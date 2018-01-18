@@ -145,9 +145,8 @@ loop_exit:
     // skip_pt: 0, invoke_writeback: 1
     CAPRI_SET_FIELD_RANGE(r4, RKEY_INFO_T, incr_nxt_to_go_token_id, invoke_writeback, (1<<3 | 0 << 2 | 0 << 1 | 1))
 
-    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
 
     // skip ring rsq dbell if reqd
     bcf    [c2], exit

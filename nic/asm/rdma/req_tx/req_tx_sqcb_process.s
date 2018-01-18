@@ -64,8 +64,7 @@ req_tx_sqcb_process:
     // sqcb1
     tblwr          CNP_C_INDEX, CNP_P_INDEX
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_cnp_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_cnp_process, r1)
 
     nop.e
     nop
@@ -90,8 +89,7 @@ process_credits:
 
     // sqcb1_p
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_process, r1)
     
     nop.e
     nop
@@ -124,8 +122,7 @@ sq_bktrack:
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, op_type, d.curr_op_type)
 
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb1_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb1_process, r1)
 
     // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
     //     sqcb0_to_sqcb1_info_p->cur_wqe_addr = sqcb0_p->curr_wqe_ptr
@@ -164,8 +161,7 @@ process_sq:
     // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
     bbeq           d.congestion_mgmt_enable, 0, process_send
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r2)
-    CAPRI_NEXT_TABLE_I_READ_PC(r2, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_dcqcn_addr_fetch_process, r1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_dcqcn_addr_fetch_process, r1)
 
 process_send:
     seq            c3, d.need_credits, 1
@@ -225,8 +221,7 @@ process_send:
     //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, ud, r5)
 
     // populate t0 PC and table address
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
 
     CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
@@ -269,8 +264,7 @@ in_progress:
     //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, first, 0)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.curr_op_type)
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r2)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r2)
     
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
@@ -328,8 +322,7 @@ fence:
     CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
     //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, li_fence_cleared, 0)
 
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, d.curr_wqe_ptr)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, d.curr_wqe_ptr)
 
 end:
     nop.e

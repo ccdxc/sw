@@ -12,7 +12,6 @@ struct resp_rx_cqpt_process_k_t k;
 #define TMP             r3
 #define EQCB_ADDR       r5
 
-#define KEY_P           r3
 #define ARG_P           r7
 
 
@@ -46,10 +45,9 @@ resp_rx_cqpt_process:
 
     RESP_RX_EQCB_ADDR_GET(EQCB_ADDR, TMP, k.args.eq_id) // BD Slot
 
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, KEY_P)
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
     CAPRI_SET_FIELD(ARG_P, EQ_INFO_T, cq_id, k.args.cq_id)
-    CAPRI_NEXT_TABLE_I_READ_PC(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, EQCB_ADDR)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_eqcb_process, EQCB_ADDR)
 
 cqpt_exit:
 

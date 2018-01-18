@@ -101,8 +101,7 @@ set_sge_arg:
     CAPRI_SET_FIELD_C(r7, WQE_TO_SGE_T, ah_size, d.ud_send.ah_size, c1)
     CAPRI_SET_FIELD_C(r7, WQE_TO_SGE_T, ah_handle, d.ud_send.ah_handle, c1)
 
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
 
     nop.e
     nop
@@ -142,9 +141,8 @@ read:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, rrq_p_index, k.args.rrq_p_index)
     // leave rest of variables to FALSE
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
@@ -181,9 +179,8 @@ atomic:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, rrq_p_index, k.args.rrq_p_index)
     // leave rest of variables to FALSE
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
@@ -225,9 +222,8 @@ inline_data:
     CAPRI_SET_FIELD_C(r7, RRQWQE_TO_HDR_T, op.send_wr.ah_handle, r2, c1)
     // leave rest of variables to FALSE
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e

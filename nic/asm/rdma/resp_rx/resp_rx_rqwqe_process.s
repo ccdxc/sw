@@ -23,7 +23,6 @@ struct rqwqe_base_t d;
 #define CURR_SGE_OFFSET r1[31:0]
 
 #define T2_ARG          r5
-#define T2_K            r5
 #define RECIRC_ARG      r6
 #define WB1_ARG         r6
 
@@ -69,7 +68,7 @@ resp_rx_rqwqe_process:
 
     add         REM_PYLD_BYTES, r0, k.args.remaining_payload_bytes
    
-    CAPRI_RESET_TABLE_0_AND_1_ARG(resp_rx_phv_t)
+    CAPRI_RESET_TABLE_0_AND_1_ARG()
 
     // first_pass = TRUE
     setcf       F_FIRST_PASS, [c0]
@@ -229,8 +228,7 @@ cb0_cb1_wb_exit:
     //CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, do_not_invalidate_tbl, 1, c3)
 
     RQCB0_ADDR_GET(r2)
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
-    CAPRI_NEXT_TABLE_I_READ_PC(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, r2)
 
     nop.e
     nop

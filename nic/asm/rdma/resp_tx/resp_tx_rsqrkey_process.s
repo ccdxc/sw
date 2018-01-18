@@ -109,8 +109,7 @@ aligned_pt:
 
 invoke_pt:
 
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqptseg_process, PT_SEG_P)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqptseg_process, PT_SEG_P)
     
     CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, pt_seg_offset, PT_OFFSET)
@@ -149,17 +148,16 @@ invoke_dcqcn:
     cmov        IN_PROGRESS, c1, 0, 1
     CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, read_rsp_in_progress, IN_PROGRESS)
 
-    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r7)
     bbeq           k.to_stage.s3.rsq_rkey.congestion_mgmt_enable, 1, dcqcn
     add            r3,  r0, k.to_stage.s3.rsq_rkey.dcqcn_cb_addr // BD slot
 
 dcqcn_mpu_only:
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r3)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r3)
     nop.e
     nop
 
 dcqcn:
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_dcqcn_enforce_process, r3)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_dcqcn_enforce_process, r3)
 
 exit:
     nop.e

@@ -351,8 +351,7 @@ cb1_byte_update:
     memwr.b        r3, r5
 
     SQCB1_ADDR_GET(r1)
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_2_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_2_process, r1)
 
 invalid_op_type:
     nop.e

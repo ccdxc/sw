@@ -15,7 +15,6 @@ struct rqcb1_t d;
 
 #define GBL_FLAGS           r7
 #define TBL_ID              r6
-#define KEY_P               r5
 #define ARG_P               r4
 #define CQCB_ADDR           r3
 #define RQCB4_ADDR          r3
@@ -77,22 +76,19 @@ inv_rkey:
     // now r3 has key_addr
 
 
-    CAPRI_GET_TABLE_3_K(resp_rx_phv_t, KEY_P)
-    CAPRI_NEXT_TABLE_I_READ_PC(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
 
 completion:
     
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, KEY_P)
     RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id)
-    CAPRI_NEXT_TABLE_I_READ_PC(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_cqcb_process, CQCB_ADDR)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_cqcb_process, CQCB_ADDR)
 
 stats:
 
-    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, KEY_P)
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, ARG_P)
     CAPRI_SET_FIELD(ARG_P, STATS_INFO_T, bubble_count, 1)
     RQCB4_ADDR_GET(RQCB4_ADDR)
-    CAPRI_NEXT_TABLE_I_READ_PC(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_stats_process, RQCB4_ADDR)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_stats_process, RQCB4_ADDR)
 
 exit:
 

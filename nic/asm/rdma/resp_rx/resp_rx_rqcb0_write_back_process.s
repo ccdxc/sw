@@ -15,7 +15,6 @@ struct rqcb0_t d;
 #define DB_DATA r5
 #define RQCB1_ADDR r6
 #define T2_ARG r7
-#define T2_K r7
 
 %%
     .param  resp_rx_rqcb1_write_back_process
@@ -81,8 +80,7 @@ incr_c_index_exit:
 invoke_wb1:
     // invoke rqcb1 write back from rqcb0 write back
     CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, current_sge_offset, curr_wqe_ptr, k.{args.current_sge_offset...args.curr_wqe_ptr})
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
-    CAPRI_NEXT_TABLE_I_READ_PC(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 
     nop.e
     nop

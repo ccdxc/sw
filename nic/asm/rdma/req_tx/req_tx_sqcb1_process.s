@@ -32,8 +32,7 @@ req_tx_sqcb1_process:
     CAPRI_SET_FIELD_C(r7, SQCB1_TO_CREDITS_T, need_credits, 1, !c1)
 
     SQCB0_ADDR_GET(r1)
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_credits_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_credits_process, r1)
 
     nop.e
     nop

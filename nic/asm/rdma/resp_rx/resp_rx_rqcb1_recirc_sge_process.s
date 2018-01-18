@@ -53,8 +53,7 @@ resp_rx_rqcb1_recirc_sge_process:
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, curr_wqe_ptr, WQE_PTR)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, dma_cmd_index, k.to_stage.s1.recirc.dma_cmd_index)
 
-    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 
     nop.e
     nop

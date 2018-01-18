@@ -45,9 +45,8 @@ add_headers:
     DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, d.header_template_size, r4)
 
     // Load dcqcn_cb to fetch pkey to fill in BTH
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r2)
     add     r4, r4, HDR_TEMPLATE_T_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ_PC(r2, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_cnp_process, r4)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_cnp_process, r4)
 
     nop.e
     nop

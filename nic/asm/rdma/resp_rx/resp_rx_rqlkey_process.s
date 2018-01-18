@@ -21,7 +21,6 @@ struct key_entry_aligned_t d;
 #define RQCB1_ADDR r7
 #define RQCB0_ADDR r7
 #define T2_ARG r5
-#define T2_KEY r6
 
 #define LKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
 #define INFO_WBCB0_T struct resp_rx_rqcb0_write_back_info_t
@@ -142,8 +141,7 @@ check_write_back:
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, k.args.incr_nxt_to_go_token_id)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, k.args.incr_c_index)
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
-    CAPRI_NEXT_TABLE_I_READ_PC(T2_KEY, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, RQCB0_ADDR)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, RQCB0_ADDR)
 
 exit:
     nop.e

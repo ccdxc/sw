@@ -54,9 +54,8 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, incr_c_index, k.args.incr_c_index)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, invoke_writeback, 1)
 
-    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_rqlkey_process, KEY_ADDR)
 
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
     tblwr.c1    d.va, 0

@@ -53,8 +53,7 @@ wqe_bktrack:
     seq           c1, k.args.in_progress, 1
     CAPRI_SET_FIELD_C(r7, SQ_BKTRACK_T, tx_psn, d.wqe_start_psn, c1)
     
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, k.to_stage.bktrack.wqe_addr)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, k.to_stage.bktrack.wqe_addr)
     
     nop.e
     nop
@@ -72,8 +71,7 @@ bktrack_sqpt:
     sll            r5, k.args.pt_base_addr, PT_BASE_ADDR_SHIFT
     add            r3, r5, r3, CAPRI_LOG_SIZEOF_U64
 
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqpt_process, r3)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqpt_process, r3)
 
     nop.e
     nop
@@ -95,9 +93,8 @@ sqcb_write_back:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, sq_c_index, r1) 
 
 set_pc:
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     SQCB0_ADDR_GET(r1)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r1)
 
     // drop the phv as there is nothing to retransmit
     phvwr          p.common.p4_intr_global_drop, 1

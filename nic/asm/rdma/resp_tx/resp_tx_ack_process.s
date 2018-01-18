@@ -21,8 +21,7 @@ resp_tx_ack_process:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.dcqcn_cb_addr, r2)
 
     // invoke MPU only dcqcn in table 1.
-    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)
  
     CAPRI_SET_TABLE_0_VALID(0)
 exit:

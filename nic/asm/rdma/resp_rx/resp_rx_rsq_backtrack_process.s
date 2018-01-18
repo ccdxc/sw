@@ -228,8 +228,7 @@ adjust_table_setup:
     CAPRI_SET_FIELD_C(r4, ADJUST_INFO_T, adjust_p_index, 1, ADJUST_P_INDEX_F)
     CAPRI_SET_FIELD(r4, ADJUST_INFO_T, index, k.args.index)
 
-    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rsq_backtrack_adjust_process, RQCB0_P)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rsq_backtrack_adjust_process, RQCB0_P)
 
     //TODO: enable below code once spr_mpuid register is available
     //mfspr       spr_mpuid, r6

@@ -90,9 +90,8 @@ ring_dcqcn_doorbell:
 
 load_write_back:            
     // DCQCN rate-enforcement passed. Load stage 5 for write-back
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
 
     nop.e
     nop
@@ -113,9 +112,8 @@ drop_phv:
     CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.rate_enforce_failed, 1)
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
 
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 

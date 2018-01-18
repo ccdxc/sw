@@ -75,8 +75,7 @@ resp_tx_rqcb_process:
 
 
     add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES  #RQCB1 address
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_dcqcn_rate_process, RQCB1_P)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_dcqcn_rate_process, RQCB1_P)
     
     nop.e
     nop
@@ -94,8 +93,7 @@ check_dcqcn_timer_q:
 
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, timer_event_process, 1)
     add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES  #RQCB1 address
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_dcqcn_rate_process, RQCB1_P)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_dcqcn_rate_process, RQCB1_P)
 
     nop.e
     nop
@@ -117,8 +115,7 @@ backtrack_q:
     CAPRI_SET_FIELD(r4, BT_ADJUST_INFO_T, adjust_rsq_c_index, d.adjust_rsq_c_index)
     CAPRI_SET_FIELD(r4, BT_ADJUST_INFO_T, rsq_bt_p_index, RSQ_BT_P_INDEX)
 
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsq_backtrack_adjust_process, RQCB1_P)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsq_backtrack_adjust_process, RQCB1_P)
 
     nop.e
     nop
@@ -161,8 +158,7 @@ rsq:
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, serv_type, d.serv_type)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, log_pmtu, d.log_pmtu)
 
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_process, RQCB1_P)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_process, RQCB1_P)
 
     nop.e
     nop
@@ -185,8 +181,7 @@ ack_nak:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.ack_nak_process, 1)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s5.rqcb1_wb.ack_nack_serv_type, d.serv_type)
 
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_ack_process, RQCB1_P)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_ack_process, RQCB1_P)
     
 exit:
     nop.e

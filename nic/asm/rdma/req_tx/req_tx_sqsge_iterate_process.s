@@ -36,7 +36,6 @@ trigger_stg3_sqsge_process:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, in_progress, inv_key, k.{args.in_progress...args.inv_key})
 
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7) // Branch Delay Slot
     //mfspr          r1, spr_tbladdr
 
     // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
@@ -44,7 +43,7 @@ trigger_stg3_sqsge_process:
     // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
     add            r1, r1, k.to_stage.sq.wqe_addr
 
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r1)
     CAPRI_SET_TABLE_3_VALID(0)
 
     nop.e

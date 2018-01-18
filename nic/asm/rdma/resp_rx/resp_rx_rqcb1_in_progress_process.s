@@ -49,8 +49,7 @@ resp_rx_rqcb1_in_progress_process:
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
     //CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, tbl_id, 0)
 
-    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 
     nop.e
     nop

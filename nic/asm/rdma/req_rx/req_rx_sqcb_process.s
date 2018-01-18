@@ -129,9 +129,8 @@ next_stage_arg:
     CAPRI_SET_FIELD(r7, SQCB0_TO_STAGE_T, syndrome, CAPRI_APP_DATA_AETH_SYNDROME)
      
 
-    CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
     add            r1, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_process, r1)
 
     nop.e
     nop
@@ -153,9 +152,8 @@ ud_feedback:
     RDMA_UD_FEEDBACK_WRID(r7)
     phvwrpair      p.cqwqe.id.wrid, r7, p.cqwqe.status, k.rdma_ud_feedback_status
 
-    CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
     add            r1, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_process, r1)
 
 exit:
     nop.e

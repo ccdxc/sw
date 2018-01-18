@@ -44,10 +44,8 @@ resp_tx_rqcb1_process:
     CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.rsq_rkey.dcqcn_cb_addr, r2)
 
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-
     // load 256 bits (i.e,32 bytes) which is the size of rsqwqe
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_tx_rsqwqe_process, k.args.rsqwqe_addr)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_tx_rsqwqe_process, k.args.rsqwqe_addr)
 
 exit:
     nop.e

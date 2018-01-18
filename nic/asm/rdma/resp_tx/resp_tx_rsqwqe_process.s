@@ -70,8 +70,7 @@ process_atomic:
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
     // invoke MPU only dcqcn in table 1.
-    CAPRI_GET_TABLE_1_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)
 
     nop.e
     // invalidate table 0
@@ -169,8 +168,7 @@ next:
 
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, r2)
 
-    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ_PC(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_tx_rsqrkey_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_tx_rsqrkey_process, KEY_ADDR)
 
 exit:
     nop.e

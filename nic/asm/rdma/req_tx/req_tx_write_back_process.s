@@ -53,9 +53,8 @@ write_back:
     // every wqe that is posted.
     //DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, SQ_C_INDEX, r2, r3)
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     SQCB1_ADDR_GET(r1)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r1)
  
     bbeq          d.retry_timer_on, 1, exit
     tblwr         d.retry_timer_on, 1 //BD slot

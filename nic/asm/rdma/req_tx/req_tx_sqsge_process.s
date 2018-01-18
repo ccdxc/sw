@@ -156,20 +156,18 @@ sge_loop:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_3
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-
     seq           c2, k.to_stage.sq.congestion_mgmt_enable, 1  
     bcf           [c1 & c2], write_back
     add            r1, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
 
 write_back_mpu_only:
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r1)
  
     nop.e
     nop
 
 write_back:
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)
 
     nop.e
     nop
@@ -192,8 +190,7 @@ iterate_sges:
     mfspr          r1, spr_tbladdr
     add            r1, r1, 2, LOG_SIZEOF_SGE_T
 
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r1)
 
 end:
     nop.e

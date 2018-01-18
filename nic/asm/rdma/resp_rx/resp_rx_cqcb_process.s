@@ -7,7 +7,6 @@ struct resp_rx_phv_t p;
 struct resp_rx_cqcb_process_k_t k;
 struct cqcb_t d;
 
-#define KEY_P               r6
 #define ARG_P               r5
 #define PAGE_INDEX          r3
 #define PAGE_OFFSET         r1
@@ -52,14 +51,13 @@ resp_rx_cqcb_process:
     add     PAGE_INDEX, PAGE_INDEX, d.pt_base_addr, PT_BASE_ADDR_SHIFT
     // now r3 has page_p to load
     
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, KEY_P)
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
     #copy fields cq_id, eq_id, and arm
     CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, arm, d.{cq_id...arm})
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_seg_offset, PAGE_SEG_OFFSET)
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, PAGE_OFFSET)
 
-    CAPRI_NEXT_TABLE_I_READ_PC(KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
     // increment p_index
     tblmincri       CQ_P_INDEX, d.log_num_wqes, 1

@@ -157,8 +157,7 @@ set_arg:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
 
     SQCB1_ADDR_GET(r5)
-    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
  
     nop.e
     nop

@@ -67,8 +67,7 @@ req_tx_bktrack_sqpt_process:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
 
     // populate t0 PC and table address
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, r1)
 
     nop.e
     nop
