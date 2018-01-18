@@ -81,8 +81,8 @@ run "yum install -y #{PACKAGES.join(" ")}"
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
 # Install go 1.9
-run "curl -sSL https://storage.googleapis.com/golang/go1.9.linux-amd64.tar.gz | tar xz -C /usr/local"
-run "go get github.com/golang/protobuf/... google.golang.org/grpc golang.org/x/tools/cmd/goimports"
+run "curl -sSL https://dl.google.com/go/go1.9.2.linux-amd64.tar.gz | tar xz -C /usr/local"
+run "go get github.com/golang/protobuf/..."
 
 inside BASE_BUILD_DIR do
   run "curl ftp://ftp.gnu.org/pub/gnu/gcc/gcc-6.1.0/gcc-6.1.0.tar.bz2 | tar xj"
@@ -252,7 +252,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.7"
+tag "pensando/nic:1.8"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

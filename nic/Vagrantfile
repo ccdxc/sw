@@ -82,7 +82,7 @@ yum install -y softhsm libtool-ltdl-devel
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
-curl -sSL https://storage.googleapis.com/golang/go1.9.linux-amd64.tar.gz | tar xz -C /usr/local
+curl -sSL https://dl.google.com/go/go1.9.2.linux-amd64.tar.gz | tar xz -C /usr/local
 go get github.com/golang/protobuf/... google.golang.org/grpc
 go get golang.org/x/tools/cmd/goimports
 

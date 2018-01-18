@@ -354,12 +354,6 @@
   revision = "553a641470496b2327abcac10b36396bd98e45c9"
 
 [[projects]]
-  branch = "release-branch.go1.4"
-  name = "github.com/golang/tools"
-  packages = ["cmd/goimports"]
-  revision = "abf43428cc239218424c7a44dc9b5987cd351c3e"
-
-[[projects]]
   branch = "master"
   name = "github.com/google/btree"
   packages = ["."]
@@ -728,7 +722,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/tools"
-  packages = ["go/ast/astutil","go/gcexportdata","go/gcimporter15","go/types/typeutil","imports"]
+  packages = ["cmd/goimports","go/ast/astutil","go/gcexportdata","go/gcimporter15","go/types/typeutil","imports"]
   revision = "8cab8a1319f0be9798e7fe78b15da75e5f94b2e9"
 
 [[projects]]
@@ -817,6 +811,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "66fb9683f654ffc372b77546df1b9e3aad79b5591ba41cac860f91869689c090"
+  inputs-digest = "2f732bd27e9b23aee8a3e9255ccb9c35c619ba748443f403317d5882425bc7ee"
   solver-name = "gps-cdcl"
   solver-version = 1
