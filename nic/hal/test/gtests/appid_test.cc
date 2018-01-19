@@ -833,7 +833,7 @@ void appid_test_transaction(appid_test_transaction_t& trans)
 
         if (i == 0) {
             // First packet
-            app_ctx->set_appid_needed();
+            app_ctx->set_appid_needed(ctx);
             strncpy(app_ctx->appid_info()->session_state_.feature_name,
                 FTE_FEATURE_APP_REDIR_APPID.c_str(),
                 sizeof(state.feature_name));

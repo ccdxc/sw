@@ -77,6 +77,12 @@ daq =
 ---------------------------------------------------------------------------
 -- 3. configure inspection
 ---------------------------------------------------------------------------
+
+packets =
+{
+    vlan_agnostic = true,
+}
+
 -- Disabled checksum for now as sample pcaps used for testing has issues
 network =
 {
@@ -143,6 +149,9 @@ appid =
     app_stats_period = 60,
     --app_detector_dir = '/etc/snort',
     app_detector_dir = snort_lua_dir,
+    session_log_filter = {
+        log_all_sessions = true
+    }
 }
 
 --[[

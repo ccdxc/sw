@@ -499,6 +499,17 @@ def run_e2e_tlsproxy_dol():
     print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E TLS Proxy DOL, exit code ", p.returncode
     return p.returncode
 
+def run_e2e_l7_dol():
+    os.chdir(nic_dir)
+    cmd = ['./tools/run_e2e_l7_test.py']
+    p = Popen(cmd)
+    print "* Starting E2E L7 DOL, pid (" + str(p.pid) + ")"
+    lock = open(lock_file, "a+")
+    lock.write(str(p.pid) + "\n")
+    lock.close()
+    p.communicate()
+    print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E L7 DOL, exit code ", p.returncode
+    return p.returncode
 # main()
 
 
@@ -562,6 +573,8 @@ def main():
                         help="Generate ASM coverage for this run")
     parser.add_argument("--e2e-tls-dol", dest='e2etls', action="store_true",
                         default=None, help="Run E2E TLS DOL")
+    parser.add_argument("--e2e-l7-dol", dest='e2el7', action="store_true",
+                        default=None, help="Run E2E L7 DOL")
     parser.add_argument("--gft", dest='gft', action="store_true",
                         default=False, help="GFT tests")
     parser.add_argument('--shuffle', dest='shuffle', default=None,

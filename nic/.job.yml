@@ -35,6 +35,7 @@ targets:
   telemetry:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo telemetry --feature telemetry" ]
   p4pt:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo proxy --feature p4pt" ]
   app_redir:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo app_redir --feature app_redir" ]
+  e2el7:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo proxy --feature proxy --config-only --e2e-l7-dol" ]
   # configtoggle: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo up2up --feature networking --configtoggle" ]
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft-build && ./run.py  --gft" ]
   base:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature eth,networking,rdma_base" ]

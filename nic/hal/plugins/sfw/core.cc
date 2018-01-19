@@ -57,7 +57,7 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
     }
 
     // TODO: Can nwsec_plcy_svc be NULL?
-    if(!nwsec_plcy_svc || matched_svc) { // svc is wildcard or matched a specific service
+    if(matched_svc) { // svc is wildcard or matched a specific service
         dllist_ctxt_t *lnode2 = NULL;
         nwsec_policy_appid_t *appid_policy = NULL;
         app_redir_ctx_t *app_ctx = app_redir_ctx(ctx, false);
@@ -66,7 +66,7 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
                 appid_policy = dllist_entry(lnode2, nwsec_policy_appid_t, lentry);
                 if(appid_policy) {
                     if(!app_ctx->appid_started()) {
-                        app_ctx->set_appid_needed();
+                        app_ctx->set_appid_needed(ctx);
                         match_rslt->valid  = 1;
                         match_rslt->action = session::FLOW_ACTION_ALLOW;
                         return HAL_RET_OK;
@@ -86,7 +86,7 @@ net_sfw_match_rules(fte::ctx_t                  &ctx,
 
                 }
             }
-        } else if (matched_svc) {
+        } else {
             match_rslt->valid  = 1;
             match_rslt->alg = matched_svc->alg;
             match_rslt->action = (session::FlowAction)nwsec_plcy_rules->action;
@@ -244,14 +244,6 @@ sfw_exec(fte::ctx_t& ctx)
 
     // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
-
-    // If appid_needed is set, we are in phase2 invocation of dfw
-    // We need to proceed further only if appid feature has some new data or it has reached a terminal state
-    app_redir_ctx_t *app_ctx = app_redir_ctx(ctx, false);
-    if(app_ctx->appid_started() &&
-       (!app_ctx->appid_updated() && !app_ctx->appid_completed())) {
-        return fte::PIPELINE_CONTINUE;
-    }
 
     // ALG Wild card entry table lookup. 
     expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
