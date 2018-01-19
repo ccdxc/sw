@@ -379,7 +379,7 @@ def run_dol(args):
                 print "%s" % '='*80
                 print "             2 Hour Exit Timeout Reached. Killing all processes."
                 print "%s" % '='*80
-                break
+                return 1
 
 
     exitcode = 0
