@@ -269,10 +269,16 @@ def run_storage_dol(port, args):
     wait_for_hal()
     bin_dir = nic_dir + "/../bazel-bin/dol/test/storage"
     os.chdir(bin_dir)
-    if args.storage_test:
-      cmd = ['./storage_test', '--hal_port', str(port), '--test_group', args.storage_test]
+    if args.rtl:
+        if args.storage_test:
+            cmd = ['./storage_test', '--hal_port', str(port), '--test_group', args.storage_test, '--poll_interval', '900']
+        else:
+            cmd = ['./storage_test', '--hal_port', str(port), '--poll_interval', '900']
     else:
-      cmd = ['./storage_test', '--hal_port', str(port)]
+        if args.storage_test:
+            cmd = ['./storage_test', '--hal_port', str(port), '--test_group', args.storage_test]
+        else:
+            cmd = ['./storage_test', '--hal_port', str(port)]
     p = Popen(cmd)
     p.communicate()
     return p.returncode

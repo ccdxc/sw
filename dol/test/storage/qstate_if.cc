@@ -141,7 +141,8 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                       uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
                       uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
                       uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
-                      uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr) {
+                      uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr,
+                      bool raise_weights) {
 
   uint8_t q_state[64];
   uint8_t pc_offset;
@@ -179,9 +180,15 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 208, 16, num_entries);
   utils::write_bit_fields(q_state, 224, 64, base_addr);
   utils::write_bit_fields(q_state, 288, 16, entry_size);
-  utils::write_bit_fields(q_state, 303, 8, 6); // hi weight
-  utils::write_bit_fields(q_state, 311, 8, 4); // med weight
-  utils::write_bit_fields(q_state, 320, 8, 2); // lo weight
+  if (raise_weights) {
+    utils::write_bit_fields(q_state, 303, 8, 50); // hi weight
+    utils::write_bit_fields(q_state, 311, 8, 48); // med weight
+    utils::write_bit_fields(q_state, 320, 8, 46); // lo weight
+  } else {
+    utils::write_bit_fields(q_state, 303, 8, 6); // hi weight
+    utils::write_bit_fields(q_state, 311, 8, 4); // med weight
+    utils::write_bit_fields(q_state, 320, 8, 2); // lo weight
+  }
   utils::write_bit_fields(q_state, 360, 8, 63); // max cmds
   utils::write_bit_fields(q_state, 368, 28, next_pc);
   // Program only if destination is used in P4+

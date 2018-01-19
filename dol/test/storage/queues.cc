@@ -409,7 +409,8 @@ int queues_setup() {
                                      kNvmeBeTotalRings, kDefaultNoHostRings, 
                                      kPvmNumEntries, pvm_sqs[i].paddr,
                                      kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
-                                     ssd_q, 0, 0, storage_hbm_ssd_bm_addr) < 0) {
+                                     ssd_q, 0, 0, storage_hbm_ssd_bm_addr, 
+                                     (j == kE2eSsdhandle)) < 0) {
       printf("Failed to setup PVM NVME backend SQ %d state \n", i);
       return -1;
     }
@@ -555,10 +556,10 @@ int queues_setup() {
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqCompSQs); j++, i++) {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqCompSqHandler,
                         kDefaultTotalRings, kDefaultHostRings) < 0) {
-      printf("Failed to setup PVM Seq Xts queue %d \n", i);
+      printf("Failed to setup PVM Seq Compression queue %d \n", i);
       return -1;
     }
-    printf("Setup PVM Seq Xts queue %d \n", i);
+    printf("Setup PVM Seq Compression queue %d \n", i);
   }
 
   // Save PVM's last SQ
