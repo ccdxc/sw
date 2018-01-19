@@ -38,6 +38,7 @@ mbt_log = nic_dir + "/mbt.log"
 storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
 bullseye_model_cov_file = nic_dir + "/coverage/bullseye_model.cov"
+bullseye_hal_cov_file = nic_dir + "/../bazel-out/../../bullseye_hal.cov"
 
 lock_file = nic_dir + "/.run.pid"
 
@@ -218,6 +219,7 @@ def run_hal(args):
     os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/daqs/"
+    os.environ["COVFILE"] = os.path.realpath(bullseye_hal_cov_file)
 
     hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(hal_dir)

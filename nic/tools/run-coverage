@@ -72,6 +72,10 @@ export COVERAGE_OUTPUT=$NIC_DIR/coverage
 export BULLSEYE_MODEL_COVERAGE_FILE=$COVERAGE_OUTPUT/bullseye_model.cov
 export BULLSEYE_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/bullseye_model_coverage
 
+export BULLSEYE_HAL_COVERAGE_FILE=$NIC_DIR/../bazel-out/../../bullseye_hal.cov
+export BULLSEYE_HAL_HTML_OUTPUT_DIR=$COVERAGE_OUTPUT/bullseye_hal_coverage
+export BULLSEYE_HAL_FILTER_COVERAGE_FILE=$COVERAGE_CONFIG_PATH/bullseye/hal_filter.txt
+
 
 if [ $keep_data -eq 0 ];then
     rm -rf $COVERAGE_OUTPUT
@@ -96,6 +100,7 @@ export CAPCOV=$NIC_DIR/asic/capri/model/capsim-gen/bin/capcov
 export CAPRI_LOADER_CONF=$NIC_DIR/../bazel-bin/nic/hal/capri_loader.conf
 export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
 export BULLSEYE_COVHTML=/home/asic/tools/eda/bullseye/bin/covhtml
+export BULLSEYE_COVSELECT=/home/asic/tools/eda/bullseye/bin/covselect
 export GEN_DIR=$NIC_DIR/gen
 
 if [ ${#skip_targets[@]} -eq 0 ]; then

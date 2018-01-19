@@ -376,11 +376,25 @@ class CapcovCoverage(CoverageBase):
     def remove_files(self, lcov_out_file, remove_files):
         pass
 
-def gen_bulls_eye_model_coverage():
+def gen_model_bulls_eye_coverage():
     cmd = [env.bullseye_covhtml_cmd,
-           "-v", "-f", env.bullseye_model_cov_file,
+           "-v", "-f", os.path.realpath(env.bullseye_model_cov_file),
             env.bullseye_model_html_output_dir]
     subprocess.call(cmd)
+
+def gen_hal_bulls_eye_coverage():
+    cmd = [env.bullseye_covselect_cmd,
+            "-f", os.path.realpath(env.bullseye_hal_cov_file),
+            "--import", env.bullseye_hal_filter_cov_file]
+    subprocess.call(cmd)
+    cmd = [env.bullseye_covhtml_cmd,
+           "-v", "-f", os.path.realpath(env.bullseye_hal_cov_file),
+            env.bullseye_hal_html_output_dir]
+    subprocess.call(cmd)
+
+def gen_bulls_eye_coverage():
+    gen_model_bulls_eye_coverage()
+    gen_hal_bulls_eye_coverage()
  
 def run(cmd, timeout=None):
     try:
@@ -479,11 +493,13 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
     <strong>Total Coverage</strong>
     <p class="indent": 5em>
     <br><a href="total_cov/hal/index.html">HAL Total Coverage</a></br>
+    <br><a href="%s">BullsEye HAL Total Coverage</a></br>
     <br><a href="total_cov/model/index.html">Model Total Coverage</a></br>
     <br><a href="%s">BullsEye Model Total Coverage</a></br>
     <br><a href="total_cov/asm/Total_asm.html">ASM Total Coverage</a></br>
     </p>
-    """ % (os.path.relpath(env.bullseye_model_html_output_dir) + "/index.html")
+    """ %((os.path.relpath(env.bullseye_hal_html_output_dir) + "/index.html"),
+	(os.path.relpath(env.bullseye_model_html_output_dir) + "/index.html"))
 
     op_file.write(total_cov_info)
     asm_cov_str = "<br><br><strong>ASM Detailed Information</strong></br></br>"
@@ -532,6 +548,6 @@ if __name__ == '__main__':
                                                              instruction_summary_page_name)
             asm_data_process.generate_feature_sub_stats(env.p4_data_output_path,
                                                         feature_summary_page_name)
-    gen_bulls_eye_model_coverage()
+    gen_bulls_eye_coverage()
     generate_coverage_summary_page(env.coverage_output_path)
 

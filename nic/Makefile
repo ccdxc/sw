@@ -9,6 +9,13 @@ include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 include $(TOPDIR)/make/Jobs.Makefile
 
+ifeq ($(c),1)
+	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
+	export CC=/home/asic/tools/eda/bullseye/bin/gcc
+	export CXX=/home/asic/tools/eda/bullseye/bin/g++
+	export COVFILE=$(COVFILE_NAME)
+endif
+
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 shell: build-runtime-image
 	mkdir -p ${PWD}/../bazel-cache;
@@ -226,6 +233,7 @@ clean:
 	$(MAKE) -C asm clean
 	$(MAKE) -C proto clean
 	$(MAKE) -C sdk clean
+	rm -rf  $(shell realpath "$(TOPDIR_ABS)"/../bazel-out/..)
 	$(MAKE) check_clean
 
 check_clean:

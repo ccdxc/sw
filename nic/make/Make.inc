@@ -11,12 +11,14 @@ else
   VERBOSE =
 endif
 
+TOPDIR_ABS = ${CURDIR}
 # For code coverage for HAL & ASM code
 ifeq ($(c),1)
-  GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov
+	GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone 
 else
   GCOV = 
 endif
+
 CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
 ifneq ($(GCOV),)
     CAPAS_COV = -C

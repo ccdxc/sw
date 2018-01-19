@@ -40,7 +40,7 @@
                 ".c",
                 ".cc"
             ],
-            "build_cmd": "make c=1",
+            "build_cmd": "bazel build && /home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 && /home/asic/tools/eda/bullseye/bin/cov01 -0",
             "clean_cmd": "make clean && (find ../bazel-out/local-fastbuild/bin -name '*.gcda'  -type f -delete || :)",
             "remove_files": [
                "/usr/include/*",
@@ -93,7 +93,7 @@
     },
     "run": {
         "gtests": {
-            "cmd": "make run-gtests",
+            "cmd": "make run-gtests c=1",
             "modules": [
                 "hal"
             ]

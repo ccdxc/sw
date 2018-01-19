@@ -9,7 +9,12 @@ endif
 
 # For code coverage
 ifeq ($(c),1)
-  GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov
+	TOPDIR_ABS = ${CURDIR}/..
+	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
+	export CC=/home/asic/tools/eda/bullseye/bin/gcc
+	export CXX=/home/asic/tools/eda/bullseye/bin/g++
+	export COVFILE=$(COVFILE_NAME)
+  GCOV = --collect_code_coverage --copt=--coverage --copt=-DCOVERAGE --cxxopt=--coverage --cxxopt=-fprofile-arcs --cxxopt=-ftest-coverage --linkopt=-coverage --linkopt=-lgcov --action_env COVFILE=$(COVFILE) --spawn_strategy=standalone 
 else
   GCOV =
 endif
