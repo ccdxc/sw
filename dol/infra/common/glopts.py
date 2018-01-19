@@ -65,11 +65,26 @@ def ValidateGlopts():
         sys.exit(1)
     
     if GlobalOptions.tcid is not None:
-        GlobalOptions.tcid = [utils.ParseInteger(tcid)
-                                  for tcid in GlobalOptions.tcid.split(',')]
-        GlobalOptions.tcid.sort()
+        tcid_range_list = GlobalOptions.tcid.split(',')
+        tcid_list = []
+        for tcid_range in tcid_range_list:
+            rl = tcid_range.split('-')
+            low = None
+            high = None
+            if len(rl) > 2:
+                print("Error: Invalid tcid range.")
+                sys.exit(1)
+            elif len(rl) == 2:
+                high = utils.ParseInteger(rl[1])
+            low = utils.ParseInteger(rl[0])
+            if high:
+                tcid_list += range(low, high+1)
+            else:
+                tcid_list.append(low)
+        tcid_list.sort()
+
+        GlobalOptions.tcid = tcid_list
         if len(GlobalOptions.tcid) == 1:
             GlobalOptions.tcid = GlobalOptions.tcid[0]
-
     GlobalOptions.alltc_done = False
 
