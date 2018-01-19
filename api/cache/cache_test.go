@@ -272,8 +272,9 @@ func (f *fakeWatchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventH
 	f.dequeues++
 }
 
-func (f *fakeWatchEventQ) Stop() {
+func (f *fakeWatchEventQ) Stop() bool {
 	f.stops++
+	return false
 }
 
 type fakeTxn struct {

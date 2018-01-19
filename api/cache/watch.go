@@ -50,7 +50,9 @@ type WatchEventQConfig struct {
 type WatchEventQ interface {
 	Enqueue(evType kvstore.WatchEventType, obj runtime.Object) error
 	Dequeue(ctx context.Context, fromver uint64, cb eventHandlerFn, cleanupfn func())
-	Stop()
+	// Stop signals a watcher exiting. Returns true when the last
+	//  watcher has returned
+	Stop() bool
 }
 
 // WatchedPrefixes is an interface for managing WatchEventQueues
@@ -86,11 +88,10 @@ func (w *watcher) getState() (uint64, time.Time) {
 
 // watchEvent is an object used to track watch events.
 type watchEvent struct {
-	version  uint64
-	refCount int
-	evType   kvstore.WatchEventType
-	enqts    time.Time
-	item     runtime.Object
+	version uint64
+	evType  kvstore.WatchEventType
+	enqts   time.Time
+	item    runtime.Object
 }
 
 // watchEventQStats is a container for stats for the watchEventQ
@@ -111,6 +112,9 @@ type watchEventQStats struct {
 // watchEventQ is an implementation of the WatchEventQ interface
 type watchEventQ struct {
 	//TBD Pending Heap
+
+	// Mutex protects all mutable unsafe members that dont have a more granular lock.
+	//  currently only refCount
 	sync.Mutex
 	// path is the KV path pertaining to the eventQueue
 	path string
@@ -201,17 +205,15 @@ func (w *watchedPrefixes) Add(path string) WatchEventQ {
 // and cleanup any watchers using the Queue.
 func (w *watchedPrefixes) Del(path string) WatchEventQ {
 	w.log.DebugLog("oper", "DelWatchedPrefix", "prefix", path)
+	defer w.Unlock()
+	w.Lock()
 	prefix := patricia.Prefix(path)
 	i := w.trie.Get(prefix)
 	if i != nil {
 		q := i.(*watchEventQ)
-		q.Lock()
-		q.refCount--
-		refcount := q.refCount
-		q.Unlock()
-		if refcount == 0 {
+		last := q.Stop()
+		if last {
 			w.log.DebugLog("oper", "DelWatchedPrefix", "prefix", path, "msg", "last watcher")
-			q.Stop()
 			w.trie.Delete(prefix)
 		}
 	}
@@ -256,11 +258,10 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj runtime.Object)
 	w.log.DebugLog("oper", "EventQueueEnqueue", "type", evType)
 	// XXXX-TODO(sanjayt): Use a pool here to reduce garbage collection work.
 	i := &watchEvent{
-		version:  v,
-		evType:   evType,
-		refCount: w.refCount,
-		item:     obj,
-		enqts:    time.Now(),
+		version: v,
+		evType:  evType,
+		item:    obj,
+		enqts:   time.Now(),
 	}
 	w.eventList.Insert(i)
 	w.notify()
@@ -281,16 +282,16 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	}
 	defer w.watcherList.Remove(tel)
 	var wg sync.WaitGroup
-	sendCh := make(chan error)
 
 	sendevent := func(e *list.Element) {
+		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)
 		defer tracker.Unlock()
 		tracker.Lock()
 		hdr.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
 			cb(obj.evType, obj.item)
-			sendCh <- nil
+			close(sendCh)
 		}()
 		select {
 		case <-sendCh:
@@ -329,8 +330,14 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 				obj = item.Value.(*watchEvent)
 			}
 			for item != nil {
-				sendevent(item)
-				item = item.Next()
+				select {
+				case <-tracker.ctx.Done():
+					// bail out here instead of iterating through items and then exiting.
+					return
+				default:
+					sendevent(item)
+					item = item.Next()
+				}
 			}
 		}
 	}
@@ -482,13 +489,13 @@ func (w *watchEventQ) start() {
 }
 
 // Stop cleans up the WatchEventQ
-func (w *watchEventQ) Stop() {
-	w.Lock()
+func (w *watchEventQ) Stop() bool {
 	defer w.Unlock()
+	w.Lock()
 	w.log.DebugLog("oper", "StopWatchEventQ", "msg", "stop called")
 	w.refCount--
 	if w.refCount != 0 {
-		return
+		return false
 	}
 	close(w.stopCh)
 	w.log.DebugLog("oper", "StopWatchEventQ", "msg", "refCount reached 0, cleaning up")
@@ -501,4 +508,5 @@ func (w *watchEventQ) Stop() {
 
 	cleanFn := func(i interface{}) {}
 	w.eventList.RemoveAll(cleanFn)
+	return true
 }
