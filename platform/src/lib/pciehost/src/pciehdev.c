@@ -98,6 +98,7 @@ pciehdev_new(const char *name, const pciehdevice_resources_t *pres)
         if (pres->lif_valid) {
             pdev->lif = pres->lif;
             pdev->lif_valid = pres->lif_valid;
+            pdev->port = pres->port;
         }
         pdev->intrbase = pres->intrbase;
     }
@@ -399,6 +400,12 @@ u_int16_t
 pciehdev_get_bdf(pciehdev_t *pdev)
 {
     return pdev->bdf;
+}
+
+u_int8_t
+pciehdev_get_port(pciehdev_t *pdev)
+{
+    return pdev->port;
 }
 
 int

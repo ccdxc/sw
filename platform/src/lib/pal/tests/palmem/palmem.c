@@ -46,8 +46,6 @@ main(int argc, char *argv[])
         }
     }
 
-    printf("optind %d argc %d\n", optind, argc);
-
     if (optind >= argc) {
         usage();
         exit(1);
@@ -68,7 +66,7 @@ main(int argc, char *argv[])
     for (offset = 0; offset < size; offset += 16) {
         const u_int16_t len = MIN(16, size - offset);
         hex_format(buf, sizeof(buf), &va[offset], len);
-        printf("%08"PRIx64": %s\n", pa + offset, buf);
+        printf("0x%08"PRIx64": %s\n", pa + offset, buf);
     }
 
     pal_mem_unmap(va);

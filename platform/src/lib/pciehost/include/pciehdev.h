@@ -77,6 +77,7 @@ pciehdev_t *pciehdev_get_by_name(const char *name);
 void *pciehdev_get_hwdev(pciehdev_t *pdev);
 void pciehdev_set_hwdev(pciehdev_t *pdev, void *phwdev);
 u_int16_t pciehdev_get_bdf(pciehdev_t *pdev);
+u_int8_t pciehdev_get_port(pciehdev_t *pdev);
 int pciehdev_get_lif(pciehdev_t *pdev);
 char *pciehdev_get_name(pciehdev_t *pdev);
 

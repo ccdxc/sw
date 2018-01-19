@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2018, Pensando Systems Inc.
 #
 
 PROGRAM = example
@@ -11,7 +11,9 @@ LCXXFLAGS = \
 	-I ../../lib/pal/include \
 	$(NULL)
 
-LIBRARIES = \
+# Use static libraries so we don't
+# have to set LD_LIBRARY_PATH to run
+STATIC_LIBRARIES = \
 	-lpal \
 	$(NULL)
 

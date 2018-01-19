@@ -23,6 +23,7 @@ typedef struct pciehdev_s {
     u_int16_t bdf;
     u_int32_t lif;
     u_int32_t intrbase;
+    u_int8_t port;
     void *phwdev;
     /* tree links */
     pciehdev_t *parent;                 /* parent bridge/vf's pf */

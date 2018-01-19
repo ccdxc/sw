@@ -176,6 +176,7 @@ pciehw_init(pciehw_t *phw)
     pciehw_bar_init(phw);
     pciehw_vfstride_init(phw);
     pciehw_hdrt_init(phw);
+    pciehw_portmap_init(phw);
     pciehw_notify_init(phw);
 }
 
@@ -360,6 +361,7 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     int lif;
 
     phwdev->bdf = pciehdev_get_bdf(pdev);
+    phwdev->port = pciehdev_get_port(pdev);
 
     lif = pciehdev_get_lif(pdev);
     if (lif >= 0) {
@@ -380,6 +382,7 @@ pciehw_finalize_dev(pciehdev_t *pdev)
         pciehw_bar_finalize(pdev);
         if (phwdev->lif_valid) {
             pciehw_hdrt_load(phw, phwdev->lif, phwdev->bdf);
+            pciehw_portmap_load(phw, phwdev->lif, phwdev->port);
         }
     }
 
@@ -501,6 +504,12 @@ cmd_hdrt(int argc, char *argv[])
 }
 
 static void
+cmd_portmap(int argc, char *argv[])
+{
+    pciehw_portmap_dbg(argc, argv);
+}
+
+static void
 cmd_notify(int argc, char *argv[])
 {
     pciehw_notify_dbg(argc, argv);
@@ -544,6 +553,7 @@ static cmd_t cmdtab[] = {
     CMDENT(prt, "prt", ""),
     CMDENT(romsk, "romsk", ""),
     CMDENT(hdrt, "hdrt", ""),
+    CMDENT(portmap, "portmap", ""),
     CMDENT(meminfo, "meminfo", ""),
     CMDENT(notify, "notify", ""),
     { NULL, NULL }

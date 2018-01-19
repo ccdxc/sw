@@ -1,4 +1,15 @@
 ================
+Set $envariables for building on srv14 bare metal.
+----------------
+# Set WS to your workspace toplevel dir.
+setenv WS /local/$USER/workspaces/<workspace>
+
+setenv GOROOT /usr/local/go
+setenv GOPATH $WS
+setenv MODEL_SOCK_PATH=$WS/src/github.com/pensando/sw/nic
+setenv PATH $WS/bin:/usr/local/go/bin:/opt/go/bin:/usr/local/bin:/local/sborikar/projects/rootfs/buildroot-2017.08/output/host/opt/ext-toolchain/bin:/usr/bin:/bin:/sbin:/usr/bin/X11
+
+================
 checkout software repo
 ----------------
 

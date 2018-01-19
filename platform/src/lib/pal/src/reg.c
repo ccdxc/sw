@@ -19,7 +19,7 @@
 u_int32_t
 pal_reg_rd32(const u_int64_t pa)
 {
-    const u_int32_t val = *(u_int32_t *)pr_ptov(pa);
+    const u_int32_t val = *(u_int32_t *)pr_ptov(pa, 4);
     pal_trace("reg_rd32 0x%08"PRIx64" = 0x%"PRIx32"\n", pa, val);
     return val;
 }
@@ -27,7 +27,7 @@ pal_reg_rd32(const u_int64_t pa)
 u_int64_t
 pal_reg_rd64(const u_int64_t pa)
 {
-    const u_int64_t val = *(u_int64_t *)pr_ptov(pa);
+    const u_int64_t val = *(u_int64_t *)pr_ptov(pa, 8);
     pal_trace("reg_rd64 0x%08"PRIx64" = 0x%"PRIx64"\n", pa, val);
     return val;
 }
@@ -37,7 +37,7 @@ pal_reg_rd32w(const u_int64_t pa,
               u_int32_t *w,
               const u_int32_t nw)
 {
-    u_int32_t *va = pr_ptov(pa);
+    u_int32_t *va = pr_ptov(pa, nw * 4);
     int i;
 
     for (i = 0; i < nw; i++) {
@@ -50,14 +50,14 @@ void
 pal_reg_wr32(const u_int64_t pa, const u_int32_t val)
 {
     pal_trace("reg_wr32 0x%08"PRIx64" = 0x%"PRIx32"\n", pa, val);
-    *(u_int32_t *)pr_ptov(pa) = val;
+    *(u_int32_t *)pr_ptov(pa, 4) = val;
 }
 
 void
 pal_reg_wr64(const u_int64_t pa, const u_int64_t val)
 {
     pal_trace("reg_wr64 0x%08"PRIx64" = 0x%"PRIx64"\n", pa, val);
-    *(u_int64_t *)pr_ptov(pa) = val;
+    *(u_int64_t *)pr_ptov(pa, 8) = val;
 }
 
 void
@@ -65,7 +65,7 @@ pal_reg_wr32w(const u_int64_t pa,
               const u_int32_t *w,
               const u_int32_t nw)
 {
-    u_int32_t *va = pr_ptov(pa);
+    u_int32_t *va = pr_ptov(pa, nw * 4);
     int i;
 
     for (i = 0; i < nw; i++) {

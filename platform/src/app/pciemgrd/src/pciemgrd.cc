@@ -220,7 +220,7 @@ cmd_add(int argc, char *argv[])
     name = NULL;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "I:L:i:n:")) != -1) {
+    while ((opt = getopt(argc, argv, "I:L:i:n:p:")) != -1) {
         switch (opt) {
         case 'I':
             r.intrbase = strtoul(optarg, NULL, 0);
@@ -234,6 +234,9 @@ cmd_add(int argc, char *argv[])
             break;
         case 'N':
             name = optarg;
+            break;
+        case 'p':
+            r.port = strtoul(optarg, NULL, 0);
             break;
         default:
             printf("bad argument: %c\n", opt);

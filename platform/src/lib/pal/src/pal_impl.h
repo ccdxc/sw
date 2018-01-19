@@ -19,11 +19,10 @@ typedef struct {
 } pal_data_t;
 
 pal_data_t *pal_get_data(void);
+pal_region_t *pr_getpa(const u_int64_t pa, const u_int64_t sz);
 
-pal_region_t *pr_new(const u_int64_t pa, const u_int64_t sz);
-void *pr_map(pal_region_t *pr);
-void *pr_ptov(const u_int64_t pa);
-u_int64_t pr_vtop(const void *va);
+void *pr_ptov(const u_int64_t pa, const u_int64_t sz);
+u_int64_t pr_vtop(const void *va, const u_int64_t sz);
 
 void pal_trace(const char *fmt, ...)
     __attribute__((format (printf, 1, 2)));

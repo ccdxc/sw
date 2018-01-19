@@ -123,6 +123,7 @@ char *pciehwdev_get_name(pciehwdev_t *phwdev);
 pciehwdev_t *pciehwdev_find_by_name(const char *name);
 
 #include "hdrt.h"
+#include "portmap.h"
 
 int pciehw_nports(void);
 
