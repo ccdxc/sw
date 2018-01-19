@@ -6,7 +6,8 @@ setenv WS /local/$USER/workspaces/<workspace>
 
 setenv GOROOT /usr/local/go
 setenv GOPATH $WS
-setenv MODEL_SOCK_PATH=$WS/src/github.com/pensando/sw/nic
+setenv MODEL_SOCK_PATH $WS/src/github.com/pensando/sw/nic
+setenv ZMQ_SOC_PATH    $WS/src/github.com/pensando/sw/nic
 setenv PATH $WS/bin:/usr/local/go/bin:/opt/go/bin:/usr/local/bin:/local/sborikar/projects/rootfs/buildroot-2017.08/output/host/opt/ext-toolchain/bin:/usr/bin:/bin:/sbin:/usr/bin/X11
 
 ================
@@ -83,7 +84,7 @@ setenv HAL_GRPC_PORT 50123
 
 # start model, note no spaces in "-d <devparams>" args list
 cd $SW/platform/
-sim/model_server/start-model -v \
+src/sim/model_server/start-model -v \
 -d type=eth,bdf=03:00.0,lif=2,qstate_addr=0xa4647000,txq_type=1,txq_count=1,rxq_type=0,rxq_count=1,intr_count=4,qidbase=0:1,mac=00:ee:00:00:00:02
 
 # start hal
@@ -110,8 +111,12 @@ qemu@simhost:~$ lspci -d 1dd8:
 02:00.0 PCI bridge: Pensando Systems, Inc Downstream Port
 03:00.0 Ethernet controller: Pensando Systems, Inc Ethernet NIC
 
-# scp to qemu vm
+================
+Miscellaneous tools
+----------------
+
+# scp to qemu vm (-P <port> number comes from netdev port in qemu-run script)
 scp -P 1037 drivers/net/ethernet/pensando/ionic/ionic.ko qemu@127.0.0.1:
 
-# ssh to qemu vm
-ssh 127.0.0.1 -p 5555 -l qemu
+# ssh to qemu vm (-P <port> number comes from netdev port in qemu-run script)
+ssh 127.0.0.1 -p 1037 -l qemu
