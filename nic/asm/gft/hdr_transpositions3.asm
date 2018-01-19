@@ -19,7 +19,7 @@ l4_hdr_transpositions:
     balcf           r7, [c1], l4_hdr_transpositions_layer1
     crestore        [c7-c1], d.l4_hdr_transpositions_d.hdr_bits[6:0], 0x3F
 
-    sne             c1, d.l4_hdr_transpositions_d.hdr_bits[15-8], 0
+    sne             c1, d.l4_hdr_transpositions_d.hdr_bits[15:8], 0
     balcf           r7, [c1], l4_hdr_transpositions_layer2
     crestore        [c7-c1], d.l4_hdr_transpositions_d.hdr_bits[14:8], 0x3F
 
@@ -27,9 +27,9 @@ l4_hdr_transpositions:
     balcf           r7, [c1], l4_hdr_transpositions_layer3
     crestore        [c7-c1], d.l4_hdr_transpositions_d.hdr_bits[22:16], 0x3F
 
-    sne             c1, d.l4_hdr_transpositions_d.hdr_bits[9:5], 0
+    sne             c1, d.l4_hdr_transpositions_d.hdr0_bits[3:0], 0
     nop.!c1.e
-    crestore        [c4-c1], d.l4_hdr_transpositions_d.hdr_bits[3:0], 0xF
+    crestore        [c4-c1], d.l4_hdr_transpositions_d.hdr0_bits[3:0], 0xF
 
 l4_hdr_transpositions_layer0:
     // vxlan_00
