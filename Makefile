@@ -2,7 +2,7 @@
 
 EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts|netagent/datapath/halproto|nic/gen"
 # Has venice protos and all things auto generated.
-TO_GEN := venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
+TO_GEN := api api/labels venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
 venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
 venice/utils/runtime/test venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi venice/ctrler/ckm/rpcserver/ckmproto \
@@ -51,7 +51,7 @@ govet-src:
 	$(info +++ govet $(PKG_DIRS))
 	@${GOVET_CMD} $(shell go list -e ./... | egrep -v ${EXCLUDE_DIRS})
 
-checks: goimports-src golint-src govet-src
+checks: protogen goimports-src golint-src govet-src
 
 # pregen target generates code that is needed by other binaries
 pregen:
@@ -63,7 +63,6 @@ qbuild:
 
 build:
 	$(MAKE) ws-tools
-	$(MAKE) protogen
 	$(MAKE) checks
 	$(MAKE) qbuild
 
@@ -121,6 +120,7 @@ ws-tools:
 	( cd $(GOPATH)/src/github.com/pensando/sw/venice/utils/apigen/protoc-gen-pensando && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/golang.org/x/tools/cmd/goimports && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/GeertJohan/go.rice/rice && go install) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/gomock && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint && go install ) && \

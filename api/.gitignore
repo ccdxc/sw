@@ -1,0 +1,4 @@
+# rice-box.go has an embedded timestamp in the embedded code.
+# This will ignore checking this file into the repo. All the targets
+# have been updated to always generate this first
+generated/**/rice-box.go

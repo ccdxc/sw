@@ -1,15 +1,14 @@
-#!/bin/sh
-
+#!/bin/bash
 if [ "$#" -ne 1 ]; then
     echo "Invalid number of arguments"
     echo " $0 <protobuf file directory>"
-    exit -1
+    exit 1
 fi
 protopath=$1
 
 if [ ! -e ${protopath} ]; then
     echo "File ${protopath} not found"
-    exit -1
+    exit 1
 fi
 
 curdir=$(pwd)

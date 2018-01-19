@@ -4,7 +4,9 @@
 # required lists packages needed by dev tools that aren't improted in the project
 # prune will not touch these packages. Please add newer packages to required with caution.
 # Maintain required lists in lexicographical order
-required = ["github.com/gogo/protobuf/protoc-gen-gofast",
+required = ["github.com/GeertJohan/go.rice",
+            "github.com/GeertJohan/go.rice/rice",
+            "github.com/gogo/protobuf/protoc-gen-gofast",
             "github.com/golang/dep",
             "github.com/golang/dep/cmd/dep",
             "github.com/golang/lint",

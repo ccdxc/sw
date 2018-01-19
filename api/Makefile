@@ -19,7 +19,7 @@ bld_proto:
 	@gofmt -s -w *.pb.go
 
 genapi:
-	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genapi.sh protos	
+	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genapi.sh protos
 
 clean:
 	@rm -rf generated/*

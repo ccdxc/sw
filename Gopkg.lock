@@ -3,8 +3,14 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/GeertJohan/go.incremental"
+  packages = ["."]
+  revision = "1172aab965109e2a70720a0f144b2a5dfeb92fa5"
+
+[[projects]]
+  branch = "master"
   name = "github.com/GeertJohan/go.rice"
-  packages = [".","embedded"]
+  packages = [".","embedded","rice"]
   revision = "c02ca9a983da5807ddf7d796784928f5be4afd09"
 
 [[projects]]
@@ -37,6 +43,12 @@
   packages = ["."]
   revision = "3b1b38866a79f06deddf0487d5c27ba0697ccd65"
   version = "v1.15.0"
+
+[[projects]]
+  name = "github.com/akavel/rsrc"
+  packages = ["binutil","coff"]
+  revision = "a1fbfaf19b9ec69d75039b2a7cb4b048aecefddf"
+  version = "v2"
 
 [[projects]]
   branch = "master"
@@ -422,6 +434,12 @@
   name = "github.com/influxdata/influxdb"
   packages = ["client/v2","models","pkg/escape"]
   revision = "aa8ea43bf8b34d420feb2ae6be2aa8743201cbfd"
+
+[[projects]]
+  name = "github.com/jessevdk/go-flags"
+  packages = ["."]
+  revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
+  version = "v1.3.0"
 
 [[projects]]
   name = "github.com/jmank88/nuts"
@@ -811,6 +829,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2f732bd27e9b23aee8a3e9255ccb9c35c619ba748443f403317d5882425bc7ee"
+  inputs-digest = "3fe10d38bd1557d9df3058f2b132cdffe387888099500bf5684d776559a12c8d"
   solver-name = "gps-cdcl"
   solver-version = 1
