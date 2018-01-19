@@ -338,7 +338,7 @@ func setupElasticsearch(t *testing.T, action string) error {
 		}
 
 		cmd = []string{
-			"run", "--rm", "-d", "--net=host", "--name=pen-test-elasticsearch",
+			"run", "--rm", "-d", "-p", "9200:9200", "--name=pen-test-elasticsearch",
 			"-e", "cluster.name=pen-test-elasticcluster", "-e", "xpack.security.enabled=false",
 			"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
 			fmt.Sprintf("%s/%s", registryURL, elasticImage)}
