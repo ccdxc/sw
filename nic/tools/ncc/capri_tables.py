@@ -5405,6 +5405,10 @@ class capri_table_mapper:
                             depth += temp['num_entries']
                 width = table_width_to_allocation_units('sram', tspec['sram']['width'])
                 ctable = self.tmgr.gress_tm[xgress_from_string(tspec['region'])].tables[tspec['name']]
+                if ctable.match_type == match_type.EXACT_HASH:
+                    if width > 512:
+                        depth = depth * (pad_to_x(width, 512) / 512)
+                        width = 512
                 if ctable.is_policer or ctable.is_writeback:
                     width = pad_to_x(width, self.memory['sram'][tspec['region']]['blk_w'])
                 self.insert_table('sram', tspec['region'], {'name':tspec['name'],
