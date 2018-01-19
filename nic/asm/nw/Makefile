@@ -12,7 +12,6 @@ ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR)
 SRC_DIR = .
 
-
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
@@ -66,28 +65,18 @@ BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
 
 asm: $(BIN_FILES)
 
-#local_deps = $(shell find . -name '*.asm' -o -name '*.s')
 DEPS_DIRS = $(subst -I,, $(INC_DIRS))
 DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 
-#asm_all: $(GEN_DIR)/.nw_asm asm
-#asm_all: $(GEN_DIR)/.nw_asm $(BIN_FILES)
 FILES = $(basename $(notdir $(BIN_FILES)))
 COMP_BIN_FILES = $(FILES:%=$(OBJ_DIR)/%.bin)
 
-#$(GEN_DIR)/.nw_asm: $(OBJ_DIR)/.dir $(local_deps) $(COMP_BIN_FILES)
 $(GEN_DIR)/.nw_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 	touch $@
 
 $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
-	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $(AS_DEFINES) $< -o $@
 	$(CAPSIM_BIN) -e ${$(basename ${<})_ARGS} $(INC_DIRS) $(patsubst %.asm,%.ctl,$<) $@
-	@#$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
-
-#$(BIN_FILES): %.bin: %.asm
-#	@echo $@
-#	@mkdir -p $(OBJ_DIR)
-#	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 
 TEST_FILES := $(patsubst %.asm, %.ctl, $(SRC_FILES))
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))

@@ -81,7 +81,9 @@ encap_erspan:
   phvwr       p.{erspan_t3_header_version,erspan_t3_header_vlan}, 0x2000
   phvwr       p.erspan_t3_header_priority, 0
   phvwr       p.erspan_t3_header_span_id, k.capri_intrinsic_tm_span_session
+#ifndef CAPRI_IGNORE_TIMESTAMP
   phvwr       p.erspan_t3_header_timestamp, r6
+#endif
   phvwr       p.{erspan_t3_header_sgt,erspan_t3_header_ft_d_other}, 0
 
   phvwr       p.inner_ethernet_valid, 1
