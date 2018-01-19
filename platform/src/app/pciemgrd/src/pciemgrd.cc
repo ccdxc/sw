@@ -145,6 +145,19 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
             printf("pciehdev_accel_new failed\n");
             return NULL;
         }
+    } else if (strcmp(type, "virtio") == 0) {
+        if (namearg == NULL) {
+            static int virtio_instance;
+            snprintf(lname, sizeof(lname), "virtio%d", virtio_instance++);
+            name = lname;
+        } else {
+            name = namearg;
+        }
+        pdev = pciehdev_virtio_new(name, pres);
+        if (pdev == NULL) {
+            printf("pciehdev_virtio_new failed\n");
+            return NULL;
+        }
     } else if (strcmp(type, "debug") == 0) {
         if (namearg == NULL) {
             static int debug_instance;

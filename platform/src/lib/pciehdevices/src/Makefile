@@ -7,6 +7,7 @@ SOURCES = \
 	eth.c \
 	nvme.c \
 	accel.c \
+	virtio.c \
 	debug.c \
 	utils.c \
 	$(NULL)

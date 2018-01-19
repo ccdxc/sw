@@ -222,6 +222,8 @@ simdev_initialize(simdev_t *sd, const char *devparams)
         sd->ops = &eth_ops;
     } else if (strcmp(type, "accel") == 0) {
         sd->ops = &accel_ops;
+    } else if (strcmp(type, "virtio") == 0) {
+        sd->ops = &virtio_ops;
     } else if (strcmp(type, "generic") == 0) {
         sd->ops = &generic_ops;
     } else {
