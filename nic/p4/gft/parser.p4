@@ -78,14 +78,33 @@ header vxlan_t vxlan_3;
 header gre_t gre_3;
 header erspan_header_t3_t erspan_3;
 
+header roce_bth_t roce_bth_1;
+header roce_deth_t roce_deth_1;
+header roce_deth_immdt_t roce_deth_immdt_1;
+
 parser start {
-    return select(current(0, 4)) {
-        default : parse_nic;
+    extract(capri_intrinsic);
+    return select(capri_intrinsic.csum_err) {
+        0 : parse_ethernet_1;
+        1 : start_ipv4_bth_deth;
+        3 : start_ipv6_bth_deth;
+        4 : start_vlan_ipv6_bth_deth;
+        5 : start_ipv4_bth_deth_immdt;
+        6 : start_vlan_ipv4_bth_deth_immdt;
+        7 : start_ipv6_bth_deth_immdt;
+        8 : start_vlan_ipv6_bth_deth_immdt;
+        9 : start_ipv4_bth;
+        10 : start_vlan_ipv4_bth;
+        11 : start_ipv6_bth;
+        12 : start_vlan_ipv6_bth;
+        // tunneled roce TBD
+        default: parse_nic;
         0x1 mask 0 : deparse_start;
         0x2 mask 0 : dummy;
     }
 }
 
+@pragma deparse_only
 parser dummy {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
@@ -121,10 +140,96 @@ parser deparse_start {
     return parse_nic;
 }
 
-
 parser parse_nic {
-    extract(capri_intrinsic);
     return parse_ethernet_1;
+}
+
+
+/******************************************************************************
+ * RoCE optimization
+ *****************************************************************************/
+parser parse_bth_deth {
+    extract(udp_1);
+    extract(roce_bth_1);
+    extract(roce_deth_1);
+    return ingress;
+}
+parser parse_bth_deth_immdt {
+    extract(udp_1);
+    extract(roce_bth_1);
+    extract(roce_deth_immdt_1);
+    return ingress;
+}
+parser parse_bth {
+    extract(udp_1);
+    extract(roce_bth_1);
+    return ingress;
+}
+parser start_ipv4_bth_deth {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_bth_deth;
+}
+parser start_vlan_ipv4_bth_deth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_bth_deth;
+}
+parser start_ipv6_bth_deth {
+    extract(ethernet_1);
+    extract(ipv6_1);
+    return parse_bth_deth;
+}
+parser start_vlan_ipv6_bth_deth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv6_1);
+    return parse_bth_deth;
+}
+parser start_ipv4_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_bth_deth_immdt;
+}
+parser start_vlan_ipv4_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_bth_deth_immdt;
+}
+parser start_ipv6_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ipv6_1);
+    return parse_bth_deth_immdt;
+}
+parser start_vlan_ipv6_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv6_1);
+    return parse_bth_deth_immdt;
+}
+parser start_ipv4_bth {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_bth;
+}
+parser start_vlan_ipv4_bth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_bth;
+}
+parser start_ipv6_bth {
+    extract(ethernet_1);
+    extract(ipv6_1);
+    return parse_bth;
+}
+parser start_vlan_ipv6_bth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv6_1);
+    return parse_bth;
 }
 
 /******************************************************************************

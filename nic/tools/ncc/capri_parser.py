@@ -549,7 +549,7 @@ class capri_ohi:
         self.var_id = -1 # id for variable len ohi size
 
     def __repr__(self):
-        return "[%d,%d]:(%d, %s)," % (self.id, self.var_id, self.start, self.length)
+        return "(%d,%d):(%d, %s)" % (self.id, self.var_id, self.start, self.length)
 
 class _scope:
     start_cs = None
@@ -1046,7 +1046,7 @@ class capri_parser:
                         # check if header has no-ohi pragma
                         if 'no_ohi' in hdr._parsed_pragmas:
                             assert len(hdr._parsed_pragmas['no_ohi'].keys()), \
-                            "Provide direction [xgress/ingress/egress] for no_ohi pragma"
+                            "Provide direction as no_ohi [xgress/ingress/egress]"
                             pdirection = hdr._parsed_pragmas['no_ohi'].keys()[0]
                             if pdirection.upper() == 'XGRESS' or \
                                 pdirection.upper() == self.d.name:
@@ -2027,6 +2027,11 @@ class capri_parser:
                     csum_hv_names.append(hfname)
                     hfname = h.name + '.udp_csum'
                     csum_hv_names.append(hfname)
+                    #start HV bit at byte boundary so that parser-meta instuction
+                    #can be used optimally.
+                    byte_align_hv_skip = 8 - (hidx % 8)
+                    hidx += byte_align_hv_skip
+                    hv_bit -= byte_align_hv_skip
                 if self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name) \
                    or self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name):
                     #allocates hv bit for ethernet.l2_csum
@@ -2060,6 +2065,11 @@ class capri_parser:
 
             #Allocate icrc HV bit for icrc rocehdr as well.
             if self.d == xgress.EGRESS and self.be.icrc.IsHdrRoceV2(h.name):
+                    #start HV bit at byte boundary so that parser-meta instuction
+                    #can be used optimally.
+                    byte_align_hv_skip = 8 - (hidx % 8)
+                    hidx += byte_align_hv_skip
+                    hv_bit -= byte_align_hv_skip
                     icrc_hv_bit_and_hf = []
                     hf_name = h.name + '.icrc'
                     icrc_cf = self.be.pa.get_field(hf_name, self.d)
@@ -2756,7 +2766,7 @@ class capri_parser:
                         break # ohi chunk start with this field
                     if ohi.start > ((cf.p4_fld.offset + cf.width) / 8):
                         break
-                    if (ohi.start+ohi.length) < (cf.p4_fld.offset/8):
+                    if (ohi.start+ohi.length) <= (cf.p4_fld.offset/8):
                         continue
                     # a cf cannot straddle ohi chunk
                     assert ohi.start < (cf.p4_fld.offset/8)
@@ -2839,6 +2849,8 @@ class capri_parser:
             split_off = max_extract
         '''
         assert split_off, pdb.set_trace()
+        # XXX Now no need to split state if ohi extraction crosses 64B (hw allows upto 14b
+        # increment to offset - added to skip udp payload
         self.logger.warning("%s:Splitting states %s, %s, split_off %d" % \
             (self.d.name, cs.name, add_cs.name if add_cs else None, split_off))
         split_cf = None

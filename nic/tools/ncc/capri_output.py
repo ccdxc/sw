@@ -3371,21 +3371,20 @@ def capri_te_cfg_output(stage):
         entry_sizeB = (entry_size + 7) / 8   # convert to bytes
         lg2entry_size = log2size(entry_sizeB)
 
+        json_tbl_['tbl_entry_sz_raw']['value'] = str(0)
+        json_tbl_['addr_shift']['value'] = str(0)
+        json_tbl_['lg2_entry_size']['value'] = str(0)
         if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
             json_tbl_['addr_shift']['value'] = str(lg2entry_size)
             json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
         elif ct.is_raw_index:
             # special handling, don't shift addr, but read entry_size bytes
-            json_tbl_['addr_shift']['value'] = str(0)
             json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
         elif ct.is_raw:
-            # XXX need parameter to pragma if entry size is fixed - leave it to run-time for now
+            # XXX need parameter or pragma if entry size is fixed - leave it to run-time for now
             json_tbl_['tbl_entry_sz_raw']['value'] = str(1)
-            json_tbl_['addr_shift']['value'] = str(0)
-            json_tbl_['lg2_entry_size']['value'] = str(0)
         else:
-            json_tbl_['addr_shift']['value'] = str(0)
-            json_tbl_['lg2_entry_size']['value'] = str(0)
+            pass
 
         # need to program chain shift for wide-key table - for toeplitz leave it as 0??
         if ct.is_wide_key and not ct.is_toeplitz_hash():

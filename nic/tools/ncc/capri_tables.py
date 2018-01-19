@@ -501,7 +501,7 @@ class capri_table:
         # key size may reduce due to unions
         self.key_phv_size = key_size
         if key_size != self.key_size:
-            self.gtm.tm.logger.info('%s k_size changed %d -> %d' % \
+            self.gtm.tm.logger.debug('%s k_size changed %d -> %d' % \
                 (self.p4_table.name, self.key_size, key_size))
 
         i_size = sum([k[1] for k in self.i_bit_ext])
@@ -511,7 +511,7 @@ class capri_table:
         # i_size can change due to union-field phvs shared between k and i
         self.i_phv_size = i_size
         if i_size != self.i_size:
-            self.gtm.tm.logger.info('%s i_size changed %d -> %d' % \
+            self.gtm.tm.logger.debug('%s i_size changed %d -> %d' % \
                 (self.p4_table.name, self.i_size, i_size))
         self.key_size = key_size
         self.i_size = i_size

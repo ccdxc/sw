@@ -119,3 +119,38 @@ header_type vxlan_t {
     }
 }
 
+header_type roce_bth_t {
+    fields {
+        opCode : 8;
+        se : 1;
+        m : 1;
+        padCnt : 2;
+        tVer : 4;
+        pKey : 16;
+        fr : 1;
+        br : 1;
+        reserved1 : 6;
+        destQP : 24;
+        ack : 1;
+        reserved2 : 7;
+        psn : 24;
+    }
+}
+
+header_type roce_deth_t {
+    fields {
+        queueKey : 32;
+        reserved : 8;
+        srcQP : 24;
+    }
+}
+
+header_type roce_deth_immdt_t {
+    fields {
+        queueKey : 32;
+        reserved : 8;
+        srcQP : 24;
+        immDt : 32;
+    }
+}
+

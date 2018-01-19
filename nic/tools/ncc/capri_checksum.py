@@ -1311,7 +1311,7 @@ class Checksum:
             if profile_obj != None:
                 profile = copy.deepcopy(csum_t)
                 p = profile_obj.csum_profile
-                if p == -1: 
+                if p == -1:
                     assert(0), pdb.set_trace()
                 log_str = profile_obj.ConfigGenerate(profile)
                 calfldobj.ParserCsumObjAddLog(log_str)
