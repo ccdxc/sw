@@ -244,7 +244,13 @@ test-clean:
 create-assets:
 	bash scripts/create-assets.sh
 
-pull-assets: ws-tools
+toolchain-clean:
+	if [ -d "/tool/toolchain" ]; then sudo umount /tool; sudo rm -rf /tool; fi
+
+toolchain:
+	if [ ! -d "/tool/toolchain" ]; then sudo rm -rf /tool; sudo mkdir -p /tool; sudo mount asic20.pensando.io:/export/tool /tool; fi
+
+pull-assets: ws-tools toolchain
 	bash scripts/pull-assets.sh
 
 .PHONY: build

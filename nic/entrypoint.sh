@@ -6,6 +6,8 @@ dir=/usr/src/github.com/pensando/sw
 
 mkdir -p ${dir}
 mount -o bind /sw ${dir}
+mkdir -p /tool
+mount asic20.pensando.io:/export/tool /tool
 echo 1>&2 building asset tools...
 
 cp -R ../vendor/github.com/gogo/protobuf/proto/* /usr/local/include/
