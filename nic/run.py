@@ -362,7 +362,7 @@ def run_dol(args):
         # Wait for runtest to finish only in case of DOL finishing
         # successfully.
         count = 0
-        while model_process.poll() is None:
+        while model_process and model_process.poll() is None:
             count += 5
             time.sleep(5)
             if count % 300 == 0:

@@ -124,8 +124,8 @@ class Module(objects.FrameworkObject):
         coverage.Init(self)
         self.logger.info("- Loading TEST SPEC = %s" % self.spec)
         self.testspec = testspec.TestSpecObject(self.path, self.spec, self.logger)
-        if self.selectors is not None:
-            self.testspec.MergeSelectors(self.selectors)
+        self.testspec.MergeSelectors(self.selectors)
+        self.testspec.DeriveLimits()
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS
 

@@ -50,6 +50,9 @@ class FrameworkObject(object):
         self.__readonly = False
         return
 
+    def IsReadOnly(self):
+        return self.__readonly
+
     def Clone(self, template):
         #assert(isinstance(template, FrameworkTemplateObject))
         old_gid = self.__gid

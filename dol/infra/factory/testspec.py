@@ -17,14 +17,22 @@ class TestSpecConfigSelectors(objects.FrameworkObject):
         super().__init__()
         self.Clone(spec)
         self.spec = spec
-        self.__init_regression()
         return
 
-    def __init_regression(self):
+    def DeriveLimits(self):
         if GlobalOptions.regression:
             self.maxflows = None
             self.maxsessions = None
             self.maxrdmasessions = None
+        elif GlobalOptions.rtl:
+            self.maxflows = 1
+            self.maxsessions = 1
+        return
+
+    def SetMaxFlows(self, maxflows):
+        if GlobalOptions.regression or GlobalOptions.rtl:
+            return
+        self.maxflows = maxflows
         return
 
     def IsFlowBased(self):
@@ -99,7 +107,12 @@ class TestSpecObject(objects.FrameworkObject):
         return
 
     def MergeSelectors(self, selectors):
-        self.selectors.Merge(selectors)
+        if selectors is not None:
+            self.selectors.Merge(selectors)
+        return
+
+    def DeriveLimits(self):
+        self.selectors.DeriveLimits()
         return
 
     def __merge_section(self, name):

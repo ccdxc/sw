@@ -64,8 +64,8 @@ def Setup(infra, module):
         return
 
     if 'maxflows' in module.args.__dict__:
-        module.logger.info("- maxflows: %s" % module.args.maxflows)
-        module.testspec.selectors.maxflows = module.args.maxflows
+        module.testspec.selectors.SetMaxFlows(module.args.maxflows)
+        module.logger.info("- maxflows: %s" % module.testspec.selectors.maxflows)
 
     return
 
