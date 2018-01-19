@@ -86,6 +86,8 @@ toolchain {
   compiler_flag: "external/linaro_linux_gcc_repo/./aarch64-linux-gnu/usr/include"
   compiler_flag: "-isystem"
   compiler_flag: "external/linaro_linux_gcc_repo/./aarch64-linux-gnu/usr/local/include"
+  compiler_flag: "-isystem"
+  compiler_flag: "external/linaro_linux_gcc_repo/aarch64-linux-gnu/sysroot/usr/local/include"
   compiler_flag: "-g"
 
   cxx_flag: "-isystem"
