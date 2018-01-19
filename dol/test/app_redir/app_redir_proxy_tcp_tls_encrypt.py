@@ -69,7 +69,7 @@ def TestCaseSetup(tc):
     tcb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR
     if redir_span:
         tcb.l7_proxy_type = tcp_proxy.l7_proxy_type_SPAN
-
+    tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq
     tcb.SetObjValPd()
 
     _proxyrcb_id = id

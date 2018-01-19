@@ -45,6 +45,7 @@ struct pd_wring_meta_s {
     uint64_t    free_semaphore_addr;
     wring_slot_parser   slot_parser;
     wring_get_hw_meta   get_hw_meta_fn;   
+    bool        skip_init_slots;
 } __PACK__;
 
 // initialize a wring pd instance

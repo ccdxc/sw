@@ -63,6 +63,9 @@ def TestCaseSetup(tc):
     tcb.state = 1
     tcb.l7_proxy_type = 0
     tcb.debug_dol = 0
+    if redir_span:
+        tcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_tx
+
     tcb.SetObjValPd()
 
     _proxyrcb_id = id
@@ -85,8 +88,7 @@ def TestCaseSetup(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
 
-    tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
-                      tcp_tls_proxy.tls_debug_dol_dec_only_sesq_stop
+    tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy
     tlscb.other_fid = 0xffff
     tlscb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR
     if redir_span:
