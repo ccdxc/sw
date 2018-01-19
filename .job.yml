@@ -9,5 +9,7 @@ references:
   - venice
   - api
   - platform
+  - nic/agent
 dependencies:
   dol: nic
+  nic/agent: venice

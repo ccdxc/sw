@@ -1,0 +1,6 @@
+targets:
+  venice: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && go test -p 1 ./venice/... && go test -p 1 ./test/..." ]
+image:
+  bind_dir: "/go/src/github.com/pensando/sw"
+  work_dir: "/go/src/github.com/pensando/sw"
+rebase: true
