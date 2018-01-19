@@ -225,6 +225,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		a.nextKvMutex.Lock()
 		a.kvPool = append(a.kvPool, config.CacheStore)
 		a.nextKvMutex.Unlock()
+		config.CacheStore.Start()
 	} else {
 		// Connect to the KV Store
 		for i := 0; i < poolSize; i++ {

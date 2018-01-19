@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	api "github.com/pensando/sw/api"
-	apicache "github.com/pensando/sw/api/cache"
+	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"

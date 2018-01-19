@@ -26,6 +26,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/apiserver"
@@ -317,7 +318,7 @@ func setupAPIServer(kvtype string, cluster []string, pool int) {
 	tinfo.apiserverAddr = "localhost" + ":" + port
 
 	for i := 0; i < clientPoolSize; i++ {
-		apicl, err := cache.NewGrpcUpstream(tinfo.apiserverAddr, tinfo.l, cache.WithSetDevMode(false))
+		apicl, err := client.NewGrpcUpstream(tinfo.apiserverAddr, tinfo.l, client.WithSetDevMode(false))
 		if err != nil {
 			panic(fmt.Sprintf("cannot create grpc client [%s] (%s)", tinfo.apiserverAddr, err))
 		}

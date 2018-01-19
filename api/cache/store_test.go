@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -13,7 +12,7 @@ func TestStoreOper(t *testing.T) {
 	s := NewStore()
 
 	t.Logf("  ->Insert an object")
-	b1 := bookstore.Book{}
+	b1 := testObj{}
 	b1.ResourceVersion = "10"
 	b1.Name = "Example"
 	s.Set("/venice/books/book/Example", 10, &b1, nil)
@@ -25,7 +24,7 @@ func TestStoreOper(t *testing.T) {
 		t.Errorf("objects do not match")
 	}
 	t.Logf("  ->Insert the same object with a previous rev")
-	b2 := bookstore.Book{}
+	b2 := testObj{}
 	b2.ResourceVersion = "9"
 	b2.Name = "changed"
 	cbCalled := 0
@@ -43,13 +42,13 @@ func TestStoreOper(t *testing.T) {
 	if err != nil {
 		t.Errorf("expecting object to be found")
 	}
-	b := r.(*bookstore.Book)
+	b := r.(*testObj)
 	if b.Name != "Example" {
 		t.Errorf("Object was changed while backpedalling %s", b.Name)
 	}
 
 	t.Logf("  ->Insert the same object with a forward rev")
-	b3 := bookstore.Book{}
+	b3 := testObj{}
 	b3.ResourceVersion = "11"
 	b3.Name = "changed again"
 	err = s.Set("/venice/books/book/Example", 11, &b3, cbfunc)
@@ -63,16 +62,16 @@ func TestStoreOper(t *testing.T) {
 	if err != nil {
 		t.Errorf("expecting object to be found")
 	}
-	b = r.(*bookstore.Book)
+	b = r.(*testObj)
 	if b.Name != "changed again" {
 		t.Errorf("Object was not updated [%s]", b.Name)
 	}
 
 	t.Logf("  ->Insert Multiple objects")
-	b4 := bookstore.Book{}
+	b4 := testObj{}
 	b4.ResourceVersion = "9"
 	b4.Name = "B4"
-	b5 := bookstore.Book{}
+	b5 := testObj{}
 	b5.ResourceVersion = "10"
 	b5.Name = "B5"
 	err = s.Set("/venice/books/book/Example1", 9, &b4, nil)

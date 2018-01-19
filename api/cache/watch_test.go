@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -126,15 +125,15 @@ func TestWatchEventQ(t *testing.T) {
 		t.Errorf("expecting number of active watchers to be 0 found %d", q.watcherList.Len())
 	}
 	t.Logf(" --> Enqueue without any active Watchers")
-	b1 := bookstore.Book{}
+	b1 := testObj{}
 	b1.ResourceVersion = "111"
-	b2 := bookstore.Book{}
+	b2 := testObj{}
 	b2.ResourceVersion = "112"
-	b3 := bookstore.Book{}
+	b3 := testObj{}
 	b3.ResourceVersion = "113"
-	b4 := bookstore.Book{}
+	b4 := testObj{}
 	b4.ResourceVersion = "114"
-	b5 := bookstore.Book{}
+	b5 := testObj{}
 	b5.ResourceVersion = "115"
 	q.Enqueue(kvstore.Created, &b1)
 	if q.eventList.Len() != 1 || q.watcherList.Len() != 0 {

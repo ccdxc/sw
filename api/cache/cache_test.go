@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	memkv "github.com/pensando/sw/venice/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -15,6 +14,19 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+type testObj struct {
+	api.TypeMeta
+	api.ObjectMeta
+	Spec   string
+	Status string
+}
+
+type testObjList struct {
+	api.TypeMeta
+	api.ListMeta
+	Items []*testObj
+}
 
 type fakeKvStore struct {
 	creates, deletes               uint64
@@ -310,6 +322,10 @@ func TestCreateCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cache create failed")
 	}
+	err = c.Start()
+	if err != nil {
+		t.Fatalf("failed to start cache")
+	}
 	c1 := c.(*cache)
 	if c1.pool == nil || len(c1.pool.pool) != 20 {
 		t.Errorf("pool not initialzed")
@@ -321,7 +337,7 @@ func TestCreateCache(t *testing.T) {
 }
 
 func TestCacheOper(t *testing.T) {
-	b := &bookstore.Book{}
+	b := &testObj{}
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(b)
 	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
@@ -349,7 +365,7 @@ func TestCacheOper(t *testing.T) {
 	if err != nil {
 		t.Errorf("expecting to succeed")
 	}
-	ret := &bookstore.Book{}
+	ret := &testObj{}
 	if err = kstr.Get(ctx, key, ret); err != nil {
 		t.Errorf("object not found in backend (%s)", err)
 	}
@@ -458,7 +474,7 @@ func TestCacheOper(t *testing.T) {
 }
 
 func TestCacheGet(t *testing.T) {
-	b := &bookstore.Book{}
+	b := &testObj{}
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(b)
 	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
@@ -504,7 +520,7 @@ func TestCacheGet(t *testing.T) {
 }
 
 func TestCacheList(t *testing.T) {
-	b := &bookstore.Book{}
+	b := &testObj{}
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(b)
 	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
@@ -522,13 +538,13 @@ func TestCacheList(t *testing.T) {
 	c.pool.AddToPool(kstr)
 	key := "/testkey"
 	ctx := context.TODO()
-	b1 := &bookstore.Book{}
+	b1 := &testObj{}
 	b1.ResourceVersion = "10"
 	b1.Name = "book 1"
-	b2 := &bookstore.Book{}
+	b2 := &testObj{}
 	b2.ResourceVersion = "100"
 	b2.Name = "book 2"
-	b3 := &bookstore.Book{}
+	b3 := &testObj{}
 	b3.ResourceVersion = "231"
 	b3.Name = "book 3"
 	expected := []runtime.Object{b1, b2, b3}
@@ -538,7 +554,7 @@ func TestCacheList(t *testing.T) {
 		return expected
 	}
 	str.listfn = listfn
-	into := &bookstore.BookList{}
+	into := &testObjList{}
 	c.List(ctx, key, into)
 	if len(into.Items) != 3 {
 		t.Errorf("expecting 3 objects, got %d", len(into.Items))
@@ -553,14 +569,14 @@ func TestCacheList(t *testing.T) {
 	}
 	for _, cmp := range expected {
 		if cmp != nil {
-			t.Errorf("Found an object that was not mached in list %+v", cmp)
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
 		}
 	}
 	c.Close()
 }
 
 func TestCacheWatch(t *testing.T) {
-	b := &bookstore.Book{}
+	b := &testObj{}
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(b)
 	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
@@ -609,7 +625,7 @@ func TestPrefixWatcher(t *testing.T) {
 	}
 	c.pool.AddToPool(kstr)
 	ctx, cancel := context.WithCancel(context.TODO())
-	b1 := &bookstore.Book{}
+	b1 := &testObj{}
 	b1.ResourceVersion = "10"
 	b1.Name = "book 1"
 
@@ -672,7 +688,7 @@ func TestPrefixWatcher(t *testing.T) {
 }
 
 func TestBackendWatcher(t *testing.T) {
-	b := &bookstore.Book{}
+	b := &testObj{}
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(b)
 	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
@@ -726,7 +742,7 @@ func TestBackendWatcher(t *testing.T) {
 }
 
 func TestTxnCommit(t *testing.T) {
-	b := &bookstore.Book{}
+	b := &testObj{}
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(b)
 	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
@@ -753,7 +769,7 @@ func TestTxnCommit(t *testing.T) {
 	}
 	fakeqs.getfn = getfn
 	f := fakeTxn{}
-	b1 := &bookstore.Book{}
+	b1 := &testObj{}
 	b1.ResourceVersion = "10"
 	b1.Name = "book 1"
 	resps := []kvstore.TxnOpResponse{

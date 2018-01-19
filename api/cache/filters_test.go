@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/bookstore"
 )
 
 func TestGetFilters(t *testing.T) {
@@ -14,7 +13,7 @@ func TestGetFilters(t *testing.T) {
 	if len(filters) != 0 {
 		t.Errorf("expecting empty filters got %d instead", len(filters))
 	}
-	book := &bookstore.Book{}
+	book := &testObj{}
 	book.Name = "exampleBook"
 	book.Tenant = "exampleTenant"
 	book.Namespace = "exampleNamespace"

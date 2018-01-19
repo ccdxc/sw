@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -41,7 +41,7 @@ func TestCrudOps(t *testing.T) {
 
 	ctx := context.Background()
 	// gRPC client
-	apicl, err := cache.NewGrpcUpstream(apiserverAddr, tinfo.l)
+	apicl, err := client.NewGrpcUpstream(apiserverAddr, tinfo.l)
 	if err != nil {
 		t.Fatalf("cannot create grpc client")
 	}

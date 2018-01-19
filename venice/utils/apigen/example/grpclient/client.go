@@ -8,7 +8,7 @@ import (
 	"reflect"
 
 	"github.com/pensando/sw/api"
-	cache "github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/utils/log"
@@ -26,7 +26,7 @@ func main() {
 	l := log.GetNewLogger(config)
 	url := *grpcaddr
 
-	apicl, err := cache.NewGrpcUpstream(url, l)
+	apicl, err := client.NewGrpcUpstream(url, l)
 	if err != nil {
 		l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
 	}

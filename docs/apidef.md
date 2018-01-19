@@ -223,7 +223,7 @@ With this the APIs defined in the protobuf should be functional and API call sho
 #Using the generated GRPC client
 The code generator generates a API server client with with CRUD apis for objects tagged with the "venice.apiCrudService" and explicit gRPC endpoints specified in the definition. The snippet below shows a sample CRUD operation on a auto generated object.
 
-        apicl, err := cache.NewGrpcUpstream(url, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+        apicl, err := client.NewGrpcUpstream(url, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
         ..
         ret, err := apicl.BookstoreV1().Publisher().Create(ctx, pub)
         ..

@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache"
 
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -102,7 +103,7 @@ type Config struct {
 	KVPoolSize int
 	// CacheStore is the cache to use instead of the KV store. The cache in turn establishes
 	//  connections to the backend KV store.
-	CacheStore kvstore.Interface
+	CacheStore cache.Interface
 }
 
 // TransformFunc is a function that tranforms a message from "from" version to the "to" version.

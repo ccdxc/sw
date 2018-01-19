@@ -40,6 +40,7 @@ type Interface interface {
 	kvstore.Interface
 	ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
 	WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) kvstore.Watcher
+	Start() error
 	Clear()
 }
 
@@ -68,6 +69,7 @@ type cache struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	logger log.Logger
+	config Config
 }
 
 // watchServer provides a kvstore.Watcher interface for watches established
@@ -303,7 +305,7 @@ func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 }
 
 // CreateNewCache creates a new cache instance with the config provided
-func CreateNewCache(config Config) (kvstore.Interface, error) {
+func CreateNewCache(config Config) (Interface, error) {
 	ret := cache{
 		store:  NewStore(),
 		pool:   &connPool{},
@@ -321,29 +323,36 @@ func CreateNewCache(config Config) (kvstore.Interface, error) {
 		parent:   &ret,
 	}
 	ret.argus = argus
-	for i := 0; i < config.NumKvClients; i++ {
-		k, err := kvs.New(config.Config)
+	ret.config = config
+	return &ret, nil
+}
+
+func (c *cache) Start() error {
+	defer c.Unlock()
+	c.Lock()
+	for i := 0; i < c.config.NumKvClients; i++ {
+		k, err := kvs.New(c.config.Config)
 		if err != nil {
 			errors.Wrap(err, "could not create KV conn pool")
 			for {
-				c := ret.pool.GetFromPool()
-				if c != nil {
-					return nil, err
+				conn := c.pool.GetFromPool()
+				if conn == nil {
+					return err
 				}
-				k := c.(kvstore.Interface)
+				k := conn.(kvstore.Interface)
 				k.Close()
-				ret.pool.DelFromPool(k)
+				c.pool.DelFromPool(k)
 			}
 		}
-		ret.pool.AddToPool(k)
+		c.pool.AddToPool(k)
 	}
-	ret.ctx, ret.cancel = context.WithCancel(context.Background())
+	c.ctx, c.cancel = context.WithCancel(context.Background())
 	// start monitor on the backend.
 	// XXX-TODO(sanjayt): right now one watch on "/venice" but can be optimized to
 	// have sharded watches one per object type using different connections.
-	ret.argus.NewPrefixWatcher(ret.ctx, globals.RootPrefix)
-	ret.active = true
-	return &ret, nil
+	c.argus.NewPrefixWatcher(c.ctx, globals.RootPrefix)
+	c.active = true
+	return nil
 }
 
 // Clear clears all entries in the cache

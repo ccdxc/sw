@@ -16,7 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/trace"
 
-	"github.com/pensando/sw/api/cache"
+	apicache "github.com/pensando/sw/api/cache"
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks"
@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 	l := log.WithContext("module", "CrudOpsTest")
 	tinfo.l = l
 	scheme := runtime.NewScheme()
-	cachecfg := cache.Config{
+	cachecfg := apicache.Config{
 		Config: store.Config{
 			Type:    store.KVStoreTypeMemkv,
 			Codec:   runtime.NewJSONCodec(scheme),
@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 		NumKvClients: 1,
 		Logger:       l,
 	}
-	cache, err := cache.CreateNewCache(cachecfg)
+	cache, err := apicache.CreateNewCache(cachecfg)
 	if err != nil {
 		panic("failed to create cache")
 	}
