@@ -269,6 +269,7 @@ class capri_table:
         self.is_policer = False
         self.policer_colors = 0 # 2-color/3-color
         self.is_rate_limit_en = False
+        self.token_refresh_profile = 0 # Token refresh profile id for policer/rate-limit
         # flit numbers from which key(K+I) is built, Lookup can be
         # launched from the last flit when all the info is avaialble
         self.flits_used = []     # flits that provide K and I values
@@ -4597,6 +4598,7 @@ class capri_gress_tm:
         self.tables = OrderedDict() # {table_name : capri_table}
         self.table_predicates = OrderedDict() # {condition_name : capri_predicate}
         self.stage_tables = None    # table list per logical stage generated from hlir
+        self.next_free_refresh_profile = 1 # Next Available Token Refresh profile id
         # hardware information
         # XXX do we need a class to manage resources in each stage??
         self.stages = OrderedDict()
@@ -4771,6 +4773,13 @@ class capri_gress_tm:
                     # Check if rate limit is enabled for this table.
                     if t._parsed_pragmas and 'enable_rate_limit' in t._parsed_pragmas:
                         ctable.is_rate_limit_en = True
+
+                    if ctable.is_policer or ctable.is_rate_limit_en:
+                        if self.next_free_refresh_profile >= 16:
+                            assert 0, "%s: Can't have more than 15 Policer/Rate-Limit tables" % (self.d.name)
+
+                        ctable.token_refresh_profile = self.next_free_refresh_profile
+                        self.next_free_refresh_profile += 1
 
                     is_ternary = False
                     for f, mtype, mask, in t.match_fields:
@@ -5896,10 +5905,40 @@ class capri_table_manager:
                             opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_saturate_none'])  << 8)
                             profile['opcode']['value'] = "0x%x" % (opcode)
 
+                        if ctable.is_policer:
+                            opcode  = ((capri_model['match_action']['te_consts']['pic_tbl_opcode_operation_sub']))
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd1_sel_tbkt'])    << 4)
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd2_sel_policer']) << 6)
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_saturate_neg'])      << 8)
+                            opcode |= ((1)  << 10) # Policer or Rate-Limit
+                            profile['opcode']['value'] = "0x%x" % (opcode)
+
                         if ctable.is_rate_limit_en:
-                            profile['rlimit_en']['value'] = "0x%x" % (1)
-                            profile['opcode']['value'] = "0x%x" % (capri_model['match_action']
-                                                                   ['te_consts']['pic_tbl_opcode_saturate_neg'])
+                            opcode  = ((capri_model['match_action']['te_consts']['pic_tbl_opcode_operation_sub']))
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd1_sel_tbkt'])    << 4)
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd2_sel_pktsize']) << 6)
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_saturate_none'])     << 8)
+                            opcode |= ((1)  << 10) # Policer or Rate-Limit
+                            profile['opcode']['value'] = "0x%x" % (opcode)
+
+                        if ctable.is_policer or ctable.is_rate_limit_en:
+                            bg_upd_profile_name = "%s_csr_cfg_bg_update_profile[%d]" % (cap_name, ctable.token_refresh_profile)
+                            bg_upd_profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][bg_upd_profile_name]
+                            bg_upd_profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
+                            bg_upd_profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
+                            bg_upd_profile['rlimit_en']['value'] = "0x%x" % (ctable.is_rate_limit_en)
+                            opcode  = ((capri_model['match_action']['te_consts']['pic_tbl_opcode_operation_add']))
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd1_sel_tbkt']) << 4)
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_oprd2_sel_rate']) << 6)
+                            opcode |= ((capri_model['match_action']['te_consts']['pic_tbl_opcode_saturate_oprd3']) << 8)
+                            opcode |= ((1)  << 10) # Policer or Rate-Limit
+                            bg_upd_profile['opcode']['value'] = "0x%x" % (opcode)
+
+                            bg_upd_profile_en_name = 'cap_pics_csr_cfg_bg_update_profile_enable'
+                            bg_upd_profile_en = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][bg_upd_profile_en_name]
+                            vector = (int(bg_upd_profile_en['vector']['value'], 0) | (1 << ctable.token_refresh_profile))
+                            bg_upd_profile_en['vector']['value'] = "0x%x" % (vector)
+
                     elif mem_type == 'tcam':
                         cap_name = 'cap_pict'
                         num_bkts = 0 if table['depth'] == 0 else (capri_get_depth_from_layout(layout) / table['depth'])
