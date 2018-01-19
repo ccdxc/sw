@@ -296,8 +296,7 @@ op_type_end:
 
     // if (adjust_psn)
     // tx_psn = read_len >> log_pmtu
-    add            r3, k.args.op.rd.log_pmtu, r0
-    srlv           r3, k.args.op.rd.read_len, r3
+    srl            r3, k.args.op.rd.read_len, k.args.op.rd.log_pmtu
     tblmincr       d.tx_psn, 24, r3
 
     // tx_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0

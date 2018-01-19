@@ -903,7 +903,6 @@ typedef struct sqcb0_s {
     uint8_t  busy: 1;        //tx
     uint8_t  congestion_mgmt_enable: 1;
     uint8_t  rsvd0: 6;
-    uint32_t pd;
     uint8_t  bktrack_in_progress:1;
     uint8_t  retry_timer_on:1;
     uint8_t  li_fence:1;
@@ -922,6 +921,7 @@ typedef struct sqcb0_s {
     uint32_t log_wqe_size: 5;
     uint32_t log_sq_page_size:5;
     uint32_t log_pmtu:5;           //tx
+    uint32_t pd;
     uint32_t pt_base_addr;          //common
     qpcb_ring_t           rings[MAX_SQ_RINGS];
     // intrinsic

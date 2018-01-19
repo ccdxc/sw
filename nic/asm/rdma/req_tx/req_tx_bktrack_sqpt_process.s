@@ -21,8 +21,7 @@ req_tx_bktrack_sqpt_process:
 
     // page_offset = (info_p->sq_c_index & ((1 << log_num_wqe_per_page) - 1)) << info_p->log_wqe_size
     mincr          r1, r2, r0
-    add            r2, r0, k.to_stage.bktrack.log_wqe_size
-    sllv           r1, r1, r2
+    sll            r1, r1, k.to_stage.bktrack.log_wqe_size
     
     // page_seg_offset = page_index & 0x7
     and            r2, r3, CAPRI_SEG_PAGE_MASK

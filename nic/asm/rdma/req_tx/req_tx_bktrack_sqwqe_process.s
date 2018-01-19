@@ -16,10 +16,10 @@ struct req_tx_bktrack_sqwqe_process_k_t k;
     seq            _cf2,  _wqe.base.op_type, OP_TYPE_CMP_N_SWAP;         \
     bcf            [_cf1 | _cf2], _wqe_op_to_num_pkts_end;               \
     add            _num_pkts_r, r0, 1;                                   \
-    sllv           _num_pkts_r, 1, _log_pmtu;                            \
+    sll            _num_pkts_r, 1, _log_pmtu;                            \
     add            _num_pkts_r, _wqe.send.length, _num_pkts_r;           \
     sub            _num_pkts_r, _num_pkts_r, 1;                          \
-    srlv           _num_pkts_r, _num_pkts_r, _log_pmtu;                  \
+    srl            _num_pkts_r, _num_pkts_r, _log_pmtu;                  \
 _wqe_op_to_num_pkts_end:
 
 %%

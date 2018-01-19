@@ -22,7 +22,6 @@ req_tx_bktrack_sqsge_process:
     add            r1, r0, (HBM_NUM_SGES_PER_CACHELINE - 1), LOG_SIZEOF_SGE_T_BITS
     add            r2, k.args.current_sge_offset, r0
     add            r3, k.args.tx_psn, r0
-    add            r4, k.to_stage.bktrack.log_pmtu, r0
     // To start with, set empty_rrq_backtrack to false
     setcf          c7, [!c0]
 
@@ -36,10 +35,10 @@ sge_loop:
     sub            r5, r5, r2 
 
     // num_pkts = (length + (1 << log_pmtu) - 1) >> log_pmtu
-    sllv           r7, 1, r4
+    sll            r7, 1, k.to_stage.bktrack.log_pmtu
     add            r6, r7, r5
     sub            r6, r6, 1
-    srlv           r6, r6, r4
+    srl            r6, r6, k.to_stage.bktrack.log_pmtu
     
     // if (rexmit_psn < (tx_psn + num_pkts))
     add            r7, r3, r6
@@ -48,7 +47,7 @@ sge_loop:
 
     // current_sge_offset = ((rexmit_psn  - tx_psn) << log_pmtu) + current_sge_offset
     sub            r7, k.to_stage.bktrack.rexmit_psn, r3
-    sllv           r7, r7, r4 
+    sll            r7, r7, k.to_stage.bktrack.log_pmtu 
     add            r2, r7, r2
 
     // tx_psn = rexmit_psn
@@ -60,9 +59,9 @@ sge_loop:
 
 next_sge:
     // current_sge_offset = partial_pkty_bytes ? ((1 << log_pmtu) - partial_pkt_bytes) : 0
-    mincr          r5, r4, r0  
+    mincr          r5, k.to_stage.bktrack.log_pmtu, r0  
     seq            c1, r5, r0
-    sllv.!c1       r7, 1, r4
+    sll.!c1       r7, 1, k.to_stage.bktrack.log_pmtu
     sub.!c1        r2, r7, r5
     add.c1         r2, r5, r0
 

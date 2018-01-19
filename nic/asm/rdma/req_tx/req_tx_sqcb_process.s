@@ -129,6 +129,7 @@ sq_bktrack:
     ssle           c1, r0, d.in_progress, d.bktrack_in_progress
     cmov           r1, c1, r0, d.curr_wqe_ptr
 
+    //copy backtrack params to TO_STAGE: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
     CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
     CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, bktrack.log_pmtu, bktrack.log_num_wqes, d.{log_pmtu...log_num_wqes})
@@ -160,12 +161,11 @@ process_sq:
 
     // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
     bbeq           d.congestion_mgmt_enable, 0, process_send
-    add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
+    add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES //Branch Delay Slot
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_dcqcn_addr_fetch_process, r1)
 
 process_send:
-    seq            c3, d.need_credits, 1
-    bcf            [c3], exit
+    bbeq           d.need_credits, 1, exit
                           
     // if (sqcb0_p->fence) goto fence
     seq            c3, d.fence, 1 // Branch Delay Slot
@@ -192,8 +192,7 @@ process_send:
 
     // page_offset = ((sq_c_index & ((1 << log_num_wqe_per_page) -1)) << log_wqe_size)
     mincr          r1, r2, r0
-    add            r2, r0, d.log_wqe_size
-    sllv           r1, r1, r2
+    sll            r1, r1, d.log_wqe_size
 
     // page_seg_offset = page_index & 0x7
     and            r2, r3, CAPRI_SEG_PAGE_MASK
@@ -205,8 +204,7 @@ process_send:
     add            r3, r5, r3, CAPRI_LOG_SIZEOF_U64
 
     // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
-    add            r4, r0, d.log_pmtu
-    sllv           r4, 1, r4
+    sll            r4, 1, d.log_pmtu
 
     // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
@@ -215,9 +213,10 @@ process_send:
     // TODO Need to check for room in RRQ ring for Read/Atomic before
     // proceeding further. Otherwise recirc until there is room
     CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, rrq_p_index, RRQ_P_INDEX)
-    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, log_pmtu, d.log_pmtu)
     CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, page_seg_offset, r2)
+    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, log_pmtu, d.log_pmtu)
     CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, pd, d.pd)
+    CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_PT_T, pd, log_pmtu, d.{pd...log_pmtu})
     //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, ud, r5)
 
     // populate t0 PC and table address
@@ -256,8 +255,7 @@ in_progress:
     sub            r3, d.num_sges, d.current_sge_id 
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, num_valid_sges, r3)
     // remaining_payload_bytes = (1 >> sqcb0_p->log_pmtu)
-    add            r4, r0, d.log_pmtu
-    sllv           r4, 1, r4
+    sll            r4, 1, d.log_pmtu
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, r4)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PYLD_BASE)
     //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, wqe_addr, d.curr_wqe_ptr)

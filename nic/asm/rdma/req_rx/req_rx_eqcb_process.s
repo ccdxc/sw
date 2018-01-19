@@ -39,8 +39,7 @@ req_rx_eqcb_process:
 
     phvwrpair       p.eqwqe.cq_id, k.args.cq_id, p.eqwqe.color, EQ_COLOR 
 
-    add             r1, r0, d.log_wqe_size
-    sllv            r1, EQ_P_INDEX, r1
+    sll             r1, EQ_P_INDEX, d.log_wqe_size
     add             EQWQE_P, d.eqe_base_addr, r1
 
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, REQ_RX_DMA_CMD_START_FLIT_ID, DMA_CMD_INDEX)

@@ -144,8 +144,7 @@ process_send_write_fml:
     seq         c7, d.e_psn, CAPRI_APP_DATA_BTH_PSN //BD Slot
     bcf         [!c7], seq_err_or_duplicate
 
-    add         r1, r0, d.log_pmtu  //BD Slot
-    sllv        r1, 1, r1
+    sll         r1, 1, d.log_pmtu  //BD Slot
 
     // packet_length should not be more than PMTU
     blt         r1, REM_PYLD_BYTES, inv_req_nak
@@ -296,8 +295,7 @@ skip_token_id_check:
     bcf         [!c7], seq_err_or_duplicate
 
     // check if payload_len is <= pmtu
-    add         r1, r0, d.log_pmtu  //BD Slot
-    sllv        r1, 1, r1
+    sll         r1, 1, d.log_pmtu  //BD Slot 
     blt         r1, REM_PYLD_BYTES, inv_req_nak
 
     // increment msn
@@ -456,8 +454,7 @@ process_read:
     
     //increment e_psn by 'n'
     // e_psn += read_len >> log_pmtu
-    add            r3, d.log_pmtu, r0
-    srlv           r3, CAPRI_RXDMA_RETH_DMA_LEN, r3
+    srl            r3, CAPRI_RXDMA_RETH_DMA_LEN, d.log_pmtu
     tblmincr       d.e_psn, 24, r3
 
     // e_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
@@ -623,8 +620,7 @@ process_ud:
     tbladd      d.token_id, 1   //BD Slot
 
     // check if payload_len is <= pmtu
-    add         r1, r0, d.log_pmtu
-    sllv        r1, 1, r1
+    sll         r1, 1, d.log_pmtu
     blt         r1, REM_PYLD_BYTES, ud_drop
 
     // check if q_key matches
@@ -660,8 +656,7 @@ rc_checkout:
 
     // page_offset = c_index & ((1 << (log_rq_page_size - log_wqe_size))-1) << log_wqe_size
     mincr       r1, r2, r0
-    add         r2, r0, d.log_wqe_size
-    sllv        r1, r1, r2
+    sll         r1, r1, d.log_wqe_size
 
     // r3 has page_index, r1 has page_offset by now
 

@@ -7,7 +7,6 @@ struct resp_rx_phv_t p;
 struct resp_rx_key_process_k_t k;
 struct key_entry_aligned_t d;
 
-#define LOG_PAGE_SIZE r4
 #define MY_PT_BASE_ADDR r2
 #define LOG_PT_SEG_SIZE r1
 #define PT_SEG_P r5
@@ -92,8 +91,7 @@ unaligned_pt:
     // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->page_size);
 
     // x = transfer_offset/log_page_size
-    add         LOG_PAGE_SIZE, r0, d.log_page_size
-    srlv        r5, r3, LOG_PAGE_SIZE
+    srlv        r5, r3, d.log_page_size
     // transfer_offset%log_page_size 
     //add         r6, r0, r3
     mincr       PT_OFFSET, d.log_page_size, r0

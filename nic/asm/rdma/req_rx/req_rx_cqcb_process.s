@@ -31,8 +31,7 @@ req_rx_cqcb_process:
 
     // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
     mincr           r1, r2, r0
-    add             r2, r0, d.log_wqe_size
-    sllv            r1, r1, r2
+    sll             r1, r1, d.log_wqe_size
 
     // r3 has page_index, r1 has page_offset by now
 

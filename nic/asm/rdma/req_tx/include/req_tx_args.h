@@ -9,8 +9,10 @@ struct req_tx_sqcb_to_pt_info_t {
     page_seg_offset                : 3;
     remaining_payload_bytes        : 32;
     rrq_p_index                    : 8;
-    log_pmtu                       : 5;
+    //packed params begin - pd, log_pmtu
     pd                             : 32;
+    log_pmtu                       : 5;
+    //packed params end
     pad                            : 64; // pad to 160bits for S2S data
 };
 
@@ -195,10 +197,12 @@ struct req_tx_sq_to_stage_t {
 
 struct req_tx_bktrack_to_stage_t {
     wqe_addr                     : 64;
+    //packed params begin: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
     log_pmtu                     : 5;
     log_sq_page_size             : 5;
     log_wqe_size                 : 5;
     log_num_wqes                 : 5;
+    //packed params end: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
     rexmit_psn                   : 24;
     pad                          : 20;
 };

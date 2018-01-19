@@ -158,6 +158,7 @@ class RdmaSQstate(Packet):
         LEShortField("c_index5", 0),
     
         IntField("pt_base_addr", 0),
+        IntField("pd", 0),
         BitField("log_pmtu", 0xa, 5),
         BitField("log_sq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
@@ -176,7 +177,6 @@ class RdmaSQstate(Packet):
         BitField("li_fence", 0, 1),
         BitField("retry_timer_on", 0, 1),
         BitField("bktrack_in_progress", 0, 1),
-        IntField("pd", 0),
         BitField("rsvd0", 0, 6),
         BitField("congestion_mgmt_enable",0, 1),
         BitField("busy", 0, 1),

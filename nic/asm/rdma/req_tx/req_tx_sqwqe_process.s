@@ -77,8 +77,7 @@ send_or_write:
     phvwrpair      p.rdma_feedback.ud.optype[3:0], d.base.op_type, p.rdma_feedback.ud.status, 0
 
     // For UD, length should be less than pmtu
-    add            r4, r0, k.args.log_pmtu
-    sllv           r4, 1, r4
+    sll            r4, 1,  k.args.log_pmtu
     add            r5, r0, d.ud_send.length
     blt            r4, r5, ud_error
     add            r2, d.ud_send.ah_handle, r0 // Branch Delay Slot

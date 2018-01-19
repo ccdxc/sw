@@ -71,15 +71,15 @@ compare_read:
     // if received psn is not within orignal read's range, result = NO_MATCH
     
     // r2 = log_pmtu
-    add     r2, r0, k.args.log_pmtu
+    //add     r2, r0, k.args.log_pmtu
     // r3 = 1 << log_pmtu (i.e., pmtu)
-    sllv    r3, 1, r2
+    sll     r3, 1, k.args.log_pmtu 
     // r4 = len + pmtu 
     add     r4, d.read.len, r3
     // r4 = r4-1
     sub     r4, r4, 1
     // r4 = r4/pmtu
-    srlv    r4, r4, r2
+    srl     r4, r4, k.args.log_pmtu 
     
     // valid psn range is [d.psn, d.psn+r4)
     // note: lower bound is inclusive, upper bound is exclusive
@@ -96,7 +96,7 @@ compare_read:
     sub     r3, r0, d.psn
     mincr   r3, 24, k.args.search_psn 
     // r3 = r3 << log_pmtu
-    sllv    r3, r3, r2
+    sll     r3, r3, k.args.log_pmtu 
     // r4 = search_va - d.va
     sub     r4, k.to_stage.s0.backtrack.va, d.read.va
     

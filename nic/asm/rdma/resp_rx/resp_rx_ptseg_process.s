@@ -35,16 +35,14 @@ resp_rx_ptseg_process:
 
     IS_ANY_FLAG_SET(IS_ATOMIC, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP|RESP_RX_FLAG_ATOMIC_FNA)
 
-    add         r1, r0, k.args.log_page_size
-
     // k_p->pt_offset / log_page_size
-    srlv        PAGE_ID, k.args.pt_offset, r1
+    srl         PAGE_ID, k.args.pt_offset, k.args.log_page_size
     //big-endian
     sub		PAGE_ID, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), PAGE_ID
 
     // k_p->pt_offset % log_page_size
     add         PAGE_OFFSET, 0, k.args.pt_offset
-    mincr       PAGE_OFFSET, r1, r0
+    mincr       PAGE_OFFSET, k.args.log_page_size, r0
     
     add         DMA_CMD_INDEX, r0, k.args.dma_cmd_start_index
     add         TRANSFER_BYTES, r0, k.args.pt_bytes
@@ -58,8 +56,7 @@ transfer_loop:
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_RX_DMA_CMD_START_FLIT_ID, DMA_CMD_INDEX)
     // r1 has DMA_CMD_BASE
 
-    add                 r3, r0, k.args.log_page_size
-    sllv                DMA_BYTES, 1, r3
+    sll                 DMA_BYTES, 1, k.args.log_page_size
     sub.F_FIRST_PASS    DMA_BYTES, DMA_BYTES, PAGE_OFFSET    
     slt                 c3, DMA_BYTES, TRANSFER_BYTES
     cmov                DMA_BYTES, c3, DMA_BYTES, TRANSFER_BYTES

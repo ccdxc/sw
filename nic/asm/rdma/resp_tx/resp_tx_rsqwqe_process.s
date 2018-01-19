@@ -85,12 +85,10 @@ process_read:
         (1 << rqcb1_to_rsqwqe_info_p->log_pmtu);
     */
     sub         r2, CURR_PSN, d.psn
-    add         r3, r0, k.args.log_pmtu
-    sllv        BYTES_SENT, r2, r3
+    sll         BYTES_SENT, r2, k.args.log_pmtu
     sub         XFER_BYTES, d.read.len, BYTES_SENT
 
-    add         r6, r0, k.args.log_pmtu
-    sllv        PMTU, 1, r6
+    sll         PMTU, 1, k.args.log_pmtu
 
     // transfer_bytes <= PMTU ?
     sle         c5, XFER_BYTES, PMTU

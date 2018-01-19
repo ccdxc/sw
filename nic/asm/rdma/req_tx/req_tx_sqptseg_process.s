@@ -11,8 +11,7 @@ struct req_tx_sqptseg_process_k_t k;
 req_tx_sqptseg_process:
 
     // page_id = pt_info_p->pt_offset / pt_info_p->page_size
-    add        r1, k.args.log_page_size, r0
-    srlv       r1, k.args.pt_offset, r1
+    srl        r1, k.args.pt_offset, k.args.log_page_size
     // big-endian
     sub        r1, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), r1
 
@@ -28,8 +27,7 @@ req_tx_sqptseg_process:
 
 ptseg_loop:
     // page_bytes = min(transfer_bytes, (pt_info_p->page_size - page_offset))
-    add        r5, r0, k.args.log_page_size
-    sllv       r5, 1, r5
+    sllv       r5, 1, k.args.log_page_size
     sub        r5, r5, r2
     slt        c1, r4, r5
     cmov       r5, c1, r4, r5

@@ -56,10 +56,15 @@ struct sqcb0_t {
     struct capri_intrinsic_ring_t ring4;
     struct capri_intrinsic_ring_t ring5;
     pt_base_addr: 32;
+    //packed params begin: pd, log_pmtu
+    pd: 32;
+    //packed params begin: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
     log_pmtu: 5;
+    //packed params end: pd, log_pmtu
     log_sq_page_size: 5;
     log_wqe_size: 5;
     log_num_wqes: 5;
+    //packed params end: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
     service: 4;
     curr_op_type: 8;
     curr_wqe_ptr: 64;
@@ -74,7 +79,6 @@ struct sqcb0_t {
     li_fence: 1;
     retry_timer_on: 1;
     bktrack_in_progress: 1;
-    pd: 32;
     rsvd0: 6;
     congestion_mgmt_enable: 1;
     busy: 1;
