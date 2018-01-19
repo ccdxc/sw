@@ -1089,7 +1089,7 @@ int test_run_nvme_be_wrr1() {
 
 int test_run_nvme_be_wrr2() {
 
-  uint16_t ssd_handle = 0;
+  uint16_t ssd_handle = 1;
   return run_nvme_be_wrr(queues::get_pvm_ssd_sq(ssd_handle),     // ssd_q
                          queues::get_pvm_nvme_be_sq(ssd_handle), // nvme_be_q
                          ssd_handle, 1, 1,   // ssd_handle, io_priority, is_read,
@@ -1100,7 +1100,7 @@ int test_run_nvme_be_wrr2() {
 
 int test_run_nvme_be_wrr3() {
 
-  uint16_t ssd_handle = 15;
+  uint16_t ssd_handle = 10;
   return run_nvme_be_wrr(queues::get_pvm_ssd_sq(ssd_handle),     // ssd_q
                          queues::get_pvm_nvme_be_sq(ssd_handle), // nvme_be_q
                          ssd_handle, 2, 1,  // ssd_handle, io_priority, is_read,
@@ -1133,7 +1133,7 @@ int test_run_nvme_be_wrr5() {
 
 int test_run_nvme_be_wrr6() {
 
-  uint16_t ssd_handle = 15;
+  uint16_t ssd_handle = 12;
   return run_nvme_be_wrr(queues::get_pvm_ssd_sq(ssd_handle),     // ssd_q
                          queues::get_pvm_nvme_be_sq(ssd_handle), // nvme_be_q
                          ssd_handle, 2, 0,  // ssd_handle, io_priority, is_read,
