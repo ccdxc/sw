@@ -46,6 +46,8 @@ hal_initialize()
         exit(1);
     }
 
+    // Disabling async
+    hal_cfg.async_en = false;
     // initialize HAL
     if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL initialization failed, quitting ...\n");

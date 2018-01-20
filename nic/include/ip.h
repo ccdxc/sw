@@ -139,9 +139,27 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
     return os << ipv6addr2str(ip);
 }
 
-static inline ipv4_addr_t
-ipv4_prefix_len_to_mask (uint8_t len)
-{
+static inline bool 
+ip_addr_is_equal(ip_addr_t *ip_addr1, ip_addr_t *ip_addr2) {
+    if (!ip_addr1 || !ip_addr2) {
+        return false;
+    }
+
+    return memcmp(ip_addr1, ip_addr2, sizeof(ip_addr_t)) ? false : true;
+}
+
+static inline bool 
+ip_prefix_is_equal(ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2) {
+    if (!ip_prefix1 || !ip_prefix2) {
+        return false;
+    }
+
+    return memcmp(ip_prefix1, ip_prefix2, sizeof(ip_prefix_t)) ? false : true;
+}
+
+
+static inline ipv4_addr_t 
+ipv4_prefix_len_to_mask(uint8_t len) {
     if (len > 32) {
         return 0;
     }

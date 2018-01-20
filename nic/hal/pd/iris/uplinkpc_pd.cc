@@ -61,9 +61,11 @@ pd_uplinkpc_update (pd_if_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_uplinkpc_t   *pd_uppc = (pd_uplinkpc_t *)args->intf->pd_if;
+
     if (!args) {
         goto end;
     }
+
     // update mbr ifs
     if (args->mbrlist_change) {
         // Reprogram output mapping table

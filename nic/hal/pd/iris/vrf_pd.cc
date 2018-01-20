@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/vrf_pd.hpp"
@@ -9,6 +11,7 @@ namespace hal {
 namespace pd {
 
 #define inp_prop data.input_properties_action_u.input_properties_input_properties
+
 //-----------------------------------------------------------------------------
 // PD vrf Create
 //-----------------------------------------------------------------------------
@@ -29,7 +32,7 @@ pd_vrf_create (pd_vrf_args_t *args)
         goto end;
     }
 
-    // Link PI & PD
+    // link pi & pd
     link_pi_pd(vrf_pd, args->vrf);
 
     // allocate resources
@@ -40,18 +43,19 @@ pd_vrf_create (pd_vrf_args_t *args)
         goto end;
     }
 
-    // Program HW
+    // program hw
     ret = vrf_pd_program_hw(vrf_pd);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-vrf:{}:failed to program hw", __FUNCTION__);
         goto end;
     }
 
-    // Add to flow lookup id HT
+    // add to flow lookup id ht
     ret = vrf_pd_add_to_db(vrf_pd, ((vrf_t *)(vrf_pd->vrf))->hal_handle);
     if (ret != HAL_RET_OK) {
         goto end;
     }
+
 end:
     if (ret != HAL_RET_OK) {
         vrf_pd_cleanup(vrf_pd);
@@ -66,7 +70,30 @@ end:
 hal_ret_t
 pd_vrf_update (pd_vrf_args_t *args)
 {
-    // Nothing to do for now
+    hal_ret_t   ret = HAL_RET_OK;
+    pd_vrf_t    *vrf_pd = (pd_vrf_t *)args->vrf->pd;
+
+    if (args->gipo_prefix_change) {
+
+        // De-program input mapping native & tunnel
+        ret = vrf_pd_deprogram_gipo_prefix(vrf_pd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}:unable to deprogram gipo pfx term. ret:{}",
+                          __FUNCTION__, ret);
+            goto end;
+        }
+
+        // Program input mapping native & tunnel with new gipo prefix
+        ret = vrf_pd_program_gipo_prefix(vrf_pd, 
+                                         args->new_gipo_prefix);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}:unable to program gipo pfx term. ret:{}",
+                          __FUNCTION__, ret);
+            goto end;
+        }
+    }
+
+end:
     return HAL_RET_OK;
 }
 
@@ -175,11 +202,17 @@ vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd)
 {
     hal_ret_t            ret = HAL_RET_OK;
 
-    // Program Input properties Table
+    // De-Program Input properties Table
     ret = vrf_pd_depgm_inp_prop_tbl(vrf_pd);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-vrf:{}:unable to deprogram hw", __FUNCTION__);
     }
+
+    // De-Program Input Mapping Native & Tunnel
+    if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
+        ret = vrf_pd_deprogram_gipo_prefix(vrf_pd);
+    }
+
 
     return ret;
 }
@@ -224,6 +257,13 @@ vrf_pd_program_hw (pd_vrf_t *vrf_pd)
     // Program Input properties Table
     ret = vrf_pd_pgm_inp_prop_tbl(vrf_pd);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+
+    // Program Input Mapping Native & Tunnel Tables: For MyTep Termination
+    if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
+        ret = vrf_pd_program_gipo_prefix(vrf_pd,
+                                         &((vrf_t*)(vrf_pd->vrf))->gipo_prefix);
+    }
+
 
     return ret;
 }
@@ -305,6 +345,7 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
     mask.tunnel_metadata_tunnel_type_mask = 0xFF;
 
     if (ip_prefix->addr.af == IP_AF_IPV4) {
+        HAL_TRACE_DEBUG("Programming Addr: {}", ippfx2str(ip_prefix));
         key.ipv4_valid = 1;
         key.input_mapping_native_u1.ipv4_dstAddr = ip_prefix->addr.addr.v4_addr;
         mask.ipv4_valid_mask = 0xFF;
@@ -344,16 +385,21 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
 // Program input mapping table to terminate GIPo tunnels
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
-                                      p4pd_table_id tbl_id)
+vrf_pd_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
+                                   p4pd_table_id tbl_id)
 {
-    tcam         *tcam;
-    uint32_t     *arr;
-    hal_ret_t    ret = HAL_RET_OK;
-    sdk_ret_t    sdk_ret;
+    tcam         *tcam   = NULL;
+    uint32_t     *arr    = NULL;
+    hal_ret_t    ret     = HAL_RET_OK;
+    sdk_ret_t    sdk_ret = sdk::SDK_RET_OK;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
-    HAL_ASSERT(tcam != NULL);
+    if (tcam == NULL) {
+        HAL_TRACE_ERR("pd-vrf:{}:unable to find tcam for table id: {}",
+                      __FUNCTION__, tbl_id);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
     if (tbl_id == P4TBL_ID_INPUT_MAPPING_NATIVE) {
         arr = vrf_pd->gipo_imn_idx;
@@ -369,9 +415,12 @@ pd_vrf_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
                 HAL_TRACE_ERR("Input mapping native tcam remove failure, "
                               "idx : {}, err : {}", arr[i], ret);
             }
+            HAL_TRACE_DEBUG("pd-vrf:{}:Removing from tbld_id:{} at {}",
+                            __FUNCTION__, tbl_id, arr[i]);
             arr[i] = INVALID_INDEXER_INDEX;
         }
     }
+end:
     return ret;
 }
 
@@ -379,15 +428,16 @@ pd_vrf_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
 // De-Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_deprogram_gipo_termination_prefix(pd_vrf_t *vrf_pd)
+vrf_pd_deprogram_gipo_prefix(pd_vrf_t *vrf_pd)
 {
     hal_ret_t ret;
-    /* Deprogram input mapping native */
-    ret = pd_vrf_del_gipo_termination_prefix(vrf_pd,
-                                                P4TBL_ID_INPUT_MAPPING_NATIVE);
-    /* Deprogram input mapping tunneled */
-    ret = pd_vrf_del_gipo_termination_prefix(vrf_pd,
-                                                P4TBL_ID_INPUT_MAPPING_TUNNELED);
+
+    // deprogram input mapping native
+    ret = vrf_pd_del_gipo_termination_prefix(vrf_pd,
+                                             P4TBL_ID_INPUT_MAPPING_NATIVE);
+    // deprogram input mapping tunneled
+    ret = vrf_pd_del_gipo_termination_prefix(vrf_pd,
+                                             P4TBL_ID_INPUT_MAPPING_TUNNELED);
     return ret;
 }
 
@@ -395,11 +445,12 @@ pd_vrf_deprogram_gipo_termination_prefix(pd_vrf_t *vrf_pd)
 // Program input mapping table to terminate GIPo tunnels
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_program_gipo_termination_prefix(pd_vrf_t *vrf_pd)
+vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd, 
+                           ip_prefix_t *gipo_prefix)
 {
     uint32_t     idx;
     hal_ret_t    ret = HAL_RET_OK;
-    ip_prefix_t  *gipo_prefix = &((vrf_t*)(vrf_pd->vrf))->gipo_prefix;
+    // ip_prefix_t  *gipo_prefix = &((vrf_t*)(vrf_pd->vrf))->gipo_prefix;
 
     if (gipo_prefix->len == 0) {
         return ret; // GIPo not specified. Nothing to program.
@@ -472,7 +523,7 @@ pd_vrf_program_gipo_termination_prefix(pd_vrf_t *vrf_pd)
     return HAL_RET_OK;
 
 fail_flag:
-    pd_vrf_deprogram_gipo_termination_prefix(vrf_pd);
+    vrf_pd_deprogram_gipo_prefix(vrf_pd);
     return ret;
 }
 
@@ -500,10 +551,6 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
 
     HAL_TRACE_DEBUG("pd-vrf:{}:allocated vrf_hw_id:{}, vrf_fl_lkup_id:{}", 
                     __FUNCTION__, vrf_pd->vrf_hw_id, vrf_pd->vrf_fl_lkup_id);
-
-    if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
-        ret = pd_vrf_program_gipo_termination_prefix(vrf_pd);
-    }
 
     ret = vrf_pd_alloc_cpuid(vrf_pd);
     if (ret != HAL_RET_OK) {
@@ -535,10 +582,6 @@ vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
 
         HAL_TRACE_DEBUG("pd-vrf:{}:freed vrf_hw_id: {}", 
                         __FUNCTION__, vrf_pd->vrf_hw_id);
-    }
-
-    if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
-        ret = pd_vrf_deprogram_gipo_termination_prefix(vrf_pd);
     }
 
     ret = vrf_pd_dealloc_cpuid(vrf_pd);

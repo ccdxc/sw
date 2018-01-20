@@ -217,7 +217,7 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // PD Call to allocate PD resources and HW programming
     pd::pd_vrf_args_init(&pd_vrf_args);
-    pd_vrf_args.vrf = vrf;
+    pd_vrf_args.vrf           = vrf;
     pd_vrf_args.nwsec_profile = app_ctxt->sec_prof;
     ret = pd::pd_vrf_create(&pd_vrf_args);
     if (ret != HAL_RET_OK) {
@@ -545,6 +545,63 @@ vrf_nwsec_update (VrfSpec& spec, vrf_t *vrf, bool *nwsec_change,
 }
 
 //------------------------------------------------------------------------------
+// check if gipo prefix changed for vrf
+//------------------------------------------------------------------------------
+hal_ret_t
+vrf_gipo_prefix_update (VrfSpec& spec, vrf_t *vrf, bool *gipo_prefix_change,
+                        ip_prefix_t *new_gipo_prefix)
+{
+    *gipo_prefix_change = false;
+
+    if (vrf->vrf_type != types::VRF_TYPE_INFRA) {
+        // If no infra, ignore gipo prefix change
+        goto end;
+    }
+
+    ip_pfx_spec_to_pfx_spec(new_gipo_prefix, spec.gipo_prefix());
+    if (!ip_prefix_is_equal(&vrf->gipo_prefix, new_gipo_prefix)) {
+        HAL_TRACE_DEBUG("pi-vrf:{}:gipo prefix change {} => {}", 
+                        __FUNCTION__, ippfx2str(&vrf->gipo_prefix), 
+                        ippfx2str(new_gipo_prefix));
+        *gipo_prefix_change = true;
+    }
+
+end:
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// check if anything changed for vrf
+//------------------------------------------------------------------------------
+hal_ret_t
+vrf_check_for_updates (VrfSpec& spec, vrf_t *vrf, 
+                       vrf_update_app_ctxt_t *app_ctxt)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    // check for nwsec update
+    ret = vrf_nwsec_update(spec, vrf, &app_ctxt->nwsec_prof_change, 
+                           &app_ctxt->nwsec_profile_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-vrf:{}:unable to check for nwsec update. ret:{}", 
+                      __FUNCTION__, ret);
+        goto end;
+    }
+
+    // check for gipo prefix update
+    ret = vrf_gipo_prefix_update(spec, vrf, &app_ctxt->gipo_prefix_change,
+                                 &app_ctxt->new_gipo_prefix);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-vrf:{}:unable to check for gipo pfx update. ret:{}", 
+                      __FUNCTION__, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // This is the first call back infra does for update.
 // 1. PD Call to update PD
 // 2. Update Other objects to update with new nwsec profile
@@ -552,12 +609,12 @@ vrf_nwsec_update (VrfSpec& spec, vrf_t *vrf, bool *nwsec_change,
 hal_ret_t
 vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                ret         = HAL_RET_OK;
     pd::pd_vrf_args_t        pd_vrf_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    vrf_t                    *vrf = NULL;
-    vrf_update_app_ctxt_t    *app_ctxt = NULL;
+    dllist_ctxt_t            *lnode      = NULL;
+    dhl_entry_t              *dhl_entry  = NULL;
+    vrf_t                    *vrf        = NULL, *vrf_clone = NULL;
+    vrf_update_app_ctxt_t    *app_ctxt   = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
@@ -565,19 +622,22 @@ vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    vrf       = (vrf_t *)dhl_entry->obj;
+    vrf_clone = (vrf_t *)dhl_entry->cloned_obj;
 
-    vrf = (vrf_t *)dhl_entry->obj;
-
-    HAL_TRACE_DEBUG("pi-vrf:{}:update upd CB {}",
+    HAL_TRACE_DEBUG("pi-vrf:{}:update upd CB for vrf:{}",
                     __FUNCTION__, vrf->vrf_id);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_vrf_args_init(&pd_vrf_args);
-    pd_vrf_args.vrf = vrf;
-    pd_vrf_args.nwsec_profile = app_ctxt->nwsec_prof;
+    pd_vrf_args.vrf                = vrf_clone;
+    pd_vrf_args.nwsec_profile      = app_ctxt->nwsec_prof;
+    pd_vrf_args.gipo_prefix_change = app_ctxt->gipo_prefix_change;
+    pd_vrf_args.new_gipo_prefix    = &app_ctxt->new_gipo_prefix;
+    HAL_TRACE_DEBUG("new_gipo_pfx: {}", ippfx2str(pd_vrf_args.new_gipo_prefix));
     ret = pd::pd_vrf_update(&pd_vrf_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to update vrf pd, err : {}",
@@ -619,13 +679,13 @@ vrf_make_clone (vrf_t *ten, vrf_t **ten_clone)
 hal_ret_t
 vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                ret = HAL_RET_OK;
     pd::pd_vrf_args_t        pd_vrf_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
+    dllist_ctxt_t            *lnode = NULL;
+    dhl_entry_t              *dhl_entry = NULL;
     vrf_t                    *vrf = NULL, *vrf_clone = NULL;
     vrf_update_app_ctxt_t    *app_ctxt = NULL;
-    nwsec_profile_t             *nwsec_prof = NULL;
+    nwsec_profile_t          *nwsec_prof = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
@@ -674,6 +734,12 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                 goto end;
             }
         }
+    }
+
+    // update clone with gipo prefix
+    if (app_ctxt->gipo_prefix_change) {
+        memcpy(&vrf_clone->gipo_prefix, &app_ctxt->new_gipo_prefix,
+               sizeof(ip_prefix_t));
     }
 
     // Free PD
@@ -747,12 +813,12 @@ vrf_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 hal_ret_t
 vrf_update (VrfSpec& spec, VrfResponse *rsp)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    vrf_t                    *vrf = NULL;
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
-    dhl_entry_t                 dhl_entry = { 0 };
-    const VrfKeyHandle       &kh = spec.key_or_handle();
-    vrf_update_app_ctxt_t    app_ctxt = { 0 };
+    hal_ret_t                ret       = HAL_RET_OK;
+    vrf_t                    *vrf      = NULL;
+    cfg_op_ctxt_t            cfg_ctxt  = { 0 };
+    dhl_entry_t              dhl_entry = { 0 };
+    const VrfKeyHandle       &kh       = spec.key_or_handle();
+    vrf_update_app_ctxt_t    app_ctxt  = { 0 };
 
     hal_api_trace(" API Begin: vrf update");
 
@@ -777,16 +843,14 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     HAL_TRACE_DEBUG("pi-vrf:{}:update vrf {}", __FUNCTION__, 
                     vrf->vrf_id);
 
-    ret = vrf_nwsec_update(spec, vrf, &app_ctxt.nwsec_prof_change, 
-                              &app_ctxt.nwsec_profile_handle);
-
+    ret = vrf_check_for_updates(spec, vrf, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-vrf:{}:failed to check if nwsec is updated.", 
+        HAL_TRACE_ERR("pi-vrf:{}:failed to check if vrf is updated.", 
                       __FUNCTION__);
         goto end;
     }
 
-    if (!app_ctxt.nwsec_prof_change) {
+    if (!app_ctxt.nwsec_prof_change && !app_ctxt.gipo_prefix_change) {
         HAL_TRACE_ERR("pi-vrf:{}:no change in vrf update: noop", __FUNCTION__);
         // Its a no-op. We can just return HAL_RET_OK
         // ret = HAL_RET_INVALID_OP;

@@ -26,12 +26,14 @@ set_affinity (void) {
 const std::function<void()> worker_thread_pre_cb = set_affinity;
 
 void
-logger_init (int input_cpu_id)
+logger_init (int input_cpu_id, bool async_en)
 {
     cpu_id = input_cpu_id;
     spdlog::set_level(spdlog::level::debug);
-    spdlog::set_async_mode(LOG_ASYNC_QUEUE_SIZE, LOG_OVERFLOW_POLICY,
-                           worker_thread_pre_cb, std::chrono::milliseconds::zero(), NULL);
+    if (async_en) {
+        spdlog::set_async_mode(LOG_ASYNC_QUEUE_SIZE, LOG_OVERFLOW_POLICY,
+                               worker_thread_pre_cb, std::chrono::milliseconds::zero(), NULL);
+    }
     spdlog::set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
     _logger = spdlog::stdout_logger_mt("hal");
     //return spdlog::rotating_logger_mt("hal",LOG_FILENAME, LOG_MAX_FILESIZE, LOG_MAX_FILES);

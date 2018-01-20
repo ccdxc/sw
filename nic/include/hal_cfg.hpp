@@ -25,6 +25,7 @@ typedef struct hal_cfg_s {
     std::string             loader_info_file;
     char                    feature_set[HAL_MAX_NAME_STR];
     std::string             forwarding_mode;
+    bool                    async_en;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------

@@ -72,7 +72,7 @@ namespace utils {
 
 using logger = spdlog::logger;
 
-void logger_init(int cpu_id);
+void logger_init(int cpu_id, bool async_en);
 logger* hal_logger();
 
 } // namespace utils

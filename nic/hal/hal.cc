@@ -420,7 +420,7 @@ hal_init (hal_cfg_t *hal_cfg)
     std::string  catalog_file = "catalog.json";
 
     // Initialize the logger
-    hal::utils::logger_init(HAL_CONTROL_CORE_ID);
+    hal::utils::logger_init(HAL_CONTROL_CORE_ID, hal_cfg->async_en);
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
 

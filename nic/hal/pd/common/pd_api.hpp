@@ -58,17 +58,19 @@ using hal::proxyrcb_t;
 using hal::proxyccb_t;
 using hal::copp_t;
 
-typedef uint32_t    mc_entry_hw_id_t;
-typedef uint32_t    l2seg_hw_id_t;
+typedef uint32_t  mc_entry_hw_id_t;
+typedef uint32_t  l2seg_hw_id_t;
 
 typedef struct pd_vrf_args_s {
-    vrf_t           *vrf;
-    nwsec_profile_t    *nwsec_profile;
+    vrf_t               *vrf;
+    nwsec_profile_t     *nwsec_profile;
+    bool                gipo_prefix_change;
+    ip_prefix_t         *new_gipo_prefix;
 } __PACK__ pd_vrf_args_t;
 
 typedef struct pd_l2seg_args_s {
-    vrf_t           *vrf;
-    l2seg_t            *l2seg;
+    vrf_t       *vrf;
+    l2seg_t     *l2seg;
 } __PACK__ pd_l2seg_args_t;
 
 typedef struct pd_nwsec_profile_args_s {

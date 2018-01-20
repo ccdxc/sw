@@ -1145,6 +1145,79 @@ TEST_F(vrf_test, test10)
 
 }
 
+// Test Gipo prefix update
+TEST_F(vrf_test, test12) 
+{
+    hal_ret_t               ret;
+    VrfSpec                 ten_spec, ten_spec1;
+    VrfResponse             ten_rsp, ten_rsp1;
+    SecurityProfileSpec     sp_spec;
+    SecurityProfileResponse sp_rsp;
+    VrfDeleteRequest        del_req;
+    VrfDeleteResponse       del_rsp;
+    slab_stats_t            *pre      = NULL   , *post = NULL;
+    bool                    is_leak   = false;
+
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(12);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    pre = hal_test_utils_collect_slab_stats();
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(12);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    ten_spec.mutable_gipo_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);;
+    ten_spec.mutable_gipo_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    ten_spec.mutable_gipo_prefix()->set_prefix_len(24);
+    ten_spec.set_vrf_type(types::VRF_TYPE_INFRA);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update gipo: pfx len is 0, deprogram earlier gipo and dont program anything
+    ten_spec1.mutable_key_or_handle()->set_vrf_id(12);
+    ten_spec1.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    ten_spec1.mutable_gipo_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);;
+    ten_spec1.mutable_gipo_prefix()->mutable_address()->set_v4_addr(0xa0000001);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_update(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update gipo: pfx len is 0, deprogram earlier gipo and dont program anything
+    ten_spec1.mutable_key_or_handle()->set_vrf_id(12);
+    ten_spec1.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    ten_spec1.mutable_gipo_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);;
+    ten_spec1.mutable_gipo_prefix()->mutable_address()->set_v4_addr(0xa0000001);
+    ten_spec1.mutable_gipo_prefix()->set_prefix_len(24);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_update(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete vrf
+    del_req.mutable_key_or_handle()->set_vrf_id(12);
+    del_req.mutable_key_or_handle()->set_vrf_id(12);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+}
+
 // ----------------------------------------------------------------------------
 // Vrf -ve test cases
 // ----------------------------------------------------------------------------

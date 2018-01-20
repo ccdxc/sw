@@ -266,13 +266,13 @@ end:
 hal_ret_t
 l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    l2seg_t                     *l2seg = NULL;
-    vrf_t                    *vrf = NULL;
-    hal_handle_t                hal_handle = 0;
-    l2seg_create_app_ctxt_t     *app_ctxt = NULL; 
+    hal_ret_t               ret        = HAL_RET_OK;
+    dllist_ctxt_t           *lnode     = NULL;
+    dhl_entry_t             *dhl_entry = NULL;
+    l2seg_t                 *l2seg     = NULL;
+    vrf_t                   *vrf       = NULL;
+    hal_handle_t            hal_handle = 0;
+    l2seg_create_app_ctxt_t *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -281,11 +281,11 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // assumption is there is only one element in the list
-    lnode = cfg_ctxt->dhl.next;
+    lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (l2seg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (l2seg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    l2seg = (l2seg_t *)dhl_entry->obj;
+    l2seg      = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:create commit CB {}",
@@ -316,7 +316,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
-    // 1. a. Add to l2seg id hash table
+    // Add to l2seg id hash table
     ret = l2seg_add_to_db(l2seg, hal_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to add l2seg {} to db, err : {}", 
@@ -639,11 +639,11 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
-    vrf = app_ctxt.vrf;
-    l2seg->vrf_handle = vrf->hal_handle;
-    l2seg->seg_id = spec.key_or_handle().segment_id();
-    l2seg->segment_type = spec.segment_type();
-    l2seg->pinned_uplink = spec.pinned_uplink_if_handle();
+    vrf                     = app_ctxt.vrf;
+    l2seg->vrf_handle       = vrf->hal_handle;
+    l2seg->seg_id           = spec.key_or_handle().segment_id();
+    l2seg->segment_type     = spec.segment_type();
+    l2seg->pinned_uplink    = spec.pinned_uplink_if_handle();
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
     l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
     ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());

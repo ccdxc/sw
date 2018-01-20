@@ -1,5 +1,7 @@
-#ifndef __vrf_HPP__
-#define __vrf_HPP__
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+#ifndef __VRF_HPP__
+#define __VRF_HPP__
 
 #include "nic/include/base.h"
 #include "sdk/list.hpp"
@@ -64,10 +66,13 @@ typedef struct vrf_create_app_ctxt_s {
 
 typedef struct vrf_update_app_ctxt_s {
     bool                nwsec_prof_change;
+    bool                gipo_prefix_change;
 
     // valid for nwsec_prof_change
     hal_handle_t        nwsec_profile_handle;   // new profile handle
-    nwsec_profile_t    *nwsec_prof;             // new nwsec profile
+    nwsec_profile_t     *nwsec_prof;            // new nwsec profile
+    // valid for gipo change
+    ip_prefix_t         new_gipo_prefix;        // new gipo prefix
 } __PACK__ vrf_update_app_ctxt_t;
 
 
@@ -218,5 +223,5 @@ hal_ret_t vrf_get(vrf::VrfGetRequest& req,
                      vrf::VrfGetResponse *rsp);
 }    // namespace hal
 
-#endif    // __vrf_HPP__
+#endif    // __VRF_HPP__
 
