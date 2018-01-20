@@ -69,8 +69,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
     uint64_t                                    pc_offset = 0;
     uint64_t                                    ipsec_cb_ring_base;
     uint64_t                                    ipsec_cb_ring_addr;
-    uint64_t                                    ipsec_barco_ring_base;
-    uint64_t                                    ipsec_barco_ring_addr;
+    uint32_t                                    ipsec_barco_ring_base;
+    uint32_t                                    ipsec_barco_ring_addr;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -115,10 +115,10 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         ipsec_barco_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB_BARCO);
         ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_BARCO_RING_ENTRY_SIZE));
         HAL_TRACE_DEBUG("Ring base 0x{0:x} Barco Ring Addr 0x{0:x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
-        ipsec_barco_ring_addr = htonll(ipsec_barco_ring_addr);
+        ipsec_barco_ring_addr = htonl(ipsec_barco_ring_addr);
 
-        data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = (ipsec_barco_ring_addr & 0xFFFFFFFF);
-        data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr_hi = (ipsec_barco_ring_addr & 0xFF00000000) >> 32;
+        data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = ipsec_barco_ring_addr;
+        //data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr_hi = (ipsec_barco_ring_addr & 0xFF00000000) >> 32;
         data.u.ipsec_encap_rxdma_initial_table_d.barco_cindex = 0;
         data.u.ipsec_encap_rxdma_initial_table_d.barco_pindex = 0;
         HAL_TRACE_DEBUG("Barco Ring Addr 0x{0:x} hi 0x{0:x}", data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr,

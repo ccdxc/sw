@@ -53,22 +53,12 @@ esp_ipv4_tunnel_n2h_post_to_cb_ring:
 
 esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
     tbladd d.cb_pindex, 1
+    nop
     tbland d.cb_pindex, 0x3F
-
+    nop
 dma_cmd_ring_doorbell:
-    /* address will be in r4 */
-    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)
-        /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.ipsec_global_ipsec_cb_index, 0, d.cb_pindex)                                                                                                                                    
-        phvwr           p.doorbell_cmd_dma_cmd_addr, r4
-        phvwr           p.db_data_index, d.cb_pindex
-        phvwr           p.db_data_qid, d.ipsec_cb_index
-
-        phvwri          p.doorbell_cmd_dma_cmd_phv_start_addr, IPSEC_PHV_RXDMA_DB_DATA_START
-        phvwri          p.doorbell_cmd_dma_cmd_phv_end_addr, IPSEC_PHV_RXDMA_DB_DATA_END 
-        phvwri          p.doorbell_cmd_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-
-        phvwri          p.doorbell_cmd_dma_cmd_eop, 1
-        phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
-        nop.e
-        nop 
+    CAPRI_DMA_CMD_RING_DOORBELL2(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 1, k.ipsec_global_ipsec_cb_index, 0, d.cb_pindex, db_data_pid, db_data_index)
+    phvwri          p.doorbell_cmd_dma_cmd_eop, 1
+    phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
+    nop.e
+    nop 
