@@ -1,21 +1,109 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <unistd.h>
-#include "sdk/lock.hpp"
-#include "linkmgr.hpp"
+#include <sdk/lock.hpp>
+#include <sdk/thread.hpp>
+#include <sdk/timerfd.hpp>
+#include <sdk/linkmgr.hpp>
 #include "linkmgr_state.hpp"
 #include "port.hpp"
+
+#define LINKMGR_THREAD_ID_MAX        4
 
 namespace sdk {
 namespace linkmgr {
 
-linkmgr_state *g_linkmgr_state;
-linkmgr_cfg_t g_linkmgr_cfg;
+#define CONTROL_CORE_ID    0
+
+enum {
+    LINKMGR_THREAD_ID_PERIODIC,
+}
+
+linkmgr_state       *g_linkmgr_state;
+linkmgr_cfg_t       g_linkmgr_cfg;
+sdk::lib::thread    *g_linkmgr_threads[LINKMGR_THREAD_ID_MAX];
+
+static void *
+linkmgr_periodic_thread_start (void *ctxt)
+{
+    uint64_t            missed;
+    sdk::lib::twheel    *twheel;
+    timerfd_info_t      timerfd_info;
+
+    SDK_THREAD_INIT(ctxt);
+
+    // create a timer wheel
+    twheel = sdk::lib::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,
+                                        TWHEEL_DEFAULT_DURATION, true);
+    if (twheel == NULL) {
+        SDK_TRACE_ERR("Periodic thread failed to create timer wheel");
+        return NULL;
+    }
+
+    // prepare the timer fd(s)
+    sdk::lib::timerfd_init(&timerfd_info);
+    timerfd_info.usecs = TWHEEL_DEFAULT_SLICE_DURATION * TIME_USECS_PER_MSEC;
+    if (sdk::lib::timerfd_prepare(&timerfd_info) < 0) {
+        SDK_TRACE_ERR("Periodic thread failed to intiialize timerfd");
+        return NULL;
+    }
+
+
+    // start the forever loop
+    while (TRUE) {
+        // wait for timer to fire
+        if (sdk::lib::timerfd_wait(&timerfd_info, &missed) < 0) {
+            SDK_TRACE_ERR("Periodic thread failed to wait on timer");
+            break;
+        }
+
+        // drive the timer wheel if enough time elapsed
+        twheel->tick(missed * TWHEEL_DEFAULT_SLICE_DURATION);
+    }
+
+    return NULL;
+}
+
+static sdk_ret_t
+thread_init (void)
+{
+    int    rv, thread_prio, thread_id;
+
+    // spawn periodic thread
+    thread_prio = sched_get_priority_max(SCHED_FIFO);
+    if (thread_prio < 0) {
+        return SDK_RET_ERR;
+    }
+
+    // spawn periodic thread that does background tasks
+    thread_id = LINKMGR_THREAD_ID_PERIODIC;
+    g_linkmgr_threads[thread_id] =
+        sdk::lib::thread::factory(
+                        std::string("linkmgr-periodic").c_str(),
+                        thread_id,
+                        CONTROL_CORE_ID,
+                        linkmgr_periodic_thread_start,
+                        thread_prio - 1, SCHED_RR, true);
+    if (g_linkmgr_threads[thread_id] == NULL) {
+        SDK_TRACE_ERR("Failed to create linkmgr periodic thread");
+        return SDK_RET_ERR;
+    }
+
+    // start the thread
+    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
+
+    return SDK_RET_OK;
+}
 
 sdk_ret_t
 linkmgr_init (linkmgr_cfg_t *cfg)
 {
-    //int  rc  = 0;
+    sdk_ret_t    ret;
+    //int          rc  = 0;
+
+    if ((ret = thread_init()) != SDK_RET_OK) {
+        return ret;
+    }
 
     g_linkmgr_state = linkmgr_state::factory();
     if (NULL == g_linkmgr_state) {

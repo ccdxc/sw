@@ -18,5 +18,6 @@ cc_library(
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_thread",
         "@sdk//obj:sdk_twheel",
+        "@sdk//obj:sdk_timerfd",
     ],
 )

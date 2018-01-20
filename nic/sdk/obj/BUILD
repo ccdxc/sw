@@ -133,3 +133,14 @@ cc_library(
         "//:sdk_headers",
     ],
 )
+
+# timerfd library
+cc_library(
+    name = "sdk_timerfd",
+    srcs = [
+        "libtimerfd.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)

@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <sys/timerfd.h>
 #include "sdk/thread.hpp"
+#include "sdk/timerfd.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 
 //------------------------------------------------------------------------------
@@ -26,74 +24,8 @@ namespace periodic {
 sdk::lib::twheel *g_twheel;
 static volatile bool g_twheel_is_running = false;
 
-// timer fd information
-struct periodic_info {
-    int         timer_fd;
-    uint64_t    usecs;
-    uint64_t    missed_wakeups;
-} __PACK__;
-
 // thread local variables
-thread_local struct periodic_info t_pinfo;
-
-//------------------------------------------------------------------------------
-// initiaize information about a given timer fd
-//------------------------------------------------------------------------------
-static void
-timerfd_init (struct periodic_info *pinfo)
-{
-    pinfo->timer_fd = -1;
-    pinfo->usecs = 0;
-    pinfo->missed_wakeups = 0;
-}
-
-//------------------------------------------------------------------------------
-// create and initialize a timer fd, this fd can then be used
-// in poll/select system calls eventually
-//------------------------------------------------------------------------------
-static int
-timerfd_prepare (struct periodic_info *pinfo)
-{
-    int                  fd;
-    struct itimerspec    itspec;
-    timespec_t           tspec;
-
-    // create timer fd
-    fd = timerfd_create(CLOCK_MONOTONIC, 0);
-    if (fd == -1) {
-        return fd;
-    }
-    pinfo->missed_wakeups = 0;
-    pinfo->timer_fd = fd;
-
-    // initialize the timeout
-    sdk::timestamp_from_nsecs(&tspec, pinfo->usecs * TIME_NSECS_PER_USEC);
-    itspec.it_interval = tspec;
-    itspec.it_value = tspec;
-    return timerfd_settime(fd, 0, &itspec, NULL);
-}
-
-//------------------------------------------------------------------------------
-// wait on a given timer fd and return number of missed wakeups, if any
-// TODO: in future, if we have multiple of these, we can use select()
-//------------------------------------------------------------------------------
-static int
-timerfd_wait (struct periodic_info *pinfo, uint64_t *missed)
-{
-    int         rv;
-
-    // wait for next timer event, and warn any missed events
-    *missed = 0;
-    rv = read(pinfo->timer_fd, missed, sizeof(*missed));
-    if (rv == -1) {
-        return -1;
-    }
-    if (*missed > 1) {
-        HAL_TRACE_WARN("Periodic thread missed {} wakeups", *missed);
-    }
-    pinfo->missed_wakeups += *missed;
-    return 0;
-}
+thread_local timerfd_info_t timerfd_info;
 
 //------------------------------------------------------------------------------
 // periodic thread starting point
@@ -112,10 +44,10 @@ periodic_thread_init (void *ctxt)
     }
 
     // prepare the timer fd(s)
-    timerfd_init(&t_pinfo);
-    t_pinfo.usecs = TWHEEL_DEFAULT_SLICE_DURATION * TIME_USECS_PER_MSEC;
-    if (timerfd_prepare(&t_pinfo) < 0) {
-        HAL_TRACE_ERR("Periodic thread failed to intiialize timer fd");
+    sdk::lib::timerfd_init(&timerfd_info);
+    timerfd_info.usecs = TWHEEL_DEFAULT_SLICE_DURATION * TIME_USECS_PER_MSEC;
+    if (sdk::lib::timerfd_prepare(&timerfd_info) < 0) {
+        HAL_TRACE_ERR("Periodic thread failed to intiialize timerfd");
         return NULL;
     }
 
@@ -133,15 +65,13 @@ periodic_thread_run (void *ctxt)
 
     while (TRUE) {
         // wait for timer to fire
-        if (timerfd_wait(&t_pinfo, &missed) < 0) {
+        if (sdk::lib::timerfd_wait(&timerfd_info, &missed) < 0) {
             HAL_TRACE_ERR("Periodic thread failed to wait on timer");
             break;
         }
 
         // drive the timer wheel if enough time elapsed
-        if (TRUE) {
-            g_twheel->tick(missed * TWHEEL_DEFAULT_SLICE_DURATION);
-        }
+        g_twheel->tick(missed * TWHEEL_DEFAULT_SLICE_DURATION);
     }
     g_twheel_is_running = false;
     HAL_TRACE_ERR("Periodic thread exiting !!!");
