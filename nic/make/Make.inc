@@ -39,6 +39,8 @@ endif
 
 ifeq ($(ARCH), aarch64)
     BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) --crosstool_top=//nic/tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
+    PATH_OPTS   = PATH=/tool/toolchain/aarch64/bin:$$PATH
+    BUILD_OPTS  = BUILD_ARCHES=aarch64
 else
     BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE)
 endif

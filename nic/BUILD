@@ -186,15 +186,15 @@ cc_library(
     name = "asic_libs",
     srcs = select ({
         "//conditions:default": [
-            "asic/capri/model/capsim-gen/lib/libmpuobj.a",
-            "asic/capri/model/capsim-gen/lib/libcapisa.a",
-            "asic/capri/model/capsim-gen/lib/libisa.a",
+            "asic/capri/model/capsim-master/gen/x86_64/lib/libmpuobj.so",
+            "asic/capri/model/capsim-master/gen/x86_64/lib/libcapisa.so",
+            "asic/capri/model/capsim-master/gen/x86_64/lib/libisa.so",
         ],
 
         ":aarch64_mode" : [
-            "asic/capri/model/capsim-gen/aarch64/lib/libmpuobj.a",
-            "asic/capri/model/capsim-gen/aarch64/lib/libcapisa.a",
-            "asic/capri/model/capsim-gen/aarch64/lib/libisa.a",
+            "asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so",
+            "asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so",
+            "asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so",
         ],
     })
 )

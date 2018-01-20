@@ -58,7 +58,13 @@ deps-test-shell:
 deps-test-build:
 	NO_PULL=1 make build
 
-hal: sdk
+capsim-master:
+	cd asic/capri/model/capsim-master && $(PATH_OPTS) make $(BUILD_OPTS)
+
+capsim-master-clean:
+	cd asic/capri/model/capsim-master && make $(BUILD_OPTS) clean
+
+hal: capsim-master sdk
 	$(MAKE) bazel-build
 	$(MAKE) bazel-gtests
 	$(MAKE) post-make
@@ -80,7 +86,7 @@ sdk:
 DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
 #SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
 SDK_OPTS = --copt=-Wno-unused-function 
-bazel-build: sdk
+bazel-build: capsim-master sdk
 	$(MAKE) -j4 -C p4
 	$(MAKE) -C asm
 	$(MAKE) -C proto
@@ -204,7 +210,7 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/qos_val.xml ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(VAL_TR)/qos_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/copp_val.xml ./nic/hal/test/gtests/copp_test --gtest_output="xml:$(VAL_TR)/copp_test.xml"
 
-gft-build: sdk
+gft-build: capsim-master sdk
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4
 	$(MAKE) -C asm
@@ -214,7 +220,7 @@ gft-build: sdk
 	bazel build --copt=-DGFT $(SDK_OPTS) hal/test/gtests:gft_test
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
-hal-rtl: sdk
+hal-rtl: capsim-master sdk
 	$(MAKE) -j4 -C p4
 	$(MAKE) -C asm AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP"
 	$(MAKE) -C proto
@@ -224,7 +230,7 @@ hal-rtl: sdk
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 	$(MAKE) capmodel
 
-clean:
+clean: capsim-master-clean
 	bazel clean
 	rm -rf $(VALGRIND_DIR)
 	rm -rf $(GEN_TEST_RESULTS_DIR)
