@@ -5,6 +5,8 @@ from grpc_meta.msg import GrpcReqRspMsg
 import os
 import types_pb2
 
+cpu_if_type_max = 1
+cpu_if_type_seen = 0
 
 def PreCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].HasField("if_enic_info"):
@@ -19,6 +21,15 @@ def PreCreateCb(data, req_spec, resp_spec):
         req_spec.request[0].type = interface_pb2.IF_TYPE_CPU
     elif req_spec.request[0].HasField("if_app_redir_info"):
         req_spec.request[0].type = interface_pb2.IF_TYPE_APP_REDIR
+
+    if req_spec.request[0].type == interface_pb2.IF_TYPE_CPU:
+        global cpu_if_type_max
+        global cpu_if_type_seen
+        if cpu_if_type_seen < cpu_if_type_max:
+            cpu_if_type_seen += 1
+        else:
+            req_spec.request[0].type = interface_pb2.IF_TYPE_UPLINK_PC
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_uplink_pc_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
         req_spec.request[0].type = interface_pb2.IF_TYPE_UPLINK

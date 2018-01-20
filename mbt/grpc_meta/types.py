@@ -11,6 +11,20 @@ from google.protobuf.descriptor import FieldDescriptor
 #This is bad design but when right now object generation is tied to the types
 import config_mgr
 
+seed = 0
+def set_random_seed():
+    global seed
+    if seed != 0:
+        if "MBT_RANDOM_SEED" in os.environ:
+            seed = os.environ["MBT_RANDOM_SEED"] 
+        else:
+            seed = random.random()
+        # Set the seed only once when seed was initially 0
+    random.seed(seed)
+    print("Random seed chosen is " + str(seed))
+
+set_random_seed()
+
 _tag_checker_map = {
      "key_field"     : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "key" in y,
      "ext_ref_field" : lambda x, y : (x == "gogoproto.moretags" or x == "gogoproto.jsontag") and "ref" in y,
@@ -79,7 +93,7 @@ def generate_enum(field):
     return random.randint(0, len(field.enum_type.values))
 
 def generate_bytes(field):
-    return os.urandom(16)
+    return random.getrandbits(128).to_bytes(16, byteorder='big')
 
 type_map = {
     FieldDescriptor.TYPE_DOUBLE: generate_float,

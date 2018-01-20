@@ -1,6 +1,5 @@
 import pdb
 import json
-import random
 import importlib
 from google.protobuf import json_format
 from infra.common.logging import logger
@@ -339,16 +338,6 @@ class ConfigObjectHelper(object):
                     return False
             config_object._status = ConfigObject._DELETED
         return True
-    
-    def GetRandomConfig(self):
-        if( len(self._config_objects) == 0 ):
-            print("Should not try to choose an external reference when none exists!")
-            assert False
-        index = random.randint(0, len(self._config_objects))
-        return self._config_objects[index - 1]
-    
-    def GetRandomConfigKey(self):
-        return self.GetRandomConfig().key_or_handle
     
     def Reset(self):
         #Forget about all other config objects.

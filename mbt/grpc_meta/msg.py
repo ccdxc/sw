@@ -4,11 +4,13 @@ import types_pb2 # Used to override default object type behaviors.
 import grpc_meta.types as grpc_meta_types
 import infra.common.objects as objects
 from collections import defaultdict
-import random
 import importlib
 import types_pb2
 import re
 from enum import Enum
+import random
+
+grpc_meta_types.set_random_seed()
 
 class Constraints(Enum):
     Assignment = 1
