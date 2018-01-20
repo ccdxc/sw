@@ -15,8 +15,9 @@ from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger as logger
 from infra.asic.model       import ModelConnector
 
-MAX_RETRIES = 10
-MAX_DROP_RETRIES = 1
+RTL_RETRY_SCALE     = 5
+MAX_RETRIES         = 10
+MAX_DROP_RETRIES    = 1
 
 class VerifEngineObject:
     def __init__(self):
@@ -131,15 +132,21 @@ class VerifEngineObject:
         if GlobalOptions.dryrun:
             return
         tc.info("Retry wait.........")
-        time.sleep(1)
+        if GlobalOptions.rtl:
+            time.sleep(1*RTL_RETRY_SCALE)
+        else:
+            time.sleep(1)
         return
+
+    def __get_scaled_retry(self, value):
+        if GlobalOptions.rtl:
+            return value * RTL_RETRY_SCALE
+        return value
 
     def __get_num_retries(self, tc):
         if tc.IsDrop():
-            return MAX_DROP_RETRIES
-        if GlobalOptions.rtl:
-            return MAX_RETRIES * 3
-        return MAX_RETRIES
+            return self.__get_scaled_retry(MAX_DROP_RETRIES)
+        return self.__get_scaled_retry(MAX_RETRIES)
 
     def __consume_descriptor(self, edescr, ring, tc):
         if GlobalOptions.dryrun:

@@ -6,8 +6,6 @@ feature:
     enable  : True
     ignore  : False
     spec    : tx_l3.testspec
-    args:
-        maxflows: 4
 
 modules:
     - module:

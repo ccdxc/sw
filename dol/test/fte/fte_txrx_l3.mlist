@@ -7,8 +7,6 @@ feature:
     ignore  : False
     spec    : tx_rx_l3.testspec
     runorder: 15
-    args:
-        maxflows: 4
 
 modules:
     - module:

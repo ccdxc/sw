@@ -7,8 +7,6 @@ feature:
     enable  : True
     ignore  : False
     spec    : tx.testspec
-    args    :
-        maxflows: 4
 
 modules:
     - module:

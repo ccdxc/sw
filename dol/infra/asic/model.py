@@ -84,7 +84,10 @@ ModelConnector = ModelConnectorObject()
 def exit_cleanup():
     if not GlobalOptions.dryrun:
         print("Sending exit_simulation message to Model.")
-        model_wrap.exit_simulation()
+        try:
+            model_wrap.exit_simulation()
+        except:
+            print("Error in sending exit_simulation to Model.")
     return
 
 atexit.register(exit_cleanup)

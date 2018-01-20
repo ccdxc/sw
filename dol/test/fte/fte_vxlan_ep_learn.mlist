@@ -8,7 +8,6 @@ feature:
     enable   : True
     ignore   : True
     rtl      : False
-    args     :
 
 modules:
     - module:

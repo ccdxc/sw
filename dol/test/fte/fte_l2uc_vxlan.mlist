@@ -6,8 +6,6 @@ feature:
     module  : networking
     enable  : True
     ignore  : False
-    args    :
-        maxflows: 4
 
 modules:
     - module:

@@ -8,8 +8,6 @@ feature:
     ignore  : False
     spec    : tx.testspec
     runorder: 20
-    args    :
-        maxflows: 4
 
 modules:
     - module:

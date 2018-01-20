@@ -30,7 +30,7 @@ class TestSpecConfigSelectors(objects.FrameworkObject):
         return
 
     def SetMaxFlows(self, maxflows):
-        if GlobalOptions.regression or GlobalOptions.rtl:
+        if GlobalOptions.regression:
             return
         self.maxflows = maxflows
         return

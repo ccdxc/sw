@@ -126,7 +126,7 @@ def run_rtl(args):
     one_pkt_mode = ""
     if args.model_test:
         model_test = args.model_test
-    if args.one_pkt_mode:
+    if not args.skipverify:
         one_pkt_mode = "+dol_one_pkt_mode=1"
     model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 %s ' % (one_pkt_mode, args.runtest_runargs) ]
     if args.noverilog:
@@ -330,7 +330,7 @@ def run_dol(args):
         cmd.append('--regression')
     if args.skipverify is True:
         cmd.append('--skipverify')
-    if args.rtl is True and args.one_pkt_mode is False:
+    if args.rtl and args.skipverify:
         cmd.append('--eth_mode=ionic')
     if args.tcscale is not None:
         cmd.append('--tcscale')
@@ -537,8 +537,9 @@ def main():
                         help='any extra options that should be passed to runtest as run_args.')
     parser.add_argument('--model_test', dest='model_test', default=None,
                         help='Model test name')
-    parser.add_argument('--one_pkt_mode', dest='one_pkt_mode', action="store_true",
-                        help='Enable DOL one pkt mode')
+    # This is not needed anymore. It will be automatically derived from skipverify flag.
+    #parser.add_argument('--one_pkt_mode', dest='one_pkt_mode', action="store_true",
+    #                    help='Enable DOL one pkt mode')
     parser.add_argument('--no_asic_dump', dest='no_asic_dump', action="store_true",
                         help='Disable rtl dump')
     parser.add_argument('--test_suf', dest='test_suf', default=None,
@@ -575,6 +576,10 @@ def main():
                         help='Disable model error checking')
     args = parser.parse_args()
 
+    if args.rtl == False and args.skipverify:
+        print "ERROR: skipverify option cannot be used for non RTL runs."
+        sys.exit(1)
+
     zmq_soc_dir = nic_dir
     if args.test_suf is not None:
         os.system("mkdir -p " + nic_dir + "/logs_%s" % args.test_suf)
@@ -597,59 +602,59 @@ def main():
     else:
         r = 0
 
-    if r == 0:
-        port = find_port()
-        print "* Using port (" + str(port) + ") for HAL\n"
-        os.environ["HAL_GRPC_PORT"] = str(port)
-
-        if args.dryrun is False:
-            if args.rtl:
-                run_rtl(args)
-            else:
-                run_model(args)
-            if args.gft is False:
-                run_hal(args)
-
-        if args.storage:
-            status = run_storage_dol(port, args)
-            if status != 0:
-                print "- Storage dol failed, status=", status
-        elif args.gft:
-            status = run_gft_test()
-            if status != 0:
-                print "- GFT test failed, status=", status
-        elif args.mbt and not args.feature:
-            status = run_mbt()
-            if status != 0:
-                print "- MBT test failed, status=", status
-        else:
-            if args.mbt:
-                mbt_port = find_port()
-                print "* Using port (" + str(mbt_port) + ") for mbt\n"
-                os.environ["MBT_GRPC_PORT"] = str(mbt_port)
-                run_mbt(standalone=False)
-
-            status = run_dol(args)
-            if status == 0:
-                if (args.e2etls):
-                    status = run_e2e_tlsproxy_dol()
-        if args.coveragerun:
-            dump_coverage_data()
-        cleanup(keep_logs=True)
-        os.chdir(nic_dir)
-        if args.asmcov:
-            call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
-
-        if not args.rtl and not args.no_error_check:
-            ec = os.system("grep ERROR model.log")
-            if not ec:
-                print "ERRORs found in model.log"
-                sys.exit(1)
-            print "PASS: No errors found in model.log"
-        sys.exit(status)
-    else:
+    if r != 0:
         print "- build failed!"
         sys.exit(1)
+
+    port = find_port()
+    print "* Using port (" + str(port) + ") for HAL\n"
+    os.environ["HAL_GRPC_PORT"] = str(port)
+
+    if args.dryrun is False:
+        if args.rtl:
+            run_rtl(args)
+        else:
+            run_model(args)
+        if args.gft is False:
+            run_hal(args)
+
+    if args.storage:
+        status = run_storage_dol(port, args)
+        if status != 0:
+            print "- Storage dol failed, status=", status
+    elif args.gft:
+        status = run_gft_test()
+        if status != 0:
+            print "- GFT test failed, status=", status
+    elif args.mbt and not args.feature:
+        status = run_mbt()
+        if status != 0:
+            print "- MBT test failed, status=", status
+    else:
+        if args.mbt:
+            mbt_port = find_port()
+            print "* Using port (" + str(mbt_port) + ") for mbt\n"
+            os.environ["MBT_GRPC_PORT"] = str(mbt_port)
+            run_mbt(standalone=False)
+
+        status = run_dol(args)
+        if status == 0:
+            if (args.e2etls):
+                status = run_e2e_tlsproxy_dol()
+
+    if args.coveragerun:
+        dump_coverage_data()
+    os.chdir(nic_dir)
+    if args.asmcov:
+        call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
+    if not args.rtl and not args.no_error_check:
+        ec = os.system("grep ERROR model.log")
+        if not ec:
+            print "ERRORs found in model.log"
+            sys.exit(1)
+        print "PASS: No errors found in model.log"
+    print "Status = %d" % status
+    sys.exit(status)
 
 def signal_handler(signal, frame):
     #print "cleanup from signal_handler"

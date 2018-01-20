@@ -7,8 +7,6 @@ feature:
     ignore  : False
     spec    : rx.testspec
     runorder: 10
-    args:
-        maxflows: 4
 
 modules:
     - module:
