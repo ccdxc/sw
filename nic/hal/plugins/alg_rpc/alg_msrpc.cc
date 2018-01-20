@@ -905,7 +905,8 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     app_session_t        *app_sess = NULL;
 
     HAL_TRACE_DEBUG("In alg_msrpc_exec {:p}", (void *)l4_sess);
-    if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC) {
+    if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC &&
+        (!ctx.existing_session())) {
         /*
          * ALG is hit - install Mcast flows and process first packet for UDP
          */

@@ -215,7 +215,8 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
     }
  
     alg_state = ctx.feature_session_state();
-    if (sfw_info->alg_proto == nwsec::APP_SVC_TFTP) { 
+    if (sfw_info->alg_proto == nwsec::APP_SVC_TFTP &&
+        (!ctx.existing_session())) { 
         HAL_TRACE_DEBUG("Alg Proto TFTP is set");
 
         ret = process_tftp_first_packet(ctx, &tftpop); 

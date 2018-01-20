@@ -72,7 +72,6 @@ static int __parse_ipv4(const char *data, uint32_t dlen, u_int32_t array[],
     HAL_TRACE_DEBUG("Dlen: {}", dlen);
     /* Keep data pointing at next char. */
     for (i = 0, len = 0; len < dlen && i < array_size; len++, data++) {
-        HAL_TRACE_DEBUG("Data: {} len: {}", *data, len);
         if (*data >= '0' && *data <= '9') {
             array[i] = array[i]*10 + *data - '0';
         } else if (*data == sep) {
@@ -107,8 +106,6 @@ static int __parse_port_cmd(const char *data, uint32_t dlen,
     if (length == 0)
         return 0;
 
-    for (int i=0; i<6; i++)
-        HAL_TRACE_DEBUG("{} th element: {}", i, array[i]);
     ftp_info->ip.v4_addr =  htonl((array[3] << 24) | (array[2] << 16) |
                              (array[1] << 8) | array[0]);
     ftp_info->port = htons((array[5] << 8) | array[4]);
@@ -514,7 +511,8 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
     }
 
     alg_state = ctx.feature_session_state();
-    if (sfw_info->alg_proto == nwsec::APP_SVC_FTP) {
+    if (sfw_info->alg_proto == nwsec::APP_SVC_FTP &&
+        (!ctx.existing_session())) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
             /*
              * Alloc APP session, L4 Session and FTP info

@@ -602,7 +602,8 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     app_session_t        *app_sess = NULL;
 
     HAL_TRACE_DEBUG("In alg_sunrpc_exec {:p}", (void *)l4_sess);
-    if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC) {
+    if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC &&
+        (!ctx.existing_session())) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
             HAL_TRACE_DEBUG("Parsing the first packet");
             /*
