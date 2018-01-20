@@ -517,7 +517,7 @@ hal_ret_t
 linkmgr::pd::port::port_mac_fn_init()
 {
     linkmgr::pd::mac_fn_t *mac_fn = &linkmgr::pd::port::mac_fn;
-    sdk::lib::platform_type_t platform_type = linkmgr::platform_type();
+    platform_type_t platform_type = linkmgr::platform_type();
 
     mac_fn->mac_cfg         = &mac_cfg_default;
     mac_fn->mac_enable      = &mac_enable_default;
@@ -528,7 +528,7 @@ linkmgr::pd::port::port_mac_fn_init()
     mac_fn->mac_faults_get  = &mac_faults_get_default;
 
     switch (platform_type) {
-    case sdk::lib::platform_type_t::PLATFORM_TYPE_HAPS:
+    case platform_type_t::PLATFORM_TYPE_HAPS:
         mac_fn->mac_cfg         = &mac_cfg_haps;
         mac_fn->mac_enable      = &mac_enable_haps;
         mac_fn->mac_soft_reset  = &mac_soft_reset_haps;

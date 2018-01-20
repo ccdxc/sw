@@ -16,8 +16,7 @@ namespace linkmgr {
 //------------------------------------------------------------------------------
 // notification by other threads
 //------------------------------------------------------------------------------
-hal_ret_t
-linkmgr_notify (uint8_t operation, void *ctxt);
+hal_ret_t linkmgr_notify(uint8_t operation, void *ctxt);
 
 //------------------------------------------------------------------------------
 // linkmgr thread operation entry.
@@ -47,3 +46,4 @@ extern linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
 }    // namespace linkmgr
 
 #endif  // __LINKMGR_HPP__
+

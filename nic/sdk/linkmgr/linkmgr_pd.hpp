@@ -4,10 +4,17 @@
 #define __LINKMGR_PD_HPP__
 
 #include "sdk/base.hpp"
+#include "sdk/catalog.hpp"
 
 namespace sdk {
 namespace linkmgr {
 namespace pd {
+
+typedef struct linkmgr_cfg_s {
+    platform_type_t platform_type;
+    bool            mock_hw_access;
+} __PACK__ linkmgr_cfg_t;
+extern linkmgr_cfg_t g_linkmgr_cfg;
 
 typedef struct port_args_pd_s {
     void                  *pd_p;

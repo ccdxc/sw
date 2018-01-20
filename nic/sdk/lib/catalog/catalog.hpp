@@ -6,6 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "sdk/base.hpp"
+#include "sdk/types.hpp"
 
 namespace sdk {
 namespace lib {
@@ -15,25 +16,6 @@ using boost::property_tree::ptree;
 #define MAX_ASICS                                    1
 #define MAX_ASIC_PORTS                               8
 #define MAX_UPLINK_PORTS                             8
-
-enum class port_speed_t {
-    PORT_SPEED_NONE    = 0,
-    PORT_SPEED_10G     = 1,
-    PORT_SPEED_25G     = 2,
-    PORT_SPEED_100G    = 3,
-};
-
-enum class port_type_t {
-    PORT_TYPE_NONE    = 0,
-    PORT_TYPE_ETH     = 1,
-};
-
-enum class platform_type_t {
-    PLATFORM_TYPE_NONE = 0,
-    PLATFORM_TYPE_SIM  = 1,
-    PLATFORM_TYPE_HAPS = 2,
-    PLATFORM_TYPE_HW   = 3,
-};
 
 typedef struct catalog_uplink_port_s {
     uint32_t          asic;

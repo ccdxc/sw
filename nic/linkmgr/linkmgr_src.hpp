@@ -46,8 +46,8 @@ extern linkmgr_state *g_linkmgr_state;
 typedef uint32_t port_num_t;
 
 typedef struct linkmgr_cfg_s {
-    std::string                  grpc_port;
-    sdk::lib::platform_type_t    platform_type;
+    std::string        grpc_port;
+    platform_type_t    platform_type;
 } linkmgr_cfg_t;
 
 typedef struct port_s {

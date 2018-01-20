@@ -11,7 +11,7 @@ linkmgr_state_pd::init(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    port_slab_ = slab::factory("port_pd", hal::HAL_SLAB_PORT_PD,
+    port_slab_ = slab::factory("port_pd", sdk::lib::SDK_SLAB_ID_PORT_PD,
                                sizeof(port), 8, false, true, true);
 
     if (NULL == port_slab_) {

@@ -19,6 +19,7 @@ namespace lib {
 typedef uint32_t slab_id_t;
 enum {
     SDK_SLAB_ID_TWHEEL,
+    SDK_SLAB_ID_PORT_PD,
     SDK_SLAB_ID_RSVD,
 };
 

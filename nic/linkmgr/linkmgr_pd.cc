@@ -2,7 +2,6 @@
 
 #include "nic/include/hal_lock.hpp"
 #include "sdk/pal.hpp"
-
 #include "linkmgr_pd.hpp"
 #include "linkmgr_state_pd.hpp"
 #include "linkmgr_src.hpp"
@@ -28,7 +27,7 @@ linkmgr_init_pd() {
     // initialize the port mac and serdes functions
     port::port_init();
 
-    if (platform_type() == sdk::lib::platform_type_t::PLATFORM_TYPE_SIM) {
+    if (platform_type() == platform_type_t::PLATFORM_TYPE_SIM) {
         do {
             rc = lib_model_connect();
             if (rc == -1) {
@@ -80,7 +79,7 @@ port_create_pd(port_args_pd_t *args)
     pd_p->set_num_lanes(args->num_lanes);
 
     // if admin up is set, enable the port, else disable the port
-    if(args->admin_state == ::port::PORT_ADMIN_STATE_UP) {
+    if (args->admin_state == ::port::PORT_ADMIN_STATE_UP) {
         ret = linkmgr::pd::port::port_enable(pd_p);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}: port enable failed", __FUNCTION__);

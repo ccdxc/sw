@@ -7,17 +7,20 @@
 #include <atomic>
 #include "sdk/twheel.hpp"
 #include "sdk/thread.hpp"
+#include "linkmgr_pd.hpp"
 #include "port_mac.hpp"
 #include "port.hpp"
 
+namespace sdk {
 namespace linkmgr {
+namespace pd {
 
 mac_fn_t port::mac_fn;
 serdes_fn_t port::serdes_fn;
 
 // invoked by the periodic thread when timer expires
 sdk_ret_t
-port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
+port::link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -387,12 +390,12 @@ port::port_link_sm_process(void)
 sdk_ret_t
 port::port_enable(void)
 {
-    /* check if already enabled */
-    if (this->admin_state_ == ::port::PORT_ADMIN_STATE_UP) {
+    // check if already enabled
+    if (this->admin_state_ == PORT_ADMIN_STATE_UP) {
         return SDK_RET_OK;
     }
 
-    /* enable the port */
+    // enable the port
     set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
 
     port_link_sm_process();
@@ -405,32 +408,32 @@ port::port_enable(void)
 sdk_ret_t
 port::port_disable(void)
 {
-    /* check if already disabled */
-    if (this->admin_state_ == ::port::PORT_ADMIN_STATE_DOWN) {
+    // check if already disabled
+    if (this->admin_state_ == port_admin_state_t::PORT_ADMIN_STATE_DOWN) {
         return SDK_RET_OK;
     }
 
-    /* disable the port */
+    // disable the port
     set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DISABLED);
 
     port_link_sm_process();
 
-    this->admin_state_ = ::port::PORT_ADMIN_STATE_DOWN;
+    this->admin_state_ = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
 
     return SDK_RET_OK;;
 }
 
 sdk_ret_t
-port::port_init(void)
+port::port_init(linkmgr_cfg_t *cfg)
 {
     sdk_ret_t rc = SDK_RET_OK;
 
-    rc = port::port_mac_fn_init();
+    rc = port::port_mac_fn_init(cfg);
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");
     }
 
-    rc = port::port_serdes_fn_init();
+    rc = port::port_serdes_fn_init(cfg);
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");
     }
@@ -478,4 +481,6 @@ port::port_disable(port *pd_p)
     return ret;
 }
 
+}    // namespace pd
 }    // namespace linkmgr
+}    // namespace sdk

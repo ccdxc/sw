@@ -6,9 +6,12 @@
 #include <sys/socket.h>
 #include <atomic>
 #include "port.hpp"
+#include "linkmgr_rw.hpp"
+#include "linkmgr_pd.hpp"
 
 namespace sdk {
 namespace linkmgr {
+namespace pd {
 
 //---------------------------------------------------------------------------
 // HAPS platform methods
@@ -107,10 +110,10 @@ serdes_reset_default (uint32_t sbus_addr, bool reset)
 }
 
 sdk_ret_t
-linkmgr::pd::port::port_serdes_fn_init(void)
+linkmgr::pd::port::port_serdes_fn_init(linkmgr_cfg_t *cfg)
 {
     linkmgr::pd::serdes_fn_t *serdes_fn = &linkmgr::pd::port::serdes_fn;
-    sdk::lib::platform_type_t platform_type = linkmgr::platform_type();
+    platform_type_t platform_type = cfg->platform_type;
 
     serdes_fn->serdes_cfg = &serdes_cfg_default;
     serdes_fn->serdes_signal_detect = &serdes_signal_detect_default;
@@ -120,7 +123,7 @@ linkmgr::pd::port::port_serdes_fn_init(void)
     serdes_fn->serdes_reset = &serdes_reset_default;
 
     switch (platform_type) {
-    case sdk::lib::platform_type_t::PLATFORM_TYPE_HAPS:
+    case platform_type_t::PLATFORM_TYPE_HAPS:
         serdes_fn->serdes_cfg = &serdes_cfg_haps;
         serdes_fn->serdes_signal_detect = &serdes_signal_detect_haps;
         serdes_fn->serdes_rdy = &serdes_rdy_haps;
@@ -136,5 +139,6 @@ linkmgr::pd::port::port_serdes_fn_init(void)
     return SDK_RET_OK;
 }
 
+}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk

@@ -326,37 +326,37 @@ hal_api_trace (const char *trace)
     HAL_TRACE_DEBUG(buf.c_str());
 }
 
-sdk::lib::port_speed_t
+port_speed_t
 port_speed_spec_to_sdk_port_speed (::port::PortSpeed speed)
 {
     switch (speed) {
     case ::port::PORT_SPEED_10G:
-        return sdk::lib::port_speed_t::PORT_SPEED_10G;
+        return port_speed_t::PORT_SPEED_10G;
         break;
     case ::port::PORT_SPEED_25G:
-        return sdk::lib::port_speed_t::PORT_SPEED_25G;
+        return port_speed_t::PORT_SPEED_25G;
         break;
     case ::port::PORT_SPEED_100G:
-        return sdk::lib::port_speed_t::PORT_SPEED_100G;
+        return port_speed_t::PORT_SPEED_100G;
         break;
     default:
-        return sdk::lib::port_speed_t::PORT_SPEED_NONE;
+        return port_speed_t::PORT_SPEED_NONE;
     }
 
-    return sdk::lib::port_speed_t::PORT_SPEED_NONE;
+    return port_speed_t::PORT_SPEED_NONE;
 }
 
 ::port::PortSpeed
-sdk_port_speed_to_port_speed_spec (sdk::lib::port_speed_t speed)
+sdk_port_speed_to_port_speed_spec (port_speed_t speed)
 {
     switch (speed) {
-    case sdk::lib::port_speed_t::PORT_SPEED_10G:
+    case port_speed_t::PORT_SPEED_10G:
         return ::port::PORT_SPEED_10G;
         break;
-    case sdk::lib::port_speed_t::PORT_SPEED_25G:
+    case port_speed_t::PORT_SPEED_25G:
         return ::port::PORT_SPEED_25G;
         break;
-    case sdk::lib::port_speed_t::PORT_SPEED_100G:
+    case port_speed_t::PORT_SPEED_100G:
         return ::port::PORT_SPEED_100G;
         break;
     default:
@@ -366,24 +366,24 @@ sdk_port_speed_to_port_speed_spec (sdk::lib::port_speed_t speed)
     return ::port::PORT_SPEED_NONE;
 }
 
-sdk::lib::port_type_t
+port_type_t
 port_type_to_sdk_port_type_spec (::port::PortType type)
 {
     switch (type) {
     case ::port::PORT_TYPE_ETH:
-        return sdk::lib::port_type_t::PORT_TYPE_ETH;
+        return port_type_t::PORT_TYPE_ETH;
     default:
-        return sdk::lib::port_type_t::PORT_TYPE_NONE;
+        return port_type_t::PORT_TYPE_NONE;
     }
 
-    return sdk::lib::port_type_t::PORT_TYPE_NONE;
+    return port_type_t::PORT_TYPE_NONE;
 }
 
 ::port::PortType
-sdk_port_type_to_port_type_spec (sdk::lib::port_type_t type)
+sdk_port_type_to_port_type_spec (port_type_t type)
 {
     switch (type) {
-    case sdk::lib::port_type_t::PORT_TYPE_ETH:
+    case port_type_t::PORT_TYPE_ETH:
         return ::port::PORT_TYPE_ETH;
         break;
     default:

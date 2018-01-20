@@ -1,22 +1,19 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "sdk/lock.hpp"
-#include "sdk/pal.hpp"
 #include "linkmgr_pd.hpp"
 #include "linkmgr_state_pd.hpp"
-//#include "linkmgr_src.hpp"
 #include "port.hpp"
-//#include "nic/model_sim/include/lib_model_client.h" ===> why do we need this ?
-// TODO: should be in PAL/linkmgr code that resides in HAL
 
 namespace sdk {
 namespace linkmgr {
 namespace pd {
 
 linkmgr_state_pd *g_linkmgr_state_pd;
+linkmgr_cfg_t g_linkmgr_cfg;
 
 sdk_ret_t
-linkmgr_init_pd (void)
+linkmgr_init_pd (linkmgr_cfg_t *cfg)
 {
     int  rc  = 0;
 
@@ -27,9 +24,9 @@ linkmgr_init_pd (void)
     }
 
     // initialize the port mac and serdes functions
-    port::port_init();
+    port::port_init(cfg);
 
-    if (platform_type() == sdk::lib::platform_type_t::PLATFORM_TYPE_SIM) {
+    if (cfg->platform_type == platform_type_t::PLATFORM_TYPE_SIM) {
         do {
             rc = lib_model_connect();
             if (rc == -1) {
@@ -38,6 +35,7 @@ linkmgr_init_pd (void)
             }
         } while (rc == -1);
     }
+    g_linkmgr_cfg = *cfg;
 
     return SDK_RET_OK;
 }
@@ -80,7 +78,7 @@ port_create_pd (port_args_pd_t *args)
     pd_p->set_num_lanes(args->num_lanes);
 
     // if admin up is set, enable the port, else disable the port
-    if (args->admin_state == ::port::PORT_ADMIN_STATE_UP) {
+    if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_UP) {
         ret = linkmgr::pd::port::port_enable(pd_p);
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("{}: port enable failed", __FUNCTION__);
@@ -105,13 +103,13 @@ port_update_pd (port_args_pd_t *args)
     linkmgr::pd::port  *pd_p = (linkmgr::pd::port*)args->pd_p;
 
     SDK_TRACE_DEBUG("{}: port update", __FUNCTION__);
-    if (args->port_speed != ::port::PORT_SPEED_NONE) {
+    if (args->port_speed != port_speed_t::PORT_SPEED_NONE) {
         pd_p->set_port_speed(args->port_speed);
     }
 
-    if (args->admin_state == ::port::PORT_ADMIN_STATE_UP) {
+    if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_UP) {
         ret = linkmgr::pd::port::port_enable(pd_p);
-    } else if (args->admin_state == ::port::PORT_ADMIN_STATE_DOWN) {
+    } else if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_DOWN) {
         ret = linkmgr::pd::port::port_disable(pd_p);
     }
 
@@ -215,27 +213,3 @@ port_has_admin_state_changed_pd (port_args_pd_t *args)
 }    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk
-
-// TODO
-// WTH is this ??
-uint32_t
-read_reg_base (uint32_t chip, uint64_t addr)
-{
-    uint32_t data = 0x0;
-
-    if (sdk::lib::pal_reg_read(addr, &data) != sdk::lib::PAL_RET_OK) {
-        SDK_TRACE_ERR("{} read failed", __FUNCTION__);
-    }
-
-    return data;
-}
-
-void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data)
-{
-    if (sdk::lib::pal_reg_write(addr, data) != sdk::lib::PAL_RET_OK) {
-        SDK_TRACE_ERR("{} write failed", __FUNCTION__);
-    }
-
-    uint32_t read_data = read_reg_base(chip, addr);
-    SDK_TRACE_DEBUG("{0:s} read_data after write {1:x}", __FUNCTION__, read_data);
-}

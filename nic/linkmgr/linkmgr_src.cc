@@ -56,7 +56,7 @@ sbus_addr (uint32_t asic_num, uint32_t asic_port, uint32_t lane)
     return g_linkmgr_state->catalog()->sbus_addr(asic_num, asic_port, lane);
 }
 
-sdk::lib::platform_type_t platform_type()
+platform_type_t platform_type()
 {
     return g_linkmgr_state->catalog()->platform_type();
 }

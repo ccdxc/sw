@@ -4,7 +4,7 @@
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/ip.h"
 #include "nic/gen/proto/hal/port.pb.h"
-#include "sdk/catalog.hpp"
+#include "sdk/types.hpp"
 
 using types::ApiStatus;
 
@@ -32,10 +32,10 @@ hal_ret_t hal_add_to_handle_list(dllist_ctxt_t *handle_list,
 void hal_free_handles_list(dllist_ctxt_t *list);
 hal_ret_t hal_cleanup_handle_list(dllist_ctxt_t **list);
 
-sdk::lib::port_speed_t port_speed_spec_to_sdk_port_speed(::port::PortSpeed speed);
-::port::PortSpeed sdk_port_speed_to_port_speed_spec(sdk::lib::port_speed_t speed);
-sdk::lib::port_type_t port_type_to_sdk_port_type_spec(::port::PortType type);
-::port::PortType sdk_port_type_to_port_type_spec(sdk::lib::port_type_t type);
+port_speed_t port_speed_spec_to_sdk_port_speed(::port::PortSpeed speed);
+::port::PortSpeed sdk_port_speed_to_port_speed_spec(port_speed_t speed);
+port_type_t port_type_to_sdk_port_type_spec(::port::PortType type);
+::port::PortType sdk_port_type_to_port_type_spec(port_type_t type);
 
 }    // namespace hal
 

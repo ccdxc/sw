@@ -3,36 +3,12 @@
 #ifndef __LINKMGR_PORT_HPP__
 #define __LINKMGR_PORT_HPP__
 
-#include "sdk/catalog.hpp"
-
-//extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
-//extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
-
-#if 0
-#define WRITE_REG_BASE(chip, addr, data) {                                  \
-    HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x} data 0x{3:x}",    \
-                    __FUNCTION__, chip, addr, data);                        \
-    if (linkmgr::hw_access_mock_mode() == false) {  \
-        write_reg_base(chip, addr, data);                                   \
-    }                                                                       \
-}
-
-#define READ_REG_BASE(chip, addr, data) {                       \
-    HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x}",     \
-                    __FUNCTION__, chip, addr);                  \
-    if (linkmgr::hw_access_mock_mode() == false) {  \
-        *data = read_reg_base(chip, addr);                      \
-    }                                                           \
-}
-#endif
+#include "sdk/base.hpp"
+#include "sdk/types.hpp"
+#include "linkmgr_pd.hpp"
 
 namespace sdk {
 namespace linkmgr {
-
-//extern bool hw_access_mock_mode(void);
-//extern sdk::lib::platform_type_t platform_type(void);
-//extern uint32_t sbus_addr(uint32_t asic, uint32_t asic_port, uint32_t lane);
-
 namespace pd {
 
 #define PORT_LANES_MAX 4
@@ -63,45 +39,28 @@ enum class port_link_sm_t {
     PORT_LINK_SM_UP
 };
 
-enum class port_oper_status_t {
-    PORT_OPER_STATUS_NONE = 0,
-    PORT_OPER_STATUS_UP = 1,
-    PORT_OPER_STATUS_DOWN = 2,
-};
-
 typedef struct mac_fn_s_ {
     int (*mac_cfg) (uint32_t port_num, uint32_t speed, uint32_t num_lanes);
-
     int (*mac_enable) (uint32_t port_num, uint32_t speed,
                        uint32_t num_lanes, bool enable);
-
     int (*mac_soft_reset) (uint32_t port_num, uint32_t speed,
                            uint32_t num_lanes, bool reset);
-
     int (*mac_stats_reset) (uint32_t port_num, uint32_t speed,
                             uint32_t num_lanes, bool reset);
-
     int (*mac_intr_clear) (uint32_t port_num, uint32_t speed,
                            uint32_t num_lanes);
-
     int (*mac_intr_enable) (uint32_t port_num, uint32_t speed,
                             uint32_t num_lanes, bool enable);
-
     bool (*mac_faults_get) (uint32_t port_num);
 
 } mac_fn_t;
 
 typedef struct serdes_fn_s_ {
     int (*serdes_cfg) (uint32_t sbus_addr);
-
     int (*serdes_tx_rx_enable) (uint32_t sbus_addr, bool enable);
-
     int (*serdes_output_enable) (uint32_t sbus_addr, bool enable);
-
     int (*serdes_reset) (uint32_t sbus_addr, bool reset);
-
     bool (*serdes_signal_detect) (uint32_t sbus_addr);
-
     bool (*serdes_rdy) (uint32_t sbus_addr);
 } serdes_fn_t;
 
@@ -153,7 +112,7 @@ public:
         this->link_sm_ = link_sm;
     }
 
-    const void *link_bring_up_timer(void) const {
+    void *link_bring_up_timer(void) const {
         return this->link_bring_up_timer_;
     }
 
@@ -243,10 +202,10 @@ public:
     static sdk_ret_t
         link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt);
 
-    static sdk_ret_t port_init(void);
+    static sdk_ret_t port_init(linkmgr_cfg_t *cfg);
 
-    static sdk_ret_t port_mac_fn_init(void);
-    static sdk_ret_t port_serdes_fn_init(void);
+    static sdk_ret_t port_mac_fn_init(linkmgr_cfg_t *cfg);
+    static sdk_ret_t port_serdes_fn_init(linkmgr_cfg_t *cfg);
 
     static mac_fn_t mac_fn;
 
@@ -261,10 +220,10 @@ public:
     static sdk_ret_t port_disable(port *pd_p);
 
 private:
-    port_oper_status_t      oper_status_;    // port operational status
-    port_speed_t            port_speed_;     // port speed
-    port_type_t             port_type_;      // port type
-    port_admin_state_t      admin_state_;    // port admin state
+    port_oper_status_t    oper_status_;    // port operational status
+    port_speed_t          port_speed_;     // port speed
+    port_type_t           port_type_;      // port type
+    port_admin_state_t    admin_state_;    // port admin state
     port_link_sm_t        link_sm_;          // port link state machine
     void                  *link_bring_up_timer_;   // port link bring up timer
     uint32_t              mac_id_;          // mac instance for this port
