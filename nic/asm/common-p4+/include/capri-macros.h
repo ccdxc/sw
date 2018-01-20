@@ -211,26 +211,14 @@
      ((_type) << DB_TYPE_SHFT) + \
      DB_ADDR_BASE)
 
-#define CAPRI_RING_DOORBELL_ADDR(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
-       addi            r5, r0, _pid_chk | _idx_upd | _sched_upd;\
-       sll             r5, r5, DB_UPD_SHFT;\
-       addi            r6, r0, _lif;\
-       sll             r6, r6, DB_LIF_SHFT;\
-       or              r5, r5, r6;\
-       addi            r6, r0, _type;\
-       sll             r6, r6, DB_TYPE_SHFT;\
-       or              r5, r5, r6;\
-       addi            r4, r5, DB_ADDR_BASE
+#define CAPRI_DOORBELL_ADDR_HOST(_pid_chk, _idx_upd, _sched_upd, _type) \
+    ((((_pid_chk) | (_idx_upd) | (_sched_upd)) << DB_UPD_SHFT) + \
+     DB_ADDR_BASE_HOST)
 
 #define CAPRI_RING_DOORBELL_ADDR_HOST(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
-       addi            r5, r0, _pid_chk | _idx_upd | _sched_upd;\
-       sll             r5, r5, DB_UPD_SHFT;\
-       sll             r6, _lif, DB_LIF_SHFT;\
-       or              r5, r5, r6;\
-       add             r6, r0, _type;\
-       sll             r6, r6, DB_TYPE_SHFT;\
-       or              r5, r5, r6;\
-       addi            r4, r5, DB_ADDR_BASE_HOST
+        addi            r4, r4, CAPRI_DOORBELL_ADDR_HOST(_pid_chk, _idx_upd, _sched_upd, _type); \
+        add             r4, r4, _lif, DB_LIF_SHFT; \
+        add             r4, r4, _type, DB_TYPE_SHFT;
 
 #define DB_PID_SHFT                    48
 #define DB_QID_SHFT                    24
@@ -436,25 +424,48 @@ o        phvwri      p.##_dma_cmd_prefix##_addr, __addr;                        
         phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \
         phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PPKT_TO_MEM
 
-#define CAPRI_DMA_CMD_RING_DOORBELL2(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _sfield, _efield) \
+#define CAPRI_DMA_CMD_RING_DOORBELL2_INC_PI(_dma_cmd_prefix, _lif, __type, _qid, _ring, _sfield, _efield) \
         phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
                     CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET,__type, _lif); \
+        CAPRI_RING_DOORBELL_DATA(0, _qid, _ring, 0);                                            \
+        phvwr       p.{_sfield..._efield}, r3.dx;                                               \
+        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \
+        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_efield);          \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
+
+#define CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _sfield, _efield) \
+        phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
+                    CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET,__type, _lif); \
         CAPRI_RING_DOORBELL_DATA(0, _qid, _ring, _pidx);                                        \
         phvwr       p.{_sfield..._efield}, r3.dx;                                               \
         phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \
         phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_efield);          \
         phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
 
+#define CAPRI_DMA_CMD_RING_DOORBELL2(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _sfield, _efield) \
+        CAPRI_DMA_CMD_RING_DOORBELL2_INC_PI(_dma_cmd_prefix, _lif, __type, _qid, _ring, _sfield, _efield)
 
-#define CAPRI_DMA_CMD_RING_DOORBELL(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _field)  \
+
+#define CAPRI_DMA_CMD_RING_DOORBELL_INC_PI(_dma_cmd_prefix, _lif, __type, _qid, _ring, _field)  \
         phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
                     CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET,__type, _lif); \
+        CAPRI_RING_DOORBELL_DATA(0, _qid, _ring, 0);                                            \
+        phvwr       p.{_field}, r3.dx;                                                          \
+        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_field);       \
+        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_field);           \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
+
+#define CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _field)  \
+        phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
+                    CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET,__type, _lif); \
         CAPRI_RING_DOORBELL_DATA(0, _qid, _ring, _pidx);                                        \
         phvwr       p.{_field}, r3.dx;                                                          \
         phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_field);       \
         phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_field);           \
         phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
 
+#define CAPRI_DMA_CMD_RING_DOORBELL(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _field)  \
+        CAPRI_DMA_CMD_RING_DOORBELL_INC_PI(_dma_cmd_prefix, _lif, __type, _qid, _ring, _field)
 
 #define CAPRI_DMA_CMD_PHV2PKT_SETUP(_dma_cmd_prefix, _sfield, _efield)                          \
         phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \

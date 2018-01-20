@@ -94,7 +94,7 @@ tls_enc_bld_barco_desc:
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)
 
     /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
     phvwr       p.barco_desc_doorbell_address, r4.dx
     CAPRI_OPERAND_DEBUG(r4.dx)
 

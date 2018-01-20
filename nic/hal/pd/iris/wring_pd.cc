@@ -28,7 +28,7 @@ wring_pd_meta_init() {
      */
 
     g_meta[types::WRING_TYPE_SERQ] = 
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, 64, SERQ_WRING_SLOT_SIZE, "", 0, 0, 0, serq_slot_parser, NULL};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, CAPRI_SERQ_RING_SLOTS, SERQ_WRING_SLOT_SIZE, "", 0, 0, 0, serq_slot_parser, NULL};
  
     g_meta[types::WRING_TYPE_NMDR_TX] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, CAPRI_TNMDR_RING_SIZE,
@@ -73,7 +73,7 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser, barco_gcm0_get_hw_meta};
 
     g_meta[types::WRING_TYPE_SESQ] = 
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
 
     g_meta[types::WRING_TYPE_IPSECCBQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB, 64, DEFAULT_WRING_SLOT_SIZE,
@@ -100,7 +100,8 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
 
     g_meta[types::WRING_TYPE_ASESQ] = 
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, CAPRI_ASESQ_RING_SLOTS,
+                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
 
     g_meta[types::WRING_TYPE_NMDR_TX_GC] = 
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX_GC, CAPRI_TNMDR_GC_RING_SIZE,

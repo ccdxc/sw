@@ -187,7 +187,7 @@ tls_dec_aesgcm_equeue_barco:
 
     phvwr           p.barco_desc_status_address, K(to_s7_idesc).dx
 	/* address will be in r4 */
-	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
     phvwr       p.barco_desc_doorbell_address, r4.dx
 
 	/* data will be in r3 */

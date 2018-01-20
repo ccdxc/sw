@@ -27,7 +27,7 @@ tls_dec_bsq_consume_process:
     CAPRI_CLEAR_TABLE0_VALID
 
     /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
     add		r1, k.tls_global_phv_fid, r0
 
     /*

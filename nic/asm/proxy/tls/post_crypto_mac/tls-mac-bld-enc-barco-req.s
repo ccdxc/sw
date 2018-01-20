@@ -47,7 +47,7 @@ table_read_QUEUE_ENC_BRQ:
     phvwri      p.barco_desc_command, TLS_WORD_SWAP(CAPRI_BARCO_COMMAND_AES_CBC_ENCRYPT)
 
     /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
     phvwr       p.barco_desc_doorbell_address, r4.dx
     CAPRI_OPERAND_DEBUG(r4.dx)
 

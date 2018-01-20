@@ -34,7 +34,6 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     add r1, r1, d.barco_ring_base_addr 
     phvwr  p.common_te0_phv_table_addr, r1
 
-
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.ipsec_to_stage3_block_size, d.block_size
     phvwri p.ipsec_to_stage4_dot1q_etype, DOT1Q_ETYPE
@@ -47,7 +46,7 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     nop
     seq c2, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx
     b.!c2 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
+    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, d.{barco_ring_cindex}.hx)
     memwr.dx  r4, r3
 

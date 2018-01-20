@@ -45,7 +45,7 @@ tls_dec_pre_crypto_aesgcm_newseg_process:
     add         r2, r2, D(serq_base)
 
     /* Increment CI in stage 0 and acknowledge the doorbell */
-    tbladd      D(ci_0).hx, 1
+    tblmincri   D(ci_0).hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
 	
     /* Acknowledge the doorbell */
 	//CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)

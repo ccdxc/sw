@@ -37,7 +37,7 @@ tls_dec_pre_crypto_process:
     sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
 
     /* Increment CI in stage 0 */
-    tbladd      d.{u.read_tls_stg0_d.ci_0}.hx, 1
+    tblmincri   d.{u.read_tls_stg0_d.ci_0}.hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
 	
     //add         r3, r0, r0
     add         r3, r3, d.u.read_tls_stg0_d.serq_base

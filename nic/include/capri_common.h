@@ -251,4 +251,14 @@
 #define DB_SCHED_UPD_CLEAR             (0x2)
 #define DB_SCHED_UPD_SET               (0x3)
 
+/*
+ * Producer/Consumer ring sizes
+ */
+#define CAPRI_SERQ_RING_SLOTS_SHIFT     6
+#define CAPRI_SERQ_RING_SLOTS           (1 << CAPRI_SERQ_RING_SLOTS_SHIFT)
+#define CAPRI_SESQ_RING_SLOTS_SHIFT     6
+#define CAPRI_SESQ_RING_SLOTS           (1 << CAPRI_SESQ_RING_SLOTS_SHIFT)
+#define CAPRI_ASESQ_RING_SLOTS_SHIFT    6
+#define CAPRI_ASESQ_RING_SLOTS          (1 << CAPRI_ASESQ_RING_SLOTS_SHIFT)
+
 #endif

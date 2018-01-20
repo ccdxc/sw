@@ -57,7 +57,7 @@ esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
 
 dma_cmd_ring_doorbell:
     /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)
+    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)
         /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.ipsec_global_ipsec_cb_index, 0, d.cb_pindex)                                                                                                                                    
         phvwr           p.doorbell_cmd_dma_cmd_addr, r4

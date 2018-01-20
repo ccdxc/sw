@@ -268,6 +268,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes256_gcm_record_pkt.testspec
+        rtl     : True
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -310,6 +311,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
+        rtl     : True
         args    :
             cipher_suite: CCM
             maxflows: 1
@@ -379,6 +381,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             bypass_barco : 1
             maxflows : 1

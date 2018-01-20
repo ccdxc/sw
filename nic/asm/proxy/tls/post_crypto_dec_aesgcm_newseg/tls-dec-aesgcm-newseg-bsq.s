@@ -34,7 +34,7 @@ tls_dec_post_crypto_aesgcm_newseg_process:
 	
     /* Acknowledge BSQ Doorbell */
     /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
     add		r1, k.p4_txdma_intr_qid, r0
 
     /* data will be in r3

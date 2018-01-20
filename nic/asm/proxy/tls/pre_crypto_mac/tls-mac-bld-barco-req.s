@@ -62,7 +62,7 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_header_size, r1.wx
 
     /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
     phvwr       p.barco_desc_doorbell_address, r4.dx
     CAPRI_OPERAND_DEBUG(r4.dx)
 

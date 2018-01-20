@@ -39,7 +39,7 @@ table_read_asq_cindex:
      */
 
      /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_CPU)
+    addi    r4, r0,  CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_CPU)
     
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, CPU_SCHED_RING_ASQ, d.{u.cpu_tx_initial_action_d.ci_0}.hx)

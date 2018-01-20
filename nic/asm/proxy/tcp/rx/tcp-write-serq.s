@@ -7,6 +7,7 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
+#include "tls_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s5_t0_tcp_rx_k.h"
@@ -105,8 +106,8 @@ dma_tcp_flags:
     add         r1, k.to_s5_descr, NIC_DESC_ENTRY_TCP_FLAGS_OFFSET
     CAPRI_DMA_CMD_PHV2MEM_SETUP(tcp_flags_dma_dma_cmd, r1, tcp_app_header_flags, tcp_app_header_flags)
 dma_cmd_serq_slot:
-    CAPRI_OPERAND_DEBUG(d.{serq_pidx}.hx)
-    sll         r5, d.{serq_pidx}.hx, NIC_SERQ_ENTRY_SIZE_SHIFT
+    CAPRI_OPERAND_DEBUG(d.serq_pidx)
+    sll         r5, d.serq_pidx, NIC_SERQ_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for SERQ slot */
     add         r1, r5, d.serq_base
     // increment serq pi as a part of ringing dorrbell
@@ -142,8 +143,8 @@ dma_cmd_ring_tcp_tx_doorbell:
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_RING_TX_DOORBELL, TCP_DDOL_DONT_RING_TX_DOORBELL
     bcf         [c1 & !c7], tcp_serq_produce
 
-    CAPRI_DMA_CMD_RING_DOORBELL2(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0,k.common_phv_fid, TCP_SCHED_RING_PENDING_RX2TX,
-                                 0, db_data2_pid, db_data2_index)
+    CAPRI_DMA_CMD_RING_DOORBELL2_INC_PI(tx_doorbell_or_timer_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+                                TCP_SCHED_RING_PENDING_RX2TX, db_data2_pid, db_data2_index)
 
     phvwri.c7   p.tx_doorbell_or_timer_dma_cmd_eop, 1
     b.c7        flow_write_serq_process_done
@@ -185,10 +186,10 @@ tcp_serq_produce:
     b           flow_write_serq_process_done
     nop
 ring_doorbell:
-    tbladd      d.{serq_pidx}.hx, 1
-
-    CAPRI_DMA_CMD_RING_DOORBELL2(tls_doorbell_dma_cmd, LIF_TLS, 0, k.common_phv_fid, 0,
-                                 k.to_s5_xrq_pidx, db_data_pid, db_data_index)
+    tblmincri   d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tls_doorbell_dma_cmd, LIF_TLS, 0,
+                                 k.common_phv_fid, TLS_SCHED_RING_SERQ,
+                                 d.serq_pidx, db_data_pid, db_data_index)
     sne         c1, k.common_phv_l7_proxy_en, r0
     bcf         [c1], flow_write_serq_process_done
     nop

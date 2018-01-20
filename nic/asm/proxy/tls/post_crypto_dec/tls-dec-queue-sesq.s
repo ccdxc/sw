@@ -63,7 +63,8 @@ tls_sesq_produce:
     add.c1      r7, k.tls_global_phv_fid, r0
     add.!c1     r7, k.to_s5_other_fid, r0
 
-    CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd2_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
+    tblmincri   d.u.tls_queue_sesq_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd2_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
                                 d.u.tls_queue_sesq_d.sw_sesq_pi, db_data_data)
                               
     sne         c1, k.tls_global_phv_l7_proxy_en, r0

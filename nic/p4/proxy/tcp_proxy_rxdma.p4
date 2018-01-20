@@ -346,7 +346,6 @@ header_type to_stage_5_phv_t {
     fields {
         page                    : 34;
         descr                   : 32;
-        xrq_pidx                : 16;
         payload_len             : 16;
     }
 }
@@ -1034,7 +1033,6 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
     // from to_stage 5
     modify_field(to_s5_scratch.page, to_s5.page);
     modify_field(to_s5_scratch.descr, to_s5.descr);
-    modify_field(to_s5_scratch.xrq_pidx, to_s5.xrq_pidx);
     modify_field(to_s5_scratch.payload_len, to_s5.payload_len);
 
     // from ki global
@@ -1074,7 +1072,6 @@ action write_arq(ARQ_PI_PARAMS) {
     // from to_stage 5
     modify_field(to_s5_scratch.page, to_s5.page);
     modify_field(to_s5_scratch.descr, to_s5.descr);
-    modify_field(to_s5_scratch.xrq_pidx, to_s5.xrq_pidx);
     modify_field(to_s5_scratch.payload_len, to_s5.payload_len);
 
     // from ki global
@@ -1094,7 +1091,6 @@ action write_l7q(l7q_base, l7q_pidx) {
     // from to_stage 5
     modify_field(to_s5_scratch.page, to_s5.page);
     modify_field(to_s5_scratch.descr, to_s5.descr);
-    modify_field(to_s5_scratch.xrq_pidx, to_s5.xrq_pidx);
     modify_field(to_s5_scratch.payload_len, to_s5.payload_len);
 
     // from ki global
