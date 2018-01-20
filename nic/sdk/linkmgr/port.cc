@@ -7,13 +7,12 @@
 #include <atomic>
 #include "sdk/twheel.hpp"
 #include "sdk/thread.hpp"
-#include "linkmgr_pd.hpp"
+#include "linkmgr.hpp"
 #include "port_mac.hpp"
 #include "port.hpp"
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
 mac_fn_t port::mac_fn;
 serdes_fn_t port::serdes_fn;
@@ -271,7 +270,7 @@ port::port_link_sm_process(void)
             this->link_bring_up_timer_ = NULL;  // sanity
 
             // set operational status as down
-            this->set_oper_status(::port::PORT_OPER_STATUS_DOWN);
+            this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_DOWN);
 
             // disable and clear mac interrupts
             port_mac_intr_en(false);
@@ -374,7 +373,7 @@ port::port_link_sm_process(void)
             port_mac_intr_en(true);
 
             // set operational status as up
-            this->set_oper_status(::port::PORT_OPER_STATUS_UP);
+            this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_UP);
 
             // enable pCal
             // notify others that link is up
@@ -391,7 +390,7 @@ sdk_ret_t
 port::port_enable(void)
 {
     // check if already enabled
-    if (this->admin_state_ == PORT_ADMIN_STATE_UP) {
+    if (this->admin_state_ == port_admin_state_t::PORT_ADMIN_STATE_UP) {
         return SDK_RET_OK;
     }
 
@@ -400,7 +399,7 @@ port::port_enable(void)
 
     port_link_sm_process();
 
-    this->admin_state_ = ::port::PORT_ADMIN_STATE_UP;
+    this->admin_state_ = port_admin_state_t::PORT_ADMIN_STATE_UP;
 
     return SDK_RET_OK;
 }
@@ -442,18 +441,18 @@ port::port_init(linkmgr_cfg_t *cfg)
 }
 
 sdk_ret_t
-port::port_enable(port *pd_p)
+port::port_enable(port *port_p)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (1) {
-        ret = pd_p->port_enable();
+        ret = port_p->port_enable();
     } else {
         // wake up the hal control thread to process port event
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, pd_p);
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, port_p);
 
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("{}: Error notifying control-thread for port enable",
+            SDK_TRACE_ERR("%s: Error notifying control-thread for port enable",
                           __FUNCTION__);
         }
     }
@@ -462,18 +461,18 @@ port::port_enable(port *pd_p)
 }
 
 sdk_ret_t
-port::port_disable(port *pd_p)
+port::port_disable(port *port_p)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
     if (1) {
-        ret = pd_p->port_disable();
+        ret = port_p->port_disable();
     } else {
         // wake up the hal control thread to process port event
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, pd_p);
+        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, port_p);
 
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("{}: Error notifying control-thread for port disable",
+            SDK_TRACE_ERR("%s: Error notifying control-thread for port disable",
                           __FUNCTION__);
         }
     }
@@ -481,6 +480,5 @@ port::port_disable(port *pd_p)
     return ret;
 }
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk

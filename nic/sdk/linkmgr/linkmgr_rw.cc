@@ -4,7 +4,6 @@
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
 uint32_t
 read_reg_base (uint32_t chip, uint64_t addr)
@@ -28,7 +27,6 @@ void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data)
     SDK_TRACE_DEBUG("{0:s} read_data after write {1:x}", __FUNCTION__, read_data);
 }
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk
 

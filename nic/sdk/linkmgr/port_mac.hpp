@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __PORT_MAC_HPP__
-#define __PORT_MAC_HPP__
+#ifndef __SDK_PORT_MAC_HPP__
+#define __SDK_PORT_MAC_HPP__
 
 namespace sdk {
 namespace linkmgr {
@@ -31,5 +31,5 @@ int mac_intr_clear(uint32_t port_num, uint32_t speed, uint32_t num_lanes);
 }    // namespace linkmgr
 }    // namespace sdk
 
-#endif  // __PORT_MAC_HPP__
+#endif  // __SDK_PORT_MAC_HPP__
 

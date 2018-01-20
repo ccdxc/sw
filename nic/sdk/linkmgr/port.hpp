@@ -1,15 +1,14 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __LINKMGR_PORT_HPP__
-#define __LINKMGR_PORT_HPP__
+#ifndef __SDK_LINKMGR_PORT_HPP__
+#define __SDK_LINKMGR_PORT_HPP__
 
 #include "sdk/base.hpp"
 #include "sdk/types.hpp"
-#include "linkmgr_pd.hpp"
+#include "linkmgr.hpp"
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
 #define PORT_LANES_MAX 4
 
@@ -213,11 +212,11 @@ public:
 
     // If current_thread is hal-control thread, invoke method directly
     // Else trigger hal-control thread to invoke method
-    static sdk_ret_t port_enable(port *pd_p);
+    static sdk_ret_t port_enable(port *port_p);
 
     // If current_thread is hal-control thread, invoke method directly
     // Else trigger hal-control thread to invoke method
-    static sdk_ret_t port_disable(port *pd_p);
+    static sdk_ret_t port_disable(port *port_p);
 
 private:
     port_oper_status_t    oper_status_;    // port operational status
@@ -237,8 +236,8 @@ private:
     uint32_t port_sbus_addr(uint32_t lane);
 };
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk
 
-#endif  // __LINKMGR_PORT_HPP__
+#endif  // __SDK_LINKMGR_PORT_HPP__
+

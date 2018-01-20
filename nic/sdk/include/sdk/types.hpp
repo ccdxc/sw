@@ -14,7 +14,9 @@ enum class port_speed_t {
     PORT_SPEED_NONE    = 0,
     PORT_SPEED_10G     = 1,
     PORT_SPEED_25G     = 2,
-    PORT_SPEED_100G    = 3,
+    PORT_SPEED_40G     = 3,
+    PORT_SPEED_50G     = 4,
+    PORT_SPEED_100G    = 5,
 };
 
 enum class port_type_t {
@@ -37,7 +39,7 @@ enum class port_admin_state_t {
 
 enum class port_oper_status_t {
     PORT_OPER_STATUS_NONE = 0,
-    PORT_OPER_STATUS_UP = 1,
+    PORT_OPER_STATUS_UP   = 1,
     PORT_OPER_STATUS_DOWN = 2,
 };
 

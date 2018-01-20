@@ -13,7 +13,6 @@
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
 //---------------------------------------------------------------------------
 // HAPS platform methods
@@ -82,8 +81,7 @@ mac_temac_mdio_rd_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while (mdio_ready == 0 &&
-           linkmgr::hw_access_mock_mode() == false) {
+    while ((mdio_ready == 0) && (g_linkmgr_cfg.mock_hw_access == false)) {
         mac_temac_regrd_haps(chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
     }
@@ -547,10 +545,10 @@ mac_faults_get_default (uint32_t port_num)
 }
 
 sdk_ret_t
-linkmgr::pd::port::port_mac_fn_init(linkmgr_cfg_t *cfg)
+port::port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
-    linkmgr::pd::mac_fn_t *mac_fn = &linkmgr::pd::port::mac_fn;
-    platform_type_t platform_type = cfg->platform_type;
+    mac_fn_t           *mac_fn = &port::mac_fn;
+    platform_type_t    platform_type = cfg->platform_type;
 
     mac_fn->mac_cfg         = &mac_cfg_default;
     mac_fn->mac_enable      = &mac_enable_default;
@@ -583,6 +581,5 @@ linkmgr::pd::port::port_mac_fn_init(linkmgr_cfg_t *cfg)
     return SDK_RET_OK;
 }
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk

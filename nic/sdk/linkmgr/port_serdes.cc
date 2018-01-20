@@ -7,11 +7,10 @@
 #include <atomic>
 #include "port.hpp"
 #include "linkmgr_rw.hpp"
-#include "linkmgr_pd.hpp"
+#include "linkmgr.hpp"
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
 //---------------------------------------------------------------------------
 // HAPS platform methods
@@ -110,10 +109,10 @@ serdes_reset_default (uint32_t sbus_addr, bool reset)
 }
 
 sdk_ret_t
-linkmgr::pd::port::port_serdes_fn_init(linkmgr_cfg_t *cfg)
+port::port_serdes_fn_init(linkmgr_cfg_t *cfg)
 {
-    linkmgr::pd::serdes_fn_t *serdes_fn = &linkmgr::pd::port::serdes_fn;
-    platform_type_t platform_type = cfg->platform_type;
+    serdes_fn_t        *serdes_fn = &port::serdes_fn;
+    platform_type_t    platform_type = cfg->platform_type;
 
     serdes_fn->serdes_cfg = &serdes_cfg_default;
     serdes_fn->serdes_signal_detect = &serdes_signal_detect_default;
@@ -139,6 +138,5 @@ linkmgr::pd::port::port_serdes_fn_init(linkmgr_cfg_t *cfg)
     return SDK_RET_OK;
 }
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk

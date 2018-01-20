@@ -4,16 +4,15 @@
 // read-write APIs to interact with the ASIC
 //------------------------------------------------------------------------------
 
-#ifndef __LINKMGR_RW_HPP__
-#define __LINKMGR_RW_HPP__
+#ifndef __SDK_LINKMGR_RW_HPP__
+#define __SDK_LINKMGR_RW_HPP__
 
 #include "sdk/base.hpp"
 #include "sdk/pal.hpp"
-#include "linkmgr_pd.hpp"
+#include "linkmgr.hpp"
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
 extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
 extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
@@ -35,9 +34,8 @@ extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
     }                                                                        \
 }
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk
 
-#endif  // __LINKMGR_RW_HPP__
+#endif  // __SDK_LINKMGR_RW_HPP__
 

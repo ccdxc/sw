@@ -1,17 +1,16 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "linkmgr_state_pd.hpp"
+#include "linkmgr_state.hpp"
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
 sdk_ret_t
-linkmgr_state_pd::init(void)
+linkmgr_state::init(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    port_slab_ = slab::factory("port_pd", sdk::lib::SDK_SLAB_ID_PORT_PD,
+    port_slab_ = slab::factory("port", sdk::lib::SDK_SLAB_ID_PORT_PD,
                                sizeof(port), 8, false, true, true);
 
     if (NULL == port_slab_) {
@@ -24,13 +23,13 @@ linkmgr_state_pd::init(void)
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
-linkmgr_state_pd *
-linkmgr_state_pd::factory(void)
+linkmgr_state *
+linkmgr_state::factory(void)
 {
-    linkmgr_state_pd *state = NULL;
+    linkmgr_state *state = NULL;
 
     // TODO: DONOT USE new operator
-    state = new linkmgr_state_pd();
+    state = new linkmgr_state();
     if (NULL == state) {
         return NULL;
     }
@@ -43,6 +42,5 @@ linkmgr_state_pd::factory(void)
     return state;
 }
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk

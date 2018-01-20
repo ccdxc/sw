@@ -1,5 +1,7 @@
-#ifndef __LINKMGR_STATE_PD_HPP__
-#define __LINKMGR_STATE_PD_HPP__
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+#ifndef __SDK_LINKMGR_STATE_HPP__
+#define __SDK_LINKMGR_STATE_HPP__
 
 #include "sdk/slab.hpp"
 #include "port.hpp"
@@ -8,11 +10,10 @@ using sdk::lib::slab;
 
 namespace sdk {
 namespace linkmgr {
-namespace pd {
 
-class linkmgr_state_pd {
+class linkmgr_state {
 public:
-    static linkmgr_state_pd* factory(void);
+    static linkmgr_state *factory(void);
     // get APIs for port related state
     slab *port_slab(void) const { return port_slab_; }
 
@@ -23,11 +24,10 @@ private:
     slab       *port_slab_;
 };
 
-extern linkmgr_state_pd *g_linkmgr_state_pd;
+extern linkmgr_state *g_linkmgr_state;
 
-}    // namespace pd
 }    // namespace linkmgr
 }    // namespace sdk
 
-#endif    // __LINKMGR_STATE_PD_HPP__
+#endif    // __SDK_LINKMGR_STATE_HPP__
 
