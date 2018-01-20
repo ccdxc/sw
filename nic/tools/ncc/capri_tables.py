@@ -5766,7 +5766,7 @@ class capri_table_manager:
         self.be = capri_be
         self.logger = logging.getLogger('TM')
         self.gress_tm = [capri_gress_tm(self, d) for d in xgress]
-        self.table_memory_spec = capri_table_memory_spec_load()
+        self.table_memory_spec = capri_table_memory_spec_load(self.be.args.target)
         self.mapper = capri_table_mapper(self)
 
     def print_tables(self):

@@ -76,6 +76,12 @@ def get_parser():
     parser.add_argument('--phv-flits', dest='phv_flits', action='store',
                         help='specify number of phv_flits to be used (max 12)',
                         default=None, required=False)
+    parser.add_argument('--target', dest='target', action='store',
+                        help='Target', choices=['asic', 'haps'],
+                        default='asic', required=False)
+    parser.add_argument('--fe-flags', dest='fe_flags', action='store',
+                        help='P4 front end flags',
+                        default=None, required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend
@@ -143,17 +149,21 @@ def setup_num_phv_flits(capri_model, num_flits):
     max_phv_bytes = max_phv_bits / 8
     capri_model['phv']['containers'] = {8: max_phv_bytes} # {size:num} all 8 bit containers
     capri_model['parser']['parser_num_flits'] = capri_model['phv']['num_flits'] / 2
-    
 
 def main():
     args = get_parser().parse_args()
+    if not len(args.sources):
+        print "No input file specified"
+        sys.exit(1)
     prog_name = os.path.split(args.sources[0])
     prog_name = prog_name[1].replace('.p4', '')
-    capri_logging.logger_init(log_dir=args.gen_dir, prog_name=prog_name, 
+    capri_logging.logger_init(log_dir=args.gen_dir, prog_name=prog_name,
                                 loglevel=args.loglevel, floglevel=args.floglevel)
 
     # TBD - Insert toplevel try-except block
     h = HLIR(*args.sources)
+    if args.fe_flags:
+        h.add_preprocessor_args(args.fe_flags)
     if not h.build():
         sys.exit(1)
 
