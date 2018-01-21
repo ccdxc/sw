@@ -3712,6 +3712,9 @@ def capri_dump_table_memory(be, memory, tables, mem_type, region):
     with open(out_file, "w") as of:
         free  = 0
         total = 0
+        macros = OrderedDict()
+        for macro in range(memory[mem_type][region]['width'] / memory[mem_type][region]['blk_w']):
+            macros[macro] = OrderedDict()
         for row in range(memory[mem_type][region]['depth']):
             if row != 0 and (row % memory[mem_type][region]['blk_d']) == 0:
                 of.write('\n')
@@ -3721,10 +3724,16 @@ def capri_dump_table_memory(be, memory, tables, mem_type, region):
                 value = memory[mem_type][region]['space'][row][col]
                 if value == 0:
                     free += 1
+                else:
+                    macros[col / memory[mem_type][region]['blk_w']][value] = 1
                 total += 1
                 of.write('%c' % value if value else '0')
             of.write('\n')
 
+        for macro in macros:
+            of.write('%d tables ' % (len(macros[macro])))
+
+        of.write('\n')
         of.write('%d cells free out of %d (%d%% utilization).\n' % (free, total, ((total - free) * 100 / (total if total else 1))))
         of.write('\n')
         of.write('-0s represent free cells. Letters represent cells used by tables.\n')
