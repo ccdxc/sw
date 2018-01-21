@@ -27,9 +27,8 @@ typedef struct {
     u_int64_t tph_rd_ph :2;
     u_int64_t tph_rd_en :1;
     u_int64_t tph_st    :8;
-    u_int64_t msi_st_lo :5;
-    /* u_int64_t [1] */
-    u_int64_t msi_st_hi :3;
+    /* u_int64_t [1] msg_st_lo:5 */
+    u_int64_t msi_st    :8;
     u_int64_t rc_cfg1   :1;
     u_int64_t rsrv      :60;
 } __attribute__((packed)) hdrt_t;

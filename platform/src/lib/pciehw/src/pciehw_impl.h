@@ -50,6 +50,8 @@ typedef struct pciehwdev_s {
     u_int16_t bdf;                      /* bdf of this dev */
     u_int16_t lif_valid:1;              /* lif is valid */
     u_int32_t lif;                      /* lif for this dev */
+    u_int32_t intrb;                    /* intr resource base */
+    u_int32_t intrc;                    /* intr resource count */
     pciehwdevh_t parenth;               /* handle to parent */
     pciehwdevh_t childh;                /* handle to child */
     pciehwdevh_t peerh;                 /* handle to peer */
@@ -124,6 +126,8 @@ pciehwdev_t *pciehwdev_find_by_name(const char *name);
 
 #include "hdrt.h"
 #include "portmap.h"
+#include "intr.h"
+#include "reset.h"
 
 int pciehw_nports(void);
 

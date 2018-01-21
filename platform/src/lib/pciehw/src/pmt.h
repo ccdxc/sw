@@ -116,9 +116,8 @@ typedef struct {
     u_int64_t prtsize   :5;
     u_int64_t vfstart   :6;
     u_int64_t vfend     :6;
-    u_int64_t vflimit_lo:6;
-    /* u_int64_t [1] */
-    u_int64_t vflimit_hi:5;
+    /* u_int64_t [1] vflimit_lo:6 */
+    u_int64_t vflimit   :11;
     u_int64_t bdf       :16;
     u_int64_t td        :1;
     u_int64_t pagesize  :3;

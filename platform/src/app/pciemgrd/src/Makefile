@@ -19,6 +19,7 @@ LIBRARIES = \
 	-lpciehost \
 	-lpciehdevices \
 	-lpciehw \
+	-lintrutils \
 	-lcfgspace \
 	-lpcieport \
 	-lpal \

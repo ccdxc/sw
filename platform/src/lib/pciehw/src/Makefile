@@ -14,12 +14,15 @@ SOURCES = \
 	hdrt.c \
 	portmap.c \
 	notify.c \
+	intr.c \
+	reset.c \
 	$(NULL)
 
 LCFLAGS += \
 	-I $(ASIC_ROOT)/capri/model/cap_top \
 	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	-I ../../misc/include \
+	-I ../../intrutils/include \
 	-I ../../pal/include \
 	-I ../../cfgspace/include \
 	-I ../../pciehost/include \

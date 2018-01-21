@@ -244,6 +244,9 @@ pmt_set_bar(pciehw_t *phw,
     pmt_bar_t *m = (pmt_bar_t *)&pmt.mask;
     pmr_bar_t *r = (pmr_bar_t *)&pmt.pmr;
 
+    assert((prtcount & (prtcount - 1)) == 0);
+    assert((prtsize & (prtsize - 1)) == 0);
+
     d->valid     = 1;
     d->tblid     = 0;
     d->type      = PMT_TYPE_BAR;
@@ -265,11 +268,10 @@ pmt_set_bar(pciehw_t *phw,
     r->notify    = phw->hwparams.force_notify_bar;
     r->prtbase   = prtbase;
     r->prtcount  = prtcount;
-    r->prtsize   = prtsize;
-    r->vfstart   = 0;
-    r->vfend     = 1;
-    r->vflimit_lo= 1;
-    r->vflimit_hi= 0 >> 6;
+    r->prtsize   = ffs(prtsize) - 1;
+    r->vfstart   = r->prtsize + ffs(prtcount) - 1;
+    r->vfend     = r->vfstart + 1;
+    r->vflimit   = 1;
     r->bdf       = bdf;
     r->td        = 0;
     r->pagesize  = 0;   /* 4k page size for now */
@@ -516,7 +518,7 @@ pmt_show_bar_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
                  human_readable(1 << r->prtsize),
                  r->vfstart,
                  r->vfend,
-                 (r->vflimit_hi << 6) | r->vflimit_lo,
+                 r->vflimit,
                  bdf_to_str(r->bdf),
                  r->pagesize,
                  r->qtypestart,

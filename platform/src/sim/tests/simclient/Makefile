@@ -14,6 +14,7 @@ LCFLAGS = \
 LIBRARIES = \
 	-lpciehsvc \
 	-lpciehw \
+	-lintrutils \
 	-lpal \
 	-lpciehost \
 	-lcfgspace \

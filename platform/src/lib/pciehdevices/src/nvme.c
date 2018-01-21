@@ -68,7 +68,7 @@ initialize_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
     pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_NVME);
     pciehcfg_setconf_classcode(pcfg, 0x010802);
     pciehcfg_setconf_classcode(pcfg, 0x088000); // XXX
-    pciehcfg_setconf_nintrs(pcfg, pres->nintrs);
+    pciehcfg_setconf_nintrs(pcfg, pres->intrc);
     pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
     pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));

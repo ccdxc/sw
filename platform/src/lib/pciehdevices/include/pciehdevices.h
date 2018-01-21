@@ -20,8 +20,8 @@ typedef struct pciehdevice_resources_s {
     u_int32_t lif_valid:1;      /* lif id is valid */
     u_int32_t lif;              /* lif id */
     u_int8_t port;              /* pcie port id */
-    u_int32_t intrbase;         /* interrupt start */
-    u_int32_t nintrs;           /* interrupt count */
+    u_int32_t intrb;            /* interrupt base */
+    u_int32_t intrc;            /* interrupt count */
 } pciehdevice_resources_t;
 
 pciehdev_t *pciehdev_enet_new(const char *name,

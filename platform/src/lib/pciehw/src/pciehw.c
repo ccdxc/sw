@@ -362,6 +362,8 @@ pciehw_finalize_dev(pciehdev_t *pdev)
 
     phwdev->bdf = pciehdev_get_bdf(pdev);
     phwdev->port = pciehdev_get_port(pdev);
+    phwdev->intrb = pciehdev_get_intrb(pdev);
+    phwdev->intrc = pciehdev_get_intrc(pdev);
 
     lif = pciehdev_get_lif(pdev);
     if (lif >= 0) {
@@ -384,6 +386,7 @@ pciehw_finalize_dev(pciehdev_t *pdev)
             pciehw_hdrt_load(phw, phwdev->lif, phwdev->bdf);
             pciehw_portmap_load(phw, phwdev->lif, phwdev->port);
         }
+        pciehw_intr_init(phwdev);
     }
 
     child = pciehdev_get_child(pdev);

@@ -35,9 +35,8 @@ typedef struct {
     u_int64_t vfstride  :5;
     u_int64_t aspace    :1;
     u_int64_t addrdw    :50;
-    u_int64_t sizedw_lo :3;
-    /* u_int64_t [1] */
-    u_int64_t sizedw_hi :8;
+    /* u_int64_t [1] sizedw_lo:3 */
+    u_int64_t sizedw    :11;
     u_int64_t pmvdis    :1;
     u_int64_t spare     :3;
     u_int64_t rsrv      :52;
@@ -59,9 +58,8 @@ typedef struct {
     u_int64_t lif       :11;
     u_int64_t updvec    :40;
     u_int64_t stridesel :2;
-    u_int64_t idxshf_lo :1;
-    /* u_int64_t [1] */
-    u_int64_t idxshf_hi :1;
+    /* u_int64_t [1] idxshift_lo:1 */
+    u_int64_t idxshift  :2;
     u_int64_t idxwidth  :4;
     u_int64_t qidshift  :2;
     u_int64_t qidwidth  :4;

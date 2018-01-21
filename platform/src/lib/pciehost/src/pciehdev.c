@@ -100,7 +100,8 @@ pciehdev_new(const char *name, const pciehdevice_resources_t *pres)
             pdev->lif_valid = pres->lif_valid;
             pdev->port = pres->port;
         }
-        pdev->intrbase = pres->intrbase;
+        pdev->intrb = pres->intrb;
+        pdev->intrc = pres->intrc;
     }
     strncpy0(pdev->name, name, sizeof(pdev->name));
     return pdev;
@@ -412,6 +413,18 @@ int
 pciehdev_get_lif(pciehdev_t *pdev)
 {
     return pdev->lif_valid ? pdev->lif : -1;
+}
+
+u_int32_t
+pciehdev_get_intrb(pciehdev_t *pdev)
+{
+    return pdev->intrb;
+}
+
+u_int32_t
+pciehdev_get_intrc(pciehdev_t *pdev)
+{
+    return pdev->intrc;
 }
 
 char *

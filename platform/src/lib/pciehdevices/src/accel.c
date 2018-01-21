@@ -55,7 +55,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         memset(&preg, 0, sizeof(preg));
         preg.regtype = PCIEHBARREGT_RES;
         preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_TBL);
-        preg.paddr = intr_msixcfg_addr(pres->intrbase);
+        preg.paddr = intr_msixcfg_addr(pres->intrb);
         preg.size = 0x1000;
         pciehbar_add_reg(&pbar, &preg);
 
@@ -63,7 +63,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         memset(&preg, 0, sizeof(preg));
         preg.regtype = PCIEHBARREGT_RES;
         preg.flags = (PCIEHBARREGF_RD | PCIEHBARREGF_MSIX_PBA);
-        preg.paddr = intr_pba_addr(pres->intrbase);
+        preg.paddr = intr_pba_addr(pres->intrb);
         preg.size = 0x1000;
         pciehbar_add_reg(&pbar, &preg);
     }
@@ -76,7 +76,7 @@ init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
 {
     pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_ACCEL);
     pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
-    pciehcfg_setconf_nintrs(pcfg, pres->nintrs);
+    pciehcfg_setconf_nintrs(pcfg, pres->intrc);
     pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
     pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));

@@ -229,21 +229,21 @@ cmd_add(int argc, char *argv[])
     type = argv[1];
 
     memset(&r, 0, sizeof(r));
-    r.nintrs = 4;
+    r.intrc = 4;
     name = NULL;
 
     getopt_reset(4, 2);
     while ((opt = getopt(argc, argv, "I:L:i:n:p:")) != -1) {
         switch (opt) {
         case 'I':
-            r.intrbase = strtoul(optarg, NULL, 0);
+            r.intrb = strtoul(optarg, NULL, 0);
             break;
         case 'L':
             r.lif = strtoul(optarg, NULL, 0);
             r.lif_valid = 1;
             break;
         case 'i':
-            r.nintrs = strtoul(optarg, NULL, 0);
+            r.intrc = strtoul(optarg, NULL, 0);
             break;
         case 'N':
             name = optarg;
@@ -280,7 +280,7 @@ cmd_addfn(int argc, char *argv[])
     type = argv[2];
 
     memset(&r, 0, sizeof(r));
-    r.nintrs = 4;
+    r.intrc = 4;
     r.fnn = 1;
     nfn = 1;
 
@@ -288,7 +288,7 @@ cmd_addfn(int argc, char *argv[])
     while ((opt = getopt(argc, argv, "i:n:")) != -1) {
         switch (opt) {
         case 'i':
-            r.nintrs = strtoul(optarg, NULL, 0);
+            r.intrc = strtoul(optarg, NULL, 0);
             break;
         case 'n':
             nfn = strtoul(optarg, NULL, 0);

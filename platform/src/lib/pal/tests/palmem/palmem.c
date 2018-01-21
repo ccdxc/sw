@@ -17,12 +17,8 @@ static void
 usage(void)
 {
     fprintf(stderr,
-            "Usage: palmem [-P <map_pa>][-S <mapsize>]"
-            "[-o <offset>][-s <size>]\n"
-            "-P <map_pa>        pal phys addr\n"
-            "-S <mapsize>       pal region size\n"
-            "-o <offset>        region offset to read\n"
-            "-s <size>          region size to read\n");
+            "Usage: palmem [-s <size>] <addr>\n"
+            "-s <size>          region size to read (default=16)\n");
 }
 
 int

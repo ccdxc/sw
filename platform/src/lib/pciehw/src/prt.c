@@ -166,8 +166,7 @@ prt_set_res(pciehw_t *phw,
     p->vfstride  = 0;
     p->aspace    = 0;    /* local addr */
     p->addrdw    = addr >> 2;
-    p->sizedw_lo = size_enc;
-    p->sizedw_hi = size_enc >> 3;
+    p->sizedw    = size_enc;
     p->pmvdis    = 0;
 
     prt_set(phw, prti, prt);
@@ -197,8 +196,7 @@ prt_set_db(pciehw_t *phw,
     p->lif       = lif;
     p->updvec    = updvec;
     p->stridesel = stridesel;
-    p->idxshf_lo = idxshift;
-    p->idxshf_hi = idxshift >> 1;
+    p->idxshift  = idxshift;
     p->idxwidth  = idxwidth;
     p->qidshift  = qidshift;
     p->qidwidth  = qidwidth;
@@ -354,14 +352,13 @@ static void
 prt_show_res_entry(const int prti, prt_t prt)
 {
     const prt_res_t *r = (prt_res_t *)prt;
-    const u_int32_t size_enc = r->sizedw_hi << 3 | r->sizedw_lo;
 
     pciehsys_log("%4d %-4s %4d 0x%08"PRIx64" %-4s %c%c%c\n",
                  prti,
                  prt_type_str(r->type),
                  r->vfstride,
                  (u_int64_t)r->addrdw << 2,
-                 human_readable(prt_size_decode(size_enc)),
+                 human_readable(prt_size_decode(r->sizedw)),
                  r->indirect ? 'i' : '-',
                  r->notify ? 'n' : '-',
                  r->aspace ? 'h' : '-');
@@ -421,14 +418,13 @@ static void
 prt_show_db_entry(const int prti, prt_t prt, const int raw)
 {
     const prt_db_t *r = (prt_db_t *)prt;
-    u_int8_t idxshift = r->idxshf_hi << 1 | r->idxshf_lo;
 
     pciehsys_log("%4d %-4s %4d %4d %1d:%-2d %1d:%-2d %c%c%c   %-31s\n",
                  prti,
                  prt_type_str(r->type),
                  r->vfstride,
                  r->lif,
-                 idxshift, r->idxwidth,
+                 r->idxshift, r->idxwidth,
                  r->qidshift, r->qidwidth,
                  r->indirect ? 'i' : '-',
                  r->notify   ? 'n' : '-',
