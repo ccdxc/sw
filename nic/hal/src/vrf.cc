@@ -161,6 +161,7 @@ vrf_spec_print (VrfSpec& spec)
 static hal_ret_t
 validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
 {
+    vrf_t   *infra_vrf = NULL;
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
@@ -183,6 +184,15 @@ validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
         HAL_TRACE_ERR("pi-vrf:{}:vrf id {} invalid in the request", __FUNCTION__,
                       HAL_VRF_ID_INVALID);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    infra_vrf = (vrf_t *)g_hal_state->infra_vrf();
+    if ((spec.vrf_type() == types::VRF_TYPE_INFRA) && 
+        (infra_vrf != NULL)) {
+        HAL_TRACE_ERR("pi-vrf:{}: Infra VRF already exists vrf id: {}",
+                      __FUNCTION__, infra_vrf->vrf_id);
+        rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -273,6 +283,11 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                           __FUNCTION__);
             goto end;
         }
+    }
+
+    // If the VRF created is Infra VRF, store it in hal_state
+    if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
+        g_hal_state->set_infra_vrf(vrf);
     }
 
 end:
@@ -1074,6 +1089,11 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("pi-vrf:{}:failed to del vrf {} from db, err : {}", 
                       __FUNCTION__, vrf->vrf_id, ret);
         goto end;
+    }
+
+    // If the VRF deleted is Infra VRF, remove from hal_state
+    if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
+        g_hal_state->set_infra_vrf(NULL);
     }
 
     // b. Remove object from handle id based hash table

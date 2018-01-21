@@ -1224,8 +1224,8 @@ TEST_F(vrf_test, test12)
 TEST_F(vrf_test, test11) 
 {
     hal_ret_t                       ret;
-    VrfSpec                      ten_spec, ten_spec1;
-    VrfResponse                  ten_rsp, ten_rsp1;
+    VrfSpec                      ten_spec, ten_spec1, infra_spec;
+    VrfResponse                  ten_rsp, ten_rsp1, infra_rsp;
     SecurityProfileSpec             sp_spec;
     SecurityProfileResponse         sp_rsp;
     VrfDeleteRequest             del_req;
@@ -1295,6 +1295,24 @@ TEST_F(vrf_test, test11)
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+
+    // Create Infra vrf
+    infra_spec.mutable_key_or_handle()->set_vrf_id(85);
+    infra_spec.set_vrf_type(types::VRF_TYPE_INFRA);
+    infra_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(infra_spec, &infra_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Infra Vrf again
+    infra_spec.mutable_key_or_handle()->set_vrf_id(86);
+    infra_spec.set_vrf_type(types::VRF_TYPE_INFRA);
+    infra_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(infra_spec, &infra_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
     
     // Create more than 256 vrfs. Will result in PD failure and create 
     for (int i = 0; i < 254; i++) {

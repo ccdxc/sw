@@ -115,7 +115,8 @@ static hal_ret_t
 validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
                            l2seg_create_app_ctxt_t &app_ctxt)
 {
-    vrf_t   *vrf = NULL;
+    vrf_t   *vrf = NULL, *infra_vrf = NULL;
+    l2seg_t *infra_l2seg = NULL; 
 
     if (!spec.has_vrf_key_handle() ||
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
@@ -169,6 +170,27 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
         return HAL_RET_VRF_NOT_FOUND;
     }
     app_ctxt.vrf = vrf;
+
+    if (spec.segment_type() == types::L2_SEGMENT_TYPE_INFRA) {
+
+        // Check if Infra L2Seg exists already
+        infra_l2seg = (l2seg_t *)g_hal_state->infra_l2seg();
+        if (infra_l2seg != NULL) {
+            HAL_TRACE_ERR("pi-l2seg:{}: Infra L2Seg exists already. L2seg id: {}",
+                          __FUNCTION__, infra_l2seg->seg_id);
+            rsp->set_api_status(types::API_STATUS_L2_SEGMENT_TYPE_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
+  
+        // Check if VRF is set to infra
+        infra_vrf = (vrf_t *)g_hal_state->infra_vrf();
+        if ((infra_vrf == NULL) || (vrf != infra_vrf)) {
+            HAL_TRACE_ERR("pi-l2seg:{}: Invalid vrf set for Infra L2seg. Infra vrf: {}",
+                          __FUNCTION__, (infra_vrf)?infra_vrf->vrf_id:0);
+            rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+            return HAL_RET_VRF_NOT_FOUND;
+        }
+    }
 
     return HAL_RET_OK;
 }
@@ -340,6 +362,12 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                       "relation ret:{}", 
                       __FUNCTION__,  ret);
         goto end;
+    }
+
+    if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
+        HAL_TRACE_DEBUG("pi-l2seg:{} id:{} is infra ", __FUNCTION__,
+                        l2seg->seg_id);
+        g_hal_state->set_infra_l2seg(l2seg);
     }
 
 end:
@@ -669,12 +697,6 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         l2seg_free(l2seg);
         ret = HAL_RET_INVALID_ARG;
         goto end;
-    }
-
-    if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
-        HAL_TRACE_DEBUG("pi-l2seg:{} id:{} is infra ", __FUNCTION__, 
-                        l2seg->seg_id);
-        g_hal_state->set_infra_l2seg(l2seg);
     }
 
     // allocate hal handle id
@@ -1499,6 +1521,11 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("pi-l2seg:{}:failed to del l2seg {} from db, err : {}", 
                       __FUNCTION__, l2seg->seg_id, ret);
         goto end;
+    }
+
+    // If it is Infra L2seg, remove the reference
+    if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
+        g_hal_state->set_infra_l2seg(NULL);
     }
 
     // b. Remove object from handle id based hash table

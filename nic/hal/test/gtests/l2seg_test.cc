@@ -652,7 +652,7 @@ TEST_F(l2seg_test, test4)
 TEST_F(l2seg_test, test5) 
 {
     hal_ret_t                           ret = HAL_RET_OK;
-    L2SegmentSpec                       l2seg_spec, l2seg_spec1, l2seg_spec2;
+    L2SegmentSpec                       l2seg_spec, l2seg_spec1, l2seg_spec2, infra_spec;
     L2SegmentResponse                   l2seg_rsp, l2seg_rsp1, l2seg_rsp2;
     SecurityProfileSpec                 sp_spec;
     SecurityProfileResponse             sp_rsp;
@@ -764,6 +764,60 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
+    // Create Infra l2seg with non-infra vrf
+    infra_spec.mutable_vrf_key_handle()->set_vrf_id(5);
+    infra_spec.clear_network_key_handle();
+    infra_spec.set_segment_type(types::L2_SEGMENT_TYPE_INFRA);
+    nkh = infra_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
+    infra_spec.mutable_key_or_handle()->set_segment_id(85);
+    infra_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    infra_spec.mutable_wire_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(infra_spec, &l2seg_rsp);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
+
+    // Create Infra vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(85);
+    ten_spec.set_vrf_type(types::VRF_TYPE_INFRA);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Infra l2seg with Infra vrf
+    infra_spec.mutable_vrf_key_handle()->set_vrf_id(85);
+    infra_spec.clear_network_key_handle();
+    infra_spec.set_segment_type(types::L2_SEGMENT_TYPE_INFRA);
+    nkh = infra_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
+    infra_spec.mutable_key_or_handle()->set_segment_id(85);
+    infra_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    infra_spec.mutable_wire_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(infra_spec, &l2seg_rsp);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create a second Infra L2Seg
+    infra_spec.mutable_vrf_key_handle()->set_vrf_id(85);
+    infra_spec.clear_network_key_handle();
+    infra_spec.set_segment_type(types::L2_SEGMENT_TYPE_INFRA);
+    nkh = infra_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
+    infra_spec.mutable_key_or_handle()->set_segment_id(86);
+    infra_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    infra_spec.mutable_wire_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(infra_spec, &l2seg_rsp);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
     // Create l2seg
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_spec.clear_network_key_handle();
@@ -778,8 +832,7 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
-
-    
+ 
     // Create l2seg which already exists, this should be idempotent and return the old
     // handle
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(5);
@@ -940,6 +993,15 @@ TEST_F(l2seg_test, test5)
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Delete infra l2seg
+    l2seg_del_req.mutable_vrf_key_handle()->set_vrf_id(85);
+    l2seg_del_req.mutable_key_or_handle()->set_segment_id(85);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
     for (int i = 0; i < num_l2segs; i++) {
         l2seg_del_req.mutable_key_or_handle()->set_segment_id(500 + i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -966,6 +1028,12 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     ten_del_req.mutable_key_or_handle()->set_vrf_id(51);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_delete(ten_del_req, &ten_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ten_del_req.mutable_key_or_handle()->set_vrf_id(85);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(ten_del_req, &ten_del_rsp);
     hal::hal_cfg_db_close();

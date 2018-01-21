@@ -327,6 +327,8 @@ public:
     ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
     void *infra_l2seg(void) { return infra_l2seg_; }
     void set_infra_l2seg(void *infra_l2seg) { infra_l2seg_ = infra_l2seg; }
+    void *infra_vrf(void) { return infra_vrf_; }
+    void set_infra_vrf(void *infra_vrf) { infra_vrf_ = infra_vrf; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *flow_ht(void) const { return flow_ht_; }
@@ -338,6 +340,7 @@ private:
     hal_oper_db();
 
 private:
+    void        *infra_vrf_;    // Infra VRF *
     void        *infra_l2seg_;  // l2seg_t *
     eventmgr    *event_mgr_;
     ht          *hal_handle_id_ht_;
@@ -574,6 +577,10 @@ public:
     // get API for infra l2seg
     void *infra_l2seg(void) { return oper_db_->infra_l2seg(); }
     void set_infra_l2seg(void *infra_l2seg) { oper_db_->set_infra_l2seg(infra_l2seg); }
+
+    // get API for infra VRF
+    void *infra_vrf(void) { return oper_db_->infra_vrf(); }
+    void set_infra_vrf(void *infra_vrf) { oper_db_->set_infra_vrf(infra_vrf); }
 
     // get APIs for IPSEC CB state
     slab *ipseccb_slab(void) const { return mem_db_->ipseccb_slab(); }
