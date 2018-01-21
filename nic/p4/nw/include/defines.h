@@ -350,8 +350,9 @@
 /*****************************************************************************/
 /* Recirc reason codes                                                       */
 /*****************************************************************************/
-#define RECIRC_FLOW_HASH_OVERFLOW      0
-#define RECIRC_VM_BOUNCE               1
+#define RECIRC_NONE                    0
+#define RECIRC_FLOW_HASH_OVERFLOW      1 
+#define RECIRC_VM_BOUNCE               2 
 
 /*****************************************************************************/
 /* Checksum/iCRC flags (bit positions)                                       */

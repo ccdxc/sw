@@ -15,7 +15,9 @@ metadata qos_metadata_t qos_metadata;
 
 action qos(egress_tm_oq, dest_tm_oq, cos_en, cos, dscp_en, dscp) {
     /* copy the oq to iq, needed by PBC */
-    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    if (control_metadata.recirc_reason == RECIRC_NONE) {
+        modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    }
 
     /* qos rewrite data */
     modify_field(qos_metadata.cos_en, cos_en);

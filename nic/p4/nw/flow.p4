@@ -216,6 +216,12 @@ action recirc_packet(recirc_reason) {
     modify_field(recirc_header.src_tm_iport, control_metadata.tm_iport);
     modify_field(recirc_header.reason, recirc_reason);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
+    /* At this stage, the qos_class_id will be same as the original
+     * tm_oq that the pkt entered with. It is possible that later
+     * after a flow-hit, in the flow_info table the qos_class_id
+     * gets a new value. But at this point, it is safe to use
+     */
+    modify_field(capri_intrinsic.tm_iq, qos_metadata.qos_class_id);
 }
 
 action flow_hit_from_vm_bounce(src_lif) {

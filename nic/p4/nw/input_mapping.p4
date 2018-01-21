@@ -303,6 +303,7 @@ action adjust_lkp_fields() {
     }
     if (recirc_header.valid == TRUE) {
         modify_field(control_metadata.recirc_reason, recirc_header.reason);
+        modify_field(qos_metadata.qos_class_id, capri_intrinsic.tm_iq);
         subtract(scratch_metadata.packet_len, scratch_metadata.packet_len,
                  P4_RECIRC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     }
