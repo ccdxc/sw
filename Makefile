@@ -154,11 +154,14 @@ ci-testrun:
 	tools/scripts/CI.sh
 
 ci-test:
-	make dev
-	make ci-testrun
-	make dev-clean
+	$(MAKE) dev
+	$(MAKE) ci-testrun
+	$(MAKE) dev-clean
 
-jobd-test: build unit-test-verbose cover
+jobd-test:
+	$(MAKE) build
+	$(MAKE) unit-test-verbose
+	$(MAKE) cover
 
 protogen:
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; make -C $${c} || exit 1; done
