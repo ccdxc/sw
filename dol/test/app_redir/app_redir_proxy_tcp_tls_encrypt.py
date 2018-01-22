@@ -28,6 +28,7 @@ tlscbid = ""
 tlscb = 0
 proxyrcb = 0
 proxyccb = 0
+redir_span = False
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -49,6 +50,10 @@ def TestCaseSetup(tc):
     global tlscb
     global proxyrcb
     global proxyccb
+    global redir_span
+
+    if hasattr(tc.module.args, 'redir_span'):
+        redir_span = True
 
     tc.pvtdata = ObjectDatabase(logger)
     tcp_proxy.SetupProxyArgs(tc)
@@ -62,6 +67,8 @@ def TestCaseSetup(tc):
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
     tcb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR
+    if redir_span:
+        tcb.l7_proxy_type = tcp_proxy.l7_proxy_type_SPAN
     tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq
     tcb.SetObjValPd()
 
@@ -71,6 +78,7 @@ def TestCaseSetup(tc):
     # 1. Configure PROXYRCB in HBM before packet injection
     proxyrcb = tc.infra_data.ConfigStore.objects.db[proxyrcbid]
     # let HAL fill in defaults for chain_rxq_base, etc.
+    proxyrcb.redir_span = redir_span
     proxyrcb.my_txq_base = 0
     proxyrcb.chain_rxq_base = 0
     proxyrcb.proxyrcb_flags = app_redir_shared.app_redir_dol_pipeline_loopbk_en
@@ -101,6 +109,7 @@ def TestCaseSetup(tc):
     # 1. Configure PROXYCCB in HBM before packet injection
     proxyccb = tc.infra_data.ConfigStore.objects.db[proxyccbid]
     # let HAL fill in defaults for my_txq_base, etc.
+    proxyccb.redir_span = redir_span
     proxyccb.my_txq_base = 0
     proxyccb.chain_txq_base = 0
     proxyccb.chain_txq_lif = app_redir_shared.service_lif_tls_proxy
@@ -138,6 +147,7 @@ def TestCaseVerify(tc):
     global tlscb
     global proxyrcb
     global proxyccb
+    global redir_span
 
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):
@@ -197,9 +207,15 @@ def TestCaseVerify(tc):
     tlscb_cur.GetObjValPd()
 
     # Verify PI for RNMDR got incremented
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
+    # when span is in effect, TCP would have allocated 2 descs per packet,
+    # one for forwarding to TLS and one for L7
+    num_exp_descs = num_pkts
+    if redir_span:
+        num_exp_descs *= 2
+
+    if (rnmdr_cur.pi != rnmdr.pi+num_exp_descs):
         print("RNMDR pi check failed old %d new %d expected %d" %
-                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
+                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_exp_descs))
         app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
@@ -227,17 +243,22 @@ def TestCaseVerify(tc):
     # Tx: verify PI for PROXYCCB got incremented
     time.sleep(1)
     proxyccb_cur.GetObjValPd()
-    if (proxyccb_cur.pi != proxyccb.pi+num_redir_pkts):
+
+    num_exp_proxyccb_pkts = num_redir_pkts
+    if redir_span:
+        num_exp_proxyccb_pkts = 0
+
+    if (proxyccb_cur.pi != proxyccb.pi+num_exp_proxyccb_pkts):
         print("PROXYCCB pi check failed old %d new %d expected %d" %
-                      (proxyccb.pi, proxyccb_cur.pi, proxyccb.pi+num_redir_pkts))
+                      (proxyccb.pi, proxyccb_cur.pi, proxyccb.pi+num_exp_proxyccb_pkts))
         app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
         return False
     print("PROXYCCB pi old %d new %d" % (proxyccb.pi, proxyccb_cur.pi))
 
     # Tx: verify # packets chained
-    if (proxyccb_cur.stat_pkts_chain != proxyccb.stat_pkts_chain+num_redir_pkts):
+    if (proxyccb_cur.stat_pkts_chain != proxyccb.stat_pkts_chain+num_exp_proxyccb_pkts):
         print("stat_pkts_chain check failed old %d new %d expected %d" %
-              (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain, proxyccb.stat_pkts_chain+num_redir_pkts))
+              (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain, proxyccb.stat_pkts_chain+num_exp_proxyccb_pkts))
         app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
         return False
     print("stat_pkts_chain old %d new %d" % 

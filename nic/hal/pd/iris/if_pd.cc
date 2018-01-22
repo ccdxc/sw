@@ -1,6 +1,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
+#include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/if_pd.hpp"
 #include "nic/hal/pd/iris/uplinkif_pd.hpp"
 #include "nic/hal/pd/iris/uplinkpc_pd.hpp"
@@ -9,6 +10,7 @@
 #include "nic/hal/pd/iris/app_redir_if_pd.hpp"
 #include "nic/hal/pd/iris/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/l2seg_uplink_pd.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 namespace hal {
 namespace pd {
@@ -423,6 +425,14 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
                 default:
                     HAL_ASSERT(0);
             }
+            break;
+        }
+        case intf::IF_TYPE_APP_REDIR: {
+            HAL_TRACE_DEBUG("Replication to APP_REDIR_IF: lport: {}", data->lport);
+            data->repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
+            data->is_qid = 1;
+            data->qid_or_vnid = APP_REDIR_SPAN_RAWRCB_ID;
+            data->qtype = APP_REDIR_RAWR_QTYPE;
             break;
         }
         default:

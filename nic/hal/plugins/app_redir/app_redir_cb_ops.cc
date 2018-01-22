@@ -436,5 +436,45 @@ app_redir_mirror_session_create(mirror_session_id_t &ret_id)
 }
 
 
+/*
+ * Ingress replication is the alternative when mirror session is not
+ * used for visibility mode.
+ */
+hal_ret_t
+app_redir_ing_replication_create(oif_list_id_t &ret_id)
+{
+    if_id_t     app_redir_if_id = get_app_redir_if_id();
+    l2seg_t     l2seg = {0};
+    oif_t       oif = {0};
+    hal_ret_t   ret;
+
+    ret = oif_list_create(&ret_id);
+    if (ret == HAL_RET_OK) {
+        ret = oif_list_set_honor_ingress(ret_id);
+    }
+
+    if (ret == HAL_RET_OK) {
+        oif.intf = find_if_by_id(app_redir_if_id);
+
+        /*
+         * Fields qid, l2seg and purpose are ignored by oif_list_add_oif()
+         * when i/f is of type IF_TYPE_APP_REDIR
+         */
+        oif.qid = 0;
+        oif.l2seg = &l2seg;
+        oif.purpose = intf::LIF_QUEUE_PURPOSE_NONE;
+        ret = oif_list_add_oif(ret_id, &oif);
+    }
+
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("{} successful for if_id {} list_id {}", __FUNCTION__, 
+                        app_redir_if_id, ret_id);
+    } else {
+        HAL_TRACE_ERR("{} failed for if_id {}", __FUNCTION__, app_redir_if_id);
+    }
+    return ret;
+}
+
+
 } // namespace app_redir
 } // namespace hal

@@ -122,7 +122,7 @@ header_type to_stage_6_phv_t {
 
 header_type doorbell_data_pad_t {
     fields {
-        pad                             : 320;
+        pad                             : 256;
     }
 }
 
@@ -199,6 +199,8 @@ metadata ring_entry_t ring_entry;
 metadata ring_entry_t l7_ring_entry;
 @pragma dont_trim
 metadata doorbell_data_raw_t db_data;
+@pragma dont_trim
+metadata doorbell_data_raw_t l7_db_data;
 @pragma dont_trim
 metadata doorbell_data_pad_t db_pad;
 @pragma dont_trim

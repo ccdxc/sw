@@ -178,8 +178,8 @@ proxyccb_tcpcb_l7_proxy_type_eval(uint32_t flow_id)
 
     if (proxyccb && (proxyccb->chain_txq_lif == SERVICE_LIF_TLS_PROXY)) {
         HAL_TRACE_DEBUG("{} enable TCPCB {} for app_redir", __FUNCTION__, flow_id);
-        return proxyccb->redir_span ? types::APP_REDIR_TYPE_REDIRECT :
-                                      types::APP_REDIR_TYPE_SPAN;
+        return proxyccb->redir_span ? types::APP_REDIR_TYPE_SPAN :
+                                      types::APP_REDIR_TYPE_REDIRECT;
     }
 
     return types::APP_REDIR_TYPE_NONE;
@@ -199,8 +199,8 @@ proxyccb_tlscb_l7_proxy_type_eval(uint32_t flow_id)
 
     if (proxyccb && (proxyccb->chain_txq_lif == SERVICE_LIF_TCP_PROXY)) {
         HAL_TRACE_DEBUG("{} enable TLSCB {} for app_redir", __FUNCTION__, flow_id);
-        return proxyccb->redir_span ? types::APP_REDIR_TYPE_REDIRECT :
-                                      types::APP_REDIR_TYPE_SPAN;
+        return proxyccb->redir_span ? types::APP_REDIR_TYPE_SPAN :
+                                      types::APP_REDIR_TYPE_REDIRECT;
     }
 
     return types::APP_REDIR_TYPE_NONE;

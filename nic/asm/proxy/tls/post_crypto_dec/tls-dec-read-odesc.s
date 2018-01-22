@@ -31,9 +31,9 @@ tls_dec_post_read_odesc:
      * Trim off the AAD from the output
      *  - AES-CCM uses 2 16-byte header blocks to specify AAD.
      */
-    seq         c2, k.to_s4_do_post_ccm_dec, 1
-    addi.!c2    r2, r0, NTLS_AAD_SIZE
-    addi.c2     r2, r0, TLS_AES_CCM_HEADER_SIZE
+    seq         c3, k.to_s4_do_post_ccm_dec, 1
+    addi.!c3    r2, r0, NTLS_AAD_SIZE
+    addi.c3     r2, r0, TLS_AES_CCM_HEADER_SIZE
     add         r1, d.{u.tls_read_odesc_d.O0}.wx, r2
     phvwr       p.odesc_O0, r1.wx
     phvwr.c1    p.l7_desc_O0, r1.wx

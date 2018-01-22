@@ -26,6 +26,7 @@ proxyrcbid = ""
 proxyccbid = ""
 proxyrcb = 0
 proxyccb = 0
+redir_span = False
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -45,6 +46,10 @@ def TestCaseSetup(tc):
     global proxyccbid
     global proxyrcb
     global proxyccb
+    global redir_span
+
+    if hasattr(tc.module.args, 'redir_span'):
+        redir_span = True
 
     tc.pvtdata = ObjectDatabase(logger)
     tcp_proxy.SetupProxyArgs(tc)
@@ -58,6 +63,9 @@ def TestCaseSetup(tc):
     tcb.state = 1
     tcb.l7_proxy_type = 0
     tcb.debug_dol = 0
+    if redir_span:
+        tcb.debug_dol_tx |= tcp_proxy.tcp_tx_debug_dol_dont_tx
+
     tcb.SetObjValPd()
 
     _proxyrcb_id = id
@@ -68,6 +76,7 @@ def TestCaseSetup(tc):
     # let HAL fill in defaults for chain_rxq_base, etc.
     proxyrcb.my_txq_base = 0
     proxyrcb.chain_rxq_base = 0
+    proxyrcb.redir_span = redir_span
     proxyrcb.proxyrcb_flags = app_redir_shared.app_redir_dol_pipeline_loopbk_en
 
     # fill in flow key
@@ -81,7 +90,9 @@ def TestCaseSetup(tc):
 
     tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy
     tlscb.other_fid = 0xffff
-    tlscb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR 
+    tlscb.l7_proxy_type = tcp_proxy.l7_proxy_type_REDIR
+    if redir_span:
+        tlscb.l7_proxy_type = tcp_proxy.l7_proxy_type_SPAN
 
     if tc.module.args.key_size == 16:
         tcp_tls_proxy.tls_aes128_decrypt_setup(tc, tlscb)
@@ -94,6 +105,7 @@ def TestCaseSetup(tc):
     # 1. Configure PROXYCCB in HBM before packet injection
     proxyccb = tc.infra_data.ConfigStore.objects.db[proxyccbid]
     # let HAL fill in defaults for my_txq_base, etc.
+    proxyccb.redir_span = redir_span
     proxyccb.my_txq_base = 0
     proxyccb.chain_txq_base = 0
     proxyccb.chain_txq_lif = app_redir_shared.service_lif_tcp_proxy
@@ -127,6 +139,7 @@ def TestCaseVerify(tc):
     global proxyccbid
     global proxyrcb
     global proxyccb
+    global redir_span
 
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):
@@ -169,9 +182,15 @@ def TestCaseVerify(tc):
     rnmpr_small_cur.GetMeta()
 
     # Verify PI for RNMDR got incremented
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
+    # when span is in effect, TLS would have allocated 2 descs per packet,
+    # one for forwarding to TCP and one for L7
+    num_exp_descs = num_pkts
+    if redir_span:
+        num_exp_descs *= 2
+
+    if (rnmdr_cur.pi != rnmdr.pi+num_exp_descs):
         print("RNMDR pi check failed old %d new %d expected %d" %
-                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
+                     (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_exp_descs))
         app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
@@ -199,17 +218,22 @@ def TestCaseVerify(tc):
     # Tx: verify PI for PROXYCCB got incremented
     time.sleep(1)
     proxyccb_cur.GetObjValPd()
-    if (proxyccb_cur.pi != proxyccb.pi+num_redir_pkts):
+
+    num_exp_proxyccb_pkts = num_redir_pkts
+    if redir_span:
+        num_exp_proxyccb_pkts = 0
+
+    if (proxyccb_cur.pi != proxyccb.pi+num_exp_proxyccb_pkts):
         print("PROXYCCB pi check failed old %d new %d expected %d" %
-                      (proxyccb.pi, proxyccb_cur.pi, proxyccb.pi+num_redir_pkts))
+                      (proxyccb.pi, proxyccb_cur.pi, proxyccb.pi+num_exp_proxyccb_pkts))
         app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
         return False
     print("PROXYCCB pi old %d new %d" % (proxyccb.pi, proxyccb_cur.pi))
 
     # Tx: verify # packets chained
-    if (proxyccb_cur.stat_pkts_chain != proxyccb.stat_pkts_chain+num_redir_pkts):
+    if (proxyccb_cur.stat_pkts_chain != proxyccb.stat_pkts_chain+num_exp_proxyccb_pkts):
         print("stat_pkts_chain check failed old %d new %d expected %d" %
-              (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain, proxyccb.stat_pkts_chain+num_redir_pkts))
+              (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain, proxyccb.stat_pkts_chain+num_exp_proxyccb_pkts))
         app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
         return False
     print("stat_pkts_chain old %d new %d" % 

@@ -226,6 +226,8 @@ table_read_RNMDR_ALLOC_IDX:
      * payload_len is 0
      */
     seq             c3, d.u.tcp_rx_d.alloc_descr, 1
+    phvwr.!c3       p.common_phv_l7_proxy_en, 0
+    phvwr.!c3       p.common_phv_l7_proxy_type_redirect, 0
     //bcf             [!c3], table_read_RNMPR_ALLOC_IDX
     bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,

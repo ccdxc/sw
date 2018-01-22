@@ -360,7 +360,8 @@ static bool
 tcp_is_proxy_enabled_for_flow(const flow_key_t &flow_key)
 {
     return is_proxy_enabled_for_flow(types::PROXY_TYPE_TCP, flow_key) ||
-           is_proxy_enabled_for_flow(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, flow_key);
+           is_proxy_enabled_for_flow(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, flow_key) ||
+           is_proxy_enabled_for_flow(types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN, flow_key);
 }
 
 static proxy_flow_info_t*
@@ -369,7 +370,14 @@ tcp_proxy_get_flow_info(const flow_key_t& flow_key)
     proxy_flow_info_t*      pfi;
 
     pfi = proxy_get_flow_info(types::PROXY_TYPE_TCP, &flow_key);
-    return pfi ? pfi : proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, &flow_key);
+    if (!pfi) {
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, &flow_key);
+    }
+    if (!pfi) {
+        pfi = proxy_get_flow_info(types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN, &flow_key);
+    }
+
+    return pfi;
 }
 
 fte::pipeline_action_t

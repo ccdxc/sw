@@ -78,8 +78,8 @@ ring_doorbell:
                                  k.common_phv_fid,
                                  0,
                                  d.{l7q_pidx}.hx, 
-                                 db_data_pid, 
-                                 db_data_index)
+                                 l7_db_data_pid, 
+                                 l7_db_data_index)
     tbladd      d.{l7q_pidx}.hx, 1
     CAPRI_DMA_CMD_STOP_FENCE(l7_doorbell_dma_cmd)
     addi        r7, r0, 1

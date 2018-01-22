@@ -608,13 +608,8 @@ metadata ring_entry_t ring_entry;
 @pragma dont_trim
 metadata pkt_descr_aol_t aol;
 
-header_type dma_phv_pad_t {
-    fields {
-        dma_pad           : 64;
-    }    
-}
 @pragma dont_trim
-metadata dma_phv_pad_t  dma_pad;
+metadata doorbell_data_t l7_db_data;
 
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t pkt_dma;                 // dma cmd 0

@@ -155,22 +155,25 @@ def TestCaseVerify(tc):
 
     # Tx: verify PI for RAWCCB got incremented
     rawccb_cur.GetObjValPd()
-    if not redir_span:
-        if (rawccb_cur.pi != rawccb.pi+num_pkts):
-            print("RAWCCB pi check failed old %d new %d expected %d" %
-                          (rawccb.pi, rawccb_cur.pi, rawccb.pi+num_pkts))
-            app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
-            return False
-        print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
+    num_exp_rawccb_pkts = num_pkts
+    if redir_span:
+        num_exp_rawccb_pkts = 0
 
-        # Tx: verify # packets chained
-        if (rawccb_cur.stat_pkts_chain != rawccb.stat_pkts_chain+num_pkts):
-            print("stat_pkts_chain check failed old %d new %d expected %d" %
-                  (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain, rawccb.stat_pkts_chain+num_pkts))
-            app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
-            return False
-        print("stat_pkts_chain old %d new %d" % 
-              (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain))
+    if (rawccb_cur.pi != rawccb.pi+num_exp_rawccb_pkts):
+        print("RAWCCB pi check failed old %d new %d expected %d" %
+                      (rawccb.pi, rawccb_cur.pi, rawccb.pi+num_exp_rawccb_pkts))
+        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+        return False
+    print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
+
+    # Tx: verify # packets chained
+    if (rawccb_cur.stat_pkts_chain != rawccb.stat_pkts_chain+num_exp_rawccb_pkts):
+        print("stat_pkts_chain check failed old %d new %d expected %d" %
+              (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain, rawccb.stat_pkts_chain+num_exp_rawccb_pkts))
+        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+        return False
+    print("stat_pkts_chain old %d new %d" % 
+          (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain))
 
     app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
     app_redir_shared.rawccb_stats_print(tc, rawccb_cur)

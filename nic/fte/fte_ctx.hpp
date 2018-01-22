@@ -248,6 +248,7 @@ std::ostream& operator<<(std::ostream& os, const fwding_info_t& val);
 typedef struct mcast_info_s {
     uint8_t  mcast_en;
     uint16_t mcast_ptr;
+    uint16_t proxy_mcast_ptr;
 } mcast_info_t;
 
 std::ostream& operator<<(std::ostream& os, const mcast_info_t& val);
@@ -260,9 +261,11 @@ typedef struct ingress_info_s {
 std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
 
 typedef struct mirror_info_s {
-    bool proxy_mirror;
+    bool mirror_en;
     uint8_t egr_mirror_session;
     uint8_t ing_mirror_session;
+    uint8_t proxy_egr_mirror_session;
+    uint8_t proxy_ing_mirror_session;
 } mirror_info_t;
 
 std::ostream& operator<<(std::ostream& os, const mirror_info_t& val);

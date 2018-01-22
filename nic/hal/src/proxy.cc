@@ -299,6 +299,7 @@ proxy_init_default_params(proxy_t* proxy)
 hal_ret_t
 proxy_init_inherit_parent_meta(proxy_t* proxy)
 {
+    proxy_t         *parent_proxy;
     proxy_meta_t    *meta;
 
     if((NULL == proxy) || (NULL == proxy->meta))
@@ -308,7 +309,10 @@ proxy_init_inherit_parent_meta(proxy_t* proxy)
 
     meta = proxy->meta;
     if (!meta->num_lif && (meta->parent_proxy != types::PROXY_TYPE_NONE)) {
-        proxy->meta = &g_meta[meta->parent_proxy];
+        parent_proxy = find_proxy_by_type(meta->parent_proxy);
+        assert(parent_proxy);
+        proxy->meta = parent_proxy->meta;
+        proxy->qid_idxr_ = parent_proxy->qid_idxr_;
     }
 
     return HAL_RET_OK;

@@ -69,6 +69,7 @@ tls_sesq_produce:
                               
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     bcf         [c1], tls_queue_sesq_process_done
+    nop
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd2_dma_cmd)
     b           tls_queue_sesq_process_done
     nop
