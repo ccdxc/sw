@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
@@ -25,7 +26,7 @@ func main() {
 		npmURL       = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/k8sagent.log", "Redirect logs to file")
-		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
+		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
 	)
 	flag.Parse()
 
@@ -51,6 +52,9 @@ func main() {
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
+
+	// Set the TLS provider for rpckit
+	rpckit.SetN4STLSProvider()
 
 	// read the mac address of the uplink interface
 	macAddr, err := netutils.GetIntfMac(*uplinkIf)

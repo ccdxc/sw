@@ -108,14 +108,7 @@ func (r *resolverClient) runUntilCancel() {
 		}
 
 		// grpc client setup
-		// FIXME ENRICO -- right now resolver listens on CMDGRPCPort, which cannot do TLS
-		// because it is used to bootstrap the cluster.
-		// Move resolver to a different port and enable TLS
-		opts := r.config.Options
-		opts = append(opts, rpckit.WithTLSProvider(nil))
-
-		//conn, err = grpc.Dial(r.config.Servers[i], opts...)
-		rpcClient, err := rpckit.NewRPCClient(r.config.Name, r.config.Servers[i], opts...)
+		rpcClient, err := rpckit.NewRPCClient(r.config.Name, r.config.Servers[i], r.config.Options...)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 			continue

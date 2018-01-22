@@ -34,6 +34,9 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
+	"github.com/pensando/sw/venice/cmd/grpc/service"
+	"github.com/pensando/sw/venice/cmd/services/mock"
+	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -51,7 +54,7 @@ import (
 
 const (
 	smartNICServerURL = "localhost:9199"
-	resolverURLs      = ":" + globals.CMDGRPCPort
+	resolverURLs      = ":" + globals.CMDResolverPort
 	minAgents         = 1
 	maxAgents         = 5000
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
@@ -99,14 +102,14 @@ func getDBPath(index int) string {
 // launchCMDServer creates a smartNIC CMD server for SmartNIC service.
 func launchCMDServer(m *testing.M, url string) (*rpckit.RPCServer, error) {
 
-	// create an RPC server.
+	// create an RPC server for SmartNIC service
 	rpcServer, err := rpckit.NewRPCServer("smartNIC", url, rpckit.WithTLSProvider(nil))
 	if err != nil {
 		fmt.Printf("Error creating RPC-server: %v", err)
 		return nil, err
 	}
 	tInfo.rpcServer = rpcServer
-	cmdenv.RPCServer = rpcServer
+	cmdenv.UnauthRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
 	tInfo.smartNICServer, err = smartnic.NewRPCServer(tInfo,
@@ -121,6 +124,13 @@ func launchCMDServer(m *testing.M, url string) (*rpckit.RPCServer, error) {
 	}
 	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 	rpcServer.Start()
+
+	// Also create a mock resolver
+	rs := mock.NewResolverService()
+	resolverHandler := service.NewRPCHandler(rs)
+	resolverServer, err := rpckit.NewRPCServer("resolver", *resolverURL, rpckit.WithTracerEnabled(true))
+	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+	resolverServer.Start()
 
 	return rpcServer, nil
 }
@@ -148,7 +158,11 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 	}
 	var resolverClient resolver.Interface
 	if resolverURL != nil && *resolverURL != "" {
-		resolverClient = resolver.New(&resolver.Config{Servers: strings.Split(*resolverURL, ",")})
+		resolverCfg := &resolver.Config{
+			Name:    "TestNMD",
+			Servers: strings.Split(*resolverURL, ","),
+		}
+		resolverClient = resolver.New(resolverCfg)
 	}
 	// create the new NMD
 	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, restURL, *mode, resolverClient)

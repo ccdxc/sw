@@ -506,7 +506,7 @@ func populateDynamicArgs(args []string) []string {
 		case strings.Compare(arg, "$RESOLVER_URLS") == 0:
 			servers := make([]string, 0)
 			for _, jj := range env.QuorumNodes {
-				servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDGRPCPort))
+				servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
 			}
 			arg = strings.Join(servers, ",")
 		}

@@ -32,8 +32,13 @@ type ServerRunOptions struct {
 	// RESTPort is the port for REST server.
 	RESTPort string
 
-	// GRPCPort is the port for gRPC server.
-	GRPCPort string
+	// GRPCUnauthPort is the port for the unauthenticated gRPC server.
+	// Does not require TLS. Used for cluster formation, NIC admission and certificates issuance.
+	GRPCUnauthPort string
+
+	// GRPCAuthPort is the port for the authenticated gRPC server.
+	// Requires TLS and valid client certificate. Used by resolver.
+	GRPCAuthPort string
 
 	// ConfigDir is where cmd can persist its configuration.
 	ConfigDir string
@@ -55,7 +60,8 @@ func NewServerRunOptions() *ServerRunOptions {
 	return &ServerRunOptions{
 		KVStore:           kvStoreOptions,
 		RESTPort:          globals.CMDRESTPort,
-		GRPCPort:          globals.CMDGRPCPort,
+		GRPCAuthPort:      globals.CMDGRPCAuthPort,
+		GRPCUnauthPort:    globals.CMDGRPCUnauthPort,
 		ConfigDir:         globals.ConfigDir,
 		ClusterConfigFile: "cluster.conf",
 	}

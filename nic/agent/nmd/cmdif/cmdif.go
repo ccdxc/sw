@@ -83,8 +83,9 @@ func (client *CmdClient) initRPC() error {
 	// initialize rpcClient
 	var err error
 	log.Infof("Initializing RPC client ")
-	// FIXME ENRICO -- right now CMD uses only 1 gRPC port for cluster formation, watches, etc. This cannot be TLS.
-	// We should move this service to a different port and do TLS
+	// FIXME ENRICO -- right now CMD uses the same API to register NICs and watch config updates
+	// Since the NIC does not have a certificate yet when it registers, this API cannot run over TLS.
+	// We should separate the Registration from the Watch/Update APIs so that Watch/Update can run over TLS.
 	client.rpcClient, err = rpckit.NewRPCClient("nmd", client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithTLSProvider(nil))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server, srvURL: %v Err: %v", client.srvURL, err)

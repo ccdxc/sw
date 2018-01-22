@@ -23,7 +23,7 @@ func main() {
 		host            = flag.String("host", "localhost", "host identity")
 		logToStdoutFlag = flag.Bool("logtostdout", true, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
-		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:port>")
+		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 	)
 

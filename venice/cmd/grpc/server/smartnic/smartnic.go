@@ -604,7 +604,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cmd.SmartNIC) {
 				Spec: nmd.NaplesSpec{
 					Mode:           nmd.NaplesMode_MANAGED_MODE,
 					PrimaryMac:     nicObj.Name,
-					ClusterAddress: []string{env.RPCServer.GetListenURL()},
+					ClusterAddress: []string{env.UnauthRPCServer.GetListenURL()},
 					NodeName:       nicObj.Spec.NodeName,
 					MgmtIp:         nicObj.Spec.MgmtIp,
 				},

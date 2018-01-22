@@ -41,7 +41,7 @@ import (
 
 const (
 	smartNICServerURL = "localhost:9199"
-	resolverURLs      = ":" + globals.CMDGRPCPort
+	resolverURLs      = ":" + globals.CMDResolverPort
 	// TODO: This is a temporary way of testing invalid cert
 	invalidCertSignature = "unknown-cert"
 	healthInterval       = 1 * time.Second
@@ -91,7 +91,7 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 		return nil, err
 	}
 	tInfo.rpcServer = rpcServer
-	cmdenv.RPCServer = rpcServer
+	cmdenv.UnauthRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
 	tInfo.smartNICServer, err = NewRPCServer(tInfo, healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr)

@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
@@ -22,7 +23,8 @@ func main() {
 	var (
 		hostIf    = flag.String("hostif", "ntrunk0", "Host facing interface")
 		nmdDbPath = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
-		cmd       = flag.String("cmd", ":"+globals.CMDGRPCPort, "CMD RPC server URL(s)")
+		cmd       = flag.String("cmd", ":"+globals.CMDSmartNICAPIPort, "CMD RPC server URL(s)")
+		res       = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
 		mode      = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
 		debugflag = flag.Bool("debug", false, "Enable debug mode")
 		logToFile = flag.String("logtofile", "/tmp/nmd.log", "Redirect logs to file")
@@ -52,6 +54,9 @@ func main() {
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 
+	// Set the TLS provider for rpckit
+	rpckit.SetN4STLSProvider()
+
 	// read the mac address of the host interface
 	macAddr, err := netutils.GetIntfMac(*hostIf)
 	if err != nil {
@@ -59,7 +64,7 @@ func main() {
 	}
 
 	// init resolver client
-	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: strings.Split(*cmd, ",")})
+	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: strings.Split(*res, ",")})
 
 	/// init tsdb
 	opt := tsdb.Options{

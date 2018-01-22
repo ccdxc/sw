@@ -21,7 +21,7 @@ func main() {
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
 		listenURL    = flag.String("listen-url", ":"+globals.NpmRPCPort, "gRPC listener URL")
-		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
+		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
 		restURL      = flag.String("rest-url", ":"+globals.NpmRESTPort, "rest listener URL")
 	)
 	flag.Parse()

@@ -13,6 +13,11 @@ import http
 import exceptions
 import traceback
 
+# Port numbers - keep in sync with venice/globals/constants.go
+APIGwRESTPort = "9000"
+CMDClusterMgmtPort = "9002"
+CMDResolverPort = "9009"
+
 # Utility function to run ssh
 def ssh_exec_thread(ssh_object, command):
     print "run: " + command
@@ -117,7 +122,7 @@ class Node:
 
 # Create the network by posting a message to apigw
 def createNetwork(nodeAddr, name, subnet, gw, vlanId):
-    postUrl = 'http://' + nodeAddr + ':9000/v1/networks/default/networks'
+    postUrl = 'http://' + nodeAddr + ':' + APIGwRESTPort + '/v1/networks/default/networks'
 
     # network json parameters
     jdata = json.dumps({
@@ -143,8 +148,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='1.0.0')
 parser.add_argument("-nodes", default='', help="list of nodes(comma separated)")
 parser.add_argument("-npm", default='pen-npm', help="NPM URL")
-parser.add_argument("-cmd", default='pen-master:9002', help="CMD URL")
-parser.add_argument("-resolvers", default='pen-master:9002', help="Resolver URLs")
+parser.add_argument("-cmd", default='pen-master:' + CMDClusterMgmtPort, help="CMD URL")
+parser.add_argument("-resolvers", default='pen-master:' + CMDResolverPort, help="Resolver URLs")
 parser.add_argument("-simnodes", default='', help="list of nodes(comma separated)")
 parser.add_argument("-user", default='vagrant', help="User id for ssh")
 parser.add_argument("-password", default='vagrant', help="password for ssh")

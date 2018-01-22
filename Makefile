@@ -136,18 +136,20 @@ ifndef JOB_ID
 	@( go get golang.org/x/tools/cmd/goimports )
 endif
 
-
+# VENICE_DEV=1 switches behavior of Venice components and libraries to test mode.
+# For rpckit, it changes the default connection mode from "TLS on" to "TLS off"
+# See venice/utils/testenv
 unit-test:
 	$(info +++ go test -p 1 $(TO_BUILD))
-	$(GOCMD) test -p 1 $(TO_BUILD); \
+	VENICE_DEV=1 $(GOCMD) test -p 1 $(TO_BUILD); \
 
 unit-race-test:
 	$(info +++ go test -race $(TO_BUILD))
-	go test -race $(TO_BUILD)
+	VENICE_DEV=1 go test -race $(TO_BUILD)
 
 unit-test-verbose:
 	$(info +++ go test -v -p 1 $(TO_BUILD))
-	$(GOCMD) test -v -p 1 $(TO_BUILD); \
+	VENICE_DEV=1 $(GOCMD) test -v -p 1 $(TO_BUILD); \
 
 cover:
 	$(info +++ go test -cover -tags test $(TO_BUILD))

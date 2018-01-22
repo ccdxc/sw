@@ -37,6 +37,6 @@ var (
 	NICService        types.SmartNICService
 	CfgWatcherService types.CfgWatcherService
 	CertMgr           *certmgr.CertificateMgr
-	RPCServer         *rpckit.RPCServer
-	CertRPCServer     *rpckit.RPCServer
+	AuthRPCServer     *rpckit.RPCServer // Authenticated services (requires TLS and client certificate)
+	UnauthRPCServer   *rpckit.RPCServer // Unauthenticated services
 )

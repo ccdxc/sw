@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/services"
@@ -113,6 +114,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		err = env.CertMgr.StartCa(false)
 		if err != nil || !env.CertMgr.IsReady() {
 			return nil, fmt.Errorf("Error starting CertMgr: %v", err)
+		}
+		if env.AuthRPCServer == nil {
+			go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 		}
 	}
 
@@ -286,7 +290,7 @@ func RegisterSmartNICServer(smgr *cache.Statemgr) {
 		}()
 
 		// Register smartNIC gRPC server
-		grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, nicServer)
+		grpc.RegisterSmartNICServer(env.UnauthRPCServer.GrpcServer, nicServer)
 		return
 	}
 	log.Fatalf("Failed to register smartNIC RPCserver, apiClient not up")

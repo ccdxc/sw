@@ -13,7 +13,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 type cliOpts struct {
@@ -51,7 +50,7 @@ func main() {
 		"IP:Port where collector api server should listen for grpc")
 	flagSet.StringVar(&opts.resolverURLs,
 		"resolver-urls",
-		":"+globals.CMDGRPCPort,
+		":"+globals.CMDResolverPort,
 		"Comma separated list of resolver URLs of the form 'ip:port'")
 
 	err := flagSet.Parse(os.Args[1:])
@@ -86,7 +85,6 @@ func getBackEnds(resolvers string) []string {
 	rList := strings.Split(resolvers, ",")
 	cfg := &resolver.Config{
 		Servers: rList,
-		Options: []rpckit.Option{rpckit.WithTLSProvider(nil)}, // TODO remove
 	}
 
 	rc := resolver.New(cfg)

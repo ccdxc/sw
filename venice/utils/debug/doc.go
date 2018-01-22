@@ -19,6 +19,6 @@ package debug
 // 	curl http://10.100.0.11:9006/debug/vars
 
 // {
-// "cmdline": ["/npm","-resolver-urls","node1:9002,node2:9002,node3:9002"],
+// "cmdline": ["/npm","-resolver-urls","node1:9009,node2:9009,node3:9009"],
 // "debugStats_instance": {"CreateNetwork": 123020, "DeleteNetwork": 123020}
 // }

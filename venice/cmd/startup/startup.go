@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server"
+	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
@@ -259,6 +260,9 @@ func OnStart() {
 	if err != nil {
 		log.Errorf("Node is part of cluster %+v but failed to start CA with err: %v", cluster, err)
 		return
+	}
+	if env.AuthRPCServer == nil {
+		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
 
 	if cluster.QuorumNodes == nil {

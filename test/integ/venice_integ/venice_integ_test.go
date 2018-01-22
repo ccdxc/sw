@@ -102,10 +102,21 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.certSrv = certSrv
 	log.Infof("Created cert endpoint at %s", globals.CMDCertAPIPort)
 
+	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
+	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
+		p, err := tlsproviders.NewDefaultCKMBasedProvider(certSrv.GetListenURL(), svcName)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
+	}
+	testenv.EnableRpckitTestMode()
+	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
+
 	// Now create a mock resolver
 	m := mock.NewResolverService()
 	resolverHandler := service.NewRPCHandler(m)
-	resolverServer, err := rpckit.NewRPCServer("resolver", "localhost:0", rpckit.WithTracerEnabled(true), rpckit.WithTLSProvider(nil))
+	resolverServer, err := rpckit.NewRPCServer("resolver", "localhost:0", rpckit.WithTracerEnabled(true))
 	c.Assert(err, IsNil)
 	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
 	resolverServer.Start()
@@ -123,17 +134,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		URL:     "localhost:8082",
 	}
 	m.AddServiceInstance(&si)
-
-	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
-	testenv.EnableRpckitTestMode()
-	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		p, err := tlsproviders.NewDefaultCKMBasedProvider(certSrv.GetListenURL(), svcName)
-		if err != nil {
-			return nil, err
-		}
-		return p, nil
-	}
-	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 
 	// api server config
 	sch := runtime.NewScheme()

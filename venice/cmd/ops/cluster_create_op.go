@@ -13,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/cmd/validation"
 	"github.com/pensando/sw/venice/globals"
@@ -161,6 +162,11 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		return nil, errors.NewInternalError(err)
 	}
 	log.Infof("Wrote cluster %#v to kvstore", o.cluster)
+
+	// Cluster is formed, we can start Resolver and other authenticated services
+	if env.AuthRPCServer == nil {
+		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
+	}
 
 	return o.cluster, nil
 }

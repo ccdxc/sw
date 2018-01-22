@@ -159,7 +159,7 @@ func (tu *TestUtils) Init() {
 
 	servers := make([]string, 0)
 	for _, jj := range tu.VeniceNodeIPs {
-		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDGRPCPort))
+		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDClusterMgmtPort))
 	}
 	tu.resolver = resolver.New(&resolver.Config{Servers: servers})
 	if tu.resolver == nil {

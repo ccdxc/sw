@@ -80,7 +80,7 @@ func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEv
 func (k *CfgWatcherService) apiClientConn() (*grpc.ClientConn, error) {
 	servers := make([]string, 0)
 	for ii := range env.QuorumNodes {
-		servers = append(servers, fmt.Sprintf("%s:%s", env.QuorumNodes[ii], globals.CMDGRPCPort))
+		servers = append(servers, fmt.Sprintf("%s:%s", env.QuorumNodes[ii], globals.CMDResolverPort))
 	}
 	r := resolver.New(&resolver.Config{Name: "cmd", Servers: servers})
 	rpcClient, err := rpckit.NewRPCClient("cmd", k.apiServerAddr, rpckit.WithBalancer(balancer.New(r)))

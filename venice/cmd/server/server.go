@@ -20,5 +20,9 @@ func Run(options *options.ServerRunOptions) {
 	go func() {
 		s.RunOnAddr(":" + options.RESTPort)
 	}()
-	grpcserver.RunServer(":"+options.GRPCPort, nil)
+	grpcserver.RunUnauthServer(":"+options.GRPCUnauthPort, nil)
+
+	// Server for authenticated services is not started here because it needs a
+	// certificate. It can only be started after the cluster is formed and the
+	// CA is ready
 }
