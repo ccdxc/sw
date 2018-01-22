@@ -58,8 +58,9 @@ table_read_QUEUE_BRQ:
     phvwri       p.barco_desc_command, TLS_WORD_SWAP(CAPRI_BARCO_COMMAND_HMAC_SHA256_GENERATE)
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)
 
-    addi        r1, r0, NTLS_AAD_SIZE
-    phvwr       p.barco_desc_header_size, r1.wx
+    // No header for HMAC generate with Barco
+    //addi        r1, r0, NTLS_AAD_SIZE
+    //phvwr       p.barco_desc_header_size, r1.wx
 
     /* address will be in r4 */
     addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
