@@ -127,14 +127,6 @@ ws-tools:
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/dep/cmd/dep && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/asset-build/asset-pull && go install) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/asset-build/asset-upload && go install)
-	$(MAKE) local-goimports-install
-
-# Installs goimports only in non CI environments.
-local-goimports-install:
-ifndef JOB_ID
-	$(info +++ installing goimports)
-	@( go get golang.org/x/tools/cmd/goimports )
-endif
 
 # VENICE_DEV=1 switches behavior of Venice components and libraries to test mode.
 # For rpckit, it changes the default connection mode from "TLS on" to "TLS off"
