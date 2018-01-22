@@ -47,7 +47,7 @@ typedef enum {
  * mirror-to queue were full.
  * 
  */
-#define APP_REDIR_VISIBILITY_USE_MIRROR_SESSION     0
+#define APP_REDIR_VISIBILITY_USE_MIRROR_SESSION     1
 
 
 // appID state
