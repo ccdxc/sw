@@ -10,6 +10,10 @@ OBJ_DIR = ../../obj
 NCC_OPTIONS = --asm-out --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
 PROJ = iris
 
+ifeq ($(PLATFORM),haps)
+    NCC_OPTIONS += --target=haps --fe-flags=-DPLATFORM_HAPS
+endif
+
 #p4_src = $(wildcard ./*.p4)
 #hdr_src = $(shell find . -name '*.h')
 local_deps = $(shell find . -name '*.p4' -o -name '*.h')

@@ -23,6 +23,11 @@
 #     $(LIBRARIES) - List of other build system .a's to link with.
 #     $(SYSTEM_LIBRARIES) - List of system libraries (usually -l<lib>) linked.
 #
+# If PLATFORM is set, then
+#     $(PLATFORM) - Platform against which the binaries and libs are built.
+#                   By default, it is for sim env.
+#                   Set PLATFORM=haps for haps platform.
+#
 # ================
 # Example PROGRAM
 # ----------------
@@ -388,3 +393,4 @@ endif # no PROGRAM, LIBRARY, SUBDIRS
 	@echo LCFLAGS = $(LCFLAGS)
 	@echo LCXXFLAGS = $(LCXXFLAGS)
 	@echo PGMLINK = $(PGMLINK)
+	@echo PLATFORM = $(PLATFORM)
