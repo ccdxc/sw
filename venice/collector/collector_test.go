@@ -41,8 +41,8 @@ func TestCollectorBasic(t *testing.T) {
 	defer s.Teardown()
 
 	c := NewCollector(context.Background()).WithPeriod(100 * time.Millisecond)
-	err = c.AddBackEnd("http://" + *dbServer)
-	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", *dbServer))
+	err = c.AddBackEnd(dbServer)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", dbServer))
 
 	ss := statssim.NewStatsSim()
 	ss.Init()
@@ -76,11 +76,11 @@ func TestCollectorDual(t *testing.T) {
 	c := NewCollector(context.Background()).WithPeriod(100 * time.Millisecond).WithSize(12)
 
 	// Add both backends
-	err = c.AddBackEnd("http://" + *dbServerA)
-	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", *dbServerA))
+	err = c.AddBackEnd(dbServerA)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", dbServerA))
 
-	err = c.AddBackEnd("http://" + *dbServerB)
-	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", *dbServerB))
+	err = c.AddBackEnd(dbServerB)
+	tu.AssertOk(t, err, fmt.Sprintf("failed to add backend {%s}", dbServerB))
 
 	ss := statssim.NewStatsSim()
 	ss.Init()

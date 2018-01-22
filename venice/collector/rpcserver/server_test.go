@@ -43,11 +43,11 @@ func (ts *suite) Setup(t *testing.T) {
 	tu.AssertOk(t, err, "failed to setup mockdb")
 
 	ts.c = tec.NewCollector(context.Background()).WithPeriod(100 * time.Millisecond)
-	err = ts.c.AddBackEnd("http://" + *dbServerA)
+	err = ts.c.AddBackEnd(dbServerA)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	err = ts.c.AddBackEnd("http://" + *dbServerB)
+	err = ts.c.AddBackEnd(dbServerB)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
