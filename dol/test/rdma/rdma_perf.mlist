@@ -7,7 +7,7 @@ feature:
     module      : rdma
     enable      : True
     ignore      : False
-    rtl         : False
+    rtl         : True
     selectors:
         maxrdmasessions: 1
 
@@ -73,6 +73,7 @@ modules:
         module  : resp_rx_read_only
         spec    : resp_rx_read_only.testspec
         ignore  : False
+        rtl     : True
 
     - module:
         name    : RDMA_RX_WRITE_ONLY
