@@ -76,6 +76,8 @@ void AllocHbmAddress(const internal::HbmAddressReq &req,
                        internal::HbmAddressResp *resp) {
     uint64_t addr = get_start_offset(req.handle().c_str());
     uint32_t size = get_size_kb(req.handle().c_str());
+    HAL_TRACE_DEBUG("pi-internal:{}: Allocated HBM Address {:#x} Size {}",
+                    __FUNCTION__, addr, size);
     if (addr == 0) {
         resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         resp->set_size(0);
