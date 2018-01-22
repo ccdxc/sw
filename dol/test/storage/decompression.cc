@@ -121,15 +121,22 @@ decompression_init()
   write_mem(hbm_datain_buf_pa+8, ((uint8_t *)datain_buf)+8, kCompressedDataSize);
 
   // Write queue base.
-  uint32_t cfg_glob_data;
-  read_reg(cfg_glob, cfg_glob_data);
-  write_reg(cfg_glob, (cfg_glob_data & 0xFFFF0000u) | kCPVersion);
+  uint32_t lo_reg, hi_reg;
+  read_reg(cfg_glob, lo_reg);
+  write_reg(cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
   write_reg(cfg_q_base, queue_mem_pa & 0xFFFFFFFFu);
   write_reg(cfg_q_base + 4, (queue_mem_pa >> 32) & 0xFFFFFFFFu);
-  // Enable all engines.
-  write_reg(cfg_ueng, 0x3);
+  // Enable all 16 engines.
+  read_reg(cfg_ueng, lo_reg);
+  read_reg(cfg_ueng+4, hi_reg);
+  lo_reg |= 0x3;
+  hi_reg &= ~(1u << (54 - 32));
+  write_reg(cfg_ueng, lo_reg);
+  write_reg(cfg_ueng+4, hi_reg);
   // Enable cold/warm queue.
-  write_reg(cfg_dist, 0x1);
+  read_reg(cfg_dist, lo_reg);
+  lo_reg |= 1;
+  write_reg(cfg_dist, lo_reg);
 
   queue_index = 0;
 
