@@ -2,10 +2,10 @@
 #include "INGRESS_p.h"
 #include "../../p4/gft/include/defines.h"
 
-struct hdr_transpositions1_k k;
-struct hdr_transpositions1_d d;
+struct rx_hdr_transpositions0_k k;
+struct rx_hdr_transpositions0_d d;
 struct phv_ p;
 
 %%
 
-#include "hdr_transpositions.h"
+#include "rx_hdr_transpositions.h"

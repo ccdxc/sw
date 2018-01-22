@@ -6,10 +6,10 @@ header capri_i2e_metadata_t capri_i2e_metadata;
 // layer 00
 header ethernet_t ethernet_00;
 header vlan_tag_t ctag_00;
-@pragma pa_header_union xgress ipv4_00 ipv6_00
+@pragma pa_header_union egress ipv4_00 ipv6_00
 header ipv4_t ipv4_00;
 header ipv6_t ipv6_00;
-@pragma pa_header_union xgress udp_00 tcp_00 icmp_00
+@pragma pa_header_union egress udp_00 tcp_00 icmp_00
 header udp_t udp_00;
 header tcp_t tcp_00;
 header icmp_t icmp_00;
@@ -20,10 +20,10 @@ header erspan_header_t3_t erspan_00;
 // layer 01
 header ethernet_t ethernet_01;
 header vlan_tag_t ctag_01;
-@pragma pa_header_union xgress ipv4_01 ipv6_01
+@pragma pa_header_union egress ipv4_01 ipv6_01
 header ipv4_t ipv4_01;
 header ipv6_t ipv6_01;
-@pragma pa_header_union xgress udp_01 tcp_01 icmp_01
+@pragma pa_header_union egress udp_01 tcp_01 icmp_01
 header udp_t udp_01;
 header tcp_t tcp_01;
 header icmp_t icmp_01;
@@ -48,10 +48,10 @@ header erspan_header_t3_t erspan_1;
 // layer 2
 header ethernet_t ethernet_2;
 header vlan_tag_t ctag_2;
-@pragma pa_header_union xgress ipv4_2 ipv6_2
+@pragma pa_header_union ingress ipv4_2 ipv6_2
 header ipv4_t ipv4_2;
 header ipv6_t ipv6_2;
-@pragma pa_header_union xgress udp_2 tcp_2 icmp_2
+@pragma pa_header_union ingress udp_2 tcp_2 icmp_2
 header udp_t udp_2;
 header tcp_t tcp_2;
 header icmp_t icmp_2;
@@ -70,7 +70,7 @@ header vlan_tag_t ctag_3;
 @pragma pa_field_union ingress ipv4_3.srcAddr ipv6_3.srcAddr
 header ipv4_t ipv4_3;
 header ipv6_t ipv6_3;
-@pragma pa_header_union xgress udp_3 tcp_3 icmp_3
+@pragma pa_header_union ingress udp_3 tcp_3 icmp_3
 header udp_t udp_3;
 header tcp_t tcp_3;
 header icmp_t icmp_3;
@@ -99,7 +99,7 @@ parser start {
         12 : start_vlan_ipv6_bth;
         // tunneled roce TBD
         default: parse_nic;
-        0x1 mask 0 : deparse_start;
+        0x1 mask 0 : egress_start;
         0x2 mask 0 : dummy;
     }
 }
@@ -109,35 +109,6 @@ parser dummy {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     return ingress;
-}
-
-@pragma deparse_only
-parser deparse_start {
-    // layer 00
-    extract(ethernet_00);
-    extract(ctag_00);
-    extract(ipv4_00);
-    extract(ipv6_00);
-    extract(udp_00);
-    extract(tcp_00);
-    extract(icmp_00);
-    extract(vxlan_00);
-    extract(gre_00);
-    extract(erspan_00);
-
-    // layer 01
-    extract(ethernet_01);
-    extract(ctag_01);
-    extract(ipv4_01);
-    extract(ipv6_01);
-    extract(udp_01);
-    extract(tcp_01);
-    extract(icmp_01);
-    extract(vxlan_01);
-    extract(gre_01);
-    extract(erspan_01);
-
-    return parse_nic;
 }
 
 parser parse_nic {
@@ -573,5 +544,113 @@ parser parse_vxlan_3 {
 }
 
 parser parse_end {
+    return ingress;
+}
+
+
+/******************************************************************************/
+/* Egress parser                                                              */
+/******************************************************************************/
+@pragma xgress egress
+parser egress_start {
+    extract(capri_intrinsic);
+    return select(capri_intrinsic.csum_err) {
+        default: parse_txdma;
+        0x1 mask 0 : egress_deparse_start;
+    }
+}
+
+@pragma deparse_only
+@pragma xgress egress
+parser egress_deparse_start {
+    // layer 00
+    extract(ethernet_00);
+    extract(ctag_00);
+    extract(ipv4_00);
+    extract(ipv6_00);
+    extract(udp_00);
+    extract(tcp_00);
+    extract(icmp_00);
+    extract(vxlan_00);
+    extract(gre_00);
+    extract(erspan_00);
+
+    // layer 01
+    extract(ethernet_01);
+    extract(ctag_01);
+    extract(ipv4_01);
+    extract(ipv6_01);
+    extract(udp_01);
+    extract(tcp_01);
+    extract(icmp_01);
+    extract(vxlan_01);
+    extract(gre_01);
+    extract(erspan_01);
+
+    return parse_txdma;
+}
+
+@pragma xgress egress
+parser parse_txdma {
+    extract(ethernet_1);
+    return select(latest.etherType) {
+        ETHERTYPE_CTAG : parse_tx_ctag_1;
+        ETHERTYPE_IPV4 : parse_tx_ipv4_1;
+        ETHERTYPE_IPV6 : parse_tx_ipv6_1;
+        default: ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_tx_ctag_1 {
+    extract(ctag_1);
+    return select(latest.etherType) {
+        ETHERTYPE_IPV4 : parse_tx_ipv4_1;
+        ETHERTYPE_IPV6 : parse_tx_ipv6_1;
+        default: ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_tx_ipv4_1 {
+    extract(ipv4_1);
+    return select(latest.fragOffset, latest.protocol) {
+        IP_PROTO_ICMP : parse_tx_icmp_1;
+        IP_PROTO_TCP : parse_tx_tcp_1;
+        IP_PROTO_UDP : parse_tx_udp_1;
+        default: ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_tx_ipv6_1 {
+    extract(ipv6_1);
+    return select(latest.nextHdr) {
+        IP_PROTO_ICMPV6 : parse_tx_icmp_1;
+        IP_PROTO_TCP : parse_tx_tcp_1;
+        IP_PROTO_UDP : parse_tx_udp_1;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_tx_icmp_1 {
+    extract(icmp_1);
+    return ingress;
+}
+
+@pragma xgress egress
+parser parse_tx_tcp_1 {
+    extract(tcp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
+    return ingress;
+}
+
+@pragma xgress egress
+parser parse_tx_udp_1 {
+    extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     return ingress;
 }

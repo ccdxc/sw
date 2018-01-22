@@ -1,4 +1,4 @@
-action ingress_key1(match_fields) {
+action rx_key1(match_fields) {
     if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_1, ethernet_1.dstAddr);
     }
@@ -51,7 +51,7 @@ action ingress_key1(match_fields) {
     modify_field(scratch_metadata.match_fields, match_fields);
 }
 
-action ingress_key2(match_fields) {
+action rx_key2(match_fields) {
     if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_2, ethernet_2.dstAddr);
     }
@@ -104,7 +104,7 @@ action ingress_key2(match_fields) {
     modify_field(scratch_metadata.match_fields, match_fields);
 }
 
-action ingress_key3(match_fields) {
+action rx_key3(match_fields) {
     if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_3, ethernet_3.dstAddr);
     }
@@ -157,7 +157,7 @@ action ingress_key3(match_fields) {
     modify_field(scratch_metadata.match_fields, match_fields);
 }
 
-action ingress_key4(match_fields) {
+action rx_key4(match_fields) {
     if ((match_fields & MATCH_TRANSPORT_SRC_PORT_1) != 0) {
         modify_field(flow_lkp_metadata.l4_sport_1, l4_metadata.l4_sport_1);
     }
@@ -228,7 +228,7 @@ action ingress_key4(match_fields) {
 }
 
 @pragma stage 1
-table ingress_key1 {
+table rx_key1 {
     reads {
         ethernet_1.valid               : ternary;
         ipv4_1.valid                   : ternary;
@@ -255,13 +255,13 @@ table ingress_key1 {
         tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
-        ingress_key1;
+        rx_key1;
     }
     size : 512;
 }
 
 @pragma stage 1
-table ingress_key2 {
+table rx_key2 {
     reads {
         ethernet_1.valid               : ternary;
         ipv4_1.valid                   : ternary;
@@ -288,13 +288,13 @@ table ingress_key2 {
         tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
-        ingress_key2;
+        rx_key2;
     }
     size : 512;
 }
 
 @pragma stage 2
-table ingress_key3 {
+table rx_key3 {
     reads {
         ethernet_1.valid               : ternary;
         ipv4_1.valid                   : ternary;
@@ -321,13 +321,13 @@ table ingress_key3 {
         tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
-        ingress_key3;
+        rx_key3;
     }
     size : 512;
 }
 
 @pragma stage 0
-table ingress_key4 {
+table rx_key4 {
     reads {
         ethernet_1.valid               : ternary;
         ipv4_1.valid                   : ternary;
@@ -354,12 +354,12 @@ table ingress_key4 {
         tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
-        ingress_key4;
+        rx_key4;
     }
     size : 512;
 }
 
-action ingress_vport(vport) {
+action rx_vport(vport) {
     modify_field(capri_p4_intrinsic.packet_len,
                  capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
 
@@ -373,7 +373,7 @@ action ingress_vport(vport) {
 }
 
 @pragma stage 0
-table ingress_vport {
+table rx_vport {
     reads {
         ethernet_1.valid               : ternary;
         ethernet_2.valid               : ternary;
@@ -381,15 +381,15 @@ table ingress_vport {
         ethernet_2.dstAddr             : ternary;
     }
     actions {
-        ingress_vport;
+        rx_vport;
     }
     size : 1024;
 }
 
-control ingress_key {
-    apply(ingress_vport);
-    apply(ingress_key1);
-    apply(ingress_key2);
-    apply(ingress_key3);
-    apply(ingress_key4);
+control rx_key {
+    apply(rx_vport);
+    apply(rx_key1);
+    apply(rx_key2);
+    apply(rx_key3);
+    apply(rx_key4);
 }

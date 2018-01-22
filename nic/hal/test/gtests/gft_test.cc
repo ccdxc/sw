@@ -125,10 +125,10 @@ generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
 }
 
 static void
-ingress_key1_init() {
-    ingress_key1_swkey_t      key;
-    ingress_key1_swkey_mask_t mask;
-    ingress_key1_actiondata   data;
+rx_key1_init() {
+    rx_key1_swkey_t      key;
+    rx_key1_swkey_mask_t mask;
+    rx_key1_actiondata   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -149,7 +149,7 @@ ingress_key1_init() {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.ingress_key1_action_u.ingress_key1_ingress_key1.match_fields =
+    data.rx_key1_action_u.rx_key1_rx_key1.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -159,7 +159,7 @@ ingress_key1_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_INGRESS_KEY1, &hwkey_len, &hwmask_len,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY1, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -168,18 +168,18 @@ ingress_key1_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_INGRESS_KEY1, &key, &mask,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY1, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_INGRESS_KEY1, 0, hwkey, hwmask, &data);
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY1, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
 
 static void
-ingress_key2_init() {
-    ingress_key2_swkey_t      key;
-    ingress_key2_swkey_mask_t mask;
-    ingress_key2_actiondata   data;
+rx_key2_init() {
+    rx_key2_swkey_t      key;
+    rx_key2_swkey_mask_t mask;
+    rx_key2_actiondata   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -200,7 +200,7 @@ ingress_key2_init() {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.ingress_key2_action_u.ingress_key2_ingress_key2.match_fields =
+    data.rx_key2_action_u.rx_key2_rx_key2.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -210,7 +210,7 @@ ingress_key2_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_INGRESS_KEY2, &hwkey_len, &hwmask_len,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY2, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -219,18 +219,18 @@ ingress_key2_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_INGRESS_KEY2, &key, &mask,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY2, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_INGRESS_KEY2, 0, hwkey, hwmask, &data);
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY2, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
 
 static void
-ingress_key3_init() {
-    ingress_key3_swkey_t      key;
-    ingress_key3_swkey_mask_t mask;
-    ingress_key3_actiondata   data;
+rx_key3_init() {
+    rx_key3_swkey_t      key;
+    rx_key3_swkey_mask_t mask;
+    rx_key3_actiondata   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -251,7 +251,7 @@ ingress_key3_init() {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.ingress_key3_action_u.ingress_key3_ingress_key3.match_fields =
+    data.rx_key3_action_u.rx_key3_rx_key3.match_fields =
         (MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO);
 
@@ -261,7 +261,7 @@ ingress_key3_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_INGRESS_KEY3, &hwkey_len, &hwmask_len,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY3, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -270,18 +270,18 @@ ingress_key3_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_INGRESS_KEY3, &key, &mask,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY3, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_INGRESS_KEY3, 0, hwkey, hwmask, &data);
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY3, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
 
 static void
-ingress_key4_init() {
-    ingress_key4_swkey_t      key;
-    ingress_key4_swkey_mask_t mask;
-    ingress_key4_actiondata   data;
+rx_key4_init() {
+    rx_key4_swkey_t      key;
+    rx_key4_swkey_mask_t mask;
+    rx_key4_actiondata   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -302,7 +302,7 @@ ingress_key4_init() {
     memset(&mask, 0xFF, sizeof(mask));
 
     // data
-    data.ingress_key4_action_u.ingress_key4_ingress_key4.match_fields =
+    data.rx_key4_action_u.rx_key4_rx_key4.match_fields =
         (MATCH_TRANSPORT_SRC_PORT_3 | MATCH_TRANSPORT_DST_PORT_3);
 
     // prepare entry and write hardware
@@ -311,7 +311,7 @@ ingress_key4_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_INGRESS_KEY4, &hwkey_len, &hwmask_len,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY4, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -320,26 +320,26 @@ ingress_key4_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_INGRESS_KEY4, &key, &mask,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY4, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_INGRESS_KEY4, 0, hwkey, hwmask, &data);
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY4, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
 
 static void
-ingress_key_init() {
-    ingress_key1_init();
-    ingress_key2_init();
-    ingress_key3_init();
-    ingress_key4_init();
+rx_key_init() {
+    rx_key1_init();
+    rx_key2_init();
+    rx_key3_init();
+    rx_key4_init();
 }
 
 static void
 create_vport_entry() {
-    ingress_vport_swkey_t      key;
-    ingress_vport_swkey_mask_t mask;
-    ingress_vport_actiondata   data;
+    rx_vport_swkey_t      key;
+    rx_vport_swkey_mask_t mask;
+    rx_vport_actiondata   data;
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -354,7 +354,7 @@ create_vport_entry() {
     memset(mask.ethernet_1_dstAddr_mask, 0xFF, 6);
 
     // data
-    data.ingress_vport_action_u.ingress_vport_ingress_vport.vport = 0x55;
+    data.rx_vport_action_u.rx_vport_rx_vport.vport = 0x55;
 
     // prepare entry and write hardware
     uint32_t hwkey_len = 0;
@@ -362,7 +362,7 @@ create_vport_entry() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_INGRESS_VPORT, &hwkey_len, &hwmask_len,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_VPORT, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -371,29 +371,29 @@ create_vport_entry() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_INGRESS_VPORT, &key, &mask,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_VPORT, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_INGRESS_VPORT, 0, hwkey, hwmask, &data);
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_VPORT, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
 
 static void
 create_transposition1() {
-    hdr_transpositions0_actiondata data0;
-    hdr_transpositions1_actiondata data1;
-    hdr_transpositions2_actiondata data2;
-    hdr_transpositions3_actiondata data3;
+    rx_hdr_transpositions0_actiondata data0;
+    rx_hdr_transpositions1_actiondata data1;
+    rx_hdr_transpositions2_actiondata data2;
+    rx_hdr_transpositions3_actiondata data3;
 
     memset(&data0, 0, sizeof(data0));
     memset(&data1, 0, sizeof(data1));
     memset(&data2, 0, sizeof(data2));
     memset(&data3, 0, sizeof(data3));
 
-#define DATA0 data0.hdr_transpositions0_action_u.hdr_transpositions0_hdr_transpositions
-#define DATA1 data1.hdr_transpositions1_action_u.hdr_transpositions1_hdr_transpositions
-#define DATA2 data2.hdr_transpositions2_action_u.hdr_transpositions2_hdr_transpositions
-#define DATA3 data3.hdr_transpositions3_action_u.hdr_transpositions3_l4_hdr_transpositions
+#define DATA0 data0.rx_hdr_transpositions0_action_u.rx_hdr_transpositions0_rx_hdr_transpositions
+#define DATA1 data1.rx_hdr_transpositions1_action_u.rx_hdr_transpositions1_rx_hdr_transpositions
+#define DATA2 data2.rx_hdr_transpositions2_action_u.rx_hdr_transpositions2_rx_hdr_transpositions
+#define DATA3 data3.rx_hdr_transpositions3_action_u.rx_hdr_transpositions3_rx_l4_hdr_transpositions
 
     DATA0.hdr1_bits =
         TRANSPOSITIONS_POP_ETHERNET |
@@ -401,7 +401,7 @@ create_transposition1() {
     DATA0.hdr2_bits =
         TRANSPOSITIONS_POP_ETHERNET |
         TRANSPOSITIONS_POP_IPV4;
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_HDR_TRANSPOSITIONS0, g_flow_idx2,
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS0, g_flow_idx2,
                          NULL, NULL, &data0);
 
     DATA1.hdr3_bits =
@@ -409,7 +409,7 @@ create_transposition1() {
         TRANSPOSITIONS_MODIFY_ETHERNET_DST;
     memcpy(DATA1.ethernet_dst, &g_rw_layer3_dmac, 6);
     memcpy(DATA1.ethernet_src, &g_rw_layer3_smac, 6);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_HDR_TRANSPOSITIONS1, g_flow_idx2,
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS1, g_flow_idx2,
                          NULL, NULL, &data1);
 
     DATA2.hdr3_bits =
@@ -417,7 +417,7 @@ create_transposition1() {
         TRANSPOSITIONS_MODIFY_IPV4_DST;
     memcpy(DATA2.ip_dst, &g_rw_layer3_dip, 4);
     memcpy(DATA2.ip_src, &g_rw_layer3_sip, 4);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_HDR_TRANSPOSITIONS2, g_flow_idx2,
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS2, g_flow_idx2,
                          NULL, NULL, &data2);
 
     DATA3.hdr_bits =
@@ -425,7 +425,7 @@ create_transposition1() {
         TRANSPOSITIONS_POP_UDP_1 |
         TRANSPOSITIONS_POP_VXLAN_2 |
         TRANSPOSITIONS_POP_UDP_2;
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_HDR_TRANSPOSITIONS3, g_flow_idx2,
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS3, g_flow_idx2,
                          NULL, NULL, &data3);
 
 #undef DATA0
@@ -440,14 +440,14 @@ create_transposition2() {
 
 static void
 create_gft_entry1() {
-    gft_hash_swkey_t     key;
-    gft_hash_actiondata  data;
-    uint32_t             hwkey_len = 0;
-    uint32_t             hwdata_len = 0;
-    uint32_t             hash = 0;
-    uint32_t             hash_len = 0;
-    uint32_t             gft_idx = 0;
-    uint8_t              *hwkey = NULL;
+    rx_gft_hash_swkey_t     key;
+    rx_gft_hash_actiondata  data;
+    uint32_t                hwkey_len = 0;
+    uint32_t                hwdata_len = 0;
+    uint32_t                hash = 0;
+    uint32_t                hash_len = 0;
+    uint32_t                gft_idx = 0;
+    uint8_t                 *hwkey = NULL;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -472,11 +472,11 @@ create_gft_entry1() {
     key.flow_lkp_metadata_l4_dport_3 = g_layer31_dport;
 
     // data
-    data.gft_hash_action_u.gft_hash_gft_hash_info.entry_valid = 1;
-    data.gft_hash_action_u.gft_hash_gft_hash_info.flow_index = g_flow_idx1;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
 
     // build hardware entry
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_GFT_HASH, &hwkey_len, NULL,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_GFT_HASH, &hwkey_len, NULL,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
@@ -486,7 +486,7 @@ create_gft_entry1() {
     }
     hwkey = new uint8_t[hash_len];
     memset(hwkey, 0, hash_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_GFT_HASH, &key, NULL,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_GFT_HASH, &key, NULL,
                                 hwkey, NULL);
 
     // generate hash
@@ -500,20 +500,20 @@ create_gft_entry1() {
     gft_idx = hash & 0xFFFFF;
     printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
 
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_GFT_HASH, gft_idx, hwkey, NULL, &data);
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, &data);
     delete [] hwkey;
 }
 
 static void
 create_gft_entry2() {
-    gft_hash_swkey_t     key;
-    gft_hash_actiondata  data;
-    uint32_t             hwkey_len = 0;
-    uint32_t             hwdata_len = 0;
-    uint32_t             hash = 0;
-    uint32_t             hash_len = 0;
-    uint32_t             gft_idx = 0;
-    uint8_t              *hwkey = NULL;
+    rx_gft_hash_swkey_t     key;
+    rx_gft_hash_actiondata  data;
+    uint32_t                hwkey_len = 0;
+    uint32_t                hwdata_len = 0;
+    uint32_t                hash = 0;
+    uint32_t                hash_len = 0;
+    uint32_t                gft_idx = 0;
+    uint8_t                 *hwkey = NULL;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -538,12 +538,12 @@ create_gft_entry2() {
     key.flow_lkp_metadata_l4_dport_3 = g_layer32_dport;
 
     // data
-    data.gft_hash_action_u.gft_hash_gft_hash_info.entry_valid = 1;
-    data.gft_hash_action_u.gft_hash_gft_hash_info.flow_index = 0;
-    data.gft_hash_action_u.gft_hash_gft_hash_info.hint9 = g_ohash_idx;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = 0;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.hint9 = g_ohash_idx;
 
     // build hardware entry
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_GFT_HASH, &hwkey_len, NULL,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_GFT_HASH, &hwkey_len, NULL,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
@@ -553,7 +553,7 @@ create_gft_entry2() {
     }
     hwkey = new uint8_t[hash_len];
     memset(hwkey, 0, hash_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_GFT_HASH, &key, NULL,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_GFT_HASH, &key, NULL,
                                 hwkey, NULL);
 
     // generate hash
@@ -567,17 +567,17 @@ create_gft_entry2() {
     gft_idx = hash & 0xFFFFF;
     printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
 
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_GFT_HASH, gft_idx, hwkey, NULL, &data);
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, &data);
     delete [] hwkey;
 }
 
 static void
 create_gft_overflow_entry() {
-    gft_hash_swkey_t     key;
-    gft_hash_actiondata  data;
-    uint32_t             hwkey_len = 0;
-    uint32_t             hwdata_len = 0;
-    uint8_t              *hwkey = NULL;
+    rx_gft_hash_swkey_t     key;
+    rx_gft_hash_actiondata  data;
+    uint32_t                hwkey_len = 0;
+    uint32_t                hwdata_len = 0;
+    uint8_t                 *hwkey = NULL;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -602,20 +602,20 @@ create_gft_overflow_entry() {
     key.flow_lkp_metadata_l4_dport_3 = g_layer32_dport;
 
     // data
-    data.gft_hash_action_u.gft_hash_gft_hash_info.entry_valid = 1;
-    data.gft_hash_action_u.gft_hash_gft_hash_info.flow_index = g_flow_idx2;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx2;
 
     // build hardware entry
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_GFT_HASH_OVERFLOW, &hwkey_len, NULL,
+    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_GFT_HASH_OVERFLOW, &hwkey_len, NULL,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
     hwkey = new uint8_t[hwkey_len];
     memset(hwkey, 0, hwkey_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_GFT_HASH_OVERFLOW, &key, NULL,
+    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_GFT_HASH_OVERFLOW, &key, NULL,
                                 hwkey, NULL);
 
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_GFT_HASH_OVERFLOW, g_ohash_idx, hwkey,
+    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_GFT_HASH_OVERFLOW, g_ohash_idx, hwkey,
                          NULL, &data);
     delete [] hwkey;
 }
@@ -648,7 +648,7 @@ TEST_F(gft_test, test1) {
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init();
     ASSERT_NE(ret, -1);
-    ingress_key_init();
+    rx_key_init();
     create_vport_entry();
     create_transposition1();
     create_transposition2();

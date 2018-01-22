@@ -15,19 +15,19 @@ SRC_DIR = .
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
-	gft_hash.asm \
-	gft_hash_overflow.asm \
-	hdr_transpositions0.asm \
-	hdr_transpositions1.asm \
-	hdr_transpositions2.asm \
-	hdr_transpositions3.asm \
-	ingress_key1.asm \
-	ingress_key2.asm \
-	ingress_key3.asm \
-	ingress_key4.asm \
-	ingress_vport.asm \
-	ingress_vport_stats.asm \
-	ingress_policer.asm \
+	rx_gft_hash.asm \
+	rx_gft_hash_overflow.asm \
+	rx_hdr_transpositions0.asm \
+	rx_hdr_transpositions1.asm \
+	rx_hdr_transpositions2.asm \
+	rx_hdr_transpositions3.asm \
+	rx_ipolicer.asm \
+	rx_key1.asm \
+	rx_key2.asm \
+	rx_key3.asm \
+	rx_key4.asm \
+	rx_vport.asm \
+	rx_vport_stats.asm \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))

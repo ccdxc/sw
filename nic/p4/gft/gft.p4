@@ -24,11 +24,11 @@ action drop_packet() {
 /* Ingress pipeline                                                          */
 /*****************************************************************************/
 control ingress {
-    ingress_key();
-    ingress_flow_lookup();
-    ingress_policer();
-    ingress_transpositions();
-    ingress_vport_stats();
+    rx_key();
+    rx_flow_lookup();
+    rx_policer();
+    rx_transpositions();
+    rx_vport_stats();
 }
 
 /*****************************************************************************/
