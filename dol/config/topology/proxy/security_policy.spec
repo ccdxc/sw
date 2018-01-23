@@ -12,21 +12,16 @@ policies:
                 svcs:
                     - svc:
                         proto    : 6
-                        dst_port : 3307
-                    - svc:
-                        proto    : 17
-                        dst_port : 53
-                    - svc:
-                        proto    : 6
-                        dst_port : 12380
-                    - svc:
-                        proto    : 6
-                        dst_port : 27017
+                        dst_port : 9080
                 apps:
-                    - app : "MYSQL"
-                    - app : "DNS"
                     - app : "HTTP"
-                    - app : "MONGO"
+            - rule:
+                action :  ALLOW
+                log    :  True
+                svcs:
+                    - svc:
+                        proto    : 0
+                        dst_port : 0
 
     - policy:
         id         : SEC_POLICY_ALLOW12
@@ -38,26 +33,9 @@ policies:
                 svcs:
                     - svc:
                         proto    : 6
-                        dst_port : 3307
-                    - svc:
-                        proto    : 17
-                        dst_port : 53
-                    - svc:
-                        proto    : 6
-                        dst_port : 12380
-                    - svc:
-                        proto    : 6
-                        dst_port : 27017
+                        dst_port : 9080
                 apps:
-                    - app : "MYSQL"
-                    - app : "DNS"
                     - app : "HTTP"
-                    - app : "MONGO"
-
-    - policy:
-        id         : SEC_POLICY_ALLOW13
-        default    : False
-        in_rules:
             - rule:
                 action :  ALLOW
                 log    :  True

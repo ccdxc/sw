@@ -54,6 +54,11 @@ void hntap_nat(char *pkt, int len);
 extern int tls_server_main(int argv, char *argc[]);
 
 bool hntap_go_thru_model = true; // Go thru model for host<->nw talk
+bool hntap_drop_rexmit = false;
+bool hntap_allow_udp = false;
+uint32_t hflow_seqnum = 0, nflow_seqnum = 0;
+uint32_t nw_retries = 0;
+
 
 #define ETH_ADDR_LEN 6
 
@@ -137,6 +142,7 @@ struct tcp_pseudo /*the tcp pseudo header*/
   uint16_t length;
 } pseudohead;
 
+struct tcp_header_t hflow_tcp, nflow_tcp;
 
 long checksum(unsigned short *addr, unsigned int count) {
   /* Compute Internet Checksum for "count" bytes
@@ -599,7 +605,7 @@ void
 hntap_host_tx_to_model (char *pktbuf, int size)
 {
   uint16_t lif_id = (uint16_t) (HNTAP_LIF_ID & 0xffff);
-  uint32_t port = 0, cos = 0;
+  uint32_t port = 0, cos = 0, count;
 
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt, opkt;
@@ -642,7 +648,11 @@ hntap_host_tx_to_model (char *pktbuf, int size)
   post_buffer(lif_id, TX, 0, buf, ipkt.size());
 
   // Wait for packet to come out of port
-  get_next_pkt(opkt, port, cos);
+  count = 0;
+  do {
+     get_next_pkt(opkt, port, cos);
+     if (opkt.size() == 0) {usleep(10000); count++;}
+  } while (count < (nw_retries*100) && !opkt.size());
   if (!opkt.size()) {
       TLOG("NO packet back from model! size: %d\n", opkt.size());
   } else {
@@ -773,7 +783,11 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     }
   } else {
     uint32_t port = 0, cos = 0;
-    get_next_pkt(opkt, port, cos);
+    uint32_t count = 0;
+    do {
+       get_next_pkt(opkt, port, cos);
+       if (opkt.size() == 0) {usleep(10000); count++;}
+    } while (count < (nw_retries*100) && !opkt.size());
     if (!opkt.size()) {
         TLOG("NO packet back from nw side of model! size: %d\n", opkt.size());
     } else {
@@ -922,14 +936,65 @@ hntap_dump_pkt(char *pkt, int len)
               ntohs(tcp->window),
               ntohs(tcp->check),
               ntohs(tcp->urg_ptr));
-    } else return -1;
+    } else if (!hntap_allow_udp || (ip->protocol != IPPROTO_UDP)) return -1;
   }
   return 0;
 }
 
+int
+hntap_do_drop_rexmit(char *pkt, int len, uint32_t *seqnum, struct tcp_header_t *flowtcp)
+{
+  struct ether_header_t *eth;
+  struct vlan_header_t *vlan;
+  struct ipv4_header_t *ip;
+  struct tcp_header_t *tcp;
+  uint16_t etype;
 
+  if (!hntap_drop_rexmit) return(0);
 
+  eth = (struct ether_header_t *)pkt;
+  if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
+    vlan = (struct vlan_header_t*)pkt;
+    etype = ntohs(vlan->etype);
+    ip = (ipv4_header_t *)(vlan+1);
+  } else {
+    etype = ntohs(eth->etype);
+    ip = (ipv4_header_t *)(eth+1);
+  }
 
+  if (etype == ETHERTYPE_IP) {
+
+    if (ip->protocol == IPPROTO_TCP) {
+      tcp = (struct tcp_header_t*)(ip+1);
+#if 0
+      if (ntohl(tcp->seq) == *seqnum) {
+          TLOG("Same sequence-number 0x%x\n", *seqnum);
+          return(1);
+      }
+      *seqnum = ntohl(tcp->seq);
+#endif
+      if(tcp->rst)
+          return(1);	
+      
+      *seqnum = ntohl(tcp->seq);
+      if (tcp->seq == flowtcp->seq &&
+          tcp->ack_seq == flowtcp->ack_seq &&
+          tcp->fin == flowtcp->fin &&
+          tcp->syn == flowtcp->syn &&
+          tcp->rst == flowtcp->rst &&
+          tcp->psh == flowtcp->psh &&
+          tcp->ack == flowtcp->ack &&
+          tcp->urg == flowtcp->urg &&
+          tcp->ece == flowtcp->ece &&
+          tcp->cwr == flowtcp->cwr) {
+          TLOG("Same tcp header fields\n");
+          return(1);
+      }
+      memcpy(flowtcp, tcp, sizeof(tcp_header_t));
+    }
+  }
+  return(0);
+}
 
 void
 hntap_do_select_loop (void)
@@ -990,6 +1055,12 @@ hntap_do_select_loop (void)
 	      TLOG("Not an TCP packet\n");
 	      continue;
             }
+
+	    if (hntap_do_drop_rexmit(pktbuf, nread + sizeof(struct vlan_header_t), &hflow_seqnum, &hflow_tcp)) {
+                TLOG("Retransmitted TCP packet, seqno: 0x%x, dropping\n", hflow_seqnum);
+  	        continue;
+	    }
+
 	    /*
 	     * Setup and write to the Host-memory interface for model to read.
 	     */
@@ -997,32 +1068,37 @@ hntap_do_select_loop (void)
 	}
 
 	if (FD_ISSET(net_tap_fd, &rd_set)) {
-            TLOG("Got stuff on net_tap_fd\n");
-      /*
-       * Data received from net-tap. We'll read it and write to the ZMQ to teh model (Net Rx path).
-       */
-      if ((nread = read(net_tap_fd, p+sizeof(struct ether_header_t), PKTBUF_LEN)) < 0) {
+        TLOG("Got stuff on net_tap_fd\n");
+        /*
+        * Data received from net-tap. We'll read it and write to the ZMQ to teh model (Net Rx path).
+        */
+        if ((nread = read(net_tap_fd, p+sizeof(struct ether_header_t), PKTBUF_LEN)) < 0) {
         perror("Read from net-tap failed!");
-	abort();
-      }
+        abort();
+        }
 
-      if (p[sizeof(struct ether_header_t)] != 0x45) {
+        if (p[sizeof(struct ether_header_t)] != 0x45) {
         TLOG("Not an IP packet 0x%x\n", p[sizeof(struct ether_header_t)]);
         continue;
-      }
+        }
 
-      num_nettap_pkts++;
-	   
+        num_nettap_pkts++;
+           
 
 
-      TLOG("Net-Tap %d: Read %d bytes from network tap interface\n", num_nettap_pkts, nread);
-      hntap_net_ether_header_add(pktbuf);
-      TLOG("Added ether header\n");
-      int ret = hntap_dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
-      if (ret == -1) {
-	  TLOG("Not an TCP packet \n");
-	  continue;
-      }
+        TLOG("Net-Tap %d: Read %d bytes from network tap interface\n", num_nettap_pkts, nread);
+        hntap_net_ether_header_add(pktbuf);
+        TLOG("Added ether header\n");
+        int ret = hntap_dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
+        if (ret == -1) {
+          TLOG("Not an TCP packet \n");
+	        continue;
+        }
+
+       if (hntap_do_drop_rexmit(pktbuf, nread + sizeof(struct vlan_header_t), &nflow_seqnum, &nflow_tcp)) {
+           TLOG("Retransmitted TCP packet, seqno: 0x%x, dropping\n", nflow_seqnum);
+           continue;
+       }
 
       /*
        * Write to the ZMQ interface to modeal for Network Rx packet path.
@@ -1037,6 +1113,24 @@ int main(int argv, char *argc[])
   setlinebuf(stdout);
   setlinebuf(stderr);
 
+  int opt = 0;
+  while ((opt = getopt(argv, argc, "n:x")) != -1) {
+    switch (opt) {
+    case 'n':
+        nw_retries = atoi(optarg);
+	TLOG( "NW Retries=%d\n", nw_retries);
+	break;
+    case 'x':
+	hntap_drop_rexmit = true;
+        break;
+    case '?':
+    default:
+        TLOG( "usage: ./hntap [-n <NW Retries>] [-x] \n");
+	exit(-1);
+        break;
+    }
+
+  }
   TLOG("Starting Host/network Tapper..\n");
 
   /* Create tap interface for Host-tap */

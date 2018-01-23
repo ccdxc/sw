@@ -210,7 +210,7 @@ public:
     appid_state_t appid_state() const { return appid_info_->state_; }
     void set_appid_state(appid_state_t state) {
       if(state == APPID_STATE_NEEDED)
-          set_appid_needed();
+          HAL_ASSERT(0);
       else if(appid_info_)
         appid_info_->state_ = state;
     }
@@ -227,10 +227,13 @@ public:
       return false;
     }
 
-    void set_appid_needed() {
+    void set_appid_needed(fte::ctx_t& ctx) {
         if(appid_info_) {
-            HAL_ASSERT(0);
+            //HAL_ASSERT(0);
+            return;
         } else {
+            appid_info_ = (appid_info_t *)ctx.feature_session_state(FTE_FEATURE_APP_REDIR_APPID);
+            if(appid_info_) return;
             appid_info_ = (appid_info_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_APPID_INFO,
                                             sizeof(appid_info_t));
         }

@@ -1,4 +1,4 @@
-
+#include <unistd.h>
 #include <iostream>
 #include <cmath>
 
@@ -225,10 +225,13 @@ poll_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint32_t max_count, uin
 
 
   do {
-    printf("Polling QSTATE[prev_cindex %d] ... %u tries\n", *prev_cindex, count++);
+    count++;
+    if(count % 100 == 0) {
+      printf("Polling QSTATE[prev_cindex %d] ... %u tries\n", *prev_cindex, count);
+    }
     read_queue(lif, qtype, qid);
-    sleep(1);
-    if (count >= max_count) 
+    usleep(10000);
+    if (count >= max_count*100)
       return false;
   } while (*prev_cindex == qi.qstate->c_index0);
   return true;
