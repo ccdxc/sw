@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <mutex>
 
-#define MODEL_ZMQ_SOCK_TIMEOUT_SEC      30
+#define MODEL_ZMQ_SOCK_TIMEOUT_SEC      300
 
 void *__zmq_sock;
 void *__zmq_context;
