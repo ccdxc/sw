@@ -535,7 +535,13 @@ header_type tcp_header_t {
     }
 }
 
-header_type tcp_header_option_t {
+header_type tcp_header_pad_t {
+    fields {
+        kind : 8;
+    }
+}
+
+header_type tcp_header_ts_option_t {
     fields {
         kind : 8;       // set to 8
         len : 8;        // set to 10

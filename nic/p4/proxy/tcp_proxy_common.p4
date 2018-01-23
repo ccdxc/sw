@@ -44,7 +44,7 @@
 
 #define RX2TX_SHARED_EXTRA_STATE \
         ato_deadline                    : TS_WIDTH              ;\
-        retx_head_ts                    : TS_WIDTH              ;\
+        rcv_tsval                       : TS_WIDTH              ;\
         srtt_us                         : TS_WIDTH              ;\
         rcv_wnd                         : WINDOW_WIDTH          ;\
         prior_ssthresh                  : WINDOW_WIDTH          ;\

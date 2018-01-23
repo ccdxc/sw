@@ -53,5 +53,9 @@ logfiles:
   - /sw/nic/model.log
   - /sw/nic/build.log
   - /sw/nic/storage_dol.log
+  - /sw/nic/tcp_client.log
+  - /sw/nic/tcp_server.log
+  - /sw/nic/tls_server.log
+  - /sw/nic/hntap.log
   - /sw/bazel-out/local-fastbuild/bin/nic/hal/$(expr core.*)
   - /sw/bazel-out/local-fastbuild/bin/nic/model_sim/$(expr core.*)

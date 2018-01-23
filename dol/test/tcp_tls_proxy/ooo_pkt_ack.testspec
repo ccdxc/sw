@@ -70,6 +70,7 @@ packets:
                 ack     : callback://tcpcb/tcpcb/GetSeqNum
                 window  : 1000
                 flags   : ack
+                options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
             payload:
 
 trigger:

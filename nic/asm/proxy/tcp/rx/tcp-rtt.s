@@ -230,6 +230,7 @@ tcp_set_rto:
      * via rx2tx_extra_pending_reset_backoff
      */
 flow_rtt_process_done:
+    phvwr       p.rx2tx_extra_rcv_tsval, k.to_s2_rcv_tsval
     
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_s3_bubble_start)
     nop.e

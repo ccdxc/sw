@@ -27,6 +27,7 @@ modules:
         args    :
             maxflows : 1
             send_ack : 1
+            timestamp : 0xf00df00d
         iterate :
             - flow: filter://type=IPV4
 

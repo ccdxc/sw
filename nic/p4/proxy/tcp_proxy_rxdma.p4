@@ -139,7 +139,6 @@ header_type tcp_rx_d_t {
         lrcv_time               : 32;
         snd_una                 : 32;
         snd_wl1                 : 32;
-        retx_head_ts            : 32;
         rto_deadline            : 32;
         max_window              : 16;
         bytes_rcvd              : 16;
@@ -316,7 +315,6 @@ header_type to_stage_1_phv_t {
     // tcp-rx
     fields {
         flags                   : 8;
-        rcv_tsval               : 24;
         seq                     : 32;
         ack_seq                 : 32;
         snd_nxt                 : 32;
@@ -327,6 +325,7 @@ header_type to_stage_2_phv_t {
     // tcp-rtt, read-rnmdr, read-rnmpr, read-serq
     fields {
         snd_nxt                 : 32;
+        rcv_tsval               : 32;
         rcv_tsecr               : 32;
     }
 }
@@ -404,7 +403,7 @@ header_type s1_s2s_phv_t {
         payload_len             : 16;
         debug_stage0_3_thread   : 16;
         rcv_wup                 : 32;
-        rcv_tstamp              : 32;
+        rcv_tsval               : 32;
         packets_out             : 16;
         window                  : 16;
         ip_dsfield              : 8;
@@ -714,7 +713,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
  * Stage 1 table 0 action
  */
 action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
-        snd_una, snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
+        snd_una, snd_wl1, rto_deadline, max_window, bytes_rcvd,
         bytes_acked, snd_wnd, rcv_mss, rto, pred_flags, ecn_flags, state,
         parsed_state, flag, ato, quick, snd_wscale, pending, ca_flags, write_serq,
         pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q, alloc_descr) {
@@ -724,7 +723,6 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
     // from to_stage 1
     if (write_serq == 1) {
         modify_field(to_s1_scratch.flags, to_s1.flags);
-        modify_field(to_s1_scratch.rcv_tsval, to_s1.rcv_tsval);
         modify_field(to_s1_scratch.seq, to_s1.seq);
         modify_field(to_s1_scratch.ack_seq, to_s1.ack_seq);
 
@@ -758,7 +756,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
     modify_field(s1_s2s_scratch.window, s1_s2s.window);
     modify_field(s1_s2s_scratch.ip_dsfield, s1_s2s.ip_dsfield);
     modify_field(s1_s2s_scratch.rcv_mss_shft, s1_s2s.rcv_mss_shft);
-    modify_field(s1_s2s_scratch.rcv_tstamp, s1_s2s.rcv_tstamp);
+    modify_field(s1_s2s_scratch.rcv_tsval, s1_s2s.rcv_tsval);
     modify_field(s1_s2s_scratch.quick_acks_decr, s1_s2s.quick_acks_decr);
     modify_field(s1_s2s_scratch.fin_sent, s1_s2s.fin_sent);
 
@@ -770,7 +768,6 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
     modify_field(tcp_rx_d.lrcv_time, lrcv_time);
     modify_field(tcp_rx_d.snd_una, snd_una);
     modify_field(tcp_rx_d.snd_wl1, snd_wl1);
-    modify_field(tcp_rx_d.retx_head_ts, retx_head_ts);
     modify_field(tcp_rx_d.rto_deadline, rto_deadline);
     modify_field(tcp_rx_d.max_window, max_window);
     modify_field(tcp_rx_d.bytes_rcvd, bytes_rcvd);
@@ -807,6 +804,7 @@ action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
     // from to_stage 2
     if (backoff == 0) {
         modify_field(to_s2_scratch.snd_nxt, to_s2.snd_nxt);
+        modify_field(to_s2_scratch.rcv_tsval, to_s2.rcv_tsval);
         modify_field(to_s2_scratch.rcv_tsecr, to_s2.rcv_tsecr);
     }
     if (backoff == 1) {

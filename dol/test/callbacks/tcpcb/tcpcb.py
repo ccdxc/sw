@@ -7,6 +7,12 @@ from infra.common.logging       import logger
 import infra.common.defs as defs
 from infra.common.objects import MacAddressBase
 
+class TcpOptions:
+    def __init__(self, kind, data):
+        self.kind = kind
+        self.data = data
+        return
+
 def GetSeqNum (tc, pkt):
     fin = 0
     if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
@@ -114,3 +120,32 @@ def GetOpposingFlowTxDscp(tc, pkt):
     flow = tc.config.flow
     oflow = flow.GetOpposingFlow()
     return oflow.txqos.dscp
+
+def GetPktInTcpOptions(tc, pkt):
+    return [] # Disable timestamps for now
+
+    echo_ts = []
+    ts_str = str(hex(tc.pvtdata.timestamp)) + ' 0x0'
+    echo_ts.append(TcpOptions('Timestamp', ts_str))
+    echo_ts.append(TcpOptions('NOP', None))
+    echo_ts.append(TcpOptions('EOL', None))
+    return echo_ts
+
+def GetPktOutTcpOptions(tc, pkt):
+    return [] # Disable timestamps for now
+
+    echo_ts = []
+    echo_ts.append(TcpOptions('Timestamp', '0x0 0x0'))
+    echo_ts.append(TcpOptions('NOP', None))
+    echo_ts.append(TcpOptions('EOL', None))
+    return echo_ts
+
+def GetPktAckOutTcpOptions(tc, pkt):
+    return [] # Disable timestamps for now
+
+    echo_ts = []
+    ts_str = '0x0 ' + str(hex(tc.pvtdata.timestamp))
+    echo_ts.append(TcpOptions('Timestamp', ts_str))
+    echo_ts.append(TcpOptions('NOP', None))
+    echo_ts.append(TcpOptions('EOL', None))
+    return echo_ts

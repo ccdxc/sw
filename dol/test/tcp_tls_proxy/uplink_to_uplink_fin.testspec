@@ -73,6 +73,7 @@ packets:
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
                 window  : 1000
                 flags   : ack,fin
+                options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
@@ -102,6 +103,7 @@ packets:
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
                 window  : 1000
                 flags   : ack
+                options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
 
 trigger:
     packets:

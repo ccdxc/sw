@@ -72,12 +72,16 @@ dma_cmd_tcp_header:
     phvwr           p.tcp_header_dest_port, d.dest_port
     phvwr           p.tcp_header_seq_no, k.t0_s2s_snd_nxt
     phvwr           p.tcp_header_ack_no, k.to_s6_rcv_nxt
-    phvwr           p.tcp_header_data_ofs, 5
-    //phvwr           p.tcp_header_flags, TCPHDR_ACK
+    phvwr           p.tcp_header_data_ofs, 5		// 20 bytes
+    //phvwr           p.tcp_header_data_ofs, 8		// 32 bytes
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
+	phvwr           p.tcp_nop_opt_kind, TCPOPT_NOP
+
     phvwr           p.tx2rx_quick_acks_decr, d.quick_acks_decr
 
+    // Disable timestamps for now
     CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
+    //CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_eol_opt_kind)
 
 dma_cmd_data:
     seq             c2, k.to_s6_xmit_cursor_addr, r0

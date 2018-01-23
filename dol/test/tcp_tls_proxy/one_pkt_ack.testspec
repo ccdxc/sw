@@ -44,11 +44,12 @@ packets:
                 dport   : ref://testcase/config/flow/dport
                 seq     : callback://tcpcb/tcpcb/GetSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckNum
+                options : callback://tcpcb/tcpcb/GetPktInTcpOptions
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
     - packet:
-        id          : PKT1_OUT
+        id          : PKT1_ACK_OUT
         template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : 0
         encaps      : callback://networking/packets/GetPacketEncaps
@@ -73,6 +74,7 @@ packets:
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
                 window  : 1000
                 flags   : ack
+                options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
             payload:
 
 trigger:
@@ -84,6 +86,6 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1_OUT
+            object  : ref://testcase/packets/id=PKT1_ACK_OUT
             port    : ref://testcase/config/src/endpoint/intf/ports
 

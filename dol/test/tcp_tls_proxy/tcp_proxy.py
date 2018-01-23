@@ -62,6 +62,7 @@ def SetupProxyArgs(tc):
     fin = 0
     fin_ack = 0
     final_fin = 0
+    timestamp = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -104,6 +105,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'test_mpu_tblsetaddr'):
         test_mpu_tblsetaddr = tc.module.args.test_mpu_tblsetaddr
         tc.module.logger.info("- test_mpu_tblsetaddr %s" % tc.module.args.test_mpu_tblsetaddr)
+    if hasattr(tc.module.args, 'timestamp'):
+        timestamp = tc.module.args.timestamp
+        tc.module.logger.info("- timestamp %s" % tc.module.args.timestamp)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -157,6 +161,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.fin = fin
     tc.pvtdata.fin_ack = fin_ack
     tc.pvtdata.final_fin = final_fin
+    tc.pvtdata.timestamp = timestamp
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA

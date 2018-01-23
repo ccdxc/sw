@@ -395,11 +395,19 @@ header_type txdma_phv_pad1_t {
 @pragma dont_trim
 metadata txdma_phv_pad1_t phv_pad1;
 #endif
+
 @pragma dont_trim
-metadata tcp_header_t tcp_header;
+metadata tcp_header_t tcp_header;               // 20 bytes
+@pragma dont_trim
+metadata tcp_header_ts_option_t tcp_ts_opt;     // 10 bytes
+@pragma dont_trim
+metadata tcp_header_pad_t tcp_nop_opt;          // 1 byte
+@pragma dont_trim
+metadata tcp_header_pad_t tcp_eol_opt;          // 1 byte
+
 header_type txdma_max_options_t {
     fields {
-        pad1           : 216;
+        pad1           : 36;
         pad2           : 104;
     }
 }
@@ -411,7 +419,7 @@ metadata ring_entry_t ring_entry;
 metadata doorbell_data_t db_data;
 header_type txdma_pad_before_dma_t {
     fields {
-        pad            : 24;
+        pad            : 112;
     }
 }
 @pragma dont_trim
@@ -500,7 +508,7 @@ action read_rx2tx(RX2TX_PARAMS) {
  * Stage 1 table 0 action
  */
 action read_rx2tx_extra(
-       ato_deadline, retx_head_ts, srtt_us, rcv_wnd, prior_ssthresh, high_seq,
+       ato_deadline, rcv_tsval, srtt_us, rcv_wnd, prior_ssthresh, high_seq,
        sacked_out, lost_out, retrans_out, fackets_out, ooo_datalen,
        reordering, undo_marker, undo_retrans, snd_ssthresh, loss_cwnd,
        write_seq, tso_seq, rcv_mss, ca_state, ecn_flags, num_sacks,
@@ -531,7 +539,7 @@ action read_rx2tx_extra(
 
     // d for stage 1
     modify_field(rx2tx_extra_d.ato_deadline, ato_deadline);
-    modify_field(rx2tx_extra_d.retx_head_ts, retx_head_ts);
+    modify_field(rx2tx_extra_d.rcv_tsval, rcv_tsval);
     modify_field(rx2tx_extra_d.srtt_us, srtt_us);
     modify_field(rx2tx_extra_d.rcv_wnd, rcv_wnd);
     modify_field(rx2tx_extra_d.prior_ssthresh, prior_ssthresh);

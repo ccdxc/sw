@@ -51,7 +51,9 @@ tcp_rx_process_stage1_start:
     seq.!c1         c1, k.s1_s2s_fin_sent, 1
     sne             c2, d.u.tcp_rx_d.rcv_nxt, k.to_s1_seq
     slt             c3, k.to_s1_snd_nxt, k.to_s1_ack_seq
-    slt             c4, r4, d.u.tcp_rx_d.ts_recent
+    // disable timestamp checking for now
+    setcf           c4, [c0]
+    //slt             c4, r4, d.u.tcp_rx_d.ts_recent
     seq             c5, k.s1_s2s_payload_len, r0
     sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
     bcf             [c1 | c2 | c3 | c4 | c5 | c6], tcp_rx_slow_path
@@ -64,9 +66,8 @@ tcp_rx_process_stage1_start:
 
 tcp_rx_fast_path:
     /* tcp_store_ts_recent(tp)
-     * r4 is loaded at the beginning of the stage with current timestamp value
      */
-    tblwr           d.u.tcp_rx_d.ts_recent, r4
+    tblwr           d.u.tcp_rx_d.ts_recent, k.s1_s2s_rcv_tsval
 
 tcp_rcv_nxt_update:
     tbladd          d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_payload_len

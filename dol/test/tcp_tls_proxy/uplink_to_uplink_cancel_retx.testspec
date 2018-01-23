@@ -70,6 +70,7 @@ packets:
                 dport   : ref://testcase/config/flow/dport
                 seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
+                options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
                 window  : 1000
                 flags   : ack
             payload:
@@ -99,6 +100,7 @@ packets:
                 dport   : ref://testcase/config/flow/sport
                 seq     : callback://tcpcb/tcpcb/GetReverseFlowSeqNum
                 ack     : callback://tcpcb/tcpcb/GetReverseFlowAckNumAckOnePkt
+                options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
                 window  : 1000
                 flags   : ack
 

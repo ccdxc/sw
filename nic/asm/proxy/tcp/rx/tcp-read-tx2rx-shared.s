@@ -89,8 +89,12 @@ tcp_rx_read_shared_stage0_start:
     phvwr           p.s1_s2s_fin_sent, d.fin_sent
     tblwr           d.fin_sent, 0
 
-    phvwr        p.to_s5_payload_len, k.tcp_app_header_payload_len
-    phvwr        p.s1_s2s_payload_len, k.tcp_app_header_payload_len
+    phvwr           p.to_s5_payload_len, k.tcp_app_header_payload_len
+    phvwr           p.s1_s2s_payload_len, k.tcp_app_header_payload_len
+
+    phvwr           p.to_s2_rcv_tsval, k.tcp_app_header_ts
+    phvwr           p.s1_s2s_rcv_tsval, k.tcp_app_header_ts
+    phvwr           p.to_s2_rcv_tsecr, k.tcp_app_header_prev_echo_ts
     CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
 
 read_l7_proxy_cfg:
