@@ -1,7 +1,7 @@
 ---
 targets:
-  infra: [ "bash", "-c", "./sanity.sh" ]
-  regr: [ "bash", "-c", "./regression.sh" ]
+  infra: [ "bash", "-c", "cd /sw/dol && ./sanity.sh" ]
+  regr: [ "bash", "-c", "cd /sw/dol && ./regression.sh" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
