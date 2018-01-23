@@ -34,6 +34,10 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport

@@ -469,6 +469,8 @@ app_redir_flow_key_build_from_redir_hdr(fte::ctx_t& ctx,
     flow_key.proto = (types::IPProtocol)app_hdr.proxy.ip_proto;
     flow_key.sport = ntohs(app_hdr.proxy.sport);
     flow_key.dport = ntohs(app_hdr.proxy.dport);
+
+    HAL_TRACE_DEBUG("{} {}", __FUNCTION__, flow_key);
     ctx.set_key(flow_key);
 }
 
@@ -499,6 +501,8 @@ app_redir_flow_key_build_from_proxyrcb(fte::ctx_t& ctx,
     flow_key.proto = (types::IPProtocol)proxyrcb.ip_proto;
     flow_key.sport = ntohs(proxyrcb.sport);
     flow_key.dport = ntohs(proxyrcb.dport);
+
+    HAL_TRACE_DEBUG("{} {}", __FUNCTION__, flow_key);
     ctx.set_key(flow_key);
 }
 
