@@ -16,7 +16,7 @@ entries:
             port : const/42002
 
     - entry:
-        label: norm_split_handshake
+        label: norm_split_handshake_allow
         tracking: True
         timestamp: False
         responder: 
@@ -28,6 +28,26 @@ entries:
                 tcp_ack_num     : const/0
         initiator: 
             port : const/40002
+            flow_info:
+                action  : allow
+                state   : syn_rcvd
+            tracking_info:
+                tcp_seq_num     : const/1000
+                tcp_win_sz      : const/8192
+
+    - entry:
+        label: norm_split_handshake_deny
+        tracking: True
+        timestamp: False
+        responder: 
+            port : const/40001
+            flow_info:
+                action  : allow
+                state   : init
+            tracking_info:
+                tcp_ack_num     : const/0
+        initiator: 
+            port : const/40003
             flow_info:
                 action  : allow
                 state   : syn_rcvd

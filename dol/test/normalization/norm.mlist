@@ -18,10 +18,10 @@ modules:
             #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_ENABLE
             #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_DISABLE
             # program iflow in syn_rcvd and rflow in init state. Send packet with syn or ack set from responder
-            - profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE,direction=RFLOW
             - profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE,direction=RFLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE_ALLOW,direction=RFLOW
+            - profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE_DENY,direction=RFLOW
             # Flow in established state, program iflow mss, send pkt gt mss
             - profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_ALLOW
               flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
