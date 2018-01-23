@@ -168,7 +168,15 @@ parser start {
         24 : start_outer_vlan_vxlan_ipv6_bth;
         default: parse_nic;
         0x1 mask 0 : egress_start;
+        0x1 mask 0 : rx_deparse_start;
     }
+}
+
+@pragma deparse_only
+parser rx_deparse_start {
+    extract(capri_intrinsic);
+    extract(capri_p4_intrinsic);
+    return parse_nic;
 }
 
 parser parse_nic {

@@ -16,7 +16,7 @@
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
  */
-static hal_ret_t
+hal_ret_t
 capri_default_config_init (void)
 {
     hal_ret_t   ret = HAL_RET_OK;

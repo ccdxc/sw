@@ -9,6 +9,7 @@ struct phv_ p;
 %%
 
 rx_vport_stats:
+    phvwr           p.capri_p4_intrinsic_valid, TRUE
     seq             c1, k.capri_intrinsic_drop, TRUE
     bcf             [c1], rx_vport_stats_drop
     tbladd.!c1      d.rx_vport_stats_d.permit_packets, 1
