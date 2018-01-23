@@ -10,17 +10,11 @@ from google.protobuf.descriptor import FieldDescriptor
 #This is bad design but when right now object generation is tied to the types
 import config_mgr
 
-seed = 0
 def set_random_seed():
-    global seed
-    if seed != 0:
-        if "MBT_RANDOM_SEED" in os.environ:
-            seed = os.environ["MBT_RANDOM_SEED"] 
-        else:
-            seed = random.random()
-        # Set the seed only once when seed was initially 0
+    assert('MBT_RANDOM_SEED' in os.environ)
+    seed = os.environ['MBT_RANDOM_SEED']
+
     random.seed(seed)
-    print("Random seed chosen is " + str(seed))
 
 set_random_seed()
 _tag_checker_map = {

@@ -25,6 +25,8 @@ To specify sequences of operation when running in independent mode, add them in
 Please note that currently, the sequence of operations performed for the DOL
 mode have been hardcoded. This will be updated in the future.
 
+To reproduce the set of messages generated in a prior run, set the '--mbtrandomseed' argument to the value which is present in the output logs of the run(search for MBT_RANDOM_SEED in the logs). This should be an integer value.
+
 Currently, model based tester supports the following objects
 1) SecurityGroup
 2) SecurityProfile

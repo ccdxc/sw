@@ -407,7 +407,7 @@ def run_dol(args):
         print_cores()
     return exitcode
 
-def run_mbt(standalone=True):
+def run_mbt(args, standalone=True):
     mbt_dir = nic_dir + "/../mbt"
     os.chdir(mbt_dir)
 
@@ -416,6 +416,9 @@ def run_mbt(standalone=True):
     # If topology is set, then it is being run in DOL mode.
     if not standalone:
         cmd.append('--mbt')
+    if args.mbtrandomseed:
+        cmd.append('--mbtrandomseed')
+        cmd.append(args.mbtrandomseed)
     p = Popen(cmd)
     print "* Starting Model based testing with  pid (" + str(p.pid) + ")"
     print "- Log file: " + mbt_log + "\n"
@@ -574,6 +577,8 @@ def main():
     parser.add_argument('--no_error_check', dest='no_error_check', default=None,
                         action='store_true',
                         help='Disable model error checking')
+    parser.add_argument('--mbtrandomseed', dest='mbtrandomseed', default=None,
+                        help='Seed for random numbers used in model based tests')
     args = parser.parse_args()
 
     if args.rtl == False and args.skipverify:
@@ -627,7 +632,7 @@ def main():
         if status != 0:
             print "- GFT test failed, status=", status
     elif args.mbt and not args.feature:
-        status = run_mbt()
+        status = run_mbt(args)
         if status != 0:
             print "- MBT test failed, status=", status
     else:
@@ -635,7 +640,7 @@ def main():
             mbt_port = find_port()
             print "* Using port (" + str(mbt_port) + ") for mbt\n"
             os.environ["MBT_GRPC_PORT"] = str(mbt_port)
-            run_mbt(standalone=False)
+            run_mbt(args, standalone=False)
 
         status = run_dol(args)
         if status == 0:

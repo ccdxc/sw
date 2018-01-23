@@ -4,6 +4,7 @@ import pdb
 import grpc
 from base64 import test
 import zmq
+import random
 
 paths = [
     '/nic/gen/proto/',
@@ -21,14 +22,24 @@ for path in paths:
     print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
-import config_mgr
 import infra.common.parser  as parser
 import infra.common.utils  as utils
 from infra.common.logging import logger
 import infra.common.objects as objects
-import grpc_proxy
 import threading
 from infra.common.glopts import GlobalOptions
+
+# If the random seed is set as a command line argument, set it into the 
+# environment variables now, so that the same seed is used everywhere.
+if GlobalOptions.mbtrandomseed:
+    os.environ['MBT_RANDOM_SEED'] = GlobalOptions.mbtrandomseed
+else:
+    os.environ['MBT_RANDOM_SEED'] = str(random.randint(1,10000000))
+
+print("The random seed(MBT_RANDOM_SEED) being used for this test is %s" %(str(os.environ['MBT_RANDOM_SEED'])))
+
+import grpc_proxy
+import config_mgr
 
 objects.CallbackField.SetPackagePath("cfg.callbacks")
 

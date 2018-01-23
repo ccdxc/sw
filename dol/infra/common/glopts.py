@@ -56,6 +56,8 @@ parser.add_argument('--rtl', dest='rtl',
                     action='store_true', help='Run tests in RTL mode.')
 parser.add_argument('--nohostmem', dest='hostmem', default=True,
                     action='store_false', help='Disable Host Memory.')
+parser.add_argument('--mbtrandomseed', dest='mbtrandomseed', default=None,
+                    help='Random seem for Model based tests')
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():
