@@ -29,6 +29,7 @@ class HOST_MEM_CPY : public pen_mem_base {
     }
 public:    
     virtual bool burst_read(uint64_t addr, unsigned char * data, unsigned int len, bool secure = false, bool reverse_byte_order = false) {
+	addr = ((1ull<<52)-1)&addr;
 	if (_mem->is_dirty(addr) || use_cpy) {
 	    return _mem->burst_read(addr, data, len, secure, reverse_byte_order);
 	} else {
@@ -36,6 +37,7 @@ public:
 	}
     }
     virtual bool burst_write(uint64_t addr, const unsigned char * data, unsigned int len, bool secure = false, bool reverse_byte_order = false) {
+	addr = ((1ull<<52)-1)&addr;
 	return _mem->burst_write(addr, data, len, secure, reverse_byte_order);
     }
     static HOST_MEM_CPY * access()

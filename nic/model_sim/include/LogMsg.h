@@ -47,6 +47,8 @@ class LogMsg {
             static std::shared_ptr<LogMsg> s{new LogMsg};
             return s;
         }
+        virtual uint32_t getErrCount() { return (m_cur_error_count); } 
+        virtual void setMaxErrCount( uint32_t val ) { m_max_error_count = val; }
 
 };
 
@@ -60,12 +62,14 @@ class LogMsg {
         }\
 }
 
-#define PLOG_MSG(X)  { PLOG_MSG_GLB(X, LogMsg::MSG) }
-#define PLOG_INFO(X)  { PLOG_MSG_GLB(X, LogMsg::INFO) }
-#define PLOG_ERR(X)  { PLOG_MSG_GLB(X, LogMsg::ERROR) }
-#define PLOG_WARN(X)  { PLOG_MSG_GLB(X, LogMsg::WARNING) }
-#define PLOG_CPU(X)  { PLOG_MSG_GLB(X, LogMsg::CPU) }
+#define PLOG_MSG(X)    { PLOG_MSG_GLB(X, LogMsg::MSG) }
+#define PLOG_INFO(X)   { PLOG_MSG_GLB(X, LogMsg::INFO) }
+#define PLOG_ERR(X)    { PLOG_MSG_GLB(X, LogMsg::ERROR) }
+#define PLOG_WARN(X)   { PLOG_MSG_GLB(X, LogMsg::WARNING) }
+#define PLOG_CPU(X)    { PLOG_MSG_GLB(X, LogMsg::CPU) }
 #define PLOG_DEBUG(X)  { PLOG_MSG_GLB(X, LogMsg::DEBUG) }
+#define PLOG_GET_ERR_CNT()  LogMsg::Instance().get()->getErrCount()
+#define PLOG_SET_MAX_ERR_CNT(X)  LogMsg::Instance().get()->setErrCount(X)
 
 #define PLOG(SCOPE,X) { PLOG_MSG_GLB(X, SCOPE) }
 
