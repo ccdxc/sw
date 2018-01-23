@@ -171,9 +171,10 @@ func (e *ElasticServer) addHandlers() {
 		resp := &es.SearchHits{}
 		// search for all the docs containing the given string
 		for _, doc := range e.indexes[indexName] {
-			if strings.Contains(string(doc), queryString) {
+			temp := doc
+			if strings.Contains(string(temp), queryString) {
 				resp.TotalHits++
-				resp.Hits = append(resp.Hits, &es.SearchHit{Source: (*json.RawMessage)(&doc)})
+				resp.Hits = append(resp.Hits, &es.SearchHit{Source: (*json.RawMessage)(&temp)})
 			}
 		}
 

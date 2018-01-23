@@ -66,7 +66,7 @@ func TestMockElasticServer(t *testing.T) {
 	totalHits := resp.TotalHits()
 	tu.Assert(t, totalHits == 1, fmt.Sprintf("expected %v hits, got %v", 1, totalHits))
 	// check the document as well
-	tu.Assert(t, string(doc) == data, fmt.Sprintf("expected %v hits, got %v", data, string(doc)))
+	tu.Assert(t, string(doc) == data, fmt.Sprintf("expected doc %v, got %v", data, string(doc)))
 
 	// index one more document
 	data = `{"test1":"data"}`
@@ -80,7 +80,7 @@ func TestMockElasticServer(t *testing.T) {
 	tu.AssertOk(t, err, "failed to doc from search result")
 	totalHits = resp.TotalHits()
 	tu.Assert(t, totalHits == 1, fmt.Sprintf("expected %v hits, got %v", 1, totalHits))
-	tu.Assert(t, string(doc) == data, fmt.Sprintf("expected %v hits, got %v", data, string(doc)))
+	tu.Assert(t, string(doc) == data, fmt.Sprintf("expected doc %v, got %v", data, string(doc)))
 
 	// query to match docs containing string `test`
 	resp, err = client.Search(ctx, indexName, indexType, es.NewRawStringQuery(`{"match_all":"test"}`))
