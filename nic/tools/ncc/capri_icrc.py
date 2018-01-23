@@ -1351,13 +1351,19 @@ class Icrc:
                                     icrc_calfldobj.IcrcOhiLenSelSet(0)
                             else:
                                 ohi_start_id = parser.get_ohi_hdr_start_off(\
-                                            self.be.h.p4_header_instances[l3_hdr_name])
+                                            self.be.h.p4_header_instances[l3hdr])
                                 assert(ohi_start_id != None), pdb.set_trace()
-                                icrc_calfldobj.IcrcOhiMaskSelSet(ohi_start_id)
+                                icrc_calfldobj.IcrcOhiStartSelSet(ohi_start_id)
 
-                                ohi_len_id = parser.get_ohi_slot_wr_only_field_name(\
-                                            self.be.h.p4_header_instances[l3_hdr_name])
-                                assert(ohi_len_id != None), pdb.set_trace()
+                                if icrc_calfldobj.icrc_verify_len_field != '':
+                                    ohi_len_id = parser.get_ohi_slot_wr_only_field_name(\
+                                      icrc_calfldobj.icrc_verify_len_field.split('.')[1])
+                                    assert(ohi_len_id != None), pdb.set_trace()
+                                    icrc_calfldobj.IcrcOhiLenSelSet(ohi_len_id)
+                                else:
+                                    #when verify length is not computed in parser,
+                                    #icrc computation is from L3 to till end of packet
+                                    icrc_calfldobj.IcrcOhiLenSelSet(0)
 
                             self.icrc_verify_logger.debug(\
                              'Icrc Assignment along path %s' % (str(parse_path)))

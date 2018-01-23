@@ -133,6 +133,12 @@ struct ${table}_k {
 
 /* K + D fields */
 //::        k_d_action_data_json['INGRESS_KD'][table] = {}
+//::        _start_kd_bit = 0
+//::        if len(pddict['tables'][table]['actions']) > 1:
+//::            if not (pddict['tables'][table]['is_raw']):
+//::                _start_kd_bit = 8
+//::            #endif
+//::        #endif
 //::        for action in pddict['tables'][table]['actions']:
 //::            pad_to_512 = 0
 //::            (actionname, actionfldlist) = action
@@ -140,7 +146,7 @@ struct ${table}_k {
 //::            pad_data_bits = 0
 //::            totaladatabits = 0
 //::            kd_json = OrderedDict()
-//::            _kdbit = 0
+//::            _kdbit = _start_kd_bit
 //::            if len(actionfldlist):
 //::                totaladatabits = 0
 //::                for actionfld in actionfldlist:
@@ -154,8 +160,6 @@ struct ${table}_${actionname}_d {
 //::                    mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::                    if len(pddict['tables'][table]['actions']) > 1:
 //::                        actionpc_bits = 8
-//::                        kd_json[0] = {'bit': 0, 'width': 8, 'field': __action_pc}
-//::                        _kdbit += 8
 //::                    else:
 //::                        actionpc_bits = 0
 //::                    #endif
@@ -425,10 +429,13 @@ struct ${table}_${actionname}_d {
 //::        k_d_action_data_json['INGRESS_KD'][table][actionname] = kd_json
 //::        #endfor
 
+//::        add_kd_action_bits = False
 //::        if len(pddict['tables'][table]['actions']) > 1:
 struct ${table}_d {
 //::            if not (pddict['tables'][table]['is_raw']):
     action_id : 8;
+//::                add_kd_action_bits = True
+//::                k_d_action_data_json['INGRESS_KD'][table][actionname][0] = {'bit': 0, 'width': 8, 'field': "__action_pc"}
 //::            #endif
 //::            empty_action = True
 //::            for action in pddict['tables'][table]['actions']:
@@ -443,6 +450,9 @@ struct ${table}_d {
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
 //::                    if len(actionfldlist):
+//::                        if add_kd_action_bits:
+//::                            k_d_action_data_json['INGRESS_KD'][table][actionname][0] = {'bit': 0, 'width': 8, 'field': "__action_pc"}
+//::                        #endif
         struct ${table}_${actionname}_d  ${actionname}_d;
 //::                    #endif
 //::                #endfor

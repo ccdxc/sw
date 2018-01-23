@@ -2065,36 +2065,25 @@ class capri_parser:
                     hv_bit -= 1
                     hidx += 1
                 self.csum_hdr_hv_bit[h] = csum_hv_bit_and_hf
-                #Allocate HV bit for ICRC along with l3 header
-                if self.d == xgress.EGRESS and self.be.icrc.IsHdrInIcrcCompute(h.name):
-                    icrc_hv_bit_and_hf = []
-                    hf_name = h.name + '.icrc'
-                    icrc_cf = self.be.pa.get_field(hf_name, self.d)
-                    icrc_cf.phv_bit = hv_bit
-                    self.be.pa.replace_hv_field(hv_bit, icrc_cf, self.d)
-                    icrc_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
-                    self.hv_bit_header[max_hv_bits - hidx - 1] = h
-                    hv_bit -= 1
-                    hidx += 1
-                    self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
 
-            #Allocate icrc HV bit for icrc rocehdr as well.
-            if self.d == xgress.EGRESS and self.be.icrc.IsHdrRoceV2(h.name):
+            #Allocate HV bit for ICRC along with l3 header
+            if self.d == xgress.EGRESS and self.be.icrc.IsHdrInIcrcCompute(h.name):
+                if self.be.icrc.IsHdrRoceV2(h.name):
                     #start HV bit at byte boundary so that parser-meta instuction
                     #can be used optimally.
                     byte_align_hv_skip = 8 - (hidx % 8)
                     hidx += byte_align_hv_skip
                     hv_bit -= byte_align_hv_skip
-                    icrc_hv_bit_and_hf = []
-                    hf_name = h.name + '.icrc'
-                    icrc_cf = self.be.pa.get_field(hf_name, self.d)
-                    icrc_cf.phv_bit = hv_bit
-                    self.be.pa.replace_hv_field(hv_bit, icrc_cf, self.d)
-                    icrc_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
-                    self.hv_bit_header[max_hv_bits - hidx - 1] = h
-                    hv_bit -= 1
-                    hidx += 1
-                    self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
+                icrc_hv_bit_and_hf = []
+                hf_name = h.name + '.icrc'
+                icrc_cf = self.be.pa.get_field(hf_name, self.d)
+                icrc_cf.phv_bit = hv_bit
+                self.be.pa.replace_hv_field(hv_bit, icrc_cf, self.d)
+                icrc_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
+                self.hv_bit_header[max_hv_bits - hidx - 1] = h
+                hv_bit -= 1
+                hidx += 1
+                self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
 
             #Allocate HV for header.valid
             hf_name = h.name + '.valid'
