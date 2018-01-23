@@ -216,7 +216,7 @@
      DB_ADDR_BASE_HOST)
 
 #define CAPRI_RING_DOORBELL_ADDR_HOST(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
-        addi            r4, r4, CAPRI_DOORBELL_ADDR_HOST(_pid_chk, _idx_upd, _sched_upd, _type); \
+        addi            r4, r0, CAPRI_DOORBELL_ADDR_HOST(_pid_chk, _idx_upd, _sched_upd, _type); \
         add             r4, r4, _lif, DB_LIF_SHFT; \
         add             r4, r4, _type, DB_TYPE_SHFT;
 

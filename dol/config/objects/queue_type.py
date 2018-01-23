@@ -39,7 +39,30 @@ class QueueTypeObject(base.ConfigObjectBase):
         self.need_type_specific_configure = True
         if spec.id in eth_queue_type_ids:
             self.obj_helper_q = eth_queue.EthQueueObjectHelper()
-            self.upd = spec.upd
+            if GlobalOptions.rtl:
+                if self.purpose == "LIF_QUEUE_PURPOSE_RX":
+                    # Ring the doorbell, don't increment the PI and don't set
+                    # the scheduler bit.
+                    # The PI will be incremented by directly writing to QState.
+                    self.upd = 0x0
+                elif self.purpose == "LIF_QUEUE_PURPOSE_TX":
+                    # Ring the doorbell, don't increment the PI and but set
+                    # the scheduler bit.
+                    # The PI will be incremented by directly writing to QState.
+                    self.upd = 0x1
+                else:
+                    self.upd = 0x0
+            else:
+                if self.purpose == "LIF_QUEUE_PURPOSE_RX":
+                    # Ring the doorbell, increment the PI and don't set
+                    # the scheduler bit.
+                    self.upd = 0x8
+                elif self.purpose == "LIF_QUEUE_PURPOSE_TX":
+                    # Ring the doorbell, increment the PI and set the scheduler bit.
+                    # The PI will be incremented by directly writing to QState.
+                    self.upd = 0x9
+                else:
+                    self.upd = 0x0
         elif spec.id in rdma_queue_type_ids:
             self.obj_helper_q = rdma_queue.RdmaQueueObjectHelper()
         else:
@@ -121,11 +144,9 @@ class QueueTypeObject(base.ConfigObjectBase):
         if ret == status.SUCCESS:
             if not GlobalOptions.skipverify:
                 queue.qstate.Read()
-            if self.purpose in ["LIF_QUEUE_PURPOSE_RX", "LIF_QUEUE_PURPOSE_TX"]:
-                if GlobalOptions.rtl and GlobalOptions.eth_mode == "onepkt":
-                    queue.qstate.set_pindex(ring_id, ring.pi)
-                else:
-                    self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
+            if GlobalOptions.rtl:
+                queue.qstate.set_pindex(ring_id, ring.pi)
+            self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
             if not GlobalOptions.skipverify:
                 queue.qstate.Read()
 

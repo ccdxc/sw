@@ -13,7 +13,6 @@ queue_types:
         id          : TX
         type        : 1
         purpose     : LIF_QUEUE_PURPOSE_TX
-        upd         : 0xb
         size        : 64    # Size of Qstate
         count       : 1     # Number of queues of this type
         queues:
@@ -33,7 +32,6 @@ queue_types:
         id          : RX
         type        : 0
         purpose     : LIF_QUEUE_PURPOSE_RX
-        upd         : 0x8
         size        : 64    # Size of Qstate
         count       : 1     # Number of queues of this type
         queues:
@@ -53,7 +51,6 @@ queue_types:
         id          : ADMIN
         type        : 2
         purpose     : LIF_QUEUE_PURPOSE_ADMIN
-        upd         : 0xb
         size        : 64    # Size of Qstate
         count       : 1     # Number of queues of this type
         queues:

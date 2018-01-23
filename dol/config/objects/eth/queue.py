@@ -296,9 +296,7 @@ class EthQueueObject(QueueObject):
                 # Post the descriptor
                 ret = self.Post(desc)
                 assert ret == status.SUCCESS
-
-            if self.queue_type.purpose in ["LIF_QUEUE_PURPOSE_RX", "LIF_QUEUE_PURPOSE_TX"]:
-                self.qstate.set_pindex(ring_id, ring.pi)
+            self.qstate.set_pindex(ring_id, ring.pi)
 
     def ConfigureRings(self):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
