@@ -112,7 +112,13 @@ void dump_rxcq(char *path)
 		printf("[%04x]", i);
 		printf(" status %d comp_index 0x%x color %d",
 		       comp.status, comp.comp_index, comp.color);
-		printf(" csum/level 0x%04x/%d", comp.csum, comp.csum_level);
+		printf(" csum/flags 0x%04x/[%s%s%s%s%s%s]", comp.csum,
+		       comp.csum_tcp_ok ?  " TCP_OK"  : "",
+		       comp.csum_tcp_bad ? " TCP_BAD" : "",
+		       comp.csum_udp_ok ?  " UDP_OK"  : "",
+		       comp.csum_udp_bad ? " UDP_BAD" : "",
+		       comp.csum_ip_ok ?   " IP_OK"   : "",
+		       comp.csum_ip_bad ?  " IP_BAD"  : "");
 		if (comp.rss_type)
 			printf(" rss_hash/type 0x%08x/%d", comp.rss_hash,
 			       comp.rss_type);
