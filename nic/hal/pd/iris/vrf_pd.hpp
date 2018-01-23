@@ -115,11 +115,11 @@ hal_ret_t vrf_pd_alloc_l2seg_hw_id(pd_vrf_t *vrf_pd,
                                       uint32_t *l2seg_hw_id);
 hal_ret_t vrf_pd_free_l2seg_hw_id(pd_vrf_t *vrf_pd, 
                                      uint32_t l2seg_hw_id);
-hal_ret_t vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd);
-hal_ret_t vrf_pd_program_hw (pd_vrf_t *vrf_pd);
-hal_ret_t vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd);
-hal_ret_t vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd);
-hal_ret_t vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_pgm_inp_prop_tbl(pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_program_hw(pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_pgm_inp_prop_tbl(pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_deprogram_hw(pd_vrf_t *vrf_pd);
+hal_ret_t vrf_pd_depgm_inp_prop_tbl(pd_vrf_t *vrf_pd);
 hal_ret_t vrf_pd_program_gipo_prefix(pd_vrf_t *vrf_pd, 
                                      ip_prefix_t *gipo_prefix);
 hal_ret_t vrf_pd_deprogram_gipo_prefix(pd_vrf_t *vrf_pd);
@@ -127,9 +127,9 @@ hal_ret_t vrf_pd_deprogram_gipo_prefix(pd_vrf_t *vrf_pd);
 
 hal_ret_t vrf_pd_alloc_cpuid(pd_vrf_t *pd_vrf);
 hal_ret_t vrf_pd_dealloc_cpuid(pd_vrf_t *vrf_pd);
-hal_ret_t vrf_pd_add_to_db (pd_vrf_t *pd_vrf, 
-                            hal_handle_t handle);
-hal_ret_t vrf_pd_del_from_db (pd_vrf_t *pd_vrf);
+hal_ret_t vrf_pd_add_to_db(pd_vrf_t *pd_vrf, 
+                           hal_handle_t handle);
+hal_ret_t vrf_pd_del_from_db(pd_vrf_t *pd_vrf);
 
 }   // namespace pd
 }   // namespace hal

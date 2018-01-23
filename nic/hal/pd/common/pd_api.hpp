@@ -68,20 +68,49 @@ typedef struct pd_vrf_args_s {
     ip_prefix_t         *new_gipo_prefix;
 } __PACK__ pd_vrf_args_t;
 
+static inline void
+pd_vrf_args_init (pd_vrf_args_t *args)
+{
+    args->vrf = NULL;
+    return;
+}
+
 typedef struct pd_l2seg_args_s {
     vrf_t       *vrf;
     l2seg_t     *l2seg;
 } __PACK__ pd_l2seg_args_t;
+
+static inline void
+pd_l2seg_args_init (pd_l2seg_args_t *args)
+{
+    args->vrf = NULL;
+    args->l2seg = NULL;
+    return;
+}
 
 typedef struct pd_nwsec_profile_args_s {
     nwsec_profile_t    *nwsec_profile;
     nwsec_profile_t    *clone_profile;
 } __PACK__ pd_nwsec_profile_args_t;
 
+static inline void
+pd_nwsec_profile_args_init (pd_nwsec_profile_args_t *args)
+{
+    args->nwsec_profile = NULL;
+    return;
+}
+
 typedef struct pd_dos_policy_args_s {
     dos_policy_t    *dos_policy;
     dos_policy_t    *clone_policy;
 } __PACK__ pd_dos_policy_args_t;
+
+static inline void
+pd_dos_policy_args_init (pd_dos_policy_args_t *args)
+{
+    args->dos_policy = NULL;
+    return;
+}
 
 typedef struct pd_lif_args_s {
     lif_t    *lif;
@@ -89,16 +118,14 @@ typedef struct pd_lif_args_s {
     uint32_t hw_lif_id;
 } __PACK__ pd_lif_args_t;
 
-typedef struct pd_lif_upd_args_s {
-    lif_t    *lif;
-
-    bool    vlan_strip_en_changed;
-    bool    vlan_strip_en;
-    bool    qstate_map_init_set;
-    bool    rss_config_changed;
-    bool    rx_policer_changed;
-    bool    tx_policer_changed;
-} pd_lif_upd_args_t;
+static inline void
+pd_lif_args_init (pd_lif_args_t *args)
+{
+    args->lif = NULL;
+    args->with_hw_lif_id = false;
+    args->hw_lif_id = 0;
+    return;
+}
 
 typedef struct pd_if_args_s {
     if_t    *intf;
@@ -134,11 +161,12 @@ typedef struct pd_if_args_s {
     } __PACK__;
 } __PACK__ pd_if_args_t;
 
-typedef struct pd_if_nwsec_upd_args_s {
-    l2seg_t         *l2seg;
-    if_t            *intf;
-    nwsec_profile_t *nwsec_prof;
-} __PACK__ pd_if_nwsec_upd_args_t;
+static inline void
+pd_if_args_init (pd_if_args_t *args)
+{
+    args->intf = NULL;
+    return;
+}
 
 typedef struct pd_if_lif_upd_args_s {
     if_t            *intf;
@@ -148,12 +176,60 @@ typedef struct pd_if_lif_upd_args_s {
     bool            vlan_strip_en;
 } __PACK__ pd_if_lif_upd_args_t;
 
+static inline void
+pd_if_lif_upd_args_init (pd_if_lif_upd_args_t *args)
+{
+    memset(args, 0, sizeof(pd_if_lif_upd_args_t));
+    return;
+}
+
+typedef struct pd_lif_upd_args_s {
+    lif_t    *lif;
+    bool    vlan_strip_en_changed;
+    bool    vlan_strip_en;
+    bool    qstate_map_init_set;
+    bool    rss_config_changed;
+    bool    rx_policer_changed;
+    bool    tx_policer_changed;
+} pd_lif_upd_args_t;
+
+static inline void
+pd_lif_upd_args_init (pd_lif_upd_args_t *args)
+{
+    memset(args, 0, sizeof(pd_lif_upd_args_t));
+    return;
+}
+
+typedef struct pd_if_nwsec_upd_args_s {
+    l2seg_t         *l2seg;
+    if_t            *intf;
+    nwsec_profile_t *nwsec_prof;
+} __PACK__ pd_if_nwsec_upd_args_t;
+
+static inline void
+pd_if_nwsec_upd_args_init (pd_if_nwsec_upd_args_t *args)
+{
+    args->intf = NULL;
+    args->nwsec_prof = NULL;
+    return;
+}
+
 typedef struct pd_ep_args_s {
     vrf_t        *vrf;
     l2seg_t         *l2seg;
     if_t            *intf;
     ep_t            *ep;
 } __PACK__ pd_ep_args_t;
+
+static inline void
+pd_ep_args_init (pd_ep_args_t *args)
+{
+    args->vrf = NULL;
+    args->l2seg = NULL;
+    args->intf = NULL;
+    args->ep = NULL;
+    return;
+}
 
 typedef struct pd_ep_upd_args_s {
     ep_t                    *ep;
@@ -168,6 +244,13 @@ typedef struct pd_ep_upd_args_s {
     // X change attrs
 } pd_ep_upd_args_t;
 
+static inline void
+pd_ep_upd_args_init (pd_ep_upd_args_t *args)
+{
+    memset(args, 0, sizeof(pd_ep_upd_args_t));
+    return;
+}
+
 typedef struct pd_sessoin_args_s {
     vrf_t              *vrf;
     nwsec_profile_t    *nwsec_prof;
@@ -177,54 +260,161 @@ typedef struct pd_sessoin_args_s {
     SessionResponse    *rsp;
 } __PACK__ pd_session_args_t;
 
+static inline void
+pd_session_args_init (pd_session_args_t *args)
+{
+    args->vrf = NULL;
+    args->session = NULL;
+    args->session_state = NULL;
+    args->rsp = NULL;
+    args->update_iflow = false;
+
+    return;
+}
+
 typedef struct pd_l2seg_uplink_args_s {
     l2seg_t     *l2seg;
     if_t        *intf;
 } __PACK__ pd_l2seg_uplink_args_t;
 
+static inline void
+pd_l2seg_uplinkif_args_init (pd_l2seg_uplink_args_t *args)
+{
+    args->l2seg = NULL;
+    args->intf = NULL;
+    return;
+}
+
 typedef struct pd_tlscb_args_s {
     tlscb_t            *tlscb;
 } __PACK__ pd_tlscb_args_t;
+
+static inline void
+pd_tlscb_args_init (pd_tlscb_args_t *args)
+{
+    args->tlscb = NULL;
+    return;
+}
 
 typedef struct pd_tcpcb_args_s {
     tcpcb_t            *tcpcb;
 } __PACK__ pd_tcpcb_args_t;
 
+static inline void
+pd_tcpcb_args_init (pd_tcpcb_args_t *args)
+{
+    args->tcpcb = NULL;
+    return;
+}
+
 typedef struct pd_wring_args_s {
     wring_t            *wring;
 } __PACK__ pd_wring_args_t;
+
+static inline void
+pd_wring_args_init (pd_wring_args_t *args)
+{
+    args->wring = NULL;
+    return;
+}
 
 typedef struct pd_mirror_session_args_s {
     mirror_session_t *session;
 } __PACK__ pd_mirror_session_args_t;
 
+static inline void
+pd_mirror_session_args_init(pd_mirror_session_args_t *args)
+{
+    args->session = NULL;
+}
+
 typedef struct pd_ipseccb_args_s {
     ipseccb_t            *ipseccb;
 } __PACK__ pd_ipseccb_args_t;
+
+static inline void
+pd_ipseccb_args_init (pd_ipseccb_args_t *args)
+{
+    args->ipseccb = NULL;
+    return;
+}
 
 typedef struct pd_l4lb_args_s {
     l4lb_service_entry_t    *l4lb;
 } __PACK__ pd_l4lb_args_t;
 
+static inline void
+pd_l4lb_args_init (pd_l4lb_args_t *args)
+{
+    args->l4lb = NULL;
+    return;
+}
+
 typedef struct pd_cpucb_args_s {
     cpucb_t            *cpucb;
 } __PACK__ pd_cpucb_args_t;
+
+static inline void
+pd_cpucb_args_init (pd_cpucb_args_t *args)
+{
+    args->cpucb = NULL;
+    return;
+}
 
 typedef struct pd_rawrcb_args_s {
     rawrcb_t           *rawrcb;
 } __PACK__ pd_rawrcb_args_t;
 
+static inline void
+pd_rawrcb_args_init (pd_rawrcb_args_t *args)
+{
+    args->rawrcb = NULL;
+    return;
+}
+
 typedef struct pd_rawccb_args_s {
     rawccb_t           *rawccb;
 } __PACK__ pd_rawccb_args_t;
+
+static inline void
+pd_rawccb_args_init (pd_rawccb_args_t *args)
+{
+    args->rawccb = NULL;
+    return;
+}
 
 typedef struct pd_proxyrcb_args_s {
     proxyrcb_t         *proxyrcb;
 } __PACK__ pd_proxyrcb_args_t;
 
+static inline void
+pd_proxyrcb_args_init (pd_proxyrcb_args_t *args)
+{
+    args->proxyrcb = NULL;
+    return;
+}
+
 typedef struct pd_proxyccb_args_s {
     proxyccb_t         *proxyccb;
 } __PACK__ pd_proxyccb_args_t;
+
+static inline void
+pd_proxyccb_args_init (pd_proxyccb_args_t *args)
+{
+    args->proxyccb = NULL;
+    return;
+}
+
+typedef struct pd_qos_class_args_s {
+    qos_class_t    *qos_class;
+} __PACK__ pd_qos_class_args_t;
+
+static inline void
+pd_qos_class_args_init (pd_qos_class_args_t *args)
+{
+    args->qos_class = NULL;
+    return;
+}
 
 typedef struct pd_rw_entry_args_s {
     mac_addr_t          mac_sa;
@@ -243,188 +433,9 @@ typedef struct pd_system_args_s {
 } __PACK__ pd_system_args_t;
 
 static inline void
-pd_system_args_init(pd_system_args_t *args)
+pd_system_args_init (pd_system_args_t *args)
 {
     args->rsp = NULL;
-}
-
-static inline void
-pd_vrf_args_init (pd_vrf_args_t *args)
-{
-    args->vrf = NULL;
-    return;
-}
-
-static inline void
-pd_l2seg_args_init (pd_l2seg_args_t *args)
-{
-    args->vrf = NULL;
-    args->l2seg = NULL;
-    return;
-}
-
-static inline void
-pd_nwsec_profile_args_init (pd_nwsec_profile_args_t *args)
-{
-    args->nwsec_profile = NULL;
-    return;
-}
-
-static inline void
-pd_dos_policy_args_init (pd_dos_policy_args_t *args)
-{
-    args->dos_policy = NULL;
-    return;
-}
-
-static inline void
-pd_lif_args_init (pd_lif_args_t *args)
-{
-    args->lif = NULL;
-    args->with_hw_lif_id = false;
-    args->hw_lif_id = 0;
-    return;
-}
-
-static inline void
-pd_lif_upd_args_init (pd_lif_upd_args_t *args)
-{
-    memset(args, 0, sizeof(pd_lif_upd_args_t));
-    return;
-}
-
-static inline void
-pd_if_args_init (pd_if_args_t *args)
-{
-    args->intf = NULL;
-    return;
-}
-
-static inline void
-pd_if_nwsec_upd_args_init (pd_if_nwsec_upd_args_t *args)
-{
-    args->intf = NULL;
-    args->nwsec_prof = NULL;
-    return;
-}
-
-static inline void
-pd_if_lif_upd_args_init (pd_if_lif_upd_args_t *args)
-{
-    memset(args, 0, sizeof(pd_if_lif_upd_args_t));
-    return;
-}
-
-static inline void
-pd_ep_args_init (pd_ep_args_t *args)
-{
-    args->vrf = NULL;
-    args->l2seg = NULL;
-    args->intf = NULL;
-    args->ep = NULL;
-    return;
-}
-
-static inline void
-pd_ep_upd_args_init (pd_ep_upd_args_t *args)
-{
-    memset(args, 0, sizeof(pd_ep_upd_args_t));
-    return;
-}
-static inline void
-pd_session_args_init (pd_session_args_t *args)
-{
-    args->vrf = NULL;
-    args->session = NULL;
-    args->session_state = NULL;
-    args->rsp = NULL;
-    args->update_iflow = false;
-
-    return;
-}
-
-static inline void
-pd_l2seg_uplinkif_args_init (pd_l2seg_uplink_args_t *args)
-{
-    args->l2seg = NULL;
-    args->intf = NULL;
-    return;
-}
-
-static inline void
-pd_tlscb_args_init (pd_tlscb_args_t *args)
-{
-    args->tlscb = NULL;
-    return;
-}
-
-static inline void
-pd_tcpcb_args_init (pd_tcpcb_args_t *args)
-{
-    args->tcpcb = NULL;
-    return;
-}
-
-static inline void
-pd_wring_args_init (pd_wring_args_t *args)
-{
-    args->wring = NULL;
-    return;
-}
-
-static inline void
-pd_mirror_session_args_init(pd_mirror_session_args_t *args)
-{
-    args->session = NULL;
-}
-
-static inline void
-pd_ipseccb_args_init (pd_ipseccb_args_t *args)
-{
-    args->ipseccb = NULL;
-    return;
-}
-
-static inline void
-pd_l4lb_args_init (pd_l4lb_args_t *args)
-{
-    args->l4lb = NULL;
-    return;
-}
-
-static inline void
-pd_cpucb_args_init (pd_cpucb_args_t *args)
-{
-    args->cpucb = NULL;
-    return;
-}
-
-static inline void
-pd_rawrcb_args_init (pd_rawrcb_args_t *args)
-{
-    args->rawrcb = NULL;
-    return;
-}
-
-static inline void
-pd_rawccb_args_init (pd_rawccb_args_t *args)
-{
-    args->rawccb = NULL;
-    return;
-}
-
-static inline void
-pd_proxyrcb_args_init (pd_proxyrcb_args_t *args)
-{
-    args->proxyrcb = NULL;
-    return;
-}
-
-static inline void
-pd_proxyccb_args_init (pd_proxyccb_args_t *args)
-{
-    args->proxyccb = NULL;
-    return;
 }
 
 hal_ret_t pd_vrf_create(pd_vrf_args_t *vrf);
@@ -570,17 +581,6 @@ hal_ret_t pd_proxyccb_update(pd_proxyccb_args_t *proxyccb);
 hal_ret_t pd_proxyccb_delete(pd_proxyccb_args_t *proxyccb,
                              bool retain_in_db = true);
 hal_ret_t pd_proxyccb_get(pd_proxyccb_args_t *proxyccb);
-
-typedef struct pd_qos_class_args_s {
-    qos_class_t    *qos_class;
-} __PACK__ pd_qos_class_args_t;
-
-static inline void
-pd_qos_class_args_init (pd_qos_class_args_t *args)
-{
-    args->qos_class = NULL;
-    return;
-}
 
 hal_ret_t pd_qos_class_create(pd_qos_class_args_t *qos_class);
 hal_ret_t pd_qos_class_delete(pd_qos_class_args_t *qos_class);
