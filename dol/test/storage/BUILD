@@ -183,5 +183,6 @@ cc_binary(
         "-pthread",
         "-lz",
         "-lprotobuf",
+        "-lm",
     ],
 )

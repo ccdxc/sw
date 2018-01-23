@@ -73,9 +73,11 @@ plugins:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/...
 
 capmodel:
+ifneq ($(ARCH),aarch64)
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
+endif
 
 go-proto:
 	$(MAKE) -C agent/netagent/datapath/halproto
@@ -98,12 +100,13 @@ bazel-build: capsim-master sdk
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
 	$(MAKE) capmodel
 	$(MAKE) go-proto
+ifneq ($(ARCH),aarch64)
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/proxy-e2etest:all 
+endif
 
-bazel-gtests:
+bazel-gtests-common:
 	# PI gtests
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:hal_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test/gtests:all
 	# PI Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/bitmap:bitmap_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:host_mem_test
@@ -112,9 +115,6 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/block_list:block_list_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
-	# TODO: Revisit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
 	# PD Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
@@ -123,6 +123,14 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
 	# SDK Tests
 	$(MAKE) -C sdk build-test
+
+bazel-gtests: bazel-gtests-common
+ifneq ($(ARCH),aarch64)
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test/gtests:all
+	# TODO: Revisit
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
+endif
 
 post-make:
 	mkdir -p obj/cano

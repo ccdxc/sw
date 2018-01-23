@@ -82,6 +82,7 @@ cc_test(
     srcs = glob(["test/dhcp/*.cc"]) + [
         "test/hal_mock.cc",
     ],
+    tags = ["manual"],
     copts = sdk_copts,
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     deps = gl_deps_list + [":eplearn"],
@@ -92,6 +93,7 @@ cc_test(
     srcs = glob(["test/arp/*.cc"]) + [
         "test/hal_mock.cc",
     ],
+    tags = ["manual"],
     copts = sdk_copts,
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
     deps = gl_deps_list + [":eplearn"],
