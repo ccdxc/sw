@@ -1,3 +1,6 @@
+/******************************************************************************/
+/* Rx pipeline                                                                */
+/******************************************************************************/
 action hdr_transpositions_layer_00(hdr_bits, ethernet_dst, ethernet_src,
                                    ethernet_type, ctag, ip_src, ip_dst,
                                    ip_dscp, ip_ttl, ip_proto) {
@@ -404,9 +407,9 @@ action l4_hdr_transpositions_layer_3(hdr_bits, l4_sport, l4_dport) {
     }
 }
 
-action rx_l4_hdr_transpositions(hdr_bits,
-                                l4_sport_1, l4_dport_1, l4_sport_2, l4_dport_2,
-                                l4_sport_3, l4_dport_3, in_pkts, in_bytes) {
+action rx_l4_hdr_transpositions(hdr_bits, l4_sport_1, l4_dport_1, l4_sport_2,
+                                l4_dport_2, l4_sport_3, l4_dport_3,
+                                in_pkts, in_bytes) {
     l4_hdr_transpositions_layer_1(hdr_bits, l4_sport_1, l4_dport_1);
     l4_hdr_transpositions_layer_2(hdr_bits, l4_sport_2, l4_dport_2);
     l4_hdr_transpositions_layer_3(hdr_bits, l4_sport_3, l4_dport_3);
@@ -470,4 +473,95 @@ control rx_transpositions {
     apply(rx_hdr_transpositions1);
     apply(rx_hdr_transpositions2);
     apply(rx_hdr_transpositions3);
+}
+
+/******************************************************************************/
+/* Tx pipeline                                                                */
+/******************************************************************************/
+action tx_hdr_transpositions(hdr0_bits, hdr1_bits, ethernet_dst, ethernet_src,
+                             ethernet_type, ctag, ip_src, ip_dst,
+                             ip_dscp, ip_ttl, ip_proto) {
+    hdr_transpositions_layer_00(hdr0_bits, ethernet_dst, ethernet_src,
+                                ethernet_type, ctag, ip_src, ip_dst,
+                                ip_dscp, ip_ttl, ip_proto);
+    hdr_transpositions_layer_01(hdr0_bits, ethernet_dst, ethernet_src,
+                                ethernet_type, ctag, ip_src, ip_dst,
+                                ip_dscp, ip_ttl, ip_proto);
+    hdr_transpositions_layer_1(hdr1_bits, ethernet_dst, ethernet_src,
+                               ethernet_type, ctag, ip_src, ip_dst,
+                               ip_dscp, ip_ttl, ip_proto);
+    modify_field(scratch_metadata.hdr_bits, hdr1_bits);
+}
+
+action tx_l4_hdr_transpositions(hdr0_bits, hdr_bits, encap_len_00,
+                                tenant_id_00, l4_sport_00, l4_dport_00,
+                                encap_len_01, tenant_id_01, l4_sport_01,
+                                l4_dport_01, l4_sport_1, l4_dport_1,
+                                in_pkts, in_bytes) {
+    l4_hdr_transpositions_layer_00(hdr0_bits, encap_len_00, tenant_id_00,
+                                   l4_sport_00, l4_dport_00);
+    l4_hdr_transpositions_layer_01(hdr0_bits, encap_len_01, tenant_id_01,
+                                   l4_sport_01, l4_dport_01);
+    l4_hdr_transpositions_layer_1(hdr_bits, l4_sport_1, l4_dport_1);
+
+    modify_field(scratch_metadata.hdr_bits, hdr0_bits);
+    modify_field(scratch_metadata.hdr_bits, hdr_bits);
+    modify_field(scratch_metadata.num_packets, in_pkts + 1);
+    modify_field(scratch_metadata.num_bytes,
+                 in_bytes + capri_p4_intrinsic.packet_len);
+}
+
+@pragma stage 3
+@pragma hbm_table
+table tx_hdr_transpositions0 {
+    reads {
+        flow_action_metadata.flow_index : exact;
+    }
+    actions {
+        tx_hdr_transpositions;
+    }
+    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+}
+
+@pragma stage 3
+@pragma hbm_table
+table tx_hdr_transpositions1 {
+    reads {
+        flow_action_metadata.flow_index : exact;
+    }
+    actions {
+        tx_hdr_transpositions;
+    }
+    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+}
+
+@pragma stage 3
+@pragma hbm_table
+table tx_hdr_transpositions2 {
+    reads {
+        flow_action_metadata.flow_index : exact;
+    }
+    actions {
+        tx_hdr_transpositions;
+    }
+    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+}
+
+@pragma stage 3
+@pragma hbm_table
+table tx_hdr_transpositions3 {
+    reads {
+        flow_action_metadata.flow_index : exact;
+    }
+    actions {
+        tx_l4_hdr_transpositions;
+    }
+    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+}
+
+control tx_transpositions {
+    apply(tx_hdr_transpositions0);
+    apply(tx_hdr_transpositions1);
+    apply(tx_hdr_transpositions2);
+    apply(tx_hdr_transpositions3);
 }

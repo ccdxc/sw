@@ -1,8 +1,37 @@
+/******************************************************************************
+ * Parser local definitions
+ *****************************************************************************/
+header_type parser_metadata_t {
+    fields {
+        l4_trailer                      : 16;
+        l4_len                          : 16;
+    }
+}
+
+header_type parser_ohi_t {
+    fields {
+        kind                        : 16;
+        chksum                      : 16;
+    }
+}
+
+@pragma parser_write_only
+metadata parser_ohi_t ohi;
+
+@pragma pa_parser_local
+metadata parser_metadata_t parser_metadata;
+
+/******************************************************************************
+ * Capri Intrinsic header definitions
+ *****************************************************************************/
 header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header capri_i2e_metadata_t capri_i2e_metadata;
 
+/******************************************************************************
+ * Header definitions
+ *****************************************************************************/
 // layer 00
 header ethernet_t ethernet_00;
 header vlan_tag_t ctag_00;
@@ -78,6 +107,27 @@ header vxlan_t vxlan_3;
 header gre_t gre_3;
 header erspan_header_t3_t erspan_3;
 
+// UDP payload and options
+@pragma hdr_len parser_metadata.l4_len
+header udp_payload_t udp_payload;
+@pragma no_ohi ingress
+header udp_opt_eol_t udp_opt_eol;
+@pragma no_ohi ingress
+header udp_opt_nop_t udp_opt_nop;
+@pragma no_ohi ingress
+header udp_opt_ocs_t udp_opt_ocs;
+@pragma no_ohi ingress
+header udp_opt_mss_t udp_opt_mss;
+@pragma no_ohi ingress
+header udp_opt_timestamp_t udp_opt_timestamp;
+header udp_opt_unknown_t udp_opt_unknown;
+
+// roce headers
+header roce_bth_t roce_bth;
+header roce_deth_t roce_deth;
+header roce_deth_immdt_t roce_deth_immdt;
+header icrc_t icrc;
+
 header roce_bth_t roce_bth_1;
 header roce_deth_t roce_deth_1;
 header roce_deth_immdt_t roce_deth_immdt_1;
@@ -118,21 +168,12 @@ parser start {
         24 : start_outer_vlan_vxlan_ipv6_bth;
         default: parse_nic;
         0x1 mask 0 : egress_start;
-        0x2 mask 0 : dummy;
     }
-}
-
-@pragma deparse_only
-parser dummy {
-    extract(capri_intrinsic);
-    extract(capri_p4_intrinsic);
-    return ingress;
 }
 
 parser parse_nic {
     return parse_ethernet_1;
 }
-
 
 /******************************************************************************
  * RoCE optimization
@@ -369,7 +410,6 @@ parser parse_vxlan_ipv6_bth_split {
     return parse_bth_2;
 }
 
-
 /******************************************************************************
  * Layer 1
  *****************************************************************************/
@@ -394,6 +434,7 @@ parser parse_ctag_1 {
 
 parser parse_ipv4_1 {
     extract(ipv4_1);
+    set_metadata(parser_metadata.l4_trailer, ipv4_1.totalLen - (ipv4_1.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_1;
         IP_PROTO_TCP : parse_tcp_1;
@@ -417,6 +458,7 @@ parser parse_ipv6_in_ip_1 {
 
 parser parse_ipv6_1 {
     extract(ipv6_1);
+    set_metadata(parser_metadata.l4_trailer, latest.payloadLen);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp_1;
         IP_PROTO_TCP : parse_tcp_1;
@@ -442,10 +484,12 @@ parser parse_tcp_1 {
 
 parser parse_udp_1 {
     extract(udp_1);
+    set_metadata(parser_metadata.l4_len, udp_1.len);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan_1;
+        UDP_PORT_ROCE_V2: parse_roce_v2;
         default: ingress;
     }
 }
@@ -507,6 +551,7 @@ parser parse_ctag_2 {
 
 parser parse_ipv4_2 {
     extract(ipv4_2);
+    set_metadata(parser_metadata.l4_trailer, ipv4_2.totalLen - (ipv4_2.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_2;
         IP_PROTO_TCP : parse_tcp_2;
@@ -530,6 +575,7 @@ parser parse_ipv6_in_ip_2 {
 
 parser parse_ipv6_2 {
     extract(ipv6_2);
+    set_metadata(parser_metadata.l4_trailer, latest.payloadLen);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp_2;
         IP_PROTO_TCP : parse_tcp_2;
@@ -555,10 +601,12 @@ parser parse_tcp_2 {
 
 parser parse_udp_2 {
     extract(udp_2);
+    set_metadata(parser_metadata.l4_len, udp_2.len);
     set_metadata(l4_metadata.l4_sport_2, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_2, latest.dstPort);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan_2;
+        UDP_PORT_ROCE_V2: parse_roce_v2;
         default: ingress;
     }
 }
@@ -620,6 +668,7 @@ parser parse_ctag_3 {
 
 parser parse_ipv4_3 {
     extract(ipv4_3);
+    set_metadata(parser_metadata.l4_trailer, ipv4_3.totalLen - (ipv4_3.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_3;
         IP_PROTO_TCP : parse_tcp_3;
@@ -643,6 +692,7 @@ parser parse_ipv6_in_ip_3 {
 
 parser parse_ipv6_3 {
     extract(ipv6_3);
+    set_metadata(parser_metadata.l4_trailer, latest.payloadLen);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp_3;
         IP_PROTO_TCP : parse_tcp_3;
@@ -668,10 +718,12 @@ parser parse_tcp_3 {
 
 parser parse_udp_3 {
     extract(udp_3);
+    set_metadata(parser_metadata.l4_len, udp_3.len);
     set_metadata(l4_metadata.l4_sport_3, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_3, latest.dstPort);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan_3;
+        UDP_PORT_ROCE_V2: parse_roce_v2;
         default: ingress;
         0x1 mask 0x0: parse_gre_3; // for avoiding parser flit violation
     }
@@ -708,6 +760,123 @@ parser parse_vxlan_3 {
     set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_VXLAN);
     set_metadata(tunnel_metadata.tunnel_vni_3, latest.vni);
     return parse_end;
+}
+
+parser parse_roce_v2 {
+    extract(roce_bth);
+    set_metadata(parser_metadata.l4_trailer,
+                 parser_metadata.l4_trailer - parser_metadata.l4_len);
+    set_metadata(parser_metadata.l4_len, parser_metadata.l4_len - 24);
+    return select(latest.opCode) {
+        0x64 : parse_roce_deth;
+        0x65 : parse_roce_deth_immdt;
+        default : parse_udp_payload;
+    }
+}
+
+parser parse_roce_deth {
+    extract(roce_deth);
+    set_metadata(parser_metadata.l4_len, parser_metadata.l4_len - 8);
+    return select(latest.reserved) {
+        default : parse_udp_payload;
+        0x1 mask 0x0 : parse_roce_eth;
+    }
+}
+
+parser parse_roce_deth_immdt {
+    extract(roce_deth_immdt);
+    set_metadata(parser_metadata.l4_len, parser_metadata.l4_len - 12);
+    return select(latest.reserved) {
+        default : parse_udp_payload;
+        0x1 mask 0x0 : parse_roce_eth;
+    }
+}
+
+parser parse_udp_payload {
+    set_metadata(parser_metadata.l4_len, parser_metadata.l4_len + 0);
+    extract(udp_payload);
+    return select(parser_metadata.l4_trailer) {
+        0x0000 mask 0xffff: ingress;
+        default : parse_udp_trailer;
+    }
+}
+
+parser parse_udp_trailer {
+    extract(icrc);
+    return parse_udp_options;
+}
+
+@pragma header_ordering udp_opt_ocs udp_opt_mss udp_opt_timestamp udp_opt_nop udp_opt_unknown
+parser parse_udp_options {
+    return select (current(0,8)) {
+       UDP_KIND_EOL : parse_udp_option_eol;
+       UDP_KIND_NOP : parse_udp_option_nop;
+       UDP_KIND_OCS : parse_udp_option_ocs;
+       UDP_KIND_MSS : parse_udp_option_mss;
+       UDP_KIND_TIMESTAMP : parse_udp_option_timestamp;
+       default : parse_udp_option_unknown;
+    }
+}
+
+parser parse_udp_option_eol {
+    extract(udp_opt_eol);
+    return ingress;
+}
+
+parser parse_udp_option_nop {
+    extract(udp_opt_nop);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 1);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+parser parse_udp_option_ocs {
+    extract(udp_opt_ocs);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 2);
+    set_metadata(ohi.kind, udp_opt_ocs.kind + 0);
+    set_metadata(ohi.chksum, udp_opt_ocs.chksum + 0);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+parser parse_udp_option_mss {
+    extract(udp_opt_mss);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 4);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+parser parse_udp_option_timestamp {
+    extract(udp_opt_timestamp);
+    set_metadata(parser_metadata.l4_trailer, parser_metadata.l4_trailer - 10);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+@pragma no_extract
+parser parse_udp_option_unknown {
+    extract(udp_opt_unknown);
+    set_metadata(parser_metadata.l4_trailer,
+                 parser_metadata.l4_trailer - udp_opt_unknown.len);
+    return select(parser_metadata.l4_trailer) {
+        0 : ingress;
+        default : parse_udp_options;
+    }
+}
+
+@pragma deparse_only
+parser parse_roce_eth {
+    //extract(p4_to_p4plus_roce_eth);
+    //extract(p4_to_p4plus_roce_ip);
+    return ingress;
 }
 
 parser parse_end {

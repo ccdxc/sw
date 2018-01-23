@@ -1,3 +1,6 @@
+/******************************************************************************/
+/* Rx pipeline                                                                */
+/******************************************************************************/
 action rx_key1(match_fields) {
     if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_1, ethernet_1.dstAddr);
@@ -257,7 +260,7 @@ table rx_key1 {
     actions {
         rx_key1;
     }
-    size : 512;
+    size : KEY_TABLE_SIZE;
 }
 
 @pragma stage 1
@@ -290,7 +293,7 @@ table rx_key2 {
     actions {
         rx_key2;
     }
-    size : 512;
+    size : KEY_TABLE_SIZE;
 }
 
 @pragma stage 2
@@ -323,7 +326,7 @@ table rx_key3 {
     actions {
         rx_key3;
     }
-    size : 512;
+    size : KEY_TABLE_SIZE;
 }
 
 @pragma stage 0
@@ -356,7 +359,14 @@ table rx_key4 {
     actions {
         rx_key4;
     }
-    size : 512;
+    size : KEY_TABLE_SIZE;
+}
+
+control rx_key {
+    apply(rx_key1);
+    apply(rx_key2);
+    apply(rx_key3);
+    apply(rx_key4);
 }
 
 action rx_vport(vport) {
@@ -383,13 +393,123 @@ table rx_vport {
     actions {
         rx_vport;
     }
-    size : 1024;
+    size : VPORT_TABLE_SIZE;
 }
 
-control rx_key {
+control rx_vport {
     apply(rx_vport);
-    apply(rx_key1);
-    apply(rx_key2);
-    apply(rx_key3);
-    apply(rx_key4);
+}
+
+/******************************************************************************/
+/* Tx pipeline                                                                */
+/******************************************************************************/
+action tx_key(match_fields) {
+    modify_field(flow_action_metadata.tx_ethernet_dst, ethernet_1.dstAddr);
+
+    // match_fields : lower 16 bits => L2/L3, upper 16 bits => L4
+    if ((match_fields & MATCH_ETHERNET_DST) != 0) {
+        modify_field(flow_lkp_metadata.ethernet_dst_1, ethernet_1.dstAddr);
+    }
+    if ((match_fields & MATCH_ETHERNET_SRC) != 0) {
+        modify_field(flow_lkp_metadata.ethernet_src_1, ethernet_1.srcAddr);
+    }
+    if ((match_fields & MATCH_ETHERNET_TYPE) != 0) {
+        modify_field(flow_lkp_metadata.ethernet_type_1, ethernet_1.etherType);
+    }
+
+    if ((match_fields & MATCH_CUSTOMER_VLAN_ID) != 0) {
+        modify_field(flow_lkp_metadata.ctag_1, ctag_1.vid);
+    }
+
+    if (ipv4_1.valid == TRUE) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
+            modify_field(flow_lkp_metadata.ip_src_1, ipv4_1.srcAddr);
+        }
+        if ((match_fields & MATCH_IP_DST) != 0) {
+            modify_field(flow_lkp_metadata.ip_dst_1, ipv4_1.dstAddr);
+        }
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
+            modify_field(flow_lkp_metadata.ip_dscp_1, ipv4_1.diffserv);
+        }
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
+            modify_field(flow_lkp_metadata.ip_proto_1, ipv4_1.protocol);
+        }
+        if ((match_fields & MATCH_IP_TTL) != 0) {
+            modify_field(flow_lkp_metadata.ip_ttl_1, ipv4_1.ttl);
+        }
+    }
+    if (ipv6_1.valid == TRUE) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
+            modify_field(flow_lkp_metadata.ip_src_1, ipv6_1.srcAddr);
+        }
+        if ((match_fields & MATCH_IP_DST) != 0) {
+            modify_field(flow_lkp_metadata.ip_dst_1, ipv6_1.dstAddr);
+        }
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
+            modify_field(flow_lkp_metadata.ip_dscp_1, ipv6_1.trafficClass);
+        }
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
+            modify_field(flow_lkp_metadata.ip_proto_1, ipv6_1.nextHdr);
+        }
+        if ((match_fields & MATCH_IP_TTL) != 0) {
+            modify_field(flow_lkp_metadata.ip_ttl_1, ipv6_1.hopLimit);
+        }
+    }
+
+    if ((match_fields & MATCH_TRANSPORT_SRC_PORT_1) != 0) {
+        modify_field(flow_lkp_metadata.l4_sport_1, l4_metadata.l4_sport_1);
+    }
+    if ((match_fields & MATCH_TRANSPORT_DST_PORT_1) != 0) {
+        modify_field(flow_lkp_metadata.l4_dport_1, l4_metadata.l4_dport_1);
+    }
+    if ((match_fields & MATCH_TCP_FLAGS_1) != 0) {
+        modify_field(flow_lkp_metadata.tcp_flags_1, tcp_1.flags);
+    }
+    if ((match_fields & MATCH_ICMP_TYPE_1) != 0) {
+        modify_field(flow_lkp_metadata.l4_sport_1, icmp_1.icmp_type);
+    }
+    if ((match_fields & MATCH_ICMP_CODE_1) != 0) {
+        modify_field(flow_lkp_metadata.l4_dport_1, icmp_1.icmp_code);
+    }
+
+    modify_field(scratch_metadata.match_fields, match_fields);
+}
+
+@pragma stage 0
+table tx_key {
+    reads {
+        ethernet_1.valid               : ternary;
+        ipv4_1.valid                   : ternary;
+        ipv6_1.valid                   : ternary;
+        tcp_1.valid                    : ternary;
+        udp_1.valid                    : ternary;
+        icmp_1.valid                   : ternary;
+    }
+    actions {
+        tx_key;
+    }
+    size : KEY_TABLE_SIZE;
+}
+
+control tx_key {
+    apply(tx_key);
+}
+
+action tx_vport(port) {
+    modify_field(capri_intrinsic.tm_oport, port);
+}
+
+@pragma stage 5
+table tx_vport {
+    reads {
+        flow_action_metadata.tx_ethernet_dst : ternary;
+    }
+    actions {
+        tx_vport;
+    }
+    size : VPORT_TABLE_SIZE;
+}
+
+control tx_vport {
+    apply(tx_vport);
 }

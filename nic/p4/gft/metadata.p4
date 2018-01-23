@@ -48,6 +48,7 @@ header_type flow_lkp_metadata_t {
         tenant_id_3              : 24;
         gre_proto_3              : 16;
 
+        tx_pad                   : 72;
         overflow_hash            : 32;
     }
 }
@@ -80,6 +81,7 @@ header_type flow_act_metadata_t {
         flow_index          : 16;
         policer_index       : 14;
         overflow_lkp        : 1;
+        tx_ethernet_dst     : 48;
     }
 }
 

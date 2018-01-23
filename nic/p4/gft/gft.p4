@@ -24,6 +24,7 @@ action drop_packet() {
 /* Ingress pipeline                                                          */
 /*****************************************************************************/
 control ingress {
+    rx_vport();
     rx_key();
     rx_flow_lookup();
     rx_policer();
@@ -35,4 +36,10 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
+    tx_key();
+    tx_flow_lookup();
+    tx_transpositions();
+    tx_policer();
+    tx_vport_stats();
+    tx_vport();
 }
