@@ -13,12 +13,16 @@ import "github.com/pensando/sw/api/protos/events.proto";
 message Empty {
 }
 
+message EventList {
+  repeated events.Event Events = 1 [(gogoproto.nullable) = false];
+}
+
 // events gRPC API
-service Events {
+service EventsAPI {
     // any component can use this method to generate an event
-    rpc SendEvent (events.Event) returns (Empty) {};
+    rpc SendEvents (EventList) returns (Empty) {};
 
     // any component can establish a watch to get a stream of events.
     // e.g. alerting system could watch for events to trigger an alert.
-    rpc WatchEvents (Empty) returns (stream events.Event) {};
+    rpc WatchEvents (Empty) returns (stream EventList) {};
 }
