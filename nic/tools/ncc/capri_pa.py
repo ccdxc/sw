@@ -1534,8 +1534,6 @@ class capri_gress_pa:
         if not (foffset < 512 and (foffset+hdr_size) > 512):
             return
 
-        hdr_byte_aligned_cfs = self.hdr_get_byte_aligned_fld_chunks(hdr)
-
         if hdr in self.hdr_unions:
             hdrs = self.hdr_unions[hdr][1]
         else:
@@ -1874,6 +1872,38 @@ class capri_gress_pa:
                                 sorted(self.field_order, key=lambda cf: cf.phv_bit)))
             pdb.set_trace()
             assert 0
+        
+        # Allocate deparse-only headers
+        if self.pa.be.args.split_deparse_only_headers:
+            for hf in self.hdr_fld_order:
+                if hf in self.allocated_hf and \
+                    hf not in self.pa.be.parsers[self.d].deparse_only_hdrs:
+                    continue
+                # deparse-only hdrs are yet to be allocated
+                hfid -= 1
+
+            if hfid < len(self.hdr_fld_order):
+                hfid = 0
+                for hf in self.hdr_fld_order:
+                    if hf in self.allocated_hf or \
+                        hf not in self.pa.be.parsers[self.d].deparse_only_hdrs:
+                        hfid += 1
+                        continue
+                    # A deparse only header can be split on byte aligned boundaries
+                    # and placed into non-contiguous phvs. This is useful when we run out of phv
+                    # The deparse-only headers can be used to fill in the unused flit bytes
+                    if self.split_allocate_deparse_only_header(hf):
+                        hfid += 1
+                        continue
+                    # could not find space for the deparse-only header
+                    self.pa.logger.critical("Not enough space in phv for deparse-only headers")
+                    self.print_field_order_info("PHV order(PHV FAILURE)")
+                    self.pa.logger.debug("%s:Field Allocation %s" % (self.d.name,
+                                        sorted(self.field_order, key=lambda cf: cf.phv_bit)))
+                    pdb.set_trace()
+                    assert 0
+
+                assert hfid == len(self.hdr_fld_order), pdb.set_trace()
 
         # print the un-used flit bits
         total_unused_bits = 0
@@ -2021,6 +2051,108 @@ class capri_gress_pa:
                 return
         assert 0, "No phv location free for parser_end_offset"
 
+    def split_allocate_deparse_only_header(self, hf):
+        #pdb.set_trace()
+        # Hdr and fld unions
+        # Hdr union - get the byte aligned flds for all unioned headers
+        # Fld union - allocate phv for  the largest field (unioned flds are byte aligned)
+        if hf in self.hdr_unions:
+            hdrs = self.hdr_unions[hf][1]
+            max_size = 0
+            big_hdr = None
+            for hdr in hdrs:
+                if get_header_max_size(hdr) > max_size:
+                    max_size = get_header_max_size(hdr)
+                    big_hdr = hdr
+
+            max_hdr_byte_aligned_cfs = self.hdr_get_byte_aligned_fld_chunks(big_hdr)
+
+            nxt_offset = 0
+            num_hdrs = len(hdrs) - 1    # remove the big header
+            aligned_offsets = []
+            for cf, l in max_hdr_byte_aligned_cfs.items():
+                nxt_offset += l
+                aligned_hdrs = 0
+                for hdr in hdrs:
+                    if hdr == big_hdr:
+                        continue
+                    if nxt_offset >= (get_header_max_size(hdr) * 8):
+                        aligned_hdrs += 1
+                        continue
+                    aligned = False
+                    for f in hdr.fields:
+                        if f.offset > nxt_offset:
+                            break
+                        if f.offset == nxt_offset:
+                            aligned = True
+                            break
+                    if aligned:
+                        aligned_hdrs += 1
+
+                if aligned_hdrs == num_hdrs:
+                    aligned_offsets.append(nxt_offset)
+            
+            #pdb.set_trace()
+            offset = 0
+            for nxt_offset in aligned_offsets:
+                num_bits = nxt_offset - offset
+                for flit in self.flits:
+                    # XXX make a function out of this loop
+                    # allocate for all conscutive fields until byte boundary
+                    phv_bit = flit.flit_chunk_alloc(num_bits, location=-1,
+                                        align=8, justify=0, fixed_loc=0, cross_512b=False)
+                    if phv_bit == -1:
+                        # try next flit
+                        continue
+                    break
+                assert phv_bit >= 0, pdb.set_trace()
+                # assign phv_bits to all covered fields in all headers
+                for hdr in hdrs:
+                    hdr_bit = -1
+                    for f in hdr.fields:
+                        if f.offset < offset:
+                            continue
+                        if f.offset >= nxt_offset:
+                            break
+                        if hdr_bit < 0:
+                            assert f.offset == offset
+                            hdr_bit = phv_bit
+                        cf = self.get_field(get_hfname(f))
+                        cf.phv_bit = hdr_bit
+                        hdr_bit += cf.width
+                offset += num_bits
+
+            for hdr in hdrs:
+                self.allocated_hf[hdr] = phv_bit
+            return True
+
+        # group deparse only header fields on byte boundaries
+        hdr_byte_aligned_cfs = self.hdr_get_byte_aligned_fld_chunks(hf)
+        # allocate bytes(s) from each byte-aligned cf and map hdr flds to phv
+        phv_bit = -1
+        for f in hf.fields:
+            cf = self.get_field(get_hfname(f))
+            assert cf
+            if not cf.need_phv():
+                continue
+            if cf in hdr_byte_aligned_cfs:
+                if cf.is_fld_union or cf.is_fld_union_storage:
+                    self.logger.critical("Field unions in deparse-only headers are TBD")
+                    assert 0, pdb.set_trace()
+                for flit in self.flits:
+                    # allocate for all conscutive fields until byte boundary
+                    phv_bit = flit.flit_chunk_alloc(hdr_byte_aligned_cfs[cf], location=-1,
+                                        align=8, justify=0, fixed_loc=0, cross_512b=False)
+                    if phv_bit == -1:
+                        # try next flit
+                        continue
+                    break
+            assert phv_bit >= 0, pdb.set_trace()
+            cf.phv_bit = phv_bit
+            phv_bit += cf.width
+        self.allocated_hf[hf] = phv_bit
+        return True
+        
     def allocate_phv_for_hf(self, flit, hf):
         # Assumptions:
         # - hf is either a header or metadata fld
@@ -2049,6 +2181,11 @@ class capri_gress_pa:
             self.pa.logger.debug("%s:Flit %d Start allocation for %s" % \
                 (self.d.name, flit.id, hf.hfname))
         else:
+            if self.pa.be.args.split_deparse_only_headers:
+                # special check for deparse-only headers - these are allocated outside this function
+                if hf in self.pa.be.parsers[self.d].deparse_only_hdrs:
+                    return True
+
             if hf in self.hdr_unions and hf != self.hdr_unions[hf][2]:
                 # union-ed header but not storage for union
                 return True
@@ -2177,6 +2314,7 @@ class capri_gress_pa:
             else:
                 # pdb.set_trace()
                 pass
+
             phv_bit = flit.flit_chunk_alloc(hdr_storage_size, -1, align, 0, 0, True)
             if phv_bit < 0:
                 overflow = True

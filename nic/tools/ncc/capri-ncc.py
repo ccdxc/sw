@@ -82,6 +82,10 @@ def get_parser():
     parser.add_argument('--fe-flags', dest='fe_flags', action='store',
                         help='P4 front end flags',
                         default=None, required=False)
+    parser.add_argument('--split-deparse-only-headers', dest='split_deparse_only_headers',
+                        action='store_true',
+                        help='split deparse-only headers across flits (better phv utilization, but slower)',
+                        default=False, required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend

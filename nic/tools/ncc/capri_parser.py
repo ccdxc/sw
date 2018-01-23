@@ -1973,6 +1973,21 @@ class capri_parser:
         # rebuild the ohi information
         self.ohi = self._build_ohi(None)
 
+    def align_hv_bit(self, h):
+        '''
+        # XXX Enable this code if needed - not fully working
+        # align hv bit to byte boundary if
+        # - this is the first extracted header in a state and multiple headers are extracted
+        # in that state
+        if h not in self.hdr_ext_states:
+            return False
+        # XXX this is still not a correct solution (need to group the hv bits)
+        for cs in self.hdr_ext_states[h]:
+            if not cs.deparse_only and len(cs.headers) > 1 and h == cs.headers[0]:
+                return True
+        '''
+        return False
+
     def assign_hv_bits(self):
         # this function is changed to just follow the hv allocation information created
         # while building each flit. This now only replaces the hv_bits in flit0 with actual names
@@ -2086,6 +2101,12 @@ class capri_parser:
             cf = self.be.pa.get_field(hf_name, self.d)
             assert cf and cf.is_hv, pdb.set_trace()
             # point to copy of hv_bits in flit0
+            hv_align_off = 0
+            if self.align_hv_bit(h):
+                if hv_bit % 8:
+                    hv_align_off += 8 - (hv_bit % 8)
+            hv_bit += hv_align_off
+            hidx += hv_align_off
             cf.phv_bit = hv_bit
             self.be.pa.replace_hv_field(hv_bit, cf, self.d)
             self.hdr_hv_bit[h] = hv_bit

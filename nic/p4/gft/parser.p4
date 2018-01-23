@@ -82,6 +82,10 @@ header roce_bth_t roce_bth_1;
 header roce_deth_t roce_deth_1;
 header roce_deth_immdt_t roce_deth_immdt_1;
 
+header roce_bth_t roce_bth_2;
+header roce_deth_t roce_deth_2;
+header roce_deth_immdt_t roce_deth_immdt_2;
+
 parser start {
     extract(capri_intrinsic);
     return select(capri_intrinsic.csum_err) {
@@ -97,7 +101,21 @@ parser start {
         10 : start_vlan_ipv4_bth;
         11 : start_ipv6_bth;
         12 : start_vlan_ipv6_bth;
-        // tunneled roce TBD
+        // tunneled roce - only one level of vxlan tunnel is accelerated in h/w
+        // running into header valid bit problems per state, Enable this when parser
+        // split ingress/egress
+        13 : start_outer_vxlan_ipv4_bth_deth;
+        14 : start_outer_vlan_vxlan_ipv4_bth_deth;
+        15 : start_outer_vxlan_ipv6_bth_deth;
+        16 : start_outer_vlan_vxlan_ipv6_bth_deth;
+        17 : start_outer_vxlan_ipv4_bth_deth_immdt;
+        18 : start_outer_vlan_vxlan_ipv4_bth_deth_immdt;
+        19 : start_outer_vxlan_ipv6_bth_deth_immdt;
+        20 : start_outer_vlan_vxlan_ipv6_bth_deth_immdt;
+        21 : start_outer_vxlan_ipv4_bth;
+        22 : start_outer_vlan_vxlan_ipv4_bth;
+        23 : start_outer_vxlan_ipv6_bth;
+        24 : start_outer_vlan_vxlan_ipv6_bth;
         default: parse_nic;
         0x1 mask 0 : egress_start;
         0x2 mask 0 : dummy;
@@ -202,6 +220,155 @@ parser start_vlan_ipv6_bth {
     extract(ipv6_1);
     return parse_bth;
 }
+
+// tunneled roce
+parser parse_bth_deth_2 {
+    extract(udp_2);
+    extract(roce_bth_2);
+    extract(roce_deth_2);
+    return ingress;
+}
+parser parse_bth_deth_immdt_2 {
+    extract(udp_2);
+    extract(roce_bth_2);
+    extract(roce_deth_immdt_2);
+    return ingress;
+}
+parser parse_bth_2 {
+    extract(udp_2);
+    extract(roce_bth_2);
+    return ingress;
+}
+
+parser start_outer_vxlan_ipv4_bth_deth {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv4_bth_deth;
+}
+parser start_outer_vlan_vxlan_ipv4_bth_deth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv4_bth_deth;
+}
+parser start_outer_vxlan_ipv6_bth_deth {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv6_bth_deth;
+}
+parser start_outer_vlan_vxlan_ipv6_bth_deth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv6_bth_deth;
+}
+parser start_outer_vxlan_ipv4_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv4_bth_deth_immdt;
+}
+parser start_outer_vlan_vxlan_ipv4_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv4_bth_deth_immdt;
+}
+parser start_outer_vxlan_ipv6_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv6_bth_deth_immdt;
+}
+parser start_outer_vlan_vxlan_ipv6_bth_deth_immdt {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv6_bth_deth_immdt;
+}
+parser start_outer_vxlan_ipv4_bth {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv4_bth;
+}
+parser start_outer_vlan_vxlan_ipv4_bth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv4_bth;
+}
+parser start_outer_vxlan_ipv6_bth {
+    extract(ethernet_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv6_bth;
+}
+parser start_outer_vlan_vxlan_ipv6_bth {
+    extract(ethernet_1);
+    extract(ctag_1);
+    extract(ipv4_1);
+    return parse_vxlan_ipv6_bth;
+}
+
+parser parse_vxlan_ipv4_bth_deth {
+    extract(udp_1);
+    extract(vxlan_1);
+    extract(ethernet_2);
+    return parse_vxlan_ipv4_bth_deth_split;
+}
+parser parse_vxlan_ipv4_bth_deth_split {
+    extract(ipv4_2);
+    return parse_bth_deth_2;
+}
+parser parse_vxlan_ipv6_bth_deth {
+    extract(udp_1);
+    extract(vxlan_1);
+    extract(ethernet_2);
+    return parse_vxlan_ipv6_bth_deth_split;
+}
+parser parse_vxlan_ipv6_bth_deth_split {
+    extract(ipv6_2);
+    return parse_bth_deth_2;
+}
+parser parse_vxlan_ipv4_bth_deth_immdt {
+    extract(udp_1);
+    extract(vxlan_1);
+    extract(ethernet_2);
+    return parse_vxlan_ipv4_bth_deth_immdt_split;
+}
+
+parser parse_vxlan_ipv4_bth_deth_immdt_split {
+    extract(ipv4_2);
+    return parse_bth_deth_immdt_2;
+}
+parser parse_vxlan_ipv6_bth_deth_immdt {
+    extract(udp_1);
+    extract(vxlan_1);
+    extract(ethernet_2);
+    return parse_vxlan_ipv6_bth_deth_immdt_split;
+}
+parser parse_vxlan_ipv6_bth_deth_immdt_split {
+    extract(ipv6_2);
+    return parse_bth_deth_immdt_2;
+}
+parser parse_vxlan_ipv4_bth {
+    extract(udp_1);
+    extract(vxlan_1);
+    extract(ethernet_2);
+    return parse_vxlan_ipv4_bth_split;
+}
+parser parse_vxlan_ipv4_bth_split {
+    extract(ipv4_2);
+    return parse_bth_2;
+}
+parser parse_vxlan_ipv6_bth {
+    extract(udp_1);
+    extract(vxlan_1);
+    extract(ethernet_2);
+    return parse_vxlan_ipv6_bth_split;
+}
+parser parse_vxlan_ipv6_bth_split {
+    extract(ipv6_2);
+    return parse_bth_2;
+}
+
 
 /******************************************************************************
  * Layer 1
