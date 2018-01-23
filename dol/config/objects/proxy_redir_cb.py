@@ -41,6 +41,34 @@ class ProxyrCbObject(base.ConfigObjectBase):
         self.proxyrcbq = SwDscrRingHelper.main("PROXYRCBQ", gid, self.id)
         return
 
+    def FlowKeyBuild(self, flow):
+        self.vrf = flow._FlowObject__session.initiator.ep.tenant.id
+        self.sport = flow.sport
+        self.dport = flow.dport
+        self.ip_proto = socket.IPPROTO_TCP
+
+        if flow.SepIsRemote():
+            # FLOW_DIR_FROM_UPLINK
+            self.dir = 1
+        else:
+            # FLOW_DIR_FROM_ENIC
+            self.dir = 0
+
+        if flow.IsIflow():
+            # FLOW_ROLE_INITIATOR
+            self.role = 0
+        else:
+            # FLOW_ROLE_RESPONDER
+            self.role = 1
+
+        if flow.IsIPV4():
+            self.af = socket.AF_INET
+        else:
+            self.af = socket.AF_INET6
+
+        self.ip_sa = flow.sip
+        self.ip_da = flow.dip
+        return
 
     def PrepareHALRequestSpec(self, req_spec):
         #req_spec.meta.proxyrcb_id          = self.id
@@ -59,16 +87,16 @@ class ProxyrCbObject(base.ConfigObjectBase):
            req_spec.chain_rxq_ring_index_select  = self.chain_rxq_ring_index_select
 
            req_spec.af                           = self.af
-           #if self.af == socket.AF_INET:
-           #    req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET
-           #    req_spec.ip_sa.v4_addr            = socket.htonl(self.ip_sa.v4_addr)
-           #    req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET
-           #    req_spec.ip_da.v4_addr            = socket.htonl(self.ip_da.v4_addr)
-           #elif self.af == socket.AF_INET6:
-           #    req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET6
-           #    req_spec.ip_sa.v6_addr            = self.ip_sa.getnum().to_bytes(16, 'big')
-           #    req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET6
-           #    req_spec.ip_da.v6_addr            = self.ip_da.getnum().to_bytes(16, 'big')
+           if self.af == socket.AF_INET:
+               req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET
+               req_spec.ip_sa.v4_addr            = socket.htonl(self.ip_sa.getnum())
+               req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET
+               req_spec.ip_da.v4_addr            = socket.htonl(self.ip_da.getnum())
+           elif self.af == socket.AF_INET6:
+               req_spec.ip_sa.ip_af              = haldefs.common.IP_AF_INET6
+               req_spec.ip_sa.v6_addr            = self.ip_sa.getnum().to_bytes(16, 'big')
+               req_spec.ip_da.ip_af              = haldefs.common.IP_AF_INET6
+               req_spec.ip_da.v6_addr            = self.ip_da.getnum().to_bytes(16, 'big')
 
            req_spec.sport                        = socket.htons(self.sport)
            req_spec.dport                        = socket.htons(self.dport)
@@ -100,12 +128,12 @@ class ProxyrCbObject(base.ConfigObjectBase):
             self.pi                           = resp_spec.spec.pi
             self.ci                           = resp_spec.spec.ci
 
-            #if resp_spec.spec.af == socket.AF_INET:
-            #    self.ip_sa                    = socket.ntohl(resp_spec.spec.ip_sa.v4_addr)
-            #    self.ip_da                    = socket.ntohl(resp_spec.spec.ip_da.v4_addr)
-            #elif resp_spec.spec.af == socket.AF_INET6:
-            #    self.ip_sa                    = objects.Ipv6Address(integer=resp_spec.spec.ip_sa.v6_addr)
-            #    self.ip_da                    = objects.Ipv6Address(integer=resp_spec.spec.ip_da.v6_addr)
+            if resp_spec.spec.af == socket.AF_INET:
+                self.ip_sa.v4_addr            = socket.ntohl(resp_spec.spec.ip_sa.v4_addr)
+                self.ip_da.v4_addr            = socket.ntohl(resp_spec.spec.ip_da.v4_addr)
+            elif resp_spec.spec.af == socket.AF_INET6:
+                self.ip_sa.v6_addr            = objects.Ipv6Address(integer=resp_spec.spec.ip_sa.v6_addr)
+                self.ip_da.v6_addr            = objects.Ipv6Address(integer=resp_spec.spec.ip_da.v6_addr)
 
             self.af                           = resp_spec.spec.af
             self.sport                        = socket.ntohs(resp_spec.spec.sport)
@@ -150,6 +178,29 @@ class ProxyrCbObject(base.ConfigObjectBase):
     def Write(self):
         return
 
+    #
+    # Print proxyrcb statistics
+    #
+    def StatsPrint(self):
+        print("PROXYRCB %d stat_pkts_redir %d" % 
+              (self.id, self.stat_pkts_redir))
+        print("PROXYRCB %d stat_pkts_discard %d" % 
+              (self.id, self.stat_pkts_discard))
+        print("PROXYRCB %d stat_cb_not_ready %d" % 
+              (self.id, self.stat_cb_not_ready))
+        print("PROXYRCB %d stat_null_ring_indices_addr %d" % 
+              (self.id, self.stat_null_ring_indices_addr))
+        print("PROXYRCB %d stat_aol_err %d" % 
+              (self.id, self.stat_aol_err))
+        print("PROXYRCB %d stat_rxq_full %d" % 
+              (self.id, self.stat_rxq_full))
+        print("PROXYRCB %d stat_txq_empty %d" % 
+              (self.id, self.stat_txq_empty))
+        print("PROXYRCB %d stat_sem_alloc_full %d" % 
+              (self.id, self.stat_sem_alloc_full))
+        print("PROXYRCB %d stat_sem_free_full %d" % 
+              (self.id, self.stat_sem_free_full))
+        return
 
 
 # Helper Class to Generate/Configure/Manage ProxyrCb Objects.

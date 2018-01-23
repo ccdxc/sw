@@ -142,8 +142,7 @@ rawr_s6_chain_xfer:
      * Set up DMA to enqueue descriptor to next service chain
      */
     add         r_chain_entry, r0, r_chain_pindex      // chain pindex from caller
-    add         r_scratch, r0, k.common_phv_chain_entry_size_shift
-    sllv        r_chain_entry, r_chain_entry, r_scratch
+    sllv        r_chain_entry, r_chain_entry, k.common_phv_chain_entry_size_shift
     add         r_chain_entry, r_chain_entry, k.{common_phv_chain_ring_base_sbit0_ebit31...\
                                                  common_phv_chain_ring_base_sbit32_ebit33}
     phvwr       p.dma_chain_dma_cmd_addr, r_chain_entry
@@ -216,7 +215,6 @@ rawr_s6_chain_xfer:
     phvwri      p.dma_doorbell_dma_cmd_phv_end_addr,\
                 CAPRI_PHV_END_OFFSET(chain_txq_db_data_data)
     phvwri      p.dma_doorbell_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
-    phvwri      p.dma_doorbell_dma_cmd_eop, TRUE
-    phvwri.e    p.dma_doorbell_dma_cmd_wr_fence, TRUE
-    nop
+    phvwri.e    p.dma_doorbell_dma_cmd_eop, TRUE
+    phvwri      p.dma_doorbell_dma_cmd_wr_fence, TRUE   // delay slot
 

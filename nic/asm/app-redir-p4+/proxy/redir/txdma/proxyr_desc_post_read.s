@@ -39,8 +39,6 @@ proxyr_s2_desc_post_read:
     phvwr       p.to_s6_ppage, d.{A0}.dx
     add         r_len, d.L1, d.L2
     bne         r_len, r0, _aol_error
-    seq         c1, d.L0, r0    // delay slot
-    bcf         [c1], _aol_error
 
     /*
      * Skip allocating mpage if cleanup had been set

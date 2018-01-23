@@ -99,14 +99,11 @@ rawc_s2_chain_txq_desc_enqueue:
     phvwr       p.dma_doorbell_dma_cmd_addr, r_db_addr_scratch
     phvwri      p.dma_doorbell_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(chain_txq_db_data_data)
-    phvwri      p.dma_doorbell_dma_cmd_phv_end_addr, \
-                CAPRI_PHV_END_OFFSET(chain_txq_db_data_data)
-    phvwri      p.dma_doorbell_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
-    
+
     CAPRI_DMA_CMD_STOP_FENCE(dma_doorbell_dma_cmd)
-                                
-    nop.e
-    nop
+    phvwri.e    p.dma_doorbell_dma_cmd_phv_end_addr, \
+                CAPRI_PHV_END_OFFSET(chain_txq_db_data_data)
+    phvwri      p.dma_doorbell_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM // delay slot
 
 
 /*

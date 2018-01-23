@@ -153,7 +153,7 @@
                                   stat_table_offs, phv_inc_stat, launch_fn)     \
         add         qstate_addr_dst, qstate_addr_src, stat_table_offs;          \
         phvwri      phv_inc_stat, 1;                                            \
-        CAPRI_NEXT_TABLE_READ(table, TABLE_LOCK_DIS,                            \
+        CAPRI_NEXT_TABLE_READ(table, TABLE_LOCK_EN,                             \
                               launch_fn,                                        \
                               qstate_addr_dst,                                  \
                               TABLE_SIZE_512_BITS)

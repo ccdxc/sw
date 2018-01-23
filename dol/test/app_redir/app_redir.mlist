@@ -13,6 +13,7 @@ modules:
         name    : APP_REDIR_RAW_RX_TX
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw.testspec
+        rtl     : True
         args    :
             num_pkts : 1
         iterate :
@@ -22,6 +23,7 @@ modules:
         name    : APP_REDIR_RAW_V6_RX_TX
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw.testspec
+        rtl     : True
         args    :
             num_pkts : 1
         iterate :
@@ -242,6 +244,7 @@ modules:
         name    : APP_REDIR_RAW_SPAN
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span.testspec
+        rtl     : True
         args    :
             num_pkts : 1
             redir_span : True
@@ -263,6 +266,7 @@ modules:
         name    : APP_REDIR_RAW_V6_SPAN
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span.testspec
+        rtl     : True
         args    :
             num_pkts : 1
             redir_span : True

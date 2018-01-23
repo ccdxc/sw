@@ -7,11 +7,8 @@ struct rawc_my_txq_entry_consume_d  d;
 /*
  * Registers usage
  */
-#define r_ci                        r1
-#define r_db_addr_scratch           r2
-#define r_db_data_scratch           r3
-#define r_desc                      r4
-#define r_chain_indices_addr        r5
+#define r_desc                      r1
+#define r_chain_indices_addr        r2
 
 %%
 
@@ -29,23 +26,6 @@ rawc_s1_my_txq_entry_consume:
 
     CAPRI_CLEAR_TABLE0_VALID
     
-    /*
-     * Advance CI via doorbell to clear scheduler bit;
-     * doorbell address includes: pid_chk (FALSE), lif, qtype.
-     * Doorbell data include: pid, qid, ring, CI.
-     */
-    add         r_ci, r0, k.to_s1_my_txq_ci_curr
-    mincr       r_ci, k.to_s1_my_txq_ring_size_shift, 1
-
-    DOORBELL_WRITE_CINDEX(k.{to_s1_my_txq_lif_sbit0_ebit5...\
-                             to_s1_my_txq_lif_sbit6_ebit10},
-                          k.to_s1_my_txq_qtype,
-                          k.{to_s1_my_txq_qid_sbit0_ebit5...\
-                             to_s1_my_txq_qid_sbit22_ebit23},
-                          RAWC_MY_TXQ_RING_DEFAULT,
-                          r_ci,
-                          r_db_addr_scratch,
-                          r_db_data_scratch)
     /*
      * Advance past the descriptor scratch area and launch descriptor AOLs read.
      * This is always done before checking for rawccb_ready so desc/pages

@@ -185,11 +185,15 @@ app_redir_proxyrcb_spec_build(const proxyrcb_t& proxyrcb,
     spec.set_redir_span(proxyrcb.redir_span);
 
     if (proxyrcb.af == AF_INET) {
+        spec.mutable_ip_sa()->set_ip_af(types::IP_AF_INET);
         spec.mutable_ip_sa()->set_v4_addr(proxyrcb.ip_sa.v4_addr);
+        spec.mutable_ip_da()->set_ip_af(types::IP_AF_INET);
         spec.mutable_ip_da()->set_v4_addr(proxyrcb.ip_da.v4_addr);
     } else {
+        spec.mutable_ip_sa()->set_ip_af(types::IP_AF_INET6);
         spec.mutable_ip_sa()->set_v6_addr(&proxyrcb.ip_sa.v6_addr,
                                           IP6_ADDR8_LEN);
+        spec.mutable_ip_da()->set_ip_af(types::IP_AF_INET6);
         spec.mutable_ip_da()->set_v6_addr(&proxyrcb.ip_da.v6_addr,
                                           IP6_ADDR8_LEN);
     }

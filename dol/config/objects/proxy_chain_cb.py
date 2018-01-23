@@ -118,6 +118,27 @@ class ProxycCbObject(base.ConfigObjectBase):
     def Write(self):
         return
 
+    #
+    # Print proxyccb statistics
+    #
+    def StatsPrint(self):
+        print("PROXYCCB %d stat_pkts_chain %d" % 
+              (self.id, self.stat_pkts_chain))
+        print("PROXYCCB %d stat_pkts_discard %d" % 
+              (self.id, self.stat_pkts_discard))
+        print("PROXYCCB %d stat_cb_not_ready %d" % 
+              (self.id, self.stat_cb_not_ready))
+        print("PROXYCCB %d stat_my_txq_empty %d" % 
+              (self.id, self.stat_my_txq_empty))
+        print("PROXYCCB %d stat_aol_err %d" % 
+              (self.id, self.stat_aol_err))
+        print("PROXYCCB %d stat_txq_full %d" % 
+              (self.id, self.stat_txq_full))
+        print("PROXYCCB %d stat_desc_sem_free_full %d" % 
+              (self.id, self.stat_desc_sem_free_full))
+        print("PROXYCCB %d stat_page_sem_free_full %d" % 
+              (self.id, self.stat_page_sem_free_full))
+        return
 
 
 # Helper Class to Generate/Configure/Manage ProxycCb Objects.

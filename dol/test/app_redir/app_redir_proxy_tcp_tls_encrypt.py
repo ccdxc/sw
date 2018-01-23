@@ -52,8 +52,7 @@ def TestCaseSetup(tc):
     global proxyccb
     global redir_span
 
-    if hasattr(tc.module.args, 'redir_span'):
-        redir_span = True
+    redir_span = getattr(tc.module.args, 'redir_span', False)
 
     tc.pvtdata = ObjectDatabase(logger)
     tcp_proxy.SetupProxyArgs(tc)
@@ -84,7 +83,7 @@ def TestCaseSetup(tc):
     proxyrcb.proxyrcb_flags = app_redir_shared.app_redir_dol_pipeline_loopbk_en
 
     # fill in flow key
-    app_redir_shared.proxyrcb_flow_key_build(tc, proxyrcb)
+    proxyrcb.FlowKeyBuild(tc.config.flow)
     print("vrf %d flow sport %d dport %d" % 
           (proxyrcb.vrf, proxyrcb.sport, proxyrcb.dport))
     proxyrcb.SetObjValPd()
@@ -216,7 +215,8 @@ def TestCaseVerify(tc):
     if (rnmdr_cur.pi != rnmdr.pi+num_exp_descs):
         print("RNMDR pi check failed old %d new %d expected %d" %
                      (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_exp_descs))
-        app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
+        proxyrcb_cur.StatsPrint()
+        proxyccb_cur.StatsPrint()
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
 
@@ -225,7 +225,8 @@ def TestCaseVerify(tc):
         print("RNMPR pi check failed old %d new %d expected %d" %
                   (rnmpr.pi+rnmpr_small.pi, rnmpr_cur.pi+rnmpr_small_cur.pi,
                    rnmpr.pi+rnmpr_small.pi+num_pkts+proxyr_meta_pages))
-        app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
+        proxyrcb_cur.StatsPrint()
+        proxyccb_cur.StatsPrint()
         return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
@@ -235,7 +236,8 @@ def TestCaseVerify(tc):
     if (proxyrcb_cur.stat_pkts_redir != proxyrcb.stat_pkts_redir+num_redir_pkts):
         print("stat_pkts_redir check failed old %d new %d expected %d" %
               (proxyrcb.stat_pkts_redir, proxyrcb_cur.stat_pkts_redir, proxyrcb.stat_pkts_redir+num_redir_pkts))
-        app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
+        proxyrcb_cur.StatsPrint()
+        proxyccb_cur.StatsPrint()
         return False
     print("stat_pkts_redir old %d new %d" % 
           (proxyrcb.stat_pkts_redir, proxyrcb_cur.stat_pkts_redir))
@@ -251,7 +253,8 @@ def TestCaseVerify(tc):
     if (proxyccb_cur.pi != proxyccb.pi+num_exp_proxyccb_pkts):
         print("PROXYCCB pi check failed old %d new %d expected %d" %
                       (proxyccb.pi, proxyccb_cur.pi, proxyccb.pi+num_exp_proxyccb_pkts))
-        app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
+        proxyrcb_cur.StatsPrint()
+        proxyccb_cur.StatsPrint()
         return False
     print("PROXYCCB pi old %d new %d" % (proxyccb.pi, proxyccb_cur.pi))
 
@@ -259,13 +262,14 @@ def TestCaseVerify(tc):
     if (proxyccb_cur.stat_pkts_chain != proxyccb.stat_pkts_chain+num_exp_proxyccb_pkts):
         print("stat_pkts_chain check failed old %d new %d expected %d" %
               (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain, proxyccb.stat_pkts_chain+num_exp_proxyccb_pkts))
-        app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
+        proxyrcb_cur.StatsPrint()
+        proxyccb_cur.StatsPrint()
         return False
     print("stat_pkts_chain old %d new %d" % 
           (proxyccb.stat_pkts_chain, proxyccb_cur.stat_pkts_chain))
 
-    app_redir_shared.proxyrcb_stats_print(tc, proxyrcb_cur)
-    app_redir_shared.proxyccb_stats_print(tc, proxyccb_cur)
+    proxyrcb_cur.StatsPrint()
+    proxyccb_cur.StatsPrint()
     return True
 
 def TestCaseTeardown(tc):

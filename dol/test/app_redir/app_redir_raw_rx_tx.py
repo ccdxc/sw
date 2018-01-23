@@ -40,9 +40,9 @@ def TestCaseSetup(tc):
     global redir_span
 
     tc.pvtdata = ObjectDatabase(logger)
+    redir_span = getattr(tc.module.args, 'redir_span', False)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    if hasattr(tc.module.args, 'redir_span'):
-        redir_span = True
+    if redir_span:
         id = app_redir_shared.app_redir_span_rawrcb_id
 
     rawrcbid = "RawrCb%04d" % id
@@ -129,7 +129,8 @@ def TestCaseVerify(tc):
     if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
         print("RNMDR pi check failed old %d new %d expected %d" %
                      (rnmdr.pi, rnmdr_cur.pi, rnmdr.pi+num_pkts))
-        app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
+        rawrcb_cur.StatsPrint()
+        rawccb_cur.StatsPrint()
         return False
     print("RNMDR pi old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
 
@@ -138,7 +139,8 @@ def TestCaseVerify(tc):
         print("RNMPR pi check failed old %d new %d expected %d" %
                   (rnmpr.pi+rnmpr_small.pi, rnmpr_cur.pi+rnmpr_small_cur.pi,
                    rnmpr.pi+rnmpr_small.pi+num_pkts))
-        app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
+        rawrcb_cur.StatsPrint()
+        rawccb_cur.StatsPrint()
         return False
     print("RNMPR pi old %d new %d" % (rnmpr.pi, rnmpr_cur.pi))
     print("RNMPR_SMALL old %d new %d" % (rnmpr_small.pi, rnmpr_small_cur.pi))
@@ -148,7 +150,8 @@ def TestCaseVerify(tc):
     if (rawrcb_cur.stat_pkts_redir != rawrcb.stat_pkts_redir+num_redir_pkts):
         print("stat_pkts_redir check failed old %d new %d expected %d" %
               (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir, rawrcb.stat_pkts_redir+num_redir_pkts))
-        app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
+        rawrcb_cur.StatsPrint()
+        rawccb_cur.StatsPrint()
         return False
     print("stat_pkts_redir old %d new %d" % 
           (rawrcb.stat_pkts_redir, rawrcb_cur.stat_pkts_redir))
@@ -162,7 +165,8 @@ def TestCaseVerify(tc):
     if (rawccb_cur.pi != rawccb.pi+num_exp_rawccb_pkts):
         print("RAWCCB pi check failed old %d new %d expected %d" %
                       (rawccb.pi, rawccb_cur.pi, rawccb.pi+num_exp_rawccb_pkts))
-        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+        rawrcb_cur.StatsPrint()
+        rawccb_cur.StatsPrint()
         return False
     print("RAWCCB pi old %d new %d" % (rawccb.pi, rawccb_cur.pi))
 
@@ -170,13 +174,14 @@ def TestCaseVerify(tc):
     if (rawccb_cur.stat_pkts_chain != rawccb.stat_pkts_chain+num_exp_rawccb_pkts):
         print("stat_pkts_chain check failed old %d new %d expected %d" %
               (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain, rawccb.stat_pkts_chain+num_exp_rawccb_pkts))
-        app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+        rawrcb_cur.StatsPrint()
+        rawccb_cur.StatsPrint()
         return False
     print("stat_pkts_chain old %d new %d" % 
           (rawccb.stat_pkts_chain, rawccb_cur.stat_pkts_chain))
 
-    app_redir_shared.rawrcb_stats_print(tc, rawrcb_cur)
-    app_redir_shared.rawccb_stats_print(tc, rawccb_cur)
+    rawrcb_cur.StatsPrint()
+    rawccb_cur.StatsPrint()
     return True
 
 def TestCaseTeardown(tc):

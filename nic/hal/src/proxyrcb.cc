@@ -287,11 +287,15 @@ proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponse *rsp)
     rsp->mutable_spec()->set_redir_span(rproxyrcb.redir_span);
 
     if (rproxyrcb.af == AF_INET) {
+        rsp->mutable_spec()->mutable_ip_sa()->set_ip_af(types::IP_AF_INET);
         rsp->mutable_spec()->mutable_ip_sa()->set_v4_addr(rproxyrcb.ip_sa.v4_addr);
+        rsp->mutable_spec()->mutable_ip_da()->set_ip_af(types::IP_AF_INET);
         rsp->mutable_spec()->mutable_ip_da()->set_v4_addr(rproxyrcb.ip_da.v4_addr);
     } else {
+        rsp->mutable_spec()->mutable_ip_sa()->set_ip_af(types::IP_AF_INET6);
         rsp->mutable_spec()->mutable_ip_sa()->set_v6_addr(&rproxyrcb.ip_sa.v6_addr,
                                                           IP6_ADDR8_LEN);
+        rsp->mutable_spec()->mutable_ip_da()->set_ip_af(types::IP_AF_INET6);
         rsp->mutable_spec()->mutable_ip_da()->set_v6_addr(&rproxyrcb.ip_da.v6_addr,
                                                           IP6_ADDR8_LEN);
     }

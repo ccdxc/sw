@@ -179,7 +179,6 @@ proxyr_s6_chain_xfer:
                                         common_phv_qstate_addr_sbit30_ebit33},
                                      p.t3_s2s_inc_stat_pkts_redir)
 
-    phvwri      p.dma_chain_dma_cmd_eop, TRUE
-    phvwri.e    p.dma_chain_dma_cmd_wr_fence, TRUE
-    nop
+    phvwri.e    p.dma_chain_dma_cmd_eop, TRUE
+    phvwri      p.dma_chain_dma_cmd_wr_fence, TRUE  // delay slot
     

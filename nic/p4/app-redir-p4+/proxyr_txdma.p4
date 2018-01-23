@@ -272,7 +272,6 @@ header_type to_stage_1_phv_t {
         // (max 128 bits)
         proxyrcb_deactivate             : 8;
         my_txq_ring_size_shift          : 8;
-        my_txq_ci_curr                  : 16;
         my_txq_qid                      : 24;
         my_txq_lif                      : 11;
         my_txq_qtype                    : 3;
@@ -282,7 +281,6 @@ header_type to_stage_1_phv_t {
 #define GENERATE_TO_S1_K \
     modify_field(to_s1_scratch.proxyrcb_deactivate, to_s1.proxyrcb_deactivate); \
     modify_field(to_s1_scratch.my_txq_ring_size_shift, to_s1.my_txq_ring_size_shift); \
-    modify_field(to_s1_scratch.my_txq_ci_curr, to_s1.my_txq_ci_curr); \
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif); \
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype); \
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
