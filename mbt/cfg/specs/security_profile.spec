@@ -1,6 +1,6 @@
 ProtoObject: nwsec_pb2
 Service: NwSecurity
-enabled: True
+enabled : True
 graphEnabled : True
 objects: 
     - object : 

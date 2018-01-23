@@ -20,7 +20,7 @@ To enable model based tester for an object, 2 files have to be created.
    restrictions while sending a message.
 
 To specify sequences of operation when running in independent mode, add them in
-   test/specs. Take a look at test/specs/create_delete.spec as a reference.
+   mbt_test/specs. Take a look at mbt_test/specs/create_delete.spec as a reference.
 
 Please note that currently, the sequence of operations performed for the DOL
 mode have been hardcoded. This will be updated in the future.

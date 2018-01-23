@@ -1,5 +1,5 @@
 import types_pb2
-max_infra_types = 4
+max_infra_types = 1
 current_infra_types = 0
 
 def PreCreateCb(data, req_spec, resp_spec):

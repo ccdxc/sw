@@ -1,6 +1,6 @@
 ProtoObject: l2segment_pb2
 Service: L2Segment
-enabled: True
+enabled : True
 graphEnabled : True
 objects:
     - object:

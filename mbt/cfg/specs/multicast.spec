@@ -1,6 +1,6 @@
 ProtoObject: multicast_pb2
 Service: Multicast
-enabled: True
+enabled : True
 graphEnabled : True
 objects:
     - object:

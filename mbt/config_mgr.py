@@ -5,6 +5,7 @@ from google.protobuf import json_format
 from infra.common.logging import logger
 from collections import defaultdict
 import sys
+import os
 
 import utils
 from grpc_meta.msg import GrpcReqRspMsg 
@@ -101,8 +102,8 @@ class ConfigObject():
         # Config object helper for this type
         self.object_helper = object_helper
         self.ext_ref_objects = {}
+        self.immutable_objects = {}
         self.dep_obj_database = defaultdict(list)
-        self.is_ext_ref_generated = False
         self.is_dol_created = is_dol_created
         self.is_dol_config_modified = False
 
@@ -114,24 +115,9 @@ class ConfigObject():
 
     def generate(self, op_type, ext_refs={}, external_constraints=None):
         crud_op = self._cfg_meta_object.OperHandler(op_type)
-        while True:
-            message = crud_op._req_meta_obj.generate_message(key=self.key_or_handle,
-                                                              ext_refs = ext_refs, external_constraints=external_constraints)
-            # try:
-            #     message = crud_op._req_msg()
-            #     GrpcReqRspMsg.parse_dict(gen_data, message)
-            # except:
-            #     print (gen_data)
-            #     raise
-            if not self.key_or_handle:
-                self.key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
-                
-                if self.key_or_handle:
-                    if any((self.key_or_handle == obj.key_or_handle) for obj in self.object_helper._config_objects):
-                        # Hacky way to avoid creating 2 messages with the same key, by just creating another object.
-                        # TODO Revisit this to have a better way to avoid conflicts.
-                        continue
-            break
+        message = crud_op._req_meta_obj.generate_message(key=self.key_or_handle,
+                                                          ext_refs = ext_refs, external_constraints=external_constraints,
+                                                          immutable_objects=self.immutable_objects)
         return message
 
     def get_api(self, op_type):
@@ -147,6 +133,9 @@ class ConfigObject():
         return crud_op._post_cb
     
     def process(self, op_type, redo=False, ext_refs={}, dol_message=None, external_constraints=None):
+        req_message = None
+        api_status = 'API_STATUS_OK'
+
         if op_type == ConfigObjectMeta.CREATE and not redo:
             ext_refs = ext_refs
         else:
@@ -155,19 +144,30 @@ class ConfigObject():
         if crud_oper._api == None:
             return 'API_STATUS_OK'
         if dol_message:
-            req_message = self.process_message(op_type, dol_message)
-            self._msg_cache[op_type] = req_message
-            return 'API_STATUS_OK'
-        if not redo:
-            req_message = self.generate(op_type, ext_refs=ext_refs, external_constraints=external_constraints)
+            req_message = dol_message
         else:
-            req_message = self._msg_cache[op_type]
+            if not redo:
+                req_message = self.generate(op_type, ext_refs=ext_refs, external_constraints=external_constraints)
+            else:
+                req_message = self._msg_cache[op_type]
         
-        if op_type == ConfigObjectMeta.CREATE and not redo:
-            self.ext_ref_objects = ext_refs
-        if crud_oper._pre_cb and not self.is_dol_created:
-            # if type(req_message).__name__ == "LifRequestMsg":
+        if not self.key_or_handle and (op_type == ConfigObjectMeta.CREATE):
+            self.key_or_handle = GrpcReqRspMsg.GetKeyObject(req_message)
+            
+            if self.key_or_handle:
+                # Duplicate keys are not allowed.
+                if any((self.key_or_handle == obj.key_or_handle) for obj in self.object_helper._config_objects):
+                    if not self.is_dol_created:
+                        assert False
+        if op_type == ConfigObjectMeta.CREATE:
+            self.ext_ref_objects = GrpcReqRspMsg.GetExtRefObjects(req_message)
+            self.immutable_objects = GrpcReqRspMsg.GetImmutableObjects(req_message)
+
+        should_call_callback = not (self.is_dol_created and op_type == ConfigObjectMeta.CREATE)
+        if crud_oper._pre_cb and should_call_callback:
             crud_oper._pre_cb.call(self.data, req_message, None)
+
+        resp_message = None
         api = self.get_api(op_type)
         print("Sending request message %s:%s:%s" % (self._cfg_meta_object,
                                                        op_type.__name__, req_message))
@@ -176,10 +176,11 @@ class ConfigObject():
                                                       op_type.__name__, resp_message))
         api_status = GrpcReqRspMsg.GetApiStatusObject(resp_message)
         print("API response status %s" % api_status)
-        if crud_oper._post_cb and not self.is_dol_created:
+
+        if crud_oper._post_cb and not dol_message:
             crud_oper._post_cb.call(self.data, req_message, resp_message)
         self._msg_cache[op_type] = req_message
-        return api_status
+        return api_status, resp_message
         
 # Top level manager for a given config spec. Catering to one service, can have multiple
 # objects with CRUD operations within a service.
@@ -217,21 +218,40 @@ class ConfigObjectHelper(object):
         return str(self._spec.Service) + " " + str(self._service_object.name)
 
     def ReadDolConfig(self, message):
+        import pdb
+        pdb.set_trace()
         print("Reading DOL config for %s" %(self))
-        config_object = ConfigObject(self._cfg_meta, self, is_dol_created=True)
-        ret_status = config_object.process(ConfigObjectMeta.CREATE, dol_message=message)
         # Iterate over a copy of self._config_objects so that we can modify the original list.
+        key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
         for obj in list(self._config_objects):
             # This is an update of the object. Don't try to modify this object.
-            if obj.key_or_handle == config_object.key_or_handle:
-                self._config_objects.remove(obj)
-                config_object.is_dol_config_modified = True
+            if obj.key_or_handle == key_or_handle:
+                obj._msg_cache[ConfigObjectMeta.CREATE] = message
+                obj.is_dol_created = True
+                return None, True
+                
+        config_object = ConfigObject(self._cfg_meta, self, is_dol_created=True)
+        config_object.is_dol_created = True
+        ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, dol_message=message)
         self._config_objects.append(config_object)
         config_object._status = ConfigObject._CREATED
         assert ret_status == 'API_STATUS_OK'
-        return True
+
+        ret_status, _ = config_object.process(ConfigObjectMeta.UPDATE)
+        assert ret_status == 'API_STATUS_OK'
+
+        ret_status, _ = config_object.process(ConfigObjectMeta.DELETE)
+        assert ret_status == 'API_STATUS_OK'
+
+        ret_status, resp_message = config_object.process(ConfigObjectMeta.CREATE, redo=True)
+        assert ret_status == 'API_STATUS_OK'
+        
+        config_object.is_dol_config_modified = True
+
+        return resp_message, False
 
     def ModifyDolConfig(self, ):
+        return
         # For now, just update,delete and ReCreate DOL config.
         for i in range(1):
             ret = self.UpdateConfigs(len(self._config_objects), 'API_STATUS_OK')
@@ -251,7 +271,7 @@ class ConfigObjectHelper(object):
 
     def CreateConfigObject(self, status, ext_refs={}, external_constraints=None):
         config_object = ConfigObject(self._cfg_meta, self)
-        ret_status = config_object.process(ConfigObjectMeta.CREATE, ext_refs=ext_refs, external_constraints=external_constraints)
+        ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, ext_refs=ext_refs, external_constraints=external_constraints)
         if ret_status != status:
             logger.critical("Status code does not match expected : %s," 
                         "actual : %s" % (status, ret_status) )
@@ -278,7 +298,7 @@ class ConfigObjectHelper(object):
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
                 continue
-            ret_status = config_object.process(ConfigObjectMeta.CREATE, redo=True)
+            ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, redo=True)
             if ret_status != status:
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
@@ -294,7 +314,7 @@ class ConfigObjectHelper(object):
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
                 continue
-            ret_status = config_object.process(ConfigObjectMeta.GET)
+            ret_status, _ = config_object.process(ConfigObjectMeta.GET)
             if ret_status != status:
                 if ConfigObjectMeta.GET not in self._ignore_ops:
                     return False
@@ -317,7 +337,7 @@ class ConfigObjectHelper(object):
     def UpdateConfigs(self, count, status):
         print("Updating configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
-            ret_status = config_object.process(ConfigObjectMeta.UPDATE, ext_refs={})    
+            ret_status, _ = config_object.process(ConfigObjectMeta.UPDATE, ext_refs={})    
             if ret_status != status:
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
@@ -330,7 +350,7 @@ class ConfigObjectHelper(object):
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
                 continue
-            ret_status = config_object.process(ConfigObjectMeta.DELETE)
+            ret_status, _ = config_object.process(ConfigObjectMeta.DELETE)
             if ret_status and ret_status != status:
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
@@ -396,10 +416,20 @@ def CreateConfigFromDol(incoming_message):
     except KeyError:
         # This object hasn't been enabled in MBT as yet. Return
         print("Not reading config from DOL for %s" %(type(incoming_message)))
-        return
+        return None, True
     messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
+    resp_message = None
+    err = False
     for message in messages:
-            object_helper.ReadDolConfig(message)
+            curr_message, err = object_helper.ReadDolConfig(message)
+            if err:
+                break
+            if not resp_message:
+                resp_message = curr_message
+            else:
+                resp_message = GrpcReqRspMsg.combine_repeated_messages(curr_message,
+                                                                       resp_message)
+    return resp_message, err
 
 def CreateConfigFromKeyType(key_type, ext_refs, external_constraints=None):
     object_helper = cfg_meta_mapper.key_type_to_config[key_type]

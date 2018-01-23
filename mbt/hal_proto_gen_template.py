@@ -55,10 +55,11 @@ class ${service[0]}(${fileGrpcName}.${servicerName}):
 //::         for table in service[1].methods_by_name.items():
     def ${table[0]}(self, request, context):
          stub = ${fileGrpcName}.${stubName}(channel)
-         config_mgr.CreateConfigFromDol(request)
-         logger.info("Sending DOL message for message type %s\n%s\n"%(type(request), request))
-         response = stub.${table[0]}(request)
-         logger.info("Received HAL response \n%s\n" %(response))
+         response, err = config_mgr.CreateConfigFromDol(request)
+         if err:
+            logger.info("Sending DOL message for message type %s\n%s\n"%(type(request), request))
+            response = stub.${table[0]}(request)
+            logger.info("Received HAL response \n%s\n" %(response))
          return response
 
 //::         #endfor

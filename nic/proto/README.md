@@ -36,7 +36,8 @@ Below is the list of all "moretags" used in HAL protos:
 2. reference to another object - [(gogoproto.moretags)] = "venice:ref"
 
 3. immutable fields - [(gogoproto.moretags)] = "venice:immutable"
-   This is used to indicate that a field can't be changed once object is created
+   This is used to indicate that a field can't be changed once object is created. Once the object
+   is created, for any of the subsequent CRUD operations for the object, the same value will be used.
 
 4. mandatory fields - [(gogoproto.moretags)] = "venice:mandatory"
    This is used to indicate that an object can't be created without this field

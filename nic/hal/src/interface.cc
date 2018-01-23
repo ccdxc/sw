@@ -975,12 +975,14 @@ uplink_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                         __FUNCTION__, hal_if->native_l2seg, new_seg_id);
 
 
-        app_ctxt->native_l2seg = find_l2seg_by_id(new_seg_id);
-        if (!app_ctxt->native_l2seg) {
-            HAL_TRACE_ERR("pi-uplinkif:{}:unable to find new l2seg:{}",
-                          __FUNCTION__, new_seg_id);
-            ret = HAL_RET_L2SEG_NOT_FOUND;
-            goto end;
+        if (new_seg_id != HAL_L2SEGMENT_ID_INVALID) {
+            app_ctxt->native_l2seg = find_l2seg_by_id(new_seg_id);
+            if (!app_ctxt->native_l2seg) {
+                HAL_TRACE_ERR("pi-uplinkif:{}:unable to find new l2seg:{}",
+                              __FUNCTION__, new_seg_id);
+                ret = HAL_RET_L2SEG_NOT_FOUND;
+                goto end;
+            }
         }
 
         app_ctxt->native_l2seg_change = true;
@@ -1016,12 +1018,14 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         HAL_TRACE_DEBUG("pi-uplinkpc:{}: updating native_l2seg_id {} => {}", 
                         __FUNCTION__, hal_if->native_l2seg, new_seg_id);
 
-        app_ctxt->native_l2seg = find_l2seg_by_id(new_seg_id);
-        if (!app_ctxt->native_l2seg) {
-            HAL_TRACE_ERR("pi-uplinkpc:{}:unable to find new l2seg:{}",
-                          __FUNCTION__, new_seg_id);
-            ret = HAL_RET_L2SEG_NOT_FOUND;
-            goto end;
+        if (new_seg_id != HAL_L2SEGMENT_ID_INVALID) {
+            app_ctxt->native_l2seg = find_l2seg_by_id(new_seg_id);
+            if (!app_ctxt->native_l2seg) {
+                HAL_TRACE_ERR("pi-uplinkpc:{}:unable to find new l2seg:{}",
+                              __FUNCTION__, new_seg_id);
+                ret = HAL_RET_L2SEG_NOT_FOUND;
+                goto end;
+            }
         }
 
         app_ctxt->native_l2seg_change = true;
@@ -1330,6 +1334,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if_update_app_ctxt_t        *app_ctxt = NULL;
     // if_t                        *mbr_if = NULL;
     l2seg_t                     *old_nat_l2seg = NULL, *new_nat_l2seg = NULL;
+    uint32_t                    seg_id = HAL_L2SEGMENT_ID_INVALID;
 
 
     if (cfg_ctxt == NULL) {
@@ -1417,9 +1422,13 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
             // update clone with new attrs
             if (app_ctxt->native_l2seg_change) {
+                
+                if (app_ctxt->native_l2seg) {
+                    seg_id = app_ctxt->native_l2seg->seg_id;
+                }
                 HAL_TRACE_DEBUG("Setting the clone to new native l2seg: {}", 
-                                app_ctxt->native_l2seg->seg_id);
-                intf_clone->native_l2seg = app_ctxt->native_l2seg->seg_id;
+                                seg_id);
+                intf_clone->native_l2seg = seg_id;
             }
 
             // update mbr list, valid only for uplink pc 

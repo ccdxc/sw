@@ -465,7 +465,7 @@ message IfAppRedirInfo {
 message InterfaceSpec {
   types.ObjectMeta   meta              = 1;     // object meta
   kh.InterfaceKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];     // interface being created/updated
-  IfType             type              = 4;     // type of interface
+  IfType             type              = 4 [(gogoproto.moretags) = "venice:immutable"];     // type of interface
   IfStatus           admin_status      = 5;     // admin status of the interface
   oneof if_info {
     IfEnicInfo       if_enic_info      = 6 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
