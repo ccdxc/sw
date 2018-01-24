@@ -615,57 +615,68 @@ FlowEntry::get_eff_spine_entry()
     }
 }
 
-
-#define oflow_hash_info oflow_act_data.flow_hash_overflow_action_u.flow_hash_overflow_flow_hash_info
 // ---------------------------------------------------------------------------
-// Program Non-anchor entry
+// Program non-anchor entry
 // ---------------------------------------------------------------------------
 hal_ret_t
 FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
 {
-    hal_ret_t                       rs = HAL_RET_OK;
-    p4pd_error_t                    pd_err = P4PD_SUCCESS;
-    uint32_t                        oflow_table_id = 0;
-    char                            *loc = NULL;
-    flow_hash_overflow_actiondata   oflow_act_data;
-    void                            *hwkey = NULL;
-
-    memset(&oflow_act_data, 0, sizeof(oflow_act_data));
+    hal_ret_t       rs = HAL_RET_OK;
+    p4pd_error_t    pd_err = P4PD_SUCCESS;
+    uint32_t        oflow_table_id = 0;
+    uint32_t        entire_data_len;
+    void            *hwkey = NULL;
+    void            *swdata = NULL;
+    uint8_t         *action_id;
+    uint8_t         *entry_valid;
+    void            *data;
+    hg_root_t       *first_hash_hint;
+    uint8_t         *more_hashs;
+    uint16_t        *more_hints;
 
     oflow_table_id = get_flow_table_entry()->get_flow()->get_oflow_table_id();
+    entire_data_len = get_flow_table_entry()->get_flow()->
+                      get_flow_entire_data_len();
 
-    // Do we need hw key ?
-    
-    loc = (char *)&(oflow_act_data.flow_hash_overflow_action_u); // At union
-    oflow_hash_info.entry_valid = 1;
-    loc += 1; // For entry valid
-    memcpy(loc, data_, data_len_); // export_en + flow_index is data
+    swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, 
+                        entire_data_len);
+    get_flow_table_entry()->get_flow()->
+        flow_action_data_offsets(swdata,
+                                 &action_id,
+                                 &entry_valid,
+                                 &data,
+                                 &first_hash_hint,
+                                 &more_hashs,
+                                 &more_hints);
+
+    *action_id = 0;
+    *entry_valid = 1;
+    memcpy(data, data_, data_len_); // export_en + flow_index is data
+
     if (next_fe) {
-        oflow_hash_info.hash1 = next_fe->get_fh_group()->get_hint_bits();
-        oflow_hash_info.hint1 = next_fe->get_fhct_index();
+        first_hash_hint->hash = next_fe->get_fh_group()->get_hint_bits();
+        first_hash_hint->hint = next_fe->get_fhct_index();
     }
 
     HAL_TRACE_DEBUG("FE::{}: OflowTID: {} P4 FHCT Write: {}", 
                     __FUNCTION__, oflow_table_id, fhct_index_);
-    // FlowEntry *next_fe = fh_group_->get_next_flow_entry(this);
-
-    // hwkey = ::operator new(hwkey_len_);
-    // memset(hwkey, 0, hwkey_len_);
+    
     hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_ENTRY_HW_KEY, hwkey_len_);
     p4pd_hwkey_hwmask_build(oflow_table_id, key_,
                             NULL, (uint8_t *)hwkey, NULL);
 
-    entry_trace(oflow_table_id, fhct_index_, (void *)&oflow_act_data);
-
     // P4-API: Oflow Table Write
     pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, (uint8_t*)hwkey, NULL,
-                              (void *)&oflow_act_data);
+                              swdata);
     HAL_TRACE_DEBUG("Done programming Flow Hash Overflow {}", pd_err);
-    // ::operator delete(hwkey);
+
+    // Free
     HAL_FREE(HAL_MEM_ALLOC_FLOW_ENTRY_HW_KEY, hwkey);
+    HAL_FREE(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, swdata);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
 }
+
 
 // ---------------------------------------------------------------------------
 // DeProgram Non-anchor entry
@@ -676,21 +687,27 @@ FlowEntry::deprogram_table_non_anchor_entry()
     hal_ret_t                       rs = HAL_RET_OK;
     p4pd_error_t                    pd_err = P4PD_SUCCESS;
     uint32_t                        oflow_table_id = 0;
-    flow_hash_overflow_actiondata   oflow_act_data;
+    uint32_t                        entire_data_len = 0;
+    void                            *swdata = NULL;
 
     HAL_TRACE_DEBUG("{}: Deprogram Coll. Table idx: {}", __FUNCTION__, 
             fhct_index_);
 
-    memset(&oflow_act_data, 0, sizeof(oflow_act_data));
+    entire_data_len = get_flow_table_entry()->get_flow()->
+                      get_flow_entire_data_len();
+    swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, 
+                        entire_data_len);
 
     oflow_table_id = get_flow_table_entry()->get_flow()->get_oflow_table_id();
 
 
     // P4-API: Oflow Table Write
     pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, NULL, NULL,
-                              (void *)&oflow_act_data);
+                              swdata);
 
-    entry_trace(oflow_table_id, fhct_index_, (void *)&oflow_act_data);
+    entry_trace(oflow_table_id, fhct_index_, swdata);
+
+    HAL_FREE(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, swdata);
 
     return (pd_err != P4PD_SUCCESS) ? HAL_RET_HW_FAIL : rs;
 }

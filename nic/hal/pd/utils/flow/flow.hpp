@@ -76,6 +76,11 @@ typedef std::map<uint32_t, FlowEntry*> FlowEntryMap;
   *
   * ---------------------------------------------------------------------------
 */
+typedef struct hg_root_ {
+    uint16_t hash;
+    uint16_t hint;
+} hg_root_t;
+
 class Flow {
 public:
     enum HashPoly {
@@ -111,6 +116,7 @@ private:
     uint32_t            flow_coll_capacity_;        // size of coll. table
     uint32_t            key_len_;                   // key len
     uint32_t            data_len_;                  // data len
+    uint32_t            entire_data_len_;           // entire data len
     HashPoly            hash_poly_;                 // hash polynomial
 
 
@@ -221,6 +227,7 @@ public:
     uint32_t get_table_id() { return table_id_; }
     uint32_t get_oflow_table_id() { return oflow_table_id_; }
     uint32_t get_flow_data_len() { return data_len_; }
+    uint32_t get_flow_entire_data_len() { return entire_data_len_; }
     uint32_t get_key_len() { return key_len_; }
     uint32_t get_hwkey_len() { return hwkey_len_; }
     uint32_t get_hwdata_len() { return hwdata_len_; }
@@ -232,6 +239,13 @@ public:
     indexer *get_flow_coll_indexer();
     void push_fe_delete_q(FlowEntry *fe);
     void push_fhg_delete_q(FlowHintGroup *fhg);
+    hal_ret_t flow_action_data_offsets(void *action_data,
+                                       uint8_t **action_id,
+                                       uint8_t **entry_valid,
+                                       void **data,
+                                       hg_root_t **first_hash_hint,
+                                       uint8_t **more_hashs,
+                                       uint16_t **more_hints);
 
 };
 

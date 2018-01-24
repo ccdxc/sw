@@ -18,11 +18,6 @@ class FlowTableEntry;
 
 typedef std::list<FlowHintGroup*> FlowHintGroupList;
 
-typedef struct hg_root_ {
-    uint16_t hash;
-    uint16_t hint;
-} hg_root_t;
-
 class FlowSpineEntry {
 private:
     FlowTableEntry *ft_entry_;      // Back Pointer to FT Entry        
@@ -40,8 +35,8 @@ public:
     static void destroy(FlowSpineEntry *fse, 
                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW_SPINE_ENTRY);
 
-    void form_action_data(flow_hash_actiondata *action_data);
-    void form_oflow_action_data(flow_hash_overflow_actiondata *action_data);
+    void form_action_data(void *action_data);
+    // void form_oflow_action_data(flow_hash_overflow_actiondata *action_data);
     hal_ret_t program_table();
     hal_ret_t deprogram_table();
     uint32_t get_num_hgs();

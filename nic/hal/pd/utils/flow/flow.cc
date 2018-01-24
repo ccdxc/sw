@@ -3,6 +3,7 @@
 #include "nic/hal/pd/utils/flow/flow.hpp"
 #include "nic/hal/pd/utils/flow/flow_entry.hpp"
 #include "nic/hal/pd/utils/flow/flow_table_entry.hpp"
+#include "nic/hal/pd/utils/flow/flow_spine_entry.hpp"
 
 using hal::pd::utils::Flow;
 
@@ -74,30 +75,11 @@ Flow::Flow(std::string table_name, uint32_t table_id,
 
     hint_len_ = 32/*CRC 32*/ - hash_tbl_key_len_;
 
-    HAL_TRACE_DEBUG("Flow:{}: key_len_: {}, data_len_: {}, "
-                    " hash_tbl_key_len_: {}, hash_coll_tbl_key_len_: {} "
-                    "hint_len: {} flow_hash_capacity_: {} flow_coll_capacity_: {}", 
-                    table_name_.c_str(), key_len_, data_len_, 
-                    hash_tbl_key_len_, hash_coll_tbl_key_len_, 
-                    hint_len_, flow_hash_capacity_, flow_coll_capacity);
-
     // Allocate indexer for Flow Collision Table, skip zero
-    // flow_coll_indexer_ = new indexer(flow_coll_capacity_, true, true);
-#if 0
-    flow_coll_indexer_ = indexer::factory(flow_coll_capacity_, true, 
-                                          true, 
-                                          HAL_MEM_ALLOC_FLOW_COLL_INDEXER);
-#endif
     flow_coll_indexer_ = indexer::factory(flow_coll_capacity_, true, 
                                           true);
 
     // Assumption: Max. number of flow entries will be hash table cap.
-    // flow_entry_indexer_ = new indexer(flow_hash_capacity_);
-#if 0
-    flow_entry_indexer_ = indexer::factory(flow_hash_capacity_, true,
-                                           true,
-                                           HAL_MEM_ALLOC_FLOW_ENTRY_INDEXER);
-#endif
     flow_entry_indexer_ = indexer::factory(flow_hash_capacity_, true,
                                            true);
 
@@ -109,14 +91,27 @@ Flow::Flow(std::string table_name, uint32_t table_id,
     // round off to higher byte
     hwkey_len_ = (hwkey_len_ >> 3) + ((hwkey_len_ & 0x7) ? 1 : 0);
     hwdata_len_ = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
-
-    HAL_TRACE_DEBUG("Flow:{}: in bytes: hwkey_len: {}, hwdata_len: {}",
-            __FUNCTION__, hwkey_len_, hwdata_len_);
+    entire_data_len_ = 1 +                              /* action id */
+                       1 +                              /* entry_valid */
+                       data_len_ +                      /* data len */
+                       num_hints_per_flow_entry_  * 4 + /* hints, hashes */
+                       1 +                              /* more_hashs */
+                       2;                               /* more_hints */
 
     // Initialize for Stats
     // stats_ = new uint64_t[STATS_MAX]();
     stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_FLOW_STATS,
                                     sizeof(uint64_t) * STATS_MAX);
+
+    HAL_TRACE_DEBUG("Flow:{}: key_len_: {}, data_len_: {}, entire_data_len: {}, "
+                    "hwkey_len: {}, hwdata_len: {}, "
+                    " hash_tbl_key_len_: {}, hash_coll_tbl_key_len_: {} "
+                    "hint_len: {} flow_hash_capacity_: {} flow_coll_capacity_: {}", 
+                    table_name_.c_str(), key_len_, data_len_, entire_data_len_,
+                    hwkey_len_, hwdata_len_,
+                    hash_tbl_key_len_, hash_coll_tbl_key_len_, 
+                    hint_len_, flow_hash_capacity_, flow_coll_capacity);
+
 }
            
 // ---------------------------------------------------------------------------
@@ -632,6 +627,45 @@ Flow::free_fhct_index(uint32_t idx)
                     __FUNCTION__, idx);
      return rs;
 }
+
+// ----------------------------------------------------------------------------
+// flow action data offsets
+//  {
+//      action id;      (1 byte)
+//      entry_valid;    (1 byte)
+//      data            (data_len_)
+//      <hash           (2 bytes)
+//       hint>          (2 bytes)
+//      more_hashs      (1 byte)
+//      more_hints      (2 bytes)
+//  }
+// ----------------------------------------------------------------------------
+hal_ret_t
+Flow::flow_action_data_offsets (void *action_data,
+                                uint8_t **action_id,
+                                uint8_t **entry_valid,
+                                void **data,
+                                hg_root_t **first_hash_hint,
+                                uint8_t **more_hashs,
+                                uint16_t **more_hints)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    uint8_t     *seek = NULL;
+
+    seek = (uint8_t *)action_data;
+
+    *action_id       = seek;
+    *entry_valid     = seek + 1;
+    *data            = seek + 1 + 1;
+    *first_hash_hint = (hg_root_t *)(seek + 1 + 1 + data_len_);
+    *more_hashs      = seek + 1 + 1 + data_len_ + num_hints_per_flow_entry_ * 4;
+    *more_hints      = (uint16_t *)(seek + 1 + 1 + data_len_ + 
+                                    num_hints_per_flow_entry_ * 4 + 1);
+
+    return ret;
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Increment Stats

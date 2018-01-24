@@ -215,6 +215,7 @@ extern bool lif_id_compare_key_func(void *key1, void *key2);
 hal_ret_t lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en);
 void lif_print_ifs(lif_t *lif);
 void lif_print(lif_t *lif);
+hal_ret_t lif_spec_print (LifSpec& spec);
 
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);

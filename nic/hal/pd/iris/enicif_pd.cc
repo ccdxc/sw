@@ -658,7 +658,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     if_t                                    *hal_if = (if_t *)pd_enicif->pi_if;
     if_t                                    *uplink = NULL;
     pd_l2seg_t                              *l2seg_pd;
-    sdk_hash                                    *inp_prop_tbl = NULL;
+    sdk_hash                                *inp_prop_tbl = NULL;
     uint32_t                                hash_idx = INVALID_INDEXER_INDEX;
     bool                                    direct_to_otcam = false;
 

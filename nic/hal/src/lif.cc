@@ -577,7 +577,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->hal_handle          = hal_alloc_handle();
     lif->vlan_strip_en       = spec.vlan_strip_en();
     lif->vlan_insert_en      = spec.vlan_insert_en();
-    lif->pinned_uplink       = uplink_if ? uplink_if->hal_handle : HAL_HANDLE_INVALID;
+    lif->pinned_uplink       = uplink_if ? uplink_if->hal_handle : 
+                               HAL_HANDLE_INVALID;
     lif->packet_filters.receive_broadcast = spec.packet_filter().
                                             receive_broadcast();
     lif->packet_filters.receive_promiscuous = spec.packet_filter().
@@ -1520,5 +1521,51 @@ lif_print(lif_t *lif)
     }
     HAL_TRACE_DEBUG(buf.c_str());
 }
+
+//-----------------------------------------------------------------------------
+// Print lif spec
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_spec_print (LifSpec& spec)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    fmt::MemoryWriter   buf;
+
+    buf.write("Lif Spec: ");
+    if (spec.has_key_or_handle()) {
+        auto kh = spec.key_or_handle();
+        if (kh.key_or_handle_case() == LifKeyHandle::kLifId) {
+            buf.write("lif_id:{}, ", kh.lif_id());
+        } else if (kh.key_or_handle_case() == LifKeyHandle::kLifHandle) {
+            buf.write("lif_hdl:{}, ", kh.lif_handle());
+        }
+    } else {
+        buf.write("lif_id_hdl:NULL, ");
+    }
+
+    if (spec.has_pinned_uplink_if_key_handle()) {
+        auto kh = spec.pinned_uplink_if_key_handle();
+        if (kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
+            buf.write("pinned_uplinkif_id:{}, ", kh.interface_id());
+        } else if (kh.key_or_handle_case() == kh::InterfaceKeyHandle::kIfHandle) {
+            buf.write("pinned_uplinkif_hdl:{}, ", kh.if_handle());
+        }
+    } else {
+        buf.write("sec_pro_id_hdl:NULL, ");
+    }
+
+    buf.write("vlan_strip_en:{}, vlan_insert_en:{}, ",
+              spec.vlan_strip_en(), spec.vlan_insert_en());
+
+    buf.write("packet_filters:rec_bcast:{}, rec_prom:{}, rec_mcast:{}",
+              spec.packet_filter().receive_broadcast(),
+              spec.packet_filter().receive_promiscuous(),
+              spec.packet_filter().receive_all_multicast());
+
+    HAL_TRACE_DEBUG(buf.c_str());
+    return ret;
+}
+
+
 
 }    // namespace hal
