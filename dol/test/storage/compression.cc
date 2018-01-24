@@ -297,14 +297,12 @@ static int run_cp_test(comp_test_t *params) {
       //uint64_t *h = (uint64_t *)dataout_buf;
       //*h = bswap_64(*h);
       cp_hdr_t *hdr = (cp_hdr_t *)dataout_buf;
-      if (params->cmd_bits.cksum_en) {
-        uint32_t expected_cksum =
-            params->cmd_bits.cksum_adler ? kADLER32Sum : kCRC32Sum;
-        if (hdr->cksum != expected_cksum) {
-          printf("ERROR: CKSUM mismatch. Expected 0x%x, Got 0x%x\n",
-                 expected_cksum, hdr->cksum);
-          return -1;
-        }
+      uint32_t expected_cksum =
+          params->cmd_bits.cksum_adler ? kADLER32Sum : kCRC32Sum;
+      if (hdr->cksum != expected_cksum) {
+        printf("ERROR: CKSUM mismatch. Expected 0x%x, Got 0x%x\n",
+               expected_cksum, hdr->cksum);
+        return -1;
       }
       if (hdr->data_len != kCompressedDataSize) {
         printf("ERROR: wrong data len in the compression header. "
@@ -519,7 +517,6 @@ int compress_adler_sha256() {
   spec.cmd          = 5;
   spec.cmd_bits.sha_en = 1;
   spec.cmd_bits.sha256 = 1;
-  spec.cmd_bits.cksum_en = 1;
   spec.cmd_bits.cksum_adler = 1;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
@@ -536,7 +533,6 @@ int compress_crc_sha512() {
   spec.cmd          = 5;
   spec.cmd_bits.sha_en = 1;
   spec.cmd_bits.sha256 = 0;
-  spec.cmd_bits.cksum_en = 1;
   spec.cmd_bits.cksum_adler = 0;
   spec.num_src_sgls = 1;
   spec.num_dst_sgls = 1;
@@ -628,7 +624,6 @@ int compress_output_through_sequencer() {
   d.doorbell_data = seq_params.ret_doorbell_data;
   d.cmd_bits.doorbell_on = 1;
   d.cmd_bits.sha_en = 1;
-  d.cmd_bits.cksum_en = 1;
   cp_desc_t *dst_d = (cp_desc_t *)queue_mem;
   bcopy(&d, &dst_d[queue_index], sizeof(d));
   queue_index++;
