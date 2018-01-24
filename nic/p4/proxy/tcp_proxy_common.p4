@@ -38,7 +38,7 @@
         rx_flag                         : 8                     ;\
         state                           : 8                     ;\
         pending_ack_send                : 1                     ;\
-        pending_rx_tcp_ack              : 1                     ;\
+        saved_pending_ack_send          : 1                     ;\
         pad1_rx2tx                      : 14                    ;
 
 

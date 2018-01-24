@@ -309,27 +309,6 @@ def TestCaseVerify(tc):
                     (other_tcpcb_cur.retx_snd_una, tc.packets.Get('PKT1').payloadsize))
             return False
 
-        #
-        # We have two packets coming in, and one packet cleaned, so
-        # pi should increment by 2 and ci by 1
-        #
-        if rnmdr_cur.pi != rnmdr.pi + 2:
-            print("rnmdr cur pi %d does not match expected %d" % \
-                    (rnmdr_cur.pi, rnmdr.pi + 2))
-            return False
-        if rnmpr_cur.pi != rnmpr.pi + 2:
-            print("rnmpr cur pi %d does not match expected %d" % \
-                    (rnmpr_cur.pi, rnmpr.pi + 2))
-            return False
-        if tc.pvtdata.bypass_barco:
-            if rnmdr_cur.ci != rnmdr.ci + 1:
-                print("rnmdr cur pi %d does not match expected %d" % \
-                        (rnmdr_cur.pi, rnmdr.pi + 1))
-                return False
-            if rnmpr_cur.ci != rnmpr.ci + 1:
-                print("rnmpr cur ci %d does not match expected %d" % \
-                        (rnmpr_cur.ci, rnmpr.ci + 1))
-                return False
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'complete':
         if other_tcpcb_cur.retx_xmit_cursor != 0:
             print("retx_xmit_cursor is not 0")
@@ -341,26 +320,25 @@ def TestCaseVerify(tc):
                     (other_tcpcb_cur.retx_snd_una, tc.packets.Get('PKT1').payloadsize + \
                             tc.packets.Get('PKT2').payloadsize))
             return False
-        #
-        # We have two packets coming in, and two packets cleaned, so
-        # pi should increment by 2 and ci by 2
-        #
-        if rnmdr_cur.pi != rnmdr.pi + 2:
+
+    if tc.pvtdata.test_retx and (tc.pvtdata.test_retx == 'partial' \
+            or tc.pvtdata.test_retx == 'complete'):
+        if rnmdr_cur.pi != rnmdr.pi + tc.pvtdata.pkt_alloc:
             print("rnmdr cur %d pi does not match expected %d" % \
-                    (rnmdr_cur.pi, rnmdr.pi + 2))
+                    (rnmdr_cur.pi, rnmdr.pi + tc.pvtdata.pkt_alloc))
             return False
-        if rnmpr_cur.pi != rnmpr.pi + 2:
+        if rnmpr_cur.pi != rnmpr.pi + tc.pvtdata.pkt_alloc:
             print("rnmpr cur %d pi does not match expected %d" % \
-                    (rnmpr_cur.pi, rnmpr.pi + 2))
+                    (rnmpr_cur.pi, rnmpr.pi + tc.pvtdata.pkt_alloc))
             return False
         if tc.pvtdata.bypass_barco:
-            if rnmdr_cur.ci != rnmdr.ci + 2:
+            if rnmdr_cur.ci != rnmdr.ci + tc.pvtdata.pkt_free:
                 print("rnmdr cur %d pi does not match expected %d" % \
-                        (rnmdr_cur.pi, rnmdr.pi + 2))
+                        (rnmdr_cur.pi, rnmdr.pi + tc.pvtdata.pkt_free))
                 return False
-            if rnmpr_cur.ci != rnmpr.ci + 2:
+            if rnmpr_cur.ci != rnmpr.ci + tc.pvtdata.pkt_free:
                 print("rnmpr cur ci %d does not match expected %d" % \
-                        (rnmpr_cur.ci, rnmpr.ci + 2))
+                        (rnmpr_cur.ci, rnmpr.ci + tc.pvtdata.pkt_free))
                 return False
 
     if tc.pvtdata.test_cong_avoid:

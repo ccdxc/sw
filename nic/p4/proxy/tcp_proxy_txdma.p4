@@ -73,7 +73,6 @@
     modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
-    modify_field(common_global_scratch.pending_rx_tcp_ack, common_phv.pending_rx_tcp_ack); \
     modify_field(common_global_scratch.pending_rto, common_phv.pending_rto); \
     modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);\
     modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq); \
@@ -193,7 +192,6 @@ header_type common_global_phv_t {
         pending_rx2tx           : 1;
         pending_sesq            : 1;
         pending_ack_send        : 1;
-        pending_rx_tcp_ack      : 1;
         pending_rto             : 1;
         debug_dol_dont_send_ack : 1;
         pending_asesq           : 1;
@@ -208,7 +206,6 @@ header_type common_global_phv_t {
 header_type to_stage_1_phv_t {
     fields {
         sesq_ci_addr            : HBM_ADDRESS_WIDTH;
-        pending_cidx            : 16;
     }
 }
 
@@ -450,7 +447,7 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
 pi_4, ci_4, pi_5, ci_5, debug_dol_tx, debug_dol_tblsetaddr, sesq_base, asesq_base,snd_una,\
 rcv_nxt, snd_wnd,ft_pi, rto, rx_flag, state, pending_ack_send,\
-pending_rx_tcp_ack\
+saved_pending_ack_send\
 
 
 
@@ -487,7 +484,7 @@ pending_rx_tcp_ack\
     modify_field(rx2tx_d.rx_flag, rx_flag);                                                            \
     modify_field(rx2tx_d.state, state);                                                                \
     modify_field(rx2tx_d.pending_ack_send, pending_ack_send);                                          \
-    modify_field(rx2tx_d.pending_rx_tcp_ack, pending_rx_tcp_ack);                                      \
+    modify_field(rx2tx_d.saved_pending_ack_send, saved_pending_ack_send);                              \
 
 
 
@@ -524,7 +521,6 @@ action read_rx2tx_extra(
 
     // from to_stage 1
     modify_field(to_s1_scratch.sesq_ci_addr, to_s1.sesq_ci_addr);
-    modify_field(to_s1_scratch.pending_cidx, to_s1.pending_cidx);
 
     // from stage to stage
     modify_field(t0_s2s_scratch.next_addr, t0_s2s.next_addr);
@@ -592,7 +588,6 @@ action read_sesq_ci(desc_addr) {
 
     // from to_stage 1
     modify_field(to_s1_scratch.sesq_ci_addr, to_s1.sesq_ci_addr);
-    modify_field(to_s1_scratch.pending_cidx, to_s1.pending_cidx);
 
     // d for stage 1
     modify_field(read_sesq_ci_d.desc_addr, desc_addr);

@@ -31,6 +31,12 @@ tcp_xmit_process_start:
     seq             c1, k.common_phv_pending_rto, 1
     bcf             [c1], tcp_tx_retransmit
 
+    /*
+     * For RTO case, snd_nxt is snd_una, initialize snd_nxt for other cases
+     */
+    seq             c1, k.t0_s2s_snd_nxt, r0
+    phvwr.c1        p.t0_s2s_snd_nxt, d.snd_nxt
+
 tcp_tx_enqueue:
     seq             c1, k.common_phv_pending_sesq, 1
     seq.!c1         c1, k.common_phv_pending_asesq, 1
@@ -42,12 +48,6 @@ tcp_tx_enqueue:
     seq             c1, k.common_phv_fin, 1
     bal.c1          r7, tcp_tx_handle_fin
     nop
-
-    /*
-     * For RTO case, snd_nxt is snd_una, initialize snd_nxt for other cases
-     */
-    seq             c1, k.t0_s2s_snd_nxt, r0
-    phvwr.c1        p.t0_s2s_snd_nxt, d.snd_nxt
 
 #if 0
     /* Check if there is retx q cleanup needed at head due

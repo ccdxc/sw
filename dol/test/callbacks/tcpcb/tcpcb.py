@@ -55,12 +55,13 @@ def GetNxtPktAckNum (tc, pkt):
 
 def GetPktOutSeqNum (tc, pkt):
     fin = 0
-    if 'F' in tc.packets.Get('PKT1').headers.tcp.fields.flags:
+    if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
         fin = 1
+    tc.pvtdata.flow2_bytes_txed += pkt.payloadsize + fin
     if tc.pvtdata.same_flow:
-        return tc.pvtdata.flow1_snd_nxt + fin
+        return tc.pvtdata.flow1_snd_nxt
     else:
-        return tc.pvtdata.flow2_snd_nxt + fin
+        return tc.pvtdata.flow2_snd_nxt
 
 def GetPktOutAckNum (tc, pkt):
     if tc.pvtdata.same_flow:
@@ -69,7 +70,18 @@ def GetPktOutAckNum (tc, pkt):
         return tc.pvtdata.flow2_rcv_nxt + tc.pvtdata.flow2_bytes_rxed
 
 def GetNxtPktOutSeqNum (tc, pkt):
-    return GetPktOutSeqNum(tc, pkt) + pkt.payloadsize
+    #return GetPktOutSeqNum(tc, pkt) + pkt.payloadsize
+    fin = 0
+    if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
+        fin = 1
+    if tc.pvtdata.same_flow:
+        pktSeqNum = tc.pvtdata.flow1_snd_nxt + \
+                tc.pvtdata.flow1_bytes_txed
+    else:
+        pktSeqNum = tc.pvtdata.flow2_snd_nxt + \
+                tc.pvtdata.flow2_bytes_txed
+    tc.pvtdata.flow2_bytes_txed += pkt.payloadsize + fin
+    return pktSeqNum
 
 def GetNxtPktOutAckNum (tc, pkt):
     return GetPktOutAckNum(tc, pkt)
@@ -78,20 +90,18 @@ def GetReverseFlowPktOutSeqNum (tc, pkt):
     return tc.pvtdata.flow1_snd_nxt
 
 def GetReverseFlowPktOutAckNum (tc, pkt):
-    return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
+    return tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.flow1_bytes_rxed
 
 def GetAckPktSeqNum (tc, pkt):
     fin = 0
     if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
         fin += 1
+    pktSeqNum = tc.pvtdata.flow1_snd_nxt + tc.pvtdata.flow1_bytes_txed
     tc.pvtdata.flow1_bytes_txed += pkt.payloadsize + fin
-    return tc.pvtdata.flow1_snd_nxt + tc.pvtdata.flow1_bytes_txed
+    return pktSeqNum
 
 def GetAckPktAckNum (tc, pkt):
-    fin = 0
-    if 'F' in tc.packets.Get('PKT1').headers.tcp.fields.flags:
-        fin = 1
-    return tc.pvtdata.flow1_rcv_nxt + tc.packets.Get('PKT1').payloadsize + fin
+    return tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.flow1_bytes_rxed
 
 def GetReverseFlowAckPktSeqNum (tc, pkt):
     return tc.pvtdata.flow2_snd_nxt + tc.packets.Get('PKT1').payloadsize

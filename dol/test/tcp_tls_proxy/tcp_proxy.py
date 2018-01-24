@@ -48,7 +48,8 @@ def SetupProxyArgs(tc):
     tc.module.logger.info("Testcase Args:")
     same_flow = 0
     bypass_barco = 0
-    send_ack = 0
+    send_ack_flow1 = 0
+    send_ack_flow2 = 0
     test_timer = 0
     test_retx_timer = 0
     test_cancel_retx_timer = 0
@@ -63,15 +64,20 @@ def SetupProxyArgs(tc):
     fin_ack = 0
     final_fin = 0
     timestamp = 0
+    pkt_alloc = 0
+    pkt_free = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
     if hasattr(tc.module.args, 'bypass_barco'):
         bypass_barco = tc.module.args.bypass_barco
         tc.module.logger.info("- bypass_barco %s" % tc.module.args.bypass_barco)
-    if hasattr(tc.module.args, 'send_ack'):
-        send_ack = tc.module.args.send_ack
-        tc.module.logger.info("- send_ack %s" % tc.module.args.send_ack)
+    if hasattr(tc.module.args, 'send_ack_flow1'):
+        send_ack_flow1 = tc.module.args.send_ack_flow1
+        tc.module.logger.info("- send_ack_flow1 %s" % tc.module.args.send_ack_flow1)
+    if hasattr(tc.module.args, 'send_ack_flow2'):
+        send_ack_flow2 = tc.module.args.send_ack_flow2
+        tc.module.logger.info("- send_ack_flow2 %s" % tc.module.args.send_ack_flow2)
     if hasattr(tc.module.args, 'test_timer'):
         test_timer = tc.module.args.test_timer
         tc.module.logger.info("- test_timer %s" % tc.module.args.test_timer)
@@ -108,6 +114,12 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'timestamp'):
         timestamp = tc.module.args.timestamp
         tc.module.logger.info("- timestamp %s" % tc.module.args.timestamp)
+    if hasattr(tc.module.args, 'pkt_alloc'):
+        pkt_alloc = tc.module.args.pkt_alloc
+        tc.module.logger.info("- pkt_alloc %s" % tc.module.args.pkt_alloc)
+    if hasattr(tc.module.args, 'pkt_free'):
+        pkt_free = tc.module.args.pkt_free
+        tc.module.logger.info("- pkt_free %s" % tc.module.args.pkt_free)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -118,9 +130,12 @@ def SetupProxyArgs(tc):
         if 'bypass_barco' in iterelem.__dict__:
             bypass_barco = iterelem.bypass_barco
             tc.module.logger.info("- bypass_barco %s" % iterelem.bypass_barco)
-        if 'send_ack' in iterelem.__dict__:
-            send_ack = iterelem.send_ack
-            tc.module.logger.info("- send_ack %s" % iterelem.send_ack)
+        if 'send_ack_flow1' in iterelem.__dict__:
+            send_ack_flow1 = iterelem.send_ack_flow1
+            tc.module.logger.info("- send_ack_flow1 %s" % iterelem.send_ack_flow1)
+        if 'send_ack_flow2' in iterelem.__dict__:
+            send_ack_flow2 = iterelem.send_ack_flow2
+            tc.module.logger.info("- send_ack_flow2 %s" % iterelem.send_ack_flow2)
         if 'test_timer' in iterelem.__dict__:
             test_timer = iterelem.test_timer
             tc.module.logger.info("- test_timer %s" % iterelem.test_timer)
@@ -147,7 +162,8 @@ def SetupProxyArgs(tc):
             tc.module.logger.info("- fin %s" % iterelem.fin)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
-    tc.pvtdata.send_ack = send_ack
+    tc.pvtdata.send_ack_flow1 = send_ack_flow1
+    tc.pvtdata.send_ack_flow2 = send_ack_flow2
     tc.pvtdata.test_timer = test_timer
     tc.pvtdata.test_retx_timer = test_retx_timer
     tc.pvtdata.test_cancel_retx_timer = test_cancel_retx_timer
@@ -162,6 +178,8 @@ def SetupProxyArgs(tc):
     tc.pvtdata.fin_ack = fin_ack
     tc.pvtdata.final_fin = final_fin
     tc.pvtdata.timestamp = timestamp
+    tc.pvtdata.pkt_alloc = pkt_alloc
+    tc.pvtdata.pkt_free = pkt_free
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -180,7 +198,7 @@ def init_tcb_inorder(tc, tcb):
         tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
     tcb.rcv_mss = 9216
     tcb.debug_dol = 0
-    if tc.pvtdata.send_ack:
+    if tc.pvtdata.send_ack_flow1:
         tcb.debug_dol_tx = 0
     else:
         tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell
@@ -272,7 +290,7 @@ def init_tcb_inorder2(tc, tcb):
         tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
     tcb.rcv_mss = 9216
     tcb.debug_dol = 0
-    if tc.pvtdata.send_ack:
+    if tc.pvtdata.send_ack_flow2:
         tcb.debug_dol_tx = 0
     else:
         tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell

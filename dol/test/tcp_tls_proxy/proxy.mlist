@@ -26,7 +26,7 @@ modules:
         rtl     : True
         args    :
             maxflows : 1
-            send_ack : 1
+            send_ack_flow1 : 1
             timestamp : 0xf00df00d
         iterate :
             - flow: filter://type=IPV4
@@ -37,7 +37,7 @@ modules:
         module  : in_order
         args    :
             maxflows : 1
-            send_ack : 1
+            send_ack_flow1 : 1
             test_timer : 1
         iterate :
             - flow: filter://type=IPV4
@@ -125,7 +125,7 @@ modules:
         args    :
             maxflows: 1
             ooo_seq_delta: 1000
-            send_ack : 1
+            send_ack_flow1 : 1
         iterate :
             - flow: filter://type=IPV4
 
@@ -406,7 +406,7 @@ modules:
         args    :
             bypass_barco : 1
             maxflows : 1
-            send_ack : 1
+            send_ack_flow1 : 1
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
@@ -419,7 +419,7 @@ modules:
         module  : pkt_to_p4
         args    :
             bypass_barco : 1
-            send_ack : 1
+            send_ack_flow1 : 1
             test_timer : 1
 
     - module:
@@ -428,7 +428,7 @@ modules:
         module  : pkt_to_p4
         args    :
             bypass_barco : 1
-            send_ack : 1
+            send_ack_flow1 : 1
             test_timer : 1
 
     - module:
@@ -440,6 +440,8 @@ modules:
             bypass_barco : 1
             maxflows : 1
             test_retx : complete
+            pkt_alloc : 2
+            pkt_free : 2
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL
@@ -450,6 +452,21 @@ modules:
             bypass_barco : 1
             maxflows : 1
             test_retx : partial
+            pkt_alloc : 2
+            pkt_free : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL_SEND_ACK
+        spec    : uplink_to_uplink_clean_retx_partial_send_ack.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_retx : partial
+            send_ack_flow2 : 1
+            pkt_alloc : 3
+            pkt_free : 1
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_CONG_AVOID
@@ -505,7 +522,7 @@ modules:
         args    :
             bypass_barco : 1
             fin : 1
-            send_ack : 1
+            send_ack_flow1 : 1
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_FIN_ACK
@@ -515,7 +532,7 @@ modules:
             bypass_barco : 1
             fin : 1
             fin_ack : 1
-            send_ack : 1
+            send_ack_flow1 : 1
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_FIN_ACK_FIN
@@ -525,7 +542,8 @@ modules:
             bypass_barco : 1
             fin : 1
             fin_ack : 1
-            send_ack : 1
+            send_ack_flow1 : 1
+            send_ack_flow2 : 1
             final_fin : 1
 
     - module:
@@ -572,7 +590,7 @@ modules:
         args    :
             bypass_barco : 1
             maxflows : 1
-            send_ack : 1
+            send_ack_flow1 : 1
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
@@ -615,7 +633,7 @@ modules:
         args    :
             bypass_barco : 1
             maxflows : 1
-            send_ack : 1
+            send_ack_flow1 : 1
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
@@ -720,8 +738,8 @@ modules:
         module  : ack_syn_ack_tx
         spec    : ack_syn_ack_tx.testspec
         args    :
-            maxflows    : 1
-            send_ack    : 1
+            maxflows        : 1
+            send_ack_flow1  : 1
         iterate :
             - flow: filter://type=IPV4
 

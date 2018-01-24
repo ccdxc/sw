@@ -266,7 +266,6 @@ tcp_ack:
 
 fast_tcp_ack:
     tblor           d.u.tcp_rx_d.flag, FLAG_SND_UNA_ADVANCED
-    phvwr           p.rx2tx_pending_rx_tcp_ack, 1
 
 fast_tcp_update_wl:
     tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s1_ack_seq
@@ -361,7 +360,6 @@ slow_tcp_ack_established:
 no_rearm_rto:
 #endif
 
-    phvwr           p.rx2tx_pending_rx_tcp_ack, 1
     /*
      *
      * if (after(ack, prior_snd_una)) {

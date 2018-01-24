@@ -34,19 +34,26 @@ tcp_tx_read_rx2tx_shared_process:
     phvwr           p.t0_s2s_snd_wnd, d.snd_wnd
     phvwr           p.t0_s2s_rto, d.rto
 
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
                         tcp_tx_read_rx2tx_shared_extra_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
 
 	.brbegin
-	    brpri		r7[4:0], [0,1,2,3,4]
+        // priorities are 0 (highest) to 7 (lowest)
+        // The rightmost value specifies the priority of r7[0]
+        // tx ring (5) is highest priority so that we finish pending activity
+	    brpri		r7[5:0], [0,3,5,4,1,2]
 	    nop
 	        .brcase 0
 	            b tcp_tx_launch_sesq
 	            nop
 	        .brcase 1
-	            b tcp_tx_pending_rx2tx
+	            b tcp_tx_launch_pending_rx2tx
 	            nop
 	        .brcase 2
 	            b tcp_tx_ft_expired
@@ -57,12 +64,17 @@ tcp_tx_read_rx2tx_shared_process:
 	        .brcase 4
 	            b tcp_tx_launch_asesq
 	            nop
-            .brcase 5
+	        .brcase 5
+	            b tcp_tx_launch_pending_tx
+	            nop
+            .brcase 6
 	            b tcp_tx_rx2tx_abort
 	            nop
 	.brend
 
-
+/******************************************************************************
+ * tcp_tx_launch_sesq
+ *****************************************************************************/
 tcp_tx_launch_sesq:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
@@ -105,6 +117,10 @@ tcp_tx_launch_sesq_end:
     nop.e
     nop
 
+
+/******************************************************************************
+ * tcp_tx_launch_asesq
+ *****************************************************************************/
 tcp_tx_launch_asesq:
     phvwri          p.common_phv_pending_asesq, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
@@ -131,25 +147,76 @@ tcp_tx_launch_asesq_end:
     nop.e
     nop
 
-tcp_tx_pending_rx2tx:
-    phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
-    phvwr           p.common_phv_rx_flag, d.rx_flag
 
-    phvwr           p.to_s1_pending_cidx, d.{ci_1}.hx
-    tbladd          d.{ci_1}.hx, 1
+/******************************************************************************
+ * tcp_tx_launch_pending_tx
+ *****************************************************************************/
+tcp_tx_launch_pending_tx:
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
+    phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
+    // Right now we can only get scheduled for pending ack send
+    // but that may change in future. 
+    tblwr           d.saved_pending_ack_send, 0
+    tbladd.f        d.{ci_5}.hx, 1
     phvwri          p.common_phv_pending_rx2tx, 1
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
+    phvwr           p.common_phv_pending_ack_send, 1
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, \
+                        TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+    /*
+     * Ring doorbell to set CI if pi == ci
+     */
+    seq             c1, d.{ci_5}.hx, d.{pi_5}.hx
+    b.!c1           pending_tx_end
+
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_TX,
+                        0)
+    memwr.dx        r4, r3
+
+pending_tx_end:
+    nop.e
+    nop
+
+
+/******************************************************************************
+ * tcp_tx_launch_pending_rx2tx
+ *****************************************************************************/
+tcp_tx_launch_pending_rx2tx:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
 
+    seq             c1, d.pending_ack_send, 1
+    smeqb           c2, d.rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
+    setcf           c3, [c1 & c2]
+    b.!c3           pending_one_rx2tx
+    phvwri          p.common_phv_pending_rx2tx, 1
+
+    /*
+     * Two pending activities, save one for later and reschedule
+     */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_TX, 0)
+    memwr.dx        r4, r3
+    tblwr.f         d.saved_pending_ack_send, 1
+
+pending_one_rx2tx:
+    phvwr.c2        p.common_phv_rx_flag, d.rx_flag
+    tblwr.c2        d.rx_flag, 0
+    b.c2            pending_snd_una_update
+    tbladd.f        d.{ci_1}.hx, 1
+    b.c1            pending_ack_send
+
+pending_snd_una_update:
     /*
      * pending stage is only to read retx_next_desc currently, which is
      * only used in retx cleanup, so don't launch the stage if this
      * is not a snd_una_update
      */
-    smeqb           c1, d.rx_flag, FLAG_SND_UNA_ADVANCED, FLAG_SND_UNA_ADVANCED
-    b.!c1           tcp_tx_pending_rx2tx_doorbell
 
     CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
                         tcp_tx_process_pending_start,
@@ -160,24 +227,35 @@ tcp_tx_pending_rx2tx:
                         tcp_tx_process_read_xmit_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
-tcp_tx_pending_rx2tx_doorbell:
-    tblwr.f         d.rx_flag, 0
+
+    b               pending_rx2tx_doorbell
+
+pending_ack_send:
+    phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
+    phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+
+pending_rx2tx_doorbell:
 
     /*
      * Ring doorbell to set CI if pi == ci
      */
     seq             c1, d.{ci_1}.hx, d.{pi_1}.hx
-    b.!c1           tcp_tx_pending_rx2tx_end
+    b.!c1           pending_rx2tx_end
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, 0)
     memwr.dx        r4, r3
 
-tcp_tx_pending_rx2tx_end:
+pending_rx2tx_end:
     nop.e
     nop
 
+
+/******************************************************************************
+ * tcp_tx_st_expired
+ *****************************************************************************/
 tcp_tx_st_expired:
     phvwr           p.common_phv_pending_rto, 1
     phvwr           p.t0_s2s_rto_pi, d.{pi_3}.hx
@@ -206,6 +284,10 @@ tcp_tx_st_expired_end:
     nop.e
     nop
 
+
+/******************************************************************************
+ * tcp_tx_ft_expired
+ *****************************************************************************/
 tcp_tx_ft_expired:
     phvwri          p.common_phv_pending_rx2tx, 1
     phvwr           p.common_phv_pending_ack_send, d.pending_ack_send
@@ -235,10 +317,10 @@ tcp_tx_cancel_fast_timer:
     tbladd          d.{ci_2}.hx, 1
     nop
     
-tcp_tx_rx2tx_end:
-    nop.e
-    nop
 
+/******************************************************************************
+ * tcp_tx_rx2tx_abort
+ *****************************************************************************/
 tcp_tx_rx2tx_abort:
     phvwri          p.p4_intr_global_drop, 1
     nop.e
