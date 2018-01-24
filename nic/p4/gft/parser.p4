@@ -1,25 +1,58 @@
 /******************************************************************************
  * Parser local definitions
  *****************************************************************************/
-header_type parser_metadata_t {
+
+header_type capri_deparser_len_t {
     fields {
-        l4_trailer                      : 16;
-        l4_len                          : 16;
+        trunc_pkt_len           : 16;
+        icrc_payload_len        : 16;
+        l4_1_payload_len        : 16;
+        l4_2_payload_len        : 16;
     }
 }
+
+header_type parser_metadata_t {
+    fields {
+        icrc_len                        : 16;
+        icrc                            : 32;
+        l4_trailer                      : 16;
+        l4_len                          : 16;
+        opCode                          : 8;
+    }
+}
+
+@pragma dont_trim
+@pragma pa_parser_local
+metadata parser_metadata_t parser_metadata;
 
 header_type parser_ohi_t {
     fields {
-        kind                        : 16;
-        chksum                      : 16;
+        ipv4_1___hdr_len              : 16;
+        ipv4_1___start_off            : 16;
+        ipv6_1___start_off            : 16;
+        udp_1___start_off             : 16;
+        ipv4_2___hdr_len              : 16;
+        ipv4_2___start_off            : 16;
+        ipv6_2___start_off            : 16;
+        udp_2___start_off             : 16;
+        l4_1_len                      : 16;
+        l4_2_len                      : 16;
+        icrc_len                      : 16;
+        kind                          : 16;
+        chksum                        : 16;
     }
 }
 
+@pragma dont_trim
 @pragma parser_write_only
+@pragma parser_share_ohi icrc_l3 ipv4_1___start_off ipv6_1___start_off
+@pragma parser_share_ohi icrc_inner_l3 ipv4_2___start_off ipv6_2___start_off
 metadata parser_ohi_t ohi;
 
-@pragma pa_parser_local
-metadata parser_metadata_t parser_metadata;
+@pragma deparser_variable_length_header
+@pragma dont_trim
+metadata capri_deparser_len_t capri_deparser_len;
+
 
 /******************************************************************************
  * Capri Intrinsic header definitions
@@ -128,12 +161,24 @@ header roce_deth_t roce_deth;
 header roce_deth_immdt_t roce_deth_immdt;
 header icrc_t icrc;
 
+@pragma no_ohi xgress
 header roce_bth_t roce_bth_1;
+@pragma no_ohi xgress
 header roce_deth_t roce_deth_1;
+//TODO: roce_deth_immdt_1 cannot go into PHV due to parser flit violation.
+//      When this hdr goes into OHI, it takes away ohi instruction
+//      leading to instruction exhaustion in parse state sparse_bth_deth_immdt.
+//      For now udp.len is not loaded into ohi ; instead l4 len be set to zero.
+//      This implies incoming packet from uplink shoud have udp.csum = 0 for
+//      roce pkts hitting optimized path. When udp.checksum is non zero,
+//      checksum error will be set. It upto MPU pipeline to ignore udp.csum error.
 header roce_deth_immdt_t roce_deth_immdt_1;
 
+@pragma no_ohi xgress
 header roce_bth_t roce_bth_2;
+@pragma no_ohi xgress
 header roce_deth_t roce_deth_2;
+@pragma no_ohi xgress
 header roce_deth_immdt_t roce_deth_immdt_2;
 
 parser start {
@@ -188,103 +233,155 @@ parser parse_nic {
  *****************************************************************************/
 parser parse_bth_deth {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(roce_bth_1);
     extract(roce_deth_1);
     return ingress;
 }
 parser parse_bth_deth_immdt {
     extract(udp_1);
+    // This state needs 5 ohi instructions. Due to lack of instructions
+    // and to keep roce pkt path optimized, udp.checksum of incoming
+    // packet should be zero because udp.len is not used to verify checksum
+    // instead zero is used.
+    //set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(roce_bth_1);
     extract(roce_deth_immdt_1);
     return ingress;
 }
 parser parse_bth {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(roce_bth_1);
     return ingress;
 }
 parser start_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
 parser start_vlan_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
 parser start_ipv6_bth_deth {
     extract(ethernet_1);
+    return start_ipv6_bth_deth_split;
+}
+parser start_ipv6_bth_deth_split {
     extract(ipv6_1);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
 parser start_vlan_ipv6_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
+    return start_vlan_ipv6_bth_deth_split;
+}
+parser start_vlan_ipv6_bth_deth_split {
     extract(ipv6_1);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
 parser start_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
 parser start_vlan_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
 parser start_ipv6_bth_deth_immdt {
     extract(ethernet_1);
+    return start_ipv6_bth_deth_immdt_split;
+}
+parser start_ipv6_bth_deth_immdt_split {
     extract(ipv6_1);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
 parser start_vlan_ipv6_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
+    return start_vlan_ipv6_bth_deth_immdt_split;
+}
+parser start_vlan_ipv6_bth_deth_immdt_split {
     extract(ipv6_1);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
 parser start_ipv4_bth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
 }
 parser start_vlan_ipv4_bth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
 }
 parser start_ipv6_bth {
     extract(ethernet_1);
+    return start_ipv6_bth_split;
+}
+parser start_ipv6_bth_split {
     extract(ipv6_1);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
 }
 parser start_vlan_ipv6_bth {
     extract(ethernet_1);
     extract(ctag_1);
+    return start_vlan_ipv6_bth_split;
+}
+parser start_vlan_ipv6_bth_split {
     extract(ipv6_1);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
 }
 
 // tunneled roce
 parser parse_bth_deth_2 {
     extract(udp_2);
+    set_metadata(ohi.l4_2_len, udp_2.len + 0);
+    set_metadata(ohi.icrc_len, udp_2.len + parser_metadata.icrc_len);
     extract(roce_bth_2);
     extract(roce_deth_2);
     return ingress;
 }
 parser parse_bth_deth_immdt_2 {
     extract(udp_2);
+    set_metadata(ohi.l4_2_len, udp_2.len + 0);
+    set_metadata(ohi.icrc_len, udp_2.len + parser_metadata.icrc_len);
     extract(roce_bth_2);
     extract(roce_deth_immdt_2);
     return ingress;
 }
 parser parse_bth_2 {
     extract(udp_2);
+    set_metadata(ohi.l4_2_len, udp_2.len + 0);
+    set_metadata(ohi.icrc_len, udp_2.len + parser_metadata.icrc_len);
     extract(roce_bth_2);
     return ingress;
 }
@@ -292,92 +389,125 @@ parser parse_bth_2 {
 parser start_outer_vxlan_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth;
 }
 parser start_outer_vlan_vxlan_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth;
 }
 parser start_outer_vxlan_ipv6_bth_deth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth;
 }
 parser start_outer_vlan_vxlan_ipv6_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth;
 }
 parser start_outer_vxlan_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth_immdt;
 }
 parser start_outer_vlan_vxlan_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth_immdt;
 }
 parser start_outer_vxlan_ipv6_bth_deth_immdt {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth_immdt;
 }
 parser start_outer_vlan_vxlan_ipv6_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth_immdt;
 }
 parser start_outer_vxlan_ipv4_bth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth;
 }
 parser start_outer_vlan_vxlan_ipv4_bth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth;
 }
 parser start_outer_vxlan_ipv6_bth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth;
 }
 parser start_outer_vlan_vxlan_ipv6_bth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth;
 }
 
 parser parse_vxlan_ipv4_bth_deth {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
     extract(ethernet_2);
     return parse_vxlan_ipv4_bth_deth_split;
 }
 parser parse_vxlan_ipv4_bth_deth_split {
     extract(ipv4_2);
+    set_metadata(ohi.ipv4_2___hdr_len, (ipv4_2.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_2;
 }
 parser parse_vxlan_ipv6_bth_deth {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
     extract(ethernet_2);
     return parse_vxlan_ipv6_bth_deth_split;
 }
 parser parse_vxlan_ipv6_bth_deth_split {
     extract(ipv6_2);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_2;
 }
 parser parse_vxlan_ipv4_bth_deth_immdt {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
     extract(ethernet_2);
     return parse_vxlan_ipv4_bth_deth_immdt_split;
@@ -385,36 +515,47 @@ parser parse_vxlan_ipv4_bth_deth_immdt {
 
 parser parse_vxlan_ipv4_bth_deth_immdt_split {
     extract(ipv4_2);
+    set_metadata(ohi.ipv4_2___hdr_len, (ipv4_2.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt_2;
 }
 parser parse_vxlan_ipv6_bth_deth_immdt {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
     extract(vxlan_1);
     extract(ethernet_2);
     return parse_vxlan_ipv6_bth_deth_immdt_split;
 }
 parser parse_vxlan_ipv6_bth_deth_immdt_split {
     extract(ipv6_2);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt_2;
 }
 parser parse_vxlan_ipv4_bth {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
     extract(ethernet_2);
     return parse_vxlan_ipv4_bth_split;
 }
 parser parse_vxlan_ipv4_bth_split {
     extract(ipv4_2);
+    set_metadata(ohi.ipv4_2___hdr_len, (ipv4_2.ihl << 2));
+    set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_2;
 }
 parser parse_vxlan_ipv6_bth {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
     extract(ethernet_2);
     return parse_vxlan_ipv6_bth_split;
 }
 parser parse_vxlan_ipv6_bth_split {
     extract(ipv6_2);
+    set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_2;
 }
 
@@ -442,6 +583,7 @@ parser parse_ctag_1 {
 
 parser parse_ipv4_1 {
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.l4_trailer, ipv4_1.totalLen - (ipv4_1.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_1;
@@ -492,6 +634,7 @@ parser parse_tcp_1 {
 
 parser parse_udp_1 {
     extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(parser_metadata.l4_len, udp_1.len);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
@@ -559,6 +702,7 @@ parser parse_ctag_2 {
 
 parser parse_ipv4_2 {
     extract(ipv4_2);
+    set_metadata(ohi.ipv4_2___hdr_len, (ipv4_2.ihl << 2));
     set_metadata(parser_metadata.l4_trailer, ipv4_2.totalLen - (ipv4_2.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_2;
@@ -609,6 +753,7 @@ parser parse_tcp_2 {
 
 parser parse_udp_2 {
     extract(udp_2);
+    set_metadata(ohi.l4_2_len, udp_2.len + 0);
     set_metadata(parser_metadata.l4_len, udp_2.len);
     set_metadata(l4_metadata.l4_sport_2, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_2, latest.dstPort);
@@ -650,6 +795,158 @@ parser parse_vxlan_2 {
     set_metadata(tunnel_metadata.tunnel_type_2, INGRESS_TUNNEL_TYPE_VXLAN);
     set_metadata(tunnel_metadata.tunnel_vni_2, latest.vni);
     return parse_ethernet_3;
+}
+
+/******************************************************************************
+ * Checksum for Layer 1 and Layer 2 on both fast path and regular path
+ *****************************************************************************/
+
+field_list ipv4_1_checksum_list {
+    ipv4_1.version;
+    ipv4_1.ihl;
+    ipv4_1.diffserv;
+    ipv4_1.totalLen;
+    ipv4_1.identification;
+    ipv4_1.flags;
+    ipv4_1.fragOffset;
+    ipv4_1.ttl;
+    ipv4_1.protocol;
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
+}
+
+@pragma checksum hdr_len_expr ohi.ipv4_1___hdr_len + 0
+@pragma checksum verify_len ohi.l4_1_len
+field_list_calculation ipv4_1_checksum {
+    input {
+        ipv4_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_1.hdrChecksum  {
+    verify ipv4_1_checksum;
+}
+
+field_list ipv4_1_udp_1_checksum_list {
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
+    8'0;
+    ipv4_1.protocol;
+    udp_1.len;
+    udp_1.srcPort;
+    udp_1.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_1_payload_len
+@pragma checksum verify_len  ohi.l4_1_len
+field_list_calculation ipv4_1_udp_1_checksum {
+    input {
+        ipv4_1_udp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_1_udp_1_checksum_list {
+    ipv6_1.srcAddr;
+    ipv6_1.dstAddr;
+    8'0;
+    ipv6_1.nextHdr;
+    udp_1.srcPort;
+    udp_1.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_1_payload_len
+@pragma checksum verify_len ohi.l4_1_len
+field_list_calculation ipv6_1_udp_1_checksum {
+    input {
+        ipv6_1_udp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_1.checksum {
+    verify ipv4_1_udp_1_checksum;
+    verify ipv6_1_udp_1_checksum;
+}
+
+field_list ipv4_2_checksum_list {
+    ipv4_2.version;
+    ipv4_2.ihl;
+    ipv4_2.diffserv;
+    ipv4_2.totalLen;
+    ipv4_2.identification;
+    ipv4_2.flags;
+    ipv4_2.fragOffset;
+    ipv4_2.ttl;
+    ipv4_2.protocol;
+    ipv4_2.srcAddr;
+    ipv4_2.dstAddr;
+}
+
+@pragma checksum hdr_len_expr ohi.ipv4_2___hdr_len + 0
+@pragma checksum verify_len ohi.l4_2_len
+field_list_calculation ipv4_2_checksum {
+    input {
+        ipv4_2_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_2.hdrChecksum  {
+    verify ipv4_2_checksum;
+}
+
+field_list ipv4_2_udp_2_checksum_list {
+    ipv4_2.srcAddr;
+    ipv4_2.dstAddr;
+    8'0;
+    ipv4_2.protocol;
+    udp_2.len;
+    udp_2.srcPort;
+    udp_2.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_2_payload_len
+@pragma checksum verify_len  ohi.l4_2_len
+field_list_calculation ipv4_2_udp_2_checksum {
+    input {
+        ipv4_2_udp_2_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_2_udp_2_checksum_list {
+    ipv6_2.srcAddr;
+    ipv6_2.dstAddr;
+    8'0;
+    ipv6_2.nextHdr;
+    udp_2.srcPort;
+    udp_2.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_2_payload_len
+@pragma checksum verify_len ohi.l4_2_len
+field_list_calculation ipv6_2_udp_2_checksum {
+    input {
+        ipv6_2_udp_2_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_2.checksum {
+    verify ipv4_2_udp_2_checksum;
+    verify ipv6_2_udp_2_checksum;
 }
 
 /******************************************************************************
@@ -996,5 +1293,94 @@ parser parse_tx_udp_1 {
     extract(udp_1);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
+    return select(latest.dstPort) {
+        UDP_PORT_ROCE_V2 : parse_tx_roce_v2;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_tx_roce_v2 {
+    extract(roce_bth_1);
     return ingress;
+}
+
+field_list ipv4_1_icrc_list {
+    ipv4_1.ttl;
+    ipv4_1.diffserv;
+    ipv4_1.hdrChecksum;
+    udp_1.checksum;
+    roce_bth_1.reserved1;
+}
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+@pragma icrc verify_len ohi.icrc_len
+field_list_calculation ipv4_1_roce_icrc {
+    input {
+        ipv4_1_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list ipv6_1_icrc_list {
+    ipv6_1.trafficClass;
+    ipv6_1.flowLabel;
+    ipv6_1.hopLimit;
+    udp_1.checksum;
+    roce_bth_1.reserved1;
+}
+
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+@pragma icrc verify_len ohi.icrc_len
+field_list_calculation ipv6_1_roce_icrc {
+    input {
+        ipv6_1_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list ipv4_2_icrc_list {
+    ipv4_2.ttl;
+    ipv4_2.diffserv;
+    ipv4_2.hdrChecksum;
+    udp_2.checksum;
+    roce_bth_2.reserved1;
+}
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+@pragma icrc verify_len ohi.icrc_len
+field_list_calculation ipv4_2_roce_icrc {
+    input {
+        ipv4_2_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list ipv6_2_icrc_list {
+    ipv6_2.trafficClass;
+    ipv6_2.flowLabel;
+    ipv6_2.hopLimit;
+    udp_2.checksum;
+    roce_bth_2.reserved1;
+}
+
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+@pragma icrc verify_len ohi.icrc_len
+field_list_calculation ipv6_2_roce_icrc {
+    input {
+        ipv6_2_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+
+calculated_field parser_metadata.icrc {
+    verify ipv4_1_roce_icrc if (valid(roce_bth_1));
+    verify ipv6_1_roce_icrc if (valid(roce_bth_1));
+    verify ipv4_2_roce_icrc if (valid(roce_bth_2));
+    verify ipv6_2_roce_icrc if (valid(roce_bth_2));
+    update ipv4_1_roce_icrc if (valid(roce_bth_1));
+    update ipv6_1_roce_icrc if (valid(roce_bth_1));
 }
