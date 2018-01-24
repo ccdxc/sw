@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=False,access=False
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : None
+    maxflows        : 4
 
 packets:
     - packet:
@@ -102,8 +102,8 @@ descriptors:
         id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            _buf          : ref://testcase/buffers/id=BUF2
-            len                   : ref://testcase/buffers/id=BUF2/size
+            _buf  : ref://testcase/buffers/id=BUF2
+            len   : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:

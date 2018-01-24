@@ -5,13 +5,14 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=False,access=False
         interface   : filter://any
+        lif         : filter://promiscous=False
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : None
+    maxflows        : 4
 
 packets:
     - packet:
@@ -82,9 +83,18 @@ buffers:
            size : ref://testcase/packets/id=PKT1/size
            data : ref://testcase/packets/id=PKT1/rawbytes
 
+    - buffer:
+        id      : BUF_RX # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=PKT1/size
+           data : ref://testcase/packets/id=PKT1/rawbytes
+
+
 descriptors:
     - descriptor:
-        id      : DESC1 # Input Descriptor
+        id      : DESC_TX # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
             _buf  : ref://testcase/buffers/id=BUF1
@@ -92,17 +102,36 @@ descriptors:
             len   : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : DESC2 # Expected Descriptor
+        id      : DESC_RX # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF_RX
+            addr  : ref://testcase/buffers/id=BUF_RX/addr
+            len   : ref://testcase/buffers/id=BUF_RX/size
+
+    - descriptor:
+        id      : DESC_TX_CQ # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
             status     : 0x0
 
+    - descriptor:
+        id      : DESC_RX_CQ # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF_RX
+            len   : ref://testcase/buffers/id=BUF_RX/size
+
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
+            object  : ref://testcase/descriptors/id=DESC_RX
+            ring    : callback://classic/callbacks/GetPromiscuousEnicRx
+ 
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC_TX
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
-
+           
 expect:
     delay   : callback://networking/packets/GetExpectDelay
     packets:
@@ -112,5 +141,9 @@ expect:
 
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
+            object  : ref://testcase/descriptors/id=DESC_TX_CQ
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC_RX_CQ
+            ring    : callback://classic/callbacks/GetPromiscuousEnicRx
