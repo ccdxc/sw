@@ -29,3 +29,6 @@ entries:
         
     - entry:
         group: INTERNAL_TX_PROXY_DROP
+
+    - entry:
+        group: INTERNAL_ADMIN

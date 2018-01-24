@@ -106,7 +106,6 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
   qstate->type[i].num_queues = num_entries;
   qstate->type[i].coses = ((params->type[i].cosB & 0x0f) | 
                            ((params->type[i].cosA << 4) & 0xf0));
-
   running_offset += (num_entries * cur_size);
   qstate->allocation_size = running_offset;
   // Cache the params.
@@ -179,7 +178,6 @@ int32_t LIFManagerBase::WriteQState(
     return -EINVAL;
   if (bufsize > qstate->type[type].qsize)
     return -EINVAL;
-
   
   // Fill in the appropriate cos values for that qtype in buf at offset 2.
   if(bufsize > 2) 

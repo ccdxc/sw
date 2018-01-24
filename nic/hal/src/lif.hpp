@@ -37,6 +37,15 @@ typedef struct pkt_filter_s {
     bool    receive_promiscuous;   // Receive Unknown Unicast, Broadcast, Multicast. Not Known Unicast
 } __PACK__ pkt_filter_t;
 
+typedef struct lif_cos_info_s {
+    uint16_t            cos_bmp;         // bitmap of COS values for Tx traffic supported on this LIF.
+    uint8_t             coses;           // cos values supported by LIF. cosA - Bits 4-7, cosB - Bits 0-3.
+    hal_handle_t        rx_qos_class_handle; // qos-class-hdl for Rx traffic on this LIF.
+    hal_handle_t        tx_qos_class_handle; // qos-class-hdl for Tx traffic on this LIF.
+    policer_t           rx_policer;      // Rx policer
+    policer_t           tx_policer;      // Tx policer
+} __PACK__ lif_qos_info_t;
+
 // Lif RSS config structure
 typedef struct lif_rss_info_s {
     bool        enable;
@@ -49,8 +58,6 @@ typedef struct lif_queue_info_s {
     uint8_t     type;        // hardware queue type of queue
     uint16_t    size;        // size of qstate
     uint16_t    num_queues;  // number of queues
-    hal_handle_t cosA_handle; // Handle for cosA qos class
-    hal_handle_t cosB_handle; // Handle for cosB qos class
 } __PACK__ lif_queue_info_t;
 
 // LIF structure
@@ -65,12 +72,10 @@ typedef struct lif_s {
     uint32_t            rdma_max_keys;
     uint32_t            rdma_max_pt_entries;
     lif_queue_info_t    qinfo[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
-    uint16_t            cos_bmp;                     // bitmap of COS values supported by this LIF.
-    bool                qstate_init_done;            // qstate map init status.
-    pkt_filter_t        packet_filters;              // Packet Filter Modes
-    lif_rss_info_t      rss;                         // rss enable
-    policer_t           rx_policer;      // Rx policer
-    policer_t           tx_policer;      // Tx policer
+    lif_qos_info_t      qos_info;
+    bool                qstate_init_done;// qstate map init status.
+    pkt_filter_t        packet_filters;  // Packet Filter Modes
+    lif_rss_info_t      rss;             // rss enable
 
     // operational state of interface
     hal_handle_t        hal_handle;      // HAL allocated handle

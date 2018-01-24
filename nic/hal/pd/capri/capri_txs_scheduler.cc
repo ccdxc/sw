@@ -18,6 +18,8 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/src/qos.hpp"
+#include "nic/hal/pd/common/pd_api.hpp"
 
 #ifndef HAL_GTEST
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
@@ -34,11 +36,14 @@ hal_ret_t
 capri_txs_scheduler_init ()
 {
 
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_txs_csr_t &txs_csr = cap0.txs.txs;
-    cap_psp_csr_t &psp_csr = cap0.pt.pt.psp;
-    uint64_t      txs_sched_hbm_base_addr;
-    uint16_t      dtdm_lo_map, dtdm_hi_map;
+    cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t       &txs_csr = cap0.txs.txs;
+    cap_psp_csr_t       &psp_csr = cap0.pt.pt.psp;
+    uint64_t            txs_sched_hbm_base_addr;
+    uint16_t            dtdm_lo_map, dtdm_hi_map;
+    uint32_t            admin_cos, control_cos;
+    hal::qos_class_t    *admin_qos_class, *control_qos_class;
+    hal_ret_t            ret = HAL_RET_OK;
 
     hal::hal_cfg_t *hal_cfg =
                 (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
@@ -60,18 +65,55 @@ capri_txs_scheduler_init ()
         txs_csr.cfw_scheduler_glb.write();
     }
 
-    // Init scheduler calendar with equal weights for all cos.
-    for (int i = 0; i < DTDM_CALENDAR_SIZE ; i++) {
-        txs_csr.dhs_dtdmlo_calendar.entry[i].read();
-        txs_csr.dhs_dtdmlo_calendar.entry[i].dtdm_calendar(i % 16);
-        txs_csr.dhs_dtdmhi_calendar.entry[i].dtdm_calendar(i % 16);
-        txs_csr.dhs_dtdmlo_calendar.entry[i].write();
-        txs_csr.dhs_dtdmlo_calendar.entry[i].write();
+    // Find admin_cos and program it in dtdmhi-calendar for higher priority.
+    // NOTE TODO: Init of admin-qos-class should be done before this.
+    if ((admin_qos_class = find_qos_class_by_group(hal::QOS_GROUP_ADMIN)) != NULL) { 
+        ret = hal::pd::qos_class_get_qos_class_id(admin_qos_class, NULL, &admin_cos);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error deriving qos-class-id for admin Qos class "
+                          "{} ret {}",
+                          admin_qos_class->key, ret);
+            admin_cos = 0;
+        }
+    } else {
+        HAL_TRACE_DEBUG("Admin qos class not init'ed!! Setting it to default\n");
+        admin_cos = 0;
     }
 
-    // Init all cos to be part of lo-calendar (DWRR with equal weights).
-    dtdm_lo_map = 0xffff;
-    dtdm_hi_map = 0;
+    // Find control_cos and program it for higher-priority in dtdmlo-calendar.
+    if ((control_qos_class = find_qos_class_by_group(hal::QOS_GROUP_CONTROL)) != NULL) {
+        ret = hal::pd::qos_class_get_qos_class_id(control_qos_class, NULL, &control_cos);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error deriving qos-class-id for admin Qos class "
+                          "{} ret {}",
+                          control_qos_class->key, ret);
+            control_cos = 0;
+        }
+    } else {
+        HAL_TRACE_DEBUG("control qos class not init'ed!! Setting it to default\n");
+        control_cos = 0;
+    }
+   
+    // Init scheduler calendar  for all cos.
+    for (uint32_t i = 0; i < DTDM_CALENDAR_SIZE ; i++) {
+        txs_csr.dhs_dtdmlo_calendar.entry[i].read();
+        txs_csr.dhs_dtdmhi_calendar.entry[i].read();
+        
+        // Program only admin_cos in hi-calendar to mimic strict-priority.
+        // Program control_cos multiple times in lo-calendar for higher priority than other coses.
+        txs_csr.dhs_dtdmhi_calendar.entry[i].dtdm_calendar(admin_cos);
+        if ((i % 16) == admin_cos) {
+            txs_csr.dhs_dtdmlo_calendar.entry[i].dtdm_calendar(control_cos);
+        } else {
+            txs_csr.dhs_dtdmlo_calendar.entry[i].dtdm_calendar(i % 16);
+        }
+        txs_csr.dhs_dtdmlo_calendar.entry[i].write();
+        txs_csr.dhs_dtdmhi_calendar.entry[i].write();
+    }
+
+    // Init all cos except admin-cos to be part of lo-calendar. admin-cos will be in hi-calendar (strict priority).
+    dtdm_lo_map = (0xffff & ~(1 << admin_cos));
+    dtdm_hi_map = 1 << admin_cos;
     txs_csr.cfg_sch.read();
     txs_csr.cfg_sch.dtdm_lo_map(dtdm_lo_map);
     txs_csr.cfg_sch.dtdm_hi_map(dtdm_hi_map);
@@ -94,8 +136,8 @@ capri_txs_scheduler_init ()
         psp_csr.cfg_npv_cos_to_tm_oq_map[i].write();
     }
 
-    HAL_TRACE_DEBUG("CAPRI-TXS::{}: Set hbm base addr for TXS sched to {:#x}",
-                    __func__, txs_sched_hbm_base_addr);
+    HAL_TRACE_DEBUG("CAPRI-TXS::{}: Set hbm base addr for TXS sched to {:#x}, dtdm_lo_map {:#x}, dtdm_hi_map {:#x}",
+                    __func__, txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);
     return HAL_RET_OK;
 }
 

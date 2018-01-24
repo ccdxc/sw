@@ -100,10 +100,6 @@ class QueueTypeObject(base.ConfigObjectBase):
         req_spec.size       = int(math.log(self.size, 2)) - 5
         req_spec.entries    = self.entries = int(math.log(self.count, 2))
         req_spec.purpose    = haldefs.interface.LifQPurpose.Value(self.purpose)
-        if self.lif.cosA:
-            req_spec.cos_a.qos_class_handle = self.lif.cosA.hal_handle
-        if self.lif.cosB:
-            req_spec.cos_b.qos_class_handle = self.lif.cosB.hal_handle
 
     def ProcessHALResponseSpec(self, req_spec, rsp_spec):
         pass

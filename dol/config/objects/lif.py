@@ -99,15 +99,15 @@ class LifObject(base.ConfigObjectBase):
         self.tenant     = tenant
         self.spec       = spec
         
-        self.cosA = None
-        self.cosB = None
+        self.tx_qos_class = None
+        self.rx_qos_class = None
         if self.tenant.IsQosEnabled():
-            self.cosA = getattr(spec, 'cosA', None)
-            self.cosB = getattr(spec, 'cosB', None)
-            if self.cosA:
-                self.cosA = Store.objects.Get(self.cosA)
-            if self.cosB:
-                self.cosB = Store.objects.Get(self.cosB)
+            self.tx_qos_class = getattr(spec, 'tx_qos_class', None)
+            self.rx_qos_class = getattr(spec, 'rx_qos_class', None)
+            if self.tx_qos_class:
+                self.tx_qos_class = Store.objects.Get(self.tx_qos_class)
+            if self.rx_qos_class:
+                self.rx_qos_class = Store.objects.Get(self.rx_qos_class)
 
         self.Show()
 
@@ -143,13 +143,13 @@ class LifObject(base.ConfigObjectBase):
         return self.qstate_base[type]
 
     def GetTxQosCos(self):
-        if self.cosA:
-            return self.cosA.GetTxQosCos()
+        if self.tx_qos_class:
+            return self.tx_qos_class.GetTxQosCos()
         return 7
 
     def GetTxQosDscp(self):
-        if self.cosA:
-            return self.cosA.GetTxQosDscp()
+        if self.tx_qos_class:
+            return self.tx_qos_class.GetTxQosDscp()
         return 7
 
     def ConfigureQueueTypes(self):
@@ -200,6 +200,11 @@ class LifObject(base.ConfigObjectBase):
         req_spec.rdma_max_keys = self.rdma_max_keys
         req_spec.rdma_max_pt_entries = self.rdma_max_pt_entries
         req_spec.vlan_strip_en = self.vlan_strip_en
+        if self.tx_qos_class:
+            req_spec.tx_qos_class.qos_class_handle = self.tx_qos_class.hal_handle
+        if self.rx_qos_class:
+            req_spec.rx_qos_class.qos_class_handle = self.rx_qos_class.hal_handle
+
         if GlobalOptions.classic:
             req_spec.packet_filter.receive_broadcast = True
             req_spec.packet_filter.receive_promiscuous = self.promiscous

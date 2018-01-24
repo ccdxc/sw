@@ -633,6 +633,50 @@ end:
     return ret;
 }
 
+
+//------------------------------------------------------------------------------
+// Fetch qos-cos-info for tx-scheduler.
+//------------------------------------------------------------------------------
+
+hal_ret_t
+find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
+                            uint32_t *cosA, uint32_t *cosB)
+{
+    if_t        *pinned_uplink_if;
+    hal_ret_t   ret        = HAL_RET_OK;
+    qos_class_t *qos_class, *admin_qos_class;
+
+    pinned_uplink_if = find_if_by_handle(pinned_uplink);
+
+    qos_class = find_qos_class_by_key_handle(kh);
+    if (qos_class == NULL) {
+        HAL_TRACE_ERR("Qos-class does not exist");
+        return HAL_RET_QOS_CLASS_NOT_FOUND;
+    }
+    // Fetch cosA from qos-class
+    ret = pd::qos_class_get_qos_class_id(qos_class, pinned_uplink_if, cosA);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
+                      "{} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+
+    // cosB of a LIF will always be the ADMIN-COS.
+    if ((admin_qos_class = find_qos_class_by_group(QOS_GROUP_ADMIN)) != NULL) {
+        ret = pd::qos_class_get_qos_class_id(admin_qos_class, pinned_uplink_if, cosB);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error deriving qos-class-id for admin Qos class "
+                          "{} ret {}",
+                          admin_qos_class->key, ret);
+            *cosB = 0;
+        }
+    } else {
+        *cosB = 0;
+    }
+    return ret;
+}
+
 // Copp
 // ----------------------------------------------------------------------------
 // hash table copp_type => ht_entry

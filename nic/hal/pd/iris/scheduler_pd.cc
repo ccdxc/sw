@@ -47,7 +47,7 @@ hal_ret_t scheduler_tx_pd_alloc (pd_lif_t *lif_pd)
     total_qcount = lif_get_total_qcount(lif_pd->hw_lif_id);
     alloc_units  =  (total_qcount / TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY);
     alloc_units += ((total_qcount % TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY) ? 1 : 0);
-    alloc_units *=   num_set_bits(pi_lif->cos_bmp);
+    alloc_units *=   num_set_bits(pi_lif->qos_info.cos_bmp);
 
     if (alloc_units > 0) {    
         //Allocate consecutive alloc_unit num of entries in sched table.
@@ -110,12 +110,12 @@ hal_ret_t scheduler_tx_pd_program_hw (pd_lif_t *lif_pd)
     }
 
     pi_lif = (lif_t *)lif_pd->pi_lif;
-    num_cos_values = num_set_bits(pi_lif->cos_bmp);
+    num_cos_values = num_set_bits(pi_lif->qos_info.cos_bmp);
 
     if (num_cos_values && lif_pd->tx_sched_num_table_entries) {
         txs_hw_params.sched_table_offset  = lif_pd->tx_sched_table_offset;
         txs_hw_params.num_entries_per_cos = (lif_pd->tx_sched_num_table_entries / num_cos_values);
-        txs_hw_params.cos_bmp             = pi_lif->cos_bmp;
+        txs_hw_params.cos_bmp             = pi_lif->qos_info.cos_bmp;
 
         ret = capri_txs_scheduler_lif_params_update(lif_pd->hw_lif_id, &txs_hw_params);
         if (ret != HAL_RET_OK) {
@@ -141,7 +141,7 @@ hal_ret_t scheduler_tx_pd_deprogram_hw (pd_lif_t *lif_pd)
     pi_lif = (lif_t *)lif_pd->pi_lif;
 
     // Reset cos_bmp in PI lif.
-    pi_lif->cos_bmp = 0x0;
+    pi_lif->qos_info.cos_bmp = 0x0;
     
     // Pass txs params for delete case.               
     txs_hw_params.num_entries_per_cos = 0;

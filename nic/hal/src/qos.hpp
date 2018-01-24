@@ -207,6 +207,8 @@ qos_spec_qos_group_to_qos_group (qos::QosGroup qos_group)
             return QOS_GROUP_TX_PROXY_DROP;
         case qos::INTERNAL_CPU_COPY: 
             return QOS_GROUP_CPU_COPY;
+        case qos::INTERNAL_ADMIN:
+            return QOS_GROUP_ADMIN;
         default:
             HAL_ASSERT(0);
             return QOS_GROUP_DEFAULT;
@@ -322,6 +324,10 @@ qos_policer_spec_same (policer_t *p1, policer_t *p2)
 {
     return !memcmp(p1, p2, sizeof(policer_t));
 }
+
+extern hal_ret_t
+find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink, 
+                            uint32_t *cosA, uint32_t *cosB);
 
 #define COPP_TYPES(ENTRY) \
     ENTRY(COPP_TYPE_FLOW_MISS,                  0, "flow-miss") \

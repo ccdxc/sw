@@ -214,13 +214,13 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
 
     //Allocate tx scheduler resource for this lif if qstate-map init is done.
     if (args->lif->qstate_init_done) {
-        ret = scheduler_tx_pd_alloc(pd_lif);
-        if (ret != HAL_RET_OK) {
+       ret = scheduler_tx_pd_alloc(pd_lif);
+       if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to scheduler resource",
                           __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif),
                           rs);
             goto end;
-        }
+       }
     }
 
     HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{},allocated lport_id:{}", 
@@ -472,15 +472,15 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.actionid = RX_POLICER_EXECUTE_RX_POLICER_ID;
-    if (pi_lif->rx_policer.bps_rate == 0) {
+    if (pi_lif->qos_info.rx_policer.bps_rate == 0) {
         RX_POLICER_ACTION(entry_valid) = 0;
     } else {
         RX_POLICER_ACTION(entry_valid) = 1;
         RX_POLICER_ACTION(pkt_rate) = 0;
         //TODO does this need memrev ?
-        memcpy(RX_POLICER_ACTION(burst), &pi_lif->rx_policer.burst_size, sizeof(uint32_t));
+        memcpy(RX_POLICER_ACTION(burst), &pi_lif->qos_info.rx_policer.burst_size, sizeof(uint32_t));
         // TODO convert the rate into token-rate 
-        memcpy(RX_POLICER_ACTION(rate), &pi_lif->rx_policer.bps_rate, sizeof(uint32_t));
+        memcpy(RX_POLICER_ACTION(rate), &pi_lif->qos_info.rx_policer.bps_rate, sizeof(uint32_t));
     }
 
     if (update) {
@@ -496,8 +496,8 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     }
     HAL_TRACE_DEBUG("pd-lif:{}: lif {} hw_lif_id {} rate {} burst {} programmed",
                     __FUNCTION__, lif_get_lif_id(pi_lif), 
-                    pd_lif->hw_lif_id, pi_lif->rx_policer.bps_rate,
-                    pi_lif->rx_policer.burst_size);
+                    pd_lif->hw_lif_id, pi_lif->qos_info.rx_policer.bps_rate,
+                    pi_lif->qos_info.rx_policer.burst_size);
     return ret;
 }
 #undef RX_POLICER_ACTION
