@@ -32,7 +32,7 @@ typedef u_int64_t dma_addr_t;
 #define __packed __attribute__((packed))
 #define BIT(n)  (1 << (n))
 
-#include "src/sim/libsimdev/src/ionic_if.h"
+#include "drivers/linux/eth/ionic/ionic_if.h"
 
 typedef struct ethparams_s {
     int lif;
