@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
+	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
@@ -240,7 +241,7 @@ func OnStart() {
 	// It needs to be instantiated before cluster is formed, but it will be
 	// ready to issue certificates only after the cluster is formed
 	if env.CertMgr == nil {
-		cm, err := certmgr.NewDefaultCertificateMgr()
+		cm, err := certmgr.NewGoCryptoCertificateMgr(certutils.GetCertificateMgrDir())
 		if err != nil {
 			log.Errorf("Failed to instantiate certificate manager, error: %v", err)
 			return

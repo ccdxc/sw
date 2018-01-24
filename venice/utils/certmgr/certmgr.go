@@ -252,3 +252,26 @@ func NewDefaultCertificateMgr() (*CertificateMgr, error) {
 	}
 	return cm, nil
 }
+
+// NewGoCryptoCertificateMgr creates a CertMgr backed by a GoCrypto backend
+// that stores keys in the provided directory
+// The created CertMgr instance is not ready yet because the CA hasn't been started.
+func NewGoCryptoCertificateMgr(dir string) (*CertificateMgr, error) {
+	// create a keymgr backend
+	be, err := keymgr.NewGoCryptoBackend(dir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error creating default CertificateMgr instance, KeyMgr dir: %v", dir)
+	}
+	// create a KeyMgr instance
+	km, err := keymgr.NewKeyMgr(be)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error creating default CertificateMgr instance")
+	}
+	// start CertMgr
+	cm, err := NewCertificateMgr(km)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error creating default CertificateMgr instance")
+	}
+	log.Infof("Created CertificateMgr instance with Go Crypto backend, dir: %v", dir)
+	return cm, nil
+}

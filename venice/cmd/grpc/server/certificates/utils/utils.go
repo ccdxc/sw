@@ -6,13 +6,20 @@ import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
+	"path"
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/utils/certmgr"
 )
+
+// GetCertificateMgrDir returns the directory where CertificateMgr stores the keys
+func GetCertificateMgrDir() string {
+	return path.Join(env.Options.ConfigDir, "cmd", "certmgr")
+}
 
 // GetCaTrustChain returns the trust chain from the CA certificate to the root of trust in wire format
 func GetCaTrustChain(cm *certmgr.CertificateMgr) []*certapi.Certificate {

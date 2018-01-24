@@ -56,7 +56,7 @@ func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoi
 	var transportKeyBytes []byte
 	if req.TransportKey != nil {
 		if env.CertMgr == nil {
-			cm, err := certmgr.NewDefaultCertificateMgr()
+			cm, err := certmgr.NewGoCryptoCertificateMgr(certutils.GetCertificateMgrDir())
 			if err != nil {
 				return nil, fmt.Errorf("Failed to instantiate certificate manager, error: %v", err)
 			}

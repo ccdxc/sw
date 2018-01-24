@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
+	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/cmd/validation"
 	"github.com/pensando/sw/venice/globals"
@@ -75,7 +76,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	}
 
 	if env.CertMgr == nil {
-		cm, err := certmgr.NewDefaultCertificateMgr()
+		cm, err := certmgr.NewGoCryptoCertificateMgr(certutils.GetCertificateMgrDir())
 		if err != nil {
 			return nil, fmt.Errorf("Failed to instantiate certificate manager, error: %v", err)
 		}
