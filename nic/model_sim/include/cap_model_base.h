@@ -45,6 +45,7 @@ public:
     virtual void set_host_mem_cpy(bool cpy) = 0;
     virtual void save_axi_xn() = 0;
     virtual axi_info_t * get_next_axi_xn(uint32_t port) = 0;
+    virtual unsigned get_drop_count() = 0;
     virtual ~cap_model_base() {}
 
 };

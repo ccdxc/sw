@@ -56,6 +56,8 @@ public:
      cpu_if_map.insert(std::pair<string, cpu_bus_base *> (cpu_if_name, cpu_if));
   }
 
+  virtual void remove_if(string cpu_if_name);
+
   //virtual uint32_t add_mem_prop(uint64_t addr_lo, uint64_t addr_hi, string hier_path, cpu_access_type_e access_type, bool add_index);
   //virtual mem_property* get_mem_prop(uint64_t addr ); // gets a memory hierarchy, given the address
 

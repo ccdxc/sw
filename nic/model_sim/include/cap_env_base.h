@@ -75,6 +75,10 @@ protected:
     {
         return cap_mod->get_next_axi_xn(port);
     }
+    virtual unsigned get_drop_count() 
+    {
+	return cap_mod->get_drop_count();
+    }
 
 
     virtual ~cap_env_base();
