@@ -116,15 +116,15 @@ this problem a little bit. None of the below tasks invoke `docker pull` at all.
 These make targets were created for testing:
 
 * `make deps` - makes a *test* dependencies image named `srv1.pensando.io/pensando/nic:dependencies`
+* `make deps-test-shell` - just like `make shell`, but tests against your freshly-built image.
 * `make deps-release` - makes a *release* dependencies image tagged with the
   same name.  This image is flattened to reduce size.
-* `make deps-test-shell` - just like `make shell`, but tests against your freshly-built image.
 * `make deps-test-build` - just like `make build`.
 
-Once you're done testing, and you have a **RELEASE** image:
+Once you're done testing, and you have a **RELEASE** image (replace 'x' below with the corresponding version):
 
 ```
-$ docker push srv1.pensando.io/pensando/nic:dependencies
+$ docker push registry.test.pensando.io:5000/pensando/nic:1.<x>
 ```
 
 This will push the image to the image repository. It will make it immediately

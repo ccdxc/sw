@@ -223,6 +223,11 @@ inside "/" do
   run "tar xzf #{BASE_BUILD_DIR}/sknobs.tar.gz"
 end
 
+copy "nic/toolchain.tar.gz", "#{BASE_BUILD_DIR}/toolchain.tar.gz"
+inside "/" do
+  run "tar xzf #{BASE_BUILD_DIR}/toolchain.tar.gz"
+end
+
 DAQ_VERSION = "2.2.2"
 inside BASE_BUILD_DIR do
   run "wget https://www.snort.org/downloads/snortplus/daq-#{DAQ_VERSION}.tar.gz \
@@ -253,7 +258,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.9"
+tag "pensando/nic:1.10"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
