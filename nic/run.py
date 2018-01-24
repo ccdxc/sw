@@ -660,6 +660,9 @@ def main():
             if (args.e2etls):
                 status = run_e2e_tlsproxy_dol()
 
+            if (args.e2el7):
+                status = run_e2e_l7_dol()
+
     if args.coveragerun:
         dump_coverage_data()
     os.chdir(nic_dir)
