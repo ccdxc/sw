@@ -45,13 +45,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwr p.common_te1_phv_table_addr, r3 
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     tbladd d.{rxdma_ring_cindex}.hx, 1
-    nop
-    //seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
-    //b.!c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing 
-    //addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP) 
-    //phvwr p.barco_req_doorbell_address, r4.dx
-    //CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, 0)
-    //phvwr p.barco_req_doorbell_data, r3.dx
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing:
     nop.e
