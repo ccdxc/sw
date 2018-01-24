@@ -640,6 +640,12 @@ Flow::free_fhct_index(uint32_t idx)
 //      more_hints      (2 bytes)
 //  }
 // ----------------------------------------------------------------------------
+#define FLOW_DATA_ACTION_ID_LEN 1
+#define FLOW_DATA_ENTRY_VALID_LEN 1
+#define FLOW_DATA_HASH_LEN 2
+#define FLOW_DATA_HINT_LEN 2
+#define FLOW_DATA_MORE_HASHS_LEN 1
+#define FLOW_DATA_MORE_HINTS_LEN 2
 hal_ret_t
 Flow::flow_action_data_offsets (void *action_data,
                                 uint8_t **action_id,
@@ -655,12 +661,21 @@ Flow::flow_action_data_offsets (void *action_data,
     seek = (uint8_t *)action_data;
 
     *action_id       = seek;
-    *entry_valid     = seek + 1;
-    *data            = seek + 1 + 1;
-    *first_hash_hint = (hg_root_t *)(seek + 1 + 1 + data_len_);
-    *more_hashs      = seek + 1 + 1 + data_len_ + num_hints_per_flow_entry_ * 4;
-    *more_hints      = (uint16_t *)(seek + 1 + 1 + data_len_ + 
-                                    num_hints_per_flow_entry_ * 4 + 1);
+    *entry_valid     = seek + FLOW_DATA_ACTION_ID_LEN;
+    *data            = seek + FLOW_DATA_ACTION_ID_LEN + 
+                       FLOW_DATA_ENTRY_VALID_LEN;
+    *first_hash_hint = (hg_root_t *)(seek + FLOW_DATA_ACTION_ID_LEN + 
+                                     FLOW_DATA_ENTRY_VALID_LEN + data_len_);
+    *more_hashs      = seek + FLOW_DATA_ACTION_ID_LEN + 
+                              FLOW_DATA_ENTRY_VALID_LEN + 
+                              data_len_ + 
+                              num_hints_per_flow_entry_ * (FLOW_DATA_HASH_LEN + 
+                                                           FLOW_DATA_HINT_LEN);
+    *more_hints      = (uint16_t *)(seek + FLOW_DATA_ACTION_ID_LEN + 
+                                    FLOW_DATA_ENTRY_VALID_LEN + data_len_ + 
+                                    num_hints_per_flow_entry_ * 
+                                    (FLOW_DATA_HASH_LEN + FLOW_DATA_HINT_LEN) + 
+                                    FLOW_DATA_MORE_HASHS_LEN);
 
     return ret;
 }
