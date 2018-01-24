@@ -235,8 +235,13 @@ func (a *apiGw) GetAddr() (net.Addr, error) {
 
 // GetApiServerAddr gets the API gateway address to connect to
 func (a *apiGw) GetAPIServerAddr(addr string) string {
-	// Currently this is only used to override the API server address.
-	//  returns the override address if set or return the original address
+	// This will override any addresses that is to be resolved through the resolver.
+	//  If the address is in host:port form do not override.
+	_, _, err := net.SplitHostPort(addr)
+	if err == nil {
+		return addr
+	}
+	// return the override address if set or return the original address
 	if a.apiSrvOverride != "" {
 		return a.apiSrvOverride
 	}

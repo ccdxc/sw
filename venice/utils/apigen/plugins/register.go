@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
@@ -386,24 +387,35 @@ func createDir(base string, dirs ...string) error {
 	return nil
 }
 
-func parseManifestFile(raw []byte) map[string]string {
-	manifest := make(map[string]string)
+type manifestFile struct {
+	Pkg       string
+	APIServer bool
+}
+
+func parseManifestFile(raw []byte) map[string]manifestFile {
+	manifest := make(map[string]manifestFile)
 	lines := bytes.Split(raw, []byte("\n"))
 	for _, line := range lines {
 		fields := bytes.Fields(line)
-		if len(fields) == 2 {
-			manifest[string(fields[0])] = string(fields[1])
+		if len(fields) == 3 {
+			apiserver, err := strconv.ParseBool(string(fields[2]))
+			if err == nil {
+				manifest[string(fields[0])] = manifestFile{
+					Pkg:       string(fields[1]),
+					APIServer: apiserver,
+				}
+			}
 		}
 	}
 	return manifest
 }
 
 // genManifest generates the current manifest of protos being processed.
-func genManifest(path, pkg, file string) (map[string]string, error) {
-	var manifest map[string]string
+func genManifest(desc *descriptor.File, path, pkg, file string) (map[string]manifestFile, error) {
+	var manifest map[string]manifestFile
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		glog.V(1).Infof("manifest [%s] not found", path)
-		manifest = make(map[string]string)
+		manifest = make(map[string]manifestFile)
 	} else {
 		glog.V(1).Infof("manifest exists, reading from manifest")
 		raw, err := ioutil.ReadFile(path)
@@ -413,8 +425,12 @@ func genManifest(path, pkg, file string) (map[string]string, error) {
 		}
 		manifest = parseManifestFile(raw)
 	}
+	apiserver, _ := isAPIServerServed(desc)
 	file = filepath.Base(file)
-	manifest[file] = pkg
+	manifest[file] = manifestFile{
+		Pkg:       pkg,
+		APIServer: apiserver,
+	}
 	return manifest, nil
 }
 
@@ -974,6 +990,13 @@ func getAutoRestOper(meth *descriptor.Method) (string, error) {
 	return "", errors.New("not an autogen method")
 }
 
+func isAPIServerServed(file *descriptor.File) (bool, error) {
+	if v, err := reg.GetExtension("venice.fileApiServerBacked", file); err == nil {
+		return v.(bool), nil
+	}
+	return true, nil
+}
+
 //getGrpcDestination returns the gRPC destination specified.
 func getGrpcDestination(file *descriptor.File) string {
 	if v, err := reg.GetExtension("venice.fileGrpcDest", file); err == nil {
@@ -1010,6 +1033,7 @@ func init() {
 	reg.RegisterOptionParser("venice.check", parseStringSliceOptions)
 	reg.RegisterOptionParser("gogoproto.nullable", parseBoolOptions)
 	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
+	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
 
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
@@ -1051,6 +1075,7 @@ func init() {
 	reg.RegisterFunc("getBool", scratch.getBool)
 	reg.RegisterFunc("saveInt", scratch.setInt)
 	reg.RegisterFunc("getInt", scratch.getInt)
+	reg.RegisterFunc("isAPIServerServed", isAPIServerServed)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

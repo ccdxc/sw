@@ -25,6 +25,9 @@ message RestEndpoint {
 extend google.protobuf.FileOptions {
   // GRPC destination. This is typically a service discovery key. 
   string fileGrpcDest = 51235;
+  // fileApiServerBacked indicates if this is backed by the API server.
+  //   default is true.
+  bool fileApiServerBacked = 51236;
 };
 
 // Venice Option extensions applicable at the Service level.

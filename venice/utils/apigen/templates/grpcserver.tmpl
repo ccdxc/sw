@@ -3,8 +3,8 @@
 /*
 Package {{.GoPkg.Name}}ApiServer is a auto generated package.
 Input file: {{.Name}}
-*/
-package {{.GoPkg.Name}}ApiServer{{$validators := getValidatorManifest .}}
+*/ 
+package {{.GoPkg.Name}}ApiServer{{$validators := getValidatorManifest .}}{{if isAPIServerServed .}}
 
 import (
 	"context"
@@ -269,4 +269,4 @@ func init() {
 		svc.endpoints{{.Name}} = &e
 	}{{end}}
 	apisrv.Register("{{$pkgname}}.{{.Name}}", &svc)
-}
+}{{end}}

@@ -339,7 +339,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoWatch{{.}}(ctx context.Context, in
 	return nil, errors.New("not allowed")
 }{{end}}{{end}}
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isAutoGenMethod .}}{{else}}
-func (r *Endpoints{{$svcname}}RestClient) {{.}}Endpoint(ctx context.Context, in *{{.}}) (*{{.}}, error) {
+func (r *Endpoints{{$svcname}}RestClient) {{$svcname}}{{.Name}}Endpoint(ctx context.Context, in *{{.RequestType.Name}}) (*{{.ResponseType.Name}}, error) {
 	return nil, errors.New("not allowed")
 }
 {{end}}{{end}}

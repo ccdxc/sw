@@ -25,6 +25,7 @@ func main() {
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
+		override        = flag.String("override", "", "APIserver override port")
 	)
 
 	flag.Parse()
@@ -63,6 +64,10 @@ func main() {
 		config.Logger = pl
 		config.Resolvers = strings.Split(*resolverURLs, ",")
 		config.DevMode = *devmode
+		if *override != "" {
+			config.APIServerOverride = *override
+			config.Resolvers = []string{}
+		}
 	}
 	trace.Init("ApiGateway")
 	pl.Log("msg", "Starting Run")

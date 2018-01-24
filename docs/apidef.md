@@ -220,7 +220,7 @@ The snippet below shows an example of registering a post commit hook to a method
 
 With this the APIs defined in the protobuf should be functional and API call should should be able to perform CRUD operations on the KV store objects. Service controllers would typically watch the config objects in the KV store and take business logic actions.
 
-#Using the generated GRPC client
+# Using the generated GRPC client
 The code generator generates a API server client with with CRUD apis for objects tagged with the "venice.apiCrudService" and explicit gRPC endpoints specified in the definition. The snippet below shows a sample CRUD operation on a auto generated object.
 
         apicl, err := client.NewGrpcUpstream(url, l, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
@@ -232,3 +232,49 @@ The code generator generates a API server client with with CRUD apis for objects
         ..
         opts := api.ListWatchOptions{}
         pubs, err := apicl.BookstoreV1().Publisher().List(ctx, opts)
+
+# Non-API server backend
+Services hosted on controllers that do not use the API server to frontend can also be defined. Options like venice.apiGrpcCrudService and venice.apiRestService cannot be used in such cases. The endpoints are defined explicitly. The below example shows a sample definition for a search service.
+
+	syntax = "proto3";
+	// Service name
+	package search;
+
+	// Mandatory imports.
+	import "google/api/annotations.proto";
+	import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+	import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+	import "github.com/pensando/sw/api/meta.proto";
+
+	// fileGrpcDest overrides the default value. This could potentially be a service discovery endpoint.
+	//  where the resolver service resolves and loadbalances (like pen-apiserver)
+	option (venice.fileGrpcDest) = "localhost:11000";
+	// fileApiServerBacked should be set to false to indicate that the set of services defined in this
+	//   file are not backed by the API server.
+	option (venice.fileApiServerBacked) = false;
+	
+	message SearchRequest {
+	    string QueryString = 1;
+	    string Options = 2;
+	}
+
+	message SearchResponse {
+	    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+	    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+	    string Response = 3;
+	}
+	service SearchV1 {
+	    option (venice.apiPrefix) = "search";
+	    // API Version.
+	    option (venice.apiVersion) = "v1";
+	    // In the example below a query like 
+	    //    http://<...>/venice/v1/search/query?QueryString=XXXXX&options="YYY"
+	    //  generates a RPC call Query with the parameter as
+	    //  SearchRequest{ QueryString: "XXXXX", Options:"ABC"}
+	    rpc Query (SearchRequest) returns (SearchResponse) {
+		option (google.api.http) = {
+		    get: "/query"
+		};
+	    }
+	}
+

@@ -805,8 +805,38 @@ func TestGetSwaggerFile(t *testing.T) {
 }
 
 func TestGetManifest(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example1.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileGrpcDest]: "localhost:8082">
+		`,
+		`
+		name: 'example2.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileApiServerBacked]: false>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example1.proto", "example2.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed (%s)", err)
+	}
+	file, err := r.LookupFile("example1.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
 	filepath := "/nonexistent/filenameXXXX"
-	manifest, err := genManifest(filepath, "test", "test/xyz.proto")
+	manifest, err := genManifest(file, filepath, "example", "example1.proto")
 	// Was empty file so we need to have a manifest with single element.
 	if err != nil {
 		t.Errorf("genManifest failed (%s)", err)
@@ -814,12 +844,22 @@ func TestGetManifest(t *testing.T) {
 	if len(manifest) != 1 {
 		t.Errorf("expecting 1 entry found %d", len(manifest))
 	}
-	if v, ok := manifest["xyz.proto"]; !ok || v != "test" {
+	if v, ok := manifest["example1.proto"]; !ok || v.Pkg != "example" || v.APIServer != true {
 		t.Errorf("did not find key [%v] or [%v]", ok, v)
 	}
-
+	file, err = r.LookupFile("example2.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
+	manifest, err = genManifest(file, filepath, "example", "example2.proto")
+	if err != nil {
+		t.Errorf("genManifest failed (%s)", err)
+	}
+	if v, ok := manifest["example2.proto"]; !ok || v.Pkg != "example" || v.APIServer != false {
+		t.Errorf("did not find key [%v] or [%+v]", ok, v)
+	}
 	// Now add a few existing entries
-	fileinput := []byte("\nexample1.proto example1\nexample2.proto example2\n")
+	fileinput := []byte("\nexample1.proto example1 true\nexample2.proto example2 false\n")
 	manifest = parseManifestFile(fileinput)
 	if err != nil {
 		t.Errorf("genManifest failed (%s)", err)
@@ -827,11 +867,11 @@ func TestGetManifest(t *testing.T) {
 	if len(manifest) != 2 {
 		t.Errorf("expecting 1 entry found %d", len(manifest))
 	}
-	if v, ok := manifest["example1.proto"]; !ok || v != "example1" {
-		t.Errorf("did not find key [%v] or [%v]", ok, v)
+	if v, ok := manifest["example1.proto"]; !ok || v.Pkg != "example1" {
+		t.Errorf("did not find key [%v] or [%v]", ok, v.Pkg)
 	}
-	if v, ok := manifest["example2.proto"]; !ok || v != "example2" {
-		t.Errorf("did not find key [%v] or [%v]", ok, v)
+	if v, ok := manifest["example2.proto"]; !ok || v.Pkg != "example2" {
+		t.Errorf("did not find key [%v] or [%v]", ok, v.Pkg)
 	}
 }
 

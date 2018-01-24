@@ -1,10 +1,10 @@
 
-app.proto app
-auth.proto auth
-cmd.proto cmd
-events.proto events
-example.proto bookstore
-network.proto network
-networkencryption.proto networkencryption
-telemetry.proto telemetry
-x509.proto x509
+app.proto app true
+auth.proto auth true
+cmd.proto cmd true
+events.proto events true
+example.proto bookstore true
+network.proto network true
+networkencryption.proto networkencryption true
+telemetry.proto telemetry true
+x509.proto x509 true
