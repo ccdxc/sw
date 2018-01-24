@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <unistd.h>
 #include <grpc++/grpc++.h>
 #include <memory>
 #include "nic/gen/proto/hal/internal.pb.h"
@@ -45,6 +46,16 @@ void init_hal_if() {
   sprintf(host_addr, "localhost:%lu", FLAGS_hal_port);
   hal_channel = std::move(grpc::CreateChannel(
       host_addr, grpc::InsecureChannelCredentials()));
+  int i;
+  for (i = 0; i < 500; i++) {
+    if (hal_channel->GetState(true) == GRPC_CHANNEL_READY)
+      break;
+    usleep(10000);
+  }
+  if (i == 500) {
+    printf("Channel never reached ready, cur_state=%d\n",
+           hal_channel->GetState(true));
+  }
 
   std::unique_ptr<Internal::Stub> int_stub(
       Internal::NewStub(hal_channel));
@@ -55,13 +66,11 @@ void init_hal_if() {
   interface_stub = std::move(if_stub);
 
   std::unique_ptr<CryptoKey::Stub> crypt_stub(
-    CryptoKey::NewStub(grpc::CreateChannel(
-      host_addr, grpc::InsecureChannelCredentials())));
+    CryptoKey::NewStub(hal_channel));
   crypto_stub = std::move(crypt_stub);
 
   std::unique_ptr<BarcoRings::Stub> bring_stub(
-    BarcoRings::NewStub(grpc::CreateChannel(
-      host_addr, grpc::InsecureChannelCredentials())));
+    BarcoRings::NewStub(hal_channel));
   brings_stub = std::move(bring_stub);
 }
 
@@ -125,8 +134,10 @@ int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id) {
   req->set_bdf(bdf_id);
 
   auto status = internal_stub->ConfigureLifBdf(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("set_lif_bdf failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ? 
   if (resp_msg.resps(0).status() != 0) return -1;
@@ -147,8 +158,10 @@ int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {
   req->set_resolve_label(false);
 
   auto status = internal_stub->GetProgramAddress(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("get_pgm_base_addr failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ? 
   *base_addr = resp_msg.resps(0).addr();
@@ -170,8 +183,10 @@ int get_pgm_label_offset(const char *prog_name, const char *label, uint8_t *off)
   req->set_label(label);
 
   auto status = internal_stub->GetProgramAddress(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("get_pgm_label_offset failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ? 
   *off = ((resp_msg.resps(0).addr()) >> 6) & 0xFF;
@@ -192,8 +207,10 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid, uint64_t *qa
   req->set_qid(qid);
 
   auto status = interface_stub->LifGetQState(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("get_lif_qstate_addr failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ?
   if (resp_msg.resps(0).error_code())
@@ -219,8 +236,10 @@ int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) 
   req->set_ret_data_size(kDefaultQStateSize);
 
   auto status = interface_stub->LifGetQState(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("get_lif_qstate failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ?
   if (resp_msg.resps(0).error_code())
@@ -248,7 +267,7 @@ int set_lif_qstate_size(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qst
 
   auto status = interface_stub->LifSetQState(&context, req_msg, &resp_msg);
   if (!status.ok()) {
-    printf("status %d \n", status.ok());
+    printf("get_lif_qstate_size failed: %s\n", status.error_message().c_str());
     return -1;
   }
 
@@ -277,8 +296,10 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
   req->set_handle("storage");
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("alloc_hbm_address failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ? 
   *addr = resp_msg.resps(0).addr();
@@ -302,8 +323,10 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr) {
     req->set_handle("brq-ring-xts0");
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("get_xts_ring_base_address failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ?
   *addr = resp_msg.resps(0).addr();
