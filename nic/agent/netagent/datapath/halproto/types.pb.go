@@ -14,6 +14,7 @@
 		debug.proto
 		descriptor_aol.proto
 		endpoint.proto
+		eplearn.proto
 		event.proto
 		interface.proto
 		internal.proto
@@ -189,6 +190,16 @@
 		EndpointStats
 		EndpointGetResponse
 		EndpointGetResponseMsg
+		EplearnDhcpCfg
+		EplearnArpCfg
+		EplearnCfg
+		ArpStats
+		DhcpStats
+		L2EplearnStats
+		DhcpStatus
+		ArpStatus
+		EplearnStats
+		EplearnStatus
 		EventRequest
 		EndpointEvent
 		PortEvent

@@ -11,6 +11,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "kh.proto";
+import "eplearn.proto";
 
 package endpoint;
 option go_package="halproto";
@@ -65,6 +66,7 @@ message EndpointStatus {
   bool                        learn_source_rarp   = 5;    // TRUE if learnt via RARP
   bool                        learn_source_config = 6;    // TRUE if learnt via configuration
   bool                        is_endpoint_local   = 7;    // TRUE if endpoint is local
+  eplearn.EplearnStatus       learn_status        = 8;    // ep learning status
 }
 
 // EndpointResponse is response to EndpointSpec
@@ -158,6 +160,7 @@ message EndpointGetAllRequestMsg {
 
 // EndpointStats is the statistics object for each Endpoint
 message EndpointStats {
+	eplearn.EplearnStats ep_learn_stats = 1; // Eplearning stats.
 }
 
 // EndpointGetResponse captures all the information about one Endpoint

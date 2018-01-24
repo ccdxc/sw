@@ -10,6 +10,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "kh.proto";
+import "eplearn.proto";
 
 package l2segment;
 option go_package="halproto";
@@ -52,7 +53,8 @@ message L2SegmentSpec {
   types.EncapInfo        wire_encap                 = 8;    // wire encap
   types.EncapInfo        tunnel_encap               = 9;    // tunnel encap
   types.IPAddress        gipo                       = 10;    // gipo for mcast vxlan traffic
-  fixed64                pinned_uplink_if_handle    = 11;   // The pinned uplink
+  eplearn.EplearnCfg     eplearn_cfg                = 11;    // ep learning config
+  fixed64                pinned_uplink_if_handle    = 12;   // The pinned uplink
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request
@@ -116,7 +118,8 @@ message L2SegmentGetRequestMsg {
 
 // L2SegmentStats is the statistics object for each L2 segment
 message L2SegmentStats {
-  uint32    num_endpoints = 1;    // number of endpoints in this L2 segment
+  uint32                          num_endpoints = 1;    // number of endpoints in this L2 segment
+  eplearn.L2EplearnStats          eplearn_stats = 2;    // Eplearn stats
 }
 
 // L2SegmentGetResponse captures all the information about a L2 segment
