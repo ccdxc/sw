@@ -17,6 +17,13 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_ring_barco_doorbell:
+    seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
+    b.!c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_do_nothing
+    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
+    phvwr p.barco_req_doorbell_address, r4.dx
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, 0)
+    phvwr p.barco_req_doorbell_data, r3.dx
+
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_incr_pindex_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX, barco_dbell_pi, barco_dbell_pi)
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd_incr_pindex_dma_cmd)
 
@@ -40,5 +47,7 @@ esp_ipv4_tunnel_h2n_dma_cmd_incr_barco_pindex:
     phvwri p.app_header_table1_valid, 0
     phvwri p.app_header_table2_valid, 0
     phvwri p.app_header_table3_valid, 0
+
+esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_do_nothing:
     nop.e
     nop
