@@ -2025,19 +2025,19 @@ class capri_parser:
             #For Deparser Csum to work correctly, CSUM HV bits should be co-located
             #with hdr valid bit.  Also HV bit for csum should be allocated before
             #header valid bit.
-            if self.d == xgress.EGRESS and \
-               (self.be.checksum.IsHdrInCsumCompute(h.name) or
-                self.be.checksum.IsHdrInCsumComputePhdr(h.name) or
-                self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name) or
-                self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name)):
+
+            if (self.be.checksum.IsHdrInCsumCompute(h.name, self.d) or
+                self.be.checksum.IsHdrInCsumComputePhdr(h.name, self.d) or
+                self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name, self.d) or
+                self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name, self.d)):
                 csum_hv_names = []
-                if self.be.checksum.IsHdrInCsumCompute(h.name):
+                if self.be.checksum.IsHdrInCsumCompute(h.name, self.d):
                     hfname = h.name + '.csum'
                     csum_hv_names.append(hfname)
-                if not self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name) and \
-                   not self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name) and \
-                   not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name) and \
-                   not self.be.checksum.IsHdrInOptionCsumCompute(h.name):
+                if not self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name, self.d) and \
+                   not self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name, self.d) and \
+                   not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name, self.d) and \
+                   not self.be.checksum.IsHdrInOptionCsumCompute(h.name, self.d):
                     hfname = h.name + '.tcp_csum'
                     csum_hv_names.append(hfname)
                     hfname = h.name + '.udp_csum'
@@ -2047,8 +2047,8 @@ class capri_parser:
                     byte_align_hv_skip = 8 - (hidx % 8)
                     hidx += byte_align_hv_skip
                     hv_bit -= byte_align_hv_skip
-                if self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name) \
-                   or self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name):
+                if self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name, self.d) \
+                   or self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name, self.d):
                     #allocates hv bit for ethernet.l2_csum
                     # or allocates p4_2_p4plus.l2_csum
                     hfname = h.name + '.l2csum'
@@ -2067,8 +2067,8 @@ class capri_parser:
                 self.csum_hdr_hv_bit[h] = csum_hv_bit_and_hf
 
             #Allocate HV bit for ICRC along with l3 header
-            if self.d == xgress.EGRESS and self.be.icrc.IsHdrInIcrcCompute(h.name):
-                if self.be.icrc.IsHdrRoceV2(h.name):
+            if self.be.icrc.IsHdrInIcrcCompute(h.name, self.d):
+                if self.be.icrc.IsHdrRoceV2(h.name, self.d):
                     #start HV bit at byte boundary so that parser-meta instuction
                     #can be used optimally.
                     byte_align_hv_skip = 8 - (hidx % 8)

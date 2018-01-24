@@ -1223,18 +1223,18 @@ class capri_gress_pa:
 
     def allocate_csum_hv_field(self, hdr_name):
         csum_hv_names = []
-        if self.pa.be.checksum.IsHdrInCsumCompute(hdr_name):
+        if self.pa.be.checksum.IsHdrInCsumCompute(hdr_name, self.d):
             hfname = hdr_name + '.csum'
             csum_hv_names.append(hfname)
-        if not self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name) and \
-           not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name) and \
-           not self.pa.be.checksum.IsHdrInOptionCsumCompute(hdr_name):
+        if not self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name, self.d) and \
+           not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name, self.d) and \
+           not self.pa.be.checksum.IsHdrInOptionCsumCompute(hdr_name, self.d):
             hfname = hdr_name + '.tcp_csum'
             csum_hv_names.append(hfname)
             hfname = hdr_name + '.udp_csum'
             csum_hv_names.append(hfname)
-        if self.pa.be.checksum.IsL2HdrInL2CompleteCsumCompute(hdr_name) \
-           or self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name):
+        if self.pa.be.checksum.IsL2HdrInL2CompleteCsumCompute(hdr_name, self.d) \
+           or self.pa.be.checksum.IsHdrInL2CompleteCsumCompute(hdr_name, self.d):
             hfname = hdr_name + '.l2csum'
             csum_hv_names.append(hfname)
 
@@ -2764,19 +2764,18 @@ class capri_pa:
                     else:
                         cf = self.allocate_hv_field(name, d)
                         cf.is_hv = True
-                        if d == xgress.EGRESS:
-                            # If header is part of hdr-checksum or payload checksum
-                            # or l2 complete csum, allocate csum_hv bit
-                            if self.be.checksum.IsHdrInCsumCompute(name) or \
-                                self.be.checksum.IsHdrInCsumComputePhdr(name) or \
-                                self.be.checksum.IsL2HdrInL2CompleteCsumCompute(name) or \
-                                self.be.checksum.IsHdrInL2CompleteCsumCompute(name):
-                                self.allocate_csum_hv_field(name, d)
+                        # If header is part of hdr-checksum or payload checksum
+                        # or l2 complete csum, allocate csum_hv bit
+                        if self.be.checksum.IsHdrInCsumCompute(name, d) or \
+                            self.be.checksum.IsHdrInCsumComputePhdr(name, d) or \
+                            self.be.checksum.IsL2HdrInL2CompleteCsumCompute(name, d) or \
+                            self.be.checksum.IsHdrInL2CompleteCsumCompute(name, d):
+                            self.allocate_csum_hv_field(name, d)
 
-                            if self.be.icrc.IsHdrInIcrcCompute(name):
-                                #Allocate HV so that icrc computation
-                                #can be triggered.
-                                self.allocate_icrc_hv_field(name, d)
+                        if self.be.icrc.IsHdrInIcrcCompute(name, d):
+                            #Allocate HV so that icrc computation
+                            #can be triggered.
+                            self.allocate_icrc_hv_field(name, d)
 
             if hdr.metadata:
                 #capture metadata hdr inst that is used to store variable pkt len

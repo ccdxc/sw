@@ -983,8 +983,10 @@ class Icrc:
         self.logstr_tbl             = []
         self.icrc_verify_logger     = logging.getLogger('ICRC_V')
         self.icrc_compute_logger    = logging.getLogger('ICRC_C')
-        self.verify_cal_fieldlist   = [] #List of CalField Objects
-        self.update_cal_fieldlist   = [] #List of CalField Objects
+        self.verify_cal_fieldlist   = [] #List of CalField Objects; icrc verified in ingress pipeline
+        self.eg_verify_cal_fieldlist= [] #List of CalField Objects; icrc verified in egress pipeline
+        self.update_cal_fieldlist   = [] #List of CalField Objects; icrc computed in ingress pipeline
+        self.eg_update_cal_fieldlist= [] #List of CalField Objects; icrc computed in egress pipeline
         self.icrc_profiles_allocated        = 0
         self.icrc_mask_profiles_allocated   = 0
         self.icrc_dp_profiles_allocated     = 0
@@ -993,7 +995,15 @@ class Icrc:
         self.l3hdr_to_profile_map_dp        = {}
         self.l4_hdr_to_profile_map_dp       = {}
         self.l5_hdr_to_profile_map_dp       = {}
-        self.dpr_hw_icrc_obj                = [] #Sorted list of calfldobj; sorted by fldstart
+        self.dpr_hw_icrc_obj                = [] #Sorted list of calfldobj; sorted by fldstart used in ingress pipeline
+        self.eg_dpr_hw_icrc_obj             = [] #Sorted list of calfldobj; sorted by fldstart used in egress pipeline
+
+    def icrc_direction_get(self, field_list_cal):
+        p4_calfld_obj = self.be.h.p4_field_list_calculations[field_list_cal]
+        if 'gress' in p4_calfld_obj._parsed_pragmas['icrc']:
+            gress = p4_calfld_obj._parsed_pragmas['icrc']['gress'].keys()[0]
+            return xgress.EGRESS if gress == 'egress' else xgress.INGRESS
+        return None
 
     def initialize(self):
         '''
@@ -1004,41 +1014,43 @@ class Icrc:
                 if self.be.h.p4_field_list_calculations[ops[1]].algorithm != 'icrc':
                     #calculated field objects are not icrc(skip checksum related obj)
                     continue
-                '''
-                if ops[2] and ops[2].op == 'valid':
-                    if not self.roce_hdr:
-                        self.roce_hdr = ops[2].right
-                    else:
-                        #Make sure there is no mistake in P4 expressing icrc with
-                        #different header instances in icrc calculation.
-                        assert self.roce_hdr == ops[2].right, pdb.set_trace()
-                '''
+                d = self.icrc_direction_get(ops[1])
                 if ops[0] == 'verify':
-                    self.verify_cal_fieldlist.append(IcrcParserCalField(\
+                    if d == xgress.INGRESS or d == None or d == 'XGRESS':
+                        self.verify_cal_fieldlist.append(IcrcParserCalField(\
+                                                     self.be, \
+                                                     field_dst, ops[1], ops[2].right))
+                    if d == xgress.EGRESS or d == 'XGRESS':
+                        self.eg_verify_cal_fieldlist.append(IcrcParserCalField(\
                                                      self.be, \
                                                      field_dst, ops[1], ops[2].right))
                 else:
-                    self.update_cal_fieldlist.append(IcrcDeParserCalField(\
+                    if d == xgress.INGRESS or d == 'XGRESS':
+                        self.update_cal_fieldlist.append(IcrcDeParserCalField(\
+                                                     self.be, \
+                                                     field_dst, ops[1], ops[2].right))
+                    if d == xgress.EGRESS or d == 'XGRESS' or d == None:
+                        self.eg_update_cal_fieldlist.append(IcrcDeParserCalField(\
                                                      self.be, \
                                                      field_dst, ops[1], ops[2].right))
 
     def ProcessIcrcObjects(self, d):
-        if d == xgress.INGRESS:
-            self.ProcessIcrcVerificationCalFldList(self.be.parsers[d])
-        if d == xgress.EGRESS:
-            self.ProcessIcrcUpdateCalFldList(self.be.parsers[d])
+        self.ProcessIcrcVerificationCalFldList(self.be.parsers[d])
+        self.ProcessIcrcUpdateCalFldList(self.be.parsers[d])
 
     def AllocateIcrcObjects(self, d):
-        if d == xgress.INGRESS:
-            self.AllocateParserIcrcResources(self.be.parsers[d])
-        if d == xgress.EGRESS:
-            self.AllocateDeParserIcrcResources(self.be.parsers[d])
+        self.AllocateParserIcrcResources(self.be.parsers[d])
+        self.AllocateDeParserIcrcResources(self.be.parsers[d])
 
-    def IsHdrRoceV2(self, hdr_name):
-        for calfldobj in self.verify_cal_fieldlist:
+    def IsHdrRoceV2(self, hdr_name, d):
+        verify_cal_fieldlist = self.verify_cal_fieldlist if d == xgress.INGRESS \
+                                                else self.eg_verify_cal_fieldlist
+        update_cal_fieldlist = self.update_cal_fieldlist if d == xgress.INGRESS \
+                                                else self.eg_update_cal_fieldlist
+        for calfldobj in verify_cal_fieldlist:
             if calfldobj.roce_hdr.name == hdr_name:
                 return True
-        for calfldobj in self.update_cal_fieldlist:
+        for calfldobj in update_cal_fieldlist:
             if calfldobj.roce_hdr.name == hdr_name:
                 return True
         return False
@@ -1047,9 +1059,11 @@ class Icrc:
     #   --------  iCRC verification related Code --------
 
 
-    def VerifyIcrcCalFieldObjGet(self, hdr):
+    def VerifyIcrcCalFieldObjGet(self, hdr, d):
         # Given l3hdr or l4/l5 hdr return Calculated Field Obj that is verified
-        for calflistobj in self.verify_cal_fieldlist:
+        verify_cal_fieldlist = self.verify_cal_fieldlist if d == xgress.INGRESS \
+                                                     else self.eg_verify_cal_fieldlist
+        for calflistobj in verify_cal_fieldlist:
             if hdr != '' and (calflistobj.IcrcL3HdrNameGet() == hdr or \
                                 calflistobj.IcrcL4HdrNameGet() == hdr or \
                                 calflistobj.IcrcL5HdrNameGet() == hdr):
@@ -1057,8 +1071,8 @@ class Icrc:
         return None
 
 
-    def IsHdrInIcrcVerify(self, hdrname):
-        return True if VerifyIcrcCalFieldObjGet(hdrname) else False
+    def IsHdrInIcrcVerify(self, hdrname, d):
+        return True if VerifyIcrcCalFieldObjGet(hdrname, d) else False
 
     def IcrcParserL3HdrIFldProfileBuild(self, calfldobj):
         if calfldobj.l3hdr_name not in self.l3hdr_to_profile_map.keys():
@@ -1180,8 +1194,10 @@ class Icrc:
         This function will process all verifiable calculated fields
         and creates icrc objects
         '''
+        verify_cal_fieldlist = self.verify_cal_fieldlist if parser.d == xgress.INGRESS \
+                                                     else self.eg_verify_cal_fieldlist
         icrc_l3_hdrs = []
-        for calfldobj in self.verify_cal_fieldlist:
+        for calfldobj in verify_cal_fieldlist:
             assert calfldobj != None, pdb.set_trace()
             calfldhdr = calfldobj.CalculatedFieldHdrGet()
             assert calfldhdr != None, pdb.set_trace()
@@ -1197,7 +1213,7 @@ class Icrc:
 
         # Ensure/CrossCheck that every calculated field that needs to
         # be verified has been created and also build profile.
-        for calfldobj in self.verify_cal_fieldlist:
+        for calfldobj in verify_cal_fieldlist:
             if calfldobj.IcrcParserProfileObjGet() == None:
                 assert(0), pdb.set_trace()
             #L4HdrIFldProfileBuild should be invoked after calling L3hdrProfileBuild
@@ -1214,8 +1230,10 @@ class Icrc:
         icrc_l3hdrs = set()
         icrc_l4_hdrs = set()
         icrc_l5_hdrs = set()
-        icrc_calfldobjs = set(calfldobj for calfldobj in self.verify_cal_fieldlist)
-        for calfldobj in self.verify_cal_fieldlist:
+        verify_cal_fieldlist = self.verify_cal_fieldlist if parser.d == xgress.INGRESS \
+                                                     else self.eg_verify_cal_fieldlist
+        icrc_calfldobjs = set(calfldobj for calfldobj in verify_cal_fieldlist)
+        for calfldobj in verify_cal_fieldlist:
             icrc_l3hdr = calfldobj.IcrcL3HdrNameGet()
             icrc_l4_hdr = calfldobj.IcrcL4HdrNameGet()
             icrc_l5_hdr = calfldobj.IcrcL5HdrNameGet()
@@ -1232,7 +1250,7 @@ class Icrc:
                 break
             for hdr in parsepath:
                 if hdr.name in icrc_l3hdrs:
-                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name)
+                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name, parser.d)
                     for parsestate in parser.get_ext_cstates(hdr):
                         if calfldobj not in parsestate.icrc_verify_cal_field_objs:
                             parsestate.icrc_verify_cal_field_objs.\
@@ -1241,14 +1259,14 @@ class Icrc:
                     icrc_l3hdrs.remove(hdr.name)
                     #icrc_calfldobjs.remove(calfldobj)
                 if hdr.name in icrc_l4_hdrs:
-                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name)
+                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name, parser.d)
                     for parsestate in parser.get_ext_cstates(hdr):
                         if calfldobj not in parsestate.icrc_verify_cal_field_objs:
                             parsestate.icrc_verify_cal_field_objs.\
                                             append(("L4_IFLD", calfldobj))
                     icrc_l4_hdrs.remove(hdr.name)
                 if hdr.name in icrc_l5_hdrs:
-                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name)
+                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name, parser.d)
                     for parsestate in parser.get_ext_cstates(hdr):
                         if calfldobj not in parsestate.icrc_verify_cal_field_objs:
                             parsestate.icrc_verify_cal_field_objs.\
@@ -1260,23 +1278,25 @@ class Icrc:
         #Insert all calfldobj in roce_bth parse state. Depending on parse path
         #one of the calfldobj will be used to program parser when extracting
         #roce_bth header that corresponds to L3hdr in the parser path.
-        all_calflds = [("L3_IFLD", calfldobj) for calfldobj in self.verify_cal_fieldlist]
-        for calfldobj in self.verify_cal_fieldlist:
+        all_calflds = [("L3_IFLD", calfldobj) for calfldobj in verify_cal_fieldlist]
+        for calfldobj in verify_cal_fieldlist:
             for parsestate in parser.get_ext_cstates(calfldobj.roce_hdr):
                 parsestate.icrc_verify_cal_field_objs =  all_calflds
 
 
     def AllocateParserIcrcResources(self, parser):
         icrc_l3hdrs = set()
-        for calfldobj in self.verify_cal_fieldlist:
+        verify_cal_fieldlist = self.verify_cal_fieldlist if parser.d == xgress.INGRESS \
+                                                     else self.eg_verify_cal_fieldlist
+        for calfldobj in verify_cal_fieldlist:
             icrc_l3hdr = calfldobj.IcrcL3HdrNameGet()
             if icrc_l3hdr != '' and icrc_l3hdr not in icrc_l3hdrs:
                 icrc_l3hdrs.add(icrc_l3hdr)
         if not len(icrc_l3hdrs):
             return
 
-        icrc_objects = set(calfldobj for calfldobj in self.verify_cal_fieldlist)
-        all_roce_hdr_names = set(calfldobj.roce_hdr.name for calfldobj in self.verify_cal_fieldlist)
+        icrc_objects = set(calfldobj for calfldobj in verify_cal_fieldlist)
+        all_roce_hdr_names = set(calfldobj.roce_hdr.name for calfldobj in verify_cal_fieldlist)
         all_parse_paths = sorted(parser.paths, key=lambda p: len(p), reverse=True)
         for parse_path in all_parse_paths:
             program_icrc = False
@@ -1290,7 +1310,7 @@ class Icrc:
                 l3_hdrs = None
                 _s = parse_path_hdrs.intersection(icrc_l3hdrs)
                 if len(_s):
-                    assert(len(_s) <= 2), pdb.set_trace()
+                    #assert(len(_s) <= 2), pdb.set_trace()
                     l3_hdrs = _s
                 else:
                     #roce hdr in parse path; but no associated L3 hdr is in the path.
@@ -1309,7 +1329,7 @@ class Icrc:
                     topo_l3hdrs_in_parse_path.reverse()
                     l3hdr = topo_l3hdrs_in_parse_path[0]
                     icrc_calfldobj = \
-                       self.VerifyIcrcCalFieldObjGet(l3hdr)
+                       self.VerifyIcrcCalFieldObjGet(l3hdr, parser.d)
 
                     if icrc_calfldobj in icrc_objects:
                         #In all the L3hdr Parse States, 2 things are needed
@@ -1570,27 +1590,28 @@ class Icrc:
 
     #   --------  iCRC computation related Code --------
 
-    def UpdateIcrcCalFieldObjGet(self, hdr):
+    def UpdateIcrcCalFieldObjGet(self, hdr, d):
         # Given l3 hdr or l4 or l5 header name, return icrc Calculated Field Obj that is updated
-        for calflistobj in self.update_cal_fieldlist:
+        update_cal_fieldlist = self.update_cal_fieldlist if d == xgress.INGRESS else self.eg_update_cal_fieldlist
+        for calflistobj in update_cal_fieldlist:
             if hdr != '' and (calflistobj.IcrcL3HdrNameGet() == hdr        \
                                 or calflistobj.IcrcL4HdrNameGet() == hdr   \
                                 or calflistobj.IcrcL5HdrNameGet() == hdr):
                 return calflistobj
         return None
 
-    def IsHdrInIcrcCompute(self, hdrname):
-        return True if self.UpdateIcrcCalFieldObjGet(hdrname) else False
+    def IsHdrInIcrcCompute(self, hdrname, d):
+        return True if self.UpdateIcrcCalFieldObjGet(hdrname, d) else False
 
-    def DeParserIcrcPayLoadLenSlotGet(self, calfldobj, eg_parser):
+    def DeParserIcrcPayLoadLenSlotGet(self, calfldobj, parser):
         assert calfldobj.icrc_update_len_field != '', pdb.set_trace()
-        cf_icrc_update_len = self.be.pa.get_field(calfldobj.icrc_update_len_field, eg_parser.d)
+        cf_icrc_update_len = self.be.pa.get_field(calfldobj.icrc_update_len_field, parser.d)
         dpr_variable_len_phv_start = self.be.hw_model['phv']['flit_size']
         pl_slot = (cf_icrc_update_len.phv_bit - dpr_variable_len_phv_start) / 16
 
         return pl_slot
 
-    def IcrcDeParserProfileBuild(self, calfldobj, eg_parser):
+    def IcrcDeParserProfileBuild(self, calfldobj, parser):
         if calfldobj.l3hdr_name not in self.l3hdr_to_profile_map_dp.keys():
             self.l3hdr_to_profile_map_dp[calfldobj.l3hdr_name] = \
                 (self.icrc_dp_profiles_allocated, self.icrc_dp_mask_profiles_allocated)
@@ -1602,7 +1623,7 @@ class Icrc:
         prof_obj = calfldobj.IcrcDeParserProfileObjGet()
         prof_obj.IcrcProfileNumSet(profile_num)
         prof_obj.IcrcMaskProfileNumSet(mask_profile_num)
-        phv_len_slot = self.DeParserIcrcPayLoadLenSlotGet(calfldobj, eg_parser)
+        phv_len_slot = self.DeParserIcrcPayLoadLenSlotGet(calfldobj, parser)
         prof_obj.IcrcProfilePhvLenSelSet(1, phv_len_slot)
         #Subtract 8 bytes from the start of L3 hdr so that
         #64 1bits are added to icrc computation.
@@ -1701,13 +1722,14 @@ class Icrc:
             fld_inst += 1
 
 
-    def ProcessIcrcUpdateCalFldList(self, egress_parser):
+    def ProcessIcrcUpdateCalFldList(self, parser):
         '''
          Process all update calculated fields
          and creates icrc objects
         '''
         icrc_l3_hdrs = []
-        for calfldobj in self.update_cal_fieldlist:
+        update_cal_fieldlist = self.update_cal_fieldlist if parser.d == xgress.INGRESS else self.eg_update_cal_fieldlist
+        for calfldobj in update_cal_fieldlist:
             assert calfldobj != None, pdb.set_trace()
             calfldhdr = calfldobj.CalculatedFieldHdrGet()
             assert calfldhdr != None, pdb.set_trace()
@@ -1723,33 +1745,34 @@ class Icrc:
 
         # Ensure/CrossCheck that every calculated field that needs to
         # be verified has been created and also build profile.
-        for calfldobj in self.update_cal_fieldlist:
+        for calfldobj in update_cal_fieldlist:
             if calfldobj.IcrcDeParserProfileObjGet() == None:
                 assert(0), pdb.set_trace()
             #L4HdrIFldProfileBuild should be invoked after calling L3hdrProfileBuild
-            self.IcrcDeParserProfileBuild(calfldobj, egress_parser)
+            self.IcrcDeParserProfileBuild(calfldobj, parser)
             self.IcrcDeParserL4HdrIFldProfileBuild(calfldobj)
             self.IcrcDeParserL5HdrIFldProfileBuild(calfldobj)
 
-    def AllocateDeParserIcrcResources(self, eg_parser):
-        for calfldobj in self.update_cal_fieldlist:
+    def AllocateDeParserIcrcResources(self, parser):
+        update_cal_fieldlist = self.update_cal_fieldlist if parser.d == xgress.INGRESS else self.eg_update_cal_fieldlist
+        for calfldobj in update_cal_fieldlist:
             icrc_l3hdr = calfldobj.IcrcL3HdrNameGet()
-            icrc_hv_and_hf = eg_parser.icrc_hdr_hv_bit[self.be.h.\
+            icrc_hv_and_hf = parser.icrc_hdr_hv_bit[self.be.h.\
                                                        p4_header_instances[icrc_l3hdr]]
             icrc_hv, phv_bit, hfname = icrc_hv_and_hf[0]
             calfldobj.IcrcHvBitNumSet(icrc_hv)
-            hdr_valid_phv_bit = eg_parser.hdr_hv_bit[self.be.h.\
+            hdr_valid_phv_bit = parser.hdr_hv_bit[self.be.h.\
                                                  p4_header_instances[icrc_l3hdr]]
             calfldobj.HvBitNumSet(511 - hdr_valid_phv_bit)
 
             icrc_l4_hdr = calfldobj.IcrcL4HdrNameGet()
-            icrc_hv_and_hf = eg_parser.icrc_hdr_hv_bit[self.be.h.\
+            icrc_hv_and_hf = parser.icrc_hdr_hv_bit[self.be.h.\
                                                        p4_header_instances[icrc_l4_hdr]]
             icrc_l4_hv, phv_bit, hfname = icrc_hv_and_hf[0]
             calfldobj.IcrcL4HvBitNumSet(icrc_l4_hv)
 
             icrc_l5_hdr = calfldobj.IcrcL5HdrNameGet()
-            icrc_hv_and_hf = eg_parser.icrc_hdr_hv_bit[self.be.h.\
+            icrc_hv_and_hf = parser.icrc_hdr_hv_bit[self.be.h.\
                                                        p4_header_instances[icrc_l5_hdr]]
             icrc_l5_hv, phv_bit, hfname = icrc_hv_and_hf[0]
             calfldobj.IcrcL5HvBitNumSet(icrc_l5_hv)
@@ -1768,7 +1791,8 @@ class Icrc:
 
         hw_icrcobj = [] # list of icrcobj that need to be programmed in HW
                         # without repeatation and maintaining Banyan contrainst.
-        for calfldobj in self.update_cal_fieldlist:
+        update_cal_fieldlist = self.update_cal_fieldlist if deparser.d == xgress.INGRESS else self.eg_update_cal_fieldlist
+        for calfldobj in update_cal_fieldlist:
             l3hdr = calfldobj.IcrcL3HdrNameGet()
             icrc_profile_obj = calfldobj.IcrcDeParserProfileObjGet()
             assert icrc_profile_obj != None, pdb.set_trace()
@@ -1785,7 +1809,7 @@ class Icrc:
 
         l4_hdrs = []
         self.l4_calfldobjs = []
-        for calfldobj in self.update_cal_fieldlist:
+        for calfldobj in update_cal_fieldlist:
             l4_hdr = calfldobj.IcrcL4HdrNameGet()
             if l4_hdr not in l4_hdrs:
                 l4_hdrs.append(l4_hdr)
@@ -1805,7 +1829,7 @@ class Icrc:
 
         l5_hdrs = []
         self.l5_calfldobjs = []
-        for calfldobj in self.update_cal_fieldlist:
+        for calfldobj in update_cal_fieldlist:
             l5_hdr = calfldobj.IcrcL5HdrNameGet()
             if l5_hdr not in l5_hdrs:
                 l5_hdrs.append(l5_hdr)
@@ -1825,11 +1849,15 @@ class Icrc:
 
 
         #Before generating HW config, sort based on StartFld Value.
-        self.dpr_hw_icrc_obj = sorted(hw_icrcobj, key=lambda obj: obj[0].HdrFldStartGet())
+        dpr_hw_icrc_obj = sorted(hw_icrcobj, key=lambda obj: obj[0].HdrFldStartGet())
+        if deparser.d == xgress.INGRESS:
+            self.dpr_hw_icrc_obj =  dpr_hw_icrc_obj
+        else:
+            self.eg_dpr_hw_icrc_obj =  dpr_hw_icrc_obj
         #Generate ASIC Config
         icrc_hdr_index = 0
 
-        for _calfldobj in self.dpr_hw_icrc_obj:
+        for _calfldobj in dpr_hw_icrc_obj:
             _icrc_profile_obj = _calfldobj.IcrcDeParserProfileObjGet()
             if _calfldobj not in self.l4_calfldobjs and \
                _calfldobj not in self.l5_calfldobjs:
@@ -1868,7 +1896,7 @@ class Icrc:
 
         #Deparser expects unused icrc Hdr Slots to be programmed with start fld
         #in increasing order.
-        if len(self.dpr_hw_icrc_obj):
+        if len(dpr_hw_icrc_obj):
             last_start_fld = _calfldobj.HdrFldStartGet()
             for unfilled_index in  range(icrc_hdr_index, deparser.be.hw_model['deparser']['max_crc_hdrs']):
                 icrc_hdr_cfg_name = 'cap_dppcsum_csr_cfg_crc_hdrs[%d]' % unfilled_index
@@ -1885,61 +1913,71 @@ class Icrc:
         out_dir = self.be.args.gen_dir + '/%s/logs' % (self.be.prog_name)
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-        ofile = open('%s/icrc.out' % (out_dir), "w")
-        ofile.write("Icrc Verification Config in Ingress parser\n")
-        ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
-        for calfldobj in self.verify_cal_fieldlist:
-            for log_str in calfldobj.IcrcLogStrTableGet():
-                ofile.write(log_str)
 
-        ofile.write("Icrc Compute Config in Egress Deparser\n")
-        ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
-        #for calfldobj in self.update_cal_fieldlist:
-        for calfldobj in self.dpr_hw_icrc_obj:
-            if calfldobj not in self.l4_calfldobjs and \
-               calfldobj not in self.l5_calfldobjs:
-                for log_str in calfldobj.IcrcLogStrTableGet():
-                    ofile.write(log_str)
-            elif calfldobj in self.l4_calfldobjs:
-                ofile.write("L4 Instance Config\n")
-                ofile.write("-----------------\n")
-                for log_str in calfldobj.IcrcLogStrTableGet():
-                    ofile.write(log_str)
-            elif calfldobj in self.l5_calfldobjs:
-                ofile.write("L5 Instance Config\n")
-                ofile.write("-----------------\n")
-                for log_str in calfldobj.IcrcLogStrTableGet():
-                    ofile.write(log_str)
+        for d in xgress:
+            if d == xgress.INGRESS:
+                verify_cal_fieldlist = self.verify_cal_fieldlist
+                dpr_hw_icrc_obj      = self.dpr_hw_icrc_obj
+            else:
+                verify_cal_fieldlist = self.eg_verify_cal_fieldlist
+                dpr_hw_icrc_obj      = self.eg_dpr_hw_icrc_obj
 
-        ofile.write("Summary: Icrc Compute Config in Egress Deparser\n")
-        ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
+            ofile = open('%s/icrc_%s.out' % (out_dir, d.name), "w")
+            if len(verify_cal_fieldlist):
+                ofile.write("Icrc Verification Config in parser\n")
+                ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
+                for calfldobj in verify_cal_fieldlist:
+                    for log_str in calfldobj.IcrcLogStrTableGet():
+                        ofile.write(log_str)
 
-        pstr = '{:<12s}{:<5s}{:<7s}{:<7s}{:<8s}{:<8s}{:<8s}{:<5s}{:<8s}{:<7s}{:<7s}'\
-               '{:<10s}{:<5s}{:<s}{:<5s}{:<5s}\n'.format("L3/L4/L5 ", "icrc ", "icrc ",
-                                                         "PHV ", "Icrc   ", "Mask   ",
-                                                         "HdrFld ", "HdrFld ", "use ",
-                                                         "phv ", "start ", "startsub ",
-                                                         "end ", "endsub ", "loc ",
-                                                         "locsub")
-        pstr += '{:<12s}{:<5s}{:<7s}{:<7s}{:<8s}{:<8s}{:<8s}{:<5s}{:<8s}{:<7s}{:<7s}'\
-                '{:<10s}{:<5s}{:<s}{:<5s}{:<5s}\n'.format("Hdr", "unit ", "HV  ",
-                                                          "    ", "Profile","Profile",
-                                                          "Start ", "End   ", "phv  ",
-                                                          " len ", " adj   ", " adj     ",
-                                                          " adj ", " adj    ", " adj ",
-                                                          "adj   ", " adj ")
-        ofile.write(pstr)
-        ofile.write("\n")
+            if len(dpr_hw_icrc_obj):
+                ofile.write("Icrc Compute Config in Deparser\n")
+                ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
+                for calfldobj in dpr_hw_icrc_obj:
+                    if calfldobj not in self.l4_calfldobjs and \
+                       calfldobj not in self.l5_calfldobjs:
+                        for log_str in calfldobj.IcrcLogStrTableGet():
+                            ofile.write(log_str)
+                    elif calfldobj in self.l4_calfldobjs:
+                        ofile.write("L4 Instance Config\n")
+                        ofile.write("-----------------\n")
+                        for log_str in calfldobj.IcrcLogStrTableGet():
+                            ofile.write(log_str)
+                    elif calfldobj in self.l5_calfldobjs:
+                        ofile.write("L5 Instance Config\n")
+                        ofile.write("-----------------\n")
+                        for log_str in calfldobj.IcrcLogStrTableGet():
+                            ofile.write(log_str)
 
-        for calfldobj in self.dpr_hw_icrc_obj:
-            if calfldobj not in self.l4_calfldobjs and \
-               calfldobj not in self.l5_calfldobjs:
-                ofile.write(calfldobj.IcrcDeParserConfigMatrixRowLog())
-            elif calfldobj in self.l4_calfldobjs:
-                ofile.write(calfldobj.IcrcDeParserL4ConfigMatrixRowLog())
-            elif calfldobj in self.l5_calfldobjs:
-                ofile.write(calfldobj.IcrcDeParserL5ConfigMatrixRowLog())
+                ofile.write("Summary: Icrc Compute Config in Deparser\n")
+                ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
 
-        ofile.write("\n\n")
-        ofile.close()
+                pstr = '{:<12s}{:<5s}{:<7s}{:<7s}{:<8s}{:<8s}{:<8s}{:<5s}{:<8s}{:<7s}{:<7s}'\
+                       '{:<10s}{:<5s}{:<s}{:<5s}{:<5s}\n'.format("L3/L4/L5 ", "icrc ", "icrc ",
+                                                                 "PHV ", "Icrc   ", "Mask   ",
+                                                                 "HdrFld ", "HdrFld ", "use ",
+                                                                 "phv ", "start ", "startsub ",
+                                                                 "end ", "endsub ", "loc ",
+                                                                 "locsub")
+                pstr += '{:<12s}{:<5s}{:<7s}{:<7s}{:<8s}{:<8s}{:<8s}{:<5s}{:<8s}{:<7s}{:<7s}'\
+                        '{:<10s}{:<5s}{:<s}{:<5s}{:<5s}\n'.format("Hdr", "unit ", "HV  ",
+                                                                  "    ", "Profile","Profile",
+                                                                  "Start ", "End   ", "phv  ",
+                                                                  " len ", " adj   ", " adj     ",
+                                                                  " adj ", " adj    ", " adj ",
+                                                                  "adj   ", " adj ")
+                ofile.write(pstr)
+                ofile.write("\n")
+
+            for calfldobj in dpr_hw_icrc_obj:
+                if calfldobj not in self.l4_calfldobjs and \
+                   calfldobj not in self.l5_calfldobjs:
+                    ofile.write(calfldobj.IcrcDeParserConfigMatrixRowLog())
+                elif calfldobj in self.l4_calfldobjs:
+                    ofile.write(calfldobj.IcrcDeParserL4ConfigMatrixRowLog())
+                elif calfldobj in self.l5_calfldobjs:
+                    ofile.write(calfldobj.IcrcDeParserL5ConfigMatrixRowLog())
+
+            ofile.write("\n\n")
+            ofile.close()
 

@@ -1551,10 +1551,9 @@ def capri_deparser_cfg_output(deparser):
     deparser.be.checksum.GsoCsumDeParserConfigGenerate(deparser, \
                                                        dpp_json, \
                                                        dpr_json)
-    if deparser.d == xgress.EGRESS:
-        deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
+    deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
                                             csum_hv_fld_slots, dpp_json)
-        deparser.be.icrc.IcrcDeParserConfigGenerate(deparser, \
+    deparser.be.icrc.IcrcDeParserConfigGenerate(deparser, \
                                             icrc_hv_fld_slots, dpp_json)
 
     json.dump(dpp_json['cap_dpp']['registers'],

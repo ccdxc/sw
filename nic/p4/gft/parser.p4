@@ -35,6 +35,10 @@ header_type parser_ohi_t {
         ipv4_2___start_off            : 16;
         ipv6_2___start_off            : 16;
         udp_2___start_off             : 16;
+        ipv4_3___hdr_len              : 16;
+        ipv4_3___start_off            : 16;
+        ipv6_3___start_off            : 16;
+        udp_3___start_off             : 16;
         l4_1_len                      : 16;
         l4_2_len                      : 16;
         icrc_len                      : 16;
@@ -45,8 +49,9 @@ header_type parser_ohi_t {
 
 @pragma dont_trim
 @pragma parser_write_only
-@pragma parser_share_ohi icrc_l3 ipv4_1___start_off ipv6_1___start_off
-@pragma parser_share_ohi icrc_inner_l3 ipv4_2___start_off ipv6_2___start_off
+@pragma parser_share_ohi icrc_1 ipv4_1___start_off ipv6_1___start_off
+@pragma parser_share_ohi icrc_2 ipv4_2___start_off ipv6_2___start_off
+@pragma parser_share_ohi icrc_3 ipv4_3___start_off ipv6_3___start_off
 metadata parser_ohi_t ohi;
 
 @pragma deparser_variable_length_header
@@ -817,6 +822,7 @@ field_list ipv4_1_checksum_list {
 
 @pragma checksum hdr_len_expr ohi.ipv4_1___hdr_len + 0
 @pragma checksum verify_len ohi.l4_1_len
+@pragma checksum gress ingress
 field_list_calculation ipv4_1_checksum {
     input {
         ipv4_1_checksum_list;
@@ -842,6 +848,7 @@ field_list ipv4_1_udp_1_checksum_list {
 
 @pragma checksum update_len capri_deparser_len.l4_1_payload_len
 @pragma checksum verify_len  ohi.l4_1_len
+@pragma checksum gress ingress
 field_list_calculation ipv4_1_udp_1_checksum {
     input {
         ipv4_1_udp_1_checksum_list;
@@ -862,6 +869,7 @@ field_list ipv6_1_udp_1_checksum_list {
 
 @pragma checksum update_len capri_deparser_len.l4_1_payload_len
 @pragma checksum verify_len ohi.l4_1_len
+@pragma checksum gress ingress
 field_list_calculation ipv6_1_udp_1_checksum {
     input {
         ipv6_1_udp_1_checksum_list;
@@ -873,6 +881,8 @@ field_list_calculation ipv6_1_udp_1_checksum {
 calculated_field udp_1.checksum {
     verify ipv4_1_udp_1_checksum;
     verify ipv6_1_udp_1_checksum;
+    update ipv4_1_udp_1_checksum;
+    update ipv6_1_udp_1_checksum;
 }
 
 field_list ipv4_2_checksum_list {
@@ -891,6 +901,7 @@ field_list ipv4_2_checksum_list {
 
 @pragma checksum hdr_len_expr ohi.ipv4_2___hdr_len + 0
 @pragma checksum verify_len ohi.l4_2_len
+@pragma checksum gress ingress
 field_list_calculation ipv4_2_checksum {
     input {
         ipv4_2_checksum_list;
@@ -916,6 +927,7 @@ field_list ipv4_2_udp_2_checksum_list {
 
 @pragma checksum update_len capri_deparser_len.l4_2_payload_len
 @pragma checksum verify_len  ohi.l4_2_len
+@pragma checksum gress ingress
 field_list_calculation ipv4_2_udp_2_checksum {
     input {
         ipv4_2_udp_2_checksum_list;
@@ -936,6 +948,7 @@ field_list ipv6_2_udp_2_checksum_list {
 
 @pragma checksum update_len capri_deparser_len.l4_2_payload_len
 @pragma checksum verify_len ohi.l4_2_len
+@pragma checksum gress ingress
 field_list_calculation ipv6_2_udp_2_checksum {
     input {
         ipv6_2_udp_2_checksum_list;
@@ -947,6 +960,8 @@ field_list_calculation ipv6_2_udp_2_checksum {
 calculated_field udp_2.checksum {
     verify ipv4_2_udp_2_checksum;
     verify ipv6_2_udp_2_checksum;
+    update ipv4_2_udp_2_checksum;
+    update ipv6_2_udp_2_checksum;
 }
 
 /******************************************************************************
@@ -1188,6 +1203,15 @@ parser parse_end {
     return ingress;
 }
 
+calculated_field parser_metadata.icrc {
+    verify ipv4_1_roce_icrc if (valid(roce_bth_1));
+    verify ipv6_1_roce_icrc if (valid(roce_bth_1));
+    verify ipv4_2_roce_icrc if (valid(roce_bth_2));
+    verify ipv6_2_roce_icrc if (valid(roce_bth_2));
+    verify ipv4_3_roce_icrc if (valid(roce_bth));
+    verify ipv6_3_roce_icrc if (valid(roce_bth));
+}
+
 
 /******************************************************************************/
 /* Egress parser                                                              */
@@ -1375,12 +1399,43 @@ field_list_calculation ipv6_2_roce_icrc {
     output_width : 32;
 }
 
+field_list ipv4_3_icrc_list {
+    ipv4_3.ttl;
+    ipv4_3.diffserv;
+    ipv4_3.hdrChecksum;
+    udp_3.checksum;
+    roce_bth.reserved1;
+}
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+@pragma icrc verify_len ohi.icrc_len
+field_list_calculation ipv4_3_roce_icrc {
+    input {
+        ipv4_3_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list ipv6_3_icrc_list {
+    ipv6_3.trafficClass;
+    ipv6_3.flowLabel;
+    ipv6_3.hopLimit;
+    udp_3.checksum;
+    roce_bth.reserved1;
+}
+
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+@pragma icrc verify_len ohi.icrc_len
+field_list_calculation ipv6_3_roce_icrc {
+    input {
+        ipv6_3_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
 
 calculated_field parser_metadata.icrc {
-    verify ipv4_1_roce_icrc if (valid(roce_bth_1));
-    verify ipv6_1_roce_icrc if (valid(roce_bth_1));
-    verify ipv4_2_roce_icrc if (valid(roce_bth_2));
-    verify ipv6_2_roce_icrc if (valid(roce_bth_2));
     update ipv4_1_roce_icrc if (valid(roce_bth_1));
     update ipv6_1_roce_icrc if (valid(roce_bth_1));
 }
