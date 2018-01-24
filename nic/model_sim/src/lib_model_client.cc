@@ -443,7 +443,7 @@ void config_done()
     return;
 }
 
-void testcase_begin(int tcid)
+void testcase_begin(int tcid, int loopid)
 {
     int rc;
      // thread safe
@@ -455,6 +455,7 @@ void testcase_begin(int tcid)
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_TESTCASE_BEGIN;
     buff->size = tcid;
+    buff->loopid = loopid;
 
     if (__lmodel_env)
         return;
@@ -465,7 +466,7 @@ void testcase_begin(int tcid)
     return;
 }
 
-void testcase_end(int tcid)
+void testcase_end(int tcid, int loopid)
 {
     int rc;
      // thread safe
@@ -476,7 +477,31 @@ void testcase_end(int tcid)
 
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_TESTCASE_END;
-    buff->size = tcid;
+    buff->tcid = tcid;
+    buff->loopid = loopid;
+
+    if (__lmodel_env)
+        return;
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    return;
+}
+
+void eos_ignore_addr(uint64_t addr, uint32_t size)
+{
+    int rc;
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
+    char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    buffer_hdr_t *buff;
+
+    buff = (buffer_hdr_t *) buffer;
+    buff->type = BUFF_TYPE_EOS_IGNORE_ADDR;
+    buff->size = size;
+    buff->addr = addr;
 
     if (__lmodel_env)
         return;

@@ -11,6 +11,7 @@ modules:
     - module:
         name    : IPV4_QTAG
         spec    : l2uc.testspec
+        latency : True
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False
@@ -22,6 +23,7 @@ modules:
     - module:
         name    : IPV6_QTAG
         spec    : l2uc.testspec
+        latency : True
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment : filter://native=False
@@ -33,6 +35,7 @@ modules:
     - module:
         name    : IPV4_UTAG
         spec    : l2uc.testspec
+        latency : True
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -44,6 +47,7 @@ modules:
     - module:
         name    : IPV6_UTAG
         spec    : l2uc.testspec
+        latency : True
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -55,6 +59,7 @@ modules:
     - module:
         name    : IPV4_PTAG
         spec    : l2uc.testspec
+        latency : True
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -69,6 +74,7 @@ modules:
     - module:
         name    : IPV6_PTAG
         spec    : l2uc.testspec
+        latency : True
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -161,6 +167,7 @@ modules:
     - module:
         name    : NONIP_QTAG
         spec    : l2uc_nonip.testspec
+        latency : True
         iterate :
             # Tagged Cases
             - segment: filter://native=False
@@ -169,6 +176,7 @@ modules:
     - module:
         name    : NONIP_UTAG
         spec    : l2uc_nonip.testspec
+        latency : True
         iterate :
             # Untagged Cases
             - segment: filter://native=True
@@ -177,6 +185,7 @@ modules:
     - module:
         name    : NONIP_PTAG
         spec    : l2uc_nonip.testspec
+        latency : True
         iterate :
             # Priority Tagged Cases
             - segment: filter://native=True

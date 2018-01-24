@@ -52,7 +52,7 @@ acls: ref://store/specs/id=ACL
 
 qos : True
 
-security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 
 tenants:
     -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN

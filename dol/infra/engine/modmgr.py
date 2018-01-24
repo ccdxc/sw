@@ -83,6 +83,7 @@ class Module(objects.FrameworkObject):
         self.tracker    = getattr(spec, 'tracker', False)
         self.runorder   = getattr(spec, 'runorder', 65535)
         self.rtl        = getattr(spec, 'rtl', True)
+        self.latency    = getattr(spec, 'latency', False)
         self.id         = self.runorder << 16 + ModuleIdAllocator.get()
         self.module_hdl = None
         self.infra_data = None
@@ -379,6 +380,9 @@ class ModuleDatabase:
             pmod.iterate = [ None ]
 
         if GlobalOptions.rtl == True and pmod.rtl == False:
+            return
+
+        if GlobalOptions.latency_test == True and pmod.latency == False:
             return
 
         if not self.__is_test_match(pmod.name):

@@ -58,6 +58,8 @@ parser.add_argument('--nohostmem', dest='hostmem', default=True,
                     action='store_false', help='Disable Host Memory.')
 parser.add_argument('--mbtrandomseed', dest='mbtrandomseed', default=None,
                     help='Random seem for Model based tests')
+parser.add_argument('--latency_test', dest='latency_test', default=False,
+                    action='store_true', help='Latency test.')
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():
@@ -90,3 +92,5 @@ def ValidateGlopts():
             GlobalOptions.tcid = GlobalOptions.tcid[0]
     GlobalOptions.alltc_done = False
 
+    if GlobalOptions.latency_test:
+        GlobalOptions.tcscale = 2

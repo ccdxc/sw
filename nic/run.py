@@ -158,7 +158,7 @@ def run_model(args):
 
     log = open(model_log, "w")
 #    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
-    model_cmd = [ "./cap_model", "+PLOG_MAX_QUIT_COUNT=0" ]
+    model_cmd = [ "./cap_model", "+PLOG_MAX_QUIT_COUNT=0", "+plog_add_scope=axi_trace" ]
     if args.modellogs:
         model_cmd.append("+plog=info")
         if args.gft:
@@ -346,6 +346,8 @@ def run_dol(args):
         cmd.append('--mbt')
     if args.rtl is True:
         cmd.append('--rtl')
+    if args.latency_test is True:
+        cmd.append('--latency_test')
 
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
@@ -592,10 +594,16 @@ def main():
                         help='Disable model error checking')
     parser.add_argument('--mbtrandomseed', dest='mbtrandomseed', default=None,
                         help='Seed for random numbers used in model based tests')
+    parser.add_argument('--latency_test', dest='latency_test', default=None,
+                        action='store_true',
+                        help='Latency test.')
     args = parser.parse_args()
 
     if args.rtl == False and args.skipverify:
         print "ERROR: skipverify option cannot be used for non RTL runs."
+        sys.exit(1)
+    if args.rtl == False and args.latency_test:
+        print "ERROR: latency_test option cannot be used for non RTL runs."
         sys.exit(1)
 
     zmq_soc_dir = nic_dir

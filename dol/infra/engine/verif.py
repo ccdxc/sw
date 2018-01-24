@@ -143,8 +143,8 @@ class VerifEngineObject:
             return value * RTL_RETRY_SCALE
         return value
 
-    def __get_num_retries(self, tc):
-        if tc.IsDrop():
+    def __get_num_retries(self, rxcount):
+        if rxcount == 0:
             return self.__get_scaled_retry(MAX_DROP_RETRIES)
         return self.__get_scaled_retry(MAX_RETRIES)
 
@@ -185,15 +185,18 @@ class VerifEngineObject:
         return defs.status.SUCCESS
 
     def __receive_packets(self, pcr, step, tc):
-        max_retries = self.__get_num_retries(tc)
+        max_retries = self.__get_num_retries(pcr.GetExPacketCount())
         for r in range(max_retries):
             mpkts = ModelConnector.Receive()
             for mpkt in mpkts:
                 pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])
-            if pcr.GetRxPacketCount() >= pcr.GetExPacketCount():
-                break
-            tc.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
-                     (pcr.GetExPacketCount(), pcr.GetRxPacketCount()))
+            if pcr.GetExPacketCount() == 0:
+                tc.info("DROP Testcase: Waiting for Excess packets")
+            else:
+                if pcr.GetRxPacketCount() >= pcr.GetExPacketCount():
+                    break
+                tc.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
+                        (pcr.GetExPacketCount(), pcr.GetRxPacketCount()))
             self.__retry_wait(tc)
         return
 
@@ -258,7 +261,7 @@ class VerifEngineObject:
         if step.expect.delay:
             final_delay = step.expect.delay
             if GlobalOptions.rtl:
-                final_delay = step.expect.delay * 3
+                final_delay = step.expect.delay * RTL_RETRY_SCALE
             tc.info("Expectation Delay: %d" % final_delay)
             time.sleep(final_delay)
         return

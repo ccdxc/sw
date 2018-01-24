@@ -114,6 +114,7 @@ class TestCase(objects.FrameworkObject):
         self.Clone(self.template)
         self.__root = None
         self.drop = False
+        self.loopid = None
         self.LockAttributes()
         
         self.GID(tcid)
@@ -134,8 +135,9 @@ class TestCase(objects.FrameworkObject):
         self.pvtdata        = TestCasePrivateData()
         self.coverage       = TestCaseCoverageHelper(self)
         
+        self.loopid = loopid + 1
         if GlobalOptions.tcscale:
-            self.logpfx = "TC%06d-%04d:" % (self.ID(), loopid+1)
+            self.logpfx = "TC%06d-%04d:" % (self.ID(), self.loopid)
         else:
             self.logpfx = "TC%06d" % self.ID()
         self.__generate()
@@ -382,7 +384,7 @@ class TestCase(objects.FrameworkObject):
 
     def __setup_callback(self):
         self.module.RunModuleCallback('TestCaseSetup', self)
-        ModelConnector.TestCaseBegin(self.GID())
+        ModelConnector.TestCaseBegin(self.GID(), self.loopid)
         return
 
     def __show_config_objects(self):
@@ -415,7 +417,7 @@ class TestCase(objects.FrameworkObject):
     def TeardownCallback(self):
         self.info("Invoking TestCaseTeardown.")
         self.module.RunModuleCallback('TestCaseTeardown', self)
-        ModelConnector.TestCaseEnd(self.GID())
+        ModelConnector.TestCaseEnd(self.GID(), self.loopid)
         self.coverage.Process()
         return
 

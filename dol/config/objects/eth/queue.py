@@ -314,6 +314,10 @@ class EthQueueObject(QueueObject):
                 raise NotImplementedError
         self.Fill()
 
+        if not ( GlobalOptions.dryrun or GlobalOptions.cfgonly):
+            # Ignore spurious_db_cnt
+            model_wrap.eos_ignore_addr(self.qstate.addr + 39, 1)
+
         self.qstate.Read()
 
     def Post(self, descriptor):

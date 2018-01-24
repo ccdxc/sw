@@ -671,7 +671,7 @@ TEST_F(gft_test, test1) {
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
 
-    testcase_begin(1);
+    testcase_begin(1, 1);
     ipkt.resize(sizeof(g_snd_pkt1));
     memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
     epkt.resize(sizeof(g_rcv_pkt1));
@@ -680,9 +680,9 @@ TEST_F(gft_test, test1) {
     step_network_pkt(ipkt, port);
     get_next_pkt(opkt, port, cos);
     EXPECT_TRUE(opkt == epkt);
-    testcase_end(1);
+    testcase_end(1, 1);
 
-    testcase_begin(2);
+    testcase_begin(2, 2);
     ipkt.resize(sizeof(g_snd_pkt2));
     memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
     epkt.resize(sizeof(g_rcv_pkt2));
@@ -691,7 +691,7 @@ TEST_F(gft_test, test1) {
     step_network_pkt(ipkt, port);
     get_next_pkt(opkt, port, cos);
     EXPECT_TRUE(opkt == epkt);
-    testcase_end(2);
+    testcase_end(2, 2);
 #endif
 }
 

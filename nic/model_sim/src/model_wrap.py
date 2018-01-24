@@ -170,9 +170,9 @@ def config_done ():
             error_exit()
     return
 
-def testcase_begin (tcid):
+def testcase_begin (tcid, loopid):
     socket = zmq_connect()
-    buff = pack('iiiiiiiQ', 21, tcid, 0, 0, 0, 0, 0, 0)
+    buff = pack('iiiiiiiQ', 21, tcid, loopid, 0, 0, 0, 0, 0)
     try:
         socket.send(buff)
         msg = socket.recv()
@@ -181,9 +181,20 @@ def testcase_begin (tcid):
             error_exit()
     return
 
-def testcase_end (tcid):
+def testcase_end (tcid, loopid):
     socket = zmq_connect()
-    buff = pack('iiiiiiiQ', 22, tcid, 0, 0, 0, 0, 0, 0)
+    buff = pack('iiiiiiiQ', 22, tcid, loopid, 0, 0, 0, 0, 0)
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    return
+
+def eos_ignore_addr (addr, size):
+    socket = zmq_connect()
+    buff = pack('iiiiiiiQ', 23, size, 0, 0, 0, 0, 0, addr)
     try:
         socket.send(buff)
         msg = socket.recv()

@@ -68,14 +68,14 @@ class ModelConnectorObject:
         model_wrap.config_done()
         return
 
-    def TestCaseBegin(self, tcid):
+    def TestCaseBegin(self, tcid, loopid):
         if GlobalOptions.dryrun: return
-        model_wrap.testcase_begin(tcid)
+        model_wrap.testcase_begin(tcid, loopid)
         return
 
-    def TestCaseEnd(self, tcid):
+    def TestCaseEnd(self, tcid, loopid):
         if GlobalOptions.dryrun: return
-        model_wrap.testcase_end(tcid)
+        model_wrap.testcase_end(tcid, loopid)
         return
 
 

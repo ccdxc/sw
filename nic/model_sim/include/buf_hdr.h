@@ -31,6 +31,7 @@ typedef enum buff_type_e_ {
     BUFF_TYPE_CONFIG_DONE = 20,
     BUFF_TYPE_TESTCASE_BEGIN = 21,
     BUFF_TYPE_TESTCASE_END = 22,
+    BUFF_TYPE_EOS_IGNORE_ADDR = 23,
 } buff_type_e;
 
 typedef struct buffer_port_s_ {
@@ -41,8 +42,14 @@ typedef struct buffer_port_s_ {
 
 typedef struct buffer_hdr_t_ {
     buff_type_e type;
-    int         size;
-    int         port;   // also used for mac port num
+    union {
+        int         size;
+        int         tcid;
+    };
+    union {
+        int         port;   // also used for mac port num
+        int         loopid;
+    };
     int         cos;
     int         status;
     uint32_t    slowfast;
