@@ -76,7 +76,8 @@ TEST_F(vrf_test, test1)
     hal::hal_obj_id_t       obj_id;
     void                    *obj;
     hal::vrf_t              *vrf = NULL;
-
+    VrfGetResponseMsg       get_rsp_msg;
+    VrfGetRequest           get_req;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -104,9 +105,19 @@ TEST_F(vrf_test, test1)
     vrf = (hal::vrf_t *)obj;
     ASSERT_TRUE(vrf->vrf_id == 1);
 
+    // Get vrf
+    get_req.mutable_key_or_handle()->set_vrf_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_get(get_req, &get_rsp_msg);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_l2_segments() == 0);
+    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_security_groups() == 0);
+    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_l4lb_services() == 0);
+    ASSERT_TRUE(get_rsp_msg.response(0).stats().num_endpoints() == 0);
 
     // Delete vrf
-    del_req.mutable_key_or_handle()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_delete(del_req, &del_rsp);
@@ -118,6 +129,55 @@ TEST_F(vrf_test, test1)
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
 
+    // Create  2 vrfs
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ten_spec.mutable_key_or_handle()->set_vrf_id(2);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Get vrf without setting key handle.
+    get_req.clear_key_or_handle();
+    get_rsp_msg.clear_response();
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_get(get_req, &get_rsp_msg);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    for (uint32_t i = 0; i < uint32_t(get_rsp_msg.response_size()); i++) {
+        ASSERT_TRUE(get_rsp_msg.response(i).spec().key_or_handle().vrf_id() == (i+1));
+        ASSERT_TRUE(get_rsp_msg.response(i).stats().num_l2_segments() == 0);
+        ASSERT_TRUE(get_rsp_msg.response(i).stats().num_security_groups() == 0);
+        ASSERT_TRUE(get_rsp_msg.response(i).stats().num_l4lb_services() == 0);
+        ASSERT_TRUE(get_rsp_msg.response(i).stats().num_endpoints() == 0);
+    }
+
+    // Delete vrf 1 
+    del_req.mutable_key_or_handle()->set_vrf_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete vrf 2
+    del_req.mutable_key_or_handle()->set_vrf_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 // Update vrf test with enicifs
@@ -579,14 +639,13 @@ TEST_F(vrf_test, test5)
 // ----------------------------------------------------------------------------
 TEST_F(vrf_test, test6) 
 {
-    hal_ret_t                       ret;
+    hal_ret_t                    ret;
     VrfSpec                      ten_spec, ten_spec1;
     VrfResponse                  ten_rsp, ten_rsp1;
-    SecurityProfileSpec             sp_spec;
-    SecurityProfileResponse         sp_rsp;
+    SecurityProfileSpec          sp_spec;
+    SecurityProfileResponse      sp_rsp;
     VrfDeleteRequest             del_req;
     VrfDeleteResponse            del_rsp;
-
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(61);
@@ -622,6 +681,7 @@ TEST_F(vrf_test, test6)
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
+
 }
 
 // ----------------------------------------------------------------------------

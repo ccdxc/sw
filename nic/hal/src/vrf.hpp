@@ -214,13 +214,13 @@ extern bool vrf_id_compare_key_func(void *key1, void *key2);
 vrf_t *vrf_lookup_key_or_handle (const VrfKeyHandle& kh);
 
 hal_ret_t vrf_create(vrf::VrfSpec& spec,
-                        vrf::VrfResponse *rsp);
+                     vrf::VrfResponse *rsp);
 hal_ret_t vrf_update(vrf::VrfSpec& spec,
-                        vrf::VrfResponse *rsp);
+                     vrf::VrfResponse *rsp);
 hal_ret_t vrf_delete(vrf::VrfDeleteRequest& req,
-                        vrf::VrfDeleteResponse *rsp);
+                     vrf::VrfDeleteResponse *rsp);
 hal_ret_t vrf_get(vrf::VrfGetRequest& req,
-                     vrf::VrfGetResponse *rsp);
+                  vrf::VrfGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __VRF_HPP__

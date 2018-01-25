@@ -912,35 +912,10 @@ end:
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// process a vrf get request
-//------------------------------------------------------------------------------
-hal_ret_t
-vrf_get (VrfGetRequest& req, VrfGetResponse *rsp)
+static void
+vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
 {
-    vrf_t        *vrf;
     nwsec_profile_t *sec_prof = NULL;
-
-    // key-handle field must be set
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    auto kh = req.key_or_handle();
-    if (kh.key_or_handle_case() == VrfKeyHandle::kVrfId) {
-        vrf = vrf_lookup_by_id(kh.vrf_id());
-    } else if (kh.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
-        vrf = vrf_lookup_by_handle(kh.vrf_handle());
-    } else {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    if (vrf == NULL) {
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_VRF_NOT_FOUND;
-    }
 
     // fill config spec of this vrf
     rsp->mutable_spec()->mutable_key_or_handle()->set_vrf_id(vrf->vrf_id);
@@ -960,6 +935,50 @@ vrf_get (VrfGetRequest& req, VrfGetResponse *rsp)
     rsp->mutable_spec()->set_vrf_type(vrf->vrf_type);
 
     rsp->set_api_status(types::API_STATUS_OK);
+}
+
+static bool
+vrf_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    VrfGetResponseMsg *rsp          = (VrfGetResponseMsg *)ctxt;
+    VrfGetResponse *response        = rsp->add_response();
+    vrf_t          *vrf             = NULL;
+
+    vrf = (vrf_t *)hal_handle_get_obj(entry->handle_id);
+    vrf_process_get(vrf, response);
+
+    // Always return false here, so that we walk through all hash table
+    // entries. 
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// process a vrf get request
+//------------------------------------------------------------------------------
+hal_ret_t
+vrf_get (VrfGetRequest& req, VrfGetResponseMsg *rsp)
+{
+    vrf_t        *vrf;
+
+    // key-handle field must be set
+    if (!req.has_key_or_handle()) {
+        // If the Vrf key handle field is not set, then this is a request 
+        // for information from all VRFs. Run through all VRFs in the hash 
+        // table and populate the response.
+        g_hal_state->vrf_id_ht()->walk(vrf_get_ht_cb, rsp);
+    } else {
+        auto kh = req.key_or_handle();
+        vrf = vrf_lookup_key_or_handle(kh);
+        auto response = rsp->add_response();
+        if (vrf == NULL) {
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
+            return HAL_RET_VRF_NOT_FOUND;
+        } else {
+            vrf_process_get(vrf, response);
+        }
+    }
+
     return HAL_RET_OK;
 }
 

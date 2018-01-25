@@ -86,7 +86,6 @@ VrfServiceImpl::VrfGet(ServerContext *context,
                              VrfGetResponseMsg *rsp)
 {
     uint32_t             i, nreqs = req->request_size();
-    VrfGetResponse    *response;
 
     HAL_TRACE_DEBUG("Rcvd Vrf Get Request");
     if (nreqs == 0) {
@@ -95,9 +94,8 @@ VrfServiceImpl::VrfGet(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
-        response = rsp->add_response();
         auto request = req->request(i);
-        hal::vrf_get(request, response);
+        hal::vrf_get(request, rsp);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
