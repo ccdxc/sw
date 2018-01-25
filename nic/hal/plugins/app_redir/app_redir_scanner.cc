@@ -2,6 +2,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "snort_api.h"
+#include "application_ids.h"
 #include "app_redir_scanner.hpp"
 #include "app_redir_ctx.hpp"
 #include <dlfcn.h>
@@ -37,7 +38,8 @@ volatile static uint32_t scanner_periodic_cb_count = 0;
     SCANNER_SNORT_DLFN(get_flow_info_by_key);     \
     SCANNER_SNORT_DLFN(cleanup_pkt_thread);       \
     SCANNER_SNORT_DLFN(cleanup_flow);             \
-    SCANNER_SNORT_DLFN(cleanup_flow_by_key);
+    SCANNER_SNORT_DLFN(cleanup_flow_by_key);      \
+    SCANNER_SNORT_DLFN(get_app_info);
 
 // struct of dynamically loaded function pointers
 static struct {
@@ -95,6 +97,61 @@ static bool scanner_dlclose()
     int rc = dlclose(snort_lib_so);
     snort_lib_so = nullptr;
     return (rc == 0);
+}
+
+static int scanner_get_appid_by_name(const char* app_name)
+{
+    if (snort_dl.lib_get_app_info) {
+        struct SnortAppInfo snort_appinfo;
+        memset(&snort_appinfo, 0, sizeof(snort_appinfo));
+        strcpy(snort_appinfo.name, app_name);
+        if (0 == snort_dl.lib_get_app_info(&snort_appinfo)) {
+            return snort_appinfo.id;
+        } else {
+            HAL_TRACE_WARN("scanner app {} not found", app_name);
+        }
+    }
+
+    return 0;
+}
+
+// Strcpy with conversion to uppercase
+static void strcpy_upper(char* dst, const char* src)
+{
+    if (!src || !dst) return;
+
+    while (*src) {
+        if (islower(*src))
+            *dst = toupper(*src);
+        else *dst = *src;
+
+        src++; dst++;
+    }
+    *dst = '\0';
+}
+
+
+// Returns the upper-case app name with the given scanner app id
+//   Note that the string is stored in thread-local storage, so it's
+//   valid until the next time the api is called
+static char* scanner_get_appname_by_id(int32_t id)
+{
+    static thread_local char s_scanner_appname[SNORT_MAX_APP_NAME_LEN+1];
+
+    if (snort_dl.lib_get_app_info) {
+        struct SnortAppInfo snort_appinfo;
+        memset(&snort_appinfo, 0, sizeof(snort_appinfo));
+        snort_appinfo.id = id;
+        if (0 == snort_dl.lib_get_app_info(&snort_appinfo)) {
+            strcpy_upper(s_scanner_appname, snort_appinfo.name);
+            s_scanner_appname[SNORT_MAX_APP_NAME_LEN] = '\0';
+            return s_scanner_appname;
+        } else {
+            HAL_TRACE_WARN("scanner app {} not found", id);
+        }
+    }
+
+    return nullptr;
 }
 
 void scanner_periodic_cb(void *timer, uint32_t timer_id, void* ctx)
@@ -248,10 +305,46 @@ error:
     return HAL_RET_ERR;
 }
 
-static appid_id_t scanner_appid_to_local_id(int appid)
+static std::unordered_map<int32_t, appid_id_t> scanner_appid_to_local_id_map = {
+    {APP_ID_DNS, HAL_APPID_DNS},
+    {APP_ID_MYSQL, HAL_APPID_MYSQL},
+    {APP_ID_HTTP, HAL_APPID_HTTP},
+    {APP_ID_HTTPS, HAL_APPID_HTTPS},
+    {APP_ID_POSTGRESQL, HAL_APPID_POSTGRESQL},
+    {APP_ID_UNKNOWN, 0},
+    {APP_ID_NONE, 0},
+};
+
+// Snort to Pensando app id mapping
+static appid_id_t scanner_appid_to_local_id(int32_t appid)
 {
-    // TODO: Snort to Pensando appid mapping
-    return (appid_id_t) appid;
+    // First do fast lookup, in case it's a static entry or previously seen
+    auto it = scanner_appid_to_local_id_map.find(appid);
+    if( it != scanner_appid_to_local_id_map.end()) {
+        HAL_TRACE_DEBUG("Found app id {} for scanner app id {}", it->second, appid);
+        return it->second;
+    }
+
+    // Not found, do more expensive string lookup
+
+    // Get app name by scanner id
+    appid_id_t ret = 0;
+    char* appname = scanner_get_appname_by_id(appid);
+    if (appname) {
+        // Now map the name back to the local app id
+        // Assumes local app name and scanner app name are the same
+        if (HAL_RET_OK != app_to_appid(appname, ret)) {
+            ret = 0;
+            HAL_TRACE_WARN("Unable to find app id for scanner app name {}", appname);
+        } else {
+            // Store this entry in local table, for faster lookup next time
+            scanner_appid_to_local_id_map[appid] = ret;
+            HAL_TRACE_DEBUG("Storing app id {} for scanner app {} id {}",
+                            ret, appname, appid);
+        }
+    }
+
+    return ret;
 }
 
 #define MAX_SCANNER_APPID_STATE 4

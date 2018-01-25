@@ -65,7 +65,7 @@ def hal_init():
 
 def run_hntap():
     log = open(hntap_log, "w")
-    cmd = ['../bazel-bin/nic/proxy-e2etest/nic_proxy-e2etest_hntap', '-n', '5', '-x']
+    cmd = ['../bazel-bin/nic/proxy-e2etest/nic_proxy-e2etest_hntap', '-n', '5']
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p
@@ -133,7 +133,7 @@ def run_test(testnum, testname):
     status = run_http_client()
     if status == 0:
         FNULL = open(os.devnull, 'w')
-        cmd = ['grep', '{state=\"APPID_STATE_IN_PROGRESS\",id=676}', nic_dir + '/hal.log']
+        cmd = ['grep', '{state=\"APPID_STATE_IN_PROGRESS\",id=3}', nic_dir + '/hal.log']
         p = Popen(cmd, stdout=FNULL, stderr=FNULL)
         p.communicate()
         p.wait()

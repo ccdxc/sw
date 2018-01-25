@@ -464,30 +464,43 @@ inline bool app_redir_pkt_tx_ownership(fte::ctx_t& ctx)
     return false;
 }
 
+// TODO: hack for now
+#define HAL_APPID_LIST \
+  HAL_APPID_ENTRY(NONE),       \
+  HAL_APPID_ENTRY(DNS),        \
+  HAL_APPID_ENTRY(MYSQL),      \
+  HAL_APPID_ENTRY(HTTP),       \
+  HAL_APPID_ENTRY(HTTPS),      \
+  HAL_APPID_ENTRY(POSTGRESQL), \
+  HAL_APPID_ENTRY(MONGODB),    \
+  HAL_APPID_ENTRY(CASSANDRA),  \
+  HAL_APPID_ENTRY(MAX)
+
+enum {
+#define HAL_APPID_ENTRY(app) HAL_APPID_##app
+HAL_APPID_LIST
+#undef HAL_APPID_ENTRY
+};
+
+static const char* hal_app_names[] = {
+#define HAL_APPID_ENTRY(app) #app
+HAL_APPID_LIST
+#undef HAL_APPID_ENTRY
+};
+
 inline hal_ret_t
 app_to_appid(std::string app, uint32_t& appid)
 {
-    // TODO: Hack for now
-    if(app == "DNS") {
-        appid = 617;
-    } else if(app == "MYSQL") {
-        appid = 747;
-    } else if(app == "HTTP") {
-        appid = 676;
-    } else if(app == "HTTPS") {
-        appid = 1122;
-    } else if(app == "POSTGRES") {
-        appid = 791;
-    } else if(app == "MONGO") {
-        appid = 2000000;
-    } else if(app == "CASSANDRA") {
-        appid = 2000001;
-    } else if(app == "ANY") {
-        appid = 0;
-    } else {
-        return HAL_RET_ERR;
+    for (uint32_t i = 1; i < HAL_APPID_MAX; i++) {
+        if (app == hal_app_names[i]) {
+            appid = i;
+            return HAL_RET_OK;
+        }
     }
-    return HAL_RET_OK;
+    
+    appid = 0;
+    HAL_TRACE_WARN("App name {} not found", app);
+    return HAL_RET_ERR;
 }
 
 }
