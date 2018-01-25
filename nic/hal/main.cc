@@ -249,9 +249,11 @@ main (int argc, char **argv)
         exit(1);
     }
 
-    if (hal::pd::lkl_init() != HAL_RET_OK) {
-        fprintf(stderr, "LKL initialization failed, quitting ...\n");
-        exit(1);
+    if (hal_cfg.platform_mode != hal::HAL_PLATFORM_MODE_HAPS) {
+        if (hal::pd::lkl_init() != HAL_RET_OK) {
+            fprintf(stderr, "LKL initialization failed, quitting ...\n");
+            exit(1);
+        }
     }
 
     // register for all gRPC services
