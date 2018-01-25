@@ -41,10 +41,10 @@ rx_key3_ipv4:
 rx_key3_ipv6:
     seq         c1, d.rx_key3_d.match_fields[MATCH_IP_SRC_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_ip_src_3, \
-                    k.{ipv6_3_srcAddr_sbit0_ebit31,ipv6_3_srcAddr_sbit32_ebit127}
+                    k.{ipv6_3_srcAddr_sbit0_ebit7...ipv6_3_srcAddr_sbit96_ebit127}
     seq         c1, d.rx_key3_d.match_fields[MATCH_IP_DST_BIT_POS], 1
-    phvwr.c1    p.flow_lkp_metadata_ip_dst_3, \
-                    k.{ipv6_3_dstAddr_sbit0_ebit31,ipv6_3_dstAddr_sbit32_ebit127}
+    phvwr.c1    p.flow_lkp_metadata_ip_dst_3[127:40], k.ipv6_3_dstAddr_sbit0_ebit87
+    phvwr.c1    p.flow_lkp_metadata_ip_dst_3[39:0], k.ipv6_3_dstAddr_sbit88_ebit127
     seq         c1, d.rx_key3_d.match_fields[MATCH_IP_DSCP_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_ip_dscp_3, \
                     k.{ipv6_3_trafficClass_sbit0_ebit3,ipv6_3_trafficClass_sbit4_ebit7}

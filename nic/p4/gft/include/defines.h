@@ -1,8 +1,19 @@
 #define TRUE                           1
 #define FALSE                          0
+#define ASM_INSTRUCTION_OFFSET_MAX     (8 * 256)
 
 #define EXCEPTION_VPORT                0x3FF
+
+/*****************************************************************************/
+/* Header sizes                                                              */
+/*****************************************************************************/
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
+#define CAPRI_P4_INTRINSIC_HDR_SZ      5
+#define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
+#define P4PLUS_ROCE_HDR_SZ             20
+#define P4PLUS_CLASSIC_NIC_HDR_SZ      48
+#define P4PLUS_CPU_HDR_SZ              40
+#define P4PLUS_CPU_PKT_SZ              37
 
 /*****************************************************************************/
 /* Ether types                                                               */
@@ -105,6 +116,29 @@
 #define POLICER_COLOR_GREEN            0
 #define POLICER_COLOR_YELLOW           1
 #define POLICER_COLOR_RED              2
+
+/*****************************************************************************/ 
+/* Checksum flags from parser (for compiling P4 code only, don't use in ASM  */ 
+/*****************************************************************************/ 
+#define CSUM_HDR_UDP                   1
+#define CSUM_HDR_UDP_OPT_OCS           0
+
+/*****************************************************************************/
+/* P4+ app types                                                             */
+/*****************************************************************************/
+#define P4PLUS_APPTYPE_DEFAULT         0
+#define P4PLUS_APPTYPE_CLASSIC_NIC     1
+#define P4PLUS_APPTYPE_RDMA            2
+#define P4PLUS_APPTYPE_TCPTLS          3
+#define P4PLUS_APPTYPE_IPSEC           4
+#define P4PLUS_APPTYPE_NDE             5
+#define P4PLUS_APPTYPE_STORAGE         6
+#define P4PLUS_APPTYPE_TELEMETRY       7
+#define P4PLUS_APPTYPE_CPU             8
+#define P4PLUS_APPTYPE_RAW_REDIR       9
+#define P4PLUS_APPTYPE_P4PT            10
+#define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_DEFAULT
+#define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_P4PT
 
 /*****************************************************************************/
 /* Match types                                                               */

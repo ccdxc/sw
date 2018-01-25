@@ -227,10 +227,60 @@ action rx_key4(match_fields) {
         modify_field(flow_lkp_metadata.gre_proto_3, gre_3.proto);
     }
 
+    // normalize roce opcode
+    if (roce_bth.valid == TRUE) {
+        modify_field(roce_metadata.roce_valid, TRUE);
+        modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
+    }
+    if (roce_bth_1.valid == TRUE) {
+        modify_field(roce_metadata.roce_valid, TRUE);
+        modify_field(roce_bth.opCode, roce_bth_1.opCode);
+        modify_field(capri_rxdma_intrinsic.qid, roce_bth_1.destQP);
+    }
+    if (roce_bth_2.valid == TRUE) {
+        modify_field(roce_metadata.roce_valid, TRUE);
+        modify_field(roce_bth.opCode, roce_bth_2.opCode);
+        modify_field(capri_rxdma_intrinsic.qid, roce_bth_2.destQP);
+    }
+
+    // normalize udp len
+    if (udp_3.valid == TRUE) {
+        modify_field(roce_metadata.udp_len, udp_3.len);
+        if (ipv4_3.valid == TRUE) {
+            modify_field(roce_metadata.ecn, ipv4_3.diffserv, 0xC0);
+        } else {
+            if (ipv6_1.valid == TRUE) {
+                modify_field(roce_metadata.ecn, ipv6_3.trafficClass, 0xC0);
+            }
+        }
+    } else {
+        if (udp_2.valid == TRUE) {
+            modify_field(roce_metadata.udp_len, udp_2.len);
+            if (ipv4_2.valid == TRUE) {
+                modify_field(roce_metadata.ecn, ipv4_2.diffserv, 0xC0);
+            } else {
+                if (ipv6_2.valid == TRUE) {
+                    modify_field(roce_metadata.ecn, ipv6_2.trafficClass, 0xC0);
+                }
+            }
+        } else {
+            if (udp_1.valid == TRUE) {
+                modify_field(roce_metadata.udp_len, udp_1.len);
+                if (ipv4_1.valid == TRUE) {
+                    modify_field(roce_metadata.ecn, ipv4_1.diffserv, 0xC0);
+                } else {
+                    if (ipv6_1.valid == TRUE) {
+                        modify_field(roce_metadata.ecn, ipv6_1.trafficClass, 0xC0);
+                    }
+                }
+            }
+        }
+    }
+
     modify_field(scratch_metadata.match_fields, match_fields);
 }
 
-@pragma stage 1
+@pragma stage 0
 table rx_key1 {
     reads {
         ethernet_1.valid               : ternary;
@@ -263,7 +313,7 @@ table rx_key1 {
     size : KEY_TABLE_SIZE;
 }
 
-@pragma stage 1
+@pragma stage 0
 table rx_key2 {
     reads {
         ethernet_1.valid               : ternary;
@@ -288,7 +338,6 @@ table rx_key2 {
         tcp_3.valid                    : ternary;
         udp_3.valid                    : ternary;
         icmp_3.valid                   : ternary;
-        tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
         rx_key2;
@@ -296,7 +345,7 @@ table rx_key2 {
     size : KEY_TABLE_SIZE;
 }
 
-@pragma stage 2
+@pragma stage 1
 table rx_key3 {
     reads {
         ethernet_1.valid               : ternary;
@@ -321,7 +370,6 @@ table rx_key3 {
         tcp_3.valid                    : ternary;
         udp_3.valid                    : ternary;
         icmp_3.valid                   : ternary;
-        tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
         rx_key3;
@@ -329,7 +377,7 @@ table rx_key3 {
     size : KEY_TABLE_SIZE;
 }
 
-@pragma stage 0
+@pragma stage 1
 table rx_key4 {
     reads {
         ethernet_1.valid               : ternary;
@@ -354,7 +402,6 @@ table rx_key4 {
         tcp_3.valid                    : ternary;
         udp_3.valid                    : ternary;
         icmp_3.valid                   : ternary;
-        tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
         rx_key4;
@@ -369,7 +416,7 @@ control rx_key {
     apply(rx_key4);
 }
 
-action rx_vport(vport) {
+action rx_vport(vport, rdma_enabled) {
     modify_field(capri_p4_intrinsic.packet_len,
                  capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
 
@@ -377,12 +424,13 @@ action rx_vport(vport) {
 
     // if (capri_register.c1)
     modify_field(capri_intrinsic.lif, vport);
+    modify_field(roce_metadata.rdma_enabled, rdma_enabled);
 
     // if (not capri_register.c1)
     modify_field(capri_intrinsic.lif, EXCEPTION_VPORT);
 }
 
-@pragma stage 0
+@pragma stage 1
 table rx_vport {
     reads {
         ethernet_1.valid               : ternary;

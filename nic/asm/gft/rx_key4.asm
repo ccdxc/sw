@@ -9,6 +9,57 @@ struct phv_ p;
 %%
 
 rx_key4:
+
+normalize_roce:
+check_roce_bth1_valid:
+    bbne        k.roce_bth_1_valid, TRUE, check_roce_bth2_valid
+    phvwr       p.capri_rxdma_intrinsic_qid, k.roce_bth_1_destQP
+    b           normalize_udp
+    phvwr       p.roce_metadata_roce_valid, TRUE
+
+check_roce_bth2_valid:
+    bbne        k.roce_bth_2_valid, TRUE, check_roce_bth_valid
+    phvwr       p.capri_rxdma_intrinsic_qid, k.roce_bth_2_destQP
+    b           normalize_udp
+    phvwr       p.roce_metadata_roce_valid, TRUE
+
+check_roce_bth_valid:
+    bbne        k.roce_bth_valid, TRUE, rx_key4_start
+    phvwr       p.capri_rxdma_intrinsic_qid, k.roce_bth_destQP
+    phvwr       p.roce_metadata_roce_valid, TRUE
+
+normalize_udp:
+check_udp_3_valid:
+    bbne        k.udp_3_valid, TRUE, check_udp_2_valid
+    phvwr       p.roce_metadata_udp_len, \
+                    k.{udp_3_len_sbit0_ebit7,udp_3_len_sbit8_ebit15}
+    seq         c2, k.ipv4_3_valid, TRUE
+    phvwr.c2    p.roce_metadata_ecn, k.ipv4_3_diffserv[7:6]
+    seq         c2, k.ipv6_3_valid, TRUE
+    b           rx_key4_start
+    phvwr.c2    p.roce_metadata_ecn, k.ipv6_3_trafficClass_sbit0_ebit3[3:2]
+
+check_udp_2_valid:
+    bbne        k.udp_2_valid, TRUE, check_udp_1_valid
+    phvwr       p.roce_metadata_udp_len, \
+                    k.{udp_2_len_sbit0_ebit7,udp_2_len_sbit8_ebit15}
+    seq         c2, k.ipv4_2_valid, TRUE
+    phvwr.c2    p.roce_metadata_ecn, k.ipv4_2_diffserv[7:6]
+    seq         c2, k.ipv6_2_valid, TRUE
+    b           rx_key4_start
+    phvwr.c2    p.roce_metadata_ecn, k.ipv6_2_trafficClass_sbit0_ebit3[3:2]
+
+check_udp_1_valid:
+    bbne        k.udp_1_valid, TRUE, rx_key4_start
+    phvwr       p.roce_metadata_udp_len, \
+                    k.{udp_1_len_sbit0_ebit7,udp_1_len_sbit8_ebit15}
+    seq         c2, k.ipv4_1_valid, TRUE
+    phvwr.c2    p.roce_metadata_ecn, k.ipv4_1_diffserv[7:6]
+    seq         c2, k.ipv6_1_valid, TRUE
+    b           rx_key4_start
+    phvwr.c2    p.roce_metadata_ecn, k.ipv6_1_trafficClass_sbit0_ebit3[3:2]
+
+rx_key4_start:
     nop.!c1.e
     seq         c1, d.rx_key4_d.match_fields[MATCH_TRANSPORT_SRC_PORT_1_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_l4_sport_1, k.l4_metadata_l4_sport_1

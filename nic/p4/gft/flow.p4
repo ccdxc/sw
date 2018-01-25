@@ -5,7 +5,7 @@ action rx_gft_hash_info(entry_valid, flow_index, policer_index,
                       hash1, hint1, hash2, hint2, hash3, hint3,
                       hash4, hint4, hash5, hint5, hash6, hint6,
                       hash7, hint7, hash8, hint8, hash9, hint9,
-                      hash10, hint10) {
+                      hash10, hint10, more_hash, more_hints) {
     if (entry_valid == TRUE) {
         // if register c1 indicates hit, take the results.
         modify_field(flow_action_metadata.flow_index, flow_index);
@@ -38,9 +38,11 @@ action rx_gft_hash_info(entry_valid, flow_index, policer_index,
     modify_field(scratch_metadata.hint, hint8);
     modify_field(scratch_metadata.hint, hint9);
     modify_field(scratch_metadata.hint, hint10);
+    modify_field(scratch_metadata.flag, more_hash);
+    modify_field(scratch_metadata.hint, more_hints);
 }
 
-@pragma stage 3
+@pragma stage 2
 @pragma hbm_table
 table rx_gft_hash {
     reads {
@@ -98,7 +100,7 @@ table rx_gft_hash {
     size : FLOW_HASH_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 3
 @pragma hbm_table
 @pragma overflow_table rx_gft_hash
 table rx_gft_hash_overflow {

@@ -9,6 +9,7 @@
 
 #include "key.p4"
 #include "flow.p4"
+#include "roce.p4"
 #include "stats.p4"
 #include "policer.p4"
 #include "transpositions.p4"
@@ -30,6 +31,7 @@ control ingress {
     rx_policer();
     rx_transpositions();
     rx_vport_stats();
+    rx_roce();
 }
 
 /*****************************************************************************/

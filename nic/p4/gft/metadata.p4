@@ -91,6 +91,15 @@ header_type tcam_entry_t {
     }
 }
 
+header_type roce_metadata_t {
+    fields {
+        roce_valid          : 1;
+        rdma_enabled        : 1;
+        udp_len             : 16;
+        ecn                 : 2;
+    }
+}
+
 header_type scratch_metadata_t {
     fields {
         last_seen_timestamp : 48;
@@ -122,6 +131,7 @@ metadata tunnel_metadata_t     tunnel_metadata;
 metadata l4_metadata_t         l4_metadata;
 metadata flow_lkp_metadata_t   flow_lkp_metadata;
 metadata flow_act_metadata_t   flow_action_metadata;
+metadata roce_metadata_t       roce_metadata;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t    scratch_metadata;

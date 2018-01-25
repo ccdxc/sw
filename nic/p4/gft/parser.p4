@@ -1,7 +1,6 @@
 /******************************************************************************
  * Parser local definitions
  *****************************************************************************/
-
 header_type capri_deparser_len_t {
     fields {
         trunc_pkt_len           : 16;
@@ -58,7 +57,6 @@ metadata parser_ohi_t ohi;
 @pragma dont_trim
 metadata capri_deparser_len_t capri_deparser_len;
 
-
 /******************************************************************************
  * Capri Intrinsic header definitions
  *****************************************************************************/
@@ -99,9 +97,10 @@ header gre_t gre_01;
 header erspan_header_t3_t erspan_01;
 
 // layer 1
+@pragma pa_header_union xgress p4_to_p4plus_roce_eth_1
 header ethernet_t ethernet_1;
 header vlan_tag_t ctag_1;
-@pragma pa_header_union xgress ipv4_1 ipv6_1
+@pragma pa_header_union xgress ipv4_1 ipv6_1 p4_to_p4plus_roce_ip_1
 header ipv4_t ipv4_1;
 header ipv6_t ipv6_1;
 @pragma pa_header_union xgress udp_1 tcp_1 icmp_1
@@ -113,9 +112,10 @@ header gre_t gre_1;
 header erspan_header_t3_t erspan_1;
 
 // layer 2
+@pragma pa_header_union ingress p4_to_p4plus_roce_eth_2
 header ethernet_t ethernet_2;
 header vlan_tag_t ctag_2;
-@pragma pa_header_union ingress ipv4_2 ipv6_2
+@pragma pa_header_union ingress ipv4_2 ipv6_2 p4_to_p4plus_roce_ip_2
 header ipv4_t ipv4_2;
 header ipv6_t ipv6_2;
 @pragma pa_header_union ingress udp_2 tcp_2 icmp_2
@@ -127,14 +127,10 @@ header gre_t gre_2;
 header erspan_header_t3_t erspan_2;
 
 // layer 3
+@pragma pa_header_union ingress p4_to_p4plus_roce_eth_3
 header ethernet_t ethernet_3;
 header vlan_tag_t ctag_3;
-//@pragma pa_header_union xgress ipv4_3 ipv6_3
-@pragma pa_field_union ingress ipv4_3.ttl ipv6_3.nextHdr        // keep ordering so parser can combine
-@pragma pa_field_union ingress ipv4_3.protocol ipv6_3.hopLimit  // keep ordering so parser can combine
-@pragma pa_field_union ingress ipv4_3.identification ipv6_3.payloadLen
-@pragma pa_field_union ingress ipv4_3.dstAddr ipv6_3.dstAddr
-@pragma pa_field_union ingress ipv4_3.srcAddr ipv6_3.srcAddr
+@pragma pa_header_union ingress ipv4_3 ipv6_3 p4_to_p4plus_roce_ip_3
 header ipv4_t ipv4_3;
 header ipv6_t ipv6_3;
 @pragma pa_header_union ingress udp_3 tcp_3 icmp_3
@@ -186,6 +182,26 @@ header roce_deth_t roce_deth_2;
 @pragma no_ohi xgress
 header roce_deth_immdt_t roce_deth_immdt_2;
 
+// p4 to p4plus headers
+@pragma synthetic_header
+@pragma pa_field_union ingress p4_to_p4plus_roce.roce_opt_ts_value udp_opt_timestamp.ts_value
+@pragma pa_field_union ingress p4_to_p4plus_roce.roce_opt_ts_echo  udp_opt_timestamp.ts_echo
+@pragma pa_field_union ingress p4_to_p4plus_roce.roce_opt_mss      udp_opt_mss.mss
+header p4_to_p4plus_roce_header_t p4_to_p4plus_roce;
+
+@pragma synthetic_header
+header ethernet_t p4_to_p4plus_roce_eth_1;
+@pragma synthetic_header
+header ipv6_t p4_to_p4plus_roce_ip_1;
+@pragma synthetic_header
+header ethernet_t p4_to_p4plus_roce_eth_2;
+@pragma synthetic_header
+header ipv6_t p4_to_p4plus_roce_ip_2;
+@pragma synthetic_header
+header ethernet_t p4_to_p4plus_roce_eth_3;
+@pragma synthetic_header
+header ipv6_t p4_to_p4plus_roce_ip_3;
+
 parser start {
     extract(capri_intrinsic);
     return select(capri_intrinsic.csum_err) {
@@ -226,6 +242,8 @@ parser start {
 parser rx_deparse_start {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
+    extract(capri_rxdma_intrinsic);
+    extract(p4_to_p4plus_roce);
     return parse_nic;
 }
 
@@ -1194,8 +1212,12 @@ parser parse_udp_option_unknown {
 
 @pragma deparse_only
 parser parse_roce_eth {
-    //extract(p4_to_p4plus_roce_eth);
-    //extract(p4_to_p4plus_roce_ip);
+    extract(p4_to_p4plus_roce_eth_1);
+    extract(p4_to_p4plus_roce_ip_1);
+    extract(p4_to_p4plus_roce_eth_2);
+    extract(p4_to_p4plus_roce_ip_2);
+    extract(p4_to_p4plus_roce_eth_3);
+    extract(p4_to_p4plus_roce_ip_3);
     return ingress;
 }
 

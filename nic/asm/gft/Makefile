@@ -26,6 +26,7 @@ SRC_FILES := \
 	rx_key2.asm \
 	rx_key3.asm \
 	rx_key4.asm \
+	rx_roce.asm \
 	rx_vport.asm \
 	rx_vport_stats.asm \
 	$(NULL)

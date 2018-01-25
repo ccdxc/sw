@@ -420,7 +420,7 @@ action rx_l4_hdr_transpositions(hdr_bits, l4_sport_1, l4_dport_1, l4_sport_2,
                  in_bytes + capri_p4_intrinsic.packet_len);
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
 table rx_hdr_transpositions0 {
     reads {
@@ -432,7 +432,7 @@ table rx_hdr_transpositions0 {
     size : HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
 table rx_hdr_transpositions1 {
     reads {
@@ -444,7 +444,7 @@ table rx_hdr_transpositions1 {
     size : HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
 table rx_hdr_transpositions2 {
     reads {
@@ -456,7 +456,7 @@ table rx_hdr_transpositions2 {
     size : HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
 table rx_hdr_transpositions3 {
     reads {
