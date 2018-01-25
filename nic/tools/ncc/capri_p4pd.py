@@ -165,12 +165,16 @@ class capri_p4pd:
         processedhdrunion = []
         hdr_unions = {}
         for cfield, ctype in cf_table_keylist.items():
-            if cfield.is_hdr_union:
+            if cfield.is_hdr_union \
+               or (cfield.is_union_storage() and not cfield.is_fld_union):
                 # Get list of other headers that this table key-field's
                 # header is unionized with.
                 # Check if table key is header field from any unionizedheaders
                 hdrs = self.be.pa.gress_pa[ctable.d].hdr_unions.values()
                 cfieldhdr = cfield.get_p4_hdr()
+
+                if cfieldhdr not in self.be.pa.gress_pa[ctable.d].hdr_unions:
+                    continue
 
                 _ , unionizedhdrlist, hdrcontainer = \
                     self.be.pa.gress_pa[ctable.d].hdr_unions[cfieldhdr]
@@ -186,11 +190,6 @@ class capri_p4pd:
                     if len(unionkeys):
                         hdr_unions[h] = unionkeys
                     processedhdrunion.append(h)
-
-            elif cfield.is_union_storage():
-                # TBD ; Is something needed in this case ???
-                #pdb.set_trace()
-                pass
 
         # None of table keys are hdr unions
         if not hdr_unions:
