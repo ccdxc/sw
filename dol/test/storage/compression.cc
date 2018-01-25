@@ -70,8 +70,8 @@ static uint64_t hbm_status_buf_pa;
 static uint64_t hbm_sgl_buf_pa;
 
 static bool status_poll(bool in_hbm) {
-  cp_status_sha512_t *s = (cp_status_sha512_t *)status_buf;
-  for (int i = 0; i < 1000; i++) {
+  auto func = [in_hbm] () -> int {
+    cp_status_sha512_t *s = (cp_status_sha512_t *)status_buf;
     if (in_hbm) {
       read_mem(hbm_status_buf_pa, (uint8_t *)status_buf, kStatusBufSize);
     }
@@ -82,10 +82,13 @@ static bool status_poll(bool in_hbm) {
         read_mem(hbm_status_buf_pa, (uint8_t *)status_buf, kStatusBufSize);
       }
       printf("Got status %llx\n", *((unsigned long long *)s));
-      return true;
+      return 0;
     }
-    usleep(10000);
-  }
+    return 1;
+  };
+  tests::Poller poll;
+  if (poll(func) == 0)
+    return true;
   return false;
 }
 
@@ -338,7 +341,13 @@ static int run_cp_test(comp_test_t *params) {
   }
   uint64_t *db_data = (uint64_t *)(((uint8_t *)status_buf) + 1024);
   if (params->cmd_bits.doorbell_on) {
-    if (*db_data != kDBData) {
+    auto func = [db_data] () ->int {
+      if (*db_data == kDBData)
+        return 0;
+      return 1;
+    };
+    tests::Poller poll;
+    if (poll(func) != 0) {
       printf("ERROR: doorbell is not rung\n");
       return -1;
     }
@@ -350,7 +359,13 @@ static int run_cp_test(comp_test_t *params) {
   }
   uint32_t *o = (uint32_t *)(((uint8_t *)status_buf) + 2048);
   if (params->cmd_bits.opaque_tag_on) {
-    if (*o != kTagData) {
+    auto func = [o] () -> int {
+      if (*o == kTagData)
+        return 0;
+      return 1;
+    };
+    tests::Poller poll;
+    if (poll(func) != 0) {
       printf("ERROR: Opaque tag not written\n");
       return -1;
     }

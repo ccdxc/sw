@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <functional>
 #include <vector>
+#include "gflags/gflags.h"
+
+DECLARE_uint64(poll_interval);
 
 namespace tests {
 
@@ -42,6 +45,15 @@ typedef struct cp_seq_params {
   uint64_t ret_doorbell_addr;	// Doorbell address that is formed for the compression sequencer (filled by API)
   uint64_t ret_doorbell_data;	// Doorbell data that is formed for the compression sequencer (filled by API)
 } cp_seq_params_t;
+
+class Poller {
+public:
+  Poller() : timeout(FLAGS_poll_interval) { }
+  Poller(int timeout) : timeout(timeout) { }
+  int operator()(std::function<int(void)> poll_func);
+private:
+  int timeout; //Default overall timeout
+};
 
 // API return values: 0 => successs; < 0 => failure
 int test_setup_cp_seq_ent(cp_seq_params_t *params);
