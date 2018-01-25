@@ -80,6 +80,7 @@ cc_library(
         "//nic:compression_asic_hdrs",
         "//nic/utils/host_mem",
         "//nic/model_sim:model_client",
+        "//external:gflags",
     ],
 )
 

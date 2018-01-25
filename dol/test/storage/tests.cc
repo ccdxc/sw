@@ -9,8 +9,6 @@
 #include <ctime>
 #include <netinet/in.h>
 
-#include "gflags/gflags.h"
-
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/hal_if.hpp"
 #include "dol/test/storage/qstate_if.hpp"
@@ -22,8 +20,6 @@
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "dol/test/storage/tests.hpp"
-
-DECLARE_uint64(poll_interval);
 
 const static uint32_t  kDefaultBufSize       = 4096;
 const static uint32_t  kDefaultNlb           = 0;
@@ -64,27 +60,20 @@ static uint16_t global_cid = 0x1;
 static uint64_t global_slba = 0x0000;
 static uint64_t global_byte = 0xA0;
 
-class Poller {
-public:
-  Poller() : timeout(FLAGS_poll_interval) { }
-  Poller(int timeout) : timeout(timeout) { }
-  int operator()(std::function<int(void)> poll_func) {
-    std::time_t start = std::time(nullptr);
-    std::time_t end;
-    int rv;
-    do {
-      rv = poll_func();
-      if(0 == rv)
-        return rv;
-      usleep(10000); //Sleep 10msec
-      end = std::time(nullptr);
-    } while(end - start < timeout);
-    printf("Polling timeout %d exceeded - Giving up! \n", timeout);
-    return -1;
-  }
-private:
-  int timeout; //Default overall timeout
-};
+int Poller::operator()(std::function<int(void)> poll_func) {
+  std::time_t start = std::time(nullptr);
+  std::time_t end;
+  int rv;
+  do {
+    rv = poll_func();
+    if(0 == rv)
+      return rv;
+    usleep(10000); //Sleep 10msec
+    end = std::time(nullptr);
+  } while(end - start < timeout);
+  printf("Polling timeout %d exceeded - Giving up! \n", timeout);
+  return -1;
+}
 
 int test_setup() {
   // Initialize hal interface
