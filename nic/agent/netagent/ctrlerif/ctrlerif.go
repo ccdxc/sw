@@ -156,7 +156,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 			// receive from stream
 			evtList, err := stream.Recv()
 			if err != nil {
-				log.Errorf("Error receving from watch channel. Exiting network watch. Err: %v", err)
+				log.Errorf("Error receiving from watch channel. Exiting network watch. Err: %v", err)
 
 				if client.isStopped() {
 					rpcClient.Close()
@@ -223,7 +223,7 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 			// receive from stream
 			evt, err := stream.Recv()
 			if err != nil {
-				log.Errorf("Error receving from watch channel. Exiting endpoint watch. Err: %v", err)
+				log.Errorf("Error receiving from watch channel. Exiting endpoint watch. Err: %v", err)
 
 				if client.isStopped() {
 					rpcClient.Close()
@@ -314,7 +314,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 			// receive from stream
 			evt, err := stream.Recv()
 			if err != nil {
-				log.Errorf("Error receving from watch channel. Exiting security group watch. Err: %v", err)
+				log.Errorf("Error receiving from watch channel. Exiting security group watch. Err: %v", err)
 
 				if client.isStopped() {
 					rpcClient.Close()

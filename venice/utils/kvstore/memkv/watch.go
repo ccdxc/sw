@@ -153,7 +153,7 @@ func (w *watcher) startWatching() {
 		}
 	}
 
-	// If starting from a lower verison that current object's version
+	// If starting from a lower version that current object's version
 	// send current object(s) on the channel
 	for _, key := range w.keys {
 		v := f.cluster.kvs[key]

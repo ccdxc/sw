@@ -668,7 +668,7 @@ type grpcObjEndpointV1Endpoint struct {
 }
 
 func (a *grpcObjEndpointV1Endpoint) Create(ctx context.Context, in *network.Endpoint) (*network.Endpoint, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Endpoint", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -735,7 +735,7 @@ func (a *grpcObjEndpointV1Endpoint) Watch(ctx context.Context, options *api.List
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -837,7 +837,7 @@ type grpcObjLbPolicyV1LbPolicy struct {
 }
 
 func (a *grpcObjLbPolicyV1LbPolicy) Create(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "LbPolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -904,7 +904,7 @@ func (a *grpcObjLbPolicyV1LbPolicy) Watch(ctx context.Context, options *api.List
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1006,7 +1006,7 @@ type grpcObjNetworkV1Network struct {
 }
 
 func (a *grpcObjNetworkV1Network) Create(ctx context.Context, in *network.Network) (*network.Network, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Network", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Network", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -1073,7 +1073,7 @@ func (a *grpcObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWa
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1175,7 +1175,7 @@ type grpcObjSecurityGroupV1SecurityGroup struct {
 }
 
 func (a *grpcObjSecurityGroupV1SecurityGroup) Create(ctx context.Context, in *network.SecurityGroup) (*network.SecurityGroup, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "SecurityGroup", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "SecurityGroup", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -1242,7 +1242,7 @@ func (a *grpcObjSecurityGroupV1SecurityGroup) Watch(ctx context.Context, options
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1344,7 +1344,7 @@ type grpcObjServiceV1Service struct {
 }
 
 func (a *grpcObjServiceV1Service) Create(ctx context.Context, in *network.Service) (*network.Service, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Service", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Service", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -1411,7 +1411,7 @@ func (a *grpcObjServiceV1Service) Watch(ctx context.Context, options *api.ListWa
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1513,7 +1513,7 @@ type grpcObjSgpolicyV1Sgpolicy struct {
 }
 
 func (a *grpcObjSgpolicyV1Sgpolicy) Create(ctx context.Context, in *network.Sgpolicy) (*network.Sgpolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Sgpolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Sgpolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -1580,7 +1580,7 @@ func (a *grpcObjSgpolicyV1Sgpolicy) Watch(ctx context.Context, options *api.List
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -1682,7 +1682,7 @@ type grpcObjTenantV1Tenant struct {
 }
 
 func (a *grpcObjTenantV1Tenant) Create(ctx context.Context, in *network.Tenant) (*network.Tenant, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Tenant", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -1749,7 +1749,7 @@ func (a *grpcObjTenantV1Tenant) Watch(ctx context.Context, options *api.ListWatc
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

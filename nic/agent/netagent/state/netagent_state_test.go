@@ -218,11 +218,11 @@ func TestNetworkCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Network was not found in DB")
 	Assert(t, (tnt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", tnt)
 
-	// verify duplicate network creations suceed
+	// verify duplicate network creations succeed
 	err = ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating duplicate network")
 
-	// verify duplicate network name with different content does not suceed
+	// verify duplicate network name with different content does not succeed
 	nnt := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
@@ -235,7 +235,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 		},
 	}
 	err = ag.CreateNetwork(&nnt)
-	Assert(t, (err != nil), "conflicting network creation suceeded")
+	Assert(t, (err != nil), "conflicting network creation succeeded")
 
 	// verify list api works
 	netList := ag.ListNetwork()
@@ -249,7 +249,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 
 	// verify you can not delete non-existing network
 	err = ag.DeleteNetwork(&nt)
-	Assert(t, (err != nil), "deleting non-existing network suceeded", ag)
+	Assert(t, (err != nil), "deleting non-existing network succeeded", ag)
 }
 
 func TestNetworkUpdate(t *testing.T) {
@@ -566,7 +566,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 		},
 	}
 
-	// create endpoint refering to security group
+	// create endpoint referring to security group
 	_, err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Endpoint creation with security group failed")
 
@@ -585,7 +585,7 @@ func TestSecurityGroupCreateDelete(t *testing.T) {
 		},
 	}
 	_, err = ag.CreateEndpoint(&ep2)
-	Assert(t, (err != nil), "Endpoint create with unknown sg suceeded", ep2)
+	Assert(t, (err != nil), "Endpoint create with unknown sg succeeded", ep2)
 
 	// delete sg
 	err = ag.DeleteSecurityGroup(&sg)
@@ -680,13 +680,13 @@ func TestEndpointUpdate(t *testing.T) {
 	epupd2 := epupd
 	epupd2.Spec.NetworkName = "unknown"
 	err = ag.UpdateEndpoint(&epupd2)
-	Assert(t, (err != nil), "Changing network name suceeded")
+	Assert(t, (err != nil), "Changing network name succeeded")
 
 	// try updating security group to an unknown
 	epupd2 = epupd
 	epupd2.Spec.SecurityGroups = []string{"unknown"}
 	err = ag.UpdateEndpoint(&epupd2)
-	Assert(t, (err != nil), "Changing to non-existing security group suceeded")
+	Assert(t, (err != nil), "Changing to non-existing security group succeeded")
 }
 
 func TestSecurityGroupUpdate(t *testing.T) {
@@ -752,7 +752,7 @@ func TestSecurityGroupUpdate(t *testing.T) {
 		},
 	}
 	err = ag.UpdateSecurityGroup(&sg3)
-	Assert(t, (err != nil), "Referring to unknown sg suceeded", sg3)
+	Assert(t, (err != nil), "Referring to unknown sg succeeded", sg3)
 
 	// clear the peer group
 	sg2.Spec.Rules = []netproto.SecurityRule{}
@@ -879,7 +879,7 @@ func TestTenantCreateDelete(t *testing.T) {
 
 	// verify you can not delete non-existing tenant
 	err = ag.DeleteTenant(&tn)
-	Assert(t, err != nil, "deleting non-existing network suceeded", ag)
+	Assert(t, err != nil, "deleting non-existing network succeeded", ag)
 }
 
 func TestTenantUpdate(t *testing.T) {

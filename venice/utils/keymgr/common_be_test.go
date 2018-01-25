@@ -287,12 +287,12 @@ func testWrapKeyPairNegativeCases(t *testing.T, be Backend) {
 	// Empty wrapping key ID
 	_, err = km.WrapKeyPair("baseKey", "")
 	Assert(t, err != nil, "WrapKeyPair succeeded with empty wrapping key ID")
-	// Non-existant key pair ID
-	_, err = km.WrapKeyPair("nonExistant", "kek")
-	Assert(t, err != nil, "WrapKeyPair succeeded with nonExistant key pair ID")
-	// Non-existant wrapping key ID
-	_, err = km.WrapKeyPair("baseKey", "nonExistant")
-	Assert(t, err != nil, "WrapKeyPair succeeded with nonExistant wrapping key ID")
+	// Non-existent key pair ID
+	_, err = km.WrapKeyPair("nonexistent", "kek")
+	Assert(t, err != nil, "WrapKeyPair succeeded with nonexistent key pair ID")
+	// Non-existent wrapping key ID
+	_, err = km.WrapKeyPair("baseKey", "nonexistent")
+	Assert(t, err != nil, "WrapKeyPair succeeded with nonexistent wrapping key ID")
 }
 
 func testUnwrapKeyPairNegativeCases(t *testing.T, be Backend) {
@@ -312,9 +312,9 @@ func testUnwrapKeyPairNegativeCases(t *testing.T, be Backend) {
 	// Empty unwrapping key ID
 	_, err = km.UnwrapKeyPair("unwrappedKey", wrappedKey, baseKey.Public(), "")
 	Assert(t, err != nil, "UnwrapKeyPair succeeded with empty unwrapping key ID")
-	// Non-existant unwrapping key ID
-	_, err = km.UnwrapKeyPair("unwrappedKey", wrappedKey, baseKey.Public(), "nonExistant")
-	Assert(t, err != nil, "UnwrapKeyPair succeeded with nonExistant wrapping key ID")
+	// Non-existent unwrapping key ID
+	_, err = km.UnwrapKeyPair("unwrappedKey", wrappedKey, baseKey.Public(), "nonexistent")
+	Assert(t, err != nil, "UnwrapKeyPair succeeded with nonexistent wrapping key ID")
 	// Empty wrapped key
 	_, err = km.UnwrapKeyPair("unwrappedKey", nil, baseKey.Public(), "kek")
 	Assert(t, err != nil, "UnwrapKeyPair succeeded with nil public key")

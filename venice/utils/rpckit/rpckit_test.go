@@ -99,11 +99,11 @@ func TestRPCBasic(t *testing.T) {
 
 	// make sure server with no URL or client with no URL fails
 	_, err := NewRPCServer("testServer-foo", "")
-	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
+	Assert(t, (err != nil), "server with no URL succeeded while expecting it to fail")
 	_, err = NewRPCClient("testClient-foo", "")
-	Assert(t, (err != nil), "client with no URL succeded while expecting it to fail")
+	Assert(t, (err != nil), "client with no URL succeeded while expecting it to fail")
 	_, err = NewRPCServer("testServer-bar", "google.com")
-	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
+	Assert(t, (err != nil), "server with no URL succeeded while expecting it to fail")
 
 	// make an RPC call
 	resp, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
@@ -113,7 +113,7 @@ func TestRPCBasic(t *testing.T) {
 
 	// make test err rpc and confirm we get an error
 	_, err = testClient.TestRPCErr(context.Background(), &TestReq{ReqMsg: "test request"})
-	Assert(t, (err != nil), "TestRPCErr succeded while expecting it to fail")
+	Assert(t, (err != nil), "TestRPCErr succeeded while expecting it to fail")
 
 	// verify RPC stats got incremented
 	method1 := "/rpckit.Test/TestRPC"
@@ -155,7 +155,7 @@ func TestRPCClientReconnect(t *testing.T) {
 
 	// make an RPC call on closed connection
 	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
-	Assert(t, (err != nil), "RPC succeded while expecting it to fail")
+	Assert(t, (err != nil), "RPC succeeded while expecting it to fail")
 
 	// reconnect the client
 	t.Logf("Reconnecting to RPC server")
@@ -204,7 +204,7 @@ func TestRPCServerRestart(t *testing.T) {
 
 	// make an RPC call on closed connection make sure it fails
 	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
-	Assert(t, (err != nil), "RPC succeded while expecting it to fail")
+	Assert(t, (err != nil), "RPC succeeded while expecting it to fail")
 
 	// start a new server
 	t.Logf("Restarting RPC server")

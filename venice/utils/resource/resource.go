@@ -95,7 +95,7 @@ func (rm *RsrcMgr) AddProvider(provide *rproto.ResourceProvide) error {
 		provider.Resource.Scalar.AvailableResource = provider.Resource.Scalar.TotalResource
 	case rproto.ResourceKind_Range:
 		if provider.Resource.Range.End < provider.Resource.Range.Begin {
-			log.Errorf("Invalid provider params. Begining higher than end: %+v", provide)
+			log.Errorf("Invalid provider params. Beginning higher than end: %+v", provide)
 			return errors.New("Invalid provider params")
 		}
 
@@ -169,7 +169,7 @@ func (rm *RsrcMgr) RequestResource(req *rproto.ResourceRequest) (*rproto.Resourc
 		return nil, err
 	}
 
-	log.Debugf("Providers %+v matched constraits for req: %+v", matchedProviders, req)
+	log.Debugf("Providers %+v matched constraints for req: %+v", matchedProviders, req)
 
 	// find the scheduling algorithm to run
 	schedFunc := rm.schedulers[req.Scheduler]
@@ -275,7 +275,7 @@ func (rm *RsrcMgr) applyConstraints(rlist *RsrcList, req *rproto.ResourceRequest
 		}
 	}
 
-	// if no provider matched the constraits return
+	// if no provider matched the constraints return
 	if len(matchedProviders) == 0 {
 		log.Infof("No provider matched the constraints of req: %+v", req)
 		return nil, errors.New("No provider matched the constraints")

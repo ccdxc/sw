@@ -274,7 +274,7 @@ message SmartNICSpec {
                                 (venice.check) = "StrEnum(SmartNICSpec.SmartNICPhase)",
                                 (gogoproto.jsontag) = "phase,omitempty"];
 
-    // Managment IP address of the naples node
+    // Management IP address of the naples node
     string MgmtIp           = 2 [(gogoproto.nullable) = true,
                                 (venice.check) = "IPAddr()",
                                 (gogoproto.jsontag) = "mgmt-ip,omitempty"];

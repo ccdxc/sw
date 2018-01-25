@@ -952,7 +952,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Endpoint watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Endpoint watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -1039,7 +1039,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved LbPolicy watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received LbPolicy watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -1126,7 +1126,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Network watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Network watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -1213,7 +1213,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved SecurityGroup watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received SecurityGroup watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -1300,7 +1300,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Service watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Service watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -1387,7 +1387,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Sgpolicy watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Sgpolicy watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -1474,7 +1474,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Tenant watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Tenant watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {

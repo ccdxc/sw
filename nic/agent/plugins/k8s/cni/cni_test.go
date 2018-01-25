@@ -175,7 +175,7 @@ func TestCNIServerErrors(t *testing.T) {
 
 	// create a new CNI server
 	_, err := NewCniServer(fakeCniServerURL, &dummyAgent)
-	Assert(t, (err != nil), "creating cni server succesful")
+	Assert(t, (err != nil), "creating cni server successful")
 
 	// remove old .sock files
 	os.Remove(fakeCniServerURL)
@@ -243,7 +243,7 @@ func TestCNIServerErrors(t *testing.T) {
 	r, err := client.Post("http://localhost"+AddPodURL, "application/json", new(bytes.Buffer))
 	AssertOk(t, err, "Failed to make http call")
 	defer r.Body.Close()
-	Assert(t, (r.StatusCode != 200), "add pod call with bad args suceeded")
+	Assert(t, (r.StatusCode != 200), "add pod call with bad args succeeded")
 
 	// build bad pod args
 	stdinBytes, _ = json.Marshal(types.NetConf{Name: "pensando", Type: "pensando-net"})

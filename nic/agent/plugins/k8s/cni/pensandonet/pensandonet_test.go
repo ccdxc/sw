@@ -49,7 +49,7 @@ func startFakeCniServer(t *testing.T) (*fakeCniServer, error) {
 	}
 
 	// start serving HTTP requests
-	// http.Serve is a blocking call. so, do this in a seperate go routine..
+	// http.Serve is a blocking call. so, do this in a separate go routine..
 	go func() {
 		http.Serve(l, router)
 		defer l.Close()
@@ -95,6 +95,6 @@ func TestCNIPluginError(t *testing.T) {
 	n := NewCNIPlugin("/tmp/invalid.sock")
 
 	// verify both add and delete calls return error
-	Assert(t, (n.CmdAdd(&cni.CmdArgs{}) != nil), "add pod succeded")
-	Assert(t, (n.CmdDel(&cni.CmdArgs{}) != nil), "del pod succeded")
+	Assert(t, (n.CmdAdd(&cni.CmdArgs{}) != nil), "add pod succeeded")
+	Assert(t, (n.CmdDel(&cni.CmdArgs{}) != nil), "del pod succeeded")
 }

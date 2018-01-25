@@ -391,7 +391,7 @@ message LbPolicySpec {
 }
 
 message LbPolicyStatus {
-    // list of service objects refering this lb-policy
+    // list of service objects referring this lb-policy
     repeated string Services = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty"];
 }
 

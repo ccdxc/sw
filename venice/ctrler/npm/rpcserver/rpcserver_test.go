@@ -299,7 +299,7 @@ func TestEndpointRPCParams(t *testing.T) {
 	// verify we can get the sg
 	ometa := api.ObjectMeta{Name: "invalid", Tenant: "default"}
 	_, err = endpointRPRClient.GetEndpoint(context.Background(), &ometa)
-	Assert(t, (err != nil), "Getting non-extisting endpoint suceeded")
+	Assert(t, (err != nil), "Getting non-extisting endpoint succeeded")
 
 	// stop the rpc server
 	rpcClient.Close()

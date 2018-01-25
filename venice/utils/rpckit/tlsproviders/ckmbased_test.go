@@ -34,22 +34,22 @@ func TestCKMBasedProviderInit(t *testing.T) {
 
 	// null CKM Endpoint URL
 	_, err = NewCKMBasedProvider("", km)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
+	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
 
 	// invalid CKM Endpoint
 	_, err = NewCKMBasedProvider("foo", km)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
+	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
 
 	// unavailable CKM Endpoint
 	_, err = NewCKMBasedProvider("localhost:123", km)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
+	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
 
 	// good CKM but nil KeyMgr
 	srv, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv.Stop()
 	AssertOk(t, err, "Error creating CKM controller at localhost:0")
 	_, err = NewCKMBasedProvider(srv.GetListenURL(), nil)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
+	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
 
 }
 
@@ -89,7 +89,7 @@ func TestCKMBasedProviderRPC(t *testing.T) {
 	Assert(t, (testHandler.ReqMsg == "test TLS request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test TLS response"), "Unexpected resp msg", resp)
 	AssertOk(t, err, "RPC error")
-	t.Log("Succesfully performed RPC")
+	t.Log("Successfully performed RPC")
 }
 
 func TestRPCBalancing(t *testing.T) {

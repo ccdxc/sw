@@ -368,7 +368,7 @@ func getSwaggerFileName(file string) (string, error) {
 	return "", errInvalidOption
 }
 
-// getCWD2 retuns the cwd working directory but qualified by the parent directory.
+// getCWD2 returns the cwd working directory but qualified by the parent directory.
 func getCWD2() string {
 	cwd, err := os.Getwd()
 	if err != nil {

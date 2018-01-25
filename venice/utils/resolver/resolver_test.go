@@ -125,7 +125,7 @@ func TestResolverClient(t *testing.T) {
 
 	instances := client.Lookup("NonExistentSvc")
 	if len(instances.Items) != 0 {
-		t.Fatalf("Found non-zero instances for non-existant service")
+		t.Fatalf("Found non-zero instances for non-existent service")
 	}
 
 	AssertEventually(t, func() (bool, []interface{}) {

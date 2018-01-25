@@ -65,7 +65,7 @@ func NewMessage(kind string) apisrv.Message {
 }
 
 // WithTransform registers a Transform function for the the message. to, and from are the versions
-//   involved and fn is the function being registered by the app to perform the trasnform.
+//   involved and fn is the function being registered by the app to perform the transform.
 func (m *MessageHdlr) WithTransform(from, to string, fn apisrv.TransformFunc) apisrv.Message {
 	if v, ok := m.transforms[from]; ok {
 		if v != nil {
@@ -84,7 +84,7 @@ func (m *MessageHdlr) WithValidate(fn apisrv.ValidateFunc) apisrv.Message {
 	return m
 }
 
-// WithDefaulter registers a function to apply custom defaults to teh message.
+// WithDefaulter registers a function to apply custom defaults to the message.
 func (m *MessageHdlr) WithDefaulter(fn apisrv.DefaulterFunc) apisrv.Message {
 	m.defualter = fn
 	return m

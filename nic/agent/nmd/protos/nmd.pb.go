@@ -100,7 +100,7 @@ type NaplesSpec struct {
 	PrimaryMac string `protobuf:"bytes,3,opt,name=PrimaryMac,proto3" json:"primaryMac,omitempty"`
 	// Name of the Host
 	NodeName string `protobuf:"bytes,4,opt,name=NodeName,proto3" json:"nodeName,omitempty"`
-	// Managment IP address of the naples node
+	// Management IP address of the naples node
 	MgmtIp string `protobuf:"bytes,5,opt,name=MgmtIp,proto3" json:"mgmtIp,omitempty"`
 }
 

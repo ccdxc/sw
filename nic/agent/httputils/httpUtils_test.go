@@ -44,7 +44,7 @@ func TestHTTPUtils(t *testing.T) {
 	defer os.Remove(listenURL)
 
 	// start serving HTTP requests
-	// http.Serve is a blocking call. so, do this in a seperate go routine..
+	// http.Serve is a blocking call. so, do this in a separate go routine..
 	go func() {
 		http.Serve(l, router)
 		defer l.Close()

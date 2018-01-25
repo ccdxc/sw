@@ -89,13 +89,13 @@ func testEmstoreAddDelete(t *testing.T, dbType DbType, dbPath string) {
 	// verify reading from non-existing kind will return an error
 	ometa.TypeMeta.Kind = "testObj2"
 	_, err = db.Read(&ometa)
-	Assert(t, err != nil, "Reading from non-existing table suceeded")
+	Assert(t, err != nil, "Reading from non-existing table succeeded")
 	Assert(t, strings.Contains(err.Error(), ErrTableNotFound.Error()), "Incorrect error", err)
 
 	// verify deleting from non-existing kind will return an error
 	ometa.TypeMeta.Kind = "testObj2"
 	err = db.Delete(&ometa)
-	Assert(t, err != nil, "Deleting from non-existing table suceeded")
+	Assert(t, err != nil, "Deleting from non-existing table succeeded")
 	Assert(t, strings.Contains(err.Error(), ErrTableNotFound.Error()), "Incorrect error", err)
 
 	// delete from the db

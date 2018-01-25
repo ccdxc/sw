@@ -45,14 +45,14 @@ func main() {
 			select {
 			case ev, ok := <-watcher.EventChan():
 				if ok {
-					fmt.Printf("recieved Publisher Event [ %+v]\n", ev)
+					fmt.Printf("received Publisher Event [ %+v]\n", ev)
 				} else {
 					fmt.Printf("channel closed!!")
 					return
 				}
 			case ev, ok := <-orderWatcher.EventChan():
 				if ok {
-					fmt.Printf("recieved Order Event [ %+v]\n", ev)
+					fmt.Printf("received Order Event [ %+v]\n", ev)
 				} else {
 					fmt.Printf("channel closed!!")
 					return

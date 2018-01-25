@@ -1078,7 +1078,7 @@
         },
         "Status": {
           "type": "string",
-          "title": "Managment IP address of the naples node"
+          "title": "Management IP address of the naples node"
         },
         "LastTransitionTime": {
           "type": "string",

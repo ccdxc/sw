@@ -62,7 +62,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 		return nil, nil
 	}
 
-	// check if we have the network endpoint is refering to
+	// check if we have the network endpoint is referring to
 	// FIXME: if network gets deleted after endpoint is created, how do we handle it?
 	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Name: ep.Spec.NetworkName})
 	if err != nil {
@@ -70,7 +70,7 @@ func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 		return nil, err
 	}
 
-	// check if security groups its refering to exists
+	// check if security groups its referring to exists
 	// FIXME: how do we handle security group getting deleted after ep is created.
 	var sgs []*netproto.SecurityGroup
 	for _, sgname := range ep.Spec.SecurityGroups {
@@ -138,7 +138,7 @@ func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		return err
 	}
 
-	// check if security groups its refering to exists
+	// check if security groups its referring to exists
 	var sgs []*netproto.SecurityGroup
 	for _, sgname := range ep.Spec.SecurityGroups {
 		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Name: sgname})

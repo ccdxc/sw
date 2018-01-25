@@ -122,7 +122,7 @@ type grpcObjTrafficEncryptionPolicyV1TrafficEncryptionPolicy struct {
 }
 
 func (a *grpcObjTrafficEncryptionPolicyV1TrafficEncryptionPolicy) Create(ctx context.Context, in *networkencryption.TrafficEncryptionPolicy) (*networkencryption.TrafficEncryptionPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "TrafficEncryptionPolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "TrafficEncryptionPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -189,7 +189,7 @@ func (a *grpcObjTrafficEncryptionPolicyV1TrafficEncryptionPolicy) Watch(ctx cont
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

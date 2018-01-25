@@ -272,7 +272,7 @@ type grpcObjCmdV1Cluster struct {
 }
 
 func (a *grpcObjCmdV1Cluster) Create(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Cluster", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Cluster", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -339,7 +339,7 @@ func (a *grpcObjCmdV1Cluster) Watch(ctx context.Context, options *api.ListWatchO
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -441,7 +441,7 @@ type grpcObjCmdV1Node struct {
 }
 
 func (a *grpcObjCmdV1Node) Create(ctx context.Context, in *cmd.Node) (*cmd.Node, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Node", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Node", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -508,7 +508,7 @@ func (a *grpcObjCmdV1Node) Watch(ctx context.Context, options *api.ListWatchOpti
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -610,7 +610,7 @@ type grpcObjCmdV1SmartNIC struct {
 }
 
 func (a *grpcObjCmdV1SmartNIC) Create(ctx context.Context, in *cmd.SmartNIC) (*cmd.SmartNIC, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "SmartNIC", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "SmartNIC", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -677,7 +677,7 @@ func (a *grpcObjCmdV1SmartNIC) Watch(ctx context.Context, options *api.ListWatch
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

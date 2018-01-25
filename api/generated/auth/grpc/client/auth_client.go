@@ -197,7 +197,7 @@ type grpcObjAuthV1User struct {
 }
 
 func (a *grpcObjAuthV1User) Create(ctx context.Context, in *auth.User) (*auth.User, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "User", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "User", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -264,7 +264,7 @@ func (a *grpcObjAuthV1User) Watch(ctx context.Context, options *api.ListWatchOpt
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -366,7 +366,7 @@ type grpcObjAuthV1AuthenticationPolicy struct {
 }
 
 func (a *grpcObjAuthV1AuthenticationPolicy) Create(ctx context.Context, in *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "AuthenticationPolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "AuthenticationPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -433,7 +433,7 @@ func (a *grpcObjAuthV1AuthenticationPolicy) Watch(ctx context.Context, options *
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

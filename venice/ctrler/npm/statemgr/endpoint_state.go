@@ -46,7 +46,7 @@ func (eps *EndpointState) AttributeExists(matchAttr string) bool {
 	return false
 }
 
-// MatchAttributes returns true if all atributes are found
+// MatchAttributes returns true if all attributes are found
 func (eps *EndpointState) MatchAttributes(attrs []string) bool {
 	// walk all attributes and confirm all of them match
 	for _, attr := range attrs {

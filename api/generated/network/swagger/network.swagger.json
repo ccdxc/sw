@@ -2686,7 +2686,7 @@
       "properties": {
         "Ports": {
           "type": "string",
-          "title": "list of service objects refering this lb-policy"
+          "title": "list of service objects referring this lb-policy"
         },
         "Action": {
           "type": "string"

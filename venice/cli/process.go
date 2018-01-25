@@ -141,7 +141,7 @@ func createCmdInternal(c *cli.Context, rmw bool) {
 	}
 }
 
-// readCmd is the function taht gets called for any read operation, it gets an object or a list of
+// readCmd is the function that gets called for any read operation, it gets an object or a list of
 // objects; if there are multiple objects, it would show them in a tabulated form
 func readCmd(c *cli.Context) {
 	ctx := &context{cli: c, tenant: defaultTenant}
@@ -362,7 +362,7 @@ func exampleCmd(c *cli.Context) {
 	fmt.Printf("%s\n", ref.WalkStruct(obj, refCtx))
 }
 
-// definitionCmd shows object definiton
+// definitionCmd shows object definition
 func definitionCmd(c *cli.Context) {
 	ctx := &context{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "definition"); err != nil {
@@ -595,7 +595,7 @@ func snapshotCmd(c *cli.Context) {
 		}
 	}
 
-	fmt.Printf("Successful - stored snapshot in '%s' direcotry\n", dirname)
+	fmt.Printf("Successful - stored snapshot in '%s' directory\n", dirname)
 }
 
 func bashCreateCompleter(c *cli.Context) {
@@ -733,7 +733,7 @@ func showVersion(c *cli.Context) {
 	fmt.Printf("Server Version: %s\n", DefaultVersion)
 }
 
-// sliceToMap convers a colon separted command line option strings to a go map
+// sliceToMap converts a colon separted command line option strings to a go map
 // while largely it is used for labels, it can be used for other maps too
 func sliceToMap(labelStrs []string) (map[string]string, error) {
 	labels := make(map[string]string)

@@ -494,7 +494,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved App watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received App watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -548,7 +548,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved AppUser watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received AppUser watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -602,7 +602,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved AppUserGrp watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received AppUserGrp watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {

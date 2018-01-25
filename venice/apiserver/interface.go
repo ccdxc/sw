@@ -256,7 +256,7 @@ type MessageAction interface {
 	WriteModTime(i interface{}) (interface{}, error)
 }
 
-// Method is the interface satisfied by the representaion of the RPC Method in the API Server infra.
+// Method is the interface satisfied by the representation of the RPC Method in the API Server infra.
 // A Method denotes a gRPC method or a REST resource with a set of exposed operations.
 // This interface is a combination of Registration functions for plugins and a set of Actions
 // allowed on the Method object.
@@ -267,7 +267,7 @@ type Method interface {
 
 // MethodRegistration is the set of plugins that can be registered.
 type MethodRegistration interface {
-	// With PreCommitHook registeres fn to be called at pre-commit time.
+	// With PreCommitHook registers fn to be called at pre-commit time.
 	WithPreCommitHook(fn PreCommitFunc) Method
 	// WithPostCommitHook registers tn to be invoked after the commit operation.
 	WithPostCommitHook(fn PostCommitFunc) Method
@@ -287,7 +287,7 @@ type MethodAction interface {
 	Disable()
 	// GetRequestType returns input type for the method.
 	GetRequestType() Message
-	// GetResponseType retuns the output type of the method.
+	// GetResponseType returns the output type of the method.
 	GetResponseType() Message
 	// HandleInvcation handles the invocation of this method.
 	HandleInvocation(ctx context.Context, i interface{}) (interface{}, error)

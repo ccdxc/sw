@@ -26,7 +26,7 @@ func NewFInfo(strs []string) FInfo {
 // GetSubObjFn returns an empty struct object by struct's name
 // struct's name is either an object's name within caller's package
 // or referred object in another package
-// The function is called by Get/Write/Walk routines to fetch empty embeded structs
+// The function is called by Get/Write/Walk routines to fetch empty embedded structs
 type GetSubObjFn func(string) interface{}
 
 // NilSubObj doesn't recognize any sub object name
@@ -155,7 +155,7 @@ func FieldByName(v reflect.Value, fieldName string) []string {
 // "sskip" - skip this field in the summary output
 // "ins=<val>" - indicates that insert this string to qualify the embedded fields
 //   this is useful when a struct is embedded multiple times within a struct and meaning
-//   of each occurence is different e.g. including Rule struct for 'in' rule and 'out rule
+//   of each occurrence is different e.g. including Rule struct for 'in' rule and 'out rule
 // "id=<val>" - indicates that the field be identified in output/cli-input/summary as this field
 //   this field is similar to how field name can be different in json format
 // "key" indicates that this field is the key for CRUD operations

@@ -213,7 +213,7 @@ type grpcObjFwlogPolicyV1FwlogPolicy struct {
 }
 
 func (a *grpcObjFwlogPolicyV1FwlogPolicy) Create(ctx context.Context, in *telemetry.FwlogPolicy) (*telemetry.FwlogPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "FwlogPolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -280,7 +280,7 @@ func (a *grpcObjFwlogPolicyV1FwlogPolicy) Watch(ctx context.Context, options *ap
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}
@@ -382,7 +382,7 @@ type grpcObjStatsPolicyV1StatsPolicy struct {
 }
 
 func (a *grpcObjStatsPolicyV1StatsPolicy) Create(ctx context.Context, in *telemetry.StatsPolicy) (*telemetry.StatsPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "StatsPolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -449,7 +449,7 @@ func (a *grpcObjStatsPolicyV1StatsPolicy) Watch(ctx context.Context, options *ap
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

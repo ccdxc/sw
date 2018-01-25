@@ -122,7 +122,7 @@ type grpcObjEventPolicyV1EventPolicy struct {
 }
 
 func (a *grpcObjEventPolicyV1EventPolicy) Create(ctx context.Context, in *events.EventPolicy) (*events.EventPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "EventPolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "EventPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -189,7 +189,7 @@ func (a *grpcObjEventPolicyV1EventPolicy) Watch(ctx context.Context, options *ap
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

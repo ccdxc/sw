@@ -481,7 +481,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Order watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Order watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -535,7 +535,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Book watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Book watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -589,7 +589,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Publisher watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Publisher watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {

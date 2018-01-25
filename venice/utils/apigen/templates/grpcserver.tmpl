@@ -211,14 +211,14 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 						status, ok := ev.Object.(*api.Status)
 						if !ok {
 							return errors.New("unknown error")
-						} 
+						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
 					strEvent := {{$pkgname}}.AutoMsg{{.}}WatchHelper{
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved {{.}} watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received {{.}} watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {

@@ -823,7 +823,7 @@ func (m *NetworkStatus) GetAllocatedIPv4Addrs() []byte {
 }
 
 type SGRule struct {
-	// list of service objects refering this lb-policy
+	// list of service objects referring this lb-policy
 	Ports      string   `protobuf:"bytes,1,opt,name=Ports,proto3" json:"ports,omitempty"`
 	Action     string   `protobuf:"bytes,2,opt,name=Action,proto3" json:"action,omitempty"`
 	PeerGroup  string   `protobuf:"bytes,3,opt,name=PeerGroup,proto3" json:"peer-group,omitempty"`

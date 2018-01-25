@@ -223,7 +223,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 // 1. Version tranformation of the request if the request version is different
 //    than the API server version
 // 2. Defaulting - Custom defaulting if registered
-// 3. Validation - Custom validation registerd by service.
+// 3. Validation - Custom validation registered by service.
 // 4. Pre-Commit hooks - invokes all pre-commit hooks registered for the Method
 //    Any of the called hooks can prevent the next stage of KV operation by returning
 //    false

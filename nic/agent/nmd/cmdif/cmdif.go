@@ -182,7 +182,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 
 			// Ignore events for non-local NIC
 			// In managed mode, client.nmd.nic holds the initial configuration obtained
-			// from REST API. GetSmartNIC() returns this inital config object.
+			// from REST API. GetSmartNIC() returns this initial config object.
 			nic, err := client.nmd.GetSmartNIC()
 			if err != nil || nic == nil || evt.Nic.Name != nic.GetName() {
 				log.Debugf("Ignoring non-local nics, local-nic: %+v, rcvd-nic: %+v", nic, evt.Nic)

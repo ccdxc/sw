@@ -294,7 +294,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 
 	// verify deleting non existing endpoint returns an error
 	_, err = nw.DeleteEndpoint(&epinfo.ObjectMeta)
-	Assert(t, (err != nil), "Deleting non existing endpoint succeded", epinfo)
+	Assert(t, (err != nil), "Deleting non existing endpoint succeeded", epinfo)
 
 	// delete the second endpoint
 	_, err = nw.DeleteEndpoint(&newEP.ObjectMeta)
@@ -612,7 +612,7 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 		},
 	}
 	err = stateMgr.CreateSgpolicy(&sgp2)
-	Assert(t, (err != nil), "Policy creation with unknown attachment suceeded")
+	Assert(t, (err != nil), "Policy creation with unknown attachment succeeded")
 
 	// delete the sg policy
 	err = stateMgr.DeleteSgpolicy("default", "test-sgpolicy")

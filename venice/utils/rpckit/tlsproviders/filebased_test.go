@@ -14,16 +14,16 @@ import (
 func TestFileBasedProviderInit(t *testing.T) {
 	// make sure initialization bad cert file names fail
 	_, err := NewFileBasedProvider("", "", "")
-	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeded while expecting it to fail")
+	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeeded while expecting it to fail")
 
 	_, err = NewFileBasedProvider("test.crt", "", "")
-	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeded while expecting it to fail")
+	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeeded while expecting it to fail")
 
 	_, err = NewFileBasedProvider("test.crt", "test.key", "testcerts/testCA.crt")
-	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeded while expecting it to fail")
+	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeeded while expecting it to fail")
 
 	_, err = NewFileBasedProvider("testcerts/testServer.crt", "testcerts/testServer.key", "test.ca")
-	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeded while expecting it to fail")
+	Assert(t, (err != nil), "LocalFS TLS provider initialization with bad cert succeeded while expecting it to fail")
 
 	// this one is expected to succeed
 	okProvider, err := NewFileBasedProvider("testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")

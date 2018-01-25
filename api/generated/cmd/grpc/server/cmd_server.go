@@ -499,7 +499,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Cluster watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Cluster watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -553,7 +553,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Node watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Node watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
@@ -607,7 +607,7 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved SmartNIC watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received SmartNIC watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {

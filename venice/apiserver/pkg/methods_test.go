@@ -42,7 +42,7 @@ func TestMethodWiths(t *testing.T) {
 			t.Errorf("Expecting a result of [TestResponse] got [%v]", r)
 		}
 	} else {
-		t.Errorf("Result not overriden")
+		t.Errorf("Result not overridden")
 	}
 
 	if f.Pres != 3 {
@@ -93,7 +93,7 @@ func TestMethodKvWrite(t *testing.T) {
 	// this call should fail because the data is not added to the kvstore yet
 	// fakemessage implements a dummy kv read/write
 	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
-		t.Errorf("Expecting err but succeded")
+		t.Errorf("Expecting err but succeeded")
 	}
 	if req.Kvreads != 1 {
 		t.Errorf("Expecting [1] read but found [%v]", req.Kvreads)
@@ -142,7 +142,7 @@ func TestMethodKvList(t *testing.T) {
 		apisrv.RequestParamMethod, "LIST")
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 	if respmsg, _ := m.HandleInvocation(ctx, reqmsg); respmsg != nil {
-		t.Errorf("Expecting err but succeded")
+		t.Errorf("Expecting err but succeeded")
 	}
 	if resp.Kvlists != 1 {
 		t.Errorf("Expecting [1] kvlist but found [%v]", req.Kvlists)

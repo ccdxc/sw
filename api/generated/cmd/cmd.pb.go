@@ -541,7 +541,7 @@ type NodeCondition struct {
 	// set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
 	// state. Note : Whitelist mode is not supported yet.
 	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
-	// Managment IP address of the naples node
+	// Management IP address of the naples node
 	Status string `protobuf:"bytes,2,opt,name=Status,proto3" json:"status,omitempty"`
 	// Workload node or Controller node.
 	LastTransitionTime string `protobuf:"bytes,3,opt,name=LastTransitionTime,proto3" json:"last-transition-time,omitempty"`

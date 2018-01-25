@@ -33,7 +33,7 @@ type genObj struct {
 var genObjs = map[string]genObj{}
 
 // some helper functions to help with code generation
-func paranthesis(inp string) string {
+func parenthesis(inp string) string {
 	return fmt.Sprintf("{%s}", inp)
 }
 
@@ -79,7 +79,7 @@ func catFile(inp string) string {
 var funcMap = template.FuncMap{
 	"title":        strings.Title,
 	"untitle":      unTitle,
-	"paranthesis":  paranthesis,
+	"parenthesis":  parenthesis,
 	"checkPerms":   checkPerms,
 	"visited":      visited,
 	"cleanVisited": cleanVisited,

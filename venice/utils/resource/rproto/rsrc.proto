@@ -31,7 +31,7 @@ message ScalarResource {
 
 // Range resource
 message RangeResource {
-    uint64 Begin        = 1;   // Begining of the range
+    uint64 Begin        = 1;   // Beginning of the range
     uint64 End          = 2;   // End of range
     uint64 NumAvailable = 3;   // # of available values
     bytes  Allocated    = 4;   // bitmap of Allocated values in the range

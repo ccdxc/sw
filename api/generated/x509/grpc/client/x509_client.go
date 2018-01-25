@@ -122,7 +122,7 @@ type grpcObjCertificateV1Certificate struct {
 }
 
 func (a *grpcObjCertificateV1Certificate) Create(ctx context.Context, in *x509.Certificate) (*x509.Certificate, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "Certificate", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "Certificate", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -189,7 +189,7 @@ func (a *grpcObjCertificateV1Certificate) Watch(ctx context.Context, options *ap
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

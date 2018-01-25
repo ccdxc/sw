@@ -137,7 +137,7 @@ func TestDdbPathGet(t *testing.T) {
 	testmsg, err = r.LookupMsg("", ".example.Nest2")
 	paths, err = getDbKey(testmsg)
 	if err == nil {
-		t.Errorf("getDbKey succedded on faulty specification")
+		t.Errorf("getDbKey succeeded on faulty specification")
 	}
 }
 

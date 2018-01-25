@@ -45,7 +45,7 @@ func MustGetAPIGateway() apigw.APIGateway {
 	return &singletonAPIGw
 }
 
-// initAPIGw funciton is called exactly once. (Guarded by the once)
+// initAPIGw function is called exactly once. (Guarded by the once)
 // All inititializaion for the apiGw object goes here.
 func initAPIGw() {
 	singletonAPIGw.svcmap = make(map[string]apigw.APIGatewayService)

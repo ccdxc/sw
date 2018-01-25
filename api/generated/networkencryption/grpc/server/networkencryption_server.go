@@ -236,7 +236,7 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved TrafficEncryptionPolicy watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received TrafficEncryptionPolicy watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {

@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
-	
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -67,7 +67,7 @@ type grpcObj{{$srvname}}{{.}} struct {
 }
 
 func (a *grpcObj{{$srvname}}{{.}}) Create(ctx context.Context, in *{{$pkgname}}.{{.}}) (*{{$pkgname}}.{{.}}, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "{{.}}", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "{{.}}", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -134,7 +134,7 @@ func (a *grpcObj{{$srvname}}{{.}}) Watch(ctx context.Context, options *api.ListW
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

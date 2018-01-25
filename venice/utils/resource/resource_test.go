@@ -177,7 +177,7 @@ func TestSchedConstraints(t *testing.T) {
 	AssertOk(t, err, "RequestResource failed to get a resource for c2")
 	Assert(t, (c2.ProviderID == "prov2"), "Returned provider was incorrect", c2)
 
-	// verify incorrect constraits dont match anything
+	// verify incorrect constraints dont match anything
 	req.Constraints.Attributes.Attributes["attr1"] = "attrVal5"
 	req.ConsumerID = "consumer3"
 	c3, err := rm.RequestResource(req)
@@ -358,13 +358,13 @@ func TestResourceReqFailures(t *testing.T) {
 		Constraints:  &rproto.ResourceConstraints{},
 	}
 	_, err = rm.RequestResource(req)
-	Assert(t, (err != nil), "resource req suceeded while expecting to fail", err)
+	Assert(t, (err != nil), "resource req succeeded while expecting to fail", err)
 	req.Quantity = 4
 
 	// try to allocate an invalid resource type
 	req.ResourceType = "type2"
 	_, err = rm.RequestResource(req)
-	Assert(t, (err != nil), "invalid resource type resource req suceeded while expecting to fail", err)
+	Assert(t, (err != nil), "invalid resource type resource req succeeded while expecting to fail", err)
 	req.ResourceType = "type1"
 
 	consumer := rproto.ResourceConsumer{
@@ -375,14 +375,14 @@ func TestResourceReqFailures(t *testing.T) {
 	}
 	// try some invalid resource releases
 	err = rm.ReleaseResource(nil)
-	Assert(t, (err != nil), "resource release suceeded while expecting to fail", err)
+	Assert(t, (err != nil), "resource release succeeded while expecting to fail", err)
 	consumer.ResourceType = "type2"
 	err = rm.ReleaseResource(&consumer)
-	Assert(t, (err != nil), "resource release suceeded while expecting to fail", err)
+	Assert(t, (err != nil), "resource release succeeded while expecting to fail", err)
 	consumer.ResourceType = "type1"
 	consumer.ProviderID = "prov5"
 	err = rm.ReleaseResource(&consumer)
-	Assert(t, (err != nil), "resource release suceeded while expecting to fail", err)
+	Assert(t, (err != nil), "resource release succeeded while expecting to fail", err)
 	consumer.ProviderID = "prov1"
 
 	// test idempotent release requests

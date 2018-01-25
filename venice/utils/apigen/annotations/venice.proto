@@ -23,7 +23,7 @@ message RestEndpoint {
 
 // Venice Option extensions applicable at the file level.
 extend google.protobuf.FileOptions {
-  // GRPC destination. This is typically a service discovery key. 
+  // GRPC destination. This is typically a service discovery key.
   string fileGrpcDest = 51235;
   // fileApiServerBacked indicates if this is backed by the API server.
   //   default is true.
@@ -35,7 +35,7 @@ extend google.protobuf.ServiceOptions {
   // API version.
   string apiVersion = 51250;
   // Prefix is used in how the URI is constructed. For example if the prefix option
-  // is specified as storage then the URI would be "/<version>/venice/storage/<URI path specifed for endpoint>
+  // is specified as storage then the URI would be "/<version>/venice/storage/<URI path specified for endpoint>
   string apiPrefix= 51251;
   // crudService is used to specify the messages for which this service provides gRPC CRUD Apis.
   repeated string apiGrpcCrudService = 51252;

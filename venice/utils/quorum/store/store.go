@@ -22,7 +22,7 @@ func New(c *quorum.Config) (quorum.Interface, error) {
 	}
 }
 
-// Start starts a member of KV Store Quorum using exisitng configuration.
+// Start starts a member of KV Store Quorum using existing configuration.
 // This is typically called after a restart of node or process
 func Start(c *quorum.Config) (quorum.Interface, error) {
 	switch c.Type {

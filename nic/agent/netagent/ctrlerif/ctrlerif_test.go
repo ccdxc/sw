@@ -367,9 +367,9 @@ func TestNpmclient(t *testing.T) {
 	// verify rpc call returns error
 	// verify we can make an rpc call from client to server
 	_, err = cl.EndpointCreateReq(&epinfo)
-	Assert(t, (err != nil), "endpoint create request suceeded while expecting it to fail")
+	Assert(t, (err != nil), "endpoint create request succeeded while expecting it to fail")
 	_, err = cl.EndpointDeleteReq(&epinfo)
-	Assert(t, (err != nil), "endpoint delete request suceeded while expecting it to fail")
+	Assert(t, (err != nil), "endpoint delete request succeeded while expecting it to fail")
 
 	// stop the client
 	cl.Stop()

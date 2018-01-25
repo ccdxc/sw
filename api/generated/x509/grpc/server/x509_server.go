@@ -234,7 +234,7 @@ func (s *sx509X509Backend) CompleteRegistration(ctx context.Context, logger log.
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved Certificate watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received Certificate watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {

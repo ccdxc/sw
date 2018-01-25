@@ -213,10 +213,10 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 	// loop till connection closes
 	for {
-		// keep receving events
+		// keep receiving events
 		evt, err := stream.Recv()
 		if err != nil {
-			log.Errorf("Error receving from nw if watcher. Err: %v", err)
+			log.Errorf("Error receiving from nw if watcher. Err: %v", err)
 			return
 		}
 
