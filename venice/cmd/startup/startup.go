@@ -11,7 +11,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
-	"github.com/pensando/sw/venice/cmd/grpc/server"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/services"
@@ -216,9 +215,6 @@ func StartQuorumServices(c utils.Cluster) {
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
-
-	// Create and register the RPC handler for SmartNIC service
-	go server.RegisterSmartNICServer(env.StateMgr)
 }
 
 // StartNodeServices starts services running on non-quorum node
