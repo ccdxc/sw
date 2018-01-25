@@ -84,6 +84,7 @@ class Module(objects.FrameworkObject):
         self.runorder   = getattr(spec, 'runorder', 65535)
         self.rtl        = getattr(spec, 'rtl', True)
         self.latency    = getattr(spec, 'latency', False)
+        self.pendol     = getattr(spec, 'pendol', False)
         self.id         = self.runorder << 16 + ModuleIdAllocator.get()
         self.module_hdl = None
         self.infra_data = None
@@ -93,6 +94,9 @@ class Module(objects.FrameworkObject):
         self.stats = ModuleStats()
         self.Show()
         return
+
+    def IsPendolHeaderEnabled(self):
+        return self.pendol
 
     def Show(self):
         logger.info("- Module Test  : %s" % self.name)

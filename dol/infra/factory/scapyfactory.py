@@ -353,8 +353,10 @@ class ScapyPacketObject:
             self.spkt = shdr
         return
 
-    def __add_dol_header(self):
+    def __add_dol_header(self, tcid, step_id):
         hdr = FactoryStore.headers.Get('PENDOL')
+        hdr.fields.tcid = tcid
+        hdr.fields.step_id = step_id
         self.__add_header(hdr)
         #self.__dolhdr = self.__build_header(hdr)
         #self.rawbytes += bytes(self.__dolhdr)
@@ -395,7 +397,7 @@ class ScapyPacketObject:
                 self.__add_header(hdrdata)
         
         if packet.IsDolHeaderRequired():
-            self.__add_dol_header()
+            self.__add_dol_header(packet.GetTcId(), packet.GetStepId())
 
         if packet.IsIcrcEnabled():
             self.__update_icrc(packet)

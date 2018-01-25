@@ -115,6 +115,7 @@ class TestCase(objects.FrameworkObject):
         self.__root = None
         self.drop = False
         self.loopid = None
+        self.pendol = module.IsPendolHeaderEnabled()
         self.LockAttributes()
         
         self.GID(tcid)
@@ -142,6 +143,14 @@ class TestCase(objects.FrameworkObject):
             self.logpfx = "TC%06d" % self.ID()
         self.__generate()
         return
+
+    def IsPendolHeaderEnabled(self):
+        return self.pendol
+
+    def GetStepId(self):
+        return self.step_id
+    def GetTcId(self):
+        return self.GID()
 
     def GetRoot(self):
         return self.__root

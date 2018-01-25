@@ -50,6 +50,7 @@ class FeatureObject:
         self.runorder   = getattr(spec.feature, 'runorder', 65535)
         self.rtl        = getattr(spec.feature, 'rtl', True)
         self.latency    = getattr(spec.feature, 'latency', False)
+        self.pendol     = getattr(spec.feature, 'pendol', False)
         return
 
     def LoadModules(self):
@@ -68,6 +69,7 @@ class FeatureObject:
             mspec.selectors = getattr(mspec, 'selectors', self.selectors)
             mspec.rtl       = getattr(mspec, 'rtl', self.rtl)
             mspec.latency   = getattr(mspec, 'latency', self.latency)
+            mspec.pendol    = getattr(mspec, 'pendol', self.pendol)
             mspec.runorder  = self.runorder
             ModuleStore.Add(mspec)
         return

@@ -181,10 +181,12 @@ class Packet(objects.FrameworkObject):
         self.Clone(FactoryStore.testobjects.Get('PACKET'))
         #self.tc = tc
         self.rawbytes = None
-        self.pendol = None
+        self.pendol = tc.IsPendolHeaderEnabled()
         self.icrc   = False
         self.inherit_icrc   = False
         self.basepkt = None
+        self.tcid = 0
+        self.step_id = 0
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
@@ -204,7 +206,7 @@ class Packet(objects.FrameworkObject):
         self.spktobj    = None
         self.rawbytes   = None
         self.size       = None
-        self.pendol     = pktspec.pendol
+        self.pendol     = pktspec.pendol or self.pendol
         return
 
     def IsDolHeaderRequired(self):
@@ -408,6 +410,11 @@ class Packet(objects.FrameworkObject):
     def GetIcrc(self):
         return self.spktobj.GetIcrc()
 
+    def GetTcId(self):
+        return self.tcid
+    def GetStepId(self):
+        return self.step_id
+
     def GetScapyPacket(self):
         return self.spktobj.GetScapyPacket()
 
@@ -415,6 +422,8 @@ class Packet(objects.FrameworkObject):
         if self.spktobj is not None:
             return
         self.__resolve(tc)
+        self.tcid = tc.GetTcId()
+        self.step_id = tc.GetStepId()
         self.spktobj = scapyfactory.ScapyPacketObject()
         self.spktobj.Build(packet = self)
 

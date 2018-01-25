@@ -79,29 +79,29 @@ class ICRC(CRC):
         return
 ICRC_LENGTH = len(ICRC())
 
-PENDOL_SIGNATURE = 0x900D900D
+PENDOL_SIGNATURE = 0xDEADBEEF
 class PENDOL(Packet):
     name = "PENDOL"
     fields_desc = [
         BitField("sig",         PENDOL_SIGNATURE,      32),
-        BitField("ts",          0,      32),
-        BitField("id",          0,      32),
-        BitField("opcode",      0,      8),
-        BitField("step_id",     0,      8),
-        BitField("log",         0,      1),
-        BitField("logdrop",     0,      1),
-        BitField("rsvd",        0,      14),
+        BitField("step_id",     0,      32),
+        BitField("tcid",        0,      32),
+        #BitField("ts",          0,      32),
+        #BitField("opcode",      0,      8),
+        #BitField("log",         0,      1),
+        #BitField("logdrop",     0,      1),
+        #BitField("rsvd",        0,      14),
     ]
     def show(self, indent=3, lvl="", label_lvl=""):
         print("%s###[ PENDOL ]###" % label_lvl)
         print("%s  sig      = 0x%X" % (label_lvl, self.sig))
-        print("%s  ts       = %d" % (label_lvl, self.ts))
-        print("%s  id       = %d" % (label_lvl, self.id))
-        print("%s  opcode   = %d" % (label_lvl, self.opcode))
         print("%s  step_id  = %d" % (label_lvl, self.step_id))
-        print("%s  log      = %d" % (label_lvl, self.log))
-        print("%s  logdrop  = %d" % (label_lvl, self.logdrop))
-        print("%s  rsvd     = %d" % (label_lvl, self.rsvd))
+        print("%s  tcid     = %d" % (label_lvl, self.tcid))
+        #print("%s  ts       = %d" % (label_lvl, self.ts))
+        #print("%s  opcode   = %d" % (label_lvl, self.opcode))
+        #print("%s  log      = %d" % (label_lvl, self.log))
+        #print("%s  logdrop  = %d" % (label_lvl, self.logdrop))
+        #print("%s  rsvd     = %d" % (label_lvl, self.rsvd))
         self.payload.show(indent, lvl, label_lvl)
         return
 

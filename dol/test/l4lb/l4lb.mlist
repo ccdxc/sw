@@ -5,6 +5,7 @@ feature:
     module      : l4lb
     enable      : True
     ignore      : False
+    pendol      : True
 
 modules:   
     # Aggregated
