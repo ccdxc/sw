@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <vector>
 #include <iostream>
 
@@ -14,6 +15,7 @@
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/rdma.hpp"
 #include "dol/test/storage/compression_test.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 namespace queues {
 void queues_shutdown();
@@ -196,6 +198,9 @@ int main(int argc, char**argv) {
   }
   printf("RDMA configuration completed \n");
 
+  // Indicate to model that config is done
+  config_done();
+
   printf("Forming test suite based on configuration\n");
   // Add unit tests
   if (run_unit_tests || run_nvme_tests) {
@@ -254,11 +259,18 @@ int main(int argc, char**argv) {
 
   printf("Running test cases \n");
   for (size_t i = 0; i < test_suite.size(); i++) {
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
     printf(" Starting test #: %d name: %s \n", (int) i, test_suite[i].test_name.c_str());
+
     if (test_suite[i].test_fn() < 0)
       test_suite[i].test_succeded = false;
     else
       test_suite[i].test_succeded = true;
+
+    gettimeofday(&end, NULL);
+    printf(" Finished test #: %d name: %s status %d time %d \n", (int) i, test_suite[i].test_name.c_str(), 
+           test_suite[i].test_succeded, (int) (end.tv_sec - start.tv_sec));
   }
   printf("Test case run complete, shutting down queues \n");
   queues::queues_shutdown();

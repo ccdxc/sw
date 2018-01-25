@@ -1922,13 +1922,16 @@ int XtsCtx::ring_db_n_verify() {
 
   Poller poll;
   int rv = poll(func);
+  if(0 != rv) return rv;
+
+  printf("Doorbell returned successfully \n");
 
   if(0 == rv && t10_en && !decr_en && !is_dst_hbm_buf)
     rv = verify_prot_info((char *)dst_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
 
   if(0 == rv) {
     if(STATUS_DEF_VALUE != *status) {
-      printf(" status check failed - status value %lu", *status);
+      printf(" status check failed - status value %lu\n", *status);
       rv = -1;
     }
   }
@@ -1940,15 +1943,21 @@ int XtsCtx::ring_db_n_verify() {
   }
 
   uint32_t opaque_tag = 0;
-  if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
-    printf("Reading opaque tag hbm mem failed \n");
-    return -1;
-  }
+  auto func2 = [this, opaque_tag_addr, opaque_tag] () {
+    if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
+      printf("Reading opaque tag hbm mem failed \n");
+      return -1;
+    }
 
-  if(exp_opaque_tag != opaque_tag) {
-    printf("Opaque tag expected value %u rcvd %u", exp_opaque_tag, opaque_tag);
-    return -1;
-  }
+    if(exp_opaque_tag != opaque_tag) {
+      //printf("Opaque tag expected value %u rcvd %u\n", exp_opaque_tag, opaque_tag);
+      return -1;
+    }
+    return 0;
+  };
+  rv = poll(func2);
+  if(0 == rv) printf("Opaque tag returned successfully \n");
+
   exp_opaque_tag++;
 
   return rv;
