@@ -444,7 +444,6 @@ class ParserCalField:
         assert(self.P4FieldListCalculation != None)
         assert((self.P4FieldListCalculation.algorithm == 'csum16') \
                or (self.P4FieldListCalculation.algorithm == 'csum8'))
-        assert(self.P4FieldListCalculation.output_width == 16)
 
 
     def CalculatedFieldHdrGet(self):

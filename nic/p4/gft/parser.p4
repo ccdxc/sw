@@ -5,8 +5,8 @@ header_type capri_deparser_len_t {
     fields {
         trunc_pkt_len           : 16;
         icrc_payload_len        : 16;
-        l4_1_payload_len        : 16;
-        l4_2_payload_len        : 16;
+        rx_l4_payload_len       : 16;
+        udp_opt_l2_checksum_len : 16;
     }
 }
 
@@ -821,168 +821,6 @@ parser parse_vxlan_2 {
 }
 
 /******************************************************************************
- * Checksum for Layer 1 and Layer 2 on both fast path and regular path
- *****************************************************************************/
-
-field_list ipv4_1_checksum_list {
-    ipv4_1.version;
-    ipv4_1.ihl;
-    ipv4_1.diffserv;
-    ipv4_1.totalLen;
-    ipv4_1.identification;
-    ipv4_1.flags;
-    ipv4_1.fragOffset;
-    ipv4_1.ttl;
-    ipv4_1.protocol;
-    ipv4_1.srcAddr;
-    ipv4_1.dstAddr;
-}
-
-@pragma checksum hdr_len_expr ohi.ipv4_1___hdr_len + 0
-@pragma checksum verify_len ohi.l4_1_len
-@pragma checksum gress ingress
-field_list_calculation ipv4_1_checksum {
-    input {
-        ipv4_1_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-calculated_field ipv4_1.hdrChecksum  {
-    verify ipv4_1_checksum;
-}
-
-field_list ipv4_1_udp_1_checksum_list {
-    ipv4_1.srcAddr;
-    ipv4_1.dstAddr;
-    8'0;
-    ipv4_1.protocol;
-    udp_1.len;
-    udp_1.srcPort;
-    udp_1.dstPort;
-    payload;
-}
-
-@pragma checksum update_len capri_deparser_len.l4_1_payload_len
-@pragma checksum verify_len  ohi.l4_1_len
-@pragma checksum gress ingress
-field_list_calculation ipv4_1_udp_1_checksum {
-    input {
-        ipv4_1_udp_1_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-field_list ipv6_1_udp_1_checksum_list {
-    ipv6_1.srcAddr;
-    ipv6_1.dstAddr;
-    8'0;
-    ipv6_1.nextHdr;
-    udp_1.srcPort;
-    udp_1.dstPort;
-    payload;
-}
-
-@pragma checksum update_len capri_deparser_len.l4_1_payload_len
-@pragma checksum verify_len ohi.l4_1_len
-@pragma checksum gress ingress
-field_list_calculation ipv6_1_udp_1_checksum {
-    input {
-        ipv6_1_udp_1_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-calculated_field udp_1.checksum {
-    verify ipv4_1_udp_1_checksum;
-    verify ipv6_1_udp_1_checksum;
-    update ipv4_1_udp_1_checksum;
-    update ipv6_1_udp_1_checksum;
-}
-
-field_list ipv4_2_checksum_list {
-    ipv4_2.version;
-    ipv4_2.ihl;
-    ipv4_2.diffserv;
-    ipv4_2.totalLen;
-    ipv4_2.identification;
-    ipv4_2.flags;
-    ipv4_2.fragOffset;
-    ipv4_2.ttl;
-    ipv4_2.protocol;
-    ipv4_2.srcAddr;
-    ipv4_2.dstAddr;
-}
-
-@pragma checksum hdr_len_expr ohi.ipv4_2___hdr_len + 0
-@pragma checksum verify_len ohi.l4_2_len
-@pragma checksum gress ingress
-field_list_calculation ipv4_2_checksum {
-    input {
-        ipv4_2_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-calculated_field ipv4_2.hdrChecksum  {
-    verify ipv4_2_checksum;
-}
-
-field_list ipv4_2_udp_2_checksum_list {
-    ipv4_2.srcAddr;
-    ipv4_2.dstAddr;
-    8'0;
-    ipv4_2.protocol;
-    udp_2.len;
-    udp_2.srcPort;
-    udp_2.dstPort;
-    payload;
-}
-
-@pragma checksum update_len capri_deparser_len.l4_2_payload_len
-@pragma checksum verify_len  ohi.l4_2_len
-@pragma checksum gress ingress
-field_list_calculation ipv4_2_udp_2_checksum {
-    input {
-        ipv4_2_udp_2_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-field_list ipv6_2_udp_2_checksum_list {
-    ipv6_2.srcAddr;
-    ipv6_2.dstAddr;
-    8'0;
-    ipv6_2.nextHdr;
-    udp_2.srcPort;
-    udp_2.dstPort;
-    payload;
-}
-
-@pragma checksum update_len capri_deparser_len.l4_2_payload_len
-@pragma checksum verify_len ohi.l4_2_len
-@pragma checksum gress ingress
-field_list_calculation ipv6_2_udp_2_checksum {
-    input {
-        ipv6_2_udp_2_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-calculated_field udp_2.checksum {
-    verify ipv4_2_udp_2_checksum;
-    verify ipv6_2_udp_2_checksum;
-    update ipv4_2_udp_2_checksum;
-    update ipv6_2_udp_2_checksum;
-}
-
-/******************************************************************************
  * Layer 3
  *****************************************************************************/
 parser parse_ethernet_3 {
@@ -1225,14 +1063,398 @@ parser parse_end {
     return ingress;
 }
 
-calculated_field parser_metadata.icrc {
-    verify ipv4_1_roce_icrc if (valid(roce_bth_1));
-    verify ipv6_1_roce_icrc if (valid(roce_bth_1));
-    verify ipv4_2_roce_icrc if (valid(roce_bth_2));
-    verify ipv6_2_roce_icrc if (valid(roce_bth_2));
-    verify ipv4_3_roce_icrc if (valid(roce_bth));
-    verify ipv6_3_roce_icrc if (valid(roce_bth));
+
+/******************************************************************************
+ * Checksum  in Rx Path
+ *****************************************************************************/
+
+field_list ipv4_1_checksum_list {
+    ipv4_1.version;
+    ipv4_1.ihl;
+    ipv4_1.diffserv;
+    ipv4_1.totalLen;
+    ipv4_1.identification;
+    ipv4_1.flags;
+    ipv4_1.fragOffset;
+    ipv4_1.ttl;
+    ipv4_1.protocol;
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
 }
+
+@pragma checksum hdr_len_expr ohi.ipv4_1___hdr_len + 0
+@pragma checksum verify_len ohi.l4_1_len
+@pragma checksum gress ingress
+field_list_calculation ipv4_1_checksum {
+    input {
+        ipv4_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_1.hdrChecksum  {
+    verify ipv4_1_checksum;
+    update ipv4_1_checksum;
+}
+
+field_list ipv4_1_udp_1_checksum_list {
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
+    8'0;
+    ipv4_1.protocol;
+    udp_1.len;
+    udp_1.srcPort;
+    udp_1.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.rx_l4_payload_len
+@pragma checksum verify_len  ohi.l4_1_len
+@pragma checksum gress ingress
+@pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
+field_list_calculation ipv4_1_udp_1_checksum {
+    input {
+        ipv4_1_udp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_1_udp_1_checksum_list {
+    ipv6_1.srcAddr;
+    ipv6_1.dstAddr;
+    8'0;
+    ipv6_1.nextHdr;
+    udp_1.srcPort;
+    udp_1.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.rx_l4_payload_len
+@pragma checksum verify_len ohi.l4_1_len
+@pragma checksum gress ingress
+@pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
+field_list_calculation ipv6_1_udp_1_checksum {
+    input {
+        ipv6_1_udp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_1.checksum {
+    verify ipv4_1_udp_1_checksum;
+    verify ipv6_1_udp_1_checksum;
+    update ipv4_1_udp_1_checksum;
+    update ipv6_1_udp_1_checksum;
+}
+
+field_list ipv4_2_checksum_list {
+    ipv4_2.version;
+    ipv4_2.ihl;
+    ipv4_2.diffserv;
+    ipv4_2.totalLen;
+    ipv4_2.identification;
+    ipv4_2.flags;
+    ipv4_2.fragOffset;
+    ipv4_2.ttl;
+    ipv4_2.protocol;
+    ipv4_2.srcAddr;
+    ipv4_2.dstAddr;
+}
+
+@pragma checksum hdr_len_expr ohi.ipv4_2___hdr_len + 0
+@pragma checksum verify_len ohi.l4_2_len
+@pragma checksum gress ingress
+field_list_calculation ipv4_2_checksum {
+    input {
+        ipv4_2_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_2.hdrChecksum  {
+    verify ipv4_2_checksum;
+    update ipv4_2_checksum;
+}
+
+field_list ipv4_2_udp_2_checksum_list {
+    ipv4_2.srcAddr;
+    ipv4_2.dstAddr;
+    8'0;
+    ipv4_2.protocol;
+    udp_2.len;
+    udp_2.srcPort;
+    udp_2.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.rx_l4_payload_len
+@pragma checksum verify_len  ohi.l4_2_len
+@pragma checksum gress ingress
+@pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
+field_list_calculation ipv4_2_udp_2_checksum {
+    input {
+        ipv4_2_udp_2_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_2_udp_2_checksum_list {
+    ipv6_2.srcAddr;
+    ipv6_2.dstAddr;
+    8'0;
+    ipv6_2.nextHdr;
+    udp_2.srcPort;
+    udp_2.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.rx_l4_payload_len
+@pragma checksum verify_len ohi.l4_2_len
+@pragma checksum gress ingress
+@pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
+field_list_calculation ipv6_2_udp_2_checksum {
+    input {
+        ipv6_2_udp_2_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_2.checksum {
+    verify ipv4_2_udp_2_checksum;
+    verify ipv6_2_udp_2_checksum;
+    update ipv4_2_udp_2_checksum;
+    update ipv6_2_udp_2_checksum;
+}
+
+
+field_list ipv4_3_checksum_list {
+    ipv4_3.version;
+    ipv4_3.ihl;
+    ipv4_3.diffserv;
+    ipv4_3.totalLen;
+    ipv4_3.identification;
+    ipv4_3.flags;
+    ipv4_3.fragOffset;
+    ipv4_3.ttl;
+    ipv4_3.protocol;
+    ipv4_3.srcAddr;
+    ipv4_3.dstAddr;
+}
+
+@pragma checksum hdr_len_expr ohi.ipv4_3___hdr_len + 0
+@pragma checksum verify_len ohi.l4_3_len
+@pragma checksum gress ingress
+field_list_calculation ipv4_3_checksum {
+    input {
+        ipv4_3_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_3.hdrChecksum  {
+    verify ipv4_3_checksum;
+    update ipv4_3_checksum;
+}
+
+field_list ipv4_3_udp_3_checksum_list {
+    ipv4_3.srcAddr;
+    ipv4_3.dstAddr;
+    8'0;
+    ipv4_3.protocol;
+    udp_3.len;
+    udp_3.srcPort;
+    udp_3.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.rx_l4_payload_len
+@pragma checksum verify_len  ohi.l4_3_len
+@pragma checksum gress ingress
+@pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
+field_list_calculation ipv4_3_udp_3_checksum {
+    input {
+        ipv4_3_udp_3_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_3_udp_3_checksum_list {
+    ipv6_3.srcAddr;
+    ipv6_3.dstAddr;
+    8'0;
+    ipv6_3.nextHdr;
+    udp_3.srcPort;
+    udp_3.dstPort;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.rx_l4_payload_len
+@pragma checksum verify_len ohi.l4_3_len
+@pragma checksum gress ingress
+@pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
+field_list_calculation ipv6_3_udp_3_checksum {
+    input {
+        ipv6_3_udp_3_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_3.checksum {
+    update ipv4_3_udp_3_checksum;
+    update ipv6_3_udp_3_checksum;
+}
+
+
+#if 0
+field_list l2_complete_checksum_list {
+   ethernet_3.dstAddr;
+   payload;
+}
+
+@pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
+@pragma checksum gress ingress
+field_list_calculation l2_complete_checksum {
+   input {
+       l2_complete_checksum_list;
+   }
+   algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
+   output_width : 16;
+}
+
+calculated_field p4_to_p4plus_classic_nic.csum {
+   update l2_complete_checksum if (valid(ethernet_3));
+}
+#endif
+
+
+/******************************************************************************
+ * icrc in Rx Path
+ *****************************************************************************/
+
+field_list rx_ipv4_1_icrc_list {
+    ipv4_1.ttl;
+    ipv4_1.diffserv;
+    ipv4_1.hdrChecksum;
+    udp_1.checksum;
+    roce_bth_1.reserved1;
+}
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv4_1_roce_icrc {
+    input {
+        rx_ipv4_1_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list rx_ipv6_1_icrc_list {
+    ipv6_1.trafficClass;
+    ipv6_1.flowLabel;
+    ipv6_1.hopLimit;
+    udp_1.checksum;
+    roce_bth_1.reserved1;
+}
+
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv6_1_roce_icrc {
+    input {
+        rx_ipv6_1_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list rx_ipv4_2_icrc_list {
+    ipv4_2.ttl;
+    ipv4_2.diffserv;
+    ipv4_2.hdrChecksum;
+    udp_2.checksum;
+    roce_bth_2.reserved1;
+}
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv4_2_roce_icrc {
+    input {
+        rx_ipv4_2_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list rx_ipv6_2_icrc_list {
+    ipv6_2.trafficClass;
+    ipv6_2.flowLabel;
+    ipv6_2.hopLimit;
+    udp_2.checksum;
+    roce_bth_2.reserved1;
+}
+
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv6_2_roce_icrc {
+    input {
+        rx_ipv6_2_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list rx_ipv4_3_icrc_list {
+    ipv4_3.ttl;
+    ipv4_3.diffserv;
+    ipv4_3.hdrChecksum;
+    udp_3.checksum;
+    roce_bth.reserved1;
+}
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv4_3_roce_icrc {
+    input {
+        rx_ipv4_3_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list rx_ipv6_3_icrc_list {
+    ipv6_3.trafficClass;
+    ipv6_3.flowLabel;
+    ipv6_3.hopLimit;
+    udp_3.checksum;
+    roce_bth.reserved1;
+}
+
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv6_3_roce_icrc {
+    input {
+        rx_ipv6_3_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+
+calculated_field parser_metadata.icrc {
+    verify rx_ipv4_1_roce_icrc if (valid(roce_bth_1));
+    verify rx_ipv6_1_roce_icrc if (valid(roce_bth_1));
+    verify rx_ipv4_2_roce_icrc if (valid(roce_bth_2));
+    verify rx_ipv6_2_roce_icrc if (valid(roce_bth_2));
+    verify rx_ipv4_3_roce_icrc if (valid(roce_bth));
+    verify rx_ipv6_3_roce_icrc if (valid(roce_bth));
+}
+
 
 
 /******************************************************************************/
@@ -1351,7 +1573,7 @@ parser parse_tx_roce_v2 {
     return ingress;
 }
 
-field_list ipv4_1_icrc_list {
+field_list tx_ipv4_1_icrc_list {
     ipv4_1.ttl;
     ipv4_1.diffserv;
     ipv4_1.hdrChecksum;
@@ -1359,16 +1581,16 @@ field_list ipv4_1_icrc_list {
     roce_bth_1.reserved1;
 }
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc verify_len ohi.icrc_len
-field_list_calculation ipv4_1_roce_icrc {
+@pragma icrc gress egress
+field_list_calculation tx_ipv4_1_roce_icrc {
     input {
-        ipv4_1_icrc_list;
+        tx_ipv4_1_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
 }
 
-field_list ipv6_1_icrc_list {
+field_list tx_ipv6_1_icrc_list {
     ipv6_1.trafficClass;
     ipv6_1.flowLabel;
     ipv6_1.hopLimit;
@@ -1377,16 +1599,16 @@ field_list ipv6_1_icrc_list {
 }
 
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc verify_len ohi.icrc_len
-field_list_calculation ipv6_1_roce_icrc {
+@pragma icrc gress egress
+field_list_calculation tx_ipv6_1_roce_icrc {
     input {
-        ipv6_1_icrc_list;
+        tx_ipv6_1_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
 }
 
-field_list ipv4_2_icrc_list {
+field_list tx_ipv4_2_icrc_list {
     ipv4_2.ttl;
     ipv4_2.diffserv;
     ipv4_2.hdrChecksum;
@@ -1394,16 +1616,16 @@ field_list ipv4_2_icrc_list {
     roce_bth_2.reserved1;
 }
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc verify_len ohi.icrc_len
-field_list_calculation ipv4_2_roce_icrc {
+@pragma icrc gress egress
+field_list_calculation tx_ipv4_2_roce_icrc {
     input {
-        ipv4_2_icrc_list;
+        tx_ipv4_2_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
 }
 
-field_list ipv6_2_icrc_list {
+field_list tx_ipv6_2_icrc_list {
     ipv6_2.trafficClass;
     ipv6_2.flowLabel;
     ipv6_2.hopLimit;
@@ -1412,16 +1634,16 @@ field_list ipv6_2_icrc_list {
 }
 
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc verify_len ohi.icrc_len
-field_list_calculation ipv6_2_roce_icrc {
+@pragma icrc gress egress
+field_list_calculation tx_ipv6_2_roce_icrc {
     input {
-        ipv6_2_icrc_list;
+        tx_ipv6_2_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
 }
 
-field_list ipv4_3_icrc_list {
+field_list tx_ipv4_3_icrc_list {
     ipv4_3.ttl;
     ipv4_3.diffserv;
     ipv4_3.hdrChecksum;
@@ -1429,16 +1651,16 @@ field_list ipv4_3_icrc_list {
     roce_bth.reserved1;
 }
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc verify_len ohi.icrc_len
-field_list_calculation ipv4_3_roce_icrc {
+@pragma icrc gress egress
+field_list_calculation tx_ipv4_3_roce_icrc {
     input {
-        ipv4_3_icrc_list;
+        tx_ipv4_3_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
 }
 
-field_list ipv6_3_icrc_list {
+field_list tx_ipv6_3_icrc_list {
     ipv6_3.trafficClass;
     ipv6_3.flowLabel;
     ipv6_3.hopLimit;
@@ -1447,10 +1669,10 @@ field_list ipv6_3_icrc_list {
 }
 
 @pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc verify_len ohi.icrc_len
-field_list_calculation ipv6_3_roce_icrc {
+@pragma icrc gress egress
+field_list_calculation tx_ipv6_3_roce_icrc {
     input {
-        ipv6_3_icrc_list;
+        tx_ipv6_3_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
@@ -1458,6 +1680,6 @@ field_list_calculation ipv6_3_roce_icrc {
 
 
 calculated_field parser_metadata.icrc {
-    update ipv4_1_roce_icrc if (valid(roce_bth_1));
-    update ipv6_1_roce_icrc if (valid(roce_bth_1));
+    update tx_ipv4_1_roce_icrc if (valid(roce_bth_1));
+    update tx_ipv6_1_roce_icrc if (valid(roce_bth_1));
 }

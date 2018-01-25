@@ -1792,12 +1792,13 @@ field_list udp_opt_checksum_list {
 @pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
 @pragma checksum gress egress
 @pragma checksum udp_option
+@pragma checksum update_share udp_opt_ocs.chksum, p4_to_p4plus_classic_nic.csum
 field_list_calculation udp_opt_checksum {
     input {
         udp_opt_checksum_list;
     }
     algorithm : csum8;
-    output_width : 16;
+    output_width : 8;
 }
 
 calculated_field udp_opt_ocs.chksum {
@@ -1976,6 +1977,9 @@ field_list l2_complete_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
+//Share checksum engine among udp-option csum computation and l2_checksum
+//as one is used in packet towards uplink and other in packet towards host.
+@pragma checksum update_share udp_opt_ocs.chksum, p4_to_p4plus_classic_nic.csum
 field_list_calculation l2_complete_checksum {
    input {
        l2_complete_checksum_list;

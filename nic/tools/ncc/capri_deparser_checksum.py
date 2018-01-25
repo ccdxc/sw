@@ -451,6 +451,8 @@ class DeParserCalField:
         self.be                    = capri_be
         self.logstr_tbl            = []
         self.dstField              = dstField
+        self.share_csum_engine_with= []   # list of other checksums with which
+                                          # this csum object shares csum engine.
         self.csum_hdr_obj          = None # Csum hdr obj which will
                                           # update cal fld
         self.csum_profile_obj      = None # Csum profile obj that
@@ -508,8 +510,13 @@ class DeParserCalField:
         assert(self.P4FieldListCalculation.algorithm == 'csum16' or \
                self.P4FieldListCalculation.algorithm == 'csum8' or \
                self.P4FieldListCalculation.algorithm == 'l2_complete_csum')
-        assert(self.P4FieldListCalculation.output_width == 16)
 
+        if 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys() and \
+           'update_share' in self.P4FieldListCalculation._parsed_pragmas['checksum']:
+            self.share_csum_engine_with = get_pragma_param_list(self.P4FieldListCalculation.\
+                                                                _parsed_pragmas['checksum']['update_share'])
+        else:
+            self.share_csum_engine_with = []
 
     def CalculatedFieldHdrGet(self):
         hdrinst = self.dstField.split(".")[0]
