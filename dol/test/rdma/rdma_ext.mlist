@@ -162,30 +162,6 @@ modules:
         spec    : req_rx_read_fml_exact.testspec
         ignore  : False
 
-    #- module:
-    #    name    : RDMA_TX_READ
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_read
-    #    spec    : req_tx_read.testspec
-    #    ignore  : False
-
-    #- module:
-    #    name    : RDMA_TX_ATOMIC_FETCHADD
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_atomic_fetchadd
-    #    spec    : req_tx_atomic_fetchadd.testspec
-    #    ignore  : False
-  
-    #- module:
-    #    name    : RDMA_TX_ATOMIC_CMPSWAP
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : req_tx_atomic_cmpswap
-    #    spec    : req_tx_atomic_cmpswap.testspec
-    #    ignore  : False
-
     - module:
         name    : RDMA_TX_SEND_ONLY_4SGES
         enable  : True
