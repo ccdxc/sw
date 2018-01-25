@@ -59,3 +59,5 @@ logfiles:
   - /sw/nic/hntap.log
   - /sw/bazel-out/local-fastbuild/bin/nic/hal/$(expr core.*)
   - /sw/bazel-out/local-fastbuild/bin/nic/model_sim/$(expr core.*)
+  - /sw/nic/http_client.log
+  - /sw/nic/http_server.log
