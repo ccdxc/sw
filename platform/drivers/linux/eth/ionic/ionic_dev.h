@@ -212,6 +212,8 @@ static inline void ionic_struct_size_checks(void) {
 	BUILD_BUG_ON(sizeof(struct txq_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct rxq_desc) != 16);
 	BUILD_BUG_ON(sizeof(struct rxq_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct features_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct features_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct q_enable_cmd) != 64);
 	BUILD_BUG_ON(sizeof(q_enable_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct q_disable_cmd) != 64);

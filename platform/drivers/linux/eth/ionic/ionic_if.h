@@ -29,6 +29,7 @@ enum cmd_opcode {
 	CMD_OPCODE_ADMINQ_INIT			= 4,
 	CMD_OPCODE_TXQ_INIT			= 5,
 	CMD_OPCODE_RXQ_INIT			= 6,
+	CMD_OPCODE_FEATURES			= 7,
 
 	CMD_OPCODE_Q_ENABLE			= 9,
 	CMD_OPCODE_Q_DISABLE			= 10,
@@ -691,6 +692,60 @@ struct rxq_comp {
 	u32 csum_ip_ok:1;
 	u32 csum_ip_bad:1;
 	u32 V:1;
+	u32 color:1;
+} __packed;
+
+enum feature_set {
+	FEATURE_SET_ETH_HW_FEATURES = 1,
+};
+
+enum eth_hw_features {
+	ETH_HW_VLAN_TX_TAG	= BIT(0),
+	ETH_HW_VLAN_RX_STRIP	= BIT(1),
+	ETH_HW_VLAN_RX_FILTER	= BIT(2),
+	ETH_HW_RX_HASH		= BIT(3),
+	ETH_HW_RX_CSUM		= BIT(4),
+	ETH_HW_TX_SG		= BIT(5),
+	ETH_HW_TX_CSUM		= BIT(6),
+	ETH_HW_TSO		= BIT(7),
+	ETH_HW_TSO_IPV6		= BIT(8),
+	ETH_HW_TSO_ECN		= BIT(9),
+	ETH_HW_TSO_GRE		= BIT(10),
+	ETH_HW_TSO_GRE_CSUM	= BIT(11),
+	ETH_HW_TSO_IPXIP4	= BIT(12),
+	ETH_HW_TSO_IPXIP6	= BIT(13),
+	ETH_HW_TSO_UDP		= BIT(14),
+	ETH_HW_TSO_UDP_CSUM	= BIT(15),
+	ETH_HW_SCTP_CSUM	= BIT(16),
+};
+
+/**
+ * struct features_cmd - Features command
+ * @opcode:     opcode = 7
+ * @set:        Feature set (see enum feature_set)
+ */
+struct features_cmd {
+	u16 opcode;
+	u16 set;
+	u32 rsvd2[15];
+} __packed;
+
+/**
+ * struct features_comp - Features command completion format
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @supported:  Features from set supported by device.
+ * @color:      Color bit.
+ */
+struct features_comp {
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 supported;
+	u32 rsvd2;
+	u32 rsvd3:31;
 	u32 color:1;
 } __packed;
 

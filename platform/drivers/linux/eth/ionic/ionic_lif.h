@@ -83,6 +83,7 @@ struct lif {
 	unsigned int ntxqcqs;
 	unsigned int nrxqcqs;
 	unsigned int rx_mode;
+	u32 hw_features;
 };
 
 #define lif_to_txq(lif, i)	&lif->txqcqs[i]->q

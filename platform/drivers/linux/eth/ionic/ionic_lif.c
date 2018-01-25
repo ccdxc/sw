@@ -599,6 +599,53 @@ static void ionic_qcqs_free(struct lif *lif)
 	ionic_qcq_free(lif, lif->adminqcq);
 }
 
+static int ionic_set_features(struct lif *lif, struct net_device *netdev)
+{
+	netdev->features |= NETIF_F_HIGHDMA;
+
+	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
+	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
+	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
+	if (lif->hw_features & ETH_HW_RX_HASH)
+		netdev->hw_features |= NETIF_F_RXHASH;
+	if (lif->hw_features & ETH_HW_TX_SG)
+		netdev->hw_features |= NETIF_F_SG;
+
+	if (lif->hw_features & ETH_HW_TX_CSUM)
+		netdev->hw_enc_features |= NETIF_F_HW_CSUM;
+	if (lif->hw_features & ETH_HW_RX_CSUM)
+		netdev->hw_enc_features |= NETIF_F_RXCSUM;
+	if (lif->hw_features & ETH_HW_TSO)
+		netdev->hw_enc_features |= NETIF_F_TSO;
+	if (lif->hw_features & ETH_HW_TSO_IPV6)
+		netdev->hw_enc_features |= NETIF_F_TSO6;
+	if (lif->hw_features & ETH_HW_TSO_ECN)
+		netdev->hw_enc_features |= NETIF_F_TSO_ECN;
+	if (lif->hw_features & ETH_HW_TSO_GRE)
+		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
+	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
+		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
+	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
+		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
+	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
+		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
+	if (lif->hw_features & ETH_HW_TSO_UDP)
+		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
+	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
+		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
+	if (lif->hw_features & ETH_HW_SCTP_CSUM)
+		netdev->hw_enc_features |= NETIF_F_SCTP_CRC;
+
+	netdev->hw_features |= netdev->hw_enc_features;
+	netdev->features |= netdev->hw_features;
+	netdev->vlan_features |= netdev->features;
+
+	return 0;
+}
+
 static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 {
 	struct device *dev = ionic->dev;
@@ -625,28 +672,9 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 	snprintf(lif->name, sizeof(lif->name), "lif%u", index);
 
-//	netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
-//	netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
-//	netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
-//	netdev->hw_features |= NETIF_F_RXHASH;
-	netdev->hw_features |= NETIF_F_SG;
-
-	netdev->hw_enc_features |= NETIF_F_HW_CSUM;
-//	netdev->hw_enc_features |= NETIF_F_RXCSUM | NETIF_F_HW_CSUM;
-//	netdev->hw_enc_features |= NETIF_F_TSO | NETIF_F_TSO6;
-//	netdev->hw_enc_features |= NETIF_F_TSO_ECN;
-//	netdev->hw_enc_features |= NETIF_F_GSO_GRE | NETIF_F_GSO_GRE_CSUM;
-//	netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4 | NETIF_F_GSO_IPXIP6;
-//	netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
-//	netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
-//	netdev->hw_enc_features |= NETIF_F_SCTP_CRC;
-
-	netdev->hw_features |= netdev->hw_enc_features;
-	netdev->features |= netdev->hw_features;
-
-	netdev->features |= NETIF_F_HIGHDMA;
-
-	netdev->vlan_features |= netdev->features;
+	err = ionic_set_features(lif, netdev);
+	if (err)
+		goto err_out_free_netdev;
 
 	netdev->netdev_ops = &ionic_netdev_ops;
 	netdev->ethtool_ops = &ionic_ethtool_ops;

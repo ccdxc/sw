@@ -210,6 +210,22 @@ int ionic_adminq_rx_filter_vlan(struct queue *adminq, u16 vid, bool add,
 	return 0;
 }
 
+int ionic_adminq_features(struct queue *adminq, u16 set, desc_cb cb,
+			  void *cb_arg)
+{
+	struct features_cmd *cmd = adminq->head->desc;
+
+	if (!ionic_q_has_space(adminq, 1))
+		return -ENOSPC;
+
+	cmd->opcode = CMD_OPCODE_FEATURES;
+	cmd->set = set;
+
+	ionic_q_post(adminq, true, cb, cb_arg);
+
+	return 0;
+}
+
 int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,
 			  desc_cb cb, void *cb_arg)
 {

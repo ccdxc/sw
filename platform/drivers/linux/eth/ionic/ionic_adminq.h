@@ -36,6 +36,8 @@ int ionic_adminq_rx_filter_mac(struct queue *adminq, const u8 *addr, bool add,
 			       desc_cb cb, void *cb_arg);
 int ionic_adminq_rx_filter_vlan(struct queue *adminq, u16 vid, bool add,
 				desc_cb cb, void *cb_arg);
+int ionic_adminq_features(struct queue *adminq, u16 set, desc_cb cb,
+			  void *cb_arg);
 int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,
 			  desc_cb cb, void *cb_arg);
 bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info,
