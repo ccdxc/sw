@@ -677,11 +677,11 @@ def main():
     if args.asmcov:
         call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
     if not args.rtl and not args.no_error_check:
-        ec = os.system("grep ERROR model.log")
+        ec = os.system("grep ERROR " + model_log)
         if not ec:
-            print "ERRORs found in model.log"
+            print "ERRORs found in " + model_log
             sys.exit(1)
-        print "PASS: No errors found in model.log"
+        print "PASS: No errors found in " + model_log
     print "Status = %d" % status
     sys.exit(status)
 

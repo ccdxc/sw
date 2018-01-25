@@ -782,7 +782,7 @@ copp_del_from_db (copp_t *copp)
 // validate an incoming copp create request
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_copp_create (CoppSpec& spec, CoppResponse *rsp)
+validate_copp_create (CoppSpec& spec)
 {
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
@@ -1032,7 +1032,7 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-copp:{}: copp create ", __func__);
 
-    ret = validate_copp_create(spec, rsp);
+    ret = validate_copp_create(spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-copp:{}: Validation failed ret {}", __func__, ret);
         goto end;

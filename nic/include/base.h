@@ -239,6 +239,7 @@ do {                                                       \
     ENTRY(HAL_RET_PROXYR_CB_NOT_FOUND,        61, "Proxy redirect CB not found")   \
     ENTRY(HAL_RET_PROXYC_CB_NOT_FOUND,        62, "Proxy chain CB not found")      \
     ENTRY(HAL_RET_FLOW_LKUP_ID_NOT_FOUND,     63, "flow lookup id not found")      \
+    ENTRY(HAL_RET_ACL_NOT_FOUND,              64, "acl not found")      \
                                                                                    \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

@@ -28,6 +28,8 @@ typedef uint64_t acl_tcam_entry_handle_t;
 typedef uint32_t priority_t;
 typedef uint32_t move_chain_t;
 
+#define ACL_TCAM_ENTRY_INVALID_HANDLE UINT64_MAX
+
 // forward declarations
 class TcamEntry;
 
@@ -75,12 +77,14 @@ public:
     static acl_tcam *factory(std::string table_name, uint32_t table_id, 
                              uint32_t table_size,
                              uint32_t swkey_len, uint32_t swdata_len,
-                             bool priority_0_lowest = true);
+                             bool priority_0_lowest = true,
+                             bool allow_same_priority = true);
     ~acl_tcam();
 
     hal_ret_t insert(void *key, void *key_mask, void *data,
                      priority_t priority, acl_tcam_entry_handle_t *handle);
-    hal_ret_t update(acl_tcam_entry_handle_t handle, void *data);
+    hal_ret_t update(acl_tcam_entry_handle_t handle, 
+                     void *key, void *key_mask, void *data);
     hal_ret_t remove(acl_tcam_entry_handle_t handle);
     hal_ret_t retrieve(acl_tcam_entry_handle_t handle, void *key, 
                       void *key_mask, void *data);
@@ -112,6 +116,7 @@ private:
     uint32_t                hwkey_len_;          // hw key len
     uint32_t                hwkeymask_len_;      // hw key mask len
     uint32_t                hwdata_len_;         // hw data len
+    bool                    allow_same_priority_;// Allow entries with same priority
     acl_tcam_entry_handle_t handle_allocator;    // handle allocator
 
     TcamEntry               **tcam_entries_;     // array of entry pointers
@@ -127,7 +132,8 @@ private:
     acl_tcam() {};
 
     hal_ret_t init(std::string table_name, uint32_t table_id, uint32_t table_size,
-                   uint32_t swkey_len, uint32_t swdata_len, bool priority_0_lowest);
+                   uint32_t swkey_len, uint32_t swdata_len, 
+                   bool priority_0_lowest, bool allow_same_priority);
 
     acl_tcam_entry_handle_t alloc_handle_(void) { return ++handle_allocator; }
 
@@ -141,7 +147,8 @@ private:
 
     hal_ret_t find_allowed_range_(priority_t priority,
                                   bool *prev_exists_p, uint32_t *prev_end_p,
-                                  bool *next_exists_p, uint32_t *next_start_p);
+                                  bool *next_exists_p, uint32_t *next_start_p,
+                                  bool *cur_exists_p);
     move_chain_t* create_move_chain_(uint32_t target_up,
                                      uint32_t target_down,
                                      uint32_t *free_spot_p,
@@ -154,9 +161,11 @@ private:
                             uint32_t free_spot,
                             uint32_t num_moves);
 
-    hal_ret_t program_table_(TcamEntry *te, uint32_t index, void *data = NULL);
+    hal_ret_t program_table_(TcamEntry *te, uint32_t index,
+                             void *key = NULL, void *key_mask = NULL, 
+                             void *data = NULL);
     hal_ret_t deprogram_table_(uint32_t index) ;
-    hal_ret_t entry_trace_(TcamEntry *te, uint32_t index);
+    hal_ret_t entry_trace_(void *key, void *key_mask, void *data, uint32_t index);
 
     void move_chain_state_update_(move_chain_t *move_chain,
                                   uint32_t free_spot,

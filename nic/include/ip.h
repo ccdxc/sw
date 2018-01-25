@@ -2,6 +2,7 @@
 #define __IP_H__
 
 #include "nic/include/base.h"
+#include "nic/include/bitmap.hpp"
 
 //------------------------------------------------------------------------------
 // IP address family
@@ -166,23 +167,72 @@ ipv4_prefix_len_to_mask(uint8_t len) {
     return len == 0 ? 0: ~((1<<(32-len))-1);
 }
 
+static inline int 
+ipv4_mask_to_prefix_len(ipv4_addr_t v4_addr)
+{
+    ipv4_addr_t iv4_addr = ~v4_addr;
+
+    if (!v4_addr) {
+        return 0;
+    }
+    // Check to see that set/reset bits are together (it is a power2 - 1)
+    if (iv4_addr & (iv4_addr + 1)) {
+        // Error
+        return -1;
+    }
+
+    return 32 - hal::utils::bitmap::log2_floor(iv4_addr + 1);
+}
+
 static inline void
 ipv6_prefix_len_to_mask (ipv6_addr_t *v6_addr, uint8_t len)
 {
     uint8_t    wp = 0;
 
+    v6_addr->addr64[0] = 0;
+    v6_addr->addr64[1] = 0;
     if (len > 128) {
-        v6_addr->addr64[0] = 0;
-        v6_addr->addr64[1] = 0;
+        return;
     }
+    // Using addr32/addr64 is tricky here because the v6 addresses
+    // are stored in big-endian format. So for example, for prefix len of 20 
+    // the mask should be 0xff 0xff 0xf0 0x00 ...
+    // If read it as addr32 it translates to 0x00f0ffff . Forming this is tricky
     while (len) {
-        v6_addr->addr32[wp++] = (len >= 32) ? 0xffffffff : (0xffffffff & (~((1<<(32-len))-1)));
-        if (len >= 32) {
-            len -= 32;
+        v6_addr->addr8[wp++] = (len >= 8) ? 0xff: (0xff & (~((1<<(8-len))-1)));
+        len = (len >= 8) ? len-8 : 0;
+    }
+}
+
+static inline int 
+ipv6_mask_to_prefix_len(ipv6_addr_t *v6_addr)
+{
+    int prefix_len = 0;
+    unsigned inv;
+    unsigned i;
+    for (i = 0; v6_addr->addr8[i] && (i < HAL_ARRAY_SIZE(v6_addr->addr8)); i++) {
+        if (v6_addr->addr8[i] == 0xff) {
+            prefix_len += 8;
         } else {
-            len = 0;
+            inv = ~v6_addr->addr8[i] & 0xff;
+            if (inv & (inv + 1)) {
+                // Error
+                prefix_len = -1;
+            } else {
+                prefix_len += 8 - hal::utils::bitmap::log2_floor(inv + 1);
+            }
+            i++;
+            break;
         }
     }
+    for (; i < HAL_ARRAY_SIZE(v6_addr->addr8); i++) {
+        // If any other bits are set, it's not a valid prefix
+        if (v6_addr->addr8[i]) {
+            prefix_len = -1;
+            break;
+        }
+    }
+    return prefix_len;
 }
 
 static inline bool

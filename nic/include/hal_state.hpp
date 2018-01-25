@@ -105,8 +105,7 @@ public:
 
     ht *copp_ht(void) const { return copp_ht_; }
 
-    ht *acl_id_ht(void) const { return acl_id_ht_; }
-    ht *acl_hal_handle_ht(void) const { return acl_hal_handle_ht_; }
+    ht *acl_ht(void) const { return acl_ht_; }
 
     ht *wring_id_ht(void) const { return wring_id_ht_; }
     ht *wring_hal_handle_ht(void) const { return wring_hal_handle_ht_; }
@@ -265,8 +264,7 @@ private:
 
     // acl related config
     struct {
-        ht         *acl_id_ht_;
-        ht         *acl_hal_handle_ht_;
+        ht         *acl_ht_;
     } __PACK__;
 
     // IPSec CB related config
@@ -560,8 +558,7 @@ public:
 
     // get APIs for acl state
     slab *acl_slab(void) const { return mem_db_->acl_slab(); }
-    ht *acl_id_ht(void) const { return cfg_db_->acl_id_ht(); }
-    ht *acl_hal_handle_ht(void) const { return cfg_db_->acl_hal_handle_ht(); }
+    ht *acl_ht(void) const { return cfg_db_->acl_ht(); }
 
     // get APIs for WRing state
     slab *wring_slab(void) const { return mem_db_->wring_slab(); }

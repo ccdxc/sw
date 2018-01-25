@@ -8,12 +8,17 @@
 #include <stdlib.h>
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include <google/protobuf/util/message_differencer.h>
+#include <google/protobuf/text_format.h>
 
+using google::protobuf::util::MessageDifferencer;
 using acl::AclSpec;
 using acl::AclResponse;
 using acl::AclKeyHandle;
 using acl::AclSelector;
 using acl::AclActionInfo;
+using acl::AclGetRequest;
+using acl::AclGetResponse;
 using acl::AclDeleteRequest;
 using acl::AclDeleteResponse;
 
@@ -55,7 +60,7 @@ TEST_F(acl_test, test1)
     action->set_action(acl::AclAction::ACL_ACTION_DENY);
 
     spec.mutable_key_or_handle()->set_acl_id(1);
-    spec.set_priority(100);
+    spec.set_priority(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::acl_create(spec, &rsp);
@@ -73,7 +78,7 @@ TEST_F(acl_test, test2)
     AclSelector   *match; 
     AclActionInfo *action;
 
-    for (int i = 10; i < 20; i++) {
+    for (int i = 100; i < 120; i++) {
         match = spec.mutable_match();
         match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
@@ -84,7 +89,7 @@ TEST_F(acl_test, test2)
         action->set_action(acl::AclAction::ACL_ACTION_DENY);
 
         spec.mutable_key_or_handle()->set_acl_id(i);
-        spec.set_priority(100);
+        spec.set_priority(i);
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_create(spec, &rsp);
@@ -108,7 +113,7 @@ TEST_F(acl_test, test3)
 
     std::vector<hal_handle_t> entries;
 
-    for (int i = 100; i < 110; i++) {
+    for (int i = 200; i < 210; i++) {
         match = spec.mutable_match();
         match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
         match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
@@ -119,20 +124,20 @@ TEST_F(acl_test, test3)
         action->set_action(acl::AclAction::ACL_ACTION_DENY);
 
         spec.mutable_key_or_handle()->set_acl_id(i);
-        spec.set_priority(100);
+        spec.set_priority(i);
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_create(spec, &rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
 
-        entries.push_back(rsp.status().acl_handle().handle());
+        entries.push_back(rsp.status().acl_handle());
         spec.Clear();
         rsp.Clear();
     }
 
     for (auto &entry : entries) {
-        del_req.mutable_key_or_handle()->mutable_acl_handle()->set_handle(entry);
+        del_req.mutable_key_or_handle()->set_acl_handle(entry);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_delete(del_req, &del_rsp);
         hal::hal_cfg_db_close();
@@ -142,6 +147,159 @@ TEST_F(acl_test, test3)
         del_rsp.Clear();
     }
 
+}
+
+// Create, Update and Delete ACLs
+TEST_F(acl_test, test4)
+{
+    hal_ret_t     ret;
+    AclSpec       spec;
+    AclResponse   rsp;
+    AclGetRequest get_req;
+    AclGetResponse get_rsp;
+    AclDeleteRequest del_req;
+    AclDeleteResponse del_rsp;
+
+    AclSelector   *match; 
+    AclActionInfo *action;
+    hal_handle_t acl_handle;
+
+    std::vector<std::pair<hal_handle_t,uint32_t>> entries;
+
+    for (int i = 300; i < 310; i++) {
+        spec.Clear();
+        rsp.Clear();
+
+        match = spec.mutable_match();
+        match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
+        match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
+        match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_v6_addr("0001000100010001");
+        match->mutable_ip_selector()->mutable_src_prefix()->set_prefix_len(35);
+
+        action = spec.mutable_action();
+        action->set_action(acl::AclAction::ACL_ACTION_DENY);
+
+        spec.mutable_key_or_handle()->set_acl_id(i);
+        spec.set_priority(i);
+
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::acl_create(spec, &rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_EQ(ret, HAL_RET_OK);
+        ASSERT_EQ(rsp.api_status(), types::API_STATUS_OK);
+
+        acl_handle = rsp.status().acl_handle();
+        entries.push_back(std::make_pair(acl_handle, i));
+
+        // Get
+        get_req.Clear();
+        get_rsp.Clear();
+
+        get_req.mutable_key_or_handle()->set_acl_handle(acl_handle);
+        hal::hal_cfg_db_open(hal::CFG_OP_READ);
+        ret = hal::acl_get(get_req, &get_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_EQ(ret, HAL_RET_OK);
+
+
+        ASSERT_TRUE(get_rsp.spec().priority() == spec.priority());
+        if (!MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match())) {
+            std::string str;
+            google::protobuf::TextFormat::PrintToString(get_rsp.spec().match(), &str);
+            std::cout << str << std::endl;
+            google::protobuf::TextFormat::PrintToString(spec.match(), &str);
+            std::cout << str << std::endl;
+            ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match()));
+        }
+        if (!MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action())) {
+            std::string str;
+            google::protobuf::TextFormat::PrintToString(get_rsp.spec().action(), &str);
+            std::cout << str << std::endl;
+            google::protobuf::TextFormat::PrintToString(spec.action(), &str);
+            std::cout << str << std::endl;
+            ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action()));
+        }
+    }
+
+    bool change_prio = true;
+    for (auto &entry : entries) {
+        spec.Clear();
+        rsp.Clear();
+
+        match = spec.mutable_match();
+        match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        match->mutable_ip_selector()->mutable_dst_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        match->mutable_ip_selector()->mutable_dst_prefix()->mutable_address()->set_v4_addr(0x12345678);
+        match->mutable_ip_selector()->mutable_dst_prefix()->set_prefix_len(20);
+
+        action = spec.mutable_action();
+        action->set_action(acl::AclAction::ACL_ACTION_LOG);
+
+        acl_handle = entry.first;
+        spec.mutable_key_or_handle()->set_acl_handle(acl_handle);
+        if (change_prio) {
+            spec.set_priority(entry.second + 1);
+        } else {
+            spec.set_priority(entry.second);
+        }
+
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::acl_update(spec, &rsp);
+        hal::hal_cfg_db_close();
+        if (change_prio) {
+            // Changing of priority is not allowed
+            ASSERT_NE(ret, HAL_RET_OK);
+            ASSERT_NE(rsp.api_status(), types::API_STATUS_OK);
+        } else {
+            ASSERT_EQ(ret, HAL_RET_OK);
+            ASSERT_EQ(rsp.api_status(), types::API_STATUS_OK);
+        }
+
+        // Get
+        get_req.Clear();
+        get_rsp.Clear();
+
+        get_req.mutable_key_or_handle()->set_acl_handle(acl_handle);
+        hal::hal_cfg_db_open(hal::CFG_OP_READ);
+        ret = hal::acl_get(get_req, &get_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_EQ(ret, HAL_RET_OK);
+
+
+        if (change_prio) {
+            // Request didn't succeed. So it should match original spec
+        } else {
+            ASSERT_TRUE(get_rsp.spec().priority() == spec.priority());
+            if (!MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match())) {
+                std::string str;
+                google::protobuf::TextFormat::PrintToString(get_rsp.spec().match(), &str);
+                std::cout << str << std::endl;
+                google::protobuf::TextFormat::PrintToString(spec.match(), &str);
+                std::cout << str << std::endl;
+                ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match()));
+            }
+            if (!MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action())) {
+                std::string str;
+                google::protobuf::TextFormat::PrintToString(get_rsp.spec().action(), &str);
+                std::cout << str << std::endl;
+                google::protobuf::TextFormat::PrintToString(spec.action(), &str);
+                std::cout << str << std::endl;
+                ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action()));
+            }
+        }
+        change_prio = false;
+    }
+
+    for (auto &entry : entries) {
+        del_req.mutable_key_or_handle()->set_acl_handle(entry.first);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::acl_delete(del_req, &del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_EQ(ret, HAL_RET_OK);
+        ASSERT_EQ(del_rsp.api_status(), types::API_STATUS_OK);
+        del_req.Clear();
+        del_rsp.Clear();
+    }
 }
 
 

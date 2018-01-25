@@ -598,11 +598,15 @@ def SetRingMeta(objlist):
              stub.WRingSetMeta)
     return
 
-def ConfigureAcls(objlist):
+def ConfigureAcls(objlist, update = False):
     if IsHalDisabled(): return
     stub = acl_pb2.AclStub(HalChannel)
-    __config(objlist, acl_pb2.AclRequestMsg,
-             stub.AclCreate)
+    api = stub.AclUpdate if update else stub.AclCreate
+    msg = acl_pb2.AclRequestMsg
+    __config(objlist, msg, api)
+    if not update and GlobalOptions.mbt:
+        SignalingClient.SendSignalingData(msg.__name__)
+        SignalingClient.Wait()
     return
 
 def DeleteAcls(objlist):

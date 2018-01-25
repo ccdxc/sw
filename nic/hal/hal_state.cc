@@ -172,18 +172,12 @@ hal_cfg_db::init(void)
                            hal::copp_compare_key_func);
     HAL_ASSERT_RETURN((copp_ht_ != NULL), false);
 
-    // initialize Acl related data structures
-    acl_id_ht_ = ht::factory(HAL_MAX_ACLS,
-                             hal::acl_get_key_func,
-                             hal::acl_compute_hash_func,
-                             hal::acl_compare_key_func);
-    HAL_ASSERT_RETURN((acl_id_ht_ != NULL), false);
-
-    acl_hal_handle_ht_ = ht::factory(HAL_MAX_ACLS,
-                                     hal::acl_get_handle_key_func,
-                                     hal::acl_compute_handle_hash_func,
-                                     hal::acl_compare_handle_key_func);
-    HAL_ASSERT_RETURN((acl_hal_handle_ht_ != NULL), false);
+    // initialize acl related data structures
+    acl_ht_ = ht::factory(HAL_MAX_ACLS,
+                           hal::acl_get_key_func,
+                           hal::acl_compute_hash_func,
+                           hal::acl_compare_key_func);
+    HAL_ASSERT_RETURN((acl_ht_ != NULL), false);
 
     // initialize WRing related data structures
     wring_id_ht_ = ht::factory(HAL_MAX_WRING,
@@ -355,8 +349,7 @@ hal_cfg_db::hal_cfg_db()
 
     copp_ht_ = NULL;
 
-    acl_id_ht_ = NULL;
-    acl_hal_handle_ht_ = NULL;
+    acl_ht_ = NULL;
  
     tlscb_id_ht_ = NULL;
     tlscb_hal_handle_ht_ = NULL;
@@ -467,8 +460,7 @@ hal_cfg_db::~hal_cfg_db()
     proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
     proxy_hal_handle_ht_ ? ht::destroy(proxy_hal_handle_ht_) : HAL_NOP;
     
-    acl_id_ht_ ? ht::destroy(acl_id_ht_) : HAL_NOP;
-    acl_hal_handle_ht_ ? ht::destroy(acl_hal_handle_ht_) : HAL_NOP;
+    acl_ht_ ? ht::destroy(acl_ht_) : HAL_NOP;
 
     ipseccb_id_ht_ ? ht::destroy(ipseccb_id_ht_) : HAL_NOP;
     ipseccb_hal_handle_ht_ ? ht::destroy(ipseccb_hal_handle_ht_) : HAL_NOP;

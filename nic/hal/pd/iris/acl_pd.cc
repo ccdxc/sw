@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "nic/hal/src/vrf.hpp"
 #include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -16,83 +17,33 @@
 namespace hal {
 namespace pd {
 // ----------------------------------------------------------------------------
-// Allocate Acl Instance
-// ----------------------------------------------------------------------------
-static inline pd_acl_t *
-acl_pd_alloc (void)
-{
-    pd_acl_t    *acl;
-
-    acl = (pd_acl_t *)g_hal_state_pd->acl_pd_slab()->alloc();
-    if (acl == NULL) {
-        return NULL;
-    }
-    return acl;
-}
-
-// ----------------------------------------------------------------------------
-// Initialize Acl PD instance
-// ----------------------------------------------------------------------------
-static inline pd_acl_t *
-acl_pd_init (pd_acl_t *acl)
-{
-    // Nothing to do currently
-    if (!acl) {
-        return NULL;
-    }
-
-    // Set here if you want to initialize any fields
-
-    return acl;
-}
-
-// ----------------------------------------------------------------------------
-// Allocate and Initialize Acl PD Instance
-// ----------------------------------------------------------------------------
-static inline pd_acl_t *
-acl_pd_alloc_init (void)
-{
-    return acl_pd_init(acl_pd_alloc());
-}
-
-// ----------------------------------------------------------------------------
-// Freeing Acl PD
-// ----------------------------------------------------------------------------
-static hal_ret_t
-acl_pd_free (pd_acl_t **pd_acl_)
-{
-    pd_acl_t *pd_acl = *pd_acl_;
-    if (pd_acl) {
-        hal::pd::delay_delete_to_slab(HAL_SLAB_ACL_PD, pd_acl);
-    }
-    *pd_acl_ = NULL;
-    return HAL_RET_OK;
-}
-
-// ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
-link_pi_pd(pd_acl_t *pd_acl, acl_t *pi_acl)
+static void
+acl_pd_link_pi_pd(pd_acl_t *pd_acl, acl_t *pi_acl)
 {
     pd_acl->pi_acl = pi_acl;
-    acl_set_pd_acl(pi_acl, pd_acl);
+    pi_acl->pd = pd_acl;
 }
 
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
-unlink_pi_pd(pd_acl_t *pd_acl, acl_t *pi_acl)
+static void
+acl_pd_delink_pi_pd(pd_acl_t *pd_acl, acl_t *pi_acl)
 {
-    pd_acl->pi_acl = NULL;
-    acl_set_pd_acl(pi_acl, NULL);
+    if (pd_acl) {
+        pd_acl->pi_acl = NULL;
+    }
+    if (pi_acl) {
+        pi_acl->pd = NULL;
+    }
 }
 
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Acl
 // ----------------------------------------------------------------------------
-static hal_ret_t 
+static hal_ret_t
 acl_pd_alloc_res(pd_acl_t *pd_acl)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -103,18 +54,15 @@ acl_pd_alloc_res(pd_acl_t *pd_acl)
 }
 
 // ----------------------------------------------------------------------------
-// Deallocate resources for Acl 
+// Deallocate resources for Acl
 // ----------------------------------------------------------------------------
-static void
+static hal_ret_t
 acl_pd_dealloc_res (pd_acl_t *pd_acl)
 {
-    acl_t *acl = (acl_t*)pd_acl->pi_acl;
+    hal_ret_t ret = HAL_RET_OK;
 
-    if (!acl) {
-        return;
-    }
-
-    // Deallocate any hardware resources 
+    // Deallocate any hardware resources
+    return ret;
 }
 
 static void
@@ -127,9 +75,9 @@ populate_ip_common (nacl_swkey_t *key, nacl_swkey_mask_t *mask,
     switch(ip_key->ip_proto) {
         case IP_PROTO_ICMP:
         case IP_PROTO_ICMPV6:
-            key->flow_lkp_metadata_lkp_dport = 
+            key->flow_lkp_metadata_lkp_dport =
                 (ip_key->u.icmp.icmp_type << 8) | ip_key->u.icmp.icmp_code;
-            mask->flow_lkp_metadata_lkp_dport_mask = 
+            mask->flow_lkp_metadata_lkp_dport_mask =
                 (ip_mask->u.icmp.icmp_type << 8) | ip_mask->u.icmp.icmp_code;
             break;
         case IP_PROTO_TCP:
@@ -159,25 +107,25 @@ populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
 {
     // TODO Get the index from copp policer handle and mirror session
     // handles
-    data->nacl_action_u.nacl_nacl_permit.policer_index = 
+    data->nacl_action_u.nacl_nacl_permit.policer_index =
         as->copp_policer_handle;
-    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_en = 
+    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_en =
         as->ing_mirror_en;
-    data->nacl_action_u.nacl_nacl_permit.egress_mirror_en = 
+    data->nacl_action_u.nacl_nacl_permit.egress_mirror_en =
         as->egr_mirror_en;
-    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 
+    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id =
         as->ing_mirror_session_handle;
-    data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id = 
+    data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id =
         as->egr_mirror_session_handle;
 
-    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 
+    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id =
         as->ing_mirror_session;
-    data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id = 
+    data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id =
         as->egr_mirror_session;
 }
 
 static hal_ret_t
-acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
+acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 {
     hal_ret_t            ret = HAL_RET_OK;
     acl_tcam             *acl_tbl = NULL;
@@ -190,8 +138,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     acl_eth_match_spec_t *eth_mask;
     acl_ip_match_spec_t  *ip_key;
     acl_ip_match_spec_t  *ip_mask;
-    acl_t                *pi_acl = (acl_t *)pd_acl->pi_acl;
-    vrf_t             *vrf = NULL;
+    acl_t                *pi_acl = pd_acl->pi_acl;
+    vrf_t                *vrf = NULL;
     l2seg_t              *l2seg = NULL;
     if_t                 *redirect_if = NULL;
     uint16_t             l2seg_mask = 0;
@@ -252,7 +200,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
 #ifdef ACL_DOL_TEST_ONLY
                 data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_index = 
+                data.nacl_action_u.nacl_nacl_permit.rewrite_index =
                     as->int_as.rw_idx;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_flags =
                     (as->int_as.mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
@@ -261,16 +209,16 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
 
                 data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
                 if (if_is_tunnel_if(redirect_if)) {
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 
+                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
                         (pd_tunnelif_get_rw_idx((pd_tunnelif_t *)redirect_if->pd_if));
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 
+                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
                         as->int_as.tnnl_vnid;
                     data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 1;
                 } else {
                     // support only non-native segments for DOL testing
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 
+                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
                         as->int_as.tnnl_vnid;
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 
+                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
                         g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
                 }
 #endif
@@ -301,27 +249,27 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     pd_get_l2seg_ten_masks(&l2seg_mask, &ten_mask, &ten_shift);
     if (ms->vrf_match) {
         vrf = vrf_lookup_by_handle(ms->vrf_handle);
-        key.flow_lkp_metadata_lkp_vrf = 
+        key.flow_lkp_metadata_lkp_vrf =
             ((pd_vrf_t *)(vrf->pd))->vrf_hw_id << ten_shift;
         mask.flow_lkp_metadata_lkp_vrf_mask = ten_mask;
     } else if (ms->l2seg_match) {
         l2seg = find_l2seg_by_handle(ms->l2seg_handle);
-        key.flow_lkp_metadata_lkp_vrf = 
+        key.flow_lkp_metadata_lkp_vrf =
             ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
         mask.flow_lkp_metadata_lkp_vrf_mask = ten_mask | l2seg_mask;
     }
 
     if (ms->src_if_match) {
-        key.control_metadata_src_lport = 
+        key.control_metadata_src_lport =
             if_get_lport_id(find_if_by_handle(ms->src_if_handle));
-        mask.control_metadata_src_lport_mask = 
+        mask.control_metadata_src_lport_mask =
             ~(mask.control_metadata_src_lport_mask & 0);
     }
 
     if (ms->dest_if_match) {
-        key.control_metadata_dst_lport = 
+        key.control_metadata_dst_lport =
             if_get_lport_id(find_if_by_handle(ms->dest_if_handle));
-        mask.control_metadata_dst_lport_mask = 
+        mask.control_metadata_dst_lport_mask =
             ~(mask.control_metadata_dst_lport_mask & 0);
     }
 
@@ -333,7 +281,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
             // Mac address needs to be in little-endian format while
             // passing to p4pd. So convert to uint64 and do a memcpy
             key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
-            mask.flow_lkp_metadata_lkp_type_mask = 
+            mask.flow_lkp_metadata_lkp_type_mask =
                 ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
 
             memcpy(key.flow_lkp_metadata_lkp_src, eth_key->mac_sa, sizeof(mac_addr_t));
@@ -352,51 +300,51 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
         case ACL_TYPE_IP:
             key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4 &
                                                 FLOW_KEY_LOOKUP_TYPE_IPV6;
-            mask.flow_lkp_metadata_lkp_type_mask = ~(FLOW_KEY_LOOKUP_TYPE_IPV4 ^ 
+            mask.flow_lkp_metadata_lkp_type_mask = ~(FLOW_KEY_LOOKUP_TYPE_IPV4 ^
                                                     FLOW_KEY_LOOKUP_TYPE_IPV6);
             populate_ip_common(&key, &mask, ip_key, ip_mask);
             break;
         case ACL_TYPE_IPv4:
             key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
-            mask.flow_lkp_metadata_lkp_type_mask = 
+            mask.flow_lkp_metadata_lkp_type_mask =
                 ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
 
-            memcpy(key.flow_lkp_metadata_lkp_src, 
-                   &ip_key->sip.addr.v4_addr, 
+            memcpy(key.flow_lkp_metadata_lkp_src,
+                   &ip_key->sip.addr.v4_addr,
                    sizeof(ipv4_addr_t));
-            memcpy(mask.flow_lkp_metadata_lkp_src_mask, 
-                   &ip_mask->sip.addr.v4_addr, 
+            memcpy(mask.flow_lkp_metadata_lkp_src_mask,
+                   &ip_mask->sip.addr.v4_addr,
                    sizeof(ipv4_addr_t));
 
-            memcpy(key.flow_lkp_metadata_lkp_dst, 
-                   &ip_key->dip.addr.v4_addr, 
+            memcpy(key.flow_lkp_metadata_lkp_dst,
+                   &ip_key->dip.addr.v4_addr,
                    sizeof(ipv4_addr_t));
-            memcpy(mask.flow_lkp_metadata_lkp_dst_mask, 
-                   &ip_mask->dip.addr.v4_addr, 
+            memcpy(mask.flow_lkp_metadata_lkp_dst_mask,
+                   &ip_mask->dip.addr.v4_addr,
                    sizeof(ipv4_addr_t));
 
             populate_ip_common(&key, &mask, ip_key, ip_mask);
             break;
         case ACL_TYPE_IPv6:
             key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
-            mask.flow_lkp_metadata_lkp_type_mask = 
+            mask.flow_lkp_metadata_lkp_type_mask =
                 ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
 
-            memcpy(key.flow_lkp_metadata_lkp_src, 
-                   ip_key->sip.addr.v6_addr.addr8, 
+            memcpy(key.flow_lkp_metadata_lkp_src,
+                   ip_key->sip.addr.v6_addr.addr8,
                    IP6_ADDR8_LEN);
             memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
-            memcpy(mask.flow_lkp_metadata_lkp_src_mask, 
-                   ip_mask->sip.addr.v6_addr.addr8, 
+            memcpy(mask.flow_lkp_metadata_lkp_src_mask,
+                   ip_mask->sip.addr.v6_addr.addr8,
                    IP6_ADDR8_LEN);
             memrev(mask.flow_lkp_metadata_lkp_src_mask, sizeof(mask.flow_lkp_metadata_lkp_src_mask));
 
-            memcpy(key.flow_lkp_metadata_lkp_dst, 
-                   ip_key->dip.addr.v6_addr.addr8, 
+            memcpy(key.flow_lkp_metadata_lkp_dst,
+                   ip_key->dip.addr.v6_addr.addr8,
                    IP6_ADDR8_LEN);
             memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
-            memcpy(mask.flow_lkp_metadata_lkp_dst_mask, 
-                   ip_mask->dip.addr.v6_addr.addr8, 
+            memcpy(mask.flow_lkp_metadata_lkp_dst_mask,
+                   ip_mask->dip.addr.v6_addr.addr8,
                    IP6_ADDR8_LEN);
             memrev(mask.flow_lkp_metadata_lkp_dst_mask, sizeof(mask.flow_lkp_metadata_lkp_dst_mask));
 
@@ -447,34 +395,38 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     // Insert the entry
-    ret = acl_tbl->insert(&key, &mask, &data, acl_get_priority(pi_acl), &pd_acl->handle);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-ACL::{}: Unable to program for nacl: {}",
-                __FUNCTION__, acl_get_acl_id((acl_t *)pd_acl->pi_acl));
+    if (update) {
+        ret = acl_tbl->update(pd_acl->handle, &key, &mask, &data);
     } else {
-        HAL_TRACE_DEBUG("PD-ACL::{}: Programmed for nacl: {}",
-                __FUNCTION__, acl_get_acl_id((acl_t *)pd_acl->pi_acl));
+        ret = acl_tbl->insert(&key, &mask, &data, acl_get_priority(pi_acl), &pd_acl->handle);
+    }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-acl::{}: Unable to program for nacl: {}",
+                __func__, pd_acl->pi_acl->key);
+    } else {
+        HAL_TRACE_DEBUG("pd-acl::{}: Programmed for nacl: {}",
+                __func__, pd_acl->pi_acl->key);
     }
 
     return ret;
 }
 
-static hal_ret_t 
+static hal_ret_t
 acl_pd_cleanup_acl_tbl (pd_acl_t *pd_acl)
 {
     hal_ret_t ret = HAL_RET_OK;
     acl_tcam  *acl_tbl = NULL;
-    
+
     acl_tbl = g_hal_state_pd->acl_table();
     HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     ret = acl_tbl->remove(pd_acl->handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-ACL::{}: Unable to cleanup for acl: {}",
-                __FUNCTION__, acl_get_acl_id((acl_t *)pd_acl->pi_acl));
+        HAL_TRACE_ERR("pd-acl::{}: Unable to cleanup for acl: {}",
+                      __func__, pd_acl->pi_acl->key);
     } else {
-        HAL_TRACE_DEBUG("PD-ACL::{}: Programmed cleanup acl: {}",
-                __FUNCTION__, acl_get_acl_id((acl_t *)pd_acl->pi_acl));
+        HAL_TRACE_DEBUG("pd-acl::{}: Programmed cleanup acl: {}",
+                        __func__, pd_acl->pi_acl->key);
     }
 
     return ret;
@@ -496,11 +448,11 @@ acl_pd_deprogram_hw (pd_acl_t *pd_acl)
 // Program HW
 // ----------------------------------------------------------------------------
 static hal_ret_t
-acl_pd_program_hw(pd_acl_t *pd_acl)
+acl_pd_program_hw(pd_acl_t *pd_acl, bool update)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
-    ret = acl_pd_pgm_acl_tbl(pd_acl);
+    ret = acl_pd_pgm_acl_tbl(pd_acl, update);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -508,32 +460,98 @@ acl_pd_program_hw(pd_acl_t *pd_acl)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// PD Acl Cleanup
+//  - Release all resources
+//  - Delink PI <-> PD
+//  - Free PD Acl
+//  Note:
+//      - Just free up whatever PD has.
+//      - Dont use this inplace of delete. Delete may result in giving callbacks
+//        to others.
+//-----------------------------------------------------------------------------
+hal_ret_t
+acl_pd_cleanup(pd_acl_t *pd_acl)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!pd_acl) {
+        // Nothing to do
+        goto end;
+    }
+
+    if (pd_acl->handle != ACL_TCAM_ENTRY_INVALID_HANDLE) {
+        ret = acl_pd_deprogram_hw(pd_acl);
+        HAL_TRACE_ERR("pd-acl:{}: unable to deprogram hw for acl: {}",
+                      __func__,
+                      pd_acl->pi_acl->key);
+        goto end;
+    }
+
+    // Releasing resources
+    ret = acl_pd_dealloc_res(pd_acl);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-acl:{}: unable to dealloc res for acl: {}",
+                      __func__,
+                      pd_acl->pi_acl->key);
+        goto end;
+    }
+
+    // Delinking PI<->PD
+    acl_pd_delink_pi_pd(pd_acl, pd_acl->pi_acl);
+
+    // Freeing PD
+    acl_pd_free(&pd_acl);
+end:
+    return ret;
+}
+
+
+// ----------------------------------------------------------------------------
+//  Acl Update
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_acl_update (pd_acl_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_acl_t  *pd_acl;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->acl != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->acl->pd != NULL), HAL_RET_INVALID_ARG);
+
+    HAL_TRACE_DEBUG("pd-acl::{}: updating pd state for acl:{}",
+                    __func__,
+                    args->acl->key);
+
+    pd_acl = (pd_acl_t *)args->acl->pd;
+
+    ret = acl_pd_program_hw(pd_acl, true);
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Delete a PD ACL and remove from hardware
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_delete (pd_acl_args_t *args) 
+pd_acl_delete (pd_acl_args_t *args)
 {
-    hal_ret_t ret;
-    pd_acl_t  *pd_acl;
+    hal_ret_t ret = HAL_RET_OK;
+    pd_acl_t *pd_acl;
 
-    HAL_TRACE_DEBUG("PD-ACL::{}: Deleting pd state for acl: {}", 
-            __func__, acl_get_acl_id(args->acl));
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->acl != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->acl->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("pd-acl:{}:deleting pd state for acl {}",
+                    __func__, args->acl->key);
+    pd_acl = (pd_acl_t *)args->acl->pd;
 
-    pd_acl = (pd_acl_t *)hal::acl_get_pd_acl(args->acl);
-
-    // Program HW
-    ret = acl_pd_deprogram_hw(pd_acl);
+    // free up the resource and memory
+    ret = acl_pd_cleanup(pd_acl);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-ACL::{}: Error in deprogramming hardware for acl id {} "
-                      " Err {}",
-                      __func__, acl_get_acl_id(args->acl));
-        return ret;
+        HAL_TRACE_ERR("pd-acl:{}:failed pd acl cleanup {}, ret {}",
+                      __func__, args->acl->key, ret);
     }
-
-    acl_pd_dealloc_res(pd_acl);
-    unlink_pi_pd(pd_acl, args->acl);
-    acl_pd_free(&pd_acl);
 
     return ret;
 }
@@ -542,13 +560,13 @@ pd_acl_delete (pd_acl_args_t *args)
 // Create a PD ACL and add it to hardware
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_create (pd_acl_args_t *args) 
+pd_acl_create (pd_acl_args_t *args)
 {
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
     pd_acl_t  *pd_acl;
 
-    HAL_TRACE_DEBUG("PD-ACL::{}: Creating pd state for acl: {}", 
-            __func__, acl_get_acl_id(args->acl));
+    HAL_TRACE_DEBUG("pd-acl::{}: Creating pd state for acl: {}",
+                    __func__, args->acl->key);
 
     // Create acl PD
     pd_acl = acl_pd_alloc_init();
@@ -558,26 +576,62 @@ pd_acl_create (pd_acl_args_t *args)
     }
 
     // Link PI & PD
-    link_pi_pd(pd_acl, args->acl);
+    acl_pd_link_pi_pd(pd_acl, args->acl);
 
     // Allocate Resources
     ret = acl_pd_alloc_res(pd_acl);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-ACL::{}: Unable to alloc. resources for acl: {}",
-                __func__, acl_get_acl_id(args->acl));
+        HAL_TRACE_ERR("pd-acl::{}: Unable to alloc. resources for acl: {}",
+                __func__, args->acl->key);
         goto end;
     }
 
     // Program HW
-    ret = acl_pd_program_hw(pd_acl);
+    ret = acl_pd_program_hw(pd_acl, false);
 
 end:
     if (ret != HAL_RET_OK) {
-        acl_pd_dealloc_res(pd_acl);
-        unlink_pi_pd(pd_acl, args->acl);
-        acl_pd_free(&pd_acl);
+        acl_pd_cleanup(pd_acl);
     }
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Makes a clone
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_acl_make_clone(acl_t *acl, acl_t *clone)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_acl_t *pd_acl_clone = NULL;
+
+    pd_acl_clone = acl_pd_alloc_init();
+    if (pd_acl_clone == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    memcpy(pd_acl_clone, acl->pd, sizeof(pd_acl_t));
+
+    acl_pd_link_pi_pd(pd_acl_clone, clone);
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Frees PD memory without indexer free.
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_acl_mem_free(pd_acl_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    pd_acl_t        *pd_acl;
+
+    pd_acl = (pd_acl_t *)args->acl->pd;
+    acl_pd_mem_free(pd_acl);
+
     return ret;
 }
 

@@ -52,7 +52,6 @@
 		IPPrefix
 		L4PortRange
 		Empty
-		AclHandle
 		AclKeyHandle
 		EthSelector
 		UDPSelector

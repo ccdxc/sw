@@ -79,18 +79,18 @@ pd_copp_update (pd_copp_args_t *pd_copp_upd_args)
 hal_ret_t
 pd_copp_delete (pd_copp_args_t *args)
 {
-    hal_ret_t      ret = HAL_RET_OK;
-    pd_copp_t *copp_pd;
+    hal_ret_t ret = HAL_RET_OK;
+    pd_copp_t *pd_copp;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("pd-copp:{}:deleting pd state for copp {}",
                     __func__, args->copp->key);
-    copp_pd = (pd_copp_t *)args->copp->pd;
+    pd_copp = (pd_copp_t *)args->copp->pd;
 
     // free up the resource and memory
-    ret = copp_pd_cleanup(copp_pd);
+    ret = copp_pd_cleanup(pd_copp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-copp:{}:failed pd copp cleanup Copp {}, ret {}",
                       __func__, args->copp->key, ret);
@@ -110,34 +110,34 @@ pd_copp_delete (pd_copp_args_t *args)
 //        to others.
 //-----------------------------------------------------------------------------
 hal_ret_t
-copp_pd_cleanup(pd_copp_t *copp_pd)
+copp_pd_cleanup(pd_copp_t *pd_copp)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
-    if (!copp_pd) {
+    if (!pd_copp) {
         // Nothing to do
         goto end;
     }
 
-    if (copp_pd->hw_policer_id != INVALID_INDEXER_INDEX) {
+    if (pd_copp->hw_policer_id != INVALID_INDEXER_INDEX) {
         // TODO: deprogram hw
 
     }
 
     // Releasing resources
-    ret = copp_pd_dealloc_res(copp_pd);
+    ret = copp_pd_dealloc_res(pd_copp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-copp:{}: unable to dealloc res for copp: {}",
                       __func__,
-                      ((copp_t *)(copp_pd->pi_copp))->key);
+                      ((copp_t *)(pd_copp->pi_copp))->key);
         goto end;
     }
 
     // Delinking PI<->PD
-    copp_delink_pi_pd(copp_pd, (copp_t *)copp_pd->pi_copp);
+    copp_delink_pi_pd(pd_copp, (copp_t *)pd_copp->pi_copp);
 
     // Freeing PD
-    copp_pd_free(copp_pd);
+    copp_pd_free(pd_copp);
 end:
     return ret;
 }
@@ -217,8 +217,8 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
 hal_ret_t
 copp_pd_program_hw(pd_copp_t *pd_copp)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    copp_t          *copp = (copp_t *)pd_copp->pi_copp;
+    hal_ret_t ret = HAL_RET_OK;
+    copp_t    *copp = (copp_t *)pd_copp->pi_copp;
 
     ret = copp_pd_program_copp_tbl(pd_copp, false);
     if (ret != HAL_RET_OK) {
@@ -238,7 +238,7 @@ void
 copp_link_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp)
 {
     pd_copp->pi_copp = pi_copp;
-    copp_set_pd_copp(pi_copp, pd_copp);
+    pi_copp->pd = pd_copp;
 }
 
 // ----------------------------------------------------------------------------
@@ -247,8 +247,12 @@ copp_link_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp)
 void
 copp_delink_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp)
 {
-    pd_copp->pi_copp = NULL;
-    copp_set_pd_copp(pi_copp, NULL);
+    if (pd_copp) {
+        pd_copp->pi_copp = NULL;
+    }
+    if (pi_copp) {
+        pi_copp->pd = NULL;
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -281,10 +285,10 @@ hal_ret_t
 pd_copp_mem_free(pd_copp_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
-    pd_copp_t        *copp_pd;
+    pd_copp_t        *pd_copp;
 
-    copp_pd = (pd_copp_t *)args->copp->pd;
-    copp_pd_mem_free(copp_pd);
+    pd_copp = (pd_copp_t *)args->copp->pd;
+    copp_pd_mem_free(pd_copp);
 
     return ret;
 }

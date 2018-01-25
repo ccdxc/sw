@@ -14,6 +14,7 @@
 #include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
+#include "nic/hal/pd/iris/acl_pd.hpp"
 
 using sdk::table::tcam;
 using hal::pd::utils::acl_tcam_entry_handle_t;
@@ -23,6 +24,7 @@ namespace hal {
 namespace pd {
 
 struct nacl_match_entry_t {
+    priority_t priority;
     uint8_t lkp_type;
     uint8_t lkp_type_mask;
     uint16_t dport_type;
@@ -561,7 +563,7 @@ p4pd_nacl_smart_nic_mode_init (void)
         memset(&mask, 0, sizeof(mask));
         memset(&data, 0, sizeof(data));
 
-        priority = 0;
+        priority = NACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY;
 
         key.l3_metadata_ip_frag = 1;
         mask.l3_metadata_ip_frag_mask = 1;
@@ -598,7 +600,7 @@ p4pd_nacl_match_tp_cpu_init (const nacl_match_entry_t *entry)
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    priority = 1;
+    priority = entry->priority;
 
     data.actionid = NACL_NACL_PERMIT_ID;
 
@@ -655,6 +657,7 @@ p4pd_nacl_eplearn_init (void)
     nacl_match_entry_t entry;
 
     entry = { 0 };
+    entry.priority = NACL_EP_LEARN_ENTRY_PRIORITY_BEGIN + 0;
     entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
     entry.lkp_type_mask = ~(entry.lkp_type & 0);
     entry.dport_type = ETHERTYPE_ARP;
@@ -667,6 +670,7 @@ p4pd_nacl_eplearn_init (void)
     }
 
     entry = { 0 };
+    entry.priority = NACL_EP_LEARN_ENTRY_PRIORITY_BEGIN + 1;
     entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
     entry.lkp_type_mask = ~(entry.lkp_type & 0);
     entry.dport_type = ICMP_NEIGHBOR_SOLICITATION << 8 | 0;
@@ -679,6 +683,7 @@ p4pd_nacl_eplearn_init (void)
     }
 
     entry = { 0 };
+    entry.priority = NACL_EP_LEARN_ENTRY_PRIORITY_BEGIN + 2;
     entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
     entry.lkp_type_mask = ~(entry.lkp_type & 0);
     entry.dport_type = ICMP_NEIGHBOR_ADVERTISEMENT << 8 | 0;
@@ -691,6 +696,7 @@ p4pd_nacl_eplearn_init (void)
     }
 
     entry = { 0 };
+    entry.priority = NACL_EP_LEARN_ENTRY_PRIORITY_BEGIN + 3;
     entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
     entry.lkp_type_mask = ~(entry.lkp_type & 0);
     entry.dport_type = DHCP_CLIENT_PORT;
@@ -703,6 +709,7 @@ p4pd_nacl_eplearn_init (void)
     }
 
     entry = { 0 };
+    entry.priority = NACL_EP_LEARN_ENTRY_PRIORITY_BEGIN + 4;
     entry.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
     entry.lkp_type_mask = ~(entry.lkp_type & 0);
     entry.dport_type = DHCP_SERVER_PORT;
@@ -713,6 +720,7 @@ p4pd_nacl_eplearn_init (void)
     if (ret != HAL_RET_OK) {
         goto out;
     }
+    HAL_ASSERT(entry.priority <= NACL_EP_LEARN_ENTRY_PRIORITY_END);
 out:
     return ret;
 }
@@ -745,7 +753,7 @@ p4pd_nacl_init (void)
         memset(&mask, 0, sizeof(mask));
         memset(&data, 0, sizeof(data));
 
-        priority = 0;
+        priority = NACL_QUIESCE_ENTRY_PRIORITY;
 
         uint8_t mac_sa[6] = {0x04, 0x00, 0x00, 0xff, 0xee, 0x00};
         uint8_t mac_sa_mask[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};

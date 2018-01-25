@@ -3,7 +3,7 @@ meta:
 
 fields: 
     id: None 
-    priority: const/0
+    priority: const/100
     config_flow_miss: False
     match:
         direction     : None

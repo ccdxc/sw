@@ -18,6 +18,8 @@ from infra.common.logging       import cfglogger
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
+g_acl_handle = None
+
 class AclObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -39,6 +41,7 @@ class AclObject(base.ConfigObjectBase):
 
         self.ing_mirror_sessions = []
         self.egr_mirror_sessions = []
+        self.update_in_progress = False
         for s in self.fields.action.mirror.ingress:
             ispan   = s.Get(Store)
             self.ing_mirror_sessions.append(ispan)
@@ -160,6 +163,19 @@ class AclObject(base.ConfigObjectBase):
         halapi.ConfigureAcls([self])
         return
 
+    def Update(self):
+        if g_acl_handle is None:
+            return self.Configure()
+
+        cfglogger.info("Updating Acl  : %s (id: %d)" % (self.GID(), self.id))
+        if self.GID() in self.acls_to_skip:
+            return
+        self.Show()
+        self.update_in_progress = True
+        halapi.ConfigureAcls([self], True)
+        self.update_in_progress = False
+        return
+
     def Delete(self):
         cfglogger.info("Deleting Acl  : %s (id: %d)" % (self.GID(), self.id))
         if self.GID() in self.acls_to_skip:
@@ -176,7 +192,10 @@ class AclObject(base.ConfigObjectBase):
         return vals[val]
 
     def PrepareHALRequestSpec(self, reqspec):
-        reqspec.key_or_handle.acl_id = self.id
+        if self.update_in_progress:
+            reqspec.key_or_handle.acl_handle = g_acl_handle
+        else:
+            reqspec.key_or_handle.acl_id = self.id
         reqspec.priority = self.fields.priority.get()
         if self.MatchOnSIF():
             reqspec.match.src_if_key_handle.if_handle =\
@@ -321,15 +340,20 @@ class AclObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        self.hal_handle = resp_spec.status.acl_handle.handle
+        global g_acl_handle
+
+        self.hal_handle = resp_spec.status.acl_handle
         cfglogger.info("  - Acl %s = %s handle: 0x%x" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status), 
                         self.hal_handle))
+
+        if g_acl_handle is None:
+            g_acl_handle = self.hal_handle
         return
 
     def PrepareHALDeleteRequestSpec(self, reqspec):
-        reqspec.key_or_handle.acl_handle.handle = self.hal_handle
+        reqspec.key_or_handle.acl_handle = self.hal_handle
         return
 
     def ProcessHALDeleteResponse(self, req_spec, resp_spec):

@@ -30,6 +30,14 @@ public:
     // Get the previous free index before posn
     hal_ret_t prev_free(uint32_t posn, uint32_t *set_p);
 
+    //------------------------------------------------------------------------
+    // Compute the floor value of log2 integer
+    // log2_floor(3) = 1
+    // log2_floor(4) = 2
+    // log2_floor(5) = 3
+    //------------------------------------------------------------------------
+    static uint32_t log2_floor (uint64_t v);
+
 private:
     hal_spinlock_t    slock_;          // lock for thread safety
     bool              thread_safe_;    // TRUE if thread safety is needed
@@ -47,7 +55,6 @@ private:
     hal_ret_t first_free_(uint32_t posn, uint32_t *first_free_p);
     hal_ret_t last_free_(uint32_t posn, uint32_t *last_free_p);
     uint32_t ffs_(uint64_t v);
-    uint32_t log2_floor_ (uint64_t v);
     void lock_(void) {
         if (thread_safe_) {
           HAL_SPINLOCK_LOCK(&slock_);

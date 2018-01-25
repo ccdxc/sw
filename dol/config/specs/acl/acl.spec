@@ -455,6 +455,7 @@ entries:
 
     - entry:
         id: ACL_IPV4_IGMP_ACTION_SUP_REDIRECT
+        priority: const/200
         config_flow_miss: False
         match:
             type: ip
@@ -469,6 +470,7 @@ entries:
 
     - entry:
         id: ACL_ICMPV6_MLD_REQ_ACTION_SUP_REDIRECT
+        priority: const/201
         match:
             type : ip
             ip:
@@ -484,6 +486,7 @@ entries:
 
     - entry:
         id: ACL_ICMPV6_MLD_RES_ACTION_SUP_REDIRECT
+        priority: const/202
         match:
             type : ip
             ip:
@@ -499,6 +502,7 @@ entries:
 
     - entry:
         id: ACL_ICMPV6_MLD_DONE_ACTION_SUP_REDIRECT
+        priority: const/203
         match:
             type : ip
             ip:
@@ -514,6 +518,7 @@ entries:
 
     - entry:
         id: ACL_ICMPV6_RS_ACTION_SUP_REDIRECT
+        priority: const/204
         match:
             type : ip
             ip:
@@ -529,6 +534,7 @@ entries:
 
     - entry:
         id: ACL_ICMPV6_RA_ACTION_SUP_REDIRECT
+        priority: const/205
         match:
             type : ip
             ip:
@@ -544,6 +550,7 @@ entries:
 
     - entry:
         id: ACL_ICMPV6_NS_ACTION_SUP_REDIRECT
+        priority: const/206
         match:
             type : ip
             ip:
@@ -559,6 +566,7 @@ entries:
 
     - entry:
         id: ACL_ICMPV6_NA_ACTION_SUP_REDIRECT
+        priority: const/207
         match:
             type : ip
             ip:

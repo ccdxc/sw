@@ -43,14 +43,11 @@ def TestCaseSetup(tc):
     acl.UpdateFromTCConfig(tc.config.flow, tc.config.src.endpoint, tc.config.dst.endpoint,\
                            tc.config.src.segment, tc.config.src.tenant)
 
-    acl.Configure()
+    acl.Update()
     return
 
 def TestCaseVerify(tc):
     return True
 
 def TestCaseTeardown(tc):
-    acl = tc.pvtdata.acl
-
-    acl.Delete()
     return

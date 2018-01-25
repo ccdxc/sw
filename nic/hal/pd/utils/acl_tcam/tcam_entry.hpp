@@ -53,7 +53,7 @@ public:
     static void destroy(TcamEntry *te, 
                         uint32_t mtrack_id = HAL_MEM_ALLOC_TCAM_ENTRY); 
 
-    void update_data(void *data);
+    void update_key_data(void *key, void *key_mask, void *data);
 
     // Getters & Setters
     void *get_key() { return key_; };

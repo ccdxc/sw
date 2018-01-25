@@ -52,6 +52,20 @@ ip_addr_to_spec (types::IPAddress *ip_addr_spec,
 }
 
 //----------------------------------------------------------------------------
+// convert IP prefix to IPPrefix proto spec
+//----------------------------------------------------------------------------
+hal_ret_t
+ip_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
+                const ip_prefix_t *ip_pfx) 
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ip_pfx_spec->set_prefix_len(ip_pfx->len);
+    ret = ip_addr_to_spec(ip_pfx_spec->mutable_address(), &ip_pfx->addr);
+    return ret;
+}
+
+//----------------------------------------------------------------------------
 // convert IP prefix spec in proto to ip_addr used in HAL
 //----------------------------------------------------------------------------
 hal_ret_t

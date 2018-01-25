@@ -36,7 +36,21 @@ AclServiceImpl::AclUpdate(ServerContext *context,
                               const AclRequestMsg *req,
                               AclResponseMsg *rsp)
 {
+    uint32_t          i, nreqs = req->request_size();
+    AclResponse    *response;
+
     HAL_TRACE_DEBUG("Rcvd Acl Update Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::acl_update(spec, response);
+    }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -68,6 +82,20 @@ AclServiceImpl::AclGet(ServerContext *context,
                            const AclGetRequestMsg *req,
                            AclGetResponseMsg *rsp)
 {
+    uint32_t             i, nreqs = req->request_size();
+    AclGetResponse    *response;
+
     HAL_TRACE_DEBUG("Rcvd Acl Get Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto request = req->request(i);
+        hal::acl_get(request, response);
+    }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

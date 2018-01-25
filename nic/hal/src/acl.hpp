@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #ifndef __ACL_HPP__
 #define __ACL_HPP__
 
@@ -6,6 +7,7 @@
 #include "sdk/ht.hpp"
 #include "nic/include/ip.h"
 #include "nic/gen/proto/hal/acl.pb.h"
+#include "nic/include/pd.hpp"
 
 // Include key of internal fields for use only with DOL/testing infra
 // For production builds this needs to be removed
@@ -13,8 +15,21 @@
 #define ACL_DOL_TEST_ONLY
 
 using sdk::lib::ht_ctxt_t;
+using acl::AclKeyHandle;
+
 using acl::AclSpec;
+using acl::AclStatus;
 using acl::AclResponse;
+using acl::AclRequestMsg;
+using acl::AclResponseMsg;
+using acl::AclDeleteRequest;
+using acl::AclDeleteResponse;
+using acl::AclDeleteRequestMsg;
+using acl::AclDeleteResponseMsg;
+using acl::AclGetRequest;
+using acl::AclGetRequestMsg;
+using acl::AclGetResponse;
+using acl::AclGetResponseMsg;
 
 namespace hal {
 
@@ -140,42 +155,122 @@ typedef struct acl_action_spec_s {
 
 } __PACK__ acl_action_spec_t;
 
+typedef struct acl_key_s {
+    acl_id_t acl_id;    // Acl id assigned
+} __PACK__ acl_key_t;
+
+inline std::ostream& operator<<(std::ostream& os, const acl_key_t& s)
+{
+   return os << fmt::format("{{acl_id={}}}", s.acl_id);
+}
+
 // Acl structure
 typedef struct acl_s {
-    hal_spinlock_t    slock;                 // lock to protect this structure
-    acl_id_t          acl_id;                // Acl id assigned
+    hal_spinlock_t    slock;         // lock to protect this structure
+    acl_key_t         key;           // acl key information
 
     uint32_t          priority;
     acl_match_spec_t  match_spec;
     acl_action_spec_t action_spec;
 
-    hal_handle_t      hal_handle;            // HAL allocated handle
+    hal_handle_t      hal_handle;    // HAL allocated handle
 
-    ht_ctxt_t         ht_ctxt;               // acl_id based hash table ctxt
-    ht_ctxt_t         hal_handle_ht_ctxt;    // hal handle based hash table ctxt
-
-    void              *pd_acl;
+    pd::pd_acl_t      *pd;
 } __PACK__ acl_t;
+
+// CB data structures
+typedef struct acl_create_app_ctxt_s {
+} __PACK__ acl_create_app_ctxt_t;
+
+typedef struct acl_update_app_ctxt_s {
+} __PACK__ acl_update_app_ctxt_t;
+
+// allocate a Acl instance
+static inline acl_t *
+acl_alloc (void)
+{
+    acl_t    *acl;
+
+    acl = (acl_t *)g_hal_state->acl_slab()->alloc();
+    if (acl == NULL) {
+        return NULL;
+    }
+    return acl;
+}
+
+// initialize a Acl instance
+static inline acl_t *
+acl_init (acl_t *acl)
+{
+    if (!acl) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&acl->slock, PTHREAD_PROCESS_PRIVATE);
+
+    return acl;
+}
+
+// allocate and initialize a acl instance
+static inline acl_t *
+acl_alloc_init (void)
+{
+    return acl_init(acl_alloc());
+}
 
 static inline acl_t *
 find_acl_by_id (acl_id_t acl_id)
 {
-    return (acl_t *)g_hal_state->acl_id_ht()->lookup(&acl_id);
+    hal_handle_id_ht_entry_t *entry;
+    acl_key_t                acl_key;
+    acl_t                    *acl;
+
+    acl_key.acl_id= acl_id;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->acl_ht()->lookup(&acl_key);
+    if (entry) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_ACL);
+        acl = (acl_t *)hal_handle_get_obj(entry->handle_id);
+        return acl;
+    }
+    return NULL;
 }
 
 static inline acl_t *
 find_acl_by_handle (hal_handle_t handle)
 {
-    return (acl_t *)g_hal_state->acl_hal_handle_ht()->lookup(&handle);
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_ERR("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_ACL) {
+        HAL_TRACE_ERR("{}:failed to find acl with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    return (acl_t *)hal_handle_get_obj(handle);
+}
+
+static inline acl_t *
+acl_lookup_by_key_or_handle (const AclKeyHandle& kh)
+{
+    if (kh.key_or_handle_case() == AclKeyHandle::kAclId) {
+        return find_acl_by_id(kh.acl_id());
+    } else if (kh.key_or_handle_case() == AclKeyHandle::kAclHandle) {
+        return find_acl_by_handle(kh.acl_handle());
+    }
+    return NULL;
 }
 
 extern void *acl_get_key_func(void *entry);
 extern uint32_t acl_compute_hash_func(void *key, uint32_t ht_size);
 extern bool acl_compare_key_func(void *key1, void *key2);
-
-extern void *acl_get_handle_key_func(void *entry);
-extern uint32_t acl_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool acl_compare_handle_key_func(void *key1, void *key2);
 
 hal_ret_t acl_create(acl::AclSpec& spec,
                      acl::AclResponse *rsp);
@@ -183,6 +278,8 @@ hal_ret_t acl_update(acl::AclSpec& spec,
                      acl::AclResponse *rsp);
 hal_ret_t acl_delete(acl::AclDeleteRequest& req,
                      acl::AclDeleteResponse *rsp);
+hal_ret_t acl_get(acl::AclGetRequest& req,
+                  acl::AclGetResponse *rsp);
 
 
 }    // namespace hal

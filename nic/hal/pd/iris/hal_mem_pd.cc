@@ -916,9 +916,12 @@ hal_state_pd::init_tables(void)
 
         case P4_TBL_TYPE_TCAM:
             if (tid == P4TBL_ID_NACL) {
+                // ACL tcam table with priority 0 as highest and no duplicate
+                // priorities
                 acl_table_ = acl_tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                                tinfo.key_struct_size, 
-                                               tinfo.actiondata_struct_size, true);
+                                               tinfo.actiondata_struct_size, 
+                                               false, false);
                 HAL_ASSERT(acl_table_ != NULL);
             } else if ((tid == P4TBL_ID_DDOS_SRC_VF) ||
                        (tid == P4TBL_ID_DDOS_SRC_DST) ||

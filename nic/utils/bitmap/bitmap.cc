@@ -244,7 +244,7 @@ bitmap::last_set_(uint32_t posn, uint32_t *last_set_p)
         return HAL_RET_NO_RESOURCE;
     }
 
-    off = log2_floor_(bits_[word-1] & mask);
+    off = log2_floor(bits_[word-1] & mask);
     unlock_();
 
     HAL_ASSERT(off != 64);
@@ -354,7 +354,7 @@ bitmap::last_free_(uint32_t posn, uint32_t *last_free_p)
         return HAL_RET_NO_RESOURCE;
     }
 
-    off = log2_floor_(~(bits_[word-1] | mask));
+    off = log2_floor(~(bits_[word-1] | mask));
     unlock_();
 
     HAL_ASSERT(off < 64);
@@ -402,7 +402,7 @@ bitmap::ffs_(uint64_t v)
 }
 
 uint32_t
-bitmap::log2_floor_(uint64_t v)
+bitmap::log2_floor(uint64_t v)
 {
 #ifdef __GNUC__
     return v ? 64 - __builtin_clzl(v) - 1: 64;

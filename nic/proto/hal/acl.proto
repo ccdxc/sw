@@ -20,16 +20,11 @@ service Acl {
   rpc AclGet(AclGetRequestMsg) returns (AclGetResponseMsg) {}
 }
 
-// Handle of the acl
-message AclHandle {
-  fixed64 handle = 1;    // Handle of the acl
-}
-
 // AclKeyHandle uniquely identifies a Acl
 message AclKeyHandle {
   oneof key_or_handle {
     fixed32   acl_id     = 1;    // app allocated unique Acl id
-    AclHandle acl_handle = 2;    // id of acl returned by HAL
+    fixed64   acl_handle = 2;    // id of acl returned by HAL
   }
 }
 
@@ -161,20 +156,20 @@ message AclInternalActionInfo {
 
 // AclSelector has all the match criteria for an ACL entry
 message AclSelector {
-  kh.InterfaceKeyHandle          src_if_key_handle      = 1;    // source interface
-  kh.InterfaceKeyHandle          dst_if_key_handle      = 2;    // destination interface
+  kh.InterfaceKeyHandle     src_if_key_handle    = 1;    // source interface
+  kh.InterfaceKeyHandle     dst_if_key_handle    = 2;    // destination interface
   oneof seg_selector {
-      kh.VrfKeyHandle  vrf_key_handle            = 3;    // Vrf match
+      kh.VrfKeyHandle       vrf_key_handle       = 3;    // Vrf match
       kh.L2SegmentKeyHandle l2segment_key_handle = 4;    // L2 segment
   }
   oneof pkt_selector {
-    EthSelector                    eth_selector         = 5;    // non-IP packet selector
-    IPSelector                     ip_selector          = 6;    // IP packet selector
+    EthSelector             eth_selector         = 5;    // non-IP packet selector
+    IPSelector              ip_selector          = 6;    // IP packet selector
   }
 
   // TODO: REMOVE
-  AclInternalSelector              internal_key         = 7;    // Internal fields
-  AclInternalSelector              internal_mask        = 8;    // Internal fields
+  AclInternalSelector       internal_key         = 7;    // Internal fields
+  AclInternalSelector       internal_mask        = 8;    // Internal fields
 }
 
 // AclAction specifies all possible actions for ACL entries
@@ -214,7 +209,7 @@ message AclRequestMsg {
 
 // AclStatus represents the operational status of an ACL entry
 message AclStatus {
-  AclHandle acl_handle = 1;    // id of the acl returned by HAL
+  fixed64 acl_handle = 1;    // id of the acl returned by HAL
 }
 
 // AclResponse is response to one Acl
@@ -266,9 +261,10 @@ message AclStats {
 
 // AclGetResponse captures all the information about a acl
 message AclGetResponse {
-  AclSpec   spec   = 1;    // Acl configuration
-  AclStatus status = 2;    // Acl operational status
-  AclStats  stats  = 3;    // Acl statistics
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  AclSpec         spec       = 2;    // Acl configuration
+  AclStatus       status     = 3;    // Acl operational status
+  AclStats        stats      = 4;    // Acl statistics
 }
 
 // AclGetResponseMsg is response to AclGetRequestMsg
