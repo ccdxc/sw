@@ -212,6 +212,7 @@ class ConfigObjectHelper(object):
         except AttributeError:
             self.key_type = None
         self._config_objects = []
+        self._reference_objects = []
         self._ignore_ops = [ ConfigObjectHelper.__op_map[op.op] for op in self._service_object.ignore or []]
 
     def __repr__(self):
@@ -434,4 +435,11 @@ def CreateConfigFromDol(incoming_message):
 def CreateConfigFromKeyType(key_type, ext_refs, external_constraints=None):
     object_helper = cfg_meta_mapper.key_type_to_config[key_type]
     ref_object = object_helper.CreateConfigObject('API_STATUS_OK', ext_refs, external_constraints)
+    object_helper._reference_objects.append(ref_object)
     return ref_object.key_or_handle
+
+def GetConfigMessageFromKey(key):
+    object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
+    for reference_object in object_helper._reference_objects:
+        if reference_object.key_or_handle == key:
+            return reference_object._msg_cache[ConfigObjectMeta.CREATE]
