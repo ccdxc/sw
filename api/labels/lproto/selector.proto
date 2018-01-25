@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-package labels;
+package lproto;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
@@ -17,8 +17,10 @@ message Selector {
 
 // Operator defines the supported operators for each Requirement.
 enum Operator {
-  equals       = 0;  // Key should match one of the Values
-  notEquals    = 1;  // Key should not match any of the the Values
+  equals       = 0;  // Key should match the Value
+  notEquals    = 1;  // Key should not match the Value
+  in           = 2;  // Key should match one of the Values
+  notIn        = 3;  // Key should not match any of the Values
 }
 
 // Requirement defines a single matching condition for a selector.
@@ -31,6 +33,8 @@ message Requirement {
   string Operator=2 [(gogoproto.jsontag) = "operator",
                      (venice.check) = "StrEnum(Operator)"];
 
-  // Values contains one or more values corresponding to the label key.
+  // Values contains one or more values corresponding to the label key. "equals" and
+  // "notEquals" operators need a single Value. "in" and "notIn" operators can have
+  // one or more values.
   repeated string Values=3 [(gogoproto.jsontag) = "values"];
 }

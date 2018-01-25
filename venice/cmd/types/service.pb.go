@@ -10,8 +10,10 @@ import api "github.com/pensando/sw/api"
 import api1 "github.com/pensando/sw/api"
 import _ "github.com/gogo/protobuf/gogoproto"
 
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
 
 import io "io"
 

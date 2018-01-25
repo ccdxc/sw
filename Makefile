@@ -2,7 +2,7 @@
 
 EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts|netagent/datapath/halproto|nic/gen"
 # Has venice protos and all things auto generated.
-TO_GEN := api api/labels venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
+TO_GEN := api api/labels/lproto venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
 venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
 venice/utils/runtime/test venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi venice/ctrler/ckm/rpcserver/ckmproto \
@@ -13,8 +13,8 @@ nic/agent/nmd/protos nic/agent/netagent/protos
 #
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
-./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... ./venice/collector/... \
-./venice/cli/...
+./api/labels/... ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... \
+./venice/collector/... ./venice/cli/...
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
