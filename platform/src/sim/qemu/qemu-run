@@ -2,6 +2,11 @@
 
 DRIVE_IMG=${1:?"Usage: qemu-run <qemu-img>"}
 
+: ${QEMU_SERIAL_PORT:=1034}
+: ${QEMU_MONITOR_PORT:=1035}
+: ${QEMU_SSH_PORT:=1037}
+: ${QEMU_MEMORY_MB:=256}
+
 SCRIPT_DIR=`dirname $0`
 SCRIPT_PATH=`cd $SCRIPT_DIR; echo $PWD`
 TOP_PATH=`cd $SCRIPT_DIR/../../..; echo $PWD`
@@ -18,10 +23,10 @@ export LD_LIBRARY_PATH=${N}
 QEMU_VERSION=2.9.0
 QEMU_DIR=$SCRIPT_PATH/qemu-$QEMU_VERSION
 $GDB $QEMU_DIR/x86_64-softmmu/qemu-system-x86_64 \
-    -machine q35 -smp 4 -nographic -m 256 \
-    -serial telnet::1034,server,nowait \
-    -monitor telnet::1035,server,nowait \
-    -netdev user,id=net0,hostfwd=tcp::1037-:22 \
+    -machine q35 -smp 4 -nographic -m $QEMU_MEMORY_MB \
+    -serial telnet::$QEMU_SERIAL_PORT,server,nowait \
+    -monitor telnet::$QEMU_MONITOR_PORT,server,nowait \
+    -netdev user,id=net0,hostfwd=tcp::$QEMU_SSH_PORT-:22 \
     -device e1000,netdev=net0 \
     -device ioh3420,id=pcie_bus1 \
     -device simbridge,bus=pcie_bus1 \
