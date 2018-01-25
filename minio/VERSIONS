@@ -1,5 +1,5 @@
 # format: <name> <version>
-asic_libs dcda988
-ncc_tools dcda988
+asic_libs 7078bde
+ncc_tools 7078bde
 third_party_libs 1.1.25
-pbc_config dcda988
+pbc_config 7078bde

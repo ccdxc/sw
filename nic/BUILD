@@ -126,6 +126,8 @@ cc_library(
         "asic/capri/design/common/gen/cap_phv_intr_decoders.cc",
         "asic/capri/design/common/gen/cap_phv_intr_decoders.h",
         "asic/capri/design/common/gen/cap_axi_decoders.h",
+        "asic/capri/model/cap_em/cap_emm_csr.cc",
+        "asic/capri/model/cap_em/cap_emm_csr.h",
         #"asic/capri/design/common/gen/cap_axi_decoders.h",
     ]  + glob(["asic/capri/model/cap_dpa/*csr.cc", "asic/capri/model/cap_dpa/*csr.h"])
        + glob(["asic/capri/verif/apis/*.h"])
@@ -161,6 +163,7 @@ cc_library(
         "asic/capri/model/cap_he/readonly",
         "asic/ip/verif/pcpp",
         "asic/capri/design/common/gen",
+        "asic/capri/model/cap_em",
     ],
     deps = ["//nic/hal/pd/capri/csr:sknobs_hdrs"],
     linkopts = [
