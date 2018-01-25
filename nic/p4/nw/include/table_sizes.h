@@ -34,3 +34,23 @@
 #define DDOS_SRC_VF_POLICER_TABLE_SIZE                     1024
 #define DDOS_SERVICE_POLICER_TABLE_SIZE                    1024
 #define DDOS_SRC_DST_POLICER_TABLE_SIZE                    2048
+
+#ifdef PLATFORM_HAPS
+#undef INPUT_PROPERTIES_OTCAM_TABLE_SIZE
+#undef INPUT_PROPERTIES_MAC_VLAN_TABLE_SIZE
+#undef DDOS_SRC_VF_TABLE_SIZE
+#undef DDOS_SRC_DST_TABLE_SIZE
+#undef DDOS_SERVICE_TABLE_SIZE
+#undef REGISTERED_MACS_OTCAM_TABLE_SIZE
+#undef NACL_TABLE_SIZE
+#undef IPSG_TABLE_SIZE
+
+#define INPUT_PROPERTIES_OTCAM_TABLE_SIZE                  64
+#define INPUT_PROPERTIES_MAC_VLAN_TABLE_SIZE               64
+#define DDOS_SRC_VF_TABLE_SIZE                             64
+#define DDOS_SRC_DST_TABLE_SIZE                            64
+#define DDOS_SERVICE_TABLE_SIZE                            64
+#define REGISTERED_MACS_OTCAM_TABLE_SIZE                   64
+#define NACL_TABLE_SIZE                                    64
+#define IPSG_TABLE_SIZE                                    64
+#endif
