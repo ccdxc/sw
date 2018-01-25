@@ -257,7 +257,7 @@ modules:
         name    : PKT_TO_BSQ_AES128_GCM_DECRYPT_MULTI_SEGMENT_REASM
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_decrypt
-        rtl     : True
+        rtl     : False
         spec    : one_tls_aes128_gcm_record_pkt_multi_segment.testspec
         args    :
             cipher_suite: GCM
@@ -538,6 +538,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_FIN
         spec    : uplink_to_uplink_fin.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             bypass_barco : 1
             fin : 1
@@ -547,6 +548,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_FIN_ACK
         spec    : uplink_to_uplink_fin_ack.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             bypass_barco : 1
             fin : 1
@@ -557,6 +559,7 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_FIN_ACK_FIN
         spec    : uplink_to_uplink_fin_ack_fin.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             bypass_barco : 1
             fin : 1
@@ -577,6 +580,7 @@ modules:
         name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
+        rtl     : True
         args :
               bypass_barco : 1
               maxflows : 1
@@ -589,6 +593,7 @@ modules:
         name    : UL_TO_HOST_BYPASS_BARCO
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
+        rtl     : True
         args :
               bypass_barco : 1
               maxflows : 1
@@ -606,6 +611,7 @@ modules:
         name    : UL_TO_HOST_BYPASS_BARCO_SEND_ACK
         spec    : uplink_to_host_ack.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             bypass_barco : 1
             maxflows : 1
@@ -620,6 +626,7 @@ modules:
         name    : HOST_TO_UL_BYPASS_BARCO_SAME_FLOW
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
+        rtl     : True
         args :
               bypass_barco : 1
               maxflows : 1
@@ -632,6 +639,7 @@ modules:
         name    : HOST_TO_UL_BYPASS_BARCO
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
+        rtl     : True
         args :
               bypass_barco : 1
               maxflows : 1
@@ -649,6 +657,7 @@ modules:
         name    : HOST_TO_UL_BYPASS_BARCO_SEND_ACK
         spec    : host_to_uplink_ack.testspec
         module  : pkt_to_p4
+        rtl     : True
         args    :
             bypass_barco : 1
             maxflows : 1
@@ -663,6 +672,7 @@ modules:
         name    : PKT_TO_SESQ
         package : test.tcp_tls_proxy
         module  : pkt_to_sesq
+        rtl     : True
         spec    : one_pkt.testspec
         args    :
             maxflows: 1
@@ -672,6 +682,7 @@ modules:
         name    : TLS_HANDSHAKE_RX
         package : test.tcp_tls_proxy
         module  : tls_handshake_rx
+        rtl     : True
         spec    : tls_handshake.testspec
         args    :
             maxflows: 1
@@ -975,7 +986,7 @@ modules:
         name    : TCP_PKT_TO_L7Q_IDS_V4
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ids
-        rtl     : True
+        rtl     : False 
         args    :
             maxflows: 1
         iterate :
@@ -985,7 +996,7 @@ modules:
         name    : TCP_PKT_TO_L7Q_IDS_V6
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ids
-        rtl     : True
+        rtl     : False
         args    :
             maxflows: 1
         iterate :
@@ -995,7 +1006,7 @@ modules:
         name    : TCP_FLOWS_TO_L7Q_IDS_V4
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ids
-        rtl     : True
+        rtl     : False
         args    :
             maxflows: 2
         iterate :
