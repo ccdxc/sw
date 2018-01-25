@@ -1,7 +1,7 @@
 
 #include "nic/include/hal.hpp"
 #include "nic/hal/periodic/periodic.hpp"
-#include "nic/third-party/snort3/export/include/snort_api.h"
+#include "snort_api.h"
 #include "app_redir_scanner.hpp"
 #include "app_redir_ctx.hpp"
 #include <dlfcn.h>

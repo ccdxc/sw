@@ -12,7 +12,7 @@ cc_library(
     deps = [
         "//nic/fte",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
     ],
     alwayslink = 1,
 )

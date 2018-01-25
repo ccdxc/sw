@@ -30,8 +30,8 @@
  */
 
 //#include <omapip/omapip_p.h>
-#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 
 #if defined (DEBUG_MEMORY_LEAKAGE) || defined (DEBUG_MALLOC_POOL) || \
 		defined (DEBUG_MEMORY_LEAKAGE_ON_EXIT)

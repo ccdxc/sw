@@ -32,7 +32,8 @@ cc_library(
         "@sdk//obj:sdk_indexer",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
+        "//nic:boost",
     ]
 )
 
@@ -55,7 +56,6 @@ cc_test(
         "-lzmq",
         "-lpthread",
         "-pthread",
-        "-lprotobuf",
     ],
     deps = gl_deps_list,
     copts = sdk_copts,

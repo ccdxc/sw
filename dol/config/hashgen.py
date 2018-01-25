@@ -10,7 +10,7 @@ import infra.common.objects as objects
 
 
 MODEL_DEBUG = 'nic/gen/iris/dbg_out/model_debug.json'
-CRCHACK = 'nic/third-party/crchack/bin/crchack -w32 -p04c11db7'
+CRCHACK = 'nic/hal/third-party/crchack/bin/crchack -w32 -p04c11db7'
 RECIRC_LIMIT = 4
 
 def run_cmd(cmd, inp):

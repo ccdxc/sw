@@ -16,6 +16,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic/hal:hal_src",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
+        "//nic:grpc_includes",
     ],
 )

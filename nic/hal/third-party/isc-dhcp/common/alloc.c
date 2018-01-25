@@ -27,8 +27,8 @@
  *
  */
 
-#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 //#include <omapip/omapip_p.h>
 
 struct dhcp_packet *dhcp_free_list;

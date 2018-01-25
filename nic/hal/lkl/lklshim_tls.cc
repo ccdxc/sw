@@ -9,8 +9,8 @@
 #include "nic/include/cpupkt_headers.hpp"
 
 extern "C" {
-#include "nic/third-party/lkl/export/include/lkl.h"
-#include "nic/third-party/lkl/export/include/lkl_host.h"
+#include "lkl.h"
+#include "lkl_host.h"
 }
 
 

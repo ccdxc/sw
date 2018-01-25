@@ -12,7 +12,7 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic/hal/lib:hal_handle_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "@sdk//obj:sdk_thread",
     ],
     alwayslink = 1,
@@ -26,11 +26,14 @@ cc_binary(
     ],
     deps = [
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "@sdk//obj:sdk_thread",
         "//nic:gen_proto_includes",
         "//nic:halproto",
         "//nic:grpc",
+        "//nic:grpc_includes",
+        "//nic:google_includes",
+        "//nic:libprotobuf",
         "@sdk//obj:sdk_logger",
     ],
     linkopts = [
@@ -38,7 +41,6 @@ cc_binary(
         "-lpthread",
         "-pthread",
         "-lz",
-        "-lprotobuf",
         "-lm",
     ],
 )

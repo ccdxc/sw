@@ -10,7 +10,7 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "@sdk//obj:sdk_list",
         "//nic/utils/iterator:iterator",
     ],

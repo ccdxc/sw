@@ -70,7 +70,9 @@ cc_library(
                "//nic/utils/block_list:block_list",
                "//nic/model_sim/include:modelsim_includes",
                "//nic/p4/nw/include:p4_nw_includes",
-               "//nic/third-party/spdlog",
+               "//nic:spdlog",
+               "//nic:google_includes",
+               "//nic:grpc_includes",
                "//nic/hal/periodic:periodic",
            ] + capri_util_deps +
            capri_pd_deps,

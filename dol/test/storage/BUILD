@@ -14,6 +14,8 @@ cc_library(
         "//external:gflags",
         "//nic:halproto",
         "//nic:gen_proto_includes",
+        "//nic:grpc_includes",
+        "//nic:google_includes",
     ]
 )
 
@@ -57,6 +59,7 @@ cc_library(
         ":hal_if",
         ":qstate_if",
         "//nic:halproto",
+        "//nic:google_includes",
         "//nic:gen_proto_includes",
         "//nic/utils/host_mem",
         "//nic/model_sim:model_client",
@@ -176,6 +179,7 @@ cc_binary(
         ":rdma",
         ":compression",
         "//nic:grpc",
+        "//nic:libprotobuf",
         "//external:gflags",
     ],
     copts = [ "-g" ],
@@ -183,7 +187,6 @@ cc_binary(
         "-lpthread",
         "-pthread",
         "-lz",
-        "-lprotobuf",
         "-lm",
     ],
 )

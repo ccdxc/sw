@@ -365,7 +365,7 @@ vrf_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 hal_ret_t
 vrf_prepare_rsp (VrfResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 {
-    if (ret == HAL_RET_OK) {
+    if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
         rsp->mutable_vrf_status()->set_vrf_handle(hal_handle);
     }
 
@@ -404,7 +404,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     }
 
     // check if vrf exists already, and reject if one is found
-    if (vrf_lookup_by_id(spec.key_or_handle().vrf_id())) {
+    if ((vrf = vrf_lookup_by_id(spec.key_or_handle().vrf_id()))) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to create a vrf, "
                       "vrf {} exists already", __FUNCTION__, 
                       spec.key_or_handle().vrf_id());
@@ -479,7 +479,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
                              vrf_create_cleanup_cb);
 
 end:
-    if (ret != HAL_RET_OK) {
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         if (vrf) {
             // if there is an error, if will be freed in abort CB
             vrf = NULL;

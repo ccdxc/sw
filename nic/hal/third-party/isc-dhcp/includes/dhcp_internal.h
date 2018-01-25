@@ -42,13 +42,13 @@
 #define log_fatal HAL_TRACE_ERR
 
 struct hash_table;
-#include "nic/third-party/isc-dhcp/includes/omapip/hash.h"
+#include "nic/hal/third-party/isc-dhcp/includes/omapip/hash.h"
 typedef struct hash_table group_hash_t;
 typedef struct hash_table universe_hash_t;
 typedef struct hash_table option_name_hash_t;
 typedef struct hash_table option_code_hash_t;
-#include "nic/third-party/isc-dhcp/includes/omapip/alloc.h"
-#include "nic/third-party/isc-dhcp/includes/tree.h"
+#include "nic/hal/third-party/isc-dhcp/includes/omapip/alloc.h"
+#include "nic/hal/third-party/isc-dhcp/includes/tree.h"
 
 #define DHCP_UDP_OVERHEAD \
     (20 + /* IP header */ \

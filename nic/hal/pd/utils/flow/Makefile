@@ -5,10 +5,10 @@ BUILDOBJS = xx
 
 LCXXFLAGS = \
 			-I.. \
-			-I../../../../include \
-			-I../../../../hal/pd \
-			-I../../../../gen/iris/include \
-			-I../../../../third-party/spdlog/include
+			-I$(TOPDIR)/include \
+			-I$(TOPDIR)/hal/pd \
+			-I$(TOPDIR)/gen/iris/include \
+			-I$(TOPDIR)/third-party/spdlog/include
 
 SOURCES = \
 	flow.cc \

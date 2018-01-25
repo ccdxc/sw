@@ -21,7 +21,7 @@ cc_library(
         "//nic/hal/svc:hal_svc",
         "//nic/include:base_includes",
         "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "//nic/hal/plugins/app_redir:app_redir_includes",
     ],
     alwayslink = 1,

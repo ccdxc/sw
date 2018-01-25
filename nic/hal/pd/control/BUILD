@@ -21,7 +21,7 @@ cc_library(
         "//nic/hal/lib:hal_handle_includes",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "@sdk//obj:sdk_catalog",
         "@sdk//obj:sdk_twheel",
     ],

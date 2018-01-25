@@ -5,7 +5,7 @@
 #include <rpc/pmap_prot.h>
 #include <rpc/pmap_rmt.h>
 #include "nic/hal/plugins/alg_utils/core.hpp"
-#include "nic/third-party/libtirpc/export/rpcb_prot.h"
+#include "rpcb_prot.h"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/plugins/sfw/core.hpp"
 

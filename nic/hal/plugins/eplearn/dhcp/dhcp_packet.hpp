@@ -1,7 +1,7 @@
 #ifndef DHCP_PACKET_H
 #define DHCP_PACKET_H
 
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 namespace hal {
 namespace eplearn {
 

@@ -55,3 +55,9 @@ new_local_repository(
     build_file = 'compilers/linaro_linux_gcc.BUILD',
     path = '/tool/toolchain/aarch64'
 )
+
+# Third-Party repo
+local_repository(
+    name = "third_party",
+    path = "nic/third-party",
+)

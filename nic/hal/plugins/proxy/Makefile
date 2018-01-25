@@ -7,8 +7,7 @@ LCXXFLAGS = \
 	-I$(TOPDIR)/hal/svc \
 	-I$(TOPDIR)/gen/protobuf \
 	-I$(TOPDIR)/gen/iris/include \
-	-I$(TOPDIR)/p4/nw/include \
-	-I$(TOPDIR)/third-party/spdlog/include
+	-I$(TOPDIR)/p4/nw/include 
 
 SOURCES = \
 	proxy_plugin.cc \

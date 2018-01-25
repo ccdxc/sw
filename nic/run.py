@@ -211,7 +211,7 @@ def wait_for_hal():
 
 
 def run_hal(args):
-    snort_dir = nic_dir + "/third-party/snort3/export"
+    snort_dir = nic_dir + "/hal/third-party/snort3/export"
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["LD_LIBRARY_PATH"] = "/home/asic/bin/tools/lib64:" + os.environ["LD_LIBRARY_PATH"]
     os.environ["HAL_PLUGIN_PATH"] = nic_dir + "/../bazel-bin/nic/hal/plugins/"

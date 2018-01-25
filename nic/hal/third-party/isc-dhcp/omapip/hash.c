@@ -29,8 +29,8 @@
 
 #include <limits.h>
 #include <ctype.h>
-#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 
 static unsigned
 find_length(const void *key,

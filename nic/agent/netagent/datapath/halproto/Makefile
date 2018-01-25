@@ -1,4 +1,6 @@
 GEN_DIR = ${CURDIR}
+TOP_DIR = ../../../..
+LD_LIBRARY_PATH=$(TOP_DIR)/third-party/google/x86_64/lib/
 HAL_PROTO_FILES = $(shell ls ${CURDIR}/../../../../proto/hal/ | grep .proto | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
 default:
 	$(MAKE) hal-proto
@@ -16,8 +18,9 @@ default:
 
 hal-proto: clean-proto
 	# Compile proto definitions
-	 LC_ALL=C protoc --proto_path=../../../../../ -I../../../../../nic/proto \
+	 LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/third-party/google/x86_64/bin/protoc --proto_path=../../../../../ -I../../../../../nic/proto \
 	-I../../../../../nic/proto/hal \
+	-I$(TOP_DIR)/third-party/google/include \
 	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
 	--gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:. types.proto ${HAL_PROTO_FILES}
 

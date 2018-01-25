@@ -2,7 +2,7 @@
 #define __QOS_SVC_HPP__
 
 #include "nic/include/base.h"
-#include "grpc++/grpc++.h"
+#include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/qos.grpc.pb.h"
 

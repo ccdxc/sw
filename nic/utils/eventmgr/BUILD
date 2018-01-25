@@ -11,7 +11,8 @@ cc_library(
     copts = sdk_copts,
     deps = [
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
+        "//nic:boost",
         "//nic/hal/lib:hal_handle_includes",
         "//nic/hal/periodic:periodic",
         "@sdk//obj:sdk_ht",

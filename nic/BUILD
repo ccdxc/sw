@@ -165,7 +165,8 @@ cc_library(
         "asic/capri/design/common/gen",
         "asic/capri/model/cap_em",
     ],
-    deps = ["//nic/hal/pd/capri/csr:sknobs_hdrs"],
+    deps = ["//nic/hal/pd/capri/csr:sknobs_hdrs",
+	    "//nic:boost",],
     linkopts = [
             "-lJudy",
             ],
@@ -313,158 +314,62 @@ cc_library(
 
 cc_library(
     name = "grpc",
+    deps = ["@third_party//:grpc"],
+)
 
-    srcs = select({
-        "//conditions:default": [
-            "third-party/grpc/x86_64/libgrpc++_reflection.a",
-            "third-party/grpc/x86_64/libgrpc++.a",
-            "third-party/grpc/x86_64/libgrpc_unsecure.a",
-            "third-party/grpc/x86_64/libgrpc++_unsecure.a",
-        ],
+cc_library(
+    name = "libprotobuf",
+    deps = ["@third_party//:libprotobuf"],
+)
 
-        ":aarch64_mode" : [
-            "third-party/grpc/aarch64/libgrpc++_reflection.a",
-            "third-party/grpc/aarch64/libgrpc++.a",
-            "third-party/grpc/aarch64/libgrpc_unsecure.a",
-            "third-party/grpc/aarch64/libgrpc++_unsecure.a",
-        ],
-    }),
+cc_library(
+    name = "grpc_includes",
+    deps = ["@third_party//:grpc_includes"],
+)
 
-    linkopts = select ({
-        "//conditions:default" : [
-            "-Lthird-party/grpc/x86_64",
-        ],
+cc_library(
+    name = "google_includes",
+    deps = ["@third_party//:google_includes"],
+)
 
-        ":aarch64_mode" : [
-            "-Lthird-party/grpc/aarch64",
-        ],
-    })
+cc_library(
+    name = "spdlog",
+    deps = ["//nic/hal/third-party:spdlog"],
+)
+
+cc_library(
+    name = "boost",
+    deps = ["@third_party//:boost"],
 )
 
 cc_library(
     name = "lkl_includes",
-
-    srcs = [
-        "third-party/lkl/export/include/lkl.h",
-        "third-party/lkl/export/include/lkl_host.h",
-    ],
-    hdrs = [
-        "third-party/lkl/export/include/lkl.h",
-        "third-party/lkl/export/include/lkl_host.h",
-        "third-party/lkl/export/include/lkl/autoconf.h",
-        #"third-party/lkl/export/include/lkl/asm/syscalls.h",
-        #"third-party/lkl/export/include/lkl/linux/types.h",
-        #"third-party/lkl/export/include/lkl/linux/stddef.h",
-        #"third-party/lkl/export/include/lkl/linux/posix_types.h",
-        #"third-party/lkl/export/include/lkl/asm/types.h",
-        #"third-party/lkl/export/include/lkl/asm/posix_types.h",
-        #"third-party/lkl/export/include/lkl/asm/bitsperlong.h",
-        #"third-party/lkl/export/include/lkl/asm-generic/types.h",
-        #"third-party/lkl/export/include/lkl/asm-generic/posix_types.h",
-        #"third-party/lkl/export/include/lkl/asm-generic/int-ll64.h",
-    ] + glob(["third-party/lkl/export/include/lkl/linux/*.h",
-              "third-party/lkl/export/include/lkl/asm/*.h",
-              "third-party/lkl/export/include/lkl/asm-generic/*.h",
-              "third-party/lkl/export/include/lkl/linux/hdlc/*.h",
-              "third-party/lkl/export/include/lkl/linux/byteorder/*.h"]),
-
-    includes = [
-        "third-party/lkl/export/include",
-    ],
-
-    deps = [],
+    deps = ["//nic/hal/third-party:lkl_includes"],
 )
 
 cc_library(
     name = "lkl",
-
-    srcs = select ({
-        "//conditions:default" : [
-            "third-party/lkl/export/x86_64/bin/liblkl.so",
-        ],
-
-        ":aarch64_mode" : [
-            "third-party/lkl/export/aarch64/bin/liblkl.so",
-        ],
-    }),
-
-    linkopts = select ({
-        "//conditions:default" : [
-            "-Lthird-party/lkl/export/x86_64/bin"
-        ],
-
-        ":aarch64_mode" : [
-            "-Lthird-party/lkl/export/aarch64/bin"
-        ],
-    }),
+    deps = ["//nic/hal/third-party:lkl"],
 )
 
 cc_library(
     name = "openssl",
-
-    hdrs = glob(["third-party/openssl/include/openssl/*.h"]),
-
-    srcs = select ({
-        "//conditions:default" : [
-            "third-party/openssl/x86_64/lib/libssl.a",
-            "third-party/openssl/x86_64/lib/libcrypto.a",
-        ],
-        ":aarch64_mode" : [
-            "third-party/openssl/aarch64/lib/libssl.a",
-            "third-party/openssl/aarch64/lib/libcrypto.a",
-        ],
-    }),
-
-    includes = [
-        "third-party/openssl/include",
-    ],
-
-    linkopts = select ({
-        "//conditions:default" : [
-            "-Lthird-party/openssl/x86_64/lib -ldl",
-        ],
-        ":aarch64_mode" : [
-            "-Lthird-party/openssl/aarch64/lib -ldl",
-        ],
-    }),
+    deps = ["//nic/hal/third-party:openssl"],
 )
 
 cc_library(
     name = "openssl-native",
-    hdrs = glob(["third-party/openssl-native/include/openssl/*.h"]),
-
-    srcs = [
-        "third-party/openssl-native/lib/libssl.a",
-        "third-party/openssl-native/lib/libcrypto.a",
-    ],
-
-    includes = [
-        "third-party/openssl-native/include",
-    ],
-
-    linkopts = [
-        "-Lthird-party/openssl-native/lib -ldl",
-    ],
+    deps = ["//nic/hal/third-party:openssl-native"],
 )
 
 cc_library(
     name = "snort3",
-    srcs = [
-        "third-party/snort3/export/bin/libsnort.so",
-    ],
-    hdrs = glob(["third-party/snort3/export/include/*.h"]),
-    includes = [
-        "third-party/snort3/export/include",
-    ],
+    deps = ["//nic/hal/third-party:snort3"],
 )
 
 cc_library(
     name = "libtirpc",
-    hdrs = glob(["third-party/libtirpc/export/*.h"]),
-
-    includes = [
-        "third-party/libtirpc/export"
-    ],
+    deps = ["@third_party//:libtirpc"],
 )
 
 config_setting(

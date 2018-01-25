@@ -417,7 +417,8 @@ public:
 
         status = vrf_stub_->VrfCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
-            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            assert((rsp_msg.response(0).api_status() == types::API_STATUS_OK) ||
+                   (rsp_msg.response(0).api_status() == types::API_STATUS_EXISTS_ALREADY));
             std::cout << "Vrf create succeeded, handle = "
                       << rsp_msg.response(0).vrf_status().vrf_handle()
                       << std::endl;
@@ -1091,8 +1092,8 @@ main (int argc, char** argv)
     //assert(hclient.vrf_get_by_id(1) == 0);   // should fail
 
     // recreate the vrf
-    //vrf_handle = hclient.vrf_create(vrf_id);
-    //assert(vrf_handle != 0);
+    vrf_handle = hclient.vrf_create(vrf_id);
+    assert(vrf_handle != 0);
 
     // Get slab statistics
     //hclient.slab_get();

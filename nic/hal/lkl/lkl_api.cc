@@ -6,8 +6,8 @@
 #include "nic/hal/lkl/lklshim.hpp"
 
 extern "C" {
-#include "nic/third-party/lkl/export/include/lkl.h"
-#include "nic/third-party/lkl/export/include/lkl_host.h"
+#include "lkl.h"
+#include "lkl_host.h"
 struct lkl_netdev *lkl_register_netdev_fd(int fd);
 }
 

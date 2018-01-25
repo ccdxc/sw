@@ -15,6 +15,7 @@ gl_deps_list = [
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
         "//nic:grpc",
+        "//nic:libprotobuf",
         "//nic:halproto",
 
         # PD
@@ -47,7 +48,6 @@ gl_linkopts_list = [
     "-lpthread",
     "-pthread",
     "-lz",
-    "-lprotobuf",
     "-lm"
     ]
 

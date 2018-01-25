@@ -7,7 +7,7 @@ cc_library(
     name = "bitmap",
     srcs = ["bitmap.cc", "bitmap.hpp"],
     hdrs = ["bitmap.hpp"],
-    deps = ["//nic/include:base_includes", "//nic/third-party/spdlog:spdlog", "//nic/hal:hal_includes"],
+    deps = ["//nic/include:base_includes", "//nic:spdlog", "//nic/hal:hal_includes"],
     copts = sdk_copts,
 )
 

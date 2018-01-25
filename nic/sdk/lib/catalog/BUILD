@@ -9,5 +9,6 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "//:sdk_headers",
+	"@third_party//:boost",
     ],
 )

@@ -73,5 +73,7 @@ cc_library(
             "//nic/hal/pd/iris:iris_includes",
             "//nic/utils/host_mem:host_mem_includes",
             # "//nic/utils/host_mem:host_mem",
-            "//nic/third-party/spdlog:spdlog"],
+            "//nic:spdlog",
+	    "//nic:grpc_includes",
+	   ],
 )

@@ -11,6 +11,7 @@ cc_library(
     copts = sdk_copts,
     deps = [
         "//nic:gen_includes",
+        "//nic:google_includes",
         "//nic/hal:hal_src",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",

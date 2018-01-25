@@ -19,14 +19,10 @@ cc_library(
     copts = [
         "-DCONFIG_AUTO_LKL_POSIX_HOST",
     ] + sdk_copts,
-    includes = [
-        "nic/third-party/lkl/export/include",
-    ],
     deps = [
         "//nic:asic_includes",
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
-        "//nic:lkl_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
@@ -45,7 +41,9 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/p4/include:p4_common_includes",
         "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
+        "//nic:boost",
+        "//nic:lkl_includes",
         "//nic/utils/bm_allocator",
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/print",
@@ -64,14 +62,10 @@ cc_library(
     copts = [
         "-DCONFIG_AUTO_LKL_POSIX_HOST",
     ] + sdk_copts,
-    includes = [
-        "nic/third-party/lkl/export/include",
-    ],
     deps = [
         "//nic:asic_includes",
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
-        "//nic:lkl_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
@@ -82,7 +76,10 @@ cc_library(
         "//nic/hal/pd/iris:iris_includes",
         "//nic/hal/periodic",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
+        "//nic:boost",
+        "//nic:google_includes",
+        "//nic:lkl_includes",
         "//nic/utils/block_list",
         "//nic/utils/bm_allocator",
         "//nic/utils/host_mem:host_mem_includes",

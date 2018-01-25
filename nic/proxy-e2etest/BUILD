@@ -19,14 +19,16 @@ cc_library(
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/third-party/spdlog:spdlog",
+        "//nic:spdlog",
         "//nic:grpc",
+        "//nic:grpc_includes",
+        "//nic:google_includes",
+        "//nic:libprotobuf",
         "//nic:halproto",
     ],
     linkopts = [
         "-lpthread",
         "-pthread",
-        "-lprotobuf",
         "-Lthird-party/grpc",
         "-lzmq",
         "-lz",
@@ -72,7 +74,7 @@ cc_binary(
         #"//nic:p4pluspd_txdma",
         #"//nic:p4pluspd_rxdma",
         #"//nic:asic_libs",
-        "//nic/third-party/spdlog:spdlog",
+        "//nic:spdlog",
     ],
 )
 
@@ -114,7 +116,7 @@ cc_binary(
         #"//nic:p4pluspd_txdma",
         #"//nic:p4pluspd_rxdma",
         #"//nic:asic_libs",
-        "//nic/third-party/spdlog:spdlog",
+        "//nic:spdlog",
     ],
 )
 

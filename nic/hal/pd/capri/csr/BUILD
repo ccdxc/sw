@@ -36,7 +36,7 @@ cc_library(
     deps = [
         "//nic:capricsr_int",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
     ],
     copts = sdk_copts,
 )

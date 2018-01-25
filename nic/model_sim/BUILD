@@ -31,6 +31,7 @@ cc_binary(
     deps = [
             "//nic/model_sim/include:modelsim_includes",
             "//nic/utils/host_mem:host_mem_includes",
+	    "//nic:boost",
             ],
     linkopts = [
             "-lJudy",

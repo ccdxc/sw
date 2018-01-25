@@ -11,6 +11,6 @@ cc_library(
     hdrs = ["bm_allocator.hpp"],
     deps = [
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
     ],
 )

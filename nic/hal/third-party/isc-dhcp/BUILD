@@ -34,7 +34,8 @@ cc_library(
     ] + sdk_copts,
     deps = [
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
+	"//nic/hal/third-party:isc_includes",
     ],
     alwayslink = 1,
 )

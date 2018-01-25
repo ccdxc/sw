@@ -7,6 +7,6 @@ cc_library(
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
     ],
 )

@@ -27,7 +27,8 @@ cc_library(
         "@sdk//obj:sdk_directmap",
         "//nic/include:base_includes",
         "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
+        "//nic:grpc_includes",
     ],
     alwayslink = 1,
 )

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "nic/third-party/openssl/include/openssl/evp.h"
-#include "nic/third-party/openssl/include/openssl/ssl.h"
-#include "nic/third-party/openssl/include/openssl/err.h"
-#include "nic/third-party/openssl/include/openssl/modes.h"
-#include "nic/third-party/openssl/include/openssl/aes.h"
+#include "openssl/evp.h"
+#include "openssl/ssl.h"
+#include "openssl/err.h"
+#include "openssl/modes.h"
+#include "openssl/aes.h"
 #include "nic/include/base.h"
 
 #define MAX_SSL_CONNECTIONS 16000

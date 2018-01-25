@@ -18,7 +18,7 @@ INC_DIRS = -I. -I$(GEN_DIR) \
 		   -I$(TOPDIR)/include \
 		   -I$(TOPDIR)/hal/pd \
 		   -I$(GTEST_ROOT)/include \
-		   -I$(TOPDIR)/third-party/spdlog/include \
+		   -I$(TOPDIR)/hal/third-party/spdlog/include \
 		   -I$(TOPDIR)/p4/nw/include \
 		   -I$(TOPDIR)/hal/test/utils
 

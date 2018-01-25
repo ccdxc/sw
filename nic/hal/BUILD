@@ -15,7 +15,6 @@ cc_binary(
         "-lpthread",
         "-pthread",
         "-lz",
-        "-lprotobuf",
         "-rdynamic",
         "-lm",
     ],
@@ -33,9 +32,11 @@ cc_binary(
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
         "//nic:halproto",
+        "//nic:grpc_includes",
+        "//nic:libprotobuf",
         "//nic:grpc",
         "//nic/hal/lib:hal_handle",
-        "//nic/third-party/isc-dhcp",  # TODO(move to eplearn plugin)
+        "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
 
         # PD
         "//nic/hal/pd/common:pdcommon",
@@ -104,13 +105,15 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/p4/include:p4_common_includes",
         "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "//nic/utils/block_list",
         "//nic/utils/bm_allocator",
         "//nic/utils/eventmgr",
         "//nic/utils/fsm",
         "//nic/utils/host_mem:host_mem_includes",
         "//nic/utils/print",
+	"//nic:boost",
+	"//nic:grpc_includes",
     ],
 )
 

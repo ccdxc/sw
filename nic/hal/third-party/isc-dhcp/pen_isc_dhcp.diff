@@ -7,8 +7,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/alloc.
  
 -#include "dhcpd.h"
 -#include <omapip/omapip_p.h>
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 +//#include <omapip/omapip_p.h>
  
  struct dhcp_packet *dhcp_free_list;
@@ -787,8 +787,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/option
 -#include "dhcpd.h"
 -#include <omapip/omapip_p.h>
 +#include <isc/types.h>
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 +//#include <omapip/omapip_p.h>
  #include <limits.h>
  
@@ -1169,8 +1169,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/parse.
  
 -#include "dhcpd.h"
 -#include <syslog.h>
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 +
 +void putUChar(unsigned char *obuf, u_int32_t val) { *obuf = val; }
 +
@@ -1214,8 +1214,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/tables
   */
  
 -#include "dhcpd.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 +
 +#define DHCP_R_INVALIDARG (ISC_RESULTCLASS_DHCP + 3)
  
@@ -1311,8 +1311,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/tree.c
 -#include <omapip/omapip_p.h>
 -#include <ctype.h>
 -#include <sys/wait.h>
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 +//#include "dhcpd.h"
 +//#include <omapip/omapip_p.h>
 +//#include <ctype.h>
@@ -1675,8 +1675,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/alloc.
 -
 -#include <omapip/omapip_p.h>
 +//#include <omapip/omapip_p.h>
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
  
  #if defined (DEBUG_MEMORY_LEAKAGE) || defined (DEBUG_MALLOC_POOL) || \
  		defined (DEBUG_MEMORY_LEAKAGE_ON_EXIT)
@@ -1721,8 +1721,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/errwar
  
 -#include "dhcpd.h"
  
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 +
 +#if 0
  #include <omapip/omapip_p.h>
@@ -1763,8 +1763,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/hash.c
 -#include <omapip/omapip_p.h>
  #include <limits.h>
  #include <ctype.h>
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
  
  static unsigned
  find_length(const void *key,
@@ -2009,13 +2009,13 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/hash.c
 +#define log_fatal HAL_TRACE_ERR
 +
 +struct hash_table;
-+#include "nic/third-party/isc-dhcp/includes/omapip/hash.h"
++#include "nic/hal/third-party/isc-dhcp/includes/omapip/hash.h"
 +typedef struct hash_table group_hash_t;
 +typedef struct hash_table universe_hash_t;
 +typedef struct hash_table option_name_hash_t;
 +typedef struct hash_table option_code_hash_t;
-+#include "nic/third-party/isc-dhcp/includes/omapip/alloc.h"
-+#include "nic/third-party/isc-dhcp/includes/tree.h"
++#include "nic/hal/third-party/isc-dhcp/includes/omapip/alloc.h"
++#include "nic/hal/third-party/isc-dhcp/includes/tree.h"
 +
 +#define DHCP_UDP_OVERHEAD \
 +    (20 + /* IP header */ \
@@ -2203,8 +2203,8 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/hash.c
 +/* dhcp_packet.cc*/
 +
 +// clang-format off
-+#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-+#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 +
 +#include <netinet/if_ether.h>
 +#include <netinet/udp.h>
@@ -2513,6 +2513,6 @@ diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/hash.c
 +    copts = ["-x c++", "--std=c++11"],
 +    deps = [
 +        "//nic/include:base_includes",
-+        "//nic/third-party/spdlog",
++        "@third_party//:spdlog",
 +    ],
 +)

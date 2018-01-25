@@ -28,8 +28,8 @@
 
 #define DHCP_OPTION_DATA
 #include <isc/types.h>
-#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 //#include <omapip/omapip_p.h>
 #include <limits.h>
 

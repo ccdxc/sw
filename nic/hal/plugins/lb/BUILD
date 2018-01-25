@@ -12,7 +12,7 @@ cc_library(
         "//nic:gen_includes",
         "//nic/fte",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
     ],
     copts = sdk_copts,
     alwayslink = 1,

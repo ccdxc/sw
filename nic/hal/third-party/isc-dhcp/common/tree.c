@@ -27,8 +27,8 @@
  *
  */
 
-#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 //#include "dhcpd.h"
 //#include <omapip/omapip_p.h>
 //#include <ctype.h>

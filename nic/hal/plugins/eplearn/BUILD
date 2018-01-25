@@ -18,9 +18,12 @@ common_deps = [
     "@sdk//obj:sdk_slab",
     "@sdk//obj:sdk_twheel",
     "//nic/utils/block_list:block_list",
-    "//nic/third-party/spdlog",
+    "//nic:spdlog",
     "//nic:gen_proto_includes",
     "//nic:grpc",
+    "//nic:grpc_includes",
+    "//nic:google_includes",
+    "//nic:boost",
     "//nic:gen_includes",
     "//nic/hal/periodic:periodic",
 ]
@@ -61,7 +64,7 @@ cc_library(
     srcs = glob(["dhcp/*.cc"]),
     hdrs = glob(["dhcp/*.hpp"]),
     deps = common_deps + [
-        "//nic/third-party/isc-dhcp",
+        "//nic/hal/third-party/isc-dhcp",
         ":ep_learn_common",
     ],
     copts = sdk_copts,

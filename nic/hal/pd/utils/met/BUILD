@@ -29,7 +29,7 @@ cc_library(
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/pd/capri",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_pal",
     ],

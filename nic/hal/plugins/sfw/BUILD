@@ -13,7 +13,7 @@ cc_library(
         "//nic/fte",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/hal/plugins/alg_utils:alg_utils_includes",
     ],

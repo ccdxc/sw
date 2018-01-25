@@ -1,8 +1,8 @@
 /* dhcp_packet.cc*/
 
 // clang-format off
-#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 
 #include <netinet/if_ether.h>
 #include <netinet/udp.h>

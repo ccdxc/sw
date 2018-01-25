@@ -10,7 +10,7 @@ cc_library(
     deps = [
         "//nic/hal:hal_includes",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         ],
     copts = sdk_copts,
 )

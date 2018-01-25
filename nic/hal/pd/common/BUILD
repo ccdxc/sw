@@ -27,7 +27,7 @@ cc_library(
         "//nic/hal/pd:hal_pd_includes",
         "//nic/hal/lib:hal_handle_includes",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
     ],
     alwayslink = 1,
 )

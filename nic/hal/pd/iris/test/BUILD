@@ -12,7 +12,6 @@ cc_test(
         "-lpthread",
         "-pthread",
         "-lz",
-        "-lprotobuf",
     ],
     deps = gl_deps_list + [
     		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
@@ -28,7 +27,6 @@ cc_test(
         "-lpthread",
         "-pthread",
         "-lz",
-        "-lprotobuf",
     ],
     deps =  gl_deps_list + [
 		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",

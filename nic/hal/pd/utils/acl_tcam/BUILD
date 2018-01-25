@@ -17,7 +17,7 @@ cc_library(
         #"//nic/hal/pd/utils/tcam:tcam_includes",
         "@sdk//obj:sdk_tcam",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "//nic/utils/bitmap",
     ],
     copts = sdk_copts,
@@ -30,7 +30,7 @@ cc_library(
     deps = [
         "//nic/hal/pd:hal_pd_includes",
         "//nic/include:base_includes",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "//nic/utils/bitmap",
     ],
 )
@@ -41,7 +41,6 @@ cc_test(
     deps = gl_deps_list,
     linkopts = [
         "-lzmq",
-        "-lprotobuf"
      ],
     copts = sdk_copts,
 )

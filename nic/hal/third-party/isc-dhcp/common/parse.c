@@ -26,8 +26,8 @@
  *
  */
 
-#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
-#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp_internal.h"
+#include "nic/hal/third-party/isc-dhcp/includes/dhcp.h"
 
 void putUChar(unsigned char *obuf, u_int32_t val) { *obuf = val; }
 
