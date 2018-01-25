@@ -1,0 +1,109 @@
+# Feature Test Modules List
+# For RDMA perf tests
+feature:
+    id          : rdma_lat_tx_so_inline
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    selectors:
+        maxrdmasessions: 1
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_1
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_2
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_3
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_4
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_5
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_6
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_7
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_8
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_9
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_10
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_11
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_12
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+
