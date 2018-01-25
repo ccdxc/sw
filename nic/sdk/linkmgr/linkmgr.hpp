@@ -32,11 +32,6 @@ sdk_ret_t port_update(void *port, port_args_t *port_args);
 sdk_ret_t port_delete(void *port);
 sdk_ret_t port_get(port_args_t *port_args);
 
-// TODO: what are these APIs for ????
-sdk_ret_t port_event_timer(void *ctxt);
-sdk_ret_t port_event_enable(void *ctxt);
-sdk_ret_t port_event_disable(void *ctxt);
-
 static inline void
 port_args_init (port_args_t *args)
 {
@@ -47,4 +42,3 @@ port_args_init (port_args_t *args)
 }    // namespace sdk
 
 #endif    // __SDK_LINKMGR_HPP__
-

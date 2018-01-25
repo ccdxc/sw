@@ -5,73 +5,146 @@
 #include <sdk/thread.hpp>
 #include <sdk/timerfd.hpp>
 #include <sdk/linkmgr.hpp>
+#include "linkmgr_internal.hpp"
 #include "linkmgr_state.hpp"
+#include "linkmgr_periodic.hpp"
 #include "port.hpp"
-
-#define LINKMGR_THREAD_ID_MAX        4
 
 namespace sdk {
 namespace linkmgr {
 
-#define CONTROL_CORE_ID    0
+linkmgr_state     *g_linkmgr_state;
+linkmgr_cfg_t     g_linkmgr_cfg;
+sdk::lib::thread  *g_linkmgr_threads[LINKMGR_THREAD_ID_MAX];
 
-enum {
-    LINKMGR_THREAD_ID_PERIODIC,
+// per producer request queues
+linkmgr_queue_t   g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
+
+sdk::lib::thread *
+current_thread (void)
+{
+    return sdk::lib::thread::current_thread();
 }
 
-linkmgr_state       *g_linkmgr_state;
-linkmgr_cfg_t       g_linkmgr_cfg;
-sdk::lib::thread    *g_linkmgr_threads[LINKMGR_THREAD_ID_MAX];
-
-static void *
-linkmgr_periodic_thread_start (void *ctxt)
+//------------------------------------------------------------------------------
+// linkmgr thread notification by other threads
+//------------------------------------------------------------------------------
+sdk_ret_t
+linkmgr_notify (uint8_t operation, void *ctxt)
 {
-    uint64_t            missed;
-    sdk::lib::twheel    *twheel;
-    timerfd_info_t      timerfd_info;
+    uint16_t            pindx;
+    sdk::lib::thread    *curr_thread = current_thread();
+    uint32_t            curr_tid = curr_thread->thread_id();
+    linkmgr_entry_t     *rw_entry;
 
-    SDK_THREAD_INIT(ctxt);
+    if (g_linkmgr_workq[curr_tid].nentries >= LINKMGR_CONTROL_Q_SIZE) {
+        SDK_TRACE_ERR("Error: operation {} for thread {}, tid {} full",
+                      operation, curr_thread->name(), curr_tid);
+        return SDK_RET_ERR;
+    }
+    pindx = g_linkmgr_workq[curr_tid].pindx;
 
-    // create a timer wheel
-    twheel = sdk::lib::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,
-                                        TWHEEL_DEFAULT_DURATION, true);
-    if (twheel == NULL) {
-        SDK_TRACE_ERR("Periodic thread failed to create timer wheel");
-        return NULL;
+    rw_entry = &g_linkmgr_workq[curr_tid].entries[pindx];
+    rw_entry->opn = operation;
+    rw_entry->status = SDK_RET_ERR;
+    rw_entry->data = ctxt;
+    rw_entry->done.store(false);
+
+    g_linkmgr_workq[curr_tid].nentries++;
+
+    while (rw_entry->done.load() == false) {
+        if (curr_thread->can_yield()) {
+            pthread_yield();
+        }
     }
 
-    // prepare the timer fd(s)
-    sdk::lib::timerfd_init(&timerfd_info);
-    timerfd_info.usecs = TWHEEL_DEFAULT_SLICE_DURATION * TIME_USECS_PER_MSEC;
-    if (sdk::lib::timerfd_prepare(&timerfd_info) < 0) {
-        SDK_TRACE_ERR("Periodic thread failed to intiialize timerfd");
-        return NULL;
+    // move the producer index to next slot.
+    // consumer is unaware of the blocking/non-blocking call and always
+    // moves to the next slot.
+    g_linkmgr_workq[curr_tid].pindx++;
+    if (g_linkmgr_workq[curr_tid].pindx >= LINKMGR_CONTROL_Q_SIZE) {
+        g_linkmgr_workq[curr_tid].pindx = 0;
     }
 
+    return rw_entry->status;
+}
 
-    // start the forever loop
+//------------------------------------------------------------------------------
+// linkmgr's forever loop
+//------------------------------------------------------------------------------
+void
+linkmgr_event_wait (void)
+{
+    uint32_t           qid;
+    uint16_t           cindx;
+    bool               work_done = false;
+    bool               rv = true;
+    linkmgr_entry_t   *rw_entry;
+
     while (TRUE) {
-        // wait for timer to fire
-        if (sdk::lib::timerfd_wait(&timerfd_info, &missed) < 0) {
-            SDK_TRACE_ERR("Periodic thread failed to wait on timer");
-            break;
+        work_done = false;
+        for (qid = 0; qid < LINKMGR_THREAD_ID_MAX; qid++) {
+            if (!g_linkmgr_workq[qid].nentries) {
+                // no read/write requests
+                continue;
+            }
+
+            // found a read/write request to serve
+            cindx = g_linkmgr_workq[qid].cindx;
+            rw_entry = &g_linkmgr_workq[qid].entries[cindx];
+            switch (rw_entry->opn) {
+            case LINKMGR_OPERATION_PORT_TIMER:
+                port_event_timer(rw_entry->data);
+                break;
+
+            case LINKMGR_OPERATION_PORT_ENABLE:
+                port_event_enable(rw_entry->data);
+                break;
+
+            case LINKMGR_OPERATION_PORT_DISABLE:
+                port_event_disable(rw_entry->data);
+                break;
+
+            default:
+                SDK_TRACE_ERR("Invalid operation {}", rw_entry->opn);
+                rv = false;
+                break;
+            }
+
+            // populate the results
+            rw_entry->status =  rv ? SDK_RET_OK : SDK_RET_ERR;
+            rw_entry->done.store(true);
+
+            // advance to next entry in the queue
+            g_linkmgr_workq[qid].cindx++;
+            if (g_linkmgr_workq[qid].cindx >= LINKMGR_CONTROL_Q_SIZE) {
+                g_linkmgr_workq[qid].cindx = 0;
+            }
+            g_linkmgr_workq[qid].nentries--;
+            work_done = true;
         }
 
-        // drive the timer wheel if enough time elapsed
-        twheel->tick(missed * TWHEEL_DEFAULT_SLICE_DURATION);
+        // all queues scanned once, check if any work was found
+        if (!work_done) {
+            // didn't find any work, yield and give chance to other threads
+            pthread_yield();
+        }
     }
-
-    return NULL;
 }
 
 static sdk_ret_t
 thread_init (void)
 {
-    int    rv, thread_prio, thread_id;
+    int    thread_prio = 0, thread_id = 0;
 
     // spawn periodic thread
     thread_prio = sched_get_priority_max(SCHED_FIFO);
     if (thread_prio < 0) {
+        return SDK_RET_ERR;
+    }
+
+    if(linkmgr_timer_init() != SDK_RET_OK) {
+        SDK_TRACE_ERR("Failed to init timer");
         return SDK_RET_ERR;
     }
 
@@ -85,7 +158,8 @@ thread_init (void)
                         linkmgr_periodic_thread_start,
                         thread_prio - 1, SCHED_RR, true);
     if (g_linkmgr_threads[thread_id] == NULL) {
-        SDK_TRACE_ERR("Failed to create linkmgr periodic thread");
+        SDK_TRACE_ERR("%s: Failed to create linkmgr periodic thread",
+                      __FUNCTION__);
         return SDK_RET_ERR;
     }
 
@@ -98,33 +172,22 @@ thread_init (void)
 sdk_ret_t
 linkmgr_init (linkmgr_cfg_t *cfg)
 {
-    sdk_ret_t    ret;
-    //int          rc  = 0;
+    sdk_ret_t    ret = SDK_RET_OK;
 
     if ((ret = thread_init()) != SDK_RET_OK) {
+        SDK_TRACE_ERR("%s: linkmgr thread init failed", __FUNCTION__);
         return ret;
     }
 
     g_linkmgr_state = linkmgr_state::factory();
     if (NULL == g_linkmgr_state) {
-        SDK_TRACE_ERR("linkmgr init failed", __FUNCTION__);
+        SDK_TRACE_ERR("%s: linkmgr init failed", __FUNCTION__);
         return SDK_RET_ERR;
     }
 
     // initialize the port mac and serdes functions
     port::port_init(cfg);
 
-#if 0
-    if (cfg->platform_type == platform_type_t::PLATFORM_TYPE_SIM) {
-        do {
-            rc = lib_model_connect();
-            if (rc == -1) {
-                SDK_TRACE_ERR("Failed to connect to asic, retrying in 1 sec ...");
-                sleep(1);
-            }
-        } while (rc == -1);
-    }
-#endif
     g_linkmgr_cfg = *cfg;
 
     return SDK_RET_OK;
@@ -158,7 +221,7 @@ void *
 port_create (port_args_t *args)
 {
     sdk_ret_t    ret = SDK_RET_OK;
-    port         *port_p;
+    port         *port_p = NULL;
 
     port_p = (port *)g_linkmgr_state->port_slab()->alloc();
     port_p->set_port_type(args->port_type);

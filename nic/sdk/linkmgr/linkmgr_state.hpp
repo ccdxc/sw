@@ -30,4 +30,3 @@ extern linkmgr_state *g_linkmgr_state;
 }    // namespace sdk
 
 #endif    // __SDK_LINKMGR_STATE_HPP__
-

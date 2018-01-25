@@ -38,4 +38,3 @@ extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
 }    // namespace sdk
 
 #endif  // __SDK_LINKMGR_RW_HPP__
-

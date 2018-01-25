@@ -32,4 +32,3 @@ int mac_intr_clear(uint32_t port_num, uint32_t speed, uint32_t num_lanes);
 }    // namespace sdk
 
 #endif  // __SDK_PORT_MAC_HPP__
-

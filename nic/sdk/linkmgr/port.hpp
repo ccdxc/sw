@@ -240,4 +240,3 @@ private:
 }    // namespace sdk
 
 #endif  // __SDK_LINKMGR_PORT_HPP__
-

@@ -7,9 +7,12 @@
 #include <atomic>
 #include "sdk/twheel.hpp"
 #include "sdk/thread.hpp"
+#include "sdk/catalog.hpp"
 #include "linkmgr.hpp"
 #include "port_mac.hpp"
 #include "port.hpp"
+#include "linkmgr_periodic.hpp"
+#include "linkmgr_internal.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -173,7 +176,9 @@ port::port_mac_faults_get(void)
 uint32_t
 port::port_sbus_addr(uint32_t lane)
 {
-    return sbus_addr(mac_id_, mac_ch_, lane);
+    //TODO avinash
+    //return sbus_addr(mac_id_, mac_ch_, lane);
+    return 0;
 }
 
 sdk_ret_t
@@ -266,7 +271,7 @@ port::port_link_sm_process(void)
     switch (this->link_sm_) {
         case port_link_sm_t::PORT_LINK_SM_DISABLED:
             // stop link bring up timer
-            hal::periodic::timer_delete(this->link_bring_up_timer_);
+            linkmgr_timer_delete(this->link_bring_up_timer_);
             this->link_bring_up_timer_ = NULL;  // sanity
 
             // set operational status as down
@@ -308,7 +313,7 @@ port::port_link_sm_process(void)
 
             if(serdes_rdy == false) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::timer_schedule(
+                    linkmgr_timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);
@@ -342,7 +347,7 @@ port::port_link_sm_process(void)
 
             if(sig_detect == false) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::timer_schedule(
+                    linkmgr_timer_schedule(
                             0, timeout, this,
                             (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                             false);
@@ -358,7 +363,7 @@ port::port_link_sm_process(void)
 
             if(mac_faults == true) {
                 this->link_bring_up_timer_ =
-                    hal::periodic::timer_schedule(
+                    linkmgr_timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)port::link_bring_up_timer_cb,
                         false);

@@ -29,4 +29,3 @@ void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data)
 
 }    // namespace linkmgr
 }    // namespace sdk
-

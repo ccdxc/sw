@@ -8,6 +8,9 @@ cc_library(
         ],
     deps = [
         "//:sdk_headers",
+        "//lib/pal:pal",
+        "//lib/thread:thread",
+        "//lib/timerfd:timerfd",
         "//lib/catalog:catalog",
     ],
 )
