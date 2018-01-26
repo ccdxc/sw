@@ -15,6 +15,10 @@ namespace pd {
 #define HAL_MAX_COMMON_OQS                  16
 #define HAL_MAX_RXDMA_ONLY_OQS              16
 
+// Using a non-zero value for admic cos so that any uninitialized
+// rings do not use this 
+#define HAL_QOS_ADMIN_COS                   1
+
 #define HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS  2
 #define HAL_PD_QOS_MAX_QUEUES_PER_CLASS     (1 + HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS)
 

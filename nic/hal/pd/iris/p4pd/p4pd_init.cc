@@ -809,6 +809,8 @@ p4pd_nacl_init (void)
     return HAL_RET_OK;
 }
 
+extern uint32_t qos_class_get_admin_cos();
+
 static hal_ret_t
 p4pd_qos_init (void)
 {
@@ -829,6 +831,9 @@ p4pd_qos_init (void)
             return ret;
         }
     }
+
+    // Reserve the IQ needed for the ADMIN class
+    g_hal_state_pd->qos_iq_idxr(TM_PORT_TYPE_UPLINK)->alloc_withid(qos_class_get_admin_cos());
     return ret;
 }
 

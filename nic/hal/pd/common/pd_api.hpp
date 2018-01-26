@@ -590,9 +590,7 @@ hal_ret_t qos_class_get_qos_class_id(qos_class_t *qos_class,
                                      if_t *dest_if, 
                                      uint32_t *qos_class_id);
 
-hal_ret_t qos_class_get_qos_class_id(qos_class_t *qos_class, 
-                                     if_t *dest_if, 
-                                     uint32_t *qos_class_id);
+uint32_t qos_class_get_admin_cos (void);
 
 typedef struct pd_copp_args_s {
     copp_t    *copp;

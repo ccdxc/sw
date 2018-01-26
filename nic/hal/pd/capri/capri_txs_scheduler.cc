@@ -42,7 +42,7 @@ capri_txs_scheduler_init ()
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
     uint32_t            admin_cos, control_cos;
-    hal::qos_class_t    *admin_qos_class, *control_qos_class;
+    hal::qos_class_t    *control_qos_class;
     hal_ret_t            ret = HAL_RET_OK;
 
     hal::hal_cfg_t *hal_cfg =
@@ -67,18 +67,7 @@ capri_txs_scheduler_init ()
 
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.
     // NOTE TODO: Init of admin-qos-class should be done before this.
-    if ((admin_qos_class = find_qos_class_by_group(hal::QOS_GROUP_ADMIN)) != NULL) { 
-        ret = hal::pd::qos_class_get_qos_class_id(admin_qos_class, NULL, &admin_cos);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error deriving qos-class-id for admin Qos class "
-                          "{} ret {}",
-                          admin_qos_class->key, ret);
-            admin_cos = 0;
-        }
-    } else {
-        HAL_TRACE_DEBUG("Admin qos class not init'ed!! Setting it to default\n");
-        admin_cos = 0;
-    }
+    admin_cos = hal::pd::qos_class_get_admin_cos();
 
     // Find control_cos and program it for higher-priority in dtdmlo-calendar.
     if ((control_qos_class = find_qos_class_by_group(hal::QOS_GROUP_CONTROL)) != NULL) {

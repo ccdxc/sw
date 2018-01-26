@@ -67,9 +67,6 @@ pd_qos_get_alloc_q_count (qos_class_t *qos_class,
             alloc_params->dest_oq_type = HAL_PD_QOS_OQ_RXDMA;
             alloc_params->pcie_oq = false;
             break;
-        case QOS_GROUP_ADMIN:
-            alloc_params->cnt_txdma_iq = 1;
-            break;
         case NUM_QOS_GROUPS:
             HAL_ASSERT(0);
             break;
@@ -1031,6 +1028,12 @@ qos_class_get_qos_class_id (qos_class_t *qos_class,
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
     return HAL_RET_OK;
+}
+
+uint32_t
+qos_class_get_admin_cos (void)
+{
+    return HAL_QOS_ADMIN_COS;
 }
 
 }    // namespace pd

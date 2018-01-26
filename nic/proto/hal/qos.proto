@@ -48,12 +48,11 @@ enum QosGroup {
   USER_DEFINED_6            = 6;     // User defined qos group 6
   CONTROL                   = 7;     // Control traffic
   SPAN                      = 8;     // Span traffic
-  INTERNAL_ADMIN            = 9;     // TODO: REMOVE DOL only - Internal group for admin
-  INTERNAL_RX_PROXY_NO_DROP = 10;    // TODO: REMOVE DOL only - Internal group for Rx Proxy no drop traffic
-  INTERNAL_RX_PROXY_DROP    = 11;    // TODO: REMOVE DOL only - Internal group for Rx Proxy drop traffic
-  INTERNAL_TX_PROXY_NO_DROP = 12;    // TODO: REMOVE DOL only - Internal group for Tx Proxy no drop traffic
-  INTERNAL_TX_PROXY_DROP    = 13;    // TODO: REMOVE DOL only - Internal group for Tx Proxy drop traffic
-  INTERNAL_CPU_COPY         = 14;    // TODO: REMOVE DOL only - Internal group for CPU Copy traffic
+  INTERNAL_RX_PROXY_NO_DROP = 9;     // TODO: REMOVE DOL only - Internal group for Rx Proxy no drop traffic
+  INTERNAL_RX_PROXY_DROP    = 10;    // TODO: REMOVE DOL only - Internal group for Rx Proxy drop traffic
+  INTERNAL_TX_PROXY_NO_DROP = 11;    // TODO: REMOVE DOL only - Internal group for Tx Proxy no drop traffic
+  INTERNAL_TX_PROXY_DROP    = 12;    // TODO: REMOVE DOL only - Internal group for Tx Proxy drop traffic
+  INTERNAL_CPU_COPY         = 13;    // TODO: REMOVE DOL only - Internal group for CPU Copy traffic
 }
 
 // QosClassKeyHandle uniquely identifies a QosClass

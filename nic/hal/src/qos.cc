@@ -644,7 +644,7 @@ find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
 {
     if_t        *pinned_uplink_if;
     hal_ret_t   ret        = HAL_RET_OK;
-    qos_class_t *qos_class, *admin_qos_class;
+    qos_class_t *qos_class;
 
     pinned_uplink_if = find_if_by_handle(pinned_uplink);
 
@@ -663,17 +663,7 @@ find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
     }
 
     // cosB of a LIF will always be the ADMIN-COS.
-    if ((admin_qos_class = find_qos_class_by_group(QOS_GROUP_ADMIN)) != NULL) {
-        ret = pd::qos_class_get_qos_class_id(admin_qos_class, pinned_uplink_if, cosB);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error deriving qos-class-id for admin Qos class "
-                          "{} ret {}",
-                          admin_qos_class->key, ret);
-            *cosB = 0;
-        }
-    } else {
-        *cosB = 0;
-    }
+    *cosB = pd::qos_class_get_admin_cos();
     return ret;
 }
 

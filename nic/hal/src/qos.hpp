@@ -43,15 +43,14 @@ namespace hal {
     ENTRY(QOS_GROUP_USER_DEFINED_4,      4, "user-defined-4")   \
     ENTRY(QOS_GROUP_USER_DEFINED_5,      5, "user-defined-5")   \
     ENTRY(QOS_GROUP_USER_DEFINED_6,      6, "user-defined-6")   \
-    ENTRY(QOS_GROUP_ADMIN,               7, "admin")            \
-    ENTRY(QOS_GROUP_CONTROL,             8, "control")          \
-    ENTRY(QOS_GROUP_SPAN,                9, "span")             \
-    ENTRY(QOS_GROUP_RX_PROXY_NO_DROP,   10, "rx-proxy-no-drop") \
-    ENTRY(QOS_GROUP_RX_PROXY_DROP,      11, "rx-proxy-drop")    \
-    ENTRY(QOS_GROUP_TX_PROXY_NO_DROP,   12, "tx-proxy-no-drop") \
-    ENTRY(QOS_GROUP_TX_PROXY_DROP,      13, "tx-proxy-drop")    \
-    ENTRY(QOS_GROUP_CPU_COPY,           14, "cpu-copy")         \
-    ENTRY(NUM_QOS_GROUPS,               15, "num-qos-groups")         
+    ENTRY(QOS_GROUP_CONTROL,             7, "control")          \
+    ENTRY(QOS_GROUP_SPAN,                8, "span")             \
+    ENTRY(QOS_GROUP_RX_PROXY_NO_DROP,    9, "rx-proxy-no-drop") \
+    ENTRY(QOS_GROUP_RX_PROXY_DROP,      10, "rx-proxy-drop")    \
+    ENTRY(QOS_GROUP_TX_PROXY_NO_DROP,   11, "tx-proxy-no-drop") \
+    ENTRY(QOS_GROUP_TX_PROXY_DROP,      12, "tx-proxy-drop")    \
+    ENTRY(QOS_GROUP_CPU_COPY,           13, "cpu-copy")         \
+    ENTRY(NUM_QOS_GROUPS,               14, "num-qos-groups")         
 
 DEFINE_ENUM(qos_group_t, QOS_GROUPS)
 #undef QOS_GROUOPS
@@ -207,8 +206,6 @@ qos_spec_qos_group_to_qos_group (qos::QosGroup qos_group)
             return QOS_GROUP_TX_PROXY_DROP;
         case qos::INTERNAL_CPU_COPY: 
             return QOS_GROUP_CPU_COPY;
-        case qos::INTERNAL_ADMIN:
-            return QOS_GROUP_ADMIN;
         default:
             HAL_ASSERT(0);
             return QOS_GROUP_DEFAULT;

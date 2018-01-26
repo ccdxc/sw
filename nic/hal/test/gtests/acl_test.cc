@@ -173,7 +173,7 @@ TEST_F(acl_test, test4)
         match = spec.mutable_match();
         match->mutable_ip_selector()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
         match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
-        match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_v6_addr("0001000100010001");
+        match->mutable_ip_selector()->mutable_src_prefix()->mutable_address()->set_v6_addr(std::string("\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01", 16));
         match->mutable_ip_selector()->mutable_src_prefix()->set_prefix_len(35);
 
         action = spec.mutable_action();
