@@ -9,3 +9,12 @@ struct phv_ p;
 %%
 
 #include "rx_hdr_transpositions.h"
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rx_hdr_transpositions2_error:
+    nop.e
+    nop

@@ -54,3 +54,12 @@ rx_key2_ipv6:
     phvwr.c1    p.flow_lkp_metadata_ip_proto_2, k.ipv6_2_nextHdr
     seq.e       c1, d.rx_key2_d.match_fields[MATCH_IP_TTL_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_ip_ttl_2, k.ipv6_2_hopLimit
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rx_key2_error:
+    nop.e
+    nop

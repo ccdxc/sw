@@ -29,6 +29,17 @@ SRC_FILES := \
 	rx_roce.asm \
 	rx_vport.asm \
 	rx_vport_stats.asm \
+	tx_fixup.asm \
+	tx_gft_hash.asm \
+	tx_gft_hash_overflow.asm \
+	tx_hdr_transpositions0.asm \
+	tx_hdr_transpositions1.asm \
+	tx_hdr_transpositions2.asm \
+	tx_hdr_transpositions3.asm \
+	tx_ipolicer.asm \
+	tx_key.asm \
+	tx_vport.asm \
+	tx_vport_stats.asm \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))

@@ -62,38 +62,11 @@ rx_l4_hdr_transpositions_layer3:
     jr              r7
     phvwr.c1        p.icmp_3_icmp_code, d.rx_l4_hdr_transpositions_d.l4_dport_3
 
-#if 0
-    sne             c1, d.l4_hdr_transpositions_d.hdr0_bits[3:0], 0
-    nop.!c1.e
-    crestore        [c4-c1], d.l4_hdr_transpositions_d.hdr0_bits[3:0], 0xF
-
-l4_hdr_transpositions_layer0:
-    // vxlan_00
-    phvwr.c1        p.vxlan_00_valid, TRUE
-    phvwr.c1        p.vxlan_00_vni, d.l4_hdr_transpositions_d.tenant_id_00
-    phvwri.c1       p.{vxlan_00_flags,vxlan_00_reserved}, 0x08000000
-
-    // udp_00
-    phvwr.c2        p.udp_00_valid, TRUE
-    phvwr.c2        p.{udp_00_srcPort,udp_00_dstPort}, \
-                        d.{l4_hdr_transpositions_d.l4_sport_00,\
-                           l4_hdr_transpositions_d.l4_dport_00}
-    add             r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\
-                           capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
-                        d.l4_hdr_transpositions_d.encap_len_00
-    phvwr.c3        p.udp_00_len, r1
-
-    // vxlan_01
-    phvwr.c3        p.vxlan_01_valid, TRUE
-    phvwr.c3        p.vxlan_01_vni, d.l4_hdr_transpositions_d.tenant_id_01
-    phvwri.c3       p.{vxlan_01_flags,vxlan_01_reserved}, 0x08000000
-
-    // udp_01
-    phvwr.c4        p.udp_01_valid, TRUE
-    phvwr.c4        p.udp_01_srcPort, d.l4_hdr_transpositions_d.l4_sport_01
-    phvwr.c4        p.udp_01_dstPort, d.l4_hdr_transpositions_d.l4_dport_01
-    add.e           r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\
-                           capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
-                        d.l4_hdr_transpositions_d.encap_len_01
-    phvwr.c4        p.udp_01_len, r1
-#endif
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rx_hdr_transpositions3_error:
+    nop.e
+    nop

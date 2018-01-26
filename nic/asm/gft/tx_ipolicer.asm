@@ -1,20 +1,23 @@
-#include "ingress.h"
-#include "INGRESS_p.h"
+#include "egress.h"
+#include "EGRESS_p.h"
 #include "../../p4/gft/include/defines.h"
 
-struct rx_hdr_transpositions1_k k;
-struct rx_hdr_transpositions1_d d;
+struct tx_ipolicer_d d;
 struct phv_ p;
 
 %%
 
-#include "rx_hdr_transpositions.h"
+tx_policer:
+    seq             c1, d.tx_policer_d.entry_valid, TRUE
+    seq.c1          c1, d.tx_policer_d.tbkt[39], TRUE
+    nop.e
+    phvwr.c1        p.capri_intrinsic_drop, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-rx_hdr_transpositions1_error:
+tx_ipolicer_error:
     nop.e
     nop

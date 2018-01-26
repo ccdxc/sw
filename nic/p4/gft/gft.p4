@@ -9,6 +9,7 @@
 
 #include "key.p4"
 #include "flow.p4"
+#include "apps.p4"
 #include "roce.p4"
 #include "stats.p4"
 #include "policer.p4"
@@ -31,13 +32,14 @@ control ingress {
     rx_policer();
     rx_transpositions();
     rx_vport_stats();
-    rx_roce();
+    rx_apps();
 }
 
 /*****************************************************************************/
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
+    tx_apps();
     tx_key();
     tx_flow_lookup();
     tx_transpositions();

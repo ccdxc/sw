@@ -78,7 +78,6 @@ rx_key4_start:
 
     seq         c1, d.rx_key4_d.match_fields[MATCH_TRANSPORT_SRC_PORT_2_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_l4_sport_2, k.l4_metadata_l4_sport_2
-
     seq         c1, d.rx_key4_d.match_fields[MATCH_TRANSPORT_DST_PORT_2_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_l4_dport_2, k.l4_metadata_l4_dport_2
     seq         c1, d.rx_key4_d.match_fields[MATCH_TCP_FLAGS_2_BIT_POS], 1
@@ -106,3 +105,12 @@ rx_key4_start:
     phvwr.c1    p.flow_lkp_metadata_tenant_id_3, k.tunnel_metadata_tunnel_vni_3
     seq.e       c1, d.rx_key4_d.match_fields[MATCH_GRE_PROTO_3_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_gre_proto_3, k.gre_3_proto
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rx_key4_error:
+    nop.e
+    nop

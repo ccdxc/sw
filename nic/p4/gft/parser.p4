@@ -63,6 +63,7 @@ metadata capri_deparser_len_t capri_deparser_len;
 header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
+header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 header capri_i2e_metadata_t capri_i2e_metadata;
 
 /******************************************************************************
@@ -201,6 +202,9 @@ header ipv6_t p4_to_p4plus_roce_ip_2;
 header ethernet_t p4_to_p4plus_roce_eth_3;
 @pragma synthetic_header
 header ipv6_t p4_to_p4plus_roce_ip_3;
+
+// p4plus to p4 headers
+header p4plus_to_p4_header_t p4plus_to_p4;
 
 parser start {
     extract(capri_intrinsic);
@@ -1463,6 +1467,8 @@ calculated_field parser_metadata.icrc {
 @pragma xgress egress
 parser egress_start {
     extract(capri_intrinsic);
+    extract(capri_txdma_intrinsic);
+    extract(p4plus_to_p4);
     return select(capri_intrinsic.csum_err) {
         default: parse_txdma;
         0x1 mask 0 : egress_deparse_start;
@@ -1472,6 +1478,10 @@ parser egress_start {
 @pragma deparse_only
 @pragma xgress egress
 parser egress_deparse_start {
+    // intrinsic headers
+    extract(capri_intrinsic);
+    extract(capri_p4_intrinsic);
+
     // layer 00
     extract(ethernet_00);
     extract(ctag_00);

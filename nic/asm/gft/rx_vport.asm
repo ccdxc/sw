@@ -17,3 +17,12 @@ rx_vport:
     cmov.e      r1, c1, d.rx_vport_d.vport, EXCEPTION_VPORT
     phvwrpair   p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0, \
                     p.capri_intrinsic_lif, r1
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rx_vport_error:
+    nop.e
+    nop

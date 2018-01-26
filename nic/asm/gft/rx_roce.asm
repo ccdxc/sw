@@ -79,3 +79,12 @@ rx_roce:
     phvwrpair.!c1.e p.p4_to_p4plus_roce_ip_1_valid, TRUE, \
                         p.p4_to_p4plus_roce_eth_1_valid, TRUE
     nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+rx_roce_error:
+    nop.e
+    nop

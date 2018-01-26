@@ -100,12 +100,18 @@ header_type roce_metadata_t {
     }
 }
 
+header_type control_metadata_t {
+    fields {
+        checksum_ctl        : 8;
+    }
+}
+
 header_type scratch_metadata_t {
     fields {
         last_seen_timestamp : 48;
         flow_packets        : 64;
         flow_bytes          : 64;
-        payload_len         : 16;
+        packet_len          : 16;
         flag                : 1;
         match_fields        : 32;
         hdr_bits            : 24;
@@ -123,6 +129,7 @@ header_type scratch_metadata_t {
         policer_burst       : 40;
         policer_rate        : 40;
         policer_tbkt        : 40;
+        checksum_ctl        : 8;
     }
 }
 
@@ -132,6 +139,7 @@ metadata l4_metadata_t         l4_metadata;
 metadata flow_lkp_metadata_t   flow_lkp_metadata;
 metadata flow_act_metadata_t   flow_action_metadata;
 metadata roce_metadata_t       roce_metadata;
+metadata control_metadata_t    control_metadata;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t    scratch_metadata;
