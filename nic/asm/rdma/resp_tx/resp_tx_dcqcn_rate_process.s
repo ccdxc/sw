@@ -35,9 +35,6 @@ resp_tx_dcqcn_rate_process:
     bcf     [!c1], bubble_to_next_stage
     nop
 
-    // Update cindex and ring-doorbell.
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_RATE_COMPUTE_RING_ID, k.to_stage.s4.dcqcn.new_cindex, r1, r2) //BD-slot
-
     // Check if doorbell is for processing CNP packet.
     seq     c2, d.num_cnp_rcvd, d.num_cnp_processed 
     bcf     [!c2], cnp_recv_process

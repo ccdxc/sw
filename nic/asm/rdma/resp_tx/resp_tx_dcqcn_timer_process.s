@@ -49,7 +49,6 @@ restart_timer:
     nop
     // Restart alpha timer. Alpha timer runs for 55us by default.
     CAPRI_START_SLOW_TIMER(r1, r6, k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, ALPHA_TIMER_INTERVAL)
-    DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, DCQCN_TIMER_RING_ID, k.to_stage.s4.dcqcn.new_cindex, r1, r2)
 
 skip_timer_restart:
     CAPRI_SET_TABLE_0_VALID(0)

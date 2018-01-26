@@ -9,9 +9,8 @@ struct resp_tx_to_stage_dcqcn_info_t {
     dcqcn_cb_addr: 34; // used by dcqcn-mpu-only in stage3.
     congestion_mgmt_enable: 1;
     packet_len: 14;
-    new_cindex: 16; // Used by DCQCN algorithm and DCQCN timer.
-    new_timer_cindex: 16;
-    rsvd: 47;
+    new_timer_cindex: 16; 
+    rsvd: 63;
 };
 
 struct resp_tx_to_stage_rqcb1_wb_info_t {

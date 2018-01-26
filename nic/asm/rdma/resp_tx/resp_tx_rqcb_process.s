@@ -62,15 +62,13 @@ resp_tx_rqcb_process:
     // set DMA cmd ptr   (dma cmd idx with in flit is zero)
     TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID, 0) // BD-slot
 
-    // Increment c-index and pass to stage 4
-    add         r2, r0, DCQCN_RATE_COMPUTE_C_INDEX
-    mincr       r2, 16, 1 // c_index is 16 bit
+    // Increment c-index for rate-compute-ring.
+    tblmincri   DCQCN_RATE_COMPUTE_C_INDEX, 16, 1
+
     // Increment timer-c-index and pass to stage 4. This is used to stop dcqcn-timer on reaching max-qp-rate.
     add         r3, r0, DCQCN_TIMER_C_INDEX
     mincr       r3, 16, 1 // c_index is 16 bit
-
     CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_cindex, r2)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_timer_cindex, r3)
 
 
@@ -85,11 +83,8 @@ check_dcqcn_timer_q:
     bcf         [c1], check_backtrack_q
     nop
 
-    // Increment c-index and pass to stage 4
-    add         r2, r0, DCQCN_TIMER_C_INDEX
-    mincr       r2, 16, 1 // c_index is 16 bit field
-    CAPRI_GET_STAGE_4_ARG(resp_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, s4.dcqcn.new_cindex, r2)
+    // Increment c-index of timer-ring.
+    tblmincri   DCQCN_TIMER_C_INDEX, 16, 1
 
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, timer_event_process, 1)
     add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES  #RQCB1 address
