@@ -398,6 +398,24 @@ pd_tlscb_get (pd_tlscb_args_t *tlscb)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_gft_hdr_group_xposition_profile_create (pd_gft_args_t *gft_args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_gft_exact_match_flow_entry_create (pd_gft_args_t *gft_args)
+{
+    return HAL_RET_OK;
+}
+
 }   // namespace pd
 }   // namespace hal
 

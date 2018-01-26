@@ -1281,8 +1281,13 @@ TEST_F(flow_test, DISABLED_test18) {
 }
 
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-    p4pd_init();
+    p4pd_cfg_t    p4pd_cfg = { 0 };
+
+    ::testing::InitGoogleTest(&argc, argv);
+
+    p4pd_cfg.table_map_cfg_file = string("table_maps/capri_p4_table_map.json").c_str();
+    p4pd_init(&p4pd_cfg);
+
     // testing::GTEST_FLAG(filter) = "-*test18*";
     int res = RUN_ALL_TESTS();
     p4pd_cleanup();

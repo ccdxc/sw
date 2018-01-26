@@ -1,7 +1,5 @@
-/*
- * p4pd_api.hpp
- * Mahesh Shirshyad (Pensando Systems)
- */
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __P4PD_API_H__
 #define __P4PD_API_H__
 
@@ -124,7 +122,10 @@ typedef struct p4pd_table_properties_ {
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pd_init(void);
+typedef struct p4pd_cfg_s {
+    const char *table_map_cfg_file;    // fully resolved path to the table map file
+} p4pd_cfg_t;
+p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg);
 
 
 /*
@@ -403,7 +404,7 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pluspd_rxdma_init ();
+p4pd_error_t p4pluspd_rxdma_init();
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures
@@ -414,7 +415,7 @@ p4pd_error_t p4pluspd_rxdma_init ();
 void p4pluspd_rxdma_cleanup();
 
 p4pd_error_t p4pluspd_rxdma_table_properties_get(uint32_t                 tableid,
-                                                  p4pd_table_properties_t *tbl_ctx);
+                                                 p4pd_table_properties_t *tbl_ctx);
 /* Query key details for p4-table
  *
  * Arguments:
@@ -927,3 +928,4 @@ p4pd_error_t p4pd_gft_hwkey_hwmask_build(uint32_t tableid, void *swkey,
 /*======================== P4PD GLOBAL/COMMON TABLE C/R/W routines =============*/
 
 #endif
+

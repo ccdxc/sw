@@ -328,7 +328,11 @@ TEST_F(acl_tcam_test, test4)
 
 int main(int argc, char **argv)
 {
+    p4pd_cfg_t    p4pd_cfg = {
+        .table_map_cfg_file = "table_maps/capri_p4_table_map.json"
+    };
+
     ::testing::InitGoogleTest(&argc, argv);
-    p4pd_init();
+    p4pd_init(&p4pd_cfg);
     return RUN_ALL_TESTS();
 }

@@ -53,18 +53,20 @@
 
 
 typedef uint32_t vport_id_t;
-typedef uint32_t profile_id_t;
+typedef uint32_t gft_profile_id_t;
+typedef uint32_t gft_table_id_t;
+typedef uint32_t gft_flow_entry_id_t;
 
 typedef struct gft_eth_fields_s {
-    uint8_t     dmac[MAC_ADDR_LEN];
-    uint8_t     smac[MAC_ADDR_LEN];
+    uint8_t     dmac[ETH_ADDR_LEN];
+    uint8_t     smac[ETH_ADDR_LEN];
     uint16_t    eth_type;
     uint16_t    customer_vlan_id;
     uint16_t    provider_vlan_id;
     uint8_t     priority;
 } __PACK__ gft_eth_fields_t;
 
-ypedef enum gft_table_type_e {
+typedef enum gft_table_type_e {
     GFT_TABLE_TYPE_NONE,
     GFT_TABLE_TYPE_WILDCARD_INGRESS,
     GFT_TABLE_TYPE_WILDCARD_EGRESS,
@@ -87,7 +89,7 @@ typedef struct gft_hdr_group_exact_match_profile_s {
 typedef struct gft_exact_match_profile_s {
     uint32_t                               flags;    // GFT_EXACT_MATCH_PROFILE_XXX flags, if any
     gft_table_type_t                       table_type;
-    profile_id_t                           profile_id;
+    gft_profile_id_t                       profile_id;
     uint32_t                               num_hdr_group_exact_match_profiles;
     gft_hdr_group_exact_match_profile_t    hgem_profiles[0];
 } __PACK__ gft_exact_match_profile_t;
@@ -159,7 +161,7 @@ typedef struct gft_hdr_group_xposition_profile_s {
 typedef struct gft_hdr_xposition_profile_s {
     uint32_t                             flags;         // GFT_HXP_XXX flags, if any
     gft_table_type_t                     table_type;    // table type
-    profile_id_t                         profile_id;    // profile id
+    gft_profile_id_t                     profile_id;    // profile id
     uint32_t                             num_hxp;    
     gft_hdr_group_xposition_profile_t    hdr_xposition_profiles[0];
 } __PACK__ gft_hdr_xposition_profile_t;
@@ -167,29 +169,29 @@ typedef struct gft_hdr_xposition_profile_s {
 // flags for GFT header group transposition
 #define GFT_HDR_GROUP_XPOSITION_DECREMENT_TTL_IF_NOT_ONE    0x00000001
 typedef struct gft_hdr_group_xposition_s {
-    uint32_t              flags;    // GFT_HDR_GROUP_XPOSITION_XXX flags, if any
-    xposition_action_t    action;
-    uint32_t              headers;
-    uint64_t              header_fields;
-    gft_eth_fields_t      eth_fields;
-    ip_addr_t             src_ip_addr;
-    ip_addr_t             dst_ip_addr;
-    uint8_t               ttl;
-    uint8_t               dscp;
-    uint8_t               ip_proto;
+    uint32_t                            flags;    // GFT_HDR_GROUP_XPOSITION_XXX flags, if any
+    gft_hdr_group_xposition_action_t    action;
+    uint32_t                            headers;
+    uint64_t                            header_fields;
+    gft_eth_fields_t                    eth_fields;
+    ip_addr_t                           src_ip_addr;
+    ip_addr_t                           dst_ip_addr;
+    uint8_t                             ttl;
+    uint8_t                             dscp;
+    uint8_t                             ip_proto;
     union {
         struct {
-            uint16_t      sport;
-            uint16_t      dport;
+            uint16_t                    sport;
+            uint16_t                    dport;
         } __PACK__ udp;
         struct {
-            uint16_t      sport;
-            uint16_t      dport;
+            uint16_t                    sport;
+            uint16_t                    dport;
         } __PACK__ tcp;
         struct {
-            uint32_t      tenant_id;
-            uint16_t      gre_protocol;
-            uint16_t      entropy;
+            uint32_t                    tenant_id;
+            uint16_t                    gre_protocol;
+            uint16_t                    entropy;
         } __PACK__ encap;
     } __PACK__ encap_or_transport;
 } __PACK__ gft_hdr_group_xposition_t;
@@ -216,6 +218,14 @@ typedef struct gft_hdr_group_xposition_s {
 #define GFT_EMFE_COUNTER_MEMORY_MAPPED                             0x00000002
 #define GFT_EMFE_COUNTER_CLIENT_SPECIFIED_ADDRESS                  0x00000004
 
+typedef enum gft_flow_entry_cache_hint_e {
+    GFT_FLOW_ENTRY_CACHE_HINT_NONE,
+    GFT_FLOW_ENTRY_CACHE_HINT_LOW_FREQUENCY,
+    GFT_FLOW_ENTRY_CACHE_HINT_MEDIUM_FREQUENCY,
+    GFT_FLOW_ENTRY_CACHE_HINT_HIGH_FREQUENCY,
+    GFT_FLOW_ENTRY_CACHE_HINT_MAX,
+} gft_flow_entry_cache_hint_t;
+
 typedef struct gft_exact_match_flow_entry_s {
     uint32_t                       flags;                              // GFT_EMFE_XXX flags
     gft_table_id_t                 table_id;                           // table this entry belongs to
@@ -224,8 +234,8 @@ typedef struct gft_exact_match_flow_entry_s {
     gft_profile_id_t               hdr_xposition_profile_id;           // header exposition profile id
     vport_id_t                     redirect_vport_id;                  // redirect vport id, if any
     vport_id_t                     ttl_one_redirect_vport_id;          // vport id to redirect to if TTL is one
-    gft_flow_cache_hint_t          cache_hint;                         // cache hint, if any
-    flow_entry_id_t                flow_entry_id;                      // flow entry id allocated by the app
+    gft_flow_entry_cache_hint_t    cache_hint;                         // cache hint, if any
+    gft_flow_entry_id_t            flow_entry_id;                      // flow entry id allocated by the app
     uint32_t                       num_gft_hdr_group_exact_matches;    // # of header group exact matches
     uint32_t                       num_gft_hdr_group_xpositions;       // # of header group transpositions
     gft_hdr_group_exact_match_t    *exact_matches;                     // exact match list

@@ -635,6 +635,10 @@ TEST_F(gft_test, test1) {
 #ifdef GFT
     int ret = 0;
     uint64_t asm_base_addr;
+    p4pd_cfg_t    p4pd_cfg = {
+        .table_map_cfg_file = "../gen/gft/p4pd/capri_p4_table_map.json"
+    };
+
     printf("Connecting to ASIC SIM\n");
     ret = sdk::lib::pal_init(true);
     ASSERT_NE(ret, -1);
@@ -646,7 +650,7 @@ TEST_F(gft_test, test1) {
     ret = capri_load_mpu_programs("gft", (char *)"obj/gft/asm_bin",
                                   asm_base_addr, NULL, 0);
     ASSERT_NE(ret, -1);
-    ret = p4pd_init();
+    ret = p4pd_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init();
     ASSERT_NE(ret, -1);

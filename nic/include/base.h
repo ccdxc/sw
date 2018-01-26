@@ -34,6 +34,9 @@ typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
 #define HAL_L2SEGMENT_ID_INVALID                     0
 #define HAL_PC_INVALID                               0xFF
 #define HAL_PORT_INVALID                             0xFF
+#define HAL_GFT_INVALID_PROFILE_ID                   0
+#define HAL_GFT_INVALID_TABLE_ID                     0
+#define HAL_GFT_INVALID_FLOW_ENTRY_ID                0
 #define INVALID_INDEXER_INDEX                        0xFFFFFFFF
 
 using sdk::sdk_ret_t;

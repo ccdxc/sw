@@ -7,7 +7,6 @@ load("//nic/bazel:common_deps.bzl", "sdk_copts")
 cc_library(
     name = "p4pdapi",
     srcs = [
-        "p4pd_api.cc",
         "p4pd_global_api.cc",
         "p4pd_init.cc",
         "p4pluspd_rxdma_api.cc",
@@ -29,7 +28,6 @@ cc_library(
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/iris:iris_includes",
         "//nic/hal/pd/utils/acl_tcam",
-        #"//nic/hal/pd/utils/tcam",
         "@sdk//obj:sdk_tcam",
         "//nic/include:base_includes",
         "//nic/p4/include:p4_common_includes",

@@ -29,6 +29,7 @@
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/barco_rings.hpp"
+#include "nic/hal/src/gft.hpp"
 
 namespace hal {
 namespace pd {
@@ -695,6 +696,16 @@ pd_mc_entry_args_init (pd_mc_entry_args_t *args)
 hal_ret_t pd_mc_entry_create(pd_mc_entry_args_t *mc_entry_args);
 hal_ret_t pd_mc_entry_update(pd_mc_entry_args_t *mc_entry_args);
 hal_ret_t pd_mc_entry_delete(pd_mc_entry_args_t *mc_entry_args);
+
+typedef struct pd_gft_args_s {
+    gft_exact_match_profile_t       *exact_match_profile;
+    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
+    gft_exact_match_flow_entry_t    *exact_match_flow_entry;
+} __PACK__ pd_gft_args_t;
+
+hal_ret_t pd_gft_exact_match_profile_create(pd_gft_args_t *gft_args);
+hal_ret_t pd_gft_hdr_group_xposition_profile_create(pd_gft_args_t *gft_args);
+hal_ret_t pd_gft_exact_match_flow_entry_create(pd_gft_args_t *gft_args);
 
 }    // namespace pd
 }    // namespace hal

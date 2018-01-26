@@ -855,12 +855,16 @@ hal_state_pd::init_tables(void)
     uint32_t                   tid;
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file = "table_maps/capri_p4_table_map.json"
+    };
 
     memset(&tinfo, 0, sizeof(tinfo));
     memset(&ctinfo, 0, sizeof(ctinfo));
 
     // parse the NCC generated table info file
-    p4pd_init();
+    //p4pd_cfg.table_map_cfg_file = string("table_maps/capri_p4_table_map.json").c_str();
+    p4pd_init(&p4pd_cfg);
 
     // start instantiating tables based on the parsed information
     dm_tables_ =

@@ -18,6 +18,7 @@ cc_library(
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/common:pdcommon",
         "//nic/hal/pd/control",
+        "//nic/hal/pd/p4pd:p4pd_utils",
         "//nic/hal/pd/iris/p4pd:p4pdapi",
         "//nic/hal/pd/utils/acl_tcam",
         "//nic/hal/pd/utils/flow",
