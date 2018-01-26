@@ -23,7 +23,33 @@ linkmgr_queue_t   g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
 sdk::lib::thread *
 current_thread (void)
 {
-    return sdk::lib::thread::current_thread();
+    return sdk::lib::thread::current_thread() ?
+                       sdk::lib::thread::current_thread() :
+                       g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL];
+}
+
+bool
+is_linkmgr_ctrl_thread()
+{
+    sdk::lib::thread *curr_thread = current_thread();
+    sdk::lib::thread *ctrl_thread = g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL];
+
+    // if ctrl_thread is NULL, then init has failed or not invoked
+    if (ctrl_thread == NULL) {
+        assert(0);
+    }
+
+    // if ctrl_thread is not running, then linkmgr_event_wait hasn't been invoked
+    // and no one is waiting to handle incoming msgs
+    if (!ctrl_thread->is_running()) {
+        return true;
+    }
+
+    if (curr_thread->thread_id() == ctrl_thread->thread_id()) {
+        return true;
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------
@@ -75,11 +101,14 @@ linkmgr_notify (uint8_t operation, void *ctxt)
 void
 linkmgr_event_wait (void)
 {
-    uint32_t           qid;
-    uint16_t           cindx;
-    bool               work_done = false;
-    bool               rv = true;
-    linkmgr_entry_t   *rw_entry;
+    uint32_t         qid         = 0;
+    uint16_t         cindx       = 0;
+    bool             work_done   = false;
+    bool             rv          = true;
+    linkmgr_entry_t  *rw_entry   = NULL;
+
+    // mark the control thread object as started
+    g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL]->set_running(true);
 
     while (TRUE) {
         work_done = false;
@@ -138,12 +167,12 @@ thread_init (void)
     int    thread_prio = 0, thread_id = 0;
 
     // spawn periodic thread
-    thread_prio = sched_get_priority_max(SCHED_FIFO);
+    thread_prio = sched_get_priority_max(SCHED_RR);
     if (thread_prio < 0) {
         return SDK_RET_ERR;
     }
 
-    if(linkmgr_timer_init() != SDK_RET_OK) {
+    if (linkmgr_timer_init() != SDK_RET_OK) {
         SDK_TRACE_ERR("Failed to init timer");
         return SDK_RET_ERR;
     }
@@ -156,7 +185,9 @@ thread_init (void)
                         thread_id,
                         CONTROL_CORE_ID,
                         linkmgr_periodic_thread_start,
-                        thread_prio - 1, SCHED_RR, true);
+                        thread_prio - 1,
+                        SCHED_RR,
+                        true);
     if (g_linkmgr_threads[thread_id] == NULL) {
         SDK_TRACE_ERR("%s: Failed to create linkmgr periodic thread",
                       __FUNCTION__);
@@ -165,6 +196,19 @@ thread_init (void)
 
     // start the thread
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
+
+    // create a thread object for ctrl thread
+    thread_id = LINKMGR_THREAD_ID_CTRL;
+    g_linkmgr_threads[thread_id] =
+        sdk::lib::thread::factory(std::string("linkmgr-ctrl").c_str(),
+                                  thread_id,
+                                  CONTROL_CORE_ID,
+                                  sdk::lib::thread::dummy_entry_func,
+                                  thread_prio,
+                                  SCHED_RR,
+                                  true);
+    g_linkmgr_threads[thread_id]->set_data(g_linkmgr_threads[thread_id]);
+    g_linkmgr_threads[thread_id]->set_pthread_id(pthread_self());
 
     return SDK_RET_OK;
 }

@@ -15,6 +15,7 @@ namespace linkmgr {
 #define LINKMGR_CONTROL_Q_SIZE  128
 
 typedef enum linkmgr_thread_id_e {
+    LINKMGR_THREAD_ID_CTRL,
     LINKMGR_THREAD_ID_PERIODIC
 } linkmgr_thread_id_t;
 
@@ -52,6 +53,9 @@ sdk_ret_t port_event_disable(void *ctxt);
 
 sdk_ret_t
 linkmgr_notify (uint8_t operation, void *ctxt);
+
+bool
+is_linkmgr_ctrl_thread();
 
 }    // namespace linkmgr
 }    // namespace sdk

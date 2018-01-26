@@ -12,7 +12,7 @@ namespace linkmgr {
 static sdk::lib::twheel *g_twheel = NULL;
 
 sdk_ret_t
-linkmgr_timer_init()
+linkmgr_timer_init(void)
 {
     // create a timer wheel
     g_twheel = sdk::lib::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,

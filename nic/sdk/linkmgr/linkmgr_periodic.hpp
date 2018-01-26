@@ -12,7 +12,7 @@ namespace sdk {
 namespace linkmgr {
 
 sdk_ret_t
-linkmgr_timer_init();
+linkmgr_timer_init(void);
 
 void *
 linkmgr_periodic_thread_start(void *ctxt);

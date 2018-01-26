@@ -450,10 +450,10 @@ port::port_enable(port *port_p)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    if (1) {
+    if (is_linkmgr_ctrl_thread()) {
         ret = port_p->port_enable();
     } else {
-        // wake up the hal control thread to process port event
+        // wake up the linkmgr control thread to process port event
         ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, port_p);
 
         if (ret != SDK_RET_OK) {
@@ -470,10 +470,10 @@ port::port_disable(port *port_p)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    if (1) {
+    if (is_linkmgr_ctrl_thread()) {
         ret = port_p->port_disable();
     } else {
-        // wake up the hal control thread to process port event
+        // wake up the linkmgr control thread to process port event
         ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, port_p);
 
         if (ret != SDK_RET_OK) {
