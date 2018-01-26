@@ -11,5 +11,6 @@ cc_test(
         "//:gtest",
         "//:sdk_headers",
         "//obj:sdk_slab",
+        "//lib/logger:logger",
     ],
 )

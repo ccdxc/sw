@@ -7,6 +7,8 @@
 #include "sdk/mem.hpp"
 #include "lib/slab/slab.hpp"
 
+#define SDK_DEBUG 0
+
 namespace sdk {
 namespace lib {
 
@@ -21,6 +23,14 @@ slab::alloc_block_(void)
 
     block = (slab_block_t *)SDK_MALLOC(HAL_MEM_ALLOC_LIB_SLAB, raw_block_sz_);
     if (block == NULL) {
+        SDK_TRACE_ERR("%s: slab block allocation failed."
+                      " name: %s, slab_id: %d, elem_sz: %d,"
+                      " elems_per_block: %d, size %d\n",
+                      __FUNCTION__, name_, slab_id_, elem_sz_,
+                      elems_per_block_, raw_block_sz_);
+#if SDK_DEBUG
+        SDK_ASSERT(FALSE);
+#endif
         return NULL;
     }
     block->prev_ = block->next_ = NULL;
@@ -95,8 +105,20 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
         return NULL;
     }
 
+#if SDK_DEBUG
+    SDK_TRACE_DEBUG("%s: name: %s, slab_id: %d, elem_sz: %d, elems_per_block: %d"
+                    " size %d\n",
+                    __FUNCTION__, name, slab_id, elem_sz, elems_per_block,
+                    sizeof(slab));
+#endif
+
     mem = SDK_MALLOC(HAL_MEM_ALLOC_LIB_SLAB, sizeof(slab));
     if (mem == NULL) {
+        SDK_TRACE_ERR("%s: slab allocation failed."
+                      " name: %s, slab_id: %d, elem_sz: %d,"
+                      " elems_per_block: %d size %d\n",
+                      __FUNCTION__, name, slab_id, elem_sz, elems_per_block,
+                      sizeof(slab));
         return NULL;
     }
 
@@ -104,6 +126,10 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
     rv = new_slab->init(name, slab_id, elem_sz, elems_per_block, thread_safe,
                         grow_on_demand, zero_on_alloc);
     if (rv < 0) {
+        SDK_TRACE_ERR("%s: slab init failed."
+                      " name: %s, slab_id: %d, elem_sz: %d,"
+                      " elems_per_block: %d\n",
+                      __FUNCTION__, name, slab_id, elem_sz, elems_per_block);
         new_slab->~slab();
         SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, new_slab);
         return NULL;
