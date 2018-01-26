@@ -659,6 +659,8 @@ TEST_F(gft_test, test1) {
     ret = capri_tm_init();
     ASSERT_NE(ret, -1);
 
+    config_done();
+
     rx_key_init();
     create_vport_entry();
     create_transposition1();
@@ -666,8 +668,6 @@ TEST_F(gft_test, test1) {
     create_gft_entry1();
     create_gft_entry2();
     create_gft_overflow_entry();
-
-    config_done();
 
     uint32_t port = 0;
     uint32_t cos = 0;
