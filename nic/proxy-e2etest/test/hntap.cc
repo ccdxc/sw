@@ -58,6 +58,7 @@ bool hntap_drop_rexmit = false;
 bool hntap_allow_udp = false;
 uint32_t hflow_seqnum = 0, nflow_seqnum = 0;
 uint32_t nw_retries = 0;
+uint16_t hntap_port = 0;
 
 
 #define ETH_ADDR_LEN 6
@@ -936,6 +937,11 @@ hntap_dump_pkt(char *pkt, int len)
               ntohs(tcp->window),
               ntohs(tcp->check),
               ntohs(tcp->urg_ptr));
+
+        if (hntap_port && (hntap_port != ntohs(tcp->sport) && hntap_port != ntohs(tcp->dport))) {
+	    TLOG("TCP port mismatch %d %d %d\n", hntap_port, ntohs(tcp->sport), ntohs(tcp->dport));
+            return(-1);
+        }
     } else if (!hntap_allow_udp || (ip->protocol != IPPROTO_UDP)) return -1;
   }
   return 0;
@@ -1052,7 +1058,7 @@ hntap_do_select_loop (void)
 	    hntap_host_ether_header_add(pktbuf);
 	    int ret = hntap_dump_pkt(pktbuf, nread + sizeof(struct vlan_header_t));
             if (ret == -1) {
-	      TLOG("Not an TCP packet\n");
+	      TLOG("Not a desired TCP packet\n");
 	      continue;
             }
 
@@ -1091,7 +1097,7 @@ hntap_do_select_loop (void)
         TLOG("Added ether header\n");
         int ret = hntap_dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
         if (ret == -1) {
-          TLOG("Not an TCP packet \n");
+          TLOG("Not a desired TCP packet\n");
 	        continue;
         }
 
@@ -1114,8 +1120,12 @@ int main(int argv, char *argc[])
   setlinebuf(stderr);
 
   int opt = 0;
-  while ((opt = getopt(argv, argc, "n:x")) != -1) {
+  while ((opt = getopt(argv, argc, "p:n:x")) != -1) {
     switch (opt) {
+    case 'p':
+        hntap_port = atoi(optarg);
+	TLOG( "Port numer=%d\n", hntap_port);
+        break;
     case 'n':
         nw_retries = atoi(optarg);
 	TLOG( "NW Retries=%d\n", nw_retries);

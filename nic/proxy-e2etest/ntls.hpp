@@ -12,6 +12,7 @@
 #include <linux/if_alg.h>
 #include <pthread.h>
 #include <time.h>
+#include <signal.h>
 #include <sys/times.h>
 #include <sys/time.h>
 #include <sys/sendfile.h>

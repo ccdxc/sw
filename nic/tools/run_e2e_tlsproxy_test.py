@@ -83,9 +83,9 @@ def set_proxy_tls_bypass_mode(bypass_mode):
     print("Set TLS Proxy bypass mode:%d" % bypass_mode)
     return    
 
-def run_hntap():
-    log = open(hntap_log, "w")
-    cmd = ['../bazel-bin/nic/proxy-e2etest/nic_proxy-e2etest_hntap']
+def run_hntap(tcp_port):
+    log = open(hntap_log, "a")
+    cmd = ['../bazel-bin/nic/proxy-e2etest/nic_proxy-e2etest_hntap', '-p', tcp_port]
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p
@@ -107,18 +107,18 @@ def run_hntap():
 
 
 def run_tls_server(tcp_port):
-    log = open(tls_svr_log, "w")
+    log = open(tls_svr_log, "a")
     cmd = ['../bazel-bin/nic/proxy-e2etest/nic_proxy-e2etest_tls-server', tcp_port ]
     p = Popen(cmd, stdout=log, stderr=log)
     global tls_svr_process
     tls_svr_process = p
     print("* Starting TLS Server on port %s, pid (%s)" % (tcp_port, str(p.pid)))
     print("    - Log file: " + tls_svr_log + "\n")
-    time.sleep(2)
+    time.sleep(10)
     return
 
 def run_tcp_server(tcp_port):
-    log = open(tcp_svr_log, "w")
+    log = open(tcp_svr_log, "a")
     cmd = ['../bazel-bin/nic/proxy-e2etest/nic_proxy-e2etest_tcp-server', tcp_port ]
     p = Popen(cmd, stdout=log, stderr=log)
     global tcp_svr_process
@@ -217,11 +217,13 @@ def print_logs():
           print("    " + line)
 
 
-def run_test(testnum, testname, tcp_port):
-    print("Test %d: Running E2E %s Proxy test, tcp-port %s\n" % (testnum, testname, tcp_port))
+def run_test(testnum, testname, tcp_port, bypass_tls):
+    print("Test %d: Running E2E %s test, tcp-port %s\n" % (testnum, testname, tcp_port))
     start_time = time.time()
 
-    if (testname == "TCP"):
+    run_hntap(tcp_port)
+
+    if (bypass_tls == 1):
         set_proxy_tls_bypass_mode(True)
         run_tcp_server(tcp_port)
     else:
@@ -236,6 +238,8 @@ def run_test(testnum, testname, tcp_port):
         print("Test %d: E2E %s Proxy Status = FAIL\n" % (testnum, testname))
     else:
         print("Test %d: E2E %s Proxy Status = PASS\n" % (testnum, testname))
+
+    cleanup(keep_logs=True)
     return status
 
 def main():
@@ -253,24 +257,28 @@ def main():
     start_time = time.time()
     log = open(tcp_clt_log, "w")
     log.close()
+    log = open(tcp_svr_log, "w")
+    log.close()
+    log = open(tls_svr_log, "w")
+    log.close()
+    log = open(hntap_log, "w")
+    log.close()
 
-    run_hntap()
-
-    status = run_test(1, "TLS", str(80))
+    status = run_test(1, "TLS Proxy", str(80), 0)
     if status == 0:
         time.sleep(5)
-        status = run_test(2, "TCP", str(81))
+        status = run_test(2, "TCP Proxy", str(81), 1)
     if status == 0:
         # Run TCP/TLS proxy with app redirect E2E
         time.sleep(5)
-        status = run_test(3, "TLS", str(89))
+        status = run_test(3, "TLS Proxy with APP-redirect", str(89), 0)
         if status == 0:
             # Run TCP/TLS proxy (SPAN mode) with app redirect E2E
             time.sleep(5)
-            status = run_test(4, "TLS", str(8089))
+            status = run_test(4, "TLS Proxy with App-redirect(SPAN mode)", str(8089), 0)
         status = 0
 
-    cleanup(keep_logs=True)
+    #cleanup(keep_logs=True)
 
     print("\n- Total run time: %s seconds\n" % round(time.time() - start_time, 1))
     print("Final Status = %s\n" % ("PASS" if (status == 0) else "FAIL"))
