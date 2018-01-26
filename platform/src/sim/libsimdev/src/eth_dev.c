@@ -65,8 +65,8 @@ typedef struct {
     uint64_t    cq_ring_base;
     uint32_t    intr_assert_addr;
     uint8_t     spurious_db_cnt;
-    uint8_t     color:1;
     uint8_t     rsvd:7;
+    uint8_t     color:1;
 } __attribute__((packed)) qstate_app_ethtx_t;
 
 typedef struct {
@@ -81,8 +81,8 @@ typedef struct {
     uint64_t    cq_ring_base;
     uint16_t    rss_type;
     uint32_t    intr_assert_addr;
-    uint8_t     color:1;
     uint8_t     rsvd:7;
+    uint8_t     color:1;
 } __attribute__((packed)) qstate_app_ethrx_t;
 
 static simdev_t *current_sd;

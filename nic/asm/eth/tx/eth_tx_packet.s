@@ -24,18 +24,30 @@ struct tx_table_s1_t0_eth_tx_packet_d d;
     phvwri      p.dma_pkt##n##_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT; \
     phvwri      p.dma_pkt##n##_dma_pkt_eop, 1; \
     phvwri      p.dma_pkt##n##_dma_cmd_host_addr, 1; \
-    or          r1, d.addr_lo##n, d.addr_hi##n, 48; \
+    or          r1, d.addr_lo##n, d.addr_hi##n, sizeof(d.addr_lo##n); \
     add         r1, r0, r1.dx; \
-    or          r1, r1[63:16], r1[11:8], 48; \
+    or          r1, r1[63:16], r1[11:8], sizeof(d.addr_lo##n); \
     phvwr       p.dma_pkt##n##_dma_cmd_addr, r1; \
     phvwr       p.dma_pkt##n##_dma_cmd_size, d.{len##n}.hx;
 
 #define BUILD_APP_HEADER(n) \
+    add         r1, r0, r0; \
     phvwri      p.eth_tx_app_hdr##n##_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC; \
     seq         c1, d.vlan_insert##n##, 1; \
     addi.c1     r1, r0, P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG; \
     phvwr.c1    p.eth_tx_app_hdr##n##_vlan_tag, d.{vlan_tci##n}.hx; \
-    phvwr.c1    p.eth_tx_app_hdr##n##_flags, r1;
+    phvwr.c1    p.eth_tx_app_hdr##n##_flags, r1; \
+    seq         c2, d.opcode##n##, TXQ_DESC_OPCODE_CALC_CSUM; \
+    phvwr.c2    p.eth_tx_app_hdr##n##_gso_valid, 1; \
+    or.c2       r2, d.hdr_len_lo##n, d.hdr_len_hi##n, sizeof(d.hdr_len_lo##n); \
+    add.c2      r2, r0, r2.dx; \
+    or.c2       r2, r2[63:56], r2[49:48]; \
+    addi.c2     r2, r2, 54;\
+    phvwr.c2    p.eth_tx_app_hdr##n##_gso_start, r2; \
+    or.c2       r2, d.mss_or_csumoff_lo##n, d.mss_or_csumoff_hi##n, sizeof(d.mss_or_csumoff_lo##n); \
+    add.c2      r2, r0, r2.dx; \
+    or.c2       r2, r2[63:56], r2[53:48], sizeof(d.mss_or_csumoff_lo##n); \
+    phvwr.c2    p.eth_tx_app_hdr##n##_gso_offset, r2; \
 
 #define DEBUG_DESCR_FLD(name) \
     add         r7, r0, d.##name

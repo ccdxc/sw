@@ -18,7 +18,7 @@ eth_tx_fetch_desc:
   bcf             [c1], eth_tx_queue_disabled
   seq             c2, d.c_index0, d.p_index0
   bcf             [c2], eth_tx_spurious_db
-  seq             c3, d.spurious_db_cnt, 255
+  seq             c3, d.spurious_db_cnt, MAX_SPURIOUS_DB
 
   /* R1 = What is the ring size? */
   sll             r1, 1, d.{ring_size}.hx     // R1 = ring_size
@@ -62,6 +62,13 @@ eth_tx_fetch_desc:
   // Completion descriptor
   phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
   phvwr           p.eth_tx_cq_desc_color, d.color
+#if 0
+  phvwri          p.eth_tx_cq_desc_rsvd, 0xff
+  phvwri          p.eth_tx_cq_desc_rsvd2[31:0], 0xffffffff
+  phvwri          p.eth_tx_cq_desc_rsvd2[63:32], 0xffffffff
+  phvwri          p.eth_tx_cq_desc_rsvd3, 0xffffff
+  phvwri          p.eth_tx_cq_desc_rsvd4, 0x7f
+#endif
 
   // Claim the completion entry
   tblmincri       d.{p_index1}.hx, d.{ring_size}.hx, 1
@@ -80,9 +87,9 @@ eth_tx_fetch_desc:
   nop
 
 eth_tx_spurious_db:
-  tblmincri.f     d.spurious_db_cnt, 8, 1
-  bcf             [c3], eth_tx_eval_db        // spurious_db_cnt == 255
-  phvwr.!c3.e     p.p4_intr_global_drop, 1    // spurious_db_cnt != 255
+  tblmincri.f     d.spurious_db_cnt, LG2_MAX_SPURIOUS_DB, 1
+  bcf             [c3], eth_tx_eval_db        // spurious_db_cnt == max
+  phvwr.!c3.e     p.p4_intr_global_drop, 1    // spurious_db_cnt != max
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 eth_tx_eval_db:

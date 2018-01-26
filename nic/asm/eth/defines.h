@@ -8,6 +8,8 @@
 #define LG2_RX_QSTATE_SIZE      (6)
 
 #define MAX_DESC_PER_PHV        (4)
+#define MAX_SPURIOUS_DB         (8)
+#define LG2_MAX_SPURIOUS_DB     (3)
 
 #define  RSS_TYPE_NONE         (0)
 #define  RSS_TYPE_IPV4         (1)
@@ -29,3 +31,9 @@
 #define  RSS_IPV6_UDP          (RSS_TYPE_IPV6 | RSS_TYPE_IPV6_UDP)
 
 #define  CAPRI_RAW_TABLE_SIZE_MPU_ONLY      (7)
+
+#define TXQ_DESC_OPCODE_NOP             0x0
+#define TXQ_DESC_OPCODE_CALC_NO_CSUM    0x1
+#define TXQ_DESC_OPCODE_CALC_CSUM       0x2
+#define TXQ_DESC_OPCODE_CALC_CRC32_CSUM 0x3
+#define TXQ_DESC_OPCODE_TSO             0x4
