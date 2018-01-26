@@ -39,10 +39,6 @@ dma_cmd_l7_descr:
     addi        r3, r0, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
     phvwr       p.aol_O1, r3.wx
     phvwr       p.aol_L1, k.{to_s5_payload_len}.wx
-    phvwr       p.aol_A2, r0
-    phvwr       p.aol_O2, r0
-    phvwr       p.aol_L2, r0
-    phvwr       p.aol_next_addr, r0
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(l7_descr_dma_cmd, r1, aol_A1, aol_next_pkt)
     addi        r7, r0, 1

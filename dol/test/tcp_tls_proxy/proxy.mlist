@@ -998,7 +998,7 @@ modules:
         name    : TCP_PKT_TO_L7Q_IDS_V4
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ids
-        rtl     : False 
+        rtl     : True 
         args    :
             maxflows: 1
         iterate :
@@ -1008,7 +1008,7 @@ modules:
         name    : TCP_PKT_TO_L7Q_IDS_V6
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ids
-        rtl     : False
+        rtl     : True
         args    :
             maxflows: 1
         iterate :
@@ -1018,7 +1018,7 @@ modules:
         name    : TCP_FLOWS_TO_L7Q_IDS_V4
         spec    : one_pkt.testspec
         module  : tcp_pkt_to_l7q_ids
-        rtl     : False
+        rtl     : True
         args    :
             maxflows: 2
         iterate :
