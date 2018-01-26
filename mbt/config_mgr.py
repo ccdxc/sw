@@ -219,8 +219,6 @@ class ConfigObjectHelper(object):
         return str(self._spec.Service) + " " + str(self._service_object.name)
 
     def ReadDolConfig(self, message):
-        import pdb
-        pdb.set_trace()
         print("Reading DOL config for %s" %(self))
         # Iterate over a copy of self._config_objects so that we can modify the original list.
         key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
@@ -250,25 +248,6 @@ class ConfigObjectHelper(object):
         config_object.is_dol_config_modified = True
 
         return resp_message, False
-
-    def ModifyDolConfig(self, ):
-        return
-        # For now, just update,delete and ReCreate DOL config.
-        for i in range(1):
-            ret = self.UpdateConfigs(len(self._config_objects), 'API_STATUS_OK')
-            if not ret:
-                logger.critical("Update for config object failed, Test Case cannot continue")
-                exit_error()
-            ret = self.DeleteConfigs(len(self._config_objects), 'API_STATUS_OK')
-            if not ret:
-                logger.critical("Delete for config object failed, Test Case cannot continue")
-                exit_error()
-            ret = self.ReCreateConfigs(len(self._config_objects), 'API_STATUS_OK')
-            if not ret:
-                logger.critical("ReCreate for config object failed, Test Case cannot continue")
-                exit_error()
-        for config_object in self._config_objects:
-            config_object.is_dol_config_modified = True
 
     def CreateConfigObject(self, status, ext_refs={}, external_constraints=None):
         config_object = ConfigObject(self._cfg_meta, self)
@@ -360,56 +339,13 @@ class ConfigObjectHelper(object):
             config_object._status = ConfigObject._DELETED
         return True
     
-    def Reset(self):
-        #Forget about all other config objects.
-        self._config_objects = []
-
 def AddConfigSpec(config_spec, hal_channel):
     for sub_service in config_spec.objects:
        print("Adding config spec for service : " , config_spec.Service, sub_service.object.name)
        ConfigObjectHelper(config_spec, hal_channel, sub_service.object)
 
-def SortConfigExternalDeps():
-    cfg_meta_mapper.SortExternalDeps()
-
-    for entry in cfg_meta_mapper._ConfigMetaMapper__ordered_objects:
-        if entry[1] == set():
-            dependencies = "No dependencies"
-        else:
-            dependencies = ""
-            for dep in entry[1]:
-                dependencies += "\"Service : " + str(dep) + ", Object : " + dep._service_object.name + "\"\t"
-        print ("Service : " + str(entry[0]) + ", Object : " + str(entry[0]._service_object.name))
-        print ("Dependencies : " + str(dependencies))
-   
 def GetOrderedConfigSpecs(rev = False):
     return cfg_meta_mapper.config_objects
-
-def PrintOrderedConfigSpecs():
-    for entry in cfg_meta_mapper._ConfigMetaMapper__ordered_objects:
-        if entry[1] == set():
-            dependencies = "No dependencies"
-        else:
-            dependencies = ""
-            for dep in entry[1]:
-                dependencies += "\"Service : " + str(dep) + ", Object : " + dep._service_object.name + "\"\t"
-        print ("Service : " + str(entry[0]) + ", Object : " + str(entry[0]._service_object.name))
-        print ("Dependencies : " + str(dependencies))
-
-def ResetConfigs():
-    for cfg_helper in cfg_meta_mapper.ordered():
-        cfg_helper.Reset()
-
-def GetRandomConfigObjectByKeyType(key_type):
-    return cfg_meta_mapper.GetRandomConfigOject(key_type)
-
-def ModifyConfigFromDol(message_name):
-    try:
-        object_helper = cfg_meta_mapper.dol_message_map[message_name]
-        object_helper.ModifyDolConfig()
-    except KeyError:
-        print("Unsupported modify for object")
-        # raise
 
 def CreateConfigFromDol(incoming_message):
     try:

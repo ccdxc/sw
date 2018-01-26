@@ -38,6 +38,7 @@ else:
 
 print("The random seed(MBT_RANDOM_SEED) being used for this test is %s" %(str(os.environ['MBT_RANDOM_SEED'])))
 
+# This ordering is needed because the random seed is set by the below 2 imports
 import grpc_proxy
 import config_mgr
 
@@ -91,9 +92,6 @@ for config_spec in config_specs:
 logger.logfile = "./logfile"
 logger.info("Building Config dependency information")
 
-# In the intermediate stage now, add just the pass-through server.
-# Will change this in the next commit TODO
-#grpc_proxy.initClient()
 if GlobalOptions.mbt:
     # This is blocking.
     grpc_proxy.serve()
@@ -102,7 +100,6 @@ test_specs = parser.ParseDirectory("../mbt/mbt_test/specs", "*.spec")
 for test_spec in test_specs:
     if not test_spec.Enabled:
         continue
-    # config_mgr.ResetConfigs()
     for step in test_spec.Steps:
         logger.info("Executing Step : ", step.step.op)
         op_name = op_map[step.step.op]
@@ -118,11 +115,7 @@ for test_spec in test_specs:
                 utils.log_exception(logger)
                 ret = False
             if not ret:
-                logger.info("Step %s failed for Conifg %s" % (step.step.op, cfg_spec))
+                logger.info("Step %s failed for Config %s" % (step.step.op, cfg_spec))
                 sys.exit(1)
 
 logger.info("All Config test passed!")
-
-# logger.info("Config Dependency graph is shown below")
-# config_mgr.PrintOrderedConfigSpecs()
-    

@@ -560,6 +560,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     if (spec.has_tx_qos_class()) {
         ret = find_qos_cos_info_from_spec(spec.tx_qos_class(), lif->pinned_uplink, &cosA, &cosB);
         if (ret != HAL_RET_OK) {
+            lif_prepare_rsp(rsp, ret, HAL_HANDLE_INVALID);
             return ret;
         }
         qos_class = find_qos_class_by_key_handle(spec.tx_qos_class());

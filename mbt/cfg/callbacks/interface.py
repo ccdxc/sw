@@ -66,7 +66,9 @@ def PostUpdateCb(data, req_spec, resp_spec):
 def LifPreCreateCb(data, req_spec, resp_spec):
     type_num = random.randint(0, 7)
     req_spec.request[0].ClearField('lif_qstate_map')
+    req_spec.request[0].ClearField('tx_qos_class')
     req_spec.request[0].enable_rdma = False
     req_spec.request[0].packet_filter.receive_promiscuous = False
     req_spec.request[0].packet_filter.receive_broadcast = False
     req_spec.request[0].packet_filter.receive_all_multicast = False
+

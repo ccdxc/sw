@@ -46,14 +46,8 @@ def is_api_status_field(field):
 def is_ext_ref_field(field):
     return _tag_checker_helper(field, _tag_checker_map["ext_ref_field"])
 
-def is_handle_field(field):
-    return _tag_checker_helper(field, _tag_checker_map["handle_field"])
-                        
 def is_range_field(field):
     return _tag_checker_helper(field, _tag_checker_map["range_field"])
-
-def is_unique_field(field):
-    return _tag_checker_helper(field, _tag_checker_map["unique_field"])
 
 def is_mandatory_field(field):
     return _tag_checker_helper(field, _tag_checker_map["mandatory_field"])
