@@ -873,7 +873,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     if (((uint8_t)spec.svc() == RDMA_SERV_TYPE_UD) && (spec.qp_num() <= 5)) {
         hal_if = find_if_by_handle(spec.if_handle());
         HAL_ASSERT(hal_if != NULL);
-        l2seg = find_l2seg_by_handle(hal_if->l2seg_handle);
+        l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
         HAL_ASSERT(l2seg != NULL);
         oif.intf = hal_if;
         oif.l2seg = l2seg;

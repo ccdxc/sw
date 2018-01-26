@@ -161,7 +161,7 @@ pd_enicif_upd_native_l2seg_clsc_change(pd_if_args_t *args)
 
     if (args->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
         // Install new native l2seg input prop entry
-        native_l2seg = find_l2seg_by_handle(args->new_native_l2seg_clsc);
+        native_l2seg = l2seg_lookup_by_handle(args->new_native_l2seg_clsc);
         ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
                                               native_l2seg,
                                               NULL, args,
@@ -542,7 +542,7 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
         // Program native l2seg
         if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
             native_l2seg_clsc = 
-                find_l2seg_by_handle(hal_if->native_l2seg_clsc);
+                l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
             ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
                                                   native_l2seg_clsc,
                                                   NULL, NULL,
@@ -570,7 +570,7 @@ pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
     // Walk through l2seg entries
     dllist_for_each(lnode, l2sege_list) {
         pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
-        l2seg = find_l2seg_by_handle(pi_l2seg_entry->l2seg_handle);
+        l2seg = l2seg_lookup_by_handle(pi_l2seg_entry->l2seg_handle);
         if (l2seg == NULL) {
             HAL_TRACE_ERR("pd-enicif:{}:unable to find l2seg for handle:{}",
                           __FUNCTION__, pi_l2seg_entry->l2seg_handle);
@@ -630,7 +630,7 @@ is_l2seg_native_on_enicif_classic(if_t *hal_if, l2seg_t *l2seg)
     bool            is_native = false;
     l2seg_t         *if_native_l2seg = NULL;
 
-    if_native_l2seg = find_l2seg_by_handle(hal_if->native_l2seg_clsc);
+    if_native_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
     if (if_native_l2seg) {
         if (if_native_l2seg->seg_id == l2seg->seg_id) {
             is_native = true;

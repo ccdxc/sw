@@ -651,29 +651,29 @@ TEST_F(l2seg_test, test4)
 // ----------------------------------------------------------------------------
 TEST_F(l2seg_test, test5) 
 {
-    hal_ret_t                           ret = HAL_RET_OK;
-    L2SegmentSpec                       l2seg_spec, l2seg_spec1, l2seg_spec2, infra_spec;
-    L2SegmentResponse                   l2seg_rsp, l2seg_rsp1, l2seg_rsp2;
-    SecurityProfileSpec                 sp_spec;
-    SecurityProfileResponse             sp_rsp;
-    SecurityProfileDeleteRequest        sp_del_req;
-    SecurityProfileDeleteResponse       sp_del_rsp;
+    hal_ret_t                        ret = HAL_RET_OK;
+    L2SegmentSpec                    l2seg_spec, l2seg_spec1, l2seg_spec2, infra_spec;
+    L2SegmentResponse                l2seg_rsp, l2seg_rsp1, l2seg_rsp2;
+    SecurityProfileSpec              sp_spec;
+    SecurityProfileResponse          sp_rsp;
+    SecurityProfileDeleteRequest     sp_del_req;
+    SecurityProfileDeleteResponse    sp_del_rsp;
     VrfSpec                          ten_spec;
     VrfResponse                      ten_rsp;
     VrfDeleteRequest                 ten_del_req;
     VrfDeleteResponse                ten_del_rsp;
-    NetworkSpec                         nw_spec;
-    NetworkResponse                     nw_rsp;
-    NetworkDeleteRequest                nw_del_req;
-    NetworkDeleteResponse               nw_del_rsp;
-    L2SegmentDeleteRequest              l2seg_del_req;
+    NetworkSpec                      nw_spec;
+    NetworkResponse                  nw_rsp;
+    NetworkDeleteRequest             nw_del_req;
+    NetworkDeleteResponse            nw_del_rsp;
+    L2SegmentDeleteRequest           l2seg_del_req;
     L2SegmentDeleteResponse          l2seg_del_rsp;
-    L2SegmentGetRequest                 l2seg_get_req;
-    L2SegmentGetResponse                l2seg_get_rsp;
-    slab_stats_t                        *pre = NULL, *post = NULL;
-    bool                                is_leak = false;
-    int                                 num_l2segs = 2048;
-    NetworkKeyHandle                    *nkh = NULL;
+    L2SegmentGetRequest              l2seg_get_req;
+    L2SegmentGetResponseMsg          l2seg_get_rsp;
+    slab_stats_t                     *pre = NULL, *post = NULL;
+    bool                             is_leak = false;
+    int                              num_l2segs = 2048;
+    NetworkKeyHandle                 *nkh = NULL;
 
     pre = hal_test_utils_collect_slab_stats();
 
@@ -940,33 +940,27 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
-    // Get of l2seg with no meta
+    // Get of l2seg with no key or handle and no vrf id
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(l2seg_get_rsp.response_size() > 0);
 
-
-    // Get of l2seg with no key or handle
-    l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
-    hal::hal_cfg_db_close();
-    HAL_TRACE_DEBUG("ret: {}", ret);
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
-
-
-    // Get of l2seg without key or handle
+    // Get of l2seg without key or handle but with vrf id set.
+    l2seg_get_rsp.clear_response();
     l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
     // l2seg_get_req.mutable_key_or_handle()->set_segment_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
-    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(l2seg_get_rsp.response_size() > 0);
 
     // Get of l2seg id for which l2seg is not present
+    l2seg_get_rsp.clear_response();
     l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_get_req.mutable_key_or_handle()->set_segment_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -976,6 +970,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Get of l2seg handle for which l2seg is not present
+    l2seg_get_rsp.clear_response();
     l2seg_get_req.mutable_vrf_key_handle()->set_vrf_id(5);
     l2seg_get_req.mutable_key_or_handle()->set_l2segment_handle(0xFFFFFF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

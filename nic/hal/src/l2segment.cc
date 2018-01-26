@@ -1357,7 +1357,7 @@ l2seg_lookup_key_or_handle (const L2SegmentKeyHandle& kh)
     if (kh.key_or_handle_case() == L2SegmentKeyHandle::kSegmentId) {
         l2seg = find_l2seg_by_id(kh.segment_id());
     } else if (kh.key_or_handle_case() == L2SegmentKeyHandle::kL2SegmentHandle) {
-        l2seg = find_l2seg_by_handle(kh.l2segment_handle());
+        l2seg = l2seg_lookup_by_handle(kh.l2segment_handle());
     }
 
     return l2seg;
@@ -1624,42 +1624,10 @@ end:
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// process a L2 segment get request
-//------------------------------------------------------------------------------
-hal_ret_t
-l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
-{
-    l2seg_t                         *l2seg;
-    // dllist_ctxt_t                   *lnode    = NULL;
-    // hal_handle_id_list_entry_t      *entry    = NULL;
-    NetworkKeyHandle                *nkh      = NULL;
+static void
+l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp) {
     hal_handle_t                    *p_hdl_id = NULL;
-
-    if (!req.has_vrf_key_handle() || req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-    auto kh = req.key_or_handle();
-
-    if (kh.key_or_handle_case() == kh::L2SegmentKeyHandle::kSegmentId) {
-        l2seg = find_l2seg_by_id(kh.segment_id());
-    } else if (kh.key_or_handle_case() == kh::L2SegmentKeyHandle::kL2SegmentHandle) {
-        l2seg = find_l2seg_by_handle(kh.l2segment_handle());
-    } else {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    if (l2seg == NULL) {
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
-        return HAL_RET_L2SEG_NOT_FOUND;
-    }
+    NetworkKeyHandle                *nkh      = NULL;
 
     // fill config spec of this L2 segment
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
@@ -1692,6 +1660,75 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     rsp->mutable_stats()->set_num_endpoints(l2seg->num_ep);
 
     rsp->set_api_status(types::API_STATUS_OK);
+}
+
+static bool
+l2segment_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    L2SegmentGetResponseMsg *rsp    = (L2SegmentGetResponseMsg *)ctxt;
+    L2SegmentGetResponse    *response = rsp->add_response();
+    l2seg_t                 *l2seg    = NULL;
+    
+    l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
+    l2segment_process_get(l2seg, response);
+
+    // Always return false here, so that we walk through all hash table
+    // entries. 
+    return false;
+}
+
+static bool
+l2segment_get_list_cb (void *list_entry, void *ctxt)
+{
+    hal_handle_t l2seg_handle         = *((hal_handle_t *)list_entry);
+    l2seg_t      *l2seg               = NULL;
+    L2SegmentGetResponseMsg *rsp      = (L2SegmentGetResponseMsg *)ctxt;
+    L2SegmentGetResponse    *response = rsp->add_response();
+
+    l2seg = l2seg_lookup_by_handle(l2seg_handle);
+
+    // l2seg should not be deleted here because we are still in the context 
+    // of the config thread.
+    HAL_ASSERT(l2seg != NULL);
+
+    l2segment_process_get(l2seg, response);
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+// process a L2 segment get request
+//------------------------------------------------------------------------------
+hal_ret_t
+l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponseMsg *rsp)
+{
+    l2seg_t *l2seg = NULL;
+    vrf_t   *vrf   = NULL;                        
+
+    if (req.has_vrf_key_handle()) {
+        vrf = vrf_lookup_key_or_handle(req.vrf_key_handle());
+        if (!vrf) {
+            auto response = rsp->add_response();
+            response->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
+    if (!req.has_key_or_handle() && !req.has_vrf_key_handle()) {
+        g_hal_state->l2seg_id_ht()->walk(l2segment_get_ht_cb, rsp);
+    } else if (req.has_vrf_key_handle() && (!req.has_key_or_handle())) {
+        vrf->l2seg_list->iterate(l2segment_get_list_cb, (void *)rsp);
+    } else {
+        l2seg = l2seg_lookup_key_or_handle(req.key_or_handle());
+        auto response = rsp->add_response();
+        if (l2seg == NULL) {
+            response->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
+            return HAL_RET_L2SEG_NOT_FOUND;
+        } else {
+            l2segment_process_get(l2seg, response);
+        }
+    }
     return HAL_RET_OK;
 }
 

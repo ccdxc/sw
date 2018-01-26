@@ -404,7 +404,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // If its enic, add to l2seg and lif
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
         if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
-            l2seg = find_l2seg_by_handle(hal_if->l2seg_handle);
+            l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
             // add to l2seg
             ret = l2seg_add_if(l2seg, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
@@ -448,7 +448,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             }
             // Add to native l2seg's back ref
             if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
-                nat_l2seg = find_l2seg_by_handle(hal_if->native_l2seg_clsc);
+                nat_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
                 if (nat_l2seg == NULL) {
                     HAL_TRACE_ERR("pi-enicif:{}:unable to find native_l2seg_hdl:{}",
                                   __FUNCTION__, hal_if->native_l2seg_clsc);
@@ -858,7 +858,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 
 
             if (app_ctxt->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
-                if (find_l2seg_by_handle(app_ctxt->new_native_l2seg_clsc) 
+                if (l2seg_lookup_by_handle(app_ctxt->new_native_l2seg_clsc) 
                         == NULL) {
                     HAL_TRACE_ERR("pi-enicif:{}:unable to find new "
                             "l2seg_handle:{}",
@@ -1208,7 +1208,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 
     dllist_for_each_safe(curr, next, app_ctxt->add_l2segclsclist) {
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
-        l2seg = find_l2seg_by_handle(entry->l2seg_handle);
+        l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
         if (!l2seg) {
             HAL_TRACE_ERR("{}:unable to find l2seg with handle:{}",
                           __FUNCTION__, entry->l2seg_handle);
@@ -1230,7 +1230,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
     
     dllist_for_each_safe(curr, next, app_ctxt->del_l2segclsclist) {
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
-        l2seg = find_l2seg_by_handle(entry->l2seg_handle);
+        l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
         HAL_ASSERT(l2seg != NULL);
 
         // Remove entry from temp. list
@@ -1394,7 +1394,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 intf_clone->native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
                 // Update native l2seg's relation
                 if (intf->native_l2seg_clsc != HAL_HANDLE_INVALID) {
-                    old_nat_l2seg = find_l2seg_by_handle(intf->native_l2seg_clsc);
+                    old_nat_l2seg = l2seg_lookup_by_handle(intf->native_l2seg_clsc);
                     HAL_ASSERT(old_nat_l2seg != NULL);
                     // Remove from older nat l2seg
                     ret = l2seg_del_if(old_nat_l2seg, intf);
@@ -1402,7 +1402,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 }
                 // Add to new nat l2seg
                 if (app_ctxt->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
-                    new_nat_l2seg = find_l2seg_by_handle(app_ctxt->new_native_l2seg_clsc);
+                    new_nat_l2seg = l2seg_lookup_by_handle(app_ctxt->new_native_l2seg_clsc);
                     HAL_ASSERT(new_nat_l2seg != NULL);
                     ret = l2seg_add_if(new_nat_l2seg, intf);
                     HAL_ASSERT(ret == HAL_RET_OK);
@@ -1641,7 +1641,7 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
     {
-        l2seg = find_l2seg_by_handle(hal_if->l2seg_handle);
+        l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
         auto enic_if_info = spec->mutable_if_enic_info();
         enic_if_info->set_enic_type(hal_if->enic_type);
         enic_if_info->mutable_lif_key_or_handle()->set_lif_id(hal_if->if_id);
@@ -1688,7 +1688,7 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
             HAL_TRACE_ERR("pi-uplinkpc:{}:READ ..unable to add segment id "
                           "Skipping segment ID: {}", __FUNCTION__, entry->handle_id);
-            l2seg_t *l2seg = find_l2seg_by_handle(entry->handle_id);
+            l2seg_t *l2seg = l2seg_lookup_by_handle(entry->handle_id);
             if (l2seg != NULL) {
                 uplink_pc_info->add_l2segment_id(l2seg->seg_id);
             }
@@ -1758,7 +1758,7 @@ fetch_l2seg_ifl2seg (InterfaceL2SegmentSpec& spec)
             kh::L2SegmentKeyHandle::kSegmentId) {
         return find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id());
     } else {
-        return find_l2seg_by_handle(spec.l2segment_key_or_handle().l2segment_handle());
+        return l2seg_lookup_by_handle(spec.l2segment_key_or_handle().l2segment_handle());
     }
 
     return NULL;
@@ -1788,7 +1788,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     }
     if (spec.l2segment_key_or_handle().key_or_handle_case() == 
             kh::L2SegmentKeyHandle::kL2SegmentHandle &&
-            !find_l2seg_by_handle(spec.l2segment_key_or_handle().l2segment_handle())) {
+            !l2seg_lookup_by_handle(spec.l2segment_key_or_handle().l2segment_handle())) {
         HAL_TRACE_ERR("{}:failed to find l2seg with handle:{}", 
                       __FUNCTION__, 
                       spec.l2segment_key_or_handle().l2segment_handle());
@@ -2229,7 +2229,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
         if (if_enic_info.mutable_classic_enic_info()->
                 native_l2segment_handle() != HAL_HANDLE_INVALID) {
             // Processing native l2seg
-            l2seg = find_l2seg_by_handle(if_enic_info.
+            l2seg = l2seg_lookup_by_handle(if_enic_info.
                     mutable_classic_enic_info()->native_l2segment_handle());
             if (l2seg == NULL) {
                 HAL_TRACE_ERR("pi-enicif:{}:failed to find l2seg_handle:{}",
@@ -2670,7 +2670,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (intf->if_type == intf::IF_TYPE_ENIC) {
         if (intf->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
             // Remove from l2seg
-            l2seg = find_l2seg_by_handle(intf->l2seg_handle);
+            l2seg = l2seg_lookup_by_handle(intf->l2seg_handle);
             ret = l2seg_del_if(l2seg, intf);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("pi-enicif:{}:unable to remove if from l2seg",
@@ -2720,7 +2720,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             }
             // Del from native l2seg's back ref
             if (intf->native_l2seg_clsc != HAL_HANDLE_INVALID) {
-                nat_l2seg = find_l2seg_by_handle(intf->native_l2seg_clsc);
+                nat_l2seg = l2seg_lookup_by_handle(intf->native_l2seg_clsc);
                 if (nat_l2seg == NULL) {
                     HAL_TRACE_ERR("pi-enicif:{}:unable to find native_l2seg_hdl:{}",
                                   __FUNCTION__, intf->native_l2seg_clsc);
@@ -3284,7 +3284,7 @@ enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, if_t *hal_if, bool ad
 
     dllist_for_each_safe(curr, next, l2segs_list) {
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
-        l2seg = find_l2seg_by_handle(entry->l2seg_handle);
+        l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
         if (!l2seg) {
             HAL_TRACE_ERR("{}:unable to find l2seg with handle:{}",
                           __FUNCTION__, entry->l2seg_handle);

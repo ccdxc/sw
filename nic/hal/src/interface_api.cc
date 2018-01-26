@@ -222,7 +222,7 @@ if_enicif_get_pi_l2seg(if_t *pi_if)
 
     // Check if if is enicif
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
-        pi_seg = find_l2seg_by_handle(pi_if->l2seg_handle);
+        pi_seg = l2seg_lookup_by_handle(pi_if->l2seg_handle);
 #if 0
         if (pi_if->enic_type == intf::IF_ENIC_TYPE_USEG) {
             pi_seg = find_l2seg_by_id(pi_if->l2seg_id);
@@ -324,7 +324,7 @@ if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if, uint32_t *vlan_id)
     }
 
     if (pi_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
-        pi_seg = find_l2seg_by_handle(pi_if->native_l2seg_clsc);
+        pi_seg = l2seg_lookup_by_handle(pi_if->native_l2seg_clsc);
         if (pi_seg == NULL) {
             HAL_TRACE_ERR("{}:native l2seg is not present: l2seg_hdl:{}",
                           __FUNCTION__, pi_if->native_l2seg_clsc);

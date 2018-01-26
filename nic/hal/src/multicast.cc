@@ -286,7 +286,7 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-mc_entry:{}:create add CB {}",__FUNCTION__,
                     mc_entry->hal_handle);
 
-    l2seg = find_l2seg_by_handle(mc_entry->key.l2seg_handle);
+    l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
     HAL_ASSERT(l2seg != NULL);
     ret = oif_list_create(&mc_entry->oif_list);
     HAL_ASSERT(ret == HAL_RET_OK);

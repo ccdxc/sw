@@ -512,7 +512,7 @@ vrf_handle_nwsec_update (vrf_t *vrf, nwsec_profile_t *nwsec_prof)
     // Walk L2 segs
     for (const void *ptr : *vrf->l2seg_list) {
         p_hdl_id = (hal_handle_t *)ptr;
-        l2seg = find_l2seg_by_handle(*p_hdl_id);
+        l2seg = l2seg_lookup_by_handle(*p_hdl_id);
         if (!l2seg) {
             HAL_TRACE_ERR("pi-vrf:{}:unable to find l2seg with handle:{}",
                           __FUNCTION__, *p_hdl_id);

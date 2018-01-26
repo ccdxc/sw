@@ -1070,7 +1070,7 @@ extract_match_spec (acl_match_spec_t *ms,
             l2seg = find_l2seg_by_id(l2seg_id);
         } else {
             l2seg_handle = l2seg_kh.l2segment_handle();
-            l2seg = find_l2seg_by_handle(l2seg_handle);
+            l2seg = l2seg_lookup_by_handle(l2seg_handle);
         }
 
         if(l2seg == NULL) {

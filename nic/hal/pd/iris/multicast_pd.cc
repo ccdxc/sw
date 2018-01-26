@@ -57,7 +57,7 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
     HAL_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
 
     // lkp_vrf
-    l2seg = find_l2seg_by_handle(pi_mc_entry->key.l2seg_handle);
+    l2seg = l2seg_lookup_by_handle(pi_mc_entry->key.l2seg_handle);
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
 

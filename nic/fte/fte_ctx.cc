@@ -150,7 +150,7 @@ ctx_t::lookup_flow_objs()
             key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL)? FLOW_DIR_FROM_DMA :
                 FLOW_DIR_FROM_UPLINK;
         }
-        sl2seg_ = hal::find_l2seg_by_handle(sep_->l2seg_handle);
+        sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
         HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         sif_ = hal::find_if_by_handle(sep_->if_handle);
         HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
@@ -180,7 +180,7 @@ ctx_t::lookup_flow_objs()
     }
 
     if (dep_) {
-        dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
+        dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
         HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         dif_ = hal::find_if_by_handle(dep_->if_handle);
         HAL_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
@@ -604,7 +604,7 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     }
 
     dep_handle_ = dep_->hal_handle;
-    dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
+    dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
     dif_ = hal::find_if_by_handle(dep_->if_handle);
     HAL_ASSERT(dif_ != NULL);
 

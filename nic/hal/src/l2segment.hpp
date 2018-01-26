@@ -192,7 +192,7 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
 }
 
 static inline l2seg_t *
-find_l2seg_by_handle (hal_handle_t handle)
+l2seg_lookup_by_handle (hal_handle_t handle)
 {
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
@@ -233,7 +233,7 @@ hal_ret_t l2segment_update(L2SegmentSpec& spec,
 hal_ret_t l2segment_delete(L2SegmentDeleteRequest& req,
                            L2SegmentDeleteResponse *rsp);
 hal_ret_t l2segment_get(l2segment::L2SegmentGetRequest& req,
-                        l2segment::L2SegmentGetResponse *rsp);
+                        l2segment::L2SegmentGetResponseMsg *rsp);
 
 }    // namespace hal
 

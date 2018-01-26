@@ -518,7 +518,7 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     HAL_ABORT_TRACE(rtep_ep, "ABORT:{}: should have caught in PI",
                     __FUNCTION__);
     
-    l2seg = find_l2seg_by_handle(rtep_ep->l2seg_handle);
+    l2seg = l2seg_lookup_by_handle(rtep_ep->l2seg_handle);
     HAL_ABORT_TRACE(l2seg, "ABORT:{}: EP should not exist with no l2seg",
                     __FUNCTION__);
     
@@ -613,7 +613,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
     remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4_valid);
     HAL_ASSERT(remote_tep_ep);
     
-    l2seg = find_l2seg_by_handle(remote_tep_ep->l2seg_handle);
+    l2seg = l2seg_lookup_by_handle(remote_tep_ep->l2seg_handle);
     HAL_ASSERT(l2seg);
     
     ep_if = find_if_by_handle(remote_tep_ep->if_handle);

@@ -292,7 +292,7 @@ collector_create(CollectorSpec *spec, Collector *resp) {
         HAL_TRACE_DEBUG("PI-Collector:{}: Unsupport Encap {}", __FUNCTION__, encap.encap_type());
         return HAL_RET_INVALID_ARG;
     }
-    cfg.l2seg = find_l2seg_by_handle(spec->l2seg_handle());
+    cfg.l2seg = l2seg_lookup_by_handle(spec->l2seg_handle());
     if (cfg.l2seg == NULL) {
         HAL_TRACE_DEBUG("PI-Collector:{}: Could not retrieve L2 segment", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
