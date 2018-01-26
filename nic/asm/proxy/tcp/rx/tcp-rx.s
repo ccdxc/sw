@@ -206,6 +206,7 @@ flow_rx_process_done:
 table_read_setup_next:
     phvwr           p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
+    phvwr           p.rx2tx_snd_una, d.u.tcp_rx_d.snd_una
     /*
      * c7 = drop
      */
@@ -274,7 +275,6 @@ fast_tcp_snd_una_update:
     tbladd          d.u.tcp_rx_d.bytes_acked, r1
     /* Update snd_una */
     tblwr           d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
-    phvwr           p.rx2tx_snd_una, k.to_s1_ack_seq
 
     phvwr           p.common_phv_pending_txdma, 1
 
@@ -501,7 +501,6 @@ slow_tcp_snd_una_update:
     tbladd          d.u.tcp_rx_d.bytes_acked, r3
     /* Update snd_una */
     tblwr           d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
-    phvwr           p.rx2tx_snd_una, k.to_s1_ack_seq
 
 tcp_ecn_rcv_ecn_echo:
     /* ecn_flags & TCP_ECN_OK */

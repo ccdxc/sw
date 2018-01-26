@@ -463,6 +463,18 @@ modules:
             pkt_free : 2
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_COMPLETE_ONE_SHOT
+        spec    : uplink_to_uplink_clean_retx_complete_one_shot.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_retx : complete
+            pkt_alloc : 2
+            pkt_free : 2
+
+    - module:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL
         spec    : uplink_to_uplink_clean_retx_partial.testspec
         module  : pkt_to_p4

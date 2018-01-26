@@ -66,6 +66,8 @@ retx_empty:
     tblwr           d.retx_xmit_cursor, r2
     tblwr           d.retx_head_offset, k.to_s3_offset
     tblwr           d.retx_head_len, k.to_s3_len
+    seq             c1, k.common_phv_fin, 1
+    tbladd.c1       d.retx_head_len, 1
 
     phvwr           p.to_s5_addr, r2
     phvwr           p.to_s5_offset, k.to_s3_offset
@@ -95,8 +97,12 @@ queue_to_tail:
 
 tcp_retx_snd_una_update:
     sub             r1, k.common_phv_snd_una, d.retx_snd_una
+    /*
+     * c1 = less than data in head descriptor needs to be cleaned up
+     */
     slt             c1, r1, d.retx_head_len
     b.!c1           tcp_retx_snd_una_update_free_head
+    tbladd.!c1      d.retx_snd_una, d.retx_head_len
     tbladd          d.retx_snd_una, r1
     tblsub          d.retx_head_len, r1
     tbladd.e        d.retx_head_offset, r1
@@ -131,8 +137,15 @@ tcp_retx_snd_una_update_free_head:
      * schedule ourselves again
      */
     sub             r1, k.common_phv_snd_una, d.retx_snd_una
-    slt             c1, r1, d.retx_head_len
-    // TODO : schedule again
+    sle             c1, r1, r0
+    b.c1            free_descriptor
+
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC,
+                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
+                        TCP_SCHED_RING_PENDING_TX, 0)
+    memwr.dx        r4, r3
 
 free_descriptor:
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_tx_read_nmdr_gc_idx_start,

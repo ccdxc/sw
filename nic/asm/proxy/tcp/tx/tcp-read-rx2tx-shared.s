@@ -154,15 +154,43 @@ tcp_tx_launch_asesq_end:
 tcp_tx_launch_pending_tx:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
-    // Right now we can only get scheduled for pending ack send
-    // but that may change in future. 
-    tblwr           d.saved_pending_ack_send, 0
+
+    /*
+     * saved_pending_ack_send = 0 means we got scheduled to
+     * clean retx
+     */
+    seq             c1, d.saved_pending_ack_send, 1
+    b.!c1           pending_tx_snd_una_update
     tbladd.f        d.{ci_5}.hx, 1
+    tblwr           d.saved_pending_ack_send, 0
     phvwri          p.common_phv_pending_rx2tx, 1
     phvwr           p.common_phv_pending_ack_send, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, \
                         TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+    b               pending_tx_ring_doorbell
+    nop
+
+pending_tx_snd_una_update:
+    /*
+     * pending stage is only to read retx_next_desc currently, which is
+     * only used in retx cleanup, so don't launch the stage if this
+     * is not a snd_una_update
+     */
+
+    phvwr           p.common_phv_rx_flag, FLAG_SND_UNA_ADVANCED
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
+                        tcp_tx_process_pending_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
+                        tcp_tx_process_read_xmit_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
+
+pending_tx_ring_doorbell:
     /*
      * Ring doorbell to set CI if pi == ci
      */
@@ -207,11 +235,11 @@ tcp_tx_launch_pending_rx2tx:
 pending_one_rx2tx:
     phvwr.c2        p.common_phv_rx_flag, d.rx_flag
     tblwr.c2        d.rx_flag, 0
-    b.c2            pending_snd_una_update
+    b.c2            pending_rx2tx_snd_una_update
     tbladd.f        d.{ci_1}.hx, 1
     b.c1            pending_ack_send
 
-pending_snd_una_update:
+pending_rx2tx_snd_una_update:
     /*
      * pending stage is only to read retx_next_desc currently, which is
      * only used in retx cleanup, so don't launch the stage if this
