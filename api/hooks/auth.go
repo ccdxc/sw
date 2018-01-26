@@ -13,6 +13,13 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+var (
+	// ErrAuthenticatorConfig is returned when authenticator config is incorrect in AuthenticationPolicy.
+	ErrAuthenticatorConfig = errors.New("mis-configured authentication policy, error in authenticator config")
+	// ErrTokenManagerConfig is returned when token manager config is incorrect in AuthenticationPolicy.
+	ErrTokenManagerConfig = errors.New("mis-configured authentication policy, error in token manager config ")
+)
+
 type authHooks struct {
 	logger log.Logger
 }
@@ -34,15 +41,10 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 	r.Spec.Type = auth.UserSpec_LOCAL.String()
 
 	switch oper {
-	case apiserver.CreateOper:
+	case apiserver.CreateOper, apiserver.UpdateOper:
 		// password is a required field when local user is created
 		if r.Spec.GetPassword() == "" {
 			return r, false, errors.New("password is empty")
-		}
-	case apiserver.UpdateOper:
-		// if password field is not being updated then do nothing
-		if r.Spec.GetPassword() == "" {
-			return r, true, nil
 		}
 	default:
 		return r, true, nil
@@ -61,12 +63,49 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 	return r, true, nil
 }
 
+//This hook is to validate that authenticators specified in AuthenticatorOrder are defined
+func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus bool) error {
+	r := i.(auth.AuthenticationPolicy)
+
+	// check if authenticators specified in AuthenticatorOrder are defined
+	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
+	if authenticatorOrder == nil {
+		s.logger.ErrorLog("msg", "Authenticator order config not defined")
+		return ErrAuthenticatorConfig
+	}
+	for _, authenticatorType := range authenticatorOrder {
+		switch authenticatorType {
+		case auth.Authenticators_LOCAL.String():
+			if r.Spec.Authenticators.GetLocal() == nil {
+				s.logger.ErrorLog("msg", "Local authenticator config not defined")
+				return ErrAuthenticatorConfig
+			}
+		case auth.Authenticators_LDAP.String():
+			if r.Spec.Authenticators.GetLdap() == nil {
+				s.logger.ErrorLog("msg", "Ldap authenticator config not defined")
+				return ErrAuthenticatorConfig
+			}
+		case auth.Authenticators_RADIUS.String():
+			if r.Spec.Authenticators.GetRadius() == nil {
+				s.logger.ErrorLog("msg", "Radius authenticator config not defined")
+				return ErrAuthenticatorConfig
+			}
+		default:
+			s.logger.ErrorLog("msg", "Unknown authenticator type", "authenticator", authenticatorType)
+			return ErrAuthenticatorConfig
+		}
+	}
+	return nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("User", apiserver.CreateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("User", apiserver.UpdateOper).WithPreCommitHook(r.hashPassword)
+	svc.GetCrudService("AuthenticationPolicy", apiserver.CreateOper).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("AuthenticationPolicy", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 }
 
 func init() {

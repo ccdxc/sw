@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	apisrvURL    = "localhost:9192"
+	apisrvURL    = "localhost:0"
 	testUser     = "test"
 	testPassword = "pensandoo0"
 )
@@ -32,6 +32,7 @@ const (
 var user *auth.User
 var apicl apiclient.Services
 var apiSrv apiserver.Server
+var apiSrvAddr string
 
 // password hash for testPassword
 var testPasswordHash string
@@ -49,11 +50,14 @@ func setup() {
 	if apiSrv == nil {
 		panic("Unable to create API Server")
 	}
-
-	// api server client
 	var err error
+	apiSrvAddr, err = apiSrv.GetAddr()
+	if err != nil {
+		panic("Unable to get API Server address")
+	}
+	// api server client
 	logger := log.WithContext("Pkg", "password_test")
-	apicl, err = apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	apicl, err = apiclient.NewGrpcAPIClient(apiSrvAddr, logger)
 	if err != nil {
 		panic("Error creating api client")
 	}
@@ -140,13 +144,14 @@ func createAuthenticationPolicy(enabled bool) *auth.AuthenticationPolicy {
 			Name: "AuthenticationPolicy",
 		},
 		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: &auth.Authenticators{
+			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
 					Enabled: false,
 				},
 				Local: &auth.Local{
 					Enabled: enabled,
 				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 		},
 	}

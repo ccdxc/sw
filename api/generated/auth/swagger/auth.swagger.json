@@ -289,6 +289,13 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "Spec.Secret",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
           }
         ],
         "tags": [
@@ -549,13 +556,6 @@
             }
           },
           {
-            "name": "Status.IsLoggedIn",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
             "name": "Status.LastSuccessfulLogin.time",
             "in": "query",
             "required": false,
@@ -767,6 +767,10 @@
       "properties": {
         "Authenticators": {
           "$ref": "#/definitions/authAuthenticators"
+        },
+        "Secret": {
+          "type": "string",
+          "format": "byte"
         }
       },
       "title": "User could be local or external"
@@ -993,10 +997,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "IsLoggedIn": {
-          "type": "boolean",
-          "format": "boolean"
         },
         "LastSuccessfulLogin": {
           "$ref": "#/definitions/apiTimestamp"

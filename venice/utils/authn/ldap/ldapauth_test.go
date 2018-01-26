@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	apisrvURL    = "localhost:9192"
+	apisrvURL    = "localhost:0"
 	ldapURL      = "192.168.99.100:389"
 	serverName   = "0a7af420ff67"
 	trustedCerts = `-----BEGIN CERTIFICATE-----
@@ -58,6 +58,7 @@ MFB3stnk7Lfr/w/14951n5lek97eDTodYfiF4UxeqL386krQ6eduscPIrin1114r
 
 var apicl apiclient.Services
 var apiSrv apiserver.Server
+var apiSrvAddr string
 
 func TestMain(m *testing.M) {
 	// run LDAP tests only if RUN_LDAP_TESTS env variable is set to true
@@ -77,11 +78,14 @@ func setup() {
 	if apiSrv == nil {
 		panic("Unable to create API Server")
 	}
-
-	// api server client
 	var err error
+	apiSrvAddr, err = apiSrv.GetAddr()
+	if err != nil {
+		panic("Unable to get API Server address")
+	}
+	// api server client
 	logger := log.WithContext("Pkg", "ldap_test")
-	apicl, err = apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	apicl, err = apiclient.NewGrpcAPIClient(apiSrvAddr, logger)
 	if err != nil {
 		panic("Error creating api client")
 	}
@@ -187,7 +191,7 @@ func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 			Name: "AuthenticationPolicy",
 		},
 		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: &auth.Authenticators{
+			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
 					Enabled: true,
 					Url:     ldapURL,
@@ -210,6 +214,7 @@ func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 				Local: &auth.Local{
 					Enabled: true,
 				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 		},
 	}
@@ -230,11 +235,12 @@ func createAuthenticationPolicy(ldapconf *auth.Ldap) *auth.AuthenticationPolicy 
 			Name: "AuthenticationPolicy",
 		},
 		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: &auth.Authenticators{
+			Authenticators: auth.Authenticators{
 				Ldap: ldapconf,
 				Local: &auth.Local{
 					Enabled: true,
 				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 		},
 	}

@@ -221,7 +221,7 @@ func (m *AuthenticationPolicyList) Validate(ver string, ignoreStatus bool) bool 
 }
 
 func (m *AuthenticationPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	if m.Authenticators != nil && !m.Authenticators.Validate(ver, ignoreStatus) {
+	if !m.Authenticators.Validate(ver, ignoreStatus) {
 		return false
 	}
 	return true

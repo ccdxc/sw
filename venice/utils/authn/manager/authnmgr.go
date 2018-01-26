@@ -2,9 +2,9 @@ package manager
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
@@ -20,19 +20,15 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-var (
-	// ErrNonExistentAuthenticator is returned when a non-existent authenticator is specified in AuthenticatorOrder in AuthenticationPolicy.
-	ErrNonExistentAuthenticator = errors.New("mis-configured authentication policy, authenticator doesn't exist")
-)
-
-//AuthenticationManager authenticates and returns user information
+// AuthenticationManager authenticates and returns user information
 type AuthenticationManager struct {
 	authenticators []authn.Authenticator
+	tokenManager   TokenManager
 	apicl          apiclient.Services
 }
 
-//New returns an instance of AuthenticationManager
-func New(apiServer string, resolverUrls string) (*AuthenticationManager, error) {
+// NewAuthenticationManager returns an instance of AuthenticationManager
+func NewAuthenticationManager(apiServer string, resolverUrls string, tokenExpiration time.Duration) (*AuthenticationManager, error) {
 	l := log.WithContext("Pkg", "authn")
 	// create a resolver
 	r := resolver.New(&resolver.Config{Name: "authn", Servers: strings.Split(resolverUrls, ",")})
@@ -51,6 +47,8 @@ func New(apiServer string, resolverUrls string) (*AuthenticationManager, error) 
 		log.Errorf("Error fetching authentication policy: Err: %v", err)
 		return nil, err
 	}
+
+	// instantiate authenticators
 	authenticatorOrder := policy.Spec.Authenticators.GetAuthenticatorOrder()
 	authenticators := make([]authn.Authenticator, len(authenticatorOrder))
 	for i, authenticatorType := range authenticatorOrder {
@@ -61,19 +59,24 @@ func New(apiServer string, resolverUrls string) (*AuthenticationManager, error) 
 			authenticators[i] = ldap.NewLdapAuthenticator(apicl, policy.Spec.Authenticators.GetLdap())
 		case auth.Authenticators_RADIUS.String():
 			return nil, fmt.Errorf("[%s] Authenticator not yet implemented", authenticatorType)
-		default:
-			//Authentication policy can't be created with random strings in AuthenticatorOrder. So this shouldn't occur normally
-			return nil, ErrNonExistentAuthenticator
 		}
+	}
+
+	// instantiate token manager
+	tokenManager, err := NewJWTManager(policy.Spec.GetSecret(), tokenExpiration)
+	if err != nil {
+		log.Errorf("Error creating TokenManager: Err: %v", err)
+		return nil, err
 	}
 
 	return &AuthenticationManager{
 		authenticators: authenticators,
+		tokenManager:   tokenManager,
 		apicl:          apicl,
 	}, nil
 }
 
-//Authenticate authenticates user using authenticators in the order defined in AuthenticationPolicy. If any authenticator succeeds, it doesn't try the remaining authenticators.
+// Authenticate authenticates user using authenticators in the order defined in AuthenticationPolicy. If any authenticator succeeds, it doesn't try the remaining authenticators.
 func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
 	var errlist []error
 	for _, authenticator := range authnmgr.authenticators {
@@ -86,4 +89,14 @@ func (authnmgr *AuthenticationManager) Authenticate(credential authn.Credential)
 		}
 	}
 	return nil, false, k8serrors.NewAggregate(errlist)
+}
+
+// CreateToken creates session token. It should be called only after successful authentication.
+func (authnmgr *AuthenticationManager) CreateToken(user *auth.User) (string, error) {
+	return authnmgr.tokenManager.CreateToken(user)
+}
+
+// ValidateToken validates session token and checks if it has not expired.
+func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, bool, error) {
+	return authnmgr.tokenManager.ValidateToken(token)
 }

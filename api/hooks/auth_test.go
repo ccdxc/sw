@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/pensando/sw/api"
@@ -87,9 +88,9 @@ func TestWithDeleteOperation(t *testing.T) {
 func TestWithEmptyPasswordForUpdateOperation(t *testing.T) {
 	i, ok, err := runPasswordHook(apiserver.UpdateOper, auth.UserSpec_LOCAL, "")
 
-	Assert(t, ok, "hook to hash password failed for empty password in update operation")
-	AssertOk(t, err, "Error returned for update operation")
-	Assert(t, i.(auth.User).Spec.Password == "", "hook to hash password should be no-op for empty password in update operation")
+	Assert(t, !ok, "hook to hash password succeeded for empty password in update operation")
+	Assert(t, err != nil, "No error returned for empty password in update operation")
+	Assert(t, i.(auth.User).Spec.Password == "", "Empty password shouldn't be hashed in update operation")
 }
 
 func TestWithEmptyPasswordForCreateOperation(t *testing.T) {
@@ -134,4 +135,117 @@ func TestWithUserTypeNotSpecified(t *testing.T) {
 	Assert(t, ok, "hook to hash password failed when user type not specified")
 	Assert(t, user.Spec.Type == auth.UserSpec_LOCAL.String(), "user type should default to local")
 	AssertOk(t, err, "Error returned when user type not specified")
+}
+
+// erraneousAuthenticatorsConfig returns test data for testing incorrect Authenticators configuration given to validateAuthenticationPolicy hook
+func erraneousAuthenticatorsConfig() map[string]*auth.AuthenticationPolicy {
+	policydata := make(map[string]*auth.AuthenticationPolicy)
+
+	policydata["Missing LDAP config"] = &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "MissingLDAPAuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Local: &auth.Local{
+					Enabled: true,
+				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+			},
+		},
+	}
+	policydata["Missing Local config"] = &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "MissingLocalAuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Enabled: true,
+				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+			},
+		},
+	}
+	policydata["Missing Radius config"] = &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "MissingRadiusAuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Enabled: true,
+				},
+				Local: &auth.Local{
+					Enabled: true,
+				},
+				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
+			},
+		},
+	}
+	policydata["Missing AuthenticatorOrder"] = &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "MissingAuthenticatorOrderAuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Enabled: true,
+				},
+				Local: &auth.Local{
+					Enabled: true,
+				},
+			},
+		},
+	}
+	policydata["Missing Authenticators config"] = &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "MissingAuthenticatorsAuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{},
+	}
+
+	return policydata
+}
+
+func validAuthenticationPolicyData() *auth.AuthenticationPolicy {
+	return &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Enabled: false,
+				},
+				Local: &auth.Local{
+					Enabled: true,
+				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+			},
+		},
+	}
+}
+
+func TestValidateAuthenticatorConfigHook(t *testing.T) {
+	r := authHooks{}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	// test for missing authenticator config
+	for testtype, policy := range erraneousAuthenticatorsConfig() {
+		err := r.validateAuthenticatorConfig(*policy, "", false)
+		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned for mis-configured Authenticators", testtype))
+		Assert(t, err == ErrAuthenticatorConfig, fmt.Sprintf("[%v] Unexpected error returned for mis-configured Authenticators: Err: %v", testtype, err))
+	}
+
+	// test for correctly configured  authentication policy
+	policy := validAuthenticationPolicyData()
+	err := r.validateAuthenticatorConfig(*policy, "", false)
+	AssertOk(t, err, "Validation hook failed for correctly configured authenticators")
 }

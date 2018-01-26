@@ -30,8 +30,7 @@ message UserSpec {
 message UserStatus {
     repeated string Roles             = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "roles,omitempty"];
     repeated string UserGroups        = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
-    bool IsLoggedIn                   = 3 [(gogoproto.jsontag) = "is-logged-in,omitempty"];
-    api.Timestamp LastSuccessfulLogin = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-successful-login,omitempty"];
+    api.Timestamp LastSuccessfulLogin = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-successful-login,omitempty"];
 }
 
 // User could be local or external
@@ -51,7 +50,9 @@ message User {
 
 // spec part of authentication policy object
 message AuthenticationPolicySpec {
-    Authenticators Authenticators = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "authenticators,omitempty"];
+    Authenticators Authenticators = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "authenticators,omitempty"];
+    // Secret used to sign JWT token
+    bytes Secret                  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "secret,omitempty"];
 }
 
 message Authenticators {
