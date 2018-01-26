@@ -11,7 +11,7 @@ local proto = DC.ipproto.tcp;
 local HT = hostServiceTrackerModule
 local FT = flowTrackerModule
 
-gServiceName = "ApacheCassandra"
+gServiceName = "cassandra"
 
 gPorts = {
     {DC.ipproto.tcp, 9042},

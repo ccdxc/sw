@@ -32,9 +32,9 @@ policies:
                     - app : "MYSQL"
                     - app : "DNS"
                     - app : "HTTP"
-                    - app : "MONGO"
+                    - app : "MONGODB"
                     - app : "CASSANDRA"
-                    - app : "POSTGRES"
+                    - app : "POSTGRESQL"
             - rule:
                 action :  ALLOW
                 log    :  True
@@ -102,9 +102,9 @@ policies:
                     - app : "MYSQL"
                     - app : "DNS"
                     - app : "HTTP"
-                    - app : "MONGO"
+                    - app : "MONGODB"
                     - app : "CASSANDRA"
-                    - app : "POSTGRES"
+                    - app : "POSTGRESQL"
             - rule:
                 action :  ALLOW
                 log    :  True

@@ -14,6 +14,14 @@ struct SnortFlowInfo
     void* flow_handle;
 };
 
+#define SNORT_MAX_APP_NAME_LEN 64
+struct SnortAppInfo
+{
+    int id;
+    char name[SNORT_MAX_APP_NAME_LEN+4];
+    uint32_t flags;
+};
+
 extern "C" {
 
 // Does basic initializations of snort main thread
@@ -52,6 +60,12 @@ SO_PUBLIC int cleanup_flow(void* flow_handle);
 SO_PUBLIC int cleanup_flow_by_key(uint8_t ip_proto, bool is_v6,
         const uint8_t* sip, const uint8_t* dip, uint16_t sport, uint16_t dport,
         uint16_t vlan_id, uint16_t tenant_id);
+
+// Gets global information about an app with the given id or name
+//   Input: app_info->id OR app_info->name (with 0 id)
+//   Output: app_info
+//   Returns 0 on success
+SO_PUBLIC int get_app_info(struct SnortAppInfo* app_info);
 
 }  // extern "C"
 
