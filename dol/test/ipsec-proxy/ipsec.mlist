@@ -5,6 +5,7 @@ feature:
     module      : None
     enable      : True
     ignore      : False
+    rtl         : False
 
 modules:
     - module:
@@ -14,6 +15,7 @@ modules:
         module  : pkt_to_ipseccbq
         spec    : pkt_to_ipseccbq.testspec
         ignore  : False
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
@@ -23,6 +25,7 @@ modules:
         module  : pkt_to_ipseccbq
         spec    : tcp_ipv4_pkt_payload70.testspec 
         ignore  : False
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
@@ -32,6 +35,7 @@ modules:
         module  : pkt_to_ipseccbq
         spec    : tcp_ipv4_pkt_payload71.testspec 
         ignore  : False
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
@@ -41,6 +45,7 @@ modules:
         module  : pkt_to_ipseccbq
         spec    : tcp_ipv4_pkt_payload72.testspec 
         ignore  : False
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
@@ -50,6 +55,7 @@ modules:
         module  : pkt_to_ipseccbq
         spec    : tcp_ipv4_pkt_payload73.testspec 
         ignore  : False
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
@@ -59,6 +65,7 @@ modules:
         module  : nz_key_tcp_pkt
         spec    : nz_key_tcp_pkt.testspec 
         ignore  : False
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
@@ -68,6 +75,7 @@ modules:
         module  : icmp_pkt_to_ipseccbq
         spec    : icmp_pkt_to_ipseccbq.testspec
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=ICMP
     - module:
@@ -77,6 +85,7 @@ modules:
         module  : udp_pkt_to_ipseccbq
         spec    : udp_pkt_to_ipseccbq.testspec
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
@@ -86,6 +95,7 @@ modules:
         module  : nat_t_pkt_to_uplink
         spec    : nat_t_pkt_to_uplink.testspec
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
@@ -95,6 +105,7 @@ modules:
         module  : nat_t_pkt_from_uplink
         spec    : nat_t_pkt_from_uplink.testspec
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
@@ -104,6 +115,7 @@ modules:
         module  : decrypt_ipsec_to_eth 
         spec    : decrypt_ipsec_to_eth.testspec 
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4
     - module:
@@ -113,6 +125,7 @@ modules:
         module  : decrypt_ipsec_to_eth_rekey
         spec    : decrypt_ipsec_to_eth_rekey.testspec 
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4
     - module:
@@ -122,6 +135,7 @@ modules:
         module  : decrypt_ipsec_to_eth_lt63
         spec    : decrypt_ipsec_to_eth_seq_lt_63.testspec 
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4
     - module:
@@ -131,6 +145,7 @@ modules:
         module  : decrypt_ipsec_to_eth_gt63 
         spec    : decrypt_ipsec_to_eth_seq_gt_63.testspec 
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4
     - module:
@@ -140,6 +155,7 @@ modules:
         module  : tcp_ipv6_pkt_to_ipseccbq
         spec    : tcp_ipv6_pkt_to_ipseccbq.testspec
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV6,proto=TCP
     - module:
@@ -149,6 +165,7 @@ modules:
         module  : decrypt_ipsec_ipv6_to_eth 
         spec    : decrypt_ipsec_ipv6_to_eth.testspec 
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV6
     - module:
@@ -158,14 +175,16 @@ modules:
         module  : host_pkt_to_uplink 
         spec    : host_to_network_tcp.testspec
         ignore  : False 
+        rtl     : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
         name    : TCP_V4_EXTRA_PAD 
-        enable  : True 
+        enable  : False 
         package : test.ipsec-proxy
         module  : tcp_v4_extra_pad 
         spec    : tcp_v4_extra_pad.testspec 
         ignore  : True 
+        rtl     : False 
         iterate :
             - flow: filter://type=IPV4,proto=TCP
