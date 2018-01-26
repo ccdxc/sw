@@ -47,7 +47,7 @@ pciehdev_t *pciehdev_new(const char *name,
 void pciehdev_delete(pciehdev_t *pdev);
 
 pciehdev_t *pciehdev_bridgeup_new(void);
-pciehdev_t *pciehdev_bridgedn_new(void);
+pciehdev_t *pciehdev_bridgedn_new(const int memtun_en);
 
 int pciehdev_initialize(void);
 int pciehdev_finalize(void);

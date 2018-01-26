@@ -23,6 +23,7 @@
 typedef struct pciehdev_data_s {
     pciehdev_params_t devparams;
     u_int32_t finalized:1;
+    u_int32_t memtun_br:1;
     pciehdev_t *root;
 } pciehdev_data_t;
 
@@ -136,6 +137,7 @@ pciehdev_initialize(void)
     pciehw_initialize_topology();
     pciehdev_delete_topology(pdevdata->root);
     pdevdata->root = NULL;
+    pdevdata->memtun_br = 0;
     return 0;
 }
 
@@ -197,9 +199,11 @@ pciehdev_finalize(void)
     }
     if (pdevdata->root == NULL) {
         pciehdev_t *pbrdn;
+        const int memtun_en = pdevdata->memtun_br == 0;
         pdevdata->root = pciehdev_bridgeup_new();
-        pbrdn = pciehdev_bridgedn_new();
+        pbrdn = pciehdev_bridgedn_new(memtun_en);
         pciehdev_addchild(pdevdata->root, pbrdn);
+        pdevdata->memtun_br = 1;
     }
     pciehdev_finalize_dev(pdevdata->root, bdf_make(0, 0, 0), &nextbus);
     pciehw_finalize_topology(pdevdata->root);
@@ -263,6 +267,7 @@ pciehdev_add(pciehdev_t *pdev)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
     pciehdev_t *pbrdn;
+    int memtun_en = 0;
 
     if (pdevdata->finalized) {
         return -EBUSY;
@@ -270,8 +275,10 @@ pciehdev_add(pciehdev_t *pdev)
     if (pdevdata->root == NULL) {
         pdevdata->root = pciehdev_bridgeup_new();
     }
-    pbrdn = pciehdev_bridgedn_new();
+    memtun_en = pdevdata->memtun_br == 0;
+    pbrdn = pciehdev_bridgedn_new(memtun_en);
     pciehdev_addchild(pdevdata->root, pbrdn);
+    pdevdata->memtun_br = 1;
     return pciehdev_addchild(pbrdn, pdev);
 }
 
