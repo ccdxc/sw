@@ -62,7 +62,7 @@ var _ = Describe("node tests", func() {
 			}
 
 			Eventually(func() bool {
-				out := ts.tu.VIPCommandOutput("kubectl get pods  -l name=pen-ntp -o json")
+				out := ts.tu.LocalCommandOutput("kubectl get pods  -l name=pen-ntp -o json")
 				json.Unmarshal([]byte(out), &kubeOut)
 				for _, i := range kubeOut.Items {
 					if i.Spec.NodeName == nonQnode {
@@ -70,11 +70,11 @@ var _ = Describe("node tests", func() {
 					}
 				}
 				return false
-			}, 35, 1).Should(BeTrue(), "pen-ntp container should be scheduled by kubernetes on node %s", nonQnode)
+			}, 95, 1).Should(BeTrue(), "pen-ntp container should be scheduled by kubernetes on node %s", nonQnode)
 
 			Eventually(func() string {
 				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nonQnode], "/usr/bin/docker ps -q -f 'label=io.kubernetes.container.name=pen-ntp'")
-			}, 35, 1).ShouldNot(BeEmpty(), "pen-ntp docker container should be running on %s", nonQnode)
+			}, 95, 1).ShouldNot(BeEmpty(), "pen-ntp docker container should be running on %s", nonQnode)
 
 		})
 
@@ -83,7 +83,6 @@ var _ = Describe("node tests", func() {
 			n, err2 := nodeIf.Delete(context.Background(), &obj)
 			Expect(err2).ShouldNot(HaveOccurred())
 			By(fmt.Sprintf("Disjoin %+v from cluster", n.Name))
-
 		})
 	})
 })

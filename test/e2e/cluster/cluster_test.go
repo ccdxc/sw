@@ -39,10 +39,15 @@ var _ = Describe("cluster tests", func() {
 			}
 		})
 		It("kubernetes indicated all pods to be Running", func() {
-			out := strings.Split(ts.tu.VIPCommandOutput("kubectl get pods --no-headers"), "\n")
-			for _, line := range out {
-				Expect(line).Should(ContainSubstring("Running"), "pod should be in Running state")
-			}
+			Eventually(func() string {
+				out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers"), "\n")
+				for _, line := range out {
+					if !strings.Contains(line, "Running") {
+						return line
+					}
+				}
+				return ""
+			}, 95, 1).Should(BeEmpty(), "All pods should be in Running state")
 		})
 	})
 

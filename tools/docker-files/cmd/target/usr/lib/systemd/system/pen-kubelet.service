@@ -4,6 +4,10 @@ Description=Kubelet
 [Service]
 User=root
 EnvironmentFile=-/etc/pensando/kubelet.conf
+
+# this sets systemd environment variable CGR with the cgroup of the init process. For baremetal/VM this should be /
+# for docker in docker environment this is set to the docker of this node.
+ExecStartPre=/bin/bash -c "/usr/bin/systemctl set-environment CGR=$$(grep memory /proc/1/cgroup | awk -F: '{print $$3;}')"
 ExecStart=/usr/pensando/bin/kubelet \
             --node-status-update-frequency 4s \
 			$KUBELET_ADDRESS \
@@ -12,7 +16,7 @@ ExecStart=/usr/pensando/bin/kubelet \
 			$REQUIRE_KUBE_CONFIG \
 			$NODEIP \
 			$HOSTNAME_OVERRIDE \
-			$CGROUP_DRIVER 
+			$CGROUP_DRIVER  --cgroup-root $CGR
 Restart=always
 RestartSec=10s
 LimitNOFILE=40000

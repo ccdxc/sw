@@ -73,7 +73,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@# bypassing docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6 strip ${TO_STRIP}
+	@# bypassing docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7 strip ${TO_STRIP}
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
@@ -101,16 +101,18 @@ clean: c-stop
 
 helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
-	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.1 .
-	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.6 .
+	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
+	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.7 .
+	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.1 .
+	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.1 .
 
 container-qcompile:
 	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6 make qbuild
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7 make ws-tools protogen qbuild
 
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.6
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7
 
 ws-tools:
 	$(info +++ building WS tools)
@@ -164,7 +166,7 @@ jobd-test:
 	$(MAKE) cover
 
 protogen:
-	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; make -C $${c} || exit 1; done
+	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
 	$(MAKE) pregen
 
 install_box:
@@ -249,5 +251,13 @@ toolchain:
 
 pull-assets: ws-tools
 	bash scripts/pull-assets.sh
+
+e2e:
+	$(MAKE) container-qcompile
+	$(MAKE) install
+	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config.json
+	docker exec -it node0 sh -c 'E2E_TEST=1 go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config.json '
+	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
+	#./test/e2e/dind/do.py -delete
 
 .PHONY: build

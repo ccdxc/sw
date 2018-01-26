@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -31,6 +32,7 @@ type TestBedConfig struct {
 	SSHPasswd      string `json:",omitempty"`
 	SSHAuthMethod  string `json:",omitempty"` // Only password is implemented now. Cert will come later.
 	FirstVeniceIP  string `json:",omitempty"`
+	SSHPrivKeyFile string `json:",omitempty"`
 }
 
 var defaultTestBedConfig = TestBedConfig{
@@ -41,6 +43,7 @@ var defaultTestBedConfig = TestBedConfig{
 	SSHPasswd:      "vagrant",
 	SSHAuthMethod:  "password",
 	FirstVeniceIP:  "192.168.30.11",
+	SSHPrivKeyFile: "/root/.ssh/id_rsa",
 }
 
 // TestUtils holds test config, state and any helper caches .
@@ -57,10 +60,11 @@ type TestUtils struct {
 	sshConfig *ssh.ClientConfig
 	client    map[string]*ssh.Client
 	resolver  resolver.Interface
+	apiGwAddr string
 }
 
 // New creates a new instane of TestUtils. It can be passed a different config (only specifying the fields to be overwritten)
-func New(config *TestBedConfig) *TestUtils {
+func New(config *TestBedConfig, configFile string) *TestUtils {
 	ts := TestUtils{
 		client:      make(map[string]*ssh.Client),
 		NameToIPMap: make(map[string]string),
@@ -80,13 +84,15 @@ func New(config *TestBedConfig) *TestUtils {
 	ginkgo.By(fmt.Sprintf("TestBedConfig: %+v", ts.TestBedConfig))
 
 	// which  can be overwritten with a json config
-	file, e := ioutil.ReadFile("./tb_config.json")
-	if e == nil {
-		json.Unmarshal(file, &ts)
-	} else {
-		fmt.Printf("cant read tb_config.json %v", e)
+	if configFile != "" {
+		file, e := ioutil.ReadFile(configFile)
+		if e == nil {
+			json.Unmarshal(file, &ts)
+		} else {
+			fmt.Printf("cant read configFile %s %v", configFile, e)
+		}
+		ginkgo.By(fmt.Sprintf("After config file parsing TestBedConfig: %+v", ts.TestBedConfig))
 	}
-	ginkgo.By(fmt.Sprintf("TestBedConfig: %+v", ts.TestBedConfig))
 
 	// Environment variables take highest precedence and overwrite previous config
 	if s := os.Getenv("PENS_NODES"); s != "" {
@@ -106,23 +112,22 @@ func New(config *TestBedConfig) *TestUtils {
 	return &ts
 }
 
-// Init starts connecting to the nodes and builds initial data about cluster
-func (tu *TestUtils) Init() {
+func (tu *TestUtils) sshInit() {
 	tu.sshConfig = &ssh.ClientConfig{
 		User:            tu.SSHUser,
-		Auth:            []ssh.AuthMethod{ssh.Password(tu.SSHPasswd)},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	ip := net.ParseIP(tu.FirstVeniceIP).To4()
-	if ip == nil {
-		ginkgo.Fail(fmt.Sprintf("invalid value %s for FirstVeniceIP", tu.FirstVeniceIP))
+	var signer ssh.Signer
+	key, err := ioutil.ReadFile(tu.SSHPrivKeyFile)
+	if err == nil {
+		signer, err = ssh.ParsePrivateKey(key)
+		if err == nil {
+			tu.sshConfig.Auth = append(tu.sshConfig.Auth, ssh.PublicKeys(signer))
+		}
 	}
-	for i := 0; i < tu.NumVeniceNodes; i++ {
-		tu.VeniceNodeIPs = append(tu.VeniceNodeIPs, ip.String())
-		ip[3]++
-	}
-	ginkgo.By(fmt.Sprintf("VeniceNodeIPs: %+v ", tu.VeniceNodeIPs))
+
+	tu.sshConfig.Auth = append(tu.sshConfig.Auth, ssh.Password(tu.SSHPasswd))
 
 	for _, ip := range tu.VeniceNodeIPs {
 		var err error
@@ -145,29 +150,47 @@ func (tu *TestUtils) Init() {
 		}
 
 		tu.NameToIPMap[name] = ip
+		tu.NameToIPMap[ip] = ip // cluster can also be specified using IP addresses
 		tu.IPToNameMap[ip] = name
 	}
-
-	ginkgo.By(fmt.Sprintf("NameToIpMap: %+v", tu.NameToIPMap))
-	ginkgo.By(fmt.Sprintf("IPToNameMap: %+v", tu.IPToNameMap))
-
-	var err error
 	tu.vIPClient, err = ssh.Dial("tcp", tu.ClusterVIP+":22", tu.sshConfig)
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
-
 	servers := make([]string, 0)
 	for _, jj := range tu.VeniceNodeIPs {
 		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDClusterMgmtPort))
 	}
+	ginkgo.By(fmt.Sprintf("resolver servers: %+v ", servers))
 	tu.resolver = resolver.New(&resolver.Config{Servers: servers})
+
+	tu.apiGwAddr = tu.ClusterVIP + ":" + globals.APIGwRESTPort
+
+}
+
+// Init starts connecting to the nodes and builds initial data about cluster
+func (tu *TestUtils) Init() {
+	ip := net.ParseIP(tu.FirstVeniceIP).To4()
+	if ip == nil {
+		ginkgo.Fail(fmt.Sprintf("invalid value %s for FirstVeniceIP", tu.FirstVeniceIP))
+	}
+	for i := 0; i < tu.NumVeniceNodes; i++ {
+		tu.VeniceNodeIPs = append(tu.VeniceNodeIPs, ip.String())
+		ip[3]++
+	}
+
+	tu.sshInit()
+	ginkgo.By(fmt.Sprintf("VeniceNodeIPs: %+v ", tu.VeniceNodeIPs))
+	ginkgo.By(fmt.Sprintf("NameToIPMap: %+v", tu.NameToIPMap))
+	ginkgo.By(fmt.Sprintf("IPToNameMap: %+v", tu.IPToNameMap))
+
+	var err error
 	if tu.resolver == nil {
 		ginkgo.Fail(fmt.Sprintf("resolver is nil"))
 	}
 
-	apiGwAddr := tu.ClusterVIP + ":" + globals.APIGwRESTPort
-	cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+	ginkgo.By(fmt.Sprintf("apiGwAddr : %+v ", tu.apiGwAddr))
+	cmdClient := cmdclient.NewRestCrudClientCmdV1(tu.apiGwAddr)
 	clusterIf := cmdClient.Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
 	cl, err := clusterIf.Get(context.Background(), &obj)
@@ -178,7 +201,6 @@ func (tu *TestUtils) Init() {
 		tu.QuorumNodes = append(tu.QuorumNodes, qn)
 	}
 	ginkgo.By(fmt.Sprintf("QuorumNodes: %+v ", tu.QuorumNodes))
-
 }
 
 // Close any open connections to nodes
@@ -206,10 +228,23 @@ func (tu *TestUtils) NonQuorumNodes() map[string]interface{} {
 	}
 	// remove quorum nodes from the map
 	for _, qnode := range tu.QuorumNodes {
-		ip := tu.NameToIPMap[qnode]
+		var ip string
+		// if QuorumNodes are names then lookup
+		ipAddr := net.ParseIP(qnode)
+		if ipAddr == nil {
+			ip = tu.NameToIPMap[qnode]
+		} else {
+			ip = ipAddr.String()
+		}
 		delete(ips, ip)
 	}
 	return ips
+}
+
+// LocalCommandOutput runs a command on a node and returns output in string format
+func (tu *TestUtils) LocalCommandOutput(command string) string {
+	out, _ := exec.Command("bash", "-c", command).CombinedOutput()
+	return strings.TrimSpace(string(out))
 }
 
 // CommandOutput runs a command on a node and returns output in string format
@@ -234,6 +269,7 @@ func (tu *TestUtils) VIPCommandOutput(command string) string {
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
+	ginkgo.By("Executing " + command)
 	out, err := session.CombinedOutput(command)
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))

@@ -29,7 +29,7 @@ var ts *TestSuite
 
 var _ = BeforeSuite(func() {
 	ts = &TestSuite{
-		tu: testutils.New(&testutils.TestBedConfig{NumVeniceNodes: 3, ClusterVIP: "10.100.0.10"}),
+		tu: testutils.New(&testutils.TestBedConfig{NumVeniceNodes: 3, ClusterVIP: "10.100.0.10"}, "tb_config.json"),
 	}
 	ts.tu.Init()
 })

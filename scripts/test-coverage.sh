@@ -3,7 +3,7 @@
 DISABLE_COVERAGE="apigen"
 
 # run go test -cover
-coverage=$(go test -cover -tags test -p 1 $@)
+coverage=$(VENICE_DEV=1 go test -cover -tags test -p 1 $@)
 
 # check if any tests failed
 testFail=$(echo "$coverage" | grep "FAIL")

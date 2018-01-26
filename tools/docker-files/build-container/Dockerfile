@@ -1,7 +1,7 @@
-FROM golang:1.9.2-alpine3.6
+FROM golang:1.9.3-alpine3.7
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 RUN apk update
-RUN apk add curl bash git make build-base linux-headers gcc libpcap-dev libtool
+RUN apk add curl bash git make build-base linux-headers gcc libpcap-dev libtool protobuf-dev
 RUN curl -SsLO https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && chmod +x jq-linux64 && mv jq-linux64 /usr/local/bin ;
 
 # Install Swagger

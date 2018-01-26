@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"flag"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -10,6 +11,14 @@ import (
 
 	testutils "github.com/pensando/sw/test/utils"
 )
+
+var configFile string
+
+func init() {
+	cfgFile := flag.String("configFile", "./tb_config.json", "Path to JSON Config file")
+	flag.Parse()
+	configFile = *cfgFile
+}
 
 func TestE2ETest(t *testing.T) {
 	if os.Getenv("E2E_TEST") == "" {
@@ -28,7 +37,7 @@ var ts *TestSuite
 
 var _ = BeforeSuite(func() {
 	ts = &TestSuite{
-		tu: testutils.New(nil),
+		tu: testutils.New(nil, configFile),
 	}
 	ts.tu.Init()
 })
