@@ -1852,9 +1852,15 @@ int XtsCtx::test_seq_xts() {
   xts_desc_addr->db_data = exp_db_data;
   xts_desc_addr->opaque_tag_en = 1;
   xts_desc_addr->opaque_tag = exp_opaque_tag;
-  xts_desc_addr->sector_num = start_sec_num;
-  xts_desc_addr->sector_size = sector_size;
-  xts_desc_addr->app_tag = app_tag;
+  if(t10_en) {
+    xts_desc_addr->sector_num = start_sec_num;
+    xts_desc_addr->sector_size = sector_size;
+    xts_desc_addr->app_tag = app_tag;
+  } else {
+    xts_desc_addr->sector_num = 0;
+    xts_desc_addr->sector_size = 0;
+    xts_desc_addr->app_tag = 0;
+  }
   xts_desc_addr->cmd = cmd;
   xts_desc_addr->status = host_mem_v2p(status);
 

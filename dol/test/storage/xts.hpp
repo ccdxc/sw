@@ -16,7 +16,7 @@ namespace xts {
 #define PROT_INFO_SIZE 8
 #define AES128_KEY_SIZE 16
 #define AES256_KEY_SIZE 32
-#define IV_SIZE 64
+#define IV_SIZE 16
 #define MSG_DESC_ALIGN 512
 #define MAX_AOLS 2
 #define MAX_SUB_AOLS 4
