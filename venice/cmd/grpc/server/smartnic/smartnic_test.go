@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package smartnic
+package smartnic_test
 
 import (
 	"context"
@@ -26,6 +26,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	. "github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/globals"
@@ -100,7 +101,11 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 		return nil, err
 	}
 
-	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
+	// Register self as rpc handler for both NIC registration and watch/updates on the server.
+	// In reality, CMD uses two different servers because watches and updates APIs are
+	// exposed over TLS, whereas NIC registration is not.
+	grpc.RegisterSmartNICRegistrationServer(rpcServer.GrpcServer, tInfo.smartNICServer)
+	grpc.RegisterSmartNICUpdatesServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 	rpcServer.Start()
 	cmdenv.NICService = tInfo.smartNICServer
 
@@ -144,7 +149,7 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 
 	r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(resolverURLs, ",")})
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa, dbPath, nodeID, smartNICServerURL, restURL, "classic", r)
+	ag, err := nmd.NewAgent(pa, dbPath, nodeID, smartNICServerURL, smartNICServerURL, restURL, "classic", r)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}
@@ -278,8 +283,9 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			// create API client
-			smartNICRPCClient := grpc.NewSmartNICClient(tInfo.rpcClient.ClientConn)
+			// create API clients
+			smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
+			smartNICUpdatesRPCClient := grpc.NewSmartNICUpdatesClient(tInfo.rpcClient.ClientConn)
 
 			// Set cluster admission mode to auto-admit or manual based on test input
 			refObj, err := tInfo.smartNICServer.GetCluster()
@@ -313,7 +319,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			}
 
 			// register NIC call
-			resp, err := smartNICRPCClient.RegisterNIC(context.Background(), req)
+			resp, err := smartNICRegistrationRPCClient.RegisterNIC(context.Background(), req)
 			t.Logf("Testcase: %s MAC: %s expected: %v obtained: %v err: %v", tc.name, tc.mac, tc.expected, resp, err)
 
 			AssertOk(t, err, "Error registering NIC")
@@ -358,7 +364,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 
 				// verify watch api is invoked
 				f3 := func() (bool, []interface{}) {
-					stream, err := smartNICRPCClient.WatchNICs(context.Background(), &ometa)
+					stream, err := smartNICUpdatesRPCClient.WatchNICs(context.Background(), &ometa)
 					if err != nil {
 						t.Errorf("Error watching smartNIC, mac: %s, err: %v", tc.mac, err)
 						return false, nil
@@ -401,7 +407,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 						Nic: nic,
 					}
 
-					resp, err := smartNICRPCClient.UpdateNIC(context.Background(), req)
+					resp, err := smartNICUpdatesRPCClient.UpdateNIC(context.Background(), req)
 					if err != nil {
 						t.Logf("Testcase: %s Failed to update NIC, mac: %s req: %+v resp: %+v", tc.name, tc.mac, req.Nic, resp.Nic)
 						return false, nil

@@ -107,8 +107,11 @@ func createRPCServer(t *testing.T) *mockRPCServer {
 		stop:       make(chan bool),
 	}
 
-	// register self as rpc handler
-	grpc.RegisterSmartNICServer(grpcServer.GrpcServer, &srv)
+	// Register self as rpc handler for both NIC registration and watch/updates.
+	// In reality CMD uses two different servers because watches and updates APIs are
+	// exposed over TLS, whereas NIC registration is not.
+	grpc.RegisterSmartNICRegistrationServer(grpcServer.GrpcServer, &srv)
+	grpc.RegisterSmartNICUpdatesServer(grpcServer.GrpcServer, &srv)
 	grpcServer.Start()
 
 	return &srv
@@ -128,7 +131,7 @@ func (srv *mockRPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequ
 	return &grpc.UpdateNICResponse{Nic: &req.Nic}, nil
 }
 
-func (srv *mockRPCServer) WatchNICs(meta *api.ObjectMeta, stream grpc.SmartNIC_WatchNICsServer) error {
+func (srv *mockRPCServer) WatchNICs(meta *api.ObjectMeta, stream grpc.SmartNICUpdates_WatchNICsServer) error {
 	// walk local db and send stream resp
 	for _, nic := range srv.nicdb {
 		// watch event
@@ -193,7 +196,7 @@ func TestCmdClient(t *testing.T) {
 	ag := createMockAgent(t.Name())
 
 	// create cmd client
-	cl, err := NewCmdClient(ag, testSrvURL, nil)
+	cl, err := NewCmdClient(ag, testSrvURL, testSrvURL, nil)
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
 	defer cl.Stop()
@@ -239,7 +242,7 @@ func TestCmdClientWatch(t *testing.T) {
 	ag := createMockAgent(t.Name())
 
 	// create CMD client
-	cl, err := NewCmdClient(ag, testSrvURL, nil)
+	cl, err := NewCmdClient(ag, testSrvURL, testSrvURL, nil)
 	AssertOk(t, err, "Error creating CMD client")
 	Assert(t, (cl != nil), "Error creating CMD client")
 	defer cl.Stop()
@@ -291,7 +294,7 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	ag := createMockAgent(t.Name())
 
 	// create cmd client
-	cl, err := NewCmdClient(ag, testSrvURL, nil)
+	cl, err := NewCmdClient(ag, testSrvURL, testSrvURL, nil)
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
 	defer cl.Stop()
@@ -313,7 +316,7 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	AssertOk(t, err, "Error making smartNIC register request")
 
 	// close rpcClient, to force error
-	cl.closeRPC()
+	cl.closeUpdatesRPC()
 
 	nic.Name = "2222.2222.2222"
 	srv.nicdb["2222.2222.2222"] = &nic

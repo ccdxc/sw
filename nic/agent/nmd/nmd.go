@@ -24,7 +24,7 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdURL, nmdListenURL string, mode string, resolverClient resolver.Interface) (*Agent, error) {
+func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdRegURL, cmdUpdURL, nmdListenURL string, mode string, resolverClient resolver.Interface) (*Agent, error) {
 
 	// create new NMD instance
 	nm, err := state.NewNMD(platform, nmdDbPath, nodeUUID, nmdListenURL, mode)
@@ -35,7 +35,7 @@ func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdURL, nmdListen
 	log.Infof("NMD {%+v} is running", nm)
 
 	// create the CMD client
-	cmdClient, err := cmdif.NewCmdClient(nm, cmdURL, resolverClient)
+	cmdClient, err := cmdif.NewCmdClient(nm, cmdRegURL, cmdUpdURL, resolverClient)
 	if err != nil {
 		log.Errorf("Error creating CMD client. Err: %v", err)
 		return nil, err

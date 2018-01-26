@@ -15,13 +15,14 @@ const (
 	APIGwRESTPort = "9000"
 
 	// CMD
-	CMDRESTPort        = "9001"
-	CMDGRPCUnauthPort  = "9002"
-	CMDCertAPIPort     = CMDGRPCUnauthPort
-	CMDClusterMgmtPort = CMDGRPCUnauthPort
-	CMDSmartNICAPIPort = CMDGRPCUnauthPort
-	CMDGRPCAuthPort    = "9009"
-	CMDResolverPort    = CMDGRPCAuthPort
+	CMDRESTPort                    = "9001"
+	CMDGRPCUnauthPort              = "9002"
+	CMDCertAPIPort                 = CMDGRPCUnauthPort
+	CMDClusterMgmtPort             = CMDGRPCUnauthPort
+	CMDSmartNICRegistrationAPIPort = CMDGRPCUnauthPort
+	CMDGRPCAuthPort                = "9009"
+	CMDResolverPort                = CMDGRPCAuthPort
+	CMDSmartNICUpdatesPort         = CMDGRPCAuthPort
 
 	// API Server
 	APIServerPort     = "9003"

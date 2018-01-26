@@ -264,8 +264,8 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 	return &grpc.ClusterDisjoinResp{}, err
 }
 
-// RegisterSmartNICServer creates and register smartNIC server with retries
-func RegisterSmartNICServer(smgr *cache.Statemgr) {
+// RegisterSmartNICRegistrationServer creates and register smartNIC server with retries
+func RegisterSmartNICRegistrationServer(smgr *cache.Statemgr) {
 
 	// Start smartNIC gRPC server
 	for i := 0; i < maxIters; i++ {
@@ -291,7 +291,7 @@ func RegisterSmartNICServer(smgr *cache.Statemgr) {
 
 		// Register smartNIC gRPC server
 		log.Debugf("Registering SmartNIC RPCserver")
-		grpc.RegisterSmartNICServer(env.UnauthRPCServer.GrpcServer, nicServer)
+		grpc.RegisterSmartNICRegistrationServer(env.UnauthRPCServer.GrpcServer, nicServer)
 		return
 	}
 	log.Fatalf("Failed to register SmartNIC RPCserver, apiClient not up")

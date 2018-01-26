@@ -88,16 +88,19 @@ message ClusterDisjoinReq {
 message ClusterDisjoinResp {
 }
 
-// --------------------------------- SmartNIC service API  -----------------------------------
+// --------------------------------- SmartNIC service APIs  -----------------------------------
 
-// SmartNIC service API
-// NMD on Naples will be the client of this API
-service SmartNIC {
+// SmartNIC service APIs
+// NMD on Naples will be the client of this APIs
+
+service SmartNICRegistration {
 	// Register NIC
 	// - registers the NIC when the mode is switched from classic
 	//   to managed mode
 	rpc RegisterNIC (RegisterNICRequest) returns (RegisterNICResponse) {};
+}
 
+service SmartNICUpdates {
 	// Update NIC
 	// - updates the SmartNIC and associcated port attributes, status
 	rpc UpdateNIC (UpdateNICRequest) returns (UpdateNICResponse) {};

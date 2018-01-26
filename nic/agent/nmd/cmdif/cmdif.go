@@ -29,14 +29,16 @@ type CmdClient struct {
 	sync.Mutex     // Lock for CmdClient
 	sync.WaitGroup // wait group to wait on all go routines to exit
 
-	srvURL         string             // CMD rpc server URL
-	resolverClient resolver.Interface // resolver Interface
-	rpcClient      *rpckit.RPCClient  // RPC client
-	nmd            state.NmdAPI       // NMD instance
-	watchCtx       context.Context    // ctx for object watch
-	watchCancel    context.CancelFunc // cancel for object watch
-	debugStats     *debug.Stats
-	startTime      time.Time
+	cmdRegistrationURL    string             // CMD endpoint for the NIC registration API
+	cmdUpdatesURL         string             // CMD endpoint for NIC watches and updates
+	resolverClient        resolver.Interface // resolver Interface
+	registrationRPCClient *rpckit.RPCClient  // RPC client for NIC registration API
+	updatesRPCClient      *rpckit.RPCClient  // RPC client for NIC watches and updates
+	nmd                   state.NmdAPI       // NMD instance
+	watchCtx              context.Context    // ctx for object watch
+	watchCancel           context.CancelFunc // cancel for object watch
+	debugStats            *debug.Stats
+	startTime             time.Time
 }
 
 // objectKey returns object key from object meta
@@ -45,19 +47,20 @@ func objectKey(meta api.ObjectMeta) string {
 }
 
 // NewCmdClient creates an CMD client object
-func NewCmdClient(nmd state.NmdAPI, srvURL string, resolverClient resolver.Interface) (*CmdClient, error) {
+func NewCmdClient(nmd state.NmdAPI, cmdRegistrationURL, cmdUpdatesURL string, resolverClient resolver.Interface) (*CmdClient, error) {
 
 	// watch contexts
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	// create CmdClient object
 	client := CmdClient{
-		srvURL:         srvURL,
-		resolverClient: resolverClient,
-		nmd:            nmd,
-		watchCtx:       watchCtx,
-		watchCancel:    watchCancel,
-		startTime:      time.Now(),
+		cmdRegistrationURL: cmdRegistrationURL,
+		cmdUpdatesURL:      cmdUpdatesURL,
+		resolverClient:     resolverClient,
+		nmd:                nmd,
+		watchCtx:           watchCtx,
+		watchCancel:        watchCancel,
+		startTime:          time.Now(),
 	}
 
 	client.debugStats = debug.New(fmt.Sprintf("cmdif-%s", client.getAgentName())).Tsdb().Kind("nmdStats").TsdbPeriod(5 * time.Second).Build()
@@ -75,39 +78,67 @@ func NewCmdClient(nmd state.NmdAPI, srvURL string, resolverClient resolver.Inter
 	return &client, nil
 }
 
-func (client *CmdClient) initRPC() error {
+func (client *CmdClient) initRegistrationRPC() error {
 
 	client.Lock()
 	defer client.Unlock()
 
 	// initialize rpcClient
 	var err error
-	log.Infof("Initializing RPC client ")
-	// FIXME ENRICO -- right now CMD uses the same API to register NICs and watch config updates
-	// Since the NIC does not have a certificate yet when it registers, this API cannot run over TLS.
-	// We should separate the Registration from the Watch/Update APIs so that Watch/Update can run over TLS.
-	client.rpcClient, err = rpckit.NewRPCClient("nmd", client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithTLSProvider(nil))
+	log.Infof("Initializing NIC registration RPC client ")
+	client.registrationRPCClient, err = rpckit.NewRPCClient("nmd-nic-reg", client.cmdRegistrationURL, rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithTLSProvider(nil))
 	if err != nil {
-		log.Errorf("Error connecting to grpc server, srvURL: %v Err: %v", client.srvURL, err)
+		log.Errorf("Error connecting to grpc server for NIC registration, URL: %v Err: %v", client.cmdRegistrationURL, err)
 	}
 	return err
 }
 
-func (client *CmdClient) closeRPC() {
+func (client *CmdClient) initUpdatesRPC() error {
 
 	client.Lock()
 	defer client.Unlock()
-	if client.rpcClient != nil {
-		log.Errorf("Closing RPC client")
-		client.rpcClient.Close()
-		client.rpcClient = nil
+
+	// initialize rpcClient
+	var err error
+	log.Infof("Initializing NIC updated RPC client ")
+	client.updatesRPCClient, err = rpckit.NewRPCClient("nmd-nic-upd", client.cmdUpdatesURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+	if err != nil {
+		log.Errorf("Error connecting to grpc server for NIC updates, URL: %v Err: %v", client.cmdUpdatesURL, err)
+	}
+	return err
+}
+
+func (client *CmdClient) closeRegistrationRPC() {
+	client.Lock()
+	defer client.Unlock()
+	if client.registrationRPCClient != nil {
+		log.Errorf("Closing nmd-nic-reg RPC client")
+		client.registrationRPCClient.Close()
+		client.registrationRPCClient = nil
 	}
 }
 
-func (client *CmdClient) getRPCClient() *rpckit.RPCClient {
+func (client *CmdClient) closeUpdatesRPC() {
+
 	client.Lock()
 	defer client.Unlock()
-	return client.rpcClient
+	if client.updatesRPCClient != nil {
+		log.Errorf("Closing nmd-nic-upd RPC client")
+		client.updatesRPCClient.Close()
+		client.updatesRPCClient = nil
+	}
+}
+
+func (client *CmdClient) getRegistrationRPCClient() *rpckit.RPCClient {
+	client.Lock()
+	defer client.Unlock()
+	return client.registrationRPCClient
+}
+
+func (client *CmdClient) getUpdatesRPCClient() *rpckit.RPCClient {
+	client.Lock()
+	defer client.Unlock()
+	return client.updatesRPCClient
 }
 
 // getAgentName returns a unique name for each nmd instance
@@ -125,8 +156,8 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 
 		log.Infof("Starting SmartNIC watcher")
 		// Initialize RPC client if required
-		if client.getRPCClient() == nil {
-			err := client.initRPC()
+		if client.getUpdatesRPCClient() == nil {
+			err := client.initUpdatesRPC()
 			if err != nil {
 				if client.watchCtx.Err() == context.Canceled {
 					log.Info("Context Cancelled, exiting smartNIC watcher")
@@ -141,7 +172,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 		// TODO : Set the filter to watch only for local NIC's MAC
 		//        The local NIC's MAC is obtained as part REST API
 		//        configuration for naples when it is set to managed mode
-		smartNICRPCClient := grpc.NewSmartNICClient(client.rpcClient.ClientConn)
+		smartNICRPCClient := grpc.NewSmartNICUpdatesClient(client.updatesRPCClient.ClientConn)
 		stream, err := smartNICRPCClient.WatchNICs(ctx, &api.ObjectMeta{})
 		if err != nil {
 			log.Errorf("Error watching smartNIC: Err: %v watchCtx.Err: %v",
@@ -153,7 +184,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 			}
 
 			// For RPC errors, need to close current client and re-init
-			client.closeRPC()
+			client.closeUpdatesRPC()
 			time.Sleep(time.Second)
 			continue
 		}
@@ -168,12 +199,12 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 
 				if client.watchCtx.Err() == context.Canceled {
 					log.Info("Context Cancelled, exiting smartNIC watcher")
-					client.closeRPC()
+					client.closeUpdatesRPC()
 					return
 				}
 
 				// For RPC errors, need to close current client and re-init
-				client.closeRPC()
+				client.closeUpdatesRPC()
 				time.Sleep(time.Second)
 				break
 			}
@@ -232,22 +263,23 @@ func (client *CmdClient) Stop() {
 	client.watchCancel()
 	client.Wait()
 
-	client.closeRPC()
+	client.closeUpdatesRPC()
+	client.closeRegistrationRPC()
 }
 
 // RegisterSmartNICReq send a register request for SmartNIC to CMD
 func (client *CmdClient) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
 
-	if client.getRPCClient() == nil {
+	if client.getRegistrationRPCClient() == nil {
 		// initialize rpc client
-		err := client.initRPC()
+		err := client.initRegistrationRPC()
 		if err != nil {
 			return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_UNKNOWN.String()}, err
 		}
 	}
 
 	// make an RPC call to controller
-	nicRPCClient := grpc.NewSmartNICClient(client.getRPCClient().ClientConn)
+	nicRPCClient := grpc.NewSmartNICRegistrationClient(client.getRegistrationRPCClient().ClientConn)
 	req := grpc.RegisterNICRequest{
 		Nic:  *nic,
 		Cert: getFactoryCert(),
@@ -265,16 +297,16 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNI
 // UpdateSmartNICReq send a status update of SmartNIC to CMD
 func (client *CmdClient) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 
-	if client.getRPCClient() == nil {
+	if client.getUpdatesRPCClient() == nil {
 		// initialize rpc client
-		err := client.initRPC()
+		err := client.initUpdatesRPC()
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// make an RPC call to controller
-	nicRPCClient := grpc.NewSmartNICClient(client.getRPCClient().ClientConn)
+	nicRPCClient := grpc.NewSmartNICUpdatesClient(client.getUpdatesRPCClient().ClientConn)
 	req := grpc.UpdateNICRequest{
 		Nic: *nic,
 	}

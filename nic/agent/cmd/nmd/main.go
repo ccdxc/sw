@@ -21,13 +21,14 @@ import (
 func main() {
 	// command line flags
 	var (
-		hostIf    = flag.String("hostif", "ntrunk0", "Host facing interface")
-		nmdDbPath = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
-		cmd       = flag.String("cmd", ":"+globals.CMDSmartNICAPIPort, "CMD RPC server URL(s)")
-		res       = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
-		mode      = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
-		debugflag = flag.Bool("debug", false, "Enable debug mode")
-		logToFile = flag.String("logtofile", "/tmp/nmd.log", "Redirect logs to file")
+		hostIf             = flag.String("hostif", "ntrunk0", "Host facing interface")
+		nmdDbPath          = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
+		cmdRegistrationURL = flag.String("cmdregistration", ":"+globals.CMDSmartNICRegistrationAPIPort, "NIC Registration API server URL(s)")
+		cmdUpdatesURL      = flag.String("cmdupdates", ":"+globals.CMDSmartNICUpdatesPort, "NIC Updates server URL(s)")
+		res                = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
+		mode               = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
+		debugflag          = flag.Bool("debug", false, "Enable debug mode")
+		logToFile          = flag.String("logtofile", "/tmp/nmd.log", "Redirect logs to file")
 	)
 	flag.Parse()
 
@@ -83,7 +84,7 @@ func main() {
 	}
 
 	// create the new NMD
-	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmd, ":"+globals.NmdRESTPort, *mode, resolverClient)
+	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdRegistrationURL, *cmdUpdatesURL, ":"+globals.NmdRESTPort, *mode, resolverClient)
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}

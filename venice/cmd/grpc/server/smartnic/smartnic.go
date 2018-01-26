@@ -419,7 +419,7 @@ func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]c
 }
 
 // WatchNICs watches smartNICs objects for changes and sends them as streaming rpc
-func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNICsServer) error {
+func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_WatchNICsServer) error {
 	// watch for changes
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	defer close(watchChan)

@@ -17,6 +17,7 @@ import traceback
 APIGwRESTPort = "9000"
 CMDClusterMgmtPort = "9002"
 CMDResolverPort = "9009"
+CMDUpdatesPort = "9009"
 
 # Utility function to run ssh
 def ssh_exec_thread(ssh_object, command):
@@ -95,9 +96,10 @@ class Node:
         self.npThread.start()
 
     # Start NMD process on the node
-    def startNMD(self, cmd, resolvers, hostif, uplink):
+    def startNMD(self, cmdreg, cmdupd, resolvers, hostif, uplink):
         ssh_object = self.sshConnect(self.username, self.password)
-        command = "sudo " + self.gobin + "/nmd -cmd " + cmd + " -mode managed -hostif " + hostif + " > /tmp/pensando-nmd.log 2>&1"
+        command = "sudo " + self.gobin + "/nmd -cmdregistration " + cmdreg + " -cmdupdates " + cmdupd + \
+                  " -mode managed -hostif " + hostif + " > /tmp/pensando-nmd.log 2>&1"
         self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
         # npThread.setDaemon(True)
         self.npThread.start()
@@ -148,7 +150,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='1.0.0')
 parser.add_argument("-nodes", default='', help="list of nodes(comma separated)")
 parser.add_argument("-npm", default='pen-npm', help="NPM URL")
-parser.add_argument("-cmd", default='pen-master:' + CMDClusterMgmtPort, help="CMD URL")
+parser.add_argument("-cmdregistration", default='pen-master:' + CMDClusterMgmtPort, help="CMD Cluster Mgmt URL")
+parser.add_argument("-cmdupdates", default='pen-master:' + CMDUpdatesPort, help="CMD NIC Updated URL")
 parser.add_argument("-resolvers", default='pen-master:' + CMDResolverPort, help="Resolver URLs")
 parser.add_argument("-simnodes", default='', help="list of nodes(comma separated)")
 parser.add_argument("-user", default='vagrant', help="User id for ssh")
@@ -243,7 +246,7 @@ try:
             node.startK8sAgent()
         else:
             node.startN4sAgent(args.npm, args.resolvers, args.hostif, args.uplink)
-            node.startNMD(args.cmd, args.resolvers, args.hostif, args.uplink)
+            node.startNMD(args.cmdregistration, args.cmdupdates, args.resolvers, args.hostif, args.uplink)
 
     print "################### Started Pensando Agents #####################"
 

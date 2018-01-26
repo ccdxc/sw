@@ -122,7 +122,7 @@ func launchCMDServer(m *testing.M, url string) (*rpckit.RPCServer, error) {
 		fmt.Printf("Error creating Smart NIC server: %v", err)
 		return nil, err
 	}
-	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
+	grpc.RegisterSmartNICRegistrationServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 	rpcServer.Start()
 
 	// Also create a mock resolver
@@ -165,7 +165,7 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 		resolverClient = resolver.New(resolverCfg)
 	}
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, restURL, *mode, resolverClient)
+	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, "", restURL, *mode, resolverClient)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}

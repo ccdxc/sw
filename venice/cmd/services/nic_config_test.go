@@ -45,7 +45,7 @@ import (
 )
 
 const (
-	smartNICServerURL = "localhost:" + globals.CMDSmartNICAPIPort
+	smartNICServerURL = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
 	resolverURLs      = ":" + globals.CMDResolverPort
 	minAgents         = 1
 	maxAgents         = 100
@@ -114,7 +114,7 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 		return nil, err
 	}
 
-	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
+	grpc.RegisterSmartNICRegistrationServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 	rpcServer.Start()
 	cmdenv.NICService = tInfo.smartNICServer
 	return rpcServer, nil
@@ -161,7 +161,7 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 
 	r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(*resolverURL, ",")})
 	// create the new NMD
-	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, restURL, "classic", r)
+	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, "", restURL, "classic", r)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}

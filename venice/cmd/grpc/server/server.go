@@ -39,7 +39,7 @@ func RunUnauthServer(url string, stopChannel chan bool) {
 	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
 
 	// Create and register the RPC handler for SmartNIC service
-	RegisterSmartNICServer(env.StateMgr)
+	RegisterSmartNICRegistrationServer(env.StateMgr)
 
 	// start RPC servers
 	rpcServer.Start()

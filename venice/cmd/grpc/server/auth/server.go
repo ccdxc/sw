@@ -4,6 +4,8 @@ package auth
 
 import (
 	"github.com/pensando/sw/venice/cmd/env"
+	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,6 +29,9 @@ func RunAuthServer(url string, stopChannel chan bool) {
 		// create and register the RPC handler for service object.
 		types.RegisterServiceAPIServer(env.AuthRPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
 	}
+
+	// Create and register the RPC handler for SmartNIC service
+	grpc.RegisterSmartNICUpdatesServer(env.AuthRPCServer.GrpcServer, env.NICService.(*smartnic.RPCServer))
 
 	rpcServer.Start()
 
