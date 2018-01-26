@@ -614,6 +614,8 @@ def main():
         lock_file = nic_dir + "/logs_%s/.run.pid" % args.test_suf
         zmq_soc_dir = nic_dir + "/logs_%s/" % args.test_suf
     os.environ['ZMQ_SOC_DIR'] = zmq_soc_dir
+    os.environ['MODEL_SHMKEY_PATH'] = nic_dir
+    os.environ['MODEL_SHMKEY_PROJID'] = '1'
 
     if args.cleanup:
         if os.path.isfile(lock_file):

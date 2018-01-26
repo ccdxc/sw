@@ -34,6 +34,10 @@ third-party/google/*
 third-party/grpc/*
 third-party/boost/*
 third-party/zmq/*
+third-party/crchack/*
+third-party/isc/*
+third-party/openssl/*
+third-party/snort3/*
 model_sim/libs/*
 tools/ncc/csr_json/*
 conf/init_bins
