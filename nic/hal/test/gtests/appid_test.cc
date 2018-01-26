@@ -546,8 +546,8 @@ static appid_test_transaction_t http_trans = {
     { http1_synack, sizeof(http1_synack), 1, 0 },
     { http1_ack, sizeof(http1_ack), 0, 0 },
     { http1_req, sizeof(http1_req), 0, 0 },
-    { http1_reqack, sizeof(http1_reqack), 1, 676 },
-    { http1_resp, sizeof(http1_resp), 1, 676 },
+    { http1_reqack, sizeof(http1_reqack), 1, HAL_APPID_HTTP },
+    { http1_resp, sizeof(http1_resp), 1, HAL_APPID_HTTP },
   },
   6,      // pkt_count
   51892,  // sport
@@ -701,8 +701,8 @@ static appid_test_transaction_t http_trans2 = {
     { pkt4, sizeof(pkt4), 0, 0 }, // REQ
     { pkt2, sizeof(pkt2), 1, 0 }, // SYN-ACK
 
-    { pkt5, sizeof(pkt5), 1, 676 }, // REQ-ACK
-    { pkt6, sizeof(pkt6), 1, 676 }, // RESP
+    { pkt5, sizeof(pkt5), 1, HAL_APPID_HTTP }, // REQ-ACK
+    { pkt6, sizeof(pkt6), 1, HAL_APPID_HTTP }, // RESP
   },
   12,      // pkt_count
   39986,  // sport
@@ -745,8 +745,8 @@ static unsigned char dns_resp1[95] = {
 };
 
 static appid_test_transaction_t dns_trans = {
-  { { dns_req1, sizeof(dns_req1), 0, 617 },
-    { dns_resp1, sizeof(dns_resp1), 1, 617 },
+  { { dns_req1, sizeof(dns_req1), 0, HAL_APPID_DNS },
+    { dns_resp1, sizeof(dns_resp1), 1, HAL_APPID_DNS },
   },
   2,      // pkt_count
   65353,  // sport
