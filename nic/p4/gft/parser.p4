@@ -40,6 +40,7 @@ header_type parser_ohi_t {
         udp_3___start_off             : 16;
         l4_1_len                      : 16;
         l4_2_len                      : 16;
+        l4_3_len                      : 16;
         icrc_len                      : 16;
         kind                          : 16;
         chksum                        : 16;
@@ -611,6 +612,7 @@ parser parse_ctag_1 {
 parser parse_ipv4_1 {
     extract(ipv4_1);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(ohi.l4_1_len, ipv4_1.totalLen + 0);
     set_metadata(parser_metadata.l4_trailer, ipv4_1.totalLen - (ipv4_1.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_1;
@@ -636,6 +638,7 @@ parser parse_ipv6_in_ip_1 {
 parser parse_ipv6_1 {
     extract(ipv6_1);
     set_metadata(parser_metadata.l4_trailer, latest.payloadLen);
+    set_metadata(ohi.l4_1_len, ipv6_1.payloadLen + 0);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp_1;
         IP_PROTO_TCP : parse_tcp_1;
@@ -730,6 +733,7 @@ parser parse_ctag_2 {
 parser parse_ipv4_2 {
     extract(ipv4_2);
     set_metadata(ohi.ipv4_2___hdr_len, (ipv4_2.ihl << 2));
+    set_metadata(ohi.l4_2_len, ipv4_2.totalLen + 0);
     set_metadata(parser_metadata.l4_trailer, ipv4_2.totalLen - (ipv4_2.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_2;
@@ -754,6 +758,7 @@ parser parse_ipv6_in_ip_2 {
 
 parser parse_ipv6_2 {
     extract(ipv6_2);
+    set_metadata(ohi.l4_2_len, ipv6_2.payloadLen + 0);
     set_metadata(parser_metadata.l4_trailer, latest.payloadLen);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp_2;
@@ -1089,7 +1094,7 @@ field_list ipv4_1_checksum_list {
 @pragma checksum hdr_len_expr ohi.ipv4_1___hdr_len + 0
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum gress ingress
-field_list_calculation ipv4_1_checksum {
+field_list_calculation rx_ipv4_1_checksum {
     input {
         ipv4_1_checksum_list;
     }
@@ -1098,8 +1103,8 @@ field_list_calculation ipv4_1_checksum {
 }
 
 calculated_field ipv4_1.hdrChecksum  {
-    verify ipv4_1_checksum;
-    update ipv4_1_checksum;
+    verify rx_ipv4_1_checksum;
+    update rx_ipv4_1_checksum;
 }
 
 field_list ipv4_1_udp_1_checksum_list {
@@ -1117,7 +1122,7 @@ field_list ipv4_1_udp_1_checksum_list {
 @pragma checksum verify_len  ohi.l4_1_len
 @pragma checksum gress ingress
 @pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
-field_list_calculation ipv4_1_udp_1_checksum {
+field_list_calculation rx_ipv4_1_udp_1_checksum {
     input {
         ipv4_1_udp_1_checksum_list;
     }
@@ -1139,7 +1144,7 @@ field_list ipv6_1_udp_1_checksum_list {
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum gress ingress
 @pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
-field_list_calculation ipv6_1_udp_1_checksum {
+field_list_calculation rx_ipv6_1_udp_1_checksum {
     input {
         ipv6_1_udp_1_checksum_list;
     }
@@ -1148,10 +1153,10 @@ field_list_calculation ipv6_1_udp_1_checksum {
 }
 
 calculated_field udp_1.checksum {
-    verify ipv4_1_udp_1_checksum;
-    verify ipv6_1_udp_1_checksum;
-    update ipv4_1_udp_1_checksum;
-    update ipv6_1_udp_1_checksum;
+    verify rx_ipv4_1_udp_1_checksum;
+    verify rx_ipv6_1_udp_1_checksum;
+    update rx_ipv4_1_udp_1_checksum;
+    update rx_ipv6_1_udp_1_checksum;
 }
 
 field_list ipv4_2_checksum_list {
@@ -1171,7 +1176,7 @@ field_list ipv4_2_checksum_list {
 @pragma checksum hdr_len_expr ohi.ipv4_2___hdr_len + 0
 @pragma checksum verify_len ohi.l4_2_len
 @pragma checksum gress ingress
-field_list_calculation ipv4_2_checksum {
+field_list_calculation rx_ipv4_2_checksum {
     input {
         ipv4_2_checksum_list;
     }
@@ -1180,8 +1185,8 @@ field_list_calculation ipv4_2_checksum {
 }
 
 calculated_field ipv4_2.hdrChecksum  {
-    verify ipv4_2_checksum;
-    update ipv4_2_checksum;
+    verify rx_ipv4_2_checksum;
+    update rx_ipv4_2_checksum;
 }
 
 field_list ipv4_2_udp_2_checksum_list {
@@ -1199,7 +1204,7 @@ field_list ipv4_2_udp_2_checksum_list {
 @pragma checksum verify_len  ohi.l4_2_len
 @pragma checksum gress ingress
 @pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
-field_list_calculation ipv4_2_udp_2_checksum {
+field_list_calculation rx_ipv4_2_udp_2_checksum {
     input {
         ipv4_2_udp_2_checksum_list;
     }
@@ -1221,7 +1226,7 @@ field_list ipv6_2_udp_2_checksum_list {
 @pragma checksum verify_len ohi.l4_2_len
 @pragma checksum gress ingress
 @pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
-field_list_calculation ipv6_2_udp_2_checksum {
+field_list_calculation rx_ipv6_2_udp_2_checksum {
     input {
         ipv6_2_udp_2_checksum_list;
     }
@@ -1230,12 +1235,11 @@ field_list_calculation ipv6_2_udp_2_checksum {
 }
 
 calculated_field udp_2.checksum {
-    verify ipv4_2_udp_2_checksum;
-    verify ipv6_2_udp_2_checksum;
-    update ipv4_2_udp_2_checksum;
-    update ipv6_2_udp_2_checksum;
+    verify rx_ipv4_2_udp_2_checksum;
+    verify rx_ipv6_2_udp_2_checksum;
+    update rx_ipv4_2_udp_2_checksum;
+    update rx_ipv6_2_udp_2_checksum;
 }
-
 
 field_list ipv4_3_checksum_list {
     ipv4_3.version;
@@ -1254,7 +1258,7 @@ field_list ipv4_3_checksum_list {
 @pragma checksum hdr_len_expr ohi.ipv4_3___hdr_len + 0
 @pragma checksum verify_len ohi.l4_3_len
 @pragma checksum gress ingress
-field_list_calculation ipv4_3_checksum {
+field_list_calculation rx_ipv4_3_checksum {
     input {
         ipv4_3_checksum_list;
     }
@@ -1263,8 +1267,7 @@ field_list_calculation ipv4_3_checksum {
 }
 
 calculated_field ipv4_3.hdrChecksum  {
-    verify ipv4_3_checksum;
-    update ipv4_3_checksum;
+    update rx_ipv4_3_checksum;
 }
 
 field_list ipv4_3_udp_3_checksum_list {
@@ -1282,7 +1285,7 @@ field_list ipv4_3_udp_3_checksum_list {
 @pragma checksum verify_len  ohi.l4_3_len
 @pragma checksum gress ingress
 @pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
-field_list_calculation ipv4_3_udp_3_checksum {
+field_list_calculation rx_ipv4_3_udp_3_checksum {
     input {
         ipv4_3_udp_3_checksum_list;
     }
@@ -1304,7 +1307,7 @@ field_list ipv6_3_udp_3_checksum_list {
 @pragma checksum verify_len ohi.l4_3_len
 @pragma checksum gress ingress
 @pragma checksum update_share udp_1.checksum, udp_2.checksum, udp_3.checksum
-field_list_calculation ipv6_3_udp_3_checksum {
+field_list_calculation rx_ipv6_3_udp_3_checksum {
     input {
         ipv6_3_udp_3_checksum_list;
     }
@@ -1313,8 +1316,29 @@ field_list_calculation ipv6_3_udp_3_checksum {
 }
 
 calculated_field udp_3.checksum {
-    update ipv4_3_udp_3_checksum;
-    update ipv6_3_udp_3_checksum;
+    update rx_ipv4_3_udp_3_checksum;
+    update rx_ipv6_3_udp_3_checksum;
+}
+
+
+field_list udp_opt_checksum_list {
+    udp_opt_ocs.kind; // First field in UDP options related to csum
+    payload; // specify payload keyword as list of options
+}
+
+@pragma checksum verify_len ohi.udp_opt_len
+@pragma checksum gress ingress
+@pragma checksum udp_option
+field_list_calculation rx_udp_opt_checksum {
+    input {
+        udp_opt_checksum_list;
+    }
+    algorithm : csum8;
+    output_width : 8;
+}
+
+calculated_field udp_opt_ocs.chksum {
+    verify rx_udp_opt_checksum;
 }
 
 
