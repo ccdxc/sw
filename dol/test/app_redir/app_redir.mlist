@@ -33,6 +33,7 @@ modules:
         name    : APP_REDIR_RAW_RX_TX_MULTI_PKTS
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_multi_pkts.testspec
+        rtl     : True
         args    :
             num_pkts : 3
             num_flow_miss_pkts : 1
@@ -43,6 +44,7 @@ modules:
         name    : APP_REDIR_RAW_V6_RX_TX_MULTI_PKTS
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_multi_pkts.testspec
+        rtl     : True
         args    :
             num_pkts : 3
             num_flow_miss_pkts : 1
@@ -53,6 +55,7 @@ modules:
         name    : APP_REDIR_RAW_MYSQL_APPID
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mysql_appid.testspec
+        rtl     : False
         args    :
             num_pkts : 4
         iterate :
@@ -62,6 +65,7 @@ modules:
         name    : APP_REDIR_RAW_DNS
         module  : app_redir_raw_appid
         spec    : app_redir_raw_dns.testspec
+        rtl     : False
         args    :
             num_pkts : 2
         iterate :
@@ -71,6 +75,7 @@ modules:
         name    : APP_REDIR_RAW_HTTP
         module  : app_redir_raw_appid
         spec    : app_redir_raw_http.testspec
+        rtl     : False
         args    :
             num_pkts : 5
         iterate :
@@ -80,6 +85,7 @@ modules:
         name    : APP_REDIR_RAW_V6_HTTP
         module  : app_redir_raw_appid
         spec    : app_redir_raw_v6_http.testspec
+        rtl     : False
         args    :
             num_pkts : 5
         iterate :
@@ -89,6 +95,7 @@ modules:
         name    : APP_REDIR_RAW_MONGO
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mongo.testspec
+        rtl     : False
         #enable  : False
         args    :
             num_pkts : 5
@@ -99,6 +106,7 @@ modules:
         name    : APP_REDIR_RAW_CASSANDRA
         module  : app_redir_raw_appid
         spec    : app_redir_raw_cassandra.testspec
+        rtl     : False
         #enable  : False
         args    :
             num_pkts : 5
@@ -109,6 +117,7 @@ modules:
         name    : APP_REDIR_RAW_POSTGRES
         module  : app_redir_raw_appid
         spec    : app_redir_raw_postgres.testspec
+        rtl     : False
         args    :
             num_pkts : 5
         iterate :
@@ -118,6 +127,7 @@ modules:
         name    : APP_REDIR_PROXY_TCP_TLS_ENCRYPT
         module  : app_redir_proxy_tcp_tls_encrypt
         spec    : app_redir_proxy.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -131,6 +141,7 @@ modules:
         name    : APP_REDIR_PROXY_TCP_TLS_DECRYPT
         module  : app_redir_proxy_tcp_tls_decrypt
         spec    : app_redir_proxy_one_tls_aes128_gcm.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -144,6 +155,7 @@ modules:
         name    : APP_REDIR_PROXY_V6_TCP_TLS_ENCRYPT
         module  : app_redir_proxy_tcp_tls_encrypt
         spec    : app_redir_proxy.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -157,6 +169,7 @@ modules:
         name    : APP_REDIR_PROXY_V6_TCP_TLS_DECRYPT
         module  : app_redir_proxy_tcp_tls_decrypt
         spec    : app_redir_proxy_one_tls_aes128_gcm.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -170,6 +183,7 @@ modules:
         name    : APP_REDIR_PROXY_TCP_TLS_SPAN_ENCRYPT
         module  : app_redir_proxy_tcp_tls_encrypt
         spec    : app_redir_proxy.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -184,6 +198,7 @@ modules:
         name    : APP_REDIR_PROXY_TCP_TLS_SPAN_DECRYPT
         module  : app_redir_proxy_tcp_tls_decrypt
         spec    : app_redir_proxy_one_tls_aes128_gcm.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -198,6 +213,7 @@ modules:
         name    : APP_REDIR_PROXY_V6_TCP_TLS_SPAN_ENCRYPT
         module  : app_redir_proxy_tcp_tls_encrypt
         spec    : app_redir_proxy.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -212,6 +228,7 @@ modules:
         name    : APP_REDIR_PROXY_V6_TCP_TLS_SPAN_DECRYPT
         module  : app_redir_proxy_tcp_tls_decrypt
         spec    : app_redir_proxy_one_tls_aes128_gcm.testspec
+        rtl     : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -226,6 +243,7 @@ modules:
         name    : APP_REDIR_RAW_MYSQL
         module  : app_redir_raw_appid
         spec    : app_redir_raw_mysql.testspec
+        rtl     : True
         args    :
             num_pkts : 4
         iterate :
@@ -235,6 +253,7 @@ modules:
         name    : APP_REDIR_RAW_V6_MYSQL
         module  : app_redir_raw_appid
         spec    : app_redir_raw_v6_mysql.testspec
+        rtl     : True
         args    :
             num_pkts : 4
         iterate :
@@ -255,6 +274,7 @@ modules:
         name    : APP_REDIR_RAW_SPAN_MULTI_PKTS
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span_multi_pkts.testspec
+        rtl     : True
         args    :
             num_pkts : 3
             num_flow_miss_pkts : 1
@@ -277,6 +297,7 @@ modules:
         name    : APP_REDIR_RAW_V6_SPAN_MULTI_PKTS
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_span_multi_pkts.testspec
+        rtl     : True
         args    :
             num_pkts : 3
             num_flow_miss_pkts : 1

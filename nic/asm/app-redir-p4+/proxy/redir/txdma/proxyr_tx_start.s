@@ -136,9 +136,11 @@ _proxyrcb_done:
  */
 _my_txq_ring_empty:
 
+#ifdef APP_REDIR_COLLECT_MY_TXQ_EMPTY_STATS
     PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
                                  CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR,
                                  p.t3_s2s_inc_stat_txq_empty)
+#endif
     phvwr.e     p.p4_intr_global_drop, 1
     nop
 
