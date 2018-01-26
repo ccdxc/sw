@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -239,7 +240,7 @@ func (m *FakeMessage) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key str
 // WriteToKvTxn is a mock method for testing
 func (m *FakeMessage) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error {
 	m.Txnwrites++
-	msg := i.(*kvstore.TestObj)
+	msg := i.(*compliance.TestObj)
 	if create {
 		txn.Create(TxnTestKey, msg)
 	} else {

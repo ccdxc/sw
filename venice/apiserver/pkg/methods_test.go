@@ -11,6 +11,7 @@ import (
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
 )
 
 // TestMethodWiths
@@ -203,7 +204,7 @@ func TestTxn(t *testing.T) {
 
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
-	reqmsg := &kvstore.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
+	reqmsg := &compliance.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
 	ctx := metadata.NewIncomingContext(context.Background(), md)

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 	tutils "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -33,7 +34,7 @@ var (
 
 type expectedObj struct {
 	testObj TestObj
-	evType  WatchEventType
+	evType  kvstore.WatchEventType
 }
 
 // TestObj is test object
@@ -57,7 +58,7 @@ type TestCluster interface{}
 type ClusterSetupFunc func(t *testing.T) TestCluster
 
 // StoreSetupFunc crates a state store client within the specified cluster
-type StoreSetupFunc func(t *testing.T, cluster TestCluster) (Interface, error)
+type StoreSetupFunc func(t *testing.T, cluster TestCluster) (kvstore.Interface, error)
 
 // ClusterCleanupFunc cleans up (terminate, destroy objects, etc.) the specified cluster
 type ClusterCleanupFunc func(t *testing.T, cluster TestCluster)
@@ -100,7 +101,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 	}
 }
 
-func setupTestCluster(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc) (TestCluster, Interface) {
+func setupTestCluster(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc) (TestCluster, kvstore.Interface) {
 	cluster := cSetup(t)
 	store, _ := sSetup(t, cluster)
 	return cluster, store
@@ -143,7 +144,7 @@ func TestDuplicateCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetu
 	}
 
 	err = store.Create(context.Background(), TestKey, obj)
-	if err == nil || !IsKeyExistsError(err) {
+	if err == nil || !kvstore.IsKeyExistsError(err) {
 		t.Fatalf("Failed to detect duplicate create: %v", err)
 	}
 
@@ -174,7 +175,7 @@ func TestDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 	}
 
 	err = store.Get(context.Background(), TestKey, obj)
-	if err == nil || !IsKeyNotFoundError(err) {
+	if err == nil || !kvstore.IsKeyNotFoundError(err) {
 		t.Fatalf("After Delete, key is possibly present, error: %v", err)
 	}
 
@@ -189,7 +190,7 @@ func TestNonExistentDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Delete(context.Background(), TestKey, obj)
-	if err == nil || !IsKeyNotFoundError(err) {
+	if err == nil || !kvstore.IsKeyNotFoundError(err) {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 
@@ -208,13 +209,13 @@ func TestAtomicDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	if err = store.Delete(context.Background(), TestKey, nil, Compare(WithVersion(TestKey), "=", 0)); err == nil {
+	if err = store.Delete(context.Background(), TestKey, nil, kvstore.Compare(kvstore.WithVersion(TestKey), "=", 0)); err == nil {
 		t.Fatalf("AtomicDelete failed with incorrect previous version")
 	}
 
 	prevVersion := obj.ResourceVersion
 
-	err = store.Delete(context.Background(), TestKey, obj, Compare(WithVersion(TestKey), "=", prevVersion))
+	err = store.Delete(context.Background(), TestKey, obj, kvstore.Compare(kvstore.WithVersion(TestKey), "=", prevVersion))
 	if err != nil {
 		t.Fatalf("AtomicDelete failed with error: %v", err)
 	}
@@ -248,7 +249,7 @@ func TestPrefixDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 
 	// Check that keys that need to be deleted are deleted.
 	for _, key := range expDelKeys {
-		if err := store.Get(context.Background(), key, nil); err == nil || !IsKeyNotFoundError(err) {
+		if err := store.Get(context.Background(), key, nil); err == nil || !kvstore.IsKeyNotFoundError(err) {
 			t.Fatalf("PrefixDelete failed to delete key: %v", err)
 		}
 	}
@@ -298,7 +299,7 @@ func TestNonExistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Update(context.Background(), TestKey, obj)
-	if err == nil || !IsKeyNotFoundError(err) {
+	if err == nil || !kvstore.IsKeyNotFoundError(err) {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
@@ -319,11 +320,11 @@ func TestAtomicUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 
 	prevVersion := obj.ResourceVersion
 
-	if err := store.Update(context.Background(), TestKey, obj, Compare(WithVersion(TestKey), "=", 0)); err == nil {
+	if err := store.Update(context.Background(), TestKey, obj, kvstore.Compare(kvstore.WithVersion(TestKey), "=", 0)); err == nil {
 		t.Fatalf("AtomicUpdate passed with incorrect previous version")
 	}
 
-	if err := store.Update(context.Background(), TestKey, obj, Compare(WithVersion(TestKey), "=", prevVersion)); err != nil {
+	if err := store.Update(context.Background(), TestKey, obj, kvstore.Compare(kvstore.WithVersion(TestKey), "=", prevVersion)); err != nil {
 		t.Fatalf("AtomicUpdate of a key failed with error: %v", err)
 	}
 
@@ -457,20 +458,20 @@ func TestWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCl
 		t.Fatalf("Create failed with error: %v", err)
 	}
 
-	expectWatchEvent(t, evCh, Created, obj)
+	expectWatchEvent(t, evCh, kvstore.Created, obj)
 
 	obj.Counter = 1
 	if err := store.Update(context.Background(), TestKey, obj); err != nil {
 		t.Fatalf("Update failed with error: %v", err)
 	}
 
-	expectWatchEvent(t, evCh, Updated, obj)
+	expectWatchEvent(t, evCh, kvstore.Updated, obj)
 
 	if err := store.Delete(context.Background(), TestKey, obj); err != nil {
 		t.Fatalf("Delete failed with error: %v", err)
 	}
 
-	expectWatchEvent(t, evCh, Deleted, obj)
+	expectWatchEvent(t, evCh, kvstore.Deleted, obj)
 	w.Stop()
 
 	t.Logf("Watch of Created, Updated, Deleted events succeeded")
@@ -495,20 +496,20 @@ func TestPrefixWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 			t.Fatalf("Create failed with error: %v", err)
 		}
 
-		expectWatchEvent(t, evCh, Created, obj)
+		expectWatchEvent(t, evCh, kvstore.Created, obj)
 
 		obj.Counter = 1
 		if err := store.Update(context.Background(), testDir+key, obj); err != nil {
 			t.Fatalf("Update failed with error: %v", err)
 		}
 
-		expectWatchEvent(t, evCh, Updated, obj)
+		expectWatchEvent(t, evCh, kvstore.Updated, obj)
 
 		if err := store.Delete(context.Background(), testDir+key, obj); err != nil {
 			t.Fatalf("Delete failed with error: %v", err)
 		}
 
-		expectWatchEvent(t, evCh, Deleted, obj)
+		expectWatchEvent(t, evCh, kvstore.Deleted, obj)
 	}
 
 	w.Stop()
@@ -533,7 +534,7 @@ func TestWatchExisting(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 
-	expectWatchEvent(t, w.EventChan(), Created, obj)
+	expectWatchEvent(t, w.EventChan(), kvstore.Created, obj)
 	w.Stop()
 
 	// Case 2 - created and updated.
@@ -547,7 +548,7 @@ func TestWatchExisting(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 
-	expectWatchEvent(t, w.EventChan(), Updated, obj)
+	expectWatchEvent(t, w.EventChan(), kvstore.Updated, obj)
 	w.Stop()
 
 	t.Logf("Watch of an existing object succeeded")
@@ -576,7 +577,7 @@ func TestWatchFromVersion(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 		t.Fatalf("Watch failed with error: %v", err)
 	}
 
-	expectWatchEvent(t, w.EventChan(), Updated, obj)
+	expectWatchEvent(t, w.EventChan(), kvstore.Updated, obj)
 	w.Stop()
 
 	t.Logf("Watch from a specified version succeeded")
@@ -601,20 +602,20 @@ func TestBufferedWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 			t.Fatalf("Create failed with error: %v", err)
 		}
 
-		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: Created})
+		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: kvstore.Created})
 
 		obj.Counter = 1
 		if err := store.Update(context.Background(), testDir+key, obj); err != nil {
 			t.Fatalf("Update failed with error: %v", err)
 		}
 
-		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: Updated})
+		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: kvstore.Updated})
 
 		if err := store.Delete(context.Background(), testDir+key, obj); err != nil {
 			t.Fatalf("Delete failed with error: %v", err)
 		}
 
-		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: Deleted})
+		expectedObjs = append(expectedObjs, expectedObj{testObj: *obj, evType: kvstore.Deleted})
 	}
 
 	for _, expObj := range expectedObjs {
@@ -652,7 +653,7 @@ func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 
 	select {
 	case ev, ok := <-evCh:
-		if ok && ev.Type != WatcherError {
+		if ok && ev.Type != kvstore.WatcherError {
 			t.Fatalf("Received event on cancelled watch: %+v\n", ev)
 		}
 	default:
@@ -660,14 +661,14 @@ func TestCancelWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFun
 	t.Logf("Cancel watch succeeded")
 }
 
-func expectWatchEvent(t *testing.T, ch <-chan *WatchEvent, evType WatchEventType, obj runtime.Object) {
+func expectWatchEvent(t *testing.T, ch <-chan *kvstore.WatchEvent, evType kvstore.WatchEventType, obj runtime.Object) {
 	select {
 	case ev := <-ch:
 		if ev.Type != evType {
 			t.Fatalf("Expected event %v, got %v", evType, ev.Type)
 		}
 
-		if evType == Deleted {
+		if evType == kvstore.Deleted {
 			// Delete returns the last modified version of the object,
 			// while Watch returns the version at the time of deletion.
 			obj.(*TestObj).ResourceVersion = ev.Object.(*TestObj).ResourceVersion
@@ -682,7 +683,7 @@ func expectWatchEvent(t *testing.T, ch <-chan *WatchEvent, evType WatchEventType
 }
 
 // newContest creates a new contender.
-func newContest(ctx context.Context, t *testing.T, store Interface, id string, ttl uint64) Election {
+func newContest(ctx context.Context, t *testing.T, store kvstore.Interface, id string, ttl uint64) kvstore.Election {
 	election, err := store.Contest(ctx, contestName, id, ttl)
 	if err != nil {
 		t.Fatalf("Contest creation for %v failed with error: %v", id, err)
@@ -692,8 +693,8 @@ func newContest(ctx context.Context, t *testing.T, store Interface, id string, t
 }
 
 // addCandidates creates the specified number of candidates.
-func addCandidates(ctx context.Context, t *testing.T, sSetup StoreSetupFunc, cluster TestCluster, numCandidates, startID int) []Election {
-	contenders := []Election{}
+func addCandidates(ctx context.Context, t *testing.T, sSetup StoreSetupFunc, cluster TestCluster, numCandidates, startID int) []kvstore.Election {
+	contenders := []kvstore.Election{}
 	for ii := 0; ii < numCandidates; ii++ {
 		store, err := sSetup(t, cluster)
 		if err != nil {
@@ -705,14 +706,14 @@ func addCandidates(ctx context.Context, t *testing.T, sSetup StoreSetupFunc, clu
 }
 
 // setupContest sets up the asked number of candidates.
-func setupContest(ctx context.Context, t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, numCandidates int) (TestCluster, []Election) {
+func setupContest(ctx context.Context, t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, numCandidates int) (TestCluster, []kvstore.Election) {
 	cluster := cSetup(t)
 	return cluster, addCandidates(ctx, t, sSetup, cluster, numCandidates, 0)
 }
 
 // checkElectionEvents pulls one event out of each contender provided and checks that
 // there is atmost one leader (if expLeader is set).
-func checkElectionEvents(t *testing.T, contenders []Election, expLeader bool) {
+func checkElectionEvents(t *testing.T, contenders []kvstore.Election, expLeader bool) {
 	leaderCount := 0
 	for _, contender := range contenders {
 		select {
@@ -721,11 +722,11 @@ func checkElectionEvents(t *testing.T, contenders []Election, expLeader bool) {
 		case e := <-contender.EventChan():
 			t.Logf("Got event %+v for contender %v", e, contender.ID())
 			if e.Leader == contender.ID() {
-				if e.Type != Elected {
+				if e.Type != kvstore.Elected {
 					t.Fatalf("Leader %v with non elected event %v", contender.ID(), e.Type)
 				}
 				leaderCount++
-			} else if e.Type != Changed {
+			} else if e.Type != kvstore.Changed {
 				t.Fatalf("Contender %v with non changed event %v", contender.ID(), e.Type)
 			}
 
@@ -850,9 +851,9 @@ func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetup
 func TestMultipleElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	t.Logf("Starting MultipleElection")
 
-	contenders1 := []Election{}
+	contenders1 := []kvstore.Election{}
 	contenders1Cancel := []context.CancelFunc{}
-	contenders2 := []Election{}
+	contenders2 := []kvstore.Election{}
 	contenders2Cancel := []context.CancelFunc{}
 
 	cluster := cSetup(t)
@@ -890,7 +891,7 @@ func TestMultipleElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 
 	// Disrupt the leader from first election and make sure the leader of second election is still ok
 	// and not unhappy with disruption
-	var secondElectionLeader Election
+	var secondElectionLeader kvstore.Election
 	for _, v := range contenders2 {
 		if v.IsLeader() {
 			secondElectionLeader = v
@@ -948,10 +949,10 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	txn2 := store.NewTxn()
 	oldVersion := obj1.ResourceVersion
 	obj1.Counter++
-	if err := txn2.Update(obj1.Name, obj1, Compare(WithVersion(obj1.Name), "=", obj1.ResourceVersion)); err != nil {
+	if err := txn2.Update(obj1.Name, obj1, kvstore.Compare(kvstore.WithVersion(obj1.Name), "=", obj1.ResourceVersion)); err != nil {
 		t.Fatalf("Failed to update obj1 in with error: %v", err)
 	}
-	if err := txn2.Update(obj2.Name, obj2, Compare(WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
+	if err := txn2.Update(obj2.Name, obj2, kvstore.Compare(kvstore.WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
 		t.Fatalf("Failed to update obj2 in with error: %v", err)
 	}
 	if _, err := txn2.Commit(context.Background()); err != nil {
@@ -965,10 +966,10 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 		t.Fatalf("Failed to get obj2 created in with error: %v", err)
 	}
 	oldVersion = obj2.ResourceVersion
-	if err := txn3.Delete(obj1.Name, Compare(WithVersion(obj1.Name), "=", obj1.ResourceVersion)); err != nil {
+	if err := txn3.Delete(obj1.Name, kvstore.Compare(kvstore.WithVersion(obj1.Name), "=", obj1.ResourceVersion)); err != nil {
 		t.Fatalf("Failed to delete obj1 in with error: %v", err)
 	}
-	if err := txn3.Update(obj2.Name, obj2, Compare(WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
+	if err := txn3.Update(obj2.Name, obj2, kvstore.Compare(kvstore.WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
 		t.Fatalf("Failed to update obj2 in with error: %v", err)
 	}
 	if resp, err := txn3.Commit(context.Background()); err != nil {
@@ -979,7 +980,7 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 		}
 		found := false
 		for _, r := range resp.Responses {
-			if r.Oper == OperDelete {
+			if r.Oper == kvstore.OperDelete {
 				found = true
 				robj, ok := r.Obj.(*TestObj)
 				if !ok {
@@ -1011,7 +1012,7 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 // TestLease tests multiple nodes taking a lease and stopping the lease
 func TestLease(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	var numNodes = 3
-	stores := make([]Interface, numNodes)
+	stores := make([]kvstore.Interface, numNodes)
 	cancelFuncs := make([]context.CancelFunc, numNodes)
 	// setup cluster
 	cluster := cSetup(t)
@@ -1036,7 +1037,7 @@ func TestLease(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCl
 	for i := 0; i < numNodes; i++ {
 		obj, ok := <-watch.EventChan()
 		tutils.Assert(t, ok, "Error getting from watch channel")
-		tutils.Assert(t, (obj.Type == Created), "Incorrect event", obj)
+		tutils.Assert(t, (obj.Type == kvstore.Created), "Incorrect event", obj)
 		tutils.Assert(t, (obj.Object.GetObjectKind() == "TestObj"), "Invalid object type", obj)
 	}
 
@@ -1049,7 +1050,7 @@ func TestLease(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCl
 	for i := 0; i < numNodes; i++ {
 		obj, ok := <-watch.EventChan()
 		tutils.Assert(t, ok, "Error getting from watch channel")
-		tutils.Assert(t, (obj.Type == Deleted), "Incorrect event", obj)
+		tutils.Assert(t, (obj.Type == kvstore.Deleted), "Incorrect event", obj)
 		tutils.Assert(t, (obj.Object.GetObjectKind() == "TestObj"), "Invalid object type", obj)
 	}
 
