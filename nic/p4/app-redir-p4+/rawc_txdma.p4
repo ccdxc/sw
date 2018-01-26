@@ -225,7 +225,6 @@ header_type common_global_phv_t {
 header_type to_stage_1_phv_t {
     fields {
         // (max 128 bits)
-        my_txq_ci_curr                  : 16;
         my_txq_ring_size_shift          : 8;
         chain_txq_ring_indices_addr     : 34;
         my_txq_qid                      : 24;
@@ -236,7 +235,6 @@ header_type to_stage_1_phv_t {
 
 #define GENERATE_TO_S1_K \
     modify_field(to_s1_scratch.chain_txq_ring_indices_addr, to_s1.chain_txq_ring_indices_addr); \
-    modify_field(to_s1_scratch.my_txq_ci_curr, to_s1.my_txq_ci_curr); \
     modify_field(to_s1_scratch.my_txq_ring_size_shift, to_s1.my_txq_ring_size_shift); \
     modify_field(to_s1_scratch.my_txq_lif, to_s1.my_txq_lif); \
     modify_field(to_s1_scratch.my_txq_qtype, to_s1.my_txq_qtype); \

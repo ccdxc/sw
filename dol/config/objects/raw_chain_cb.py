@@ -113,6 +113,27 @@ class RawcCbObject(base.ConfigObjectBase):
     def Write(self):
         return
 
+    #
+    # Print rawccb statistics
+    #
+    def StatsPrint(self):
+        print("RAWCCB %d stat_pkts_chain %d" % 
+              (self.id, self.stat_pkts_chain))
+        print("RAWCCB %d stat_pkts_discard %d" % 
+              (self.id, self.stat_pkts_discard))
+        print("RAWCCB %d stat_cb_not_ready %d" % 
+              (self.id, self.stat_cb_not_ready))
+        print("RAWCCB %d stat_my_txq_empty %d" % 
+              (self.id, self.stat_my_txq_empty))
+        print("RAWCCB %d stat_aol_err %d" % 
+              (self.id, self.stat_aol_err))
+        print("RAWCCB %d stat_txq_full %d" % 
+              (self.id, self.stat_txq_full))
+        print("RAWCCB %d stat_desc_sem_free_full %d" % 
+              (self.id, self.stat_desc_sem_free_full))
+        print("RAWCCB %d stat_page_sem_free_full %d" % 
+              (self.id, self.stat_page_sem_free_full))
+        return
 
 
 # Helper Class to Generate/Configure/Manage RawcCb Objects.

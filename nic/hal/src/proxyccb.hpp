@@ -9,6 +9,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/proxy.hpp"
+#include "nic/include/app_redir_shared.h"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -83,9 +84,10 @@ typedef struct proxyccb_s {
 #define HAL_MAX_PROXYCCB_HT_SIZE          1024      // hash table size
 
 /*
- * Number of PI/CI pairs defined in proxyccb_t above
+ * Number of PI/CI pairs defined in proxyccb_t above;
+ * find a change the corresponding #define as needed.
  */
-#define HAL_NUM_PROXYCCB_RINGS_MAX        1
+#define HAL_NUM_PROXYCCB_RINGS_MAX        APP_REDIR_PROXYC_RINGS_MAX
 
 // allocate a PROXYCCB instance
 static inline proxyccb_t *

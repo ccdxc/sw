@@ -87,10 +87,9 @@ _cleanup_discard_check:
      */
     phvwri      p.dma_intr_txdma_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
-    phvwri      p.dma_intr_txdma_dma_cmd_phv_end_addr, \
+    phvwri.e    p.dma_intr_txdma_dma_cmd_phv_end_addr, \
                 CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv)
-    phvwri.e    p.dma_intr_txdma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    nop
+    phvwri      p.dma_intr_txdma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT // delay slot
 
 
 /*

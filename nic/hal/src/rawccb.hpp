@@ -8,6 +8,7 @@
 #include "nic/gen/proto/hal/rawccb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/app_redir_shared.h"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -81,9 +82,10 @@ typedef struct rawccb_s {
 #define HAL_MAX_RAWCCB_HT_SIZE          1024        // hash table size
 
 /*
- * Number of PI/CI pairs defined in rawccb_t above
+ * Number of PI/CI pairs defined in rawccb_t above;
+ * find a change the corresponding #define as needed.
  */
-#define HAL_NUM_RAWCCB_RINGS_MAX        1
+#define HAL_NUM_RAWCCB_RINGS_MAX        APP_REDIR_RAWC_RINGS_MAX
 
 // allocate a RAWCCB instance
 static inline rawccb_t *

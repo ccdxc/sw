@@ -318,6 +318,9 @@ class FlowObject(base.ConfigObjectBase):
             return True
         return False
 
+    def SepIsRemote(self):
+        return self.__sep.IsRemote()
+
     def IsESP(self):
         return self.proto == 'ESP'
 

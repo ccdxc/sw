@@ -30,6 +30,14 @@
 #define APP_REDIR_NUM_QTYPES_MAX            4
 
 /*
+ * App redirect rings
+ */
+#define APP_REDIR_RAWR_RINGS_MAX            0
+#define APP_REDIR_RAWC_RINGS_MAX            1
+#define APP_REDIR_PROXYR_RINGS_MAX          1
+#define APP_REDIR_PROXYC_RINGS_MAX          1
+ 
+/*
  * rawrcb/rawccb creation for span;
  * HW always spans to qtype 0 and qid 0, lif is derived from the mirror
  * session's lport_id. Once in rawrcb, P4+ will hash on flow and spray to

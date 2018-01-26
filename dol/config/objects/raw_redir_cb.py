@@ -117,6 +117,33 @@ class RawrCbObject(base.ConfigObjectBase):
     def Write(self):
         return
 
+    #
+    # Print rawrcb statistics
+    #
+    def StatsPrint(self):
+        print("RAWRCB %d stat_pkts_redir %d" % 
+              (self.id, self.stat_pkts_redir))
+        print("RAWRCB %d stat_pkts_discard %d" % 
+              (self.id, self.stat_pkts_discard))
+        print("RAWRCB %d stat_cb_not_ready %d" % 
+              (self.id, self.stat_cb_not_ready))
+        print("RAWRCB %d stat_qstate_cfg_err %d" % 
+              (self.id, self.stat_qstate_cfg_err))
+        print("RAWRCB %d stat_pkt_len_err %d" % 
+              (self.id, self.stat_pkt_len_err))
+        print("RAWRCB %d stat_rxq_full %d" % 
+              (self.id, self.stat_rxq_full))
+        print("RAWRCB %d stat_txq_full %d" % 
+              (self.id, self.stat_txq_full))
+        print("RAWRCB %d stat_desc_sem_alloc_full %d" % 
+              (self.id, self.stat_desc_sem_alloc_full))
+        print("RAWRCB %d stat_mpage_sem_alloc_full %d" % 
+              (self.id, self.stat_mpage_sem_alloc_full))
+        print("RAWRCB %d stat_ppage_sem_alloc_full %d" % 
+              (self.id, self.stat_ppage_sem_alloc_full))
+        print("RAWRCB %d stat_sem_free_full %d" % 
+              (self.id, self.stat_sem_free_full))
+        return
 
 
 # Helper Class to Generate/Configure/Manage RawrCb Objects.
