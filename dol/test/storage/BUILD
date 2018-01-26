@@ -151,6 +151,7 @@ cc_library(
         "queues.hpp",
         "nvme.hpp",
         "xts.hpp",
+        "xts.cc",
         "xts_tests.cc",
     ],
     deps = [

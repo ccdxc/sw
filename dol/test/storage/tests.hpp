@@ -10,6 +10,9 @@ DECLARE_uint64(poll_interval);
 
 namespace tests {
 
+const static uint32_t  kDefaultBufSize       = 4096;
+const static uint32_t  kSeqDescSize          = 64;
+
 typedef struct cp_seq_entry {
   uint64_t next_doorbell_addr;	// Next capri doorbell address (if chaining)
   uint64_t next_doorbell_data;	// Next capri doorbell data (if chaining)

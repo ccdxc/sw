@@ -2,6 +2,7 @@
 #define _XTS_HPP_
 
 #include <stdint.h>
+#include <string>
 
 #define CAPRI_BARCO_MD_HENS_REG_BASE                    (0x6580000)
 
@@ -104,5 +105,59 @@ typedef struct TestCtx_{
 
 
 }  // namespace xts
+
+namespace tests {
+
+extern void *read_buf;
+extern  void *write_buf;
+extern  void *read_buf2;
+
+extern  uint64_t read_hbm_buf;
+extern uint64_t write_hbm_buf;
+extern uint64_t read_hbm_buf2;
+extern uint64_t write_hbm_buf2;
+
+class XtsCtx {
+public:
+
+  void init(bool chain = false);
+  std::string get_name(bool chain = false);
+  XtsCtx();
+  ~XtsCtx();
+  int test_seq_xts();
+  int ring_db_n_verify();
+
+  void* src_buf = write_buf;
+  bool is_src_hbm_buf = false;
+  void* dst_buf = read_buf;
+  bool is_dst_hbm_buf = false;
+  void* src_buf_phy = NULL;
+  void* dst_buf_phy = NULL;
+
+  uint16_t seq_xts_q;
+  uint32_t num_sectors = 1;
+  xts::Op op;
+  uint32_t key_size = AES128_KEY_SIZE;
+  uint32_t sector_size = SECTOR_SIZE;
+  uint32_t num_aols = 1;
+  uint32_t num_sub_aols = 1;
+  uint16_t app_tag = 0xbeef;
+  uint32_t start_sec_num = 5;
+  xts::xts_aol_t* in_aol[MAX_AOLS];
+  xts::xts_aol_t* out_aol[MAX_AOLS];
+  bool ring_seq_db = true;
+  uint16_t seq_xts_index = 0;
+  xts::xts_desc_t* xts_desc_addr = NULL;
+  unsigned char* iv = NULL;
+
+  // ctx data needed for verification of op completion
+  uint64_t xts_db_addr = 0;
+  uint64_t* xts_db = NULL;
+  uint64_t exp_db_data = 0xdeadbeefdeadbeef;
+  uint64_t* status = NULL;
+  bool t10_en = false;
+  bool decr_en = false;
+};
+}  // namespace tests
 
 #endif   // _XTS_HPP_
