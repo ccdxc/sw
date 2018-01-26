@@ -71,7 +71,7 @@ eth_tx_fetch_desc:
   tblmincri.c1    d.color, 1, 1
 
   // Claim the descriptor
-  tblmincri.f     d.{c_index0}.hx, d.{ring_size}.hx, 1
+  tblmincr.f      d.{c_index0}.hx, d.{ring_size}.hx, r2
 
   // Eval the doorbell only when pi == ci
   seq             c3, d.{p_index0}.hx, d.{c_index0}.hx

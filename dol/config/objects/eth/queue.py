@@ -317,6 +317,8 @@ class EthQueueObject(QueueObject):
         if not ( GlobalOptions.dryrun or GlobalOptions.cfgonly):
             # Ignore spurious_db_cnt
             model_wrap.eos_ignore_addr(self.qstate.addr + 39, 1)
+            # Ignore completion ring posted index
+            model_wrap.eos_ignore_addr(self.qstate.addr + 12, 2)
 
         self.qstate.Read()
 
