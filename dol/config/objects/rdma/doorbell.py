@@ -31,6 +31,4 @@ class Doorbell(doorbell.Doorbell):
         lgh.info("- Data:0x%x (Pindex:%d/RingID:%d/QID:%d/PID:%d)" %
                  (data, p_index, ring_id, queue_id, pid))
 
-        self.ring.queue.qstate.Read()
         model_wrap.step_doorbell(address, data)
-        self.ring.queue.qstate.Read()
