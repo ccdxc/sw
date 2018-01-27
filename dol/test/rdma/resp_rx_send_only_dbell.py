@@ -2,6 +2,7 @@
 
 from test.rdma.utils import *
 from infra.common.glopts import GlobalOptions
+import copy
 
 def Setup(infra, module):
     return
@@ -15,7 +16,7 @@ def TestCaseSetup(tc):
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+    tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
 
     #Set the immdt_as_dbell property on the QP
     rs.lqp.rq.qstate.data.immdt_as_dbell = 1

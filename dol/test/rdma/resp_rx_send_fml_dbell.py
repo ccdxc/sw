@@ -2,6 +2,7 @@
 
 from test.rdma.utils import *
 from infra.common.glopts import GlobalOptions
+import copy
 
 def Setup(infra, module):
     return
@@ -15,7 +16,7 @@ def TestCaseSetup(tc):
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+    tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
     tc.pvtdata.send_first_psn = tc.pvtdata.rq_pre_qstate.e_psn
     tc.pvtdata.send_mid_psn = tc.pvtdata.rq_pre_qstate.e_psn + 1
     tc.pvtdata.send_last_psn = tc.pvtdata.rq_pre_qstate.e_psn + 2

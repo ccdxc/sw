@@ -303,7 +303,6 @@ class RdmaQstateObject(object):
         if (GlobalOptions.dryrun): return
         cfglogger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
         model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
-        self.Read()
 
     def Read(self):
         if (GlobalOptions.dryrun):
@@ -316,13 +315,14 @@ class RdmaQstateObject(object):
     
     def incr_pindex(self, ring, ring_size):
         assert(ring < 7)
-        self.set_pindex(ring, ((self.get_pindex(ring) + 1) & (ring_size - 1)))
-        self.Write()
+        prev_value = self.get_pindex(ring)
+        new_value = ((self.get_pindex(ring) + 1) & (ring_size - 1))
+        cfglogger.info("  incr_pindex: pre-val: %d new-val: %d ring_size %d" % (prev_value, new_value, ring_size))
+        self.set_pindex(ring, new_value)
 
     def incr_cindex(self, ring, ring_size):
         assert(ring < 7)
         self.set_cindex(ring, ((self.get_cindex(ring) + 1) & (ring_size - 1)))
-        self.Write()
 
     def set_pindex(self, ring, value):
         assert(ring < 7)
@@ -412,6 +412,10 @@ class RdmaQueueObject(QueueObject):
 
     def ConfigureRings(self):
         self.obj_helper_ring.Configure()
+        if not ( GlobalOptions.dryrun or GlobalOptions.cfgonly):
+            # Ignore spurious ring_empty_counter memory comparison b/w RTL and SW model
+            if self.queue_type.GID() == 'RDMA_RQ':
+                model_wrap.eos_ignore_addr(self.GetQstateAddr() + 44, 1)
 
     def Show(self):
         cfglogger.info('Queue: %s' % self.GID())
