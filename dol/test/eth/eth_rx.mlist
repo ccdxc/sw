@@ -61,6 +61,7 @@ modules:
     - module:
         name    : L3UC
         spec    : rx_l3.testspec
+        latency : true
         iterate:
             # Tagged Flows
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING

@@ -29,6 +29,7 @@ modules:
     - module:
         name    : L3UC
         spec    : tx_rx_l3.testspec
+        latency : true
         iterate:
             # Untagged Flows
             - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
