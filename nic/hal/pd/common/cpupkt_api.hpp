@@ -9,7 +9,7 @@ namespace hal {
 namespace pd {
 
 #define MAX_CPU_PKT_QUEUES              (types::WRingType_ARRAYSIZE)
-#define MAX_CPU_PKT_QUEUE_INST_INFO     (HAL_MAX_PROXY_FLOWS)
+#define MAX_CPU_PKT_QUEUE_INST_INFO     (1024)
 
 #define HAL_MAX_CPU_PKT_DESCR_ENTRIES   1024
 #define CPU_PKT_DESCR_SIZE              128
@@ -64,7 +64,7 @@ typedef struct cpupkt_queue_info_s {
     types::WRingType        type;
     pd_wring_meta_t*        wring_meta;
     uint32_t                num_qinst;
-    cpupkt_qinst_info_t*    qinst_info[HAL_MAX_PROXY_FLOWS];
+    cpupkt_qinst_info_t*    qinst_info[MAX_CPU_PKT_QUEUE_INST_INFO];
 } cpupkt_queue_info_t;
 
 typedef struct cpupkt_rx_ctxt_s {

@@ -355,8 +355,10 @@ hal_state_pd::init(void)
                                  sizeof(hal::pd::cpupkt_ctxt_t), MAX_CPU_PKT_QUEUES,
                                  true, true, true);
     HAL_ASSERT_RETURN((cpupkt_slab_ != NULL), false);
-    cpupkt_qinst_info_slab_ = slab::factory("CPUPKT QINFO PD", HAL_SLAB_CPUPKT_QINST_INFO_PD,
-                                            sizeof(hal::pd::cpupkt_queue_info_t), MAX_CPU_PKT_QUEUE_INST_INFO,
+    cpupkt_qinst_info_slab_ = slab::factory("CPUPKT QINFO PD",
+                                            HAL_SLAB_CPUPKT_QINST_INFO_PD,
+                                            sizeof(hal::pd::cpupkt_queue_info_t),
+                                            MAX_CPU_PKT_QUEUES,
                                             true, true, true);
     HAL_ASSERT_RETURN((cpupkt_qinst_info_slab_ != NULL), false);
 
