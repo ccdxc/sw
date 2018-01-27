@@ -322,21 +322,21 @@ modules:
         spec    : resp_rx_send_only_options_no_OCS.testspec
         ignore  : False
 
-    - module:
-        name    : RDMA_RX_SEND_ONLY_OPTIONS_OCS_ERROR
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_send_only_options_OCS_error
-        spec    : resp_rx_send_only_options_OCS_error.testspec
-        ignore  : True
+#    - module:
+#        name    : RDMA_RX_SEND_ONLY_OPTIONS_OCS_ERROR
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_options_OCS_error
+#        spec    : resp_rx_send_only_options_OCS_error.testspec
+#        ignore  : True
 
-    - module:
-        name    : RDMA_RX_SEND_ONLY_OPTIONS_OCS_AS_NON_FIRST_OPTION
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_send_only_options_OCS_as_non_first_option
-        spec    : resp_rx_send_only_options_OCS_as_non_first_option.testspec
-        ignore  : True
+#    - module:
+#        name    : RDMA_RX_SEND_ONLY_OPTIONS_OCS_AS_NON_FIRST_OPTION
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_options_OCS_as_non_first_option
+#        spec    : resp_rx_send_only_options_OCS_as_non_first_option.testspec
+#        ignore  : True
 
     - module:
         name    : RDMA_RX_SEND_ONLY_2CQ_1EQ
@@ -354,13 +354,13 @@ modules:
         spec    : resp_rx_send_only_inv_lkey_err1.testspec
         ignore  : False
 
-    - module:
-        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR2
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_send_only_inv_lkey_err
-        spec    : resp_rx_send_only_inv_lkey_err2.testspec
-        ignore  : True
+#    - module:
+#        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR2
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_inv_lkey_err
+#        spec    : resp_rx_send_only_inv_lkey_err2.testspec
+#        ignore  : True
 
     - module:
         name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR3
