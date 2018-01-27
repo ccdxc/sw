@@ -1,5 +1,5 @@
 # format: <name> <version>
-asic_libs 7078bde
-ncc_tools 7078bde
+asic_libs 7c8bf92
+ncc_tools 7c8bf92
 third_party_libs 1.1.31
-pbc_config 7078bde
+pbc_config 7c8bf92

@@ -13,9 +13,8 @@
 #endif
 #else // _COSIM_
 
-#ifdef _ZEBU_
-#include "cpu_bus_zebu.h"
-#endif
+/* ZEBU or HAPS */
+// these are included outside, not needed here
 #endif
 
 
