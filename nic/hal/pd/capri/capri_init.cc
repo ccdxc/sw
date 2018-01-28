@@ -6,6 +6,8 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/include/hal.hpp"
+#include "nic/include/hal_cfg.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
@@ -108,6 +110,10 @@ capri_init (capri_cfg_t *cfg = NULL)
     
     HAL_TRACE_DEBUG("Capri Init ");
 
+    hal::hal_cfg_t *hal_cfg =
+                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    HAL_ASSERT(hal_cfg);
+
     ret = capri_hbm_parse();
 
     ret = capri_hbm_regions_init();
@@ -129,7 +135,11 @@ capri_init (capri_cfg_t *cfg = NULL)
         ret = capri_txs_scheduler_init();
     }
  
-    if (ret == HAL_RET_OK) {
+    // Call PXB/PCIE init only in MODEL and RTL simulation
+    // This will be done by PCIe manager for the actual chip
+    if (ret == HAL_RET_OK &&
+        (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM ||
+         hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL)) {
         ret = capri_pxb_pcie_init();
     }
 
