@@ -79,7 +79,8 @@ struct sqcb0_t {
     li_fence: 1;
     retry_timer_on: 1;
     bktrack_in_progress: 1;
-    rsvd0: 6;
+    rsvd0: 5;
+    ring_empty_sched_eval_done: 1;
     congestion_mgmt_enable: 1;
     busy: 1;
     // a byte field located in sqcb0, but manipulated from

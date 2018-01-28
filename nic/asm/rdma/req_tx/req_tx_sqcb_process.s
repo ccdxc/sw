@@ -34,9 +34,12 @@ req_tx_sqcb_process:
 
     seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0 // Branch Delay Slot
     bcf            [!c1], process_recirc
-    
+
+    // reset sched_eval_done 
+    tblwr          d.ring_empty_sched_eval_done, 0  //Branch Delay Slot
+
     // copy intrinsic to global
-    add            r1, r0, offsetof(struct phv_, common_global_global_data) //Branch Delay Slot
+    add            r1, r0, offsetof(struct phv_, common_global_global_data) 
 
     // enable below code after spr_tbladdr special purpose register is available in capsim
     #mfspr         r1, spr_tbladdr
@@ -327,8 +330,12 @@ end:
     nop
 
 all_rings_empty:
+    bbeq    d.ring_empty_sched_eval_done, 1, exit
+    nop     //BD Slot                        
+
     // ring doorbell to re-evaluate scheduler
     DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3)
+    tblwr   d.ring_empty_sched_eval_done, 1
 
 exit:
     phvwr   p.common.p4_intr_global_drop, 1
