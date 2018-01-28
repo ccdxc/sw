@@ -118,60 +118,95 @@ struct reset_comp {
 	u32 rsvd2[3];
 } __packed;
 
+#define IDENTITY_VERSION_1		1
+
 /**
- * struct identify_cmd - Device identify command
- * @opcode: opcode = 2
- * @addr:   Destination address for the 4096-byte device
- *          configuration info
+ * struct identify_cmd - Driver/device identify command
+ * @opcode:  opcode = 2
+ * @ver:     Highest version of identify supported by driver:
+ *                 1 = version 1.0
+ * @addr:    Destination address for the 4096-byte device
+ *           identify info
  */
 struct identify_cmd {
 	u16 opcode;
-	u16 rsvd;
+	u16 ver;
 	dma_addr_t addr;
 	u32 rsvd2[13];
 } __packed;
 
 /**
- * struct identify_comp - Identify command completion
+ * struct identify_comp - Driver/device identify command completion
  * @status: The status of the command.  Values for status are:
  *             0 = Successful completion
+ *             1 = Version not supported by device
+ * @ver:    Version of identify returned by device
  */
 struct identify_comp {
 	u32 status:8;
 	u32 rsvd:24;
-	u32 rsvd2[3];
+	u16 ver;
+	u16 rsvd2[5];
 } __packed;
 
+enum os_type {
+	OS_TYPE_LINUX   = 1,
+	OS_TYPE_WIN     = 2,
+	OS_TYPE_DPDK    = 3,
+	OS_TYPE_FREEBSD = 4,
+	OS_TYPE_IXPE    = 5,
+};
+
 /**
- * union identity - 4096 bytes of device identity information
- * @asic_type:        ASIC type:
- *                       0 = Capri
- * @asic_rev:         ASIC revision level, e.g. 0xA0
- * @serial_num:       NULL-terminated string representing the
- *                    device serial number
- * @fw_version:       NULL-terminated string representing the
- *                    firmware version
- * @nlifs:            Number of LIFs provisioned
- * @ndbpgs_per_lif:   Number of doorbell pages per LIF
- * @nadminqs_per_lif: Number of admin queues per LIF provisioned
- * @ntxqs_per_lif:    Number of Ethernet transmit queues per LIF
- *                    provisioned
- * @nrxqs_per_lif:    Number of Ethernet receive queues per LIF
- *                    provisioned
- * @ncps_per_lif:     Number of completion queues per LIF
- *                    provisioned
- * @nrdmasqs_per_lif: Number of RMDA send queues per LIF
- *                    provisioned
- * @nrdmarqs_per_lif: Number of RDMA receive queues per LIF
- *                    provisioned
- * @neqs_per_lif:     Number of event queues per LIF provisioned
- * @nintrs:           Number of interrupts provisioned
- * @nucasts_per_lif:  Number of perfect unicast addresses
- *                    supported
- * @nmcasts_per_lif:  Number of perfect multicast addresses
- *                    supported.
+ * union identity - 4096 bytes of driver/device identity information
+ *
+ * Supplied by driver (IN):
+ *
+ *     @os_type:          OS type (see enum os_type)
+ *     @os_dist:          OS distribution, numeric format
+ *     @os_dist_str:      OS distribution, string format
+ *     @kernel_ver:       Kernel version, numeric format
+ *     @kernel_ver_str:   Kernel version, string format
+ *     @driver_ver_str:   Driver version, string format
+ *
+ * Return by device (OUT):
+ *
+ *     @asic_type:        ASIC type:
+ *                           0 = Capri
+ *     @asic_rev:         ASIC revision level, e.g. 0xA0
+ *     @serial_num:       NULL-terminated string representing the
+ *                        device serial number
+ *     @fw_version:       NULL-terminated string representing the
+ *                        firmware version
+ *     @nlifs:            Number of LIFs provisioned
+ *     @ndbpgs_per_lif:   Number of doorbell pages per LIF
+ *     @nadminqs_per_lif: Number of admin queues per LIF provisioned
+ *     @ntxqs_per_lif:    Number of Ethernet transmit queues per LIF
+ *                        provisioned
+ *     @nrxqs_per_lif:    Number of Ethernet receive queues per LIF
+ *                        provisioned
+ *     @ncps_per_lif:     Number of completion queues per LIF
+ *                        provisioned
+ *     @nrdmasqs_per_lif: Number of RMDA send queues per LIF
+ *                        provisioned
+ *     @nrdmarqs_per_lif: Number of RDMA receive queues per LIF
+ *                        provisioned
+ *     @neqs_per_lif:     Number of event queues per LIF provisioned
+ *     @nintrs:           Number of interrupts provisioned
+ *     @nucasts_per_lif:  Number of perfect unicast addresses
+ *                        supported
+ *     @nmcasts_per_lif:  Number of perfect multicast addresses
+ *                        supported.
  */
 union identity {
+	struct {
+		u32 os_type;
+		u32 os_dist;
+		char os_dist_str[128];
+		u32 kernel_ver;
+		char kernel_ver_str[32];
+		char driver_ver_str[32];
+	} drv;
 	struct {
 		u8 asic_type;
 		u8 asic_rev;
@@ -190,7 +225,7 @@ union identity {
 		u32 nintrs;
 		u32 nucasts_per_lif;
 		u32 nmcasts_per_lif;
-	};
+	} dev;
 	u32 words[1024];
 } __packed;
 

@@ -291,20 +291,22 @@ static int identity_show(struct seq_file *seq, void *v)
 	union identity *ident = ionic->ident;
 
 	seq_printf(seq, "asic_type:        %s\n",
-		   ionic_dev_asic_name(ident->asic_type));
-	seq_printf(seq, "asic_rev:         0x%x\n", ident->asic_rev);
-	seq_printf(seq, "serial_num:       %s\n", ident->serial_num);
-	seq_printf(seq, "fw_version:       %s\n", ident->fw_version);
-	seq_printf(seq, "nlifs:            %d\n", ident->nlifs);
-	seq_printf(seq, "ndbpgs_per_lif:   %d\n", ident->ndbpgs_per_lif);
-	seq_printf(seq, "nadminqs_per_lif: %d\n", ident->nadminqs_per_lif);
-	seq_printf(seq, "ntxqs_per_lif:    %d\n", ident->ntxqs_per_lif);
-	seq_printf(seq, "nrxqs_per_lif:    %d\n", ident->nrxqs_per_lif);
-	seq_printf(seq, "ncqs_per_lif:     %d\n", ident->ncqs_per_lif);
-	seq_printf(seq, "nrdmasqs_per_lif: %d\n", ident->nrdmasqs_per_lif);
-	seq_printf(seq, "nrdmarqs_per_lif: %d\n", ident->nrdmarqs_per_lif);
-	seq_printf(seq, "neqs_per_lif:     %d\n", ident->neqs_per_lif);
-	seq_printf(seq, "nintrs:           %d\n", ident->nintrs);
+		   ionic_dev_asic_name(ident->dev.asic_type));
+	seq_printf(seq, "asic_rev:         0x%x\n", ident->dev.asic_rev);
+	seq_printf(seq, "serial_num:       %s\n", ident->dev.serial_num);
+	seq_printf(seq, "fw_version:       %s\n", ident->dev.fw_version);
+	seq_printf(seq, "nlifs:            %d\n", ident->dev.nlifs);
+	seq_printf(seq, "ndbpgs_per_lif:   %d\n", ident->dev.ndbpgs_per_lif);
+	seq_printf(seq, "nadminqs_per_lif: %d\n", ident->dev.nadminqs_per_lif);
+	seq_printf(seq, "ntxqs_per_lif:    %d\n", ident->dev.ntxqs_per_lif);
+	seq_printf(seq, "nrxqs_per_lif:    %d\n", ident->dev.nrxqs_per_lif);
+	seq_printf(seq, "ncqs_per_lif:     %d\n", ident->dev.ncqs_per_lif);
+	seq_printf(seq, "nrdmasqs_per_lif: %d\n", ident->dev.nrdmasqs_per_lif);
+	seq_printf(seq, "nrdmarqs_per_lif: %d\n", ident->dev.nrdmarqs_per_lif);
+	seq_printf(seq, "neqs_per_lif:     %d\n", ident->dev.neqs_per_lif);
+	seq_printf(seq, "nintrs:           %d\n", ident->dev.nintrs);
+	seq_printf(seq, "nucasts_per_lif:  %d\n", ident->dev.nucasts_per_lif);
+	seq_printf(seq, "nmcasts_per_lif:  %d\n", ident->dev.nmcasts_per_lif);
 
 	return 0;
 }
@@ -319,7 +321,7 @@ int ionic_debugfs_add_ident(struct ionic *ionic)
 int ionic_debugfs_add_sizes(struct ionic *ionic)
 {
 	debugfs_create_u32("nlifs", S_IRUSR, ionic->dentry,
-			   &ionic->ident->nlifs);
+			   &ionic->ident->dev.nlifs);
 	debugfs_create_u32("ntxqs_per_lif", S_IRUSR, ionic->dentry,
 			   &ionic->ntxqs_per_lif);
 	debugfs_create_u32("nrxqs_per_lif", S_IRUSR, ionic->dentry,

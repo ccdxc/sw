@@ -315,7 +315,7 @@ u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 void ionic_dev_cmd_reset(struct ionic_dev *idev);
-void ionic_dev_cmd_identify(struct ionic_dev *idev, dma_addr_t addr);
+void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 			       unsigned int index, unsigned int lif_index,

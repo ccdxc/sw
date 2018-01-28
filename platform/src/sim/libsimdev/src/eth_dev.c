@@ -231,19 +231,23 @@ devcmd_identify(struct admin_cmd *acmd, struct admin_comp *acomp)
     simdev_t *sd = current_sd;
     ethparams_t *ep = sd->priv;
     union identity ident = {
-        .asic_type = 0x00,
-        .asic_rev = 0xa0,
-        .serial_num = "serial_num0001",
-        .fw_version = "fwvers0002",
-        .nlifs = 1,
-        .ndbpgs_per_lif = 1,
-        .ntxqs_per_lif = ep->txq_count,
-        .nrxqs_per_lif = ep->rxq_count,
-        .ncqs_per_lif = 0,
-        .nrdmasqs_per_lif = 0,
-        .nrdmarqs_per_lif = 0,
-        .neqs_per_lif = 0,
-        .nintrs = ep->intr_count,
+        .dev = {
+            .asic_type = 0x00,
+            .asic_rev = 0xa0,
+            .serial_num = "serial_num0001",
+            .fw_version = "fwvers0002",
+            .nlifs = 1,
+            .ndbpgs_per_lif = 1,
+            .ntxqs_per_lif = ep->txq_count,
+            .nrxqs_per_lif = ep->rxq_count,
+            .ncqs_per_lif = 0,
+            .nrdmasqs_per_lif = 0,
+            .nrdmarqs_per_lif = 0,
+            .neqs_per_lif = 0,
+            .nintrs = ep->intr_count,
+            .nucasts_per_lif = 0,
+            .nmcasts_per_lif = 0,
+        },
     };
 
     simdev_log("devcmd_identify: addr 0x%"PRIx64" size %ld\n", 
@@ -252,6 +256,7 @@ devcmd_identify(struct admin_cmd *acmd, struct admin_comp *acomp)
                    cmd->addr, sizeof(ident), &ident) < 0) {
         simdev_error("devcmd_identify: sims_memwr failed\n");
         comp->status = 1;
+        comp->ver = IDENTITY_VERSION_1;
     }
 }
 

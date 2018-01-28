@@ -43,7 +43,7 @@ static void ionic_get_drvinfo(struct net_device *netdev,
 
 	strlcpy(drvinfo->driver, DRV_NAME, sizeof(drvinfo->driver));
 	strlcpy(drvinfo->version, DRV_VERSION, sizeof(drvinfo->version));
-	strlcpy(drvinfo->fw_version, ionic->ident->fw_version,
+	strlcpy(drvinfo->fw_version, ionic->ident->dev.fw_version,
 		sizeof(drvinfo->fw_version));
 	strlcpy(drvinfo->bus_info, ionic_bus_info(ionic),
 		sizeof(drvinfo->bus_info));
@@ -283,9 +283,9 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 	rx_mode |= (netdev->flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
 	rx_mode |= (netdev->flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
 
-	if (netdev_uc_count(netdev) + 1 > ident->nucasts_per_lif)
+	if (netdev_uc_count(netdev) + 1 > ident->dev.nucasts_per_lif)
 		rx_mode |= RX_MODE_F_PROMISC;
-	if (netdev_mc_count(netdev) > ident->nmcasts_per_lif)
+	if (netdev_mc_count(netdev) > ident->dev.nmcasts_per_lif)
 		rx_mode |= RX_MODE_F_ALLMULTI;
 
 	if (lif->rx_mode != rx_mode) {
@@ -518,7 +518,7 @@ static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 
 static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
 {
-	unsigned int ndbpgs_per_lif = lif->ionic->ident->ndbpgs_per_lif;
+	unsigned int ndbpgs_per_lif = lif->ionic->ident->dev.ndbpgs_per_lif;
 
 	BUG_ON(ndbpgs_per_lif < page + 1);
 
@@ -704,7 +704,7 @@ int ionic_lifs_alloc(struct ionic *ionic)
 
 	INIT_LIST_HEAD(&ionic->lifs);
 
-	for (i = 0; i < ionic->ident->nlifs; i++) {
+	for (i = 0; i < ionic->ident->dev.nlifs; i++) {
 		err = ionic_lif_alloc(ionic, i);
 		if (err)
 			return err;
@@ -1076,16 +1076,16 @@ void ionic_lifs_unregister(struct ionic *ionic)
 int ionic_lifs_size(struct ionic *ionic)
 {
 	union identity *ident = ionic->ident;
-	unsigned int nlifs = ident->nlifs;
-	unsigned int ntxqs_per_lif = ident->ntxqs_per_lif;
-	unsigned int nrxqs_per_lif = ident->nrxqs_per_lif;
-	unsigned int nintrs = ident->nintrs;
+	unsigned int nlifs = ident->dev.nlifs;
+	unsigned int ntxqs_per_lif = ident->dev.ntxqs_per_lif;
+	unsigned int nrxqs_per_lif = ident->dev.nrxqs_per_lif;
+	unsigned int nintrs = ident->dev.nintrs;
 	int err;
 
 try_again:
 	nintrs = nlifs * (ntxqs_per_lif + nrxqs_per_lif + 1 /* adminq */);
 
-	while (nintrs > ident->nintrs)
+	while (nintrs > ident->dev.nintrs)
 	{
 		if (ntxqs_per_lif-- > 1)
 			goto try_again;

@@ -108,10 +108,11 @@ void ionic_dev_cmd_reset(struct ionic_dev *idev)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_identify(struct ionic_dev *idev, dma_addr_t addr)
+void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr)
 {
 	union dev_cmd cmd = {
 		.identify.opcode = CMD_OPCODE_IDENTIFY,
+		.identify.ver = ver,
 		.identify.addr = addr,
 	};
 

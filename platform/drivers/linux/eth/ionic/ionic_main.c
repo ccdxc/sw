@@ -17,7 +17,9 @@
  */
 
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/netdevice.h>
+#include <linux/utsname.h>
 
 #include "ionic.h"
 #include "ionic_bus.h"
@@ -137,11 +139,22 @@ int ionic_identify(struct ionic *ionic)
 	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
 	if (!ident)
 		return -ENOMEM;
-	ident_pa = dma_map_single(dev, ident, sizeof(*ident), DMA_FROM_DEVICE);
+	ident_pa = dma_map_single(dev, ident, sizeof(*ident),
+				  DMA_BIDIRECTIONAL);
 	if (dma_mapping_error(dev, ident_pa))
 		return -EIO;
 
-	ionic_dev_cmd_identify(idev, ident_pa);
+	ident->drv.os_type = OS_TYPE_LINUX;
+	ident->drv.os_dist = 0;
+	strncpy(ident->drv.os_dist_str, utsname()->release,
+		sizeof(ident->drv.os_dist_str) - 1);
+	ident->drv.kernel_ver = LINUX_VERSION_CODE;
+	strncpy(ident->drv.kernel_ver_str, utsname()->version,
+		sizeof(ident->drv.kernel_ver_str) - 1);
+	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
+		sizeof(ident->drv.driver_ver_str) - 1);
+
+	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
 
 	err = ionic_dev_cmd_wait_check(idev, HZ * 2);
 	if (err)
@@ -157,14 +170,14 @@ int ionic_identify(struct ionic *ionic)
 	return 0;
 
 err_out_unmap:
-	dma_unmap_single(dev, ident_pa, sizeof(*ident), DMA_FROM_DEVICE);
+	dma_unmap_single(dev, ident_pa, sizeof(*ident), DMA_BIDIRECTIONAL);
 	return err;
 }
 
 void ionic_forget_identity(struct ionic *ionic)
 {
 	dma_unmap_single(ionic->dev, ionic->ident_pa,
-			 sizeof(*ionic->ident), DMA_FROM_DEVICE);
+			 sizeof(*ionic->ident), DMA_BIDIRECTIONAL);
 }
 
 int ionic_reset(struct ionic *ionic)
