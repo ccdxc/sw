@@ -415,7 +415,7 @@ class RdmaQueueObject(QueueObject):
         if not ( GlobalOptions.dryrun or GlobalOptions.cfgonly):
             # Ignore spurious ring_empty_counter memory comparison b/w RTL and SW model
             if self.queue_type.GID() == 'RDMA_RQ':
-                model_wrap.eos_ignore_addr(self.GetQstateAddr() + 24, 1)
+                model_wrap.eos_ignore_addr(self.GetQstateAddr() + 44, 1)
 
     def Show(self):
         cfglogger.info('Queue: %s' % self.GID())
