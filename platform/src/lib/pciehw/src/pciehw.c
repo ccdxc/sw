@@ -39,7 +39,7 @@ pciehwdev_get(pciehwdevh_t hwdevh)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    return hwdevh ? &phwmem->dev[hwdevh] : NULL;
+    return hwdevh > 0 && hwdevh < PCIEHW_NDEVS ? &phwmem->dev[hwdevh] : NULL;
 }
 
 pciehwdevh_t

@@ -5,7 +5,7 @@
 # XXX fix build for aarch64
 LBUILD_ARCHES = x86_64
 
-PCIUTILS_VERSION ?= 3.5.5
+PCIUTILS_VERSION ?= 3.5.6
 PCIUTILS = pciutils-$(PCIUTILS_VERSION)
 PCIUTILS_TARBALL = $(PCIUTILS).tar.gz
 PCIUTILS_PATCH = pciutils.patch
@@ -18,31 +18,31 @@ include $(TOPDIR)/make/Makefile.inc
 
 ifneq ("$(strip $(BUILD_ARCH))","")
 
-all: $(PCIUTILS) apply-patch build genprogs
+all: build genprogs
 
 clean:
 	$(RM) -r $(PCIUTILS) $(PCIUTILS)-orig
 	$(RM) $(PCIUTILS_TARBALL)
 	$(RM) $(GENPROGS)
-	$(RM) .patched
 
 endif # BUILD_ARCH
 
 gen-patch: $(PCIUTILS)-orig $(PCIUTILS) clean-pciutils
 	-diff -uprN $(PCIUTILS)-orig $(PCIUTILS) > $(PCIUTILS_PATCH)
 
-apply-patch: .patched
-
-.patched:
-	(cd $(PCIUTILS) && patch -p1 -f) < $(PCIUTILS_PATCH) && touch $@
-
 build: $(PCIUTILS)
 	$(MAKE) -C $(PCIUTILS) PEN_TOP=../$(TOPDIR) BUILD_ARCH=$(BUILD_ARCH)
 
 genprogs: $(GENPROGS)
 
-$(PCIUTILS): $(PCIUTILS_TARBALL)
-	tar xf $?
+$(PCIUTILS): $(PCIUTILS_TARBALL) $(PCIUTILS_PATCH)
+	$(RM) -r $(PCIUTILS)
+	tar xf $(PCIUTILS_TARBALL)
+	(cd $(PCIUTILS) && patch -p1 -f) < $(PCIUTILS_PATCH)
+
+$(PCIUTILS)-orig: $(PCIUTILS_TARBALL)
+	mkdir $(PCIUTILS)-orig
+	cd $(PCIUTILS)-orig; tar xf ../$(PCIUTILS_TARBALL) --strip-components=1
 
 $(PCIUTILS_TARBALL):
 	curl -sO ftp://atrey.karlin.mff.cuni.cz/pub/linux/pci/$@

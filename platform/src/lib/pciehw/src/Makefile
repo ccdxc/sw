@@ -24,6 +24,7 @@ LCFLAGS += \
 	-I ../../misc/include \
 	-I ../../intrutils/include \
 	-I ../../pal/include \
+	-I ../../pcietlp/include \
 	-I ../../cfgspace/include \
 	-I ../../pciehost/include \
 	-I ../include \

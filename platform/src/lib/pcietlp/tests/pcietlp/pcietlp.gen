@@ -1,0 +1,9 @@
+#!/bin/sh
+
+TOPDIR=../../../../..
+GENLIB=$TOPDIR/gen/x86_64/lib
+PROG=$TOPDIR/gen/x86_64/bin/pcietlp
+
+export LD_LIBRARY_PATH=$GENLIB
+
+$PROG $*

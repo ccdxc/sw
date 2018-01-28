@@ -35,30 +35,29 @@ pal_mem_vtop(const void *va)
     return pr_vtop(va, 4);
 }
 
+void *
+pal_memcpy(void *dst, const void *src, size_t n)
+{
+    u_int8_t *d = dst;
+    const u_int8_t *s = src;
+    int i;
+
+    for (i = 0; i < n; i++) {
+        *d++ = *s++;
+    }
+    return dst;
+}
+
 int
 pal_mem_rd(const u_int64_t pa, void *buf, const size_t sz)
 {
-#ifdef __aarch64__
-    pal_data_t *pd = pal_get_data();
-
-    lseek(pd->memfd, pa, SEEK_SET);
-    return read(pd->memfd, buf, sz);
-#else
-    memcpy(buf, pr_ptov(pa, sz), sz);
+    pal_memcpy(buf, pr_ptov(pa, sz), sz);
     return sz;
-#endif
 }
 
 int
 pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz)
 {
-#ifdef __aarch64__
-    pal_data_t *pd = pal_get_data();
-
-    lseek(pd->memfd, pa, SEEK_SET);
-    return write(pd->memfd, buf, sz);
-#else
-    memcpy(pr_ptov(pa, sz), buf, sz);
+    pal_memcpy(pr_ptov(pa, sz), buf, sz);
     return sz;
-#endif
 }

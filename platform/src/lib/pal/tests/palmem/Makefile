@@ -17,6 +17,7 @@ LIBRARIES = \
 	-lcfgspace \
 	-lpciehw \
 	-lintrutils \
+	-lpcietlp \
 	$(NULL)
 
 TOPDIR = ../../../../..

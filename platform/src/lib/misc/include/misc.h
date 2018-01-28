@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 char *hex_format(char *buf, size_t buflen,
-                 const unsigned char *data, const size_t datalen);
+                 const void *data, const size_t datalen);
 char *strncpy0(char *d, const char *s, const size_t n);
 int strtoargv(char *s, char *argv[], const int maxac);
 

@@ -29,6 +29,7 @@ LIBRARIES = \
 	-lsimdev \
 	-lpciehsvc \
 	-lpciehw \
+	-lpcietlp \
 	-lintrutils \
 	-lpciehost \
 	-lcfgspace \

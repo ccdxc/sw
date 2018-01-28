@@ -344,7 +344,7 @@ idx  typ vfst 0xaddr____ size INP
 static void
 prt_show_res_entry_hdr(void)
 {
-    pciehsys_log("%-4s %-4s %-4s %-10s %-4s %-5s\n",
+    pciehsys_log("%-4s %-4s %-4s %-11s %-4s %-5s\n",
                  "idx", "type", "vfst", "address", "size", "flags");
 }
 
@@ -353,7 +353,7 @@ prt_show_res_entry(const int prti, prt_t prt)
 {
     const prt_res_t *r = (prt_res_t *)prt;
 
-    pciehsys_log("%4d %-4s %4d 0x%08"PRIx64" %-4s %c%c%c\n",
+    pciehsys_log("%4d %-4s %4d 0x%09"PRIx64" %-4s %c%c%c\n",
                  prti,
                  prt_type_str(r->type),
                  r->vfstride,

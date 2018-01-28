@@ -7,8 +7,9 @@
 
 #define PMT_BASE        \
     (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_TGT_PMT_BYTE_ADDRESS)
-#define PMT_COUNT       \
-    CAP_PXB_CSR_DHS_TGT_PMT_ENTRIES
+#define PMT_COUNT_ASIC  CAP_PXB_CSR_DHS_TGT_PMT_ENTRIES
+#define PMT_COUNT_FPGA  512
+#define PMT_COUNT       PMT_COUNT_ASIC
 #define PMT_NWORDS      5
 #define PMT_STRIDE      \
     (CAP_PXB_CSR_DHS_TGT_PMT_ENTRY_ARRAY_ELEMENT_SIZE * 4 * 8)
@@ -137,5 +138,22 @@ typedef struct {
     u_int64_t mask;
     pmr_t pmr;
 } pmt_t;
+
+struct pciehw_s;
+typedef struct pciehw_s pciehw_t;
+struct pciehwdev_s;
+typedef struct pciehwdev_s pciehwdev_t;
+struct pciehwbar_s;
+typedef struct pciehwbar_s pciehwbar_t;
+
+void pciehw_pmt_init(pciehw_t *phw);
+int pciehw_pmt_load_cfg(pciehw_t *phw, pciehwdev_t *phwdev);
+void pciehw_pmt_unload_cfg(pciehw_t *phw, pciehwdev_t *phwdev);
+int pciehw_pmt_alloc(pciehwdev_t *phwdev, pciehbar_t *bar);
+void pciehw_pmt_load_bar(pciehw_t *phw,
+                         pciehwdev_t *phwdev,
+                         pciehwbar_t *phwbar);
+void pciehw_pmt_dbg(int argc, char *argv[]);
+void pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on);
 
 #endif /* __PMT_H__ */

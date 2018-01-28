@@ -10,6 +10,7 @@ LIBRARIES = \
 	-lsimlib \
 	-lpciehsvc \
 	-lpciehw \
+	-lpcietlp \
 	-lpciehost \
 	-lcfgspace \
 	-lpal \

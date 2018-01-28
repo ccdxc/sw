@@ -10,6 +10,7 @@ SUBDIRS = \
 	pciehost \
 	pciehsvc \
 	pciehw \
+	pcietlp \
 	pcieport \
 	pal \
 	$(NULL)

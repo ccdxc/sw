@@ -22,6 +22,7 @@ LIBRARIES = \
 	-lintrutils \
 	-lcfgspace \
 	-lpcieport \
+	-lpcietlp \
 	-lpal \
 	-lmisc \
 	$(NULL)

@@ -21,11 +21,12 @@
 #include "pciehw_impl.h"
 #include "pmt.h"
 
+static int npmt = PMT_COUNT_FPGA; /* XXX runtime */
+
 static int
 pmt_size(void)
 {
-    pciehw_t *phw = pciehw_get();
-    return phw->npmt;
+    return npmt;
 }
 
 static char *
@@ -41,11 +42,12 @@ static int
 pmt_alloc(pciehw_t *phw, const pciehwdevh_t phwdevh)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehw_spmt_t *spmt;
     int i;
 
-    for (i = 0; i < phw->npmt; i++) {
-        if (phwmem->pmt_inuse[i] == 0) {
-            phwmem->pmt_inuse[i] = phwdevh;
+    for (spmt = phwmem->spmt, i = 0; i < pmt_size(); i++, spmt++) {
+        if (spmt->owner == 0) {
+            spmt->owner = phwdevh;
             return i;
         }
     }
@@ -292,7 +294,7 @@ pmt_grst(pciehw_t *phw)
 #else
     int i;
 
-    for (i = 0; i < phw->npmt; i++) {
+    for (i = 0; i < pmt_size(); i++) {
         pmt_clr_tcam(phw, i);
     }
 #endif
@@ -304,7 +306,7 @@ pmt_pmr_init(pciehw_t *phw)
     const pmr_t pmr = { 0 };
     int i;
 
-    for (i = 0; i < phw->npmt; i++) {
+    for (i = 0; i < pmt_size(); i++) {
         pmt_set_pmr(phw, i, pmr);
     }
 }
@@ -363,12 +365,13 @@ pciehw_pmt_unload_cfg(pciehw_t *phw, pciehwdev_t *phwdev)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
+    pciehw_spmt_t *spmt;
     int i;
 
-    for (i = 0; i < pmt_size(); i++) {
-        if (phwmem->pmt_inuse[i] == hwdevh) {
+    for (spmt = phwmem->spmt, i = 0; i < pmt_size(); i++, spmt++) {
+        if (spmt->owner == hwdevh) {
             pmt_clr(phw, i);
-            phwmem->pmt_inuse[i] = 0;
+            spmt->owner = 0;
         }
     }
 }
@@ -432,7 +435,6 @@ pciehw_pmt_load_bar(pciehw_t *phw,
 void
 pciehw_pmt_init(pciehw_t *phw)
 {
-    phw->npmt = phw->is_asic ? PCIEHW_NPMT : PCIEHW_NPMT / 4;
     pmt_reset(phw);
 }
 
@@ -581,7 +583,7 @@ pmt_show(pciehw_t *phw)
     int i;
 
     last_hdr_displayed = -1;
-    for (i = 0; i < phw->npmt; i++) {
+    for (i = 0; i < pmt_size(); i++) {
         pmt_get(phw, i, &pmt);
         if (pmt.valid) {
             pmt_show_entry(phw, i, &pmt);
@@ -597,7 +599,7 @@ pmt_show_raw(pciehw_t *phw)
     int i;
 
     pmt_show_raw_entry_hdr();
-    for (i = 0; i < phw->npmt; i++) {
+    for (i = 0; i < pmt_size(); i++) {
         pmt_get_tcam(phw, i, &e);
         pmt_get_pmr(phw, i, pmr);
         if (e.v) {
@@ -628,5 +630,40 @@ pciehw_pmt_dbg(int argc, char *argv[])
         pmt_show_raw(phw);
     } else {
         pmt_show(phw);
+    }
+}
+
+void
+pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
+    pciehw_spmt_t *spmt;
+    pmt_t pmt;
+    int i;
+
+    for (spmt = phwmem->spmt, i = 0; i < pmt_size(); i++, spmt++) {
+        if (spmt->owner == hwdevh) {
+            pmt_common_t *pmt_common;
+
+            pmt_get(phw, i, &pmt);
+            pmt_common = (pmt_common_t *)&pmt.data;
+            switch (pmt_common->type) {
+            case PMT_TYPE_CFG: {
+                pmr_cfg_t *r = (pmr_cfg_t *)&pmt.pmr;
+                r->notify = on;
+                break;
+            }
+            case PMT_TYPE_BAR: {
+                pmr_bar_t *r = (pmr_bar_t *)&pmt.pmr;
+                r->notify = on;
+                break;
+            }
+            default:
+                break;
+            }
+            pmt_set(phw, i, &pmt);
+        }
     }
 }

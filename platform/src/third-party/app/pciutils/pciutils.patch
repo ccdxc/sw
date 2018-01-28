@@ -1,7 +1,7 @@
-diff -uprN pciutils-3.5.5-orig/lib/configure pciutils-3.5.5/lib/configure
---- pciutils-3.5.5-orig/lib/configure	2015-09-14 08:47:08.000000000 -0700
-+++ pciutils-3.5.5/lib/configure	2017-09-18 18:56:15.737022000 -0700
-@@ -68,6 +68,7 @@ case $sys in
+diff -uprN pciutils-3.5.6-orig/lib/configure pciutils-3.5.6/lib/configure
+--- pciutils-3.5.6-orig/lib/configure	2017-11-17 04:55:33.000000000 -0800
++++ pciutils-3.5.6/lib/configure	2018-01-29 18:28:14.722134839 -0800
+@@ -63,6 +63,7 @@ case $sys in
  		echo >>$c '#define PCI_HAVE_LINUX_BYTEORDER_H'
  		echo >>$c '#define PCI_PATH_PROC_BUS_PCI "/proc/bus/pci"'
  		echo >>$c '#define PCI_PATH_SYS_BUS_PCI "/sys/bus/pci"'
@@ -9,7 +9,7 @@ diff -uprN pciutils-3.5.5-orig/lib/configure pciutils-3.5.5/lib/configure
  		case $cpu in
  				i?86|x86_64)	echo_n " i386-ports"
  						echo >>$c '#define PCI_HAVE_PM_INTEL_CONF'
-@@ -107,6 +108,7 @@ case $sys in
+@@ -102,6 +103,7 @@ case $sys in
  		echo >>$c '#define PCI_HAVE_PM_DARWIN_DEVICE'
  		echo >>$m 'WITH_LIBS+=-lresolv -framework CoreFoundation -framework IOKit'
  		echo >>$c '#define PCI_HAVE_64BIT_ADDRESS'
@@ -17,9 +17,9 @@ diff -uprN pciutils-3.5.5-orig/lib/configure pciutils-3.5.5/lib/configure
  		LIBRESOLV=
  		LIBEXT=dylib
  		;;
-diff -uprN pciutils-3.5.5-orig/lib/init.c pciutils-3.5.5/lib/init.c
---- pciutils-3.5.5-orig/lib/init.c	2016-05-22 00:52:52.000000000 -0700
-+++ pciutils-3.5.5/lib/init.c	2017-09-21 18:53:06.694660000 -0700
+diff -uprN pciutils-3.5.6-orig/lib/init.c pciutils-3.5.6/lib/init.c
+--- pciutils-3.5.6-orig/lib/init.c	2016-05-22 00:52:52.000000000 -0700
++++ pciutils-3.5.6/lib/init.c	2018-01-29 18:28:14.722134839 -0800
 @@ -15,17 +15,21 @@
  
  static struct pci_methods *pci_methods[PCI_ACCESS_MAX] = {
@@ -65,18 +65,18 @@ diff -uprN pciutils-3.5.5-orig/lib/init.c pciutils-3.5.5/lib/init.c
  };
  
  void *
-diff -uprN pciutils-3.5.5-orig/lib/internal.h pciutils-3.5.5/lib/internal.h
---- pciutils-3.5.5-orig/lib/internal.h	2016-05-22 00:53:07.000000000 -0700
-+++ pciutils-3.5.5/lib/internal.h	2017-09-18 18:56:16.131017000 -0700
+diff -uprN pciutils-3.5.6-orig/lib/internal.h pciutils-3.5.6/lib/internal.h
+--- pciutils-3.5.6-orig/lib/internal.h	2016-05-22 00:53:07.000000000 -0700
++++ pciutils-3.5.6/lib/internal.h	2018-01-29 18:28:14.722134839 -0800
 @@ -86,4 +86,4 @@ void pci_free_caps(struct pci_dev *);
  
  extern struct pci_methods pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
  	pm_fbsd_device, pm_aix_device, pm_nbsd_libpci, pm_obsd_device,
 -	pm_dump, pm_linux_sysfs, pm_darwin;
 +        pm_dump, pm_linux_sysfs, pm_darwin, pm_pen_libpciehost;
-diff -uprN pciutils-3.5.5-orig/lib/Makefile pciutils-3.5.5/lib/Makefile
---- pciutils-3.5.5-orig/lib/Makefile	2014-11-01 10:04:20.000000000 -0700
-+++ pciutils-3.5.5/lib/Makefile	2017-09-18 18:56:15.643019000 -0700
+diff -uprN pciutils-3.5.6-orig/lib/Makefile pciutils-3.5.6/lib/Makefile
+--- pciutils-3.5.6-orig/lib/Makefile	2014-11-01 10:04:20.000000000 -0700
++++ pciutils-3.5.6/lib/Makefile	2018-01-29 18:28:14.722134839 -0800
 @@ -46,6 +46,17 @@ ifdef PCI_HAVE_PM_DARWIN_DEVICE
  OBJS += darwin
  endif
@@ -95,9 +95,9 @@ diff -uprN pciutils-3.5.5-orig/lib/Makefile pciutils-3.5.5/lib/Makefile
  all: $(PCILIB) $(PCILIBPC)
  
  ifeq ($(SHARED),no)
-diff -uprN pciutils-3.5.5-orig/lib/pci.h pciutils-3.5.5/lib/pci.h
---- pciutils-3.5.5-orig/lib/pci.h	2017-07-05 06:21:38.000000000 -0700
-+++ pciutils-3.5.5/lib/pci.h	2017-09-18 18:56:16.231016000 -0700
+diff -uprN pciutils-3.5.6-orig/lib/pci.h pciutils-3.5.6/lib/pci.h
+--- pciutils-3.5.6-orig/lib/pci.h	2017-11-17 05:01:24.000000000 -0800
++++ pciutils-3.5.6/lib/pci.h	2018-01-29 18:28:14.722134839 -0800
 @@ -41,6 +41,7 @@ enum pci_access_type {
    PCI_ACCESS_OBSD_DEVICE,		/* OpenBSD /dev/pci */
    PCI_ACCESS_DUMP,			/* Dump file */
@@ -106,9 +106,9 @@ diff -uprN pciutils-3.5.5-orig/lib/pci.h pciutils-3.5.5/lib/pci.h
    PCI_ACCESS_MAX
  };
  
-diff -uprN pciutils-3.5.5-orig/lib/pen-libpciehost.c pciutils-3.5.5/lib/pen-libpciehost.c
---- pciutils-3.5.5-orig/lib/pen-libpciehost.c	1969-12-31 16:00:00.000000000 -0800
-+++ pciutils-3.5.5/lib/pen-libpciehost.c	2017-09-18 18:56:16.302018000 -0700
+diff -uprN pciutils-3.5.6-orig/lib/pen-libpciehost.c pciutils-3.5.6/lib/pen-libpciehost.c
+--- pciutils-3.5.6-orig/lib/pen-libpciehost.c	1969-12-31 16:00:00.000000000 -0800
++++ pciutils-3.5.6/lib/pen-libpciehost.c	2018-01-29 18:28:14.722134839 -0800
 @@ -0,0 +1,111 @@
 +/*
 + *	The PCI Library -- NetBSD libpci access
@@ -221,10 +221,10 @@ diff -uprN pciutils-3.5.5-orig/lib/pen-libpciehost.c pciutils-3.5.5/lib/pen-libp
 +  NULL,                                 /* dev_init */
 +  NULL                                  /* dev_cleanup */
 +};
-diff -uprN pciutils-3.5.5-orig/Makefile pciutils-3.5.5/Makefile
---- pciutils-3.5.5-orig/Makefile	2017-07-05 06:21:29.000000000 -0700
-+++ pciutils-3.5.5/Makefile	2017-09-18 18:56:15.547020000 -0700
-@@ -87,6 +87,22 @@ common.o: common.c pciutils.h $(PCIINC)
+diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
+--- pciutils-3.5.6-orig/Makefile	2017-11-17 05:00:27.000000000 -0800
++++ pciutils-3.5.6/Makefile	2018-01-29 18:28:14.722134839 -0800
+@@ -87,6 +87,27 @@ common.o: common.c pciutils.h $(PCIINC)
  lspci: LDLIBS+=$(LIBKMOD_LIBS)
  ls-kernel.o: CFLAGS+=$(LIBKMOD_CFLAGS)
  
@@ -232,10 +232,15 @@ diff -uprN pciutils-3.5.5-orig/Makefile pciutils-3.5.5/Makefile
 +# expect PEN_TOP, BUILD_ARCH passed in
 +PEN_TOP ?= path-to-pensando-topdir
 +LIBPCIEDIR = $(PEN_TOP)/gen/$(BUILD_ARCH)/lib
-+LIBPCIE = $(LIBPCIEDIR)/libpciehsvc.a $(LIBPCIEDIR)/libpciehw.a \
-+	  $(LIBPCIEDIR)/libpciehost.a $(LIBPCIEDIR)/libcfgspace.a \
-+	  $(LIBPCIEDIR)/libpal.a $(LIBPCIEDIR)/libmisc.a \
-+	  $(LIBPCIEDIR)/libintrutils.a
++LIBPCIE = \
++	$(LIBPCIEDIR)/libpciehsvc.a \
++	$(LIBPCIEDIR)/libpciehw.a \
++	$(LIBPCIEDIR)/libpcietlp.a \
++	$(LIBPCIEDIR)/libpciehost.a \
++	$(LIBPCIEDIR)/libcfgspace.a \
++	$(LIBPCIEDIR)/libpal.a \
++	$(LIBPCIEDIR)/libmisc.a \
++	$(LIBPCIEDIR)/libintrutils.a
 +lspci: LDLIBS+=$(LIBPCIE)
 +lspci: $(LIBPCIE)
 +setpci: LDLIBS+=$(LIBPCIE)

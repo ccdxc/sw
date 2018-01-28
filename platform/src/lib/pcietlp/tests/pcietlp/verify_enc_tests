@@ -1,0 +1,20 @@
+#!/bin/sh
+
+npass=0
+nfail=0
+for tc in testcases/*.enc; do
+    tb=`echo $tc | sed -e 's/\.enc$//'`
+    pcietlp.gen -d $tb.exp > $tb.out
+    if ! cmp -s $tb.out $tb.enc; then
+	echo $tc FAILED ===
+	nfail=`expr $nfail + 1`
+    else
+	echo $tc verified
+	rm $tb.out
+	npass=`expr $npass + 1`
+    fi
+done
+
+echo Passed: $npass Failed: $nfail
+if [ $nfail != 0 ]; then exit 1; fi
+exit 0

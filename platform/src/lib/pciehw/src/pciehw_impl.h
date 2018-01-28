@@ -7,6 +7,8 @@
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
+#include "pmt.h"
+#include "notify.h"
 
 struct pciehw_s;
 typedef struct pciehw_s pciehw_t;
@@ -19,12 +21,12 @@ typedef struct pciehw_s pciehw_t;
 #define PCIEHW_NROMSK   128
 #define PCIEHW_ROMSKSZ  (PCIEHW_CFGSZ / sizeof (u_int32_t))
 
-#define PCIEHW_NPMT     CAP_PXB_CSR_DHS_TGT_PMT_ENTRIES
+#define PCIEHW_NPMT     PMT_COUNT
 #define PCIEHW_NPRT     CAP_PXB_CSR_DHS_TGT_PRT_ENTRIES
 
 #define PCIEHW_NBAR     6               /* 6 cfgspace BARs */
 
-#define PCIEHW_NOTIFYSZ (1 * 1024 * 1024)
+#define PCIEHW_NOTIFYSZ NOTIFYSZ
 
 typedef u_int32_t pciehwdevh_t;
 
@@ -92,7 +94,6 @@ typedef struct pciehw_mem_s {
     u_int32_t allocdev;
     u_int32_t allocprt;
     pciehwdevh_t rooth;
-    pciehwdevh_t pmt_inuse[PCIEHW_NPMT]; /* XXX replaced with spmt.owner */
     pciehwdev_t dev[PCIEHW_NDEVS];
     pciehw_port_t port[PCIEHW_NPORTS];
     pciehw_sromsk_t sromsk[PCIEHW_NROMSK];
@@ -102,7 +103,7 @@ typedef struct pciehw_mem_s {
     u_int8_t cfgrst[PCIEHW_NDEVS][PCIEHW_CFGSZ] __attribute__((aligned(4096)));
     u_int8_t cfgmsk[PCIEHW_NDEVS][PCIEHW_CFGSZ] __attribute__((aligned(4096)));
     u_int8_t notify_area[PCIEHW_NPORTS][PCIEHW_NOTIFYSZ]
-                                             __attribute__((aligned(0x10000)));
+                                     __attribute__((aligned(PCIEHW_NOTIFYSZ)));
     u_int32_t notify_intr_dest;         /* temporary notify intr dest */
 } pciehw_mem_t;
 
@@ -111,7 +112,6 @@ typedef struct pciehw_s {
     u_int32_t is_asic:1;                /* running on asic platform */
     u_int16_t clients;                  /* number of clients using us */
     u_int32_t nports;                   /* number of ports available */
-    u_int32_t npmt;                     /* number of PMT entries */
     pciehw_params_t hwparams;
     pciehw_mem_t *pciehwmem;
 } pciehw_t;
@@ -138,15 +138,6 @@ int pciehw_bar_init(pciehw_t *phw);
 int pciehw_bar_finalize(pciehdev_t *pdev);
 void pciehw_bar_dbg(int argc, char *argv[]);
 
-void pciehw_pmt_init(pciehw_t *phw);
-int pciehw_pmt_load_cfg(pciehw_t *phw, pciehwdev_t *phwdev);
-void pciehw_pmt_unload_cfg(pciehw_t *phw, pciehwdev_t *phwdev);
-int pciehw_pmt_alloc(pciehwdev_t *phwdev, pciehbar_t *bar);
-void pciehw_pmt_load_bar(pciehw_t *phw,
-                         pciehwdev_t *phwdev,
-                         pciehwbar_t *phwbar);
-void pciehw_pmt_dbg(int argc, char *argv[]);
-
 void pciehw_prt_init(pciehw_t *phw);
 int pciehw_prt_load(pciehwdev_t *phwdev, pciehbar_t *bar);
 void pciehw_prt_unload(pciehw_t *phw, pciehwdev_t *phwdev);
@@ -162,10 +153,6 @@ void pciehw_romsk_dbg(int argc, char *argv[]);
 void pciehw_vfstride_init(pciehw_t *phw);
 int pciehw_vfstride_load(pciehw_t *phw, pciehwdev_t *phwdev);
 void pciehw_vfstride_unload(pciehw_t *phw, pciehwdev_t *phwdev);
-
-int pciehw_notify_init(pciehw_t *phw);
-int pciehw_notify_poll(pciehw_t *phw);
-void pciehw_notify_dbg(int argc, char *argv[]);
 
 void *pciehw_memset(void *s, int c, size_t n);
 void *pciehw_memcpy(void *dst, const void *src, size_t n);

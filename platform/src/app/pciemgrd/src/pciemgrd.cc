@@ -496,6 +496,7 @@ cmd_poll(int argc, char *argv[])
     poll_enabled = 1;
     while (poll_enabled) {
         pcieport_poll(pme->pport);
+        pciehw_poll();
         if (polltm_us) usleep(polltm_us);
     }
     printf("Polling stopped\n");
