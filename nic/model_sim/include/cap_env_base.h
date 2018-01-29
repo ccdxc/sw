@@ -13,6 +13,7 @@ class cap_env_base : public cap_blk_env_base {
 protected:
     cap_model_base * cap_mod;
     int my_id;
+    bool pad_enable = false;  // Pad packets to 64 bytes.
  public:
     cap_top_csr_t * cap0_ptr;
     cap_env_base(int id);
@@ -37,6 +38,7 @@ protected:
 
     // returns true if there are no more packets in the system
     virtual bool is_env_idle();
+    virtual void show_pending();
 
     // Read capri register
     virtual bool read_reg (uint64_t addr, uint32_t& data);
@@ -80,7 +82,7 @@ protected:
 	return cap_mod->get_drop_count();
     }
 
-
+    virtual void enable_padding() { pad_enable = true; }
     virtual ~cap_env_base();
 };
 #endif

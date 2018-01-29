@@ -1,5 +1,5 @@
 # format: <name> <version>
-asic_libs da1f319
-ncc_tools da1f319
+asic_libs ffda073
+ncc_tools ffda073
 third_party_libs 1.1.31
-pbc_config da1f319
+pbc_config ffda073
