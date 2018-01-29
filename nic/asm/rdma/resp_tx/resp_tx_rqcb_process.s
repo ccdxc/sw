@@ -38,8 +38,8 @@ resp_tx_rqcb_process:
     // copy intrinsic to global
     add            r1, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
 
-    // reset sched_eval_done
-    tblwr          d.ring_empty_sched_eval_done, 0
+    // reset ring_empty_counter
+    tblwr          d.ring_empty_counter, 0
 
     // enable below code after spr_tbladdr special purpose register is available in capsim
     #mfspr         r1, spr_tbladdr
@@ -192,12 +192,13 @@ exit:
     nop
 
 all_rings_empty:
-    bbeq        d.ring_empty_sched_eval_done, 1, skip_doorbell_eval
-    nop         //BD Slot
+    seq     c1, d.ring_empty_counter, 0
+    bcf     [!c1], skip_doorbell_eval
+    nop     //BD Slot
 
     // ring doorbell to re-evaluate scheduler
     DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3)
-    tblwr       d.ring_empty_sched_eval_done, 1
 
 skip_doorbell_eval:
     phvwr.e     p.common.p4_intr_global_drop, 1
+    tblmincri   d.ring_empty_counter, 8, 1  //Exit Slot

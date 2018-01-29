@@ -57,8 +57,8 @@ struct rqcb0_t {
     token_id: 8;
     nxt_to_go_token_id: 8;
     rsq_pindex_prime: 8;
-    ring_empty_sched_eval_done: 1;
-    rsvd0: 7;
+    ring_empty_counter: 8;
+
 
     log_pmtu: 5;
     log_rq_page_size: 5;
@@ -84,7 +84,7 @@ struct rqcb0_t {
     curr_read_rsp_psn: 24;
     read_rsp_lock: 1;
     read_rsp_in_progress: 1;
-    rsvd1: 6;
+    rsvd: 6;
 
     proxy_cindex: 16; // place holder for a copy of c_index to avoid
                        // scheduler ringing RQ all the time.
