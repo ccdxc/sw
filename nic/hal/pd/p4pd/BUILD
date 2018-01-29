@@ -14,6 +14,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/hal/pd:hal_pd_includes",
         "//nic:gen_includes",
+        "//nic:boost",
     ],
     alwayslink = 1,
 )

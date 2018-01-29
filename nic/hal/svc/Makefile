@@ -8,10 +8,7 @@ LCXXFLAGS = \
 			-I$(GEN_DIR)/protobuf \
 			-I$(GEN_DIR)/iris/include \
 			-I../src \
-			-I../../include \
-			-I$(TOPDIR)/third-party/spdlog/include \
-			-I$(TOPDIR)/third-party/google/include \
-			-I$(TOPDIR)/third-party/grpc/include
+			-I../../include
 
 
 

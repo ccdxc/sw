@@ -4,8 +4,8 @@ SHAREDLIBRARY = libhalproto.so
 
 LCXXFLAGS = \
 			-I/usr/local/include \
-			-I$(TOPDIR)/third-party/google/include \
-			-I$(TOPDIR)/third-party/grpc/include \
+			-I$(TOPDIR)/hal/third-party/google/include \
+			-I$(TOPDIR)/hal/third-party/grpc/include \
 			-pthread \
 			-O3 \
 			$(NULL)

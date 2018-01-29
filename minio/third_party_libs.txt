@@ -1,8 +1,8 @@
-nic/third-party/grpc/*
 nic/third-party/boost/*
-nic/third-party/google/*
-nic/third-party/zmq/*
 
+nic/hal/third-party/grpc/*
+nic/hal/third-party/google/*
+nic/hal/third-party/zmq/*
 nic/hal/third-party/isc/*
 nic/hal/third-party/crchack/bin/crchack/
 

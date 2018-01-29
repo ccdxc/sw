@@ -7,23 +7,23 @@ include $(TOPDIR)/make/Makefile.inc
 # Adding more clean files
 LCLEANFILES = $(OBJ_DIR)/*.pb.o $(OBJ_DIR)/*.pb.d $(OBJ_DIR)/libhalproto.so $(GEN_DIR)/*.pb.* $(GEN_DIR)/*.pb-c.* $(GEN_DIR)/*.py $(GEN_DIR)/*_proto $(GEN_DIR) 
 
-LD_LIBRARY_PATH=$(TOPDIR)/third-party/google/x86_64/lib/
-PROTOC = $(TOPDIR)/third-party/google/x86_64/bin/protoc
-C_PROTOC = $(TOPDIR)/third-party/google/x86_64/bin/protoc-c
+LD_LIBRARY_PATH=$(TOPDIR)/hal/third-party/google/x86_64/lib/
+PROTOC = $(TOPDIR)/hal/third-party/google/x86_64/bin/protoc
+C_PROTOC = $(TOPDIR)/hal/third-party/google/x86_64/bin/protoc-c
 
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
-GRPC_CPP_PLUGIN_PATH ?= $(TOPDIR)/third-party/grpc/x86_64/bin/grpc_cpp_plugin
-GRPC_PYTHON_PLUGIN_PATH ?= $(TOPDIR)/third-party/grpc/x86_64/bin/grpc_python_plugin
+GRPC_CPP_PLUGIN_PATH ?= $(TOPDIR)/hal/third-party/grpc/x86_64/bin/grpc_cpp_plugin
+GRPC_PYTHON_PLUGIN_PATH ?= $(TOPDIR)/hal/third-party/grpc/x86_64/bin/grpc_python_plugin
 COMMON_PROTO_DIR = ${CURDIR}
 #AGENTS_PROTO_DIR = ./agents
 AGENTS_PROTO_DIR = .
 HAL_PROTO_DIR = ./hal
 OBJ_DIR = ../obj
 CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -fpic -O3
-INC_DIRS = -I. -I$(TOPDIR)/../vendor/github.com/gogo/protobuf/gogoproto -I../third-party/google/include
+INC_DIRS = -I. -I$(TOPDIR)/../vendor/github.com/gogo/protobuf/gogoproto -I../hal/third-party/google/include
 INC_HAL_DIRS = -I$(TOPDIR)/../../vendor/github.com/gogo/protobuf/gogoproto
 # To use from proto/hal
-INC_DIRS_HAL = -I.. -I$(TOPDIR)/../../vendor/github.com/gogo/protobuf/gogoproto -I../../third-party/google/include
+INC_DIRS_HAL = -I.. -I$(TOPDIR)/../../vendor/github.com/gogo/protobuf/gogoproto -I../../hal/third-party/google/include
 
 #$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/types_proto $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto $(GEN_DIR)/cp_mfile_proto cxx_build
 #$(GEN_DIR)/proto: $(GEN_DIR)/.dir $(GEN_DIR)/types_proto $(GEN_DIR)/agents_proto $(GEN_DIR)/hal_proto

@@ -314,22 +314,22 @@ cc_library(
 
 cc_library(
     name = "grpc",
-    deps = ["@third_party//:grpc"],
+    deps = ["//nic/hal/third-party:grpc"],
 )
 
 cc_library(
     name = "libprotobuf",
-    deps = ["@third_party//:libprotobuf"],
+    deps = ["//nic/hal/third-party:libprotobuf"],
 )
 
 cc_library(
     name = "grpc_includes",
-    deps = ["@third_party//:grpc_includes"],
+    deps = ["//nic/hal/third-party:grpc_includes"],
 )
 
 cc_library(
     name = "google_includes",
-    deps = ["@third_party//:google_includes"],
+    deps = ["//nic/hal/third-party:google_includes"],
 )
 
 cc_library(
@@ -369,7 +369,7 @@ cc_library(
 
 cc_library(
     name = "libtirpc",
-    deps = ["@third_party//:libtirpc"],
+    deps = ["//nic/hal/third-party:libtirpc"],
 )
 
 config_setting(
