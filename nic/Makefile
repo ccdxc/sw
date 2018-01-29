@@ -80,7 +80,7 @@ ifneq ($(ARCH),aarch64)
 endif
 
 go-proto:
-	$(MAKE) -C agent/netagent/datapath/halproto
+	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto
 
 sdk:
 	$(MAKE) -C sdk lib
