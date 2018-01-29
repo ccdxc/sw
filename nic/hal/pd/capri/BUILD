@@ -29,7 +29,7 @@ capri_util_deps = [
 capri_pd_deps = [
     "//nic/hal/pd/capri/csr:capricsr",
     "//nic/hal/pd/capri/csr:hal_pknobs",
-    "//nic/hal/pd/common:pdcommon",
+    "//nic/hal/pd:pdcommon",
     "//nic/hal/pd/iris:iris_includes",
 ]
 

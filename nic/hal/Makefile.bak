@@ -6,7 +6,7 @@ GTEST_DIR = test
 GTEST_ROOT = ../third-party/googletest-release-1.8.0/googletest
 GEN_TEST_RESULTS_DIR = ../gen/test_results
 
-INC_DIRS = -I. -I$(GEN_DIR) -Isvc -Isrc -I../utils/ -Ipd/common -I../include -Ipd \
+INC_DIRS = -I. -I$(GEN_DIR) -Isvc -Isrc -I../utils/ -I../include -Ipd \
 		-I$(GTEST_ROOT)/include -I../third-party/spdlog/include
 LDFLAGS = -L/usr/local/lib -L../model_sim/build -L../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -lzmq
 

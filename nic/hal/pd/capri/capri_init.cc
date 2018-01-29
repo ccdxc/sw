@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
@@ -8,6 +10,7 @@
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "nic/gen/include/p4pd_table.h"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
@@ -98,69 +101,6 @@ capri_default_config_verify (void)
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
-// - link all the P4 programs, by resolving symbols, labels etc.
-// - load the P4/P4+ programs in HBM
-// - do all the parser/deparser related register programming
-// - do all the table configuration related register programming
-//------------------------------------------------------------------------------
-hal_ret_t
-capri_init (capri_cfg_t *cfg = NULL)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    
-    HAL_TRACE_DEBUG("Capri Init ");
-
-    hal::hal_cfg_t *hal_cfg =
-                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-    HAL_ASSERT(hal_cfg);
-
-    ret = capri_hbm_parse();
-
-    ret = capri_hbm_regions_init();
-    
-    if (capri_table_rw_init()) {
-        return HAL_RET_ERR;
-    }
- 
-    // Do asic init before overwriting with the default configs
-    if (ret == HAL_RET_OK) {
-        ret = capri_tm_asic_init();
-    }
-
-    if (ret == HAL_RET_OK) {
-        ret = capri_default_config_init();
-    }
-
-    if (ret == HAL_RET_OK) {
-        ret = capri_txs_scheduler_init();
-    }
- 
-    // Call PXB/PCIE init only in MODEL and RTL simulation
-    // This will be done by PCIe manager for the actual chip
-    if (ret == HAL_RET_OK &&
-        (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM ||
-         hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL)) {
-        ret = capri_pxb_pcie_init();
-    }
-
-    if (ret == HAL_RET_OK) {
-        ret = capri_tm_init();
-    }
-
-    if (ret == HAL_RET_OK) {
-        ret = capri_repl_init();
-    }
-
-   if (cfg && !cfg->loader_info_file.empty()) {
-        capri_list_program_addr(cfg->loader_info_file.c_str());
-    }
-
-
-    return ret;
-}
-
-//------------------------------------------------------------------------------
-// perform all the CAPRI specific initialization
 //------------------------------------------------------------------------------
 hal_ret_t
 hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
@@ -171,7 +111,7 @@ hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
 }
 
 static hal_ret_t
-capri_timer_hbm_init(void)
+capri_timer_hbm_init (void)
 {
     hal_ret_t ret = HAL_RET_OK;
     uint64_t timer_key_hbm_base_addr;
@@ -190,41 +130,13 @@ capri_timer_hbm_init(void)
     return ret;
 }
 
-hal_ret_t
-capri_hbm_regions_init()
+static hal_ret_t
+capri_p4_asm_init (void)
 {
-    hal_ret_t ret = HAL_RET_OK;
-
-    ret = capri_p4_asm_init();
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    ret = capri_p4p_asm_init();
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    ret = capri_p4_pgm_init();
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    ret = capri_timer_hbm_init();
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    return ret;
-}
-
-hal_ret_t
-capri_p4_asm_init()
-{
-    hal_ret_t               ret = HAL_RET_OK;
-    uint64_t                p4_prm_base_addr;
-    char                    *cfg_path;
-    std::string             full_path;
+    hal_ret_t      ret = HAL_RET_OK;
+    uint64_t       p4_prm_base_addr;
+    char           *cfg_path;
+    std::string    full_path;
 
     cfg_path = getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
@@ -249,12 +161,12 @@ capri_p4_asm_init()
     return ret;
 }
 
-hal_ret_t
-capri_p4_pgm_init()
+static hal_ret_t
+capri_p4_pgm_init (void)
 {
-    hal_ret_t               ret = HAL_RET_OK;
- char               *cfg_path;
- std::string        full_path;
+    hal_ret_t      ret = HAL_RET_OK;
+    char           *cfg_path;
+    std::string    full_path;
 
     cfg_path = getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
@@ -276,14 +188,14 @@ capri_p4_pgm_init()
     return ret;
 }
 
-hal_ret_t
-capri_p4p_asm_init()
+static hal_ret_t
+capri_p4p_asm_init (void)
 {
-    hal_ret_t                           ret = HAL_RET_OK;
-    uint64_t                            p4plus_prm_base_addr;
-    char                                *cfg_path;
-    std::string                         full_path;
-    capri_prog_param_info_t             *symbols;
+    hal_ret_t                  ret = HAL_RET_OK;
+    uint64_t                   p4plus_prm_base_addr;
+    char                       *cfg_path;
+    std::string                full_path;
+    capri_prog_param_info_t    *symbols;
 
     cfg_path = getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
@@ -754,6 +666,96 @@ capri_p4p_asm_init()
                             p4plus_prm_base_addr, symbols, CAPRI_P4PLUS_NUM_SYMBOLS);
 
     HAL_FREE(hal::HAL_MEM_ALLOC_PD, symbols);
+
+    return ret;
+}
+
+static hal_ret_t
+capri_hbm_regions_init (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = capri_p4_asm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = capri_p4p_asm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = capri_p4_pgm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = capri_timer_hbm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// perform all the CAPRI specific initialization
+// - link all the P4 programs, by resolving symbols, labels etc.
+// - load the P4/P4+ programs in HBM
+// - do all the parser/deparser related register programming
+// - do all the table configuration related register programming
+//------------------------------------------------------------------------------
+hal_ret_t
+capri_init (capri_cfg_t *cfg = NULL)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    
+    HAL_TRACE_DEBUG("Capri Init ");
+
+    hal::hal_cfg_t *hal_cfg =
+        (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    HAL_ASSERT(hal_cfg);
+
+    ret = capri_hbm_parse();
+
+    ret = capri_hbm_regions_init();
+    
+    if (capri_table_rw_init()) {
+        return HAL_RET_ERR;
+    }
+ 
+    // Do asic init before overwriting with the default configs
+    if (ret == HAL_RET_OK) {
+        ret = capri_tm_asic_init();
+    }
+
+    if (ret == HAL_RET_OK) {
+        ret = capri_default_config_init();
+    }
+
+    if (ret == HAL_RET_OK) {
+        ret = capri_txs_scheduler_init();
+    }
+ 
+    // Call PXB/PCIE init only in MODEL and RTL simulation
+    // This will be done by PCIe manager for the actual chip
+    if (ret == HAL_RET_OK &&
+        (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM ||
+         hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL)) {
+        ret = capri_pxb_pcie_init();
+    }
+
+    if (ret == HAL_RET_OK) {
+        ret = capri_tm_init();
+    }
+
+    if (ret == HAL_RET_OK) {
+        ret = capri_repl_init();
+    }
+
+   if (cfg && !cfg->loader_info_file.empty()) {
+        capri_list_program_addr(cfg->loader_info_file.c_str());
+    }
 
     return ret;
 }

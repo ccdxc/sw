@@ -160,15 +160,15 @@ cc_test(
     copts = sdk_copts,
 )
 
-cc_test(
-    name = "gft_test",
-    srcs = ["gft_test.cc"],
-    deps = [
-        "//nic/p4/gft/include:p4_gft_includes",
-        "//nic:gft_p4pd"] + gl_deps_list,
-    linkopts = [] + gl_linkopts_list,
-    copts = sdk_copts,
-)
+#cc_test(
+    #name = "gft_test",
+    #srcs = ["gft_test.cc"],
+    #deps = [
+        #"//nic/p4/gft/include:p4_gft_includes",
+        #"//nic:gft_p4pd"] + gl_deps_list,
+    #linkopts = [] + gl_linkopts_list,
+    #copts = sdk_copts,
+#)
 
 cc_test(
     name = "appid_test",

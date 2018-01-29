@@ -1,5 +1,5 @@
 #include "nic/hal/pd/iris/wring_pd.hpp"
-#include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"

@@ -13,12 +13,6 @@
 //::    else:
 //::	    start_table_base = 301
 //::    #endif
-//:: elif pddict['p4program'] == 'gft':
-//::    p4prog = pddict['p4program'] + '_'
-//::    hdrdir = pddict['p4program']
-//::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
-//::    prefix = 'p4pd_' + pddict['p4program']
-//::	start_table_base = 401
 //:: else:
 //::    p4prog = ''
 //::    hdrdir = 'iris'
@@ -55,7 +49,7 @@ using ::debug::DebugResponseMsg;
 //::     #endfor
 
 //::    if len(tabledict):
-//::        if pddict['p4plus'] or pddict['p4program'] == 'gft':
+//::        if pddict['p4plus']:
 //::            api_prefix = 'p4pd_' + pddict['p4program']
 //::        else:
 //::            api_prefix = 'p4pd'

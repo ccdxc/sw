@@ -21,7 +21,7 @@ GTEST_ROOT = ../third-party/googletest-release-1.8.0/googletest
 GEN_TEST_RESULTS_DIR = ../gen/test_results
 LIBLKL_ROOT = ../third-party/lkl/export/
 
-INC_DIRS = -I../ -I. -I$(GEN_DIR) -I$(GEN_DIR)/iris/include -I$(GEN_DIR)/protobuf -Isvc -Isrc -I../utils/ -Ipd/common -I../include -Ipd -I../p4/nw/include \
+INC_DIRS = -I../ -I. -I$(GEN_DIR) -I$(GEN_DIR)/iris/include -I$(GEN_DIR)/protobuf -Isvc -Isrc -I../utils/ -I../include -Ipd -I../p4/nw/include \
 		-I$(GTEST_ROOT)/include -I../third-party/spdlog/include -I../third-party/google/include -I../third-party/grpc/include -Ilkl -I../asm/cpu-p4+/include
 LCXXFLAGS = $(INC_DIRS)
 LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib -L../model_sim/build -L../obj/ `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lhalproto -lprotobuf -lpthread -ldl -lzmq
@@ -31,7 +31,6 @@ LDFLAGS +=	-lhal \
 			-lfte \
 			-lnetwork \
 			-lperiodic \
-			-lp4pdapi \
 			-lp4pd \
 			-lp4pluspd_rxdma \
 			-lp4pluspd_txdma \

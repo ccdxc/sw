@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 
-#ifdef GFT
 #include <boost/crc.hpp>
 #include "nic/model_sim/include/lib_model_client.h"
 #include "sdk/pal.hpp"
@@ -10,7 +9,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
-#include "nic/gen/gft/include/gft_p4pd.h"
+#include "nic/gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 extern hal_ret_t capri_default_config_init(void);
@@ -621,7 +620,6 @@ create_gft_overflow_entry() {
                          NULL, &data);
     delete [] hwkey;
 }
-#endif
 
 class gft_test : public ::testing::Test {
   protected:
@@ -632,7 +630,6 @@ class gft_test : public ::testing::Test {
 };
 
 TEST_F(gft_test, test1) {
-#ifdef GFT
     int ret = 0;
     uint64_t asm_base_addr;
     p4pd_cfg_t    p4pd_cfg = {
@@ -697,7 +694,6 @@ TEST_F(gft_test, test1) {
     get_next_pkt(opkt, port, cos);
     EXPECT_TRUE(opkt == epkt);
     testcase_end(2, 2);
-#endif
 }
 
 int main(int argc, char **argv) {

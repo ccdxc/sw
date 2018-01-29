@@ -1,31 +1,17 @@
-/*
- * p4pd_api.cpp
- * Mahesh Shirshyad (Pensando Systems)
- */
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <stdio.h>
-#include <string>
-#include <errno.h>
-#include "nic/hal/pd/p4pd_api.hpp"
-#ifndef GFT
-#include "nic/gen/iris/include/p4pd.h"
-#else
-#include "nic/gen/gft/include/gft_p4pd.h"
-#define P4TBL_ID_TBLMIN                 P4_GFT_TBL_ID_TBLMIN
-#define P4TBL_ID_TBLMAX                 P4_GFT_TBL_ID_TBLMAX
-#define p4pd_tbl_swkey_size             p4pd_gft_tbl_swkey_size
-#define p4pd_tbl_names                  p4pd_gft_tbl_names
-#define p4pd_prep_p4tbl_names           p4pd_gft_prep_p4tbl_names
-#define p4pd_prep_p4tbl_sw_struct_sizes p4pd_gft_prep_p4tbl_sw_struct_sizes
-#define p4pd_tbl_sw_action_data_size    p4pd_gft_tbl_sw_action_data_size
-#endif
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <string>
+//#include <errno.h>
+//#include <stdlib.h>
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-
-//#include <capri_tbl_rw.hpp>
+#include "nic/hal/pd/p4pd_api.hpp"
+//#include "nic/gen/iris/include/p4pd.h"
+#include "nic/gen/include/common_txdma_actions_p4pd_table.h"
+//#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free
@@ -57,21 +43,23 @@
 #define JKEY_HASH_TYPE          "hash_type"
 #define JKEY_NUM_BUCKETS        "num_buckets"
 
-static p4pd_table_properties_t *_p4tbls;
+static p4pd_table_properties_t *_p4plus_txdma_tbls;
 
 namespace pt = boost::property_tree;
 
-static uint16_t p4pd_get_tableid_from_tablename(const char *tablename)
+static uint8_t
+p4pluspd_txdma_get_tableid_from_tablename (const char *tablename)
 {
-    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
-        if (!strcmp(p4pd_tbl_names[i], tablename)) {
+    for (int i = 0; i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        if (!strcmp(p4pd_common_txdma_actions_tbl_names[i], tablename)) {
             return i;
         }
     }
-    return (-1);
+    return -1;
 }
 
-static p4pd_table_dir_en p4pd_get_table_direction(const char *direction)
+static p4pd_table_dir_en
+p4pluspd_txdma_get_table_direction (const char *direction)
 {
     if (!strcmp(direction, "ingress")) {
         return(P4_GRESS_INGRESS);
@@ -79,10 +67,11 @@ static p4pd_table_dir_en p4pd_get_table_direction(const char *direction)
     if (!strcmp(direction, "egress")) {
         return(P4_GRESS_EGRESS);
     }
-    return (P4_GRESS_INVALID);
+    return P4_GRESS_INVALID;
 }
 
-static p4pd_table_type_en p4pd_get_table_type(const char *match_type)
+static p4pd_table_type_en
+p4pluspd_txdma_get_table_type (const char *match_type)
 {
     if (!strcmp(match_type, "hash")) {
         return(P4_TBL_TYPE_HASH);
@@ -99,38 +88,31 @@ static p4pd_table_type_en p4pd_get_table_type(const char *match_type)
     if (!strcmp(match_type, "mpu")) {
         return(P4_TBL_TYPE_MPU);
     }
-    return (P4_TBL_TYPE_INVALID);
+    return P4_TBL_TYPE_INVALID;
 }
 
 #ifdef P4PD_CLI
-#define P4PD_TBL_PACKING_JSON  "../../../gen/iris/p4pd/capri_p4_table_map.json"
+#define P4PLUSPD_TXDMA_TBL_PACKING_JSON  "../../../gen/common_txdma_actions/p4pd/capri_p4_table_map.json"
 #else
-#ifndef GFT
-#define P4PD_TBL_PACKING_JSON  "table_maps/capri_p4_table_map.json"
-#else
-#define P4PD_TBL_PACKING_JSON  "../gen/gft/p4pd/capri_p4_table_map.json"
-#endif
+#define P4PLUSPD_TXDMA_TBL_PACKING_JSON  "table_maps/capri_p4_txdma_table_map.json"
 #endif
 
-static p4pd_error_t p4pd_tbl_packing_json_parse()
+static
+p4pd_error_t
+p4pluspd_txdma_tbl_packing_json_parse ()
 {
     pt::ptree               json_pt;
     p4pd_table_properties_t *tbl;
     std::string             full_path;
-#ifndef P4PD_CLI
     char                    *cfg_path;
+
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
-         full_path =  std::string(cfg_path) + "/" + P4PD_TBL_PACKING_JSON;
+         full_path =  std::string(cfg_path) + "/" + P4PLUSPD_TXDMA_TBL_PACKING_JSON;
      } else {
          printf("Please specify HAL_CONFIG_PATH env. variable ... ");
          exit(0);
      }
-     //printf("Capri_Table_Map_Json: %s\n", full_path.c_str());
-#else
-     full_path =  std::string(P4PD_TBL_PACKING_JSON);
-#endif
-
 
     std::ifstream tbl_json(full_path.c_str());
 
@@ -142,10 +124,10 @@ static p4pd_error_t p4pd_tbl_packing_json_parse()
         return P4PD_FAIL;
     }
     //int num_tables = json_pt.count(JKEY_TABLES);
-    int num_tables = P4TBL_ID_TBLMAX;
-    _p4tbls = (p4pd_table_properties_t*)P4PD_CALLOC(num_tables, 
+    int num_tables = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX;
+    _p4plus_txdma_tbls = (p4pd_table_properties_t*)P4PD_CALLOC(num_tables, 
                                                 sizeof(p4pd_table_properties_t));
-    if (!_p4tbls) {
+    if (!_p4plus_txdma_tbls) {
         // Error : TODO: Tracing...
         return P4PD_FAIL;
     }
@@ -159,36 +141,35 @@ static p4pd_error_t p4pd_tbl_packing_json_parse()
         std::string overflow  = p4_tbl.second.get<std::string>(JKEY_OVERFLOW); 
         std::string overflow_parent  = p4_tbl.second.get<std::string>(JKEY_OVERFLOW_PARENT); 
 
-        int tableid = p4pd_get_tableid_from_tablename(tablename.c_str());
+        int tableid = p4pluspd_txdma_get_tableid_from_tablename(tablename.c_str());
         if (tableid == -1) {
             // Error..
             return P4PD_FAIL;
         }
 
-        tbl = _p4tbls + tableid;
+        tbl = _p4plus_txdma_tbls + tableid;
 
-        tbl->key_struct_size = p4pd_tbl_swkey_size[tableid];
-        tbl->actiondata_struct_size = p4pd_tbl_sw_action_data_size[tableid];
+        tbl->key_struct_size = p4pd_common_txdma_actions_tbl_swkey_size[tableid];
+        tbl->actiondata_struct_size = p4pd_common_txdma_actions_tbl_sw_action_data_size[tableid];
 
         if (strlen(overflow.c_str())) {
             tbl->has_oflow_table = true;
-            tbl->oflow_table_id = p4pd_get_tableid_from_tablename(overflow.c_str());
+            tbl->oflow_table_id = p4pluspd_txdma_get_tableid_from_tablename(overflow.c_str());
         } else {
             tbl->has_oflow_table = false;
         }
         if (strlen(overflow_parent.c_str())) {
             tbl->is_oflow_table = true;
-            tbl->oflow_parent_table_id = p4pd_get_tableid_from_tablename(overflow_parent.c_str());
         } else {
             tbl->is_oflow_table = false;
         }
 
 
-        tbl->tablename = (char*)p4pd_tbl_names[tableid];
+        tbl->tablename = (char*)p4pd_common_txdma_actions_tbl_names[tableid];
         tbl->tableid = tableid;
 
-        tbl->table_type = p4pd_get_table_type(match_type.c_str());
-        tbl->gress = p4pd_get_table_direction(direction.c_str());
+        tbl->table_type = p4pluspd_txdma_get_table_type(match_type.c_str());
+        tbl->gress = p4pluspd_txdma_get_table_direction(direction.c_str());
         tbl->hash_type = p4_tbl.second.get<int>(JKEY_HASH_TYPE); 
 
         tbl->stage = p4_tbl.second.get<int>(JKEY_STAGE); 
@@ -234,27 +215,27 @@ static p4pd_error_t p4pd_tbl_packing_json_parse()
             tbl->table_location = P4_TBL_LOCATION_PIPE;
         }
     }
-    return (P4PD_SUCCESS);
+    return P4PD_SUCCESS;
 }
 
-void p4pd_cleanup()
+void
+p4pluspd_txdma_cleanup (void)
 {
-    P4PD_FREE(_p4tbls);
+    P4PD_FREE(_p4plus_txdma_tbls);
 }
 
-p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg)
+p4pd_error_t
+p4pluspd_txdma_init (void)
 {
-    p4pd_prep_p4tbl_names();
-    p4pd_prep_p4tbl_sw_struct_sizes();
-    if (p4pd_tbl_packing_json_parse() != P4PD_SUCCESS) {
-        //p4pd_cleanup();
-        P4PD_FREE(_p4tbls);
+    p4pd_common_txdma_actions_prep_p4tbl_names();
+    p4pd_common_txdma_actions_prep_p4tbl_sw_struct_sizes();
+
+    if (p4pluspd_txdma_tbl_packing_json_parse() != P4PD_SUCCESS) {
+        P4PD_FREE(_p4plus_txdma_tbls);
         return P4PD_FAIL;
     }
-    return (P4PD_SUCCESS);
+    return P4PD_SUCCESS;
 }
-
-
 
 /* P4PD API that uses tableID to return table properties that HAL
  * layer can use to construct, initialize P4 tables in local memory.
@@ -273,18 +254,15 @@ p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg)
  *
  *  P4PD_FAIL                          : If tableid is not valid
  */
-p4pd_error_t p4pd_table_properties_get(uint32_t                       tableid, 
-                                       p4pd_table_properties_t       *tbl_ctx)
-
+p4pd_error_t
+p4pluspd_txdma_table_properties_get (uint32_t tableid,
+                                     p4pd_table_properties_t *tbl_ctx)
 {
-    if (tableid >= P4TBL_ID_TBLMAX || !_p4tbls) {
+    if (tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX || !_p4plus_txdma_tbls) {
         return P4PD_FAIL;
     }
 
     // Until json parsing is fixed comment out following line.
-    memcpy(tbl_ctx, _p4tbls + tableid, sizeof(p4pd_table_properties_t));
-    return (P4PD_SUCCESS);
+    memcpy(tbl_ctx, _p4plus_txdma_tbls + tableid, sizeof(p4pd_table_properties_t));
+    return P4PD_SUCCESS;
 }
-
-
-

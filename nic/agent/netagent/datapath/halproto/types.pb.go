@@ -16,6 +16,7 @@
 		endpoint.proto
 		eplearn.proto
 		event.proto
+		gft.proto
 		interface.proto
 		internal.proto
 		ipseccb.proto
@@ -203,6 +204,8 @@
 		EndpointEvent
 		PortEvent
 		EventResponse
+		GftEthFields
+		GftHeaderGroupExactMatchProfile
 		LifQStateMapEntry
 		PktFilter
 		LifSpec

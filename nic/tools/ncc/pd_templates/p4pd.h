@@ -13,11 +13,6 @@
 //::    else:
 //::        start_table_base = 301
 //::    #endif
-//:: elif pddict['p4program'] == 'gft':
-//::    p4prog = pddict['p4program'] + '_'
-//::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
-//::    prefix = 'p4pd_' + pddict['p4program']
-//::	start_table_base = 401
 //:: else:
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
@@ -120,6 +115,20 @@
 //::     mpu_max = tableid - 1
 //::     tblid_max = tableid
 //::     #endfor
+//::    table_min_dict = {}
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_MIN'] = hash_min
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_MAX'] = hash_max
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_OTCAM_MIN'] = hash_otcam_min
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_HASH_OTCAM_MAX'] = hash_otcam_max
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_TCAM_MIN'] = tcam_min
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_TCAM_MAX'] = tcam_max
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_INDEX_MIN'] = index_min
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_INDEX_MAX'] = index_max
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_MPU_MIN'] = mpu_min
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_MPU_MAX'] = mpu_max
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_TBLMIN'] = start_table_base
+//::    table_min_dict['P4' + caps_p4prog + 'TBL_ID_TBLMAX'] = tblid_max
+//::    _context['P4TBL_TYPES'] = table_min_dict
 
 
 //::     for table in pddict['tables']:
@@ -426,89 +435,19 @@ typedef struct __attribute__((__packed__)) __${table}_actiondata {
  *   p4pd_entry_read()
  */
 typedef enum ${prefix}_table_ids_ {
-    P4${caps_p4prog}TBL_ID_HASH_MIN = ${hash_min},
-    P4${caps_p4prog}TBL_ID_HASH_MAX = ${hash_max},
-    P4${caps_p4prog}TBL_ID_HASH_OTCAM_MIN = ${hash_otcam_min},
-    P4${caps_p4prog}TBL_ID_HASH_OTCAM_MAX = ${hash_otcam_max},
-    P4${caps_p4prog}TBL_ID_TCAM_MIN = ${tcam_min},
-    P4${caps_p4prog}TBL_ID_TCAM_MAX = ${tcam_max},
-    P4${caps_p4prog}TBL_ID_INDEX_MIN = ${index_min},
-    P4${caps_p4prog}TBL_ID_INDEX_MAX = ${index_max},
-    P4${caps_p4prog}TBL_ID_MPU_MIN = ${mpu_min},
-    P4${caps_p4prog}TBL_ID_MPU_MAX = ${mpu_max},
-    P4${caps_p4prog}TBL_ID_TBLMIN = ${start_table_base},
 //::        for  tblname in sorted(tabledict, key=tabledict.get):
 //::            caps_tblname = tblname.upper() 
     P4${caps_p4prog}TBL_ID_${caps_tblname} = ${tabledict[tblname]},
 //::        #endfor
-    P4${caps_p4prog}TBL_ID_TBLMAX = ${tblid_max}
+    __P4${caps_p4prog}TBL_ID_TBLMAX = ${tblid_max}
 } ${prefix}_table_id;
 
 
 #define P4${caps_p4prog}TBL_NAME_MAX_LEN 80 /* p4 table name will be truncated to 80 characters */
 
-extern char ${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
-extern uint16_t ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_TBLMAX];
-extern uint16_t ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_TBLMAX];
-
-inline void ${prefix}_prep_p4tbl_names()
-{
-//::        for  tblname in sorted(tabledict, key=tabledict.get):
-//::            caps_tblname = tblname.upper() 
-    strncpy(${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_${caps_tblname}], "${tblname}", strlen("${tblname}"));
-//::        #endfor
-}
-
-inline void ${prefix}_prep_p4tbl_sw_struct_sizes()
-{
-//::        for  tblname in sorted(tabledict, key=tabledict.get):
-//::            caps_tblname = tblname.upper() 
-//::        if pddict['tables'][tblname]['type'] != 'Index':
-    ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_${caps_tblname}] = sizeof(${tblname}_swkey);
-//::        #endif
-    ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata);
-//::        #endfor
-}
 
 //::    #endif
 
-inline int ${prefix}_get_max_action_id(uint32_t tableid)
-{
-    switch(tableid) {
-//::        for  tblname in sorted(tabledict, key=tabledict.get):
-//::            caps_tblname = tblname.upper() 
-        case P4${caps_p4prog}TBL_ID_${caps_tblname}:
-            return (${caps_tblname}_MAX_ID);
-        break;
-//::        #endfor
-    }
-    // Not found tableid case
-    return (0);
-}
-
-inline void ${prefix}_get_action_name(uint32_t tableid, int actionid, char *action_name)
-{
-    switch(tableid) {
-//::        for  tblname in sorted(tabledict, key=tabledict.get):
-//::            caps_tblname = tblname.upper() 
-        case P4${caps_p4prog}TBL_ID_${caps_tblname}:
-//::            if len(pddict['tables'][tblname]['actions']):
-            switch(actionid) {
-//::                for action in pddict['tables'][tblname]['actions']:
-//::                    (actionname, actionfldlist) = action
-//::                    actname = actionname.upper()
-                case ${caps_tblname}_${actname}_ID:
-                    strcpy(action_name, "${actionname}");
-                    return;
-                break;
-//::                #endfor
-            }
-//::            #endif
-        break;
-//::        #endfor
-    }
-    *action_name = '\0';
-}
 
 //::    for i in range(len(pddict['egr-hdrs'])):
 //::        if pddict['egr-hdrs'][i].name == 'tm_replication_data':
@@ -548,7 +487,7 @@ typedef struct __attribute__((__packed__)) __p4_replication_data_t {
 //::    #endfor
 
 #define P4_REPL_TABLE_NAME                 "replication_table"
-#define P4_REPL_TABLE_ID                   P4TBL_ID_TBLMAX
+#define P4_REPL_TABLE_ID                   __P4TBL_ID_TBLMAX
 #define P4_REPL_TABLE_DEPTH                (64 * 1024)
 #define P4_REPL_ENTRY_WIDTH                (sizeof(p4_replication_data_t))
 #define CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE (60 / P4_REPL_ENTRY_WIDTH)

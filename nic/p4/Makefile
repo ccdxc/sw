@@ -20,12 +20,50 @@ SUBDIRS = \
           p4pt \
           $(NULL)
 
-.PHONY: subdirs $(SUBDIRS)
-default: subdirs
+IRIS_SUBDIRS = \
+          nw \
+          common-p4+ \
+          proxy \
+          proxy/tls \
+          ipsec-p4+ \
+          storage \
+          rdma \
+          cpu-p4+ \
+          gc \
+          app-redir-p4+ \
+          eth \
+          ipfix \
+          adminq \
+          p4pt \
+          $(NULL)
+
+MSFT_GFT_SUBDIRS = \
+          common-p4+ \
+          proxy \
+          proxy/tls \
+          ipsec-p4+ \
+          storage \
+          rdma \
+          cpu-p4+ \
+          gc \
+          app-redir-p4+ \
+          eth \
+          ipfix \
+          adminq \
+          gft \
+          p4pt \
+          $(NULL)
+
+.PHONY: subdirs iris msft_gft $(SUBDIRS)
+default: iris 
+
+iris: $(IRIS_SUBDIRS)
+
+msft_gft: $(MSFT_GFT_SUBDIRS)
 
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	make -C $@
 
 include $(TOPDIR)/make/Makefile.inc

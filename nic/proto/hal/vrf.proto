@@ -20,7 +20,6 @@ service Vrf {
   rpc VrfGet (VrfGetRequestMsg) returns (VrfGetResponseMsg) {}
 }
 
-
 // VrfSpec captures all the vrf level configuration
 message VrfSpec {
   types.ObjectMeta                      meta                 = 1;    // common object meta

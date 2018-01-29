@@ -10,6 +10,9 @@
 #include "nic/hal/pd/utils/flow/flow.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
+#include "nic/gen/include/p4pd_table.h"
+#include "nic/gen/include/common_txdma_actions_p4pd_table.h"
+#include "nic/gen/include/common_rxdma_actions_p4pd_table.h"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
@@ -210,19 +213,19 @@ public:
     indexer *cpupkt_page_hw_id_idxr(void) {return cpupkt_page_hwid_idxr_; }
 
     // get APIs for TXS scheduler related state
-    BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }    
+    BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
 
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
     hal_ret_t p4plus_txdma_init_tables(void);
-    directmap *dm_table(p4pd_table_id tid) const {
+    directmap *dm_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
             return NULL;
         }
         return dm_tables_[tid - P4TBL_ID_INDEX_MIN];
     }
 
-    sdk_hash *hash_tcam_table(p4pd_table_id tid) const {
+    sdk_hash *hash_tcam_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_HASH_OTCAM_MIN) ||
             (tid > P4TBL_ID_HASH_OTCAM_MAX)) {
             return NULL;
@@ -230,7 +233,7 @@ public:
         return hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN];
     }
 
-    tcam *tcam_table(p4pd_table_id tid) const {
+    tcam *tcam_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_TCAM_MIN) || (tid > P4TBL_ID_TCAM_MAX)) {
             return NULL;
         }
@@ -249,7 +252,7 @@ public:
         return acl_table_;
     }
 
-    directmap *p4plus_rxdma_dm_table(p4pd_common_rxdma_actions_table_id tid) const {
+    directmap *p4plus_rxdma_dm_table(uint32_t tid) const {
         if ((tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN) ||
             (tid > P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX)) {
             return NULL;
@@ -257,7 +260,7 @@ public:
         return p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
     }
 
-    directmap *p4plus_txdma_dm_table(p4pd_common_txdma_actions_table_id tid) const {
+    directmap *p4plus_txdma_dm_table(uint32_t tid) const {
         if ((tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN) ||
             (tid > P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX)) {
             return NULL;

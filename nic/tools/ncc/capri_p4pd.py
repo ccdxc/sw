@@ -71,7 +71,7 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
                            os.path.join(output_dir, genf)))
     return pdoutfiles
 
-def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name):
+def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, gen_dir):
 
     if output_h_dir and not os.path.exists(output_h_dir):
         os.mkdir(output_h_dir)
@@ -79,16 +79,59 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
         os.mkdir(output_c_dir)
     if output_py_dir and not os.path.exists(output_py_dir):
         os.mkdir(output_py_dir)
+    outdir = gen_dir + '/include/'
+    if outdir and not os.path.exists(outdir):
+        os.mkdir(outdir)
 
     templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, pd_dict['cli-name'])
+    _prog_name = ''
+    if prog_name != '':
+        prog_name = prog_name + '_'
+        _prog_name = '_' + prog_name
     for templatefile, outfile in templates_outfiles:
         outputfile_path = os.path.dirname(outfile)
         pdd = {}
         with open(outfile, "w") as of:
             pdd['pddict'] = pd_dict
-            render_template(of, templatefile, pdd, template_dir, \
-                            prefix=tenjin_prefix)
+            p4tbl_types = render_template(of, templatefile, pdd, template_dir, \
+                                          prefix=tenjin_prefix)
             of.close()
+            if p4tbl_types:
+                outfile = gen_dir + '/include/' + prog_name + 'p4pd_table.h'
+                with open(outfile, "w") as of:
+                    file_prologue =  \
+                            '/* ' + prog_name + 'p4pd_table.h\n'+\
+                            ' * Pensando Systems\n'  +\
+                            ' */\n' + \
+                            '/*\n'  + \
+                            ' * This file is generated from P4 program. Any changes made to this file will\n' + \
+                            ' * be lost.\n' + \
+                            ' */\n\n' + \
+                            '#ifndef __' + prog_name.upper() + 'P4PD_TABLE_H__\n'
+                    of.write(file_prologue)
+                    of.write('\n')
+                    of.write('\n')
+                    code_str = 'typedef enum '+ prog_name + 'p4pd_table_range_ {\n'
+                    of.write(code_str)
+                    for k, v in p4tbl_types.items():
+                        code_str =  '    ' + k + ' = ' + str(v) + ','  + '\n'
+                        of.write(code_str)
+                    code_str = '} ' + prog_name + 'p4pd_table_range_en;\n\n'
+                    of.write(code_str)
+                    code_extern_funcs = \
+                    '#define _P4TBL_NAME_MAX_LEN        80\n' + \
+                    'extern void p4pd_' + prog_name + 'prep_p4tbl_sw_struct_sizes(void);\n' + \
+                    'extern void p4pd_' + prog_name + 'prep_p4tbl_names(void);\n' + \
+                    'extern int p4pd_'  + prog_name + 'get_max_action_id(uint32_t tableid);\n' + \
+                    'extern void p4pd_' + prog_name + 'get_action_name(uint32_t tableid, int actionid, char *action_name);\n' + \
+                    'extern char p4pd_' + prog_name + 'tbl_names[' + 'P4' + _prog_name.upper() + 'TBL_ID_TBLMAX][' + '_P4TBL_NAME_MAX_LEN];\n' + \
+                    'extern uint16_t p4pd_' + prog_name + 'tbl_swkey_size[P4' + _prog_name.upper() + 'TBL_ID_TBLMAX];\n'+ \
+                    'extern uint16_t p4pd_' + prog_name + 'tbl_sw_action_data_size[P4' + _prog_name.upper() + 'TBL_ID_TBLMAX];\n\n\n'
+                    of.write(code_extern_funcs)
+                    code_str = '#endif\n\n'
+                    of.write(code_str)
+                    of.close()
+
 
 def p4pd_generate_asm_code(pd_dict, template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name):
 
@@ -1495,12 +1538,12 @@ class capri_p4pd:
         cur_path = os.path.split(cur_path)[0]
         templatedir = os.path.join(cur_path, 'pd_templates/')
 
-        if self.be.args.p4_plus or self.be.prog_name == 'gft':
+        if self.be.args.p4_plus:
             prog_name = self.be.prog_name
         else:
             prog_name = ''
 
-        p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir, py_outputdir, prog_name)
+        p4pd_generate_code(self.pddict, templatedir, h_outputdir, c_outputdir, py_outputdir, prog_name, gen_dir)
 
         outputdir = gen_dir + '/%s/asm_out' % (self.be.prog_name)
         if not os.path.exists(outputdir):

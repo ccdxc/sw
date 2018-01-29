@@ -13,11 +13,6 @@
 //::    else:
 //::        start_table_base = 301
 //::    #endif
-//:: elif pddict['p4program'] == 'gft':
-//::    p4prog = pddict['p4program'] + '_'
-//::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
-//::    prefix = 'p4pd_' + pddict['p4program']
-//::	start_table_base = 401
 //:: else:
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'

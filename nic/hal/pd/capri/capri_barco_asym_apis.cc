@@ -1,4 +1,4 @@
-#include "nic/hal/pd/common/pd_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"

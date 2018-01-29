@@ -6,7 +6,7 @@
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/network.hpp"
-#include "nic/hal/pd/common/pd_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/src/lif.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/ip.h"

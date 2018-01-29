@@ -1,7 +1,7 @@
 #include "tls_api.hpp"
 #include "ssl_helper.hpp"
 #include "nic/include/tcp_common.h"
-#include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/lkl/lklshim_tls.hpp"
 #include "nic/hal/src/crypto_keys.hpp"

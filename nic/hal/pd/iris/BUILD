@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
-
 licenses(["notice"])  # MIT license
-
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
@@ -16,10 +14,9 @@ cc_library(
         "//nic/hal:hal_src",
         "//nic/hal/pd/capri",
         "//nic/hal/pd/capri:capri_includes",
-        "//nic/hal/pd/common:pdcommon",
+        "//nic/hal/pd:pdcommon",
         "//nic/hal/pd/control",
-        "//nic/hal/pd/p4pd:p4pd_utils",
-        "//nic/hal/pd/iris/p4pd:p4pdapi",
+        "//nic/hal/pd/p4pd:p4pd",
         "//nic/hal/pd/utils/acl_tcam",
         "//nic/hal/pd/utils/flow",
         "//nic/hal/pd/utils/met",
@@ -48,7 +45,6 @@ cc_library(
     deps = [
         "//nic:gen_includes",
         "//nic/hal/pd/utils/acl_tcam:acl_tcam_includes",
-        #"//nic/hal/pd/utils/directmap:directmap_includes",
         "//nic/hal/pd/utils/flow:flow_includes",
         "//nic/hal/pd/utils/met:met_includes",
         "@sdk//obj:sdk_tcam",
@@ -56,5 +52,6 @@ cc_library(
         "@sdk//obj:sdk_directmap",
         "//nic/utils/bitmap",
         "//nic/utils/bm_allocator",
+        "//nic/p4/rdma/include:p4_rdma_includes",
     ],
 )

@@ -25,6 +25,8 @@ def render_template(out, name, context, templates_dir, prefix=None):
     out.write(engine.render(name, context, template_globals))
     if 'KD_DICT' in context:
         return context['KD_DICT']
+    if 'P4TBL_TYPES' in context:
+        return context['P4TBL_TYPES']
     else:
         return None
 

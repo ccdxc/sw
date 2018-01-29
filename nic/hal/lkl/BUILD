@@ -31,7 +31,7 @@ cc_library(
         "//nic/hal:hal_includes",
         "//nic/hal:hal_src",
         "//nic/hal/pd/capri:capri_includes",
-        "//nic/hal/pd/common:pdcommon",
+        "//nic/hal/pd:pdcommon",
         "//nic/hal/pd/iris:iris_includes",
         "//nic/hal/periodic",
         "//nic/hal/plugins:plugins_includes",

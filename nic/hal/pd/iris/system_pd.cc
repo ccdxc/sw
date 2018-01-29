@@ -12,11 +12,49 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_system_populate_drop_stats(DropStatsEntry *stats_entry, 
-                              uint8_t idx);
+pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    tcam                    *tcam;
+    drop_stats_swkey         key = { 0 };
+    drop_stats_swkey_mask    key_mask = { 0 };
+    drop_stats_actiondata    data = { 0 };
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    // Retrieve from SW to get the stats idx
+    sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to retrieve stats idx for: {}",
+                idx);
+        goto end;
+    }
+
+    // Read from drop stats table
+    sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to retrieve drop stats for entry: {}",
+                idx);
+        goto end;
+    }
+
+    if (key.entry_inactive_drop_stats) {
+        goto end;
+    }
+
+    pd_system_decode(&key, &key_mask, &data, stats_entry);
+
+end:
+
+    return ret;
+}
 
 hal_ret_t
-pd_drop_stats_get(pd_system_args_t *pd_sys_args)
+pd_drop_stats_get (pd_system_args_t *pd_sys_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
     SystemResponse          *rsp = pd_sys_args->rsp;
@@ -34,8 +72,8 @@ pd_drop_stats_get(pd_system_args_t *pd_sys_args)
 }
 
 inline hbm_addr_t
-hbm_get_addr_for_stat_index(p4pd_table_id table_id,
-                            uint8_t idx)
+hbm_get_addr_for_stat_index (p4pd_table_id table_id,
+                             uint8_t idx)
 {
     hbm_addr_t  stats_base_addr;
     p4pd_table_properties_t  tbl_ctx;
@@ -85,50 +123,8 @@ hbm_get_addr_for_stat_index(p4pd_table_id table_id,
 }
 
 hal_ret_t
-pd_system_populate_drop_stats(DropStatsEntry *stats_entry, 
-                            uint8_t idx)
-{
-    hal_ret_t               ret = HAL_RET_OK;
-    sdk_ret_t               sdk_ret;
-    tcam                    *tcam;
-    drop_stats_swkey         key = { 0 };
-    drop_stats_swkey_mask    key_mask = { 0 };
-    drop_stats_actiondata    data = { 0 };
-
-    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
-
-    // Retrieve from SW to get the stats idx
-    sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to retrieve stats idx for: {}",
-                idx);
-        goto end;
-    }
-
-    // Read from drop stats table
-    sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to retrieve drop stats for entry: {}",
-                idx);
-        goto end;
-    }
-
-    if (key.entry_inactive_drop_stats) {
-        goto end;
-    }
-
-    pd_system_decode(&key, &key_mask, &data, stats_entry);
-
-end:
-    return ret;
-}
-
-hal_ret_t
-pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
-        drop_stats_actiondata *data, DropStatsEntry *stats_entry)
+pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
+                  drop_stats_actiondata *data, DropStatsEntry *stats_entry)
 {
     hal_ret_t   ret = HAL_RET_OK;
     uint64_t drop_reason, drop_reason_mask;
@@ -212,8 +208,8 @@ pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
 }
 
 hal_ret_t
-pd_system_populate_index_table_stats(sys::TableStatsEntry *stats_entry,
-        p4pd_table_id id)
+pd_system_populate_index_table_stats (sys::TableStatsEntry *stats_entry,
+                                      p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
     directmap               *dm;
@@ -223,7 +219,7 @@ pd_system_populate_index_table_stats(sys::TableStatsEntry *stats_entry,
         return ret;
     }
 
-    stats_entry->set_table_type (sys::TABLE_TYPE_INDEX);
+    stats_entry->set_table_type(sys::TABLE_TYPE_INDEX);
     stats_entry->set_table_name(dm->name());
     stats_entry->set_table_size(dm->capacity());
     stats_entry->set_overflow_table_size(0);
@@ -238,8 +234,8 @@ pd_system_populate_index_table_stats(sys::TableStatsEntry *stats_entry,
 }
 
 hal_ret_t
-pd_system_populate_flow_table_stats(sys::TableStatsEntry *stats_entry,
-        p4pd_table_id id)
+pd_system_populate_flow_table_stats (sys::TableStatsEntry *stats_entry,
+                                     p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
     Flow                    *fl;
@@ -264,8 +260,8 @@ pd_system_populate_flow_table_stats(sys::TableStatsEntry *stats_entry,
 }
 
 hal_ret_t
-pd_system_populate_acl_tcam_table_stats(sys::TableStatsEntry *stats_entry,
-        p4pd_table_id id)
+pd_system_populate_acl_tcam_table_stats (sys::TableStatsEntry *stats_entry,
+                                         p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
     acl_tcam                *acl_tcam;
@@ -290,8 +286,8 @@ pd_system_populate_acl_tcam_table_stats(sys::TableStatsEntry *stats_entry,
 }
 
 hal_ret_t
-pd_system_populate_tcam_table_stats(sys::TableStatsEntry *stats_entry,
-        p4pd_table_id id)
+pd_system_populate_tcam_table_stats (sys::TableStatsEntry *stats_entry,
+                                     p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
     tcam                    *tcam;
@@ -316,8 +312,8 @@ pd_system_populate_tcam_table_stats(sys::TableStatsEntry *stats_entry,
 }
 
 hal_ret_t
-pd_system_populate_hash_tcam_table_stats(sys::TableStatsEntry *stats_entry,
-        p4pd_table_id id)
+pd_system_populate_hash_tcam_table_stats (sys::TableStatsEntry *stats_entry,
+                                          p4pd_table_id id)
 {
     hal_ret_t               ret = HAL_RET_OK;
     sdk_hash                *hash;
@@ -343,23 +339,28 @@ pd_system_populate_hash_tcam_table_stats(sys::TableStatsEntry *stats_entry,
 }
 
 static hal_ret_t
-pd_system_populate_table_stats(sys::TableStatsEntry *stats_entry, 
-        p4pd_table_id id)
+pd_system_populate_table_stats (sys::TableStatsEntry *stats_entry,
+                                uint32_t id)
 {
     hal_ret_t               ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("PD-System: Populating table stats");
 
     if (id >= P4TBL_ID_INDEX_MIN && id <= P4TBL_ID_INDEX_MAX) {
-        return pd_system_populate_index_table_stats(stats_entry, id);
+        return pd_system_populate_index_table_stats(stats_entry,
+                                                    (p4pd_table_id)id);
     } else if (id == P4TBL_ID_NACL) {
-        return pd_system_populate_acl_tcam_table_stats(stats_entry, id);
+        return pd_system_populate_acl_tcam_table_stats(stats_entry,
+                                                       (p4pd_table_id)id);
     } else if (id >= P4TBL_ID_TCAM_MIN && id <= P4TBL_ID_TCAM_MAX) {
-        return pd_system_populate_tcam_table_stats(stats_entry, id);
+        return pd_system_populate_tcam_table_stats(stats_entry,
+                                                   (p4pd_table_id)id);
     } else if (id >= P4TBL_ID_HASH_OTCAM_MIN && id <= P4TBL_ID_HASH_OTCAM_MAX) {
-        return pd_system_populate_hash_tcam_table_stats(stats_entry, id);
+        return pd_system_populate_hash_tcam_table_stats(stats_entry,
+                                                        (p4pd_table_id)id);
     } else if (id >= P4TBL_ID_HASH_MIN && id <= P4TBL_ID_HASH_MAX) {
-        return pd_system_populate_flow_table_stats(stats_entry, id);
+        return pd_system_populate_flow_table_stats(stats_entry,
+                                                   (p4pd_table_id)id);
     } else {
         stats_entry->set_table_type (sys::TABLE_TYPE_NONE);
     }
@@ -368,7 +369,7 @@ pd_system_populate_table_stats(sys::TableStatsEntry *stats_entry,
 }
 
 hal_ret_t
-pd_table_stats_get(pd_system_args_t *pd_sys_args)
+pd_table_stats_get (pd_system_args_t *pd_sys_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
     SystemResponse          *rsp = pd_sys_args->rsp;

@@ -5,7 +5,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/telemetry.hpp"
-#include "nic/hal/pd/common/cpupkt_headers.hpp"
+#include "nic/hal/pd/cpupkt_headers.hpp"
 
 namespace hal {
 namespace pd {

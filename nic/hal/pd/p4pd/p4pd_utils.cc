@@ -1,22 +1,11 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/hal/pd/p4pd_api.hpp"
-#ifndef GFT
-#include "nic/gen/iris/include/p4pd.h"
-#else
-#include "nic/gen/gft/include/gft_p4pd.h"
-#define P4TBL_ID_TBLMIN                 P4_GFT_TBL_ID_TBLMIN
-#define P4TBL_ID_TBLMAX                 P4_GFT_TBL_ID_TBLMAX
-#define p4pd_tbl_swkey_size             p4pd_gft_tbl_swkey_size
-#define p4pd_tbl_names                  p4pd_gft_tbl_names
-#define p4pd_prep_p4tbl_names           p4pd_gft_prep_p4tbl_names
-#define p4pd_prep_p4tbl_sw_struct_sizes p4pd_gft_prep_p4tbl_sw_struct_sizes
-#define p4pd_tbl_sw_action_data_size    p4pd_gft_tbl_sw_action_data_size
-#endif
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/include/p4pd_table.h"
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free
@@ -47,6 +36,15 @@
 #define JSON_KEY_BTM_RIGHT_BLOCK    "layout.bottom_right.block"
 #define JSON_KEY_HASH_TYPE          "hash_type"
 #define JSON_KEY_NUM_BUCKETS        "num_buckets"
+
+#if 0
+// TODO: we need declarations for these in common files
+extern void p4pd_prep_p4tbl_sw_struct_sizes(void);
+extern void p4pd_prep_p4tbl_names(void);
+extern char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
+extern uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];
+extern uint16_t p4pd_tbl_sw_action_data_size[P4TBL_ID_TBLMAX];
+#endif
 
 static p4pd_table_properties_t *_p4tbls;
 namespace pt = boost::property_tree;

@@ -49,9 +49,6 @@
 #define GFT_HEADER_FIELD_OOB_TENANT_ID             0x00080000ULL
 #define GFT_HEADER_FIELD_GRE_PROTOCOL              0x00100000ULL
 
-#define INVALID_GFT_PROFILE_ID                     0
-
-
 typedef uint32_t vport_id_t;
 typedef uint32_t gft_profile_id_t;
 typedef uint32_t gft_table_id_t;

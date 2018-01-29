@@ -13,12 +13,6 @@
 //::    else:
 //::	    start_table_base = 301
 //::    #endif
-//:: elif pddict['p4program'] == 'gft':
-//::    p4prog = pddict['p4program'] + '_'
-//::    hdrdir = pddict['p4program']
-//::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
-//::    prefix = 'p4pd_' + pddict['p4program']
-//::	start_table_base = 401
 //:: else:
 //::    p4prog = ''
 //::    hdrdir = 'iris'
@@ -81,9 +75,9 @@
 #define P4PD_TCAM_WORD_CHUNK_LEN (16)  /* Tcam word chunk */
 #define P4PD_MAX_PHV_LEN         (6*1024) /* Used to build wide table entry */
 
-char ${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
-uint16_t ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_TBLMAX];
-uint16_t ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_TBLMAX];
+char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
+uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
+uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 
 extern int capri_table_entry_write(uint32_t tableid,
                                    uint32_t index,
@@ -3330,7 +3324,7 @@ ${table}_entry_decode(uint32_t tableid,
 
 //::    if len(tabledict):
 
-//::        if pddict['p4plus'] or pddict['p4program'] == 'gft':
+//::        if pddict['p4plus']:
 //::            api_prefix = 'p4pd_' + pddict['p4program']
 //::        else:
 //::            api_prefix = 'p4pd'
@@ -4942,6 +4936,67 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 
 
 //::    #endif
+//
+//::    if len(tabledict):
+
+void ${prefix}_prep_p4tbl_names()
+{
+//::        for  tblname in sorted(tabledict, key=tabledict.get):
+//::            caps_tblname = tblname.upper() 
+    strncpy(${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_${caps_tblname}], "${tblname}", strlen("${tblname}"));
+//::        #endfor
+}
+
+void ${prefix}_prep_p4tbl_sw_struct_sizes()
+{
+//::        for  tblname in sorted(tabledict, key=tabledict.get):
+//::            caps_tblname = tblname.upper() 
+//::        if pddict['tables'][tblname]['type'] != 'Index':
+    ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_${caps_tblname}] = sizeof(${tblname}_swkey);
+//::        #endif
+    ${prefix}_tbl_sw_action_data_size[P4${caps_p4prog}TBL_ID_${caps_tblname}]= sizeof(${tblname}_actiondata);
+//::        #endfor
+}
+
+//::    #endif
+
+int ${prefix}_get_max_action_id(uint32_t tableid)
+{
+    switch(tableid) {
+//::        for  tblname in sorted(tabledict, key=tabledict.get):
+//::            caps_tblname = tblname.upper() 
+        case P4${caps_p4prog}TBL_ID_${caps_tblname}:
+            return (${caps_tblname}_MAX_ID);
+        break;
+//::        #endfor
+    }
+    // Not found tableid case
+    return (0);
+}
+
+void ${prefix}_get_action_name(uint32_t tableid, int actionid, char *action_name)
+{
+    switch(tableid) {
+//::        for  tblname in sorted(tabledict, key=tabledict.get):
+//::            caps_tblname = tblname.upper() 
+        case P4${caps_p4prog}TBL_ID_${caps_tblname}:
+//::            if len(pddict['tables'][tblname]['actions']):
+            switch(actionid) {
+//::                for action in pddict['tables'][tblname]['actions']:
+//::                    (actionname, actionfldlist) = action
+//::                    actname = actionname.upper()
+                case ${caps_tblname}_${actname}_ID:
+                    strcpy(action_name, "${actionname}");
+                    return;
+                break;
+//::                #endfor
+            }
+//::            #endif
+        break;
+//::        #endfor
+    }
+    *action_name = '\0';
+}
 
 #ifdef P4PDGEN_COMPILE
 #include <stdio.h>

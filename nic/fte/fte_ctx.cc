@@ -7,8 +7,8 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
-#include "nic/hal/pd/common/cpupkt_headers.hpp"
-#include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/pd/cpupkt_headers.hpp"
+#include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 

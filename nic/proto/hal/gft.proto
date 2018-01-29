@@ -1,0 +1,36 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for vrf
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+import "types.proto";
+import "kh.proto";
+
+package gft;
+option go_package="halproto";
+
+// The gft service definition
+service Gft {
+}
+
+message GftEthFields {
+  uint64    dst_mac_addr     = 1;
+  uint64    src_mac_addr     = 2;
+  uint32    eth_type         = 3;
+  uint32    customer_vlan_id = 4;
+  uint32    provider_vlan_id = 5;
+  uint32    priority         = 6;
+}
+
+enum GftTableType {
+  GFT_TABLE_TYPE_NONE                = 0;
+  GFT_TABLE_TYPE_WILDCARD_INGRESS    = 1;
+  GFT_TABLE_TYPE_WILDCARD_EGRESS     = 2;
+  GFT_TABLE_TYPE_EXACT_MATCH_INGRESS = 3;
+  GFT_TABLE_TYPE_EXACT_MATCH_EGRESS  = 4;
+}
+
+message GftHeaderGroupExactMatchProfile {
+} 

@@ -1,16 +1,5 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __P4PD_API_H__
-#define __P4PD_API_H__
-
-#include <stdint.h>
-
-#ifndef P4PD_CLI
-#include "nic/hal/pd/hal_pd_error.hpp"
-#else
-typedef int p4pd_error_t;
-#endif
-
 /* This file contains data structures and APIs needed to operate on P4 table.
  *
  * For every P4table, 
@@ -45,7 +34,13 @@ typedef int p4pd_error_t;
  *      <table_name>_entry_read()
  */
 
-//#include "nic/include/base.h"
+#ifndef __P4PD_API_H__
+#define __P4PD_API_H__
+
+#include <stdint.h>
+#include "nic/hal/pd/hal_pd_error.hpp"
+
+#define P4TBL_NAME_MAX_LEN                           80               // TODO: this is generated in multiple files today !!!
 
 #define P4PD_TCAM_DC_BIT                             0
 #define P4PD_TCAM_DC_UINT8                           0xFF
@@ -846,7 +841,7 @@ p4pd_error_t p4pd_global_entry_write(uint32_t tableid,
  *                                 determining relative to other enties.
  *                                 If table is index table, then index value
  *                                 is same as the key used to lookup table.
- *  OUT : void    *swkey         : Hardware key data read from hardware table is 
+ *  OUT : void    *swkey         : Hardware key data read from hardware table is
  *                                 converted to software key. A software key
  *                                 structure is generated for every p4-table.
  *                                 Refer to p4pd.h for structure details.
@@ -907,25 +902,5 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
 p4pd_error_t
 p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
 
-#ifdef GFT
-void p4pd_gft_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
-                            uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
-p4pd_error_t p4pd_gft_entry_write(uint32_t tableid, uint32_t index, uint8_t *hwkey,
-                                  uint8_t *hwkey_mask, void  *actiondata);
-p4pd_error_t p4pd_gft_entry_read(uint32_t tableid, uint32_t index, void *swkey,
-                                 void *swkey_mask, void *actiondata);
-p4pd_error_t p4pd_gft_table_entry_decoded_string_get(
-    uint32_t tableid, uint32_t index, uint8_t *hwentry, uint8_t *hwentry_y,
-    uint16_t hwentry_len, char *buffer, uint16_t buf_len);
-p4pd_error_t p4pd_gft_table_ds_decoded_string_get(
-    uint32_t tableid, uint32_t index, void *sw_key, void *sw_key_mask, void *action_data,
-    char *buffer, uint16_t buf_len);
-p4pd_error_t p4pd_gft_hwkey_hwmask_build(uint32_t tableid, void *swkey,
-                                         void *swkey_mask, uint8_t *hw_key,
-                                         uint8_t *hw_key_mask);
-#endif
-
-/*======================== P4PD GLOBAL/COMMON TABLE C/R/W routines =============*/
-
-#endif
+#endif    // __P4PD_API_H__
 

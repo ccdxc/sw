@@ -12,7 +12,7 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
-#include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
+#include "nic/hal/pd/iris/p4pd_defaults.hpp"
 
 namespace hal {
 namespace pd {

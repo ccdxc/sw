@@ -11,7 +11,7 @@
 #include "nic/p4/nw/include/table_sizes.h"
 #include "nic/hal/pd/iris/rw_pd.hpp"
 #include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
-#include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
+#include "nic/hal/pd/iris/p4pd_defaults.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/hal/pd/iris/acl_pd.hpp"
@@ -1610,7 +1610,8 @@ p4pd_compute_checksum_init(void)
 //    - Same as above but this is not inherently driven by P4 code and have 
 //      a different qid than above two.
 //-----------------------------------------------------------------------------
-hal_ret_t
+// TODO: Ajeer -- why is this called capri_xxx ??
+static hal_ret_t
 capri_repl_pgm_def_entries (void)
 {
     p4_replication_data_t data;
@@ -1679,7 +1680,7 @@ capri_repl_pgm_def_entries (void)
 //-----------------------------------------------------------------------------
 // Chip Forwarding Mode Initialization
 //-----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 p4pd_forwarding_mode_init (void) 
 {
 #if 0

@@ -19,14 +19,13 @@ gl_deps_list = [
         "//nic:halproto",
 
         # PD
-        "//nic/hal/pd/common:pdcommon",
+        "//nic/hal/pd:pdcommon",
         "@sdk//obj:sdk_tcam",
         "@sdk//obj:sdk_hash",
         "@sdk//obj:sdk_directmap",
         "//nic/hal/pd/utils/flow",
         "//nic/hal/pd/utils/met",
         "//nic/hal/pd/utils/acl_tcam",
-        "//nic/hal/pd/iris/p4pd:p4pdapi",
         "//nic/hal/pd/iris",
         "//nic:capricsr_int",
         "//nic/hal/pd/capri",

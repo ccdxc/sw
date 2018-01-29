@@ -8,7 +8,7 @@
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/interface_api.hpp"
-#include "nic/hal/pd/common/pd_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"

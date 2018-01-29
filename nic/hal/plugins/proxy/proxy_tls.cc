@@ -1,6 +1,6 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/hal/tls/tls_api.hpp"
 #include "nic/hal/src/tlscb.hpp"

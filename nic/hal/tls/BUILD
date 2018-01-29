@@ -17,7 +17,7 @@ cc_library(
         "//nic:spdlog",
         "//nic:boost",
         "//nic:google_includes",
-        "//nic/hal/pd/common:pdcommon",
+        "//nic/hal/pd:pdcommon",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
         "//nic:gen_proto_includes",

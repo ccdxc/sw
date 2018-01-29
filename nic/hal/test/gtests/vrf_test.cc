@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
-#include "nic/hal/pd/common/pd_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;

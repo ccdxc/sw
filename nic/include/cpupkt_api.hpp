@@ -1,1 +1,1 @@
-../hal/pd/common/cpupkt_api.hpp
+../hal/pd/cpupkt_api.hpp
