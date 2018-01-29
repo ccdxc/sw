@@ -348,7 +348,7 @@
 // specified in the d-vector. Fence the interrupt with previous 
 // DMA writes.
 #define PCI_RAISE_INTERRUPT(_dma_cmd_ptr)				\
-   phvwr	p.pci_intr_data_data, d.intr_data;			\
+   phvwr	p.pci_intr_data_data, d.{intr_data}.wx;			\
    add		r7, r0, d.intr_addr;					\
    DMA_PHV2MEM_SETUP(pci_intr_data_data, pci_intr_data_data,		\
                      r7, _dma_cmd_ptr)					\

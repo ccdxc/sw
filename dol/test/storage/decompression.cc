@@ -135,6 +135,7 @@ decompression_init()
   read_reg(cfg_ueng+4, hi_reg);
   lo_reg |= 0x3;
   hi_reg &= ~(1u << (54 - 32));
+  hi_reg &= ~(1u << (53 - 32));
   write_reg(cfg_ueng, lo_reg);
   write_reg(cfg_ueng+4, hi_reg);
   // Enable cold/warm queue.
