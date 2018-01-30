@@ -49,6 +49,38 @@ func (x GftTableType) String() string {
 }
 func (GftTableType) EnumDescriptor() ([]byte, []int) { return fileDescriptorGft, []int{0} }
 
+type GftHeaderGroupTranspostionAction int32
+
+const (
+	GftHeaderGroupTranspostionAction_TRANSPOSITION_ACTION_NONE   GftHeaderGroupTranspostionAction = 0
+	GftHeaderGroupTranspostionAction_TRANSPOSITION_ACTION_MODIFY GftHeaderGroupTranspostionAction = 1
+	GftHeaderGroupTranspostionAction_TRANSPOSITION_ACTION_IGNORE GftHeaderGroupTranspostionAction = 2
+	GftHeaderGroupTranspostionAction_TRANSPOSITION_ACTION_PUSH   GftHeaderGroupTranspostionAction = 3
+	GftHeaderGroupTranspostionAction_TRANSPOSITION_ACTION_POP    GftHeaderGroupTranspostionAction = 4
+)
+
+var GftHeaderGroupTranspostionAction_name = map[int32]string{
+	0: "TRANSPOSITION_ACTION_NONE",
+	1: "TRANSPOSITION_ACTION_MODIFY",
+	2: "TRANSPOSITION_ACTION_IGNORE",
+	3: "TRANSPOSITION_ACTION_PUSH",
+	4: "TRANSPOSITION_ACTION_POP",
+}
+var GftHeaderGroupTranspostionAction_value = map[string]int32{
+	"TRANSPOSITION_ACTION_NONE":   0,
+	"TRANSPOSITION_ACTION_MODIFY": 1,
+	"TRANSPOSITION_ACTION_IGNORE": 2,
+	"TRANSPOSITION_ACTION_PUSH":   3,
+	"TRANSPOSITION_ACTION_POP":    4,
+}
+
+func (x GftHeaderGroupTranspostionAction) String() string {
+	return proto.EnumName(GftHeaderGroupTranspostionAction_name, int32(x))
+}
+func (GftHeaderGroupTranspostionAction) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorGft, []int{1}
+}
+
 type GftEthFields struct {
 	DstMacAddr     uint64 `protobuf:"varint,1,opt,name=dst_mac_addr,json=dstMacAddr,proto3" json:"dst_mac_addr,omitempty"`
 	SrcMacAddr     uint64 `protobuf:"varint,2,opt,name=src_mac_addr,json=srcMacAddr,proto3" json:"src_mac_addr,omitempty"`
@@ -105,20 +137,1387 @@ func (m *GftEthFields) GetPriority() uint32 {
 	return 0
 }
 
+type GftHeaders struct {
+	EthernetHeader bool `protobuf:"varint,1,opt,name=ethernet_header,json=ethernetHeader,proto3" json:"ethernet_header,omitempty"`
+	Ipv4Header     bool `protobuf:"varint,2,opt,name=ipv4_header,json=ipv4Header,proto3" json:"ipv4_header,omitempty"`
+	Ipv6Header     bool `protobuf:"varint,3,opt,name=ipv6_header,json=ipv6Header,proto3" json:"ipv6_header,omitempty"`
+	TcpHeader      bool `protobuf:"varint,4,opt,name=tcp_header,json=tcpHeader,proto3" json:"tcp_header,omitempty"`
+	UdpHeader      bool `protobuf:"varint,5,opt,name=udp_header,json=udpHeader,proto3" json:"udp_header,omitempty"`
+	IcmpHeader     bool `protobuf:"varint,6,opt,name=icmp_header,json=icmpHeader,proto3" json:"icmp_header,omitempty"`
+	NoEncap        bool `protobuf:"varint,7,opt,name=no_encap,json=noEncap,proto3" json:"no_encap,omitempty"`
+	IpInIpEncap    bool `protobuf:"varint,8,opt,name=ip_in_ip_encap,json=ipInIpEncap,proto3" json:"ip_in_ip_encap,omitempty"`
+	IpInGreEncap   bool `protobuf:"varint,9,opt,name=ip_in_gre_encap,json=ipInGreEncap,proto3" json:"ip_in_gre_encap,omitempty"`
+	NvgreEncap     bool `protobuf:"varint,10,opt,name=nvgre_encap,json=nvgreEncap,proto3" json:"nvgre_encap,omitempty"`
+	VxlanEncap     bool `protobuf:"varint,11,opt,name=vxlan_encap,json=vxlanEncap,proto3" json:"vxlan_encap,omitempty"`
+}
+
+func (m *GftHeaders) Reset()                    { *m = GftHeaders{} }
+func (m *GftHeaders) String() string            { return proto.CompactTextString(m) }
+func (*GftHeaders) ProtoMessage()               {}
+func (*GftHeaders) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{1} }
+
+func (m *GftHeaders) GetEthernetHeader() bool {
+	if m != nil {
+		return m.EthernetHeader
+	}
+	return false
+}
+
+func (m *GftHeaders) GetIpv4Header() bool {
+	if m != nil {
+		return m.Ipv4Header
+	}
+	return false
+}
+
+func (m *GftHeaders) GetIpv6Header() bool {
+	if m != nil {
+		return m.Ipv6Header
+	}
+	return false
+}
+
+func (m *GftHeaders) GetTcpHeader() bool {
+	if m != nil {
+		return m.TcpHeader
+	}
+	return false
+}
+
+func (m *GftHeaders) GetUdpHeader() bool {
+	if m != nil {
+		return m.UdpHeader
+	}
+	return false
+}
+
+func (m *GftHeaders) GetIcmpHeader() bool {
+	if m != nil {
+		return m.IcmpHeader
+	}
+	return false
+}
+
+func (m *GftHeaders) GetNoEncap() bool {
+	if m != nil {
+		return m.NoEncap
+	}
+	return false
+}
+
+func (m *GftHeaders) GetIpInIpEncap() bool {
+	if m != nil {
+		return m.IpInIpEncap
+	}
+	return false
+}
+
+func (m *GftHeaders) GetIpInGreEncap() bool {
+	if m != nil {
+		return m.IpInGreEncap
+	}
+	return false
+}
+
+func (m *GftHeaders) GetNvgreEncap() bool {
+	if m != nil {
+		return m.NvgreEncap
+	}
+	return false
+}
+
+func (m *GftHeaders) GetVxlanEncap() bool {
+	if m != nil {
+		return m.VxlanEncap
+	}
+	return false
+}
+
+type GftHeaderFields struct {
+	DstMacAddr     bool `protobuf:"varint,1,opt,name=dst_mac_addr,json=dstMacAddr,proto3" json:"dst_mac_addr,omitempty"`
+	SrcMacAddr     bool `protobuf:"varint,2,opt,name=src_mac_addr,json=srcMacAddr,proto3" json:"src_mac_addr,omitempty"`
+	EthType        bool `protobuf:"varint,3,opt,name=eth_type,json=ethType,proto3" json:"eth_type,omitempty"`
+	CustomerVlanId bool `protobuf:"varint,4,opt,name=customer_vlan_id,json=customerVlanId,proto3" json:"customer_vlan_id,omitempty"`
+	ProviderVlanId bool `protobuf:"varint,5,opt,name=provider_vlan_id,json=providerVlanId,proto3" json:"provider_vlan_id,omitempty"`
+	Dot1PPriority  bool `protobuf:"varint,6,opt,name=dot1p_priority,json=dot1pPriority,proto3" json:"dot1p_priority,omitempty"`
+	SrcIpAddr      bool `protobuf:"varint,7,opt,name=src_ip_addr,json=srcIpAddr,proto3" json:"src_ip_addr,omitempty"`
+	DstIpAddr      bool `protobuf:"varint,8,opt,name=dst_ip_addr,json=dstIpAddr,proto3" json:"dst_ip_addr,omitempty"`
+	IpTtl          bool `protobuf:"varint,9,opt,name=ip_ttl,json=ipTtl,proto3" json:"ip_ttl,omitempty"`
+	IpProtocol     bool `protobuf:"varint,10,opt,name=ip_protocol,json=ipProtocol,proto3" json:"ip_protocol,omitempty"`
+	IpDscp         bool `protobuf:"varint,11,opt,name=ip_dscp,json=ipDscp,proto3" json:"ip_dscp,omitempty"`
+	SrcPort        bool `protobuf:"varint,12,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty"`
+	DstPort        bool `protobuf:"varint,13,opt,name=dst_port,json=dstPort,proto3" json:"dst_port,omitempty"`
+	TcpFlags       bool `protobuf:"varint,14,opt,name=tcp_flags,json=tcpFlags,proto3" json:"tcp_flags,omitempty"`
+	TenantId       bool `protobuf:"varint,15,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	IcmpType       bool `protobuf:"varint,16,opt,name=icmp_type,json=icmpType,proto3" json:"icmp_type,omitempty"`
+	IcmpCode       bool `protobuf:"varint,17,opt,name=icmp_code,json=icmpCode,proto3" json:"icmp_code,omitempty"`
+	OobVlan        bool `protobuf:"varint,18,opt,name=oob_vlan,json=oobVlan,proto3" json:"oob_vlan,omitempty"`
+	OobTenantId    bool `protobuf:"varint,19,opt,name=oob_tenant_id,json=oobTenantId,proto3" json:"oob_tenant_id,omitempty"`
+	GreProtocol    bool `protobuf:"varint,20,opt,name=gre_protocol,json=greProtocol,proto3" json:"gre_protocol,omitempty"`
+}
+
+func (m *GftHeaderFields) Reset()                    { *m = GftHeaderFields{} }
+func (m *GftHeaderFields) String() string            { return proto.CompactTextString(m) }
+func (*GftHeaderFields) ProtoMessage()               {}
+func (*GftHeaderFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{2} }
+
+func (m *GftHeaderFields) GetDstMacAddr() bool {
+	if m != nil {
+		return m.DstMacAddr
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetSrcMacAddr() bool {
+	if m != nil {
+		return m.SrcMacAddr
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetEthType() bool {
+	if m != nil {
+		return m.EthType
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetCustomerVlanId() bool {
+	if m != nil {
+		return m.CustomerVlanId
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetProviderVlanId() bool {
+	if m != nil {
+		return m.ProviderVlanId
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetDot1PPriority() bool {
+	if m != nil {
+		return m.Dot1PPriority
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetSrcIpAddr() bool {
+	if m != nil {
+		return m.SrcIpAddr
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetDstIpAddr() bool {
+	if m != nil {
+		return m.DstIpAddr
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetIpTtl() bool {
+	if m != nil {
+		return m.IpTtl
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetIpProtocol() bool {
+	if m != nil {
+		return m.IpProtocol
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetIpDscp() bool {
+	if m != nil {
+		return m.IpDscp
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetSrcPort() bool {
+	if m != nil {
+		return m.SrcPort
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetDstPort() bool {
+	if m != nil {
+		return m.DstPort
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetTcpFlags() bool {
+	if m != nil {
+		return m.TcpFlags
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetTenantId() bool {
+	if m != nil {
+		return m.TenantId
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetIcmpType() bool {
+	if m != nil {
+		return m.IcmpType
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetIcmpCode() bool {
+	if m != nil {
+		return m.IcmpCode
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetOobVlan() bool {
+	if m != nil {
+		return m.OobVlan
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetOobTenantId() bool {
+	if m != nil {
+		return m.OobTenantId
+	}
+	return false
+}
+
+func (m *GftHeaderFields) GetGreProtocol() bool {
+	if m != nil {
+		return m.GreProtocol
+	}
+	return false
+}
+
 type GftHeaderGroupExactMatchProfile struct {
+	Headers     *GftHeaders      `protobuf:"bytes,1,opt,name=headers" json:"headers,omitempty"`
+	MatchFields *GftHeaderFields `protobuf:"bytes,2,opt,name=match_fields,json=matchFields" json:"match_fields,omitempty"`
 }
 
 func (m *GftHeaderGroupExactMatchProfile) Reset()         { *m = GftHeaderGroupExactMatchProfile{} }
 func (m *GftHeaderGroupExactMatchProfile) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderGroupExactMatchProfile) ProtoMessage()    {}
 func (*GftHeaderGroupExactMatchProfile) Descriptor() ([]byte, []int) {
-	return fileDescriptorGft, []int{1}
+	return fileDescriptorGft, []int{3}
+}
+
+func (m *GftHeaderGroupExactMatchProfile) GetHeaders() *GftHeaders {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatchProfile) GetMatchFields() *GftHeaderFields {
+	if m != nil {
+		return m.MatchFields
+	}
+	return nil
+}
+
+type GftExactMatchProfile struct {
+	RdmaFlow           bool                               `protobuf:"varint,1,opt,name=rdma_flow,json=rdmaFlow,proto3" json:"rdma_flow,omitempty"`
+	TableType          GftTableType                       `protobuf:"varint,2,opt,name=table_type,json=tableType,proto3,enum=gft.GftTableType" json:"table_type,omitempty"`
+	ProfileId          uint32                             `protobuf:"varint,3,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	ExactMatchProfiles []*GftHeaderGroupExactMatchProfile `protobuf:"bytes,4,rep,name=exact_match_profiles,json=exactMatchProfiles" json:"exact_match_profiles,omitempty"`
+}
+
+func (m *GftExactMatchProfile) Reset()                    { *m = GftExactMatchProfile{} }
+func (m *GftExactMatchProfile) String() string            { return proto.CompactTextString(m) }
+func (*GftExactMatchProfile) ProtoMessage()               {}
+func (*GftExactMatchProfile) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{4} }
+
+func (m *GftExactMatchProfile) GetRdmaFlow() bool {
+	if m != nil {
+		return m.RdmaFlow
+	}
+	return false
+}
+
+func (m *GftExactMatchProfile) GetTableType() GftTableType {
+	if m != nil {
+		return m.TableType
+	}
+	return GftTableType_GFT_TABLE_TYPE_NONE
+}
+
+func (m *GftExactMatchProfile) GetProfileId() uint32 {
+	if m != nil {
+		return m.ProfileId
+	}
+	return 0
+}
+
+func (m *GftExactMatchProfile) GetExactMatchProfiles() []*GftHeaderGroupExactMatchProfile {
+	if m != nil {
+		return m.ExactMatchProfiles
+	}
+	return nil
+}
+
+type UdpMatchFields struct {
+	Sport uint32 `protobuf:"varint,1,opt,name=sport,proto3" json:"sport,omitempty"`
+	Dport uint32 `protobuf:"varint,2,opt,name=dport,proto3" json:"dport,omitempty"`
+}
+
+func (m *UdpMatchFields) Reset()                    { *m = UdpMatchFields{} }
+func (m *UdpMatchFields) String() string            { return proto.CompactTextString(m) }
+func (*UdpMatchFields) ProtoMessage()               {}
+func (*UdpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{5} }
+
+func (m *UdpMatchFields) GetSport() uint32 {
+	if m != nil {
+		return m.Sport
+	}
+	return 0
+}
+
+func (m *UdpMatchFields) GetDport() uint32 {
+	if m != nil {
+		return m.Dport
+	}
+	return 0
+}
+
+type TcpMatchFields struct {
+	Sport    uint32 `protobuf:"varint,1,opt,name=sport,proto3" json:"sport,omitempty"`
+	Dport    uint32 `protobuf:"varint,2,opt,name=dport,proto3" json:"dport,omitempty"`
+	TcpFlags uint32 `protobuf:"varint,3,opt,name=tcp_flags,json=tcpFlags,proto3" json:"tcp_flags,omitempty"`
+}
+
+func (m *TcpMatchFields) Reset()                    { *m = TcpMatchFields{} }
+func (m *TcpMatchFields) String() string            { return proto.CompactTextString(m) }
+func (*TcpMatchFields) ProtoMessage()               {}
+func (*TcpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{6} }
+
+func (m *TcpMatchFields) GetSport() uint32 {
+	if m != nil {
+		return m.Sport
+	}
+	return 0
+}
+
+func (m *TcpMatchFields) GetDport() uint32 {
+	if m != nil {
+		return m.Dport
+	}
+	return 0
+}
+
+func (m *TcpMatchFields) GetTcpFlags() uint32 {
+	if m != nil {
+		return m.TcpFlags
+	}
+	return 0
+}
+
+type IcmpMatchFields struct {
+	Type uint32 `protobuf:"varint,1,opt,name=type,proto3" json:"type,omitempty"`
+	Code uint32 `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+}
+
+func (m *IcmpMatchFields) Reset()                    { *m = IcmpMatchFields{} }
+func (m *IcmpMatchFields) String() string            { return proto.CompactTextString(m) }
+func (*IcmpMatchFields) ProtoMessage()               {}
+func (*IcmpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{7} }
+
+func (m *IcmpMatchFields) GetType() uint32 {
+	if m != nil {
+		return m.Type
+	}
+	return 0
+}
+
+func (m *IcmpMatchFields) GetCode() uint32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+type EncapMatchFields struct {
+	TenantId    uint32 `protobuf:"varint,1,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	GreProtocol uint32 `protobuf:"varint,2,opt,name=gre_protocol,json=greProtocol,proto3" json:"gre_protocol,omitempty"`
+}
+
+func (m *EncapMatchFields) Reset()                    { *m = EncapMatchFields{} }
+func (m *EncapMatchFields) String() string            { return proto.CompactTextString(m) }
+func (*EncapMatchFields) ProtoMessage()               {}
+func (*EncapMatchFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{8} }
+
+func (m *EncapMatchFields) GetTenantId() uint32 {
+	if m != nil {
+		return m.TenantId
+	}
+	return 0
+}
+
+func (m *EncapMatchFields) GetGreProtocol() uint32 {
+	if m != nil {
+		return m.GreProtocol
+	}
+	return 0
+}
+
+type GftHeaderGroupExactMatch struct {
+	Headers     *GftHeaders      `protobuf:"bytes,1,opt,name=headers" json:"headers,omitempty"`
+	MatchFields *GftHeaderFields `protobuf:"bytes,2,opt,name=match_fields,json=matchFields" json:"match_fields,omitempty"`
+	EthFields   *GftEthFields    `protobuf:"bytes,3,opt,name=eth_fields,json=ethFields" json:"eth_fields,omitempty"`
+	SrcIpAddr   *IPAddress       `protobuf:"bytes,4,opt,name=src_ip_addr,json=srcIpAddr" json:"src_ip_addr,omitempty"`
+	DstIpAddr   *IPAddress       `protobuf:"bytes,5,opt,name=dst_ip_addr,json=dstIpAddr" json:"dst_ip_addr,omitempty"`
+	IpTtl       uint32           `protobuf:"varint,6,opt,name=ip_ttl,json=ipTtl,proto3" json:"ip_ttl,omitempty"`
+	IpDscp      uint32           `protobuf:"varint,7,opt,name=ip_dscp,json=ipDscp,proto3" json:"ip_dscp,omitempty"`
+	IpProtocol  uint32           `protobuf:"varint,8,opt,name=ip_protocol,json=ipProtocol,proto3" json:"ip_protocol,omitempty"`
+	// Types that are valid to be assigned to EncapOrTransport:
+	//	*GftHeaderGroupExactMatch_UdpFields
+	//	*GftHeaderGroupExactMatch_TcpFields
+	//	*GftHeaderGroupExactMatch_IcmpFields
+	//	*GftHeaderGroupExactMatch_EncapFields
+	EncapOrTransport isGftHeaderGroupExactMatch_EncapOrTransport `protobuf_oneof:"encap_or_transport"`
+}
+
+func (m *GftHeaderGroupExactMatch) Reset()                    { *m = GftHeaderGroupExactMatch{} }
+func (m *GftHeaderGroupExactMatch) String() string            { return proto.CompactTextString(m) }
+func (*GftHeaderGroupExactMatch) ProtoMessage()               {}
+func (*GftHeaderGroupExactMatch) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{9} }
+
+type isGftHeaderGroupExactMatch_EncapOrTransport interface {
+	isGftHeaderGroupExactMatch_EncapOrTransport()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type GftHeaderGroupExactMatch_UdpFields struct {
+	UdpFields *UdpMatchFields `protobuf:"bytes,9,opt,name=udp_fields,json=udpFields,oneof"`
+}
+type GftHeaderGroupExactMatch_TcpFields struct {
+	TcpFields *TcpMatchFields `protobuf:"bytes,10,opt,name=tcp_fields,json=tcpFields,oneof"`
+}
+type GftHeaderGroupExactMatch_IcmpFields struct {
+	IcmpFields *IcmpMatchFields `protobuf:"bytes,11,opt,name=icmp_fields,json=icmpFields,oneof"`
+}
+type GftHeaderGroupExactMatch_EncapFields struct {
+	EncapFields *EncapMatchFields `protobuf:"bytes,12,opt,name=encap_fields,json=encapFields,oneof"`
+}
+
+func (*GftHeaderGroupExactMatch_UdpFields) isGftHeaderGroupExactMatch_EncapOrTransport()   {}
+func (*GftHeaderGroupExactMatch_TcpFields) isGftHeaderGroupExactMatch_EncapOrTransport()   {}
+func (*GftHeaderGroupExactMatch_IcmpFields) isGftHeaderGroupExactMatch_EncapOrTransport()  {}
+func (*GftHeaderGroupExactMatch_EncapFields) isGftHeaderGroupExactMatch_EncapOrTransport() {}
+
+func (m *GftHeaderGroupExactMatch) GetEncapOrTransport() isGftHeaderGroupExactMatch_EncapOrTransport {
+	if m != nil {
+		return m.EncapOrTransport
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetHeaders() *GftHeaders {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetMatchFields() *GftHeaderFields {
+	if m != nil {
+		return m.MatchFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetEthFields() *GftEthFields {
+	if m != nil {
+		return m.EthFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetSrcIpAddr() *IPAddress {
+	if m != nil {
+		return m.SrcIpAddr
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetDstIpAddr() *IPAddress {
+	if m != nil {
+		return m.DstIpAddr
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetIpTtl() uint32 {
+	if m != nil {
+		return m.IpTtl
+	}
+	return 0
+}
+
+func (m *GftHeaderGroupExactMatch) GetIpDscp() uint32 {
+	if m != nil {
+		return m.IpDscp
+	}
+	return 0
+}
+
+func (m *GftHeaderGroupExactMatch) GetIpProtocol() uint32 {
+	if m != nil {
+		return m.IpProtocol
+	}
+	return 0
+}
+
+func (m *GftHeaderGroupExactMatch) GetUdpFields() *UdpMatchFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupExactMatch_UdpFields); ok {
+		return x.UdpFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetTcpFields() *TcpMatchFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupExactMatch_TcpFields); ok {
+		return x.TcpFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetIcmpFields() *IcmpMatchFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupExactMatch_IcmpFields); ok {
+		return x.IcmpFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupExactMatch) GetEncapFields() *EncapMatchFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupExactMatch_EncapFields); ok {
+		return x.EncapFields
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*GftHeaderGroupExactMatch) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _GftHeaderGroupExactMatch_OneofMarshaler, _GftHeaderGroupExactMatch_OneofUnmarshaler, _GftHeaderGroupExactMatch_OneofSizer, []interface{}{
+		(*GftHeaderGroupExactMatch_UdpFields)(nil),
+		(*GftHeaderGroupExactMatch_TcpFields)(nil),
+		(*GftHeaderGroupExactMatch_IcmpFields)(nil),
+		(*GftHeaderGroupExactMatch_EncapFields)(nil),
+	}
+}
+
+func _GftHeaderGroupExactMatch_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*GftHeaderGroupExactMatch)
+	// encap_or_transport
+	switch x := m.EncapOrTransport.(type) {
+	case *GftHeaderGroupExactMatch_UdpFields:
+		_ = b.EncodeVarint(9<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.UdpFields); err != nil {
+			return err
+		}
+	case *GftHeaderGroupExactMatch_TcpFields:
+		_ = b.EncodeVarint(10<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.TcpFields); err != nil {
+			return err
+		}
+	case *GftHeaderGroupExactMatch_IcmpFields:
+		_ = b.EncodeVarint(11<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.IcmpFields); err != nil {
+			return err
+		}
+	case *GftHeaderGroupExactMatch_EncapFields:
+		_ = b.EncodeVarint(12<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EncapFields); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("GftHeaderGroupExactMatch.EncapOrTransport has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _GftHeaderGroupExactMatch_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*GftHeaderGroupExactMatch)
+	switch tag {
+	case 9: // encap_or_transport.udp_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(UdpMatchFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupExactMatch_UdpFields{msg}
+		return true, err
+	case 10: // encap_or_transport.tcp_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(TcpMatchFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupExactMatch_TcpFields{msg}
+		return true, err
+	case 11: // encap_or_transport.icmp_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(IcmpMatchFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupExactMatch_IcmpFields{msg}
+		return true, err
+	case 12: // encap_or_transport.encap_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(EncapMatchFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupExactMatch_EncapFields{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _GftHeaderGroupExactMatch_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*GftHeaderGroupExactMatch)
+	// encap_or_transport
+	switch x := m.EncapOrTransport.(type) {
+	case *GftHeaderGroupExactMatch_UdpFields:
+		s := proto.Size(x.UdpFields)
+		n += proto.SizeVarint(9<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *GftHeaderGroupExactMatch_TcpFields:
+		s := proto.Size(x.TcpFields)
+		n += proto.SizeVarint(10<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *GftHeaderGroupExactMatch_IcmpFields:
+		s := proto.Size(x.IcmpFields)
+		n += proto.SizeVarint(11<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *GftHeaderGroupExactMatch_EncapFields:
+		s := proto.Size(x.EncapFields)
+		n += proto.SizeVarint(12<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type GftHeaderGroupTranspositionProfile struct {
+	Action      GftHeaderGroupTranspostionAction `protobuf:"varint,1,opt,name=action,proto3,enum=gft.GftHeaderGroupTranspostionAction" json:"action,omitempty"`
+	Headers     *GftHeaders                      `protobuf:"bytes,2,opt,name=headers" json:"headers,omitempty"`
+	MatchFields *GftHeaderFields                 `protobuf:"bytes,3,opt,name=match_fields,json=matchFields" json:"match_fields,omitempty"`
+}
+
+func (m *GftHeaderGroupTranspositionProfile) Reset()         { *m = GftHeaderGroupTranspositionProfile{} }
+func (m *GftHeaderGroupTranspositionProfile) String() string { return proto.CompactTextString(m) }
+func (*GftHeaderGroupTranspositionProfile) ProtoMessage()    {}
+func (*GftHeaderGroupTranspositionProfile) Descriptor() ([]byte, []int) {
+	return fileDescriptorGft, []int{10}
+}
+
+func (m *GftHeaderGroupTranspositionProfile) GetAction() GftHeaderGroupTranspostionAction {
+	if m != nil {
+		return m.Action
+	}
+	return GftHeaderGroupTranspostionAction_TRANSPOSITION_ACTION_NONE
+}
+
+func (m *GftHeaderGroupTranspositionProfile) GetHeaders() *GftHeaders {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTranspositionProfile) GetMatchFields() *GftHeaderFields {
+	if m != nil {
+		return m.MatchFields
+	}
+	return nil
+}
+
+type GftHeaderTranspositionProfile struct {
+	RedirectToVportIngressQueue           bool                                  `protobuf:"varint,1,opt,name=redirect_to_vport_ingress_queue,json=redirectToVportIngressQueue,proto3" json:"redirect_to_vport_ingress_queue,omitempty"`
+	RedirectToVportEgressQueue            bool                                  `protobuf:"varint,2,opt,name=redirect_to_vport_egress_queue,json=redirectToVportEgressQueue,proto3" json:"redirect_to_vport_egress_queue,omitempty"`
+	RedirectToVportIngressQueueIfTtlIsOne bool                                  `protobuf:"varint,3,opt,name=redirect_to_vport_ingress_queue_if_ttl_is_one,json=redirectToVportIngressQueueIfTtlIsOne,proto3" json:"redirect_to_vport_ingress_queue_if_ttl_is_one,omitempty"`
+	RedirectToVportEgressQueueIfTtlIsOne  bool                                  `protobuf:"varint,4,opt,name=redirect_to_vport_egress_queue_if_ttl_is_one,json=redirectToVportEgressQueueIfTtlIsOne,proto3" json:"redirect_to_vport_egress_queue_if_ttl_is_one,omitempty"`
+	CopyAllPackets                        bool                                  `protobuf:"varint,5,opt,name=copy_all_packets,json=copyAllPackets,proto3" json:"copy_all_packets,omitempty"`
+	CopyFirstPacket                       bool                                  `protobuf:"varint,6,opt,name=copy_first_packet,json=copyFirstPacket,proto3" json:"copy_first_packet,omitempty"`
+	CopyWhenTcpFlagSet                    bool                                  `protobuf:"varint,7,opt,name=copy_when_tcp_flag_set,json=copyWhenTcpFlagSet,proto3" json:"copy_when_tcp_flag_set,omitempty"`
+	CustomActionPresent                   bool                                  `protobuf:"varint,8,opt,name=custom_action_present,json=customActionPresent,proto3" json:"custom_action_present,omitempty"`
+	MetaActionBeforeTransposition         bool                                  `protobuf:"varint,9,opt,name=meta_action_before_transposition,json=metaActionBeforeTransposition,proto3" json:"meta_action_before_transposition,omitempty"`
+	TableType                             GftTableType                          `protobuf:"varint,10,opt,name=table_type,json=tableType,proto3,enum=gft.GftTableType" json:"table_type,omitempty"`
+	ProfileId                             uint32                                `protobuf:"varint,11,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	TranspositionProfiles                 []*GftHeaderGroupTranspositionProfile `protobuf:"bytes,12,rep,name=transposition_profiles,json=transpositionProfiles" json:"transposition_profiles,omitempty"`
+}
+
+func (m *GftHeaderTranspositionProfile) Reset()         { *m = GftHeaderTranspositionProfile{} }
+func (m *GftHeaderTranspositionProfile) String() string { return proto.CompactTextString(m) }
+func (*GftHeaderTranspositionProfile) ProtoMessage()    {}
+func (*GftHeaderTranspositionProfile) Descriptor() ([]byte, []int) {
+	return fileDescriptorGft, []int{11}
+}
+
+func (m *GftHeaderTranspositionProfile) GetRedirectToVportIngressQueue() bool {
+	if m != nil {
+		return m.RedirectToVportIngressQueue
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetRedirectToVportEgressQueue() bool {
+	if m != nil {
+		return m.RedirectToVportEgressQueue
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetRedirectToVportIngressQueueIfTtlIsOne() bool {
+	if m != nil {
+		return m.RedirectToVportIngressQueueIfTtlIsOne
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetRedirectToVportEgressQueueIfTtlIsOne() bool {
+	if m != nil {
+		return m.RedirectToVportEgressQueueIfTtlIsOne
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetCopyAllPackets() bool {
+	if m != nil {
+		return m.CopyAllPackets
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetCopyFirstPacket() bool {
+	if m != nil {
+		return m.CopyFirstPacket
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetCopyWhenTcpFlagSet() bool {
+	if m != nil {
+		return m.CopyWhenTcpFlagSet
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetCustomActionPresent() bool {
+	if m != nil {
+		return m.CustomActionPresent
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetMetaActionBeforeTransposition() bool {
+	if m != nil {
+		return m.MetaActionBeforeTransposition
+	}
+	return false
+}
+
+func (m *GftHeaderTranspositionProfile) GetTableType() GftTableType {
+	if m != nil {
+		return m.TableType
+	}
+	return GftTableType_GFT_TABLE_TYPE_NONE
+}
+
+func (m *GftHeaderTranspositionProfile) GetProfileId() uint32 {
+	if m != nil {
+		return m.ProfileId
+	}
+	return 0
+}
+
+func (m *GftHeaderTranspositionProfile) GetTranspositionProfiles() []*GftHeaderGroupTranspositionProfile {
+	if m != nil {
+		return m.TranspositionProfiles
+	}
+	return nil
+}
+
+type UdpTranspositionFields struct {
+	Sport uint32 `protobuf:"varint,1,opt,name=sport,proto3" json:"sport,omitempty"`
+	Dport uint32 `protobuf:"varint,2,opt,name=dport,proto3" json:"dport,omitempty"`
+}
+
+func (m *UdpTranspositionFields) Reset()                    { *m = UdpTranspositionFields{} }
+func (m *UdpTranspositionFields) String() string            { return proto.CompactTextString(m) }
+func (*UdpTranspositionFields) ProtoMessage()               {}
+func (*UdpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{12} }
+
+func (m *UdpTranspositionFields) GetSport() uint32 {
+	if m != nil {
+		return m.Sport
+	}
+	return 0
+}
+
+func (m *UdpTranspositionFields) GetDport() uint32 {
+	if m != nil {
+		return m.Dport
+	}
+	return 0
+}
+
+type TcpTranspositionFields struct {
+	Sport uint32 `protobuf:"varint,1,opt,name=sport,proto3" json:"sport,omitempty"`
+	Dport uint32 `protobuf:"varint,2,opt,name=dport,proto3" json:"dport,omitempty"`
+}
+
+func (m *TcpTranspositionFields) Reset()                    { *m = TcpTranspositionFields{} }
+func (m *TcpTranspositionFields) String() string            { return proto.CompactTextString(m) }
+func (*TcpTranspositionFields) ProtoMessage()               {}
+func (*TcpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{13} }
+
+func (m *TcpTranspositionFields) GetSport() uint32 {
+	if m != nil {
+		return m.Sport
+	}
+	return 0
+}
+
+func (m *TcpTranspositionFields) GetDport() uint32 {
+	if m != nil {
+		return m.Dport
+	}
+	return 0
+}
+
+type IcmpTranspositionFields struct {
+	Type uint32 `protobuf:"varint,1,opt,name=type,proto3" json:"type,omitempty"`
+	Code uint32 `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+}
+
+func (m *IcmpTranspositionFields) Reset()                    { *m = IcmpTranspositionFields{} }
+func (m *IcmpTranspositionFields) String() string            { return proto.CompactTextString(m) }
+func (*IcmpTranspositionFields) ProtoMessage()               {}
+func (*IcmpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{14} }
+
+func (m *IcmpTranspositionFields) GetType() uint32 {
+	if m != nil {
+		return m.Type
+	}
+	return 0
+}
+
+func (m *IcmpTranspositionFields) GetCode() uint32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+type EncapTranspositionFields struct {
+	TenantId    uint32 `protobuf:"varint,1,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	GreProtocol uint32 `protobuf:"varint,2,opt,name=gre_protocol,json=greProtocol,proto3" json:"gre_protocol,omitempty"`
+}
+
+func (m *EncapTranspositionFields) Reset()                    { *m = EncapTranspositionFields{} }
+func (m *EncapTranspositionFields) String() string            { return proto.CompactTextString(m) }
+func (*EncapTranspositionFields) ProtoMessage()               {}
+func (*EncapTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{15} }
+
+func (m *EncapTranspositionFields) GetTenantId() uint32 {
+	if m != nil {
+		return m.TenantId
+	}
+	return 0
+}
+
+func (m *EncapTranspositionFields) GetGreProtocol() uint32 {
+	if m != nil {
+		return m.GreProtocol
+	}
+	return 0
+}
+
+type GftHeaderGroupTransposition struct {
+	Action       GftHeaderGroupTranspostionAction `protobuf:"varint,1,opt,name=action,proto3,enum=gft.GftHeaderGroupTranspostionAction" json:"action,omitempty"`
+	Headers      *GftHeaders                      `protobuf:"bytes,2,opt,name=headers" json:"headers,omitempty"`
+	HeaderFields *GftHeaderFields                 `protobuf:"bytes,3,opt,name=header_fields,json=headerFields" json:"header_fields,omitempty"`
+	EthFields    *GftEthFields                    `protobuf:"bytes,4,opt,name=eth_fields,json=ethFields" json:"eth_fields,omitempty"`
+	SrcIpAddr    *IPAddress                       `protobuf:"bytes,5,opt,name=src_ip_addr,json=srcIpAddr" json:"src_ip_addr,omitempty"`
+	DstIpAddr    *IPAddress                       `protobuf:"bytes,6,opt,name=dst_ip_addr,json=dstIpAddr" json:"dst_ip_addr,omitempty"`
+	IpTtl        uint32                           `protobuf:"varint,7,opt,name=ip_ttl,json=ipTtl,proto3" json:"ip_ttl,omitempty"`
+	IpDscp       uint32                           `protobuf:"varint,8,opt,name=ip_dscp,json=ipDscp,proto3" json:"ip_dscp,omitempty"`
+	IpProtocol   uint32                           `protobuf:"varint,9,opt,name=ip_protocol,json=ipProtocol,proto3" json:"ip_protocol,omitempty"`
+	// Types that are valid to be assigned to EncapOrTransport:
+	//	*GftHeaderGroupTransposition_UdpFields
+	//	*GftHeaderGroupTransposition_TcpFields
+	//	*GftHeaderGroupTransposition_IcmpFields
+	//	*GftHeaderGroupTransposition_EncapFields
+	EncapOrTransport isGftHeaderGroupTransposition_EncapOrTransport `protobuf_oneof:"encap_or_transport"`
+}
+
+func (m *GftHeaderGroupTransposition) Reset()                    { *m = GftHeaderGroupTransposition{} }
+func (m *GftHeaderGroupTransposition) String() string            { return proto.CompactTextString(m) }
+func (*GftHeaderGroupTransposition) ProtoMessage()               {}
+func (*GftHeaderGroupTransposition) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{16} }
+
+type isGftHeaderGroupTransposition_EncapOrTransport interface {
+	isGftHeaderGroupTransposition_EncapOrTransport()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type GftHeaderGroupTransposition_UdpFields struct {
+	UdpFields *UdpTranspositionFields `protobuf:"bytes,10,opt,name=udp_fields,json=udpFields,oneof"`
+}
+type GftHeaderGroupTransposition_TcpFields struct {
+	TcpFields *TcpTranspositionFields `protobuf:"bytes,11,opt,name=tcp_fields,json=tcpFields,oneof"`
+}
+type GftHeaderGroupTransposition_IcmpFields struct {
+	IcmpFields *IcmpTranspositionFields `protobuf:"bytes,12,opt,name=icmp_fields,json=icmpFields,oneof"`
+}
+type GftHeaderGroupTransposition_EncapFields struct {
+	EncapFields *EncapTranspositionFields `protobuf:"bytes,13,opt,name=encap_fields,json=encapFields,oneof"`
+}
+
+func (*GftHeaderGroupTransposition_UdpFields) isGftHeaderGroupTransposition_EncapOrTransport()   {}
+func (*GftHeaderGroupTransposition_TcpFields) isGftHeaderGroupTransposition_EncapOrTransport()   {}
+func (*GftHeaderGroupTransposition_IcmpFields) isGftHeaderGroupTransposition_EncapOrTransport()  {}
+func (*GftHeaderGroupTransposition_EncapFields) isGftHeaderGroupTransposition_EncapOrTransport() {}
+
+func (m *GftHeaderGroupTransposition) GetEncapOrTransport() isGftHeaderGroupTransposition_EncapOrTransport {
+	if m != nil {
+		return m.EncapOrTransport
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetAction() GftHeaderGroupTranspostionAction {
+	if m != nil {
+		return m.Action
+	}
+	return GftHeaderGroupTranspostionAction_TRANSPOSITION_ACTION_NONE
+}
+
+func (m *GftHeaderGroupTransposition) GetHeaders() *GftHeaders {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetHeaderFields() *GftHeaderFields {
+	if m != nil {
+		return m.HeaderFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetEthFields() *GftEthFields {
+	if m != nil {
+		return m.EthFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetSrcIpAddr() *IPAddress {
+	if m != nil {
+		return m.SrcIpAddr
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetDstIpAddr() *IPAddress {
+	if m != nil {
+		return m.DstIpAddr
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetIpTtl() uint32 {
+	if m != nil {
+		return m.IpTtl
+	}
+	return 0
+}
+
+func (m *GftHeaderGroupTransposition) GetIpDscp() uint32 {
+	if m != nil {
+		return m.IpDscp
+	}
+	return 0
+}
+
+func (m *GftHeaderGroupTransposition) GetIpProtocol() uint32 {
+	if m != nil {
+		return m.IpProtocol
+	}
+	return 0
+}
+
+func (m *GftHeaderGroupTransposition) GetUdpFields() *UdpTranspositionFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupTransposition_UdpFields); ok {
+		return x.UdpFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetTcpFields() *TcpTranspositionFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupTransposition_TcpFields); ok {
+		return x.TcpFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetIcmpFields() *IcmpTranspositionFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupTransposition_IcmpFields); ok {
+		return x.IcmpFields
+	}
+	return nil
+}
+
+func (m *GftHeaderGroupTransposition) GetEncapFields() *EncapTranspositionFields {
+	if x, ok := m.GetEncapOrTransport().(*GftHeaderGroupTransposition_EncapFields); ok {
+		return x.EncapFields
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*GftHeaderGroupTransposition) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _GftHeaderGroupTransposition_OneofMarshaler, _GftHeaderGroupTransposition_OneofUnmarshaler, _GftHeaderGroupTransposition_OneofSizer, []interface{}{
+		(*GftHeaderGroupTransposition_UdpFields)(nil),
+		(*GftHeaderGroupTransposition_TcpFields)(nil),
+		(*GftHeaderGroupTransposition_IcmpFields)(nil),
+		(*GftHeaderGroupTransposition_EncapFields)(nil),
+	}
+}
+
+func _GftHeaderGroupTransposition_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*GftHeaderGroupTransposition)
+	// encap_or_transport
+	switch x := m.EncapOrTransport.(type) {
+	case *GftHeaderGroupTransposition_UdpFields:
+		_ = b.EncodeVarint(10<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.UdpFields); err != nil {
+			return err
+		}
+	case *GftHeaderGroupTransposition_TcpFields:
+		_ = b.EncodeVarint(11<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.TcpFields); err != nil {
+			return err
+		}
+	case *GftHeaderGroupTransposition_IcmpFields:
+		_ = b.EncodeVarint(12<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.IcmpFields); err != nil {
+			return err
+		}
+	case *GftHeaderGroupTransposition_EncapFields:
+		_ = b.EncodeVarint(13<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.EncapFields); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("GftHeaderGroupTransposition.EncapOrTransport has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _GftHeaderGroupTransposition_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*GftHeaderGroupTransposition)
+	switch tag {
+	case 10: // encap_or_transport.udp_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(UdpTranspositionFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupTransposition_UdpFields{msg}
+		return true, err
+	case 11: // encap_or_transport.tcp_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(TcpTranspositionFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupTransposition_TcpFields{msg}
+		return true, err
+	case 12: // encap_or_transport.icmp_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(IcmpTranspositionFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupTransposition_IcmpFields{msg}
+		return true, err
+	case 13: // encap_or_transport.encap_fields
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(EncapTranspositionFields)
+		err := b.DecodeMessage(msg)
+		m.EncapOrTransport = &GftHeaderGroupTransposition_EncapFields{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _GftHeaderGroupTransposition_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*GftHeaderGroupTransposition)
+	// encap_or_transport
+	switch x := m.EncapOrTransport.(type) {
+	case *GftHeaderGroupTransposition_UdpFields:
+		s := proto.Size(x.UdpFields)
+		n += proto.SizeVarint(10<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *GftHeaderGroupTransposition_TcpFields:
+		s := proto.Size(x.TcpFields)
+		n += proto.SizeVarint(11<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *GftHeaderGroupTransposition_IcmpFields:
+		s := proto.Size(x.IcmpFields)
+		n += proto.SizeVarint(12<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *GftHeaderGroupTransposition_EncapFields:
+		s := proto.Size(x.EncapFields)
+		n += proto.SizeVarint(13<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type GftExactMathFlowEntry struct {
+	AddInActivatedState                   bool                           `protobuf:"varint,1,opt,name=add_in_activated_state,json=addInActivatedState,proto3" json:"add_in_activated_state,omitempty"`
+	RdmaFlow                              bool                           `protobuf:"varint,2,opt,name=rdma_flow,json=rdmaFlow,proto3" json:"rdma_flow,omitempty"`
+	RedirectToVportIngressQueue           bool                           `protobuf:"varint,3,opt,name=redirect_to_vport_ingress_queue,json=redirectToVportIngressQueue,proto3" json:"redirect_to_vport_ingress_queue,omitempty"`
+	RedirectToVportEgressQueue            bool                           `protobuf:"varint,4,opt,name=redirect_to_vport_egress_queue,json=redirectToVportEgressQueue,proto3" json:"redirect_to_vport_egress_queue,omitempty"`
+	RedirectToVportIngressQueueIfTtlIsOne bool                           `protobuf:"varint,5,opt,name=redirect_to_vport_ingress_queue_if_ttl_is_one,json=redirectToVportIngressQueueIfTtlIsOne,proto3" json:"redirect_to_vport_ingress_queue_if_ttl_is_one,omitempty"`
+	RedirectToVportEgressQueueIfTtlIsOne  bool                           `protobuf:"varint,6,opt,name=redirect_to_vport_egress_queue_if_ttl_is_one,json=redirectToVportEgressQueueIfTtlIsOne,proto3" json:"redirect_to_vport_egress_queue_if_ttl_is_one,omitempty"`
+	CopyAllPackets                        bool                           `protobuf:"varint,7,opt,name=copy_all_packets,json=copyAllPackets,proto3" json:"copy_all_packets,omitempty"`
+	CopyFirstPacket                       bool                           `protobuf:"varint,8,opt,name=copy_first_packet,json=copyFirstPacket,proto3" json:"copy_first_packet,omitempty"`
+	CopyWhenTcpFlagSet                    bool                           `protobuf:"varint,9,opt,name=copy_when_tcp_flag_set,json=copyWhenTcpFlagSet,proto3" json:"copy_when_tcp_flag_set,omitempty"`
+	CustomActionPresent                   bool                           `protobuf:"varint,10,opt,name=custom_action_present,json=customActionPresent,proto3" json:"custom_action_present,omitempty"`
+	MetaActionBeforeTransposition         bool                           `protobuf:"varint,11,opt,name=meta_action_before_transposition,json=metaActionBeforeTransposition,proto3" json:"meta_action_before_transposition,omitempty"`
+	CopyAfterTcpFinFlagSet                bool                           `protobuf:"varint,12,opt,name=copy_after_tcp_fin_flag_set,json=copyAfterTcpFinFlagSet,proto3" json:"copy_after_tcp_fin_flag_set,omitempty"`
+	CopyAfterTcpRstFlagSet                bool                           `protobuf:"varint,13,opt,name=copy_after_tcp_rst_flag_set,json=copyAfterTcpRstFlagSet,proto3" json:"copy_after_tcp_rst_flag_set,omitempty"`
+	TableId                               uint32                         `protobuf:"varint,14,opt,name=table_id,json=tableId,proto3" json:"table_id,omitempty"`
+	VportId                               uint32                         `protobuf:"varint,15,opt,name=vport_id,json=vportId,proto3" json:"vport_id,omitempty"`
+	MatchProfileId                        uint32                         `protobuf:"varint,16,opt,name=match_profile_id,json=matchProfileId,proto3" json:"match_profile_id,omitempty"`
+	HeaderTranspositionProfileId          uint32                         `protobuf:"varint,17,opt,name=header_transposition_profile_id,json=headerTranspositionProfileId,proto3" json:"header_transposition_profile_id,omitempty"`
+	RedirectVportId                       uint32                         `protobuf:"varint,18,opt,name=redirect_vport_id,json=redirectVportId,proto3" json:"redirect_vport_id,omitempty"`
+	TtlOneRedirectVportId                 uint32                         `protobuf:"varint,19,opt,name=ttl_one_redirect_vport_id,json=ttlOneRedirectVportId,proto3" json:"ttl_one_redirect_vport_id,omitempty"`
+	FlowEntryId                           uint32                         `protobuf:"varint,20,opt,name=flow_entry_id,json=flowEntryId,proto3" json:"flow_entry_id,omitempty"`
+	ExactMatches                          []*GftHeaderGroupExactMatch    `protobuf:"bytes,21,rep,name=exact_matches,json=exactMatches" json:"exact_matches,omitempty"`
+	Transpositions                        []*GftHeaderGroupTransposition `protobuf:"bytes,22,rep,name=transpositions" json:"transpositions,omitempty"`
+}
+
+func (m *GftExactMathFlowEntry) Reset()                    { *m = GftExactMathFlowEntry{} }
+func (m *GftExactMathFlowEntry) String() string            { return proto.CompactTextString(m) }
+func (*GftExactMathFlowEntry) ProtoMessage()               {}
+func (*GftExactMathFlowEntry) Descriptor() ([]byte, []int) { return fileDescriptorGft, []int{17} }
+
+func (m *GftExactMathFlowEntry) GetAddInActivatedState() bool {
+	if m != nil {
+		return m.AddInActivatedState
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetRdmaFlow() bool {
+	if m != nil {
+		return m.RdmaFlow
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetRedirectToVportIngressQueue() bool {
+	if m != nil {
+		return m.RedirectToVportIngressQueue
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetRedirectToVportEgressQueue() bool {
+	if m != nil {
+		return m.RedirectToVportEgressQueue
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetRedirectToVportIngressQueueIfTtlIsOne() bool {
+	if m != nil {
+		return m.RedirectToVportIngressQueueIfTtlIsOne
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetRedirectToVportEgressQueueIfTtlIsOne() bool {
+	if m != nil {
+		return m.RedirectToVportEgressQueueIfTtlIsOne
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetCopyAllPackets() bool {
+	if m != nil {
+		return m.CopyAllPackets
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetCopyFirstPacket() bool {
+	if m != nil {
+		return m.CopyFirstPacket
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetCopyWhenTcpFlagSet() bool {
+	if m != nil {
+		return m.CopyWhenTcpFlagSet
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetCustomActionPresent() bool {
+	if m != nil {
+		return m.CustomActionPresent
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetMetaActionBeforeTransposition() bool {
+	if m != nil {
+		return m.MetaActionBeforeTransposition
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetCopyAfterTcpFinFlagSet() bool {
+	if m != nil {
+		return m.CopyAfterTcpFinFlagSet
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetCopyAfterTcpRstFlagSet() bool {
+	if m != nil {
+		return m.CopyAfterTcpRstFlagSet
+	}
+	return false
+}
+
+func (m *GftExactMathFlowEntry) GetTableId() uint32 {
+	if m != nil {
+		return m.TableId
+	}
+	return 0
+}
+
+func (m *GftExactMathFlowEntry) GetVportId() uint32 {
+	if m != nil {
+		return m.VportId
+	}
+	return 0
+}
+
+func (m *GftExactMathFlowEntry) GetMatchProfileId() uint32 {
+	if m != nil {
+		return m.MatchProfileId
+	}
+	return 0
+}
+
+func (m *GftExactMathFlowEntry) GetHeaderTranspositionProfileId() uint32 {
+	if m != nil {
+		return m.HeaderTranspositionProfileId
+	}
+	return 0
+}
+
+func (m *GftExactMathFlowEntry) GetRedirectVportId() uint32 {
+	if m != nil {
+		return m.RedirectVportId
+	}
+	return 0
+}
+
+func (m *GftExactMathFlowEntry) GetTtlOneRedirectVportId() uint32 {
+	if m != nil {
+		return m.TtlOneRedirectVportId
+	}
+	return 0
+}
+
+func (m *GftExactMathFlowEntry) GetFlowEntryId() uint32 {
+	if m != nil {
+		return m.FlowEntryId
+	}
+	return 0
+}
+
+func (m *GftExactMathFlowEntry) GetExactMatches() []*GftHeaderGroupExactMatch {
+	if m != nil {
+		return m.ExactMatches
+	}
+	return nil
+}
+
+func (m *GftExactMathFlowEntry) GetTranspositions() []*GftHeaderGroupTransposition {
+	if m != nil {
+		return m.Transpositions
+	}
+	return nil
 }
 
 func init() {
 	proto.RegisterType((*GftEthFields)(nil), "gft.GftEthFields")
+	proto.RegisterType((*GftHeaders)(nil), "gft.GftHeaders")
+	proto.RegisterType((*GftHeaderFields)(nil), "gft.GftHeaderFields")
 	proto.RegisterType((*GftHeaderGroupExactMatchProfile)(nil), "gft.GftHeaderGroupExactMatchProfile")
+	proto.RegisterType((*GftExactMatchProfile)(nil), "gft.GftExactMatchProfile")
+	proto.RegisterType((*UdpMatchFields)(nil), "gft.UdpMatchFields")
+	proto.RegisterType((*TcpMatchFields)(nil), "gft.TcpMatchFields")
+	proto.RegisterType((*IcmpMatchFields)(nil), "gft.IcmpMatchFields")
+	proto.RegisterType((*EncapMatchFields)(nil), "gft.EncapMatchFields")
+	proto.RegisterType((*GftHeaderGroupExactMatch)(nil), "gft.GftHeaderGroupExactMatch")
+	proto.RegisterType((*GftHeaderGroupTranspositionProfile)(nil), "gft.GftHeaderGroupTranspositionProfile")
+	proto.RegisterType((*GftHeaderTranspositionProfile)(nil), "gft.GftHeaderTranspositionProfile")
+	proto.RegisterType((*UdpTranspositionFields)(nil), "gft.UdpTranspositionFields")
+	proto.RegisterType((*TcpTranspositionFields)(nil), "gft.TcpTranspositionFields")
+	proto.RegisterType((*IcmpTranspositionFields)(nil), "gft.IcmpTranspositionFields")
+	proto.RegisterType((*EncapTranspositionFields)(nil), "gft.EncapTranspositionFields")
+	proto.RegisterType((*GftHeaderGroupTransposition)(nil), "gft.GftHeaderGroupTransposition")
+	proto.RegisterType((*GftExactMathFlowEntry)(nil), "gft.GftExactMathFlowEntry")
 	proto.RegisterEnum("gft.GftTableType", GftTableType_name, GftTableType_value)
+	proto.RegisterEnum("gft.GftHeaderGroupTranspostionAction", GftHeaderGroupTranspostionAction_name, GftHeaderGroupTranspostionAction_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -207,6 +1606,362 @@ func (m *GftEthFields) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *GftHeaders) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftHeaders) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.EthernetHeader {
+		dAtA[i] = 0x8
+		i++
+		if m.EthernetHeader {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Ipv4Header {
+		dAtA[i] = 0x10
+		i++
+		if m.Ipv4Header {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Ipv6Header {
+		dAtA[i] = 0x18
+		i++
+		if m.Ipv6Header {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.TcpHeader {
+		dAtA[i] = 0x20
+		i++
+		if m.TcpHeader {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.UdpHeader {
+		dAtA[i] = 0x28
+		i++
+		if m.UdpHeader {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IcmpHeader {
+		dAtA[i] = 0x30
+		i++
+		if m.IcmpHeader {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.NoEncap {
+		dAtA[i] = 0x38
+		i++
+		if m.NoEncap {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IpInIpEncap {
+		dAtA[i] = 0x40
+		i++
+		if m.IpInIpEncap {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IpInGreEncap {
+		dAtA[i] = 0x48
+		i++
+		if m.IpInGreEncap {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.NvgreEncap {
+		dAtA[i] = 0x50
+		i++
+		if m.NvgreEncap {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.VxlanEncap {
+		dAtA[i] = 0x58
+		i++
+		if m.VxlanEncap {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	return i, nil
+}
+
+func (m *GftHeaderFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftHeaderFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.DstMacAddr {
+		dAtA[i] = 0x8
+		i++
+		if m.DstMacAddr {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.SrcMacAddr {
+		dAtA[i] = 0x10
+		i++
+		if m.SrcMacAddr {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.EthType {
+		dAtA[i] = 0x18
+		i++
+		if m.EthType {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CustomerVlanId {
+		dAtA[i] = 0x20
+		i++
+		if m.CustomerVlanId {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.ProviderVlanId {
+		dAtA[i] = 0x28
+		i++
+		if m.ProviderVlanId {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.Dot1PPriority {
+		dAtA[i] = 0x30
+		i++
+		if m.Dot1PPriority {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.SrcIpAddr {
+		dAtA[i] = 0x38
+		i++
+		if m.SrcIpAddr {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.DstIpAddr {
+		dAtA[i] = 0x40
+		i++
+		if m.DstIpAddr {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IpTtl {
+		dAtA[i] = 0x48
+		i++
+		if m.IpTtl {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IpProtocol {
+		dAtA[i] = 0x50
+		i++
+		if m.IpProtocol {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IpDscp {
+		dAtA[i] = 0x58
+		i++
+		if m.IpDscp {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.SrcPort {
+		dAtA[i] = 0x60
+		i++
+		if m.SrcPort {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.DstPort {
+		dAtA[i] = 0x68
+		i++
+		if m.DstPort {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.TcpFlags {
+		dAtA[i] = 0x70
+		i++
+		if m.TcpFlags {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.TenantId {
+		dAtA[i] = 0x78
+		i++
+		if m.TenantId {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IcmpType {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.IcmpType {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.IcmpCode {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.IcmpCode {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.OobVlan {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.OobVlan {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.OobTenantId {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.OobTenantId {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.GreProtocol {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.GreProtocol {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	return i, nil
+}
+
 func (m *GftHeaderGroupExactMatchProfile) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -222,6 +1977,996 @@ func (m *GftHeaderGroupExactMatchProfile) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Headers != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Headers.Size()))
+		n1, err := m.Headers.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	if m.MatchFields != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.MatchFields.Size()))
+		n2, err := m.MatchFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
+func (m *GftExactMatchProfile) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftExactMatchProfile) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RdmaFlow {
+		dAtA[i] = 0x8
+		i++
+		if m.RdmaFlow {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.TableType != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TableType))
+	}
+	if m.ProfileId != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.ProfileId))
+	}
+	if len(m.ExactMatchProfiles) > 0 {
+		for _, msg := range m.ExactMatchProfiles {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintGft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *UdpMatchFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UdpMatchFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Dport))
+	}
+	return i, nil
+}
+
+func (m *TcpMatchFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpMatchFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Dport))
+	}
+	if m.TcpFlags != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TcpFlags))
+	}
+	return i, nil
+}
+
+func (m *IcmpMatchFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IcmpMatchFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Type))
+	}
+	if m.Code != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Code))
+	}
+	return i, nil
+}
+
+func (m *EncapMatchFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EncapMatchFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.TenantId != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TenantId))
+	}
+	if m.GreProtocol != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.GreProtocol))
+	}
+	return i, nil
+}
+
+func (m *GftHeaderGroupExactMatch) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftHeaderGroupExactMatch) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Headers != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Headers.Size()))
+		n3, err := m.Headers.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if m.MatchFields != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.MatchFields.Size()))
+		n4, err := m.MatchFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if m.EthFields != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.EthFields.Size()))
+		n5, err := m.EthFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	if m.SrcIpAddr != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.SrcIpAddr.Size()))
+		n6, err := m.SrcIpAddr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	if m.DstIpAddr != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.DstIpAddr.Size()))
+		n7, err := m.DstIpAddr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n7
+	}
+	if m.IpTtl != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IpTtl))
+	}
+	if m.IpDscp != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IpDscp))
+	}
+	if m.IpProtocol != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IpProtocol))
+	}
+	if m.EncapOrTransport != nil {
+		nn8, err := m.EncapOrTransport.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn8
+	}
+	return i, nil
+}
+
+func (m *GftHeaderGroupExactMatch_UdpFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.UdpFields != nil {
+		dAtA[i] = 0x4a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.UdpFields.Size()))
+		n9, err := m.UdpFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	return i, nil
+}
+func (m *GftHeaderGroupExactMatch_TcpFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.TcpFields != nil {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TcpFields.Size()))
+		n10, err := m.TcpFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	return i, nil
+}
+func (m *GftHeaderGroupExactMatch_IcmpFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.IcmpFields != nil {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IcmpFields.Size()))
+		n11, err := m.IcmpFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+func (m *GftHeaderGroupExactMatch_EncapFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.EncapFields != nil {
+		dAtA[i] = 0x62
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.EncapFields.Size()))
+		n12, err := m.EncapFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	return i, nil
+}
+func (m *GftHeaderGroupTranspositionProfile) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftHeaderGroupTranspositionProfile) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Action != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Action))
+	}
+	if m.Headers != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Headers.Size()))
+		n13, err := m.Headers.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n13
+	}
+	if m.MatchFields != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.MatchFields.Size()))
+		n14, err := m.MatchFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	return i, nil
+}
+
+func (m *GftHeaderTranspositionProfile) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftHeaderTranspositionProfile) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RedirectToVportIngressQueue {
+		dAtA[i] = 0x8
+		i++
+		if m.RedirectToVportIngressQueue {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RedirectToVportEgressQueue {
+		dAtA[i] = 0x10
+		i++
+		if m.RedirectToVportEgressQueue {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RedirectToVportIngressQueueIfTtlIsOne {
+		dAtA[i] = 0x18
+		i++
+		if m.RedirectToVportIngressQueueIfTtlIsOne {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RedirectToVportEgressQueueIfTtlIsOne {
+		dAtA[i] = 0x20
+		i++
+		if m.RedirectToVportEgressQueueIfTtlIsOne {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyAllPackets {
+		dAtA[i] = 0x28
+		i++
+		if m.CopyAllPackets {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyFirstPacket {
+		dAtA[i] = 0x30
+		i++
+		if m.CopyFirstPacket {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyWhenTcpFlagSet {
+		dAtA[i] = 0x38
+		i++
+		if m.CopyWhenTcpFlagSet {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CustomActionPresent {
+		dAtA[i] = 0x40
+		i++
+		if m.CustomActionPresent {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.MetaActionBeforeTransposition {
+		dAtA[i] = 0x48
+		i++
+		if m.MetaActionBeforeTransposition {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.TableType != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TableType))
+	}
+	if m.ProfileId != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.ProfileId))
+	}
+	if len(m.TranspositionProfiles) > 0 {
+		for _, msg := range m.TranspositionProfiles {
+			dAtA[i] = 0x62
+			i++
+			i = encodeVarintGft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *UdpTranspositionFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UdpTranspositionFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Dport))
+	}
+	return i, nil
+}
+
+func (m *TcpTranspositionFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpTranspositionFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Dport))
+	}
+	return i, nil
+}
+
+func (m *IcmpTranspositionFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IcmpTranspositionFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Type != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Type))
+	}
+	if m.Code != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Code))
+	}
+	return i, nil
+}
+
+func (m *EncapTranspositionFields) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EncapTranspositionFields) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.TenantId != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TenantId))
+	}
+	if m.GreProtocol != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.GreProtocol))
+	}
+	return i, nil
+}
+
+func (m *GftHeaderGroupTransposition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftHeaderGroupTransposition) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Action != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Action))
+	}
+	if m.Headers != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.Headers.Size()))
+		n15, err := m.Headers.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n15
+	}
+	if m.HeaderFields != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.HeaderFields.Size()))
+		n16, err := m.HeaderFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n16
+	}
+	if m.EthFields != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.EthFields.Size()))
+		n17, err := m.EthFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
+	}
+	if m.SrcIpAddr != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.SrcIpAddr.Size()))
+		n18, err := m.SrcIpAddr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n18
+	}
+	if m.DstIpAddr != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.DstIpAddr.Size()))
+		n19, err := m.DstIpAddr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	if m.IpTtl != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IpTtl))
+	}
+	if m.IpDscp != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IpDscp))
+	}
+	if m.IpProtocol != 0 {
+		dAtA[i] = 0x48
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IpProtocol))
+	}
+	if m.EncapOrTransport != nil {
+		nn20, err := m.EncapOrTransport.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn20
+	}
+	return i, nil
+}
+
+func (m *GftHeaderGroupTransposition_UdpFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.UdpFields != nil {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.UdpFields.Size()))
+		n21, err := m.UdpFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	return i, nil
+}
+func (m *GftHeaderGroupTransposition_TcpFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.TcpFields != nil {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TcpFields.Size()))
+		n22, err := m.TcpFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	return i, nil
+}
+func (m *GftHeaderGroupTransposition_IcmpFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.IcmpFields != nil {
+		dAtA[i] = 0x62
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.IcmpFields.Size()))
+		n23, err := m.IcmpFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	return i, nil
+}
+func (m *GftHeaderGroupTransposition_EncapFields) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.EncapFields != nil {
+		dAtA[i] = 0x6a
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.EncapFields.Size()))
+		n24, err := m.EncapFields.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n24
+	}
+	return i, nil
+}
+func (m *GftExactMathFlowEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GftExactMathFlowEntry) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.AddInActivatedState {
+		dAtA[i] = 0x8
+		i++
+		if m.AddInActivatedState {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RdmaFlow {
+		dAtA[i] = 0x10
+		i++
+		if m.RdmaFlow {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RedirectToVportIngressQueue {
+		dAtA[i] = 0x18
+		i++
+		if m.RedirectToVportIngressQueue {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RedirectToVportEgressQueue {
+		dAtA[i] = 0x20
+		i++
+		if m.RedirectToVportEgressQueue {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RedirectToVportIngressQueueIfTtlIsOne {
+		dAtA[i] = 0x28
+		i++
+		if m.RedirectToVportIngressQueueIfTtlIsOne {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.RedirectToVportEgressQueueIfTtlIsOne {
+		dAtA[i] = 0x30
+		i++
+		if m.RedirectToVportEgressQueueIfTtlIsOne {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyAllPackets {
+		dAtA[i] = 0x38
+		i++
+		if m.CopyAllPackets {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyFirstPacket {
+		dAtA[i] = 0x40
+		i++
+		if m.CopyFirstPacket {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyWhenTcpFlagSet {
+		dAtA[i] = 0x48
+		i++
+		if m.CopyWhenTcpFlagSet {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CustomActionPresent {
+		dAtA[i] = 0x50
+		i++
+		if m.CustomActionPresent {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.MetaActionBeforeTransposition {
+		dAtA[i] = 0x58
+		i++
+		if m.MetaActionBeforeTransposition {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyAfterTcpFinFlagSet {
+		dAtA[i] = 0x60
+		i++
+		if m.CopyAfterTcpFinFlagSet {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.CopyAfterTcpRstFlagSet {
+		dAtA[i] = 0x68
+		i++
+		if m.CopyAfterTcpRstFlagSet {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.TableId != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TableId))
+	}
+	if m.VportId != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.VportId))
+	}
+	if m.MatchProfileId != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.MatchProfileId))
+	}
+	if m.HeaderTranspositionProfileId != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.HeaderTranspositionProfileId))
+	}
+	if m.RedirectVportId != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.RedirectVportId))
+	}
+	if m.TtlOneRedirectVportId != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.TtlOneRedirectVportId))
+	}
+	if m.FlowEntryId != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintGft(dAtA, i, uint64(m.FlowEntryId))
+	}
+	if len(m.ExactMatches) > 0 {
+		for _, msg := range m.ExactMatches {
+			dAtA[i] = 0xaa
+			i++
+			dAtA[i] = 0x1
+			i++
+			i = encodeVarintGft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.Transpositions) > 0 {
+		for _, msg := range m.Transpositions {
+			dAtA[i] = 0xb2
+			i++
+			dAtA[i] = 0x1
+			i++
+			i = encodeVarintGft(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -258,9 +3003,533 @@ func (m *GftEthFields) Size() (n int) {
 	return n
 }
 
+func (m *GftHeaders) Size() (n int) {
+	var l int
+	_ = l
+	if m.EthernetHeader {
+		n += 2
+	}
+	if m.Ipv4Header {
+		n += 2
+	}
+	if m.Ipv6Header {
+		n += 2
+	}
+	if m.TcpHeader {
+		n += 2
+	}
+	if m.UdpHeader {
+		n += 2
+	}
+	if m.IcmpHeader {
+		n += 2
+	}
+	if m.NoEncap {
+		n += 2
+	}
+	if m.IpInIpEncap {
+		n += 2
+	}
+	if m.IpInGreEncap {
+		n += 2
+	}
+	if m.NvgreEncap {
+		n += 2
+	}
+	if m.VxlanEncap {
+		n += 2
+	}
+	return n
+}
+
+func (m *GftHeaderFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.DstMacAddr {
+		n += 2
+	}
+	if m.SrcMacAddr {
+		n += 2
+	}
+	if m.EthType {
+		n += 2
+	}
+	if m.CustomerVlanId {
+		n += 2
+	}
+	if m.ProviderVlanId {
+		n += 2
+	}
+	if m.Dot1PPriority {
+		n += 2
+	}
+	if m.SrcIpAddr {
+		n += 2
+	}
+	if m.DstIpAddr {
+		n += 2
+	}
+	if m.IpTtl {
+		n += 2
+	}
+	if m.IpProtocol {
+		n += 2
+	}
+	if m.IpDscp {
+		n += 2
+	}
+	if m.SrcPort {
+		n += 2
+	}
+	if m.DstPort {
+		n += 2
+	}
+	if m.TcpFlags {
+		n += 2
+	}
+	if m.TenantId {
+		n += 2
+	}
+	if m.IcmpType {
+		n += 3
+	}
+	if m.IcmpCode {
+		n += 3
+	}
+	if m.OobVlan {
+		n += 3
+	}
+	if m.OobTenantId {
+		n += 3
+	}
+	if m.GreProtocol {
+		n += 3
+	}
+	return n
+}
+
 func (m *GftHeaderGroupExactMatchProfile) Size() (n int) {
 	var l int
 	_ = l
+	if m.Headers != nil {
+		l = m.Headers.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.MatchFields != nil {
+		l = m.MatchFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+
+func (m *GftExactMatchProfile) Size() (n int) {
+	var l int
+	_ = l
+	if m.RdmaFlow {
+		n += 2
+	}
+	if m.TableType != 0 {
+		n += 1 + sovGft(uint64(m.TableType))
+	}
+	if m.ProfileId != 0 {
+		n += 1 + sovGft(uint64(m.ProfileId))
+	}
+	if len(m.ExactMatchProfiles) > 0 {
+		for _, e := range m.ExactMatchProfiles {
+			l = e.Size()
+			n += 1 + l + sovGft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *UdpMatchFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		n += 1 + sovGft(uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		n += 1 + sovGft(uint64(m.Dport))
+	}
+	return n
+}
+
+func (m *TcpMatchFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		n += 1 + sovGft(uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		n += 1 + sovGft(uint64(m.Dport))
+	}
+	if m.TcpFlags != 0 {
+		n += 1 + sovGft(uint64(m.TcpFlags))
+	}
+	return n
+}
+
+func (m *IcmpMatchFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovGft(uint64(m.Type))
+	}
+	if m.Code != 0 {
+		n += 1 + sovGft(uint64(m.Code))
+	}
+	return n
+}
+
+func (m *EncapMatchFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.TenantId != 0 {
+		n += 1 + sovGft(uint64(m.TenantId))
+	}
+	if m.GreProtocol != 0 {
+		n += 1 + sovGft(uint64(m.GreProtocol))
+	}
+	return n
+}
+
+func (m *GftHeaderGroupExactMatch) Size() (n int) {
+	var l int
+	_ = l
+	if m.Headers != nil {
+		l = m.Headers.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.MatchFields != nil {
+		l = m.MatchFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.EthFields != nil {
+		l = m.EthFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.SrcIpAddr != nil {
+		l = m.SrcIpAddr.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.DstIpAddr != nil {
+		l = m.DstIpAddr.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.IpTtl != 0 {
+		n += 1 + sovGft(uint64(m.IpTtl))
+	}
+	if m.IpDscp != 0 {
+		n += 1 + sovGft(uint64(m.IpDscp))
+	}
+	if m.IpProtocol != 0 {
+		n += 1 + sovGft(uint64(m.IpProtocol))
+	}
+	if m.EncapOrTransport != nil {
+		n += m.EncapOrTransport.Size()
+	}
+	return n
+}
+
+func (m *GftHeaderGroupExactMatch_UdpFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.UdpFields != nil {
+		l = m.UdpFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftHeaderGroupExactMatch_TcpFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.TcpFields != nil {
+		l = m.TcpFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftHeaderGroupExactMatch_IcmpFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.IcmpFields != nil {
+		l = m.IcmpFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftHeaderGroupExactMatch_EncapFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.EncapFields != nil {
+		l = m.EncapFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftHeaderGroupTranspositionProfile) Size() (n int) {
+	var l int
+	_ = l
+	if m.Action != 0 {
+		n += 1 + sovGft(uint64(m.Action))
+	}
+	if m.Headers != nil {
+		l = m.Headers.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.MatchFields != nil {
+		l = m.MatchFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+
+func (m *GftHeaderTranspositionProfile) Size() (n int) {
+	var l int
+	_ = l
+	if m.RedirectToVportIngressQueue {
+		n += 2
+	}
+	if m.RedirectToVportEgressQueue {
+		n += 2
+	}
+	if m.RedirectToVportIngressQueueIfTtlIsOne {
+		n += 2
+	}
+	if m.RedirectToVportEgressQueueIfTtlIsOne {
+		n += 2
+	}
+	if m.CopyAllPackets {
+		n += 2
+	}
+	if m.CopyFirstPacket {
+		n += 2
+	}
+	if m.CopyWhenTcpFlagSet {
+		n += 2
+	}
+	if m.CustomActionPresent {
+		n += 2
+	}
+	if m.MetaActionBeforeTransposition {
+		n += 2
+	}
+	if m.TableType != 0 {
+		n += 1 + sovGft(uint64(m.TableType))
+	}
+	if m.ProfileId != 0 {
+		n += 1 + sovGft(uint64(m.ProfileId))
+	}
+	if len(m.TranspositionProfiles) > 0 {
+		for _, e := range m.TranspositionProfiles {
+			l = e.Size()
+			n += 1 + l + sovGft(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *UdpTranspositionFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		n += 1 + sovGft(uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		n += 1 + sovGft(uint64(m.Dport))
+	}
+	return n
+}
+
+func (m *TcpTranspositionFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.Sport != 0 {
+		n += 1 + sovGft(uint64(m.Sport))
+	}
+	if m.Dport != 0 {
+		n += 1 + sovGft(uint64(m.Dport))
+	}
+	return n
+}
+
+func (m *IcmpTranspositionFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovGft(uint64(m.Type))
+	}
+	if m.Code != 0 {
+		n += 1 + sovGft(uint64(m.Code))
+	}
+	return n
+}
+
+func (m *EncapTranspositionFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.TenantId != 0 {
+		n += 1 + sovGft(uint64(m.TenantId))
+	}
+	if m.GreProtocol != 0 {
+		n += 1 + sovGft(uint64(m.GreProtocol))
+	}
+	return n
+}
+
+func (m *GftHeaderGroupTransposition) Size() (n int) {
+	var l int
+	_ = l
+	if m.Action != 0 {
+		n += 1 + sovGft(uint64(m.Action))
+	}
+	if m.Headers != nil {
+		l = m.Headers.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.HeaderFields != nil {
+		l = m.HeaderFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.EthFields != nil {
+		l = m.EthFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.SrcIpAddr != nil {
+		l = m.SrcIpAddr.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.DstIpAddr != nil {
+		l = m.DstIpAddr.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	if m.IpTtl != 0 {
+		n += 1 + sovGft(uint64(m.IpTtl))
+	}
+	if m.IpDscp != 0 {
+		n += 1 + sovGft(uint64(m.IpDscp))
+	}
+	if m.IpProtocol != 0 {
+		n += 1 + sovGft(uint64(m.IpProtocol))
+	}
+	if m.EncapOrTransport != nil {
+		n += m.EncapOrTransport.Size()
+	}
+	return n
+}
+
+func (m *GftHeaderGroupTransposition_UdpFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.UdpFields != nil {
+		l = m.UdpFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftHeaderGroupTransposition_TcpFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.TcpFields != nil {
+		l = m.TcpFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftHeaderGroupTransposition_IcmpFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.IcmpFields != nil {
+		l = m.IcmpFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftHeaderGroupTransposition_EncapFields) Size() (n int) {
+	var l int
+	_ = l
+	if m.EncapFields != nil {
+		l = m.EncapFields.Size()
+		n += 1 + l + sovGft(uint64(l))
+	}
+	return n
+}
+func (m *GftExactMathFlowEntry) Size() (n int) {
+	var l int
+	_ = l
+	if m.AddInActivatedState {
+		n += 2
+	}
+	if m.RdmaFlow {
+		n += 2
+	}
+	if m.RedirectToVportIngressQueue {
+		n += 2
+	}
+	if m.RedirectToVportEgressQueue {
+		n += 2
+	}
+	if m.RedirectToVportIngressQueueIfTtlIsOne {
+		n += 2
+	}
+	if m.RedirectToVportEgressQueueIfTtlIsOne {
+		n += 2
+	}
+	if m.CopyAllPackets {
+		n += 2
+	}
+	if m.CopyFirstPacket {
+		n += 2
+	}
+	if m.CopyWhenTcpFlagSet {
+		n += 2
+	}
+	if m.CustomActionPresent {
+		n += 2
+	}
+	if m.MetaActionBeforeTransposition {
+		n += 2
+	}
+	if m.CopyAfterTcpFinFlagSet {
+		n += 2
+	}
+	if m.CopyAfterTcpRstFlagSet {
+		n += 2
+	}
+	if m.TableId != 0 {
+		n += 1 + sovGft(uint64(m.TableId))
+	}
+	if m.VportId != 0 {
+		n += 1 + sovGft(uint64(m.VportId))
+	}
+	if m.MatchProfileId != 0 {
+		n += 2 + sovGft(uint64(m.MatchProfileId))
+	}
+	if m.HeaderTranspositionProfileId != 0 {
+		n += 2 + sovGft(uint64(m.HeaderTranspositionProfileId))
+	}
+	if m.RedirectVportId != 0 {
+		n += 2 + sovGft(uint64(m.RedirectVportId))
+	}
+	if m.TtlOneRedirectVportId != 0 {
+		n += 2 + sovGft(uint64(m.TtlOneRedirectVportId))
+	}
+	if m.FlowEntryId != 0 {
+		n += 2 + sovGft(uint64(m.FlowEntryId))
+	}
+	if len(m.ExactMatches) > 0 {
+		for _, e := range m.ExactMatches {
+			l = e.Size()
+			n += 2 + l + sovGft(uint64(l))
+		}
+	}
+	if len(m.Transpositions) > 0 {
+		for _, e := range m.Transpositions {
+			l = e.Size()
+			n += 2 + l + sovGft(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -441,6 +3710,726 @@ func (m *GftEthFields) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *GftHeaders) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftHeaders: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftHeaders: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EthernetHeader", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.EthernetHeader = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ipv4Header", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Ipv4Header = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ipv6Header", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Ipv6Header = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpHeader", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.TcpHeader = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UdpHeader", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.UdpHeader = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IcmpHeader", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IcmpHeader = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NoEncap", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.NoEncap = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpInIpEncap", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IpInIpEncap = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpInGreEncap", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IpInGreEncap = bool(v != 0)
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NvgreEncap", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.NvgreEncap = bool(v != 0)
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VxlanEncap", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.VxlanEncap = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GftHeaderFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftHeaderFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftHeaderFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DstMacAddr", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.DstMacAddr = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SrcMacAddr", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SrcMacAddr = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EthType", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.EthType = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CustomerVlanId", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CustomerVlanId = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProviderVlanId", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ProviderVlanId = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dot1PPriority", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Dot1PPriority = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SrcIpAddr", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SrcIpAddr = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DstIpAddr", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.DstIpAddr = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpTtl", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IpTtl = bool(v != 0)
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpProtocol", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IpProtocol = bool(v != 0)
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpDscp", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IpDscp = bool(v != 0)
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SrcPort", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.SrcPort = bool(v != 0)
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DstPort", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.DstPort = bool(v != 0)
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpFlags", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.TcpFlags = bool(v != 0)
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TenantId", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.TenantId = bool(v != 0)
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IcmpType", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IcmpType = bool(v != 0)
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IcmpCode", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IcmpCode = bool(v != 0)
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OobVlan", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.OobVlan = bool(v != 0)
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OobTenantId", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.OobTenantId = bool(v != 0)
+		case 20:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GreProtocol", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.GreProtocol = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *GftHeaderGroupExactMatchProfile) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -470,6 +4459,2692 @@ func (m *GftHeaderGroupExactMatchProfile) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: GftHeaderGroupExactMatchProfile: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Headers == nil {
+				m.Headers = &GftHeaders{}
+			}
+			if err := m.Headers.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MatchFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MatchFields == nil {
+				m.MatchFields = &GftHeaderFields{}
+			}
+			if err := m.MatchFields.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GftExactMatchProfile) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftExactMatchProfile: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftExactMatchProfile: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RdmaFlow", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RdmaFlow = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TableType", wireType)
+			}
+			m.TableType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TableType |= (GftTableType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProfileId", wireType)
+			}
+			m.ProfileId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProfileId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExactMatchProfiles", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ExactMatchProfiles = append(m.ExactMatchProfiles, &GftHeaderGroupExactMatchProfile{})
+			if err := m.ExactMatchProfiles[len(m.ExactMatchProfiles)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UdpMatchFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UdpMatchFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UdpMatchFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sport", wireType)
+			}
+			m.Sport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dport", wireType)
+			}
+			m.Dport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpMatchFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpMatchFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpMatchFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sport", wireType)
+			}
+			m.Sport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dport", wireType)
+			}
+			m.Dport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpFlags", wireType)
+			}
+			m.TcpFlags = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TcpFlags |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IcmpMatchFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IcmpMatchFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IcmpMatchFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			}
+			m.Code = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Code |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EncapMatchFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EncapMatchFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EncapMatchFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TenantId", wireType)
+			}
+			m.TenantId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TenantId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GreProtocol", wireType)
+			}
+			m.GreProtocol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GreProtocol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GftHeaderGroupExactMatch) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftHeaderGroupExactMatch: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftHeaderGroupExactMatch: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Headers == nil {
+				m.Headers = &GftHeaders{}
+			}
+			if err := m.Headers.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MatchFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MatchFields == nil {
+				m.MatchFields = &GftHeaderFields{}
+			}
+			if err := m.MatchFields.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EthFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.EthFields == nil {
+				m.EthFields = &GftEthFields{}
+			}
+			if err := m.EthFields.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SrcIpAddr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SrcIpAddr == nil {
+				m.SrcIpAddr = &IPAddress{}
+			}
+			if err := m.SrcIpAddr.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DstIpAddr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.DstIpAddr == nil {
+				m.DstIpAddr = &IPAddress{}
+			}
+			if err := m.DstIpAddr.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpTtl", wireType)
+			}
+			m.IpTtl = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IpTtl |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpDscp", wireType)
+			}
+			m.IpDscp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IpDscp |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpProtocol", wireType)
+			}
+			m.IpProtocol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IpProtocol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UdpFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &UdpMatchFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupExactMatch_UdpFields{v}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &TcpMatchFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupExactMatch_TcpFields{v}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IcmpFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &IcmpMatchFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupExactMatch_IcmpFields{v}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EncapFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EncapMatchFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupExactMatch_EncapFields{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GftHeaderGroupTranspositionProfile) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftHeaderGroupTranspositionProfile: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftHeaderGroupTranspositionProfile: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			m.Action = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Action |= (GftHeaderGroupTranspostionAction(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Headers == nil {
+				m.Headers = &GftHeaders{}
+			}
+			if err := m.Headers.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MatchFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MatchFields == nil {
+				m.MatchFields = &GftHeaderFields{}
+			}
+			if err := m.MatchFields.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GftHeaderTranspositionProfile) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftHeaderTranspositionProfile: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftHeaderTranspositionProfile: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportIngressQueue", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportIngressQueue = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportEgressQueue", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportEgressQueue = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportIngressQueueIfTtlIsOne", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportIngressQueueIfTtlIsOne = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportEgressQueueIfTtlIsOne", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportEgressQueueIfTtlIsOne = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyAllPackets", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyAllPackets = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyFirstPacket", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyFirstPacket = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyWhenTcpFlagSet", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyWhenTcpFlagSet = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CustomActionPresent", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CustomActionPresent = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetaActionBeforeTransposition", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.MetaActionBeforeTransposition = bool(v != 0)
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TableType", wireType)
+			}
+			m.TableType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TableType |= (GftTableType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProfileId", wireType)
+			}
+			m.ProfileId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProfileId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TranspositionProfiles", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TranspositionProfiles = append(m.TranspositionProfiles, &GftHeaderGroupTranspositionProfile{})
+			if err := m.TranspositionProfiles[len(m.TranspositionProfiles)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UdpTranspositionFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UdpTranspositionFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UdpTranspositionFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sport", wireType)
+			}
+			m.Sport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dport", wireType)
+			}
+			m.Dport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpTranspositionFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpTranspositionFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpTranspositionFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sport", wireType)
+			}
+			m.Sport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dport", wireType)
+			}
+			m.Dport = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Dport |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IcmpTranspositionFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IcmpTranspositionFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IcmpTranspositionFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			}
+			m.Code = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Code |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EncapTranspositionFields) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EncapTranspositionFields: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EncapTranspositionFields: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TenantId", wireType)
+			}
+			m.TenantId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TenantId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GreProtocol", wireType)
+			}
+			m.GreProtocol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.GreProtocol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GftHeaderGroupTransposition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftHeaderGroupTransposition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftHeaderGroupTransposition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			m.Action = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Action |= (GftHeaderGroupTranspostionAction(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Headers == nil {
+				m.Headers = &GftHeaders{}
+			}
+			if err := m.Headers.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.HeaderFields == nil {
+				m.HeaderFields = &GftHeaderFields{}
+			}
+			if err := m.HeaderFields.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EthFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.EthFields == nil {
+				m.EthFields = &GftEthFields{}
+			}
+			if err := m.EthFields.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SrcIpAddr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SrcIpAddr == nil {
+				m.SrcIpAddr = &IPAddress{}
+			}
+			if err := m.SrcIpAddr.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DstIpAddr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.DstIpAddr == nil {
+				m.DstIpAddr = &IPAddress{}
+			}
+			if err := m.DstIpAddr.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpTtl", wireType)
+			}
+			m.IpTtl = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IpTtl |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpDscp", wireType)
+			}
+			m.IpDscp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IpDscp |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpProtocol", wireType)
+			}
+			m.IpProtocol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IpProtocol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UdpFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &UdpTranspositionFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupTransposition_UdpFields{v}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &TcpTranspositionFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupTransposition_TcpFields{v}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IcmpFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &IcmpTranspositionFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupTransposition_IcmpFields{v}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EncapFields", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EncapTranspositionFields{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.EncapOrTransport = &GftHeaderGroupTransposition_EncapFields{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GftExactMathFlowEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GftExactMathFlowEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GftExactMathFlowEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddInActivatedState", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AddInActivatedState = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RdmaFlow", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RdmaFlow = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportIngressQueue", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportIngressQueue = bool(v != 0)
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportEgressQueue", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportEgressQueue = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportIngressQueueIfTtlIsOne", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportIngressQueueIfTtlIsOne = bool(v != 0)
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectToVportEgressQueueIfTtlIsOne", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RedirectToVportEgressQueueIfTtlIsOne = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyAllPackets", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyAllPackets = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyFirstPacket", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyFirstPacket = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyWhenTcpFlagSet", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyWhenTcpFlagSet = bool(v != 0)
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CustomActionPresent", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CustomActionPresent = bool(v != 0)
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetaActionBeforeTransposition", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.MetaActionBeforeTransposition = bool(v != 0)
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyAfterTcpFinFlagSet", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyAfterTcpFinFlagSet = bool(v != 0)
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CopyAfterTcpRstFlagSet", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CopyAfterTcpRstFlagSet = bool(v != 0)
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TableId", wireType)
+			}
+			m.TableId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TableId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VportId", wireType)
+			}
+			m.VportId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VportId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MatchProfileId", wireType)
+			}
+			m.MatchProfileId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MatchProfileId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderTranspositionProfileId", wireType)
+			}
+			m.HeaderTranspositionProfileId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HeaderTranspositionProfileId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedirectVportId", wireType)
+			}
+			m.RedirectVportId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RedirectVportId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TtlOneRedirectVportId", wireType)
+			}
+			m.TtlOneRedirectVportId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TtlOneRedirectVportId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 20:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FlowEntryId", wireType)
+			}
+			m.FlowEntryId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FlowEntryId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 21:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExactMatches", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ExactMatches = append(m.ExactMatches, &GftHeaderGroupExactMatch{})
+			if err := m.ExactMatches[len(m.ExactMatches)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 22:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Transpositions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Transpositions = append(m.Transpositions, &GftHeaderGroupTransposition{})
+			if err := m.Transpositions[len(m.Transpositions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGft(dAtA[iNdEx:])
@@ -599,29 +7274,128 @@ var (
 func init() { proto.RegisterFile("gft.proto", fileDescriptorGft) }
 
 var fileDescriptorGft = []byte{
-	// 373 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0xd1, 0x4d, 0x8e, 0xda, 0x30,
-	0x1c, 0x05, 0x70, 0x4c, 0x80, 0xa6, 0x2e, 0xad, 0x50, 0xba, 0x68, 0x9a, 0x45, 0x80, 0x54, 0xad,
-	0x50, 0x17, 0x5d, 0xb4, 0x27, 0x08, 0x60, 0x02, 0x12, 0x50, 0x14, 0xa2, 0x7e, 0x6d, 0x2c, 0x13,
-	0x3b, 0x24, 0x6a, 0x20, 0x91, 0xf3, 0x07, 0x95, 0x9b, 0xf4, 0x36, 0xdd, 0x76, 0x39, 0x17, 0x18,
-	0x69, 0xc4, 0x5c, 0x64, 0x44, 0x02, 0xcc, 0x08, 0x69, 0x66, 0x65, 0xfb, 0xf9, 0xa7, 0x67, 0xcb,
-	0xc6, 0xcf, 0x97, 0x01, 0x7c, 0x4a, 0x65, 0x02, 0x89, 0xa6, 0x2c, 0x03, 0x30, 0x5e, 0xc0, 0x2e,
-	0x15, 0x59, 0x91, 0x18, 0xea, 0xef, 0xb0, 0x98, 0x59, 0xd7, 0x08, 0xd7, 0x9d, 0x00, 0x08, 0x84,
-	0x83, 0x48, 0xc4, 0x3c, 0xd3, 0x5a, 0xb8, 0xce, 0x33, 0xa0, 0x2b, 0xe6, 0x53, 0xc6, 0xb9, 0xd4,
-	0x51, 0x0b, 0x75, 0x2a, 0x2e, 0xe6, 0x19, 0x4c, 0x98, 0x6f, 0x73, 0x2e, 0x0f, 0x22, 0x93, 0xfe,
-	0xbd, 0x28, 0x17, 0x22, 0x93, 0xfe, 0x49, 0xbc, 0xc5, 0xaa, 0x80, 0x90, 0x1e, 0x4e, 0xd4, 0x95,
-	0x16, 0xea, 0xbc, 0x74, 0x9f, 0x09, 0x08, 0xbd, 0x5d, 0x2a, 0xb4, 0x0e, 0x6e, 0xf8, 0x9b, 0x0c,
-	0x92, 0x95, 0x90, 0x74, 0x1b, 0xb3, 0x35, 0x8d, 0xb8, 0x5e, 0xc9, 0xc9, 0xab, 0x53, 0xfe, 0x2d,
-	0x66, 0xeb, 0x11, 0x3f, 0xc8, 0x54, 0x26, 0xdb, 0x88, 0x3f, 0x90, 0xd5, 0x42, 0x9e, 0xf2, 0xa3,
-	0x34, 0xb0, 0x9a, 0xca, 0x28, 0x91, 0x11, 0xec, 0xf4, 0x5a, 0x2e, 0xce, 0x6b, 0xab, 0x8d, 0x9b,
-	0x4e, 0x00, 0x43, 0xc1, 0xb8, 0x90, 0x8e, 0x4c, 0x36, 0x29, 0xf9, 0xc3, 0x7c, 0x98, 0x30, 0xf0,
-	0xc3, 0x99, 0x4c, 0x82, 0x28, 0x16, 0x1f, 0xff, 0x15, 0x4f, 0xe0, 0xb1, 0x45, 0x2c, 0xf2, 0x3b,
-	0xbe, 0xc1, 0xaf, 0x9d, 0x81, 0x47, 0x3d, 0xbb, 0x3b, 0x26, 0xd4, 0xfb, 0x39, 0x23, 0x74, 0xfa,
-	0x75, 0x4a, 0x1a, 0x25, 0xed, 0x1d, 0x6e, 0x5e, 0x6c, 0x7c, 0x1f, 0x8d, 0xfb, 0x3d, 0xdb, 0xed,
-	0xd3, 0xd1, 0xd4, 0x71, 0xc9, 0x7c, 0xde, 0x40, 0x9a, 0x85, 0xcd, 0xc7, 0x10, 0x29, 0x4c, 0x59,
-	0xfb, 0x80, 0xad, 0x0b, 0x43, 0x7e, 0xd8, 0x3d, 0x8f, 0x4e, 0x6c, 0xaf, 0x37, 0x3c, 0x77, 0x29,
-	0xda, 0x7b, 0xdc, 0x7e, 0xc2, 0x1d, 0xeb, 0x2a, 0x9f, 0xab, 0x58, 0x71, 0x02, 0xe8, 0x1a, 0xff,
-	0xf7, 0x26, 0xba, 0xda, 0x9b, 0xe8, 0x66, 0x6f, 0xa2, 0xbf, 0xb7, 0x66, 0xe9, 0x97, 0x1a, 0xb2,
-	0x38, 0xff, 0xe7, 0x45, 0x2d, 0x1f, 0xbe, 0xdc, 0x05, 0x00, 0x00, 0xff, 0xff, 0xc1, 0xb0, 0x43,
-	0xb5, 0x17, 0x02, 0x00, 0x00,
+	// 1964 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0xed, 0x6e, 0xe3, 0xc6,
+	0xd5, 0xb6, 0x2c, 0xc9, 0xa2, 0x8e, 0x3e, 0xac, 0x1d, 0x7f, 0xac, 0xbc, 0x5e, 0x7f, 0x44, 0x89,
+	0xdf, 0xec, 0xbb, 0x68, 0x17, 0xa9, 0xb3, 0x48, 0x9a, 0x76, 0x8b, 0x42, 0xb6, 0x65, 0x9b, 0x40,
+	0x6c, 0xab, 0xb4, 0x76, 0xd3, 0x5d, 0x14, 0x1d, 0xd0, 0x9c, 0x91, 0x45, 0x94, 0x26, 0x59, 0x72,
+	0xec, 0x8d, 0x2f, 0xa0, 0x40, 0x2f, 0xa1, 0x40, 0x2f, 0xa6, 0xf9, 0xd7, 0xfe, 0xec, 0x05, 0xa4,
+	0x40, 0xb1, 0xfd, 0xdd, 0x6b, 0x68, 0x31, 0x67, 0x48, 0x8a, 0x94, 0x25, 0xd9, 0xce, 0xa6, 0xf9,
+	0x25, 0xf1, 0x9c, 0xe7, 0x1c, 0x9e, 0x99, 0x79, 0x78, 0x9e, 0x43, 0x42, 0xf9, 0xbc, 0x2f, 0x9e,
+	0xf9, 0x81, 0x27, 0x3c, 0x92, 0x3f, 0xef, 0x8b, 0x47, 0x15, 0x71, 0xed, 0xf3, 0x50, 0x59, 0x5a,
+	0xff, 0xc8, 0x41, 0xf5, 0xa0, 0x2f, 0x3a, 0x62, 0xb0, 0x6f, 0x73, 0x87, 0x85, 0x64, 0x13, 0xaa,
+	0x2c, 0x14, 0xf4, 0xc2, 0xb4, 0xa8, 0xc9, 0x58, 0xd0, 0xcc, 0x6d, 0xe6, 0x9e, 0x14, 0x0c, 0x60,
+	0xa1, 0x38, 0x32, 0xad, 0x36, 0x63, 0x81, 0x44, 0x84, 0x81, 0x35, 0x44, 0xcc, 0x2a, 0x44, 0x18,
+	0x58, 0x31, 0x62, 0x05, 0x34, 0x2e, 0x06, 0x54, 0xde, 0xa7, 0x99, 0xdf, 0xcc, 0x3d, 0xa9, 0x19,
+	0x25, 0x2e, 0x06, 0xbd, 0x6b, 0x9f, 0x93, 0x27, 0xd0, 0xb0, 0x2e, 0x43, 0xe1, 0x5d, 0xf0, 0x80,
+	0x5e, 0x39, 0xa6, 0x4b, 0x6d, 0xd6, 0x2c, 0x20, 0xa4, 0x1e, 0xdb, 0x5f, 0x39, 0xa6, 0xab, 0x33,
+	0x89, 0xf4, 0x03, 0xef, 0xca, 0x66, 0x29, 0x64, 0x51, 0x21, 0x63, 0x7b, 0x84, 0x7c, 0x04, 0x9a,
+	0x1f, 0xd8, 0x5e, 0x60, 0x8b, 0xeb, 0xe6, 0x1c, 0x22, 0x92, 0xeb, 0xd6, 0x7f, 0x66, 0x01, 0x0e,
+	0xfa, 0xe2, 0x90, 0x9b, 0x8c, 0x07, 0x21, 0xf9, 0x18, 0xe6, 0xb9, 0x18, 0xf0, 0xc0, 0xe5, 0x82,
+	0x0e, 0xd0, 0x86, 0x0b, 0xd4, 0x8c, 0x7a, 0x6c, 0x56, 0x48, 0xb2, 0x01, 0x15, 0xdb, 0xbf, 0x7a,
+	0x1e, 0x83, 0x66, 0x11, 0x04, 0xd2, 0x94, 0x01, 0x7c, 0x16, 0x03, 0xf2, 0x09, 0xe0, 0xb3, 0x08,
+	0xb0, 0x06, 0x20, 0x2c, 0x3f, 0xf6, 0x17, 0xd0, 0x5f, 0x16, 0x96, 0x3f, 0x74, 0x5f, 0xb2, 0xc4,
+	0x5d, 0x54, 0xee, 0x4b, 0xe6, 0xa7, 0xd2, 0x5b, 0x17, 0x89, 0x7f, 0x2e, 0x4a, 0x6f, 0x5d, 0xc4,
+	0x80, 0x15, 0xd0, 0x5c, 0x8f, 0x72, 0xd7, 0x32, 0xfd, 0x66, 0x09, 0xbd, 0x25, 0xd7, 0xeb, 0xc8,
+	0x4b, 0xf2, 0x21, 0xd4, 0x6d, 0x9f, 0xda, 0x2e, 0xb5, 0xfd, 0x08, 0xa0, 0x21, 0xa0, 0x62, 0xfb,
+	0xba, 0xab, 0xfb, 0x0a, 0xb4, 0x05, 0xf3, 0x0a, 0x74, 0x1e, 0xf0, 0x08, 0x55, 0x46, 0x54, 0x55,
+	0xa2, 0x0e, 0x02, 0xae, 0x60, 0x1b, 0x50, 0x71, 0xaf, 0x86, 0x10, 0x50, 0x75, 0xa0, 0x29, 0x01,
+	0x5c, 0x7d, 0x2d, 0x8f, 0x47, 0x01, 0x2a, 0x0a, 0x80, 0x26, 0x04, 0xb4, 0xfe, 0x58, 0x84, 0xf9,
+	0xe4, 0x04, 0xa6, 0x90, 0x4c, 0xbb, 0x95, 0x64, 0xda, 0x54, 0x92, 0x69, 0xb7, 0x93, 0x4c, 0xbb,
+	0x33, 0xc9, 0xb4, 0x1b, 0x24, 0xdb, 0x82, 0x3a, 0xf3, 0xc4, 0x4f, 0x7c, 0x9a, 0xa1, 0x9a, 0x66,
+	0xd4, 0xd0, 0xda, 0x8d, 0x8c, 0x64, 0x1d, 0x2a, 0xb2, 0x6e, 0xdb, 0x57, 0x65, 0xab, 0x93, 0x29,
+	0x87, 0x81, 0xa5, 0xfb, 0x58, 0xf5, 0x3a, 0x54, 0xe4, 0xca, 0x63, 0xbf, 0x3a, 0x98, 0x32, 0x0b,
+	0x45, 0xe4, 0x5f, 0x82, 0x39, 0xdb, 0xa7, 0x42, 0x38, 0xd1, 0x69, 0x14, 0x6d, 0xbf, 0x27, 0x1c,
+	0xc5, 0x36, 0x8a, 0x8f, 0xac, 0xe5, 0x39, 0xf1, 0x31, 0xd8, 0x7e, 0x37, 0xb2, 0x90, 0x87, 0x50,
+	0xb2, 0x7d, 0xca, 0x42, 0x2b, 0x3e, 0x82, 0x39, 0xdb, 0xdf, 0x0b, 0x2d, 0x5f, 0x6e, 0x93, 0x2c,
+	0xc8, 0xf7, 0x02, 0xd1, 0xac, 0xaa, 0x6d, 0x0a, 0x03, 0xab, 0xeb, 0x05, 0x42, 0xba, 0x64, 0x2d,
+	0xe8, 0xaa, 0x29, 0x17, 0x0b, 0x05, 0xba, 0x56, 0x41, 0x52, 0x95, 0xf6, 0x1d, 0xf3, 0x3c, 0x6c,
+	0xd6, 0xd1, 0xa7, 0x09, 0xcb, 0xdf, 0x97, 0xd7, 0xe8, 0xe4, 0xae, 0xe9, 0x0a, 0xb9, 0x5b, 0xf3,
+	0x91, 0x13, 0x0d, 0x3a, 0x93, 0x4e, 0x24, 0x2e, 0x9e, 0x4b, 0x43, 0x39, 0xa5, 0x01, 0x0f, 0x26,
+	0x76, 0x5a, 0x1e, 0xe3, 0xcd, 0x07, 0x43, 0xe7, 0xae, 0xc7, 0xb8, 0x2c, 0xc7, 0xf3, 0xce, 0xf0,
+	0x18, 0x9a, 0x44, 0x95, 0xe3, 0x79, 0x67, 0x72, 0xfb, 0x49, 0x0b, 0x6a, 0xd2, 0x35, 0xbc, 0xeb,
+	0x82, 0x22, 0xb4, 0xe7, 0x9d, 0xf5, 0xe2, 0x1b, 0x7f, 0x00, 0x55, 0xc9, 0xd3, 0x64, 0x8f, 0x16,
+	0x15, 0xe4, 0x3c, 0xe0, 0xf1, 0x26, 0xb5, 0xfe, 0x90, 0x83, 0x8d, 0x84, 0x8a, 0x07, 0x81, 0x77,
+	0xe9, 0x77, 0xbe, 0x36, 0x2d, 0x71, 0x64, 0x0a, 0x6b, 0xd0, 0x0d, 0xbc, 0xbe, 0xed, 0x70, 0xf2,
+	0xff, 0x50, 0x52, 0xcf, 0x5c, 0x88, 0xac, 0xac, 0x6c, 0xcf, 0x3f, 0x93, 0xfd, 0x73, 0xd8, 0x43,
+	0x8c, 0xd8, 0x4f, 0x3e, 0x87, 0xea, 0x85, 0x0c, 0xa5, 0x7d, 0x64, 0x35, 0x72, 0xb4, 0xb2, 0xbd,
+	0x98, 0xc5, 0x2b, 0xc6, 0x1b, 0x15, 0x44, 0xaa, 0x8b, 0xd6, 0xb7, 0x39, 0x58, 0x94, 0x4d, 0xf7,
+	0xc6, 0xcd, 0x57, 0xa1, 0x1c, 0xb0, 0x0b, 0x93, 0xf6, 0x1d, 0xef, 0x6d, 0xf4, 0x50, 0x68, 0xd2,
+	0xb0, 0xef, 0x78, 0x6f, 0xc9, 0x27, 0x00, 0xc2, 0x3c, 0x73, 0xb8, 0xda, 0x5a, 0x79, 0xb3, 0xfa,
+	0xf6, 0x83, 0xf8, 0x66, 0x3d, 0xe9, 0x91, 0x7b, 0x6c, 0x94, 0x45, 0xfc, 0x57, 0xf6, 0x18, 0x5f,
+	0x65, 0x96, 0x7b, 0xa6, 0x3a, 0x71, 0x39, 0xb2, 0xe8, 0x8c, 0xbc, 0x82, 0x45, 0x2e, 0x4b, 0xa0,
+	0x6a, 0x15, 0x91, 0x23, 0x6c, 0x16, 0x36, 0xf3, 0x4f, 0x2a, 0xdb, 0x1f, 0x65, 0xd7, 0x31, 0x7e,
+	0xbb, 0x0c, 0xc2, 0x47, 0x4d, 0x61, 0xeb, 0x05, 0xd4, 0x5f, 0x32, 0xff, 0x68, 0xb8, 0x60, 0xb2,
+	0x08, 0xc5, 0x10, 0x69, 0x96, 0xc3, 0x1a, 0xd4, 0x85, 0xb4, 0x32, 0xb4, 0xce, 0x2a, 0x2b, 0x5e,
+	0xb4, 0x5e, 0x43, 0xbd, 0x67, 0x7d, 0xd7, 0xe8, 0x2c, 0x71, 0xd5, 0x8a, 0x13, 0xe2, 0xb6, 0xbe,
+	0x80, 0x79, 0xdd, 0xba, 0xc8, 0xe4, 0x26, 0x50, 0xc0, 0xed, 0x54, 0xa9, 0xf1, 0xbf, 0xb4, 0x21,
+	0x41, 0x55, 0x62, 0xfc, 0xdf, 0x32, 0xa0, 0x81, 0xed, 0x2c, 0x1d, 0x9b, 0x79, 0x0e, 0x72, 0xd1,
+	0xbd, 0x26, 0xd1, 0x51, 0x25, 0xcb, 0xd0, 0xf1, 0xdb, 0x02, 0x34, 0x27, 0xed, 0xef, 0x0f, 0xc1,
+	0x43, 0xc9, 0x28, 0xd9, 0x42, 0xa3, 0xb0, 0x3c, 0x86, 0x25, 0x8c, 0x4a, 0x46, 0x02, 0xa3, 0xcc,
+	0xc5, 0x30, 0x22, 0xd3, 0xde, 0x0a, 0x18, 0xd2, 0x78, 0xa6, 0x26, 0x0a, 0xbd, 0x2b, 0x5b, 0x18,
+	0x0f, 0xc3, 0x74, 0xc3, 0xfb, 0x24, 0xdb, 0xf0, 0x8a, 0x93, 0x22, 0xc6, 0xb5, 0x40, 0x25, 0xe6,
+	0x51, 0x0b, 0x4c, 0x75, 0xb8, 0x12, 0xda, 0xe3, 0x0e, 0x37, 0xd2, 0x1b, 0x35, 0x74, 0xa6, 0x7b,
+	0xe3, 0x73, 0x25, 0xb5, 0xd1, 0x32, 0xcb, 0x58, 0xc1, 0x02, 0x2e, 0x33, 0x4b, 0xd3, 0xc3, 0x19,
+	0x54, 0xe0, 0x68, 0xa9, 0xcf, 0x95, 0x7e, 0x47, 0x51, 0x90, 0x8a, 0xca, 0xd2, 0x53, 0x46, 0x49,
+	0x86, 0xa9, 0xa8, 0xcf, 0x23, 0xdd, 0x8e, 0xc2, 0x2a, 0xa9, 0xa3, 0x18, 0xa1, 0xde, 0xe1, 0x8c,
+	0xd2, 0xf3, 0x28, 0xf0, 0x67, 0x50, 0x45, 0x05, 0x8d, 0x23, 0xab, 0x18, 0xb9, 0x84, 0x91, 0xa3,
+	0xcc, 0x3b, 0x9c, 0x31, 0x2a, 0x08, 0x56, 0x97, 0x3b, 0x8b, 0x40, 0x54, 0xac, 0x17, 0x50, 0x11,
+	0x98, 0x2e, 0x3e, 0x20, 0xad, 0xbf, 0xe6, 0xa0, 0x95, 0xa5, 0x57, 0x4f, 0xf9, 0x42, 0x5b, 0xd8,
+	0x9e, 0x1b, 0xf7, 0x9c, 0x5f, 0xc0, 0x9c, 0x69, 0x49, 0x03, 0xf2, 0xac, 0xbe, 0xbd, 0x35, 0xe6,
+	0xb9, 0x8f, 0x03, 0x25, 0xac, 0x8d, 0x60, 0x23, 0x0a, 0x4a, 0xf3, 0x74, 0xf6, 0x9e, 0x3c, 0xcd,
+	0xdf, 0xb5, 0x5f, 0xfe, 0x79, 0x0e, 0xd6, 0x12, 0xc0, 0xd8, 0x45, 0xec, 0xc1, 0x46, 0xc0, 0x99,
+	0x1d, 0x70, 0x4b, 0x50, 0xe1, 0xd1, 0x2b, 0xb9, 0x01, 0xd4, 0x76, 0xcf, 0x25, 0xb7, 0xe8, 0xef,
+	0x2f, 0xf9, 0x25, 0x8f, 0xda, 0xe9, 0x6a, 0x0c, 0xeb, 0x79, 0xaf, 0x24, 0x48, 0x57, 0x98, 0x5f,
+	0x49, 0x08, 0xd9, 0x81, 0xf5, 0x9b, 0x59, 0x78, 0x3a, 0x89, 0x1a, 0x43, 0x1e, 0x8d, 0x24, 0xe9,
+	0xa4, 0x72, 0xfc, 0x06, 0x7e, 0x7c, 0x4b, 0x25, 0xd4, 0xee, 0x4b, 0x76, 0x53, 0x3b, 0xa4, 0x9e,
+	0x1b, 0xcf, 0x2e, 0x5b, 0x53, 0xea, 0xd2, 0xfb, 0x3d, 0xe1, 0xe8, 0xe1, 0x89, 0xcb, 0xc9, 0x1b,
+	0xf8, 0xd1, 0xf4, 0x0a, 0x47, 0x92, 0xab, 0xa9, 0xe7, 0xa3, 0xc9, 0xf5, 0xa6, 0x72, 0xcb, 0xa9,
+	0xc9, 0xf3, 0xaf, 0xa9, 0xe9, 0x38, 0xd4, 0x37, 0xad, 0xdf, 0x71, 0x11, 0xc6, 0xb3, 0x90, 0xb4,
+	0xb7, 0x1d, 0xa7, 0xab, 0xac, 0xe4, 0x29, 0x3c, 0x40, 0x64, 0xdf, 0x0e, 0xe4, 0xfc, 0x80, 0xd6,
+	0x68, 0x1c, 0x9a, 0x97, 0x8e, 0x7d, 0x69, 0x57, 0x60, 0xb2, 0x0d, 0xcb, 0x88, 0x7d, 0x3b, 0xe0,
+	0x2e, 0x8d, 0x5b, 0x33, 0x0d, 0xb9, 0x88, 0x66, 0x23, 0x22, 0xbd, 0x5f, 0x0d, 0xb8, 0xdb, 0x53,
+	0x5d, 0xfa, 0x14, 0x63, 0x96, 0xd4, 0x9c, 0x46, 0x15, 0xc9, 0xa8, 0x1f, 0xf0, 0x90, 0xbb, 0x22,
+	0x1a, 0x97, 0x16, 0x94, 0x53, 0x11, 0xb1, 0xab, 0x5c, 0xe4, 0x00, 0x36, 0x2f, 0xb8, 0x30, 0xe3,
+	0x88, 0x33, 0xde, 0xf7, 0x02, 0x1e, 0x3f, 0x0d, 0x8a, 0x2c, 0xd1, 0x48, 0xb5, 0x26, 0x71, 0x2a,
+	0x78, 0x07, 0x51, 0x19, 0x46, 0x8d, 0xc8, 0x2c, 0xdc, 0x5b, 0x66, 0x2b, 0xa3, 0x32, 0xfb, 0x5b,
+	0x58, 0xce, 0x94, 0x31, 0x14, 0xda, 0x2a, 0x0a, 0xed, 0xc7, 0x53, 0x1e, 0xb8, 0x34, 0xc9, 0x8d,
+	0x25, 0x31, 0xc6, 0x1a, 0xb6, 0xf6, 0x60, 0xf9, 0x25, 0xcb, 0x46, 0x7c, 0x07, 0xd9, 0xdd, 0x83,
+	0xe5, 0x9e, 0xf5, 0xde, 0x59, 0xda, 0xf0, 0x50, 0xb6, 0xb9, 0x71, 0x69, 0xee, 0xaa, 0xb4, 0x6f,
+	0xa0, 0x89, 0xfd, 0x6e, 0x5c, 0x8e, 0xf7, 0x55, 0xdc, 0x6f, 0x8a, 0xb0, 0x3a, 0x65, 0xa3, 0x7f,
+	0xc0, 0x5e, 0xf8, 0x05, 0xd4, 0xd4, 0xdf, 0xbb, 0x34, 0xc3, 0xea, 0x20, 0xfd, 0xf2, 0x94, 0x55,
+	0xed, 0xc2, 0xfd, 0x55, 0xbb, 0x78, 0x6f, 0xd5, 0x9e, 0xbb, 0x8f, 0x6a, 0x97, 0x26, 0xa8, 0xb6,
+	0x36, 0x4d, 0xb5, 0xcb, 0x37, 0x54, 0xfb, 0x45, 0x46, 0xb5, 0x95, 0xfe, 0xae, 0xc6, 0xaa, 0x3d,
+	0x86, 0x1c, 0x59, 0xf5, 0x7e, 0x91, 0x51, 0xef, 0x4a, 0x2a, 0x7a, 0x3c, 0xcb, 0xb3, 0x2a, 0xfe,
+	0xcb, 0xac, 0x8a, 0x2b, 0x2d, 0x7e, 0x9c, 0xa8, 0xf8, 0xf8, 0xf8, 0xb4, 0x9a, 0xef, 0x8c, 0xa8,
+	0x79, 0x0d, 0x33, 0xac, 0x0d, 0xd5, 0x7c, 0x7c, 0x8a, 0x3b, 0xa8, 0xfa, 0xbf, 0xcb, 0xb0, 0x94,
+	0x7a, 0x77, 0x18, 0xc8, 0x57, 0x83, 0x8e, 0x2b, 0x82, 0x6b, 0xf2, 0x29, 0x2c, 0x9b, 0x8c, 0xc9,
+	0x57, 0x7a, 0x49, 0xc7, 0x2b, 0x53, 0x70, 0x46, 0x43, 0x61, 0x8a, 0x58, 0xfa, 0x16, 0x4c, 0xc6,
+	0x74, 0xa4, 0x2c, 0xfa, 0x4e, 0xa5, 0x2b, 0xfb, 0xc6, 0x31, 0x3b, 0xf2, 0xc6, 0x71, 0x07, 0x55,
+	0xcd, 0x7f, 0x1f, 0xaa, 0x5a, 0xf8, 0xfe, 0x55, 0xb5, 0xf8, 0xbf, 0x54, 0xd5, 0xb9, 0xf7, 0x54,
+	0xd5, 0xd2, 0xdd, 0x55, 0x55, 0xbb, 0xaf, 0xaa, 0x96, 0xef, 0xaf, 0xaa, 0xf0, 0x7e, 0xaa, 0x5a,
+	0xb9, 0x8b, 0xaa, 0xfe, 0x1c, 0x56, 0xd5, 0x36, 0xf4, 0x05, 0x0f, 0x54, 0xc5, 0xb6, 0x3b, 0xac,
+	0x5a, 0x7d, 0x99, 0xc0, 0x35, 0xb5, 0x25, 0x42, 0x96, 0x6d, 0xbb, 0x71, 0xe5, 0x37, 0x83, 0xe5,
+	0x0e, 0x25, 0xc1, 0xb5, 0x9b, 0xc1, 0x46, 0x28, 0xe2, 0xe0, 0x15, 0xd0, 0x94, 0x9e, 0xdb, 0x0c,
+	0xbf, 0x64, 0xd4, 0x8c, 0x12, 0x5e, 0xeb, 0x4c, 0xba, 0x22, 0x26, 0xa9, 0xef, 0x18, 0x35, 0xa3,
+	0x84, 0xd7, 0xea, 0xc3, 0x50, 0xe6, 0xad, 0x58, 0x42, 0x1a, 0xea, 0xeb, 0xe3, 0x45, 0xea, 0x65,
+	0x57, 0x67, 0xa4, 0x03, 0x1b, 0x51, 0x27, 0x1f, 0xab, 0xf2, 0x32, 0xf0, 0x01, 0x06, 0x3e, 0x1e,
+	0x4c, 0x9c, 0x5f, 0x75, 0x26, 0x4f, 0x3f, 0xe1, 0x60, 0x52, 0x14, 0xc1, 0xc0, 0xf9, 0xd8, 0xf1,
+	0x2a, 0x2a, 0xee, 0xa7, 0xb0, 0x22, 0xd9, 0xe8, 0xb9, 0x9c, 0xde, 0x8c, 0x59, 0xc0, 0x98, 0x25,
+	0x21, 0x9c, 0x13, 0x97, 0x1b, 0x23, 0x91, 0x2d, 0xa8, 0xc9, 0x27, 0x9d, 0x72, 0xd9, 0x31, 0x24,
+	0x7a, 0x51, 0x89, 0x64, 0x3f, 0xee, 0x22, 0x3a, 0x23, 0x3b, 0x50, 0x4b, 0x7d, 0x16, 0xe0, 0x61,
+	0x73, 0x09, 0xc7, 0x94, 0xb5, 0xa9, 0xdf, 0x03, 0x8c, 0xea, 0xf0, 0x43, 0x00, 0x0f, 0xc9, 0x21,
+	0xd4, 0x33, 0xbb, 0x11, 0x36, 0x97, 0x31, 0xc9, 0xe6, 0x6d, 0xb3, 0x8e, 0x31, 0x12, 0xf7, 0xf4,
+	0x2f, 0xea, 0x03, 0x75, 0x32, 0x78, 0x91, 0x87, 0xb0, 0x70, 0xb0, 0xdf, 0xa3, 0xbd, 0xf6, 0xce,
+	0x97, 0x1d, 0xda, 0x7b, 0xdd, 0xed, 0xd0, 0xe3, 0x93, 0xe3, 0x4e, 0x63, 0x86, 0x7c, 0x08, 0x1b,
+	0x23, 0x8e, 0xaf, 0xf4, 0x2f, 0xf7, 0x76, 0xdb, 0xc6, 0x1e, 0xd5, 0x8f, 0x0f, 0x8c, 0xce, 0xe9,
+	0x69, 0x23, 0x47, 0x5a, 0xb0, 0x3e, 0x09, 0xd4, 0x51, 0x98, 0x59, 0xf2, 0x7f, 0xd0, 0x1a, 0xc1,
+	0x74, 0x7e, 0xdd, 0xde, 0xed, 0xd1, 0xa3, 0x76, 0x6f, 0xf7, 0x30, 0xc9, 0x95, 0x27, 0x5b, 0xf0,
+	0xc1, 0x14, 0x5c, 0x94, 0xae, 0xf0, 0xf4, 0x9b, 0x1c, 0x6c, 0xde, 0x36, 0x42, 0x90, 0x35, 0x58,
+	0xe9, 0x19, 0xed, 0xe3, 0xd3, 0xee, 0xc9, 0xa9, 0xde, 0xd3, 0x4f, 0x8e, 0x69, 0x7b, 0x17, 0x7f,
+	0xa2, 0xb5, 0x6d, 0xc0, 0xea, 0x58, 0xf7, 0xd1, 0xc9, 0x9e, 0xbe, 0xff, 0xba, 0x91, 0x9b, 0x08,
+	0xd0, 0x0f, 0x8e, 0x4f, 0x8c, 0x4e, 0x63, 0x76, 0xe2, 0x0d, 0xba, 0x2f, 0x4f, 0x0f, 0x1b, 0x79,
+	0xf2, 0x18, 0x9a, 0xe3, 0xdd, 0x27, 0xdd, 0x46, 0x61, 0xbb, 0x08, 0xf9, 0x83, 0xbe, 0xd8, 0x79,
+	0xf4, 0xb7, 0x77, 0xeb, 0xb9, 0xbf, 0xbf, 0x5b, 0xcf, 0xfd, 0xf3, 0xdd, 0x7a, 0xee, 0x4f, 0xff,
+	0x5a, 0x9f, 0x79, 0xa3, 0x0d, 0x4c, 0x07, 0x35, 0xfc, 0x6c, 0x0e, 0x7f, 0x3e, 0xfd, 0x6f, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x24, 0x76, 0xfe, 0x1e, 0x6e, 0x18, 0x00, 0x00,
 }

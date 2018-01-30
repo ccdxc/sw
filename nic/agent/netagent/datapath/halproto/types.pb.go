@@ -205,7 +205,23 @@
 		PortEvent
 		EventResponse
 		GftEthFields
+		GftHeaders
+		GftHeaderFields
 		GftHeaderGroupExactMatchProfile
+		GftExactMatchProfile
+		UdpMatchFields
+		TcpMatchFields
+		IcmpMatchFields
+		EncapMatchFields
+		GftHeaderGroupExactMatch
+		GftHeaderGroupTranspositionProfile
+		GftHeaderTranspositionProfile
+		UdpTranspositionFields
+		TcpTranspositionFields
+		IcmpTranspositionFields
+		EncapTranspositionFields
+		GftHeaderGroupTransposition
+		GftExactMathFlowEntry
 		LifQStateMapEntry
 		PktFilter
 		LifSpec

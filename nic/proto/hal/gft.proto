@@ -6,7 +6,6 @@
 
 syntax = "proto3";
 import "types.proto";
-import "kh.proto";
 
 package gft;
 option go_package="halproto";
@@ -32,5 +31,181 @@ enum GftTableType {
   GFT_TABLE_TYPE_EXACT_MATCH_EGRESS  = 4;
 }
 
+message GftHeaders {
+  bool ethernet_header = 1;
+  bool ipv4_header     = 2;
+  bool ipv6_header     = 3;
+  bool tcp_header      = 4;
+  bool udp_header      = 5;
+  bool icmp_header     = 6;
+  bool no_encap        = 7;
+  bool ip_in_ip_encap  = 8;
+  bool ip_in_gre_encap = 9;
+  bool nvgre_encap     = 10;
+  bool vxlan_encap     = 11;
+}
+
+message GftHeaderFields {
+  bool dst_mac_addr     = 1;
+  bool src_mac_addr     = 2;
+  bool eth_type         = 3;
+  bool customer_vlan_id = 4;
+  bool provider_vlan_id = 5;
+  bool dot1p_priority   = 6;
+  bool src_ip_addr      = 7;
+  bool dst_ip_addr      = 8;
+  bool ip_ttl           = 9;
+  bool ip_protocol      = 10;
+  bool ip_dscp          = 11;
+  bool src_port         = 12;
+  bool dst_port         = 13;
+  bool tcp_flags        = 14;
+  bool tenant_id        = 15;
+  bool icmp_type        = 16;
+  bool icmp_code        = 17;
+  bool oob_vlan         = 18;
+  bool oob_tenant_id    = 19;
+  bool gre_protocol     = 20;
+}
+
 message GftHeaderGroupExactMatchProfile {
+  GftHeaders      headers      = 1;
+  GftHeaderFields match_fields = 2;
 } 
+
+message GftExactMatchProfile {
+  bool                                        rdma_flow            = 1;
+  GftTableType                                table_type           = 2;
+  uint32                                      profile_id           = 3;
+  repeated GftHeaderGroupExactMatchProfile    exact_match_profiles = 4;
+}
+
+message UdpMatchFields {
+  uint32     sport        = 1;
+  uint32     dport        = 2;
+}
+
+message TcpMatchFields {
+  uint32     sport        = 1;
+  uint32     dport        = 2;
+  uint32     tcp_flags    = 3;
+}
+
+message IcmpMatchFields {
+  uint32     type         = 1;
+  uint32     code         = 2;
+}
+
+message EncapMatchFields {
+  uint32     tenant_id    = 1;
+  uint32     gre_protocol = 2;
+}
+
+message GftHeaderGroupExactMatch {
+  GftHeaders               headers      = 1;
+  GftHeaderFields          match_fields = 2;
+  GftEthFields             eth_fields   = 3;
+  types.IPAddress          src_ip_addr  = 4;
+  types.IPAddress          dst_ip_addr  = 5;
+  uint32                   ip_ttl       = 6;
+  uint32                   ip_dscp      = 7;
+  uint32                   ip_protocol  = 8;
+  oneof encap_or_transport {
+    UdpMatchFields         udp_fields   = 9;
+    TcpMatchFields         tcp_fields   = 10;
+    IcmpMatchFields        icmp_fields  = 11;
+    EncapMatchFields       encap_fields = 12;
+  }
+}
+
+enum GftHeaderGroupTranspostionAction {
+  TRANSPOSITION_ACTION_NONE   = 0;
+  TRANSPOSITION_ACTION_MODIFY = 1;
+  TRANSPOSITION_ACTION_IGNORE = 2;
+  TRANSPOSITION_ACTION_PUSH   = 3;
+  TRANSPOSITION_ACTION_POP    = 4;
+}
+
+message GftHeaderGroupTranspositionProfile {
+  GftHeaderGroupTranspostionAction action       = 1;
+  GftHeaders                       headers      = 2;
+  GftHeaderFields                  match_fields = 3;
+}
+
+message GftHeaderTranspositionProfile {
+  bool                                           redirect_to_vport_ingress_queue               = 1;
+  bool                                           redirect_to_vport_egress_queue                = 2;
+  bool                                           redirect_to_vport_ingress_queue_if_ttl_is_one = 3;
+  bool                                           redirect_to_vport_egress_queue_if_ttl_is_one  = 4;
+  bool                                           copy_all_packets                              = 5;
+  bool                                           copy_first_packet                             = 6;
+  bool                                           copy_when_tcp_flag_set                        = 7;
+  bool                                           custom_action_present                         = 8;
+  bool                                           meta_action_before_transposition              = 9;
+  GftTableType                                   table_type                                    = 10;
+  uint32                                         profile_id                                    = 11;
+  repeated GftHeaderGroupTranspositionProfile    transposition_profiles                        = 12;
+}
+
+message UdpTranspositionFields {
+  uint32     sport        = 1;
+  uint32     dport        = 2;
+}
+
+message TcpTranspositionFields {
+  uint32     sport        = 1;
+  uint32     dport        = 2;
+}
+
+message IcmpTranspositionFields {
+  uint32     type         = 1;
+  uint32     code         = 2;
+}
+
+message EncapTranspositionFields {
+  uint32     tenant_id    = 1;
+  uint32     gre_protocol = 2;
+}
+
+message GftHeaderGroupTransposition {
+  GftHeaderGroupTranspostionAction     action        = 1;
+  GftHeaders                           headers       = 2;
+  GftHeaderFields                      header_fields = 3;
+  GftEthFields                         eth_fields    = 4;
+  types.IPAddress                      src_ip_addr   = 5;
+  types.IPAddress                      dst_ip_addr   = 6;
+  uint32                               ip_ttl        = 7;
+  uint32                               ip_dscp       = 8;
+  uint32                               ip_protocol   = 9;
+  oneof encap_or_transport {
+    UdpTranspositionFields             udp_fields    = 10;
+    TcpTranspositionFields             tcp_fields    = 11;
+    IcmpTranspositionFields            icmp_fields   = 12;
+    EncapTranspositionFields           encap_fields  = 13;
+  }
+}
+
+message GftExactMathFlowEntry {
+  bool                                    add_in_activated_state                         = 1;
+  bool                                    rdma_flow                                      = 2;
+  bool                                    redirect_to_vport_ingress_queue                = 3;
+  bool                                    redirect_to_vport_egress_queue                 = 4;
+  bool                                    redirect_to_vport_ingress_queue_if_ttl_is_one  = 5;
+  bool                                    redirect_to_vport_egress_queue_if_ttl_is_one   = 6;
+  bool                                    copy_all_packets                               = 7;
+  bool                                    copy_first_packet                              = 8;
+  bool                                    copy_when_tcp_flag_set                         = 9;
+  bool                                    custom_action_present                          = 10;
+  bool                                    meta_action_before_transposition               = 11;
+  bool                                    copy_after_tcp_fin_flag_set                    = 12;
+  bool                                    copy_after_tcp_rst_flag_set                    = 13;
+  uint32                                  table_id                                       = 14;
+  uint32                                  vport_id                                       = 15;
+  uint32                                  match_profile_id                               = 16;
+  uint32                                  header_transposition_profile_id                = 17;
+  uint32                                  redirect_vport_id                              = 18;
+  uint32                                  ttl_one_redirect_vport_id                      = 19;
+  uint32                                  flow_entry_id                                  = 20;
+  repeated GftHeaderGroupExactMatch       exact_matches                                  = 21;
+  repeated GftHeaderGroupTransposition    transpositions                                 = 22;
+}
