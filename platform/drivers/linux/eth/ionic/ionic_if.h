@@ -47,6 +47,8 @@ enum cmd_opcode {
 	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
 };
 
+#pragma pack(push, 1)
+
 /**
  * struct cmd - General admin command format
  * @opcode:   Opcode for the command
@@ -55,7 +57,7 @@ enum cmd_opcode {
 struct admin_cmd {
 	u16 opcode;
 	u16 cmd_data[31];
-} __packed;
+};
 
 /**
  * struct admin_comp - General admin command completion format
@@ -76,7 +78,7 @@ struct admin_comp {
 	u8 cmd_data[11];
 	u8 rsvd2:7;
 	u8 color:1;
-} __packed;
+};
 
 /**
  * struct nop_cmd - NOP command
@@ -85,7 +87,7 @@ struct admin_comp {
 struct nop_cmd {
 	u16 opcode;
 	u16 rsvd[31];
-} __packed;
+};
 
 /**
  * struct nop_comp - NOP command completion
@@ -96,7 +98,7 @@ struct nop_comp {
 	u32 status:8;
 	u32 rsvd:24;
 	u32 rsvd2[3];
-} __packed;
+};
 
 /**
  * struct reset_cmd - Device reset command
@@ -105,7 +107,7 @@ struct nop_comp {
 struct reset_cmd {
 	u16 opcode;
 	u16 rsvd[31];
-} __packed;
+};
 
 /**
  * struct reset_comp - Reset command completion
@@ -116,7 +118,7 @@ struct reset_comp {
 	u32 status:8;
 	u32 rsvd:24;
 	u32 rsvd2[3];
-} __packed;
+};
 
 #define IDENTITY_VERSION_1		1
 
@@ -133,7 +135,7 @@ struct identify_cmd {
 	u16 ver;
 	dma_addr_t addr;
 	u32 rsvd2[13];
-} __packed;
+};
 
 /**
  * struct identify_comp - Driver/device identify command completion
@@ -147,7 +149,7 @@ struct identify_comp {
 	u32 rsvd:24;
 	u16 ver;
 	u16 rsvd2[5];
-} __packed;
+};
 
 enum os_type {
 	OS_TYPE_LINUX   = 1,
@@ -227,7 +229,7 @@ union identity {
 		u32 nmcasts_per_lif;
 	} dev;
 	u32 words[1024];
-} __packed;
+};
 
 /**
  * struct lif_init_cmd - LIF init command
@@ -240,7 +242,7 @@ struct lif_init_cmd {
 	u32 index:24;
 	u32 rsvd2:8;
 	u32 rsvd3[14];
-} __packed;
+};
 
 /**
  * struct lif_init_comp - LIF init command completion
@@ -251,7 +253,7 @@ struct lif_init_comp {
 	u32 status:8;
 	u32 rsvd:24;
 	u32 rsvd2[3];
-} __packed;
+};
 
 /**
  * struct adminq_init_cmd - Admin queue init command
@@ -280,7 +282,7 @@ struct adminq_init_cmd {
 	u32 ring_size:8;
 	dma_addr_t ring_base;
 	u32 rsvd2[11];
-} __packed;
+};
 
 /**
  * struct adminq_init_comp - Admin queue init command completion
@@ -295,7 +297,7 @@ struct adminq_init_comp {
 	u32 qid:24;
 	u32 qtype:8;
 	u32 rsvd2[2];
-} __packed;
+};
 
 enum txq_type {
 	TXQ_TYPE_ETHERNET = 0,
@@ -342,7 +344,7 @@ struct txq_init_cmd {
 	u32 rsvd3:21;
 	dma_addr_t ring_base;
 	u32 rsvd4[10];
-} __packed;
+};
 
 /**
  * struct txq_init_comp - Tx queue init command completion
@@ -363,7 +365,7 @@ struct txq_init_comp {
 	u32 rsvd2;
 	u32 rsvd3:31;
 	u32 color:1;
-} __packed;
+};
 
 enum txq_desc_opcode {
 	TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,  // TODO don't set this to zero
@@ -512,7 +514,7 @@ struct txq_desc {
 			u16 rsvd4:2;
 		};
 	};
-} __packed;
+};
 
 #define IONIC_TX_MAX_SG_ELEMS	16
 
@@ -527,7 +529,7 @@ struct txq_sg_desc {
 		u16 len;
 		u16 rsvd2[3];
 	} elems[IONIC_TX_MAX_SG_ELEMS];
-} __packed;
+};
 
 /** struct txq_comp - Ethernet transmit queue completion descriptor
  * @status:     The status of the command.  Values for status are:
@@ -543,7 +545,7 @@ struct txq_comp {
         u32 rsvd2[2];
         u32 rsvd3:31;
         u32 color:1;
-} __packed;
+};
 
 
 enum rxq_type {
@@ -589,7 +591,7 @@ struct rxq_init_cmd {
 	u32 rsvd3:24;
 	dma_addr_t ring_base;
 	u32 rsvd4[10];
-} __packed;
+};
 
 /**
  * struct rxq_init_comp - Rx queue init command completion
@@ -610,7 +612,7 @@ struct rxq_init_comp {
 	u32 rsvd2;
 	u32 rsvd3:31;
 	u32 color:1;
-} __packed;
+};
 
 enum rxq_desc_opcode {
 	RXQ_DESC_OPCODE_NOP = 0,
@@ -643,7 +645,7 @@ struct rxq_desc {
 	u16 opcode:3;
 	u16 rsvd2:13;
 	u32 rsvd3;
-} __packed;
+};
 
 enum rxq_comp_rss_type {
 	RXQ_COMP_RSS_TYPE_NONE = 0,
@@ -728,7 +730,7 @@ struct rxq_comp {
 	u32 csum_ip_bad:1;
 	u32 V:1;
 	u32 color:1;
-} __packed;
+};
 
 enum feature_set {
 	FEATURE_SET_ETH_HW_FEATURES = 1,
@@ -763,7 +765,7 @@ struct features_cmd {
 	u16 opcode;
 	u16 set;
 	u32 rsvd2[15];
-} __packed;
+};
 
 /**
  * struct features_comp - Features command completion format
@@ -782,7 +784,7 @@ struct features_comp {
 	u32 rsvd2;
 	u32 rsvd3:31;
 	u32 color:1;
-} __packed;
+};
 
 /**
  * struct q_enable_cmd - Queue enable command
@@ -796,7 +798,7 @@ struct q_enable_cmd {
 	u32 qid:24;
 	u32 qtype:8;
 	u32 rsvd2[14];
-} __packed;
+};
 
 typedef struct admin_comp q_enable_comp;
 
@@ -812,7 +814,7 @@ struct q_disable_cmd {
 	u32 qid:24;
 	u32 qtype:8;
 	u32 rsvd2[14];
-} __packed;
+};
 
 typedef struct admin_comp q_disable_comp;
 
@@ -824,7 +826,7 @@ typedef struct admin_comp q_disable_comp;
 struct station_mac_addr_get_cmd {
 	u16 opcode;
 	u16 rsvd[31];
-} __packed;
+};
 
 /**
  * struct station_mac_addr_get_comp - Get LIF's station MAC address
@@ -844,7 +846,7 @@ struct station_mac_addr_get_comp {
 	u16 rsvd2;
 	u32 rsvd3:31;
 	u32 color:1;
-} __packed;
+};
 
 /**
  * struct mtu_set_cmd - Set LIF's MTU command
@@ -855,7 +857,7 @@ struct mtu_set_cmd {
 	u16 opcode;
 	u16 mtu;
 	u16 rsvd[30];
-} __packed;
+};
 
 typedef struct admin_comp mtu_set_comp;
 
@@ -885,7 +887,7 @@ struct rx_mode_set_cmd {
 	u16 opcode;
 	u16 rx_mode;
 	u16 rsvd[30];
-} __packed;
+};
 
 typedef struct admin_comp rx_mode_set_comp;
 
@@ -913,7 +915,7 @@ struct rx_filter_cmd {
 	u8 addr[6];
 	u8 rsvd[2];
 	u16 rsvd2[23];
-} __packed;
+};
 
 /**
  * struct rx_filter_comp - Add/delete LIF's Rx filter command
@@ -933,7 +935,7 @@ struct rx_filter_comp {
 	u32 rsvd2;
 	u32 rsvd3:31;
 	u32 color:1;
-} __packed;
+};
 
 
 /**
@@ -948,7 +950,7 @@ struct debug_q_dump_cmd {
 	u32 qid:24;
 	u32 qtype:8;
 	u32 rsvd2[14];
-} __packed;
+};
 
 /**
  * struct debug_q_dump_comp - Debug queue dump command completion
@@ -972,6 +974,8 @@ struct debug_q_dump_comp {
 	u16 c_index1;
 	u32 rsvd2:31;
 	u32 color:1;
-} __packed;
+};
+
+#pragma pack(pop)
 
 #endif /* _IONIC_IF_H_ */

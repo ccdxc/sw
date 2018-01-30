@@ -24,6 +24,8 @@
 #define IONIC_MIN_MTU		ETH_MIN_MTU
 #define IONIC_MAX_MTU		9000
 
+#pragma pack(push, 1)
+
 union dev_cmd {
 	u32 words[16];
 	struct admin_cmd cmd;
@@ -42,7 +44,7 @@ union dev_cmd {
 	struct rx_mode_set_cmd rx_mode_set;
 	struct rx_filter_cmd rx_filter;
 #endif
-} __packed;
+};
 
 union dev_cmd_comp {
 	u32 words[4];
@@ -63,18 +65,18 @@ union dev_cmd_comp {
 	rx_mode_set_comp rx_mode_set;
 	struct rx_filter_comp rx_filter;
 #endif
-} __packed;
+};
 
 struct dev_cmd_regs {
 	u32 signature;
 	u32 done;
 	union dev_cmd cmd;
 	union dev_cmd_comp comp;
-} __packed;
+};
 
 struct dev_cmd_db {
 	u32 v;
-} __packed;
+};
 
 #define IONIC_BARS_MAX		6
 
@@ -103,7 +105,7 @@ struct doorbell {
 	u8 qid_lo;
 	u16 qid_hi;
 	u16 rsvd2;
-} __packed;
+};
 
 #define INTR_CTRL_REGS_MAX	64
 
@@ -176,7 +178,7 @@ struct intr_ctrl {
 	u32 coalescing_curr:6;
 	u32 rsvd5:26;
 	u32 rsvd6[3];
-} __packed;
+};
 
 #define intr_to_mask(intr_ctrl)			((void *)(intr_ctrl) + 4)
 #define intr_to_credits(intr_ctrl)		((void *)(intr_ctrl) + 8)
@@ -184,7 +186,9 @@ struct intr_ctrl {
 
 struct intr_status {
 	u32 status[2];
-} __packed;
+};
+
+#pragma pack(pop)
 
 static inline void ionic_struct_size_checks(void) {
 	BUILD_BUG_ON(sizeof(struct doorbell) != 8);

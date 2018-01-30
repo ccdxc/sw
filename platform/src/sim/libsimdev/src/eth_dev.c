@@ -29,7 +29,6 @@ typedef u_int16_t u16;
 typedef u_int32_t u32;
 typedef u_int64_t u64;
 typedef u_int64_t dma_addr_t;
-#define __packed __attribute__((packed))
 #define BIT(n)  (1 << (n))
 
 #include "drivers/linux/eth/ionic/ionic_if.h"
