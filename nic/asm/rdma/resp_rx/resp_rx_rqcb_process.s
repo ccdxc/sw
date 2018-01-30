@@ -77,11 +77,11 @@ skip_roce_opt_parsing:
     CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
-    add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
     CAPRI_GET_STAGE_5_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 start_recirc_packet:
+    add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
     crestore [c7, c6, c5, c4, c3, c2, c1], r7, (RESP_RX_FLAG_UD | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
     // c7: UD, c6: cswap, c5: fna, c4: write, c3: read, c2: send, c1: only
 
