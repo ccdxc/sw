@@ -678,6 +678,8 @@ def main():
     os.chdir(nic_dir)
     if args.asmcov:
         call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
+
+    cleanup()
     if not args.rtl and not args.no_error_check:
         ec = os.system("grep ERROR " + model_log)
         if not ec:
@@ -690,6 +692,7 @@ def main():
 def signal_handler(signal, frame):
     #print "cleanup from signal_handler"
     cleanup()
+    sys.exit(1)
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler) # ctrl-c
@@ -697,6 +700,5 @@ if __name__ == "__main__":
     signal.signal(signal.SIGQUIT, signal_handler) # ctrl-d
     signal.signal(signal.SIGABRT, signal_handler) # Assert or Abort
     signal.signal(signal.SIGSEGV, signal_handler) # Seg Fault
-    atexit.register(cleanup)
     remove_all_core_files()
     main()
