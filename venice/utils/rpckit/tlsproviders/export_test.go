@@ -9,6 +9,6 @@ import (
 // Export private functions/methods for testing
 // This is needed because tests have been put in a dedicated namespace to avoid circular dependencies
 
-func (p *CKMBasedProvider) GetServerCertificate(clientHelloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (p *CMDBasedProvider) GetServerCertificate(clientHelloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	return p.getServerCertificate(clientHelloInfo)
 }

@@ -104,7 +104,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 
 	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
 	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		p, err := tlsproviders.NewDefaultCKMBasedProvider(certSrv.GetListenURL(), svcName)
+		p, err := tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
 		if err != nil {
 			return nil, err
 		}

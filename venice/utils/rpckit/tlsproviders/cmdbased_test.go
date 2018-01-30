@@ -22,52 +22,51 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func TestCKMBasedProviderInit(t *testing.T) {
+func TestCMDBasedProviderInit(t *testing.T) {
 	// NEGATIVE TEST-CASES
 
 	// create a real KeyMgr
-	be, err := keymgr.NewDefaultBackend("rpckit_ckm_test")
+	be, err := keymgr.NewDefaultBackend("rpckit_cmd_test")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	defer be.Close()
 	km, err := keymgr.NewKeyMgr(be)
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
-	// null CKM Endpoint URL
-	_, err = NewCKMBasedProvider("", km)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
+	// null CMD Endpoint URL
+	_, err = NewCMDBasedProvider("", km)
+	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
-	// invalid CKM Endpoint
-	_, err = NewCKMBasedProvider("foo", km)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
+	// invalid CMD Endpoint
+	_, err = NewCMDBasedProvider("foo", km)
+	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
-	// unavailable CKM Endpoint
-	_, err = NewCKMBasedProvider("localhost:123", km)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
+	// unavailable CMD Endpoint
+	_, err = NewCMDBasedProvider("localhost:123", km)
+	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
-	// good CKM but nil KeyMgr
+	// good CMD but nil KeyMgr
 	srv, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv.Stop()
-	AssertOk(t, err, "Error creating CKM controller at localhost:0")
-	_, err = NewCKMBasedProvider(srv.GetListenURL(), nil)
-	Assert(t, err != nil, "CKMBasedProvider instantiation succeeded while expected to fail")
-
+	AssertOk(t, err, "Error creating CMD controller at localhost:0")
+	_, err = NewCMDBasedProvider(srv.GetListenURL(), nil)
+	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 }
 
-func TestCKMBasedProviderRPC(t *testing.T) {
-	// create a mock CKM endpoint
+func TestCMDBasedProviderRPC(t *testing.T) {
+	// create a mock CMD endpoint
 	srv, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv.Stop()
-	AssertOk(t, err, "Error creating CKM controller at localhost:0")
+	AssertOk(t, err, "Error creating CMD controller at localhost:0")
 
 	// create KeyMgr
-	be, err := keymgr.NewDefaultBackend("rpckit_ckm_test")
+	be, err := keymgr.NewDefaultBackend("rpckit_cmd_test")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	defer be.Close()
 	km, err := keymgr.NewKeyMgr(be)
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
 	// create TLS provider
-	tlsProvider, err := NewCKMBasedProvider(srv.GetListenURL(), km)
+	tlsProvider, err := NewCMDBasedProvider(srv.GetListenURL(), km)
 	AssertOk(t, err, "TLS provider initialization failed")
 
 	// create server
@@ -93,17 +92,17 @@ func TestCKMBasedProviderRPC(t *testing.T) {
 }
 
 func TestRPCBalancing(t *testing.T) {
-	// start two mock CKM endpoints
+	// start two mock CMD endpoints
 	srv1, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv1.Stop()
-	AssertOk(t, err, "Error creating CKM controller at localhost:0")
+	AssertOk(t, err, "Error creating CMD controller at localhost:0")
 	_, portStr1, err := net.SplitHostPort(srv1.GetListenURL())
 	AssertOk(t, err, fmt.Sprintf("Error getting srv1 port from URL: %s", srv1.GetListenURL()))
 	AssertOk(t, err, "Failed to convert port")
 
 	srv2, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv2.Stop()
-	AssertOk(t, err, "Error creating CKM controller at localhost:0")
+	AssertOk(t, err, "Error creating CMD controller at localhost:0")
 	_, portStr2, err := net.SplitHostPort(srv2.GetListenURL())
 	AssertOk(t, err, fmt.Sprintf("Error getting srv2 port from URL: %s", srv1.GetListenURL()))
 	AssertOk(t, err, "Failed to convert port")
@@ -140,15 +139,15 @@ func TestRPCBalancing(t *testing.T) {
 	b := balancer.New(r)
 
 	// create KeyMgr
-	be, err := keymgr.NewDefaultBackend("rpckit_ckm_test")
+	be, err := keymgr.NewDefaultBackend("rpckit_cmd_test")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	defer be.Close()
 	km, err := keymgr.NewKeyMgr(be)
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
 	// create TLS provider
-	tlsProvider, err := NewCKMBasedProvider("certsrv", km, WithBalancer(b))
-	AssertOk(t, err, "Error instantiating CKMBasedProvider")
+	tlsProvider, err := NewCMDBasedProvider("certsrv", km, WithBalancer(b))
+	AssertOk(t, err, "Error instantiating CMDBasedProvider")
 	defer tlsProvider.Close()
 
 	// Wait until grpc connects to both the servers
@@ -156,7 +155,7 @@ func TestRPCBalancing(t *testing.T) {
 		return b.NumUpConns() == 2, nil
 	}, "Unexpected up servers")
 
-	// Clear the counters for the 2 RPCs that were triggered by NewCKMBasedProvider
+	// Clear the counters for the 2 RPCs that were triggered by NewCMDBasedProvider
 	srv1.ClearRPCCounts()
 	srv2.ClearRPCCounts()
 
@@ -165,7 +164,7 @@ func TestRPCBalancing(t *testing.T) {
 	// Directly invoke getServerCertificate() and check that the requests are load-balanced.
 	for i := uint64(0); i < 20; i++ {
 		_, err = tlsProvider.GetServerCertificate(&tls.ClientHelloInfo{ServerName: fmt.Sprintf("Hello-%d", i)})
-		AssertOk(t, err, "Error getting certificate from CKM")
+		AssertOk(t, err, "Error getting certificate from CMD")
 	}
 
 	srv1RPCCount := srv1.GetRPCSuccessCount()

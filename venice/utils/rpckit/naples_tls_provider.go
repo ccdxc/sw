@@ -25,7 +25,7 @@ func SetN4STLSProvider() {
 	}
 	log.Infof("Setting TLS provider to point to: %v", naplesCertSrvURL)
 	tlsProvider := func(svcName string) (TLSProvider, error) {
-		p, err := tlsproviders.NewDefaultCKMBasedProvider(naplesCertSrvURL, svcName)
+		p, err := tlsproviders.NewDefaultCMDBasedProvider(naplesCertSrvURL, svcName)
 		if err != nil {
 			return nil, err
 		}

@@ -22,9 +22,9 @@ func GetDefaultTLSProvider(svcName string) (TLSProvider, error) {
 		}
 		return nil, nil
 	}
-	tlsProvider, err := tlsproviders.NewDefaultCKMBasedProvider(certSrvEndpoint, svcName)
+	tlsProvider, err := tlsproviders.NewDefaultCMDBasedProvider(certSrvEndpoint, svcName)
 	if err != nil {
-		log.Errorf("Error getting CKM-based TLS provider for service %s at %s", svcName, certSrvEndpoint)
+		log.Errorf("Error getting CMD-based TLS provider for service %s at %s", svcName, certSrvEndpoint)
 		return nil, err
 	}
 	return tlsProvider, nil

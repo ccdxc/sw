@@ -378,7 +378,7 @@ func Setup(m *testing.M) {
 	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
 	testenv.EnableRpckitTestMode()
 	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
-		return tlsproviders.NewDefaultCKMBasedProvider(certSrv.GetListenURL(), svcName)
+		return tlsproviders.NewDefaultCMDBasedProvider(certSrv.GetListenURL(), svcName)
 	}
 	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
 

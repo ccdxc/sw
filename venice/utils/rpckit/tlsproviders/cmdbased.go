@@ -26,20 +26,20 @@ const (
 	maxRetries    = 5
 )
 
-// CKMBasedProvider is a TLS Provider which retrieves keys and certificates from the Cluster Key Manager (CKM)
-// using the certificates API
-type CKMBasedProvider struct {
+// CMDBasedProvider is a TLS Provider which generates private keys locally and retrieves
+// corresponding certificates from the Cluster Management Daemon (CMD)
+type CMDBasedProvider struct {
 	// the KeyMgr instance used to generate and store keys and certificates
 	keyMgr *keymgr.KeyMgr
 
-	// the remote URL of the CKM endpoint
-	ckmEndpointURL string
+	// the remote URL of the CMD endpoint
+	cmdEndpointURL string
 
 	// conn is the gRPC client connection
 	conn *grpc.ClientConn
 
-	// the CKM gRPC client
-	ckmClient certapi.CertificatesClient
+	// the CMD gRPC client
+	cmdClient certapi.CertificatesClient
 
 	// When providing credentials for a client, use the same certificate for all connections
 	clientCertificate *tls.Certificate
@@ -55,28 +55,28 @@ type CKMBasedProvider struct {
 	trustRoots *x509.CertPool
 
 	// User-provided options to control the behavior of the provider
-	ckmProviderOptions
+	cmdProviderOptions
 }
 
-type ckmProviderOptions struct {
-	// A gRPC load-balancer to be used when dialing the CKM endpoint
+type cmdProviderOptions struct {
+	// A gRPC load-balancer to be used when dialing the CMD endpoint
 	// At present it needs to be passed in explicitly.
 	// In the future it will be instantiated automatically.
 	balancer grpc.Balancer
 }
 
-// CKMProviderOption fills the optional params for CKMBasedProvider
-type CKMProviderOption func(opt *ckmProviderOptions)
+// CMDProviderOption fills the optional params for CMDBasedProvider
+type CMDProviderOption func(opt *cmdProviderOptions)
 
-// WithBalancer passes a gRPC load-balancer to be used when dialing CKM
-func WithBalancer(b grpc.Balancer) CKMProviderOption {
-	return func(o *ckmProviderOptions) {
+// WithBalancer passes a gRPC load-balancer to be used when dialing CMD
+func WithBalancer(b grpc.Balancer) CMDProviderOption {
+	return func(o *cmdProviderOptions) {
 		o.balancer = b
 	}
 }
 
-func (p *CKMBasedProvider) getCkmDialOptions() []grpc.DialOption {
-	// Right now the CKM API is not authenticated.
+func (p *CMDBasedProvider) getCkmDialOptions() []grpc.DialOption {
+	// Right now the CMD API is not authenticated.
 	// We cannot use TLS because the API itself is meant to supply TLS certificates
 	dialOptions := []grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second * 3)}
 	if p.balancer != nil {
@@ -86,9 +86,9 @@ func (p *CKMBasedProvider) getCkmDialOptions() []grpc.DialOption {
 	return dialOptions
 }
 
-func (p *CKMBasedProvider) fetchCaCertificates() error {
+func (p *CMDBasedProvider) fetchCaCertificates() error {
 	// Fetch CA trust chain
-	tcs, err := p.ckmClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
+	tcs, err := p.cmdClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "Error fetching CA trust chain")
 	}
@@ -101,7 +101,7 @@ func (p *CKMBasedProvider) fetchCaCertificates() error {
 	}
 
 	// Fetch additional trust roots
-	rootsResp, err := p.ckmClient.GetTrustRoots(context.Background(), &certapi.Empty{})
+	rootsResp, err := p.cmdClient.GetTrustRoots(context.Background(), &certapi.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "Error fetching trust roots")
 	}
@@ -117,7 +117,7 @@ func (p *CKMBasedProvider) fetchCaCertificates() error {
 	return nil
 }
 
-func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certificate, error) {
+func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certificate, error) {
 	privateKey, err := p.keyMgr.GetObject(subjAltName, keymgr.ObjectTypeKeyPair)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading key pair from keymgr")
@@ -134,7 +134,7 @@ func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 	}
 
 	// Get the CSR signed
-	csrResp, err := p.ckmClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
+	csrResp, err := p.cmdClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
 	if err != nil {
 		return nil, errors.Wrap(err, "Error issuing sign request")
 	}
@@ -155,18 +155,18 @@ func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 	}, nil
 }
 
-// NewCKMBasedProvider instantiates a new CKM-based TLS provider
-func NewCKMBasedProvider(ckmEpNameOrURL string, km *keymgr.KeyMgr, opts ...CKMProviderOption) (*CKMBasedProvider, error) {
-	if ckmEpNameOrURL == "" {
-		return nil, fmt.Errorf("Requires CKM endpoint name or URL in form hostname:port")
+// NewCMDBasedProvider instantiates a new CMD-based TLS provider
+func NewCMDBasedProvider(cmdEpNameOrURL string, km *keymgr.KeyMgr, opts ...CMDProviderOption) (*CMDBasedProvider, error) {
+	if cmdEpNameOrURL == "" {
+		return nil, fmt.Errorf("Requires CMD endpoint name or URL in form hostname:port")
 	}
 	if km == nil {
 		return nil, fmt.Errorf("Requires valid instance of KeyMgr")
 	}
 
-	provider := &CKMBasedProvider{
+	provider := &CMDBasedProvider{
 		keyMgr:             km,
-		ckmEndpointURL:     ckmEpNameOrURL,
+		cmdEndpointURL:     cmdEpNameOrURL,
 		serverCertificates: make(map[string](*tls.Certificate)),
 		trustRoots:         x509.NewCertPool(),
 	}
@@ -174,42 +174,42 @@ func NewCKMBasedProvider(ckmEpNameOrURL string, km *keymgr.KeyMgr, opts ...CKMPr
 	// add custom options
 	for _, o := range opts {
 		if o != nil {
-			o(&provider.ckmProviderOptions)
+			o(&provider.cmdProviderOptions)
 		}
 	}
-	_, _, err := net.SplitHostPort(ckmEpNameOrURL)
+	_, _, err := net.SplitHostPort(cmdEpNameOrURL)
 	if err != nil && provider.balancer == nil {
-		return nil, fmt.Errorf("Require a balancer to resolve %v", ckmEpNameOrURL)
+		return nil, fmt.Errorf("Require a balancer to resolve %v", cmdEpNameOrURL)
 	}
 
-	// Connect to CKM Endpoint and create RPC client
+	// Connect to CMD Endpoint and create RPC client
 	var success bool
 	var conn *grpc.ClientConn
 	for i := 0; i < maxRetries; i++ {
-		log.Infof("Connecting to CKM Endpoint: %v", provider.ckmEndpointURL)
-		conn, err = grpc.Dial(provider.ckmEndpointURL, provider.getCkmDialOptions()...)
+		log.Infof("Connecting to CMD Endpoint: %v", provider.cmdEndpointURL)
+		conn, err = grpc.Dial(provider.cmdEndpointURL, provider.getCkmDialOptions()...)
 		if err == nil {
 			success = true
-			provider.ckmClient = certapi.NewCertificatesClient(conn)
+			provider.cmdClient = certapi.NewCertificatesClient(conn)
 			break
 		}
 		time.Sleep(retryInterval)
 	}
 	if !success {
-		return nil, errors.Wrapf(err, "Failed to dial CKM Endpoint %s", provider.ckmEndpointURL)
+		return nil, errors.Wrapf(err, "Failed to dial CMD Endpoint %s", provider.cmdEndpointURL)
 	}
 	provider.conn = conn
 
 	err = provider.fetchCaCertificates()
 	if err != nil {
-		log.Fatalf("Error fetching trust roots from %s: %v", ckmEpNameOrURL, err)
+		log.Fatalf("Error fetching trust roots from %s: %v", cmdEpNameOrURL, err)
 	}
 
 	return provider, nil
 }
 
-// NewDefaultCKMBasedProvider instantiates a new CKM-based TLS provider using a keymgr with default backend
-func NewDefaultCKMBasedProvider(ckmEpNameOrURL, endpointID string, opts ...CKMProviderOption) (*CKMBasedProvider, error) {
+// NewDefaultCMDBasedProvider instantiates a new CMD-based TLS provider using a keymgr with default backend
+func NewDefaultCMDBasedProvider(cmdEpNameOrURL, endpointID string, opts ...CMDProviderOption) (*CMDBasedProvider, error) {
 	workDir, err := ioutil.TempDir("", "tlsprovider-"+endpointID+"-")
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error creating workdir for GoCrypto backend")
@@ -223,7 +223,7 @@ func NewDefaultCKMBasedProvider(ckmEpNameOrURL, endpointID string, opts ...CKMPr
 		be.Close()
 		return nil, errors.Wrapf(err, "Error instantiating keymgr")
 	}
-	prov, err := NewCKMBasedProvider(ckmEpNameOrURL, km, opts...)
+	prov, err := NewCMDBasedProvider(cmdEpNameOrURL, km, opts...)
 	if err != nil {
 		km.Close()
 		return nil, errors.Wrapf(err, "Error instantiating keymgr")
@@ -232,7 +232,7 @@ func NewDefaultCKMBasedProvider(ckmEpNameOrURL, endpointID string, opts ...CKMPr
 }
 
 // getServerCertificate is the callback that returns server certificates
-func (p *CKMBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (p *CMDBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	serverName := clientHelloInfo.ServerName
 	tlsCert := p.serverCertificates[serverName]
 	if tlsCert == nil {
@@ -248,7 +248,7 @@ func (p *CKMBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHello
 }
 
 // GetServerOptions returns server options to be passed to grpc.NewServer()
-func (p *CKMBasedProvider) GetServerOptions(serverName string) (grpc.ServerOption, error) {
+func (p *CMDBasedProvider) GetServerOptions(serverName string) (grpc.ServerOption, error) {
 	tlsConfig := getTLSServerConfig(serverName, nil, p.trustRoots)
 	// Set callback to be invoked whenever a new connection is established
 	// This enables certificate rotation
@@ -257,7 +257,7 @@ func (p *CKMBasedProvider) GetServerOptions(serverName string) (grpc.ServerOptio
 }
 
 // GetDialOptions returns dial options to be passed to grpc.Dial()
-func (p *CKMBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, error) {
+func (p *CMDBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, error) {
 	// Golang 1.8.3 and subsequent support a GetClientCertificate option to allow a client to
 	// pick a certificate based on the server's certificate request. However, with gRPC this
 	// doesn't work, because gRPC currently copies tls.Config structures using a naive,
@@ -281,7 +281,7 @@ func (p *CKMBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, e
 }
 
 // Close closes the client.
-func (p *CKMBasedProvider) Close() {
+func (p *CMDBasedProvider) Close() {
 	if p.conn != nil {
 		log.Infof("Closing client conn: %+v", p.conn)
 		p.conn.Close()
