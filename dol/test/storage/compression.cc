@@ -135,6 +135,7 @@ compression_init()
   read_reg(cfg_ueng+4, hi_reg);
   lo_reg |= 0xFFFF;
   hi_reg &= ~(1u << (54 - 32));
+  hi_reg &= ~(1u << (53 - 32));
   write_reg(cfg_ueng, lo_reg);
   write_reg(cfg_ueng+4, hi_reg);
   // Enable cold/warm queue.
@@ -577,6 +578,7 @@ int compress_max_features() {
   bzero(&spec, sizeof(spec));
   spec.test_name    = __func__;
   spec.cmd          = 0x7FD;
+  spec.cmd_bits.cksum_en = 0;
   spec.num_src_sgls = 7;
   spec.num_dst_sgls = 8;
   spec.datain_len   = 4096;
@@ -619,13 +621,14 @@ int compress_output_through_sequencer() {
   seq_sgl.len[3] = 2237;
   write_mem(hbm_sgl_buf_pa, (uint8_t *)&seq_sgl, sizeof(seq_sgl));
 
+  const uint32_t kIntrData = 0x11223344;
   cp_seq_params_t seq_params;
   bzero(&seq_params, sizeof(seq_params));
   seq_params.seq_ent.status_hbm_pa = hbm_status_buf_pa;
   seq_params.seq_ent.src_hbm_pa = hbm_dataout_buf_pa;
   seq_params.seq_ent.sgl_pa = hbm_sgl_buf_pa;
   seq_params.seq_ent.intr_pa = status_buf_pa + 1024;
-  seq_params.seq_ent.intr_data = 0x11223344;
+  seq_params.seq_ent.intr_data = kIntrData;
   seq_params.seq_ent.status_len = sizeof(cp_status_sha512_t);
   seq_params.seq_ent.status_dma_en = 1;
   seq_params.seq_ent.intr_en = 1;
@@ -645,8 +648,22 @@ int compress_output_through_sequencer() {
   if (queue_index == 4096)
     queue_index = 0;
   write_reg(cfg_q_pd_idx, queue_index);
-  step_doorbell(seq_params.ret_doorbell_addr, seq_params.ret_doorbell_data);
 
+  // First poll for interrupt
+  uint32_t *o = (uint32_t *)(((uint8_t *)status_buf) + 1024);
+  auto func = [o] () -> int {
+    if (*o == kIntrData)
+      return 0;
+    return 1;
+  };
+  tests::Poller poll;
+  if (poll(func) != 0) {
+    printf("ERROR: Interrupt not written %x\n", *o);
+    return -1;
+  }
+  printf("Interrupt Read after test complete \n");
+
+  // Then poll for status
   if (!status_poll(false)) {
     printf("ERROR: Compression status never came\n");
     return -1;
@@ -660,6 +677,8 @@ int compress_output_through_sequencer() {
     printf("ERROR: Compression generated err = 0x%x\n", st->err);
     return -1;
   }
+ 
+  // Finally check the data 
   uint16_t expected_data_len = kCompressedDataSize + 8;
   if (st->output_data_len != expected_data_len) {
     printf("ERROR: output data len mismatch, expected %u, received %u\n",

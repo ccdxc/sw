@@ -2075,7 +2075,7 @@ int test_setup_cp_seq_ent(cp_seq_params_t *params) {
   utils::write_bit_fields(seq_comp_desc, 451, 1, params->seq_ent.intr_en);
 
   // Form the doorbell to be returned by the API
-  queues::get_host_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_comp_q, 0, seq_comp_index, 
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_comp_q, 0, seq_comp_index, 
                              &params->ret_doorbell_addr, &params->ret_doorbell_data);
   
   return 0;
