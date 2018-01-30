@@ -14,11 +14,10 @@
 #include "sdk/pal.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/list.hpp"
-#include "nic/hal/periodic/periodic.hpp"
+#include "sdk/linkmgr.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_state.hpp"
-#include "linkmgr_pd.hpp"
 #include "nic/linkmgr/utils.hpp"
 
 using grpc::Server;
@@ -26,15 +25,16 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 using boost::property_tree::ptree;
-using linkmgr::pd::port_args_pd_t;
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
 using sdk::lib::dllist_add;
 using sdk::lib::dllist_reset;
+using sdk::types::platform_type_t;
+using sdk::linkmgr::port_args_t;
+using sdk::SDK_RET_OK;
 
 namespace linkmgr {
 
-sdk::lib::thread    *g_linkmgr_threads[hal::HAL_THREAD_ID_MAX];
 class linkmgr_state *g_linkmgr_state;
 linkmgr_cfg_t       linkmgr_cfg;
 
@@ -45,9 +45,9 @@ current_thread (void)
 }
 
 bool
-hw_access_mock_mode (void)
+mock_access_mode (void)
 {
-    return g_linkmgr_state->catalog()->access_mock_mode();
+    return linkmgr_cfg.mock_access_mode;
 }
 
 uint32_t
@@ -58,7 +58,7 @@ sbus_addr (uint32_t asic_num, uint32_t asic_port, uint32_t lane)
 
 platform_type_t platform_type()
 {
-    return g_linkmgr_state->catalog()->platform_type();
+    return linkmgr_cfg.platform_type;
 }
 
 hal_ret_t
@@ -138,78 +138,6 @@ linkmgr_catalog_init(std::string catalog_file)
     return sdk::lib::catalog::factory(catalog_file);
 }
 
-static void *
-linkmgr_periodic_loop_start (void *ctxt)
-{
-    // initialize timer wheel
-    hal::periodic::periodic_thread_init(ctxt);
-
-    // run main loop
-    hal::periodic::periodic_thread_run(ctxt);
-
-    return NULL;
-}
-
-//------------------------------------------------------------------------------
-//  spawn and setup all the HAL threads
-//------------------------------------------------------------------------------
-static hal_ret_t
-linkmgr_thread_init (void)
-{
-    int                  rv, thread_prio;
-    struct sched_param   sched_param = { 0 };
-    pthread_attr_t       attr;
-    cpu_set_t            cpus;
-    int                  thread_id = 0;
-
-    // spawn data core threads and pin them to their cores
-    thread_prio = sched_get_priority_max(SCHED_FIFO);
-    assert(thread_prio >= 0);
-
-    // spawn periodic thread that does background tasks
-    thread_id = hal::HAL_THREAD_ID_PERIODIC;
-    g_linkmgr_threads[thread_id] =
-        sdk::lib::thread::factory(
-                        std::string("periodic-thread").c_str(),
-                        thread_id,
-                        HAL_CONTROL_CORE_ID,
-                        linkmgr_periodic_loop_start,
-                        thread_prio - 1, SCHED_RR, true);
-    HAL_ABORT(g_linkmgr_threads[thread_id] != NULL);
-    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
-
-    // make the current thread, main hal config thread (also a real-time thread)
-    rv = pthread_attr_init(&attr);
-    if (rv != 0) {
-        HAL_TRACE_ERR("pthread_attr_init failure, err : {}", rv);
-        return HAL_RET_ERR;
-    }
-
-    // set core affinity
-    CPU_ZERO(&cpus);
-    CPU_SET(HAL_CONTROL_CORE_ID, &cpus);
-    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
-    if (rv != 0) {
-        HAL_TRACE_ERR("pthread_attr_setaffinity_np failure, err : {}", rv);
-        return HAL_RET_ERR;
-    }
-
-    // create a thread object for this main thread
-    thread_id = hal::HAL_THREAD_ID_CFG;
-    g_linkmgr_threads[thread_id] =
-        sdk::lib::thread::factory(
-                        std::string("cfg-thread").c_str(),
-                        thread_id,
-                        HAL_CONTROL_CORE_ID,
-                        sdk::lib::thread::dummy_entry_func,
-                        sched_param.sched_priority, SCHED_RR, true);
-    g_linkmgr_threads[thread_id]->set_data(g_linkmgr_threads[thread_id]);
-    g_linkmgr_threads[thread_id]->set_pthread_id(pthread_self());
-    g_linkmgr_threads[thread_id]->set_running(true);
-
-    return HAL_RET_OK;
-}
-
 void
 svc_reg (const std::string& server_addr)
 {
@@ -262,6 +190,8 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 
         linkmgr_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
 
+        linkmgr_cfg->mock_access_mode = pt.get<bool>("mock_access_mode", false);
+
         if (getenv("HAL_GRPC_PORT")) {
             linkmgr_cfg->grpc_port = getenv("HAL_GRPC_PORT");
             HAL_TRACE_DEBUG("Overriding GRPC Port to : {}", linkmgr_cfg->grpc_port);
@@ -277,10 +207,13 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 hal_ret_t
 linkmgr_init()
 {
-    hal_ret_t    ret          = HAL_RET_OK;
-    std::string  catalog_file = "catalog.json";
-    std::string  cfg_file     = "linkmgr.json";
-    char         *cfg_path    = NULL;
+    hal_ret_t       ret_hal        = HAL_RET_OK;
+    sdk_ret_t       sdk_ret        = SDK_RET_OK;
+    std::string     catalog_file   = "catalog.json";
+    std::string     cfg_file       = "linkmgr.json";
+    char            *cfg_path      = NULL;
+
+    sdk::linkmgr::linkmgr_cfg_t   sdk_cfg;
 
     // makeup the full file path
     cfg_path = std::getenv("HAL_CONFIG_PATH");
@@ -299,51 +232,33 @@ linkmgr_init()
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(catalog);
 
-    ret = linkmgr::pd::linkmgr_init_pd();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} pd init failed", __FUNCTION__);
-        return ret;
+    sdk_cfg.platform_type    = linkmgr_cfg.platform_type;
+    sdk_cfg.mock_access_mode = linkmgr_cfg.mock_access_mode;
+
+    sdk_ret = sdk::linkmgr::linkmgr_init(&sdk_cfg);
+    if (sdk_ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("{} linkmgr init failed", __FUNCTION__);
+        return HAL_RET_ERR;
     }
 
-    ret = linkmgr_thread_init();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{} thread init failed", __FUNCTION__);
-        return ret;
-    }
-
-    if(sdk::lib::pal_init(hw_access_mock_mode()) != sdk::lib::PAL_RET_OK) {
+    if(sdk::lib::pal_init(mock_access_mode()) != sdk::lib::PAL_RET_OK) {
         HAL_TRACE_ERR("{} pal init failed", __FUNCTION__);
         return HAL_RET_ERR;
     }
 
-    // must be done after pd init
-    ret = linkmgr_uplinks_create(catalog);
-    if (ret != HAL_RET_OK) {
+    // must be done after sdk linkmgr init
+    ret_hal = linkmgr_uplinks_create(catalog);
+    if (ret_hal != HAL_RET_OK) {
         HAL_TRACE_ERR("{} uplinks create failed", __FUNCTION__);
     }
+
+    // start the linkmgr control thread
+    sdk::linkmgr::linkmgr_event_wait();
 
     // register for all gRPC services
     svc_reg(std::string("localhost:") + linkmgr_cfg.grpc_port);
 
-    return ret;
-}
-
-hal_ret_t
-port_event_timer(void *ctxt)
-{
-    return linkmgr::pd::port_event_timer_pd(ctxt);
-}
-
-hal_ret_t
-port_event_enable(void *ctxt)
-{
-    return linkmgr::pd::port_event_enable_pd(ctxt);
-}
-
-hal_ret_t
-port_event_disable(void *ctxt)
-{
-    return linkmgr::pd::port_event_disable_pd(ctxt);
+    return ret_hal;
 }
 
 void *
@@ -477,12 +392,12 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
 hal_ret_t
 port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                ret = HAL_RET_OK;
-    port_args_pd_t           port_args_pd = { 0 };
-    dllist_ctxt_t            *lnode = NULL;
-    dhl_entry_t              *dhl_entry = NULL;
-    port_t                   *pi_p = NULL;
-    port_create_app_ctxt_t   *app_ctxt = NULL;
+    hal_ret_t               ret        = HAL_RET_OK;
+    port_args_t             port_args  = { 0 };
+    dllist_ctxt_t           *lnode     = NULL;
+    dhl_entry_t             *dhl_entry = NULL;
+    port_t                  *pi_p      = NULL;
+    port_create_app_ctxt_t  *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
@@ -500,19 +415,22 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, pi_p->port_num);
 
     // PD Call to allocate PD resources and HW programming
-    pd::port_args_init_pd(&port_args_pd);
+    sdk::linkmgr::port_args_init(&port_args);
 
-    port_args_pd.port_type   = app_ctxt->port_type;
-    port_args_pd.admin_state = app_ctxt->admin_state;
-    port_args_pd.port_speed  = app_ctxt->port_speed;
-    port_args_pd.mac_id      = app_ctxt->mac_id;
-    port_args_pd.mac_ch      = app_ctxt->mac_ch;
-    port_args_pd.num_lanes   = app_ctxt->num_lanes;
+    port_args.port_type   =
+                hal::port_type_spec_to_sdk_port_type(app_ctxt->port_type);
+    port_args.admin_state =
+                hal::port_admin_st_spec_to_sdk_port_admin_st(app_ctxt->admin_state);
+    port_args.port_speed  =
+                hal::port_speed_spec_to_sdk_port_speed(app_ctxt->port_speed);
+    port_args.mac_id      = app_ctxt->mac_id;
+    port_args.mac_ch      = app_ctxt->mac_ch;
+    port_args.num_lanes   = app_ctxt->num_lanes;
 
-    pi_p->pd_p = pd::port_create_pd(&port_args_pd);
+    pi_p->pd_p = sdk::linkmgr::port_create(&port_args);
     if (NULL == pi_p->pd_p) {
         HAL_TRACE_ERR("{}:failed to create port pd, err : {}",
-                __FUNCTION__, ret);
+                      __FUNCTION__, ret);
     }
 
 end:
@@ -571,12 +489,12 @@ end:
 hal_ret_t
 port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t        ret = HAL_RET_OK;
-    port_args_pd_t   port_args_pd = { 0 };
-    dhl_entry_t      *dhl_entry = NULL;
-    port_t           *pi_p = NULL;
-    hal_handle_t     hal_handle_id = 0;
-    dllist_ctxt_t    *lnode = NULL;
+    hal_ret_t      ret           = HAL_RET_OK;
+    sdk_ret_t      sdk_ret       = SDK_RET_OK;
+    dhl_entry_t    *dhl_entry    = NULL;
+    port_t         *pi_p         = NULL;
+    hal_handle_t   hal_handle_id = 0;
+    dllist_ctxt_t  *lnode        = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
@@ -595,14 +513,13 @@ port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // delete call to PD
     if (pi_p->pd_p) {
-        pd::port_args_init_pd(&port_args_pd);
-        port_args_pd.pd_p = pi_p->pd_p;
-        ret = pd::port_delete_pd(&port_args_pd);
-        if (ret != HAL_RET_OK) {
+        sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
+        if (sdk_ret != SDK_RET_OK) {
             HAL_TRACE_ERR("{}:failed to delete port pd, err : {}",
                           __FUNCTION__, ret);
         }
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // remove the object
     hal::hal_handle_free(hal_handle_id);
@@ -796,67 +713,19 @@ port_lookup_key_or_handle (const kh::PortKeyHandle& key_handle)
 }
 
 //------------------------------------------------------------------------------
-// check for changes in port update
-//------------------------------------------------------------------------------
-hal_ret_t
-port_update_check_for_change (PortSpec& spec,
-                              port_t *pi_p,
-                              port_update_app_ctxt_t *app_ctxt,
-                              bool *has_changed)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-    port_args_pd_t  port_args_pd = { 0 };
-
-    *has_changed = false;
-
-    pd::port_args_init_pd(&port_args_pd);
-    port_args_pd.pd_p = pi_p->pd_p;
-
-    // check if port speed is set in update request
-    if (spec.port_speed() != ::port::PORT_SPEED_NONE) {
-        port_args_pd.port_speed  = spec.port_speed();
-        *has_changed = pd::port_has_speed_changed_pd(&port_args_pd);
-    }
-
-    // check if admin state is set in update request
-    if (spec.admin_state() != ::port::PORT_ADMIN_STATE_NONE) {
-        port_args_pd.admin_state  = spec.admin_state();
-        *has_changed = pd::port_has_admin_state_changed_pd(&port_args_pd);
-    }
-
-    return ret;
-}
-
-//------------------------------------------------------------------------------
-// Make a clone
-// - Both PI and PD objects cloned.
-//------------------------------------------------------------------------------
-hal_ret_t
-port_make_clone (port_t *pi_p, port_t **pi_clone_p)
-{
-
-    *pi_clone_p = port_alloc_init();
-
-    memcpy(*pi_clone_p, pi_p, sizeof(port_t));
-
-    (*pi_clone_p)->pd_p = pd::port_make_clone_pd(pi_p->pd_p);
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
 // This is the first call back infra does for update.
 // 1. PD Call to update PD
 //------------------------------------------------------------------------------
 hal_ret_t
 port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                ret = HAL_RET_OK;
-    port_args_pd_t           port_args_pd = { 0 };
-    dllist_ctxt_t            *lnode = NULL;
-    dhl_entry_t              *dhl_entry = NULL;
-    port_t                   *pi_p = NULL;
-    port_update_app_ctxt_t    *app_ctxt = NULL;
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret = SDK_RET_OK;
+    port_args_t             port_args = { 0 };
+    dllist_ctxt_t           *lnode = NULL;
+    dhl_entry_t             *dhl_entry = NULL;
+    port_t                  *pi_p = NULL;
+    port_update_app_ctxt_t  *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
@@ -875,21 +744,24 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, pi_p->port_num);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::port_args_init_pd(&port_args_pd);
+    sdk::linkmgr::port_args_init(&port_args);
 
-    port_args_pd.pd_p        = pi_p->pd_p;
-    port_args_pd.port_type   = app_ctxt->port_type;
-    port_args_pd.admin_state = app_ctxt->admin_state;
-    port_args_pd.port_speed  = app_ctxt->port_speed;
-    port_args_pd.mac_id      = app_ctxt->mac_id;
-    port_args_pd.mac_ch      = app_ctxt->mac_ch;
-    port_args_pd.num_lanes   = app_ctxt->num_lanes;
+    port_args.port_type   =
+                hal::port_type_spec_to_sdk_port_type(app_ctxt->port_type);
+    port_args.admin_state =
+                hal::port_admin_st_spec_to_sdk_port_admin_st(app_ctxt->admin_state);
+    port_args.port_speed  =
+                hal::port_speed_spec_to_sdk_port_speed(app_ctxt->port_speed);
+    port_args.mac_id      = app_ctxt->mac_id;
+    port_args.mac_ch      = app_ctxt->mac_ch;
+    port_args.num_lanes   = app_ctxt->num_lanes;
 
-    ret = pd::port_update_pd(&port_args_pd);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, &port_args);
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to update port pd, err : {}",
                       __FUNCTION__, ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
 end:
     return ret;
@@ -903,11 +775,13 @@ end:
 hal_ret_t
 port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t        ret = HAL_RET_OK;
-    port_args_pd_t   port_args_pd = { 0 };
-    dllist_ctxt_t    *lnode = NULL;
-    dhl_entry_t      *dhl_entry = NULL;
-    port_t           *pi_p = NULL, *pi_clone_p = NULL;
+    hal_ret_t      ret         = HAL_RET_OK;
+    //sdk_ret_t      sdk_ret     = SDK_RET_OK;
+    //port_args_t    port_args   = { 0 };
+    dllist_ctxt_t  *lnode      = NULL;
+    dhl_entry_t    *dhl_entry  = NULL;
+    port_t         *pi_p       = NULL;
+    port_t         *pi_clone_p = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
@@ -925,17 +799,20 @@ port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, pi_p->port_num);
     printf("Original: %p, Clone: %p\n", pi_p, pi_clone_p);
 
+#if 0
     // Free PD
-    pd::port_args_init_pd(&port_args_pd);
-    port_args_pd.pd_p = pi_p->pd_p;
-    ret = pd::port_mem_free_pd(&port_args_pd);
-    if (ret != HAL_RET_OK) {
+    sdk::linkmgr::port_args_init(&port_args);
+    sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to free original port pd, err : {}",
                       __FUNCTION__, ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // Free PI
     port_free(pi_p);
+#endif
+
 end:
     return ret;
 }
@@ -948,7 +825,8 @@ hal_ret_t
 port_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t        ret = HAL_RET_OK;
-    port_args_pd_t   port_args_pd = { 0 };
+    sdk_ret_t      sdk_ret     = SDK_RET_OK;
+    port_args_t   port_args = { 0 };
     dllist_ctxt_t    *lnode = NULL;
     dhl_entry_t      *dhl_entry = NULL;
     port_t           *pi_p = NULL;
@@ -969,13 +847,13 @@ port_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, pi_p->port_num);
 
     // Free PD
-    pd::port_args_init_pd(&port_args_pd);
-    port_args_pd.pd_p = pi_p->pd_p;
-    ret = pd::port_mem_free_pd(&port_args_pd);
-    if (ret != HAL_RET_OK) {
+    sdk::linkmgr::port_args_init(&port_args);
+    sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to delete port pd, err : {}",
                       __FUNCTION__, ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // Free PI
     port_free(pi_p);
@@ -1001,7 +879,6 @@ port_update (PortSpec& spec, PortResponse *rsp)
     const kh::PortKeyHandle  &kh = spec.key_or_handle();
     cfg_op_ctxt_t              cfg_ctxt = { 0 };
     dhl_entry_t                dhl_entry = { 0 };
-    bool                       has_changed = false;
     port_update_app_ctxt_t     app_ctxt;
 
     hal::hal_api_trace(" API Begin: port update ");
@@ -1035,14 +912,7 @@ port_update (PortSpec& spec, PortResponse *rsp)
     app_ctxt.mac_ch      = spec.mac_ch();
     app_ctxt.num_lanes   = spec.num_lanes();
 
-    // Check for changes
-    ret = port_update_check_for_change(spec, pi_p, &app_ctxt, &has_changed);
-    if (ret != HAL_RET_OK || !has_changed) {
-        HAL_TRACE_ERR("{}:no change in port update: noop", __FUNCTION__);
-        goto end;
-    }
-
-    port_make_clone(pi_p, (port_t **)&dhl_entry.cloned_obj);
+    dhl_entry.cloned_obj = pi_p;
 
     // form ctxt and call infra update object
     dhl_entry.handle = pi_p->hal_handle_id;
@@ -1113,7 +983,7 @@ hal_ret_t
 port_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t        ret = HAL_RET_OK;
-    port_args_pd_t   port_args_pd = { 0 };
+    sdk_ret_t      sdk_ret     = SDK_RET_OK;
     dllist_ctxt_t    *lnode = NULL;
     dhl_entry_t      *dhl_entry = NULL;
     port_t           *pi_p = NULL;
@@ -1132,16 +1002,12 @@ port_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("{}:delete del CB {}",
                     __FUNCTION__, pi_p->port_num);
 
-    // 1. PD Call to allocate PD resources and HW programming
-    pd::port_args_init_pd(&port_args_pd);
-
-    port_args_pd.pd_p = pi_p->pd_p;
-
-    ret = pd::port_delete_pd(&port_args_pd);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to delete port pd, err : {}", 
                       __FUNCTION__, ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
 end:
     return ret;
@@ -1273,10 +1139,11 @@ end:
 hal_ret_t
 port_get (PortGetRequest& req, PortGetResponse *rsp)
 {
-    port_t          *pi_p = NULL;
-    PortSpec        *spec = NULL;
-    hal_ret_t       ret = HAL_RET_OK;
-    port_args_pd_t  port_args_pd = { 0 };
+    port_t       *pi_p     = NULL;
+    PortSpec     *spec     = NULL;
+    hal_ret_t    ret       = HAL_RET_OK;
+    sdk_ret_t    sdk_ret   = SDK_RET_OK;
+    port_args_t  port_args = { 0 };
 
     hal::hal_api_trace(" API Begin: port get ");
 
@@ -1296,25 +1163,29 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
     spec->mutable_key_or_handle()->set_port_id(pi_p->port_num);
 
     // 1. PD Call to get PD resources
-    pd::port_args_init_pd(&port_args_pd);
+    sdk::linkmgr::port_args_init(&port_args);
 
-    port_args_pd.pd_p = pi_p->pd_p;
-
-    ret = pd::port_get_pd(&port_args_pd);
-    if (ret != HAL_RET_OK) {
+    sdk_ret = sdk::linkmgr::port_get(pi_p->pd_p, &port_args);
+    if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("{}:failed to get port pd, err : {}",
                       __FUNCTION__, ret);
     }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     if (ret == HAL_RET_OK) {
-        spec->set_port_type   (port_args_pd.port_type);
-        spec->set_port_speed  (port_args_pd.port_speed);
-        spec->set_admin_state (port_args_pd.admin_state);
-        spec->set_mac_id      (port_args_pd.mac_id);
-        spec->set_mac_ch      (port_args_pd.mac_ch);
-        spec->set_num_lanes   (port_args_pd.num_lanes);
-
-        rsp->set_status       (port_args_pd.oper_status);
+        spec->set_port_type
+                (hal::sdk_port_type_to_port_type_spec(port_args.port_type));
+        spec->set_port_speed
+                (hal::sdk_port_speed_to_port_speed_spec(port_args.port_speed));
+        spec->set_admin_state
+                (hal::sdk_port_admin_st_to_port_admin_st_spec
+                                        (port_args.admin_state));
+        rsp->set_status
+                (hal::sdk_port_oper_st_to_port_oper_st_spec
+                                        (port_args.oper_status));
+        spec->set_mac_id    (port_args.mac_id);
+        spec->set_mac_ch    (port_args.mac_ch);
+        spec->set_num_lanes (port_args.num_lanes);
     }
 
     rsp->set_api_status(hal::hal_prepare_rsp(ret));

@@ -48,6 +48,7 @@ typedef uint32_t port_num_t;
 typedef struct linkmgr_cfg_s {
     std::string        grpc_port;
     platform_type_t    platform_type;
+    bool               mock_access_mode;
 } linkmgr_cfg_t;
 
 typedef struct port_s {

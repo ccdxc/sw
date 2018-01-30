@@ -1,12 +1,6 @@
 {
     "card_index" : "10010",
 
-    "tenant_id"  : "1",
-
-    "platform_type" : "haps",
-
-    "access_mock_mode" : "false",
-
     "num_asics" : "1",
     "asics" :
     [

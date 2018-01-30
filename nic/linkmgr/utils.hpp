@@ -34,9 +34,17 @@ hal_ret_t hal_cleanup_handle_list(dllist_ctxt_t **list);
 
 port_speed_t port_speed_spec_to_sdk_port_speed(::port::PortSpeed speed);
 ::port::PortSpeed sdk_port_speed_to_port_speed_spec(port_speed_t speed);
-port_type_t port_type_to_sdk_port_type_spec(::port::PortType type);
+
+port_type_t port_type_spec_to_sdk_port_type(::port::PortType type);
 ::port::PortType sdk_port_type_to_port_type_spec(port_type_t type);
 
+::port::PortAdminState
+sdk_port_admin_st_to_port_admin_st_spec (port_admin_state_t admin_st);
+port_admin_state_t
+port_admin_st_spec_to_sdk_port_admin_st (::port::PortAdminState admin_st);
+
+::port::PortOperStatus
+sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st);
 }    // namespace hal
 
 #endif    // __LINKMGR_UTILS_HPP__

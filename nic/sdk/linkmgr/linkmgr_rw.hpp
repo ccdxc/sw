@@ -19,17 +19,17 @@ extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
 
 // wrapper macros for read/write operations
 #define READ_REG_BASE(chip, addr, data) {                                    \
-    SDK_TRACE_DEBUG("PORT: %s: chip %d addr 0x%x",                           \
+    SDK_TRACE_DEBUG("PORT: %s: chip %d addr 0x%x\n",                         \
                     __FUNCTION__, chip, addr);                               \
-    if (g_linkmgr_cfg.mock_hw_access == false) {                             \
+    if (g_linkmgr_cfg.mock_access_mode == false) {                             \
         *data = read_reg_base(chip, addr);                                   \
     }                                                                        \
 }
 
 #define WRITE_REG_BASE(chip, addr, data) {                                   \
-    SDK_TRACE_DEBUG("PORT: %s: chip %d addr 0x%x data 0x%x",                 \
+    SDK_TRACE_DEBUG("PORT: %s: chip %d addr 0x%x data 0x%x\n",               \
                     __FUNCTION__, chip, addr, data);                         \
-    if (g_linkmgr_cfg.mock_hw_access == false) {                             \
+    if (g_linkmgr_cfg.mock_access_mode == false) {                             \
         write_reg_base(chip, addr, data);                                    \
     }                                                                        \
 }

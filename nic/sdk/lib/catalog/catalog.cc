@@ -129,12 +129,6 @@ catalog::populate_catalog(ptree &prop_tree)
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
     catalog_db_.num_uplink_ports =
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
-    catalog_db_.access_mock_mode =
-        prop_tree.get<bool>("access_mock_mode", false);
-    std::string platform_type =
-                            prop_tree.get<std::string>("platform_type", "");
-    catalog_db_.platform_type =
-                        catalog_platform_type_to_platform_type(platform_type);
     populate_asics(prop_tree);
     populate_uplink_ports(prop_tree);
 

@@ -107,14 +107,14 @@ pal_sim_connect (void)
         return PAL_RET_OK;
     }
 
-    SDK_TRACE_DEBUG("Connecting to ASIC SIM");
+    SDK_TRACE_DEBUG("Connecting to ASIC SIM\n");
     do {
         rc = (*gl_sim_vecs.connect)();
         if (rc != -1) {
-            SDK_TRACE_DEBUG("Connected to the ASIC model...");
+            SDK_TRACE_DEBUG("Connected to the ASIC model...\n");
             break;
         }
-        SDK_TRACE_DEBUG("Failed to connect to asic, retrying in 1 sec ...");
+        SDK_TRACE_DEBUG("Failed to connect to asic, retrying in 1 sec ...\n");
         sleep(1);
     } while (1);
 

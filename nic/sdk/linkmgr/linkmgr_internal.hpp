@@ -11,12 +11,13 @@ namespace sdk {
 namespace linkmgr {
 
 #define CONTROL_CORE_ID         0
-#define LINKMGR_THREAD_ID_MAX   2
+#define LINKMGR_THREAD_ID_MAX   3
 #define LINKMGR_CONTROL_Q_SIZE  128
 
 typedef enum linkmgr_thread_id_e {
     LINKMGR_THREAD_ID_CTRL,
-    LINKMGR_THREAD_ID_PERIODIC
+    LINKMGR_THREAD_ID_PERIODIC,
+    LINKMGR_THREAD_ID_CFG
 } linkmgr_thread_id_t;
 
 typedef enum linkmgr_opn_e {

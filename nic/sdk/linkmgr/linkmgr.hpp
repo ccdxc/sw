@@ -11,7 +11,7 @@ namespace linkmgr {
 
 typedef struct linkmgr_cfg_s {
     platform_type_t platform_type;
-    bool            mock_hw_access;
+    bool            mock_access_mode;
 } __PACK__ linkmgr_cfg_t;
 extern linkmgr_cfg_t g_linkmgr_cfg;
 
@@ -26,11 +26,14 @@ typedef struct port_args_s {
     uint32_t              num_lanes;      // number of lanes for the port
 } __PACK__ port_args_t;
 
-sdk_ret_t linkmgr_init(void);
+sdk_ret_t linkmgr_init(linkmgr_cfg_t *cfg);
 void *port_create(port_args_t *port_args);
 sdk_ret_t port_update(void *port, port_args_t *port_args);
 sdk_ret_t port_delete(void *port);
-sdk_ret_t port_get(port_args_t *port_args);
+sdk_ret_t port_get(void *port, port_args_t *port_args);
+
+void
+linkmgr_event_wait (void);
 
 static inline void
 port_args_init (port_args_t *args)

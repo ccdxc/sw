@@ -25,7 +25,7 @@ current_thread (void)
 {
     return sdk::lib::thread::current_thread() ?
                        sdk::lib::thread::current_thread() :
-                       g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL];
+                       g_linkmgr_threads[LINKMGR_THREAD_ID_CFG];
 }
 
 bool
@@ -34,8 +34,8 @@ is_linkmgr_ctrl_thread()
     sdk::lib::thread *curr_thread = current_thread();
     sdk::lib::thread *ctrl_thread = g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL];
 
-    // if ctrl_thread is NULL, then init has failed or not invoked
-    if (ctrl_thread == NULL) {
+    // if curr_thread/ctrl_thread is NULL, then init has failed or not invoked
+    if (curr_thread == NULL || ctrl_thread == NULL) {
         assert(0);
     }
 
@@ -95,11 +95,18 @@ linkmgr_notify (uint8_t operation, void *ctxt)
     return rw_entry->status;
 }
 
+void
+linkmgr_event_wait (void)
+{
+    int thread_id = LINKMGR_THREAD_ID_CTRL;
+    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
+}
+
 //------------------------------------------------------------------------------
 // linkmgr's forever loop
 //------------------------------------------------------------------------------
-void
-linkmgr_event_wait (void)
+void*
+linkmgr_event_loop (void* ctxt)
 {
     uint32_t         qid         = 0;
     uint16_t         cindx       = 0;
@@ -107,8 +114,7 @@ linkmgr_event_wait (void)
     bool             rv          = true;
     linkmgr_entry_t  *rw_entry   = NULL;
 
-    // mark the control thread object as started
-    g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL]->set_running(true);
+    SDK_THREAD_INIT(ctxt);
 
     while (TRUE) {
         work_done = false;
@@ -140,6 +146,9 @@ linkmgr_event_wait (void)
                 break;
             }
 
+            SDK_TRACE_ERR("%s: invoked control thread. opn %d\n",
+                            __FUNCTION__, rw_entry->opn);
+
             // populate the results
             rw_entry->status =  rv ? SDK_RET_OK : SDK_RET_ERR;
             rw_entry->done.store(true);
@@ -166,8 +175,7 @@ thread_init (void)
 {
     int    thread_prio = 0, thread_id = 0;
 
-    // spawn periodic thread
-    thread_prio = sched_get_priority_max(SCHED_RR);
+    thread_prio = sched_get_priority_max(SCHED_OTHER);
     if (thread_prio < 0) {
         return SDK_RET_ERR;
     }
@@ -186,7 +194,7 @@ thread_init (void)
                         CONTROL_CORE_ID,
                         linkmgr_periodic_thread_start,
                         thread_prio - 1,
-                        SCHED_RR,
+                        SCHED_OTHER,
                         true);
     if (g_linkmgr_threads[thread_id] == NULL) {
         SDK_TRACE_ERR("%s: Failed to create linkmgr periodic thread",
@@ -194,29 +202,52 @@ thread_init (void)
         return SDK_RET_ERR;
     }
 
-    // start the thread
+    // start the periodic thread
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
 
-    // create a thread object for ctrl thread
+    // init the control thread
     thread_id = LINKMGR_THREAD_ID_CTRL;
     g_linkmgr_threads[thread_id] =
         sdk::lib::thread::factory(std::string("linkmgr-ctrl").c_str(),
                                   thread_id,
                                   CONTROL_CORE_ID,
+                                  linkmgr_event_loop,
+                                  thread_prio -1,
+                                  SCHED_OTHER,
+                                  true);
+
+    // create a thread object for CFG thread
+    thread_id = LINKMGR_THREAD_ID_CFG;
+    g_linkmgr_threads[thread_id] =
+        sdk::lib::thread::factory(std::string("linkmgr-cfg").c_str(),
+                                  thread_id,
+                                  CONTROL_CORE_ID,
                                   sdk::lib::thread::dummy_entry_func,
-                                  thread_prio,
-                                  SCHED_RR,
+                                  thread_prio -1,
+                                  SCHED_OTHER,
                                   true);
     g_linkmgr_threads[thread_id]->set_data(g_linkmgr_threads[thread_id]);
     g_linkmgr_threads[thread_id]->set_pthread_id(pthread_self());
+    g_linkmgr_threads[thread_id]->set_running(true);
 
     return SDK_RET_OK;
+}
+
+static void
+linkmgr_workq_init(void)
+{
+    uint32_t qid = 0;
+    for (qid = 0; qid < LINKMGR_THREAD_ID_MAX; qid++) {
+        g_linkmgr_workq[qid].nentries = 0;
+    }
 }
 
 sdk_ret_t
 linkmgr_init (linkmgr_cfg_t *cfg)
 {
     sdk_ret_t    ret = SDK_RET_OK;
+
+    linkmgr_workq_init();
 
     if ((ret = thread_init()) != SDK_RET_OK) {
         SDK_TRACE_ERR("%s: linkmgr thread init failed", __FUNCTION__);
@@ -294,20 +325,40 @@ port_create (port_args_t *args)
 // update given port
 //-----------------------------------------------------------------------------
 sdk_ret_t
-port_update (port_args_t *args)
+port_update (void *pd_p, port_args_t *args)
 {
-    sdk_ret_t    ret = SDK_RET_OK;
-    port         *port_p = (port *)args->port_p;
+    sdk_ret_t   ret = SDK_RET_OK;
+    port        *port_p = (port *)pd_p;
+    bool        configured = false;
 
     SDK_TRACE_DEBUG("%s: port update", __FUNCTION__);
+
     if (args->port_speed != port_speed_t::PORT_SPEED_NONE) {
         port_p->set_port_speed(args->port_speed);
+        configured = true;
     }
 
-    if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_UP) {
-        ret = port::port_enable(port_p);
-    } else if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_DOWN) {
+    // Disable the port if any config has changed
+    if (configured == true) {
         ret = port::port_disable(port_p);
+    }
+
+    // Enable the port if -
+    // admin-up state is set in request msg OR
+    // admin state is not set in request msg, but port is already admin up
+    switch(args->admin_state) {
+    case port_admin_state_t::PORT_ADMIN_STATE_NONE:
+        if (port_p->admin_state() == port_admin_state_t::PORT_ADMIN_STATE_UP) {
+            ret = port::port_enable(port_p);
+        }
+        break;
+
+    case port_admin_state_t::PORT_ADMIN_STATE_UP:
+        ret = port::port_enable(port_p);
+        break;
+
+    default:
+        break;
     }
 
     return ret;
@@ -317,10 +368,10 @@ port_update (port_args_t *args)
 // delete given port by disabling the port and then deleting the port instance
 //-----------------------------------------------------------------------------
 sdk_ret_t
-port_delete (port_args_t *args)
+port_delete (void *pd_p)
 {
     sdk_ret_t    ret = SDK_RET_OK;
-    port         *port_p = (port *)args->port_p;
+    port         *port_p = (port *)pd_p;
 
     SDK_TRACE_DEBUG("%s: port delete", __FUNCTION__);
     ret = port::port_disable(port_p);
@@ -333,10 +384,10 @@ port_delete (port_args_t *args)
 // PD Port get
 //-----------------------------------------------------------------------------
 sdk_ret_t
-port_get (port_args_t *args)
+port_get (void *pd_p, port_args_t *args)
 {
     sdk_ret_t            ret = SDK_RET_OK;
-    port    *port_p = (port *)args->port_p;
+    port    *port_p = (port *)pd_p;
 
     SDK_TRACE_DEBUG("%s: port get", __FUNCTION__);
     args->port_type   = port_p->port_type();

@@ -1,5 +1,6 @@
 {
-  "platform_type" : "haps",
+  "platform_type" : "sim",
+  "mock_access_mode" : "true",
   "sw" : {
     "grpc_port": "50053"
   }
