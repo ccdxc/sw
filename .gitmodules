@@ -1,6 +1,7 @@
 [submodule "nic/asic"]
 	path = nic/asic
 	url = git@github.com:pensando/asic.git
+	branch = rtl_dol
 [submodule "nic/p4-hlir"]
 	path = nic/p4-hlir
 	url = git@github.com:pensando/p4-hlir.git
