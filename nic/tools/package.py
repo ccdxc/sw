@@ -54,10 +54,15 @@ for root, dirs, files in os.walk(output_dir):
 cmd = 'mkdir -p fake_root_target/nic/lib'
 call(cmd, shell=True)
 
+# package all the plugins
 cmd = 'find bazel-bin/nic/hal/plugins/ -name "*.so" | grep -v __main__ | xargs tar cf plugins.tar'
 call(cmd, shell=True)
 
 cmd = 'tar -xf plugins.tar -C fake_root_target/nic/lib/ --strip-components=4'
+call(cmd, shell=True)
+
+# remove dol plugin for aarch64
+cmd = 'rm -rf fake_root_target/nic/lib/dol'
 call(cmd, shell=True)
 
 cmd = 'tar --exclude=*.debug -cvzf hal.tgz ' + output_dir

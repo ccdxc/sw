@@ -496,6 +496,31 @@ public:
         return 0;
     }
 
+    uint64_t cpu_if_create(uint32_t lif_id) {
+        InterfaceSpec           *spec;
+        InterfaceRequestMsg     req_msg;
+        InterfaceResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_interface_id(lif_id);
+        spec->set_type(::intf::IfType::IF_TYPE_CPU);
+        spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+        spec->mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "CPU if create succeeded, handle = "
+                      << rsp_msg.response(0).status().if_handle()
+                      << std::endl;
+            return rsp_msg.response(0).status().if_handle();
+        }
+        std::cout << "CPU if create failed, error = "
+                  << rsp_msg.response(0).api_status() << std::endl;
+        return 0;
+    }
+
     uint64_t enic_if_create(uint32_t enic_if_id, uint32_t lif_id,
                             uint64_t pinned_uplink_if_handle,
                             uint64_t native_l2seg_handle,
@@ -1067,9 +1092,10 @@ main (int argc, char** argv)
 
     uint64_t    vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
     uint64_t    nw1_handle, nw2_handle, uplink_if_handle; //, session_handle;
-    uint64_t    lif_handle, enic_if_handle;
+    uint64_t    lif_handle, enic_if_handle, cpu_if_handle;
     uint64_t    vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint64_t    lif_id = 100;
+    uint64_t    cpu_lif_id = 1003;
     uint64_t    enic_if_id = 200;
     EncapInfo   l2seg_encap;
 
@@ -1082,6 +1108,9 @@ main (int argc, char** argv)
     // delete a non-existent vrf
     hclient.vrf_delete_by_id(1);
 #endif
+
+    cpu_if_handle = hclient.cpu_if_create(cpu_lif_id);
+    assert(cpu_if_handle != 0);
 
     // create a vrf and perform GETs
     vrf_handle = hclient.vrf_create(vrf_id);
@@ -1097,7 +1126,7 @@ main (int argc, char** argv)
 
     // Get slab statistics
     //hclient.slab_get();
-  
+
     // create a security group
     sg_handle = hclient.sg_create(sg_id);
     assert(sg_handle != 0);
