@@ -79,7 +79,7 @@ mac_temac_mdio_rd_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while ((mdio_ready == 0) && (g_linkmgr_cfg.mock_access_mode == false)) {
+    while ((mdio_ready == 0) && (g_linkmgr_cfg.hw_mock == false)) {
         mac_temac_regrd_haps(chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
     }
@@ -108,7 +108,7 @@ mac_temac_mdio_wr_haps (uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while ((mdio_ready == 0) && (g_linkmgr_cfg.mock_access_mode == false)) {
+    while ((mdio_ready == 0) && (g_linkmgr_cfg.hw_mock == false)) {
         mac_temac_regrd_haps(chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
         SDK_TRACE_DEBUG("%s reg_data 0x%x mdio_ready %d\n",

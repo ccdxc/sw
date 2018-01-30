@@ -119,7 +119,13 @@ using event::Event;
 using event::EventRequest;
 using event::EventResponse;
 
-const std::string&    hal_svc_endpoint_("localhost:50054");
+std::string  hal_svc_endpoint_     = "localhost:50054";
+std::string  linkmgr_svc_endpoint_ = "localhost:50053";
+
+port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
+port::PortType       port_type        = port::PORT_TYPE_NONE;
+port::PortAdminState port_admin_state = port::PORT_ADMIN_STATE_NONE;
+port::PortSpeed      port_speed       = port::PORT_SPEED_NONE;
 
 class hal_client {
 public:
@@ -179,6 +185,8 @@ public:
                 std::cout << "Port create succeeded for port "
                           << port_id
                           << std::endl;
+            } else {
+                return -1;
             }
 
             return 0;
@@ -214,6 +222,8 @@ public:
                 std::cout << "Port update succeeded for port "
                           << port_id
                           << std::endl;
+            } else {
+                return -1;
             }
 
             return 0;
@@ -227,7 +237,7 @@ public:
         return -1;
     }
 
-    int port_get(uint32_t vrf_id, uint32_t port_id) {
+    int port_get(uint32_t vrf_id, uint32_t port_id, bool compare=false) {
         PortGetRequest      *req;
         PortGetRequestMsg   req_msg;
         PortGetResponseMsg  rsp_msg;
@@ -259,6 +269,23 @@ public:
                           << rsp_msg.response(0).spec().mac_ch() << std::endl
                           << " Num lanes: "
                           << rsp_msg.response(0).spec().num_lanes() << std::endl;
+            } else {
+                return -1;
+            }
+
+            if (compare == true) {
+                if (port_oper_status != port::PORT_OPER_STATUS_NONE) {
+                    assert(rsp_msg.response(0).status() == port_oper_status);
+                }
+                if (port_type != port::PORT_TYPE_NONE) {
+                    assert(rsp_msg.response(0).spec().port_type() == port_type);
+                }
+                if (port_admin_state != port::PORT_ADMIN_STATE_NONE) {
+                    assert(rsp_msg.response(0).spec().admin_state() == port_admin_state);
+                }
+                if (port_speed != port::PORT_SPEED_NONE) {
+                    assert(rsp_msg.response(0).spec().port_speed() == port_speed);
+                }
             }
 
             return 0;
@@ -290,6 +317,8 @@ public:
                     rsp_msg.response(0).api_status(), port_id) == true) {
                 std::cout << "Port Delete succeeded for port "
                           << port_id << std::endl;
+            } else {
+                return -1;
             }
 
             return 0;
@@ -971,6 +1000,7 @@ int ports_get(hal_client *hclient, int vrf_id)
 int port_test(hal_client *hclient, int vrf_id)
 {
     int port = 1;
+    int ret  = 0;
 
     // port 1: create and get
     std::cout <<  "*********** Port "
@@ -978,8 +1008,11 @@ int port_test(hal_client *hclient, int vrf_id)
               << " create, enable and get"
               << " **********"
               << std::endl;
-    hclient->port_create(vrf_id, port);
-    hclient->port_get(vrf_id, port);
+    ret = hclient->port_create(vrf_id, port);
+    assert(ret == -1);
+
+    ret = hclient->port_get(vrf_id, port);
+    assert(ret != -1);
 
     // port 1: update speed and get
     std::cout <<  "*********** Port "
@@ -987,9 +1020,14 @@ int port_test(hal_client *hclient, int vrf_id)
               << " update speed and get"
               << " **********"
               << std::endl;
-    hclient->port_update(vrf_id, port,
+    ret = hclient->port_update(vrf_id, port,
                      ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
-    hclient->port_get(vrf_id, port);
+    assert(ret != -1);
+
+    port_speed = ::port::PORT_SPEED_10G;
+    ret = hclient->port_get(vrf_id, port, true);
+    assert(ret != -1);
+    port_speed = ::port::PORT_SPEED_NONE;
 
     // port 1: delete
     std::cout <<  "*********** Port "
@@ -997,7 +1035,8 @@ int port_test(hal_client *hclient, int vrf_id)
               << " delete"
               << " **********"
               << std::endl;
-    hclient->port_delete(vrf_id, port);
+    ret = hclient->port_delete(vrf_id, port);
+    assert(ret != -1);
 
     port = 2;
 
@@ -1007,8 +1046,11 @@ int port_test(hal_client *hclient, int vrf_id)
               << " create, enable and get"
               << " **********"
               << std::endl;
-    hclient->port_create(vrf_id, port);
-    hclient->port_get(vrf_id, port);
+    ret = hclient->port_create(vrf_id, port);
+    assert(ret == -1);
+
+    ret = hclient->port_get(vrf_id, port);
+    assert(ret != -1);
 
     // port 2: update speed and get
     std::cout <<  "*********** Port "
@@ -1016,9 +1058,14 @@ int port_test(hal_client *hclient, int vrf_id)
               << " update speed and get"
               << " **********"
               << std::endl;
-    hclient->port_update(vrf_id, port,
+    ret = hclient->port_update(vrf_id, port,
                      ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
-    hclient->port_get(vrf_id, port);
+    assert(ret != -1);
+
+    port_speed = ::port::PORT_SPEED_10G;
+    ret = hclient->port_get(vrf_id, port, true);
+    assert(ret != -1);
+    port_speed = ::port::PORT_SPEED_NONE;
 
     port = 1;
 
@@ -1028,8 +1075,12 @@ int port_test(hal_client *hclient, int vrf_id)
               << " create, enable and get"
               << " **********"
               << std::endl;
-    hclient->port_create(vrf_id, port);
-    hclient->port_get(vrf_id, port);
+
+    ret = hclient->port_create(vrf_id, port);
+    assert(ret != -1);
+
+    ret = hclient->port_get(vrf_id, port);
+    assert(ret != -1);
 
     // port 1: update speed and get
     std::cout <<  "*********** Port "
@@ -1037,9 +1088,14 @@ int port_test(hal_client *hclient, int vrf_id)
               << " update speed and get"
               << " **********"
               << std::endl;
-    hclient->port_update(vrf_id, port,
+    ret = hclient->port_update(vrf_id, port,
                      ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
-    hclient->port_get(vrf_id, port);
+    assert(ret != -1);
+
+    port_speed = ::port::PORT_SPEED_10G;
+    ret = hclient->port_get(vrf_id, port, true);
+    assert(ret != -1);
+    port_speed = ::port::PORT_SPEED_NONE;
 
     // port 1: delete and get
     std::cout <<  "*********** Port "
@@ -1047,8 +1103,11 @@ int port_test(hal_client *hclient, int vrf_id)
               << " delete and get"
               << " **********"
               << std::endl;
-    hclient->port_delete(vrf_id, port);
-    hclient->port_get(vrf_id, port);
+    ret = hclient->port_delete(vrf_id, port);
+    assert(ret != -1);
+
+    ret = hclient->port_get(vrf_id, port);
+    assert(ret == -1);
 
     port = 2;
 
@@ -1058,9 +1117,14 @@ int port_test(hal_client *hclient, int vrf_id)
               << " disable and get"
               << " **********"
               << std::endl;
-    hclient->port_update(vrf_id, port,
+    ret = hclient->port_update(vrf_id, port,
                      ::port::PORT_SPEED_NONE, ::port::PORT_ADMIN_STATE_DOWN);
-    hclient->port_get(vrf_id, port);
+    assert(ret != -1);
+
+    port_admin_state = port::PORT_ADMIN_STATE_DOWN;
+    ret = hclient->port_get(vrf_id, port);
+    assert(ret != -1);
+    port_admin_state = port::PORT_ADMIN_STATE_NONE;
 
     // port 2: create and get
     std::cout <<  "*********** Port "
@@ -1068,8 +1132,11 @@ int port_test(hal_client *hclient, int vrf_id)
               << " create, enable and get"
               << " **********"
               << std::endl;
-    hclient->port_create(vrf_id, port);
-    hclient->port_get(vrf_id, port);
+    ret = hclient->port_create(vrf_id, port);
+    assert(ret == -1);
+
+    ret = hclient->port_get(vrf_id, port);
+    assert(ret != -1);
 
     // port 2: delete and get
     std::cout <<  "*********** Port "
@@ -1077,8 +1144,11 @@ int port_test(hal_client *hclient, int vrf_id)
               << " delete and get"
               << " **********"
               << std::endl;
-    hclient->port_delete(vrf_id, port);
-    hclient->port_get(vrf_id, port);
+    ret = hclient->port_delete(vrf_id, port);
+    assert(ret != -1);
+
+    ret = hclient->port_get(vrf_id, port);
+    assert(ret == -1);
 
     return 0;
 }
@@ -1087,27 +1157,33 @@ int port_test(hal_client *hclient, int vrf_id)
 int
 main (int argc, char** argv)
 {
-    hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
+    uint64_t     vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
+    uint64_t     nw1_handle, nw2_handle, uplink_if_handle; //, session_handle;
+    uint64_t     lif_handle, enic_if_handle, cpu_if_handle;
+    uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
+    uint64_t     lif_id = 100;
+    uint64_t     cpu_lif_id = 1003;
+    uint64_t     enic_if_id = 200;
+    EncapInfo    l2seg_encap;
+    bool         test_port = false;
+    std::string  svc_endpoint = hal_svc_endpoint_;
+
+    if (argc > 1) {
+        test_port = true;
+        svc_endpoint = linkmgr_svc_endpoint_;
+    }
+
+    hal_client hclient(grpc::CreateChannel(svc_endpoint,
                                            grpc::InsecureChannelCredentials()));
-
-    uint64_t    vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
-    uint64_t    nw1_handle, nw2_handle, uplink_if_handle; //, session_handle;
-    uint64_t    lif_handle, enic_if_handle, cpu_if_handle;
-    uint64_t    vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
-    uint64_t    lif_id = 100;
-    uint64_t    cpu_lif_id = 1003;
-    uint64_t    enic_if_id = 200;
-    EncapInfo   l2seg_encap;
-
-#if 0
-    //port_test(&hclient, vrf_id);
-    //ports_enable(&hclient, vrf_id);
-    ports_get(&hclient, vrf_id);
-    return 0;
+    if (test_port == true) {
+        port_test(&hclient, vrf_id);
+        //ports_enable(&hclient, vrf_id);
+        //ports_get(&hclient, vrf_id);
+        return 0;
+    }
 
     // delete a non-existent vrf
     hclient.vrf_delete_by_id(1);
-#endif
 
     cpu_if_handle = hclient.cpu_if_create(cpu_lif_id);
     assert(cpu_if_handle != 0);

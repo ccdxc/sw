@@ -45,9 +45,9 @@ current_thread (void)
 }
 
 bool
-mock_access_mode (void)
+hw_mock (void)
 {
-    return linkmgr_cfg.mock_access_mode;
+    return linkmgr_cfg.hw_mock;
 }
 
 uint32_t
@@ -190,7 +190,7 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 
         linkmgr_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
 
-        linkmgr_cfg->mock_access_mode = pt.get<bool>("mock_access_mode", false);
+        linkmgr_cfg->hw_mock = pt.get<bool>("hw_mock", false);
 
         if (getenv("HAL_GRPC_PORT")) {
             linkmgr_cfg->grpc_port = getenv("HAL_GRPC_PORT");
@@ -232,8 +232,8 @@ linkmgr_init()
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(catalog);
 
-    sdk_cfg.platform_type    = linkmgr_cfg.platform_type;
-    sdk_cfg.mock_access_mode = linkmgr_cfg.mock_access_mode;
+    sdk_cfg.platform_type = linkmgr_cfg.platform_type;
+    sdk_cfg.hw_mock = linkmgr_cfg.hw_mock;
 
     sdk_ret = sdk::linkmgr::linkmgr_init(&sdk_cfg);
     if (sdk_ret != SDK_RET_OK) {
@@ -241,7 +241,7 @@ linkmgr_init()
         return HAL_RET_ERR;
     }
 
-    if(sdk::lib::pal_init(mock_access_mode()) != sdk::lib::PAL_RET_OK) {
+    if(sdk::lib::pal_init(hw_mock()) != sdk::lib::PAL_RET_OK) {
         HAL_TRACE_ERR("{} pal init failed", __FUNCTION__);
         return HAL_RET_ERR;
     }

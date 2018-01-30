@@ -327,9 +327,10 @@ port_create (port_args_t *args)
 sdk_ret_t
 port_update (void *pd_p, port_args_t *args)
 {
-    sdk_ret_t   ret = SDK_RET_OK;
-    port        *port_p = (port *)pd_p;
-    bool        configured = false;
+    sdk_ret_t          ret           = SDK_RET_OK;
+    bool               configured    = false;
+    port               *port_p       = (port *)pd_p;
+    port_admin_state_t prev_admin_st = port_p->admin_state();
 
     SDK_TRACE_DEBUG("%s: port update", __FUNCTION__);
 
@@ -344,13 +345,17 @@ port_update (void *pd_p, port_args_t *args)
     }
 
     // Enable the port if -
-    // admin-up state is set in request msg OR
-    // admin state is not set in request msg, but port is already admin up
+    //      admin-up state is set in request msg OR
+    //      admin state is not set in request msg, but port was admin up
     switch(args->admin_state) {
     case port_admin_state_t::PORT_ADMIN_STATE_NONE:
-        if (port_p->admin_state() == port_admin_state_t::PORT_ADMIN_STATE_UP) {
+        if (prev_admin_st == port_admin_state_t::PORT_ADMIN_STATE_UP) {
             ret = port::port_enable(port_p);
         }
+        break;
+
+    case port_admin_state_t::PORT_ADMIN_STATE_DOWN:
+        ret = port::port_disable(port_p);
         break;
 
     case port_admin_state_t::PORT_ADMIN_STATE_UP:

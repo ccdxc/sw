@@ -11,7 +11,7 @@ namespace linkmgr {
 
 typedef struct linkmgr_cfg_s {
     platform_type_t platform_type;
-    bool            mock_access_mode;
+    bool            hw_mock;
 } __PACK__ linkmgr_cfg_t;
 extern linkmgr_cfg_t g_linkmgr_cfg;
 
