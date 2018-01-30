@@ -474,6 +474,7 @@ int main (int argc, char ** argv)
     auto env = new cap_env_base(0);
     env->init();
     env->load_debug();
+    env->enable_padding();
     g_env = env;
     wait_loop();
 

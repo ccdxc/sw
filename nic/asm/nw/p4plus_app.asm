@@ -72,6 +72,9 @@ p4plus_app_tcp_proxy:
   add           r3, r3, P4PLUS_CPU_PKT_SZ
   add.!c7       r3, r0, k.l4_metadata_tcp_data_len
 
+  phvwr.!c7     p.capri_deparser_len_trunc_pkt_len, k.l4_metadata_tcp_data_len
+  phvwr.!c7     p.{capri_intrinsic_payload,capri_deparser_len_trunc}, 0x1
+
   phvwrpair     p.p4_to_p4plus_tcp_proxy_sack_valid, TRUE, \
                     p.p4_to_p4plus_tcp_proxy_valid, TRUE
   phvwrpair     p.p4_to_p4plus_tcp_proxy_p4plus_app_id, \

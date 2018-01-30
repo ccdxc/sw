@@ -21,6 +21,9 @@ gl_ignore_fields = {
     'ESP'   : [ 'data'],
 }
 
+MIN_PACKET_SIZE = 60 # excluding CRC
+CPU_PORT        = 128
+
 class CrPacket:
     def __init__(self, pktid, rawpkt, ports = None):
         self.ports      = ports
@@ -331,7 +334,17 @@ class PacketComparator:
     def GetRxPacketCount(self):
         return len(self.rxpkts)
 
+    def __add_padding(self, spkt, ports):
+        #if ports and CPU_PORT in ports:
+        #    return spkt
+        newpkt = spkt
+        if ports and len(spkt) < MIN_PACKET_SIZE:
+            newpkt = spkt + (bytes([0x0]) * (MIN_PACKET_SIZE - len(spkt)))
+        return newpkt
+        
+
     def AddExpected(self, spkt, ports, pktid):
+        spkt = self.__add_padding(spkt, ports)
         self.eid += 1
         epgid = '%s::%d' % (pktid, self.eid)
         self.lg.info("EXPECTED RX Packet: %s, Ports: " % epgid, ports)
@@ -342,6 +355,8 @@ class PacketComparator:
         return
 
     def AddReceived(self, spkt, ports):
+        if GlobalOptions.dryrun:
+            spkt = self.__add_padding(spkt, ports)
         self.rid += 1
         rpgid = 'RXPKT%d' % self.rid
         self.lg.info("ACTUAL RX Packet: %s, Ports: " % rpgid, ports)

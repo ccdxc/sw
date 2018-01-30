@@ -8,6 +8,9 @@ import infra.penscapy.penscapy as penscapy
 
 from infra.common.glopts import GlobalOptions
 
+MIN_PACKET_SIZE = 60 # excluding CRC
+CPU_PORT = 128
+
 class ModelRxPacket:
     def __init__(self, rawpkt, port, cos):
         self.rawpkt = rawpkt
@@ -47,12 +50,19 @@ class ModelConnectorObject:
             rxpkt = ModelRxPacket(pkt, port, cos)
             rxpkts.append(rxpkt)
         return
-      
+     
+    def __add_padding(self, spkt):
+        newpkt = spkt
+        if len(spkt) < MIN_PACKET_SIZE:
+            newpkt = spkt + (bytes([0x0]) * (MIN_PACKET_SIZE - len(spkt)))
+        return newpkt
+
     def __recv_cpu_packets(self, rxpkts):
         while True:
             pkt = model_wrap.get_next_cpu_pkt()
             if len(pkt) == 0: break
-            rxpkt = ModelRxPacket(pkt, 128, 0)
+            pkt = self.__add_padding(pkt)
+            rxpkt = ModelRxPacket(pkt, CPU_PORT, 0)
             rxpkts.append(rxpkt)
         return
 

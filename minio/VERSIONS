@@ -1,6 +1,6 @@
 # format: <name> <version>
 
-asic_libs ffda073
-ncc_tools ffda073
+asic_libs 462bf2c
+ncc_tools 462bf2c
 third_party_libs 1.1.32
-pbc_config ffda073
+pbc_config 462bf2c
