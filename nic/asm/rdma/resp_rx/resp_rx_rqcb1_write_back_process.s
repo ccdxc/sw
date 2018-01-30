@@ -43,14 +43,14 @@ resp_rx_rqcb1_write_back_process:
 
 skip_updates:
 
-    // if completion is not set, stats after writeback
-    bbne        k.global.flags.resp_rx._completion, 1, stats
-    //assumption is that write back is called with table 2
-    CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
+    // stats to be called in s6/t1 from cqcb process at s5/t2 
+    // if completion is not set, then cqcb process is not called, so
+    // call stats bubble up routine
+    bbne        k.global.flags.resp_rx._completion, 1, stats_bubble_up
 
     // if both non-first/only & completion for a send packet is set, 
     // wrid present in CB1 should be stored into phv.cqwqe
-    IS_ANY_FLAG_SET(F_MID_OR_LAST, r7, RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_LAST)
+    IS_ANY_FLAG_SET(F_MID_OR_LAST, r7, RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_LAST)  // BD Slot
     ARE_ALL_FLAGS_SET(F_COMPL_AND_SEND, r7, RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)
     setcf        F_SEND_COMPL_AND_MID_OR_LAST, [F_MID_OR_LAST & F_COMPL_AND_SEND]
     
@@ -83,12 +83,17 @@ completion:
     RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_cqcb_process, CQCB_ADDR)
 
-stats:
 
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, ARG_P)
-    CAPRI_SET_FIELD(ARG_P, STATS_INFO_T, bubble_count, 1)
-    RQCB4_ADDR_GET(RQCB4_ADDR)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_stats_process, RQCB4_ADDR)
+    nop.e
+    nop
+
+stats_bubble_up:
+
+    //assumption is that write back is called with table 2
+    // for stats bubble up action, just call with memory only table. need to call at stage5/table2
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
+    CAPRI_SET_FIELD(ARG_P, STATS_INFO_T, bubble_up, 1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
 
 exit:
 

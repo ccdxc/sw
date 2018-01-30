@@ -44,8 +44,8 @@ rq:
     CAPRI_SET_FIELD(r2, RESP_RX_TO_S4_T, wb1.log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
 
     add r2, r0, offsetof(struct phv_, to_stage_6_to_stage_data)
-    CAPRI_SET_FIELD(r2, RESP_RX_TO_S6_T, cqpt.cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
-    CAPRI_SET_FIELD(r2, RESP_RX_TO_S6_T, cqpt.log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S6_T, cqpt_stats.cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S6_T, cqpt_stats.log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
     b   done
     nop
 

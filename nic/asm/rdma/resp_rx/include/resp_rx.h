@@ -12,7 +12,7 @@
     CQCB_ADDR_GET(_r, _cqid, k.to_stage.s4.wb1.cqcb_base_addr_page_id);
 
 #define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.to_stage.s6.cqpt.cqcb_base_addr_page_id, k.to_stage.s6.cqpt.log_num_cq_entries);
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.to_stage.s6.cqpt_stats.cqcb_base_addr_page_id, k.to_stage.s6.cqpt_stats.log_num_cq_entries);
 
 // currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
 // dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will
@@ -443,8 +443,8 @@ struct resp_rx_rsq_backtrack_adjust_process_k_t {
 
 //20
 struct resp_rx_stats_info_t {
-    bubble_count: 3;
-    pad : 157;
+    bubble_up: 1;
+    pad : 159;
 };
 
 

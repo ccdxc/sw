@@ -11,11 +11,13 @@ struct cqcb_t d;
 #define PAGE_INDEX          r3
 #define PAGE_OFFSET         r1
 #define PAGE_SEG_OFFSET     r4
+#define RQCB4_ADDR          r6
 
 #define CQ_PT_INFO_T    struct resp_rx_cqcb_to_pt_info_t
 
 %%
     .param  resp_rx_cqpt_process
+    .param  resp_rx_stats_process
 
 .align
 resp_rx_cqcb_process:
@@ -57,6 +59,11 @@ resp_rx_cqcb_process:
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, PAGE_OFFSET)
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
+
+    // always call stats process at stage6/table1
+    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, ARG_P)   // sets STATS_INFO_T->bubble_up to 0
+    RQCB4_ADDR_GET(RQCB4_ADDR)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_stats_process, RQCB4_ADDR)
 
     // increment p_index
     tblmincri       CQ_P_INDEX, d.log_num_wqes, 1

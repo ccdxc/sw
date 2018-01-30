@@ -16,11 +16,6 @@ struct resp_rx_to_stage_wb0_info_t {
     pad: 104;
 };
 
-struct resp_rx_to_stage_stats_info_t {
-    bytes: 16;
-    pad: 112;
-};
-
 struct resp_rx_to_stage_wb1_info_t {
     update_wqe_ptr: 1;
     update_num_sges: 1;
@@ -32,10 +27,20 @@ struct resp_rx_to_stage_wb1_info_t {
     pad: 54;
 };
 
-struct resp_rx_to_stage_cqpt_info_t {
+//struct resp_rx_to_stage_cqpt_info_t {
+//    cqcb_base_addr_page_id  : 22;
+//    log_num_cq_entries      : 4;
+//};
+//
+//struct resp_rx_to_stage_stats_info_t {
+//    bytes: 16;
+//};
+
+struct resp_rx_to_stage_cqpt_stats_info_t {
     cqcb_base_addr_page_id  : 22;
     log_num_cq_entries      : 4;
-    pad: 102;
+    bytes: 16;
+    pad: 86;
 };
 
 struct resp_rx_to_stage_recirc_info_t {
@@ -99,14 +104,13 @@ struct resp_rx_s4_info_t {
 struct resp_rx_s5_info_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_stats_info_t stats;
     };
 };
 
 struct resp_rx_s6_info_t {
     union {
-        struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_cqpt_info_t cqpt;
+        struct resp_rx_to_stage_backtrack_info_t  backtrack;
+        struct resp_rx_to_stage_cqpt_stats_info_t cqpt_stats;
     };
 };
 

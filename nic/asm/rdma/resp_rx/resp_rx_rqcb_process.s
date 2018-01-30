@@ -17,7 +17,7 @@ struct rdma_stage0_table_k k;
 #define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
 #define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
 #define STATS_INFO_T struct resp_rx_stats_info_t
-#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
+#define TO_S_CQPT_STATS_INFO_T struct resp_rx_to_stage_cqpt_stats_info_t
 #define ECN_INFO_T  struct resp_rx_ecn_info_t
 #define RQCB_TO_RD_ATOMIC_T struct resp_rx_rqcb_to_read_atomic_rkey_info_t
 #define TO_S_ATOMIC_INFO_T struct resp_rx_to_stage_atomic_info_t
@@ -77,8 +77,8 @@ skip_roce_opt_parsing:
     CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
-    CAPRI_GET_STAGE_5_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
+    CAPRI_GET_STAGE_6_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, TO_S_CQPT_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 start_recirc_packet:
     add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
