@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -47,6 +48,9 @@ type CMDBasedProvider struct {
 	// When providing credentials for servers, mint a new certificate for each server
 	// so that we can put the correct server name in the subject
 	serverCertificates map[string](*tls.Certificate)
+
+	// Lock for serverCertificates map
+	srvCertMapMutex sync.Mutex
 
 	// CaTrustChain is used to form the bundles presented to the peer
 	caTrustChain []*x509.Certificate
@@ -234,14 +238,19 @@ func NewDefaultCMDBasedProvider(cmdEpNameOrURL, endpointID string, opts ...CMDPr
 // getServerCertificate is the callback that returns server certificates
 func (p *CMDBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	serverName := clientHelloInfo.ServerName
+
+	p.srvCertMapMutex.Lock()
 	tlsCert := p.serverCertificates[serverName]
+	p.srvCertMapMutex.Unlock()
 	if tlsCert == nil {
 		var err error
 		tlsCert, err = p.getTLSCertificate(serverName)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting dial options for server %s: %v", serverName, err)
 		}
+		p.srvCertMapMutex.Lock()
 		p.serverCertificates[serverName] = tlsCert
+		p.srvCertMapMutex.Unlock()
 	}
 
 	return tlsCert, nil
