@@ -133,7 +133,7 @@ struct doorbell {
  *                    sent.  When written by software this
  *                    register atomically decrements @int_credits
  *                    by the value written.  When @int_credits
- *                    becomes 0 then the “pending interrupt” bit
+ *                    becomes 0 then the "pending interrupt" bit
  *                    in the Interrupt Status register is cleared
  *                    by the hardware and any pending but unsent
  *                    interrupts are cleared.
@@ -180,9 +180,9 @@ struct intr_ctrl {
 	u32 rsvd6[3];
 };
 
-#define intr_to_mask(intr_ctrl)			((void *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)		((void *)(intr_ctrl) + 8)
-#define intr_to_mask_on_assert(intr_ctrl)	((void *)(intr_ctrl) + 12)
+#define intr_to_mask(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 4)
+#define intr_to_credits(intr_ctrl)		(void *)((u8 *)(intr_ctrl) + 8)
+#define intr_to_mask_on_assert(intr_ctrl)	(void *)((u8 *)(intr_ctrl) + 12)
 
 struct intr_status {
 	u32 status[2];
