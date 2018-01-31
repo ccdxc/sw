@@ -95,7 +95,7 @@ ipfix_create_ipv6_record:
                     CAPRI_PHV_END_OFFSET(ipfix_record_common_drop_vector)
     phvwr       p.phv2mem_cmd2_dma_cmd_addr, r1
 
-    tblwr       d.{u.ipfix_create_record_d.rnext}.hx, IPFIX_IPv6_RECORD_SIZE
+    tbladd      d.{u.ipfix_create_record_d.rnext}.hx, IPFIX_IPv6_RECORD_SIZE
 
 ipfix_header_fixups:
     seq         c1, k.ipfix_metadata_do_export, FALSE
@@ -135,6 +135,7 @@ ipfix_header_fixups:
     phvwr       p.phv2mem_cmd4_dma_cmd_phv_end_addr, \
                     CAPRI_PHV_END_OFFSET(ipfix_t0_metadata_doorbell_data)
     phvwr       p.phv2mem_cmd4_dma_cmd_addr, r1
+    phvwr       p.phv2mem_cmd4_dma_cmd_wr_fence, 1
     phvwr       p.phv2mem_cmd4_dma_cmd_eop, 1
 
 ipfix_record_done:

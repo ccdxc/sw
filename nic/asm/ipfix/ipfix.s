@@ -16,18 +16,19 @@ ipfix_start:
     seq         c1, k.p4_txdma_intr_qid, 1
     bcf         [c1], ipfix_export_start
 
-    slt         c1, d.u.ipfix_start_d.sindex, d.u.ipfix_start_d.eindex
+    // exit if we are done
+    sle         c1, d.u.ipfix_start_d.sindex, d.u.ipfix_start_d.eindex
+    bcf         [!c1], ipfix_exit
+
     // disable scheduler bit if we have processed all entries
+    seq         c1, d.u.ipfix_start_d.sindex, d.u.ipfix_start_d.eindex
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x2, DB_UPD_SHFT
     or          r1, r1, 1005, DB_LIF_SHFT
-    memwr.!c1.dx    r1, r0
+    memwr.c1.dx r1, r0
 
-    // ring the export doorbell, if needed
-    add         r1, d.{u.ipfix_start_d.rstart}.hx, 16
-    slt         c2, r1, d.u.ipfix_start_d.rnext
-    setcf       c2, [!c1 & c2]
-    phvwr.c2    p.ipfix_metadata_do_export, 1
+    // ring the export doorbell if needed
+    phvwr.c1    p.ipfix_metadata_do_export, 1
 
     // save info to global
     phvwr       p.ipfix_metadata_qstate_addr, \
@@ -44,7 +45,7 @@ ipfix_start:
     phvwr       p.common_te0_phv_table_lock_en, 0
 
     // update start index
-    tbladd.c1   d.{u.ipfix_start_d.sindex}.wx, 1
+    tbladd      d.{u.ipfix_start_d.sindex}.wx, 1
 
     // enable lookups in next stage
     phvwr       p.app_header_table0_valid, 1
@@ -61,6 +62,11 @@ ipfix_export_start:
     add         r2, r0, 1, 24
     memwr.dx    r1, r2
 
+    // reset next ptr
+    seq         c1, d.u.ipfix_start_d.rnext, 0
+    bcf         [c1], ipfix_exit
+    tblwr.!c1   d.u.ipfix_start_d.rnext, 0
+
     // table 1 : lookup qstate address of qid 0
     sub         r1, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1, \
                        p4_txdma_intr_qstate_addr_sbit2_ebit33}, 0x40
@@ -75,3 +81,10 @@ ipfix_export_start:
     phvwr       p.app_header_table2_valid, 0
     phvwr.e     p.app_header_table3_valid, 0
     nop
+
+ipfix_exit:
+    phvwr       p.app_header_table0_valid, 0
+    phvwr       p.app_header_table1_valid, 0
+    phvwr       p.app_header_table2_valid, 0
+    phvwr.e     p.app_header_table3_valid, 0
+    phvwr       p.p4_intr_global_drop, 1
