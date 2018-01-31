@@ -24,6 +24,7 @@ type MockTSDB struct {
 
 // Setup starts a server at the specified url
 func (i *MockTSDB) Setup() (string, error) {
+	models.EnableUintSupport() // temporary
 
 	testWriter := func(r *http.Request) (interface{}, error) {
 		body := r.Body

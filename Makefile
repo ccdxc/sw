@@ -15,7 +15,7 @@ TESTS := ./test/...
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./api/ ./api/hooks/... \
 ./api/labels/... ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... \
-./venice/collector/... ./venice/cli/... ${TESTS}
+./venice/collector/... ./venice/cli/... ./venice/aggregator/... ${TESTS}
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 

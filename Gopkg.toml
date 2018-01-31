@@ -229,8 +229,11 @@ required = ["github.com/GeertJohan/go.rice",
 # Override needed for supporting the correct db.Writes in TestServer. ToDo Use compatible semver
 [[override]]
   name = "github.com/influxdata/influxdb"
-  revision = "aa8ea43bf8b34d420feb2ae6be2aa8743201cbfd"
+  revision = "8b18cc445653866f71a59002f2f8524721a5d27e"
 
+[[constraint]]
+  name = "github.com/influxdata/influxql"
+  branch = "master"
 # Override needed for the handling unmarshal errors in Agent REST Server and NMD REST Server. ToDo Use compatible semver
 [[override]]
   name = "github.com/coreos/etcd"
@@ -240,6 +243,10 @@ required = ["github.com/GeertJohan/go.rice",
 [[override]]
   revision = "eda1d775a087f2a96fec7c7876ea94dea43e6027"
   name = "github.com/miekg/pkcs11"
+
+[[override]]
+  revision = "fbae0281ffd546fa6d1959fec6075ac5da7fb577"
+  name = "github.com/uber-go/zap"
 
 [[constraint]]
   branch = "master"

@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  name = "collectd.org"
+  packages = ["api","cdtime","network"]
+  revision = "2ce144541b8903101fb8f1483cc0497a68798122"
+  version = "v0.3.0"
+
+[[projects]]
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
+  version = "v0.3.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/GeertJohan/go.incremental"
   packages = ["."]
@@ -92,6 +104,12 @@
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/bmizerany/pat"
+  packages = ["."]
+  revision = "6226ea591a40176dd3ff9cd8eff81ed6ca721a00"
+
+[[projects]]
   name = "github.com/boltdb/bolt"
   packages = ["."]
   revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
@@ -108,6 +126,12 @@
   packages = ["."]
   revision = "61153c768f31ee5f130071d08fc82b85208528de"
   version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/cespare/xxhash"
+  packages = ["."]
+  revision = "5c37fe3735342a2e0d01c87a907579987c8936cc"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -179,6 +203,18 @@
   packages = ["."]
   revision = "dbeaa9332f19a944acb5736b4456cfcc02140e29"
   version = "v3.1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/dgryski/go-bits"
+  packages = ["."]
+  revision = "bd8a69a71dc203aa976f9d918b428db9ac605f57"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/dgryski/go-bitstream"
+  packages = ["."]
+  revision = "7d46cd22db7004f0cceb6f7975824b560cf0e486"
 
 [[projects]]
   name = "github.com/docker/distribution"
@@ -306,6 +342,12 @@
   version = "v1.7.0"
 
 [[projects]]
+  name = "github.com/go-test/deep"
+  packages = ["."]
+  revision = "9898238679c264cfb10411539f14a0553dc8b295"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "v2"
   name = "github.com/go-yaml/yaml"
   packages = ["."]
@@ -319,7 +361,7 @@
 
 [[projects]]
   name = "github.com/gogo/protobuf"
-  packages = ["gogoproto","jsonpb","plugin/compare","plugin/defaultcheck","plugin/description","plugin/embedcheck","plugin/enumstringer","plugin/equal","plugin/face","plugin/gostring","plugin/marshalto","plugin/oneofcheck","plugin/populate","plugin/size","plugin/stringer","plugin/testgen","plugin/union","plugin/unmarshal","proto","protoc-gen-gofast","protoc-gen-gogo/descriptor","protoc-gen-gogo/generator","protoc-gen-gogo/grpc","protoc-gen-gogo/plugin","sortkeys","types","vanity","vanity/command"]
+  packages = ["codec","gogoproto","jsonpb","plugin/compare","plugin/defaultcheck","plugin/description","plugin/embedcheck","plugin/enumstringer","plugin/equal","plugin/face","plugin/gostring","plugin/marshalto","plugin/oneofcheck","plugin/populate","plugin/size","plugin/stringer","plugin/testgen","plugin/union","plugin/unmarshal","proto","protoc-gen-gofast","protoc-gen-gogo/descriptor","protoc-gen-gogo/generator","protoc-gen-gogo/grpc","protoc-gen-gogo/plugin","sortkeys","types","vanity","vanity/command"]
   revision = "342cbe0a04158f6dcb03ca0079991a51a4248c02"
   version = "v0.5"
 
@@ -370,6 +412,12 @@
   name = "github.com/google/btree"
   packages = ["."]
   revision = "316fb6d3f031ae8f4d457c6c5186b9e3ded70435"
+
+[[projects]]
+  name = "github.com/google/go-cmp"
+  packages = ["cmp","cmp/internal/diff","cmp/internal/function","cmp/internal/value"]
+  revision = "8099a9787ce5dc5984ed879a3bda47dc730a8e97"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -432,8 +480,32 @@
 
 [[projects]]
   name = "github.com/influxdata/influxdb"
-  packages = ["client/v2","models","pkg/escape"]
-  revision = "aa8ea43bf8b34d420feb2ae6be2aa8743201cbfd"
+  packages = [".","client/v2","cmd/influxd/run","coordinator","logger","models","monitor","monitor/diagnostics","pkg/bits","pkg/bloom","pkg/bytesutil","pkg/deep","pkg/escape","pkg/estimator","pkg/estimator/hll","pkg/limiter","pkg/metrics","pkg/mmap","pkg/pool","pkg/rhh","pkg/tracing","pkg/tracing/fields","pkg/tracing/labels","pkg/tracing/wire","prometheus","prometheus/remote","query","query/internal","query/neldermead","services/collectd","services/continuous_querier","services/graphite","services/httpd","services/meta","services/meta/internal","services/opentsdb","services/precreator","services/retention","services/snapshotter","services/storage","services/subscriber","services/udp","tcp","toml","tsdb","tsdb/engine","tsdb/engine/tsm1","tsdb/index","tsdb/index/inmem","tsdb/index/tsi1","tsdb/internal","uuid"]
+  revision = "8b18cc445653866f71a59002f2f8524721a5d27e"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/influxdata/influxql"
+  packages = [".","internal"]
+  revision = "47c654dfb4cd3be546b9ed1b37b30d7ab2784ffc"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/influxdata/usage-client"
+  packages = ["v1"]
+  revision = "6d3895376368aa52a3a81d2a16e90f0f52371967"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/influxdata/yamux"
+  packages = ["."]
+  revision = "1f58ded512de5feabbe30b60c7d33a7a896c5f16"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/influxdata/yarpc"
+  packages = [".","codes","status","yarpcproto"]
+  revision = "fdd7e84bf38b2005289b3a0bd0d66dde5a423096"
 
 [[projects]]
   name = "github.com/jessevdk/go-flags"
@@ -458,6 +530,12 @@
   name = "github.com/juju/ratelimit"
   packages = ["."]
   revision = "59fac5042749a5afb9af70e813da1dd5474f0167"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jwilder/encoding"
+  packages = ["simple8b"]
+  revision = "b4e1701a28efcc637d9afcca7d38e495fe909a09"
 
 [[projects]]
   branch = "master"
@@ -584,6 +662,12 @@
   revision = "53be0d36a84c2a886ca057d34b6aa4468df9ccb4"
 
 [[projects]]
+  name = "github.com/philhofer/fwd"
+  packages = ["."]
+  revision = "bb6d471dc95d4fe11e432687f8b70ff496cf3136"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/pierrec/lz4"
   packages = ["."]
   revision = "2fcda4cb7018ce05a25959d2fe08c83e3329f169"
@@ -662,6 +746,12 @@
   version = "v2.2.6"
 
 [[projects]]
+  name = "github.com/tinylib/msgp"
+  packages = ["msgp"]
+  revision = "b2b6a672cf1e5b90748f79b8b81fc8c5cf0571a1"
+  version = "1.0.2"
+
+[[projects]]
   name = "github.com/ugorji/go"
   packages = ["codec"]
   revision = "8c0409fcbb70099c748d71f714529204975f6c3f"
@@ -700,6 +790,30 @@
   packages = ["."]
   revision = "07dd2e8dfe18522e9c447ba95f2fe95262f63bb2"
   version = "0.0.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/xlab/treeprint"
+  packages = ["."]
+  revision = "06dfc6fa17cdde904617990a0c2d89e3e332dbb3"
+
+[[projects]]
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  revision = "8474b86a5a6f79c443ce4b2992817ff32cf208b8"
+  version = "v1.3.1"
+
+[[projects]]
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "go.uber.org/zap"
+  packages = [".","buffer","internal/bufferpool","internal/color","internal/exit","zapcore"]
+  revision = "35aad584952c3e7020db7b839f6b102de6271f89"
+  version = "v1.7.1"
 
 [[projects]]
   branch = "master"

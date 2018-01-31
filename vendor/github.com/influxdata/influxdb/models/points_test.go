@@ -40,6 +40,47 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
+func TestMarshalFields(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		value interface{}
+		exp   string
+	}{
+		{
+			name:  "Float",
+			value: float64(2),
+			exp:   `value=2`,
+		},
+		{
+			name:  "Integer",
+			value: int64(2),
+			exp:   `value=2i`,
+		},
+		{
+			name:  "Unsigned",
+			value: uint64(2),
+			exp:   `value=2u`,
+		},
+		{
+			name:  "String",
+			value: "foobar",
+			exp:   `value="foobar"`,
+		},
+		{
+			name:  "Boolean",
+			value: true,
+			exp:   `value=true`,
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			fields := map[string]interface{}{"value": tt.value}
+			if have, want := models.Fields(fields).MarshalBinary(), []byte(tt.exp); !bytes.Equal(have, want) {
+				t.Fatalf("unexpected field output: %s != %s", string(have), string(want))
+			}
+		})
+	}
+}
+
 func TestTags_HashKey(t *testing.T) {
 	tags = models.NewTags(map[string]string{"A FOO": "bar", "APPLE": "orange", "host": "serverA", "region": "uswest"})
 	got := tags.HashKey()
@@ -523,6 +564,7 @@ func TestParsePointBadNumber(t *testing.T) {
 		"cpu v=-e-e-e ",
 		"cpu v=42+3 ",
 		"cpu v= ",
+		"cpu v=-123u",
 	} {
 		_, err := models.ParsePointsString(tt)
 		if err == nil {
@@ -567,9 +609,16 @@ func TestParsePointMinInt64(t *testing.T) {
 	}
 
 	// min int
-	_, err = models.ParsePointsString(`cpu,host=serverA,region=us-west value=-9223372036854775808i`)
+	p, err := models.ParsePointsString(`cpu,host=serverA,region=us-west value=-9223372036854775808i`)
 	if err != nil {
 		t.Errorf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=-9223372036854775808i`, err)
+	}
+	fields, err := p[0].Fields()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exp, got := int64(-9223372036854775808), fields["value"].(int64); exp != got {
+		t.Fatalf("ParsePoints Value mismatch. \nexp: %v\ngot: %v", exp, got)
 	}
 
 	// leading zeros
@@ -587,9 +636,16 @@ func TestParsePointMaxFloat64(t *testing.T) {
 	}
 
 	// max float
-	_, err = models.ParsePointsString(fmt.Sprintf(`cpu,host=serverA,region=us-west value=%s`, string(maxFloat64)))
+	p, err := models.ParsePointsString(fmt.Sprintf(`cpu,host=serverA,region=us-west value=%s`, string(maxFloat64)))
 	if err != nil {
 		t.Errorf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=9223372036854775807`, err)
+	}
+	fields, err := p[0].Fields()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exp, got := math.MaxFloat64, fields["value"].(float64); exp != got {
+		t.Fatalf("ParsePoints Value mismatch. \nexp: %v\ngot: %v", exp, got)
 	}
 
 	// leading zeros
@@ -607,15 +663,77 @@ func TestParsePointMinFloat64(t *testing.T) {
 	}
 
 	// min float
-	_, err = models.ParsePointsString(fmt.Sprintf(`cpu,host=serverA,region=us-west value=%s`, string(minFloat64)))
+	p, err := models.ParsePointsString(fmt.Sprintf(`cpu,host=serverA,region=us-west value=%s`, string(minFloat64)))
 	if err != nil {
 		t.Errorf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=...`, err)
+	}
+	fields, err := p[0].Fields()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exp, got := -math.MaxFloat64, fields["value"].(float64); exp != got {
+		t.Fatalf("ParsePoints Value mismatch. \nexp: %v\ngot: %v", exp, got)
 	}
 
 	// leading zeros
 	_, err = models.ParsePointsString(fmt.Sprintf(`cpu,host=serverA,region=us-west value=%s`, "-0000000"+string(minFloat64)[1:]))
 	if err != nil {
 		t.Errorf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=...`, err)
+	}
+}
+
+func TestParsePointMaxUint64(t *testing.T) {
+	// out of range
+	_, err := models.ParsePointsString(`cpu,host=serverA,region=us-west value=18446744073709551616u`)
+	exp := `unable to parse 'cpu,host=serverA,region=us-west value=18446744073709551616u': unable to parse unsigned 18446744073709551616: strconv.ParseUint: parsing "18446744073709551616": value out of range`
+	if err == nil || (err != nil && err.Error() != exp) {
+		t.Fatalf("Error mismatch:\nexp: %s\ngot: %v", exp, err)
+	}
+
+	// max int
+	p, err := models.ParsePointsString(`cpu,host=serverA,region=us-west value=18446744073709551615u`)
+	if err != nil {
+		t.Fatalf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=18446744073709551615u`, err)
+	}
+	fields, err := p[0].Fields()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exp, got := uint64(18446744073709551615), fields["value"].(uint64); exp != got {
+		t.Fatalf("ParsePoints Value mismatch. \nexp: %v\ngot: %v", exp, got)
+	}
+
+	// leading zeros
+	_, err = models.ParsePointsString(`cpu,host=serverA,region=us-west value=00018446744073709551615u`)
+	if err != nil {
+		t.Fatalf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=00018446744073709551615u`, err)
+	}
+}
+
+func TestParsePointMinUint64(t *testing.T) {
+	// out of range
+	_, err := models.ParsePointsString(`cpu,host=serverA,region=us-west value=--1u`)
+	if err == nil {
+		t.Errorf(`ParsePoints("%s") mismatch. got nil, exp error`, `cpu,host=serverA,region=us-west value=-1u`)
+	}
+
+	// min int
+	p, err := models.ParsePointsString(`cpu,host=serverA,region=us-west value=0u`)
+	if err != nil {
+		t.Errorf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=0u`, err)
+	}
+	fields, err := p[0].Fields()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exp, got := uint64(0), fields["value"].(uint64); exp != got {
+		t.Fatalf("ParsePoints Value mismatch. \nexp: %v\ngot: %v", exp, got)
+	}
+
+	// leading zeros
+	_, err = models.ParsePointsString(`cpu,host=serverA,region=us-west value=0000u`)
+	if err != nil {
+		t.Errorf(`ParsePoints("%s") mismatch. got %v, exp nil`, `cpu,host=serverA,region=us-west value=0000u`, err)
 	}
 }
 
@@ -1221,6 +1339,15 @@ func TestParsePointQuotedTags(t *testing.T) {
 			},
 			time.Unix(1, 0)),
 	)
+}
+
+func TestParsePoint_TrailingSlash(t *testing.T) {
+	_, err := models.ParsePointsString(`a v=1 0\`)
+	if err == nil {
+		t.Fatalf("ParsePoints failed: %v", err)
+	} else if !strings.Contains(err.Error(), "bad timestamp") {
+		t.Fatalf("ParsePoints unexpected error: %v", err)
+	}
 }
 
 func TestParsePointsUnbalancedQuotedTags(t *testing.T) {
@@ -2062,29 +2189,30 @@ func TestNewPointsRejectsEmptyFieldNames(t *testing.T) {
 
 func TestNewPointsRejectsMaxKey(t *testing.T) {
 	var key string
-	for i := 0; i < 65536; i++ {
+	// tsm field key is point key, separator (4 bytes) and field
+	for i := 0; i < models.MaxKeyLength-len("value")-4; i++ {
 		key += "a"
 	}
 
-	if _, err := models.NewPoint(key, nil, models.Fields{"value": 1}, time.Now()); err == nil {
+	// Test max key len
+	if _, err := models.NewPoint(key, nil, models.Fields{"value": 1, "ok": 2.0}, time.Now()); err != nil {
+		t.Fatalf("new point with max key. got: %v, expected: nil", err)
+	}
+
+	if _, err := models.ParsePointsString(fmt.Sprintf("%v value=1,ok=2.0", key)); err != nil {
+		t.Fatalf("parse point with max key. got: %v, expected: nil", err)
+	}
+
+	// Test 1 byte over max key len
+	key += "a"
+	if _, err := models.NewPoint(key, nil, models.Fields{"value": 1, "ok": 2.0}, time.Now()); err == nil {
 		t.Fatalf("new point with max key. got: nil, expected: error")
 	}
 
-	if _, err := models.ParsePointsString(fmt.Sprintf("%v value=1", key)); err == nil {
+	if _, err := models.ParsePointsString(fmt.Sprintf("%v value=1,ok=2.0", key)); err == nil {
 		t.Fatalf("parse point with max key. got: nil, expected: error")
 	}
-}
 
-func TestParseKeyEmpty(t *testing.T) {
-	if _, _, err := models.ParseKey(nil); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestParseKeyMissingValue(t *testing.T) {
-	if _, _, err := models.ParseKey([]byte("cpu,foo ")); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
 }
 
 func TestPoint_FieldIterator_Simple(t *testing.T) {
@@ -2147,6 +2275,8 @@ func toFields(fi models.FieldIterator) models.Fields {
 			v, err = fi.FloatValue()
 		case models.Integer:
 			v, err = fi.IntegerValue()
+		case models.Unsigned:
+			v, err = fi.UnsignedValue()
 		case models.String:
 			v = fi.StringValue()
 		case models.Boolean:
@@ -2172,7 +2302,7 @@ m v=42i
 m v="string"
 m v=true
 m v="string\"with\"escapes"
-m v=42i,f=42,g=42.314
+m v=42i,f=42,g=42.314,u=123u
 m a=2i,b=3i,c=true,d="stuff",e=-0.23,f=123.456
 `)
 
@@ -2249,4 +2379,9 @@ func BenchmarkEscapeString_QuotesAndBackslashes(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		sink = [...]string{models.EscapeStringField(s1), models.EscapeStringField(s2)}
 	}
+}
+
+func init() {
+	// Force uint support to be enabled for testing.
+	models.EnableUintSupport()
 }
