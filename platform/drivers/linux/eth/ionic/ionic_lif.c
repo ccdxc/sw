@@ -304,6 +304,7 @@ static int ionic_set_mac_address(struct net_device *netdev, void *addr)
 	return 0;
 }
 
+#ifdef ADMINQ
 static void ionic_change_mtu_cb(struct queue *q, struct desc_info *desc_info,
 				struct cq_info *cq_info, void *cb_arg)
 {
@@ -324,17 +325,34 @@ static void ionic_change_mtu_cb(struct queue *q, struct desc_info *desc_info,
 
 	rtnl_unlock();
 }
+#endif
 
 static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 {
 	struct lif *lif = netdev_priv(netdev);
+#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
+#else
+	unsigned int i;
+#endif
 
 	if (netif_running(netdev))
 		ionic_stop(netdev);
 
-	return ionic_adminq_mtu_set(adminq, new_mtu, ionic_change_mtu_cb,
+#ifdef ADMINQ
+	ionic_adminq_mtu_set(adminq, new_mtu, ionic_change_mtu_cb,
 				    NULL);
+#else
+	netdev->mtu = new_mtu;
+
+	for (i = 0; i < lif->nrxqcqs; i++)
+		ionic_rx_refill(&lif->rxqcqs[i]->q);
+
+	if (netif_running(netdev))
+		ionic_open(netdev);
+
+	return 0;
+#endif
 }
 
 static void ionic_tx_timeout(struct net_device *netdev)
