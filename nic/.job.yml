@@ -1,6 +1,7 @@
 ---
 targets:
   main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make bazel-build && make bazel-gtests && make run-gtests && make clean" ]
+  arm_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make capsim-master && make ARCH=aarch64 bazel-build && make ARCH=aarch64 bazel-gtests && make clean" ]
   storage:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --storage" ]
   # config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --configtest" ]
   rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo rdma --feature rdma" ]
