@@ -548,7 +548,7 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 }
 
 // createDaemonSet creates a DaemonSet object.
-func createDaemonSet(client k8sclient.Interface, module *types.Module) (err error) {
+func createDaemonSet(client k8sclient.Interface, module *types.Module) error {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 	dsConfig := &clientTypes.DaemonSet{
@@ -580,11 +580,11 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) (err erro
 		log.Errorf("Failed to create DaemonSet %+v with error: %v", dsConfig, err)
 	}
 
-	return
+	return err
 }
 
 // createDeployment creates a Deployment object.
-func createDeployment(client k8sclient.Interface, module *types.Module) (err error) {
+func createDeployment(client k8sclient.Interface, module *types.Module) error {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
@@ -617,7 +617,7 @@ func createDeployment(client k8sclient.Interface, module *types.Module) (err err
 		log.Errorf("Failed to create Deployment %+v with error: %v", dConfig, err)
 	}
 
-	return
+	return err
 }
 
 // deleteModules deletes modules using k8s.
@@ -633,33 +633,44 @@ func (k *k8sService) deleteModules(modules map[string]types.Module) {
 }
 
 // deleteDaemonSet deletes a DaemonSet object.
-func (k *k8sService) deleteDaemonSet(name string) (err error) {
-	err = k.client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
+func (k *k8sService) deleteDaemonSet(name string) error {
+	err := k.client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
 	if err == nil {
 		log.Infof("Deleted DaemonSet %v", name)
-		return
 	} else if errors.IsNotFound(err) {
 		log.Infof("DaemonSet %v not found", name)
-		return
+		err = nil
 	} else {
 		log.Errorf("Failed to delete DaemonSet %v with error: %v", name, err)
-		return
 	}
+	return err
+}
+
+func (k *k8sService) DeleteNode(name string) error {
+	err := k.client.CoreV1().Nodes().Delete(name, nil)
+	if err == nil {
+		log.Infof("Deleted Node %v from k8s", name)
+	} else if errors.IsNotFound(err) {
+		log.Infof("Node %v not found in k8s", name)
+		err = nil
+	} else {
+		log.Errorf("Failed to delete Node %v from k8s with error: %v", name, err)
+	}
+	return err
 }
 
 // deleteDeployment deletes a Deployment object.
-func (k *k8sService) deleteDeployment(name string) (err error) {
-	err = k.client.Extensions().Deployments(defaultNS).Delete(name, nil)
+func (k *k8sService) deleteDeployment(name string) error {
+	err := k.client.Extensions().Deployments(defaultNS).Delete(name, nil)
 	if err == nil {
 		log.Infof("Deleted Deployment %v", name)
-		return
 	} else if errors.IsNotFound(err) {
 		log.Infof("Deployment %v not found", name)
-		return
+		err = nil
 	} else {
 		log.Errorf("Failed to delete Deployment %v with error: %v", name, err)
-		return
 	}
+	return err
 }
 
 // Stop stops the kubernetes service.

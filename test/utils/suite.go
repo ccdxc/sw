@@ -258,7 +258,7 @@ func (tu *TestUtils) CommandOutput(ip string, command string) string {
 
 	out, err := session.CombinedOutput(command)
 	if err != nil {
-		ginkgo.Fail(fmt.Sprintf("err : %s", err))
+		ginkgo.Fail(fmt.Sprintf("command %s on %s failed with err : %s after output: %s", command, ip, err.Error(), string(out)))
 	}
 	return strings.TrimSpace(string(out))
 }

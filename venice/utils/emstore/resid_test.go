@@ -126,26 +126,26 @@ func concurrentResourceIDAllocationTest(db Emstore, t *testing.T, genIDs []uint6
 	// request 10000 net, sg and tenant object ids
 	for i := 0; i < concurrencyCount; i++ {
 		randomUsec := randGen.Intn(100)
-		go func() {
+		go func(iter int) {
 			id, err := db.GetNextID(n)
-			AssertOk(t, err, fmt.Sprintf("could not generate network ID. Iteration: %v, Err: %v", i, err))
+			AssertOk(t, err, fmt.Sprintf("could not generate network ID. Iteration: %v, Err: %v", iter, err))
 			idChannel <- id
 			time.Sleep(time.Microsecond * time.Duration(randomUsec))
-		}()
+		}(i)
 
-		go func() {
+		go func(iter int) {
 			id, err := db.GetNextID(s)
-			AssertOk(t, err, fmt.Sprintf("Could not generate security group ID. Iteration: %v, Err: %v", i, err))
+			AssertOk(t, err, fmt.Sprintf("Could not generate security group ID. Iteration: %v, Err: %v", iter, err))
 			idChannel <- id
 			time.Sleep(time.Microsecond * time.Duration(randomUsec))
-		}()
+		}(i)
 
-		go func() {
+		go func(iter int) {
 			id, err := db.GetNextID(tn)
-			AssertOk(t, err, fmt.Sprintf("Could not generate tenant ID. Iteration: %v, Err: %v", i, err))
+			AssertOk(t, err, fmt.Sprintf("Could not generate tenant ID. Iteration: %v, Err: %v", iter, err))
 			idChannel <- id
 			time.Sleep(time.Microsecond * time.Duration(randomUsec))
-		}()
+		}(i)
 	}
 
 	for i := 0; i < concurrencyCount*3; i++ {

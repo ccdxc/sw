@@ -38,6 +38,7 @@ func (o *NodeDisjoinOp) Run() (interface{}, error) {
 	if err != nil {
 		return nil, errors.NewInternalError(err)
 	}
+	err = env.K8sService.DeleteNode(o.node.Name)
 	log.Infof("node %v disjoin from cluster. err %v", o.node.Name, err)
 	return o.node.Name, err
 }

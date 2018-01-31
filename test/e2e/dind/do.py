@@ -48,7 +48,7 @@ class Node:
     def startNode(self):
         while runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name)) == 0:
             time.sleep(2)
-        runCommand("""docker run -P -l pens --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v $GOPATH/src:/import/src --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(self.ipaddress, self.name, self.name))
+        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -P -l pens --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v $GOPATH/src:/import/src --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(self.ipaddress, self.name, self.name))
         while self.runCmd("""docker ps >/dev/null 2>&1""".format(self.name)) != 0:
             time.sleep(2)
     def doCluster(self):
@@ -179,10 +179,12 @@ for addr in xrange(len(nodeList)):
 
 if args.init_cluster_only:
     initCluster(ipList[0], quorumIPs, clustervip)
+    os.system("stty sane")
     sys.exit(0)
 
 if args.stop:
     stopCluster(nodeList, nodes, quorumNames, clustervip)
+    os.system("stty sane")
     sys.exit(0)
 if args.restart:
     restartCluster(nodeList, nodes, quorumNames, clustervip)
@@ -190,6 +192,7 @@ if args.restart:
     sys.exit(0)
 if args.delete:
     deleteCluster()
+    os.system("stty sane")
     sys.exit(0)
 
 deleteCluster()

@@ -186,13 +186,16 @@ type K8sPodEventObserver interface {
 	OnNotifyK8sPodEvent(K8sPodEvent) error
 }
 
-// K8sService is the interface for managing controllers deployed through K8s.
+// K8sService is the interface for managing nodes/controllers deployed through K8s.
 type K8sService interface {
 	Register(K8sPodEventObserver)
 	UnRegister(K8sPodEventObserver)
 
 	// Start the k8s service.
 	Start(client k8sclient.Interface, isLeader bool)
+
+	// Delete a node from k8s cluster
+	DeleteNode(name string) error
 
 	// Stop the k8s service.
 	Stop()

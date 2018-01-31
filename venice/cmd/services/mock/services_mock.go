@@ -294,6 +294,11 @@ func (m *K8sService) Start(client k8sclient.Interface, isLeader bool) {
 func (m *K8sService) Stop() {
 }
 
+// Delete a node
+func (m *K8sService) DeleteNode(name string) error {
+	return nil
+}
+
 // Register is a mock implementation of registering an observer.
 func (m *K8sService) Register(o types.K8sPodEventObserver) {
 	m.Lock()
