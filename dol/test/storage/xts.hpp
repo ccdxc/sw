@@ -120,12 +120,14 @@ extern uint64_t write_hbm_buf2;
 class XtsCtx {
 public:
 
-  void init(bool chain = false);
+  void init(uint32_t size, bool chain = false);
   std::string get_name(bool chain = false);
   XtsCtx();
   ~XtsCtx();
   int test_seq_xts();
-  int ring_db_n_verify();
+  int ring_doorbell();
+  int verify_doorbell();
+  int queue_req_n_ring_db_from_host();
 
   void* src_buf = write_buf;
   bool is_src_hbm_buf = false;
@@ -145,7 +147,8 @@ public:
   uint32_t start_sec_num = 5;
   xts::xts_aol_t* in_aol[MAX_AOLS];
   xts::xts_aol_t* out_aol[MAX_AOLS];
-  bool ring_seq_db = true;
+  bool ring_db = true;
+  bool verify_db = true;
   uint16_t seq_xts_index = 0;
   xts::xts_desc_t* xts_desc_addr = NULL;
   unsigned char* iv = NULL;
@@ -157,7 +160,17 @@ public:
   uint64_t* status = NULL;
   bool t10_en = false;
   bool decr_en = false;
+
+  uint64_t xts_ring_base_addr;
+  uint64_t xts_ring_pi_addr;
+  bool use_seq = true;
 };
+
+
+int xts_multi_blk();
+int xts_in_place();
+
+
 }  // namespace tests
 
 #endif   // _XTS_HPP_

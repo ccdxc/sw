@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <netinet/in.h>
+#include <math.h>
 
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/hal_if.hpp"
@@ -13,10 +14,14 @@
 uint32_t key128_desc_idx = 0;
 uint32_t key256_desc_idx = 0;
 bool key_desc_inited = false;
-uint32_t exp_opaque_tag = 99; //some random number that keeps gettign incremented
+uint32_t exp_opaque_tag_encr = 0;
+uint32_t exp_opaque_tag_decr = 0;
 
 const static uint32_t  kAolSize              = 64;
 const static uint32_t  kXtsDescSize          = 128;
+const static uint32_t  kXtsPISize            = 4;
+const static uint32_t  kXtsQueueSize         = 1024;
+
 
 namespace xts {
 extern std::vector<TestCtx> xts_tests;
@@ -86,13 +91,47 @@ bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset
     return false;
 }
 
-void XtsCtx::init(bool chain) {
+
+int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en) {
+
+  uint64_t opaque_tag_addr = 0;
+  if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr)) {
+    printf("get_xts_opaque_tag_addr failed \n");
+    return -1;
+  }
+
+  uint32_t opaque_tag = 0;
+  auto func = [opaque_tag_addr, opaque_tag, exp_opaque_tag] () {
+    if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
+      printf("Reading opaque tag hbm mem failed \n");
+      return -1;
+    }
+
+    if(exp_opaque_tag > opaque_tag) {
+      //printf("Opaque tag expected value %u rcvd %u\n", exp_opaque_tag, opaque_tag);
+      return -1;
+    }
+    return 0;
+  };
+  Poller poll;
+  int rv = poll(func);
+  if(0 == rv) {
+    if(decr_en) printf("Decr Opaque tag returned successfully \n");
+    else printf("Encr Opaque tag returned successfully \n");
+  } else {
+    printf("Opaque tag expected value %u rcvd %u\n", exp_opaque_tag, opaque_tag);
+  }
+
+  return rv;
+}
+
+void XtsCtx::init(uint32_t size, bool chain) {
   xts_db = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
   *xts_db = 0;
   if(!is_src_hbm_buf) {
     if(!chain) {
       srand(time(NULL));
-      for(uint32_t i = 0; i < kDefaultBufSize/sizeof(int); i++) {
+      for(uint32_t i = 0; i < size/sizeof(int); i++) {
         ((int*)src_buf)[i] = rand();
       }
     }
@@ -101,7 +140,7 @@ void XtsCtx::init(bool chain) {
     src_buf_phy = src_buf;
   }
   if(!is_dst_hbm_buf) {
-    memset(dst_buf, 0, kDefaultBufSize);
+    memset(dst_buf, 0, size);
     dst_buf_phy = (void*)host_mem_v2p(dst_buf);
   } else {
     dst_buf_phy = dst_buf;
@@ -230,7 +269,7 @@ int XtsCtx::test_seq_xts() {
   assert(num_aols <= MAX_AOLS); // Currently we only support upto 2 - min required to validate aol chaining
   assert(num_sub_aols <= MAX_SUB_AOLS); // Currently we only support upto 4 - min required to validate aol chaining
   assert(sizeof(xts::xts_desc_t) == kXtsDescSize);
-  xts::xts_desc_t* xts_desc_addr = (xts::xts_desc_t*)alloc_host_mem(sizeof(xts::xts_desc_t));
+  xts_desc_addr = (xts::xts_desc_t*)alloc_host_mem(sizeof(xts::xts_desc_t));
 
   assert(sizeof(xts::xts_aol_t) == kAolSize);
   memset(in_aol, 0x0, sizeof(in_aol));
@@ -303,7 +342,8 @@ int XtsCtx::test_seq_xts() {
   xts_desc_addr->db_addr = xts_db_addr;
   xts_desc_addr->db_data = exp_db_data;
   xts_desc_addr->opaque_tag_en = 1;
-  xts_desc_addr->opaque_tag = exp_opaque_tag;
+  xts_desc_addr->opaque_tag = decr_en? ++exp_opaque_tag_decr : ++exp_opaque_tag_encr;
+
   if(t10_en) {
     xts_desc_addr->sector_num = start_sec_num;
     xts_desc_addr->sector_size = sector_size;
@@ -338,36 +378,53 @@ int XtsCtx::test_seq_xts() {
   else
     xts_desc_addr->key_desc_idx = key256_desc_idx;
 
-  // Fill the XTS Seq descriptor
-  utils::write_bit_fields(seq_xts_desc, 0, 64, host_mem_v2p(xts_desc_addr));
-  utils::write_bit_fields(seq_xts_desc, 64, 32, 7);  //2^7 which will be 128 - xts desc size
-  utils::write_bit_fields(seq_xts_desc, 96, 16, 2);  //2^2 which will be 4 - prod index size
-
   // Fill xts producer index addr
   if(decr_en)
-    utils::write_bit_fields(seq_xts_desc, 112, 34, CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX);
+    xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX;
   else
-    utils::write_bit_fields(seq_xts_desc, 112, 34, CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX);
-
-  uint64_t xts_ring_base_addr;
+    xts_ring_pi_addr = CAPRI_BARCO_MD_HENS_REG_XTS0_PRODUCER_IDX;
 
   if(hal_if::get_xts_ring_base_address(decr_en, &xts_ring_base_addr) < 0) {
     printf("can't get xts ring base address \n");
     return -1;
   }
-  // Fill xts ring base addr
-  utils::write_bit_fields(seq_xts_desc, 146, 34, xts_ring_base_addr);
 
-  if(ring_seq_db) {
-    return ring_db_n_verify();
+  if(use_seq) {
+    // Fill the XTS Seq descriptor
+    utils::write_bit_fields(seq_xts_desc, 0, 64, host_mem_v2p(xts_desc_addr));
+    utils::write_bit_fields(seq_xts_desc, 64, 32, (uint64_t) log2(kXtsDescSize));  //2^7 which will be 128 - xts desc size
+    utils::write_bit_fields(seq_xts_desc, 96, 16, (uint64_t) log2(kXtsPISize));  //2^2 which will be 4 - prod index size
+    utils::write_bit_fields(seq_xts_desc, 146, 34, xts_ring_base_addr);
+    utils::write_bit_fields(seq_xts_desc, 112, 34, xts_ring_pi_addr);
   }
 
+  int rv = 0;
+  if(ring_db) {
+    rv = ring_doorbell();
+    if(rv == 0 && verify_db)
+      rv = verify_doorbell();
+  }
+
+  return rv;
+}
+
+int XtsCtx::ring_doorbell() {
+  if(use_seq) {
+    // Kickstart the sequencer
+    test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
+  } else {
+    uint32_t pi;
+    read_reg(xts_ring_pi_addr, pi);
+    uint64_t ring_addr = xts_ring_base_addr + kXtsDescSize * pi;
+    write_mem(ring_addr, (uint8_t*)xts_desc_addr, kXtsDescSize);
+    pi += 1;
+    if(pi == kXtsQueueSize) pi = 0; // roll-over case
+    write_reg(xts_ring_pi_addr, pi);
+  }
   return 0;
 }
 
-int XtsCtx::ring_db_n_verify() {
-  // Kickstart the sequencer
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
+int XtsCtx::verify_doorbell() {
 
   // Poll for doorbell data as XTS which runs in a different thread
   auto func = [this] () {
@@ -393,32 +450,8 @@ int XtsCtx::ring_db_n_verify() {
       rv = -1;
     }
   }
-
-  uint64_t opaque_tag_addr = 0;
-  if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr)) {
-    printf("get_xts_opaque_tag_addr failed \n");
-    return -1;
-  }
-
-  uint32_t opaque_tag = 0;
-  auto func2 = [this, opaque_tag_addr, opaque_tag] () {
-    if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
-      printf("Reading opaque tag hbm mem failed \n");
-      return -1;
-    }
-
-    if(exp_opaque_tag != opaque_tag) {
-      //printf("Opaque tag expected value %u rcvd %u\n", exp_opaque_tag, opaque_tag);
-      return -1;
-    }
-    return 0;
-  };
-  rv = poll(func2);
-  if(0 == rv) printf("Opaque tag returned successfully \n");
-
-  exp_opaque_tag++;
-
-  return rv;
+  uint32_t exp_opaque_tag = decr_en? exp_opaque_tag_decr : exp_opaque_tag_encr;
+  return verify_opaque_tag(exp_opaque_tag, decr_en);
 }
 
 class XtsChainCtx {
@@ -428,56 +461,63 @@ public:
     if(0 == rv && num_ops == 2) {
       printf(" Executing second part of chain\n");
       rv = xts_ctx2.test_seq_xts();
-      if(0 == rv) {
-        char src_buf_cp[kDefaultBufSize], dst_buf_cp[kDefaultBufSize];
-        uint32_t src_off = 0, dst_off = 0;
-        memset(src_buf_cp, 0, kDefaultBufSize);
-        memset(dst_buf_cp, 0, kDefaultBufSize);
-        for(uint32_t i = 0; i < xts_ctx1.num_aols; i++) {
-          for(uint32_t j = 0; j < xts_ctx1.num_sub_aols; j++) {
-            uint32_t off, len;
-            if(0 == j) {
-              off = xts_ctx1.in_aol[i]->o0;
-              len = xts_ctx1.in_aol[i]->l0;
-            }
-            else if(1 == j) {
-              off = xts_ctx1.in_aol[i]->o1;
-              len = xts_ctx1.in_aol[i]->l1;
-            }
-            else if(2 == j) {
-              off = xts_ctx1.in_aol[i]->o2;
-              len = xts_ctx1.in_aol[i]->l2;
-            }
-            memcpy(src_buf_cp + src_off, (char*)xts_ctx1.src_buf+off, len);
-            src_off += len;
-          }
-        }
-        for(uint32_t i = 0; i < xts_ctx2.num_aols; i++) {
-          for(uint32_t j = 0; j < xts_ctx2.num_sub_aols; j++) {
-            uint32_t off, len;
-            if(0 == j) {
-              off = xts_ctx2.out_aol[i]->o0;
-              len = xts_ctx2.out_aol[i]->l0;
-            }
-            else if(1 == j) {
-              off = xts_ctx2.out_aol[i]->o1;
-              len = xts_ctx2.out_aol[i]->l1;
-            }
-            else if(2 == j) {
-              off = xts_ctx2.out_aol[i]->o2;
-              len = xts_ctx2.out_aol[i]->l2;
-            }
-            memcpy(dst_buf_cp + dst_off, (char*)xts_ctx2.dst_buf+off, len);
-            dst_off += len;
-          }
-        }
-        rv = memcmp(src_buf_cp, dst_buf_cp, xts_ctx1.num_sectors * SECTOR_SIZE);
-        if(0 != rv) {
-          rv = -1;
-          printf(" Memcmp failed \n");
-        }
+      if(0 == rv && verify_e2e) {
+        return e2e_verify();
       }
     }
+    return rv;
+  }
+
+  int e2e_verify(void) {
+    int rv = 0;
+    char src_buf_cp[kDefaultBufSize], dst_buf_cp[kDefaultBufSize];
+    uint32_t src_off = 0, dst_off = 0;
+    memset(src_buf_cp, 0, kDefaultBufSize);
+    memset(dst_buf_cp, 0, kDefaultBufSize);
+    for(uint32_t i = 0; i < xts_ctx1.num_aols; i++) {
+      for(uint32_t j = 0; j < xts_ctx1.num_sub_aols; j++) {
+        uint32_t off, len;
+        if(0 == j) {
+          off = xts_ctx1.in_aol[i]->o0;
+          len = xts_ctx1.in_aol[i]->l0;
+        }
+        else if(1 == j) {
+          off = xts_ctx1.in_aol[i]->o1;
+          len = xts_ctx1.in_aol[i]->l1;
+        }
+        else if(2 == j) {
+          off = xts_ctx1.in_aol[i]->o2;
+          len = xts_ctx1.in_aol[i]->l2;
+        }
+        memcpy(src_buf_cp + src_off, (char*)xts_ctx1.src_buf+off, len);
+        src_off += len;
+      }
+    }
+    for(uint32_t i = 0; i < xts_ctx2.num_aols; i++) {
+      for(uint32_t j = 0; j < xts_ctx2.num_sub_aols; j++) {
+        uint32_t off, len;
+        if(0 == j) {
+          off = xts_ctx2.out_aol[i]->o0;
+          len = xts_ctx2.out_aol[i]->l0;
+        }
+        else if(1 == j) {
+          off = xts_ctx2.out_aol[i]->o1;
+          len = xts_ctx2.out_aol[i]->l1;
+        }
+        else if(2 == j) {
+          off = xts_ctx2.out_aol[i]->o2;
+          len = xts_ctx2.out_aol[i]->l2;
+        }
+        memcpy(dst_buf_cp + dst_off, (char*)xts_ctx2.dst_buf+off, len);
+        dst_off += len;
+      }
+    }
+    rv = memcmp(src_buf_cp, dst_buf_cp, xts_ctx1.num_sectors * SECTOR_SIZE);
+    if(0 != rv) {
+      rv = -1;
+      printf(" Memcmp failed %d \n", rv);
+    }
+
     return rv;
   }
   std::string get_name() {
@@ -489,6 +529,7 @@ public:
   }
   XtsCtx xts_ctx1, xts_ctx2;
   int num_ops = 1;
+  bool verify_e2e = true;
 };
 
 int add_xts_tests(std::vector<TestEntry>& test_suite) {
@@ -517,13 +558,173 @@ int add_xts_tests(std::vector<TestEntry>& test_suite) {
     }
     if(xts::INVALID != ent.op2)
       ctx->num_ops = 2;
-    ctx->xts_ctx1.init();
-    ctx->xts_ctx2.init(true);
+    ctx->xts_ctx1.init(kDefaultBufSize);
+    ctx->xts_ctx2.init(kDefaultBufSize, true);
     test_suite.push_back({*ctx, ctx->get_name(), false});
     delete ctx;
   }
+  test_suite.push_back({&tests::xts_multi_blk, "XTS Multi Block", false});
+  test_suite.push_back({&tests::xts_in_place, "XTS HBM  Buffer In-Place", false});
 
   return 0;
 }
+
+
+const static uint32_t  kTotalReqs = 128;
+const static uint32_t  kInitReqs = 64;
+const static uint32_t  kBatchSize = 32;
+const static uint32_t  kSectorSize = SECTOR_SIZE;
+const static uint32_t  kBufSize = kTotalReqs*(kSectorSize + PROT_INFO_SIZE);
+
+int fill_ctx(XtsChainCtx* ctx, char* in_buff[kTotalReqs], char *stg_buff[kTotalReqs], char *out_buff[kTotalReqs]) {
+  for(uint32_t i = 0; i < kTotalReqs; i++) {
+    ctx[i].xts_ctx1.op = xts::AES_ENCR_N_T10;
+    ctx[i].xts_ctx1.use_seq = false;
+    ctx[i].xts_ctx1.verify_db = false;
+
+    ctx[i].xts_ctx2.op = xts::AES_DECR_N_T10;
+    ctx[i].xts_ctx2.use_seq = false;
+    ctx[i].xts_ctx2.verify_db = false;
+
+    ctx[i].xts_ctx1.src_buf = (void*)in_buff[i];
+    ctx[i].xts_ctx1.is_src_hbm_buf = false;
+    ctx[i].xts_ctx1.dst_buf = (void*)stg_buff[i];
+    ctx[i].xts_ctx1.is_dst_hbm_buf = false;
+
+    ctx[i].xts_ctx2.src_buf = (void*)stg_buff[i];
+    ctx[i].xts_ctx2.is_src_hbm_buf = false;
+    ctx[i].xts_ctx2.dst_buf = (void*)out_buff[i];
+    ctx[i].xts_ctx2.is_dst_hbm_buf = false;
+
+    ctx[i].num_ops = 2;
+    ctx[i].xts_ctx1.init(kSectorSize + PROT_INFO_SIZE);
+    ctx[i].xts_ctx2.init(kSectorSize + PROT_INFO_SIZE, true);
+  }
+  return 0;
+}
+
+int xts_multi_blk() {
+  int rv;
+  char *in_buff[kTotalReqs], *stg_buff[kTotalReqs], *out_buff[kTotalReqs];
+  char* in_buffer = (char *)alloc_host_mem(kBufSize);
+  char* stg_buffer = (char *)alloc_host_mem(kBufSize);
+  char* out_buffer = (char *)alloc_host_mem(kBufSize);
+
+  for(uint32_t i = 0; i < kTotalReqs; i++) {
+    in_buff[i] = in_buffer + i * (kSectorSize + PROT_INFO_SIZE);
+    stg_buff[i] = stg_buffer + i * (kSectorSize + PROT_INFO_SIZE);
+    out_buff[i] = out_buffer + i * (kSectorSize + PROT_INFO_SIZE);
+  }
+
+  XtsChainCtx *ctx = new XtsChainCtx[kTotalReqs];
+  fill_ctx(ctx, in_buff, stg_buff, out_buff);
+
+  //Queue initial set of requests
+  for(uint32_t i = 0; i < kInitReqs; i++) {
+    rv = ctx[i].xts_ctx1.test_seq_xts();
+    if(0 != rv) return rv;
+  }
+
+  uint32_t exp_encr_opaque_tag = kBatchSize, exp_decr_opaque_tag = 0;
+  uint32_t encr_reqs_comp = 0, decr_reqs_comp = 0;
+  uint32_t pending_encr_reqs = kTotalReqs -kInitReqs,  pending_decr_reqs = kTotalReqs;
+  while(1) {
+    //Wait for batch size encr to complete
+    if(exp_encr_opaque_tag && encr_reqs_comp < kTotalReqs) {
+      rv = verify_opaque_tag(exp_encr_opaque_tag, false);
+      if(0 != rv) {
+        printf("pending %u comp %u\n", pending_encr_reqs, encr_reqs_comp);
+        return rv;
+      }
+      encr_reqs_comp = exp_encr_opaque_tag;
+      exp_encr_opaque_tag += kBatchSize;
+    }
+
+    //Queue next batch size of encr
+    if(pending_encr_reqs >= kBatchSize) {
+      for(uint32_t i = kTotalReqs - pending_encr_reqs;
+          i < kTotalReqs - pending_encr_reqs + kBatchSize;
+          i++) {
+        rv = ctx[i].xts_ctx1.test_seq_xts();
+        if(0 != rv) return rv;
+      }
+      pending_encr_reqs -= kBatchSize;
+    }
+
+    //Wait for batch size decr to complete
+    if(exp_decr_opaque_tag && decr_reqs_comp < kTotalReqs) {
+      rv = verify_opaque_tag(exp_decr_opaque_tag, true);
+      if(0 != rv) {
+        printf("pending %u comp %u\n", pending_decr_reqs, decr_reqs_comp);
+        return rv;
+      }
+      decr_reqs_comp = exp_decr_opaque_tag;
+    }
+
+    //Queue next batch size of decr
+    if(pending_decr_reqs >= kBatchSize) {
+      for(uint32_t i = kTotalReqs - pending_decr_reqs;
+          i < kTotalReqs - pending_decr_reqs + kBatchSize;
+          i++) {
+        rv = ctx[i].xts_ctx2.test_seq_xts();
+        if(0 != rv) return rv;
+      }
+      pending_decr_reqs -= kBatchSize;
+      exp_decr_opaque_tag += kBatchSize;
+    }
+
+    if(encr_reqs_comp >= kTotalReqs &&
+       decr_reqs_comp >= kTotalReqs) {
+      break;
+    }
+  }
+
+  for(uint32_t i = 0; i < kTotalReqs; i++) {
+    rv = ctx[i].e2e_verify();
+    if(0 != rv) return rv;
+  }
+
+  return rv;
+}
+
+int xts_in_place() {
+
+  XtsChainCtx ctx;
+  ctx.verify_e2e = false;
+  ctx.xts_ctx1.op = xts::AES_ENCR_ONLY;
+  ctx.xts_ctx2.op = xts::AES_DECR_ONLY;
+
+  srand(time(NULL));
+  for(uint32_t i = 0; i < kSectorSize/sizeof(int); i++) {
+    ((int*)write_buf)[i] = rand();
+  }
+
+  write_mem(write_hbm_buf, (uint8_t*)write_buf, kSectorSize);
+  ctx.xts_ctx1.src_buf = (void*)write_hbm_buf;
+  ctx.xts_ctx1.is_src_hbm_buf = true;
+  ctx.xts_ctx1.dst_buf = (void*)write_hbm_buf;
+  ctx.xts_ctx1.is_dst_hbm_buf = true;
+
+  ctx.xts_ctx2.src_buf = (void*)write_hbm_buf;
+  ctx.xts_ctx2.is_src_hbm_buf = true;
+  ctx.xts_ctx2.dst_buf = (void*)write_hbm_buf;
+  ctx.xts_ctx2.is_dst_hbm_buf = true;
+
+  ctx.num_ops = 2;
+  ctx.xts_ctx1.init(kDefaultBufSize);
+  ctx.xts_ctx2.init(kDefaultBufSize, true);
+  int rv = ctx();
+  if(0 == rv) {
+    read_mem(write_hbm_buf, (uint8_t*)read_buf, kSectorSize);
+    rv = memcmp(write_buf, read_buf, kSectorSize);
+    if(0 != rv) {
+      rv = -1;
+      printf(" Memcmp failed %d \n", rv);
+    }
+  }
+
+  return rv;
+}
+
 
 } // namespace tests

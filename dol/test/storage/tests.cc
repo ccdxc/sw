@@ -1580,8 +1580,8 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   xts_ctx.dst_buf = (void*)write_hbm_buf;
   xts_ctx.is_dst_hbm_buf = true;
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
-  xts_ctx.ring_seq_db = false;
-  xts_ctx.init();
+  xts_ctx.ring_db = false;
+  xts_ctx.init(kDefaultBufSize);
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_r2n_q, 0,
                              seq_r2n_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
   //xts_ctx.exp_db_data = bswap_64(xts_ctx.exp_db_data);
@@ -1671,8 +1671,8 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   xts_ctx.dst_buf = (void*)read_hbm_buf2;
   xts_ctx.is_dst_hbm_buf = true;
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
-  xts_ctx.ring_seq_db = false;
-  xts_ctx.init();
+  xts_ctx.ring_db = false;
+  xts_ctx.init(kDefaultBufSize);
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
       seq_pdma_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
   //xts_ctx.exp_db_data = bswap_64(xts_ctx.exp_db_data);
