@@ -61,6 +61,7 @@ packets:
                 fl      : 0
                 nh      : 50
             esp:
+                seq     : 1
                 spi     : callback://ipsec/ipsec/GetSpi
                 iv      : callback://ipsec/ipsec/GetIv
             payload:

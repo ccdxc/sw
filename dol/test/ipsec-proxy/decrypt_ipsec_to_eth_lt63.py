@@ -51,7 +51,7 @@ def TestCaseSetup(tc):
     ipseccb.iv                        = 0xaaaaaaaaaaaaaaaa
     ipseccb.iv_salt                   = 0xbbbbbbbb
     ipseccb.esn_hi                    = 0
-    ipseccb.esn_lo                    = 0
+    ipseccb.esn_lo                    = 0 
     ipseccb.spi                       = 0
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
     ipseccb.expected_seq_no           = 0

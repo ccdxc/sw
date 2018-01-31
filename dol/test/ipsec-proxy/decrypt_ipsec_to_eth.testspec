@@ -60,6 +60,7 @@ packets:
                 id      : 0
                 tos     : 0
             esp:
+                seq     : callback://ipsec/ipsec/GetSeqNo
                 spi     : callback://ipsec/ipsec/GetSpi
                 iv      : callback://ipsec/ipsec/GetIv
             payload:

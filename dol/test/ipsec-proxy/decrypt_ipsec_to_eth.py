@@ -131,9 +131,6 @@ def TestCaseVerify(tc):
         return False
 
     print("Expected seq no 0x%x seq_no_bmp 0x%x" % (ipseccb_cur.expected_seq_no, ipseccb_cur.seq_no_bmp))
-    # 2. Verify seq no
-    if (ipseccb_cur.expected_seq_no != expected_seq_no+1):
-        return False
 
     # 3. Fetch current values from Platform
     ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"]

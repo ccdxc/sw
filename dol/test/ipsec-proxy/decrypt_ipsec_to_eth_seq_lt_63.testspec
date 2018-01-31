@@ -43,7 +43,7 @@ packets:
     - packet:
         id          : PKT2
         template    : ref://factory/packets/id=ETH_IPV4_ESP
-        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD/size
+        payloadsize : ref://factory/payloads/id=ESP_LT63_PAYLOAD/size
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             eth:
@@ -64,7 +64,7 @@ packets:
                 iv      : callback://ipsec/ipsec/GetIv
                 seq     : callback://ipsec/ipsec/GetLt63SeqNo
             payload:
-                data    : ref://factory/payloads/id=ESP_PAYLOAD/data 
+                data    : ref://factory/payloads/id=ESP_LT63_PAYLOAD/data 
     - packet:
         id          : PKT3
         template    : ref://factory/packets/id=ETH_IPV4_TCP
