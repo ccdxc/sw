@@ -196,8 +196,8 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 
 			// handle api server watch events
 			w.handleApisrvWatch(ctx, apicl)
+			apicl.Close()
 		}
-		apicl.Close()
 
 		// if stop flag is set, we are done
 		if w.stopped() {
