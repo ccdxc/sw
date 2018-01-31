@@ -64,6 +64,7 @@ class ${service[0]}(${fileGrpcName}.${servicerName}):
 
 //::         #endfor
 //::         # Add the service to the proxy server.
+    pass
 ${fileGrpcName}.add_${servicerName}_to_server(${service[0]}(), proxyServer)
 
 //::     #endfor
