@@ -10,6 +10,7 @@ struct rqcb0_t d;
 #define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t
 
 #define DMA_CMD_BASE r1
+#define GLOBAL_FLAGS r2
 #define TMP r3
 #define DB_ADDR r4
 #define DB_DATA r5
@@ -38,11 +39,16 @@ resp_rx_rqcb0_write_back_process:
 
 incr_c_index_exit:
 
-    // Skip ACK generation for UD
+    // Skip ACK generation for UD 
     bbeq        k.global.flags.resp_rx._ud, 1, invoke_wb1
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
-    crestore        [c7, c6, c5, c4, c3, c2], k.global.flags, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST)
+    // Skip ACK generation for NAK case. NAK is generated in lkey_process in the prev stage.
+    add         GLOBAL_FLAGS, r0, k.global.flags
+    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP)
+    bcf     [c2], invoke_wb1
+
+    crestore        [c7, c6, c5, c4, c3, c2], GLOBAL_FLAGS, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST) // BD-slot
     //c7: ack c6: cswap c5: fna c4: read c3: only c2: last
 
     // RQCB0 writeback is called for SEND/WRITE/ATOMIC as well.

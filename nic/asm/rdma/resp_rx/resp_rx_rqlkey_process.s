@@ -158,7 +158,7 @@ error_completion:
     or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP
     // if it is send and error is encourntered, even first/middle packets
     // should generate completion queue error.
-    // for write, only last/only packet will checkout a descriptor and only 
+    // for write, only last/only packet with immdt will checkout a descriptor and only 
     // in that case COMPLETION flag is set. In case of first/middle, we don't 
     // need to generate completion queue entry.
     or.c1       GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION
@@ -181,7 +181,6 @@ error_completion:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD_ON_ERROR)
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 
-    bcf     [!c1],  check_write_back
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c1) //BD Slot
     //clear both lkey0 and lkey1 table valid bits
     CAPRI_SET_TABLE_0_VALID(0)
