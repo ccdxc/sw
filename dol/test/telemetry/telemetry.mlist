@@ -12,6 +12,7 @@ modules:
         module  : ipfix
         spec    : ipfix.testspec
         ignore  : False
+        rtl     : False
 
     # Passed
     - module:

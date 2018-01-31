@@ -24,7 +24,7 @@ class TestSpecConfigSelectors(objects.FrameworkObject):
             self.maxflows = None
             self.maxsessions = None
             self.maxrdmasessions = None
-        elif GlobalOptions.rtl:
+        elif GlobalOptions.lite:
             self.maxflows = 1
             self.maxsessions = 1
             self.maxrdmasessions = 1

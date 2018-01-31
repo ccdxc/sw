@@ -12,6 +12,7 @@ feature:
 modules:
     - module:
         name    : IPV4
+        perf    : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False
@@ -26,6 +27,7 @@ modules:
 
     - module:
         name    : IPV6
+        perf    : True
         iterate:
             - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
               segment   : filter://native=False

@@ -1,7 +1,7 @@
 # Feature Test Modules List
 feature:
     id          : eth
-    sub         : tx_perf
+    sub         : perf
     package     : test.eth
     module      : eth
     enable      : True
@@ -11,6 +11,7 @@ modules:
     - module:
         name    : TX_PERF
         spec    : tx_perf.testspec
+        perf    : True
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False

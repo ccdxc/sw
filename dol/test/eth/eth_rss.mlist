@@ -1,7 +1,7 @@
 # Feature Test Modules List
 feature:
     id          : eth
-    sub         : rx_rss
+    sub         : rss
     package     : test.eth
     module      : eth
     enable      : True
@@ -9,7 +9,7 @@ feature:
 
 modules:
     - module:
-        name    : IPv4
+        name    : IPV4
         spec    : rss.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
@@ -18,7 +18,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : IPv4_TCP
+        name    : IPV4_TCP
         spec    : rss.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
@@ -27,7 +27,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : IPv4_UDP
+        name    : IPV4_UDP
         spec    : rss.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -36,7 +36,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : IPv6
+        name    : IPV6
         spec    : rss.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
@@ -45,7 +45,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : IPv6_TCP
+        name    : IPV6_TCP
         spec    : rss.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
@@ -54,7 +54,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : IPv6_UDP
+        name    : IPV6_UDP
         spec    : rss.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
@@ -63,55 +63,43 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : VXLAN_IPv4
+        name    : VXLAN_IPV4
         spec    : rss_vxlan.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
               segment   : filter://native=False
-            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
-              segment   : filter://native=True
 
     - module:
-        name    : VXLAN_IPv4_TCP
+        name    : VXLAN_IPV4_TCP
         spec    : rss_vxlan.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
               segment   : filter://native=False
-            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
 
     - module:
-        name    : VXLAN_IPv4_UDP
+        name    : VXLAN_IPV4_UDP
         spec    : rss_vxlan.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=False
-            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-              segment   : filter://native=True
 
     - module:
-        name    : VXLAN_IPv6
+        name    : VXLAN_IPV6
         spec    : rss_vxlan.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
               segment   : filter://native=False
-            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
-              segment   : filter://native=True
 
     - module:
-        name    : VXLAN_IPv6_TCP
+        name    : VXLAN_IPV6_TCP
         spec    : rss_vxlan.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
               segment   : filter://native=False
-            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
 
     - module:
-        name    : VXLAN_IPv6_UDP
+        name    : VXLAN_IPV6_UDP
         spec    : rss_vxlan.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment   : filter://native=False
-            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
-              segment   : filter://native=True

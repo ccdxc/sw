@@ -83,7 +83,7 @@ class Module(objects.FrameworkObject):
         self.tracker    = getattr(spec, 'tracker', False)
         self.runorder   = getattr(spec, 'runorder', 65535)
         self.rtl        = getattr(spec, 'rtl', True)
-        self.latency    = getattr(spec, 'latency', False)
+        self.perf    = getattr(spec, 'perf', False)
         self.pendol     = getattr(spec, 'pendol', False)
         self.id         = self.runorder << 16 + ModuleIdAllocator.get()
         self.module_hdl = None
@@ -120,7 +120,10 @@ class Module(objects.FrameworkObject):
                 objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
 
         self.testspec.selectors.roots = objs
-        self.logger.info("- Selected %d Matching Objects" % len(objs))
+        if len(objs) == 0:
+            self.logger.error("- Selected %d Matching Objects" % len(objs))
+        else:
+            self.logger.info("- Selected %d Matching Objects" % len(objs))
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS
 
@@ -386,7 +389,10 @@ class ModuleDatabase:
         if GlobalOptions.rtl == True and pmod.rtl == False:
             return
 
-        if GlobalOptions.latency_test == True and pmod.latency == False:
+        if GlobalOptions.latency == True and pmod.perf == False:
+            return
+
+        if GlobalOptions.pps == True and pmod.perf == False:
             return
 
         if not self.__is_test_match(pmod.name):

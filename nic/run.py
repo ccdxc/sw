@@ -346,8 +346,12 @@ def run_dol(args):
         cmd.append('--mbt')
     if args.rtl is True:
         cmd.append('--rtl')
-    if args.latency_test is True:
-        cmd.append('--latency_test')
+    if args.latency is True:
+        cmd.append('--latency')
+    if args.pps is True:
+        cmd.append('--pps')
+    if args.lite is True:
+        cmd.append('--lite')
 
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
@@ -458,11 +462,11 @@ def cleanup(keep_logs=True):
     lock = open(lock_file, "r")
     for pid in lock:
         if is_running(int(pid)):
-            print "Sending SIGTERM to process group %d" % int(pid)
-            try:
-                os.killpg(int(pid), signal.SIGTERM)
-            except:
-                print "No processes found with PGID %d" % int(pid)
+            #print "Sending SIGTERM to process group %d" % int(pid)
+            #try:
+            #    os.killpg(int(pid), signal.SIGTERM)
+            #except:
+            #    print "No processes found with PGID %d" % int(pid)
 
 
             print "Sending SIGTERM to process %d" % int(pid)
@@ -594,16 +598,19 @@ def main():
                         help='Disable model error checking')
     parser.add_argument('--mbtrandomseed', dest='mbtrandomseed', default=None,
                         help='Seed for random numbers used in model based tests')
-    parser.add_argument('--latency_test', dest='latency_test', default=None,
-                        action='store_true',
-                        help='Latency test.')
+    parser.add_argument('--latency', dest='latency', default=None,
+                        action='store_true', help='Latency test.')
+    parser.add_argument('--pps', dest='pps', default=None,
+                        action='store_true', help='PPS Test.')
+    parser.add_argument('--lite', dest='lite', default=None,
+                        action='store_true', help='Lite Sanity Test.')
     args = parser.parse_args()
 
     if args.rtl == False and args.skipverify:
         print "ERROR: skipverify option cannot be used for non RTL runs."
         sys.exit(1)
-    if args.rtl == False and args.latency_test:
-        print "ERROR: latency_test option cannot be used for non RTL runs."
+    if args.rtl == False and (args.latency or args.pps):
+        print "ERROR: latency or pps option cannot be used for non RTL runs."
         sys.exit(1)
 
     zmq_soc_dir = nic_dir
@@ -687,6 +694,7 @@ def main():
             sys.exit(1)
         print "PASS: No errors found in " + model_log
     print "Status = %d" % status
+    os.system("echo %d > .run.status" % status)
     sys.exit(status)
 
 def signal_handler(signal, frame):

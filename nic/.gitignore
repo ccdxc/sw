@@ -19,6 +19,7 @@ proto/proto
 proto/types_proto
 asic_gen
 .run.pid
+.run.status
 hal.log*
 model.log*
 dol.log*

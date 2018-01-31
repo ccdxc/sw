@@ -1,6 +1,6 @@
 feature:
     id          : eth
-    sub         : tx_vlan_insert
+    sub         : insert
     package     : test.eth
     module      : eth
     enable      : False

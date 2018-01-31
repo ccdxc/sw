@@ -1,13 +1,13 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=False
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     flow            : filter://fwtype=L2

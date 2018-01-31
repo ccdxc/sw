@@ -11,6 +11,7 @@ modules:
     - module:
         name    : IPV4_QTAG
         spec    : l3uc.testspec
+        perf    : True
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
               srcseg    : filter://native=False
@@ -22,6 +23,7 @@ modules:
     - module:
         name    : IPV6_QTAG
         spec    : l3uc.testspec
+        perf    : True
         iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
               srcseg    : filter://native=False

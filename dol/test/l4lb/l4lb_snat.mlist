@@ -1,6 +1,7 @@
 # Feature Test Modules List
 feature:
     id          : l4lb
+    sub         : snat
     package     : test.l4lb
     module      : l4lb
     enable      : True
@@ -22,18 +23,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VLAN
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
             # TCP
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://fabencap=VLAN
@@ -41,18 +30,12 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VLAN
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
+
+    - module:
+        # Uplink <-> Uplink
+        name    : ROUTED_NW_NW_ENCAP
+        spec    : nw_nw_l3.testspec
+        iterate :
             # Native -> Tunnel 
             # UDP
             - flow   : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
@@ -61,18 +44,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VLAN
               dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
             # TCP
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://fabencap=VLAN
@@ -80,18 +51,12 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VLAN
               dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VXLAN
+
+    - module:
+        # Uplink <-> Uplink
+        name    : ROUTED_NW_NW_DECAP
+        spec    : nw_nw_l3.testspec
+        iterate :
             # Tunnel -> Native
             # UDP
             - flow   : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
@@ -100,18 +65,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VXLAN
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
             # TCP
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://fabencap=VXLAN
@@ -119,19 +72,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VXLAN
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VXLAN
-              dstseg : filter://fabencap=VLAN
-        ignore  : False
 
     - module:
         # Uplink <-> Uplink
@@ -146,18 +86,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VLAN
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
             # TCP
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://fabencap=VLAN
@@ -165,19 +93,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://fabencap=VLAN
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-        ignore  : False
 
     - module:
         # Host -> Uplink
@@ -192,18 +107,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
             # TCP
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://any
@@ -211,39 +114,20 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
+
     - module:
         # Host -> Uplink Vxlan
         name    : BRIDGED_TX_NW_VXLAN
         spec    : tx_nw_l2_vxlan.testspec
+        enable  : False
         iterate :
             # Native -> Tunnel 
             # UDP
             - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
             - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
-            - flow   : filter://label=L4LB,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
             # TCP
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-        ignore  : False
 
     - module:
         # Host -> Uplink
@@ -258,18 +142,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
             # TCP
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://any
@@ -277,18 +149,12 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
+
+    - module:
+        # Host -> Uplink
+        name    : ROUTED_TX_NW_ENCAP
+        spec    : tx_nw_l3.testspec
+        iterate :
             # Native -> Tunnel 
             # UDP
             - flow   : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
@@ -297,18 +163,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
             # TCP
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://any
@@ -316,19 +170,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VXLAN
-        ignore  : False
 
     #- module:
     #    # Uplink -> Host
@@ -513,35 +354,11 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
             # TCP
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://any
               dstseg : filter://any
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://any
 
@@ -558,18 +375,6 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=UDP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
             # TCP
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
               srcseg : filter://any
@@ -577,85 +382,3 @@ modules:
             - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
               srcseg : filter://any
               dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=DNAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_PORT
-              srcseg : filter://any
-              dstseg : filter://any
-            - flow  : filter://label=L4LB,fwtype=L3,proto=TCP,nat_type=TWICE_NAT,nat_rw=IP_ONLY
-              srcseg : filter://any
-              dstseg : filter://any
-    
-    # DSR 
-    - module:
-        # Uplink <-> Uplink
-        name    : DSR_BRIDGED_NW_NW
-        spec    : nw_nw_l2.testspec
-        iterate :
-            # Native -> Native
-            # UDP
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=MAC_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=MAC_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            # TCP
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_PORT
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_ONLY
-              srcseg : filter://fabencap=VLAN
-              dstseg : filter://fabencap=VLAN
-
-    - module:
-        # Host -> Uplink
-        name    : DSR_BRIDGED_TX_NW
-        spec    : tx_nw_l2.testspec
-        iterate :
-            # Native -> Native
-            # UDP
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=MAC_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=MAC_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            # TCP
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_PORT
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_ONLY
-              srcseg : filter://any
-              dstseg : filter://fabencap=VLAN
-
-    - module:
-        # Host -> Uplink Vxlan
-        name    : DSR_BRIDGED_TX_NW_VXLAN
-        spec    : tx_nw_l2_vxlan.testspec
-        iterate :
-            # Native -> Tunnel 
-            # UDP
-            - flow  : filter://label=L4LB,proto=UDP,nat_type=DNAT,nat_rw=MAC_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=MAC_ONLY
-            # TCP
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_ONLY
-        ignore  : False
-
-    - module:
-        # Host -> Host
-        name    : DSR_BRIDGED_TX_RX
-        spec    : tx_rx_l2.testspec
-        iterate :
-            # Native -> Native
-            # UDP
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=MAC_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=DNAT,nat_rw=MAC_ONLY
-            # TCP
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_PORT
-            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_ONLY

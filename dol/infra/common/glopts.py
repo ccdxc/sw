@@ -58,8 +58,13 @@ parser.add_argument('--nohostmem', dest='hostmem', default=True,
                     action='store_false', help='Disable Host Memory.')
 parser.add_argument('--mbtrandomseed', dest='mbtrandomseed', default=None,
                     help='Random seem for Model based tests')
-parser.add_argument('--latency_test', dest='latency_test', default=False,
-                    action='store_true', help='Latency test.')
+parser.add_argument('--latency', dest='latency', default=False,
+                    action='store_true', help='Latency Test.')
+parser.add_argument('--pps', dest='pps', default=False,
+                    action='store_true', help='PPS Test.')
+parser.add_argument('--lite', dest='lite', default=False,
+                    action='store_true', help='Lite Sanity Test.')
+
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():
@@ -92,5 +97,12 @@ def ValidateGlopts():
             GlobalOptions.tcid = GlobalOptions.tcid[0]
     GlobalOptions.alltc_done = False
 
-    if GlobalOptions.latency_test:
-        GlobalOptions.tcscale = 2
+    if GlobalOptions.latency:
+        if not GlobalOptions.dryrun:
+            GlobalOptions.tcscale = 10
+        GlobalOptions.lite = True
+
+    if GlobalOptions.pps:
+        if not GlobalOptions.dryrun:
+            GlobalOptions.tcscale = 100
+        GlobalOptions.lite = True

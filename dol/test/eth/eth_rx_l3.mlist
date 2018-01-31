@@ -1,0 +1,107 @@
+# Feature Test Modules List
+feature:
+    id          : eth
+    sub         : rxl3
+    package     : test.eth
+    module      : eth
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_QTAG
+        spec    : rx_l3.testspec
+        perf    : True
+        iterate:
+            # Tagged Flows
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG
+        spec    : rx_l3.testspec
+        perf    : True
+        iterate:
+            # Tagged Flows
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=False
+
+    - module:
+        name    : IPV4_UTAG
+        spec    : rx_l3.testspec
+        iterate:
+            # Untagged Flows
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG
+        spec    : rx_l3.testspec
+        iterate:
+            # Untagged Flows
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+
+    - module:
+        name    : IPV4_PTAG
+        spec    : rx_l3.testspec
+        iterate:
+            # Priority Tagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+
+    - module:
+        name    : IPV6_PTAG
+        spec    : rx_l3.testspec
+        iterate:
+            # Priority Tagged Cases
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+
+    - module:
+        name    : IPV4_VXLAN
+        spec    : rx_vxlan_l3.testspec
+        perf    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+
+    - module:
+        name    : IPV6_VXLAN
+        spec    : rx_vxlan_l3.testspec
+        perf    : True
+        iterate:
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING

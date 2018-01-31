@@ -1,0 +1,133 @@
+# Feature Test Modules List
+feature:
+    id          : eth
+    sub         : txl3
+    package     : test.eth
+    module      : eth
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_QTAG
+        spec    : tx_l3.testspec
+        perf    : True
+        iterate:
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=False
+
+    - module:
+        name    : IPV6_QTAG
+        spec    : tx_l3.testspec
+        perf    : True
+        iterate:
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=False
+
+    - module:
+        name    : IPV4_UTAG
+        spec    : tx_l3.testspec
+        iterate :
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=True
+
+    - module:
+        name    : IPV6_UTAG
+        spec    : tx_l3.testspec
+        iterate :
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=True
+
+    - module:
+        name    : IPV4_QTAG_GFT_DROP
+        spec    : tx_l3.testspec
+        iterate:
+            - flow  : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg: filter://native=False
+
+    - module:
+        name    : IPV6_QTAG_GFT_DROP
+        spec    : tx_l3.testspec
+        iterate:
+            - flow  : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg: filter://native=False
+
+    - module:
+        name    : IPV4_UTAG_GFT_DROP
+        spec    : tx_l3.testspec
+        iterate:
+            - flow  : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg: filter://native=True
+
+    - module:
+        name    : IPV6_UTAG_GFT_DROP
+        spec    : tx_l3.testspec
+        iterate:
+            - flow  : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg: filter://native=True
+
+    - module:
+        name    : IPV4_VXLAN
+        spec    : tx_vxlan_l3.testspec
+        perf    : True
+        iterate:
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+
+    - module:
+        name    : IPV6_VXLAN
+        spec    : tx_vxlan_l3.testspec
+        perf    : True
+        iterate:
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+
+    - module:
+        name    : IPV4_VXLAN_GFT_DROP
+        spec    : tx_vxlan_l3.testspec
+        iterate:
+            - flow: filter://type=IPV4,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=ICMP,label=GFT_DROP
+
+    - module:
+        name    : IPV6_VXLAN_GFT_DROP
+        spec    : tx_vxlan_l3.testspec
+        iterate:
+            - flow: filter://type=IPV6,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=ICMPV6,label=GFT_DROP

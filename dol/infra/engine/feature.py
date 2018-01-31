@@ -49,7 +49,7 @@ class FeatureObject:
         self.selectors  = getattr(spec.feature, 'selectors', None)
         self.runorder   = getattr(spec.feature, 'runorder', 65535)
         self.rtl        = getattr(spec.feature, 'rtl', True)
-        self.latency    = getattr(spec.feature, 'latency', False)
+        self.perf       = getattr(spec.feature, 'perf', False)
         self.pendol     = getattr(spec.feature, 'pendol', False)
         return
 
@@ -68,7 +68,7 @@ class FeatureObject:
             mspec.args      = getattr(mspec, 'args', self.args)
             mspec.selectors = getattr(mspec, 'selectors', self.selectors)
             mspec.rtl       = getattr(mspec, 'rtl', self.rtl)
-            mspec.latency   = getattr(mspec, 'latency', self.latency)
+            mspec.perf      = getattr(mspec, 'perf', self.perf)
             mspec.pendol    = getattr(mspec, 'pendol', self.pendol)
             mspec.runorder  = self.runorder
             ModuleStore.Add(mspec)

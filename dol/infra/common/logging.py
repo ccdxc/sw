@@ -101,7 +101,7 @@ class Logger:
             if indent >= defs.LOGGING_DEFAULT_REV_OFFSET:
                 indent = indent - defs.LOGGING_DEFAULT_REV_OFFSET
         level = kwargs['level']
-        prefix = prefixes[self.level]
+        prefix = prefixes[kwargs['level']]
         if self.level < level:
             return None
         text = text + self.__get_timestamp()

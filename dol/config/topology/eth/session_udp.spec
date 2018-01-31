@@ -12,3 +12,10 @@ entries:
             port : const/128
         initiator: 
             port : const/47273
+
+    - entry:
+        label: gft_drop
+        responder:
+            port : const/129
+        initiator: 
+            port : const/47274

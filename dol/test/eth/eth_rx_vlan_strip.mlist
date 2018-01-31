@@ -1,6 +1,6 @@
 feature:
     id          : eth
-    sub         : rx_vlan_strip
+    sub         : strip
     package     : test.eth
     module      : eth_rx_vlan_strip
     enable      : True
