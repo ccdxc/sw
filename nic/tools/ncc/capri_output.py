@@ -2687,6 +2687,7 @@ def capri_parser_output_decoders(parser):
                                                           [bi.nxt_state], bi.nxt_state,\
                                                           csum_t)
                 if csum_prof != None:
+                    csum_prof['word_size'] = str(hex(int(csum_t['word_size'], 16) * cprof_inst))
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
                             = csum_prof
