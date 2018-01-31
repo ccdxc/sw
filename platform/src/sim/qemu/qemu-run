@@ -2,6 +2,8 @@
 
 DRIVE_IMG=${1:?"Usage: qemu-run <qemu-img>"}
 
+#for qemu without kvm, set env: QEMU_MACHINE=q35
+: ${QEMU_MACHINE:=q35,accel=kvm}
 : ${QEMU_SERIAL_PORT:=1034}
 : ${QEMU_MONITOR_PORT:=1035}
 : ${QEMU_SSH_PORT:=1037}
@@ -23,7 +25,7 @@ export LD_LIBRARY_PATH=${N}
 QEMU_VERSION=2.9.0
 QEMU_DIR=$SCRIPT_PATH/qemu-$QEMU_VERSION
 $GDB $QEMU_DIR/x86_64-softmmu/qemu-system-x86_64 \
-    -machine q35 -smp 4 -nographic -m $QEMU_MEMORY_MB \
+    -machine $QEMU_MACHINE -smp cpus=4,sockets=2,cores=2 -nographic -m $QEMU_MEMORY_MB \
     -serial telnet::$QEMU_SERIAL_PORT,server,nowait \
     -monitor telnet::$QEMU_MONITOR_PORT,server,nowait \
     -netdev user,id=net0,hostfwd=tcp::$QEMU_SSH_PORT-:22 \
