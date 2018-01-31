@@ -40,9 +40,14 @@ cc_library(
 
 cc_library(
     name = "libprotobuf",
-    srcs = [
-	"google/x86_64/lib/libprotobuf.so.14",
-    ],
+    srcs = select ({
+        "//conditions:default" : [
+	        "google/x86_64/lib/libprotobuf.so.14",
+        ],
+        ":aarch64_mode" : [
+	        "google/aarch64/lib/libprotobuf.so.14",
+        ],
+    }),
 )
 
 cc_library(
