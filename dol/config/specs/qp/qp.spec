@@ -3,7 +3,7 @@ meta:
     id: QP_RDMA
 
 rc:
-    count           : 0
+    count           : 4
     svc_name        : "RC"
     service         : 0
     hostmem_pg_size : 4096
@@ -18,7 +18,7 @@ rc:
     sq_in_nic       : 0
 
 perf_rc:
-    count           : 1
+    count           : 0
     svc_name        : "RC"
     service         : 0
     hostmem_pg_size : 4096
