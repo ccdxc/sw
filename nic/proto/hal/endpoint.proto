@@ -104,9 +104,9 @@ message EndpointUpdateResponseMsg {
 // so that agent and HAL are less chatty when doing bulk deletes (e.g.
 // when a L2 segment is deleted or interfae goes down etc.)
 message EndpointFilter {
-  kh.VrfKeyHandle       vrf_key_handle       = 1 [(gogoproto.moretags) = "venice:vrf_ref"];
+  kh.VrfKeyHandle       vrf_key_handle       = 1 [(gogoproto.moretags) = "venice:ref"];
   kh.InterfaceKeyHandle interface_key_handle = 2 [(gogoproto.moretags) = "venice:ref"];
-  kh.L2SegmentKeyHandle l2Segment_key_handle = 3 [(gogoproto.moretags) = "venice:l2seg_ref"];
+  kh.L2SegmentKeyHandle l2Segment_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // EndpointDeleteRequest is used to delete an endpoint
@@ -150,8 +150,8 @@ message EndpointGetRequestMsg {
 // EndpointGetByInterfaceRequestMsg is used to GET endpoints by interface
 message EndpointGetByInterfaceRequestMsg {
   types.ObjectMeta      meta                 = 1;    // object meta
-  kh.VrfKeyHandle       vrf_key_handle       = 2 [(gogoproto.moretags) = "venice:vrf_ref"];
-  kh.InterfaceKeyHandle interface_key_handle = 3 [(gogoproto.moretags) = "venice:interface_ref"];
+  kh.VrfKeyHandle       vrf_key_handle       = 2 [(gogoproto.moretags) = "venice:ref"];
+  kh.InterfaceKeyHandle interface_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // EndpointGetAllRequestMsg is used to GET all the endpoints

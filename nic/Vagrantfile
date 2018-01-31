@@ -96,35 +96,6 @@ make -j$(grep -c processor /proc/cpuinfo)
 make install
 ldconfig
 
-# install protobuf-cpp
-cd /tmp
-wget https://github.com/google/protobuf/releases/download/v3.4.1/protobuf-cpp-3.4.1.tar.gz
-tar xzf protobuf-cpp-3.4.1.tar.gz
-cd protobuf-3.4.1
-./autogen.sh && ./configure --prefix /usr
-make -j$(grep -c processor /proc/cpuinfo)
-make install
-ldconfig
-
-# install protobuf-c
-cd /tmp
-wget https://github.com/protobuf-c/protobuf-c/releases/download/v1.3.0/protobuf-c-1.3.0.tar.gz
-tar -xzf protobuf-c-1.3.0.tar.gz
-cd protobuf-c-1.3.0
-./configure --prefix /usr
-make -j$(grep -c processor /proc/cpuinfo)
-make install
-ldconfig
-
-# install grpc
-cd /tmp
-git clone -b v1.6.6  https://github.com/grpc/grpc
-cd grpc
-git submodule update --init
-make -j$(grep -c processor /proc/cpuinfo)
-make install
-ldconfig
-
 # install zeromq
 cd /tmp
 wget https://github.com/zeromq/zeromq3-x/releases/download/v3.2.5/zeromq-3.2.5.tar.gz
@@ -133,15 +104,6 @@ cd zeromq-3.2.5
 ./configure --prefix=/usr
 make -j$(grep -c processor /proc/cpuinfo)
 make install
-
-# install boost
-cd /tmp
-wget http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.gz
-tar xfz boost_1_62_0.tar.gz
-cd boost_1_62_0
-./bootstrap.sh
-./b2 --without-python --prefix=/usr -j$(grep -c processor /proc/cpuinfo) link=shared runtime-link=shared install
-ldconfig
 
 # install libtins
 cd /tmp
@@ -153,14 +115,6 @@ cmake ../ -DLIBTINS_ENABLE_CXX11=1
 make
 make install
 ldconfig
-
-# install bind9
-cd /tmp
-git clone https://source.isc.org/git/bind9.git
-cd bind9
-./configure --without-openssl
-make
-make install
 
 # untar sknobs.tar.gz
 cd /
