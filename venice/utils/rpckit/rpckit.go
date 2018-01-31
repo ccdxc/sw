@@ -14,11 +14,19 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-const defaultMaxMsgSize = 50 * 1024 * 1024
+const (
+	defaultMaxMsgSize = 50 * 1024 * 1024
+	// clientKeepaliveTime is the interval at which rpc clients send
+	// keepalive messages to the server. This is enabled to protect watches
+	// from hanging on a server failure. The default timeout on keepalives
+	// is 20 seconds.
+	clientKeepaliveTime = 5 * time.Second
+)
 
 // Singleton stats
 var once sync.Once
@@ -202,6 +210,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	grpcOpts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(rpcServerUnaryInterceptor(rpcServer)),
 		grpc.StreamInterceptor(rpcServerStreamInterceptor(rpcServer)),
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{MinTime: clientKeepaliveTime}),
 	}
 
 	// Use default TLS provider unless user has passed in one
@@ -369,6 +378,7 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 	}
 
 	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: clientKeepaliveTime}),
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(rpcClient)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(rpcClient)))
 
@@ -413,6 +423,7 @@ func (c *RPCClient) Reconnect() error {
 
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(c.remoteURL, opts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: clientKeepaliveTime}),
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(c)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(c)))
 	if err != nil {
