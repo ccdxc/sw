@@ -111,7 +111,8 @@ wring_pd_meta_init() {
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
  
     g_meta[types::WRING_TYPE_NMDR_RX_GC] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX_GC, CAPRI_RNMDR_GC_RING_SIZE,
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_RX_GC,
+                           CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL, false};
 
     return HAL_RET_OK;

@@ -22,14 +22,24 @@ struct gc_tx_initial_action_initial_action_d d;
 .align
 gc_tx_rnmdr_s0_start:
     .brbegin
-        brpri       r7[0:0], [0]
+        brpri       r7[3:0], [0, 1, 2, 3]
         nop
             .brcase CAPRI_RNMDR_GC_TCP_RING_PRODUCER
                 b gc_tx_handle_rnmdr_tcp
                 nop
-            .brcase CAPRI_RNMDR_GC_TCP_RING_PRODUCER + 1
+            .brcase CAPRI_RNMDR_GC_TLS_RING_PRODUCER 
                 b gc_tx_abort
                 nop
+            .brcase CAPRI_RNMDR_GC_IPSEC_RING_PRODUCER 
+                b gc_tx_abort
+                nop
+            .brcase CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER
+                b gc_tx_handle_rnmdr_arm
+                nop
+            .brcase CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER + 1
+                b gc_tx_abort
+                nop
+
     .brend
 
 
@@ -123,3 +133,38 @@ gc_tx_end:
 gc_tx_abort:
     nop.e
     phvwr           p.p4_intr_global_drop, 1
+    
+/*
+ * ARM freeing a descriptor into RNMDR
+ */
+gc_tx_handle_rnmdr_arm:
+    CAPRI_OPERAND_DEBUG(d.ring_base)
+    CAPRI_OPERAND_DEBUG(d.ring_shift)
+    /*
+     * Ring 3 is the ring that ARM writes to when freeing a descriptor
+     *
+     * r5 = Address to read from descriptor GC ring
+     * 
+     * r4 = doorbell address
+     * r3 = doorbell data
+     */
+    add             r5, d.{ring_base}.dx, RNMDR_GC_PRODUCER_ARM, (RNMDR_GC_PER_PRODUCER_SHIFT + RNMDR_TABLE_ENTRY_SIZE_SHFT)
+    add             r5, r5, d.{ci_3}.hx, RNMDR_TABLE_ENTRY_SIZE_SHFT
+    tblmincri.f     d.{ci_3}.hx, RNMDR_GC_PER_PRODUCER_SHIFT, 1
+    nop
+    
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_rnmdr_addr, r5, TABLE_SIZE_64_BITS)
+
+    /*
+     * Ring doorbell to set CI if pi == ci
+     */
+    seq             c1, d.{ci_3}.hx, d.{pi_3}.hx
+    b.!c1           gc_tx_end
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_GC)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, CAPRI_HBM_GC_RNMDR_QID, CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER, 0)
+    memwr.dx        r4, r3
+
+    nop.e
+    nop
+

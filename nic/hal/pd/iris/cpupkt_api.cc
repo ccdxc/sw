@@ -5,9 +5,12 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
+#include "nic/include/capri_common.h"
 
 namespace hal {
 namespace pd {
+
+thread_local uint32_t gc_pindex = 0;
 
 static inline cpupkt_ctxt_t*
 cpupkt_ctxt_alloc(void) 
@@ -336,9 +339,15 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
         
         ret = cpupkt_descr_to_headers(descr, flow_miss_hdr, data, data_len);
         if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to create skbuff");
+            HAL_TRACE_ERR("Failed to convert descr to headers");
         }
+        
         cpupkt_free_and_inc_queue_index(*qinst_info);
+        
+        ret = cpupkt_descr_free(descr_addr);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to free descr");    
+        }
         return ret;
     }
 
@@ -351,6 +360,42 @@ cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data)
     free(flow_miss_hdr);
     return HAL_RET_OK;
 }
+
+hal_ret_t
+cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    wring_hw_id_t   gc_slot_addr=0;
+    
+    // program GC queue
+    ret = wring_pd_get_base_addr(types::WRING_TYPE_NMDR_RX_GC,
+                                 CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER,
+                                 &gc_slot_addr);
+    gc_slot_addr += (gc_pindex * CAPRI_HBM_RNMDR_ENTRY_SIZE);
+
+    HAL_TRACE_DEBUG("Programming GC queue: {:#x}, descr: {:#x}, gc_pindex: {}",
+                        gc_slot_addr, descr_addr, gc_pindex);
+    if(!p4plus_hbm_write(gc_slot_addr, (uint8_t*)&descr_addr,
+                         sizeof(cpupkt_hw_id_t))) {
+        HAL_TRACE_ERR("Failed to program gc queue");
+        return HAL_RET_HW_FAIL;
+    }
+    
+    // ring doorbell
+    ret = cpupkt_program_send_ring_doorbell(SERVICE_LIF_GC,
+                                            0,
+                                            CAPRI_HBM_GC_RNMDR_QID,
+                                            CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to ring doorbell");
+        return HAL_RET_HW_FAIL;
+    }
+
+    gc_pindex++;
+
+    return HAL_RET_OK;
+}
+
 
 hal_ret_t
 cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr)

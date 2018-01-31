@@ -59,7 +59,7 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qid, uint64_t ring_base, int ring_shift, 
         pc_offset = (pc_offset >> 6);
         HAL_TRACE_DEBUG("programming action-id: {:#x}", pc_offset);
         data.action_id = pc_offset;
-        data.u.initial_action_d.total = 1;
+        data.u.initial_action_d.total = 5;
         data.u.initial_action_d.ring_base = ring_base;
         data.u.initial_action_d.ring_shift = ring_shift;
     }

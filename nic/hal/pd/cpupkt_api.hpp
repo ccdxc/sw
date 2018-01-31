@@ -119,6 +119,7 @@ hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
 
 hal_ret_t cpupkt_page_alloc(cpupkt_hw_id_t* page_addr);
 hal_ret_t cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr);
+hal_ret_t cpupkt_descr_free(cpupkt_hw_id_t descr_addr);
 
 hal_ret_t
 cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
