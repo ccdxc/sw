@@ -18,7 +18,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "@sdk//obj:sdk_indexer",
         "//nic/hal:hal_includes",
-        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/lib:hal_lib_includes",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
         "//nic:spdlog",

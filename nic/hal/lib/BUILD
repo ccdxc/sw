@@ -5,9 +5,10 @@ licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
-    name = "hal_handle_includes",
+    name = "hal_lib_includes",
     hdrs = [
         "hal_handle.hpp",
+        "hal_utils.hpp",
     ],
     deps = [
         "@sdk//obj:sdk_list",
@@ -15,12 +16,14 @@ cc_library(
 )
 
 cc_library(
-    name = "hal_handle",
+    name = "hal_lib",
     srcs = [
         "hal_handle.cc",
+        "hal_utils.cc",
     ],
     hdrs = [
         "hal_handle.hpp",
+        "hal_utils.hpp",
     ],
     deps = [
         "@sdk//obj:sdk_list",

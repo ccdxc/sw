@@ -33,5 +33,78 @@
         {"port_num" : "6", "asic" : "0", "asic_port" : "5" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
         {"port_num" : "7", "asic" : "0", "asic_port" : "6" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
         {"port_num" : "8", "asic" : "0", "asic_port" : "7" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" }
-    ]
+    ],
+
+    "qos_config" : 
+    {
+        "configs" : 
+        {
+            "qos_class" : 
+            [
+                {
+                    "keyOrHandle" : { "qosGroup" : "DEFAULT" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                },
+                {
+                    "keyOrHandle" : { "qosGroup" : "CONTROL" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                },
+                {
+                    "keyOrHandle" : { "qosGroup" : "SPAN" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                },
+                {
+                    "keyOrHandle" : { "qosGroup" : "INTERNAL_RX_PROXY_NO_DROP" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                },
+                {
+                    "keyOrHandle" : { "qosGroup" : "INTERNAL_RX_PROXY_DROP" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                },
+                {
+                    "keyOrHandle" : { "qosGroup" : "INTERNAL_TX_PROXY_NO_DROP" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                },
+                {
+                    "keyOrHandle" : { "qosGroup" : "INTERNAL_TX_PROXY_DROP" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                },
+                {
+                    "keyOrHandle" : { "qosGroup" : "INTERNAL_CPU_COPY" },
+                    "mtu" : 9216,
+                    "buffer" : { "reservedMtus" : 3 },
+                    "sched" : { "strict" : { "bps" : 10000 } }
+                }
+            ],
+            "copp" : 
+            [
+                {
+                    "keyOrHandle" : { "coppType" : "COPP_TYPE_FLOW_MISS" },
+                    "policer" : { "bpsRate" : 10000, "burstSize" : 10000 }
+                },
+                {
+                    "keyOrHandle" : { "coppType" : "COPP_TYPE_ARP" },
+                    "policer" : { "bpsRate" : 10000, "burstSize" : 10000 }
+                },
+                {
+                    "keyOrHandle" : { "coppType" : "COPP_TYPE_DHCP" },
+                    "policer" : { "bpsRate" : 10000, "burstSize" : 10000 }
+                }
+            ]
+        }
+    }
 }

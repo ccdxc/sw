@@ -13,7 +13,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic:boost",
-        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/lib:hal_lib_includes",
         "//nic/hal/periodic:periodic",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_slab",

@@ -132,6 +132,8 @@ catalog::populate_catalog(ptree &prop_tree)
     populate_asics(prop_tree);
     populate_uplink_ports(prop_tree);
 
+    catalog_db_.qos_config_tree = prop_tree.get_child("qos_config");
+
     return SDK_RET_OK;
 }
 

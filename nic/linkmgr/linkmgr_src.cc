@@ -19,6 +19,7 @@
 #include "linkmgr_svc.hpp"
 #include "linkmgr_state.hpp"
 #include "nic/linkmgr/utils.hpp"
+#include "nic/hal/lib/hal_utils.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -209,7 +210,6 @@ linkmgr_init()
 {
     hal_ret_t       ret_hal        = HAL_RET_OK;
     sdk_ret_t       sdk_ret        = SDK_RET_OK;
-    std::string     catalog_file   = "catalog.json";
     std::string     cfg_file       = "linkmgr.json";
     char            *cfg_path      = NULL;
 
@@ -226,7 +226,7 @@ linkmgr_init()
     g_linkmgr_state = linkmgr_state::factory();
     HAL_ASSERT_RETURN((g_linkmgr_state != NULL), HAL_RET_ERR);
 
-    sdk::lib::catalog *catalog = linkmgr_catalog_init(catalog_file);
+    sdk::lib::catalog *catalog = hal_lib_catalog_init();
     HAL_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 
     // store the catalog in global hal state

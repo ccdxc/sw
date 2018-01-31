@@ -833,7 +833,7 @@ p4pd_qos_init (void)
     }
 
     // Reserve the IQ needed for the ADMIN class
-    g_hal_state_pd->qos_iq_idxr(TM_PORT_TYPE_UPLINK)->alloc_withid(qos_class_get_admin_cos());
+    g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(qos_class_get_admin_cos());
     return ret;
 }
 

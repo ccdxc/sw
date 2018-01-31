@@ -32,7 +32,7 @@ cc_library(
         "@sdk//obj:sdk_list",
         "@sdk//obj:sdk_thread",
         "//nic/hal/pd:hal_pd_includes",
-        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/lib:hal_lib_includes",
         "//nic/include:base_includes",
         "//nic:spdlog",
     ],

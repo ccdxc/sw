@@ -134,7 +134,8 @@ public:
 
     // get APIs for Qos-class related state
     slab *qos_class_pd_slab(void) const { return qos_class_pd_slab_; }
-    indexer *qos_iq_idxr(tm_port_type_e port_type) { return qos_iq_idxr_[port_type]; }
+    indexer *qos_txdma_iq_idxr(void) { return qos_txdma_iq_idxr_; }
+    indexer *qos_uplink_iq_idxr(void) { return qos_uplink_iq_idxr_; }
     indexer *qos_common_oq_idxr(void) { return qos_common_oq_idxr_; }
     indexer *qos_rxdma_oq_idxr(void) { return qos_rxdma_oq_idxr_; }
     uint32_t qos_island_cur_cells(uint32_t island) { 
@@ -377,7 +378,8 @@ private:
     struct {
         slab       *qos_class_pd_slab_;
         // Array of indexers for each of the tm port types - uplink, p4, dma
-        indexer    **qos_iq_idxr_;
+        indexer    *qos_txdma_iq_idxr_;
+        indexer    *qos_uplink_iq_idxr_;
         indexer    *qos_common_oq_idxr_;
         indexer    *qos_rxdma_oq_idxr_;
         // Buffer island configuration

@@ -46,6 +46,7 @@ typedef struct catalog_s {
     bool                     access_mock_mode;                  // do not access HW, dump only reads/writes
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
+    ptree                    qos_config_tree;                   // qos config information
 } catalog_t;
 
 class catalog {
@@ -63,6 +64,8 @@ public:
     platform_type_t platform_type(void) const { return catalog_db_.platform_type; }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
+
+    ptree& catalog_qos_config_tree(void) { return catalog_db_.qos_config_tree; }
 
 private:
     catalog_t    catalog_db_;   // whole catalog database

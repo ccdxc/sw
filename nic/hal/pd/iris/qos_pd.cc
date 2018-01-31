@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/qos_pd.hpp"
@@ -251,7 +252,7 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
     } else {
         // Allocate the iqs first in uplink and txdma
         if (q_alloc_params.cnt_uplink_iq) {
-            rs = g_hal_state_pd->qos_iq_idxr(TM_PORT_TYPE_UPLINK)->alloc(
+            rs = g_hal_state_pd->qos_uplink_iq_idxr()->alloc(
                 (uint32_t*)&pd_qos_class->uplink.iq);
             if (rs != indexer::SUCCESS) {
                 return HAL_RET_NO_RESOURCE;
@@ -269,7 +270,7 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
             p4_q_idx = HAL_PD_QOS_IQ_TX_UPLINK_GROUP_0;
         }
         for (unsigned i = 0; i < q_alloc_params.cnt_txdma_iq; i++, p4_q_idx++) {
-            rs = g_hal_state_pd->qos_iq_idxr(TM_PORT_TYPE_DMA)->alloc(
+            rs = g_hal_state_pd->qos_txdma_iq_idxr()->alloc(
                 (uint32_t*)&pd_qos_class->txdma[i].iq);
             if (rs != indexer::SUCCESS) {
                 return HAL_RET_NO_RESOURCE;
@@ -410,39 +411,41 @@ qos_class_pd_alloc_buffers (pd_qos_class_t *pd_qos_class)
                     uplink_hbm_fifo_count, dma_fifo_count,
                     hbm_fifo_size);
 
-    hbm_fifo_base = g_hal_state_pd->qos_hbm_fifo_allocator()->Alloc(hbm_fifo_size);
-    if (hbm_fifo_base < 0) {
-        HAL_TRACE_ERR("pd-qos:{}:{} Error allocating hbm buffer fifo",
-                      __func__, __LINE__);
-        return HAL_RET_NO_RESOURCE;
-    }
+    if (hbm_fifo_size) {
+        hbm_fifo_base = g_hal_state_pd->qos_hbm_fifo_allocator()->Alloc(hbm_fifo_size);
+        if (hbm_fifo_base < 0) {
+            HAL_TRACE_ERR("pd-qos:{}:{} Error allocating hbm buffer fifo",
+                          __func__, __LINE__);
+            return HAL_RET_NO_RESOURCE;
+        }
 
-    pd_qos_class->hbm_fifo_base = (uint64_t)hbm_fifo_base;
-    pd_qos_class->hbm_fifo_size = hbm_fifo_size;
+        pd_qos_class->hbm_fifo_base = (uint64_t)hbm_fifo_base;
+        pd_qos_class->hbm_fifo_size = hbm_fifo_size;
 
-    hbm_offset = pd_qos_class->hbm_fifo_base;
+        hbm_offset = pd_qos_class->hbm_fifo_base;
 
-    for (unsigned i = 0; i < uplink_hbm_fifo_count; i++) {
-        pd_qos_class->uplink.payload_hbm_offset[i] = hbm_offset;
-        hbm_offset += payload_fifo_size;
-        pd_qos_class->uplink.control_hbm_offset[i] = hbm_offset;
-        hbm_offset += control_fifo_size;
-    }
-
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->txdma); i++) {
-        if (capri_tm_q_valid(pd_qos_class->txdma[i].iq)) {
-            pd_qos_class->txdma[i].payload_hbm_offset = hbm_offset;
+        for (unsigned i = 0; i < uplink_hbm_fifo_count; i++) {
+            pd_qos_class->uplink.payload_hbm_offset[i] = hbm_offset;
             hbm_offset += payload_fifo_size;
-            pd_qos_class->txdma[i].control_hbm_offset = hbm_offset;
+            pd_qos_class->uplink.control_hbm_offset[i] = hbm_offset;
             hbm_offset += control_fifo_size;
         }
+
+        for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->txdma); i++) {
+            if (capri_tm_q_valid(pd_qos_class->txdma[i].iq)) {
+                pd_qos_class->txdma[i].payload_hbm_offset = hbm_offset;
+                hbm_offset += payload_fifo_size;
+                pd_qos_class->txdma[i].control_hbm_offset = hbm_offset;
+                hbm_offset += control_fifo_size;
+            }
+        }
+
+        pd_qos_class->payload_hbm_size = payload_fifo_size;
+        pd_qos_class->control_hbm_size = control_fifo_size;
+
+        // If our math is right, hbm_offset should now be equal to the base + size
+        HAL_ASSERT(hbm_offset == (hbm_fifo_base + hbm_fifo_size));
     }
-
-    pd_qos_class->payload_hbm_size = payload_fifo_size;
-    pd_qos_class->control_hbm_size = control_fifo_size;
-
-    // If our math is right, hbm_offset should now be equal to the base + size
-    HAL_ASSERT(hbm_offset == (hbm_fifo_base + hbm_fifo_size));
 
     return ret;
 }
@@ -487,11 +490,11 @@ qos_class_pd_dealloc_res(pd_qos_class_t *pd_qos_class)
     hal_ret_t            ret = HAL_RET_OK;
 
     if (capri_tm_q_valid(pd_qos_class->uplink.iq)) {
-        g_hal_state_pd->qos_iq_idxr(TM_PORT_TYPE_UPLINK)->free(pd_qos_class->uplink.iq);
+        g_hal_state_pd->qos_uplink_iq_idxr()->free(pd_qos_class->uplink.iq);
     }
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->txdma); i++) {
         if (capri_tm_q_valid(pd_qos_class->txdma[i].iq)) {
-            g_hal_state_pd->qos_iq_idxr(TM_PORT_TYPE_DMA)->free(pd_qos_class->txdma[i].iq);
+            g_hal_state_pd->qos_txdma_iq_idxr()->free(pd_qos_class->txdma[i].iq);
         }
     }
 

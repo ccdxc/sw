@@ -37,7 +37,7 @@ protected:
   }
 
   static void qos_init(void); 
-  static const qos::QosGroup cos_a_1 = qos::DEFAULT;
+  static const qos::QosGroup cos_a_1 = qos::USER_DEFINED_2;
   static const qos::QosGroup cos_a_2 = qos::USER_DEFINED_1;
 };
 
@@ -54,6 +54,9 @@ void scheduler_tx_test::qos_init()
     spec.set_mtu(2000);
     spec.mutable_buffer()->set_reserved_mtus(2);
     spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(50);
+    spec.mutable_uplink_class_map()->set_dot1q_pcp(2);
+    spec.mutable_uplink_class_map()->add_ip_dscp(10);
+    spec.mutable_uplink_class_map()->add_ip_dscp(15);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qos_class_create(spec, &rsp);

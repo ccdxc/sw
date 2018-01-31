@@ -18,7 +18,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic/utils/mtrack:mtrack",
         "@sdk//obj:sdk_list",
-        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/lib:hal_lib_includes",
         "//:gtest",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/periodic:periodic",

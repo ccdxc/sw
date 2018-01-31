@@ -28,6 +28,8 @@
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/session.hpp"
+#include "nic/hal/src/qos.hpp"
+#include "nic/hal/lib/hal_utils.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -417,7 +419,7 @@ hal_init (hal_cfg_t *hal_cfg)
 {
     int          tid;
     char         *user = NULL;
-    std::string  catalog_file = "catalog.json";
+    hal_ret_t    ret = HAL_RET_OK;
 
     // Initialize the logger
     hal::utils::logger_init(HAL_CONTROL_CORE_ID, hal_cfg->async_en);
@@ -435,6 +437,9 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
+
+    sdk::lib::catalog* catalog = hal_lib_catalog_init();
+    g_hal_state->set_catalog(catalog);
 
     // initialize config parameters from the JSON file
     HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
@@ -477,6 +482,10 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do proxy init
     hal_proxy_svc_init();
+
+    // do qos init
+    ret = hal_qos_init();
+    HAL_ABORT(ret == HAL_RET_OK);
 
     // install signal handlers
     hal_sig_init();

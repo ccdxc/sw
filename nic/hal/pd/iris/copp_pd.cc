@@ -192,6 +192,9 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
         memcpy(COPP_ACTION(rate), &pi_copp->policer.bps_rate, sizeof(uint32_t));
     }
 
+    // TODO Fixme. Setting entry-valid to 0 until copp is verified and values
+    // are determined
+    COPP_ACTION(entry_valid) = 0;
     if (update) {
         sdk_ret = copp_tbl->update(pd_copp->hw_policer_id, &d);
     } else {

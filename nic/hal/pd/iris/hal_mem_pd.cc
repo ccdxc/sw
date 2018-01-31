@@ -57,8 +57,6 @@ class hal_state_pd *g_hal_state_pd;
 bool
 hal_state_pd::init(void)
 {
-    uint32_t num_iqs = 0;
-
     // initialize vrf related data structures
     vrf_slab_ = slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
                                  sizeof(hal::pd::pd_vrf_t), 8,
@@ -195,16 +193,12 @@ hal_state_pd::init(void)
                                        false, true, true);
     HAL_ASSERT_RETURN((qos_class_pd_slab_ != NULL), false);
 
-    qos_iq_idxr_ = (indexer **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
-                               sizeof(bitmap *) * NUM_TM_PORT_TYPES);
-    HAL_ASSERT_RETURN((qos_iq_idxr_ != NULL), false);
+    qos_txdma_iq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_TXDMA_IQS);
+    HAL_ASSERT_RETURN(qos_txdma_iq_idxr_ != NULL, false);
 
-    for (int port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
-        num_iqs = capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type);
-        qos_iq_idxr_[port_type] = sdk::lib::indexer::factory(num_iqs);
-        HAL_ASSERT_RETURN((qos_iq_idxr_[port_type] != NULL), false);
-    }
-    
+    qos_uplink_iq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_TXDMA_IQS);
+    HAL_ASSERT_RETURN(qos_uplink_iq_idxr_ != NULL, false);
+
     qos_common_oq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_COMMON_OQS);
     HAL_ASSERT_RETURN((qos_common_oq_idxr_ != NULL), false);
 
@@ -484,7 +478,8 @@ hal_state_pd::hal_state_pd()
     session_slab_ = NULL;
 
     qos_class_pd_slab_ = NULL;
-    qos_iq_idxr_ = NULL;
+    qos_txdma_iq_idxr_ = NULL;
+    qos_uplink_iq_idxr_ = NULL;
     qos_common_oq_idxr_ = NULL;
     qos_rxdma_oq_idxr_ = NULL;
     qos_hbm_fifo_allocator_ = NULL;
@@ -582,12 +577,8 @@ hal_state_pd::~hal_state_pd()
     tcpcb_hwid_ht_ ? ht::destroy(tcpcb_hwid_ht_) : HAL_NOP;
 
     qos_class_pd_slab_ ? slab::destroy(qos_class_pd_slab_) : HAL_NOP;
-    if (qos_iq_idxr_) {
-        for (int port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
-            qos_iq_idxr_[port_type] ? indexer::destroy(qos_iq_idxr_[port_type]) : HAL_NOP;
-        }
-        HAL_FREE(HAL_MEM_ALLOC_PD, qos_iq_idxr_);
-    }
+    qos_uplink_iq_idxr_ ? indexer::destroy(qos_uplink_iq_idxr_) : HAL_NOP;
+    qos_txdma_iq_idxr_ ? indexer::destroy(qos_txdma_iq_idxr_) : HAL_NOP;
     qos_common_oq_idxr_ ? indexer::destroy(qos_common_oq_idxr_) : HAL_NOP;
     qos_rxdma_oq_idxr_ ? indexer::destroy(qos_rxdma_oq_idxr_) : HAL_NOP;
     qos_hbm_fifo_allocator_ ? delete qos_hbm_fifo_allocator_ : HAL_NOP;

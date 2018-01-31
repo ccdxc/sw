@@ -35,7 +35,7 @@ cc_binary(
         "//nic:grpc_includes",
         "//nic:libprotobuf",
         "//nic:grpc",
-        "//nic/hal/lib:hal_handle",
+        "//nic/hal/lib:hal_lib",
         "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
 
         # PD
@@ -65,7 +65,7 @@ cc_library(
         "hal.hpp",
     ] + glob(["src/*.hpp"]),
     deps = [
-        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/lib:hal_lib_includes",
     ]
 )
 
@@ -92,7 +92,7 @@ cc_library(
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic/fte:fte_includes",
         "//nic/hal:hal_includes",
-        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/lib:hal_lib",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd:pdcommon",
         "//nic/hal/pd/iris:iris_includes",

@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #ifndef __QOS_HPP__
 #define __QOS_HPP__
 
@@ -481,6 +482,7 @@ hal_ret_t copp_create(qos::CoppSpec& spec,
 hal_ret_t copp_update(qos::CoppSpec& spec,
                               qos::CoppResponse *rsp);
 
+hal_ret_t hal_qos_init (void);
 
 }    // namespace hal
 

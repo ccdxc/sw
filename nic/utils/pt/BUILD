@@ -12,7 +12,7 @@ cc_library(
         "//nic/hal:hal_includes",
         "//nic/hal/periodic",
         "//nic/include:base_includes",
-        "//nic/hal/lib:hal_handle_includes",
+        "//nic/hal/lib:hal_lib_includes",
         "//nic:spdlog",
         "//nic/utils/print",
         "@sdk//obj:sdk_slab",

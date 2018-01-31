@@ -45,7 +45,7 @@ TEST_F(copp_test, test1)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
     hal::hal_cfg_db_close();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_NE(ret, HAL_RET_OK);
 
 
     spec.Clear();
@@ -56,7 +56,7 @@ TEST_F(copp_test, test1)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
     hal::hal_cfg_db_close();
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_NE(ret, HAL_RET_OK);
 }
 
 // Negative tests
@@ -75,7 +75,7 @@ TEST_F(copp_test, test2)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::copp_create(spec, &rsp);
     hal::hal_cfg_db_close();
-    ASSERT_EQ(ret, HAL_RET_INVALID_ARG);
+    ASSERT_NE(ret, HAL_RET_OK);
 
     spec.Clear();
     // copp type not set

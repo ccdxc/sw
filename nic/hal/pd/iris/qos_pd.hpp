@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #ifndef __HAL_QOS_PD_HPP__
 #define __HAL_QOS_PD_HPP__
 
@@ -11,6 +12,9 @@
 
 namespace hal {
 namespace pd {
+
+#define HAL_MAX_TXDMA_IQS                   16
+#define HAL_MAX_UPLINK_IQS                  8
 
 #define HAL_MAX_COMMON_OQS                  16
 #define HAL_MAX_RXDMA_ONLY_OQS              16
