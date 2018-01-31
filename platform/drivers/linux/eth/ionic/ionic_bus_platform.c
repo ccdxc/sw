@@ -139,9 +139,9 @@ static int ionic_probe(struct platform_device *pfdev)
 	}
 
 	dev_info(dev, "ASIC %s rev 0x%X serial num %s fw version %s\n",
-		 ionic_dev_asic_name(ionic->ident->asic_type),
-		 ionic->ident->asic_rev, ionic->ident->serial_num,
-		 ionic->ident->fw_version);
+		 ionic_dev_asic_name(ionic->ident->dev.asic_type),
+		 ionic->ident->dev.asic_rev, ionic->ident->dev.serial_num,
+		 ionic->ident->dev.fw_version);
 
 	/* Allocate and init LIFs, creating a netdev per LIF
 	 */
