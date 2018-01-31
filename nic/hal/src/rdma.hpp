@@ -105,6 +105,7 @@ class RDMAManager {
 #define HDR_TEMP_ADDR_SHIFT 3
 #define RRQ_BASE_ADDR_SHIFT 3
 #define RSQ_BASE_ADDR_SHIFT 3
+#define HBM_SQ_BASE_ADDR_SHIFT 3
 
 // all the page_ids are encoded as 22-bits, assuming 4K page size (12-bits)
 // appropriate shift will make 34-bit (22+12) hbm address.
@@ -902,7 +903,8 @@ typedef struct sqcb0_s {
     uint8_t  cb1_byte;
     uint8_t  busy: 1;        //tx
     uint8_t  congestion_mgmt_enable: 1;
-    uint8_t  rsvd0: 6;
+    uint8_t  rsvd0: 5;
+    uint8_t  sq_in_hbm: 1;
     uint8_t  bktrack_in_progress:1;
     uint8_t  retry_timer_on:1;
     uint8_t  li_fence:1;
@@ -922,7 +924,10 @@ typedef struct sqcb0_s {
     uint32_t log_sq_page_size:5;
     uint32_t log_pmtu:5;           //tx
     uint32_t pd;
-    uint32_t pt_base_addr;          //common
+    union {
+        uint32_t pt_base_addr;          //common
+        uint32_t hbm_sq_base_addr;
+    };
     qpcb_ring_t           rings[MAX_SQ_RINGS];
     // intrinsic
     qpcb_intrinsic_base_t ring_header;

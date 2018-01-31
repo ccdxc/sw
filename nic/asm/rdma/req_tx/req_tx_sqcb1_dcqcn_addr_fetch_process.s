@@ -20,6 +20,8 @@ req_tx_sqcb1_dcqcn_addr_fetch_process:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.header_template_addr, d.header_template_addr)
 
     // Pass congestion_mgmt_enable flag to stage 3 and 4
+    CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.congestion_mgmt_enable, 1)
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.congestion_mgmt_enable, 1)
     CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)

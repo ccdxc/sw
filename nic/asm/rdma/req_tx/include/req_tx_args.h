@@ -137,7 +137,8 @@ struct req_tx_sqcb0_to_sqcb1_info_t {
     bktrack                       : 1; 
     pt_base_addr                  : 32;
     op_type                       : 5;
-    pad                           : 39;
+    sq_in_hbm                     : 1;
+    pad                           : 38;
 };
 
 

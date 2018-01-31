@@ -120,6 +120,7 @@ sq_bktrack:
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack, 1)
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, pt_base_addr, d.pt_base_addr)
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, op_type, d.curr_op_type)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, sq_in_hbm, d.sq_in_hbm)
 
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb1_process, r1)
@@ -185,6 +186,29 @@ process_send:
     // update state, otherwise discard and redo in the next scheduler slot
     add            r1, r0, SPEC_SQ_C_INDEX // Branch Delay Slot
 
+    bbne           d.sq_in_hbm, 1, pt_process
+    sll            r2, r1, d.log_wqe_size // Branch Delay Slot
+    add            r2, r2, d.hbm_sq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
+    // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
+    sll            r4, 1, d.log_pmtu
+
+    // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
+    CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, remaining_payload_bytes, r4)
+    CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, rrq_p_index, RRQ_P_INDEX)
+ 
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, r2)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
+
+    // populate t0 PC and table address
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, r2)
+
+    tblmincri.e    SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
+    nop
+
+pt_process:
     // log_num_wqe_per_page = (log_sq_page_size - log_wqe_size)
     // page_index = sq_c_index >> (log_num_wqe_per_page)
     sub            r2, d.log_sq_page_size, d.log_wqe_size
@@ -214,8 +238,9 @@ process_send:
     // proceeding further. Otherwise recirc until there is room
     CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, rrq_p_index, RRQ_P_INDEX)
     CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, page_seg_offset, r2)
-    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, log_pmtu, d.log_pmtu)
-    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, pd, d.pd)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, log_pmtu, d.log_pmtu)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, pd, d.pd)
+    //write pd, log_pmtu together
     CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_PT_T, pd, log_pmtu, d.{pd...log_pmtu})
     //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, ud, r5)
 

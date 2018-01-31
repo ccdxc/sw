@@ -157,7 +157,7 @@ class RdmaSQstate(Packet):
         LEShortField("p_index5", 0),
         LEShortField("c_index5", 0),
     
-        IntField("pt_base_addr", 0),
+        IntField("pt_base_addr/sq_hbm_base_addr", 0),
         IntField("pd", 0),
         BitField("log_pmtu", 0xa, 5),
         BitField("log_sq_page_size", 0xc, 5),
@@ -177,7 +177,8 @@ class RdmaSQstate(Packet):
         BitField("li_fence", 0, 1),
         BitField("retry_timer_on", 0, 1),
         BitField("bktrack_in_progress", 0, 1),
-        BitField("rsvd0", 0, 6),
+        BitField("sq_in_hbm", 0, 1),
+        BitField("rsvd0", 0, 5),
         BitField("congestion_mgmt_enable",0, 1),
         BitField("busy", 0, 1),
         ByteField("cb1_byte", 0),
@@ -422,11 +423,11 @@ class RdmaQueueObject(QueueObject):
         cfglogger.info('- type   : %s' % self.queue_type.GID())
         cfglogger.info('- id     : %s' % self.id)
 
-    def SetRingParams(self, ring_id, host, mem_handle, address, size, desc_size):
+    def SetRingParams(self, ring_id, host, nic_resident, mem_handle, address, size, desc_size):
         r = self.rings.Get(ring_id)
         if r is None:
             assert(0)
-        r.SetRingParams(host, mem_handle, address, size, desc_size)
+        r.SetRingParams(host, nic_resident, mem_handle, address, size, desc_size)
         return
 
 class RdmaQueueObjectHelper:

@@ -45,16 +45,44 @@ req_tx_bktrack_sqcb1_process:
     CAPRI_SET_FIELD_RANGE(r7, SQ_BKTRACK_T, current_sge_offset, num_sges, k.{args.current_sge_offset...args.num_sges})
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, d.ssn)
 
+    seq            c2, k.args.sq_in_hbm, 1 
     seq            c1, k.to_stage.bktrack.wqe_addr, r0
-    bcf            [c1],  bktrack_sqpt
+    bcf.!c2        [c1],  bktrack_sqpt
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, d.tx_psn) // Branch Delay Slot
 
+    bcf            [c2 & !c1], wqe_bktrack
+    add            r2, r0, k.to_stage.bktrack.wqe_addr // Branch Delay Slot
+    
+    sll            r2, k.args.sq_c_index, k.to_stage.bktrack.log_wqe_size
+    //pt_base_addr is overloaded with sq_hbm_base_addr
+    add            r2, r2, k.args.pt_base_addr, HBM_SQ_BASE_ADDR_SHIFT
+    
 wqe_bktrack:
     seq           c1, k.args.in_progress, 1
     CAPRI_SET_FIELD_C(r7, SQ_BKTRACK_T, tx_psn, d.wqe_start_psn, c1)
     
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, k.to_stage.bktrack.wqe_addr)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqwqe_process, r2)
+ 
+    //for now, use to_stage_args to pass the wqe_addr
+    //until we organize better, copy to all stages
+    CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r2)
+
+    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r2)
     
+    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r2)
+    
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r2)
+    
+    CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r2)
+   
+    CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r2)
+   
     nop.e
     nop
 

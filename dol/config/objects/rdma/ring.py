@@ -18,6 +18,7 @@ class RdmaRingObject(ring.RingObject):
         self.size = None
         self.desc_size = None
         self.initialized = False
+        self.nic_resident = False
 
     def Init(self, queue, spec):
         super().Init(queue, spec)
@@ -26,15 +27,16 @@ class RdmaRingObject(ring.RingObject):
         self.doorbell = doorbell.Doorbell()
         self.doorbell.Init(self, spec)
 
-    def SetRingParams(self, host, mem_handle, address, size, desc_size):
+    def SetRingParams(self, host, nic_resident, mem_handle, address, size, desc_size):
         self.host = host
+        self.nic_resident = nic_resident
         self.address = address
         self.mem_handle = mem_handle
         self.size = size
         self.desc_size = desc_size
-        cfglogger.info("SetRingParams: host %d eqe_base_addr: 0x%x" \
+        cfglogger.info("SetRingParams: host %d nic_resident %d eqe_base_addr: 0x%x" \
                        " size %d desc_size %d " %\
-                       (self.host, self.address, self.size, self.desc_size))
+                       (self.host, self.nic_resident, self.address, self.size, self.desc_size))
 
 
     def Configure(self):
@@ -47,8 +49,12 @@ class RdmaRingObject(ring.RingObject):
         # Bind the descriptor to the ring
         cfglogger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_pindex(0)))
-        descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
-                                                 resmgr.HostMemoryAllocator.v2p(descriptor.address))
+        if self.nic_resident:
+            descriptor.mem_handle = None
+        else:
+            descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
+                                                     resmgr.HostMemoryAllocator.v2p(descriptor.address))
+
         descriptor.Write()
         cfglogger.info('incrementing pindex..')
         self.queue.qstate.incr_pindex(0, self.size)

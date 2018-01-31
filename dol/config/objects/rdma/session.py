@@ -158,6 +158,15 @@ class RdmaSessionObjectHelper:
         else:
             return []
 
+    def __get_perf_qps_for_ep(self, ep):
+        if hasattr(ep, 'pds'):
+            pds = ep.pds.GetAll()
+            for pd in pds:
+                qps = pd.perf_qps.GetAll()
+                return qps
+        else:
+            return []
+
     def RCGenerate(self):
         self.nw_sessions = SessionHelper.GetAllMatchingLabel('RDMA')
         for nw_s in self.nw_sessions:
@@ -230,6 +239,41 @@ class RdmaSessionObjectHelper:
                 break
         return
 
+    def PerfRCGenerate(self):
+        self.nw_sessions = SessionHelper.GetAllMatchingLabel('RDMA')
+        for nw_s in self.nw_sessions:
+
+            ep1 = nw_s.initiator.ep
+            ep2 = nw_s.responder.ep
+
+            # lqp should come from a local endpoint
+            if ep1.remote or not ep2.remote : continue
+
+            ep1_qps = self.__get_perf_qps_for_ep(ep1)
+            ep2_qps = self.__get_perf_qps_for_ep(ep2)
+            
+            for lqp in ep1_qps:
+                if lqp in self.used_qps: continue
+                for rqp in ep2_qps:
+                    if rqp in self.used_qps: continue
+                    self.used_qps.append(lqp)
+                    self.used_qps.append(rqp)
+
+                    vxlan = ep2.segment.IsFabEncapVxlan()
+
+                    cfglogger.info("RDMA PERF RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
+                                   "IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
+                                   not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(), 
+                                   ep2.segment.IsFabEncapVxlan()))
+
+                    rdma_s = RdmaSessionObject()
+                    rdma_s.Init(nw_s, lqp, rqp, vxlan)
+                    self.rdma_sessions.append(rdma_s)
+                    break
+                break
+        return
+
+
     def UDGenerate(self):
         self.nw_sessions = SessionHelper.GetAllMatchingLabel('RDMA')
         for nw_s in self.nw_sessions:
@@ -261,6 +305,7 @@ class RdmaSessionObjectHelper:
 
     def Generate(self):
         self.RCGenerate()
+        self.PerfRCGenerate()
         self.UDGenerate()
         
     def Configure(self):

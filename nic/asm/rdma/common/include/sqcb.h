@@ -55,7 +55,10 @@ struct sqcb0_t {
     struct capri_intrinsic_ring_t ring3;
     struct capri_intrinsic_ring_t ring4;
     struct capri_intrinsic_ring_t ring5;
-    pt_base_addr: 32;
+    union {
+        pt_base_addr: 32;
+        hbm_sq_base_addr: 32;
+    };
     //packed params begin: pd, log_pmtu
     pd: 32;
     //packed params begin: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
@@ -79,7 +82,8 @@ struct sqcb0_t {
     li_fence: 1;
     retry_timer_on: 1;
     bktrack_in_progress: 1;
-    rsvd0: 6;
+    sq_in_hbm: 1;
+    rsvd0: 5;
     congestion_mgmt_enable: 1;
     busy: 1;
     // a byte field located in sqcb0, but manipulated from

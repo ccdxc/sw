@@ -61,7 +61,8 @@ message RdmaQpSpec {
   uint32                   rq_cq_num       = 17;   // RQ's CQ Number
   uint32                   sq_cq_num       = 18;   // SQ's CQ Number
   bool                     immdt_as_dbell  = 19;   // Use immdt data to ring dbell
-  fixed64                  if_handle       = 20;   // EP's/ENIC's interface handle
+  bool                     sq_in_nic_memory= 20;   // Allocate SQ in NIC Memory
+  fixed64                  if_handle       = 21;   // EP's/ENIC's interface handle
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
@@ -75,7 +76,8 @@ message RdmaQpResponse {
   //RdmaQpStatus        status           = 2;    // operational status
   uint64              rsq_base_addr    = 3;    // RSQ base addr
   uint64              rrq_base_addr    = 4;    // RRQ base addr
-  uint64              header_temp_addr = 5;    // Header template addr
+  uint64              nic_sq_base_addr = 5;    // NIC SQ base addr
+  uint64              header_temp_addr = 6;    // Header template addr
 }
 
 // RdmaQpResponseMsg is response to RdmaQpRequestMsg

@@ -88,7 +88,7 @@ class CqObject(base.ConfigObjectBase):
         req_spec.cq_lkey = self.cq_mr.lkey
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        self.cq.SetRingParams('CQ', True, 
+        self.cq.SetRingParams('CQ', True, False,
                               self.cq_slab.mem_handle,
                               self.cq_slab.address, 
                               self.num_cq_wqes, 

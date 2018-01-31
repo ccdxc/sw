@@ -48,6 +48,7 @@ class QpObject(base.ConfigObjectBase):
         self.pmtu = spec.pmtu
         self.hostmem_pg_size = spec.hostmem_pg_size
         self.atomic_enabled = spec.atomic_enabled
+        self.sq_in_nic = spec.sq_in_nic
 
         self.num_sq_sges = spec.num_sq_sges
         self.num_sq_wqes = self.__roundup_to_pow_2(spec.num_sq_wqes)
@@ -184,6 +185,7 @@ class QpObject(base.ConfigObjectBase):
             req_spec.rq_lkey = self.rq_mr.lkey
             req_spec.sq_cq_num = self.sq_cq.id
             req_spec.rq_cq_num = self.rq_cq.id
+            req_spec.sq_in_nic_memory = self.sq_in_nic
     
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
@@ -204,22 +206,30 @@ class QpObject(base.ConfigObjectBase):
             self.rsq_base_addr = resp_spec.rsq_base_addr
             self.rrq_base_addr = resp_spec.rrq_base_addr
             self.header_temp_addr = resp_spec.header_temp_addr
-            self.sq.SetRingParams('SQ', True, 
+            self.nic_sq_base_addr = resp_spec.nic_sq_base_addr
+            if self.sq_in_nic:
+                self.sq.SetRingParams('SQ', True, True,
+                                  None,
+                                  self.nic_sq_base_addr,
+                                  self.num_sq_wqes, 
+                                  self.sqwqe_size)
+            else:
+                self.sq.SetRingParams('SQ', True, False,
                                   self.sq_slab.mem_handle,
                                   self.sq_slab.address, 
                                   self.num_sq_wqes, 
                                   self.sqwqe_size)
-            self.rq.SetRingParams('RQ', True, 
+            self.rq.SetRingParams('RQ', True, False,
                                   self.rq_slab.mem_handle,
                                   self.rq_slab.address,
                                   self.num_rq_wqes, 
                                   self.rqwqe_size)
-            self.sq.SetRingParams('RRQ', False, 
+            self.sq.SetRingParams('RRQ', False, True,
                                   None,
                                   self.rrq_base_addr,
                                   self.num_rrq_wqes,
                                   self.rrqwqe_size)
-            self.rq.SetRingParams('RSQ', False, 
+            self.rq.SetRingParams('RSQ', False, True,
                                   None,
                                   self.rsq_base_addr,
                                   self.num_rsq_wqes,
@@ -352,6 +362,7 @@ class RdmaDCQCNstate(scapy.Packet):
 class QpObjectHelper:
     def __init__(self):
         self.qps = []
+        self.perf_qps = []
         self.udqps = []
 
     def Generate(self, pd, spec):
@@ -368,6 +379,18 @@ class QpObjectHelper:
             qp = QpObject(pd, qp_id, rc_spec)
             self.qps.append(qp)
             j += 1
+
+        #PERF RC QPs
+        rc_spec = spec.perf_rc
+        count = rc_spec.count
+        cfglogger.info("Creating %d %s Perf Qps. for PD:%s" %\
+                       (count, rc_spec.svc_name, pd.GID()))
+        for i in range(count):
+            qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
+            qp = QpObject(pd, qp_id, rc_spec)
+            self.perf_qps.append(qp)
+            j += 1
+
 
         #UD QPs
         ud_spec = spec.ud
@@ -386,5 +409,6 @@ class QpObjectHelper:
         if self.pd.remote:
             cfglogger.info("skipping QP configuration for remote PD: %s" %(self.pd.GID()))
             return
-        cfglogger.info("Configuring %d QPs." % len(self.qps)) 
+        cfglogger.info("Configuring %d QPs %d Perf QPs." % (len(self.qps), len(self.perf_qps)))
         halapi.ConfigureQps(self.qps)
+        halapi.ConfigureQps(self.perf_qps)

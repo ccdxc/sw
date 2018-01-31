@@ -85,7 +85,8 @@ send_or_write:
 set_sge_arg:
     bcf            [c2], inline_data
     // sge_list_addr = wqe_addr + TX_SGE_OFFSET
-    add            r3, k.to_stage.sq.wqe_addr, TXWQE_SGE_OFFSET // Branch Delay Slot
+    mfspr          r3, spr_tbladdr //Branch Delay Slot
+    add            r3, r3, TXWQE_SGE_OFFSET
 
     // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
@@ -113,7 +114,8 @@ read:
 
     // prepare RRQWQE descriptor
     phvwrpair      RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ, RRQWQE_NUM_SGES, d.base.num_sges
-    add            r2, k.to_stage.sq.wqe_addr, TXWQE_SGE_OFFSET
+    mfspr          r3, spr_tbladdr
+    add            r2, r3, TXWQE_SGE_OFFSET
     phvwrpair      RRQWQE_READ_LEN, d.read.length, RRQWQE_READ_WQE_SGE_LIST_ADDR, r2
 
     //CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)

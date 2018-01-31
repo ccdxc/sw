@@ -685,11 +685,12 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     uint8_t      num_sq_wqes, num_rq_wqes;
     uint8_t      num_rrq_wqes, num_rsq_wqes;
     uint32_t     sqwqe_size, rqwqe_size;
+    uint32_t     sq_size;
     sqcb_t       sqcb;
     sqcb_t       *sqcb_p = &sqcb;
     rqcb_t       rqcb;
     rqcb_t       *rqcb_p = &rqcb;
-    uint64_t     header_template_addr, rrq_base_addr, rsq_base_addr;
+    uint64_t     header_template_addr, rrq_base_addr, rsq_base_addr, hbm_sq_base_addr;
     uint64_t     offset;
     uint64_t     offset_verify;
     hal_ret_t    ret;
@@ -713,8 +714,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                     spec.sq_lkey(), spec.rq_lkey());
     HAL_TRACE_DEBUG("{}: Inputs: sq_cq_id: {} rq_cq_id: {}", __FUNCTION__,
                     spec.sq_cq_num(), spec.rq_cq_num());
-    HAL_TRACE_DEBUG("{}: Inputs: atomic_enabled: {} immdt_as_dbell: {}", __FUNCTION__,
-                    spec.atomic_enabled(), spec.immdt_as_dbell());
+    HAL_TRACE_DEBUG("{}: Inputs: atomic_enabled: {} immdt_as_dbell: {}, sq_in_nic: {}", __FUNCTION__,
+                    spec.atomic_enabled(), spec.immdt_as_dbell(), spec.sq_in_nic_memory());
 
     // allocate sq and rq
     sqwqe_size = roundup_to_pow_2(spec.sq_wqe_size());
@@ -746,8 +747,22 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     //  rings as one less than max/total
     sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_RINGS - 1;
     sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_RINGS - 1;
-    sqcb_p->sqcb0.pt_base_addr =
-        rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())) >> PT_BASE_ADDR_SHIFT;
+    if (spec.sq_in_nic_memory()) {
+        sqcb_p->sqcb0.sq_in_hbm = 1;
+        sq_size = num_sq_wqes * sqwqe_size;
+        hbm_sq_base_addr = g_rdma_manager->HbmAlloc(sq_size);
+        HAL_ASSERT(hbm_sq_base_addr);
+        HAL_ASSERT(hbm_sq_base_addr != (uint32_t)-ENOMEM);
+        // Make sure hbm_sq_base_addr is 8 byte aligned
+        HAL_ASSERT(hbm_sq_base_addr % 8 == 0);
+        sqcb_p->sqcb0.hbm_sq_base_addr = hbm_sq_base_addr >> HBM_SQ_BASE_ADDR_SHIFT;
+    } else {
+        sqcb_p->sqcb0.sq_in_hbm = 0;
+        hbm_sq_base_addr = 0;
+        sqcb_p->sqcb0.pt_base_addr =
+            rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())) >> PT_BASE_ADDR_SHIFT;
+    }
+
     HAL_TRACE_DEBUG("{}: lif: {}, lkey: {}, rdma_mr_pt_base: {}, rdma_pt_addr: {}, shifted rdma_pt_addr: {} sqcb0_pt_base_addr: {}",
                      __FUNCTION__, lif, spec.sq_lkey(),
                     rdma_mr_pt_base_get(lif, spec.sq_lkey()),
@@ -861,6 +876,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->set_rsq_base_addr(rsq_base_addr);
     rsp->set_rrq_base_addr(rrq_base_addr);
+    rsp->set_nic_sq_base_addr(hbm_sq_base_addr);
     rsp->set_header_temp_addr(header_template_addr);
 
     // For UD QPs, please add it to the Segment's Broadcast OIFs list
