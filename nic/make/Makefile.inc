@@ -136,13 +136,13 @@ CLEANFILES += $(LCLEANFILES)
 # For code coverage, do "make GCOV="--coverage -DCOVERAGE" <target>"
 GCOV?=
 
-CFLAGS = $(OPT) $(GCOV) -Wall -Werror -Wuninitialized -fpic
+CFLAGS = $(OPT) $(GCOV) -Wall -Werror -Wuninitialized -fPIC
 # CFLAGS += -MT $(GENDIR)/$(addsuffix .o,$(basename $(notdir $(<)))) -MMD -MP -MF $(GENDIR)/$(notdir $*).d
 # Original
 CFLAGS += -MT $@ -MMD -MP -MF $(GENDIR)/$*.d
 CFLAGS += $(LCFLAGS)
 
-CXXFLAGS = $(OPT) $(GCOV) -std=c++11 -Wall -Werror -Wuninitialized -fpic
+CXXFLAGS = $(OPT) $(GCOV) -std=c++11 -Wall -Werror -Wuninitialized -fPIC
 # CXXFLAGS += -MT $(GENDIR)/$(addsuffix .o,$(basename $(notdir $(<)))) -MMD -MP -MF $(GENDIR)/$(notdir $*).d
 # Original
 CXXFLAGS += -MT $@ -MMD -MP -MF $(GENDIR)/$*.d
