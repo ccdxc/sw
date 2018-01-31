@@ -179,12 +179,22 @@ modules:
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
+        name    : BAD_SIG_PKT_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : bad_sig_pkt_to_ipseccbq
+        spec    : bad_sig_pkt_to_ipseccbq.testspec
+        ignore  : False
+        rtl     : False 
+        iterate :
+            - flow: filter://type=IPV4
+    - module:
         name    : TCP_V4_EXTRA_PAD 
-        enable  : False 
+        enable  : True 
         package : test.ipsec-proxy
         module  : tcp_v4_extra_pad 
         spec    : tcp_v4_extra_pad.testspec 
-        ignore  : True 
+        ignore  : False 
         rtl     : False 
         iterate :
             - flow: filter://type=IPV4,proto=TCP
