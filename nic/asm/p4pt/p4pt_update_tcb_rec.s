@@ -43,8 +43,13 @@ p4pt_update_tcb_rec_start:
     tblwr    d.u.p4pt_update_tcb_rec_d.data_length, k.p4pt_s2s_data_length
     tblwr    d.u.p4pt_update_tcb_rec_d.read, k.p4pt_s2s_read
     tblwr    d.u.p4pt_update_tcb_rec_d.write, k.p4pt_s2s_write
+#ifdef CAPRI_IGNORE_TIMESTAMP
     mfspr    r4, spr_time
     tblwr    d.u.p4pt_update_tcb_rec_d.req_timestamp, r4
+#else
+    add      r1, r0, 0
+    tblwr    d.u.p4pt_update_tcb_rec_d.req_timestamp, r0
+#endif
     b        prep_next_lookup
     nop
 
@@ -59,8 +64,12 @@ process_response:
 
     tblwr    d.u.p4pt_update_tcb_rec_d.status, k.p4pt_s2s_status
     add      r1, r0, d.u.p4pt_update_tcb_rec_d.req_timestamp
+#ifdef CAPRI_IGNORE_TIMESTAMP
     mfspr    r4, spr_time
     sub      r1, r1, r4
+#else
+    add      r1, r0, 0
+#endif
     phvwr    p.p4pt_global_latency, r1
     phvwr    p.p4pt_s2s_write, d.u.p4pt_update_tcb_rec_d.write
     phvwr    p.p4pt_s2s_read, d.u.p4pt_update_tcb_rec_d.read
