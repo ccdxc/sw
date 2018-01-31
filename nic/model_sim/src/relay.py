@@ -15,7 +15,7 @@ from contextlib import contextmanager
 import binascii
 
 
-MTU = 1500
+MTU = 9200
 
 def mac(s):
     if not re.match(r'[0-9a-f]{2}(:[0-9a-f]{2}){5}', s):
@@ -65,7 +65,7 @@ def tap2model(tap, stop, poll_interval, verbose, examine, fix_checksum):
     while not stop.is_set():
         r, w, e = select([tap], [], [], poll_interval)
         if r:
-            pkt = tap.read(MTU)
+            pkt = tap.read(MTU+14+4)  # MTU + Eth hdr + VLAN hdr
             print("\ntap2model: packet %d length %d\n" % (count, len(pkt)))
             if verbose or examine:
                 scapy_pkt = Ether(pkt)

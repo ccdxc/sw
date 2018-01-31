@@ -851,7 +851,8 @@ struct station_mac_addr_get_comp {
 /**
  * struct mtu_set_cmd - Set LIF's MTU command
  * @opcode:     opcode = 16
- * @mtu:        MTU
+ * @mtu:        MTU.  Min MTU=68, Min IPv4 MTU per RFC791.
+ *              Max MTU=9200.
  */
 struct mtu_set_cmd {
 	u16 opcode;

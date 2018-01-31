@@ -22,7 +22,7 @@
 #include "ionic_if.h"
 
 #define IONIC_MIN_MTU		ETH_MIN_MTU
-#define IONIC_MAX_MTU		9000
+#define IONIC_MAX_MTU		9200
 
 #pragma pack(push, 1)
 
