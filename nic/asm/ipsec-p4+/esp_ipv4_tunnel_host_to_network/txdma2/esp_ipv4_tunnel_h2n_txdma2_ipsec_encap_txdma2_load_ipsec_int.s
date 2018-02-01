@@ -9,9 +9,8 @@ struct phv_ p;
 %%
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
-    and r1, d.status, 0xF
-    sne c1, r1, r0 
-    bcf [c1], esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_barco_error
+    seq c1, d.{status}.dx, 0
+    bcf [!c1], esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_barco_error
     phvwri p.app_header_table2_valid, 0
     phvwr p.txdma2_global_pad_size, d.pad_size
     phvwr p.txdma2_global_l4_protocol, d.l4_protocol
@@ -23,6 +22,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
 
 // need to add error code
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_barco_error:
+    phvwri p.p4_intr_global_drop, 1
     phvwri p.app_header_table0_valid, 0
     phvwri p.app_header_table1_valid, 0
     phvwri p.app_header_table2_valid, 0
