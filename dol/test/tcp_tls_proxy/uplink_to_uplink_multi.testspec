@@ -1,0 +1,278 @@
+# TCP Proxy RX Inorder Sample TestSpec file.
+selectors:
+    # Update: Vikasd
+    # Choose the config, that only selects flows matching below packet
+    # templates.
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        qpair       : filter://any # Local QPair
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        qpair       : filter://any 
+    flow        : filter://proto=TCP,label=TCP-PROXY
+    maxflows    : 1
+
+# Packet section defines the set of input and output packets. Input packets
+# will be used in triggers and output packets will be used in expect
+packets:
+    - packet:
+        id          : BASE_PKT
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                seq     : callback://tcpcb/tcpcb/GetSeqNum
+                ack     : callback://tcpcb/tcpcb/GetAckNum
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
+    - packet:
+        id          : PKT1
+        clone       : ref://testcase/packets/id=BASE_PKT
+
+    - packet:
+        id          : PKT2
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : PKT3
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : PKT4
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : PKT5
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : PKT6
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : PKT7
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+
+    - packet:
+        id          : PKT8
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : PKT9
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : PKT10
+        clone       : ref://testcase/packets/id=BASE_PKT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+
+    - packet:
+        id          : BASE_PKT_OUT
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
+                ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
+                options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
+                window  : 1000
+                flags   : ack
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
+    - packet:
+        id          : PKT1_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+
+    - packet:
+        id          : PKT2_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT3_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT4_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT5_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT6_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT7_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT8_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT9_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+    - packet:
+        id          : PKT10_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT_OUT
+        headers     :
+            tcp:
+                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT2
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT3
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT4
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT5
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT6
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT7
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT8
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT9
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT10
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT2_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT3_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT4_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT5_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT6_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT7_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT8_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT9_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT10_OUT
+            port    : ref://testcase/config/dst/endpoint/intf/ports

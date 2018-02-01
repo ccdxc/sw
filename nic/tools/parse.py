@@ -63,6 +63,8 @@ def parse_logs():
             fields1 = re.split(r'\[(.*)\]: (.*)\.e(.*)', line)
             inscountfile.write("%03d %s %d\n" % (int(fields1[1])+1, program, programline))
             #print(fields1[1], program, programline, linenum)
+        elif 'Starting Testcase TC' in line:
+            print '\n' + line.strip()
         model1file.write(line)
     modelfile.close()
     model1file.close()

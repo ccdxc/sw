@@ -419,6 +419,16 @@ modules:
               dstseg    : filter://fabencap=VXLAN
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_MULTI_PACKET
+        spec    : uplink_to_uplink_multi.testspec
+        module  : pkt_to_p4
+        rtl     : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_pkts : 10
+
+    - module:
         name    : UL_TO_UL_BYPASS_BARCO_SEND_ACK
         spec    : uplink_to_uplink_ack.testspec
         module  : pkt_to_p4
