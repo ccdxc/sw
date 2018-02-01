@@ -1,0 +1,182 @@
+# Feature Test Modules List
+feature:
+    id          : l4lb
+    sub         : snatl2
+    package     : test.l4lb
+    module      : l4lb
+    enable      : True
+    ignore      : False
+    pendol      : True
+
+modules:   
+    # Aggregated
+    - module:
+        # Uplink <-> Uplink
+        name    : NW_NW_UDP
+        spec    : nw_nw_l2.testspec
+        iterate :
+            # Native -> Native
+            # UDP
+            - flow   : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://fabencap=VLAN
+            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://fabencap=VLAN
+
+    - module:
+        # Uplink <-> Uplink
+        name    : NW_NW_TCP
+        spec    : nw_nw_l2.testspec
+        perf    : True
+        iterate :
+            # Native -> Native
+            # TCP
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://fabencap=VLAN
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://fabencap=VLAN
+
+    - module:
+        # Host -> Uplink
+        name    : TX_NW_UDP
+        spec    : tx_nw_l2.testspec
+        iterate :
+            # Native -> Native
+            # UDP
+            - flow   : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://any
+              dstseg : filter://fabencap=VLAN
+            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://any
+              dstseg : filter://fabencap=VLAN
+
+    - module:
+        # Host -> Uplink
+        name    : TX_NW_TCP
+        spec    : tx_nw_l2.testspec
+        perf    : True
+        iterate :
+            # Native -> Native
+            # TCP
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://any
+              dstseg : filter://fabencap=VLAN
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://any
+              dstseg : filter://fabencap=VLAN
+
+    - module:
+        # Host -> Uplink Vxlan
+        name    : TX_NW_UDP_ENCAP
+        spec    : tx_nw_l2_vxlan.testspec
+        enable  : False
+        iterate :
+            # Native -> Tunnel 
+            # UDP
+            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
+            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
+
+    - module:
+        # Host -> Uplink Vxlan
+        name    : TX_NW_TCP_ENCAP
+        spec    : tx_nw_l2_vxlan.testspec
+        perf    : True
+        enable  : False
+        iterate :
+            # TCP
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
+
+    - module:
+        # Uplink -> Host
+        name    : NW_RX_UDP
+        spec    : nw_rx_l2.testspec
+        enable  : False
+        iterate :
+            # Native -> Native
+            # UDP
+            - flow   : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://any
+            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://any
+
+    - module:
+        # Uplink -> Host
+        name    : NW_RX_TCP
+        spec    : nw_rx_l2.testspec
+        enable  : False
+        perf    : True
+        iterate :
+            # Native -> Native
+            # TCP
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://any
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://fabencap=VLAN
+              dstseg : filter://any
+    
+    - module:
+        # Uplink -> Host
+        name    : NW_RX_UDP_DECAP
+        spec    : nw_rx_l2.testspec
+        enable  : False
+        iterate :
+            # Tunnel -> Native
+            # UDP
+            - flow   : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://fabencap=VXLAN
+              dstseg : filter://any
+            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://fabencap=VXLAN
+              dstseg : filter://any
+
+    - module:
+        # Uplink -> Host
+        name    : NW_RX_TCP_DECAP
+        spec    : nw_rx_l2.testspec
+        perf    : True
+        enable  : False
+        iterate :
+            # Tunnel -> Native
+            # TCP
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://fabencap=VXLAN
+              dstseg : filter://any
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://fabencap=VXLAN
+              dstseg : filter://any
+
+    - module:
+        # Host -> Host
+        name    : TX_RX_UDP
+        spec    : tx_rx_l2.testspec
+        iterate :
+            # Native -> Native
+            # UDP
+            - flow   : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://any
+              dstseg : filter://any
+            - flow  : filter://label=L4LB,fwtype=L2,proto=UDP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://any
+              dstseg : filter://any
+
+    - module:
+        # Host -> Host
+        name    : TX_RX_TCP
+        spec    : tx_rx_l2.testspec
+        perf    : True
+        iterate :
+            # Native -> Native
+            # TCP
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
+              srcseg : filter://any
+              dstseg : filter://any
+            - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_ONLY
+              srcseg : filter://any
+              dstseg : filter://any

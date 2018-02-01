@@ -609,7 +609,7 @@ def main():
     if args.rtl == False and args.skipverify:
         print "ERROR: skipverify option cannot be used for non RTL runs."
         sys.exit(1)
-    if args.rtl == False and (args.latency or args.pps):
+    if not args.dryrun and args.rtl == False and (args.latency or args.pps):
         print "ERROR: latency or pps option cannot be used for non RTL runs."
         sys.exit(1)
 

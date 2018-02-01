@@ -97,6 +97,9 @@ def ValidateGlopts():
             GlobalOptions.tcid = GlobalOptions.tcid[0]
     GlobalOptions.alltc_done = False
 
+    if GlobalOptions.rtl:
+        GlobalOptions.lite = True
+
     if GlobalOptions.latency:
         if not GlobalOptions.dryrun:
             GlobalOptions.tcscale = 10

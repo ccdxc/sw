@@ -1892,6 +1892,7 @@ modules:
     - module:
         name    : ABS_STEP_TEST
         tracker : True
+        enable  : False
         ignore  : True
         args    :
             connspec: ref://trackerstore/connections/id=DEFAULT
