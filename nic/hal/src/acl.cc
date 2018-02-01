@@ -389,7 +389,7 @@ acl_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    HAL_TRACE_ERR("pi-acl:{}:added acl:{} to DB",
+    HAL_TRACE_DEBUG("pi-acl:{}:added acl:{} to DB",
                   __func__, acl->key);
 
     // TODO: Increment the ref counts of dependent objects

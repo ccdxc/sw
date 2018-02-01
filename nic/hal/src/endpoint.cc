@@ -343,8 +343,8 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    HAL_TRACE_ERR("pi-ep:{}:added EP:{} to L2 DB", 
-                  __FUNCTION__, ep_l2_key_to_str(ep));
+    HAL_TRACE_DEBUG("pi-ep:{}:added EP:{} to L2 DB", 
+                    __FUNCTION__, ep_l2_key_to_str(ep));
 
     // Add EP to L3 DB
     dllist_for_each(ip_lnode, &ep->ip_list_head) {
@@ -398,8 +398,8 @@ endpoint_cleanup(ep_t *ep)
         HAL_TRACE_ERR("pi-ep:{}:unable to delete EP from L3 DB", __FUNCTION__);
         goto end;
     }
-    HAL_TRACE_ERR("pi-ep:{}:deleted EP:{} from L2 DB", 
-                  __FUNCTION__, ep_l2_key_to_str(ep));
+    HAL_TRACE_DEBUG("pi-ep:{}:deleted EP:{} from L2 DB", 
+                    __FUNCTION__, ep_l2_key_to_str(ep));
 
     // Remove EP from L3 DB
     dllist_for_each_safe(curr, next, &ep->ip_list_head) {

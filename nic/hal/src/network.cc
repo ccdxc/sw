@@ -201,8 +201,8 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    HAL_TRACE_ERR("pi-network:{}:added network to DB", 
-                  __FUNCTION__);
+    HAL_TRACE_DEBUG("pi-network:{}:added network to DB", 
+                    __FUNCTION__);
 end:
     return ret;
 }

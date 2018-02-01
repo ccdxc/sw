@@ -175,6 +175,12 @@ qos_class_free (qos_class_t *qos_class)
     return HAL_RET_OK;
 }
 
+static bool
+valid_qos_group (qos_group_t qos_group)
+{
+    return qos_group < NUM_QOS_GROUPS;
+}
+
 static inline qos_group_t
 qos_spec_qos_group_to_qos_group (qos::QosGroup qos_group)
 {
@@ -208,8 +214,9 @@ qos_spec_qos_group_to_qos_group (qos::QosGroup qos_group)
         case qos::INTERNAL_CPU_COPY: 
             return QOS_GROUP_CPU_COPY;
         default:
-            HAL_ASSERT(0);
-            return QOS_GROUP_DEFAULT;
+            HAL_TRACE_ERR("pi-qos:{}: Invalid qos group {}", 
+                          __func__, qos_group);
+            return NUM_QOS_GROUPS;
     }
 }
 
@@ -258,7 +265,9 @@ static inline qos_class_t *
 find_qos_class_by_key_handle (const QosClassKeyHandle& kh)
 {
     if (kh.key_or_handle_case() == QosClassKeyHandle::kQosGroup) {
-        return find_qos_class_by_group(qos_spec_qos_group_to_qos_group(kh.qos_group()));
+        qos_group_t qos_group = qos_spec_qos_group_to_qos_group(kh.qos_group());
+        return valid_qos_group(qos_group) ? 
+                                    find_qos_class_by_group(qos_group) : NULL;
     } else if (kh.key_or_handle_case() == QosClassKeyHandle::kQosClassHandle) {
         return find_qos_class_by_handle(kh.qos_class_handle());
     }
