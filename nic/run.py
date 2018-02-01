@@ -285,17 +285,69 @@ def run_storage_dol(port, args):
     return p.returncode
 
 # Run GFT tests
-def run_gft_test():
+def run_gft_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.chdir(nic_dir)
     cmd = ['../bazel-bin/nic/hal/test/gtests/gft_test']
     p = Popen(cmd)
-    p.communicate()
-    return p.returncode
+    #p.communicate()
+    return check_for_completion(p, model_process, hal_process, args)
 
 
 # DOL
+
+def check_for_completion(p, model_process, hal_process, args):
+    while 1:
+        if p and p.poll() is not None:
+            break
+        if model_process and model_process.poll() is not None:
+            break
+        if hal_process and hal_process.poll() is not None:
+            break
+        time.sleep(5)
+
+    if args.rtl and p.returncode == 0:
+        # Wait for runtest to finish only in case of DOL finishing
+        # successfully.
+        count = 0
+        while model_process and model_process.poll() is None:
+            count += 5
+            time.sleep(5)
+            if count % 300 == 0:
+                print "RUNTEST/SIMV not exited after %d seconds" % count
+            if count == 7200: # 2 hours
+                print "%s" % '='*80
+                print "             2 Hour Exit Timeout Reached. Killing all processes."
+                print "%s" % '='*80
+                return 1
+
+
+    exitcode = 0
+    check_for_cores = False;
+    if model_process:
+        print "* MODEL exit code " + str(model_process.returncode)
+        if model_process.returncode:
+            exitcode = model_process.returncode
+            check_for_cores = True
+
+    if hal_process:
+        print "* HAL exit code " + str(hal_process.returncode)
+        if hal_process.returncode:
+            exitcode = hal_process.returncode
+            check_for_cores = True
+
+    if p:
+        print "* DOL exit code " + str(p.returncode)
+        if p.returncode:
+            exitcode = p.returncode
+
+    if check_for_cores:
+        #Wait for all stdouts to clear out.
+        time.sleep(5)
+        print_cores()
+
+    return exitcode
 
 
 def run_dol(args):
@@ -362,55 +414,7 @@ def run_dol(args):
     #p.communicate()
     log.close()
 
-    while 1:
-        if p and p.poll() is not None:
-            break
-        if model_process and model_process.poll() is not None:
-            break
-        if hal_process and hal_process.poll() is not None:
-            break
-        time.sleep(5)
-
-    if args.rtl and p.returncode == 0:
-        # Wait for runtest to finish only in case of DOL finishing
-        # successfully.
-        count = 0
-        while model_process and model_process.poll() is None:
-            count += 5
-            time.sleep(5)
-            if count % 300 == 0:
-                print "RUNTEST/SIMV not exited after %d seconds" % count
-            if count == 7200: # 2 hours
-                print "%s" % '='*80
-                print "             2 Hour Exit Timeout Reached. Killing all processes."
-                print "%s" % '='*80
-                return 1
-
-
-    exitcode = 0
-    check_for_cores = False;
-    if model_process:
-        print "* MODEL exit code " + str(model_process.returncode)
-        if model_process.returncode:
-            exitcode = model_process.returncode
-            check_for_cores = True
-
-    if hal_process:
-        print "* HAL exit code " + str(hal_process.returncode)
-        if hal_process.returncode:
-            exitcode = hal_process.returncode
-            check_for_cores = True
-
-    if p:
-        print "* DOL exit code " + str(p.returncode)
-        if p.returncode:
-            exitcode = p.returncode
-
-    if check_for_cores:
-        #Wait for all stdouts to clear out.
-        time.sleep(5)
-        process_cores()
-    return exitcode
+    return check_for_completion(p, model_process, hal_process, args)
 
 def run_mbt(args, standalone=True):
     mbt_dir = nic_dir + "/../mbt"
@@ -657,7 +661,7 @@ def main():
         if status != 0:
             print "- Storage dol failed, status=", status
     elif args.gft:
-        status = run_gft_test()
+        status = run_gft_test(args)
         if status != 0:
             print "- GFT test failed, status=", status
     elif args.mbt and not args.feature:

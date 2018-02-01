@@ -885,45 +885,71 @@ TEST_F(gft_test, test1) {
     tx_create_transposition();
     tx_create_gft_entry();
 
+    uint32_t i = 0;
     uint32_t port = 0;
     uint32_t cos = 0;
     std::vector<uint8_t> ipkt;
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
+    uint32_t tcscale = 1;
+    uint32_t tcid = 1;
+    
+    if (getenv("TCSCALE")) {
+        tcscale = atoi(getenv("TCSCALE"));
+    }
 
-    testcase_begin(1, 0);
     ipkt.resize(sizeof(g_snd_pkt1));
     memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
     epkt.resize(sizeof(g_rcv_pkt1));
     memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
     std::cout << "Rx: Testing wide key without overflow" << std::endl;
-    step_network_pkt(ipkt, port);
-    get_next_pkt(opkt, port, cos);
-    EXPECT_TRUE(opkt == epkt);
-    testcase_end(1, 0);
+    for (i = 0; i < tcscale; i++) {
+        printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+        testcase_begin(tcid, i+1);
+        step_network_pkt(ipkt, port);
+        if (!getenv("SKIP_VERIFY")) {
+            get_next_pkt(opkt, port, cos);
+            EXPECT_TRUE(opkt == epkt);
+        }
+        testcase_end(tcid, i+1);
+    }
 
-    testcase_begin(2, 0);
+    tcid++;
     ipkt.resize(sizeof(g_snd_pkt2));
     memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
     epkt.resize(sizeof(g_rcv_pkt2));
     memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
     std::cout << "Rx: Testing wide key with overflow" << std::endl;
-    step_network_pkt(ipkt, port);
-    get_next_pkt(opkt, port, cos);
-    EXPECT_TRUE(opkt == epkt);
-    testcase_end(2, 0);
+    for (i = 0; i < tcscale; i++) {
+        printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+        testcase_begin(tcid, i+1);
+        step_network_pkt(ipkt, port);
+        if (!getenv("SKIP_VERIFY")) {
+            get_next_pkt(opkt, port, cos);
+            EXPECT_TRUE(opkt == epkt);
+        }
+        testcase_end(tcid, i+1);
+    }
 
+    tcid++;
     port = 7;
-    testcase_begin(3, 0);
     ipkt.resize(sizeof(g_snd_pkt3));
     memcpy(ipkt.data(), g_snd_pkt3, sizeof(g_snd_pkt3));
     epkt.resize(sizeof(g_rcv_pkt3));
     memcpy(epkt.data(), g_rcv_pkt3, sizeof(g_rcv_pkt3));
     std::cout << "Tx: Testing wide key without overflow" << std::endl;
-    step_network_pkt(ipkt, port);
-    get_next_pkt(opkt, port, cos);
-    EXPECT_TRUE(opkt == epkt);
-    testcase_end(3, 0);
+    for (i = 0; i < tcscale; i++) {
+        printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+        testcase_begin(tcid, i+1);
+        step_network_pkt(ipkt, port);
+        if (!getenv("SKIP_VERIFY")) {
+            get_next_pkt(opkt, port, cos);
+            EXPECT_TRUE(opkt == epkt);
+        }
+        testcase_end(tcid, i+1);
+    }
+
+    exit_simulation();
 }
 
 int main(int argc, char **argv) {
