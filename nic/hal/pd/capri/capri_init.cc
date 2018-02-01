@@ -22,10 +22,11 @@
  * Load any bin files needed for initializing default configs
  */
 hal_ret_t
-capri_default_config_init (void)
+capri_default_config_init (bool init_with_pbc_hbm)
 {
     hal_ret_t   ret = HAL_RET_OK;
     char        *cfg_path;
+    std::string hbm_full_path;
     std::string full_path;
     int         num_phases = 2;
     int         i;
@@ -37,8 +38,13 @@ capri_default_config_init (void)
     }
 
     for (i = 0; i < num_phases; i++) {
+        hbm_full_path =  std::string(cfg_path) + "/init_bins/" + "hbminit_" + 
+            std::to_string(i) + "_bin";
         full_path =  std::string(cfg_path) + "/init_bins/" + "init_" + 
-                                        std::to_string(i) + "_bin";
+            std::to_string(i) + "_bin";
+        if (init_with_pbc_hbm && (access(hbm_full_path.c_str(), R_OK) ==  0)) {
+            full_path = hbm_full_path;        
+        }
 
         // Check if directory is present
         if (access(full_path.c_str(), R_OK) < 0) {
@@ -107,6 +113,7 @@ hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
 {
     capri_cfg_t capri_cfg;
     capri_cfg.loader_info_file = cfg->loader_info_file;
+    capri_cfg.init_with_pbc_hbm = cfg->init_with_pbc_hbm;
     return capri_init(&capri_cfg);
 }
 
@@ -730,7 +737,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_default_config_init();
+        ret = capri_default_config_init(cfg ? cfg->init_with_pbc_hbm : false);
     }
 
     if (ret == HAL_RET_OK) {

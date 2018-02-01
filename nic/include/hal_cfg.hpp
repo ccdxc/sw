@@ -26,6 +26,7 @@ typedef struct hal_cfg_s {
     char                    feature_set[HAL_MAX_NAME_STR];
     std::string             forwarding_mode;
     bool                    async_en;
+    bool                    init_with_pbc_hbm;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------

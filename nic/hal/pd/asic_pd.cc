@@ -533,6 +533,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
 
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
+    asic_cfg.init_with_pbc_hbm = hal_cfg->init_with_pbc_hbm;
     HAL_ABORT(asic_init(&asic_cfg) == HAL_RET_OK);
     return;
 }

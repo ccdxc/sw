@@ -14,6 +14,7 @@ namespace pd {
 
 typedef struct asic_cfg_s {
     std::string      loader_info_file;
+    bool             init_with_pbc_hbm;
 } asic_cfg_t;
 
 //------------------------------------------------------------------------------

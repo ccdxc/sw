@@ -282,7 +282,7 @@
         },
         {
             "name": "qos-hbm-fifo",
-            "size_kb": 131072 
+            "size_kb": 262144 
         }
     ]
 }
