@@ -298,46 +298,6 @@ capri_program_hbm_table_base_addr(void)
     }
 }
 
-#ifndef GFT
-static int capri_stats_region_init()
-{
-    p4pd_table_properties_t       tbl_ctx;
-    hbm_addr_t                    stats_base_addr;
-    uint64_t                      stats_region_start;
-    uint64_t                      stats_region_size;
-
-    stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
-    stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
-
-    // reset bit 31 (saves one ASM instruction)
-    stats_region_start &= 0x7FFFFFFF;
-    stats_base_addr &= 0x7FFFFFFF;
-
-    capri_table_constant_write(P4TBL_ID_FLOW_STATS, stats_base_addr);
-    p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    capri_table_constant_write(P4TBL_ID_RX_POLICER_ACTION, stats_base_addr);
-    p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    capri_table_constant_write(P4TBL_ID_COPP_ACTION, stats_base_addr);
-    p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    capri_table_constant_write(P4TBL_ID_TX_STATS, stats_base_addr);
-    p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
-    stats_base_addr += (tbl_ctx.tabledepth << 6);
-
-    capri_table_constant_write(P4TBL_ID_INGRESS_TX_STATS, stats_base_addr);
-    p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
-    stats_base_addr += (tbl_ctx.tabledepth << 3);
-
-    assert(stats_base_addr <  (stats_region_start +  stats_region_size));
-    return CAPRI_OK;
-}
-#endif /* !GFT */
-
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0            0
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
 
@@ -840,7 +800,6 @@ int capri_table_rw_init()
     /* Timers */
     capri_timer_init();
 
-    capri_stats_region_init();
 #endif /* !GFT */
 
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
@@ -1611,37 +1570,35 @@ int capri_hbm_table_entry_read(uint32_t tableid,
     return (CAPRI_OK);
 }
 
-int capri_table_constant_write(uint32_t tableid, uint64_t val)
+int capri_table_constant_write(uint64_t val, uint32_t stage,
+                               uint32_t stage_tableid, bool ingress)
 {
-    p4pd_table_properties_t       tbl_ctx;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    p4pd_table_properties_get(tableid, &tbl_ctx);
-    if (tbl_ctx.gress == P4_GRESS_INGRESS) {
-        cap_te_csr_t &te_csr = cap0.sgi.te[tbl_ctx.stage];
-        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].value(val);
-        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].write();
+    if (ingress) {
+        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
+        te_csr.cfg_table_mpu_const[stage_tableid].write();
     } else {
-        cap_te_csr_t &te_csr = cap0.sge.te[tbl_ctx.stage];
-        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].value(val);
-        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].write();
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
+        te_csr.cfg_table_mpu_const[stage_tableid].write();
     }
     return (CAPRI_OK);
 }
 
-int capri_table_constant_read(uint32_t tableid, uint64_t *val)
+int capri_table_constant_read(uint64_t *val, uint32_t stage,
+                              int stage_tableid, bool ingress)
 {
-    p4pd_table_properties_t       tbl_ctx;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    p4pd_table_properties_get(tableid, &tbl_ctx);
-    if (tbl_ctx.gress == P4_GRESS_INGRESS) {
-        cap_te_csr_t &te_csr = cap0.sgi.te[tbl_ctx.stage];
-        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].read();
-        *val = te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].
+    if (ingress) {
+        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].read();
+        *val = te_csr.cfg_table_mpu_const[stage_tableid].
             value().convert_to<uint64_t>();
     } else {
-        cap_te_csr_t &te_csr = cap0.sge.te[tbl_ctx.stage];
-        te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].read();
-        *val = te_csr.cfg_table_mpu_const[tbl_ctx.stage_tableid].
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
+        te_csr.cfg_table_mpu_const[stage_tableid].read();
+        *val = te_csr.cfg_table_mpu_const[stage_tableid].
             value().convert_to<uint64_t>();
     }
     return (CAPRI_OK);

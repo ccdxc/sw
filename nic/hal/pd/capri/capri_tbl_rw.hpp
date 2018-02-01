@@ -90,9 +90,11 @@ int capri_hbm_table_entry_read(uint32_t tableid,
                                uint8_t *hwentry,
                                uint16_t *entry_size);
 
-int capri_table_constant_write(uint32_t tableid, uint64_t val);
+int capri_table_constant_write(uint64_t val, uint32_t stage,
+                               uint32_t stage_tableid, bool ingress);
 
-int capri_table_constant_read(uint32_t tableid, uint64_t *val);
+int capri_table_constant_read(uint64_t *val, uint32_t stage,
+                              int stage_tableid, bool ingress);
 
 void capri_timer_init_helper(uint32_t key_lines);
 
