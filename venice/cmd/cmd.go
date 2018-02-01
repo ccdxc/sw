@@ -29,7 +29,7 @@ func main() {
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
-		LogToStdout: false,
+		LogToStdout: true,
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,

@@ -207,6 +207,7 @@ func (k *CfgWatcherService) stopWatchers() {
 }
 
 // runUntilCancel implements the config Watcher service.
+// TODO: Add resource version to watcher options
 func (k *CfgWatcherService) runUntilCancel() {
 
 	// init wait group

@@ -72,11 +72,14 @@ func (sm *Statemgr) CreateSmartNIC(sn *cmd.SmartNIC) error {
 	// see if we already have it
 	esn, err := sm.FindObject("SmartNIC", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
 	if err == nil {
-		log.Errorf("Can not change existing smartNIC {%+v}. New state: {%+v}", esn, sn)
-		return fmt.Errorf("Can not change smartNIC after its created")
+		// Object exists in cache, but we got a watcher event with event-type:Created
+		// and this can happen if there is a watcher error/reset and we need to update
+		// the cache to handle it gracefully as an Update.
+		log.Infof("Objects exists, updating smartNIC OldState: {%+v}. New state: {%+v}", esn, sn)
+		return sm.UpdateSmartNIC(sn)
 	}
 
-	// create new sg state
+	// create new smartnic state
 	sns, err := NewSmartNICState(sn, sm)
 	if err != nil {
 		log.Errorf("Error creating new smartnic state. Err: %v", err)
