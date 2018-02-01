@@ -11,6 +11,7 @@ endif
 ifeq ($(c),1)
 	TOPDIR_ABS = ${CURDIR}/..
 	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
+        COV_OUTPUT_BASE = --output_base=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../../sdk)
 	export CC=/home/asic/tools/eda/bullseye/bin/gcc
 	export CXX=/home/asic/tools/eda/bullseye/bin/g++
 	export COVFILE=$(COVFILE_NAME)
@@ -47,7 +48,12 @@ else
     OUTPUT_BASE = --output_base=$(BAZEL_OUTPUT_BASE)
 endif
 
-BZL_OPT = $(OUTPUT_BASE)
+ifeq ($(c),1)
+    BZL_OPT = $(COV_OUTPUT_BASE)
+else
+    BZL_OPT = $(OUTPUT_BASE)
+endif
+
 
 all: lib
 
