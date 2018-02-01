@@ -676,6 +676,9 @@ action f_p4plus_to_p4_2() {
     }
     modify_field(control_metadata.checksum_ctl, scratch_metadata.size8);
 
+    // copy gso_valid to capri_gso_csum.gso field (done in ASM)
+    modify_field(scratch_metadata.flag, p4plus_to_p4.gso_valid);
+
     remove_header(p4plus_to_p4);
     remove_header(capri_txdma_intrinsic);
 }

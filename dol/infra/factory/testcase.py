@@ -229,7 +229,8 @@ class TestCase(objects.FrameworkObject):
         cb = getattr(pspec, 'callback', None)
         if cb is None: return
         pkts = cb.call(self)
-        self.packets.SetAll(pkts)
+        if pkts:
+            self.packets.SetAll(pkts)
         return
 
     def __generate_packets(self):

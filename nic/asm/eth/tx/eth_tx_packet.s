@@ -30,6 +30,10 @@ struct tx_table_s1_t0_eth_tx_packet_d d;
     phvwr       p.dma_pkt##n##_dma_cmd_addr, r1; \
     phvwr       p.dma_pkt##n##_dma_cmd_size, d.{len##n}.hx;
 
+// gso_start and gso_offset values needed by P4 are absolute values from the
+// beginning of the packet (including intrinsic headers). Whereas, the
+// gso_start value sent by driver is absolute and gso_offset is relative
+// to the gso_start value.
 #define BUILD_APP_HEADER(n) \
     add         r1, r0, r0; \
     phvwri      p.eth_tx_app_hdr##n##_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC; \
@@ -39,15 +43,16 @@ struct tx_table_s1_t0_eth_tx_packet_d d;
     phvwr.c1    p.eth_tx_app_hdr##n##_flags, r1; \
     seq         c2, d.opcode##n##, TXQ_DESC_OPCODE_CALC_CSUM; \
     phvwr.c2    p.eth_tx_app_hdr##n##_gso_valid, 1; \
-    or.c2       r2, d.hdr_len_lo##n, d.hdr_len_hi##n, sizeof(d.hdr_len_lo##n); \
-    add.c2      r2, r0, r2.dx; \
-    or.c2       r2, r2[63:56], r2[49:48]; \
-    addi.c2     r2, r2, 54;\
-    phvwr.c2    p.eth_tx_app_hdr##n##_gso_start, r2; \
-    or.c2       r2, d.mss_or_csumoff_lo##n, d.mss_or_csumoff_hi##n, sizeof(d.mss_or_csumoff_lo##n); \
-    add.c2      r2, r0, r2.dx; \
-    or.c2       r2, r2[63:56], r2[53:48], sizeof(d.mss_or_csumoff_lo##n); \
-    phvwr.c2    p.eth_tx_app_hdr##n##_gso_offset, r2; \
+    or.c2       r3, d.hdr_len_lo##n, d.hdr_len_hi##n, sizeof(d.hdr_len_lo##n); \
+    add.c2      r3, r0, r3.dx; \
+    or.c2       r3, r3[63:56], r3[49:48]; \
+    addi.c2     r3, r3, 44;\
+    phvwr.c2    p.eth_tx_app_hdr##n##_gso_start, r3; \
+    or.c2       r4, d.mss_or_csumoff_lo##n, d.mss_or_csumoff_hi##n, sizeof(d.mss_or_csumoff_lo##n); \
+    add.c2      r4, r0, r4.dx; \
+    or.c2       r4, r4[63:56], r4[53:48], sizeof(d.mss_or_csumoff_lo##n); \
+    add.c2      r4, r4, r3; \
+    phvwr.c2    p.eth_tx_app_hdr##n##_gso_offset, r4; \
 
 #define DEBUG_DESCR_FLD(name) \
     add         r7, r0, d.##name
@@ -134,7 +139,6 @@ eth_tx_packet_done:
     phvwri.e.c1 p.dma_cmpl_dma_cmd_eop, 1
     nop
 
-    // DMA Interrupt
     phvwri      p.dma_intr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.dma_intr_dma_cmd_addr, k.eth_tx_t0_s2s_intr_assert_addr
     phvwri      p.dma_intr_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_tx_t0_s2s_intr_assert_data)

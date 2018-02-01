@@ -274,9 +274,10 @@ header_type p4plus_to_p4_header_t {
         vlan_tag            : 16;
         gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
                                   // that appear before L2 hdr
+        byte_align_pad0     : 2;
         gso_offset          : 14; // should be adjusted to include size of all intrinsic hdrs
                                   // that appear before L2 hdr
-        byte_align_pad      : 3;
+        byte_align_pad1     : 1;
         gso_valid           : 1;
     }
 }

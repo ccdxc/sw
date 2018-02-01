@@ -19,6 +19,9 @@ f_p4plus_to_p4_2:
   phvwr.c2      p.udp_len, r2
   phvwr         p.control_metadata_udp_opt_bytes, k.p4plus_to_p4_udp_opt_bytes
 
+  // copy gso_valid to capri_gso_csum.gso field
+  phvwr         p.capri_gso_csum_gso, k.p4plus_to_p4_gso_valid
+
   // update compute checksum flags (classic nic)
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC
   bcf           [!c1], f_p4plus_to_p4_2_other_apps

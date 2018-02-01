@@ -64,7 +64,8 @@ def __generate_descriptors_from_callback(tc, descr_entry):
     if cb is None:
         return
     descrs = cb.call(tc)
-    tc.descriptors.SetAll(descrs)
+    if descrs:
+        tc.descriptors.SetAll(descrs)
     return
 
 def __generate_descriptors_from_spec(tc, desc_entry):
@@ -98,7 +99,8 @@ def __generate_buffers_from_callback(tc, buff_entry):
     if cb is None:
         return
     bufs = cb.call(tc)
-    tc.buffers.SetAll(bufs)
+    if bufs:
+        tc.buffers.SetAll(bufs)
     return
 
 def GenerateBuffers(tc):

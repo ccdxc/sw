@@ -41,9 +41,9 @@ class EthBufferObject(base.FactoryObjectBase):
         if self.data is None:
             resmgr.HostMemoryAllocator.zero(self._mem, self.size)
         else:
-            resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
             self.logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
-            scapyfactory.ScapyPacketObject.ShowRawPacket(self.data, self.logger)
+            scapyfactory.Parse(self.data).Show(self.logger)
+            resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
             self.logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
 
     def Read(self):
@@ -57,7 +57,7 @@ class EthBufferObject(base.FactoryObjectBase):
         self.data = resmgr.HostMemoryAllocator.read(self._mem, self.size)
 
         self.logger.info("=" * 30, "READ BUFFER", "=" * 30)
-        scapyfactory.ScapyPacketObject.ShowRawPacket(self.data, self.logger)
+        scapyfactory.Parse(self.data).Show(self.logger)
         self.logger.info("=" * 30, "END READ BUFFER", "=" * 30)
 
         return self.data
