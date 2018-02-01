@@ -1082,6 +1082,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : quiesce_flows
         spec    : quiesce_flows.testspec
+        rtl     : True
         args :
               bypass_barco : 1
               maxflows : 1
