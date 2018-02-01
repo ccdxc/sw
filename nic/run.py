@@ -72,24 +72,23 @@ def remove_core_files(path):
 def remove_all_core_files():
     remove_core_files(hal_core_path) 
     remove_core_files(model_core_path) 
-    
-def print_hal_core():
-    hal_core_file = get_latest_core_file(hal_core_path)
-    if hal_core_file:
-        print "**************************HAL CORE BEGIN*********************************"
-        print_core(hal_executable, hal_core_file)
-        print "**************************HAL CORE END***********************************"
 
-def print_model_core():
-    model_core_file = get_latest_core_file(model_core_path)
-    if model_core_file:
-        print "**************************MODEL CORE BEGIN*********************************"
-        print_core(model_executable, model_core_file)
-        print "**************************MODEL CORE END***********************************"
-      
-def print_cores():
-    print_hal_core()
-    print_model_core()
+def process_core(executable, core_path):   
+    core_file = get_latest_core_file(core_path)
+    if core_file:
+        print_core(executable, core_file)
+        os.system("mv " + core_file + "  " + nic_dir + "/core." +  os.path.basename(executable))
+   
+
+def process_hal_core():
+    process_core(hal_executable, hal_core_path)
+
+def process_model_core():
+    process_core(model_executable, model_core_path)
+
+def process_cores():
+    process_hal_core()
+    process_model_core()
           
 # build
 def build():
@@ -410,7 +409,7 @@ def run_dol(args):
     if check_for_cores:
         #Wait for all stdouts to clear out.
         time.sleep(5)
-        print_cores()
+        process_cores()
     return exitcode
 
 def run_mbt(args, standalone=True):
