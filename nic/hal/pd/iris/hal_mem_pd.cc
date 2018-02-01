@@ -1130,9 +1130,11 @@ hal_ret_t
 hal_pd_pgm_def_entries (void)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    p4pd_def_cfg_t  p4pd_def_cfg;
 
     HAL_TRACE_DEBUG("Programming table default entries ...");
-    ret = p4pd_table_defaults_init();
+    p4pd_def_cfg.admin_cos = qos_class_get_admin_cos();
+    ret = p4pd_table_defaults_init(&p4pd_def_cfg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program default entries, err: {}", ret);
     }

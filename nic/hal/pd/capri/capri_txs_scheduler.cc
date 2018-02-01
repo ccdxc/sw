@@ -33,7 +33,7 @@
 #define DTDM_CALENDAR_SIZE 64
 
 hal_ret_t
-capri_txs_scheduler_init ()
+capri_txs_scheduler_init (uint32_t admin_cos)
 {
 
     cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -41,7 +41,7 @@ capri_txs_scheduler_init ()
     cap_psp_csr_t       &psp_csr = cap0.pt.pt.psp;
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
-    uint32_t            admin_cos, control_cos;
+    uint32_t            control_cos;
     hal::qos_class_t    *control_qos_class;
     hal_ret_t            ret = HAL_RET_OK;
 
@@ -67,8 +67,6 @@ capri_txs_scheduler_init ()
 
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.
     // NOTE TODO: Init of admin-qos-class should be done before this.
-    admin_cos = hal::pd::qos_class_get_admin_cos();
-
     // Find control_cos and program it for higher-priority in dtdmlo-calendar.
     if ((control_qos_class = find_qos_class_by_group(hal::QOS_GROUP_CONTROL)) != NULL) {
         ret = hal::pd::qos_class_get_qos_class_id(control_qos_class, NULL, &control_cos);

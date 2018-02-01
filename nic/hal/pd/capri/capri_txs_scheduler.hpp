@@ -28,7 +28,7 @@ typedef struct txs_sched_lif_params_s {
  * @return hal_ret_t: Status of the operation
  */
 
-hal_ret_t capri_txs_scheduler_init();
+hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos);
 
 /** capri_txs_scheduler_lif_params_update
  * API to program txs scheduler table with lif,queue,cos mappings.

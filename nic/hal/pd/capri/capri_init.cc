@@ -116,6 +116,7 @@ hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
     capri_cfg_t capri_cfg;
     capri_cfg.loader_info_file = cfg->loader_info_file;
     capri_cfg.init_with_pbc_hbm = cfg->init_with_pbc_hbm;
+    capri_cfg.admin_cos = cfg->admin_cos;
     return capri_init(&capri_cfg);
 }
 
@@ -745,7 +746,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_txs_scheduler_init();
+        ret = capri_txs_scheduler_init(cfg->admin_cos);
     }
  
     // Call PXB/PCIE init only in MODEL and RTL simulation

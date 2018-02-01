@@ -16,6 +16,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/hal/pd/iris/acl_pd.hpp"
+#include "nic/hal/pd/hal_pd.hpp"
 
 using sdk::table::tcam;
 using hal::pd::utils::acl_tcam_entry_handle_t;
@@ -811,10 +812,8 @@ p4pd_nacl_init (void)
     return HAL_RET_OK;
 }
 
-extern uint32_t qos_class_get_admin_cos();
-
 static hal_ret_t
-p4pd_qos_init (void)
+p4pd_qos_init (uint32_t admin_cos)
 {
     hal_ret_t      ret = HAL_RET_OK;
     sdk_ret_t      sdk_ret;
@@ -835,7 +834,7 @@ p4pd_qos_init (void)
     }
 
     // Reserve the IQ needed for the ADMIN class
-    g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(qos_class_get_admin_cos());
+    g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(admin_cos);
     return ret;
 }
 
@@ -1768,7 +1767,7 @@ p4pd_capri_stats_region_init(void)
 }
 
 hal_ret_t
-p4pd_table_defaults_init (void)
+p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
     // initialize all P4 ingress tables with default entries, if any
     HAL_ASSERT(p4pd_input_mapping_native_init() == HAL_RET_OK);
@@ -1781,7 +1780,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_nacl_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_nacl_eplearn_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_qos_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_qos_init(p4pd_def_cfg->admin_cos) == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any
     HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);

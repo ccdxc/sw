@@ -42,6 +42,12 @@ cc_library(
         "//nic/hal/lib:hal_lib_includes",
         "//nic/include:base_includes",
         "//nic:spdlog",
+        "//nic/utils/block_list",
+        "//nic/hal/periodic:periodic",
+        "//nic:gen_proto_includes",
+        "//nic:boost",
+        "//nic:google_includes",
+        "//nic:grpc_includes",
     ],
     alwayslink = 1,
 )

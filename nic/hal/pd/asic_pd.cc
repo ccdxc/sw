@@ -5,6 +5,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "sdk/pal.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
 namespace pd {
@@ -534,6 +535,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
     asic_cfg.init_with_pbc_hbm = hal_cfg->init_with_pbc_hbm;
+    asic_cfg.admin_cos = qos_class_get_admin_cos();
     HAL_ABORT(asic_init(&asic_cfg) == HAL_RET_OK);
     return;
 }
