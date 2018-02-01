@@ -175,8 +175,8 @@ class TenantObject(base.ConfigObjectBase):
 
     def IsL4LbEnabled(self):
         return self.l4lb_enable == True
-    def AllocL4LbBackend(self, remote, tnnled):
-        return self.obj_helper_segment.AllocL4LbBackend(remote, tnnled)
+    def AllocL4LbBackend(self, remote, tnnled, pick_ep_in_l2seg_vxlan):
+        return self.obj_helper_segment.AllocL4LbBackend(remote, tnnled, pick_ep_in_l2seg_vxlan)
 
     def IsIPV4EpLearnEnabled(self):
         if GlobalOptions.rtl:
@@ -187,7 +187,7 @@ class TenantObject(base.ConfigObjectBase):
         if GlobalOptions.rtl:
             return False
         return self.ep_learn and self.ep_learn.ipv6
-    
+
     def __create_l4lb_services(self):
         if 'l4lb' not in self.spec.__dict__:
             self.l4lb_enable = False
@@ -222,7 +222,7 @@ class TenantObject(base.ConfigObjectBase):
     def __create_infra_tunnels(self):
         #Don't create tunnels if Learning enabled for now.
         if self.IsIPV4EpLearnEnabled() or self.IsIPV6EpLearnEnabled():
-            return        
+            return
         for entry in self.spec.tunnels:
             spec = entry.spec.Get(Store)
             self.obj_helper_tunnel.Generate(self, spec, self.GetEps())
@@ -260,7 +260,7 @@ class TenantObject(base.ConfigObjectBase):
     def ConfigureCollectors(self):
         if self.IsSpan():
             self.obj_helper_collector.main(self, self.spec)
-        return 
+        return
 
     def AllocLif(self):
         return self.obj_helper_lif.Alloc()

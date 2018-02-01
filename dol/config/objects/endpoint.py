@@ -68,6 +68,9 @@ class EndpointObject(base.ConfigObjectBase):
         # EP is remote & segment's fabencap is vxlan
         return self.remote and self.segment.IsFabEncapVxlan()
 
+    def IsInL2SegVxlan(self):
+        return self.segment.IsFabEncapVxlan()
+
     def IsNative(self):
         return self.segment.native or self.access
 
@@ -224,7 +227,7 @@ class EndpointObject(base.ConfigObjectBase):
             for sg in self.sgs:
                 sg_key_handle = req_spec.endpoint_attrs.sg_key_handle.add()
                 sg_key_handle.security_group_handle = sg.hal_handle
-        return 
+        return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.endpoint_status.endpoint_handle
@@ -401,7 +404,7 @@ class EndpointObjectHelper:
 
         if segment.l4lb:
             cfglogger.info("Creating %d %s L4LB Backend EPs in Segment = %s" %\
-                           (spec.direct, typestr, segment.GID()))
+                           (count, typestr, segment.GID()))
             enics = enic_cb(backend = True)
             bend_eps = self.__create(segment, enics, count, backend = True)
             self.backend_local += bend_eps
@@ -409,7 +412,7 @@ class EndpointObjectHelper:
         return eps,bend_eps
 
     def __create_local_all(self, segment, spec):
-        self.direct,self.backend_direct = self.__create_local(segment, spec, 'direct', 
+        self.direct,self.backend_direct = self.__create_local(segment, spec, 'direct',
                                                               segment.GetDirectEnics)
         self.pvlan,self.backend_pvlan = self.__create_local(segment, spec, 'pvlan',
                                                             segment.GetPvlanEnics)

@@ -23,7 +23,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
         self.GID("L4LbBknd%04d" % self.id)
         return
 
-    def Init(self, service, spec):
+    def Init(self, service, spec, pick_ep_in_l2seg_vxlan):
         self.service    = service
         self.port       = spec.port
         self.remote     = spec.remote
@@ -31,7 +31,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
             self.tnnled = spec.tnnled
         else:
             self.tnnled  = False
-        self.ep         = service.tenant.AllocL4LbBackend(self.remote, self.tnnled)
+        self.ep         = service.tenant.AllocL4LbBackend(self.remote, self.tnnled, pick_ep_in_l2seg_vxlan)
         self.ep.AttachL4LbBackend(self)
         return
 
@@ -84,7 +84,13 @@ class L4LbBackendObjectHelper:
             count = bspec.count.get()
             for c in range(count):
                 bend = L4LbBackendObject()
-                bend.Init(service, bspec)
+                if c < count/2:
+                    cfglogger.info("Picking up non-vxlan EP for Backend");
+                    pick_ep_in_l2seg_vxlan = False
+                else:
+                    cfglogger.info("Picking up vxlan EP for Backend");
+                    pick_ep_in_l2seg_vxlan = True
+                bend.Init(service, bspec, pick_ep_in_l2seg_vxlan)
                 self.bends.append(bend)
         return
 

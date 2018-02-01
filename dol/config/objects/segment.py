@@ -457,7 +457,7 @@ class SegmentObjectHelper:
             cfglogger.info("- Backend: %s" % bend.GID())
         return
 
-    def AllocL4LbBackend(self, remote, tnnled):
+    def AllocL4LbBackend(self, remote, tnnled, pick_ep_in_l2seg_vxlan):
         self.__get_backend_eps(remote)
         if remote:
             if tnnled:
@@ -466,6 +466,19 @@ class SegmentObjectHelper:
                 eplist = self.backend_remote_eps
         else:
             eplist = self.backend_eps
+            count = len(eplist)
+            found = False
+            for c in range(count):
+                ep = eplist[c]
+                if pick_ep_in_l2seg_vxlan and ep.IsInL2SegVxlan():
+                    found = True
+                    break;
+            if found:
+                obj = eplist[c]
+                del eplist[c]
+                return obj
+
+
 
         obj = eplist[0]
         del eplist[0]
