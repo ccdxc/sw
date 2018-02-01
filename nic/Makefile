@@ -35,7 +35,7 @@ clean-docker: build-runtime-image
 REGISTRY = registry.test.pensando.io:5000
 
 build-runtime-image: install_box
-	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.10; fi
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.11; fi
 	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box -t pensando/nic nic/box.rb
 
 install_box:
@@ -44,7 +44,7 @@ install_box:
 # make a trial dependencies image. pass RELEASE=1 or run `make deps-release` to
 # do a release build.
 deps: install_box
-	cd .. && RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t '$(REGISTRY)/pensando/nic:1.10' nic/box-deps.rb
+	cd .. && RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t '$(REGISTRY)/pensando/nic:1.11' nic/box-deps.rb
 
 # make a release build of the dependencies image
 deps-release:

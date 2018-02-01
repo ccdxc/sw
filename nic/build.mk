@@ -11,9 +11,12 @@ DETECTED_OS=$(osname)
 BLD_MC = $(shell uname -n)
 SHELL := /bin/bash
 
+TOOLCHAIN_ROOT=/tool/toolchain/aarch64
+TOOLCHAIN_VER=1.1
+
 ifeq ($(ARCH), aarch64)
-    CC=/tool/toolchain/aarch64/bin/aarch64-linux-gnu-gcc
-    CXX=/tool/toolchain/aarch64/bin/aarch64-linux-gnu-g++
+    CC=$(TOOLCHAIN_ROOT)-$(TOOLCHAIN_VER)/bin/aarch64-linux-gnu-gcc
+    CXX=$(TOOLCHAIN_ROOT)-$(TOOLCHAIN_VER)/bin/aarch64-linux-gnu-g++
 else
     CC=gcc
     CXX=g++

@@ -53,7 +53,7 @@ local_repository(
 new_local_repository(
     name = 'linaro_linux_gcc_repo',
     build_file = 'compilers/linaro_linux_gcc.BUILD',
-    path = '/tool/toolchain/aarch64'
+    path = '/tool/toolchain/aarch64-1.1'
 )
 
 # Third-Party repo

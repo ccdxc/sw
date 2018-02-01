@@ -32,9 +32,11 @@ cc_binary(
         "//nic/hal/lib:hal_lib",
         "//nic:halproto",
         "//nic:grpc",
+	"//nic:grpc_includes",
         "//nic:libprotobuf",
         "//nic/utils/trace:trace",
         "@sdk//linkmgr:linkmgr",
+	"//nic:google_includes",
     ],
     linkopts = [
         "-lzmq",
