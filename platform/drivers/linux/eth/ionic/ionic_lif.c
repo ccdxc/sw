@@ -121,6 +121,8 @@ static int ionic_open(struct net_device *netdev)
 			return err;
 	}
 
+	netif_carrier_on(netdev);
+
 	return 0;
 }
 
