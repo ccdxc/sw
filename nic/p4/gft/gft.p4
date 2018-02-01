@@ -1,3 +1,4 @@
+#define TXHACK
 #include "include/defines.h"
 #include "include/table_sizes.h"
 

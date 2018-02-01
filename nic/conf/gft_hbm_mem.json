@@ -10,7 +10,7 @@
         },
         {
             "name": "rx_gft_hash_overflow",
-            "size_kb": 1024
+            "size_kb": 4096
         },
         {
             "name": "rx_hdr_transpositions0",
@@ -26,6 +26,30 @@
         },
         {
             "name": "rx_hdr_transpositions3",
+            "size_kb": 65536
+        },
+        {
+            "name": "tx_gft_hash",
+            "size_kb": 262144
+        },
+        {
+            "name": "tx_gft_hash_overflow",
+            "size_kb": 4096
+        },
+        {
+            "name": "tx_hdr_transpositions0",
+            "size_kb": 65536
+        },
+        {
+            "name": "tx_hdr_transpositions1",
+            "size_kb": 65536
+        },
+        {
+            "name": "tx_hdr_transpositions2",
+            "size_kb": 65536
+        },
+        {
+            "name": "tx_hdr_transpositions3",
             "size_kb": 65536
         }
     ]

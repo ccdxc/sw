@@ -247,18 +247,18 @@
 /* Transposition types                                                       */
 /*****************************************************************************/
 #define TRANSPOSITIONS_PUSH_ETHERNET_00            0x00000001
-#define TRANSPOSITIONS_PUSH_IPV4_00                0x00000020
-#define TRANSPOSITIONS_PUSH_IPV6_00                0x00000040
-#define TRANSPOSITIONS_PUSH_CTAG_00                0x00000080
+#define TRANSPOSITIONS_PUSH_IPV4_00                0x00000002
+#define TRANSPOSITIONS_PUSH_IPV6_00                0x00000004
+#define TRANSPOSITIONS_PUSH_CTAG_00                0x00000008
 #define TRANSPOSITIONS_PUSH_ETHERNET_01            0x00000010
 #define TRANSPOSITIONS_PUSH_IPV4_01                0x00000020
 #define TRANSPOSITIONS_PUSH_IPV6_01                0x00000040
 #define TRANSPOSITIONS_PUSH_CTAG_01                0x00000080
 
-#define TRANSPOSITIONS_ENCAP_LEN_MASK_00           0x00FC0000
-#define TRANSPOSITIONS_ENCAP_LEN_MASK_01           0x0003F000
-#define TRANSPOSITIONS_ENCAP_LEN_SHIFT_00          18
-#define TRANSPOSITIONS_ENCAP_LEN_SHIFT_01          12
+#define TRANSPOSITIONS_ENCAP_LEN_MASK_00           0x00FF0000
+#define TRANSPOSITIONS_ENCAP_LEN_MASK_01           0x0000FF00
+#define TRANSPOSITIONS_ENCAP_LEN_SHIFT_00          16
+#define TRANSPOSITIONS_ENCAP_LEN_SHIFT_01          8
 
 #define TRANSPOSITIONS_POP_ETHERNET                0x00000001
 #define TRANSPOSITIONS_POP_CTAG                    0x00000002

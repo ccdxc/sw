@@ -490,6 +490,7 @@ action tx_hdr_transpositions(hdr0_bits, hdr1_bits, ethernet_dst, ethernet_src,
     hdr_transpositions_layer_1(hdr1_bits, ethernet_dst, ethernet_src,
                                ethernet_type, ctag, ip_src, ip_dst,
                                ip_dscp, ip_ttl, ip_proto);
+    modify_field(scratch_metadata.hdr_bits, hdr0_bits);
     modify_field(scratch_metadata.hdr_bits, hdr1_bits);
 }
 

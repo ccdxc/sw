@@ -3,6 +3,13 @@
 /******************************************************************************/
 action rx_vport_stats(permit_packets, permit_bytes,
                       drop_packets, drop_bytes) {
+#ifdef TXHACK
+    if (capri_intrinsic.lif == EXCEPTION_VPORT) {
+        add_header(capri_txdma_intrinsic);
+        add_header(p4plus_to_p4);
+        modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
+    }
+#endif
     add_header(capri_p4_intrinsic);
     if (capri_intrinsic.drop == TRUE) {
         modify_field(scratch_metadata.num_packets, drop_packets);

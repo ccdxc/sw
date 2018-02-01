@@ -249,6 +249,10 @@ parser rx_deparse_start {
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
     extract(p4_to_p4plus_roce);
+#ifdef TXHACK
+    extract(capri_txdma_intrinsic);
+    extract(p4plus_to_p4);
+#endif
     return parse_nic;
 }
 
@@ -1491,6 +1495,9 @@ calculated_field parser_metadata.icrc {
 @pragma xgress egress
 parser egress_start {
     extract(capri_intrinsic);
+#ifdef TXHACK
+    extract(capri_p4_intrinsic);
+#endif
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
     return select(capri_intrinsic.csum_err) {
@@ -1583,6 +1590,8 @@ parser parse_tx_icmp_1 {
 }
 
 @pragma xgress egress
+@pragma allow_set_meta l4_metadata.l4_sport_1
+@pragma allow_set_meta l4_metadata.l4_dport_1
 parser parse_tx_tcp_1 {
     extract(tcp_1);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
@@ -1591,6 +1600,8 @@ parser parse_tx_tcp_1 {
 }
 
 @pragma xgress egress
+@pragma allow_set_meta l4_metadata.l4_sport_1
+@pragma allow_set_meta l4_metadata.l4_dport_1
 parser parse_tx_udp_1 {
     extract(udp_1);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);

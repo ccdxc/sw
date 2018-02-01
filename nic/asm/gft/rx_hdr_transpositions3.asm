@@ -17,15 +17,15 @@ rx_l4_hdr_transpositions:
 
     sne             c1, d.rx_l4_hdr_transpositions_d.hdr_bits[15:8], 0
     balcf           r7, [c1], rx_l4_hdr_transpositions_layer2
-    crestore        [c7-c1], d.rx_l4_hdr_transpositions_d.hdr_bits[14:8], 0x3F
+    crestore        [c7-c1], d.rx_l4_hdr_transpositions_d.hdr_bits[14:8], 0x7F
 
     sne             c1, d.rx_l4_hdr_transpositions_d.hdr_bits[23:16], 0
     balcf           r7, [c1], rx_l4_hdr_transpositions_layer3
-    crestore        [c7-c1], d.rx_l4_hdr_transpositions_d.hdr_bits[22:16], 0x3F
+    crestore        [c7-c1], d.rx_l4_hdr_transpositions_d.hdr_bits[22:16], 0x7F
 
     sne             c1, d.rx_l4_hdr_transpositions_d.hdr_bits[7:0], 0
     nop.!c1.e
-    crestore        [c7-c1], d.rx_l4_hdr_transpositions_d.hdr_bits[6:0], 0x3F
+    crestore        [c7-c1], d.rx_l4_hdr_transpositions_d.hdr_bits[6:0], 0x7F
 
 rx_l4_hdr_transpositions_layer1:
     phvwr.c1        p.vxlan_1_valid, FALSE
