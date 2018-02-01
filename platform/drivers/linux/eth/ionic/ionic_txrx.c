@@ -274,8 +274,6 @@ static void ionic_tx_clean_sop(struct device *dev, struct txq_desc *desc)
 	dma_addr_t dma_addr;
 
 	switch (desc->opcode) {
-	case TXQ_DESC_OPCODE_NOP:
-		break;
 	case TXQ_DESC_OPCODE_CALC_NO_CSUM:
 	case TXQ_DESC_OPCODE_CALC_CSUM:
 	case TXQ_DESC_OPCODE_TSO:
@@ -424,9 +422,7 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 	if (!addr)
 		return -ENOMEM;
 
-	desc->opcode = skb->csum_not_inet ?
-		TXQ_DESC_OPCODE_CALC_CRC32_CSUM :
-		TXQ_DESC_OPCODE_CALC_CSUM;
+	desc->opcode = TXQ_DESC_OPCODE_CALC_CSUM;
 	desc->num_sg_elems = skb_shinfo(skb)->nr_frags;
 	desc->len = skb_headlen(skb);
 	desc->addr = addr;

@@ -190,12 +190,8 @@ void dump_txq(char *path)
 			return "CALC_NO_CSUM";
 		case TXQ_DESC_OPCODE_CALC_CSUM:
 			return "CALC_CSUM";
-		case TXQ_DESC_OPCODE_CALC_CRC32_CSUM:
-			return "CALC_CRC32_CSUM";
 		case TXQ_DESC_OPCODE_TSO:
 			return "TSO";
-		case TXQ_DESC_OPCODE_NOP:
-			return "NOP";
 		default:
 			return "???";
 		}
@@ -214,7 +210,6 @@ void dump_txq(char *path)
 
 		switch (desc.opcode) {
 		case TXQ_DESC_OPCODE_CALC_CSUM:
-		case TXQ_DESC_OPCODE_CALC_CRC32_CSUM:
 			printf(" hdr_len %d csum_offset %d", desc.hdr_len,
 			       desc.csum_offset);
 			break;

@@ -368,11 +368,9 @@ struct txq_init_comp {
 };
 
 enum txq_desc_opcode {
-	TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,  // TODO don't set this to zero
+	TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,
 	TXQ_DESC_OPCODE_CALC_CSUM,
-	TXQ_DESC_OPCODE_CALC_CRC32_CSUM,
 	TXQ_DESC_OPCODE_TSO,
-	TXQ_DESC_OPCODE_NOP, // TODO set this back to 0
 };
 
 /**
@@ -382,11 +380,6 @@ enum txq_desc_opcode {
  * @num_sg_elems: Number of scatter-gather elements in SG
  *                descriptor
  * @opcode:       Tx operation, see TXQ_DESC_OPCODE_*:
- *
- *                   TXQ_DESC_OPCODE_NOP:
- *
- *                      No packet sent; used to pad out end of
- *                      queue (ring)
  *
  *                   TXQ_DESC_OPCODE_CALC_NO_CSUM:
  *
@@ -428,17 +421,6 @@ enum txq_desc_opcode {
  *                      Documentation/networking/checksum-
  *                      offloads.txt for more info).
  *
- *                   TXQ_DESC_OPCODE_CALC_CRC32_CSUM:
- *
- *                      Offload 32-bit CRC32c L4 checksum
- *                      calculation/insertion.  SCTP, for
- *                      example, uses this checksum algortihm.
- *                      The same rules and fields @hdr_len and
- *                      @csum_offset are used as in
- *                      TXQ_DESC_OPCODE_CALC_CSUM, including the
- *                      encapsulation cases where SCTP or other
- *                      CRC32c protocol is the inner protocol.
- *
  *                   TXQ_DESC_OPCODE_TSO:
  *
  *                      Device preforms TCP segmentation offload
@@ -472,14 +454,13 @@ enum txq_desc_opcode {
  *                by @V-bit).  Includes .1p and .1q tags
  * @hdr_len:      Length of packet headers, including
  *                encapsulating outer header, if applicable.
- *                Valid for opcodes TXQ_DESC_OPCODE_CALC_CSUM,
- *                TXQ_DESC_OPCODE_CALC_CRC32_CSUM and
+ *                Valid for opcodes TXQ_DESC_OPCODE_CALC_CSUM and
  *                TXQ_DESC_OPCODE_TSO.  Should be set to zero for
- *                all other modes.  For TXQ_DESC_OPCODE_CALC_CSUM
- *                and TXQ_DESC_OPCODE_CALC_CRC32_CSUM, @hdr_len
- *                is length of headers up to inner-most L4
- *                header.  For TXQ_DESC_OPCODE_TSO, @hdr_len is
- *                up to inner-most L4 payload, so inclusive of
+ *                all other modes.  For
+ *                TXQ_DESC_OPCODE_CALC_CSUM, @hdr_len is length
+ *                of headers up to inner-most L4 header.  For
+ *                TXQ_DESC_OPCODE_TSO, @hdr_len is up to
+ *                inner-most L4 payload, so inclusive of
  *                inner-most L4 header.
  * @V:            Insert an L2 VLAN header using @vlan_tci.
  * @C:            Create a completion entry (CQ) for this packet.
@@ -489,8 +470,7 @@ enum txq_desc_opcode {
  *                TXQ_DESC_OPCODE_TSO.
  * @csum_offset:  Offset into inner-most L4 header of checksum
  *                field.  Only applicable for
- *                TXQ_DESC_OPCODE_CALC_CSUM and
- *                TXQ_DESC_OPCODE_CALC_CRC32_CSUM.
+ *                TXQ_DESC_OPCODE_CALC_CSUM.
  */
 struct txq_desc {
 	u64 addr:52;
