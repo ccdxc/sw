@@ -227,7 +227,7 @@ action recirc_packet(recirc_reason) {
 action flow_hit_from_vm_bounce(src_lif) {
     remove_header(ethernet);
     remove_header(ipv4);
-    remove_header(udp);
+    //remove_header(udp);
     remove_header(vxlan_gpe);
     recirc_packet(RECIRC_VM_BOUNCE);
     modify_field(capri_intrinsic.lif, src_lif);
@@ -236,7 +236,7 @@ action flow_hit_from_vm_bounce(src_lif) {
 action flow_hit_to_vm_bounce(dst_lport, qos_class_id) {
     remove_header(ethernet);
     remove_header(ipv4);
-    remove_header(udp);
+    //remove_header(udp);
     remove_header(vxlan_gpe);
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);

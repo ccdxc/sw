@@ -55,9 +55,9 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
             else:
                 genf = f
         else:
-            if ".h" in f:
+            if f.endswith('.h'):
                 output_dir = output_h_dir
-            elif ".c" in f:
+            elif f.endswith(".cc"):
                 output_dir = output_c_dir
             else:
                 continue
