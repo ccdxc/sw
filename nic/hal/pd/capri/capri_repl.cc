@@ -1,12 +1,14 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.h"
+#ifndef GFT
 #include "nic/gen/iris/include/p4pd.h"
+#endif
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/hal_pd_error.hpp"
 #include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
-#include "nic/hal/pd/iris/hal_state_pd.hpp"
+//#include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
 
@@ -63,9 +65,11 @@ capri_repl_entry_write(uint32_t index, capri_repl_table_entry* entry)
 hal_ret_t
 capri_repl_init (void)
 {
+#ifndef GFT
     capri_hbm_base = get_hbm_base();
     hbm_repl_table_offset = get_hbm_offset(JP4_REPL);
     capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
     capri_tm_repl_table_token_size_set(P4_REPL_ENTRY_WIDTH * 8);
+#endif
     return HAL_RET_OK;
 }

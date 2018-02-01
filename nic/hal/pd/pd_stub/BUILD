@@ -8,12 +8,13 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic/hal:hal_hdrs",
-        "//nic/third-party/spdlog",
+        "//nic:spdlog",
         "//nic/utils/block_list",
         "//nic/hal/periodic",
         "//nic:halproto",
         "//nic:gen_proto_includes",
-        "//nic/hal/pd/iris:iris_includes", # this exists only because session.hpp include p4pd header files !!
+        #"//nic/hal/pd/iris:iris_includes", # this exists only because session.hpp include p4pd header files !!
+        "//nic/hal/pd:hal_pd_includes",
     ],
     alwayslink = 1,
 )

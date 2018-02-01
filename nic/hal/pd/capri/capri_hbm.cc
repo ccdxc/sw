@@ -22,7 +22,11 @@ hal_ret_t
 capri_hbm_parse()
 {
     char             		*cfg_path;
+#ifndef GFT
     char                    cfgfile[] = "hbm_mem.json";
+#else
+    char                    cfgfile[] = "gft_hbm_mem.json";
+#endif
     pt::ptree               json_pt;
     std::string             full_path;
     capri_hbm_region_t      *reg;

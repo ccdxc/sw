@@ -5,7 +5,14 @@ load("//nic/bazel:common_deps.bzl", "sdk_copts")
 cc_library(
     name = "hal_pd_includes",
     srcs = [],
-    hdrs = ["p4pd_api.hpp", "hal_pd_error.hpp", "asic_pd.hpp", "hal_pd.hpp"],
+    hdrs = [
+        "p4pd_api.hpp",
+        "hal_pd_error.hpp",
+        "asic_pd.hpp",
+        "hal_pd.hpp",
+        "cpupkt_api.hpp",
+        "cpupkt_headers.hpp",
+    ],
     deps = [
         "//nic/hal:hal_includes",
     ]

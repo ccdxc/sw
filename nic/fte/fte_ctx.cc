@@ -6,7 +6,6 @@
 #include "sdk/list.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
-#include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
@@ -397,6 +396,7 @@ ctx_t::update_flow_table()
     hal_ret_t       ret;
     hal_handle_t    session_handle;
     hal::session_t *session = NULL;
+    hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
 
     hal::session_args_t session_args = {};
     hal::session_cfg_t session_cfg = {};
@@ -440,12 +440,14 @@ ctx_t::update_flow_table()
         iflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(sl2seg_);
 
         // TODO(goli) fix tnnl_rw_idx lookup
-        if (iflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {
+        if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
             iflow_attrs.tnnl_rw_idx = 0;
-        } else if (iflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+        } else if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
             iflow_attrs.tnnl_rw_idx = 1;
         } else if (dif_ && dif_->if_type == intf::IF_TYPE_TUNNEL) {
-            iflow_attrs.tnnl_rw_idx = hal::pd::pd_tunnelif_get_rw_idx((hal::pd::pd_tunnelif_t *)dif_->pd_if);
+            tif_args.hal_if = dif_;
+            hal::pd::pd_tunnelif_get_rw_idx(&tif_args);   // TODO: pls check for return value
+            iflow_attrs.tnnl_rw_idx = tif_args.tnnl_rw_idx;
         }
 
         session_args.iflow[stage] = &iflow_cfg;
@@ -494,12 +496,14 @@ ctx_t::update_flow_table()
         rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_flow_lkupid(dl2seg_);
 
         // TODO(goli) fix tnnl w_idx lookup
-        if (rflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {
+        if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
             rflow_attrs.tnnl_rw_idx = 0;
-        } else if (rflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+        } else if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
             rflow_attrs.tnnl_rw_idx = 1;
         } else if (sif_ && sif_->if_type == intf::IF_TYPE_TUNNEL) {
-            rflow_attrs.tnnl_rw_idx = hal::pd::pd_tunnelif_get_rw_idx((hal::pd::pd_tunnelif_t *)sif_->pd_if);
+            tif_args.hal_if = sif_;
+            hal::pd::pd_tunnelif_get_rw_idx(&tif_args);   // TODO: pls check for return value
+            rflow_attrs.tnnl_rw_idx = tif_args.tnnl_rw_idx;
         }
 
         session_args.rflow[stage] = &rflow_cfg;

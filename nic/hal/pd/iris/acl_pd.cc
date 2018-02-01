@@ -127,24 +127,25 @@ populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
 static hal_ret_t
 acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    acl_tcam             *acl_tbl = NULL;
-    nacl_swkey_t         key;
-    nacl_swkey_mask_t    mask;
-    nacl_actiondata      data;
-    acl_match_spec_t     *ms = NULL;
-    acl_action_spec_t    *as = NULL;
-    acl_eth_match_spec_t *eth_key;
-    acl_eth_match_spec_t *eth_mask;
-    acl_ip_match_spec_t  *ip_key;
-    acl_ip_match_spec_t  *ip_mask;
-    acl_t                *pi_acl = pd_acl->pi_acl;
-    vrf_t                *vrf = NULL;
-    l2seg_t              *l2seg = NULL;
-    if_t                 *redirect_if = NULL;
-    uint16_t             l2seg_mask = 0;
-    uint16_t             ten_mask = 0;
-    uint8_t              ten_shift = 0;
+    hal_ret_t                              ret = HAL_RET_OK;
+    acl_tcam                               *acl_tbl = NULL;
+    nacl_swkey_t                           key;
+    nacl_swkey_mask_t                      mask;
+    nacl_actiondata                        data;
+    acl_match_spec_t                       *ms = NULL;
+    acl_action_spec_t                      *as = NULL;
+    acl_eth_match_spec_t                   *eth_key;
+    acl_eth_match_spec_t                   *eth_mask;
+    acl_ip_match_spec_t                    *ip_key;
+    acl_ip_match_spec_t                    *ip_mask;
+    acl_t                                  *pi_acl = pd_acl->pi_acl;
+    vrf_t                                  *vrf = NULL;
+    l2seg_t                                *l2seg = NULL;
+    if_t                                   *redirect_if = NULL;
+    uint16_t                               l2seg_mask = 0;
+    uint16_t                               ten_mask = 0;
+    uint8_t                                ten_shift = 0;
+    hal::pd::pd_tunnelif_get_rw_idx_args_t tif_args = { 0 };
 
     ms = acl_get_match_spec(pi_acl);
     as = acl_get_action_spec(pi_acl);
@@ -209,8 +210,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 
                 data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
                 if (if_is_tunnel_if(redirect_if)) {
+                    tif_args.hal_if = redirect_if;
+                    hal::pd::pd_tunnelif_get_rw_idx(&tif_args);  // TODO: pls check for return value
                     data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
-                        (pd_tunnelif_get_rw_idx((pd_tunnelif_t *)redirect_if->pd_if));
+                        tif_args.tnnl_rw_idx;
                     data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
                         as->int_as.tnnl_vnid;
                     data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 1;

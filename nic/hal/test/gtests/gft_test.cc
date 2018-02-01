@@ -81,7 +81,8 @@ static uint8_t g_rcv_pkt2[] = {
     0x00, 0x01, 0x00, 0x00, 0x40, 0x06, 0x59, 0xC8, 0x0F,
     0x0A, 0x0B, 0x0C, 0x0E, 0x0A, 0x0B, 0x0C, 0x12, 0x34,
     0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x50, 0x02, 0x20, 0x00, 0x06, 0x2F, 0x00, 0x00};
+    0x00, 0x50, 0x02, 0x20, 0x00, 0x06, 0x2F, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 
 uint64_t g_layer1_dmac   = 0x000102030405ULL;
@@ -160,7 +161,7 @@ rx_key1_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY1, &hwkey_len, &hwmask_len,
+    p4pd_hwentry_query(P4TBL_ID_RX_KEY1, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -169,9 +170,9 @@ rx_key1_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY1, &key, &mask,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_KEY1, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY1, 0, hwkey, hwmask, &data);
+    p4pd_entry_write(P4TBL_ID_RX_KEY1, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
@@ -211,7 +212,7 @@ rx_key2_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY2, &hwkey_len, &hwmask_len,
+    p4pd_hwentry_query(P4TBL_ID_RX_KEY2, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -220,9 +221,9 @@ rx_key2_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY2, &key, &mask,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_KEY2, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY2, 0, hwkey, hwmask, &data);
+    p4pd_entry_write(P4TBL_ID_RX_KEY2, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
@@ -262,7 +263,7 @@ rx_key3_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY3, &hwkey_len, &hwmask_len,
+    p4pd_hwentry_query(P4TBL_ID_RX_KEY3, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -271,9 +272,9 @@ rx_key3_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY3, &key, &mask,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_KEY3, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY3, 0, hwkey, hwmask, &data);
+    p4pd_entry_write(P4TBL_ID_RX_KEY3, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
@@ -312,7 +313,7 @@ rx_key4_init() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_KEY4, &hwkey_len, &hwmask_len,
+    p4pd_hwentry_query(P4TBL_ID_RX_KEY4, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -321,9 +322,9 @@ rx_key4_init() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_KEY4, &key, &mask,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_KEY4, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_KEY4, 0, hwkey, hwmask, &data);
+    p4pd_entry_write(P4TBL_ID_RX_KEY4, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
@@ -363,7 +364,7 @@ create_vport_entry() {
     uint32_t hwdata_len = 0;
     uint8_t  *hwkey = NULL;
     uint8_t  *hwmask = NULL;
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_VPORT, &hwkey_len, &hwmask_len,
+    p4pd_hwentry_query(P4TBL_ID_RX_VPORT, &hwkey_len, &hwmask_len,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -372,9 +373,9 @@ create_vport_entry() {
     hwmask = new uint8_t[hwmask_len];
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_VPORT, &key, &mask,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_VPORT, &key, &mask,
                                 hwkey, hwmask);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_VPORT, 0, hwkey, hwmask, &data);
+    p4pd_entry_write(P4TBL_ID_RX_VPORT, 0, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
@@ -402,7 +403,7 @@ create_transposition1() {
     DATA0.hdr2_bits =
         TRANSPOSITIONS_POP_ETHERNET |
         TRANSPOSITIONS_POP_IPV4;
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS0, g_flow_idx2,
+    p4pd_entry_write(P4TBL_ID_RX_HDR_TRANSPOSITIONS0, g_flow_idx2,
                          NULL, NULL, &data0);
 
     DATA1.hdr3_bits =
@@ -410,7 +411,7 @@ create_transposition1() {
         TRANSPOSITIONS_MODIFY_ETHERNET_DST;
     memcpy(DATA1.ethernet_dst, &g_rw_layer3_dmac, 6);
     memcpy(DATA1.ethernet_src, &g_rw_layer3_smac, 6);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS1, g_flow_idx2,
+    p4pd_entry_write(P4TBL_ID_RX_HDR_TRANSPOSITIONS1, g_flow_idx2,
                          NULL, NULL, &data1);
 
     DATA2.hdr3_bits =
@@ -418,7 +419,7 @@ create_transposition1() {
         TRANSPOSITIONS_MODIFY_IPV4_DST;
     memcpy(DATA2.ip_dst, &g_rw_layer3_dip, 4);
     memcpy(DATA2.ip_src, &g_rw_layer3_sip, 4);
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS2, g_flow_idx2,
+    p4pd_entry_write(P4TBL_ID_RX_HDR_TRANSPOSITIONS2, g_flow_idx2,
                          NULL, NULL, &data2);
 
     DATA3.hdr_bits =
@@ -426,7 +427,7 @@ create_transposition1() {
         TRANSPOSITIONS_POP_UDP_1 |
         TRANSPOSITIONS_POP_VXLAN_2 |
         TRANSPOSITIONS_POP_UDP_2;
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_HDR_TRANSPOSITIONS3, g_flow_idx2,
+    p4pd_entry_write(P4TBL_ID_RX_HDR_TRANSPOSITIONS3, g_flow_idx2,
                          NULL, NULL, &data3);
 
 #undef DATA0
@@ -477,7 +478,7 @@ create_gft_entry1() {
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
 
     // build hardware entry
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_GFT_HASH, &hwkey_len, NULL,
+    p4pd_hwentry_query(P4TBL_ID_RX_GFT_HASH, &hwkey_len, NULL,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
@@ -487,7 +488,7 @@ create_gft_entry1() {
     }
     hwkey = new uint8_t[hash_len];
     memset(hwkey, 0, hash_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_GFT_HASH, &key, NULL,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_GFT_HASH, &key, NULL,
                                 hwkey, NULL);
 
     // generate hash
@@ -501,7 +502,7 @@ create_gft_entry1() {
     gft_idx = hash & 0xFFFFF;
     printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
 
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, &data);
+    p4pd_entry_write(P4TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, &data);
     delete [] hwkey;
 }
 
@@ -544,7 +545,7 @@ create_gft_entry2() {
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.hint9 = g_ohash_idx;
 
     // build hardware entry
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_GFT_HASH, &hwkey_len, NULL,
+    p4pd_hwentry_query(P4TBL_ID_RX_GFT_HASH, &hwkey_len, NULL,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
@@ -554,7 +555,7 @@ create_gft_entry2() {
     }
     hwkey = new uint8_t[hash_len];
     memset(hwkey, 0, hash_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_GFT_HASH, &key, NULL,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_GFT_HASH, &key, NULL,
                                 hwkey, NULL);
 
     // generate hash
@@ -568,7 +569,7 @@ create_gft_entry2() {
     gft_idx = hash & 0xFFFFF;
     printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
 
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, &data);
+    p4pd_entry_write(P4TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, &data);
     delete [] hwkey;
 }
 
@@ -607,16 +608,16 @@ create_gft_overflow_entry() {
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx2;
 
     // build hardware entry
-    p4pd_gft_hwentry_query(P4_GFT_TBL_ID_RX_GFT_HASH_OVERFLOW, &hwkey_len, NULL,
+    p4pd_hwentry_query(P4TBL_ID_RX_GFT_HASH_OVERFLOW, &hwkey_len, NULL,
                            &hwdata_len);
     hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
     hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
     hwkey = new uint8_t[hwkey_len];
     memset(hwkey, 0, hwkey_len);
-    p4pd_gft_hwkey_hwmask_build(P4_GFT_TBL_ID_RX_GFT_HASH_OVERFLOW, &key, NULL,
+    p4pd_hwkey_hwmask_build(P4TBL_ID_RX_GFT_HASH_OVERFLOW, &key, NULL,
                                 hwkey, NULL);
 
-    p4pd_gft_entry_write(P4_GFT_TBL_ID_RX_GFT_HASH_OVERFLOW, g_ohash_idx, hwkey,
+    p4pd_entry_write(P4TBL_ID_RX_GFT_HASH_OVERFLOW, g_ohash_idx, hwkey,
                          NULL, &data);
     delete [] hwkey;
 }

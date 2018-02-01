@@ -10,7 +10,6 @@
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/gen/proto/hal/session.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/src/qos.hpp"
 
 using sdk::lib::ht_ctxt_t;
@@ -43,6 +42,41 @@ namespace hal {
 // forward declarations
 typedef struct flow_s flow_t;
 typedef struct session_s session_t;
+
+// from p4pd.h
+typedef enum tunnel_rewrite_actions_enum {
+    TUNNEL_REWRITE_NOP_ID = 0,
+    TUNNEL_REWRITE_ENCAP_VXLAN_ID = 1,
+    TUNNEL_REWRITE_ENCAP_ERSPAN_ID = 2,
+    TUNNEL_REWRITE_ENCAP_VLAN_ID = 3,
+    TUNNEL_REWRITE_MAX_ID = 4
+} tunnel_rewrite_actions_en;
+
+// from p4pd.h
+typedef enum rewrite_actions_enum {
+    REWRITE_NOP_ID = 0,
+    REWRITE_REWRITE_ID = 1,
+    REWRITE_IPV4_NAT_SRC_REWRITE_ID = 2,
+    REWRITE_IPV4_NAT_DST_REWRITE_ID = 3,
+    REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID = 4,
+    REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID = 5,
+    REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID = 6,
+    REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID = 7,
+    REWRITE_IPV4_TWICE_NAT_REWRITE_ID = 8,
+    REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID = 9,
+    REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID = 10,
+    REWRITE_IPV6_NAT_SRC_REWRITE_ID = 11,
+    REWRITE_IPV6_NAT_DST_REWRITE_ID = 12,
+    REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID = 13,
+    REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID = 14,
+    REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID = 15,
+    REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID = 16,
+    REWRITE_IPV6_TWICE_NAT_REWRITE_ID = 17,
+    REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID = 18,
+    REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID = 19,
+    REWRITE_MAX_ID = 20
+} rewrite_actions_en;
+
 
 // flow type depends on the type of packets flow is for
 enum flow_type_t {

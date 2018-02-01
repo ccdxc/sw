@@ -17,7 +17,9 @@
 #include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/p4pt.hpp"
 #include "nic/hal/src/session.hpp"
+#ifndef GFT
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
+#endif
 #include "nic/hal/tls/tls_api.hpp"
 
 namespace hal {
@@ -189,13 +191,14 @@ add_proxy_flow_info_to_db(proxy_flow_info_t* pfi)
 hal_ret_t
 proxy_program_lif(proxy_t* proxy)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    intf::LifSpec       lif_spec;
-    intf::LifResponse   rsp;
-    lif_hal_info_t      lif_hal_info = {0};
-    proxy_meta_t        *meta = &g_meta[proxy->type];
-    proxy_meta_lif_t    *meta_lif_info = NULL;
-    proxy_meta_qtype_t  *meta_qtype_info = NULL;
+    hal_ret_t                         ret = HAL_RET_OK;
+    intf::LifSpec                     lif_spec;
+    intf::LifResponse                 rsp;
+    lif_hal_info_t                    lif_hal_info = {0};
+    proxy_meta_t                      *meta = &g_meta[proxy->type];
+    proxy_meta_lif_t                  *meta_lif_info = NULL;
+    proxy_meta_qtype_t                *meta_qtype_info = NULL;
+    pd::pd_lif_get_lport_id_args_t    lif_args = { 0 };
 
     // program LIF(s)
     for(uint i = 0; i < meta->num_lif; i++) {
@@ -239,12 +242,14 @@ proxy_program_lif(proxy_t* proxy)
         lif_t* lif = find_lif_by_id(meta_lif_info->lif_id);
         HAL_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
 
-        meta_lif_info->lport_id = pd::lif_get_lport_id(lif);
-        HAL_TRACE_DEBUG("Received lport-id: {} for lif: {}", meta_lif_info->lport_id, meta_lif_info->lif_id);
+        lif_args.pi_lif = lif;
+        pd::lif_get_lport_id(&lif_args);
+        meta_lif_info->lport_id = lif_args.lport_id;
+        HAL_TRACE_DEBUG("Received lport-id: {} for lif: {}",
+                        meta_lif_info->lport_id, meta_lif_info->lif_id);
     } // end lif loop
     return HAL_RET_OK;
 }
-
 
 //------------------------------------------------------------------------------
 // process a Proxy enable request
@@ -336,7 +341,12 @@ proxy_post_lif_program_init(proxy_t* proxy)
         ret = proxy_create_cpucb();
         break;
     case types::PROXY_TYPE_P4PT:
+#ifndef GFT
+        // TODO: how is this code supposed to run with another P4 program?
+        //       the only interface between PI and PD is via p4pd_api.hpp 
+        //       can't directly go to iris !!!
         ret = pd::p4pt_pd_init();
+#endif
         break;
     default:
         break;

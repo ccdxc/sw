@@ -1,5 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/include/hal_lock.hpp"
+#include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include <netinet/ether.h>
@@ -161,11 +162,11 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
 
     // Program HW
-    if (tnnl_rwe->tnnl_rw_key.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
+    if ((uint8_t)tnnl_rwe->tnnl_rw_key.tnnl_rw_act == (uint8_t)TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
         ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan(tnnl_rwe);
-    } else if (tnnl_rwe->tnnl_rw_key.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_ERSPAN_ID) {
+    } else if ((uint8_t)tnnl_rwe->tnnl_rw_key.tnnl_rw_act == (uint8_t)TUNNEL_REWRITE_ENCAP_ERSPAN_ID) {
         ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan(tnnl_rwe);
-    } else if (tnnl_rwe->tnnl_rw_key.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+    } else if ((uint8_t)tnnl_rwe->tnnl_rw_key.tnnl_rw_act == (uint8_t)TUNNEL_REWRITE_ENCAP_VLAN_ID) {
         ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan(tnnl_rwe);
     }
     if (ret != HAL_RET_OK) {

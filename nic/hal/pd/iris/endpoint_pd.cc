@@ -860,13 +860,16 @@ ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
 uint32_t
 ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep, 
                           tunnel_rewrite_actions_en tnnl_rw_act) {
-    HAL_ASSERT(tnnl_rw_act < TUNNEL_REWRITE_MAX_ID);
+    hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
 
+    HAL_ASSERT(tnnl_rw_act < TUNNEL_REWRITE_MAX_ID);
     if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
         return g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
     } else if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
         if_t *tunnel_if = ep_find_if_by_handle((ep_t *)pd_ep->pi_ep);
-        return (pd_tunnelif_get_rw_idx((pd_tunnelif_t *)tunnel_if->pd_if));
+        tif_args.hal_if = tunnel_if;
+        hal::pd::pd_tunnelif_get_rw_idx(&tif_args);
+        return tif_args.tnnl_rw_idx;
     }
 
     return 0;

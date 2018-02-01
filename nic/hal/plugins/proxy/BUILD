@@ -17,7 +17,7 @@ cc_library(
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",
         "//nic/hal/tls:tls_api",
-        "//nic/hal/pd/iris",
+        #"//nic/hal/pd/iris",
         "//nic/hal/lkl:lkl_api",
         "//nic:gen_proto_includes",
         "//nic/fte:fte_includes",

@@ -97,15 +97,18 @@ static hal_ret_t
 pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
                           if_t *intf)
 {
-    lif_t                *lif;
-    hal_ret_t            ret = HAL_RET_OK;
+    lif_t                         *lif;
+    hal_ret_t                     ret = HAL_RET_OK;
+    pd_lif_get_lport_id_args_t    lif_args = { 0 };
 
     /*
      * PD resources should have already allocated when the LIF was created
      */
     lif = if_get_lif(intf);
     if (lif) {
-        pd_app_redir_if->lport_id = lif_get_lport_id(lif);
+        lif_args.pi_lif = lif;
+        lif_get_lport_id(&lif_args);
+        pd_app_redir_if->lport_id = lif_args.lport_id;
         HAL_TRACE_DEBUG("{}: if_id:{} lif_id:{} lport_id:{}", 
                         __FUNCTION__, if_get_if_id((if_t *)pd_app_redir_if->pi_if),
                         lif_get_lif_id(lif), pd_app_redir_if->lport_id);

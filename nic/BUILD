@@ -7,11 +7,6 @@ cc_library(
     srcs = [
         "asic/capri/model/cap_top/cap_top_csr.cc",
         "asic/capri/model/cap_top/cap_top_csr.h",
-        #"asic/capri/model/cap_top/cap_env_base.cc",
-        #"asic/capri/model/cap_top/cap_env_base.h",
-        #"asic/capri/model/cap_top/cap_model_base.h",
-        #"asic/capri/model/cap_top/cap_factory.h",
-        #"asic/capri/model/utils/cap_blk_env_base.h",
         "asic/capri/model/utils/cap_csr_base.cc",
         "asic/capri/model/utils/cap_csr_base.h",
         "asic/capri/model/utils/cpp_int_helper.h",
@@ -80,7 +75,6 @@ cc_library(
         "asic/capri/model/cap_he/readonly/cap_mpns_csr.h",
         "asic/capri/model/cap_he/readonly/cap_mpse_csr.cc",
         "asic/capri/model/cap_he/readonly/cap_mpse_csr.h",
-        # "asic/capri/model/cap_he/cap_he_csr.h",
         "asic/capri/model/cap_pcie/cap_pxp_csr.cc",
         "asic/capri/model/cap_pcie/cap_pxp_csr.h",
         "asic/capri/model/cap_pcie/cap_pxc_csr.cc",
@@ -106,9 +100,6 @@ cc_library(
         "asic/capri/model/utils/msg_stream.cc",
         "asic/capri/model/utils/cap_csr_py_if.cc",
         "asic/capri/model/utils/cap_csr_py_if.h",
-        #"asic/capri/model/utils/cap_blk_env_top.cc",
-        #"asic/capri/model/utils/cap_test_factory.h",
-        #"asic/capri/model/utils/cap_blk_env_top.h",
         "asic/ip/verif/pcpp/pen_axi4_slave.h",
         "asic/ip/verif/pcpp/HBM.h",
         "asic/ip/verif/pcpp/HOST_MEM.h",
@@ -217,8 +208,13 @@ cc_library(
     deps = [],
 )
 
+config_setting(
+   name = "gft",
+   values = { "define": "p4pipeline=gft" }
+)
+
 cc_library(
-    name = "p4pd",
+    name = "iris_p4pd",
     srcs = ["gen/iris/src/p4pd.cc"],
     hdrs = [
         "gen/iris/include/p4pd.h",
@@ -229,17 +225,17 @@ cc_library(
     ],
 )
 
-#cc_library(
-    #name = "gft_p4pd",
-    #srcs = ["gen/gft/src/gft_p4pd.cc"],
-    #hdrs = [
-        #"gen/gft/include/p4pd.h",
-    #],
-    #deps = [
-        #"//nic:gen_includes",
-        #"//nic/include:base_includes",
-    #],
-#)
+cc_library(
+    name = "gft_p4pd",
+    srcs = ["gen/gft/src/p4pd.cc"],
+    hdrs = [
+        "gen/gft/include/p4pd.h",
+    ],
+    deps = [
+        "//nic:gen_includes",
+        "//nic/include:base_includes",
+    ],
+)
 
 cc_library(
     name = "p4pluspd_txdma",
@@ -268,13 +264,14 @@ cc_library(
 cc_library(
     name = "gen_includes",
     srcs = [],
-    hdrs = ["gen/iris/include/p4pd.h",
+    hdrs = select ({
+        "//conditions:default": [
+            "gen/iris/include/p4pd.h",
             "gen/iris/include/p4plus_egress.h",
             "gen/iris/include/p4plus_ingress.h",
             "gen/include/p4pd_table.h",
             "gen/include/common_txdma_actions_p4pd_table.h",
             "gen/include/common_rxdma_actions_p4pd_table.h",
-            #"gen/gft/include/p4pd.h",
             "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
             "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
             "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
@@ -291,7 +288,32 @@ cc_library(
             "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
             "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
             "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
-            ],
+        ],
+        ":gft" : [
+            "gen/gft/include/p4pd.h",
+            "gen/gft/include/p4plus_egress.h",
+            "gen/gft/include/p4plus_ingress.h",
+            "gen/include/p4pd_table.h",
+            "gen/include/common_txdma_actions_p4pd_table.h",
+            "gen/include/common_rxdma_actions_p4pd_table.h",
+            "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
+            "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
+            "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
+            "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
+            #"gen/ipsec_rxdma_actions/include/ipsec_rxdma_actions_p4plus_ingress.h",
+            "gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h",
+            "gen/tls_txdma_post_crypto_enc/include/tls_txdma_post_crypto_enc_p4plus_ingress.h",
+            "gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h",
+            "gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h",
+            "gen/gc_txdma/include/gc_txdma_p4plus_ingress.h",
+            "gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h",
+            "gen/rawc_txdma/include/rawc_txdma_p4plus_ingress.h",
+            "gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h",
+            "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
+            "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
+            "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
+        ],
+    }),
     deps = ["//nic/include:base_includes"],
 )
 

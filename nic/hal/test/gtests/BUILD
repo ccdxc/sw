@@ -71,7 +71,6 @@ cc_test(
     copts = sdk_copts,
 )
 
-
 cc_test(
     name = "bm_allocator_test",
     srcs = ["bm_allocator_test.cc"],
@@ -160,15 +159,42 @@ cc_test(
     copts = sdk_copts,
 )
 
-#cc_test(
-    #name = "gft_test",
-    #srcs = ["gft_test.cc"],
-    #deps = [
-        #"//nic/p4/gft/include:p4_gft_includes",
-        #"//nic:gft_p4pd"] + gl_deps_list,
-    #linkopts = [] + gl_linkopts_list,
-    #copts = sdk_copts,
-#)
+cc_test(
+    name = "gft_test",
+    srcs = ["gft_test.cc"],
+    deps = [
+        "//nic/p4/gft/include:p4_gft_includes",
+        "//nic/hal/pd/pd_stub",
+        "//nic/hal/pd/gft",
+        "//nic/hal:hal_src",
+        "//nic/fte:fte",
+        "//nic/hal/plugins:plugins",
+        "//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/hal/lkl:lkl_api",
+        "//nic:lkl",
+        #"//nic/hal/test/utils:haltestutils",
+        "//nic:gft_p4pd",
+        "//nic/model_sim:model_client",
+        "//nic/hal/pd/capri",
+        "//nic/utils/trace",
+        "//nic:grpc",
+        "//nic:gen_proto_includes",
+        "//nic:libprotobuf",
+        "//nic:halproto",
+        "//nic:p4pluspd_txdma",
+        "//nic:p4pluspd_rxdma",
+        "//nic:asic_libs",
+        "//nic/hal/pd/control:control",
+        "@sdk//obj:sdk_logger",
+        "@sdk//obj:sdk_pal",
+        "@sdk//obj:sdk_catalog",
+        "//nic/hal/pd/p4pd:p4pd",
+        "//:gtest",
+        ],
+    linkopts = [] + gl_linkopts_list,
+    tags = ["gft"],
+    copts = sdk_copts,
+)
 
 cc_test(
     name = "appid_test",

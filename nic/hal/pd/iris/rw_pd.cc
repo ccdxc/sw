@@ -204,7 +204,8 @@ pd_rw_entry_find_or_alloc(pd_rw_entry_args_t *args, uint32_t *rw_idx)
         return HAL_RET_INVALID_ARG;
     }
 
-    rw_key.rw_act = args->rw_act;
+    // TODO: Fix once p4pd enums are moved to their own namespace
+    rw_key.rw_act = (::rewrite_actions_en)args->rw_act;
     memcpy(rw_key.mac_sa, args->mac_sa, sizeof(args->mac_sa));
     memcpy(rw_key.mac_da, args->mac_da, sizeof(args->mac_da));
 

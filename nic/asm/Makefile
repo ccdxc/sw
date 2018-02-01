@@ -34,7 +34,6 @@ IRIS_SUBDIRS = \
           $(NULL)
 
 MSFT_GFT_SUBDIRS= \
-          nw \
           common-p4+ \
           proxy \
           rdma \
@@ -45,7 +44,6 @@ MSFT_GFT_SUBDIRS= \
           app-redir-p4+ \
           p4pt \
           eth \
-          ipfix \
           adminq \
           gft \
           p4pt \

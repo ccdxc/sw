@@ -486,9 +486,11 @@ typedef struct __attribute__((__packed__)) __p4_replication_data_t {
 //::        #endif
 //::    #endfor
 
+//:: if not pddict['p4plus']:
 #define P4_REPL_TABLE_NAME                 "replication_table"
 #define P4_REPL_TABLE_ID                   __P4TBL_ID_TBLMAX
 #define P4_REPL_TABLE_DEPTH                (64 * 1024)
 #define P4_REPL_ENTRY_WIDTH                (sizeof(p4_replication_data_t))
 #define CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE (60 / P4_REPL_ENTRY_WIDTH)
+//:: #endif
 #endif

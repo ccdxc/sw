@@ -43,16 +43,16 @@
 #define CAPRI_FAIL (-1)
 
 #ifdef GFT
-#include "nic/gen/gft/include/gft_p4pd.h"
+#include "nic/gen/gft/include/p4pd.h"
 static void capri_timer_init() __attribute__((unused));
 static int capri_table_p4plus_init() __attribute__((unused));
 static void capri_program_p4plus_table_mpu_pc() __attribute__((unused));
 static void capri_p4plus_recirc_init() __attribute__((unused));
-#define P4TBL_ID_TBLMIN        P4_GFT_TBL_ID_TBLMIN
-#define P4TBL_ID_TBLMAX        P4_GFT_TBL_ID_TBLMAX
-#define p4pd_tbl_names         p4pd_gft_tbl_names
-#define p4pd_get_max_action_id p4pd_gft_get_max_action_id
-#define p4pd_get_action_name   p4pd_gft_get_action_name
+//#define P4TBL_ID_TBLMIN        P4_GFT_TBL_ID_TBLMIN
+//#define P4TBL_ID_TBLMAX        P4_GFT_TBL_ID_TBLMAX
+//#define p4pd_tbl_names         p4pd_gft_tbl_names
+//#define p4pd_get_max_action_id p4pd_gft_get_max_action_id
+//#define p4pd_get_action_name   p4pd_gft_get_action_name
 #define P4_PGM_NAME            "gft"
 #else
 #include "nic/gen/iris/include/p4pd.h"
@@ -185,8 +185,8 @@ get_sram_shadow_for_table(uint32_t tableid) {
                         __FUNCTION__, tableid);
         return (g_shadow_sram_txdma);
 #ifdef GFT
-    } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
-               (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
+    } else if ((tableid >= P4TBL_ID_TBLMIN) &&
+               (tableid <= P4TBL_ID_TBLMAX)) {
         HAL_TRACE_DEBUG("{} Working with p4 sram shadow for tableid {}\n",
                         __FUNCTION__, tableid);
         p4pd_table_properties_t tbl_ctx;

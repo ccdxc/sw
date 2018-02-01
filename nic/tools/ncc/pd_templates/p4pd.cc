@@ -15,7 +15,7 @@
 //::    #endif
 //:: else:
 //::    p4prog = ''
-//::    hdrdir = 'iris'
+//::    hdrdir = pddict['p4program']
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //::	start_table_base = 1

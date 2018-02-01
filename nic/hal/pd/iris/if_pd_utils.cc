@@ -61,20 +61,21 @@ if_is_tunnel_if(if_t *pi_if)
 // ----------------------------------------------------------------------------
 // Given a PI LIf, get its lport id
 // ----------------------------------------------------------------------------
-uint32_t
-lif_get_lport_id(lif_t *pi_lif) 
+hal_ret_t
+lif_get_lport_id (pd_lif_get_lport_id_args_t *args)
 {
-    uint32_t        lport_id = 0;
+    // uint32_t        lport_id = 0;
     pd_lif_t        *pd_lif = NULL;
+    lif_t *pi_lif = args->pi_lif;
 
     HAL_ASSERT(pi_lif != NULL);
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
     HAL_ASSERT(pi_lif != NULL);
 
-    lport_id =  pd_lif->lif_lport_id;
+    args->lport_id =  pd_lif->lif_lport_id;
 
-    return lport_id;
+    return HAL_RET_OK;
 }
 
 // ----------------------------------------------------------------------------
@@ -428,12 +429,15 @@ l2seg_get_pi_vrf(l2seg_t *pi_l2seg)
 // ----------------------------------------------------------------------------
 // Given a PD tunnel IF, get the tunnel rewrite index
 // ----------------------------------------------------------------------------
-int
-pd_tunnelif_get_rw_idx(pd_tunnelif_t *pd_tif)
+hal_ret_t
+pd_tunnelif_get_rw_idx (pd_tunnelif_get_rw_idx_args_t *args)
 {
+    pd_tunnelif_t *pd_tif = (pd_tunnelif_t *)args->hal_if->pd_if;
+
     if (!pd_tif)
-        return -1;
-    return (pd_tif->tunnel_rw_idx);
+        args->tnnl_rw_idx = -1;
+    args->tnnl_rw_idx = pd_tif->tunnel_rw_idx;
+    return HAL_RET_OK;
 }
 
 // ----------------------------------------------------------------------------
@@ -483,18 +487,16 @@ pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask,
     return HAL_RET_OK;
 }
 
-
-
 uint8_t *memrev(uint8_t *block, size_t elnum)
 {
-     uint8_t *s, *t, tmp;
+    uint8_t *s, *t, tmp;
 
     for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
         tmp = *s;
         *s = *t;
         *t = tmp;
     }
-     return block;
+    return block;
 }
 
 }   // namespace pd

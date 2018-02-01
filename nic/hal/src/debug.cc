@@ -3,8 +3,8 @@
 #include "nic/hal/src/debug.hpp"
 #include "sdk/slab.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/hal/lkl/lklshim.hpp"
+//#include "nic/hal/pd/iris/hal_state_pd.hpp"
+//#include "nic/hal/lkl/lklshim.hpp"
 
 using sdk::lib::slab;
 
@@ -44,7 +44,7 @@ mtrack_get (debug::MemTrackGetRequest& req,
 }
 
 hal_ret_t
-set_slab_response(slab *s, debug::SlabGetResponseMsg *rsp)
+set_slab_response (slab *s, debug::SlabGetResponseMsg *rsp)
 {
     debug::SlabGetResponse  *response;
 
@@ -82,6 +82,7 @@ set_slab_response(slab *s, debug::SlabGetResponseMsg *rsp)
 hal_ret_t
 slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
 {
+#if 0
     hal_slab_t  slab_id;
     hal_ret_t   ret = HAL_RET_OK;
     uint32_t i = 0;
@@ -113,6 +114,7 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
         HAL_TRACE_ERR("Failed to get slab for slab id {}", i ? i : slab_id);
         return ret;
     }
+#endif
 
     return HAL_RET_OK;
 }

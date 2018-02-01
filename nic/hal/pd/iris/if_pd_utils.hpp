@@ -25,10 +25,6 @@ uint32_t if_get_uplink_ifpc_id(if_t *pi_if);
 uint32_t if_get_uplink_lport_id(if_t *pi_if);
 vrf_t *if_get_pi_vrf(if_t *pi_if);
 if_t *if_get_if_from_ep(ep_t *ep);
-int pd_tunnelif_get_rw_idx(pd_tunnelif_t *pd_tif);
-
-// Lif APIs
-uint32_t lif_get_lport_id(lif_t *pi_lif);
 
 // L2Seg APIs
 vrf_t *l2seg_get_pi_vrf(l2seg_t *pi_l2seg);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fte_ctx.hpp"
+#include "nic/hal/src/session.hpp"
 
 namespace fte {
 
@@ -185,9 +186,9 @@ private:
                                           const  header_rewrite_info_t &src);
     static hal_ret_t merge_header_rewrite_with_push(header_push_info_t &dst,
                                                     const  header_rewrite_info_t &src);
-    static rewrite_actions_enum nat_rewrite_action(header_type_t l3_type,
-                                                   header_type_t l4_type,
-                                                   session::NatType nat_type);
+    static hal::rewrite_actions_enum nat_rewrite_action(header_type_t l3_type,
+                                                        header_type_t l4_type,
+                                                        session::NatType nat_type);
     hal_ret_t build_rewrite_config(hal::flow_cfg_t &config,
                                           hal::flow_pgm_attrs_t &attrs,
                                           const header_rewrite_info_t &rewrite) const;

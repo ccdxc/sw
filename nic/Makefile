@@ -126,7 +126,7 @@ bazel-gtests-common:
 
 bazel-gtests: bazel-gtests-common
 ifneq ($(ARCH),aarch64)
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test/gtests:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gft hal/test/gtests:all
 	# TODO: Revisit
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
@@ -218,14 +218,14 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/qos_val.xml ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(VAL_TR)/qos_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/copp_val.xml ./nic/hal/test/gtests/copp_test --gtest_output="xml:$(VAL_TR)/copp_test.xml"
 
-gft-build: capsim-master sdk
+gft: capsim-master sdk
 	$(MAKE) capmodel
-	$(MAKE) -j4 -C p4
-	$(MAKE) -C asm
+	$(MAKE) -j4 -C p4 msft_gft
+	$(MAKE) -C asm msft_gft
 	$(MAKE) -C proto
 	$(MAKE) -j4 -C gen/proto/hal
-	bazel build --copt=-DGFT $(SDK_OPTS) hal:hal
-	bazel build --copt=-DGFT $(SDK_OPTS) hal/test/gtests:gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
+	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
 hal-rtl: capsim-master sdk

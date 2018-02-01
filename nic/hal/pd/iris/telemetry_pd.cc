@@ -48,6 +48,8 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
 {
     uint32_t dst_lport;
     mirror_actiondata action_data;
+    hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
+
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR("PD-MIRROR-SESSION:: NULL argument");
         return HAL_RET_INVALID_ARG;
@@ -91,12 +93,10 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
             action_data.actionid = MIRROR_ERSPAN_MIRROR_ID;
             action_data.mirror_action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
             action_data.mirror_action_u.mirror_erspan_mirror.dst_lport = dst_lport;
-            pd_tunnelif_t *pd_if = (pd_tunnelif_t*)if_get_pd_if(args->session->mirror_destination_u.er_span_dest.tunnel_if);
-            if (pd_if == NULL) {
-                HAL_TRACE_ERR("PD-MIRROR-SESSION:: cannot recover PD IF {}", args->session->id);
-                return HAL_RET_INVALID_ARG;
-            }
-            action_data.mirror_action_u.mirror_erspan_mirror.tunnel_rewrite_index  = pd_tunnelif_get_rw_idx(pd_if);
+            tif_args.hal_if = args->session->mirror_destination_u.er_span_dest.tunnel_if;
+            hal::pd::pd_tunnelif_get_rw_idx(&tif_args);
+            action_data.mirror_action_u.mirror_erspan_mirror.tunnel_rewrite_index =
+                tif_args.tnnl_rw_idx;
             break;
         }
         default:

@@ -1,6 +1,10 @@
 #ifndef __CAPRI_BARCO_RES_HPP__
 #define __CAPRI_BARCO_RES_HPP__
 
+#include "sdk/indexer.hpp"
+
+using sdk::lib::indexer;
+
 namespace hal {
 namespace pd {
 

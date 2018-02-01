@@ -423,6 +423,12 @@ typedef struct pd_rw_entry_args_s {
     rewrite_actions_en  rw_act;
 } __PACK__ pd_rw_entry_args_t;
 
+typedef enum twice_nat_actions_enum {
+    TWICE_NAT_NOP_ID = 0,
+    TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID = 1,
+    TWICE_NAT_MAX_ID = 2
+} twice_nat_actions_en;
+
 typedef struct pd_twice_nat_entry_args_s {
     ip_addr_t               nat_ip;
     uint16_t                nat_l4_port;
@@ -505,6 +511,19 @@ pd_debug_cli_write(uint32_t tableid,
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);
 uint32_t if_get_tm_oport(if_t *pi_if);
+
+typedef struct pd_tunnelif_get_rw_idx_args_s {
+    if_t *hal_if;
+    uint32_t tnnl_rw_idx;
+} __PACK__ pd_tunnelif_get_rw_idx_args_t;
+hal_ret_t pd_tunnelif_get_rw_idx(pd_tunnelif_get_rw_idx_args_t *args);
+
+typedef struct pd_lif_get_lport_id_args_s {
+    lif_t *pi_lif;
+    uint32_t lport_id;
+} __PACK__ pd_lif_get_lport_id_args_t;
+hal_ret_t lif_get_lport_id(pd_lif_get_lport_id_args_t *args);
+
 uint32_t ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, 
         rewrite_actions_en rw_act);
 uint32_t ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,

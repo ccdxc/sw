@@ -164,30 +164,30 @@ hal_ret_t flow_t::header_rewrite(const header_rewrite_info_t &header_rewrite)
 }
 
 
-rewrite_actions_enum
+hal::rewrite_actions_enum
 flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
                            session::NatType nat_type)
 {
     static int proto_tcp = 0, proto_udp = 1, proto_other = 2;
     static int af_v4 = 0, af_v6 = 1;
-    static rewrite_actions_enum snat_actions[2][3] = {
-        {REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID, REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID,
-         REWRITE_IPV4_NAT_SRC_REWRITE_ID},
-        {REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID, REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID,
-         REWRITE_IPV6_NAT_SRC_REWRITE_ID}
+    static hal::rewrite_actions_enum snat_actions[2][3] = {
+        {hal::REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID, hal::REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID,
+         hal::REWRITE_IPV4_NAT_SRC_REWRITE_ID},
+        {hal::REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID, hal::REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID,
+         hal::REWRITE_IPV6_NAT_SRC_REWRITE_ID}
     };
-    static rewrite_actions_enum dnat_actions[2][3] = {
-        {REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID, REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID,
-         REWRITE_IPV4_NAT_DST_REWRITE_ID},
-        {REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID, REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID,
-         REWRITE_IPV6_NAT_DST_REWRITE_ID}
+    static hal::rewrite_actions_enum dnat_actions[2][3] = {
+        {hal::REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID, hal::REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID,
+         hal::REWRITE_IPV4_NAT_DST_REWRITE_ID},
+        {hal::REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID, hal::REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID,
+         hal::REWRITE_IPV6_NAT_DST_REWRITE_ID}
     };
 
-    static rewrite_actions_enum twice_nat_actions[2][3] = {
-        {REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID, REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID,
-         REWRITE_IPV4_TWICE_NAT_REWRITE_ID},
-        {REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID, REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID,
-         REWRITE_IPV6_TWICE_NAT_REWRITE_ID}
+    static hal::rewrite_actions_enum twice_nat_actions[2][3] = {
+        {hal::REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID, hal::REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID,
+         hal::REWRITE_IPV4_TWICE_NAT_REWRITE_ID},
+        {hal::REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID, hal::REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID,
+         hal::REWRITE_IPV6_TWICE_NAT_REWRITE_ID}
     };
 
     int proto = (l4_type == FTE_HEADER_tcp) ? proto_tcp :
@@ -202,7 +202,7 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
     case session::NAT_TYPE_DNAT:
         return dnat_actions[af][proto];
     default:
-        return REWRITE_REWRITE_ID;        
+        return hal::REWRITE_REWRITE_ID;        
     }
 }
 
@@ -214,8 +214,8 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     bool snat, dnat;
     hal::pd::pd_rw_entry_args_t rw_key{};
 
-    attrs.rw_act = REWRITE_NOP_ID;
-    attrs.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+    attrs.rw_act = hal::REWRITE_NOP_ID;
+    attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_NOP_ID;
 
 
     // flags
@@ -238,7 +238,7 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     //VLAN rewrite
     if (rewrite.valid_flds.vlan_id) {
         attrs.tnnl_vnid = rewrite.ether.vlan_id;
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_VLAN_ID;
     }
 
     // L3 rewrite
@@ -330,7 +330,7 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     // TODO(goli) delete the idx on freeing flow
     if (config.nat_type == session::NAT_TYPE_TWICE_NAT){
         hal::pd::pd_twice_nat_entry_args_t args;
-        args.twice_nat_act = TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID;
+        args.twice_nat_act = hal::pd::TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID;
         args.nat_ip = config.nat_dip;
         args.nat_l4_port = config.nat_dport;
         ret = pd_twice_nat_add(&args, &attrs.twice_nat_idx);
@@ -340,8 +340,8 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     }
 
     // tunnel rewrite action
-    attrs.tnnl_rw_act = rewrite.valid_flds.vlan_id ? TUNNEL_REWRITE_ENCAP_VLAN_ID :
-        TUNNEL_REWRITE_NOP_ID;
+    attrs.tnnl_rw_act = rewrite.valid_flds.vlan_id ? hal::TUNNEL_REWRITE_ENCAP_VLAN_ID :
+        hal::TUNNEL_REWRITE_NOP_ID;
 
     return ret;
 }
@@ -353,11 +353,11 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
 
     switch (header.valid_hdrs&FTE_ENCAP_HEADERS) {
     case FTE_HEADER_vxlan:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_VXLAN_ID;
         attrs.tnnl_vnid = header.vxlan.vrf_id;
         break;
     case FTE_HEADER_erspan:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
         break;
 #ifdef PHASE2
     case FTE_HEADER_ipsec_esp:

@@ -1,12 +1,9 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/iris/hal_state_pd.hpp"
+//#include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 
-
 namespace hal {
-
 namespace pd {
-
 
 capri_barco_resources_t capri_barco_resources[] = {
     /* 0 - CRYPTO_BARCO_RES_ASYM_DMA_DESCR */
@@ -55,6 +52,7 @@ capri_barco_resources_t capri_barco_resources[] = {
     },
 };
 
+#if 0
 static inline indexer * capri_barco_indexer_get(capri_barco_res_type_t res)
 {
     indexer     *idxer = NULL;
@@ -79,6 +77,7 @@ static inline indexer * capri_barco_indexer_get(capri_barco_res_type_t res)
     assert(idxer != NULL);
     return idxer;
 }
+#endif
 
 hal_ret_t capri_barco_obj_alloc(capri_barco_resources_t *capri_barco_res,
         int32_t *res_id, uint64_t *res)
@@ -207,10 +206,29 @@ hal_ret_t capri_barco_res_allocator_init(void)
     uint16_t                idx;
     uint64_t                region = 0; 
     uint32_t                region_size = 0;
+    indexer                 *barco_indexers[CRYPTO_BARCO_RES_MAX];
 
+    barco_indexers[CRYPTO_BARCO_RES_ASYM_DMA_DESCR] =
+        sdk::lib::indexer::factory(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
+    HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_ASYM_DMA_DESCR] != NULL,
+                      HAL_RET_OOM);
+
+     barco_indexers[CRYPTO_BARCO_RES_HBM_MEM_512B] =
+         sdk::lib::indexer::factory(CRYPTO_HBM_MEM_COUNT_MAX);
+     HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_HBM_MEM_512B] != NULL,
+                       HAL_RET_OOM);
+
+     barco_indexers[CRYPTO_BARCO_RES_ASYM_KEY_DESCR] =
+         sdk::lib::indexer::factory(CRYPTO_ASYM_KEY_DESCR_COUNT_MAX);
+     HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_ASYM_KEY_DESCR] != NULL,
+                       HAL_RET_OOM);
+
+     barco_indexers[CRYPTO_BARCO_RES_SYM_MSG_DESCR] =
+         sdk::lib::indexer::factory(CRYPTO_SYM_MSG_DESCR_COUNT_MAX);
+     HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_SYM_MSG_DESCR] != NULL,
+                       HAL_RET_OOM);
 
     for (idx = CRYPTO_BARCO_RES_MIN; idx < CRYPTO_BARCO_RES_MAX; idx++) {
-
         region = get_start_offset(capri_barco_resources[idx].hbm_region_name);
         if (!region) {
             HAL_TRACE_ERR("Failed to retrieve {} memory region",
@@ -234,8 +252,7 @@ hal_ret_t capri_barco_res_allocator_init(void)
         }
         capri_barco_resources[idx].hbm_region = region;
         capri_barco_resources[idx].hbm_region_size = region_size;
-        capri_barco_resources[idx].idxer =
-            capri_barco_indexer_get((capri_barco_res_type_t)idx);
+        capri_barco_resources[idx].idxer = barco_indexers[(capri_barco_res_type_t)idx];
         HAL_TRACE_DEBUG("Setting up {} {} @ {:x}",
                 capri_barco_resources[idx].obj_count,
                 capri_barco_resources[idx].allocator_name,

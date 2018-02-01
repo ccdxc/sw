@@ -261,6 +261,8 @@ hal_state_pd::init(void)
     session_keys_idxr_ = sdk::lib::indexer::factory(CRYPTO_KEY_COUNT_MAX);
     HAL_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
 
+#if 0
+    // TODO: cleanup these variables
     crypto_asym_dma_descr_idxr_ = sdk::lib::indexer::factory(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
     HAL_ASSERT_RETURN((crypto_asym_dma_descr_idxr_ != NULL), false);
 
@@ -272,6 +274,7 @@ hal_state_pd::init(void)
 
     crypto_asym_key_descr_idxr_ = sdk::lib::indexer::factory(CRYPTO_ASYM_KEY_DESCR_COUNT_MAX);
     HAL_ASSERT_RETURN((crypto_asym_key_descr_idxr_!= NULL), false);
+#endif
     
     // initialize IPSECCB related data structures
     ipseccb_slab_ = slab::factory("IPSECCB PD", HAL_SLAB_IPSECCB_PD,
