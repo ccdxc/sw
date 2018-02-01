@@ -192,7 +192,7 @@ pd_enicif_upd_l2seg_clsc_change(pd_if_args_t *args)
 
     // Program input prop. entries for new l2segs
     ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, args->add_l2seg_clsclist,
-                                    args, TABLE_OPER_UPDATE);
+                                    args, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif: failed to pgm input prop."
                 "for new l2segs. ret:{}", ret);

@@ -94,5 +94,3 @@ objects:
             response : None
             pre_cb   : None
             post_cb  : None
-
-

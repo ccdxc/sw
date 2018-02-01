@@ -9,6 +9,7 @@ import os
 
 import utils
 from grpc_meta.msg import GrpcReqRspMsg 
+from grpc_meta.utils import ApiStatus
 
 def exit_error():
     sys.exit(1)
@@ -107,12 +108,6 @@ class ConfigObject():
         self.is_dol_created = is_dol_created
         self.is_dol_config_modified = False
 
-    def process_message(self, op_type, message):
-        assert not self.key_or_handle
-        self.key_or_handle = GrpcReqRspMsg.GetKeyObject(message)
-        self.ext_ref_objects = GrpcReqRspMsg.GetExtRefObjects(message)
-        return message
-
     def generate(self, op_type, ext_refs={}, external_constraints=None):
         crud_op = self._cfg_meta_object.OperHandler(op_type)
         message = crud_op._req_meta_obj.generate_message(key=self.key_or_handle,
@@ -131,10 +126,53 @@ class ConfigObject():
     def get_post_cb(self, op_type):
         crud_op = self._cfg_meta_object.OperHandler(op_type)
         return crud_op._post_cb
-    
+
+    def send_message(self, op_type, req_message, should_call_callback):
+        crud_oper = self._cfg_meta_object.OperHandler(op_type)
+        if crud_oper._api == None:
+            return ApiStatus.API_STATUS_OK
+
+        if crud_oper._pre_cb and should_call_callback:
+            crud_oper._pre_cb.call(self.data, req_message, None)
+
+        # Send the message to HAL
+        api = self.get_api(op_type)
+        print("Sending request message %s:%s:%s" % (self._cfg_meta_object,
+                                                    op_type.__name__, req_message))
+        resp_message = api(req_message)
+        print("Received response message %s:%s:%s" % (self._cfg_meta_object,
+                                                      op_type.__name__, resp_message))
+        api_status = GrpcReqRspMsg.GetApiStatusObject(resp_message)
+        print("API response status %s" % api_status)
+
+        if crud_oper._post_cb and should_call_callback:
+            crud_oper._post_cb.call(self.data, req_message, resp_message)
+        self._msg_cache[op_type] = req_message
+        return api_status, resp_message
+   
+    def dol_process(self, op_type, req_message=None, redo=False):
+        api_status = ApiStatus.API_STATUS_OK
+
+        # If this is the first time the message is being received from DOL, get some additional
+        # meta information from the object.
+        if op_type == ConfigObjectMeta.CREATE and not redo:
+            assert not self.key_or_handle
+            self.key_or_handle = GrpcReqRspMsg.GetKeyObject(req_message)
+            self.ext_ref_objects = GrpcReqRspMsg.GetExtRefObjects(req_message)
+            self.immutable_objects = GrpcReqRspMsg.GetImmutableObjects(req_message)
+
+        if op_type != ConfigObjectMeta.CREATE:
+            req_message = self.generate(op_type, ext_refs=self.ext_ref_objects, external_constraints=None)
+        elif redo:
+            req_message = self._msg_cache[op_type]
+
+        should_call_callback = (op_type != ConfigObjectMeta.CREATE and not redo)
+
+        return self.send_message(op_type, req_message, should_call_callback)
+ 
     def process(self, op_type, redo=False, ext_refs={}, dol_message=None, external_constraints=None):
         req_message = None
-        api_status = 'API_STATUS_OK'
+        api_status = ApiStatus.API_STATUS_OK
 
         if op_type == ConfigObjectMeta.CREATE and not redo:
             ext_refs = ext_refs
@@ -142,46 +180,23 @@ class ConfigObject():
             ext_refs = self.ext_ref_objects
         crud_oper = self._cfg_meta_object.OperHandler(op_type)
         if crud_oper._api == None:
-            return 'API_STATUS_OK'
-        if dol_message:
-            req_message = dol_message
+            return ApiStatus.API_STATUS_OK
+
+        if not redo:
+            req_message = self.generate(op_type, ext_refs=ext_refs, external_constraints=external_constraints)
         else:
-            if not redo:
-                req_message = self.generate(op_type, ext_refs=ext_refs, external_constraints=external_constraints)
-            else:
-                req_message = self._msg_cache[op_type]
+            req_message = self._msg_cache[op_type]
         
-        if not self.key_or_handle and (op_type == ConfigObjectMeta.CREATE):
+        if op_type == ConfigObjectMeta.CREATE and not redo:
             self.key_or_handle = GrpcReqRspMsg.GetKeyObject(req_message)
-            
-            if self.key_or_handle:
-                # Duplicate keys are not allowed.
-                if any((self.key_or_handle == obj.key_or_handle) for obj in self.object_helper._config_objects):
-                    if not self.is_dol_created:
-                        assert False
-        if op_type == ConfigObjectMeta.CREATE:
             self.ext_ref_objects = GrpcReqRspMsg.GetExtRefObjects(req_message)
             self.immutable_objects = GrpcReqRspMsg.GetImmutableObjects(req_message)
 
-        should_call_callback = not (self.is_dol_created and op_type == ConfigObjectMeta.CREATE)
+        should_call_callback = not (op_type == ConfigObjectMeta.CREATE and redo)
         if crud_oper._pre_cb and should_call_callback:
             crud_oper._pre_cb.call(self.data, req_message, None)
 
-        resp_message = None
-        api = self.get_api(op_type)
-        print("Sending request message %s:%s:%s" % (self._cfg_meta_object,
-                                                       op_type.__name__, req_message))
-        resp_message = api(req_message)
-        print("Received response message %s:%s:%s" % (self._cfg_meta_object,
-                                                      op_type.__name__, resp_message))
-        api_status = GrpcReqRspMsg.GetApiStatusObject(resp_message)
-        print("API response status %s" % api_status)
-
-        if crud_oper._post_cb and not dol_message:
-            crud_oper._post_cb.call(self.data, req_message, resp_message)
-        self._msg_cache[op_type] = req_message
-        return api_status, resp_message
-        
+        return self.send_message(op_type, req_message, should_call_callback)      
 # Top level manager for a given config spec. Catering to one service, can have multiple
 # objects with CRUD operations within a service.
 class ConfigObjectHelper(object):
@@ -201,6 +216,14 @@ class ConfigObjectHelper(object):
         self._service_object = service_object
         self.key_type = None
         self.sorted_ext_refs = []
+        # These are the objects for which CRUD operations will be done in HAL. 
+        self._config_objects = []
+        # These are the objects, that have been created as external references for the
+        # the config objects above.
+        self._reference_objects = []
+        # This list contains all the operations that have been ignored for this object.
+        self._ignore_ops = [ ConfigObjectHelper.__op_map[op.op] for op in self._service_object.ignore or []]
+
         print("Setting up config meta for the object %s in service %s"
                     %(service_object.name, spec.Service))
         self._cfg_meta = ConfigObjectMeta(self._pb2, self._stub, self._spec, self._service_object)
@@ -211,9 +234,6 @@ class ConfigObjectHelper(object):
             cfg_meta_mapper.Add(self.key_type, service_object, self)
         except AttributeError:
             self.key_type = None
-        self._config_objects = []
-        self._reference_objects = []
-        self._ignore_ops = [ ConfigObjectHelper.__op_map[op.op] for op in self._service_object.ignore or []]
 
     def __repr__(self):
         return str(self._spec.Service) + " " + str(self._service_object.name)
@@ -227,23 +247,25 @@ class ConfigObjectHelper(object):
             if obj.key_or_handle == key_or_handle:
                 obj._msg_cache[ConfigObjectMeta.CREATE] = message
                 obj.is_dol_created = True
+                # Setting the err return to True ensures that this message is just forwarded
+                # to HAL.
                 return None, True
                 
         config_object = ConfigObject(self._cfg_meta, self, is_dol_created=True)
         config_object.is_dol_created = True
-        ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, dol_message=message)
+        ret_status, _ = config_object.dol_process(ConfigObjectMeta.CREATE, message)
         self._config_objects.append(config_object)
         config_object._status = ConfigObject._CREATED
-        assert ret_status == 'API_STATUS_OK'
+        assert ret_status == ApiStatus.API_STATUS_OK
 
-        ret_status, _ = config_object.process(ConfigObjectMeta.UPDATE)
-        assert ret_status == 'API_STATUS_OK'
+        ret_status, _ = config_object.dol_process(ConfigObjectMeta.UPDATE)
+        assert ret_status == ApiStatus.API_STATUS_OK
 
-        ret_status, _ = config_object.process(ConfigObjectMeta.DELETE)
-        assert ret_status == 'API_STATUS_OK'
+        ret_status, _ = config_object.dol_process(ConfigObjectMeta.DELETE)
+        assert ret_status == ApiStatus.API_STATUS_OK
 
-        ret_status, resp_message = config_object.process(ConfigObjectMeta.CREATE, redo=True)
-        assert ret_status == 'API_STATUS_OK'
+        ret_status, resp_message = config_object.dol_process(ConfigObjectMeta.CREATE, redo=True)
+        assert ret_status == ApiStatus.API_STATUS_OK
         
         config_object.is_dol_config_modified = True
 
@@ -341,12 +363,14 @@ class ConfigObjectHelper(object):
     
 def AddConfigSpec(config_spec, hal_channel):
     for sub_service in config_spec.objects:
-       print("Adding config spec for service : " , config_spec.Service, sub_service.object.name)
+       print("Adding config spec for service : ", config_spec.Service, sub_service.object.name)
        ConfigObjectHelper(config_spec, hal_channel, sub_service.object)
 
 def GetOrderedConfigSpecs(rev = False):
     return cfg_meta_mapper.config_objects
 
+# This function has 2 return values. The second field indicates whether an error was encountered in 
+# processing, in which case the message will be sent as is to HAL.
 def CreateConfigFromDol(incoming_message):
     try:
         object_helper = cfg_meta_mapper.dol_message_map[type(incoming_message).__name__]
@@ -354,26 +378,35 @@ def CreateConfigFromDol(incoming_message):
         # This object hasn't been enabled in MBT as yet. Return
         print("Not reading config from DOL for %s" %(type(incoming_message)))
         return None, True
+    # We handle one request as a config object for which the CRUD operations can be performed.
+    # The message sent by DOL contains several requests, so split them here. 
     messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
     resp_message = None
     err = False
     for message in messages:
             curr_message, err = object_helper.ReadDolConfig(message)
+            # An error was encountered when performing one of the CRUD operations.
+            # Send an error back, so that this message is sent as is to HAL(without modifications)
             if err:
                 break
             if not resp_message:
                 resp_message = curr_message
             else:
+                # Combine all the repeated messages, as DOL expects this.
                 resp_message = GrpcReqRspMsg.combine_repeated_messages(curr_message,
                                                                        resp_message)
     return resp_message, err
 
+# This is used to create an object which is being referenced by another object.
 def CreateConfigFromKeyType(key_type, ext_refs, external_constraints=None):
     object_helper = cfg_meta_mapper.key_type_to_config[key_type]
-    ref_object = object_helper.CreateConfigObject('API_STATUS_OK', ext_refs, external_constraints)
+    ref_object = object_helper.CreateConfigObject(ApiStatus.API_STATUS_OK, ext_refs, external_constraints)
     object_helper._reference_objects.append(ref_object)
     return ref_object.key_or_handle
 
+# This is used to get the object being referred to from the key. Used in the context 
+# of callbacks, to check whether an object being referred to has some specific
+# attributes set.
 def GetConfigMessageFromKey(key):
     object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
     for reference_object in object_helper._reference_objects:

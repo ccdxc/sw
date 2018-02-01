@@ -9,6 +9,7 @@ import types_pb2
 import re
 from enum import Enum
 import random
+from grpc_meta.utils import ApiStatus
 
 grpc_meta_types.set_random_seed()
 
