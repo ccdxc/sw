@@ -136,7 +136,22 @@ pal_hw_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
 pal_ret_t
 pal_hw_ring_doorbell (uint64_t addr, uint64_t data)
 {
-    assert(0);
+    uint64_t mmap_addr = 0x0;
+
+    SDK_TRACE_DEBUG("%s: addr: 0x%x, data: 0x%x\n", __FUNCTION__, addr, data);
+
+    addr += 0x8000000;
+
+    int valid = pal_virtual_addr_from_physical_addr(addr, &mmap_addr);
+
+    if (valid == -1) {
+        SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
+                        __FUNCTION__, addr);
+        return PAL_RET_NOK;
+    }
+
+    *(uint64_t*)mmap_addr = data;
+
     return PAL_RET_OK;
 }
 

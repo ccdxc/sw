@@ -55,7 +55,8 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     txs_csr.cfw_scheduler_static.read();
     txs_csr.cfw_scheduler_static.hbm_base(txs_sched_hbm_base_addr);
 
-    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
+    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM ||
+        hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) {
         // Init txs hbm/sram.
         txs_csr.cfw_scheduler_glb.read();
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);

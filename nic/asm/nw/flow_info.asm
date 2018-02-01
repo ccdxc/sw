@@ -147,8 +147,6 @@ flow_miss_tcp_non_syn_first_pkt_drop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_hit_drop:
-  K_DBG_WR(0x60)
-  DBG_WR(0x6d, 0x6d)
   /* set drop bit */
   phvwr.e       p.control_metadata_drop_reason[DROP_FLOW_HIT], 1
   phvwr         p.capri_intrinsic_drop, 1
@@ -167,8 +165,6 @@ flow_hit_to_vm_bounce:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:
-  K_DBG_WR(0x60)
-  DBG_WR(0x6e, 0x6e)
   nop.e
   nop
 
