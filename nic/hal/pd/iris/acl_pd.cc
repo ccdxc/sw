@@ -73,32 +73,35 @@ populate_ip_common (nacl_swkey_t *key, nacl_swkey_mask_t *mask,
     mask->flow_lkp_metadata_lkp_proto_mask = ip_mask->ip_proto;
 
     switch(ip_key->ip_proto) {
-        case IP_PROTO_ICMP:
-        case IP_PROTO_ICMPV6:
-            key->flow_lkp_metadata_lkp_dport =
-                (ip_key->u.icmp.icmp_type << 8) | ip_key->u.icmp.icmp_code;
-            mask->flow_lkp_metadata_lkp_dport_mask =
-                (ip_mask->u.icmp.icmp_type << 8) | ip_mask->u.icmp.icmp_code;
-            break;
-        case IP_PROTO_TCP:
-            key->flow_lkp_metadata_lkp_sport = ip_key->u.tcp.sport;
-            mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->u.tcp.sport;
+    case IP_PROTO_ICMP:
+    case IP_PROTO_ICMPV6:
+        key->flow_lkp_metadata_lkp_dport =
+            (ip_key->u.icmp.icmp_type << 8) | ip_key->u.icmp.icmp_code;
+        mask->flow_lkp_metadata_lkp_dport_mask =
+            (ip_mask->u.icmp.icmp_type << 8) | ip_mask->u.icmp.icmp_code;
+        break;
 
-            key->flow_lkp_metadata_lkp_dport = ip_key->u.tcp.dport;
-            mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->u.tcp.dport;
+    case IP_PROTO_TCP:
+        key->flow_lkp_metadata_lkp_sport = ip_key->u.tcp.sport;
+        mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->u.tcp.sport;
 
-            key->tcp_flags = ip_key->u.tcp.tcp_flags;
-            mask->tcp_flags_mask = ip_mask->u.tcp.tcp_flags;
-            break;
-        case IP_PROTO_UDP:
-            key->flow_lkp_metadata_lkp_sport = ip_key->u.udp.sport;
-            mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->u.udp.sport;
+        key->flow_lkp_metadata_lkp_dport = ip_key->u.tcp.dport;
+        mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->u.tcp.dport;
 
-            key->flow_lkp_metadata_lkp_dport = ip_key->u.udp.dport;
-            mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->u.udp.dport;
-            break;
-        default:
-            break;
+        key->tcp_flags = ip_key->u.tcp.tcp_flags;
+        mask->tcp_flags_mask = ip_mask->u.tcp.tcp_flags;
+        break;
+
+    case IP_PROTO_UDP:
+        key->flow_lkp_metadata_lkp_sport = ip_key->u.udp.sport;
+        mask->flow_lkp_metadata_lkp_sport_mask = ip_mask->u.udp.sport;
+
+        key->flow_lkp_metadata_lkp_dport = ip_key->u.udp.dport;
+        mask->flow_lkp_metadata_lkp_dport_mask = ip_mask->u.udp.dport;
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -146,8 +149,6 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     uint16_t                               ten_mask = 0;
     uint8_t                                ten_shift = 0;
 
-    // ms = acl_get_match_spec(pi_acl);
-    // as = acl_get_action_spec(pi_acl);
     ms = &pi_acl->match_spec;
     as = &pi_acl->action_spec;
 
@@ -162,82 +163,82 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 
     // Populate the data
     switch(as->action) {
-        case acl::ACL_ACTION_LOG:
-            data.actionid = NACL_NACL_PERMIT_ID;
-            data.nacl_action_u.nacl_nacl_permit.log_en = 1;
+    case acl::ACL_ACTION_LOG:
+        data.actionid = NACL_NACL_PERMIT_ID;
+        data.nacl_action_u.nacl_nacl_permit.log_en = 1;
+        data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
+        data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_LOG;
+        populate_permit_actions(&data, as);
+        break;
+    case acl::ACL_ACTION_REDIRECT:
+        data.actionid = NACL_NACL_PERMIT_ID;
+
+        redirect_if = find_if_by_handle(as->redirect_if_handle);
+        data.nacl_action_u.nacl_nacl_permit.dst_lport_en = 1;
+        data.nacl_action_u.nacl_nacl_permit.dst_lport = if_get_lport_id(redirect_if);
+
+        if (if_is_cpu_if(redirect_if)) {
+            // If going to CPU, do not do any rewrites on packet. So set
+            // the rewrite indexes to 0 (nop)
             data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
-            data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_LOG;
-            populate_permit_actions(&data, as);
-            break;
-        case acl::ACL_ACTION_REDIRECT:
-            data.actionid = NACL_NACL_PERMIT_ID;
-
-            redirect_if = find_if_by_handle(as->redirect_if_handle);
-            data.nacl_action_u.nacl_nacl_permit.dst_lport_en = 1;
-            data.nacl_action_u.nacl_nacl_permit.dst_lport = if_get_lport_id(redirect_if);
-
-            if (if_is_cpu_if(redirect_if)) {
-                // If going to CPU, do not do any rewrites on packet. So set
-                // the rewrite indexes to 0 (nop)
-                data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_REDIRECT;
-                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
-            } else {
-                // TODO: Figure out how to get these values
-                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_en = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
-                data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
+            data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_REDIRECT;
+            data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
+        } else {
+            // TODO: Figure out how to get these values
+            data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 0;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_en = 0;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 0;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
+            data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
 #ifdef ACL_DOL_TEST_ONLY
-                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_index =
-                    as->int_as.rw_idx;
-                data.nacl_action_u.nacl_nacl_permit.rewrite_flags =
-                    (as->int_as.mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
-                    (as->int_as.mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
-                    (as->int_as.ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
+            data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_index =
+                as->int_as.rw_idx;
+            data.nacl_action_u.nacl_nacl_permit.rewrite_flags =
+                (as->int_as.mac_sa_rewrite ? REWRITE_FLAGS_MAC_SA : 0) |
+                (as->int_as.mac_da_rewrite ? REWRITE_FLAGS_MAC_DA : 0) |
+                (as->int_as.ttl_dec ? REWRITE_FLAGS_TTL_DEC : 0);
 
-                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
-                if (if_is_tunnel_if(redirect_if)) {
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
-                        (tunnelif_get_rw_idx((pd_tunnelif_t *)redirect_if->pd_if));
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
-                        as->int_as.tnnl_vnid;
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 1;
-                } else {
-                    // support only non-native segments for DOL testing
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
-                        as->int_as.tnnl_vnid;
-                    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
-                        g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
-                }
-#endif
+            data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
+            if (if_is_tunnel_if(redirect_if)) {
+                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
+                    (tunnelif_get_rw_idx((pd_tunnelif_t *)redirect_if->pd_if));
+                data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
+                    as->int_as.tnnl_vnid;
+                data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 1;
+            } else {
+                // support only non-native segments for DOL testing
+                data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
+                    as->int_as.tnnl_vnid;
+                data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
+                    g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
             }
+#endif
+        }
 
-            populate_permit_actions(&data, as);
-            break;
-        case acl::ACL_ACTION_PERMIT:
-            data.actionid = NACL_NACL_PERMIT_ID;
-            populate_permit_actions(&data, as);
-            break;
-        case acl::ACL_ACTION_DENY:
-            data.actionid = NACL_NACL_DENY_ID;
-            break;
-        default:
-            data.actionid = NACL_NOP_ID;
-            break;
+        populate_permit_actions(&data, as);
+        break;
+    case acl::ACL_ACTION_PERMIT:
+        data.actionid = NACL_NACL_PERMIT_ID;
+        populate_permit_actions(&data, as);
+        break;
+    case acl::ACL_ACTION_DENY:
+        data.actionid = NACL_NACL_DENY_ID;
+        break;
+    default:
+        data.actionid = NACL_NOP_ID;
+        break;
     }
 
     // Populate the Key and Mask
@@ -276,84 +277,84 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     }
 
     switch(ms->acl_type) {
-        case ACL_TYPE_NONE:
-            // Nothing to do
-            break;
-        case ACL_TYPE_ETH:
-            // Mac address needs to be in little-endian format while
-            // passing to p4pd. So convert to uint64 and do a memcpy
-            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
-            mask.flow_lkp_metadata_lkp_type_mask =
-                ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+    case ACL_TYPE_NONE:
+        // Nothing to do
+        break;
+    case ACL_TYPE_ETH:
+        // Mac address needs to be in little-endian format while
+        // passing to p4pd. So convert to uint64 and do a memcpy
+        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
+        mask.flow_lkp_metadata_lkp_type_mask =
+            ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
 
-            memcpy(key.flow_lkp_metadata_lkp_src, eth_key->mac_sa, sizeof(mac_addr_t));
-            memrev(key.flow_lkp_metadata_lkp_src, sizeof(mac_addr_t));
-            memcpy(mask.flow_lkp_metadata_lkp_src_mask, eth_mask->mac_sa, sizeof(mac_addr_t));
-            memrev(mask.flow_lkp_metadata_lkp_src_mask, sizeof(mac_addr_t));
+        memcpy(key.flow_lkp_metadata_lkp_src, eth_key->mac_sa, sizeof(mac_addr_t));
+        memrev(key.flow_lkp_metadata_lkp_src, sizeof(mac_addr_t));
+        memcpy(mask.flow_lkp_metadata_lkp_src_mask, eth_mask->mac_sa, sizeof(mac_addr_t));
+        memrev(mask.flow_lkp_metadata_lkp_src_mask, sizeof(mac_addr_t));
 
-            memcpy(key.flow_lkp_metadata_lkp_dst, eth_key->mac_da, sizeof(mac_addr_t));
-            memrev(key.flow_lkp_metadata_lkp_dst, sizeof(mac_addr_t));
-            memcpy(mask.flow_lkp_metadata_lkp_dst_mask, eth_mask->mac_da, sizeof(mac_addr_t));
-            memrev(mask.flow_lkp_metadata_lkp_dst_mask, sizeof(mac_addr_t));
+        memcpy(key.flow_lkp_metadata_lkp_dst, eth_key->mac_da, sizeof(mac_addr_t));
+        memrev(key.flow_lkp_metadata_lkp_dst, sizeof(mac_addr_t));
+        memcpy(mask.flow_lkp_metadata_lkp_dst_mask, eth_mask->mac_da, sizeof(mac_addr_t));
+        memrev(mask.flow_lkp_metadata_lkp_dst_mask, sizeof(mac_addr_t));
 
-            key.flow_lkp_metadata_lkp_dport = eth_key->ether_type;
-            mask.flow_lkp_metadata_lkp_dport_mask = eth_mask->ether_type;
-            break;
-        case ACL_TYPE_IP:
-            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4 &
-                                                FLOW_KEY_LOOKUP_TYPE_IPV6;
-            mask.flow_lkp_metadata_lkp_type_mask = ~(FLOW_KEY_LOOKUP_TYPE_IPV4 ^
-                                                    FLOW_KEY_LOOKUP_TYPE_IPV6);
-            populate_ip_common(&key, &mask, ip_key, ip_mask);
-            break;
-        case ACL_TYPE_IPv4:
-            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
-            mask.flow_lkp_metadata_lkp_type_mask =
-                ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+        key.flow_lkp_metadata_lkp_dport = eth_key->ether_type;
+        mask.flow_lkp_metadata_lkp_dport_mask = eth_mask->ether_type;
+        break;
+    case ACL_TYPE_IP:
+        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4 &
+                                            FLOW_KEY_LOOKUP_TYPE_IPV6;
+        mask.flow_lkp_metadata_lkp_type_mask = ~(FLOW_KEY_LOOKUP_TYPE_IPV4 ^
+                                                FLOW_KEY_LOOKUP_TYPE_IPV6);
+        populate_ip_common(&key, &mask, ip_key, ip_mask);
+        break;
+    case ACL_TYPE_IPv4:
+        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+        mask.flow_lkp_metadata_lkp_type_mask =
+            ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
 
-            memcpy(key.flow_lkp_metadata_lkp_src,
-                   &ip_key->sip.addr.v4_addr,
-                   sizeof(ipv4_addr_t));
-            memcpy(mask.flow_lkp_metadata_lkp_src_mask,
-                   &ip_mask->sip.addr.v4_addr,
-                   sizeof(ipv4_addr_t));
+        memcpy(key.flow_lkp_metadata_lkp_src,
+               &ip_key->sip.addr.v4_addr,
+               sizeof(ipv4_addr_t));
+        memcpy(mask.flow_lkp_metadata_lkp_src_mask,
+               &ip_mask->sip.addr.v4_addr,
+               sizeof(ipv4_addr_t));
 
-            memcpy(key.flow_lkp_metadata_lkp_dst,
-                   &ip_key->dip.addr.v4_addr,
-                   sizeof(ipv4_addr_t));
-            memcpy(mask.flow_lkp_metadata_lkp_dst_mask,
-                   &ip_mask->dip.addr.v4_addr,
-                   sizeof(ipv4_addr_t));
+        memcpy(key.flow_lkp_metadata_lkp_dst,
+               &ip_key->dip.addr.v4_addr,
+               sizeof(ipv4_addr_t));
+        memcpy(mask.flow_lkp_metadata_lkp_dst_mask,
+               &ip_mask->dip.addr.v4_addr,
+               sizeof(ipv4_addr_t));
 
-            populate_ip_common(&key, &mask, ip_key, ip_mask);
-            break;
-        case ACL_TYPE_IPv6:
-            key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
-            mask.flow_lkp_metadata_lkp_type_mask =
-                ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+        populate_ip_common(&key, &mask, ip_key, ip_mask);
+        break;
+    case ACL_TYPE_IPv6:
+        key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV6;
+        mask.flow_lkp_metadata_lkp_type_mask =
+            ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
 
-            memcpy(key.flow_lkp_metadata_lkp_src,
-                   ip_key->sip.addr.v6_addr.addr8,
-                   IP6_ADDR8_LEN);
-            memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
-            memcpy(mask.flow_lkp_metadata_lkp_src_mask,
-                   ip_mask->sip.addr.v6_addr.addr8,
-                   IP6_ADDR8_LEN);
-            memrev(mask.flow_lkp_metadata_lkp_src_mask, sizeof(mask.flow_lkp_metadata_lkp_src_mask));
+        memcpy(key.flow_lkp_metadata_lkp_src,
+               ip_key->sip.addr.v6_addr.addr8,
+               IP6_ADDR8_LEN);
+        memrev(key.flow_lkp_metadata_lkp_src, sizeof(key.flow_lkp_metadata_lkp_src));
+        memcpy(mask.flow_lkp_metadata_lkp_src_mask,
+               ip_mask->sip.addr.v6_addr.addr8,
+               IP6_ADDR8_LEN);
+        memrev(mask.flow_lkp_metadata_lkp_src_mask, sizeof(mask.flow_lkp_metadata_lkp_src_mask));
 
-            memcpy(key.flow_lkp_metadata_lkp_dst,
-                   ip_key->dip.addr.v6_addr.addr8,
-                   IP6_ADDR8_LEN);
-            memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
-            memcpy(mask.flow_lkp_metadata_lkp_dst_mask,
-                   ip_mask->dip.addr.v6_addr.addr8,
-                   IP6_ADDR8_LEN);
-            memrev(mask.flow_lkp_metadata_lkp_dst_mask, sizeof(mask.flow_lkp_metadata_lkp_dst_mask));
+        memcpy(key.flow_lkp_metadata_lkp_dst,
+               ip_key->dip.addr.v6_addr.addr8,
+               IP6_ADDR8_LEN);
+        memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
+        memcpy(mask.flow_lkp_metadata_lkp_dst_mask,
+               ip_mask->dip.addr.v6_addr.addr8,
+               IP6_ADDR8_LEN);
+        memrev(mask.flow_lkp_metadata_lkp_dst_mask, sizeof(mask.flow_lkp_metadata_lkp_dst_mask));
 
-            populate_ip_common(&key, &mask, ip_key, ip_mask);
-            break;
-        case ACL_TYPE_INVALID:
-            return HAL_RET_ERR;
+        populate_ip_common(&key, &mask, ip_key, ip_mask);
+        break;
+    case ACL_TYPE_INVALID:
+        return HAL_RET_ERR;
     }
     // TODO:Populate the below values
     key.control_metadata_flow_miss_ingress = 0;

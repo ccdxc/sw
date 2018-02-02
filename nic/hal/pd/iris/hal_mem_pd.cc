@@ -43,7 +43,6 @@
 #include "nic/hal/pd/iris/proxyrcb_pd.hpp"
 #include "nic/hal/pd/iris/proxyccb_pd.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
-// #include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
 namespace hal {

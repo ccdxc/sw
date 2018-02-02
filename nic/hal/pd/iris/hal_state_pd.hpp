@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __HAL_STATE_PD_HPP__
 #define __HAL_STATE_PD_HPP__
 

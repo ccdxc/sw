@@ -97,8 +97,8 @@ bazel-build: capsim-master sdk
 	# HAL PI
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
 	# Iris PD
-	$(MAKE) iris
-	$(MAKE) stub_pd
+	$(MAKE) pd_iris
+	$(MAKE) pd_stub
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
@@ -109,14 +109,14 @@ ifneq ($(ARCH),aarch64)
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/proxy-e2etest:all 
 endif
 
-iris:
+pd_iris:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
 
-stub_pd:
+pd_stub:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
 
-gft_pd:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/gft
+pd_gft:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --define p4pipeline=gft $(SDK_OPTS) hal/pd/gft
 
 bazel-gtests-common:
 	# PI gtests
@@ -242,7 +242,7 @@ gft: capsim-master sdk
 	$(MAKE) -C proto
 	$(MAKE) -j4 -C gen/proto/hal
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
-	$(MAKE) gft_pd
+	$(MAKE) pd_gft
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib

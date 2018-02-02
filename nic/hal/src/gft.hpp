@@ -241,6 +241,8 @@ typedef struct gft_exact_match_flow_entry_s {
     uint32_t                       num_gft_hdr_group_xpositions;       // # of header group transpositions
     gft_hdr_group_exact_match_t    *exact_matches;                     // exact match list
     gft_hdr_group_xposition_t      *hdr_group_xpositions;              // header transposition list
+
+    void                           *pd;                                // PD state, if any
 } __PACK__ gft_exact_match_flow_entry_t;
 
 #endif    // __GFT_HPP__

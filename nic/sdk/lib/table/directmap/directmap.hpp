@@ -25,7 +25,6 @@ typedef bool (*direct_map_iterate_func_t)(uint32_t index, void *data,
                                           const void *cb_data);
 
 class directmap {
-
 public:
     // Note: Stats are mutually exclusive for every API. Only one stat will
     //       be incremented for an API call.
@@ -53,6 +52,7 @@ public:
         STATS_ITER_FAIL_HW,
         STATS_MAX
     };
+
 private:
 
     enum api {
@@ -94,6 +94,7 @@ private:
     directmap(char *name, uint32_t id, uint32_t capacity, 
               uint32_t swdata_len, bool sharing_en = false);
     ~directmap();
+
 public:
     // factory & destroy methods
     static directmap *factory(char *name, uint32_t id, 
@@ -125,6 +126,8 @@ public:
 
 }    // namespace table
 }    // namespace sdk
+
+using sdk::table::directmap;
 
 #endif // __SDK_DIRECT_MAP_HPP__
 

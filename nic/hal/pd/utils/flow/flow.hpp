@@ -252,4 +252,7 @@ public:
 }   // namespace utils
 }   // namespace pd
 }   // namespace hal
+
+using hal::pd::utils::Flow;
+
 #endif // __FLOW_HPP__
