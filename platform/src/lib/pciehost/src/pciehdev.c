@@ -21,10 +21,11 @@
 #include "pciehw.h"
 
 typedef struct pciehdev_data_s {
-    pciehdev_params_t devparams;
+    pciehdev_openparams_t params;
     u_int32_t finalized:1;
     u_int32_t memtun_br:1;
     pciehdev_t *root;
+    pciehdev_evhandler_t evhandler;
 } pciehdev_data_t;
 
 static pciehdev_data_t pciehdev_data;
@@ -38,37 +39,35 @@ pciehdev_get_data(void)
 /******************************************************************/
 
 int
-pciehdev_open(pciehdev_params_t *devparams)
+pciehdev_open(pciehdev_openparams_t *params)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
     pciehw_params_t hwparams;
     int r;
 
-    if (devparams) {
-        pdevdata->devparams = *devparams;
+    if (params) {
+        pdevdata->params = *params;
     }
 
-    if (pdevdata->devparams.vendorid == 0) {
+    if (pdevdata->params.vendorid == 0) {
         /* vendorid defaults to Pensando. */
-        pdevdata->devparams.vendorid = PCI_VENDOR_ID_PENSANDO;
+        pdevdata->params.vendorid = PCI_VENDOR_ID_PENSANDO;
     }
-    if (pdevdata->devparams.subvendorid == 0) {
+    if (pdevdata->params.subvendorid == 0) {
         /* subvendorid defaults to vendorid. */
-        pdevdata->devparams.subvendorid = pdevdata->devparams.vendorid;
+        pdevdata->params.subvendorid = pdevdata->params.vendorid;
     }
-    if (pdevdata->devparams.cap_gen == 0) {
-        pdevdata->devparams.cap_gen = 4;
+    if (pdevdata->params.cap_gen == 0) {
+        pdevdata->params.cap_gen = 4;
     }
-    if (pdevdata->devparams.cap_width == 0) {
-        pdevdata->devparams.cap_width = 16;
+    if (pdevdata->params.cap_width == 0) {
+        pdevdata->params.cap_width = 16;
     }
 
     memset(&hwparams, 0, sizeof(hwparams));
-    hwparams.inithw = pdevdata->devparams.inithw;
-    hwparams.fake_bios_scan = pdevdata->devparams.fake_bios_scan;
-    hwparams.force_notify_cfg = pdevdata->devparams.force_notify_cfg;
-    hwparams.force_notify_bar = pdevdata->devparams.force_notify_bar;
-    hwparams.first_bus = pdevdata->devparams.first_bus;
+    hwparams.inithw = pdevdata->params.inithw;
+    hwparams.fake_bios_scan = pdevdata->params.fake_bios_scan;
+    hwparams.first_bus = pdevdata->params.first_bus;
     if ((r = pciehw_open(&hwparams)) < 0) {
         return r;
     }
@@ -192,7 +191,7 @@ int
 pciehdev_finalize(void)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
-    u_int8_t nextbus = pdevdata->devparams.first_bus;
+    u_int8_t nextbus = pdevdata->params.first_bus;
 
     if (pdevdata->finalized) {
         return -EALREADY;
@@ -209,12 +208,6 @@ pciehdev_finalize(void)
     pciehw_finalize_topology(pdevdata->root);
     pdevdata->finalized = 1;
     return 0;
-}
-
-void *
-pciehdev_get_priv(pciehdev_t *pdev)
-{
-    return pdev->priv;
 }
 
 void
@@ -440,9 +433,27 @@ pciehdev_get_name(pciehdev_t *pdev)
     return pdev->name;
 }
 
-pciehdev_params_t *
+pciehdev_openparams_t *
 pciehdev_get_params(void)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
-    return &pdevdata->devparams;
+    return &pdevdata->params;
+}
+
+int
+pciehdev_register_event_handler(pciehdev_evhandler_t evhandler)
+{
+    pciehdev_data_t *pdevdata = pciehdev_get_data();
+    pdevdata->evhandler = evhandler;
+    return 0;
+}
+
+void
+pciehdev_event(pciehdev_t *pdev, const pciehdev_eventdata_t *evd)
+{
+    pciehdev_data_t *pdevdata = pciehdev_get_data();
+
+    if (pdevdata->evhandler) {
+        pdevdata->evhandler(pdev, evd);
+    }
 }

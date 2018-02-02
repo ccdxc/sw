@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -43,7 +44,7 @@ pciehwdev_get(pciehwdevh_t hwdevh)
 }
 
 pciehwdevh_t
-pciehwdev_geth(pciehwdev_t *phwdev)
+pciehwdev_geth(const pciehwdev_t *phwdev)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
@@ -55,7 +56,7 @@ pciehwdev_geth(pciehwdev_t *phwdev)
  * copying into a static buf and returning a pointer to that.
  */
 char *
-pciehwdev_get_name(pciehwdev_t *phwdev)
+pciehwdev_get_name(const pciehwdev_t *phwdev)
 {
     static char name[32];
     pciehw_memcpy(name, phwdev->name, sizeof(name));
@@ -80,7 +81,7 @@ pciehwdev_find_by_name(const char *name)
 }
 
 void
-pciehwdev_get_cfgspace(pciehwdev_t *phwdev, cfgspace_t *cs)
+pciehwdev_get_cfgspace(const pciehwdev_t *phwdev, cfgspace_t *cs)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
@@ -175,6 +176,7 @@ pciehw_init(pciehw_t *phw)
     pciehw_cfg_init(phw);
     pciehw_bar_init(phw);
     pciehw_vfstride_init(phw);
+    pciehw_port_init(phw);
     pciehw_hdrt_init(phw);
     pciehw_portmap_init(phw);
     pciehw_notify_init(phw);
@@ -360,6 +362,7 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     pciehdev_t *parent, *peer, *child;
     int lif;
 
+    phwdev->pdev = pdev;
     phwdev->bdf = pciehdev_get_bdf(pdev);
     phwdev->port = pciehdev_get_port(pdev);
     phwdev->intrb = pciehdev_get_intrb(pdev);
@@ -372,8 +375,6 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     }
     parent = pciehdev_get_parent(pdev);
     phwdev->parenth = parent ? pciehwdev_geth(pciehdev_get_hwdev(parent)) : 0;
-
-    pciehw_cfg_finalize(pdev);
 
     /*
      * Don't load the root into hardware.  root represents the
@@ -388,6 +389,8 @@ pciehw_finalize_dev(pciehdev_t *pdev)
         }
         pciehw_intr_init(phwdev);
     }
+
+    pciehw_cfg_finalize(pdev);
 
     child = pciehdev_get_child(pdev);
     if (child) {
@@ -669,33 +672,34 @@ pciehw_poll(void)
 void *
 pciehw_memset(void *s, int c, size_t n)
 {
-#if 0
-    u_int8_t *p;
-    int i;
+    if (((uintptr_t)s & 0x3) == 0 && (n & 0x3) == 0) {
+        volatile u_int32_t *p;
+        int i;
 
-    for (p = s, i = 0; i < n; i++, p++) {
-        *p = c;
-    }
-#else
-    u_int32_t *p;
-    int i;
+        c &= 0xff;
+        c = ((c << 0) |
+             (c << 8) |
+             (c << 16) |
+             (c << 24));
+        for (p = s, i = 0; i < n >> 2; i++, p++) {
+            *p = c;
+        }
+    } else {
+        volatile u_int8_t *p;
+        int i;
 
-    c &= 0xff;
-    c = ((c << 0) |
-         (c << 8) |
-         (c << 16) |
-         (c << 24));
-    for (p = s, i = 0; i < n >> 2; i++, p++) {
-        *p = c;
+        for (p = s, i = 0; i < n; i++, p++) {
+            *p = c;
+        }
     }
-#endif
+
     return s;
 }
 
 void *
 pciehw_memcpy(void *dst, const void *src, size_t n)
 {
-    u_int8_t *d = dst;
+    volatile u_int8_t *d = dst;
     const u_int8_t *s = src;
     int i;
 

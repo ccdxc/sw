@@ -12,8 +12,10 @@ SOURCES = \
 	prt.c \
 	vfstride.c \
 	hdrt.c \
+	port.c \
 	portmap.c \
 	notify.c \
+	event.c \
 	intr.c \
 	reset.c \
 	$(NULL)

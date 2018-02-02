@@ -39,8 +39,9 @@ pmt_type_str(int type)
 }
 
 static int
-pmt_alloc(pciehw_t *phw, const pciehwdevh_t phwdevh)
+pmt_alloc(const pciehwdevh_t phwdevh)
 {
+    pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehw_spmt_t *spmt;
     int i;
@@ -54,6 +55,19 @@ pmt_alloc(pciehw_t *phw, const pciehwdevh_t phwdevh)
     /* out of pmt entries? */
     pciehsys_error("pmt_alloc failed for 0x%08x\n", phwdevh);
     return -1;
+}
+
+static void
+pmt_free(const int pmti)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+
+    assert(pmti >= 0 && pmti < pmt_size());
+    assert(spmt->owner != 0);
+
+    spmt->owner = 0;
 }
 
 static u_int64_t
@@ -71,29 +85,25 @@ pmr_addr(const int pmti)
 }
 
 static void
-pmt_get_tcam(pciehw_t *phw, const int pmti, pmt_tcam_entry_t *e)
+pmt_get_tcam(const int pmti, pmt_tcam_entry_t *e)
 {
     pal_reg_rd32w(pmt_addr(pmti), e->words, PMT_NWORDS);
 }
 
 static void
-pmt_set_tcam(pciehw_t *phw, const int pmti, const pmt_tcam_entry_t *e)
+pmt_set_tcam(const int pmti, const pmt_tcam_entry_t *e)
 {
     pal_reg_wr32w(pmt_addr(pmti), e->words, PMT_NWORDS);
 }
 
 static void
-pmt_get_pmr(pciehw_t *phw,
-            const int pmti,
-            pmr_t pmr)
+pmt_get_pmr(const int pmti, pmr_t pmr)
 {
     pal_reg_rd32w(pmr_addr(pmti), pmr, PMR_NWORDS);
 }
 
 static void
-pmt_set_pmr(pciehw_t *phw,
-            const int pmti,
-            const pmr_t pmr)
+pmt_set_pmr(const int pmti, const pmr_t pmr)
 {
     pal_reg_wr32w(pmr_addr(pmti), pmr, PMR_NWORDS);
 }
@@ -102,16 +112,16 @@ pmt_set_pmr(pciehw_t *phw,
  * Retrieve an entry from hardware.
  */
 static void
-pmt_get(pciehw_t *phw, const int pmti, pmt_t *p)
+pmt_get(const int pmti, pmt_t *p)
 {
     pmt_tcam_entry_t e;
 
-    pmt_get_tcam(phw, pmti, &e);
+    pmt_get_tcam(pmti, &e);
     p->valid = e.v;
     p->data = e.x;
     p->mask = e.x ^ e.y;
 
-    pmt_get_pmr(phw, pmti, p->pmr);
+    pmt_get_pmr(pmti, p->pmr);
 }
 
 /*
@@ -128,7 +138,7 @@ pmt_get(pciehw_t *phw, const int pmti, pmt_t *p)
  * {1 1} (never match)
  */
 static void
-pmt_set(pciehw_t *phw, const int pmti, const pmt_t *p)
+pmt_set(const int pmti, const pmt_t *p)
 {
     pmt_tcam_entry_t e;
 
@@ -140,16 +150,16 @@ pmt_set(pciehw_t *phw, const int pmti, const pmt_t *p)
      * Set PMR entry first, then TCAM, so by the time a tcam search
      * can hit an entry the corresponding ram entry is valid too.
      */
-    pmt_set_pmr(phw, pmti, p->pmr);
-    pmt_set_tcam(phw, pmti, &e);
+    pmt_set_pmr(pmti, p->pmr);
+    pmt_set_tcam(pmti, &e);
 }
 
 static void
-pmt_clr_tcam(pciehw_t *phw, const int pmti)
+pmt_clr_tcam(const int pmti)
 {
-    pmt_tcam_entry_t e = { 0 };
+    const pmt_tcam_entry_t e = { 0 };
 
-    pmt_set_tcam(phw, pmti, &e);
+    pmt_set_tcam(pmti, &e);
 }
 
 /*
@@ -158,40 +168,33 @@ pmt_clr_tcam(pciehw_t *phw, const int pmti)
  * don't write anything to PMR.
  */
 static void
-pmt_clr(pciehw_t *phw, const int pmti)
+pmt_clr(const int pmti)
 {
-    pmt_clr_tcam(phw, pmti);
+    pmt_clr_tcam(pmti);
 }
 
 static void
-pmt_set_cfg(pciehw_t *phw,
-            pciehwdev_t *phwdev,
+pmt_set_cfg(pciehwdev_t *phwdev,
             const int pmti,
             const u_int64_t cfgpa,
             const u_int16_t addr,
             const u_int16_t addrm,
             const u_int8_t romsksel,
-            const int oflags)
+            const u_int8_t notify,
+            const u_int8_t indirect)
 {
     const u_int64_t cfgpadw = cfgpa >> 2;
     const u_int16_t bdf = phwdev->bdf;
-    int rw, rw_m;
     pmt_t pmt = { 0 };
     pmt_cfg_t *d = (pmt_cfg_t *)&pmt.data;
     pmt_cfg_t *m = (pmt_cfg_t *)&pmt.mask;
     pmr_cfg_t *r = (pmr_cfg_t *)&pmt.pmr;
 
-    switch (oflags) {
-    case O_RDONLY: rw = 0; rw_m = 1; break;
-    case O_WRONLY: rw = 1; rw_m = 1; break;
-    case O_RDWR:   rw = 0; rw_m = 0; break;
-    }
-
     d->valid     = 1;
     d->tblid     = 0;
     d->type      = PMT_TYPE_CFG;
     d->port      = phwdev->port;
-    d->rw        = rw;
+    d->rw        = 0;
     d->bdf       = bdf;
     d->addrdw    = addr >> 2;
     d->rsrv      = 0x0;
@@ -200,7 +203,7 @@ pmt_set_cfg(pciehw_t *phw,
     m->tblid     = 0x0; /* don't care, for now */
     m->type      = 0x7;
     m->port      = 0x7;
-    m->rw        = rw_m;
+    m->rw        = 0;
     m->bdf       = 0xffff;
     m->addrdw    = addrm >> 2;
     m->rsrv      = 0x0; /* don't care */
@@ -208,8 +211,8 @@ pmt_set_cfg(pciehw_t *phw,
     r->valid     = 1;
     r->type      = PMT_TYPE_CFG;
     r->vfbase    = 0;
-    r->indirect  = 0;
-    r->notify    = phw->hwparams.force_notify_cfg;
+    r->indirect  = indirect;
+    r->notify    = notify;
     r->pstart    = phwdev->port;
     r->bstart    = bdf_to_bus(bdf);
     r->dstart    = bdf_to_dev(bdf);
@@ -221,16 +224,15 @@ pmt_set_cfg(pciehw_t *phw,
     r->stridesel = phwdev->vfstridesel;
     r->td        = 0;
     r->addrdw    = cfgpadw;
-    r->aspace    = 0;    /* cfgpadw is local */
+    r->aspace    = 0;    /* cfgpadw is local not host */
     r->romsksel  = romsksel;
 
     pmt.valid = 1;
-    pmt_set(phw, pmti, &pmt);
+    pmt_set(pmti, &pmt);
 }
 
 static void
-pmt_set_bar(pciehw_t *phw,
-            const int pmti,
+pmt_set_bar(const int pmti,
             const u_int8_t port,
             const u_int16_t bdf,
             const u_int64_t addr,
@@ -239,7 +241,9 @@ pmt_set_bar(pciehw_t *phw,
             const u_int32_t prtcount,
             const u_int32_t prtsize,
             const u_int8_t qtypestart,
-            const u_int8_t qtypemask)
+            const u_int8_t qtypemask,
+            const u_int8_t notify,
+            const u_int8_t indirect)
 {
     pmt_t pmt = { 0 };
     pmt_bar_t *d = (pmt_bar_t *)&pmt.data;
@@ -266,8 +270,8 @@ pmt_set_bar(pciehw_t *phw,
     r->valid     = 1;
     r->type      = PMT_TYPE_BAR;
     r->vfbase    = 0;
-    r->indirect  = 0;
-    r->notify    = phw->hwparams.force_notify_bar;
+    r->indirect  = indirect;
+    r->notify    = notify;
     r->prtbase   = prtbase;
     r->prtcount  = prtcount;
     r->prtsize   = ffs(prtsize) - 1;
@@ -283,11 +287,11 @@ pmt_set_bar(pciehw_t *phw,
     r->qidend    = 1;
 
     pmt.valid = 1;
-    pmt_set(phw, pmti, &pmt);
+    pmt_set(pmti, &pmt);
 }
 
 static void
-pmt_grst(pciehw_t *phw)
+pmt_grst(void)
 {
 #ifdef __aarch64__
     pal_reg_wr32(PMT_GRST, 1);
@@ -295,27 +299,72 @@ pmt_grst(pciehw_t *phw)
     int i;
 
     for (i = 0; i < pmt_size(); i++) {
-        pmt_clr_tcam(phw, i);
+        pmt_clr_tcam(i);
     }
 #endif
 }
 
 static void
-pmt_pmr_init(pciehw_t *phw)
+pmt_pmr_init(void)
 {
     const pmr_t pmr = { 0 };
     int i;
 
     for (i = 0; i < pmt_size(); i++) {
-        pmt_set_pmr(phw, i, pmr);
+        pmt_set_pmr(i, pmr);
     }
 }
 
 static void
 pmt_reset(pciehw_t *phw)
 {
-    pmt_grst(phw);
-    pmt_pmr_init(phw);
+    pmt_grst();
+    pmt_pmr_init();
+}
+
+static int
+bar_type_to_pmt_type(pciehbartype_t bartype)
+{
+    int pmttype = 0;
+
+    switch (bartype) {
+    case PCIEHBARTYPE_MEM:
+    case PCIEHBARTYPE_MEM64: pmttype = PMT_TYPE_MEM; break;
+    case PCIEHBARTYPE_IO:    pmttype = PMT_TYPE_IO;  break;
+    case PCIEHBARTYPE_NONE:
+    default:
+        pciehsys_error("unexpected bartype: %d\n", bartype);
+        assert(0);
+        break;
+    }
+    return pmttype;
+}
+
+static void
+pmt_load_bar(pciehwbar_t *phwbar)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = phwbar->pmti;
+    const pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+    const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
+    const u_int64_t addr = spmt->baraddr;
+    const u_int64_t addrm = ~((1 << (ffsl(spmt->barsize) - 1)) - 1);
+
+    assert(phwbar->valid);
+
+    pmt_set_bar(pmti,
+                phwdev->port,
+                phwdev->bdf,
+                addr,
+                addrm,
+                spmt->prtbase,
+                spmt->prtcount,
+                spmt->prtsize,
+                spmt->qtypestart,
+                spmt->qtypemask,
+                spmt->notify,
+                spmt->indirect);
 }
 
 /******************************************************************
@@ -323,23 +372,24 @@ pmt_reset(pciehw_t *phw)
  */
 
 int
-pciehw_pmt_load_cfg(pciehw_t *phw, pciehwdev_t *phwdev)
+pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
 {
+    pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
+    const pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
     const u_int64_t cfgpa = pal_mem_vtop(&phwmem->cfgcur[hwdevh]);
     int pmti, i;
 
     for (i = 0; i < PCIEHW_ROMSKSZ; i++) {
         const int romsk = phwdev->romsksel[i];
+        const int notify = phwdev->cfghnd[i] != 0;
         if (romsk != ROMSK_RDONLY) {
-            pmti = pmt_alloc(phw, hwdevh);
+            pmti = pmt_alloc(hwdevh);
             if (pmti < 0) {
                 pciehsys_error("load_cfg: pmt_alloc failed i %d\n", i);
                 goto error_out;
             }
-            pmt_set_cfg(phw, phwdev,
-                        pmti, cfgpa, i << 2, 0xffff, romsk, O_RDWR);
+            pmt_set_cfg(phwdev, pmti, cfgpa, i << 2, 0xffff, romsk, notify, 0);
         }
     }
     /*
@@ -347,88 +397,145 @@ pciehw_pmt_load_cfg(pciehw_t *phw, pciehwdev_t *phwdev)
      * but romsk=1 selects the read-only entry so effectively this
      * claims all read/write transactions but writes have no effect.
      */
-    pmti = pmt_alloc(phw, hwdevh);
+    pmti = pmt_alloc(hwdevh);
     if (pmti < 0) {
         pciehsys_error("load_cfg: pmt_alloc failed catchall\n");
         goto error_out;
     }
-    pmt_set_cfg(phw, phwdev, pmti, cfgpa, 0, 0, ROMSK_RDONLY, O_RDWR);
+    pmt_set_cfg(phwdev, pmti, cfgpa, 0, 0, ROMSK_RDONLY, 0, 0);
     return 0;
 
  error_out:
-    pciehw_pmt_unload_cfg(phw, phwdev);
+    pciehw_pmt_unload_cfg(phwdev);
     return -1;
 }
 
 void
-pciehw_pmt_unload_cfg(pciehw_t *phw, pciehwdev_t *phwdev)
+pciehw_pmt_unload_cfg(pciehwdev_t *phwdev)
 {
+    pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
     pciehw_spmt_t *spmt;
     int i;
 
     for (spmt = phwmem->spmt, i = 0; i < pmt_size(); i++, spmt++) {
-        if (spmt->owner == hwdevh) {
-            pmt_clr(phw, i);
-            spmt->owner = 0;
+        if (spmt->owner == hwdevh && spmt->type == PMT_TYPE_CFG) {
+            pmt_clr(i);
+            pmt_free(i);
         }
     }
 }
 
 int
-pciehw_pmt_alloc(pciehwdev_t *phwdev, pciehbar_t *bar)
+pciehw_pmt_alloc_bar(pciehwdev_t *phwdev, const pciehbar_t *bar)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
-    pciehwbar_t *phwbar;
     pciehw_spmt_t *spmt;
-    int pmti;
+    int pmti, prti;
 
-    pmti = pmt_alloc(phw, hwdevh);
+    pmti = pmt_alloc(hwdevh);
     if (pmti < 0) {
         pciehsys_error("pmt_alloc: pmt_alloc failed\n");
         return -1;
     }
-    phwbar = &phwdev->bar[bar->cfgidx];
-    phwbar->pmti = pmti;
-    phwbar->type = bar->type;
-    phwbar->valid = 1;
+    prti = pciehw_prt_alloc(phwdev, bar);
+    if (prti < 0) {
+        pmt_free(pmti);
+        return -1;
+    }
+
     spmt = &phwmem->spmt[pmti];
     spmt->barsize = bar->size;
+    spmt->type = bar_type_to_pmt_type(bar->type);
+    spmt->prtbase = prti;
+    spmt->prtcount = bar->nregs;
+    spmt->prtsize = bar->size / bar->nregs;
+    /* XXX get these from bar->reg[] */
     spmt->qtypestart = 3;
     spmt->qtypemask = 0x7;
-    return 0;
+    return pmti;
 }
 
 void
-pciehw_pmt_load_bar(pciehw_t *phw,
-                    pciehwdev_t *phwdev,
-                    pciehwbar_t *phwbar)
+pciehw_pmt_free_bar(const int pmti)
 {
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+
+    assert(spmt->loaded == 0);
+    pciehw_prt_free(spmt->prtbase, spmt->prtcount);
+    pmt_free(pmti);
+}
+
+void
+pciehw_pmt_load_bar(pciehwbar_t *phwbar)
+{
+    pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     const u_int32_t pmti = phwbar->pmti;
     pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
-    const u_int64_t addr = spmt->baraddr;
-    const u_int64_t addrm = ~((1 << (ffsl(spmt->barsize) - 1)) - 1);
 
-    assert(phwbar->valid);
-
-    pmt_set_bar(phw,
-                pmti,
-                phwdev->port,
-                phwdev->bdf,
-                addr,
-                addrm,
-                phwbar->prtbase,
-                phwbar->prtcount,
-                phwbar->prtsize,
-                spmt->qtypestart,
-                spmt->qtypemask);
-
+    /*
+     * Load PRT first, then load PMT so PMT tcam search hit
+     * will find valid PRT entries.
+     */
+    pciehw_prt_load(spmt->prtbase, spmt->prtcount);
+    pmt_load_bar(phwbar);
     if (!spmt->loaded) {
         spmt->loaded = 1;
+    }
+}
+
+void
+pciehw_pmt_setaddr(pciehwbar_t *phwbar, const u_int64_t addr)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = phwbar->pmti;
+    pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+
+    spmt->baraddr = addr;
+    /* if loaded, reload with new addr */
+    if (spmt->loaded) {
+        pmt_load_bar(phwbar);
+    }
+}
+
+void
+pciehw_pmt_unload_bar(pciehwbar_t *phwbar)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = phwbar->pmti;
+    pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+
+    /*
+     * Unload PMT first, then PRT so PMT tcam search will not hit
+     * and PRT is unreferenced.
+     */
+    if (spmt->loaded) {
+        pmt_clr(pmti);
+        pciehw_prt_unload(spmt->prtbase, spmt->prtcount);
+        spmt->loaded = 0;
+    }
+}
+
+void
+pciehw_pmt_enable_bar(pciehwbar_t *phwbar, const int on)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = phwbar->pmti;
+    pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+
+    if (on && !spmt->loaded) {
+        pciehw_pmt_load_bar(phwbar);
+    } else if (!on && spmt->loaded) {
+        pciehw_pmt_unload_bar(phwbar);
     }
 }
 
@@ -436,6 +543,7 @@ void
 pciehw_pmt_init(pciehw_t *phw)
 {
     pmt_reset(phw);
+    pciehw_prt_init(phw);
 }
 
 /******************************************************************
@@ -584,7 +692,7 @@ pmt_show(pciehw_t *phw)
 
     last_hdr_displayed = -1;
     for (i = 0; i < pmt_size(); i++) {
-        pmt_get(phw, i, &pmt);
+        pmt_get(i, &pmt);
         if (pmt.valid) {
             pmt_show_entry(phw, i, &pmt);
         }
@@ -600,8 +708,8 @@ pmt_show_raw(pciehw_t *phw)
 
     pmt_show_raw_entry_hdr();
     for (i = 0; i < pmt_size(); i++) {
-        pmt_get_tcam(phw, i, &e);
-        pmt_get_pmr(phw, i, pmr);
+        pmt_get_tcam(i, &e);
+        pmt_get_pmr(i, pmr);
         if (e.v) {
             pmt_show_raw_entry(phw, i, &e, pmr);
         }
@@ -647,7 +755,7 @@ pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on)
         if (spmt->owner == hwdevh) {
             pmt_common_t *pmt_common;
 
-            pmt_get(phw, i, &pmt);
+            pmt_get(i, &pmt);
             pmt_common = (pmt_common_t *)&pmt.data;
             switch (pmt_common->type) {
             case PMT_TYPE_CFG: {
@@ -663,7 +771,7 @@ pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on)
             default:
                 break;
             }
-            pmt_set(phw, i, &pmt);
+            pmt_set(i, &pmt);
         }
     }
 }

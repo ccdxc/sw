@@ -26,18 +26,17 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         memset(&preg, 0, sizeof(preg));
         preg.regtype = PCIEHBARREGT_RES;
         preg.flags = PCIEHBARREGF_RW;
-        preg.paddr = 0x1000;
+        preg.paddr = pres->devcmdpa;
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
 
         /* Device Cmd Doorbell */
         memset(&preg, 0, sizeof(preg));
         preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_WR;
-        preg.paddr = 0x2000;
+        preg.flags = (PCIEHBARREGF_WR |
+                      PCIEHBARREGF_NOTIFYWR);
+        preg.paddr = pres->devcmddbpa;
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
 
         /* Interrupt Control regs */
@@ -46,7 +45,6 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         preg.flags = PCIEHBARREGF_RW;
         preg.paddr = intr_drvcfg_addr(pres->intrb);
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
 
         /* Interrupt Status regs */
@@ -55,7 +53,6 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         preg.flags = PCIEHBARREGF_RD;
         preg.paddr = intr_pba_addr(pres->intrb);
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
 
         /* <reserved> */
@@ -64,7 +61,6 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         preg.flags = PCIEHBARREGF_RD;
         preg.paddr = 0;
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
 
         /* <reserved> */
@@ -73,7 +69,6 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         preg.flags = PCIEHBARREGF_RD;
         preg.paddr = 0;
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
 
         /* MSI-X Interrupt Table */
@@ -82,7 +77,6 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_TBL);
         preg.paddr = intr_msixcfg_addr(pres->intrb);
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
 
         /* MSI-X Interrupt PBA */
@@ -91,7 +85,6 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         preg.flags = (PCIEHBARREGF_RD | PCIEHBARREGF_MSIX_PBA);
         preg.paddr = intr_pba_addr(pres->intrb);
         preg.size = 0x1000;
-        preg.align = 0;
         pciehbar_add_reg(&pbar, &preg);
     }
     pciehbars_add_bar(pbars, &pbar);
@@ -103,9 +96,7 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         memset(&preg, 0, sizeof(preg));
         preg.regtype = PCIEHBARREGT_DB64;
         preg.flags = PCIEHBARREGF_WR;
-        preg.paddr = 0x100000;
         preg.size = 0x1000;
-        preg.align = 0;
         preg.qtyshift = 3;
         preg.qtywidth = 3;
         /* eth rxq */
@@ -183,7 +174,7 @@ enet_initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
 }
 
 pciehdev_t *
-pciehdev_enet_new(const char *name, const pciehdevice_resources_t *pres)
+pciehdev_eth_new(const char *name, const pciehdevice_resources_t *pres)
 {
     pciehdev_t *pdev = pciehdev_new(name, pres);
     enet_initialize_bars(pdev, pres);

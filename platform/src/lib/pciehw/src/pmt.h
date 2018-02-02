@@ -28,6 +28,9 @@
 #define PMT_TYPE_CFG    0       /* host cfg */
 #define PMT_TYPE_BAR    1       /* host mem/io bar */
 #define PMT_TYPE_RC     2       /* rc dma */
+/* these types were added later -- XXX check these */
+#define PMT_TYPE_MEM    1       /* host mem bar */
+#define PMT_TYPE_IO     1       /* host i/o bar */
 
 /* generic tcam entry format */
 typedef union {
@@ -147,12 +150,13 @@ struct pciehwbar_s;
 typedef struct pciehwbar_s pciehwbar_t;
 
 void pciehw_pmt_init(pciehw_t *phw);
-int pciehw_pmt_load_cfg(pciehw_t *phw, pciehwdev_t *phwdev);
-void pciehw_pmt_unload_cfg(pciehw_t *phw, pciehwdev_t *phwdev);
-int pciehw_pmt_alloc(pciehwdev_t *phwdev, pciehbar_t *bar);
-void pciehw_pmt_load_bar(pciehw_t *phw,
-                         pciehwdev_t *phwdev,
-                         pciehwbar_t *phwbar);
+int pciehw_pmt_load_cfg(pciehwdev_t *phwdev);
+void pciehw_pmt_unload_cfg(pciehwdev_t *phwdev);
+int pciehw_pmt_alloc_bar(pciehwdev_t *phwdev, const pciehbar_t *bar);
+void pciehw_pmt_free_bar(const int pmti);
+void pciehw_pmt_setaddr(pciehwbar_t *phwbar, const u_int64_t addr);
+void pciehw_pmt_load_bar(pciehwbar_t *phwbar);
+void pciehw_pmt_enable_bar(pciehwbar_t *phwbar, const int on);
 void pciehw_pmt_dbg(int argc, char *argv[]);
 void pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on);
 

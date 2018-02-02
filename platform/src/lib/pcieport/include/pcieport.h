@@ -35,6 +35,7 @@ pcieport_t *pcieport_open(const int port);
 void pcieport_close(pcieport_t *p);
 int pcieport_ctrl(pcieport_t *p, const pcieport_cmd_t cmd, void *arg);
 int pcieport_poll(pcieport_t *p);
+void pcieport_dbg(int argc, char *argv[]);
 
 #ifdef __cplusplus
 }

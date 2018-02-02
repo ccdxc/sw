@@ -38,7 +38,7 @@ pal_mem_vtop(const void *va)
 void *
 pal_memcpy(void *dst, const void *src, size_t n)
 {
-    u_int8_t *d = dst;
+    volatile u_int8_t *d = dst;
     const u_int8_t *s = src;
     int i;
 

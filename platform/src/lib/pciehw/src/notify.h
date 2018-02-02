@@ -18,7 +18,7 @@ typedef struct notify_info_s {
     u_int64_t vfid              :11;
     u_int64_t is_notify         :1;
     u_int64_t direct_size       :9;
-    /* u_int64_t [1] */
+    /* u_int64_t [1] direct_addr_lo:3 */
     u_int64_t direct_addr       :52;
     u_int64_t aspace            :1;
     u_int64_t pmti              :10;

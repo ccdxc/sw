@@ -40,6 +40,9 @@
     (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_BYTE_OFFSET)
 #define REQ_NOTIFY_STRIDE 4
 
+static int notify_verbose;
+static int skip_notify = 1;
+
 static u_int64_t
 notify_addr(const int port)
 {
@@ -86,6 +89,12 @@ notify_get_pici(const int port, int *pip, int *cip)
 
     *pip = pici & 0xffff;
     *cip = pici >> 16;
+}
+
+static u_int32_t
+notify_pici_delta(const int pi, const int ci)
+{
+    return abs(pi - ci);
 }
 
 /*
@@ -190,6 +199,49 @@ notify_init(pciehw_t *phw)
     }
 }
 
+static int
+notify_ring_inc(const int idx, const int inc)
+{
+    return (idx + inc) & (NOTIFY_NENTRIES - 1);
+}
+
+static void
+pciehw_notify(notify_entry_t *nentry, pcie_stlp_t *stlp)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehw_spmt_t *spmt = phwmem->spmt;
+    u_int32_t pmti = nentry->info.pmti;
+    pciehwdevh_t hwdevh = spmt[pmti].owner;
+    pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
+
+    if (notify_verbose) {
+        pciehsys_log("%s\n", pcietlp_str(stlp));
+        pciehsys_log("  pmti %d hit %d dev %s addr 0x%08"PRIx64"\n",
+                     pmti,
+                     nentry->info.pmt_hit,
+                     pciehwdev_get_name(phwdev),
+                     (u_int64_t)nentry->info.direct_addr);
+    }
+
+    switch (stlp->type) {
+    case PCIE_STLP_CFGRD:
+    case PCIE_STLP_CFGRD1:
+        pciehw_cfgrd_notify(phwdev, stlp, spmt);
+        break;
+    case PCIE_STLP_CFGWR:
+    case PCIE_STLP_CFGWR1:
+        pciehw_cfgwr_notify(phwdev, stlp, spmt);
+        break;
+    case PCIE_STLP_MEMRD:
+        pciehw_barrd_notify(phwdev, stlp, spmt);
+        break;
+    case PCIE_STLP_MEMWR:
+        pciehw_barwr_notify(phwdev, stlp, spmt);
+        break;
+    }
+}
+
 /******************************************************************
  * apis
  */
@@ -201,51 +253,43 @@ pciehw_notify_init(pciehw_t *phw)
 
     notify_init(phw);
     for (i = 0; i < phw->nports; i++) {
+        pciehw_port_skip_notify(i, skip_notify);
         notify_ring_init(phw, i);
     }
     return 0;
-}
-
-int
-notify_ring_inc(const int idx, const int inc)
-{
-    return (idx + inc) & (NOTIFY_NENTRIES - 1);
 }
 
 static int
 pciehw_notify_intr(pciehw_t *phw, const int port)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    //pciehw_port_t *p = &phwmem->port[port];
+    pciehw_port_t *p = &phwmem->port[port];
     notify_entry_t *notify_ring = (notify_entry_t *)phwmem->notify_area[port];
-    pciehw_spmt_t *spmt = phwmem->spmt;
     pcie_stlp_t stlpbuf, *stlp = &stlpbuf;
+    notify_entry_t *n;
     int pi, ci, i, endidx;
+    u_int32_t pici_delta;
 
     notify_get_pici(port, &pi, &ci);
 
     if (ci == pi) return -1;
 
-    /* we consumed these, adjust ci */
-    pciehsys_log("notify pi %d ci %d\n", pi, ci);
+    /* we'll consume these, adjust ci */
     notify_set_ci(port, pi);
+
+    pici_delta = notify_pici_delta(pi, ci);
+    if (pici_delta > p->notify_max) {
+        p->notify_max = pici_delta;
+    }
 
     endidx = notify_ring_inc(pi, 1);
     for (i = notify_ring_inc(ci, 1);
          i != endidx;
          i = notify_ring_inc(i, 1)) {
-        notify_entry_t *n = &notify_ring[i];
-        u_int32_t pmti = n->info.pmti;
-        pciehwdevh_t hwdevh = spmt[pmti].owner;
-        pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
 
+        n = &notify_ring[i];
         pcietlp_decode(stlp, n->rtlp, sizeof(n->rtlp));
-        pciehsys_log("%s\n", pcietlp_str(stlp));
-        pciehsys_log("  pmti %d hit %d dev %s addr 0x%08"PRIx64"\n",
-                     pmti,
-                     n->info.pmt_hit,
-                     pciehwdev_get_name(phwdev),
-                     (u_int64_t)n->info.direct_addr);
+        pciehw_notify(n, stlp);
     }
     return 0;
 }
@@ -264,6 +308,7 @@ static void
 notify_show(void)
 {
     pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     u_int64_t addrdw;
     u_int32_t v;
     u_int32_t in[NOTIFY_INT_NWORDS];
@@ -281,16 +326,20 @@ notify_show(void)
     addrdw |= in[1];
     pciehsys_log("%-*s : 0x%08"PRIx64"\n", w, "int_addr", addrdw << 2);
     pciehsys_log("%-*s : 0x%08x\n", w, "int_data", in[0]);
+    pciehsys_log("%-*s : %d\n", w, "notify_verbose", notify_verbose);
 
-    pciehsys_log("%-4s %-11s %5s %5s\n", "port", "ring_base", "pi", "ci");
+    pciehsys_log("%-4s %-11s %5s %5s %4s\n",
+                 "port", "ring_base", "pi", "ci", "max");
     for (i = 0; i < phw->nports; i++) {
+        pciehw_port_t *p = &phwmem->port[i];
         u_int64_t ring_base;
         int pi, ci;
 
         notify_get_ring_base(phw, i, &ring_base);
         notify_get_pici(i, &pi, &ci);
 
-        pciehsys_log("%-4d 0x%09"PRIx64" %5d %5d\n", i, ring_base, pi, ci);
+        pciehsys_log("%-4d 0x%09"PRIx64" %5d %5d %4d\n",
+                     i, ring_base, pi, ci, p->notify_max);
     }
 }
 
@@ -316,13 +365,15 @@ void
 pciehw_notify_dbg(int argc, char *argv[])
 {
     int opt, do_enable, do_disable;
+    int port;
     char *devname;
 
     do_enable = 0;
     do_disable = 0;
+    port = 0;
     devname = NULL;
     optind = 0;
-    while ((opt = getopt(argc, argv, "d:e:")) != -1) {
+    while ((opt = getopt(argc, argv, "d:efp:sv")) != -1) {
         switch (opt) {
         case 'd':
             devname = optarg;
@@ -333,6 +384,22 @@ pciehw_notify_dbg(int argc, char *argv[])
             devname  = optarg;
             do_enable = 1;
             do_disable = 0;
+            break;
+        case 'f': { /* flush */
+            int pi, ci;
+            notify_get_pici(port, &pi, &ci);
+            notify_set_ci(port, pi);
+            break;
+        }
+        case 'p':
+            port = strtoul(optarg, NULL, 0);
+            break;
+        case 's': /* skip_notify_if_qfull */
+            skip_notify = strtoul(optarg, NULL, 0) != 0;
+            pciehw_port_skip_notify(port, skip_notify);
+            break;
+        case 'v':
+            notify_verbose = !notify_verbose;
             break;
         default:
             return;

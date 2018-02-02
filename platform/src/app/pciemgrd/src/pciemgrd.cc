@@ -112,9 +112,9 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
         } else {
             name = namearg;
         }
-        pdev = pciehdev_enet_new(name, pres);
+        pdev = pciehdev_eth_new(name, pres);
         if (pdev == NULL) {
-            printf("pciehdev_enet_new failed\n");
+            printf("pciehdev_eth_new failed\n");
             return NULL;
         }
     } else if (strcmp(type, "ethvf") == 0) {
@@ -230,11 +230,19 @@ cmd_add(int argc, char *argv[])
 
     memset(&r, 0, sizeof(r));
     r.intrc = 4;
+    r.devcmdpa = 0x13e000000;   /* XXX */
+    r.devcmddbpa = r.devcmdpa + 0x1000; /* XXX */
     name = NULL;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "I:L:i:n:p:")) != -1) {
+    while ((opt = getopt(argc, argv, "d:D:I:L:i:n:p:")) != -1) {
         switch (opt) {
+        case 'd':
+            r.devcmdpa = strtoull(optarg, NULL, 0);
+            break;
+        case 'D':
+            r.devcmddbpa = strtoull(optarg, NULL, 0);
+            break;
         case 'I':
             r.intrb = strtoul(optarg, NULL, 0);
             break;
@@ -588,10 +596,17 @@ dbg_pciehw(int argc, char *argv[])
     pciehw_dbg(argc, argv);
 }
 
+static void
+dbg_pcieport(int argc, char *argv[])
+{
+    pcieport_dbg(argc, argv);
+}
+
 static cmd_t dbgtab[] = {
 #define DBGENT(name, desc, helpstr) \
     { #name, dbg_##name, desc, helpstr }
     DBGENT(pciehw, "pciehw debug", ""),
+    DBGENT(pcieport, "pcieport debug", ""),
     { NULL, NULL }
 };
 
@@ -646,6 +661,13 @@ process(int argc, char *argv[])
     c->f(argc, argv);
 }
 
+static void
+pciemgr_evhandler(pciehdev_t *pdev, const pciehdev_eventdata_t *evd)
+{
+    printf("evhandler %d\n", evd->evtype);
+}
+
+
 static jmp_buf prompt_env;
 
 static void
@@ -661,7 +683,7 @@ main(int argc, char *argv[])
     int opt;
     char *line, prompt[32], *av[16];
     int ac;
-    pciehdev_params_t p;
+    pciehdev_openparams_t p;
 
     memset(&p, 0, sizeof(p));
     p.inithw = 1;
@@ -679,7 +701,7 @@ main(int argc, char *argv[])
     p.first_bus = 1;
 #endif
 
-    while ((opt = getopt(argc, argv, "b:BCFhHP:s:v")) != -1) {
+    while ((opt = getopt(argc, argv, "b:FhHP:s:v")) != -1) {
         switch (opt) {
         case 'b':
             p.first_bus = strtoul(optarg, NULL, 0);
@@ -692,12 +714,6 @@ main(int argc, char *argv[])
             break;
         case 'H':
             p.inithw = 0;       /* no init hw */
-            break;
-        case 'C':
-            p.force_notify_cfg = 1;
-            break;
-        case 'B':
-            p.force_notify_bar = 1;
             break;
         case 'P':
             if (!parse_linkspec(optarg, &p.cap_gen, &p.cap_width)) {
@@ -725,6 +741,7 @@ main(int argc, char *argv[])
     }
     if (pcieport_ctrl(pme->pport, PCIEPORT_CMD_HOSTCONFIG, NULL) < 0) {
         printf("pcieport_ctrl(HOSTCONFIG) failed\n");
+        exit(1);
     }
     if (pciehdev_open(&p) < 0) {
         printf("pciehdev_open failed\n");
@@ -732,6 +749,10 @@ main(int argc, char *argv[])
     }
     if (pciehdev_initialize() < 0) {
         printf("pciehdev_initialize failed\n");
+        exit(1);
+    }
+    if (pciehdev_register_event_handler(pciemgr_evhandler) < 0) {
+        printf("pciehdev_register_event_handler failed\n");
         exit(1);
     }
 

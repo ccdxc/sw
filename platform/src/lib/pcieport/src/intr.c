@@ -39,27 +39,22 @@ pcieport_intr(pcieport_t *p)
     pal_reg_wr32(PXC_(INT_C_MAC_INTREG, pn), int_mac);
 
     if (int_mac & MAC_INTREGF_(LINK_UP2DN)) {
-        printf("link down\n");
         pcieport_fsm(p, PCIEPORTEV_LINKDN);
     }
     if (int_mac & MAC_INTREGF_(RST_DN2UP)) {
-        printf("mac down\n");
         pcieport_fsm(p, PCIEPORTEV_MACDN);
     }
 
     if (sta_rst & STA_RSTF_(PERSTN)) {
         if (int_mac & MAC_INTREGF_(RST_UP2DN)) {
-            printf("mac up\n");
             pcieport_fsm(p, PCIEPORTEV_MACUP);
             pcieport_gate_open(p);
             pcieport_set_crs(p, 0);
         }
         if (int_mac & MAC_INTREGF_(LINK_DN2UP)) {
-            printf("link up\n");
             pcieport_fsm(p, PCIEPORTEV_LINKUP);
         }
         if (int_mac & MAC_INTREGF_(SEC_BUSNUM_CHANGED)) {
-            printf("sec_busnum\n");
             pcieport_fsm(p, PCIEPORTEV_BUSCHG);
         }
     }
@@ -102,6 +97,7 @@ pp_intr(void)
     if (int_pp & INTREG_PERSTN(0)) {
         pcieport_t *p = &pi->pcieport[0];
         printf("power on\n");
+        /* XXX pcieport_fsm(p, PCIEPORTEV_POWERON); */
         pcieport_config(p);
     }
     return 0;

@@ -162,18 +162,18 @@ pciehcfg_setconf_vf(pciehcfg_t *pcfg, const int on)
 static void
 pciehcfg_setconf_defaults(pciehcfg_t *pcfg)
 {
-    pciehdev_params_t *devparams = pciehdev_get_params();
+    pciehdev_openparams_t *params = pciehdev_get_params();
 
-    pcfg->cap_gen = devparams->cap_gen;
-    pcfg->cap_width = devparams->cap_width;
-    pcfg->vendorid = devparams->vendorid;
-    pcfg->subvendorid = devparams->subvendorid;
-    pcfg->subdeviceid = devparams->subdeviceid;
+    pcfg->cap_gen = params->cap_gen;
+    pcfg->cap_width = params->cap_width;
+    pcfg->vendorid = params->vendorid;
+    pcfg->subvendorid = params->subvendorid;
+    pcfg->subdeviceid = params->subdeviceid;
     pcfg->flr = 1;
-    pcfg->exttag = !devparams->noexttag;
-    pcfg->exttag_en = !devparams->noexttag_en;
-    pcfg->msicap = !devparams->nomsicap;
-    pcfg->msixcap = !devparams->nomsixcap;
+    pcfg->exttag = !params->noexttag;
+    pcfg->exttag_en = !params->noexttag_en;
+    pcfg->msicap = !params->nomsicap;
+    pcfg->msixcap = !params->nomsixcap;
 }
 
 pciehcfg_t *

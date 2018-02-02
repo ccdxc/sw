@@ -57,6 +57,8 @@ void pcieport_set_pcs_reset(pcieport_t *p, const int on);
 void pcieport_set_mac_reset(pcieport_t *p, const int on);
 void pcieport_set_ltssm_en(pcieport_t *p, const int on);
 
+void pcieport_fsm_dbg(int argc, char *argv[]);
+
 /*
  * Register convenience macros.
  */

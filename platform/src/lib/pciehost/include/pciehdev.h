@@ -21,7 +21,7 @@ typedef struct pciehbars_s pciehbars_t;
 struct pciehdevice_resources_s;
 typedef struct pciehdevice_resources_s pciehdevice_resources_t;
 
-typedef struct pciehdev_params_s {
+typedef struct pciehdev_openparams_s {
     u_int8_t cap_gen;           /* default GenX capability (1,2,3,4) */
     u_int8_t cap_width;         /* xX lane width (1,2,4,8,16) */
     u_int16_t vendorid;         /* default vendorid */
@@ -30,17 +30,39 @@ typedef struct pciehdev_params_s {
     u_int8_t first_bus;         /* first bus number for virtual devices bdf */
     u_int32_t inithw:1;         /* initialize hw */
     u_int32_t fake_bios_scan:1; /* scan finalized topology, assign bus #'s */
-    u_int32_t force_notify_cfg:1;/* force notify on cfg PMT entries */
-    u_int32_t force_notify_bar:1;/* force notify on bar PMT entries */
     u_int32_t noexttag:1;       /* no extended tags capable */
     u_int32_t noexttag_en:1;    /* no extended tags enabled */
     u_int32_t nomsicap:1;       /* no msi cap */
     u_int32_t nomsixcap:1;      /* no msix cap */
-} pciehdev_params_t;
+} pciehdev_openparams_t;
 
-int pciehdev_open(pciehdev_params_t *devparams);
+typedef enum pciehdev_event_e {
+    PCIEHDEV_EV_NONE,
+    PCIEHDEV_EV_MEMRD_NOTIFY,
+    PCIEHDEV_EV_MEMWR_NOTIFY,
+} pciehdev_event_t;
+
+typedef struct pciehdev_mem_notify_s {
+    u_int64_t baraddr;          /* PCIe bar address */
+    u_int64_t baroffset;        /* bar-local offset */
+    u_int8_t baridx;            /* bar index */
+    u_int32_t size;             /* i/o size */
+    u_int64_t data;             /* data, if write */
+} pciehdev_mem_notify_t;
+
+typedef struct pciehdev_eventdata_s {
+    pciehdev_event_t evtype;            /* PCIEHDEV_EV_* */
+    union {
+        pciehdev_mem_notify_t mem_notify;   /* EV_MEMRD/WR_NOTIFY */
+    };
+} pciehdev_eventdata_t;
+
+typedef void (*pciehdev_evhandler_t)(pciehdev_t *pdev,
+                                     const pciehdev_eventdata_t *evdata);
+
+int pciehdev_open(pciehdev_openparams_t *params);
 void pciehdev_close(void);
-pciehdev_params_t *pciehdev_get_params(void);
+pciehdev_openparams_t *pciehdev_get_params(void);
 
 pciehdev_t *pciehdev_new(const char *name,
                          const pciehdevice_resources_t *pres);
@@ -51,7 +73,6 @@ pciehdev_t *pciehdev_bridgedn_new(const int memtun_en);
 
 int pciehdev_initialize(void);
 int pciehdev_finalize(void);
-void *pcidehdev_get_priv(pciehdev_t *pdev);
 
 void pciehdev_set_cfg(pciehdev_t *pdev, pciehcfg_t *pcfg);
 pciehcfg_t *pciehdev_get_cfg(pciehdev_t *pdev);
@@ -82,6 +103,9 @@ int pciehdev_get_lif(pciehdev_t *pdev);
 u_int32_t pciehdev_get_intrb(pciehdev_t *pdev);
 u_int32_t pciehdev_get_intrc(pciehdev_t *pdev);
 char *pciehdev_get_name(pciehdev_t *pdev);
+
+int pciehdev_register_event_handler(pciehdev_evhandler_t evhandler);
+void pciehdev_event(pciehdev_t *pdev, const pciehdev_eventdata_t *evd);
 
 #ifdef __cplusplus
 }

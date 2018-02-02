@@ -22,10 +22,12 @@ typedef struct pciehdevice_resources_s {
     u_int8_t port;              /* pcie port id */
     u_int32_t intrb;            /* interrupt base */
     u_int32_t intrc;            /* interrupt count */
+    u_int64_t devcmdpa;         /* devcmd region physical address */
+    u_int64_t devcmddbpa;       /* devcmd doorbell physical address */
 } pciehdevice_resources_t;
 
-pciehdev_t *pciehdev_enet_new(const char *name,
-                              const pciehdevice_resources_t *pres);
+pciehdev_t *pciehdev_eth_new(const char *name,
+                             const pciehdevice_resources_t *pres);
 
 pciehdev_t *pciehdev_nvme_new(const char *name,
                               const pciehdevice_resources_t *pres);

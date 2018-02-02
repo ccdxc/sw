@@ -20,8 +20,6 @@ typedef struct cfgspace_s cfgspace_t;
 typedef struct pciehw_params_s {
     u_int32_t inithw:1;         /* initialize hw */
     u_int32_t fake_bios_scan:1; /* assign bus #'s on finalize */
-    u_int32_t force_notify_cfg:1;/* force notify on all cfg PMT entries */
-    u_int32_t force_notify_bar:1;/* force notify on all bar PMT entries */
     u_int8_t first_bus;         /* first bus to use for virtual devices */
 } pciehw_params_t;
 
