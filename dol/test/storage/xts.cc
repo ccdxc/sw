@@ -270,6 +270,7 @@ int XtsCtx::test_seq_xts() {
   assert(num_sub_aols <= MAX_SUB_AOLS); // Currently we only support upto 4 - min required to validate aol chaining
   assert(sizeof(xts::xts_desc_t) == kXtsDescSize);
   xts_desc_addr = (xts::xts_desc_t*)alloc_host_mem(sizeof(xts::xts_desc_t));
+  memset(xts_desc_addr, 0, sizeof(xts::xts_desc_t));
 
   assert(sizeof(xts::xts_aol_t) == kAolSize);
   memset(in_aol, 0x0, sizeof(in_aol));
