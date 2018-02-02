@@ -55,16 +55,16 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     txs_csr.cfw_scheduler_static.read();
     txs_csr.cfw_scheduler_static.hbm_base(txs_sched_hbm_base_addr);
 
-    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM ||
-        hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) {
-        // Init txs hbm/sram.
-        txs_csr.cfw_scheduler_glb.read();
+    // Init sram.
+    txs_csr.cfw_scheduler_glb.read();
+    // skip init on RTL/Model.
+    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) {
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
-        txs_csr.cfw_scheduler_glb.sram_hw_init(1);
-
-        txs_csr.cfw_scheduler_static.write();
-        txs_csr.cfw_scheduler_glb.write();
     }
+    txs_csr.cfw_scheduler_glb.sram_hw_init(1);
+
+    txs_csr.cfw_scheduler_static.write();
+    txs_csr.cfw_scheduler_glb.write();
 
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.
     // NOTE TODO: Init of admin-qos-class should be done before this.
