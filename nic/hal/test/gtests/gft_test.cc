@@ -193,6 +193,68 @@ uint8_t g_rcv_pkt5[] = {
     0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
     0x75, 0x76, 0x77, 0x7A, 0x78, 0x79};
 
+uint8_t g_snd_pkt6[] = {
+    0x00, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0x00, 0xA1,
+    0xA2, 0xA3, 0xA4, 0xA5, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x4C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x11,
+    0x61, 0x99, 0x0B, 0x01, 0x02, 0x03, 0x0A, 0x01,
+    0x02, 0x03, 0x00, 0x35, 0x12, 0xB7, 0x00, 0x38,
+    0xDE, 0x89, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+    0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+    0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11,
+    0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+    0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x00, 0x00,
+    0x00, 0x00};
+
+uint8_t g_rcv_pkt6[] = {
+    0x00, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0x00, 0xA1,
+    0xA2, 0xA3, 0xA4, 0xA5, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x4C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x11,
+    0x61, 0x99, 0x0B, 0x01, 0x02, 0x03, 0x0A, 0x01,
+    0x02, 0x03, 0x00, 0x35, 0x12, 0xB7, 0x00, 0x38,
+    0xDE, 0x89, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+    0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+    0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11,
+    0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+    0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x00, 0x00,
+    0x00, 0x00};
+
+uint8_t g_snd_pkt7[] = {
+    0x00, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0x00, 0xA1,
+    0xA2, 0xA3, 0xA4, 0xA5, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x4C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x11,
+    0x61, 0x99, 0x0B, 0x01, 0x02, 0x03, 0x0A, 0x01,
+    0x02, 0x03, 0x00, 0x35, 0x12, 0xB7, 0x00, 0x38,
+    0xDE, 0x89, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+    0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+    0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11,
+    0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+    0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x00, 0x00,
+    0x00, 0x00};
+
+uint8_t g_rcv_pkt7[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xA1,
+    0xA2, 0xA3, 0xA4, 0xA5, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x7E, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0x00, 0x00, 0x0B, 0x01, 0x02, 0x03, 0x0A, 0x01,
+    0x02, 0x03, 0x00, 0x35, 0x12, 0xB5, 0x00, 0x6A,
+    0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5,
+    0x00, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x08, 0x00,
+    0x45, 0x00, 0x00, 0x4C, 0x00, 0x01, 0x00, 0x00,
+    0x40, 0x11, 0x61, 0x99, 0x0B, 0x01, 0x02, 0x03,
+    0x0A, 0x01, 0x02, 0x03, 0x00, 0x35, 0x12, 0xB7,
+    0x00, 0x38, 0xDE, 0x89, 0x04, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+    0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+    0x00, 0x00, 0x00, 0x00};
+
 uint64_t g_layer1_dmac   = 0x000102030405ULL;
 uint64_t g_layer1_smac   = 0x00A1A2A3A4A5ULL;
 uint32_t g_layer1_dip    = 0x0A010203;
@@ -212,8 +274,6 @@ uint16_t g_layer31_sport = 0xABBA;
 uint16_t g_layer31_dport = 0xBEEF;
 uint16_t g_layer32_sport = 0x1234;
 uint16_t g_layer32_dport = 0x5678;
-uint16_t g_rdma_sport    = 0x0035;
-uint16_t g_rdma_dport    = 0x12B7;
 uint32_t g_ohash_idx     = 0xDEAF;
 uint32_t g_flow_idx1     = 0xA32;
 uint32_t g_flow_idx2     = 0xA34;
@@ -232,7 +292,20 @@ uint32_t g_tx_layer1_sip   = 0x0F010203;
 uint8_t  g_tx_layer1_proto = IP_PROTO_TCP;
 uint16_t g_tx_layer1_sport = 0x1234;
 uint16_t g_tx_layer1_dport = 0x5678;
+
+uint64_t g_tx_rdma1_dmac   = 0x00E1E2E3E4E5ULL;
+uint64_t g_tx_rdma1_smac   = 0x00A1A2A3A4A5ULL;
+uint32_t g_tx_rdma1_dip    = 0x0A010203;
+uint32_t g_tx_rdma1_sip    = 0x0B010203;
+uint64_t g_tx_rdma2_dmac   = 0x00F1F2F3F4F5ULL;
+
+uint16_t g_rdma_sport      = 0x0035;
+uint16_t g_rdma_dport      = 0x12B7;
+uint8_t  g_rdma_proto      = IP_PROTO_UDP;
+
 uint32_t g_tx_flow_idx1    = 0xB32;
+uint32_t g_tx_flow_idx2    = 0xB34;
+uint32_t g_tx_flow_idx3    = 0xB36;
 
 static uint32_t
 generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
@@ -803,7 +876,7 @@ rx_create_transposition() {
 }
 
 static void
-gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata *data) {
+rx_gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata *data) {
     uint32_t hwkey_len = 0;
     uint32_t hwdata_len = 0;
     uint32_t hash = 0;
@@ -828,12 +901,12 @@ gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata *data) {
     uint32_t crc_init_val = 0;
     for (uint32_t i = 0; i < hash_len; i += 64) {
         hash = generate_hash_(hwkey + i, 64, crc_init_val);
-        printf("HASH(%d) : 0x%0x\n", i, hash);
+        //printf("HASH(%d) : 0x%0x\n", i, hash);
         crc_init_val = hash;
     }
     hash = generate_hash_(hwkey, hash_len, 0);
     gft_idx = hash & 0xFFFFF;
-    printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
+    //printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
 
     p4pd_entry_write(P4TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, data);
     delete [] hwkey;
@@ -870,7 +943,7 @@ rx_create_gft_entry1() {
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
 
-    gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data);
 }
 
 static void
@@ -905,7 +978,7 @@ rx_create_gft_entry2() {
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = 0;
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.hint9 = g_ohash_idx;
 
-    gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data);
 }
 
 static void
@@ -929,7 +1002,7 @@ rx_create_gft_entry3() {
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx3;
 
-    gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data);
 }
 
 static void
@@ -958,7 +1031,7 @@ rx_create_gft_entry4() {
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
 
-    gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data);
 }
 
 static void
@@ -1011,7 +1084,7 @@ rx_create_gft_overflow_entry() {
 }
 
 static void
-tx_key_init() {
+tx_tcp_key_init(int index) {
     tx_key_swkey_t      key;
     tx_key_swkey_mask_t mask;
     tx_key_actiondata   data;
@@ -1047,13 +1120,106 @@ tx_key_init() {
     memset(hwkey, 0, hwkey_len);
     memset(hwmask, 0, hwmask_len);
     p4pd_hwkey_hwmask_build(P4TBL_ID_TX_KEY, &key, &mask, hwkey, hwmask);
-    p4pd_entry_write(P4TBL_ID_TX_KEY, 0, hwkey, hwmask, &data);
+    p4pd_entry_write(P4TBL_ID_TX_KEY, index, hwkey, hwmask, &data);
     delete [] hwkey;
     delete [] hwmask;
 }
 
 static void
-tx_create_transposition() {
+tx_udp_key_init(int index) {
+    tx_key_swkey_t      key;
+    tx_key_swkey_mask_t mask;
+    tx_key_actiondata   data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // key and mask
+    key.ethernet_1_valid = 0xFF;
+    key.ipv4_1_valid = 0xFF;
+    key.udp_1_valid = 0xFF;
+    memset(&mask, 0xFF, sizeof(mask));
+
+    // data
+    data.tx_key_action_u.tx_key_tx_key.match_fields =
+        ((MATCH_ETHERNET_SRC | MATCH_ETHERNET_DST |
+          MATCH_IP_SRC | MATCH_IP_DST | MATCH_IP_PROTO) |
+         ((MATCH_TRANSPORT_SRC_PORT_1 | MATCH_TRANSPORT_DST_PORT_1) << 16));
+
+    // prepare entry and write hardware
+    uint32_t hwkey_len = 0;
+    uint32_t hwmask_len = 0;
+    uint32_t hwdata_len = 0;
+    uint8_t  *hwkey = NULL;
+    uint8_t  *hwmask = NULL;
+    p4pd_hwentry_query(P4TBL_ID_TX_KEY, &hwkey_len, &hwmask_len, &hwdata_len);
+    hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
+    hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
+    hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
+    hwkey = new uint8_t[hwkey_len];
+    hwmask = new uint8_t[hwmask_len];
+    memset(hwkey, 0, hwkey_len);
+    memset(hwmask, 0, hwmask_len);
+    p4pd_hwkey_hwmask_build(P4TBL_ID_TX_KEY, &key, &mask, hwkey, hwmask);
+    p4pd_entry_write(P4TBL_ID_TX_KEY, index, hwkey, hwmask, &data);
+    delete [] hwkey;
+    delete [] hwmask;
+}
+
+static void
+tx_key_init() {
+    tx_tcp_key_init(0);
+    tx_udp_key_init(1);
+}
+
+static void
+tx_create_transposition2() {
+    tx_hdr_transpositions0_actiondata data0;
+    tx_hdr_transpositions1_actiondata data1;
+    tx_hdr_transpositions2_actiondata data2;
+    tx_hdr_transpositions3_actiondata data3;
+
+    memset(&data0, 0, sizeof(data0));
+    memset(&data1, 0, sizeof(data1));
+    memset(&data2, 0, sizeof(data2));
+    memset(&data3, 0, sizeof(data3));
+
+#define DATA0 data0.tx_hdr_transpositions0_action_u.tx_hdr_transpositions0_tx_hdr_transpositions
+#define DATA1 data1.tx_hdr_transpositions1_action_u.tx_hdr_transpositions1_tx_hdr_transpositions
+#define DATA2 data2.tx_hdr_transpositions2_action_u.tx_hdr_transpositions2_tx_hdr_transpositions
+#define DATA3 data3.tx_hdr_transpositions3_action_u.tx_hdr_transpositions3_tx_l4_hdr_transpositions
+
+    // encap len = 36B
+    DATA0.hdr0_bits =
+        (TRANSPOSITIONS_PUSH_ETHERNET_00 | TRANSPOSITIONS_PUSH_IPV4_00) |
+        (36 << 16);
+    memcpy(DATA0.ethernet_dst, &g_layer1_dmac, 6);
+    memcpy(DATA0.ethernet_src, &g_layer1_smac, 6);
+    memcpy(DATA0.ip_src, &g_layer1_sip, 4);
+    memcpy(DATA0.ip_dst, &g_layer1_dip, 4);
+    DATA0.ethernet_type = 0x0800;
+    DATA0.ip_ttl = 64;
+    DATA0.ip_proto = g_layer1_proto;
+    p4pd_entry_write(P4TBL_ID_TX_HDR_TRANSPOSITIONS0, g_tx_flow_idx3,
+                     NULL, NULL, &data0);
+
+    DATA3.hdr0_bits =
+        TRANSPOSITIONS_PUSH_VXLAN_00 | TRANSPOSITIONS_PUSH_UDP_00;
+    DATA3.l4_sport_00  = 0x0035;
+    DATA3.l4_dport_00  = 0x12b5;
+    DATA3.encap_len_00 = 16;
+    p4pd_entry_write(P4TBL_ID_TX_HDR_TRANSPOSITIONS3, g_tx_flow_idx3,
+                     NULL, NULL, &data3);
+
+#undef DATA0
+#undef DATA1
+#undef DATA2
+#undef DATA3
+}
+
+static void
+tx_create_transposition3() {
     tx_hdr_transpositions0_actiondata data0;
     tx_hdr_transpositions1_actiondata data1;
     tx_hdr_transpositions2_actiondata data2;
@@ -1118,15 +1284,45 @@ tx_create_transposition() {
 }
 
 static void
-tx_create_gft_entry() {
+tx_gft_entry_write(tx_gft_hash_swkey_t *key, tx_gft_hash_actiondata *data) {
+    uint32_t hwkey_len = 0;
+    uint32_t hwdata_len = 0;
+    uint32_t hash = 0;
+    uint32_t hash_len = 0;
+    uint32_t gft_idx = 0;
+    uint8_t  *hwkey = NULL;
+
+    // build hardware entry
+    p4pd_hwentry_query(P4TBL_ID_TX_GFT_HASH, &hwkey_len, NULL, &hwdata_len);
+    hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
+    hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
+    hash_len = hwkey_len;
+    if (hash_len % 64) {
+        hash_len +=  (64 - (hwkey_len % 64));
+    }
+    hwkey = new uint8_t[hash_len];
+    memset(hwkey, 0, hash_len);
+    p4pd_hwkey_hwmask_build(P4TBL_ID_TX_GFT_HASH, key, NULL, hwkey, NULL);
+
+    // generate hash
+    uint32_t crc_init_val = 0;
+    for (uint32_t i = 0; i < hash_len; i += 64) {
+        hash = generate_hash_(hwkey + i, 64, crc_init_val);
+        //printf("HASH(%d) : 0x%0x\n", i, hash);
+        crc_init_val = hash;
+    }
+    hash = generate_hash_(hwkey, hash_len, 0);
+    gft_idx = hash & 0xFFFFF;
+    //printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
+
+    p4pd_entry_write(P4TBL_ID_TX_GFT_HASH, gft_idx, hwkey, NULL, data);
+    delete [] hwkey;
+}
+
+static void
+tx_create_gft_entry1() {
     tx_gft_hash_swkey_t     key;
     tx_gft_hash_actiondata  data;
-    uint32_t                hwkey_len = 0;
-    uint32_t                hwdata_len = 0;
-    uint32_t                hash = 0;
-    uint32_t                hash_len = 0;
-    uint32_t                gft_idx = 0;
-    uint8_t                 *hwkey = NULL;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -1144,36 +1340,31 @@ tx_create_gft_entry() {
     data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
     data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx1;
 
-    // build hardware entry
-    p4pd_hwentry_query(P4TBL_ID_TX_GFT_HASH, &hwkey_len, NULL, &hwdata_len);
-    hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
-    hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
-    hash_len = hwkey_len;
-    if (hash_len % 64) {
-        hash_len +=  (64 - (hwkey_len % 64));
-    }
-    hwkey = new uint8_t[hash_len];
-    memset(hwkey, 0, hash_len);
-    p4pd_hwkey_hwmask_build(P4TBL_ID_TX_GFT_HASH, &key, NULL, hwkey, NULL);
+    tx_gft_entry_write(&key, &data);
+}
 
-    for (uint32_t i = 0; i < hash_len; i++) {
-        printf("%02x ", hwkey[i]);
-    }
-    printf("\n");
+static void
+tx_create_gft_entry2() {
+    tx_gft_hash_swkey_t     key;
+    tx_gft_hash_actiondata  data;
 
-    // generate hash
-    uint32_t crc_init_val = 0;
-    for (uint32_t i = 0; i < hash_len; i += 64) {
-        hash = generate_hash_(hwkey + i, 64, crc_init_val);
-        printf("HASH(%d) : 0x%0x\n", i, hash);
-        crc_init_val = hash;
-    }
-    hash = generate_hash_(hwkey, hash_len, 0);
-    gft_idx = hash & 0xFFFFF;
-    printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
 
-    p4pd_entry_write(P4TBL_ID_TX_GFT_HASH, gft_idx, hwkey, NULL, &data);
-    delete [] hwkey;
+    // key
+    memcpy(key.flow_lkp_metadata_ethernet_dst_1, &g_tx_rdma1_dmac, 6);
+    memcpy(key.flow_lkp_metadata_ethernet_src_1, &g_tx_rdma1_smac, 6);
+    memcpy(key.flow_lkp_metadata_ip_dst_1, &g_tx_rdma1_dip, 4);
+    memcpy(key.flow_lkp_metadata_ip_src_1, &g_tx_rdma1_sip, 4);
+    key.flow_lkp_metadata_ip_proto_1 = g_rdma_proto;
+    key.flow_lkp_metadata_l4_sport_1 = g_rdma_sport;
+    key.flow_lkp_metadata_l4_dport_1 = g_rdma_dport;
+
+    // data
+    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
+    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx2;
+
+    tx_gft_entry_write(&key, &data);
 }
 
 class gft_test : public ::testing::Test {
@@ -1183,6 +1374,30 @@ class gft_test : public ::testing::Test {
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
+
+static void
+tx_create_gft_entry3() {
+    tx_gft_hash_swkey_t     key;
+    tx_gft_hash_actiondata  data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    // key
+    memcpy(key.flow_lkp_metadata_ethernet_dst_1, &g_tx_rdma2_dmac, 6);
+    memcpy(key.flow_lkp_metadata_ethernet_src_1, &g_tx_rdma1_smac, 6);
+    memcpy(key.flow_lkp_metadata_ip_dst_1, &g_tx_rdma1_dip, 4);
+    memcpy(key.flow_lkp_metadata_ip_src_1, &g_tx_rdma1_sip, 4);
+    key.flow_lkp_metadata_ip_proto_1 = g_rdma_proto;
+    key.flow_lkp_metadata_l4_sport_1 = g_rdma_sport;
+    key.flow_lkp_metadata_l4_dport_1 = g_rdma_dport;
+
+    // data
+    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
+    data.tx_gft_hash_action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx3;
+
+    tx_gft_entry_write(&key, &data);
+}
 
 TEST_F(gft_test, test1) {
     int ret = 0;
@@ -1225,8 +1440,11 @@ TEST_F(gft_test, test1) {
     rx_create_gft_overflow_entry();
 
     tx_key_init();
-    tx_create_transposition();
-    tx_create_gft_entry();
+    tx_create_transposition2();
+    tx_create_transposition3();
+    tx_create_gft_entry1();
+    tx_create_gft_entry2();
+    tx_create_gft_entry3();
 
     uint32_t i = 0;
     uint32_t port = 0;
@@ -1235,12 +1453,13 @@ TEST_F(gft_test, test1) {
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
     uint32_t tcscale = 1;
-    uint32_t tcid = 1;
+    uint32_t tcid = 0;
 
     if (getenv("TCSCALE")) {
         tcscale = atoi(getenv("TCSCALE"));
     }
 
+    tcid++;
     ipkt.resize(sizeof(g_snd_pkt1));
     memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
     epkt.resize(sizeof(g_rcv_pkt1));
@@ -1315,6 +1534,42 @@ TEST_F(gft_test, test1) {
     epkt.resize(sizeof(g_rcv_pkt5));
     memcpy(epkt.data(), g_rcv_pkt5, sizeof(g_rcv_pkt5));
     std::cout << "Tx: Testing wide key without overflow" << std::endl;
+    for (i = 0; i < tcscale; i++) {
+        printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+        testcase_begin(tcid, i+1);
+        step_network_pkt(ipkt, port);
+        if (!getenv("SKIP_VERIFY")) {
+            get_next_pkt(opkt, port, cos);
+            EXPECT_TRUE(opkt == epkt);
+        }
+        testcase_end(tcid, i+1);
+    }
+
+    tcid++;
+    port = 7;
+    ipkt.resize(sizeof(g_snd_pkt6));
+    memcpy(ipkt.data(), g_snd_pkt6, sizeof(g_snd_pkt6));
+    epkt.resize(sizeof(g_rcv_pkt6));
+    memcpy(epkt.data(), g_rcv_pkt6, sizeof(g_rcv_pkt6));
+    std::cout << "Tx: Testing native RDMA flow" << std::endl;
+    for (i = 0; i < tcscale; i++) {
+        printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+        testcase_begin(tcid, i+1);
+        step_network_pkt(ipkt, port);
+        if (!getenv("SKIP_VERIFY")) {
+            get_next_pkt(opkt, port, cos);
+            EXPECT_TRUE(opkt == epkt);
+        }
+        testcase_end(tcid, i+1);
+    }
+
+    tcid++;
+    port = 7;
+    ipkt.resize(sizeof(g_snd_pkt7));
+    memcpy(ipkt.data(), g_snd_pkt7, sizeof(g_snd_pkt7));
+    epkt.resize(sizeof(g_rcv_pkt7));
+    memcpy(epkt.data(), g_rcv_pkt7, sizeof(g_rcv_pkt7));
+    std::cout << "Tx: Testing tunneled RDMA flow" << std::endl;
     for (i = 0; i < tcscale; i++) {
         printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
         testcase_begin(tcid, i+1);
