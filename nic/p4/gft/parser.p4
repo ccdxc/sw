@@ -6,6 +6,7 @@ header_type capri_deparser_len_t {
         trunc_pkt_len           : 16;
         icrc_payload_len        : 16;
         rx_l4_payload_len       : 16;
+        tx_l4_payload_len       : 16;
         udp_opt_l2_checksum_len : 16;
     }
 }
@@ -44,6 +45,14 @@ header_type parser_ohi_t {
         icrc_len                      : 16;
         kind                          : 16;
         chksum                        : 16;
+        ipv4_00___hdr_len             : 16;
+        ipv4_00___start_off           : 16;
+        ipv6_00___start_off           : 16;
+        udp_00___start_off            : 16;
+        ipv4_01___hdr_len             : 16;
+        ipv4_01___start_off           : 16;
+        ipv6_01___start_off           : 16;
+        udp_01___start_off            : 16;
     }
 }
 
@@ -1617,6 +1626,209 @@ parser parse_tx_roce_v2 {
     extract(roce_bth_1);
     return ingress;
 }
+
+/******************************************************************************
+ * Checksum  in Tx Path
+ *****************************************************************************/
+
+field_list ipv4_00_checksum_list {
+    ipv4_00.version;
+    ipv4_00.ihl;
+    ipv4_00.diffserv;
+    ipv4_00.totalLen;
+    ipv4_00.identification;
+    ipv4_00.flags;
+    ipv4_00.fragOffset;
+    ipv4_00.ttl;
+    ipv4_00.protocol;
+    ipv4_00.srcAddr;
+    ipv4_00.dstAddr;
+}
+
+field_list ipv4_00_udp_00_checksum_list {
+    ipv4_00.srcAddr;
+    ipv4_00.dstAddr;
+    8'0;
+    ipv4_00.protocol;
+    udp_00.len;
+    udp_00.srcPort;
+    udp_00.dstPort;
+    payload;
+}
+
+field_list ipv6_00_udp_00_checksum_list {
+    ipv6_00.srcAddr;
+    ipv6_00.dstAddr;
+    8'0;
+    ipv6_00.nextHdr;
+    udp_00.srcPort;
+    udp_00.dstPort;
+    payload;
+}
+
+
+@pragma checksum hdr_len_expr ohi.ipv4_00___hdr_len + 0
+@pragma checksum gress egress
+field_list_calculation tx_ipv4_00_checksum {
+    input {
+        ipv4_00_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_00.hdrChecksum  {
+    update tx_ipv4_00_checksum;
+}
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+field_list_calculation tx_ipv4_00_udp_00_checksum {
+    input {
+        ipv4_00_udp_00_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+field_list_calculation tx_ipv6_00_udp_00_checksum {
+    input {
+        ipv6_00_udp_00_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_00.checksum {
+    update tx_ipv4_00_udp_00_checksum;
+    update tx_ipv6_00_udp_00_checksum;
+}
+
+field_list ipv4_01_checksum_list {
+    ipv4_01.version;
+    ipv4_01.ihl;
+    ipv4_01.diffserv;
+    ipv4_01.totalLen;
+    ipv4_01.identification;
+    ipv4_01.flags;
+    ipv4_01.fragOffset;
+    ipv4_01.ttl;
+    ipv4_01.protocol;
+    ipv4_01.srcAddr;
+    ipv4_01.dstAddr;
+}
+
+field_list ipv4_01_udp_01_checksum_list {
+    ipv4_01.srcAddr;
+    ipv4_01.dstAddr;
+    8'0;
+    ipv4_01.protocol;
+    udp_01.len;
+    udp_01.srcPort;
+    udp_01.dstPort;
+    payload;
+}
+
+field_list ipv6_01_udp_01_checksum_list {
+    ipv6_01.srcAddr;
+    ipv6_01.dstAddr;
+    8'0;
+    ipv6_01.nextHdr;
+    udp_01.srcPort;
+    udp_01.dstPort;
+    payload;
+}
+
+
+@pragma checksum hdr_len_expr ohi.ipv4_01___hdr_len + 0
+@pragma checksum gress egress
+field_list_calculation tx_ipv4_01_checksum {
+    input {
+        ipv4_01_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_01.hdrChecksum  {
+    update tx_ipv4_01_checksum;
+}
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+field_list_calculation tx_ipv4_01_udp_01_checksum {
+    input {
+        ipv4_01_udp_01_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+field_list_calculation tx_ipv6_01_udp_01_checksum {
+    input {
+        ipv6_01_udp_01_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_01.checksum {
+    update tx_ipv4_01_udp_01_checksum;
+    update tx_ipv6_01_udp_01_checksum;
+}
+
+@pragma checksum hdr_len_expr ohi.ipv4_1___hdr_len + 0
+@pragma checksum gress egress
+field_list_calculation tx_ipv4_1_checksum {
+    input {
+        ipv4_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_1.hdrChecksum  {
+    update tx_ipv4_1_checksum;
+}
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+field_list_calculation tx_ipv4_1_udp_1_checksum {
+    input {
+        ipv4_1_udp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+field_list_calculation tx_ipv6_1_udp_1_checksum {
+    input {
+        ipv6_1_udp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field udp_1.checksum {
+    update tx_ipv4_1_udp_1_checksum;
+    update tx_ipv6_1_udp_1_checksum;
+}
+
+/******************************************************************************
+ * icrc in Tx Path
+ *****************************************************************************/
 
 field_list tx_ipv4_1_icrc_list {
     ipv4_1.ttl;

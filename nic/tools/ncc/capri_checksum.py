@@ -792,15 +792,6 @@ class Checksum:
                         if pl_calfldobj and pl_calfldobj in csum_objects:
                             calfldhdr = pl_calfldobj.CalculatedFieldHdrGet()
 
-                            #Inorder to handle case where phdr is not part of
-                            # header checksum (v6), skip checksum unit
-                            # as though csum unit is allocated for phdr.
-                            # This is needed because if [ipv6, udp,..] parse path
-                            # is processed before [ipv4, udp, ....], then UDP
-                            # csum unit assignment will not be correct.
-                            if pl_calfldobj.phdr_name not in csum_hdrs:
-                                ParserCsumEngineObj.\
-                                    AllocateCsumUnit(pl_calfldobj.phdr_name)
                             # Payload checksum node needs 1 csum engine
                             # and 1 csum profile but more csum phdr profiles
                             # depending on which pseudo hdr is in the packet
@@ -808,9 +799,6 @@ class Checksum:
                             pl_calfldobj.ParserCsumObjGet().CsumUnitNumSet(\
                                 ParserCsumEngineObj.
                                                AllocateCsumUnit(calfldhdr))
-                            if pl_calfldobj.phdr_name not in csum_hdrs:
-                                ParserCsumEngineObj.\
-                                    DeAllocateCsumUnit(pl_calfldobj.phdr_name)
                             pl_calfldobj.ParserCsumProfileGet().\
                                             CsumProfileUnitNumSet(\
                                 ParserCsumEngineObj.\
@@ -1622,7 +1610,7 @@ class Checksum:
         return pl_slot
 
     def DeParserInnerPayLoadCsumInclude(self, outer_csum_objs, csum_hdr,\
-                                        csum_obj, parse_path):
+                                        csum_obj):
         if not len(outer_csum_objs):
             return
 
@@ -1691,6 +1679,136 @@ class Checksum:
             calfldobj.DeParserCsumProfileObjSet(DeParserCsumProfile())
             l2_csum_cal_fieldlist_update.append(calfldobj)
 
+    def BuildDeParserCsumNonPayloadObject(self, parser, hdr, calfldobj):
+        DeParserCsumEngineObj = self.IngDeParserCsumEngineObj if parser.d == xgress.INGRESS \
+                                               else self.EgDeParserCsumEngineObj
+        csum_obj = calfldobj.DeParserCsumObjGet()
+        csum_obj.HvBitNumSet(parser.hdr_hv_bit[hdr])
+        csum_obj.CsumHvBitNumSet(parser.csum_hdr_hv_bit[hdr][0][0])
+        csum_obj.CsumHvBitStrSet(parser.csum_hdr_hv_bit[hdr][0][2])
+        calfldhdr = calfldobj.CalculatedFieldHdrGet()
+        csum_obj.CsumUnitNumSet(DeParserCsumEngineObj.\
+                                 AllocateCsumUnit(calfldhdr, calfldobj, True))
+        csum_obj.PhdrValidSet(0)
+        csum_profile = DeParserCsumEngineObj.AllocateCsumProfile(calfldhdr)
+        #Config Csum Profile
+        csum_obj.CsumProfileNumSet(csum_profile)
+        csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
+        csum_profile_obj.CsumProfileNumSet(csum_profile)
+        csum_profile_obj.CsumProfilePhvLenSelSet(0,0)
+        #TODO use p4field hlir-offset to set checksum location
+        # 10th byte in ipv4 header is checksum
+        csum_profile_obj.CsumProfileCsumLocSet(10)
+        if calfldobj.option_checksum:
+            csum_profile_obj.CsumProfileCsumLocSet(1)
+            csum_profile_obj.CsumEightBitSet(1)
+            dprsr_payload_len_slot = \
+                    self.DeParserPayLoadLenSlotGet(calfldobj, parser)
+            csum_profile_obj.CsumProfilePhvLenSelSet(1,dprsr_payload_len_slot)
+
+        self.csum_compute_logger.debug("%s" % csum_obj.LogGenerate(hdr.name))
+        self.csum_compute_logger.debug(" %s" %
+                         csum_profile_obj.LogGenerate())
+        self.csum_compute_logger.debug('\n')
+
+
+    def BuildDeParserCsumPayloadObject(self, parser, hdr, phdr, pl_calfldobj, payload_csum_obj_list):
+        DeParserCsumEngineObj = self.IngDeParserCsumEngineObj if parser.d == xgress.INGRESS \
+                                               else self.EgDeParserCsumEngineObj
+        calfldhdr = pl_calfldobj.CalculatedFieldHdrGet()
+        # Payload checksum node needs 1 csum engine
+        # and 1 csum profile but more csum phdr profiles
+        # depending on which pseudo hdr is in the packet
+        # /parse path.
+        csum_unit = DeParserCsumEngineObj.AllocateCsumUnit(calfldhdr, pl_calfldobj)
+        csum_profile = DeParserCsumEngineObj.AllocateCsumProfile(calfldhdr)
+        csum_obj = pl_calfldobj.DeParserCsumObjGet()
+        csum_obj.CsumUnitNumSet(csum_unit)
+        #Include result of inner payload checksum into
+        #outer payload checksum computation
+        self.DeParserInnerPayLoadCsumInclude(payload_csum_obj_list, hdr.name, csum_obj)
+        payload_csum_obj_list.append((csum_obj, hdr.name))
+        csum_obj.HvBitNumSet(parser.hdr_hv_bit[hdr])
+        csumhv = -1
+        l3hf_name = calfldhdr + '.csum'
+        for elem in parser.csum_hdr_hv_bit[hdr]:
+            if elem[2] == l3hf_name:
+                csumhv = elem[0]
+                break
+        assert csumhv != -1, pdb.set_trace()
+        csum_obj.CsumHvBitNumSet(csumhv)
+        csum_obj.CsumHvBitStrSet(l3hf_name)
+        csum_obj.CsumProfileNumSet(csum_profile)
+        csum_obj.PhdrValidSet(0)
+        csum_profile_obj = pl_calfldobj.DeParserCsumProfileObjGet()
+        csum_profile_obj.CsumProfileNumSet(csum_profile)
+        dprsr_payload_len_slot = \
+                self.DeParserPayLoadLenSlotGet(pl_calfldobj, parser)
+        csum_profile_obj.CsumProfilePhvLenSelSet(1, dprsr_payload_len_slot)
+
+        #TODO use p4field hlir-offset to set checksum location
+        if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
+            csum_profile_obj.CsumProfileCsumLocSet(16)
+            csum_profile_obj.CsumProfilePhdrNextHdrSet(6)
+            add_len = 1
+        elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
+            csum_profile_obj.CsumProfileCsumLocSet(6)
+            csum_profile_obj.CsumProfilePhdrNextHdrSet(17)
+            add_len = 1
+        csum_profile_obj.CsumProfileAddLenSet(add_len)
+
+        if self.DeParserPhdrCsumObjGet(phdr, csum_unit,hdr.name, parser.d) == None:
+            #Set Phdr profile#, in csum hdr object of Phdr
+            #Phdr that this payload csum uses.
+            phdr_csum_obj = \
+                    self.DeParserPhdrCsumObjGet(phdr, -1, '', parser.d)
+            assert phdr_csum_obj != None, pdb.set_trace()
+            phdr_csum_obj = copy.copy(phdr_csum_obj)
+            phdr_inst = self.be.h.p4_header_instances[phdr]
+            phdr_csum_obj.HvBitNumSet(parser.hdr_hv_bit[phdr_inst])
+            if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
+                csumhv = -1
+                l3hf_name = pl_calfldobj.phdr_name + '.tcp_csum'
+                for elem in parser.csum_hdr_hv_bit[phdr_inst]:
+                    if elem[2] == l3hf_name:
+                        csumhv = elem[0]
+                        break
+                assert csumhv != -1, pdb.set_trace()
+                phdr_csum_obj.CsumHvBitNumSet(csumhv)
+                phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
+            elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
+                csumhv = -1
+                l3hf_name = pl_calfldobj.phdr_name + '.udp_csum'
+                for elem in parser.csum_hdr_hv_bit[phdr_inst]:
+                    if elem[2] == l3hf_name:
+                        csumhv = elem[0]
+                        break
+                assert csumhv != -1, pdb.set_trace()
+                phdr_csum_obj.CsumHvBitNumSet(csumhv)
+                phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
+            else:
+                pdb.set_trace()
+
+            phdr_profile = DeParserCsumEngineObj.AllocatePhdrProfile(calfldhdr, phdr)
+            phdr_csum_obj.PhdrProfileNumSet(phdr_profile)
+            self.DeParserPhdrCsumObjSet(phdr, phdr_csum_obj, csum_unit, hdr.name, parser.d)
+            pl_calfldobj.DeParserPhdrCsumObjSet(phdr_csum_obj)
+            assert pl_calfldobj.DeParserPhdrProfileObjGet() == None, pdb.set_trace()
+            pl_calfldobj.DeParserPhdrProfileObjSet(\
+                          DeParserPhdrProfile(phdr_profile,  \
+                                              pl_calfldobj.CsumPhdrTypeGet(), \
+                                              pl_calfldobj.phdr_fields, 0))
+        else:
+            assert(0), pdb.set_trace()
+
+        phdr_csum_obj.PhdrValidSet(1)
+        phdr_csum_obj.PhdrUnitSet(csum_unit)
+        self.csum_compute_logger.debug('%s' % csum_obj.LogGenerate(hdr.name))
+        self.csum_compute_logger.debug('%s' % csum_profile_obj.LogGenerate())
+        self.csum_compute_logger.debug('%s' % phdr_csum_obj.LogGenerate(pl_calfldobj.phdr_name))
+        self.csum_compute_logger.debug('\n')
+
+
     def AllocateDeParserCsumResources(self, parser):
         '''
          Walk all parse paths and assign resources
@@ -1706,8 +1824,6 @@ class Checksum:
             csum_hdr = calfldobj.CalculatedFieldHdrGet()
             if csum_hdr not in csum_hdrs:
                 csum_hdrs.add(csum_hdr)
-
-        for calfldobj in update_cal_fieldlist:
             csum_phdr = calfldobj.CsumPhdrNameGet()
             if csum_phdr != '' and csum_phdr not in csum_phdrs:
                 csum_phdrs.add(csum_phdr)
@@ -1775,38 +1891,9 @@ class Checksum:
                     #calfldobjlist is not used.
                     calfldobj = calfldobjlist[0]
                     if not calfldobj.payload_checksum and calfldobj in csum_objects:
-                        _csum_obj = calfldobj.DeParserCsumObjGet()
-                        _csum_obj.HvBitNumSet(parser.hdr_hv_bit[hdr])
-                        _csum_obj.CsumHvBitNumSet(parser.csum_hdr_hv_bit[hdr][0][0])
-                        _csum_obj.CsumHvBitStrSet(parser.csum_hdr_hv_bit[hdr][0][2])
-                        calfldhdr = calfldobj.CalculatedFieldHdrGet()
-                        _csum_obj.CsumUnitNumSet(DeParserCsumEngineObj.\
-                                                 AllocateCsumUnit(calfldhdr, calfldobj, True))
-                        _csum_obj.PhdrValidSet(0)
-                        csum_profile = DeParserCsumEngineObj.\
-                                                 AllocateCsumProfile(calfldhdr)
-                        #Config Csum Profile
-                        _csum_obj.CsumProfileNumSet(csum_profile)
-                        _csum_profile_obj = calfldobj.DeParserCsumProfileObjGet()
-                        _csum_profile_obj.CsumProfileNumSet(csum_profile)
-                        _csum_profile_obj.CsumProfilePhvLenSelSet(0,0)
-                        #TODO use p4field hlir-offset to set checksum location
-                        # 10th byte in ipv4 header is checksum
-                        _csum_profile_obj.CsumProfileCsumLocSet(10)
-                        if calfldobj.option_checksum:
-                            _csum_profile_obj.CsumProfileCsumLocSet(1)
-                            _csum_profile_obj.CsumEightBitSet(1)
-                            dprsr_payload_len_slot = \
-                                    self.DeParserPayLoadLenSlotGet(calfldobj, parser)
-                            _csum_profile_obj.CsumProfilePhvLenSelSet(1,dprsr_payload_len_slot)
-
                         self.csum_compute_logger.debug(\
-                        'Checksum Assignment along path %s' % (str(parse_path)))
-                        self.csum_compute_logger.debug("%s" % _csum_obj.LogGenerate(hdr.name))
-                        self.csum_compute_logger.debug(" %s" %
-                                         _csum_profile_obj.LogGenerate())
-                        self.csum_compute_logger.debug('\n')
-
+                        '%s: Checksum Assignment along path %s' % (xgress_to_string(parser.d), str(parse_path)))
+                        self.BuildDeParserCsumNonPayloadObject(parser, hdr, calfldobj)
                         csum_objects.remove(calfldobj)
 
                     elif calfldobj.payload_checksum:
@@ -1830,124 +1917,49 @@ class Checksum:
                             # outer csum, process it.
                             _csum_obj = pl_calfldobj.DeParserCsumObjGet()
                             self.DeParserInnerPayLoadCsumInclude(\
-                                        payload_csum_obj_list, hdr.name, _csum_obj, parse_path)
+                                        payload_csum_obj_list, hdr.name, _csum_obj)
 
                         if pl_calfldobj and pl_calfldobj in csum_objects:
-                            calfldhdr = pl_calfldobj.CalculatedFieldHdrGet()
-                            # Payload checksum node needs 1 csum engine
-                            # and 1 csum profile but more csum phdr profiles
-                            # depending on which pseudo hdr is in the packet
-                            # /parse path.
-                            csum_unit = DeParserCsumEngineObj.\
-                                            AllocateCsumUnit(calfldhdr, calfldobj)
-                            csum_profile = DeParserCsumEngineObj.\
-                                            AllocateCsumProfile(calfldhdr)
-                            _csum_obj = pl_calfldobj.DeParserCsumObjGet()
-                            _csum_obj.CsumUnitNumSet(csum_unit)
-                            #Include result of inner payload checksum into
-                            #outer payload checksum computation
-                            self.DeParserInnerPayLoadCsumInclude(\
-                                        payload_csum_obj_list, hdr.name, _csum_obj, parse_path)
-                            payload_csum_obj_list.append((_csum_obj, hdr.name))
-                            _csum_obj.HvBitNumSet(parser.hdr_hv_bit[hdr])
-                            csumhv = -1
-                            l3hf_name = calfldhdr + '.csum'
-                            for elem in parser.csum_hdr_hv_bit[hdr]:
-                                if elem[2] == l3hf_name:
-                                    csumhv = elem[0]
-                                    break
-                            assert csumhv != -1, pdb.set_trace()
-                            _csum_obj.CsumHvBitNumSet(csumhv)
-                            _csum_obj.CsumHvBitStrSet(l3hf_name)
-                            _csum_obj.CsumProfileNumSet(csum_profile)
-                            _csum_obj.PhdrValidSet(0)
-                            _csum_profile_obj = pl_calfldobj.\
-                                                    DeParserCsumProfileObjGet()
-                            _csum_profile_obj.CsumProfileNumSet(csum_profile)
-                            dprsr_payload_len_slot = \
-                                    self.DeParserPayLoadLenSlotGet(pl_calfldobj, parser)
-                            _csum_profile_obj.CsumProfilePhvLenSelSet(1, \
-                                                        dprsr_payload_len_slot)
-
-                            #TODO use p4field hlir-offset to set checksum location
-                            if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
-                                _csum_profile_obj.CsumProfileCsumLocSet(16)
-                                _csum_profile_obj.CsumProfilePhdrNextHdrSet(6)
-                                add_len = 1
-                            elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
-                                _csum_profile_obj.CsumProfileCsumLocSet(6)
-                                _csum_profile_obj.CsumProfilePhdrNextHdrSet(17)
-                                add_len = 1
-                            _csum_profile_obj.CsumProfileAddLenSet(add_len)
-
-                            if self.DeParserPhdrCsumObjGet(phdr, csum_unit,\
-                                                           hdr.name, parser.d) == None:
-                                #Set Phdr profile#, in csum hdr object of Phdr
-                                #Phdr that this payload csum uses.
-                                phdr_csum_obj = \
-                                        self.DeParserPhdrCsumObjGet(phdr,\
-                                                                    -1, '', parser.d)
-                                assert phdr_csum_obj != None, pdb.set_trace()
-                                _phdr_csum_obj = copy.copy(phdr_csum_obj)
-                                phdr_inst = self.be.h.p4_header_instances[phdr]
-                                _phdr_csum_obj.HvBitNumSet(parser.hdr_hv_bit[phdr_inst])
-                                if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
-                                    csumhv = -1
-                                    l3hf_name = pl_calfldobj.phdr_name + '.tcp_csum'
-                                    for elem in parser.csum_hdr_hv_bit[phdr_inst]:
-                                        if elem[2] == l3hf_name:
-                                            csumhv = elem[0]
-                                            break
-                                    assert csumhv != -1, pdb.set_trace()
-                                    _phdr_csum_obj.CsumHvBitNumSet(csumhv)
-                                    _phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
-                                elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
-                                    csumhv = -1
-                                    l3hf_name = pl_calfldobj.phdr_name + '.udp_csum'
-                                    for elem in parser.csum_hdr_hv_bit[phdr_inst]:
-                                        if elem[2] == l3hf_name:
-                                            csumhv = elem[0]
-                                            break
-                                    assert csumhv != -1, pdb.set_trace()
-                                    _phdr_csum_obj.CsumHvBitNumSet(csumhv)
-                                    _phdr_csum_obj.CsumHvBitStrSet(l3hf_name)
-                                else:
-                                    pdb.set_trace()
-
-                                phdr_profile = DeParserCsumEngineObj.\
-                                          AllocatePhdrProfile(calfldhdr, phdr)
-                                _phdr_csum_obj.PhdrProfileNumSet(phdr_profile)
-                                self.DeParserPhdrCsumObjSet(phdr, \
-                                            _phdr_csum_obj, csum_unit, hdr.name, parser.d)
-                                pl_calfldobj.DeParserPhdrCsumObjSet(_phdr_csum_obj)
-                                assert pl_calfldobj.DeParserPhdrProfileObjGet()\
-                                       == None, pdb.set_trace()
-                                pl_calfldobj.DeParserPhdrProfileObjSet(\
-                                              DeParserPhdrProfile(phdr_profile,  \
-                                                                  pl_calfldobj.CsumPhdrTypeGet(), \
-                                                                  pl_calfldobj.phdr_fields, 0))
-                            else:
-                                assert(0), pdb.set_trace()
-
-                            _phdr_csum_obj.PhdrValidSet(1)
-                            _phdr_csum_obj.PhdrUnitSet(csum_unit)
-
-                            self.csum_compute_logger.debug('Checksum Assignment'\
+                            self.csum_compute_logger.debug('%s Checksum Assignment'\
                                                            ' along path %s' %
-                                                           str(parse_path))
-                            self.csum_compute_logger.debug('%s' % \
-                                              _csum_obj.LogGenerate(hdr.name))
-                            self.csum_compute_logger.debug('%s' % \
-                                              _csum_profile_obj.LogGenerate())
-                            self.csum_compute_logger.debug('%s' % _phdr_csum_obj.\
-                                              LogGenerate(pl_calfldobj.phdr_name))
-
-                            self.csum_compute_logger.debug('\n')
-
+                                                           (xgress_to_string(parser.d), str(parse_path)))
+                            self.BuildDeParserCsumPayloadObject(parser, hdr, phdr, pl_calfldobj, payload_csum_obj_list)
                             csum_objects.remove(pl_calfldobj)
 
                 if not len(csum_objects):
                     break
+
+        if len(csum_objects):
+            #Not all csum update objects processed. This could happen if one/more
+            #csum headers are extracted in deparser-only states. Such headers will
+            #not appear in parse_path. This can be done for csum update objects
+            #only or objects that are in checksum.ig/eg_update_cal_fieldlist.
+            #Add logic to walk through deparser only headers and if those headers
+            # are also csum objects, then assign csum resources.
+            deparse_only_hdrs = set(hdr.name for hdr in parser.deparse_only_hdrs)
+            for calfldobj in update_cal_fieldlist:
+                csum_hdr = calfldobj.CalculatedFieldHdrGet()
+                if csum_hdr in deparse_only_hdrs:
+                    if not calfldobj.payload_checksum and calfldobj in csum_objects:
+                        self.csum_compute_logger.debug(\
+                        '%s: Checksum Assignment along path %s' % (xgress_to_string(parser.d),
+                         str(parse_path)))
+                        self.BuildDeParserCsumNonPayloadObject(parser, \
+                        parser.be.h.p4_header_instances[csum_hdr], calfldobj)
+                        csum_objects.remove(calfldobj)
+                    elif calfldobj.payload_checksum and calfldobj in csum_objects:
+                        csum_phdr = calfldobj.CsumPhdrNameGet()
+                        if csum_phdr != '' and parser.be.h.p4_header_instances[csum_phdr] \
+                                               in parser.deparse_only_hdrs:
+                            self.csum_compute_logger.debug('%s Checksum Assignment'\
+                                                           ' along path %s' % \
+                                                           (xgress_to_string(parser.d),\
+                                                           str(parse_path)))
+                            self.BuildDeParserCsumPayloadObject(parser, \
+                                 parser.be.h.p4_header_instances[csum_hdr], \
+                                 csum_phdr, calfldobj, payload_csum_obj_list)
+
+                            csum_objects.remove(calfldobj)
 
         assert(len(csum_objects) == 0), pdb.set_trace()
         DeParserCsumEngineObj.CsumUnitAllocationFinalize()

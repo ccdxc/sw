@@ -56,8 +56,8 @@ tx_key_ipv6:
     phvwr.c1    p.flow_lkp_metadata_ip_src_1, \
                     k.{ipv6_1_srcAddr_sbit0_ebit7...ipv6_1_srcAddr_sbit96_ebit127}
     seq         c1, d.tx_key_d.match_fields[MATCH_IP_DST_BIT_POS], 1
-    phvwr.c1    p.flow_lkp_metadata_ip_dst_1[127:16], k.ipv6_1_dstAddr_sbit0_ebit111
-    phvwr.c1    p.flow_lkp_metadata_ip_dst_1[15:0], k.ipv6_1_dstAddr_sbit112_ebit127
+    phvwr.c1    p.flow_lkp_metadata_ip_dst_1[127:8], k.ipv6_1_dstAddr_sbit0_ebit119
+    phvwr.c1    p.flow_lkp_metadata_ip_dst_1[7:0], k.ipv6_1_dstAddr_sbit120_ebit127
     seq         c1, d.tx_key_d.match_fields[MATCH_IP_DSCP_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_ip_dscp_1, \
                     k.{ipv6_1_trafficClass_sbit0_ebit3,ipv6_1_trafficClass_sbit4_ebit7}
