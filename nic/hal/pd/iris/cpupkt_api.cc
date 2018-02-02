@@ -12,6 +12,8 @@ namespace pd {
 
 thread_local uint32_t gc_pindex = 0;
 
+hal_ret_t cpupkt_descr_free(cpupkt_hw_id_t descr_addr);
+
 static inline cpupkt_ctxt_t*
 cpupkt_ctxt_alloc(void) 
 {
@@ -146,10 +148,15 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
  * Packet send/receive APIs
  ***************************************************************/
  
+#if 0
 cpupkt_ctxt_t* 
 cpupkt_ctxt_alloc_init(void)
+#endif
+EXTC hal_ret_t
+pd_cpupkt_ctxt_alloc_init(pd_cpupkt_ctxt_alloc_init_args_t *args)
 {
-    return cpupkt_ctxt_init(cpupkt_ctxt_alloc());    
+    args->ctxt = cpupkt_ctxt_init(cpupkt_ctxt_alloc());    
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -201,9 +208,14 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::W
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
+EXTC hal_ret_t 
+// cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
+pd_cpupkt_register_tx_queue(pd_cpupkt_register_tx_queue_args_t *args)
 {
+    cpupkt_ctxt_t* ctxt = args->ctxt;
+    types::WRingType type = args->type;
+    uint32_t queue_id = args->queue_id;
+
     HAL_TRACE_DEBUG("cpupkt: register Tx Queue: type:{} id:{}", type, queue_id);
     if(!ctxt) {
         HAL_TRACE_ERR("Ctxt is null");
@@ -229,10 +241,17 @@ cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
     return HAL_RET_OK;
 }
 
-
+#if 0
 hal_ret_t 
 cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
+#endif
+EXTC hal_ret_t 
+pd_cpupkt_register_rx_queue(pd_cpupkt_register_rx_queue_args_t *args)
 {
+    cpupkt_ctxt_t* ctxt = args->ctxt;
+    types::WRingType type = args->type;
+    uint32_t queue_id = args->queue_id;
+
     HAL_TRACE_DEBUG("cpupkt: register Rx Queue: type:{} id:{}", type, queue_id);
 
     if(!ctxt) {
@@ -272,9 +291,17 @@ cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
     return HAL_RET_OK;
 }
 
+#if 0
 hal_ret_t 
 cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
+#endif
+EXTC hal_ret_t
+pd_cpupkt_unregister_tx_queue(pd_cpupkt_unregister_tx_queue_args_t *args)
 {
+    cpupkt_ctxt_t* ctxt = args->ctxt;
+    types::WRingType type = args->type;
+    uint32_t queue_id = args->queue_id;
+
     HAL_TRACE_DEBUG("cpupkt: unregister Tx Queue: type:{} id:{}", type, queue_id);
     
     if(!ctxt) {
@@ -294,13 +321,21 @@ cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t 
 }
 
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                     p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
                     uint8_t** data, 
                     size_t* data_len)
+#endif
+pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    cpupkt_ctxt_t* ctxt = args->ctxt;
+    p4_to_p4plus_cpu_pkt_t** flow_miss_hdr = args->flow_miss_hdr;
+    uint8_t** data = args->data;
+    size_t* data_len = args->data_len;
+
     if(!ctxt) {
         return HAL_RET_INVALID_ARG;    
     }
@@ -354,9 +389,11 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     return HAL_RET_RETRY;    
 }
 
-hal_ret_t
-cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data)
+EXTC hal_ret_t
+// cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data)
+pd_cpupkt_free(pd_cpupkt_free_args_t *args)
 {
+    p4_to_p4plus_cpu_pkt_t* flow_miss_hdr = args->flow_miss_hdr;
     free(flow_miss_hdr);
     return HAL_RET_OK;
 }
@@ -382,10 +419,19 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
     }
     
     // ring doorbell
+    // Ring doorbell
+    pd_cpupkt_program_send_ring_doorbell_args_t d_args = {0};
+    d_args.dest_lif = SERVICE_LIF_GC;
+    d_args.qtype = 0;
+    d_args.qid = CAPRI_HBM_GC_RNMDR_QID;
+    d_args.ring_number = CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER;
+    ret = pd_cpupkt_program_send_ring_doorbell(&d_args);
+#if 0
     ret = cpupkt_program_send_ring_doorbell(SERVICE_LIF_GC,
                                             0,
                                             CAPRI_HBM_GC_RNMDR_QID,
                                             CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER);
+#endif
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to ring doorbell");
         return HAL_RET_HW_FAIL;
@@ -397,12 +443,14 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
 }
 
 
-hal_ret_t
-cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr)
+EXTC hal_ret_t
+// cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr)
+pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
 {
     indexer::status     rs;
     uint32_t            descr_index;
     cpupkt_hw_id_t      base_addr;
+    cpupkt_hw_id_t      *descr_addr = args->descr_addr;
 
     if(!descr_addr) {
         return HAL_RET_INVALID_ARG;    
@@ -424,12 +472,14 @@ cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr)
     return HAL_RET_OK;
 }
 
-hal_ret_t
-cpupkt_page_alloc(cpupkt_hw_id_t* page_addr)
+EXTC hal_ret_t
+// cpupkt_page_alloc(cpupkt_hw_id_t* page_addr)
+pd_cpupkt_page_alloc(pd_cpupkt_page_alloc_args_t *args)
 {
     indexer::status     rs;
     uint32_t            page_index;
     cpupkt_hw_id_t      base_addr;
+    cpupkt_hw_id_t* page_addr = args->page_addr;
 
     if(!page_addr) {
         return HAL_RET_INVALID_ARG;    
@@ -456,8 +506,11 @@ cpupkt_program_descr(cpupkt_hw_id_t page_addr, size_t len, cpupkt_hw_id_t* descr
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_descr_aol_t  descr = {0};
+    pd_cpupkt_descr_alloc_args_t args;
 
-    ret = cpupkt_descr_alloc(descr_addr);
+    args.descr_addr = descr_addr;
+
+    ret = pd_cpupkt_descr_alloc(&args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to allocate descr for the packet, err: {}", ret);
         goto cleanup;
@@ -502,14 +555,21 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
     return HAL_RET_OK;
 }
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
                                   uint8_t  qtype,
                                   uint32_t qid,
                                   uint8_t  ring_number)
+#endif
+pd_cpupkt_program_send_ring_doorbell(pd_cpupkt_program_send_ring_doorbell_args_t *args)
 {
     uint64_t            addr = 0;
     uint64_t            data = 0;
+    uint16_t dest_lif = args->dest_lif;
+    uint8_t  qtype = args->qtype;
+    uint32_t qid = args->qid;
+    uint8_t  ring_number = args->ring_number;
     uint64_t            qid64 = qid;
 
     
@@ -530,7 +590,8 @@ cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
 }
 
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 cpupkt_send(cpupkt_ctxt_t* ctxt,
             types::WRingType type,
             uint32_t queue_id,
@@ -542,6 +603,8 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
             uint8_t  qtype,
             uint32_t qid,
             uint8_t ring_number)
+#endif
+pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     cpupkt_hw_id_t      page_addr = 0;
@@ -549,13 +612,26 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     cpupkt_hw_id_t      write_addr = 0;
     size_t              write_len = 0;
     size_t              total_len = 0;
+    cpupkt_ctxt_t* ctxt = s_args->ctxt;
+    types::WRingType type = s_args->type;
+    uint32_t queue_id = s_args->queue_id;
+    cpu_to_p4plus_header_t* cpu_header = s_args->cpu_header;
+    p4plus_to_p4_header_t* p4_header = s_args->p4_header;
+    uint8_t* data = s_args->data;
+    size_t data_len = s_args->data_len;
+    uint16_t dest_lif = s_args->dest_lif;
+    uint8_t  qtype = s_args->qtype;
+    uint32_t qid = s_args->qid;
+    uint8_t ring_number = s_args->ring_number;
 
     if(!ctxt || !data) {
         return HAL_RET_INVALID_ARG;    
     }
     
     // Allocate a page and descr for the pkt
-    ret = cpupkt_page_alloc(&page_addr);
+    pd_cpupkt_page_alloc_args_t args;
+    args.page_addr = &page_addr;
+    ret = pd_cpupkt_page_alloc(&args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to allocate page for the packet, err: {}", ret);
         goto cleanup;
@@ -620,7 +696,13 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     }
 
     // Ring doorbell
-    ret = cpupkt_program_send_ring_doorbell(dest_lif, qtype, qid, ring_number);
+    pd_cpupkt_program_send_ring_doorbell_args_t d_args;
+    d_args.dest_lif = dest_lif;
+    d_args.qtype = qtype;
+    d_args.qid = qid;
+    d_args.ring_number = ring_number;
+    // ret = cpupkt_program_send_ring_doorbell(dest_lif, qtype, qid, ring_number);
+    ret = pd_cpupkt_program_send_ring_doorbell(&d_args);
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }

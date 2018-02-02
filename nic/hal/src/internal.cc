@@ -8,8 +8,8 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/if_utils.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
+// #include "nic/hal/pd/capri/capri_hbm.hpp"
+// #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -47,25 +47,42 @@ int capri_program_label_to_offset(const char *handle,
                                   char *prog_name, char *label_name,
                                   uint64_t *offset);
 
-using hal::pd::pd_if_args_t;
-
 namespace hal {
 
 void GetProgramAddress(const internal::ProgramAddressReq &req,
                        internal::ProgramAddressResp *resp) {
     uint64_t addr;
     if (req.resolve_label()) {
+        pd::pd_capri_program_label_to_offset_args_t args = {0};
+        args.handle = req.handle().c_str();
+        args.prog_name = (char *)req.prog_name().c_str();
+        args.label_name = (char *)req.label().c_str();
+        args.offset = &addr;
+        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+                                  (void *)&args);
+#if 0
         int ret = capri_program_label_to_offset(
             req.handle().c_str(), (char *) req.prog_name().c_str(),
             (char *) req.label().c_str(), &addr);
-        if (ret < 0)
+        int ret = 0;
+#endif
+        if (ret != HAL_RET_OK)
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         else
             resp->set_addr(addr);
     } else {
+        pd::pd_capri_program_to_base_addr_args_t base_args = {0};
+        base_args.handle = req.handle().c_str();
+        base_args.prog_name = (char *)req.prog_name().c_str();
+        base_args.base_addr = &addr;
+        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR, 
+                                  (void *)&base_args);
+#if 0
         int ret = capri_program_to_base_addr(
             req.handle().c_str(), (char *) req.prog_name().c_str(), &addr);
-        if (ret < 0)
+        int ret = 0;
+#endif
+        if (ret != HAL_RET_OK)
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         else
             resp->set_addr(addr);
@@ -74,8 +91,21 @@ void GetProgramAddress(const internal::ProgramAddressReq &req,
 
 void AllocHbmAddress(const internal::HbmAddressReq &req,
                        internal::HbmAddressResp *resp) {
+#if 0
     uint64_t addr = get_start_offset(req.handle().c_str());
     uint32_t size = get_size_kb(req.handle().c_str());
+#endif
+    pd::pd_get_start_offset_args_t args;
+    args.reg_name = req.handle().c_str();
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&args);
+    uint64_t addr = args.offset;
+
+    pd::pd_get_size_kb_args_t size_args;
+    size_args.reg_name = req.handle().c_str();
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, (void *)&size_args);
+    uint32_t size = size_args.size;
+
+
     HAL_TRACE_DEBUG("pi-internal:{}: Allocated HBM Address {:#x} Size {}",
                     __FUNCTION__, addr, size);
     if (addr == 0) {
@@ -89,7 +119,15 @@ void AllocHbmAddress(const internal::HbmAddressReq &req,
 
 void ConfigureLifBdf(const internal::LifBdfReq &req,
                      internal::LifBdfResp *resp) {
+#if 0
    int ret = capri_pxb_cfg_lif_bdf(req.lif(), req.bdf());
+#endif
+   pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
+   args.lif = req.lif();
+   args.bdf = req.bdf();
+   int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF, 
+                                  (void *)&args);
+
    resp->set_lif(req.lif());
    resp->set_bdf(req.bdf());
    resp->set_status(ret);

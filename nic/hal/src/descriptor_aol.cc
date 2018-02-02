@@ -15,9 +15,13 @@ descriptor_aol_get(DescrAolRequest& request, DescrAolSpec *response)
 {
     pd::pd_descr_aol_t      pd_descr, *pd_descr_ptr;
     hal_ret_t               ret = HAL_RET_OK;
+    pd::pd_descriptor_aol_get_args_t args;
 
     pd_descr_ptr = (pd::pd_descr_aol_t*) request.descr_aol_handle();
-    ret = pd::pd_descriptor_aol_get(pd_descr_ptr, &pd_descr);
+    args.src = pd_descr_ptr;
+    args.dst = &pd_descr;
+    //ret = pd::pd_descriptor_aol_get(pd_descr_ptr, &pd_descr);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DESC_AOL_GET, (void *)&args);
 
     response->set_descr_aol_handle(request.descr_aol_handle());
     response->set_address1(pd_descr.a0);

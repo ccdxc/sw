@@ -23,8 +23,8 @@ using hal::l2seg_t;
 using hal::qos_class_t;
 
 // LIF APIs
-uint32_t lif_get_lif_id(lif_t *pi_lif);
-uint8_t lif_get_qtype(lif_t *pi_lif, intf::LifQPurpose purpose);
+uint32_t lif_get_lif_id(lif_t *pi_lif)  __attribute__((used));
+uint8_t lif_get_qtype(lif_t *pi_lif, intf::LifQPurpose purpose) __attribute__((used));
 void lif_set_pd_lif(lif_t *pi_lif, void *pd_lif);
 void *lif_get_pd_lif(lif_t *pi_lif);
 bool lif_get_enable_rdma(lif_t *pi_lif);

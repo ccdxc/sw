@@ -53,10 +53,12 @@ end:
     return ret;
 }
 
-hal_ret_t
-pd_drop_stats_get (pd_system_args_t *pd_sys_args)
+EXTC hal_ret_t
+// pd_drop_stats_get (pd_system_args_t *pd_sys_args)
+pd_drop_stats_get(pd_drop_stats_get_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_system_args_t        *pd_sys_args = args->pd_sys_args;
     SystemResponse          *rsp = pd_sys_args->rsp;
     DropStatsEntry          *stats_entry = NULL;
 
@@ -368,10 +370,12 @@ pd_system_populate_table_stats (sys::TableStatsEntry *stats_entry,
     return ret;
 }
 
-hal_ret_t
-pd_table_stats_get (pd_system_args_t *pd_sys_args)
+EXTC hal_ret_t
+// pd_table_stats_get (pd_system_args_t *pd_sys_args)
+pd_table_stats_get(pd_table_stats_get_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;
+    pd_system_args_t        *pd_sys_args = args->pd_sys_args;
     SystemResponse          *rsp = pd_sys_args->rsp;
     sys::TableStatsEntry    *stats_entry = NULL;
     int                     i;

@@ -21,8 +21,8 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Adding L2segment on Uplink
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_add_l2seg_uplink(pd_l2seg_uplink_args_t *args)
+EXTC hal_ret_t
+pd_add_l2seg_uplink(pd_add_l2seg_uplink_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -37,8 +37,8 @@ pd_add_l2seg_uplink(pd_l2seg_uplink_args_t *args)
 // ----------------------------------------------------------------------------
 // Deleting L2segment on Uplink
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_del_l2seg_uplink(pd_l2seg_uplink_args_t *args)
+EXTC hal_ret_t
+pd_del_l2seg_uplink(pd_del_l2seg_uplink_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -54,7 +54,7 @@ pd_del_l2seg_uplink(pd_l2seg_uplink_args_t *args)
 // Programming HW 
 // ----------------------------------------------------------------------------
 hal_ret_t
-l2seg_uplink_program_hw(pd_l2seg_uplink_args_t *args)
+l2seg_uplink_program_hw(pd_add_l2seg_uplink_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     nwsec_profile_t     *pi_nwsec = NULL;
@@ -71,7 +71,7 @@ l2seg_uplink_program_hw(pd_l2seg_uplink_args_t *args)
 // De-Programming HW 
 // ----------------------------------------------------------------------------
 hal_ret_t
-l2seg_uplink_deprogram_hw(pd_l2seg_uplink_args_t *args)
+l2seg_uplink_deprogram_hw(pd_del_l2seg_uplink_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -86,7 +86,7 @@ l2seg_uplink_deprogram_hw(pd_l2seg_uplink_args_t *args)
 // ----------------------------------------------------------------------------
 #define inp_prop data.input_properties_action_u.input_properties_input_properties
 hal_ret_t
-l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profile_t *nwsec_prof)
+l2seg_uplink_pgm_input_properties_tbl(pd_add_l2seg_uplink_args_t *args, nwsec_profile_t *nwsec_prof)
 {
     uint32_t                                uplink_ifpc_id = 0;
     bool                                    is_native = FALSE;
@@ -259,7 +259,7 @@ end:
 // DeProgram input propterties table
 // ----------------------------------------------------------------------------
 hal_ret_t
-l2seg_uplink_depgm_input_properties_tbl (pd_l2seg_uplink_args_t *args)
+l2seg_uplink_depgm_input_properties_tbl (pd_del_l2seg_uplink_args_t *args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
@@ -316,7 +316,7 @@ l2seg_uplink_depgm_input_properties_tbl (pd_l2seg_uplink_args_t *args)
 // Form data for input properties table
 // ----------------------------------------------------------------------------
 hal_ret_t
-l2seg_uplink_inp_prop_form_data (pd_l2seg_uplink_args_t *args,
+l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
                                  nwsec_profile_t *nwsec_prof,
                                  input_properties_actiondata &data)
 {
@@ -361,7 +361,7 @@ l2seg_uplink_inp_prop_form_data (pd_l2seg_uplink_args_t *args,
 // Update data for input properties table
 // ----------------------------------------------------------------------------
 hal_ret_t
-l2seg_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
+l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
                                        nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                   ret = HAL_RET_OK;

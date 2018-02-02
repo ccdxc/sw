@@ -482,8 +482,8 @@ err:
  * APIs
  *******************************************/
 
-hal_ret_t
-pd_proxyrcb_create (pd_proxyrcb_args_t *args)
+EXTC hal_ret_t
+pd_proxyrcb_create (pd_proxyrcb_create_args_t *args)
 {
     hal_ret_t               ret;
     pd_proxyrcb_s           *proxyrcb_pd;
@@ -538,15 +538,15 @@ cleanup:
  * proxyrcb_deactivate and proxyrcb_activate.
  */
 static hal_ret_t
-pd_proxyrcb_deactivate (pd_proxyrcb_args_t *args)
+pd_proxyrcb_deactivate (pd_proxyrcb_update_args_t *args)
 {
     hal_ret_t           ret;
     proxyrcb_t          curr_proxyrcb;
     pd_proxyrcb_t       curr_proxyrcb_pd;
-    pd_proxyrcb_args_t  curr_args;
+    pd_proxyrcb_get_args_t  curr_args;
     proxyrcb_t*         proxyrcb = args->proxyrcb;
 
-    pd_proxyrcb_args_init(&curr_args);
+    pd_proxyrcb_get_args_init(&curr_args);
     curr_args.proxyrcb = &curr_proxyrcb;
     curr_proxyrcb.cb_id = proxyrcb->cb_id;
 
@@ -567,8 +567,8 @@ pd_proxyrcb_deactivate (pd_proxyrcb_args_t *args)
     return ret;
 }
 
-hal_ret_t
-pd_proxyrcb_update (pd_proxyrcb_args_t *args)
+EXTC hal_ret_t
+pd_proxyrcb_update (pd_proxyrcb_update_args_t *args)
 {
     hal_ret_t       ret;
     
@@ -602,11 +602,16 @@ pd_proxyrcb_update (pd_proxyrcb_args_t *args)
     return ret;
 }
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 pd_proxyrcb_delete (pd_proxyrcb_args_t *args,
                     bool retain_in_db)
+#endif
+pd_proxyrcb_delete (pd_proxyrcb_delete_args_t *del_args)
 {
     hal_ret_t       ret;
+    pd_proxyrcb_args_t *args = del_args->r_args;
+    bool retain_in_db = del_args->retain_in_db;
     
     if(!args) {
        return HAL_RET_INVALID_ARG; 
@@ -630,7 +635,7 @@ pd_proxyrcb_delete (pd_proxyrcb_args_t *args,
 }
 
 hal_ret_t
-pd_proxyrcb_get (pd_proxyrcb_args_t *args)
+pd_proxyrcb_get (pd_proxyrcb_get_args_t *args)
 {
     hal_ret_t               ret;
     pd_proxyrcb_t           proxyrcb_pd;

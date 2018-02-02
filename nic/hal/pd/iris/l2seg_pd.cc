@@ -59,22 +59,39 @@ flow_lkupid_compare_hw_key_func(void *key1, void *key2)
 }
 
 // Deprecated: Remove it once FTE uses new API
+extern "C" hal_ret_t
+pd_find_l2seg_by_hwid (pd_find_l2seg_by_hwid_args_t *args)
+{
+    pd_l2seg_t *l2seg_pd = find_l2seg_pd_by_hwid(args->hwid);
+    args->l2seg =  l2seg_pd ? (l2seg_t*) l2seg_pd->l2seg : NULL;
+
+
+    return HAL_RET_OK;
+}
+#if 0
 l2seg_t *
 find_l2seg_by_hwid (l2seg_hw_id_t hwid)
 {
     pd_l2seg_t *l2seg_pd = find_l2seg_pd_by_hwid(hwid);
     return l2seg_pd ? (l2seg_t*) l2seg_pd->l2seg : NULL;
 }
+#endif
  
 //-----------------------------------------------------------------------------
 // Get the PI vrf or l2seg given the flow lookup id
 //-----------------------------------------------------------------------------
+#if 0
 hal_ret_t pd_get_object_from_flow_lkupid(uint32_t flow_lkupid, 
                                          hal_obj_id_t *obj_id,
                                          void **pi_obj)
+#endif
+extern "C" hal_ret_t pd_get_object_from_flow_lkupid(pd_get_object_from_flow_lkupid_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     hal_handle_id_ht_entry_t    *entry;
+    uint32_t flow_lkupid = args->flow_lkupid;
+    hal_obj_id_t *obj_id = args->obj_id;
+    void **pi_obj = args->pi_obj;
 
     *obj_id = HAL_OBJ_ID_NONE;
     *pi_obj = NULL;
@@ -166,8 +183,8 @@ l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
 //------------------------------------------------------------------------------
 // pd l2seg create
 //------------------------------------------------------------------------------
-hal_ret_t
-pd_l2seg_create (pd_l2seg_args_t *args)
+extern "C" hal_ret_t
+pd_l2seg_create (pd_l2seg_create_args_t *args)
 {
     hal_ret_t               ret;
     pd_l2seg_s              *l2seg_pd = NULL;
@@ -217,8 +234,8 @@ end:
 //-----------------------------------------------------------------------------
 // PD l2seg Update
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_l2seg_update (pd_l2seg_args_t *args)
+extern "C" hal_ret_t
+pd_l2seg_update (pd_l2seg_update_args_t *args)
 {
     // Nothing to do for now
     return HAL_RET_OK;
@@ -227,8 +244,8 @@ pd_l2seg_update (pd_l2seg_args_t *args)
 //-----------------------------------------------------------------------------
 // PD l2seg Delete
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_l2seg_delete (pd_l2seg_args_t *args)
+extern "C" hal_ret_t
+pd_l2seg_delete (pd_l2seg_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_l2seg_t     *l2seg_pd;
@@ -664,11 +681,16 @@ l2seg_delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_l2seg_make_clone(l2seg_t *l2seg, l2seg_t *clone)
+extern "C" hal_ret_t
+// pd_l2seg_make_clone(l2seg_t *l2seg, l2seg_t *clone)
+pd_l2seg_make_clone(pd_l2seg_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_l2seg_t         *pd_l2seg_clone = NULL;
+    l2seg_t            *l2seg, *clone;
+
+    l2seg = args->l2seg;
+    clone = args->clone;
 
     pd_l2seg_clone = l2seg_pd_alloc_init();
     if (pd_l2seg_clone == NULL) {
@@ -687,20 +709,33 @@ end:
 //-----------------------------------------------------------------------------
 // Returns the vrf hwid of the l2seg (used as lkp_vrf in flow key)
 //-----------------------------------------------------------------------------
+#if 0
 l2seg_hw_id_t
 pd_l2seg_get_flow_lkupid(l2seg_t *l2seg)
 {
     return ((pd_l2seg_t *)l2seg->pd)->l2seg_fl_lkup_id;
+}
+#endif
+
+extern "C" hal_ret_t 
+pd_l2seg_get_flow_lkupid(pd_l2seg_get_flow_lkupid_args_t *args)
+{
+    l2seg_t *l2seg = args->l2seg;
+    args->hwid = ((pd_l2seg_t *)l2seg->pd)->l2seg_fl_lkup_id;
+    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
 // Returns the internal vlan of l2seg (used for input_properites lookup of
 // reinjected packets) returns false if vlan is not valid
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_l2seg_get_fromcpu_vlanid(l2seg_t *l2seg, uint16_t *vid)
+extern "C" hal_ret_t
+// pd_l2seg_get_fromcpu_vlanid(l2seg_t *l2seg, uint16_t *vid)
+pd_l2seg_get_fromcpu_vlanid(pd_l2seg_get_fromcpu_vlanid_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    l2seg_t *l2seg = args->l2seg;
+    uint16_t *vid = args->vid;
 
     if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
         ret = HAL_RET_INVALID_ARG;
@@ -718,8 +753,8 @@ end:
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_l2seg_mem_free(pd_l2seg_args_t *args)
+extern "C" hal_ret_t
+pd_l2seg_mem_free(pd_l2seg_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_l2seg_t     *l2seg_pd;

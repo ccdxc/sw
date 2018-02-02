@@ -107,7 +107,7 @@ hal_ret_t pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
         nwsec_profile_t *nwsec_prof);
 hal_ret_t
 pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif, 
-                                    pd_if_lif_upd_args_t *lif_upd,
+                                    pd_if_lif_update_args_t *lif_upd,
                                     table_oper_t oper);
 hal_ret_t pd_enicif_cleanup(pd_enicif_t *pd_enicif);
 
@@ -118,39 +118,39 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
                               nwsec_profile_t *nwsec_prof,
                               input_properties_mac_vlan_actiondata &data,
                               bool host_entry);
-hal_ret_t pd_enicif_lif_update(pd_if_lif_upd_args_t *args);
+hal_ret_t pd_enicif_lif_update(pd_if_lif_update_args_t *args);
 hal_ret_t
 pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif, 
                                      nwsec_profile_t *nwsec_prof);
 hal_ret_t
 pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif, 
                           dllist_ctxt_t *l2sege_list,
-                          pd_if_args_t *args,
+                          pd_if_update_args_t *args,
                           table_oper_t oper);
 hal_ret_t
 pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif);
 hal_ret_t pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif);
 hal_ret_t pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif);
-bool pd_enicif_get_vlan_strip (lif_t *lif, pd_if_lif_upd_args_t *lif_upd);
+bool pd_enicif_get_vlan_strip (lif_t *lif, pd_if_lif_update_args_t *lif_upd);
 hal_ret_t pd_enicif_alloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list);
 hal_ret_t pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list);
 hal_ret_t pd_enicif_alloc_l2seg_entries (pd_enicif_t *pd_enicif);
 hal_ret_t
 pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                                 pd_if_l2seg_entry_t *if_l2seg,
-                                pd_if_args_t *args,
+                                pd_if_update_args_t *args,
                                 table_oper_t oper);
-hal_ret_t pd_enicif_upd_l2seg_clsc_change(pd_if_args_t *args);
+hal_ret_t pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args);
 hal_ret_t pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, 
                                       dllist_ctxt_t *l2sege_list);
 hal_ret_t pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx);
-hal_ret_t pd_enicif_upd_native_l2seg_clsc_change(pd_if_args_t *args);
+hal_ret_t pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args);
 
-hal_ret_t pd_enicif_create(pd_if_args_t *args);
-hal_ret_t pd_enicif_update(pd_if_args_t *args);
-hal_ret_t pd_enicif_delete(pd_if_args_t *args);
-hal_ret_t pd_enicif_make_clone(if_t *hal_if, if_t *clone);
-hal_ret_t pd_enicif_mem_free(pd_if_args_t *args);
+hal_ret_t pd_enicif_create(pd_if_create_args_t *args);
+hal_ret_t pd_enicif_update(pd_if_update_args_t *args);
+hal_ret_t pd_enicif_delete(pd_if_delete_args_t *args);
+hal_ret_t pd_enicif_make_clone(pd_if_make_clone_args_t *args);
+hal_ret_t pd_enicif_mem_free(pd_if_mem_free_args_t *args);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_ENICIF_HPP__

@@ -587,8 +587,8 @@ wring_pd_compare_hw_key_func (void *key1, void *key2)
     return false;
 }
 
-hal_ret_t
-pd_wring_create (pd_wring_args_t *args)
+EXTC hal_ret_t
+pd_wring_create (pd_wring_create_args_t *args)
 {
     hal_ret_t               ret;
     pd_wring_s              *wring_pd;
@@ -628,8 +628,8 @@ cleanup:
     return ret;
 }
 
-hal_ret_t
-pd_wring_get_entry (pd_wring_args_t *args)
+EXTC hal_ret_t
+pd_wring_get_entry (pd_wring_get_entry_args_t *args)
 {
     hal_ret_t               ret;
     pd_wring_t              wring_pd;
@@ -649,8 +649,8 @@ cleanup:
     return ret;
 }
 
-hal_ret_t
-pd_wring_get_meta (pd_wring_args_t *args)
+EXTC hal_ret_t
+pd_wring_get_meta (pd_wring_get_meta_args_t *args)
 {
     hal_ret_t               ret;
     pd_wring_t              wring_pd;
@@ -672,8 +672,8 @@ cleanup:
     return ret;
 }
 
-hal_ret_t
-pd_wring_set_meta (pd_wring_args_t *args)
+EXTC hal_ret_t
+pd_wring_set_meta (pd_wring_set_meta_args_t *args)
 {
     hal_ret_t               ret;
     pd_wring_t              wring_pd;

@@ -247,7 +247,7 @@ hal_ret_t
 qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_qos_class_args_t     pd_qos_class_args = { 0 };
+    pd::pd_qos_class_create_args_t     pd_qos_class_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     qos_class_t                 *qos_class = NULL;
@@ -267,9 +267,10 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __func__, qos_class->key);
 
     // PD Call to allocate PD resources and HW programming
-    pd::pd_qos_class_args_init(&pd_qos_class_args);
+    pd::pd_qos_class_create_args_init(&pd_qos_class_args);
     pd_qos_class_args.qos_class = qos_class;
-    ret = pd::pd_qos_class_create(&pd_qos_class_args);
+    // ret = pd::pd_qos_class_create(&pd_qos_class_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_CREATE, (void *)&pd_qos_class_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-qos:{}:failed to create qos_class pd, err : {}", 
                       __func__, ret);
@@ -370,7 +371,7 @@ hal_ret_t
 qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    pd::pd_qos_class_args_t pd_qos_class_args = { 0 };
+    pd::pd_qos_class_delete_args_t pd_qos_class_args = { 0 };
     dllist_ctxt_t           *lnode = NULL;
     dhl_entry_t             *dhl_entry = NULL;
     qos_class_t             *qos_class = NULL;
@@ -392,9 +393,10 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. delete call to PD
     if (qos_class->pd) {
-        pd::pd_qos_class_args_init(&pd_qos_class_args);
+        pd::pd_qos_class_delete_args_init(&pd_qos_class_args);
         pd_qos_class_args.qos_class = qos_class;
-        ret = pd::pd_qos_class_delete(&pd_qos_class_args);
+        // ret = pd::pd_qos_class_delete(&pd_qos_class_args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-qos:{}:failed to delete qos_class pd, err : {}", 
                           __func__, ret);
@@ -657,9 +659,10 @@ hal_ret_t
 find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
                             uint32_t *cosA, uint32_t *cosB)
 {
-    if_t        *pinned_uplink_if;
-    hal_ret_t   ret        = HAL_RET_OK;
-    qos_class_t *qos_class;
+    if_t                    *pinned_uplink_if;
+    hal_ret_t               ret = HAL_RET_OK;
+    qos_class_t             *qos_class;
+    pd::pd_qos_class_get_qos_class_id_args_t q_args;
 
     pinned_uplink_if = find_if_by_handle(pinned_uplink);
 
@@ -669,7 +672,12 @@ find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
     // Fetch cosA from qos-class
-    ret = pd::qos_class_get_qos_class_id(qos_class, pinned_uplink_if, cosA);
+    q_args.qos_class= qos_class;
+    q_args.dest_if = pinned_uplink_if;
+    q_args.qos_class_id = cosA;
+    // ret = pd::qos_class_get_qos_class_id(qos_class, pinned_uplink_if, cosA);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_QOS_CLASSID, (void *)&q_args);
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
                       "{} ret {}",
@@ -678,7 +686,10 @@ find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
     }
 
     // cosB of a LIF will always be the ADMIN-COS.
-    *cosB = pd::qos_class_get_admin_cos();
+    pd::pd_qos_class_get_admin_cos_args_t args = {0};
+    // *cosB = pd::qos_class_get_admin_cos();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_GET_ADMIN_COS, (void *)&args);
+    *cosB = args.cos;
     return ret;
 }
 
@@ -823,7 +834,7 @@ hal_ret_t
 copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t          ret = HAL_RET_OK;
-    pd::pd_copp_args_t pd_copp_args = { 0 };
+    pd::pd_copp_create_args_t pd_copp_args = { 0 };
     dllist_ctxt_t      *lnode = NULL;
     dhl_entry_t        *dhl_entry = NULL;
     copp_t             *copp = NULL;
@@ -843,9 +854,10 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __func__, copp->key);
 
     // PD Call to allocate PD resources and HW programming
-    pd::pd_copp_args_init(&pd_copp_args);
+    pd::pd_copp_create_args_init(&pd_copp_args);
     pd_copp_args.copp = copp;
-    ret = pd::pd_copp_create(&pd_copp_args);
+    // ret = pd::pd_copp_create(&pd_copp_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_CREATE, (void *)&pd_copp_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-copp:{}:failed to create copp pd, err : {}", 
                       __func__, ret);
@@ -946,7 +958,7 @@ hal_ret_t
 copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t          ret = HAL_RET_OK;
-    pd::pd_copp_args_t pd_copp_args = { 0 };
+    pd::pd_copp_delete_args_t pd_copp_args = { 0 };
     dllist_ctxt_t      *lnode = NULL;
     dhl_entry_t        *dhl_entry = NULL;
     copp_t             *copp = NULL;
@@ -968,9 +980,10 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. delete call to PD
     if (copp->pd) {
-        pd::pd_copp_args_init(&pd_copp_args);
+        pd::pd_copp_delete_args_init(&pd_copp_args);
         pd_copp_args.copp = copp;
-        ret = pd::pd_copp_delete(&pd_copp_args);
+        // ret = pd::pd_copp_delete(&pd_copp_args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, (void *)&pd_copp_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-copp:{}:failed to delete copp pd, err : {}", 
                           __func__, ret);

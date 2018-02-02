@@ -2,16 +2,32 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
+cc_binary(
+    name = "libiris.so",
+    linkshared = 1,
+    deps = [
+            "//nic/hal/pd/iris:pd_iris"
+    ],
+)
+
 cc_library(
-    name = "iris",
+    name = "pd_iris",
     srcs = [] + glob(["*.cc"]),
     hdrs = [] + glob(["*.hpp"]) + glob(["*.h"]),
     copts = sdk_copts,
     deps = [
+        # PD Cleanup Only
+        #"//nic/hal/pd/iris:p4pdapi",
+        "//nic:iris_p4pd",
+        "//nic:p4pluspd_txdma",
+        "//nic:p4pluspd_rxdma",
+        # -----
         "//nic:asic_includes",
         "//nic:gen_includes",
         "@sdk//:sdk_headers",
-        "//nic/hal:hal_src",
+        "//nic/hal:hal_includes",
+        "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
+        #"//nic/hal:hal_src",
         "//nic/hal/pd/capri",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd:pdcommon",
@@ -26,6 +42,7 @@ cc_library(
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic:spdlog",
         "//nic:grpc_includes",
+        "//nic/p4/include:p4_common_includes",
     ],
     alwayslink = 1,
 )

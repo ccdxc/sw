@@ -98,11 +98,11 @@ hal_ret_t pd_app_redir_if_cleanup(pd_app_redir_if_t *upif_pd);
 
 pd_lif_t *pd_app_redir_if_get_pd_lif(pd_app_redir_if_t *pd_app_redir_if);
 
-hal_ret_t pd_app_redir_if_create(pd_if_args_t *args);
-hal_ret_t pd_app_redir_if_update(pd_if_args_t *args);
-hal_ret_t pd_app_redir_if_delete(pd_if_args_t *args);
-hal_ret_t pd_app_redir_if_make_clone(if_t *hal_if, if_t *clone);
-hal_ret_t pd_app_redir_if_mem_free(pd_if_args_t *args);
+hal_ret_t pd_app_redir_if_create(pd_if_create_args_t *args);
+hal_ret_t pd_app_redir_if_update(pd_if_update_args_t *args);
+hal_ret_t pd_app_redir_if_delete(pd_if_delete_args_t *args);
+hal_ret_t pd_app_redir_if_make_clone(pd_if_make_clone_args_t *args);
+hal_ret_t pd_app_redir_if_mem_free(pd_if_mem_free_args_t *args);
 
 }   // namespace pd
 }   // namespace hal

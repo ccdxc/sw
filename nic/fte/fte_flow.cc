@@ -320,7 +320,11 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
                                       (session::NatType)config.nat_type);
     rw_key.rw_act = attrs.rw_act;
 
-    ret = hal::pd::pd_rw_entry_find_or_alloc(&rw_key, &attrs.rw_idx);
+    hal::pd::pd_rw_entry_find_or_alloc_args_t r_args;
+    r_args.args = &rw_key;
+    r_args.rw_idx = &attrs.rw_idx;
+    // ret = hal::pd::pd_rw_entry_find_or_alloc(&rw_key, &attrs.rw_idx);
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, (void *)&r_args);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -329,11 +333,15 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     //twice-nat idx
     // TODO(goli) delete the idx on freeing flow
     if (config.nat_type == session::NAT_TYPE_TWICE_NAT){
-        hal::pd::pd_twice_nat_entry_args_t args;
-        args.twice_nat_act = hal::pd::TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID;
-        args.nat_ip = config.nat_dip;
-        args.nat_l4_port = config.nat_dport;
-        ret = pd_twice_nat_add(&args, &attrs.twice_nat_idx);
+		hal::pd::pd_twice_nat_entry_args_t args;
+		args.twice_nat_act = hal::pd::TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID;
+		args.nat_ip = config.nat_dip;
+		args.nat_l4_port = config.nat_dport;
+		hal::pd::pd_twice_nat_add_args_t t_args;
+		t_args.args = &args;
+		t_args.twice_nat_idx = &attrs.twice_nat_idx;
+		ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TWICE_NAT_ADD, (void *)&t_args);
+		// ret = pd_twice_nat_add(&args, &attrs.twice_nat_idx);
         if (ret != HAL_RET_OK) {
             return ret;
         }
@@ -361,28 +369,28 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
         break;
 #ifdef PHASE2
     case FTE_HEADER_ipsec_esp:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IPSEC_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_IPSEC_ID;
         break;
     case FTE_HEADER_vxlan_gpe:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_GPE_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_VXLAN_GPE_ID;
         attrs.tnnl_vnid = header.vxlan_gpe.vrf_id;
         break;
     case FTE_HEADER_geneve:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GENV_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_GENV_ID;
         attrs.tnnl_vnid = header.geneve.vrf_id;
       break;
     case FTE_HEADER_nvgre:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_NVGRE_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_NVGRE_ID;
         attrs.tnnl_vnid = header.geneve.vrf_id;
         break;
     case FTE_HEADER_gre:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GRE_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_GRE_ID;
         break;
     case FTE_HEADER_mpls:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_MPLS_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_MPLS_ID;
         break;
     case FTE_HEADER_ip_in_ip:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IP_ID;
+        attrs.tnnl_rw_act = hal::TUNNEL_REWRITE_ENCAP_IP_ID;
         break;
 #endif /* PHASE2 */
     default:
@@ -426,7 +434,11 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     if (valid_.ingress_info) {
         if (ingress_info_.expected_sif) {
             attrs.expected_src_lif_en = 1;
-            attrs.expected_src_lif = hal::pd::if_get_hw_lif_id(ingress_info_.expected_sif);
+            hal::pd::pd_if_get_hw_lif_id_args_t args;
+            args.pi_if = ingress_info_.expected_sif;
+            attrs.expected_src_lif = args.hw_lif_id; 
+            // attrs.expected_src_lif = hal::pd::if_get_hw_lif_id(ingress_info_.expected_sif);
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, (void *)&args);
         }
     }
 

@@ -79,7 +79,12 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
 
     if (qos_class) {
         qos_class_en = true;
-        ret = hal::pd::qos_class_get_qos_class_id(qos_class, dif, &qos_class_id);
+        pd::pd_qos_class_get_qos_class_id_args_t args;
+        args.qos_class = qos_class;
+        args.dest_if = dif;
+        args.qos_class_id = &qos_class_id;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_QOS_CLASSID, (void *)&args);
+        // ret = hal::pd::qos_class_get_qos_class_id(qos_class, dif, &qos_class_id);
         if (ret != HAL_RET_OK) {
             return ret;
         }

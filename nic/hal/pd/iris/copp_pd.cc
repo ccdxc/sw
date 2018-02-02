@@ -10,8 +10,8 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Copp Create
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_copp_create(pd_copp_args_t *args)
+EXTC hal_ret_t
+pd_copp_create(pd_copp_create_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;;
     pd_copp_t *pd_copp;
@@ -58,11 +58,12 @@ end:
     return ret;
 }
 
+#if 0
 // ----------------------------------------------------------------------------
 // Copp Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_update (pd_copp_args_t *pd_copp_upd_args)
+pd_copp_update (pd_copp_update_args_t *pd_copp_upd_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -72,12 +73,13 @@ pd_copp_update (pd_copp_args_t *pd_copp_upd_args)
 
     return ret;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // PD Copp Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_delete (pd_copp_args_t *args)
+pd_copp_delete (pd_copp_delete_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_copp_t *pd_copp;
@@ -281,6 +283,7 @@ end:
     return ret;
 }
 
+#if 0
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
@@ -295,6 +298,7 @@ pd_copp_mem_free(pd_copp_args_t *args)
 
     return ret;
 }
+#endif
 
 }    // namespace pd
 }    // namespace hal

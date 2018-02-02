@@ -6,15 +6,23 @@
 namespace hal {
 namespace pd {
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 pd_debug_cli_read(uint32_t tableid,
                   uint32_t index,
                   void     *swkey,
                   void     *swkey_mask,
                   void     *actiondata)
+#endif
+pd_debug_cli_read(pd_debug_cli_read_args_t *args)
 {
     hal_ret_t    ret    = HAL_RET_OK;
     p4pd_error_t pd_err = P4PD_SUCCESS;
+    uint32_t tableid = args->tableid;
+    uint32_t index = args->index;
+    void     *swkey = args->swkey;
+    void     *swkey_mask = args->swkey_mask;
+    void     *actiondata = args->actiondata;
 
     pd_err = p4pd_global_entry_read(tableid,
                                     index,
@@ -31,12 +39,15 @@ pd_debug_cli_read(uint32_t tableid,
 }
 
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 pd_debug_cli_write(uint32_t tableid,
                    uint32_t index,
                    void     *swkey,
                    void     *swkey_mask,
                    void     *actiondata)
+#endif
+pd_debug_cli_write(pd_debug_cli_write_args_t *args)
 {
     hal_ret_t    ret              = HAL_RET_OK;
     p4pd_error_t pd_err           = P4PD_SUCCESS;
@@ -45,6 +56,11 @@ pd_debug_cli_write(uint32_t tableid,
     uint32_t     hwactiondata_len = 0;
     void         *hwkey           = NULL;
     void         *hwkeymask       = NULL;
+    uint32_t tableid = args->tableid;
+    uint32_t index = args->index;
+    void     *swkey = args->swkey;
+    void     *swkey_mask = args->swkey_mask;
+    void     *actiondata = args->actiondata;
 
     p4pd_hwentry_query(tableid, &hwkey_len,
                        &hwkeymask_len, &hwactiondata_len);

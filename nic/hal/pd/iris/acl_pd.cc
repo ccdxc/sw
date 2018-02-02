@@ -145,10 +145,11 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     uint16_t                               l2seg_mask = 0;
     uint16_t                               ten_mask = 0;
     uint8_t                                ten_shift = 0;
-    hal::pd::pd_tunnelif_get_rw_idx_args_t tif_args = { 0 };
 
-    ms = acl_get_match_spec(pi_acl);
-    as = acl_get_action_spec(pi_acl);
+    // ms = acl_get_match_spec(pi_acl);
+    // as = acl_get_action_spec(pi_acl);
+    ms = &pi_acl->match_spec;
+    as = &pi_acl->action_spec;
 
     eth_key = &ms->key.eth;
     eth_mask = &ms->mask.eth;
@@ -210,10 +211,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 
                 data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
                 if (if_is_tunnel_if(redirect_if)) {
-                    tif_args.hal_if = redirect_if;
-                    hal::pd::pd_tunnelif_get_rw_idx(&tif_args);  // TODO: pls check for return value
                     data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index =
-                        tif_args.tnnl_rw_idx;
+                        (tunnelif_get_rw_idx((pd_tunnelif_t *)redirect_if->pd_if));
                     data.nacl_action_u.nacl_nacl_permit.tunnel_vnid =
                         as->int_as.tnnl_vnid;
                     data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 1;
@@ -513,8 +512,8 @@ end:
 // ----------------------------------------------------------------------------
 //  Acl Update
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_acl_update (pd_acl_args_t *args)
+EXTC hal_ret_t
+pd_acl_update (pd_acl_update_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_acl_t  *pd_acl;
@@ -536,8 +535,8 @@ pd_acl_update (pd_acl_args_t *args)
 // ----------------------------------------------------------------------------
 // Delete a PD ACL and remove from hardware
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_acl_delete (pd_acl_args_t *args)
+EXTC hal_ret_t
+pd_acl_delete (pd_acl_delete_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_acl_t *pd_acl;
@@ -562,8 +561,8 @@ pd_acl_delete (pd_acl_args_t *args)
 // ----------------------------------------------------------------------------
 // Create a PD ACL and add it to hardware
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_acl_create (pd_acl_args_t *args)
+EXTC hal_ret_t
+pd_acl_create (pd_acl_create_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_acl_t  *pd_acl;
@@ -604,10 +603,13 @@ end:
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_acl_make_clone(acl_t *acl, acl_t *clone)
+// pd_acl_make_clone(acl_t *acl, acl_t *clone)
+pd_acl_make_clone (pd_acl_make_clone_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_acl_t *pd_acl_clone = NULL;
+    acl_t *acl = args->acl;
+    acl_t *clone = args->clone;
 
     pd_acl_clone = acl_pd_alloc_init();
     if (pd_acl_clone == NULL) {
@@ -626,8 +628,8 @@ end:
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_acl_mem_free(pd_acl_args_t *args)
+EXTC hal_ret_t
+pd_acl_mem_free(pd_acl_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_acl_t        *pd_acl;

@@ -187,6 +187,8 @@ capri_barco_resp_dispatch (capri_barco_ring_t *barco_ring)
 }
 #endif
 
+hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
+
 }    // namespace pd
 }    // namespace hal
 

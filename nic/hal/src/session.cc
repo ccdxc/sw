@@ -590,7 +590,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
 {
     hal_ret_t ret;
     nwsec_profile_t         *nwsec_prof;
-    pd::pd_session_args_t    pd_session_args;
+    pd::pd_session_create_args_t    pd_session_args;
     session_t               *session;
 
     HAL_ASSERT(args->vrf && args->iflow && args->iflow_attrs);
@@ -663,7 +663,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     session->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming, if any
-    pd::pd_session_args_init(&pd_session_args);
+    pd::pd_session_create_args_init(&pd_session_args);
     pd_session_args.vrf = args->vrf;
     pd_session_args.nwsec_prof = nwsec_prof;
     pd_session_args.session = session;
@@ -671,7 +671,8 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     pd_session_args.rsp = args->rsp;
     pd_session_args.update_iflow = true;
 
-    ret = pd::pd_session_create(&pd_session_args);
+    // ret = pd::pd_session_create(&pd_session_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_CREATE, (void *)&pd_session_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session create failure, err : {}", ret);
         goto end;
@@ -721,7 +722,7 @@ hal_ret_t
 session_update(const session_args_t *args, session_t *session) 
 {
     hal_ret_t                ret;
-    pd::pd_session_args_t    pd_session_args;
+    pd::pd_session_update_args_t    pd_session_args;
 
     if(args->iflow[0]) {
         session->iflow->config = *args->iflow[0];
@@ -752,13 +753,14 @@ session_update(const session_args_t *args, session_t *session)
     }
  
     // allocate all PD resources and finish programming, if any
-    pd::pd_session_args_init(&pd_session_args);
+    pd::pd_session_update_args_init(&pd_session_args);
     pd_session_args.vrf = args->vrf;
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
 
-    ret = pd::pd_session_update(&pd_session_args);
+    // ret = pd::pd_session_update(&pd_session_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_UPDATE, (void *)&pd_session_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session update failure, err : {}", ret);
     }
@@ -770,17 +772,18 @@ hal_ret_t
 session_delete(const session_args_t *args, session_t *session)
 {
     hal_ret_t                ret;
-    pd::pd_session_args_t    pd_session_args;
+    pd::pd_session_delete_args_t    pd_session_args;
 
     // allocate all PD resources and finish programming, if any
-    pd::pd_session_args_init(&pd_session_args);
+    pd::pd_session_delete_args_init(&pd_session_args);
     pd_session_args.vrf =
         args ? args->vrf : vrf_lookup_by_handle(session->vrf_handle);
     pd_session_args.session = session;
     pd_session_args.session_state = args ? args->session_state : NULL;
     pd_session_args.rsp = args ? args->rsp : NULL;
 
-    ret = pd::pd_session_delete(&pd_session_args);
+    // ret = pd::pd_session_delete(&pd_session_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_DELETE, (void *)&pd_session_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session delete failure, err : {}", ret);
         session_cleanup(session);
@@ -830,6 +833,7 @@ session_age_cb (void *entry, void *ctxt)
     uint64_t                 last_pkt_ts;
     uint64_t                 session_timeout;
     session_args_t           session_args;
+    pd::pd_flow_get_args_t   args;
 
     // read the initiator flow record
     iflow = session->iflow;
@@ -838,7 +842,11 @@ session_age_cb (void *entry, void *ctxt)
                       session->config.session_id);
         return false;
     }
-    ret = hal::pd::pd_flow_get(session, iflow, &iflow_state);
+    args.session = session;
+    args.flow = iflow;
+    args.flow_state = &iflow_state;
+    // ret = hal::pd::pd_flow_get(session, iflow, &iflow_state);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
                       session->config.session_id);
@@ -851,7 +859,11 @@ session_age_cb (void *entry, void *ctxt)
         HAL_TRACE_ERR("session {} has no rflow, ignoring ...",
                       session->config.session_id);
     } else {
-        ret = hal::pd::pd_flow_get(session, rflow, &rflow_state);
+        args.session = session;
+        args.flow = rflow;
+        args.flow_state = &rflow_state;
+        // ret = hal::pd::pd_flow_get(session, rflow, &rflow_state);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_GET, (void *)&args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to fetch rflow record of session {}",
                           session->config.session_id);

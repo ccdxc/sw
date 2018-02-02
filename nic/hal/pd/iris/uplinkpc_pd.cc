@@ -15,7 +15,7 @@ namespace pd {
 // Uplink PC Create
 // ----------------------------------------------------------------------------
 hal_ret_t 
-pd_uplinkpc_create(pd_if_args_t *args)
+pd_uplinkpc_create(pd_if_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_uplinkpc_t      *pd_upif;
@@ -57,7 +57,7 @@ end:
 // PD UplinkPC Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_uplinkpc_update (pd_if_args_t *args)
+pd_uplinkpc_update (pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_uplinkpc_t   *pd_uppc = (pd_uplinkpc_t *)args->intf->pd_if;
@@ -97,7 +97,7 @@ end:
 // PD uplinkpc Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_uplinkpc_delete (pd_if_args_t *args)
+pd_uplinkpc_delete (pd_if_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_uplinkpc_t    *uplinkpc_pd;
@@ -386,7 +386,7 @@ uplinkpc_pd_program_hw(pd_uplinkpc_t *pd_upif)
 // ReProgram TM Register
 // ----------------------------------------------------------------------------
 hal_ret_t
-uplinkpc_pd_upd_tm_register (pd_if_args_t *args)
+uplinkpc_pd_upd_tm_register (pd_if_update_args_t *args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     dllist_ctxt_t               *curr, *next;
@@ -594,10 +594,13 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_uplinkpc_make_clone(if_t *hal_if, if_t *clone)
+// pd_uplinkpc_make_clone(if_t *hal_if, if_t *clone)
+pd_uplinkpc_make_clone(pd_if_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_uplinkpc_t       *pd_uplinkpc_clone = NULL;
+    if_t *hal_if = args->hal_if;
+    if_t *clone = args->clone;
 
     pd_uplinkpc_clone = uplinkpc_pd_alloc_init();
     if (pd_uplinkpc_clone == NULL) {
@@ -617,7 +620,7 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_uplinkpc_mem_free(pd_if_args_t *args)
+pd_uplinkpc_mem_free(pd_if_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_uplinkpc_t  *upif_pd;

@@ -18,8 +18,8 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // PD If Create
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_if_create (pd_if_args_t *args)
+EXTC hal_ret_t
+pd_if_create (pd_if_create_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
@@ -57,8 +57,8 @@ pd_if_create (pd_if_args_t *args)
 // ----------------------------------------------------------------------------
 // PD If Update
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_if_update (pd_if_args_t *args)
+EXTC hal_ret_t
+pd_if_update (pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
@@ -95,8 +95,8 @@ pd_if_update (pd_if_args_t *args)
 // ----------------------------------------------------------------------------
 // PD If Delete
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_if_delete (pd_if_args_t *args)
+EXTC hal_ret_t
+pd_if_delete (pd_if_delete_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
@@ -133,8 +133,8 @@ pd_if_delete (pd_if_args_t *args)
 // ----------------------------------------------------------------------------
 // Lif params update. For enics
 // ----------------------------------------------------------------------------
-hal_ret_t 
-pd_if_lif_update(pd_if_lif_upd_args_t *args)
+EXTC hal_ret_t 
+pd_if_lif_update(pd_if_lif_update_args_t *args)
 {
     HAL_TRACE_DEBUG("pd-if:{}: if lif update", __FUNCTION__);
     return pd_enicif_lif_update(args);
@@ -145,8 +145,8 @@ pd_if_lif_update(pd_if_lif_upd_args_t *args)
 // ----------------------------------------------------------------------------
 // PD If mem free
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_if_mem_free (pd_if_args_t *args)
+EXTC hal_ret_t
+pd_if_mem_free (pd_if_mem_free_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
@@ -179,33 +179,36 @@ pd_if_mem_free (pd_if_args_t *args)
 
     return ret;
 }
-hal_ret_t
-pd_if_make_clone (if_t *hal_if, if_t *clone)
+
+EXTC hal_ret_t
+pd_if_make_clone (pd_if_make_clone_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     intf::IfType    if_type;
+    if_t *hal_if = args->hal_if;
+    // if_t *clone = args->clone;
 
     HAL_TRACE_DEBUG("pd-if:{}: if clone", __FUNCTION__);
 
     if_type = hal::intf_get_if_type(hal_if);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
-            ret = pd_enicif_make_clone(hal_if, clone);
+            ret = pd_enicif_make_clone(args);
             break;
         case intf::IF_TYPE_UPLINK:
-            ret = pd_uplinkif_make_clone(hal_if, clone);
+            ret = pd_uplinkif_make_clone(args);
             break;
         case intf::IF_TYPE_UPLINK_PC:
-            ret = pd_uplinkpc_make_clone(hal_if, clone);
+            ret = pd_uplinkpc_make_clone(args);
             break;
         case intf::IF_TYPE_TUNNEL:
-            ret = pd_tunnelif_make_clone(hal_if, clone);
+            ret = pd_tunnelif_make_clone(args);
             break;
         case intf::IF_TYPE_CPU:
-            ret = pd_cpuif_make_clone(hal_if, clone);
+            ret = pd_cpuif_make_clone(args);
             break;
         case intf::IF_TYPE_APP_REDIR:
-            ret = pd_app_redir_if_make_clone(hal_if, clone);
+            ret = pd_app_redir_if_make_clone(args);
             break;
         default:
             HAL_ASSERT(0);
@@ -217,13 +220,13 @@ pd_if_make_clone (if_t *hal_if, if_t *clone)
 // Nwsec profile update 
 //      - Triggered from vrf update
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args)
+EXTC hal_ret_t
+pd_if_nwsec_update(pd_if_nwsec_update_args_t *args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     intf::IfType                if_type;
     void                        *pd_if = args->intf->pd_if;
-    pd_l2seg_uplink_args_t      uplink_args = { 0 };
+    pd_add_l2seg_uplink_args_t      uplink_args = { 0 };
 
     HAL_TRACE_DEBUG("pd-if:{}:", __FUNCTION__);
 

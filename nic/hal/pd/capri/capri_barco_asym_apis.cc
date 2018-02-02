@@ -32,7 +32,10 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"y1", (char *)y1, 32);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"k", (char *)k, 32);
 
-    ret = pd_crypto_asym_alloc_key(&ecc_pm_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_pm_p256_key_idx;
+    // ret = pd_crypto_asym_alloc_key(&ecc_pm_p256_key_idx);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to allocate key descriptor");
         goto cleanup;
@@ -44,7 +47,11 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(32) |
                             CAPRI_BARCO_ASYM_CMD_ECC_POINT_MUL);
                                 
-    ret = pd_crypto_asym_write_key(ecc_pm_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_pm_p256_key_idx;
+    w_args.key = &asym_key;
+    // ret = pd_crypto_asym_write_key(ecc_pm_p256_key_idx, &asym_key);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to write key: {}", ecc_pm_p256_key_idx);
         goto cleanup;
@@ -248,7 +255,10 @@ cleanup:
     }
 
     if (ecc_pm_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_pm_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_pm_p256_key_idx;
+        // ret = pd_crypto_asym_free_key(ecc_pm_p256_key_idx);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ECC Point Mul P256: Failed to free key descriptor");
         }
@@ -373,7 +383,10 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
         goto cleanup;
     }
 
-    ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_p256_key_idx;
+    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
@@ -385,7 +398,11 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(32) |
                             CAPRI_BARCO_ASYM_ECDSA_SIG_GEN);
                                 
-    ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key = &asym_key;
+    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
@@ -565,7 +582,10 @@ cleanup:
     }
 
     if (ecc_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_p256_key_idx;
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -715,7 +735,10 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         goto cleanup;
     }
 
-    ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_p256_key_idx;
+    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
@@ -727,7 +750,11 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(32) |
                             CAPRI_BARCO_ASYM_ECDSA_SIG_VERIFY);
                                 
-    ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key = &asym_key;
+    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
@@ -867,7 +894,10 @@ cleanup:
     }
 
     if (ecc_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_p256_key_idx;
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -969,7 +999,10 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
         goto cleanup;
     }
 
-    ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_p256_key_idx;
+    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
@@ -981,7 +1014,11 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_ENCRYPT);
                                 
-    ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key = &asym_key;
+    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
@@ -1147,7 +1184,10 @@ cleanup:
     }
 
     if (ecc_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_p256_key_idx;
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -1249,7 +1289,10 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
         goto cleanup;
     }
 
-    ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_p256_key_idx;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
@@ -1261,7 +1304,11 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_DECRYPT);
                                 
-    ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key = &asym_key;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
@@ -1427,7 +1474,10 @@ cleanup:
     }
 
     if (ecc_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_p256_key_idx;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -1630,7 +1680,10 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
         goto cleanup;
     }
 
-    ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_p256_key_idx;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
@@ -1642,7 +1695,11 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_CRT_DECRYPT);
                                 
-    ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key = &asym_key;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
@@ -1808,7 +1865,10 @@ cleanup:
     }
 
     if (ecc_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_p256_key_idx;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -1942,7 +2002,10 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d,
         goto cleanup;
     }
 
-    ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_p256_key_idx;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
@@ -1954,7 +2017,11 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d,
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_SIG_GEN);
                                 
-    ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key = &asym_key;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
@@ -2120,7 +2187,10 @@ cleanup:
     }
 
     if (ecc_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_p256_key_idx;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }
@@ -2223,7 +2293,10 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
         goto cleanup;
     }
 
-    ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
+    pd_crypto_asym_alloc_key_args_t args;
+    args.key_idx = &ecc_p256_key_idx;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_ALLOC_KEY, (void *)&args);
+    // ret = pd_crypto_asym_alloc_key(&ecc_p256_key_idx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
@@ -2235,7 +2308,11 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
                             CAPRI_BARCO_ASYM_CMD_SIZE_OF_OP(256) |
                             CAPRI_BARCO_ASYM_CMD_RSA_SIG_VERIFY);
                                 
-    ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
+    pd_crypto_asym_write_key_args_t w_args;
+    w_args.key_idx = ecc_p256_key_idx;
+    w_args.key = &asym_key;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_WRITE_KEY, (void *)&w_args);
+    // ret = pd_crypto_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: {}", ecc_p256_key_idx);
         goto cleanup;
@@ -2367,7 +2444,10 @@ cleanup:
     }
 
     if (ecc_p256_key_idx != -1) {
-        ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
+        pd_crypto_asym_free_key_args_t f_args;
+        f_args.key_idx = ecc_p256_key_idx;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ASYM_FREE_KEY, (void *)&f_args);
+        // ret = pd_crypto_asym_free_key(ecc_p256_key_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR(CAPRI_BARCO_API_NAME"Failed to free key descriptor");
         }

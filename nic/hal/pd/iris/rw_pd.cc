@@ -196,10 +196,13 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
     return ret;
 }
 
-hal_ret_t
-pd_rw_entry_find_or_alloc(pd_rw_entry_args_t *args, uint32_t *rw_idx)
+EXTC hal_ret_t
+pd_rw_entry_find_or_alloc(pd_rw_entry_find_or_alloc_args_t *rw_args)
 {
     pd_rw_entry_key_t   rw_key{};
+    pd_rw_entry_args_t *args = rw_args->args;
+    uint32_t *rw_idx = rw_args->rw_idx;
+
     if (!args) {
         return HAL_RET_INVALID_ARG;
     }

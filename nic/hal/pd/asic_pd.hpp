@@ -18,6 +18,11 @@ typedef struct asic_cfg_s {
     uint32_t         admin_cos;
 } asic_cfg_t;
 
+// asic init
+typedef struct pd_asic_init_args_s {
+    asic_cfg_t *cfg;
+} __PACK__ pd_asic_init_args_t;
+
 //------------------------------------------------------------------------------
 // public API for register read operations
 // NOTE: this is always a blocking call and this API runs in the calling

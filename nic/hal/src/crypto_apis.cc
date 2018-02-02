@@ -3,8 +3,8 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/crypto_apis.hpp"
-#include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
-#include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
+// #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
+// #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 
 namespace hal {
 
@@ -17,11 +17,26 @@ hal_ret_t crypto_asym_api_ecc_point_mul(cryptoapis::CryptoApiRequest &req,
     uint32_t            key_size;
     uint8_t             px[ECC_MAX_KEY_SIZE];
     uint8_t             py[ECC_MAX_KEY_SIZE];
+    pd::pd_capri_barco_asym_ecc_point_mul_p256_args_t args;
 
     key_size = req.ecc_point_mul_fp().ecc_domain_params().keysize();
 
     switch (key_size) {
         case 32:
+            args.p = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().p().data();
+            args.n = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().n().data();
+            args.xg = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().g().x().data();
+            args.yg = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().g().y().data();
+            args.a = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().a().data();
+            args.b = (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().b().data();
+            args.x1 = (uint8_t *)req.ecc_point_mul_fp().ecc_point().x().data();
+            args.y1 = (uint8_t *)req.ecc_point_mul_fp().ecc_point().y().data();
+            args.k = (uint8_t *)req.ecc_point_mul_fp().k().data();
+            args.x3 = px;
+            args.y3 = py;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECC_MUL_P256, (void *)&args);
+
+#if 0
             ret = pd::capri_barco_asym_ecc_point_mul_p256(
                     (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().p().data(),
                     (uint8_t *)req.ecc_point_mul_fp().ecc_domain_params().n().data(),
@@ -34,6 +49,7 @@ hal_ret_t crypto_asym_api_ecc_point_mul(cryptoapis::CryptoApiRequest &req,
                     (uint8_t *)req.ecc_point_mul_fp().k().data(),
                     px,
                     py);
+#endif
             if (ret == HAL_RET_OK) {
                 resp->mutable_ecc_point_mul_fp()->mutable_q()->mutable_x()->assign(
                         (const char*)px, (size_t) key_size);
@@ -64,11 +80,25 @@ hal_ret_t crypto_asym_api_ecdsa_sig_gen(cryptoapis::CryptoApiRequest &req,
     uint32_t            key_size;
     uint8_t             r[ECC_MAX_KEY_SIZE];
     uint8_t             s[ECC_MAX_KEY_SIZE];
+    pd::pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t args;
 
     key_size = req.ecdsa_sig_gen_fp().ecc_domain_params().keysize();
 
     switch (key_size) {
         case 32:
+            args.p = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().p().data();
+            args.n = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().n().data();
+            args.xg = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().g().x().data();
+            args.yg = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().g().y().data();
+            args.a = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().a().data();
+            args.b = (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().b().data();
+            args.da = (uint8_t *)req.ecdsa_sig_gen_fp().da().data();
+            args.k = (uint8_t *)req.ecdsa_sig_gen_fp().k().data();
+            args.h = (uint8_t *)req.ecdsa_sig_gen_fp().h().data();
+            args.r = r;
+            args.s = s;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, (void *)&args);
+#if 0
             ret = pd::capri_barco_asym_ecdsa_p256_sig_gen(
                     (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().p().data(),
                     (uint8_t *)req.ecdsa_sig_gen_fp().ecc_domain_params().n().data(),
@@ -81,6 +111,7 @@ hal_ret_t crypto_asym_api_ecdsa_sig_gen(cryptoapis::CryptoApiRequest &req,
                     (uint8_t *)req.ecdsa_sig_gen_fp().h().data(),
                     r,
                     s);
+#endif
             if (ret == HAL_RET_OK) {
                 resp->mutable_ecdsa_sig_gen_fp()->mutable_r()->assign(
                         (const char*)r, (size_t) key_size);
@@ -99,7 +130,6 @@ hal_ret_t crypto_asym_api_ecdsa_sig_gen(cryptoapis::CryptoApiRequest &req,
     else {
         resp->set_api_status(types::API_STATUS_ERR);
     }
-
     return ret;
 }
 
@@ -108,11 +138,25 @@ hal_ret_t crypto_asym_api_ecdsa_sig_verify(cryptoapis::CryptoApiRequest &req,
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
+    pd::pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t args;
 
     key_size = req.ecdsa_sig_verify_fp().ecc_domain_params().keysize();
 
     switch (key_size) {
         case 32:
+            args.p = (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().p().data();
+            args.n = (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().n().data();
+            args.xg = (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().g().x().data();
+            args.yg = (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().g().y().data();
+            args.a = (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().a().data();
+            args.b = (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().b().data();
+            args.xq = (uint8_t *)req.ecdsa_sig_verify_fp().q().x().data();
+            args.yq = (uint8_t *)req.ecdsa_sig_verify_fp().q().y().data();
+            args.r = (uint8_t *)req.ecdsa_sig_verify_fp().r().data();
+            args.s = (uint8_t *)req.ecdsa_sig_verify_fp().s().data();
+            args.h = (uint8_t *)req.ecdsa_sig_verify_fp().h().data();
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, (void *)&args);
+#if 0
             ret = pd::capri_barco_asym_ecdsa_p256_sig_verify(
                     (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().p().data(),
                     (uint8_t *)req.ecdsa_sig_verify_fp().ecc_domain_params().n().data(),
@@ -126,6 +170,7 @@ hal_ret_t crypto_asym_api_ecdsa_sig_verify(cryptoapis::CryptoApiRequest &req,
                     (uint8_t *)req.ecdsa_sig_verify_fp().s().data(),
                     (uint8_t *)req.ecdsa_sig_verify_fp().h().data()
                     );
+#endif
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);
@@ -148,17 +193,26 @@ hal_ret_t crypto_asym_api_rsa_encrypt(cryptoapis::CryptoApiRequest &req,
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
     uint8_t             cipher_text[RSA_MAX_KEY_SIZE];
+    pd::pd_capri_barco_asym_rsa2k_encrypt_args_t args;
 
     key_size = req.rsa_encrypt().keysize();
 
     switch (key_size) {
         case 256:
+            args.n = (uint8_t *)req.rsa_encrypt().mod_n().data();
+            args.e = (uint8_t *)req.rsa_encrypt().e().data();
+            args.m = (uint8_t *)req.rsa_encrypt().plain_text().data();
+            args.c = cipher_text;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, (void *)&args);
+
+#if 0
             ret = pd::capri_barco_asym_rsa2k_encrypt(
                     (uint8_t *)req.rsa_encrypt().mod_n().data(),
                     (uint8_t *)req.rsa_encrypt().e().data(),
                     (uint8_t *)req.rsa_encrypt().plain_text().data(),
                     cipher_text
                     );
+#endif
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);
@@ -183,17 +237,26 @@ hal_ret_t crypto_asym_api_rsa_decrypt(cryptoapis::CryptoApiRequest &req,
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
     uint8_t             plain_text[RSA_MAX_KEY_SIZE];
+    pd::pd_capri_barco_asym_rsa2k_decrypt_args_t args;
 
     key_size = req.rsa_decrypt().keysize();
 
     switch (key_size) {
         case 256:
+            args.n = (uint8_t *)req.rsa_decrypt().mod_n().data();
+            args.d =  (uint8_t *)req.rsa_decrypt().d().data();
+            args.c = (uint8_t *)req.rsa_decrypt().cipher_text().data();
+            args.m = plain_text;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, (void *)&args);
+
+#if 0
             ret = pd::capri_barco_asym_rsa2k_decrypt(
                     (uint8_t *)req.rsa_decrypt().mod_n().data(),
                     (uint8_t *)req.rsa_decrypt().d().data(),
                     (uint8_t *)req.rsa_decrypt().cipher_text().data(),
                     plain_text
                     );
+#endif
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);
@@ -218,11 +281,22 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
     uint8_t             plain_text[RSA_MAX_KEY_SIZE];
+    pd::pd_capri_barco_asym_rsa2k_crt_decrypt_args_t args;
 
     key_size = req.rsa_crt_decrypt().keysize();
 
     switch (key_size) {
         case 256:
+            args.p = (uint8_t *)req.rsa_crt_decrypt().p().data();
+            args.q = (uint8_t *)req.rsa_crt_decrypt().q().data();
+            args.dp = (uint8_t *)req.rsa_crt_decrypt().dp().data();
+            args.dq = (uint8_t *)req.rsa_crt_decrypt().dq().data();
+            args.qinv = (uint8_t *)req.rsa_crt_decrypt().qinv().data();
+            args.c = (uint8_t *)req.rsa_crt_decrypt().cipher_text().data();
+            args.m = plain_text;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, (void *)&args);
+
+#if 0
             ret = pd::capri_barco_asym_rsa2k_crt_decrypt(
                     (uint8_t *)req.rsa_crt_decrypt().p().data(),
                     (uint8_t *)req.rsa_crt_decrypt().q().data(),
@@ -232,6 +306,7 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
                     (uint8_t *)req.rsa_crt_decrypt().cipher_text().data(),
                     plain_text
                     );
+#endif
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);
@@ -256,17 +331,26 @@ hal_ret_t crypto_asym_api_rsa_sig_gen(cryptoapis::CryptoApiRequest &req,
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
     uint8_t             s[RSA_MAX_KEY_SIZE];
+    pd::pd_capri_barco_asym_rsa2k_sig_gen_args_t args;
 
     key_size = req.rsa_sig_gen().keysize();
 
     switch (key_size) {
         case 256:
+            args.n = (uint8_t *)req.rsa_sig_gen().mod_n().data();
+            args.d = (uint8_t *)req.rsa_sig_gen().d().data();
+            args.h = (uint8_t *)req.rsa_sig_gen().h().data();
+            args.s = s;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, (void *)&args);
+
+#if 0
             ret = pd::capri_barco_asym_rsa2k_sig_gen(
                     (uint8_t *)req.rsa_sig_gen().mod_n().data(),
                     (uint8_t *)req.rsa_sig_gen().d().data(),
                     (uint8_t *)req.rsa_sig_gen().h().data(),
                     s
                     );
+#endif
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);
@@ -290,17 +374,26 @@ hal_ret_t crypto_asym_api_rsa_sig_verify(cryptoapis::CryptoApiRequest &req,
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
+    pd::pd_capri_barco_asym_rsa2k_sig_verify_args_t args;
 
     key_size = req.rsa_sig_verify().keysize();
 
     switch (key_size) {
         case 256:
+            args.n = (uint8_t *)req.rsa_sig_verify().mod_n().data();
+            args.e = (uint8_t *)req.rsa_sig_verify().e().data();
+            args.h = (uint8_t *)req.rsa_sig_verify().h().data();
+            args.s = (uint8_t *)req.rsa_sig_verify().s().data();
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, (void *)&args);
+
+#if 0
             ret = pd::capri_barco_asym_rsa2k_sig_verify(
                     (uint8_t *)req.rsa_sig_verify().mod_n().data(),
                     (uint8_t *)req.rsa_sig_verify().e().data(),
                     (uint8_t *)req.rsa_sig_verify().h().data(),
                     (uint8_t *)req.rsa_sig_verify().s().data()
                     );
+#endif
             break;
         default:
             HAL_TRACE_ERR("Unsupported key size: {}", key_size);
@@ -325,6 +418,7 @@ hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
     int32_t                       digest_len, exp_digest_len;
     uint8_t                       digest[CRYPTO_MAX_HASH_DIGEST_LEN];
     cryptoapis::CryptoApiHashType hashtype;
+    pd::pd_capri_barco_sym_hash_process_request_args_t args;
 
     if (generate) {
         hashtype = req.hash_generate().hashtype();
@@ -369,6 +463,16 @@ hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
 	return HAL_RET_INVALID_ARG;
     }
 
+    args.hash_type = hashtype;
+    args.generate = generate;
+    args.key = generate ? (uint8_t *)req.hash_generate().key().data() : (uint8_t *)req.hash_verify().key().data();
+    args.key_len = generate ? (uint32_t)req.hash_generate().key_len() : (uint32_t)req.hash_verify().key_len();
+    args.data = generate ? (uint8_t *)req.hash_generate().data().data() : (uint8_t *)req.hash_verify().data().data();
+    args.data_len = generate ? (uint32_t)req.hash_generate().data_len() : (uint32_t)req.hash_verify().data_len();
+    args.output_digest = generate ? digest : (uint8_t *)req.hash_verify().digest().data();
+    args.digest_len = digest_len;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, (void *)&args);
+#if 0
     ret = pd::capri_barco_sym_hash_process_request(hashtype,
 						   generate,
 						   generate ?
@@ -387,6 +491,7 @@ hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
 						   digest :
 						   (uint8_t *)req.hash_verify().digest().data(),
 						   digest_len);
+#endif
 
     if (ret == HAL_RET_OK) {
         if (generate) {

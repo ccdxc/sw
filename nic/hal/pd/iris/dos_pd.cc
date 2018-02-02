@@ -15,8 +15,8 @@ namespace pd {
 //-----------------------------------------------------------------------------
 // PD DoS Create
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_dos_policy_create (pd_dos_policy_args_t *args)
+EXTC hal_ret_t
+pd_dos_policy_create (pd_dos_policy_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_dos_policy_t      *pd_dosp;
@@ -57,8 +57,8 @@ end:
 //-----------------------------------------------------------------------------
 // PD DoS Update
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_dos_policy_update (pd_dos_policy_args_t *args)
+EXTC hal_ret_t
+pd_dos_policy_update (pd_dos_policy_update_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_dos_policy_t   *pd_dosp;
@@ -98,8 +98,8 @@ pd_dos_policy_update (pd_dos_policy_args_t *args)
 //-----------------------------------------------------------------------------
 // PD DoS Delete
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_dos_policy_delete (pd_dos_policy_args_t *args)
+EXTC hal_ret_t
+pd_dos_policy_delete (pd_dos_policy_delete_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_dos_policy_t  *dos_pd;
@@ -892,11 +892,14 @@ dos_delink_pi_pd(pd_dos_policy_t *pd_dosp, dos_policy_t  *pi_nw)
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_dos_policy_make_clone(dos_policy_t *dosp, dos_policy_t *clone)
+EXTC hal_ret_t
+// pd_dos_policy_make_clone(dos_policy_t *dosp, dos_policy_t *clone)
+pd_dos_policy_make_clone(pd_dos_policy_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_dos_policy_t     *pd_dosp_clone = NULL;
+    dos_policy_t *dosp = args->dos_policy;
+    dos_policy_t *clone = args->clone_policy;
 
     pd_dosp_clone = dos_pd_alloc_init();
     if (pd_dosp_clone == NULL) {
@@ -915,8 +918,8 @@ end:
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_dos_policy_mem_free(pd_dos_policy_args_t *args)
+EXTC hal_ret_t
+pd_dos_policy_mem_free(pd_dos_policy_mem_free_args_t *args)
 {
     pd_dos_policy_t       *dos_pd;
     hal_ret_t             ret = HAL_RET_OK;

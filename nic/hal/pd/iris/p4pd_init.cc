@@ -2,6 +2,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "sdk/tcam.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
@@ -835,6 +836,12 @@ p4pd_qos_init (uint32_t admin_cos)
 
     // Reserve the IQ needed for the ADMIN class
     g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(admin_cos);
+#if 0
+    pd_qos_class_get_admin_cos_args_t args = {0};
+    pd_qos_class_get_admin_cos(&args);   
+    g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(args.cos);
+    // g_hal_state_pd->qos_txdma_iq_idxr()->alloc_withid(qos_class_get_admin_cos());
+#endif
     return ret;
 }
 

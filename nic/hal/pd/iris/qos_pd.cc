@@ -79,8 +79,8 @@ pd_qos_get_alloc_q_count (qos_class_t *qos_class,
 // ----------------------------------------------------------------------------
 // Qos-class Create
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_class_create(pd_qos_class_args_t *args)
+EXTC hal_ret_t
+pd_qos_class_create(pd_qos_class_create_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;;
     pd_qos_class_t *pd_qos_class;
@@ -127,6 +127,7 @@ end:
     return ret;
 }
 
+#if 0
 // ----------------------------------------------------------------------------
 // Qos-class Update
 // ----------------------------------------------------------------------------
@@ -141,12 +142,13 @@ pd_qos_class_update (pd_qos_class_args_t *pd_qos_class_upd_args)
 
     return ret;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // PD Qos-class Delete
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_class_delete (pd_qos_class_args_t *args)
+EXTC hal_ret_t
+pd_qos_class_delete (pd_qos_class_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_qos_class_t *qos_class_pd;
@@ -975,6 +977,7 @@ end:
     return ret;
 }
 
+#if 0
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
@@ -989,22 +992,34 @@ pd_qos_class_mem_free(pd_qos_class_args_t *args)
 
     return ret;
 }
+#endif
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 qos_class_get_qos_class_id (qos_class_t *qos_class, 
                             if_t *dest_if, 
                             uint32_t *qos_class_id) 
+#endif
+pd_qos_class_get_qos_class_id (pd_qos_class_get_qos_class_id_args_t *q_args)
 {
     pd_qos_class_t *pd_qos_class;
     tm_port_t      dest_port;
     uint32_t       group = 0;
+    pd_if_get_tm_oport_args_t args;
+
+    qos_class_t *qos_class = q_args->qos_class;
+    if_t *dest_if = q_args->dest_if;
+    uint32_t *qos_class_id = q_args->qos_class_id;
         
     if (!qos_class) {
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
 
     if (dest_if) {
-        dest_port = if_get_tm_oport(dest_if);
+        args.pi_if = dest_if;
+        pd_if_get_tm_oport(&args);
+        dest_port = args.tm_oport;
+        // dest_port = if_get_tm_oport(dest_if);
     } else {
         // If the dest if is not available, treat it as destined to uplink-0
         dest_port = TM_PORT_UPLINK_0;
@@ -1042,6 +1057,13 @@ uint32_t
 qos_class_get_admin_cos (void)
 {
     return HAL_QOS_ADMIN_COS;
+}
+
+EXTC hal_ret_t 
+pd_qos_class_get_admin_cos (pd_qos_class_get_admin_cos_args_t *args)
+{
+    args->cos = HAL_QOS_ADMIN_COS;
+    return HAL_RET_OK;
 }
 
 }    // namespace pd

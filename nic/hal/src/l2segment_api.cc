@@ -1,12 +1,14 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
+#include "nic/hal/src/interface.hpp"
+#include "nic/include/interface_api.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/include/l2segment_api.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/hal/src/network.hpp"
+#include "nic/hal/src/lif_manager.hpp"
 
 namespace hal {
-
 
 // ----------------------------------------------------------------------------
 // Returns L2 segment PD

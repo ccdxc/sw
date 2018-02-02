@@ -14,8 +14,8 @@
 #include "nic/hal/src/eth.hpp"
 #include "nic/hal/src/qos.hpp"
 
-using hal::pd::pd_if_args_t;
-using hal::pd::pd_if_lif_upd_args_t;
+using hal::pd::pd_if_create_args_t;
+using hal::pd::pd_if_lif_update_args_t;
 
 namespace hal {
 
@@ -198,19 +198,20 @@ lif_fwd_create (LifSpec& spec, LifResponse *rsp, lif_t *lif,
                 lif_hal_info_t *lif_hal_info)
 {
     hal_ret_t         ret          = HAL_RET_OK;
-    pd::pd_lif_args_t pd_lif_args;
+    pd::pd_lif_create_args_t pd_lif_args;
 
     HAL_TRACE_DEBUG("pi-lif:{}: P4 Processing for lif id {}", __FUNCTION__, 
                     spec.key_or_handle().lif_id());
 
     // allocate all PD resources and finish programming, if any
-    pd::pd_lif_args_init(&pd_lif_args);
+    pd::pd_lif_create_args_init(&pd_lif_args);
     pd_lif_args.lif = lif;
     if (lif_hal_info) {
         pd_lif_args.with_hw_lif_id = lif_hal_info->with_hw_lif_id;
         pd_lif_args.hw_lif_id = lif_hal_info->hw_lif_id;
     }
-    ret = pd::pd_lif_create(&pd_lif_args);
+    // ret = pd::pd_lif_create(&pd_lif_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_CREATE, (void *)&pd_lif_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD lif create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -417,7 +418,7 @@ hal_ret_t
 lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t         ret         = HAL_RET_OK;
-    pd::pd_lif_args_t pd_lif_args = { 0 };
+    pd::pd_lif_delete_args_t pd_lif_args = { 0 };
     dllist_ctxt_t     *lnode      = NULL;
     dhl_entry_t       *dhl_entry  = NULL;
     lif_t             *lif        = NULL;
@@ -440,9 +441,10 @@ lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. delete call to PD
     if (lif->pd_lif) {
-        pd::pd_lif_args_init(&pd_lif_args);
+        pd::pd_lif_delete_args_init(&pd_lif_args);
         pd_lif_args.lif = lif;
-        ret = pd::pd_lif_delete(&pd_lif_args);
+        // ret = pd::pd_lif_delete(&pd_lif_args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_DELETE, (void *)&pd_lif_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}", 
                           __FUNCTION__, ret);
@@ -668,7 +670,7 @@ hal_ret_t
 lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t             ret        = HAL_RET_OK;
-    pd::pd_lif_upd_args_t args       = { 0 };
+    pd::pd_lif_update_args_t args       = { 0 };
     dllist_ctxt_t         *lnode     = NULL;
     dhl_entry_t           *dhl_entry = NULL;
     lif_t                 *lif       = NULL;
@@ -707,14 +709,20 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_lif_upd_args_init(&args);
+    pd::pd_lif_update_args_init(&args);
     args.lif                   = lif_clone;
     args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
     args.vlan_strip_en         = app_ctxt->vlan_strip_en;
     args.qstate_map_init_set   = app_ctxt->qstate_map_init_set;
     args.rx_policer_changed    = app_ctxt->rx_policer_changed;
     args.tx_policer_changed    = app_ctxt->tx_policer_changed;
-    hw_lif_id                  = pd::pd_get_hw_lif_id(lif);
+
+    pd::pd_get_hw_lif_id_args_t hwlifid_args;
+    hwlifid_args.lif = lif;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_HW_LIFID, (void *)&hwlifid_args);
+
+    // hw_lif_id                  = pd::pd_get_hw_lif_id(lif);
+    hw_lif_id = hwlifid_args.hw_lifid;
 
     if (app_ctxt->qstate_map_init_set) {
         // init queue state map
@@ -733,7 +741,8 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
     args.rss_config_changed = app_ctxt->rss_config_changed;
 
-    ret = pd::pd_lif_update(&args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_UPDATE, (void *)&args);
+    // ret = pd::pd_lif_update(&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
@@ -754,13 +763,19 @@ end:
 hal_ret_t
 lif_make_clone (lif_t *lif, lif_t **lif_clone, LifSpec& spec)
 {
+    pd::pd_lif_make_clone_args_t args;
+
     *lif_clone = lif_alloc_init();
     memcpy(*lif_clone, lif, sizeof(lif_t));
 
     // After clone always reset lists
     dllist_reset(&(*lif_clone)->if_list_head);
 
-    pd::pd_lif_make_clone(lif, *lif_clone);
+    args.lif = lif;
+    args.clone = *lif_clone;
+    // pd::pd_lif_make_clone(lif, *lif_clone);
+    pd::hal_pd_call(pd::PD_FUNC_ID_LIF_MAKE_CLONE, (void *)&args);
+
 
     // Update the clone with the new values
     if (spec.has_rx_policer()) {
@@ -783,7 +798,7 @@ hal_ret_t
 lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t             ret         = HAL_RET_OK;
-    pd::pd_lif_args_t     pd_lif_args = { 0 };
+    pd::pd_lif_mem_free_args_t     pd_lif_args = { 0 };
     dllist_ctxt_t         *lnode      = NULL;
     dhl_entry_t           *dhl_entry  = NULL;
     lif_t                 *lif        = NULL, *lif_clone = NULL;
@@ -819,9 +834,10 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     lif_print_ifs(lif_clone);
 
     // Free PD
-    pd::pd_lif_args_init(&pd_lif_args);
+    pd::pd_lif_mem_free_args_init(&pd_lif_args);
     pd_lif_args.lif = lif;
-    ret = pd::pd_lif_mem_free(&pd_lif_args);
+    // ret = pd::pd_lif_mem_free(&pd_lif_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_MEM_FREE, (void *)&pd_lif_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
@@ -841,7 +857,7 @@ hal_ret_t
 lif_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                ret         = HAL_RET_OK;
-    pd::pd_lif_args_t        pd_lif_args = { 0 };
+    pd::pd_lif_mem_free_args_t        pd_lif_args = { 0 };
     dllist_ctxt_t            *lnode      = NULL;
     dhl_entry_t              *dhl_entry  = NULL;
     lif_t                    *lif        = NULL;
@@ -863,9 +879,10 @@ lif_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, lif->lif_id);
 
     // Free PD
-    pd::pd_lif_args_init(&pd_lif_args);
+    pd::pd_lif_mem_free_args_init(&pd_lif_args);
     pd_lif_args.lif = lif;
-    ret = pd::pd_lif_mem_free(&pd_lif_args);
+    // ret = pd::pd_lif_mem_free(&pd_lif_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_MEM_FREE, (void *)&pd_lif_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
@@ -1081,7 +1098,7 @@ hal_ret_t
 lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t         ret         = HAL_RET_OK;
-    pd::pd_lif_args_t pd_lif_args = { 0 };
+    pd::pd_lif_delete_args_t pd_lif_args = { 0 };
     dllist_ctxt_t     *lnode      = NULL;
     dhl_entry_t       *dhl_entry  = NULL;
     lif_t             *lif        = NULL;
@@ -1105,9 +1122,10 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, lif->lif_id);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_lif_args_init(&pd_lif_args);
+    pd::pd_lif_delete_args_init(&pd_lif_args);
     pd_lif_args.lif = lif;
-    ret = pd::pd_lif_delete(&pd_lif_args);
+    // ret = pd::pd_lif_delete(&pd_lif_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_DELETE, (void *)&pd_lif_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}", 
                       __FUNCTION__, ret);
@@ -1410,7 +1428,7 @@ lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
     dllist_ctxt_t              *lnode  = NULL;
     hal_handle_id_list_entry_t *entry  = NULL;
     if_t                       *hal_if = NULL;
-    pd::pd_if_lif_upd_args_t   args    = { 0 };
+    pd::pd_if_lif_update_args_t   args    = { 0 };
 
     if (lif == NULL) {
         return ret;
@@ -1419,7 +1437,7 @@ lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
     HAL_TRACE_DEBUG("pi-lif:{}:lif_id: {}", 
                     __FUNCTION__, lif->lif_id);
 
-    pd::pd_if_lif_upd_args_init(&args);
+    pd::pd_if_lif_update_args_init(&args);
     // Walk enicifs
     dllist_for_each(lnode, &lif->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);

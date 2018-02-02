@@ -1,4 +1,5 @@
--I ../..
+-I ../../..
+-I ../../sdk/include
 -I ../../include
--I ../../third-party/spdlog/include
+-I ../third-party/spdlog/include
 -std=c++11

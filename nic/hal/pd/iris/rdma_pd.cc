@@ -11,6 +11,21 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
+pd_rxdma_table_entry_add(pd_rxdma_table_entry_add_args_t *args) {
+    return p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(args->idx,
+                                                                       args->rdma_en_qtype_mask,
+                                                                       args->pt_base_addr_page_id,
+                                                                       args->log_num_pt_entries,
+                                                                       args->cqcb_base_addr_page_id,
+                                                                       args->log_num_cq_entries,
+                                                                       args->prefetch_pool_base_addr_page_id,
+                                                                       args->log_num_prefetch_pool_entries,
+                                                                       args->sq_qtype,
+                                                                       args->rq_qtype);
+
+}
+
+hal_ret_t
 p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t rdma_en_qtype_mask,
                                                       uint32_t pt_base_addr_page_id,
@@ -82,6 +97,20 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_st
 
 
 
+hal_ret_t
+pd_txdma_table_entry_add(pd_txdma_table_entry_add_args_t *args) {
+    return p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(args->idx,
+                                                                       args->rdma_en_qtype_mask,
+                                                                       args->pt_base_addr_page_id,
+                                                                       args->log_num_pt_entries,
+                                                                       args->cqcb_base_addr_page_id,
+                                                                       args->log_num_cq_entries,
+                                                                       args->prefetch_pool_base_addr_page_id,
+                                                                       args->log_num_prefetch_pool_entries,
+                                                                       args->sq_qtype,
+                                                                       args->rq_qtype);
+
+}
 hal_ret_t
 p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t rdma_en_qtype_mask,

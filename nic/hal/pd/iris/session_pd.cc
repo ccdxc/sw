@@ -446,7 +446,7 @@ p4pd_del_flow_info_table_entries (pd_session_t *session_pd)
 // program flow info table entries for a given session
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_info_table_entries (pd_session_args_t *args)
+p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
 {
     hal_ret_t       ret;
     pd_session_t    *session_pd = (pd_session_t *)args->session->pd;
@@ -588,7 +588,7 @@ p4pd_del_flow_hash_table_entry (uint32_t flow_index)
 //------------------------------------------------------------------------------
 hal_ret_t
 p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
-                                  pd_session_args_t *args)
+                                  pd_session_create_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;
     session_t               *session = (session_t *)session_pd->session;
@@ -741,8 +741,8 @@ p4pd_del_flow_hash_table_entries (pd_session_t *session_pd)
 //------------------------------------------------------------------------------
 // program all PD tables for given session and maintain meta data in PD state
 //------------------------------------------------------------------------------
-hal_ret_t
-pd_session_create (pd_session_args_t *args)
+EXTC hal_ret_t
+pd_session_create (pd_session_create_args_t *args)
 {
     hal_ret_t          ret;
     pd_session_t       *session_pd;
@@ -816,7 +816,7 @@ cleanup:
 // update PD tables for given session 
 //------------------------------------------
 hal_ret_t
-pd_session_update (pd_session_args_t *args)
+pd_session_update (pd_session_update_args_t *args)
 {
     hal_ret_t          ret;
     pd_session_t       *session_pd = NULL;
@@ -850,13 +850,14 @@ pd_session_update (pd_session_args_t *args)
     }
 
     // update/add flow info table entries
-    ret = p4pd_add_flow_info_table_entries(args);
+    ret = p4pd_add_flow_info_table_entries((pd_session_create_args_t *)args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Flow info table entry upd failure");
         goto cleanup;
     }
 
-    ret = p4pd_add_flow_hash_table_entries(session_pd, args);
+    ret = p4pd_add_flow_hash_table_entries(session_pd, 
+                                           (pd_session_create_args_t *)args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Flow hash table entry upd failure");
         goto cleanup;
@@ -880,8 +881,8 @@ cleanup:
 //-----------------------------------------
 // Delete PD tables for given session
 //------------------------------------------
-hal_ret_t
-pd_session_delete (pd_session_args_t *args)
+EXTC hal_ret_t
+pd_session_delete (pd_session_delete_args_t *args)
 {
     hal_ret_t          ret = HAL_RET_OK;
     pd_session_t       *session_pd = NULL;
@@ -913,8 +914,8 @@ pd_session_delete (pd_session_args_t *args)
 //-----------------------------------------
 // get all session related information
 //------------------------------------------
-hal_ret_t
-pd_session_get (pd_session_args_t *args)
+EXTC hal_ret_t
+pd_session_get (pd_session_get_args_t *args)
 {
     return HAL_RET_OK;
 }
@@ -922,8 +923,8 @@ pd_session_get (pd_session_args_t *args)
 //------------------------------------------------------------------------------
 // get all flow related information
 //------------------------------------------------------------------------------
-hal_ret_t
-pd_flow_get (session_t *session, flow_t *iflow, flow_state_t *flow_state)
+EXTC hal_ret_t
+pd_flow_get (pd_flow_get_args_t *args)
 {
     return HAL_RET_OK;
 }

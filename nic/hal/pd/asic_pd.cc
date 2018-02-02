@@ -4,10 +4,13 @@
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "sdk/pal.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
+
+extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 namespace pd {
 
 using sdk::lib::pal_ret_t;
@@ -96,15 +99,15 @@ is_asic_rw_thread (void)
     curr_thread    = hal::hal_get_current_thread();
     asic_rw_thread = g_hal_threads[HAL_THREAD_ID_ASIC_RW];
 
-    if (curr_thread == NULL) {
-        // running in single-threaded mode
+	if (curr_thread == NULL) {
+		// running in single-threaded mode
         return true;
     }
 
     if (asic_rw_thread == NULL ||
-        asic_rw_thread->is_running() == false) {
-        assert(0);
-    }
+         asic_rw_thread->is_running() == false) {
+         assert(0);
+     }
 
     if (curr_thread->thread_id() == asic_rw_thread->thread_id()) {
         return true;
@@ -523,6 +526,7 @@ asic_rw_loop (void)
 void
 asic_rw_init (hal_cfg_t *hal_cfg)
 {
+    hal_ret_t   ret = HAL_RET_OK;
     asic_cfg_t  asic_cfg;
     pal_ret_t   palrv;
 
@@ -535,8 +539,16 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
     asic_cfg.init_with_pbc_hbm = hal_cfg->init_with_pbc_hbm;
-    asic_cfg.admin_cos = qos_class_get_admin_cos();
-    HAL_ABORT(asic_init(&asic_cfg) == HAL_RET_OK);
+
+    // TODO: Introduce a PD call to retrieve admin cos from PD
+    // asic_cfg.admin_cos = qos_class_get_admin_cos();
+    asic_cfg.admin_cos = 1;
+    pd_asic_init_args_t args;
+    args.cfg = &asic_cfg;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, (void *)&args);
+    HAL_ABORT(ret == HAL_RET_OK);
+    // HAL_ABORT(asic_init(&asic_cfg) == HAL_RET_OK);
+
     return;
 }
 
@@ -570,7 +582,10 @@ std::string
 asic_pd_csr_dump(char *csr_str)
 {
     HAL_TRACE_DEBUG("{} csr string {}", __FUNCTION__, csr_str);
-    return asic_csr_dump(csr_str);
+    // PD-Cleanup: Dont use capri apis
+    // return asic_csr_dump(csr_str);
+    std::string val = "";
+    return val;
 }
 
 }    // namespace pd

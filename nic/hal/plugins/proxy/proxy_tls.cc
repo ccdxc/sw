@@ -1,6 +1,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include "nic/hal/pd/cpupkt_api.hpp"
+// #include "nic/hal/pd/cpupkt_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/hal/tls/tls_api.hpp"
 #include "nic/hal/src/tlscb.hpp"
@@ -40,15 +41,39 @@ tls_exec(fte::ctx_t& ctx)
     if(get_resp.spec().debug_dol() & TLS_DDOL_ARM_LOOP_CTRL_PKTS) {
         HAL_TRACE_DEBUG("tls-proxy: debug_dol to loop ctrl pkacet set. Transmit the packet");
         if (asesq_ctx == NULL)   {
-            asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
+            hal::pd::pd_cpupkt_ctxt_alloc_init_args_t args;
+            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, (void *)&args);
+            asesq_ctx = args.ctxt;
+            // asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
             HAL_ASSERT_RETURN(asesq_ctx != NULL, fte::PIPELINE_CONTINUE);
         }
         
+        hal::pd::pd_cpupkt_register_tx_queue_args_t t_args;
+        t_args.ctxt = asesq_ctx;
+        t_args.type = types::WRING_TYPE_ASESQ;
+        t_args.queue_id = cpu_rxhdr->qid;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&t_args);
+#if 0
         ret = hal::pd::cpupkt_register_tx_queue(asesq_ctx,
                                                 types::WRING_TYPE_ASESQ,
                                                 cpu_rxhdr->qid);
+#endif
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, fte::PIPELINE_CONTINUE);
 
+        hal::pd::pd_cpupkt_send_args_t s_args;
+        s_args.ctxt = asesq_ctx;
+        s_args.type = types::WRING_TYPE_ASESQ;
+        s_args.queue_id = cpu_rxhdr->qid;
+        s_args.cpu_header = NULL;
+        s_args.p4_header = NULL;
+        s_args.data = data;
+        s_args.data_len = datalen;
+        s_args.dest_lif = SERVICE_LIF_TCP_PROXY;
+        s_args.qtype = 0;
+        s_args.qid = cpu_rxhdr->qid;
+        s_args.ring_number = TCP_SCHED_RING_ASESQ;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, (void *)&s_args);
+#if 0
         hal::pd::cpupkt_send(asesq_ctx,
                             types::WRING_TYPE_ASESQ,
                             cpu_rxhdr->qid,
@@ -60,6 +85,7 @@ tls_exec(fte::ctx_t& ctx)
                             0,
                             cpu_rxhdr->qid,
                             TCP_SCHED_RING_ASESQ);
+#endif
     }
 	return fte::PIPELINE_CONTINUE;
 }

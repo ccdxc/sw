@@ -17,8 +17,8 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Lif Create in PD
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_lif_create (pd_lif_args_t *args)
+EXTC hal_ret_t
+pd_lif_create (pd_lif_create_args_t *args)
 {
     hal_ret_t            ret;
     pd_lif_t             *pd_lif;
@@ -58,8 +58,8 @@ end:
 //-----------------------------------------------------------------------------
 // PD Lif Update
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_lif_update (pd_lif_upd_args_t *args)
+EXTC hal_ret_t
+pd_lif_update (pd_lif_update_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     lif_t               *lif = args->lif;
@@ -134,8 +134,8 @@ end:
 //-----------------------------------------------------------------------------
 // PD Lif Delete
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_lif_delete (pd_lif_args_t *args)
+EXTC hal_ret_t
+pd_lif_delete (pd_lif_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_lif_t       *lif_pd;
@@ -170,7 +170,7 @@ end:
 // Allocate resources for PD Lif
 // ----------------------------------------------------------------------------
 hal_ret_t 
-lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
+lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
@@ -435,7 +435,7 @@ end:
 // Get vlan strip enable
 // ----------------------------------------------------------------------------
 bool
-pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_upd_args_t *args)
+pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_update_args_t *args)
 {
     if (args && args->vlan_strip_en_changed) {
         return args->vlan_strip_en;
@@ -531,7 +531,7 @@ lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
 #define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
 #define om_cpu data.output_mapping_action_u.output_mapping_redirect_to_cpu
 hal_ret_t
-lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args, 
+lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_update_args_t *args, 
                               table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
@@ -693,21 +693,25 @@ delink_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_lif_make_clone(lif_t *ten, lif_t *clone)
+EXTC hal_ret_t
+// pd_lif_make_clone(lif_t *ten, lif_t *clone)
+pd_lif_make_clone(pd_lif_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    pd_lif_t         *pd_ten_clone = NULL;
+    pd_lif_t            *pd_lif_clone = NULL;
 
-    pd_ten_clone = lif_pd_alloc_init();
-    if (pd_ten_clone == NULL) {
+    lif_t *lif = args->lif;
+    lif_t *clone = args->clone;
+
+    pd_lif_clone = lif_pd_alloc_init();
+    if (pd_lif_clone == NULL) {
         ret = HAL_RET_OOM;
         goto end;
     }
 
-    memcpy(pd_ten_clone, ten->pd_lif, sizeof(pd_lif_t));
+    memcpy(pd_lif_clone, lif->pd_lif, sizeof(pd_lif_t));
 
-    link_pi_pd(pd_ten_clone, clone);
+    link_pi_pd(pd_lif_clone, clone);
 
 end:
     return ret;
@@ -716,8 +720,8 @@ end:
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_lif_mem_free(pd_lif_args_t *args)
+EXTC hal_ret_t
+pd_lif_mem_free(pd_lif_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_lif_t    *lif_pd;
@@ -733,11 +737,17 @@ pd_lif_mem_free(pd_lif_args_t *args)
 // Get PD hw_lif_id from lif.
 // ------------------------------------------------------------------------
 
-uint32_t pd_get_hw_lif_id(lif_t *lif) {
+// uint32_t pd_get_hw_lif_id(lif_t *lif)
+EXTC hal_ret_t
+pd_get_hw_lif_id (pd_get_hw_lif_id_args_t *args)
+{
+    lif_t *lif = args->lif;
 
     pd_lif_t  *lif_pd = (pd_lif_t *)lif->pd_lif;
 
-    return lif_pd->hw_lif_id;
+    args->hw_lifid = lif_pd->hw_lif_id;
+
+    return HAL_RET_OK;
 }
 }    // namespace pd
 }    // namespace hal

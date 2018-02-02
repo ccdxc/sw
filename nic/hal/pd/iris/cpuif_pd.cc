@@ -16,7 +16,7 @@ namespace pd {
 // CPU If Create
 // ----------------------------------------------------------------------------
 hal_ret_t 
-pd_cpuif_create(pd_if_args_t *args)
+pd_cpuif_create(pd_if_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_cpuif_t           *pd_cpuif;
@@ -58,7 +58,7 @@ end:
 // PD CPUIf Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_cpuif_update (pd_if_args_t *args)
+pd_cpuif_update (pd_if_update_args_t *args)
 {
     // Nothing to do for now
     return HAL_RET_OK;
@@ -68,7 +68,7 @@ pd_cpuif_update (pd_if_args_t *args)
 // PD cpuif Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_cpuif_delete (pd_if_args_t *args)
+pd_cpuif_delete (pd_if_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_cpuif_t  *cpuif_pd;
@@ -288,10 +288,12 @@ pd_cpuif_get_pd_lif(pd_cpuif_t *pd_cpuif)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_cpuif_make_clone(if_t *hal_if, if_t *clone)
+pd_cpuif_make_clone(pd_if_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_cpuif_t       *pd_cpuif_clone = NULL;
+    if_t *hal_if = args->hal_if;
+    if_t *clone = args->clone;
 
     pd_cpuif_clone = pd_cpuif_alloc_init();
     if (pd_cpuif_clone == NULL) {
@@ -311,7 +313,7 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_cpuif_mem_free(pd_if_args_t *args)
+pd_cpuif_mem_free(pd_if_mem_free_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_cpuif_t      *cpuif_pd;

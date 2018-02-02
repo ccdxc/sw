@@ -349,8 +349,8 @@ err:
  * APIs
  *******************************************/
 
-hal_ret_t
-pd_ipseccb_decrypt_create (pd_ipseccb_args_t *args)
+EXTC hal_ret_t
+pd_ipseccb_decrypt_create (pd_ipseccb_decrypt_create_args_t *args)
 {
     hal_ret_t               ret;
     pd_ipseccb_decrypt_s              *ipseccb_pd;
@@ -389,8 +389,8 @@ cleanup:
     return ret;
 }
 
-hal_ret_t
-pd_ipseccb_decrypt_update (pd_ipseccb_args_t *args)
+EXTC hal_ret_t
+pd_ipseccb_decrypt_update (pd_ipseccb_decrypt_update_args_t *args)
 {
     hal_ret_t               ret;
     
@@ -411,8 +411,8 @@ pd_ipseccb_decrypt_update (pd_ipseccb_args_t *args)
     return ret;
 }
 
-hal_ret_t
-pd_ipseccb_decrypt_delete (pd_ipseccb_args_t *args)
+EXTC hal_ret_t
+pd_ipseccb_decrypt_delete (pd_ipseccb_decrypt_delete_args_t *args)
 {
     hal_ret_t               ret;
     
@@ -438,8 +438,8 @@ pd_ipseccb_decrypt_delete (pd_ipseccb_args_t *args)
     return ret;
 }
 
-hal_ret_t
-pd_ipseccb_decrypt_get (pd_ipseccb_args_t *args)
+EXTC hal_ret_t
+pd_ipseccb_decrypt_get (pd_ipseccb_decrypt_get_args_t *args)
 {
     hal_ret_t               ret;
     pd_ipseccb_decrypt_t              ipseccb_pd;

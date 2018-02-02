@@ -7,6 +7,7 @@
 #include <iomanip>
 #include "nic/p4/nw/include/defines.h"
 #include "nic/include/cpupkt_api.hpp"
+#include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
@@ -136,13 +137,22 @@ std::string hex_str(const uint8_t *buf, size_t sz)
     return result.str();
 }
 
+hal::pd::cpupkt_ctxt_t *
+fte_cpupkt_ctxt_alloc_init()
+{
+    hal::pd::pd_cpupkt_ctxt_alloc_init_args_t args;
+
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, (void *)&args);
+
+    return args.ctxt;
+}
 
 //------------------------------------------------------------------------------
 // FTE instance constructor
 //------------------------------------------------------------------------------
 inst_t::inst_t(uint8_t fte_id) :
     id_(fte_id),
-    arm_ctx_(hal::pd::cpupkt_ctxt_alloc_init()),
+    arm_ctx_(fte_cpupkt_ctxt_alloc_init()),
     softq_(mpscq_t::alloc(MAX_SOFTQ_SLOTS)),
     ctx_(NULL),
     feature_state_(NULL),
@@ -153,13 +163,25 @@ inst_t::inst_t(uint8_t fte_id) :
 {
     hal_ret_t ret;
 
-    ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQRX, fte_id);
+    hal::pd::pd_cpupkt_register_rx_queue_args_t args;
+    args.ctxt = arm_ctx_;
+    args.type = types::WRING_TYPE_ARQRX;
+    args.queue_id = fte_id;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, (void *)&args);
+    // ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQRX, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
-    ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQTX, fte_id);
+    args.type = types::WRING_TYPE_ARQTX;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, (void *)&args);
+    // ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQTX, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
-    ret = cpupkt_register_tx_queue(arm_ctx_, types::WRING_TYPE_ASQ, fte_id);
+    hal::pd::pd_cpupkt_register_tx_queue_args_t tx_args;
+    tx_args.ctxt = arm_ctx_;
+    tx_args.type = types::WRING_TYPE_ASQ;
+    tx_args.queue_id = fte_id;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&tx_args);
+    // ret = cpupkt_register_tx_queue(arm_ctx_, types::WRING_TYPE_ASQ, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 }
 
@@ -229,10 +251,26 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                  uint8_t* pkt, size_t pkt_len)
 {
     HAL_TRACE_DEBUG("fte: sending pkt to id: {}", id_);
+    hal::pd::pd_cpupkt_send_args_t args;
+    args.ctxt = arm_ctx_;
+    args.type = types::WRING_TYPE_ASQ;
+    args.queue_id = id_;
+    args.cpu_header = cpu_header;
+    args.p4_header = p4plus_header;
+    args.data = pkt;
+    args.data_len = pkt_len;
+    args.dest_lif = hal::SERVICE_LIF_CPU;
+    args.qtype = CPU_ASQ_QTYPE;
+    args.qid = id_;
+    args.ring_number = CPU_SCHED_RING_ASQ;
+
+    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, (void *)&args);
+#if 0
     return hal::pd::cpupkt_send(arm_ctx_, types::WRING_TYPE_ASQ, id_,
                                 cpu_header, p4plus_header, pkt, pkt_len,
                                 hal::SERVICE_LIF_CPU, CPU_ASQ_QTYPE,
                                 id_, CPU_SCHED_RING_ASQ);
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -280,7 +318,13 @@ void inst_t::process_arq()
     size_t pkt_len;
 
     // read the packet
-    ret = hal::pd::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len);
+    hal::pd::pd_cpupkt_poll_receive_args_t args;
+    args.ctxt = arm_ctx_;
+    args.flow_miss_hdr = &cpu_rxhdr;
+    args.data = &pkt;
+    args.data_len = &pkt_len;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_REC, (void *)&args);
+    // ret = hal::pd::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len);
     if (ret == HAL_RET_RETRY) {
         return;
     }

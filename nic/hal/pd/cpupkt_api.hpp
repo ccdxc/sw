@@ -91,7 +91,7 @@ cpupkt_ctxt_init(cpupkt_ctxt_t* ctxt)
     memset(ctxt, 0, sizeof(cpupkt_ctxt_t));
     return ctxt;
 }
-
+#if 0
 cpupkt_ctxt_t* cpupkt_ctxt_alloc_init(void);
 hal_ret_t cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id=0);
 hal_ret_t cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id=0);
@@ -127,6 +127,6 @@ cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
                                   uint32_t qid,
                                   uint8_t  ring_number);
 
-
+#endif
 } // namespace pd
 } // namespace hal

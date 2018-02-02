@@ -15,8 +15,8 @@ namespace pd {
 //-----------------------------------------------------------------------------
 // PD vrf Create
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_vrf_create (pd_vrf_args_t *args)
+extern "C" hal_ret_t
+pd_vrf_create (pd_vrf_create_args_t *args)
 {
     hal_ret_t               ret;
     pd_vrf_t                *vrf_pd;
@@ -67,8 +67,8 @@ end:
 //-----------------------------------------------------------------------------
 // PD vrf Update
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_vrf_update (pd_vrf_args_t *args)
+extern "C" hal_ret_t
+pd_vrf_update (pd_vrf_update_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
     pd_vrf_t    *vrf_pd = (pd_vrf_t *)args->vrf->pd;
@@ -100,8 +100,8 @@ end:
 //-----------------------------------------------------------------------------
 // PD vrf Delete
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_vrf_delete (pd_vrf_args_t *args)
+extern "C" hal_ret_t
+pd_vrf_delete (pd_vrf_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_vrf_t    *vrf_pd;
@@ -784,11 +784,15 @@ delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_vrf_make_clone(vrf_t *ten, vrf_t *clone)
+EXTC hal_ret_t
+pd_vrf_make_clone(pd_vrf_make_clone_args_t *args)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    pd_vrf_t         *pd_ten_clone = NULL;
+    hal_ret_t     ret           = HAL_RET_OK;
+    pd_vrf_t      *pd_ten_clone = NULL;
+    vrf_t         *ten, *clone;
+
+    ten = args->vrf;
+    clone = args->clone;
 
     pd_ten_clone = vrf_pd_alloc_init();
     if (pd_ten_clone == NULL) {
@@ -808,7 +812,7 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_vrf_mem_free(pd_vrf_args_t *args)
+pd_vrf_mem_free(pd_vrf_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_vrf_t    *vrf_pd;
@@ -823,10 +827,13 @@ pd_vrf_mem_free(pd_vrf_args_t *args)
 // Returns the vlan id for packets from CPU 
 // Note: Currently being used only for IPSec packets.
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_vrf_get_fromcpu_vlanid(vrf_t *vrf, uint16_t *vid)
+extern "C" hal_ret_t
+// pd_vrf_get_fromcpu_vlanid(vrf_t *vrf, uint16_t *vid)
+pd_vrf_get_fromcpu_vlanid(pd_vrf_get_fromcpu_vlanid_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    vrf_t *vrf = args->vrf;
+    uint16_t *vid = args->vid;
 
     if (vrf == NULL || vid == NULL) {
         HAL_TRACE_ERR("{}:invalid args", __FUNCTION__);
@@ -842,10 +849,20 @@ end:
 //-----------------------------------------------------------------------------
 // Returns the vrf lookupid of the vrf (used as lkp_vrf in flow key)
 //-----------------------------------------------------------------------------
+#if 0
 uint32_t
 pd_vrf_get_lookup_id(vrf_t *vrf)
 {
     return ((pd_vrf_t *)vrf->pd)->vrf_fl_lkup_id;
+}
+#endif
+
+extern "C" hal_ret_t
+pd_vrf_get_lookup_id(pd_vrf_get_lookup_id_args_t *args)
+{
+    vrf_t *vrf = args->vrf;
+    args->lkup_id = ((pd_vrf_t *)vrf->pd)->vrf_fl_lkup_id;
+    return HAL_RET_OK;
 }
 
 

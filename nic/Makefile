@@ -89,11 +89,16 @@ DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
 #SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
 SDK_OPTS = --copt=-Wno-unused-function 
 bazel-build: capsim-master sdk
+	# P4
 	$(MAKE) -j4 -C p4
 	$(MAKE) -C asm
 	$(MAKE) -C proto
 	$(MAKE) V=1 -j8 -C gen/proto/hal
+	# HAL PI
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+	# Iris PD
+	$(MAKE) iris
+	$(MAKE) stub_pd
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
@@ -103,6 +108,15 @@ bazel-build: capsim-master sdk
 ifneq ($(ARCH),aarch64)
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/proxy-e2etest:all 
 endif
+
+iris:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
+
+stub_pd:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
+
+gft_pd:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/gft
 
 bazel-gtests-common:
 	# PI gtests
@@ -116,11 +130,12 @@ bazel-gtests-common:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
 	# PD Utils
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
+	# TODO: Please enable after PD cleanup commit
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
 	# PD
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
 	# SDK Tests
 	$(MAKE) -C sdk build-test
 
@@ -176,10 +191,10 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	cd ../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
 	cd ../bazel-bin && ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	# PD Utils gtests
-	$(PD_CMD_OPTS) ./nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
+	#$(PD_CMD_OPTS) ./nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
 	# Removed because of randomization
 	#cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/flow/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow.xml"
-	$(PD_CMD_OPTS) ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
+	#$(PD_CMD_OPTS) ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
 	# PD gtests
 	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_test.xml"
 	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/tnnl_rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tnnl_rw_tbl_test.xml"
@@ -225,6 +240,7 @@ gft: capsim-master sdk
 	$(MAKE) -C proto
 	$(MAKE) -j4 -C gen/proto/hal
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
+	$(MAKE) gft_pd
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib

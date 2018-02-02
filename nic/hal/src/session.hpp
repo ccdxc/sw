@@ -77,7 +77,6 @@ typedef enum rewrite_actions_enum {
     REWRITE_MAX_ID = 20
 } rewrite_actions_en;
 
-
 // flow type depends on the type of packets flow is for
 enum flow_type_t {
     FLOW_TYPE_L2   = 0,    // non-IP flow

@@ -19,7 +19,7 @@ namespace pd {
 // Enic If Create
 // ----------------------------------------------------------------------------
 hal_ret_t 
-pd_enicif_create(pd_if_args_t *args)
+pd_enicif_create(pd_if_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
@@ -69,7 +69,7 @@ end:
 // PD EnicIf Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_update (pd_if_args_t *args)
+pd_enicif_update (pd_if_update_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -91,7 +91,7 @@ pd_enicif_update (pd_if_args_t *args)
 // PD EnicIf Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_delete (pd_if_args_t *args)
+pd_enicif_delete (pd_if_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_enicif_t    *enicif_pd;
@@ -122,7 +122,7 @@ pd_enicif_delete (pd_if_args_t *args)
 // Enicif Update: Handling pinned uplink change
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_upd_pinned_uplink_change(pd_if_args_t *args)
+pd_enicif_upd_pinned_uplink_change(pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
@@ -147,7 +147,7 @@ end:
 // Enicif Update: Handling native l2seg change
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_upd_native_l2seg_clsc_change(pd_if_args_t *args)
+pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
@@ -175,7 +175,7 @@ pd_enicif_upd_native_l2seg_clsc_change(pd_if_args_t *args)
 // Enicif Update: Handling l2seg list change
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_upd_l2seg_clsc_change(pd_if_args_t *args)
+pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
@@ -559,7 +559,7 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 hal_ret_t
 pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif, 
                           dllist_ctxt_t *l2sege_list,
-                          pd_if_args_t *args,
+                          pd_if_update_args_t *args,
                           table_oper_t oper)
 {
     hal_ret_t               ret = HAL_RET_OK;
@@ -647,7 +647,7 @@ is_l2seg_native_on_enicif_classic(if_t *hal_if, l2seg_t *l2seg)
 hal_ret_t
 pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                                 pd_if_l2seg_entry_t *if_l2seg,
-                                pd_if_args_t *args,
+                                pd_if_update_args_t *args,
                                 table_oper_t oper)
 {
     hal_ret_t                               ret = HAL_RET_OK;
@@ -875,7 +875,7 @@ end:
 // Enic reprogramming because of lif params change
 // ----------------------------------------------------------------------------
 hal_ret_t 
-pd_enicif_lif_update(pd_if_lif_upd_args_t *args)
+pd_enicif_lif_update(pd_if_lif_update_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
@@ -898,7 +898,7 @@ pd_enicif_lif_update(pd_if_lif_upd_args_t *args)
 #define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
 hal_ret_t
 pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif, 
-                                    pd_if_lif_upd_args_t *lif_upd,
+                                    pd_if_lif_update_args_t *lif_upd,
                                     table_oper_t oper)
 {
     hal_ret_t                   ret                 = HAL_RET_OK;
@@ -1189,10 +1189,12 @@ end:
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_make_clone(if_t *hal_if, if_t *clone)
+pd_enicif_make_clone(pd_if_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_enicif_t       *pd_enicif_clone = NULL;
+    if_t *hal_if = args->hal_if;
+    if_t *clone = args->clone;
 
     pd_enicif_clone = pd_enicif_alloc_init();
     if (pd_enicif_clone == NULL) {
@@ -1212,7 +1214,7 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_mem_free(pd_if_args_t *args)
+pd_enicif_mem_free(pd_if_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_enicif_t  *upif_pd;
@@ -1258,7 +1260,7 @@ pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
 }
 
 bool
-pd_enicif_get_vlan_strip (lif_t *lif, pd_if_lif_upd_args_t *lif_upd)
+pd_enicif_get_vlan_strip (lif_t *lif, pd_if_lif_update_args_t *lif_upd)
 {
     if (lif_upd && lif_upd->vlan_strip_en_changed) {
         return lif_upd->vlan_strip_en;

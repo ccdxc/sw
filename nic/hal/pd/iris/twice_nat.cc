@@ -8,14 +8,20 @@
 namespace hal {
 namespace pd {
 
-
+#if 0
 hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
                            uint32_t *twice_nat_idx)
+#endif
+EXTC hal_ret_t
+pd_twice_nat_add(pd_twice_nat_add_args_t *t_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
     sdk_ret_t               sdk_ret;
     directmap               *dm;
     twice_nat_actiondata    data = { 0 };
+    pd_twice_nat_entry_args_t *args = t_args->args;
+    uint32_t *twice_nat_idx = t_args->twice_nat_idx;
+
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
     HAL_ASSERT(dm != NULL);
@@ -46,12 +52,15 @@ hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
     return ret;
 }
 
-hal_ret_t pd_twice_nat_del(pd_twice_nat_entry_args_t *args)
+// hal_ret_t pd_twice_nat_del(pd_twice_nat_entry_args_t *args)
+EXTC hal_ret_t
+pd_twice_nat_del(pd_twice_nat_del_args_t *t_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
     sdk_ret_t               sdk_ret;
     directmap               *dm;
     twice_nat_actiondata    data = { 0 };
+    pd_twice_nat_entry_args_t *args = t_args->args;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
     HAL_ASSERT(dm != NULL);

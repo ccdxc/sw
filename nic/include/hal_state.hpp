@@ -625,6 +625,12 @@ public:
     sdk::lib::catalog* catalog(void) const { return catalog_; }
     void set_catalog(sdk::lib::catalog *catalog) { catalog_ = catalog; }
 
+    void* pd_so(void) const { return pd_so_; }
+    void set_pd_so(void *so) { pd_so_ = so; }
+
+    void* pd_stub_so(void) const { return pd_stub_so_; }
+    void set_pd_stub_so(void *so) { pd_stub_so_ = so; }
+
 private:
     bool init(void);
     hal_state();
@@ -634,6 +640,8 @@ private:
     hal_oper_db          *oper_db_;
     hal_mem_db           *mem_db_;
     sdk::lib::catalog    *catalog_;
+    void                 *pd_so_;
+    void                 *pd_stub_so_;
 };
 
 extern class hal_state    *g_hal_state;

@@ -1,7 +1,8 @@
 #include "tls_api.hpp"
 #include "ssl_helper.hpp"
 #include "nic/include/tcp_common.h"
-#include "nic/hal/pd/cpupkt_api.hpp"
+// #include "nic/hal/pd/cpupkt_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/lkl/lklshim_tls.hpp"
 #include "nic/hal/src/crypto_keys.hpp"
@@ -63,6 +64,21 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
     }
     return HAL_RET_OK;
     */
+
+    hal::pd::pd_cpupkt_send_args_t args;
+    args.ctxt = asesq_ctx;
+    args.type = types::WRING_TYPE_ASESQ;
+    args.queue_id = id;
+    args.cpu_header = NULL;
+    args.p4_header = NULL;
+    args.data = data;
+    args.data_len = len;
+    args.dest_lif = SERVICE_LIF_TCP_PROXY;
+    args.qtype = 0;
+    args.qid = id;
+    args.ring_number = TCP_SCHED_RING_ASESQ;
+    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, (void *)&args);
+#if 0
     return hal::pd::cpupkt_send(asesq_ctx,
                                 types::WRING_TYPE_ASESQ,
                                 id,
@@ -74,6 +90,7 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
                                 0,
                                 id,
                                 TCP_SCHED_RING_ASESQ);
+#endif
 }
 
 hal_ret_t
@@ -264,7 +281,10 @@ tls_api_init(void)
 
     // Initialize pkt send ctxt
     if (asesq_ctx == NULL)   {
-        asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
+        hal::pd::pd_cpupkt_ctxt_alloc_init_args_t args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, (void *)&args);
+        // asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
+        asesq_ctx = args.ctxt;
         HAL_ASSERT_RETURN(asesq_ctx != NULL, HAL_RET_NO_RESOURCE);
     }
 
@@ -312,7 +332,12 @@ tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid)
 {
     // Start handskake towards decrypt
     // register this qid to send context
-    hal::pd::cpupkt_register_tx_queue(asesq_ctx, types::WRING_TYPE_ASESQ, dec_qid);
+    hal::pd::pd_cpupkt_register_tx_queue_args_t args;
+    args.ctxt = asesq_ctx;
+    args.type = types::WRING_TYPE_ASESQ;
+    args.queue_id = dec_qid;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&args);
+    // hal::pd::cpupkt_register_tx_queue(asesq_ctx, types::WRING_TYPE_ASESQ, dec_qid);
 
     return g_ssl_helper.start_connection(dec_qid, enc_qid);
 }

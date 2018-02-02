@@ -19,7 +19,7 @@ static hal_ret_t pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
 // APPREDIR If Create
 // ----------------------------------------------------------------------------
 hal_ret_t 
-pd_app_redir_if_create(pd_if_args_t *args)
+pd_app_redir_if_create(pd_if_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_app_redir_if_t    *pd_app_redir_if;
@@ -58,7 +58,7 @@ end:
 // PD app_redir_if Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_app_redir_if_update (pd_if_args_t *args)
+pd_app_redir_if_update (pd_if_update_args_t *args)
 {
     // Nothing to do for now
     return HAL_RET_OK;
@@ -68,7 +68,7 @@ pd_app_redir_if_update (pd_if_args_t *args)
 // PD app_redir_if Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_app_redir_if_delete (pd_if_args_t *args)
+pd_app_redir_if_delete (pd_if_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_app_redir_if_t  *app_redir_if_pd;
@@ -99,16 +99,17 @@ pd_app_redir_if_alloc_res(pd_app_redir_if_t *pd_app_redir_if,
 {
     lif_t                         *lif;
     hal_ret_t                     ret = HAL_RET_OK;
-    pd_lif_get_lport_id_args_t    lif_args = { 0 };
+    pd_lif_get_lport_id_args_t    args = { 0 };
 
     /*
      * PD resources should have already allocated when the LIF was created
      */
     lif = if_get_lif(intf);
     if (lif) {
-        lif_args.pi_lif = lif;
-        lif_get_lport_id(&lif_args);
-        pd_app_redir_if->lport_id = lif_args.lport_id;
+        args.pi_lif = lif;
+        pd_lif_get_lport_id(&args);
+        pd_app_redir_if->lport_id = args.lport_id;
+        // pd_app_redir_if->lport_id = lif_get_lport_id(lif);
         HAL_TRACE_DEBUG("{}: if_id:{} lif_id:{} lport_id:{}", 
                         __FUNCTION__, if_get_if_id((if_t *)pd_app_redir_if->pi_if),
                         lif_get_lif_id(lif), pd_app_redir_if->lport_id);
@@ -192,10 +193,12 @@ pd_app_redir_if_get_pd_lif(pd_app_redir_if_t *pd_app_redir_if)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_app_redir_if_make_clone(if_t *hal_if, if_t *clone)
+pd_app_redir_if_make_clone(pd_if_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_app_redir_if_t       *pd_app_redir_if_clone = NULL;
+    if_t *hal_if = args->hal_if;
+    if_t *clone = args->clone;
 
     pd_app_redir_if_clone = pd_app_redir_if_alloc_init();
     if (pd_app_redir_if_clone == NULL) {
@@ -215,7 +218,7 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_app_redir_if_mem_free(pd_if_args_t *args)
+pd_app_redir_if_mem_free(pd_if_mem_free_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_app_redir_if_t      *app_redir_if_pd;

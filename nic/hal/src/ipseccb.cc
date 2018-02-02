@@ -98,7 +98,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     ipseccb_t                *ipseccb;
-    pd::pd_ipseccb_args_t    pd_ipseccb_args;
+    pd::pd_ipseccb_create_args_t    pd_ipseccb_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     l2seg_t *infra_seg;
@@ -170,15 +170,18 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
-    pd::pd_ipseccb_args_init(&pd_ipseccb_args);
+    pd::pd_ipseccb_create_args_init(&pd_ipseccb_args);
     pd_ipseccb_args.ipseccb = ipseccb;
-    ret = pd::pd_ipseccb_create(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_create(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_CREATE, (void *)&pd_ipseccb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSEC CB create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto cleanup;
     }
-    ret = pd::pd_ipseccb_decrypt_create(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_decrypt_create(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_CREATE, 
+                          (void *)&pd_ipseccb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSEC CB decrypt create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -208,7 +211,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK; 
     ipseccb_t*               ipseccb;
-    pd::pd_ipseccb_args_t    pd_ipseccb_args;
+    pd::pd_ipseccb_update_args_t    pd_ipseccb_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
     l2seg_t *infra_seg;
@@ -222,7 +225,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         return HAL_RET_IPSEC_CB_NOT_FOUND;
     }
  
-    pd::pd_ipseccb_args_init(&pd_ipseccb_args);
+    pd::pd_ipseccb_update_args_init(&pd_ipseccb_args);
     pd_ipseccb_args.ipseccb = ipseccb;
     
     ipseccb->iv_size = spec.iv_size();
@@ -275,13 +278,16 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     } else {
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
-    ret = pd::pd_ipseccb_update(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_update(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_UPDATE, (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: ", ret);
         rsp->set_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    ret = pd::pd_ipseccb_decrypt_update(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_decrypt_update(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_UPDATE, 
+                          (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: ", ret);
         rsp->set_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
@@ -302,7 +308,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     hal_ret_t              ret = HAL_RET_OK; 
     ipseccb_t                ripseccb;
     ipseccb_t*               ipseccb;
-    pd::pd_ipseccb_args_t    pd_ipseccb_args;
+    pd::pd_ipseccb_get_args_t    pd_ipseccb_args;
 
     auto kh = req.key_or_handle();
 
@@ -314,10 +320,11 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     
     ipseccb_init(&ripseccb);
     ripseccb.cb_id = ipseccb->cb_id;
-    pd::pd_ipseccb_args_init(&pd_ipseccb_args);
+    pd::pd_ipseccb_get_args_init(&pd_ipseccb_args);
     pd_ipseccb_args.ipseccb = &ripseccb;
     
-    ret = pd::pd_ipseccb_get(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_get(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_GET, (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
@@ -356,7 +363,9 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
 
     // fill stats of this IPSEC CB
     rsp->set_api_status(types::API_STATUS_OK);
-    ret = pd::pd_ipseccb_decrypt_get(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_decrypt_get(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_GET, 
+                          (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Decrypt IPSECCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
@@ -377,7 +386,7 @@ ipseccb_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteRespon
 {
     hal_ret_t              ret = HAL_RET_OK; 
     ipseccb_t*               ipseccb;
-    pd::pd_ipseccb_args_t    pd_ipseccb_args;
+    pd::pd_ipseccb_delete_args_t    pd_ipseccb_args;
 
     auto kh = req.key_or_handle();
     ipseccb = find_ipseccb_by_id(kh.ipseccb_id());
@@ -386,16 +395,19 @@ ipseccb_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteRespon
         return HAL_RET_OK;
     }
  
-    pd::pd_ipseccb_args_init(&pd_ipseccb_args);
+    pd::pd_ipseccb_delete_args_init(&pd_ipseccb_args);
     pd_ipseccb_args.ipseccb = ipseccb;
     
-    ret = pd::pd_ipseccb_delete(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_delete(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DELETE, (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
-    ret = pd::pd_ipseccb_decrypt_delete(&pd_ipseccb_args);
+    // ret = pd::pd_ipseccb_decrypt_delete(&pd_ipseccb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSECCB_DECRYPT_DELETE, 
+                          (void *)&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);

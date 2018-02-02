@@ -1,11 +1,11 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/pd/iris/hal_state_pd.hpp"
+// #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include <gtest/gtest.h>
 
 using hal::g_hal_state;
 using hal::utils::g_hal_mem_mgr;
-using hal::pd::g_hal_state_pd;
+// using hal::pd::g_hal_state_pd;
 
 // extern class hal_state_pd    *g_hal_state_pd;
 
@@ -88,7 +88,9 @@ hal_test_utils_get_slab(hal_slab_t slab_id)
         return pi_slab;
     }
 
-    return g_hal_state_pd->get_slab(slab_id);
+    // TODO: PD-Cleanup: Fix it once cleanup is done
+    // return g_hal_state_pd->get_slab(slab_id);
+    return NULL;
 }
 
 void

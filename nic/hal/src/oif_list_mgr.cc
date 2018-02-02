@@ -9,66 +9,111 @@ namespace hal {
 // Creates a new oif_list and returns handle
 hal_ret_t oif_list_create(oif_list_id_t *list)
 {
-    return pd::oif_list_create(list);
+    pd::pd_oif_list_create_args_t args;
+    args.list = list;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_CREATE, (void *)&args);
+    
+    // return pd::oif_list_create(list);
 }
 
 // Creates a contiguous block of oif_lists and returns handle to the first one
 hal_ret_t oif_list_create_block(oif_list_id_t *list, uint32_t size)
 {
-    return pd::oif_list_create_block(list, size);
+    pd::pd_oif_list_create_block_args_t args;
+    args.list = list;
+    args.size = size;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_CREATE_BLOCK, (void *)&args);
+    // return pd::oif_list_create_block(list, size);
 }
 
 // Takes an oiflis_handle and deletes it
 hal_ret_t oif_list_delete(oif_list_id_t list)
 {
-    return pd::oif_list_delete(list);
+    pd::pd_oif_list_delete_args_t args;
+    args.list = list;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_DELETE, (void *)&args);
+
+    // return pd::oif_list_delete(list);
 }
 
 // Takes an oiflis_handle and deletes a block starting from it
 hal_ret_t oif_list_delete_block(oif_list_id_t list, uint32_t size)
 {
-    return pd::oif_list_delete_block(list, size);
+    pd::pd_oif_list_delete_block_args_t args;
+    args.list = list;
+    args.size = size;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_DELETE_BLOCK, (void *)&args);
+
+    // return pd::oif_list_delete_block(list, size);
 }
 
 // Adds an oif to list
 hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
 {
-    return pd::oif_list_add_oif(list, oif);
+    pd::pd_oif_list_add_oif_args_t args;
+    args.list = list;
+    args.oif = oif;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_ADD_OIF, (void *)&args);
+    // return pd::oif_list_add_oif(list, oif);
 }
 
 // Adds an RDMA QP oif to list
 hal_ret_t oif_list_add_qp_oif(oif_list_id_t list, oif_t *oif)
 {
-    return pd::oif_list_add_qp_oif(list, oif);
+    pd::pd_oif_list_add_qp_oif_args_t args;
+    args.list = list;
+    args.oif = oif;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_ADD_QP_OIF, (void *)&args);
+    // return pd::oif_list_add_qp_oif(list, oif);
 }
 
 // Removes an oif from list
 hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif)
 {
-    return pd::oif_list_remove_oif(list, oif);
+    pd::pd_oif_list_remove_oif_args_t args;
+    args.list = list;
+    args.oif = oif;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_REM_OIF, (void *)&args);
+    // return pd::oif_list_remove_oif(list, oif);
 }
 
 // Check if an oif is present in the list
 hal_ret_t oif_list_is_member(oif_list_id_t list, oif_t *oif)
 {
-    return pd::oif_list_is_member(list, oif);
+    pd::pd_oif_list_is_member_args_t args;
+    args.list = list;
+    args.oif = oif;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_OIFL_IS_MEMBER, (void *)&args);
+    // return pd::oif_list_is_member(list, oif);
 }
 
 // Get the number of oifs in the list
 hal_ret_t oif_list_get_num_oifs(oif_list_id_t list, uint32_t &num_oifs)
 {
-    return pd::oif_list_get_num_oifs(list, num_oifs);
+    pd::pd_oif_list_get_num_oifs_args_t args;
+    args.list = list;
+    args.num_oifs = &num_oifs;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_GET_NUM_OIFS, (void *)&args);
+    // return pd::oif_list_get_num_oifs(list, num_oifs);
 }
 
 // Get an array of all oifs in the list
 hal_ret_t oif_list_get_oif_array(oif_list_id_t list, uint32_t &num_oifs, oif_t *oifs)
 {
-    return pd::oif_list_get_oif_array(list, num_oifs, oifs);
+    pd::pd_oif_list_get_oif_array_args_t args;
+    args.list = list;
+    args.num_oifs = &num_oifs;
+    args.oifs = oifs;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_GET_OIF_ARRAY, (void *)&args);
+    // return pd::oif_list_get_oif_array(list, num_oifs, oifs);
 }
 
 hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list)
 {
-    return pd::oif_list_set_honor_ingress(list);
+    pd::pd_oif_list_set_honor_ingress_args_t args;
+    args.list = list;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_SET_HONOR_ING, (void *)&args);
+    // return pd::oif_list_set_honor_ingress(list);
 }
 
 }    // namespace hal

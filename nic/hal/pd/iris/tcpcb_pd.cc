@@ -1174,8 +1174,8 @@ err:
  * APIs
  *******************************************/
 
-hal_ret_t
-pd_tcpcb_create (pd_tcpcb_args_t *args)
+EXTC hal_ret_t
+pd_tcpcb_create (pd_tcpcb_create_args_t *args)
 {
     hal_ret_t               ret;
     pd_tcpcb_s              *tcpcb_pd;
@@ -1217,8 +1217,8 @@ cleanup:
     return ret;
 }
 
-hal_ret_t
-pd_tcpcb_update (pd_tcpcb_args_t *args)
+EXTC hal_ret_t
+pd_tcpcb_update (pd_tcpcb_update_args_t *args)
 {
     hal_ret_t               ret;
     
@@ -1239,8 +1239,8 @@ pd_tcpcb_update (pd_tcpcb_args_t *args)
     return ret;
 }
 
-hal_ret_t
-pd_tcpcb_delete (pd_tcpcb_args_t *args)
+EXTC hal_ret_t
+pd_tcpcb_delete (pd_tcpcb_delete_args_t *args)
 {
     hal_ret_t               ret;
     
@@ -1266,8 +1266,8 @@ pd_tcpcb_delete (pd_tcpcb_args_t *args)
     return ret;
 }
 
-hal_ret_t
-pd_tcpcb_get (pd_tcpcb_args_t *args)
+EXTC hal_ret_t
+pd_tcpcb_get (pd_tcpcb_get_args_t *args)
 {
     hal_ret_t               ret;
     pd_tcpcb_t              tcpcb_pd;

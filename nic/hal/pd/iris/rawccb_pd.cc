@@ -365,8 +365,8 @@ err:
  * APIs
  *******************************************/
 
-hal_ret_t
-pd_rawccb_create (pd_rawccb_args_t *args)
+EXTC hal_ret_t
+pd_rawccb_create (pd_rawccb_create_args_t *args)
 {
     hal_ret_t               ret;
     pd_rawccb_s             *rawccb_pd;
@@ -416,15 +416,15 @@ cleanup:
 }
 
 static hal_ret_t
-pd_rawccb_deactivate (pd_rawccb_args_t *args)
+pd_rawccb_deactivate (pd_rawccb_update_args_t *args)
 {
     hal_ret_t           ret;
     rawccb_t            curr_rawccb;
     pd_rawccb_t         curr_rawccb_pd;
-    pd_rawccb_args_t    curr_args;
+    pd_rawccb_get_args_t    curr_args;
     rawccb_t*           rawccb = args->rawccb;
     
-    pd_rawccb_args_init(&curr_args);
+    pd_rawccb_get_args_init(&curr_args);
     curr_args.rawccb = &curr_rawccb;
     curr_rawccb.cb_id = rawccb->cb_id;
 
@@ -445,8 +445,8 @@ pd_rawccb_deactivate (pd_rawccb_args_t *args)
     return ret;
 }
 
-hal_ret_t
-pd_rawccb_update (pd_rawccb_args_t *args)
+EXTC hal_ret_t
+pd_rawccb_update (pd_rawccb_update_args_t *args)
 {
     hal_ret_t       ret;
     
@@ -475,11 +475,16 @@ pd_rawccb_update (pd_rawccb_args_t *args)
     return ret;
 }
 
-hal_ret_t
+EXTC hal_ret_t
+#if 0
 pd_rawccb_delete (pd_rawccb_args_t *args,
                   bool retain_in_db)
+#endif
+pd_rawccb_delete (pd_rawccb_delete_args_t *del_args)
 {
     hal_ret_t       ret;
+    pd_rawccb_args_t *args = del_args->r_args;
+    bool retain_in_db = del_args->retain_in_db;
     
     if(!args) {
        return HAL_RET_INVALID_ARG; 
@@ -504,7 +509,7 @@ pd_rawccb_delete (pd_rawccb_args_t *args,
 }
 
 hal_ret_t
-pd_rawccb_get (pd_rawccb_args_t *args)
+pd_rawccb_get (pd_rawccb_get_args_t *args)
 {
     hal_ret_t       ret;
     pd_rawccb_t     rawccb_pd;

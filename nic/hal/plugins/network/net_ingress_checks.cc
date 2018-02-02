@@ -29,8 +29,13 @@ update_src_if(fte::ctx_t&ctx)
     HAL_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
 
     // Drop the packet if the pkt src_if is not the expected if
+    pd::pd_if_get_hw_lif_id_args_t args;
+    args.pi_if = sif;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, (void *)&args);
+
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && ctx.cpu_rxhdr() &&
-        ctx.cpu_rxhdr()->src_lif != hal::pd::if_get_hw_lif_id(sif)) {
+        ctx.cpu_rxhdr()->src_lif != args.hw_lif_id) {
+        // ctx.cpu_rxhdr()->src_lif != hal::pd::if_get_hw_lif_id(sif)) {
         ctx.set_drop();
     }
 

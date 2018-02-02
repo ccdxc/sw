@@ -207,7 +207,7 @@ hal_ret_t
 vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
+    pd::pd_vrf_create_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     vrf_t                    *vrf = NULL;
@@ -226,10 +226,11 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf = (vrf_t *)dhl_entry->obj;
 
     // PD Call to allocate PD resources and HW programming
-    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd::pd_vrf_create_args_init(&pd_vrf_args);
     pd_vrf_args.vrf           = vrf;
     pd_vrf_args.nwsec_profile = app_ctxt->sec_prof;
-    ret = pd::pd_vrf_create(&pd_vrf_args);
+    // ret = pd::pd_vrf_create(&pd_vrf_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_CREATE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to create vrf pd, err : {}", 
                 __FUNCTION__, ret);
@@ -306,12 +307,12 @@ end:
 hal_ret_t
 vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t ret = HAL_RET_OK;
-    pd::pd_vrf_args_t pd_vrf_args = { 0 };
-    dllist_ctxt_t *lnode =  NULL;
-    dhl_entry_t *dhl_entry        = NULL;
-    vrf_t *vrf                    = NULL;
-    hal_handle_t hal_handle       = 0;
+    hal_ret_t ret                        = HAL_RET_OK;
+    pd::pd_vrf_delete_args_t pd_vrf_args = { 0 };
+    dllist_ctxt_t *lnode                 = NULL;
+    dhl_entry_t *dhl_entry               = NULL;
+    vrf_t *vrf                           = NULL;
+    hal_handle_t hal_handle              = 0;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -330,9 +331,10 @@ vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 1. delete call to PD
     if (vrf->pd) {
-        pd::pd_vrf_args_init(&pd_vrf_args);
+        pd::pd_vrf_delete_args_init(&pd_vrf_args);
         pd_vrf_args.vrf = vrf;
-        ret = pd::pd_vrf_delete(&pd_vrf_args);
+        // ret = pd::pd_vrf_delete(&pd_vrf_args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_DELETE, (void *)&pd_vrf_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}", 
                           __FUNCTION__, ret);
@@ -625,7 +627,7 @@ hal_ret_t
 vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                ret         = HAL_RET_OK;
-    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
+    pd::pd_vrf_update_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t            *lnode      = NULL;
     dhl_entry_t              *dhl_entry  = NULL;
     vrf_t                    *vrf        = NULL, *vrf_clone = NULL;
@@ -647,13 +649,14 @@ vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, vrf->vrf_id);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd::pd_vrf_update_args_init(&pd_vrf_args);
     pd_vrf_args.vrf                = vrf_clone;
     pd_vrf_args.nwsec_profile      = app_ctxt->nwsec_prof;
     pd_vrf_args.gipo_prefix_change = app_ctxt->gipo_prefix_change;
     pd_vrf_args.new_gipo_prefix    = &app_ctxt->new_gipo_prefix;
     HAL_TRACE_DEBUG("new_gipo_pfx: {}", ippfx2str(pd_vrf_args.new_gipo_prefix));
-    ret = pd::pd_vrf_update(&pd_vrf_args);
+    // ret = pd::pd_vrf_update(&pd_vrf_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_UPDATE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to update vrf pd, err : {}",
                       __FUNCTION__, ret);
@@ -678,10 +681,17 @@ end:
 hal_ret_t
 vrf_make_clone (vrf_t *ten, vrf_t **ten_clone)
 {
+    pd::pd_vrf_make_clone_args_t args;
+
+    pd::pd_vrf_make_clone_args_init(&args);
+
     *ten_clone = vrf_alloc_init();
     memcpy(*ten_clone, ten, sizeof(vrf_t));
 
-    pd::pd_vrf_make_clone(ten, *ten_clone);
+    // pd::pd_vrf_make_clone(ten, *ten_clone);
+    args.vrf = ten;
+    args.clone = *ten_clone;
+    pd::hal_pd_call(pd::PD_FUNC_ID_VRF_MAKE_CLONE, (void *)&args);
 
     return HAL_RET_OK;
 }
@@ -694,13 +704,13 @@ vrf_make_clone (vrf_t *ten, vrf_t **ten_clone)
 hal_ret_t
 vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                ret = HAL_RET_OK;
-    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
-    dllist_ctxt_t            *lnode = NULL;
-    dhl_entry_t              *dhl_entry = NULL;
-    vrf_t                    *vrf = NULL, *vrf_clone = NULL;
-    vrf_update_app_ctxt_t    *app_ctxt = NULL;
-    nwsec_profile_t          *nwsec_prof = NULL;
+    hal_ret_t                         ret         = HAL_RET_OK;
+    pd::pd_vrf_mem_free_args_t        pd_vrf_args = { 0 };
+    dllist_ctxt_t                     *lnode      = NULL;
+    dhl_entry_t                       *dhl_entry  = NULL;
+    vrf_t                             *vrf        = NULL, *vrf_clone = NULL;
+    vrf_update_app_ctxt_t             *app_ctxt   = NULL;
+    nwsec_profile_t                   *nwsec_prof = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
@@ -758,9 +768,10 @@ vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Free PD
-    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd::pd_vrf_mem_free_args_init(&pd_vrf_args);
     pd_vrf_args.vrf = vrf;
-    ret = pd::pd_vrf_mem_free(&pd_vrf_args);
+    // ret = pd::pd_vrf_mem_free(&pd_vrf_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_MEM_FREE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}",
                       __FUNCTION__, ret);
@@ -779,11 +790,11 @@ end:
 hal_ret_t
 vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_vrf_args_t           pd_vrf_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    vrf_t                       *vrf = NULL;
+    hal_ret_t                       ret         = HAL_RET_OK;
+    pd::pd_vrf_mem_free_args_t      pd_vrf_args = { 0 };
+    dllist_ctxt_t                   *lnode      = NULL;
+    dhl_entry_t                     *dhl_entry  = NULL;
+    vrf_t                           *vrf        = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
@@ -801,9 +812,10 @@ vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, vrf->vrf_id);
 
     // Free PD
-    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd::pd_vrf_mem_free_args_init(&pd_vrf_args);
     pd_vrf_args.vrf = vrf;
-    ret = pd::pd_vrf_mem_free(&pd_vrf_args);
+    // ret = pd::pd_vrf_mem_free(&pd_vrf_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_MEM_FREE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}",
                       __FUNCTION__, ret);
@@ -1023,7 +1035,7 @@ hal_ret_t
 vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret         = HAL_RET_OK;
-    pd::pd_vrf_args_t           pd_vrf_args = { 0 };
+    pd::pd_vrf_delete_args_t    pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode      = NULL;
     dhl_entry_t                 *dhl_entry  = NULL;
     vrf_t                       *vrf        = NULL;
@@ -1047,9 +1059,10 @@ vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, vrf->vrf_id);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd::pd_vrf_delete_args_init(&pd_vrf_args);
     pd_vrf_args.vrf = vrf;
-    ret = pd::pd_vrf_delete(&pd_vrf_args);
+    // ret = pd::pd_vrf_delete(&pd_vrf_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_VRF_DELETE, (void *)&pd_vrf_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}", 
                       __FUNCTION__, ret);

@@ -13,8 +13,6 @@
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
-using hal::pd::pd_if_args_t;
-
 namespace hal {
 
 //------------------------------------------------------------------------------
@@ -296,7 +294,7 @@ hal_ret_t
 if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_if_args_t            pd_if_args = { 0 };
+    pd::pd_if_create_args_t            pd_if_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if = NULL;
@@ -318,10 +316,11 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, hal_if->if_id);
 
     // PD Call to allocate PD resources and HW programming
-    pd::pd_if_args_init(&pd_if_args);
+    pd::pd_if_create_args_init(&pd_if_args);
     pd_if_args.intf = hal_if;
     pd_if_args.lif = app_ctxt->lif;
-    ret = pd::pd_if_create(&pd_if_args);
+    // ret = pd::pd_if_create(&pd_if_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_CREATE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to create if pd, err : {}", 
                 __FUNCTION__, ret);
@@ -511,7 +510,7 @@ hal_ret_t
 if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_if_args_t            pd_if_args = { 0 };
+    pd::pd_if_delete_args_t            pd_if_args = { 0 };
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if = NULL;
     hal_handle_t                hal_handle = 0;
@@ -536,9 +535,10 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // delete call to PD
     if (hal_if->pd_if) {
-        pd::pd_if_args_init(&pd_if_args);
+        pd::pd_if_delete_args_init(&pd_if_args);
         pd_if_args.intf = hal_if;
-        ret = pd::pd_if_delete(&pd_if_args);
+        // ret = pd::pd_if_delete(&pd_if_args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_DELETE, (void *)&pd_if_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-if:{}:failed to delete if pd, err : {}", 
                           __FUNCTION__, ret);
@@ -811,6 +811,8 @@ validate_if_update (InterfaceSpec& spec, InterfaceResponse*rsp)
 hal_ret_t
 if_make_clone (if_t *hal_if, if_t **if_clone)
 {
+    pd::pd_if_make_clone_args_t args;
+    
 
     *if_clone = if_alloc_init();
 
@@ -821,7 +823,10 @@ if_make_clone (if_t *hal_if, if_t **if_clone)
     dllist_reset(&(*if_clone)->l2seg_list_head);
     dllist_reset(&(*if_clone)->enicif_list_head);
 
-    pd::pd_if_make_clone(hal_if, *if_clone);
+    args.hal_if = hal_if;
+    args.clone = *if_clone;
+    pd::hal_pd_call(pd::PD_FUNC_ID_IF_MAKE_CLONE, (void *)&args);
+    // pd::pd_if_make_clone(hal_if, *if_clone);
 
     return HAL_RET_OK;
 }
@@ -1125,7 +1130,7 @@ hal_ret_t
 if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_if_args_t            pd_if_args = { 0 };
+    pd::pd_if_update_args_t            pd_if_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if = NULL;
@@ -1148,7 +1153,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
-        pd::pd_if_args_init(&pd_if_args);
+        pd::pd_if_update_args_init(&pd_if_args);
         pd_if_args.intf = hal_if;
         pd_if_args.native_l2seg_clsc_change = app_ctxt->native_l2seg_clsc_change;
         pd_if_args.new_native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
@@ -1160,7 +1165,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         break;
     case intf::IF_TYPE_UPLINK:
     case intf::IF_TYPE_UPLINK_PC:
-        pd::pd_if_args_init(&pd_if_args);
+        pd::pd_if_update_args_init(&pd_if_args);
         pd_if_args.intf = hal_if;
         pd_if_args.native_l2seg_change = app_ctxt->native_l2seg_change;
         pd_if_args.native_l2seg = app_ctxt->native_l2seg;
@@ -1183,7 +1188,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = HAL_RET_INVALID_ARG;
     }
 
-    ret = pd::pd_if_update(&pd_if_args);
+    // ret = pd::pd_if_update(&pd_if_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_UPDATE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to update if pd, err : {}",
                       __FUNCTION__, ret);
@@ -1326,7 +1332,7 @@ hal_ret_t
 if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_if_args_t            pd_if_args = { 0 };
+    pd::pd_if_mem_free_args_t            pd_if_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *intf = NULL, *intf_clone = NULL, 
@@ -1450,9 +1456,10 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Free PD
-    pd::pd_if_args_init(&pd_if_args);
+    pd::pd_if_mem_free_args_init(&pd_if_args);
     pd_if_args.intf = intf;
-    ret = pd::pd_if_mem_free(&pd_if_args);
+    // ret = pd::pd_if_mem_free(&pd_if_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_MEM_FREE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to free original if pd, err : {}",
                       __FUNCTION__, ret);
@@ -1491,7 +1498,7 @@ hal_ret_t
 if_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_if_args_t            pd_if_args = { 0 };
+    pd::pd_if_mem_free_args_t            pd_if_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *intf = NULL;
@@ -1513,9 +1520,10 @@ if_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, intf->if_id);
 
     // Free PD
-    pd::pd_if_args_init(&pd_if_args);
+    pd::pd_if_mem_free_args_init(&pd_if_args);
     pd_if_args.intf = intf;
-    ret = pd::pd_if_mem_free(&pd_if_args);
+    // ret = pd::pd_if_mem_free(&pd_if_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_MEM_FREE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to delete if pd, err : {}",
                       __FUNCTION__, ret);
@@ -1835,7 +1843,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     if_t                        *hal_if = NULL;
     l2seg_t                     *l2seg = NULL;
     oif_t                       oif;
-    pd::pd_l2seg_uplink_args_t  pd_l2seg_uplink_args;
+    pd::pd_add_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
     hal_api_trace(" API Begin: addl2seguplink ");
     // Validate if l2seg and uplink exists
@@ -1854,10 +1862,11 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
                     hal_if->if_id, l2seg->seg_id);
 
     // PD Call
-    pd::pd_l2seg_uplinkif_args_init(&pd_l2seg_uplink_args);
+    pd::pd_add_l2seg_uplink_args_init(&pd_l2seg_uplink_args);
     pd_l2seg_uplink_args.l2seg  = l2seg;
     pd_l2seg_uplink_args.intf   = hal_if;
-    ret = pd::pd_add_l2seg_uplink(&pd_l2seg_uplink_args);
+    // ret = pd::pd_add_l2seg_uplink(&pd_l2seg_uplink_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ADD_L2SEG_UPLINK, (void *)&pd_l2seg_uplink_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2segup<->link:{}: failed in pd, ret:{}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -1911,7 +1920,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     hal_ret_t                   ret = HAL_RET_OK;
     l2seg_t                     *l2seg = NULL;
     if_t                        *hal_if = NULL;
-    pd::pd_l2seg_uplink_args_t  pd_l2seg_uplink_args;
+    pd::pd_del_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
     hal_api_trace(" API Begin: delete l2seg on uplink ");
 
@@ -1931,10 +1940,12 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
             hal_if->if_id, l2seg->seg_id);
 
     // PD Call
-    pd::pd_l2seg_uplinkif_args_init(&pd_l2seg_uplink_args);
+    pd::pd_del_l2seg_uplink_args_init(&pd_l2seg_uplink_args);
     pd_l2seg_uplink_args.l2seg  = l2seg;
     pd_l2seg_uplink_args.intf   = hal_if;
-    ret = pd::pd_del_l2seg_uplink(&pd_l2seg_uplink_args);
+    // ret = pd::pd_del_l2seg_uplink(&pd_l2seg_uplink_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DEL_L2SEG_UPLINK, 
+                          (void *)&pd_l2seg_uplink_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2segup<->link:{}: failed in pd, ret:{}", ret);
         goto end;
@@ -2598,7 +2609,7 @@ hal_ret_t
 if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_if_args_t            pd_if_args = { 0 };
+    pd::pd_if_delete_args_t            pd_if_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *intf = NULL;
@@ -2622,9 +2633,10 @@ if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, intf->if_id);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_if_args_init(&pd_if_args);
+    pd::pd_if_delete_args_init(&pd_if_args);
     pd_if_args.intf = intf;
-    ret = pd::pd_if_delete(&pd_if_args);
+    // ret = pd::pd_if_delete(&pd_if_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_DELETE, (void *)&pd_if_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to delete if pd, err : {}", 
                       __FUNCTION__, ret);
@@ -2991,15 +3003,16 @@ hal_ret_t
 if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    pd::pd_if_nwsec_upd_args_t  args;
+    pd::pd_if_nwsec_update_args_t  args;
 
     HAL_TRACE_DEBUG("{}: if_id: {}", __FUNCTION__, hal_if->if_id);
-    pd::pd_if_nwsec_upd_args_init(&args);
+    pd::pd_if_nwsec_update_args_init(&args);
     args.l2seg = l2seg;
     args.intf = hal_if;
     args.nwsec_prof = nwsec_prof;
 
-    ret = pd::pd_if_nwsec_update(&args);
+    // ret = pd::pd_if_nwsec_update(&args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_NWSEC_UPDATE, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: PD call for nwsec update on if failed. ret: {}", 
                 __FUNCTION__, ret);
@@ -3011,7 +3024,7 @@ end:
 }
 
 hal_ret_t
-if_handle_lif_update (pd::pd_if_lif_upd_args_t *args)
+if_handle_lif_update (pd::pd_if_lif_update_args_t *args)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
@@ -3022,7 +3035,8 @@ if_handle_lif_update (pd::pd_if_lif_upd_args_t *args)
 
     HAL_TRACE_DEBUG("{}: if_id: {}", __FUNCTION__, args->intf->if_id);
 
-    ret = pd::pd_if_lif_update(args);
+    // ret = pd::pd_if_lif_update(args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_LIF_UPDATE, (void *)args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: PD call for lif update on if failed. ret: {}", 
                 __FUNCTION__, ret);

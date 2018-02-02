@@ -4,12 +4,14 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/p4pt.hpp"
 #include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
 namespace pd {
 
-hal_ret_t
-p4pt_pd_init() {
+EXTC hal_ret_t
+// p4pt_pd_init() {
+p4pt_pd_init(p4pt_pd_init_args_t *args) {
     lif_id_t lif_id = SERVICE_LIF_P4PT;
     uint32_t qid = 0;
 

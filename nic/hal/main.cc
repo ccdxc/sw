@@ -63,6 +63,11 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
+#if 0
+namespace hal {
+    thread   *g_hal_threads[HAL_THREAD_ID_MAX];
+}
+#endif
 // TODO - port should come from some global cfg file or
 //        command line argument
 const std::string&    hal_svc_endpoint_("localhost:50052");

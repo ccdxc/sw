@@ -313,10 +313,18 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
 
     ret = tcpcb_update(*spec, &rsp);
 
+    hal::pd::pd_cpupkt_program_send_ring_doorbell_args_t args;
+    args.dest_lif = SERVICE_LIF_TCP_PROXY;
+    args.qtype = 0;
+    args.qid = qid;
+    args.ring_number = TCP_SCHED_RING_PENDING_RX2TX;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_PGM_SEND_RING_DBELL, (void *)&args);
+#if 0
     ret = hal::pd::cpupkt_program_send_ring_doorbell(SERVICE_LIF_TCP_PROXY,
                                                      0,
                                                      qid,
                                                      TCP_SCHED_RING_PENDING_RX2TX);
+#endif
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
@@ -325,10 +333,18 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
 void tcp_ring_doorbell(uint32_t qid)
 {
     hal_ret_t ret = HAL_RET_OK;
+    hal::pd::pd_cpupkt_program_send_ring_doorbell_args_t args;
+    args.dest_lif = SERVICE_LIF_TCP_PROXY;
+    args.qtype = 0;
+    args.qid = qid;
+    args.ring_number = TCP_SCHED_RING_PENDING_RX2TX;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_PGM_SEND_RING_DBELL, (void *)&args);
+#if 0
     ret = hal::pd::cpupkt_program_send_ring_doorbell(SERVICE_LIF_TCP_PROXY,
                                                      0,
                                                      qid,
                                                      TCP_SCHED_RING_PENDING_RX2TX);
+#endif
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("ring doorbell failed {}", ret);
     }
@@ -362,6 +378,7 @@ tcp_is_proxy_enabled_for_flow(const flow_key_t &flow_key)
     return is_proxy_enabled_for_flow(types::PROXY_TYPE_TCP, flow_key) ||
            is_proxy_enabled_for_flow(types::PROXY_TYPE_APP_REDIR_PROXY_TCP, flow_key) ||
            is_proxy_enabled_for_flow(types::PROXY_TYPE_APP_REDIR_PROXY_TCP_SPAN, flow_key);
+    return true;
 }
 
 static proxy_flow_info_t*
@@ -436,6 +453,7 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
 {
     proxy_flow_info_t*      pfi = NULL;
     flow_key_t              flow_key = ctx.key();
+    hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
 
     if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
         HAL_TRACE_DEBUG("{}: responder side. ignoring.", __FUNCTION__);
@@ -451,11 +469,19 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
         // get the flow info for the tcp proxy service 
         pfi = tcp_proxy_get_flow_info(flow_key);
         if (pfi) {
-            if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.sl2seg(), &shw_vlan_id) == HAL_RET_OK) {
+            args.l2seg = ctx.sl2seg();
+            args.vid = &shw_vlan_id;
+            // if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.sl2seg(), &shw_vlan_id) == HAL_RET_OK) {
+            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                                     (void*)&args) == HAL_RET_OK) {
               HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
             }
 
-            if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.dl2seg(), &dhw_vlan_id) == HAL_RET_OK) {
+            args.l2seg = ctx.dl2seg();
+            args.vid = &dhw_vlan_id;
+            // if (hal::pd::pd_l2seg_get_fromcpu_vlanid(ctx.dl2seg(), &dhw_vlan_id) == HAL_RET_OK) {
+            if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
+                                     (void*)&args) == HAL_RET_OK) {
               HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", dhw_vlan_id);
             }
 

@@ -7,15 +7,15 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/rdma.hpp"
 #ifndef GFT
-#include "nic/hal/pd/iris/rdma_pd.hpp"
+// #include "nic/hal/pd/iris/rdma_pd.hpp"
 #endif
 #include "nic/utils/host_mem/host_mem.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+// #include "nic/hal/pd/capri/capri_hbm.hpp"
 #ifndef GFT
-#include "nic/hal/pd/iris/if_pd_utils.hpp"
-#include "nic/hal/pd/iris/hal_state_pd.hpp"
+// #include "nic/hal/pd/iris/if_pd_utils.hpp"
+// #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #endif
-#include "nic/hal/pd/capri/capri_loader.h"
+// #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/p4/include/common_defines.h"
 #include "nic/include/oif_list_api.hpp"
 
@@ -32,9 +32,25 @@ RDMAManager *g_rdma_manager = nullptr;
 extern LIFManager *g_lif_manager;
 
 RDMAManager::RDMAManager() {
-  uint64_t hbm_addr = get_start_offset(kHBMLabel);
-  HAL_ASSERT(hbm_addr > 0);
-  HAL_ASSERT(get_size_kb(kHBMLabel) == kHBMSizeKB);
+  // Don't use capri
+  // uint64_t hbm_addr = get_start_offset(kHBMLabel);
+  // Don't use capri
+  // HAL_ASSERT(get_size_kb(kHBMLabel) == kHBMSizeKB);
+  
+  pd::pd_get_start_offset_args_t off_args = {0};
+  pd::pd_get_size_kb_args_t size_args = {0};
+
+  off_args.reg_name = kHBMLabel;
+  pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
+  uint64_t hbm_addr = off_args.offset;
+
+  size_args.reg_name = kHBMLabel;
+  pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, (void *)&size_args);
+  assert(size_args.size == kHBMSizeKB);
+
+
+
+
   uint32_t num_units = (kHBMSizeKB * 1024) / kAllocUnit;
   if (hbm_addr & 0xFFF) {
     // Not 4K aligned.
@@ -105,6 +121,20 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
 #ifndef GFT
     hal_ret_t   ret;
 
+	hal::pd::pd_rxdma_table_entry_add_args_s rx_args;
+	rx_args.idx = lif;
+    rx_args.rdma_en_qtype_mask = entry_p->rdma_en_qtype_mask;
+    rx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
+    rx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
+    rx_args.cqcb_base_addr_page_id = entry_p->cqcb_base_addr_page_id;
+    rx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
+    rx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
+    rx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
+    rx_args.sq_qtype = entry_p->sq_qtype;
+    rx_args.rq_qtype = entry_p->rq_qtype;
+	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RXDMA_TABLE_ADD, (void *)&rx_args);
+
+#if 0
     ret = hal::pd::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(lif,
                entry_p->rdma_en_qtype_mask,
                entry_p->pt_base_addr_page_id,
@@ -115,6 +145,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
                entry_p->log_num_prefetch_pool_entries,
                entry_p->sq_qtype,
                entry_p->rq_qtype);
+#endif
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for rxdma, idx : {}, err : {}",
                       lif, ret);
@@ -122,6 +153,19 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
         return ret;
     }
 
+	hal::pd::pd_txdma_table_entry_add_args_s tx_args;
+	tx_args.idx = lif;
+    tx_args.rdma_en_qtype_mask = entry_p->rdma_en_qtype_mask;
+    tx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
+    tx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
+    tx_args.cqcb_base_addr_page_id = entry_p->cqcb_base_addr_page_id;
+    tx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
+    tx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
+    tx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
+    tx_args.sq_qtype = entry_p->sq_qtype;
+    tx_args.rq_qtype = entry_p->rq_qtype;
+	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, (void *)&tx_args);
+#if 0
     ret = hal::pd::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(lif,
                entry_p->rdma_en_qtype_mask,
                entry_p->pt_base_addr_page_id,
@@ -132,6 +176,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
                entry_p->log_num_prefetch_pool_entries,
                entry_p->sq_qtype,
                entry_p->rq_qtype);
+#endif
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for txdma, idx : {}, err : {}",
                       lif, ret);
@@ -371,8 +416,15 @@ rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
     pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
     key_table_base_addr = pt_table_base_addr + (sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries);
 
+#if 0
     capri_hbm_read_mem((uint64_t)(((key_entry_t *) key_table_base_addr) + key),
                        (uint8_t*)entry_p, sizeof(key_entry_t));
+#endif
+    pd::pd_capri_hbm_read_mem_args_t args = {0};
+    args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + key);
+    args.buf = (uint8_t*)entry_p;
+    args.size = sizeof(key_entry_t);
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, (void *)&args);
     // Convert data before reading from HBM
     memrev((uint8_t*)entry_p, sizeof(key_entry_t));
 }
@@ -392,8 +444,15 @@ rdma_key_entry_write (uint16_t lif, uint32_t key, key_entry_t *entry_p)
 
     memcpy(&tmp_key_entry, entry_p, sizeof(key_entry_t));
     memrev((uint8_t *)&tmp_key_entry, sizeof(key_entry_t));
+#if 0
     capri_hbm_write_mem((uint64_t)(((key_entry_t *) key_table_base_addr) + key),
                         (uint8_t*)&tmp_key_entry, sizeof(key_entry_t));
+#endif
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + key);
+    args.buf = (uint8_t*)&tmp_key_entry;
+    args.size = sizeof(key_entry_t);
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
 }
 
 void
@@ -406,8 +465,16 @@ rdma_pt_entry_write (uint16_t lif, uint32_t offset, uint64_t pg_ptr)
     pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
     pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
 
+    // Don't use capri apis
+#if 0
     capri_hbm_write_mem((uint64_t)(pt_table_base_addr + 
         (offset * sizeof(uint64_t))), (uint8_t*)&pg_ptr, sizeof(pg_ptr));
+#endif
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    args.addr = (uint64_t)(pt_table_base_addr + (offset * sizeof(uint64_t)));
+    args.buf = (uint8_t*)&pg_ptr;
+    args.size = sizeof(pg_ptr);
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
 }
 
 uint64_t
@@ -636,13 +703,22 @@ stage0_resp_rx_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rdma_resp_rx_stage0";
 
+#if 0
     int ret = capri_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
+#endif
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+                              (void *)&args);
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
     //                __FUNCTION__, ret, offset);
-    if(ret < 0) {
+    if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
         return HAL_RET_HW_FAIL;
     }
@@ -652,16 +728,26 @@ stage0_resp_rx_prog_addr(uint64_t* offset)
 hal_ret_t
 stage0_resp_tx_prog_addr(uint64_t* offset)
 {
+    // Can't access capri apis from PI
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "rdma_resp_tx_stage0";
 
+#if 0
     int ret = capri_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
+#endif
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+                                    (void *)&args);
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
     //                __FUNCTION__, ret, offset);
-    if(ret < 0) {
+    if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
         return HAL_RET_HW_FAIL;
     }
@@ -671,17 +757,29 @@ stage0_resp_tx_prog_addr(uint64_t* offset)
 hal_ret_t
 stage0_req_rx_prog_addr(uint64_t* offset)
 {
+    //  Can't access capri apis from PI
+
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rdma_req_rx_stage0";
 
+#if 0
     int ret = capri_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
+#endif
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+                                    (void *)&args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
     //                __FUNCTION__, ret, offset);
-    if(ret < 0) {
+    // if(ret < 0) {
+    if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
         return HAL_RET_HW_FAIL;
     }
@@ -691,17 +789,27 @@ stage0_req_rx_prog_addr(uint64_t* offset)
 hal_ret_t
 stage0_req_tx_prog_addr(uint64_t* offset)
 {
+    // Can't access capri apis from PI
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "rdma_req_tx_stage0";
 
+#if 0
     int ret = capri_program_label_to_offset("p4plus",
                                             progname,
                                             labelname,
                                             offset);
+#endif
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
+                                    (void *)&args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n", 
     //                __FUNCTION__, ret, offset);
-    if(ret < 0) {
+    if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: ret: []\n", __FUNCTION__, ret);
         return HAL_RET_HW_FAIL;
     }
@@ -1034,7 +1142,14 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     HAL_ASSERT(header_template_addr % 8 == 0);
 
     memrev((uint8_t*)&temp, header_template_size);
+#if 0
     capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t*)&temp, header_template_size);
+#endif
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    args.addr = (uint64_t)header_template_addr;
+    args.buf = (uint8_t*)&temp;
+    args.size = header_template_size;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
 
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->set_ah_handle(header_template_addr);
@@ -1056,6 +1171,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     rqcb_t       rqcb;
     rqcb_t       *rqcb_p = &rqcb;
     uint64_t     header_template_addr;
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Update for lif {} QID {} oper type {}", 
@@ -1106,7 +1222,14 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             memcpy(&header_template, (uint8_t *)spec.header_template().c_str(),
                    std::min(sizeof(header_template_t), spec.header_template().size()));
         
+            // Don't use capri apis
+#if 0
             capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t *)&header_template, sizeof(header_template_t));
+#endif
+            args.addr = (uint64_t)header_template_addr;
+            args.buf = (uint8_t *)&header_template;
+            args.size =  sizeof(header_template_t);
+            pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
 
             HAL_TRACE_DEBUG("{}: Update: Setting header_template content @addr: {} to: {}", 
                             __FUNCTION__, header_template_addr, spec.header_template());
@@ -1189,7 +1312,7 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     uint32_t     lif = spec.hw_lif_id(), num_eq_wqes;
     uint8_t      eqwqe_size;
     eqcb_t       eqcb;
-    uint32_t     hbm_eq_intr_table_base;
+    uint64_t     hbm_eq_intr_table_base;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA EQ Create for lif {}", __FUNCTION__, lif);
@@ -1227,7 +1350,12 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
 
     rsp->set_api_status(types::API_STATUS_OK);
     // Fill the EQ Interrupt address = Intr_table base + 8 bytes for each intr_num
-    hbm_eq_intr_table_base = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
+    // Dont use capri
+    // hbm_eq_intr_table_base = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
+    pd::pd_get_start_offset_args_t off_args = {0};
+    off_args.reg_name = "rdma-eq-intr-table";
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
+    hbm_eq_intr_table_base = off_args.offset;
     HAL_ASSERT(hbm_eq_intr_table_base > 0);
     rsp->set_eq_intr_tbl_addr(hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t));
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");

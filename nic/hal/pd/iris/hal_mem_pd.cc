@@ -47,6 +47,9 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
 namespace hal {
+extern uint32_t g_test;
+extern uint32_t g_test_arr[2];
+extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 namespace pd {
 
 class hal_state_pd *g_hal_state_pd;
@@ -1081,8 +1084,8 @@ hal_state_pd::p4plus_txdma_init_tables(void)
 //------------------------------------------------------------------------------
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
-hal_ret_t
-hal_pd_mem_init (void)
+extern "C" hal_ret_t
+pd_mem_init (pd_mem_init_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -1113,8 +1116,8 @@ hal_pd_mem_init (void)
 //------------------------------------------------------------------------------
 // Phase 2 memory related initialization for HAL - after the ASIC is ready
 //------------------------------------------------------------------------------
-hal_ret_t
-hal_pd_mem_init_phase_2 (void)
+extern "C" hal_ret_t
+pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -1126,8 +1129,8 @@ hal_pd_mem_init_phase_2 (void)
 //------------------------------------------------------------------------------
 // program default entries in tables
 //------------------------------------------------------------------------------
-hal_ret_t
-hal_pd_pgm_def_entries (void)
+extern "C" hal_ret_t
+pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
     p4pd_def_cfg_t  p4pd_def_cfg;
@@ -1145,8 +1148,8 @@ hal_pd_pgm_def_entries (void)
 //------------------------------------------------------------------------------
 // program default entries for P4Plus tables
 //------------------------------------------------------------------------------
-hal_ret_t
-hal_pd_pgm_def_p4plus_entries (void)
+extern "C" hal_ret_t
+pd_pgm_def_p4plus_entries (pd_pgm_def_p4plus_entries_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
 

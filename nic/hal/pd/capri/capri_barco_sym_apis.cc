@@ -82,7 +82,10 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
 		    status_addr);
 
     if (key_len) {
-        ret = pd_crypto_alloc_key(&hmac_key_descr_idx);
+        pd_crypto_alloc_key_args_t args;
+        args.key_idx = &hmac_key_descr_idx;
+        // ret = pd_crypto_alloc_key(&hmac_key_descr_idx);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, (void *)&args);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate key descriptor",
 			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
@@ -315,7 +318,10 @@ cleanup:
     }
 
     if (hmac_key_descr_idx != -1) {
-        ret = pd_crypto_free_key(hmac_key_descr_idx);
+        hal::pd::pd_crypto_free_key_args_t args;
+        args.key_idx = hmac_key_descr_idx;
+        // ret = pd_crypto_free_key(hmac_key_descr_idx);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, (void *)&args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free key descriptor @ {:x}",
 			  hmac_key_descr_idx);
@@ -436,7 +442,10 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 		    status_addr);
 
     if (key_len) {
-        ret = pd_crypto_alloc_key(&aes_key_descr_idx);
+    pd_crypto_alloc_key_args_t args;
+    args.key_idx = &aes_key_descr_idx;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY, (void *)&args);
+        // ret = pd_crypto_alloc_key(&aes_key_descr_idx);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate key descriptor",
 			  capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
@@ -798,7 +807,10 @@ cleanup:
     }
 
     if (aes_key_descr_idx != -1) {
-        ret = pd_crypto_free_key(aes_key_descr_idx);
+        pd_crypto_free_key_args_t f_args;
+        f_args.key_idx = aes_key_descr_idx;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_FREE_KEY, (void *)&f_args);
+        // ret = pd_crypto_free_key(aes_key_descr_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free key descriptor @ {:x}",
 			  aes_key_descr_idx);

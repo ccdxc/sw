@@ -102,7 +102,7 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     rawrcb_t                *rawrcb = NULL;
-    pd::pd_rawrcb_args_t    pd_rawrcb_args;
+    pd::pd_rawrcb_create_args_t    pd_rawrcb_args;
 
     // validate the request message
     ret = validate_rawrcb_create(spec, rsp);
@@ -138,9 +138,10 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
     rawrcb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
-    pd::pd_rawrcb_args_init(&pd_rawrcb_args);
+    pd::pd_rawrcb_create_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = rawrcb;
-    ret = pd::pd_rawrcb_create(&pd_rawrcb_args);
+    // ret = pd::pd_rawrcb_create(&pd_rawrcb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_CREATE, (void *)&pd_rawrcb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWR CB create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -172,7 +173,7 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK; 
     rawrcb_t*               rawrcb;
-    pd::pd_rawrcb_args_t    pd_rawrcb_args;
+    pd::pd_rawrcb_update_args_t    pd_rawrcb_args;
 
     auto kh = spec.key_or_handle();
 
@@ -198,10 +199,11 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
     rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
     rawrcb->chain_txq_qid = spec.chain_txq_qid();
 
-    pd::pd_rawrcb_args_init(&pd_rawrcb_args);
+    pd::pd_rawrcb_update_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = rawrcb;
     
-    ret = pd::pd_rawrcb_update(&pd_rawrcb_args);
+    // ret = pd::pd_rawrcb_update(&pd_rawrcb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_UPDATE, (void *)&pd_rawrcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: Update Failed, err: ", ret);
         rsp->set_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);
@@ -223,7 +225,7 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     hal_ret_t               ret = HAL_RET_OK; 
     rawrcb_t                rrawrcb;
     rawrcb_t*               rawrcb;
-    pd::pd_rawrcb_args_t    pd_rawrcb_args;
+    pd::pd_rawrcb_get_args_t    pd_rawrcb_args;
 
     auto kh = req.key_or_handle();
 
@@ -235,10 +237,11 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     
     rawrcb_init(&rrawrcb);
     rrawrcb.cb_id = rawrcb->cb_id;
-    pd::pd_rawrcb_args_init(&pd_rawrcb_args);
+    pd::pd_rawrcb_get_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = &rrawrcb;
     
-    ret = pd::pd_rawrcb_get(&pd_rawrcb_args);
+    // ret = pd::pd_rawrcb_get(&pd_rawrcb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_GET, (void *)&pd_rawrcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);
@@ -293,6 +296,7 @@ rawrcb_delete (rawrcb::RawrCbDeleteRequest& req, rawrcb::RawrCbDeleteResponseMsg
     hal_ret_t               ret = HAL_RET_OK; 
     rawrcb_t*               rawrcb;
     pd::pd_rawrcb_args_t    pd_rawrcb_args;
+    pd::pd_rawrcb_delete_args_t    del_args;
 
     auto kh = req.key_or_handle();
     rawrcb = find_rawrcb_by_id(kh.rawrcb_id());
@@ -301,10 +305,13 @@ rawrcb_delete (rawrcb::RawrCbDeleteRequest& req, rawrcb::RawrCbDeleteResponseMsg
         return HAL_RET_OK;
     }
  
-    pd::pd_rawrcb_args_init(&pd_rawrcb_args);
+    pd::pd_rawrcb_delete_args_init(&del_args);
+    del_args.r_args = &pd_rawrcb_args;
+
     pd_rawrcb_args.rawrcb = rawrcb;
     
-    ret = pd::pd_rawrcb_delete(&pd_rawrcb_args);
+    // ret = pd::pd_rawrcb_delete(&pd_rawrcb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);

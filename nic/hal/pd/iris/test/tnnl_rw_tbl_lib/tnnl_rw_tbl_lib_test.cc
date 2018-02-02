@@ -78,6 +78,6 @@ TEST_F(tnnl_rw_test, test1) {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  hal::pd::hal_pd_mem_init();
+  pd_mem_init(NULL);
   return RUN_ALL_TESTS();
 }

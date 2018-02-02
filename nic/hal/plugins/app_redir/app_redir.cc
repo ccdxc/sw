@@ -427,9 +427,17 @@ app_redir_pkt_check_tx_enqueue(fte::ctx_t& ctx)
 
     HAL_TRACE_DEBUG("{} flow_id {} pkt_len {} src_lif {}", __FUNCTION__,
                     redir_ctx.chain_flow_id(), pkt_len, cpu_header.src_lif);
+    pd::pd_cpupkt_register_tx_queue_args_t args;
+    args.ctxt = redir_ctx.arm_ctx();
+    args.type = redir_ctx.chain_wring_type();
+    args.queue_id = redir_ctx.chain_flow_id();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&args);
+
+#if 0
     ret = hal::pd::cpupkt_register_tx_queue(redir_ctx.arm_ctx(),
                                             redir_ctx.chain_wring_type(),
                                             redir_ctx.chain_flow_id());
+#endif
     if (ret == HAL_RET_OK) {
         ret = ctx.queue_txpkt(pkt, pkt_len, &cpu_header, &p4_header,
                               SERVICE_LIF_APP_REDIR, redir_ctx.chain_qtype(),

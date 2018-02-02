@@ -97,7 +97,7 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     tlscb_t                *tlscb;
-    pd::pd_tlscb_args_t    pd_tlscb_args;
+    pd::pd_tlscb_create_args_t    pd_tlscb_args;
 
     // validate the request message
     ret = validate_tlscb_create(spec, rsp);
@@ -125,9 +125,11 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
-    pd::pd_tlscb_args_init(&pd_tlscb_args);
+    pd::pd_tlscb_create_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
-    ret = pd::pd_tlscb_create(&pd_tlscb_args);
+    // ret = pd::pd_tlscb_create(&pd_tlscb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_CREATE, (void *)&pd_tlscb_args);
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLS CB create failure, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -157,7 +159,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK; 
     tlscb_t*               tlscb;
-    pd::pd_tlscb_args_t    pd_tlscb_args;
+    pd::pd_tlscb_update_args_t    pd_tlscb_args;
     bool                   is_decrypt_flow = false;
 
     auto kh = spec.key_or_handle();
@@ -185,10 +187,11 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->other_fid = spec.other_fid();
     tlscb->l7_proxy_type = spec.l7_proxy_type();
 
-    pd::pd_tlscb_args_init(&pd_tlscb_args);
+    pd::pd_tlscb_update_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
     
-    ret = pd::pd_tlscb_update(&pd_tlscb_args);
+    // ret = pd::pd_tlscb_update(&pd_tlscb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_UPDATE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: Update Failed, err: ", ret);
         rsp->set_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);
@@ -210,7 +213,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     hal_ret_t              ret = HAL_RET_OK; 
     tlscb_t                rtlscb;
     tlscb_t*               tlscb;
-    pd::pd_tlscb_args_t    pd_tlscb_args;
+    pd::pd_tlscb_get_args_t    pd_tlscb_args;
 
     auto kh = req.key_or_handle();
 
@@ -222,10 +225,11 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     
     tlscb_init(&rtlscb);
     rtlscb.cb_id = tlscb->cb_id;
-    pd::pd_tlscb_args_init(&pd_tlscb_args);
+    pd::pd_tlscb_get_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = &rtlscb;
     
-    ret = pd::pd_tlscb_get(&pd_tlscb_args);
+    // ret = pd::pd_tlscb_get(&pd_tlscb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_GET, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: Failed to get, err: {}", ret);
         rsp->set_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);
@@ -283,7 +287,7 @@ tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp
 {
     hal_ret_t              ret = HAL_RET_OK; 
     tlscb_t*               tlscb;
-    pd::pd_tlscb_args_t    pd_tlscb_args;
+    pd::pd_tlscb_delete_args_t    pd_tlscb_args;
 
     auto kh = req.key_or_handle();
     tlscb = find_tlscb_by_id(kh.tlscb_id());
@@ -292,10 +296,11 @@ tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp
         return HAL_RET_OK;
     }
  
-    pd::pd_tlscb_args_init(&pd_tlscb_args);
+    pd::pd_tlscb_delete_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
     
-    ret = pd::pd_tlscb_delete(&pd_tlscb_args);
+    // ret = pd::pd_tlscb_delete(&pd_tlscb_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_DELETE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: delete Failed, err: {}", ret);
         rsp->add_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);

@@ -28,13 +28,13 @@ cc_library(
     hdrs = ["core.hpp", "msrpc_proto_def.hpp", "alg_msrpc.hpp"],
 )
 
-cc_test(
-    name = "alg_rpc_test",
-    srcs = glob(["test/*.cc"]),
-    deps = [
-           "//nic/hal/plugins/alg_utils:alg_utils",
-           "//nic/hal/plugins/alg_rpc:alg_rpc",
-           ] + gl_deps_list,
-    linkopts = gl_linkopts_list,
-    copts = sdk_copts
-)
+#cc_test(
+#    name = "alg_rpc_test",
+#    srcs = glob(["test/*.cc"]),
+#    deps = [
+#           "//nic/hal/plugins/alg_utils:alg_utils",
+#           "//nic/hal/plugins/alg_rpc:alg_rpc",
+#           ] + gl_deps_list,
+#    linkopts = gl_linkopts_list,
+#    copts = sdk_copts
+#)

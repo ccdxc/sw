@@ -43,8 +43,8 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
 }
 
 
-hal_ret_t
-pd_mirror_session_create(pd_mirror_session_args_t *args)
+EXTC hal_ret_t
+pd_mirror_session_create(pd_mirror_session_create_args_t *args)
 {
     uint32_t dst_lport;
     mirror_actiondata action_data;
@@ -107,8 +107,8 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
 
-hal_ret_t
-pd_mirror_session_delete(pd_mirror_session_args_t *args)
+EXTC hal_ret_t
+pd_mirror_session_delete(pd_mirror_session_delete_args_t *args)
 {
     mirror_actiondata action_data;
     if ((args == NULL) || (args->session == NULL)) {
@@ -122,8 +122,8 @@ pd_mirror_session_delete(pd_mirror_session_args_t *args)
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
 
-hal_ret_t
-pd_mirror_session_get(pd_mirror_session_args_t *args)
+EXTC hal_ret_t
+pd_mirror_session_get(pd_mirror_session_get_args_t *args)
 {
     mirror_actiondata action_data;
     if ((args == NULL) || (args->session == NULL)) {
@@ -164,9 +164,12 @@ pd_mirror_session_get(pd_mirror_session_args_t *args)
 #define IPFIX_BUFSIZE 2048
 #define IPFIX_HBM_MEMSIZE (64 * 1024)
 telemetry_export_dest *_export_destinations[IPFIX_HBM_MEMSIZE/IPFIX_BUFSIZE];
-hal_ret_t
-pd_collector_create(collector_config_t *cfg)
+EXTC hal_ret_t
+// pd_collector_create(collector_config_t *cfg)
+pd_collector_create(pd_collector_create_args_t *c_args)
 {
+    collector_config_t *cfg = c_args->cfg;
+    pd_l2seg_get_fromcpu_vlanid_args_t args;
     HAL_TRACE_DEBUG("PD-ExportControl:{}: ExportID {}", __FUNCTION__,
     cfg->exporter_id);
     // Id is less than max size allows.
@@ -184,7 +187,10 @@ pd_collector_create(collector_config_t *cfg)
     _export_destinations[cfg->exporter_id] = d;
     d->init(cfg->exporter_id);
 
-    if (pd_l2seg_get_fromcpu_vlanid(cfg->l2seg, &cfg->vlan) != HAL_RET_OK) {
+    args.l2seg = cfg->l2seg;
+    args.vid = &cfg->vlan;
+    // if (pd_l2seg_get_fromcpu_vlanid(cfg->l2seg, &cfg->vlan) != HAL_RET_OK) {
+    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, (void *)&args) != HAL_RET_OK) {
         HAL_TRACE_DEBUG("PD-Collector:{}: Could not retrieve CPU VLAN", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }

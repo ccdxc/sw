@@ -22,8 +22,8 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // EP Create
 // ----------------------------------------------------------------------------
-hal_ret_t 
-pd_ep_create(pd_ep_args_t *args)
+EXTC hal_ret_t 
+pd_ep_create(pd_ep_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_ep_t             *pd_ep;
@@ -78,8 +78,8 @@ end:
 // ----------------------------------------------------------------------------
 // EP Update 
 // ----------------------------------------------------------------------------
-hal_ret_t 
-pd_ep_update (pd_ep_upd_args_t *pd_ep_upd_args)
+EXTC hal_ret_t 
+pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -97,8 +97,8 @@ pd_ep_update (pd_ep_upd_args_t *pd_ep_upd_args)
 //-----------------------------------------------------------------------------
 // PD Endpoint Delete
 //-----------------------------------------------------------------------------
-hal_ret_t
-pd_ep_delete (pd_ep_args_t *args)
+EXTC hal_ret_t
+pd_ep_delete (pd_ep_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_ep_t    *ep_pd;
@@ -181,7 +181,7 @@ end:
 // EP Update: Handling ip list change
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args)
+pd_ep_upd_iplist_change (pd_ep_update_args_t *pd_ep_upd_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -278,7 +278,7 @@ end:
 // Allocate and Initialize EP L3 entries
 // ----------------------------------------------------------------------------
 hal_ret_t 
-ep_pd_alloc_ip_entries(pd_ep_args_t *args)
+ep_pd_alloc_ip_entries(pd_ep_create_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     ep_t            *pi_ep = args->ep;
@@ -723,10 +723,12 @@ ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_make_clone(ep_t *ep, ep_t *clone)
+pd_ep_make_clone(pd_ep_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_ep_t             *pd_ep_clone = NULL;
+    ep_t *ep = args->ep;
+    ep_t *clone = args->clone;
 
     pd_ep_clone = ep_pd_alloc_init();
     if (pd_ep_clone == NULL) {
@@ -746,7 +748,7 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_mem_free(pd_ep_args_t *args)
+pd_ep_mem_free(pd_ep_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_ep_t        *ep_pd;
@@ -860,16 +862,13 @@ ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(ep_t *pi_ep,
 uint32_t
 ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep, 
                           tunnel_rewrite_actions_en tnnl_rw_act) {
-    hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
 
     HAL_ASSERT(tnnl_rw_act < TUNNEL_REWRITE_MAX_ID);
     if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
         return g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
     } else if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
         if_t *tunnel_if = ep_find_if_by_handle((ep_t *)pd_ep->pi_ep);
-        tif_args.hal_if = tunnel_if;
-        hal::pd::pd_tunnelif_get_rw_idx(&tif_args);
-        return tif_args.tnnl_rw_idx;
+        return (tunnelif_get_rw_idx((pd_tunnelif_t *)tunnel_if->pd_if));
     }
 
     return 0;

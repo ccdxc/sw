@@ -14,13 +14,13 @@ struct pd_l4lb_s {
     void        *pi_l4lb;
 } __PACK__;
 
-hal_ret_t pd_l4lb_create(pd_l4lb_args_t *args);
+// hal_ret_t pd_l4lb_create(pd_l4lb_args_t *args);
 pd_l4lb_t *l4lb_pd_alloc();
 pd_l4lb_t *l4lb_pd_init(pd_l4lb_t *up_l4lb);
 pd_l4lb_t *l4lb_pd_alloc_init();
 hal_ret_t l4lb_pd_free(pd_l4lb_t *up_l4lb);
 hal_ret_t l4lb_pd_alloc_res(pd_l4lb_t *up_l4lb);
-hal_ret_t l4lb_pd_alloc_ip_entries(pd_l4lb_args_t *args);
+hal_ret_t l4lb_pd_alloc_ip_entries(pd_l4lb_create_args_t *args);
 hal_ret_t l4lb_pd_program_hw(pd_l4lb_t *up_l4lb);
 void link_pi_pd(pd_l4lb_t *pd_l4lb, l4lb_service_entry_t *pi_l4lb);
 void unlink_pi_pd(pd_l4lb_t *pd_l4lb, l4lb_service_entry_t *pi_up_l4lb);

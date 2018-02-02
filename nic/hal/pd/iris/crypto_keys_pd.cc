@@ -14,11 +14,14 @@ uint64_t    key_mem_base = 0;
 uint64_t    key_mem_size = 0;
 char        key_mem[] = CAPRI_BARCO_KEY_MEM;
 
-hal_ret_t pd_crypto_alloc_key(int32_t *key_idx)
+// hal_ret_t pd_crypto_alloc_key(int32_t *key_idx)
+EXTC hal_ret_t
+pd_crypto_alloc_key(pd_crypto_alloc_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     is = indexer::SUCCESS;
     uint64_t            key_addr = 0;
+    int32_t *key_idx = args->key_idx;
 
     is = g_hal_state_pd->crypto_pd_keys_idxr()->alloc((uint32_t *)key_idx);
     if (is != indexer::SUCCESS) {
@@ -37,10 +40,12 @@ hal_ret_t pd_crypto_alloc_key(int32_t *key_idx)
 }
 
 
-hal_ret_t pd_crypto_free_key(int32_t key_idx)
+// hal_ret_t pd_crypto_free_key(int32_t key_idx)
+EXTC hal_ret_t pd_crypto_free_key(pd_crypto_free_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     is = indexer::SUCCESS;
+    int32_t key_idx = args->key_idx;
 
     if (!g_hal_state_pd->crypto_pd_keys_idxr()->is_index_allocated(key_idx)) {
         HAL_TRACE_ERR("SessKey: Freeing non-allocated key: {}", key_idx);
@@ -59,28 +64,38 @@ hal_ret_t pd_crypto_free_key(int32_t key_idx)
 }
 
 
-hal_ret_t pd_crypto_write_key(int32_t key_idx, crypto_key_t *key)
+// hal_ret_t pd_crypto_write_key(int32_t key_idx, crypto_key_t *key)
+EXTC hal_ret_t pd_crypto_write_key(pd_crypto_write_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    int32_t key_idx = args->key_idx;
+    crypto_key_t *key = args->key;
 
     ret = capri_barco_setup_key(key_idx, key->key_type, key->key, key->key_size);
 
     return ret;
 }
 
-hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key)
+// hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key)
+EXTC hal_ret_t pd_crypto_read_key(pd_crypto_read_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    int32_t key_idx = args->key_idx;
+    crypto_key_t *key = args->key;
 
     ret = capri_barco_read_key(key_idx, &key->key_type, key->key, &key->key_size);
 
     return ret;
 }
 
-hal_ret_t pd_crypto_asym_alloc_key(int32_t *key_idx)
+// hal_ret_t pd_crypto_asym_alloc_key(int32_t *key_idx)
+EXTC hal_ret_t
+pd_crypto_asym_alloc_key(pd_crypto_asym_alloc_key_args_t *args)
+
 {
     uint64_t        key_desc;
     hal_ret_t       ret = HAL_RET_OK;
+    int32_t *key_idx = args->key_idx;
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc);
     if (ret != HAL_RET_OK) {
@@ -91,9 +106,11 @@ hal_ret_t pd_crypto_asym_alloc_key(int32_t *key_idx)
     return ret;
 }
 
-hal_ret_t pd_crypto_asym_free_key(int32_t key_idx)
+// hal_ret_t pd_crypto_asym_free_key(int32_t key_idx)
+EXTC hal_ret_t pd_crypto_asym_free_key(pd_crypto_asym_free_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
+    int32_t key_idx = args->key_idx;
 
     /* TODO: Also free up the DMA descriptor and corresponding memory regions 
      * if any referenced by the key descriptor 
@@ -108,11 +125,14 @@ hal_ret_t pd_crypto_asym_free_key(int32_t key_idx)
     return ret;
 }
 
-hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key)
+// hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key)
+EXTC hal_ret_t pd_crypto_asym_write_key(pd_crypto_asym_write_key_args_t *args)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     capri_barco_asym_key_desc_t     key_desc;
     uint64_t                        key_desc_addr = 0;
+    int32_t key_idx = args->key_idx;
+    crypto_asym_key_t *key = args->key;
 
 
     ret = capri_barco_res_get_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc_addr);
@@ -133,11 +153,14 @@ hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key)
     return ret;
 }
 
-hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key)
+// hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key)
+EXTC hal_ret_t pd_crypto_asym_read_key(pd_crypto_asym_read_key_args_t *args)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     capri_barco_asym_key_desc_t     key_desc;
     uint64_t                        key_desc_addr = 0;
+    int32_t key_idx = args->key_idx;
+    crypto_asym_key_t *key = args->key;
 
     ret = capri_barco_res_get_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc_addr);
     if (ret  != HAL_RET_OK) {

@@ -31,6 +31,7 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
 {
     bool         table_access = false;
     bool         reg_access = false;
+    hal::pd::pd_debug_cli_read_args_t args;
     string       data;
 
     hal_ret_t    ret = HAL_RET_OK;
@@ -62,12 +63,20 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
     if (table_access) {
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
             DebugSpec *rsp_spec = response->mutable_spec();
+            args.tableid = key_handle.table_id();
+            args.index = spec.index();
+            args.swkey = (void *)spec.swkey().c_str();
+            args.swkey_mask = (void *)spec.swkey_mask().c_str();
+            args.actiondata = (void *)spec.actiondata().c_str();
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, (void *)&args);
+#if 0
             ret = hal::pd::pd_debug_cli_read(
                                     key_handle.table_id(),
                                     spec.index(),
                                     (void *)spec.swkey().c_str(),
                                     (void *)spec.swkey_mask().c_str(),
                                     (void *)spec.actiondata().c_str());
+#endif
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_DEBUG("{}: Hardware read failure, err : {}",
                                 __FUNCTION__, ret);
@@ -80,12 +89,20 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
             rsp_spec->set_swkey_mask(spec.swkey_mask());
             rsp_spec->set_actiondata(spec.actiondata());
         } else {
+            args.tableid = key_handle.table_id();
+            args.index = spec.index();
+            args.swkey = (void *)spec.swkey().c_str();
+            args.swkey_mask = (void *)spec.swkey_mask().c_str();
+            args.actiondata = (void *)spec.actiondata().c_str();
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_WRITE, (void *)&args);
+#if 0
             ret = hal::pd::pd_debug_cli_write(
                                     key_handle.table_id(),
                                     spec.index(),
                                     (void *)spec.swkey().c_str(),
                                     (void *)spec.swkey_mask().c_str(),
                                     (void *)spec.actiondata().c_str());
+#endif
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_DEBUG("{}: Hardware write failure, err : {}",
                                 __FUNCTION__, ret);
@@ -100,7 +117,8 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
         if (spec.opn_type() == debug::DEBUG_OP_TYPE_READ) {
             if (key_handle.key_or_handle_case() == debug::DebugKeyHandle::kRegName) {
 
-                data = hal::pd::asic_csr_dump((char *)key_handle.reg_name().c_str());
+                // PD-Cleanup: Don't call capri apis
+                // data = hal::pd::asic_csr_dump((char *)key_handle.reg_name().c_str());
                 debug::RegisterData *reg_data = response->add_data();
                 reg_data->set_reg_name(key_handle.reg_name());
                 reg_data->set_value(data);
@@ -119,6 +137,8 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                     return Status::OK;
                 }*/
                 if (strcmp((char *)key_handle.block_name().c_str() , "all") == 0) {
+                    // PD-Cleanup: Don't call capri apis
+#if 0
                     vector<string> block_vector = hal::pd::asic_csr_list_get("cap0", 1);
 
                     for ( auto block : block_vector) {
@@ -138,11 +158,14 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                         }
                         //fflush(reg_fd);
                     }
+#endif
                     //fclose(reg_fd);
                 } else {
                     string block_name = key_handle.block_name();
                     HAL_TRACE_DEBUG("Block name: {}", block_name);
                     vector < tuple < std::string, string, std::string>> reg_data;
+                    // PD-Cleanup: Don't call capri apis
+#if 0
                     reg_data = hal::pd::asic_csr_dump_reg((char *) (block_name.c_str()), 1);
                     for (auto reg : reg_data) {
                         string reg_name;
@@ -155,6 +178,7 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                         reg_data->set_address(offset);
                         //std::fprintf(reg_fd, "%s, offset: %d , value: %s \n",reg_name.c_str(), offset, value.c_str());
                     }
+#endif
                     //fflush(reg_fd);
                     //fclose(reg_fd);
                 }

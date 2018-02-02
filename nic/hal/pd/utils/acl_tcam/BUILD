@@ -38,7 +38,7 @@ cc_library(
 cc_test(
     name = "acl_tcam_test",
     srcs = ["test/acl_tcam_test.cc"],
-    deps = [] + gl_deps_list,
+    deps = [":acl_tcam"] + gl_deps_list,
     linkopts = [
         "-lzmq",
      ],

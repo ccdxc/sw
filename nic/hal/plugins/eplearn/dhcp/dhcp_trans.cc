@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include "dhcp_packet.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
+#include "nic/include/interface_api.hpp"
 
 namespace hal {
 namespace eplearn {
@@ -153,11 +154,18 @@ update_flow_fwding(fte::ctx_t *fte_ctx)
     ep_t *dep = nullptr;
     if_t *dif;
     hal_ret_t ret;
+    hal::pd::pd_find_l2seg_by_hwid_args_t args;
 
     dep = fte_ctx->dep();
 
     if (dep == nullptr) {
+#if 0
         dl2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
+#endif
+        args.hwid = cpu_rxhdr_->lkp_vrf;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FIND_L2SEG_BY_HWID, (void *)&args);
+        dl2seg = args.l2seg;
+
         HAL_ASSERT(dl2seg != nullptr);
         ethhdr = (ether_header_t *)(fte_ctx->pkt() + cpu_rxhdr_->l2_offset);
         dep = hal::find_ep_by_l2_key(dl2seg->seg_id, ethhdr->dmac);
@@ -181,7 +189,11 @@ update_flow_fwding(fte::ctx_t *fte_ctx)
         flowupd.fwding.qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
         flowupd.fwding.qid_en = 1;
         flowupd.fwding.qid = 0;
-        flowupd.fwding.lport = hal::pd::if_get_lport_id(flowupd.fwding.dif);
+        pd::pd_if_get_lport_id_args_t args;
+        args.pi_if = flowupd.fwding.dif;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET_LPORT_ID, (void *)&args);
+        flowupd.fwding.lport = args.lport_id;
+        // flowupd.fwding.lport = hal::pd::if_get_lport_id(flowupd.fwding.dif);
         flowupd.fwding.dl2seg = dl2seg;
         ret = fte_ctx->update_flow(flowupd);
         if (ret != HAL_RET_OK) {

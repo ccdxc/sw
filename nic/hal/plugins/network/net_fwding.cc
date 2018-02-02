@@ -67,7 +67,11 @@ update_fwding_info(fte::ctx_t&ctx)
     }
 
     // update fwding info
-    flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
+    pd::pd_if_get_lport_id_args_t args;
+    args.pi_if = dif;
+    pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET_LPORT_ID, (void *)&args);
+    flowupd.fwding.lport = args.lport_id;
+    // flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
     return ctx.update_flow(flowupd);
 }
 

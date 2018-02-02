@@ -15,6 +15,7 @@ cc_library(
         "//nic:gen_proto_includes",
         #"//nic/hal/pd/iris:iris_includes", # this exists only because session.hpp include p4pd header files !!
         "//nic/hal/pd:hal_pd_includes",
+        "//nic/utils/bm_allocator",
     ],
     alwayslink = 1,
 )

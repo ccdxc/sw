@@ -18,7 +18,7 @@
 #include "nic/hal/src/p4pt.hpp"
 #include "nic/hal/src/session.hpp"
 #ifndef GFT
-#include "nic/hal/pd/iris/if_pd_utils.hpp"
+// #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #endif
 #include "nic/hal/tls/tls_api.hpp"
 
@@ -198,7 +198,7 @@ proxy_program_lif(proxy_t* proxy)
     proxy_meta_t                      *meta = &g_meta[proxy->type];
     proxy_meta_lif_t                  *meta_lif_info = NULL;
     proxy_meta_qtype_t                *meta_qtype_info = NULL;
-    pd::pd_lif_get_lport_id_args_t    lif_args = { 0 };
+    pd::pd_lif_get_lport_id_args_t    args = { 0 };
 
     // program LIF(s)
     for(uint i = 0; i < meta->num_lif; i++) {
@@ -242,9 +242,14 @@ proxy_program_lif(proxy_t* proxy)
         lif_t* lif = find_lif_by_id(meta_lif_info->lif_id);
         HAL_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
 
+#if 0
         lif_args.pi_lif = lif;
         pd::lif_get_lport_id(&lif_args);
         meta_lif_info->lport_id = lif_args.lport_id;
+#endif
+        args.pi_lif = lif;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET_LPORTID, (void *)&args);
+        meta_lif_info->lport_id = args.lport_id;
         HAL_TRACE_DEBUG("Received lport-id: {} for lif: {}",
                         meta_lif_info->lport_id, meta_lif_info->lif_id);
     } // end lif loop
@@ -345,7 +350,9 @@ proxy_post_lif_program_init(proxy_t* proxy)
         // TODO: how is this code supposed to run with another P4 program?
         //       the only interface between PI and PD is via p4pd_api.hpp 
         //       can't directly go to iris !!!
-        ret = pd::p4pt_pd_init();
+        pd::p4pt_pd_init_args_t args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_P4PT_INIT, (void *)&args);
+        // ret = pd::p4pt_pd_init();
 #endif
         break;
     default:

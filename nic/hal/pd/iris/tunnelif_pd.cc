@@ -17,7 +17,7 @@ namespace pd {
 // Tunnel If Create
 // ----------------------------------------------------------------------------
 hal_ret_t 
-pd_tunnelif_create(pd_if_args_t *args)
+pd_tunnelif_create(pd_if_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_tunnelif_t        *pd_tunnelif;
@@ -59,7 +59,7 @@ end:
 // PD TunnelIf Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_tunnelif_update (pd_if_args_t *args)
+pd_tunnelif_update (pd_if_update_args_t *args)
 {
     // Nothing to do for now
     return HAL_RET_OK;
@@ -69,7 +69,7 @@ pd_tunnelif_update (pd_if_args_t *args)
 // PD Tunnelif Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_tunnelif_delete (pd_if_args_t *args)
+pd_tunnelif_delete (pd_if_delete_args_t *args)
 {
     hal_ret_t        ret = HAL_RET_OK;
     pd_tunnelif_t    *tunnelif_pd;
@@ -671,10 +671,12 @@ fail_flag:
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tunnelif_make_clone(if_t *hal_if, if_t *clone)
+pd_tunnelif_make_clone(pd_if_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_tunnelif_t       *pd_tunnelif_clone = NULL;
+    if_t *hal_if = args->hal_if;
+    if_t *clone = args->clone;
 
     pd_tunnelif_clone = pd_tunnelif_alloc_init();
     if (pd_tunnelif_clone == NULL) {
@@ -694,7 +696,7 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tunnelif_mem_free(pd_if_args_t *args)
+pd_tunnelif_mem_free(pd_if_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_tunnelif_t  *pd_tunnif;
