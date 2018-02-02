@@ -15,6 +15,9 @@
 #include <byteswap.h>
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
+#include "gflags/gflags.h"
+
+DECLARE_uint64(long_poll_interval);
 
 namespace tests {
 
@@ -210,10 +213,7 @@ static int run_dc_test(comp_test_t *params) {
   }
   cp_hdr.data_len = kCompressedDataSize;
   cp_hdr.version = kCPVersion;
-  // HACK, temporary fix until model/RTL is fixed.
-  //printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
   uint64_t *h = (uint64_t *)&cp_hdr;
-  //*h = bswap_64(*h);
   *((uint64_t *)datain_buf) = *h;
   write_mem(hbm_datain_buf_pa, (uint8_t *)h, sizeof(cp_hdr_t));
 
@@ -535,6 +535,71 @@ int decompress_doorbell_odata() {
   spec.dataout_len  = 4096;
 
   return run_dc_test(&spec);
+}
+
+// Run decompression continuously.
+int decompress_flat_host_buf_performance() {
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  uint32_t tag_terminal_value = 63; // total 64 commands
+
+  cp_hdr_t cp_hdr = {0};
+  cp_hdr.cksum = kCRC32Sum;
+  cp_hdr.data_len = kCompressedDataSize;
+  cp_hdr.version = kCPVersion;
+  uint64_t *h = (uint64_t *)&cp_hdr;
+  *((uint64_t *)datain_buf) = *h;
+
+  printf("Starting testcase decompress_flat_host_buf_performance\n");
+  d.cmd_bits.header_present = 1;
+  d.cmd_bits.cksum_en = 1;  // CRC32
+  d.cmd_bits.opaque_tag_on = 1;
+  d.src = datain_buf_pa;
+  d.dst = dataout_buf_pa;
+  d.input_len = kCompressedDataSize + 8;
+  d.expected_len = 4096;
+  d.status_addr = status_buf_pa;
+  d.opaque_tag_addr = d.status_addr + 2048;
+
+  cp_desc_t *dst_d = (cp_desc_t *)queue_mem;
+  for (unsigned i = 0; i <= tag_terminal_value; i++) {
+    d.opaque_tag_data = i;
+    bcopy(&d, &dst_d[queue_index], sizeof(d));
+    queue_index++;
+    if (queue_index == 4096)
+      queue_index = 0;
+    write_reg(cfg_q_pd_idx, queue_index);
+  }
+
+  // Wait for opaque tag to reach terminal value.
+  unsigned *tag_addr = (unsigned *)(((uint8_t *)status_buf) + 2048);
+  auto func = [tag_addr, tag_terminal_value] () -> int {
+    if (*tag_addr == tag_terminal_value)
+      return 0;
+    return 1;
+  };
+  tests::Poller poll(FLAGS_long_poll_interval);
+  if (poll(func) != 0) {
+    printf("testcase decompress_flat_host_buf_performance failed : poll timeout\n");
+    return -1;
+  }
+  // Do status validation.
+  cp_status_sha512_t *st = (cp_status_sha512_t *)status_buf;
+  if (!st->valid) {
+    printf("ERROR: status valid bit not set\n");
+    return -1;
+  }
+  if (st->err) {
+    printf("ERROR: decompression generated err = 0x%x\n", st->err);
+    return -1;
+  }
+  if (st->output_data_len != kUncompressedDataSize) {
+    printf("ERROR: output data len mismatch, expected %u, received %u\n",
+           kUncompressedDataSize, st->output_data_len);
+    return -1;
+  }
+  printf("testcase decompress_flat_host_buf_performance passed\n");
+  return 0;
 }
 
 }  // namespace tests

@@ -15,6 +15,9 @@
 #include <byteswap.h>
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
+#include "gflags/gflags.h"
+
+DECLARE_uint64(long_poll_interval);
 
 namespace tests {
 
@@ -296,10 +299,6 @@ static int run_cp_test(comp_test_t *params) {
     }
     uint8_t *data_start = (uint8_t *)dataout_buf;
     if (params->cmd_bits.insert_header) {
-      // HACK, temporary fix until model/RTL is fixed.
-      //printf("HACK!! Swapping the header while waiting for model/RTL to get fixed\n");
-      //uint64_t *h = (uint64_t *)dataout_buf;
-      //*h = bswap_64(*h);
       cp_hdr_t *hdr = (cp_hdr_t *)dataout_buf;
       uint32_t expected_cksum =
           params->cmd_bits.cksum_adler ? kADLER32Sum : kCRC32Sum;
@@ -703,6 +702,60 @@ int compress_output_through_sequencer() {
   
   printf("testcase compress_output_through_sequencer passed\n");
 
+  return 0;
+}
+
+// Run compression on a 4K flat buf continuously
+int compress_flat_host_buf_performance() {
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  uint32_t tag_terminal_value = 63; // total 64 commands
+
+  printf("Starting testcase compress_flat_host_buf_performance\n");
+  d.cmd_bits.compression_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.opaque_tag_on = 1;
+  d.cmd_bits.sha_en = 1;
+  d.src = datain_buf_pa;
+  d.dst = dataout_buf_pa;
+  d.input_len = 4096;
+  d.expected_len = 4096 - 8;
+  d.status_addr = status_buf_pa;
+  d.opaque_tag_addr = d.status_addr + 2048;
+
+  cp_desc_t *dst_d = (cp_desc_t *)queue_mem;
+  for (unsigned i = 0; i <= tag_terminal_value; i++) {
+    d.opaque_tag_data = i;
+    bcopy(&d, &dst_d[queue_index], sizeof(d));
+    queue_index++;
+    if (queue_index == 4096)
+      queue_index = 0;
+    write_reg(cfg_q_pd_idx, queue_index);
+  }
+
+  // Wait for opaque tag to reach terminal value.
+  unsigned *tag_addr = (unsigned *)(((uint8_t *)status_buf) + 2048);
+  auto func = [tag_addr, tag_terminal_value] () -> int {
+    if (*tag_addr == tag_terminal_value)
+      return 0;
+    return 1;
+  };
+  tests::Poller poll(FLAGS_long_poll_interval);
+  if (poll(func) != 0) {
+    printf("testcase compress_flat_host_buf_performance failed : poll timeout\n");
+    return -1;
+  }
+  // Verify status
+  cp_status_sha512_t *st = (cp_status_sha512_t *)status_buf;
+  if (!st->valid) {
+    printf("ERROR: Compression valid bit not set\n");
+    return -1;
+  }
+  if (st->err) {
+    printf("ERROR: Compression generated err = 0x%x\n", st->err);
+    return -1;
+  }
+  printf("testcase compress_flat_host_buf_performance passed\n");
   return 0;
 }
 

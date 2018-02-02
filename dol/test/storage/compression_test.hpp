@@ -64,6 +64,7 @@ int compress_crc_sha512();
 int compress_doorbell_odata();
 int compress_max_features();
 int compress_output_through_sequencer();
+int compress_flat_host_buf_performance();
 
 int decompress_host_flat();
 int decompress_hbm_flat();
@@ -78,6 +79,7 @@ int decompress_return_through_hbm();
 int decompress_adler();
 int decompress_crc();
 int decompress_doorbell_odata();
+int decompress_flat_host_buf_performance();
 
 }  // namespace tests
 
