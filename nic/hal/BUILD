@@ -42,6 +42,7 @@ cc_binary(
             # PD
             "//nic/hal/pd:pdcommon",
             "@sdk//obj:sdk_tcam",
+            "@sdk//obj:sdk_catalog",
             "@sdk//obj:sdk_hash",
             "@sdk//obj:sdk_directmap",
             "//nic/hal/pd/utils/flow",
@@ -50,7 +51,6 @@ cc_binary(
             "//nic/hal/pd/iris",
             "//nic:capricsr_int",
             "//nic/hal/pd/capri",
-            "//nic/hal/pd/control",
             "//nic:iris_p4pd",
             "//nic/hal/pd/p4pd:p4pd",
             "//nic:p4pluspd_txdma",
@@ -81,6 +81,7 @@ cc_binary(
             # PD
             "//nic/hal/pd:pdcommon",
             "@sdk//obj:sdk_tcam",
+            "@sdk//obj:sdk_catalog",
             "@sdk//obj:sdk_hash",
             "@sdk//obj:sdk_directmap",
             "//nic/hal/pd/utils/flow",
@@ -90,7 +91,6 @@ cc_binary(
             "//nic/hal/pd/pd_stub",
             "//nic:capricsr_int",
             "//nic/hal/pd/capri",
-            "//nic/hal/pd/control",
             "//nic:gft_p4pd",
             "//nic/hal/pd/p4pd:p4pd",
             "//nic:p4pluspd_txdma",

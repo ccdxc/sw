@@ -30,6 +30,7 @@ gl_deps_list = [
         "//nic:capricsr_int",
         "//nic/hal/pd/capri",
         "@sdk//obj:sdk_pal",
+        "@sdk//obj:sdk_catalog",
         "//nic/model_sim:model_client",
         "//nic:iris_p4pd",
         "//nic:p4pluspd_txdma",

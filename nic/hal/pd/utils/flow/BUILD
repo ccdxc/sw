@@ -57,6 +57,6 @@ cc_test(
         "-lpthread",
         "-pthread",
     ],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     copts = sdk_copts,
 )

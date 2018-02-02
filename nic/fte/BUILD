@@ -39,6 +39,6 @@ cc_test(
     name = "fte_test",
     srcs = glob(["test/*.cc"]),
     linkopts = gl_linkopts_list,
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     copts = sdk_copts,
 )

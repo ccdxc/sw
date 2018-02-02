@@ -8,14 +8,14 @@ load("//nic/bazel:common_deps.bzl", "sdk_copts")
 cc_test(
     name = "network_test",
     srcs = ["network_test.cc"],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
 cc_test(
     name = "acl_test",
     srcs = ["acl_test.cc"],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
@@ -35,14 +35,14 @@ cc_test(
 cc_test(
     name = "tunnelif_test",
     srcs = ["tunnelif_test.cc"],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
 cc_test(
     name = "vrf_test",
     srcs = ["vrf_test.cc"],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
@@ -50,7 +50,7 @@ cc_test(
 cc_test(
     name = "l2seg_test",
     srcs = ["l2seg_test.cc"],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
@@ -58,7 +58,7 @@ cc_test(
 cc_test(
     name = "endpoint_test",
     srcs = ["endpoint_test.cc"],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
@@ -66,7 +66,7 @@ cc_test(
 cc_test(
     name = "internal_test",
     srcs = ["internal_test.cc"],
-    deps = gl_deps_list,
+    deps = [] + gl_deps_list,
     linkopts = [] + gl_linkopts_list,
     copts = sdk_copts,
 )
@@ -184,7 +184,6 @@ cc_test(
         "//nic:p4pluspd_txdma",
         "//nic:p4pluspd_rxdma",
         "//nic:asic_libs",
-        "//nic/hal/pd/control:control",
         "@sdk//obj:sdk_logger",
         "@sdk//obj:sdk_pal",
         "@sdk//obj:sdk_catalog",
@@ -201,7 +200,7 @@ cc_test(
     srcs = ["appid_test.cc"],
     deps = [
         "//nic/hal/plugins/app_redir:app_redir",
-        "//nic:snort3"
+        "//nic:snort3",
     ] + gl_deps_list,
     linkopts = ["-lsnort"] + 
         gl_linkopts_list,

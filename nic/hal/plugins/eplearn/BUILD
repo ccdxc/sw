@@ -14,6 +14,7 @@ common_deps = [
     "//nic/p4/nw/include:p4_nw_includes",
     "//nic/hal/pd:pdcommon",
     "@sdk//obj:sdk_ht",
+    "@sdk//obj:sdk_catalog",
     "@sdk//obj:sdk_indexer",
     "@sdk//obj:sdk_slab",
     "@sdk//obj:sdk_twheel",
