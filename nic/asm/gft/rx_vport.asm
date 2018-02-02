@@ -13,6 +13,7 @@ rx_vport:
                        capri_p4_intrinsic_frame_size_sbit6_ebit13}, \
                     CAPRI_GLOBAL_INTRINSIC_HDR_SZ
     phvwr       p.capri_p4_intrinsic_packet_len, r1
+    phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     phvwr       p.roce_metadata_rdma_enabled, d.rx_vport_d.rdma_enabled
     cmov.e      r1, c1, d.rx_vport_d.vport, EXCEPTION_VPORT
     phvwrpair   p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0, \

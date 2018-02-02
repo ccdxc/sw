@@ -9,6 +9,7 @@ struct phv_ p;
 %%
 
 tx_vport:
+    phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     phvwr.e     p.capri_intrinsic_tm_oport, d.tx_vport_d.port
     nop
 
