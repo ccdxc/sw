@@ -76,8 +76,8 @@ hal_pd_load_symbols(void) {
 
     // l2seg pd calls
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_CREATE, pd_l2seg_create);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_DELETE, pd_l2seg_update);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_delete);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_DELETE, pd_l2seg_delete);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
     PD_SYMBOL_LOAD(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
     PD_SYMBOL_LOAD(PD_FUNC_ID_FIND_L2SEG_BY_HWID, pd_find_l2seg_by_hwid);

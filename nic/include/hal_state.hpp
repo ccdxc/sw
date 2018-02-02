@@ -705,6 +705,8 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 {
     void    *timer_ctxt;
 
+    HAL_ASSERT(elem != NULL);
+
     if (g_delay_delete && hal::periodic::periodic_thread_is_running()) {
         timer_ctxt =
             hal::periodic::timer_schedule(slab_id,

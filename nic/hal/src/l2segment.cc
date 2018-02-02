@@ -1277,7 +1277,7 @@ hal_ret_t
 l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    l2seg_t                     *l2seg = NULL;
+    l2seg_t                     *l2seg = NULL, *l2seg_clone = NULL;
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     const L2SegmentKeyHandle    &kh = spec.key_or_handle();
@@ -1338,7 +1338,9 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
     // TODO: Check if we have to do something as fwd policy changed
 
-    l2seg_make_clone(l2seg, (l2seg_t **)&dhl_entry.cloned_obj);
+    l2seg_make_clone(l2seg, &l2seg_clone);
+    // l2seg_make_clone(l2seg, (l2seg_t **)&dhl_entry.cloned_obj);
+    dhl_entry.cloned_obj = l2seg_clone;
 
     // form ctxt and call infra update object
     dhl_entry.handle = l2seg->hal_handle;
@@ -1354,7 +1356,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_update_cleanup_cb);
 
 end:
-    l2seg_prepare_rsp(rsp, ret, l2seg);
+    l2seg_prepare_rsp(rsp, ret, (ret == HAL_RET_OK) ? l2seg_clone : l2seg);
     hal_api_trace(" API End: l2segment update ");
     return ret;
 }
