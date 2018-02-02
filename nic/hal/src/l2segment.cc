@@ -196,7 +196,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
 }
 
 //------------------------------------------------------------------------------
-// PD Call to allocate PD resources and HW programming
+// pd call to allocate pd resources and h/w programming
 //------------------------------------------------------------------------------
 hal_ret_t
 l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -243,11 +243,12 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // ret = pd::pd_l2seg_create(&pd_l2seg_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to create l2seg pd, err : {}", 
-                __FUNCTION__, ret);
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to create l2seg pd, err : {}",
+                      __FUNCTION__, ret);
     }
 
 end:
+
     return ret;
 }
 
@@ -257,9 +258,9 @@ end:
 hal_ret_t
 l2seg_update_network_relation (block_list *nw_list, l2seg_t *l2seg, bool add)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    network_t                   *nw = NULL;
-    hal_handle_t                *p_hdl_id = NULL;
+    hal_ret_t       ret = HAL_RET_OK;
+    network_t       *nw = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
 
     for (const void *ptr : *nw_list) {
         p_hdl_id = (hal_handle_t *)ptr;
@@ -278,6 +279,7 @@ l2seg_update_network_relation (block_list *nw_list, l2seg_t *l2seg, bool add)
     }
 
 end:
+
     return ret;
 }
 
@@ -304,11 +306,10 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // assumption is there is only one element in the list
-    lnode     = cfg_ctxt->dhl.next;
+    lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt  = (l2seg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
-
-    l2seg      = (l2seg_t *)dhl_entry->obj;
+    app_ctxt = (l2seg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:create commit CB {}",
@@ -372,6 +373,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
+
     return ret;
 }
 
@@ -731,6 +733,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_create_cleanup_cb);
 
 end:
+
     if (ret != HAL_RET_OK) {
         if (l2seg) {
             // if there is an error, it will be cleaned up in abort CB
@@ -741,7 +744,6 @@ end:
     l2seg_prepare_rsp(rsp, ret, l2seg);
     hal_api_trace(" API End: l2segment create ");
     return ret;
-
 }
 
 //------------------------------------------------------------------------------
@@ -937,7 +939,7 @@ end:
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     pd::pd_l2seg_mem_free_args_t    pd_l2seg_args = { 0 };
@@ -1068,28 +1070,23 @@ l2seg_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 hal_ret_t
 l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
-                         bool *nwlist_change,
-                         block_list *add_nwlist, 
-                         block_list *del_nwlist,
-                         block_list *aggr_nwlist)
+                      bool *nwlist_change, block_list *add_nwlist, 
+                      block_list *del_nwlist, block_list *aggr_nwlist)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
-    uint16_t                        num_nws = 0, i = 0;
-    // dllist_ctxt_t                   *lnode = NULL;
-    bool                            nw_exists = false;
-    NetworkKeyHandle                nw_key_handle;
-    network_t                       *nw = NULL;
-    // hal_handle_id_list_entry_t      *entry = NULL, *lentry = NULL;
-    hal_handle_t                    *p_hdl_id = NULL;
+    hal_ret_t           ret = HAL_RET_OK;
+    uint16_t            num_nws = 0, i = 0;
+    bool                nw_exists = false;
+    NetworkKeyHandle    nw_key_handle;
+    network_t           *nw = NULL;
+    hal_handle_t        *p_hdl_id = NULL;
 
     *nwlist_change = false;
-
     num_nws = spec.network_key_handle_size();
-    HAL_TRACE_DEBUG("pi-l2seg:{}:num. of nws:{}", 
-                    __FUNCTION__, num_nws);
+    HAL_TRACE_DEBUG("pi-l2seg:{}:num. of nws:{}", __FUNCTION__, num_nws);
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);
-        nw = network_lookup_key_or_handle(nw_key_handle, spec.vrf_key_handle().vrf_id());
+        nw = network_lookup_key_or_handle(nw_key_handle,
+                                          spec.vrf_key_handle().vrf_id());
         if (nw == NULL ) {
             ret = HAL_RET_INVALID_ARG;
             goto end;
@@ -1166,6 +1163,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     }
 #endif
 end:
+
     return ret;
 }
 
@@ -1197,13 +1195,13 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
         goto end;
     }
 
-    if (app_ctxt->mcast_fwd_policy_change || 
-            app_ctxt->bcast_fwd_policy_change ||
-            app_ctxt->nwlist_change) {
+    if (app_ctxt->mcast_fwd_policy_change ||
+        app_ctxt->bcast_fwd_policy_change || app_ctxt->nwlist_change) {
         app_ctxt->l2seg_change = true;
     }
 
 end:
+
     return ret;
 }
 

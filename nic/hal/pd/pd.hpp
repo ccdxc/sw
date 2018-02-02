@@ -7,7 +7,7 @@ namespace pd {
 typedef struct pd_vrf_s pd_vrf_t;
 typedef struct pd_nwsec_profile_s pd_nwsec_profile_t;
 typedef struct pd_dos_policy_s pd_dos_policy_t;
-typedef struct pd_l2seg_s pd_l2seg_t;
+//typedef struct pd_l2seg_s pd_l2seg_t;
 typedef struct pd_lif_s pd_lif_t;
 typedef struct pd_uplinkif_s pd_uplinkif_t;
 typedef struct pd_uplinkpc_s pd_uplinkpc_t;
@@ -37,6 +37,9 @@ typedef struct pd_proxyrcb_s pd_proxyrcb_t;
 typedef struct pd_proxyccb_s pd_proxyccb_t;
 typedef struct pd_mc_entry_s pd_mc_entry_t;
 typedef struct pd_copp_s pd_copp_t;
+typedef struct pd_gft_exact_match_profile_s pd_gft_exact_match_profile_t;
+typedef struct pd_gft_hdr_xposition_profile_s pd_gft_hdr_xposition_profile_t;
+typedef struct pd_gft_exact_match_flow_entry_s pd_gft_exact_match_flow_entry_t;
 
 }    // namespace pd
 }    // namespace hal

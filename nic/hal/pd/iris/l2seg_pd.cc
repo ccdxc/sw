@@ -123,6 +123,30 @@ end:
     return ret;
 }
 
+//----------------------------------------------------------------------------
+// Linking PI <-> PD
+//----------------------------------------------------------------------------
+static void
+l2seg_link_pi_pd (pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
+{
+    pd_l2seg->l2seg = pi_l2seg;
+    pi_l2seg->pd = pd_l2seg;
+}
+
+//----------------------------------------------------------------------------
+// Un-Linking PI <-> PD
+//----------------------------------------------------------------------------
+static void 
+l2seg_delink_pi_pd (pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
+{
+    if (pd_l2seg) {
+        pd_l2seg->l2seg = NULL;
+    }
+    if (pi_l2seg) {
+        pi_l2seg->pd = NULL;
+    }
+}
+
 //------------------------------------------------------------------------------
 // insert a l2segment to HAL config db
 //------------------------------------------------------------------------------
@@ -186,8 +210,8 @@ l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
 extern "C" hal_ret_t
 pd_l2seg_create (pd_l2seg_create_args_t *args)
 {
-    hal_ret_t               ret;
-    pd_l2seg_s              *l2seg_pd = NULL;
+    hal_ret_t     ret;
+    pd_l2seg_t    *l2seg_pd = NULL;
 
     HAL_TRACE_DEBUG("pd-l2seg:{}:creating pd state for l2seg", 
                     __FUNCTION__, args->l2seg->seg_id);
@@ -350,7 +374,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t                   ret           = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
-    sdk_hash                        *inp_prop_tbl = NULL;
+    sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
     input_properties_actiondata data          = { 0 };
 
@@ -393,6 +417,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     }
 
 end:
+
     return ret;
 }
 
@@ -400,9 +425,9 @@ end:
 // Allocating resources
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_alloc_res(pd_l2seg_t *pd_l2seg)
+l2seg_pd_alloc_res (pd_l2seg_t *pd_l2seg)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    hal_ret_t    ret = HAL_RET_OK;
 
     ret = l2seg_pd_alloc_cpuid(pd_l2seg);
     if (ret != HAL_RET_OK) {
@@ -417,6 +442,7 @@ l2seg_pd_alloc_res(pd_l2seg_t *pd_l2seg)
     }
 
 end:
+
     if (ret != HAL_RET_OK) {
         l2seg_pd_dealloc_res(pd_l2seg);
     }
@@ -427,7 +453,7 @@ end:
 // De-allocating resources
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_dealloc_res(pd_l2seg_t *pd_l2seg)
+l2seg_pd_dealloc_res (pd_l2seg_t *pd_l2seg)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -444,6 +470,7 @@ l2seg_pd_dealloc_res(pd_l2seg_t *pd_l2seg)
     }
 
 end:
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-l2seg:{}:failed to dealloc res", __FUNCTION__);
     }
@@ -451,9 +478,10 @@ end:
 }
 
 uint32_t
-l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd)
+l2seg_pd_l2seguplink_count (pd_l2seg_t *l2seg_pd)
 {
-    uint32_t        count  = 0;
+    uint32_t    count  = 0;
+
     for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
         if (l2seg_pd->inp_prop_tbl_idx[i] != INVALID_INDEXER_INDEX ||
                 l2seg_pd->inp_prop_tbl_idx_pri[i] != INVALID_INDEXER_INDEX) {
@@ -468,7 +496,6 @@ l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd)
     return count;
 }
 
-
 //-----------------------------------------------------------------------------
 // PD L2seg Cleanup
 //  - Release all resources
@@ -480,7 +507,7 @@ l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd)
 //        to others.
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_cleanup(pd_l2seg_t *l2seg_pd)
+l2seg_pd_cleanup (pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t       ret = HAL_RET_OK;
     uint32_t        l2seguplink_count = 0;
@@ -514,7 +541,9 @@ l2seg_pd_cleanup(pd_l2seg_t *l2seg_pd)
 
     // Freeing PD
     l2seg_pd_free(l2seg_pd);
+
 end:
+
     return ret;
 }
 
@@ -522,10 +551,10 @@ end:
 // Allocating hwid for l2segment
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_alloc_hwid(pd_l2seg_t *pd_l2seg)
+l2seg_pd_alloc_hwid (pd_l2seg_t *pd_l2seg)
 {
-    pd_vrf_t             *ten_pd = NULL;
-    hal_ret_t               ret = HAL_RET_OK;
+    pd_vrf_t     *ten_pd = NULL;
+    hal_ret_t    ret = HAL_RET_OK;
 
     ten_pd = pd_l2seg_get_pd_vrf(pd_l2seg);
     HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
@@ -537,11 +566,12 @@ l2seg_pd_alloc_hwid(pd_l2seg_t *pd_l2seg)
     pd_l2seg->l2seg_fl_lkup_id = ten_pd->vrf_hw_id << HAL_PD_VRF_SHIFT | 
                                 pd_l2seg->l2seg_hw_id; 
     HAL_TRACE_DEBUG("pd-l2seg:{}:l2seg_hwid: {},ten_hwid: {}, "
-            "l2seg_fl_lkup_id: {} ", 
-            __FUNCTION__, pd_l2seg->l2seg_hw_id, ten_pd->vrf_hw_id, 
-            pd_l2seg->l2seg_fl_lkup_id);
+                    "l2seg_fl_lkup_id: {} ", 
+                    __FUNCTION__, pd_l2seg->l2seg_hw_id, ten_pd->vrf_hw_id, 
+                    pd_l2seg->l2seg_fl_lkup_id);
 
 end:
+
     return ret;
 }
 
@@ -551,8 +581,8 @@ end:
 hal_ret_t
 l2seg_pd_dealloc_hwid(pd_l2seg_t *l2seg_pd)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    pd_vrf_t         *ten_pd = NULL;
+    hal_ret_t    ret = HAL_RET_OK;
+    pd_vrf_t     *ten_pd = NULL;
 
     if (l2seg_pd->l2seg_hw_id != INVALID_INDEXER_INDEX) {
         ten_pd = pd_l2seg_get_pd_vrf(l2seg_pd);
@@ -568,6 +598,7 @@ l2seg_pd_dealloc_hwid(pd_l2seg_t *l2seg_pd)
     }
 
 end:
+
     return ret;
 }
 
@@ -575,32 +606,30 @@ end:
 // Allocating cpuid used as vlan id for traffic coming from cpu
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_alloc_cpuid(pd_l2seg_t *pd_l2seg)
+l2seg_pd_alloc_cpuid (pd_l2seg_t *pd_l2seg)
 {
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
 
     // Allocate from cpu id
     rs = g_hal_state_pd->l2seg_cpu_idxr()->
-        alloc((uint32_t *)&pd_l2seg->l2seg_fromcpu_id);
+             alloc((uint32_t *)&pd_l2seg->l2seg_fromcpu_id);
     if (rs != indexer::SUCCESS) {
         pd_l2seg->l2seg_fromcpu_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
     HAL_TRACE_DEBUG("pd-l2seg:{}: seg_id:{} allocated from_cpu_id: {}", 
-                    __FUNCTION__, 
-                    ((l2seg_t*)(pd_l2seg->l2seg))->seg_id,
+                    __FUNCTION__, ((l2seg_t*)(pd_l2seg->l2seg))->seg_id,
                     pd_l2seg->l2seg_fromcpu_id);
 
     return ret;
 }
 
-
 //-----------------------------------------------------------------------------
 // De-Allocate cpuid
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_dealloc_cpuid(pd_l2seg_t *l2seg_pd)
+l2seg_pd_dealloc_cpuid (pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     rs;
@@ -619,13 +648,12 @@ l2seg_pd_dealloc_cpuid(pd_l2seg_t *l2seg_pd)
     }
 
 end:
+
     return ret;
 }
 
-
-
 uint32_t
-pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg)
+pd_l2seg_get_l4_prof_idx (pd_l2seg_t *pd_l2seg)
 {
     l2seg_t         *pi_l2seg = NULL;
     vrf_t        *pi_vrf = NULL;
@@ -640,7 +668,7 @@ pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg)
 }
 
 pd_vrf_t *
-pd_l2seg_get_pd_vrf(pd_l2seg_t *pd_l2seg)
+pd_l2seg_get_pd_vrf (pd_l2seg_t *pd_l2seg)
 {
     l2seg_t         *pi_l2seg = NULL;
     vrf_t        *pi_vrf = NULL;
@@ -655,35 +683,10 @@ pd_l2seg_get_pd_vrf(pd_l2seg_t *pd_l2seg)
 }
 
 // ----------------------------------------------------------------------------
-// Linking PI <-> PD
-// ----------------------------------------------------------------------------
-void
-l2seg_link_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
-{
-    pd_l2seg->l2seg = pi_l2seg;
-    pi_l2seg->pd = pd_l2seg;
-}
-
-// ----------------------------------------------------------------------------
-// Un-Linking PI <-> PD
-// ----------------------------------------------------------------------------
-void 
-l2seg_delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
-{
-    if (pd_l2seg) {
-        pd_l2seg->l2seg = NULL;
-    }
-    if (pi_l2seg) {
-        pi_l2seg->pd = NULL;
-    }
-}
-
-// ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
 extern "C" hal_ret_t
-// pd_l2seg_make_clone(l2seg_t *l2seg, l2seg_t *clone)
-pd_l2seg_make_clone(pd_l2seg_make_clone_args_t *args)
+pd_l2seg_make_clone (pd_l2seg_make_clone_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_l2seg_t         *pd_l2seg_clone = NULL;
@@ -703,6 +706,7 @@ pd_l2seg_make_clone(pd_l2seg_make_clone_args_t *args)
     l2seg_link_pi_pd(pd_l2seg_clone, clone);
 
 end:
+
     return ret;
 }
 
@@ -711,7 +715,7 @@ end:
 //-----------------------------------------------------------------------------
 #if 0
 l2seg_hw_id_t
-pd_l2seg_get_flow_lkupid(l2seg_t *l2seg)
+pd_l2seg_get_flow_lkupid (l2seg_t *l2seg)
 {
     return ((pd_l2seg_t *)l2seg->pd)->l2seg_fl_lkup_id;
 }
@@ -730,8 +734,7 @@ pd_l2seg_get_flow_lkupid(pd_l2seg_get_flow_lkupid_args_t *args)
 // reinjected packets) returns false if vlan is not valid
 //-----------------------------------------------------------------------------
 extern "C" hal_ret_t
-// pd_l2seg_get_fromcpu_vlanid(l2seg_t *l2seg, uint16_t *vid)
-pd_l2seg_get_fromcpu_vlanid(pd_l2seg_get_fromcpu_vlanid_args_t *args)
+pd_l2seg_get_fromcpu_vlanid (pd_l2seg_get_fromcpu_vlanid_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
     l2seg_t *l2seg = args->l2seg;
@@ -747,14 +750,15 @@ pd_l2seg_get_fromcpu_vlanid(pd_l2seg_get_fromcpu_vlanid_args_t *args)
     }
 
 end:
+
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 extern "C" hal_ret_t
-pd_l2seg_mem_free(pd_l2seg_mem_free_args_t *args)
+pd_l2seg_mem_free (pd_l2seg_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_l2seg_t     *l2seg_pd;

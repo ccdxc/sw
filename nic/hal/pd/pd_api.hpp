@@ -38,37 +38,35 @@
 namespace hal {
 namespace pd {
 
-using hal::vrf_t;
-using hal::l2seg_t;
-using hal::network_t;
-using hal::nwsec_profile_t;
-using hal::dos_policy_t;
-using hal::if_t;
-using hal::lif_t;
-using hal::session_t;
-using hal::flow_key_t;
-using hal::flow_t;
-using hal::tlscb_t;
-using hal::tcpcb_t;
-using hal::qos_class_t;
-using hal::acl_t;
-using hal::wring_t;
-using hal::mirror_session_t;
-using hal::ipseccb_t;
-using hal::l4lb_service_entry_t;
-using hal::cpucb_t;
-using hal::rawrcb_t;
-using hal::rawccb_t;
-using hal::proxyrcb_t;
-using hal::proxyccb_t;
-using hal::copp_t;
+//using hal::vrf_t;
+//using hal::l2seg_t;
+//using hal::network_t;
+//using hal::nwsec_profile_t;
+//using hal::dos_policy_t;
+//using hal::if_t;
+//using hal::lif_t;
+//using hal::session_t;
+//using hal::flow_key_t;
+//using hal::flow_t;
+//using hal::tlscb_t;
+//using hal::tcpcb_t;
+//using hal::qos_class_t;
+//using hal::acl_t;
+//using hal::wring_t;
+//using hal::mirror_session_t;
+//using hal::ipseccb_t;
+//using hal::l4lb_service_entry_t;
+//using hal::cpucb_t;
+//using hal::rawrcb_t;
+//using hal::rawccb_t;
+//using hal::proxyrcb_t;
+//using hal::proxyccb_t;
+//using hal::copp_t;
 
 #define EXTC extern "C"
 
 typedef uint32_t  mc_entry_hw_id_t;
 typedef uint32_t  l2seg_hw_id_t;
-
-// Bharat: New PD desgin changes
 
 typedef struct pd_mem_init_args_s {
 } __PACK__ pd_mem_init_args_t;
@@ -2050,6 +2048,21 @@ typedef struct pd_capri_barco_sym_hash_process_request_args_s {
     int digest_len;
 } __PACK__ pd_capri_barco_sym_hash_process_request_args_t;
 
+// gft
+typedef struct pd_gft_args_s {
+    gft_exact_match_profile_t       *exact_match_profile;
+    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
+    gft_exact_match_flow_entry_t    *exact_match_flow_entry;
+} __PACK__ pd_gft_args_t;
+
+static inline void
+pd_gft_args_init (pd_gft_args_t *args)
+{
+    args->exact_match_profile = NULL;
+    args->hdr_xposition_profile = NULL;
+    args->exact_match_flow_entry = NULL;
+}
+
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
     ENTRY(PD_FUNC_ID_MEM_INIT,              0, "pd_func_id_pd_mem_init")                \
@@ -2241,7 +2254,10 @@ typedef struct pd_capri_barco_sym_hash_process_request_args_s {
     ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, 187, "PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, 188, "PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY")\
     ENTRY(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, 189, "PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ")\
-    ENTRY(PD_FUNC_ID_MAX,                   200, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, 190, "PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE") \
+    ENTRY(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, 191, "PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE") \
+    ENTRY(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, 192, "PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE") \
+    ENTRY(PD_FUNC_ID_MAX,                   194, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2249,10 +2265,14 @@ DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
     extern "C" hal_ret_t NAME(NAME ## _args_t *args);                       \
     typedef hal_ret_t (* NAME ## _t)(NAME ## _args_t *args)
 
+#define PD_FUNCP_ARGS_TYPEDEF(NAME, ARGS)                                   \
+    extern "C" hal_ret_t NAME(ARGS ## _args_t *args);                       \
+    typedef hal_ret_t (* NAME ## _t)(ARGS ## _args_t *args)
+
 #define PD_UNION_FIELD(NAME) \
     NAME ## _t NAME
 
-#define  PD_FUNCTION(NAME) {#NAME, NULL}
+//#define  PD_FUNCTION(NAME) {#NAME, NULL}
 
 // init pd calls
 PD_FUNCP_TYPEDEF(pd_mem_init);
@@ -2535,6 +2555,11 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_gen);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_verify);
 PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
 
+// gft apis
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_create, pd_gft);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft);
+
 typedef struct pd_call_s {
     union {
         // init pd calls
@@ -2816,26 +2841,18 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_capri_barco_asym_rsa2k_sig_verify);
         PD_UNION_FIELD(pd_capri_barco_sym_hash_process_request);
 
+        // gft APIs
+        PD_UNION_FIELD(pd_gft_exact_match_profile_create);
+        PD_UNION_FIELD(pd_gft_hdr_group_xposition_profile_create);
+        PD_UNION_FIELD(pd_gft_exact_match_flow_entry_create);
     };
 
 } pd_call_t;
 
-
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, void *args);
-
-#if 0
-typedef struct pd_gft_args_s {
-    gft_exact_match_profile_t       *exact_match_profile;
-    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
-    gft_exact_match_flow_entry_t    *exact_match_flow_entry;
-} __PACK__ pd_gft_args_t;
-
-hal_ret_t pd_gft_exact_match_profile_create(pd_gft_args_t *gft_args);
-hal_ret_t pd_gft_hdr_group_xposition_profile_create(pd_gft_args_t *gft_args);
-hal_ret_t pd_gft_exact_match_flow_entry_create(pd_gft_args_t *gft_args);
-#endif
 
 }    // namespace pd
 }    // namespace hal
 
 #endif    // __HAL_PD_API_HPP__
+

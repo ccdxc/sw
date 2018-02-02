@@ -88,7 +88,9 @@ typedef struct gft_exact_match_profile_s {
     gft_table_type_t                       table_type;
     gft_profile_id_t                       profile_id;
     uint32_t                               num_hdr_group_exact_match_profiles;
-    gft_hdr_group_exact_match_profile_t    hgem_profiles[0];
+    gft_hdr_group_exact_match_profile_t    *hgem_profiles;
+
+    void                                   *pd;    // PD state, if any
 } __PACK__ gft_exact_match_profile_t;
 
 // flags for GFT header group exact match
@@ -160,7 +162,9 @@ typedef struct gft_hdr_xposition_profile_s {
     gft_table_type_t                     table_type;    // table type
     gft_profile_id_t                     profile_id;    // profile id
     uint32_t                             num_hxp;    
-    gft_hdr_group_xposition_profile_t    hdr_xposition_profiles[0];
+    gft_hdr_group_xposition_profile_t    *hdr_xposition_profiles;
+    
+    void                                 *pd;    // PD state, if any
 } __PACK__ gft_hdr_xposition_profile_t;
 
 // flags for GFT header group transposition

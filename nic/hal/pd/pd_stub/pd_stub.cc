@@ -10,6 +10,9 @@ namespace pd {
 #define PD_FUNC_STUB(NAME)                                                  \
     hal_ret_t NAME(NAME ## _args_t *args) { return HAL_RET_OK; }
 
+#define PD_FUNC_STUB_ARGS(API, ARGS)                                        \
+    hal_ret_t API(ARGS ## _args_t *args) { return HAL_RET_OK; }
+
 // init pd calls
 PD_FUNC_STUB(pd_mem_init);
 PD_FUNC_STUB(pd_mem_init_phase2);
@@ -278,6 +281,12 @@ PD_FUNC_STUB(pd_capri_hbm_write_mem);
 PD_FUNC_STUB(pd_capri_program_label_to_offset);
 PD_FUNC_STUB(pd_capri_pxb_cfg_lif_bdf);
 PD_FUNC_STUB(pd_capri_program_to_base_addr);
+
+// gft
+PD_FUNC_STUB_ARGS(pd_gft_exact_match_profile_create, pd_gft);
+PD_FUNC_STUB_ARGS(pd_gft_hdr_group_xposition_profile_create, pd_gft);
+PD_FUNC_STUB_ARGS(pd_gft_exact_match_flow_entry_create, pd_gft);
+
 }   // namespace pd
 }   // namespace hal
 

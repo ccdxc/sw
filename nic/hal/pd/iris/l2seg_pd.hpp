@@ -15,7 +15,7 @@ namespace pd {
 #define HAL_MAX_HW_L2SEGMENTS                        2048
 
 // l2seg pd state
-struct pd_l2seg_s {
+typedef struct pd_l2seg_s {
     void                *l2seg;              // PI L2 segment
 
     // operational state of l2seg pd
@@ -35,7 +35,7 @@ struct pd_l2seg_s {
 
     // Entry used by traffic From CPU traffic
     uint32_t            inp_prop_tbl_cpu_idx;
-} __PACK__;
+} __PACK__ pd_l2seg_t;
 
 // allocate a l2seg pd instance
 static inline pd_l2seg_t *
@@ -99,16 +99,6 @@ l2seg_pd_mem_free (pd_l2seg_t *l2seg_pd)
     return HAL_RET_OK;
 }
 
-#if 0
-// insert l2seg pd state in all meta data structures
-static inline hal_ret_t
-add_l2seg_pd_to_db (pd_l2seg_t *l2seg_pd)
-{
-    g_hal_state_pd->flow_lkupid_ht()->insert(l2seg_pd, &l2seg_pd->hw_ht_ctxt);
-    return HAL_RET_OK;
-}
-#endif
-
 // find a l2seg pd instance given its hw id
 // Deprecated: Remove find_l2seg_by_hwid along with this function
 static inline pd_l2seg_t *
@@ -118,8 +108,8 @@ find_l2seg_pd_by_hwid (l2seg_hw_id_t hwid)
     l2seg_t                     *l2seg;
     pd_l2seg_t                  *l2seg_pd = NULL;
 
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->
-        flow_lkupid_ht()->lookup(&hwid);
+    entry = (hal_handle_id_ht_entry_t *)
+                g_hal_state_pd->flow_lkupid_ht()->lookup(&hwid);
     if (entry) {
         l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
         l2seg_pd = (pd_l2seg_t *)l2seg->pd;
@@ -138,18 +128,14 @@ hal_ret_t l2seg_pd_alloc_hwid(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_dealloc_res(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_dealloc_cpuid(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_dealloc_hwid(pd_l2seg_t *pd_l2seg);
-void l2seg_link_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg);
-void l2seg_delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg);
-
 hal_ret_t l2seg_pd_cleanup(pd_l2seg_t *l2seg_pd);
 uint32_t l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd);
 uint32_t pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg);
 pd_vrf_t *pd_l2seg_get_pd_vrf(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_program_hw(pd_l2seg_t *l2seg_pd);
-hal_ret_t l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd);
-hal_ret_t l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd);
-hal_ret_t l2seg_pd_depgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd);
-
+hal_ret_t l2seg_pd_pgm_inp_prop_tbl(pd_l2seg_t *l2seg_pd);
+hal_ret_t l2seg_pd_deprogram_hw(pd_l2seg_t *l2seg_pd);
+hal_ret_t l2seg_pd_depgm_inp_prop_tbl(pd_l2seg_t *l2seg_pd);
 
 }   // namespace pd
 }   // namespace hal
