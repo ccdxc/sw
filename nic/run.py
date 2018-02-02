@@ -345,7 +345,7 @@ def check_for_completion(p, model_process, hal_process, args):
     if check_for_cores:
         #Wait for all stdouts to clear out.
         time.sleep(5)
-        print_cores()
+        process_cores()
 
     return exitcode
 
