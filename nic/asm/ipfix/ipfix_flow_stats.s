@@ -30,7 +30,7 @@ ipfix_flow_stats:
                        ipfix_metadata_qstate_addr_sbit32_ebit33}
     phvwri      p.common_te0_phv_table_pc, ipfix_create_record[33:6]
     phvwr       p.common_te0_phv_table_raw_table_size, 6
-    phvwr       p.common_te0_phv_table_lock_en, 0
+    phvwr       p.common_te0_phv_table_lock_en, 1
 
     phvwr       p.app_header_table0_valid, 1
     phvwr       p.app_header_table1_valid, 0
