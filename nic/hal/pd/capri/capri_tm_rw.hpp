@@ -41,7 +41,7 @@
 //      - Traffic from TxDMA will enter P4-ig with OQs 0-15, and carry over the
 //        same while going to P4-eg
 //      - Traffic from Uplink will enter P4-ig with OQs 24-31 (HAL_TM_P4_UPLINK_IQ_OFFSET)
-//        and get remapped to OQs 16-23 by the qos-table
+//        and get remapped to OQs 24-29 and 16-17 by the qos-table
 //        (HAL_TM_P4_UPLINK_EGRESS_OQ_OFFSET)
 //
 // For recirc, oq 31 (TM_P4_IG_RECIRC_QUEUE) is used in P4-ig and oq 29 is used in P4-eg
@@ -53,8 +53,14 @@
 // Offset at which the oqs for rxdma only classes start
 #define HAL_TM_RXDMA_OQ_OFFSET              16
 
-#define HAL_TM_P4_SPAN_QUEUE                30
-#define HAL_TM_P4_CPU_COPY_QUEUE            31
+#define HAL_TM_P4_SPAN_QUEUE                            30
+#define HAL_TM_P4_CPU_COPY_QUEUE                        31
+/* On P4 EG, due to the resercation of queues 30 and 31 for span and cpu-copy,
+ * the uplink queues which are using these values in p4-ig need to use the 
+ * below two values
+ */
+#define HAL_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      (HAL_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 0)
+#define HAL_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  (HAL_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1) 
 
 typedef uint32_t tm_port_t;
 typedef int32_t tm_q_t;

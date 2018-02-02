@@ -260,8 +260,13 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
 
             pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] = 
                     HAL_TM_P4_UPLINK_IQ_OFFSET + pd_qos_class->uplink.iq;
-            pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = 
-                    HAL_TM_P4_UPLINK_EGRESS_OQ_OFFSET + pd_qos_class->uplink.iq;
+            if (pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] == HAL_TM_P4_SPAN_QUEUE) {
+                pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = HAL_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT;
+            } else if (pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX] == HAL_TM_P4_CPU_COPY_QUEUE) {
+                pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = HAL_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT;
+            } else {
+                pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_RX] = pd_qos_class->uplink.iq;
+            }
         }
 
         if (q_alloc_params.cnt_txdma_iq == 1) {
