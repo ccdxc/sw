@@ -305,6 +305,10 @@ port_create (port_args_t *args)
     port_p->set_mac_ch(args->mac_ch);
     port_p->set_num_lanes(args->num_lanes);
 
+    for (uint32_t i = 0; i < args->num_lanes; ++i) {
+        port_p->sbus_addr_set(i, args->sbus_addr[i]);
+    }
+
     // if admin up is set, enable the port, else disable the port
     if (args->admin_state == port_admin_state_t::PORT_ADMIN_STATE_UP) {
         ret = port::port_enable(port_p);

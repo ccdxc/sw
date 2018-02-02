@@ -200,22 +200,65 @@ catalog::destroy(catalog *clog)
     SDK_FREE(hal::HAL_MEM_ALLOC_CATALOG, clog);
 }
 
-catalog_uplink_port_t*
+catalog_uplink_port_t *
 catalog::uplink_port(uint32_t port)
 {
-    // TODO: do out of bound error check here !!
     return &catalog_db_.uplink_ports[port-1];
 }
 
-catalog_asic_port_t*
-catalog::asic_port(uint32_t port)
+port_speed_t
+catalog::port_speed(uint32_t port)
+{
+    // TODO: do out of bound error check here !!
+    return catalog_db_.uplink_ports[port-1].speed;
+}
+
+uint32_t
+catalog::num_lanes(uint32_t port)
+{
+    return catalog_db_.uplink_ports[port-1].num_lanes;
+}
+
+port_type_t
+catalog::port_type(uint32_t port)
+{
+    return catalog_db_.uplink_ports[port-1].type;
+}
+
+bool
+catalog::enabled(uint32_t port)
+{
+    return catalog_db_.uplink_ports[port-1].enabled;
+}
+
+uint32_t
+catalog::mac_id(uint32_t port, uint32_t lane)
 {
     catalog_uplink_port_t *catalog_uplink_port_p = uplink_port(port);
     uint32_t asic = catalog_uplink_port_p->asic;
     uint32_t asic_port = catalog_uplink_port_p->asic_port;
 
-    // TODO: do out of bound error check here !!
-    return &catalog_db_.asics[asic].ports[asic_port];
+    return catalog_db_.asics[asic].ports[asic_port + lane].mac_id;
+}
+
+uint32_t
+catalog::mac_ch(uint32_t port, uint32_t lane)
+{
+    catalog_uplink_port_t *catalog_uplink_port_p = uplink_port(port);
+    uint32_t asic = catalog_uplink_port_p->asic;
+    uint32_t asic_port = catalog_uplink_port_p->asic_port;
+
+    return catalog_db_.asics[asic].ports[asic_port + lane].mac_ch;
+}
+
+uint32_t
+catalog::sbus_addr(uint32_t port, uint32_t lane)
+{
+    catalog_uplink_port_t *catalog_uplink_port_p = uplink_port(port);
+    uint32_t asic = catalog_uplink_port_p->asic;
+    uint32_t asic_port = catalog_uplink_port_p->asic_port;
+
+    return catalog_db_.asics[asic].ports[asic_port + lane].sbus_addr;
 }
 
 uint32_t

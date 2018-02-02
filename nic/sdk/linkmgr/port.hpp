@@ -194,6 +194,9 @@ public:
     // check for serdes ready
     bool port_serdes_rdy(void);
 
+    // set the sbus addr for each serdes
+    sdk_ret_t sbus_addr_set (uint32_t lane, uint32_t sbus_addr);
+
     // ----------------------------------------------------
     // static methods
     // ----------------------------------------------------
@@ -219,15 +222,16 @@ public:
     static sdk_ret_t port_disable(port *port_p);
 
 private:
-    port_oper_status_t    oper_status_;    // port operational status
-    port_speed_t          port_speed_;     // port speed
-    port_type_t           port_type_;      // port type
-    port_admin_state_t    admin_state_;    // port admin state
-    port_link_sm_t        link_sm_;          // port link state machine
-    void                  *link_bring_up_timer_;   // port link bring up timer
-    uint32_t              mac_id_;          // mac instance for this port
-    uint32_t              mac_ch_;          // mac channel within mac instance
-    uint32_t              num_lanes_;       // number of lanes for this port
+    port_oper_status_t    oper_status_;               // port operational status
+    port_speed_t          port_speed_;                // port speed
+    port_type_t           port_type_;                 // port type
+    port_admin_state_t    admin_state_;               // port admin state
+    port_link_sm_t        link_sm_;                   // port link state machine
+    void                  *link_bring_up_timer_;      // port link bring up timer
+    uint32_t              mac_id_;                    // mac instance for this port
+    uint32_t              mac_ch_;                    // mac channel within mac instance
+    uint32_t              num_lanes_;                 // number of lanes for this port
+    uint32_t              sbus_addr_[PORT_MAX_LANES]; // sbus addr for each serdes
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);

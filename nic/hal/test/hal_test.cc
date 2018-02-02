@@ -1166,19 +1166,27 @@ main (int argc, char** argv)
     uint64_t     enic_if_id = 200;
     EncapInfo    l2seg_encap;
     bool         test_port = false;
+    bool         test_port_get = false;
     std::string  svc_endpoint = hal_svc_endpoint_;
 
     if (argc > 1) {
-        test_port = true;
-        svc_endpoint = linkmgr_svc_endpoint_;
+        if (!strcmp(argv[1], "port_test")) {
+            test_port = true;
+            svc_endpoint = linkmgr_svc_endpoint_;
+        } else if (!strcmp(argv[1], "port_get")) {
+            test_port_get = true;
+            svc_endpoint = linkmgr_svc_endpoint_;
+        }
     }
 
     hal_client hclient(grpc::CreateChannel(svc_endpoint,
                                            grpc::InsecureChannelCredentials()));
     if (test_port == true) {
         port_test(&hclient, vrf_id);
-        //ports_enable(&hclient, vrf_id);
-        //ports_get(&hclient, vrf_id);
+        return 0;
+    } else if (test_port_get == true) {
+        // ports_enable(&hclient, vrf_id);
+        ports_get(&hclient, vrf_id);
         return 0;
     }
 

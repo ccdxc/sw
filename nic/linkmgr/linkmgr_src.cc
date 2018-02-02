@@ -14,7 +14,6 @@
 #include "sdk/pal.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/list.hpp"
-#include "sdk/linkmgr.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_state.hpp"
@@ -51,10 +50,58 @@ hw_mock (void)
     return linkmgr_cfg.hw_mock;
 }
 
-uint32_t
-sbus_addr (uint32_t asic_num, uint32_t asic_port, uint32_t lane)
+sdk::lib::catalog*
+catalog()
 {
-    return g_linkmgr_state->catalog()->sbus_addr(asic_num, asic_port, lane);
+    return g_linkmgr_state->catalog();
+}
+
+uint32_t
+num_uplink_ports()
+{
+    return catalog()->num_uplink_ports();
+}
+
+port_speed_t
+port_speed(uint32_t port)
+{
+    return catalog()->port_speed(port);
+}
+
+port_type_t
+port_type(uint32_t port)
+{
+    return catalog()->port_type(port);
+}
+
+uint32_t
+num_lanes(uint32_t port)
+{
+    return catalog()->num_lanes(port);
+}
+
+bool
+enabled(uint32_t port)
+{
+    return catalog()->enabled(port);
+}
+
+uint32_t
+mac_id(uint32_t port, uint32_t lane)
+{
+    return catalog()->mac_id(port, lane);
+}
+
+uint32_t
+mac_ch(uint32_t port, uint32_t lane)
+{
+    return catalog()->mac_ch(port, lane);
+}
+
+uint32_t
+sbus_addr (uint32_t port, uint32_t lane)
+{
+    return catalog()->sbus_addr(port, lane);
 }
 
 platform_type_t platform_type()
@@ -63,25 +110,20 @@ platform_type_t platform_type()
 }
 
 hal_ret_t
-linkmgr_uplink_create(uint32_t uplink_port,
-                      sdk::lib::catalog *catalog_p)
+linkmgr_uplink_create(uint32_t uplink_port)
 {
-    hal_ret_t       ret = HAL_RET_OK;
-    PortSpec        spec;
-    PortResponse    response;
-    sdk::lib::catalog_uplink_port_t *catalog_uplink_port_p;
-    sdk::lib::catalog_asic_port_t *catalog_asic_port_p;
+    hal_ret_t     ret  = HAL_RET_OK;
+    PortSpec      spec;
+    PortResponse  response;
 
-    catalog_uplink_port_p = catalog_p->uplink_port(uplink_port);
     spec.mutable_key_or_handle()->set_port_id(uplink_port);
-    spec.set_port_speed(hal::sdk_port_speed_to_port_speed_spec(catalog_uplink_port_p->speed));
-    spec.set_num_lanes(catalog_uplink_port_p->num_lanes);
-    spec.set_port_type(hal::sdk_port_type_to_port_type_spec(catalog_uplink_port_p->type));
-    catalog_asic_port_p = catalog_p->asic_port(uplink_port);
-    spec.set_mac_id(catalog_asic_port_p->mac_id);
-    spec.set_mac_ch(catalog_asic_port_p->mac_ch);
+    spec.set_port_speed(hal::sdk_port_speed_to_port_speed_spec(port_speed(uplink_port)));
+    spec.set_num_lanes(num_lanes(uplink_port));
+    spec.set_port_type(hal::sdk_port_type_to_port_type_spec(port_type(uplink_port)));
+    spec.set_mac_id(mac_id(uplink_port, 0));
+    spec.set_mac_ch(mac_ch(uplink_port, 0));
 
-    if (catalog_uplink_port_p->enabled == true) {
+    if (enabled(uplink_port) == true) {
         spec.set_admin_state(::port::PORT_ADMIN_STATE_UP);
     }
 
@@ -100,19 +142,14 @@ linkmgr_uplink_create(uint32_t uplink_port,
 // create uplink ports in the catalog file
 //------------------------------------------------------------------------------
 hal_ret_t
-linkmgr_uplinks_create(sdk::lib::catalog *catalog_p)
+linkmgr_uplinks_create()
 {
     uint32_t  uplink_port = 0;
     hal_ret_t ret = HAL_RET_OK;
 
-    if (NULL == catalog_p) {
-        HAL_TRACE_ERR("{}: catalog db NULL", __FUNCTION__);
-        return HAL_RET_ERR;
-    }
-
-    for (uplink_port = 1; uplink_port <= catalog_p->num_uplink_ports();
-                                                      ++uplink_port) {
-        ret = linkmgr_uplink_create(uplink_port, catalog_p);
+    for (uplink_port = 1; uplink_port <= num_uplink_ports();
+                                             ++uplink_port) {
+        ret = linkmgr_uplink_create(uplink_port);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}: Error creating uplink port {}",
                           __FUNCTION__,  uplink_port);
@@ -247,7 +284,7 @@ linkmgr_init()
     }
 
     // must be done after sdk linkmgr init
-    ret_hal = linkmgr_uplinks_create(catalog);
+    ret_hal = linkmgr_uplinks_create();
     if (ret_hal != HAL_RET_OK) {
         HAL_TRACE_ERR("{} uplinks create failed", __FUNCTION__);
     }
@@ -418,14 +455,16 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     sdk::linkmgr::port_args_init(&port_args);
 
     port_args.port_type   =
-                hal::port_type_spec_to_sdk_port_type(app_ctxt->port_type);
+            hal::port_type_spec_to_sdk_port_type(app_ctxt->port_type);
     port_args.admin_state =
-                hal::port_admin_st_spec_to_sdk_port_admin_st(app_ctxt->admin_state);
+            hal::port_admin_st_spec_to_sdk_port_admin_st(app_ctxt->admin_state);
     port_args.port_speed  =
-                hal::port_speed_spec_to_sdk_port_speed(app_ctxt->port_speed);
+            hal::port_speed_spec_to_sdk_port_speed(app_ctxt->port_speed);
     port_args.mac_id      = app_ctxt->mac_id;
     port_args.mac_ch      = app_ctxt->mac_ch;
     port_args.num_lanes   = app_ctxt->num_lanes;
+    memcpy(port_args.sbus_addr, app_ctxt->sbus_addr,
+                                PORT_MAX_LANES * sizeof(uint32_t));
 
     pi_p->pd_p = sdk::linkmgr::port_create(&port_args);
     if (NULL == pi_p->pd_p) {
@@ -561,13 +600,14 @@ port_prepare_rsp (PortResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle_id)
 hal_ret_t
 port_create (PortSpec& spec, PortResponse *rsp)
 {
-    hal_ret_t      ret = HAL_RET_OK;
-    port_t         *pi_p = NULL;
-    port_t         *pi_p1 = NULL;
-    dhl_entry_t    dhl_entry = { 0 };
-    cfg_op_ctxt_t  cfg_ctxt = { 0 };
-    port_create_app_ctxt_t   app_ctxt;
-    memset (&app_ctxt, 0, sizeof(port_create_app_ctxt_t));
+    hal_ret_t               ret        = HAL_RET_OK;
+    port_t                  *pi_p      = NULL;
+    port_t                  *pi_p1     = NULL;
+    dhl_entry_t             dhl_entry  = { 0 };
+    cfg_op_ctxt_t           cfg_ctxt   = { 0 };
+    port_create_app_ctxt_t  app_ctxt;
+
+    memset(&app_ctxt, 0, sizeof(port_create_app_ctxt_t));
 
     hal::hal_api_trace(" API Begin: port create ");
     HAL_TRACE_DEBUG("{}:port create with id:{}", __FUNCTION__,
@@ -620,6 +660,10 @@ port_create (PortSpec& spec, PortResponse *rsp)
     app_ctxt.mac_id      = spec.mac_id();
     app_ctxt.mac_ch      = spec.mac_ch();
     app_ctxt.num_lanes   = spec.num_lanes();
+
+    for (uint32_t i = 0; i < spec.num_lanes(); ++i) {
+        app_ctxt.sbus_addr[i] = sbus_addr(spec.key_or_handle().port_id(), i);
+    }
 
     dhl_entry.handle = pi_p->hal_handle_id;
     dhl_entry.obj = pi_p;

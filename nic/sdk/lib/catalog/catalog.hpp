@@ -58,12 +58,18 @@ public:
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
     catalog_t *catalog_db(void) { return &catalog_db_; }
-    catalog_uplink_port_t *uplink_port(uint32_t uplink_port);
-    catalog_asic_port_t *asic_port(uint32_t uplink_port);
     uint32_t num_uplink_ports(void) const { return catalog_db_.num_uplink_ports; }
     platform_type_t platform_type(void) const { return catalog_db_.platform_type; }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
+
+    port_speed_t port_speed(uint32_t port);
+    uint32_t     num_lanes (uint32_t port);
+    port_type_t  port_type (uint32_t port);
+    bool         enabled   (uint32_t port);
+    uint32_t     mac_id    (uint32_t port, uint32_t lane);
+    uint32_t     mac_ch    (uint32_t port, uint32_t lane);
+    uint32_t     sbus_addr (uint32_t port, uint32_t lane);
 
     ptree& catalog_qos_config_tree(void) { return catalog_db_.qos_config_tree; }
 
@@ -100,6 +106,8 @@ private:
 
     // populate config for all uplink ports
     sdk_ret_t populate_uplink_ports(ptree &prop_tree);
+
+    catalog_uplink_port_t *uplink_port(uint32_t port);
 };
 
 }    // namespace lib

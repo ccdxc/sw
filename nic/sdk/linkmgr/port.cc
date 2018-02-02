@@ -176,9 +176,7 @@ port::port_mac_faults_get(void)
 uint32_t
 port::port_sbus_addr(uint32_t lane)
 {
-    //TODO avinash
-    //return sbus_addr(mac_id_, mac_ch_, lane);
-    return 0;
+    return this->sbus_addr_[lane];
 }
 
 sdk_ret_t
@@ -258,6 +256,13 @@ port::port_serdes_rdy(void)
     }
 
     return serdes_rdy;
+}
+
+sdk_ret_t
+port::sbus_addr_set (uint32_t lane, uint32_t sbus_addr)
+{
+    this->sbus_addr_[lane] = sbus_addr;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

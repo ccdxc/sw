@@ -4,6 +4,7 @@
 #define __LINKMGR_SRC_HPP__
 
 #include "sdk/ht.hpp"
+#include "sdk/linkmgr.hpp"
 
 #include "nic/include/base.h"
 #include "sdk/list.hpp"
@@ -65,12 +66,13 @@ typedef struct port_s {
 
 // CB data structures
 typedef struct port_create_app_ctxt_s {
-    PortType         port_type;       // port type
-    PortSpeed        port_speed;      // port speed
-    PortAdminState   admin_state;     // admin state of the port
-    uint32_t         mac_id;          // mac id associated with the port
-    uint32_t         mac_ch;          // mac channel associated with the port
-    uint32_t         num_lanes;       // number of lanes for the port
+    PortType         port_type;                 // port type
+    PortSpeed        port_speed;                // port speed
+    PortAdminState   admin_state;               // admin state of the port
+    uint32_t         mac_id;                    // mac id associated with the port
+    uint32_t         mac_ch;                    // mac channel associated with the port
+    uint32_t         num_lanes;                 // number of lanes for the port
+    uint32_t         sbus_addr[PORT_MAX_LANES]; // sbus addr for each lane
 } __PACK__ port_create_app_ctxt_t;
 
 typedef port_create_app_ctxt_t port_update_app_ctxt_t;
