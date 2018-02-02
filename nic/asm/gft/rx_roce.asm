@@ -21,6 +21,7 @@ rx_roce:
                         p.p4_to_p4plus_roce_raw_flags, d.u.rx_roce_d.raw_flags
     phvwr           p.p4_to_p4plus_roce_p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwr           p.capri_rxdma_intrinsic_qtype, d.u.rx_roce_d.qtype
+    phvwr           p.capri_intrinsic_payload, FALSE
 
     seq             c1, d.u.rx_roce_d.tm_oq_overwrite, TRUE
     phvwr.c1        p.capri_intrinsic_tm_oq, d.u.rx_roce_d.tm_oq
@@ -64,8 +65,8 @@ rx_roce:
     phvwrpair       p.vxlan_3_valid, 0, p.gre_3_valid, 0
     phvwr           p.udp_3_valid, 0
 
-    .assert(offsetof(p, udp_opt_eol_valid) - offsetof(p, udp_payload_valid) == 7)
-    phvwr           p.{udp_opt_eol_valid...udp_payload_valid}, 0
+    .assert(offsetof(p, udp_opt_eol_valid) - offsetof(p, icrc_valid) == 6)
+    phvwr           p.{udp_opt_eol_valid...icrc_valid}, 0
 
     nop.!c1.e
 

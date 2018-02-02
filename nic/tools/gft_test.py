@@ -102,8 +102,7 @@ dump_pkt(rpkt)
 
 pkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
-        UDP() / BTH() / RETH()
-
+        UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
 dump_pkt(pkt)
 
 ###############################################################################
@@ -113,5 +112,5 @@ pkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
         UDP() / VXLAN() / \
         Ether(dst='00:11:12:13:14:15', src='00:B1:B2:B3:B4:B5') / \
         IP(dst='12.1.2.3', src='13.1.2.3') / \
-        UDP() / BTH() / RETH()
+        UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
 dump_pkt(pkt)

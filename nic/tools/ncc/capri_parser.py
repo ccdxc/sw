@@ -1342,7 +1342,7 @@ class capri_parser:
                 # mode where each pipeline is used by itself.) Best to have capri_hdr
                 # Since build ohi is called before egress processing it is a problem, currently
                 # build_ohi is called multiple times which fixes the problem
-                if self.d == xgress.EGRESS:
+                if self.d == xgress.EGRESS or (self.d == xgress.INGRESS and self.be.args.single_pipe):
                     hdr.fields.remove(p4f)
                     assert len(hdr.fields) == 1, pdb.set_trace() # HACK only 2 flds allowed, 1 removed
                     hdr.fields[0].offset = 0
