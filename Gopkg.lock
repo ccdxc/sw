@@ -479,6 +479,12 @@
   version = "0.2.4"
 
 [[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
   name = "github.com/influxdata/influxdb"
   packages = [".","client/v2","cmd/influxd/run","coordinator","logger","models","monitor","monitor/diagnostics","pkg/bits","pkg/bloom","pkg/bytesutil","pkg/deep","pkg/escape","pkg/estimator","pkg/estimator/hll","pkg/limiter","pkg/metrics","pkg/mmap","pkg/pool","pkg/rhh","pkg/tracing","pkg/tracing/fields","pkg/tracing/labels","pkg/tracing/wire","prometheus","prometheus/remote","query","query/internal","query/neldermead","services/collectd","services/continuous_querier","services/graphite","services/httpd","services/meta","services/meta/internal","services/opentsdb","services/precreator","services/retention","services/snapshotter","services/storage","services/subscriber","services/udp","tcp","toml","tsdb","tsdb/engine","tsdb/engine/tsm1","tsdb/index","tsdb/index/inmem","tsdb/index/tsi1","tsdb/internal","uuid"]
   revision = "8b18cc445653866f71a59002f2f8524721a5d27e"
@@ -734,6 +740,12 @@
   version = "v1.0.4"
 
 [[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
+
+[[projects]]
   name = "github.com/spf13/pflag"
   packages = ["."]
   revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
@@ -949,6 +961,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "aaa322120851aa93979cfe6cfd641bcdee76bb39d49144c9a718f299eb9c854b"
+  inputs-digest = "a4e46e4b7c9aaea5ef0f6ae8146784850f7e50c53458d9639a4b083397bafe6a"
   solver-name = "gps-cdcl"
   solver-version = 1
