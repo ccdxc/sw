@@ -39,7 +39,7 @@ class QueueTypeObject(base.ConfigObjectBase):
         self.need_type_specific_configure = True
         if spec.id in eth_queue_type_ids:
             self.obj_helper_q = eth_queue.EthQueueObjectHelper()
-            if GlobalOptions.rtl:
+            if GlobalOptions.rtl and not GlobalOptions.skipverify:
                 if self.purpose == "LIF_QUEUE_PURPOSE_RX":
                     # Ring the doorbell, don't increment the PI and don't set
                     # the scheduler bit.
@@ -140,7 +140,7 @@ class QueueTypeObject(base.ConfigObjectBase):
         if ret == status.SUCCESS:
             if not GlobalOptions.skipverify:
                 queue.qstate.Read()
-            if GlobalOptions.rtl:
+            if GlobalOptions.rtl and not GlobalOptions.skipverify:
                 queue.qstate.set_pindex(ring_id, ring.pi)
             self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
             if not GlobalOptions.skipverify:
