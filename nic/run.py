@@ -404,7 +404,13 @@ def run_dol(args):
     if args.lite is True:
         cmd.append('--lite')
 
-    p = Popen(cmd)
+    if args.coveragerun:
+        #Increasing timeout for coverage runs only.
+        dol_env = os.environ.copy()
+        dol_env["MODEL_TIMEOUT"] = "300"
+        p = Popen(cmd, env=dol_env)
+    else:
+        p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
 
