@@ -51,6 +51,10 @@
         {
             "name": "tx_hdr_transpositions3",
             "size_kb": 65536
+        },
+        {
+            "name": "qos-hbm-fifo",
+            "size_kb": 262144
         }
     ]
 }
