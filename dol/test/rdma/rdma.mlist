@@ -33,6 +33,7 @@ modules:
         module  : req_tx_send_only_rexmit_timeout
         spec    : req_tx_send_only_rexmit_timeout.testspec
         ignore  : False
+        # Timers support in RTL is being added by ASIC team
         rtl     : False
         selectors:
             maxrdmasessions: 1
@@ -445,6 +446,9 @@ modules:
         module  : resp_rx_duplicate_quiesce
         spec    : resp_rx_duplicate_quiesce.testspec
         ignore  : False
+        # fix for this require code re-org of CBs which
+        # is planned next week, then will enable in RTL
+        rtl     : False
     
     # RQ Recirc testcases
     - module:

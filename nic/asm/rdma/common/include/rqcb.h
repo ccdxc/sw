@@ -82,7 +82,7 @@ struct rqcb0_t {
     msn:24; 
 
     curr_read_rsp_psn: 24;
-    read_rsp_lock: 1;
+    read_rsp_lock: 1;          // rsvd 6 is not free, need total of 1B here for DMA of read_rsp_lock
     read_rsp_in_progress: 1;
     rsvd: 6;
 
