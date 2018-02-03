@@ -43,6 +43,7 @@ targets:
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --gft" ]
   base:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py  --topo base --feature eth,networking,rdma_base --lite" ]
   proto-sync: ["sh", "-c", "cd /sw && make pull-assets && cd $GOPATH/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto && make proto-sync"]
+  hal-rtl/parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make hal-rtl && ./run.py  --topo parser --feature parser" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
