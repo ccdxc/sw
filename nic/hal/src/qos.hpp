@@ -231,7 +231,7 @@ find_qos_class_by_group (qos_group_t qos_group)
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         qos_class_ht()->lookup(&qos_class_key);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
                    HAL_OBJ_ID_QOS_CLASS);
@@ -440,7 +440,7 @@ find_copp_by_copp_type (copp_type_t copp_type)
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         copp_ht()->lookup(&copp_key);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
                    HAL_OBJ_ID_COPP);

@@ -223,7 +223,7 @@ find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         nwsec_profile_id_ht()->lookup(&profile_id);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
                    HAL_OBJ_ID_SECURITY_PROFILE);
@@ -240,6 +240,9 @@ find_nwsec_profile_by_handle (hal_handle_t handle)
 {
     // return (nwsec_profile_t *)g_hal_state->nwsec_profile_hal_handle_ht()->lookup(&handle);
     // check for object type
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
         HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",

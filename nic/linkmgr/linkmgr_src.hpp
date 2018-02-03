@@ -141,7 +141,7 @@ find_port_by_id (port_num_t port_num)
     entry = (hal_handle_id_ht_entry_t *)
             g_linkmgr_state->port_id_ht()->lookup(&port_num);
 
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(
                 entry->handle_id)->obj_id() == hal::HAL_OBJ_ID_PORT);
@@ -155,6 +155,10 @@ find_port_by_id (port_num_t port_num)
 static inline port_t *
 find_port_by_handle (hal_handle_t handle)
 {
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
         HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",

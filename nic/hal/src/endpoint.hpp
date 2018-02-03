@@ -227,7 +227,7 @@ find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         ep_l2_ht()->lookup(&l2_key);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
                    HAL_OBJ_ID_ENDPOINT);
@@ -241,9 +241,13 @@ find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
 static inline ep_t *
 find_ep_by_handle (hal_handle_t handle)
 {
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+
     // check for object type
     if (hal_handle_get_from_handle_id(handle)->obj_id() != HAL_OBJ_ID_ENDPOINT) {
-        return HAL_HANDLE_INVALID;
+        return NULL;
     }
     return (ep_t *)hal_handle_get_obj(handle);
 }

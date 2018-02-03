@@ -176,7 +176,7 @@ vrf_lookup_by_id (vrf_id_t tid)
     vrf_t                    *vrf;
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->vrf_id_ht()->lookup(&tid);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
 
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
@@ -194,6 +194,10 @@ vrf_lookup_by_id (vrf_id_t tid)
 static inline vrf_t *
 vrf_lookup_by_handle (hal_handle_t handle)
 {
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
         HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",

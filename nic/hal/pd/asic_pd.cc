@@ -67,26 +67,6 @@ typedef struct asic_rw_queue_s {
 // per producer read/write request queues
 asic_rw_queue_t    g_asic_rw_workq[HAL_THREAD_ID_MAX];
 
-// check if this thread is the hal-control thread for given chip
-// Returns true if:
-//    this thread's id matches with hal-control thread's id
-bool
-is_hal_ctrl_thread()
-{
-    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
-    sdk::lib::thread *ctrl_thread = g_hal_threads[HAL_THREAD_ID_CONTROL];
-
-    if (ctrl_thread == NULL || curr_thread == NULL) {
-        assert(0);
-    }
-
-    if (curr_thread->thread_id() == ctrl_thread->thread_id()) {
-        return true;
-    }
-
-    return false;
-}
-
 // check if this thread is the asic-rw thread for given chip
 // Returns true if:
 //    this thread's id matches with asic-rw thread's id

@@ -227,7 +227,7 @@ find_acl_by_id (acl_id_t acl_id)
     acl_key.acl_id= acl_id;
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->acl_ht()->lookup(&acl_key);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
                    HAL_OBJ_ID_ACL);

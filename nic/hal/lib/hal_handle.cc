@@ -303,6 +303,9 @@ hal_handle_get_from_handle_id (hal_handle_t handle_id)
 {
     hal_handle_ht_entry_t    *entry;
 
+    if (handle_id == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
     // lookup by handle id and get the handle class
     entry =
         (hal_handle_ht_entry_t *)hal_handle_id_ht()->lookup(&handle_id);
@@ -321,6 +324,9 @@ hal_handle_get_obj (hal_handle_t handle_id)
 {
     hal_handle_ht_entry_t    *entry;
 
+    if (handle_id == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
     // lookup by handle id and get the handle class
     entry =
         (hal_handle_ht_entry_t *)hal_handle_id_ht()->lookup(&handle_id);

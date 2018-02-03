@@ -22,7 +22,7 @@ flow_lkupid_get_hw_key_func(void *entry)
 
     HAL_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
-    if (ht_entry == NULL) {
+    if ((ht_entry == NULL) || (ht_entry->handle_id == HAL_HANDLE_INVALID)) {
         return NULL;
     }
     if (hal_handle_get_from_handle_id(ht_entry->handle_id)->obj_id() == 
@@ -98,7 +98,7 @@ extern "C" hal_ret_t pd_get_object_from_flow_lkupid(pd_get_object_from_flow_lkup
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->
         flow_lkupid_ht()->lookup(&flow_lkupid);
-    if (entry == NULL) {
+    if ((entry == NULL) || (entry->handle_id == HAL_HANDLE_INVALID)) {
         HAL_TRACE_ERR("{}:unable to find vrf/l2seg for flow_lkupid:{}",
                       __FUNCTION__, flow_lkupid);
         ret = HAL_RET_FLOW_LKUP_ID_NOT_FOUND;

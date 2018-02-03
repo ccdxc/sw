@@ -181,7 +181,7 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         l2seg_id_ht()->lookup(&l2seg_id);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
                    HAL_OBJ_ID_L2SEG);
@@ -194,6 +194,10 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
 static inline l2seg_t *
 l2seg_lookup_by_handle (hal_handle_t handle)
 {
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
         HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",

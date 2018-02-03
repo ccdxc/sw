@@ -417,7 +417,7 @@ nwsec_group_lookup_by_key(uint32_t sg_id)
 
     HAL_TRACE_DEBUG("Lookup sg_id {}", sg_id);
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->nwsec_group_ht()->lookup(&sg_id);
-    if (entry) {
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_SECURITY_GROUP);
         nwsec_group = (nwsec_group_t *) hal_handle_get_obj(entry->handle_id);
@@ -433,6 +433,9 @@ nwsec_group_lookup_by_key(uint32_t sg_id)
 static inline nwsec_group_t *
 nwsec_group_lookup_by_handle (hal_handle_t handle)
 {
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
     auto hal_handle = hal_handle_get_from_handle_id(handle);
     if (!hal_handle) {
         HAL_TRACE_DEBUG("failed to find hal object with handle:{}",
