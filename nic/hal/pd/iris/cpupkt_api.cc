@@ -378,12 +378,10 @@ pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
         }
         
         cpupkt_free_and_inc_queue_index(*qinst_info);
-        /*
         ret = cpupkt_descr_free(descr_addr);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to free descr");    
         }
-        */
         return ret;
     }
 
@@ -411,9 +409,10 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
                                  &gc_slot_addr);
     gc_slot_addr += (gc_pindex * CAPRI_HBM_RNMDR_ENTRY_SIZE);
 
-    HAL_TRACE_DEBUG("Programming GC queue: {:#x}, descr: {:#x}, gc_pindex: {}",
-                        gc_slot_addr, descr_addr, gc_pindex);
-    if(!p4plus_hbm_write(gc_slot_addr, (uint8_t*)&descr_addr,
+    uint64_t value = htonll(descr_addr);
+    HAL_TRACE_DEBUG("Programming GC queue: {:#x}, descr: {:#x}, gc_pindex: {}, value: {:#x}",
+                        gc_slot_addr, descr_addr, gc_pindex, value);
+    if(!p4plus_hbm_write(gc_slot_addr, (uint8_t*)&value,
                          sizeof(cpupkt_hw_id_t))) {
         HAL_TRACE_ERR("Failed to program gc queue");
         return HAL_RET_HW_FAIL;
