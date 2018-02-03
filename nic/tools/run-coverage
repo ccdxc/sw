@@ -97,7 +97,7 @@ export MPU_PC_COV_DUMP_DIR=$NIC_DIR/coverage/asm_out_all
 mkdir -p $MPU_PC_COV_DUMP_DIR
 
 export CAPCOV=$NIC_DIR/asic/capri/model/capsim-gen/bin/capcov
-export CAPRI_LOADER_CONF=$NIC_DIR/../bazel-bin/nic/hal/capri_loader.conf
+export CAPRI_LOADER_CONF=$NIC_DIR/gen/capri_loader.conf
 export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
 export BULLSEYE_COVHTML=/home/asic/tools/eda/bullseye/bin/covhtml
 export BULLSEYE_COVSELECT=/home/asic/tools/eda/bullseye/bin/covselect

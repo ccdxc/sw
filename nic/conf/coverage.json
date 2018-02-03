@@ -98,6 +98,12 @@
                 "hal"
             ]
         },
+        "gft": {
+            "cmd": "/home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 gft &&  /home/asic/tools/eda/bullseye/bin/cov01 -0  && ./run.py --gft --coverage",
+            "modules": [
+                "model", "asm"
+            ]
+        },
         "dol": {
             "cmd_cfg": "./coverage/dol_cov_runs.json",
             "modules": [

@@ -220,8 +220,8 @@ def run_hal(args):
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/daqs/"
     os.environ["COVFILE"] = os.path.realpath(bullseye_hal_cov_file)
 
-    hal_dir = nic_dir + "/../bazel-bin/nic/hal"
-    os.chdir(hal_dir)
+    #hal_dir = nic_dir + "/../bazel-bin/nic/hal"
+    os.chdir(nic_dir)
 
     global hal_log
     jsonfile = 'hal.json'
@@ -239,7 +239,7 @@ def run_hal(args):
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
 
     log = open(hal_log, "w")
-    p = Popen(["./hal", "--config", jsonfile], stdout=log, stderr=log)
+    p = Popen(["../bazel-bin/nic/hal/hal", "--config", jsonfile], stdout=log, stderr=log)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"

@@ -244,6 +244,8 @@ gft: capsim-master sdk
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
 	$(MAKE) pd_gft
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
+	mv obj/gft/asm_bin/*.cano obj/cano 2>/dev/null || :
+	$(MAKE) post-make
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
 hal-rtl: capsim-master sdk
@@ -269,6 +271,7 @@ clean: capsim-master-clean
 	$(MAKE) -C proto clean
 	$(MAKE) -C sdk clean
 	rm -rf  $(shell realpath "$(TOPDIR_ABS)"/../bazel-out/..)
+	rm -rf gen/capri_loader.conf
 	$(MAKE) check_clean
 
 check_clean:
