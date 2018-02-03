@@ -6,6 +6,9 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/include/p4pd_table.h"
+#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free
@@ -48,6 +51,75 @@ extern uint16_t p4pd_tbl_sw_action_data_size[P4TBL_ID_TBLMAX];
 
 static p4pd_table_properties_t *_p4tbls;
 namespace pt = boost::property_tree;
+
+/* START: Common capri inits - applicable to IRIS & GFT */
+/* TODO: These functions need to be moved to asic-pd common layer */
+/* Store base address for the table. */
+static uint64_t capri_table_asm_err_offset[P4TBL_ID_TBLMAX];
+static uint64_t capri_table_asm_base[P4TBL_ID_TBLMAX];
+hal_ret_t
+p4pd_capri_program_table_mpu_pc(void)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        p4pd_table_properties_get(i, &tbl_ctx);
+        if (tbl_ctx.is_oflow_table &&
+            tbl_ctx.table_type == P4_TBL_TYPE_TCAM) {
+            // OTCAM and hash table share the same table id
+            // so mpu_pc shouldn't be overwritten
+            continue;
+        }
+        capri_program_table_mpu_pc(tbl_ctx.tableid,
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS),
+                                   tbl_ctx.stage,
+                                   tbl_ctx.stage_tableid,
+                                   capri_table_asm_err_offset[i],
+                                   capri_table_asm_base[i]);
+    }
+    return HAL_RET_OK;
+}
+
+#define P4ACTION_NAME_MAX_LEN (100)
+hal_ret_t
+p4pd_capri_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
+{
+    char action_name[P4ACTION_NAME_MAX_LEN] = {0};
+    char progname[P4ACTION_NAME_MAX_LEN] = {0};
+    uint64_t capri_action_asm_base;
+    //p4pd_table_properties_t tbl_ctx;
+
+    HAL_TRACE_DEBUG("In p4pd_capri_table_mpu_base_init\n");
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
+        capri_program_to_base_addr(p4pd_cfg->p4pd_pgm_name, progname,
+                                   &capri_table_asm_base[i]);
+        for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
+            p4pd_get_action_name(i, j, action_name);
+            capri_action_asm_base = 0;
+            capri_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+                                          action_name, &capri_action_asm_base);
+            /* Action base is in byte and 64B aligned... */
+            HAL_ASSERT((capri_action_asm_base & 0x3f) == 0);
+            capri_action_asm_base >>= 6;
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_asm_base);
+            capri_set_action_asm_base(i, j, capri_action_asm_base);
+        }
+
+        /* compute error program offset for each table */
+        snprintf(action_name, P4ACTION_NAME_MAX_LEN, "%s_error",
+                 p4pd_tbl_names[i]);
+        capri_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+                                      action_name,
+                                      &capri_table_asm_err_offset[i]);
+        HAL_ASSERT((capri_table_asm_err_offset[i] & 0x3f) == 0);
+        capri_table_asm_err_offset[i] >>= 6;
+        HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                        progname, action_name, capri_table_asm_err_offset[i]);
+    }
+    return HAL_RET_OK;
+}
+/* END: Common capri inits - applicable to IRIS & GFT */
 
 static uint16_t
 p4pd_get_tableid_from_tablename (const char *tablename)
@@ -235,6 +307,19 @@ p4pd_init (p4pd_cfg_t *p4pd_cfg)
 }
 
 //-----------------------------------------------------------------------------
+// P4PD asic common initialization
+//-----------------------------------------------------------------------------
+p4pd_error_t
+p4pd_asic_init (p4pd_cfg_t *p4pd_cfg)
+{
+    /* Common capri inits - applicable to IRIS & GFT */
+    /* TODO: These functions need to be moved to asic-pd common layer */
+    HAL_ASSERT(p4pd_capri_table_mpu_base_init(p4pd_cfg) == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_program_table_mpu_pc() == HAL_RET_OK);
+    return P4PD_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------
 // P4PD API that uses tableID to return table properties that app
 // layer can use to construct, initialize P4 tables in local memory.
 //
@@ -261,3 +346,4 @@ p4pd_table_properties_get (uint32_t tableid, p4pd_table_properties_t *tbl_ctx)
     memcpy(tbl_ctx, _p4tbls + tableid, sizeof(p4pd_table_properties_t));
     return P4PD_SUCCESS;
 }
+

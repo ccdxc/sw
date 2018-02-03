@@ -96,6 +96,28 @@ int capri_table_constant_write(uint64_t val, uint32_t stage,
 int capri_table_constant_read(uint64_t *val, uint32_t stage,
                               int stage_tableid, bool ingress);
 
+void capri_set_action_asm_base(int tableid, int actionid,
+                               uint64_t asm_base);
+
+void capri_set_action_rxdma_asm_base(int tableid, int actionid,
+                                     uint64_t asm_base);
+
+void capri_set_action_txdma_asm_base(int tableid, int actionid,
+                                     uint64_t asm_base);
+
+void capri_set_table_txdma_asm_base(int actionid,
+                                    uint64_t asm_base);
+
+void capri_set_table_rxdma_asm_base(int actionid,
+                                    uint64_t asm_base);
+
+void capri_program_p4plus_sram_table_mpu_pc(int tableid, int stage_tbl_id,
+                                            int stage);
+
+void capri_program_table_mpu_pc(int tableid, bool gress, int stage, int stage_tableid,
+                           uint64_t capri_table_asm_err_offset,
+                           uint64_t capri_table_asm_base);
+
 void capri_timer_init_helper(uint32_t key_lines);
 
 #endif

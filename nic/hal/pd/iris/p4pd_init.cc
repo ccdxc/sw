@@ -15,6 +15,7 @@
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/hal/pd/iris/acl_pd.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
@@ -23,6 +24,13 @@ using sdk::table::tcam;
 using hal::pd::utils::acl_tcam_entry_handle_t;
 using hal::pd::utils::priority_t;
 
+#define P4ACTION_NAME_MAX_LEN (100)
+#define P4TBL_MAX_ACTIONS (64)
+#ifdef GFT
+#define P4_PGM_NAME            "gft"
+#else
+#define P4_PGM_NAME            "iris"
+#endif
 
 namespace hal {
 namespace pd {
@@ -1725,53 +1733,9 @@ p4pd_forwarding_mode_init (void)
     return HAL_RET_OK;
 }
 
-hal_ret_t
-p4pd_capri_stats_region_init(void)
-{
-    p4pd_table_properties_t       tbl_ctx;
-    hbm_addr_t                    stats_base_addr;
-    uint64_t                      stats_region_start;
-    uint64_t                      stats_region_size;
-
-    stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
-    stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
-
-    // reset bit 31 (saves one ASM instruction)
-    stats_region_start &= 0x7FFFFFFF;
-    stats_base_addr &= 0x7FFFFFFF;
-
-    p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 6);
-
-    p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 3);
-    assert(stats_base_addr <  (stats_region_start +  stats_region_size));
-    return HAL_RET_OK;
-}
+/* *
+ * Capri specific init functions
+ * */
 
 hal_ret_t
 p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
@@ -1800,12 +1764,6 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     HAL_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_compute_checksum_init() == HAL_RET_OK);
 
-    /* Capri specific inits */
-#ifndef GFT
-    // initialize the p4pd stats region
-    HAL_ASSERT(p4pd_capri_stats_region_init() == HAL_RET_OK);
-#endif
-    
     // initialize all PB/TM tables with default entries, if any
     // Even though this is not really a P4 Table it is very
     // tightly coupled with our P4 Program and after discussing

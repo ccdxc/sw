@@ -44,12 +44,64 @@
 #include "nic/hal/pd/iris/proxyccb_pd.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
 namespace hal {
 extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 namespace pd {
 
 class hal_state_pd *g_hal_state_pd;
+
+/**** Iris specific capri inits - START ****/
+/* TODO: These functions need to be moved to asic-pd common layer */
+hal_ret_t
+p4pd_capri_stats_region_init(void)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    hbm_addr_t                    stats_base_addr;
+    uint64_t                      stats_region_start;
+    uint64_t                      stats_region_size;
+
+    stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
+    stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
+
+    // reset bit 31 (saves one ASM instruction)
+    stats_region_start &= 0x7FFFFFFF;
+    stats_base_addr &= 0x7FFFFFFF;
+
+    p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    stats_base_addr += (tbl_ctx.tabledepth << 5);
+
+    p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    stats_base_addr += (tbl_ctx.tabledepth << 5);
+
+    p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    stats_base_addr += (tbl_ctx.tabledepth << 5);
+
+    p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    stats_base_addr += (tbl_ctx.tabledepth << 6);
+
+    p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    stats_base_addr += (tbl_ctx.tabledepth << 3);
+    assert(stats_base_addr <  (stats_region_start +  stats_region_size));
+    return HAL_RET_OK;
+}
+/**** Iris specific capri inits - END ****/
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the slabs
@@ -838,7 +890,8 @@ hal_state_pd::init_tables(void)
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "table_maps/capri_p4_table_map.json"
+        .table_map_cfg_file = "table_maps/capri_p4_table_map.json",
+        .p4pd_pgm_name = "iris"
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -1103,6 +1156,17 @@ hal_ret_t
 pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file = "table_maps/capri_p4_table_map.json",
+        .p4pd_pgm_name = "iris"
+    };
+    
+    /**** Iris specific capri inits ****/
+    // initialize the p4pd stats region
+    HAL_ASSERT(p4pd_capri_stats_region_init() == HAL_RET_OK);
+
+    /* Common asic pd init - Must be called after capri asic init */
+    p4pd_asic_init(&p4pd_cfg);
 
     g_hal_state_pd->qos_hbm_fifo_allocator_init();
 
@@ -1348,6 +1412,7 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
     }
     return HAL_RET_OK;
 }
+
 
 }    // namespace pd
 }    // namespace hal

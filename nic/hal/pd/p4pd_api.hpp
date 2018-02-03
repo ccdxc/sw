@@ -119,8 +119,10 @@ typedef struct p4pd_table_properties_ {
  */
 typedef struct p4pd_cfg_s {
     const char *table_map_cfg_file;    // fully resolved path to the table map file
+    const char *p4pd_pgm_name;
 } p4pd_cfg_t;
 p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg);
+p4pd_error_t p4pd_asic_init(p4pd_cfg_t *p4pd_cfg);
 
 
 /*

@@ -19,6 +19,8 @@ cc_library(
         "//nic:gen_includes",
         "//nic:boost",
         "//nic:spdlog",
+        "//nic:asic_includes",
+        "//nic/hal/pd/capri:capri_includes",
     ],
     alwayslink = 1,
 )

@@ -1403,7 +1403,8 @@ TEST_F(gft_test, test1) {
     int ret = 0;
     uint64_t asm_base_addr;
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file = "../gen/gft/p4pd/capri_p4_table_map.json"
+        .table_map_cfg_file = "../gen/gft/p4pd/capri_p4_table_map.json",
+        .p4pd_pgm_name = "gft"
     };
 
     printf("Connecting to ASIC SIM\n");
@@ -1421,6 +1422,8 @@ TEST_F(gft_test, test1) {
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init();
+    ASSERT_NE(ret, -1);
+    ret = p4pd_asic_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     ret = capri_default_config_init(true);
     ASSERT_NE(ret, -1);
