@@ -22,7 +22,7 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // EP Create
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t 
+hal_ret_t 
 pd_ep_create(pd_ep_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
@@ -78,7 +78,7 @@ end:
 // ----------------------------------------------------------------------------
 // EP Update 
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t 
+hal_ret_t 
 pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -97,7 +97,7 @@ pd_ep_update (pd_ep_update_args_t *pd_ep_upd_args)
 //-----------------------------------------------------------------------------
 // PD Endpoint Delete
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_ep_delete (pd_ep_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;

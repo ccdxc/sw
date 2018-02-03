@@ -6,7 +6,7 @@
 namespace hal {
 namespace pd {
 
-EXTC hal_ret_t
+hal_ret_t
 #if 0
 pd_debug_cli_read(uint32_t tableid,
                   uint32_t index,
@@ -39,7 +39,7 @@ pd_debug_cli_read(pd_debug_cli_read_args_t *args)
 }
 
 
-EXTC hal_ret_t
+hal_ret_t
 #if 0
 pd_debug_cli_write(uint32_t tableid,
                    uint32_t index,

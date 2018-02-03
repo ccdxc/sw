@@ -57,6 +57,9 @@ cc_test(
         "-lpthread",
         "-pthread",
     ],
-    deps = [] + gl_deps_list,
+    deps = [
+            "//nic/hal/pd/iris:pd_iris",
+            "//nic/hal/pd/capri:capri",
+            ] + gl_deps_list,
     copts = sdk_copts,
 )

@@ -8,7 +8,7 @@
 namespace hal {
 namespace pd {
 
-EXTC hal_ret_t 
+hal_ret_t 
  // pd_descriptor_aol_get(pd_descr_aol_t *src, pd_descr_aol_t *dst)
 pd_descriptor_aol_get(pd_descriptor_aol_get_args_t *args)
 {

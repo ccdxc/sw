@@ -61,7 +61,7 @@ if_is_tunnel_if(if_t *pi_if)
 // ----------------------------------------------------------------------------
 // Given a PI LIf, get its lport id
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_lif_get_lport_id(pd_lif_get_lport_id_args_t *args)
 {
     // uint32_t        lport_id = 0;
@@ -92,7 +92,7 @@ if_get_lport_id(if_t *pi_if)
     return args.lport_id;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_if_get_lport_id(pd_if_get_lport_id_args_t *args)
 {
     pd_enicif_t     *pd_enicif = NULL;
@@ -174,7 +174,7 @@ if_get_hw_lif_id(if_t *pi_if)
 uint32_t
 if_get_hw_lif_id(if_t *pi_if) 
 #endif
-EXTC hal_ret_t
+hal_ret_t
 pd_if_get_hw_lif_id(pd_if_get_hw_lif_id_args_t *args)
 {
     lif_t           *pi_lif = NULL;
@@ -361,7 +361,7 @@ if_get_uplink_lport_id(if_t *pi_if)
 uint32_t
 if_get_tm_oport(if_t *pi_if) 
 #endif
-EXTC hal_ret_t
+hal_ret_t
 pd_if_get_tm_oport(pd_if_get_tm_oport_args_t *args)
 {
     intf::IfType               if_type;

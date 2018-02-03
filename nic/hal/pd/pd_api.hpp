@@ -2063,6 +2063,12 @@ pd_gft_args_init (pd_gft_args_t *args)
     args->exact_match_flow_entry = NULL;
 }
 
+// slab
+typedef struct pd_get_slab_args_s {
+    hal_slab_t slab_id;
+    sdk::lib::slab *slab;
+} __PACK__ pd_get_slab_args_t;
+
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
     ENTRY(PD_FUNC_ID_MEM_INIT,              0, "pd_func_id_pd_mem_init")                \
@@ -2257,7 +2263,8 @@ pd_gft_args_init (pd_gft_args_t *args)
     ENTRY(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, 190, "PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE") \
     ENTRY(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, 191, "PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE") \
     ENTRY(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, 192, "PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE") \
-    ENTRY(PD_FUNC_ID_MAX,                   194, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_GET_SLAB,              193, "PD_FUNC_ID_GET_SLAB")\
+    ENTRY(PD_FUNC_ID_MAX,                   200, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2560,6 +2567,9 @@ PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_create, pd_gft);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft);
 
+// slab
+PD_FUNCP_TYPEDEF(pd_get_slab);
+
 typedef struct pd_call_s {
     union {
         // init pd calls
@@ -2845,6 +2855,9 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_gft_exact_match_profile_create);
         PD_UNION_FIELD(pd_gft_hdr_group_xposition_profile_create);
         PD_UNION_FIELD(pd_gft_exact_match_flow_entry_create);
+
+        // slab
+        PD_UNION_FIELD(pd_get_slab);
     };
 
 } pd_call_t;

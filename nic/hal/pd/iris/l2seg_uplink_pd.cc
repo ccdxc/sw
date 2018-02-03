@@ -21,7 +21,7 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Adding L2segment on Uplink
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_add_l2seg_uplink(pd_add_l2seg_uplink_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -37,7 +37,7 @@ pd_add_l2seg_uplink(pd_add_l2seg_uplink_args_t *args)
 // ----------------------------------------------------------------------------
 // Deleting L2segment on Uplink
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_del_l2seg_uplink(pd_del_l2seg_uplink_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;

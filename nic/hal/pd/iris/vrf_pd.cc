@@ -15,7 +15,7 @@ namespace pd {
 //-----------------------------------------------------------------------------
 // PD vrf Create
 //-----------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 pd_vrf_create (pd_vrf_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -67,7 +67,7 @@ end:
 //-----------------------------------------------------------------------------
 // PD vrf Update
 //-----------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 pd_vrf_update (pd_vrf_update_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -100,7 +100,7 @@ end:
 //-----------------------------------------------------------------------------
 // PD vrf Delete
 //-----------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 pd_vrf_delete (pd_vrf_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
@@ -784,7 +784,7 @@ delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_vrf_make_clone(pd_vrf_make_clone_args_t *args)
 {
     hal_ret_t     ret           = HAL_RET_OK;
@@ -827,7 +827,7 @@ pd_vrf_mem_free(pd_vrf_mem_free_args_t *args)
 // Returns the vlan id for packets from CPU 
 // Note: Currently being used only for IPSec packets.
 // ----------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 // pd_vrf_get_fromcpu_vlanid(vrf_t *vrf, uint16_t *vid)
 pd_vrf_get_fromcpu_vlanid(pd_vrf_get_fromcpu_vlanid_args_t *args)
 {
@@ -857,7 +857,7 @@ pd_vrf_get_lookup_id(vrf_t *vrf)
 }
 #endif
 
-extern "C" hal_ret_t
+hal_ret_t
 pd_vrf_get_lookup_id(pd_vrf_get_lookup_id_args_t *args)
 {
     vrf_t *vrf = args->vrf;

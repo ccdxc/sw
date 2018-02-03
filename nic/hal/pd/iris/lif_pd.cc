@@ -17,7 +17,7 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Lif Create in PD
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_lif_create (pd_lif_create_args_t *args)
 {
     hal_ret_t            ret;
@@ -58,7 +58,7 @@ end:
 //-----------------------------------------------------------------------------
 // PD Lif Update
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_lif_update (pd_lif_update_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -134,7 +134,7 @@ end:
 //-----------------------------------------------------------------------------
 // PD Lif Delete
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_lif_delete (pd_lif_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
@@ -693,7 +693,7 @@ delink_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 // pd_lif_make_clone(lif_t *ten, lif_t *clone)
 pd_lif_make_clone(pd_lif_make_clone_args_t *args)
 {
@@ -720,7 +720,7 @@ end:
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_lif_mem_free(pd_lif_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
@@ -738,7 +738,7 @@ pd_lif_mem_free(pd_lif_mem_free_args_t *args)
 // ------------------------------------------------------------------------
 
 // uint32_t pd_get_hw_lif_id(lif_t *lif)
-EXTC hal_ret_t
+hal_ret_t
 pd_get_hw_lif_id (pd_get_hw_lif_id_args_t *args)
 {
     lif_t *lif = args->lif;

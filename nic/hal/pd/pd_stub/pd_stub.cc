@@ -287,6 +287,8 @@ PD_FUNC_STUB_ARGS(pd_gft_exact_match_profile_create, pd_gft);
 PD_FUNC_STUB_ARGS(pd_gft_hdr_group_xposition_profile_create, pd_gft);
 PD_FUNC_STUB_ARGS(pd_gft_exact_match_flow_entry_create, pd_gft);
 
+// slab
+PD_FUNC_STUB(pd_get_slab);
 }   // namespace pd
 }   // namespace hal
 

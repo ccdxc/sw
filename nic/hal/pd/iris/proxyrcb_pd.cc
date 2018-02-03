@@ -482,7 +482,7 @@ err:
  * APIs
  *******************************************/
 
-EXTC hal_ret_t
+hal_ret_t
 pd_proxyrcb_create (pd_proxyrcb_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -567,7 +567,7 @@ pd_proxyrcb_deactivate (pd_proxyrcb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_proxyrcb_update (pd_proxyrcb_update_args_t *args)
 {
     hal_ret_t       ret;
@@ -602,7 +602,7 @@ pd_proxyrcb_update (pd_proxyrcb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 #if 0
 pd_proxyrcb_delete (pd_proxyrcb_args_t *args,
                     bool retain_in_db)

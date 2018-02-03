@@ -176,7 +176,7 @@ end:
 //------------------------------------------------------------------------------
 // pd mc_entry create
 //------------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_mc_entry_create (pd_mc_entry_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -212,7 +212,7 @@ end:
 //-----------------------------------------------------------------------------
 // PD mc_entry Delete
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_mc_entry_delete (pd_mc_entry_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;

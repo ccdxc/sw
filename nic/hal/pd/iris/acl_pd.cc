@@ -513,7 +513,7 @@ end:
 // ----------------------------------------------------------------------------
 //  Acl Update
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_acl_update (pd_acl_update_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -536,7 +536,7 @@ pd_acl_update (pd_acl_update_args_t *args)
 // ----------------------------------------------------------------------------
 // Delete a PD ACL and remove from hardware
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_acl_delete (pd_acl_delete_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -562,7 +562,7 @@ pd_acl_delete (pd_acl_delete_args_t *args)
 // ----------------------------------------------------------------------------
 // Create a PD ACL and add it to hardware
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_acl_create (pd_acl_create_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -629,7 +629,7 @@ end:
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_acl_mem_free(pd_acl_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;

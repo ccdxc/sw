@@ -15,7 +15,7 @@ uint64_t    key_mem_size = 0;
 char        key_mem[] = CAPRI_BARCO_KEY_MEM;
 
 // hal_ret_t pd_crypto_alloc_key(int32_t *key_idx)
-EXTC hal_ret_t
+hal_ret_t
 pd_crypto_alloc_key(pd_crypto_alloc_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -41,7 +41,7 @@ pd_crypto_alloc_key(pd_crypto_alloc_key_args_t *args)
 
 
 // hal_ret_t pd_crypto_free_key(int32_t key_idx)
-EXTC hal_ret_t pd_crypto_free_key(pd_crypto_free_key_args_t *args)
+hal_ret_t pd_crypto_free_key(pd_crypto_free_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     is = indexer::SUCCESS;
@@ -65,7 +65,7 @@ EXTC hal_ret_t pd_crypto_free_key(pd_crypto_free_key_args_t *args)
 
 
 // hal_ret_t pd_crypto_write_key(int32_t key_idx, crypto_key_t *key)
-EXTC hal_ret_t pd_crypto_write_key(pd_crypto_write_key_args_t *args)
+hal_ret_t pd_crypto_write_key(pd_crypto_write_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     int32_t key_idx = args->key_idx;
@@ -77,7 +77,7 @@ EXTC hal_ret_t pd_crypto_write_key(pd_crypto_write_key_args_t *args)
 }
 
 // hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key)
-EXTC hal_ret_t pd_crypto_read_key(pd_crypto_read_key_args_t *args)
+hal_ret_t pd_crypto_read_key(pd_crypto_read_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     int32_t key_idx = args->key_idx;
@@ -89,7 +89,7 @@ EXTC hal_ret_t pd_crypto_read_key(pd_crypto_read_key_args_t *args)
 }
 
 // hal_ret_t pd_crypto_asym_alloc_key(int32_t *key_idx)
-EXTC hal_ret_t
+hal_ret_t
 pd_crypto_asym_alloc_key(pd_crypto_asym_alloc_key_args_t *args)
 
 {
@@ -107,7 +107,7 @@ pd_crypto_asym_alloc_key(pd_crypto_asym_alloc_key_args_t *args)
 }
 
 // hal_ret_t pd_crypto_asym_free_key(int32_t key_idx)
-EXTC hal_ret_t pd_crypto_asym_free_key(pd_crypto_asym_free_key_args_t *args)
+hal_ret_t pd_crypto_asym_free_key(pd_crypto_asym_free_key_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     int32_t key_idx = args->key_idx;
@@ -126,7 +126,7 @@ EXTC hal_ret_t pd_crypto_asym_free_key(pd_crypto_asym_free_key_args_t *args)
 }
 
 // hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key)
-EXTC hal_ret_t pd_crypto_asym_write_key(pd_crypto_asym_write_key_args_t *args)
+hal_ret_t pd_crypto_asym_write_key(pd_crypto_asym_write_key_args_t *args)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     capri_barco_asym_key_desc_t     key_desc;
@@ -154,7 +154,7 @@ EXTC hal_ret_t pd_crypto_asym_write_key(pd_crypto_asym_write_key_args_t *args)
 }
 
 // hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key)
-EXTC hal_ret_t pd_crypto_asym_read_key(pd_crypto_asym_read_key_args_t *args)
+hal_ret_t pd_crypto_asym_read_key(pd_crypto_asym_read_key_args_t *args)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     capri_barco_asym_key_desc_t     key_desc;

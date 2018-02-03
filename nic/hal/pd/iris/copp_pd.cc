@@ -10,7 +10,7 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // Copp Create
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_copp_create(pd_copp_create_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;;

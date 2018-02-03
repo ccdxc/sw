@@ -396,7 +396,7 @@ err:
  * APIs
  *******************************************/
 
-EXTC hal_ret_t
+hal_ret_t
 pd_proxyccb_create (pd_proxyccb_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -476,7 +476,7 @@ pd_proxyccb_deactivate (pd_proxyccb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_proxyccb_update (pd_proxyccb_update_args_t *args)
 {
     hal_ret_t       ret;
@@ -510,7 +510,7 @@ pd_proxyccb_update (pd_proxyccb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 #if 0
 pd_proxyccb_delete (pd_proxyccb_args_t *args,
                     bool retain_in_db)

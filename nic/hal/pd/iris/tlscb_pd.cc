@@ -385,7 +385,7 @@ p4pd_get_tlscb_entry(pd_tlscb_t* tlscb_pd)
  * APIs
  *******************************************/
 
-EXTC hal_ret_t
+hal_ret_t
 pd_tlscb_create (pd_tlscb_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -427,7 +427,7 @@ cleanup:
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_tlscb_update (pd_tlscb_update_args_t *args)
 {
     hal_ret_t               ret;
@@ -449,7 +449,7 @@ pd_tlscb_update (pd_tlscb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_tlscb_delete (pd_tlscb_delete_args_t *args)
 {
     hal_ret_t               ret;
@@ -476,7 +476,7 @@ pd_tlscb_delete (pd_tlscb_delete_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_tlscb_get (pd_tlscb_get_args_t *args)
 {
     hal_ret_t               ret;

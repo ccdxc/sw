@@ -277,7 +277,7 @@ TEST_F(vrf_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    args.flow_lkupid = 4096;
+    args.flow_lkupid = 4097;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
     // ret = hal::pd::pd_get_object_from_flow_lkupid(4097, &obj_id, &obj);

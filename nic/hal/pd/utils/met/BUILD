@@ -50,6 +50,9 @@ cc_test(
     name = "met_test",
     srcs = ["test/met_test.cc"],
     linkopts = gl_linkopts_list,
-    deps = [] + gl_deps_list,
+    deps = [
+            "//nic/hal/pd/iris:pd_iris",
+            "//nic/hal/pd/capri:capri",
+            ] + gl_deps_list,
     copts = sdk_copts,
 )

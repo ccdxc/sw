@@ -39,7 +39,6 @@ cc_binary(
             "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
 
             # PD
-            "//nic:capricsr_int",
             "@sdk//obj:sdk_catalog",
             "//nic:asic_libs",
         ],

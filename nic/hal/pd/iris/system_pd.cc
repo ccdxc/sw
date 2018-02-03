@@ -53,7 +53,7 @@ end:
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 // pd_drop_stats_get (pd_system_args_t *pd_sys_args)
 pd_drop_stats_get(pd_drop_stats_get_args_t *args)
 {
@@ -370,7 +370,7 @@ pd_system_populate_table_stats (sys::TableStatsEntry *stats_entry,
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 // pd_table_stats_get (pd_system_args_t *pd_sys_args)
 pd_table_stats_get(pd_table_stats_get_args_t *args)
 {

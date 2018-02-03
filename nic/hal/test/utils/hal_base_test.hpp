@@ -90,6 +90,6 @@ protected:
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {
-    hal_uninitialize();
+    // hal_uninitialize();
   }
 };

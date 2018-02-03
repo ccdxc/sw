@@ -342,6 +342,9 @@ hal_pd_load_symbols(void) {
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
+
+    // slab
+    PD_SYMBOL_LOAD(PD_FUNC_ID_GET_SLAB, pd_get_slab);
     return ret;
 }
 
@@ -383,8 +386,8 @@ hal_pd_call(pd_func_id_t pd_func_id, void *args)
 
     // l2seg pd calls
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_CREATE, pd_l2seg_create);
-    PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_DELETE, pd_l2seg_update);
-    PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_delete);
+    PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_DELETE, pd_l2seg_delete);
+    PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_UPDATE, pd_l2seg_update);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
     PD_SYMBOL_CALL(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
     PD_SYMBOL_CALL(PD_FUNC_ID_FIND_L2SEG_BY_HWID, pd_find_l2seg_by_hwid);
@@ -648,6 +651,9 @@ hal_pd_call(pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_GEN, pd_capri_barco_asym_rsa2k_sig_gen);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
+
+    // slab
+    PD_SYMBOL_CALL(PD_FUNC_ID_GET_SLAB, pd_get_slab);
 
     HAL_ASSERT(0);
     return ret;

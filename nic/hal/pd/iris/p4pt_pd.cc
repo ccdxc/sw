@@ -9,7 +9,7 @@
 namespace hal {
 namespace pd {
 
-EXTC hal_ret_t
+hal_ret_t
 // p4pt_pd_init() {
 p4pt_pd_init(p4pt_pd_init_args_t *args) {
     lif_id_t lif_id = SERVICE_LIF_P4PT;

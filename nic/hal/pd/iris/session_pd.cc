@@ -741,7 +741,7 @@ p4pd_del_flow_hash_table_entries (pd_session_t *session_pd)
 //------------------------------------------------------------------------------
 // program all PD tables for given session and maintain meta data in PD state
 //------------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_session_create (pd_session_create_args_t *args)
 {
     hal_ret_t          ret;
@@ -881,7 +881,7 @@ cleanup:
 //-----------------------------------------
 // Delete PD tables for given session
 //------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_session_delete (pd_session_delete_args_t *args)
 {
     hal_ret_t          ret = HAL_RET_OK;
@@ -914,7 +914,7 @@ pd_session_delete (pd_session_delete_args_t *args)
 //-----------------------------------------
 // get all session related information
 //------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_session_get (pd_session_get_args_t *args)
 {
     return HAL_RET_OK;
@@ -923,7 +923,7 @@ pd_session_get (pd_session_get_args_t *args)
 //------------------------------------------------------------------------------
 // get all flow related information
 //------------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_flow_get (pd_flow_get_args_t *args)
 {
     return HAL_RET_OK;

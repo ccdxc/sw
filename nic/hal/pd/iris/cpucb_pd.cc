@@ -350,7 +350,7 @@ err:
  * APIs
  *******************************************/
 
-EXTC hal_ret_t
+hal_ret_t
 pd_cpucb_create (pd_cpucb_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -405,7 +405,7 @@ cleanup:
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_cpucb_update (pd_cpucb_update_args_t *args)
 {
     hal_ret_t               ret;
@@ -427,7 +427,7 @@ pd_cpucb_update (pd_cpucb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_cpucb_delete (pd_cpucb_delete_args_t *args)
 {
     hal_ret_t               ret;
@@ -454,7 +454,7 @@ pd_cpucb_delete (pd_cpucb_delete_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_cpucb_get (pd_cpucb_get_args_t *args)
 {
     hal_ret_t               ret;

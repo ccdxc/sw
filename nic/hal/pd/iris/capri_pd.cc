@@ -15,49 +15,49 @@
 namespace hal {
 namespace pd {
 
-EXTC hal_ret_t
+hal_ret_t
 pd_get_start_offset (pd_get_start_offset_args_t *args)
 {
     args->offset = get_start_offset(args->reg_name);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_get_size_kb (pd_get_size_kb_args_t *args)
 {
     args->size = get_size_kb(args->reg_name);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_push_qstate_to_capri (pd_push_qstate_to_capri_args_t *args)
 {
     push_qstate_to_capri(args->qstate);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_clear_qstate (pd_clear_qstate_args_t *args) 
 {
     clear_qstate(args->qstate);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_read_qstate (pd_read_qstate_args_t *args)
 {
     read_qstate(args->q_addr, args->buf, args->q_size);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_write_qstate (pd_write_qstate_args_t *args)
 {
     write_qstate(args->q_addr, args->buf, args->q_size);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_get_pc_offset (pd_get_pc_offset_args_t *args)
 {
     int32_t ret = get_pc_offset(args->handle, args->prog_name, 
@@ -68,21 +68,21 @@ pd_get_pc_offset (pd_get_pc_offset_args_t *args)
 
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_capri_hbm_read_mem (pd_capri_hbm_read_mem_args_t *args)
 {
     capri_hbm_read_mem(args->addr, args->buf, args->size);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_capri_hbm_write_mem (pd_capri_hbm_write_mem_args_t *args)
 {
     capri_hbm_write_mem(args->addr, args->buf, args->size);
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_capri_program_label_to_offset (pd_capri_program_label_to_offset_args_t *args)
 {
     capri_program_label_to_offset(args->handle, args->prog_name,
@@ -90,7 +90,7 @@ pd_capri_program_label_to_offset (pd_capri_program_label_to_offset_args_t *args)
     return HAL_RET_OK;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_capri_pxb_cfg_lif_bdf (pd_capri_pxb_cfg_lif_bdf_args_t *args)
 {
     return capri_pxb_cfg_lif_bdf(args->lif, args->bdf);

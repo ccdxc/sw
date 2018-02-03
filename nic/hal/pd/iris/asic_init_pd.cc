@@ -5,7 +5,7 @@
 namespace hal {
 namespace pd {
 
-EXTC hal_ret_t
+hal_ret_t
 pd_asic_init (pd_asic_init_args_t *args) 
 {
 

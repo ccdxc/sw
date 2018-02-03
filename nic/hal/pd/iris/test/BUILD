@@ -14,6 +14,9 @@ cc_test(
         "-lz",
     ],
     deps = gl_deps_list + [
+            "//nic/hal/pd/iris:pd_iris",
+            "//nic/hal/pd/capri:capri_includes",
+            "//nic/hal/pd:pdcommon",
     		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
     ],
     copts = sdk_copts,
@@ -29,7 +32,10 @@ cc_test(
         "-lz",
     ],
     deps =  gl_deps_list + [
-		"//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
+            "//nic/hal/pd/iris:pd_iris",
+            "//nic/hal/pd/capri:capri",
+            "//nic/hal/pd:pdcommon",
+            "//nic/hal/pd/utils/p4pd_mock:p4pd_mock",
     ],
     copts = sdk_copts,
 )

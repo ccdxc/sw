@@ -17,7 +17,7 @@ namespace pd {
 
 // Creates a new oif_list and returns handle
 // hal_ret_t oif_list_create(oif_list_id_t *list)
-EXTC hal_ret_t pd_oif_list_create(pd_oif_list_create_args_t *args)
+hal_ret_t pd_oif_list_create(pd_oif_list_create_args_t *args)
 {
     oif_list_id_t *list = args->list;
     return g_hal_state_pd->met_table()->create_repl_list(list);
@@ -25,7 +25,7 @@ EXTC hal_ret_t pd_oif_list_create(pd_oif_list_create_args_t *args)
 
 // Creates a contiguous block of oif_lists and returns handle to the first one
 // hal_ret_t oif_list_create_block(oif_list_id_t *list, uint32_t size)
-EXTC hal_ret_t pd_oif_list_create_block(pd_oif_list_create_block_args_t *args)
+hal_ret_t pd_oif_list_create_block(pd_oif_list_create_block_args_t *args)
 {
     oif_list_id_t *list = args->list;
     uint32_t size = args->size;
@@ -34,7 +34,7 @@ EXTC hal_ret_t pd_oif_list_create_block(pd_oif_list_create_block_args_t *args)
 
 // Takes an oiflis_handle and deletes it
 // hal_ret_t oif_list_delete(oif_list_id_t list)
-EXTC hal_ret_t pd_oif_list_delete(pd_oif_list_delete_args_t *args)
+hal_ret_t pd_oif_list_delete(pd_oif_list_delete_args_t *args)
 {
     oif_list_id_t list = args->list;
     return g_hal_state_pd->met_table()->delete_repl_list(list);
@@ -42,7 +42,7 @@ EXTC hal_ret_t pd_oif_list_delete(pd_oif_list_delete_args_t *args)
 
 // Takes an oiflis_handle and deletes a block starting from it
 // hal_ret_t oif_list_delete_block(oif_list_id_t list, uint32_t size)
-EXTC hal_ret_t pd_oif_list_delete_block(pd_oif_list_delete_block_args_t *args)
+hal_ret_t pd_oif_list_delete_block(pd_oif_list_delete_block_args_t *args)
 {
     oif_list_id_t list = args->list;
     uint32_t size = args->size;
@@ -85,7 +85,7 @@ hal_ret_t pd_oif_list_add_oif(pd_oif_list_add_oif_args_t *args)
 
 // Adds an rdma qp based oif to list
 // hal_ret_t oif_list_add_qp_oif(oif_list_id_t list, oif_t *oif)
-EXTC hal_ret_t pd_oif_list_add_qp_oif(pd_oif_list_add_qp_oif_args_t *args)
+hal_ret_t pd_oif_list_add_qp_oif(pd_oif_list_add_qp_oif_args_t *args)
 {
     hal_ret_t ret;
     oif_list_id_t list = args->list;
@@ -133,7 +133,7 @@ EXTC hal_ret_t pd_oif_list_add_qp_oif(pd_oif_list_add_qp_oif_args_t *args)
 // Removes an oif from list
 // Removes an oif from list
 // hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif)
-EXTC hal_ret_t pd_oif_list_remove_oif(pd_oif_list_remove_oif_args_t *args)
+hal_ret_t pd_oif_list_remove_oif(pd_oif_list_remove_oif_args_t *args)
 {
     oif_list_id_t list = args->list;
     // oif_t *oif = args->oif;
@@ -147,25 +147,25 @@ EXTC hal_ret_t pd_oif_list_remove_oif(pd_oif_list_remove_oif_args_t *args)
 
 // Check if an oif is present in the list
 // hal_ret_t oif_list_is_member(oif_list_id_t list, oif_t *oif) {
-EXTC hal_ret_t pd_oif_list_is_member(pd_oif_list_is_member_args_t *args) {
+hal_ret_t pd_oif_list_is_member(pd_oif_list_is_member_args_t *args) {
     return HAL_RET_OK;
 }
 
 // Get an array of all oifs in the list
 // hal_ret_t oif_list_get_num_oifs(oif_list_id_t list, uint32_t &num_oifs) {
-EXTC hal_ret_t pd_oif_list_get_num_oifs(pd_oif_list_get_num_oifs_args_t *args) {
+hal_ret_t pd_oif_list_get_num_oifs(pd_oif_list_get_num_oifs_args_t *args) {
     return HAL_RET_OK;
 }
 
 // Get an array of all oifs in the list
 // hal_ret_t oif_list_get_oif_array(oif_list_id_t list, uint32_t &num_oifs, oif_t *oifs) {
-EXTC hal_ret_t pd_oif_list_get_oif_array(pd_oif_list_get_oif_array_args_t *args) {
+hal_ret_t pd_oif_list_get_oif_array(pd_oif_list_get_oif_array_args_t *args) {
     return HAL_RET_OK;
 }
 
 // Adds a special node for ingress driven copy
 // hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list)
-EXTC hal_ret_t pd_oif_list_set_honor_ingress(pd_oif_list_set_honor_ingress_args_t *args)
+hal_ret_t pd_oif_list_set_honor_ingress(pd_oif_list_set_honor_ingress_args_t *args)
 {
     p4_replication_data_t data;
     oif_list_id_t list = args->list;

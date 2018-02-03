@@ -393,7 +393,7 @@ err:
  * APIs
  *******************************************/
 
-EXTC hal_ret_t
+hal_ret_t
 pd_rawrcb_create (pd_rawrcb_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -478,7 +478,7 @@ pd_rawrcb_deactivate (pd_rawrcb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_rawrcb_update (pd_rawrcb_update_args_t *args)
 {
     hal_ret_t       ret;
@@ -508,7 +508,7 @@ pd_rawrcb_update (pd_rawrcb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 #if 0
 pd_rawrcb_delete (pd_rawrcb_delete_args_t *args,
                   bool retain_in_db)
@@ -540,7 +540,7 @@ pd_rawrcb_delete (pd_rawrcb_delete_args_t *del_args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_rawrcb_get (pd_rawrcb_get_args_t *args)
 {
     hal_ret_t       ret;

@@ -13,7 +13,7 @@ namespace pd {
 //-----------------------------------------------------------------------------
 // PD Nwsec Create
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_nwsec_profile_create (pd_nwsec_profile_create_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
@@ -55,7 +55,7 @@ end:
 //-----------------------------------------------------------------------------
 // PD Nwsec Update
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
@@ -96,7 +96,7 @@ pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
 //-----------------------------------------------------------------------------
 // PD Nwsec Delete
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_nwsec_profile_delete (pd_nwsec_profile_delete_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -356,7 +356,7 @@ nwsec_delink_pi_pd(pd_nwsec_profile_t *pd_nw, nwsec_profile_t  *pi_nw)
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 // pd_nwsec_profile_make_clone(nwsec_profile_t *nwsec, nwsec_profile_t *clone)
 pd_nwsec_profile_make_clone(pd_nwsec_profile_make_clone_args_t *args)    
 {
@@ -382,7 +382,7 @@ end:
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_nwsec_profile_mem_free(pd_nwsec_profile_mem_free_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;

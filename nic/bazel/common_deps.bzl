@@ -20,24 +20,9 @@ gl_deps_list = [
         #"//nic/hal/pd/control",
 
         # PD
-        #"//nic/hal/pd:pdcommon",
-        #"@sdk//obj:sdk_tcam",
-        #"@sdk//obj:sdk_hash",
-        #"@sdk//obj:sdk_directmap",
-        #"//nic/hal/pd/utils/flow",
-        #"//nic/hal/pd/utils/met",
-        #"//nic/hal/pd/utils/acl_tcam",
-        #"//nic/hal/pd/iris",
-        "//nic:capricsr_int",
-        #"//nic/hal/pd/capri",
-        #"@sdk//obj:sdk_pal",
-        #"//nic/model_sim:model_client",
-        #"//nic:iris_p4pd",
-        #"//nic:p4pluspd_txdma",
-        #"//nic:p4pluspd_rxdma",
         "@sdk//obj:sdk_catalog",
         "//nic:asic_libs",
-        "//nic/hal/lib:hal_lib",
+        #"//nic/hal/lib:hal_lib",
 
         # External
         "//:gtest",

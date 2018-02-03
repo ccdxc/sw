@@ -365,7 +365,7 @@ err:
  * APIs
  *******************************************/
 
-EXTC hal_ret_t
+hal_ret_t
 pd_rawccb_create (pd_rawccb_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -445,7 +445,7 @@ pd_rawccb_deactivate (pd_rawccb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_rawccb_update (pd_rawccb_update_args_t *args)
 {
     hal_ret_t       ret;
@@ -475,7 +475,7 @@ pd_rawccb_update (pd_rawccb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 #if 0
 pd_rawccb_delete (pd_rawccb_args_t *args,
                   bool retain_in_db)

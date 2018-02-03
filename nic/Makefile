@@ -133,11 +133,11 @@ ifneq ($(ARCH),aarch64)
 endif
 	# PD Utils
 	# TODO: Please enable after PD cleanup commit
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
 	# PD
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
 	# SDK Tests
 	$(MAKE) -C sdk build-test
 
@@ -184,7 +184,7 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/copp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/copp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
 	$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
-	# PI Utils gtests
+	@# PI Utils gtests
 	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
 	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"
 	cd ../bazel-bin && ./nic/utils/pt/pt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/pt_test.xml"
@@ -192,15 +192,15 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	cd ../bazel-bin && ./nic/utils/block_list/block_list_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/block_list_test.xml"
 	cd ../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
 	cd ../bazel-bin && ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
-	# PD Utils gtests
-	#$(PD_CMD_OPTS) ./nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
-	# Removed because of randomization
+	@# PD Utils gtests
+	$(PD_CMD_OPTS) ./nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
+	@# Removed because of randomization
 	#cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/flow/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow.xml"
-	#$(PD_CMD_OPTS) ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
-	# PD gtests
+	$(PD_CMD_OPTS) ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
+	@# PD gtests
 	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_test.xml"
 	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/tnnl_rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tnnl_rw_tbl_test.xml"
-	# SDK tests
+	@# SDK tests
 	@find sdk/bazel-bin/test -name *.runfiles_manifest* | sed 's/\.runfiles_manifest$$//1' | \
 	while read i; \
 		do printf "\nRunning $$i\n" && $$i --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/$(basename($$i)).xml"; \

@@ -411,7 +411,7 @@ err:
  * APIs
  *******************************************/
 
-EXTC hal_ret_t
+hal_ret_t
 pd_ipseccb_create (pd_ipseccb_create_args_t *args)
 {
     hal_ret_t               ret;
@@ -450,7 +450,7 @@ cleanup:
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_ipseccb_update (pd_ipseccb_update_args_t *args)
 {
     hal_ret_t               ret;
@@ -472,7 +472,7 @@ pd_ipseccb_update (pd_ipseccb_update_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_ipseccb_delete (pd_ipseccb_delete_args_t *args)
 {
     hal_ret_t               ret;
@@ -499,7 +499,7 @@ pd_ipseccb_delete (pd_ipseccb_delete_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_ipseccb_get (pd_ipseccb_get_args_t *args)
 {
     hal_ret_t               ret;

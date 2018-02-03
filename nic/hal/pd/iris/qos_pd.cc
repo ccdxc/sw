@@ -79,7 +79,7 @@ pd_qos_get_alloc_q_count (qos_class_t *qos_class,
 // ----------------------------------------------------------------------------
 // Qos-class Create
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_qos_class_create(pd_qos_class_create_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;;
@@ -147,7 +147,7 @@ pd_qos_class_update (pd_qos_class_args_t *pd_qos_class_upd_args)
 //-----------------------------------------------------------------------------
 // PD Qos-class Delete
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_qos_class_delete (pd_qos_class_delete_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
@@ -994,7 +994,7 @@ pd_qos_class_mem_free(pd_qos_class_args_t *args)
 }
 #endif
 
-EXTC hal_ret_t
+hal_ret_t
 #if 0
 qos_class_get_qos_class_id (qos_class_t *qos_class, 
                             if_t *dest_if, 
@@ -1059,7 +1059,7 @@ qos_class_get_admin_cos (void)
     return HAL_QOS_ADMIN_COS;
 }
 
-EXTC hal_ret_t 
+hal_ret_t 
 pd_qos_class_get_admin_cos (pd_qos_class_get_admin_cos_args_t *args)
 {
     args->cos = HAL_QOS_ADMIN_COS;

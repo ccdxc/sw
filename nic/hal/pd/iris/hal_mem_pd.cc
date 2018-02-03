@@ -46,8 +46,6 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
 namespace hal {
-extern uint32_t g_test;
-extern uint32_t g_test_arr[2];
 extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 namespace pd {
 
@@ -698,6 +696,14 @@ hal_state_pd::factory(void)
         return slab_name; \
     }
 
+hal_ret_t
+pd_get_slab (pd_get_slab_args_t *args)
+{
+
+    args->slab = g_hal_state_pd->get_slab(args->slab_id);
+    return HAL_RET_OK;
+}
+
 slab *
 hal_state_pd::get_slab(hal_slab_t slab_id) 
 {
@@ -1061,7 +1067,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
 //------------------------------------------------------------------------------
 // one time memory related initialization for HAL
 //------------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 pd_mem_init (pd_mem_init_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -1093,7 +1099,7 @@ pd_mem_init (pd_mem_init_args_t *args)
 //------------------------------------------------------------------------------
 // Phase 2 memory related initialization for HAL - after the ASIC is ready
 //------------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -1106,7 +1112,7 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
 //------------------------------------------------------------------------------
 // program default entries in tables
 //------------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -1125,7 +1131,7 @@ pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 //------------------------------------------------------------------------------
 // program default entries for P4Plus tables
 //------------------------------------------------------------------------------
-extern "C" hal_ret_t
+hal_ret_t
 pd_pgm_def_p4plus_entries (pd_pgm_def_p4plus_entries_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;

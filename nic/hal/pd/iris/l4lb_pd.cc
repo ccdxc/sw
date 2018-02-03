@@ -13,7 +13,7 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // l4lb Create
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t 
+hal_ret_t 
 pd_l4lb_create(pd_l4lb_create_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;; 

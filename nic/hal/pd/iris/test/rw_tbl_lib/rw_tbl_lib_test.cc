@@ -2,6 +2,7 @@
 #include "nic/hal/pd/iris/rw_pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_pd.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 #include "nic/include/eth.h"
 
 using hal::pd::pd_rw_entry_key_t;
@@ -92,6 +93,6 @@ TEST_F(rw_test, test1) {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  pd_mem_init(NULL);
+  hal::pd::pd_mem_init(NULL);
   return RUN_ALL_TESTS();
 }

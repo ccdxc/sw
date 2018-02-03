@@ -423,8 +423,7 @@ hal_init (hal_cfg_t *hal_cfg)
     hal_ret_t    ret = HAL_RET_OK;
 
     // Initialize the logger
-    // hal::utils::logger_init(HAL_CONTROL_CORE_ID, hal_cfg->async_en);
-    hal::utils::logger_init(HAL_CONTROL_CORE_ID, false);
+    hal::utils::logger_init(HAL_CONTROL_CORE_ID, hal_cfg->async_en);
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
 

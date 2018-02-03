@@ -18,7 +18,7 @@ namespace pd {
 // ----------------------------------------------------------------------------
 // PD If Create
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_if_create (pd_if_create_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -57,7 +57,7 @@ pd_if_create (pd_if_create_args_t *args)
 // ----------------------------------------------------------------------------
 // PD If Update
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_if_update (pd_if_update_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -95,7 +95,7 @@ pd_if_update (pd_if_update_args_t *args)
 // ----------------------------------------------------------------------------
 // PD If Delete
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_if_delete (pd_if_delete_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -133,7 +133,7 @@ pd_if_delete (pd_if_delete_args_t *args)
 // ----------------------------------------------------------------------------
 // Lif params update. For enics
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t 
+hal_ret_t 
 pd_if_lif_update(pd_if_lif_update_args_t *args)
 {
     HAL_TRACE_DEBUG("pd-if:{}: if lif update", __FUNCTION__);
@@ -145,7 +145,7 @@ pd_if_lif_update(pd_if_lif_update_args_t *args)
 // ----------------------------------------------------------------------------
 // PD If mem free
 // ----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_if_mem_free (pd_if_mem_free_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -180,7 +180,7 @@ pd_if_mem_free (pd_if_mem_free_args_t *args)
     return ret;
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_if_make_clone (pd_if_make_clone_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -220,7 +220,7 @@ pd_if_make_clone (pd_if_make_clone_args_t *args)
 // Nwsec profile update 
 //      - Triggered from vrf update
 //-----------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_if_nwsec_update(pd_if_nwsec_update_args_t *args)
 {
     hal_ret_t                   ret = HAL_RET_OK;

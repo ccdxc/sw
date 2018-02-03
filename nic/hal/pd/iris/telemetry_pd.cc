@@ -43,7 +43,7 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
 }
 
 
-EXTC hal_ret_t
+hal_ret_t
 pd_mirror_session_create(pd_mirror_session_create_args_t *args)
 {
     uint32_t dst_lport;
@@ -107,7 +107,7 @@ pd_mirror_session_create(pd_mirror_session_create_args_t *args)
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_mirror_session_delete(pd_mirror_session_delete_args_t *args)
 {
     mirror_actiondata action_data;
@@ -122,7 +122,7 @@ pd_mirror_session_delete(pd_mirror_session_delete_args_t *args)
     return pd_mirror_update_hw(args->session->id, &action_data);
 }
 
-EXTC hal_ret_t
+hal_ret_t
 pd_mirror_session_get(pd_mirror_session_get_args_t *args)
 {
     mirror_actiondata action_data;
@@ -164,7 +164,7 @@ pd_mirror_session_get(pd_mirror_session_get_args_t *args)
 #define IPFIX_BUFSIZE 2048
 #define IPFIX_HBM_MEMSIZE (64 * 1024)
 telemetry_export_dest *_export_destinations[IPFIX_HBM_MEMSIZE/IPFIX_BUFSIZE];
-EXTC hal_ret_t
+hal_ret_t
 // pd_collector_create(collector_config_t *cfg)
 pd_collector_create(pd_collector_create_args_t *c_args)
 {
