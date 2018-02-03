@@ -23,7 +23,11 @@ namespace pd {
 class hal_state_pd {
 public:
     static hal_state_pd *factory(void);
+    static void destroy(hal_state_pd *state);
     hal_ret_t init_tables(void);
+    hal_ret_t p4plus_rxdma_init_tables(void);
+    hal_ret_t p4plus_txdma_init_tables(void);
+
     directmap *dm_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
             return NULL;

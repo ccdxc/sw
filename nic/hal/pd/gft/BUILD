@@ -19,6 +19,7 @@ cc_library(
         "//nic/hal/pd:hal_pd_includes",
         "//nic:gen_includes",
         "//nic/hal/pd/utils/flow",
+        "//nic/hal/pd/p4pd:p4pd",
         "@sdk//:sdk_headers",
         "@sdk//obj:sdk_tcam",
         "@sdk//obj:sdk_hash",

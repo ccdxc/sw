@@ -106,8 +106,8 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
     }
 
 #if SDK_DEBUG
-    SDK_TRACE_DEBUG("%s: name: %s, slab_id: %d, elem_sz: %d, elems_per_block: %d"
-                    " size %d\n",
+    SDK_TRACE_DEBUG("%s: name: %s, slab_id: %u, elem_sz: %u, elems_per_block: %u"
+                    " size %u\n",
                     __FUNCTION__, name, slab_id, elem_sz, elems_per_block,
                     sizeof(slab));
 #endif

@@ -263,21 +263,6 @@ hal_state_pd::init(void)
     session_keys_idxr_ = sdk::lib::indexer::factory(CRYPTO_KEY_COUNT_MAX);
     HAL_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
 
-#if 0
-    // TODO: cleanup these variables
-    crypto_asym_dma_descr_idxr_ = sdk::lib::indexer::factory(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
-    HAL_ASSERT_RETURN((crypto_asym_dma_descr_idxr_ != NULL), false);
-
-    crypto_sym_msg_descr_idxr_ = sdk::lib::indexer::factory(CRYPTO_SYM_MSG_DESCR_COUNT_MAX);
-    HAL_ASSERT_RETURN((crypto_sym_msg_descr_idxr_ != NULL), false);
-
-    hbm_mem_idxr_ = sdk::lib::indexer::factory(CRYPTO_HBM_MEM_COUNT_MAX);
-    HAL_ASSERT_RETURN((hbm_mem_idxr_!= NULL), false);
-
-    crypto_asym_key_descr_idxr_ = sdk::lib::indexer::factory(CRYPTO_ASYM_KEY_DESCR_COUNT_MAX);
-    HAL_ASSERT_RETURN((crypto_asym_key_descr_idxr_!= NULL), false);
-#endif
-    
     // initialize IPSECCB related data structures
     ipseccb_slab_ = slab::factory("IPSECCB PD", HAL_SLAB_IPSECCB_PD,
                                  sizeof(hal::pd::pd_ipseccb_encrypt_t), 128,
@@ -629,7 +614,6 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
             if (dm_tables_[tid]) {
                 directmap::destroy(dm_tables_[tid]);
-                // delete dm_tables_[tid];
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, dm_tables_);
@@ -640,7 +624,6 @@ hal_state_pd::~hal_state_pd()
              tid < P4TBL_ID_HASH_OTCAM_MAX; tid++) {
             if (hash_tcam_tables_[tid]) {
                 sdk_hash::destroy(hash_tcam_tables_[tid]);
-                // delete hash_tcam_tables_[tid];
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, hash_tcam_tables_);
@@ -650,7 +633,6 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4TBL_ID_TCAM_MIN; tid < P4TBL_ID_TCAM_MIN; tid++) {
             if (tcam_tables_[tid]) {
                 tcam::destroy(tcam_tables_[tid]);
-                // delete tcam_tables_[tid];
             }
         }
         HAL_FREE(HAL_MEM_ALLOC_PD, tcam_tables_);
@@ -658,12 +640,10 @@ hal_state_pd::~hal_state_pd()
 
     if (flow_table_) {
         Flow::destroy(flow_table_);
-        // delete flow_table_;
     }
 
     if (met_table_) {
         Met::destroy(met_table_);
-        // delete met_table_;
     }
 
     if (acl_table_) {
@@ -674,7 +654,6 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
              tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                // delete p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN];
                 directmap::destroy(p4plus_rxdma_dm_tables_[tid - 
                                    P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
@@ -686,7 +665,6 @@ hal_state_pd::~hal_state_pd()
         for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
              tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
             if (p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                // delete p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN];
                 directmap::destroy(p4plus_txdma_dm_tables_[tid - 
                                    P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
             }
@@ -1091,7 +1069,7 @@ pd_mem_init (pd_mem_init_args_t *args)
     g_hal_state_pd = hal_state_pd::factory();
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    HAL_TRACE_DEBUG("Initializing asic lib tables ...");
+    HAL_TRACE_DEBUG("Initializing p4 asic lib tables ...");
     ret = g_hal_state_pd->init_tables();
     if (ret != HAL_RET_OK) {
         delete g_hal_state_pd;

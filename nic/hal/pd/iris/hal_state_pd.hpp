@@ -164,10 +164,6 @@ public:
 
     // get APIs for Crypto state
     indexer *crypto_pd_keys_idxr(void) { return session_keys_idxr_; }
-    indexer *crypto_asym_dma_descr_idxr(void) { return crypto_asym_dma_descr_idxr_; }
-    indexer *crypto_sym_msg_descr_idxr(void) { return crypto_sym_msg_descr_idxr_; }
-    indexer *hbm_mem_idxr(void) { return hbm_mem_idxr_; }
-    indexer *crypto_asym_key_descr_idxr(void) { return crypto_asym_key_descr_idxr_; }
     
     // get APIs for IPSEC CB related state
     slab *ipseccb_slab(void) const { return ipseccb_slab_; }
@@ -409,10 +405,6 @@ private:
     // Crypto related state
     struct {
         indexer    *session_keys_idxr_;
-        indexer    *crypto_asym_dma_descr_idxr_;
-        indexer    *crypto_sym_msg_descr_idxr_;
-        indexer    *hbm_mem_idxr_;
-        indexer    *crypto_asym_key_descr_idxr_;
     } __PACK__;
     
     // ipseccb related state
