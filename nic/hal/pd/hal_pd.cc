@@ -15,14 +15,15 @@ pd_call_t *g_pd_calls;
 
 #define PD_SYMBOL_LOAD(PD_FUNC_ID, NAME)                                       \
 {                                                                              \
-    g_pd_calls[PD_FUNC_ID].NAME =                                                \
+    g_pd_calls[PD_FUNC_ID].NAME =                                              \
         (NAME ## _t)dlsym(g_hal_state->pd_so(), #NAME);                        \
     dlsym_error = dlerror();                                                   \
     if (dlsym_error) {                                                         \
         HAL_TRACE_ERR("{}: cannot load symbol from PD LIB {}: {}",             \
                       __FUNCTION__,  #NAME, dlsym_error);                      \
-        g_pd_calls[PD_FUNC_ID].NAME =                                            \
+        g_pd_calls[PD_FUNC_ID].NAME =                                          \
             (NAME ## _t)dlsym(g_hal_state->pd_stub_so(), #NAME);               \
+        dlsym_error = dlerror();                                               \
         if (dlsym_error) {                                                     \
             HAL_TRACE_ERR("{}: cannot load symbol from PD STUBLIB {}: {}",     \
                           __FUNCTION__, #NAME, dlsym_error);                   \
@@ -54,7 +55,7 @@ pd_call_t *g_pd_calls;
 
 
 hal_ret_t
-hal_pd_load_symbols(void) {
+hal_pd_load_symbols (void) {
     hal_ret_t       ret = HAL_RET_OK;
     const char*     dlsym_error = NULL;
 
@@ -343,31 +344,34 @@ hal_pd_load_symbols(void) {
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
 
+    // gft
+    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, pd_gft_exact_match_profile_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, pd_gft_hdr_group_xposition_profile_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, pd_gft_exact_match_flow_entry_create);
+
     // slab
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_SLAB, pd_get_slab);
     return ret;
 }
 
-
 #define PD_SYMBOL_CALL(PD_FUNC_ID, NAME)                                      \
 {                                                                             \
     if (pd_func_id == PD_FUNC_ID) {                                           \
-        ret = g_pd_calls[pd_func_id].NAME((NAME ## _args_t *)args);             \
+        ret = g_pd_calls[pd_func_id].NAME((NAME ## _args_t *)args);           \
         return ret;                                                           \
     }                                                                         \
 }
-// TODO: Sample expansion of above macro. Remove this once the code is stable
-#if 0
-    PD_SYMBOL_CALL(PD_FUNC_ID_VRF_CREATE, pd_vrf_create);
-    ===
-    if (pd_func_id == PD_FUNC_ID_VRF_CREATE) {
-        g_pd_calls[pd_func_id].pd_vrf_create((pd_vrf_create_args_t *)args);
-        return ret;
-    }
-#endif
+
+#define PD_SYMBOL_ARGS_CALL(PD_FUNC_ID, NAME, ARGS)                           \
+{                                                                             \
+    if (pd_func_id == PD_FUNC_ID) {                                           \
+        ret = g_pd_calls[pd_func_id].NAME((ARGS ## _args_t *)args);           \
+        return ret;                                                           \
+    }                                                                         \
+}
 
 hal_ret_t
-hal_pd_call(pd_func_id_t pd_func_id, void *args) 
+hal_pd_call (pd_func_id_t pd_func_id, void *args) 
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -652,13 +656,17 @@ hal_pd_call(pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
 
+    // gft
+    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, pd_gft_exact_match_profile_create, pd_gft);
+    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, pd_gft_hdr_group_xposition_profile_create, pd_gft);
+    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, pd_gft_exact_match_flow_entry_create, pd_gft);
+
     // slab
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_SLAB, pd_get_slab);
 
     HAL_ASSERT(0);
     return ret;
 }
-
 
 hal_ret_t
 hal_pd_libopen (hal_cfg_t *hal_cfg)

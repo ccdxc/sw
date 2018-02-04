@@ -38,31 +38,6 @@
 namespace hal {
 namespace pd {
 
-//using hal::vrf_t;
-//using hal::l2seg_t;
-//using hal::network_t;
-//using hal::nwsec_profile_t;
-//using hal::dos_policy_t;
-//using hal::if_t;
-//using hal::lif_t;
-//using hal::session_t;
-//using hal::flow_key_t;
-//using hal::flow_t;
-//using hal::tlscb_t;
-//using hal::tcpcb_t;
-//using hal::qos_class_t;
-//using hal::acl_t;
-//using hal::wring_t;
-//using hal::mirror_session_t;
-//using hal::ipseccb_t;
-//using hal::l4lb_service_entry_t;
-//using hal::cpucb_t;
-//using hal::rawrcb_t;
-//using hal::rawccb_t;
-//using hal::proxyrcb_t;
-//using hal::proxyccb_t;
-//using hal::copp_t;
-
 #define EXTC extern "C"
 
 typedef uint32_t  mc_entry_hw_id_t;
