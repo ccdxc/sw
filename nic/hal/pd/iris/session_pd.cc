@@ -926,7 +926,34 @@ pd_session_get (pd_session_get_args_t *args)
 hal_ret_t
 pd_flow_get (pd_flow_get_args_t *args)
 {
-    return HAL_RET_OK;
+    hal_ret_t                 ret = HAL_RET_OK;
+    sdk_ret_t                 sdk_ret;
+    flow_stats_actiondata     d = {0};
+    directmap                *dm = NULL;
+    pd_flow_t                 pd_flow;
+
+    if (args->pd_session == NULL) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    HAL_ASSERT(dm != NULL);
+
+    if (args->role == FLOW_ROLE_INITIATOR) {
+        pd_flow = args->pd_session->iflow;
+    } else {
+        pd_flow = args->pd_session->rflow;
+    }
+
+    sdk_ret = dm->retrieve(pd_flow.flow_stats_hw_id, &d);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret == HAL_RET_OK) {
+        args->flow_state->last_pkt_ts = d.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp;
+        args->flow_state->packets = d.flow_stats_action_u.flow_stats_flow_stats.permit_packets;
+        args->flow_state->bytes = d.flow_stats_action_u.flow_stats_flow_stats.permit_bytes;
+    }
+    
+    return ret;
 }
 
 }    // namespace pd

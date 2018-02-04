@@ -789,3 +789,18 @@ capri_tm_repl_table_token_size_set(uint32_t size_in_bits)
     pbc_csr.cfg_rpl.write();
     return HAL_RET_OK;
 }
+
+/* Get hw clock */
+hal_ret_t
+capri_tm_get_clock_tick(uint64_t *tick)
+{
+#ifndef HAL_GTEST
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
+
+    hbm_csr.sta_hbm_timestamp.read();
+    *tick = (uint64_t)hbm_csr.sta_hbm_timestamp.value().convert_to<uint64_t>();
+#endif 
+    return HAL_RET_OK;
+}

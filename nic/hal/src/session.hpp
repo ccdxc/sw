@@ -381,6 +381,7 @@ hal_ret_t session_delete(const session_args_t *args, session_t *session);
 hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
+bool session_age_cb (void *entry, void *ctxt);
 
 }    // namespace hal
 

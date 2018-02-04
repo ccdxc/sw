@@ -1459,8 +1459,8 @@ pd_mc_entry_update_args_init (pd_mc_entry_update_args_t *args)
 
 // flow get
 typedef struct pd_flow_get_args_s {
-    session_t *session;
-    flow_t *flow;
+    pd_session_t *pd_session;
+    flow_role_t   role;
     flow_state_t *flow_state;
 } __PACK__ pd_flow_get_args_t;
 
@@ -2038,11 +2038,22 @@ pd_gft_args_init (pd_gft_args_t *args)
     args->exact_match_flow_entry = NULL;
 }
 
+
+//clock
+typedef struct pd_conv_hw_clock_to_sw_clock_args_s {
+    uint64_t   hw_ns;
+    uint64_t  *sw_ns;
+} __PACK__ pd_conv_hw_clock_to_sw_clock_args_t;
+
+typedef struct pd_clock_delta_comp_args_s {
+} __PACK__ pd_clock_delta_comp_args_t;
+
 // slab
 typedef struct pd_get_slab_args_s {
     hal_slab_t slab_id;
     sdk::lib::slab *slab;
 } __PACK__ pd_get_slab_args_t;
+
 
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \
@@ -2239,6 +2250,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, 191, "PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE") \
     ENTRY(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, 192, "PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE") \
     ENTRY(PD_FUNC_ID_GET_SLAB,              193, "PD_FUNC_ID_GET_SLAB")\
+    ENTRY(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, 194, "PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK")\
+    ENTRY(PD_FUNC_ID_CLOCK_DELTA_COMP, 195, "PD_FUNC_ID_CLOCK_DELTA_COMP")\
     ENTRY(PD_FUNC_ID_MAX,                   200, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
@@ -2542,8 +2555,14 @@ PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_create, pd_gft);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft);
 
+
+//clock
+PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
+PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
+
 // slab
 PD_FUNCP_TYPEDEF(pd_get_slab);
+
 
 typedef struct pd_call_s {
     union {
@@ -2831,8 +2850,13 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_gft_hdr_group_xposition_profile_create);
         PD_UNION_FIELD(pd_gft_exact_match_flow_entry_create);
 
+        // clock
+        PD_UNION_FIELD(pd_conv_hw_clock_to_sw_clock);
+        PD_UNION_FIELD(pd_clock_delta_comp);
+
         // slab
         PD_UNION_FIELD(pd_get_slab);
+
     };
 
 } pd_call_t;

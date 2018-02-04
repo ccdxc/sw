@@ -18,13 +18,14 @@ namespace fte {
 // FTE features
 typedef struct feature_s feature_t;
 struct feature_s {
-    std::string            name;           // feature name
-    uint16_t               id;             // feature id (generated)
-    bool                   registered;     // feature is registered (plugin loaded)
-    feature_state_init_t   state_init_fn;  // handler to init feature specific ctx state
-    size_t                 state_size;     // Size of the feature state
-    uint32_t               state_offset;   // Offset of the feature state in fte::ctx_t
-    exec_handler_t         exec_handler;   // Feature exec handler
+    std::string                 name;           // feature name
+    uint16_t                    id;             // feature id (generated)
+    bool                        registered;     // feature is registered (plugin loaded)
+    feature_state_init_t        state_init_fn;  // handler to init feature specific ctx state
+    size_t                      state_size;     // Size of the feature state
+    uint32_t                    state_offset;   // Offset of the feature state in fte::ctx_t
+    exec_handler_t              exec_handler;   // Feature exec handler
+    session_delete_handler_t    sess_del_cb;    // Session delete handler callback
 };
 
 static std::map<std::string, feature_t*> g_feature_map_;
@@ -172,6 +173,7 @@ hal_ret_t register_feature(const std::string& name,
     }
 
     feature->state_init_fn = feature_info.state_init_fn;
+    feature->sess_del_cb   = feature_info.sess_del_cb;
     feature->registered = true;
 
     return HAL_RET_OK;
@@ -248,11 +250,17 @@ pipeline_lookup_(const lifqid_t& lifq)
 }
 
 static inline pipeline_action_t
-pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, uint8_t end)
+pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, 
+                      uint8_t end)
 {
     pipeline_action_t rc = PIPELINE_CONTINUE;
 
-    HAL_TRACE_DEBUG("Invoking pipeline with start: {} end: {}", start, end);
+    HAL_TRACE_DEBUG("Invoking pipeline with start: {} end: {} for ev {}", 
+                    start, end, ctx.pipeline_event());
+
+    if (ctx.pipeline_event() == FTE_SESSION_DELETE) {
+        ctx.set_hal_cleanup(true);
+    } 
 
     for (int i = start; i < end; i++) {
         feature_t *feature = pipeline->features[i];
@@ -263,9 +271,15 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, uint8_t e
 
         ctx.set_feature_name(feature->name.c_str());
         ctx.set_feature_status(HAL_RET_OK);
-        rc = feature->exec_handler(ctx);
-        HAL_TRACE_DEBUG("fte:exec_handler feature={} pipeline={} action={}", feature->name,
-                        pipeline->name, rc);
+        if (ctx.pipeline_event() == FTE_SESSION_DELETE) {
+            if (feature->sess_del_cb) {
+                feature->sess_del_cb(ctx);
+            }
+        } else {
+            rc = feature->exec_handler(ctx);
+        }
+        HAL_TRACE_DEBUG("fte:exec_handler feature={} pipeline={} event={} action={}", 
+                        feature->name, pipeline->name, ctx.pipeline_event(), rc);
 
         if (rc != PIPELINE_CONTINUE) {
             break;

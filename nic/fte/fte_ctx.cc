@@ -250,28 +250,19 @@ ctx_t::get_proxy_mirror_flow(hal::flow_role_t role)
     return false;
 }
 
-//------------------------------------------------------------------------------
-// Lookup existing session for the flow
-//------------------------------------------------------------------------------
-hal_ret_t
-ctx_t::lookup_session()
+//-----------------------------------------------------------------------------
+// Initialize context from the existing session
+//-----------------------------------------------------------------------------
+void
+ctx_t::init_ctxt_from_session(hal::session_t *session)
 {
     hal::flow_t *hflow = NULL;
-    int stage = 0;
+    int          stage = 0;
 
-    if (protobuf_request()) {
-        return HAL_RET_SESSION_NOT_FOUND; 
-    }
+    session_ = session;
 
-    session_ = hal::session_lookup(key_, &role_);
-    if (!session_) {
-        return HAL_RET_SESSION_NOT_FOUND;
-    }
-
-    HAL_TRACE_DEBUG("fte: found existing session");
-
-    hflow = session_->iflow;
-    if(role_ != hal::FLOW_ROLE_INITIATOR) {
+    hflow = session->iflow;
+    if (role_ != hal::FLOW_ROLE_INITIATOR) {
         role_ = hal::FLOW_ROLE_INITIATOR;
         key_ = hflow->config.key;
         swap_flow_objs();
@@ -279,7 +270,7 @@ ctx_t::lookup_session()
 
     // Init feature sepcific session state
     sdk::lib::dllist_ctxt_t   *entry;
-    dllist_for_each(entry, &session_->feature_list_head) {
+    dllist_for_each(entry, &session->feature_list_head) {
         feature_session_state_t *state =
             dllist_entry(entry, feature_session_state_t, session_feature_lentry);
         uint16_t id = feature_id(state->feature_name);
@@ -297,7 +288,7 @@ ctx_t::lookup_session()
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {
         iflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
             if (hflow->reverse_flow) {
-                rflow_[stage]->from_config(hflow->reverse_flow->config, 
+                rflow_[stage]->from_config(hflow->reverse_flow->config,
                                                hflow->reverse_flow->pgm_attrs);
                 valid_rflow_ = true;
             }
@@ -306,6 +297,26 @@ ctx_t::lookup_session()
         iflow_[stage]->from_config(hflow->reverse_flow->config, hflow->reverse_flow->pgm_attrs);
         valid_rflow_ = true;
     }
+}
+
+//------------------------------------------------------------------------------
+// Lookup existing session for the flow
+//------------------------------------------------------------------------------
+hal_ret_t
+ctx_t::lookup_session()
+{
+    if (protobuf_request()) {
+        return HAL_RET_SESSION_NOT_FOUND; 
+    }
+
+    session_ = hal::session_lookup(key_, &role_);
+    if (!session_) {
+        return HAL_RET_SESSION_NOT_FOUND;
+    }
+
+    HAL_TRACE_DEBUG("fte: found existing session");
+
+    init_ctxt_from_session(session_);
 
     return HAL_RET_OK;
 }
@@ -438,7 +449,7 @@ ctx_t::update_flow_table()
         return HAL_RET_OK;
     }
 
-    for (uint8_t stage = 0; valid_iflow_ && stage <= istage_; stage++) {
+    for (uint8_t stage = 0; valid_iflow_ && !hal_cleanup() && stage <= istage_; stage++) {
         flow_t *iflow = iflow_[stage];
         hal::flow_cfg_t &iflow_cfg = iflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& iflow_attrs = iflow_attrs_list[stage];
@@ -493,7 +504,7 @@ ctx_t::update_flow_table()
                         iflow_attrs.qos_class_en, iflow_attrs.qos_class_id);
     }
 
-    for (uint8_t stage = 0; valid_rflow_ && stage <= rstage_; stage++) {
+    for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
         flow_t *rflow = rflow_[stage];
         hal::flow_cfg_t &rflow_cfg = rflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& rflow_attrs = rflow_attrs_list[stage];
@@ -779,6 +790,35 @@ ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflo
         HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
         return ret;
     }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------------
+// Initialize the context from session -- needed when called from hal for cleanup
+//------------------------------------------------------------------------------------
+hal_ret_t
+ctx_t::init(hal::session_t *session, flow_t iflow[], flow_t rflow[], 
+            feature_state_t feature_state[], uint16_t num_features)
+{
+    hal_ret_t ret;
+
+    ret = init(FLOW_MISS_LIFQ, feature_state, num_features);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failed to init ctx, err={}", ret);
+        return ret;
+    }
+
+    for (uint8_t i = 0; i < MAX_STAGES; i++) {
+        iflow_[i] = &iflow[i];
+        rflow_[i] = &rflow[i];        
+        iflow_[i]->init(this);
+        rflow_[i]->init(this);
+    }
+
+    init_ctxt_from_session(session);
+
+    ret = lookup_flow_objs();
 
     return HAL_RET_OK;
 }

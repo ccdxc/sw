@@ -6,10 +6,17 @@
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 
 namespace hal {
 namespace pd {
+
+thread_local void *g_clock_delta_timer;
+
+#define HAL_TIMER_ID_CLOCK_SYNC         0
+#define HAL_TIMER_ID_CLOCK_SYNC_INTVL  (60 * TIME_MSECS_PER_MIN)
+#define HW_CLOCK_TICK_TO_NS            1200480 //based on frequency of 833 Hz
 
 hal_ret_t
 pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
@@ -86,11 +93,11 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
     switch (table_id) {
     case P4TBL_ID_INGRESS_TX_STATS:
         p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
-        stats_base_addr += ((tbl_ctx.tabledepth << 5) + (tbl_ctx.tabledepth << 4) + (tbl_ctx.tabledepth << 3));
+        stats_base_addr += (tbl_ctx.tabledepth << 6);
         // Fall through
     case P4TBL_ID_TX_STATS:
-        p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
-        stats_base_addr += (tbl_ctx.tabledepth << 3);
+        p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
+        stats_base_addr += (tbl_ctx.tabledepth << 5);
         // Fall through
     case P4TBL_ID_COPP_ACTION:
         p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
@@ -115,7 +122,7 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
         stats_base_addr += (idx << 3);
         break;
     case P4TBL_ID_TX_STATS:
-        stats_base_addr += ((idx << 5) + (idx << 4) + (idx << 3));
+        stats_base_addr += (idx << 6);
         break;
     default:
         break;
@@ -392,6 +399,77 @@ pd_table_stats_get(pd_table_stats_get_args_t *args)
     }
 
     return ret;
+}
+
+//------------------------------------------------------------------------------
+// convert hardware timestamp to software timestamp
+//------------------------------------------------------------------------------
+EXTC hal_ret_t
+pd_conv_hw_clock_to_sw_clock (pd_conv_hw_clock_to_sw_clock_args_t *args)
+{
+    if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
+        *args->sw_ns = args->hw_ns + g_hal_state_pd->clock_delta();
+    } else {
+        *args->sw_ns = args->hw_ns - g_hal_state_pd->clock_delta();
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Compute delta between sw and hw clock
+//----------------------------------------------------------------------
+static void
+clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    uint64_t              hw_ns = 0, sw_ns = 0, delta_ns = 0;
+    timespec_t            sw_ts;
+
+    // Read hw time
+    capri_tm_get_clock_tick(&hw_ns);
+    hw_ns = hw_ns * HW_CLOCK_TICK_TO_NS;
+
+    // get current time
+    clock_gettime(CLOCK_MONOTONIC, &sw_ts);
+    sdk::timestamp_to_nsecs(&sw_ts, &sw_ns);
+
+    if (sw_ns == hw_ns) {
+        // Do nothing. We are in sync in hw!
+        return;
+    } else if (sw_ns < hw_ns) {
+        delta_ns = hw_ns - sw_ns;
+        g_hal_state_pd->set_clock_delta_op(HAL_CLOCK_DELTA_OP_SUBTRACT);
+    } else {
+        // hw_ns < sw_ns
+        delta_ns = sw_ns - hw_ns;
+        g_hal_state_pd->set_clock_delta_op(HAL_CLOCK_DELTA_OP_ADD);
+    }
+    HAL_TRACE_DEBUG("Delta ns: {}", delta_ns);
+    HAL_TRACE_DEBUG("Clock delta op: {}", g_hal_state_pd->clock_delta_op());
+    g_hal_state_pd->set_clock_delta(delta_ns);
+}
+
+//------------------------------------------------------------------------------
+// Start a periodic timer for Hw and sw clock delta computation
+//------------------------------------------------------------------------------
+EXTC hal_ret_t
+pd_clock_delta_comp(pd_clock_delta_comp_args_t *args)
+{
+    // wait until the periodic thread is ready
+    while (!hal::periodic::periodic_thread_is_running()) {
+        pthread_yield();
+    }
+
+    g_hal_state_pd->set_clock_delta(0);
+    g_clock_delta_timer =
+        hal::periodic::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id
+                                      HAL_TIMER_ID_CLOCK_SYNC_INTVL,
+                                      (void *)0,    // ctxt
+                                      clock_delta_comp_cb, true);
+    if (!g_clock_delta_timer) {
+        return HAL_RET_ERR;
+    }
+    return HAL_RET_OK;
 }
 
 }    // namespace pd

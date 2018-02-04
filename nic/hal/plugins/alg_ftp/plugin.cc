@@ -20,8 +20,13 @@ extern "C" hal_ret_t alg_ftp_init() {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
     slab *ftpinfo_slab_ = NULL;
+    fte::feature_info_t info = {
+        state_size:  0,
+        state_init_fn: NULL,
+        sess_del_cb: alg_ftp_session_delete_cb
+    };
 
-    fte::register_feature(FTE_FEATURE_ALG_FTP, alg_ftp_exec);
+    fte::register_feature(FTE_FEATURE_ALG_FTP, alg_ftp_exec, info);
    
     appsess_slab_ = slab::factory("ftp_alg_appsess", HAL_SLAB_FTP_ALG_APPSESS,
                                   sizeof(app_session_t), 64,

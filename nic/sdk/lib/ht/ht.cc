@@ -269,7 +269,7 @@ ht::remove_entry(void *entry, ht_ctxt_t *ht_ctxt)
 
     SDK_ASSERT_RETURN(((entry != NULL) && (ht_ctxt != NULL)),
                       SDK_RET_INVALID_ARG);
-    SDK_ASSERT_RETURN(entry != ht_ctxt->entry, SDK_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((entry == ht_ctxt->entry), SDK_RET_INVALID_ARG);
 
     key = get_key_func_(entry);
     SDK_ASSERT_RETURN(key != NULL, SDK_RET_ERR);
@@ -285,7 +285,9 @@ ht::remove_entry(void *entry, ht_ctxt_t *ht_ctxt)
 
     if (ht_bucket->ht_ctxt == ht_ctxt) {
         ht_bucket->ht_ctxt = ht_ctxt->next;
-        ht_bucket->ht_ctxt->prev = NULL;
+        if (ht_bucket->ht_ctxt) {
+            ht_bucket->ht_ctxt->prev = NULL;
+        }
     } else if (ht_ctxt->next == NULL) {
         ht_ctxt->prev->next = NULL;
     } else {

@@ -13,6 +13,15 @@
 
 namespace fte {
 
+// FTE pipeline events
+#define FTE_PIPELINE_EVENT_ENTRIES(ENTRY)           \
+    ENTRY(FTE_SESSION_CREATE,   0, "create")        \
+    ENTRY(FTE_SESSION_UPDATE,   1, "update")        \
+    ENTRY(FTE_SESSION_DELETE,   2, "delete")        \
+
+DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
+#undef FTE_PIPELINE_EVENT_ENTRIES
+
 // Flow update codes
 #define FTE_FLOW_UPDATE_CODES(ENTRY)                                    \
     ENTRY(FLOWUPD_ACTION,        0, "update flow action (allow/deny)")  \
@@ -394,7 +403,9 @@ public:
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
                    flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
-    hal_ret_t process();
+    hal_ret_t init(hal::session_t *session, flow_t iflow[], flow_t rflow[], 
+                   feature_state_t feature_state[], uint16_t num_features);
+    hal_ret_t process(void);
 
     hal_ret_t update_flow(const flow_update_t& flowupd, const hal::flow_role_t role);
 
@@ -483,6 +494,7 @@ public:
     bool flow_miss() const { return (arm_lifq_== FLOW_MISS_LIFQ); }
     bool app_redir_pipeline() const { return (arm_lifq_.lif == APP_REDIR_LIFQ.lif); }
     bool tcp_proxy_pipeline() const { return (arm_lifq_.lif == TCP_PROXY_LIFQ.lif); }
+    bool tcp_close() const { return (arm_lifq_ == TCP_CLOSE_LIFQ); }
 
     bool valid_iflow() const { return valid_iflow_; }
     void set_valid_iflow(bool val) { valid_iflow_ = val; }
@@ -504,9 +516,6 @@ public:
     hal::ep_t *dep() const { return dep_; }
     hal_handle_t sep_handle() { return sep_handle_; }
     hal_handle_t dep_handle() { return dep_handle_; }
-
-    void* alg_entry() const { return alg_entry_; }
-    void set_alg_entry(void* entry) { alg_entry_ = entry; }
 
     bool hal_cleanup() const { return cleanup_hal_; }
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
@@ -541,6 +550,9 @@ public:
         feature_state_[feature_id_].session_state = state;
         return HAL_RET_OK;
     }
+
+    pipeline_event_t  pipeline_event(void) { return event_; }
+    void set_pipeline_event(pipeline_event_t ev) { event_ = ev; }
 
     // protected methods accessed by gtest
 protected:
@@ -592,8 +604,9 @@ private:
     hal::ep_t             *dep_;
     hal_handle_t          sep_handle_;
     hal_handle_t          dep_handle_;
-    void*                 alg_entry_;         // ALG entry in the wildcard table
+    pipeline_event_t      event_;
 
+    void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();
     hal_ret_t lookup_flow_objs();

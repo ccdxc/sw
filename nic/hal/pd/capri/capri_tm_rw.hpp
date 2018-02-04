@@ -329,6 +329,15 @@ capri_tm_repl_table_base_addr_set(uint64_t addr);
 hal_ret_t
 capri_tm_repl_table_token_size_set(uint32_t size_in_bits);
 
+/** capri_tm_get_clock_tick
+ * API to get the hardware clock tick.
+ *
+ * @param  tick[in]: Pointer to store the returned hardware clock.
+ * @return hal_ret_t: Status of the operation
+ */
+hal_ret_t
+capri_tm_get_clock_tick(uint64_t *tick);
+
 void
 capri_tm_dump_debug_regs(void);
 void

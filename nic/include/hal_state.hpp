@@ -15,6 +15,7 @@
 #include "nic/include/ip.h"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/periodic/periodic.hpp"
+#include "sdk/timestamp.hpp"
 
 namespace hal {
 
@@ -24,6 +25,12 @@ using sdk::lib::ht;
 using hal::utils::bitmap;
 using hal::utils::eventmgr;
 using sdk::lib::dllist_ctxt_t;
+
+typedef enum hal_timer_id_s {
+    HAL_TIMER_ID_CLOCK_SYNC               = 0,
+    HAL_TIMER_ID_SESSION_AGEOUT           = 1,
+    HAL_TIMER_ID_MAX                      = 2, 
+} hal_timer_id_t;
 
 typedef enum hal_forwarding_mode_s {
     HAL_FORWARDING_MODE_NONE              = 0,
@@ -338,14 +345,14 @@ private:
     hal_oper_db();
 
 private:
-    void        *infra_vrf_;    // Infra VRF *
-    void        *infra_l2seg_;  // l2seg_t *
-    eventmgr    *event_mgr_;
-    ht          *hal_handle_id_ht_;
-    ht          *ep_l2_ht_;
-    ht          *ep_l3_entry_ht_;
-    ht          *flow_ht_;
-    ip_addr_t mytep_ip;
+    void                   *infra_vrf_;      // Infra VRF *
+    void                   *infra_l2seg_;    // l2seg_t *
+    eventmgr               *event_mgr_;
+    ht                     *hal_handle_id_ht_;
+    ht                     *ep_l2_ht_;
+    ht                     *ep_l3_entry_ht_;
+    ht                     *flow_ht_;
+    ip_addr_t               mytep_ip;
 };
 
 // HAL memory slabs and any other memory manager state

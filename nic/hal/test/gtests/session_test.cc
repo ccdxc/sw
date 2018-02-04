@@ -257,6 +257,8 @@ TEST_F(session_test, test2)
     ::google::protobuf::uint32  ip3 = 0x40020001;
     ::google::protobuf::uint32  ip4 = 0x40020002;
     NetworkKeyHandle                *nkh = NULL;
+    timespec_t                  ctime;
+    uint64_t                    ctime_ns;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -469,6 +471,11 @@ TEST_F(session_test, test2)
     ret = fte::session_create(sess_spec2, &sess_rsp2);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    clock_gettime(CLOCK_MONOTONIC, &ctime);
+    sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+    hal::session_age_cb((void *)hal::find_session_by_id(3), (void *)&ctime_ns);
+    ASSERT_TRUE(hal::find_session_by_id(3) == NULL);
 }
 
 // ----------------------------------------------------------------------------
@@ -1369,7 +1376,6 @@ TEST_F(session_test, test8)
     ::google::protobuf::uint32  ip3 = 0x0a000005;
     NetworkKeyHandle                *nkh = NULL;
 
-
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(8);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -1702,6 +1708,10 @@ TEST_F(session_test, test9)
 
     uint64_t sess_hdl = sess_rsp.mutable_status()->session_handle();
     HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
+
+    ret = fte::session_delete(sess_spec, &sess_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 TEST_F(session_test, test10) 
@@ -1885,7 +1895,11 @@ TEST_F(session_test, test10)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Delete Session
+    ret = fte::session_delete(hal::find_session_by_id(10));
+    ASSERT_TRUE(ret == HAL_RET_OK);
 }
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

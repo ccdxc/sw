@@ -55,6 +55,8 @@ LIFManager *g_lif_manager = nullptr;
 // thread local variables
 thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
+thread_local void *g_clock_delta_timer;
+
 using boost::property_tree::ptree;
 
 static thread *

@@ -17,6 +17,37 @@ void incr_parse_error(l4_alg_status_t *sess) {
     HAL_ATOMIC_INC_UINT32(&((rpc_info_t *)sess->info)->parse_errors, 1);
 }
 
+/*
+ *  APP Session delete handler
+ */
+void alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
+    fte::feature_session_state_t  *alg_state = NULL;
+    l4_alg_status_t               *l4_sess =  NULL;
+    app_session_t                 *app_sess = NULL;
+
+    alg_state = ctx.feature_session_state();
+    if (alg_state != NULL) {
+        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+        if (l4_sess->isCtrl == TRUE) {
+            // Dont cleanup if control session is timed out
+            // we need to keep it around until the data session
+            // goes away
+            return;
+        }
+        /*
+         * Cleanup the data session that is getting timed out
+         * If there are no more expected flows or data sessions
+         * attached to the app session, cleanup the app session
+         */
+        app_sess = l4_sess->app_session;
+        g_rpc_state->cleanup_l4_sess(l4_sess);
+        if (dllist_empty(&app_sess->exp_flow_lhead) &&
+            dllist_empty(&app_sess->l4_sess_lhead)) {
+            g_rpc_state->cleanup_app_session(app_sess);
+        }
+    }
+}
+
 uint8_t *alloc_rpc_pkt(void) {
     return ((uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, MAX_ALG_RPC_PKT_SZ));
 }

@@ -40,6 +40,7 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb);
 hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info, l4_alg_status_t *l4_sess);
 hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info, l4_alg_status_t *l4_sess);
 uint8_t *alloc_rpc_pkt(void);
+void alg_rpc_session_delete_cb(fte::ctx_t &ctx);
 
 /*
  * Data Structures

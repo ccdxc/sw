@@ -17,8 +17,31 @@ static void incr_parse_error(l4_alg_status_t *sess) {
     HAL_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->parse_errors, 1);
 }
 
+/*
+ * APP Session delete handler
+ */
 static void incr_unknown_opcode(l4_alg_status_t *sess) {
     HAL_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->unknown_opcode, 1);
+}
+
+/*
+ *  APP Session delete handler
+ */
+void alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
+    fte::feature_session_state_t  *alg_state = NULL;
+    l4_alg_status_t               *l4_sess =  NULL;
+
+    alg_state = ctx.feature_session_state();
+    if (alg_state != NULL) {
+        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+        if (l4_sess->isCtrl == TRUE) {
+            // Dont cleanup if control session is timed out
+            // we need to keep it around until the data session
+            // goes away
+            return;
+        }
+        g_tftp_state->cleanup_app_session(l4_sess->app_session);       
+    }
 }
 
 /*

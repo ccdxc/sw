@@ -46,6 +46,11 @@ extern class hal_state_pd    *g_hal_state_pd;
 
 #define HAL_MAX_HW_ACLS                 512 
 
+typedef enum hal_clock_delta_op_s {
+    HAL_CLOCK_DELTA_OP_ADD                = 0,
+    HAL_CLOCK_DELTA_OP_SUBTRACT           = 1,
+} hal_clock_delta_op_t;
+
 //-----------------------------------------------------------------------------
 // class hal_state_pd
 //  
@@ -267,6 +272,12 @@ public:
         return p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN];
     }
 
+    void set_clock_delta(uint64_t delta) { clock_delta_ = delta; }
+    uint64_t clock_delta(void) { return clock_delta_; }
+
+    void set_clock_delta_op(hal_clock_delta_op_t op) { clock_delta_op_ = op; }
+    hal_clock_delta_op_t clock_delta_op(void) { return clock_delta_op_; }
+
 private:
     bool init(void);
     hal_state_pd();
@@ -477,14 +488,16 @@ private:
         ht         *proxyccb_hwid_ht_;
     } __PACK__;
 
-    directmap    **dm_tables_;
-    sdk_hash     **hash_tcam_tables_;
-    tcam         **tcam_tables_;
-    Flow         *flow_table_;
-    Met          *met_table_;
-    acl_tcam     *acl_table_;
-    directmap    **p4plus_rxdma_dm_tables_;
-    directmap    **p4plus_txdma_dm_tables_;
+    directmap             **dm_tables_;
+    sdk_hash              **hash_tcam_tables_;
+    tcam                  **tcam_tables_;
+    Flow                   *flow_table_;
+    Met                    *met_table_;
+    acl_tcam               *acl_table_;
+    directmap             **p4plus_rxdma_dm_tables_;
+    directmap             **p4plus_txdma_dm_tables_;
+    uint64_t                clock_delta_;    // hw sw clock delta in nanoseconds
+    hal_clock_delta_op_t    clock_delta_op_; // hw sw clock delta op 
 };
 
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id, void *elem);

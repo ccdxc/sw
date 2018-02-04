@@ -19,8 +19,13 @@ extern "C" hal_ret_t alg_tftp_init() {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
     slab *tftpinfo_slab_ = NULL;
+    fte::feature_info_t info = {
+        state_size:  0,
+        state_init_fn: NULL,        
+        sess_del_cb: alg_tftp_session_delete_cb
+    };
 
-    fte::register_feature(FTE_FEATURE_ALG_TFTP, alg_tftp_exec);
+    fte::register_feature(FTE_FEATURE_ALG_TFTP, alg_tftp_exec, info);
     HAL_TRACE_DEBUG("Registering feature: {}", FTE_FEATURE_ALG_TFTP);
 
     appsess_slab_ = slab::factory("tftp_alg_appsess", HAL_SLAB_TFTP_ALG_APPSESS,

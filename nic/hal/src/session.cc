@@ -12,6 +12,7 @@
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/src/qos.hpp"
 #include "sdk/timestamp.hpp"
+#include "nic/include/fte.hpp"
 
 using telemetry::MirrorSessionId;
 using session::FlowInfo;
@@ -23,6 +24,7 @@ using session::ConnTrackInfo;
 namespace hal {
 
 thread_local void *g_session_timer;
+#define SESSION_SW_DEFAULT_TIMEOUT (5 * TIME_NSECS_PER_SEC) 
 
 void *
 session_get_key_func (void *entry)
@@ -417,6 +419,37 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// remove this session from all meta data structures
+//------------------------------------------------------------------------------
+static inline void
+del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
+{
+    HAL_TRACE_DEBUG("Entering DEL session from DB:{}", session->hal_handle);
+
+
+    g_hal_state->session_id_ht()->remove_entry(session,
+                                         &session->session_id_ht_ctxt);
+
+    g_hal_state->session_hal_handle_ht()->remove_entry(session,
+                                                 &session->hal_handle_ht_ctxt);
+
+    g_hal_state->session_hal_iflow_ht()->remove_entry(session,
+                                                &session->hal_iflow_ht_ctxt);
+
+    if (session->rflow) {
+        g_hal_state->session_hal_rflow_ht()->remove_entry(session, 
+                                                    &session->hal_rflow_ht_ctxt);
+    }
+
+    if (sep) {
+        ep_del_session(sep, session);
+    }
+    if (dep) {
+        ep_del_session(dep, session);
+    }
+}
+
 
 static void
 flow_tcp_to_flow_tcp_spec(flow_t *flow, FlowKeyTcpUdpInfo *tcp_udp)
@@ -786,8 +819,10 @@ session_delete(const session_args_t *args, session_t *session)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_DELETE, (void *)&pd_session_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session delete failure, err : {}", ret);
-        session_cleanup(session);
     }
+
+    del_session_from_db(args->sep, args->dep, session);
+
     session_cleanup(session);
 
     return ret;
@@ -800,40 +835,43 @@ session_delete(const session_args_t *args, session_t *session)
 // determine aging timeout of a session based on its properties
 // TODO: look at the nwsec profile
 //------------------------------------------------------------------------------
-static uint32_t
+static uint64_t
 session_aging_timeout (session_t *session,
                        flow_t *iflow, flow_state_t *iflow_state,
                        flow_t *rflow, flow_state_t *rflow_state)
 {
-    // TODO:fill this in
-    return 1000;
-}
+    uint64_t            timeout = SESSION_SW_DEFAULT_TIMEOUT;
+    vrf_t              *vrf = NULL;
+    nwsec_profile_t    *nwsec_prof = NULL;
 
-//------------------------------------------------------------------------------
-// convert hardware timestamp to software timestamp
-// TODO: move this to PD and always expose sw time in PI
-//------------------------------------------------------------------------------
-static uint64_t
-hw_time_to_sw_time_ns (uint64_t ctime_ns)
-{
-    return ctime_ns;
+    vrf = vrf_lookup_by_handle(session->vrf_handle);
+    if (vrf != NULL) {
+        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
+        if (nwsec_prof != NULL) {
+            timeout = (uint64_t)(nwsec_prof->session_idle_timeout * TIME_NSECS_PER_SEC);
+        }
+    }
+
+    return timeout;
 }
 
 //------------------------------------------------------------------------------
 // determine whether a given session should be aged or not
 //------------------------------------------------------------------------------
-static bool
+bool
 session_age_cb (void *entry, void *ctxt)
 {
-    hal_ret_t                ret;
-    session_t                *session = (session_t *)entry;
-    flow_t                   *iflow, *rflow;
-    flow_state_t             iflow_state, rflow_state;
-    uint64_t                 ctime_ns = *(uint64_t *)ctxt;
-    uint64_t                 last_pkt_ts;
-    uint64_t                 session_timeout;
-    session_args_t           session_args;
-    pd::pd_flow_get_args_t   args;
+    pd::pd_conv_hw_clock_to_sw_clock_args_t    clock_args;
+    hal_ret_t                                  ret;
+    session_t                                 *session = (session_t *)entry;
+    flow_t                                    *iflow, *rflow;
+    flow_state_t                               iflow_state, rflow_state;
+    uint64_t                                   ctime_ns = *(uint64_t *)ctxt;
+    uint64_t                                   last_pkt_ts;
+    uint64_t                                   session_timeout;
+    pd::pd_flow_get_args_t                     args;
+    SessionSpec                                spec;
+    SessionResponse                            rsp; 
 
     // read the initiator flow record
     iflow = session->iflow;
@@ -842,15 +880,15 @@ session_age_cb (void *entry, void *ctxt)
                       session->config.session_id);
         return false;
     }
-    args.session = session;
-    args.flow = iflow;
+    args.pd_session = session->pd;
+    args.role = FLOW_ROLE_INITIATOR;
     args.flow_state = &iflow_state;
     // ret = hal::pd::pd_flow_get(session, iflow, &iflow_state);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
-                      session->config.session_id);
-        return ret;
+                       session->config.session_id);
+        return false;
     }
 
     // read the responder flow record
@@ -859,10 +897,9 @@ session_age_cb (void *entry, void *ctxt)
         HAL_TRACE_ERR("session {} has no rflow, ignoring ...",
                       session->config.session_id);
     } else {
-        args.session = session;
-        args.flow = rflow;
+        args.pd_session = session->pd;
+        args.role = FLOW_ROLE_RESPONDER;
         args.flow_state = &rflow_state;
-        // ret = hal::pd::pd_flow_get(session, rflow, &rflow_state);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_GET, (void *)&args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to fetch rflow record of session {}",
@@ -874,21 +911,29 @@ session_age_cb (void *entry, void *ctxt)
     // check if iflow has expired now
     session_timeout = session_aging_timeout(session, iflow, &iflow_state,
                                             rflow, rflow ? &rflow_state : NULL);
-    last_pkt_ts = hw_time_to_sw_time_ns(iflow_state.last_pkt_ts);
+
+    // Convert hw clock to sw clock resolving any deltas
+    clock_args.hw_ns = iflow_state.last_pkt_ts;
+    clock_args.sw_ns = &last_pkt_ts;
+    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, (void *)&clock_args);
+
+    HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}", 
+                    last_pkt_ts, ctime_ns, session_timeout);
     if ((ctime_ns - last_pkt_ts) < session_timeout) {
         // session hasn't aged yet, move on
         return false;
     } else  {
         // no activity detected on initiator flow for a while, check responder
-        last_pkt_ts = hw_time_to_sw_time_ns(rflow_state.last_pkt_ts);
+        clock_args.hw_ns = rflow_state.last_pkt_ts;
+        clock_args.sw_ns = &last_pkt_ts;
+        pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, (void *)&clock_args);
         if ((ctime_ns - last_pkt_ts) < session_timeout) {
             // responder flow seems to be active still
             return false;
         }
 
         // time to clean up the session
-        memset(&session_args, 0, sizeof(session_args));
-        ret = session_delete(NULL, session);
+        ret = fte::session_delete(session);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delte aged session {}",
                           session->config.session_id);
@@ -913,15 +958,16 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
 
-    //HAL_TRACE_DEBUG("[{}:{}] timer id {}, bucket {}",
-                    //__FUNCTION__, __LINE__, timer_id, bucket);
+    //HAL_TRACE_DEBUG("[{}:{}] timer id {}, bucket: {}",
+    //                __FUNCTION__, __LINE__, timer_id,  bucket);
     for (i = 0; i < HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL; i++) {
         g_hal_state->session_id_ht()->walk_bucket_safe(bucket,
-                                                       session_age_cb, &ctime_ns);
+                                                     session_age_cb, &ctime_ns);
         bucket = (bucket + 1)%g_hal_state->session_id_ht()->num_buckets();
     }
+
     // store the bucket id to resume on next invocation
-    hal::periodic::timer_update(g_session_timer, HAL_SESSION_AGE_SCAN_INTVL,
+    hal::periodic::timer_update(timer, HAL_SESSION_AGE_SCAN_INTVL,
                                 true, reinterpret_cast<void *>(bucket));
 }
 
@@ -936,13 +982,14 @@ session_init (void)
         pthread_yield();
     }
     g_session_timer =
-        hal::periodic::timer_schedule(0,            // timer_id
+        hal::periodic::timer_schedule(HAL_TIMER_ID_SESSION_AGEOUT,            // timer_id
                                       HAL_SESSION_AGE_SCAN_INTVL,
                                       (void *)0,    // ctxt
                                       session_age_walk_cb, true);
     if (!g_session_timer) {
         return HAL_RET_ERR;
     }
+    HAL_TRACE_DEBUG("session timer: {:p}", g_session_timer);
     return HAL_RET_OK;
 }
 

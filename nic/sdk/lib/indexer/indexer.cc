@@ -349,7 +349,7 @@ indexer::num_indices_allocated(void)
 {
 	uint32_t	usage = 0;
 
-	for (uint32_t i = 0; i < size_; i++) {
+	for (uint32_t i = 1; i < size_; i++) {
 		if (is_index_allocated(i)) {
 			usage++;
 		}

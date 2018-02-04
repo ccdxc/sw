@@ -344,6 +344,11 @@ hal_pd_load_symbols (void) {
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_LOAD(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
 
+    // hw clock to sw clock conversion api
+    PD_SYMBOL_LOAD(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
+
+
     // gft
     PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, pd_gft_exact_match_profile_create);
     PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, pd_gft_hdr_group_xposition_profile_create);
@@ -351,6 +356,7 @@ hal_pd_load_symbols (void) {
 
     // slab
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_SLAB, pd_get_slab);
+
     return ret;
 }
 
@@ -656,6 +662,11 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, pd_capri_barco_asym_rsa2k_sig_verify);
     PD_SYMBOL_CALL(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, pd_capri_barco_sym_hash_process_request);
 
+
+    //clock
+    PD_SYMBOL_CALL(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
+    PD_SYMBOL_CALL(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
+
     // gft
     PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, pd_gft_exact_match_profile_create, pd_gft);
     PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, pd_gft_hdr_group_xposition_profile_create, pd_gft);
@@ -663,6 +674,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
 
     // slab
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_SLAB, pd_get_slab);
+
 
     HAL_ASSERT(0);
     return ret;
@@ -731,6 +743,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_mem_init_phase2_args_t ph2_args;
     pd_pgm_def_entries_args_t pgm_def_args;
     pd_pgm_def_p4plus_entries_args_t pgm_p4p_args;
+    pd_clock_delta_comp_args_t       clock_args;
 
     HAL_ASSERT(hal_cfg != NULL);
 
@@ -799,6 +812,8 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         HAL_TRACE_ERR("HAL Programming default p4plus entries failed, err : {}", ret);
         goto cleanup;
     }
+
+    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, (void *)&clock_args) == HAL_RET_OK);
 
     return HAL_RET_OK;
 

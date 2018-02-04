@@ -220,8 +220,8 @@ Flow::insert(void *key, void *data, uint32_t *index)
     void                            *hwkey = NULL;
     FlowTableEntryMap::iterator     itr;
 
-	rs = alloc_flow_entry_index_(&fe_idx);
-	if (rs != HAL_RET_OK) goto end;
+    rs = alloc_flow_entry_index_(&fe_idx);
+    if (rs != HAL_RET_OK) goto end;
 
     HAL_TRACE_DEBUG("Flow::{}: Insert flow_entry_pi_idx: {} ", 
                     __FUNCTION__, fe_idx);
@@ -237,7 +237,7 @@ Flow::insert(void *key, void *data, uint32_t *index)
     hwkey = HAL_CALLOC(HAL_MEM_ALLOC_FLOW_HW_KEY, hwkey_len_);
 
     rs = entry->form_hw_key(table_id_, hwkey);
-	if (rs != HAL_RET_OK) goto end;
+    if (rs != HAL_RET_OK) goto end;
 
     // cal. hash
     hash_val = generate_hash_(hwkey, hwkey_len_);
@@ -295,8 +295,8 @@ Flow::insert(void *key, void *data, uint32_t *index)
         FlowEntry::destroy(entry);
 
         // free index alloced
-		rs1 = free_flow_entry_index_(fe_idx);
-		HAL_ASSERT(rs1 == HAL_RET_OK);
+        rs1 = free_flow_entry_index_(fe_idx);
+        HAL_ASSERT(rs1 == HAL_RET_OK);
     }
 end:
     // Uncomment for debugging
@@ -343,7 +343,7 @@ hal_ret_t
 Flow::remove(uint32_t index)
 {
     hal_ret_t               rs = HAL_RET_OK;
-    FlowEntry               *f_entry          = NULL;
+    FlowEntry               *f_entry     = NULL;
     FlowTableEntry          *ft_entry    = NULL;
     FlowEntryMap::iterator  itr;
 
@@ -386,7 +386,7 @@ Flow::remove(uint32_t index)
         rs = HAL_RET_ENTRY_NOT_FOUND;
     }
 
-	print_flow();
+    print_flow();
     stats_update(REMOVE, rs);
     return rs;
 }
@@ -799,34 +799,34 @@ Flow::table_num_delete_errors(void)
 hal_ret_t
 Flow::print_flow()
 {
-    hal_ret_t   		ret = HAL_RET_OK;
-	uint32_t 			flow_bits = 0, fe_idx = 0;
-	FlowTableEntry 		*fte = NULL;
-	FlowEntry			*fe = NULL;
+    hal_ret_t        ret = HAL_RET_OK;
+    uint32_t         flow_bits = 0, fe_idx = 0;
+    FlowTableEntry  *fte = NULL;
+    FlowEntry       *fe = NULL;
 
-	HAL_TRACE_DEBUG("Printing Flow Tables:");
-	HAL_TRACE_DEBUG("-------- ---- -------");
-	HAL_TRACE_DEBUG("Total Num_FTEs: {}", flow_table_.size());
-	for (FlowTableEntryMap::const_iterator it = flow_table_.begin();
-			it != flow_table_.end(); ++it) {
-		flow_bits = it->first;
-		fte = it->second;
-		HAL_TRACE_DEBUG("flow_bits: {:#x}", flow_bits);
-		fte->print_fte();
-	}
+    HAL_TRACE_DEBUG("Printing Flow Tables:");
+    HAL_TRACE_DEBUG("-------- ---- -------");
+    HAL_TRACE_DEBUG("Total Num_FTEs: {}", flow_table_.size());
+    for (FlowTableEntryMap::const_iterator it = flow_table_.begin();
+         it != flow_table_.end(); ++it) {
+        flow_bits = it->first;
+        fte = it->second;
+        HAL_TRACE_DEBUG("flow_bits: {:#x}", flow_bits);
+        fte->print_fte();
+    }
 
-	HAL_TRACE_DEBUG("Total Num_FEs: {}", flow_entry_map_.size());
-	for (FlowEntryMap::const_iterator it = flow_entry_map_.begin();
-			it != flow_entry_map_.end(); ++it) {
-		fe_idx = it->first;
-		fe = it->second;
-		HAL_TRACE_DEBUG("  fe_idx: {:#x}", fe_idx);
-		fe->print_fe();
-	}
+    HAL_TRACE_DEBUG("Total Num_FEs: {}", flow_entry_map_.size());
+    for (FlowEntryMap::const_iterator it = flow_entry_map_.begin();
+         it != flow_entry_map_.end(); ++it) {
+        fe_idx = it->first;
+        fe = it->second;
+        HAL_TRACE_DEBUG("  fe_idx: {:#x}", fe_idx);
+        fe->print_fe();
+    }
 
-	HAL_ASSERT(flow_entry_map_.size() == flow_entry_indexer_->num_indices_allocated()); 
+    HAL_ASSERT(flow_entry_map_.size() == flow_entry_indexer_->num_indices_allocated()); 
 
-	return ret;
+    return ret;
 }
 
 

@@ -10,7 +10,7 @@ extern "C" {
 void app_redir_plugin_init() {
     fte::feature_info_t info = {
         state_size: sizeof(app_redir_ctx_t),
-        app_redir_ctx_t::init,
+        state_init_fn: app_redir_ctx_t::init,
     };
     fte::register_feature(FTE_FEATURE_APP_REDIR_MISS, app_redir_miss_exec);
     fte::register_feature(FTE_FEATURE_APP_REDIR, app_redir_exec);
