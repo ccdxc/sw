@@ -8,7 +8,7 @@ fields:
     cnxn_tracking_en: 0
     ipsg_en: 1
     tcp_rtt_estimate_en: 0
-    session_idle_timeout: 0
+    session_idle_timeout: 4294967295 
     tcp_cnxn_setup_timeout: 0
     tcp_close_timeout: 0
     tcp_close_wait_timeout: 0

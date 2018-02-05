@@ -76,7 +76,10 @@ class SecurityProfileObject(base.ConfigObjectBase):
         req_spec.cnxn_tracking_en = self.fields.cnxn_tracking_en
         req_spec.ipsg_en = self.fields.ipsg_en
         req_spec.tcp_rtt_estimate_en = self.fields.tcp_rtt_estimate_en
-        req_spec.session_idle_timeout = self.fields.session_idle_timeout
+        if ('session_idle_timeout' in dir(self.fields)):
+            req_spec.session_idle_timeout = self.fields.session_idle_timeout
+        else:
+            req_spec.session_idle_timeout = 65535
         req_spec.tcp_cnxn_setup_timeout = self.fields.tcp_cnxn_setup_timeout
         req_spec.tcp_close_timeout = self.fields.tcp_close_timeout
         req_spec.tcp_close_wait_timeout = self.fields.tcp_close_wait_timeout

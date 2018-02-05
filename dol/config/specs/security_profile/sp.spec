@@ -7,11 +7,9 @@ profiles:
          ip_normalization_en: 0
          tcp_normalization_en: 0
          icmp_normalization_en: 0
-         session_idle_timeout:  300
 
     - id: SEC_PROF_DEFAULT
       fields:
-         session_idle_timeout:  300
 
     - id: SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
       fields:

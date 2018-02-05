@@ -24,7 +24,9 @@ using session::ConnTrackInfo;
 namespace hal {
 
 thread_local void *g_session_timer;
-#define SESSION_SW_DEFAULT_TIMEOUT (5 * TIME_NSECS_PER_SEC) 
+
+// Set for DOL. Need to change it to a lower value
+#define SESSION_SW_DEFAULT_TIMEOUT (0xFFFFFFFF * TIME_NSECS_PER_SEC) 
 
 void *
 session_get_key_func (void *entry)
