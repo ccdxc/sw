@@ -278,6 +278,7 @@ class TestCase(objects.FrameworkObject):
     def __setup_packets(self, step_id, tcsn, spsn):
         if spsn.packets == None: return
         for spkt in spsn.packets:
+            self.info("- Setting up  Packet: %s:" % spkt)
             tpkt = self.__setup_packet(step_id, spkt)            
             if tpkt is None:
                 continue

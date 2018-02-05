@@ -9,6 +9,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/gen/proto/hal/system.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
 #include "nic/hal/src/system.hpp"
 
 Status
@@ -22,5 +23,22 @@ SystemServiceImpl::SystemGet(ServerContext *context,
     hal::system_get(rsp);
 
     hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+
+Status
+SystemServiceImpl::SystemConfig(ServerContext *context,
+                             const  SystemConfigMsg *request,
+                             SystemConfigResponseMsg *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd System Config Request");
+    hal_ret_t ret;
+    ret = hal::system_set(request);
+    rsp->add_response();
+    if (ret != HAL_RET_OK) {
+        rsp->set_status(types::API_STATUS_HW_WRITE_ERROR);
+        return Status::OK;
+    }
     return Status::OK;
 }

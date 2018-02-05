@@ -38,6 +38,7 @@ import proxyrcb_pb2         as proxyrcb_pb2
 import proxyccb_pb2         as proxyccb_pb2
 import multicast_pb2        as multicast_pb2
 import barco_rings_pb2      as barco_rings_pb2
+import system_pb2           as system_pb2
 
 #import endpoint_pb2_grpc        as endpoint_pb2_grpc
 #import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -551,6 +552,11 @@ def ConfigureCollectors(objlist):
              stub.CollectorCreate)
     return
 
+def ConfigureSystem(objlist):
+    if IsHalDisabled(): return
+    stub = system_pb2.SystemStub(HalChannel)
+    __config(objlist, system_pb2.SystemConfigMsg, stub.SystemConfig)
+    return
 
 def ConfigureNetworks(objlist):
     if IsHalDisabled(): return

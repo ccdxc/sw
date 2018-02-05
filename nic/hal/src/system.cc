@@ -52,4 +52,19 @@ end:
     return HAL_RET_OK;
 }
 
+hal_ret_t
+system_set(const SystemConfigMsg *req)
+{
+    hal::pd::pd_system_drop_action_args_t args;
+    uint32_t nreqs = req->request_size();
+    if (nreqs != 1) {
+        HAL_TRACE_ERR("got more than one entry in request");
+        return HAL_RET_INVALID_ARG;
+    }
+    auto spec = req->request(0);
+    args.spec = &spec;
+    // return pd::hal_pd_call(pd::pd_system_drop_action(&args);
+    return pd::hal_pd_call(pd::PD_FUNC_ID_SYSTEM_DROP_ACTION, (void*)&args);
+}
+
 }    // namespace hal

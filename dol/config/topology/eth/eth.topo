@@ -49,6 +49,8 @@ uplinkpc:
 
 acls: None
 
+dropaction: span
+
 qos : True
 
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
@@ -63,5 +65,8 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_ETH_VXLAN
         count   : 1
         lifns   : range/300/305
+    -   spec    : ref://store/specs/id=ETH_SPAN_VLAN
+        count   : 1
+        lifns   : range/400/405
 
 cpu: None

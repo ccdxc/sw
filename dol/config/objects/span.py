@@ -124,10 +124,20 @@ class SpanSessionObjectHelper:
         return
         
     def Generate(self, tenant, topospec):
+        tnls = []
+        for tnl in Store.objects.GetAllByClass(tunnel.TunnelObject):
+            if tnl.IsGRE():
+                tnls.append(tnl)
+        tnlid = 0
         for entry in topospec.span_sessions:
             spec = entry.spec.Get(Store)
             span_ssn = SpanSessionObject()
             span_ssn.Init(tenant, spec)
+            if span_ssn.IsErspan():
+                tnl = tnls[tnlid % len(tnls)]
+                tnlid = tnlid + 1
+                span_ssn.erspan_dest = tnl.GetDestIp()
+                span_ssn.erspan_src = tnl.GetSrcIp()
             self.span_ssns.append(span_ssn)
         Store.objects.SetAll(self.span_ssns)
         return

@@ -9,6 +9,7 @@
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 
+using sys::SystemConfigSpec;
 namespace hal {
 namespace pd {
 
@@ -129,6 +130,54 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
     }
 
     return stats_base_addr;
+}
+
+
+hal_ret_t
+pd_system_drop_stats_set (int id, drop_stats_actiondata *data) {
+    hal_ret_t                ret;
+    sdk_ret_t                sdk_ret;
+    tcam                     *tcam;
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+    
+    data->actionid = DROP_STATS_DROP_STATS_ID;
+    sdk_ret = tcam->update(id, data);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
+                id, ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+
+EXTC hal_ret_t
+pd_system_drop_action(pd_system_drop_action_args_t *args) {
+    SystemConfigSpec *spec = args->spec;
+    uint8_t sessns = 0;
+    drop_stats_actiondata    data = { 0 };
+
+    for (int i = 0; i < spec->span_on_drop_sessions().size(); i++) {
+        auto sess = spec->span_on_drop_sessions(i).session_id();
+        if (sess > 7) {
+            return HAL_RET_INVALID_ARG;
+        }
+        sessns = 1 << sess;
+    }
+    if (sessns > 0) {
+        data.drop_stats_action_u.drop_stats_drop_stats.mirror_en = 1;
+        data.drop_stats_action_u.drop_stats_drop_stats.mirror_session_id = sessns;
+    } else {
+        data.drop_stats_action_u.drop_stats_drop_stats.mirror_en = 0;
+        data.drop_stats_action_u.drop_stats_drop_stats.mirror_session_id = sessns;
+    }
+    for (int i = DROP_MIN; i <= DROP_MAX; i++) {
+        pd_system_drop_stats_set(i, &data);
+    }
+    return HAL_RET_OK;
 }
 
 hal_ret_t

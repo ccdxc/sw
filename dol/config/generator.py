@@ -19,6 +19,7 @@ from config.objects.proxy_service       import ProxyServiceHelper
 from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 from config.objects.cpu                 import CpuHelper
 from config.objects.app_redir_if        import AppRedirIfHelper
+from config.objects.system              import SystemHelper
 
 from config.objects.swdr                import SwDscrRingHelper
 from config.objects.brq                 import BRQHelper
@@ -38,7 +39,6 @@ def process(topospec):
     UplinkPcHelper.main(topospec)
     # Generate and Configure Tenants
     TenantHelper.main(topospec)
-
     # Security Groups
     SecurityGroupPolicyHelper.main(topospec)
 
@@ -68,6 +68,9 @@ def process(topospec):
 
     # Generate all sessions
     SessionHelper.main()
+
+    # setup the system drop actions
+    SystemHelper.main(topospec)
 
     # Generate all sessions
     RdmaSessionHelper.main()

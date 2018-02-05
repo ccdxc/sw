@@ -12,6 +12,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "telemetry.proto";
 option go_package="halproto";
 
 package sys;
@@ -20,6 +21,7 @@ package sys;
 service System {
   // System related APIs
   rpc SystemGet(types.Empty) returns (SystemResponse) {}
+  rpc SystemConfig(SystemConfigMsg) returns (SystemConfigResponseMsg) {}
 }
 
 message DropStatsEntry {
@@ -88,6 +90,7 @@ message TableStats {
 // Status captures the operating status of various components in the HAL
 // including "ready" status, thread health etc.
 message Status {
+  repeated telemetry.MirrorSessionId span_on_drop_sessions  = 1;  // Mirror Sessions to enable for DROP packets
 }
 
 // Global system object
@@ -108,3 +111,19 @@ message DropStats {
   repeated DropStatsEntry drop_entries  = 1;               // list of drop statistics
 }
 
+message SystemConfigSpec {
+  repeated telemetry.MirrorSessionId span_on_drop_sessions  = 1;  // Mirror Sessions to enable for DROP packets
+}
+
+message SystemConfigMsg {
+  repeated SystemConfigSpec request = 1;
+}
+
+message SystemConfigResponse {
+  types.ApiStatus   api_status  = 1;
+}
+
+message SystemConfigResponseMsg {
+  types.ApiStatus                       status  = 1; // Response status of the API
+  repeated SystemConfigResponse         response    = 2; // Empty Response for now
+}

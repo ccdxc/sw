@@ -680,6 +680,10 @@
 		SystemResponse
 		Stats
 		DropStats
+		SystemConfigSpec
+		SystemConfigMsg
+		SystemConfigResponse
+		SystemConfigResponseMsg
 		TcpCbKeyHandle
 		TcpCbSpec
 		TcpCbRequestMsg

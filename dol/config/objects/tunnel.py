@@ -33,6 +33,7 @@ class TunnelObject(base.ConfigObjectBase):
             self.ltep       = self.tenant.local_tep
         else:
             leps = self.tenant.GetLocalEps()
+            cfglogger.info(" found %d local eps for tunnel using %s" % (len(leps), leps[0].ipaddrs[0].get()))
             self.ltep = leps[0].ipaddrs[0]
 
         if remote_ep.IsRemote():

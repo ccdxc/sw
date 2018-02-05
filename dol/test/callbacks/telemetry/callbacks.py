@@ -381,5 +381,3 @@ def GetErspanPayloadSize(testcase, inpkt, args):
         return basepkt.size
     testcase.info("GetErspanPktSize returning ", plen)
     return plen
-
-

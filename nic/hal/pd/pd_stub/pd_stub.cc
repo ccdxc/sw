@@ -222,6 +222,7 @@ PD_FUNC_STUB(pd_get_opaque_tag_addr);
 // stats
 PD_FUNC_STUB(pd_drop_stats_get);
 PD_FUNC_STUB(pd_table_stats_get);
+PD_FUNC_STUB(pd_system_drop_action);
 
 // oifl
 PD_FUNC_STUB(pd_oif_list_create);

@@ -42,6 +42,28 @@ packets:
                 vlan: ref://testcase/config/dst/segment/vlan_id
                 prio: ref://testcase/config/flow/txqos/cos
 
+    - packet:
+        id          : SPAN_PKT
+        clone       : ref://testcase/packets/id=IN_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers     :
+            erspaneth:
+                src    : callback://networking/packets/GetDropPacketERSPANSrcMac
+                dst    : callback://networking/packets/GetDropPacketERSPANDstMac
+            erspanqtag:
+                prio: 1
+                vlan: callback://networking/packets/GetDropPacketERSPANVlanEncap
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://networking/packets/GetDropPacketERSPANSrcIp
+                dst : callback://networking/packets/GetDropPacketERSPANDstIp
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
 buffers:
     - buffer:
         id      : BUF1 # Input Buffer
@@ -81,6 +103,9 @@ expect:
         - packet:
             object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT
             port    : 128
+        - packet:
+            object  : callback://networking/packets/GetExpectedSpanPacket
+            port    : callback://networking/packets/GetDropPacketDestPort/session=0
 
     descriptors:
         - descriptor:

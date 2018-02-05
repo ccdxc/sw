@@ -9,6 +9,8 @@ from config.store import Store
 from infra.common.glopts import GlobalOptions as GlobalOptions
 import config.objects.tenant as Tenant
 import config.objects.segment as Segment
+import config.objects.tunnel    as tunnel
+import config.objects.span as span
 
 def GetTtl(testcase, packet):
     return 129
@@ -366,3 +368,70 @@ def GetClassicEnicPacketEncapsForMulticastCopy(testcase, packet):
         encaps.append(__get_template('ENCAP_QTAG'))
 
     return encaps
+
+def getGRETunnels(testcase):
+    # verify we have an ERPSPAN session configured.
+    tnls = []
+    found = False
+    spans = Store.objects.GetAllByClass(span.SpanSessionObject)
+    for ssn in Store.objects.GetAllByClass(span.SpanSessionObject):
+        if ssn.IsErspan():
+            found = True
+            break
+    if not found:
+        return tnls
+
+    for tnl in Store.objects.GetAllByClass(tunnel.TunnelObject):
+        if tnl.IsGRE():
+            tnls.append(tnl)
+    return tnls
+
+def GetDropPacketERSPANSrcMac(testcase, packet):
+    tnls = getGRETunnels(testcase)
+    if len(tnls) > 0:
+        return tnls[0].remote_ep.segment.macaddr
+    return None
+
+def GetDropPacketERSPANDstMac(testcase, packet):
+    tnls = getGRETunnels(testcase)
+    if len(tnls) > 0:
+        return tnls[0].remote_ep.macaddr
+    return None
+
+def GetDropPacketERSPANVlanEncap(testcase, packet):
+    tnls = getGRETunnels(testcase)
+    if len(tnls) > 0:
+        return tnls[0].remote_ep.segment.vlan_id
+    return None
+
+def GetDropPacketERSPANSrcIp(testcase, packet):
+    tnls = getGRETunnels(testcase)
+    if len(tnls) > 0:
+        return tnls[0].GetSrcIp()
+    return IpAddress(string='0.0.0.0')
+
+def GetDropPacketERSPANDstIp(testcase, packet):
+    tnls = getGRETunnels(testcase)
+    if len(tnls) > 0:
+        return tnls[0].GetDestIp()
+    return IpAddress(string='0.0.0.0')
+
+def GetDropPacketDestPort(testcase, args):
+    tnls = getGRETunnels(testcase)
+    if len(tnls) == 0:
+        return None
+    if 'ports' not in tnls[0].remote_ep.intf.__dict__:
+        ports = []
+        ports.append(tnls[0].remote_ep.intf)
+        return ports
+    else:
+        return tnls[0].remote_ep.intf.ports
+
+def GetExpectedSpanPacket(testcase, args = None):
+    tnls = getGRETunnels(testcase)
+    if len(tnls) == 0:
+        return None
+    if testcase.config.flow.action == 'DROP':
+        return testcase.packets.Get('SPAN_PKT')
+
+    return None

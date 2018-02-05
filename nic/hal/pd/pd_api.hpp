@@ -1672,6 +1672,16 @@ typedef struct pd_table_stats_get_args_s {
     pd_system_args_t *pd_sys_args;
 } __PACK__ pd_table_stats_get_args_t;
 
+typedef struct pd_system_drop_action_args_s {
+    SystemConfigSpec *spec;
+} __PACK__ pd_system_drop_action_args_t;
+
+static inline void
+pd_system_drop_action_args_init (pd_system_drop_action_args_t *args)
+{
+    args->spec = NULL;
+}
+
 // oiflist 
 typedef struct pd_oif_list_create_args_s {
     oif_list_id_t *list;
@@ -2252,7 +2262,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_GET_SLAB,              193, "PD_FUNC_ID_GET_SLAB")\
     ENTRY(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, 194, "PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK")\
     ENTRY(PD_FUNC_ID_CLOCK_DELTA_COMP, 195, "PD_FUNC_ID_CLOCK_DELTA_COMP")\
-    ENTRY(PD_FUNC_ID_MAX,                   200, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SYSTEM_DROP_ACTION,    196, "PD_FUNC_ID_SYSTEM_DROP_ACTION") \
+    ENTRY(PD_FUNC_ID_MAX,                   197, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2478,6 +2489,7 @@ PD_FUNCP_TYPEDEF(pd_get_opaque_tag_addr);
 // stats
 PD_FUNCP_TYPEDEF(pd_drop_stats_get);
 PD_FUNCP_TYPEDEF(pd_table_stats_get);
+PD_FUNCP_TYPEDEF(pd_system_drop_action);
 
 // oifl
 PD_FUNCP_TYPEDEF(pd_oif_list_create);
@@ -2774,6 +2786,7 @@ typedef struct pd_call_s {
         // stats
         PD_UNION_FIELD(pd_drop_stats_get);
         PD_UNION_FIELD(pd_table_stats_get);
+        PD_UNION_FIELD(pd_system_drop_action);
 
         // oifl
         PD_UNION_FIELD(pd_oif_list_create);

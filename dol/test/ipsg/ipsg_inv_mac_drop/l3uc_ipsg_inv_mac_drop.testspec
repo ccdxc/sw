@@ -76,6 +76,28 @@ packets:
                 tc      : ref://testcase/config/flow/txqos/dscp
                 hlim    : callback://networking/packets/GetRoutedTtl
 
+    - packet:
+        id          : SPAN_PKT
+        clone       : ref://testcase/packets/id=IN_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers     :
+            erspaneth:
+                src    : callback://networking/packets/GetDropPacketERSPANSrcMac
+                dst    : callback://networking/packets/GetDropPacketERSPANDstMac
+            erspanqtag:
+                prio: 0
+                vlan: callback://networking/packets/GetDropPacketERSPANVlanEncap
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://networking/packets/GetDropPacketERSPANSrcIp
+                dst : callback://networking/packets/GetDropPacketERSPANDstIp
+            erspangre:
+            erspan:
+                sessionid: const/0
+                ver     : const/2
+
 trigger:
     packets:
         - packet:
@@ -88,3 +110,7 @@ expect:
             object  : None
             #object  : callback://networking/packets/GetL3UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports
+
+        - packet:
+            object  : ref://testcase/packets/id=SPAN_PKT
+            port    : callback://networking/packets/GetDropPacketDestPort/session=0

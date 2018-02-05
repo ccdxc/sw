@@ -272,6 +272,7 @@ hal_pd_load_symbols (void) {
     // stats
     PD_SYMBOL_LOAD(PD_FUNC_ID_DROP_STATS_GET, pd_drop_stats_get);
     PD_SYMBOL_LOAD(PD_FUNC_ID_TABLE_STATS_GET, pd_table_stats_get);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_SYSTEM_DROP_ACTION, pd_system_drop_action);
 
     // oifl
     PD_SYMBOL_LOAD(PD_FUNC_ID_OIFL_CREATE, pd_oif_list_create);
@@ -590,6 +591,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     // stats
     PD_SYMBOL_CALL(PD_FUNC_ID_DROP_STATS_GET, pd_drop_stats_get);
     PD_SYMBOL_CALL(PD_FUNC_ID_TABLE_STATS_GET, pd_table_stats_get);
+    PD_SYMBOL_CALL(PD_FUNC_ID_SYSTEM_DROP_ACTION, pd_system_drop_action);
 
     // oifl
     PD_SYMBOL_CALL(PD_FUNC_ID_OIFL_CREATE, pd_oif_list_create);
