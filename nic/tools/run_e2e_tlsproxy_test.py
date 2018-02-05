@@ -276,7 +276,6 @@ def main():
             # Run TCP/TLS proxy (SPAN mode) with app redirect E2E
             time.sleep(5)
             status = run_test(4, "TLS Proxy with App-redirect(SPAN mode)", str(8089), 0)
-        status = 0
 
     #cleanup(keep_logs=True)
 
