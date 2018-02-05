@@ -20,6 +20,8 @@
 namespace hal {
 namespace pd {
 
+extern class hal_state_pd    *g_hal_state_pd;
+
 class hal_state_pd {
 public:
     static hal_state_pd *factory(void);

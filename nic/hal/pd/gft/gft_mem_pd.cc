@@ -192,7 +192,8 @@ hal_state_pd::init_tables(void)
             if (!tinfo.is_oflow_table) {
                 tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
                     tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                  tinfo.key_struct_size, tinfo.actiondata_struct_size, false);
+                                  tinfo.key_struct_size,
+                                  tinfo.actiondata_struct_size, true);
                 HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
             }
             break;
