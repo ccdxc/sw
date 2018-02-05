@@ -127,7 +127,6 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     // allocate all PD resources and finish programming
     pd::pd_tlscb_create_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
-    // ret = pd::pd_tlscb_create(&pd_tlscb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_CREATE, (void *)&pd_tlscb_args);
 
     if (ret != HAL_RET_OK) {
@@ -190,7 +189,6 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     pd::pd_tlscb_update_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
     
-    // ret = pd::pd_tlscb_update(&pd_tlscb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_UPDATE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: Update Failed, err: ", ret);
@@ -228,7 +226,6 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     pd::pd_tlscb_get_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = &rtlscb;
     
-    // ret = pd::pd_tlscb_get(&pd_tlscb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_GET, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: Failed to get, err: {}", ret);
@@ -299,7 +296,6 @@ tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp
     pd::pd_tlscb_delete_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
     
-    // ret = pd::pd_tlscb_delete(&pd_tlscb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_DELETE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: delete Failed, err: {}", ret);

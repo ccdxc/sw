@@ -94,11 +94,11 @@ hal_ret_t
 l4lbservice_create(l4lb::L4LbServiceSpec& spec,
                    l4lb::L4LbServiceResponse *rsp) 
 {
-    hal_ret_t               ret;
-    vrf_id_t             tid;
-    vrf_t                *vrf = NULL;
-    l4lb_service_entry_t    *l4lb = NULL;
-    pd::pd_l4lb_create_args_t      pd_l4lb_args = {0};
+    hal_ret_t                   ret;
+    vrf_id_t                    tid;
+    vrf_t                       *vrf = NULL;
+    l4lb_service_entry_t        *l4lb = NULL;
+    pd::pd_l4lb_create_args_t   pd_l4lb_args = {0};
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-L4LBService:{}: L4LB Create for vrf: {}", __FUNCTION__, 
@@ -145,7 +145,6 @@ l4lbservice_create(l4lb::L4LbServiceSpec& spec,
     // PD Call
     pd::pd_l4lb_create_args_init(&pd_l4lb_args);
     pd_l4lb_args.l4lb = l4lb;
-    // ret = pd::pd_l4lb_create(&pd_l4lb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L4LB_CREATE, (void *)&pd_l4lb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD L4Lb create failure, err : {}", ret);

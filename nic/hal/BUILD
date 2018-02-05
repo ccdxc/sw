@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
+load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
 
 cc_binary(
     name = "hal",
@@ -10,19 +11,11 @@ cc_binary(
         "main.cc",
     ],
     copts = sdk_copts,
-    linkopts = [
-        "-lzmq",
-        "-lpthread",
-        "-pthread",
-        "-lz",
-        "-rdynamic",
-        "-lm",
-    ],
+    linkopts = gl_linkopts_list,
     deps = [
             ":hal_src",
             # PI
             "//nic/fte",
-            "//nic/hal/periodic",
             "//nic/hal/svc:hal_svc",
             "//nic/utils/trace",
             "//nic/utils/print",
@@ -35,7 +28,6 @@ cc_binary(
             "//nic:grpc_includes",
             "//nic:libprotobuf",
             "//nic:grpc",
-            "//nic/hal/lib:hal_lib",
             "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
 
             # PD

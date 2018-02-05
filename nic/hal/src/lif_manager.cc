@@ -18,17 +18,13 @@ const static uint32_t kAllocUnit = 4096;
 namespace hal {
 
 LIFManager::LIFManager() {
-  // uint64_t hbm_addr = 0xc0000000;
-  // Can't call capri from PI
-  // uint64_t hbm_addr = get_start_offset(kHBMLabel);
-  // assert(hbm_addr > 0);
-  // assert(get_size_kb(kHBMLabel) == kHBMSizeKB);
   pd::pd_get_start_offset_args_t off_args = {0};
   pd::pd_get_size_kb_args_t size_args = {0};
 
   off_args.reg_name = kHBMLabel;
   pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);
   uint64_t hbm_addr = off_args.offset;
+  assert(hbm_addr > 0);
 
   size_args.reg_name = kHBMLabel;
   pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, (void *)&size_args);
@@ -56,8 +52,6 @@ int32_t LIFManager::InitLIFQStateImpl(LIFQState *qstate) {
   alloc_offset *= kAllocUnit;
   qstate->hbm_address = hbm_base_ + alloc_offset;
 
-  // Don't use capri apis
-  // push_qstate_to_capri(qstate);
   pd::pd_push_qstate_to_capri_args_t args = {0};
   args.qstate = qstate;
   pd::hal_pd_call(pd::PD_FUNC_ID_PUSH_QSTATE, (void*)&args);
@@ -66,8 +60,6 @@ int32_t LIFManager::InitLIFQStateImpl(LIFQState *qstate) {
 }
 
 void LIFManager::DeleteLIFQStateImpl(LIFQState *qstate) {
-  // Don't use capri apis
-  // clear_qstate(qstate);
   pd::pd_clear_qstate_args_t args = {0};
   args.qstate = qstate;
   pd::hal_pd_call(pd::PD_FUNC_ID_CLEAR_QSTATE, (void*)&args);
@@ -80,8 +72,6 @@ void LIFManager::DeleteLIFQStateImpl(LIFQState *qstate) {
 
 int32_t LIFManager::ReadQStateImpl(
     uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
-  // Don't use capri apis
-  // return read_qstate(q_addr, buf, q_size);
     pd::pd_read_qstate_args_t args = {0};
     args.q_addr = q_addr;
     args.buf = buf;
@@ -93,8 +83,6 @@ int32_t LIFManager::ReadQStateImpl(
 
 int32_t LIFManager::WriteQStateImpl(
     uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
-  // Don't use capri apis
-  // return write_qstate(q_addr, buf, q_size);
   pd::pd_write_qstate_args_t args = {0};
   args.q_addr = q_addr;
   args.buf = buf;
@@ -107,8 +95,6 @@ int32_t LIFManager::WriteQStateImpl(
 int32_t LIFManager::GetPCOffset(
     const char *handle, const char *prog_name,
     const char *label, uint8_t *ret_offset) {
-  // Don't use capri apis
-  // return get_pc_offset(handle, prog_name, label, ret_offset);
   pd::pd_get_pc_offset_args_t args;
   args.handle = handle;
   args.prog_name = prog_name;

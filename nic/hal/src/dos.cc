@@ -198,7 +198,6 @@ dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
     // PD Call to allocate PD resources and HW programming
     pd::pd_dos_policy_create_args_init(&pd_dosp_args);
     pd_dosp_args.dos_policy = dosp;
-    // ret = pd::pd_dos_policy_create(&pd_dosp_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DOS_POLICY_CREATE, 
                           (void *)&pd_dosp_args);
     if (ret != HAL_RET_OK) {

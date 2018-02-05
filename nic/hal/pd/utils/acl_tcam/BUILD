@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
+load("//nic/bazel:common_deps.bzl", "test_deps_list")
 
 cc_library(
     name = "acl_tcam",
@@ -42,7 +43,7 @@ cc_test(
             ":acl_tcam",
             "//nic/hal/pd/iris:pd_iris",
             "//nic/hal/pd/capri:capri",
-            ] + gl_deps_list,
+            ] + gl_deps_list + test_deps_list,
     linkopts = [
         "-lzmq",
      ],

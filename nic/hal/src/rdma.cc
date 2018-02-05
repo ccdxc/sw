@@ -32,11 +32,6 @@ RDMAManager *g_rdma_manager = nullptr;
 extern LIFManager *g_lif_manager;
 
 RDMAManager::RDMAManager() {
-  // Don't use capri
-  // uint64_t hbm_addr = get_start_offset(kHBMLabel);
-  // Don't use capri
-  // HAL_ASSERT(get_size_kb(kHBMLabel) == kHBMSizeKB);
-  
   pd::pd_get_start_offset_args_t off_args = {0};
   pd::pd_get_size_kb_args_t size_args = {0};
 
@@ -134,18 +129,6 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     rx_args.rq_qtype = entry_p->rq_qtype;
 	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_RXDMA_TABLE_ADD, (void *)&rx_args);
 
-#if 0
-    ret = hal::pd::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(lif,
-               entry_p->rdma_en_qtype_mask,
-               entry_p->pt_base_addr_page_id,
-               entry_p->log_num_pt_entries,
-               entry_p->cqcb_base_addr_page_id,
-               entry_p->log_num_cq_entries,
-               entry_p->prefetch_pool_base_addr_page_id,
-               entry_p->log_num_prefetch_pool_entries,
-               entry_p->sq_qtype,
-               entry_p->rq_qtype);
-#endif
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for rxdma, idx : {}, err : {}",
                       lif, ret);
@@ -165,18 +148,6 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.sq_qtype = entry_p->sq_qtype;
     tx_args.rq_qtype = entry_p->rq_qtype;
 	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, (void *)&tx_args);
-#if 0
-    ret = hal::pd::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(lif,
-               entry_p->rdma_en_qtype_mask,
-               entry_p->pt_base_addr_page_id,
-               entry_p->log_num_pt_entries,
-               entry_p->cqcb_base_addr_page_id,
-               entry_p->log_num_cq_entries,
-               entry_p->prefetch_pool_base_addr_page_id,
-               entry_p->log_num_prefetch_pool_entries,
-               entry_p->sq_qtype,
-               entry_p->rq_qtype);
-#endif
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for txdma, idx : {}, err : {}",
                       lif, ret);
@@ -703,12 +674,6 @@ stage0_resp_rx_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rdma_resp_rx_stage0";
 
-#if 0
-    int ret = capri_program_label_to_offset("p4plus",
-                                            progname,
-                                            labelname,
-                                            offset);
-#endif
     pd::pd_capri_program_label_to_offset_args_t args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
@@ -732,12 +697,6 @@ stage0_resp_tx_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "rdma_resp_tx_stage0";
 
-#if 0
-    int ret = capri_program_label_to_offset("p4plus",
-                                            progname,
-                                            labelname,
-                                            offset);
-#endif
     pd::pd_capri_program_label_to_offset_args_t args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
@@ -762,12 +721,6 @@ stage0_req_rx_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rdma_req_rx_stage0";
 
-#if 0
-    int ret = capri_program_label_to_offset("p4plus",
-                                            progname,
-                                            labelname,
-                                            offset);
-#endif
     pd::pd_capri_program_label_to_offset_args_t args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
@@ -793,12 +746,6 @@ stage0_req_tx_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "rdma_req_tx_stage0";
 
-#if 0
-    int ret = capri_program_label_to_offset("p4plus",
-                                            progname,
-                                            labelname,
-                                            offset);
-#endif
     pd::pd_capri_program_label_to_offset_args_t args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
@@ -1142,9 +1089,6 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     HAL_ASSERT(header_template_addr % 8 == 0);
 
     memrev((uint8_t*)&temp, header_template_size);
-#if 0
-    capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t*)&temp, header_template_size);
-#endif
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     args.addr = (uint64_t)header_template_addr;
     args.buf = (uint8_t*)&temp;
@@ -1222,10 +1166,6 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             memcpy(&header_template, (uint8_t *)spec.header_template().c_str(),
                    std::min(sizeof(header_template_t), spec.header_template().size()));
         
-            // Don't use capri apis
-#if 0
-            capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t *)&header_template, sizeof(header_template_t));
-#endif
             args.addr = (uint64_t)header_template_addr;
             args.buf = (uint8_t *)&header_template;
             args.size =  sizeof(header_template_t);
@@ -1350,8 +1290,6 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
 
     rsp->set_api_status(types::API_STATUS_OK);
     // Fill the EQ Interrupt address = Intr_table base + 8 bytes for each intr_num
-    // Dont use capri
-    // hbm_eq_intr_table_base = get_start_offset(CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE);
     pd::pd_get_start_offset_args_t off_args = {0};
     off_args.reg_name = "rdma-eq-intr-table";
     pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&off_args);

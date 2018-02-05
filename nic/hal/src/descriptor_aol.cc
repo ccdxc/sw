@@ -1,7 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-// #include "nic/hal/svc/descriptor_aol_svc.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/descriptor_aol.hpp"
@@ -20,7 +19,6 @@ descriptor_aol_get(DescrAolRequest& request, DescrAolSpec *response)
     pd_descr_ptr = (pd::pd_descr_aol_t*) request.descr_aol_handle();
     args.src = pd_descr_ptr;
     args.dst = &pd_descr;
-    //ret = pd::pd_descriptor_aol_get(pd_descr_ptr, &pd_descr);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DESC_AOL_GET, (void *)&args);
 
     response->set_descr_aol_handle(request.descr_aol_handle());

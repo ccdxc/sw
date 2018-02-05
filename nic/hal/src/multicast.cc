@@ -261,15 +261,15 @@ end:
 hal_ret_t
 mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_mc_entry_create_args_t      pd_mc_entry_args = { 0 };
-    dhl_entry_t                 *dhl_entry = NULL;
-    mc_entry_t                  *mc_entry = NULL;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    dllist_ctxt_t               *lnode = NULL;
-    l2seg_t                     *l2seg = NULL;
-    if_t                        *pi_if = NULL;
-    oif_t                       oif = { 0 };
+    hal_ret_t                     ret = HAL_RET_OK;
+    dhl_entry_t                   *dhl_entry = NULL;
+    mc_entry_t                    *mc_entry = NULL;
+    hal_handle_id_list_entry_t    *entry = NULL;
+    dllist_ctxt_t                 *lnode = NULL;
+    l2seg_t                       *l2seg = NULL;
+    if_t                          *pi_if = NULL;
+    oif_t                         oif = { 0 };
+    pd::pd_mc_entry_create_args_t pd_mc_entry_args = { 0 };
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-mc_entry:{}: invalid cfg_ctxt", __FUNCTION__);
@@ -333,7 +333,6 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_mc_entry_create_args_init(&pd_mc_entry_args);
     pd_mc_entry_args.mc_entry = mc_entry;
-    // ret = pd::pd_mc_entry_create(&pd_mc_entry_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_CREATE, (void *)&pd_mc_entry_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-mc_entry:{}:failed to create mc_entry pd, err : {}",
@@ -394,12 +393,12 @@ end:
 hal_ret_t
 mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    hal_handle_t                hal_handle = 0;
-    dllist_ctxt_t               *lnode = NULL;
-    mc_entry_t                  *mc_entry = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    pd::pd_mc_entry_delete_args_t      pd_mc_entry_args = { 0 };
+    hal_ret_t                     ret = HAL_RET_OK;
+    hal_handle_t                  hal_handle = 0;
+    dllist_ctxt_t                 *lnode = NULL;
+    mc_entry_t                    *mc_entry = NULL;
+    dhl_entry_t                   *dhl_entry = NULL;
+    pd::pd_mc_entry_delete_args_t pd_mc_entry_args = { 0 };
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-mc_entry:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -419,8 +418,7 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (mc_entry->pd) {
         pd::pd_mc_entry_delete_args_init(&pd_mc_entry_args);
         pd_mc_entry_args.mc_entry = mc_entry;
-        // ret = pd::pd_mc_entry_delete(&pd_mc_entry_args);
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, (void *)&pd_mc_entry_args);
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_MC_ENTRY_DELETE, (void *)&pd_mc_entry_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-mc_entry:{}:failed to delete mc_entry pd, err : {}",
                           __FUNCTION__, ret);

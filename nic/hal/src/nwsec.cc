@@ -396,7 +396,6 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_nwsec_profile_create_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    // ret = pd::pd_nwsec_profile_create(&pd_nwsec_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_CREATE, 
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
@@ -489,7 +488,6 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (nwsec->pd) {
         pd::pd_nwsec_profile_delete_args_init(&pd_nwsec_args);
         pd_nwsec_args.nwsec_profile = nwsec;
-        // ret = pd::pd_nwsec_profile_delete(&pd_nwsec_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE, 
                               (void *)&pd_nwsec_args);
         if (ret != HAL_RET_OK) {
@@ -820,7 +818,6 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_nwsec_profile_update_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
     pd_nwsec_args.clone_profile = nwsec_clone;
-    // ret = pd::pd_nwsec_profile_update(&pd_nwsec_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_UPDATE, 
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
@@ -864,7 +861,6 @@ nwsec_make_clone (nwsec_profile_t *nwsec, nwsec_profile_t **nwsec_clone,
     args.nwsec_profile = nwsec;
     args.clone_profile = *nwsec_clone;
     pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MAKE_CLONE, (void *)&args);
-    // pd::pd_nwsec_profile_make_clone(nwsec, *nwsec_clone);
 
     // Keep new values in the clone
     nwsec_profile_init_from_spec(*nwsec_clone, spec);
@@ -922,7 +918,6 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     // Free PD
     pd::pd_nwsec_profile_mem_free_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    // ret = pd::pd_nwsec_profile_mem_free(&pd_nwsec_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
@@ -944,10 +939,10 @@ hal_ret_t
 nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_nwsec_profile_mem_free_args_t pd_nwsec_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     nwsec_profile_t             *nwsec = NULL;
+    pd::pd_nwsec_profile_mem_free_args_t pd_nwsec_args = { 0 };
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-sec-prof{}:invalid cfg_ctxt", __FUNCTION__);
@@ -967,7 +962,6 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free PD
     pd::pd_nwsec_profile_mem_free_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    // ret = pd::pd_nwsec_profile_mem_free(&pd_nwsec_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
@@ -1087,10 +1081,10 @@ hal_ret_t
 nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_nwsec_profile_delete_args_t pd_nwsec_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     nwsec_profile_t             *nwsec = NULL;
+    pd::pd_nwsec_profile_delete_args_t pd_nwsec_args = { 0 };
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-sec-prof:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -1109,7 +1103,6 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_nwsec_profile_delete_args_init(&pd_nwsec_args);
     pd_nwsec_args.nwsec_profile = nwsec;
-    // ret = pd::pd_nwsec_profile_delete(&pd_nwsec_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE, 
                           (void *)&pd_nwsec_args);
 

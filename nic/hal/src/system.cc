@@ -30,7 +30,6 @@ system_get(SystemResponse *rsp)
 
     d_args.pd_sys_args = &pd_system_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_STATS_GET, (void *)&d_args);
-    // ret = pd::pd_drop_stats_get(&pd_system_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
@@ -39,7 +38,6 @@ system_get(SystemResponse *rsp)
 
     t_args.pd_sys_args = &pd_system_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TABLE_STATS_GET, (void *)&t_args);
-    // ret = pd::pd_table_stats_get(&pd_system_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);

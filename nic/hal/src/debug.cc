@@ -3,8 +3,6 @@
 #include "nic/hal/src/debug.hpp"
 #include "sdk/slab.hpp"
 #include "nic/include/hal_state.hpp"
-//#include "nic/hal/pd/iris/hal_state_pd.hpp"
-//#include "nic/hal/lkl/lklshim.hpp"
 
 using sdk::lib::slab;
 

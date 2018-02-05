@@ -155,7 +155,6 @@ proxyrcb_create (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
     // allocate all PD resources and finish programming
     pd::pd_proxyrcb_create_args_init(&pd_proxyrcb_args);
     pd_proxyrcb_args.proxyrcb = proxyrcb;
-    // ret = pd::pd_proxyrcb_create(&pd_proxyrcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYRCB_CREATE, (void *)&pd_proxyrcb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYR CB create failure, err : {}", ret);
@@ -229,7 +228,6 @@ proxyrcb_update (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
     pd::pd_proxyrcb_update_args_init(&pd_proxyrcb_args);
     pd_proxyrcb_args.proxyrcb = proxyrcb;
     
-    // ret = pd::pd_proxyrcb_update(&pd_proxyrcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYRCB_UPDATE, (void *)&pd_proxyrcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYRCB: Update Failed, err: ", ret);
@@ -267,7 +265,6 @@ proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponse *rsp)
     pd::pd_proxyrcb_get_args_init(&pd_proxyrcb_args);
     pd_proxyrcb_args.proxyrcb = &rproxyrcb;
     
-    // ret = pd::pd_proxyrcb_get(&pd_proxyrcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYRCB_GET, (void *)&pd_proxyrcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYRCB: Failed to get, err: {}", ret);
@@ -356,7 +353,6 @@ proxyrcb_delete (proxyrcb::ProxyrCbDeleteRequest& req, proxyrcb::ProxyrCbDeleteR
     del_args.r_args = &pd_proxyrcb_args;
     pd_proxyrcb_args.proxyrcb = proxyrcb;
     
-    // ret = pd::pd_proxyrcb_delete(&pd_proxyrcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYRCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYRCB: delete Failed, err: {}", ret);

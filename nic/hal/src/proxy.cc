@@ -352,7 +352,6 @@ proxy_post_lif_program_init(proxy_t* proxy)
         //       can't directly go to iris !!!
         pd::p4pt_pd_init_args_t args;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_P4PT_INIT, (void *)&args);
-        // ret = pd::p4pt_pd_init();
 #endif
         break;
     default:

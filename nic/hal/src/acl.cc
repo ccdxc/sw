@@ -121,7 +121,6 @@ acl_free (acl_t *acl, bool free_pd)
     if (free_pd) {
         pd::pd_acl_mem_free_args_init(&pd_acl_args);
         pd_acl_args.acl = acl;
-        // ret = pd::pd_acl_mem_free(&pd_acl_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MEM_FREE, (void *)&pd_acl_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-acl:{}:failed to delete acl pd, err : {}",
@@ -342,7 +341,6 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_acl_create_args_init(&pd_acl_args);
     pd_acl_args.acl = acl;
-    // ret = pd::pd_acl_create(&pd_acl_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_CREATE, (void *)&pd_acl_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-acl:{}:failed to create acl pd, err : {}",
@@ -437,7 +435,6 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (acl->pd) {
         pd::pd_acl_delete_args_init(&pd_acl_args);
         pd_acl_args.acl = acl;
-        // ret = pd::pd_acl_delete(&pd_acl_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-acl:{}:failed to delete acl pd, err : {}",
@@ -1396,7 +1393,6 @@ extract_action_spec (acl_action_spec_t *as,
 
         pd::pd_rw_entry_find_or_alloc_args_t r_args;
         rw_key.rw_act = REWRITE_REWRITE_ID;
-        // ret = hal::pd::pd_rw_entry_find_or_alloc(&rw_key, &as->int_as.rw_idx);
         r_args.args = &rw_key;
         r_args.rw_idx = &as->int_as.rw_idx;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, (void *)&r_args);
@@ -1590,7 +1586,6 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_acl_update_args_init(&pd_acl_args);
     pd_acl_args.acl = acl_clone;
-    // ret = pd::pd_acl_update(&pd_acl_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_UPDATE, (void *)&pd_acl_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-acl:{}:failed to update acl pd, err : {}",
@@ -1623,7 +1618,6 @@ acl_make_clone (acl_t *acl, acl_t **acl_clone_p, AclSpec& spec)
     args.acl = acl;
     args.clone = *acl_clone_p;
     pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MAKE_CLONE, (void *)&args);
-    // pd::pd_acl_make_clone(acl, acl_clone);
 
     // Update with the new spec
     ret = acl_populate_from_spec(acl_clone, spec);
@@ -1890,7 +1884,6 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_acl_delete_args_init(&pd_acl_args);
     pd_acl_args.acl = acl;
-    // ret = pd::pd_acl_delete(&pd_acl_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-acl:{}:failed to delete acl pd, err : {}",

@@ -4,6 +4,7 @@ licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "gl_deps_list")
 load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
+load("//nic/bazel:common_deps.bzl", "test_deps_list")
 
 
 cc_library(
@@ -25,7 +26,7 @@ cc_test(
     deps = [
         # Utils
         ":fsm",
-    ] + gl_deps_list,
+    ] + gl_deps_list + test_deps_list,
     linkopts = gl_linkopts_list,
     copts = sdk_copts,
 )

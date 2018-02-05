@@ -704,7 +704,6 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     pd_session_args.rsp = args->rsp;
     pd_session_args.update_iflow = true;
 
-    // ret = pd::pd_session_create(&pd_session_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_CREATE, (void *)&pd_session_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session create failure, err : {}", ret);
@@ -792,7 +791,6 @@ session_update(const session_args_t *args, session_t *session)
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
 
-    // ret = pd::pd_session_update(&pd_session_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_UPDATE, (void *)&pd_session_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session update failure, err : {}", ret);
@@ -815,7 +813,6 @@ session_delete(const session_args_t *args, session_t *session)
     pd_session_args.session_state = args ? args->session_state : NULL;
     pd_session_args.rsp = args ? args->rsp : NULL;
 
-    // ret = pd::pd_session_delete(&pd_session_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_DELETE, (void *)&pd_session_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session delete failure, err : {}", ret);
@@ -883,7 +880,6 @@ session_age_cb (void *entry, void *ctxt)
     args.pd_session = session->pd;
     args.role = FLOW_ROLE_INITIATOR;
     args.flow_state = &iflow_state;
-    // ret = hal::pd::pd_flow_get(session, iflow, &iflow_state);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",

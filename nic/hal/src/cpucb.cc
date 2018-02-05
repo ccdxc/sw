@@ -131,7 +131,6 @@ cpucb_create (CpuCbSpec& spec, CpuCbResponse *rsp)
     // allocate all PD resources and finish programming
     pd::pd_cpucb_create_args_init(&pd_cpucb_args);
     pd_cpucb_args.cpucb = cpucb;
-    // ret = pd::pd_cpucb_create(&pd_cpucb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_CREATE, (void *)&pd_cpucb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD CPU CB create failure, err : {}", ret);
@@ -177,7 +176,6 @@ cpucb_update (CpuCbSpec& spec, CpuCbResponse *rsp)
     
     cpucb_spec_to_cb(spec, *cpucb);
 
-    // ret = pd::pd_cpucb_update(&pd_cpucb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_UPDATE, (void *)&pd_cpucb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD CPUCB: Update Failed, err: ", ret);
@@ -214,7 +212,6 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponse *rsp)
     pd::pd_cpucb_get_args_init(&pd_cpucb_args);
     pd_cpucb_args.cpucb = &rcpucb;
     
-    // ret = pd::pd_cpucb_get(&pd_cpucb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_GET, (void *)&pd_cpucb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD CPUCB: Failed to get, err: {}", ret);
@@ -253,7 +250,6 @@ cpucb_delete (cpucb::CpuCbDeleteRequest& req, cpucb::CpuCbDeleteResponseMsg *rsp
     pd::pd_cpucb_delete_args_init(&pd_cpucb_args);
     pd_cpucb_args.cpucb = cpucb;
     
-    // ret = pd::pd_cpucb_delete(&pd_cpucb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_DELETE, (void *)&pd_cpucb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD CPUCB: delete Failed, err: {}", ret);

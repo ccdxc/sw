@@ -123,7 +123,6 @@ wring_create (WRingSpec& spec, WRingResponse *rsp)
     // allocate all PD resources and finish programming
     pd::pd_wring_create_args_init(&pd_wring_args);
     pd_wring_args.wring = wring;
-    // ret = pd::pd_wring_create(&pd_wring_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_CREATE, (void *)&pd_wring_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring create failure, err : {}", ret);
@@ -179,7 +178,6 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
     pd::pd_wring_get_entry_args_init(&pd_wring_args);
     pd_wring_args.wring = &wring;
 
-    // ret = pd::pd_wring_get_entry(&pd_wring_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_ENTRY, (void *)&pd_wring_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
@@ -245,7 +243,6 @@ wring_get_meta (WRingSpec& spec, WRingGetMetaResponse *rsp)
     pd::pd_wring_get_meta_args_init(&pd_wring_args);
     pd_wring_args.wring = &wring;
 
-    // ret = pd::pd_wring_get_meta(&pd_wring_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_META, (void *)&pd_wring_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
@@ -289,7 +286,6 @@ wring_set_meta (WRingSpec& spec, WRingSetMetaResponse *rsp)
     pd::pd_wring_set_meta_args_init(&pd_wring_args);
     pd_wring_args.wring = &wring;
 
-    // ret = pd::pd_wring_set_meta(&pd_wring_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_SET_META, (void *)&pd_wring_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);

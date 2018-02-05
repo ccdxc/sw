@@ -60,12 +60,6 @@ void GetProgramAddress(const internal::ProgramAddressReq &req,
         args.offset = &addr;
         hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
                                   (void *)&args);
-#if 0
-        int ret = capri_program_label_to_offset(
-            req.handle().c_str(), (char *) req.prog_name().c_str(),
-            (char *) req.label().c_str(), &addr);
-        int ret = 0;
-#endif
         if (ret != HAL_RET_OK)
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         else
@@ -77,11 +71,6 @@ void GetProgramAddress(const internal::ProgramAddressReq &req,
         base_args.base_addr = &addr;
         hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR, 
                                   (void *)&base_args);
-#if 0
-        int ret = capri_program_to_base_addr(
-            req.handle().c_str(), (char *) req.prog_name().c_str(), &addr);
-        int ret = 0;
-#endif
         if (ret != HAL_RET_OK)
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         else
@@ -91,10 +80,6 @@ void GetProgramAddress(const internal::ProgramAddressReq &req,
 
 void AllocHbmAddress(const internal::HbmAddressReq &req,
                        internal::HbmAddressResp *resp) {
-#if 0
-    uint64_t addr = get_start_offset(req.handle().c_str());
-    uint32_t size = get_size_kb(req.handle().c_str());
-#endif
     pd::pd_get_start_offset_args_t args;
     args.reg_name = req.handle().c_str();
     pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&args);
@@ -119,9 +104,6 @@ void AllocHbmAddress(const internal::HbmAddressReq &req,
 
 void ConfigureLifBdf(const internal::LifBdfReq &req,
                      internal::LifBdfResp *resp) {
-#if 0
-   int ret = capri_pxb_cfg_lif_bdf(req.lif(), req.bdf());
-#endif
    pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
    args.lif = req.lif();
    args.bdf = req.bdf();

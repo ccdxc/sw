@@ -240,7 +240,6 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_l2seg_create_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
     pd_l2seg_args.vrf = app_ctxt->vrf;
-    // ret = pd::pd_l2seg_create(&pd_l2seg_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to create l2seg pd, err : {}",
@@ -415,7 +414,6 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (l2seg->pd) {
         pd::pd_l2seg_delete_args_init(&pd_l2seg_args);
         pd_l2seg_args.l2seg = l2seg;
-        // ret = pd::pd_l2seg_delete(&pd_l2seg_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}", 
@@ -461,8 +459,6 @@ l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
         // TODO: REMOVE DOL test only
         args.l2seg = l2seg;
         pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (void *)&args);
-        // rsp->mutable_l2segment_status()->set_vrf_id(
-        //     hal::pd::pd_l2seg_get_flow_lkupid(l2seg));
         rsp->mutable_l2segment_status()->set_vrf_id(args.hwid);
           
     }
@@ -834,7 +830,6 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_update_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    // ret = pd::pd_l2seg_update(&pd_l2seg_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_UPDATE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to update l2seg pd, err : {}",
@@ -865,7 +860,6 @@ l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
     *l2seg_clone = l2seg_alloc_init();
     memcpy(*l2seg_clone, l2seg, sizeof(l2seg_t));
 
-    // pd::pd_l2seg_make_clone(l2seg, *l2seg_clone);
     args.l2seg = l2seg;
     args.clone = *l2seg_clone;
     pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MAKE_CLONE, (void *)&args);
@@ -997,7 +991,6 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free PD
     pd::pd_l2seg_mem_free_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    // ret = pd::pd_l2seg_mem_free(&pd_l2seg_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}",
@@ -1043,7 +1036,6 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free PD
     pd::pd_l2seg_mem_free_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    // ret = pd::pd_l2seg_mem_free(&pd_l2seg_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}",
@@ -1419,11 +1411,11 @@ validate_l2seg_delete (l2seg_t *l2seg)
 hal_ret_t
 l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret           = HAL_RET_OK;
     pd::pd_l2seg_delete_args_t  pd_l2seg_args = { 0 };
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    l2seg_t                     *l2seg = NULL;
+    dllist_ctxt_t               *lnode        = NULL;
+    dhl_entry_t                 *dhl_entry    = NULL;
+    l2seg_t                     *l2seg        = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -1448,7 +1440,6 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_delete_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    // ret = pd::pd_l2seg_delete(&pd_l2seg_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}", 

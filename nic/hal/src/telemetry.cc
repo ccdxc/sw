@@ -175,7 +175,6 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
         }
     }
     args.session = &session;
-    // ret = pd_mirror_session_create(&args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_CREATE, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-MirrorSession:{}: Create failed {}", __FUNCTION__, ret);
@@ -201,7 +200,6 @@ mirror_session_get(MirrorSessionId *id, MirrorSession *rsp)
     memset(&session, 0, sizeof(session));
     session.id = id->session_id();
     args.session = &session;
-    // ret = pd_mirror_session_get(&args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-MirrorSession:{}: PD API failed {}", __FUNCTION__, ret);
@@ -246,7 +244,6 @@ mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp)
     memset(&session, 0, sizeof(session));
     session.id = id->session_id();
     args.session = &session;
-    // ret = pd_mirror_session_delete(&args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_DELETE, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-MirrorSession:{}: PD API failed {}", __FUNCTION__, ret);
@@ -310,7 +307,6 @@ collector_create(CollectorSpec *spec, Collector *resp) {
     }
     memcpy(cfg.src_mac, *dmac, sizeof(cfg.src_mac));
     args.cfg = &cfg;
-    // ret = hal::pd::pd_collector_create(&cfg);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_CREATE, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-Collector:{}: PD API failed {}", __FUNCTION__, ret);

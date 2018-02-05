@@ -138,7 +138,6 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     // allocate all PD resources and finish programming
     pd::pd_tcpcb_create_args_init(&pd_tcpcb_args);
     pd_tcpcb_args.tcpcb = tcpcb;
-    // ret = pd::pd_tcpcb_create(&pd_tcpcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_CREATE, (void *)&pd_tcpcb_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCP CB create failure, err : {}", ret);
@@ -206,7 +205,6 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
     
-    // ret = pd::pd_tcpcb_update(&pd_tcpcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_UPDATE, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: Update Failed, err: ", ret);
@@ -245,7 +243,6 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     pd::pd_tcpcb_get_args_init(&pd_tcpcb_args);
     pd_tcpcb_args.tcpcb = &rtcpcb;
     
-    // ret = pd::pd_tcpcb_get(&pd_tcpcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_GET, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: Failed to get, err: {}", ret);
@@ -342,7 +339,6 @@ tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp
     pd::pd_tcpcb_delete_args_init(&pd_tcpcb_args);
     pd_tcpcb_args.tcpcb = tcpcb;
     
-    // ret = pd::pd_tcpcb_delete(&pd_tcpcb_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_DELETE, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: delete Failed, err: {}", ret);
