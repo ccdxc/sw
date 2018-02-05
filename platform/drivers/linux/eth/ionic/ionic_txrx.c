@@ -428,7 +428,7 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 	desc->addr = addr;
 	desc->vlan_tci = skb_vlan_tag_get(skb);
 	desc->hdr_len = skb_checksum_start_offset(skb);
-	desc->csum_offset = desc->hdr_len + skb->csum_offset;
+	desc->csum_offset = skb->csum_offset;
 	desc->V = !!skb_vlan_tag_present(skb);
 	desc->C = 1;
 	desc->O = encap;

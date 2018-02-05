@@ -123,11 +123,9 @@ def GetChecksumOffset(tc, obj, args=None):
 
 
 TxOpcodeEnum = {
-    'TXQ_DESC_OPCODE_NOP' : 0x0,
-    'TXQ_DESC_OPCODE_CALC_NO_CSUM' : 0x1,
-    'TXQ_DESC_OPCODE_CALC_CSUM' : 0x2,
-    'TXQ_DESC_OPCODE_CALC_CRC32_CSUM' : 0x3,
-    'TXQ_DESC_OPCODE_TSO': 0x4
+    'TXQ_DESC_OPCODE_CALC_NO_CSUM' : 0x0,
+    'TXQ_DESC_OPCODE_CALC_CSUM' : 0x1,
+    'TXQ_DESC_OPCODE_TSO': 0x2
 }
 
 def GetTxOpcodeCalcCsum(tc, obj, args=None):
