@@ -24,7 +24,6 @@ for path in paths:
 
 import infra.common.parser  as parser
 import infra.common.utils  as utils
-from infra.common.logging import logger
 import infra.common.objects as objects
 import threading
 from infra.common.glopts import GlobalOptions
@@ -45,7 +44,7 @@ import config_mgr
 objects.CallbackField.SetPackagePath("cfg.callbacks")
 
 def start_zmq_server():
-    logger.info("Starting ZMQ server for signaling DOL!")
+    print("Starting ZMQ server for signaling DOL!")
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     socket.bind("ipc://%s/zmqsockmbt" % ws_top)
@@ -65,12 +64,12 @@ def get_hal_channel():
         port = os.environ['HAL_GRPC_PORT']
     else:
         port = '50054'
-    logger.info("Creating GRPC channel to HAL on port %s" %(port))
+    print("Creating GRPC channel to HAL on port %s" %(port))
     server = 'localhost:' + port
     hal_channel = grpc.insecure_channel(server)
-    logger.info("Waiting for HAL to be ready ...")
+    print("Waiting for HAL to be ready ...")
     grpc.channel_ready_future(hal_channel).result()
-    logger.info("Connected to HAL!")
+    print("Connected to HAL!")
     return hal_channel
 
 op_map = {
@@ -86,11 +85,10 @@ hal_channel = get_hal_channel()
 config_specs = parser.ParseDirectory("../mbt/cfg/specs", "*.spec")
 for config_spec in config_specs:
     if config_spec.graphEnabled:
-        logger.info("Adding config spec for service : " , config_spec.Service)
+        print("Adding config spec for service : " , config_spec.Service)
         config_mgr.AddConfigSpec(config_spec, hal_channel)
 
-logger.logfile = "./logfile"
-logger.info("Building Config dependency information")
+print("Building Config dependency information")
 
 if GlobalOptions.mbt:
     # This is blocking.
@@ -101,21 +99,30 @@ for test_spec in test_specs:
     if not test_spec.Enabled:
         continue
     for step in test_spec.Steps:
-        logger.info("Executing Step : ", step.step.op)
+        print("Executing Step : ", step.step.op)
         op_name = op_map[step.step.op]
         for cfg_spec in config_mgr.GetOrderedConfigSpecs(rev=step.step.op=="Delete"):
             if not cfg_spec._spec.enabled:
                 continue
-            logger.info("Executing Step  %s for Config %s and object %s" % (step.step.op, cfg_spec, cfg_spec._service_object.name))
+            print("Executing Step  %s for Config %s and object %s" % (step.step.op, cfg_spec, cfg_spec._service_object.name))
             method = getattr(cfg_spec, op_name)
             try:
                 ret = method(test_spec.MaxObjects, step.step.status)
             except Exception as ex:
-                logger.critical("Received Exception", ex)
-                utils.log_exception(logger)
-                ret = False
+                print("Received Exception", ex)
+                raise
             if not ret:
-                logger.info("Step %s failed for Config %s" % (step.step.op, cfg_spec))
+                print("Step %s failed for Config %s" % (step.step.op, cfg_spec))
                 sys.exit(1)
 
-logger.info("All Config test passed!")
+for cfg_spec in config_mgr.GetOrderedConfigSpecs():
+    print("Object -> " + str(cfg_spec))
+    print("Number of Objects Created : " + str(len(cfg_spec._config_objects)))
+    print("    Total Number of Create Operations : " + str(cfg_spec.num_create_ops))
+    print("    Total Number of Read Operations : " + str(cfg_spec.num_read_ops))
+    print("    Total Number of Update Operations : " + str(cfg_spec.num_update_ops))
+    print("    Total Number of Delete Operations : " + str(cfg_spec.num_delete_ops))
+    print("\n")
+
+print("All Config test passed!")
+

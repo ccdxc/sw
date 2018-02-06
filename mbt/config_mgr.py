@@ -235,6 +235,11 @@ class ConfigObjectHelper(object):
         except AttributeError:
             self.key_type = None
 
+        self.num_create_ops = 0
+        self.num_read_ops = 0
+        self.num_update_ops = 0
+        self.num_delete_ops = 0
+
     def __repr__(self):
         return str(self._spec.Service) + " " + str(self._service_object.name)
 
@@ -292,6 +297,7 @@ class ConfigObjectHelper(object):
             config_object = self.CreateConfigObject(status, ext_refs={})
             if config_object:
                 self._config_objects.append(config_object)
+                self.num_create_ops += 1
 
         return True
 
@@ -309,6 +315,7 @@ class ConfigObjectHelper(object):
                     return False
                 else:
                     config_object._status = ConfigObject._CREATED
+            self.num_create_ops += 1
         return True
                  
     def VerifyConfigs(self, count, status):
@@ -334,6 +341,7 @@ class ConfigObjectHelper(object):
                     print(json.dumps(utils.convert_object_to_dict(result),indent=4))
                     if ConfigObjectMeta.GET not in self._ignore_ops:
                         return False 
+            self.num_read_ops += 1
         return True
     
     def UpdateConfigs(self, count, status):
@@ -345,6 +353,7 @@ class ConfigObjectHelper(object):
                             "actual : %s" % (status, ret_status) )
                 if ConfigObjectMeta.UPDATE not in self._ignore_ops:
                     return False 
+            self.num_update_ops += 1
         return True
     
     def DeleteConfigs(self, count, status):
@@ -359,6 +368,7 @@ class ConfigObjectHelper(object):
                 if config_object.is_dol_created or ConfigObjectMeta.DELETE not in self._ignore_ops:
                     return False
             config_object._status = ConfigObject._DELETED
+            self.num_delete_ops += 1
         return True
     
 def AddConfigSpec(config_spec, hal_channel):
