@@ -8,6 +8,7 @@ feature:
     ignore  : False
     spec    : firewall.testspec
     serial  : True
+    perf    : True
 
 modules:
     - module:
