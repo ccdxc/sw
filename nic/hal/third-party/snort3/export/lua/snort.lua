@@ -155,13 +155,11 @@ appid =
 }
 
 -- uncomment output and configure verbose to enable more debug logs
---[[
 output =
 {
     logdir = conf_dir,
     verbose = true,
 }
---]]
 
 --[[
 reputation =

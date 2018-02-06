@@ -216,6 +216,7 @@
 328	NetScout	0	0	0	~	netscout
 329	Netware	0	0	0	~	netware
 330	NFA	0	0	0	~	nfa
+331	NFS	0	0	0	~	nfs
 332	NI FTP	0	0	0	~	ni_ftp
 333	NI Mail	0	0	0	~	ni_mail
 334	NIP	0	0	0	~	nip
@@ -630,7 +631,7 @@
 853	STUN	20037	0	0	stun	stun
 854	Swarovski	0	0	269	~	swarovski
 855	T. Rowe Price	0	0	133	~	troweprice
-856	TDS	0	43	0	~	tds
+856	TDS	20041	43	0	tds	tds
 857	talk	20021	0	0	talk	talk
 858	Target	0	0	176	~	target
 859	Tchibo	0	0	177	~	tchibo
