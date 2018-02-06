@@ -72,7 +72,7 @@ modules:
         # Host -> Uplink Vxlan
         name    : TX_NW_UDP_ENCAP
         spec    : tx_nw_l2_vxlan.testspec
-        enable  : False
+        enable  : True
         iterate :
             # Native -> Tunnel 
             # UDP
@@ -84,7 +84,7 @@ modules:
         name    : TX_NW_TCP_ENCAP
         spec    : tx_nw_l2_vxlan.testspec
         perf    : True
-        enable  : False
+        enable  : True
         iterate :
             # TCP
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=SNAT,nat_rw=IP_PORT
@@ -94,7 +94,7 @@ modules:
         # Uplink -> Host
         name    : NW_RX_UDP
         spec    : nw_rx_l2.testspec
-        enable  : False
+        enable  : True
         iterate :
             # Native -> Native
             # UDP
@@ -109,7 +109,7 @@ modules:
         # Uplink -> Host
         name    : NW_RX_TCP
         spec    : nw_rx_l2.testspec
-        enable  : False
+        enable  : True
         perf    : True
         iterate :
             # Native -> Native
@@ -125,7 +125,7 @@ modules:
         # Uplink -> Host
         name    : NW_RX_UDP_DECAP
         spec    : nw_rx_l2.testspec
-        enable  : False
+        enable  : True
         iterate :
             # Tunnel -> Native
             # UDP
@@ -141,7 +141,7 @@ modules:
         name    : NW_RX_TCP_DECAP
         spec    : nw_rx_l2.testspec
         perf    : True
-        enable  : False
+        enable  : True
         iterate :
             # Tunnel -> Native
             # TCP

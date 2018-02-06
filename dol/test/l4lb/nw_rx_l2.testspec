@@ -1,15 +1,17 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT
+        segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT
+        segment     : filter://any
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://label=L4LB,fwtype=L2
-    maxflows        : None
+    maxflows        : 4
 
 packets:
     - packet:
@@ -70,7 +72,8 @@ packets:
                 src     : ref://testcase/config/dst/endpoint/intf/macaddr
                 dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
             qtag:
-                vlan    : callback://networking/packets/GetExpectedVlanId
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                #vlan    : callback://networking/packets/GetExpectedVlanId
                 #vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
                 prio    : 0
             outeripv4   :

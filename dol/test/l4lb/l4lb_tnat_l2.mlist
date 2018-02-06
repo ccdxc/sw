@@ -92,7 +92,7 @@ modules:
         # Uplink -> Host
         name    : NW_RX_UDP
         spec    : nw_rx_l2.testspec
-        enable  : False
+        enable  : True
         iterate :
             # Native -> Native
             # UDP
@@ -108,7 +108,7 @@ modules:
         name    : NW_RX_TCP
         spec    : nw_rx_l2.testspec
         perf    : True
-        enable  : False
+        enable  : True
         iterate :
             # Native -> Native
             # TCP
@@ -123,7 +123,7 @@ modules:
         # Uplink -> Host
         name    : NW_RX_UDP_DECAP
         spec    : nw_rx_l2.testspec
-        enable  : False
+        enable  : True
         iterate :
             # Tunnel -> Native
             # UDP
@@ -136,10 +136,10 @@ modules:
 
     - module:
         # Uplink -> Host
-        name    : NW_RX_TCP_ENCAP
+        name    : NW_RX_TCP_DECAP
         spec    : nw_rx_l2.testspec
         perf    : True
-        enable  : False
+        enable  : True
         iterate :
             # Tunnel -> Native
             # TCP

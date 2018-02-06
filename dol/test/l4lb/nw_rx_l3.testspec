@@ -1,15 +1,15 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://label=L4LB,fwtype=L3
-    maxflows        : None
+    maxflows        : 4
 
 packets:
     - packet:
@@ -78,7 +78,8 @@ packets:
                 src     : ref://testcase/config/dst/endpoint/intf/macaddr
                 dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
             qtag:
-                vlan    : callback://networking/packets/GetExpectedVlanId
+                vlan    : ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                #vlan    : callback://networking/packets/GetExpectedVlanId
                 #vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
                 prio    : 0
             outeripv4   :
@@ -91,10 +92,8 @@ packets:
             vxlan       :
                 vni     : ref://testcase/config/dst/segment/vxlan_id
             eth:
-                src     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatSmac
-                dst     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatDmac
-            qtag:
-                prio    : ref://testcase/config/flow/txqos/cos
+                src     : callback://l4lb/callbacks/GetL3FlowL4LbPostNatSmac
+                dst     : callback://l4lb/callbacks/GetL3FlowL4LbPostNatDmac
             ipv4:
                 src     : ref://testcase/config/flow/nat_sip
                 dst     : ref://testcase/config/flow/nat_dip
