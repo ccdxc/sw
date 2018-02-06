@@ -202,7 +202,7 @@ message ERSpanSpec {
 
 // MirrorSessionId is a key for the SPAN session
 message MirrorSessionId {
-  uint32 session_id = 1;
+  uint32 session_id = 1 [(gogoproto.moretags) = "venice:range:1-7"];
 }
 
 // MirrorSessionSpec is the configuration specification for mirror config

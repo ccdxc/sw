@@ -165,3 +165,11 @@ message MulticastEntryKeyHandle {
     fixed64 multicast_handle = 2;
   }
 }
+
+// AclKeyHandle uniquely identifies a Acl
+message AclKeyHandle {
+  oneof key_or_handle {
+    fixed32   acl_id     = 1;    // app allocated unique Acl id
+    fixed64   acl_handle = 2;    // id of acl returned by HAL
+  }
+}

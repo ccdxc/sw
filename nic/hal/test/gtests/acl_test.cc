@@ -14,7 +14,7 @@
 using google::protobuf::util::MessageDifferencer;
 using acl::AclSpec;
 using acl::AclResponse;
-using acl::AclKeyHandle;
+using kh::AclKeyHandle;
 using acl::AclSelector;
 using acl::AclActionInfo;
 using acl::AclGetRequest;

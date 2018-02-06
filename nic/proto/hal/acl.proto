@@ -20,14 +20,6 @@ service Acl {
   rpc AclGet(AclGetRequestMsg) returns (AclGetResponseMsg) {}
 }
 
-// AclKeyHandle uniquely identifies a Acl
-message AclKeyHandle {
-  oneof key_or_handle {
-    fixed32   acl_id     = 1;    // app allocated unique Acl id
-    fixed64   acl_handle = 2;    // id of acl returned by HAL
-  }
-}
-
 // EthSelector has match criteria for non-IP packets
 message EthSelector {
   uint32 eth_type       = 1;
@@ -156,11 +148,11 @@ message AclInternalActionInfo {
 
 // AclSelector has all the match criteria for an ACL entry
 message AclSelector {
-  kh.InterfaceKeyHandle     src_if_key_handle    = 1;    // source interface
-  kh.InterfaceKeyHandle     dst_if_key_handle    = 2;    // destination interface
+  kh.InterfaceKeyHandle     src_if_key_handle    = 1 [(gogoproto.moretags) = "venice:ref"];    // source interface
+  kh.InterfaceKeyHandle     dst_if_key_handle    = 2 [(gogoproto.moretags) = "venice:ref"];    // destination interface
   oneof seg_selector {
-      kh.VrfKeyHandle       vrf_key_handle       = 3;    // Vrf match
-      kh.L2SegmentKeyHandle l2segment_key_handle = 4;    // L2 segment
+      kh.VrfKeyHandle       vrf_key_handle       = 3 [(gogoproto.moretags) = "venice:ref"];    // Vrf match
+      kh.L2SegmentKeyHandle l2segment_key_handle = 4 [(gogoproto.moretags) = "venice:ref"];    // L2 segment
   }
   oneof pkt_selector {
     EthSelector             eth_selector         = 5;    // non-IP packet selector
@@ -186,7 +178,7 @@ message AclActionInfo {
   repeated telemetry.MirrorSessionId ing_mirror_sessions    = 2;    // ingress mirror sessions
   repeated telemetry.MirrorSessionId egr_mirror_sessions    = 3;    // egress mirror sessions 
   fixed64                            copp_policer_handle    = 4;    // egress copp policer
-  kh.InterfaceKeyHandle              redirect_if_key_handle = 5;    // redirect interface
+  kh.InterfaceKeyHandle              redirect_if_key_handle = 5 [(gogoproto.moretags) = "venice:ref"];    // redirect interface
                                                                     // TODO: REMOVE
   AclInternalActionInfo              internal_actions       = 6;    // Internal action fields
 }
@@ -195,8 +187,8 @@ message AclActionInfo {
 message AclSpec {
   types.ObjectMeta meta          = 1;    // common object meta
   // key_or_handle is ACL's key or handle
-  AclKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  uint32           priority      = 3;    // priority of the rule (0 being lowest)
+  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  uint32           priority      = 3 [(gogoproto.moretags) = "venice:immutable"];    // priority of the rule (0 being lowest)
                                          // TBD: is this per-vrf priority ? or global ?
   AclSelector      match         = 4;    // match conditions
   AclActionInfo    action        = 5;    // action(s)
@@ -214,7 +206,7 @@ message AclStatus {
 
 // AclResponse is response to one Acl
 message AclResponse {
-  types.ApiStatus api_status = 1;    // API status code
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   AclStatus       status     = 2;    // Acl operational state
 }
 
@@ -226,7 +218,7 @@ message AclResponseMsg {
 message AclDeleteRequest {
   types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is unique identifier of ACL being deleted
-  AclKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // Batched requests to delete acls
@@ -236,7 +228,7 @@ message AclDeleteRequestMsg {
 
 // AclDeleteResponse is response to Acl delete request
 message AclDeleteResponse {
-  types.ApiStatus api_status = 1;    // API status code
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
 }
 
 // AclDeleteResponseMsg is batched response to AclDeleteRequestMsg
@@ -248,7 +240,7 @@ message AclDeleteResponseMsg {
 message AclGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is ACL's identifier for retrieval
-  AclKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message AclGetRequestMsg {

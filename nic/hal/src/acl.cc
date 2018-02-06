@@ -494,7 +494,7 @@ validate_acl_create (AclSpec& spec)
     }
 
     if (spec.key_or_handle().key_or_handle_case() !=
-        acl::AclKeyHandle::kAclId) {
+        kh::AclKeyHandle::kAclId) {
         HAL_TRACE_ERR("pi-acl:{}: ACL id not provided",
                       __func__);
         return HAL_RET_INVALID_ARG;

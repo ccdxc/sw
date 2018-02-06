@@ -11,7 +11,7 @@ using grpc::Status;
 
 using acl::Acl;
 using acl::AclSpec;
-using acl::AclKeyHandle;
+using kh::AclKeyHandle;
 using acl::AclRequestMsg;
 using acl::AclResponse;
 using acl::AclResponseMsg;

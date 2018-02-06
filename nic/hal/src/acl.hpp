@@ -7,6 +7,7 @@
 #include "sdk/ht.hpp"
 #include "nic/include/ip.h"
 #include "nic/gen/proto/hal/acl.pb.h"
+#include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
 
 // Include key of internal fields for use only with DOL/testing infra
@@ -15,7 +16,7 @@
 #define ACL_DOL_TEST_ONLY
 
 using sdk::lib::ht_ctxt_t;
-using acl::AclKeyHandle;
+using kh::AclKeyHandle;
 
 using acl::AclSpec;
 using acl::AclStatus;
