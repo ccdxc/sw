@@ -1,0 +1,11 @@
+# Kernel / RDMA Library make artifacts
+Module.symvers
+modules.order
+.cache.mk
+.tmp_versions/
+.*.cmd
+.*.d
+*.mod.c
+*.o
+*.ko
+build/
