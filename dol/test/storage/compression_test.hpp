@@ -44,6 +44,7 @@ typedef struct comp_test {
            dst_is_hbm:1,
            dst_sgl_is_hbm:1,
            status_is_hbm:1,
+           output_same_as_input:1,
            unused:1;
 } comp_test_t;
 
