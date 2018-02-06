@@ -1,0 +1,12 @@
+{
+  "mode": "sim",
+  "asic": {
+    "name": "capri",
+    "loader_info_file" : "gen/capri_loader.conf",
+    "init_with_pbc_hbm" : true
+  },
+  "sw" : {
+    "grpc_port": "50054",
+    "feature_set": "gft"
+  }
+}

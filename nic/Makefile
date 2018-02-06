@@ -116,7 +116,7 @@ pd_stub:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
 
 pd_gft:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --define p4pipeline=gft $(SDK_OPTS) hal/pd/gft
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/pd/gft:all
 
 bazel-gtests-common:
 	# PI gtests

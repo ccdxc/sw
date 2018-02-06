@@ -47,11 +47,6 @@
 static void capri_timer_init() __attribute__((unused));
 static int capri_table_p4plus_init() __attribute__((unused));
 static void capri_p4plus_recirc_init() __attribute__((unused));
-//#define P4TBL_ID_TBLMIN        P4_GFT_TBL_ID_TBLMIN
-//#define P4TBL_ID_TBLMAX        P4_GFT_TBL_ID_TBLMAX
-//#define p4pd_tbl_names         p4pd_gft_tbl_names
-//#define p4pd_get_max_action_id p4pd_gft_get_max_action_id
-//#define p4pd_get_action_name   p4pd_gft_get_action_name
 #define P4_PGM_NAME            "gft"
 #else
 #include "nic/gen/iris/include/p4pd.h"

@@ -19,7 +19,7 @@ pd_call_t *g_pd_calls;
         (NAME ## _t)dlsym(g_hal_state->pd_so(), #NAME);                        \
     dlsym_error = dlerror();                                                   \
     if (dlsym_error) {                                                         \
-        HAL_TRACE_ERR("{}: cannot load symbol from PD LIB {}: {}",             \
+        HAL_TRACE_DEBUG("{}: cannot load symbol from PD LIB {}: {}",           \
                       __FUNCTION__,  #NAME, dlsym_error);                      \
         g_pd_calls[PD_FUNC_ID].NAME =                                          \
             (NAME ## _t)dlsym(g_hal_state->pd_stub_so(), #NAME);               \
@@ -55,7 +55,8 @@ pd_call_t *g_pd_calls;
 
 
 hal_ret_t
-hal_pd_load_symbols (void) {
+hal_pd_load_symbols (void)
+{
     hal_ret_t       ret = HAL_RET_OK;
     const char*     dlsym_error = NULL;
 

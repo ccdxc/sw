@@ -282,6 +282,22 @@ PD_FUNC_STUB(pd_capri_hbm_write_mem);
 PD_FUNC_STUB(pd_capri_program_label_to_offset);
 PD_FUNC_STUB(pd_capri_pxb_cfg_lif_bdf);
 PD_FUNC_STUB(pd_capri_program_to_base_addr);
+PD_FUNC_STUB(pd_capri_barco_asym_req_descr_get);
+PD_FUNC_STUB(pd_capri_barco_symm_req_descr_get);
+PD_FUNC_STUB(pd_capri_barco_ring_meta_get);
+PD_FUNC_STUB(pd_capri_barco_asym_ecc_point_mul_p256);
+PD_FUNC_STUB(pd_capri_barco_asym_ecdsa_p256_sig_gen);
+PD_FUNC_STUB(pd_capri_barco_asym_ecdsa_p256_sig_verify);
+PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_encrypt);
+PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_decrypt);
+PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_crt_decrypt);
+PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_sig_gen);
+PD_FUNC_STUB(pd_capri_barco_asym_rsa2k_sig_verify);
+PD_FUNC_STUB(pd_capri_barco_sym_hash_process_request);
+
+// clock
+PD_FUNC_STUB(pd_conv_hw_clock_to_sw_clock);
+PD_FUNC_STUB(pd_clock_delta_comp);
 
 // gft
 PD_FUNC_STUB_ARGS(pd_gft_exact_match_profile_create, pd_gft);
@@ -290,6 +306,7 @@ PD_FUNC_STUB_ARGS(pd_gft_exact_match_flow_entry_create, pd_gft);
 
 // slab
 PD_FUNC_STUB(pd_get_slab);
+
 }   // namespace pd
 }   // namespace hal
 

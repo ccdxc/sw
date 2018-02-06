@@ -42,8 +42,8 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
     uint32_t            control_cos;
-    hal::qos_class_t    *control_qos_class;
-    hal_ret_t            ret = HAL_RET_OK;
+    //hal::qos_class_t    *control_qos_class;
+    //hal_ret_t            ret = HAL_RET_OK;
 
     hal::hal_cfg_t *hal_cfg =
                 (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
@@ -66,6 +66,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     txs_csr.cfw_scheduler_static.write();
     txs_csr.cfw_scheduler_glb.write();
 
+#if 0
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.
     // NOTE TODO: Init of admin-qos-class should be done before this.
     // Find control_cos and program it for higher-priority in dtdmlo-calendar.
@@ -86,6 +87,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
         HAL_TRACE_DEBUG("control qos class not init'ed!! Setting it to default\n");
         control_cos = 0;
     }
+#endif
    
     // Init scheduler calendar  for all cos.
     for (uint32_t i = 0; i < DTDM_CALENDAR_SIZE ; i++) {

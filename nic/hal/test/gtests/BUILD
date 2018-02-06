@@ -166,7 +166,7 @@ cc_test(
     deps = [
         "//nic/p4/gft/include:p4_gft_includes",
         "//nic/hal/pd/pd_stub",
-        "//nic/hal/pd/gft",
+        "//nic/hal/pd/gft:pd_gft",
         "//nic/hal:hal_src",
         "//nic/fte:fte",
         "//nic/hal/plugins:plugins",
