@@ -83,6 +83,7 @@ class FlowObject(base.ConfigObjectBase):
         self.__init_nat()
         self.__init_qos()
         self.__init_sp()
+        self.__init_distlabel()
 
         if self.__session.IsFteEnabled():
             self.fte = True
@@ -143,6 +144,18 @@ class FlowObject(base.ConfigObjectBase):
         self.txqos.dscp = self.__sfep.GetTxQosDscp()
         self.rxqos.cos  = self.__dfep.GetRxQosCos()
         self.rxqos.dscp = self.__dfep.GetRxQosDscp()
+        return
+
+    def __init_distlabel(self):
+        src_intf = self.__sfep.GetInterface()
+        dst_intf = self.__dfep.GetInterface()
+        src_label = "None"
+        dst_label = "None"
+        if src_intf:
+            src_label = src_intf.GetDistLabel()
+        if dst_intf:
+            dst_label = dst_intf.GetDistLabel()
+        self.distlabel = "%s_to_%s" % (src_label, dst_label)
         return
 
     def __init_nat(self):
@@ -552,6 +565,7 @@ class FlowObject(base.ConfigObjectBase):
         if self.__flowhash is not None:
             cfglogger.info("  - flowhash : 0x%08x" % self.__flowhash)
         cfglogger.info("  - label  : %s" % self.label)
+        cfglogger.info("  - distlabel: %s" % self.distlabel)
         if self.IsSnat():
             string += '/%s/%s/%d/%s' %\
                       (self.nat_type, self.nat_sip.get(),

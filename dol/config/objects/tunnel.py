@@ -59,6 +59,10 @@ class TunnelObject(base.ConfigObjectBase):
         self.rxqos.dscp = 7
         return
 
+    def GetDistLabel(self):
+        intf = self.remote_ep.GetInterface()
+        return intf.GetDistLabel()
+
     def GetTxQosCos(self):
         return self.txqos.cos
 

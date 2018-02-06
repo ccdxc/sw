@@ -316,9 +316,13 @@ def check_for_completion(p, model_process, hal_process, args):
             time.sleep(5)
             if count % 300 == 0:
                 print "RUNTEST/SIMV not exited after %d seconds" % count
-            if count == 7200: # 2 hours
+
+            exit_timeout = 14400
+            if 'MODEL_EXIT_TIMEOUT' in os.environ:
+                exit_timeout = os.environ('MODEL_EXIT_TIMEOUT')
+            if count == exit_timeout: # 2 hours
                 print "%s" % '='*80
-                print "             2 Hour Exit Timeout Reached. Killing all processes."
+                print "             %d hour Exit Timeout Reached. Killing all processes." % (exit_timeout / 3600)
                 print "%s" % '='*80
                 return 1
 
@@ -386,6 +390,9 @@ def run_dol(args):
     if args.tcscale is not None:
         cmd.append('--tcscale')
         cmd.append(args.tcscale)
+    if args.modscale is not None:
+        cmd.append('--modscale')
+        cmd.append(args.modscale)
     if args.dryrun is True:
         cmd.append('--dryrun')
     if args.configonly is True:
@@ -581,6 +588,8 @@ def main():
                         action='store_true', help='Skip Verification all tests.')
     parser.add_argument('--tcscale', dest='tcscale', default=None,
                         help='Testcase Scale Factor.')
+    parser.add_argument('--modscale', dest='modscale', default=None,
+                        help='Module Scale Factor.')
 #    parser.add_argument('--cfgscale', dest='cfgscale', default=None,
 #                        help='Configuration Scale Factor.')
     parser.add_argument('--dryrun', dest='dryrun', action='store_true',

@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import os
 import pdb
+import copy
 import importlib
 import subprocess
 import operator
@@ -93,6 +94,11 @@ class Module(objects.FrameworkObject):
 
         self.stats = ModuleStats()
         self.Show()
+        return
+
+    def InitCopy(self, inst):
+        self.name = "%s_%03d" % (self.name, inst)
+        self.GID("%s_%s" % (self.feature, self.name))
         return
 
     def IsPendolHeaderEnabled(self):
@@ -408,11 +414,18 @@ class ModuleDatabase:
         if module.GID() in self.db:
             logger.error("Duplicate Test : %s" % module.GID())
             assert(0)
-        self.db[module.GID()] = module
+
+        if GlobalOptions.modscale:
+            for s in range(GlobalOptions.modscale):
+                newmod = copy.deepcopy(module)
+                newmod.InitCopy(s+1)
+                self.db[newmod.GID()] = newmod
+        else:
+            self.db[module.GID()] = module
         return
 
     def GetAll(self):
-        if GlobalOptions.shuffle != 1:
+        if GlobalOptions.shuffle:
             modlist = list(self.db.values())
             random.shuffle(modlist)
             return modlist

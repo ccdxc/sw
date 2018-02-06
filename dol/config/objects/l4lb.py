@@ -35,6 +35,9 @@ class L4LbBackendObject(base.ConfigObjectBase):
         self.ep.AttachL4LbBackend(self)
         return
 
+    def GetInterface(self):
+        return self.ep.GetInterface()
+
     def IsTunneled(self):
         return self.tnnled
 

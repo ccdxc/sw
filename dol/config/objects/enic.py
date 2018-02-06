@@ -132,6 +132,9 @@ class EnicObject(base.ConfigObjectBase):
         self.rxqos.dscp = 7
         return
 
+    def GetDistLabel(self):
+        return "HOST"
+
     def GetTxQosCos(self):
         return self.txqos.cos
 

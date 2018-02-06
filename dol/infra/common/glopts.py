@@ -45,8 +45,10 @@ parser.add_argument('--eth_mode', dest='eth_mode', default="onepkt",
                     help='ETH driver mode selection.')
 parser.add_argument('--tcscale', dest='tcscale', default=None,
                     help='Testcase Scale Factor.')
-parser.add_argument('--shuffle', dest='shuffle', default=1,
-                    help='Shuffle tests and loop for X times.')
+parser.add_argument('--modscale', dest='modscale', default=None,
+                    help='Module Scale Factor.')
+parser.add_argument('--shuffle', dest='shuffle', action='store_true',
+                    help='Shuffle test order')
 parser.add_argument('--mbt', dest='mbt',
                     action='store_true', help='Enable model based tester'
                     'for enabled features')
@@ -109,3 +111,6 @@ def ValidateGlopts():
         if not GlobalOptions.dryrun:
             GlobalOptions.tcscale = 100
         GlobalOptions.lite = True
+
+    if GlobalOptions.modscale:
+        GlobalOptions.modscale = utils.ParseInteger(GlobalOptions.modscale)

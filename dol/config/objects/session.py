@@ -386,20 +386,22 @@ class SessionObjectHelper:
             self.__add_fep_pair(flowep1, flowep2)
             for t in spec.entries:
                 self.__pre_process_spec_entry(t.entry)
-                session = SessionObject()
-                status = session.Init(flowep1, flowep2, t.entry)
-                if status != defs.status.SUCCESS:
-                    continue
-                self.__add_session(session)
-                if session.IsFteEnabled():
-                    cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
-                    self.ftessns.append(session)
-                elif GlobalOptions.classic:
-                    cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
-                    self.classicssns.append(session)
-                else:
-                    cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
-                    self.ssns.append(session)
+                count = getattr(t.entry, 'count', 1)
+                for i in range(count):
+                    session = SessionObject()
+                    status = session.Init(flowep1, flowep2, t.entry)
+                    if status != defs.status.SUCCESS:
+                        continue
+                    self.__add_session(session)
+                    if session.IsFteEnabled():
+                        cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
+                        self.ftessns.append(session)
+                    elif GlobalOptions.classic:
+                        cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
+                        self.classicssns.append(session)
+                    else:
+                        cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
+                        self.ssns.append(session)
         return
 
     def __process_ipv6(self, flowep1, flowep2, entries):

@@ -42,6 +42,9 @@ class UplinkObject(base.ConfigObjectBase):
         self.rxqos.dscp = 7
         return
 
+    def GetDistLabel(self):
+        return "NW%d" % self.ports[0]
+
     def GetTxQosCos(self):
         return self.txqos.cos
 

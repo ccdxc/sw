@@ -77,6 +77,9 @@ class FlowEndpointL4LbObject:
             return self.GetServicePort()
         return bport
 
+    def GetBackendInterface(self):
+        return self.backend.GetInterface()
+
     def IsBackendPortValid(self):
         bport = self.backend.port.get()
         return bport != 0
@@ -272,6 +275,13 @@ class FlowEndpointObject(base.ConfigObjectBase):
             elif self.IsIPV6():
                 return self.l4lb.GetIpv6Address()
         return self.addr
+
+    def GetInterface(self):
+        if self.IsL4Lb():
+            return self.l4lb.GetBackendInterface()
+        elif self.ep:
+            return self.ep.GetInterface()
+        return None
 
     def GetFlowDip(self):
         return self.addr

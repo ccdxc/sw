@@ -794,3 +794,18 @@ steps:
             rflow   :
                 seq : 4677789
                 ack : 5442378
+
+    - step:
+        id          : IFLOW_DATA_PERF
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 128
+        fields      :
+            flags   : ack
+
+    - step:
+        id          : RFLOW_DATA_PERF
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 128
+        fields      :
+            flags   : ack
+

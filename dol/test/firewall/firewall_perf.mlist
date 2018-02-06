@@ -1,0 +1,37 @@
+# Feature Test Modules List
+feature:
+    id      : firewall
+    sub     : perf
+    package : test.firewall
+    module  : firewall
+    enable  : True
+    ignore  : False
+    spec    : firewall.testspec
+    serial  : True
+
+modules:
+    - module:
+        name    : PERF_FLOW
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=PERF
+        iterate :
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
+

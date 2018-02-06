@@ -68,4 +68,24 @@ connections:
             window  : 1000
             scale   : 0
             mss     : 1460
+    - connection:
+        id          : PERF
+        initiator:
+            # Don't change the values below. They need to match the connection
+            # specs in test/firewall/tracker/specs/connections.spec
+            port    : range/41001/49999
+            seq     : 1000
+            ack     : 2000
+            window  : 8192
+            scale   : 1
+            mss     : 1460
+        responder:
+            # Don't change the values below. They need to match the connection
+            # specs in test/firewall/tracker/specs/connections.spec
+            port    : range/41001/49999
+            seq     : 2000
+            ack     : 1000
+            window  : 8192
+            scale   : 1
+            mss     : 1460
 
