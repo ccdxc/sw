@@ -224,9 +224,13 @@ static int run_cp_test(comp_test_t *params) {
   }
 
   uint64_t bufout_pa = params->dst_is_hbm ? hbm_dataout_buf_pa : dataout_buf_pa;
-  bzero(dataout_buf, kDataoutBufSize);
-  if (params->dst_is_hbm) {
-    write_mem(hbm_dataout_buf_pa, all_zeros, kDataoutBufSize);
+  if (params->output_same_as_input) {
+    bufout_pa = bufin_pa;
+  } else {
+    bzero(dataout_buf, kDataoutBufSize);
+    if (params->dst_is_hbm) {
+      write_mem(hbm_dataout_buf_pa, all_zeros, kDataoutBufSize);
+    }
   }
   if (params->cmd_bits.compression_en) {
     if (params->num_dst_sgls == 1) {
@@ -393,6 +397,20 @@ int compress_host_flat() {
   return run_cp_test(&spec);
 }
 
+int compress_host_flat_same_buf() {
+  comp_test_t spec;
+  bzero(&spec, sizeof(spec));
+  spec.test_name    = __func__;
+  spec.cmd          = 5;
+  spec.num_src_sgls = 1;
+  spec.num_dst_sgls = 1;
+  spec.datain_len   = 4096;
+  spec.dataout_len  = 4096;
+  spec.output_same_as_input = 1;
+
+  return run_cp_test(&spec);
+}
+
 int compress_hbm_flat() {
   comp_test_t spec;
   bzero(&spec, sizeof(spec));
@@ -404,6 +422,22 @@ int compress_hbm_flat() {
   spec.dataout_len  = 4096;
   spec.src_is_hbm   = 1;
   spec.dst_is_hbm   = 1;
+
+  return run_cp_test(&spec);
+}
+
+int compress_hbm_flat_same_buf() {
+  comp_test_t spec;
+  bzero(&spec, sizeof(spec));
+  spec.test_name    = __func__;
+  spec.cmd          = 5;
+  spec.num_src_sgls = 1;
+  spec.num_dst_sgls = 1;
+  spec.datain_len   = 4096;
+  spec.dataout_len  = 4096;
+  spec.src_is_hbm   = 1;
+  spec.dst_is_hbm   = 1;
+  spec.output_same_as_input = 1;
 
   return run_cp_test(&spec);
 }
