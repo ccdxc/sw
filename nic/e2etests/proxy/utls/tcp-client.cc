@@ -1,4 +1,4 @@
-#include "nic/proxy-e2etest/ntls.hpp"
+#include "nic/e2etests/proxy/ntls.hpp"
 
 int bytes_recv;
 int port;

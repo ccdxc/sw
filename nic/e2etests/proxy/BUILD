@@ -2,33 +2,8 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "lib_driver",
-    srcs = [
-             "lib_driver.cc",
-           ],
+    name = "common_includes",
     hdrs = glob(["*.hpp"]),
-    deps = [
-        "//nic/model_sim/include:modelsim_includes",
-        "//nic/include:base_includes",
-        "//nic/utils/host_mem:host_mem",
-        "//nic:gen_includes",
-        "//nic:gen_proto_includes",
-        "//nic/p4/nw/include:p4_nw_includes",
-        "//nic:spdlog",
-        "//nic:grpc",
-        "//nic:grpc_includes",
-        "//nic:google_includes",
-        "//nic:libprotobuf",
-        "//nic:halproto",
-    ],
-    linkopts = [
-        "-lpthread",
-        "-pthread",
-        "-Lthird-party/grpc",
-        "-lzmq",
-        "-lz",
-    ],
-    alwayslink = 1,
 )
 
 cc_binary(
@@ -39,7 +14,8 @@ cc_binary(
     deps = [
         "//nic/model_sim/include:modelsim_includes",
         # PI
-        "//nic/proxy-e2etest:lib_driver",
+        "//nic/e2etests:driver",
+        "//nic/e2etests/proxy:common_includes",
         "//nic/utils/host_mem:host_mem",
 
         # PD
@@ -57,7 +33,8 @@ cc_binary(
     deps = [
         "//nic/model_sim/include:modelsim_includes",
         # PI
-        "//nic/proxy-e2etest:lib_driver",
+        "//nic/e2etests:driver",
+        "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem",
@@ -76,7 +53,8 @@ cc_binary(
     deps = [
         "//nic/model_sim/include:modelsim_includes",
         # PI
-        "//nic/proxy-e2etest:lib_driver",
+        "//nic/e2etests:driver",
+        "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem",
@@ -86,25 +64,6 @@ cc_binary(
     ],
 )
 
-cc_binary(
-    name = "nic_proxy-e2etest_hntap",
-    srcs = [
-        "test/hntap.cc"
-        #"utls/tcp-server.cc"
-    ],
-    deps = [
-        "//nic/model_sim/include:modelsim_includes",
-        # PI
-        "//nic/proxy-e2etest:lib_driver",
-        "//nic/utils/trace",
-        "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
-        "//nic:openssl-native",
-
-        # PD
-        "//nic/model_sim:model_client",
-    ],
-)
 
 cc_binary(
     name = "nic_proxy-e2etest_tls-client",
@@ -113,7 +72,8 @@ cc_binary(
     ],
     deps = [
         # PI
-        "//nic/proxy-e2etest:lib_driver",
+        "//nic/e2etests:driver",
+        "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem",
@@ -130,7 +90,8 @@ cc_binary(
     ],
     deps = [
         # PI
-        "//nic/proxy-e2etest:lib_driver",
+        "//nic/e2etests:driver",
+        "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem",
@@ -148,7 +109,8 @@ cc_binary(
     deps = [
         #"//nic/model_sim/include:modelsim_includes",
         # PI
-        "//nic/proxy-e2etest:lib_driver",
+        "//nic/e2etests:driver",
+        "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem",
@@ -166,7 +128,8 @@ cc_binary(
     ],
     deps = [
         # PI
-        "//nic/proxy-e2etest:lib_driver",
+        "//nic/e2etests:driver",
+        "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem",

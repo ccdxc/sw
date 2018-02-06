@@ -106,7 +106,9 @@ bazel-build: capsim-master sdk
 	$(MAKE) capmodel
 	$(MAKE) go-proto
 ifneq ($(ARCH),aarch64)
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/proxy-e2etest:all 
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests/proxy:all
+        #This is temporary, will be removed soon.
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:all 
 endif
 
 pd_iris:

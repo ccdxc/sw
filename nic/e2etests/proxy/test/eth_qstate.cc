@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/model_sim/include/lib_model_client.h"
-#include "nic/proxy-e2etest/lib_driver.hpp"
+#include "nic/e2etests/driver/lib_driver.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {

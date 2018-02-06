@@ -1,4 +1,4 @@
-#include "nic/proxy-e2etest/ntls.hpp"
+#include "nic/e2etests/proxy/ntls.hpp"
 
 pthread_t server_thread;
 

@@ -1,4 +1,4 @@
-#include "nic/proxy-e2etest/ntls.hpp"
+#include "nic/e2etests/proxy/ntls.hpp"
 
 #define WHERE_INFO(ssl, w, flag, msg) { \
     if(w & flag) { \
@@ -199,7 +199,7 @@ void *main_server(void* unused)
   SSL_CTX *ctx;
 
   ctx = InitServerCTX();/* initialize SSL */
-  LoadCertificates(ctx, "proxy-e2etest/ca.crt", "proxy-e2etest/ca.pem");/* load certs */
+  LoadCertificates(ctx, "e2etests/proxy/ca.crt", "e2etests/proxy/ca.pem");/* load certs */
   SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
 
   int server = OpenListener(port);/* create server socket */

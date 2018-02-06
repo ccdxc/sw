@@ -25,8 +25,8 @@
 #include <iomanip>
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/model_sim/include/buf_hdr.h"
-#include "nic/proxy-e2etest/lib_driver.hpp"
-#include "nic/proxy-e2etest/ntls.hpp"
+#include "nic/e2etests/driver/lib_driver.hpp"
+#include "nic/e2etests/proxy/ntls.hpp"
 
 #define HNTAP_HOST_TAPIF        "hntap_host0"
 #define HNTAP_HOST_TAPIF_IP     "64.1.0.4"
