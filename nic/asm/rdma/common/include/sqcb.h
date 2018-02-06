@@ -100,7 +100,8 @@ struct sqcb0_t {
 
     spec_sq_cindex: 16;
     state: 3;
-    rsvd2: 5;
+    ring_empty_sched_eval_done: 1;
+    rsvd2: 4;
 };
 
 struct sqcb1_t {

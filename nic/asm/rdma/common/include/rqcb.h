@@ -57,8 +57,8 @@ struct rqcb0_t {
     token_id: 8;
     nxt_to_go_token_id: 8;
     rsq_pindex_prime: 8;
-    ring_empty_counter: 8;
-
+    ring_empty_sched_eval_done: 1;
+    rsvd0: 7;
 
     log_pmtu: 5;
     log_rq_page_size: 5;

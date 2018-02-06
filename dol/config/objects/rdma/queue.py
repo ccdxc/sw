@@ -54,7 +54,8 @@ class RdmaRQstate(Packet):
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
         ByteField("rsq_pindex_prime", 0),                                            
-        ByteField("ring_empty_counter", 0),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        BitField("rsvd", 0, 7),
 
         BitField("log_pmtu", 0xa, 5),
         BitField("log_rq_page_size", 0xc, 5),
@@ -184,7 +185,8 @@ class RdmaSQstate(Packet):
         ByteField("cb1_byte", 0),
         ShortField("spec_sq_cindex", 0),
         BitField("state", 0, 3),
-        BitField("rsvd2", 0, 5),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        BitField("rsvd2", 0, 4),
 
         # SQCB1 
         IntField("rrq_base_addr", 0),
