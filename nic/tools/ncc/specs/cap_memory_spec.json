@@ -1,12 +1,12 @@
 {
   "sram": {
     "ingress": {
-      "count": 10,
+      "count": 8,
       "depth": 4096,
       "width": 128
     },
     "egress": {
-      "count": 10,
+      "count": 8,
       "depth": 4096,
       "width": 128
     }

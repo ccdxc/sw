@@ -7,7 +7,7 @@ header_type nat_metadata_t {
         twice_nat_l4_port     : 16;
         nat_ip                : 128;
         nat_l4_port           : 16;
-        twice_nat_idx         : 13;
+        twice_nat_idx         : 11;
     }
 }
 

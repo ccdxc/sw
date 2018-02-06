@@ -23,7 +23,7 @@
 #define OUTPUT_MAPPING_TABLE_SIZE                          2048
 #define TX_STATS_TABLE_SIZE                                2048
 
-#define TWICE_NAT_TABLE_SIZE                               8192
+#define TWICE_NAT_TABLE_SIZE                               2048
 #define REWRITE_TABLE_SIZE                                 4096
 #define TUNNEL_REWRITE_TABLE_SIZE                          1024
 #define RX_POLICER_TABLE_SIZE                              2048

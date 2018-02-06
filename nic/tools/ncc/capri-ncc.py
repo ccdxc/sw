@@ -32,7 +32,7 @@ def get_parser():
                         'P4 program')
     parser.add_argument('--log', dest='loglevel', type=str,
                         help='Set console logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL',
-                        default='INFO', required=False)
+                        default='WARNING', required=False)
     parser.add_argument('--flog', dest='floglevel', type=str,
                         help='Set File logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL',
                         default='DEBUG', required=False)
