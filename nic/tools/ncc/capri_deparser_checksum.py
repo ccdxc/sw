@@ -386,6 +386,9 @@ class DeParserCsumObj:
     def HdrFldStartGet(self):
         return self.hdrfld_start
 
+    def HdrFldEndGet(self):
+        return self.hdrfld_end
+
     def CsumCopyVldSet(self, csum_copy_vld):
         #when csum engine result should be copied into phv
         #this bit should be set.
