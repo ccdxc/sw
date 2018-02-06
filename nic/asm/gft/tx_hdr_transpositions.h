@@ -29,7 +29,7 @@ tx_hdr_transpositions_layer00:
                         d.tx_hdr_transpositions_d.hdr0_bits[23:16]
 
 tx_hdr_transpositions_layer00_ipv4:
-    phvwr.c2        p.ipv4_00_valid, TRUE
+    phvwrpair.c2    p.ipv4_00_valid, TRUE, p.ipv4_00_csum, TRUE
     phvwrpair.c2    p.{ipv4_00_version,ipv4_00_ihl}, 0x45, \
                         p.ipv4_00_totalLen, r1
     phvwrpair.c2    p.ipv4_00_diffserv, d.tx_hdr_transpositions_d.ip_dscp, \
@@ -67,7 +67,7 @@ tx_hdr_transpositions_layer01:
                         d.tx_hdr_transpositions_d.hdr0_bits[15:8]
 
 tx_hdr_transpositions_layer01_ipv4:
-    phvwr.c2        p.ipv4_01_valid, TRUE
+    phvwrpair.c2    p.ipv4_01_valid, TRUE, p.ipv4_01_csum, TRUE
     phvwrpair.c2    p.{ipv4_01_version,ipv4_01_ihl}, 0x45, \
                         p.ipv4_01_totalLen, r1
     phvwrpair.c2    p.ipv4_01_diffserv, d.tx_hdr_transpositions_d.ip_dscp, \

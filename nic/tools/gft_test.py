@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 
 import sys
+import socket
+
 #sys.path.insert(0, 'model_sim/src')
 #import model_wrap
 
 sys.path.insert(0, '../dol')
 sys.path.insert(0, '../dol/third_party')
 from infra.penscapy.penscapy import *
+from infra.factory.scapyfactory import IcrcHeaderBuilder
 
 def dump_pkt(pkt):
     print('***')
@@ -82,10 +85,10 @@ pkt = Ether(dst='00:21:22:23:24:25', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 
 rpkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
-        IP(dst='10.1.2.3', src='11.1.2.3', id=0, chksum=0) / \
+        IP(dst='10.1.2.3', src='11.1.2.3', id=0) / \
         UDP(dport=4789, chksum=0) / VXLAN() / \
         Ether(dst='00:11:12:13:14:15', src='00:B1:B2:B3:B4:B5') / \
-        IP(dst='12.1.2.3', src='13.1.2.3', id=0, chksum=0) / \
+        IP(dst='12.1.2.3', src='13.1.2.3', id=0) / \
         UDP(dport=4789, chksum=0) / VXLAN() / \
         Ether(dst='00:21:22:23:24:25', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='14.1.2.3', src='15.1.2.3') / \
@@ -103,6 +106,9 @@ dump_pkt(rpkt)
 pkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
         UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
+builder = IcrcHeaderBuilder(pkt)
+icrc = socket.htonl(builder.GetIcrc())
+pkt[ICRC].icrc = icrc
 
 dump_pkt(pkt)
 
@@ -122,6 +128,9 @@ dump_pkt(pkt)
 pkt = Ether(dst='00:E1:E2:E3:E4:E5', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
         UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
+builder = IcrcHeaderBuilder(pkt)
+icrc = socket.htonl(builder.GetIcrc())
+pkt[ICRC].icrc = icrc
 
 dump_pkt(pkt)
 
@@ -132,11 +141,14 @@ pkt = Ether(dst='00:F1:F2:F3:F4:F5', src='00:A1:A2:A3:A4:A5') / \
         UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
 
 rpkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
-        IP(dst='10.1.2.3', src='11.1.2.3', id=0, chksum=0) / \
+        IP(dst='10.1.2.3', src='11.1.2.3', id=0) / \
         UDP(dport=4789, chksum=0) / VXLAN() / \
         Ether(dst='00:F1:F2:F3:F4:F5', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
         UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
+builder = IcrcHeaderBuilder(pkt)
+icrc = socket.htonl(builder.GetIcrc())
+rpkt[ICRC].icrc = icrc
 
 dump_pkt(pkt)
 dump_pkt(rpkt)

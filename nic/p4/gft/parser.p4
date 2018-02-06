@@ -1683,7 +1683,7 @@ calculated_field ipv4_00.hdrChecksum  {
 
 @pragma checksum update_len capri_deparser_len.tx_l4_payload_len
 @pragma checksum gress egress
-@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
 field_list_calculation tx_ipv4_00_udp_00_checksum {
     input {
         ipv4_00_udp_00_checksum_list;
@@ -1694,7 +1694,7 @@ field_list_calculation tx_ipv4_00_udp_00_checksum {
 
 @pragma checksum update_len capri_deparser_len.tx_l4_payload_len
 @pragma checksum gress egress
-@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
 field_list_calculation tx_ipv6_00_udp_00_checksum {
     input {
         ipv6_00_udp_00_checksum_list;
@@ -1760,7 +1760,7 @@ calculated_field ipv4_01.hdrChecksum  {
 
 @pragma checksum update_len capri_deparser_len.tx_l4_payload_len
 @pragma checksum gress egress
-@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
 field_list_calculation tx_ipv4_01_udp_01_checksum {
     input {
         ipv4_01_udp_01_checksum_list;
@@ -1771,7 +1771,7 @@ field_list_calculation tx_ipv4_01_udp_01_checksum {
 
 @pragma checksum update_len capri_deparser_len.tx_l4_payload_len
 @pragma checksum gress egress
-@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
 field_list_calculation tx_ipv6_01_udp_01_checksum {
     input {
         ipv6_01_udp_01_checksum_list;
@@ -1801,7 +1801,7 @@ calculated_field ipv4_1.hdrChecksum  {
 
 @pragma checksum update_len capri_deparser_len.tx_l4_payload_len
 @pragma checksum gress egress
-@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
 field_list_calculation tx_ipv4_1_udp_1_checksum {
     input {
         ipv4_1_udp_1_checksum_list;
@@ -1812,7 +1812,7 @@ field_list_calculation tx_ipv4_1_udp_1_checksum {
 
 @pragma checksum update_len capri_deparser_len.tx_l4_payload_len
 @pragma checksum gress egress
-@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_00.checksum, tcp_01.checksum, tcp_1.checksum
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
 field_list_calculation tx_ipv6_1_udp_1_checksum {
     input {
         ipv6_1_udp_1_checksum_list;
@@ -1824,6 +1824,70 @@ field_list_calculation tx_ipv6_1_udp_1_checksum {
 calculated_field udp_1.checksum {
     update tx_ipv4_1_udp_1_checksum;
     update tx_ipv6_1_udp_1_checksum;
+}
+
+
+field_list ipv4_1_tcp_1_checksum_list {
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
+    8'0;
+    ipv4_1.protocol;
+    capri_deparser_len.tx_l4_payload_len;
+    tcp_1.srcPort;
+    tcp_1.dstPort;
+    tcp_1.seqNo;
+    tcp_1.ackNo;
+    tcp_1.dataOffset;
+    tcp_1.res;
+    tcp_1.flags;
+    tcp_1.window;
+    tcp_1.urgentPtr;
+    payload;
+}
+
+field_list ipv6_1_tcp_1_checksum_list {
+    ipv6_1.srcAddr;
+    ipv6_1.dstAddr;
+    8'0;
+    ipv6_1.nextHdr;
+    capri_deparser_len.tx_l4_payload_len;
+    tcp_1.srcPort;
+    tcp_1.dstPort;
+    tcp_1.seqNo;
+    tcp_1.ackNo;
+    tcp_1.dataOffset;
+    tcp_1.res;
+    tcp_1.flags;
+    tcp_1.window;
+    tcp_1.urgentPtr;
+    payload;
+}
+
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
+field_list_calculation tx_ipv4_1_tcp_1_checksum {
+    input {
+        ipv4_1_tcp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+@pragma checksum update_len capri_deparser_len.tx_l4_payload_len
+@pragma checksum gress egress
+@pragma checksum update_share udp_00.checksum, udp_01.checksum, udp_1.checksum, tcp_1.checksum
+field_list_calculation tx_ipv6_1_tcp_1_checksum {
+    input {
+        ipv6_1_tcp_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+calculated_field tcp_1.checksum {
+    update tx_ipv4_1_tcp_1_checksum;
+    update tx_ipv6_1_tcp_1_checksum;
 }
 
 /******************************************************************************

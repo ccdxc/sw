@@ -263,8 +263,7 @@ class ScapyHeaderBuilder_IPFIX(ScapyHeaderBuilder_BASE):
 IPFIX_builder = ScapyHeaderBuilder_IPFIX()
 
 class IcrcHeaderBuilder:
-    def __init__(self, packet):
-        spkt = packet.GetScapyPacket()
+    def __init__(self, spkt):
         self.spkt = spkt.copy()
         if penscapy.IPv6 in self.spkt:
             self.spkt = self.spkt[penscapy.IPv6]
@@ -374,7 +373,8 @@ class ScapyPacketObject:
 
     def __update_icrc(self, packet):
         if packet.IsNewIcrcRequired():
-            builder = IcrcHeaderBuilder(packet)
+            spkt = packet.GetScapyPacket()
+            builder = IcrcHeaderBuilder(spkt)
             icrc = builder.GetIcrc()
             #convert to network byte format
             icrc = (((icrc << 24) & 0xFF000000) |\
