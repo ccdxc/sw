@@ -611,6 +611,24 @@ gft_exact_match_flow_entry_link_pi_pd (pd_gft_exact_match_flow_entry_t *pd,
     pi->pd = pd;
 }
 
+static hal_ret_t
+gft_program_rx_xpositions (gft_hdr_group_xposition_t *xpositions,
+                           uint32_t num_xpositions, uint32_t index)
+{
+#if 0
+    rx_hdr_transpositions0_swkey_t       rx0_key = { 0 };
+    rx_hdr_transpositions0_actiondata    rx0_action = { 0 };
+    rx_hdr_transpositions1_swkey_t       rx1_key = { 0 };
+    rx_hdr_transpositions1_actiondata    rx1_action = { 0 };
+    rx_hdr_transpositions2_swkey_t       rx2_key = { 0 };
+    rx_hdr_transpositions2_actiondata    rx2_action = { 0 };
+    rx_hdr_transpositions3_swkey_t       rx3_key = { 0 };
+    rx_hdr_transpositions3_actiondata    rx3_action = { 0 };
+#endif
+
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 pd_gft_exact_match_flow_entry_create (pd_gft_args_t *gft_args)
 {
@@ -642,6 +660,38 @@ pd_asic_init (pd_asic_init_args_t *args)
 {
     asic_init(args->cfg);
     return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_lif_create (pd_lif_create_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_lif_get_lport_id (pd_lif_get_lport_id_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_qos_class_create (pd_qos_class_create_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_copp_create (pd_copp_create_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+// TODO: this one also doesn't belong here .. we need to get the cpu tx/rx
+// driver story right
+hal_ret_t
+pd_cpupkt_poll_receive (pd_cpupkt_poll_receive_args_t *args)
+{
+    return HAL_RET_RETRY;
 }
 
 }    // namespace pd

@@ -18,12 +18,19 @@ typedef enum hal_platform_mode_s {
     HAL_PLATFORM_MODE_RTL,
 } hal_platform_mode_t;
 
+typedef enum hal_feature_set_s {
+    HAL_FEATURE_SET_NONE,
+    HAL_FEATURE_SET_IRIS,
+    HAL_FEATURE_SET_GFT,
+} hal_feature_set_t;
+
 typedef struct hal_cfg_s {
     hal_platform_mode_t     platform_mode;
     char                    asic_name[HAL_MAX_NAME_STR];
     std::string             grpc_port;
     std::string             loader_info_file;
     char                    feature_set[HAL_MAX_NAME_STR];
+    hal_feature_set_t       features;
     std::string             forwarding_mode;
     bool                    async_en;
     bool                    init_with_pbc_hbm;

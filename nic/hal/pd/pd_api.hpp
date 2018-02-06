@@ -2567,14 +2567,12 @@ PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_create, pd_gft);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft);
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft);
 
-
 //clock
 PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
 PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
 
 // slab
 PD_FUNCP_TYPEDEF(pd_get_slab);
-
 
 typedef struct pd_call_s {
     union {

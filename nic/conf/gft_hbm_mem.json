@@ -1,8 +1,88 @@
 {
     "regions": [
         {
+            "name": "lif2qstate_map",
+            "size_kb": 20480
+        },
+        {
+            "name": "arq-rx",
+            "size_kb": 64
+        },
+        {
+            "name": "arq-tx",
+            "size_kb": 64
+        },
+        {
+            "name": "asq",
+            "size_kb": 64
+        },
+        {
+            "name": "cpu-descriptor",
+            "size_kb": 2048
+        },
+        {
+            "name": "cpu-page",
+            "size_kb": 32768
+        },
+        {
+            "name": "descriptor-tx",
+            "size_kb": 2048
+        },
+        {
+            "name": "descriptor-rx",
+            "size_kb": 2048
+        },
+        {
+            "name": "page-small-tx",
+            "size_kb": 32768
+        },
+        {
+            "name": "page-small-rx",
+            "size_kb": 32768
+        },
+        {
+            "name": "page-big-tx",
+            "size_kb": 147456
+        },
+        {
+            "name": "page-big-rx",
+            "size_kb": 147456
+        },
+        {
             "name": "p4_program",
             "size_kb": 131072
+        },
+        {
+            "name": "p4plus_program",
+            "size_kb": 131072
+        },
+        {
+            "name": "rdma",
+            "size_kb": 131072
+        },
+        {
+            "name": "rdma-atomic-resource-addr",
+            "size_kb": 1
+        },
+        {
+            "name": "key-desc-array",
+            "size_kb": 1024
+        },
+        {
+            "name": "rdma-eq-intr-table",
+            "size_kb": 32
+        },
+        {
+            "_comment": "hash depth = 1024",
+            "_comment1": "data space = 1024 * 16 * 64 = 1024K",
+            "_comment1": "key space = 1024 * 64 = 64K",
+            "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
+            "name": "timers",
+            "size_kb": 1088
+        },
+        {
+            "name": "tx-scheduler",
+            "size_kb": 2048
         },
         {
             "name": "rx_gft_hash",

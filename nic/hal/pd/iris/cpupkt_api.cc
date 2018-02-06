@@ -148,10 +148,6 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
  * Packet send/receive APIs
  ***************************************************************/
  
-#if 0
-cpupkt_ctxt_t* 
-cpupkt_ctxt_alloc_init(void)
-#endif
 hal_ret_t
 pd_cpupkt_ctxt_alloc_init(pd_cpupkt_ctxt_alloc_init_args_t *args)
 {
@@ -209,7 +205,6 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::W
 }
 
 hal_ret_t 
-// cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
 pd_cpupkt_register_tx_queue(pd_cpupkt_register_tx_queue_args_t *args)
 {
     cpupkt_ctxt_t* ctxt = args->ctxt;
@@ -241,10 +236,6 @@ pd_cpupkt_register_tx_queue(pd_cpupkt_register_tx_queue_args_t *args)
     return HAL_RET_OK;
 }
 
-#if 0
-hal_ret_t 
-cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
-#endif
 hal_ret_t 
 pd_cpupkt_register_rx_queue(pd_cpupkt_register_rx_queue_args_t *args)
 {
@@ -291,10 +282,6 @@ pd_cpupkt_register_rx_queue(pd_cpupkt_register_rx_queue_args_t *args)
     return HAL_RET_OK;
 }
 
-#if 0
-hal_ret_t 
-cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
-#endif
 hal_ret_t
 pd_cpupkt_unregister_tx_queue(pd_cpupkt_unregister_tx_queue_args_t *args)
 {
@@ -322,12 +309,6 @@ pd_cpupkt_unregister_tx_queue(pd_cpupkt_unregister_tx_queue_args_t *args)
 
 
 hal_ret_t
-#if 0
-cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
-                    p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
-                    uint8_t** data, 
-                    size_t* data_len)
-#endif
 pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
@@ -389,7 +370,6 @@ pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
 }
 
 hal_ret_t
-// cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data)
 pd_cpupkt_free(pd_cpupkt_free_args_t *args)
 {
     p4_to_p4plus_cpu_pkt_t* flow_miss_hdr = args->flow_miss_hdr;
@@ -426,13 +406,7 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
     d_args.qid = CAPRI_HBM_GC_RNMDR_QID;
     d_args.ring_number = CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER;
     ret = pd_cpupkt_program_send_ring_doorbell(&d_args);
-#if 0
-    ret = cpupkt_program_send_ring_doorbell(SERVICE_LIF_GC,
-                                            0,
-                                            CAPRI_HBM_GC_RNMDR_QID,
-                                            CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER);
-#endif
-    if(ret != HAL_RET_OK) {
+    if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to ring doorbell");
         return HAL_RET_HW_FAIL;
     }
@@ -444,7 +418,6 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
 
 
 hal_ret_t
-// cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr)
 pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
 {
     indexer::status     rs;
@@ -473,7 +446,6 @@ pd_cpupkt_descr_alloc(pd_cpupkt_descr_alloc_args_t *args)
 }
 
 hal_ret_t
-// cpupkt_page_alloc(cpupkt_hw_id_t* page_addr)
 pd_cpupkt_page_alloc(pd_cpupkt_page_alloc_args_t *args)
 {
     indexer::status     rs;
@@ -556,12 +528,6 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
 }
 
 hal_ret_t
-#if 0
-cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
-                                  uint8_t  qtype,
-                                  uint32_t qid,
-                                  uint8_t  ring_number)
-#endif
 pd_cpupkt_program_send_ring_doorbell(pd_cpupkt_program_send_ring_doorbell_args_t *args)
 {
     uint64_t            addr = 0;
@@ -591,19 +557,6 @@ pd_cpupkt_program_send_ring_doorbell(pd_cpupkt_program_send_ring_doorbell_args_t
 
 
 hal_ret_t
-#if 0
-cpupkt_send(cpupkt_ctxt_t* ctxt,
-            types::WRingType type,
-            uint32_t queue_id,
-            cpu_to_p4plus_header_t* cpu_header,
-            p4plus_to_p4_header_t* p4_header,
-            uint8_t* data, 
-            size_t data_len,
-            uint16_t dest_lif,
-            uint8_t  qtype,
-            uint32_t qid,
-            uint8_t ring_number)
-#endif
 pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
 {
     hal_ret_t           ret = HAL_RET_OK;

@@ -368,6 +368,14 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             HAL_TRACE_DEBUG("Overriding GRPC Port to : {}", hal_cfg->grpc_port);
         }
         sparam = pt.get<std::string>("sw.feature_set");
+        if (!memcmp("iris", sparam.c_str(), 5)) {
+            hal_cfg->features = HAL_FEATURE_SET_IRIS;
+        } else if (!memcmp("gft", sparam.c_str(), 4)) {
+            hal_cfg->features = HAL_FEATURE_SET_GFT;
+        } else {
+            hal_cfg->features = HAL_FEATURE_SET_NONE;
+            HAL_TRACE_ERR("Uknown feature set {}", sparam.c_str());
+        }
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
@@ -484,7 +492,9 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     // do proxy init
-    hal_proxy_svc_init();
+    if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
+        hal_proxy_svc_init();
+    }
 
     // do qos init
     ret = hal_qos_init();

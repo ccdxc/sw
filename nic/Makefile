@@ -240,11 +240,12 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 gft: capsim-master sdk
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
-	$(MAKE) -C asm msft_gft
+	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT"
 	$(MAKE) -C proto
 	$(MAKE) -j4 -C gen/proto/hal
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
 	$(MAKE) pd_gft
+	$(MAKE) pd_stub
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
 	mv obj/gft/asm_bin/*.cano obj/cano 2>/dev/null || :
 	$(MAKE) post-make

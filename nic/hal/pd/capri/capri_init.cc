@@ -396,7 +396,18 @@ capri_p4p_asm_init (void)
     symbols[35].params[1].name = ARQRX_QIDXR_BASE;
     symbols[35].params[1].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
 
-#ifndef GFT
+#ifdef GFT
+#undef P4TBL_ID_FLOW_HASH
+#undef P4TBL_ID_FLOW_INFO
+#undef P4TBL_ID_SESSION_STATE
+#undef P4TBL_ID_FLOW_STATS
+
+#define P4TBL_ID_FLOW_HASH P4TBL_ID_INDEX_MIN
+#define P4TBL_ID_FLOW_INFO P4TBL_ID_INDEX_MIN
+#define P4TBL_ID_SESSION_STATE P4TBL_ID_INDEX_MIN
+#define P4TBL_ID_FLOW_STATS P4TBL_ID_INDEX_MIN
+#endif
+
     symbols[36].name = "ipfix.bin";
     symbols[36].num_params = 1;
     symbols[36].params[0].name = P4_FLOW_HASH_BASE;
@@ -422,7 +433,6 @@ capri_p4p_asm_init (void)
         get_start_offset(p4pd_tbl_names[P4TBL_ID_FLOW_STATS]);
     symbols[39].params[1].name = P4_FLOW_ATOMIC_STATS_BASE;
     symbols[39].params[1].val = get_start_offset(JP4_ATOMIC_STATS);
-#endif
 
     symbols[40].name = "tcp-tx-read-gc-nmdr-idx.bin";
     symbols[40].num_params = 2;

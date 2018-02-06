@@ -118,10 +118,12 @@ cpu_tx_stage0:
     j   cpu_tx_stage0_start
     nop
 
+#ifndef GFT
 .align
 ipfix_tx_stage0:
     j   ipfix_start
     nop
+#endif
 
 .align
 adminq_stage0:

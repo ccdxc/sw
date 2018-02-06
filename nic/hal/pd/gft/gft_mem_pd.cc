@@ -3,6 +3,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
 namespace pd {
@@ -136,7 +137,8 @@ hal_state_pd::init_tables(void)
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "table_maps/capri_p4_table_map.json"
+        .table_map_cfg_file = "../gen/gft/p4pd/capri_p4_table_map.json",      // TODO: this should be in common location
+        .p4pd_pgm_name = "gft"
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -151,9 +153,6 @@ hal_state_pd::init_tables(void)
                                  sizeof(directmap *) *
                                  (P4TBL_ID_INDEX_MAX - P4TBL_ID_INDEX_MIN + 1));
     HAL_ASSERT(dm_tables_ != NULL);
-
-    // make sure there is one flow table only
-    HAL_ASSERT((P4TBL_ID_HASH_MAX - P4TBL_ID_HASH_MIN + 1) == 2);
 
     hash_tcam_tables_ =
         (sdk_hash **)HAL_CALLOC(HAL_MEM_ALLOC_PD,
@@ -318,7 +317,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
 }
 
 hal_ret_t
-hal_pd_mem_init (void)
+pd_mem_init (pd_mem_init_args_t *args)
 {
     hal_ret_t    ret = HAL_RET_OK;
 
@@ -355,19 +354,48 @@ cleanup:
 }
 
 hal_ret_t
-hal_pd_mem_init_phase_2 (void)
+pd_mem_init_phase2 (pd_mem_init_phase2_args_t *arg)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-hal_pd_pgm_def_entries (void)
+pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t
-hal_pd_pgm_def_p4plus_entries (void)
+pd_pgm_def_p4plus_entries (pd_pgm_def_p4plus_entries_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+// TODO: this doesn't belong in PD as this is not pipeline dependent
+// move the code in iris to some common place so all HAL PDs can use
+hal_ret_t
+pd_clock_delta_comp (pd_clock_delta_comp_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+// TODO: this doesn't belong in PD .. CPU tx/rx driver can't be in iris/gft, it
+// is common to all PDs
+hal_ret_t
+pd_cpupkt_ctxt_alloc_init (pd_cpupkt_ctxt_alloc_init_args_t *args)
+{
+    args->ctxt = NULL;
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_cpupkt_register_tx_queue (pd_cpupkt_register_tx_queue_args_t *args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_cpupkt_register_rx_queue (pd_cpupkt_register_rx_queue_args_t *args)
 {
     return HAL_RET_OK;
 }

@@ -7,11 +7,21 @@
 namespace hal {
 namespace pd {
 
-#define PD_FUNC_STUB(NAME)                                                  \
-    hal_ret_t NAME(NAME ## _args_t *args) { return HAL_RET_OK; }
+#define PD_FUNC_STUB(API)                                               \
+hal_ret_t                                                               \
+API (API ## _args_t *args)                                              \
+{                                                                       \
+    HAL_ASSERT(FALSE);                                                  \
+    return HAL_RET_OK;                                                  \
+}
 
-#define PD_FUNC_STUB_ARGS(API, ARGS)                                        \
-    hal_ret_t API(ARGS ## _args_t *args) { return HAL_RET_OK; }
+#define PD_FUNC_STUB_ARGS(API, ARGS)                                    \
+hal_ret_t                                                               \
+API (ARGS ## _args_t *args)                                             \
+{                                                                       \
+    HAL_ASSERT(FALSE);                                                  \
+    return HAL_RET_OK;                                                  \
+}
 
 // init pd calls
 PD_FUNC_STUB(pd_mem_init);
