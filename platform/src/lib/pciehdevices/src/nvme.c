@@ -10,6 +10,7 @@
 #include "pci_ids.h"
 #include "pciehost.h"
 #include "pciehdevices.h"
+#include "utils_impl.h"
 
 static void
 initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
@@ -17,47 +18,41 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     pciehbarreg_t preg;
     pciehbar_t pbar;
 
-    /* bar mem */
-    memset(&pbar, 0, sizeof(pbar));
-    memset(&preg, 0, sizeof(preg));
-    preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = 0;
-    preg.size = 0x1000;
-    preg.align = 0;
-    pciehbar_add_reg(&pbar, &preg);
-
-    pbar.type = PCIEHBARTYPE_MEM;
-    pciehbars_add_bar(pbars, &pbar);
-
     /* bar mem64 */
     memset(&pbar, 0, sizeof(pbar));
-    memset(&preg, 0, sizeof(preg));
-    preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_TBL);
-    preg.paddr = 0;
-    preg.size = 0x1000;
-    preg.align = 0;
-    pciehbar_add_reg(&pbar, &preg);
-
-    memset(&preg, 0, sizeof(preg));
-    preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_PBA);
-    preg.paddr = 0;
-    preg.size = 0x1000;
-    preg.align = 0;
-    pciehbar_add_reg(&pbar, &preg);
-
     pbar.type = PCIEHBARTYPE_MEM64;
-    pciehbars_add_bar(pbars, &pbar);
 
-    /* bar io */
-    memset(&pbar, 0, sizeof(pbar));
+    /* Controller Regs */
     memset(&preg, 0, sizeof(preg));
+    preg.regtype = PCIEHBARREGT_RES;
     preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = 0;
-    preg.size = 0x10;
-    preg.align = 0;
+    preg.paddr = pres->devcmdpa;
+    preg.size = 0x1000;
     pciehbar_add_reg(&pbar, &preg);
 
-    pbar.type = PCIEHBARTYPE_IO;
+    /* Doorbells */
+    memset(&preg, 0, sizeof(preg));
+    preg.regtype = PCIEHBARREGT_DB32;
+    preg.flags = PCIEHBARREGF_RW;
+    preg.size = 0x1000;
+    pciehbar_add_reg(&pbar, &preg);
+
+    /* MSI-X Interrupt Table */
+    memset(&preg, 0, sizeof(preg));
+    preg.regtype = PCIEHBARREGT_RES;
+    preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_TBL);
+    preg.paddr = intr_msixcfg_addr(pres->intrb);
+    preg.size = 0x1000;
+    pciehbar_add_reg(&pbar, &preg);
+
+    /* MSI-X Interrupt PBA */
+    memset(&preg, 0, sizeof(preg));
+    preg.regtype = PCIEHBARREGT_RES;
+    preg.flags = (PCIEHBARREGF_RD | PCIEHBARREGF_MSIX_PBA);
+    preg.paddr = intr_pba_addr(pres->intrb);
+    preg.size = 0x1000;
+    pciehbar_add_reg(&pbar, &preg);
+
     pciehbars_add_bar(pbars, &pbar);
 }
 

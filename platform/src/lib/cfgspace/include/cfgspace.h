@@ -193,11 +193,20 @@ int cfgspace_setextcap(cfgspace_t *cs,
  * Reads return current values, writes apply the write-mask to
  * implement read-only fields.
  */
+u_int8_t  cfgspace_readb(cfgspace_t *cs, const u_int16_t offset);
+u_int16_t cfgspace_readw(cfgspace_t *cs, const u_int16_t offset);
+u_int32_t cfgspace_readd(cfgspace_t *cs, const u_int16_t offset);
 int cfgspace_read(cfgspace_t *cs,
                   const u_int16_t offset,
                   const u_int8_t size,
                   u_int32_t *valp);
 
+void cfgspace_writeb(cfgspace_t *cs,
+                     const u_int16_t offset, const u_int8_t val);
+void cfgspace_writew(cfgspace_t *cs,
+                     const u_int16_t offset, const u_int16_t val);
+void cfgspace_writed(cfgspace_t *cs,
+                     const u_int16_t offset, const u_int32_t val);
 int cfgspace_write(cfgspace_t *cs,
                    const u_int16_t offset,
                    const u_int8_t size,

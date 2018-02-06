@@ -6,5 +6,7 @@
 #define __INTR_H__
 
 void pciehw_intr_init(pciehwdev_t *phwdev);
+void pciehw_intr_config(pciehwdev_t *phwdev,
+                        const int legacy, const int fmask);
 
 #endif /* __INTR_H__ */

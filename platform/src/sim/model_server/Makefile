@@ -33,6 +33,7 @@ LIBRARIES = \
 	-lintrutils \
 	-lpciehost \
 	-lcfgspace \
+	-lintrutils \
 	-lpal \
 	-lmisc \
 	$(NULL)

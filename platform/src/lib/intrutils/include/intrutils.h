@@ -55,10 +55,17 @@ void intr_msixcfg(const int intr,
                   const u_int64_t msgaddr,
                   const u_int32_t msgdata,
                   const int vctrl);
-int intr_fwcfg_function_mask(const int intr, const int on);
-void intr_fwcfg_msi(const int intr, const int lif, const int port_id);
+void intr_fwcfg(const int intr,
+                const int lif,
+                const int port,
+                const int legacy,
+                const int intpin,
+                const int fmask);
+void intr_fwcfg_msi(const int intr, const int lif, const int port);
 void intr_fwcfg_legacy(const int intr,
-                       const int lif, const int port_id, const int int_pin);
+                       const int lif, const int port, const int intpin);
+int intr_fwcfg_function_mask(const int intr, const int on);
+void intr_fwcfg_mode(const int intr, const int legacy, const int fmask);
 void intr_fwcfg_local(const int intr, const int on);
 
 #ifdef __cplusplus

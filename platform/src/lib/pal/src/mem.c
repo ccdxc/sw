@@ -52,12 +52,14 @@ int
 pal_mem_rd(const u_int64_t pa, void *buf, const size_t sz)
 {
     pal_memcpy(buf, pr_ptov(pa, sz), sz);
+    pal_reg_trace("mem_rd 0x%08"PRIx64" sz 0x%ld\n", pa, sz);
     return sz;
 }
 
 int
 pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz)
 {
+    pal_reg_trace("mem_wr 0x%08"PRIx64" sz 0x%ld\n", pa, sz);
     pal_memcpy(pr_ptov(pa, sz), buf, sz);
     return sz;
 }

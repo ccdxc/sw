@@ -66,6 +66,7 @@ typedef struct pciehwdev_s {
     pciehwdevh_t parenth;               /* handle to parent */
     pciehwdevh_t childh;                /* handle to child */
     pciehwdevh_t peerh;                 /* handle to peer */
+    u_int8_t intpin;                    /* legacy int pin */
     u_int8_t vfstridesel;               /* vfstride selector */
     u_int8_t romsksel[PCIEHW_ROMSKSZ];  /* cfg read-only mask selectors */
     u_int8_t cfghnd[PCIEHW_CFGHNDSZ];   /* cfg indirect/notify handlers */
@@ -126,6 +127,7 @@ typedef struct pciehw_mem_s {
     u_int8_t notify_area[PCIEHW_NPORTS][PCIEHW_NOTIFYSZ]
                                      __attribute__((aligned(PCIEHW_NOTIFYSZ)));
     u_int32_t notify_intr_dest;         /* temporary notify intr dest */
+    u_int32_t notify_ring_mask;
 } pciehw_mem_t;
 
 typedef struct pciehw_s {

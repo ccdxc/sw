@@ -125,11 +125,11 @@ cfgspace_setcap_msix(cfgspace_t *cs,
                      const u_int8_t capaddr)
 {
     const u_int8_t caplen = 0xc;
+    const u_int8_t tblbir = cp->msix_tblbir;
+    const u_int8_t pbabir = cp->msix_pbabir;
+    const u_int32_t tbloff = cp->msix_tbloff;
+    const u_int32_t pbaoff = cp->msix_pbaoff;
     u_int16_t nintrs = cp->nintrs;
-    u_int8_t tblbir = cp->msix_tblbir;
-    u_int8_t pbabir = cp->msix_pbabir;
-    u_int32_t tbloff = cp->msix_tbloff;
-    u_int32_t pbaoff = cp->msix_pbaoff;
     u_int32_t v, m;
 
     /* if no intrs then no msix capability */

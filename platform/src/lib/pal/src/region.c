@@ -152,6 +152,7 @@ void *
 pr_ptov(const u_int64_t pa, const u_int64_t sz)
 {
     pal_region_t *pr = pr_getpa(pa, sz);
+    assert(pr != NULL);
     return pr->va + (pa - pr->pa);
 }
 

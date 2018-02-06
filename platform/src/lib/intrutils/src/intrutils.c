@@ -146,6 +146,73 @@ intr_msixcfg(const int intr,
     pal_reg_wr32(pa + offsetof(intr_msixcfg_t, vector_ctrl), vctrl);
 }
 
+/*
+ * Configure the fwcfg register group.  This register group is
+ * under fw control (hence the name) and not visible to the host.
+ *
+ * Note:  We are careful to make config changes to fwcfg only with
+ * the function_mask set.  Masking the interrupt will deassert the
+ * interrupt if asserted in legacy mode, then we change any config,
+ * then re-enable with the new config.  If necessary the interrupt
+ * will re-assert with the new config.
+ */
+void
+intr_fwcfg(const int intr,
+           const int lif,
+           const int port,
+           const int legacy,
+           const int intpin,
+           const int fmask)
+{
+    const u_int64_t pa = intr_fwcfg_addr(intr);
+    intr_fwcfg_t v = {
+        .function_mask = 1, /* masked while making updates, then set */
+        .lif = lif,
+        .port_id = port,
+        .local_int = 0,
+        .legacy = legacy,
+        .int_pin = intpin,
+    };
+    
+    /* mask via function_mask while making changes */
+    intr_fwcfg_function_mask(intr, 1);
+    {
+        pal_reg_wr32w(pa, v.w, NWORDS(v.w));
+    }
+    intr_fwcfg_function_mask(intr, fmask);
+}
+
+/*
+ * Short-cut for configuring an interrupt resource in MSI mode.
+ */
+void
+intr_fwcfg_msi(const int intr, const int lif, const int port)
+{
+    const int legacy = 0;
+    const int intpin = 0;
+    const int fmask = 0;
+
+    intr_fwcfg(intr, lif, port, legacy, intpin, fmask);
+}
+
+/*
+ * Short-cut for configuring an interrupt resource in legacy mode.
+ */
+void
+intr_fwcfg_legacy(const int intr,
+                  const int lif, const int port, const int intpin)
+{
+    const int legacy = 1;
+    const int fmask = 0;
+
+    intr_fwcfg(intr, lif, port, legacy, intpin, fmask);
+}
+
+/*
+ * Set the function_mask for this interrupt resource.
+ * Return the previous value of the mask so caller can
+ * restore to previous value if desired.
+ */
 int
 intr_fwcfg_function_mask(const int intr, const int on)
 {
@@ -155,56 +222,44 @@ intr_fwcfg_function_mask(const int intr, const int on)
     return omask;
 }
 
-void
-intr_fwcfg_msi(const int intr, const int lif, const int port_id)
-{
-    const u_int64_t pa = intr_fwcfg_addr(intr);
-    intr_fwcfg_t v = {
-        .function_mask = 1, /* masked while making updates, then unmasked */
-        .lif = lif,
-        .port_id = port_id,
-        .local_int = 0,
-        .legacy = 0,
-        .int_pin = 0,
-    };
-    
-    /* mask via function_mask while making changes */
-    intr_fwcfg_function_mask(intr, 1);
-    {
-        pal_reg_wr32w(pa, v.w, NWORDS(v.w));
-    }
-    intr_fwcfg_function_mask(intr, 0);
-}
-
-void
-intr_fwcfg_legacy(const int intr,
-                  const int lif, const int port_id, const int int_pin)
-{
-    const u_int64_t pa = intr_fwcfg_addr(intr);
-    intr_fwcfg_t v = {
-        .function_mask = 1, /* masked while making updates, then unmasked */
-        .lif = lif,
-        .port_id = port_id,
-        .local_int = 0,
-        .legacy = 1,
-        .int_pin = int_pin,
-    };
-    
-    /* mask via function_mask while making changes */
-    intr_fwcfg_function_mask(intr, 1);
-    {
-        pal_reg_wr32w(pa, v.w, NWORDS(v.w));
-    }
-    intr_fwcfg_function_mask(intr, 0);
-}
-
+/*
+ * Set an interrupt resource in "local" mode which makes the
+ * message address to be a local address, otherwise the
+ * message address is a host address.  Set to local for interrupts
+ * to be sent to the local CPU interrupt controller.
+ */
 void
 intr_fwcfg_local(const int intr, const int on)
 {
     const u_int64_t pa = intr_fwcfg_addr(intr);
     intr_fwcfg_t v;
+    int omask;
     
-    pal_reg_rd32w(pa, v.w, NWORDS(v.w));
-    v.local_int = on;
-    pal_reg_wr32w(pa, v.w, NWORDS(v.w));
+    /* mask via function_mask while making changes */
+    omask = intr_fwcfg_function_mask(intr, 1);
+    {
+        pal_reg_rd32w(pa, v.w, NWORDS(v.w));
+        v.local_int = on;
+        pal_reg_wr32w(pa, v.w, NWORDS(v.w));
+    }
+    intr_fwcfg_function_mask(intr, omask);
+}
+
+/*
+ * Change the mode of the interrupt between legacy and msi mode.
+ */
+void
+intr_fwcfg_mode(const int intr, const int legacy, const int fmask)
+{
+    const u_int64_t pa = intr_fwcfg_addr(intr);
+    intr_fwcfg_t v;
+    
+    /* mask via function_mask while making changes */
+    intr_fwcfg_function_mask(intr, 1);
+    {
+        pal_reg_rd32w(pa, v.w, NWORDS(v.w));
+        v.legacy = legacy;
+        pal_reg_wr32w(pa, v.w, NWORDS(v.w));
+    }
+    intr_fwcfg_function_mask(intr, fmask);
 }

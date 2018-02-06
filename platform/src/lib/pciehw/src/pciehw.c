@@ -382,15 +382,19 @@ pciehw_finalize_dev(pciehdev_t *pdev)
      * need to add to hw tables to virtualize.
      */
     if (parent) {
+        /* bar first, the cfg below */
         pciehw_bar_finalize(pdev);
         if (phwdev->lif_valid) {
             pciehw_hdrt_load(phw, phwdev->lif, phwdev->bdf);
             pciehw_portmap_load(phw, phwdev->lif, phwdev->port);
         }
-        pciehw_intr_init(phwdev);
     }
 
+    /* cfg after bar above */
     pciehw_cfg_finalize(pdev);
+
+    /* init_init() now that we have a parent link and cfg */
+    pciehw_intr_init(phwdev);
 
     child = pciehdev_get_child(pdev);
     if (child) {
@@ -462,19 +466,20 @@ cmd_dev(int argc, char *argv[])
     char lifstr[8];
     int i;
 
-    pciehsys_log("%-3s %-10s %-9s %-4s\n",
-                 "hdl", "name", "p:bdf", "lif");
+    pciehsys_log("%-3s %-10s %-9s %-4s %-4s\n",
+                 "hdl", "name", "p:bdf", "intx", "lif");
     phwdev = &phwmem->dev[1];
     for (i = 1; i <= phwmem->allocdev; i++, phwdev++) {
         lifstr[0] = '\0';
         if (phwdev->lif_valid) {
             snprintf(lifstr, sizeof(lifstr), "%d", phwdev->lif);
         }
-        pciehsys_log("%3d %-10s %1d:%-7s %4s\n",
+        pciehsys_log("%3d %-10s %1d:%-7s    %c %4s\n",
                      pciehwdev_geth(phwdev),
                      pciehwdev_get_name(phwdev),
                      phwdev->port,
                      bdf_to_str(phwdev->bdf),
+                     phwdev->intrc ? "ABCD"[phwdev->intpin] : ' ',
                      lifstr);
     }
 }

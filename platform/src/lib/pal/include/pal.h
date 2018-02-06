@@ -29,6 +29,8 @@ void pal_reg_wr32w(const u_int64_t pa,
                    const u_int32_t *w,
                    const u_int32_t nw);
 
+int pal_reg_trace_control(const int on);
+
 /*
  * PAL memory read/write APIs.
  */
@@ -37,6 +39,8 @@ void pal_mem_unmap(void *va);
 u_int64_t pal_mem_vtop(const void *va);
 int pal_mem_rd(const u_int64_t pa,       void *buf, const size_t sz);
 int pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz);
+
+int pal_mem_trace_control(const int on);
 
 #ifdef __cplusplus
 }

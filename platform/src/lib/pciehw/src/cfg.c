@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <linux/pci_regs.h>
 
 #include "bdf.h"
 #include "pciehsys.h"
@@ -30,7 +31,9 @@ static void
 pciehw_set_cfghnd(pciehwdev_t *phwdev,
                   const u_int16_t reg, const pciehw_cfghnd_t hnd)
 {
-    phwdev->cfghnd[reg >> 2] = hnd;
+    const u_int16_t regdw = reg >> 2;
+    assert(regdw < PCIEHW_CFGHNDSZ);
+    phwdev->cfghnd[regdw] = hnd;
 }
 
 static void
@@ -57,7 +60,7 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
         }
     }
 
-    msixcap = cfgspace_findcap(&cs, 0x11); /* MSIX */
+    msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
     if (msixcap) {
         /* MSIX message control */
         pciehw_set_cfghnd(phwdev, msixcap, PCIEHW_CFGHND_MSIX);
@@ -116,21 +119,21 @@ pciehw_cfg_finalize(pciehdev_t *pdev)
 /*
  * Detect these overlaps:
  *
- * start          count
+ * regaddr        regsize
  * v              v
  * +--------------+
  * +--------------+
  * ^              ^
  * tlpaddr        tpsize
  *
- * start          count
+ * regaddr        regsize
  * v              v
  * +--------------+
  *           +--------------+
  *           ^              ^
  *           tlpaddr        tpsize
  *
- *     start          count
+ *     regaddr        regsize
  *     v              v
  *     +--------------+
  * +--------------+
@@ -139,12 +142,12 @@ pciehw_cfg_finalize(pciehdev_t *pdev)
  */
 static int
 stlp_overlap(const pcie_stlp_t *stlp,
-             const u_int32_t start, const u_int32_t count)
+             const u_int32_t regaddr, const u_int32_t regsize)
 {
     const u_int32_t tlpaddr = stlp->addr;
     const u_int32_t tlpsize = stlp->size;
 
-    return tlpaddr < start + count && tlpaddr + tlpsize > start;
+    return tlpaddr < regaddr + regsize && tlpaddr + tlpsize > regaddr;
 }
 
 void
@@ -157,9 +160,7 @@ pciehw_cfgrd_notify(pciehwdev_t *phwdev,
 static u_int32_t
 cfg_bar32(cfgspace_t *cs, const u_int32_t cfgoff)
 {
-    u_int32_t baraddr;
-
-    cfgspace_read(cs, cfgoff, 4, &baraddr);
+    u_int32_t baraddr = cfgspace_readd(cs, cfgoff);
     return baraddr;
 }
 
@@ -168,8 +169,8 @@ cfg_bar64(cfgspace_t *cs, const u_int32_t cfgoff)
 {
     u_int32_t barlo, barhi;
 
-    cfgspace_read(cs, cfgoff + 0, 4, &barlo);
-    cfgspace_read(cs, cfgoff + 4, 4, &barhi);
+    barlo = cfgspace_readd(cs, cfgoff + 0);
+    barhi = cfgspace_readd(cs, cfgoff + 4);
 
     return ((u_int64_t)barhi << 32) | barlo;
 }
@@ -219,12 +220,28 @@ static void
 pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     cfgspace_t cs;
-    u_int32_t cmd;
+    u_int16_t cmd, msixcap, msixctl;
 
     pciehwdev_get_cfgspace(phwdev, &cs);
-    cfgspace_read(&cs, 0x4, 2, &cmd);
+    cmd = cfgspace_readw(&cs, PCI_COMMAND);
+    msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
+    if (msixcap) {
+        msixctl = cfgspace_readw(&cs, msixcap + PCI_MSIX_FLAGS);
+    } else {
+        msixctl = 0;
+    }
+
+    /* bar control */
     pciehw_cfg_io_enable(phwdev, (cmd & 0x1) != 0);
     pciehw_cfg_mem_enable(phwdev, (cmd & 0x2) != 0);
+
+    /* intx_disable */
+    if ((msixctl & PCI_MSIX_FLAGS_ENABLE) == 0) {
+        const int legacy = 1;
+        const int fmask = (cmd & PCI_COMMAND_INTX_DISABLE) != 0;
+        pciehw_intr_config(phwdev, legacy, fmask);
+    }
+
 #if 0
     /* XXX */
     pciehw_cfg_busmaster_enable(phwdev, (cmd & 0x4) != 0);
@@ -258,15 +275,57 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
     }
 }
 
+static void
+pciehw_cfgwr_msix(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    const u_int16_t reg = stlp->addr;
+    const u_int16_t regdw = reg >> 2;
+    cfgspace_t cs;
+    u_int16_t msixctl, cmd;
+    int msix_en, msix_mask, fmask, legacy;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    msixctl = cfgspace_readw(&cs, (regdw << 2) + 2);
+    msix_en = (msixctl & PCI_MSIX_FLAGS_ENABLE) != 0;
+    msix_mask = (msixctl & PCI_MSIX_FLAGS_MASKALL) != 0;
+
+    if (msix_en) {
+        /* msix mode */
+        legacy = 0;
+        fmask = msix_mask;
+    } else {
+        /* intx mode */
+        legacy = 1;
+        cmd = cfgspace_readw(&cs, PCI_COMMAND);
+        fmask = (cmd & PCI_COMMAND_INTX_DISABLE) != 0;
+    }
+
+    pciehw_intr_config(phwdev, legacy, fmask);
+}
+
 void
 pciehw_cfgwr_notify(pciehwdev_t *phwdev,
                     const pcie_stlp_t *stlp,
                     const pciehw_spmt_t *spmt)
 {
-    if (stlp_overlap(stlp, 0x4, 0x2)) {
-        pciehw_cfgwr_cmd(phwdev, stlp);
+    const u_int16_t reg = stlp->addr;
+    const u_int16_t regdw = reg >> 2;
+    pciehw_cfghnd_t hnd = PCIEHW_CFGHND_NONE;
+
+    if (regdw < PCIEHW_CFGHNDSZ) {
+        hnd = phwdev->cfghnd[regdw];
     }
-    if (stlp_overlap(stlp, 0x10, 0x18)) {
+    switch (hnd) {
+    case PCIEHW_CFGHND_NONE:
+        break;
+    case PCIEHW_CFGHND_CMD:
+        pciehw_cfgwr_cmd(phwdev, stlp);
+        break;
+    case PCIEHW_CFGHND_BARS:
         pciehw_cfgwr_bars(phwdev, stlp);
+        break;
+    case PCIEHW_CFGHND_MSIX:
+        pciehw_cfgwr_msix(phwdev, stlp);
+        break;
     }
 }

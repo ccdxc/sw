@@ -8,6 +8,24 @@
 #include "cfgspace.h"
 #include "cfgspace_getset.h"
 
+u_int8_t
+cfgspace_readb(cfgspace_t *cs, const u_int16_t offset)
+{
+    return cfgspace_getb(cs, offset);
+}
+
+u_int16_t
+cfgspace_readw(cfgspace_t *cs, const u_int16_t offset)
+{
+    return cfgspace_getw(cs, offset);
+}
+
+u_int32_t
+cfgspace_readd(cfgspace_t *cs, const u_int16_t offset)
+{
+    return cfgspace_getd(cs, offset);
+}
+
 int
 cfgspace_read(cfgspace_t *cs,
               const u_int16_t offset,
@@ -35,7 +53,7 @@ cfgspace_read(cfgspace_t *cs,
  * current contents of config space are replaced with the result.
  */
 
-static void
+void
 cfgspace_writeb(cfgspace_t *cs, const u_int16_t offset, const u_int8_t val)
 {
     const u_int8_t oval = cfgspace_getb_cur(cs, offset);
@@ -44,7 +62,7 @@ cfgspace_writeb(cfgspace_t *cs, const u_int16_t offset, const u_int8_t val)
     cfgspace_setb_cur(cs, offset, nval);
 }
 
-static void
+void
 cfgspace_writew(cfgspace_t *cs, const u_int16_t offset, const u_int16_t val)
 {
     const u_int16_t oval = cfgspace_getw_cur(cs, offset);
@@ -53,7 +71,7 @@ cfgspace_writew(cfgspace_t *cs, const u_int16_t offset, const u_int16_t val)
     cfgspace_setw_cur(cs, offset, nval);
 }
 
-static void
+void
 cfgspace_writed(cfgspace_t *cs, const u_int16_t offset, const u_int32_t val)
 {
     const u_int32_t oval = cfgspace_getd_cur(cs, offset);

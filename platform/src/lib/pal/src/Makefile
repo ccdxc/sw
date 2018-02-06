@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2017-2018, Pensando Systems Inc.
 #
 
 LIBRARY = libpal.a libpal.so
@@ -12,8 +12,6 @@ SOURCES = \
 	$(NULL)
 
 LCFLAGS += \
-	-I ../../misc/include \
-	-I ../../pciehost/include \
 	-I ../include \
 	$(NULL)
 
