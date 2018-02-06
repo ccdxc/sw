@@ -84,7 +84,7 @@ def generate_string(field):
     return ''.join(random.choice(letters) for _ in range(16))
 
 def generate_enum(field):
-    return random.randint(0, len(field.enum_type.values))
+    return random.randint(0, len(field.enum_type.values) - 1)
 
 def generate_bytes(field):
     return random.getrandbits(128).to_bytes(16, byteorder='big')

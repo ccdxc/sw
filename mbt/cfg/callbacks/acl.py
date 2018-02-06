@@ -22,10 +22,12 @@ def PreCreateCb(data, req_spec, resp_spec):
             req_spec.request[0].match.ip_selector.src_prefix.address.ip_af = types_pb2.IP_AF_INET
             req_spec.request[0].match.ip_selector.dst_prefix.address.ip_af = types_pb2.IP_AF_INET
             req_spec.request[0].match.ip_selector.src_prefix.address.v4_addr = random.randint(0, 99999)
+            req_spec.request[0].match.ip_selector.dst_prefix.address.v4_addr = random.randint(0, 99999)
         elif req_spec.request[0].match.ip_selector.ip_af == types_pb2.IP_AF_INET6:
             req_spec.request[0].match.ip_selector.src_prefix.address.ip_af = types_pb2.IP_AF_INET6
             req_spec.request[0].match.ip_selector.dst_prefix.address.ip_af = types_pb2.IP_AF_INET6
             req_spec.request[0].match.ip_selector.src_prefix.address.v6_addr = random.getrandbits(128).to_bytes(16, byteorder='big')
+            req_spec.request[0].match.ip_selector.dst_prefix.address.v6_addr = random.getrandbits(128).to_bytes(16, byteorder='big')
 
     if req_spec.request[0].action.action != acl_pb2.ACL_ACTION_REDIRECT:
         req_spec.request[0].action.ClearField("redirect_if_key_handle")
