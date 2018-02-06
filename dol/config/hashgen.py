@@ -331,6 +331,10 @@ class TcpUdpHashGenObject:
 
         return (hashval, skip, drop, outp['lkp_sport'], outp['lkp_dport'])
 
-hc = HashCollider(MODEL_DEBUG, CRCHACK)
-TcpUdpHashGen = TcpUdpHashGenObject()
+hc = None
+TcpUdpHashGen = None
+
+if not GlobalOptions.gft:
+    hc = HashCollider(MODEL_DEBUG, CRCHACK)
+    TcpUdpHashGen = TcpUdpHashGenObject()
 

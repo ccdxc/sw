@@ -160,7 +160,7 @@ def run_model(args):
     model_cmd = [ "./cap_model", "+PLOG_MAX_QUIT_COUNT=0", "+plog_add_scope=axi_trace" ]
     if args.modellogs:
         model_cmd.append("+plog=info")
-        if args.gft:
+        if args.gft or args.gft_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/gen/gft/dbg_out/model_debug.json")
         else:
             model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")
@@ -227,6 +227,8 @@ def run_hal(args):
     jsonfile = 'hal.json'
     if args.rtl:
         jsonfile = 'hal_rtl.json'
+    if args.gft:
+        jsonfile = 'hal_gft.json'
 
     if args.test_suf is not None:
          hal_log = nic_dir + "/logs_%s/hal.log" % args.test_suf
@@ -317,12 +319,12 @@ def check_for_completion(p, model_process, hal_process, args):
             if count % 300 == 0:
                 print "RUNTEST/SIMV not exited after %d seconds" % count
 
-            exit_timeout = 14400
+            exit_timeout = 4
             if 'MODEL_EXIT_TIMEOUT' in os.environ:
                 exit_timeout = os.environ('MODEL_EXIT_TIMEOUT')
-            if count == exit_timeout: # 2 hours
+            if count == exit_timeout * 60 * 60:
                 print "%s" % '='*80
-                print "             %d hour Exit Timeout Reached. Killing all processes." % (exit_timeout / 3600)
+                print "             %d hour Exit Timeout Reached. Killing all processes." % exit_timeout
                 print "%s" % '='*80
                 return 1
 
@@ -410,6 +412,8 @@ def run_dol(args):
         cmd.append('--pps')
     if args.lite is True:
         cmd.append('--lite')
+    if args.gft is True:
+        cmd.append('--gft')
 
     if args.coveragerun:
         #Increasing timeout for coverage runs only.
@@ -604,6 +608,8 @@ def main():
                         default=None, help="Run E2E L7 DOL")
     parser.add_argument("--gft", dest='gft', action="store_true",
                         default=False, help="GFT tests")
+    parser.add_argument("--gft_gtest", dest='gft_gtest', action="store_true",
+                        default=False, help="Run GFT gtests")
     parser.add_argument('--shuffle', dest='shuffle', default=None,
                         help='Shuffle tests and loop for X times.')
     parser.add_argument('--mbt', dest='mbt', default=None,
@@ -668,14 +674,14 @@ def main():
             run_rtl(args)
         else:
             run_model(args)
-        if args.gft is False:
+        if args.gft_gtest is False:
             run_hal(args)
 
     if args.storage:
         status = run_storage_dol(port, args)
         if status != 0:
             print "- Storage dol failed, status=", status
-    elif args.gft:
+    elif args.gft_gtest:
         status = run_gft_test(args)
         if status != 0:
             print "- GFT test failed, status=", status
