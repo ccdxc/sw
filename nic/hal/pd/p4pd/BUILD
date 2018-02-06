@@ -21,6 +21,7 @@ cc_library(
         "//nic:spdlog",
         "//nic:asic_includes",
         "//nic/hal/pd/capri:capri_includes",
+        "//nic/p4/nw/include:p4_nw_includes",
     ],
     alwayslink = 1,
 )

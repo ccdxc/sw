@@ -9,6 +9,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/p4/nw/include/defines.h"
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free
@@ -119,6 +120,31 @@ p4pd_capri_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     }
     return HAL_RET_OK;
 }
+
+hal_ret_t
+p4pd_capri_deparser_init (void)
+{
+    capri_deparser_init(TM_PORT_INGRESS, TM_PORT_EGRESS);
+    return HAL_RET_OK;    
+}
+
+hal_ret_t
+p4pd_capri_program_hbm_table_base_addr(void)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    /* Program table base address into capri TE */
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        p4pd_global_table_properties_get(i, &tbl_ctx);
+        if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
+            continue;
+        }
+        capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
+                    tbl_ctx.tablename, tbl_ctx.stage,
+                    (tbl_ctx.gress == P4_GRESS_INGRESS));
+    }
+    return HAL_RET_OK;
+}
+
 /* END: Common capri inits - applicable to IRIS & GFT */
 
 static uint16_t
@@ -316,6 +342,8 @@ p4pd_asic_init (p4pd_cfg_t *p4pd_cfg)
     /* TODO: These functions need to be moved to asic-pd common layer */
     HAL_ASSERT(p4pd_capri_table_mpu_base_init(p4pd_cfg) == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_program_table_mpu_pc() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_deparser_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_program_hbm_table_base_addr() == HAL_RET_OK);
     return P4PD_SUCCESS;
 }
 

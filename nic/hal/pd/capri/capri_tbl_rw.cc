@@ -45,7 +45,6 @@
 #ifdef GFT
 #include "nic/gen/gft/include/p4pd.h"
 static void capri_timer_init() __attribute__((unused));
-static int capri_table_p4plus_init() __attribute__((unused));
 static void capri_p4plus_recirc_init() __attribute__((unused));
 #define P4_PGM_NAME            "gft"
 #else
@@ -245,39 +244,33 @@ capri_program_table_mpu_pc(int tableid, bool ingress, int stage, int stage_table
     }
 }
 
-static void
-capri_program_hbm_table_base_addr(void)
+void
+capri_program_hbm_table_base_addr(int stage_tableid, char *tablename, int stage,
+                                  bool ingress)
 {
-    p4pd_table_properties_t       tbl_ctx;
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
-        p4pd_global_table_properties_get(i, &tbl_ctx);
-        if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
-            continue;
-        }
-        // For each HBM table, program HBM table start address
-        assert(tbl_ctx.stage_tableid < 16);
-        HAL_TRACE_DEBUG("===HBM Tbl id,Name: {}, {}, Stage {}, "
-                        "StageID {} HBM Tbl startadd: {:#x}===",
-                        i, tbl_ctx.tablename, tbl_ctx.stage,
-                        tbl_ctx.stage_tableid,
-                        get_start_offset(tbl_ctx.tablename));
-        if (tbl_ctx.gress == P4_GRESS_INGRESS) {
-            cap_te_csr_t &te_csr = cap0.sgi.te[tbl_ctx.stage];
-            // Push to HW/Capri from entry_start_block to block
-            te_csr.cfg_table_property[tbl_ctx.stage_tableid].read();
-            te_csr.cfg_table_property[tbl_ctx.stage_tableid]
-                    .addr_base(get_start_offset(tbl_ctx.tablename));
-            te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
-        } else {
-            cap_te_csr_t &te_csr = cap0.sge.te[tbl_ctx.stage];
-            // Push to HW/Capri from entry_start_block to block
-            te_csr.cfg_table_property[tbl_ctx.stage_tableid].read();
-            te_csr.cfg_table_property[tbl_ctx.stage_tableid]
-                    .addr_base(get_start_offset(tbl_ctx.tablename));
-            te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
-        }
+    // For each HBM table, program HBM table start address
+    assert(stage_tableid < 16);
+    HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, "
+                    "StageTblID: {}===",
+                    tablename, stage,
+                    stage_tableid);
+                    //get_start_offset(tablename));
+    if (ingress) {
+        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
+        // Push to HW/Capri from entry_start_block to block
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid]
+                .addr_base(get_start_offset(tablename));
+        te_csr.cfg_table_property[stage_tableid].write();
+    } else {
+        cap_te_csr_t &te_csr = cap0.sge.te[stage];
+        // Push to HW/Capri from entry_start_block to block
+        te_csr.cfg_table_property[stage_tableid].read();
+        te_csr.cfg_table_property[stage_tableid]
+                .addr_base(get_start_offset(tablename));
+        te_csr.cfg_table_property[stage_tableid].write();
     }
 }
 
@@ -344,14 +337,13 @@ void capri_program_p4plus_sram_table_mpu_pc(int tableid, int stage_tbl_id,
 // Size of the entire LIF indirection table
 #define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
 
-static int capri_toeplitz_init()
+int capri_toeplitz_init(int stage, int stage_tableid)
 {
     int tbl_id;
     uint64_t pc;
     uint64_t tbl_base;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
-    p4pd_table_properties_t tbl_ctx;
 
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) ETH_RSS_INDIR_PROGRAM,
@@ -367,11 +359,9 @@ static int capri_toeplitz_init()
                     pc);
 
     // Program rss params table with the PC
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
-                                     &tbl_ctx);
-    te_csr = &cap0.pcr.te[tbl_ctx.stage];
+    te_csr = &cap0.pcr.te[stage];
 
-    tbl_id = tbl_ctx.stage_tableid;
+    tbl_id = stage_tableid;
 
     tbl_base = get_start_offset(CAPRI_HBM_REG_RSS_INDIR_TABLE);
     HAL_ASSERT(tbl_base > 0);
@@ -408,12 +398,13 @@ static int capri_toeplitz_init()
 }
 #endif
 
-static int capri_table_p4plus_init()
+int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
+                            int stage_apphdr_off, int stage_tableid_apphdr_off,
+                            int stage_txdma_act, int stage_tableid_txdma_act)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
     uint64_t capri_action_p4plus_asm_base;
-    p4pd_table_properties_t tbl_ctx;
 
     hal::hal_cfg_t *hal_cfg =
                 (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
@@ -434,19 +425,15 @@ static int capri_table_p4plus_init()
                     capri_action_p4plus_asm_base);
 
     // Program app-header table config @(stage, stage_tableid) with the PC
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
-                                     &tbl_ctx);
-    te_csr = &cap0.pcr.te[tbl_ctx.stage];
+    te_csr = &cap0.pcr.te[stage_apphdr];
     capri_program_p4plus_table_mpu_pc_args(
-            tbl_ctx.stage_tableid, te_csr,
+            stage_tableid_apphdr, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
 
     // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
-                                     &tbl_ctx);
     capri_program_p4plus_table_mpu_pc_args(
-            tbl_ctx.stage_tableid, te_csr,
+            stage_tableid_apphdr_off, te_csr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
 
@@ -465,18 +452,16 @@ static int capri_table_p4plus_init()
                     capri_action_p4plus_asm_base);
 
     // Program table config @(stage, stage_tableid) with the PC
-    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0,
-                                     &tbl_ctx);
-    te_csr = &cap0.pct.te[tbl_ctx.stage];
+    te_csr = &cap0.pct.te[stage_txdma_act];
     capri_program_p4plus_table_mpu_pc_args(
-            tbl_ctx.stage_tableid, te_csr,
+            stage_tableid_txdma_act, te_csr,
             capri_action_p4plus_asm_base, 0);
 
-    if (tbl_ctx.stage == 0 &&
+    if (stage_txdma_act == 0 &&
         hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
-        te_csr->cfg_table_property[tbl_ctx.stage_tableid].max_bypass_cnt(0x10); 
-        te_csr->cfg_table_property[tbl_ctx.stage_tableid].write();
+        te_csr->cfg_table_property[stage_tableid_txdma_act].max_bypass_cnt(0x10); 
+        te_csr->cfg_table_property[stage_tableid_txdma_act].write();
     }
 
     return CAPRI_OK ;
@@ -572,8 +557,8 @@ capri_p4p_stage_id_init() {
     cap0.tpc.pics.cfg_stage_id.write();
 }
 
-static void
-capri_deparser_init() {
+void
+capri_deparser_init(int tm_port_ingress, int tm_port_egress) {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cpp_int recirc_rw_bm = 0;
     // Ingress deparser is indexed with 1
@@ -582,10 +567,10 @@ capri_deparser_init() {
     cap0.dpr.dpr[1].cfg_global_2.drop_max_recirc_cnt(1);
     // Drop after 4 recircs
     cap0.dpr.dpr[1].cfg_global_2.max_recirc_cnt(4);
-    cap0.dpr.dpr[1].cfg_global_2.recirc_oport(TM_PORT_INGRESS);
+    cap0.dpr.dpr[1].cfg_global_2.recirc_oport(tm_port_ingress);
     cap0.dpr.dpr[1].cfg_global_2.clear_recirc_bit_en(1);
-    recirc_rw_bm |= 1<<TM_PORT_INGRESS;
-    recirc_rw_bm |= 1<<TM_PORT_EGRESS;
+    recirc_rw_bm |= 1<<tm_port_ingress;
+    recirc_rw_bm |= 1<<tm_port_egress;
     cap0.dpr.dpr[1].cfg_global_2.recirc_rw_bm(recirc_rw_bm);
     cap0.dpr.dpr[1].cfg_global_2.write();
     // Egress deparser is indexed with 0
@@ -742,25 +727,11 @@ int capri_table_rw_init()
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
 
-    /* Initialize the deparsers */
-    capri_deparser_init();
-
-    /* Fill up table base address and action-pcs */
-
-    /* Program p4 HBM table start addr in table property config. */
-    capri_program_hbm_table_base_addr();
-
 #ifndef GFT
-    /* Program p4plus table config properties. */
-    capri_table_p4plus_init();
-
     capri_p4plus_table_mpu_base_init();
 
     /* Program p4plus recirc parameters. */
     capri_p4plus_recirc_init();
-
-    /* Program Toeplitz table */
-    capri_toeplitz_init();
 
     /* Timers */
     capri_timer_init();

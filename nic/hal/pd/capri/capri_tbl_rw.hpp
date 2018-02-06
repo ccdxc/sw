@@ -120,4 +120,15 @@ void capri_program_table_mpu_pc(int tableid, bool gress, int stage, int stage_ta
 
 void capri_timer_init_helper(uint32_t key_lines);
 
+int capri_toeplitz_init(int stage, int stage_tableid);
+
+int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
+                            int stage_apphdr_off, int stage_tableid_apphdr_off,
+                            int stage_txdma_act, int stage_tableid_txdma_act);
+
+void capri_deparser_init(int tm_port_ingress, int tm_port_egress);
+
+void capri_program_hbm_table_base_addr(int stage_tableid, char *tablename,
+                                       int stage, bool ingress);
+
 #endif

@@ -52,7 +52,7 @@ namespace pd {
 
 class hal_state_pd *g_hal_state_pd;
 
-/**** Iris specific capri inits - START ****/
+/**** START: Iris specific capri inits ****/
 /* TODO: These functions need to be moved to asic-pd common layer */
 hal_ret_t
 p4pd_capri_stats_region_init(void)
@@ -101,7 +101,41 @@ p4pd_capri_stats_region_init(void)
     assert(stats_base_addr <  (stats_region_start +  stats_region_size));
     return HAL_RET_OK;
 }
-/**** Iris specific capri inits - END ****/
+
+hal_ret_t
+p4pd_capri_toeplitz_init (void)
+{
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
+                                     &tbl_ctx);
+    capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_capri_p4plus_table_init (void)
+{
+    p4pd_table_properties_t tbl_ctx_apphdr;
+    p4pd_table_properties_t tbl_ctx_apphdr_off;
+    p4pd_table_properties_t tbl_ctx_txdma_act;
+    
+    /* P4 plus table inits */
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+                                     &tbl_ctx_apphdr);
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
+                                     &tbl_ctx_apphdr_off);
+    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0,
+                                     &tbl_ctx_txdma_act);
+    capri_p4plus_table_init(tbl_ctx_apphdr.stage,
+                            tbl_ctx_apphdr.stage_tableid,
+                            tbl_ctx_apphdr_off.stage,
+                            tbl_ctx_apphdr_off.stage_tableid,
+                            tbl_ctx_txdma_act.stage,
+                            tbl_ctx_txdma_act.stage_tableid);
+    return (HAL_RET_OK);
+}
+
+/**** END: Iris specific capri inits ****/
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the slabs
@@ -1164,6 +1198,8 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
     /**** Iris specific capri inits ****/
     // initialize the p4pd stats region
     HAL_ASSERT(p4pd_capri_stats_region_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_toeplitz_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_p4plus_table_init() == HAL_RET_OK);
 
     /* Common asic pd init - Must be called after capri asic init */
     p4pd_asic_init(&p4pd_cfg);
