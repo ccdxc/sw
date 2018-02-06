@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #pragma once
 
 #include <spdlog/fmt/ostr.h>
@@ -52,20 +54,82 @@
  * log("m={}", m); 
  */
 
-#define HAL_LOG(level, args...) \
-    if(hal::utils::hal_logger()) hal::utils::hal_logger()->log(level, args)
-#define HAL_LOG_IF(cond, level, args...) \
-    if(hal::utils::hal_logger()) hal::utils::hal_logger()->log(cond, level, args)
+#define HAL_TRACE_ERR(args, ...)                                               \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->error("[{}:{}] " args, __func__, __LINE__,   \
+                                        ##__VA_ARGS__);                        \
+    }                                                                          \
+} while (0)
 
-#define HAL_TRACE_ERR(args...) HAL_LOG(spdlog::level::err, args)
-#define HAL_TRACE_WARN(args...) HAL_LOG(spdlog::level::warn, args)
-#define HAL_TRACE_INFO(args...) HAL_LOG(spdlog::level::info, args)
-#define HAL_TRACE_DEBUG(args...) HAL_LOG(spdlog::level::debug, args)
+#define HAL_TRACE_ERR_NO_META(args...)                                         \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->error(args);                                 \
+    }                                                                          \
+} while (0)
 
-#define HAL_ERR_IF(cond, args...) HAL_LOG_IF(cond, spdlog::level::err, args)
-#define HAL_WARN_IF(cond, args...)  HAL_LOG_IF(cond, spdlog::level::warn, args)
-#define HAL_INFO_IF(cond, args...)  HAL_LOG_IF(cond, spdlog::level::info, args)
-#define HAL_DEBUG_IF(cond, args...) HAL_LOG_IF(cond, spdlog::level::debug, args)
+#define HAL_TRACE_WARN(args, ...)                                              \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->warn("[{}:{}] " args, __func__, __LINE__,    \
+                                       ##__VA_ARGS__);                         \
+    }                                                                          \
+} while (0)
+
+#define HAL_TRACE_INFO(args, ...)                                              \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->info("[{}:{}] " args, __func__, __LINE__,    \
+                                       ##__VA_ARGS__);                         \
+    }                                                                          \
+} while (0)
+
+#define HAL_TRACE_DEBUG(args, ...)                                             \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->debug("[{}:{}] " args, __func__, __LINE__,   \
+                                        ##__VA_ARGS__);                        \
+    }                                                                          \
+} while (0)
+
+#define HAL_TRACE_DEBUG_NO_META(args...)                                       \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->debug(args);                                 \
+    }                                                                          \
+} while (0)
+
+#define HAL_ERR_IF(cond, args, ...)                                            \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->error_if("[{}:{}] "  args,                   \
+                                           __func__, __LINE__, ##__VA_ARGS__); \
+    }                                                                          \
+} while (0)
+#define HAL_WARN_IF(cond, args, ...)                                           \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->warn_if("[{}:{}] "  args,                    \
+                                           __func__, __LINE__, ##__VA_ARGS__); \
+    }                                                                          \
+} while (0)
+
+#define HAL_INFO_IF(cond, args, ...)                                           \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->info_if("[{}:{}] "  args,                    \
+                                           __func__, __LINE__, ##__VA_ARGS__); \
+    }                                                                          \
+} while (0)
+
+#define HAL_DEBUG_IF(cond, args, ...)                                          \
+do {                                                                           \
+    if (hal::utils::hal_logger()) {                                            \
+        hal::utils::hal_logger()->debug_if("[{}:{}] "  args,                   \
+                                           __func__, __LINE__, ##__VA_ARGS__); \
+    }                                                                          \
+} while (0)
 
 namespace hal {
 namespace utils {

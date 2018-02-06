@@ -414,7 +414,7 @@ Flow::generate_hash_(void *key, uint32_t key_len, bool log)
 
     if (log) {
         HAL_TRACE_DEBUG("Key:");
-        HAL_TRACE_DEBUG(buf.c_str());
+        HAL_TRACE_DEBUG("{}", buf.c_str());
     }
 
 	switch(hash_poly_) {

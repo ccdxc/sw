@@ -307,7 +307,7 @@ acl_spec_print (AclSpec& spec)
         }
     }
 
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
     return ret;
 }
 

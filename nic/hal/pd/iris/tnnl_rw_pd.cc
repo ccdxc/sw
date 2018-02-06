@@ -57,7 +57,7 @@ tnnl_rw_entry_key_trace(pd_tnnl_rw_entry_key_t *tnnl_rw_key)
     buf.write("ip_type: {}, ", tnnl_rw_key->ip_type);
     buf.write("vlan_v: {}, vlan_id {} ]", tnnl_rw_key->vlan_valid, 
               tnnl_rw_key->vlan_id);
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 
     return HAL_RET_OK;
 }

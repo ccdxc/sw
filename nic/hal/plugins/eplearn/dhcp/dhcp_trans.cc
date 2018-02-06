@@ -328,7 +328,7 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request_after_bound(
     dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
     fte::ctx_t *fte_ctx = data->fte_ctx;
     const struct packet *decoded_packet = data->decoded_packet;
-    ep_t *ep_entry;
+    ep_t *ep_entry = fte_ctx->sep();
     hal_ret_t ret;
     struct option_data option_data;
     eplearn_info_t *eplearn_info = (eplearn_info_t*)\

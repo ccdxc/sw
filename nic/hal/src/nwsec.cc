@@ -447,6 +447,7 @@ nwsec_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
+
     return ret;
 }
 
@@ -501,7 +502,9 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // 3. Free PI vrf
     nwsec_profile_free(nwsec);
+
 end:
+
     return ret;
 }
 
@@ -641,10 +644,9 @@ security_profile_spec_print (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(multicast_src_drop);
     buf.write("\n");
 
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
     return ret;
 }
-
 
 // create an instance of security profile
 hal_ret_t

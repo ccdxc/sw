@@ -73,7 +73,7 @@ ReplEntry::trace_repl_entry()
     for (uint32_t i = 0; i < data_len_; i++, ptr++) {
         buf.write("{:#x} ", (uint8_t)*ptr);
     }
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 
     return ret;
 }

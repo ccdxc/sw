@@ -60,8 +60,8 @@ public:
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_allocs++;
-            HAL_TRACE_DEBUG("mem_allocation for id: {}, allocs:{}", 
-                            alloc_id, it->second->num_allocs);
+            //HAL_TRACE_DEBUG("mem_allocation for id: {}, allocs:{}", 
+                            //alloc_id, it->second->num_allocs);
         } else {
             mtrack_info = (mtrack_info_t *)calloc(1, sizeof(mtrack_info_t));
             if (mtrack_info == NULL) {
@@ -100,8 +100,8 @@ public:
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_frees++;
-            HAL_TRACE_DEBUG("mem_free for id: {}, frees:{}", 
-                            alloc_id, it->second->num_frees);
+            //HAL_TRACE_DEBUG("mem_free for id: {}, frees:{}", 
+                            //alloc_id, it->second->num_frees);
             if (it->second->num_frees == it->second->num_allocs) {
                 // we can free this state now
                 free_mem = true;

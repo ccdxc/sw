@@ -148,7 +148,7 @@ vrf_spec_print (VrfSpec& spec)
     ip_pfx_spec_to_pfx_spec(&gipo_pfx, spec.gipo_prefix());
     buf.write("my_tep:{}, gipo_pfx:{}/{}", ipaddr2str(&my_tep), ipaddr2str(&gipo_pfx.addr), gipo_pfx.len);
 
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
     return ret;
 }
 

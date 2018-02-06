@@ -32,7 +32,7 @@ rw_entry_pd_compute_hash_func (void *key, uint32_t ht_size)
 // compare func.
 //-----------------------------------------------------------------------------
 bool
-rw_entry_pd_compare_key_func(void *key1, void *key2)
+rw_entry_pd_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
 	if (!memcmp(key1, key2, sizeof(pd_rw_entry_key_t))) {
@@ -45,7 +45,7 @@ rw_entry_pd_compare_key_func(void *key1, void *key2)
 // Find an entry 
 //-----------------------------------------------------------------------------
 hal_ret_t
-rw_entry_find(pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
+rw_entry_find (pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
 {
 	hal_ret_t 		    ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
@@ -64,11 +64,12 @@ rw_entry_find(pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
                 rw_key->rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-        HAL_TRACE_DEBUG(buf.c_str());
+        HAL_TRACE_DEBUG("{}", buf.c_str());
 
     }
 
 end:
+
     return ret;
 }
 
@@ -76,8 +77,8 @@ end:
 // Allocate an entry 
 //-----------------------------------------------------------------------------
 hal_ret_t
-rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info, 
-               uint32_t *rw_idx)
+rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
+                uint32_t *rw_idx)
 {
 	hal_ret_t 			ret = HAL_RET_OK;
 	uint32_t			tmp_rw_idx = 0;
@@ -113,7 +114,7 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
                     g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(), rw_key->rw_act);
             buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
             buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-            HAL_TRACE_ERR(buf.c_str());
+            HAL_TRACE_ERR("{}", buf.c_str());
             ret = HAL_RET_NO_RESOURCE;
         }
     }
@@ -135,13 +136,11 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     rwe->ref_cnt++;
 
 	buf.write("PD-RW: Usage: {} ref_cnt: {} Allocated rw_id: {} for [ rw_act: {}, ",
-					g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
-                    rwe->ref_cnt,
-				    tmp_rw_idx, 
-					rw_key->rw_act);
+              g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
+              rwe->ref_cnt, tmp_rw_idx, rw_key->rw_act);
     buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
     buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 
     // Program HW
     ret = rw_pd_pgm_rw_tbl(rwe);
@@ -154,6 +153,7 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     }
 
 end:
+
 	return ret;
 } 
 
@@ -187,17 +187,19 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
                   rw_key->rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-        HAL_TRACE_DEBUG(buf.c_str());
+        HAL_TRACE_DEBUG("{}", buf.c_str());
         goto end;
     }
     
     ret = rw_entry_alloc(rw_key, NULL, rw_idx);
+
  end:
+
     return ret;
 }
 
 hal_ret_t
-pd_rw_entry_find_or_alloc(pd_rw_entry_find_or_alloc_args_t *rw_args)
+pd_rw_entry_find_or_alloc (pd_rw_entry_find_or_alloc_args_t *rw_args)
 {
     pd_rw_entry_key_t   rw_key{};
     pd_rw_entry_args_t *args = rw_args->args;
@@ -219,7 +221,7 @@ pd_rw_entry_find_or_alloc(pd_rw_entry_find_or_alloc_args_t *rw_args)
 // Delete the rw entry
 //-----------------------------------------------------------------------------
 hal_ret_t
-rw_entry_delete(pd_rw_entry_key_t *rw_key) 
+rw_entry_delete (pd_rw_entry_key_t *rw_key) 
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_rw_entry_t       *rwe = NULL;
@@ -248,7 +250,7 @@ rw_entry_delete(pd_rw_entry_key_t *rw_key)
             rw_key->rw_act);
     buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rw_key->mac_sa));
     buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rw_key->mac_da));
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 
     if (rwe->ref_cnt == 0) {
 
@@ -274,6 +276,7 @@ rw_entry_delete(pd_rw_entry_key_t *rw_key)
     }
 
 end:
+
     return ret;
 }
 
@@ -281,7 +284,7 @@ end:
 // Deprogramming the hw entry
 //-----------------------------------------------------------------------------
 hal_ret_t
-rw_pd_depgm_rw_tbl(pd_rw_entry_t *rwe) 
+rw_pd_depgm_rw_tbl (pd_rw_entry_t *rwe) 
 {
     hal_ret_t            ret = HAL_RET_OK;
     sdk_ret_t            sdk_ret;
@@ -306,7 +309,7 @@ rw_pd_depgm_rw_tbl(pd_rw_entry_t *rwe)
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
     }
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 
     return ret;
 }
@@ -315,7 +318,7 @@ rw_pd_depgm_rw_tbl(pd_rw_entry_t *rwe)
 // Programming the hw entry
 //-----------------------------------------------------------------------------
 hal_ret_t
-rw_pd_pgm_rw_tbl(pd_rw_entry_t *rwe)
+rw_pd_pgm_rw_tbl (pd_rw_entry_t *rwe)
 {
     hal_ret_t            ret = HAL_RET_OK;
     sdk_ret_t            sdk_ret;
@@ -349,7 +352,7 @@ rw_pd_pgm_rw_tbl(pd_rw_entry_t *rwe)
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
     }
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 
     return ret;
 }

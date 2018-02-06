@@ -257,7 +257,7 @@ hal_api_trace (const char *trace)
     for (int i = 0; i < NUM_DASHES; i++) {
         buf.write("{}", "-");
     }
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 }
 
 //-----------------------------------------------------------------------------

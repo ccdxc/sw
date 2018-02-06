@@ -554,12 +554,12 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
         src_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_src[i]);
     }
     HAL_TRACE_DEBUG("Src:");
-    HAL_TRACE_DEBUG(src_buf.c_str());
+    HAL_TRACE_DEBUG("{}", src_buf.c_str());
     for (uint32_t i = 0; i < 16; i++) {
         dst_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_dst[i]);
     }
     HAL_TRACE_DEBUG("Dst:");
-    HAL_TRACE_DEBUG(dst_buf.c_str());
+    HAL_TRACE_DEBUG("{}", dst_buf.c_str());
     ret = g_hal_state_pd->flow_table()->insert(&key, &flow_data,
                                                &flow_pd->flow_hash_hw_id);
     // TODO: Cleanup. Dont return flow coll from lib.

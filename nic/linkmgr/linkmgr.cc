@@ -86,7 +86,7 @@ sdk_error_logger (const char *format, ...)
 
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
-    HAL_TRACE_ERR(logbuf);
+    HAL_TRACE_ERR_NO_META("{}", logbuf);
     va_end(args);
 
     return 0;
@@ -100,7 +100,7 @@ sdk_debug_logger (const char *format, ...)
 
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
-    HAL_TRACE_DEBUG(logbuf);
+    HAL_TRACE_DEBUG_NO_META("{}", logbuf);
     va_end(args);
 
     return 0;

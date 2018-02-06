@@ -1500,7 +1500,7 @@ lif_print(lif_t *lif)
             buf.write("if_id: {}, ", hal_if->if_id);
         }
     }
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -1543,7 +1543,7 @@ lif_spec_print (LifSpec& spec)
               spec.packet_filter().receive_promiscuous(),
               spec.packet_filter().receive_all_multicast());
 
-    HAL_TRACE_DEBUG(buf.c_str());
+    HAL_TRACE_DEBUG("{}", buf.c_str());
     return ret;
 }
 

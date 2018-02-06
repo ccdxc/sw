@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <chrono>
 #include "nic/utils/trace/trace.hpp"
 
@@ -13,17 +15,17 @@ static int cpu_id               = 0;
 //const auto LOG_MAX_FILESIZE = 10*1024*1024;
 //const auto LOG_MAX_FILES = 10;
 
-// This will be run in the worker thread spawned by spdlog. Return values
-// are ignored for setting the affinity, as this is not a critical operation.
+// this will be run in the context of worker thread(s) spawned by spdlog
 static void
-set_affinity (void) {
+set_cpu_affinity (void)
+{
     cpu_set_t cpus;
     CPU_ZERO(&cpus);
     CPU_SET(cpu_id, &cpus);
     pthread_t current_thread = pthread_self(); 
     pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpus);
 }
-const std::function<void()> worker_thread_pre_cb = set_affinity;
+const std::function<void()> worker_thread_pre_cb = set_cpu_affinity;
 
 void
 logger_init (int input_cpu_id, bool async_en)
@@ -39,8 +41,11 @@ logger_init (int input_cpu_id, bool async_en)
     //return spdlog::rotating_logger_mt("hal",LOG_FILENAME, LOG_MAX_FILESIZE, LOG_MAX_FILES);
 }
 
-logger* hal_logger() {
+logger *
+hal_logger (void)
+{
     return _logger.get();
 }
-}
-}
+
+}    // utils
+}    // namespace hal
