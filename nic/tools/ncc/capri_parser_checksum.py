@@ -428,12 +428,15 @@ class ParserCalField:
                                             self.dstField)
             assert self.l4_verify_len_field  != '', pdb.set_trace()
         elif 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys():
-            #TODO: Process constant from pragma expression
             if 'hdr_len_expr' in self.P4FieldListCalculation.\
                                     _parsed_pragmas['checksum'].keys():
                 self.hdrlen_verify_field = \
                    self.P4FieldListCalculation.\
                     _parsed_pragmas['checksum']['hdr_len_expr'].keys()[0]
+                param_list = get_pragma_param_list(self.P4FieldListCalculation.\
+                                                   _parsed_pragmas['checksum']['hdr_len_expr'])
+                self.end_adj_const = int(param_list[2])
+                assert param_list[1] == '+', pdb.set_trace()
             if 'verify_len' in \
                 self.P4FieldListCalculation._parsed_pragmas['checksum']:
                 self.l4_verify_len_field = self.P4FieldListCalculation._parsed_pragmas\

@@ -1216,9 +1216,7 @@ class Checksum:
                                                      shift_val=0)
             csum_profile_obj.CsumProfileStartAdjSet(addsub_start=0,\
                                                     start_adj=0)
-            #Since ihl*4 - 20 is captured in OHI, add 20Bytes to checksum len
-            csum_profile_obj.CsumProfileEndAdjSet(addsub_end=1,\
-                                                  end_adj=20)
+            csum_profile_obj.CsumProfileEndAdjSet(1, calfldobj.end_adj_const)
             csum_profile_obj.CsumProfilePhdrSet(addsub_phdr=0,\
                                                 phdr_adj=0)
             # 10th byte offset in ipv4 hdr where hdr checksum field is.
