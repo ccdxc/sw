@@ -12,7 +12,10 @@
 
 namespace queues {
 
-void queues_seq_pdma_num_set(uint64_t& num_pdma_queues);
+bool seq_queue_pdma_num_validate(const char *flag_name,
+                                  uint64_t value);
+
+void seq_queue_pdma_num_set(uint64_t& num_pdma_queues);
 
 int queues_setup();
 

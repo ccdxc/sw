@@ -203,7 +203,18 @@ void *queue_consume_entry(queues_t *queue, uint16_t *index) {
 }
 
 
-void queues_seq_pdma_num_set(uint64_t& num_pdma_queues) {
+bool seq_queue_pdma_num_validate(const char *flag_name,
+                                 uint64_t value) {
+   if ((value >= kPvmNumSeqPdmaSQs) && (value < kPvmNumSQs)) {
+       return true;
+   }
+
+   printf("Value for --%s (in power of 2) must be >= %d and <= %d\n",
+          flag_name, (int)kPvmNumSeqPdmaSQs, (int)kPvmNumSQs - 1);
+   return false;
+}
+
+void seq_queue_pdma_num_set(uint64_t& num_pdma_queues) {
 
     // Make adjustment for the number of seq SQs needed for PDMA testing.
     // Note num_pdma_queues denotes 2 ^ num_pdma_queues

@@ -93,7 +93,7 @@ int test_setup() {
   printf("Model client initialized\n");
 
   if (run_pdma_tests) {
-      queues::queues_seq_pdma_num_set(FLAGS_num_pdma_queues);
+      queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
   }
 
   // Initialize queues

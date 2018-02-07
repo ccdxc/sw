@@ -14,6 +14,7 @@
 
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/rdma.hpp"
+#include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/compression_test.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -26,8 +27,10 @@ DEFINE_string(test_group, "", "Test group to run");
 DEFINE_uint64(poll_interval, 60, "Polling interval in seconds");
 DEFINE_uint64(long_poll_interval, 300,
               "Polling interval for longer running tests in seconds");
-DEFINE_uint64(num_pdma_queues, 10,
+
+DEFINE_uint64(num_pdma_queues, 3,
               "number of queues for PDMA test (in power of 2)");
+DEFINE_validator(num_pdma_queues, &queues::seq_queue_pdma_num_validate);
 
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
@@ -176,7 +179,7 @@ int main(int argc, char**argv) {
       run_xts_tests = true;
       run_rdma_tests = true;
       run_comp_perf_tests = true;
-      run_pdma_tests = false; // keep this lengthy disabled by default
+      run_pdma_tests = true;
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
