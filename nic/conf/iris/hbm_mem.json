@@ -226,7 +226,7 @@
         },
         {
             "name": "storage",
-            "size_kb": 256
+            "size_kb": 4352
         },
         {
             "name": "ipfix",

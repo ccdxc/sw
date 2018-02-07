@@ -20,11 +20,6 @@
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
-namespace tests {
-void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
-                        uint8_t ring, uint16_t index);
-}
-
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;

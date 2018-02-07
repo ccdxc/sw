@@ -7,6 +7,10 @@
 #include "gflags/gflags.h"
 
 DECLARE_uint64(poll_interval);
+DECLARE_uint64(long_poll_interval);
+DECLARE_uint64(num_pdma_queues);
+
+extern bool run_pdma_tests;
 
 namespace tests {
 
@@ -169,6 +173,12 @@ int test_run_rdma_e2e_write();
 int test_run_rdma_e2e_read();
 
 int test_run_rdma_lif_override();
+
+int test_run_seq_pdma_multi_xfers();
+
+void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
+                        uint8_t ring, uint16_t index,
+                        bool suppress_log = false);
 
 struct TestEntry {
   std::function<int(void)> test_fn;

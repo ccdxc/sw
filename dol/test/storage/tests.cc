@@ -92,6 +92,10 @@ int test_setup() {
   }
   printf("Model client initialized\n");
 
+  if (run_pdma_tests) {
+      queues::seq_queue_pdma_num_set(FLAGS_num_pdma_queues);
+  }
+
   // Initialize queues
   if (queues::queues_setup() < 0) {
     printf("Failed to setup lif and queues \n");
@@ -148,13 +152,16 @@ int test_setup() {
 
 
 void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
-                        uint8_t ring, uint16_t index) {
+                        uint8_t ring, uint16_t index, 
+                        bool suppress_log) {
   uint64_t db_data;
   uint64_t db_addr;
 
   queues::get_host_doorbell(lif, qtype, qid, ring, index, &db_addr, &db_data);
 
-  printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
+  if (!suppress_log) {
+      printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
+  }
   step_doorbell(db_addr, db_data);
 }
 
@@ -1893,6 +1900,178 @@ int test_run_rdma_e2e_write() {
   IncrInitiatorRcvBufPtr();
 
   return rc;
+}
+
+int test_seq_pdma_write(uint16_t seq_pdma_q,
+                        void *curr_wr_buf,
+                        uint64_t curr_wr_hbm_buf,
+                        void *curr_db_data,
+                        uint32_t exp_db_data_value) {
+  uint16_t  seq_pdma_index;
+  uint8_t   *seq_pdma_desc;
+
+  // Sequencer #1: PDMA descriptor
+  seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q,
+                                                           &seq_pdma_index);
+  memset(seq_pdma_desc, 0, kSeqDescSize);
+
+  // Fill the PDMA descriptor
+  utils::write_bit_fields(seq_pdma_desc, 128, 64, host_mem_v2p(curr_wr_buf));
+  utils::write_bit_fields(seq_pdma_desc, 192, 64, curr_wr_hbm_buf);
+  utils::write_bit_fields(seq_pdma_desc, 256, 32, kDefaultBufSize);
+
+  // Form the interrupt add/data and enable it
+  utils::write_bit_fields(seq_pdma_desc, 312, 64, host_mem_v2p(curr_db_data));
+  utils::write_bit_fields(seq_pdma_desc, 376, 32, exp_db_data_value);
+  utils::write_bit_fields(seq_pdma_desc, 409, 1, 1);
+
+  // Kickstart the sequencer 
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+                     seq_pdma_index, true);
+  
+  return 0;
+}
+
+int test_seq_pdma_read(uint16_t seq_pdma_q,
+                       void *curr_rd_buf,
+                       uint64_t curr_rd_hbm_buf,
+                       void *curr_db_data,
+                       uint32_t exp_db_data_value) {
+  uint16_t  seq_pdma_index;
+  uint8_t   *seq_pdma_desc;
+
+  // Sequencer #1: PDMA descriptor
+  seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q,
+                                                           &seq_pdma_index);
+  memset(seq_pdma_desc, 0, kSeqDescSize);
+
+  // Fill the PDMA descriptor
+  utils::write_bit_fields(seq_pdma_desc, 128, 64, curr_rd_hbm_buf);
+  utils::write_bit_fields(seq_pdma_desc, 192, 64, host_mem_v2p(curr_rd_buf));
+  utils::write_bit_fields(seq_pdma_desc, 256, 32, kDefaultBufSize);
+  // Form the interrupt add/data and enable it
+  utils::write_bit_fields(seq_pdma_desc, 312, 64, host_mem_v2p(curr_db_data));
+  utils::write_bit_fields(seq_pdma_desc, 376, 32, exp_db_data_value);
+  utils::write_bit_fields(seq_pdma_desc, 409, 1, 1);
+
+  // Kickstart the sequencer 
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+                     seq_pdma_index, true);
+
+  return 0;
+}
+
+int test_run_seq_pdma_multi_xfers() {
+    uint32_t    *wr_seq_db_data;
+    uint32_t    *rd_seq_db_data;
+    uint32_t    *exp_seq_db_data;
+    void        *pdma_wr_buf;
+    void        **pdma_rd_buf;
+    uint64_t    pdma_wr_hbm_buf;
+    uint32_t    exp_db_data_value;
+    uint32_t    total_seq_db_data_size;
+    int         val_pdma_queues = NUM_TO_VAL(FLAGS_num_pdma_queues);
+    int         i;
+    int         rc;
+
+    assert(val_pdma_queues);
+    total_seq_db_data_size = kSeqDbDataSize * val_pdma_queues;
+    wr_seq_db_data = (uint32_t *)alloc_host_mem(total_seq_db_data_size);
+    assert(wr_seq_db_data);
+    rd_seq_db_data = (uint32_t *)alloc_host_mem(total_seq_db_data_size);
+    assert(rd_seq_db_data);
+    exp_seq_db_data = (uint32_t *)alloc_host_mem(total_seq_db_data_size);
+    assert(exp_seq_db_data);
+
+    // Write from the same source host buffer, but read into different
+    // destination host buffers
+    pdma_wr_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
+    assert(pdma_wr_buf);
+    memset(pdma_wr_buf, 0x55, kDefaultBufSize);
+    pdma_rd_buf = (void **)alloc_host_mem(sizeof(void *) * val_pdma_queues);
+    assert(pdma_rd_buf);
+    memset(pdma_rd_buf, 0, sizeof(void *) * val_pdma_queues);
+
+    // Set expected completion doorbell data value
+    exp_db_data_value = 0xdbdbdbdb;
+    memset(exp_seq_db_data, 0xdb, total_seq_db_data_size);
+    memset(wr_seq_db_data, 0, total_seq_db_data_size);
+    memset(rd_seq_db_data, 0, total_seq_db_data_size);
+    
+    for (i = 0; i < val_pdma_queues; i++) {
+
+        // Write from the same source host buffer, 
+        // but to different per-queue destination HBM buffers
+        assert(utils::hbm_addr_alloc_page_aligned(kDefaultBufSize,
+                                                  &pdma_wr_hbm_buf) == 0);
+        test_seq_pdma_write(queues::get_pvm_seq_pdma_sq(i), pdma_wr_buf,
+                            pdma_wr_hbm_buf, &wr_seq_db_data[i],
+                            exp_db_data_value);
+
+        // Read into different per-queue destination host buffers, 
+        // from the different per-queue source HBM buffers above
+        pdma_rd_buf[i] = alloc_page_aligned_host_mem(kDefaultBufSize);
+        assert(pdma_rd_buf[i]);
+        test_seq_pdma_read(queues::get_pvm_seq_pdma_sq(i), pdma_rd_buf[i],
+                           pdma_wr_hbm_buf, &rd_seq_db_data[i],
+                           exp_db_data_value);
+        if (i && ((i % 100) == 0)) {
+            printf("%s: submitted %d PDMA write/read transfer pairs\n",
+                   __FUNCTION__, i);
+        }
+    }
+
+    // Poll for DMA completion
+    auto dma_db_compl_verify = [wr_seq_db_data, rd_seq_db_data,
+                                exp_seq_db_data, total_seq_db_data_size] () {
+
+        if (memcmp(wr_seq_db_data, exp_seq_db_data, total_seq_db_data_size) ||
+            memcmp(rd_seq_db_data, exp_seq_db_data, total_seq_db_data_size)) {
+            return -1;
+        }
+        return 0;
+    };
+
+    Poller poll(FLAGS_long_poll_interval * FLAGS_num_pdma_queues * FLAGS_num_pdma_queues);
+    rc = poll(dma_db_compl_verify);
+
+    printf("%s: completed %d PDMA write/read transfer pairs. rc = %d\n",
+           __FUNCTION__, (int)val_pdma_queues, rc);
+    if (rc == 0) {
+        auto wr_rd_data_verify = [pdma_wr_buf, pdma_rd_buf] (int pos) {
+
+            if (memcmp(pdma_rd_buf[pos], pdma_wr_buf, kDefaultBufSize)) {
+                printf("%s: all transfers completed but read buffer %d "
+                       "has incorrect data\n", __FUNCTION__, pos);
+                return -1;
+            }
+            return 0;
+        };
+
+        // Verify 1st, middle, and last buffer data
+        rc = wr_rd_data_verify(0);
+        if (rc == 0) {
+            rc = wr_rd_data_verify(val_pdma_queues / 2);
+        }
+        if (rc == 0) {
+            rc = wr_rd_data_verify(val_pdma_queues - 1);
+        }
+    }
+
+    // There are no methods to free HBM memory but at least we can free
+    // allocated host buffers
+    for (i = 0; i < val_pdma_queues; i++) {
+        if (pdma_rd_buf[i]) {
+            free_host_mem(pdma_rd_buf[i]);
+        }
+    }
+    free_host_mem(pdma_rd_buf);
+    free_host_mem(pdma_wr_buf);
+    free_host_mem(exp_seq_db_data);
+    free_host_mem(rd_seq_db_data);
+    free_host_mem(wr_seq_db_data);
+
+    return rc;
 }
 
 int test_run_rdma_e2e_read() {
