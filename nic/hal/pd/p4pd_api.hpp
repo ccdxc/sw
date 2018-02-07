@@ -401,7 +401,7 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pluspd_rxdma_init();
+p4pd_error_t p4pluspd_rxdma_init(const char *pgm);
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures
@@ -570,7 +570,7 @@ p4pd_common_rxdma_actions_table_ds_decoded_string_get(uint32_t   tableid,
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pluspd_txdma_init ();
+p4pd_error_t p4pluspd_txdma_init(const char *pgm);
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures

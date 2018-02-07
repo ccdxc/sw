@@ -1,47 +1,41 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-//#include <stdio.h>
-//#include <string>
-//#include <errno.h>
-//#include <stdlib.h>
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
-//#include "nic/gen/iris/include/p4pd.h"
 #include "nic/gen/include/common_txdma_actions_p4pd_table.h"
-//#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 
 #define P4PD_CALLOC  calloc
 #define P4PD_FREE    free
 
-/* Key strings used in table packing json file */
-#define JKEY_TABLES             "tables"
-#define JKEY_TABLE_NAME         "name"
-#define JKEY_MATCH_TYPE         "match_type"
-#define JKEY_DIRECTION          "direction"
-#define JKEY_REGION             "region"
-#define JKEY_STAGE              "stage"
-#define JKEY_STAGE_TBL_ID       "stage_table_id"
-#define JKEY_NUM_ENTRIES        "num_entries"
-#define JKEY_TCAM               "tcam"
-#define JKEY_SRAM               "sram"
-#define JKEY_HBM                "hbm"
-#define JKEY_OVERFLOW           "overflow"
-#define JKEY_OVERFLOW_PARENT    "overflow_parent"
-#define JKEY_ENTRY_WIDTH        "entry_width"
-#define JKEY_ENTRY_WIDTH_BITS   "entry_width_bits"
-#define JKEY_ENTRY_START_INDEX  "entry_start_index"
-#define JKEY_ENTRY_END_INDEX    "entry_end_index"
-#define JKEY_TOP_LEFT_X         "layout.top_left.x"
-#define JKEY_TOP_LEFT_Y         "layout.top_left.y"
-#define JKEY_TOP_LEFT_BLOCK     "layout.top_left.block"
-#define JKEY_BTM_RIGHT_X        "layout.bottom_right.x"
-#define JKEY_BTM_RIGHT_Y        "layout.bottom_right.y"
-#define JKEY_BTM_RIGHT_BLOCK    "layout.bottom_right.block"
-#define JKEY_HASH_TYPE          "hash_type"
-#define JKEY_NUM_BUCKETS        "num_buckets"
+// key strings used in table packing json file
+#define JSON_KEY_TABLES             "tables"
+#define JSON_KEY_TABLE_NAME         "name"
+#define JSON_KEY_MATCH_TYPE         "match_type"
+#define JSON_KEY_DIRECTION          "direction"
+#define JSON_KEY_REGION             "region"
+#define JSON_KEY_STAGE              "stage"
+#define JSON_KEY_STAGE_TBL_ID       "stage_table_id"
+#define JSON_KEY_NUM_ENTRIES        "num_entries"
+#define JSON_KEY_TCAM               "tcam"
+#define JSON_KEY_SRAM               "sram"
+#define JSON_KEY_HBM                "hbm"
+#define JSON_KEY_OVERFLOW           "overflow"
+#define JSON_KEY_OVERFLOW_PARENT    "overflow_parent"
+#define JSON_KEY_ENTRY_WIDTH        "entry_width"
+#define JSON_KEY_ENTRY_WIDTH_BITS   "entry_width_bits"
+#define JSON_KEY_ENTRY_START_INDEX  "entry_start_index"
+#define JSON_KEY_ENTRY_END_INDEX    "entry_end_index"
+#define JSON_KEY_TOP_LEFT_X         "layout.top_left.x"
+#define JSON_KEY_TOP_LEFT_Y         "layout.top_left.y"
+#define JSON_KEY_TOP_LEFT_BLOCK     "layout.top_left.block"
+#define JSON_KEY_BTM_RIGHT_X        "layout.bottom_right.x"
+#define JSON_KEY_BTM_RIGHT_Y        "layout.bottom_right.y"
+#define JSON_KEY_BTM_RIGHT_BLOCK    "layout.bottom_right.block"
+#define JSON_KEY_HASH_TYPE          "hash_type"
+#define JSON_KEY_NUM_BUCKETS        "num_buckets"
 
 static p4pd_table_properties_t *_p4plus_txdma_tbls;
 
@@ -91,15 +85,10 @@ p4pluspd_txdma_get_table_type (const char *match_type)
     return P4_TBL_TYPE_INVALID;
 }
 
-#ifdef P4PD_CLI
-#define P4PLUSPD_TXDMA_TBL_PACKING_JSON  "../../../gen/common_txdma_actions/p4pd/capri_p4_table_map.json"
-#else
-#define P4PLUSPD_TXDMA_TBL_PACKING_JSON  "table_maps/capri_p4_txdma_table_map.json"
-#endif
-
+#define P4PLUSPD_TXDMA_TBL_PACKING_JSON  "capri_p4_txdma_table_map.json"
 static
 p4pd_error_t
-p4pluspd_txdma_tbl_packing_json_parse ()
+p4pluspd_txdma_tbl_packing_json_parse (const char *pgm)
 {
     pt::ptree               json_pt;
     p4pd_table_properties_t *tbl;
@@ -108,7 +97,7 @@ p4pluspd_txdma_tbl_packing_json_parse ()
 
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
-         full_path =  std::string(cfg_path) + "/" + P4PLUSPD_TXDMA_TBL_PACKING_JSON;
+         full_path =  std::string(cfg_path) + "/" + std::string(pgm) + "/" + P4PLUSPD_TXDMA_TBL_PACKING_JSON;
      } else {
          printf("Please specify HAL_CONFIG_PATH env. variable ... ");
          exit(0);
@@ -118,12 +107,12 @@ p4pluspd_txdma_tbl_packing_json_parse ()
 
     read_json(tbl_json, json_pt);
     
-    boost::optional<pt::ptree&>table_pt = json_pt.get_child_optional(JKEY_TABLES);
+    boost::optional<pt::ptree&>table_pt = json_pt.get_child_optional(JSON_KEY_TABLES);
     if (!table_pt) {
         // Error
         return P4PD_FAIL;
     }
-    //int num_tables = json_pt.count(JKEY_TABLES);
+    //int num_tables = json_pt.count(JSON_KEY_TABLES);
     int num_tables = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX;
     _p4plus_txdma_tbls = (p4pd_table_properties_t*)P4PD_CALLOC(num_tables, 
                                                 sizeof(p4pd_table_properties_t));
@@ -134,12 +123,12 @@ p4pluspd_txdma_tbl_packing_json_parse ()
 
     // Iterator over all p4 tables packing data and build book keeping
     // DS used to read/write to device.
-    BOOST_FOREACH(pt::ptree::value_type &p4_tbl, json_pt.get_child(JKEY_TABLES)) {
-        std::string tablename = p4_tbl.second.get<std::string>(JKEY_TABLE_NAME);
-        std::string match_type = p4_tbl.second.get<std::string>(JKEY_MATCH_TYPE); 
-        std::string direction = p4_tbl.second.get<std::string>(JKEY_DIRECTION); 
-        std::string overflow  = p4_tbl.second.get<std::string>(JKEY_OVERFLOW); 
-        std::string overflow_parent  = p4_tbl.second.get<std::string>(JKEY_OVERFLOW_PARENT); 
+    BOOST_FOREACH(pt::ptree::value_type &p4_tbl, json_pt.get_child(JSON_KEY_TABLES)) {
+        std::string tablename = p4_tbl.second.get<std::string>(JSON_KEY_TABLE_NAME);
+        std::string match_type = p4_tbl.second.get<std::string>(JSON_KEY_MATCH_TYPE); 
+        std::string direction = p4_tbl.second.get<std::string>(JSON_KEY_DIRECTION); 
+        std::string overflow  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW); 
+        std::string overflow_parent  = p4_tbl.second.get<std::string>(JSON_KEY_OVERFLOW_PARENT); 
 
         int tableid = p4pluspd_txdma_get_tableid_from_tablename(tablename.c_str());
         if (tableid == -1) {
@@ -170,47 +159,47 @@ p4pluspd_txdma_tbl_packing_json_parse ()
 
         tbl->table_type = p4pluspd_txdma_get_table_type(match_type.c_str());
         tbl->gress = p4pluspd_txdma_get_table_direction(direction.c_str());
-        tbl->hash_type = p4_tbl.second.get<int>(JKEY_HASH_TYPE); 
+        tbl->hash_type = p4_tbl.second.get<int>(JSON_KEY_HASH_TYPE); 
 
-        tbl->stage = p4_tbl.second.get<int>(JKEY_STAGE); 
-        tbl->stage_tableid = p4_tbl.second.get<int>(JKEY_STAGE_TBL_ID); 
-        tbl->tabledepth = p4_tbl.second.get<int>(JKEY_NUM_ENTRIES); 
+        tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE); 
+        tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID); 
+        tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES); 
 
         /* Memory units used by the table */
-        boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JKEY_TCAM);
+        boost::optional<pt::ptree&>_tcam = p4_tbl.second.get_child_optional(JSON_KEY_TCAM);
         if (_tcam) {
-            tbl->tcam_layout.entry_width = _tcam.get().get<int>(JKEY_ENTRY_WIDTH);
-            tbl->tcam_layout.entry_width_bits = _tcam.get().get<int>(JKEY_ENTRY_WIDTH_BITS);
-            tbl->tcam_layout.start_index = _tcam.get().get<int>(JKEY_ENTRY_START_INDEX);
-            tbl->tcam_layout.end_index = _tcam.get().get<int>(JKEY_ENTRY_END_INDEX);
-            tbl->tcam_layout.top_left_x = _tcam.get().get<int>(JKEY_TOP_LEFT_X);
-            tbl->tcam_layout.top_left_y = _tcam.get().get<int>(JKEY_TOP_LEFT_Y);
-            tbl->tcam_layout.top_left_block = _tcam.get().get<int>(JKEY_TOP_LEFT_BLOCK);
-            tbl->tcam_layout.btm_right_x = _tcam.get().get<int>(JKEY_BTM_RIGHT_X);
-            tbl->tcam_layout.btm_right_y = _tcam.get().get<int>(JKEY_BTM_RIGHT_Y);
-            tbl->tcam_layout.btm_right_block = _tcam.get().get<int>(JKEY_BTM_RIGHT_BLOCK);
-            tbl->tcam_layout.num_buckets = _tcam.get().get<int>(JKEY_NUM_BUCKETS);
+            tbl->tcam_layout.entry_width = _tcam.get().get<int>(JSON_KEY_ENTRY_WIDTH);
+            tbl->tcam_layout.entry_width_bits = _tcam.get().get<int>(JSON_KEY_ENTRY_WIDTH_BITS);
+            tbl->tcam_layout.start_index = _tcam.get().get<int>(JSON_KEY_ENTRY_START_INDEX);
+            tbl->tcam_layout.end_index = _tcam.get().get<int>(JSON_KEY_ENTRY_END_INDEX);
+            tbl->tcam_layout.top_left_x = _tcam.get().get<int>(JSON_KEY_TOP_LEFT_X);
+            tbl->tcam_layout.top_left_y = _tcam.get().get<int>(JSON_KEY_TOP_LEFT_Y);
+            tbl->tcam_layout.top_left_block = _tcam.get().get<int>(JSON_KEY_TOP_LEFT_BLOCK);
+            tbl->tcam_layout.btm_right_x = _tcam.get().get<int>(JSON_KEY_BTM_RIGHT_X);
+            tbl->tcam_layout.btm_right_y = _tcam.get().get<int>(JSON_KEY_BTM_RIGHT_Y);
+            tbl->tcam_layout.btm_right_block = _tcam.get().get<int>(JSON_KEY_BTM_RIGHT_BLOCK);
+            tbl->tcam_layout.num_buckets = _tcam.get().get<int>(JSON_KEY_NUM_BUCKETS);
         }
-        boost::optional<pt::ptree&>_sram = p4_tbl.second.get_child_optional(JKEY_SRAM);
+        boost::optional<pt::ptree&>_sram = p4_tbl.second.get_child_optional(JSON_KEY_SRAM);
         if (_sram) {
-            tbl->sram_layout.entry_width = _sram.get().get<int>(JKEY_ENTRY_WIDTH);
-            tbl->sram_layout.entry_width_bits = _sram.get().get<int>(JKEY_ENTRY_WIDTH_BITS);
-            tbl->sram_layout.start_index = _sram.get().get<int>(JKEY_ENTRY_START_INDEX);
-            tbl->sram_layout.end_index = _sram.get().get<int>(JKEY_ENTRY_END_INDEX);
-            tbl->sram_layout.top_left_x = _sram.get().get<int>(JKEY_TOP_LEFT_X);
-            tbl->sram_layout.top_left_y = _sram.get().get<int>(JKEY_TOP_LEFT_Y);
-            tbl->sram_layout.top_left_block = _sram.get().get<int>(JKEY_TOP_LEFT_BLOCK);
-            tbl->sram_layout.btm_right_x = _sram.get().get<int>(JKEY_BTM_RIGHT_X);
-            tbl->sram_layout.btm_right_y = _sram.get().get<int>(JKEY_BTM_RIGHT_Y);
-            tbl->sram_layout.btm_right_block = _sram.get().get<int>(JKEY_BTM_RIGHT_BLOCK);
-            tbl->sram_layout.num_buckets = _sram.get().get<int>(JKEY_NUM_BUCKETS);
+            tbl->sram_layout.entry_width = _sram.get().get<int>(JSON_KEY_ENTRY_WIDTH);
+            tbl->sram_layout.entry_width_bits = _sram.get().get<int>(JSON_KEY_ENTRY_WIDTH_BITS);
+            tbl->sram_layout.start_index = _sram.get().get<int>(JSON_KEY_ENTRY_START_INDEX);
+            tbl->sram_layout.end_index = _sram.get().get<int>(JSON_KEY_ENTRY_END_INDEX);
+            tbl->sram_layout.top_left_x = _sram.get().get<int>(JSON_KEY_TOP_LEFT_X);
+            tbl->sram_layout.top_left_y = _sram.get().get<int>(JSON_KEY_TOP_LEFT_Y);
+            tbl->sram_layout.top_left_block = _sram.get().get<int>(JSON_KEY_TOP_LEFT_BLOCK);
+            tbl->sram_layout.btm_right_x = _sram.get().get<int>(JSON_KEY_BTM_RIGHT_X);
+            tbl->sram_layout.btm_right_y = _sram.get().get<int>(JSON_KEY_BTM_RIGHT_Y);
+            tbl->sram_layout.btm_right_block = _sram.get().get<int>(JSON_KEY_BTM_RIGHT_BLOCK);
+            tbl->sram_layout.num_buckets = _sram.get().get<int>(JSON_KEY_NUM_BUCKETS);
         }
-        boost::optional<pt::ptree&>_hbm = p4_tbl.second.get_child_optional(JKEY_HBM);
+        boost::optional<pt::ptree&>_hbm = p4_tbl.second.get_child_optional(JSON_KEY_HBM);
         if (_hbm) {
             tbl->table_location = P4_TBL_LOCATION_HBM;
-            tbl->hbm_layout.entry_width = _hbm.get().get<int>(JKEY_ENTRY_WIDTH);
-            tbl->hbm_layout.start_index = _hbm.get().get<int>(JKEY_ENTRY_START_INDEX);
-            tbl->hbm_layout.end_index = _hbm.get().get<int>(JKEY_ENTRY_END_INDEX);
+            tbl->hbm_layout.entry_width = _hbm.get().get<int>(JSON_KEY_ENTRY_WIDTH);
+            tbl->hbm_layout.start_index = _hbm.get().get<int>(JSON_KEY_ENTRY_START_INDEX);
+            tbl->hbm_layout.end_index = _hbm.get().get<int>(JSON_KEY_ENTRY_END_INDEX);
         } else {
             tbl->table_location = P4_TBL_LOCATION_PIPE;
         }
@@ -225,12 +214,12 @@ p4pluspd_txdma_cleanup (void)
 }
 
 p4pd_error_t
-p4pluspd_txdma_init (void)
+p4pluspd_txdma_init (const char *pgm)
 {
     p4pd_common_txdma_actions_prep_p4tbl_names();
     p4pd_common_txdma_actions_prep_p4tbl_sw_struct_sizes();
 
-    if (p4pluspd_txdma_tbl_packing_json_parse() != P4PD_SUCCESS) {
+    if (p4pluspd_txdma_tbl_packing_json_parse(pgm) != P4PD_SUCCESS) {
         P4PD_FREE(_p4plus_txdma_tbls);
         return P4PD_FAIL;
     }

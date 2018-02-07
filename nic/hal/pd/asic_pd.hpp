@@ -16,6 +16,7 @@ typedef struct asic_cfg_s {
     std::string      loader_info_file;
     bool             init_with_pbc_hbm;
     uint32_t         admin_cos;
+    std::string      pgm_name;
 } asic_cfg_t;
 
 // asic init

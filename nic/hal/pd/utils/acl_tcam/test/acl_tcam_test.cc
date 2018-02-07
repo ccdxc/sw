@@ -329,7 +329,7 @@ TEST_F(acl_tcam_test, test4)
 int main(int argc, char **argv)
 {
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file = "table_maps/capri_p4_table_map.json",
+        .table_map_cfg_file = "iris/capri_p4_table_map.json",
         .p4pd_pgm_name = "iris"
     };
 

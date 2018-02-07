@@ -113,10 +113,12 @@ capri_default_config_verify (void)
 hal_ret_t
 hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
 {
-    capri_cfg_t capri_cfg;
+    capri_cfg_t    capri_cfg;
+
     capri_cfg.loader_info_file = cfg->loader_info_file;
     capri_cfg.init_with_pbc_hbm = cfg->init_with_pbc_hbm;
     capri_cfg.admin_cos = cfg->admin_cos;
+    capri_cfg.pgm_name = cfg->pgm_name;
     return capri_init(&capri_cfg);
 }
 
@@ -141,7 +143,7 @@ capri_timer_hbm_init (void)
 }
 
 static hal_ret_t
-capri_p4_asm_init (void)
+capri_p4_asm_init (capri_cfg_t *cfg)
 {
     hal_ret_t      ret = HAL_RET_OK;
     uint64_t       p4_prm_base_addr;
@@ -150,7 +152,7 @@ capri_p4_asm_init (void)
 
     cfg_path = getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + "asm_bin";
+        full_path =  std::string(cfg_path) + "/" + cfg->pgm_name + "/" + "asm_bin";
     } else {
         HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
@@ -172,7 +174,7 @@ capri_p4_asm_init (void)
 }
 
 static hal_ret_t
-capri_p4_pgm_init (void)
+capri_p4_pgm_init (capri_cfg_t *cfg)
 {
     hal_ret_t      ret = HAL_RET_OK;
     char           *cfg_path;
@@ -180,7 +182,7 @@ capri_p4_pgm_init (void)
 
     cfg_path = getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + "pgm_bin";
+        full_path =  std::string(cfg_path) + "/" + cfg->pgm_name + "/" + "pgm_bin";
     } else {
         HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
@@ -693,11 +695,11 @@ capri_p4p_asm_init (void)
 }
 
 static hal_ret_t
-capri_hbm_regions_init (void)
+capri_hbm_regions_init (capri_cfg_t *cfg)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    ret = capri_p4_asm_init();
+    ret = capri_p4_asm_init(cfg);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -707,7 +709,7 @@ capri_hbm_regions_init (void)
         return ret;
     }
 
-    ret = capri_p4_pgm_init();
+    ret = capri_p4_pgm_init(cfg);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -738,9 +740,9 @@ capri_init (capri_cfg_t *cfg = NULL)
         (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     HAL_ASSERT(hal_cfg);
 
-    ret = capri_hbm_parse();
+    ret = capri_hbm_parse(cfg->pgm_name.c_str());
 
-    ret = capri_hbm_regions_init();
+    ret = capri_hbm_regions_init(cfg);
     
     if (capri_table_rw_init()) {
         return HAL_RET_ERR;

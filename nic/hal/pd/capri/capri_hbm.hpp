@@ -24,7 +24,7 @@ typedef struct capri_hbm_region_s {
     uint64_t    start_offset;
 } capri_hbm_region_t;
 
-hal_ret_t capri_hbm_parse();
+hal_ret_t capri_hbm_parse(const char *pgm_name);
 uint64_t get_hbm_base(void);
 uint64_t get_hbm_offset(const char *reg_name);
 uint64_t get_start_offset(const char *reg_name);

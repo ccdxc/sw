@@ -1406,7 +1406,7 @@ TEST_F(gft_test, test1) {
     int ret = 0;
     uint64_t asm_base_addr;
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file = "../gen/gft/p4pd/capri_p4_table_map.json",
+        .table_map_cfg_file = "gft/capri_p4_table_map.json",
         .p4pd_pgm_name = "gft"
     };
     const char *hal_conf_file = "conf/hal.json";
@@ -1417,7 +1417,7 @@ TEST_F(gft_test, test1) {
     ASSERT_NE(ret, -1);
     ret = capri_load_config((char *)"obj/gft/pgm_bin");
     ASSERT_NE(ret, -1);
-    ret = capri_hbm_parse();
+    ret = capri_hbm_parse("gft");
     ASSERT_NE(ret, -1);
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     ret = capri_load_mpu_programs("gft", (char *)"obj/gft/asm_bin",

@@ -7,6 +7,7 @@ typedef struct capri_cfg_s {
     std::string      loader_info_file;
     bool             init_with_pbc_hbm;
     uint32_t         admin_cos;
+    std::string      pgm_name;
 } capri_cfg_t;
 
 hal_ret_t capri_init(capri_cfg_t *hal_cfg);

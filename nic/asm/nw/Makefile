@@ -7,7 +7,7 @@ include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 
 PROJ = iris
-OBJ_DIR = ../../obj/asm_bin
+OBJ_DIR = ../../obj/iris/asm_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR)
 SRC_DIR = .

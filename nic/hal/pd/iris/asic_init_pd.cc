@@ -8,9 +8,8 @@ namespace pd {
 hal_ret_t
 pd_asic_init (pd_asic_init_args_t *args) 
 {
-
+    args->cfg->pgm_name = std::string("iris");
     asic_init(args->cfg);
-
     return HAL_RET_OK;
 }
 }    // namespace pd

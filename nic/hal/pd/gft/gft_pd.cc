@@ -658,6 +658,7 @@ pd_gft_exact_match_flow_entry_create (pd_gft_args_t *gft_args)
 hal_ret_t
 pd_asic_init (pd_asic_init_args_t *args)
 {
+    args->cfg->pgm_name = std::string("gft");
     asic_init(args->cfg);
     return HAL_RET_OK;
 }

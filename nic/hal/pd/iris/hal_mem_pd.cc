@@ -938,7 +938,7 @@ hal_state_pd::init_tables(void)
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "table_maps/capri_p4_table_map.json",
+        .table_map_cfg_file = "iris/capri_p4_table_map.json",
         .p4pd_pgm_name = "iris"
     };
 
@@ -1078,7 +1078,7 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
     memset(&ctinfo, 0, sizeof(ctinfo));
 
     // parse the NCC generated table info file for p4+ tables
-    rc = p4pluspd_rxdma_init();
+    rc = p4pluspd_rxdma_init("iris");
     HAL_ASSERT(rc == P4PD_SUCCESS);
 
     // start instantiating tables based on the parsed information
@@ -1127,7 +1127,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
     memset(&ctinfo, 0, sizeof(ctinfo));
 
     // parse the NCC generated table info file for p4+ tables
-    rc = p4pluspd_txdma_init();
+    rc = p4pluspd_txdma_init("iris");
     HAL_ASSERT(rc == P4PD_SUCCESS);
 
     // start instantiating tables based on the parsed information
@@ -1205,7 +1205,7 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
 {
     hal_ret_t   ret = HAL_RET_OK;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file = "table_maps/capri_p4_table_map.json",
+        .table_map_cfg_file = "iris/capri_p4_table_map.json",
         .p4pd_pgm_name = "iris"
     };
     
