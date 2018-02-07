@@ -64,6 +64,7 @@ lib:
 	bazel $(BZL_OPT) build $(BUILD_OPTS) examples/...
 	@echo Copying over libs ...
 	@find bazel-bin/lib -name "*.so" ! -name '*_*' -exec cp {} obj \;
+	@find bazel-bin/linkmgr -name "*.so" ! -name '*_*' -exec cp {} obj \;
 	@chmod 755 obj/*.so
 
 test: lib build-test

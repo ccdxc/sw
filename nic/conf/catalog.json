@@ -1,6 +1,10 @@
 {
     "card_index" : "10010",
 
+    "max_mpu_per_stage" : "4",
+
+    "mpu_trace_size" : "2048",
+
     "num_asics" : "1",
     "asics" :
     [

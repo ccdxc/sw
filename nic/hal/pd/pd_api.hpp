@@ -1500,6 +1500,28 @@ typedef struct pd_debug_cli_read_args_s {
     void     *actiondata;
 } __PACK__ pd_debug_cli_read_args_t;
 
+// pipeline type for MPU tracing
+typedef enum pd_mpu_trace_pipeline_type_e {
+    MPU_TRACE_PIPELINE_NONE,
+    MPU_TRACE_PIPELINE_P4_INGRESS,
+    MPU_TRACE_PIPELINE_P4_EGRESS,
+} pd_mpu_trace_pipeline_type_t;
+
+// MPU tracing
+typedef struct pd_mpu_trace_enable_args_s {
+    uint32_t                     stage_id;
+    uint32_t                     mpu;
+    pd_mpu_trace_pipeline_type_t pipeline_type;
+    uint32_t                     mpu_trace_size;
+    uint32_t                     max_mpu_per_stage;
+    uint64_t                     base_addr;
+    uint32_t                     buf_size;
+    uint8_t                      wrap;
+    uint8_t                      table_key;
+    uint8_t                      instructions;
+    uint8_t                      enable;
+} __PACK__ pd_mpu_trace_enable_args_t;
+
 typedef struct pd_debug_cli_write_args_s {
     uint32_t tableid;
     uint32_t index;
@@ -2263,7 +2285,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, 194, "PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK")\
     ENTRY(PD_FUNC_ID_CLOCK_DELTA_COMP, 195, "PD_FUNC_ID_CLOCK_DELTA_COMP")\
     ENTRY(PD_FUNC_ID_SYSTEM_DROP_ACTION,    196, "PD_FUNC_ID_SYSTEM_DROP_ACTION") \
-    ENTRY(PD_FUNC_ID_MAX,                   197, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_MPU_TRACE_ENABLE,      197, "PD_FUNC_ID_MPU_TRACE_ENABLE")\
+    ENTRY(PD_FUNC_ID_MAX,                   198, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2455,6 +2478,7 @@ PD_FUNCP_TYPEDEF(pd_del_l2seg_uplink);
 // debug cli
 PD_FUNCP_TYPEDEF(pd_debug_cli_read);
 PD_FUNCP_TYPEDEF(pd_debug_cli_write);
+PD_FUNCP_TYPEDEF(pd_mpu_trace_enable);
 
 // get apis
 PD_FUNCP_TYPEDEF(pd_if_get_hw_lif_id);
@@ -2750,6 +2774,7 @@ typedef struct pd_call_s {
         // debug cli
         PD_UNION_FIELD(pd_debug_cli_read);
         PD_UNION_FIELD(pd_debug_cli_write);
+        PD_UNION_FIELD(pd_mpu_trace_enable);
 
         // get apis
         PD_UNION_FIELD(pd_if_get_hw_lif_id);

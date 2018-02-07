@@ -12,6 +12,10 @@ hal_ret_t mtrack_get(debug::MemTrackGetRequest& req,
 hal_ret_t slab_get_from_req(debug::SlabGetRequest& req,
                             debug::SlabGetResponseMsg *rsp);
 
+hal_ret_t
+mpu_trace_enable(debug::MpuTraceRequest& req,
+                 debug::MpuTraceResponseMsg *rsp);
+
 }    // namespace hal
 
 #endif    // __DEBUG_HPP__

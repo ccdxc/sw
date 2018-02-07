@@ -239,6 +239,7 @@ hal_pd_load_symbols (void)
     // debug cli
     PD_SYMBOL_LOAD(PD_FUNC_ID_DEBUG_CLI_READ, pd_debug_cli_read);
     PD_SYMBOL_LOAD(PD_FUNC_ID_DEBUG_CLI_WRITE, pd_debug_cli_write);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_MPU_TRACE_ENABLE, pd_mpu_trace_enable);
 
     // apis
     PD_SYMBOL_LOAD(PD_FUNC_ID_IF_GET_HW_LIF_ID, pd_if_get_hw_lif_id);
@@ -557,6 +558,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     // debug cli
     PD_SYMBOL_CALL(PD_FUNC_ID_DEBUG_CLI_READ, pd_debug_cli_read);
     PD_SYMBOL_CALL(PD_FUNC_ID_DEBUG_CLI_WRITE, pd_debug_cli_write);
+    PD_SYMBOL_CALL(PD_FUNC_ID_MPU_TRACE_ENABLE, pd_mpu_trace_enable);
 
     // apis
     PD_SYMBOL_CALL(PD_FUNC_ID_IF_GET_HW_LIF_ID, pd_if_get_hw_lif_id);

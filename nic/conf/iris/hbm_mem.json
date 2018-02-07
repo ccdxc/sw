@@ -283,6 +283,10 @@
         {
             "name": "qos-hbm-fifo",
             "size_kb": 262144 
+        },
+        {
+            "name": "mpu-trace",
+            "size_kb": 96
         }
     ]
 }

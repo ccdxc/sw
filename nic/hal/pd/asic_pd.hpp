@@ -100,7 +100,6 @@ vector < tuple < std::string, std::string, std::string > > asic_csr_dump_reg(cha
 vector <std::string>
 asic_csr_list_get(std::string path, int level);
 
-
 }    // namespace pd
 }    // namespace hal
 

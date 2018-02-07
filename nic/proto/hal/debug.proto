@@ -16,6 +16,7 @@ service Debug {
     rpc DebugInvoke (DebugRequestMsg) returns (DebugResponseMsg) {}
     rpc MemTrackGet (MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}
     rpc SlabGet (SlabGetRequestMsg) returns (SlabGetResponseMsg){}
+    rpc MpuTraceOpn (MpuTraceRequestMsg) returns (MpuTraceResponseMsg){}
 }
 
 // DebugKeyHandle uniquely identfies the table/register to access
@@ -167,3 +168,38 @@ message SlabGetResponse {
 message SlabGetResponseMsg {
   repeated SlabGetResponse     response = 1;    // batched get response
 }
+
+// pipeline type for MPU trace
+enum MpuTracePipelineType {
+    MPU_TRACE_PIPELINE_NONE       = 0;   // pipeline type not set
+    MPU_TRACE_PIPELINE_P4_INGRESS = 1;   // P4 ingress pipeline
+    MPU_TRACE_PIPELINE_P4_EGRESS  = 2;   // P4 egress pipeline
+}
+
+// parameters to enable/disable MPU tracing
+message MpuTraceRequest {
+    MpuTracePipelineType  pipeline_type  =  1;     // pipeline type
+    uint32                mpu            =  2;     // MPU number
+    uint32                stage_id       =  3;     // stage id
+    uint64                base_addr      =  4;     // base addr where trace is present
+    bool                  wrap           =  5;     // wrap the trace
+    bool                  table_key      =  6;     // set table and key trace
+    bool                  instructions   =  7;     // set instructions trace
+    bool                  enable         =  8;     // enable/disable trace
+}
+
+// Batched MPU trace enable/disable request msg
+message MpuTraceRequestMsg {
+    repeated MpuTraceRequest request = 1;
+}
+
+// MPU trace enable/disable status
+message MpuTraceResponse {
+    types.ApiStatus   api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// Batched MPU trace response
+message MpuTraceResponseMsg {
+    repeated MpuTraceResponse response = 1;
+}
+

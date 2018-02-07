@@ -2,11 +2,31 @@
 #include "nic/include/mtrack.hpp"
 #include "nic/hal/src/debug.hpp"
 #include "sdk/slab.hpp"
+#include "sdk/catalog.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/pd_api.hpp"
 
 using sdk::lib::slab;
 
 namespace hal {
+
+static sdk::lib::catalog*
+catalog(void)
+{
+    return g_hal_state->catalog();
+}
+
+static uint32_t
+max_mpu_per_stage(void)
+{
+    return catalog()->max_mpu_per_stage();
+}
+
+static uint32_t
+mpu_trace_size(void)
+{
+    return catalog()->mpu_trace_size();
+}
 
 bool
 mtrack_map_walk_cb (void *ctxt, uint32_t alloc_id,
@@ -115,6 +135,40 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
 #endif
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+mpu_trace_enable(debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
+{
+    hal::pd::pd_mpu_trace_enable_args_t args;
+
+    memset(&args, 0, sizeof(hal::pd::pd_mpu_trace_enable_args_t));
+
+    args.max_mpu_per_stage = max_mpu_per_stage();
+    args.mpu_trace_size    = mpu_trace_size();
+    args.stage_id          = req.stage_id();
+    args.mpu               = req.mpu();
+    args.base_addr         = req.base_addr();
+    args.buf_size          = 5;
+
+    if (req.wrap() == true) {
+        args.wrap = 1;
+    }
+
+    if (req.table_key() == true) {
+        args.table_key = 1;
+    }
+
+    if (req.instructions() == true) {
+        args.instructions = 1;
+    }
+
+    if (req.enable() == true) {
+        args.enable = 1;
+    }
+
+    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_MPU_TRACE_ENABLE,
+                                (void *)&args);
 }
 
 }    // namespace hal

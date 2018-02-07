@@ -11,6 +11,8 @@
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 
 namespace hal {
 namespace pd {
@@ -238,6 +240,154 @@ pd_capri_barco_sym_hash_process_request (pd_capri_barco_sym_hash_process_request
                                                 args->data_len,
                                                 args->output_digest,
                                                 args->digest_len);
+}
+
+// Enable MPU tracing on p4 ingress
+static hal_ret_t
+capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
+                                  uint32_t mpu,
+                                  uint64_t base_addr,
+                                  uint32_t buf_size,
+                                  uint8_t  wrap,
+                                  uint8_t  table_key,
+                                  uint8_t  instructions,
+                                  uint8_t  enable)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    HAL_TRACE_DEBUG ("{0:s} INGRESS: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                     __FUNCTION__, stage_id, mpu, base_addr);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.sgi.mpu[stage_id].trace[mpu].read();
+    cap0.sgi.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.sgi.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.sgi.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.sgi.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.sgi.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.sgi.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.sgi.mpu[stage_id].trace[mpu].write();
+
+    return HAL_RET_OK;
+}
+
+// Enable MPU tracing on p4 egress
+static hal_ret_t
+capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
+                                 uint32_t mpu,
+                                 uint64_t base_addr,
+                                 uint32_t buf_size,
+                                 uint8_t  wrap,
+                                 uint8_t  table_key,
+                                 uint8_t  instructions,
+                                 uint8_t  enable)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    HAL_TRACE_DEBUG ("{0:s} EGRESS: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                     __FUNCTION__, stage_id, mpu, base_addr);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.sge.mpu[stage_id].trace[mpu].read();
+    cap0.sge.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.sge.mpu[stage_id].trace[mpu].buf_size(buf_size);
+    cap0.sge.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.sge.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.sge.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.sge.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.sge.mpu[stage_id].trace[mpu].write();
+
+    return HAL_RET_OK;
+}
+
+// Enable MPU tracing on p4 ingress and p4 egress
+// TODO deprecate later
+static hal_ret_t
+capri_mpu_trace_enable(void)
+{
+    uint64_t base_addr = get_start_offset("mpu-trace");
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 4; ++j) {
+            HAL_TRACE_DEBUG ("{0:s} INGRESS: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                             __FUNCTION__, i, j, base_addr);
+
+            cap0.sgi.mpu[i].trace[j].read();
+            cap0.sgi.mpu[i].trace[j].base_addr(base_addr >> 6);
+            cap0.sgi.mpu[i].trace[j].buf_size(5);
+            cap0.sgi.mpu[i].trace[j].wrap(1);
+            cap0.sgi.mpu[i].trace[j].table_and_key(1);
+            cap0.sgi.mpu[i].trace[j].instructions(0);
+            cap0.sgi.mpu[i].trace[j].enable(1);
+            cap0.sgi.mpu[i].trace[j].write();
+
+            base_addr += 2048;
+        }
+    }
+
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 4; ++j) {
+            HAL_TRACE_DEBUG ("{0:s} EGRESS: stage {1:d} mpu {2:d} base_addr 0x{3:x}",
+                             __FUNCTION__, i, j, base_addr);
+
+
+            cap0.sge.mpu[i].trace[j].read();
+            cap0.sge.mpu[i].trace[j].base_addr(base_addr >> 6);
+            cap0.sge.mpu[i].trace[j].buf_size(5);
+            cap0.sge.mpu[i].trace[j].wrap(1);
+            cap0.sge.mpu[i].trace[j].table_and_key(1);
+            cap0.sge.mpu[i].trace[j].instructions(0);
+            cap0.sge.mpu[i].trace[j].enable(1);
+            cap0.sge.mpu[i].trace[j].write();
+
+            base_addr += 2048;
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_mpu_trace_enable(pd_mpu_trace_enable_args_t *args)
+{
+    uint64_t base_addr = get_start_offset("mpu-trace");
+
+    if (args->base_addr == 0) {
+        base_addr =
+            base_addr +
+            (args->stage_id * args->max_mpu_per_stage * args->mpu_trace_size) +
+            (args->mpu * args->mpu_trace_size);
+    } else {
+        base_addr = args->base_addr;
+    }
+
+    switch (args->pipeline_type) {
+    case MPU_TRACE_PIPELINE_P4_INGRESS:
+        return capri_p4_ingress_mpu_trace_enable(args->stage_id,
+                                                 args->mpu,
+                                                 base_addr,
+                                                 args->buf_size,
+                                                 args->wrap,
+                                                 args->table_key,
+                                                 args->instructions,
+                                                 args->enable);
+    case MPU_TRACE_PIPELINE_P4_EGRESS:
+        return capri_p4_egress_mpu_trace_enable(args->stage_id,
+                                                args->mpu,
+                                                base_addr,
+                                                args->buf_size,
+                                                args->wrap,
+                                                args->table_key,
+                                                args->instructions,
+                                                args->enable);
+    default:
+        return capri_mpu_trace_enable();
+    }
+
+    return HAL_RET_OK;
 }
 
 } // namespace pd

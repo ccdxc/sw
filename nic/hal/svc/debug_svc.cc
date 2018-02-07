@@ -235,3 +235,25 @@ Status DebugServiceImpl::SlabGet(ServerContext *context,
 
     return Status::OK;
 }
+
+Status DebugServiceImpl::MpuTraceOpn(ServerContext *context,
+                                     const MpuTraceRequestMsg *req,
+                                     MpuTraceResponseMsg *rsp)
+{
+    uint32_t  i     = 0;
+    uint32_t  nreqs = req->request_size();
+
+    HAL_TRACE_DEBUG("Received MPU trace request");
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        auto request = req->request(i);
+        hal::mpu_trace_enable(request, rsp);
+    }
+
+    return Status::OK;
+}
+

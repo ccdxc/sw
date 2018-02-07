@@ -164,6 +164,10 @@
 		SlabGetRequestMsg
 		SlabGetResponse
 		SlabGetResponseMsg
+		MpuTraceRequest
+		MpuTraceRequestMsg
+		MpuTraceResponse
+		MpuTraceResponseMsg
 		DescrAolRequest
 		DescrAolRequestMsg
 		DescrAolSpec

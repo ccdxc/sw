@@ -144,3 +144,14 @@ cc_library(
         "//:sdk_headers",
     ],
 )
+
+# linkmgr library
+cc_library(
+    name = "sdk_linkmgr",
+    srcs = [
+        "liblinkmgr.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)
