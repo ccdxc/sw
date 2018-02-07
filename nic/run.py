@@ -321,7 +321,7 @@ def check_for_completion(p, model_process, hal_process, args):
 
             exit_timeout = 4
             if 'MODEL_EXIT_TIMEOUT' in os.environ:
-                exit_timeout = os.environ('MODEL_EXIT_TIMEOUT')
+                exit_timeout = os.environ['MODEL_EXIT_TIMEOUT']
             if count == exit_timeout * 60 * 60:
                 print "%s" % '='*80
                 print "             %d hour Exit Timeout Reached. Killing all processes." % exit_timeout
