@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -12,93 +13,123 @@ import (
 	"time"
 )
 
-type CoverageReport struct {
-	Kind    string
-	Records map[string]CoverRec
+// minCoverage is the minimum expected coverage for a package
+const (
+	goTestCmd   = "GOPATH=%s VENICE_DEV=1 go test -cover -tags test -p 1 %s"
+	minCoverage = 75.0
+	failPrefix  = "--- FAIL:"
+)
+
+var ErrTestFailed = errors.New("test execution failed")
+var ErrTestCovFailed = errors.New("coverage tests failed")
+
+// TestReport summarizes all the targets. We capture only the failed tests.
+type TestReport struct {
+	RunFailed bool
+	Results   []*Target
 }
 
-type Error struct {
-	Kind        string
-	Description string
-}
-
-type CoverRec struct {
-	CoveragePercent float64
-	TestDuration    time.Duration
-	Passed          int
-	Failed          int
-}
-
-var report = CoverageReport{Kind: "coverage", Records: map[string]CoverRec{}}
-
-func printError(err error) {
-	fmt.Printf(`{\n"Kind": "error", "Description": "%s"}`, err)
+// Target holds test execution details.
+type Target struct {
+	Name        string
+	Coverage    float64
+	Duration    string
+	FailedTests []string
+	Error       string
 }
 
 func main() {
 	if len(os.Args) <= 1 {
-		fmt.Printf("invalid arguments\n")
+		log.Fatalf("report needs at-least one target to run tests.")
 	}
-	fileName := os.Args[1]
-	targets := os.Args[2:]
-	getCoverage(targets)
-	getNumTests(targets)
 
-	j, err := json.MarshalIndent(report, "", "  ")
+	var t TestReport
+	for _, tgt := range os.Args[1:] {
+		p := Target{
+			Name: tgt,
+		}
+		t.Results = append(t.Results, &p)
+	}
+	t.RunCoverage()
+	j, _ := t.reportToJson()
+
+	t.testCoveragePass()
+
+	if t.RunFailed {
+		log.Fatalf("Tests failed. %s", fmt.Sprintf(string(j)))
+	}
+
+	fmt.Println(string(j))
+}
+
+func (t *TestReport) RunCoverage() {
+	for _, tgt := range t.Results {
+		err := tgt.test()
+		if err != nil || tgt.Error != "" {
+			t.RunFailed = true
+		}
+	}
+}
+
+func (t *TestReport) reportToJson() ([]byte, error) {
+	return json.MarshalIndent(t, "", "  ")
+}
+
+func (t *TestReport) testCoveragePass() {
+	for _, tgt := range t.Results {
+		if tgt.Error == ErrTestCovFailed.Error() {
+			log.Println(fmt.Sprintf("\033[31m%s\033[39m", "Insufficient code coverage for the following packages:"))
+			log.Println(fmt.Sprintf("\033[31m%s\033[39m", tgt.Name))
+			t.RunFailed = true
+		}
+	}
+}
+
+func (tgt *Target) test() error {
+	cmd := fmt.Sprintf(goTestCmd, os.Getenv("GOPATH"), tgt.Name)
+	start := time.Now()
+	defer func(tgt *Target) {
+		tgt.Duration = time.Since(start).String()
+	}(tgt)
+	out, err := exec.Command("sh", "-c", cmd).CombinedOutput()
 	if err != nil {
-		printError(err)
-		return
+		fmt.Println(string(out))
+		tgt.Error = ErrTestFailed.Error()
 	}
-	fmt.Printf("%s\n", string(j))
-	ioutil.WriteFile(fileName, j, 0644)
+
+	err = tgt.parseCmdOutput(out)
+	if tgt.Coverage < minCoverage && tgt.Error == "" {
+		tgt.Error = ErrTestCovFailed.Error()
+	}
+	return err
 }
 
-func findPassFail(out []byte, rec *CoverRec) CoverRec {
-	passed := 0
-	failed := 0
+func (tgt *Target) parseCmdOutput(b []byte) error {
+	err := tgt.getFailedTests(b)
+	if err != nil {
+		log.Printf("could not get failed tests: %v\n", err)
+		return err
+	}
+	return tgt.getCoveragePercent(b)
+}
 
-	lines := strings.Split(string(out), "\n")
+func (tgt *Target) getFailedTests(b []byte) error {
+	lines := strings.Split(string(b), "\n")
 	for _, line := range lines {
-		if strings.HasPrefix(line, "--- PASS") {
-			passed++
-		} else if strings.HasPrefix(line, "--- FAIL") {
-			failed++
+		if strings.HasPrefix(line, failPrefix) {
+			t := strings.Split(line, " ")[2]
+			tgt.FailedTests = append(tgt.FailedTests, t)
 		}
 	}
-
-	rec.Passed = passed
-	rec.Failed = failed
-
-	return *rec
-}
-
-func getNumTests(targets []string) {
-	for _, target := range targets {
-		cmd := fmt.Sprintf("GOPATH=%s go test -v -p 1 %s", os.Getenv("GOPATH"), target)
-		t0 := time.Now()
-		out, err := exec.Command("sh", "-c", cmd).CombinedOutput()
-		if err != nil {
-			fmt.Printf("Output:\n%s\n", out)
-			fmt.Printf("Error executing coverage test for target %s: %s\n", cmd, err)
-			return
-		}
-		t1 := time.Now()
-
-		rec := CoverRec{}
-		if orec, ok := report.Records[target]; ok {
-			rec = orec
-		}
-		rec.TestDuration = t1.Sub(t0)
-
-		report.Records[target] = findPassFail(out, &rec)
+	if len(tgt.FailedTests) > 0 {
+		log.Printf("Test Failure: %v\n", tgt.Name)
+		return ErrTestFailed
 	}
+	return nil
 }
 
-func findCoveragePercent(out []byte, rec *CoverRec) CoverRec {
-	totalCoveragePercent := 0.0
-	totalCount := 0
-
-	lines := strings.Split(string(out), "\n")
+func (tgt *Target) getCoveragePercent(b []byte) error {
+	lines := strings.Split(string(b), "\n")
 	for _, line := range lines {
 		re := regexp.MustCompile("[0-9]+.[0-9]%")
 		v := re.FindString(line)
@@ -108,34 +139,10 @@ func findCoveragePercent(out []byte, rec *CoverRec) CoverRec {
 		v = strings.TrimSuffix(v, "%")
 		f, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			fmt.Printf("Error: %s parsing float\n", err)
+			fmt.Printf("error: %s parsing float\n", err)
 		} else {
-			totalCoveragePercent += f
-			totalCount++
+			tgt.Coverage = f
 		}
 	}
-	if totalCount == 0 {
-		totalCount++
-	}
-	rec.CoveragePercent = totalCoveragePercent / float64(totalCount)
-
-	return *rec
-}
-
-func getCoverage(targets []string) {
-	for _, target := range targets {
-		cmd := fmt.Sprintf("GOPATH=%s go test -cover -tags test -p 1 %s", os.Getenv("GOPATH"), target)
-		out, err := exec.Command("sh", "-c", cmd).CombinedOutput()
-		if err != nil {
-			fmt.Printf("Error executing coverage test for target %s: %s\n", cmd, err)
-			fmt.Printf("Output:\n%s\n", out)
-			return
-		}
-
-		rec := CoverRec{}
-		if orec, ok := report.Records[target]; ok {
-			rec = orec
-		}
-		report.Records[target] = findCoveragePercent(out, &rec)
-	}
+	return nil
 }

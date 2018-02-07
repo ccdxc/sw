@@ -1,6 +1,6 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts|netagent/datapath/halproto|nic/gen"
+EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|netagent/datapath/halproto|nic/gen"
 # Has venice protos and all things auto generated.
 TO_GEN := api api/labels/lproto venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
 venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
@@ -15,7 +15,7 @@ TESTS := ./test/...
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./api/ ./api/hooks/... \
 ./api/labels/... ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... \
-./venice/collector/... ./venice/cli/... ./venice/aggregator/... ${TESTS}
+./venice/collector/... ./venice/cli/... ./venice/aggregator/... ${TESTS} ./scripts/report/...
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
