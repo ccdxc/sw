@@ -99,7 +99,7 @@
             ]
         },
         "gft": {
-            "cmd": "/home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 gft &&  /home/asic/tools/eda/bullseye/bin/cov01 -0  && ./run.py --gft --coverage",
+            "cmd": "/home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 gft &&  /home/asic/tools/eda/bullseye/bin/cov01 -0  && ./run.py --gft_gtest --coverage",
             "modules": [
                 "model", "asm"
             ]
