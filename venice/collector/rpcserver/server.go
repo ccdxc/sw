@@ -54,6 +54,11 @@ func (s *CollRPCSrv) ErrOut() <-chan error {
 	return s.grpcSrv.DoneCh
 }
 
+// URL gets the listen url of teh server
+func (s *CollRPCSrv) URL() string {
+	return s.grpcSrv.GetListenURL()
+}
+
 // Stop stops the server
 func (s *CollRPCSrv) Stop() {
 	s.grpcSrv.Stop()
@@ -128,10 +133,10 @@ func readFields(f map[string]*metric.Field) map[string]interface{} {
 	out := make(map[string]interface{})
 	for k, v := range f {
 		switch v.F.(type) {
-		case *metric.Field_Counter:
-			out[k] = v.GetCounter()
-		case *metric.Field_Gauge:
-			out[k] = v.GetGauge()
+		case *metric.Field_Int64:
+			out[k] = v.GetInt64()
+		case *metric.Field_Float64:
+			out[k] = v.GetFloat64()
 		case *metric.Field_String_:
 			out[k] = v.GetString_()
 		case *metric.Field_Bool:

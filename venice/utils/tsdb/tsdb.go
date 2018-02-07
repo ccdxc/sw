@@ -536,30 +536,30 @@ func xformFields(p *Point) map[string]*metric.Field {
 		case int64:
 			val := v.(int64)
 			res[k] = &metric.Field{
-				F: &metric.Field_Counter{
-					Counter: uint64(val),
+				F: &metric.Field_Int64{
+					Int64: int64(val),
 				},
 			}
 		case Counter:
 			val := v.(Counter)
 			res[k] = &metric.Field{
-				F: &metric.Field_Counter{
-					Counter: uint64(val),
+				F: &metric.Field_Int64{
+					Int64: int64(val),
 				},
 			}
 		case float64:
 			val := v.(float64)
 			res[k] = &metric.Field{
-				F: &metric.Field_Gauge{
-					Gauge: float64(val),
+				F: &metric.Field_Float64{
+					Float64: float64(val),
 				},
 			}
 
 		case Gauge:
 			val := v.(Gauge)
 			res[k] = &metric.Field{
-				F: &metric.Field_Gauge{
-					Gauge: float64(val),
+				F: &metric.Field_Float64{
+					Float64: float64(val),
 				},
 			}
 		case string:

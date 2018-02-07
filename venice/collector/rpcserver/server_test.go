@@ -105,14 +105,14 @@ func xformFields(f map[string]interface{}, fType string) map[string]*metric.Fiel
 		switch fType {
 		case "Counter":
 			res[k] = &metric.Field{
-				F: &metric.Field_Counter{
-					Counter: uint64(v),
+				F: &metric.Field_Int64{
+					Int64: int64(v),
 				},
 			}
 		case "Gauge":
 			res[k] = &metric.Field{
-				F: &metric.Field_Gauge{
-					Gauge: float64(v),
+				F: &metric.Field_Float64{
+					Float64: float64(v),
 				},
 			}
 		case "String":

@@ -18,8 +18,8 @@ service MetricApi {
 // Field is one of (uint64, float64, string, bool)
 message Field {
 	oneof f {
-		uint64 Counter = 1;
-		double Gauge = 2;
+		int64 Int64 = 1;
+		double Float64 = 2;
 		string String = 3;
 		bool Bool = 4;
 	}
