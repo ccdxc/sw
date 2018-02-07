@@ -49,7 +49,7 @@ typedef struct lif_cos_info_s {
 // Lif RSS config structure
 typedef struct lif_rss_info_s {
     bool        enable;
-    int         type;
+    uint32_t    type;
     uint8_t     key[ETH_RSS_KEY_LENGTH];
 } __PACK__ lif_rss_info_t;
 

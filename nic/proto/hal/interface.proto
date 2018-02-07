@@ -334,7 +334,7 @@ message LifGetResponseMsg {
 // LifRssConfig is used to set Lif's RSS configuration
 message LifRssSpec {
   bool          enable    = 1;    // RSS enable
-  LifRssType    type      = 2;    // RSS type
+  uint32        type      = 2;    // RSS type
   bytes         key       = 3;    // RSS key/seed
 }
 
