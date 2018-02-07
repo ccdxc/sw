@@ -1,26 +1,47 @@
 #include "app_redir_common.h"
 
-struct phv_                                 p;
-struct proxyr_mpage_post_k                  k;
-struct proxyr_mpage_post_mpage_post_alloc_d d;
+struct phv_                             p;
+struct proxyr_mpage_k                   k;
+struct proxyr_mpage_post_alloc_mpage_d  d;
+
+/*
+ * Registers usage
+ *
+ * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
+ */
+#define r_ring_indices_addr         r3
 
 %%
 
-    .param      proxyr_s5_chain_pindex_pre_alloc
+    .param      proxyr_s5_chain_xfer
+    .param      proxyr_s5_cleanup_discard
+
     .align
 
 proxyr_s4_mpage_post_alloc:
 
-    CAPRI_CLEAR_TABLE0_VALID
+    //CAPRI_CLEAR_TABLE0_VALID
 
-    phvwr       p.to_s6_mpage, d.page
-    
+    seq         c1, k.common_phv_mpage_sem_pindex_full, r0
+    phvwr.c1    p.to_s5_mpage, d.page
+    sne         c1, k.common_phv_do_cleanup_discard, r0
+    bcf         [c1], _cleanup_discard_launch
+
     /*
-     * Advance to next stage which is stage 5 to eventually arrive
-     * at a pre-agreed upon stage for handling chain pindex atomic update.
+     * Launch read of chain RxQ indices
      */
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, proxyr_s5_chain_pindex_pre_alloc)
-    nop.e
+    add         r_ring_indices_addr, r0, \
+                k.{to_s4_chain_ring_indices_addr_sbit0_ebit31...\
+                   to_s4_chain_ring_indices_addr_sbit32_ebit33} // delay slot
+    seq         c1, r_ring_indices_addr, r0
+    bcf         [c1], _cleanup_discard_launch
+    phvwri.c1   p.t3_s2s_inc_stat_null_ring_indices_addr, 1 // delay slot
+    
+    CAPRI_NEXT_TABLE_READ_e(0, 
+                            TABLE_LOCK_DIS,
+                            proxyr_s5_chain_xfer,
+                            r_ring_indices_addr,
+                            TABLE_SIZE_64_BITS)
     nop
 
     .align
@@ -31,8 +52,18 @@ proxyr_s4_mpage_post_alloc:
  */    
 proxyr_s4_mpage_skip_alloc:
 
-    CAPRI_CLEAR_TABLE1_VALID
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, proxyr_s5_chain_pindex_pre_alloc)
+    /*
+     * Fall through!!!
+     */
+
+     
+/*
+ * Initiate cleanup discard
+ */
+_cleanup_discard_launch:    
+
+    CAPRI_CLEAR_TABLE0_VALID
+
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, proxyr_s5_cleanup_discard)
     nop.e
     nop
-

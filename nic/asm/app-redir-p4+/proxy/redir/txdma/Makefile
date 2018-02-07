@@ -31,7 +31,6 @@ SRC_FILES := \
     $(SRC_DIR)/proxyr_mpage_sem_pindex_post_update.s \
     $(SRC_DIR)/proxyr_mpage_post_alloc.s \
     $(SRC_DIR)/proxyr_flow_key_post_read.s \
-    $(SRC_DIR)/proxyr_chain_pindex_pre_alloc.s \
     $(SRC_DIR)/proxyr_chain_xfer.s \
     $(SRC_DIR)/proxyr_cleanup_discard.s \
     $(SRC_DIR)/proxyr_desc_free.s \

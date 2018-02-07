@@ -32,11 +32,9 @@ SRC_FILES := \
     $(SRC_DIR)/rawr_ppage_post_alloc.s \
     $(SRC_DIR)/rawr_mpage_sem_post_update.s \
     $(SRC_DIR)/rawr_mpage_post_alloc.s \
-    $(SRC_DIR)/rawr_chain_qidxr_stage_advance_a.s \
-    $(SRC_DIR)/rawr_chain_qidxr_stage_advance_b.s \
     $(SRC_DIR)/rawr_chain_pindex_pre_alloc.s \
     $(SRC_DIR)/rawr_chain_txq_pindex_post_read.s \
-    $(SRC_DIR)/rawr_chain_qidxr_post_read.s \
+    $(SRC_DIR)/rawr_chain_sem_post_update.s \
     $(SRC_DIR)/rawr_cleanup_discard.s \
     $(SRC_DIR)/rawr_desc_free.s \
     $(SRC_DIR)/rawr_ppage_free.s \

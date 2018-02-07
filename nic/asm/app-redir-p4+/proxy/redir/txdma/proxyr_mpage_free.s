@@ -20,38 +20,26 @@ struct proxyr_mpage_free_mpage_free_d   d;
     
     .align
 
-proxyr_s7_mpage_free:
+proxyr_s6_mpage_free:
 
     CAPRI_CLEAR_TABLE2_VALID
 
     /*
-     * mpage free semaphore should never be full
+     * mpage free semaphore should never be full,
+     * but abort if so... proxyr_s6_desc_free will launch stats collect
      */
     sne         c1, d.pindex_full, r0
-    bcf         [c1], proxyr_page_free_sem_pindex_full
+    phvwri.c1.e p.t3_s2s_inc_stat_sem_free_full, 1
+    
     addi        r_page_is_small, r0, TRUE   // delay slot
-    add         r_page_addr, r0, k.{to_s7_mpage_sbit0_ebit3...\
-                                    to_s7_mpage_sbit28_ebit33}
+    add         r_page_addr, r0, k.{to_s6_mpage_sbit0_ebit3...\
+                                    to_s6_mpage_sbit28_ebit33}
     bal         r_return, proxyr_page_free
     add         r_table_idx, r0, d.pindex                   // delay slot
     nop.e
     nop
     
 
-/*
- * A free semaphore index was unexpectedly full
- */                                   
-proxyr_page_free_sem_pindex_full:
-
-    /*
-     * Would have added stats here.
-     * However, this is stage 7 so there are no more stages left to increment stats.
-     */
-    APP_REDIR_FREE_SEM_PINDEX_FULL_TRAP()
-    nop.e
-    nop
-
-    
 /*
  * On input, 
  *     r_page_addr: page address to free

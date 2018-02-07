@@ -11,6 +11,6 @@ rawr_s2_mpage_post_alloc:
 
     CAPRI_CLEAR_TABLE2_VALID
 
-    phvwr.e     p.to_s6_mpage, d.page
-    nop
+    seq.e       c1, k.common_phv_mpage_sem_pindex_full, r0
+    phvwr.c1    p.to_s4_mpage, d.page     // delay slot
     

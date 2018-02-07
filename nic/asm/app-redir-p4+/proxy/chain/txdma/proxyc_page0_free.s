@@ -55,11 +55,10 @@ _page1_sem_free_idx_launch:
     sne         c1, k.t1_s2s_aol_A1_small, r0
     addi.c1     r_scratch, r0, CAPRI_SEM_RNMPR_SMALL_FREE_INF_ADDR
     addi.!c1    r_scratch, r0, CAPRI_SEM_RNMPR_FREE_INF_ADDR
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
-                          proxyc_s6_page1_free,
-                          r_scratch,
-                          TABLE_SIZE_64_BITS)
-    nop.e
+    CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
+                            proxyc_s6_page1_free,
+                            r_scratch,
+                            TABLE_SIZE_64_BITS)
     nop
 
     .align

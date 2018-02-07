@@ -44,19 +44,21 @@ proxyr_s0_tx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
-    phvwr       p.common_phv_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
     seq         c1, r7[APP_REDIR_PROXYR_RINGS_MAX-1:0], r0
     bcf         [c1], _my_txq_ring_empty
 
     /*
      * qid is our flow ID context
      */
-    phvwr       p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF     // delay slot
-    phvwr       p.to_s1_my_txq_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE
-    phvwr       p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
-
-    phvwr       p.common_phv_proxyrcb_flags, d.{u.start_d.proxyrcb_flags}.hx
+    phvwrpair   p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF, \
+                p.to_s1_my_txq_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE // delay slot
+    phvwrpair   p.to_s1_my_txq_ring_size_shift, d.u.start_d.my_txq_ring_size_shift, \
+                p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
+                
+    phvwrpair   p.common_phv_chain_ring_index_select, d.u.start_d.chain_rxq_ring_index_select[2:0], \
+                p.common_phv_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
     phvwr       p.common_phv_redir_span_instance, d.u.start_d.redir_span
+    phvwr       p.common_phv_proxyrcb_flags, d.{u.start_d.proxyrcb_flags}.hx
     
     /*
      * Also prefill certain meta header fields;
@@ -70,10 +72,9 @@ proxyr_s0_tx_start:
     phvwr       p.pen_proxyr_hdr_v1_flow_id, r_my_txq_qid
 
     phvwr       p.common_phv_chain_ring_base, d.{u.start_d.chain_rxq_base}.dx
-    phvwr       p.common_phv_chain_ring_size_shift, d.u.start_d.chain_rxq_ring_size_shift
-    phvwr       p.common_phv_chain_entry_size_shift, d.u.start_d.chain_rxq_entry_size_shift
-    phvwr       p.common_phv_chain_ring_index_select, d.u.start_d.chain_rxq_ring_index_select
-    phvwr       p.to_s5_chain_ring_indices_addr, d.{u.start_d.chain_rxq_ring_indices_addr}.dx
+    phvwrpair   p.common_phv_chain_ring_size_shift, d.u.start_d.chain_rxq_ring_size_shift[4:0], \
+                p.common_phv_chain_entry_size_shift, d.u.start_d.chain_rxq_entry_size_shift[4:0]
+    phvwr       p.to_s4_chain_ring_indices_addr, d.{u.start_d.chain_rxq_ring_indices_addr}.dx
     
     /*
      * Two sentinels surround the programming of CB byte sequence:
@@ -102,7 +103,6 @@ proxyr_s0_tx_start:
      * program to properly consume and free the descriptor along with 
      * any pages embedded within.
      */
-    phvwr       p.to_s1_my_txq_ring_size_shift, d.u.start_d.my_txq_ring_size_shift
     add         r_ci, r0, d.{u.start_d.ci_0}.hx
     sllv        r_my_txq_slot, r_ci, d.u.start_d.my_txq_entry_size_shift
     add         r_my_txq_slot, r_my_txq_slot, d.{u.start_d.my_txq_base}.dx

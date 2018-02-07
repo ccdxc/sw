@@ -15,23 +15,24 @@ struct rawr_ppage_free_ppage_free_d d;
 #define r_scratch                   r6
 
 %%
-    .param      rawr_page_free_sem_pindex_full
     .param      rawr_page_free
     
     .align
 
-rawr_s7_ppage_free:
+rawr_s5_ppage_free:
 
     CAPRI_CLEAR_TABLE1_VALID
 
     /*
-     * ppage free semaphore should never be full
+     * ppage free semaphore should never be full,
+     * but abort if so... rawr_s5_desc_free will launch stats collect
      */
     sne         c1, d.pindex_full, r0
-    j.c1        rawr_page_free_sem_pindex_full
+    phvwri.c1.e p.t3_s2s_inc_stat_sem_free_full, 1
+    
     addi        r_page_is_small, r0, FALSE   // delay slot
-    add         r_page_addr, r0, k.{to_s7_ppage_sbit0_ebit5...\
-                                    to_s7_ppage_sbit30_ebit33}
+    add         r_page_addr, r0, k.{to_s5_ppage_sbit0_ebit5...\
+                                    to_s5_ppage_sbit30_ebit33}
     jal         r_return, rawr_page_free
     add         r_table_idx, r0, d.pindex                   // delay slot
     nop.e

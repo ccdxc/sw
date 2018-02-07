@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/capri_common.h"
 #include "nic/hal/pd/iris/proxyrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -183,7 +184,7 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
                         proxyrcb->chain_rxq_ring_index_select, arq_base);
         data.u.start_d.chain_rxq_base = arq_base;
         data.u.start_d.chain_rxq_ring_indices_addr =
-                             get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+               CAPRI_SEM_ARQ_TX_IDX_INC_ADDR(proxyrcb->chain_rxq_ring_index_select);
         data.u.start_d.chain_rxq_ring_size_shift = ring_size_shift;
         data.u.start_d.chain_rxq_entry_size_shift = entry_size_shift;
         HAL_TRACE_DEBUG("PROXYRCB chain_rxq_ring_indices_addr: {:#x} "
