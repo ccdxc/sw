@@ -64,7 +64,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-network:{}:adding to network key hash table", 
+    HAL_TRACE_DEBUG("{}:adding to network key hash table", 
                     __FUNCTION__);
     // allocate an entry to establish mapping from l2key to its handle
     entry =
@@ -80,7 +80,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
                                                          entry, 
                                                          &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to network key to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to network key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -101,7 +101,7 @@ network_del_from_db (network_t *nw)
     hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-network:{}:removing from network key hash table", 
+    HAL_TRACE_DEBUG("{}:removing from network key hash table", 
                     __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->network_key_ht()->
@@ -111,7 +111,7 @@ network_del_from_db (network_t *nw)
         // free up
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     } else {
-        HAL_TRACE_ERR("pi-network:{}:unable to find network:{}",
+        HAL_TRACE_ERR("{}:unable to find network:{}",
                       __FUNCTION__, network_to_str(nw));
         ret = HAL_RET_NETWORK_NOT_FOUND;
         goto end;
@@ -134,14 +134,14 @@ validate_network_create (NetworkSpec& spec, NetworkResponse *rsp)
 {
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-network:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
     if (!spec.has_vrf_key_handle() ||
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-network:{}:vrf not found", __FUNCTION__);
+        HAL_TRACE_ERR("{}:vrf not found", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -169,7 +169,7 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-network:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -182,13 +182,13 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
     
-    HAL_TRACE_DEBUG("pi-network:{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit CB {}",
                     __FUNCTION__, network_to_str(nw));
 
     // Add network to key DB
     ret = network_add_to_db (nw, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:unable to add network to DB", 
+        HAL_TRACE_ERR("{}:unable to add network to DB", 
                       __FUNCTION__);
         goto end;
     }
@@ -196,12 +196,12 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Setup backward refs
     ret = network_update_sg_relation(&nw->sg_list_head, nw, true);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to add sg -> network"
+        HAL_TRACE_ERR("{}:failed to add sg -> network"
                       " relation ret:{}", __FUNCTION__, ret);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-network:{}:added network to DB", 
+    HAL_TRACE_DEBUG("{}:added network to DB", 
                     __FUNCTION__);
 end:
     return ret;
@@ -233,11 +233,11 @@ network_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-network:{}:network:{}:create abort CB",
+    HAL_TRACE_DEBUG("{}:network:{}:create abort CB",
                     __FUNCTION__, network_to_str(nw));
 
     // clean up sgs as these are inserted before callbacks
-    HAL_TRACE_DEBUG("pi-network:{}:freeing up sg list entries", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:freeing up sg list entries", __FUNCTION__);
     hal_free_handles_list(&nw->sg_list_head);
 
     // remove the object
@@ -289,7 +289,7 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
 
     num_sgs = spec.sg_key_handle_size();
 
-    HAL_TRACE_DEBUG("pi-network:{}:adding {} no. of sgs", __FUNCTION__,
+    HAL_TRACE_DEBUG("{}:adding {} no. of sgs", __FUNCTION__,
                     num_sgs);
 
     for (i = 0; i < num_sgs; i++) {
@@ -337,7 +337,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     tid = spec.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
-        HAL_TRACE_ERR("pi-network:{}: unable to retrieve vrf_id:{}",
+        HAL_TRACE_ERR("{}: unable to retrieve vrf_id:{}",
                 __FUNCTION__, tid);
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
@@ -347,20 +347,20 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     if (spec.gateway_ep_handle() != HAL_HANDLE_INVALID) {
         gw_ep = find_ep_by_handle(spec.gateway_ep_handle());
         if (gw_ep == NULL) {
-            HAL_TRACE_ERR("pi-network:{}: unable to retrieve gateway endpoint:{}",
+            HAL_TRACE_ERR("{}: unable to retrieve gateway endpoint:{}",
                     __FUNCTION__);
             ret = HAL_RET_EP_NOT_FOUND;
             goto end;
         }
     } else {
-        HAL_TRACE_DEBUG("pi-network:{}:gateway way ep is not present."
+        HAL_TRACE_DEBUG("{}:gateway way ep is not present."
                         " flows using this network will not have reachability info.");
     }
 
     // check if network with pfx already exists
     ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
     if (find_network_by_key(tid, &ip_pfx)) {
-        HAL_TRACE_ERR("pi-network:{}:network already exists (tid,ippfx) : {}:{}",
+        HAL_TRACE_ERR("{}:network already exists (tid,ippfx) : {}:{}",
                       __FUNCTION__, tid, ippfx2str(&ip_pfx));
         ret = HAL_RET_ENTRY_EXISTS;
         goto end;
@@ -370,7 +370,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     nw = network_alloc_init();
     if (nw == NULL) {
         ret = HAL_RET_OOM;
-        HAL_TRACE_ERR("pi-network:{}: out of memory. err: {}", 
+        HAL_TRACE_ERR("{}: out of memory. err: {}", 
                       ret);
         goto end;
     }
@@ -378,7 +378,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     // allocate hal handle id
     nw->hal_handle = hal_handle_alloc(HAL_OBJ_ID_NETWORK);
     if (nw->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-network:{}: failed to alloc handle", 
+        HAL_TRACE_ERR("{}: failed to alloc handle", 
                       __FUNCTION__);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -390,7 +390,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
     network_read_security_groups(nw, spec);
 
-    HAL_TRACE_DEBUG("pi-network:{}:nw: {}, rmac: {}", 
+    HAL_TRACE_DEBUG("{}:nw: {}, rmac: {}", 
                     __FUNCTION__,
                     ippfx2str(&nw->nw_key.ip_pfx),
                     macaddr2str(nw->rmac_addr));
@@ -429,7 +429,7 @@ validate_network_update (NetworkSpec& spec, NetworkResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-network:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -509,7 +509,7 @@ network_handle_gateway_ep_change (network_t *nw, network_t *nw_clone,
         ret = fte::fte_handle_network_reachability_change(session,
                                                           app_ctxt->new_gw_ep_handle);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-network:{}:failed in fte for reachability change",
+            HAL_TRACE_ERR("{}:failed in fte for reachability change",
                           __FUNCTION__);
             goto end;
         }
@@ -574,7 +574,7 @@ network_update_pi_with_sg_list (network_t *nw, network_update_app_ctxt_t *app_ct
     ret = network_update_sg_relation(app_ctxt->add_sglist,
                                      nw, true);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to add sg -> network "
+        HAL_TRACE_ERR("{}:failed to add sg -> network "
                 "relation ret:{}", 
                 __FUNCTION__,  ret);
         goto end;
@@ -583,7 +583,7 @@ network_update_pi_with_sg_list (network_t *nw, network_update_app_ctxt_t *app_ct
     ret = network_update_sg_relation(app_ctxt->del_sglist,
                                      nw, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to del sg -/-> network "
+        HAL_TRACE_ERR("{}:failed to del sg -/-> network "
                 "relation ret:{}", 
                 __FUNCTION__,  ret);
         goto end;
@@ -626,7 +626,7 @@ network_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     nw_clone = (network_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-network:{}: update upd cb {}",
+    HAL_TRACE_DEBUG("{}: update upd cb {}",
                     __FUNCTION__, network_to_str(nw));
 
     // trigger session to handle change of reachability
@@ -669,7 +669,7 @@ network_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     nw_clone = (network_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-network:{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit CB {}",
                     __FUNCTION__, network_to_str(nw));
 
     // move lists
@@ -718,7 +718,7 @@ network_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     // nw_clone = (network_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-network:{}:update abort CB {}",
+    HAL_TRACE_DEBUG("{}:update abort CB {}",
                     __FUNCTION__, network_to_str(nw));
 
     // Free sg lists
@@ -804,7 +804,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
     sdk::lib::dllist_reset(*aggr_sglist);
 
     num_sgs = spec.sg_key_handle_size();
-    HAL_TRACE_DEBUG("pi-network:{}:num_sgs:{}", 
+    HAL_TRACE_DEBUG("{}:num_sgs:{}", 
                     __FUNCTION__, num_sgs);
     for (i = 0; i < num_sgs; i++) {
         sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
@@ -821,7 +821,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
             // Add to added list
             hal_add_to_handle_list(*add_sglist, sg_handle);
             *sglist_change = true;
-            HAL_TRACE_DEBUG("pi-network:{}: added to add list hdl: {}", 
+            HAL_TRACE_DEBUG("{}: added to add list hdl: {}", 
                     __FUNCTION__, sg_handle);
         }
     }
@@ -835,7 +835,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
 
     dllist_for_each(lnode, &(nw->sg_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("pi-network:{}: Checking for sg: {}", 
+        HAL_TRACE_DEBUG("{}: Checking for sg: {}", 
                 __FUNCTION__, entry->handle_id);
         for (i = 0; i < num_sgs; i++) {
             auto sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
@@ -859,7 +859,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
             // Insert into the list
             sdk::lib::dllist_add(*del_sglist, &lentry->dllist_ctxt);
             *sglist_change = true;
-            HAL_TRACE_DEBUG("pi-network:{}: added to delete list hdl: {}", 
+            HAL_TRACE_DEBUG("{}: added to delete list hdl: {}", 
                     __FUNCTION__, lentry->handle_id);
         }
         sg_exists = false;
@@ -899,7 +899,7 @@ network_check_update (NetworkSpec& spec, network_t *nw,
                                       &app_ctxt->del_sglist,
                                       &app_ctxt->aggr_sglist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to check sg list change. ret:{}",
+        HAL_TRACE_ERR("{}:failed to check sg list change. ret:{}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -933,7 +933,7 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     // validate the request message
     ret = validate_network_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:network update validation failed, ret : {}",
+        HAL_TRACE_ERR("{}:network update validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -941,25 +941,25 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     // retrieve network object
     nw = network_lookup_key_or_handle(kh, spec.vrf_key_handle().vrf_id());
     if (nw == NULL) {
-        HAL_TRACE_ERR("pi-network:{}:failed to find nw handle {}",
+        HAL_TRACE_ERR("{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());
         ret = HAL_RET_NETWORK_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-network:{}: network update for {}",
+    HAL_TRACE_DEBUG("{}: network update for {}",
                     __FUNCTION__, network_to_str(nw));
 
     ret = network_check_update(spec, nw, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:network check update failed, ret : {}", 
+        HAL_TRACE_ERR("{}:network check update failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
 
     // check if anything changed
     if (!app_ctxt.network_changed) {
-        HAL_TRACE_ERR("pi-network:{}:no change in network update: noop", 
+        HAL_TRACE_ERR("{}:no change in network update: noop", 
                       __FUNCTION__);
         goto end;
     }
@@ -1047,7 +1047,7 @@ validate_network_delete_req (NetworkDeleteRequest& req,
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-network:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1094,7 +1094,7 @@ network_detach_from_security_groups (network_t *nw)
 
     ret = network_update_sg_relation(&nw->sg_list_head, nw, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to del sg -/-> network"
+        HAL_TRACE_ERR("{}:failed to del sg -/-> network"
                 "relation ret:{}", 
                 __FUNCTION__,  ret);
         goto end;
@@ -1125,7 +1125,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-network:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1136,14 +1136,14 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nw = (network_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-network:{}:delete commit CB {}",
+    HAL_TRACE_DEBUG("{}:delete commit CB {}",
                     __FUNCTION__, network_to_str(nw));
 
     
     // remove back refs from security groups and free up list
     ret = network_detach_from_security_groups(nw);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to detach from security groups, "
+        HAL_TRACE_ERR("{}:failed to detach from security groups, "
                       "ret:{}", __FUNCTION__, ret);
         goto end;
     }
@@ -1151,7 +1151,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Remove from network key hash table
     ret = network_del_from_db(nw);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:failed to del network {} from db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to del network {} from db, err : {}", 
                       __FUNCTION__, network_to_str(nw), ret);
         goto end;
     }
@@ -1166,7 +1166,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:commit CBs can't fail: ret:{}",
+        HAL_TRACE_ERR("{}:commit CBs can't fail: ret:{}",
                       __FUNCTION__, ret);
         HAL_ASSERT(0);
     }
@@ -1210,20 +1210,20 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
     // validate the request message
     ret = validate_network_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-network:{}:network delete validation failed, ret : {}",
+        HAL_TRACE_ERR("{}:network delete validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
 
     nw = network_lookup_key_or_handle(kh, req.vrf_key_handle().vrf_id());
     if (nw == NULL) {
-        HAL_TRACE_ERR("pi-network:{}:failed to find nw handle {}",
+        HAL_TRACE_ERR("{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());
         ret = HAL_RET_NETWORK_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-network:{}:deleting nw :{}", 
+    HAL_TRACE_DEBUG("{}:deleting nw :{}", 
                     __FUNCTION__, network_to_str(nw));
 
 
@@ -1282,7 +1282,7 @@ network_add_l2seg (network_t *nw, l2seg_t *l2seg)
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-network:{}:add network => l2seg(id:hdl), {} => {}:{}, ret:{}",
+    HAL_TRACE_DEBUG("{}:add network => l2seg(id:hdl), {} => {}:{}, ret:{}",
                     __FUNCTION__, network_to_str(nw), 
                     l2seg->seg_id, l2seg->hal_handle, ret);
     return ret;
@@ -1313,7 +1313,7 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
     }
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-network:{}:del network =/=> l2seg(id:hdl), "
+    HAL_TRACE_DEBUG("{}:del network =/=> l2seg(id:hdl), "
                     "{} =/=> {}:{}, ret:{}",
                     __FUNCTION__, network_to_str(nw), l2seg->seg_id, 
                     l2seg->hal_handle, ret);
@@ -1349,7 +1349,7 @@ network_add_session (network_t *nw, session_t *sess)
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-network:{}:add network => session_hdl, {} => {}, "
+    HAL_TRACE_DEBUG("{}:add network => session_hdl, {} => {}, "
                     "ret:{}",
                     __FUNCTION__, network_to_str(nw), 
                     sess->hal_handle, ret);
@@ -1380,7 +1380,7 @@ network_del_session (network_t *nw, session_t *sess)
     }
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-network:{}:del network =/=> session_hdl, {} =/=> {}, "
+    HAL_TRACE_DEBUG("{}:del network =/=> session_hdl, {} =/=> {}, "
                     "ret:{}",
                     __FUNCTION__, network_to_str(nw), 
                     sess->hal_handle, ret);

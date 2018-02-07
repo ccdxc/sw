@@ -22,7 +22,7 @@ pd_tunnelif_create(pd_if_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_tunnelif_t        *pd_tunnelif;
 
-    HAL_TRACE_DEBUG("pd-tunnelif::{}: Creating pd state for Tunnelif: {}", 
+    HAL_TRACE_DEBUG(":{}: Creating pd state for Tunnelif: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create Tunnel If PD
@@ -39,7 +39,7 @@ pd_tunnelif_create(pd_if_create_args_t *args)
     ret = pd_tunnelif_alloc_res(pd_tunnelif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("pd-tunnelif::{}: unable to alloc. resources for TunnelIf: {}",
+        HAL_TRACE_ERR(":{}: unable to alloc. resources for TunnelIf: {}",
                       __FUNCTION__, if_get_if_id(args->intf));
         goto end;
     }
@@ -77,19 +77,19 @@ pd_tunnelif_delete (pd_if_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-tunnelif:{}:deleting pd state for tunnelif: {}",
+    HAL_TRACE_DEBUG("{}:deleting pd state for tunnelif: {}",
                     __FUNCTION__, args->intf->if_id);
     tunnelif_pd = (pd_tunnelif_t *)args->intf->pd_if;
 
     // deprogram HW
     ret = pd_tunnelif_deprogram_hw(tunnelif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-tunnelif:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     ret = pd_tunnelif_cleanup(tunnelif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-tunnelif:{}:failed pd tunnelif delete",
+        HAL_TRACE_ERR("{}:failed pd tunnelif delete",
                       __FUNCTION__);
     }
 
@@ -192,7 +192,7 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
     return HAL_RET_OK;
 
 fail_flag:
-    HAL_TRACE_ERR("pd-tunnelif:{}:unable to program hw");
+    HAL_TRACE_ERR("{}:unable to program hw");
     return ret;
     // return (pd_tunnelif_deprogram_hw(pd_tunnelif));
 }
@@ -443,10 +443,10 @@ pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 
     ret = tnnl_rw_entry_delete(&key);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-tunnelif:{}:unable to deprogram tnnl rw table: ret:{}",
+        HAL_TRACE_ERR("{}:unable to deprogram tnnl rw table: ret:{}",
                       __FUNCTION__, ret);
     } else {
-        HAL_TRACE_DEBUG("pd-tunnelif:{}:deprogrammed tnnl rw table. index:{}",
+        HAL_TRACE_DEBUG("{}:deprogrammed tnnl rw table. index:{}",
                         __FUNCTION__, pd_tif->tunnel_rw_idx);
     }
     pd_tif->tunnel_rw_idx = INVALID_INDEXER_INDEX;
@@ -579,10 +579,10 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 
     ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-tunnelif:{}:unable to program tnnl rw table: ret:{}",
+        HAL_TRACE_ERR("{}:unable to program tnnl rw table: ret:{}",
                       __FUNCTION__, ret);
     } else {
-        HAL_TRACE_DEBUG("pd-tunnelif:{}:programmed tnnl rw table. index:{}",
+        HAL_TRACE_DEBUG("{}:programmed tnnl rw table. index:{}",
                         __FUNCTION__, pd_tif->tunnel_rw_idx);
     }
 
@@ -643,7 +643,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
         if (v4_valid) {
             act.tunnel_rewrite_encap_vxlan.ip_type = IP_HEADER_TYPE_IPV4;
         } else {
-            HAL_TRACE_ERR("pd-tunnelif::{}: Invalid outer encap header",
+            HAL_TRACE_ERR(":{}: Invalid outer encap header",
                           __FUNCTION__);
             ret = HAL_RET_ERR;
             goto fail_flag;

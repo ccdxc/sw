@@ -6,12 +6,14 @@
 
 syntax = "proto3";
 import "types.proto";
+import "kh.proto";
 
 package gft;
 option go_package="halproto";
 
 // The gft service definition
 service Gft {
+  rpc GftExactMatchProfileCreate (GftExactMatchProfileRequestMsg) returns (GftExactMatchProfileResponseMsg) {}
 }
 
 message GftEthFields {
@@ -73,11 +75,34 @@ message GftHeaderGroupExactMatchProfile {
   GftHeaderFields match_fields = 2;
 } 
 
-message GftExactMatchProfile {
-  bool                                        rdma_flow            = 1;
-  GftTableType                                table_type           = 2;
-  uint32                                      profile_id           = 3;
-  repeated GftHeaderGroupExactMatchProfile    exact_match_profiles = 4;
+message GftExactMatchProfileSpec {
+  types.ObjectMeta                            meta                 = 1;    // common object meta
+  kh.GftExactMatchProfileKeyHandle            key_or_handle        = 2;
+  bool                                        rdma_flow            = 3;
+  GftTableType                                table_type           = 4;
+  repeated GftHeaderGroupExactMatchProfile    exact_match_profiles = 5;
+}
+
+// GftExactMatchProfileRequestMsg is used to do batched add or modify of GFT
+// exact match profile request
+message GftExactMatchProfileRequestMsg {
+  repeated GftExactMatchProfileSpec    request = 1;    // batched request
+}
+
+// GftExactMatchProfileStatus represents the current status of GFT exact match profile
+message GftExactMatchProfileStatus {
+  fixed64    profile_handle = 1;    // handle of the gft exact match profile returned by HAL
+}
+
+// GftExactMatchProfileResponse is response to GftExactMatchProfileSpec
+message GftExactMatchProfileResponse {
+  types.ApiStatus               api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  GftExactMatchProfileStatus    status     = 2;    // operational status
+}
+
+// GftExactMatchProfileResponseMsg is batched response to GftExactMatchProfileRequestMsg
+message GftExactMatchProfileResponseMsg {
+  repeated GftExactMatchProfileResponse    response = 1;    // batched response
 }
 
 message UdpMatchFields {

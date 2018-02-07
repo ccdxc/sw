@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
@@ -63,7 +65,7 @@ l2seg_add_to_db (l2seg_t *l2seg, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:adding to l2seg id hash table", 
+    HAL_TRACE_DEBUG("{}:adding to l2seg id hash table", 
                     __FUNCTION__);
     // allocate an entry to establish mapping from seg id to its handle
     entry =
@@ -78,7 +80,7 @@ l2seg_add_to_db (l2seg_t *l2seg, hal_handle_t handle)
     sdk_ret = g_hal_state->l2seg_id_ht()->insert_with_key(&l2seg->seg_id,
                                                           entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to add seg id to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add seg id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -95,7 +97,7 @@ l2seg_del_from_db (l2seg_t *l2seg)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:removing from seg id hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:removing from seg id hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->l2seg_id_ht()->
         remove(&l2seg->seg_id);
@@ -120,7 +122,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
 
     if (!spec.has_vrf_key_handle() ||
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no vrf_key_handle or invalid vrf id",
+        HAL_TRACE_ERR("{}:no vrf_key_handle or invalid vrf id",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -137,7 +139,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
 
     // must have key-handle set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg id and handle not set in request",
+        HAL_TRACE_ERR("{}:l2seg id and handle not set in request",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -146,7 +148,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
     // must have key in the key-handle
     if (spec.key_or_handle().key_or_handle_case() !=
             L2SegmentKeyHandle::kSegmentId) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg id not set in request",
+        HAL_TRACE_ERR("{}:l2seg id not set in request",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_L2_SEGMENT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -154,7 +156,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
 
     // must have wire encap
     if (!spec.has_wire_encap()) {
-        HAL_TRACE_ERR("pi-l2seg:{}:should have a wire encap",
+        HAL_TRACE_ERR("{}:should have a wire encap",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_ENCAP_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -163,7 +165,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
     // fetch the vrf
     vrf = vrf_lookup_key_or_handle(spec.vrf_key_handle());
     if (vrf == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}: Fetch Vrf Id:{}/{} Failed. ret: {}",
+        HAL_TRACE_ERR("{}: Fetch Vrf Id:{}/{} Failed. ret: {}",
                       __FUNCTION__, spec.vrf_key_handle().vrf_id(),
                       spec.vrf_key_handle().vrf_handle(), HAL_RET_INVALID_ARG);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
@@ -176,7 +178,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
         // Check if Infra L2Seg exists already
         infra_l2seg = (l2seg_t *)g_hal_state->infra_l2seg();
         if (infra_l2seg != NULL) {
-            HAL_TRACE_ERR("pi-l2seg:{}: Infra L2Seg exists already. L2seg id: {}",
+            HAL_TRACE_ERR("{}: Infra L2Seg exists already. L2seg id: {}",
                           __FUNCTION__, infra_l2seg->seg_id);
             rsp->set_api_status(types::API_STATUS_L2_SEGMENT_TYPE_INVALID);
             return HAL_RET_INVALID_ARG;
@@ -185,7 +187,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
         // Check if VRF is set to infra
         infra_vrf = (vrf_t *)g_hal_state->infra_vrf();
         if ((infra_vrf == NULL) || (vrf != infra_vrf)) {
-            HAL_TRACE_ERR("pi-l2seg:{}: Invalid vrf set for Infra L2seg. Infra vrf: {}",
+            HAL_TRACE_ERR("{}: Invalid vrf set for Infra L2seg. Infra vrf: {}",
                           __FUNCTION__, (infra_vrf)?infra_vrf->vrf_id:0);
             rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
             return HAL_RET_VRF_NOT_FOUND;
@@ -209,7 +211,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_create_app_ctxt_t     *app_ctxt = NULL; 
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}: invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -220,7 +222,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     l2seg     = (l2seg_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:create add CB {}",
+    HAL_TRACE_DEBUG("{}:create add CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // create the broadcast/flood list for this l2seg
@@ -231,7 +233,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to create broadcast list, err : {}",
+        HAL_TRACE_ERR("{}:failed to create broadcast list, err : {}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -242,7 +244,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.vrf = app_ctxt->vrf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to create l2seg pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to create l2seg pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -299,7 +301,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_create_app_ctxt_t *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -311,7 +313,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // create the broadcast/flood list for this l2seg
@@ -342,7 +344,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Add to l2seg id hash table
     ret = l2seg_add_to_db(l2seg, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to add l2seg {} to db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to add l2seg {} to db, err : {}", 
                 __FUNCTION__, l2seg->seg_id, ret);
         goto end;
     }
@@ -351,7 +353,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf = app_ctxt->vrf;
     ret = vrf_add_l2seg(vrf, l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to add rel. from vrf",
+        HAL_TRACE_ERR("{}:failed to add rel. from vrf",
                 __FUNCTION__);
         goto end;
     }
@@ -359,14 +361,14 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Add l2seg to network's l2seg list
     ret = l2seg_update_network_relation (l2seg->nw_list, l2seg, true);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to add network -> l2seg "
+        HAL_TRACE_ERR("{}:failed to add network -> l2seg "
                       "relation ret:{}", 
                       __FUNCTION__,  ret);
         goto end;
     }
 
     if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
-        HAL_TRACE_DEBUG("pi-l2seg:{} id:{} is infra ", __FUNCTION__,
+        HAL_TRACE_DEBUG("{} id:{} is infra ", __FUNCTION__,
                         l2seg->seg_id);
         g_hal_state->set_infra_l2seg(l2seg);
     }
@@ -396,7 +398,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -407,7 +409,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:create abort CB {}",
+    HAL_TRACE_DEBUG("{}:create abort CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // delete call to PD
@@ -416,7 +418,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_l2seg_args.l2seg = l2seg;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}", 
+            HAL_TRACE_ERR("{}:failed to delete l2seg pd, err : {}", 
                           __FUNCTION__, ret);
         }
     }
@@ -481,7 +483,7 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
 
     num_nws = spec.network_key_handle_size();
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:received {} networks", 
+    HAL_TRACE_DEBUG("{}:received {} networks", 
             __FUNCTION__, num_nws);
 
     for (i = 0; i < num_nws; i++) {
@@ -491,14 +493,14 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
         }
-        HAL_TRACE_DEBUG("pi-l2seg:{}:adding network: {} with handle:{}", __FUNCTION__, 
+        HAL_TRACE_DEBUG("{}:adding network: {} with handle:{}", __FUNCTION__, 
                         ippfx2str(&nw->nw_key.ip_pfx), nw->hal_handle);
 
         // add nw to list
         // hal_add_to_handle_list(&l2seg->nw_list_head, nw->hal_handle);
         hal_add_to_handle_block_list(l2seg->nw_list, nw->hal_handle);
     }
-    HAL_TRACE_DEBUG("pi-l2seg:{}:networks added:", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:networks added:", __FUNCTION__);
     hal_print_handles_block_list(l2seg->nw_list);
 #if 0
     sdk::lib::dllist_reset(&l2seg->nw_list_head);
@@ -509,14 +511,14 @@ l2seg_read_networks (l2seg_t *l2seg, L2SegmentSpec& spec)
             ret = HAL_RET_NETWORK_NOT_FOUND;
             goto end;
         }
-        HAL_TRACE_DEBUG("pi-l2seg:{}:adding network: {} with handle:{}", __FUNCTION__, 
+        HAL_TRACE_DEBUG("{}:adding network: {} with handle:{}", __FUNCTION__, 
                         ippfx2str(&nw->nw_key.ip_pfx), nw->hal_handle);
 
         // add nw to list
         hal_add_to_handle_list(&l2seg->nw_list_head, nw->hal_handle);
     }
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:networks added:", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:networks added:", __FUNCTION__);
     hal_print_handles_list(&l2seg->nw_list_head);
 #endif
 
@@ -629,17 +631,14 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg_t                     *existing_l2seg = NULL;
     bool                        is_same   = false;
 
-
-    hal_api_trace(" API Begin: l2segment create ");
-    HAL_TRACE_DEBUG("pi-l2seg:{}:l2seg create with id:{}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("L2seg create with id:{}",
                     spec.key_or_handle().segment_id());
 
     // validate the request message
     ret = validate_l2segment_create(spec, rsp, app_ctxt);
     if (ret != HAL_RET_OK) {
         // api_status already set, just return
-        HAL_TRACE_ERR("pi-l2seg:{}:validation Failed. ret: {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Validation Failed. ret: {}", ret);
         goto end;
     }
 
@@ -654,8 +653,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
             goto end;
         }
 
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to create a l2seg, "
-                      "l2seg {} exists already", __FUNCTION__, 
+        HAL_TRACE_ERR("Failed to create a l2seg, l2seg {} exists already",
                       spec.key_or_handle().segment_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         ret = HAL_RET_ENTRY_EXISTS;
@@ -665,8 +663,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     // instantiate the L2 segment
     l2seg = l2seg_alloc_init();
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:unable to allocate handle/memory ret: {}",
-                      __FUNCTION__, ret);
+        HAL_TRACE_ERR("Unable to allocate handle/memory ret: {}", ret);
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         ret = HAL_RET_OOM;
         goto end;
@@ -683,22 +680,19 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     if (spec.has_wire_encap()) {
         l2seg->wire_encap.type = spec.wire_encap().encap_type();
         l2seg->wire_encap.val = spec.wire_encap().encap_value();
-        HAL_TRACE_DEBUG("pi-l2seg:{}:wire enc_type:{} enc_val:{}",
-                        __FUNCTION__, l2seg->wire_encap.type, 
+        HAL_TRACE_DEBUG("Wire enc_type:{} enc_val:{}", l2seg->wire_encap.type, 
                         l2seg->wire_encap.val);
     }
     if (spec.has_tunnel_encap()) {
         l2seg->tunnel_encap.type = spec.tunnel_encap().encap_type();
         l2seg->tunnel_encap.val = spec.tunnel_encap().encap_value();
-        HAL_TRACE_DEBUG("pi-l2seg:{}:tunnel enc_type:{} enc_val:{}",
-                        __FUNCTION__, l2seg->tunnel_encap.type, 
-                        l2seg->tunnel_encap.val);
+        HAL_TRACE_DEBUG("Tunnel enc_type:{} enc_val:{}",
+                        l2seg->tunnel_encap.type, l2seg->tunnel_encap.val);
     }
 
     ret = l2seg_read_networks(l2seg, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:error in reading networks",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("Error in reading networks, err {}", ret);
         l2seg_free(l2seg);
         ret = HAL_RET_INVALID_ARG;
         goto end;
@@ -707,8 +701,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     // allocate hal handle id
     l2seg->hal_handle = hal_handle_alloc(HAL_OBJ_ID_L2SEG);
     if (l2seg->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}: failed to alloc handle {}", 
-                      __FUNCTION__, l2seg->seg_id);
+        HAL_TRACE_ERR("Failed to alloc handle {}", l2seg->seg_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         l2seg_free(l2seg);
         ret = HAL_RET_HANDLE_INVALID;
@@ -738,7 +731,6 @@ end:
         }
     }
     l2seg_prepare_rsp(rsp, ret, l2seg);
-    hal_api_trace(" API End: l2segment create ");
     return ret;
 }
 
@@ -753,7 +745,7 @@ validate_l2seg_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     // if vrf is set, it has to be right
     if (spec.has_vrf_key_handle() &&
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no vrf_key_handle or invalid vrf id",
+        HAL_TRACE_ERR("{}:no vrf_key_handle or invalid vrf id",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -761,7 +753,7 @@ validate_l2seg_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-l2seg:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -782,12 +774,12 @@ l2seg_fwdpolicy_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     app_ctxt->bcast_fwd_policy_change = false;
 
     if (l2seg->mcast_fwd_policy != spec.mcast_fwd_policy()) {
-        HAL_TRACE_DEBUG("pi-l2seg:{}:mcast_fwd_policy updated", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}:mcast_fwd_policy updated", __FUNCTION__);
         app_ctxt->mcast_fwd_policy_change = true;
         app_ctxt->new_mcast_fwd_policy = spec.mcast_fwd_policy();
     }
     if (l2seg->bcast_fwd_policy != spec.bcast_fwd_policy()) {
-        HAL_TRACE_DEBUG("pi-l2seg:{}:bcast_fwd_policy updated", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}:bcast_fwd_policy updated", __FUNCTION__);
         app_ctxt->bcast_fwd_policy_change = true;
         app_ctxt->new_bcast_fwd_policy = spec.bcast_fwd_policy();
     }
@@ -813,7 +805,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_update_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -824,7 +816,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     l2seg = (l2seg_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}: update upd cb {}",
+    HAL_TRACE_DEBUG("{}: update upd cb {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -832,7 +824,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.l2seg = l2seg;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_UPDATE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to update l2seg pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to update l2seg pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -943,7 +935,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                         *l2seg = NULL, *l2seg_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -955,7 +947,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     l2seg_clone = (l2seg_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
 #if 0
@@ -967,7 +959,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->nwlist_change) {
         ret = l2seg_update_pi_with_nw_list(l2seg_clone, app_ctxt);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-l2seg:{}:failed to update pi with nwlists, "
+            HAL_TRACE_ERR("{}:failed to update pi with nwlists, "
                           "ret:{}",
                           __FUNCTION__, ret);
             goto end;
@@ -982,7 +974,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     //      - Free original
     ret = l2seg_update_pi_with_nw_list(l2seg_clone, app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to update pi with nwlists, "
+        HAL_TRACE_ERR("{}:failed to update pi with nwlists, "
                       "ret:{}",
                       __FUNCTION__, ret);
         goto end;
@@ -993,7 +985,7 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.l2seg = l2seg;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete l2seg pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -1018,7 +1010,7 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                         *l2seg = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1030,7 +1022,7 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assign clone as we are trying to free only the clone
     l2seg = (l2seg_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // Free PD
@@ -1038,7 +1030,7 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.l2seg = l2seg;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_MEM_FREE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete l2seg pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -1074,7 +1066,7 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
 
     *nwlist_change = false;
     num_nws = spec.network_key_handle_size();
-    HAL_TRACE_DEBUG("pi-l2seg:{}:num. of nws:{}", __FUNCTION__, num_nws);
+    HAL_TRACE_DEBUG("{}:num. of nws:{}", __FUNCTION__, num_nws);
     for (i = 0; i < num_nws; i++) {
         nw_key_handle = spec.network_key_handle(i);
         nw = network_lookup_key_or_handle(nw_key_handle,
@@ -1093,27 +1085,27 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
             // Add to added list
             hal_add_to_handle_block_list(add_nwlist, nw->hal_handle);
             *nwlist_change = true;
-            HAL_TRACE_DEBUG("pi-l2seg:{}: added to add list hdl: {}", 
+            HAL_TRACE_DEBUG("{}: added to add list hdl: {}", 
                     __FUNCTION__, nw->hal_handle);
         }
     }
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:Existing nws:", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:Existing nws:", __FUNCTION__);
     hal_print_handles_block_list(l2seg->nw_list);
-    HAL_TRACE_DEBUG("pi-l2seg:{}:New Aggregated nws:", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:New Aggregated nws:", __FUNCTION__);
     hal_print_handles_block_list(aggr_nwlist);
-    HAL_TRACE_DEBUG("pi-l2seg:{}:added nws:", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:added nws:", __FUNCTION__);
     hal_print_handles_block_list(add_nwlist);
 
     // dllist_for_each(lnode, &(l2seg->nw_list_head)) {
     //     entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
     for (const void *ptr : *l2seg->nw_list) {
         p_hdl_id = (hal_handle_t *)ptr;
-        HAL_TRACE_DEBUG("pi-l2seg:{}: Checking for nw: {}", 
+        HAL_TRACE_DEBUG("{}: Checking for nw: {}", 
                 __FUNCTION__, *p_hdl_id);
         for (i = 0; i < num_nws; i++) {
             nw_key_handle = spec.network_key_handle(i);
-            HAL_TRACE_DEBUG("pi-l2seg:{}:grpc nw handle: {}", __FUNCTION__, nw->hal_handle);
+            HAL_TRACE_DEBUG("{}:grpc nw handle: {}", __FUNCTION__, nw->hal_handle);
             if (*p_hdl_id == nw->hal_handle) {
                 nw_exists = true;
                 break;
@@ -1137,13 +1129,13 @@ l2seg_nw_list_update (L2SegmentSpec& spec, l2seg_t *l2seg,
 #endif
             hal_add_to_handle_block_list(del_nwlist, *p_hdl_id);
             *nwlist_change = true;
-            HAL_TRACE_DEBUG("pi-l2seg:{}: added to delete list hdl: {}", 
+            HAL_TRACE_DEBUG("{}: added to delete list hdl: {}", 
                     __FUNCTION__, *p_hdl_id);
         }
         nw_exists = false;
     }
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:deleted nws:", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:deleted nws:", __FUNCTION__);
     hal_print_handles_block_list(del_nwlist);
 
 #if 0
@@ -1171,7 +1163,7 @@ l2seg_check_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     // check for fwd policy change
     ret = l2seg_fwdpolicy_update(spec, l2seg, app_ctxt); 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to check if fwdpolicy is updated.", 
+        HAL_TRACE_ERR("{}:failed to check if fwdpolicy is updated.", 
                       __FUNCTION__);
         goto end;
     }
@@ -1208,7 +1200,7 @@ l2seg_validate_vrf (vrf_id_t vrf_id, l2seg_t *l2seg)
     vrf_t    *ten = NULL;
 
     if (vrf_id == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:invalid vrf_id:{}",
+        HAL_TRACE_ERR("{}:invalid vrf_id:{}",
                       __FUNCTION__, vrf_id);
         ret = HAL_RET_INVALID_ARG;
         goto end;
@@ -1216,14 +1208,14 @@ l2seg_validate_vrf (vrf_id_t vrf_id, l2seg_t *l2seg)
 
     ten = vrf_lookup_by_id(vrf_id);
     if (ten == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:unable to find vrf_id:{}",
+        HAL_TRACE_ERR("{}:unable to find vrf_id:{}",
                       __FUNCTION__, vrf_id);
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
     if (ten->hal_handle != l2seg->vrf_handle) {
-        HAL_TRACE_ERR("pi-l2seg:{}:unable to match cr_ten_hdl:{}, "
+        HAL_TRACE_ERR("{}:unable to match cr_ten_hdl:{}, "
                       "up_ten_hdl:{}",
                       __FUNCTION__, l2seg->vrf_handle, ten->hal_handle);
         ret = HAL_RET_INVALID_ARG;
@@ -1243,7 +1235,7 @@ l2seg_update_app_ctxt_init(l2seg_update_app_ctxt_t *app_ctxt)
     hal_ret_t       ret = HAL_RET_OK;
 
     if (!app_ctxt) {
-        HAL_TRACE_ERR("pi-l2seg:{}: app ctxt is NULL", __FUNCTION__);
+        HAL_TRACE_ERR("{}: app ctxt is NULL", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1280,14 +1272,14 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     // validate the request message
     ret = validate_l2seg_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg update validation failed, ret : {}", 
+        HAL_TRACE_ERR("{}:l2seg update validation failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
 
     l2seg = l2seg_lookup_key_or_handle(kh);
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to find l2seg, id {}, handle {}",
+        HAL_TRACE_ERR("{}:failed to find l2seg, id {}, handle {}",
                       __FUNCTION__, kh.segment_id(), kh.l2segment_handle());
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
@@ -1296,19 +1288,19 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     if (spec.has_vrf_key_handle()) {
         ret = l2seg_validate_vrf(spec.vrf_key_handle().vrf_id(), l2seg);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-l2seg:{}:mismatch of vrfs for l2seg, "
+            HAL_TRACE_ERR("{}:mismatch of vrfs for l2seg, "
                           "id:{}, handle:{}",
                           __FUNCTION__, kh.segment_id(), kh.l2segment_handle());
             goto end;
         }
     }
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:update l2seg {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}:update l2seg {}", __FUNCTION__, 
                     l2seg->seg_id);
 
     ret = l2seg_update_app_ctxt_init(&app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg unable to init upd app ctxt, "
+        HAL_TRACE_ERR("{}:l2seg unable to init upd app ctxt, "
                       "ret : {}", 
                       __FUNCTION__, ret);
         goto end;
@@ -1316,13 +1308,13 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
     ret = l2seg_check_update(spec, l2seg, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg check update failed, ret : {}", 
+        HAL_TRACE_ERR("{}:l2seg check update failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
 
     if (!app_ctxt.l2seg_change) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no change in l2seg update: noop", __FUNCTION__);
+        HAL_TRACE_ERR("{}:no change in l2seg update: noop", __FUNCTION__);
         // Its a no-op. We can just return HAL_RET_OK
         // ret = HAL_RET_INVALID_OP;
         goto end;
@@ -1380,7 +1372,7 @@ validate_l2seg_delete_req (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse*
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-l2seg:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1398,7 +1390,7 @@ validate_l2seg_delete (l2seg_t *l2seg)
     // check for no presence of back refernces
     if (l2seg->if_list->num_elems()) {
         ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("pi-l2seg:{}:ifs still referring:", __FUNCTION__);
+        HAL_TRACE_ERR("{}:ifs still referring:", __FUNCTION__);
         hal_print_handles_block_list(l2seg->if_list);
     }
 
@@ -1418,7 +1410,7 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                     *l2seg        = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1429,7 +1421,7 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     l2seg = (l2seg_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:delete del CB {}",
+    HAL_TRACE_DEBUG("{}:delete del CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // TODO: Check the dependency ref count for the l2seg. whoever is refering
@@ -1442,7 +1434,7 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.l2seg = l2seg;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to delete l2seg pd, err : {}", 
                       __FUNCTION__, ret);
     }
 
@@ -1460,7 +1452,7 @@ l2seg_detach_from_networks (l2seg_t *l2seg)
 
     ret = l2seg_update_network_relation(l2seg->nw_list, l2seg, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to del network -/-> l2seg"
+        HAL_TRACE_ERR("{}:failed to del network -/-> l2seg"
                 "relation ret:{}", 
                 __FUNCTION__,  ret);
         goto end;
@@ -1491,7 +1483,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1502,14 +1494,14 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:delete commit CB {}",
+    HAL_TRACE_DEBUG("{}:delete commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // Remove l2seg references from other objects
     vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
     ret = vrf_del_l2seg(vrf, l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to del rel. from vrf",
+        HAL_TRACE_ERR("{}:failed to del rel. from vrf",
                 __FUNCTION__);
         goto end;
     }
@@ -1517,7 +1509,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // remove back refs from networks and free up list
     ret = l2seg_detach_from_networks(l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to detach from networks, "
+        HAL_TRACE_ERR("{}:failed to detach from networks, "
                       "ret:{}", __FUNCTION__, ret);
         goto end;
     }
@@ -1525,7 +1517,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // a. Remove from l2seg id hash table
     ret = l2seg_del_from_db(l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to del l2seg {} from db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to del l2seg {} from db, err : {}", 
                       __FUNCTION__, l2seg->seg_id, ret);
         goto end;
     }
@@ -1546,7 +1538,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:commit CBs can't fail: ret:{}",
+        HAL_TRACE_ERR("{}:commit CBs can't fail: ret:{}",
                       __FUNCTION__, ret);
         HAL_ASSERT(0);
     }
@@ -1588,25 +1580,25 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
     // validate the request message
     ret = validate_l2seg_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg delete validation failed, ret : {}",
+        HAL_TRACE_ERR("{}:l2seg delete validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
 
     l2seg = l2seg_lookup_key_or_handle(kh);
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to find l2seg, id {}, handle {}",
+        HAL_TRACE_ERR("{}:failed to find l2seg, id {}, handle {}",
                       __FUNCTION__, kh.segment_id(), kh.l2segment_handle());
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-l2seg:{}:deleting l2seg {}", 
+    HAL_TRACE_DEBUG("{}:deleting l2seg {}", 
                     __FUNCTION__, l2seg->seg_id);
 
     // validate if there no objects referring this sec. profile
     ret = validate_l2seg_delete(l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg delete validation failed, "
+        HAL_TRACE_ERR("{}:l2seg delete validation failed, "
                       "ret : {}",
                       __FUNCTION__, ret);
         goto end;
@@ -1757,7 +1749,7 @@ l2seg_add_if (l2seg_t *l2seg, if_t *hal_if)
     l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-l2seg:{}: add l2seg => if ,{} => {}, ret:{}",
+    HAL_TRACE_DEBUG("{}: add l2seg => if ,{} => {}, ret:{}",
                     __FUNCTION__, l2seg->seg_id, hal_if->if_id, ret);
     return ret;
 }
@@ -1784,7 +1776,7 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}: del l2seg =/=> if ,{} =/=> {}, ret:{}",
+    HAL_TRACE_DEBUG("{}: del l2seg =/=> if ,{} =/=> {}, ret:{}",
                     __FUNCTION__, l2seg->seg_id, hal_if->if_id, ret);
 
 end:
@@ -1805,7 +1797,7 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:handling nwsec update seg_id: {}", 
+    HAL_TRACE_DEBUG("{}:handling nwsec update seg_id: {}", 
                     __FUNCTION__, l2seg->seg_id);
     // Walk through Ifs and call respective functions
     for (const void *ptr : *l2seg->if_list) {
@@ -1814,7 +1806,7 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
         // hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
         hal_if = find_if_by_handle(*p_hdl_id);
         if (!hal_if) {
-            HAL_TRACE_ERR("pi-l2seg:{}:unable to find if with handle:{}",
+            HAL_TRACE_ERR("{}:unable to find if with handle:{}",
                           __FUNCTION__, *p_hdl_id);
             continue;
         }

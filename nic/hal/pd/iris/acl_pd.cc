@@ -404,10 +404,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
         ret = acl_tbl->insert(&key, &mask, &data, acl_get_priority(pi_acl), &pd_acl->handle);
     }
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-acl::{}: Unable to program for nacl: {}",
+        HAL_TRACE_ERR("{}: Unable to program for nacl: {}",
                 __func__, pd_acl->pi_acl->key);
     } else {
-        HAL_TRACE_DEBUG("pd-acl::{}: Programmed for nacl: {}",
+        HAL_TRACE_DEBUG("{}: Programmed for nacl: {}",
                 __func__, pd_acl->pi_acl->key);
     }
 
@@ -425,10 +425,10 @@ acl_pd_cleanup_acl_tbl (pd_acl_t *pd_acl)
 
     ret = acl_tbl->remove(pd_acl->handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-acl::{}: Unable to cleanup for acl: {}",
+        HAL_TRACE_ERR("{}: Unable to cleanup for acl: {}",
                       __func__, pd_acl->pi_acl->key);
     } else {
-        HAL_TRACE_DEBUG("pd-acl::{}: Programmed cleanup acl: {}",
+        HAL_TRACE_DEBUG("{}: Programmed cleanup acl: {}",
                         __func__, pd_acl->pi_acl->key);
     }
 
@@ -523,7 +523,7 @@ pd_acl_update (pd_acl_update_args_t *args)
     HAL_ASSERT_RETURN((args->acl != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->acl->pd != NULL), HAL_RET_INVALID_ARG);
 
-    HAL_TRACE_DEBUG("pd-acl::{}: updating pd state for acl:{}",
+    HAL_TRACE_DEBUG("{}: updating pd state for acl:{}",
                     __func__,
                     args->acl->key);
 
@@ -568,7 +568,7 @@ pd_acl_create (pd_acl_create_args_t *args)
     hal_ret_t ret = HAL_RET_OK;
     pd_acl_t  *pd_acl;
 
-    HAL_TRACE_DEBUG("pd-acl::{}: Creating pd state for acl: {}",
+    HAL_TRACE_DEBUG("{}: Creating pd state for acl: {}",
                     __func__, args->acl->key);
 
     // Create acl PD
@@ -585,7 +585,7 @@ pd_acl_create (pd_acl_create_args_t *args)
     ret = acl_pd_alloc_res(pd_acl);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("pd-acl::{}: Unable to alloc. resources for acl: {}",
+        HAL_TRACE_ERR("{}: Unable to alloc. resources for acl: {}",
                 __func__, args->acl->key);
         goto end;
     }

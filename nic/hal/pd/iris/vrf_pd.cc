@@ -22,7 +22,7 @@ pd_vrf_create (pd_vrf_create_args_t *args)
     pd_vrf_t                *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-vrf:{}:creating pd state for vrf {}",
+    HAL_TRACE_DEBUG("{}:creating pd state for vrf {}",
                     __FUNCTION__, args->vrf->vrf_id);
 
     // allocate PD vrf state
@@ -38,7 +38,7 @@ pd_vrf_create (pd_vrf_create_args_t *args)
     // allocate resources
     ret = vrf_pd_alloc_res(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to allocated resources", 
+        HAL_TRACE_ERR("{}:failed to allocated resources", 
                       __FUNCTION__);
         goto end;
     }
@@ -46,7 +46,7 @@ pd_vrf_create (pd_vrf_create_args_t *args)
     // program hw
     ret = vrf_pd_program_hw(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to program hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
         goto end;
     }
 
@@ -109,27 +109,27 @@ pd_vrf_delete (pd_vrf_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->vrf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->vrf->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-vrf:{}:Deleting pd state for vrf {}",
+    HAL_TRACE_DEBUG("{}:Deleting pd state for vrf {}",
                     __FUNCTION__, args->vrf->vrf_id);
     vrf_pd = (pd_vrf_t *)args->vrf->pd;
 
     // deprogram HW
     ret = vrf_pd_deprogram_hw(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     // remove from db
     ret = vrf_pd_del_from_db(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:unable to delete from db", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to delete from db", __FUNCTION__);
         goto end;
     }
 
     // dealloc resources and free
     ret = vrf_pd_cleanup(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed pd vrf delete",
+        HAL_TRACE_ERR("{}:failed pd vrf delete",
                       __FUNCTION__);
     }
 
@@ -147,7 +147,7 @@ vrf_pd_add_to_db (pd_vrf_t *pd_vrf, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pd-vrf:{}:adding to flow lkup id hash table. fl_lkup_id:{} => ",
+    HAL_TRACE_DEBUG("{}:adding to flow lkup id hash table. fl_lkup_id:{} => ",
                     __FUNCTION__, pd_vrf->vrf_fl_lkup_id);
 
     // allocate an entry to establish mapping from vrf hwid to its handle
@@ -164,7 +164,7 @@ vrf_pd_add_to_db (pd_vrf_t *pd_vrf, hal_handle_t handle)
         insert_with_key(&pd_vrf->vrf_fl_lkup_id,
                         entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to add hw id to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add hw id to handle mapping, "
                       "err : {}", __FUNCTION__, sdk_ret);
         hal::pd::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -181,7 +181,7 @@ vrf_pd_del_from_db (pd_vrf_t *pd_vrf)
 {
     hal_handle_id_ht_entry_t    *entry = NULL;
 
-    HAL_TRACE_DEBUG("pd-vrf:{}:removing from flow lkup id hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:removing from flow lkup id hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->flow_lkupid_ht()->
         remove(&pd_vrf->vrf_fl_lkup_id);
@@ -205,7 +205,7 @@ vrf_pd_deprogram_hw (pd_vrf_t *vrf_pd)
     // De-Program Input properties Table
     ret = vrf_pd_depgm_inp_prop_tbl(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     // De-Program Input Mapping Native & Tunnel
@@ -233,11 +233,11 @@ vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
     sdk_ret = inp_prop_tbl->remove(vrf_pd->inp_prop_tbl_cpu_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf::{}:unable to deprogram from cpu entry "
+        HAL_TRACE_ERR(":{}:unable to deprogram from cpu entry "
                 "input properties for seg_id:{}",
                 __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
     } else {
-        HAL_TRACE_DEBUG("pd-vrf::{}:deprogrammed from_cpu_entry "
+        HAL_TRACE_DEBUG(":{}:deprogrammed from_cpu_entry "
                 "input properties for seg_id:{}",
                 __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
     }
@@ -300,12 +300,12 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
     sdk_ret = inp_prop_tbl->insert(&key, &data, &vrf_pd->inp_prop_tbl_cpu_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf::{}: Unable to program from cpu entry "
+        HAL_TRACE_ERR(":{}: Unable to program from cpu entry "
                       "input properties for vrf_id:{}",
                       __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
         goto end;
     } else {
-        HAL_TRACE_DEBUG("pd-vrf::{}: Programmed from_cpu_entry "
+        HAL_TRACE_DEBUG(":{}: Programmed from_cpu_entry "
                         "input properties for vrf_id:{}",
                         __FUNCTION__, ((vrf_t*)(vrf_pd->vrf))->vrf_id);
     }
@@ -395,7 +395,7 @@ vrf_pd_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     if (tcam == NULL) {
-        HAL_TRACE_ERR("pd-vrf:{}:unable to find tcam for table id: {}",
+        HAL_TRACE_ERR("{}:unable to find tcam for table id: {}",
                       __FUNCTION__, tbl_id);
         ret = HAL_RET_INVALID_ARG;
         goto end;
@@ -415,7 +415,7 @@ vrf_pd_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
                 HAL_TRACE_ERR("Input mapping native tcam remove failure, "
                               "idx : {}, err : {}", arr[i], ret);
             }
-            HAL_TRACE_DEBUG("pd-vrf:{}:Removing from tbld_id:{} at {}",
+            HAL_TRACE_DEBUG("{}:Removing from tbld_id:{} at {}",
                             __FUNCTION__, tbl_id, arr[i]);
             arr[i] = INVALID_INDEXER_INDEX;
         }
@@ -540,7 +540,7 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
     rs = g_hal_state_pd->vrf_hwid_idxr()->
                          alloc((uint32_t *)&vrf_pd->vrf_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc vrf_hw_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc vrf_hw_id err: {}", 
                       __FUNCTION__, rs);
         vrf_pd->vrf_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
@@ -549,12 +549,12 @@ vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
 
     vrf_pd->vrf_fl_lkup_id = vrf_pd->vrf_hw_id << HAL_PD_VRF_SHIFT;
 
-    HAL_TRACE_DEBUG("pd-vrf:{}:allocated vrf_hw_id:{}, vrf_fl_lkup_id:{}", 
+    HAL_TRACE_DEBUG("{}:allocated vrf_hw_id:{}, vrf_fl_lkup_id:{}", 
                     __FUNCTION__, vrf_pd->vrf_hw_id, vrf_pd->vrf_fl_lkup_id);
 
     ret = vrf_pd_alloc_cpuid(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc cpuid", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to alloc cpuid", __FUNCTION__);
         goto end;
     }
 
@@ -574,19 +574,19 @@ vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
     if (vrf_pd->vrf_hw_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->vrf_hwid_idxr()->free(vrf_pd->vrf_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-vrf:{}:failed to free vrf_hw_id err: {}", 
+            HAL_TRACE_ERR("{}:failed to free vrf_hw_id err: {}", 
                           __FUNCTION__, vrf_pd->vrf_hw_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("pd-vrf:{}:freed vrf_hw_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed vrf_hw_id: {}", 
                         __FUNCTION__, vrf_pd->vrf_hw_id);
     }
 
     ret = vrf_pd_dealloc_cpuid(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to dealloc cpuid", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to dealloc cpuid", __FUNCTION__);
         goto end;
     }
 
@@ -610,7 +610,7 @@ vrf_pd_alloc_cpuid(pd_vrf_t *pd_vrf)
         pd_vrf->vrf_fromcpu_vlan_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("pd-vrf:{}: vrf_id:{} allocated from_cpu_vlan_id: {}", 
+    HAL_TRACE_DEBUG("{}: vrf_id:{} allocated from_cpu_vlan_id: {}", 
                     __FUNCTION__, 
                     ((vrf_t*)(pd_vrf->vrf))->vrf_id,
                     pd_vrf->vrf_fromcpu_vlan_id);
@@ -632,13 +632,13 @@ vrf_pd_dealloc_cpuid(pd_vrf_t *vrf_pd)
         rs = g_hal_state_pd->l2seg_cpu_idxr()->free(vrf_pd->
                                                     vrf_fromcpu_vlan_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-vrf:{}:failed to free cpuid err: {}", 
+            HAL_TRACE_ERR("{}:failed to free cpuid err: {}", 
                           __FUNCTION__, vrf_pd->vrf_fromcpu_vlan_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("pd-vrf:{}:freed from_cpu_vlan_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed from_cpu_vlan_id: {}", 
                         __FUNCTION__, vrf_pd->vrf_fromcpu_vlan_id);
     }
 
@@ -669,7 +669,7 @@ vrf_pd_cleanup(pd_vrf_t *vrf_pd)
     // Check if l2segs have been removed before vrf cleanup
     // index 0 is reserved.
     if (vrf_pd->l2seg_hw_id_idxr_->num_indices_allocated() > 1) {
-        HAL_TRACE_ERR("pd-vrf:{}:l2seg idxr still in use. usage:{}", 
+        HAL_TRACE_ERR("{}:l2seg idxr still in use. usage:{}", 
                       __FUNCTION__, vrf_pd->l2seg_hw_id_idxr_->
                       num_indices_allocated());
         ret = HAL_RET_INVALID_OP;
@@ -679,7 +679,7 @@ vrf_pd_cleanup(pd_vrf_t *vrf_pd)
     // Releasing resources
     ret = vrf_pd_dealloc_res(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-vrf:{}: unable to dealloc res for vrf: {}", 
+        HAL_TRACE_ERR("{}: unable to dealloc res for vrf: {}", 
                       __FUNCTION__, 
                       ((vrf_t *)(vrf_pd->vrf))->vrf_id);
         goto end;
@@ -710,14 +710,14 @@ vrf_pd_alloc_l2seg_hw_id(pd_vrf_t *vrf_pd, uint32_t *l2seg_hw_id)
 
     rs = vrf_pd->l2seg_hw_id_idxr_->alloc(l2seg_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc l2seg_hw_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc l2seg_hw_id err: {}", 
                       __FUNCTION__, rs);
         *l2seg_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pd-vrf:{}:allocated l2seg_hw_id: {} for vrf: {}", 
+    HAL_TRACE_DEBUG("{}:allocated l2seg_hw_id: {} for vrf: {}", 
                     __FUNCTION__, *l2seg_hw_id, 
                     ((vrf_t *)(vrf_pd->vrf))->vrf_id);
 
@@ -742,13 +742,13 @@ vrf_pd_free_l2seg_hw_id(pd_vrf_t *vrf_pd, uint32_t l2seg_hw_id)
     if (l2seg_hw_id != INVALID_INDEXER_INDEX) { 
         rs = vrf_pd->l2seg_hw_id_idxr_->free(l2seg_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-vrf:{}:Failed to free l2seg_hw_id:{} "
+            HAL_TRACE_ERR("{}:Failed to free l2seg_hw_id:{} "
                     "err: {}", __FUNCTION__,
                     l2seg_hw_id, rs);
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
-        HAL_TRACE_DEBUG("pd-vrf:{}:freed l2seg_hw_id: {} for vrf: {}", 
+        HAL_TRACE_DEBUG("{}:freed l2seg_hw_id: {} for vrf: {}", 
                         __FUNCTION__, l2seg_hw_id, 
                         ((vrf_t *)(vrf_pd->vrf))->vrf_id);
     }

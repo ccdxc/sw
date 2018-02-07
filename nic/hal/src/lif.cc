@@ -60,7 +60,7 @@ lif_add_to_db (lif_t *lif, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t *entry = NULL;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:adding to lif id hash table", 
+    HAL_TRACE_DEBUG("{}:adding to lif id hash table", 
                     __FUNCTION__);
     // allocate an entry to establish mapping from vrf id to its handle
     entry =
@@ -75,7 +75,7 @@ lif_add_to_db (lif_t *lif, hal_handle_t handle)
     sdk_ret = g_hal_state->lif_id_ht()->insert_with_key(&lif->lif_id,
                                                         entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to add lif id to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add lif id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -95,7 +95,7 @@ lif_del_from_db (lif_t *lif)
 {
     hal_handle_id_ht_entry_t *entry;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:removing from lif id hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:removing from lif id hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->lif_id_ht()->
         remove(&lif->lif_id);
@@ -200,7 +200,7 @@ lif_fwd_create (LifSpec& spec, LifResponse *rsp, lif_t *lif,
     hal_ret_t                ret = HAL_RET_OK;
     pd::pd_lif_create_args_t pd_lif_args;
 
-    HAL_TRACE_DEBUG("pi-lif:{}: P4 Processing for lif id {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}: P4 Processing for lif id {}", __FUNCTION__, 
                     spec.key_or_handle().lif_id());
 
     // allocate all PD resources and finish programming, if any
@@ -229,7 +229,7 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
 
     // make sure key-handle field is set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-lif:{}: Lif didn't have key or handle. Err: {}", 
+        HAL_TRACE_ERR("{}: Lif didn't have key or handle. Err: {}", 
                       __FUNCTION__, HAL_RET_INVALID_ARG);
         rsp->set_api_status(types::API_STATUS_LIF_ID_INVALID);
         ret = HAL_RET_INVALID_ARG;
@@ -239,7 +239,7 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
     // check if lif id is set in key-handle
     if (spec.key_or_handle().key_or_handle_case() !=
             kh::LifKeyHandle::kLifId) {
-        HAL_TRACE_ERR("pi-lif:{}: Lif didn't have Id. Err: {}", 
+        HAL_TRACE_ERR("{}: Lif didn't have Id. Err: {}", 
                       __FUNCTION__, HAL_RET_INVALID_ARG);
         rsp->set_api_status(types::API_STATUS_LIF_ID_INVALID);
         ret = HAL_RET_INVALID_ARG;
@@ -248,7 +248,7 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
 
     // check if lif exists already, and reject if one is found
     if (find_lif_by_id(spec.key_or_handle().lif_id())) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to create a lif, "
+        HAL_TRACE_ERR("{}:failed to create a lif, "
                       "lif {} exists already", __FUNCTION__, 
                       spec.key_or_handle().lif_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
@@ -284,7 +284,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     std::unique_ptr<uint8_t[]> buf;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}: invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -298,7 +298,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     spec         = app_ctxt->spec;
     rsp          = app_ctxt->rsp;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:create add CB {}",
+    HAL_TRACE_DEBUG("{}:create add CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // allocate a hw lif id
@@ -375,7 +375,7 @@ lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t  hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -387,13 +387,13 @@ lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // 1. a. Add to lif id hash table
     ret = lif_add_to_db(lif, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to add lif {} to db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to add lif {} to db, err : {}", 
                 __FUNCTION__, lif->lif_id, ret);
         goto end;
     }
@@ -424,7 +424,7 @@ lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_lif_delete_args_t pd_lif_args = { 0 };
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -435,7 +435,7 @@ lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:create abort CB {}",
+    HAL_TRACE_DEBUG("{}:create abort CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // 1. delete call to PD
@@ -444,7 +444,7 @@ lif_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_lif_args.lif = lif;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_DELETE, (void *)&pd_lif_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}", 
+            HAL_TRACE_ERR("{}:failed to delete lif pd, err : {}", 
                           __FUNCTION__, ret);
         }
     }
@@ -503,13 +503,13 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("pi-lif:{}:lif create for id {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}:lif create for id {}", __FUNCTION__, 
                     spec.key_or_handle().lif_id());
 
     // validate the request message
     ret = validate_lif_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:validation failed, ret : {}", 
+        HAL_TRACE_ERR("{}:validation failed, ret : {}", 
                 __FUNCTION__, ret);
         return ret;
     }
@@ -517,7 +517,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     // allocate and initialize interface instance
     lif = lif_alloc_init();
     if (lif == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:out of memory. err: {}", 
+        HAL_TRACE_ERR("{}:out of memory. err: {}", 
                       __FUNCTION__, HAL_RET_OOM);
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         return HAL_RET_OOM;
@@ -577,7 +577,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     // allocate hal handle id
     hal_handle = hal_handle_alloc(HAL_OBJ_ID_LIF);
     if (hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to alloc handle {}", 
+        HAL_TRACE_ERR("{}:failed to alloc handle {}", 
                       __FUNCTION__, lif->lif_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         lif_free(lif);
@@ -601,7 +601,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
                              lif_create_cleanup_cb);
 
     if (ret != HAL_RET_OK && lif != NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:error in creating lif with id ", __FUNCTION__, lif->lif_id);
+        HAL_TRACE_ERR("{}:error in creating lif with id ", __FUNCTION__, lif->lif_id);
         // if there is an error, lif will be freed in abort CB
         lif_prepare_rsp(rsp, ret, HAL_HANDLE_INVALID);
         return ret;
@@ -645,7 +645,7 @@ validate_lif_update (LifSpec& spec, LifResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-lif:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -691,7 +691,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif = (lif_t *)dhl_entry->obj;
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:update upd CB {}",
+    HAL_TRACE_DEBUG("{}:update upd CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // Update PI clone
@@ -740,7 +740,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_UPDATE, (void *)&args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -813,7 +813,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     lif       = (lif_t *)dhl_entry->obj;
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // Update PI clone
@@ -834,7 +834,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     pd_lif_args.lif = lif;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_MEM_FREE, (void *)&pd_lif_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -870,7 +870,7 @@ lif_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lif = (lif_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // Free PD
@@ -878,7 +878,7 @@ lif_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_lif_args.lif = lif;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_MEM_FREE, (void *)&pd_lif_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -926,7 +926,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 
     // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {
-        HAL_TRACE_DEBUG("pi-lif:{}:vlan_strip_en changed {} => {}",
+        HAL_TRACE_DEBUG("{}:vlan_strip_en changed {} => {}",
                         __FUNCTION__, lif->vlan_strip_en, spec->vlan_strip_en());
         app_ctxt->vlan_strip_en_changed = true;
         app_ctxt->vlan_strip_en = spec->vlan_strip_en();
@@ -936,7 +936,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 
     // Handle pinned uplink change
     if (lif->pinned_uplink != uplink_if_handle) {
-        HAL_TRACE_DEBUG("pi-lif:{}:pinned uplink hdl changed {} => {}",
+        HAL_TRACE_DEBUG("{}:pinned uplink hdl changed {} => {}",
                         __FUNCTION__, lif->pinned_uplink, uplink_if_handle);
         app_ctxt->pinned_uplink_changed = true;
         app_ctxt->new_pinned_uplink     = uplink_if_handle;
@@ -952,7 +952,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         lif->rss.type != spec->rss().type() ||
         cmp) {
         app_ctxt->rss_config_changed = true;
-        HAL_TRACE_DEBUG("pi-lif:{}:rss configuration changed", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}:rss configuration changed", __FUNCTION__);
     }
 
     if (spec->has_rx_policer()) {
@@ -960,7 +960,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     }
     if (!qos_policer_spec_same(&lif->qos_info.rx_policer, &new_rx_policer)) {
         app_ctxt->rx_policer_changed = true;
-        HAL_TRACE_DEBUG("pi-lif:{}: rx policer configuration changed", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}: rx policer configuration changed", __FUNCTION__);
     }
 
     if (spec->has_tx_policer()) {
@@ -968,7 +968,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     }
     if (!qos_policer_spec_same(&lif->qos_info.tx_policer, &new_tx_policer)) {
         app_ctxt->tx_policer_changed = true;
-        HAL_TRACE_DEBUG("pi-lif:{}: tx policer configuration changed", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}: tx policer configuration changed", __FUNCTION__);
     }
 
     return ret;
@@ -993,19 +993,19 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     // validate the request message
     ret = validate_lif_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:lif delete validation failed, ret : {}", 
+        HAL_TRACE_ERR("{}:lif delete validation failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
 
     lif = lif_lookup_key_or_handle(kh);
     if (lif == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to find lif, id {}, handle {}",
+        HAL_TRACE_ERR("{}:failed to find lif, id {}, handle {}",
                       __FUNCTION__, kh.lif_id(), kh.lif_handle());
         ret = HAL_RET_LIF_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-lif:{}:update lif {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}:update lif {}", __FUNCTION__, 
                     lif->lif_id);
 
     hal_handle = lif->hal_handle;
@@ -1015,7 +1015,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     app_ctxt.rsp  = rsp;
     ret = lif_handle_update(&app_ctxt, lif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:lif check update failed, ret : {}", 
+        HAL_TRACE_ERR("{}:lif check update failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
@@ -1025,7 +1025,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.rss_config_changed ||
           app_ctxt.rx_policer_changed ||
           app_ctxt.tx_policer_changed)) {
-        HAL_TRACE_ERR("pi-lif:{}:no change in lif update: noop", __FUNCTION__);
+        HAL_TRACE_ERR("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
     
@@ -1060,7 +1060,7 @@ validate_lif_delete_req (LifDeleteRequest& req, LifDeleteResponse *rsp)
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-lif:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1078,7 +1078,7 @@ validate_lif_delete (lif_t *lif)
     // check for no presence of back references
     if (dllist_count(&lif->if_list_head)) {
         ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("pi-lif:{}:ifs still referring:", __FUNCTION__);
+        HAL_TRACE_ERR("{}:ifs still referring:", __FUNCTION__);
         hal_print_handles_list(&lif->if_list_head);
     }
 
@@ -1098,7 +1098,7 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_lif_delete_args_t pd_lif_args = { 0 };
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1112,7 +1112,7 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lif = (lif_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:delete del CB {}",
+    HAL_TRACE_DEBUG("{}:delete del CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1120,7 +1120,7 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_lif_args.lif = lif;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_DELETE, (void *)&pd_lif_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to delete lif pd, err : {}", 
                       __FUNCTION__, ret);
     }
 
@@ -1147,7 +1147,7 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t  hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1158,13 +1158,13 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif        = (lif_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-lif:{}:delete commit CB {}",
+    HAL_TRACE_DEBUG("{}:delete commit CB {}",
                     __FUNCTION__, lif->lif_id);
 
     // a. Remove from lif id hash table
     ret = lif_del_from_db(lif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to del lif {} from db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to del lif {} from db, err : {}", 
                       __FUNCTION__, lif->lif_id, ret);
         goto end;
     }
@@ -1216,25 +1216,25 @@ lif_delete (LifDeleteRequest& req, LifDeleteResponse *rsp)
     // validate the request message
     ret = validate_lif_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:lif delete validation failed, ret : {}",
+        HAL_TRACE_ERR("{}:lif delete validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
 
     lif = lif_lookup_key_or_handle(kh);
     if (lif == NULL) {
-        HAL_TRACE_ERR("pi-lif:{}:failed to find lif, id {}, handle {}",
+        HAL_TRACE_ERR("{}:failed to find lif, id {}, handle {}",
                       __FUNCTION__, kh.lif_id(), kh.lif_handle());
         ret = HAL_RET_LIF_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-lif:{}:deleting lif {}", 
+    HAL_TRACE_DEBUG("{}:deleting lif {}", 
                     __FUNCTION__, lif->lif_id);
 
     // validate if there no objects referring this sec. profile
     ret = validate_lif_delete(lif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-lif:{}:lif delete validation failed, "
+        HAL_TRACE_ERR("{}:lif delete validation failed, "
                       "ret : {}",
                       __FUNCTION__, ret);
         goto end;
@@ -1427,7 +1427,7 @@ lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("pi-lif:{}:lif_id: {}", 
+    HAL_TRACE_DEBUG("{}:lif_id: {}", 
                     __FUNCTION__, lif->lif_id);
 
     pd::pd_if_lif_update_args_init(&args);
@@ -1436,7 +1436,7 @@ lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         hal_if = find_if_by_handle(entry->handle_id);
         if (!hal_if) {
-            HAL_TRACE_ERR("pi-lif:{}:unable to find if with handle:{}",
+            HAL_TRACE_ERR("{}:unable to find if with handle:{}",
                           __FUNCTION__, entry->handle_id);
             continue;
         }
@@ -1465,7 +1465,7 @@ lif_print_ifs(lif_t *lif)
     dllist_for_each(lnode, &(lif->if_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         hal_if = find_if_by_handle(entry->handle_id);
-        HAL_TRACE_DEBUG("pi-lif:{}: if: {}", 
+        HAL_TRACE_DEBUG("{}: if: {}", 
                 __FUNCTION__, hal_if->if_id);
     }
 }

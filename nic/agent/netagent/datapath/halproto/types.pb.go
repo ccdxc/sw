@@ -207,7 +207,11 @@
 		GftHeaders
 		GftHeaderFields
 		GftHeaderGroupExactMatchProfile
-		GftExactMatchProfile
+		GftExactMatchProfileSpec
+		GftExactMatchProfileRequestMsg
+		GftExactMatchProfileStatus
+		GftExactMatchProfileResponse
+		GftExactMatchProfileResponseMsg
 		UdpMatchFields
 		TcpMatchFields
 		IcmpMatchFields
@@ -325,6 +329,7 @@
 		MulticastEntryKey
 		MulticastEntryKeyHandle
 		AclKeyHandle
+		GftExactMatchProfileKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
 		L2SegmentStatus

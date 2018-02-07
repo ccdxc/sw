@@ -82,7 +82,7 @@ nwsec_add_to_db (nwsec_profile_t *nwsec, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:adding to nwsec profile id hash table", 
+    HAL_TRACE_DEBUG("{}:adding to nwsec profile id hash table", 
                     __FUNCTION__);
     // allocate an entry to establish mapping from security profile id to its handle
     entry =
@@ -97,7 +97,7 @@ nwsec_add_to_db (nwsec_profile_t *nwsec, hal_handle_t handle)
     sdk_ret = g_hal_state->nwsec_profile_id_ht()->
         insert_with_key(&nwsec->profile_id, entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to add nwsec id to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add nwsec id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -117,7 +117,7 @@ nwsec_del_from_db (nwsec_profile_t *nwsec)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:removing from nwsec profile id hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:removing from nwsec profile id hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->nwsec_profile_id_ht()->
         remove(&nwsec->profile_id);
@@ -220,7 +220,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
     }
 
     if (NWSEC_SPEC_CHECK(ipsg_en)) {
-        HAL_TRACE_DEBUG("pi-sec-prof:{}:ipsg changed {} => {}",
+        HAL_TRACE_DEBUG("{}:ipsg changed {} => {}",
                         __FUNCTION__, nwsec->ipsg_en, spec.ipsg_en());
         app_ctxt->ipsg_changed = true;
     }
@@ -345,7 +345,7 @@ validate_nwsec_create(SecurityProfileSpec& spec, SecurityProfileResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:nwsec id and handle not set in request",
+        HAL_TRACE_ERR("{}:nwsec id and handle not set in request",
                       __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
@@ -354,7 +354,7 @@ validate_nwsec_create(SecurityProfileSpec& spec, SecurityProfileResponse *rsp)
     // key-handle field set, but create requires key, not handle
     if (spec.key_or_handle().key_or_handle_case() !=
             SecurityProfileKeyHandle::kProfileId) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:nwsec id not set in request",
+        HAL_TRACE_ERR("{}:nwsec id not set in request",
                       __FUNCTION__);
         ret = HAL_RET_NWSEC_ID_INVALID;
         goto end;
@@ -379,7 +379,7 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // nwsec_create_app_ctxt_t         *app_ctxt = NULL; 
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-sec-prof:{}: invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -390,7 +390,7 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:create add CB {}",
+    HAL_TRACE_DEBUG("{}:create add CB {}",
                     __FUNCTION__, nwsec->profile_id);
 
     // PD Call to allocate PD resources and HW programming
@@ -399,7 +399,7 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_CREATE, 
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to create nwsec pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to create nwsec pd, err : {}", 
                 __FUNCTION__, ret);
     }
 
@@ -422,7 +422,7 @@ nwsec_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -434,14 +434,14 @@ nwsec_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit CB {}",
                     __FUNCTION__, nwsec->profile_id);
 
 
     // 1. a. Add to nwsec id hash table
     ret = nwsec_add_to_db(nwsec, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to add nwsec {} to db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to add nwsec {} to db, err : {}", 
                 __FUNCTION__, nwsec->profile_id, ret);
         goto end;
     }
@@ -471,7 +471,7 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                        hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -482,7 +482,7 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:create abort CB {}",
+    HAL_TRACE_DEBUG("{}:create abort CB {}",
                     __FUNCTION__, nwsec->profile_id);
 
     // 1. delete call to PD
@@ -492,7 +492,7 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_DELETE, 
                               (void *)&pd_nwsec_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-sec-prof:{}:failed to delete nwsec pd, err : {}", 
+            HAL_TRACE_ERR("{}:failed to delete nwsec pd, err : {}", 
                           __FUNCTION__, ret);
         }
     }
@@ -660,7 +660,7 @@ security_profile_create (SecurityProfileSpec& spec,
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
 
     hal_api_trace(" API Begin: security profile create ");
-    HAL_TRACE_DEBUG("pi-sec-prof:{}: creating security profile, id {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("{}: creating security profile, id {}", __FUNCTION__,
                     spec.key_or_handle().profile_id());
 
     // Prints spec
@@ -670,14 +670,14 @@ security_profile_create (SecurityProfileSpec& spec,
     ret = validate_nwsec_create(spec, rsp);
     if (ret != HAL_RET_OK) {
         // api_status already set, just return
-        HAL_TRACE_ERR("pi-sec-prof:{}:validation failed. ret: {}",
+        HAL_TRACE_ERR("{}:validation failed. ret: {}",
                       __FUNCTION__, ret);
         goto end;
     }
 
     // check if nwsec profile exists already, and reject if one is found
     if (find_nwsec_profile_by_id(spec.key_or_handle().profile_id())) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to create a nwsec, "
+        HAL_TRACE_ERR("{}:failed to create a nwsec, "
                       "nwsec{} exists already", __FUNCTION__, 
                       spec.key_or_handle().profile_id());
         ret =  HAL_RET_ENTRY_EXISTS;
@@ -687,7 +687,7 @@ security_profile_create (SecurityProfileSpec& spec,
     // instantiate the nwsec profile
     sec_prof = nwsec_profile_alloc_init();
     if (sec_prof == NULL) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:unable to allocate handle/memory ret: {}",
+        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
                       __FUNCTION__, ret);
         ret = HAL_RET_OOM;
         goto end;
@@ -699,7 +699,7 @@ security_profile_create (SecurityProfileSpec& spec,
     // allocate hal handle id
     sec_prof->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_PROFILE);
     if (sec_prof->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-sec-prof:{}: failed to alloc handle {}", 
+        HAL_TRACE_ERR("{}: failed to alloc handle {}", 
                       __FUNCTION__, sec_prof->profile_id);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -742,7 +742,7 @@ validate_nwsec_update (SecurityProfileSpec & spec, SecurityProfileResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -763,7 +763,7 @@ nwsec_handle_ipsg_change (nwsec_profile_t *nwsec, nwsec_profile_t *nwsec_clone)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:sec_prof_id:{}", 
+    HAL_TRACE_DEBUG("{}:sec_prof_id:{}", 
                     __FUNCTION__, nwsec_clone->profile_id);
     // clone didnt have the lists moved yet. They happen in commit CB.
     // So walking vrf list in the original.
@@ -771,13 +771,13 @@ nwsec_handle_ipsg_change (nwsec_profile_t *nwsec, nwsec_profile_t *nwsec_clone)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         auto ten = vrf_lookup_by_handle(entry->handle_id);
         if (!ten) {
-            HAL_TRACE_ERR("pi-sec-prof:{}:unable to find vrf with handle:{}",
+            HAL_TRACE_ERR("{}:unable to find vrf with handle:{}",
                           __FUNCTION__, entry->handle_id);
             continue;
         }
         ret = vrf_handle_nwsec_update(ten, nwsec_clone);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-sec-prof:{}:unable to process nwsec_clone "
+            HAL_TRACE_ERR("{}:unable to process nwsec_clone "
                           "update by vrf{}", __FUNCTION__, ten->vrf_id);
         }
     }
@@ -813,7 +813,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     nwsec_clone = (nwsec_profile_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}: update upd cb {}",
+    HAL_TRACE_DEBUG("{}: update upd cb {}",
                     __FUNCTION__, nwsec->profile_id);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -823,7 +823,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_UPDATE, 
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to update nwsec pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to update nwsec pd, err : {}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -834,7 +834,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         // nwsec_clone->ipsg_en = app_ctxt->ipsg_en;
         ret = nwsec_handle_ipsg_change(nwsec, nwsec_clone);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-sec-prof:{}:failed to handle ipsg "
+            HAL_TRACE_ERR("{}:failed to handle ipsg "
                           "change, err:{}", __FUNCTION__, ret);
             goto end;
         }
@@ -867,7 +867,7 @@ nwsec_make_clone (nwsec_profile_t *nwsec, nwsec_profile_t **nwsec_clone,
     // Keep new values in the clone
     nwsec_profile_init_from_spec(*nwsec_clone, spec);
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:clone_ipsg:{}",
+    HAL_TRACE_DEBUG("{}:clone_ipsg:{}",
                     __FUNCTION__, (*nwsec_clone)->ipsg_en);
 
     return HAL_RET_OK;
@@ -901,7 +901,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     nwsec_clone = (nwsec_profile_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit CB {}",
                     __FUNCTION__, nwsec->profile_id);
 
     // move lists
@@ -914,7 +914,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
         nwsec_profile_init_from_spec(nwsec_clone, *app_ctxt->spec);
     }
 #endif
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:clone_ipsg:{}",
+    HAL_TRACE_DEBUG("{}:clone_ipsg:{}",
                     __FUNCTION__, (nwsec_clone)->ipsg_en);
 
     // Free PD
@@ -923,7 +923,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to delete nwsec pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete nwsec pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -958,7 +958,7 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assign clone as we are trying to free only the clone
     nwsec = (nwsec_profile_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:update commit CB {}",
+    HAL_TRACE_DEBUG("{}:update commit CB {}",
                     __FUNCTION__, nwsec->profile_id);
 
     // Free PD
@@ -967,7 +967,7 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_NWSEC_PROF_MEM_FREE,
                           (void *)&pd_nwsec_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to delete nwsec pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete nwsec pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -997,7 +997,7 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     const SecurityProfileKeyHandle &kh       = spec.key_or_handle();
 
     hal_api_trace(" API Begin: security profile update ");
-    HAL_TRACE_DEBUG("pi-sec-prof:{}: nwsec update for id:{} or handle:{}",
+    HAL_TRACE_DEBUG("{}: nwsec update for id:{} or handle:{}",
                     __FUNCTION__,
                     spec.key_or_handle().profile_id(),
                     spec.key_or_handle().profile_handle());
@@ -1008,7 +1008,7 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     // validate the request message
     ret = validate_nwsec_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:nwsec update validation failed, ret : {}", 
+        HAL_TRACE_ERR("{}:nwsec update validation failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
@@ -1016,7 +1016,7 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     // lookup this security profile
     sec_prof = nwsec_lookup_key_or_handle(spec.key_or_handle());
     if (!sec_prof) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to find nwsec, id {}, handle {}",
+        HAL_TRACE_ERR("{}:failed to find nwsec, id {}, handle {}",
                       __FUNCTION__, kh.profile_id(), kh.profile_handle());
         ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
         goto end;
@@ -1025,13 +1025,13 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
     // check what changed
     ret = nwsec_handle_update(spec, sec_prof, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:nwsec check update failed, ret : {}", 
+        HAL_TRACE_ERR("{}:nwsec check update failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
 
     if (!app_ctxt.nwsec_changed) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:no change in nwsec update: noop", __FUNCTION__);
+        HAL_TRACE_ERR("{}:no change in nwsec update: noop", __FUNCTION__);
         goto end;
     }
 
@@ -1069,7 +1069,7 @@ validate_nwsec_delete_req (SecurityProfileDeleteRequest& req,
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1089,7 +1089,7 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_nwsec_profile_delete_args_t pd_nwsec_args = { 0 };
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1099,7 +1099,7 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:delete del CB {}",
+    HAL_TRACE_DEBUG("{}:delete del CB {}",
                     __FUNCTION__, nwsec->profile_id);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1109,7 +1109,7 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                           (void *)&pd_nwsec_args);
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to delete nwsec pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to delete nwsec pd, err : {}", 
                       __FUNCTION__, ret);
     }
 
@@ -1133,7 +1133,7 @@ nwsec_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1144,13 +1144,13 @@ nwsec_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec = (nwsec_profile_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:delete commit CB {}",
+    HAL_TRACE_DEBUG("{}:delete commit CB {}",
                     __FUNCTION__, nwsec->profile_id);
 
     // a. Remove from nwsec id hash table
     ret = nwsec_del_from_db(nwsec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to del nwsec {} from db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to del nwsec {} from db, err : {}", 
                       __FUNCTION__, nwsec->profile_id, ret);
         goto end;
     }
@@ -1218,7 +1218,7 @@ security_profile_delete (SecurityProfileDeleteRequest& req,
     // validate the request message
     ret = validate_nwsec_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:nwsec delete validation failed, ret : {}",
+        HAL_TRACE_ERR("{}:nwsec delete validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -1226,18 +1226,18 @@ security_profile_delete (SecurityProfileDeleteRequest& req,
     // lookup nwsec
     nwsec = nwsec_lookup_key_or_handle(kh);
     if (nwsec == NULL) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:failed to find nwsec, id {}, handle {}",
+        HAL_TRACE_ERR("{}:failed to find nwsec, id {}, handle {}",
                       __FUNCTION__, kh.profile_id(), kh.profile_handle());
         ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-sec-prof:{}:deleting nwsec profile {}", 
+    HAL_TRACE_DEBUG("{}:deleting nwsec profile {}", 
                     __FUNCTION__, nwsec->profile_id);
 
     // validate if there no objects referring this sec. profile
     ret = validate_nwsec_delete(nwsec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-sec-prof:{}:sec prof delete validation failed, "
+        HAL_TRACE_ERR("{}:sec prof delete validation failed, "
                       "ret : {}",
                       __FUNCTION__, ret);
         goto end;
@@ -1382,7 +1382,7 @@ nwsec_prof_add_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-sec-prof:{}: add nwsec => vrf, {} => {}, ten_hdl:{} ret:{}",
+    HAL_TRACE_DEBUG("{}: add nwsec => vrf, {} => {}, ten_hdl:{} ret:{}",
                     __FUNCTION__, nwsec->profile_id, vrf->vrf_id,
                     vrf->hal_handle, ret);
     return ret;
@@ -1413,7 +1413,7 @@ nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
     }
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}: del nwsec =/=> vrf, {} =/=> {}, ret:{}",
+    HAL_TRACE_DEBUG("{}: del nwsec =/=> vrf, {} =/=> {}, ret:{}",
                     __FUNCTION__, nwsec->profile_id, vrf->vrf_id, ret);
     return ret;
 }

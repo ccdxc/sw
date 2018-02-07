@@ -19,7 +19,7 @@ pd_nwsec_profile_create (pd_nwsec_profile_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_nwsec_profile_t   *pd_nwsec;
 
-    HAL_TRACE_DEBUG("pd-nwsec:{}: creating pd state ",
+    HAL_TRACE_DEBUG("{}: creating pd state ",
                     __FUNCTION__);
 
     // Create nwsec PD
@@ -35,8 +35,7 @@ pd_nwsec_profile_create (pd_nwsec_profile_create_args_t *args)
     // Allocate Resources
     ret = nwsec_pd_alloc_res(pd_nwsec);
     if (ret != HAL_RET_OK) {
-        // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-Nwsec::{}: Unable to alloc. resources",
+        HAL_TRACE_ERR("{}: Unable to alloc. resources",
                       __FUNCTION__);
         goto end;
     }
@@ -61,14 +60,14 @@ pd_nwsec_profile_update (pd_nwsec_profile_update_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_nwsec_profile_t   *pd_nwsec;
 
-    HAL_TRACE_DEBUG("pd-nwsec:{}: updating pd state ",
+    HAL_TRACE_DEBUG("{}: updating pd state ",
                     __FUNCTION__);
 
     pd_nwsec = (pd_nwsec_profile_t *)args->clone_profile->pd;
     ret = nwsec_pd_program_hw(pd_nwsec, FALSE);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("pd-nwsec:{}: unable to program hw, ret : {}",
+        HAL_TRACE_ERR("{}: unable to program hw, ret : {}",
                       __FUNCTION__, ret);
     }
 
@@ -105,20 +104,20 @@ pd_nwsec_profile_delete (pd_nwsec_profile_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->nwsec_profile != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->nwsec_profile->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-nwsec:{}:deleting pd state for nwsec profile {}",
+    HAL_TRACE_DEBUG("{}:deleting pd state for nwsec profile {}",
                     __FUNCTION__, args->nwsec_profile->profile_id);
     nwsec_pd = (pd_nwsec_profile_t *)args->nwsec_profile->pd;
 
     // deprogram HW
     ret = nwsec_pd_deprogram_hw(nwsec_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-nwsec:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     // dealloc resources and free
     ret = nwsec_pd_cleanup(nwsec_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-nwsec:{}:failed pd nwsec delete",
+        HAL_TRACE_ERR("{}:failed pd nwsec delete",
                       __FUNCTION__);
     }
 
@@ -136,7 +135,7 @@ nwsec_pd_deprogram_hw (pd_nwsec_profile_t *nwsec_pd)
     // Program Input properties Table
     ret = nwsec_pd_depgm_l4_prof_tbl(nwsec_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-nwsec:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     return ret;
@@ -158,11 +157,11 @@ nwsec_pd_depgm_l4_prof_tbl (pd_nwsec_profile_t *nwsec_pd)
     sdk_ret = dm->remove(nwsec_pd->nwsec_hw_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-nwsec:{}:unable to deprogram l4_profile_entry:{},"
+        HAL_TRACE_ERR("{}:unable to deprogram l4_profile_entry:{},"
                 " ret:{}",
                 __FUNCTION__, nwsec_pd->nwsec_hw_id, ret);
     } else {
-        HAL_TRACE_DEBUG("pd-nwsec:{}:deprogrammed l4_profile_entry: {}",
+        HAL_TRACE_DEBUG("{}:deprogrammed l4_profile_entry: {}",
                 __FUNCTION__, nwsec_pd->nwsec_hw_id);
     }
 
@@ -254,10 +253,10 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-nwsec:{}:unable to programm l4_profile_entry: {}, ret:{}",
+        HAL_TRACE_ERR("{}:unable to programm l4_profile_entry: {}, ret:{}",
                       __FUNCTION__, pd_nw->nwsec_hw_id, ret);
     } else {
-        HAL_TRACE_DEBUG("pd-nwsec:{}:programmed l4_profile_entry: {}",
+        HAL_TRACE_DEBUG("{}:programmed l4_profile_entry: {}",
                         __FUNCTION__, pd_nw->nwsec_hw_id);
     }
     return (ret);
@@ -304,7 +303,7 @@ nwsec_pd_cleanup(pd_nwsec_profile_t *nwsec_pd)
     // Releasing resources
     ret = nwsec_pd_dealloc_res(nwsec_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-nwsec:{}: unable to dealloc res for nwsec: {}", 
+        HAL_TRACE_ERR("{}: unable to dealloc res for nwsec: {}", 
                       __FUNCTION__, 
                       ((nwsec_profile_t*)(nwsec_pd->nwsec_profile))->profile_id);
         goto end;

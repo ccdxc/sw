@@ -67,7 +67,7 @@ qos_class_add_to_db (qos_class_t *qos_class, hal_handle_t handle)
     hal_handle_id_ht_entry_t    *entry;
     qos_uplink_cmap_t           *cmap = &qos_class->uplink_cmap;
 
-    HAL_TRACE_DEBUG("pi-qos:{}:adding to qos_class hash table", 
+    HAL_TRACE_DEBUG("{}:adding to qos_class hash table", 
                     __func__);
     // allocate an entry to establish mapping from qos_group to its handle
     entry =
@@ -81,7 +81,7 @@ qos_class_add_to_db (qos_class_t *qos_class, hal_handle_t handle)
     sdk_ret = g_hal_state->qos_class_ht()->insert_with_key(&qos_class->key,
                                                    entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-qos:{}:failed to add key to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add key to handle mapping, "
                       "err : {}", __func__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -112,7 +112,7 @@ qos_class_del_from_db (qos_class_t *qos_class)
     hal_handle_id_ht_entry_t    *entry;
     qos_uplink_cmap_t           *cmap = &qos_class->uplink_cmap;
 
-    HAL_TRACE_DEBUG("pi-qos:{}:removing from hash table", __func__);
+    HAL_TRACE_DEBUG("{}:removing from hash table", __func__);
 
     // Update the global bmps for the cmaps
     if (qos_class_is_user_defined(qos_class)) {
@@ -147,31 +147,31 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-qos:{}:qos group not set in request", __func__);
+        HAL_TRACE_ERR("{}:qos group not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
     auto kh = spec.key_or_handle();
     if (kh.key_or_handle_case() != QosClassKeyHandle::kQosGroup) {
         // key-handle field set, but qos-group not provided
-        HAL_TRACE_ERR("pi-qos:{}:qos group not set in request", __func__);
+        HAL_TRACE_ERR("{}:qos group not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
     if (find_qos_class_by_key_handle(kh)) {
-        HAL_TRACE_ERR("pi-qos:{}:qos class already exists", __func__);
+        HAL_TRACE_ERR("{}:qos class already exists", __func__);
         return HAL_RET_ENTRY_EXISTS;
     }
 
     // mtu should be set
     if (!spec.mtu()) {
-        HAL_TRACE_ERR("pi-qos:{}:mtu not set in request", __func__);
+        HAL_TRACE_ERR("{}:mtu not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
     // Buffer configuration should be present
     if (!spec.has_buffer() || !spec.buffer().reserved_mtus()) {
-        HAL_TRACE_ERR("pi-qos:{}:buffer not set in request", __func__);
+        HAL_TRACE_ERR("{}:buffer not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -184,7 +184,7 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
         if (spec.buffer().headroom_mtus() || 
             spec.buffer().xon_threshold() ||
             spec.buffer().xoff_clear_limit()) {
-            HAL_TRACE_ERR("pi-qos:{}:No-drop class buffer params set in request for drop class", 
+            HAL_TRACE_ERR("{}:No-drop class buffer params set in request for drop class", 
                           __func__);
             return HAL_RET_INVALID_ARG;
         }
@@ -192,7 +192,7 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
         if (!spec.buffer().headroom_mtus() || 
             !spec.buffer().xon_threshold() ||
             !spec.buffer().xoff_clear_limit()) {
-            HAL_TRACE_ERR("pi-qos:{}:No-drop class buffer params not set in request", 
+            HAL_TRACE_ERR("{}:No-drop class buffer params not set in request", 
                           __func__);
             return HAL_RET_INVALID_ARG;
         }
@@ -200,40 +200,40 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     // Scheduler configuration should be set
     if (!spec.has_sched()) {
-        HAL_TRACE_ERR("pi-qos:{}:scheduler not set in request", __func__);
+        HAL_TRACE_ERR("{}:scheduler not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
     qos_group = qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
     if (!valid_qos_group(qos_group)) {
-        HAL_TRACE_ERR("pi-qos:{}: Not valid qos group {}",
+        HAL_TRACE_ERR("{}: Not valid qos group {}",
                       __func__, spec.key_or_handle().qos_group());
         return HAL_RET_INVALID_ARG;
     }
     // Validate the uplink-class-map
     if (qos_group_is_user_defined(qos_group)) {
         if (!spec.has_uplink_class_map()) {
-            HAL_TRACE_ERR("pi-qos:{}:uplink class map not set", __func__);
+            HAL_TRACE_ERR("{}:uplink class map not set", __func__);
             return HAL_RET_INVALID_ARG;
         }
 
         // Do validations to check that the dot1q_pcp and ip_dscp are not 
         // associated with other classes
         if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.uplink_class_map().dot1q_pcp())) {
-            HAL_TRACE_ERR("pi-qos:{}: Dot1q pcp {} is already in use",
+            HAL_TRACE_ERR("{}: Dot1q pcp {} is already in use",
                           __func__, spec.uplink_class_map().dot1q_pcp());
             return HAL_RET_INVALID_ARG;
         }
 
         for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
             if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.uplink_class_map().ip_dscp(i))) {
-                HAL_TRACE_ERR("pi-qos:{}: IP dscp {} is already in use",
+                HAL_TRACE_ERR("{}: IP dscp {} is already in use",
                               __func__, spec.uplink_class_map().ip_dscp(i));
                 return HAL_RET_INVALID_ARG;
             }
         }
     } else if (spec.has_uplink_class_map()) {
-        HAL_TRACE_ERR("pi-qos:{}:uplink class map set for internal class", __func__);
+        HAL_TRACE_ERR("{}:uplink class map set for internal class", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -253,7 +253,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                 *qos_class = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos:{}: invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __func__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -263,7 +263,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class = (qos_class_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-qos:{}:create add CB {}",
+    HAL_TRACE_DEBUG("{}:create add CB {}",
                     __func__, qos_class->key);
 
     // PD Call to allocate PD resources and HW programming
@@ -272,7 +272,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // ret = pd::pd_qos_class_create(&pd_qos_class_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_CREATE, (void *)&pd_qos_class_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-qos:{}:failed to create qos_class pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to create qos_class pd, err : {}", 
                       __func__, ret);
     }
 
@@ -295,7 +295,7 @@ qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos:{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -307,18 +307,18 @@ qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-qos:{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit CB {}",
                     __func__, qos_class->key);
 
     // Add to DB
     ret = qos_class_add_to_db (qos_class, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-qos:{}:unable to add qos class:{} to DB", 
+        HAL_TRACE_ERR("{}:unable to add qos class:{} to DB", 
                       __func__, qos_class->key);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-qos:{}:added qos class:{} to DB", 
+    HAL_TRACE_DEBUG("{}:added qos class:{} to DB", 
                   __func__, qos_class->key);
 
     // TODO: Increment the ref counts of dependent objects
@@ -340,16 +340,16 @@ qos_class_cleanup(qos_class_t *qos_class)
     // Remove from DB
     ret = qos_class_del_from_db(qos_class);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-qos:{}:unable to delete qos class from DB", __func__);
+        HAL_TRACE_ERR("{}:unable to delete qos class from DB", __func__);
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-qos:{}:deleted qos class:{} from DB", 
+    HAL_TRACE_DEBUG("{}:deleted qos class:{} from DB", 
                     __func__, qos_class->key);
 
     // Free qos class 
     ret = qos_class_free(qos_class);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-qos:{}:unable to free qos class", __func__);
+        HAL_TRACE_ERR("{}:unable to free qos class", __func__);
         goto end;
     }
 
@@ -378,7 +378,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t            hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos:{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -389,7 +389,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-qos:{}:create abort CB {}", __func__);
+    HAL_TRACE_DEBUG("{}:create abort CB {}", __func__);
 
     // 1. delete call to PD
     if (qos_class->pd) {
@@ -398,7 +398,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         // ret = pd::pd_qos_class_delete(&pd_qos_class_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-qos:{}:failed to delete qos_class pd, err : {}", 
+            HAL_TRACE_ERR("{}:failed to delete qos_class pd, err : {}", 
                           __func__, ret);
         }
     }
@@ -453,7 +453,7 @@ update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
         no_drop = true;
         qos_class->pfc_cos = spec.pfc().pfc_cos();
         if (qos_class->pfc_cos >= HAL_MAX_PFC_COS_VALS) {
-            HAL_TRACE_ERR("pi-qos:{}: Invalid pfc cos value {}", 
+            HAL_TRACE_ERR("{}: Invalid pfc cos value {}", 
                           __func__, qos_class->pfc_cos);
             return HAL_RET_INVALID_ARG;
         }
@@ -502,7 +502,7 @@ update_cmap_params (QosClassSpec& spec, qos_class_t *qos_class)
     }
 
     if (!spec.has_uplink_class_map()) {
-        HAL_TRACE_ERR("pi-qos:{}: Invalid class map specified", 
+        HAL_TRACE_ERR("{}: Invalid class map specified", 
                       __func__);
         return HAL_RET_INVALID_ARG;
     }
@@ -578,22 +578,22 @@ qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("pi-qos:{}: qos_class create ", __func__);
+    HAL_TRACE_DEBUG("{}: qos_class create ", __func__);
 
     ret = validate_qos_class_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-qos:{}: Validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("{}: Validation failed ret {}", __func__, ret);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-qos:{}: qos_class create for qos-group {} ", 
+    HAL_TRACE_DEBUG("{}: qos_class create for qos-group {} ", 
                     __func__, 
                     qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group()));
 
     // instantiate qos class 
     qos_class = qos_class_alloc_init();
     if (qos_class == NULL) {
-        HAL_TRACE_ERR("pi-qos:{}:unable to allocate handle/memory ret: {}",
+        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
                       __func__, ret);
         ret = HAL_RET_OOM;
         goto end;
@@ -605,7 +605,7 @@ qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
     // populate from the spec
     ret = qos_class_populate_from_spec(qos_class, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-qos:{}: error in populating qos-class from spec",
+        HAL_TRACE_ERR("{}: error in populating qos-class from spec",
                       __func__);
         goto end;
     }
@@ -613,7 +613,7 @@ qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
     // allocate hal handle id
     qos_class->hal_handle = hal_handle_alloc(HAL_OBJ_ID_QOS_CLASS);
     if (qos_class->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-qos:{}: failed to alloc handle", 
+        HAL_TRACE_ERR("{}: failed to alloc handle", 
                       __func__);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -746,7 +746,7 @@ copp_add_to_db (copp_t *copp, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-copp:{}:adding to copp hash table", 
+    HAL_TRACE_DEBUG("{}:adding to copp hash table", 
                     __func__);
     // allocate an entry to establish mapping from copp_type to its handle
     entry =
@@ -760,7 +760,7 @@ copp_add_to_db (copp_t *copp, hal_handle_t handle)
     sdk_ret = g_hal_state->copp_ht()->insert_with_key(&copp->key,
                                                    entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-copp:{}:failed to add key to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add key to handle mapping, "
                       "err : {}", __func__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -780,7 +780,7 @@ copp_del_from_db (copp_t *copp)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-copp:{}:removing from hash table", __func__);
+    HAL_TRACE_DEBUG("{}:removing from hash table", __func__);
 
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->copp_ht()->
@@ -802,25 +802,25 @@ validate_copp_create (CoppSpec& spec)
 {
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-qos:{}:copp-type not set in request", __func__);
+        HAL_TRACE_ERR("{}:copp-type not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
     auto kh = spec.key_or_handle();
     if (kh.key_or_handle_case() != CoppKeyHandle::kCoppType) {
         // key-handle field set, but copp-type not provided
-        HAL_TRACE_ERR("pi-qos:{}:copp-type not set in request", __func__);
+        HAL_TRACE_ERR("{}:copp-type not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
     if (find_copp_by_key_handle(kh)) {
-        HAL_TRACE_ERR("pi-qos:{}:copp already exists", __func__);
+        HAL_TRACE_ERR("{}:copp already exists", __func__);
         return HAL_RET_ENTRY_EXISTS;
     }
 
     // Copp policer rate cannot be zero
     if (!spec.has_policer() || !spec.policer().bps_rate()) {
-        HAL_TRACE_ERR("pi-qos:{}:policer spec not set in request", __func__);
+        HAL_TRACE_ERR("{}:policer spec not set in request", __func__);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -840,7 +840,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t             *copp = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp:{}: invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __func__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -850,7 +850,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp = (copp_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-copp:{}:create add CB {}",
+    HAL_TRACE_DEBUG("{}:create add CB {}",
                     __func__, copp->key);
 
     // PD Call to allocate PD resources and HW programming
@@ -859,7 +859,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // ret = pd::pd_copp_create(&pd_copp_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_CREATE, (void *)&pd_copp_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-copp:{}:failed to create copp pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to create copp pd, err : {}", 
                       __func__, ret);
     }
 
@@ -882,7 +882,7 @@ copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t  hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp:{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -894,18 +894,18 @@ copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-copp:{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit CB {}",
                     __func__, copp->key);
 
     // Add to DB
     ret = copp_add_to_db (copp, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-copp:{}:unable to add copp:{} to DB", 
+        HAL_TRACE_ERR("{}:unable to add copp:{} to DB", 
                       __func__, copp->key);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-copp:{}:added copp:{} to DB", 
+    HAL_TRACE_DEBUG("{}:added copp:{} to DB", 
                   __func__, copp->key);
 
     // TODO: Increment the ref counts of dependent objects
@@ -927,16 +927,16 @@ copp_cleanup(copp_t *copp)
     // Remove from DB
     ret = copp_del_from_db(copp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-copp:{}:unable to delete copp from DB", __func__);
+        HAL_TRACE_ERR("{}:unable to delete copp from DB", __func__);
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-copp:{}:deleted copp:{} from DB", 
+    HAL_TRACE_DEBUG("{}:deleted copp:{} from DB", 
                     __func__, copp->key);
 
     // Free copp 
     ret = copp_free(copp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-copp:{}:unable to free copp", __func__);
+        HAL_TRACE_ERR("{}:unable to free copp", __func__);
         goto end;
     }
 
@@ -965,7 +965,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t       hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp:{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -976,7 +976,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-copp:{}:create abort CB {}", __func__);
+    HAL_TRACE_DEBUG("{}:create abort CB {}", __func__);
 
     // 1. delete call to PD
     if (copp->pd) {
@@ -985,7 +985,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         // ret = pd::pd_copp_delete(&pd_copp_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, (void *)&pd_copp_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-copp:{}:failed to delete copp pd, err : {}", 
+            HAL_TRACE_ERR("{}:failed to delete copp pd, err : {}", 
                           __func__, ret);
         }
     }
@@ -1048,22 +1048,22 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     cfg_op_ctxt_t cfg_ctxt = { 0 };
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("pi-copp:{}: copp create ", __func__);
+    HAL_TRACE_DEBUG("{}: copp create ", __func__);
 
     ret = validate_copp_create(spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-copp:{}: Validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("{}: Validation failed ret {}", __func__, ret);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-copp:{}: copp create for copp-type {} ", 
+    HAL_TRACE_DEBUG("{}: copp create for copp-type {} ", 
                     __func__, 
                     copp_spec_copp_type_to_copp_type(spec.key_or_handle().copp_type()));
 
     // instantiate copp 
     copp = copp_alloc_init();
     if (copp == NULL) {
-        HAL_TRACE_ERR("pi-copp:{}:unable to allocate handle/memory ret: {}",
+        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
                       __func__, ret);
         ret = HAL_RET_OOM;
         goto end;
@@ -1075,7 +1075,7 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     // populate from the spec
     ret = copp_populate_from_spec(copp, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-copp:{}: error in populating copp from spec",
+        HAL_TRACE_ERR("{}: error in populating copp from spec",
                       __func__);
         goto end;
     }
@@ -1083,7 +1083,7 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     // allocate hal handle id
     copp->hal_handle = hal_handle_alloc(HAL_OBJ_ID_COPP);
     if (copp->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-copp:{}: failed to alloc handle", 
+        HAL_TRACE_ERR("{}: failed to alloc handle", 
                       __func__);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
@@ -1144,7 +1144,7 @@ hal_qos_init (void)
             google::protobuf::util::JsonStringToMessage(ss.str(), &qos_class_spec);
             ret = qos_class_create(qos_class_spec, &qos_class_rsp); 
             if (qos_class_rsp.api_status() != types::API_STATUS_OK) {
-                HAL_TRACE_ERR("pi-qos:{}: Error  creating qos class ret: {}",
+                HAL_TRACE_ERR("{}: Error  creating qos class ret: {}",
                               __func__, ret);
                 goto end;
             }
@@ -1163,7 +1163,7 @@ hal_qos_init (void)
             google::protobuf::util::JsonStringToMessage(ss.str(), &copp_spec);
             ret = copp_create(copp_spec, &copp_rsp); 
             if (copp_rsp.api_status() != types::API_STATUS_OK) {
-                HAL_TRACE_ERR("pi-qos:{}: Error  creating copp ret: {}",
+                HAL_TRACE_ERR("{}: Error  creating copp ret: {}",
                               __func__, ret);
                 goto end;
             }

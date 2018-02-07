@@ -10,8 +10,16 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/kh.pb.h"
+#include "nic/gen/proto/hal/gft.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
+
+using gft::GftExactMatchProfileSpec;
+using gft::GftExactMatchProfileStatus;
+using gft::GftExactMatchProfileResponse;
+using kh::GftExactMatchProfileKeyHandle;
+using gft::GftExactMatchProfileRequestMsg;
+using gft::GftExactMatchProfileResponseMsg;
 
 // bitmap of flags indicating headers of interest per profile
 #define GFT_HEADER_ETHERNET                        0x00000001

@@ -21,7 +21,7 @@ pd_dos_policy_create (pd_dos_policy_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_dos_policy_t      *pd_dosp;
 
-    HAL_TRACE_DEBUG("pd-dos:{}: creating pd state ",
+    HAL_TRACE_DEBUG("{}: creating pd state ",
                     __FUNCTION__);
 
     // Create dos PD
@@ -37,9 +37,7 @@ pd_dos_policy_create (pd_dos_policy_create_args_t *args)
     // Allocate Resources
     ret = dos_pd_alloc_res(pd_dosp);
     if (ret != HAL_RET_OK) {
-        // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-DoS::{}: Unable to alloc. resources",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("Unable to alloc. resources");
         goto end;
     }
 
@@ -63,14 +61,14 @@ pd_dos_policy_update (pd_dos_policy_update_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_dos_policy_t   *pd_dosp;
 
-    HAL_TRACE_DEBUG("pd-dos:{}: updating pd state ",
+    HAL_TRACE_DEBUG("{}: updating pd state ",
                     __FUNCTION__);
 
     pd_dosp = (pd_dos_policy_t *)args->clone_policy->pd;
     ret = dos_pd_program_hw(pd_dosp, FALSE);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("pd-dos:{}: unable to program hw, ret : {}",
+        HAL_TRACE_ERR("{}: unable to program hw, ret : {}",
                       __FUNCTION__, ret);
     }
 
@@ -107,20 +105,20 @@ pd_dos_policy_delete (pd_dos_policy_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->dos_policy != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->dos_policy->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-dos:{}:deleting pd state for dos policy handle {}",
+    HAL_TRACE_DEBUG("{}:deleting pd state for dos policy handle {}",
                     __FUNCTION__, args->dos_policy->hal_handle);
     dos_pd = (pd_dos_policy_t *)args->dos_policy->pd;
 
     // deprogram HW
     ret = dos_pd_deprogram_hw(dos_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-dos:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     // dealloc resources and free
     ret = dos_pd_cleanup(dos_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-dos:{}:failed pd dos delete",
+        HAL_TRACE_ERR("{}:failed pd dos delete",
                       __FUNCTION__);
     }
 
@@ -153,7 +151,7 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
     
     data.actionid = actionid;
     data.ddos_src_vf_action_u.ddos_src_vf_ddos_src_vf_hit.ddos_src_vf_base_policer_idx = policer_idx;
-    HAL_TRACE_DEBUG("pd-dos:{}: act_id: {} pol_index: {} slport: {}",
+    HAL_TRACE_DEBUG("{}: act_id: {} pol_index: {} slport: {}",
                      __FUNCTION__, actionid, policer_idx, slport);
     sdk_ret = tcam->insert(&key, &mask, &data, &ret_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -222,7 +220,7 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
      
     data.actionid = actionid;
     data.ddos_service_action_u.ddos_service_ddos_service_hit.ddos_service_base_policer_idx = policer_idx;
-    HAL_TRACE_DEBUG("pd-dos:{} ip-addr: {} dport: {} proto: {}"
+    HAL_TRACE_DEBUG("{} ip-addr: {} dport: {} proto: {}"
                     "vrf: {} act_id: {} pol_idx: {}", __FUNCTION__,
                     *ip_addr, dport, proto, vrf, actionid, policer_idx);
 
@@ -238,7 +236,7 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr, bool is_icmp,
             return ret;
         }
     }
-    HAL_TRACE_DEBUG("pd-dos:{} ret-idx : {}, ret: {}",
+    HAL_TRACE_DEBUG("{} ret-idx : {}, ret: {}",
                     __FUNCTION__, ret_idx, ret);
     *idx = (int) ret_idx;
     return ret;
@@ -273,7 +271,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     /* Return if both addresses are not v4/v6 */
     if (!((src_ip_addr->af == IP_AF_IPV4) && (dst_ip_addr->af == IP_AF_IPV4)) &&
        (!(src_ip_addr->af == IP_AF_IPV6) && (dst_ip_addr->af == IP_AF_IPV6))) {
-        HAL_TRACE_DEBUG("pd-dos:{} src/dst networks are not same type (v4/v6)",
+        HAL_TRACE_DEBUG("{} src/dst networks are not same type (v4/v6)",
                         __FUNCTION__);
         return (ret);
     }
@@ -330,7 +328,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     data.actionid = actionid;
     data.ddos_src_dst_action_u.ddos_src_dst_ddos_src_dst_hit.ddos_src_dst_base_policer_idx = policer_idx;
 
-    HAL_TRACE_DEBUG("pd-dos:{} src-ip: {} src-pfxlen: {} dst-ip: {} dst-pfxlen: {} "
+    HAL_TRACE_DEBUG("{} src-ip: {} src-pfxlen: {} dst-ip: {} dst-pfxlen: {} "
                     "dport: {} proto: {} vrf: {} act_id: {} pol_idx: {}",
                      __FUNCTION__, *src_ip_addr, src_pfxlen, *dst_ip_addr,
                      dst_pfxlen, dport, proto, vrf, actionid, policer_idx);
@@ -347,7 +345,7 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
         }
     }
 
-    HAL_TRACE_DEBUG("pd-dos:{} ret-idx: {}, ret: {}",
+    HAL_TRACE_DEBUG("{} ret-idx: {}, ret: {}",
                     __FUNCTION__, ret_idx, ret);
     *idx = (int) ret_idx;
     return ret;
@@ -377,7 +375,7 @@ dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
                       "tbl_id: {} err : {}", tbl_id, ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("pd-dos:{} saved_color: {} dropped_pkts: {} idx: {}",
+    HAL_TRACE_DEBUG("{} saved_color: {} dropped_pkts: {} idx: {}",
                     __FUNCTION__, saved_color, dropped_pkts, *idx);
     return ret;
 }
@@ -429,7 +427,7 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
                        tbl_id, ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("pd-dos:{} pps: {} color_aware: {} cir: {} cbr: {}"
+    HAL_TRACE_DEBUG("{} pps: {} color_aware: {} cir: {} cbr: {}"
                     "pir: {} pbr: {} ret-pol-idx: {}", __FUNCTION__, pps,
                     color_aware, cir, cbr, pir, pbr, *idx);
     return ret;
@@ -525,7 +523,7 @@ dos_pd_program_ddos_src_vf_table (pd_dos_policy_t *pd_dosp, ep_t *ep, if_t *intf
     dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     HAL_ASSERT(dosp != NULL);
     if (!dosp->egr_pol_valid) {
-        HAL_TRACE_DEBUG("pd-dos:{}: DoS egress policy is not valid. "
+        HAL_TRACE_DEBUG("{}: DoS egress policy is not valid. "
                         "Skip src_vf table programming",
                         __FUNCTION__);
         return HAL_RET_OK;
@@ -542,7 +540,7 @@ dos_pd_program_ddos_src_vf_table (pd_dos_policy_t *pd_dosp, ep_t *ep, if_t *intf
                                           base_pol_idx,
                                           P4TBL_ID_DDOS_SRC_VF, &tcam_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}",
+    HAL_TRACE_DEBUG("{}: tcam_index: {}",
                      tcam_idx, __FUNCTION__);
     pd_dosp->ddos_src_vf_hw_id = tcam_idx;
     pd_dosp->ddos_src_vf_pol_hw_id = base_pol_idx;
@@ -576,36 +574,36 @@ dos_pd_program_ddos_src_dst_table (dos_policy_t *dosp,
                     P4TBL_ID_DDOS_SRC_DST_POLICER,
                     P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION, &base_pol_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
+    HAL_TRACE_DEBUG("{}: base_policer_index: {}",
                      base_pol_idx, __FUNCTION__);
     sg_list = &dosp->sg_list_head;
     /* Go through all the security groups */
-    HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all SG", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}: Iterating through all SG", __FUNCTION__);
     dllist_for_each_safe(curr, next, sg_list) {
         ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
         nw_list = get_nw_list_for_security_group(ent->sg_id);
-        HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
-        HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all NWs", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}: SG-id: {}", __FUNCTION__, ent->sg_id);
+        HAL_TRACE_DEBUG("{}: Iterating through all NWs", __FUNCTION__);
         /* For each security group, go through the associated Networks */
         dllist_for_each_safe(nwcurr, nwnext, nw_list) {
             nw_ent = dllist_entry(nwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
             nw = find_network_by_handle(nw_ent->handle_id);
             HAL_ASSERT(nw != NULL);
-            HAL_TRACE_DEBUG("pd-dos:{}: NW pfx: {}/{}", __FUNCTION__,
+            HAL_TRACE_DEBUG("{}: NW pfx: {}/{}", __FUNCTION__,
                             nw->nw_key.ip_pfx.addr, nw->nw_key.ip_pfx.len);
             /* Get the peer Security Group */
             pnw_list = get_nw_list_for_security_group(dosp_prop->peer_sg_id);
-            HAL_TRACE_DEBUG("pd-dos:{}: Peer sg-id: {}", __FUNCTION__,
+            HAL_TRACE_DEBUG("{}: Peer sg-id: {}", __FUNCTION__,
                             dosp_prop->peer_sg_id);
-            HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all peer NWs", __FUNCTION__);
+            HAL_TRACE_DEBUG("{}: Iterating through all peer NWs", __FUNCTION__);
             /* Go through the associated peer networks */
             dllist_for_each_safe(pnwcurr, pnwnext, pnw_list) {
                 pnw_ent = dllist_entry(pnwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
                 pnw = find_network_by_handle(pnw_ent->handle_id);
                 HAL_ASSERT(pnw != NULL);
-                HAL_TRACE_DEBUG("pd-dos:{}: Peer-NW pfx: {}/{}", __FUNCTION__,
+                HAL_TRACE_DEBUG("{}: Peer-NW pfx: {}/{}", __FUNCTION__,
                                 pnw->nw_key.ip_pfx.addr, pnw->nw_key.ip_pfx.len);
-                HAL_TRACE_DEBUG("pd-dos:{}: is_icmp: {} type: {} code: {}",
+                HAL_TRACE_DEBUG("{}: is_icmp: {} type: {} code: {}",
                                 __FUNCTION__, dosp_prop->service.is_icmp,
                                 dosp_prop->service.icmp_msg_type,
                                 dosp_prop->service.icmp_msg_code);
@@ -622,7 +620,7 @@ dos_pd_program_ddos_src_dst_table (dos_policy_t *dosp,
                               base_pol_idx, P4TBL_ID_DDOS_SRC_DST,
                               &tcam_idx);
                 HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-                HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}", tcam_idx,
+                HAL_TRACE_DEBUG("{}: tcam_index: {}", tcam_idx,
                                 __FUNCTION__);
             }
         }
@@ -642,7 +640,7 @@ dos_pd_program_ddos_src_dst_policy (pd_dos_policy_t *pd_dosp,
     dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     HAL_ASSERT(dosp != NULL);
     /* Program the src-dst subnets if ingress policy is valid */
-    HAL_TRACE_DEBUG("pd-dos:{}: ingr_pol_valid: {} ingress.peer_sg_id: {}",
+    HAL_TRACE_DEBUG("{}: ingr_pol_valid: {} ingress.peer_sg_id: {}",
                     __FUNCTION__, dosp->ingr_pol_valid, dosp->ingress.peer_sg_id);
     if (dosp->ingr_pol_valid && 
             (dosp->ingress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
@@ -652,7 +650,7 @@ dos_pd_program_ddos_src_dst_policy (pd_dos_policy_t *pd_dosp,
     }
 
     /* Program the src-dst subnets if egress policy is valid */
-    HAL_TRACE_DEBUG("pd-dos:{}: egr_pol_valid: {} egress.peer_sg_id: {}",
+    HAL_TRACE_DEBUG("{}: egr_pol_valid: {} egress.peer_sg_id: {}",
                     __FUNCTION__, dosp->egr_pol_valid, dosp->egress.peer_sg_id);
     if (dosp->egr_pol_valid && 
             (dosp->egress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
@@ -678,7 +676,7 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
     dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     HAL_ASSERT(dosp != NULL);
     if (!dosp->ingr_pol_valid) {
-        HAL_TRACE_DEBUG("pd-dos:{}: DoS ingress policy is not valid. ",
+        HAL_TRACE_DEBUG("{}: DoS ingress policy is not valid. ",
                         "Skip service table programming",
                         __FUNCTION__);
         return HAL_RET_OK;
@@ -691,15 +689,15 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
                            P4TBL_ID_DDOS_SERVICE_POLICER,
                            P4TBL_ID_DDOS_SERVICE_POLICER_ACTION, &base_pol_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    HAL_TRACE_DEBUG("pd-dos:{}: service_tbl. base_policer_index: {}",
+    HAL_TRACE_DEBUG("{}: service_tbl. base_policer_index: {}",
                      base_pol_idx, __FUNCTION__);
     ip_list = &ep->ip_list_head;
     /* Iterate over all the IP addresses for this endpoint */
     dllist_for_each_safe(curr, next, ip_list) {
         pi_ip_ent = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
-        HAL_TRACE_DEBUG("pd-dos:{}: ep_ip_addr: {}",
+        HAL_TRACE_DEBUG("{}: ep_ip_addr: {}",
                          __FUNCTION__, pi_ip_ent->ip_addr);
-        HAL_TRACE_DEBUG("pd-dos:{}: is_icmp: {} type: {} code: {}",
+        HAL_TRACE_DEBUG("{}: is_icmp: {} type: {} code: {}",
                         __FUNCTION__, dosp->ingress.service.is_icmp,
                         dosp->ingress.service.icmp_msg_type,
                         dosp->ingress.service.icmp_msg_code);
@@ -714,7 +712,7 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }
 
-    HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}",
+    HAL_TRACE_DEBUG("{}: tcam_index: {}",
                      tcam_idx, __FUNCTION__);
     /* One IP addr per EP for now */
     pd_dosp->ddos_service_hw_id = tcam_idx;
@@ -744,7 +742,7 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
     dp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     ten = vrf_lookup_by_handle(dp->vrf_handle);
     if (ten == NULL) {
-        HAL_TRACE_ERR("pd-dos:{}:unable to find vrf", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to find vrf", __FUNCTION__);
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
@@ -752,33 +750,33 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
     ten_pd = (pd_vrf_t *) ten->pd;
 
     sg_list = &dp->sg_list_head;
-    HAL_TRACE_DEBUG("pd-dos:{}: Going through the linked security groups",
+    HAL_TRACE_DEBUG("{}: Going through the linked security groups",
                      __FUNCTION__);
     /* Get the security groups linked to this dos policy */
     dllist_for_each_safe(curr, next, sg_list) {
         ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
+        HAL_TRACE_DEBUG("{}: SG-id: {}", __FUNCTION__, ent->sg_id);
         /* For each security group, go through the associated EPs */
         ep_list = get_ep_list_for_security_group(ent->sg_id);
         dllist_for_each_safe(epcurr, epnext, ep_list) {
             ep_ent = dllist_entry(epcurr, hal_handle_id_list_entry_t, dllist_ctxt);
             ep = find_ep_by_handle(ep_ent->handle_id);
             HAL_ASSERT(ep != NULL);
-            HAL_TRACE_DEBUG("pd-dos:{}: Got EP handle {}", __FUNCTION__,
+            HAL_TRACE_DEBUG("{}: Got EP handle {}", __FUNCTION__,
                              ep_ent->handle_id);
             intf = ep_get_if(ep);
             HAL_ASSERT(intf != NULL);
-            HAL_TRACE_DEBUG("pd-dos:{}: Intf-id: {}", __FUNCTION__, intf->if_id);
+            HAL_TRACE_DEBUG("{}: Intf-id: {}", __FUNCTION__, intf->if_id);
             /* 
              * TODO: Can program a single set of policers for all EPs since the
              * policer rates are the same. Using different policers for DOL.
              * Revisit and fix
              * */
-            HAL_TRACE_DEBUG("pd-dos:{}: Program src-vf table", __FUNCTION__);
+            HAL_TRACE_DEBUG("{}: Program src-vf table", __FUNCTION__);
             /* Program the DDoS Src VF table */
             ret = dos_pd_program_ddos_src_vf_table (pd_dosp, ep, intf);
             HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-            HAL_TRACE_DEBUG("pd-dos:{}: Program service table", __FUNCTION__);
+            HAL_TRACE_DEBUG("{}: Program service table", __FUNCTION__);
             /* Program the DDoS service table */
             ret = dos_pd_program_ddos_service_table (pd_dosp, ep, ten_pd);
             HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
@@ -854,7 +852,7 @@ dos_pd_cleanup(pd_dos_policy_t *dos_pd)
     // Releasing resources
     ret = dos_pd_dealloc_res(dos_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-dos:{}: unable to dealloc res for dos hdl: {}", 
+        HAL_TRACE_ERR("{}: unable to dealloc res for dos hdl: {}", 
                       __FUNCTION__, 
                       ((dos_policy_t*)(dos_pd->pi_dos_policy))->hal_handle);
         goto end;

@@ -16,7 +16,7 @@ pd_copp_create(pd_copp_create_args_t *args)
     hal_ret_t      ret = HAL_RET_OK;;
     pd_copp_t *pd_copp;
 
-    HAL_TRACE_DEBUG("pd-copp::{}: creating pd state for copp: {}",
+    HAL_TRACE_DEBUG("{}: creating pd state for copp: {}",
                     __func__, args->copp->key);
 
     // Create copp PD
@@ -33,7 +33,7 @@ pd_copp_create(pd_copp_create_args_t *args)
     ret = copp_pd_alloc_res(pd_copp);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("pd-copp::{}: Unable to alloc. resources for Copp: {} ret {}",
+        HAL_TRACE_ERR("{}: Unable to alloc. resources for Copp: {} ret {}",
                       __func__, args->copp->key, ret);
         goto end;
     }
@@ -41,14 +41,14 @@ pd_copp_create(pd_copp_create_args_t *args)
     // Program HW
     ret = copp_pd_program_hw(pd_copp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-copp::{}: Unable to program hw for Copp: {} ret {}",
+        HAL_TRACE_ERR("{}: Unable to program hw for Copp: {} ret {}",
                       __func__, args->copp->key, ret);
         goto end;
     }
 
 end:
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-copp::{}: Error in programming hw for Copp: {}: ret: {}",
+        HAL_TRACE_ERR("{}: Error in programming hw for Copp: {}: ret: {}",
                       __func__, args->copp->key, ret);
         // unlink_pi_pd(pd_copp, args->copp);
         // copp_pd_free(pd_copp);
@@ -67,7 +67,7 @@ pd_copp_update (pd_copp_update_args_t *pd_copp_upd_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("pd-copp::{}: updating pd state for copp:{}",
+    HAL_TRACE_DEBUG("{}: updating pd state for copp:{}",
                     __func__,
                     pd_copp_upd_args->copp->key);
 
@@ -87,14 +87,14 @@ pd_copp_delete (pd_copp_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-copp:{}:deleting pd state for copp {}",
+    HAL_TRACE_DEBUG("{}:deleting pd state for copp {}",
                     __func__, args->copp->key);
     pd_copp = (pd_copp_t *)args->copp->pd;
 
     // free up the resource and memory
     ret = copp_pd_cleanup(pd_copp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-copp:{}:failed pd copp cleanup Copp {}, ret {}",
+        HAL_TRACE_ERR("{}:failed pd copp cleanup Copp {}, ret {}",
                       __func__, args->copp->key, ret);
     }
 
@@ -129,7 +129,7 @@ copp_pd_cleanup(pd_copp_t *pd_copp)
     // Releasing resources
     ret = copp_pd_dealloc_res(pd_copp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-copp:{}: unable to dealloc res for copp: {}",
+        HAL_TRACE_ERR("{}: unable to dealloc res for copp: {}",
                       __func__,
                       ((copp_t *)(pd_copp->pi_copp))->key);
         goto end;
@@ -204,11 +204,11 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-copp:{}: copp policer table write failure, copp {}, ret {}",
+        HAL_TRACE_ERR("{}: copp policer table write failure, copp {}, ret {}",
                       __FUNCTION__, pi_copp->key, ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("pd-copp:{}: copp {} hw_policer_id {} rate {} burst {} programmed",
+    HAL_TRACE_DEBUG("{}: copp {} hw_policer_id {} rate {} burst {} programmed",
                     __FUNCTION__, pi_copp->key,
                     pd_copp->hw_policer_id, pi_copp->policer.bps_rate,
                     pi_copp->policer.burst_size);
@@ -227,7 +227,7 @@ copp_pd_program_hw(pd_copp_t *pd_copp)
 
     ret = copp_pd_program_copp_tbl(pd_copp, false);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-copp::{}: Error programming the copp table "
+        HAL_TRACE_ERR("{}: Error programming the copp table "
                       "Copp {} ret {}",
                       __func__, copp->key, ret);
         return ret;

@@ -94,7 +94,7 @@ ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:adding to ep l2 hash table", 
+    HAL_TRACE_DEBUG("{}:adding to ep l2 hash table", 
                     __FUNCTION__);
     // allocate an entry to establish mapping from l2key to its handle
     entry =
@@ -109,7 +109,7 @@ ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
     sdk_ret = g_hal_state->ep_l2_ht()->insert_with_key(&ep->l2_key,
                                                        entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -129,7 +129,7 @@ ep_del_from_l2_db (ep_t *ep)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:removing from l2 hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:removing from l2 hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->ep_l2_ht()->
             remove(&ep->l2_key);
@@ -153,7 +153,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     sdk_ret_t                   sdk_ret;
     ep_l3_entry_t               *entry;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:adding to ep l2 hash table", 
+    HAL_TRACE_DEBUG("{}:adding to ep l2 hash table", 
                     __FUNCTION__);
     // allocate an entry to establish mapping from l3key to its handle
     entry = (ep_l3_entry_t *)g_hal_state->ep_l3_entry_slab()->alloc();
@@ -169,7 +169,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     sdk_ret = g_hal_state->ep_l3_entry_ht()->insert_with_key(l3_key,
                                                          entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         hal::delay_delete_to_slab(HAL_SLAB_EP_L3_ENTRY, entry);
     }
@@ -186,7 +186,7 @@ ep_del_from_l3_db (ep_l3_key_t *l3_key)
 {
     ep_l3_entry_t               *l3_entry;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:removing from l3 hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:removing from l3 hash table", __FUNCTION__);
     // remove from hash table
     l3_entry = (ep_l3_entry_t *)g_hal_state->ep_l3_entry_ht()->remove(l3_key);
 
@@ -206,26 +206,26 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
     if (!spec.has_vrf_key_handle() ||
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}:vrf id not valid",
+        HAL_TRACE_ERR("{}:vrf id not valid",
                       __FUNCTION__);
         return HAL_RET_VRF_ID_INVALID;
     }
 
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-ep:{}:ep doesn't have key or handle",
+        HAL_TRACE_ERR("{}:ep doesn't have key or handle",
                       __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
 
     if ((spec.key_or_handle().key_or_handle_case() != EndpointKeyHandle::kEndpointKey) ||
         (spec.key_or_handle().endpoint_key().endpoint_l2_l3_key_case() != EndpointKey::kL2Key)) {
-        HAL_TRACE_ERR("pi-ep:{}:ep doesnt have l2 key",
+        HAL_TRACE_ERR("{}:ep doesnt have l2 key",
                       __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
 
     if (!spec.has_endpoint_attrs()) {
-        HAL_TRACE_ERR("pi-ep:{}:ep doesnt have attributes",
+        HAL_TRACE_ERR("{}:ep doesnt have attributes",
                       __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
@@ -235,7 +235,7 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         (spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle().segment_id() == HAL_L2SEGMENT_ID_INVALID)) ||
        ((spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle().key_or_handle_case() == L2SegmentKeyHandle::kL2SegmentHandle) &&
         (spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle().l2segment_handle() == HAL_HANDLE_INVALID))) {
-        HAL_TRACE_ERR("pi-ep:{}:l2seg key/handle not valid",
+        HAL_TRACE_ERR("{}:l2seg key/handle not valid",
                       __FUNCTION__);
         return HAL_RET_HANDLE_INVALID;
     }
@@ -245,7 +245,7 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         (spec.endpoint_attrs().interface_key_handle().interface_id() == HAL_IFINDEX_INVALID)) ||
        ((spec.endpoint_attrs().interface_key_handle().key_or_handle_case() == InterfaceKeyHandle::kIfHandle) &&
         (spec.endpoint_attrs().interface_key_handle().if_handle() == HAL_HANDLE_INVALID))) {
-        HAL_TRACE_ERR("pi-ep:{}:interface handle not valid",
+        HAL_TRACE_ERR("{}:interface handle not valid",
                       __FUNCTION__);
         return HAL_RET_HANDLE_INVALID;
     }
@@ -267,7 +267,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_create_app_ctxt_t    *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}: invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -278,7 +278,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:create add CB {}",
+    HAL_TRACE_DEBUG("{}:create add CB {}",
                     __FUNCTION__, ep_l2_key_to_str(ep));
 
     // PD Call to allocate PD resources and HW programming
@@ -289,7 +289,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.intf = app_ctxt->hal_if;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_CREATE, (void *)&pd_ep_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to create ep pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to create ep pd, err : {}", 
                       __FUNCTION__, ret);
     }
 
@@ -318,7 +318,7 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_l3_key_t          l3_key       = {0};
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -332,18 +332,18 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle = dhl_entry->handle;
     vrf = app_ctxt->vrf;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:create commit CB {}",
+    HAL_TRACE_DEBUG("{}:create commit CB {}",
                     __FUNCTION__, ep_l2_key_to_str(ep));
 
     // Add EP to L2 DB
     ret = ep_add_to_l2_db (ep, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to add EP:{} to L2 DB", 
+        HAL_TRACE_ERR("{}:unable to add EP:{} to L2 DB", 
                       __FUNCTION__, ep_l2_key_to_str(ep));
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-ep:{}:added EP:{} to L2 DB", 
+    HAL_TRACE_DEBUG("{}:added EP:{} to L2 DB", 
                     __FUNCTION__, ep_l2_key_to_str(ep));
 
     // Add EP to L3 DB
@@ -353,15 +353,15 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, hal_handle);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-ep:{}:unable to add EP:{} to L3 DB", 
+            HAL_TRACE_ERR("{}:unable to add EP:{} to L3 DB", 
                           __FUNCTION__, ep_l2_key_to_str(ep));
             goto end;
         }
-        HAL_TRACE_DEBUG("pi-ep:{}:added EP ({}, {}) to L3 DB",
+        HAL_TRACE_DEBUG("{}:added EP ({}, {}) to L3 DB",
                         __FUNCTION__,
                         l3_key.vrf_id,
                         ipaddr2str(&l3_key.ip_addr));
-        HAL_TRACE_DEBUG("pi-ep:{}:added EP ({}, {}) to L3 DB",
+        HAL_TRACE_DEBUG("{}:added EP ({}, {}) to L3 DB",
                         __FUNCTION__,
                         l3_key.vrf_id,
                         ipaddr2str(&pi_ip_entry->ip_addr));
@@ -395,10 +395,10 @@ endpoint_cleanup(ep_t *ep)
     // Remove EP from L2 DB
     ret = ep_del_from_l2_db(ep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to delete EP from L3 DB", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to delete EP from L3 DB", __FUNCTION__);
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-ep:{}:deleted EP:{} from L2 DB", 
+    HAL_TRACE_DEBUG("{}:deleted EP:{} from L2 DB", 
                     __FUNCTION__, ep_l2_key_to_str(ep));
 
     // Remove EP from L3 DB
@@ -408,11 +408,11 @@ endpoint_cleanup(ep_t *ep)
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_del_from_l3_db(&l3_key);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-ep:{}:unable to del EP:{} from L3 DB", 
+            HAL_TRACE_ERR("{}:unable to del EP:{} from L3 DB", 
                           __FUNCTION__, ep_l2_key_to_str(ep));
             goto end;
         }
-        HAL_TRACE_DEBUG("pi-ep:{}:deleted EP ({}, {}) from L3 DB",
+        HAL_TRACE_DEBUG("{}:deleted EP ({}, {}) from L3 DB",
                         __FUNCTION__,
                         l3_key.vrf_id,
                         ipaddr2str(&l3_key.ip_addr));
@@ -421,7 +421,7 @@ endpoint_cleanup(ep_t *ep)
     // Free EP
     ret = ep_free(ep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to free EP", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to free EP", __FUNCTION__);
         goto end;
     }
 
@@ -450,7 +450,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -461,7 +461,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:create abort CB {}", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:create abort CB {}", __FUNCTION__);
 
     // 1. delete call to PD
     if (ep->pd) {
@@ -469,7 +469,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_ep_args.ep = ep;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_DELETE, (void *)&pd_ep_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-ep:{}:failed to delete ep pd, err : {}", 
+            HAL_TRACE_ERR("{}:failed to delete ep pd, err : {}", 
                           __FUNCTION__, ret);
         }
     }
@@ -582,7 +582,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     L2SegmentKeyHandle              l2seg_key_handle;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("pi-ep:{}: ep create for id {}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("{}: ep create for id {}", __FUNCTION__, 
                     spec.vrf_key_handle().vrf_id());
 
     ret = validate_endpoint_create(spec, rsp);
@@ -602,7 +602,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     l2seg_key_handle = spec.key_or_handle().endpoint_key().l2_key().l2segment_key_handle();
     l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to find l2seg, id {}, handle {}",
+        HAL_TRACE_ERR("{}:failed to find l2seg, id {}, handle {}",
                       __FUNCTION__, l2seg_key_handle.segment_id(), l2seg_key_handle.l2segment_handle());
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
@@ -619,7 +619,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     // instantiate EP
     ep = ep_alloc_init();
     if (ep == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to allocate handle/memory ret: {}",
+        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
                       __FUNCTION__, ret);
         ret = HAL_RET_OOM;
         goto end;
@@ -693,7 +693,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     // allocate hal handle id
     ep->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ENDPOINT);
     if (ep->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}: failed to alloc handle", 
+        HAL_TRACE_ERR("{}: failed to alloc handle", 
                       __FUNCTION__);
         ret =HAL_RET_HANDLE_INVALID;
         goto end;
@@ -757,7 +757,7 @@ validate_endpoint_update_spec (EndpointUpdateRequest& req, EndpointResponse *rsp
     // Check if vrf id is valid
     if (!req.has_vrf_key_handle() ||
         req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}:vrf id invalid", __FUNCTION__);
+        HAL_TRACE_ERR("{}:vrf id invalid", __FUNCTION__);
         ret = HAL_RET_VRF_ID_INVALID;
         goto end;
     }
@@ -765,7 +765,7 @@ validate_endpoint_update_spec (EndpointUpdateRequest& req, EndpointResponse *rsp
     // Check if ep's key or handle is passed
     if (!req.has_key_or_handle()) {
         ret = HAL_RET_INVALID_ARG;
-        HAL_TRACE_ERR("pi-ep:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         goto end;
     }
 
@@ -793,7 +793,7 @@ ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         session = find_session_by_handle(entry->handle_id);
         HAL_ABORT(session != NULL);
-        HAL_TRACE_DEBUG("pi-ep:{}:Callback for session_id: {}", __FUNCTION__,
+        HAL_TRACE_DEBUG("{}:Callback for session_id: {}", __FUNCTION__,
                         session->config.session_id);
         // TODO: vmotion: Call FTE API to handle 
         // ret = fte_handle_if_change(session, ep, &fte_event);
@@ -830,7 +830,7 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
     // ep_clone = (ep_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-ep:{}: update upd cb ", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}: update upd cb ", __FUNCTION__);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_ep_update_args_init(&pd_ep_args);
@@ -841,14 +841,14 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.app_ctxt      = app_ctxt;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_UPDATE, (void *)&pd_ep_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to update ep pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to update ep pd, err : {}",
                       __FUNCTION__, ret);
     }
 
     // Make FTE calls to process sessions
     ret = ep_handle_if_change(ep, app_ctxt->new_if_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed FTE update, err:{}",
+        HAL_TRACE_ERR("{}:failed FTE update, err:{}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -886,7 +886,7 @@ ep_copy_ip_list (ep_t *dst_ep, ep_t *src_ep)
     dllist_ctxt_t   *curr, *next;
     ep_ip_entry_t   *pi_ip_entry = NULL;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:Before copy EP's IPs:");
+    HAL_TRACE_DEBUG("{}:Before copy EP's IPs:");
     ep_print_ips(src_ep);
 
     sdk::lib::dllist_reset(&dst_ep->ip_list_head);
@@ -932,7 +932,7 @@ endpoint_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
     ep_clone = (ep_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:update commit CB",
+    HAL_TRACE_DEBUG("{}:update commit CB",
                     __FUNCTION__);
 
     // Update PI structures
@@ -946,14 +946,14 @@ endpoint_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.ep = ep;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_MEM_FREE, (void *)&pd_ep_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to delete ep pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete ep pd, err : {}",
                       __FUNCTION__, ret);
     }
 
     // Free PI
     ep_free(ep);
 end:
-    HAL_TRACE_DEBUG("pi-ep:{}:Clone EP's IPs:");
+    HAL_TRACE_DEBUG("{}:Clone EP's IPs:");
     ep_print_ips(ep_clone);
     return ret;
 }
@@ -985,7 +985,7 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assign clone as we are trying to free only the clone
     ep = (ep_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:update abort CB",
+    HAL_TRACE_DEBUG("{}:update abort CB",
                     __FUNCTION__);
 
     // Free PD
@@ -993,7 +993,7 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.ep = ep;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_MEM_FREE, (void *)&pd_ep_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to delete ep pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to delete ep pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -1030,13 +1030,13 @@ fetch_endpoint(vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
         if (ep_key.has_l2_key()) {
             auto ep_l2_key = ep_key.l2_key();
             MAC_UINT64_TO_ADDR(mac_addr, ep_l2_key.mac_address());
-            HAL_TRACE_DEBUG("pi-ep:{}:l2 key: seg:{}, handle {}, mac:{}", __FUNCTION__,
+            HAL_TRACE_DEBUG("{}:l2 key: seg:{}, handle {}, mac:{}", __FUNCTION__,
                             ep_l2_key.l2segment_key_handle().segment_id(), 
                             ep_l2_key.l2segment_key_handle().l2segment_handle(),
                             macaddr2str(mac_addr));
             l2seg = l2seg_lookup_key_or_handle(ep_l2_key.l2segment_key_handle());
             if (l2seg == NULL) {
-                HAL_TRACE_ERR("pi-ep:{}:failed to find l2seg, id {}, handle {}",
+                HAL_TRACE_ERR("{}:failed to find l2seg, id {}, handle {}",
                               __FUNCTION__, ep_l2_key.l2segment_key_handle().segment_id(),
                               ep_l2_key.l2segment_key_handle().l2segment_handle());
                 return HAL_RET_L2SEG_NOT_FOUND;
@@ -1088,11 +1088,11 @@ endpoint_validate_update_change(ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
             EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_SETUP) ||
             EP_VMOTION_STATE_CHECK(VMOTION_STATE_SETUP, VMOTION_STATE_ACTIVATE) ||
             EP_VMOTION_STATE_CHECK(VMOTION_STATE_ACTIVATE, VMOTION_END)) {
-            HAL_TRACE_DEBUG("pi-ep:{}:Vmotion state change: {} => {}",
+            HAL_TRACE_DEBUG("{}:Vmotion state change: {} => {}",
                             __FUNCTION__, ep->vmotion_state, 
                             app_ctxt->new_vmotion_state);
         } else {
-            HAL_TRACE_ERR("pi-ep:{}:invalid vmotion state change: {} => {}",
+            HAL_TRACE_ERR("{}:invalid vmotion state change: {} => {}",
                           __FUNCTION__, ep->vmotion_state, 
                           app_ctxt->new_vmotion_state);
             ret = HAL_RET_INVALID_ARG;
@@ -1103,7 +1103,7 @@ endpoint_validate_update_change(ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
         if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_NONE, VMOTION_STATE_START)) {
             // Check if "if" changed to tunnel
             if (!app_ctxt->if_change) {
-                HAL_TRACE_ERR("pi-ep:{}:invalid update. if has to change", 
+                HAL_TRACE_ERR("{}:invalid update. if has to change", 
                               __FUNCTION__);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
@@ -1111,14 +1111,14 @@ endpoint_validate_update_change(ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
 
             hal_if = find_if_by_handle(app_ctxt->new_if_handle);
             if (!hal_if) {
-                HAL_TRACE_ERR("pi-ep:{}:invalid update. new if not present new_if_hdl:{}", 
+                HAL_TRACE_ERR("{}:invalid update. new if not present new_if_hdl:{}", 
                               __FUNCTION__, app_ctxt->new_if_handle);
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
             }
 
             if (hal_if->if_type != intf::IF_TYPE_TUNNEL) {
-                HAL_TRACE_ERR("pi-ep:{}:invalid update. if has to be tunnel "
+                HAL_TRACE_ERR("{}:invalid update. if has to be tunnel "
                               "if if_hdl:{}, if_type:{}", 
                               __FUNCTION__, app_ctxt->new_if_handle,
                               hal_if->if_type);
@@ -1136,7 +1136,7 @@ endpoint_validate_update_change(ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
                                    VMOTION_END)) {
             // For now, assumption is nothing else changes
             if (app_ctxt->iplist_change || app_ctxt->if_change) {
-                HAL_TRACE_ERR("pi-ep:{}:invalid update. vmotion update "
+                HAL_TRACE_ERR("{}:invalid update. vmotion update "
                               "requires nothing else should change"
                               "iplist_chg:{}, if_change:{}", 
                               __FUNCTION__, app_ctxt->iplist_change,
@@ -1187,7 +1187,7 @@ endpoint_check_update(EndpointUpdateRequest& req, ep_t *ep, ep_update_app_ctxt_t
     // Validate changes
     ret = endpoint_validate_update_change(ep, app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("pi-ep:{}:ep update change validation failed", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}:ep update change validation failed", __FUNCTION__);
         goto end;
     }
 
@@ -1371,7 +1371,7 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
     sdk::lib::dllist_reset(*del_iplist);
 
     num_ips = req.endpoint_attrs().ip_address_size();
-    HAL_TRACE_DEBUG("pi-ep:{}:Before Checking for added IPs. Num:{}", 
+    HAL_TRACE_DEBUG("{}:Before Checking for added IPs. Num:{}", 
                     __FUNCTION__, num_ips);
     ep_print_ips(ep);
     for (i = 0; i < num_ips; i++) {
@@ -1391,9 +1391,9 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
         }
     }
 
-    HAL_TRACE_DEBUG("pi-ep:{}:Done Checking for added IPs", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:Done Checking for added IPs", __FUNCTION__);
     ep_print_ips(ep);
-    HAL_TRACE_DEBUG("pi-ep:{}:Checking for deleted IPs", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:Checking for deleted IPs", __FUNCTION__);
 
     // lnode = ep->ip_list_head.next;
     dllist_for_each(lnode, &(ep->ip_list_head)) {
@@ -1486,7 +1486,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
 
     vrf = vrf_lookup_by_handle(ep->vrf_handle);
     if (vrf == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to find vrf", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to find vrf", __FUNCTION__);
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
@@ -1507,11 +1507,11 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, ep->hal_handle);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-ep:{}:unable to add EP:{} to L3 DB", 
+            HAL_TRACE_ERR("{}:unable to add EP:{} to L3 DB", 
                           __FUNCTION__, ep_l2_key_to_str(ep));
             goto end;
         }
-        HAL_TRACE_DEBUG("pi-ep:{}:added EP ({}, {}) to L3 DB",
+        HAL_TRACE_DEBUG("{}:added EP ({}, {}) to L3 DB",
                         __FUNCTION__,
                         l3_key.vrf_id,
                         ipaddr2str(&l3_key.ip_addr));
@@ -1553,11 +1553,11 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
             l3_key.ip_addr = pi_ip_entry->ip_addr;
             ret = ep_del_from_l3_db(&l3_key);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("pi-ep:{}:unable to del EP:{} from L3 DB", 
+                HAL_TRACE_ERR("{}:unable to del EP:{} from L3 DB", 
                               __FUNCTION__, ep_l2_key_to_str(ep));
                 goto end;
             }
-            HAL_TRACE_DEBUG("pi-ep:{}:deleted EP ({}, {}) from L3 DB",
+            HAL_TRACE_DEBUG("{}:deleted EP ({}, {}) from L3 DB",
                             __FUNCTION__,
                             l3_key.vrf_id,
                             ipaddr2str(&l3_key.ip_addr));
@@ -1621,7 +1621,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     tid = req.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to find vrf for tid:{}", 
+        HAL_TRACE_ERR("{}:failed to find vrf for tid:{}", 
                       __FUNCTION__, tid);
         ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
@@ -1630,7 +1630,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     // fetch the ep
     ret = fetch_endpoint(tid, req.key_or_handle(), &ep, &api_status);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to fetch endpoint",
+        HAL_TRACE_ERR("{}:failed to fetch endpoint",
                       __FUNCTION__);
         rsp->set_api_status(api_status);
         goto end;
@@ -1639,7 +1639,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     // check for change
     ret = endpoint_check_update(req, ep, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:update change check failed: ret:{}",
+        HAL_TRACE_ERR("{}:update change check failed: ret:{}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -1654,7 +1654,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 
 
     if (!app_ctxt.if_change && !l2seg_change && !iplist_change) {
-        HAL_TRACE_ERR("pi-ep:{}:no change in ep update: noop", __FUNCTION__);
+        HAL_TRACE_ERR("{}:no change in ep update: noop", __FUNCTION__);
         goto end;
     }
 
@@ -1733,7 +1733,7 @@ validate_endpoint_delete (EndpointDeleteRequest& req,
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-ep:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1753,7 +1753,7 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_t                        *ep = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1767,7 +1767,7 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:delete del CB",
+    HAL_TRACE_DEBUG("{}:delete del CB",
                     __FUNCTION__);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1775,7 +1775,7 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.ep = ep;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_DELETE, (void *)&pd_ep_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to delete ep pd, err : {}", 
+        HAL_TRACE_ERR("{}:failed to delete ep pd, err : {}", 
                       __FUNCTION__, ret);
     }
 
@@ -1799,7 +1799,7 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1810,12 +1810,12 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:delete commit CB",
+    HAL_TRACE_DEBUG("{}:delete commit CB",
                     __FUNCTION__);
 
     ret = endpoint_cleanup(ep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to del ep from db, err : {}", 
+        HAL_TRACE_ERR("{}:failed to del ep from db, err : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
@@ -1876,7 +1876,7 @@ endpoint_delete (EndpointDeleteRequest& req,
     tid = req.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to find vrf for tid:{}", 
+        HAL_TRACE_ERR("{}:failed to find vrf for tid:{}", 
                       __FUNCTION__, tid);
         ret = HAL_RET_VRF_NOT_FOUND;
         // rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
@@ -1886,11 +1886,11 @@ endpoint_delete (EndpointDeleteRequest& req,
     // fetch the ep
     ret = fetch_endpoint(tid, req.key_or_handle(), &ep, &api_status);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to find EP", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to find EP", __FUNCTION__);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-ep:{}:deleting ep:{}", 
+    HAL_TRACE_DEBUG("{}:deleting ep:{}", 
                     __FUNCTION__, ep_l2_key_to_str(ep)); 
 
     // form ctxt and call infra add
@@ -2060,7 +2060,7 @@ ep_add_session (ep_t *ep, session_t *session)
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-ep:{}: add ep => session, ids: {} => {}, "
+    HAL_TRACE_DEBUG("{}: add ep => session, ids: {} => {}, "
                     "hdls: {} => {}, ret:{}",
                     __FUNCTION__, ep_l2_key_to_str(ep), session->config.session_id, 
                     ep->hal_handle, session->hal_handle, ret);
@@ -2091,7 +2091,7 @@ ep_del_session (ep_t *ep, session_t *session)
     }
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-ep:{}: add ep =/=> session, ids: {} =/=> {}, "
+    HAL_TRACE_DEBUG("{}: add ep =/=> session, ids: {} =/=> {}, "
                     "hdls: {} => {}, ret:{}",
                     __FUNCTION__, ep_l2_key_to_str(ep), session->config.session_id, 
                     ep->hal_handle, session->hal_handle, ret);

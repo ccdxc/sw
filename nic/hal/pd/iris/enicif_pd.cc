@@ -24,7 +24,7 @@ pd_enicif_create(pd_if_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
 
-    HAL_TRACE_DEBUG("pd-enicif:{}: creating pd state for enicif: {}", 
+    HAL_TRACE_DEBUG("{}: creating pd state for enicif: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create Enic If PD
@@ -40,7 +40,7 @@ pd_enicif_create(pd_if_create_args_t *args)
     // Create L2segs PD entries for classic
     ret = pd_enicif_alloc_l2seg_entries(pd_enicif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif::{}: unable to alloc. pd l2seg entries: ret:{}",
+        HAL_TRACE_ERR(":{}: unable to alloc. pd l2seg entries: ret:{}",
                       __FUNCTION__, ret);
         goto end;
     }
@@ -49,7 +49,7 @@ pd_enicif_create(pd_if_create_args_t *args)
     ret = pd_enicif_alloc_res(pd_enicif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("pd-enicif:{}: unable to alloc. resources for enicif: {}",
+        HAL_TRACE_ERR("{}: unable to alloc. resources for enicif: {}",
                       __FUNCTION__, if_get_if_id(args->intf));
         goto end;
     }
@@ -99,19 +99,19 @@ pd_enicif_delete (pd_if_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-enicif:{}:deleting pd state for enicif: {}",
+    HAL_TRACE_DEBUG("{}:deleting pd state for enicif: {}",
                     __FUNCTION__, args->intf->if_id);
     enicif_pd = (pd_enicif_t *)args->intf->pd_if;
 
     // deprogram HW
     ret = pd_enicif_deprogram_hw(enicif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     ret = pd_enicif_cleanup(enicif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:failed pd enicif delete",
+        HAL_TRACE_ERR("{}:failed pd enicif delete",
                       __FUNCTION__);
     }
 
@@ -128,13 +128,13 @@ pd_enicif_upd_pinned_uplink_change(pd_if_update_args_t *args)
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
     if_t            *hal_if = (if_t *)pd_enicif->pi_if;
 
-    HAL_TRACE_DEBUG("pd-enicif:{} pinned uplink change: ", __FUNCTION__);
+    HAL_TRACE_DEBUG("{} pinned uplink change: ", __FUNCTION__);
 
     // Program input prop. entries for new l2segs
     ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, &hal_if->l2seg_list_clsc_head,
                                     args, TABLE_OPER_UPDATE);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif: failed to repgm input prop."
+        HAL_TRACE_ERR(" failed to repgm input prop."
                 "for l2segs. ret:{}", ret);
         goto end;
     }
@@ -153,7 +153,7 @@ pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args)
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
     l2seg_t         *native_l2seg = NULL;
 
-    HAL_TRACE_DEBUG("pd-enicif:{} native l2seg change: ", __FUNCTION__);
+    HAL_TRACE_DEBUG("{} native l2seg change: ", __FUNCTION__);
 
     // Remove old native l2seg input prop entry
     ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
@@ -180,12 +180,12 @@ pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args)
     hal_ret_t       ret = HAL_RET_OK;
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
 
-    HAL_TRACE_DEBUG("pd-enicif:{} l2seg-list change: ", __FUNCTION__);
+    HAL_TRACE_DEBUG("{} l2seg-list change: ", __FUNCTION__);
 
     // Allocated PD State for new IP entries
     ret = pd_enicif_alloc_pd_l2seg_entries(args->add_l2seg_clsclist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif: failed to alloced pd l2seg entries "
+        HAL_TRACE_ERR(" failed to alloced pd l2seg entries "
                 "for new l2segs. ret:{}", ret);
         goto end;
     }
@@ -194,7 +194,7 @@ pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args)
     ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, args->add_l2seg_clsclist,
                                     args, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif: failed to pgm input prop."
+        HAL_TRACE_ERR(" failed to pgm input prop."
                 "for new l2segs. ret:{}", ret);
         goto end;
     }
@@ -203,7 +203,7 @@ pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args)
     ret = pd_enicif_pd_depgm_inp_prop(pd_enicif,
                                       args->del_l2seg_clsclist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif: failed to depgm input prop."
+        HAL_TRACE_ERR(" failed to depgm input prop."
                 "for deleted l2segs ret:{}", ret);
         goto end;
     }
@@ -211,7 +211,7 @@ pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args)
     // free up delete IPs PD state
     ret = pd_enicif_dealloc_pd_l2seg_entries(args->del_l2seg_clsclist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif: failed to free pd l2seg entries. ret:{}", ret);
+        HAL_TRACE_ERR(" failed to free pd l2seg entries. ret:{}", ret);
         goto end;
     }
 
@@ -231,7 +231,7 @@ pd_enicif_alloc_l2seg_entries (pd_enicif_t *pd_enicif)
 
     ret = pd_enicif_alloc_pd_l2seg_entries(&(hal_if->l2seg_list_clsc_head));
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}: failed to allocated pd l2seg entries.",
+        HAL_TRACE_ERR("{}: failed to allocated pd l2seg entries.",
                 __FUNCTION__);
     }
 
@@ -262,7 +262,7 @@ pd_enicif_alloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
         // Link PI to PD
         ((pd_if_l2seg_entry_t *)(pi_l2seg_entry->pd))->pi_if_l2seg_entry = pi_l2seg_entry;
 
-        HAL_TRACE_DEBUG("pd-enicif:{}: Allocating pd l2seg entry for l2seg_hdl:{}",
+        HAL_TRACE_DEBUG("{}: Allocating pd l2seg entry for l2seg_hdl:{}",
                 __FUNCTION__, pi_l2seg_entry->l2seg_handle);
     }
 
@@ -303,7 +303,7 @@ pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
                                            pi_l2seg_entry->pd);
             // Unlink PD from PI
             pi_l2seg_entry->pd = NULL;
-            HAL_TRACE_DEBUG("pd-enicif:{}: freeing pd enicif l2seg entry for l2seg_hdl: {}",
+            HAL_TRACE_DEBUG("{}: freeing pd enicif l2seg entry for l2seg_hdl: {}",
                     __FUNCTION__, pi_l2seg_entry->l2seg_handle);
         } else {
             HAL_ASSERT(0);
@@ -329,12 +329,12 @@ pd_enicif_alloc_res(pd_enicif_t *pd_enicif)
     rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_enicif->
             enic_lport_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("pd-enicif:{}:failed to alloc lport_id err: {}", 
+        HAL_TRACE_ERR("{}:failed to alloc lport_id err: {}", 
                       __FUNCTION__, rs);
         pd_enicif->enic_lport_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("pd-enicif:{}: if_id:{} allocated lport_id:{}", 
+    HAL_TRACE_DEBUG("{}: if_id:{} allocated lport_id:{}", 
                     __FUNCTION__, 
                     if_get_if_id((if_t *)pd_enicif->pi_if),
                     pd_enicif->enic_lport_id);
@@ -354,13 +354,13 @@ pd_enicif_dealloc_res(pd_enicif_t *pd_enicif)
     if (pd_enicif->enic_lport_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->lport_idxr()->free(pd_enicif->enic_lport_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-enicif:{}:failed to free lport_id err: {}", 
+            HAL_TRACE_ERR("{}:failed to free lport_id err: {}", 
                           __FUNCTION__, pd_enicif->enic_lport_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("pd-enicif:{}:freed lport_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed lport_id: {}", 
                         __FUNCTION__, pd_enicif->enic_lport_id);
     }
 
@@ -392,7 +392,7 @@ pd_enicif_cleanup(pd_enicif_t *pd_enicif)
     // Releasing resources
     ret = pd_enicif_dealloc_res(pd_enicif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}: unable to dealloc res for enicif: {}", 
+        HAL_TRACE_ERR("{}: unable to dealloc res for enicif: {}", 
                       __FUNCTION__, 
                       ((if_t *)(pd_enicif->pi_if))->if_id);
         goto end;
@@ -422,14 +422,14 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
     // De program TM register
     ret = pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
         goto end;
     }
 
     // De-Program Output Mapping Table
     ret = pd_enicif_pd_depgm_output_mapping_tbl(pd_enicif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
 end:
@@ -453,12 +453,12 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_host);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram inp mac vlan table "
+        HAL_TRACE_ERR("{}:unable to deprogram inp mac vlan table "
                       "for host traffic",
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
         goto end;
     } else {
-        HAL_TRACE_ERR("pd-enicif:{}:deprogrammed inp mac vlan table for "
+        HAL_TRACE_ERR("{}:deprogrammed inp mac vlan table for "
                       "host traffic",
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
     }
@@ -466,12 +466,12 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_upl);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram inp mac vlan table "
+        HAL_TRACE_ERR("{}:unable to deprogram inp mac vlan table "
                       "for uplink traffic",
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
         goto end;
     } else {
-        HAL_TRACE_ERR("pd-enicif:{}:deprogrammed inp mac vlan table for "
+        HAL_TRACE_ERR("{}:deprogrammed inp mac vlan table for "
                       "uplink traffic",
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
     }
@@ -496,10 +496,10 @@ pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif)
     sdk_ret = dm_omap->remove(pd_enicif->enic_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram omapping table",
+        HAL_TRACE_ERR("{}:unable to deprogram omapping table",
                 __FUNCTION__, pd_enicif->enic_lport_id);
     } else {
-        HAL_TRACE_ERR("pd-enicif:{}:deprogrammed omapping table",
+        HAL_TRACE_ERR("{}:deprogrammed omapping table",
                 __FUNCTION__, pd_enicif->enic_lport_id);
     }
 
@@ -519,7 +519,7 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 
     pi_nwsec = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
     if (pi_nwsec == NULL) {
-        HAL_TRACE_DEBUG("pd-enicif:{}: No nwsec. Programming default", __FUNCTION__);
+        HAL_TRACE_DEBUG("{}: No nwsec. Programming default", __FUNCTION__);
     }
 
     // Check if classic
@@ -572,7 +572,7 @@ pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
         pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
         l2seg = l2seg_lookup_by_handle(pi_l2seg_entry->l2seg_handle);
         if (l2seg == NULL) {
-            HAL_TRACE_ERR("pd-enicif:{}:unable to find l2seg for handle:{}",
+            HAL_TRACE_ERR("{}:unable to find l2seg for handle:{}",
                           __FUNCTION__, pi_l2seg_entry->l2seg_handle);
             goto end;
         }
@@ -582,7 +582,7 @@ pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
                                               pi_l2seg_entry->pd,
                                               args, oper);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-enicif:{}:unable to pgm for l2seg:{}, if{}",
+            HAL_TRACE_ERR("{}:unable to pgm for l2seg:{}, if{}",
                            l2seg->seg_id, 
                            if_get_if_id((if_t *)pd_enicif->pi_if));
         }
@@ -611,7 +611,7 @@ pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, dllist_ctxt_t *l2sege_list)
 
         ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_l2seg_entry->inp_prop_idx);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-enicif:{}:unable to depgm input properties for "
+            HAL_TRACE_ERR("{}:unable to depgm input properties for "
                           "l2seg:{}, if{}",
                           l2seg ? l2seg->seg_id : HAL_L2SEGMENT_ID_INVALID, 
                           if_get_if_id((if_t *)pd_enicif->pi_if));
@@ -714,14 +714,14 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                                    key_mask, direct_to_otcam);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-enicif:{}:classic: unable to program for "
+            HAL_TRACE_ERR("{}:classic: unable to program for "
                           "(l2seg, upif): ({}, {})",
                           __FUNCTION__, 
                           hal::l2seg_get_l2seg_id(l2seg), 
                           if_get_if_id(hal_if));
             goto end;
         } else {
-            HAL_TRACE_DEBUG("pd-enicif:{}:classic: Programmed "
+            HAL_TRACE_DEBUG("{}:classic: Programmed "
                             "table:input_properties index:{} ", __FUNCTION__,
                             hash_idx);
         }
@@ -745,14 +745,14 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
         sdk_ret = inp_prop_tbl->update(hash_idx, &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-enicif:{}:classic: unable to reprogram for "
+            HAL_TRACE_ERR("{}:classic: unable to reprogram for "
                           "(l2seg, upif): ({}, {})",
                           __FUNCTION__, 
                           hal::l2seg_get_l2seg_id(l2seg), 
                           if_get_if_id(hal_if));
             goto end;
         } else {
-            HAL_TRACE_DEBUG("pd-enicif:{}:classic: reprogrammed "
+            HAL_TRACE_DEBUG("{}:classic: reprogrammed "
                             "table:input_properties index:{} ", __FUNCTION__,
                             hash_idx);
         }
@@ -817,14 +817,14 @@ pd_enicif_pd_repgm_inp_prop_l2seg(pd_if_args_t *args,
     // Update
     ret = inp_prop_tbl->update(hash_idx, &data);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:classic: unable to reprogram for "
+        HAL_TRACE_ERR("{}:classic: unable to reprogram for "
                       "(l2seg, upif): ({}, {})",
                       __FUNCTION__, 
                       hal::l2seg_get_l2seg_id(l2seg), 
                       if_get_if_id(hal_if));
         goto end;
     } else {
-        HAL_TRACE_DEBUG("pd-enicif:{}:classic: reprogrammed "
+        HAL_TRACE_DEBUG("{}:classic: reprogrammed "
                         "table:input_properties index:{} ", __FUNCTION__,
                         hash_idx);
     }
@@ -858,11 +858,11 @@ pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx)
     sdk_ret = inp_prop_tbl->remove(inp_prop_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:classic: unable to deprogram at:{} ",
+        HAL_TRACE_ERR("{}:classic: unable to deprogram at:{} ",
                       __FUNCTION__, inp_prop_idx);
         goto end;
     } else {
-        HAL_TRACE_ERR("pd-enicif:{}:classic: deprogrammed at:{} ",
+        HAL_TRACE_ERR("{}:classic: deprogrammed at:{} ",
                       __FUNCTION__, inp_prop_idx);
     }
 end:
@@ -880,7 +880,7 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
 
-    HAL_TRACE_DEBUG("pd-enicif:{}: updating lif params for enicif: {}", 
+    HAL_TRACE_DEBUG("{}: updating lif params for enicif: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     pd_enicif = (pd_enicif_t *)args->intf->pd_if;
@@ -942,12 +942,12 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         sdk_ret = dm_omap->insert_withid(&data, pd_enicif->enic_lport_id);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-enicif::{}:if_id:{} {} unable to program",
+            HAL_TRACE_ERR(":{}:if_id:{} {} unable to program",
                           __FUNCTION__, 
                           ((if_t*)pd_enicif->pi_if)->if_id,
                           oper);
         } else {
-            HAL_TRACE_DEBUG("pd-enicif:{}: lif_id:{} {} programmed output "
+            HAL_TRACE_DEBUG("{}: lif_id:{} {} programmed output "
                             "mapping at:{} access_vlan:{}",
                             __FUNCTION__, 
                             ((if_t*)pd_enicif->pi_if)->if_id,
@@ -958,12 +958,12 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         sdk_ret = dm_omap->update(pd_enicif->enic_lport_id, &data);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pd-enicif::{}:if_id:{} {} unable to program",
+            HAL_TRACE_ERR(":{}:if_id:{} {} unable to program",
                           __FUNCTION__, 
                           ((if_t*)pd_enicif->pi_if)->if_id,
                           oper);
         } else {
-            HAL_TRACE_DEBUG("pd-enicif:{}: if_id:{} {} programmed output "
+            HAL_TRACE_DEBUG("{}: if_id:{} {} programmed output "
                             "mapping at:{} access_vlan:{}",
                             __FUNCTION__, 
                             ((if_t*)pd_enicif->pi_if)->if_id,
@@ -1034,11 +1034,11 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
                                             &(pd_enicif->inp_prop_mac_vlan_idx_host));
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}:unable to program for Host traffic (EnicIf): {}",
+        HAL_TRACE_ERR("{}:unable to program for Host traffic (EnicIf): {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if));
         goto end;
     } else {
-        HAL_TRACE_DEBUG("pd-enicif:{}:programmed for Host traffic (EnicIf): {} tcamIdx: {}",
+        HAL_TRACE_DEBUG("{}:programmed for Host traffic (EnicIf): {} tcamIdx: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), 
                 pd_enicif->inp_prop_mac_vlan_idx_host);
     }
@@ -1061,7 +1061,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
         key.vlan_tag_vid = l2seg_get_wire_encap_val((l2seg_t *)pi_l2seg);
     } else {
         // TODO: What if wire encap is Tunnel ...
-        HAL_TRACE_ERR("pd-enicif:{}: WireEncap = VXLAN - NOT IMPLEMENTED",
+        HAL_TRACE_ERR("{}: WireEncap = VXLAN - NOT IMPLEMENTED",
                       __FUNCTION__);
         return HAL_RET_OK;
     }
@@ -1077,11 +1077,11 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
                                             &(pd_enicif->inp_prop_mac_vlan_idx_upl));
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}: unable to program for Uplink traffic (EnicIf): {} ret: {}",
+        HAL_TRACE_ERR("{}: unable to program for Uplink traffic (EnicIf): {} ret: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), ret);
         goto end;
     } else {
-        HAL_TRACE_ERR("pd-enicif:{}: programmed for Uplink traffic (EnicIf): {} tcamIdx: {}",
+        HAL_TRACE_ERR("{}: programmed for Uplink traffic (EnicIf): {} tcamIdx: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), 
                 pd_enicif->inp_prop_mac_vlan_idx_upl);
     }
@@ -1170,11 +1170,11 @@ pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
     sdk_ret = inp_prop_mac_vlan_tbl->update(pd_enicif->inp_prop_mac_vlan_idx_host, &data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif:{}: unable to program for Host traffic (EnicIf): {}",
+        HAL_TRACE_ERR("{}: unable to program for Host traffic (EnicIf): {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if));
         goto end;
     } else {
-        HAL_TRACE_DEBUG("pd-enicif:{}: programmed for Host traffic (EnicIf): {} TcamIdx: {}",
+        HAL_TRACE_DEBUG("{}: programmed for Host traffic (EnicIf): {} TcamIdx: {}",
                 __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), 
                 pd_enicif->inp_prop_mac_vlan_idx_host);
     }

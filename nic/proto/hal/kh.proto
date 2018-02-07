@@ -173,3 +173,13 @@ message AclKeyHandle {
     fixed64   acl_handle = 2;    // id of acl returned by HAL
   }
 }
+
+// GftExactMatchProfileKeyHandle is used to operate on a GFT exact match profile
+// either by its profile id or HAL allocated handle
+message GftExactMatchProfileKeyHandle {
+  oneof key_or_handle {
+    uint64     profile_id      = 1;   // App allocated unique profile id
+    fixed64    profile_handle  = 2;   // handle of the profile returned by HAL
+  }
+}
+

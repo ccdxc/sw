@@ -80,7 +80,7 @@ tnnl_rw_entry_find(pd_tnnl_rw_entry_key_t *tnnl_rw_key, pd_tnnl_rw_entry_t **tnn
     if ((*tnnl_rwe) == NULL) {
         ret = HAL_RET_ENTRY_NOT_FOUND;
     } else {
-        HAL_TRACE_DEBUG("pd-tnnl_rw: Found tnnl_rw_id: {} ",
+        HAL_TRACE_DEBUG("Found tnnl_rw_id: {} ",
                         (*tnnl_rwe)->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(tnnl_rw_key);
     }
@@ -126,13 +126,13 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         rs = g_hal_state_pd->tnnl_rw_tbl_idxr()->
             alloc_withid(tmp_tnnl_rw_idx);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-tnnl_rw: Indexer err: {}", rs);
+            HAL_TRACE_ERR("Indexer err: {}", rs);
             goto end;
         }
     } else {
         rs = g_hal_state_pd->tnnl_rw_tbl_idxr()->alloc(&tmp_tnnl_rw_idx);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-tnnl_rw: Resource Exhaustion Usage: {} for ",
+            HAL_TRACE_ERR("Resource Exhaustion Usage: {} for ",
                           g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated());
             tnnl_rw_entry_key_trace(tnnl_rw_key);
             ret = HAL_RET_NO_RESOURCE;
@@ -155,7 +155,7 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     // Increment the ref count
     tnnl_rwe->ref_cnt++;
 
-    HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Allocated tnnl_rw_id: {} for ",
+    HAL_TRACE_DEBUG("Usage: {} ref_cnt: {} Allocated tnnl_rw_id: {} for ",
                     g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated(),
                     tnnl_rwe->ref_cnt,
                     tmp_tnnl_rw_idx);
@@ -203,7 +203,7 @@ tnnl_rw_entry_find_or_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, uint32_t *tnnl_
         *tnnl_rw_idx = tnnl_rwe->tnnl_rw_idx;
         // Increment the ref count
         tnnl_rwe->ref_cnt++;
-        HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Find/Alloc "
+        HAL_TRACE_DEBUG("Usage: {} ref_cnt: {} Find/Alloc "
                         "tnnl_rw_id: {} for ",
                         g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated(),
                         tnnl_rwe->ref_cnt,
@@ -259,7 +259,7 @@ tnnl_rw_entry_delete(pd_tnnl_rw_entry_key_t *tnnl_rw_key)
     // Decrement the ref count
     tnnl_rwe->ref_cnt--;
 
-    HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Delete tnnl_rw_id: {} for ",
+    HAL_TRACE_DEBUG("Usage: {} ref_cnt: {} Delete tnnl_rw_id: {} for ",
                     g_hal_state_pd->tnnl_rw_tbl_idxr()->num_indices_allocated(),
                     tnnl_rwe->ref_cnt,
                     tnnl_rwe->tnnl_rw_idx);
@@ -308,12 +308,12 @@ tnnl_rw_pd_depgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe)
     sdk_ret = tnnl_rw_tbl->remove(tnnl_rwe->tnnl_rw_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("pd-tnnl_rw: Unable to de-program at tnnl_rw_id: {} "
+        HAL_TRACE_DEBUG("Unable to de-program at tnnl_rw_id: {} "
                         "ret: {}, for ",
                         tnnl_rwe->tnnl_rw_idx, ret);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     } else {
-        HAL_TRACE_DEBUG("pd-tnnl_rw: De-Programmed at tnnl_rw_id: {} for ",
+        HAL_TRACE_DEBUG("De-Programmed at tnnl_rw_id: {} for ",
                   tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     }
@@ -355,7 +355,7 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan (pd_tnnl_rw_entry_t *tnnl_rwe)
                       tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     } else {
-        HAL_TRACE_DEBUG("pd-tnnl_rw: Programmed at tnnl_rw_id: {} for ",
+        HAL_TRACE_DEBUG("Programmed at tnnl_rw_id: {} for ",
                         tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     }
@@ -394,7 +394,7 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan (pd_tnnl_rw_entry_t *tnnl_rwe)
                       tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     } else {
-        HAL_TRACE_DEBUG("pd-tnnl_rw: Programmed at tnnl_rw_id: {} for ",
+        HAL_TRACE_DEBUG("Programmed at tnnl_rw_id: {} for ",
                         tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     }
@@ -423,7 +423,7 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan (pd_tnnl_rw_entry_t *tnnl_rwe)
                       tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     } else {
-        HAL_TRACE_DEBUG("pd-tnnl_rw: Programmed at tnnl_rw_id: {} for ",
+        HAL_TRACE_DEBUG("Programmed at tnnl_rw_id: {} for ",
                         tnnl_rwe->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
     }

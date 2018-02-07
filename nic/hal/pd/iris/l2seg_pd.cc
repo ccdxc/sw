@@ -157,7 +157,7 @@ l2seg_pd_add_to_db (pd_l2seg_t *pd_l2seg, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pd-l2seg:{}:adding to l2seg hwid hash table. hwid:{} => ",
+    HAL_TRACE_DEBUG("{}:adding to l2seg hwid hash table. hwid:{} => ",
                     __FUNCTION__, pd_l2seg->l2seg_fl_lkup_id);
 
     // allocate an entry to establish mapping from l2seg hwid to its handle
@@ -173,7 +173,7 @@ l2seg_pd_add_to_db (pd_l2seg_t *pd_l2seg, hal_handle_t handle)
     sdk_ret = g_hal_state_pd->flow_lkupid_ht()->insert_with_key(&pd_l2seg->l2seg_fl_lkup_id,
                                                                 entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to add hw id to handle mapping, "
+        HAL_TRACE_ERR("{}:failed to add hw id to handle mapping, "
                       "err : {}", __FUNCTION__, sdk_ret);
         hal::pd::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
@@ -190,7 +190,7 @@ l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
 {
     hal_handle_id_ht_entry_t    *entry = NULL;
 
-    HAL_TRACE_DEBUG("pd-l2seg:{}:removing from hwid hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:removing from hwid hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->flow_lkupid_ht()->
         remove(&pd_l2seg->l2seg_fl_lkup_id);
@@ -213,7 +213,7 @@ pd_l2seg_create (pd_l2seg_create_args_t *args)
     hal_ret_t     ret;
     pd_l2seg_t    *l2seg_pd = NULL;
 
-    HAL_TRACE_DEBUG("pd-l2seg:{}:creating pd state for l2seg", 
+    HAL_TRACE_DEBUG("{}:creating pd state for l2seg", 
                     __FUNCTION__, args->l2seg->seg_id);
 
     // create l2seg PD
@@ -228,7 +228,7 @@ pd_l2seg_create (pd_l2seg_create_args_t *args)
     // allocate resources
     ret = l2seg_pd_alloc_res(l2seg_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}: Unable to alloc. resources "
+        HAL_TRACE_ERR("{}: Unable to alloc. resources "
                 "for seg_id: {}", __FUNCTION__, args->l2seg->seg_id);
         goto end;
     }
@@ -236,7 +236,7 @@ pd_l2seg_create (pd_l2seg_create_args_t *args)
     // Program HW
     ret = l2seg_pd_program_hw(l2seg_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to program hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to program hw", __FUNCTION__);
         goto end;
     }
 
@@ -277,20 +277,20 @@ pd_l2seg_delete (pd_l2seg_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->l2seg != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->l2seg->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-l2seg:{}:deleting pd state for l2seg {}",
+    HAL_TRACE_DEBUG("{}:deleting pd state for l2seg {}",
                     __FUNCTION__, args->l2seg->seg_id);
     l2seg_pd = (pd_l2seg_t *)args->l2seg->pd;
 
     // deprogram HW
     ret = l2seg_pd_deprogram_hw(l2seg_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     // remove from db
     ret = l2seg_pd_del_from_db(l2seg_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:unable to delete from db", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to delete from db", __FUNCTION__);
         goto end;
     }
 
@@ -315,7 +315,7 @@ l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd)
     // Program Input properties Table
     ret = l2seg_pd_depgm_inp_prop_tbl(l2seg_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
 
     return ret;
@@ -337,11 +337,11 @@ l2seg_pd_depgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     sdk_ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_cpu_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg::{}:unable to deprogram from cpu entry "
+        HAL_TRACE_ERR(":{}:unable to deprogram from cpu entry "
                 "input properties for seg_id:{}",
                 __FUNCTION__, ((l2seg_t*)(l2seg_pd->l2seg))->seg_id);
     } else {
-        HAL_TRACE_DEBUG("pd-l2seg::{}:deprogrammed from_cpu_entry "
+        HAL_TRACE_DEBUG(":{}:deprogrammed from_cpu_entry "
                 "input properties for seg_id:{}",
                 __FUNCTION__, ((l2seg_t*)(l2seg_pd->l2seg))->seg_id);
     }
@@ -406,12 +406,12 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     sdk_ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg::{}: Unable to program from cpu entry "
+        HAL_TRACE_ERR(":{}: Unable to program from cpu entry "
                       "input properties for seg_id:{}",
                       __FUNCTION__, ((l2seg_t*)(l2seg_pd->l2seg))->seg_id);
         goto end;
     } else {
-        HAL_TRACE_DEBUG("pd-l2seg::{}: Programmed from_cpu_entry "
+        HAL_TRACE_DEBUG(":{}: Programmed from_cpu_entry "
                         "input properties for seg_id:{}",
                         __FUNCTION__, ((l2seg_t*)(l2seg_pd->l2seg))->seg_id);
     }
@@ -431,13 +431,13 @@ l2seg_pd_alloc_res (pd_l2seg_t *pd_l2seg)
 
     ret = l2seg_pd_alloc_cpuid(pd_l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to alloc cpuid", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to alloc cpuid", __FUNCTION__);
         goto end;
     }
 
     ret = l2seg_pd_alloc_hwid(pd_l2seg); 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to alloc hwid", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to alloc hwid", __FUNCTION__);
         goto end;
     }
 
@@ -459,20 +459,20 @@ l2seg_pd_dealloc_res (pd_l2seg_t *pd_l2seg)
 
     ret = l2seg_pd_dealloc_cpuid(pd_l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to dealloc cpuid", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to dealloc cpuid", __FUNCTION__);
         goto end;
     }
 
     ret = l2seg_pd_dealloc_hwid(pd_l2seg); 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to dealloc hwid", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to dealloc hwid", __FUNCTION__);
         goto end;
     }
 
 end:
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to dealloc res", __FUNCTION__);
+        HAL_TRACE_ERR("{}:failed to dealloc res", __FUNCTION__);
     }
     return ret;
 }
@@ -485,7 +485,7 @@ l2seg_pd_l2seguplink_count (pd_l2seg_t *l2seg_pd)
     for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
         if (l2seg_pd->inp_prop_tbl_idx[i] != INVALID_INDEXER_INDEX ||
                 l2seg_pd->inp_prop_tbl_idx_pri[i] != INVALID_INDEXER_INDEX) {
-            HAL_TRACE_DEBUG("pd-l2seg:{}:index {} used tbl_idx:{}, "
+            HAL_TRACE_DEBUG("{}:index {} used tbl_idx:{}, "
                             "tbl_idx_pri:{}", 
                             __FUNCTION__, i, l2seg_pd->inp_prop_tbl_idx[i],
                             l2seg_pd->inp_prop_tbl_idx_pri[i]);
@@ -520,7 +520,7 @@ l2seg_pd_cleanup (pd_l2seg_t *l2seg_pd)
     // check if there are no add_l2seg_on_uplinks referrals.
     l2seguplink_count = l2seg_pd_l2seguplink_count(l2seg_pd);
     if (l2seguplink_count) {
-        HAL_TRACE_ERR("pd-l2seg:{}:failed to cleanup. still has {} uplink ifs",
+        HAL_TRACE_ERR("{}:failed to cleanup. still has {} uplink ifs",
                 __FUNCTION__, l2seguplink_count);
         ret = HAL_RET_INVALID_OP;
         // TODO: Uncomment this once ifs are migrated to modify scheme
@@ -530,7 +530,7 @@ l2seg_pd_cleanup (pd_l2seg_t *l2seg_pd)
     // Releasing resources
     ret = l2seg_pd_dealloc_res(l2seg_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-l2seg:{}: unable to dealloc res for l2seg: {}", 
+        HAL_TRACE_ERR("{}: unable to dealloc res for l2seg: {}", 
                       __FUNCTION__, 
                       ((l2seg_t *)(l2seg_pd->l2seg))->seg_id);
         goto end;
@@ -565,7 +565,7 @@ l2seg_pd_alloc_hwid (pd_l2seg_t *pd_l2seg)
     }
     pd_l2seg->l2seg_fl_lkup_id = ten_pd->vrf_hw_id << HAL_PD_VRF_SHIFT | 
                                 pd_l2seg->l2seg_hw_id; 
-    HAL_TRACE_DEBUG("pd-l2seg:{}:l2seg_hwid: {},ten_hwid: {}, "
+    HAL_TRACE_DEBUG("{}:l2seg_hwid: {},ten_hwid: {}, "
                     "l2seg_fl_lkup_id: {} ", 
                     __FUNCTION__, pd_l2seg->l2seg_hw_id, ten_pd->vrf_hw_id, 
                     pd_l2seg->l2seg_fl_lkup_id);
@@ -593,7 +593,7 @@ l2seg_pd_dealloc_hwid(pd_l2seg_t *l2seg_pd)
             goto end;
         }
 
-        HAL_TRACE_DEBUG("pd-l2seg:{}:freed l2seg_hwid: {}", 
+        HAL_TRACE_DEBUG("{}:freed l2seg_hwid: {}", 
                         __FUNCTION__, l2seg_pd->l2seg_hw_id);
     }
 
@@ -618,7 +618,7 @@ l2seg_pd_alloc_cpuid (pd_l2seg_t *pd_l2seg)
         pd_l2seg->l2seg_fromcpu_id = INVALID_INDEXER_INDEX;
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("pd-l2seg:{}: seg_id:{} allocated from_cpu_id: {}", 
+    HAL_TRACE_DEBUG("{}: seg_id:{} allocated from_cpu_id: {}", 
                     __FUNCTION__, ((l2seg_t*)(pd_l2seg->l2seg))->seg_id,
                     pd_l2seg->l2seg_fromcpu_id);
 
@@ -637,13 +637,13 @@ l2seg_pd_dealloc_cpuid (pd_l2seg_t *l2seg_pd)
     if (l2seg_pd->l2seg_fromcpu_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->l2seg_cpu_idxr()->free(l2seg_pd->l2seg_fromcpu_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-l2seg:{}:failed to free cpuid err: {}", 
+            HAL_TRACE_ERR("{}:failed to free cpuid err: {}", 
                           __FUNCTION__, l2seg_pd->l2seg_fromcpu_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("pd-l2seg:{}:freed from_cpu_id: {}", 
+        HAL_TRACE_DEBUG("{}:freed from_cpu_id: {}", 
                         __FUNCTION__, l2seg_pd->l2seg_fromcpu_id);
     }
 
