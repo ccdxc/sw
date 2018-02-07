@@ -921,7 +921,8 @@ parser parse_udp_3 {
     set_metadata(l4_metadata.l4_dport_3, latest.dstPort);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan_3;
-        UDP_PORT_ROCE_V2: parse_roce_v2;
+        // No support for Roce in 3rd layer
+        //UDP_PORT_ROCE_V2: parse_roce_v2;
         default: ingress;
         0x1 mask 0x0: parse_gre_3; // for avoiding parser flit violation
     }
@@ -1390,7 +1391,7 @@ field_list rx_ipv4_1_icrc_list {
 }
 @pragma icrc verify_len ohi.icrc_len
 @pragma icrc gress ingress
-field_list_calculation rx_ipv4_1_roce_icrc {
+field_list_calculation rx_ipv4_1_roce_1_icrc {
     input {
         rx_ipv4_1_icrc_list;
     }
@@ -1408,7 +1409,7 @@ field_list rx_ipv6_1_icrc_list {
 
 @pragma icrc verify_len ohi.icrc_len
 @pragma icrc gress ingress
-field_list_calculation rx_ipv6_1_roce_icrc {
+field_list_calculation rx_ipv6_1_roce_1_icrc {
     input {
         rx_ipv6_1_icrc_list;
     }
@@ -1425,7 +1426,7 @@ field_list rx_ipv4_2_icrc_list {
 }
 @pragma icrc verify_len ohi.icrc_len
 @pragma icrc gress ingress
-field_list_calculation rx_ipv4_2_roce_icrc {
+field_list_calculation rx_ipv4_2_roce_2_icrc {
     input {
         rx_ipv4_2_icrc_list;
     }
@@ -1443,7 +1444,7 @@ field_list rx_ipv6_2_icrc_list {
 
 @pragma icrc verify_len ohi.icrc_len
 @pragma icrc gress ingress
-field_list_calculation rx_ipv6_2_roce_icrc {
+field_list_calculation rx_ipv6_2_roce_2_icrc {
     input {
         rx_ipv6_2_icrc_list;
     }
@@ -1451,49 +1452,89 @@ field_list_calculation rx_ipv6_2_roce_icrc {
     output_width : 32;
 }
 
-field_list rx_ipv4_3_icrc_list {
-    ipv4_3.ttl;
-    ipv4_3.diffserv;
-    ipv4_3.hdrChecksum;
-    udp_3.checksum;
+field_list rx_ipv4_1_roce_icrc_list {
+    ipv4_1.ttl;
+    ipv4_1.diffserv;
+    ipv4_1.hdrChecksum;
+    udp_1.checksum;
     roce_bth.reserved1;
 }
 @pragma icrc verify_len ohi.icrc_len
 @pragma icrc gress ingress
-field_list_calculation rx_ipv4_3_roce_icrc {
+field_list_calculation rx_ipv4_1_roce_icrc {
     input {
-        rx_ipv4_3_icrc_list;
+        rx_ipv4_1_roce_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
 }
 
-field_list rx_ipv6_3_icrc_list {
-    ipv6_3.trafficClass;
-    ipv6_3.flowLabel;
-    ipv6_3.hopLimit;
-    udp_3.checksum;
+field_list rx_ipv6_1_roce_icrc_list {
+    ipv6_1.trafficClass;
+    ipv6_1.flowLabel;
+    ipv6_1.hopLimit;
+    udp_1.checksum;
     roce_bth.reserved1;
 }
 
 @pragma icrc verify_len ohi.icrc_len
 @pragma icrc gress ingress
-field_list_calculation rx_ipv6_3_roce_icrc {
+field_list_calculation rx_ipv6_1_roce_icrc {
     input {
-        rx_ipv6_3_icrc_list;
+        rx_ipv6_1_roce_icrc_list;
     }
     algorithm : icrc;
     output_width : 32;
 }
 
+field_list rx_ipv4_2_roce_icrc_list {
+    ipv4_2.ttl;
+    ipv4_2.diffserv;
+    ipv4_2.hdrChecksum;
+    udp_2.checksum;
+    roce_bth.reserved1;
+}
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv4_2_roce_icrc {
+    input {
+        rx_ipv4_2_roce_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list rx_ipv6_2_roce_icrc_list {
+    ipv6_2.trafficClass;
+    ipv6_2.flowLabel;
+    ipv6_2.hopLimit;
+    udp_2.checksum;
+    roce_bth.reserved1;
+}
+
+@pragma icrc verify_len ohi.icrc_len
+@pragma icrc gress ingress
+field_list_calculation rx_ipv6_2_roce_icrc {
+    input {
+        rx_ipv6_2_roce_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
 
 calculated_field parser_metadata.icrc {
-    verify rx_ipv4_1_roce_icrc if (valid(roce_bth_1));
-    verify rx_ipv6_1_roce_icrc if (valid(roce_bth_1));
-    verify rx_ipv4_2_roce_icrc if (valid(roce_bth_2));
-    verify rx_ipv6_2_roce_icrc if (valid(roce_bth_2));
-    verify rx_ipv4_3_roce_icrc if (valid(roce_bth));
-    verify rx_ipv6_3_roce_icrc if (valid(roce_bth));
+
+    // icrc for optimized parse path case.
+    verify rx_ipv4_1_roce_1_icrc if (valid(roce_bth_1));
+    verify rx_ipv6_1_roce_1_icrc if (valid(roce_bth_1));
+    verify rx_ipv4_2_roce_2_icrc if (valid(roce_bth_2));
+    verify rx_ipv6_2_roce_2_icrc if (valid(roce_bth_2));
+
+    // icrc for un-optimized parse path case.
+    verify rx_ipv4_1_roce_icrc if (valid(roce_bth));
+    verify rx_ipv6_1_roce_icrc if (valid(roce_bth));
+    verify rx_ipv4_2_roce_icrc if (valid(roce_bth));
+    verify rx_ipv6_2_roce_icrc if (valid(roce_bth));
 }
 
 

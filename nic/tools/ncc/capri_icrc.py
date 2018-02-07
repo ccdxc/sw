@@ -1059,20 +1059,31 @@ class Icrc:
     #   --------  iCRC verification related Code --------
 
 
-    def VerifyIcrcCalFieldObjGet(self, hdr, d):
+    def VerifyIcrcCalFieldObjGet(self, l3hdr, l4hdr, l5hdr, d):
         # Given l3hdr or l4/l5 hdr return Calculated Field Obj that is verified
         verify_cal_fieldlist = self.verify_cal_fieldlist if d == xgress.INGRESS \
                                                      else self.eg_verify_cal_fieldlist
+        if l3hdr == '' or l4hdr == '' or l5hdr == '':
+            return None
         for calflistobj in verify_cal_fieldlist:
-            if hdr != '' and (calflistobj.IcrcL3HdrNameGet() == hdr or \
-                                calflistobj.IcrcL4HdrNameGet() == hdr or \
-                                calflistobj.IcrcL5HdrNameGet() == hdr):
+            if calflistobj.IcrcL3HdrNameGet() == l3hdr and \
+               calflistobj.IcrcL4HdrNameGet() == l4hdr and \
+               calflistobj.IcrcL5HdrNameGet() == l5hdr:
                 return calflistobj
         return None
 
 
     def IsHdrInIcrcVerify(self, hdrname, d):
-        return True if VerifyIcrcCalFieldObjGet(hdrname, d) else False
+        verify_cal_fieldlist = self.verify_cal_fieldlist if d == xgress.INGRESS \
+                                                     else self.eg_verify_cal_fieldlist
+        if hdrname == '':
+            return False
+        for calflistobj in verify_cal_fieldlist:
+            if calflistobj.IcrcL3HdrNameGet() == hdrname or\
+               calflistobj.IcrcL4HdrNameGet() == hdrname or\
+               calflistobj.IcrcL5HdrNameGet() == hdrname:
+                return True
+        return False
 
     def IcrcParserL3HdrIFldProfileBuild(self, calfldobj):
         if calfldobj.l3hdr_name not in self.l3hdr_to_profile_map.keys():
@@ -1230,58 +1241,79 @@ class Icrc:
         icrc_l3hdrs = set()
         icrc_l4_hdrs = set()
         icrc_l5_hdrs = set()
+        all_icrc_l3hdrs = set()
+        all_icrc_l4_hdrs = set()
+        all_icrc_l5_hdrs = set()
         verify_cal_fieldlist = self.verify_cal_fieldlist if parser.d == xgress.INGRESS \
                                                      else self.eg_verify_cal_fieldlist
-        icrc_calfldobjs = set(calfldobj for calfldobj in verify_cal_fieldlist)
         for calfldobj in verify_cal_fieldlist:
             icrc_l3hdr = calfldobj.IcrcL3HdrNameGet()
             icrc_l4_hdr = calfldobj.IcrcL4HdrNameGet()
             icrc_l5_hdr = calfldobj.IcrcL5HdrNameGet()
             if icrc_l3hdr != '' and icrc_l3hdr not in icrc_l3hdrs:
                 icrc_l3hdrs.add(icrc_l3hdr)
+                all_icrc_l3hdrs.add(icrc_l3hdr)
             if icrc_l4_hdr != '' and icrc_l4_hdr not in icrc_l4_hdrs:
                 icrc_l4_hdrs.add(icrc_l4_hdr)
+                all_icrc_l4_hdrs.add(icrc_l4_hdr)
             if icrc_l5_hdr != '' and icrc_l5_hdr not in icrc_l5_hdrs:
                 icrc_l5_hdrs.add(icrc_l5_hdr)
+                all_icrc_l5_hdrs.add(icrc_l5_hdr)
         #Find parse states where reference to icrc calfldobj should be added.
-        l3_calfldlist = []
         for parsepath in parser.paths:
-            if not len(icrc_calfldobjs):
-                break
+            l3hdr = None
+            l4hdr = None
+            l5hdr = None
             for hdr in parsepath:
-                if hdr.name in icrc_l3hdrs:
-                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name, parser.d)
-                    for parsestate in parser.get_ext_cstates(hdr):
-                        if calfldobj not in parsestate.icrc_verify_cal_field_objs:
-                            parsestate.icrc_verify_cal_field_objs.\
+                if hdr.name in all_icrc_l3hdrs:
+                    l3hdr = hdr
+                if hdr.name in all_icrc_l4_hdrs:
+                    l4hdr = hdr
+                if hdr.name in all_icrc_l5_hdrs:
+                    l5hdr = hdr
+
+
+            if l3hdr and l4hdr and l5hdr:
+                calfldobj = self.VerifyIcrcCalFieldObjGet(l3hdr.name, l4hdr.name, l5hdr.name, parser.d)
+            else:
+                continue
+
+            if calfldobj == None:
+                continue
+
+            for parsestate in parser.get_ext_cstates(l3hdr):
+                if ('L3_IFLD', calfldobj) not in parsestate.icrc_verify_cal_field_objs:
+                    parsestate.icrc_verify_cal_field_objs.\
                                             append(("L3_IFLD", calfldobj))
-                            l3_calfldlist.append(calfldobj)
-                    icrc_l3hdrs.remove(hdr.name)
-                    #icrc_calfldobjs.remove(calfldobj)
-                if hdr.name in icrc_l4_hdrs:
-                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name, parser.d)
-                    for parsestate in parser.get_ext_cstates(hdr):
-                        if calfldobj not in parsestate.icrc_verify_cal_field_objs:
-                            parsestate.icrc_verify_cal_field_objs.\
+                    if l3hdr.name in icrc_l3hdrs:
+                        icrc_l3hdrs.remove(l3hdr.name)
+
+            for parsestate in parser.get_ext_cstates(l4hdr):
+                if ('L4_IFLD', calfldobj) not in parsestate.icrc_verify_cal_field_objs:
+                    parsestate.icrc_verify_cal_field_objs.\
                                             append(("L4_IFLD", calfldobj))
-                    icrc_l4_hdrs.remove(hdr.name)
-                if hdr.name in icrc_l5_hdrs:
-                    calfldobj = self.VerifyIcrcCalFieldObjGet(hdr.name, parser.d)
-                    for parsestate in parser.get_ext_cstates(hdr):
-                        if calfldobj not in parsestate.icrc_verify_cal_field_objs:
-                            parsestate.icrc_verify_cal_field_objs.\
+                    if l4hdr.name in icrc_l4_hdrs:
+                        icrc_l4_hdrs.remove(l4hdr.name)
+                #Also add L3 calfldobj in this parse state. Depending upon parse branches
+                #correct calfldobj will be used in IcrcParserConfigGenerate()
+                if ('L3_IFLD', calfldobj) not in parsestate.icrc_verify_cal_field_objs:
+                    parsestate.icrc_verify_cal_field_objs.\
+                                            append(("L3_IFLD", calfldobj))
+
+            for parsestate in parser.get_ext_cstates(l5hdr):
+                if ('L5_IFLD', calfldobj) not in parsestate.icrc_verify_cal_field_objs:
+                    parsestate.icrc_verify_cal_field_objs.\
                                             append(("L5_IFLD", calfldobj))
-                    icrc_l5_hdrs.remove(hdr.name)
+                    if l5hdr.name in icrc_l5_hdrs:
+                        icrc_l5_hdrs.remove(l5hdr.name)
+                #Also add L3 calfldobj in this parse state. Depending upon parse branches
+                #correct calfldobj will be used in IcrcParserConfigGenerate()
+                if ('L3_IFLD', calfldobj) not in parsestate.icrc_verify_cal_field_objs:
+                    parsestate.icrc_verify_cal_field_objs.\
+                                            append(("L3_IFLD", calfldobj))
+
         assert(len(icrc_l5_hdrs) == 0 and len(icrc_l4_hdrs) == 0 and \
                len(icrc_l3hdrs) == 0), pdb.set_trace()
-
-        #Insert all calfldobj in roce_bth parse state. Depending on parse path
-        #one of the calfldobj will be used to program parser when extracting
-        #roce_bth header that corresponds to L3hdr in the parser path.
-        all_calflds = [("L3_IFLD", calfldobj) for calfldobj in verify_cal_fieldlist]
-        for calfldobj in verify_cal_fieldlist:
-            for parsestate in parser.get_ext_cstates(calfldobj.roce_hdr):
-                parsestate.icrc_verify_cal_field_objs =  all_calflds
 
 
     def AllocateParserIcrcResources(self, parser):
@@ -1301,6 +1333,7 @@ class Icrc:
         for parse_path in all_parse_paths:
             program_icrc = False
             parse_path_hdrs = set(hdr.name for hdr in parse_path)
+
             rhdr = parse_path_hdrs.intersection(all_roce_hdr_names)
             if len(rhdr):
                 assert(len(rhdr) == 1), pdb.set_trace()
@@ -1310,26 +1343,19 @@ class Icrc:
                 l3_hdrs = None
                 _s = parse_path_hdrs.intersection(icrc_l3hdrs)
                 if len(_s):
-                    #assert(len(_s) <= 2), pdb.set_trace()
                     l3_hdrs = _s
                 else:
                     #roce hdr in parse path; but no associated L3 hdr is in the path.
                     assert(0), pdb.set_trace()
 
-                for hdr in parse_path:
+                for _i, hdr in enumerate(parse_path):
                     if hdr.name != roce_hdr_name:
                         continue
-                    #In order to associate right l3hdr, maintain
-                    #l3hdrs in the same order as they are in parse path.
-                    topo_l3hdrs_in_parse_path = []
-                    for _hdr in parse_path:
-                        if _hdr.name in l3_hdrs:
-                            topo_l3hdrs_in_parse_path.append(_hdr.name)
-                        if _hdr.name == hdr.name: break
-                    topo_l3hdrs_in_parse_path.reverse()
-                    l3hdr = topo_l3hdrs_in_parse_path[0]
+                    #Associate correct l3hdr and l4hdr that is the covering roce_hdr (if multiple layers of tunnels)
+                    l4hdr = parse_path[_i-1].name
+                    l3hdr = parse_path[_i-2].name
                     icrc_calfldobj = \
-                       self.VerifyIcrcCalFieldObjGet(l3hdr, parser.d)
+                       self.VerifyIcrcCalFieldObjGet(l3hdr, l4hdr, roce_hdr_name, parser.d)
 
                     if icrc_calfldobj in icrc_objects:
                         #In all the L3hdr Parse States, 2 things are needed
@@ -1431,6 +1457,7 @@ class Icrc:
                         # add bth.reserved1 as invariant is added related to UDP ohi.
 
                         icrc_objects.remove(icrc_calfldobj)
+                    #There is no need to loop through headers that are beyond roce_hdr in the parse_path.
                     break
 
                 if not len(icrc_objects):
