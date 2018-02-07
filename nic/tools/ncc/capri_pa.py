@@ -19,6 +19,7 @@ import capri_logging
 from capri_utils import *
 from capri_model import capri_model as capri_model
 from capri_output import capri_asm_output_pa as capri_asm_output_pa
+from capri_output import capri_cstruct_output_pa as capri_cstruct_output_pa
 from capri_output import capri_output_i2e_meta_header as capri_output_i2e_meta_header
 from operator import methodcaller
 
@@ -3202,6 +3203,7 @@ class capri_pa:
     def capri_asm_output(self):
         for d in xgress:
             capri_asm_output_pa(self.gress_pa[d])
+            capri_cstruct_output_pa(self.gress_pa[d])
 
     def phv_dbg_output(self):
         # create a dictionary and write it to a json file

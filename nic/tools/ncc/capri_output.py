@@ -410,16 +410,37 @@ def _get_phv_loc(flit_inst, loc, size):
     end = start - size + 1
     return "[" + str(start) + ":" + str(end) + "]"
 
-def capri_asm_output_pa(gress_pa):
+def capri_cstruct_output_pa(gress_pa):
+    capri_asm_output_pa(gress_pa, False)
+
+def capri_asm_output_pa(gress_pa, asm_output=True):
     if gress_pa.pa.be.args.old_phv_allocation:
         return _capri_asm_output_pa(gress_pa)
 
+    def cstruct_data_type_get(asm_output, width, indent):
+        if asm_output:
+            return indent
+        if width < 32:
+            return indent + 'uint32_t '
+        if width < 64:
+            return indent + 'uint64_t '
+        return indent + 'uint8_t '
+
+    def phv_width_string_get(asm_output, width):
+        if asm_output or width < 64:
+            return ' : ' + str(width)
+        if width > 64:
+            return '[' + str(width / 8) + ']'
+        return ''
+
+
     class _phv_union:
-        def __init__(self, uname):
+        def __init__(self, uname, asm_output):
             self.streams = OrderedDict()
             self.name = uname
             self.end_phv = -1
             self.start_phv = -1
+            self.asm_output = asm_output
 
         def add_cfld(self, strm_name, cf):
             if strm_name in self.streams:
@@ -440,23 +461,32 @@ def capri_asm_output_pa(gress_pa):
             pstr = indent + 'union {\n'
             for strm, cf_strm in self.streams.items():
                 phv_bit = self.start_phv
-                pstr += indent2 + 'struct {\n'
+                if self.asm_output:
+                    pstr += indent2 + 'struct {\n'
+                else:
+                    pstr += indent2 + 'struct  __attribute__ ((__packed__)) {\n'
                 for cf in cf_strm:
                     if phv_bit != cf.phv_bit:
                         # print pad
-                        pstr += indent3 + '_%s_pad_%d_ : %d; // FLE[%d:%d]\n' % \
-                            (strm, phv_bit, cf.phv_bit - phv_bit,
+                        pstr += cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent3)
+                        width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
+                        pstr += '_%s_pad_%d_%s; // FLE[%d:%d]\n' % \
+                            (strm, phv_bit, width_str,
                             _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
-                    pstr += indent3 + '%s : %d; // BE[%d] FLE[%d:%d]\n' % \
-                        (_get_output_name(cf.hfname), cf.width, cf.phv_bit,
+                    pstr += cstruct_data_type_get(asm_output, cf.width, indent3)
+                    width_str = phv_width_string_get(asm_output, cf.width)
+                    pstr += '%s%s; // BE[%d] FLE[%d:%d]\n' % \
+                        (_get_output_name(cf.hfname), width_str, cf.phv_bit,
                         _phv_bit_flit_le_bit(cf.phv_bit),
                         _phv_bit_flit_le_bit(cf.phv_bit+cf.width-1))
                     phv_bit += cf.storage_size()
                 # add pad to bottom-align unions as needed by capas
                 bottom_pad = self.end_phv - phv_bit
                 if bottom_pad > 0:
-                    pstr += indent3 + '%s_bottom_pad_ : %d; // FLE[%d:%d]\n' % \
-                        (_get_output_name(strm), bottom_pad,
+                    pstr += cstruct_data_type_get(asm_output, bottom_pad, indent3)
+                    width_str = phv_width_string_get(asm_output, bottom_pad)
+                    pstr += '%s_bottom_pad_%s; // FLE[%d:%d]\n' % \
+                        (_get_output_name(strm), width_str,
                         _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(self.end_phv-1))
 
                 pstr += indent2 + '};\n'
@@ -466,10 +496,16 @@ def capri_asm_output_pa(gress_pa):
 
 
     gen_dir = gress_pa.pa.be.args.gen_dir
-    cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
-    if not os.path.exists(cur_path):
-        os.makedirs(cur_path)
-    fname = cur_path + '/%s_p.h' % gress_pa.d.name
+    if not asm_output:
+        cur_path = gen_dir + '/%s/include' % gress_pa.pa.be.prog_name
+        if not os.path.exists(cur_path):
+            os.makedirs(cur_path)
+        fname = cur_path + '/%s_phv.h' % gress_pa.d.name.lower()
+    else:
+        cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
+        if not os.path.exists(cur_path):
+            os.makedirs(cur_path)
+        fname = cur_path + '/%s_p.h' % gress_pa.d.name
     hfile = open(fname, 'w')
     num_flits = gress_pa.pa.be.hw_model['phv']['num_flits']
     pstr_flit = {}
@@ -499,8 +535,10 @@ def capri_asm_output_pa(gress_pa):
             flit_pad = cf.phv_bit - phv_bit
             assert flit_pad >= 0, pdb.set_trace()
             if flit_pad > 0:
-                pstr += indent + '_flit_%d_pad_%d_ : %d; // FLE[%d:%d]\n' % \
-                    (fid, phv_bit, flit_pad,
+                pstr += cstruct_data_type_get(asm_output, flit_pad, indent)
+                width_str = phv_width_string_get(asm_output, flit_pad)
+                pstr += '_flit_%d_pad_%d_%s; // FLE[%d:%d]\n' % \
+                    (fid, phv_bit, width_str,
                     _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
             phv_bit = cf.phv_bit
             pstr_flit[fid] = copy.copy(pstr)
@@ -517,11 +555,15 @@ def capri_asm_output_pa(gress_pa):
             # check for gaps
             if phv_bit != cf.phv_bit:
                 assert (cf.phv_bit - phv_bit) >= 0, pdb.set_trace()
-                pstr += indent + '_pad_%d_ : %d; // FLE[%d:%d]\n' % \
-                    (phv_bit, cf.phv_bit - phv_bit,
+                pstr += cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent)
+                width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
+                pstr += '_pad_%d_%s; // FLE[%d:%d]\n' % \
+                    (phv_bit, width_str,
                     _phv_bit_flit_le_bit(phv_bit),_phv_bit_flit_le_bit(cf.phv_bit-1))
-            pstr += indent + '%s : %d; // BE[%d] FLE[%d:%d]\n' % \
-                    (_get_output_name(cf.hfname), cf.width, cf.phv_bit,
+            pstr += cstruct_data_type_get(asm_output, cf.width, indent)
+            width_str = phv_width_string_get(asm_output, cf.width)
+            pstr += '%s%s; // BE[%d] FLE[%d:%d]\n' % \
+                    (_get_output_name(cf.hfname), width_str, cf.phv_bit,
                     _phv_bit_flit_le_bit(cf.phv_bit), _phv_bit_flit_le_bit(cf.phv_bit+cf.width-1))
             phv_bit = cf.phv_bit + cf.storage_size()
             continue
@@ -543,7 +585,7 @@ def capri_asm_output_pa(gress_pa):
             if active_union:
                 active_union.add_cfld(hdr_name, cf)
             else:
-                active_union = _phv_union(storage_hdr_name)
+                active_union = _phv_union(storage_hdr_name, asm_output)
                 active_union.add_cfld(hdr_name, cf)
             phv_bit = active_union.end_phv
 
@@ -559,7 +601,7 @@ def capri_asm_output_pa(gress_pa):
                 active_union.add_cfld(cf.hfname, cf)
                 phv_bit = active_union.end_phv
             else:
-                active_union = _phv_union(storage_fld_name)
+                active_union = _phv_union(storage_fld_name, asm_output)
                 active_union.add_cfld(cf.hfname, cf)
                 phv_bit = active_union.end_phv
         else:
@@ -571,39 +613,55 @@ def capri_asm_output_pa(gress_pa):
 
     last_flit_pad = ((fid+1) * flit_sz) - phv_bit
     if last_flit_pad:
-        pstr += indent + '_pad_%d_ : %d; // FLE[%d:%d]\n' % \
-                    (phv_bit, last_flit_pad,
+        pstr += cstruct_data_type_get(asm_output, last_flit_pad, indent)
+        width_str = phv_width_string_get(asm_output, last_flit_pad)
+        pstr += '_pad_%d_ %s; // FLE[%d:%d]\n' % \
+                    (phv_bit, width_str,
                     _phv_bit_flit_le_bit(phv_bit),
                     _phv_bit_flit_le_bit(phv_bit+last_flit_pad-1))
     if fid < num_flits and pstr_flit[fid] == '':
         pstr_flit[fid] = copy.copy(pstr)
 
-    pstr = 'struct phv_ {\n'
-    hfile.write(pstr)
-    for i in range (num_flits-1, -1, -1):
-        hfile.write(pstr_flit[i])
-    pstr = '};\n'
-    hfile.write(pstr)
+    if not asm_output:
+        fname = '__%s_phv__' % gress_pa.d.name
+        hfile.write("#ifndef " +  fname.upper() + '\n\n')
+        fname = '__%s_phv__' % gress_pa.d.name
+        hfile.write("#define " + fname.upper() + '\n\n\n')
+        pstr = 'typedef struct __attribute__ ((__packed__)) ' + gress_pa.d.name.lower() + '_phv_ {\n'
+        hfile.write(pstr)
+        for i in range (num_flits-1, -1, -1):
+            hfile.write(pstr_flit[i])
+        pstr = '} ' + gress_pa.d.name.lower() + '_phv_t;\n\n'
+        hfile.write(pstr)
+        hfile.write("#endif\n")
+    else:
+        pstr = 'struct phv_ {\n'
+        hfile.write(pstr)
+        for i in range (num_flits-1, -1, -1):
+            hfile.write(pstr_flit[i])
+        pstr = '};\n'
+        hfile.write(pstr)
     hfile.close()
 
     # create a test asm file with phvwr to all flds
     # This can be used for a quick validation that phv_ struct generated can be used
     # by capas
-    fname = cur_path + '/%s_phv_test.asm' % gress_pa.d.name
-    hfile = open(fname, 'w')
-    pstr = "#include \"%s_p.h\"\n" % gress_pa.d.name
-    pstr += "struct phv_ p;"
-    pstr += "\n%%\ntest_start:\n"
+    if asm_output:
+        fname = cur_path + '/%s_phv_test.asm' % gress_pa.d.name
+        hfile = open(fname, 'w')
+        pstr = "#include \"%s_p.h\"\n" % gress_pa.d.name
+        pstr += "struct phv_ p;"
+        pstr += "\n%%\ntest_start:\n"
 
-    indent = '    '
-    for cf in gress_pa.field_order:
-        if cf.width == 0 or cf.is_ohi:
-            continue
-        pstr += indent + "phvwr p.%s, 0\n" % _get_output_name(cf.hfname)
-    pstr += indent + 'nop.e\n'
-    pstr += indent + 'nop\n'
-    hfile.write(pstr)
-    hfile.close()
+        indent = '    '
+        for cf in gress_pa.field_order:
+            if cf.width == 0 or cf.is_ohi:
+                continue
+            pstr += indent + "phvwr p.%s, 0\n" % _get_output_name(cf.hfname)
+        pstr += indent + 'nop.e\n'
+        pstr += indent + 'nop\n'
+        hfile.write(pstr)
+        hfile.close()
 
 def _capri_asm_output_pa(gress_pa):
     gen_dir = gress_pa.pa.be.args.gen_dir
