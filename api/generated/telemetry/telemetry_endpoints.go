@@ -28,6 +28,598 @@ var _ api.ObjectMeta
 var _ grpc.ServerStream
 var _ fmt.Formatter
 
+// MiddlewareFlowExportPolicyV1Client add middleware to the client
+type MiddlewareFlowExportPolicyV1Client func(ServiceFlowExportPolicyV1Client) ServiceFlowExportPolicyV1Client
+
+// EndpointsFlowExportPolicyV1Client is the endpoints for the client
+type EndpointsFlowExportPolicyV1Client struct {
+	Client FlowExportPolicyV1Client
+
+	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
+	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
+	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
+}
+
+// EndpointsFlowExportPolicyV1RestClient is the REST client
+type EndpointsFlowExportPolicyV1RestClient struct {
+	logger   log.Logger
+	client   *http.Client
+	instance string
+
+	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
+	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
+	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
+	AutoWatchFlowExportPolicyEndpoint  endpoint.Endpoint
+}
+
+// MiddlewareFlowExportPolicyV1Server adds middle ware to the server
+type MiddlewareFlowExportPolicyV1Server func(ServiceFlowExportPolicyV1Server) ServiceFlowExportPolicyV1Server
+
+// EndpointsFlowExportPolicyV1Server is the server endpoints
+type EndpointsFlowExportPolicyV1Server struct {
+	AutoAddFlowExportPolicyEndpoint    endpoint.Endpoint
+	AutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
+	AutoGetFlowExportPolicyEndpoint    endpoint.Endpoint
+	AutoListFlowExportPolicyEndpoint   endpoint.Endpoint
+	AutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
+
+	watchHandlerFlowExportPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+}
+
+// AutoAddFlowExportPolicy is endpoint for AutoAddFlowExportPolicy
+func (e EndpointsFlowExportPolicyV1Client) AutoAddFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	resp, err := e.AutoAddFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &FlowExportPolicy{}, err
+	}
+	return resp.(*FlowExportPolicy), nil
+}
+
+type respFlowExportPolicyV1AutoAddFlowExportPolicy struct {
+	V   FlowExportPolicy
+	Err error
+}
+
+// AutoDeleteFlowExportPolicy is endpoint for AutoDeleteFlowExportPolicy
+func (e EndpointsFlowExportPolicyV1Client) AutoDeleteFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	resp, err := e.AutoDeleteFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &FlowExportPolicy{}, err
+	}
+	return resp.(*FlowExportPolicy), nil
+}
+
+type respFlowExportPolicyV1AutoDeleteFlowExportPolicy struct {
+	V   FlowExportPolicy
+	Err error
+}
+
+// AutoGetFlowExportPolicy is endpoint for AutoGetFlowExportPolicy
+func (e EndpointsFlowExportPolicyV1Client) AutoGetFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	resp, err := e.AutoGetFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &FlowExportPolicy{}, err
+	}
+	return resp.(*FlowExportPolicy), nil
+}
+
+type respFlowExportPolicyV1AutoGetFlowExportPolicy struct {
+	V   FlowExportPolicy
+	Err error
+}
+
+// AutoListFlowExportPolicy is endpoint for AutoListFlowExportPolicy
+func (e EndpointsFlowExportPolicyV1Client) AutoListFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions) (*FlowExportPolicyList, error) {
+	resp, err := e.AutoListFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &FlowExportPolicyList{}, err
+	}
+	return resp.(*FlowExportPolicyList), nil
+}
+
+type respFlowExportPolicyV1AutoListFlowExportPolicy struct {
+	V   FlowExportPolicyList
+	Err error
+}
+
+// AutoUpdateFlowExportPolicy is endpoint for AutoUpdateFlowExportPolicy
+func (e EndpointsFlowExportPolicyV1Client) AutoUpdateFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	resp, err := e.AutoUpdateFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &FlowExportPolicy{}, err
+	}
+	return resp.(*FlowExportPolicy), nil
+}
+
+type respFlowExportPolicyV1AutoUpdateFlowExportPolicy struct {
+	V   FlowExportPolicy
+	Err error
+}
+
+// AutoWatchFlowExportPolicy performs Watch for FlowExportPolicy
+func (e EndpointsFlowExportPolicyV1Client) AutoWatchFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions) (FlowExportPolicyV1_AutoWatchFlowExportPolicyClient, error) {
+	return e.Client.AutoWatchFlowExportPolicy(ctx, in)
+}
+
+// AutoAddFlowExportPolicy implementation on server Endpoint
+func (e EndpointsFlowExportPolicyV1Server) AutoAddFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (FlowExportPolicy, error) {
+	resp, err := e.AutoAddFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return FlowExportPolicy{}, err
+	}
+	return *resp.(*FlowExportPolicy), nil
+}
+
+// MakeFlowExportPolicyV1AutoAddFlowExportPolicyEndpoint creates  AutoAddFlowExportPolicy endpoints for the service
+func MakeFlowExportPolicyV1AutoAddFlowExportPolicyEndpoint(s ServiceFlowExportPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*FlowExportPolicy)
+		v, err := s.AutoAddFlowExportPolicy(ctx, *req)
+		return respFlowExportPolicyV1AutoAddFlowExportPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("FlowExportPolicyV1:AutoAddFlowExportPolicy")(f)
+}
+
+// AutoDeleteFlowExportPolicy implementation on server Endpoint
+func (e EndpointsFlowExportPolicyV1Server) AutoDeleteFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (FlowExportPolicy, error) {
+	resp, err := e.AutoDeleteFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return FlowExportPolicy{}, err
+	}
+	return *resp.(*FlowExportPolicy), nil
+}
+
+// MakeFlowExportPolicyV1AutoDeleteFlowExportPolicyEndpoint creates  AutoDeleteFlowExportPolicy endpoints for the service
+func MakeFlowExportPolicyV1AutoDeleteFlowExportPolicyEndpoint(s ServiceFlowExportPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*FlowExportPolicy)
+		v, err := s.AutoDeleteFlowExportPolicy(ctx, *req)
+		return respFlowExportPolicyV1AutoDeleteFlowExportPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("FlowExportPolicyV1:AutoDeleteFlowExportPolicy")(f)
+}
+
+// AutoGetFlowExportPolicy implementation on server Endpoint
+func (e EndpointsFlowExportPolicyV1Server) AutoGetFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (FlowExportPolicy, error) {
+	resp, err := e.AutoGetFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return FlowExportPolicy{}, err
+	}
+	return *resp.(*FlowExportPolicy), nil
+}
+
+// MakeFlowExportPolicyV1AutoGetFlowExportPolicyEndpoint creates  AutoGetFlowExportPolicy endpoints for the service
+func MakeFlowExportPolicyV1AutoGetFlowExportPolicyEndpoint(s ServiceFlowExportPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*FlowExportPolicy)
+		v, err := s.AutoGetFlowExportPolicy(ctx, *req)
+		return respFlowExportPolicyV1AutoGetFlowExportPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("FlowExportPolicyV1:AutoGetFlowExportPolicy")(f)
+}
+
+// AutoListFlowExportPolicy implementation on server Endpoint
+func (e EndpointsFlowExportPolicyV1Server) AutoListFlowExportPolicy(ctx context.Context, in api.ListWatchOptions) (FlowExportPolicyList, error) {
+	resp, err := e.AutoListFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return FlowExportPolicyList{}, err
+	}
+	return *resp.(*FlowExportPolicyList), nil
+}
+
+// MakeFlowExportPolicyV1AutoListFlowExportPolicyEndpoint creates  AutoListFlowExportPolicy endpoints for the service
+func MakeFlowExportPolicyV1AutoListFlowExportPolicyEndpoint(s ServiceFlowExportPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListFlowExportPolicy(ctx, *req)
+		return respFlowExportPolicyV1AutoListFlowExportPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("FlowExportPolicyV1:AutoListFlowExportPolicy")(f)
+}
+
+// AutoUpdateFlowExportPolicy implementation on server Endpoint
+func (e EndpointsFlowExportPolicyV1Server) AutoUpdateFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (FlowExportPolicy, error) {
+	resp, err := e.AutoUpdateFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return FlowExportPolicy{}, err
+	}
+	return *resp.(*FlowExportPolicy), nil
+}
+
+// MakeFlowExportPolicyV1AutoUpdateFlowExportPolicyEndpoint creates  AutoUpdateFlowExportPolicy endpoints for the service
+func MakeFlowExportPolicyV1AutoUpdateFlowExportPolicyEndpoint(s ServiceFlowExportPolicyV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*FlowExportPolicy)
+		v, err := s.AutoUpdateFlowExportPolicy(ctx, *req)
+		return respFlowExportPolicyV1AutoUpdateFlowExportPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("FlowExportPolicyV1:AutoUpdateFlowExportPolicy")(f)
+}
+
+// AutoWatchFlowExportPolicy is the watch handler for FlowExportPolicy on the server side.
+func (e EndpointsFlowExportPolicyV1Server) AutoWatchFlowExportPolicy(in *api.ListWatchOptions, stream FlowExportPolicyV1_AutoWatchFlowExportPolicyServer) error {
+	return e.watchHandlerFlowExportPolicy(in, stream)
+}
+
+// MakeAutoWatchFlowExportPolicyEndpoint creates the Watch endpoint
+func MakeAutoWatchFlowExportPolicyEndpoint(s ServiceFlowExportPolicyV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(FlowExportPolicyV1_AutoWatchFlowExportPolicyServer)
+		return s.AutoWatchFlowExportPolicy(options, wstream)
+	}
+}
+
+// MakeFlowExportPolicyV1ServerEndpoints creates server endpoints
+func MakeFlowExportPolicyV1ServerEndpoints(s ServiceFlowExportPolicyV1Server, logger log.Logger) EndpointsFlowExportPolicyV1Server {
+	return EndpointsFlowExportPolicyV1Server{
+
+		AutoAddFlowExportPolicyEndpoint:    MakeFlowExportPolicyV1AutoAddFlowExportPolicyEndpoint(s, logger),
+		AutoDeleteFlowExportPolicyEndpoint: MakeFlowExportPolicyV1AutoDeleteFlowExportPolicyEndpoint(s, logger),
+		AutoGetFlowExportPolicyEndpoint:    MakeFlowExportPolicyV1AutoGetFlowExportPolicyEndpoint(s, logger),
+		AutoListFlowExportPolicyEndpoint:   MakeFlowExportPolicyV1AutoListFlowExportPolicyEndpoint(s, logger),
+		AutoUpdateFlowExportPolicyEndpoint: MakeFlowExportPolicyV1AutoUpdateFlowExportPolicyEndpoint(s, logger),
+
+		watchHandlerFlowExportPolicy: MakeAutoWatchFlowExportPolicyEndpoint(s, logger),
+	}
+}
+
+// LoggingFlowExportPolicyV1MiddlewareClient adds middleware for the client
+func LoggingFlowExportPolicyV1MiddlewareClient(logger log.Logger) MiddlewareFlowExportPolicyV1Client {
+	return func(next ServiceFlowExportPolicyV1Client) ServiceFlowExportPolicyV1Client {
+		return loggingFlowExportPolicyV1MiddlewareClient{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingFlowExportPolicyV1MiddlewareClient struct {
+	logger log.Logger
+	next   ServiceFlowExportPolicyV1Client
+}
+
+// LoggingFlowExportPolicyV1MiddlewareServer adds middleware for the client
+func LoggingFlowExportPolicyV1MiddlewareServer(logger log.Logger) MiddlewareFlowExportPolicyV1Server {
+	return func(next ServiceFlowExportPolicyV1Server) ServiceFlowExportPolicyV1Server {
+		return loggingFlowExportPolicyV1MiddlewareServer{
+			logger: logger,
+			next:   next,
+		}
+	}
+}
+
+type loggingFlowExportPolicyV1MiddlewareServer struct {
+	logger log.Logger
+	next   ServiceFlowExportPolicyV1Server
+}
+
+func (m loggingFlowExportPolicyV1MiddlewareClient) AutoAddFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (resp *FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoAddFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareClient) AutoDeleteFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (resp *FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoDeleteFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareClient) AutoGetFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (resp *FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoGetFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareClient) AutoListFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *FlowExportPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoListFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareClient) AutoUpdateFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (resp *FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoUpdateFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateFlowExportPolicy(ctx, in)
+	return
+}
+
+func (m loggingFlowExportPolicyV1MiddlewareClient) AutoWatchFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions) (resp FlowExportPolicyV1_AutoWatchFlowExportPolicyClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoWatchFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchFlowExportPolicy(ctx, in)
+	return
+}
+
+func (m loggingFlowExportPolicyV1MiddlewareServer) AutoAddFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (resp FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoAddFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareServer) AutoDeleteFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (resp FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoDeleteFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareServer) AutoGetFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (resp FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoGetFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareServer) AutoListFlowExportPolicy(ctx context.Context, in api.ListWatchOptions) (resp FlowExportPolicyList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoListFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingFlowExportPolicyV1MiddlewareServer) AutoUpdateFlowExportPolicy(ctx context.Context, in FlowExportPolicy) (resp FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FlowExportPolicyV1", "method", "AutoUpdateFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateFlowExportPolicy(ctx, in)
+	return
+}
+
+func (m loggingFlowExportPolicyV1MiddlewareServer) AutoWatchFlowExportPolicy(in *api.ListWatchOptions, stream FlowExportPolicyV1_AutoWatchFlowExportPolicyServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "FlowExportPolicyV1", "method", "AutoWatchFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchFlowExportPolicy(in, stream)
+	return
+}
+func (r *EndpointsFlowExportPolicyV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
+	target, err := url.Parse(r.instance)
+	if err != nil {
+		return nil, fmt.Errorf("invalid instance %s", r.instance)
+	}
+	target.Path = path
+	req, err := http.NewRequest(method, target.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not create request (%s)", err)
+	}
+	if err = encodeHTTPRequest(ctx, req, in); err != nil {
+		return nil, fmt.Errorf("could not encode request (%s)", err)
+	}
+	return req, nil
+}
+
+//
+func makeURIFlowExportPolicyV1AutoAddFlowExportPolicyCreateOper(in *FlowExportPolicy) string {
+	return fmt.Sprint("/v1/flowExportPolicy", "/", in.Tenant, "/flowExportPolicy")
+}
+
+//
+func makeURIFlowExportPolicyV1AutoDeleteFlowExportPolicyDeleteOper(in *FlowExportPolicy) string {
+	return fmt.Sprint("/v1/flowExportPolicy", "/", in.Tenant, "/flowExportPolicy/", in.Name)
+}
+
+//
+func makeURIFlowExportPolicyV1AutoGetFlowExportPolicyGetOper(in *FlowExportPolicy) string {
+	return fmt.Sprint("/v1/flowExportPolicy", "/", in.Tenant, "/flowExportPolicy/", in.Name)
+}
+
+//
+func makeURIFlowExportPolicyV1AutoListFlowExportPolicyListOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/v1/flowExportPolicy", "/", in.Tenant, "/flowExportPolicy")
+}
+
+//
+func makeURIFlowExportPolicyV1AutoUpdateFlowExportPolicyUpdateOper(in *FlowExportPolicy) string {
+	return fmt.Sprint("/v1/flowExportPolicy", "/", in.Tenant, "/flowExportPolicy/", in.Name)
+}
+
+// AutoAddFlowExportPolicy CRUD method for FlowExportPolicy
+func (r *EndpointsFlowExportPolicyV1RestClient) AutoAddFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	path := makeURIFlowExportPolicyV1AutoAddFlowExportPolicyCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespFlowExportPolicyV1AutoAddFlowExportPolicy(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FlowExportPolicy), nil
+}
+
+// AutoUpdateFlowExportPolicy CRUD method for FlowExportPolicy
+func (r *EndpointsFlowExportPolicyV1RestClient) AutoUpdateFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	path := makeURIFlowExportPolicyV1AutoUpdateFlowExportPolicyUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespFlowExportPolicyV1AutoUpdateFlowExportPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FlowExportPolicy), err
+}
+
+// AutoGetFlowExportPolicy CRUD method for FlowExportPolicy
+func (r *EndpointsFlowExportPolicyV1RestClient) AutoGetFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	path := makeURIFlowExportPolicyV1AutoGetFlowExportPolicyGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespFlowExportPolicyV1AutoGetFlowExportPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FlowExportPolicy), err
+}
+
+// AutoDeleteFlowExportPolicy CRUD method for FlowExportPolicy
+func (r *EndpointsFlowExportPolicyV1RestClient) AutoDeleteFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	path := makeURIFlowExportPolicyV1AutoDeleteFlowExportPolicyDeleteOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespFlowExportPolicyV1AutoDeleteFlowExportPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FlowExportPolicy), err
+}
+
+// AutoListFlowExportPolicy CRUD method for FlowExportPolicy
+func (r *EndpointsFlowExportPolicyV1RestClient) AutoListFlowExportPolicy(ctx context.Context, options *api.ListWatchOptions) (*FlowExportPolicyList, error) {
+	path := makeURIFlowExportPolicyV1AutoListFlowExportPolicyListOper(options)
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespFlowExportPolicyV1AutoListFlowExportPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FlowExportPolicyList), err
+}
+
+// AutoWatchFlowExportPolicy CRUD method for FlowExportPolicy
+func (r *EndpointsFlowExportPolicyV1RestClient) AutoWatchFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
+// MakeFlowExportPolicyV1RestClientEndpoints make REST client endpoints
+func MakeFlowExportPolicyV1RestClientEndpoints(instance string) (EndpointsFlowExportPolicyV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsFlowExportPolicyV1RestClient{
+		instance: instance,
+		client:   http.DefaultClient,
+	}, nil
+
+}
+
 // MiddlewareFwlogPolicyV1Client add middleware to the client
 type MiddlewareFwlogPolicyV1Client func(ServiceFwlogPolicyV1Client) ServiceFwlogPolicyV1Client
 

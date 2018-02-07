@@ -15,6 +15,17 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
+// FlowExportPolicyInterface exposes the CRUD methods for FlowExportPolicy
+type FlowExportPolicyInterface interface {
+	Create(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error)
+	Update(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FlowExportPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FlowExportPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*FlowExportPolicy, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // FwlogPolicyInterface exposes the CRUD methods for FwlogPolicy
 type FwlogPolicyInterface interface {
 	Create(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
@@ -35,6 +46,11 @@ type StatsPolicyInterface interface {
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*StatsPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
+}
+
+// FlowExportPolicyV1Interface exposes objects with CRUD operations allowed by the service
+type FlowExportPolicyV1Interface interface {
+	FlowExportPolicy() FlowExportPolicyInterface
 }
 
 // FwlogPolicyV1Interface exposes objects with CRUD operations allowed by the service

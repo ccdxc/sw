@@ -35,10 +35,22 @@ type stelemetryTelemetryBackend struct {
 	Services map[string]apiserver.Service
 	Messages map[string]apiserver.Message
 
-	endpointsFwlogPolicyV1 *eFwlogPolicyV1Endpoints
-	endpointsStatsPolicyV1 *eStatsPolicyV1Endpoints
+	endpointsFlowExportPolicyV1 *eFlowExportPolicyV1Endpoints
+	endpointsFwlogPolicyV1      *eFwlogPolicyV1Endpoints
+	endpointsStatsPolicyV1      *eStatsPolicyV1Endpoints
 }
 
+type eFlowExportPolicyV1Endpoints struct {
+	Svc stelemetryTelemetryBackend
+
+	fnAutoAddFlowExportPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteFlowExportPolicy func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetFlowExportPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListFlowExportPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateFlowExportPolicy func(ctx context.Context, t interface{}) (interface{}, error)
+
+	fnAutoWatchFlowExportPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+}
 type eFwlogPolicyV1Endpoints struct {
 	Svc stelemetryTelemetryBackend
 
@@ -66,8 +78,9 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 	grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) error {
 	s.Messages = map[string]apiserver.Message{
 
-		"telemetry.AutoMsgFwlogPolicyWatchHelper": apisrvpkg.NewMessage("telemetry.AutoMsgFwlogPolicyWatchHelper"),
-		"telemetry.AutoMsgStatsPolicyWatchHelper": apisrvpkg.NewMessage("telemetry.AutoMsgStatsPolicyWatchHelper"),
+		"telemetry.AutoMsgFlowExportPolicyWatchHelper": apisrvpkg.NewMessage("telemetry.AutoMsgFlowExportPolicyWatchHelper"),
+		"telemetry.AutoMsgFwlogPolicyWatchHelper":      apisrvpkg.NewMessage("telemetry.AutoMsgFwlogPolicyWatchHelper"),
+		"telemetry.AutoMsgStatsPolicyWatchHelper":      apisrvpkg.NewMessage("telemetry.AutoMsgStatsPolicyWatchHelper"),
 		"telemetry.FlowExportPolicy": apisrvpkg.NewMessage("telemetry.FlowExportPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := telemetry.FlowExportPolicy{}
@@ -159,6 +172,17 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				return fmt.Errorf("Default Validation failed")
 			}
 			return nil
+		}),
+		"telemetry.FlowExportPolicyList": apisrvpkg.NewMessage("telemetry.FlowExportPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := telemetry.FlowExportPolicyList{}
+			r := telemetry.FlowExportPolicy{}
+			key := r.MakeKey(prefix)
+			err := kvs.List(ctx, key, &into)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
 		}),
 		"telemetry.FlowExportSpec":   apisrvpkg.NewMessage("telemetry.FlowExportSpec"),
 		"telemetry.FlowExportStatus": apisrvpkg.NewMessage("telemetry.FlowExportStatus"),
@@ -386,6 +410,93 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 	apisrv.RegisterMessages("telemetry", s.Messages)
 
 	{
+		srv := apisrvpkg.NewService("FlowExportPolicyV1")
+
+		s.endpointsFlowExportPolicyV1.fnAutoAddFlowExportPolicy = srv.AddMethod("AutoAddFlowExportPolicy",
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoAddFlowExportPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsFlowExportPolicyV1.fnAutoDeleteFlowExportPolicy = srv.AddMethod("AutoDeleteFlowExportPolicy",
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoDeleteFlowExportPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsFlowExportPolicyV1.fnAutoGetFlowExportPolicy = srv.AddMethod("AutoGetFlowExportPolicy",
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoGetFlowExportPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsFlowExportPolicyV1.fnAutoListFlowExportPolicy = srv.AddMethod("AutoListFlowExportPolicy",
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["telemetry.FlowExportPolicyList"], "flowExportPolicy", "AutoListFlowExportPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsFlowExportPolicyV1.fnAutoUpdateFlowExportPolicy = srv.AddMethod("AutoUpdateFlowExportPolicy",
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoUpdateFlowExportPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+
+		s.endpointsFlowExportPolicyV1.fnAutoWatchFlowExportPolicy = s.Messages["telemetry.FlowExportPolicy"].WatchFromKv
+
+		s.Services = map[string]apiserver.Service{
+			"telemetry.FlowExportPolicyV1": srv,
+		}
+		apisrv.RegisterService("telemetry.FlowExportPolicyV1", srv)
+		endpoints := telemetry.MakeFlowExportPolicyV1ServerEndpoints(s.endpointsFlowExportPolicyV1, logger)
+		server := telemetry.MakeGRPCServerFlowExportPolicyV1(ctx, endpoints, logger)
+		telemetry.RegisterFlowExportPolicyV1Server(grpcserver.GrpcServer, server)
+	}
+	// Add Watchers
+	{
+
+		s.Messages["telemetry.FlowExportPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := telemetry.FlowExportPolicy{}
+			key := o.MakeKey(svcprefix)
+			wstream := stream.(telemetry.FlowExportPolicyV1_AutoWatchFlowExportPolicyServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "FlowExportPolicy")
+				return err
+			}
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.DebugLog("Channel closed for FlowExportPolicy Watcher")
+						return nil
+					}
+					in, ok := ev.Object.(*telemetry.FlowExportPolicy)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					strEvent := telemetry.AutoMsgFlowExportPolicyWatchHelper{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "recieved FlowExportPolicy watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "FlowExportPolicy", "fromver", in.APIVersion, "tover", version)
+							break
+						}
+						strEvent.Object = i.(*telemetry.FlowExportPolicy)
+					}
+					l.DebugLog("msg", "writing to stream")
+					if err := wstream.Send(&strEvent); err != nil {
+						l.DebugLog("msg", "Stream send error'ed for FlowExportPolicy", "error", err)
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for FlowExportPolicy Watcher")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
+	}
+
+	{
 		srv := apisrvpkg.NewService("FwlogPolicyV1")
 
 		s.endpointsFwlogPolicyV1.fnAutoAddFwlogPolicy = srv.AddMethod("AutoAddFwlogPolicy",
@@ -562,6 +673,50 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 	return nil
 }
 
+func (e *eFlowExportPolicyV1Endpoints) AutoAddFlowExportPolicy(ctx context.Context, t telemetry.FlowExportPolicy) (telemetry.FlowExportPolicy, error) {
+	r, err := e.fnAutoAddFlowExportPolicy(ctx, t)
+	if err == nil {
+		return r.(telemetry.FlowExportPolicy), err
+	}
+	return telemetry.FlowExportPolicy{}, err
+
+}
+func (e *eFlowExportPolicyV1Endpoints) AutoDeleteFlowExportPolicy(ctx context.Context, t telemetry.FlowExportPolicy) (telemetry.FlowExportPolicy, error) {
+	r, err := e.fnAutoDeleteFlowExportPolicy(ctx, t)
+	if err == nil {
+		return r.(telemetry.FlowExportPolicy), err
+	}
+	return telemetry.FlowExportPolicy{}, err
+
+}
+func (e *eFlowExportPolicyV1Endpoints) AutoGetFlowExportPolicy(ctx context.Context, t telemetry.FlowExportPolicy) (telemetry.FlowExportPolicy, error) {
+	r, err := e.fnAutoGetFlowExportPolicy(ctx, t)
+	if err == nil {
+		return r.(telemetry.FlowExportPolicy), err
+	}
+	return telemetry.FlowExportPolicy{}, err
+
+}
+func (e *eFlowExportPolicyV1Endpoints) AutoListFlowExportPolicy(ctx context.Context, t api.ListWatchOptions) (telemetry.FlowExportPolicyList, error) {
+	r, err := e.fnAutoListFlowExportPolicy(ctx, t)
+	if err == nil {
+		return r.(telemetry.FlowExportPolicyList), err
+	}
+	return telemetry.FlowExportPolicyList{}, err
+
+}
+func (e *eFlowExportPolicyV1Endpoints) AutoUpdateFlowExportPolicy(ctx context.Context, t telemetry.FlowExportPolicy) (telemetry.FlowExportPolicy, error) {
+	r, err := e.fnAutoUpdateFlowExportPolicy(ctx, t)
+	if err == nil {
+		return r.(telemetry.FlowExportPolicy), err
+	}
+	return telemetry.FlowExportPolicy{}, err
+
+}
+
+func (e *eFlowExportPolicyV1Endpoints) AutoWatchFlowExportPolicy(in *api.ListWatchOptions, stream telemetry.FlowExportPolicyV1_AutoWatchFlowExportPolicyServer) error {
+	return e.fnAutoWatchFlowExportPolicy(in, stream, "flowExportPolicy")
+}
 func (e *eFwlogPolicyV1Endpoints) AutoAddFwlogPolicy(ctx context.Context, t telemetry.FwlogPolicy) (telemetry.FwlogPolicy, error) {
 	r, err := e.fnAutoAddFwlogPolicy(ctx, t)
 	if err == nil {
@@ -656,6 +811,10 @@ func init() {
 
 	svc := stelemetryTelemetryBackend{}
 
+	{
+		e := eFlowExportPolicyV1Endpoints{Svc: svc}
+		svc.endpointsFlowExportPolicyV1 = &e
+	}
 	{
 		e := eFwlogPolicyV1Endpoints{Svc: svc}
 		svc.endpointsFwlogPolicyV1 = &e

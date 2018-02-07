@@ -15,6 +15,17 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+// ServiceFlowExportPolicyV1Client  is the client interface for the service.
+type ServiceFlowExportPolicyV1Client interface {
+	AutoAddFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
+	AutoDeleteFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
+	AutoGetFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
+	AutoListFlowExportPolicy(ctx context.Context, t *api.ListWatchOptions) (*FlowExportPolicyList, error)
+	AutoUpdateFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
+
+	AutoWatchFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions) (FlowExportPolicyV1_AutoWatchFlowExportPolicyClient, error)
+}
+
 // ServiceFwlogPolicyV1Client  is the client interface for the service.
 type ServiceFwlogPolicyV1Client interface {
 	AutoAddFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
@@ -35,6 +46,17 @@ type ServiceStatsPolicyV1Client interface {
 	AutoUpdateStatsPolicy(ctx context.Context, t *StatsPolicy) (*StatsPolicy, error)
 
 	AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions) (StatsPolicyV1_AutoWatchStatsPolicyClient, error)
+}
+
+// ServiceFlowExportPolicyV1Server is the server interface for the service.
+type ServiceFlowExportPolicyV1Server interface {
+	AutoAddFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
+	AutoDeleteFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
+	AutoGetFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
+	AutoListFlowExportPolicy(ctx context.Context, t api.ListWatchOptions) (FlowExportPolicyList, error)
+	AutoUpdateFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
+
+	AutoWatchFlowExportPolicy(in *api.ListWatchOptions, stream FlowExportPolicyV1_AutoWatchFlowExportPolicyServer) error
 }
 
 // ServiceFwlogPolicyV1Server is the server interface for the service.

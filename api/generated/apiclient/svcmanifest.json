@@ -135,6 +135,12 @@
   },
   "telemetry": {
     "Svcs": {
+      "FlowExportPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "FlowExportPolicy"
+        ]
+      },
       "FwlogPolicyV1": {
         "Version": "v1",
         "Messages": [

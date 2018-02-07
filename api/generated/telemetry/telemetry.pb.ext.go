@@ -40,6 +40,12 @@ func (m *StatsPolicy) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *FlowExportPolicyList) MakeKey(prefix string) string {
+	obj := FlowExportPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *FwlogPolicyList) MakeKey(prefix string) string {
 	obj := FwlogPolicy{}
 	return obj.MakeKey(prefix)
@@ -48,6 +54,12 @@ func (m *FwlogPolicyList) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *StatsPolicyList) MakeKey(prefix string) string {
 	obj := StatsPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgFlowExportPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := FlowExportPolicy{}
 	return obj.MakeKey(prefix)
 }
 
@@ -61,6 +73,15 @@ func (m *AutoMsgFwlogPolicyWatchHelper) MakeKey(prefix string) string {
 func (m *AutoMsgStatsPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := StatsPolicy{}
 	return obj.MakeKey(prefix)
+}
+
+func (m *AutoMsgFlowExportPolicyWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgFlowExportPolicyWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
 }
 
 func (m *AutoMsgFwlogPolicyWatchHelper) Clone(into interface{}) error {
@@ -83,6 +104,15 @@ func (m *AutoMsgStatsPolicyWatchHelper) Clone(into interface{}) error {
 
 func (m *FlowExportPolicy) Clone(into interface{}) error {
 	out, ok := into.(*FlowExportPolicy)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *FlowExportPolicyList) Clone(into interface{}) error {
+	out, ok := into.(*FlowExportPolicyList)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -191,6 +221,13 @@ func (m *StatsStatus) Clone(into interface{}) error {
 
 // Validators
 
+func (m *AutoMsgFlowExportPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
 func (m *AutoMsgFwlogPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
@@ -202,6 +239,15 @@ func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver string, ignoreStatus bool) 
 func (m *FlowExportPolicy) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Spec.Validate(ver, ignoreStatus) {
 		return false
+	}
+	return true
+}
+
+func (m *FlowExportPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
 	}
 	return true
 }

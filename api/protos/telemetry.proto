@@ -142,16 +142,16 @@ service FwlogPolicyV1 {
 message FlowExportStatus {
 }
 
-
 message FlowExportTarget {
     enum Formats {
-        Netflow = 0;
+        Ipfix = 0;
     }
     // Interval defines how often to push the records to an external or internal collector
     // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
     string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty"];
 
     string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportTarget.Formats)"];
+
     // Export contains export parameters.
     repeated api.ExportConfig Exports = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
 
@@ -179,10 +179,10 @@ service FlowExportPolicyV1 {
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    option (venice.apiGrpcCrudService) = "flowExportPolicy";
+    option (venice.apiGrpcCrudService) = "FlowExportPolicy";
 
     option (venice.apiRestService) = {
-        Object: "FlowExport"
+        Object: "FlowExportPolicy"
         Method: [ "get", "put", "delete" ]
         Pattern: "/{O.Tenant}/flowExportPolicy/{O.Name}"
     };

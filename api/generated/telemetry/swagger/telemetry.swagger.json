@@ -15,6 +15,264 @@
     "application/json"
   ],
   "paths": {
+    "/{O.Tenant}/flowExportPolicy": {
+      "get": {
+        "operationId": "AutoListFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryFlowExportPolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "FlowExportPolicyV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryFlowExportPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "FlowExportPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/flowExportPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "FlowExportPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FlowExportPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateFlowExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryFlowExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryFlowExportPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "FlowExportPolicyV1"
+        ]
+      }
+    },
     "/{O.Tenant}/fwlogPolicy": {
       "get": {
         "operationId": "AutoListFwlogPolicy",
@@ -700,20 +958,20 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
-    "telemetryAutoMsgFwlogPolicyWatchHelper": {
+    "telemetryAutoMsgFlowExportPolicyWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
           "type": "string"
         },
         "Object": {
-          "$ref": "#/definitions/telemetryFwlogPolicy"
+          "$ref": "#/definitions/telemetryFlowExportPolicy"
         }
       },
       "description": "=========================================================================================\n stats policy\n=========================================================================================",
       "title": "telemetry policies:\n-------------------------------------------------------------------------------\npolicy name         |  intended for        |     description                 |\n-------------------------------------------------------------------------------\nstats               |  sys admins          |    for all stats other than     |\n                    |                      |    fwlog/netflow.               |\n                    |                      |    includes retention,compaction|\n-------------------------------------------------------------------------------\nfwlog               |  security admins     |    firewall log policy          |\n                    |                      |    includes retention,          |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------\n                    |                      |                                 |\nflowexport          |  network admins      |    netflow export policy        |\n                    |                      |    includes interval,           |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------"
     },
-    "telemetryAutoMsgStatsPolicyWatchHelper": {
+    "telemetryAutoMsgFwlogPolicyWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
@@ -721,11 +979,93 @@
           "title": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host"
         },
         "Object": {
-          "$ref": "#/definitions/telemetryStatsPolicy",
+          "$ref": "#/definitions/telemetryFwlogPolicy",
           "title": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'"
         }
       },
       "title": "compaction method will be selected by Venice based on the mesaurement/table\ncollection interval will be selected by Venice based on workloads"
+    },
+    "telemetryAutoMsgStatsPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/telemetryStatsPolicy"
+        }
+      }
+    },
+    "telemetryFlowExportPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/telemetryFlowExportSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/telemetryFlowExportStatus"
+        }
+      }
+    },
+    "telemetryFlowExportPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "RetentionTime defines for how long to keep the fwlog before it is deleted"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "Export contains the export config"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetryFlowExportPolicy"
+          }
+        }
+      },
+      "title": "Firewall logs are managed like syslog.\nVenice collects fwlog irrespective of the export config"
+    },
+    "telemetryFlowExportSpec": {
+      "type": "object",
+      "properties": {
+        "Targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetryFlowExportTarget"
+          }
+        }
+      }
+    },
+    "telemetryFlowExportStatus": {
+      "type": "object",
+      "title": "========================================================================================\n flow export policy\n========================================================================================"
+    },
+    "telemetryFlowExportTarget": {
+      "type": "object",
+      "properties": {
+        "Interval": {
+          "type": "string",
+          "title": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
+        },
+        "Format": {
+          "type": "string"
+        },
+        "Exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiExportConfig"
+          },
+          "description": "Export contains export parameters."
+        }
+      }
     },
     "telemetryFwlogPolicy": {
       "type": "object",
@@ -742,15 +1082,13 @@
         "Status": {
           "$ref": "#/definitions/telemetryFwlogStatus"
         }
-      },
-      "title": "========================================================================================\n flow export policy\n========================================================================================"
+      }
     },
     "telemetryFwlogPolicyList": {
       "type": "object",
       "properties": {
         "T": {
-          "$ref": "#/definitions/apiTypeMeta",
-          "title": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
+          "$ref": "#/definitions/apiTypeMeta"
         },
         "ListMeta": {
           "$ref": "#/definitions/apiListMeta"
@@ -759,8 +1097,7 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/telemetryFwlogPolicy"
-          },
-          "description": "Export contains export parameters."
+          }
         }
       }
     },

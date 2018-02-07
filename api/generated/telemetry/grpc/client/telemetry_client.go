@@ -25,6 +25,97 @@ var _ api.TypeMeta
 var _ listerwatcher.WatcherClient
 var _ kvstore.Interface
 
+// NewFlowExportPolicyV1 sets up a new client for FlowExportPolicyV1
+func NewFlowExportPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceFlowExportPolicyV1Client {
+
+	var lAutoAddFlowExportPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoAddFlowExportPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.FlowExportPolicyV1",
+			"AutoAddFlowExportPolicy",
+			telemetry.EncodeGrpcReqFlowExportPolicy,
+			telemetry.DecodeGrpcRespFlowExportPolicy,
+			&telemetry.FlowExportPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddFlowExportPolicyEndpoint = trace.ClientEndPoint("FlowExportPolicyV1:AutoAddFlowExportPolicy")(lAutoAddFlowExportPolicyEndpoint)
+	}
+	var lAutoDeleteFlowExportPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteFlowExportPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.FlowExportPolicyV1",
+			"AutoDeleteFlowExportPolicy",
+			telemetry.EncodeGrpcReqFlowExportPolicy,
+			telemetry.DecodeGrpcRespFlowExportPolicy,
+			&telemetry.FlowExportPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteFlowExportPolicyEndpoint = trace.ClientEndPoint("FlowExportPolicyV1:AutoDeleteFlowExportPolicy")(lAutoDeleteFlowExportPolicyEndpoint)
+	}
+	var lAutoGetFlowExportPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoGetFlowExportPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.FlowExportPolicyV1",
+			"AutoGetFlowExportPolicy",
+			telemetry.EncodeGrpcReqFlowExportPolicy,
+			telemetry.DecodeGrpcRespFlowExportPolicy,
+			&telemetry.FlowExportPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetFlowExportPolicyEndpoint = trace.ClientEndPoint("FlowExportPolicyV1:AutoGetFlowExportPolicy")(lAutoGetFlowExportPolicyEndpoint)
+	}
+	var lAutoListFlowExportPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoListFlowExportPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.FlowExportPolicyV1",
+			"AutoListFlowExportPolicy",
+			telemetry.EncodeGrpcReqListWatchOptions,
+			telemetry.DecodeGrpcRespFlowExportPolicyList,
+			&telemetry.FlowExportPolicyList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListFlowExportPolicyEndpoint = trace.ClientEndPoint("FlowExportPolicyV1:AutoListFlowExportPolicy")(lAutoListFlowExportPolicyEndpoint)
+	}
+	var lAutoUpdateFlowExportPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateFlowExportPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry.FlowExportPolicyV1",
+			"AutoUpdateFlowExportPolicy",
+			telemetry.EncodeGrpcReqFlowExportPolicy,
+			telemetry.DecodeGrpcRespFlowExportPolicy,
+			&telemetry.FlowExportPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateFlowExportPolicyEndpoint = trace.ClientEndPoint("FlowExportPolicyV1:AutoUpdateFlowExportPolicy")(lAutoUpdateFlowExportPolicyEndpoint)
+	}
+	return telemetry.EndpointsFlowExportPolicyV1Client{
+		Client: telemetry.NewFlowExportPolicyV1Client(conn),
+
+		AutoAddFlowExportPolicyEndpoint:    lAutoAddFlowExportPolicyEndpoint,
+		AutoDeleteFlowExportPolicyEndpoint: lAutoDeleteFlowExportPolicyEndpoint,
+		AutoGetFlowExportPolicyEndpoint:    lAutoGetFlowExportPolicyEndpoint,
+		AutoListFlowExportPolicyEndpoint:   lAutoListFlowExportPolicyEndpoint,
+		AutoUpdateFlowExportPolicyEndpoint: lAutoUpdateFlowExportPolicyEndpoint,
+	}
+}
+
+// NewFlowExportPolicyV1Backend creates an instrumented client with middleware
+func NewFlowExportPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceFlowExportPolicyV1Client {
+	cl := NewFlowExportPolicyV1(conn, logger)
+	cl = telemetry.LoggingFlowExportPolicyV1MiddlewareClient(logger)(cl)
+	return cl
+}
+
 // NewFwlogPolicyV1 sets up a new client for FwlogPolicyV1
 func NewFwlogPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.ServiceFwlogPolicyV1Client {
 
@@ -205,6 +296,175 @@ func NewStatsPolicyV1Backend(conn *grpc.ClientConn, logger log.Logger) telemetry
 	cl := NewStatsPolicyV1(conn, logger)
 	cl = telemetry.LoggingStatsPolicyV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type grpcObjFlowExportPolicyV1FlowExportPolicy struct {
+	logger log.Logger
+	client telemetry.ServiceFlowExportPolicyV1Client
+}
+
+func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Create(ctx context.Context, in *telemetry.FlowExportPolicy) (*telemetry.FlowExportPolicy, error) {
+	a.logger.DebugLog("msg", "recieved call", "object", "FlowExportPolicy", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddFlowExportPolicy(nctx, in)
+}
+
+func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Update(ctx context.Context, in *telemetry.FlowExportPolicy) (*telemetry.FlowExportPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateFlowExportPolicy(nctx, in)
+}
+
+func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FlowExportPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.FlowExportPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetFlowExportPolicy(nctx, &in)
+}
+
+func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FlowExportPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.FlowExportPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteFlowExportPolicy(nctx, &in)
+}
+
+func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.FlowExportPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListFlowExportPolicy(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchFlowExportPolicy(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(telemetry.FlowExportPolicyV1_AutoWatchFlowExportPolicyClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjFlowExportPolicyV1FlowExportPolicy struct {
+	endpoints telemetry.EndpointsFlowExportPolicyV1RestClient
+	instance  string
+}
+
+func (a *restObjFlowExportPolicyV1FlowExportPolicy) Create(ctx context.Context, in *telemetry.FlowExportPolicy) (*telemetry.FlowExportPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddFlowExportPolicy(ctx, in)
+}
+
+func (a *restObjFlowExportPolicyV1FlowExportPolicy) Update(ctx context.Context, in *telemetry.FlowExportPolicy) (*telemetry.FlowExportPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateFlowExportPolicy(ctx, in)
+}
+
+func (a *restObjFlowExportPolicyV1FlowExportPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FlowExportPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.FlowExportPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetFlowExportPolicy(ctx, &in)
+}
+
+func (a *restObjFlowExportPolicyV1FlowExportPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*telemetry.FlowExportPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := telemetry.FlowExportPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteFlowExportPolicy(ctx, &in)
+}
+
+func (a *restObjFlowExportPolicyV1FlowExportPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*telemetry.FlowExportPolicy, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListFlowExportPolicy(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjFlowExportPolicyV1FlowExportPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjFlowExportPolicyV1FlowExportPolicy) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return true
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return true
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
 }
 
 type grpcObjFwlogPolicyV1FwlogPolicy struct {
@@ -543,6 +803,43 @@ func (a *restObjStatsPolicyV1StatsPolicy) Allowed(oper apiserver.APIOperType) bo
 	default:
 		return false
 	}
+}
+
+type crudClientFlowExportPolicyV1 struct {
+	grpcFlowExportPolicy telemetry.FlowExportPolicyInterface
+}
+
+// NewGrpcCrudClientFlowExportPolicyV1 creates a GRPC client for the service
+func NewGrpcCrudClientFlowExportPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.FlowExportPolicyV1Interface {
+	client := NewFlowExportPolicyV1Backend(conn, logger)
+	return &crudClientFlowExportPolicyV1{
+
+		grpcFlowExportPolicy: &grpcObjFlowExportPolicyV1FlowExportPolicy{client: client, logger: logger},
+	}
+}
+
+func (a *crudClientFlowExportPolicyV1) FlowExportPolicy() telemetry.FlowExportPolicyInterface {
+	return a.grpcFlowExportPolicy
+}
+
+type crudRestClientFlowExportPolicyV1 struct {
+	restFlowExportPolicy telemetry.FlowExportPolicyInterface
+}
+
+// NewRestCrudClientFlowExportPolicyV1 creates a REST client for the service.
+func NewRestCrudClientFlowExportPolicyV1(url string) telemetry.FlowExportPolicyV1Interface {
+	endpoints, err := telemetry.MakeFlowExportPolicyV1RestClientEndpoints(url)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientFlowExportPolicyV1{
+
+		restFlowExportPolicy: &restObjFlowExportPolicyV1FlowExportPolicy{endpoints: endpoints, instance: url},
+	}
+}
+
+func (a *crudRestClientFlowExportPolicyV1) FlowExportPolicy() telemetry.FlowExportPolicyInterface {
+	return a.restFlowExportPolicy
 }
 
 type crudClientFwlogPolicyV1 struct {

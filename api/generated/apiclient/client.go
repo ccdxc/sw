@@ -56,6 +56,8 @@ type Services interface {
 	// Package is networkencryption and len of messages is 1
 	TrafficEncryptionPolicyV1() networkencryption.TrafficEncryptionPolicyV1Interface
 	// Package is telemetry and len of messages is 1
+	FlowExportPolicyV1() telemetry.FlowExportPolicyV1Interface
+	// Package is telemetry and len of messages is 1
 	FwlogPolicyV1() telemetry.FwlogPolicyV1Interface
 	// Package is telemetry and len of messages is 1
 	StatsPolicyV1() telemetry.StatsPolicyV1Interface
@@ -81,6 +83,7 @@ type apiGrpcServerClient struct {
 	aSgpolicyV1                network.SgpolicyV1Interface
 	aTenantV1                  network.TenantV1Interface
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
+	aFlowExportPolicyV1        telemetry.FlowExportPolicyV1Interface
 	aFwlogPolicyV1             telemetry.FwlogPolicyV1Interface
 	aStatsPolicyV1             telemetry.StatsPolicyV1Interface
 	aCertificateV1             x509.CertificateV1Interface
@@ -143,6 +146,10 @@ func (a *apiGrpcServerClient) TrafficEncryptionPolicyV1() networkencryption.Traf
 	return a.aTrafficEncryptionPolicyV1
 }
 
+func (a *apiGrpcServerClient) FlowExportPolicyV1() telemetry.FlowExportPolicyV1Interface {
+	return a.aFlowExportPolicyV1
+}
+
 func (a *apiGrpcServerClient) FwlogPolicyV1() telemetry.FwlogPolicyV1Interface {
 	return a.aFwlogPolicyV1
 }
@@ -180,6 +187,7 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 		aSgpolicyV1:                networkClient.NewGrpcCrudClientSgpolicyV1(client.ClientConn, logger),
 		aTenantV1:                  networkClient.NewGrpcCrudClientTenantV1(client.ClientConn, logger),
 		aTrafficEncryptionPolicyV1: networkencryptionClient.NewGrpcCrudClientTrafficEncryptionPolicyV1(client.ClientConn, logger),
+		aFlowExportPolicyV1:        telemetryClient.NewGrpcCrudClientFlowExportPolicyV1(client.ClientConn, logger),
 		aFwlogPolicyV1:             telemetryClient.NewGrpcCrudClientFwlogPolicyV1(client.ClientConn, logger),
 		aStatsPolicyV1:             telemetryClient.NewGrpcCrudClientStatsPolicyV1(client.ClientConn, logger),
 		aCertificateV1:             x509Client.NewGrpcCrudClientCertificateV1(client.ClientConn, logger),
@@ -202,6 +210,7 @@ type apiRestServerClient struct {
 	aSgpolicyV1                network.SgpolicyV1Interface
 	aTenantV1                  network.TenantV1Interface
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
+	aFlowExportPolicyV1        telemetry.FlowExportPolicyV1Interface
 	aFwlogPolicyV1             telemetry.FwlogPolicyV1Interface
 	aStatsPolicyV1             telemetry.StatsPolicyV1Interface
 	aCertificateV1             x509.CertificateV1Interface
@@ -264,6 +273,10 @@ func (a *apiRestServerClient) TrafficEncryptionPolicyV1() networkencryption.Traf
 	return a.aTrafficEncryptionPolicyV1
 }
 
+func (a *apiRestServerClient) FlowExportPolicyV1() telemetry.FlowExportPolicyV1Interface {
+	return a.aFlowExportPolicyV1
+}
+
 func (a *apiRestServerClient) FwlogPolicyV1() telemetry.FwlogPolicyV1Interface {
 	return a.aFwlogPolicyV1
 }
@@ -294,6 +307,7 @@ func NewRestAPIClient(url string) (Services, error) {
 		aSgpolicyV1:                networkClient.NewRestCrudClientSgpolicyV1(url),
 		aTenantV1:                  networkClient.NewRestCrudClientTenantV1(url),
 		aTrafficEncryptionPolicyV1: networkencryptionClient.NewRestCrudClientTrafficEncryptionPolicyV1(url),
+		aFlowExportPolicyV1:        telemetryClient.NewRestCrudClientFlowExportPolicyV1(url),
 		aFwlogPolicyV1:             telemetryClient.NewRestCrudClientFwlogPolicyV1(url),
 		aStatsPolicyV1:             telemetryClient.NewRestCrudClientStatsPolicyV1(url),
 		aCertificateV1:             x509Client.NewRestCrudClientCertificateV1(url),

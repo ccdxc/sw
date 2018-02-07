@@ -22,6 +22,155 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+type grpcServerFlowExportPolicyV1 struct {
+	Endpoints EndpointsFlowExportPolicyV1Server
+
+	AutoAddFlowExportPolicyHdlr    grpctransport.Handler
+	AutoDeleteFlowExportPolicyHdlr grpctransport.Handler
+	AutoGetFlowExportPolicyHdlr    grpctransport.Handler
+	AutoListFlowExportPolicyHdlr   grpctransport.Handler
+	AutoUpdateFlowExportPolicyHdlr grpctransport.Handler
+}
+
+// MakeGRPCServerFlowExportPolicyV1 creates a GRPC server for FlowExportPolicyV1 service
+func MakeGRPCServerFlowExportPolicyV1(ctx context.Context, endpoints EndpointsFlowExportPolicyV1Server, logger log.Logger) FlowExportPolicyV1Server {
+	options := []grpctransport.ServerOption{
+		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(recoverVersion),
+	}
+	return &grpcServerFlowExportPolicyV1{
+		Endpoints: endpoints,
+		AutoAddFlowExportPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoAddFlowExportPolicyEndpoint,
+			DecodeGrpcReqFlowExportPolicy,
+			EncodeGrpcRespFlowExportPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFlowExportPolicy", logger)))...,
+		),
+
+		AutoDeleteFlowExportPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteFlowExportPolicyEndpoint,
+			DecodeGrpcReqFlowExportPolicy,
+			EncodeGrpcRespFlowExportPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFlowExportPolicy", logger)))...,
+		),
+
+		AutoGetFlowExportPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoGetFlowExportPolicyEndpoint,
+			DecodeGrpcReqFlowExportPolicy,
+			EncodeGrpcRespFlowExportPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFlowExportPolicy", logger)))...,
+		),
+
+		AutoListFlowExportPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoListFlowExportPolicyEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespFlowExportPolicyList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFlowExportPolicy", logger)))...,
+		),
+
+		AutoUpdateFlowExportPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateFlowExportPolicyEndpoint,
+			DecodeGrpcReqFlowExportPolicy,
+			EncodeGrpcRespFlowExportPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFlowExportPolicy", logger)))...,
+		),
+	}
+}
+
+func (s *grpcServerFlowExportPolicyV1) AutoAddFlowExportPolicy(ctx oldcontext.Context, req *FlowExportPolicy) (*FlowExportPolicy, error) {
+	_, resp, err := s.AutoAddFlowExportPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respFlowExportPolicyV1AutoAddFlowExportPolicy).V
+	return &r, resp.(respFlowExportPolicyV1AutoAddFlowExportPolicy).Err
+}
+
+func decodeHTTPrespFlowExportPolicyV1AutoAddFlowExportPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FlowExportPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerFlowExportPolicyV1) AutoDeleteFlowExportPolicy(ctx oldcontext.Context, req *FlowExportPolicy) (*FlowExportPolicy, error) {
+	_, resp, err := s.AutoDeleteFlowExportPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respFlowExportPolicyV1AutoDeleteFlowExportPolicy).V
+	return &r, resp.(respFlowExportPolicyV1AutoDeleteFlowExportPolicy).Err
+}
+
+func decodeHTTPrespFlowExportPolicyV1AutoDeleteFlowExportPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FlowExportPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerFlowExportPolicyV1) AutoGetFlowExportPolicy(ctx oldcontext.Context, req *FlowExportPolicy) (*FlowExportPolicy, error) {
+	_, resp, err := s.AutoGetFlowExportPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respFlowExportPolicyV1AutoGetFlowExportPolicy).V
+	return &r, resp.(respFlowExportPolicyV1AutoGetFlowExportPolicy).Err
+}
+
+func decodeHTTPrespFlowExportPolicyV1AutoGetFlowExportPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FlowExportPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerFlowExportPolicyV1) AutoListFlowExportPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*FlowExportPolicyList, error) {
+	_, resp, err := s.AutoListFlowExportPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respFlowExportPolicyV1AutoListFlowExportPolicy).V
+	return &r, resp.(respFlowExportPolicyV1AutoListFlowExportPolicy).Err
+}
+
+func decodeHTTPrespFlowExportPolicyV1AutoListFlowExportPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FlowExportPolicyList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerFlowExportPolicyV1) AutoUpdateFlowExportPolicy(ctx oldcontext.Context, req *FlowExportPolicy) (*FlowExportPolicy, error) {
+	_, resp, err := s.AutoUpdateFlowExportPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respFlowExportPolicyV1AutoUpdateFlowExportPolicy).V
+	return &r, resp.(respFlowExportPolicyV1AutoUpdateFlowExportPolicy).Err
+}
+
+func decodeHTTPrespFlowExportPolicyV1AutoUpdateFlowExportPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FlowExportPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerFlowExportPolicyV1) AutoWatchFlowExportPolicy(in *api.ListWatchOptions, stream FlowExportPolicyV1_AutoWatchFlowExportPolicyServer) error {
+	return s.Endpoints.AutoWatchFlowExportPolicy(in, stream)
+}
+
 type grpcServerFwlogPolicyV1 struct {
 	Endpoints EndpointsFwlogPolicyV1Server
 
@@ -351,6 +500,40 @@ func EncodeGrpcRespFlowExportPolicy(ctx context.Context, response interface{}) (
 
 // DecodeGrpcRespFlowExportPolicy decodes GRPC response
 func DecodeGrpcRespFlowExportPolicy(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFlowExportPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFlowExportPolicyList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportPolicyList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFlowExportPolicyList encodes GRPC request
+func EncodeGrpcReqFlowExportPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicyList)
+	return req, nil
+}
+
+// DecodeGrpcReqFlowExportPolicyList decodes GRPC request
+func DecodeGrpcReqFlowExportPolicyList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicyList)
+	return req, nil
+}
+
+// EncodeGrpcRespFlowExportPolicyList endodes the GRPC response
+func EncodeGrpcRespFlowExportPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFlowExportPolicyList decodes the GRPC response
+func DecodeGrpcRespFlowExportPolicyList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

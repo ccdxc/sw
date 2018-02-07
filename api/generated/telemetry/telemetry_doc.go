@@ -7,9 +7,11 @@ Input file: protos/telemetry.proto
 
 The following Messages are defined.
 
+  AutoMsgFlowExportPolicyWatchHelper
   AutoMsgFwlogPolicyWatchHelper
   AutoMsgStatsPolicyWatchHelper
   FlowExportPolicy
+  FlowExportPolicyList
   FlowExportSpec
   FlowExportStatus
   FlowExportTarget
@@ -23,6 +25,14 @@ The following Messages are defined.
   StatsStatus
 
 The following Services and Methods are defined.
+
+ Service: FlowExportPolicyV1
+   AutoAddFlowExportPolicy
+   AutoDeleteFlowExportPolicy
+   AutoGetFlowExportPolicy
+   AutoListFlowExportPolicy
+   AutoUpdateFlowExportPolicy
+   AutoWatchFlowExportPolicy
 
  Service: FwlogPolicyV1
    AutoAddFwlogPolicy
