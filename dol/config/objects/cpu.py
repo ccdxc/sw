@@ -52,6 +52,24 @@ class CpuObject(base.ConfigObjectBase):
                         self.hal_handle))
         return
 
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        #get_req_spec.key_or_handle.if_handle = self.hal_handle
+        # HAL reserved 1003 as CPU If ID.
+        get_req_spec.key_or_handle.interface_id = 1003
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        if get_resp.spec.key_or_handle.HasField("interface_id"):
+            self.id = get_resp.spec.key_or_handle.interface_id
+        else:
+            self.hal_handle = get_resp.spec.key_or_handle.if_handle
+
+        self.hal_handle = get_resp.status.if_handle;
+        cfglogger.info("- Cpu %s = %s (HDL = 0x%x)" %\
+                       (self.GID(),\
+                        haldefs.common.ApiStatus.Name(get_resp.api_status),\
+                        self.hal_handle))
+
 
 class CpuObjectHelper:
     def __init__(self):
@@ -61,6 +79,11 @@ class CpuObjectHelper:
     def Configure(self):
         cfglogger.info("Configuring %d Cpus" % len(self.objlist))
         halapi.ConfigureInterfaces(self.objlist)
+        return
+
+    def GetConf(self):
+        cfglogger.info("Get Config from HAL for %d Cpus" % len(self.objlist))
+        halapi.GetInterfaces(self.objlist)
         return
 
     def Generate(self, topospec):
@@ -75,7 +98,10 @@ class CpuObjectHelper:
 
     def main(self, topospec):
         self.Generate(topospec)
-        self.Configure()
+        # CPU if is created inside HAL during init ...
+        #     DOL just queries for handle
+        #self.Configure()
+        self.GetConf()
         cfglogger.info("Adding %d Cpus to Store." % len(self.objlist))
         return
 

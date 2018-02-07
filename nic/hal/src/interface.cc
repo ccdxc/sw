@@ -1639,6 +1639,7 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_interface_id(hal_if->if_id);
     spec->set_type(hal_if->if_type);
+    rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
     spec->set_admin_status(hal_if->if_admin_status);
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:

@@ -422,6 +422,32 @@ hal_sdk_init (void)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+hal_cpu_if_create (uint32_t lif_id) {
+    InterfaceSpec      spec;
+    InterfaceResponse  response;
+    hal_ret_t          ret = HAL_RET_OK;
+
+    spec.mutable_key_or_handle()->set_interface_id(IF_ID_CPU);
+    spec.set_type(::intf::IfType::IF_TYPE_CPU);
+    spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+
+    ret = interface_create(spec, &response);
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: CPU if create success, handle = {}",
+                      __FUNCTION__, response.status().if_handle());
+    } else {
+        HAL_TRACE_DEBUG("{}: CPU if create failed", __FUNCTION__);
+    }
+
+    hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
@@ -495,6 +521,9 @@ hal_init (hal_cfg_t *hal_cfg)
     if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
         hal_proxy_svc_init();
     }
+
+    // create cpu interface
+    hal_cpu_if_create(SERVICE_LIF_CPU);
 
     // do qos init
     ret = hal_qos_init();

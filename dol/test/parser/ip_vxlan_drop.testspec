@@ -31,6 +31,8 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+                flags   : callback://parser/callbacks/GetIpv4Flags
+                frag    : callback://parser/callbacks/GetIpv4FragOffset
                 #len     : callback://parser/callbacks/GetIpv4TotalLen
             ipv6:
                 src     : ref://testcase/config/flow/sip

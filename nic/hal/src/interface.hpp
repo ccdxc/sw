@@ -12,7 +12,6 @@
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/lif.hpp"
 #include "nic/hal/src/utils.hpp"
-// #include "nic/utils/block_list/block_list.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -52,6 +51,9 @@ using intf::SetQStateResponseMsg;
 using intf::IfType;
 
 namespace hal {
+
+#define IF_ID_CPU 1003
+
 
 // l2seg entry used for classic enic if
 typedef struct if_l2seg_entry_s {
