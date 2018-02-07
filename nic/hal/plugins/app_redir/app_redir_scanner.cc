@@ -311,6 +311,12 @@ static std::unordered_map<int32_t, appid_id_t> scanner_appid_to_local_id_map = {
     {APP_ID_HTTP, HAL_APPID_HTTP},
     {APP_ID_HTTPS, HAL_APPID_HTTPS},
     {APP_ID_POSTGRESQL, HAL_APPID_POSTGRESQL},
+    {APP_ID_TABULAR_DATA_STREAM_TDS, HAL_APPID_MSSQL},
+    {APP_ID_MS_SQL, HAL_APPID_MSSQL},
+    {APP_ID_ORACLE_DATABASE, HAL_APPID_ORACLE},
+    {APP_ID_ORACLE_TNS, HAL_APPID_ORACLE},
+    {APP_ID_NFS, HAL_APPID_NFS},
+    {APP_ID_SUN_RPC, HAL_APPID_NFS}, // TODO: hierarchical appid
     {APP_ID_UNKNOWN, 0},
     {APP_ID_NONE, 0},
 };

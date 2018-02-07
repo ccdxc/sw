@@ -28,6 +28,21 @@ policies:
                     - svc:
                         proto    : 6
                         dst_port : 5432
+                    - svc:
+                        proto    : 6
+                        dst_port : 1433
+                    - svc:
+                        proto    : 6
+                        dst_port : 1521
+                    - svc:
+                        proto    : 17
+                        dst_port : 111
+                    - svc:
+                        proto    : 17
+                        dst_port : 1048
+                    - svc:
+                        proto    : 17
+                        dst_port : 2049
                 apps:
                     - app : "MYSQL"
                     - app : "DNS"
@@ -35,6 +50,9 @@ policies:
                     - app : "MONGODB"
                     - app : "CASSANDRA"
                     - app : "POSTGRESQL"
+                    - app : "MSSQL"
+                    - app : "ORACLE"
+                    - app : "NFS"
             - rule:
                 action :  ALLOW
                 log    :  True
@@ -98,6 +116,21 @@ policies:
                     - svc:
                         proto    : 6
                         dst_port : 5432
+                    - svc:
+                        proto    : 6
+                        dst_port : 1433
+                    - svc:
+                        proto    : 6
+                        dst_port : 1521
+                    - svc:
+                        proto    : 17
+                        dst_port : 111
+                    - svc:
+                        proto    : 17
+                        dst_port : 1048
+                    - svc:
+                        proto    : 17
+                        dst_port : 2049
                 apps:
                     - app : "MYSQL"
                     - app : "DNS"
@@ -105,6 +138,9 @@ policies:
                     - app : "MONGODB"
                     - app : "CASSANDRA"
                     - app : "POSTGRESQL"
+                    - app : "MSSQL"
+                    - app : "ORACLE"
+                    - app : "NFS"
             - rule:
                 action :  ALLOW
                 log    :  True

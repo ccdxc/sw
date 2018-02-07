@@ -124,6 +124,36 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : APP_REDIR_RAW_MSSQL
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_mssql.testspec
+        rtl     : False
+        args    :
+            num_pkts : 5
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_ORACLE_TNS
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_oracle_tns.testspec
+        rtl     : False
+        args    :
+            num_pkts : 5
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_NFS
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_nfs.testspec
+        rtl     : False
+        args    :
+            num_pkts : 6
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : APP_REDIR_PROXY_TCP_TLS_ENCRYPT
         module  : app_redir_proxy_tcp_tls_encrypt
         spec    : app_redir_proxy.testspec

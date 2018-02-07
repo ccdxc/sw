@@ -474,6 +474,9 @@ inline bool app_redir_pkt_tx_ownership(fte::ctx_t& ctx)
   HAL_APPID_ENTRY(POSTGRESQL), \
   HAL_APPID_ENTRY(MONGODB),    \
   HAL_APPID_ENTRY(CASSANDRA),  \
+  HAL_APPID_ENTRY(MSSQL),      \
+  HAL_APPID_ENTRY(ORACLE),     \
+  HAL_APPID_ENTRY(NFS),        \
   HAL_APPID_ENTRY(MAX)
 
 enum {
