@@ -65,10 +65,10 @@ rx_roce:
     phvwrpair       p.vxlan_3_valid, 0, p.gre_3_valid, 0
     phvwr           p.udp_3_valid, 0
 
+    nop.!c1.e
+
     .assert(offsetof(p, udp_opt_eol_valid) - offsetof(p, icrc_valid) == 6)
     phvwr           p.{udp_opt_eol_valid...icrc_valid}, 0
-
-    nop.!c1.e
 
     // eth and IP header for UD
     seq             c1, k.ethernet_3_valid, TRUE
