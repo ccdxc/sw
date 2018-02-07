@@ -11,9 +11,11 @@ import "kh.proto";
 package gft;
 option go_package="halproto";
 
-// The gft service definition
+// The GFT service definition
 service Gft {
   rpc GftExactMatchProfileCreate (GftExactMatchProfileRequestMsg) returns (GftExactMatchProfileResponseMsg) {}
+  rpc GftHeaderTranspositionProfileCreate (GftHeaderTranspositionProfileRequestMsg) returns (GftHeaderTranspositionProfileResponseMsg) {}
+  rpc GftExactMatchFlowEntryCreate (GftExactMatchFlowEntryRequestMsg) returns (GftExactMatchFlowEntryResponseMsg) {}
 }
 
 message GftEthFields {
@@ -77,21 +79,21 @@ message GftHeaderGroupExactMatchProfile {
 
 message GftExactMatchProfileSpec {
   types.ObjectMeta                            meta                 = 1;    // common object meta
-  kh.GftExactMatchProfileKeyHandle            key_or_handle        = 2;
+  kh.GftExactMatchProfileKeyHandle            key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
   bool                                        rdma_flow            = 3;
   GftTableType                                table_type           = 4;
   repeated GftHeaderGroupExactMatchProfile    exact_match_profiles = 5;
 }
 
 // GftExactMatchProfileRequestMsg is used to do batched add or modify of GFT
-// exact match profile request
+// exact match profile
 message GftExactMatchProfileRequestMsg {
   repeated GftExactMatchProfileSpec    request = 1;    // batched request
 }
 
 // GftExactMatchProfileStatus represents the current status of GFT exact match profile
 message GftExactMatchProfileStatus {
-  fixed64    profile_handle = 1;    // handle of the gft exact match profile returned by HAL
+  fixed64    profile_handle = 1;    // handle of the GFT exact match profile returned by HAL
 }
 
 // GftExactMatchProfileResponse is response to GftExactMatchProfileSpec
@@ -126,23 +128,6 @@ message EncapMatchFields {
   uint32     gre_protocol = 2;
 }
 
-message GftHeaderGroupExactMatch {
-  GftHeaders               headers      = 1;
-  GftHeaderFields          match_fields = 2;
-  GftEthFields             eth_fields   = 3;
-  types.IPAddress          src_ip_addr  = 4;
-  types.IPAddress          dst_ip_addr  = 5;
-  uint32                   ip_ttl       = 6;
-  uint32                   ip_dscp      = 7;
-  uint32                   ip_protocol  = 8;
-  oneof encap_or_transport {
-    UdpMatchFields         udp_fields   = 9;
-    TcpMatchFields         tcp_fields   = 10;
-    IcmpMatchFields        icmp_fields  = 11;
-    EncapMatchFields       encap_fields = 12;
-  }
-}
-
 enum GftHeaderGroupTranspostionAction {
   TRANSPOSITION_ACTION_NONE   = 0;
   TRANSPOSITION_ACTION_MODIFY = 1;
@@ -157,19 +142,42 @@ message GftHeaderGroupTranspositionProfile {
   GftHeaderFields                  match_fields = 3;
 }
 
-message GftHeaderTranspositionProfile {
-  bool                                           redirect_to_vport_ingress_queue               = 1;
-  bool                                           redirect_to_vport_egress_queue                = 2;
-  bool                                           redirect_to_vport_ingress_queue_if_ttl_is_one = 3;
-  bool                                           redirect_to_vport_egress_queue_if_ttl_is_one  = 4;
-  bool                                           copy_all_packets                              = 5;
-  bool                                           copy_first_packet                             = 6;
-  bool                                           copy_when_tcp_flag_set                        = 7;
-  bool                                           custom_action_present                         = 8;
-  bool                                           meta_action_before_transposition              = 9;
-  GftTableType                                   table_type                                    = 10;
-  uint32                                         profile_id                                    = 11;
-  repeated GftHeaderGroupTranspositionProfile    transposition_profiles                        = 12;
+message GftHeaderTranspositionProfileSpec {
+  types.ObjectMeta                               meta                                          = 1;    // common object meta
+  kh.GftHeaderTranspositionProfileKeyHandle      key_or_handle                                 = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  bool                                           redirect_to_vport_ingress_queue               = 3;
+  bool                                           redirect_to_vport_egress_queue                = 4;
+  bool                                           redirect_to_vport_ingress_queue_if_ttl_is_one = 5;
+  bool                                           redirect_to_vport_egress_queue_if_ttl_is_one  = 6;
+  bool                                           copy_all_packets                              = 7;
+  bool                                           copy_first_packet                             = 8;
+  bool                                           copy_when_tcp_flag_set                        = 9;
+  bool                                           custom_action_present                         = 10;
+  bool                                           meta_action_before_transposition              = 11;
+  GftTableType                                   table_type                                    = 12;
+  repeated GftHeaderGroupTranspositionProfile    transposition_profiles                        = 13;
+}
+
+// GftHeaderTranspositionProfileRequestMsg is used to do batched add or modify of GFT
+// header transposition profile
+message GftHeaderTranspositionProfileRequestMsg {
+  repeated GftHeaderTranspositionProfileSpec    request = 1;    // batched request
+}
+
+// GftHeaderTranspositionProfileStatus represents the current status of GFT header transposition profile
+message GftHeaderTranspositionProfileStatus {
+  fixed64    profile_handle = 1;    // handle of the GFT header transposition profile returned by HAL
+}
+
+// GftHeaderTranspositionProfileResponse is response to GftHeaderTranspositionProfileSpec
+message GftHeaderTranspositionProfileResponse {
+  types.ApiStatus                        api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  GftHeaderTranspositionProfileStatus    status     = 2;
+}
+
+// GftHeaderTranspositionProfileResponseMsg is batched response to GftHeaderTranspositionProfileRequestMsg
+message GftHeaderTranspositionProfileResponseMsg {
+  repeated GftHeaderTranspositionProfileResponse    response = 1;    // batched response
 }
 
 message UdpTranspositionFields {
@@ -192,6 +200,23 @@ message EncapTranspositionFields {
   uint32     gre_protocol = 2;
 }
 
+message GftHeaderGroupExactMatch {
+  GftHeaders               headers      = 1;
+  GftHeaderFields          match_fields = 2;
+  GftEthFields             eth_fields   = 3;
+  types.IPAddress          src_ip_addr  = 4;
+  types.IPAddress          dst_ip_addr  = 5;
+  uint32                   ip_ttl       = 6;
+  uint32                   ip_dscp      = 7;
+  uint32                   ip_protocol  = 8;
+  oneof encap_or_transport {
+    UdpMatchFields         udp_fields   = 9;
+    TcpMatchFields         tcp_fields   = 10;
+    IcmpMatchFields        icmp_fields  = 11;
+    EncapMatchFields       encap_fields = 12;
+  }
+}
+
 message GftHeaderGroupTransposition {
   GftHeaderGroupTranspostionAction     action        = 1;
   GftHeaders                           headers       = 2;
@@ -210,27 +235,50 @@ message GftHeaderGroupTransposition {
   }
 }
 
-message GftExactMathFlowEntry {
-  bool                                    add_in_activated_state                         = 1;
-  bool                                    rdma_flow                                      = 2;
-  bool                                    redirect_to_vport_ingress_queue                = 3;
-  bool                                    redirect_to_vport_egress_queue                 = 4;
-  bool                                    redirect_to_vport_ingress_queue_if_ttl_is_one  = 5;
-  bool                                    redirect_to_vport_egress_queue_if_ttl_is_one   = 6;
-  bool                                    copy_all_packets                               = 7;
-  bool                                    copy_first_packet                              = 8;
-  bool                                    copy_when_tcp_flag_set                         = 9;
-  bool                                    custom_action_present                          = 10;
-  bool                                    meta_action_before_transposition               = 11;
-  bool                                    copy_after_tcp_fin_flag_set                    = 12;
-  bool                                    copy_after_tcp_rst_flag_set                    = 13;
-  uint32                                  table_id                                       = 14;
-  uint32                                  vport_id                                       = 15;
-  uint32                                  match_profile_id                               = 16;
-  uint32                                  header_transposition_profile_id                = 17;
-  uint32                                  redirect_vport_id                              = 18;
-  uint32                                  ttl_one_redirect_vport_id                      = 19;
-  uint32                                  flow_entry_id                                  = 20;
-  repeated GftHeaderGroupExactMatch       exact_matches                                  = 21;
-  repeated GftHeaderGroupTransposition    transpositions                                 = 22;
+message GftExactMatchFlowEntrySpec {
+  types.ObjectMeta                             meta                                           = 1;    // common object meta
+  kh.GftExactMatchFlowEntryKeyHandle           key_or_handle                                  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.GftExactMatchProfileKeyHandle             exact_match_profile                            = 3 [(gogoproto.moretags) = "venice:ref"];
+  kh.GftHeaderTranspositionProfileKeyHandle    transposition_profile                          = 4 [(gogoproto.moretags) = "venice:ref"];
+  bool                                         add_in_activated_state                         = 5;
+  bool                                         rdma_flow                                      = 6;
+  bool                                         redirect_to_vport_ingress_queue                = 7;
+  bool                                         redirect_to_vport_egress_queue                 = 8;
+  bool                                         redirect_to_vport_ingress_queue_if_ttl_is_one  = 9;
+  bool                                         redirect_to_vport_egress_queue_if_ttl_is_one   = 10;
+  bool                                         copy_all_packets                               = 11;
+  bool                                         copy_first_packet                              = 12;
+  bool                                         copy_when_tcp_flag_set                         = 13;
+  bool                                         custom_action_present                          = 14;
+  bool                                         meta_action_before_transposition               = 15;
+  bool                                         copy_after_tcp_fin_flag_set                    = 16;
+  bool                                         copy_after_tcp_rst_flag_set                    = 17;
+  uint32                                       table_id                                       = 18;
+  uint32                                       vport_id                                       = 19;
+  uint32                                       redirect_vport_id                              = 20;
+  uint32                                       ttl_one_redirect_vport_id                      = 21;
+  repeated GftHeaderGroupExactMatch            exact_matches                                  = 22;
+  repeated GftHeaderGroupTransposition         transpositions                                 = 23;
+}
+
+// GftExactMatchFlowEntryRequestMsg is used to do batched add or modify of GFT
+// exact match flow entry
+message GftExactMatchFlowEntryRequestMsg {
+  repeated GftExactMatchFlowEntrySpec    request = 1;    // batched request
+}
+
+// GftExactMatchFlowEntryStatus represents the current status of GFT exact match flow entry
+message GftExactMatchFlowEntryStatus {
+  fixed64    flow_entry_handle = 1;    // handle of the GFT exact match flow entry returned by HAL
+}
+
+// GftExactMatchFlowEntryResponse is response to GftExactMatchFlowEntrySpec
+message GftExactMatchFlowEntryResponse {
+  types.ApiStatus                api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  GftExactMatchFlowEntryStatus    status = 2;
+}
+
+// GftExactMatchFlowEntryResponseMsg is batched response to GftExactMatchFlowEntryRequestMsg
+message GftExactMatchFlowEntryResponseMsg {
+  repeated GftExactMatchFlowEntryResponse    response = 1;    // batched response
 }

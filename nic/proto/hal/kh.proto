@@ -183,3 +183,20 @@ message GftExactMatchProfileKeyHandle {
   }
 }
 
+// GftHeaderTranspositionProfileKeyHandle is used to operate on a GFT header
+// transposition profile either by its profile id or HAL allocated handle
+message GftHeaderTranspositionProfileKeyHandle {
+  oneof key_or_handle {
+    uint64     profile_id      = 1;   // App allocated unique profile id
+    fixed64    profile_handle  = 2;   // handle of the profile returned by HAL
+  }
+}
+
+// GftExactMatchFlowEntryKeyHandle is used to operate on a GFT exact match
+// flow entry either by its entry id or or HAL allocated handle
+message GftExactMatchFlowEntryKeyHandle {
+  oneof key_or_handle {
+    uint64     flow_entry_id     = 1;   // App allocated unique profile id
+    fixed64    flow_entry_handle = 2;   // handle of the profile returned by HAL
+  }
+}

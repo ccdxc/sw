@@ -216,15 +216,23 @@
 		TcpMatchFields
 		IcmpMatchFields
 		EncapMatchFields
-		GftHeaderGroupExactMatch
 		GftHeaderGroupTranspositionProfile
-		GftHeaderTranspositionProfile
+		GftHeaderTranspositionProfileSpec
+		GftHeaderTranspositionProfileRequestMsg
+		GftHeaderTranspositionProfileStatus
+		GftHeaderTranspositionProfileResponse
+		GftHeaderTranspositionProfileResponseMsg
 		UdpTranspositionFields
 		TcpTranspositionFields
 		IcmpTranspositionFields
 		EncapTranspositionFields
+		GftHeaderGroupExactMatch
 		GftHeaderGroupTransposition
-		GftExactMathFlowEntry
+		GftExactMatchFlowEntrySpec
+		GftExactMatchFlowEntryRequestMsg
+		GftExactMatchFlowEntryStatus
+		GftExactMatchFlowEntryResponse
+		GftExactMatchFlowEntryResponseMsg
 		LifQStateMapEntry
 		PktFilter
 		LifSpec
@@ -330,6 +338,8 @@
 		MulticastEntryKeyHandle
 		AclKeyHandle
 		GftExactMatchProfileKeyHandle
+		GftHeaderTranspositionProfileKeyHandle
+		GftExactMatchFlowEntryKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
 		L2SegmentStatus

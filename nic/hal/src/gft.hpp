@@ -14,12 +14,27 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
 
+using kh::GftExactMatchProfileKeyHandle;
+using kh::GftHeaderTranspositionProfileKeyHandle;
+using kh::GftExactMatchFlowEntryKeyHandle;
+
 using gft::GftExactMatchProfileSpec;
+using gft::GftExactMatchProfileRequestMsg;
 using gft::GftExactMatchProfileStatus;
 using gft::GftExactMatchProfileResponse;
-using kh::GftExactMatchProfileKeyHandle;
-using gft::GftExactMatchProfileRequestMsg;
 using gft::GftExactMatchProfileResponseMsg;
+
+using gft::GftHeaderTranspositionProfileSpec;
+using gft::GftHeaderTranspositionProfileRequestMsg;
+using gft::GftHeaderTranspositionProfileStatus;
+using gft::GftHeaderTranspositionProfileResponse;
+using gft::GftHeaderTranspositionProfileResponseMsg;
+
+using gft::GftExactMatchFlowEntrySpec;
+using gft::GftExactMatchFlowEntryRequestMsg;
+using gft::GftExactMatchFlowEntryStatus;
+using gft::GftExactMatchFlowEntryResponse;
+using gft::GftExactMatchFlowEntryResponseMsg;
 
 // bitmap of flags indicating headers of interest per profile
 #define GFT_HEADER_ETHERNET                        0x00000001
@@ -56,6 +71,8 @@ using gft::GftExactMatchProfileResponseMsg;
 #define GFT_HEADER_FIELD_OOB_VLAN                  0x00040000ULL
 #define GFT_HEADER_FIELD_OOB_TENANT_ID             0x00080000ULL
 #define GFT_HEADER_FIELD_GRE_PROTOCOL              0x00100000ULL
+
+namespace hal {
 
 typedef uint32_t vport_id_t;
 typedef uint32_t gft_profile_id_t;
@@ -252,6 +269,16 @@ typedef struct gft_exact_match_flow_entry_s {
 
     void                           *pd;                                // PD state, if any
 } __PACK__ gft_exact_match_flow_entry_t;
+
+// SVC CRUD APIs
+hal_ret_t gft_exact_match_profile_create(GftExactMatchProfileSpec& spec,
+                                         GftExactMatchProfileResponse *rsp);
+hal_ret_t gft_header_transposition_profile_create(GftHeaderTranspositionProfileSpec &spec,
+                                                  GftHeaderTranspositionProfileResponse *rsp);
+hal_ret_t gft_exact_match_flow_entry_create(GftExactMatchFlowEntrySpec &spec,
+                                            GftExactMatchFlowEntryResponse *rsp);
+
+}    // namespace hal
 
 #endif    // __GFT_HPP__
 

@@ -19,4 +19,18 @@ gft_exact_match_profile_create (GftExactMatchProfileSpec& spec,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+gft_header_transposition_profile_create (GftHeaderTranspositionProfileSpec &spec,
+                                         GftHeaderTranspositionProfileResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+gft_exact_match_flow_entry_create (GftExactMatchFlowEntrySpec &spec,
+                                   GftExactMatchFlowEntryResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
 }    // namespace hal

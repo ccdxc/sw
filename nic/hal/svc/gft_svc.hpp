@@ -12,12 +12,28 @@ using grpc::ServerContext;
 using grpc::Status;
 
 using gft::Gft;
+
+using kh::GftExactMatchProfileKeyHandle;
+using kh::GftHeaderTranspositionProfileKeyHandle;
+using kh::GftExactMatchFlowEntryKeyHandle;
+
 using gft::GftExactMatchProfileSpec;
+using gft::GftExactMatchProfileRequestMsg;
 using gft::GftExactMatchProfileStatus;
 using gft::GftExactMatchProfileResponse;
-using kh::GftExactMatchProfileKeyHandle;
-using gft::GftExactMatchProfileRequestMsg;
 using gft::GftExactMatchProfileResponseMsg;
+
+using gft::GftHeaderTranspositionProfileSpec;
+using gft::GftHeaderTranspositionProfileRequestMsg;
+using gft::GftHeaderTranspositionProfileStatus;
+using gft::GftHeaderTranspositionProfileResponse;
+using gft::GftHeaderTranspositionProfileResponseMsg;
+
+using gft::GftExactMatchFlowEntrySpec;
+using gft::GftExactMatchFlowEntryRequestMsg;
+using gft::GftExactMatchFlowEntryStatus;
+using gft::GftExactMatchFlowEntryResponse;
+using gft::GftExactMatchFlowEntryResponseMsg;
 
 class GftServiceImpl final : public Gft::Service {
 public:
@@ -25,6 +41,13 @@ public:
                            const GftExactMatchProfileRequestMsg *req,
                            GftExactMatchProfileResponseMsg *rsp) override;
 
+    Status GftHeaderTranspositionProfileCreate(ServerContext *context,
+                                    const GftHeaderTranspositionProfileRequestMsg *req,
+                                    GftHeaderTranspositionProfileResponseMsg *rsp) override;
+
+    Status GftExactMatchFlowEntryCreate(ServerContext *context,
+                                 const GftExactMatchFlowEntryRequestMsg *req,
+                                 GftExactMatchFlowEntryResponseMsg *rsp) override;
 };
 
 #endif    // __GFT_SVC_HPP__
