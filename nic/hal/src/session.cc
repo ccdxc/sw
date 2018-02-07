@@ -975,6 +975,11 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 session_init (void)
 {
+    // Disable aging when FTE is disabled
+    if (getenv("DISABLE_FTE")) {
+        return HAL_RET_OK;
+    }
+
     // wait until the periodic thread is ready
     while (!hal::periodic::periodic_thread_is_running()) {
         pthread_yield();
