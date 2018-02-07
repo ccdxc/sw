@@ -131,4 +131,8 @@ void capri_deparser_init(int tm_port_ingress, int tm_port_egress);
 void capri_program_hbm_table_base_addr(int stage_tableid, char *tablename,
                                        int stage, bool ingress);
 
+void capri_p4plus_recirc_init();
+
+void capri_timer_init();
+
 #endif

@@ -135,6 +135,20 @@ p4pd_capri_p4plus_table_init (void)
     return (HAL_RET_OK);
 }
 
+hal_ret_t
+p4pd_capri_p4plus_recirc_init (void)
+{
+    capri_p4plus_recirc_init();
+    return (HAL_RET_OK);
+}
+
+hal_ret_t
+p4pd_capri_timer_init (void)
+{
+    capri_timer_init();
+    return (HAL_RET_OK);
+}
+
 /**** END: Iris specific capri inits ****/
 
 //------------------------------------------------------------------------------
@@ -1200,6 +1214,8 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
     HAL_ASSERT(p4pd_capri_stats_region_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_p4plus_table_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_p4plus_recirc_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_timer_init() == HAL_RET_OK);
 
     /* Common asic pd init - Must be called after capri asic init */
     p4pd_asic_init(&p4pd_cfg);
