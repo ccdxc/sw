@@ -11,11 +11,9 @@
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
-#define	NUM_TO_VAL(num)		(1 << (num))
-
 const static uint32_t	kNvmeNumSQs		 = 3;
 const static uint32_t	kNvmeNumCQs		 = 3;
-const static uint32_t	kPvmNumSQs		 = 7;
+const static uint32_t	kPvmNumSQs		 = 11;
 const static uint32_t	kPvmNumCQs		 = 5;
 const static uint32_t	kPvmNumHQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumEQs		 = 1;
@@ -23,7 +21,7 @@ const static uint32_t	kPvmNumNvmeSQs		 = 1;
 const static uint32_t	kPvmNumR2nSQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumNvmeBeSQs	 = 4;
 const static uint32_t	kPvmNumSsdSQs	 	 = 4;
-const static uint32_t	kPvmNumSeqPdmaSQs	 = 3;
+      static uint32_t	kPvmNumSeqPdmaSQs	 = 3; // pdma test may modify at run time
 const static uint32_t	kPvmNumSeqR2nSQs	 = 3;
 const static uint32_t	kPvmNumSeqXtsSQs	 = 3;
 const static uint32_t	kPvmNumSeqCompSQs	 = 4;
@@ -205,6 +203,22 @@ void *queue_consume_entry(queues_t *queue, uint16_t *index) {
 }
 
 
+void queues_seq_pdma_num_set(uint64_t& num_pdma_queues) {
+
+    // Make adjustment for the number of seq SQs needed for PDMA testing.
+    // Note num_pdma_queues denotes 2 ^ num_pdma_queues
+    if (num_pdma_queues < kPvmNumSeqPdmaSQs) {
+        num_pdma_queues = kPvmNumSeqPdmaSQs;
+    }
+
+    // If more than 10 (i.e., 1024) queues are supported, be sure to
+    // adjust conf/hbm_mem.json to increase storage HBM space
+    if (num_pdma_queues >= kPvmNumSQs) {
+        num_pdma_queues = kPvmNumSQs - 1;
+    }
+
+    kPvmNumSeqPdmaSQs = num_pdma_queues;
+}
 
 int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
                     uint16_t total_rings, uint16_t host_rings) {
@@ -768,7 +782,7 @@ uint32_t get_pvm_ssd_sq(uint32_t offset) {
 }
 
 uint32_t get_pvm_seq_pdma_sq(uint32_t offset) {
-  assert(offset < NUM_TO_VAL(kPvmNumSeqPdmaSQs));
+  assert(offset < (uint32_t)NUM_TO_VAL(kPvmNumSeqPdmaSQs));
   return (pvm_seq_pdma_sq_base + offset);
 }
 

@@ -26,6 +26,8 @@ DEFINE_string(test_group, "", "Test group to run");
 DEFINE_uint64(poll_interval, 60, "Polling interval in seconds");
 DEFINE_uint64(long_poll_interval, 300,
               "Polling interval for longer running tests in seconds");
+DEFINE_uint64(num_pdma_queues, 10,
+              "number of queues for PDMA test (in power of 2)");
 
 bool run_unit_tests = false;
 bool run_nvme_tests = false;
@@ -34,6 +36,7 @@ bool run_local_e2e_tests = false;
 bool run_comp_tests = false;
 bool run_xts_tests = false;
 bool run_rdma_tests = false;
+bool run_pdma_tests = false;
 bool run_comp_perf_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
@@ -129,6 +132,10 @@ std::vector<tests::TestEntry> rdma_tests = {
   {&tests::test_run_rdma_lif_override, "E2E read LIF override", false},
 };
 
+std::vector<tests::TestEntry> pdma_tests = {
+  {&tests::test_run_seq_pdma_multi_xfers, "PDMA multiple transfers", false},
+};
+
 std::vector<tests::TestEntry> comp_perf_tests = {
   {&tests::compress_flat_host_buf_performance,
    "Flat buf compression performance", false},
@@ -156,6 +163,7 @@ int main(int argc, char**argv) {
   std::cout << "Input - hal_port: "   << FLAGS_hal_port 
             << ", test group: "       << FLAGS_test_group
             << ", polling interval: " << FLAGS_poll_interval 
+            << ", # PDMA queues (power of 2): " << FLAGS_num_pdma_queues 
             << std::endl;
 
   // Set the test group based on flags. Default is to allow all.
@@ -168,6 +176,7 @@ int main(int argc, char**argv) {
       run_xts_tests = true;
       run_rdma_tests = true;
       run_comp_perf_tests = true;
+      run_pdma_tests = false; // keep this lengthy disabled by default
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
   } else if (FLAGS_test_group == "nvme") {
@@ -184,8 +193,10 @@ int main(int argc, char**argv) {
       run_rdma_tests = true;
   } else if (FLAGS_test_group == "comp_perf") {
       run_comp_perf_tests = true;
+  } else if (FLAGS_test_group == "pdma") {
+      run_pdma_tests = true;
   } else {
-    printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma] "
+    printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma] "
            " [--poll_interval <yyy>] \n");
     return -1;
   }
@@ -267,6 +278,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(rdma_tests[i]);
     }
     printf("Added RDMA tests \n");
+  }
+
+  // Add pdma tests
+  if (run_pdma_tests) {
+    for (size_t i = 0; i < pdma_tests.size(); i++) {
+      test_suite.push_back(pdma_tests[i]);
+    }
+    printf("Added PDMA tests \n");
   }
 
   if (run_comp_perf_tests) {

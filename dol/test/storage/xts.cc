@@ -28,8 +28,6 @@ extern std::vector<TestCtx> xts_tests;
 }
 
 namespace tests {
-extern void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
-                        uint8_t ring, uint16_t index);
 
 int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
   uint32_t sector_size, uint32_t sec_num_start, uint16_t app_tag) {
