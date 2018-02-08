@@ -8,20 +8,20 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s2_t0_tcp_rx_k.h"
+#include "INGRESS_s3_t0_tcp_rx_k.h"
     
 struct phv_ p;
-struct s2_t0_tcp_rx_k_ k;
-struct s2_t0_tcp_rx_tcp_rtt_d d;
+struct s3_t0_tcp_rx_k_ k;
+struct s3_t0_tcp_rx_tcp_rtt_d d;
 
     
 %%
-    .param          tcp_rx_s3_bubble_start
+    .param          tcp_rx_s4_bubble_start
     .align
-tcp_rx_rtt_stage2_start:
+tcp_rx_rtt_start:
 
     CAPRI_CLEAR_TABLE0_VALID
-    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
     add             r6, r0, r0
@@ -171,7 +171,7 @@ m_ge_0_done:
     srl.c2      r4, r4,2
     sub.c2      r5, d.rttvar_us, r4
     tblwr       d.rttvar_us, r5
-    tblwr.c1    d.rtt_seq, k.to_s2_snd_nxt
+    tblwr.c1    d.rtt_seq, k.to_s3_snd_nxt
     addi.c1     r4, r0, TCP_RTO_MIN
     tblwr.c1    d.mdev_max_us, r4
     
@@ -195,7 +195,7 @@ first_rtt_measure:
     tblwr       d.mdev_max_us, d.rttvar_us
     
     /* tp->rtt.rtt_seq = tp->tx.snd_nxt; */
-    tblwr       d.rtt_seq, k.to_s2_snd_nxt
+    tblwr       d.rtt_seq, k.to_s3_snd_nxt
 first_rtt_measure_done:
     /* tp->rtt.srtt_us = max(1U, srtt) */
     addi        r5,r0,1
@@ -230,9 +230,12 @@ tcp_set_rto:
      * via rx2tx_extra_pending_reset_backoff
      */
 flow_rtt_process_done:
-    phvwr       p.rx2tx_extra_rcv_tsval, k.to_s2_rcv_tsval
+    phvwr       p.rx2tx_extra_rcv_tsval, k.to_s3_rcv_tsval
     
-    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_s3_bubble_start)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                        tcp_rx_s4_bubble_start,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_FC_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop
 

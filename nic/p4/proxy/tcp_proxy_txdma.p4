@@ -450,7 +450,6 @@ rcv_nxt, snd_wnd,ft_pi, rto, rx_flag, state, pending_ack_send,\
 saved_pending_ack_send\
 
 
-
 #define GENERATE_RX2TX_D                                                                               \
     modify_field(rx2tx_d.rsvd, rsvd);                                                                  \
     modify_field(rx2tx_d.cosA, cosA);                                                                  \

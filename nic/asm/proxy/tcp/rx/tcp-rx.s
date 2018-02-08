@@ -10,18 +10,17 @@
 #include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s1_t0_tcp_rx_k.h"
+#include "INGRESS_s2_t0_tcp_rx_k.h"
 
 struct phv_ p;
-struct s1_t0_tcp_rx_k_ k;
-struct s1_t0_tcp_rx_d d;
+struct s2_t0_tcp_rx_k_ k;
+struct s2_t0_tcp_rx_d d;
 
 %%
-    .param          tcp_rx_rtt_stage2_start
-    .param          tcp_rx_read_rnmdr_stage2_start
-    .param          tcp_rx_read_rnmpr_stage2_start
-    .param          tcp_rx_sack_stage2_start
-    .param          tcp_rx_l7_read_rnmdr_stage2_start
+    .param          tcp_rx_rtt_start
+    .param          tcp_rx_read_rnmdr_start
+    .param          tcp_rx_read_rnmpr_start
+    .param          tcp_rx_l7_read_rnmdr_start
     .align
 
     /*
@@ -30,12 +29,12 @@ struct s1_t0_tcp_rx_d d;
      * c6 = ooo in Rx Queue, skip some stages
      * c7 = Drop packet
      */
-tcp_rx_process_stage1_start:
+tcp_rx_process_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
     add             r6, r0, r0
 #endif
-    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
 
     tblwr           d.u.tcp_rx_d.alloc_descr, 1
     phvwri          p.common_phv_write_serq, 1
@@ -49,8 +48,8 @@ tcp_rx_process_stage1_start:
     sne             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
     seq.!c1         c1, k.common_phv_fin, 1
     seq.!c1         c1, k.s1_s2s_fin_sent, 1
-    sne             c2, d.u.tcp_rx_d.rcv_nxt, k.to_s1_seq
-    slt             c3, k.to_s1_snd_nxt, k.to_s1_ack_seq
+    sne             c2, d.u.tcp_rx_d.rcv_nxt, k.to_s2_seq
+    slt             c3, k.to_s2_snd_nxt, k.to_s2_ack_seq
     // disable timestamp checking for now
     setcf           c4, [c0]
     //slt             c4, r4, d.u.tcp_rx_d.ts_recent
@@ -62,7 +61,7 @@ tcp_rx_process_stage1_start:
      * s2s variable that has different meaning in s0-->s1. May not be 0
      * so overwrite it
      */
-    phvwr           p.s5_s2s_ooo_offset, r0
+    phvwr           p.s6_s2s_ooo_offset, r0
 
 tcp_rx_fast_path:
     /* tcp_store_ts_recent(tp)
@@ -75,7 +74,7 @@ tcp_rcv_nxt_update:
 bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, 16, k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd)
 bytes_rcvd_stats_update:
-    CAPRI_STATS_INC_UPDATE(k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s6_bytes_rcvd)
+    CAPRI_STATS_INC_UPDATE(k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
 bytes_rcvd_stats_update_end:
 
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
@@ -149,7 +148,7 @@ delack_engine_init_done:
     slt.c2          c3, d.u.tcp_rx_d.rto, d.u.tcp_rx_d.ato
     /*     tp->fto.ato = tp->fto.rto */
     tblwr.c3        d.u.tcp_rx_d.ato, d.u.tcp_rx_d.rto
-    phvwr.c3        p.s5_s2s_ato, d.u.tcp_rx_d.rto
+    phvwr.c3        p.s6_s2s_ato, d.u.tcp_rx_d.rto
     /* if (m > tp->fto.rto */
     slt.c2          c4, d.u.tcp_rx_d.rto, r1
     bal.c2          r7, tcp_incr_quickack
@@ -164,7 +163,7 @@ tcp_event_data_rcv_done:
     bcf             [c1], tcp_ecn_check_ce
 
     /* c1 = (ack_seq == snd_una) */
-    seq             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    seq             c1, k.to_s2_ack_seq, d.u.tcp_rx_d.snd_una
 
     /*
      * clear process_ack_flag if ack_seq != snd_una
@@ -213,7 +212,7 @@ table_read_setup_next:
     bcf             [c7], flow_rx_drop
 
 table_read_RTT:
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_rtt_start,
                         k.common_phv_qstate_addr, TCP_TCB_RTT_OFFSET,
                         TABLE_SIZE_512_BITS)
     /*
@@ -232,12 +231,12 @@ table_read_RNMDR_ALLOC_IDX:
     phvwr.!c3       p.common_phv_l7_proxy_type_redirect, 0
     //bcf             [!c3], table_read_RNMPR_ALLOC_IDX
     bcf             [!c3], tcp_rx_end
-    CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
+    CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_start,
                         RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 table_read_RNMPR_ALLOC_IDX:
     //seq             c3, k.s1_s2s_payload_len, r0
     //bcf             [c3], tcp_rx_end
-    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
+    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_start,
                         RNMPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 table_read_L7_RNDMR_ALLOC_IDX:
     seq             c1, k.common_phv_l7_proxy_en, 1
@@ -250,7 +249,7 @@ table_read_L7_RNDMR_ALLOC_IDX:
     seq             c2, k.common_phv_l7_proxy_type_redirect, 1
     phvwri.c2       p.app_header_table1_valid, 0
     phvwri.c2       p.common_phv_write_serq, 0
-    CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_stage2_start,
+    CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_start,
                         RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 
 tcp_rx_end:
@@ -260,8 +259,8 @@ tcp_rx_end:
 
 
 tcp_ack:
-    slt             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
-    slt             c2, k.to_s1_snd_nxt, k.to_s1_ack_seq
+    slt             c1, k.to_s2_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c2, k.to_s2_snd_nxt, k.to_s2_ack_seq
     sne             c3, d.u.tcp_rx_d.state, TCP_ESTABLISHED
     bcf             [c1 | c2 | c3], slow_tcp_ack
 
@@ -269,12 +268,12 @@ fast_tcp_ack:
     tblor           d.u.tcp_rx_d.flag, FLAG_SND_UNA_ADVANCED
 
 fast_tcp_update_wl:
-    tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s2_ack_seq
 fast_tcp_snd_una_update:
-    sub             r1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    sub             r1, k.to_s2_ack_seq, d.u.tcp_rx_d.snd_una
     tbladd          d.u.tcp_rx_d.bytes_acked, r1
     /* Update snd_una */
-    tblwr           d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_una, k.to_s2_ack_seq
 
     phvwr           p.common_phv_pending_txdma, 1
 
@@ -286,7 +285,7 @@ fast_tcp_in_ack_event:
 
 slow_tcp_ack:
     seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
-    sne             c2, k.to_s1_snd_nxt, k.to_s1_ack_seq
+    sne             c2, k.to_s2_snd_nxt, k.to_s2_ack_seq
     bcf             [c1 | c2], slow_tcp_ack_established
 
     /*
@@ -320,9 +319,9 @@ slow_tcp_ack_established:
      *  }
      *
      */
-    slt             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c1, k.to_s2_ack_seq, d.u.tcp_rx_d.snd_una
     sub.c1          r1, d.u.tcp_rx_d.snd_una, d.u.tcp_rx_d.max_window
-    slt.c1          c2, k.to_s1_ack_seq, r1
+    slt.c1          c2, k.to_s2_ack_seq, r1
     phvwr.c2        p.rx2tx_extra_pending_challenge_ack_send, 1
     bcf             [c2], flow_rx_process_done
     nop
@@ -336,7 +335,7 @@ slow_tcp_ack_established:
      *          goto invalid_ack;
      *
      */
-    slt             c1, k.to_s1_snd_nxt, k.to_s1_ack_seq
+    slt             c1, k.to_s2_snd_nxt, k.to_s2_ack_seq
     bcf             [c1], invalid_ack
     nop
 
@@ -367,7 +366,7 @@ no_rearm_rto:
      *  }
      *
      */
-    slt             c1, d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    slt             c1, d.u.tcp_rx_d.snd_una, k.to_s2_ack_seq
     tblor.c1        d.u.tcp_rx_d.flag, FLAG_SND_UNA_ADVANCED
 
     /* ts_recent update must be made after we are sure that the packet
@@ -440,11 +439,11 @@ tcp_ack_update_window:
     sll             r2, k.s1_s2s_window, d.u.tcp_rx_d.snd_wscale
 tcp_may_update_window:
     /* after(ack, snd_una) */
-    slt             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c1, k.to_s2_ack_seq, d.u.tcp_rx_d.snd_una
     /* after(ack_seq, snd_wl1) */
-    slt             c2, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
+    slt             c2, k.to_s2_seq, d.u.tcp_rx_d.snd_wl1
     /* ack_seq == snd_wl1 */
-    slt             c3, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
+    slt             c3, k.to_s2_seq, d.u.tcp_rx_d.snd_wl1
     /* nwin > snd_wnd */
     slt             c4, d.u.tcp_rx_d.snd_wnd, r2
     setcf           c5, [!c3 | !c4]
@@ -458,7 +457,7 @@ tcp_update_window:
     /* ack_ev_flags |= CA_ACK_WIN_UPDATE */
     ori             r1, r1, CA_ACK_WIN_UPDATE
     /* tcp_update_wl */
-    tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s1_seq
+    tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s2_seq
     /*
         if (tp->tx.snd_wnd != nwin) {
         tp->tx.snd_wnd = nwin;
@@ -497,10 +496,10 @@ tcp_update_window_bypass:
 slow_tcp_snd_una_update:
     /* tcp_snd_una_update */
     /* Increment bytes acked by the delta between ack_seq and snd_una */
-    sub             r3, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    sub             r3, k.to_s2_ack_seq, d.u.tcp_rx_d.snd_una
     tbladd          d.u.tcp_rx_d.bytes_acked, r3
     /* Update snd_una */
-    tblwr           d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_una, k.to_s2_ack_seq
 
 tcp_ecn_rcv_ecn_echo:
     /* ecn_flags & TCP_ECN_OK */
@@ -622,7 +621,7 @@ tcp_incr_quickack:
 
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
     jr              r7
-    phvwr           p.s5_s2s_ato, TCP_ATO_MIN
+    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
 
 #if 0
     // TODO : this needs to move to tx pipeline
@@ -684,7 +683,7 @@ tcp_enter_quickack_mode:
     tblwr           d.u.tcp_rx_d.pingpong, r0
     phvwr           p.common_phv_pingpong, d.u.tcp_rx_d.pingpong
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-    phvwr           p.s5_s2s_ato, TCP_ATO_MIN
+    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
     sne             c4, r7, r0
     jr.c4           r7
     add             r7, r0, r0
@@ -706,9 +705,9 @@ tcp_rx_slow_path:
 
     seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
-    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.{to_s1_seq}.wx
-    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.{to_s1_ack_seq}.wx
-    phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s1_flags
+    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.{to_s2_seq}.wx
+    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.{to_s2_ack_seq}.wx
+    phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s2_flags
 
     bcf             [c1], flow_rx_process_done
     setcf           c7, [!c0]
@@ -717,15 +716,15 @@ tcp_rx_slow_path:
 
     /* if (cp->seq != tp->rx.rcv_nxt) { */
     /* if pkt->seq > rcv_nxt, do ooo (SACK) processing */
-    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.to_s1_seq
+    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.to_s2_seq
     bcf             [c7], ooo_received
     /* if rcv_nxt > pkt->seq, retransmission, drop the packet */
-    slt             c7, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
+    slt             c7, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
 
     /*   if (!(before(cp->ack_seq, tp->tx.snd_nxt))) { */
-    sle             c1, k.to_s1_ack_seq, k.to_s1_snd_nxt
+    sle             c1, k.to_s2_ack_seq, k.to_s2_snd_nxt
     bcf             [!c1], slow_path
     nop
 
@@ -798,7 +797,7 @@ tcp_rx_slow_path_post_fin_handling:
     bcf             [c1],slow_path
     nop
 
-    seq             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    seq             c1, k.to_s2_ack_seq, d.u.tcp_rx_d.snd_una
     bal.!c1         r7, tcp_ack
     nop
     seq             c1, k.s1_s2s_payload_len, r0
@@ -819,7 +818,7 @@ tcp_queue_rcv:
      * r0 (0) is the rightmost (lowest) bit set
      * r2 is the leftmost (highest) bit set
      */
-    add             r1, k.to_s1_seq, k.s1_s2s_payload_len
+    add             r1, k.to_s2_seq, k.s1_s2s_payload_len
     sub             r1, r1, d.u.tcp_rx_d.rcv_nxt
     srl             r2, r1, TCP_OOO_CELL_SIZE_SHIFT
     and             r3, r1, TCP_OOO_CELL_SIZE_MASK
@@ -842,7 +841,7 @@ tcp_queue_rcv:
     sll             r3, r3, TCP_OOO_CELL_SIZE_SHIFT
     slt             c1, r1, r3
     add.c1          r1, r3, r0
-    phvwr           p.to_s5_payload_len, r1
+    phvwr           p.to_s6_payload_len, r1
     tbladd          d.u.tcp_rx_d.rcv_nxt, r1
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.common_phv_ooo_in_rx_q, 1
@@ -873,7 +872,7 @@ tcp_queue_rcv:
 ooo_bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
 ooo_bytes_rcvd_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s6_bytes_rcvd)
+    CAPRI_STATS_INC_UPDATE(r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
     b               bytes_rcvd_stats_update_end
     setcf           c6, [c0]
 
@@ -899,10 +898,10 @@ ooo_received:
      *
      * c7 = drop packet
      */
-    sub             r1, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
+    sub             r1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
     add             r2, r1, k.s1_s2s_payload_len
     add             r3, d.u.tcp_rx_d.rcv_nxt, TCP_OOO_NUM_CELLS * TCP_OOO_CELL_SIZE
-    add             r4, k.to_s1_seq, k.s1_s2s_payload_len
+    add             r4, k.to_s2_seq, k.s1_s2s_payload_len
     slt             c7, r3, r4
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
@@ -925,7 +924,7 @@ ooo_received:
 
     fsetv           r5, d.u.tcp_rx_d.ooo_rcv_bitmap, r4, r3
     tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r5
-    phvwr           p.s5_s2s_ooo_offset, r1
+    phvwr           p.s6_s2s_ooo_offset, r1
     tblwr           d.u.tcp_rx_d.ooo_in_rx_q, 1
     b               flow_rx_process_done
     phvwr           p.common_phv_ooo_rcv, 1

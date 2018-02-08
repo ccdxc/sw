@@ -9,11 +9,11 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s5_t1_tcp_rx_k.h"
+#include "INGRESS_s6_t1_tcp_rx_k.h"
 
 struct phv_ p;
-struct s5_t1_tcp_rx_k_ k;
-struct s5_t1_tcp_rx_write_arq_d d;
+struct s6_t1_tcp_rx_k_ k;
+struct s6_t1_tcp_rx_write_arq_d d;
 
 %%
     .align
@@ -31,15 +31,15 @@ dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
 
     /* Set the DMA_WRITE CMD for data */
-    add         r1, r0, k.to_s5_page
+    add         r1, r0, k.to_s6_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
     seq         c1, k.common_phv_write_tcp_app_hdr, 1
     bcf         [c1], dma_cmd_cpu_hdr
     nop
 
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s5_payload_len)
-    add         r6, r0, k.to_s5_payload_len
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s6_payload_len)
+    add         r6, r0, k.to_s6_payload_len
 
     b          dma_cmd_descr
     nop
@@ -63,19 +63,19 @@ dma_cmd_cpu_hdr:
     addi        r1, r0, 9000
     phvwr       p.cpu_hdr3_tcp_mss, r1.hx
     phvwri      p.cpu_hdr3_tcp_ws, 0
-    add         r1, r0, k.to_s5_page
+    add         r1, r0, k.to_s6_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr3_tcp_ws)
 
 dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */
-    add         r5, k.to_s5_descr, r0
+    add         r5, k.to_s6_descr, r0
     addi        r1, r5, PKT_DESC_AOL_OFFSET
 
 
-    phvwr       p.aol_A0, k.{to_s5_page}.dx
+    phvwr       p.aol_A0, k.{to_s6_page}.dx
 
-    sub         r4, r3, k.to_s5_page
+    sub         r4, r3, k.to_s6_page
     phvwr       p.aol_O0, r4.wx
 
     phvwr       p.aol_L0, r6.wx
@@ -93,7 +93,7 @@ dma_cmd_arq_slot:
     add         r6, r0, d.{arq_pindex}.wx 
 #endif
     CPU_RX_ENQUEUE(r5,
-                   k.to_s5_descr,
+                   k.to_s6_descr,
                    r6,
                    r4,
                    ring_entry_descr_addr,

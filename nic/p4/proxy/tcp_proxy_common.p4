@@ -18,6 +18,20 @@
 #define MTU_WIDTH                       8
 #define TCP_OOO_NUM_CELLS               64 // needs to match entry in tcp-constants.h
 
+#define TXDMA_PARAMS_BASE                                                                             \
+rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
+
+#define GENERATE_TXDMA_PARAMS_BASE(__struct)                                                           \
+    modify_field(__struct.rsvd, rsvd);                                                                 \
+    modify_field(__struct.cosA, cosA);                                                                 \
+    modify_field(__struct.cosB, cosB);                                                                 \
+    modify_field(__struct.cos_sel, cos_sel);                                                           \
+    modify_field(__struct.eval_last, eval_last);                                                       \
+    modify_field(__struct.host, host);                                                                 \
+    modify_field(__struct.total, total);                                                               \
+    modify_field(__struct.pid, pid);                                                                   \
+
+
 #define TX2RX_SHARED_STATE \
         prr_out                         : SEQ_NUMBER_WIDTH      ;\
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\

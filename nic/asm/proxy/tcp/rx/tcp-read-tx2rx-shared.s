@@ -19,7 +19,7 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
 %%
 
-    .param          tcp_rx_process_stage1_start
+    .param          tcp_rx_read_tls_stage0_start
     .align
 tcp_rx_read_shared_stage0_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
@@ -28,7 +28,7 @@ tcp_rx_read_shared_stage0_start:
 #endif
     /* Debug instruction */
     CAPRI_CLEAR_TABLE0_VALID
-    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
 
     tblwr           d.rx_ts, r4
     phvwr           p.common_phv_debug_dol, d.debug_dol
@@ -62,13 +62,13 @@ tcp_rx_read_shared_stage0_start:
     /* Setup the to-stage/stage-to-stage variables based
      * on the p42p4+ app header info
      */
-    phvwr           p.to_s1_flags, k.tcp_app_header_flags
-    phvwr           p.to_s1_seq, k.tcp_app_header_seqNo
-    phvwr           p.to_s1_ack_seq, k.tcp_app_header_ackNo
+    phvwr           p.to_s2_flags, k.tcp_app_header_flags
+    phvwr           p.to_s2_seq, k.tcp_app_header_seqNo
+    phvwr           p.to_s2_ack_seq, k.tcp_app_header_ackNo
     phvwr           p.cpu_hdr2_tcp_window, k.{tcp_app_header_window}.hx
 
     //phvwr        p.prr_out, d.prr_out
-    phvwr           p.to_s1_snd_nxt, d.snd_nxt
+    phvwr           p.to_s2_snd_nxt, d.snd_nxt
     phvwr           p.to_s2_snd_nxt, d.snd_nxt
     //phvwr        p.ecn_flags_tx, d.ecn_flags_tx
     phvwr           p.common_phv_ecn_flags, d.ecn_flags_tx
@@ -89,12 +89,12 @@ tcp_rx_read_shared_stage0_start:
     phvwr           p.s1_s2s_fin_sent, d.fin_sent
     tblwr           d.fin_sent, 0
 
-    phvwr           p.to_s5_payload_len, k.tcp_app_header_payload_len
+    phvwr           p.to_s6_payload_len, k.tcp_app_header_payload_len
     phvwr           p.s1_s2s_payload_len, k.tcp_app_header_payload_len
 
-    phvwr           p.to_s2_rcv_tsval, k.tcp_app_header_ts
+    phvwr           p.to_s3_rcv_tsval, k.tcp_app_header_ts
     phvwr           p.s1_s2s_rcv_tsval, k.tcp_app_header_ts
-    phvwr           p.to_s2_rcv_tsecr, k.tcp_app_header_prev_echo_ts
+    phvwr           p.to_s3_rcv_tsecr, k.tcp_app_header_prev_echo_ts
     CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
 
 read_l7_proxy_cfg:
@@ -104,9 +104,9 @@ read_l7_proxy_cfg:
     phvwri.c2   p.common_phv_l7_proxy_type_redirect, 1
 
 table_read_RX:
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                tcp_rx_process_stage1_start, k.p4_rxdma_intr_qstate_addr,
-                TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
+                tcp_rx_read_tls_stage0_start, d.tls_stage0_ring0_addr,
+                TABLE_SIZE_32_BITS)
 flow_terminate:
     nop.e
     nop

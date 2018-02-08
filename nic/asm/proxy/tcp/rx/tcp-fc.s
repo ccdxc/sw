@@ -9,11 +9,11 @@
 #include "tcp-constants.h"  
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s4_t0_tcp_rx_k.h"
+#include "INGRESS_s5_t0_tcp_rx_k.h"
     
 struct phv_ p;
-struct s4_t0_tcp_rx_k_ k;
-struct s4_t0_tcp_rx_tcp_fc_d d;
+struct s5_t0_tcp_rx_k_ k;
+struct s5_t0_tcp_rx_tcp_fc_d d;
     
 %%
     .param          tcp_rx_write_serq_stage_start
@@ -22,7 +22,7 @@ struct s4_t0_tcp_rx_tcp_fc_d d;
     .param          ARQRX_QIDXR_BASE
     .align  
 tcp_rx_fc_stage_start:
-    CAPRI_SET_DEBUG_STAGE4_7(p.s5_s2s_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE4_7(p.s6_s2s_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
     sne         c1, k.common_phv_write_arq, r0
     bcf         [c1], tcp_cpu_rx
 
@@ -39,13 +39,13 @@ tcp_rx_fc_stage_start:
     sne         c2, k.common_phv_ooo_in_rx_q, r0
     bcf         [!c1 & !c2], flow_fc_process_done
 
-    tblwr.c1    d.page, k.to_s4_page
-    tblwr.c1    d.descr, k.to_s4_descr
-    tblwr.c1    d.l7_descr, k.to_s4_l7_descr
+    tblwr.c1    d.page, k.to_s5_page
+    tblwr.c1    d.descr, k.to_s5_descr
+    tblwr.c1    d.l7_descr, k.to_s5_l7_descr
 
-    phvwr.c2    p.to_s5_descr, d.descr
-    phvwr.c2    p.to_s5_page, d.page
-    phvwr.c2    p.s5_t2_s2s_l7_descr, d.l7_descr
+    phvwr.c2    p.to_s6_descr, d.descr
+    phvwr.c2    p.to_s6_page, d.page
+    phvwr.c2    p.s6_t2_s2s_l7_descr, d.l7_descr
 
 flow_fc_process_done:   
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,

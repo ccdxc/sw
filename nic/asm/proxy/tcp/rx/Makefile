@@ -29,7 +29,7 @@ NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
 
 SRC_FILES := \
-    $(SRC_DIR)/tcp-rx-s3-bubble.s \
+    $(SRC_DIR)/tcp-rx-s4-bubble.s \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
     $(SRC_DIR)/tcp-read-idx.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \
@@ -39,6 +39,7 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-rpage-alloc.s \
     $(SRC_DIR)/tcp-l7-rdesc-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \
+    $(SRC_DIR)/tcp-rx-read-tls-stage0.s \
     $(SRC_DIR)/tcp-rx.s \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \

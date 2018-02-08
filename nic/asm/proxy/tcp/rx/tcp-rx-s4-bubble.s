@@ -9,17 +9,17 @@
 #include "tcp-constants.h"  
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s3_t0_tcp_rx_k.h"
+#include "INGRESS_s4_t0_tcp_rx_k.h"
     
 struct phv_ p;
-struct s3_t0_tcp_rx_k_ k;
+struct s4_t0_tcp_rx_k_ k;
     
 %%
     .align
     .param          tcp_rx_fc_stage_start
 
-tcp_rx_s3_bubble_start:
-    CAPRI_SET_DEBUG_STAGE0_3(p.s5_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
+tcp_rx_s4_bubble_start:
+    CAPRI_SET_DEBUG_STAGE4_7(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_rx_fc_stage_start,
                         k.common_phv_qstate_addr,

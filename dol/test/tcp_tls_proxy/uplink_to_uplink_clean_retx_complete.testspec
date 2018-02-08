@@ -189,26 +189,38 @@ packets:
                 window  : 1000
                 flags   : ack
 
-trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT1
-            port    : ref://testcase/config/src/endpoint/intf/ports
-        - packet:
-            object  : ref://testcase/packets/id=PKT2
-            port    : ref://testcase/config/src/endpoint/intf/ports
-        - packet:
-            object  : ref://testcase/packets/id=PKT1_OUT_ACK
-            port    : ref://testcase/config/dst/endpoint/intf/ports
-        - packet:
-            object  : ref://testcase/packets/id=PKT2_OUT_ACK
-            port    : ref://testcase/config/dst/endpoint/intf/ports
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1
+                    port    : ref://testcase/config/src/endpoint/intf/ports
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2
+                    port    : ref://testcase/config/src/endpoint/intf/ports
 
-expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT1_OUT
-            port    : ref://testcase/config/dst/endpoint/intf/ports
-        - packet:
-            object  : ref://testcase/packets/id=PKT2_OUT
-            port    : ref://testcase/config/dst/endpoint/intf/ports
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1_OUT
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2_OUT
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1_OUT_ACK
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+        expect:
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT2_OUT_ACK
+                    port    : ref://testcase/config/dst/endpoint/intf/ports
+        expect:
