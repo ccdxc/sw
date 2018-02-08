@@ -65,7 +65,7 @@ def hal_init():
 
 def run_hntap():
     log = open(hntap_log, "w")
-    cmd = ['../bazel-bin/nic/e2etests/nic_proxy-e2etest_hntap', '-n', '5']
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_hntap', '-n', '5']
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p

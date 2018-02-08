@@ -85,7 +85,7 @@ def set_proxy_tls_bypass_mode(bypass_mode):
 
 def run_hntap(tcp_port):
     log = open(hntap_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/nic_proxy-e2etest_hntap', '-p', tcp_port]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_hntap', '-p', tcp_port]
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p

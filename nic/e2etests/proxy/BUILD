@@ -139,3 +139,28 @@ cc_binary(
         "//nic/model_sim:model_client",
     ],
 )
+
+
+cc_binary(
+    name = "nic_proxy-e2etest_hntap",
+    srcs = [
+        "proxy_hntap.cc"
+    ],
+    deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        # PI
+        "//nic/e2etests:driver",
+        "//nic/e2etests:hntap-lib",
+        "//nic/e2etests/proxy:common_includes",
+        "//nic/e2etests:hntap_common_includes",
+        "//nic/e2etests:e2etest-lib",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        "//nic/utils/host_mem:host_mem",
+        "//nic:openssl-native",
+
+        # PD
+        "//nic/model_sim:model_client",
+    ],
+)
+
