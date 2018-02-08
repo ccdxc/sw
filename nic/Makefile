@@ -153,8 +153,7 @@ endif
 
 post-make:
 	mkdir -p obj/cano
-	mv obj/asm_bin/*.cano obj/cano 2>/dev/null || :
-	mv obj/p4plus_bin/*.cano obj/cano 2>/dev/null || :
+	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
 SNORT_EXPORT_DIR = $(TOPDIR_ABS)/hal/third-party/snort3/export
@@ -245,7 +244,6 @@ gft: capsim-master sdk
 	$(MAKE) pd_gft
 	$(MAKE) pd_stub
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
-	mv obj/gft/asm_bin/*.cano obj/cano 2>/dev/null || :
 	$(MAKE) post-make
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
