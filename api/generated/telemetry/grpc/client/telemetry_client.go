@@ -304,7 +304,7 @@ type grpcObjFlowExportPolicyV1FlowExportPolicy struct {
 }
 
 func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Create(ctx context.Context, in *telemetry.FlowExportPolicy) (*telemetry.FlowExportPolicy, error) {
-	a.logger.DebugLog("msg", "recieved call", "object", "FlowExportPolicy", "oper", "create")
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "create")
 	if in == nil {
 		return nil, errors.New("invalid input")
 	}
@@ -371,7 +371,7 @@ func (a *grpcObjFlowExportPolicyV1FlowExportPolicy) Watch(ctx context.Context, o
 		for {
 			r, err := wstream.Recv()
 			if err != nil {
-				a.logger.ErrorLog("msg", "error on recieve", "error", err)
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
 				close(lw.OutCh)
 				return
 			}

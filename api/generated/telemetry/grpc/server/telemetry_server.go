@@ -473,7 +473,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 						Type:   string(ev.Type),
 						Object: in,
 					}
-					l.DebugLog("msg", "recieved FlowExportPolicy watch event from KV", "type", ev.Type)
+					l.DebugLog("msg", "received FlowExportPolicy watch event from KV", "type", ev.Type)
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
