@@ -141,7 +141,7 @@ def TestCaseVerify(tc):
     ipseccbqq_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi - rnmdr.pi > 2):
+    if (rnmdr_cur.pi - rnmdr.pi > 4):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
@@ -152,7 +152,7 @@ def TestCaseVerify(tc):
     brq_cur.GetMeta()
     brq_cur.GetRingEntries([brq.pi, brq_cur.pi])
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    if (brq_cur.pi != (brq.pi+1)):
+    if (brq_cur.pi != (brq.pi+2)):
         print("brq pi/ci not as expected")
         #needs fix in HAL and support in model/p4+ for this check to work/pass
         return False
@@ -182,13 +182,13 @@ def TestCaseVerify(tc):
         return False
 
     # 8. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
+    if (tnmdr_cur.pi != tnmdr.pi+2):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
     print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
 
     # 9. Verify PI for TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi+1):
+    if (tnmpr_cur.pi != tnmpr.pi+2):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))

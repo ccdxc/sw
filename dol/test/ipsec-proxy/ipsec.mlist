@@ -129,6 +129,16 @@ modules:
         iterate :
             - flow: filter://type=IPV4
     - module:
+        name    : DECRYPT_PKT_TO_IPSECCBQ_REKEY_SIMULTANEOUS
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : decrypt_ipsec_rekey_simultaneous
+        spec    : decrypt_ipsec_rekey_simultaneous.testspec 
+        ignore  : False 
+        rtl     : False 
+        iterate :
+            - flow: filter://type=IPV4
+    - module:
         name    : DECRYPT_LT_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy
