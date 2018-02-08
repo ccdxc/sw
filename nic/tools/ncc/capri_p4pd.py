@@ -107,7 +107,8 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
                             ' * This file is generated from P4 program. Any changes made to this file will\n' + \
                             ' * be lost.\n' + \
                             ' */\n\n' + \
-                            '#ifndef __' + prog_name.upper() + 'P4PD_TABLE_H__\n'
+                            '#ifndef __' + prog_name.upper() + 'P4PD_TABLE_H__\n' + \
+                            '#define __' + prog_name.upper() + 'P4PD_TABLE_H__\n'
                     of.write(file_prologue)
                     of.write('\n')
                     of.write('\n')
@@ -118,6 +119,20 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
                         of.write(code_str)
                     code_str = '} ' + prog_name + 'p4pd_table_range_en;\n\n'
                     of.write(code_str)
+                    ####
+                    code_str = 'typedef enum '+ prog_name + 'p4pd_pipeline_dir_range_ {\n'
+                    of.write(code_str)
+                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_MIN = 0,\n'
+                    of.write(code_str)
+                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_INGRESS = ' + 'P4_' + prog_name.upper() + 'PIPE_GRESS_MIN,\n'
+                    of.write(code_str)
+                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_EGRESS,\n'
+                    of.write(code_str)
+                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_MAX,\n'
+                    of.write(code_str)
+                    code_str = '} ' + prog_name + 'p4pd_pipeline_dir_range_en;\n\n'
+                    of.write(code_str)
+                    ####
                     code_extern_funcs = \
                     '#define _P4TBL_NAME_MAX_LEN        80\n' + \
                     'extern void p4pd_' + prog_name + 'prep_p4tbl_sw_struct_sizes(void);\n' + \
