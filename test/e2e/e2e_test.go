@@ -77,7 +77,7 @@ func TestE2E(t *testing.T) {
 // TestVCHBasic tests basic vchub functionality
 func (s *e2eSuite) TestVCHBasic(c *C) {
 	// make sure vchub has the smart nics
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		nics, err := s.vchubGetNics()
 		if err == nil && len(nics) >= 1 {
 			return true, nil
@@ -91,7 +91,7 @@ func (s *e2eSuite) TestVCHBasic(c *C) {
 	log.Infof("VM create Response: %+v", resp)
 
 	// verify VM got created
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		return s.vchubNwifExists("10.1.1.1", hostMac), nil
 	}, "Error getting vm nwifs", "50ms", "10s")
 
@@ -100,7 +100,7 @@ func (s *e2eSuite) TestVCHBasic(c *C) {
 	c.Assert(err, IsNil)
 
 	// verify vm was removed
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		return !s.vchubNwifExists("10.1.1.1", ""), nil
 	}, "VM nwif is not deleted", "50ms", "10s")
 }

@@ -235,7 +235,7 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		if cfg.Spec.Mode == nmd.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
@@ -248,7 +248,7 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 
 	var naplesCfg nmd.Naples
 
-	f2 := func() (bool, []interface{}) {
+	f2 := func() (bool, interface{}) {
 		err := netutils.HTTPGet(nm.GetNMDUrl()+"/", &naplesCfg)
 		if err != nil {
 			log.Errorf("Failed to get naples config, err:%+v", err)
@@ -276,7 +276,7 @@ func TestNaplesRestartClassicMode(t *testing.T) {
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
@@ -308,7 +308,7 @@ func TestNaplesManagedMode(t *testing.T) {
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to start NMD in managed mode", nm)
 
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 
 		// Verify mode
 		cfg := nm.GetNaplesConfig()
@@ -360,7 +360,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
@@ -388,7 +388,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	var err error
 	var resp NaplesConfigResp
 
-	f2 := func() (bool, []interface{}) {
+	f2 := func() (bool, interface{}) {
 		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
@@ -398,7 +398,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	}
 	AssertEventually(t, f2, "Failed to post the naples config")
 
-	f3 := func() (bool, []interface{}) {
+	f3 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
@@ -464,7 +464,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 		},
 	}
 
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
@@ -474,7 +474,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 	}
 	AssertEventually(t, f1, "Failed to post the naples config")
 
-	f2 := func() (bool, []interface{}) {
+	f2 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
@@ -532,7 +532,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 		},
 	}
 
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
@@ -541,7 +541,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 	}
 	AssertEventually(t, f1, "Failed to post the naples config")
 
-	f2 := func() (bool, []interface{}) {
+	f2 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
@@ -604,7 +604,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 		},
 	}
 
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
@@ -614,7 +614,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 	}
 	AssertEventually(t, f1, "Failed to post the naples config")
 
-	f2 := func() (bool, []interface{}) {
+	f2 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)

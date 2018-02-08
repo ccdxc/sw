@@ -492,7 +492,7 @@ func TestRPCBalancing(t *testing.T) {
 	testClient := NewTestClient(client.ClientConn)
 
 	// Wait until grpc connects to both the servers
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return b.NumUpConns() == 2, nil
 	}, "Unexpected up servers")
 

@@ -890,7 +890,7 @@ func getExpectedNICs(t *testing.T) map[string]*orch.SmartNIC {
 }
 
 func verifyVCPSnics(t *testing.T, poll, timeOut string) {
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		nicMap := getExpectedNICs(t)
 		return checkSmartNICList(nicMap) == nil, nil
 	}, "verifyVCPSnics", poll, timeOut)
@@ -1095,7 +1095,7 @@ func TestVCPNwIF(t *testing.T) {
 	}
 
 	v1.Run()
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		ifMap := getExpectedNwIFs(t)
 		return checkNwIFList(ifMap) == nil, nil
 	}, "Default NwIFs", "50ms", "5s")

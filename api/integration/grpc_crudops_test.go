@@ -422,12 +422,12 @@ func TestCrudOps(t *testing.T) {
 
 	// ===== Validate Watch Events received === //
 	AssertEventually(t,
-		func() (bool, []interface{}) { return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil },
+		func() (bool, interface{}) { return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil },
 		"failed to receive all watch events",
 		"10ms",
 		"9s")
 	AssertEventually(t,
-		func() (bool, []interface{}) { return len(oExpectWatchEvents) == len(oRcvWatchEvents), nil },
+		func() (bool, interface{}) { return len(oExpectWatchEvents) == len(oRcvWatchEvents), nil },
 		"failed to receive all watch events",
 		"10ms",
 		"9s")

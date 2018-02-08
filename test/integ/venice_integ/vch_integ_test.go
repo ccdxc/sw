@@ -56,7 +56,7 @@ func (vt *vchSuite) SetUp(c *C, numAgents int) {
 
 	vt.vcp = vcprobe.NewVCProbe(u, vt.storeCh)
 
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		if vt.vcp.Start() == nil {
 			vt.vcp.Run()
 			return true, nil

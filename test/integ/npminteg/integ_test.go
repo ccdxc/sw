@@ -137,7 +137,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 
 	// verify agent receives the network
 	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, []interface{}) {
+		AssertEventually(c, func() (bool, interface{}) {
 			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
@@ -152,7 +152,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, []interface{}) {
+		AssertEventually(c, func() (bool, interface{}) {
 			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
@@ -174,14 +174,14 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 
 	// wait till agent has the network
 	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, []interface{}) {
+		AssertEventually(c, func() (bool, interface{}) {
 			ometa := api.ObjectMeta{Tenant: "default", Name: "testNetwork"}
 			_, nerr := ag.nagent.NetworkAgent.FindNetwork(ometa)
 			return (nerr == nil), nil
@@ -230,7 +230,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// wait for all endpoints to be propagated to other agents
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
-			found := CheckEventually(func() (bool, []interface{}) {
+			found := CheckEventually(func() (bool, interface{}) {
 				return (ag.datapath.GetEndpointCount() == it.numAgents), nil
 			}, "10ms", it.pollTimeout())
 			if !found {
@@ -286,7 +286,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
-			if !CheckEventually(func() (bool, []interface{}) {
+			if !CheckEventually(func() (bool, interface{}) {
 				return (ag.datapath.GetEndpointCount() == 0), nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
@@ -305,7 +305,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// delete the network
 	err = it.ctrler.Watchr.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr != nil), nil
 	}, "Network still found in statemgr")

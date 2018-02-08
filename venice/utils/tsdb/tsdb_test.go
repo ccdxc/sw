@@ -143,7 +143,7 @@ func TestAddPoints(t *testing.T) {
 	}
 
 	// verify vm was removed
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return fc.validate("table2", pts), nil
 	}, "add points not received on transmitter if", "1ms", "1s")
 }
@@ -362,7 +362,7 @@ func TestBatchCollector(t *testing.T) {
 		Fields: map[string]interface{}{"rxBytes": int64(7743), "txBytes": int64(6644), "rxPackets": int64(76),
 			"txPackets": int64(988), "cpuUtil": 34.1, "up": true, "user": "admin"}}}
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return ts.metricServer.validate("endpoint", pts), nil
 	}, "add points not received on collector", "100ms", "1s")
 
@@ -373,7 +373,7 @@ func TestBatchCollector(t *testing.T) {
 	pts = []Point{{Tags: map[string]string{"Tenant": "foo", "Namespace": "bar", "Name": "nicagent-fakename"},
 		Fields: map[string]interface{}{"networkLatency": int64(100)}}}
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return ts.metricServer.validate("latencyStats", pts), nil
 	}, "add points not received on collector", "100ms", "1s")
 

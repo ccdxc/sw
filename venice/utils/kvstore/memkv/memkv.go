@@ -57,6 +57,9 @@ type Cluster struct {
 // db of clusters
 var clusters = make(map[string]*Cluster)
 
+// lock to protect access to clusters
+var globalLock sync.Mutex
+
 // NewMemKv creates a new in memory kv store
 func NewMemKv(cluster []string, codec runtime.Codec) (kvstore.Interface, error) {
 	// create the client
@@ -87,6 +90,9 @@ func NewCluster() *Cluster {
 
 // getCluster gets a cluster by url
 func getCluster(cluster []string) *Cluster {
+	globalLock.Lock()
+	defer globalLock.Unlock()
+
 	// see if we have a cluster already
 	cl, ok := clusters[fmt.Sprintf("%v", cluster)]
 	if ok {

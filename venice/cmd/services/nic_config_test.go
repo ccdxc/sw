@@ -215,7 +215,7 @@ func TestNICConfig(t *testing.T) {
 					nm := ag.GetNMD()
 
 					// Validate default classic mode
-					f1 := func() (bool, []interface{}) {
+					f1 := func() (bool, interface{}) {
 
 						cfg := nm.GetNaplesConfig()
 						if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
@@ -245,7 +245,7 @@ func TestNICConfig(t *testing.T) {
 					}
 
 					// Verify the Naples received the config and switched to Managed Mode
-					f4 := func() (bool, []interface{}) {
+					f4 := func() (bool, interface{}) {
 
 						// validate the mode is managed
 						cfg := nm.GetNaplesConfig()
@@ -284,7 +284,7 @@ func TestNICConfig(t *testing.T) {
 					AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("1s"), string("60s"))
 
 					// Validate SmartNIC object state is updated on Venice
-					f5 := func() (bool, []interface{}) {
+					f5 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
 							Name: nodeID,
@@ -301,7 +301,7 @@ func TestNICConfig(t *testing.T) {
 					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
 
 					// Validate Workload Node object is created
-					f6 := func() (bool, []interface{}) {
+					f6 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
 							Name: nodeID,

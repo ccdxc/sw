@@ -1,0 +1,27 @@
+
+# Create database
+curl -i -XPOST 'http://localhost:7086/create?db=mydb'
+
+# write points
+curl -i -XPOST 'http://localhost:7086/write?db=mydb' --data-binary 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'
+
+# Query
+curl -sG 'http://localhost:7086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT * FROM cpu_load_short" | python -mjson.tool
+
+# Information about the cluster
+curl -s http://node1:7086/info | python -mjson.tool
+
+
+# ---------------------- kv store api -------------------
+
+# List
+curl -sG 'http://localhost:7086/kv/list?table=test' | python -mjson.tool
+
+# Put
+curl -s -XPOST 'http://localhost:7086/kv/put?table=test' --data-binary 'testKey1=testVal1'
+
+# Delete
+curl -s -XPOST 'http://localhost:7086/kv/delete?table=test' --data-binary 'testKey3'
+
+# Get
+curl -sG 'http://localhost:7086/kv/get?table=test' --data-urlencode "keys=testKey1" | python -mjson.tool

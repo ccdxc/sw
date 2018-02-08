@@ -212,7 +212,7 @@ func (h *halCtlSuite) TestVrfGet(c *C) {
 		Request: []*halproto.VrfGetRequest{req},
 	}
 
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		resp, err = h.getVrfs(vrfGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get VRFs")
@@ -234,7 +234,7 @@ func (h *halCtlSuite) TestL2SegmentGet(c *C) {
 		Request: []*halproto.L2SegmentGetRequest{req},
 	}
 
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		resp, err = h.getL2Segments(l2SegGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get L2Segments")

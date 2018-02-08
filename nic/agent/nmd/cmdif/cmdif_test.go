@@ -250,21 +250,21 @@ func TestCmdClientWatch(t *testing.T) {
 	cl.nmd.SetSmartNIC(&nic)
 
 	// verify client got the nic
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		ag.Lock()
 		defer ag.Unlock()
 		n := ag.nicAdded[objectKey(nic.ObjectMeta)]
 		return (n != nil && n.Name == nic.Name), nil
 	}, "NIC add not found in agent")
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		ag.Lock()
 		defer ag.Unlock()
 		n := ag.nicUpdated[objectKey(nic.ObjectMeta)]
 		return (n != nil && n.Name == nic.Name), nil
 	}, "NIC update not found in agent")
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		ag.Lock()
 		defer ag.Unlock()
 		n := ag.nicDeleted[objectKey(nic.ObjectMeta)]
@@ -327,21 +327,21 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	}()
 
 	// verify client got the nic
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		ag.Lock()
 		defer ag.Unlock()
 		n := ag.nicAdded[objectKey(nic.ObjectMeta)]
 		return (n != nil && n.Name == nic.Name), nil
 	}, "NIC add not found in agent")
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		ag.Lock()
 		defer ag.Unlock()
 		n := ag.nicUpdated[objectKey(nic.ObjectMeta)]
 		return (n != nil && n.Name == nic.Name), nil
 	}, "NIC update not found in agent")
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		ag.Lock()
 		defer ag.Unlock()
 		n := ag.nicDeleted[objectKey(nic.ObjectMeta)]

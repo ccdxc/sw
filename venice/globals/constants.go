@@ -66,6 +66,8 @@ const (
 	InfluxHTTPPort   = "8086"
 	InfluxAdminPort  = "8083"
 	CollectorAPIPort = "10777"
+	CitadelRPCPort   = "7000"
+	CitadelHTTPPort  = "7086"
 
 	// KV Store keys
 	RootPrefix = "/venice"

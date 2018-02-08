@@ -68,7 +68,7 @@ func TestLeaderService(t *testing.T) {
 	go l.Start()
 	defer l.Stop()
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return l.Leader() == id, []interface{}{"Unexpected leader: ", l.Leader()}
 	}, "Failed to become leader", "10ms", "2s")
 
@@ -83,7 +83,7 @@ func TestLeaderService(t *testing.T) {
 	}
 
 	l.Stop()
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return l.Leader() == "", []interface{}{l.Leader()}
 	}, "Failed to give up leadership", "10ms", "1s")
 
@@ -112,13 +112,13 @@ func TestLeaderServiceWithObserverError(t *testing.T) {
 	go l.Start()
 	defer l.Stop()
 
-	AssertConsistently(t, func() (bool, []interface{}) {
+	AssertConsistently(t, func() (bool, interface{}) {
 		return l.Leader() != id, nil
 	}, "Became leader when it shouldn't", "10ms", "100ms")
 
 	m1.ForceError = false
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return l.Leader() == id, nil
 	}, "Failed to become leader", "10ms", "2s")
 }
@@ -136,7 +136,7 @@ func TestLeaderRegisterService(t *testing.T) {
 	go l.Start()
 	defer l.Stop()
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return l.Leader() == id, nil
 	}, "Failed to become leader", "10ms", "2s")
 
@@ -153,7 +153,7 @@ func TestLeaderRegisterService(t *testing.T) {
 
 	l.Stop()
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return l.Leader() == "", nil
 	}, "Failed to give up leadership", "10ms", "2s")
 

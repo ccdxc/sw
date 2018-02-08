@@ -102,7 +102,7 @@ func TestApiWatcher(t *testing.T) {
 	AssertEquals(t, "testTenant", tn.Name, "tenant names did not match")
 
 	// verify the tenant got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return terr == nil, nil
 	}, "Tenant not found in statemgr")
@@ -127,7 +127,7 @@ func TestApiWatcher(t *testing.T) {
 	Assert(t, (ns.Spec.IPv4Subnet == "10.1.1.0/24"), "Got invalid network", ns)
 
 	// verify network got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
@@ -158,7 +158,7 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating nw if")
 
 	// verify endpoint got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, perr := stateMgr.FindEndpoint("testTenant", "test-nwif")
 		return (perr == nil), nil
 	}, "Endpoint not found in statemgr")
@@ -171,7 +171,7 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting nw if")
 
 	// verify endpoint is gone
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, perr := stateMgr.FindEndpoint("testTenant", "test-nwif")
 		return (perr != nil), nil
 	}, "Endpoint still found in statemgr")
@@ -181,7 +181,7 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting network")
 
 	// verify network is gone
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, nerr := stateMgr.FindNetwork("testTenant", "test")
 		return (nerr != nil), nil
 	}, "Endpoint still found in statemgr")

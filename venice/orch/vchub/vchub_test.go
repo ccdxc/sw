@@ -62,7 +62,7 @@ func TestVCHub(t *testing.T) {
 	vcHubClient := orch.NewOrchApiClient(conn)
 	filter := &orch.Filter{}
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		nicList, err := vcHubClient.ListSmartNICs(context.Background(), filter)
 		if err != nil {
 			return false, nil

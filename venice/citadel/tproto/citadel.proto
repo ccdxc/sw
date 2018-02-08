@@ -1,0 +1,181 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+// this file contains the proto definitions for citadel inter node messages
+
+syntax = "proto3";
+
+package tproto;
+
+// Points write request
+message PointsWriteReq {
+    string ClusterType = 1;  // cluster type
+    uint64 ReplicaID   = 2;  // replica id
+    uint64 ShardID     = 3;  // shard id
+    string Database    = 4;  // database name
+    string Points      = 5;  // points to write
+}
+
+// status resp
+message StatusResp {
+    string Status = 1; // response status
+}
+
+// replica information
+message ReplicaInfo {
+    string ClusterType = 1;  // cluster type
+    uint64 ReplicaID   = 2;  // replica id
+    uint64 ShardID     = 3;  // shard this replica belongs to
+    bool IsPrimary     = 4;  // is this a primary replica
+    string NodeUUID    = 5;  // node id
+    string NodeURL     = 6; // node URL
+}
+
+// create/Update shard request
+message ShardReq {
+    string ClusterType = 1;  // cluster type
+    uint64 ReplicaID   = 2;  // replica id
+    uint64 ShardID     = 3;  // shard this replica belongs to
+    bool IsPrimary     = 4;  // is this a primary replica
+    repeated ReplicaInfo Replicas = 5; // other replicas in this shard
+}
+
+message DatabaseReq {
+    string ClusterType = 1;  // cluster type
+    uint64 ReplicaID   = 2;  // replica id
+    uint64 ShardID     = 3;  // shard id
+    string Database    = 4;  // database name
+}
+
+// execute query req
+message QueryReq {
+    string ClusterType = 1;  // cluster type
+    uint64 ReplicaID   = 2;  // replica id
+    uint64 ShardID     = 3;  // shard id
+    string Database    = 4;  // database name
+    uint64 TxnID       = 5;  // transaction id
+    string Query       = 6;  // query to run
+}
+
+// single result
+message Result {
+    bytes Data = 1; // marshalled result
+}
+
+// query result
+message QueryResp {
+    string ClusterType = 1;      // cluster type
+    uint64 ReplicaID   = 2;      // replica id
+    uint64 ShardID     = 3;      // shard id
+    string Database    = 4;      // database name
+    uint64 TxnID       = 5;      // transaction id
+    repeated Result Result = 6;  // query result
+}
+
+// sync shard req message from metadata server to primary
+message SyncShardMsg {
+    string ClusterType        = 1;    // cluster type
+    uint64 SrcReplicaID       = 2;    // replica id of the source
+    uint64 DestReplicaID      = 3;    // replica id of the destination
+    uint64 ShardID            = 4;    // shard id
+    string DestNodeUUID       = 5;    // dest node UUID
+    string DestNodeURL        = 6;    // URL to communicate to dest node
+    bool SrcIsPrimary         = 7;    // Make source replica the primary
+    repeated ReplicaInfo Replicas = 8; // other replicas in this shard
+}
+
+// information about the chunk we are syncing
+message ChunkInfo {
+    uint64 ChunkID = 1;  // local chunk id
+    string Database = 2; // database associated with this chunk
+}
+
+// information about the shard we are syncing
+message SyncShardInfoMsg {
+    string ClusterType        = 1;    // cluster type
+    uint64 SrcReplicaID       = 2;    // replica id of the source
+    uint64 DestReplicaID      = 3;    // replica id of the destination
+    uint64 ShardID            = 4;    // shard id
+    bytes  ChunkMeta          = 5;    // local metadata for this replica
+    repeated ChunkInfo Chunks = 6;    // information about the chunks
+}
+
+// SyncDataMsg streaming data sync message
+message SyncDataMsg {
+    string ClusterType    = 1;    // cluster type
+    uint64 SrcReplicaID   = 2;    // replica id of the source
+    uint64 DestReplicaID  = 3;    // replica id of the destination
+    uint64 ShardID        = 4;    // shard id
+    uint64 ChunkID        = 5;    // chunk identifier
+    bytes Data            = 6;    // sync data
+}
+
+// key
+message Key {
+    bytes Key = 1;
+}
+
+// kv-pair
+message KeyValue {
+    bytes Key   = 1;
+    bytes Value = 2;
+}
+
+// key message to be used by read and delete requests.
+message KeyMsg {
+    string ClusterType = 1;    // cluster type
+    uint64 ShardID     = 2;    // shard id
+    uint64 ReplicaID   = 3;    // replica id
+    string Table       = 4;    // table name
+    repeated Key Keys  = 5;    // list of keys
+}
+
+// key-value message to be used by read/list resp and write req
+message KeyValueMsg {
+    string ClusterType    = 1;    // cluster type
+    uint64 ShardID        = 2;    // shard id
+    uint64 ReplicaID      = 3;    // replica id
+    string Table          = 4;    // table name
+    repeated KeyValue Kvs = 5;    // key-value pairs
+}
+
+// table name message to be used by list req
+message TableMsg {
+    string ClusterType    = 1;    // cluster type
+    uint64 ShardID        = 2;    // shard id
+    uint64 ReplicaID      = 3;    // replica id
+    string Table          = 4;    // table name
+}
+
+// Datanode RPC messages
+service DataNode {
+    // shard management APIs
+    rpc CreateShard (ShardReq) returns (StatusResp) {};
+    rpc UpdateShard (ShardReq) returns (StatusResp) {};
+    rpc DeleteShard (ShardReq) returns (StatusResp) {};
+
+    // Sync messages
+    rpc SyncShardReq (SyncShardMsg) returns (StatusResp) {};
+    rpc SyncShardInfo (SyncShardInfoMsg) returns (StatusResp) {};
+    rpc SyncData (stream SyncDataMsg) returns (StatusResp) {};
+
+    // TSDB messages
+    rpc CreateDatabase (DatabaseReq) returns (StatusResp) {};
+    rpc DeleteDatabase (DatabaseReq) returns (StatusResp) {};
+    rpc PointsReplicate (PointsWriteReq) returns (StatusResp) {};
+    rpc PointsWrite (PointsWriteReq) returns (StatusResp) {};
+    rpc ExecuteQuery(QueryReq) returns (QueryResp) {};
+
+    // key-value messages
+    rpc ReadReq(KeyMsg) returns (KeyValueMsg) {};
+    rpc ListReq(TableMsg) returns (KeyValueMsg) {};
+    rpc WriteReq(KeyValueMsg) returns (StatusResp) {};
+    rpc DelReq(KeyMsg) returns (StatusResp) {};
+    rpc WriteReplicate(KeyValueMsg) returns (StatusResp) {};
+    rpc DelReplicate(KeyMsg) returns (StatusResp) {};
+}
+
+// Broker RPC messages
+service Broker {
+    rpc PointsWrite (PointsWriteReq) returns (StatusResp) {};
+    rpc ExecuteQuery(QueryReq) returns (QueryResp) {};
+}

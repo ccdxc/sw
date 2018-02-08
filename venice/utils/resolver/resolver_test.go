@@ -76,7 +76,7 @@ func TestResolverClient(t *testing.T) {
 	client := New(config)
 	mo := &mockServiceInstanceObserver{}
 	client.Register(mo)
-	c2 := func() (bool, []interface{}) {
+	c2 := func() (bool, interface{}) {
 		instances := client.Lookup("svc1")
 		if len(instances.Items) != 2 {
 			return false, nil
@@ -105,7 +105,7 @@ func TestResolverClient(t *testing.T) {
 		Service: "svc1",
 	}
 	m.AddServiceInstance(&si3)
-	c3 := func() (bool, []interface{}) {
+	c3 := func() (bool, interface{}) {
 		instances := client.Lookup("svc1")
 		if len(instances.Items) != 3 {
 			return false, nil
@@ -128,7 +128,7 @@ func TestResolverClient(t *testing.T) {
 		t.Fatalf("Found non-zero instances for non-existent service")
 	}
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		if mo.addedCount == 3 && mo.deletedCount == 1 {
 			return true, nil
 		}

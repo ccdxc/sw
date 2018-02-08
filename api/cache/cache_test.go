@@ -647,7 +647,7 @@ func TestPrefixWatcher(t *testing.T) {
 	wg.Add(1)
 	go pw.worker(ctx, &wg)
 	t.Logf("  -> test watcher create")
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		defer pw.Unlock()
 		pw.Lock()
 		return pw.running == true, nil
@@ -661,21 +661,21 @@ func TestPrefixWatcher(t *testing.T) {
 		Object: b1,
 	}
 	ws.ch <- &ev
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return str.sets == 1, nil
 	}, "did not see cache set on Update event")
 
 	t.Logf("  -> test create event")
 	ev.Type = kvstore.Created
 	ws.ch <- &ev
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return str.sets == 2, nil
 	}, "did not see cache set on create event")
 
 	t.Logf("  -> test delete event")
 	ev.Type = kvstore.Deleted
 	ws.ch <- &ev
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return str.deletes == 1, nil
 	}, "did not see cache delete on delete event")
 	t.Logf("  -> test WatcherError event")
@@ -683,7 +683,7 @@ func TestPrefixWatcher(t *testing.T) {
 	ws.ch <- &ev
 	t.Logf("  -> test exit")
 	cancel()
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return !pw.running, nil
 	}, "did not prefix watcher exit on close")
 }
@@ -732,7 +732,7 @@ func TestBackendWatcher(t *testing.T) {
 
 	t.Logf("  -> test stop")
 	cancel()
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		for _, v := range bw.prefixes {
 			if v.running {
 				return false, nil

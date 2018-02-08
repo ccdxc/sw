@@ -108,7 +108,7 @@ func TestElastic(t *testing.T) {
 
 	// Create a client
 	AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			esClient, err = elastic.NewClient(elasticURL, log.GetNewLogger(log.GetDefaultConfig("events")))
 			if err != nil {
 				t.Logf("error creating client: %v", err)
@@ -285,7 +285,7 @@ func indexEventsSequential(ctx context.Context, client elastic.ESClient, t *test
 func ping(ctx context.Context, client elastic.ESClient, t *testing.T) {
 	// ping the elastic server to get version details
 	AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			if err := client.Ping(ctx); err != nil {
 				return false, nil
 			}

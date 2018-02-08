@@ -104,7 +104,7 @@ func TestMasterServiceSetStatus(t *testing.T) {
 	m.Start()
 
 	testutils.AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
 		}, "Leader is not this node at the end of test")
 }
@@ -123,7 +123,7 @@ func TestMasterServiceSetStatusOnLeadershipWin(t *testing.T) {
 
 	l.BecomeLeader()
 	testutils.AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
 		},
 		"Leader is not this node at the end of test")
@@ -145,21 +145,21 @@ func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
 	cw.ClusterHandler(kvstore.Created, &cmd.Cluster{}) // handlers are set when master starts
 	testutils.AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
 		}, "Leader is not this node at the end of test")
 
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
 	cw.ClusterHandler(kvstore.Updated, &cmd.Cluster{})
 	testutils.AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
 		}, "Leader is not this node at the end of test")
 
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
 	cw.ClusterHandler(kvstore.Updated, &cmd.Cluster{})
 	testutils.AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
 		}, "Leadership not corrected in timer at the end of the test")
 
@@ -174,7 +174,7 @@ func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == "dummy", "Non-Leader reacting to cluster object creation")
 
 	testutils.AssertEventually(t,
-		func() (bool, []interface{}) {
+		func() (bool, interface{}) {
 			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == "dummy", nil
 		}, "Non-Leader reacting to cluster object creation")
 }

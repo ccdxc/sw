@@ -79,7 +79,7 @@ def preamble_script(postamble)
 
     #start OVS
     systemctl start openvswitch
-    
+
     # Add pensando internal docker registry
     mkdir -p /etc/docker
     echo '{ "insecure-registries" : ["registry.test.pensando.io:5000"] }' > /etc/docker/daemon.json

@@ -221,7 +221,7 @@ func TestCreateNMDs(t *testing.T) {
 
 					if *mode == "classic" {
 						// Validate default classic mode
-						f1 := func() (bool, []interface{}) {
+						f1 := func() (bool, interface{}) {
 
 							cfg := nm.GetNaplesConfig()
 							if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
@@ -235,7 +235,7 @@ func TestCreateNMDs(t *testing.T) {
 						var naplesCfg proto.Naples
 
 						// Validate REST endpoint
-						f2 := func() (bool, []interface{}) {
+						f2 := func() (bool, interface{}) {
 
 							err := netutils.HTTPGet(nm.GetNMDUrl()+"/", &naplesCfg)
 							if err != nil {
@@ -267,7 +267,7 @@ func TestCreateNMDs(t *testing.T) {
 						var resp nmdstate.NaplesConfigResp
 
 						// Post the mode change config
-						f3 := func() (bool, []interface{}) {
+						f3 := func() (bool, interface{}) {
 							err = netutils.HTTPPost(nm.GetNMDUrl(), &naplesCfg, &resp)
 							if err != nil {
 								log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
@@ -279,7 +279,7 @@ func TestCreateNMDs(t *testing.T) {
 					}
 
 					// Validate Managed Mode
-					f4 := func() (bool, []interface{}) {
+					f4 := func() (bool, interface{}) {
 
 						// validate the mode is managed
 						cfg := nm.GetNaplesConfig()
@@ -318,7 +318,7 @@ func TestCreateNMDs(t *testing.T) {
 					AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("10ms"), string("60s"))
 
 					// Validate SmartNIC object is created
-					f5 := func() (bool, []interface{}) {
+					f5 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
 							Name: nodeID,
@@ -334,7 +334,7 @@ func TestCreateNMDs(t *testing.T) {
 					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
 
 					// Validate Workload Node object is created
-					f6 := func() (bool, []interface{}) {
+					f6 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
 							Name: nodeID,

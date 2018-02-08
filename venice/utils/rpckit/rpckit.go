@@ -138,7 +138,6 @@ func WithBalancer(b grpc.Balancer) Option {
 func defaultOptions(mysvcName, role string) *options {
 	return &options{
 		stats:        newStatsMiddleware(mysvcName, role),
-		tracer:       newTracerMiddleware(mysvcName),
 		enableTracer: false,
 		enableLogger: true,
 		enableStats:  true,
@@ -185,7 +184,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		mysvcName: mysvcName,
 		listenURL: listenURL,
 		listener:  ListenWrapper(lis),
-		DoneCh:    make(chan error),
+		DoneCh:    make(chan error, 2),
 		options:   *defaultOptions(mysvcName, RoleServer),
 	}
 
@@ -204,6 +203,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		rpcServer.middlewares = append(rpcServer.middlewares, newLogMiddleware()) // logging
 	}
 	if rpcServer.enableTracer {
+		rpcServer.tracer = newTracerMiddleware(mysvcName)
 		rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.tracer) // tracing
 	}
 
@@ -340,6 +340,7 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 		rpcClient.middlewares = append(rpcClient.middlewares, newLogMiddleware()) // logging
 	}
 	if rpcClient.enableTracer {
+		rpcClient.tracer = newTracerMiddleware(mysvcName)
 		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer) // tracing
 	}
 

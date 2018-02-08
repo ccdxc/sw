@@ -39,14 +39,14 @@ func TestBG(t *testing.T) {
 	tbg1 := &testBG{}
 	tbg1.Start()
 	go tbg1.run()
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return tbg1.running, nil
 	}, "bg did not run", "1ms", "1s")
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return (tbg1.count > 0), nil
 	}, "bg did not execute", "1ms", "1s")
 	tbg1.StopSync()
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		return !tbg1.running, nil
 	}, "bg did not run", "1ms", "1s")
 }

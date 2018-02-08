@@ -329,7 +329,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			if tc.expected == cmd.SmartNICSpec_ADMITTED.String() || tc.expected == cmd.SmartNICSpec_PENDING.String() {
 
 				// verify smartNIC is created
-				f1 := func() (bool, []interface{}) {
+				f1 := func() (bool, interface{}) {
 					nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
 					if err != nil {
 						t.Errorf("Error getting NIC object for mac:%s", tc.mac)
@@ -346,7 +346,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				AssertEventually(t, f1, fmt.Sprintf("Failed to verify presence of smartNIC object"))
 
 				// verify Node object is created
-				f2 := func() (bool, []interface{}) {
+				f2 := func() (bool, interface{}) {
 					ometa := api.ObjectMeta{Name: tc.nodeName}
 					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
 					if err != nil {
@@ -363,7 +363,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				AssertEventually(t, f2, fmt.Sprintf("Failed to verify presence of Node object"))
 
 				// verify watch api is invoked
-				f3 := func() (bool, []interface{}) {
+				f3 := func() (bool, interface{}) {
 					stream, err := smartNICUpdatesRPCClient.WatchNICs(context.Background(), &ometa)
 					if err != nil {
 						t.Errorf("Error watching smartNIC, mac: %s, err: %v", tc.mac, err)
@@ -384,7 +384,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				AssertEventually(t, f3, fmt.Sprintf("Failed to verify watch for smartNIC event"))
 
 				// Verify UpdateNIC RPC
-				f4 := func() (bool, []interface{}) {
+				f4 := func() (bool, interface{}) {
 					var phase string
 					if nic.ObjectMeta.Name == tc.approvedNIC {
 						phase = cmd.SmartNICSpec_ADMITTED.String()
@@ -430,7 +430,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				AssertEventually(t, f4, fmt.Sprintf("Failed to verify update for smartNIC"))
 
 				// Verify NIC health status goes to UNKNOWN after deadtimeInterval
-				f5 := func() (bool, []interface{}) {
+				f5 := func() (bool, interface{}) {
 
 					nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
 					if err != nil {
@@ -453,7 +453,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				AssertEventually(t, f5, fmt.Sprintf("Failed to verify NIC health status going to UNKNOWN"))
 
 				// Verify Node object has its status updated with list of registered NICs
-				f6 := func() (bool, []interface{}) {
+				f6 := func() (bool, interface{}) {
 					ometa = api.ObjectMeta{Name: tc.nodeName}
 					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
 					if err != nil {
@@ -474,7 +474,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				AssertEventually(t, f6, fmt.Sprintf("Failed to verify that Node object is updated with registered nic"))
 
 				// Verify Deletion of SmartNIC object
-				f7 := func() (bool, []interface{}) {
+				f7 := func() (bool, interface{}) {
 					ometa = api.ObjectMeta{Name: tc.mac}
 					err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 					if err != nil {
@@ -489,7 +489,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				}
 
 				// Verify Deletion of Node object
-				f8 := func() (bool, []interface{}) {
+				f8 := func() (bool, interface{}) {
 					ometa = api.ObjectMeta{Name: tc.nodeName}
 					err = tInfo.smartNICServer.DeleteNode(ometa)
 					if err != nil {
@@ -502,7 +502,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			} else {
 
 				// Verify SmartNIC object is not created
-				f1 := func() (bool, []interface{}) {
+				f1 := func() (bool, interface{}) {
 					nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
 					if err != nil || nicObj == nil {
 						return true, nil
@@ -594,7 +594,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	nm := ag.GetNMD()
 
 	// Validate default classic mode
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
@@ -624,7 +624,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	}
 
 	// Verify the Naples received the config and switched to Managed Mode
-	f4 := func() (bool, []interface{}) {
+	f4 := func() (bool, interface{}) {
 
 		// validate the mode is managed
 		cfg := nm.GetNaplesConfig()
@@ -663,7 +663,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("1s"), string("60s"))
 
 	// Validate SmartNIC object state is updated on Venice
-	f5 := func() (bool, []interface{}) {
+	f5 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
 			Name: nodeID,
@@ -680,7 +680,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
 
 	// Validate Workload Node object is created
-	f6 := func() (bool, []interface{}) {
+	f6 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
 			Name: nodeID,
@@ -696,7 +696,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	AssertEventually(t, f6, "Failed to verify creation of required Node object", string("10ms"), string("30s"))
 
 	// Verify Deletion of SmartNIC object
-	f7 := func() (bool, []interface{}) {
+	f7 := func() (bool, interface{}) {
 		ometa := api.ObjectMeta{Name: nodeID}
 		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 		if err != nil {
@@ -707,7 +707,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
 
 	// Verify Deletion of Node object
-	f8 := func() (bool, []interface{}) {
+	f8 := func() (bool, interface{}) {
 		ometa := api.ObjectMeta{Name: nodeID}
 		err = tInfo.smartNICServer.DeleteNode(ometa)
 		if err != nil {
@@ -739,7 +739,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	nm := ag.GetNMD()
 
 	// Validate default classic mode
-	f1 := func() (bool, []interface{}) {
+	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
 		if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
@@ -769,7 +769,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	}
 
 	// Verify SmartNIC object has UNREACHABLE condition
-	f2 := func() (bool, []interface{}) {
+	f2 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
 			Name: nodeID,
@@ -789,7 +789,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 		string("10ms"), string("30s"))
 
 	// Verify Deletion of SmartNIC object
-	f3 := func() (bool, []interface{}) {
+	f3 := func() (bool, interface{}) {
 		ometa := api.ObjectMeta{Name: nodeID}
 		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 		if err != nil {

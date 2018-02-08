@@ -34,10 +34,8 @@ import cmd "github.com/pensando/sw/api/generated/cmd"
 import api "github.com/pensando/sw/api"
 import certapi "github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 
-import (
-	context "golang.org/x/net/context"
-	grpc1 "google.golang.org/grpc"
-)
+import context "golang.org/x/net/context"
+import grpc1 "google.golang.org/grpc"
 
 import io "io"
 

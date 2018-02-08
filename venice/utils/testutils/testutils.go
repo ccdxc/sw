@@ -3,7 +3,7 @@
 package testutils
 
 import (
-	"fmt"
+	"encoding/json"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -13,7 +13,7 @@ import (
 )
 
 // Evaluator prototype for eveluator function
-type Evaluator func() (bool, []interface{})
+type Evaluator func() (bool, interface{})
 
 // TBApi is common T,B interface
 type TBApi interface {
@@ -93,15 +93,16 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 		select {
 		case <-timeout:
 			// evaluate one last time
-			c, strs := eval()
+			c, v := eval()
 			if c {
 				return
 			}
 			logrus.Errorf("Evaluator timed out after %v", time.Since(timer))
 			_, file, line, _ := runtime.Caller(1)
 			msg2 := ""
-			if len(strs) > 0 {
-				msg2 = ": " + fmt.Sprint(strs...)
+			if v != nil {
+				str, _ := json.Marshal(v)
+				msg2 = ": " + string(str)
 			}
 			tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
 				append([]interface{}{filepath.Base(file), line})...)
@@ -145,24 +146,26 @@ func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...strin
 		select {
 		case <-timeout:
 			// evaluate one last time
-			c, strs := eval()
+			c, v := eval()
 			if c {
 				return
 			}
 			logrus.Errorf("Evaluator failed after %v", time.Since(timer))
 			msg2 := ""
-			if len(strs) > 0 {
-				msg2 = ": " + fmt.Sprint(strs...)
+			if v != nil {
+				str, _ := json.Marshal(v)
+				msg2 = ": " + string(str)
 			}
 			tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
 				append([]interface{}{filepath.Base(file), line})...)
 		case <-time.After(pollInterval):
-			c, strs := eval()
+			c, v := eval()
 			if !c {
 				logrus.Errorf("Evaluator failed after %v", time.Since(timer))
 				msg2 := ""
-				if len(strs) > 0 {
-					msg2 = ": " + fmt.Sprint(strs...)
+				if v != nil {
+					str, _ := json.Marshal(v)
+					msg2 = ": " + string(str)
 				}
 				tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
 					append([]interface{}{filepath.Base(file), line})...)
@@ -207,13 +210,14 @@ func CheckEventually(eval Evaluator, intervals ...string) bool {
 			}
 		case <-timeout:
 			// eveluate one last time
-			c, strs := eval()
+			c, v := eval()
 			if !c {
 				_, file, line, _ := runtime.Caller(1)
 
 				msg2 := ""
-				if len(strs) > 0 {
-					msg2 = ": " + fmt.Sprint(strs...)
+				if v != nil {
+					str, _ := json.Marshal(v)
+					msg2 = ": " + string(str)
 				}
 
 				logrus.Errorf("%s:%d: Evaluator timed out after %v", filepath.Base(file), line, time.Since(timer))

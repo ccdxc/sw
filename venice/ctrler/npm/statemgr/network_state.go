@@ -95,7 +95,7 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 		}
 
 		// determine the bit in bitmask
-		addrBit := ipv42int(reqIPAddr) - ipv42int(baseAddr)
+		addrBit := ipv42int(reqIPAddr) - ipv42int(ipnet.IP)
 
 		// check if address is already allocated
 		if bs.Test(uint(addrBit)) {

@@ -60,7 +60,7 @@ func TestNetworkWatcher(t *testing.T) {
 	err = watcher.CreateTenant("testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return terr == nil, nil
 	}, "Tenant not found in statemgr")
@@ -73,7 +73,7 @@ func TestNetworkWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating network")
 
 	// verify network got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
@@ -88,7 +88,7 @@ func TestNetworkWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting network")
 
 	// verify network is removed
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
 		return (nerr != nil), nil
 	}, "Network still found after deleting")
@@ -116,7 +116,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	err = watcher.CreateTenant("testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return terr == nil, nil
 	}, "Tenant not found in statemgr")
@@ -127,7 +127,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	// create a network
 	err = watcher.CreateNetwork("testTenant", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating network")
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
@@ -138,7 +138,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify endpoint got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, perr := stateMgr.FindObject("Endpoint", "testTenant", "testEndpoint")
 		return (perr == nil), nil
 	}, "Endpoint not found in statemgr")
@@ -156,7 +156,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting endpoint")
 
 	// verify endpoint got deleted
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, perr := stateMgr.FindObject("Endpoint", "testTenant", "testEndpoint")
 		return (perr != nil), nil
 	}, "Endpoint still found in statemgr")
@@ -188,7 +188,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	err = watcher.CreateTenant("testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return terr == nil, nil
 	}, "Tenant not found in statemgr")
@@ -201,7 +201,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating sg")
 
 	// verify sg got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, serr := stateMgr.FindSecurityGroup("testTenant", "testsg")
 		return (serr == nil), nil
 	}, "Sg not found in statemgr")
@@ -216,7 +216,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting sg")
 
 	// verify network is removed
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, serr := stateMgr.FindSecurityGroup("testTenant", "testsg")
 		return (serr != nil), nil
 	}, "Sg still found in statemgr")
@@ -243,7 +243,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	err = watcher.CreateTenant("testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return terr == nil, nil
 	}, "Tenant not found in statemgr")
@@ -256,7 +256,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating sg")
 
 	// wait a little for watch even to propagate
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, serr := stateMgr.FindSecurityGroup("testTenant", "testsg")
 		return (serr == nil), nil
 	}, "Sg not found in statemgr")
@@ -280,7 +280,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating sg policy")
 
 	// verify the sg policy exists
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, serr := stateMgr.FindSgpolicy("testTenant", "pol1")
 		return (serr == nil), nil
 	}, "Sg policy not found in statemgr")
@@ -296,7 +296,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting sg policy")
 
 	// verify sgpolicy is gone
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, serr := stateMgr.FindSgpolicy("testTenant", "pol1")
 		return (serr != nil), nil
 	}, "Sg policy still found in statemgr")
@@ -325,7 +325,7 @@ func TestTenantWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating tenant")
 
 	// verify tenant got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return terr == nil, nil
 	}, "Tenant not found in statemgr")
@@ -338,7 +338,7 @@ func TestTenantWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting tenant")
 
 	// verify tenant is removed
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return (terr != nil), nil
 	}, "Tenant still found after deleting")
@@ -376,7 +376,7 @@ func TestRestartWatchers(t *testing.T) {
 	err = w.CreateTenant("testTenant")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, terr := stateMgr.FindTenant("testTenant")
 		return terr == nil, nil
 	}, "Tenant not found in statemgr")
@@ -389,7 +389,7 @@ func TestRestartWatchers(t *testing.T) {
 	AssertOk(t, err, "Error creating network")
 
 	// verify network got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
 		return nerr == nil, nil
 	}, "Network not found in statemgr")
@@ -404,7 +404,7 @@ func TestRestartWatchers(t *testing.T) {
 	AssertOk(t, err, "Error creating sg")
 
 	// wait a little for watch even to propagate
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, serr := stateMgr.FindSecurityGroup("testTenant", "testsg")
 		return serr == nil, nil
 	}, "Sg not found in statemgr")
@@ -428,7 +428,7 @@ func TestRestartWatchers(t *testing.T) {
 	AssertOk(t, err, "Error creating sg policy")
 
 	// verify the sg policy exists
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, serr := stateMgr.FindSgpolicy("testTenant", "pol1")
 		return serr == nil, nil
 	}, "Sg policy not found in statemgr")
@@ -446,7 +446,7 @@ func TestRestartWatchers(t *testing.T) {
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify endpoint got created
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		_, perr := stateMgr.FindObject("Endpoint", "testTenant", "testEndpoint")
 		return perr == nil, nil
 	}, "Endpoint not found in statemgr")

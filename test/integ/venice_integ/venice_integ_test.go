@@ -265,7 +265,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	AssertOk(c, err, "Error creating network")
 
 	// verify network gets created in agent
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr == nil), nil
 	}, "Network not found in agent", intervals...)
@@ -275,7 +275,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	AssertOk(c, err, "Error deleting network")
 
 	// verify network is removed from agent
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr != nil), nil
 	}, "Network still found in agent", intervals...)
@@ -291,7 +291,7 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 	vcHubClient := orch.NewOrchApiClient(rpcClient.ClientConn)
 	// verify number of smartnics
 	filter := &orch.Filter{}
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		nicList, err := vcHubClient.ListSmartNICs(context.Background(), filter)
 		if err == nil && len(nicList.GetItems()) == it.numAgents {
 			return true, nil
@@ -312,7 +312,7 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 	addResp, err := it.vcHub.vcSim.CreateNwIF(snicMac, addReq)
 	c.Assert(err, IsNil)
 
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
 		if err != nil {
 			return false, nil
@@ -332,7 +332,7 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 
 	// delete and verify
 	it.vcHub.vcSim.DeleteNwIF(snicMac, addResp.UUID)
-	AssertEventually(c, func() (bool, []interface{}) {
+	AssertEventually(c, func() (bool, interface{}) {
 		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
 		if err != nil {
 			return false, nil
