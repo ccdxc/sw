@@ -416,39 +416,6 @@ control rx_key {
     apply(rx_key4);
 }
 
-action rx_vport(vport, rdma_enabled) {
-    modify_field(capri_p4_intrinsic.packet_len,
-                 capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
-
-    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
-    modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
-
-    // if (capri_register.c1)
-    modify_field(capri_intrinsic.lif, vport);
-    modify_field(roce_metadata.rdma_enabled, rdma_enabled);
-
-    // if (not capri_register.c1)
-    modify_field(capri_intrinsic.lif, EXCEPTION_VPORT);
-}
-
-@pragma stage 1
-table rx_vport {
-    reads {
-        ethernet_1.valid               : ternary;
-        ethernet_2.valid               : ternary;
-        ethernet_1.dstAddr             : ternary;
-        ethernet_2.dstAddr             : ternary;
-    }
-    actions {
-        rx_vport;
-    }
-    size : VPORT_TABLE_SIZE;
-}
-
-control rx_vport {
-    apply(rx_vport);
-}
-
 /******************************************************************************/
 /* Tx pipeline                                                                */
 /******************************************************************************/
@@ -542,24 +509,4 @@ table tx_key {
 
 control tx_key {
     apply(tx_key);
-}
-
-action tx_vport(port) {
-    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
-    modify_field(capri_intrinsic.tm_oport, port);
-}
-
-@pragma stage 5
-table tx_vport {
-    reads {
-        flow_action_metadata.tx_ethernet_dst : ternary;
-    }
-    actions {
-        tx_vport;
-    }
-    size : VPORT_TABLE_SIZE;
-}
-
-control tx_vport {
-    apply(tx_vport);
 }

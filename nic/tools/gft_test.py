@@ -114,12 +114,17 @@ dump_pkt(pkt)
 
 ###############################################################################
 
-pkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
-        IP(dst='10.1.2.3', src='11.1.2.3') / \
-        UDP() / VXLAN() / \
-        Ether(dst='00:11:12:13:14:15', src='00:B1:B2:B3:B4:B5') / \
+
+ipkt = Ether(dst='00:11:12:13:14:15', src='00:B1:B2:B3:B4:B5') / \
         IP(dst='12.1.2.3', src='13.1.2.3') / \
         UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
+builder = IcrcHeaderBuilder(ipkt)
+icrc = socket.htonl(builder.GetIcrc())
+ipkt[ICRC].icrc = icrc
+
+pkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
+        IP(dst='10.1.2.3', src='11.1.2.3') / \
+        UDP() / VXLAN() / ipkt
 
 dump_pkt(pkt)
 
@@ -127,7 +132,7 @@ dump_pkt(pkt)
 
 pkt = Ether(dst='00:E1:E2:E3:E4:E5', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
-        UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
+        UDP(chksum=0) / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
 builder = IcrcHeaderBuilder(pkt)
 icrc = socket.htonl(builder.GetIcrc())
 pkt[ICRC].icrc = icrc
@@ -138,14 +143,14 @@ dump_pkt(pkt)
 
 pkt = Ether(dst='00:F1:F2:F3:F4:F5', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
-        UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
+        UDP(chksum=0) / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
 
 rpkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3', id=0) / \
         UDP(dport=4789, chksum=0) / VXLAN() / \
         Ether(dst='00:F1:F2:F3:F4:F5', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
-        UDP() / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
+        UDP(chksum=0) / BTH(opcode=4) / bytes([b for b in range(0,32)]) / ICRC()
 builder = IcrcHeaderBuilder(pkt)
 icrc = socket.htonl(builder.GetIcrc())
 rpkt[ICRC].icrc = icrc

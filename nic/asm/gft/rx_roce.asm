@@ -1,5 +1,6 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "CSUM_INGRESS.h"
 #include "../../p4/gft/include/defines.h"
 
 struct rx_roce_k k;
@@ -44,7 +45,7 @@ rx_roce:
 
     // udp options
     seq             c2, k.udp_opt_ocs_valid, FALSE
-    //seq             c3, k.capri_intrinsic_csum_err[csum_hdr_udp_opt_ocs], 0
+    seq             c3, k.capri_intrinsic_csum_err[csum_hdr_udp_opt_ocs], 0
     orcf            c2, [!c2 & c3]
     phvwrpair.c2    p.p4_to_p4plus_roce_roce_opt_ts_valid, \
                         k.udp_opt_timestamp_valid, \

@@ -13,6 +13,7 @@
 #include "apps.p4"
 #include "roce.p4"
 #include "stats.p4"
+#include "vport.p4"
 #include "policer.p4"
 #include "transpositions.p4"
 

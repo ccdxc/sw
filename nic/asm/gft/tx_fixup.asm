@@ -64,7 +64,7 @@ tx_fixup_upd_tcp_seq:
 tx_fixup_done:
     // remove the headers
     phvwr.e         p.capri_txdma_intrinsic_valid, FALSE
-    phvwr           p.p4plus_to_p4_valid, FALSE
+    phvwr.f         p.p4plus_to_p4_valid, FALSE
 
 /*****************************************************************************/
 /* error function                                                            */

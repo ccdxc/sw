@@ -14,6 +14,8 @@ header_type capri_deparser_len_t {
 header_type parser_metadata_t {
     fields {
         icrc_len                        : 16;
+        icrc_len_1                      : 16;
+        icrc_len_2                      : 16;
         icrc                            : 32;
         l4_trailer                      : 16;
         l4_len                          : 16;
@@ -221,6 +223,7 @@ parser start {
     return select(capri_intrinsic.csum_err) {
         0 : parse_ethernet_1;
         1 : start_ipv4_bth_deth;
+        2 : start_vlan_ipv4_bth_deth;
         3 : start_ipv6_bth_deth;
         4 : start_vlan_ipv6_bth_deth;
         5 : start_ipv4_bth_deth_immdt;
@@ -231,9 +234,6 @@ parser start {
         10 : start_vlan_ipv4_bth;
         11 : start_ipv6_bth;
         12 : start_vlan_ipv6_bth;
-        // tunneled roce - only one level of vxlan tunnel is accelerated in h/w
-        // running into header valid bit problems per state, Enable this when parser
-        // split ingress/egress
         13 : start_outer_vxlan_ipv4_bth_deth;
         14 : start_outer_vlan_vxlan_ipv4_bth_deth;
         15 : start_outer_vxlan_ipv6_bth_deth;
@@ -627,7 +627,8 @@ parser parse_ipv4_1 {
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(ohi.l4_1_len, ipv4_1.totalLen + 0);
     set_metadata(parser_metadata.l4_trailer, ipv4_1.totalLen - (ipv4_1.ihl << 2));
-    return select(latest.fragOffset, latest.protocol) {
+    set_metadata(parser_metadata.icrc_len_1, (ipv4_1.ihl << 2)); //ipv4 hdr size; 8 bytes of icrc invariant to be added
+    return select(latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_1;
         IP_PROTO_TCP : parse_tcp_1;
         IP_PROTO_UDP : parse_udp_1;
@@ -652,6 +653,8 @@ parser parse_ipv6_1 {
     extract(ipv6_1);
     set_metadata(parser_metadata.l4_trailer, latest.payloadLen);
     set_metadata(ohi.l4_1_len, ipv6_1.payloadLen + 0);
+    set_metadata(parser_metadata.icrc_len_1, 40); //std ipv6 hdr size; 8 bytes of icrc invariant to be added.
+                                                //v6-option size will be added later in the parse graph
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp_1;
         IP_PROTO_TCP : parse_tcp_1;
@@ -676,9 +679,13 @@ parser parse_tcp_1 {
 }
 
 parser parse_udp_1 {
+    set_metadata(parser_metadata.l4_len, current(32, 16) + 0);
+    set_metadata(ohi.l4_1_len, current(32, 16) + 0);
+    set_metadata(ohi.icrc_len, current(32, 16) + parser_metadata.icrc_len_1 + 8); // 8 bytes of invariant
+    return parse_udp_1_split;
+}
+parser parse_udp_1_split {
     extract(udp_1);
-    set_metadata(ohi.l4_1_len, udp_1.len + 0);
-    set_metadata(parser_metadata.l4_len, udp_1.len);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     return select(latest.dstPort) {
@@ -748,7 +755,8 @@ parser parse_ipv4_2 {
     set_metadata(ohi.ipv4_2___hdr_len, (ipv4_2.ihl << 2));
     set_metadata(ohi.l4_2_len, ipv4_2.totalLen + 0);
     set_metadata(parser_metadata.l4_trailer, ipv4_2.totalLen - (ipv4_2.ihl << 2));
-    return select(latest.fragOffset, latest.protocol) {
+    set_metadata(parser_metadata.icrc_len_2, (ipv4_2.ihl << 2)); //ipv4 hdr size; 8 bytes of icrc invariant to be added
+    return select(latest.protocol) {
         IP_PROTO_ICMP : parse_icmp_2;
         IP_PROTO_TCP : parse_tcp_2;
         IP_PROTO_UDP : parse_udp_2;
@@ -773,6 +781,8 @@ parser parse_ipv6_2 {
     extract(ipv6_2);
     set_metadata(ohi.l4_2_len, ipv6_2.payloadLen + 0);
     set_metadata(parser_metadata.l4_trailer, latest.payloadLen);
+    set_metadata(parser_metadata.icrc_len_2, 40); //std ipv6 hdr size; 8 bytes of icrc invariant to be added
+                                                //v6-option size will be added later in the parse graph
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp_2;
         IP_PROTO_TCP : parse_tcp_2;
@@ -797,9 +807,14 @@ parser parse_tcp_2 {
 }
 
 parser parse_udp_2 {
+    set_metadata(parser_metadata.l4_len, current(32, 16) + 0);
+    set_metadata(ohi.l4_2_len, current(32, 16) + 0);
+    set_metadata(ohi.icrc_len, current(32, 16) + parser_metadata.icrc_len_2 + 8); // 8 bytes of invariant
+    return parse_udp_2_split;
+}
+
+parser parse_udp_2_split {
     extract(udp_2);
-    set_metadata(ohi.l4_2_len, udp_2.len + 0);
-    set_metadata(parser_metadata.l4_len, udp_2.len);
     set_metadata(l4_metadata.l4_sport_2, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_2, latest.dstPort);
     return select(latest.dstPort) {
@@ -921,8 +936,7 @@ parser parse_udp_3 {
     set_metadata(l4_metadata.l4_dport_3, latest.dstPort);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan_3;
-        // No support for Roce in 3rd layer
-        //UDP_PORT_ROCE_V2: parse_roce_v2;
+        UDP_PORT_ROCE_V2: parse_roce_v2;
         default: ingress;
         0x1 mask 0x0: parse_gre_3; // for avoiding parser flit violation
     }
@@ -1969,77 +1983,6 @@ field_list_calculation tx_ipv6_1_roce_icrc {
     algorithm : icrc;
     output_width : 32;
 }
-
-field_list tx_ipv4_2_icrc_list {
-    ipv4_2.ttl;
-    ipv4_2.diffserv;
-    ipv4_2.hdrChecksum;
-    udp_2.checksum;
-    roce_bth_2.reserved1;
-}
-@pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc gress egress
-field_list_calculation tx_ipv4_2_roce_icrc {
-    input {
-        tx_ipv4_2_icrc_list;
-    }
-    algorithm : icrc;
-    output_width : 32;
-}
-
-field_list tx_ipv6_2_icrc_list {
-    ipv6_2.trafficClass;
-    ipv6_2.flowLabel;
-    ipv6_2.hopLimit;
-    udp_2.checksum;
-    roce_bth_2.reserved1;
-}
-
-@pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc gress egress
-field_list_calculation tx_ipv6_2_roce_icrc {
-    input {
-        tx_ipv6_2_icrc_list;
-    }
-    algorithm : icrc;
-    output_width : 32;
-}
-
-field_list tx_ipv4_3_icrc_list {
-    ipv4_3.ttl;
-    ipv4_3.diffserv;
-    ipv4_3.hdrChecksum;
-    udp_3.checksum;
-    roce_bth.reserved1;
-}
-@pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc gress egress
-field_list_calculation tx_ipv4_3_roce_icrc {
-    input {
-        tx_ipv4_3_icrc_list;
-    }
-    algorithm : icrc;
-    output_width : 32;
-}
-
-field_list tx_ipv6_3_icrc_list {
-    ipv6_3.trafficClass;
-    ipv6_3.flowLabel;
-    ipv6_3.hopLimit;
-    udp_3.checksum;
-    roce_bth.reserved1;
-}
-
-@pragma icrc update_len capri_deparser_len.icrc_payload_len
-@pragma icrc gress egress
-field_list_calculation tx_ipv6_3_roce_icrc {
-    input {
-        tx_ipv6_3_icrc_list;
-    }
-    algorithm : icrc;
-    output_width : 32;
-}
-
 
 calculated_field parser_metadata.icrc {
     update tx_ipv4_1_roce_icrc if (valid(roce_bth_1));
