@@ -86,10 +86,38 @@ packets:
                 dport   : 44444
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data
+    - packet:
+        id          : PKT4
+        template    : ref://factory/packets/id=ETH_IPV4_ESP
+        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD/size
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            eth:
+                src     : callback://ipsec/ipsec/GetSMac 
+                dst     : callback://ipsec/ipsec/GetDMac 
+            qtag:
+                vlan    : callback://ipsec/ipsec/GetEncapVlan
+                prio    : 0
+            ipv4:
+                src     : callback://ipsec/ipsec/GetDIp
+                dst     : callback://ipsec/ipsec/GetSIp 
+                ttl     : 255
+                len     : 164
+                id      : 0
+                tos     : 0
+            esp:
+                seq     : 1
+                spi     : 0
+                iv      : callback://ipsec/ipsec/GetIv
+            payload:
+                data    : ref://factory/payloads/id=ESP_PAYLOAD/data 
 trigger:
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT2
+            port    : ref://testcase/config/src/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT4
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
@@ -98,6 +126,12 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=PKT3
             port    : 2
+        - packet:
+            object  : ref://testcase/packets/id=PKT3
+            port    : 2
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : 128 
         - packet:
             object  : ref://testcase/packets/id=PKT1
             port    : 128 
