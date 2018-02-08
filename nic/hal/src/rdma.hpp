@@ -183,12 +183,12 @@ typedef struct qpcb_ring_s {
 
 typedef struct qpcb_intrinsic_s {
     uint16_t  pid;
+    uint8_t   host_rings:4; // Swapping host/total nibbles since it is accessed by doorbell-module in Little-Endian.
     uint8_t   total_rings:4;
-    uint8_t   host_rings:4;
     uint8_t   eval_last;
     uint8_t   cos_selector;
+    uint8_t   cosA:4; // Swapping nibbles cosA/cosB since it is accessed by doorbell-module in Little-Endian. 
     uint8_t   cosB:4;
-    uint8_t   cosA:4;
     uint8_t   rsvd;
     uint8_t   pc;
 } PACKED qpcb_intrinsic_base_t;

@@ -334,7 +334,7 @@ qos_policer_spec_same (policer_t *p1, policer_t *p2)
 
 extern hal_ret_t
 find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink, 
-                            uint32_t *cosA, uint32_t *cosB);
+                            uint32_t *cos);
 
 #define COPP_TYPES(ENTRY) \
     ENTRY(COPP_TYPE_FLOW_MISS,                  0, "flow-miss") \

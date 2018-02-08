@@ -13,12 +13,12 @@ class EthRxQstate(Packet):
     fields_desc = [
         ByteField("pc", 0),
         ByteField("rsvd", 0),
-        BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
         ByteField("cos_sel", 0),
         ByteField("eval_last", 0),
-        BitField("host", 0, 4),
         BitField("total", 0, 4),
+        BitField("host", 0, 4),
         LEShortField("pid", 0),
 
         LEShortField("p_index0", 0),
@@ -41,12 +41,12 @@ class EthTxQstate(Packet):
     fields_desc = [
         ByteField("pc", 0),
         ByteField("rsvd", 0),
-        BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
         ByteField("cos_sel", 0),
         ByteField("eval_last", 0),
-        BitField("host", 0, 4),
         BitField("total", 0, 4),
+        BitField("host", 0, 4),
         LEShortField("pid", 0),
 
         LEShortField("p_index0", 0),
@@ -69,12 +69,12 @@ class AdminQstate(Packet):
     fields_desc = [
         ByteField("pc", 0),
         ByteField("rsvd", 0),
-        BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
         ByteField("cos_sel", 0),
         ByteField("eval_last", 0),
-        BitField("host", 0, 4),
         BitField("total", 0, 4),
+        BitField("host", 0, 4),
         LEShortField("pid", 0),
 
         LEShortField("p_index0", 0),

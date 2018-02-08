@@ -24,12 +24,12 @@ class RdmaRQstate(Packet):
     fields_desc = [
         ByteField("pc_offset", 0),
         ByteField("rsvd0", 0),
-        BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
         ByteField("cos_sel", 0),
         ByteField("eval_last", 0),
-        BitField("host", 0, 4),
         BitField("total", 0, 4),
+        BitField("host", 0, 4),
         ShortField("pid", 0),
 
         LEShortField("p_index0", 0),
@@ -137,12 +137,12 @@ class RdmaSQstate(Packet):
     fields_desc = [
         ByteField("pc_offset", 0),
         ByteField("rsvd0", 0),
-        BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
         ByteField("cos_sel", 0),
         ByteField("eval_last", 0),
-        BitField("host", 0, 4),
         BitField("total", 0, 4),
+        BitField("host", 0, 4),
         LEShortField("pid", 0),
 
         LEShortField("p_index0", 0),
@@ -231,12 +231,12 @@ class RdmaCQstate(Packet):
     fields_desc = [
         ByteField("pc_offset", 0),
         ByteField("rsvd0", 0),
-        BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
         ByteField("cos_sel", 0),
         ByteField("eval_last", 0),
-        BitField("host", 0, 4),
         BitField("total", 0, 4),
+        BitField("host", 0, 4),
         ShortField("pid", 0),
 
         ShortField("p_index0", 0),
@@ -266,12 +266,12 @@ class RdmaEQstate(Packet):
     fields_desc = [
         ByteField("pc_offset", 0),
         ByteField("rsvd0", 0),
-        BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
         ByteField("cos_sel", 0),
         ByteField("eval_last", 0),
-        BitField("host", 0, 4),
         BitField("total", 0, 4),
+        BitField("host", 0, 4),
         ShortField("pid", 0),
 
         ShortField("p_index0", 0),

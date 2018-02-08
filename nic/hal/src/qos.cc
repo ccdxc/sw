@@ -657,7 +657,7 @@ end:
 
 hal_ret_t
 find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
-                            uint32_t *cosA, uint32_t *cosB)
+                            uint32_t *cos)
 {
     if_t                    *pinned_uplink_if;
     hal_ret_t               ret = HAL_RET_OK;
@@ -671,11 +671,10 @@ find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
         HAL_TRACE_ERR("Qos-class does not exist");
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
-    // Fetch cosA from qos-class
+    // Fetch cos from qos-class
     q_args.qos_class= qos_class;
     q_args.dest_if = pinned_uplink_if;
-    q_args.qos_class_id = cosA;
-    // ret = pd::qos_class_get_qos_class_id(qos_class, pinned_uplink_if, cosA);
+    q_args.qos_class_id = cos;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_QOS_CLASSID, (void *)&q_args);
 
     if (ret != HAL_RET_OK) {
@@ -684,12 +683,6 @@ find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
                       qos_class->key, ret);
         return ret;
     }
-
-    // cosB of a LIF will always be the ADMIN-COS.
-    pd::pd_qos_class_get_admin_cos_args_t args = {0};
-    // *cosB = pd::qos_class_get_admin_cos();
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_GET_ADMIN_COS, (void *)&args);
-    *cosB = args.cos;
     return ret;
 }
 

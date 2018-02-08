@@ -39,7 +39,7 @@ typedef struct pkt_filter_s {
 
 typedef struct lif_cos_info_s {
     uint16_t            cos_bmp;         // bitmap of COS values for Tx traffic supported on this LIF.
-    uint8_t             coses;           // cos values supported by LIF. cosA - Bits 4-7, cosB - Bits 0-3.
+    uint8_t             coses;           // cos values supported by LIF. cosA - Bits 0-4, cosB - Bits 4-7.
     hal_handle_t        rx_qos_class_handle; // qos-class-hdl for Rx traffic on this LIF.
     hal_handle_t        tx_qos_class_handle; // qos-class-hdl for Tx traffic on this LIF.
     policer_t           rx_policer;      // Rx policer

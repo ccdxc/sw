@@ -127,14 +127,20 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
             return HAL_RET_INVALID_ARG;
         }
 
-        qs_params.type[ent.type_num()].size    = ent.size();
-        qs_params.type[ent.type_num()].entries = ent.entries();
-        qs_params.type[ent.type_num()].cosA    = (lif->qos_info.coses & 0xf0) >> 4;
-        qs_params.type[ent.type_num()].cosB    = (lif->qos_info.coses & 0x0f);
-
         if (ent.purpose() > intf::LifQPurpose_MAX) {
             HAL_TRACE_ERR("Invalid entry in LifSpec : purpose={}", ent.purpose());
             return HAL_RET_INVALID_ARG;
+        }
+
+        qs_params.type[ent.type_num()].size    = ent.size();
+        qs_params.type[ent.type_num()].entries = ent.entries();
+    
+        // Set both cosA,cosB to admin_cos(cosA) value for admin-qtype.
+        if (ent.purpose() != intf::LIF_QUEUE_PURPOSE_ADMIN) {
+            qs_params.type[ent.type_num()].cosA    = (lif->qos_info.coses & 0x0f);
+            qs_params.type[ent.type_num()].cosB    = (lif->qos_info.coses & 0xf0) >> 4;
+        } else {
+            qs_params.type[ent.type_num()].cosA = qs_params.type[ent.type_num()].cosB = (lif->qos_info.coses & 0x0f);
         }
 
         lif->qinfo[ent.purpose()].type = ent.type_num();
@@ -500,6 +506,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     cfg_op_ctxt_t              cfg_ctxt   = { 0 };
     qos_class_t                *qos_class;
     uint32_t                   cosA = 0, cosB = 0;
+    pd::pd_qos_class_get_admin_cos_args_t args = {0};
 
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -558,7 +565,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     }
 
     if (spec.has_tx_qos_class()) {
-        ret = find_qos_cos_info_from_spec(spec.tx_qos_class(), lif->pinned_uplink, &cosA, &cosB);
+        ret = find_qos_cos_info_from_spec(spec.tx_qos_class(), lif->pinned_uplink, &cosB);
         if (ret != HAL_RET_OK) {
             lif_prepare_rsp(rsp, ret, HAL_HANDLE_INVALID);
             return ret;
@@ -566,8 +573,17 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         qos_class = find_qos_class_by_key_handle(spec.tx_qos_class());
         lif->qos_info.tx_qos_class_handle = qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID;
     }
+
+    // cosA of a LIF will always be the ADMIN-COS.
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_GET_ADMIN_COS, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-lif:{}:failed to fetch admin cos of lif {}, err : {}",
+                      __FUNCTION__, lif->lif_id, ret);
+    }
+    cosA = args.cos;
+
     lif->qos_info.cos_bmp =  ((1 << cosA) | (1 << cosB));
-    lif->qos_info.coses   =  (cosB & 0x0f) | ((cosA << 4) & 0xf0);
+    lif->qos_info.coses   =  (cosA & 0x0f) | ((cosB << 4) & 0xf0);
 
     if (spec.has_rx_qos_class()) {
         qos_class = find_qos_class_by_key_handle(spec.rx_qos_class());
