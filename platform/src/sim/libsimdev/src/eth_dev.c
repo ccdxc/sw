@@ -58,14 +58,16 @@ typedef struct {
     uint16_t    p_index1;
     uint16_t    c_index1;
 
-    uint8_t     enable;
+    uint8_t     enable:1;
+    uint8_t     color:1;
+    uint8_t     rsvd1:6;
+
     uint64_t    ring_base;
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
     uint32_t    intr_assert_addr;
     uint8_t     spurious_db_cnt;
-    uint8_t     rsvd:7;
-    uint8_t     color:1;
+    uint64_t    sg_ring_base;
 } __attribute__((packed)) qstate_app_ethtx_t;
 
 typedef struct {
@@ -74,14 +76,15 @@ typedef struct {
     uint16_t    p_index1;
     uint16_t    c_index1;
 
-    uint8_t     enable;
+    uint8_t     enable:1;
+    uint8_t     color:1;
+    uint8_t     rsvd1:6;
+
     uint64_t    ring_base;
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
     uint16_t    rss_type;
     uint32_t    intr_assert_addr;
-    uint8_t     rsvd:7;
-    uint8_t     color:1;
 } __attribute__((packed)) qstate_app_ethrx_t;
 
 static simdev_t *current_sd;
@@ -329,16 +332,18 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qs.total = 1;
     qs.pid = cmd->pid;
     qsethtx = (qstate_app_ethtx_t *)qs.app_data;
-    qsethtx->enable = cmd->E;
     qsethtx->p_index0 = 0;
     qsethtx->c_index0 = 0;
     qsethtx->p_index1 = 0;
     qsethtx->c_index1 = 0;
+    qsethtx->enable = cmd->E;
+    qsethtx->color = 1;
     qsethtx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethtx->ring_size = cmd->ring_size;
     qsethtx->cq_ring_base = roundup(qsethtx->ring_base + (1 << cmd->ring_size), 4096);
     qsethtx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
-    qsethtx->color = 1;
+    qsethtx->spurious_db_cnt = 0;
+    qsethtx->sg_ring_base = roundup(qsethtx->cq_ring_base + (1 << cmd->ring_size), 4096);
 
     if (eth_write_txqstate(sd, cmd->index, &qs) < 0) {
         simdev_error("devcmd_txq_init: write_txqstate %d failed\n",
@@ -397,11 +402,11 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethrx->p_index1 = 0;
     qsethrx->c_index1 = 0;
     qsethrx->enable = cmd->E;
+    qsethrx->color = 1;
     qsethrx->ring_base = (1ULL << 63) + cmd->ring_base;
     qsethrx->ring_size = cmd->ring_size;
     qsethrx->cq_ring_base = roundup(qsethrx->ring_base + (1 << cmd->ring_size), 4096);
     qsethrx->intr_assert_addr = intr_assert_addr(ep->intr_base + cmd->intr_index);
-    qsethrx->color = 1;
 
     if (eth_write_rxqstate(sd, cmd->index, &qs) < 0) {
         simdev_error("devcmd_rxq_init: write_rxqstate %d failed\n",
@@ -437,8 +442,8 @@ devcmd_q_enable(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethtx = (qstate_app_ethtx_t *)qs.app_data;
     qsethtx->enable = 1;
 
-    assert(offsetof(qstate_app_ethtx_t, enable) == 
-           offsetof(qstate_app_ethrx_t, enable));
+    //assert(offsetof(qstate_app_ethtx_t, enable) == 
+    //       offsetof(qstate_app_ethrx_t, enable));
 
     if (eth_write_qstate(sd, type, qid, &qs) < 0) {
         simdev_error("devcmd_q_enable: write_qstate %d failed\n", qid);
@@ -469,8 +474,8 @@ devcmd_q_disable(struct admin_cmd *acmd, struct admin_comp *acomp)
     qsethtx = (qstate_app_ethtx_t *)qs.app_data;
     qsethtx->enable = 0;
 
-    assert(offsetof(qstate_app_ethtx_t, enable) == 
-           offsetof(qstate_app_ethrx_t, enable));
+    //assert(offsetof(qstate_app_ethtx_t, enable) == 
+    //       offsetof(qstate_app_ethrx_t, enable));
 
     if (eth_write_qstate(sd, type, qid, &qs) < 0) {
         simdev_error("devcmd_q_enable: write_qstate %d failed\n", qid);

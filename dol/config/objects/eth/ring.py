@@ -5,12 +5,17 @@ import config.resmgr            as resmgr
 import config.objects.ring      as ring
 from infra.common.logging       import cfglogger
 from infra.common.glopts        import GlobalOptions
+from factory.objects.eth.descriptor import IONIC_TX_MAX_SG_ELEMS
 
 
 class EthRingObject(ring.RingObject):
+
+    MAX_SG_ELEMS = 16
+
     def __init__(self):
         super().__init__()
-        self._mem = None
+        self._mem = None    # Primary descriptor memory
+        self._sgmem = None  # Scatter Gather descriptor memory
         self.pi = 0     # Local PI
         self.ci = 0     # Local CI
         self.exp_color = 1  # Expect this color until ring wrap, then toggle
@@ -21,6 +26,9 @@ class EthRingObject(ring.RingObject):
         assert isinstance(self.size, int) and (self.size != 0) and ((self.size & (self.size - 1)) == 0)
         self.desc_size = self.descriptor_template.meta.size
         assert isinstance(self.desc_size, int) and (self.desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
+        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+            self.sg_desc_size = self.descriptor_template.meta.size
+            assert isinstance(self.desc_size, int) and (self.sg_desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
 
     def Configure(self):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
@@ -30,6 +38,8 @@ class EthRingObject(ring.RingObject):
         self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
         resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
         cfglogger.info("Creating Ring %s" % self)
+        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+            self._sgmem = resmgr.HostMemoryAllocator.get(IONIC_TX_MAX_SG_ELEMS * self.size * self.sg_desc_size)
 
     def Post(self, descriptor):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
@@ -48,8 +58,7 @@ class EthRingObject(ring.RingObject):
         descriptor.Write()
 
         # Increment posted index
-        self.pi += 1
-        self.pi %= self.size
+        self.pi = (self.pi + 1) % self.size
 
         return status.SUCCESS
 
@@ -80,18 +89,20 @@ class EthRingObject(ring.RingObject):
             self.exp_color = 0 if self.exp_color else 1
 
         # Increment consumer index
-        self.ci = (descriptor.GetCompletionIndex() + 1) % self.size
+        self.ci = (self.ci + 1) % self.size
 
         return status.SUCCESS
 
     def __str__(self):
-        return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/Mem:%s/Size:%d/DescSize:%d/PI:%d/CI:%d" %
+        return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/Mem:%s/SgMem:%s/Size:%d/DescSize:%d/PI:%d/CI:%d" %
                 (self.__class__.__name__,
                  self.queue.queue_type.lif.hw_lif_id,
                  self.queue.queue_type.type,
                  self.queue.id,
                  self.id,
-                 self._mem, self.size, self.desc_size,
+                 self._mem,
+                 self._sgmem,
+                 self.size, self.desc_size,
                  self.pi, self.ci))
 
 class EthRingObjectHelper:

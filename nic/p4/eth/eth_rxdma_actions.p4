@@ -33,7 +33,8 @@ action eth_rx_dummy(data0, data1, data2, data3, data4, data5, data6, data7)
 action eth_rx_app_header(
     rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, p_index1, c_index1,
-    enable, ring_base, ring_size, cq_ring_base, rss_type, intr_assert_addr, color)
+    enable, color, rsvd1,
+    ring_base, ring_size, cq_ring_base, intr_assert_addr, rss_type)
 {
     // --- For K+I struct generation
 
@@ -69,12 +70,13 @@ action eth_rx_app_header(
     // --- For D-struct generation
     MODIFY_QSTATE_INTRINSIC(eth_rx_qstate)
     modify_field(eth_rx_qstate.enable, enable);
+    modify_field(eth_rx_qstate.color, color);
+    modify_field(eth_rx_qstate.rsvd1, rsvd1);
     modify_field(eth_rx_qstate.ring_base, ring_base);
     modify_field(eth_rx_qstate.ring_size, ring_size);
     modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base);
-    modify_field(eth_rx_qstate.rss_type, rss_type);
     modify_field(eth_rx_qstate.intr_assert_addr, intr_assert_addr);
-    modify_field(eth_rx_qstate.color, color);
+    modify_field(eth_rx_qstate.rss_type, rss_type);
 }
 
 action eth_rx_rss_skip()
@@ -90,7 +92,8 @@ action eth_rx_rss_skip()
 action eth_rx_fetch_desc(
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     p_index0, c_index0, p_index1, c_index1,
-    enable, ring_base, ring_size, cq_ring_base, rss_type, intr_assert_addr, color)
+    enable, color, rsvd1,
+    ring_base, ring_size, cq_ring_base, intr_assert_addr, rss_type)
 {
     // --- For K+I struct generation
 
@@ -101,12 +104,13 @@ action eth_rx_fetch_desc(
     modify_field(eth_rx_qstate.pc, pc);
     MODIFY_QSTATE_INTRINSIC(eth_rx_qstate)
     modify_field(eth_rx_qstate.enable, enable);
+    modify_field(eth_rx_qstate.color, color);
+    modify_field(eth_rx_qstate.rsvd1, rsvd1);
     modify_field(eth_rx_qstate.ring_base, ring_base);
     modify_field(eth_rx_qstate.ring_size, ring_size);
     modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base);
-    modify_field(eth_rx_qstate.rss_type, rss_type);
     modify_field(eth_rx_qstate.intr_assert_addr, intr_assert_addr);
-    modify_field(eth_rx_qstate.color, color);
+    modify_field(eth_rx_qstate.rss_type, rss_type);
 }
 
 action eth_rx_packet(

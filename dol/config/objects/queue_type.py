@@ -138,13 +138,14 @@ class QueueTypeObject(base.ConfigObjectBase):
         ring = queue.obj_helper_ring.rings[ring_id]
         ret = queue.Post(descriptor)
         if ret == status.SUCCESS:
-            if not GlobalOptions.skipverify:
-                queue.qstate.Read()
-            if GlobalOptions.rtl and not GlobalOptions.skipverify:
-                queue.qstate.set_pindex(ring_id, ring.pi)
-            self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
-            if not GlobalOptions.skipverify:
-                queue.qstate.Read()
+            if descriptor._more is None:    # All descriptors are posted
+                if not GlobalOptions.skipverify:
+                    queue.qstate.Read()
+                if GlobalOptions.rtl and not GlobalOptions.skipverify:
+                    queue.qstate.set_pindex(ring_id, ring.pi)
+                self.doorbell.Ring(queue_id, ring_id, ring.pi, queue.pid)
+                if not GlobalOptions.skipverify:
+                    queue.qstate.Read()
 
     def Consume(self, descriptor, queue_id=0):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly or GlobalOptions.skipverify:

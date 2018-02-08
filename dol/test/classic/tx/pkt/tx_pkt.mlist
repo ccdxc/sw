@@ -1,0 +1,44 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : tx_pkt
+    package     : test.classic
+    module      : classic
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : TX_PKT_1
+        spec    : tx_pkt_1.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : TX_PKT_2
+        spec    : tx_pkt_2.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : TX_PKT_3
+        spec    : tx_pkt_3.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : TX_PKT_4
+        spec    : tx_pkt_4.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False
+
+    - module:
+        name    : TX_PKT_5
+        spec    : tx_pkt_5.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment : filter://native=False

@@ -11,7 +11,7 @@ include $(TOPDIR)/make/Make.inc
 PROJ = eth_txdma_actions
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I.. -I$(ASM_HDR_DIR) -I$(TOPDIR)/asm/common-p4+/include -I$(TOPDIR)/p4/include -I$(TOPDIR)/include
+INC_DIRS = -I. -I.. -I$(ASM_HDR_DIR) -I$(TOPDIR)/gen/$(PROJ)/alt_asm_out/ -I$(TOPDIR)/asm/common-p4+/include -I$(TOPDIR)/p4/include -I$(TOPDIR)/include
 SRC_DIR = .
 
 
@@ -19,7 +19,9 @@ CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
 	eth_tx_fetch_desc.s \
-	eth_tx_packet.s \
+	eth_tx_prep.s \
+	eth_tx.s \
+	eth_tx_completion.s \
 	eth_tx_drop.s \
 	$(NULL)
 

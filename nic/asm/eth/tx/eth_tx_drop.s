@@ -1,7 +1,8 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "defines.h"
+#include "../../asm/eth/tx/defines.h"
+#include "../../p4/nw/include/defines.h"
 
 struct phv_ p;
 struct tx_table_s0_t0_k k;

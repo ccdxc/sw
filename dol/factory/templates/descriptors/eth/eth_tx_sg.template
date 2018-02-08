@@ -1,0 +1,6 @@
+meta:
+    id      : DESCR_ETH_TX_SG
+    size    : 16
+    package : factory.objects.eth
+    module  : descriptor
+    objname : EthTxSgDescriptorObject

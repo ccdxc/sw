@@ -56,13 +56,15 @@ header_type eth_rx_qstate_d {
         p_index1 : 16;
         c_index1 : 16;
 
-        enable : 8;
+        enable : 1;
+        color : 1;
+        rsvd1 : 6;
+
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
-        rss_type : 16;
         intr_assert_addr : 32;
-        color : 1;
+        rss_type : 16;
     }
 }
 

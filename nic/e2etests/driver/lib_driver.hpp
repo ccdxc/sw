@@ -62,7 +62,10 @@ struct qstate {
     uint16_t    p_index1;
     uint16_t    c_index1;
 
-    uint8_t     enable;
+    uint8_t     rsvd1 : 6;
+    uint8_t     color : 1;
+    uint8_t     enable : 1;
+
     uint64_t    ring_base;
     uint16_t    ring_size;
     uint64_t    cq_ring_base;

@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
          "eval_last=0x%0x\n"
          "host=0x%0x\ntotal=0x%0x\n"
          "pid=0x%0x\n"
-         "enable=0x%0x\nring_base=0x%0lx\nring_size=0x%0x\n"
+         "enable=0x%0x\ncolor=0x%0x\nring_base=0x%0lx\nring_size=0x%0x\n"
          "p_index=0x%0x\nc_index=0x%0x\n"
          "cq_ring_base=0x%0lx\n",
          ptr->pc_offset,
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
          ptr->eval_last,
          ptr->host, ptr->total,
          ptr->pid,
-         ptr->enable, ptr->ring_base, ptr->ring_size,
+         ptr->enable, ptr->color, ptr->ring_base, ptr->ring_size,
          ptr->p_index0, ptr->c_index0,
          ptr->cq_ring_base);
 

@@ -14,6 +14,9 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 .align
 eth_rx_app_header:
 
+  tblwr.l.f       d.rsvd1, 0
+  // !!! No table updates after this point !!!
+
   // Save all required information from APP header
   phvwr           p.eth_rx_global_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1, p4_rxdma_intr_qstate_addr_sbit2_ebit33}
   phvwr           p.eth_rx_t0_s2s_packet_len, k.p4_to_p4plus_packet_len

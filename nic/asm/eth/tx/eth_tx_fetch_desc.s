@@ -1,7 +1,7 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "defines.h"
+#include "../../asm/eth/tx/defines.h"
 #include "../../p4/nw/include/defines.h"
 
 struct phv_ p;
@@ -10,7 +10,7 @@ struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 
 %%
 
-.param  eth_tx_packet
+.param  eth_tx_prep
 
 .align
 eth_tx_fetch_desc:
@@ -33,42 +33,19 @@ eth_tx_fetch_desc:
   sle             c2, r2, MAX_DESC_PER_PHV    // max(num_posted, max_per_phv)
   addi.!c2        r2, r0, MAX_DESC_PER_PHV
   // Are we at the end of the ring?
-  add             r7, d.{c_index0}.hx, r2     // ci + to_do
-  slt             c3, r1, r7                  // end-of-ring = ring_size < (ci + to_do)
+  add             r6, d.{c_index0}.hx, r2     // ci + to_do
+  slt             c3, r1, r6                  // end-of-ring = ring_size < (ci + to_do)
   addi.c3         r2, r0, 1                   // to_do = 1 if end-of-ring
   phvwr           p.eth_tx_t0_s2s_num_desc, r2
 
-  // Setup Descriptor read for next stage
-  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
-  phvwri          p.common_te0_phv_table_lock_en, 1
-  phvwri          p.common_te0_phv_table_pc, eth_tx_packet[38:6]
-
   // Compute the descriptor fetch address
   add             r3, d.{ring_base}.dx, d.{c_index0}.hx, LG2_TX_DESC_SIZE
-  phvwr           p.common_te0_phv_table_addr, r3
-  // Compute the size of descriptor read
-  seq             c4, r2, 1        // Should we read 16 B or 64 B?
-  setcf           c4, [c3 | c4]    // read = 16 if to_do == 1 or end-of-ring else 64
-  addi.c4         r3, r0, LG2_TX_DESC_SIZE
-  addi.!c4        r3, r0, LG2_TX_DESC_SIZE + 2
-  phvwr           p.common_te0_phv_table_raw_table_size, r3
+
+  // Compute the sg descriptor address
+  add             r4, d.{sg_ring_base}.dx, d.{c_index0}, LG2_TX_SG_DESC_SIZE
 
   // Compute the completion descriptor address
-  add             r3, d.{cq_ring_base}.dx, d.{p_index1}.hx, LG2_TX_CMPL_DESC_SIZE
-  phvwr           p.eth_tx_t0_s2s_cq_desc_addr, r3
-  phvwr           p.eth_tx_t0_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
-  phvwri          p.eth_tx_t0_s2s_intr_assert_data, 0x01000000
-
-  // Completion descriptor
-  phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
-  phvwr           p.eth_tx_cq_desc_color, d.color
-#if 0
-  phvwri          p.eth_tx_cq_desc_rsvd, 0xff
-  phvwri          p.eth_tx_cq_desc_rsvd2[31:0], 0xffffffff
-  phvwri          p.eth_tx_cq_desc_rsvd2[63:32], 0xffffffff
-  phvwri          p.eth_tx_cq_desc_rsvd3, 0xffffff
-  phvwri          p.eth_tx_cq_desc_rsvd4, 0x7f
-#endif
+  add             r5, d.{cq_ring_base}.dx, d.{p_index1}.hx, LG2_TX_CMPL_DESC_SIZE
 
   // Claim the completion entry
   tblmincri       d.{p_index1}.hx, d.{ring_size}.hx, 1
@@ -79,6 +56,29 @@ eth_tx_fetch_desc:
 
   // Claim the descriptor
   tblmincr.f      d.{c_index0}.hx, d.{ring_size}.hx, r2
+  // !!! No table updates after this point !!!
+
+  // Setup Descriptor read for next stage
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
+  //phvwri          p.common_te0_phv_table_lock_en, 1
+  phvwri          p.common_te0_phv_table_pc, eth_tx_prep[38:6]  
+  phvwr           p.common_te0_phv_table_addr, r3
+  // Compute the size of descriptor read
+  seq             c4, r2, 1        // Should we read 16 B or 64 B?
+  setcf           c4, [c3 | c4]    // read = 16 if to_do == 1 or end-of-ring else 64
+  addi.c4         r6, r0, LG2_TX_DESC_SIZE
+  addi.!c4        r6, r0, LG2_TX_DESC_SIZE + 2
+  phvwr           p.common_te0_phv_table_raw_table_size, r6
+
+  phvwr           p.eth_tx_t0_s2s_sg_desc_addr, r4
+
+  phvwr           p.eth_tx_t1_s2s_cq_desc_addr, r5
+  phvwr           p.eth_tx_t1_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
+  phvwri          p.eth_tx_t1_s2s_intr_assert_data, 0x01000000
+
+  // Completion descriptor
+  phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
+  phvwr           p.eth_tx_cq_desc_color, d.color
 
   // Eval the doorbell only when pi == ci
   seq             c3, d.{p_index0}.hx, d.{c_index0}.hx
@@ -88,11 +88,14 @@ eth_tx_fetch_desc:
 
 eth_tx_spurious_db:
   tblmincri.f     d.spurious_db_cnt, LG2_MAX_SPURIOUS_DB, 1
+  // !!! No table updates after this point !!!
+
   bcf             [c3], eth_tx_eval_db        // spurious_db_cnt == max
   phvwr.!c3.e     p.p4_intr_global_drop, 1    // spurious_db_cnt != max
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 eth_tx_eval_db:
+
   or              r1, k.p4_intr_global_lif_sbit3_ebit10, k.p4_intr_global_lif_sbit0_ebit2, 8
   CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, r1)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
@@ -102,6 +105,9 @@ eth_tx_eval_db:
   nop
 
 eth_tx_queue_disabled:
+  tblwr.l.f       d.rsvd1, 0
+  // !!! No table updates after this point !!!
+
   or              r1, k.p4_intr_global_lif_sbit3_ebit10, k.p4_intr_global_lif_sbit0_ebit2, 8
   CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, k.p4_txdma_intr_qtype, r1)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
@@ -109,4 +115,3 @@ eth_tx_queue_disabled:
 
   phvwr.e         p.p4_intr_global_drop, 1
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 0
-

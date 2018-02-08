@@ -84,7 +84,7 @@ class EthTxSgElement(LittleEndianStructure):
         ("addr", c_uint64, 52),
         ("rsvd", c_uint64, 12),
         ("len", c_uint16),
-        ("rsvd2", c_uint16 * 2),
+        ("rsvd1", c_uint16 * 3),
     ]
 
 
@@ -139,6 +139,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         self._mem = None    # Set when self.Bind method is called
         self._data = None   # Set when self.Read/self.Write method is called
         self._buf = None    # Set when Init method is called
+        self._more = 0      # Set when Init methods is called
 
     def Init(self, spec):
         super().Init(spec)
@@ -153,6 +154,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
 
         self.fields = {k: getattr(spec.fields, k) for k in spec.fields.keys()}
         self._buf = getattr(spec.fields, '_buf', None)
+        self._more = getattr(spec.fields, '_more', None)
 
         self.logger.info("Init %s" % self)
 
@@ -244,6 +246,14 @@ class EthRxCqDescriptorObject(EthDescriptorObject):
 
 class EthTxDescriptorObject(EthDescriptorObject):
     __data_class__ = EthTxDescriptor
+
+    def Read(self):
+        # This is a write-only descriptor type
+        return
+
+
+class EthTxSgDescriptorObject(EthDescriptorObject):
+    __data_class__ = EthTxSgDescriptor
 
     def Read(self):
         # This is a write-only descriptor type
