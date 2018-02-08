@@ -76,15 +76,15 @@ func TestESMockBulkIndex(t *testing.T) {
 	mc := newMockClient()
 	Assert(t, mc.CreateIndex(ctx, indexName, "") == nil, "failed to create index")
 
-	var requests []elastic.BulkRequest
+	requests := make([]*elastic.BulkRequest, 10)
 	for i := 0; i < 10; i++ {
-		requests = append(requests, elastic.BulkRequest{
+		requests[i] = &elastic.BulkRequest{
 			RequestType: "index",
 			Index:       indexName,
 			IndexType:   indexType,
 			ID:          uuid.NewV4().String(),
 			Obj:         mockObj{name: fmt.Sprintf("dummy%v", i)},
-		})
+		}
 	}
 
 	// test bulk operation
@@ -98,10 +98,10 @@ func TestESMockBulkIndex(t *testing.T) {
 	Assert(t, result.TotalHits() == 1, fmt.Sprintf("expected search result %v, got %v", 1, result.TotalHits()))
 
 	// index some more docs (valid + invalid docs)
-	requests = []elastic.BulkRequest{}
+	requests = []*elastic.BulkRequest{}
 	for i := 0; i < 10; i++ {
 		// valid
-		requests = append(requests, elastic.BulkRequest{
+		requests = append(requests, &elastic.BulkRequest{
 			RequestType: "index",
 			Index:       indexName,
 			IndexType:   indexType,
@@ -110,7 +110,7 @@ func TestESMockBulkIndex(t *testing.T) {
 		})
 
 		// invalid
-		requests = append(requests, elastic.BulkRequest{
+		requests = append(requests, &elastic.BulkRequest{
 			RequestType: "index",
 			Index:       indexName,
 			IndexType:   indexType,
@@ -138,15 +138,15 @@ func TestESMockSearch(t *testing.T) {
 	mc := newMockClient()
 	Assert(t, mc.CreateIndex(ctx, indexName, "") == nil, "failed to create index")
 
-	var requests []elastic.BulkRequest
+	requests := make([]*elastic.BulkRequest, 10)
 	for i := 0; i < 10; i++ {
-		requests = append(requests, elastic.BulkRequest{
+		requests[i] = &elastic.BulkRequest{
 			RequestType: "index",
 			Index:       indexName,
 			IndexType:   indexType,
 			ID:          uuid.NewV4().String(),
 			Obj:         mockObj{name: "dummy1"},
-		})
+		}
 	}
 
 	// test bulk operation

@@ -5,7 +5,7 @@ EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|netagent/data
 TO_GEN := api api/labels/lproto venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
 venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
 venice/utils/runtime/test venice/utils/apigen/annotations venice/orch \
-venice/cmd/grpc/server/certificates/certapi venice/ctrler/ckm/rpcserver/ckmproto \
+venice/cmd/grpc/server/certificates/certapi venice/ctrler/evtsmgr/rpcserver/eventsproto \
 nic/agent/nmd/protos nic/agent/netagent/protos
 
 #

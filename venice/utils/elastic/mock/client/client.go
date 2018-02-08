@@ -83,7 +83,7 @@ func (e *mockClient) Index(ctx context.Context, index, iType, ID string, obj int
 }
 
 //Bulk performs the bulk operation using mockClient
-func (e *mockClient) Bulk(ctx context.Context, objs []elastic.BulkRequest) (*es.BulkResponse, error) {
+func (e *mockClient) Bulk(ctx context.Context, objs []*elastic.BulkRequest) (*es.BulkResponse, error) {
 	var error bool
 	var response es.BulkResponse
 

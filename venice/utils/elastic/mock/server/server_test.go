@@ -52,9 +52,9 @@ func TestMockElasticServer(t *testing.T) {
 	tu.AssertOk(t, err, "failed to perform index operation")
 
 	// test bulk operation
-	_, err = client.Bulk(ctx, []elastic.BulkRequest{
-		elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy1"},
-		elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy2"},
+	_, err = client.Bulk(ctx, []*elastic.BulkRequest{
+		&elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy1"},
+		&elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType, Obj: "{}", ID: "dummy2"},
 	})
 	tu.AssertOk(t, err, "failed to perform bulk operation")
 

@@ -21,8 +21,4 @@ message EventList {
 service EventsAPI {
     // any component can use this method to generate an event
     rpc SendEvents (EventList) returns (Empty) {};
-
-    // any component can establish a watch to get a stream of events.
-    // e.g. alerting system could watch for events to trigger an alert.
-    rpc WatchEvents (Empty) returns (stream EventList) {};
 }

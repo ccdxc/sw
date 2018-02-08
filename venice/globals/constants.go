@@ -73,4 +73,7 @@ const (
 	RootPrefix = "/venice"
 	ClusterKey = "/venice/cmd/cluster"
 	NodesKey   = "/venice/cmd/nodes"
+
+	// Events manager
+	EvtsMgrRPCPort = "9010"
 )

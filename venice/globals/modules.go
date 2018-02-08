@@ -10,4 +10,5 @@ const (
 	Npm       = "pen-npm"
 	Influx    = "pen-influx"
 	Collector = "pen-collector"
+	EvtsMgr   = "pen-evtsmgr"
 )

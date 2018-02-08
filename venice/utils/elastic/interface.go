@@ -32,7 +32,7 @@ type ESClient interface {
 
 	// Bulk performs the bulk request against elasticsearch. Each of the request
 	// in bulk operation can be heterogeneous.
-	Bulk(ctx context.Context, objs []BulkRequest) (*es.BulkResponse, error)
+	Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkResponse, error)
 
 	// Search performs the given query on `index` and type `iType`.
 	Search(ctx context.Context, index, iType string, query interface{}) (*es.SearchResult, error)

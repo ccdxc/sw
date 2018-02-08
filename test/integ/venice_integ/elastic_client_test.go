@@ -223,9 +223,9 @@ func searchEvents(ctx context.Context, client elastic.ESClient, t *testing.T) {
 
 // indexEventsBulk performs the bulk indexing
 func indexEventsBulk(ctx context.Context, client elastic.ESClient, t *testing.T) {
-	var requests []elastic.BulkRequest
+	requests := make([]*elastic.BulkRequest, numEvents)
 	// add requests for the bulk operation
-	for i := 1; i <= numEvents; i++ {
+	for i := 0; i < numEvents; i++ {
 		event.Meta.UUID = uuid.NewV4().String()
 		event.Meta.Name = event.Meta.UUID
 
@@ -233,9 +233,13 @@ func indexEventsBulk(ctx context.Context, client elastic.ESClient, t *testing.T)
 		ts, _ := types.TimestampProto(time.Now())
 		event.Meta.ModTime.Timestamp = *ts
 
-		requests = append(requests,
-			elastic.BulkRequest{RequestType: "index", Index: indexName, IndexType: indexType,
-				ID: event.Meta.UUID, Obj: event})
+		requests[i] = &elastic.BulkRequest{
+			RequestType: "index",
+			Index:       indexName,
+			IndexType:   indexType,
+			ID:          event.Meta.UUID,
+			Obj:         event,
+		}
 	}
 
 	start := time.Now()

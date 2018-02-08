@@ -140,7 +140,7 @@ func (e *Client) Index(ctx context.Context, index, iType, ID string, obj interfa
 // same order it was sent in). so that we can check if a specific action failed or not.
 // indexed documents are visible for search in near-real time.
 // document changes are not visible to search immediately, but will become visible within 1 second.
-func (e *Client) Bulk(ctx context.Context, objs []BulkRequest) (*es.BulkResponse, error) {
+func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkResponse, error) {
 	if len(objs) == 0 {
 		return nil, NewError(ErrBulkRequestFailed, "No bulk requests to commit")
 	}
