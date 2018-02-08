@@ -30,8 +30,11 @@ rx_hdr_transpositions_layer1:
     phvwr.c5        p.ipv4_1_protocol, d.rx_hdr_transpositions_d.ip_proto
     phvwr.c6        p.ipv4_1_ttl, d.rx_hdr_transpositions_d.ip_ttl
     phvwr.c7        p.ipv6_1_srcAddr, d.rx_hdr_transpositions_d.ip_src
+    setcf           c7, [c2|c3|c4|c5|c6|c7]
+    phvwr.c7        p.control_metadata_update_checksum_1, TRUE
     crestore        [c7-c1], d.rx_hdr_transpositions_d.hdr1_bits[20:14], 0x7F
     phvwr.c1        p.ipv6_1_dstAddr, d.rx_hdr_transpositions_d.ip_dst
+    phvwr.c1        p.control_metadata_update_checksum_1, TRUE
     phvwr.c2        p.ipv6_1_trafficClass, d.rx_hdr_transpositions_d.ip_dscp
     phvwr.c3        p.ipv6_1_nextHdr, d.rx_hdr_transpositions_d.ip_proto
     nop.e
@@ -56,8 +59,11 @@ rx_hdr_transpositions_layer2:
     phvwr.c5        p.ipv4_2_protocol, d.rx_hdr_transpositions_d.ip_proto
     phvwr.c6        p.ipv4_2_ttl, d.rx_hdr_transpositions_d.ip_ttl
     phvwr.c7        p.ipv6_2_srcAddr, d.rx_hdr_transpositions_d.ip_src
+    setcf           c7, [c2|c3|c4|c5|c6|c7]
+    phvwr.c7        p.control_metadata_update_checksum_2, TRUE
     crestore        [c7-c1], d.rx_hdr_transpositions_d.hdr2_bits[20:14], 0x7F
     phvwr.c1        p.ipv6_2_dstAddr, d.rx_hdr_transpositions_d.ip_dst
+    phvwr.c1        p.control_metadata_update_checksum_2, TRUE
     phvwr.c2        p.ipv6_2_trafficClass, d.rx_hdr_transpositions_d.ip_dscp
     phvwr.c3        p.ipv6_2_nextHdr, d.rx_hdr_transpositions_d.ip_proto
     jr              r7
@@ -82,8 +88,11 @@ rx_hdr_transpositions_layer3:
     phvwr.c5        p.ipv4_3_protocol, d.rx_hdr_transpositions_d.ip_proto
     phvwr.c6        p.ipv4_3_ttl, d.rx_hdr_transpositions_d.ip_ttl
     phvwr.c7        p.ipv6_3_srcAddr, d.rx_hdr_transpositions_d.ip_src
+    setcf           c7, [c2|c3|c4|c5|c6|c7]
+    phvwr.c7        p.control_metadata_update_checksum_3, TRUE
     crestore        [c7-c1], d.rx_hdr_transpositions_d.hdr3_bits[20:14], 0x7F
     phvwr.c1        p.ipv6_3_dstAddr, d.rx_hdr_transpositions_d.ip_dst
+    phvwr.c1        p.control_metadata_update_checksum_3, TRUE
     phvwr.c2        p.ipv6_3_trafficClass, d.rx_hdr_transpositions_d.ip_dscp
     phvwr.c3        p.ipv6_3_nextHdr, d.rx_hdr_transpositions_d.ip_proto
     jr              r7

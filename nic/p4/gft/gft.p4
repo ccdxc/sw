@@ -15,6 +15,7 @@
 #include "stats.p4"
 #include "vport.p4"
 #include "policer.p4"
+#include "checksum.p4"
 #include "transpositions.p4"
 
 action nop() {
@@ -35,6 +36,7 @@ control ingress {
     rx_transpositions();
     rx_vport_stats();
     rx_apps();
+    rx_checksum();
 }
 
 /*****************************************************************************/

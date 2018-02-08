@@ -35,6 +35,8 @@ rx_l4_hdr_transpositions_layer1:
     phvwr.c5        p.tcp_1_srcPort, d.rx_l4_hdr_transpositions_d.l4_sport_1
     phvwr.c6        p.tcp_1_dstPort, d.rx_l4_hdr_transpositions_d.l4_dport_1
     phvwr.c7        p.icmp_1_icmp_type, d.rx_l4_hdr_transpositions_d.l4_sport_1
+    setcf           c7, [c3|c4|c5|c6]
+    phvwr.c7        p.control_metadata_update_checksum_1, TRUE
     crestore.e      [c1], d.rx_l4_hdr_transpositions_d.hdr_bits[7], 0x1
     phvwr.c1        p.icmp_1_icmp_code, d.rx_l4_hdr_transpositions_d.l4_dport_1
 
@@ -46,6 +48,8 @@ rx_l4_hdr_transpositions_layer2:
     phvwr.c5        p.tcp_2_srcPort, d.rx_l4_hdr_transpositions_d.l4_sport_2
     phvwr.c6        p.tcp_2_dstPort, d.rx_l4_hdr_transpositions_d.l4_dport_2
     phvwr.c7        p.icmp_2_icmp_type, d.rx_l4_hdr_transpositions_d.l4_sport_2
+    setcf           c7, [c3|c4|c5|c6]
+    phvwr.c7        p.control_metadata_update_checksum_2, TRUE
     crestore        [c1], d.rx_l4_hdr_transpositions_d.hdr_bits[15], 0x1
     jr              r7
     phvwr.c1        p.icmp_2_icmp_code, d.rx_l4_hdr_transpositions_d.l4_dport_2
@@ -58,6 +62,8 @@ rx_l4_hdr_transpositions_layer3:
     phvwr.c5        p.tcp_3_srcPort, d.rx_l4_hdr_transpositions_d.l4_sport_3
     phvwr.c6        p.tcp_3_dstPort, d.rx_l4_hdr_transpositions_d.l4_dport_3
     phvwr.c7        p.icmp_3_icmp_type, d.rx_l4_hdr_transpositions_d.l4_sport_3
+    setcf           c7, [c3|c4|c5|c6]
+    phvwr.c7        p.control_metadata_update_checksum_3, TRUE
     crestore        [c1], d.rx_l4_hdr_transpositions_d.hdr_bits[23], 0x1
     jr              r7
     phvwr.c1        p.icmp_3_icmp_code, d.rx_l4_hdr_transpositions_d.l4_dport_3

@@ -103,7 +103,6 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
     rx_key1_mask.icmp_3_valid_mask = 0xFF;
     rx_key1_mask.tcp_3_valid_mask = 0xFF;
     rx_key1_mask.udp_3_valid_mask = 0xFF;
-    rx_key1_mask.tunnel_metadata_tunnel_type_3_mask = 0xFF;
 #endif
 
     // set all the care bits in the key mask(s)
@@ -461,25 +460,13 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                     MATCH_TRANSPORT_DST_PORT_3;
             }
         }
-        if (gft_emp->headers & GFT_HEADER_IP_IN_IP_ENCAP) {
-            rx_key1.tunnel_metadata_tunnel_type_3 =
-                INGRESS_TUNNEL_TYPE_IP_IN_IP;
-        }
         if (gft_emp->headers & GFT_HEADER_IP_IN_GRE_ENCAP) {
-            rx_key1.tunnel_metadata_tunnel_type_3 =
-                INGRESS_TUNNEL_TYPE_GRE;
             if (gft_emp->match_fields & GFT_HEADER_FIELD_GRE_PROTOCOL) {
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_GRE_PROTO_3;
             }
         }
-        if (gft_emp->headers & GFT_HEADER_NVGRE_ENCAP) {
-            rx_key1.tunnel_metadata_tunnel_type_3 =
-                INGRESS_TUNNEL_TYPE_NVGRE;
-        }
         if (gft_emp->headers & GFT_HEADER_VXLAN_ENCAP) {
-            rx_key1.tunnel_metadata_tunnel_type_3 =
-                INGRESS_TUNNEL_TYPE_VXLAN;
             if (gft_emp->match_fields & GFT_HEADER_FIELD_TENANT_ID) {
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TENANT_ID_3;

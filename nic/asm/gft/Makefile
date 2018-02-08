@@ -15,6 +15,7 @@ SRC_DIR = .
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
+	rx_checksum.asm \
 	rx_gft_hash.asm \
 	rx_gft_hash_overflow.asm \
 	rx_hdr_transpositions0.asm \

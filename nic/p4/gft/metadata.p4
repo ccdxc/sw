@@ -102,7 +102,9 @@ header_type roce_metadata_t {
 
 header_type control_metadata_t {
     fields {
-        checksum_ctl        : 8;
+        update_checksum_1   : 1;
+        update_checksum_2   : 1;
+        update_checksum_3   : 1;
     }
 }
 
@@ -129,7 +131,6 @@ header_type scratch_metadata_t {
         policer_burst       : 40;
         policer_rate        : 40;
         policer_tbkt        : 40;
-        checksum_ctl        : 8;
     }
 }
 

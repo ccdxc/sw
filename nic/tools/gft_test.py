@@ -48,7 +48,7 @@ dump_pkt(rpkt)
 
 ###############################################################################
 
-pkt = bytes(Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
+pkt = Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
         IP(dst='10.1.2.3', src='11.1.2.3') / \
         UDP(dport=4789) / VXLAN() / \
         Ether(dst='00:11:12:13:14:15', src='00:B1:B2:B3:B4:B5') / \
@@ -56,19 +56,11 @@ pkt = bytes(Ether(dst='00:01:02:03:04:05', src='00:A1:A2:A3:A4:A5') / \
         UDP(dport=4789) / VXLAN() / \
         Ether(dst='00:21:22:23:24:25', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='14.1.2.3', src='15.1.2.3') / \
-        TCP(sport=0x1234, dport=0x5678))
-
-# hack till checksum fields are fixed
-tpkt = Ether(dst='00:21:22:23:24:25', src='00:C1:C2:C3:C4:C5') / \
-        IP(dst='14.1.2.3', src='15.1.2.3') / \
         TCP(sport=0x1234, dport=0x5678)
-npkt = Ether(tpkt.build())
-ipchksum = npkt.getlayer(IP).chksum
-tcpchksum = npkt.getlayer(TCP).chksum
 
-rpkt = bytes(Ether(dst='00:FE:ED:FE:ED:FE', src='00:DE:AE:AE:AE:AF') / \
-        IP(dst='14.10.11.12', src='15.10.11.12', chksum=ipchksum) / \
-        TCP(sport=0x1234, dport=0x5678, chksum=tcpchksum) / '\0\0\0\0\0\0')
+rpkt = Ether(dst='00:FE:ED:FE:ED:FE', src='00:DE:AE:AE:AE:AF') / \
+        IP(dst='14.10.11.12', src='15.10.11.12') / \
+        TCP(sport=0x1234, dport=0x5678)
 
 dump_pkt(pkt)
 dump_pkt(rpkt)

@@ -47,21 +47,16 @@ action tx_fixup() {
     }
 
     // update checksum/icrc compute flags
-    modify_field(scratch_metadata.checksum_ctl, 0);
     if (ipv4_1.valid == TRUE) {
-        bit_or(scratch_metadata.checksum_ctl, scratch_metadata.checksum_ctl,
-               (1 << CHECKSUM_CTL_IP_CHECKSUM));
+        // compute ipv4 checksum
     }
     if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_RDMA) {
-        bit_or(scratch_metadata.checksum_ctl, scratch_metadata.checksum_ctl,
-               (1 << CHECKSUM_CTL_ICRC));
+        // compute icrc
     } else {
         if ((udp_1.valid == TRUE) or (tcp_1.valid == TRUE)) {
-            bit_or(scratch_metadata.checksum_ctl, scratch_metadata.checksum_ctl,
-                   (1 << CHECKSUM_CTL_L4_CHECKSUM));
+            // compute l4 checksum
         }
     }
-    modify_field(control_metadata.checksum_ctl, scratch_metadata.checksum_ctl);
 
     remove_header(p4plus_to_p4);
     remove_header(capri_txdma_intrinsic);

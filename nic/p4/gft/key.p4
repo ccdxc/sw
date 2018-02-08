@@ -249,7 +249,7 @@ action rx_key4(match_fields) {
         if (ipv4_3.valid == TRUE) {
             modify_field(roce_metadata.ecn, ipv4_3.diffserv, 0xC0);
         } else {
-            if (ipv6_1.valid == TRUE) {
+            if (ipv6_3.valid == TRUE) {
                 modify_field(roce_metadata.ecn, ipv6_3.trafficClass, 0xC0);
             }
         }
@@ -305,7 +305,6 @@ table rx_key1 {
         tcp_3.valid                    : ternary;
         udp_3.valid                    : ternary;
         icmp_3.valid                   : ternary;
-        tunnel_metadata.tunnel_type_3  : ternary;
     }
     actions {
         rx_key1;

@@ -146,13 +146,6 @@ header_type gre_t {
     }
 }
 
-header_type nvgre_t {
-    fields {
-        tni : 24;
-        flow_id : 8;
-    }
-}
-
 header_type erspan_header_t3_t {
     fields {
         version : 4;
