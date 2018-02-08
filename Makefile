@@ -250,7 +250,7 @@ toolchain-clean:
 toolchain:
 	if [ ! -d "/tool/toolchain" ]; then sudo rm -rf /tool; sudo mkdir -p /tool; sudo mount asic20.pensando.io:/export/tool /tool; fi
 
-pull-assets: ws-tools
+pull-assets:
 	bash scripts/pull-assets.sh
 
 e2e:

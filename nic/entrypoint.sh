@@ -6,10 +6,8 @@ dir=/usr/src/github.com/pensando/sw
 
 mkdir -p ${dir}
 mount -o bind /sw ${dir}
-echo 1>&2 building asset tools...
-
 cp -R ../vendor/github.com/gogo/protobuf/proto/* /usr/local/include/
-
-cd $dir && go install ./asset-build/... && cd /sw/nic
+echo 1>&2 building tools...
+cd $dir && make ws-tools && go install ./asset-build/... && cd /sw/nic
 
 exec "$@"
