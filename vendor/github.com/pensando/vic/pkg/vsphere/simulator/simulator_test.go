@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -28,6 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
+	"github.com/pensando/vic/pkg/vsphere/simulator/vc"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25"
@@ -35,8 +38,10 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
-	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
-	"github.com/pensando/vic/pkg/vsphere/simulator/vc"
+)
+
+const (
+	testTagID = "urn:vmomi:InventoryServiceTag:be1321e5-9539-4914-9abf-d39126122f42:GLOBAL"
 )
 
 func TestUnmarshal(t *testing.T) {
@@ -492,5 +497,215 @@ func TestServeHTTPErrors(t *testing.T) {
 
 	if res.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected status %d, got %s", http.StatusBadRequest, res.Status)
+	}
+}
+
+func Test_reqParams(t *testing.T) {
+	path := fmt.Sprintf("/rest/com/vmware/cis/tagging/tag/id:%s", testTagID)
+	parms := reqParams(path, "/", []string{":"})
+	if parms["id"] != testTagID {
+		t.Errorf("Expected %s, got %s", testTagID,
+			parms["id"])
+	}
+
+	if len(parms) != 1 {
+		t.Errorf("Expected %d params, got %d", 1, len(parms))
+	}
+
+	path = fmt.Sprintf("/rest/com/vmware/cis/tagging/tag-association/id:%s?~action=list-attached-objects", testTagID)
+	parms = reqParams(path, "/", []string{":", "?", "="})
+	if len(parms) != 2 {
+		t.Errorf("Expected %d params, got %d", 2, len(parms))
+	}
+	if parms["id"] != testTagID {
+		t.Errorf("Expected %s, got %s", testTagID,
+			parms["id"])
+	}
+	if parms["~action"] != "list-attached-objects" {
+		t.Errorf("Expected list-attached-objects, got %s", parms["~action"])
+	}
+
+	path = fmt.Sprintf("/rest/com/vmware/cis/tagging/tag-association/id:%s?~action=attach", testTagID)
+	parms = reqParams(path, "/", []string{":", "?", "="})
+	if len(parms) != 2 {
+		t.Errorf("Expected %d params, got %d", 2, len(parms))
+	}
+	if parms["id"] != testTagID {
+		t.Errorf("Expected %s, got %s", testTagID,
+			parms["id"])
+	}
+	if parms["~action"] != "attach" {
+		t.Errorf("Expected attach, got %s", parms["~action"])
+	}
+	path = "/rest/com/vmware/cis/tagging/tag-association?~action=list-attached-objects-on-tags"
+	parms = reqParams(path, "?", []string{"="})
+	if len(parms) != 1 {
+		t.Errorf("Expected %d params, got %d", 1, len(parms))
+	}
+	if parms["~action"] != "list-attached-objects-on-tags" {
+		t.Errorf("Expected list-attached-objects-on-tags, got %s", parms["~action"])
+	}
+}
+
+func TestTags(t *testing.T) {
+	s := New(NewServiceInstance(esx.ServiceContent, esx.RootFolder))
+
+	ts := s.NewServer()
+	defer ts.Close()
+
+	tc := NewTagClient(ts.URL)
+
+	// CreateSession
+	err := tc.CreateSession(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// CreateTag
+	err = tc.CreateTag("tagA")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// GetTagByName
+	id, err := tc.GetTagByName("tagA")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if id == "" {
+		t.Fatalf("GetTagByName failed")
+	}
+
+	// UpdateTag
+	err = tc.UpdateTag(id, "tagB")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tn, _, err := tc.GetTag(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if tn != "tagB" {
+		t.Errorf("Update failed")
+	}
+
+	err = tc.CreateTag("tagABC")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tags, err := tc.ListTags()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(tags) != 2 {
+		t.Errorf("Expected two tags, got %d", len(tags))
+	}
+
+	err = tc.DeleteTag("tagB")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Attach
+	err = tc.Attach("tagABC", "vm-101")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	idABC, err := tc.GetTagByName("tagABC")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// ListVMs
+	vms, err := tc.ListVMs(idABC)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(vms) != 1 || vms[0] != "vm-101" {
+		t.Fatalf("ListVMs failed %+v", vms)
+	}
+	err = tc.Attach("tagABC", "vm-102")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// create another tag
+	err = tc.CreateTag("tagXYZ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = tc.Attach("tagXYZ", "vm-103")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	idXYZ, err := tc.GetTagByName("tagXYZ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// ListVMsMulti
+	tags = []string{idABC, idXYZ}
+	to, err := tc.ListVMsMulti(tags)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(to) != 2 {
+		t.Errorf("Expected 2 object sets, got %d",
+			len(to))
+	}
+
+	// DeleteSession
+	err = tc.DeleteSession()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Detach
+	err = tc.Detach("tagABC", "vm-102")
+	if err == nil {
+		t.Fatal("Expected error, got none")
+	}
+
+	// Create session
+	err = tc.CreateSession(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Detach
+	err = tc.Detach("tagABC", "vm-102")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = tc.DeleteTag("tagXYZ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// ListVMsMulti
+	tags = []string{idABC, idXYZ}
+	to, err = tc.ListVMsMulti(tags)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	found := false
+	for _, obj := range to {
+		if len(obj.ObjIDs) != 0 {
+			if obj.ObjIDs[0].ID == "vm-101" {
+				found = true
+			}
+			break
+		}
+	}
+
+	if !found {
+		t.Errorf("Error listing %+v", to)
 	}
 }

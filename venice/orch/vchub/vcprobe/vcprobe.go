@@ -23,6 +23,7 @@ const (
 )
 
 // VCProbe represents an instance of a vCenter Interface
+// This is comprised of a SOAP interface and a REST interface
 type VCProbe struct {
 	vcURL   *url.URL
 	vcID    string
@@ -32,6 +33,7 @@ type VCProbe struct {
 	ctx     context.Context
 	outBox  chan<- defs.StoreMsg
 	wg      sync.WaitGroup
+	tp      *tagsProbe
 }
 
 // NewVCProbe returns a new instance of VCProbe
@@ -39,6 +41,7 @@ func NewVCProbe(vcURL *url.URL, hOutBox chan<- defs.StoreMsg) *VCProbe {
 	return &VCProbe{
 		vcURL:  vcURL,
 		outBox: hOutBox,
+		tp:     newTagsProbe(vcURL, hOutBox),
 	}
 }
 
@@ -58,7 +61,9 @@ func (v *VCProbe) Start() error {
 	v.client = c
 	v.viewMgr = view.NewManager(v.client.Client)
 	v.vcID = v.vcURL.Hostname() + ":" + v.vcURL.Port()
-	return nil
+
+	err = v.tp.Start(v.ctx)
+	return err
 }
 
 // Stop stops the sessions
@@ -74,6 +79,7 @@ func (v *VCProbe) Stop() {
 func (v *VCProbe) Run() {
 	go v.probeSmartNICs()
 	go v.probeNwIFs()
+	go v.tp.PollTags(&v.wg)
 }
 
 // GetVeth checks if the base virtual device is a vnic and returns a pointer to

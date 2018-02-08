@@ -665,7 +665,7 @@
   branch = "master"
   name = "github.com/pensando/vic"
   packages = ["pkg/vsphere/simulator","pkg/vsphere/simulator/esx","pkg/vsphere/simulator/vc"]
-  revision = "d7adb2971fc2350557adb5ed4c8d64197921069a"
+  revision = "0cac268e71f72c9e9e80d89d23b3c0c51fdff8cc"
 
 [[projects]]
   branch = "master"

@@ -30,6 +30,7 @@ import (
 )
 
 func TestCreateVm(t *testing.T) {
+	t.Skip()
 	ctx := context.Background()
 
 	for _, model := range []*Model{ESX(), VPX()} {

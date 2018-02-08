@@ -19,6 +19,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"flag"
@@ -26,6 +27,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,7 +36,9 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"sync"
 
+	"github.com/satori/go.uuid"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25"
@@ -61,6 +65,10 @@ type Service struct {
 	readAll func(io.Reader) ([]byte, error)
 
 	TLS *tls.Config
+	sync.Mutex
+	restToken string
+	tags      map[string]*Tag
+	tagAssoc  map[string]map[AttachedObj]bool
 }
 
 // Server provides a simulator Service over HTTP
@@ -74,7 +82,9 @@ type Server struct {
 // New returns an initialized simulator Service instance
 func New(instance *ServiceInstance) *Service {
 	s := &Service{
-		readAll: ioutil.ReadAll,
+		readAll:  ioutil.ReadAll,
+		tags:     make(map[string]*Tag),
+		tagAssoc: make(map[string]map[AttachedObj]bool),
 	}
 
 	s.client, _ = vim25.NewClient(context.Background(), s)
@@ -384,6 +394,14 @@ func (s *Service) NewServer() *Server {
 	mux := http.NewServeMux()
 	path := "/sdk"
 
+	// register rest handlers
+	mux.HandleFunc(sessionPath, s.ServeSession)
+	mux.HandleFunc(tagListPath, s.ServeTagList)
+	mux.HandleFunc(tagPath, s.ServeTag)
+	mux.HandleFunc(tagAssocPath, s.ServeTagAssoc)
+	mux.HandleFunc(tagAssocMulti, s.ServeTagMulti)
+
+	// register SDK handlers
 	mux.HandleFunc(path, s.ServeSDK)
 	mux.HandleFunc(path+"/vimServiceVersions.xml", s.ServiceVersions)
 	mux.HandleFunc(folderPrefix, s.ServeDatastore)
@@ -521,4 +539,312 @@ func UnmarshalBody(data []byte) (*Method, error) {
 	method.This = field.Interface().(types.ManagedObjectReference)
 
 	return method, nil
+}
+
+// ServeSession implements the http.Handler interface
+func (s *Service) ServeSession(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "DELETE":
+		s.restToken = sessionID()
+	case "POST":
+		s.restToken = sessionID()
+		resp := struct {
+			Value string `json:"value"`
+		}{
+			Value: s.restToken,
+		}
+
+		writeContent(w, &resp)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+
+	}
+}
+
+// ServeTagList implements the http.Handler interface
+func (s *Service) ServeTagList(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("vmware-api-session-id") != s.restToken {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	s.Lock()
+	defer s.Unlock()
+
+	switch r.Method {
+	case "GET":
+		var resp struct {
+			Value []string `json:"value"`
+		}
+		resp.Value = make([]string, 0, len(s.tags))
+		for k := range s.tags {
+			resp.Value = append(resp.Value, k)
+		}
+		writeContent(w, &resp)
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// ServeTag implements the http.Handler interface
+func (s *Service) ServeTag(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("vmware-api-session-id") != s.restToken {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	s.Lock()
+	defer s.Unlock()
+
+	params := reqParams(r.URL.RequestURI(), "/", []string{":"})
+	tagID := params["id"]
+
+	switch r.Method {
+	case "GET":
+		var gResp struct {
+			Value *Tag `json:"value"`
+		}
+		gResp.Value = s.tags[tagID]
+		if gResp.Value == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		writeContent(w, &gResp)
+	case "POST":
+		var req struct {
+			CS cSpec `json:"create_spec"`
+		}
+		if readReq(r, &req) != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		u := uuid.NewV4()
+
+		id := fmt.Sprintf("urn:vmomi:InventoryServiceTag:%s:GLOBAL", u)
+
+		s.tags[id] = &Tag{
+			CategoryID: req.CS.CategoryID,
+			Name:       req.CS.Name,
+			ID:         id,
+		}
+		resp := struct {
+			Value string `json:"value"`
+		}{
+			Value: id,
+		}
+		writeContent(w, &resp)
+
+	case "DELETE":
+		delete(s.tags, tagID)
+		delete(s.tagAssoc, tagID)
+
+	case "PATCH":
+		var ureq struct {
+			US uSpec `json:"update_spec"`
+		}
+		if readReq(r, &ureq) != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		tag := s.tags[tagID]
+		if tag == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		tag.Name = ureq.US.Name
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// ServeTagAssoc implements the http.Handler interface
+func (s *Service) ServeTagAssoc(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("vmware-api-session-id") != s.restToken {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	s.Lock()
+	defer s.Unlock()
+
+	// read parameters
+	params := reqParams(r.URL.RequestURI(), "/", []string{":", "?", "="})
+	tagID := params["id"]
+	// check if the tag exists
+	_, exists := s.tags[tagID]
+	if !exists {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	action := params["~action"]
+	switch action {
+	case "attach":
+		var req struct {
+			ObjectID AttachedObj `json:"object_id"`
+		}
+		err := readReq(r, &req)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		assoc := s.tagAssoc[tagID]
+		if assoc == nil {
+			assoc = make(map[AttachedObj]bool)
+			s.tagAssoc[tagID] = assoc
+		}
+
+		assoc[req.ObjectID] = true
+
+	case "detach":
+		var req struct {
+			ObjectID AttachedObj `json:"object_id"`
+		}
+		err := readReq(r, &req)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		assoc := s.tagAssoc[tagID]
+		if assoc != nil {
+			delete(assoc, req.ObjectID)
+		}
+
+
+	case "list-attached-objects":
+		var resp struct {
+			Value []AttachedObj `json:"value"`
+		}
+		resp.Value = s.getObjsOnTag(tagID)
+		writeContent(w, &resp)
+
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}
+
+// ServeTagMulti implements the http.Handler interface
+func (s *Service) ServeTagMulti(w http.ResponseWriter, r *http.Request) {
+
+	if r.Header.Get("vmware-api-session-id") != s.restToken {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	s.Lock()
+	defer s.Unlock()
+
+	// read parameters
+	params := reqParams(r.URL.RequestURI(), "?", []string{"="})
+	action := params["~action"]
+	if action != "list-attached-objects-on-tags" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	var req struct {
+		TagIDs []string `json:"tag_ids"`
+	}
+	err := readReq(r, &req)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var resp struct {
+		Value []TagObjects `json:"value"`
+	}
+	for _, id := range req.TagIDs {
+		to := TagObjects{
+			TagID:  id,
+			ObjIDs: s.getObjsOnTag(id),
+		}
+
+		resp.Value = append(resp.Value, to)
+	}
+	writeContent(w, &resp)
+}
+
+func (s *Service) getObjsOnTag(tagID string) []AttachedObj {
+	var res []AttachedObj
+	assoc := s.tagAssoc[tagID]
+	if assoc != nil {
+		for k := range assoc {
+			res = append(res, k)
+		}
+	}
+
+	return res
+}
+
+func sessionID() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+	return base64.URLEncoding.EncodeToString(b)
+}
+
+func readReq(r *http.Request, data interface{}) error {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, data)
+}
+
+func writeContent(w http.ResponseWriter, resp interface{}) {
+	content, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(content)
+}
+
+// reqParams is a request parameter parser
+// sep is an ordered list of separator tokens
+// p is the request path
+func reqParams(p, delim string, sep []string) map[string]string {
+	r := make(map[string]string)
+
+	// trim path prefix
+	parts := strings.Split(p, delim)
+	p = parts[len(parts)-1]
+
+	// parse for kv pairs.
+	k := ""
+	for _, t := range sep {
+		parts := strings.SplitN(p, t, 2)
+		if len(parts) == 2 {
+			if k == "" {
+				k = parts[0]
+			} else {
+				r[k] = parts[0]
+				k = ""
+			}
+			p = parts[1]
+		}
+	}
+
+	if k != "" {
+		r[k] = p
+	}
+
+	return r
 }
