@@ -144,6 +144,20 @@ mpu_trace_enable(debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
 
     memset(&args, 0, sizeof(hal::pd::pd_mpu_trace_enable_args_t));
 
+    switch(req.pipeline_type()) {
+    case debug::MPU_TRACE_PIPELINE_P4_INGRESS:
+        args.pipeline_type = hal::pd::MPU_TRACE_PIPELINE_P4_INGRESS;
+        break;
+
+    case debug::MPU_TRACE_PIPELINE_P4_EGRESS:
+        args.pipeline_type = hal::pd::MPU_TRACE_PIPELINE_P4_EGRESS;
+        break;
+
+    default:
+        args.pipeline_type = hal::pd::MPU_TRACE_PIPELINE_NONE;
+        break;
+    }
+
     args.max_mpu_per_stage = max_mpu_per_stage();
     args.mpu_trace_size    = mpu_trace_size();
     args.stage_id          = req.stage_id();

@@ -136,6 +136,56 @@ public:
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)) {}
 
+    int mpu_trace_enable(int stage_id,
+                         int mpu,
+                         bool enable,
+                         char *pipeline_type)
+    {
+        ClientContext              context;
+        Status                     status;
+        debug::MpuTraceRequestMsg  req_msg;
+        debug::MpuTraceResponseMsg rsp_msg;
+
+        debug::MpuTraceRequest *req = req_msg.add_request();
+
+        if (!strcmp(pipeline_type, "p4_ingress")) {
+            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_INGRESS);
+        } else if (!strcmp(pipeline_type, "p4_egress")) {
+            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_EGRESS);
+        } else {
+            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_NONE);
+        }
+
+        if (stage_id != -1) {
+            req->set_stage_id(stage_id);
+        }
+
+        if (mpu != -1) {
+            req->set_mpu(mpu);
+        }
+
+        req->set_wrap(1);
+        req->set_table_key(true);
+        req->set_instructions(false);
+        req->set_enable(enable);
+
+        status = debug_stub_->MpuTraceOpn(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "MPU trace "
+                      << (enable ? "enable" : "disable")
+                      << " succeeded"
+                      << std::endl;
+            return 0;
+        }
+
+        std::cout << "MPU trace "
+                  << (enable ? "enable" : "disable")
+                  << " failed"
+                  << std::endl;
+
+        return -1;
+    }
+
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
         switch(api_status) {
@@ -1169,6 +1219,12 @@ main (int argc, char** argv)
     bool         test_port_get = false;
     std::string  svc_endpoint = hal_svc_endpoint_;
 
+    bool         mpu_trace = false;
+    bool         enable = false;
+    int          stage_id = -1;
+    int          mpu = -1;
+    char         pipeline_type[32] = {0};
+
     if (argc > 1) {
         if (!strcmp(argv[1], "port_test")) {
             test_port = true;
@@ -1176,6 +1232,11 @@ main (int argc, char** argv)
         } else if (!strcmp(argv[1], "port_get")) {
             test_port_get = true;
             svc_endpoint = linkmgr_svc_endpoint_;
+        } else if (!strcmp(argv[1], "mpu_trace_enable")) {
+            mpu_trace = true;
+            enable = true;
+        } else if (!strcmp(argv[1], "mpu_trace_disable")) {
+            mpu_trace = true;
         }
     }
 
@@ -1187,6 +1248,20 @@ main (int argc, char** argv)
     } else if (test_port_get == true) {
         // ports_enable(&hclient, vrf_id);
         ports_get(&hclient, vrf_id);
+        return 0;
+    } else if (mpu_trace == true) {
+        if (argc != 5) {
+            std::cout << "Usage: <pgm> <mpu_trace_enable/mpu_trace_disable>"
+                         " <p4_ingress/p4_egress/none> stage_id mpu"
+                      << std::endl;
+            return 0;
+        }
+
+        strcpy(pipeline_type, argv[2]);
+        stage_id = atoi(argv[3]);
+        mpu = atoi(argv[4]);
+
+        hclient.mpu_trace_enable(stage_id, mpu, enable, pipeline_type);
         return 0;
     }
 
