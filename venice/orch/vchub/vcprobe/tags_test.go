@@ -24,22 +24,22 @@ func TestTags(t *testing.T) {
 	}
 
 	tp := newTagsProbe(u, nil)
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		err := tp.Start(context.Background())
-		return (err == nil), nil
+		return err == nil, nil
 	}, "tagsProbe.Start", "5ms", "20s")
 
 	err = tp.fetchTags()
 	if err != nil {
 		t.Error(err)
 	}
-	Assert(t, err == nil, "fatchTags filed")
+	Assert(t, err == nil, "fetchTags failed")
 
 	// add some tags and list again
 	err = tp.tc.CreateTag("tagZone1")
 	Assert(t, err == nil, "CreateTag failed")
 	err = tp.fetchTags()
-	Assert(t, err == nil, "fatchTags filed")
+	Assert(t, err == nil, "fetchTags failed")
 	err = tp.tc.CreateTag("tagZone2")
 	Assert(t, err == nil, "CreateTag failed")
 	err = tp.tc.CreateTag("tagZone3")
@@ -123,9 +123,9 @@ func TestClient(t *testing.T) {
 
 	tc := NewTagClient(u)
 
-	AssertEventually(t, func() (bool, []interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		err := tc.CreateSession(context.Background())
-		return (err == nil), nil
+		return err == nil, nil
 	}, "tc.CreateSession", "5ms", "20s")
 
 	// CreateTag
