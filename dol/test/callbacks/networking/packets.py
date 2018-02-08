@@ -390,19 +390,19 @@ def GetDropPacketERSPANSrcMac(testcase, packet):
     tnls = getGRETunnels(testcase)
     if len(tnls) > 0:
         return tnls[0].remote_ep.segment.macaddr
-    return None
+    return '00:00:00:00:00:00'
 
 def GetDropPacketERSPANDstMac(testcase, packet):
     tnls = getGRETunnels(testcase)
     if len(tnls) > 0:
         return tnls[0].remote_ep.macaddr
-    return None
+    return '00:00:00:00:00:00'
 
 def GetDropPacketERSPANVlanEncap(testcase, packet):
     tnls = getGRETunnels(testcase)
     if len(tnls) > 0:
         return tnls[0].remote_ep.segment.vlan_id
-    return None
+    return 0
 
 def GetDropPacketERSPANSrcIp(testcase, packet):
     tnls = getGRETunnels(testcase)
