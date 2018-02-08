@@ -245,6 +245,7 @@ gft: capsim-master sdk
 	$(MAKE) pd_stub
 	$(MAKE) gtests_gft
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
 	$(MAKE) post-make
 
 gtests_gft:

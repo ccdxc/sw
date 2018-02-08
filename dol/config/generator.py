@@ -93,7 +93,8 @@ def main(topofile):
     resmgr.init()
     cfglogger.info("Generating Config Objects for Topology = %s" % topofile)
     topospec = parser.ParseFile('config/topology/', topofile)
-    process(topospec)
+    if topospec:
+        process(topospec)
     timeprofiler.ConfigTimeProfiler.Stop()
     ModelConnector.ConfigDone()
     return
