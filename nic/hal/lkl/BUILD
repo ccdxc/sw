@@ -21,7 +21,7 @@ cc_library(
     ] + sdk_copts,
     deps = [
         "//nic:asic_includes",
-        "//nic:gen_includes",
+        #"//nic:gen_includes",
         "//nic:gen_proto_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
@@ -64,7 +64,7 @@ cc_library(
     ] + sdk_copts,
     deps = [
         "//nic:asic_includes",
-        "//nic:gen_includes",
+        #"//nic:gen_includes",
         "//nic:gen_proto_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",

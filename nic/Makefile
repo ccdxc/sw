@@ -243,8 +243,16 @@ gft: capsim-master sdk
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
 	$(MAKE) pd_gft
 	$(MAKE) pd_stub
+	$(MAKE) gtests_gft
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
 	$(MAKE) post-make
+
+gtests_gft:
+	bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:lif_gft_test
+	#bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:all
+
+run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
+	$(CMD_OPTS) ./nic/hal/test/gtests/lif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_gft_test.xml"
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
 hal-rtl: capsim-master sdk

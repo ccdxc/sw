@@ -1,3 +1,4 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
@@ -6,14 +7,21 @@
 #include <stdlib.h>
 
 void
-hal_initialize()
+hal_initialize(const char c_file[])
 {
-    char 			cfg_file[] = "hal.json";
+    char 			cfg_file[32];
+    char 			def_cfg_file[] = "hal.json";
 	char 			*cfg_path;
     std::string     full_path, ini_full_path, ini_file = "hal.ini";
     hal::hal_cfg_t  hal_cfg;
 
     bzero(&hal_cfg, sizeof(hal_cfg));
+
+    if (strlen(c_file) > 0) {
+        strcpy(cfg_file, c_file);
+    } else {
+        strcpy(cfg_file, def_cfg_file);
+    }
 
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
@@ -86,7 +94,11 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
-    hal_initialize();
+    hal_initialize("");
+  }
+
+  static void SetUpTestCase(const char c_file[]) {
+    hal_initialize(c_file);
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {

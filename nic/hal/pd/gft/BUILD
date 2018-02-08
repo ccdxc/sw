@@ -33,6 +33,7 @@ cc_library(
         "//nic/hal/pd/p4pd:p4pd",
         "//nic/p4/gft/include:p4_gft_includes",
         "//nic/hal/pd/capri",
+        "//nic/hal/pd/globalpd",
         "@sdk//:sdk_headers",
         "@sdk//obj:sdk_tcam",
         "@sdk//obj:sdk_hash",

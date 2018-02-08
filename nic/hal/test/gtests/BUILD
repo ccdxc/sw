@@ -1,3 +1,5 @@
+# {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
@@ -161,6 +163,36 @@ cc_test(
 )
 
 cc_test(
+    name = "appid_test",
+    srcs = ["appid_test.cc"],
+    deps = [
+        "//nic/hal/plugins/app_redir:app_redir",
+        "//nic:snort3",
+    ] + gl_deps_list + test_deps_list,
+    linkopts = ["-lsnort"] + 
+        gl_linkopts_list,
+    copts = sdk_copts,
+)
+
+cc_test(
+    name = "qos_test",
+    srcs = ["qos_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)
+
+cc_test(
+    name = "copp_test",
+    srcs = ["copp_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)
+
+
+# GFT targets
+cc_test(
     name = "gft_test",
     srcs = ["gft_test.cc"],
     deps = [
@@ -197,29 +229,11 @@ cc_test(
 )
 
 cc_test(
-    name = "appid_test",
-    srcs = ["appid_test.cc"],
-    deps = [
-        "//nic/hal/plugins/app_redir:app_redir",
-        "//nic:snort3",
-    ] + gl_deps_list + test_deps_list,
-    linkopts = ["-lsnort"] + 
-        gl_linkopts_list,
+    name = "lif_gft_test",
+    srcs = ["lif_gft_test.cc"],
+    deps = [] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    tags = ["gft"],
     copts = sdk_copts,
 )
 
-cc_test(
-    name = "qos_test",
-    srcs = ["qos_test.cc"],
-    deps = [] + gl_deps_list + test_deps_list,
-    linkopts = [] + gl_linkopts_list,
-    copts = sdk_copts,
-)
-
-cc_test(
-    name = "copp_test",
-    srcs = ["copp_test.cc"],
-    deps = [] + gl_deps_list + test_deps_list,
-    linkopts = [] + gl_linkopts_list,
-    copts = sdk_copts,
-)

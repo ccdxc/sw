@@ -13,7 +13,7 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     copts = sdk_copts,
     deps = [
-        "//nic:gen_includes",
+        #"//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic:grpc",
         "//nic:halproto",

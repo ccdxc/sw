@@ -12,7 +12,7 @@ cc_library(
     ] + glob(["*.hpp"]),
     copts = sdk_copts,
     deps = [
-        "//nic:gen_includes",
+        #"//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic/hal:hal_src",
         "//nic/include:base_includes",

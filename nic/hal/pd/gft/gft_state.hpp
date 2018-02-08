@@ -16,9 +16,14 @@
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/gft/include/p4pd.h"
+#include "nic/utils/bm_allocator/bm_allocator.hpp"
+
+using sdk::lib::slab;
 
 namespace hal {
 namespace pd {
+
+#define HAL_MAX_HW_LIFS         1025        
 
 extern class hal_state_pd    *g_hal_state_pd;
 
@@ -26,9 +31,25 @@ class hal_state_pd {
 public:
     static hal_state_pd *factory(void);
     static void destroy(hal_state_pd *state);
+
+    slab *get_slab(hal_slab_t slab_id);
+
+
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
     hal_ret_t p4plus_txdma_init_tables(void);
+
+
+    // get APIs for LIF related state
+    slab *lif_pd_slab(void) const { return lif_pd_slab_; }
+    indexer *lif_hwid_idxr(void) const { return lif_hwid_idxr_; }
+
+    // get APIs for Uplinkif  related state
+    slab *uplinkif_pd_slab(void) const { return uplinkif_pd_slab_; }
+
+    // get APIs for TXS scheduler related state
+    BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
+
 
     directmap *dm_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
@@ -84,7 +105,25 @@ private:
     Flow         *flow_table_;
     directmap    **p4plus_rxdma_dm_tables_;
     directmap    **p4plus_txdma_dm_tables_;
+
+    // LIF related state
+    struct {
+        slab       *lif_pd_slab_;
+        indexer    *lif_hwid_idxr_;         // Used even by Uplink IF/PCs
+    } __PACK__;
+
+    // Uplink IF related state
+    struct {
+        slab       *uplinkif_pd_slab_;
+    } __PACK__;
+
+    // TXS scheduler related state
+    struct {
+        BMAllocator    *txs_scheduler_map_idxr_;
+    } __PACK__;
 };
+
+hal_ret_t delay_delete_to_slab(hal_slab_t slab_id, void *elem);
 
 }    // namespace pd
 }    // namespace hal

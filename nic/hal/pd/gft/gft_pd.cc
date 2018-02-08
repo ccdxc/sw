@@ -664,12 +664,6 @@ pd_asic_init (pd_asic_init_args_t *args)
 }
 
 hal_ret_t
-pd_lif_create (pd_lif_create_args_t *args)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
 pd_lif_get_lport_id (pd_lif_get_lport_id_args_t *args)
 {
     return HAL_RET_OK;

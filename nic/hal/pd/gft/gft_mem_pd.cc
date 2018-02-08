@@ -4,6 +4,7 @@
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/pd/gft/lif_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -19,6 +20,23 @@ hal_state_pd::init(void)
     flow_table_ = NULL;
     p4plus_rxdma_dm_tables_ = NULL;
     p4plus_txdma_dm_tables_ = NULL;
+
+    // initialize LIF PD related data structures
+    lif_pd_slab_ = slab::factory("LIF_PD", HAL_SLAB_LIF_PD,
+                                 sizeof(hal::pd::pd_lif_t), 8,
+                                 false, true, true);
+    HAL_ASSERT_RETURN((lif_pd_slab_ != NULL), false);
+
+    lif_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_LIFS);
+    HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
+
+#if 0
+    // initialize Uplink If PD related data structures
+    uplinkif_pd_slab_ = slab::factory("UPLINKIF_PD", HAL_SLAB_UPLINKIF_PD,
+                                 sizeof(hal::pd::pd_uplinkif_t), 8,
+                                 false, true, true);
+    HAL_ASSERT_RETURN((uplinkif_pd_slab_ != NULL), false);
+#endif
 
     return true;
 }
@@ -127,6 +145,30 @@ hal_state_pd::factory(void)
     return new_state;
 }
 
+// ----------------------------------------------------------------------------
+// Gives slab for a slab id
+// ----------------------------------------------------------------------------
+#define GET_SLAB(slab_name) \
+    if (slab_name && slab_name->slab_id() == slab_id) { \
+        return slab_name; \
+    }
+
+hal_ret_t
+pd_get_slab (pd_get_slab_args_t *args)
+{
+
+    args->slab = g_hal_state_pd->get_slab(args->slab_id);
+    return HAL_RET_OK;
+}
+
+slab *
+hal_state_pd::get_slab(hal_slab_t slab_id) 
+{
+    GET_SLAB(lif_pd_slab_);
+    GET_SLAB(uplinkif_pd_slab_);
+
+    return NULL;
+}
 //------------------------------------------------------------------------------
 // initializing tables
 //------------------------------------------------------------------------------
@@ -368,6 +410,83 @@ pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 hal_ret_t
 pd_pgm_def_p4plus_entries (pd_pgm_def_p4plus_entries_args_t *args)
 {
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// free an element back to given PD slab specified by its id
+//------------------------------------------------------------------------------
+hal_ret_t
+free_to_slab (hal_slab_t slab_id, void *elem)
+{
+    switch (slab_id) {
+    case HAL_SLAB_LIF_PD:
+        g_hal_state_pd->lif_pd_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_UPLINKIF_PD:
+        g_hal_state_pd->uplinkif_pd_slab()->free(elem);
+        break;
+
+    default:
+        HAL_TRACE_ERR("Unknown slab id {}", slab_id);
+        HAL_ASSERT(FALSE);
+        return HAL_RET_INVALID_ARG;
+        break;
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// callback invoked by the timerwheel to release an object to its slab
+//------------------------------------------------------------------------------
+static inline void
+pd_slab_delay_delete_cb (void *timer, hal_slab_t slab_id, void *elem)
+{
+    hal_ret_t    ret;
+
+    if (slab_id < HAL_SLAB_PI_MAX) {
+        ret = hal::free_to_slab(slab_id, elem);
+    } else if (slab_id < HAL_SLAB_PD_MAX) {
+        ret = hal::pd::free_to_slab(slab_id, elem);
+    } else {
+        HAL_TRACE_ERR("{}: Unexpected slab id {}", __FUNCTION__, slab_id);
+        ret = HAL_RET_INVALID_ARG;
+    }
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("[{}:{}] Failed to release elem {} to slab id {}",
+                      __FUNCTION__, __LINE__, elem, slab_id);
+    }
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+// wrapper function to delay delete slab elements
+// NOTE: currently delay delete timeout is 2 seconds, it is expected that any
+//       other threads using (a pointer to) this object should be done with this
+//       object within this timeout or else this memory can be freed and
+//       allocated for other objects and can result in corruptions. Hence, tune
+//       this timeout, if needed
+//------------------------------------------------------------------------------
+hal_ret_t
+delay_delete_to_slab (hal_slab_t slab_id, void *elem)
+{
+    void    *timer_ctxt;
+
+    if (g_delay_delete && hal::periodic::periodic_thread_is_running()) {
+        timer_ctxt =
+            hal::periodic::timer_schedule(slab_id,
+                                          TIME_MSECS_PER_SEC << 1, elem,
+                                          (sdk::lib::twheel_cb_t)pd_slab_delay_delete_cb,
+                                          false);
+        if (!timer_ctxt) {
+            return HAL_RET_ERR;
+        }
+    } else {
+        pd_slab_delay_delete_cb(NULL, slab_id, elem);
+    }
     return HAL_RET_OK;
 }
 
