@@ -1,6 +1,7 @@
 Name: Create_Delete_Create_Delete
 MaxObjects: 1
 Enabled: False
+LoopCount : 1
 Steps :
     - step:
         op     : Create

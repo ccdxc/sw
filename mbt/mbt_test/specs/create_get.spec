@@ -1,6 +1,7 @@
 Name: Create_Get
 MaxObjects: 10
 Enabled: False
+LoopCount : 1
 Steps :
     - step:
         op     : Create
