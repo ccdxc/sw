@@ -231,9 +231,17 @@ cc_test(
 cc_test(
     name = "lif_gft_test",
     srcs = ["lif_gft_test.cc"],
-    deps = [] + gl_deps_list + test_deps_list,
-    linkopts = [] + gl_linkopts_list,
+    deps = gl_deps_list + test_deps_list,
+    linkopts = gl_linkopts_list,
     tags = ["gft"],
     copts = sdk_copts,
 )
 
+cc_test(
+    name = "uplinkif_gft_test",
+    srcs = ["uplinkif_gft_test.cc"],
+    deps = gl_deps_list + test_deps_list,
+    linkopts = gl_linkopts_list,
+    tags = ["gft"],
+    copts = sdk_copts,
+)

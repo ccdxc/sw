@@ -178,10 +178,13 @@ gft: platform capsim-master sdk
 
 gtests_gft:
 	bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:lif_gft_test
+	bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:uplinkif_gft_test
+	 @# Once PD is properly cleaned up gft_test should be compiled with the below cmd. Remove above cmds
 	#bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:all
 
 run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/lif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_gft_test.xml"
+	$(CMD_OPTS) ./nic/hal/test/gtests/uplinkif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkif_gft_test.xml"
 
 #################################################
 #################### HAL ########################

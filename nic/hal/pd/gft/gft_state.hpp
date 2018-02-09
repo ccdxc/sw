@@ -47,6 +47,9 @@ public:
     // get APIs for Uplinkif  related state
     slab *uplinkif_pd_slab(void) const { return uplinkif_pd_slab_; }
 
+    // get APIs for enicif  related state
+    slab *enicif_pd_slab(void) const { return enicif_pd_slab_; }
+
     // get APIs for TXS scheduler related state
     BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
 
@@ -115,6 +118,11 @@ private:
     // Uplink IF related state
     struct {
         slab       *uplinkif_pd_slab_;
+    } __PACK__;
+
+    // Enic IF related state
+    struct {
+        slab       *enicif_pd_slab_;
     } __PACK__;
 
     // TXS scheduler related state

@@ -5,6 +5,8 @@
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"
+#include "nic/hal/pd/gft/uplinkif_pd.hpp"
+#include "nic/hal/pd/gft/enicif_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -30,13 +32,18 @@ hal_state_pd::init(void)
     lif_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_LIFS);
     HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
 
-#if 0
     // initialize Uplink If PD related data structures
     uplinkif_pd_slab_ = slab::factory("UPLINKIF_PD", HAL_SLAB_UPLINKIF_PD,
                                  sizeof(hal::pd::pd_uplinkif_t), 8,
                                  false, true, true);
     HAL_ASSERT_RETURN((uplinkif_pd_slab_ != NULL), false);
-#endif
+
+    // initialize ENIC If PD related data structures
+    enicif_pd_slab_ = slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
+                                 sizeof(hal::pd::pd_enicif_t), 8,
+                                 false, true, true);
+    HAL_ASSERT_RETURN((enicif_pd_slab_ != NULL), false);
+
 
     return true;
 }
@@ -46,6 +53,9 @@ hal_state_pd::init(void)
 //------------------------------------------------------------------------------
 hal_state_pd::hal_state_pd()
 {
+    lif_pd_slab_ = NULL;
+    uplinkif_pd_slab_ = NULL;
+    enicif_pd_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -54,6 +64,14 @@ hal_state_pd::hal_state_pd()
 hal_state_pd::~hal_state_pd()
 {
     uint32_t    tid;
+
+
+    lif_pd_slab_ ? slab::destroy(lif_pd_slab_) : HAL_NOP;
+    lif_hwid_idxr_ ? indexer::destroy(lif_hwid_idxr_) : HAL_NOP;
+
+    uplinkif_pd_slab_ ? slab::destroy(uplinkif_pd_slab_) : HAL_NOP;
+    enicif_pd_slab_ ? slab::destroy(enicif_pd_slab_) : HAL_NOP;
+
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -166,6 +184,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
 {
     GET_SLAB(lif_pd_slab_);
     GET_SLAB(uplinkif_pd_slab_);
+    GET_SLAB(enicif_pd_slab_);
 
     return NULL;
 }
@@ -426,6 +445,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_UPLINKIF_PD:
         g_hal_state_pd->uplinkif_pd_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_ENICIF_PD:
+        g_hal_state_pd->enicif_pd_slab()->free(elem);
         break;
 
     default:
