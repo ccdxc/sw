@@ -308,6 +308,7 @@ PD_FUNC_STUB(pd_capri_barco_sym_hash_process_request);
 
 // clock
 PD_FUNC_STUB(pd_conv_hw_clock_to_sw_clock);
+PD_FUNC_STUB(pd_conv_sw_clock_to_hw_clock);
 PD_FUNC_STUB(pd_clock_delta_comp);
 
 // gft

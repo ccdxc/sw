@@ -37,6 +37,7 @@ p4pd_add_flow_stats_table_entry (uint32_t *flow_stats_idx)
 
 
     d.actionid = FLOW_STATS_FLOW_STATS_ID;
+
     // insert the entry
     sdk_ret = dm->insert(&d, flow_stats_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -125,10 +126,11 @@ p4pd_del_flow_stats_table_entries (pd_session_t *session_pd)
                       ret);
     }
     if (session_pd->rflow_valid) {
-        ret =
-            p4pd_del_flow_stats_table_entry(session_pd->rflow.flow_stats_hw_id);
-            HAL_TRACE_ERR("iflow flow stats table entry delete failed, "
+        ret = p4pd_del_flow_stats_table_entry(session_pd->rflow.flow_stats_hw_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("rflow flow stats table entry delete failed, "
                           "err : {}", ret);
+        }
     }
 
     return ret;
@@ -254,15 +256,18 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 hal_ret_t
 p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_role_t role, bool aug)
 {
-    hal_ret_t                ret;
-    sdk_ret_t                sdk_ret;
-    directmap                *dm;
-    flow_info_actiondata     d = { 0};
-    timespec_t               ts;
-    flow_pgm_attrs_t         *flow_attrs = NULL;
-    flow_cfg_t               *flow_cfg = NULL;
-    pd_session_t             *sess_pd = NULL;
-    bool                     entry_exists = false;
+    pd_conv_sw_clock_to_hw_clock_args_t     clock_args;
+    hal_ret_t                               ret;
+    sdk_ret_t                               sdk_ret;
+    directmap                              *dm, *dmstats;
+    flow_info_actiondata                    d = { 0};
+    timespec_t                              ts;
+    flow_pgm_attrs_t                       *flow_attrs = NULL;
+    flow_cfg_t                             *flow_cfg = NULL;
+    pd_session_t                           *sess_pd = NULL;
+    bool                                    entry_exists = false;
+    uint64_t                                sw_ns = 0;
+    uint32_t                                hw_tick = 0;
 
     sess_pd = session->pd;
 
@@ -372,9 +377,14 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow_attrs->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
         session->config.conn_track_en ? sess_pd->session_state_idx : 0;
-    clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-    d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
-
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    sdk::timestamp_to_nsecs(&ts, &sw_ns);
+    clock_args.hw_tick = &hw_tick;
+    clock_args.sw_ns = sw_ns;
+    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, (void *)&clock_args);
+    d.flow_info_action_u.flow_info_flow_info.start_timestamp = hw_tick; 
+    HAL_TRACE_DEBUG("Sw ns: {} hw tick: {}", sw_ns, hw_tick);
+   
     if (entry_exists) {
        // Update the entry
        sdk_ret = dm->update(flow_pd->flow_stats_hw_id, &d);
@@ -385,6 +395,23 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
            return ret;
        }
     } else {
+       // Initialize last pkt seen timestamp to the start timestamp when you create
+       // the flow
+       dmstats = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+       if (dmstats) { 
+           flow_stats_actiondata    stats = { 0 };
+
+           stats.actionid = FLOW_STATS_FLOW_STATS_ID;
+           stats.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp = hw_tick;
+
+           sdk_ret = dmstats->update(flow_pd->flow_stats_hw_id, &stats);
+           ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+           if (ret != HAL_RET_OK) {
+               HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
+                            flow_pd->flow_stats_hw_id, ret);
+           } 
+       }
+
        // insert the entry
        sdk_ret = dm->insert_withid(&d, flow_pd->flow_stats_hw_id);
        ret = hal_sdk_ret_to_hal_ret(sdk_ret);

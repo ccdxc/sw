@@ -236,7 +236,7 @@ struct flow_s {
 
 typedef struct flow_state_s {
     uint64_t        create_ts;           // flow create timestamp
-    uint64_t        last_pkt_ts;         // last packet timestamp
+    uint32_t        last_pkt_ts;         // last packet timestamp
     uint64_t        packets;             // packet count on this flow
     uint64_t        bytes;               // byte count on this flow
     uint32_t        exception_bmap;      // exceptions seen on this flow
@@ -315,6 +315,7 @@ struct session_s {
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     hal_handle_t        vrf_handle;               // vrf handle
+    void                *tcp_close_timer;         // Timer to wait for FIN from both sides
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state
@@ -382,6 +383,7 @@ hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
 bool session_age_cb (void *entry, void *ctxt);
+hal_ret_t tcp_close_timer_schedule (session_t *session);
 
 }    // namespace hal
 

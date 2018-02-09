@@ -349,6 +349,7 @@ hal_pd_load_symbols (void)
 
     // hw clock to sw clock conversion api
     PD_SYMBOL_LOAD(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, pd_conv_sw_clock_to_hw_clock);
     PD_SYMBOL_LOAD(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
 
     // gft
@@ -669,6 +670,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
 
     //clock
     PD_SYMBOL_CALL(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
+    PD_SYMBOL_CALL(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, pd_conv_sw_clock_to_hw_clock);
     PD_SYMBOL_CALL(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
 
     // gft

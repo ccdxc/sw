@@ -331,7 +331,7 @@ Flow::update(uint32_t index, void *data)
         rs = HAL_RET_ENTRY_NOT_FOUND;
     }
 
-	print_flow();
+	//print_flow();
     stats_update(UPDATE, rs);
     return rs;
 }
@@ -386,7 +386,7 @@ Flow::remove(uint32_t index)
         rs = HAL_RET_ENTRY_NOT_FOUND;
     }
 
-    print_flow();
+    //print_flow();
     stats_update(REMOVE, rs);
     return rs;
 }

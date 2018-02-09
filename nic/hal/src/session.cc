@@ -25,8 +25,7 @@ namespace hal {
 
 thread_local void *g_session_timer;
 
-// Set for DOL. Need to change it to a lower value
-#define SESSION_SW_DEFAULT_TIMEOUT (0xFFFFFFFF * TIME_NSECS_PER_SEC) 
+#define SESSION_SW_DEFAULT_TIMEOUT (3600 * TIME_NSECS_PER_SEC) 
 
 void *
 session_get_key_func (void *entry)
@@ -369,6 +368,8 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
     session->session_id_ht_ctxt.reset();
     g_hal_state->session_id_ht()->insert(session,
                                          &session->session_id_ht_ctxt);
+    HAL_TRACE_DEBUG("Session: {:p} session id ht ctxt: {:p}", (void *)session, 
+                    (void *)session->session_id_ht_ctxt.entry);
 
     session->hal_handle_ht_ctxt.reset();
     g_hal_state->session_hal_handle_ht()->insert(session,
@@ -429,8 +430,11 @@ del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
 {
     HAL_TRACE_DEBUG("Entering DEL session from DB:{}", session->hal_handle);
 
-
-    g_hal_state->session_id_ht()->remove_entry(session,
+    // All the sessions are supposed to have session id
+    // Need to remove this check once the session id allocation
+    // happens for flow-miss
+    if (session->config.session_id)
+        g_hal_state->session_id_ht()->remove_entry(session,
                                          &session->session_id_ht_ctxt);
 
     g_hal_state->session_hal_handle_ht()->remove_entry(session,
@@ -640,6 +644,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     dllist_reset(&session->feature_list_head);
     session->config = *args->session;
     session->vrf_handle = args->vrf->hal_handle;
+    session->tcp_close_timer = NULL;
 
     // fetch the security profile, if any
     if (args->vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
@@ -741,7 +746,7 @@ session_lookup(flow_key_t key, flow_role_t *role)
 
     // Should we look at iflow first ?
     session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));
-    if(role)
+    if (role)
         *role = FLOW_ROLE_RESPONDER;
     if (session == NULL) {
         session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(key));
@@ -829,6 +834,7 @@ session_delete(const session_args_t *args, session_t *session)
 
 #define HAL_SESSION_AGE_SCAN_INTVL                   (5 * TIME_MSECS_PER_SEC)
 #define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL        4
+#define HAL_TCP_CLOSE_WAIT_INTVL                     (10 * TIME_MSECS_PER_SEC)
 
 //------------------------------------------------------------------------------
 // determine aging timeout of a session based on its properties
@@ -872,6 +878,12 @@ session_age_cb (void *entry, void *ctxt)
     SessionSpec                                spec;
     SessionResponse                            rsp; 
 
+    if (session->tcp_close_timer != NULL) {
+        HAL_TRACE_DEBUG("FIN/RST is being processed for session {} -- bailing aging",
+                        session->config.session_id);
+        return false;
+    }
+
     // read the initiator flow record
     iflow = session->iflow;
     if (!iflow) {
@@ -911,10 +923,10 @@ session_age_cb (void *entry, void *ctxt)
                                             rflow, rflow ? &rflow_state : NULL);
 
     // Convert hw clock to sw clock resolving any deltas
-    clock_args.hw_ns = iflow_state.last_pkt_ts;
+    clock_args.hw_tick = iflow_state.last_pkt_ts;
     clock_args.sw_ns = &last_pkt_ts;
     pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, (void *)&clock_args);
-
+    HAL_TRACE_DEBUG("Hw tick: {}", iflow_state.last_pkt_ts);
     HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}", 
                     last_pkt_ts, ctime_ns, session_timeout);
     if ((ctime_ns - last_pkt_ts) < session_timeout) {
@@ -922,7 +934,7 @@ session_age_cb (void *entry, void *ctxt)
         return false;
     } else  {
         // no activity detected on initiator flow for a while, check responder
-        clock_args.hw_ns = rflow_state.last_pkt_ts;
+        clock_args.hw_tick = rflow_state.last_pkt_ts;
         clock_args.sw_ns = &last_pkt_ts;
         pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, (void *)&clock_args);
         if ((ctime_ns - last_pkt_ts) < session_timeout) {
@@ -959,9 +971,9 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     //HAL_TRACE_DEBUG("[{}:{}] timer id {}, bucket: {}",
     //                __FUNCTION__, __LINE__, timer_id,  bucket);
     for (i = 0; i < HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL; i++) {
-        g_hal_state->session_id_ht()->walk_bucket_safe(bucket,
+        g_hal_state->session_hal_handle_ht()->walk_bucket_safe(bucket,
                                                      session_age_cb, &ctime_ns);
-        bucket = (bucket + 1)%g_hal_state->session_id_ht()->num_buckets();
+        bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
 
     // store the bucket id to resume on next invocation
@@ -996,5 +1008,39 @@ session_init (void)
     return HAL_RET_OK;
 }
 
-}    // namespace hal
+void
+tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    hal_ret_t  ret; 
+    session_t *session = (session_t *)ctxt;
 
+    // time to clean up the session
+    ret = fte::session_delete(session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delte aged session {}",
+                      session->config.session_id);
+    }    
+}
+
+hal_ret_t
+tcp_close_timer_schedule (session_t *session)
+{
+    if (getenv("DISABLE_FTE")) {
+        return HAL_RET_OK;
+    }
+
+    session->tcp_close_timer = hal::periodic::timer_schedule(HAL_TIMER_ID_TCP_CLOSE_WAIT,
+                                                       HAL_TCP_CLOSE_WAIT_INTVL,
+                                                       (void *)session,
+                                                       tcp_close_cb, false);
+
+    if (!session->tcp_close_timer) {
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("TCP Close timer started for session {}",
+                     session->config.session_id);
+
+    return HAL_RET_OK;
+}
+
+}    // namespace hal

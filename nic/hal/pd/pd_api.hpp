@@ -2073,9 +2073,14 @@ pd_gft_args_init (pd_gft_args_t *args)
 
 //clock
 typedef struct pd_conv_hw_clock_to_sw_clock_args_s {
-    uint64_t   hw_ns;
+    uint32_t   hw_tick;
     uint64_t  *sw_ns;
 } __PACK__ pd_conv_hw_clock_to_sw_clock_args_t;
+
+typedef struct pd_conv_sw_clock_to_hw_clock_args_s {
+    uint64_t   sw_ns;
+    uint32_t  *hw_tick;
+} __PACK__ pd_conv_sw_clock_to_hw_clock_args_t;
 
 typedef struct pd_clock_delta_comp_args_s {
 } __PACK__ pd_clock_delta_comp_args_t;
@@ -2286,7 +2291,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_CLOCK_DELTA_COMP, 195, "PD_FUNC_ID_CLOCK_DELTA_COMP")\
     ENTRY(PD_FUNC_ID_SYSTEM_DROP_ACTION,    196, "PD_FUNC_ID_SYSTEM_DROP_ACTION") \
     ENTRY(PD_FUNC_ID_MPU_TRACE_ENABLE,      197, "PD_FUNC_ID_MPU_TRACE_ENABLE")\
-    ENTRY(PD_FUNC_ID_MAX,                   198, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, 198, "PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK")\
+    ENTRY(PD_FUNC_ID_MAX,                   199, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2593,6 +2599,7 @@ PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft);
 
 //clock
 PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
+PD_FUNCP_TYPEDEF(pd_conv_sw_clock_to_hw_clock);
 PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
 
 // slab
@@ -2888,6 +2895,7 @@ typedef struct pd_call_s {
 
         // clock
         PD_UNION_FIELD(pd_conv_hw_clock_to_sw_clock);
+        PD_UNION_FIELD(pd_conv_sw_clock_to_hw_clock);
         PD_UNION_FIELD(pd_clock_delta_comp);
 
         // slab

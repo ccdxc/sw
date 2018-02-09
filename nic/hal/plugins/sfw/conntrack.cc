@@ -57,12 +57,28 @@ net_conntrack_configured(fte::ctx_t &ctx)
     return false;
 }
 
+static void
+process_tcp_close(fte::ctx_t& ctx) 
+{
+    // Start a timer to cleanup session if this is the first FIN/RST received
+    // Timer is started in order to wait for either side to close the TCP 
+    // connection
+    if (ctx.existing_session() && ctx.session()->tcp_close_timer == NULL) {
+        hal::tcp_close_timer_schedule(ctx.session()); 
+    }
+}
+
 fte::pipeline_action_t
 conntrack_exec(fte::ctx_t& ctx)
 {
     hal_ret_t       ret;
 
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FLOW_STATE};
+
+    if (ctx.tcp_close()) {
+        process_tcp_close(ctx);
+        return fte::PIPELINE_CONTINUE; 
+    }
 
     if (!net_conntrack_configured(ctx)) {
         return fte::PIPELINE_CONTINUE;

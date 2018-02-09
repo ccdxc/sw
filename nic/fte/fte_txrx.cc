@@ -358,7 +358,7 @@ void inst_t::process_arq()
             HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
             break;
         }
-            
+
         // process the packet and update flow table
         hal::app_redir::app_redir_ctx(*ctx_, false)->set_arm_ctx(arm_ctx_);
         ret = ctx_->process();

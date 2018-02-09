@@ -217,7 +217,8 @@
             "name": "tcp-close",
             "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_TCP_CLOSE" },
             "outbound_features": [
-                 "pensando.io/dol:test"
+                 "pensando.io/dol:test",
+                 "pensando.io/sfw:conntrack"
             ]
         },
         {

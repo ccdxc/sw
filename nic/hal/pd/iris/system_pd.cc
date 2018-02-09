@@ -17,7 +17,8 @@ thread_local void *g_clock_delta_timer;
 
 #define HAL_TIMER_ID_CLOCK_SYNC         0
 #define HAL_TIMER_ID_CLOCK_SYNC_INTVL  (60 * TIME_MSECS_PER_MIN)
-#define HW_CLOCK_TICK_TO_NS            1200480 //based on frequency of 833 Hz
+#define HW_CLOCK_TICK_TO_NS(x)         (x * 1200480) //based on frequency of 833 Hz
+#define NS_TO_HW_CLOCK_TICK(x)         (x / 1200480)
 
 hal_ret_t
 pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
@@ -457,9 +458,26 @@ EXTC hal_ret_t
 pd_conv_hw_clock_to_sw_clock (pd_conv_hw_clock_to_sw_clock_args_t *args)
 {
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
-        *args->sw_ns = args->hw_ns + g_hal_state_pd->clock_delta();
+        HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick), 
+                         (HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta()));
+        *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta();
     } else {
-        *args->sw_ns = args->hw_ns - g_hal_state_pd->clock_delta();
+        *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick) - g_hal_state_pd->clock_delta();
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+//// convert hardware timestamp to software timestamp
+////------------------------------------------------------------------------------
+EXTC hal_ret_t
+pd_conv_sw_clock_to_hw_clock (pd_conv_sw_clock_to_hw_clock_args_t *args)
+{
+    if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
+        *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns - g_hal_state_pd->clock_delta())); 
+    } else {
+        *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns + g_hal_state_pd->clock_delta()));
     }
 
     return HAL_RET_OK;
@@ -476,7 +494,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // Read hw time
     capri_tm_get_clock_tick(&hw_ns);
-    hw_ns = hw_ns * HW_CLOCK_TICK_TO_NS;
+    HW_CLOCK_TICK_TO_NS(hw_ns);
 
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &sw_ts);
@@ -493,6 +511,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
         delta_ns = sw_ns - hw_ns;
         g_hal_state_pd->set_clock_delta_op(HAL_CLOCK_DELTA_OP_ADD);
     }
+
     HAL_TRACE_DEBUG("Delta ns: {}", delta_ns);
     HAL_TRACE_DEBUG("Clock delta op: {}", g_hal_state_pd->clock_delta_op());
     g_hal_state_pd->set_clock_delta(delta_ns);
@@ -508,8 +527,8 @@ pd_clock_delta_comp(pd_clock_delta_comp_args_t *args)
     while (!hal::periodic::periodic_thread_is_running()) {
         pthread_yield();
     }
-
-    g_hal_state_pd->set_clock_delta(0);
+ 
+    clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
     g_clock_delta_timer =
         hal::periodic::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id
                                       HAL_TIMER_ID_CLOCK_SYNC_INTVL,
