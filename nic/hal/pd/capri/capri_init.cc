@@ -176,7 +176,7 @@ capri_p4_asm_init (capri_cfg_t *cfg)
 static hal_ret_t
 capri_p4_pgm_init (capri_cfg_t *cfg)
 {
-    hal_ret_t      ret = HAL_RET_OK;
+    hal_ret_t      ret;
     char           *cfg_path;
     std::string    full_path;
 
@@ -184,20 +184,36 @@ capri_p4_pgm_init (capri_cfg_t *cfg)
     if (cfg_path) {
         full_path =  std::string(cfg_path) + "/" + cfg->pgm_name + "/" + "pgm_bin";
     } else {
-        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
+        HAL_TRACE_ERR("HAL_CONFIG_PATH environment variable not set");
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
     HAL_TRACE_DEBUG("PGM Binaries dir: {}", full_path.c_str());
 
-    // Check if directory is present
+    // check if directory is present
     if (access(full_path.c_str(), R_OK) < 0) {
-        HAL_TRACE_ERR("{} not_present/no_read_permissions", full_path.c_str());
+        HAL_TRACE_ERR("{} not present/no read permissions", full_path.c_str());
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
-
     ret = capri_load_config((char *)full_path.c_str());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to load config for {}", full_path);
+        return ret;
+    }
 
-    return ret;
+    // load the common p4plus program config
+    full_path =  std::string(cfg_path) + "/p4plus/pgm_bin";
+    // check if directory is present
+    if (access(full_path.c_str(), R_OK) < 0) {
+        HAL_TRACE_ERR("{} not present/no read permissions", full_path.c_str());
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+    }
+    ret = capri_load_config((char *)full_path.c_str());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to load config for {}", full_path);
+        return ret;
+    }
+
+    return HAL_RET_OK;
 }
 
 static hal_ret_t

@@ -6,7 +6,7 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 NCC = ../../tools/ncc/capri-ncc.py
-OBJ_DIR = ../../obj/iris
+OBJ_DIR = ../../obj/p4plus
 GEN_DIR = ../../gen
 NCC_OPTIONS = --asm-out --p4-plus --no-ohi --two-byte-profile --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
 
