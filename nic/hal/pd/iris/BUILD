@@ -26,7 +26,6 @@ cc_library(
         "//nic:gen_includes",
         "@sdk//:sdk_headers",
         "//nic/hal:hal_includes",
-        "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         #"//nic/hal:hal_src",
         "//nic/hal/pd/capri",
         "//nic/hal/pd/capri:capri_includes",
@@ -43,6 +42,8 @@ cc_library(
         "//nic:spdlog",
         "//nic:grpc_includes",
         "//nic/p4/include:p4_common_includes",
+        "//nic/hal/pd/libs/wring:wringpd",
+        "//nic/hal/pd/libs/cpupkt:cpupkt",
     ],
     alwayslink = 1,
 )

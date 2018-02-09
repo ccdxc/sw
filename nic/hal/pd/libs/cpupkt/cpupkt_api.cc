@@ -1,6 +1,5 @@
-#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
-#include "nic/hal/pd/iris/p4plus_pd_api.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -13,6 +12,21 @@ namespace pd {
 thread_local uint32_t gc_pindex = 0;
 
 hal_ret_t cpupkt_descr_free(cpupkt_hw_id_t descr_addr);
+
+static inline bool
+cpupkt_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
+{
+    hal_ret_t rv = hal::pd::asic_mem_write(addr, data, size_in_bytes);
+    return rv == HAL_RET_OK ? true : false;
+}
+
+static inline bool
+cpupkt_hbm_read(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
+{
+    hal_ret_t rv = hal::pd::asic_mem_read(addr, data, size_in_bytes);
+    return rv == HAL_RET_OK ? true : false;
+}
+
 
 static inline cpupkt_ctxt_t*
 cpupkt_ctxt_alloc(void) 
@@ -72,7 +86,7 @@ cpupkt_free_and_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
 {
     // Set the slot back to 0
     uint64_t value = 0;
-    if(!p4plus_hbm_write(qinst_info.pc_index_addr,
+    if(!cpupkt_hbm_write(qinst_info.pc_index_addr,
                          (uint8_t *)&value,
                          sizeof(uint64_t))) {
         HAL_TRACE_ERR("Failed to reset pc_index_addr");
@@ -123,14 +137,14 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
 
     uint64_t pktaddr = descr.a0 + descr.o0;
 
-    if(!p4plus_hbm_read(pktaddr, buffer, descr.l0)) {
+    if(!cpupkt_hbm_read(pktaddr, buffer, descr.l0)) {
         HAL_TRACE_ERR("Failed to read hbm page");
         free(buffer);
         return HAL_RET_HW_FAIL;
     }
     if(descr.l1) {
         uint64_t pktaddr = descr.a1 + descr.o1;
-        if (!p4plus_hbm_read(pktaddr, buffer + descr.l0, descr.l1)) {
+        if (!cpupkt_hbm_read(pktaddr, buffer + descr.l0, descr.l1)) {
             HAL_TRACE_ERR("Failed to read hbm page 1");
             free(buffer);
             return HAL_RET_HW_FAIL;
@@ -328,7 +342,7 @@ pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
         value = 0;
         qinst_info = ctxt->rx.queue[i].qinst_info[0];
         //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);
-        if(!p4plus_hbm_read(qinst_info->pc_index_addr,
+        if(!cpupkt_hbm_read(qinst_info->pc_index_addr,
                             (uint8_t *)&value, 
                             sizeof(uint64_t))) {
             HAL_TRACE_ERR("Failed to read the data from the hw");
@@ -348,7 +362,7 @@ pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
                         ctxt->rx.queue[i].type, qinst_info->queue_id, qinst_info->pc_index, qinst_info->pc_index_addr, value, descr_addr);
         // get the descriptor
         pd_descr_aol_t  descr = {0};
-        if(!p4plus_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+        if(!cpupkt_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
             HAL_TRACE_ERR("Failed to read the descr from hw");
             return HAL_RET_HW_FAIL;
         }
@@ -392,7 +406,7 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
     uint64_t value = htonll(descr_addr);
     HAL_TRACE_DEBUG("Programming GC queue: {:#x}, descr: {:#x}, gc_pindex: {}, value: {:#x}",
                         gc_slot_addr, descr_addr, gc_pindex, value);
-    if(!p4plus_hbm_write(gc_slot_addr, (uint8_t*)&value,
+    if(!cpupkt_hbm_write(gc_slot_addr, (uint8_t*)&value,
                          sizeof(cpupkt_hw_id_t))) {
         HAL_TRACE_ERR("Failed to program gc queue");
         return HAL_RET_HW_FAIL;
@@ -493,7 +507,7 @@ cpupkt_program_descr(cpupkt_hw_id_t page_addr, size_t len, cpupkt_hw_id_t* descr
     descr.l0 = len;
 
     HAL_TRACE_DEBUG("Programming descr: descr_addr: {:#x}", *descr_addr);
-    if(!p4plus_hbm_write(*descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+    if(!cpupkt_hbm_write(*descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
         HAL_TRACE_ERR("Failed to program descr");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;
@@ -519,7 +533,7 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
     }
     HAL_TRACE_DEBUG("Programming send queue: addr: {:#x} value: {:#x}",
                         qinst_info->pc_index_addr, descr_addr);
-    if(!p4plus_hbm_write(qinst_info->pc_index_addr, (uint8_t*) &descr_addr, sizeof(cpupkt_hw_id_t))) {
+    if(!cpupkt_hbm_write(qinst_info->pc_index_addr, (uint8_t*) &descr_addr, sizeof(cpupkt_hw_id_t))) {
         HAL_TRACE_ERR("Failed to program send queue");
         return HAL_RET_HW_FAIL;
     }
@@ -605,7 +619,7 @@ pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
         total_len += write_len;
         HAL_TRACE_DEBUG("Copying CPU header of len: {} to addr: {:#x}, l2offset: {:#x}",
                         write_len, write_addr, cpu_header->l2_offset);
-        if(!p4plus_hbm_write(write_addr, (uint8_t *)cpu_header, write_len)) {
+        if(!cpupkt_hbm_write(write_addr, (uint8_t *)cpu_header, write_len)) {
             HAL_TRACE_ERR("Failed to copy packet to the page");
             ret = HAL_RET_HW_FAIL;
             goto cleanup;
@@ -617,7 +631,7 @@ pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
         total_len += write_len;
         HAL_TRACE_DEBUG("Copying P4Plus to P4 header of len: {} to addr: {:#x}",
                         write_len, write_addr);
-        if(!p4plus_hbm_write(write_addr, (uint8_t *)p4_header, write_len)) {
+        if(!cpupkt_hbm_write(write_addr, (uint8_t *)p4_header, write_len)) {
             HAL_TRACE_ERR("Failed to copy packet to the page");
             ret = HAL_RET_HW_FAIL;
             goto cleanup;
@@ -629,7 +643,7 @@ pd_cpupkt_send(pd_cpupkt_send_args_t *s_args)
     write_len = data_len;
     total_len += write_len;
     HAL_TRACE_DEBUG("Copying data of len: {} to page at addr: {:#x}", write_len, write_addr);
-    if(!p4plus_hbm_write(write_addr, data, write_len)) {
+    if(!cpupkt_hbm_write(write_addr, data, write_len)) {
         HAL_TRACE_ERR("Failed to copy packet to the page");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;

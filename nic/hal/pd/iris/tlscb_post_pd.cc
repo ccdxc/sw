@@ -9,7 +9,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/gen/tls_txdma_post_crypto_enc/include/tls_txdma_post_crypto_enc_p4plus_ingress.h"
-#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 
 namespace hal {

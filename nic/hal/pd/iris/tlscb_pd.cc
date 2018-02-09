@@ -1,6 +1,6 @@
 #include "nic/include/base.h"
 #include <arpa/inet.h>
-#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/tlscb_pd.hpp"

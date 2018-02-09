@@ -26,7 +26,7 @@
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/iris/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/tcpcb_pd.hpp"
-#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/pd/iris/crypto_keys_pd.hpp"
 #include "nic/hal/pd/iris/ipseccb_pd.hpp"

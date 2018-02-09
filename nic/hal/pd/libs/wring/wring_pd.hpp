@@ -6,7 +6,7 @@
 #include "nic/hal/src/wring.hpp"
 #include "nic/include/base.h"
 #include "sdk/ht.hpp"
-#include "nic/hal/pd/iris/hal_state_pd.hpp"
+//#include "nic/hal/pd/iris/hal_state_pd.hpp"
 
 using sdk::lib::ht_ctxt_t;
 

@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/hal.hpp"

@@ -4,7 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif_manager.hpp"
