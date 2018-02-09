@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/grpc-gateway/runtime"
+
 	"github.com/pensando/sw/api"
 	x509 "github.com/pensando/sw/api/generated/x509"
 	"github.com/pensando/sw/api/generated/x509/grpc/client"

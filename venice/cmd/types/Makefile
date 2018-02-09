@@ -16,4 +16,4 @@ bld_proto:
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/gogoproto \
 		--gofast_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor,plugins=grpc:. *.proto
-	@gofmt -s -w *.pb.go
+	@goimports -local "github.com/pensando/sw" -l -w *.pb.go

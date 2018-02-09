@@ -12,6 +12,10 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"google.golang.org/grpc"
+
 	"github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -21,9 +25,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
-	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
-	"google.golang.org/grpc"
 )
 
 // dummy vars to suppress unused errors

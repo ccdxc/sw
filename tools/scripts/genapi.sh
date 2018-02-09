@@ -93,6 +93,6 @@ do
         cd $tempdir
 done < ${curdir}/generated/manifest
 cd ${curdir}
-echo "++ running go fmt"
+echo "++ running goimports"
 # Go format code
-gofmt -s -w generated
+goimports -local "github.com/pensando/sw" -l -w generated

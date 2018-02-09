@@ -18,9 +18,14 @@ const (
 	goTestCmd   = "GOPATH=%s VENICE_DEV=1 go test -cover -tags test -p 1 %s"
 	minCoverage = 75.0
 	failPrefix  = "--- FAIL:"
+	// report should not enforce coverage when there are no test files.
+	covIgnorePrefix = "[no test files]"
 )
 
+// ErrTestFailed errors out when there is a compilation failure or test assertions.
 var ErrTestFailed = errors.New("test execution failed")
+
+// ErrTestCovFailed errors out when the coverage percent is < 75.0%
 var ErrTestCovFailed = errors.New("coverage tests failed")
 
 // TestReport summarizes all the targets. We capture only the failed tests.
@@ -50,8 +55,8 @@ func main() {
 		}
 		t.Results = append(t.Results, &p)
 	}
-	t.RunCoverage()
-	j, _ := t.reportToJson()
+	t.runCoverage()
+	j, _ := t.reportToJSON()
 
 	t.testCoveragePass()
 
@@ -62,7 +67,7 @@ func main() {
 	fmt.Println(string(j))
 }
 
-func (t *TestReport) RunCoverage() {
+func (t *TestReport) runCoverage() {
 	for _, tgt := range t.Results {
 		err := tgt.test()
 		if err != nil || tgt.Error != "" {
@@ -71,7 +76,7 @@ func (t *TestReport) RunCoverage() {
 	}
 }
 
-func (t *TestReport) reportToJson() ([]byte, error) {
+func (t *TestReport) reportToJSON() ([]byte, error) {
 	return json.MarshalIndent(t, "", "  ")
 }
 
@@ -129,11 +134,22 @@ func (tgt *Target) getFailedTests(b []byte) error {
 }
 
 func (tgt *Target) getCoveragePercent(b []byte) error {
-	lines := strings.Split(string(b), "\n")
+	out := strings.TrimSpace(string(b))
+	lines := strings.Split(out, "\n")
 	for _, line := range lines {
-		re := regexp.MustCompile("[0-9]+.[0-9]%")
+		// We need this for packages which doesn't have any test files.
+		// Common cases include binary only packages, generated code, type definitions.
+		if strings.Contains(line, covIgnorePrefix) {
+			tgt.Coverage = 100.0
+			continue
+		}
+		// The coverage percentage parsing should be > 0.0%
+		// Cases include packages which has a *test.go file but doesn't test the main binary.
+		// This will also ignore parsing coverage details for the integration tests themselves
+		re := regexp.MustCompile("[1-9]+.[0-9]%")
 		v := re.FindString(line)
 		if len(v) <= 0 {
+			tgt.Coverage = 100.0
 			continue
 		}
 		v = strings.TrimSuffix(v, "%")

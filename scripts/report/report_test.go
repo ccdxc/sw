@@ -91,8 +91,11 @@ FAIL	github.com/pensando/sw/nic/agent/netagent/state	0.021s
 2018/02/06 11:00:20 Insufficient code coverage for the following packages:
 2018/02/06 11:00:20 github.com/pensando/sw/nic/agent/cmd/halctl`
 
-	testCovFailedStdout = `ok  	github.com/pensando/sw/nic/agent/netagent/state	0.020s	coverage: 41.7% of statements`
-	testInvalidPkgName  = "github.com/pensando/foo"
+	testCovFailedStdout      = `ok  	github.com/pensando/sw/nic/agent/netagent/state	0.020s	coverage: 41.7% of statements`
+	testInvalidPkgName       = "github.com/pensando/foo"
+	testCovIgnoreNoTestFiles = `?   	github.com/pensando/sw/api	[no test files]`
+	testCovIgnoreSkipped     = `ok  	github.com/pensando/sw/test/e2e	0.028s`
+	testCovIgnoreZeroCov     = `ok  	github.com/pensando/sw/api/integration	0.201s	coverage: 0.0% of statements`
 )
 
 // Happy path tests
@@ -105,9 +108,9 @@ func TestCoverage(t *testing.T) {
 		},
 	}
 
-	tr.RunCoverage()
+	tr.runCoverage()
 
-	_, err := tr.reportToJson()
+	_, err := tr.reportToJSON()
 	AssertOk(t, err, "Could not convert report to json")
 
 	tr.testCoveragePass()
@@ -148,4 +151,24 @@ func TestInvalidPackageName(t *testing.T) {
 	}
 	tgt.test()
 	AssertEquals(t, ErrTestFailed.Error(), tgt.Error, "expected the test to fail, it passed instead")
+}
+
+func TestCoverageIgnore(t *testing.T) {
+	tgt := Target{
+		Name: test,
+	}
+	err := tgt.getCoveragePercent([]byte(testCovIgnoreNoTestFiles))
+	AssertOk(t, err, "coverage parsing expected to pass")
+	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100% for missing test files")
+
+	tgt.Coverage = 0.0
+	err = tgt.getCoveragePercent([]byte(testCovIgnoreSkipped))
+	AssertOk(t, err, "coverage parsing expected to pass")
+	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100% for missing test files")
+
+	tgt.Coverage = 0.0
+	err = tgt.getCoveragePercent([]byte(testCovIgnoreZeroCov))
+	AssertOk(t, err, "coverage parsing expected to pass")
+	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100% for missing test files")
+
 }

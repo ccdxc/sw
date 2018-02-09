@@ -87,7 +87,7 @@ def run_hntap():
 
 def run_http_server():
     log = open(http_svr_log, "w")
-    cmd = ['go', 'run', nic_tools_dir + '/simple_http_server.go' ]
+    cmd = ['go', 'run', nic_tools_dir + '/server/simple_http_server.go' ]
     p = Popen(cmd, stdout=log, stderr=log, preexec_fn=os.setsid)
     global http_svr_process
     http_svr_process = p
@@ -99,7 +99,7 @@ def run_http_server():
 
 def run_http_client():
     log = open(http_clt_log, "a")
-    cmd = ['go', 'run', nic_tools_dir + '/simple_http_client2.go' ]
+    cmd = ['go', 'run', nic_tools_dir + '/client/simple_http_client.go' ]
     p = Popen(cmd, stdout=log, stderr=log)
     print("* Starting HTTP Client on pid (%s)" % (str(p.pid)))
     print("    - Log file: " + http_clt_log + "\n")
@@ -156,7 +156,7 @@ def main():
         run_hntap()
         print("E2E L7 DOL: config-only, stopping..\n")
         sys.exit(0)
-        
+
     start_time = time.time()
     log = open(http_clt_log, "w")
     log.close()

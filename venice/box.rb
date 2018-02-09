@@ -9,4 +9,4 @@ run "chmod +x /entrypoint.sh"
 
 entrypoint "/dind"
 
-cmd %w[make build unit-test-verbose]
+cmd %w[make]

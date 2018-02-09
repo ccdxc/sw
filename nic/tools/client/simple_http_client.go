@@ -12,8 +12,8 @@ var (
 )
 
 const (
-	MaxIdleConnections int = 20
-	RequestTimeout     int = 60
+	maxIdleConnections = 20
+	requestTimeout     = 60
 )
 
 // init HTTPClient
@@ -25,17 +25,17 @@ func init() {
 func createHTTPClient() *http.Client {
 	client := &http.Client{
 		Transport: &http.Transport{
-			MaxIdleConnsPerHost: MaxIdleConnections,
+			MaxIdleConnsPerHost: maxIdleConnections,
 			DisableKeepAlives:   true,
 		},
-		Timeout: time.Duration(RequestTimeout) * time.Second,
+		Timeout: time.Duration(requestTimeout) * time.Second,
 	}
 
 	return client
 }
 
 func main() {
-	var endPoint string = "http://64.0.0.1:9080/index.html"
+	endPoint := "http://64.0.0.1:9080/index.html"
 
 	req, err := http.NewRequest("GET", endPoint, nil)
 	if err != nil {

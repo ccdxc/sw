@@ -96,6 +96,8 @@ func NewLeaderService(id string) *LeaderService {
 		id: id,
 	}
 }
+
+// ID returns the leader ID.
 func (l *LeaderService) ID() string {
 	return l.id
 }
@@ -245,7 +247,7 @@ type Configs struct {
 }
 
 // GenerateKubeletConfig is a mock implementation of kubelet config generation.
-func (c *Configs) GenerateKubeletConfig(nodeId, virtualIP string) error {
+func (c *Configs) GenerateKubeletConfig(nodeID, virtualIP string) error {
 	return nil
 }
 
@@ -294,7 +296,7 @@ func (m *K8sService) Start(client k8sclient.Interface, isLeader bool) {
 func (m *K8sService) Stop() {
 }
 
-// Delete a node
+// DeleteNode deletes a node
 func (m *K8sService) DeleteNode(name string) error {
 	return nil
 }

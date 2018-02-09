@@ -1,25 +1,35 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|netagent/datapath/halproto|nic/gen"
-# Has venice protos and all things auto generated.
+# Lists excluded patterns to go list
+EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim"
+
+# Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels/lproto venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
 venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
 venice/utils/runtime/test venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi venice/ctrler/evtsmgr/rpcserver/eventsproto \
 nic/agent/nmd/protos nic/agent/netagent/protos
 
-#
-# Note: Excluded api/generated directory on purpose to avoid golint errors
-#
-TESTS := ./test/...
-TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
-./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./api/ ./api/hooks/... \
-./api/labels/... ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... \
-./venice/collector/... ./venice/cli/... ./venice/aggregator/... ./venice/citadel/... ${TESTS} ./scripts/report/...
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
-TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
+# Lists all the vendored packages that need to be installed prior to the build.
+TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway \
+							./vendor/github.com/gogo/protobuf/protoc-gen-gofast \
+							./vendor/github.com/golang/protobuf/protoc-gen-go \
+							./venice/utils/apigen/protoc-gen-pensando \
+							./vendor/golang.org/x/tools/cmd/goimports \
+							./vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger \
+							./vendor/github.com/GeertJohan/go.rice/rice \
+							./vendor/github.com/golang/mock/gomock \
+							./vendor/github.com/golang/mock/mockgen \
+							./vendor/github.com/golang/lint/golint \
+							./vendor/github.com/golang/dep/cmd/dep \
+							./asset-build/... \
 
-GOVET_CMD := go vet
+# Lists the binaries to be containerized
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
+
+# Lists all go packages. Auto ignores vendor
+GO_PKG := $(shell go list -e -f '{{.ImportPath}}' ./... | egrep -v ${EXCLUDE_PATTERNS})
+
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
@@ -29,43 +39,66 @@ REGISTRY_URL ?= registry.test.pensando.io:5000
 default:
 	$(MAKE) ws-tools
 	$(MAKE) checks
-	$(MAKE) qbuild
-	$(MAKE) unit-test
-	$(MAKE) cover
+	$(MAKE) build
+	$(MAKE) unit-test-cover
 
-goimports-src:
-	$(info +++ goimports $(PKG_DIRS))
+# ws-tools installs all the binaries needed to generate, lint and build go sources
+ws-tools:
+	$(info +++ building WS tools)
+	@go install ${TO_INSTALL}
+
+# checks ensure that the go code meets standards
+checks: gen goimports-src golint-src govet-src
+
+# gen does all the autogeneration. viz venice cli, proto sources. Ensure that any new autogen target is added to TO_GEN above
+gen:
+	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
+	@$(PWD)/venice/cli/scripts/gen.sh
+
+# goimports-src formats the source and orders imports
+# Target directories is needed only for goipmorts where it doesn't accept package names.
+# Doing the go list here avoids an additional global go list
+goimports-src: gen
+	$(info +++ goimports sources)
+	@GO_DIRS=$(go list -e -f '{{.Dir}}' ./... | egrep -v ${EXCLUDE_PATTERNS})
 ifdef JOB_ID
 	@echo "Running in CI; checking goimports and fmt"
-	@$(eval IMPRT=`find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOIMPORTS_CMD} -l`)
+	@$(eval IMPRT=`${GOIMPORTS_CMD} ${GO_DIRS}`)
 	@echo "goimports found errors in the following files(if any):"
 	@echo $(IMPRT)
 	@test -z "$(IMPRT)"
 endif
-	@find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOIMPORTS_CMD} -w
+	@${GOIMPORTS_CMD} -w ${GO_DIRS}
 
-golint-src:
-	$(info +++ golint $(TO_BUILD))
-	@scripts/validate-lint.sh $(TO_BUILD)
+# golint-src runs go linter and verifies code style matches golang recommendations
+golint-src: gen
+	$(info +++ golint sources)
+	@$(eval LINT=`golint ${GO_PKG} | grep -v pb.go`)
+	@echo $(LINT)
+	@test -z "$(LINT)"
 
-govet-src:
-	$(info +++ govet $(PKG_DIRS))
-	@${GOVET_CMD} $(shell go list -e ./... | egrep -v ${EXCLUDE_DIRS})
+# govet-src validates source code and reports suspicious constructs
+govet-src: gen
+	$(info +++ govet sources)
+	@go vet ${GO_PKG}
 
-checks: protogen goimports-src golint-src govet-src
-
-# pregen target generates code that is needed by other binaries
-pregen:
-	@$(PWD)/venice/cli/scripts/gen.sh
-
-qbuild:
-	$(info +++ go install $(TO_BUILD))
-	go install -v $(TO_BUILD)
-
+.PHONY: build
+# build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
 build:
-	$(MAKE) ws-tools
-	$(MAKE) checks
-	$(MAKE) qbuild
+	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
+		echo "+++ building go sources"; go install ${GO_PKG}; \
+	else \
+		echo "+++ rebuilding all go sources"; go install -a ${GO_PKG};\
+	fi
+
+# VENICE_DEV=1 switches behavior of Venice components and libraries to test mode.
+# For rpckit, it changes the default connection mode from "TLS on" to "TLS off"
+# See venice/utils/testenv
+# unit-test-cover uses go test wrappers in scripts/report/report.go and runs coverage tests.
+# this will return a non 0 error when coverage for a package is < 75.0%
+unit-test-cover:
+	$(info +++ running go tests)
+	@VENICE_DEV=1 go run scripts/report/report.go ${GO_PKG}
 
 c-start:
 	@tools/scripts/create-container.sh startCluster
@@ -74,14 +107,8 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@# bypassing docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7 strip ${TO_STRIP}
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
-
-qdeploy:
-	$(MAKE) container-qcompile
-	$(MAKE) install
-	$(MAKE) c-start
 
 deploy:
 	$(MAKE) container-compile
@@ -89,8 +116,8 @@ deploy:
 	$(MAKE) c-start
 
 cluster:
-	$(MAKE) qbuild
-	$(MAKE) container-qcompile
+	$(MAKE) build
+	$(MAKE) container-compile
 	$(MAKE) install
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
 	tools/scripts/startSim.py
@@ -107,92 +134,31 @@ helper-containers:
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.1 .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.1 .
 
-container-qcompile:
-	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7 make ws-tools protogen qbuild
-
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7
-
-ws-tools:
-	$(info +++ building WS tools)
-	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protoc-gen-gofast && go install) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/protobuf/protoc-gen-go && go install) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/venice/utils/apigen/protoc-gen-pensando && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/golang.org/x/tools/cmd/goimports && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/GeertJohan/go.rice/rice && go install) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/gomock && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/dep/cmd/dep && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/asset-build/asset-pull && go install) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/asset-build/asset-upload && go install)
-
-# VENICE_DEV=1 switches behavior of Venice components and libraries to test mode.
-# For rpckit, it changes the default connection mode from "TLS on" to "TLS off"
-# See venice/utils/testenv
-unit-test:
-	$(info +++ go test -p 1 $(TO_BUILD))
-	VENICE_DEV=1 $(GOCMD) test -p 1 $(TO_BUILD); \
-
-unit-race-test:
-	$(info +++ go test -race $(TO_BUILD))
-	VENICE_DEV=1 go test -race $(TO_BUILD)
-
-unit-test-verbose:
-	$(info +++ go test -v -p 1 $(TO_BUILD))
-	VENICE_DEV=1 $(GOCMD) test -v -p 1 $(TO_BUILD); \
-
-cover:
-	$(info +++ go test -cover -tags test $(TO_BUILD))
-	@scripts/test-coverage.sh $(TO_BUILD)
-
-report:
-	$(GOCMD) run scripts/report/report.go /meta/coverage.json $(TO_BUILD)
-
-ci-testrun:
-	tools/scripts/CI.sh
-
-ci-test:
-	$(MAKE) dev
-	$(MAKE) ci-testrun
-	$(MAKE) dev-clean
-
-jobd-test:
-	$(MAKE) build
-	$(MAKE) unit-test-verbose
-	$(MAKE) cover
-
-protogen:
-	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
-	$(MAKE) pregen
-
-install_box:
-	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
-
-clean-grpc:
-	rm -rf grpc-gateway
-
-update-grpc: clean-grpc
-	@if git remote show origin | grep -q git@github.com; \
-	then \
-		echo Using ssh, trying git submodule...; \
-		git submodule update --init; \
+	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
+		echo "+++ building go sources"; docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7 make ws-tools gen build; \
 	else \
-		echo Using https, trying direct clone...; \
-		git clone https://github.com/pensando/grpc-gateway; \
+		echo "+++ rebuilding all go sources"; docker run --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7 make ws-tools gen build;\
 	fi
 
-docker-test: install_box
-	NO_COPY=1 box box.rb
-	docker run -it -v "${PWD}:/go/src/github.com/pensando/sw" --rm pensando/sw
+container-qcompile:
+	mkdir -p ${PWD}/bin/cbin
+	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
+		echo "+++ building go sources"; docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7; \
+	else \
+		echo "+++ rebuilding all go sources"; docker run --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.7;\
+	fi
 
-test-debug: install_box
-	NO_COPY=1 box box-base.rb
-	docker run -it -v "${PWD}:/go/src/github.com/pensando/sw" pensando/sw:dependencies
+
+unit-race-test:
+	$(info +++ running go tests with race detector)
+	@VENICE_DEV=1 go test -race ${GO_PKG}
+
+unit-test-verbose:
+	$(info +++ running go tests verbose)
+	@VENICE_DEV=1 $(GOCMD) test -v -p 1 ${GO_PKG}; \
+
 
 # Target to run on Mac to start kibana docker, this connects to the Elastic running on vagrant cluster
 start-kibana:
@@ -218,7 +184,7 @@ dev-clean:
 
 test-cluster:
 	scripts/bringup-dev.sh Vagrantfile.e2e
-	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make qbuild && make cluster'
+	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/; make build && make cluster'
 	scripts/setup_hostsim.sh
 	vagrant ssh node1 -- '/import/src/github.com/pensando/sw/tools/scripts/startSim.py -nodes $$NAPLES_NODES -simnodes $$HOSTSIM_NODES -hostif eth2 -uplink eth3 -simif eth2 -gobin /import/bin/cbin -simbin /import/bin'
 
@@ -260,5 +226,3 @@ e2e:
 	docker exec -it node0 sh -c 'E2E_TEST=1 go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config.json '
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
-
-.PHONY: build

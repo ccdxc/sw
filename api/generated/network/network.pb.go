@@ -4755,7 +4755,7 @@ func (m *TLSClientPolicySpec) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.CertificatesSelector) > 0 {
-		for k := range m.CertificatesSelector {
+		for k, _ := range m.CertificatesSelector {
 			dAtA[i] = 0xa
 			i++
 			v := m.CertificatesSelector[k]

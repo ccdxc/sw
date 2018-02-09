@@ -155,7 +155,7 @@ func NewCertSrv(listenURL, certPath, keyPath, rootsPath string) (*CertSrv, error
 	return ctrler, err
 }
 
-// Returns the URL the server is listening on
+// GetListenURL returns the URL the server is listening on
 func (c *CertSrv) GetListenURL() string {
 	return c.listenURL
 }
@@ -166,14 +166,17 @@ func (c *CertSrv) Stop() error {
 	return nil
 }
 
+// GetRPCSuccessCount returns rpcSuccess count
 func (c *CertSrv) GetRPCSuccessCount() uint64 {
 	return atomic.LoadUint64(&c.rpcSuccess)
 }
 
+// GetRPCErrorCount returns rpcError count
 func (c *CertSrv) GetRPCErrorCount() uint64 {
 	return atomic.LoadUint64(&c.rpcError)
 }
 
+// ClearRPCCounts clears rpcSuccess and rpcError counters
 func (c *CertSrv) ClearRPCCounts() {
 	atomic.StoreUint64(&c.rpcSuccess, 0)
 	atomic.StoreUint64(&c.rpcError, 0)

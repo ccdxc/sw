@@ -1,6 +1,6 @@
 ---
 targets:
-  test: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make jobd-test TO_BUILD=./test/..." ]
+  test: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make" ]
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"

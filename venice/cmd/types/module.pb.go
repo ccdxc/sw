@@ -30,8 +30,10 @@ import api "github.com/pensando/sw/api"
 import api1 "github.com/pensando/sw/api"
 import _ "github.com/gogo/protobuf/gogoproto"
 
-import context "golang.org/x/net/context"
-import grpc "google.golang.org/grpc"
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
 
 import io "io"
 
@@ -557,7 +559,7 @@ func (m *ModuleSpec_Submodule) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.EnvVars) > 0 {
-		for k := range m.EnvVars {
+		for k, _ := range m.EnvVars {
 			dAtA[i] = 0x32
 			i++
 			v := m.EnvVars[k]

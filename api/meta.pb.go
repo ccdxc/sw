@@ -446,7 +446,7 @@ func (m *ObjectMeta) MarshalTo(dAtA []byte) (int, error) {
 		i += copy(dAtA[i:], m.UUID)
 	}
 	if len(m.Labels) > 0 {
-		for k := range m.Labels {
+		for k, _ := range m.Labels {
 			dAtA[i] = 0x32
 			i++
 			v := m.Labels[k]

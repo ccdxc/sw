@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/grpc-gateway/runtime"
+
 	"github.com/pensando/sw/api"
 	telemetry "github.com/pensando/sw/api/generated/telemetry"
 	"github.com/pensando/sw/api/generated/telemetry/grpc/client"

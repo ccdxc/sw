@@ -1,14 +1,10 @@
-package main
+package hntap
 
 import (
-	//"encoding/json"
+	"flag"
 	"fmt"
 	"net"
-	//"os"
-	//"os/exec"
 	"strconv"
-	//"strings"
-	"flag"
 	"time"
 
 	"github.com/google/gopacket"
@@ -17,7 +13,7 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
-// createVethPair creates veth interface pairs with specified name
+// setupVethPairWithBridge creates veth interface pairs with specified name
 func setupVethPairWithBridge(brname, brIPnet,
 	local, localIPnet,
 	peer, peerIPnet,
@@ -29,13 +25,13 @@ func setupVethPairWithBridge(brname, brIPnet,
 		log.Errorf("Could not create bridge %s: %v", brname, err)
 		return err
 	}
-	brIp, brIpNet, err := net.ParseCIDR(brIPnet)
+	brIP, brIPNet, err := net.ParseCIDR(brIPnet)
 	if err != nil {
 		log.Errorf("Error parsing IP %s for bridge %s: %v", brIPnet, brname, err)
 		return err
 	}
 
-	var address = &net.IPNet{IP: brIp, Mask: brIpNet.Mask}
+	var address = &net.IPNet{IP: brIP, Mask: brIPNet.Mask}
 	var addr = &netlink.Addr{IPNet: address}
 	if err := netlink.AddrAdd(br, addr); err != nil {
 		log.Errorf("Error configuring IP(%s) on the bridge %s: %v", brIPnet, brname, err)
@@ -70,13 +66,13 @@ func setupVethPairWithBridge(brname, brIPnet,
 		return err
 	}
 
-	Ip, IpNet, err := net.ParseCIDR(localIPnet)
+	IP, IPNet, err := net.ParseCIDR(localIPnet)
 	if err != nil {
 		log.Errorf("Error parsing IP %s for interface %s: %v", localIPnet, local, err)
 		return err
 	}
 
-	address = &net.IPNet{IP: Ip, Mask: IpNet.Mask}
+	address = &net.IPNet{IP: IP, Mask: IPNet.Mask}
 	addr = &netlink.Addr{IPNet: address}
 	if err := netlink.AddrAdd(lintf, addr); err != nil {
 		log.Errorf("Error configuring IP(%s) on the interface %s: %v", localIPnet, local, err)
@@ -107,13 +103,13 @@ func setupVethPairWithBridge(brname, brIPnet,
 		return err
 	}
 
-	pIp, pIpNet, err := net.ParseCIDR(peerIPnet)
+	pIP, pIPNet, err := net.ParseCIDR(peerIPnet)
 	if err != nil {
 		log.Errorf("Error parsing IP %s for interface %s: %v", peerIPnet, peer, err)
 		return err
 	}
 
-	address = &net.IPNet{IP: pIp, Mask: pIpNet.Mask}
+	address = &net.IPNet{IP: pIP, Mask: pIPNet.Mask}
 	addr = &netlink.Addr{IPNet: address}
 	if err := netlink.AddrAdd(pintf, addr); err != nil {
 		log.Errorf("Error configuring IP(%s) on the interface %s: %v", peerIPnet, peer, err)
@@ -140,13 +136,13 @@ func setupTapIf(name, IPsubnet string) error {
 		return err
 	}
 
-	Ip, IpNet, err := net.ParseCIDR(IPsubnet)
+	IP, IPNet, err := net.ParseCIDR(IPsubnet)
 	if err != nil {
 		log.Errorf("Error parsing IP %s for interface %s: %v", IPsubnet, name, err)
 		return err
 	}
 
-	var address = &net.IPNet{IP: Ip, Mask: IpNet.Mask}
+	var address = &net.IPNet{IP: IP, Mask: IPNet.Mask}
 	var addr = &netlink.Addr{IPNet: address}
 	if err := netlink.AddrAdd(intf, addr); err != nil {
 		log.Errorf("Error configuring IP(%s) on the interface %s: %v", IPsubnet, name, err)
@@ -237,7 +233,7 @@ func listenOnDevice(device string, packetCount int) error {
 	log.Infof("Opened device %s to capture packets", device)
 
 	// Use the handle as a packet source to process all packets
-	var packetRcvd int = 0
+	var packetRcvd int
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	for packet := range packetSource.Packets() {
 		// Process packet here
@@ -255,7 +251,7 @@ func listenOnDevice(device string, packetCount int) error {
 
 func handleHostTx(done chan bool) {
 
-	if hntap_mode == "native" {
+	if hntapMode == "native" {
 		device = "hntap_host0"
 	} else {
 		device = "hntap_hostveth0"
@@ -276,7 +272,7 @@ func handleNetTx(done chan bool) {
 
 func handleNetRx(done chan bool) {
 
-	if hntap_mode == "native" {
+	if hntapMode == "native" {
 		device = "hntap_net0"
 	} else {
 		device = "hntap_netveth0"
@@ -312,7 +308,7 @@ func handleNetworkTxRx(done chan bool) {
 	done <- true
 }
 
-var hntap_mode string
+var hntapMode string
 
 func main() {
 
@@ -320,7 +316,7 @@ func main() {
 	flag.Parse()
 
 	fmt.Println("argptr:", *argptr)
-	hntap_mode = *argptr
+	hntapMode = *argptr
 
 	/*
 	 * By default, create a TAP interface each for host side and network side.

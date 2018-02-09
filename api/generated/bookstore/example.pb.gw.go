@@ -16,11 +16,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/pensando/grpc-gateway/runtime"
 	"github.com/pensando/grpc-gateway/utilities"
-	"github.com/pensando/sw/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+
+	"github.com/pensando/sw/api"
 )
 
 var _ codes.Code

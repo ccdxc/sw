@@ -155,7 +155,7 @@ func NewCKMctrler(listenURL, certPath, keyPath, rootsPath string) (*CKMctrler, e
 	return ctrler, err
 }
 
-// Returns the URL the server is listening on
+// GetListenURL returns the URL the server is listening on
 func (c *CKMctrler) GetListenURL() string {
 	return c.listenURL
 }
@@ -166,14 +166,17 @@ func (c *CKMctrler) Stop() error {
 	return nil
 }
 
+// GetRPCSuccessCount returns rpcSuccess count
 func (c *CKMctrler) GetRPCSuccessCount() uint64 {
 	return atomic.LoadUint64(&c.rpcSuccess)
 }
 
+// GetRPCErrorCount returns rpcError count
 func (c *CKMctrler) GetRPCErrorCount() uint64 {
 	return atomic.LoadUint64(&c.rpcError)
 }
 
+// ClearRPCCounts clears rpcSuccess and rpcError counters
 func (c *CKMctrler) ClearRPCCounts() {
 	atomic.StoreUint64(&c.rpcSuccess, 0)
 	atomic.StoreUint64(&c.rpcError, 0)
