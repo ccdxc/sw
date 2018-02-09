@@ -19,50 +19,19 @@ service NwSecurityRule {
     rpc SecurityRuleGet (SecurityRuleGetMsg) returns (SecurityRuleGetResponseMsg) {}
 }
 
-enum IPAddressType {
-    IP_ADDRESS_NONE           = 0;
-    IP_ADDRESS_IPV4_ANY       = 1;  // any IPv4 address
-    IP_ADDRESS_IPV6_ANY       = 2;  // any IPv6 address
-    IP_ADDRESS_ANY            = 3;  // any IP address
-    IP_ADDRESS_IPV4_MULTICAST = 4;  // any IPv4 multicast address
-    IP_ADDRESS_IPV6_MULTICAST = 5;  // any IPv6 multicast address
-    IP_ADDRESS_MULTICAST      = 6;  // any IP multicast address
-    IP_ADDRESS_V6_LINK_LOCAL  = 7;  // IPv6 link local address
-}
-
-message IPSubnet {
-    oneof subnet {
-        types.IPPrefix ipv4_subnet      = 1;     // V4 Subnet
-        types.IPPrefix ipv6_subnet      = 2;     // V6 Subnet
-    }
-}
-
-message AddressRange {
-    oneof range {
-        types.IPRange ipv4_range       = 1;  // V4 address range
-        types.IPRange ipv6_range       = 2;  // V6 address range
-    }
-}
-
 // AddressSpec is the named prefix or range
 message AddressSpec {
     oneof   Address {
-        IPSubnet      prefix     = 1;    // v4 or v6 address prefix
-        AddressRange  range      = 2;    // v4 or v6 address range
+        types.IPSubnet        prefix     = 1;    // v4 or v6 address prefix
+        types.AddressRange    range      = 2;    // v4 or v6 address range
     }
 }
 
 message AddressStatus {
 }
 
-message Address {
-    types.ObjectMeta    meta            = 1;
-    AddressSpec         spec            = 2;
-    AddressStatus       status          = 3;
-}
-
 message AddressGroupSpec {
-    repeated Address address = 1;
+    repeated types.Address address = 1;
 }
 
 message AddressGroupStatus {
@@ -75,15 +44,14 @@ message AddressGroup {
 }
 
 message IPAddressSpec {
-
     oneof Formats {
-        IPAddressType   type        = 1;
-        IPSubnet        prefix      = 2;
-        AddressRange    range       = 3;
-        Address         address     = 4;
-        AddressGroup    addr_grp    = 5;
+        types.IPAddressType   type        = 1;
+        types.IPSubnet        prefix      = 2;
+        types.AddressRange    range       = 3;
+        types.Address         address     = 4;
+        AddressGroup          addr_grp    = 5;
     }
-    bool negate                     = 6;
+    bool negate                           = 6;
 }
 
 // predefined apps - default apps for which ALG functionality is invoked

@@ -1,0 +1,107 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for NAT
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+import "types.proto";
+import "kh.proto";
+
+package nat;
+option go_package="halproto";
+
+// The NAT service definition
+service Nat {
+  rpc NatRuleCreate (NatRuleRequestMsg) returns (NatRuleResponseMsg) {}
+  rpc NatRuleGet (NatRuleGetRequestMsg) returns (NatRuleGetResponseMsg) {}
+}
+
+// types of NAT actions supported
+enum NatAction {
+  NAT_TYPE_NONE                 = 0;
+  NAT_TYPE_STATIC_ADDRESS       = 1;
+  NAT_TYPE_DYNAMIC_ADDRESS      = 2;
+  NAT_TYPE_DYNAMIC_ADDRESS_PORT = 3;
+}
+
+// NAT pool definition
+// NOTE: addresses inside the NAT pool are "owned" by the device, so device is
+// expected to advertise the routes for the same and respond to ARP requests
+message NatPool {
+  repeated types.Address   address    = 1;    // NAT address range(s)
+  types.L4PortRange        port_range = 2;    // port range (for NAPT)
+}
+
+// NatRuleSpec is the user intent for the NAT rule
+message NatRuleSpec {
+  types.ObjectMeta               meta            = 1;    // common object meta
+  kh.NatRuleKeyHandle            key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];;    // key or handle of this object
+
+  // NAT rule match conditions
+  repeated types.IPAddressObj    src_address     = 3;    // source address(es)
+  repeated uint32                src_sg          = 4;    // source security group(s)
+  repeated types.IPAddressObj    dst_address     = 5;    // destination address(es)
+  repeated uint32                dst_sg          = 6;    // destination security group(s)
+  repeated types.L4PortRange     dst_port_range  = 7;    // dst port range
+  repeated types.L4PortRange     src_port_range  = 8;    // src port range
+
+  // NAT rule action related attributes
+  NatAction                      src_nat_action  = 9;    // action related to the rule
+  NatAction                      dst_nat_action  = 10;   // action related to the rule
+  NatPool                        src_nat_pool    = 11;   // src NAT pool
+  NatPool                        dst_nat_pool    = 12;   // dst NAT pool
+}
+
+// NatRuleRequestMsg is the batched add or modify of NAT rule request
+message NatRuleRequestMsg {
+  repeated NatRuleSpec    request = 1;    // batched request
+}
+
+// NatRuleStatus reflects the current opertional status of the NAT rule
+message NatRuleStatus {
+  fixed64    handle  = 1;    // id of the NAT rule returned by HAL
+}
+
+// NatRuleResponse is the response to NatRuleSpec
+message NatRuleResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];  // API status code
+  NatRuleStatus      status     = 2;
+}
+
+// NatRuleResponseMsg is batched response to NatRuleRequestMsg
+message NatRuleResponseMsg {
+  repeated NatRuleResponse    response = 1;    // batched response
+}
+
+// NatRuleGetRequest is used to get information about a NAT rule
+message NatRuleGetRequest {
+  types.ObjectMeta       meta          = 1;    // object meta
+  kh.NatRuleKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];;    // NAT rule key or handle
+}
+
+// NatRuleGetRequestMsg is batched GET request for NAT rules
+message NatRuleGetRequestMsg {
+  repeated NatRuleGetRequest    request = 1;    // batched get request
+}
+
+// NatRuleStats is the statistics object for each NAT rule
+message NatRuleStats {
+  uint32    num_tcp_sessions   = 1;
+  uint32    num_udp_sessions   = 2;
+  uint32    num_other_sessions = 3;
+}
+
+// NatRuleGetResponse reflects all the information about a NAT rule
+message NatRuleGetResponse {
+  types.ApiStatus   api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  NatRuleSpec       spec       = 2;    // NAT rule config
+  NatRuleStatus     status     = 3;    // NAT rule operational status
+  NatRuleStats      stats      = 4;    // NAT rule stats, if any
+}
+
+// NatRuleGetResponseMsg is batched response to NatRuleGetRequestMsg
+message NatRuleGetResponseMsg {
+  types.ApiStatus                api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  repeated NatRuleGetResponse    response   = 2;    // batched get response
+}

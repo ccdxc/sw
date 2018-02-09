@@ -1,14 +1,9 @@
-
 //------------------------------------------------------------------------------
-// protobuf specification for global objects. HAL's static global configuration
-// comes from hal.json that HAL uses when it comes up. However, there are few
-// knobs that are global to the NIC and can be changed after init time. Those
-// are captured here. For example, NIC can boot in classic mode and then connect
-// to Pensando controller that can make it trasition to flow mode.
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// protobuf specification for keys and handles of all HAL objects
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
-
 package kh;
 option go_package="halproto";
 
@@ -200,3 +195,13 @@ message GftExactMatchFlowEntryKeyHandle {
     fixed64    flow_entry_handle = 2;   // handle of the profile returned by HAL
   }
 }
+
+// NatRuleKeyHandle uniquely identifies a NAT rule and is used
+// to create/update/delete/get NAT rules
+message NatRuleKeyHandle {
+    oneof rule_key_or_handle {
+        uint64     nat_rule_id     = 1;  // rule id idenfied by a number
+        fixed64    nat_rule_handle = 2;  // handle for NAT rule returned by HAL
+    }
+}
+

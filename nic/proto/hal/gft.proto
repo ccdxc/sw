@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //
-// protobuf specification for vrf
+// protobuf specification for GFT
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
