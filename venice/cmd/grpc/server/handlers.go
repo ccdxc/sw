@@ -28,6 +28,7 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/version"
 )
@@ -119,6 +120,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 		}
 	}
+	env.QuorumNodes = req.QuorumNodes
 
 	// Check if quorum node.
 	if req.QuorumConfig != nil {
@@ -163,7 +165,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			return nil, err
 		}
 
-		env.QuorumNodes = req.QuorumNodes
 		env.Quorum = quorumIntf
 		env.KVServers = kvServers
 
@@ -203,37 +204,49 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			return nil, err
 		}
 
+		env.K8sService = services.NewK8sService()
+		env.ResolverService = services.NewResolverService(env.K8sService)
 		env.KVStore = kv
 		env.StateMgr = cache.NewStatemgr()
 		// Create leader service before its users
 		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 		env.SystemdService = services.NewSystemdService()
 		env.VipService = services.NewVIPService()
-		env.MasterService = services.NewMasterService(req.VirtualIp, services.WithK8sSvcMasterOption(env.K8sService),
+		env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
 			services.WithResolverSvcMasterOption(env.ResolverService))
 		env.NtpService = services.NewNtpService(req.NTPServers)
 
 		env.SystemdService.Start() // must be called before dependent services
 		env.VipService.AddVirtualIPs(req.VirtualIp)
-		env.MasterService.Start()
-		env.LeaderService.Start()
-		env.CfgWatcherService.Start()
 
 		// We let the quorum nodes use the external NTP server and non-quorum nodes use the VIP for ntp server
 		env.NtpService.NtpConfigFile(req.NTPServers)
+		env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
+		env.LeaderService.Register(env.ServiceTracker)
 
+		env.MasterService.Start()
+		env.LeaderService.Start()
+		env.CfgWatcherService.Start()
 	} else {
 		env.NtpService = services.NewNtpService(req.NTPServers)
 		env.NtpService.NtpConfigFile([]string{req.VirtualIp})
 		env.SystemdService = services.NewSystemdService()
 		env.SystemdService.Start() // must be called before dependent services
+
+		env.ServiceTracker = services.NewServiceTracker(nil)
 	}
 
-	env.NodeService = services.NewNodeService(req.NodeId, req.VirtualIp)
+	servers := make([]string, 0)
+	for _, jj := range env.QuorumNodes {
+		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
+	}
+	env.ResolverClient = resolver.New(&resolver.Config{Name: req.NodeId, Servers: servers})
+	env.NodeService = services.NewNodeService(req.NodeId)
 	// Start node services. Currently we are running Node services on Quorum nodes also
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
+	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 
 	return &grpc.ClusterJoinResp{}, nil
 }
@@ -260,6 +273,20 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 		if err == nil {
 			err = err2
 		}
+	}
+	if env.ServiceTracker != nil {
+		env.ServiceTracker.Stop()
+	}
+	if env.ResolverClient != nil {
+		r := env.ResolverClient.(resolver.Interface)
+		r.Deregister(env.ServiceTracker)
+		r.Stop()
+		env.ResolverClient = nil
+	}
+	env.ServiceTracker = nil
+	if env.SystemdService != nil {
+		env.SystemdService.Stop()
+		env.SystemdService = nil
 	}
 	return &grpc.ClusterDisjoinResp{}, err
 }

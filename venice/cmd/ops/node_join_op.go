@@ -93,11 +93,12 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 
 	// Send join request to all nodes.
 	joinReq := &grpc.ClusterJoinReq{
-		Name:       o.cluster.Name,
-		Uuid:       o.cluster.UUID,
-		VirtualIp:  o.cluster.Spec.VirtualIP,
-		NTPServers: o.cluster.Spec.NTPServers,
-		NodeId:     o.node.Name,
+		Name:        o.cluster.Name,
+		Uuid:        o.cluster.UUID,
+		VirtualIp:   o.cluster.Spec.VirtualIP,
+		NTPServers:  o.cluster.Spec.NTPServers,
+		QuorumNodes: o.cluster.Spec.QuorumNodes,
+		NodeId:      o.node.Name,
 	}
 
 	err = sendJoins(nil, joinReq, []string{o.node.Name}, nodeTransportKeys)

@@ -80,7 +80,7 @@ golint-src: gen
 # govet-src validates source code and reports suspicious constructs
 govet-src: gen
 	$(info +++ govet sources)
-	@go vet ${GO_PKG}
+	@go vet -source ${GO_PKG}
 
 .PHONY: build
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
@@ -158,7 +158,6 @@ unit-race-test:
 unit-test-verbose:
 	$(info +++ running go tests verbose)
 	@VENICE_DEV=1 $(GOCMD) test -v -p 1 ${GO_PKG}; \
-
 
 # Target to run on Mac to start kibana docker, this connects to the Elastic running on vagrant cluster
 start-kibana:

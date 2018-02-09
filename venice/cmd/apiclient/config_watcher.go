@@ -2,7 +2,6 @@ package apiclient
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -78,12 +76,18 @@ func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEv
 
 // apiClientConn creates a gRPC client Connection to API server
 func (k *CfgWatcherService) apiClientConn() (*grpc.ClientConn, error) {
-	servers := make([]string, 0)
-	for ii := range env.QuorumNodes {
-		servers = append(servers, fmt.Sprintf("%s:%s", env.QuorumNodes[ii], globals.CMDResolverPort))
+	var rpcClient *rpckit.RPCClient
+	var err error
+	var r resolver.Interface
+
+	if env.ResolverClient != nil {
+		r = env.ResolverClient.(resolver.Interface)
 	}
-	r := resolver.New(&resolver.Config{Name: "cmd", Servers: servers})
-	rpcClient, err := rpckit.NewRPCClient("cmd", k.apiServerAddr, rpckit.WithBalancer(balancer.New(r)))
+	if r != nil {
+		rpcClient, err = rpckit.NewRPCClient("cmd", k.apiServerAddr, rpckit.WithBalancer(balancer.New(r)))
+	} else {
+		rpcClient, err = rpckit.NewRPCClient("cmd", k.apiServerAddr)
+	}
 	if err != nil {
 		k.logger.Errorf("#### RPC client creation failed with error: %v", err)
 		return nil, errors.NewInternalError(err)

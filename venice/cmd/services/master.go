@@ -26,10 +26,9 @@ import (
 // TODO: Spread these out when it makes sense to do so.
 var (
 	masterServices = []string{
-		"pen-kube-apiserver",
-		"pen-kube-scheduler",
-		"pen-kube-controller-manager",
-		"pen-elasticsearch",
+		globals.KubeAPIServer,
+		globals.KubeScheduler,
+		globals.KubeControllerManager,
 	}
 	// cluster status will be updated every 30 seconds or
 	// when any leader event is observed or when cluster is created/updated
@@ -45,7 +44,6 @@ type masterService struct {
 	cfgWatcherSvc types.CfgWatcherService
 	isLeader      bool
 	enabled       bool
-	virtualIP     string // virtualIP for services which can listed on only one VIP
 	configs       configs.Interface
 
 	// this channel will be updated to indicate any change in the cluster or leader.
@@ -102,12 +100,13 @@ func WithResolverSvcMasterOption(resolverSvc types.ResolverService) MasterOption
 }
 
 // NewMasterService returns a Master Service
-func NewMasterService(virtualIP string, options ...MasterOption) types.MasterService {
+func NewMasterService(options ...MasterOption) types.MasterService {
 	m := masterService{
 		leaderSvc:     env.LeaderService,
 		sysSvc:        env.SystemdService,
 		cfgWatcherSvc: env.CfgWatcherService,
-		virtualIP:     virtualIP,
+		k8sSvc:        env.K8sService,
+		resolverSvc:   env.ResolverService,
 		configs:       configs.New(),
 		updateCh:      make(chan bool),
 		closeCh:       make(chan bool),
@@ -143,6 +142,7 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 // that have affinity to the Virtual IP.
 // TODO: Spread out kubernetes master services also?
 func (m *masterService) Start() error {
+	var err error
 	m.sysSvc.Start()
 	m.leaderSvc.Start()
 
@@ -155,15 +155,15 @@ func (m *masterService) Start() error {
 	go m.updateClusterStatus()
 	if m.isLeader {
 		m.updateCh <- true
-		return m.startLeaderServices(m.virtualIP)
+		err = m.startLeaderServices()
 	}
 	m.resolverSvc.Start()
-	return nil
+	return err
 }
 
 // caller holds the lock
-func (m *masterService) startLeaderServices(virtualIP string) error {
-	if err := m.configs.GenerateKubeMasterConfig(virtualIP); err != nil {
+func (m *masterService) startLeaderServices() error {
+	if err := m.configs.GenerateKubeMasterConfig("localhost"); err != nil {
 		return err
 	}
 	if err := m.configs.GenerateAPIServerConfig(); err != nil {
@@ -285,7 +285,7 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		m.isLeader = true
 		if m.enabled {
 			m.updateCh <- true
-			m.startLeaderServices(m.virtualIP)
+			m.startLeaderServices()
 		}
 	case types.LeaderEventLost:
 		m.Lock()

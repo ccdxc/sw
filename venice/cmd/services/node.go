@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -17,11 +18,12 @@ var (
 
 type nodeService struct {
 	sync.Mutex
-	sysSvc    types.SystemdService
-	virtualIP string
-	enabled   bool
-	configs   configs.Interface
-	nodeID    string
+	sysSvc               types.SystemdService
+	enabled              bool
+	configs              configs.Interface
+	nodeID               string
+	k8sAPIServerLocation string
+	elasticLocation      string
 }
 
 // NodeOption fills the optional params
@@ -42,12 +44,11 @@ func WithSystemdSvcNodeOption(sysSvc types.SystemdService) NodeOption {
 }
 
 // NewNodeService returns a NodeService
-func NewNodeService(nodeID, virtualIP string, options ...NodeOption) types.NodeService {
+func NewNodeService(nodeID string, options ...NodeOption) types.NodeService {
 	s := nodeService{
-		virtualIP: virtualIP,
-		sysSvc:    env.SystemdService,
-		configs:   configs.New(),
-		nodeID:    nodeID,
+		sysSvc:  env.SystemdService,
+		configs: configs.New(),
+		nodeID:  nodeID,
 	}
 
 	for _, o := range options {
@@ -68,13 +69,8 @@ func (s *nodeService) Start() error {
 	s.Lock()
 	defer s.Unlock()
 	s.enabled = true
-	if err := s.configs.GenerateKubeletConfig(s.nodeID, s.virtualIP); err != nil {
-		return err
-	}
 
-	if err := s.configs.GenerateFilebeatConfig(s.virtualIP); err != nil {
-		return err
-	}
+	s.configs.GenerateFilebeatConfig("")
 
 	for ii := range nodeServices {
 		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
@@ -98,6 +94,42 @@ func (s *nodeService) Stop() {
 	s.configs.RemoveKubeletConfig()
 	s.configs.RemoveFilebeatConfig()
 
+}
+
+// FileBeatConfig with the location of the Elastic server
+func (s *nodeService) FileBeatConfig(elasticLocation string) {
+	if s.elasticLocation == elasticLocation {
+		return
+	}
+	if err := s.configs.GenerateFilebeatConfig(elasticLocation); err != nil {
+		log.Errorf("Failed to generate filebeat config with error: %v", err)
+		return
+	}
+	if !s.enabled {
+		return
+	}
+	if err := s.sysSvc.StartUnit("pen-filebeatconfig.service"); err != nil {
+		log.Errorf("Failed to reconfigure filebeat service with new config.  error: %v", err)
+		return
+	}
+}
+
+// KubectlConfig updates the kubelet with the new location of k8sAPI server
+func (s *nodeService) KubeletConfig(k8sAPIServerLocation string) {
+	if s.k8sAPIServerLocation == k8sAPIServerLocation {
+		return
+	}
+	if err := s.configs.GenerateKubeletConfig(s.nodeID, k8sAPIServerLocation, globals.KubeAPIServerPort); err != nil {
+		log.Errorf("Failed to generate kubelet config with error: %v", err)
+		return
+	}
+	if !s.enabled {
+		return
+	}
+	if err := s.sysSvc.StartUnit(fmt.Sprintf("pen-kubeletconfig.service")); err != nil {
+		log.Errorf("Failed to reconfigure kubelet service with new config.  error: %v", err)
+		return
+	}
 }
 
 // AreNodeServicesRunning returns if all the controller node services are

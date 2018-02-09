@@ -78,7 +78,7 @@ type VIPService interface {
 	DeleteVirtualIPs(ips ...string) error
 }
 
-// NodeService is the interface for starting/stopping services running on all controller nodes
+// NodeService is the interface for starting/stopping/configuring services running on all controller nodes
 type NodeService interface {
 	SystemdEventObserver
 	// Start starts the services that run on all controller nodes
@@ -92,6 +92,12 @@ type NodeService interface {
 	// AreNodeServicesRunning returns if all the controller node services
 	// are running.
 	AreNodeServicesRunning() bool
+
+	// FileBeatConfig with the location of the Elastic server
+	FileBeatConfig(elasticLocation string)
+
+	// KubeletConfig updates the kubelet with the new location of k8sApi server
+	KubeletConfig(k8sAPIServerLocation string)
 }
 
 // MasterService is the interface for starting/stopping master services (that run on node winning leader election)
@@ -244,6 +250,11 @@ type ResolverService interface {
 
 	// List all service instances.
 	ListInstances() *ServiceInstanceList
+
+	// AddSvcInstance to add a service instance explicitly without using k8s service
+	AddServiceInstance(si *ServiceInstance) error
+	// DelSvcInstance to delete a service instance explicitly without using k8s service
+	DeleteServiceInstance(si *ServiceInstance) error
 }
 
 // NodeEventHandler handles watch events for Node object
@@ -292,4 +303,21 @@ type SmartNICService interface {
 
 	// DeleteNicFromRetryDB removes a smartNIC from RetryDB
 	DeleteNicFromRetryDB(nic *cmd.SmartNIC)
+}
+
+// ServiceTracker tracks location of a service
+type ServiceTracker interface {
+	// LeadershipObserver is used on Quorum nodes : Resolver is informed of the new
+	//	location of Services which run on Leader.
+	LeadershipObserver
+
+	// OnNotifyResolver is used to listen to resolver updates and inform location of interested services
+	OnNotifyResolver(e ServiceInstanceEvent) error
+
+	// Run the service tracker. Supposed to be called with Run(resolver.Interface, NodeService)
+	//	but declared this way because of complex circular dependencies
+	Run(interface{}, NodeService)
+
+	// Stop the service
+	Stop()
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
-	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -33,8 +32,6 @@ func RunUnauthServer(url string, stopChannel chan bool) {
 	certRPCHandler := certificates.NewRPCHandler(env.CertMgr)
 	certapi.RegisterCertificatesServer(rpcServer.GrpcServer, certRPCHandler)
 
-	env.K8sService = services.NewK8sService()
-	env.ResolverService = services.NewResolverService(env.K8sService)
 	env.StateMgr = cache.NewStatemgr()
 	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
 

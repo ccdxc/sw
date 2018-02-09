@@ -299,6 +299,36 @@ var k8sModules = map[string]types.Module{
 			},
 		},
 	},
+	globals.ElasticSearch: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.ElasticSearch,
+		},
+		Spec: &types.ModuleSpec{
+			Type:      types.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Name:  globals.ElasticSearch,
+					Image: "$REGISTRY_URL/elasticsearch/elasticsearch:5.4.1-pen",
+					// TODO
+					// Becaues of https://github.com/kubernetes/kubernetes/pull/48986
+					// we cant have environment variables with special chars in kube
+					// So comment out the code below and have a special Elastic image with
+					//  these options as part of Dockerfile.
+					// Once we upgrade to latest kube, we can use official elastic image
+					//  and pass the first 2 environment variables explicitly below
+					EnvVars: map[string]string{
+						//"cluster.name":           "pen-elasticcluster",
+						//"xpack.security.enabled": "false",
+						"ES_JAVA_OPTS": "-Xms512m -Xmx512m",
+					},
+				},
+			},
+		},
+	},
 }
 
 // NewK8sService creates a new kubernetes service.
@@ -496,6 +526,17 @@ func makeVolumes(module *types.Module) ([]v1.Volume, []v1.VolumeMount) {
 	return volumes, volumeMounts
 }
 
+func populateEnv(args map[string]string) []v1.EnvVar {
+	envVars := make([]v1.EnvVar, 0)
+	for k, v := range args {
+		envVars = append(envVars, v1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
+	return envVars
+}
+
 func populateDynamicArgs(args []string) []string {
 	result := make([]string, 0)
 	for ii := range args {
@@ -542,6 +583,7 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 				Privileged: &sm.Privileged,
 			},
 			Args: populateDynamicArgs(sm.Args),
+			Env:  populateEnv(sm.EnvVars),
 		})
 	}
 	return containers
@@ -713,6 +755,7 @@ func (k *k8sService) notify(e types.K8sPodEvent) error {
 	k.Lock()
 	defer k.Unlock()
 	for _, o := range k.observers {
+		log.Infof("Calling observer: %+v  with k8sPodEvent: %v", o, e)
 		er := o.OnNotifyK8sPodEvent(e)
 		if err == nil && er != nil {
 			err = er

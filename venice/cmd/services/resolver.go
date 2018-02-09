@@ -120,6 +120,11 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 	return nil
 }
 
+func (r *resolverService) AddServiceInstance(si *types.ServiceInstance) error {
+	r.addSvcInstance(si)
+	return nil
+}
+
 // addSvcInstance adds a service instance to a service.
 func (r *resolverService) addSvcInstance(si *types.ServiceInstance) {
 	r.Lock()
@@ -151,6 +156,11 @@ func (r *resolverService) addSvcInstance(si *types.ServiceInstance) {
 		Type:     types.ServiceInstanceEvent_Added,
 		Instance: si,
 	})
+}
+
+func (r *resolverService) DeleteServiceInstance(si *types.ServiceInstance) error {
+	r.delSvcInstance(si)
+	return nil
 }
 
 // delSvcInstance deletes a service instance from a service.
@@ -265,6 +275,7 @@ func (r *resolverService) notify(e types.ServiceInstanceEvent) error {
 	defer r.RUnlock()
 	var err error
 	for _, o := range r.observers {
+		log.Infof("Calling observer: %+v  with serviceInstanceEvent: %v", o, e)
 		er := o.OnNotifyServiceInstance(e)
 		if err == nil && er != nil {
 			err = er

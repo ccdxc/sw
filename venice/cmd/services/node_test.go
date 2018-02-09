@@ -8,10 +8,8 @@ import (
 )
 
 func setupNode(testName string) (types.SystemdService, types.NodeService) {
-	testIP := "11.1.1.1"
-
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
-	n := NewNodeService(testName, testIP, WithSystemdSvcNodeOption(s), WithConfigsNodeOption(&mock.Configs{}))
+	n := NewNodeService(testName, WithSystemdSvcNodeOption(s), WithConfigsNodeOption(&mock.Configs{}))
 	return s, n
 }
 
@@ -39,4 +37,8 @@ func TestNodeServiceStartBeforeSystemdService(t *testing.T) {
 	s.Start()
 
 	checkAllNodeServiceStarted(t, s)
+
+	// should not crash
+	n.FileBeatConfig("dummy")
+	n.KubeletConfig("dummy")
 }

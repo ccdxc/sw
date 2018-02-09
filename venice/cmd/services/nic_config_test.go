@@ -129,11 +129,10 @@ func createCMD(m *testing.M) *rpckit.RPCServer {
 	cmdenv.StateMgr = cache.NewStatemgr()
 
 	// Start CMD config watcher
-	testIP := "localhost"
 	l := mock.NewLeaderService("testMaster")
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr, cmdenv.StateMgr)
-	cmdenv.MasterService = NewMasterService(testIP,
+	cmdenv.MasterService = NewMasterService(
 		WithLeaderSvcMasterOption(l),
 		WithSystemdSvcMasterOption(s),
 		WithConfigsMasterOption(&mock.Configs{}),

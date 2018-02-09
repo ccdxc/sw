@@ -13,12 +13,10 @@ import (
 )
 
 func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock.CfgWatcherService, types.MasterService) {
-	testIP := "11.1.1.1"
-
 	l := mock.NewLeaderService(t.Name())
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := mock.CfgWatcherService{}
-	m := NewMasterService(testIP, WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mock.Configs{}),
+	m := NewMasterService(WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mock.Configs{}),
 		WithCfgWatcherMasterOption(&cw), WithK8sSvcMasterOption(&mock.K8sService{}))
 
 	return l, s, &cw, m

@@ -159,7 +159,7 @@ func (tu *TestUtils) sshInit() {
 	}
 	servers := make([]string, 0)
 	for _, jj := range tu.VeniceNodeIPs {
-		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDClusterMgmtPort))
+		servers = append(servers, fmt.Sprintf("%s:%s", tu.IPToNameMap[jj], globals.CMDClusterMgmtPort))
 	}
 	ginkgo.By(fmt.Sprintf("resolver servers: %+v ", servers))
 	tu.resolver = resolver.New(&resolver.Config{Servers: servers})

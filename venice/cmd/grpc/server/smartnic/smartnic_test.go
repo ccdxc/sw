@@ -74,11 +74,10 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 	cmdenv.StateMgr = cache.NewStatemgr()
 
 	// Start CMD config watcher
-	testIP := "localhost"
 	l := mock.NewLeaderService("testMaster")
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr, cmdenv.StateMgr)
-	cmdenv.MasterService = cmdsvc.NewMasterService(testIP,
+	cmdenv.MasterService = cmdsvc.NewMasterService(
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),

@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -92,34 +93,32 @@ func waitForAPIAndStartServices() {
 	}
 }
 
-// StartQuorumServices starts services on quorum node
-func StartQuorumServices(c utils.Cluster) {
-	log.Debugf("Starting Quorum services on startup")
+func isQuorumMember(c *utils.Cluster) (bool, string) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Errorf("Failed to determine hostname. error: %v", err)
-		return
+		return false, hostname
 	}
 
-	found := false
 	for _, member := range c.QuorumNodes {
 		if hostname == member {
-			found = true
-			break
+			return true, hostname
 		}
 		if net.ParseIP(member) != nil {
-			found, _ = netutils.IsAConfiguredIP(member)
+			found, _ := netutils.IsAConfiguredIP(member)
 			if found {
 				hostname = member
-				break
+				return true, hostname
 			}
 		}
 	}
+	log.Infof("skipping starting Quorum services as this node (%s) is not part of quorum (%s)", hostname, c.QuorumNodes)
+	return false, ""
+}
 
-	if !found {
-		log.Infof("skipping starting Quorum services as this node (%s) is not part of quorum (%s)", hostname, c.QuorumNodes)
-		return
-	}
+// StartQuorumServices starts services on quorum node
+func StartQuorumServices(c utils.Cluster, hostname string) {
+	log.Debugf("Starting Quorum services on startup")
 
 	qConfig := &quorum.Config{
 		Type:       store.KVStoreTypeEtcd,
@@ -135,6 +134,7 @@ func StartQuorumServices(c utils.Cluster) {
 	})
 
 	var quorumIntf quorum.Interface
+	var err error
 	ii := 0
 	for ; ii < maxIters; ii++ {
 		quorumIntf, err = store.Start(qConfig)
@@ -200,8 +200,16 @@ func StartQuorumServices(c utils.Cluster) {
 	env.ResolverService = services.NewResolverService(env.K8sService)
 	env.StateMgr = cache.NewStatemgr()
 	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
-	env.MasterService = services.NewMasterService(c.VirtualIP, services.WithK8sSvcMasterOption(env.K8sService),
+	env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
 		services.WithResolverSvcMasterOption(env.ResolverService))
+	env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
+	env.LeaderService.Register(env.ServiceTracker) // call before starting leader service
+
+	servers := make([]string, 0)
+	for _, jj := range env.QuorumNodes {
+		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
+	}
+	env.ResolverClient = resolver.New(&resolver.Config{Name: c.NodeID, Servers: servers})
 
 	env.SystemdService.Start() // must be called before dependent services
 	env.VipService.AddVirtualIPs(c.VirtualIP)
@@ -211,9 +219,14 @@ func StartQuorumServices(c utils.Cluster) {
 
 	go waitForAPIAndStartServices()
 
-	env.NodeService = services.NewNodeService(c.NodeID, c.VirtualIP)
+	env.NodeService = services.NewNodeService(c.NodeID)
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
+	}
+	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
+
+	if env.AuthRPCServer == nil {
+		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
 }
 
@@ -225,9 +238,21 @@ func StartNodeServices(nodeID, VirtualIP string) {
 	env.SystemdService = services.NewSystemdService()
 	env.SystemdService.Start()
 
-	env.NodeService = services.NewNodeService(nodeID, VirtualIP)
+	env.NodeService = services.NewNodeService(nodeID)
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
+	}
+
+	servers := make([]string, 0)
+	for _, jj := range env.QuorumNodes {
+		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
+	}
+	env.ResolverClient = resolver.New(&resolver.Config{Name: nodeID, Servers: servers})
+	env.ServiceTracker = services.NewServiceTracker(nil)
+	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
+
+	if env.AuthRPCServer == nil {
+		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
 }
 
@@ -258,14 +283,12 @@ func OnStart() {
 		log.Errorf("Node is part of cluster %+v but failed to start CA with err: %v", cluster, err)
 		return
 	}
-	if env.AuthRPCServer == nil {
-		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
-	}
-
-	if cluster.QuorumNodes == nil {
+	env.QuorumNodes = cluster.QuorumNodes
+	quorumMember, hostname := isQuorumMember(cluster)
+	if !quorumMember {
 		StartNodeServices(cluster.NodeID, cluster.VirtualIP)
 		return
 	}
 
-	StartQuorumServices(*cluster)
+	StartQuorumServices(*cluster, hostname)
 }

@@ -42,13 +42,13 @@ const (
 
 // GenerateKubeMasterConfig generates the systemd configuration files for
 // Kubernetes master services.
-func GenerateKubeMasterConfig(virtualIP string) error {
+func GenerateKubeMasterConfig(apiServerAddr string) error {
 	if err := generateKubeAPIServerConfig(); err != nil {
 		return err
 	}
 
 	cfgMap := make(map[string]string)
-	cfgMap[kubeMasterVar] = fmt.Sprintf("%s %s:%s", kubeMasterParam, virtualIP, globals.KubeAPIServerPort)
+	cfgMap[kubeMasterVar] = fmt.Sprintf("%s %s:%s", kubeMasterParam, apiServerAddr, globals.KubeAPIServerPort)
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, kubeCfgFile))
 }
 

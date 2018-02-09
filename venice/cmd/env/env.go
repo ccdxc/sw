@@ -39,4 +39,6 @@ var (
 	CertMgr           *certmgr.CertificateMgr
 	AuthRPCServer     *rpckit.RPCServer // Authenticated services (requires TLS and client certificate)
 	UnauthRPCServer   *rpckit.RPCServer // Unauthenticated services
+	ServiceTracker    types.ServiceTracker
+	ResolverClient    interface{}
 )

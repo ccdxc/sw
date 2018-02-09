@@ -38,6 +38,11 @@ class TestMgmtNode:
         self.runCmd("""kubectl   config set-cluster e2e --server=http://{}:8080 """.format(self.clustervip))
         self.runCmd("""kubectl   config set-context e2e --cluster=e2e """)
         self.runCmd("""kubectl   config use-context e2e """)
+        self.runCmd("""mkdir -p /etc/bash_completion.d""")
+        self.runCmd("""go install ./venice/exe/venice""")
+        self.runCmd("""/usr/local/go/bin/venice auto-completion""")
+        self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
+        self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
     def __init__(self, name, ipaddress):
         self.debug = False
@@ -49,8 +54,11 @@ class Node:
         while runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name)) == 0:
             time.sleep(2)
         runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -P -l pens --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v $GOPATH/src:/import/src --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(self.ipaddress, self.name, self.name))
+        # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""".format(self.name)) != 0:
             time.sleep(2)
+        self.runCmd(r'''bash  -c ' CGR=`grep memory /proc/1/cgroup  | cut -d: -f3` ; if [ !  -z $CGR ]; then  mkdir -p /sys/fs/cgroup/cpuset/$CGR; fi; if [ !  -z $CGR ]; then mkdir -p /sys/fs/cgroup/hugetlb/$CGR; fi' '''.format(self.name))
+
     def doCluster(self):
         self.startNode()
         self.runCmd("""sh -c 'for i in /import/src/github.com/pensando/sw/bin/tars/* ; do docker load -i  $i; done'""")
@@ -106,6 +114,8 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
         time.sleep(3)
 
 def deleteCluster():
+    runCommand("""docker stop -t 3 node0 >/dev/null 2>&1""")
+    runCommand(""" for i in $(docker ps -f label=pens --format '{{.ID}}'); do docker exec -it $i init 0; done """)
     runCommand("""docker stop -t 3 $(docker ps -f label=pens --format '{{.ID}}') >/dev/null 2>&1""")
 def stopCluster(nodeList, nodes, quorum, clustervip):
     pool = ThreadPool(len(nodeList))
@@ -178,7 +188,7 @@ for addr in xrange(len(nodeList)):
     nodes.append(node)
 
 if args.init_cluster_only:
-    initCluster(ipList[0], quorumIPs, clustervip)
+    initCluster(ipList[0], quorumNames, clustervip)
     os.system("stty sane")
     sys.exit(0)
 

@@ -40,8 +40,8 @@ const (
 
 // GenerateKubeletConfig generates kubelet configuration file and systemd
 // configuration file.
-func GenerateKubeletConfig(nodeID, virtualIP string) error {
-	if err := generateKubeletConfig(virtualIP); err != nil {
+func GenerateKubeletConfig(nodeID, kubeAPIServerAddr string, kubeAPIServerPort string) error {
+	if err := generateKubeletConfig(kubeAPIServerAddr, kubeAPIServerPort); err != nil {
 		return err
 	}
 	return generateSystemdKubeletConfig(nodeID)
@@ -49,11 +49,11 @@ func GenerateKubeletConfig(nodeID, virtualIP string) error {
 
 // generateKubeletConfig generates the kubelet configuration file with
 // information to communicate with the API server.
-func generateKubeletConfig(virtualIP string) error {
+func generateKubeletConfig(kubeAPIServerAddr string, kubeAPIServerPort string) error {
 	config := api.Config{
 		Clusters: map[string]*api.Cluster{
 			"kubernetes": {
-				Server: fmt.Sprintf("%s:%s", virtualIP, globals.KubeAPIServerPort),
+				Server: kubeAPIServerAddr + ":" + kubeAPIServerPort,
 			},
 		},
 		Contexts: map[string]*api.Context{

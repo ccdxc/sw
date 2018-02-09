@@ -79,12 +79,12 @@ logging:
 `
 
 // GenerateFilebeatConfig generates configuration file for filebeat service
-func GenerateFilebeatConfig(virtualIP string) error {
+func GenerateFilebeatConfig(elasticServerAddr string) error {
 
 	fbParams := FilebeatParams{
-		"/var/log/pensando",
-		virtualIP + ":9200",
-		"venice.logs",
+		LogDir:          "/var/log/pensando",
+		ElasticEndpoint: elasticServerAddr + ":" + globals.ElasticsearchRESTPort,
+		ElasticIndex:    "venice.logs",
 	}
 
 	t := template.New("Filebeat config template")

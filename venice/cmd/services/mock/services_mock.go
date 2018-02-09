@@ -247,7 +247,7 @@ type Configs struct {
 }
 
 // GenerateKubeletConfig is a mock implementation of kubelet config generation.
-func (c *Configs) GenerateKubeletConfig(nodeID, virtualIP string) error {
+func (c *Configs) GenerateKubeletConfig(nodeID, virtualIP string, p string) error {
 	return nil
 }
 
@@ -616,3 +616,39 @@ func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICEventHandler) 
 // APIClient returns a valid interface once the APIServer is good and
 // accepting requests
 func (c *CfgWatcherService) APIClient() cmd.CmdV1Interface { return &c.DummyAPIClient }
+
+// NodeService is the interface for starting/stopping/configuring services running on all controller nodes
+type NodeService struct {
+	K8sAPIServerLocation string
+	ElasticLocation      string
+}
+
+// Start service
+func (n *NodeService) Start() error {
+	return nil
+}
+
+// Stop service
+func (n *NodeService) Stop() {
+	return
+}
+
+// AreNodeServicesRunning returns true for now
+func (n *NodeService) AreNodeServicesRunning() bool {
+	return true
+}
+
+// KubeletConfig is dummy
+func (n *NodeService) KubeletConfig(k8sAPIServerLocation string) {
+	n.K8sAPIServerLocation = k8sAPIServerLocation
+}
+
+// FileBeatConfig is dummy
+func (n *NodeService) FileBeatConfig(elasticLocation string) {
+	n.ElasticLocation = elasticLocation
+}
+
+// OnNotifySystemdEvent is dummy
+func (n *NodeService) OnNotifySystemdEvent(e types.SystemdEvent) error {
+	return nil
+}

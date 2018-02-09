@@ -1,0 +1,7 @@
+[Unit]
+Description=Pensando kubelet configuration script
+Documentation=http://pensando.io/
+
+[Service]
+ExecStart=/bin/sh -c '/usr/bin/systemctl restart pen-kubelet ; exit 0'
+Type=oneshot

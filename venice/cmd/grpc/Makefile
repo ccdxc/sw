@@ -2,7 +2,9 @@ FIX_PROTO = sed -i.bak_ 's/github.com\/golang\/protobuf\/proto/github.com\/gogo\
 FIX_VER = sed -i.bak_ 's/proto.ProtoPackageIsVersion/proto.GoGoProtoPackageIsVersion/'
 DEL_BAK = rm *.bak_
 
-all: bld_proto fix
+all:
+	$(MAKE) bld_proto
+	$(MAKE) fix
 
 fix:
 	@${FIX_VER} *pb.go
