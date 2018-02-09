@@ -1,66 +1,62 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : tx_csum
+    sub         : csum_l2
     package     : test.classic
     module      : classic
-    spec        : tx_csum.testspec
+    spec        : csum_l2.testspec
     enable      : True
     ignore      : False
 
 modules:
 
     - module:
-        name    : ICMP
+        name    : NONIP
         iterate:
-            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
-              segment   : filter://native=True
+            - segment   : filter://native=True
+              flow      : filter://label=CLASSIC
+
+    - module:
+        name    : NONIP_QTAG
+        iterate:
+            - segment   : filter://native=False
+              flow      : filter://label=CLASSIC
 
     - module:
         name    : IPV4
         iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
+              segment   : filter://native=True
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=True
             - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment   : filter://native=True
-
-    - module:
-        name    : ICMP_QTAG
-        iterate:
-            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
-              segment   : filter://native=False
 
     - module:
         name    : IPV4_QTAG
         iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
+              segment   : filter://native=False
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False
             - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
               segment   : filter://native=False
 
     - module:
-        name    : ICMPV6
+        name    : IPV6
         iterate:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
               segment   : filter://native=True
-
-    - module:
-        name    : IPV6
-        iterate:
             - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
               segment   : filter://native=True
             - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC
               segment   : filter://native=True
 
     - module:
-        name    : ICMPV6_QTAG
+        name    : IPV6_QTAG
         iterate:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
               segment   : filter://native=False
-
-    - module:
-        name    : IPV6_QTAG
-        iterate:
             - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
               segment   : filter://native=False
             - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC

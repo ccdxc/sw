@@ -5,6 +5,7 @@ from scapy.layers.inet import ICMP
 from scapy.utils import checksum
 import config.hal.defs as haldefs
 from bitstring import BitArray
+from scapy.layers.inet6 import in6_chksum
 
 from .toeplitz import *
 
@@ -81,7 +82,6 @@ def GetChecksumTestPacket(tc, obj, args=None):
         else:
             raise NotImplementedError
     elif pkt.haslayer(IPv6):
-        from scapy.layers.inet6 import in6_chksum
         if pkt.haslayer(TCP):
             pkt[TCP].chksum = ~in6_chksum(pkt[IPv6].nh, pkt[TCP], bytes([0x0]*len(pkt[TCP]))) & 0xffff
         elif pkt.haslayer(UDP):
@@ -130,3 +130,9 @@ TxOpcodeEnum = {
 
 def GetTxOpcodeCalcCsum(tc, obj, args=None):
     return TxOpcodeEnum['TXQ_DESC_OPCODE_CALC_CSUM']
+
+
+def GetL2Checksum(tc, obj, args=None):
+    spktobj = tc.packets.db['EXP_PKT'].spktobj
+    pkt = spktobj.spkt
+    return checksum(bytes(pkt)) & 0xffff
