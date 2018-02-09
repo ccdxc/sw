@@ -121,13 +121,23 @@ def run_rtl(args):
     os.environ["ASIC_SRC"] = os.getcwd() + "/asic"
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64:" + os.getcwd() + "/asic/capri/model/capsim-gen/lib:/home/asic/bin/tools/lib64"
     os.environ["PATH"] = os.getcwd() + "/asic/common/tools/bin" + ":" + os.environ["PATH"]
-    model_test = "core_basic_dol"
+
+    if args.port_mode == 'nomac':
+        model_test = "core_basic_dol"
+    elif args.port_mode == '2x100':
+        model_test = "core_basic_dol_2x100"
+    elif args.port_mode == '8x25':
+        model_test = "core_basic_dol_8x25"
+    else:
+        print "Unknown port_mode", args.port_mode
+        sys.exit(1)
+
     one_pkt_mode = ""
     if args.model_test:
         model_test = args.model_test
     if not args.skipverify:
-        one_pkt_mode = "+dol_one_pkt_mode=1"
-    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s +core.axi_master0.max_write_latency=1500 +core.axi_master0.avg_max_write_latency=1500 +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_HIGH +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 %s ' % (one_pkt_mode, args.runtest_runargs) ]
+        one_pkt_mode = "+dol_one_pkt_mode=1 +save_rtl_pkts=1"
+    model_cmd = [ 'runtest', '-ngrid', '-test', model_test, '-run_args', ' %s  +dol_poll_time=5 +dump_axi +pcie_all_lif_valid=1 +UVM_VERBOSITY=UVM_MEDIUM +fill_pattern=0 +te_dbg +plog=info +mem_verbose +verbose +PLOG_MAX_QUIT_COUNT=100 +top_sb/initial_timeout_ns=60000 %s ' % (one_pkt_mode, args.runtest_runargs), '-cfg_args', 'core/axi_master/<0:3>/max_read_latency=3000 core/axi_master/<0:3>/avg_max_read_latency=3000' ]
     if args.noverilog:
         model_cmd = model_cmd + ['-ro']
     if not args.no_asic_dump:
@@ -628,6 +638,9 @@ def main():
                         action='store_true', help='PPS Test.')
     parser.add_argument('--lite', dest='lite', default=None,
                         action='store_true', help='Lite Sanity Test.')
+    parser.add_argument('--port_mode', dest='port_mode', default='nomac',
+                        help='In RTL mode choose how many ports are active: (nomac/8x25/2x100)')
+
     args = parser.parse_args()
 
     if args.rtl == False and args.skipverify:
