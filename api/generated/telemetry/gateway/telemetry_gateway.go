@@ -9,6 +9,8 @@ package telemetryGwService
 import (
 	"context"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -34,6 +36,7 @@ type sFlowExportPolicyV1GwService struct {
 }
 
 type adapterFlowExportPolicyV1 struct {
+	conn    *rpckit.RPCClient
 	service telemetry.ServiceFlowExportPolicyV1Client
 }
 
@@ -76,38 +79,63 @@ func (e *sFlowExportPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	rslvr resolver.Interface) error {
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
+
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
 	if mux == nil {
 		mux = runtime.NewServeMux(opts)
 	}
-	fileCount++
-	err = telemetry.RegisterFlowExportPolicyV1HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service telemetry.FlowExportPolicyV1")
+	muxMutex.Unlock()
 
-	m.Handle("/v1/flowExportPolicy/", http.StripPrefix("/v1/flowExportPolicy", mux))
+	fileCount++
+
 	if fileCount == 1 {
-		err = registerSwaggerDef(m, logger)
+		err := registerSwaggerDef(m, logger)
+		if err != nil {
+			logger.ErrorLog("msg", "failed to register swagger spec", "service", "telemetry.FlowExportPolicyV1", "error", err)
+		}
 	}
-	return err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = telemetry.RegisterFlowExportPolicyV1HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service telemetry.FlowExportPolicyV1")
+					m.Handle("/v1/flowExportPolicy/", http.StripPrefix("/v1/flowExportPolicy", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "telemetry.FlowExportPolicyV1", "error", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
 }
 
-func (e *sFlowExportPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (telemetry.FlowExportPolicyV1Client, error) {
+func (e *sFlowExportPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterFlowExportPolicyV1, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
@@ -134,7 +162,7 @@ func (e *sFlowExportPolicyV1GwService) newClient(ctx context.Context, grpcAddr s
 		}()
 	}()
 
-	cl := adapterFlowExportPolicyV1{grpcclient.NewFlowExportPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterFlowExportPolicyV1{conn: client, service: grpcclient.NewFlowExportPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -143,6 +171,7 @@ type sFwlogPolicyV1GwService struct {
 }
 
 type adapterFwlogPolicyV1 struct {
+	conn    *rpckit.RPCClient
 	service telemetry.ServiceFwlogPolicyV1Client
 }
 
@@ -185,38 +214,57 @@ func (e *sFwlogPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	rslvr resolver.Interface) error {
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
+
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
 	if mux == nil {
 		mux = runtime.NewServeMux(opts)
 	}
+	muxMutex.Unlock()
+
 	fileCount++
-	err = telemetry.RegisterFwlogPolicyV1HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service telemetry.FwlogPolicyV1")
 
-	m.Handle("/v1/fwlogPolicy/", http.StripPrefix("/v1/fwlogPolicy", mux))
-	if fileCount == 1 {
-
-	}
-	return err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = telemetry.RegisterFwlogPolicyV1HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service telemetry.FwlogPolicyV1")
+					m.Handle("/v1/fwlogPolicy/", http.StripPrefix("/v1/fwlogPolicy", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "telemetry.FwlogPolicyV1", "error", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
 }
 
-func (e *sFwlogPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (telemetry.FwlogPolicyV1Client, error) {
+func (e *sFwlogPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterFwlogPolicyV1, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
@@ -243,7 +291,7 @@ func (e *sFwlogPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := adapterFwlogPolicyV1{grpcclient.NewFwlogPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterFwlogPolicyV1{conn: client, service: grpcclient.NewFwlogPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
@@ -252,6 +300,7 @@ type sStatsPolicyV1GwService struct {
 }
 
 type adapterStatsPolicyV1 struct {
+	conn    *rpckit.RPCClient
 	service telemetry.ServiceStatsPolicyV1Client
 }
 
@@ -294,38 +343,57 @@ func (e *sStatsPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	rslvr resolver.Interface) error {
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
+
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
 	if mux == nil {
 		mux = runtime.NewServeMux(opts)
 	}
+	muxMutex.Unlock()
+
 	fileCount++
-	err = telemetry.RegisterStatsPolicyV1HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service telemetry.StatsPolicyV1")
 
-	m.Handle("/v1/statsPolicy/", http.StripPrefix("/v1/statsPolicy", mux))
-	if fileCount == 1 {
-
-	}
-	return err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = telemetry.RegisterStatsPolicyV1HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service telemetry.StatsPolicyV1")
+					m.Handle("/v1/statsPolicy/", http.StripPrefix("/v1/statsPolicy", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "telemetry.StatsPolicyV1", "error", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
 }
 
-func (e *sStatsPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (telemetry.StatsPolicyV1Client, error) {
+func (e *sStatsPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterStatsPolicyV1, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
@@ -352,7 +420,7 @@ func (e *sStatsPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := adapterStatsPolicyV1{grpcclient.NewStatsPolicyV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterStatsPolicyV1{conn: client, service: grpcclient.NewStatsPolicyV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

@@ -9,6 +9,8 @@ package x509GwService
 import (
 	"context"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -34,6 +36,7 @@ type sCertificateV1GwService struct {
 }
 
 type adapterCertificateV1 struct {
+	conn    *rpckit.RPCClient
 	service x509.ServiceCertificateV1Client
 }
 
@@ -76,38 +79,63 @@ func (e *sCertificateV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	rslvr resolver.Interface) error {
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
+
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
 	if mux == nil {
 		mux = runtime.NewServeMux(opts)
 	}
-	fileCount++
-	err = x509.RegisterCertificateV1HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service x509.CertificateV1")
+	muxMutex.Unlock()
 
-	m.Handle("/v1/certificate/", http.StripPrefix("/v1/certificate", mux))
+	fileCount++
+
 	if fileCount == 1 {
-		err = registerSwaggerDef(m, logger)
+		err := registerSwaggerDef(m, logger)
+		if err != nil {
+			logger.ErrorLog("msg", "failed to register swagger spec", "service", "x509.CertificateV1", "error", err)
+		}
 	}
-	return err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = x509.RegisterCertificateV1HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service x509.CertificateV1")
+					m.Handle("/v1/certificate/", http.StripPrefix("/v1/certificate", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "x509.CertificateV1", "error", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
 }
 
-func (e *sCertificateV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (x509.CertificateV1Client, error) {
+func (e *sCertificateV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterCertificateV1, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
@@ -134,7 +162,7 @@ func (e *sCertificateV1GwService) newClient(ctx context.Context, grpcAddr string
 		}()
 	}()
 
-	cl := adapterCertificateV1{grpcclient.NewCertificateV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterCertificateV1{conn: client, service: grpcclient.NewCertificateV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

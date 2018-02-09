@@ -176,14 +176,15 @@ func (a *apiGw) Run(config apigw.Config) {
 	a.logger.Infof("Resolving via %v", config.Resolvers)
 	// Let all the services complete registration. All services served by this
 	// gateway should have registered themselves via their init().
+	var wg sync.WaitGroup
 	for name, svc := range a.svcmap {
 		config.Logger.Log("Svc", name, "msg", "RegisterComplete")
-		err := svc.CompleteRegistration(ctx, config.Logger, s, m, rslvr)
+		err := svc.CompleteRegistration(ctx, config.Logger, s, m, rslvr, &wg)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to complete registration of %v (%v)", name, err))
 		}
 	}
-
+	wg.Wait()
 	// Now RUN!
 	if config.DebugMode {
 		m.Handle("/_debug/pprof/", http.HandlerFunc(pprof.Index))

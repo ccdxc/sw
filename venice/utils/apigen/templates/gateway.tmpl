@@ -9,6 +9,8 @@ package {{.GoPkg.Name}}GwService
 import (
 	"context"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -37,6 +39,7 @@ type s{{.Name}}GwService struct {
 }
 
 type adapter{{.Name}} struct {
+	conn *rpckit.RPCClient
 	service {{$pkgname}}.Service{{$svcname}}Client
 }
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
@@ -57,39 +60,64 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	rslvr resolver.Interface) error {
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	{{if strEq $cgrpcdest "" }}grpcaddr := "{{$grpcdest}}"{{else}}
 	grpcaddr := "{{$cgrpcdest}}"{{end}}
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
+
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
 	if mux == nil {
 		mux = runtime.NewServeMux(opts)
 	}
-	fileCount++
-	err = {{$pkgname}}.Register{{.Name}}HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service {{$pkgname}}.{{.Name}}")
+	muxMutex.Unlock()
 	{{$manifest := (getSvcManifest "generated/apiclient/svcmanifest.json")}}{{$pkgs := (index $manifest $pkgname)}}{{$fileCount := (len $pkgs.Files)}}
-	m.Handle("/{{$svcparams.Version}}/{{$svcparams.Prefix}}/", http.StripPrefix("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", mux))
+	fileCount++
+	{{if eq ($index) 0}}
 	if fileCount == {{$fileCount}} {
-		{{if eq ($index) 0}}err = registerSwaggerDef(m, logger){{end}}
-	}
-	return err
+		err := registerSwaggerDef(m, logger)
+		if err != nil {
+			logger.ErrorLog("msg", "failed to register swagger spec", "service", "{{$pkgname}}.{{.Name}}", "error", err)
+		}
+	}{{end}}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = {{$pkgname}}.Register{{.Name}}HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service {{$pkgname}}.{{.Name}}")
+					m.Handle("/{{$svcparams.Version}}/{{$svcparams.Prefix}}/", http.StripPrefix("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "{{$pkgname}}.{{.Name}}", "error", err)
+			select {
+				case <-ctx.Done():
+					return
+				case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
 }
 
-func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) ({{$pkgname}}.{{.Name}}Client, error) {
+func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapter{{$svcname}}, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
@@ -116,7 +144,7 @@ func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, rs
 		}()
 	}()
 
-	cl := adapter{{$svcname}}{grpcclient.New{{.Name}}Backend(client.ClientConn, e.logger)}
+	cl := &adapter{{$svcname}}{conn: client, service: grpcclient.New{{.Name}}Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }{{end}}
 

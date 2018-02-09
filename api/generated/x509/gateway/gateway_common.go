@@ -8,6 +8,7 @@ package x509GwService
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/GeertJohan/go.rice"
 	"github.com/pkg/errors"
@@ -17,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+var muxMutex sync.Mutex
 var mux *runtime.ServeMux
 var fileCount int
 

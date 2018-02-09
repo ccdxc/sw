@@ -16,6 +16,7 @@ import (
     "github.com/pensando/sw/venice/utils/log"
 )
 
+var muxMutex sync.Mutex
 var mux *runtime.ServeMux
 var fileCount int
 

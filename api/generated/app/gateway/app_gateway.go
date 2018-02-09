@@ -9,6 +9,8 @@ package appGwService
 import (
 	"context"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -34,6 +36,7 @@ type sAppV1GwService struct {
 }
 
 type adapterAppV1 struct {
+	conn    *rpckit.RPCClient
 	service app.ServiceAppV1Client
 }
 
@@ -146,38 +149,63 @@ func (e *sAppV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	rslvr resolver.Interface) error {
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
+
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
 	if mux == nil {
 		mux = runtime.NewServeMux(opts)
 	}
-	fileCount++
-	err = app.RegisterAppV1HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service app.AppV1")
+	muxMutex.Unlock()
 
-	m.Handle("/v1/app/", http.StripPrefix("/v1/app", mux))
+	fileCount++
+
 	if fileCount == 1 {
-		err = registerSwaggerDef(m, logger)
+		err := registerSwaggerDef(m, logger)
+		if err != nil {
+			logger.ErrorLog("msg", "failed to register swagger spec", "service", "app.AppV1", "error", err)
+		}
 	}
-	return err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = app.RegisterAppV1HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service app.AppV1")
+					m.Handle("/v1/app/", http.StripPrefix("/v1/app", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "app.AppV1", "error", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
 }
 
-func (e *sAppV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (app.AppV1Client, error) {
+func (e *sAppV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterAppV1, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
@@ -204,7 +232,7 @@ func (e *sAppV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr 
 		}()
 	}()
 
-	cl := adapterAppV1{grpcclient.NewAppV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterAppV1{conn: client, service: grpcclient.NewAppV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 

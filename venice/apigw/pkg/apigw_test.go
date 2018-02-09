@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ type testGwService struct {
 }
 
 func (t *testGwService) CompleteRegistration(ctx context.Context,
-	logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface) error {
+	logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface, wg *sync.WaitGroup) error {
 	t.regevents = t.regevents + 1
 	return nil
 }

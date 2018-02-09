@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"sync"
 
 	"google.golang.org/grpc"
 
@@ -14,7 +15,7 @@ import (
 // APIGatewayService is the interface satisfied by all all services registering to the API gateway
 type APIGatewayService interface {
 	// CompleteRegistration is a callback invoked after the API Gateway is done initializing.
-	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface) error
+	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface, wg *sync.WaitGroup) error
 }
 
 // APIGateway is satisfied by the API Gateway implementation.

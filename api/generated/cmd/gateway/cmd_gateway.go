@@ -9,6 +9,8 @@ package cmdGwService
 import (
 	"context"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	oldcontext "golang.org/x/net/context"
@@ -34,6 +36,7 @@ type sCmdV1GwService struct {
 }
 
 type adapterCmdV1 struct {
+	conn    *rpckit.RPCClient
 	service cmd.ServiceCmdV1Client
 }
 
@@ -146,38 +149,63 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
 	m *http.ServeMux,
-	rslvr resolver.Interface) error {
+	rslvr resolver.Interface,
+	wg *sync.WaitGroup) error {
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
-	if cl == nil || err != nil {
-		err = errors.Wrap(err, "could not create client")
-		return err
-	}
+
 	marshaller := runtime.JSONBuiltin{}
 	opts := runtime.WithMarshalerOption("*", &marshaller)
+	muxMutex.Lock()
 	if mux == nil {
 		mux = runtime.NewServeMux(opts)
 	}
-	fileCount++
-	err = cmd.RegisterCmdV1HandlerWithClient(ctx, mux, cl)
-	if err != nil {
-		err = errors.Wrap(err, "service registration failed")
-		return err
-	}
-	logger.InfoLog("msg", "registered service cmd.CmdV1")
+	muxMutex.Unlock()
 
-	m.Handle("/v1/cmd/", http.StripPrefix("/v1/cmd", mux))
+	fileCount++
+
 	if fileCount == 1 {
-		err = registerSwaggerDef(m, logger)
+		err := registerSwaggerDef(m, logger)
+		if err != nil {
+			logger.ErrorLog("msg", "failed to register swagger spec", "service", "cmd.CmdV1", "error", err)
+		}
 	}
-	return err
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			nctx, cancel := context.WithCancel(ctx)
+			cl, err := e.newClient(nctx, grpcaddr, rslvr, apigw.GetDevMode())
+			if err == nil {
+				muxMutex.Lock()
+				err = cmd.RegisterCmdV1HandlerWithClient(ctx, mux, cl)
+				muxMutex.Unlock()
+				if err == nil {
+					logger.InfoLog("msg", "registered service cmd.CmdV1")
+					m.Handle("/v1/cmd/", http.StripPrefix("/v1/cmd", mux))
+					return
+				} else {
+					err = errors.Wrap(err, "failed to register")
+				}
+			} else {
+				err = errors.Wrap(err, "failed to create client")
+			}
+			cancel()
+			logger.ErrorLog("msg", "failed to register", "service", "cmd.CmdV1", "error", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
+		}
+	}()
+	return nil
 }
 
-func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (cmd.CmdV1Client, error) {
+func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterCmdV1, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
@@ -204,7 +232,7 @@ func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr 
 		}()
 	}()
 
-	cl := adapterCmdV1{grpcclient.NewCmdV1Backend(client.ClientConn, e.logger)}
+	cl := &adapterCmdV1{conn: client, service: grpcclient.NewCmdV1Backend(client.ClientConn, e.logger)}
 	return cl, nil
 }
 
