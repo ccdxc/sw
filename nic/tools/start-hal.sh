@@ -6,7 +6,6 @@ SNORT_EXPORT_DIR=$NIC_DIR/hal/third-party/snort3/export
 #GDB='gdb --args'
 export ZMQ_SOC_DIR=$NIC_DIR
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export HAL_PLUGIN_PATH=$NIC_DIR/../bazel-bin/nic/hal/plugins/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/../bazel-bin/nic/model_sim/:$SNORT_EXPORT_DIR/bin/
 export SNORT_LUA_PATH=$SNORT_EXPORT_DIR/lua/
 export LUA_PATH="$SNORT_EXPORT_DIR/lua/?.lua;;"

@@ -223,7 +223,6 @@ def run_hal(args):
     snort_dir = nic_dir + "/hal/third-party/snort3/export"
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["LD_LIBRARY_PATH"] = "/home/asic/bin/tools/lib64:" + os.environ["LD_LIBRARY_PATH"]
-    os.environ["HAL_PLUGIN_PATH"] = nic_dir + "/../bazel-bin/nic/hal/plugins/"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/bin/"
     os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
