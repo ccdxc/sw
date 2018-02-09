@@ -11,10 +11,9 @@
 
 namespace hal {
 
-// ----------------------------------------------------------------------------
-// hash table profile_id => entry
-//  - Get key from entry
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// get security profile's key
+//----------------------------------------------------------------------------
 void *
 nwsec_profile_id_get_key_func (void *entry)
 {
@@ -30,9 +29,9 @@ nwsec_profile_id_get_key_func (void *entry)
     return (void *)&(nwsec->profile_id);
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // hash table profile_id => entry compute hash func.
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 uint32_t
 nwsec_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 {
@@ -41,9 +40,9 @@ nwsec_profile_id_compute_hash_func (void *key, uint32_t ht_size)
                                          sizeof(nwsec_profile_id_t)) % ht_size;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // hash table profile_id => entry compare func.
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 bool
 nwsec_profile_id_compare_key_func (void *key1, void *key2)
 {
@@ -55,7 +54,7 @@ nwsec_profile_id_compare_key_func (void *key1, void *key2)
 }
 
 //------------------------------------------------------------------------------
-// Lookup l2seg from key or handle
+// lookup l2seg from key or handle
 //------------------------------------------------------------------------------
 nwsec_profile_t *
 nwsec_lookup_key_or_handle (const SecurityProfileKeyHandle& kh)
@@ -339,7 +338,7 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
 // validate function for nwsec profile create
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_nwsec_create(SecurityProfileSpec& spec, SecurityProfileResponse *rsp)
+validate_nwsec_create (SecurityProfileSpec& spec, SecurityProfileResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -361,11 +360,12 @@ validate_nwsec_create(SecurityProfileSpec& spec, SecurityProfileResponse *rsp)
     }
 
 end:
+
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// Main Create CB
+// main Create CB
 // - PD Call to allocate PD resources and HW programming
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -659,8 +659,7 @@ security_profile_create (SecurityProfileSpec& spec,
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: security profile create ");
-    HAL_TRACE_DEBUG("{}: creating security profile, id {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("Creating security profile id {}",
                     spec.key_or_handle().profile_id());
 
     // Prints spec
@@ -677,8 +676,8 @@ security_profile_create (SecurityProfileSpec& spec,
 
     // check if nwsec profile exists already, and reject if one is found
     if (find_nwsec_profile_by_id(spec.key_or_handle().profile_id())) {
-        HAL_TRACE_ERR("{}:failed to create a nwsec, "
-                      "nwsec{} exists already", __FUNCTION__, 
+        HAL_TRACE_ERR("Failed to create nwsec profile, "
+                      "profile {} exists already",
                       spec.key_or_handle().profile_id());
         ret =  HAL_RET_ENTRY_EXISTS;
         goto end;
@@ -687,9 +686,9 @@ security_profile_create (SecurityProfileSpec& spec,
     // instantiate the nwsec profile
     sec_prof = nwsec_profile_alloc_init();
     if (sec_prof == NULL) {
+        ret = HAL_RET_OOM;
         HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
                       __FUNCTION__, ret);
-        ret = HAL_RET_OOM;
         goto end;
     }
 
@@ -719,6 +718,7 @@ security_profile_create (SecurityProfileSpec& spec,
                              nwsec_create_cleanup_cb);
 
 end:
+
     if (ret != HAL_RET_OK) {
         if (sec_prof) {
             // if there is an error, if will be freed in abort CB
@@ -728,7 +728,6 @@ end:
 
     nwsec_prepare_rsp(rsp, ret, 
                       sec_prof ? sec_prof->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: security profile create ");
     return ret;
 }
 

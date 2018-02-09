@@ -297,7 +297,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t             *dhl_entry = NULL;
     l2seg_t                 *l2seg     = NULL;
     vrf_t                   *vrf       = NULL;
-    hal_handle_t            hal_handle = 0;
+    hal_handle_t            hal_handle = HAL_HANDLE_INVALID;
     l2seg_create_app_ctxt_t *app_ctxt  = NULL;
 
     if (cfg_ctxt == NULL) {

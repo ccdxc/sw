@@ -109,14 +109,122 @@ typedef struct gft_hdr_group_exact_match_profile_s {
 // flags for GFT exact match profile
 #define GFT_EXACT_MATCH_PROFILE_RDMA_FLOW      0x00000001
 typedef struct gft_exact_match_profile_s {
-    uint32_t                               flags;    // GFT_EXACT_MATCH_PROFILE_XXX flags, if any
+    hal_spinlock_t                         slock;      // lock to protect this structure
+    gft_profile_id_t                       profile_id; // profile id
+    uint32_t                               flags;      // GFT_EXACT_MATCH_PROFILE_XXX flags, if any
     gft_table_type_t                       table_type;
-    gft_profile_id_t                       profile_id;
     uint32_t                               num_hdr_group_exact_match_profiles;
     gft_hdr_group_exact_match_profile_t    *hgem_profiles;
 
+    // operational state
+    hal_handle_t          hal_handle;              // HAL allocated handle
+
     void                                   *pd;    // PD state, if any
 } __PACK__ gft_exact_match_profile_t;
+
+typedef struct gft_exact_match_profile_create_app_ctxt_s {
+} __PACK__ gft_exact_match_profile_create_app_ctxt_t;
+
+#define HAL_MAX_GFT_EXACT_MATCH_PROFILES    512
+
+// allocate a GFT exact match profile instance
+static inline gft_exact_match_profile_t *
+gft_exact_match_profile_alloc (void)
+{
+    gft_exact_match_profile_t    *profile;
+
+    profile = (gft_exact_match_profile_t *)
+                  g_hal_state->gft_exact_match_profile_slab()->alloc();
+    if (profile == NULL) {
+        return NULL;
+    }
+    return profile;
+}
+
+// initialize a GFT exact match profile instance
+static inline gft_exact_match_profile_t *
+gft_exact_match_profile_init (gft_exact_match_profile_t *profile)
+{
+    if (!profile) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_PRIVATE);
+    profile->profile_id = 0;
+    profile->flags = 0;
+    profile->table_type = GFT_TABLE_TYPE_NONE;
+    profile->num_hdr_group_exact_match_profiles = 0;
+    profile->hgem_profiles = NULL;
+
+    profile->hal_handle = HAL_HANDLE_INVALID;
+    profile->pd     = NULL;
+
+    return profile;
+}
+
+// allocate and initialize a GFT exact match profile instance
+static inline gft_exact_match_profile_t *
+gft_exact_match_profile_alloc_init (void)
+{
+    return gft_exact_match_profile_init(gft_exact_match_profile_alloc());
+}
+
+// free a GFT exact match profile instance
+static inline hal_ret_t
+gft_exact_match_profile_free (gft_exact_match_profile_t *profile)
+{
+    HAL_SPINLOCK_DESTROY(&profile->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_GFT_EXACT_MATCH_PROFILE, profile);
+    return HAL_RET_OK;
+}
+
+// cleanup and free a GFT exact match profile
+static inline hal_ret_t
+gft_exact_match_profile_cleanup (gft_exact_match_profile_t *profile)
+{
+    gft_exact_match_profile_free(profile);
+    return HAL_RET_OK;
+}
+
+// find a GFT exact match profile instance by its id
+static inline gft_exact_match_profile_t *
+find_gft_exact_match_profile_by_id (gft_profile_id_t profile_id)
+{
+    hal_handle_id_ht_entry_t     *entry;
+    gft_exact_match_profile_t    *profile;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+                gft_exact_match_profile_id_ht()->lookup(&profile_id);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+                   HAL_OBJ_ID_GFT_EXACT_MATCH_PROFILE);
+
+        profile =
+            (gft_exact_match_profile_t *)hal_handle_get_obj(entry->handle_id);
+        return profile;
+    }
+    return NULL;
+}
+
+// find a GFT exact match profile instance by its handle
+static inline gft_exact_match_profile_t *
+find_gft_exact_match_profile_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("Failed to find object with handle {}", handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_GFT_EXACT_MATCH_PROFILE) {
+        HAL_TRACE_DEBUG("Failed to find GFT exact match profile with handle {}",
+                        handle);
+        return NULL;
+    }
+    return (gft_exact_match_profile_t *)hal_handle_get_obj(handle);
+}
 
 // flags for GFT header group exact match
 #define GFT_HDR_GROUP_EXACT_MATCH_IS_TTL_ONE        0x00000001
@@ -269,6 +377,11 @@ typedef struct gft_exact_match_flow_entry_s {
 
     void                           *pd;                                // PD state, if any
 } __PACK__ gft_exact_match_flow_entry_t;
+
+void *gft_exact_match_profile_id_get_key_func(void *entry);
+uint32_t gft_exact_match_profile_id_compute_hash_func(void *key,
+                                                      uint32_t ht_size);
+bool gft_exact_match_profile_id_compare_key_func(void *key1, void *key2);
 
 // SVC CRUD APIs
 hal_ret_t gft_exact_match_profile_create(GftExactMatchProfileSpec& spec,

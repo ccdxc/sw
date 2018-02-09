@@ -26,6 +26,7 @@
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/dos.hpp"
+#include "nic/hal/src/gft.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
 
@@ -884,7 +885,14 @@ hal_mem_db::init(void)
                                        true, true, true);
     HAL_ASSERT_RETURN((nwsec_group_slab_ != NULL), false);
 
-    
+    // initialize GFT related slabs
+    gft_exact_match_profile_slab_ =
+        slab::factory("gft_exact_match_profile",
+                      HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
+                      sizeof(hal::gft_exact_match_profile_t),
+                      16, false, true, true);
+    HAL_ASSERT_RETURN((gft_exact_match_profile_slab_ != NULL), false);
+
     return true;
 }
 
@@ -931,6 +939,7 @@ hal_mem_db::hal_mem_db()
     rawccb_slab_ = NULL;
     proxyrcb_slab_ = NULL;
     proxyccb_slab_ = NULL;
+    gft_exact_match_profile_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -1001,6 +1010,7 @@ hal_mem_db::~hal_mem_db()
     proxyrcb_slab_ = NULL;
     proxyccb_slab_ ? slab::destroy(proxyccb_slab_) : HAL_NOP;
     proxyccb_slab_ = NULL;
+    gft_exact_match_profile_slab_ ? slab::destroy(gft_exact_match_profile_slab_) : HAL_NOP;
 }
 
 //----------------------------------------------------------------------------
@@ -1050,6 +1060,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(rawccb_slab_);
     GET_SLAB(proxyrcb_slab_);
     GET_SLAB(proxyccb_slab_);
+    GET_SLAB(gft_exact_match_profile_slab_);
 
     return NULL;
 }

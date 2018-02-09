@@ -2075,8 +2075,7 @@ pd_gft_args_init (pd_gft_args_t *args)
     args->exact_match_flow_entry = NULL;
 }
 
-
-//clock
+// clock
 typedef struct pd_conv_hw_clock_to_sw_clock_args_s {
     uint32_t   hw_tick;
     uint64_t  *sw_ns;
@@ -2095,7 +2094,6 @@ typedef struct pd_get_slab_args_s {
     hal_slab_t slab_id;
     sdk::lib::slab *slab;
 } __PACK__ pd_get_slab_args_t;
-
 
 // generic pd call macros
 #define PD_FUNC_IDS(ENTRY)                                                              \

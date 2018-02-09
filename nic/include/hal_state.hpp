@@ -152,6 +152,10 @@ public:
     ht *proxyccb_id_ht(void) const { return proxyccb_id_ht_; }
     ht *proxyccb_hal_handle_ht(void) const { return proxyccb_hal_handle_ht_; }
 
+    // get APIs for GFT state
+    ht *gft_exact_match_profile_id_ht(void) const { return gft_exact_match_profile_id_ht_; }
+    ht *gft_exact_match_profile_hal_handle_ht(void) const { return gft_exact_match_profile_hal_handle_ht_; }
+
     void set_forwarding_mode(std::string modestr);
     hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
 
@@ -177,6 +181,7 @@ private:
         ht         *nwsec_profile_id_ht_;
         ht         *nwsec_profile_hal_handle_ht_;
     } __PACK__;
+
     // security group policy related config
     struct {
         ht         *nwsec_policy_cfg_ht_;
@@ -317,6 +322,12 @@ private:
         hal_forwarding_mode_t   forwarding_mode_;
     } __PACK__;
 
+    // GFT related config
+    struct {
+        ht         *gft_exact_match_profile_id_ht_;
+        ht         *gft_exact_match_profile_hal_handle_ht_;
+    } __PACK__;
+
     wp_rwlock    rwlock_;
     typedef struct obj_meta_s {
         uint32_t        obj_sz;
@@ -401,6 +412,7 @@ public:
     slab *rawccb_slab(void) const { return rawccb_slab_; }
     slab *proxyrcb_slab(void) const { return proxyrcb_slab_; }
     slab *proxyccb_slab(void) const { return proxyccb_slab_; }
+    slab *gft_exact_match_profile_slab(void) const { return gft_exact_match_profile_slab_; }
 
 private:
     bool init(void);
@@ -445,6 +457,7 @@ private:
     slab    *rawccb_slab_;
     slab    *proxyrcb_slab_;
     slab    *proxyccb_slab_;
+    slab    *gft_exact_match_profile_slab_;
 };
 
 //------------------------------------------------------------------------------
@@ -621,6 +634,11 @@ public:
     slab *proxyccb_slab(void) const { return mem_db_->proxyccb_slab(); }
     ht *proxyccb_id_ht(void) const { return cfg_db_->proxyccb_id_ht(); }
     ht *proxyccb_hal_handle_ht(void) const { return cfg_db_->proxyccb_hal_handle_ht(); }
+
+    // get APIs for GFT state
+    slab *gft_exact_match_profile_slab(void) const { return mem_db_->gft_exact_match_profile_slab(); }
+    ht *gft_exact_match_profile_id_ht(void) const { return cfg_db_->gft_exact_match_profile_id_ht(); }
+    ht *gft_exact_match_profile_hal_handle_ht(void) const { return cfg_db_->gft_exact_match_profile_hal_handle_ht(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(std::string modestr) { 

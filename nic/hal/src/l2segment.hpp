@@ -227,7 +227,7 @@ is_l2seg_wire_encap_vxlan (l2seg_t *l2seg)
 extern void *l2seg_id_get_key_func(void *entry);
 extern uint32_t l2seg_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool l2seg_id_compare_key_func(void *key1, void *key2);
-l2seg_t *l2seg_lookup_key_or_handle (const L2SegmentKeyHandle& kh);
+l2seg_t *l2seg_lookup_key_or_handle(const L2SegmentKeyHandle& kh);
 
 // SVC CRUD APIs
 hal_ret_t l2segment_create(L2SegmentSpec& spec,
