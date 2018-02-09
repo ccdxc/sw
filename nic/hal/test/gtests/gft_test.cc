@@ -857,8 +857,7 @@ rx_create_transposition() {
                          NULL, NULL, &data1);
 
     DATA2.hdr3_bits =
-        TRANSPOSITIONS_MODIFY_IPV4_SRC |
-        TRANSPOSITIONS_MODIFY_IPV4_DST;
+        TRANSPOSITIONS_MODIFY_IP_SRC | TRANSPOSITIONS_MODIFY_IP_DST;
     memcpy(DATA2.ip_dst, &g_rw_layer3_dip, 4);
     memcpy(DATA2.ip_src, &g_rw_layer3_sip, 4);
     p4pd_entry_write(P4TBL_ID_RX_HDR_TRANSPOSITIONS2, g_flow_idx2,

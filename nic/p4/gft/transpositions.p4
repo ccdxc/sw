@@ -111,46 +111,45 @@ action hdr_transpositions_layer_1(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ctag_1.etherType, ethernet_type);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
-        modify_field(ipv4_1.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST) != 0) {
-        modify_field(ipv4_1.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP) != 0) {
-        modify_field(ipv4_1.diffserv, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO) != 0) {
-        modify_field(ipv4_1.protocol, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL) != 0) {
-        modify_field(ipv4_1.ttl, ip_ttl);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC) != 0) {
-        modify_field(ipv6_1.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST) != 0) {
-        modify_field(ipv6_1.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP) != 0) {
-        modify_field(ipv6_1.trafficClass, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO) != 0) {
-        modify_field(ipv6_1.nextHdr, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL) != 0) {
-        modify_field(ipv6_1.hopLimit, ip_ttl);
-    }
-
-    if ((hdr_bits & (TRANSPOSITIONS_MODIFY_IPV4_SRC |
-                     TRANSPOSITIONS_MODIFY_IPV4_DST |
-                     TRANSPOSITIONS_MODIFY_IPV4_DSCP |
-                     TRANSPOSITIONS_MODIFY_IPV4_PROTO |
-                     TRANSPOSITIONS_MODIFY_IPV4_TTL |
-                     TRANSPOSITIONS_MODIFY_IPV6_SRC |
-                     TRANSPOSITIONS_MODIFY_IPV6_DST)) != 0) {
+    if (ipv4_1.valid == TRUE) {
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_SRC) != 0) {
+            modify_field(ipv4_1.srcAddr, ip_src);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DST) != 0) {
+            modify_field(ipv4_1.dstAddr, ip_dst);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DSCP) != 0) {
+            modify_field(ipv4_1.diffserv, ip_dscp);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_PROTO) != 0) {
+            modify_field(ipv4_1.protocol, ip_proto);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_TTL) != 0) {
+            modify_field(ipv4_1.ttl, ip_ttl);
+        }
         modify_field(control_metadata.update_checksum_1, TRUE);
+    }
+
+    if (ipv6_1.valid == TRUE) {
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_SRC) != 0) {
+            modify_field(ipv6_1.srcAddr, ip_src);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DST) != 0) {
+            modify_field(ipv6_1.dstAddr, ip_dst);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DSCP) != 0) {
+            modify_field(ipv6_1.trafficClass, ip_dscp);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_PROTO) != 0) {
+            modify_field(ipv6_1.nextHdr, ip_proto);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_TTL) != 0) {
+            modify_field(ipv6_1.hopLimit, ip_ttl);
+        }
+        if ((hdr_bits & (TRANSPOSITIONS_MODIFY_IP_SRC |
+                         TRANSPOSITIONS_MODIFY_IP_DST)) != 0) {
+            modify_field(control_metadata.update_checksum_1, TRUE);
+        }
     }
 }
 
@@ -186,46 +185,45 @@ action hdr_transpositions_layer_2(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ctag_2.etherType, ethernet_type);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
-        modify_field(ipv4_2.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST) != 0) {
-        modify_field(ipv4_2.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP) != 0) {
-        modify_field(ipv4_2.diffserv, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO) != 0) {
-        modify_field(ipv4_2.protocol, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL) != 0) {
-        modify_field(ipv4_2.ttl, ip_ttl);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC) != 0) {
-        modify_field(ipv6_2.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST) != 0) {
-        modify_field(ipv6_2.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP) != 0) {
-        modify_field(ipv6_2.trafficClass, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO) != 0) {
-        modify_field(ipv6_2.nextHdr, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL) != 0) {
-        modify_field(ipv6_2.hopLimit, ip_ttl);
-    }
-
-    if ((hdr_bits & (TRANSPOSITIONS_MODIFY_IPV4_SRC |
-                     TRANSPOSITIONS_MODIFY_IPV4_DST |
-                     TRANSPOSITIONS_MODIFY_IPV4_DSCP |
-                     TRANSPOSITIONS_MODIFY_IPV4_PROTO |
-                     TRANSPOSITIONS_MODIFY_IPV4_TTL |
-                     TRANSPOSITIONS_MODIFY_IPV6_SRC |
-                     TRANSPOSITIONS_MODIFY_IPV6_DST)) != 0) {
+    if (ipv4_2.valid == TRUE) {
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_SRC) != 0) {
+            modify_field(ipv4_2.srcAddr, ip_src);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DST) != 0) {
+            modify_field(ipv4_2.dstAddr, ip_dst);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DSCP) != 0) {
+            modify_field(ipv4_2.diffserv, ip_dscp);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_PROTO) != 0) {
+            modify_field(ipv4_2.protocol, ip_proto);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_TTL) != 0) {
+            modify_field(ipv4_2.ttl, ip_ttl);
+        }
         modify_field(control_metadata.update_checksum_2, TRUE);
+    }
+
+    if (ipv6_2.valid == TRUE) {
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_SRC) != 0) {
+            modify_field(ipv6_2.srcAddr, ip_src);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DST) != 0) {
+            modify_field(ipv6_2.dstAddr, ip_dst);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DSCP) != 0) {
+            modify_field(ipv6_2.trafficClass, ip_dscp);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_PROTO) != 0) {
+            modify_field(ipv6_2.nextHdr, ip_proto);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_TTL) != 0) {
+            modify_field(ipv6_2.hopLimit, ip_ttl);
+        }
+        if ((hdr_bits & (TRANSPOSITIONS_MODIFY_IP_SRC |
+                         TRANSPOSITIONS_MODIFY_IP_DST)) != 0) {
+            modify_field(control_metadata.update_checksum_2, TRUE);
+        }
     }
 }
 
@@ -261,46 +259,45 @@ action hdr_transpositions_layer_3(hdr_bits, ethernet_dst, ethernet_src,
         modify_field(ctag_3.etherType, ethernet_type);
     }
 
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_SRC) != 0) {
-        modify_field(ipv4_3.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DST) != 0) {
-        modify_field(ipv4_3.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_DSCP) != 0) {
-        modify_field(ipv4_3.diffserv, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_PROTO) != 0) {
-        modify_field(ipv4_3.protocol, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV4_TTL) != 0) {
-        modify_field(ipv4_3.ttl, ip_ttl);
-    }
-
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_SRC) != 0) {
-        modify_field(ipv6_3.srcAddr, ip_src);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DST) != 0) {
-        modify_field(ipv6_3.dstAddr, ip_dst);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_DSCP) != 0) {
-        modify_field(ipv6_3.trafficClass, ip_dscp);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_PROTO) != 0) {
-        modify_field(ipv6_3.nextHdr, ip_proto);
-    }
-    if ((hdr_bits & TRANSPOSITIONS_MODIFY_IPV6_TTL) != 0) {
-        modify_field(ipv6_3.hopLimit, ip_ttl);
-    }
-
-    if ((hdr_bits & (TRANSPOSITIONS_MODIFY_IPV4_SRC |
-                     TRANSPOSITIONS_MODIFY_IPV4_DST |
-                     TRANSPOSITIONS_MODIFY_IPV4_DSCP |
-                     TRANSPOSITIONS_MODIFY_IPV4_PROTO |
-                     TRANSPOSITIONS_MODIFY_IPV4_TTL |
-                     TRANSPOSITIONS_MODIFY_IPV6_SRC |
-                     TRANSPOSITIONS_MODIFY_IPV6_DST)) != 0) {
+    if (ipv4_3.valid == TRUE) {
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_SRC) != 0) {
+            modify_field(ipv4_3.srcAddr, ip_src);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DST) != 0) {
+            modify_field(ipv4_3.dstAddr, ip_dst);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DSCP) != 0) {
+            modify_field(ipv4_3.diffserv, ip_dscp);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_PROTO) != 0) {
+            modify_field(ipv4_3.protocol, ip_proto);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_TTL) != 0) {
+            modify_field(ipv4_3.ttl, ip_ttl);
+        }
         modify_field(control_metadata.update_checksum_3, TRUE);
+    }
+
+    if (ipv6_3.valid == TRUE) {
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_SRC) != 0) {
+            modify_field(ipv6_3.srcAddr, ip_src);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DST) != 0) {
+            modify_field(ipv6_3.dstAddr, ip_dst);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_DSCP) != 0) {
+            modify_field(ipv6_3.trafficClass, ip_dscp);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_PROTO) != 0) {
+            modify_field(ipv6_3.nextHdr, ip_proto);
+        }
+        if ((hdr_bits & TRANSPOSITIONS_MODIFY_IP_TTL) != 0) {
+            modify_field(ipv6_3.hopLimit, ip_ttl);
+        }
+        if ((hdr_bits & (TRANSPOSITIONS_MODIFY_IP_SRC |
+                         TRANSPOSITIONS_MODIFY_IP_DST)) != 0) {
+            modify_field(control_metadata.update_checksum_3, TRUE);
+        }
     }
 }
 
