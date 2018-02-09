@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include "nic/include/fte.hpp"
+#include "nic/include/app_redir_shared.h"
 #include "nic/p4/nw/include/defines.h"
 
 namespace hal {
@@ -30,24 +31,6 @@ typedef enum {
     // when SPAN is applicable, this is the default type
     APP_REDIR_SPAN_APPLIC_DEFAULT_TYPE = APP_REDIR_SPAN_INGRESS 
 } __PACK__ app_redir_span_type_t;
-
-/*
- * Two ways of supporting visibility mode: using a mirror session or 
- * ingress replication. 
- *
- * Mirror session has a limitation that P4 only parses up to the L2 header 
- * on the span packet so we'd have to work around that with 
- * app_redir_rx_span_parse_workaround() below.
- *
- * Ingress replication does not have such limitation but is available for
- * ingress copy only. In addition, replication will back pressure the source
- * if either the flow's destination queue or the replication-to queue is full.
- *
- * In the case of mirror session, the span copy would be dropped if the
- * mirror-to queue were full.
- * 
- */
-#define APP_REDIR_VISIBILITY_USE_MIRROR_SESSION     1
 
 
 // appID state

@@ -75,4 +75,50 @@
     add    _dest_r, _dest_r, _k_cpu_id, ARQ_SEM_IDX_ENTRY_SHIFT; \
     addi   _dest_r, _dest_r, CAPRI_SEM_INC_OFFSET;
 
+/*
+ * Set up HW toeplitz hash key and data
+ */
+#define TOEPLITZ_KEY_DATA_SETUP(_hash_key_prefix, _app_type, _app_header, \
+                                _r_pkt_type, _r_hash_key, _brend_label) \
+    addi        _r_hash_key, r0, _hash_key_prefix; \
+    addui       _r_hash_key, _r_hash_key, _hash_key_prefix; \
+    phvwrpair   p.toeplitz_key0_data[127:64], _r_hash_key, \
+                p.toeplitz_key0_data[63:0],   _r_hash_key; \
+    phvwrpair   p.toeplitz_key1_data[127:64], _r_hash_key, \
+                p.toeplitz_key1_data[63:0],   _r_hash_key; \
+    phvwrpair   p.toeplitz_key2_data[127:64], _r_hash_key, \
+                p.toeplitz_key2_data[3:0], _app_type; \
+    add         _r_pkt_type, r0, k.##_app_header##_packet_type; \
+    .brbegin; \
+    br          _r_pkt_type[1:0]; \
+    nop; \
+    .brcase CPU_PACKET_TYPE_NONE; \
+        b           _brend_label; \
+        nop; \
+    .brcase CPU_PACKET_TYPE_IPV4; \
+        b           _brend_label; \
+        phvwrpair   p.toeplitz_input0_data[127:64], k.##_app_header##_ip_sa_sbit24_ebit127[87:24], \
+                    p.toeplitz_input0_data[63:32],  k.{##_app_header##_l4_sport...##_app_header##_l4_dport_sbit8_ebit15}; \
+    .brcase CPU_PACKET_TYPE_IPV6; \
+        phvwr       p.toeplitz_input0_data, k.{##_app_header##_ip_sa_sbit0_ebit15...##_app_header##_ip_sa_sbit24_ebit127}; \
+        phvwrpair   p.toeplitz_input1_data[127:120], k.##_app_header##_ip_da1_sbit0_ebit7, \
+                    p.toeplitz_input1_data[119:64],  k.##_app_header##_ip_da1_sbit8_ebit63; \
+        phvwr       p.toeplitz_input1_data[63:0], k.##_app_header##_ip_da2; \
+        b           _brend_label; \
+        phvwr       p.toeplitz_input2_data, k.{##_app_header##_l4_sport...##_app_header##_l4_dport_sbit8_ebit15}; \
+    .brcase 3; \
+        illegal; \
+        nop; \
+    .brend;
+
+
+/*
+ * Evaluate HW toeplitz hash result to a mask and max value
+ * (without using mod)
+ */
+#define TOEPLITZ_HASH_CALC_ID(_r_hash_result, _hash_mask, _hash_max_val, _cf) \
+    and         _r_hash_result, _r_hash_result.wx, _hash_mask; \
+    sle         _cf, _r_hash_result, _hash_max_val; \
+    add.!_cf    _r_hash_result, r0, r0;
+
 #endif

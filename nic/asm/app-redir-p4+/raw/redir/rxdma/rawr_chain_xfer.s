@@ -37,7 +37,7 @@ struct rawr_chain_sem_k                 k;
  * Register args:
  *     On entry, r1 contains the allocated chain ring pindex
  */
-rawr_s4_chain_xfer:
+rawr_s5_chain_xfer:
 
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr,\
                 CAPRI_PHV_START_OFFSET(dma_cpu_pkt_dma_cmd_type) / 16
@@ -68,14 +68,14 @@ rawr_s4_chain_xfer:
      * and the packet content. They either fit entirely in one mpage, 
      * or one pppage, or both, as guaranteed by rawr_s0_rx_start.
      */
-    add         r_page_addr, r0, k.{to_s4_mpage_sbit0_ebit3...\
-                                    to_s4_mpage_sbit28_ebit33}
+    add         r_page_addr, r0, k.{to_s5_mpage_sbit0_ebit3...\
+                                    to_s5_mpage_sbit28_ebit33}
     sne         c1, r_page_addr, r0
     addi.c1     r_page_size, r0, APP_REDIR_MPAGE_SIZE
     ori.c1      r_rawr_hdr_flags, r_rawr_hdr_flags,\
                 PEN_APP_REDIR_A0_RNMPR_SMALL
-    add.!c1     r_page_addr, r0, k.{to_s4_ppage_sbit0_ebit5...\
-                                    to_s4_ppage_sbit30_ebit33}
+    add.!c1     r_page_addr, r0, k.{to_s5_ppage_sbit0_ebit5...\
+                                    to_s5_ppage_sbit30_ebit33}
     addi.!c1    r_page_size, r0, APP_REDIR_PPAGE_SIZE
 
     phvwr       p.pen_raw_redir_hdr_v1_flags, r_rawr_hdr_flags
@@ -111,8 +111,8 @@ rawr_s4_chain_xfer:
     sle         c2, r_pkt_len, r_page_size
     addi.c2     r_page_addr, r_page_addr, P4PLUS_RAW_REDIR_HDR_SZ
     phvwr.!c2   p.aol_L0, r_xfer_len.wx
-    add.!c2     r_page_addr, r0, k.{to_s4_ppage_sbit0_ebit5...\
-                                    to_s4_ppage_sbit30_ebit33}
+    add.!c2     r_page_addr, r0, k.{to_s5_ppage_sbit0_ebit5...\
+                                    to_s5_ppage_sbit30_ebit33}
     
     sub         r_pkt_len, r_pkt_len, r_xfer_len
     phvwr       p.dma_pkt_content_dma_cmd_addr, r_page_addr
@@ -128,8 +128,8 @@ rawr_s4_chain_xfer:
     /*
      * Set up transfer of the AOL's into queue descriptor
      */    
-    add         r_desc, k.{to_s4_desc_sbit0_ebit31...\
-                           to_s4_desc_sbit32_ebit33},\
+    add         r_desc, k.{to_s5_desc_sbit0_ebit31...\
+                           to_s5_desc_sbit32_ebit33},\
                 NIC_DESC_ENTRY_0_OFFSET
     phvwrpair   p.dma_desc_dma_cmd_addr, r_desc,\
                 p.dma_desc_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
@@ -152,10 +152,10 @@ rawr_s4_chain_xfer:
      */
     smeqh       c1, r_rawrcb_flags, APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET,\
                                     APP_REDIR_CHAIN_DESC_ADD_AOL_OFFSET
-    add.c1      r_desc, k.{to_s4_desc_sbit0_ebit31...\
-                           to_s4_desc_sbit32_ebit33}, NIC_DESC_ENTRY_0_OFFSET
-    add.!c1     r_desc, k.{to_s4_desc_sbit0_ebit31...\
-                           to_s4_desc_sbit32_ebit33}, r0
+    add.c1      r_desc, k.{to_s5_desc_sbit0_ebit31...\
+                           to_s5_desc_sbit32_ebit33}, NIC_DESC_ENTRY_0_OFFSET
+    add.!c1     r_desc, k.{to_s5_desc_sbit0_ebit31...\
+                           to_s5_desc_sbit32_ebit33}, r0
     /*
      * The same queue may also require descriptor valid bit to be set
      */

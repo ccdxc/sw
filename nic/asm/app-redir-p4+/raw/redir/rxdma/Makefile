@@ -32,6 +32,7 @@ SRC_FILES := \
     $(SRC_DIR)/rawr_ppage_post_alloc.s \
     $(SRC_DIR)/rawr_mpage_sem_post_update.s \
     $(SRC_DIR)/rawr_mpage_post_alloc.s \
+    $(SRC_DIR)/rawr_hash_calc_id.s \
     $(SRC_DIR)/rawr_chain_pindex_pre_alloc.s \
     $(SRC_DIR)/rawr_chain_txq_pindex_post_read.s \
     $(SRC_DIR)/rawr_chain_sem_post_update.s \

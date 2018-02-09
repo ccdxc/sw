@@ -20,20 +20,20 @@ struct rawr_mpage_free_mpage_free_d d;
     
     .align
 
-rawr_s5_mpage_free:
+rawr_s6_mpage_free:
 
     CAPRI_CLEAR_TABLE2_VALID
 
     /*
      * mpage free semaphore should never be full,
-     * but abort if so... rawr_s5_desc_free will launch stats collect
+     * but abort if so... rawr_s6_desc_free will launch stats collect
      */
     sne         c1, d.pindex_full, r0
     phvwri.c1.e p.t3_s2s_inc_stat_sem_free_full, 1
     
     addi        r_page_is_small, r0, TRUE   // delay slot
-    add         r_page_addr, r0, k.{to_s5_mpage_sbit0_ebit3...\
-                                    to_s5_mpage_sbit28_ebit33}
+    add         r_page_addr, r0, k.{to_s6_mpage_sbit0_ebit3...\
+                                    to_s6_mpage_sbit28_ebit33}
     bal         r_return, rawr_page_free
     add         r_table_idx, r0, d.pindex                   // delay slot
     nop.e

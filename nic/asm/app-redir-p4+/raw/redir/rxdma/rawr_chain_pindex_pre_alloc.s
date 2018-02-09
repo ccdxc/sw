@@ -8,22 +8,22 @@ struct rawr_chain_pindex_pre_alloc_k    k;
  *
  * Note that CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP uses r1/r2 as scratch registers!
  */
-#define r_ring_indices_addr         r3
-#define r_qstate_addr               r4
+#define r_ring_index_select         r3
+#define r_ring_indices_addr         r4
+#define r_qstate_addr               r5
 
 %%
 
-    .param      rawr_s4_chain_txq_pindex_post_read
-    .param      rawr_s4_chain_sem_pindex_post_update
-    .param      rawr_s4_cleanup_discard
-    .param      rawr_err_stats_inc
+    .param      rawr_s5_chain_txq_pindex_post_read
+    .param      rawr_s5_chain_sem_pindex_post_update
+    .param      rawr_s5_cleanup_discard
     
     .align
     
-rawr_s3_chain_pindex_pre_alloc:
+rawr_s4_chain_pindex_pre_alloc:
 
     //CAPRI_CLEAR_TABLE1_VALID
-
+    
     /*
      * For a given flow, one of 2 types of redirection applies:
      *   1) Redirect to ARM CPU RxQ, or
@@ -40,12 +40,13 @@ rawr_s3_chain_pindex_pre_alloc:
      */
     seq         c1, k.common_phv_chain_to_rxq, r0   // delay slot
     bcf         [c1], _chain_txq_ring_indices_launch
-    add         r_ring_indices_addr, r0, \
-                k.{to_s3_chain_ring_indices_addr_sbit0_ebit31...\
-                   to_s3_chain_ring_indices_addr_sbit32_ebit33} // delay slot
+    
+    CPU_ARQ_SEM_IDX_INC_ADDR(RX, 
+                             k.common_phv_chain_ring_index_select,
+                             r_ring_indices_addr)
     CAPRI_NEXT_TABLE_READ_e(1, 
                             TABLE_LOCK_DIS,
-                            rawr_s4_chain_sem_pindex_post_update,
+                            rawr_s5_chain_sem_pindex_post_update,
                             r_ring_indices_addr,
                             TABLE_SIZE_64_BITS)
     nop
@@ -59,7 +60,7 @@ rawr_s3_chain_pindex_pre_alloc:
 _chain_txq_ring_indices_launch:
      
     CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
-                            rawr_s4_chain_txq_pindex_post_read,
+                            rawr_s5_chain_txq_pindex_post_read,
                             r_ring_indices_addr,
                             TABLE_SIZE_32_BITS)
     nop                          
@@ -72,6 +73,6 @@ _cleanup_discard_launch:
     /*
      * Launch common cleanup code for next stage
      */
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, rawr_s4_cleanup_discard)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, rawr_s5_cleanup_discard)
     nop.e
     nop

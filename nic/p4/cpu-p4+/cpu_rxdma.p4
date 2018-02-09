@@ -94,23 +94,6 @@ header_type write_arqrx_d_t {
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
-header_type p4_to_p4plus_cpu_header_ext_t {
-    fields {
-        p4plus_app_id       : 4;
-        table0_valid        : 1;
-        table1_valid        : 1;
-        table2_valid        : 1;
-        table3_valid        : 1;
-        ip_proto            : 8;
-        l4_sport            : 16;
-        l4_dport            : 16;
-        packet_type         : 2;
-        packet_len          : 14;
-        ip_sa               : 128;
-        ip_da1              : 64;
-        ip_da2              : 64;
-    }
-}
 
 header_type common_global_phv_t {
     fields {

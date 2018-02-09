@@ -12,7 +12,13 @@ struct common_p4plus_stage0_app_header_table_d  d;
 #define r_pkt_len                   r3
 #define r_alloc_inf_addr            r4
 #define r_ring_indices_addr         r5
-#define r_qstate_addr               r6
+#define r_hash_key                  r6
+#define r_pkt_type                  r7
+
+/*
+ * Register reuse (on early abort)
+ */
+#define r_qstate_addr               r7
 
 %%
     .param          rawr_s1_desc_sem_pindex_post_update
@@ -39,7 +45,6 @@ rawr_s0_rx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
-    phvwr       p.common_phv_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
 
     /*
      * Two sentinels surround the programming of CB byte sequence:
@@ -61,16 +66,24 @@ rawr_s0_rx_start:
     sne         c1, r_chain_rxq_base, r0
     sne         c2, r_chain_txq_base, r0
     bcf         [c1 & c2], _qstate_cfg_err_discard
-    
+
     /*
-     * qid is our flow ID context, with qid 0 dedicated for SPAN
+     * Validate packet length
+     *    Packet_len field contains
+     *      sizeof(p4_to_p4plus_cpu_pkt_t) + complete packet length
+     *    to which we will add an app header of size P4PLUS_RAW_REDIR_HDR_SZ
      */
-    seq         c3, CAPRI_RXDMA_INTRINSIC_QID, APP_REDIR_SPAN_RAWRCB_ID // delay slot
-    phvwr.c3    p.common_phv_redir_span_instance, TRUE
-    phvwr       p.pen_raw_redir_hdr_v1_flow_id, CAPRI_RXDMA_INTRINSIC_QID
-    bcf         [!c1 & !c2], _qstate_cfg_err_discard
     add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...\
                                   rawr_app_header_packet_len_sbit6_ebit13} // delay slot
+    ble.s       r_pkt_len, r0, _packet_len_err_discard
+    addi        r_pkt_len, r_pkt_len, P4PLUS_RAW_REDIR_HDR_SZ // delay slot
+    phvwrpair   p.common_phv_packet_len, r_pkt_len, \
+                p.common_phv_qstate_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
+    /*
+     * qid is our flow ID context
+     */
+    bcf         [!c1 & !c2], _qstate_cfg_err_discard
+    phvwr       p.pen_raw_redir_hdr_v1_flow_id, CAPRI_RXDMA_INTRINSIC_QID // delay slot
     bcf         [c1], _chain_rxq_set
     phvwrpair   p.common_phv_chain_ring_index_select,\
                 d.u.rawr_rx_start_d.chain_txq_ring_index_select[2:0],\
@@ -93,19 +106,33 @@ _chain_rxq_set:
 
 _r_ring_indices_addr_check:
     beq         r_ring_indices_addr, r0, _qstate_cfg_err_discard
-    phvwr       p.to_s3_chain_ring_indices_addr, r_ring_indices_addr // delay slot
+    phvwr       p.t1_s2s_chain_ring_indices_addr, r_ring_indices_addr // delay slot
 
     /*
-     * Packet_len field contains
-     *   sizeof(p4_to_p4plus_cpu_pkt_t) + complete packet length
-     * to which we will add an app header of size P4PLUS_RAW_REDIR_HDR_SZ
+     * qid 0 is dedicated for SPAN and, in which case,
+     * perform symmetric hash to determine which ...
      */
-    add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...\
-                                  rawr_app_header_packet_len_sbit6_ebit13}
-    ble.s       r_pkt_len, r0, _packet_len_err_discard
-    addi        r_pkt_len, r_pkt_len, P4PLUS_RAW_REDIR_HDR_SZ     // delay slot
-    phvwr       p.common_phv_packet_len, r_pkt_len
+    seq         c3, CAPRI_RXDMA_INTRINSIC_QID, APP_REDIR_SPAN_RAWRCB_ID // delay slot
+    bcf         [!c3], _page_alloc_prep
+    phvwr.c3    p.common_phv_redir_span_instance, TRUE // delay slot
+    
+    /*
+     * Set up HW toeplitz hash for SPAN;
+     * currently, L3/L4 app header data is available only when the SPAN
+     * method uses ingress multicast replication (i.e., not mirror session)
+     */
+#if !APP_REDIR_VISIBILITY_USE_MIRROR_SESSION
+     
+    TOEPLITZ_KEY_DATA_SETUP(CPU_HASH_KEY_PREFIX,
+                            P4PLUS_APPTYPE_RAW_REDIR,
+                            rawr_app_header,
+                            r_pkt_type,
+                            r_hash_key,
+                            _page_alloc_prep)
+_page_alloc_prep:
 
+#endif
+    
     /*
      * Allocate either one meta page, or one packet page, or both.
      */
