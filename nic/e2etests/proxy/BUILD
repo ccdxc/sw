@@ -16,7 +16,8 @@ cc_binary(
         # PI
         "//nic/e2etests:driver",
         "//nic/e2etests/proxy:common_includes",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
 
         # PD
         "//nic:capricsr_int",
@@ -37,7 +38,8 @@ cc_binary(
         "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
 
         # PD
         "//nic/model_sim:model_client",
@@ -57,7 +59,8 @@ cc_binary(
         "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
 
         # PD
         "//nic/model_sim:model_client",
@@ -76,7 +79,8 @@ cc_binary(
         "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
 
         # PD
@@ -94,7 +98,8 @@ cc_binary(
         "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
 
         # PD
         "//nic/model_sim:model_client",
@@ -113,7 +118,8 @@ cc_binary(
         "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
 
         # PD
@@ -132,7 +138,8 @@ cc_binary(
         "//nic/e2etests/proxy:common_includes",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
 
         # PD

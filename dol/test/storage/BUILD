@@ -61,7 +61,8 @@ cc_library(
         "//nic:halproto",
         "//nic:google_includes",
         "//nic:gen_proto_includes",
-        "//nic/utils/host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
     ]
 )
@@ -81,7 +82,8 @@ cc_library(
     copts = [ "-g" ],
     deps = [
         "//nic:compression_asic_hdrs",
-        "//nic/utils/host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
         "//external:gflags",
     ],
@@ -96,7 +98,8 @@ cc_library(
     ],
     deps = [
         ":utils",
-        "//nic/utils/host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
     ]
 )
 
@@ -136,7 +139,8 @@ cc_library(
     ],
     deps = [
         ":ssd_core",
-        "//nic/utils/host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
     ]
 )
@@ -160,7 +164,8 @@ cc_library(
         ":r2n",
         ":ssd",
         ":utils",
-        "//nic/utils/host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic/model_sim:model_client",
     ],
     copts = [

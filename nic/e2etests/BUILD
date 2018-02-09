@@ -10,7 +10,8 @@ cc_library(
     deps = [
         "//nic/model_sim/include:modelsim_includes",
         "//nic/include:base_includes",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic/p4/nw/include:p4_nw_includes",
@@ -84,7 +85,8 @@ cc_library(
 	"//nic/e2etests:e2etest-lib",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
 
         # PD
