@@ -3833,6 +3833,68 @@ def capri_get_top_level_path(cur_dir):
 
     return top_dir
 
+def capri_p4pd_create_swig_makefile_click(be):
+    name = be.prog_name
+    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    top_dir = capri_get_top_level_path(out_dir)
+
+    content_str = '# This Makefile is auto-generated. Changes will be overwritten!\n'
+    content_str += 'SW_DIR         =  ../' + top_dir + '\n'
+    content_str += 'NIC_DIR        =  $(SW_DIR)/nic\n'
+    content_str += 'TOOLCHAIN_PATH =  /tool/toolchain/aarch64\n'
+    content_str += 'TOOLCHAIN_VER  =  1.1\n'
+    content_str += '\n'
+    content_str += 'ifneq ($(ARCH),aarch64)\n'
+    content_str += '    ARCH = x86_64\n'
+    content_str += 'endif\n'
+    content_str += '\n'
+    content_str += 'ifeq ($(ARCH),aarch64)\n'
+    content_str += 'CXX            =  aarch64-linux-gnu-g++\n'
+    content_str += 'else\n'
+    content_str += 'CXX            =  g++\n'
+    content_str += 'endif\n'
+    content_str += '\n'
+    content_str += 'CPPFLAGS       =  -shared -fPIC\n'
+    content_str += '\n'
+    content_str += 'INC_DIRS       =  -I$(SW_DIR)\n'
+    content_str += 'INC_DIRS       += -I$(NIC_DIR)/hal/third-party/grpc/include\n'
+    content_str += 'INC_DIRS       += -I$(NIC_DIR)/hal/third-party/google/include\n'
+    content_str += 'INC_DIRS	   += -I/usr/include/python3.6m\n'
+    content_str += 'INC_DIRS	   += -I/usr/include/python3.4m\n'
+    content_str += 'ifeq ($(ARCH),aarch64)\n'
+    content_str += 'INC_DIRS       += -I$(TOOLCHAIN_PATH)-$(TOOLCHAIN_VER)/aarch64-linux-gnu/usr/include\n'
+    content_str += 'endif\n'
+    content_str += '\n'
+    content_str += 'ARCHIVES       =  -Wl,--allow-multiple-definition\n'
+    content_str += 'ARCHIVES       += -Wl,--whole-archive $(NIC_DIR)/hal/third-party/grpc/$(ARCH)/lib/libgrpc*.a -Wl,--no-whole-archive\n'
+    content_str += '\n'
+    content_str += 'SHARED_LIBS    =  $(NIC_DIR)/hal/third-party/google/$(ARCH)/lib/libprotobuf.so.14\n'
+    content_str += 'SHARED_LIBS    += -L$(NIC_DIR)/obj\n'
+    content_str += 'ifeq ($(ARCH),aarch64)\n'
+    content_str += 'SHARED_LIBS    += -L$(TOOLCHAIN_PATH)-$(TOOLCHAIN_VER)/aarch64-linux-gnu/usr/lib\n'
+    content_str += 'endif\n'
+    content_str += 'SHARED_LIBS    += -lhalproto\n'
+    content_str += '\n'
+    content_str += 'default: iris\n'
+    content_str += '\n'
+    content_str += 'swig:\n'
+    content_str += '\tswig -c++ -python -I$(NIC_DIR)/gen/iris/include -I$(NIC_DIR)/hal/pd -o iris_wrap.cc iris.i\n'
+    content_str += '\n'
+    content_str += 'iris: swig\n'
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o _iris.so iris_wrap.cc $(NIC_DIR)/gen/iris/src/p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)\n'
+    content_str += '\n'
+    content_str += 'clean:\n'
+    content_str += '\trm -f _iris.so iris_wrap.cc iris.py\n'
+
+    out_file = out_dir + 'Makefile.click'
+    with open(out_file, "w") as of:
+        of.write(content_str)
+        of.close()
+
 def capri_p4pd_create_swig_makefile(be):
 
     name = be.prog_name
