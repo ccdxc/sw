@@ -1453,8 +1453,8 @@ field_list_calculation rx_ipv6_2_tcp_2_checksum {
 calculated_field tcp_2.checksum {
     verify rx_ipv4_2_tcp_2_checksum;
     verify rx_ipv6_2_tcp_2_checksum;
-    //update rx_ipv4_2_tcp_2_checksum;
-    //update rx_ipv6_2_tcp_2_checksum;
+    update rx_ipv4_2_tcp_2_checksum;
+    update rx_ipv6_2_tcp_2_checksum;
 }
 
 @pragma checksum hdr_len_expr ohi.ipv4_3___hdr_len + 0

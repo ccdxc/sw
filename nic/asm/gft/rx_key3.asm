@@ -10,6 +10,8 @@ struct phv_ p;
 
 rx_key3:
     nop.!c1.e
+    seq         c1, d.rx_key3_d.match_fields, r0
+    nop.c1.e
     crestore    [c4-c1], d.rx_key3_d.match_fields[3:0], 0xF
     phvwr.c1    p.flow_lkp_metadata_ethernet_dst_3, k.ethernet_3_dstAddr
     phvwr.c2    p.flow_lkp_metadata_ethernet_src_3, k.ethernet_3_srcAddr

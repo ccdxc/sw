@@ -21,7 +21,8 @@ rx_roce:
     phvwrpair       p.p4_to_p4plus_roce_rdma_hdr_len, d.u.rx_roce_d.len[5:0], \
                         p.p4_to_p4plus_roce_raw_flags, d.u.rx_roce_d.raw_flags
     phvwr           p.p4_to_p4plus_roce_p4plus_app_id, P4PLUS_APPTYPE_RDMA
-    phvwr           p.capri_rxdma_intrinsic_qtype, d.u.rx_roce_d.qtype
+    phvwrpair       p.capri_rxdma_intrinsic_qid, k.roce_bth_destQP, \
+                        p.capri_rxdma_intrinsic_qtype, d.u.rx_roce_d.qtype
     phvwr           p.capri_intrinsic_payload, FALSE
 
     seq             c1, d.u.rx_roce_d.tm_oq_overwrite, TRUE

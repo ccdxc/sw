@@ -1693,7 +1693,7 @@ class capri_table:
                 # copy k bytes and bits to km0
                 km0_profile.k_byte_sel += self.combined_profile.k_byte_sel
                 km0_free -= len(self.combined_profile.k_byte_sel)
-                assert num_kbits < max_km_bits, pdb.set_trace() # XXX TBD
+                assert num_kbits <= max_km_bits, pdb.set_trace() # XXX TBD
                 km0_profile.k_bit_sel += self.combined_profile.k_bit_sel
 
                 byte_avail = (self.num_km * max_kmB) - num_byte_sel

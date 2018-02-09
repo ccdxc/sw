@@ -17,6 +17,7 @@ action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.qtype, qtype);
+    modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
     add(capri_rxdma_intrinsic.rx_splitter_offset, len,
         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
          P4PLUS_ROCE_HDR_SZ));

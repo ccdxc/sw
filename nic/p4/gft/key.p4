@@ -230,17 +230,16 @@ action rx_key4(match_fields) {
     // normalize roce opcode
     if (roce_bth.valid == TRUE) {
         modify_field(roce_metadata.roce_valid, TRUE);
-        modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
     }
     if (roce_bth_1.valid == TRUE) {
         modify_field(roce_metadata.roce_valid, TRUE);
         modify_field(roce_bth.opCode, roce_bth_1.opCode);
-        modify_field(capri_rxdma_intrinsic.qid, roce_bth_1.destQP);
+        modify_field(roce_bth.destQP, roce_bth_1.destQP);
     }
     if (roce_bth_2.valid == TRUE) {
         modify_field(roce_metadata.roce_valid, TRUE);
         modify_field(roce_bth.opCode, roce_bth_2.opCode);
-        modify_field(capri_rxdma_intrinsic.qid, roce_bth_2.destQP);
+        modify_field(roce_bth.destQP, roce_bth_2.destQP);
     }
 
     // normalize udp len
