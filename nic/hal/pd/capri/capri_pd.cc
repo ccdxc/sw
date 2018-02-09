@@ -246,12 +246,17 @@ pd_capri_barco_sym_hash_process_request (pd_capri_barco_sym_hash_process_request
 static hal_ret_t
 capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
                                   uint32_t mpu,
+                                  uint8_t  enable,
+                                  uint8_t  trace_enable,
+                                  uint8_t  phv_debug,
+                                  uint8_t  phv_error,
+                                  uint64_t watch_pc,
                                   uint64_t base_addr,
-                                  uint32_t buf_size,
-                                  uint8_t  wrap,
                                   uint8_t  table_key,
                                   uint8_t  instructions,
-                                  uint8_t  enable)
+                                  uint8_t  wrap,
+                                  uint8_t  reset,
+                                  uint32_t buf_size)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
@@ -261,12 +266,24 @@ capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
     // TODO max check on mpu and stage_id
 
     cap0.sgi.mpu[stage_id].trace[mpu].read();
+    cap0.sgi.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.sgi.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.sgi.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.sgi.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.sgi.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
     cap0.sgi.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
-    cap0.sgi.mpu[stage_id].trace[mpu].buf_size(buf_size);
-    cap0.sgi.mpu[stage_id].trace[mpu].wrap(wrap);
     cap0.sgi.mpu[stage_id].trace[mpu].table_and_key(table_key);
     cap0.sgi.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.sgi.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.sgi.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.sgi.mpu[stage_id].trace[mpu].buf_size(buf_size);
     cap0.sgi.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.sgi.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
     cap0.sgi.mpu[stage_id].trace[mpu].write();
 
     return HAL_RET_OK;
@@ -276,12 +293,17 @@ capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
 static hal_ret_t
 capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
                                  uint32_t mpu,
+                                 uint8_t  enable,
+                                 uint8_t  trace_enable,
+                                 uint8_t  phv_debug,
+                                 uint8_t  phv_error,
+                                 uint64_t watch_pc,
                                  uint64_t base_addr,
-                                 uint32_t buf_size,
-                                 uint8_t  wrap,
                                  uint8_t  table_key,
                                  uint8_t  instructions,
-                                 uint8_t  enable)
+                                 uint8_t  wrap,
+                                 uint8_t  reset,
+                                 uint32_t buf_size)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
@@ -291,12 +313,24 @@ capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
     // TODO max check on mpu and stage_id
 
     cap0.sge.mpu[stage_id].trace[mpu].read();
+    cap0.sge.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.sge.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.sge.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.sge.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.sge.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
     cap0.sge.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
-    cap0.sge.mpu[stage_id].trace[mpu].buf_size(buf_size);
-    cap0.sge.mpu[stage_id].trace[mpu].wrap(wrap);
     cap0.sge.mpu[stage_id].trace[mpu].table_and_key(table_key);
     cap0.sge.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.sge.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.sge.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.sge.mpu[stage_id].trace[mpu].buf_size(buf_size);
     cap0.sge.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.sge.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
     cap0.sge.mpu[stage_id].trace[mpu].write();
 
     return HAL_RET_OK;
@@ -368,21 +402,33 @@ pd_mpu_trace_enable(pd_mpu_trace_enable_args_t *args)
     case MPU_TRACE_PIPELINE_P4_INGRESS:
         return capri_p4_ingress_mpu_trace_enable(args->stage_id,
                                                  args->mpu,
+                                                 args->enable,
+                                                 args->trace_enable,
+                                                 args->phv_debug,
+                                                 args->phv_error,
+                                                 args->watch_pc,
                                                  base_addr,
-                                                 args->buf_size,
-                                                 args->wrap,
                                                  args->table_key,
                                                  args->instructions,
-                                                 args->enable);
+                                                 args->wrap,
+                                                 args->reset,
+                                                 args->buf_size);
+
     case MPU_TRACE_PIPELINE_P4_EGRESS:
         return capri_p4_egress_mpu_trace_enable(args->stage_id,
                                                 args->mpu,
+                                                args->enable,
+                                                args->trace_enable,
+                                                args->phv_debug,
+                                                args->phv_error,
+                                                args->watch_pc,
                                                 base_addr,
-                                                args->buf_size,
-                                                args->wrap,
                                                 args->table_key,
                                                 args->instructions,
-                                                args->enable);
+                                                args->wrap,
+                                                args->reset,
+                                                args->buf_size);
+
     default:
         return capri_mpu_trace_enable();
     }

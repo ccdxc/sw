@@ -178,14 +178,19 @@ enum MpuTracePipelineType {
 
 // parameters to enable/disable MPU tracing
 message MpuTraceRequest {
-    MpuTracePipelineType  pipeline_type  =  1;     // pipeline type
-    uint32                mpu            =  2;     // MPU number
-    uint32                stage_id       =  3;     // stage id
-    uint64                base_addr      =  4;     // base addr where trace is present
-    bool                  wrap           =  5;     // wrap the trace
-    bool                  table_key      =  6;     // set table and key trace
-    bool                  instructions   =  7;     // set instructions trace
-    bool                  enable         =  8;     // enable/disable trace
+    MpuTracePipelineType  pipeline_type    =  1;    // pipeline type
+    uint32                stage_id         =  2;    // stage id
+    uint32                mpu              =  3;    // MPU number
+    bool                  enable           =  4;    // enable/disable trace for every table result
+    bool                  trace_enable     =  5;    // trace is enable only if TRACE instruction is executed
+    bool                  phv_debug        =  6;    // trace if PHV has phv_debug set
+    bool                  phv_error        =  7;    // trace if PHV has table error set
+    uint64                watch_pc         =  8;    // start trace when PC == watch_pc
+    uint64                base_addr        =  9;    // base addr where trace is present
+    bool                  table_key        =  10;   // set table and key trace
+    bool                  instructions     =  11;   // set instructions trace
+    bool                  wrap             =  12;   // wrap the trace
+    bool                  reset            =  13;   // reset trace buffer index to 0. Clear wrap.
 }
 
 // Batched MPU trace enable/disable request msg
@@ -195,7 +200,8 @@ message MpuTraceRequestMsg {
 
 // MPU trace enable/disable status
 message MpuTraceResponse {
-    types.ApiStatus   api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+    types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+    uint32            debug_index = 2;    // current index in trace buffer
 }
 
 // Batched MPU trace response

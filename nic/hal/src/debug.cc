@@ -162,11 +162,24 @@ mpu_trace_enable(debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
     args.mpu_trace_size    = mpu_trace_size();
     args.stage_id          = req.stage_id();
     args.mpu               = req.mpu();
+    args.watch_pc          = req.watch_pc();
     args.base_addr         = req.base_addr();
     args.buf_size          = 5;
 
-    if (req.wrap() == true) {
-        args.wrap = 1;
+    if (req.enable() == true) {
+        args.enable = 1;
+    }
+
+    if (req.trace_enable() == true) {
+        args.trace_enable = 1;
+    }
+
+    if (req.phv_debug() == true) {
+        args.phv_debug = 1;
+    }
+
+    if (req.phv_error() == true) {
+        args.phv_error = 1;
     }
 
     if (req.table_key() == true) {
@@ -177,8 +190,12 @@ mpu_trace_enable(debug::MpuTraceRequest& req, debug::MpuTraceResponseMsg *rsp)
         args.instructions = 1;
     }
 
-    if (req.enable() == true) {
-        args.enable = 1;
+    if (req.wrap() == true) {
+        args.wrap = 1;
+    }
+
+    if (req.reset() == true) {
+        args.reset = 1;
     }
 
     return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_MPU_TRACE_ENABLE,

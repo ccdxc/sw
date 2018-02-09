@@ -1509,17 +1509,22 @@ typedef enum pd_mpu_trace_pipeline_type_e {
 
 // MPU tracing
 typedef struct pd_mpu_trace_enable_args_s {
+    pd_mpu_trace_pipeline_type_t pipeline_type;
     uint32_t                     stage_id;
     uint32_t                     mpu;
-    pd_mpu_trace_pipeline_type_t pipeline_type;
-    uint32_t                     mpu_trace_size;
-    uint32_t                     max_mpu_per_stage;
+    uint8_t                      enable;
+    uint8_t                      trace_enable;
+    uint8_t                      phv_debug;
+    uint8_t                      phv_error;
+    uint64_t                     watch_pc;
     uint64_t                     base_addr;
-    uint32_t                     buf_size;
-    uint8_t                      wrap;
     uint8_t                      table_key;
     uint8_t                      instructions;
-    uint8_t                      enable;
+    uint8_t                      wrap;
+    uint8_t                      reset;
+    uint32_t                     buf_size;
+    uint32_t                     mpu_trace_size;
+    uint32_t                     max_mpu_per_stage;
 } __PACK__ pd_mpu_trace_enable_args_t;
 
 typedef struct pd_debug_cli_write_args_s {
