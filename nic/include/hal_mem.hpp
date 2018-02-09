@@ -78,7 +78,10 @@ typedef enum hal_slab_e {
     HAL_SLAB_GFT_EXACT_MATCH_PROFILE         = 64,
     HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE   = 65,
     HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY      = 66,
-    HAL_SLAB_PI_MAX                          = 67,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_ACL_CTX                         = 67,
+    HAL_SLAB_ACL_LIST                        = 68,
+    HAL_SLAB_ACL_LIST_ITEM                   = 69,
+    HAL_SLAB_PI_MAX                          = 70,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

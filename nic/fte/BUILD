@@ -9,8 +9,8 @@ load("//nic/bazel:common_deps.bzl", "test_deps_list")
 
 cc_library(
     name = "fte",
-    srcs = glob(["*.cc"]),
-    hdrs = glob(["*.hpp"]),
+    srcs = glob(["*.cc", "acl/*.cc"]),
+    hdrs = glob(["*.hpp", "acl/*.hpp"]),
     copts = sdk_copts,
     deps = [
         #"//nic:gen_includes",
