@@ -1,5 +1,6 @@
-.PHONY: sdk hal hal-clean
-default: hal
+.PHONY: p4 asm proto gen hal utils linkmgr sdk
+
+default: all
 
 TOPDIR = .
 TOPDIR_ABS = ${CURDIR}
@@ -9,12 +10,9 @@ include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
 include $(TOPDIR)/make/Jobs.Makefile
 
-ifeq ($(c),1)
-	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
-	export CC=/home/asic/tools/eda/bullseye/bin/gcc
-	export CXX=/home/asic/tools/eda/bullseye/bin/g++
-	export COVFILE=$(COVFILE_NAME)
-endif
+#################################################
+################### DOCKER ######################
+#################################################
 
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 shell: build-runtime-image
@@ -58,129 +56,9 @@ deps-test-shell:
 deps-test-build:
 	NO_PULL=1 make build
 
-ifeq ($(ARCH),aarch64)
-
-swig-cli-clean:
-	make -C gen/iris/cli -f Makefile.click clean
-
-swig-cli: swig-cli-clean
-	PATH=/tool/toolchain/aarch64-1.1/bin:$$PATH make -C gen/iris/cli -f Makefile.click
-
-package-clean:
-	cd ../ && rm -rf fake_root_target && rm -f hal.tgz && rm -f hal.tar
-
-package: swig-cli package-clean
-	cd ../ && python nic/tools/package.py
-
-endif
-
-platform:
-ifeq ($(ARCH),aarch64)
-	cd ../platform && $(PATH_OPTS) make $(BUILD_OPTS)
-endif
-
-platform-clean:
-	cd ../platform && make $(BUILD_OPTS) clean
-
-capsim-master:
-	cd asic/capri/model/capsim-master && $(PATH_OPTS) make $(BUILD_OPTS)
-
-capsim-master-clean:
-	cd asic/capri/model/capsim-master && make $(BUILD_OPTS) clean
-
-hal:
-	$(MAKE) bazel-build
-	$(MAKE) bazel-gtests
-	$(MAKE) post-make
-
-plugins:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/...
-
-capmodel:
-ifneq ($(ARCH),aarch64)
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
-endif
-
-go-proto:
-	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto
-
-sdk:
-	$(MAKE) -C sdk lib
-
-DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
-#SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
-SDK_OPTS = --copt=-Wno-unused-function 
-bazel-build: platform capsim-master sdk
-	# P4
-	$(MAKE) -j4 -C p4
-	$(MAKE) -C asm
-	$(MAKE) -C proto
-	$(MAKE) V=1 -j8 -C gen/proto/hal
-	# HAL PI
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
-	# Iris PD
-	$(MAKE) pd_iris
-	$(MAKE) pd_stub
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
-	$(MAKE) capmodel
-	$(MAKE) go-proto
-ifneq ($(ARCH),aarch64)
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests/proxy:all
-        #This is temporary, will be removed soon.
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:all 
-endif
-ifeq ($(ARCH),aarch64)
-	$(MAKE) package
-endif
-
-pd_iris:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
-
-pd_stub:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
-
-pd_gft:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/pd/gft:all
-
-bazel-gtests-common:
-	# PI gtests
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:hal_test
-	# PI Utils
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/bitmap:bitmap_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:host_mem_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/pt:pt_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/shm:shmseg_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/block_list:block_list_test
-ifneq ($(ARCH),aarch64)
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
-endif
-	# PD Utils
-	# TODO: Please enable after PD cleanup commit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
-	# PD
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
-	# SDK Tests
-	$(MAKE) -C sdk build-test
-
-bazel-gtests: bazel-gtests-common
-ifneq ($(ARCH),aarch64)
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gft hal/test/gtests:all
-	# TODO: Revisit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
-endif
-
-post-make:
-	mkdir -p obj/cano
-	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
+#################################################
+############### RUN-GTESTS ######################
+#################################################
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
 SNORT_EXPORT_DIR = $(TOPDIR_ABS)/hal/third-party/snort3/export
@@ -232,8 +110,10 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	while read i; \
 		do printf "\nRunning $$i\n" && $$i --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/$(basename($$i)).xml"; \
 	done \
-	
 
+#################################################
+############## VALGRIND #########################
+#################################################
 
 VAL_CMD = valgrind --xml=yes 
 VAL_CMD_OPTS = $(CMD_OPTS) $(VAL_CMD)
@@ -261,6 +141,27 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/qos_val.xml ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(VAL_TR)/qos_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/copp_val.xml ./nic/hal/test/gtests/copp_test --gtest_output="xml:$(VAL_TR)/copp_test.xml"
 
+#################################################
+################ HAL-RTL ########################
+#################################################
+
+BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
+hal-rtl: p4 platform capsim-master sdk
+	$(MAKE) AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP" asm
+	$(MAKE) proto
+	$(MAKE) gen
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/plugins/...
+	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
+	$(MAKE) utils
+	$(MAKE) capmodel
+
+#################################################
+################## GFT ##########################
+#################################################
+
 gft: platform capsim-master sdk
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
@@ -282,19 +183,142 @@ gtests_gft:
 run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/lif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_gft_test.xml"
 
-BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
-hal-rtl: platform capsim-master sdk
+#################################################
+#################### HAL ########################
+#################################################
+
+swig-cli-clean:
+	make -C gen/iris/cli -f Makefile.click clean
+
+swig-cli: swig-cli-clean
+	PATH=/tool/toolchain/aarch64-1.1/bin:$$PATH make -C gen/iris/cli -f Makefile.click
+
+package-clean:
+	cd ../ && rm -rf fake_root_target && rm -f hal.tgz && rm -f hal.tar
+
+package: swig-cli package-clean
+	cd ../ && python nic/tools/package.py
+
+platform:
+    ifeq ($(ARCH),aarch64)
+		cd ../platform && $(PATH_OPTS) make $(BUILD_OPTS)
+    endif
+
+platform-clean:
+	cd ../platform && make $(BUILD_OPTS) clean
+
+capsim-master:
+	cd asic/capri/model/capsim-master && $(PATH_OPTS) make $(BUILD_OPTS)
+
+capsim-master-clean:
+	cd asic/capri/model/capsim-master && make $(BUILD_OPTS) clean
+
+capmodel:
+    ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
+    endif
+
+go-proto:
+	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto
+
+sdk:
+	$(MAKE) -C sdk lib
+
+DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
+#SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
+SDK_OPTS = --copt=-Wno-unused-function 
+
+pd_iris:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
+
+pd_stub:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
+
+pd_gft:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/pd/gft:all
+
+p4:
 	$(MAKE) -j4 -C p4
-	$(MAKE) -C asm AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP"
+
+asm:
+	$(MAKE) -C asm
+
+proto:
 	$(MAKE) -C proto
-	$(MAKE) V=1 -j8 -C gen/proto/hal
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/plugins/...
-	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
+
+gen: proto
+	$(MAKE) -j8 -C gen/proto/hal
+
+hal: p4 asm gen sdk capsim-master platform
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+
+plugins:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
+
+utils:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
-	$(MAKE) capmodel
+
+linkmgr:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
+
+#################################################
+#################### GTESTS #####################
+#################################################
+
+gtests-common:
+	# PI gtests
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:hal_test
+	# PI Utils
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/bitmap:bitmap_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:host_mem_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/pt:pt_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/shm:shmseg_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/block_list:block_list_test
+    ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
+    endif
+	# PD Utils
+	# TODO: Please enable after PD cleanup commit
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
+	# PD
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
+	# SDK Tests
+	$(MAKE) -C sdk build-test
+
+gtests: gtests-common
+    ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gft hal/test/gtests:all
+		# TODO: Revisit
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
+    endif
+
+sanity-tests:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
+    ifneq ($(ARCH),aarch64)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests/proxy:all
+		#This is temporary, will be removed soon.
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:all
+    endif
+
+post-make:
+	mkdir -p obj/cano
+	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
+
+pd: pd_iris pd_stub
+
+nic: hal pd plugins utils linkmgr capmodel go-proto
+	$(MAKE) post-make
+	$(MAKE) package
+
+tests: gtests sanity-tests
+
+all: nic tests
 
 clean: platform-clean capsim-master-clean
 	bazel clean

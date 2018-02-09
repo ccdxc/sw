@@ -50,3 +50,11 @@ endif
 
 #BZL_OPT = --bazelrc=bazel.rc
 BZL_OPT = $(OUTPUT_BASE)
+
+ifeq ($(c),1)
+	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
+	export CC=/home/asic/tools/eda/bullseye/bin/gcc
+	export CXX=/home/asic/tools/eda/bullseye/bin/g++
+	export COVFILE=$(COVFILE_NAME)
+endif
+
