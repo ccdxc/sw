@@ -62,7 +62,8 @@ cc_library(
         "//nic/e2etests:e2etest-lib",
         "//nic/utils/trace",
         "//nic/utils/print",
-        "//nic/utils/host_mem:host_mem",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
         "//nic:openssl-native",
 
         # PD
