@@ -94,6 +94,11 @@ if GlobalOptions.mbt:
     # This is blocking.
     grpc_proxy.serve()
 
+reference_spec = parser.ParseFile("../mbt/cfg/references", "references.spec")
+for object in reference_spec.objects:
+    print("Reference object being created is " + object.object.service + " Name is " + object.object.name)
+    config_mgr.CreateReferenceObject(object.object)
+
 test_specs = parser.ParseDirectory("../mbt/mbt_test/specs", "*.spec")
 for test_spec in test_specs:
     if not test_spec.Enabled:

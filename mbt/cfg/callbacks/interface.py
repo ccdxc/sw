@@ -4,6 +4,8 @@ import math
 from grpc_meta.msg import GrpcReqRspMsg
 import os
 import types_pb2
+import config_mgr
+import kh_pb2
 
 cpu_if_type_max = 1
 cpu_if_type_seen = 0
@@ -59,6 +61,10 @@ def PreCreateCb(data, req_spec, resp_spec):
     elif req_spec.request[0].type == interface_pb2.IF_TYPE_ENIC:
         req_spec.request[0].if_enic_info.enic_type = interface_pb2.IF_ENIC_TYPE_CLASSIC
         req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_handle = 0
+        # Classic Enic's with the same L2Segments are not allowed.
+        # So create a new object.
+        l2seg_key = create_and_get_l2seg_key()
+        req_spec.request[0].if_enic_info.classic_enic_info.l2segment_key_handle.extend([l2seg_key])
         req_spec.request[0].if_enic_info.pinned_uplink_if_handle = 0
 
 def PostCreateCb(data, req_spec, resp_spec):
@@ -67,6 +73,11 @@ def PostCreateCb(data, req_spec, resp_spec):
 
 def PostGetCb(data, req_spec, resp_spec):
     data.actual_data.spec = resp_spec.response[0].spec
+
+def create_and_get_l2seg_key():
+    l2seg_key_type = getattr(kh_pb2, 'L2SegmentKeyHandle')
+    return config_mgr.CreateConfigFromKeyType(l2seg_key_type)
+    
 
 def PreUpdateCb(data, req_spec, resp_spec):
     if req_spec.request[0].HasField("if_enic_info"):
@@ -107,6 +118,10 @@ def PreUpdateCb(data, req_spec, resp_spec):
     elif req_spec.request[0].type == interface_pb2.IF_TYPE_ENIC:
         req_spec.request[0].if_enic_info.enic_type = interface_pb2.IF_ENIC_TYPE_CLASSIC
         req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_handle = 0
+        # Classic Enic's with the same L2Segments are not allowed.
+        # So create a new object.
+        l2seg_key = create_and_get_l2seg_key()
+        req_spec.request[0].if_enic_info.classic_enic_info.l2segment_key_handle.extend([l2seg_key])
         req_spec.request[0].if_enic_info.pinned_uplink_if_handle = 0
 
 

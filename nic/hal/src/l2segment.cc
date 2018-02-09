@@ -1317,6 +1317,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         HAL_TRACE_ERR("{}:no change in l2seg update: noop", __FUNCTION__);
         // Its a no-op. We can just return HAL_RET_OK
         // ret = HAL_RET_INVALID_OP;
+        l2seg_clone = l2seg;
         goto end;
     }
 

@@ -1,7 +1,7 @@
 ProtoObject: endpoint_pb2
 Service: Endpoint
-enabled : False
-graphEnabled : False
+enabled : True
+graphEnabled : True
 objects:
     - object :
         name : Endpoint
@@ -35,4 +35,3 @@ objects:
             response : EndpointGetResponseMsg
             pre_cb   : None
             post_cb  : None
-

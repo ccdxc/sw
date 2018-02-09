@@ -173,14 +173,18 @@ class GrpcReqRspMsg:
                 GrpcReqRspMsg.static_generate_message(sub_message, key, ext_refs, external_constraints)
 
     @staticmethod
+    def extract_constraints(constraint_str):
+        constraints = re.search(r'(?<=constraints=\{).*?(?=\})', constraint_str).group(0)
+        if '==' in constraint_str:
+            return constraints.split('=='), Constraints.Equality
+        else:
+            return constraints.split('='), Constraints.Assignment
+
+    @staticmethod
     def get_constraints(field):
         options = field.GetOptions().__str__()
         if 'constraint' in options:
-            constraints = re.search(r'(?<=constraints=\{).*?(?=\})', options).group(0)
-            if '==' in options:
-                return constraints.split('=='), Constraints.Equality
-            else:
-                return constraints.split('='), Constraints.Assignment
+            return GrpcReqRspMsg.extract_constraints(options)
         return None, None
 
     @staticmethod
@@ -258,7 +262,7 @@ class GrpcReqRspMsg:
                     constraints = None
                 if repeated:
                     message = message.add()
-                ref = config_mgr.CreateConfigFromKeyType(type(message), ext_refs,
+                ref = config_mgr.GetReferenceObject(type(message), ext_refs,
                                                          external_constraints=constraints)
                 if repeated:
                     ext_refs[(field_in_parent.name, type(message))] = [ref]
