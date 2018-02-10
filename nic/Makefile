@@ -6,110 +6,11 @@ TOPDIR = .
 TOPDIR_ABS = ${CURDIR}
 CUSTOM = hal
 
-include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
-include $(TOPDIR)/make/Jobs.Makefile
-
-#################################################
-################### DOCKER ######################
-#################################################
-
-# get a shell with the dependencies image loaded, with the host filesystem mounted.
-shell: build-runtime-image
-	mkdir -p ${PWD}/../bazel-cache;
-	docker run -it --rm --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash
-
-# run `make gtest` with the dependencies image.
-test: build-runtime-image
-	docker run -it --rm --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make gtest'
-
-# run a build with the dependencies image.
-build: build-runtime-image
-	docker run -it --rm --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make gtest'
-
-clean-docker: build-runtime-image
-	docker run -it --rm --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make clean'
-
-REGISTRY = registry.test.pensando.io:5000
-
-build-runtime-image: install_box
-	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.11; fi
-	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box -t pensando/nic nic/box.rb
-
-install_box:
-	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
-
-# make a trial dependencies image. pass RELEASE=1 or run `make deps-release` to
-# do a release build.
-deps: install_box
-	cd .. && RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t '$(REGISTRY)/pensando/nic:1.11' nic/box-deps.rb
-
-# make a release build of the dependencies image
-deps-release:
-	RELEASE=1 make deps
-
-# make a shell based on the local build of the dependencies image, for testing
-deps-test-shell:
-	NO_PULL=1 make shell
-
-# do a test build with a local build of the dependencies image.
-deps-test-build:
-	NO_PULL=1 make build
-
-#################################################
-############### RUN-GTESTS ######################
-#################################################
-
-GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
-SNORT_EXPORT_DIR = $(TOPDIR_ABS)/hal/third-party/snort3/export
-SNORT_CMD_OPTS = SNORT_LUA_PATH=$(SNORT_EXPORT_DIR)/lua/ LUA_PATH="$(SNORT_EXPORT_DIR)/lua/?.lua;;" SNORT_DAQ_PATH=$(SNORT_EXPORT_DIR)/daqs/
-CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/:$(SNORT_EXPORT_DIR)/bin/ CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf
-PD_CMD_OPTS = cd ../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR_ABS)/../bazel-bin/nic/model_sim/ CAPRI_MOCK_MODE=1 LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf
-run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
-	# PI gtests
-	$(CMD_OPTS) ./nic/hal/test/gtests/acl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/bm_allocator_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bm_allocator_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/enicif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/enicif_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/lif_manager_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_manager_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/lif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/session_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/session_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/tlscb_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tlscb_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/uplinkif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkif_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/uplinkpc_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkpc_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/internal_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/internal_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/endpoint_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/endpoint_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/network_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/network_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/vrf_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/vrf_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/l2seg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/l2seg_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/tunnelif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tunnelif_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/nwsec_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/scheduler_tx_test.xml"
-	$(CMD_OPTS) $(SNORT_CMD_OPTS) ./nic/hal/test/gtests/appid_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/appid_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/qos_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/qos_test.xml"
-	$(CMD_OPTS) ./nic/hal/test/gtests/copp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/copp_test.xml"
-	$(CMD_OPTS) ./nic/hal/plugins/eplearn/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
-	$(CMD_OPTS) ./nic/hal/plugins/eplearn/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
-	@# PI Utils gtests
-	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
-	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"
-	cd ../bazel-bin && ./nic/utils/pt/pt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/pt_test.xml"
-	cd ../bazel-bin && ./nic/utils/shm/shmseg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/shmseg_test.xml"
-	cd ../bazel-bin && ./nic/utils/block_list/block_list_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/block_list_test.xml"
-	cd ../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
-	cd ../bazel-bin && ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
-	@# PD Utils gtests
-	$(PD_CMD_OPTS) ./nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
-	@# Removed because of randomization
-	#cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/flow/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow.xml"
-	$(PD_CMD_OPTS) ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
-	@# PD gtests
-	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_test.xml"
-	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/tnnl_rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tnnl_rw_tbl_test.xml"
-	@# SDK tests
-	@find sdk/bazel-bin/test -name *.runfiles_manifest* | sed 's/\.runfiles_manifest$$//1' | \
-	while read i; \
-		do printf "\nRunning $$i\n" && $$i --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/$(basename($$i)).xml"; \
-	done \
+include $(TOPDIR)/make/Makefile.inc
+include $(TOPDIR)/make/Makefile.docker
+include $(TOPDIR)/make/Makefile.tests
+include $(TOPDIR)/make/Makefile.jobs
 
 #################################################
 ############## VALGRIND #########################
@@ -194,7 +95,7 @@ swig-cli-clean:
 	make -C gen/iris/cli -f Makefile.click clean
 
 swig-cli: swig-cli-clean
-	PATH=/tool/toolchain/aarch64-1.1/bin:$$PATH make -C gen/iris/cli -f Makefile.click
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C gen/iris/cli -f Makefile.click
 
 package-clean:
 	cd ../ && rm -rf fake_root_target && rm -f hal.tgz && rm -f hal.tar
@@ -266,49 +167,6 @@ utils:
 linkmgr:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) linkmgr:linkmgr
 
-#################################################
-#################### GTESTS #####################
-#################################################
-
-gtests-common:
-	# PI gtests
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/test:hal_test
-	# PI Utils
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/bitmap:bitmap_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:host_mem_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/pt:pt_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/shm:shmseg_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/block_list:block_list_test
-    ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/fsm:fsm_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) fte:fte_test
-    endif
-	# PD Utils
-	# TODO: Please enable after PD cleanup commit
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/acl_tcam:acl_tcam_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/flow:flow_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/utils/met:met_test
-	# PD
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/pd/iris/test:all
-	# SDK Tests
-	$(MAKE) -C sdk build-test
-
-gtests: gtests-common
-    ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) --build_tag_filters=-gft hal/test/gtests:all
-		# TODO: Revisit
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:dhcp_test
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/eplearn:arp_test
-    endif
-
-sanity-tests:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //dol/test/storage:storage_test
-    ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests/proxy:all
-		#This is temporary, will be removed soon.
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) //nic/e2etests:all
-    endif
-
 post-make:
 	mkdir -p obj/cano
 	find obj -name '*.cano'  -type f  | xargs -i mv {} obj/cano 2>/dev/null || :
@@ -318,8 +176,6 @@ pd: pd_iris pd_stub
 nic: hal pd plugins utils linkmgr capmodel go-proto
 	$(MAKE) post-make
 	$(MAKE) package
-
-tests: gtests sanity-tests
 
 all: nic tests
 
