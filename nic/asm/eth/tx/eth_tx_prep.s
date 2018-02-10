@@ -35,11 +35,43 @@ eth_tx_prep:
   beq             r1, r0, eth_tx_prep_error
   nop
 
-  phvwr           p.to_stage_2_to_stage_data, d[511:384]
-  phvwr           p.to_stage_3_to_stage_data, d[383:256]
-  phvwr           p.to_stage_4_to_stage_data, d[255:128]
+  sub             r1, r1, 1   // Make num_desc 0-based
+
+.brbegin
+  br              r1[1:0]
+  nop
+
+  .brcase 0
+    b               eth_tx_prep1
+    nop
+
+  .brcase 1
+    b               eth_tx_prep2
+    nop
+
+  .brcase 2
+    b               eth_tx_prep3
+    nop
+
+  .brcase 3
+    b               eth_tx_prep4
+    nop
+
+.brend
+
+eth_tx_prep4:
   phvwr           p.to_stage_5_to_stage_data, d[127:0]
 
+eth_tx_prep3:
+  phvwr           p.to_stage_4_to_stage_data, d[255:128]
+
+eth_tx_prep2:
+  phvwr           p.to_stage_3_to_stage_data, d[383:256]
+
+eth_tx_prep1:
+  phvwr           p.to_stage_2_to_stage_data, d[511:384]
+
+eth_tx_prep_done:
   // Start TX
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
   seq             c1, d.num_sg_elems0, 0
