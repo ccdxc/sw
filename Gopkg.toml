@@ -255,3 +255,19 @@ required = ["github.com/GeertJohan/go.rice",
 [[constraint]]
   name = "github.com/deckarep/golang-set"
   version = "1.7.0"
+
+[prune]
+  non-go = true
+  go-tests = true
+  unused-packages = true
+  [[prune.project]]
+    name = "github.com/gogo/protobuf"
+    non-go = false
+  [[prune.project]]
+    name = "github.com/golang/protobuf"
+    non-go = false
+    unused-packages = false
+  [[prune.project]]
+    name = "github.com/pensando/grpc-gateway"
+    unused-packages = false
+    non-go = false
