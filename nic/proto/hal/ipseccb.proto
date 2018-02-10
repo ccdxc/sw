@@ -3,7 +3,6 @@
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
-
 import "types.proto";
 
 package ipseccb;
@@ -122,3 +121,4 @@ message IpsecCbGetResponse {
 message IpsecCbGetResponseMsg {
   repeated IpsecCbGetResponse    response = 1;    // batch get response
 }
+

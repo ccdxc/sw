@@ -787,8 +787,6 @@ l2seg_fwdpolicy_update (L2SegmentSpec& spec, l2seg_t *l2seg,
     return HAL_RET_OK;
 }
 
-
-
 //------------------------------------------------------------------------------
 // This is the first call back infra does for update.
 // 1. PD Call to update PD

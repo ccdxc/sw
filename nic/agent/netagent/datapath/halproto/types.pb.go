@@ -19,6 +19,7 @@
 		gft.proto
 		interface.proto
 		internal.proto
+		ipsec.proto
 		ipseccb.proto
 		kh.proto
 		l2segment.proto
@@ -312,6 +313,12 @@
 		LifBdfResp
 		ConfigureLifBdfRequestMsg
 		ConfigureLifBdfResponseMsg
+		Key
+		IpsecRuleSpec
+		IpsecRuleRequestMsg
+		IpsecRuleStatus
+		IpsecRuleResponse
+		IpsecRuleResponseMsg
 		IpsecCbKeyHandle
 		IpsecCbSpec
 		IpsecCbRequestMsg
@@ -350,6 +357,7 @@
 		GftHeaderTranspositionProfileKeyHandle
 		GftExactMatchFlowEntryKeyHandle
 		NatRuleKeyHandle
+		IpsecRuleKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
 		L2SegmentStatus
