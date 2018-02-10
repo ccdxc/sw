@@ -28,7 +28,6 @@ modules:
         # Uplink <-> Uplink
         name    : NW_NW_TCP
         spec    : nw_nw_l2.testspec
-        perf    : True
         iterate :
             # Native -> Native
             # TCP
@@ -197,7 +196,6 @@ modules:
         # Uplink <-> Uplink
         name    : DSR_NW_NW_TCP
         spec    : nw_nw_l2.testspec
-        perf    : True
         iterate :
             # TCP
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_PORT

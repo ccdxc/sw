@@ -27,7 +27,6 @@ modules:
         # Uplink <-> Uplink
         name    : NW_NW_TCP
         spec    : nw_nw_l2.testspec
-        perf    : True
         iterate :
             # Native -> Native
             # TCP
@@ -56,7 +55,6 @@ modules:
         # Host -> Uplink
         name    : TX_NW_TCP
         spec    : tx_nw_l2.testspec
-        perf    : True
         iterate :
             # Native -> Native
             # TCP
@@ -81,7 +79,6 @@ modules:
         # Host -> Uplink Vxlan
         name    : TX_NW_TCP_ENCAP
         spec    : tx_nw_l2_vxlan.testspec
-        perf    : True
         iterate :
             # Native -> Tunnel 
             # TCP
@@ -107,7 +104,6 @@ modules:
         # Uplink -> Host
         name    : NW_RX_TCP
         spec    : nw_rx_l2.testspec
-        perf    : True
         enable  : True
         iterate :
             # Native -> Native
@@ -138,7 +134,6 @@ modules:
         # Uplink -> Host
         name    : NW_RX_TCP_DECAP
         spec    : nw_rx_l2.testspec
-        perf    : True
         enable  : True
         iterate :
             # Tunnel -> Native
@@ -168,7 +163,6 @@ modules:
         # Host -> Host
         name    : TX_RX_TCP
         spec    : tx_rx_l2.testspec
-        perf    : True
         iterate :
             # Native -> Native
             # TCP
@@ -199,7 +193,6 @@ modules:
         # Uplink <-> Uplink
         name    : DSR_NW_NW_TCP
         spec    : nw_nw_l2.testspec
-        perf    : True
         iterate :
             # TCP
             - flow  : filter://label=L4LB,fwtype=L2,proto=TCP,nat_type=DNAT,nat_rw=MAC_PORT
@@ -227,7 +220,6 @@ modules:
         # Host -> Uplink
         name    : DSR_TX_NW_TCP
         spec    : tx_nw_l2.testspec
-        perf    : True
         iterate :
             # Native -> Native
             # TCP
@@ -252,7 +244,6 @@ modules:
         # Host -> Uplink Vxlan
         name    : DSR_TX_NW_TCP_ENCAP
         spec    : tx_nw_l2_vxlan.testspec
-        perf    : True
         iterate :
             # Native -> Tunnel 
             # TCP
@@ -273,7 +264,6 @@ modules:
         # Host -> Host
         name    : DSR_TX_RX_TCP
         spec    : tx_rx_l2.testspec
-        perf    : True
         iterate :
             # Native -> Native
             # TCP

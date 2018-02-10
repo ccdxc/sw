@@ -12,7 +12,6 @@ modules:
     - module:
         name    : TX_UUC
         spec    : tx_prm.testspec
-        perf    : True
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False
@@ -20,7 +19,6 @@ modules:
     - module:
         name    : RX_UUC
         spec    : rx_prm.testspec
-        perf    : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False

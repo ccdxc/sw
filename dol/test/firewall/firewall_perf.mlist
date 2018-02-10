@@ -23,16 +23,3 @@ modules:
             # Send some data in both directions
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
-            # Send some data in both directions
-            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
-            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
-            # Send some data in both directions
-            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
-            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
-            # Send some data in both directions
-            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
-            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
-            # Send some data in both directions
-            - step  : ref://trackerstore/steps/id=IFLOW_DATA_PERF
-            - step  : ref://trackerstore/steps/id=RFLOW_DATA_PERF
-

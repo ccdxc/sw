@@ -12,7 +12,6 @@ feature:
 modules:
     - module:
         name    : IPV4_QTAG
-        perf    : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False
@@ -27,7 +26,6 @@ modules:
 
     - module:
         name    : IPV6_QTAG
-        perf    : True
         iterate:
             - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
               segment   : filter://native=False

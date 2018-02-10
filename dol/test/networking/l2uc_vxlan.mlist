@@ -9,9 +9,14 @@ feature:
 
 modules:
     - module:
+        name    : IPV4_TCP
+        spec    : l2uc_vxlan.testspec
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+
+    - module:
         name    : IPV4
         spec    : l2uc_vxlan.testspec
-        perf    : True
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
             - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
@@ -20,7 +25,6 @@ modules:
     - module:
         name    : IPV6
         spec    : l2uc_vxlan.testspec
-        perf    : True
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
@@ -29,7 +33,6 @@ modules:
     - module:
         name    : NONIP
         spec    : l2uc_nonip_vxlan.testspec
-        perf    : True
         iterate :
             - flow   : filter://fwtype=L2,type=MAC,label=NETWORKING
 

@@ -9,13 +9,18 @@ feature:
 
 modules:
     - module:
-        name    : IPV4_QTAG
+        name    : IPV4_TCP_QTAG
         spec    : tx.testspec
         perf    : True
         iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
-              segment : filter://native=False
             - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+
+    - module:
+        name    : IPV4_QTAG
+        spec    : tx.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False
             - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
               segment : filter://native=False
@@ -23,7 +28,6 @@ modules:
     - module:
         name    : IPV6_QTAG
         spec    : tx.testspec
-        perf    : True
         iterate:
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
               segment : filter://native=False

@@ -11,7 +11,6 @@ modules:
     - module:
         name    : IPV4_QTAG
         spec    : tx_l3.testspec
-        perf    : True
         iterate:
             - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
               srcseg: filter://native=False
@@ -23,7 +22,6 @@ modules:
     - module:
         name    : IPV6_QTAG
         spec    : tx_l3.testspec
-        perf    : True
         iterate:
             - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
               srcseg: filter://native=False
@@ -101,7 +99,6 @@ modules:
     - module:
         name    : IPV4_VXLAN
         spec    : tx_vxlan_l3.testspec
-        perf    : True
         iterate:
             - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
@@ -110,7 +107,6 @@ modules:
     - module:
         name    : IPV6_VXLAN
         spec    : tx_vxlan_l3.testspec
-        perf    : True
         iterate:
             - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV6,proto=TCP,label=NETWORKING

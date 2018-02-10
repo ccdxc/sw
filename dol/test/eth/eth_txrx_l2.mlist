@@ -12,7 +12,6 @@ modules:
     - module:
         name    : IPV4_QTAG
         spec    : tx_rx.testspec
-        perf    : True
         iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False
@@ -24,7 +23,6 @@ modules:
     - module:
         name    : IPV6_QTAG
         spec    : tx_rx.testspec
-        perf    : True
         iterate:
             - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
               segment : filter://native=False

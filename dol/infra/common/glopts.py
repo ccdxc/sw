@@ -111,7 +111,7 @@ def ValidateGlopts():
 
     if GlobalOptions.pps:
         if not GlobalOptions.dryrun:
-            GlobalOptions.tcscale = 100
+            GlobalOptions.tcscale = 1000
         GlobalOptions.lite = True
 
     if GlobalOptions.modscale:
