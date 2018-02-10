@@ -1,12 +1,12 @@
 #################################################
 ################### DOCKER ######################
 #################################################
-
-SW_DIR = ${PWD}/../..
+CUR_DIR:=$(shell pwd)
+SW_DIR:=$(shell dirname ${CUR_DIR})
 
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 shell: build-runtime-image
-	mkdir -p $(SW_DIR)/bazel-cache;
+	mkdir -p ${SW_DIR}/bazel-cache;
 	docker run -it --rm --privileged -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash
 
 # run `make gtest` with the dependencies image.
