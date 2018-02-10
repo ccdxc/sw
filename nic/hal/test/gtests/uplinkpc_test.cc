@@ -475,6 +475,8 @@ TEST_F(uplinkpc_test, test6)
     hal_handle_t                    upif_handles[8];
     NetworkKeyHandle                *nkh = NULL;
     InterfaceKeyHandle              *ifkh = NULL;
+    InterfaceGetRequest             get_req;
+    InterfaceGetResponseMsg         get_rsp_msg;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(6);
@@ -569,6 +571,23 @@ TEST_F(uplinkpc_test, test6)
         ASSERT_TRUE(ret == HAL_RET_OK);
         hal::hal_cfg_db_close();
     }
+
+    // Get interface by setting key.
+    get_req.mutable_key_or_handle()->set_interface_id(600 + num_uplinks + 1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_get(get_req, &get_rsp_msg);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(get_rsp_msg.response_size() == 1);
+
+    // Get interface without setting the key
+    get_rsp_msg.clear_response();
+    get_req.clear_key_or_handle();
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_get(get_req, &get_rsp_msg);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(get_rsp_msg.response_size() > 1);
 
     // Deleting L2segment on UplinkPC
     for (int j = 1; j <= num_l2segs; j++) {

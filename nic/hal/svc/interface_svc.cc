@@ -199,7 +199,6 @@ InterfaceServiceImpl::InterfaceGet(ServerContext *context,
                                    InterfaceGetResponseMsg *rsp)
 {
     uint32_t                i, nreqs = req->request_size();
-    InterfaceGetResponse    *response;
 
     HAL_TRACE_DEBUG("Received if get ");
     if (nreqs == 0) {
@@ -208,9 +207,8 @@ InterfaceServiceImpl::InterfaceGet(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
-        response = rsp->add_response();
         auto spec = req->request(i);
-        hal::interface_get(spec, response);
+        hal::interface_get(spec, rsp);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

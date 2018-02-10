@@ -1613,27 +1613,11 @@ end:
 
 }
 
-//------------------------------------------------------------------------------
-// process a interface get request
-//------------------------------------------------------------------------------
-hal_ret_t
-interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
+static void
+if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
 {
-    if_t             *hal_if;
     InterfaceSpec    *spec;
     l2seg_t          *l2seg;
-
-    hal_api_trace(" API Begin: interface get ");
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    hal_if = if_lookup_key_or_handle(req.key_or_handle());
-    if (!hal_if) {
-        rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
-        return HAL_RET_INVALID_ARG;
-    }
 
     // fill in the config spec of this interface
     spec = rsp->mutable_spec();
@@ -1729,7 +1713,48 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     default:
         break;
     }
-    hal_api_trace(" API End: interface get ");
+}
+
+static bool
+if_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    InterfaceGetResponseMsg *rsp    = (InterfaceGetResponseMsg *)ctxt;
+    InterfaceGetResponse *response  = rsp->add_response();
+    if_t          *hal_if           = NULL;
+
+    hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+    if_process_get(hal_if, response);
+
+    // Always return false here, so that we walk through all hash table
+    // entries. 
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// process a interface get request
+//------------------------------------------------------------------------------
+hal_ret_t
+interface_get (InterfaceGetRequest& req, InterfaceGetResponseMsg *rsp)
+{
+    if_t             *hal_if;
+
+    if (!req.has_key_or_handle()) {
+        // When the key-handle is not set, this is a request for all interface 
+        // objects. Run through the hash table and retrieve all values.
+        g_hal_state->if_id_ht()->walk(if_get_ht_cb, rsp);
+    } else {
+        hal_if = if_lookup_key_or_handle(req.key_or_handle());
+
+        auto response = rsp->add_response();
+        if (!hal_if) {
+            response->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+            return HAL_RET_INVALID_ARG;
+        } else {
+            if_process_get(hal_if, response);
+        }
+    }
+
     return HAL_RET_OK;
 }
 
@@ -1798,7 +1823,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         return HAL_RET_L2SEG_NOT_FOUND;
     }
 
-    // uplink key/hanle is must
+    // uplink key/handle is must
     if (!spec.has_if_key_handle()) {
         HAL_TRACE_ERR("{}:no if key or handle", __FUNCTION__);
         return HAL_RET_INTERFACE_ID_INVALID;

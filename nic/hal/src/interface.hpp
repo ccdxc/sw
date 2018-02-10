@@ -434,7 +434,7 @@ hal_ret_t interface_update(intf::InterfaceSpec& spec,
 hal_ret_t interface_delete(intf::InterfaceDeleteRequest& req,
                            intf::InterfaceDeleteResponse *rsp);
 hal_ret_t interface_get(intf::InterfaceGetRequest& spec,
-                        intf::InterfaceGetResponse *rsp);
+                        intf::InterfaceGetResponseMsg *rsp);
 
 hal_ret_t add_l2seg_on_uplink(intf::InterfaceL2SegmentSpec& spec,
                               intf::InterfaceL2SegmentResponse *rsp);
