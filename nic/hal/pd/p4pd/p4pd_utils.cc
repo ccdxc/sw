@@ -6,6 +6,8 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/include/p4pd_table.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -41,15 +43,6 @@
 #define JSON_KEY_HASH_TYPE          "hash_type"
 #define JSON_KEY_NUM_BUCKETS        "num_buckets"
 
-#if 0
-// TODO: we need declarations for these in common files
-extern void p4pd_prep_p4tbl_sw_struct_sizes(void);
-extern void p4pd_prep_p4tbl_names(void);
-extern char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
-extern uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];
-extern uint16_t p4pd_tbl_sw_action_data_size[P4TBL_ID_TBLMAX];
-#endif
-
 static p4pd_table_properties_t *_p4tbls;
 namespace pt = boost::property_tree;
 
@@ -59,7 +52,7 @@ namespace pt = boost::property_tree;
 static uint64_t capri_table_asm_err_offset[P4TBL_ID_TBLMAX];
 static uint64_t capri_table_asm_base[P4TBL_ID_TBLMAX];
 hal_ret_t
-p4pd_capri_program_table_mpu_pc(void)
+p4pd_capri_program_table_mpu_pc (void)
 {
     p4pd_table_properties_t       tbl_ctx;
     for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
@@ -81,7 +74,7 @@ p4pd_capri_program_table_mpu_pc(void)
 }
 
 #define P4ACTION_NAME_MAX_LEN (100)
-hal_ret_t
+static hal_ret_t
 p4pd_capri_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 {
     char action_name[P4ACTION_NAME_MAX_LEN] = {0};
@@ -121,15 +114,15 @@ p4pd_capri_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     return HAL_RET_OK;
 }
 
-hal_ret_t
+static hal_ret_t
 p4pd_capri_deparser_init (void)
 {
     capri_deparser_init(TM_PORT_INGRESS, TM_PORT_EGRESS);
     return HAL_RET_OK;    
 }
 
-hal_ret_t
-p4pd_capri_program_hbm_table_base_addr(void)
+static hal_ret_t
+p4pd_capri_program_hbm_table_base_addr (void)
 {
     p4pd_table_properties_t       tbl_ctx;
     /* Program table base address into capri TE */
@@ -142,6 +135,53 @@ p4pd_capri_program_hbm_table_base_addr(void)
                     tbl_ctx.tablename, tbl_ctx.stage,
                     (tbl_ctx.gress == P4_GRESS_INGRESS));
     }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_capri_toeplitz_init (void)
+{
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
+                                     &tbl_ctx);
+    capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_capri_p4plus_table_init (void)
+{
+    p4pd_table_properties_t tbl_ctx_apphdr;
+    p4pd_table_properties_t tbl_ctx_apphdr_off;
+    p4pd_table_properties_t tbl_ctx_txdma_act;
+
+    /* P4 plus table inits */
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+                                     &tbl_ctx_apphdr);
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
+                                     &tbl_ctx_apphdr_off);
+    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0,
+                                     &tbl_ctx_txdma_act);
+    capri_p4plus_table_init(tbl_ctx_apphdr.stage,
+                            tbl_ctx_apphdr.stage_tableid,
+                            tbl_ctx_apphdr_off.stage,
+                            tbl_ctx_apphdr_off.stage_tableid,
+                            tbl_ctx_txdma_act.stage,
+                            tbl_ctx_txdma_act.stage_tableid);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_capri_p4plus_recirc_init (void)
+{
+    capri_p4plus_recirc_init();
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_capri_timer_init (void)
+{
+    capri_timer_init();
     return HAL_RET_OK;
 }
 
@@ -338,7 +378,7 @@ p4pd_init (p4pd_cfg_t *p4pd_cfg)
 p4pd_error_t
 p4pd_asic_init (p4pd_cfg_t *p4pd_cfg)
 {
-    /* Common capri inits - applicable to IRIS & GFT */
+    // common capri inits - applicable to all pipelines (iris, gft etc.)
     /* TODO: These functions need to be moved to asic-pd common layer */
     HAL_ASSERT(p4pd_capri_table_mpu_base_init(p4pd_cfg) == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_program_table_mpu_pc() == HAL_RET_OK);

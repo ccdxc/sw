@@ -38,6 +38,7 @@
 #define __P4PD_API_H__
 
 #include <stdint.h>
+#include "nic/include/base.h"
 #include "nic/hal/pd/hal_pd_error.hpp"
 
 #define P4TBL_NAME_MAX_LEN                           80               // TODO: this is generated in multiple files today !!!
@@ -903,6 +904,16 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
 
 p4pd_error_t
 p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
+
+// START: Iris specific capri inits
+// TODO: These functions need to be moved to asic-pd common layer
+
+hal_ret_t p4pd_capri_toeplitz_init(void);
+hal_ret_t p4pd_capri_p4plus_table_init(void);
+hal_ret_t p4pd_capri_p4plus_recirc_init(void);
+hal_ret_t p4pd_capri_timer_init(void);
+
+// END: Iris specific capri inits
 
 #endif    // __P4PD_API_H__
 

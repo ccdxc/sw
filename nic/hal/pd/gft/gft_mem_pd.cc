@@ -44,7 +44,6 @@ hal_state_pd::init(void)
                                  false, true, true);
     HAL_ASSERT_RETURN((enicif_pd_slab_ != NULL), false);
 
-
     return true;
 }
 
@@ -65,13 +64,11 @@ hal_state_pd::~hal_state_pd()
 {
     uint32_t    tid;
 
-
     lif_pd_slab_ ? slab::destroy(lif_pd_slab_) : HAL_NOP;
     lif_hwid_idxr_ ? indexer::destroy(lif_hwid_idxr_) : HAL_NOP;
 
     uplinkif_pd_slab_ ? slab::destroy(uplinkif_pd_slab_) : HAL_NOP;
     enicif_pd_slab_ ? slab::destroy(enicif_pd_slab_) : HAL_NOP;
-
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -163,12 +160,12 @@ hal_state_pd::factory(void)
     return new_state;
 }
 
-// ----------------------------------------------------------------------------
-// Gives slab for a slab id
-// ----------------------------------------------------------------------------
-#define GET_SLAB(slab_name) \
-    if (slab_name && slab_name->slab_id() == slab_id) { \
-        return slab_name; \
+//-----------------------------------------------------------------------------
+// return slab for a slab id
+//-----------------------------------------------------------------------------
+#define GET_SLAB(slab_name)                                            \
+    if (slab_name && slab_name->slab_id() == slab_id) {                \
+        return slab_name;                                              \
     }
 
 hal_ret_t
@@ -188,6 +185,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
 
     return NULL;
 }
+
 //------------------------------------------------------------------------------
 // initializing tables
 //------------------------------------------------------------------------------
@@ -417,6 +415,21 @@ cleanup:
 hal_ret_t
 pd_mem_init_phase2 (pd_mem_init_phase2_args_t *arg)
 {
+    p4pd_cfg_t    p4pd_cfg = {
+        .table_map_cfg_file = "gft/capri_p4_table_map.json",
+        .p4pd_pgm_name = "gft"
+    };
+
+    // gft specific capri inits
+    HAL_ASSERT(p4pd_capri_toeplitz_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_p4plus_table_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_p4plus_recirc_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_capri_timer_init() == HAL_RET_OK);
+
+    // common asic pd init (must be called after capri asic init)
+    p4pd_asic_init(&p4pd_cfg);
+
+    // g_hal_state_pd->qos_hbm_fifo_allocator_init();
     return HAL_RET_OK;
 }
 
@@ -474,12 +487,11 @@ pd_slab_delay_delete_cb (void *timer, hal_slab_t slab_id, void *elem)
     } else if (slab_id < HAL_SLAB_PD_MAX) {
         ret = hal::pd::free_to_slab(slab_id, elem);
     } else {
-        HAL_TRACE_ERR("{}: Unexpected slab id {}", __FUNCTION__, slab_id);
+        HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
         ret = HAL_RET_INVALID_ARG;
     }
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("[{}:{}] Failed to release elem {} to slab id {}",
-                      __FUNCTION__, __LINE__, elem, slab_id);
+        HAL_TRACE_ERR("Failed to release elem {} to slab id {}", elem, slab_id);
     }
 
     return;

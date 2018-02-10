@@ -154,35 +154,25 @@ static capri_tcam_shadow_mem_t *g_shadow_tcam_p4[2];
 static capri_sram_shadow_mem_t *g_shadow_sram_rxdma;
 static capri_sram_shadow_mem_t *g_shadow_sram_txdma;
 
-static capri_sram_shadow_mem_t*
-get_sram_shadow_for_table(uint32_t tableid, int gress) {
+static capri_sram_shadow_mem_t *
+get_sram_shadow_for_table (uint32_t tableid, int gress)
+{
     if ((tableid >= P4TBL_ID_TBLMIN) &&
         (tableid <= P4TBL_ID_TBLMAX)) {
-        HAL_TRACE_DEBUG("{} Working with p4 sram shadow for tableid {}\n",
-                        __FUNCTION__, tableid);
+        HAL_TRACE_DEBUG("Working with p4 sram shadow for table {}\n", tableid);
         return (g_shadow_sram_p4[gress]);
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
-        HAL_TRACE_DEBUG("{} Working with rxdma shadow for tableid {}\n",
-                        __FUNCTION__, tableid);
+        HAL_TRACE_DEBUG("Working with rxdma shadow for table {}\n", tableid);
         return (g_shadow_sram_rxdma);
     } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
-        HAL_TRACE_DEBUG("{} Working with txdma shadow for tableid {}\n",
-                        __FUNCTION__, tableid);
+        HAL_TRACE_DEBUG("Working with txdma shadow for table {}\n", tableid);
         return (g_shadow_sram_txdma);
-#ifdef GFT
-    } else if ((tableid >= P4TBL_ID_TBLMIN) &&
-               (tableid <= P4TBL_ID_TBLMAX)) {
-        HAL_TRACE_DEBUG("{} Working with p4 sram shadow for tableid {}\n",
-                        __FUNCTION__, tableid);
-        return (g_shadow_sram_p4[gress]);
-#endif
     } else {
         HAL_ASSERT(0);
     }
     return NULL;
-
 }
 
 /* HBM base address in System memory map; Cached once at the init time */
@@ -205,9 +195,10 @@ typedef enum capri_tbl_rw_logging_levels_ {
 #define HAL_LOG_TBL_UPDATES
 
 void
-capri_program_table_mpu_pc(int tableid, bool ingress, int stage, int stage_tableid,
-                           uint64_t capri_table_asm_err_offset,
-                           uint64_t capri_table_asm_base)
+capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
+                            int stage_tableid,
+                            uint64_t capri_table_asm_err_offset,
+                            uint64_t capri_table_asm_base)
 {
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -237,8 +228,8 @@ capri_program_table_mpu_pc(int tableid, bool ingress, int stage, int stage_table
 }
 
 void
-capri_program_hbm_table_base_addr(int stage_tableid, char *tablename, int stage,
-                                  bool ingress)
+capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
+                                   int stage, bool ingress)
 {
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -269,8 +260,9 @@ capri_program_hbm_table_base_addr(int stage_tableid, char *tablename, int stage,
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0            0
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
 
-static void capri_program_p4plus_table_mpu_pc_args(int tbl_id, cap_te_csr_t *te_csr, 
-                                              uint64_t pc, uint32_t offset)
+static void
+capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr, 
+                                        uint64_t pc, uint32_t offset)
 {
     te_csr->cfg_table_property[tbl_id].read();
     te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
@@ -283,8 +275,9 @@ static void capri_program_p4plus_table_mpu_pc_args(int tbl_id, cap_te_csr_t *te_
 #define CAPRI_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
 #define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
 
-void capri_program_p4plus_sram_table_mpu_pc(int tableid, int stage_tbl_id,
-                                            int stage)
+void
+capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
+                                        int stage)
 {
     uint64_t pc;
     cap_te_csr_t *te_csr;
@@ -310,11 +303,7 @@ void capri_program_p4plus_sram_table_mpu_pc(int tableid, int stage_tbl_id,
     te_csr->cfg_table_property[stage_tbl_id].write();
 }
 
-#ifndef GFT
-/*
- * RSS Topelitz Table
- */
-
+// RSS Topelitz Table
 #define ETH_RSS_INDIR_PROGRAM               "eth_rx_rss_indir.bin"
 // Maximum number of queue per LIF
 #define ETH_RSS_MAX_QUEUES                  (128)
@@ -329,7 +318,8 @@ void capri_program_p4plus_sram_table_mpu_pc(int tableid, int stage_tbl_id,
 // Size of the entire LIF indirection table
 #define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
 
-int capri_toeplitz_init(int stage, int stage_tableid)
+int
+capri_toeplitz_init (int stage, int stage_tableid)
 {
     int tbl_id;
     uint64_t pc;
@@ -388,11 +378,11 @@ int capri_toeplitz_init(int stage, int stage_tableid)
 
     return CAPRI_OK;
 }
-#endif
 
-int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
-                            int stage_apphdr_off, int stage_tableid_apphdr_off,
-                            int stage_txdma_act, int stage_tableid_txdma_act)
+int
+capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
+                         int stage_apphdr_off, int stage_tableid_apphdr_off,
+                         int stage_txdma_act, int stage_tableid_txdma_act)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
@@ -460,7 +450,8 @@ int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
 }
 
 void
-capri_p4plus_recirc_init() {
+capri_p4plus_recirc_init (void)
+{
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     // RxDMA
@@ -477,7 +468,7 @@ capri_p4plus_recirc_init() {
 }
 
 void
-capri_timer_init_helper(uint32_t key_lines)
+capri_timer_init_helper (uint32_t key_lines)
 {
     uint64_t timer_key_hbm_base_addr;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -525,7 +516,7 @@ capri_timer_init_helper(uint32_t key_lines)
 }
 
 void
-capri_timer_init(void)
+capri_timer_init (void)
 {
     capri_timer_init_helper(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
 }
@@ -541,7 +532,8 @@ capri_timer_init(void)
          val7  : 3
 */
 static void
-capri_p4p_stage_id_init() {
+capri_p4p_stage_id_init (void)
+{
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap0.rpc.pics.cfg_stage_id.all(0x688FAC);
     cap0.rpc.pics.cfg_stage_id.write();
@@ -598,7 +590,7 @@ capri_mpu_icache_invalidate (void)
  * seuqencing issue which is causing the rxdma tests to fail before moving
  * this out */
 static void
-capri_p4plus_table_mpu_base_init(void)
+capri_p4plus_table_mpu_base_init (void)
 {
     int ret;
     char action_name[P4ACTION_NAME_MAX_LEN] = {0};
@@ -671,7 +663,8 @@ capri_p4plus_table_mpu_base_init(void)
 }
 
 void capri_debug_hbm_reset(void);
-int capri_table_rw_init()
+int
+capri_table_rw_init (void)
 {
     // !!!!!!
     // Before making this call, it is expected that
@@ -730,8 +723,8 @@ int capri_table_rw_init()
     return (CAPRI_OK);
 }
 
-
-void capri_table_rw_cleanup()
+void
+capri_table_rw_cleanup (void)
 {
     for (int i = P4_PIPE_GRESS_MIN; i < P4_PIPE_GRESS_MAX; i++) {
         if (g_shadow_sram_p4[i]) {
@@ -753,8 +746,8 @@ void capri_table_rw_cleanup()
     g_shadow_sram_txdma = NULL;
 }
 
-
-uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid)
+uint8_t
+capri_get_action_pc (uint32_t tableid, uint8_t actionid)
 {
     if ((tableid >= P4TBL_ID_TBLMIN) &&
         (tableid <= P4TBL_ID_TBLMAX)) {
@@ -770,7 +763,8 @@ uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid)
     }
 }
 
-uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc)
+uint8_t
+capri_get_action_id (uint32_t tableid, uint8_t actionpc)
 {
     if ((tableid >= P4TBL_ID_TBLMIN) &&
         (tableid <= P4TBL_ID_TBLMAX)) {
@@ -797,12 +791,13 @@ uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc)
     return (0xff);
 }
 
-static void capri_sram_entry_details_get(uint32_t index,
-                                         int *sram_row, int *entry_start_block,
-                                         int *entry_end_block, int *entry_start_word,
-                                         uint16_t top_left_x, uint16_t top_left_y,
-                                         uint8_t top_left_block, uint16_t btm_right_y,
-                                         uint8_t num_buckets, uint16_t entry_width)
+static void
+capri_sram_entry_details_get (uint32_t index,
+                              int *sram_row, int *entry_start_block,
+                              int *entry_end_block, int *entry_start_word,
+                              uint16_t top_left_x, uint16_t top_left_y,
+                              uint8_t top_left_block, uint16_t btm_right_y,
+                              uint8_t num_buckets, uint16_t entry_width)
 {
     *sram_row = top_left_y + (index/num_buckets);
     assert(*sram_row <= btm_right_y);
@@ -825,8 +820,8 @@ static void capri_sram_entry_details_get(uint32_t index,
 
 }
 
-cap_pics_csr_t*
-p4pd_global_pics_get(uint32_t tableid)
+cap_pics_csr_t *
+p4pd_global_pics_get (uint32_t tableid)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     if ((tableid >= P4TBL_ID_TBLMIN) &&
@@ -845,10 +840,11 @@ p4pd_global_pics_get(uint32_t tableid)
 }
 
 
-int capri_table_entry_write(uint32_t tableid,
-                            uint32_t index,
-                            uint8_t  *hwentry,
-                            uint16_t hwentry_bit_len)
+int
+capri_table_entry_write (uint32_t tableid,
+                         uint32_t index,
+                         uint8_t  *hwentry,
+                         uint16_t hwentry_bit_len)
 {
     /* 1. When a Memory line is shared by multiple tables, only tableid's
      *    table entry bits need to be modified in the memory line.
@@ -968,14 +964,14 @@ int capri_table_entry_write(uint32_t tableid,
     }
 #endif
 
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-
-int capri_table_entry_read(uint32_t tableid,
-                           uint32_t index,
-                           uint8_t  *hwentry,
-                           uint16_t *hwentry_bit_len)
+int
+capri_table_entry_read (uint32_t tableid,
+                        uint32_t index,
+                        uint8_t  *hwentry,
+                        uint16_t *hwentry_bit_len)
 {
     /*
      * Unswizzing of the bytes into readable format is
@@ -1040,13 +1036,14 @@ int capri_table_entry_read(uint32_t tableid,
 
     *hwentry_bit_len = tbl_ctx.sram_layout.entry_width_bits;
 
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-int capri_table_hw_entry_read(uint32_t tableid,
-                              uint32_t index,
-                              uint8_t  *hwentry,
-                              uint16_t *hwentry_bit_len)
+int
+capri_table_hw_entry_read (uint32_t tableid,
+                           uint32_t index,
+                           uint8_t  *hwentry,
+                           uint16_t *hwentry_bit_len)
 {
     /*
      * Unswizzing of the bytes into readable format is
@@ -1140,13 +1137,13 @@ int capri_table_hw_entry_read(uint32_t tableid,
  *     2. Table entry start and end on 16b boundary. Multiple such 16b words
  *        are updated or read from when performing table write or read.
  */
-
-static void capri_tcam_entry_details_get(uint32_t index,
-                                         int *tcam_row, int *entry_start_block,
-                                         int *entry_end_block, int *entry_start_word,
-                                         uint16_t top_left_y, uint8_t top_left_block,
-                                         uint16_t btm_right_y, uint8_t num_buckets,
-                                         uint16_t entry_width, uint32_t start_index)
+static void
+capri_tcam_entry_details_get (uint32_t index,
+                              int *tcam_row, int *entry_start_block,
+                              int *entry_end_block, int *entry_start_word,
+                              uint16_t top_left_y, uint8_t top_left_block,
+                              uint16_t btm_right_y, uint8_t num_buckets,
+                              uint16_t entry_width, uint32_t start_index)
 {
     *tcam_row = top_left_y + (index/num_buckets);
     assert (*tcam_row <= btm_right_y);
@@ -1169,11 +1166,12 @@ static void capri_tcam_entry_details_get(uint32_t index,
                           / CAPRI_TCAM_WORDS_PER_BLOCK) * CAPRI_TCAM_ROWS;
 }
 
-int capri_tcam_table_entry_write(uint32_t tableid,
-                                 uint32_t index,
-                                 uint8_t  *trit_x,
-                                 uint8_t  *trit_y,
-                                 uint16_t hwentry_bit_len)
+int
+capri_tcam_table_entry_write (uint32_t tableid,
+                              uint32_t index,
+                              uint8_t  *trit_x,
+                              uint8_t  *trit_y,
+                              uint16_t hwentry_bit_len)
 {
     /* 1. When a Memory line is shared by multiple tables, only tableid's
      *    table entry bits need to be modified in the memory line.
@@ -1302,19 +1300,16 @@ int capri_tcam_table_entry_write(uint32_t tableid,
     }
 #endif
 
-
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-
-
-int capri_tcam_table_entry_read(uint32_t tableid,
-                                uint32_t index,
-                                uint8_t  *trit_x,
-                                uint8_t  *trit_y,
-                                uint16_t *hwentry_bit_len)
+int
+capri_tcam_table_entry_read (uint32_t tableid,
+                             uint32_t index,
+                             uint8_t  *trit_x,
+                             uint8_t  *trit_y,
+                             uint16_t *hwentry_bit_len)
 {
-
     int tcam_row, entry_start_block, entry_end_block;
     int entry_start_word;
 
@@ -1373,14 +1368,15 @@ int capri_tcam_table_entry_read(uint32_t tableid,
 
     *hwentry_bit_len = tbl_ctx.tcam_layout.entry_width_bits;;
 
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-int capri_tcam_table_hw_entry_read(uint32_t tableid,
-                                   uint32_t index,
-                                   uint8_t  *trit_x,
-                                   uint8_t  *trit_y,
-                                   uint16_t *hwentry_bit_len)
+int
+capri_tcam_table_hw_entry_read (uint32_t tableid,
+                                uint32_t index,
+                                uint8_t  *trit_x,
+                                uint8_t  *trit_y,
+                                uint16_t *hwentry_bit_len)
 {
     int tcam_row, entry_start_block, entry_end_block;
     int entry_start_word;
@@ -1455,12 +1451,11 @@ int capri_tcam_table_hw_entry_read(uint32_t tableid,
     return (CAPRI_OK);
 }
 
-
-
-int capri_hbm_table_entry_write(uint32_t tableid,
-                                uint32_t index,
-                                uint8_t *hwentry,
-                                uint16_t entry_size)
+int
+capri_hbm_table_entry_write (uint32_t tableid,
+                             uint32_t index,
+                             uint8_t *hwentry,
+                             uint16_t entry_size)
 {
     p4pd_table_properties_t       tbl_ctx;
     p4pd_table_properties_get(tableid, &tbl_ctx);
@@ -1490,13 +1485,14 @@ int capri_hbm_table_entry_write(uint32_t tableid,
     HAL_TRACE_DEBUG("{}", buffer);
 #endif
 
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-int capri_hbm_table_entry_read(uint32_t tableid,
-                               uint32_t index,
-                               uint8_t *hwentry,
-                               uint16_t *entry_size)
+int
+capri_hbm_table_entry_read (uint32_t tableid,
+                            uint32_t index,
+                            uint8_t *hwentry,
+                            uint16_t *entry_size)
 {
     p4pd_table_properties_t       tbl_ctx;
     p4pd_table_properties_get(tableid, &tbl_ctx);
@@ -1508,11 +1504,12 @@ int capri_hbm_table_entry_read(uint32_t tableid,
     hal::pd::asic_mem_read(get_start_offset(tbl_ctx.tablename) + entry_start_addr,
                            hwentry, tbl_ctx.hbm_layout.entry_width);
     *entry_size = tbl_ctx.hbm_layout.entry_width;
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-int capri_table_constant_write(uint64_t val, uint32_t stage,
-                               uint32_t stage_tableid, bool ingress)
+int
+capri_table_constant_write (uint64_t val, uint32_t stage,
+                            uint32_t stage_tableid, bool ingress)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     if (ingress) {
@@ -1524,11 +1521,12 @@ int capri_table_constant_write(uint64_t val, uint32_t stage,
         te_csr.cfg_table_mpu_const[stage_tableid].value(val);
         te_csr.cfg_table_mpu_const[stage_tableid].write();
     }
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-int capri_table_constant_read(uint64_t *val, uint32_t stage,
-                              int stage_tableid, bool ingress)
+int
+capri_table_constant_read (uint64_t *val, uint32_t stage,
+                           int stage_tableid, bool ingress)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     if (ingress) {
@@ -1542,32 +1540,35 @@ int capri_table_constant_read(uint64_t *val, uint32_t stage,
         *val = te_csr.cfg_table_mpu_const[stage_tableid].
             value().convert_to<uint64_t>();
     }
-    return (CAPRI_OK);
+    return CAPRI_OK;
 }
 
-void capri_set_action_asm_base(int tableid, int actionid,
-                               uint64_t asm_base)
+void
+capri_set_action_asm_base (int tableid, int actionid,
+                           uint64_t asm_base)
 {
     capri_action_asm_base[tableid][actionid] = asm_base;
     return;
 }
 
-void capri_set_action_rxdma_asm_base(int tableid, int actionid,
-                                     uint64_t asm_base)
+void
+capri_set_action_rxdma_asm_base (int tableid, int actionid,
+                                 uint64_t asm_base)
 {
     capri_action_rxdma_asm_base[tableid][actionid] = asm_base;
     return;
 }
 
-void capri_set_action_txdma_asm_base(int tableid, int actionid,
-                                     uint64_t asm_base)
+void
+capri_set_action_txdma_asm_base (int tableid, int actionid,
+                                 uint64_t asm_base)
 {
     capri_action_txdma_asm_base[tableid][actionid] = asm_base;
     return;
 }
 
 void 
-capri_debug_hbm_read(void)
+capri_debug_hbm_read (void)
 {
 #if DBG_HBM_EN
     uint64_t start_addr = DBG_HBM_BASE;
@@ -1593,7 +1594,7 @@ capri_debug_hbm_read(void)
 }
 
 void 
-capri_debug_hbm_reset(void)
+capri_debug_hbm_reset (void)
 {
 #if DBG_HBM_EN
     uint64_t start_addr = DBG_HBM_BASE;
@@ -1616,14 +1617,13 @@ capri_debug_hbm_reset(void)
 #endif
 }
 
-extern
-cap_csr_base * get_csr_base_from_path(string);
+extern cap_csr_base *get_csr_base_from_path(string);
 
 namespace hal {
 namespace pd {
 
 vector < tuple < string, string, string >>
-asic_csr_dump_reg(char *block_name, bool exclude_mem)
+asic_csr_dump_reg (char *block_name, bool exclude_mem)
 {
 
     typedef vector< tuple< std::string, std::string, std::string> > reg_data;
@@ -1658,7 +1658,9 @@ asic_csr_dump_reg(char *block_name, bool exclude_mem)
     return data_tl;
 }
 
-vector <string> asic_csr_list_get(string path, int level) {
+vector <string>
+asic_csr_list_get (string path, int level)
+{
     cap_csr_base *objP = get_csr_base_from_path(path);
     vector <string> block_name;
     if (objP == 0) return vector<string>();
@@ -1671,12 +1673,9 @@ vector <string> asic_csr_list_get(string path, int level) {
 }
 }
 
-extern void
-capri_tm_dump_debug_regs(void);
-extern void
-capri_tm_dump_config_regs(void);
-extern void
-capri_tm_dump_all_regs(void);
+extern void capri_tm_dump_debug_regs(void);
+extern void capri_tm_dump_config_regs(void);
+extern void capri_tm_dump_all_regs(void);
 
 std::string
 hal::pd::asic_csr_dump (char *csr_str)

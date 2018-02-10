@@ -52,9 +52,9 @@ namespace pd {
 
 class hal_state_pd *g_hal_state_pd;
 
-/**** START: Iris specific capri inits ****/
-/* TODO: These functions need to be moved to asic-pd common layer */
-hal_ret_t
+// START: Iris specific capri inits
+// TODO: These functions need to be moved to asic-pd common layer
+static hal_ret_t
 p4pd_capri_stats_region_init(void)
 {
     p4pd_table_properties_t       tbl_ctx;
@@ -102,54 +102,7 @@ p4pd_capri_stats_region_init(void)
     return HAL_RET_OK;
 }
 
-hal_ret_t
-p4pd_capri_toeplitz_init (void)
-{
-    p4pd_table_properties_t tbl_ctx;
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
-                                     &tbl_ctx);
-    capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-p4pd_capri_p4plus_table_init (void)
-{
-    p4pd_table_properties_t tbl_ctx_apphdr;
-    p4pd_table_properties_t tbl_ctx_apphdr_off;
-    p4pd_table_properties_t tbl_ctx_txdma_act;
-    
-    /* P4 plus table inits */
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
-                                     &tbl_ctx_apphdr);
-    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
-                                     &tbl_ctx_apphdr_off);
-    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0,
-                                     &tbl_ctx_txdma_act);
-    capri_p4plus_table_init(tbl_ctx_apphdr.stage,
-                            tbl_ctx_apphdr.stage_tableid,
-                            tbl_ctx_apphdr_off.stage,
-                            tbl_ctx_apphdr_off.stage_tableid,
-                            tbl_ctx_txdma_act.stage,
-                            tbl_ctx_txdma_act.stage_tableid);
-    return (HAL_RET_OK);
-}
-
-hal_ret_t
-p4pd_capri_p4plus_recirc_init (void)
-{
-    capri_p4plus_recirc_init();
-    return (HAL_RET_OK);
-}
-
-hal_ret_t
-p4pd_capri_timer_init (void)
-{
-    capri_timer_init();
-    return (HAL_RET_OK);
-}
-
-/**** END: Iris specific capri inits ****/
+// END: Iris specific capri inits
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the slabs
@@ -1203,26 +1156,24 @@ pd_mem_init (pd_mem_init_args_t *args)
 hal_ret_t
 pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-    p4pd_cfg_t                 p4pd_cfg = {
+    p4pd_cfg_t    p4pd_cfg = {
         .table_map_cfg_file = "iris/capri_p4_table_map.json",
         .p4pd_pgm_name = "iris"
     };
     
-    /**** Iris specific capri inits ****/
-    // initialize the p4pd stats region
+    // iris specific capri inits, initialize the p4pd stats region
     HAL_ASSERT(p4pd_capri_stats_region_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_p4plus_table_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_p4plus_recirc_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_capri_timer_init() == HAL_RET_OK);
 
-    /* Common asic pd init - Must be called after capri asic init */
+    // common asic pd init (must be called after capri asic init)
     p4pd_asic_init(&p4pd_cfg);
 
     g_hal_state_pd->qos_hbm_fifo_allocator_init();
 
-    return ret;
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
