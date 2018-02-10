@@ -72,34 +72,36 @@ rawr_s0_rx_start:
     add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...\
                                   rawr_app_header_packet_len_sbit6_ebit13} // delay slot
     bcf         [c1], _chain_rxq_set
-    phvwr       p.common_phv_chain_ring_base, r_chain_txq_base  // delay slot
-    phvwr       p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_txq_ring_size_shift
-    phvwr       p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_txq_entry_size_shift
+    phvwrpair   p.common_phv_chain_ring_index_select,\
+                d.u.rawr_rx_start_d.chain_txq_ring_index_select[2:0],\
+                p.common_phv_chain_ring_base, r_chain_txq_base  // delay slot
+    phvwrpair   p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_txq_ring_size_shift[4:0],\
+                p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_txq_entry_size_shift[4:0]
     phvwr       p.t1_s2s_chain_lif, d.{u.rawr_rx_start_d.chain_txq_lif}.hx
     phvwr       p.t1_s2s_chain_qtype, d.u.rawr_rx_start_d.chain_txq_qtype
     phvwr       p.t1_s2s_chain_qid, d.{u.rawr_rx_start_d.chain_txq_qid}.wx
-    phvwr       p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_txq_ring_index_select
     b           _r_ring_indices_addr_check
     add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_txq_ring_indices_addr}.dx // delay slot
 
 _chain_rxq_set:
-    phvwr       p.common_phv_chain_ring_base, r_chain_rxq_base
-    phvwr       p.common_phv_chain_to_rxq, TRUE
-    phvwr       p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_rxq_ring_size_shift
-    phvwr       p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_rxq_entry_size_shift
+    phvwrpair   p.common_phv_chain_to_rxq, TRUE,\
+                p.common_phv_chain_ring_base, r_chain_rxq_base
+    phvwrpair   p.common_phv_chain_ring_size_shift, d.u.rawr_rx_start_d.chain_rxq_ring_size_shift[4:0],\
+                p.common_phv_chain_entry_size_shift, d.u.rawr_rx_start_d.chain_rxq_entry_size_shift[4:0]
     phvwr       p.common_phv_chain_ring_index_select, d.u.rawr_rx_start_d.chain_rxq_ring_index_select
     add         r_ring_indices_addr, r0, d.{u.rawr_rx_start_d.chain_rxq_ring_indices_addr}.dx
 
 _r_ring_indices_addr_check:
     beq         r_ring_indices_addr, r0, _qstate_cfg_err_discard
-    phvwr       p.to_s5_chain_ring_indices_addr, r_ring_indices_addr // delay slot
+    phvwr       p.to_s3_chain_ring_indices_addr, r_ring_indices_addr // delay slot
 
     /*
      * Packet_len field contains
      *   sizeof(p4_to_p4plus_cpu_pkt_t) + complete packet length
      * to which we will add an app header of size P4PLUS_RAW_REDIR_HDR_SZ
      */
-    add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...rawr_app_header_packet_len_sbit6_ebit13}
+    add         r_pkt_len, r0, k.{rawr_app_header_packet_len_sbit0_ebit5...\
+                                  rawr_app_header_packet_len_sbit6_ebit13}
     ble.s       r_pkt_len, r0, _packet_len_err_discard
     addi        r_pkt_len, r_pkt_len, P4PLUS_RAW_REDIR_HDR_SZ     // delay slot
     phvwr       p.common_phv_packet_len, r_pkt_len

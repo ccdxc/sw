@@ -7,7 +7,6 @@ struct proxyc_desc_enqueue_desc_enqueue_d   d;
 #define r_pi                        r1
 #define r_ci                        r2
 #define r_qentry_addr               r3
-#define r_qentry_size_shift         r4
 #define r_db_addr_scratch           r5
 #define r_db_data_scratch           r6
 #define r_desc                      r7
@@ -50,11 +49,13 @@ proxyc_s3_desc_enqueue:
     /*
      * Set up DMA to enqueue descriptor to next service chain.
      */
-    add         r_qentry_size_shift, r0, k.common_phv_chain_txq_entry_size_shift
-    sllv        r_qentry_addr, r_qentry_addr, r_qentry_size_shift
-    add         r_qentry_addr, r_qentry_addr, k.{common_phv_chain_txq_base_sbit0_ebit31...\
-                                                 common_phv_chain_txq_base_sbit32_ebit33}
-    phvwr       p.dma_chain_dma_cmd_addr, r_qentry_addr
+    sllv        r_qentry_addr, r_qentry_addr, \
+                k.common_phv_chain_txq_entry_size_shift
+    add         r_qentry_addr, r_qentry_addr, \
+                k.{common_phv_chain_txq_base_sbit0_ebit31...\
+                   common_phv_chain_txq_base_sbit32_ebit33}
+    phvwrpair   p.dma_chain_dma_cmd_addr, r_qentry_addr, \
+                p.dma_chain_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
 
     /*
      * Service chain's queue may be expecting to get a desc that has already
@@ -66,10 +67,10 @@ proxyc_s3_desc_enqueue:
     add.c1      r_desc, k.to_s3_desc, NIC_DESC_ENTRY_0_OFFSET
     add.!c1     r_desc, k.to_s3_desc, r0
     phvwr       p.chain_txq_desc_addr_descr_addr, r_desc
-    phvwri      p.dma_chain_dma_cmd_phv_start_addr, \
+    phvwrpair   p.dma_chain_dma_cmd_phv_end_addr,   \
+                CAPRI_PHV_END_OFFSET(chain_txq_desc_addr_descr_addr), \
+                p.dma_chain_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(chain_txq_desc_addr_descr_addr)
-    phvwri      p.dma_chain_dma_cmd_phv_end_addr,   \
-                CAPRI_PHV_END_OFFSET(chain_txq_desc_addr_descr_addr)
     /*
      * Gather packet chain statistics
      */
@@ -83,7 +84,6 @@ proxyc_s3_desc_enqueue:
     smeqh       c1, r_proxyccb_flags, APP_REDIR_DOL_SKIP_CHAIN_DOORBELL,\
                                       APP_REDIR_DOL_SKIP_CHAIN_DOORBELL
     bcf         [c1], _skip_chain_doorbell
-    phvwri      p.dma_chain_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM  // delay slot
 
     /*
      * Set up DMA to increment PI and ring doorbell
@@ -103,14 +103,15 @@ proxyc_s3_desc_enqueue:
                             r_db_data_scratch)
                         
     phvwr       p.chain_txq_db_data_data, r_db_data_scratch.dx
-    phvwr       p.dma_doorbell_dma_cmd_addr, r_db_addr_scratch
-    phvwri      p.dma_doorbell_dma_cmd_phv_start_addr,  \
+    phvwrpair   p.dma_doorbell_dma_cmd_addr, r_db_addr_scratch, \
+                p.dma_doorbell_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwrpair.e p.dma_doorbell_dma_cmd_phv_end_addr,    \
+                CAPRI_PHV_END_OFFSET(chain_txq_db_data_data), \
+                p.dma_doorbell_dma_cmd_phv_start_addr,  \
                 CAPRI_PHV_START_OFFSET(chain_txq_db_data_data)
+    phvwrpair   p.dma_doorbell_dma_cmd_wr_fence, TRUE, \
+                p.dma_doorbell_dma_cmd_eop, TRUE    // delay slot
                 
-    CAPRI_DMA_CMD_STOP_FENCE(dma_doorbell_dma_cmd)
-    phvwri.e    p.dma_doorbell_dma_cmd_phv_end_addr,    \
-                CAPRI_PHV_END_OFFSET(chain_txq_db_data_data)
-    phvwri      p.dma_doorbell_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM // delay slot
 
 _skip_chain_doorbell:    
     CAPRI_DMA_CMD_STOP_FENCE(dma_chain_dma_cmd)

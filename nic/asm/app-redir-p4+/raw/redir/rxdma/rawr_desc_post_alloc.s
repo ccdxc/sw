@@ -6,26 +6,18 @@ struct rawr_desc_desc_post_alloc_d  d;
 
 %%
 
-    .param      rawr_s3_chain_qidxr_stage_advance
+    .param      rawr_s3_chain_pindex_pre_alloc
     .align
     
 rawr_s2_desc_post_alloc:
 
     CAPRI_CLEAR_TABLE0_VALID
 
-    phvwr       p.to_s6_desc, d.desc
-
     /*
-     * Service chain RxQs that are ARM CPU bound (e.g. ARQs) cannot use
-     * semaphores because the ARM does not have HW support for semaphore
-     * manipulation (for freeing). In such cases, special HBM queue index
-     * regions are provided for direct access under table lock to prevent
-     * race condition.
-     *
-     * Note: table lock is only effective for a given stage so all P4+
-     * programs must coordinate so that they lock a given table in
-     * the same stage. For the ARM ARQ, that is stage 6.
+     * Move to common stage to launch ARQ semaphore read.
+     * In the case of SPAN, post hashing result will handle the stage advance.
      */ 
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, rawr_s3_chain_qidxr_stage_advance)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, rawr_s3_chain_pindex_pre_alloc)
+
+    seq.e       c1, k.common_phv_desc_sem_pindex_full, r0
+    phvwr.c1    p.to_s4_desc, d.desc  // delay slot

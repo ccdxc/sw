@@ -16,22 +16,23 @@ struct proxyr_ppage_free_ppage_free_d   d;
 
 %%
     .param      proxyr_page_free
-    .param      proxyr_page_free_sem_pindex_full
     
     .align
 
-proxyr_s7_ppage_free:
+proxyr_s6_ppage_free:
 
     CAPRI_CLEAR_TABLE1_VALID
 
     /*
-     * ppage free semaphore should never be full
+     * ppage free semaphore should never be full.
+     * but abort if so... proxyr_s6_desc_free will launch stats collect
      */
     sne         c1, d.pindex_full, r0
-    j.c1        proxyr_page_free_sem_pindex_full
+    phvwri.c1.e p.t3_s2s_inc_stat_sem_free_full, 1
+    
     addi        r_page_is_small, r0, FALSE   // delay slot
-    add         r_page_addr, r0, k.{to_s7_ppage_sbit0_ebit5...\
-                                    to_s7_ppage_sbit30_ebit33}
+    add         r_page_addr, r0, k.{to_s6_ppage_sbit0_ebit5...\
+                                    to_s6_ppage_sbit30_ebit33}
     jal         r_return, proxyr_page_free
     add         r_table_idx, r0, d.pindex                   // delay slot
     nop.e

@@ -18,17 +18,14 @@
 #define tx_table_s1_t0          proxyr_my_txq_entry
 #define tx_table_s1_t1          proxyr_flow_key
 #define tx_table_s2_t0          proxyr_desc
-#define tx_table_s3_t0          proxyr_mpage_sem_post
-#define tx_table_s3_t1          proxyr_mpage_sem_skip
-#define tx_table_s4_t0          proxyr_mpage_post
-#define tx_table_s4_t1          proxyr_mpage_skip
-#define tx_table_s5_t0          proxyr_chain_pindex
-#define tx_table_s6_t0          proxyr_cleanup_discard
-#define tx_table_s6_t1          proxyr_chain_xfer
-#define tx_table_s7_t0          proxyr_desc_free
-#define tx_table_s7_t1          proxyr_ppage_free
-#define tx_table_s7_t2          proxyr_mpage_free
-#define tx_table_s7_t3          proxyr_stats            // actually stage agnostic
+#define tx_table_s3_t0          proxyr_mpage_sem
+#define tx_table_s4_t0          proxyr_mpage
+#define tx_table_s5_t0          proxyr_chain_xfer
+#define tx_table_s5_t1          proxyr_cleanup_discard
+#define tx_table_s6_t0          proxyr_desc_free
+#define tx_table_s6_t1          proxyr_ppage_free
+#define tx_table_s6_t2          proxyr_mpage_free
+#define tx_table_s6_t3          proxyr_stats            // actually stage agnostic
 
 /*
  * L7 proxy redirect stage 1
@@ -39,38 +36,33 @@
 /*
  * L7 Proxy Chain stage 2
  */
-#define tx_table_s2_t0_action   desc_post_read
+#define tx_table_s2_t0_action   post_read_desc
 
 /*
  * L7 Proxy Chain stage 3
  */
-#define tx_table_s3_t0_action   mpage_pindex_post_update
-#define tx_table_s3_t1_action   mpage_pindex_skip
+#define tx_table_s3_t0_action   pindex_post_update_mpage
+#define tx_table_s3_t0_action1  pindex_skip_mpage
 
 /*
  * L7 Proxy Chain stage 4
  */
-#define tx_table_s4_t0_action   mpage_post_alloc
-#define tx_table_s4_t1_action   mpage_skip_alloc
+#define tx_table_s4_t0_action   post_alloc_mpage
+#define tx_table_s4_t0_action1  skip_alloc_mpage
 
 /*
  * L7 Proxy Chain stage 5
  */
-#define tx_table_s5_t0_action   chain_pindex_pre_alloc
+#define tx_table_s5_t0_action   chain_xfer
+#define tx_table_s5_t1_action   cleanup_discard
 
 /*
  * L7 Proxy Chain stage 6
  */
-#define tx_table_s6_t0_action   cleanup_discard
-#define tx_table_s6_t1_action   chain_xfer
-
-/*
- * L7 Proxy Chain stage 7
- */
-#define tx_table_s7_t0_action   desc_free
-#define tx_table_s7_t1_action   ppage_free
-#define tx_table_s7_t2_action   mpage_free
-#define tx_table_s7_t3_action   err_stat_inc    // actually stage agnostic
+#define tx_table_s6_t0_action   desc_free
+#define tx_table_s6_t1_action   ppage_free
+#define tx_table_s6_t2_action   mpage_free
+#define tx_table_s6_t3_action   err_stat_inc    // actually stage agnostic
 
 
 #include "../common-p4+/common_txdma.p4"
@@ -286,14 +278,14 @@ header_type to_stage_1_phv_t {
     modify_field(to_s1_scratch.my_txq_qid, to_s1.my_txq_qid);
 
 
-header_type to_stage_5_phv_t {
+header_type to_stage_4_phv_t {
     fields {
         // (max 128 bits)
         chain_ring_indices_addr         : 34;
     }
 }
 
-header_type to_stage_6_phv_t {
+header_type to_stage_5_phv_t {
     fields {
         // (max 128 bits)
         desc                            : 34;
@@ -302,13 +294,13 @@ header_type to_stage_6_phv_t {
     }
 }
 
-#define GENERATE_TO_S6_K \
-    modify_field(to_s6_scratch.desc,  to_s6.desc); \
-    modify_field(to_s6_scratch.ppage, to_s6.ppage); \
-    modify_field(to_s6_scratch.mpage, to_s6.mpage);
+#define GENERATE_TO_S5_K \
+    modify_field(to_s5_scratch.desc,  to_s5.desc); \
+    modify_field(to_s5_scratch.ppage, to_s5.ppage); \
+    modify_field(to_s5_scratch.mpage, to_s5.mpage);
 
 
-header_type to_stage_7_phv_t {
+header_type to_stage_6_phv_t {
     fields {
         // (max 128 bits)
         desc                            : 34;
@@ -410,6 +402,11 @@ metadata to_stage_1_phv_t               to_s1;
 @pragma scratch_metadata
 metadata to_stage_1_phv_t               to_s1_scratch;
 
+@pragma pa_header_union ingress         to_stage_4
+metadata to_stage_4_phv_t               to_s4;
+@pragma scratch_metadata
+metadata to_stage_4_phv_t               to_s4_scratch;
+
 @pragma pa_header_union ingress         to_stage_5
 metadata to_stage_5_phv_t               to_s5;
 @pragma scratch_metadata
@@ -419,11 +416,6 @@ metadata to_stage_5_phv_t               to_s5_scratch;
 metadata to_stage_6_phv_t               to_s6;
 @pragma scratch_metadata
 metadata to_stage_6_phv_t               to_s6_scratch;
-
-@pragma pa_header_union ingress         to_stage_7
-metadata to_stage_7_phv_t               to_s7;
-@pragma scratch_metadata
-metadata to_stage_7_phv_t               to_s7_scratch;
 
 @pragma dont_trim
 @pragma pa_header_union ingress         common_t3_s2s
@@ -578,7 +570,7 @@ action flow_key_post_read(ip_sa, ip_da, sport, dport,
 /*
  * Stage 2 table 0 action
  */
-action desc_post_read(A0, O0, L0,
+action post_read_desc(A0, O0, L0,
                       A1, O1, L1,
                       A2, O2, L2,
                       next_addr, next_pkt) {
@@ -609,37 +601,38 @@ action desc_post_read(A0, O0, L0,
 /*
  * Stage 3 table 0 action
  */
-action mpage_pindex_post_update(pindex, pindex_full) {
+action pindex_post_update_mpage(pindex, pindex_full) {
     modify_field(sem_mpage_d.pindex, pindex);
     modify_field(sem_mpage_d.pindex_full, pindex_full);
 }
 
 
 /*
- * Stage 3 table 1 action
+ * Stage 3 table 0 action1
  */
-action mpage_pindex_skip() {
-    // k + i for stage 3 table 1
+action pindex_skip_mpage() {
+    // k + i for stage 3 table 0
 
     // from to_stage 3
     
     // from ki global
     //GENERATE_GLOBAL_K
 
-    // d for stage 3 table 1
+    // d for stage 3 table 0
 }
 
 
 /*
  * Stage 4 table 0 action
  */
-action mpage_post_alloc(page, pad) {
+action post_alloc_mpage(page, pad) {
     // k + i for stage 4 table 0
 
     // from to_stage 4
+    modify_field(to_s4_scratch.chain_ring_indices_addr, to_s4.chain_ring_indices_addr);
     
     // from ki global
-    //GENERATE_GLOBAL_K
+    GENERATE_GLOBAL_K
 
     // d for stage 4 table 0
     modify_field(alloc_mpage_d.page, page);
@@ -648,135 +641,116 @@ action mpage_post_alloc(page, pad) {
 
 
 /*
- * Stage 4 table 1 action
+ * Stage 4 table 0 action1
  */
-action mpage_skip_alloc() {
+action skip_alloc_mpage() {
 
-    // k + i for stage 4 table 1
+    // k + i for stage 4 table 0
 
     // from to_stage 4
     
     // from ki global
     //GENERATE_GLOBAL_K
 
-    // d for stage 4 table 1
+    // d for stage 4 table 0
 }
 
 
 /*
  * Stage 5 table 0 action
  */
-action chain_pindex_pre_alloc() {
+action chain_xfer(ARQ_PI_PARAMS) {
 
     // k + i for stage 5 table 0
 
     // from to_stage 5
-    modify_field(to_s5_scratch.chain_ring_indices_addr, to_s5.chain_ring_indices_addr);
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
+    GENERATE_TO_S5_K
 
     // d for stage 5 table 0
+    GENERATE_ARQ_PI_D(qidxr_chain_d)
+}
+
+
+/*
+ * Stage 5 table 1 action
+ */
+action cleanup_discard() {
+
+    // k + i for stage 5
+
+    // from to_stage 5
+    GENERATE_TO_S5_K
+
+    // from ki global
+    GENERATE_GLOBAL_K
+    
+    // d for stage 5 table 1
 }
 
 
 /*
  * Stage 6 table 0 action
  */
-action cleanup_discard() {
-
-    // k + i for stage 6
-
-    // from to_stage 6
-    GENERATE_TO_S6_K
-
-    // from ki global
-    GENERATE_GLOBAL_K
-    
-    // d for stage 6 table 0
-}
-
-
-/*
- * Stage 6 table 1 action
- */
-action chain_xfer(ARQ_PI_PARAMS) {
-
-    // k + i for stage 6 table 1
-
-    // from to_stage 6
-
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // from stage to stage
-    GENERATE_TO_S6_K
-
-    // d for stage 6 table 2
-    GENERATE_ARQ_PI_D(qidxr_chain_d)
-}
-
-
-/*
- * Stage 7 table 0 action
- */
 action desc_free(pindex, pindex_full) {
 
-    // k + i for stage 7 table 0
+    // k + i for stage 6 table 0
     
-    // from to_stage 7
-    modify_field(to_s7_scratch.desc, to_s7.desc);
+    // from to_stage 6
+    modify_field(to_s6_scratch.desc, to_s6.desc);
 
     // from ki global
-    //GENERATE_GLOBAL_K
+    GENERATE_GLOBAL_K
 
     // from stage to stage
 
-    // d for stage 7 table 0
+    // d for stage 6 table 0
     modify_field(sem_desc_d.pindex, pindex);
     modify_field(sem_desc_d.pindex_full, pindex_full);
 }
 
 
 /*
- * Stage 7 table 1 action
+ * Stage 6 table 1 action
  */
 action ppage_free(pindex, pindex_full) {
 
-    // k + i for stage 7 table 2
+    // k + i for stage 6 table 1
     
-    // from to_stage 7
-    modify_field(to_s7_scratch.ppage, to_s7.ppage);
+    // from to_stage 6
+    modify_field(to_s6_scratch.ppage, to_s6.ppage);
 
     // from ki global
     //GENERATE_GLOBAL_K
 
     // from stage to stage
 
-    // d for stage 7 table 1
+    // d for stage 6 table 1
     modify_field(sem_ppage_d.pindex, pindex);
     modify_field(sem_ppage_d.pindex_full, pindex_full);
 }
 
 
 /*
- * Stage 7 table 2 action
+ * Stage 6 table 2 action
  */
 action mpage_free(pindex, pindex_full) {
 
-    // k + i for stage 7 table 2
+    // k + i for stage 6 table 2
     
-    // from to_stage 7
-    modify_field(to_s7_scratch.mpage, to_s7.mpage);
+    // from to_stage 6
+    modify_field(to_s6_scratch.mpage, to_s6.mpage);
 
     // from ki global
     //GENERATE_GLOBAL_K
 
     // from stage to stage
 
-    // d for stage 7 table 2
+    // d for stage 6 table 2
     modify_field(sem_mpage_d.pindex, pindex);
     modify_field(sem_mpage_d.pindex_full, pindex_full);
 }

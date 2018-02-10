@@ -114,11 +114,10 @@ _aol_cpu_flags_read:
      */
     beq         r_cpu_header_addr, r0, _aol_cpu_flags_missing
     nop     
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
-                          proxyc_s3_cpu_flags_post_read,
-                          r_cpu_header_addr,
-                          TABLE_SIZE_32_BITS)
-    nop.e
+    CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
+                            proxyc_s3_cpu_flags_post_read,
+                            r_cpu_header_addr,
+                            TABLE_SIZE_32_BITS)
     nop
 
 

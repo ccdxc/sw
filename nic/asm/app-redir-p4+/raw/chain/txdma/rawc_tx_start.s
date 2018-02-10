@@ -38,27 +38,28 @@ rawc_s0_tx_start:
      */
      
     CAPRI_CLEAR_TABLE0_VALID
-    phvwr       p.common_phv_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
     seq         c1, r7[APP_REDIR_RAWC_RINGS_MAX-1:0], r0
     bcf         [c1], _my_txq_ring_empty
     
     /*
      * qid is our flow ID context
      */
-    phvwr       p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF     // delay slot
-    phvwr       p.to_s1_my_txq_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE
-    phvwr       p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
-
-    phvwr       p.common_phv_chain_txq_base, d.{chain_txq_base}.dx
-    phvwr       p.common_phv_chain_txq_ring_size_shift, d.chain_txq_ring_size_shift
-    phvwr       p.common_phv_chain_txq_entry_size_shift, d.chain_txq_entry_size_shift
-    phvwr       p.t0_s2s_chain_txq_lif, d.{chain_txq_lif}.hx
-    phvwr       p.t0_s2s_chain_txq_qtype, d.chain_txq_qtype
-    phvwr       p.t0_s2s_chain_txq_qid, d.{chain_txq_qid}.wx
-    phvwr       p.t0_s2s_chain_txq_ring, d.chain_txq_ring
-    
+    phvwrpair   p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF, \
+                p.to_s1_my_txq_qtype, CAPRI_TXDMA_INTRINSIC_QTYPE   // delay slot
+    phvwrpair   p.to_s1_my_txq_ring_size_shift, d.my_txq_ring_size_shift, \
+                p.to_s1_my_txq_qid, CAPRI_TXDMA_INTRINSIC_QID
     phvwr       p.to_s1_chain_txq_ring_indices_addr, d.{chain_txq_ring_indices_addr}.dx
-    phvwr       p.to_s1_my_txq_ring_size_shift, d.my_txq_ring_size_shift
+                
+    phvwr       p.common_phv_chain_txq_base, d.{chain_txq_base}.dx
+    phvwr       p.common_phv_qstate_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
+    
+    phvwrpair   p.common_phv_chain_txq_ring_size_shift, d.chain_txq_ring_size_shift, \
+                p.common_phv_chain_txq_entry_size_shift, d.chain_txq_entry_size_shift
+    phvwr       p.t0_s2s_chain_txq_lif, d.{chain_txq_lif}.hx
+    phvwr       p.t0_s2s_chain_txq_qid, d.{chain_txq_qid}.wx
+    phvwrpair   p.t0_s2s_chain_txq_qtype, d.chain_txq_qtype[2:0], \
+                p.t0_s2s_chain_txq_ring, d.chain_txq_ring[2:0]
+    
 
     /*
      * Two sentinels surround the programming of CB byte sequence:

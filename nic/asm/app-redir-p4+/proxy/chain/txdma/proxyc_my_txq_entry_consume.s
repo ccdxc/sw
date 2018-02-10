@@ -21,7 +21,7 @@ struct proxyc_my_txq_entry_consume_d    d;
  */
 proxyc_s1_my_txq_entry_consume:
 
-    CAPRI_CLEAR_TABLE0_VALID
+    //CAPRI_CLEAR_TABLE0_VALID
     
     /*
      * Advance past the descriptor scratch area and launch descriptor AOLs read.
@@ -31,9 +31,9 @@ proxyc_s1_my_txq_entry_consume:
     phvwr       p.to_s3_desc, r_desc
     phvwr       p.t0_s2s_desc, r_desc
     add         r_desc, r_desc, NIC_DESC_ENTRY_0_OFFSET
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN,
-                          proxyc_s2_desc_meta_strip,
-                          r_desc,
-                          TABLE_SIZE_512_BITS)
-    nop.e
-    nop                          
+    CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_EN,
+                            proxyc_s2_desc_meta_strip,
+                            r_desc,
+                            TABLE_SIZE_512_BITS)
+    nop
+

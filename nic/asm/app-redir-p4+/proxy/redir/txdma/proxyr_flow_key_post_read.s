@@ -7,11 +7,8 @@ struct proxyr_flow_key_flow_key_post_read_d d;
 /*
  * Registers usage
  */
-#define r_qstate_addr               r3
 
 %%
-    .param      proxyr_err_stats_inc
-    
     .align
 
 /*
@@ -38,24 +35,15 @@ proxyr_s1_flow_key_post_read:
      */
     phvwr       p.p4plus_cpu_pkt_lkp_vrf, d.{vrf}.hx
     phvwr       p.pen_proxyr_hdr_v1_vrf, d.vrf
-    phvwr       p.{pen_proxyr_hdr_v1_ip_sa, pen_proxyr_hdr_v1_ip_da}, \
+    phvwr.e     p.{pen_proxyr_hdr_v1_ip_sa, pen_proxyr_hdr_v1_ip_da}, \
                 d.{ip_sa, ip_da}
-    phvwr       p.{pen_proxyr_hdr_v1_sport, pen_proxyr_hdr_v1_dport}, \
-                d.{sport, dport}
-    phvwr       p.pen_proxyr_hdr_v1_af, d.af
-    phvwr.e     p.pen_proxyr_hdr_v1_ip_proto, d.ip_proto
-    nop
+    phvwrpair   p.{pen_proxyr_hdr_v1_sport, pen_proxyr_hdr_v1_dport}, d.{sport, dport}, \
+                p.{pen_proxyr_hdr_v1_af, pen_proxyr_hdr_v1_ip_proto}, d.{af, ip_proto}
 
-    .align
-    
 /*
  * CB has been de-activated or never made ready
  */
 _proxyrcb_not_ready:
  
-    PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
-                                    common_phv_qstate_addr_sbit30_ebit33},
-                                 p.t3_s2s_inc_stat_cb_not_ready)
-    phvwri.e    p.common_phv_do_cleanup_discard, TRUE
-    nop
+    phvwri.e    p.t3_s2s_inc_stat_cb_not_ready, 1
+    phvwri      p.common_phv_do_cleanup_discard, TRUE   // delay slot

@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/capri_common.h"
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -23,7 +24,6 @@
     (CAPRI_QSTATE_HEADER_COMMON_SIZE +      \
      (HAL_NUM_RAWRCB_RINGS_MAX * CAPRI_QSTATE_HEADER_RING_SINGLE_SIZE))
      
-
 namespace hal {
 namespace pd {
 
@@ -166,7 +166,7 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
 
             data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
             data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
-                                   get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+                   CAPRI_SEM_ARQ_RX_IDX_INC_ADDR(rawrcb->chain_rxq_ring_index_select);
             data.u.rawr_rx_start_d.chain_rxq_ring_size_shift  = ring_size_shift;
             data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = entry_size_shift;
 

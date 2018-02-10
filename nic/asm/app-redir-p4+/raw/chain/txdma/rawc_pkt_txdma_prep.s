@@ -107,11 +107,10 @@ rawc_s2_pkt_txdma_prep:
      */
     beq         r_cpu_header_addr, r0, _aol_cpu_flags_missing
     nop     
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
-                          rawc_s3_pkt_txdma_post,
-                          r_cpu_header_addr,
-                          TABLE_SIZE_32_BITS)
-    nop.e
+    CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
+                            rawc_s3_pkt_txdma_post,
+                            r_cpu_header_addr,
+                            TABLE_SIZE_32_BITS)
     nop
 
 

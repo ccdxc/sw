@@ -23,10 +23,7 @@ struct rawr_desc_sem_desc_pindex_post_update_d  d;
  */
 rawr_s1_desc_sem_pindex_post_update:
 
-    CAPRI_CLEAR_TABLE0_VALID
-        
-    phvwr       p.common_phv_desc_sem_pindex_full, d.pindex_full
-    phvwr       p.t3_s2s_inc_stat_desc_sem_alloc_full, d.pindex_full
+    //CAPRI_CLEAR_TABLE0_VALID
     
     /*
      * If semaphore full, handle it in a later stage but
@@ -36,6 +33,7 @@ rawr_s1_desc_sem_pindex_post_update:
     mincr       r_pi, CAPRI_RNMDR_RING_SHIFT, r0
     sne         c1, d.pindex_full, r0
     add.c1      r_pi, r0, r0
+    phvwri.c1   p.common_phv_do_cleanup_discard, TRUE
 
     APP_REDIR_IMM64_LOAD(r_table_base, RNMDR_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ_INDEX(0, r_pi,
@@ -44,6 +42,6 @@ rawr_s1_desc_sem_pindex_post_update:
                                 r_table_base, 
                                 RNMDR_TABLE_ENTRY_SIZE_SHFT,
                                 TABLE_SIZE_64_BITS)
-    nop.e
-    nop
+    phvwr.e     p.common_phv_desc_sem_pindex_full, d.pindex_full
+    phvwr       p.t3_s2s_inc_stat_desc_sem_alloc_full, d.pindex_full // delay slot
 

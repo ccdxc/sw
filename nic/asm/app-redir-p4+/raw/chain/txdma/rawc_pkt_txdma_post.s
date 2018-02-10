@@ -70,26 +70,28 @@ _cleanup_discard_check:
     phvwr       p.p4_intr_global_lif, d.{src_lif}.hx    // delay slot
     phvwri      p.p4_txdma_intr_dma_cmd_ptr, \
                 CAPRI_PHV_START_OFFSET(dma_intr_global_dma_cmd_type) / 16
-    phvwri      p.p4_intr_global_tm_iport, TM_PORT_DMA
-    phvwri      p.p4_intr_global_tm_oport, TM_PORT_INGRESS
+    phvwrpair   p.p4_intr_global_tm_iport, TM_PORT_DMA,\
+                p.p4_intr_global_tm_oport, TM_PORT_INGRESS
     
     /*
      * Set up DMA of cap_phv_intr_global_t header to packet domain
      */
-    phvwri      p.dma_intr_global_dma_cmd_phv_start_addr, \
+    phvwrpair   p.dma_intr_global_dma_cmd_phv_end_addr, \
+                CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type), \
+                p.dma_intr_global_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
-    phvwri      p.dma_intr_global_dma_cmd_phv_end_addr, \
-                CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
     phvwri      p.dma_intr_global_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     
     /*
      * Set up DMA of cap_phv_intr_txdma_t header to packet domain
      */
-    phvwri      p.dma_intr_txdma_dma_cmd_phv_start_addr, \
+    phvwri      p.dma_intr_txdma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    phvwrpair.e p.dma_intr_txdma_dma_cmd_phv_end_addr, \
+                CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv), \
+                p.dma_intr_txdma_dma_cmd_phv_start_addr, \
                 CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
-    phvwri.e    p.dma_intr_txdma_dma_cmd_phv_end_addr, \
-                CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv)
-    phvwri      p.dma_intr_txdma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT // delay slot
+    phvwrpair   p.dma_doorbell_dma_cmd_wr_fence, TRUE, \
+                p.dma_doorbell_dma_cmd_eop, TRUE    // delay slot
 
 
 /*

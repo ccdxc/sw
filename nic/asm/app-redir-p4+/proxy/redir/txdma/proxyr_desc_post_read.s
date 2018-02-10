@@ -2,7 +2,7 @@
 
 struct phv_                             p;
 struct proxyr_desc_k                    k;
-struct proxyr_desc_desc_post_read_d     d;
+struct proxyr_desc_post_read_desc_d     d;
 
 /*
  * Registers usage
@@ -27,8 +27,8 @@ struct proxyr_desc_desc_post_read_d     d;
  */
 proxyr_s2_desc_post_read:
 
-    CAPRI_CLEAR_TABLE0_VALID
-    
+    //CAPRI_CLEAR_TABLE0_VALID
+
     /*
      * Make some assumptions to simplify implementation:
      *  - desc scratch: TCP flag
@@ -36,7 +36,7 @@ proxyr_s2_desc_post_read:
      *  - AOL1: NULL
      *  - AOL2: NULL
      */
-    phvwr       p.to_s6_ppage, d.{A0}.dx
+    phvwr       p.to_s5_ppage, d.{A0}.dx
     add         r_len, d.L1, d.L2
     bne         r_len, r0, _aol_error
 
@@ -47,33 +47,27 @@ proxyr_s2_desc_post_read:
     bcf         [c1], _mpage_sem_pindex_skip
     
     /*
-     * Shift A0 down so that A0 can be replaced with
-     * meta page later
-     */
-    phvwr       p.{aol_A1, aol_O1, aol_L1}, d.{A0, O0, L0}  // delay slot
-    
-    /*
      * Fetch/update memory page pindex for storing meta headers
      */
-    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_ALLOC_INF_ADDR
+    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_ALLOC_INF_ADDR // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           proxyr_s3_mpage_sem_pindex_post_update,
                           r_alloc_inf_addr,
                           TABLE_SIZE_64_BITS)
-    nop.e
+    /*
+     * Shift A0 down so that A0 can be replaced with
+     * meta page later
+     */
+    phvwr.e     p.{aol_A1, aol_O1, aol_L1}, d.{A0, O0, L0}
     nop
-
 
 /*
  * Unexpected values in desc
  */
 _aol_error:
 
-    PROXYRCB_ERR_STAT_INC_LAUNCH(3, r_qstate_addr,
-                                 k.{common_phv_qstate_addr_sbit0_ebit5... \
-                                    common_phv_qstate_addr_sbit30_ebit33},
-                                 p.t3_s2s_inc_stat_aol_err)
     APP_REDIR_TXDMA_INVALID_AOL_TRAP()
+    phvwri      p.t3_s2s_inc_stat_aol_err, 1
     phvwri      p.common_phv_do_cleanup_discard, TRUE
 
     /*
@@ -85,7 +79,7 @@ _aol_error:
  */
 _mpage_sem_pindex_skip:
     
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, proxyr_s3_mpage_sem_pindex_skip)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, proxyr_s3_mpage_sem_pindex_skip)
     nop.e    
     nop    
 
