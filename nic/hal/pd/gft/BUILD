@@ -38,6 +38,7 @@ cc_library(
         "@sdk//obj:sdk_tcam",
         "@sdk//obj:sdk_hash",
         "@sdk//obj:sdk_directmap",
+        "//nic/hal/pd/asicpd:asicpd",
     ],
     copts = sdk_copts,
     alwayslink = 1,

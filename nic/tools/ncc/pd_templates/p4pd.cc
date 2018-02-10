@@ -79,10 +79,15 @@ char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NA
 uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 
-extern int capri_table_entry_write(uint32_t tableid,
-                                   uint32_t index,
-                                   uint8_t  *hwentry,
-                                   uint16_t hwentry_bit_len);
+namespace hal {
+namespace pd {
+extern int asicpd_table_entry_write(uint32_t tableid,
+                                    uint32_t index,
+                                    uint8_t  *hwentry,
+                                    uint16_t hwentry_bit_len);
+}
+}
+
 extern int capri_table_entry_read(uint32_t  tableid,
                                   uint32_t  index,
                                   uint8_t   *hwentry,
@@ -1968,7 +1973,7 @@ ${table}_entry_write(uint32_t tableid,
     // Write to SRAM  area that is associated with TCAM. This SRAM area is
     // in the bottom portion of hash-table's sram area.
     // Hence increment index by size of hash table.
-    capri_table_entry_write(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, _sram_entry, entry_size);
+    hal::pd::asicpd_table_entry_write(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, _sram_entry, entry_size);
 
     // Install Key in TCAM
     // Swizzle Key installed in TCAM before writing to TCAM memory
@@ -2013,7 +2018,7 @@ ${table}_entry_write(uint32_t tableid,
                                             packed_actiondata,
                                             actiondatalen);
     p4pd_swizzle_bytes(sram_hwentry, entry_size);
-    capri_table_entry_write(tableid, index, sram_hwentry, entry_size);
+    hal::pd::asicpd_table_entry_write(tableid, index, sram_hwentry, entry_size);
 
     // Install Key in TCAM
     tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
@@ -2060,7 +2065,7 @@ ${table}_entry_write(uint32_t tableid,
     capri_hbm_table_entry_write(tableid, index, hwentry, entry_size);
 //::            else:
     p4pd_swizzle_bytes(hwentry, entry_size);
-    capri_table_entry_write(tableid, index, hwentry, entry_size);
+    hal::pd::asicpd_table_entry_write(tableid, index, hwentry, entry_size);
 //::            #endif
     return (P4PD_SUCCESS);
 }
@@ -2152,7 +2157,7 @@ ${table}_entry_write(uint32_t tableid,
     capri_hbm_table_entry_write(tableid, hashindex, _hwentry, entry_size);
 //::            else:
     p4pd_swizzle_bytes(_hwentry, entry_size);
-    capri_table_entry_write(tableid, hashindex, _hwentry, entry_size);
+    hal::pd::asicpd_table_entry_write(tableid, hashindex, _hwentry, entry_size);
 //::            #endif
     
     return (P4PD_SUCCESS);

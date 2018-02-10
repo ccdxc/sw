@@ -44,6 +44,7 @@ cc_library(
         "//nic/p4/include:p4_common_includes",
         "//nic/hal/pd/libs/wring:wringpd",
         "//nic/hal/pd/libs/cpupkt:cpupkt",
+        "//nic/hal/pd/asicpd:asicpd",
     ],
     alwayslink = 1,
 )

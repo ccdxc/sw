@@ -41,6 +41,24 @@
 #define CAPRI_P4_NUM_STAGES     6
 #define CAPRI_P4PLUS_NUM_STAGES 8
 
+#define CAPRI_OK (0)
+#define CAPRI_FAIL (-1)
+
+typedef struct capri_table_mem_layout_ {
+    uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
+                                /* In units of bytes in case of HBM table */
+    uint16_t    entry_width_bits;
+    uint32_t    start_index;
+    uint32_t    end_index;
+    uint16_t    top_left_x;
+    uint16_t    top_left_y;
+    uint8_t     top_left_block;
+    uint16_t    btm_right_x;
+    uint16_t    btm_right_y;
+    uint8_t     btm_right_block;
+    uint8_t     num_buckets;
+} capri_table_mem_layout_t;
+
 int capri_table_rw_init();
 
 void capri_table_rw_cleanup();
@@ -48,8 +66,10 @@ void capri_table_rw_cleanup();
 int capri_table_entry_write(uint32_t tableid,
                             uint32_t index,
                             uint8_t  *hwentry,
-                            uint16_t hwentry_bit_len);
-
+                            uint16_t hwentry_bit_len,
+                            capri_table_mem_layout_t &tbl_info, int gress,
+                            bool is_oflow_table,
+                            uint32_t ofl_parent_tbl_depth);
 
 int capri_table_entry_read(uint32_t tableid,
                            uint32_t index,

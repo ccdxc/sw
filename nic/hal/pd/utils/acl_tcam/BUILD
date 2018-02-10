@@ -42,7 +42,6 @@ cc_test(
     deps = [
             ":acl_tcam",
             "//nic/hal/pd/iris:pd_iris",
-            "//nic/hal/pd/capri:capri",
             ] + gl_deps_list + test_deps_list,
     linkopts = [
         "-lzmq",
