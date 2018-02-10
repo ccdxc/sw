@@ -199,18 +199,26 @@ message GftExactMatchFlowEntryKeyHandle {
 // NatRuleKeyHandle uniquely identifies a NAT rule and is used
 // to create/update/delete/get NAT rules
 message NatRuleKeyHandle {
-    oneof rule_key_or_handle {
+    oneof key_or_handle {
         uint64     rule_id     = 1;  // rule id idenfied by a number
         fixed64    rule_handle = 2;  // handle for NAT rule returned by HAL
+    }
+}
+
+// NatVpnMappingKeyHandle uniquely identifies a NAT VPN mapping and is used
+// to create/update/delete/get NAT VPN mappings
+message NatVpnMappingKeyHandle {
+    oneof key_or_handle {
+        uint64     mapping_id     = 1;  // mapping id idenfied by a number
+        fixed64    mapping_handle = 2;  // handle for NAT VPN mapping returned by HAL
     }
 }
 
 // IpsecRuleKeyHandle uniquely identifies a IPSec rule and is used
 // to create/update/delete/get IPSec rules
 message IpsecRuleKeyHandle {
-    oneof rule_key_or_handle {
+    oneof key_or_handle {
         uint64     rule_id     = 1;  // rule id idenfied by a number
         fixed64    rule_handle = 2;  // handle for IPSec rule returned by HAL
     }
 }
-

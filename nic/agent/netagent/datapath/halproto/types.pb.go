@@ -314,6 +314,7 @@
 		ConfigureLifBdfRequestMsg
 		ConfigureLifBdfResponseMsg
 		Key
+		IpsecSA
 		IpsecRuleSpec
 		IpsecRuleRequestMsg
 		IpsecRuleStatus
@@ -357,6 +358,7 @@
 		GftHeaderTranspositionProfileKeyHandle
 		GftExactMatchFlowEntryKeyHandle
 		NatRuleKeyHandle
+		NatVpnMappingKeyHandle
 		IpsecRuleKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
@@ -428,6 +430,11 @@
 		NatRuleStats
 		NatRuleGetResponse
 		NatRuleGetResponseMsg
+		NatVpnMappingSpec
+		NatVpnMappingRequestMsg
+		NatVpnMappingStatus
+		NatVpnMappingResponse
+		NatVpnMappingResponseMsg
 		Device
 		NetworkSpec
 		NetworkRequestMsg

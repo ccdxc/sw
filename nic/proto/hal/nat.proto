@@ -13,8 +13,12 @@ option go_package="halproto";
 
 // The NAT service definition
 service Nat {
+  // NAT related APIs
   rpc NatRuleCreate (NatRuleRequestMsg) returns (NatRuleResponseMsg) {}
   rpc NatRuleGet (NatRuleGetRequestMsg) returns (NatRuleGetResponseMsg) {}
+
+  // NAT-VPN mappings related APIs
+  rpc NatVpnMappingCreate (NatVpnMappingRequestMsg) returns (NatVpnMappingResponseMsg) {}
 }
 
 // types of NAT actions supported
@@ -58,7 +62,7 @@ message NatRuleRequestMsg {
   repeated NatRuleSpec    request = 1;    // batched request
 }
 
-// NatRuleStatus reflects the current opertional status of the NAT rule
+// NatRuleStatus reflects the current operational status of the NAT rule
 message NatRuleStatus {
   fixed64    handle  = 1;    // id of the NAT rule returned by HAL
 }
@@ -104,4 +108,34 @@ message NatRuleGetResponse {
 message NatRuleGetResponseMsg {
   types.ApiStatus                api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   repeated NatRuleGetResponse    response   = 2;    // batched get response
+}
+
+// NatVpnMappingSpec is the user intent for the NAT-VPN mapping
+message NatVpnMappingSpec {
+  types.ObjectMeta             meta            = 1;    // common object meta
+  kh.NatVpnMappingKeyHandle    key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];;    // key or handle of this object
+  types.IPAddress              service_ip      = 3;  // public/external IP of the service
+  types.IPAddress              mapped_ip       = 4;  // private/internal IP address of the server
+  kh.VrfKeyHandle              vrf_key_handle  = 5 [(gogoproto.moretags) = "venice:ref"];  // internal VRF
+}
+
+// NatVpnMappingRequestMsg is the batched add or modify of NAT VPN mapping request
+message NatVpnMappingRequestMsg {
+  repeated NatVpnMappingSpec    request = 1;    // batched request
+}
+
+// NatVpnMappingStatus reflects the current operational status of a NAT VPN mapping
+message NatVpnMappingStatus  {
+  fixed64    handle  = 1;    // id of the NAT VPN mapping returned by HAL
+}
+
+// NatVpnMappingResponse is the response to NatVpnMappingSpec
+message NatVpnMappingResponse {
+  types.ApiStatus        api_status = 1 [(gogoproto.jsontag) = "api_status"];  // API status code
+  NatVpnMappingStatus    status     = 2;
+}
+
+// NatVpnMappingResponseMsg is batched response to NatVpnMappingRequestMsg
+message NatVpnMappingResponseMsg {
+  repeated NatVpnMappingResponse    response = 1;    // batched response
 }

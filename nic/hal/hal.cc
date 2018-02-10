@@ -422,8 +422,13 @@ hal_sdk_init (void)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// create CPU interface, this will be used by FTEs to receive packets from
+// dataplane and to inject packets into the dataplane
+//------------------------------------------------------------------------------
 hal_ret_t
-hal_cpu_if_create (uint32_t lif_id) {
+hal_cpu_if_create (uint32_t lif_id)
+{
     InterfaceSpec      spec;
     InterfaceResponse  response;
     hal_ret_t          ret = HAL_RET_OK;

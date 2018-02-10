@@ -241,6 +241,87 @@ func _Key_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
+// IPSec security association object
+type IpsecSA struct {
+	Protocol                IpsecProtocol           `protobuf:"varint,10,opt,name=protocol,proto3,enum=ipsec.IpsecProtocol" json:"protocol,omitempty"`
+	AuthenticationAlgorithm AuthenticationAlgorithm `protobuf:"varint,11,opt,name=authentication_algorithm,json=authenticationAlgorithm,proto3,enum=ipsec.AuthenticationAlgorithm" json:"authentication_algorithm,omitempty"`
+	AuthenticationKey       *Key                    `protobuf:"bytes,12,opt,name=authentication_key,json=authenticationKey" json:"authentication_key,omitempty"`
+	EncryptionAlgorithm     EncryptionAlgorithm     `protobuf:"varint,13,opt,name=encryption_algorithm,json=encryptionAlgorithm,proto3,enum=ipsec.EncryptionAlgorithm" json:"encryption_algorithm,omitempty"`
+	EncryptionKey           *Key                    `protobuf:"bytes,14,opt,name=encryption_key,json=encryptionKey" json:"encryption_key,omitempty"`
+	LocalGatewayIp          *IPAddress              `protobuf:"bytes,15,opt,name=local_gateway_ip,json=localGatewayIp" json:"local_gateway_ip,omitempty"`
+	RemoteGatewayIp         *IPAddress              `protobuf:"bytes,16,opt,name=remote_gateway_ip,json=remoteGatewayIp" json:"remote_gateway_ip,omitempty"`
+	Spi                     uint32                  `protobuf:"varint,17,opt,name=spi,proto3" json:"spi,omitempty"`
+	NatTraversalPort        uint32                  `protobuf:"varint,18,opt,name=nat_traversal_port,json=natTraversalPort,proto3" json:"nat_traversal_port,omitempty"`
+}
+
+func (m *IpsecSA) Reset()                    { *m = IpsecSA{} }
+func (m *IpsecSA) String() string            { return proto.CompactTextString(m) }
+func (*IpsecSA) ProtoMessage()               {}
+func (*IpsecSA) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{1} }
+
+func (m *IpsecSA) GetProtocol() IpsecProtocol {
+	if m != nil {
+		return m.Protocol
+	}
+	return IpsecProtocol_IPSEC_PROTOCOL_NONE
+}
+
+func (m *IpsecSA) GetAuthenticationAlgorithm() AuthenticationAlgorithm {
+	if m != nil {
+		return m.AuthenticationAlgorithm
+	}
+	return AuthenticationAlgorithm_AUTHENTICATION_ALGORITHM_NONE
+}
+
+func (m *IpsecSA) GetAuthenticationKey() *Key {
+	if m != nil {
+		return m.AuthenticationKey
+	}
+	return nil
+}
+
+func (m *IpsecSA) GetEncryptionAlgorithm() EncryptionAlgorithm {
+	if m != nil {
+		return m.EncryptionAlgorithm
+	}
+	return EncryptionAlgorithm_ENCRYPTION_ALGORITHM_NONE
+}
+
+func (m *IpsecSA) GetEncryptionKey() *Key {
+	if m != nil {
+		return m.EncryptionKey
+	}
+	return nil
+}
+
+func (m *IpsecSA) GetLocalGatewayIp() *IPAddress {
+	if m != nil {
+		return m.LocalGatewayIp
+	}
+	return nil
+}
+
+func (m *IpsecSA) GetRemoteGatewayIp() *IPAddress {
+	if m != nil {
+		return m.RemoteGatewayIp
+	}
+	return nil
+}
+
+func (m *IpsecSA) GetSpi() uint32 {
+	if m != nil {
+		return m.Spi
+	}
+	return 0
+}
+
+func (m *IpsecSA) GetNatTraversalPort() uint32 {
+	if m != nil {
+		return m.NatTraversalPort
+	}
+	return 0
+}
+
 // IpsecRuleSpec is the user intent for the IPSec rule
 type IpsecRuleSpec struct {
 	Meta         *ObjectMeta         `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
@@ -253,22 +334,14 @@ type IpsecRuleSpec struct {
 	DstSg        []uint32        `protobuf:"varint,7,rep,packed,name=dst_sg,json=dstSg" json:"dst_sg,omitempty"`
 	DstPortRange []*L4PortRange  `protobuf:"bytes,8,rep,name=dst_port_range,json=dstPortRange" json:"dst_port_range,omitempty"`
 	SrcPortRange []*L4PortRange  `protobuf:"bytes,9,rep,name=src_port_range,json=srcPortRange" json:"src_port_range,omitempty"`
-	// action parameters
-	Protocol                IpsecProtocol           `protobuf:"varint,10,opt,name=protocol,proto3,enum=ipsec.IpsecProtocol" json:"protocol,omitempty"`
-	AuthenticationAlgorithm AuthenticationAlgorithm `protobuf:"varint,11,opt,name=authentication_algorithm,json=authenticationAlgorithm,proto3,enum=ipsec.AuthenticationAlgorithm" json:"authentication_algorithm,omitempty"`
-	AuthenticationKey       *Key                    `protobuf:"bytes,12,opt,name=authentication_key,json=authenticationKey" json:"authentication_key,omitempty"`
-	EncryptionAlgorithm     EncryptionAlgorithm     `protobuf:"varint,13,opt,name=encryption_algorithm,json=encryptionAlgorithm,proto3,enum=ipsec.EncryptionAlgorithm" json:"encryption_algorithm,omitempty"`
-	EncryptionKey           *Key                    `protobuf:"bytes,14,opt,name=encryption_key,json=encryptionKey" json:"encryption_key,omitempty"`
-	LocalGatewayIp          *IPAddress              `protobuf:"bytes,15,opt,name=local_gateway_ip,json=localGatewayIp" json:"local_gateway_ip,omitempty"`
-	RemoteGatewayIp         *IPAddress              `protobuf:"bytes,16,opt,name=remote_gateway_ip,json=remoteGatewayIp" json:"remote_gateway_ip,omitempty"`
-	Spi                     uint32                  `protobuf:"varint,17,opt,name=spi,proto3" json:"spi,omitempty"`
-	NatTraversalPort        uint32                  `protobuf:"varint,18,opt,name=nat_traversal_port,json=natTraversalPort,proto3" json:"nat_traversal_port,omitempty"`
+	// IPSec security associaton parameters
+	SecurityAssociation *IpsecSA `protobuf:"bytes,10,opt,name=security_association,json=securityAssociation" json:"security_association,omitempty"`
 }
 
 func (m *IpsecRuleSpec) Reset()                    { *m = IpsecRuleSpec{} }
 func (m *IpsecRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleSpec) ProtoMessage()               {}
-func (*IpsecRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{1} }
+func (*IpsecRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{2} }
 
 func (m *IpsecRuleSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -333,67 +406,11 @@ func (m *IpsecRuleSpec) GetSrcPortRange() []*L4PortRange {
 	return nil
 }
 
-func (m *IpsecRuleSpec) GetProtocol() IpsecProtocol {
+func (m *IpsecRuleSpec) GetSecurityAssociation() *IpsecSA {
 	if m != nil {
-		return m.Protocol
-	}
-	return IpsecProtocol_IPSEC_PROTOCOL_NONE
-}
-
-func (m *IpsecRuleSpec) GetAuthenticationAlgorithm() AuthenticationAlgorithm {
-	if m != nil {
-		return m.AuthenticationAlgorithm
-	}
-	return AuthenticationAlgorithm_AUTHENTICATION_ALGORITHM_NONE
-}
-
-func (m *IpsecRuleSpec) GetAuthenticationKey() *Key {
-	if m != nil {
-		return m.AuthenticationKey
+		return m.SecurityAssociation
 	}
 	return nil
-}
-
-func (m *IpsecRuleSpec) GetEncryptionAlgorithm() EncryptionAlgorithm {
-	if m != nil {
-		return m.EncryptionAlgorithm
-	}
-	return EncryptionAlgorithm_ENCRYPTION_ALGORITHM_NONE
-}
-
-func (m *IpsecRuleSpec) GetEncryptionKey() *Key {
-	if m != nil {
-		return m.EncryptionKey
-	}
-	return nil
-}
-
-func (m *IpsecRuleSpec) GetLocalGatewayIp() *IPAddress {
-	if m != nil {
-		return m.LocalGatewayIp
-	}
-	return nil
-}
-
-func (m *IpsecRuleSpec) GetRemoteGatewayIp() *IPAddress {
-	if m != nil {
-		return m.RemoteGatewayIp
-	}
-	return nil
-}
-
-func (m *IpsecRuleSpec) GetSpi() uint32 {
-	if m != nil {
-		return m.Spi
-	}
-	return 0
-}
-
-func (m *IpsecRuleSpec) GetNatTraversalPort() uint32 {
-	if m != nil {
-		return m.NatTraversalPort
-	}
-	return 0
 }
 
 // IpsecRuleRequestMsg is the batched add or modify of NAT rule request
@@ -404,7 +421,7 @@ type IpsecRuleRequestMsg struct {
 func (m *IpsecRuleRequestMsg) Reset()                    { *m = IpsecRuleRequestMsg{} }
 func (m *IpsecRuleRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleRequestMsg) ProtoMessage()               {}
-func (*IpsecRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{2} }
+func (*IpsecRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{3} }
 
 func (m *IpsecRuleRequestMsg) GetRequest() []*IpsecRuleSpec {
 	if m != nil {
@@ -413,7 +430,7 @@ func (m *IpsecRuleRequestMsg) GetRequest() []*IpsecRuleSpec {
 	return nil
 }
 
-// IpsecRuleStatus reflects the current opertional status of the IPSec rule
+// IpsecRuleStatus reflects the current operational status of the IPSec rule
 type IpsecRuleStatus struct {
 	Handle uint64 `protobuf:"fixed64,1,opt,name=handle,proto3" json:"handle,omitempty"`
 }
@@ -421,7 +438,7 @@ type IpsecRuleStatus struct {
 func (m *IpsecRuleStatus) Reset()                    { *m = IpsecRuleStatus{} }
 func (m *IpsecRuleStatus) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleStatus) ProtoMessage()               {}
-func (*IpsecRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{3} }
+func (*IpsecRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{4} }
 
 func (m *IpsecRuleStatus) GetHandle() uint64 {
 	if m != nil {
@@ -439,7 +456,7 @@ type IpsecRuleResponse struct {
 func (m *IpsecRuleResponse) Reset()                    { *m = IpsecRuleResponse{} }
 func (m *IpsecRuleResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleResponse) ProtoMessage()               {}
-func (*IpsecRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{4} }
+func (*IpsecRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{5} }
 
 func (m *IpsecRuleResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -463,7 +480,7 @@ type IpsecRuleResponseMsg struct {
 func (m *IpsecRuleResponseMsg) Reset()                    { *m = IpsecRuleResponseMsg{} }
 func (m *IpsecRuleResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleResponseMsg) ProtoMessage()               {}
-func (*IpsecRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{5} }
+func (*IpsecRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorIpsec, []int{6} }
 
 func (m *IpsecRuleResponseMsg) GetResponse() []*IpsecRuleResponse {
 	if m != nil {
@@ -474,6 +491,7 @@ func (m *IpsecRuleResponseMsg) GetResponse() []*IpsecRuleResponse {
 
 func init() {
 	proto.RegisterType((*Key)(nil), "ipsec.Key")
+	proto.RegisterType((*IpsecSA)(nil), "ipsec.IpsecSA")
 	proto.RegisterType((*IpsecRuleSpec)(nil), "ipsec.IpsecRuleSpec")
 	proto.RegisterType((*IpsecRuleRequestMsg)(nil), "ipsec.IpsecRuleRequestMsg")
 	proto.RegisterType((*IpsecRuleStatus)(nil), "ipsec.IpsecRuleStatus")
@@ -598,6 +616,95 @@ func (m *Key_KeyLocation) MarshalTo(dAtA []byte) (int, error) {
 	i = encodeVarintIpsec(dAtA, i, uint64(m.KeyLocation))
 	return i, nil
 }
+func (m *IpsecSA) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *IpsecSA) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Protocol != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.Protocol))
+	}
+	if m.AuthenticationAlgorithm != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.AuthenticationAlgorithm))
+	}
+	if m.AuthenticationKey != nil {
+		dAtA[i] = 0x62
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.AuthenticationKey.Size()))
+		n2, err := m.AuthenticationKey.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	if m.EncryptionAlgorithm != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.EncryptionAlgorithm))
+	}
+	if m.EncryptionKey != nil {
+		dAtA[i] = 0x72
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.EncryptionKey.Size()))
+		n3, err := m.EncryptionKey.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if m.LocalGatewayIp != nil {
+		dAtA[i] = 0x7a
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.LocalGatewayIp.Size()))
+		n4, err := m.LocalGatewayIp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if m.RemoteGatewayIp != nil {
+		dAtA[i] = 0x82
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.RemoteGatewayIp.Size()))
+		n5, err := m.RemoteGatewayIp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	if m.Spi != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.Spi))
+	}
+	if m.NatTraversalPort != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintIpsec(dAtA, i, uint64(m.NatTraversalPort))
+	}
+	return i, nil
+}
+
 func (m *IpsecRuleSpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -617,31 +724,31 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintIpsec(dAtA, i, uint64(m.Meta.Size()))
-		n2, err := m.Meta.MarshalTo(dAtA[i:])
+		n6, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n6
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintIpsec(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n3, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n7, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n7
 	}
 	if m.VrfKeyHandle != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintIpsec(dAtA, i, uint64(m.VrfKeyHandle.Size()))
-		n4, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		n8, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n8
 	}
 	if len(m.SrcAddress) > 0 {
 		for _, msg := range m.SrcAddress {
@@ -656,21 +763,21 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.SrcSg) > 0 {
-		dAtA6 := make([]byte, len(m.SrcSg)*10)
-		var j5 int
+		dAtA10 := make([]byte, len(m.SrcSg)*10)
+		var j9 int
 		for _, num := range m.SrcSg {
 			for num >= 1<<7 {
-				dAtA6[j5] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA10[j9] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j5++
+				j9++
 			}
-			dAtA6[j5] = uint8(num)
-			j5++
+			dAtA10[j9] = uint8(num)
+			j9++
 		}
 		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(j5))
-		i += copy(dAtA[i:], dAtA6[:j5])
+		i = encodeVarintIpsec(dAtA, i, uint64(j9))
+		i += copy(dAtA[i:], dAtA10[:j9])
 	}
 	if len(m.DstAddress) > 0 {
 		for _, msg := range m.DstAddress {
@@ -685,21 +792,21 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.DstSg) > 0 {
-		dAtA8 := make([]byte, len(m.DstSg)*10)
-		var j7 int
+		dAtA12 := make([]byte, len(m.DstSg)*10)
+		var j11 int
 		for _, num := range m.DstSg {
 			for num >= 1<<7 {
-				dAtA8[j7] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA12[j11] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j7++
+				j11++
 			}
-			dAtA8[j7] = uint8(num)
-			j7++
+			dAtA12[j11] = uint8(num)
+			j11++
 		}
 		dAtA[i] = 0x3a
 		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(j7))
-		i += copy(dAtA[i:], dAtA8[:j7])
+		i = encodeVarintIpsec(dAtA, i, uint64(j11))
+		i += copy(dAtA[i:], dAtA12[:j11])
 	}
 	if len(m.DstPortRange) > 0 {
 		for _, msg := range m.DstPortRange {
@@ -725,76 +832,15 @@ func (m *IpsecRuleSpec) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.Protocol != 0 {
-		dAtA[i] = 0x50
+	if m.SecurityAssociation != nil {
+		dAtA[i] = 0x52
 		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.Protocol))
-	}
-	if m.AuthenticationAlgorithm != 0 {
-		dAtA[i] = 0x58
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.AuthenticationAlgorithm))
-	}
-	if m.AuthenticationKey != nil {
-		dAtA[i] = 0x62
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.AuthenticationKey.Size()))
-		n9, err := m.AuthenticationKey.MarshalTo(dAtA[i:])
+		i = encodeVarintIpsec(dAtA, i, uint64(m.SecurityAssociation.Size()))
+		n13, err := m.SecurityAssociation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
-	}
-	if m.EncryptionAlgorithm != 0 {
-		dAtA[i] = 0x68
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.EncryptionAlgorithm))
-	}
-	if m.EncryptionKey != nil {
-		dAtA[i] = 0x72
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.EncryptionKey.Size()))
-		n10, err := m.EncryptionKey.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n10
-	}
-	if m.LocalGatewayIp != nil {
-		dAtA[i] = 0x7a
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.LocalGatewayIp.Size()))
-		n11, err := m.LocalGatewayIp.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n11
-	}
-	if m.RemoteGatewayIp != nil {
-		dAtA[i] = 0x82
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.RemoteGatewayIp.Size()))
-		n12, err := m.RemoteGatewayIp.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n12
-	}
-	if m.Spi != 0 {
-		dAtA[i] = 0x88
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.Spi))
-	}
-	if m.NatTraversalPort != 0 {
-		dAtA[i] = 0x90
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintIpsec(dAtA, i, uint64(m.NatTraversalPort))
+		i += n13
 	}
 	return i, nil
 }
@@ -877,11 +923,11 @@ func (m *IpsecRuleResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintIpsec(dAtA, i, uint64(m.Status.Size()))
-		n13, err := m.Status.MarshalTo(dAtA[i:])
+		n14, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n14
 	}
 	return i, nil
 }
@@ -949,6 +995,43 @@ func (m *Key_KeyLocation) Size() (n int) {
 	n += 1 + sovIpsec(uint64(m.KeyLocation))
 	return n
 }
+func (m *IpsecSA) Size() (n int) {
+	var l int
+	_ = l
+	if m.Protocol != 0 {
+		n += 1 + sovIpsec(uint64(m.Protocol))
+	}
+	if m.AuthenticationAlgorithm != 0 {
+		n += 1 + sovIpsec(uint64(m.AuthenticationAlgorithm))
+	}
+	if m.AuthenticationKey != nil {
+		l = m.AuthenticationKey.Size()
+		n += 1 + l + sovIpsec(uint64(l))
+	}
+	if m.EncryptionAlgorithm != 0 {
+		n += 1 + sovIpsec(uint64(m.EncryptionAlgorithm))
+	}
+	if m.EncryptionKey != nil {
+		l = m.EncryptionKey.Size()
+		n += 1 + l + sovIpsec(uint64(l))
+	}
+	if m.LocalGatewayIp != nil {
+		l = m.LocalGatewayIp.Size()
+		n += 1 + l + sovIpsec(uint64(l))
+	}
+	if m.RemoteGatewayIp != nil {
+		l = m.RemoteGatewayIp.Size()
+		n += 2 + l + sovIpsec(uint64(l))
+	}
+	if m.Spi != 0 {
+		n += 2 + sovIpsec(uint64(m.Spi))
+	}
+	if m.NatTraversalPort != 0 {
+		n += 2 + sovIpsec(uint64(m.NatTraversalPort))
+	}
+	return n
+}
+
 func (m *IpsecRuleSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -1002,36 +1085,9 @@ func (m *IpsecRuleSpec) Size() (n int) {
 			n += 1 + l + sovIpsec(uint64(l))
 		}
 	}
-	if m.Protocol != 0 {
-		n += 1 + sovIpsec(uint64(m.Protocol))
-	}
-	if m.AuthenticationAlgorithm != 0 {
-		n += 1 + sovIpsec(uint64(m.AuthenticationAlgorithm))
-	}
-	if m.AuthenticationKey != nil {
-		l = m.AuthenticationKey.Size()
+	if m.SecurityAssociation != nil {
+		l = m.SecurityAssociation.Size()
 		n += 1 + l + sovIpsec(uint64(l))
-	}
-	if m.EncryptionAlgorithm != 0 {
-		n += 1 + sovIpsec(uint64(m.EncryptionAlgorithm))
-	}
-	if m.EncryptionKey != nil {
-		l = m.EncryptionKey.Size()
-		n += 1 + l + sovIpsec(uint64(l))
-	}
-	if m.LocalGatewayIp != nil {
-		l = m.LocalGatewayIp.Size()
-		n += 1 + l + sovIpsec(uint64(l))
-	}
-	if m.RemoteGatewayIp != nil {
-		l = m.RemoteGatewayIp.Size()
-		n += 2 + l + sovIpsec(uint64(l))
-	}
-	if m.Spi != 0 {
-		n += 2 + sovIpsec(uint64(m.Spi))
-	}
-	if m.NatTraversalPort != 0 {
-		n += 2 + sovIpsec(uint64(m.NatTraversalPort))
 	}
 	return n
 }
@@ -1174,6 +1230,283 @@ func (m *Key) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.KeyInfo = &Key_KeyLocation{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipIpsec(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthIpsec
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *IpsecSA) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowIpsec
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: IpsecSA: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: IpsecSA: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Protocol", wireType)
+			}
+			m.Protocol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Protocol |= (IpsecProtocol(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthenticationAlgorithm", wireType)
+			}
+			m.AuthenticationAlgorithm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AuthenticationAlgorithm |= (AuthenticationAlgorithm(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthenticationKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AuthenticationKey == nil {
+				m.AuthenticationKey = &Key{}
+			}
+			if err := m.AuthenticationKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EncryptionAlgorithm", wireType)
+			}
+			m.EncryptionAlgorithm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EncryptionAlgorithm |= (EncryptionAlgorithm(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EncryptionKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.EncryptionKey == nil {
+				m.EncryptionKey = &Key{}
+			}
+			if err := m.EncryptionKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 15:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LocalGatewayIp", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.LocalGatewayIp == nil {
+				m.LocalGatewayIp = &IPAddress{}
+			}
+			if err := m.LocalGatewayIp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemoteGatewayIp", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthIpsec
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.RemoteGatewayIp == nil {
+				m.RemoteGatewayIp = &IPAddress{}
+			}
+			if err := m.RemoteGatewayIp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spi", wireType)
+			}
+			m.Spi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Spi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NatTraversalPort", wireType)
+			}
+			m.NatTraversalPort = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowIpsec
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NatTraversalPort |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipIpsec(dAtA[iNdEx:])
@@ -1572,46 +1905,8 @@ func (m *IpsecRuleSpec) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 10:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Protocol", wireType)
-			}
-			m.Protocol = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Protocol |= (IpsecProtocol(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 11:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AuthenticationAlgorithm", wireType)
-			}
-			m.AuthenticationAlgorithm = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AuthenticationAlgorithm |= (AuthenticationAlgorithm(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 12:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AuthenticationKey", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SecurityAssociation", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1635,169 +1930,13 @@ func (m *IpsecRuleSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.AuthenticationKey == nil {
-				m.AuthenticationKey = &Key{}
+			if m.SecurityAssociation == nil {
+				m.SecurityAssociation = &IpsecSA{}
 			}
-			if err := m.AuthenticationKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.SecurityAssociation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 13:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EncryptionAlgorithm", wireType)
-			}
-			m.EncryptionAlgorithm = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.EncryptionAlgorithm |= (EncryptionAlgorithm(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 14:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EncryptionKey", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthIpsec
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.EncryptionKey == nil {
-				m.EncryptionKey = &Key{}
-			}
-			if err := m.EncryptionKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 15:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LocalGatewayIp", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthIpsec
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.LocalGatewayIp == nil {
-				m.LocalGatewayIp = &IPAddress{}
-			}
-			if err := m.LocalGatewayIp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 16:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RemoteGatewayIp", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthIpsec
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.RemoteGatewayIp == nil {
-				m.RemoteGatewayIp = &IPAddress{}
-			}
-			if err := m.RemoteGatewayIp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 17:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spi", wireType)
-			}
-			m.Spi = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Spi |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 18:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NatTraversalPort", wireType)
-			}
-			m.NatTraversalPort = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowIpsec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NatTraversalPort |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipIpsec(dAtA[iNdEx:])
@@ -2251,68 +2390,70 @@ var (
 func init() { proto.RegisterFile("ipsec.proto", fileDescriptorIpsec) }
 
 var fileDescriptorIpsec = []byte{
-	// 995 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x55, 0xdf, 0x4e, 0x2a, 0x47,
-	0x18, 0x77, 0x45, 0x11, 0x3f, 0xfe, 0xb8, 0x8c, 0x1e, 0xdd, 0xd2, 0x1e, 0xa4, 0xb4, 0x4d, 0xac,
-	0x69, 0x48, 0x0f, 0xc7, 0x36, 0xc7, 0x93, 0x26, 0xcd, 0xb2, 0xa5, 0x42, 0x05, 0x21, 0x03, 0xa7,
-	0xcd, 0xe9, 0xcd, 0x66, 0x5c, 0x46, 0xe0, 0x80, 0xec, 0x76, 0x66, 0xb4, 0xe1, 0xbe, 0x0f, 0xd1,
-	0x17, 0xe8, 0x65, 0xdf, 0xa3, 0x97, 0x7d, 0x02, 0xd3, 0xd8, 0xbb, 0x5e, 0x9e, 0x27, 0x68, 0x66,
-	0x76, 0x17, 0x10, 0x41, 0x2e, 0x8c, 0x3b, 0xf3, 0xfb, 0xf3, 0x7d, 0xe3, 0xfc, 0xbe, 0x11, 0xe2,
-	0x7d, 0x8f, 0x53, 0xa7, 0xe0, 0x31, 0x57, 0xb8, 0x68, 0x53, 0x2d, 0x32, 0x71, 0x31, 0xf6, 0x28,
-	0xf7, 0xf7, 0x32, 0xb1, 0x41, 0xcf, 0xff, 0xca, 0xff, 0x00, 0x91, 0x73, 0x3a, 0x46, 0x08, 0x22,
-	0x03, 0x3a, 0x36, 0xb4, 0x9c, 0x76, 0x94, 0xa8, 0xac, 0x61, 0xb9, 0x40, 0x9f, 0x40, 0x62, 0x40,
-	0xc7, 0xf6, 0xd0, 0x75, 0x88, 0xe8, 0xbb, 0x23, 0x63, 0x3d, 0xa7, 0x1d, 0x25, 0x2b, 0x6b, 0x38,
-	0x3e, 0xa0, 0xe3, 0x5a, 0xb0, 0x59, 0x02, 0x88, 0x49, 0x52, 0x7f, 0x74, 0xe5, 0xe6, 0xef, 0xb6,
-	0x20, 0x59, 0x95, 0xc5, 0xf0, 0xcd, 0x90, 0xb6, 0x3c, 0xea, 0xa0, 0xcf, 0x60, 0xe3, 0x9a, 0x0a,
-	0xa2, 0x7c, 0xe3, 0xc5, 0x74, 0xc1, 0xef, 0xa1, 0x71, 0xf9, 0x8e, 0x3a, 0xa2, 0x4e, 0x05, 0xc1,
-	0x0a, 0x46, 0x35, 0x48, 0x4a, 0x13, 0x97, 0xd9, 0x3d, 0x32, 0xea, 0x0c, 0xa9, 0x2a, 0x15, 0x2f,
-	0xee, 0x17, 0x06, 0xbd, 0xc2, 0xc4, 0xf0, 0x9c, 0x8e, 0x2b, 0x0a, 0x2d, 0xe9, 0xef, 0xef, 0x0e,
-	0x13, 0xb7, 0x74, 0xd4, 0x77, 0xe8, 0xeb, 0xfc, 0x80, 0x8e, 0xf3, 0xaa, 0xa5, 0x06, 0xf3, 0x61,
-	0xf4, 0x3d, 0xa4, 0x6e, 0xd9, 0x95, 0x2d, 0x1d, 0x03, 0xbb, 0x88, 0xb2, 0xd3, 0xa5, 0xdd, 0x8f,
-	0xec, 0x6a, 0x6a, 0x94, 0x7a, 0x7f, 0x77, 0x08, 0x81, 0x11, 0xa3, 0x57, 0x38, 0x71, 0x3b, 0x83,
-	0xa2, 0x13, 0x88, 0x73, 0xe6, 0xd8, 0xa4, 0xd3, 0x61, 0x94, 0x73, 0x63, 0x23, 0x17, 0x39, 0x8a,
-	0x17, 0x77, 0x83, 0x33, 0x54, 0x9b, 0xa6, 0xbf, 0xdf, 0xb8, 0x7c, 0x87, 0x81, 0x33, 0x27, 0x58,
-	0xa2, 0x67, 0x10, 0x95, 0x2a, 0xde, 0x35, 0x36, 0x73, 0x91, 0xa3, 0x24, 0xde, 0xe4, 0xcc, 0x69,
-	0x75, 0xa5, 0x59, 0x87, 0x8b, 0x89, 0x59, 0xf4, 0x09, 0xb3, 0x0e, 0x17, 0x33, 0x66, 0x52, 0xc5,
-	0xbb, 0xc6, 0x96, 0x6f, 0xd6, 0xe1, 0xa2, 0xd5, 0x45, 0xaf, 0x20, 0x25, 0xb7, 0x3d, 0x97, 0x09,
-	0x9b, 0x91, 0x51, 0x97, 0x1a, 0x31, 0xe5, 0x87, 0x02, 0xbf, 0xda, 0x49, 0xd3, 0x65, 0x02, 0x4b,
-	0x04, 0x27, 0x3a, 0x5c, 0x4c, 0x56, 0x52, 0x29, 0xbb, 0x9b, 0x51, 0x6e, 0x2f, 0x57, 0x72, 0xe6,
-	0x4c, 0x95, 0x5f, 0x42, 0x4c, 0x25, 0xc6, 0x71, 0x87, 0x06, 0xe4, 0xb4, 0xa3, 0x54, 0x71, 0xaf,
-	0xe0, 0xc7, 0x4c, 0xdd, 0x50, 0x33, 0xc0, 0xf0, 0x84, 0x85, 0xde, 0x82, 0x41, 0x6e, 0x44, 0x8f,
-	0x8e, 0x44, 0xdf, 0x0f, 0x8b, 0x4d, 0x86, 0x5d, 0x97, 0xf5, 0x45, 0xef, 0xda, 0x88, 0x2b, 0x87,
-	0x6c, 0xe0, 0x60, 0x3e, 0xa0, 0x99, 0x21, 0x0b, 0x1f, 0x90, 0xc5, 0x00, 0x3a, 0x05, 0x34, 0x67,
-	0x2d, 0xd3, 0x9b, 0x50, 0xd7, 0x0c, 0x81, 0xe9, 0x39, 0x1d, 0xe3, 0xf4, 0x43, 0x96, 0x4c, 0x7a,
-	0x1d, 0xf6, 0xe8, 0xc8, 0x61, 0x63, 0x6f, 0xae, 0xa3, 0xa4, 0xea, 0x28, 0x13, 0x88, 0xcb, 0x13,
-	0xca, 0xb4, 0x9b, 0x5d, 0xfa, 0x78, 0x13, 0xbd, 0x80, 0xd4, 0x8c, 0x9d, 0xec, 0x22, 0xf5, 0xa8,
-	0x8b, 0xe4, 0x94, 0x21, 0x3b, 0x78, 0x0d, 0xba, 0x9c, 0xa9, 0xa1, 0xdd, 0x25, 0x82, 0xfe, 0x4a,
-	0xc6, 0x76, 0xdf, 0x33, 0x76, 0x82, 0x84, 0xce, 0xe5, 0x01, 0xa7, 0x14, 0xf3, 0xcc, 0x27, 0x56,
-	0x3d, 0xf4, 0x0d, 0xa4, 0x19, 0xbd, 0x76, 0x05, 0x9d, 0x15, 0xeb, 0x4b, 0xc4, 0x3b, 0x3e, 0x75,
-	0xaa, 0xd6, 0x21, 0xc2, 0xbd, 0xbe, 0x91, 0x96, 0x83, 0x8c, 0xe5, 0x27, 0xfa, 0x02, 0xd0, 0x88,
-	0x08, 0x5b, 0x30, 0x72, 0x4b, 0x19, 0x27, 0x43, 0x95, 0x0c, 0x03, 0x29, 0x82, 0x3e, 0x22, 0xa2,
-	0x1d, 0x02, 0x32, 0x08, 0xf9, 0x32, 0xec, 0x4e, 0xc6, 0x11, 0xd3, 0x5f, 0x6e, 0x28, 0x17, 0x75,
-	0xde, 0x45, 0x05, 0xd8, 0x62, 0xfe, 0xca, 0xd0, 0x54, 0x9a, 0x1e, 0x24, 0x23, 0x7c, 0x0c, 0x70,
-	0x48, 0xca, 0x7f, 0x0e, 0x3b, 0x53, 0x44, 0x10, 0x71, 0xc3, 0xd1, 0x3e, 0x44, 0x83, 0x59, 0x95,
-	0x4f, 0x45, 0x14, 0x07, 0xab, 0xfc, 0x6f, 0x1a, 0xa4, 0x67, 0x4a, 0x72, 0xcf, 0x1d, 0x71, 0x8a,
-	0xbe, 0x05, 0x20, 0x5e, 0xdf, 0xe6, 0x4a, 0xab, 0x14, 0xa9, 0xc9, 0xf1, 0x4d, 0xaf, 0xef, 0x7b,
-	0x96, 0x52, 0xff, 0xdd, 0x1d, 0xce, 0xf0, 0xf0, 0x36, 0x09, 0x21, 0x54, 0x80, 0x68, 0x20, 0x0e,
-	0x5f, 0x9a, 0xf9, 0x86, 0x7d, 0x49, 0xc0, 0xca, 0xd7, 0x60, 0xef, 0x51, 0x17, 0xf2, 0xe4, 0x27,
-	0x10, 0x63, 0xc1, 0x32, 0x38, 0xba, 0x31, 0xef, 0x14, 0xd2, 0xf1, 0x84, 0x79, 0xfc, 0x53, 0xf0,
-	0x4c, 0x86, 0x33, 0x83, 0x0e, 0x60, 0xb7, 0xda, 0x6c, 0x95, 0x2d, 0xbb, 0x89, 0x1b, 0xed, 0x86,
-	0xd5, 0xa8, 0xd9, 0x17, 0x8d, 0x8b, 0xb2, 0xbe, 0x86, 0x9e, 0x41, 0x7a, 0x0e, 0x30, 0x2b, 0xba,
-	0x86, 0xf6, 0x01, 0xcd, 0x6d, 0x97, 0x5b, 0x4d, 0x7d, 0xfd, 0xf8, 0x8f, 0x08, 0xec, 0x2e, 0x48,
-	0x2e, 0x7a, 0x0e, 0x1f, 0x94, 0x2f, 0x2c, 0xfc, 0xb6, 0xd9, 0xae, 0x36, 0x2e, 0x6c, 0xb3, 0x76,
-	0xd6, 0xc0, 0xd5, 0x76, 0xa5, 0x1e, 0x56, 0xf9, 0x14, 0x72, 0x0b, 0x61, 0xb3, 0xdc, 0xb2, 0xcf,
-	0xac, 0xba, 0xfd, 0xa2, 0xf8, 0x4a, 0xd7, 0x56, 0xb2, 0x8a, 0x5f, 0x7d, 0xad, 0xaf, 0x3f, 0xc9,
-	0xb2, 0x02, 0xaf, 0xc8, 0x6a, 0xd6, 0x69, 0x51, 0xdf, 0x58, 0xc9, 0x92, 0x15, 0x37, 0x9f, 0x66,
-	0x95, 0x2c, 0x55, 0x31, 0xba, 0x9a, 0x75, 0x5a, 0xd4, 0xb7, 0x56, 0xb2, 0x64, 0xc5, 0xd8, 0xd2,
-	0x3f, 0xe7, 0x77, 0xe5, 0xd6, 0x4b, 0x7d, 0x1b, 0xe5, 0xe0, 0xa3, 0x85, 0xb0, 0x55, 0x31, 0xe5,
-	0x8f, 0x0e, 0xc7, 0x7f, 0x6a, 0x70, 0xb0, 0xe4, 0xcd, 0x43, 0x1f, 0xc3, 0x73, 0xf3, 0x4d, 0xbb,
-	0x52, 0xbe, 0x68, 0x57, 0x2d, 0x73, 0xf1, 0x7d, 0x65, 0x60, 0x7f, 0x9e, 0xe2, 0xdf, 0x81, 0xae,
-	0x2d, 0xc1, 0x2c, 0xab, 0xae, 0xaf, 0xcb, 0x98, 0xcd, 0x61, 0x95, 0xba, 0x69, 0xe9, 0x11, 0x94,
-	0x85, 0xcc, 0x22, 0x51, 0xc9, 0xb2, 0x5b, 0x15, 0x53, 0xdf, 0x28, 0xbe, 0x81, 0x4d, 0x15, 0x58,
-	0x54, 0x9b, 0x99, 0x5c, 0x8b, 0x51, 0x22, 0x28, 0xca, 0x3c, 0x0e, 0x7c, 0xf8, 0x30, 0x64, 0x3e,
-	0x5c, 0x36, 0x0c, 0x75, 0xde, 0xcd, 0xaf, 0x95, 0x32, 0x7f, 0xdd, 0x67, 0xb5, 0xbf, 0xef, 0xb3,
-	0xda, 0x3f, 0xf7, 0x59, 0xed, 0xf7, 0x7f, 0xb3, 0x6b, 0x3f, 0xc7, 0x7a, 0x64, 0xa8, 0xfe, 0x7f,
-	0x5c, 0x46, 0xd5, 0xaf, 0x97, 0xff, 0x07, 0x00, 0x00, 0xff, 0xff, 0xe7, 0x10, 0x4d, 0x76, 0xcb,
-	0x08, 0x00, 0x00,
+	// 1038 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x56, 0x4f, 0x73, 0x22, 0x45,
+	0x14, 0xcf, 0x04, 0x42, 0xd8, 0xc7, 0x9f, 0x0c, 0x4d, 0x36, 0x19, 0xd1, 0x25, 0x88, 0x5a, 0x85,
+	0x29, 0x8b, 0x72, 0xd9, 0x68, 0x6d, 0xb6, 0xac, 0xb2, 0x86, 0x11, 0x03, 0x06, 0x02, 0xd5, 0xb0,
+	0x5a, 0xeb, 0x65, 0x6a, 0x32, 0x74, 0x60, 0x16, 0xc2, 0x8c, 0xdd, 0x9d, 0x58, 0xdc, 0xbd, 0x7a,
+	0xf7, 0xe2, 0xd1, 0xa3, 0xdf, 0xc3, 0xa3, 0x9f, 0x20, 0x65, 0xc5, 0x9b, 0xc7, 0xfd, 0x04, 0x56,
+	0xf7, 0xcc, 0x00, 0x21, 0x90, 0x1c, 0x28, 0xa6, 0xfb, 0xf7, 0xe7, 0xbd, 0x79, 0xef, 0x75, 0x03,
+	0x24, 0x1c, 0x8f, 0x11, 0xbb, 0xec, 0x51, 0x97, 0xbb, 0x68, 0x4b, 0x2e, 0x72, 0x09, 0x3e, 0xf5,
+	0x08, 0xf3, 0xf7, 0x72, 0xf1, 0xd1, 0xd0, 0x7f, 0x2a, 0x7e, 0x07, 0x91, 0x53, 0x32, 0x45, 0x08,
+	0x22, 0x23, 0x32, 0xd5, 0x94, 0x82, 0x52, 0x4a, 0xd6, 0x37, 0xb0, 0x58, 0xa0, 0x8f, 0x20, 0x39,
+	0x22, 0x53, 0x73, 0xec, 0xda, 0x16, 0x77, 0xdc, 0x89, 0xb6, 0x59, 0x50, 0x4a, 0xa9, 0xfa, 0x06,
+	0x4e, 0x8c, 0xc8, 0xb4, 0x19, 0x6c, 0x56, 0x01, 0xe2, 0x82, 0xe4, 0x4c, 0x2e, 0xdc, 0xe2, 0xaf,
+	0x51, 0xd8, 0x6e, 0x88, 0x60, 0x5d, 0x1d, 0x7d, 0x0e, 0x71, 0x19, 0xc0, 0x76, 0xc7, 0x1a, 0x14,
+	0x94, 0x52, 0xba, 0xb2, 0x5b, 0xf6, 0xb3, 0x92, 0x8c, 0x4e, 0x80, 0xe1, 0x19, 0x0b, 0xbd, 0x01,
+	0xcd, 0xba, 0xe2, 0x43, 0x32, 0xe1, 0x8e, 0xef, 0x6d, 0x5a, 0xe3, 0x81, 0x4b, 0x1d, 0x3e, 0xbc,
+	0xd4, 0x12, 0xd2, 0x21, 0x1f, 0x38, 0xe8, 0x77, 0x68, 0x7a, 0xc8, 0xc2, 0xfb, 0xd6, 0x6a, 0x00,
+	0x1d, 0x03, 0x5a, 0xb2, 0x16, 0x2f, 0x9b, 0x2c, 0x28, 0xa5, 0x44, 0x05, 0x02, 0xd3, 0x53, 0x32,
+	0xc5, 0x99, 0xbb, 0x2c, 0x51, 0x98, 0x16, 0xec, 0x92, 0x89, 0x4d, 0xa7, 0xde, 0x52, 0x46, 0x29,
+	0x99, 0x51, 0x2e, 0x10, 0xd7, 0x66, 0x94, 0x79, 0x36, 0x59, 0x72, 0x7f, 0x13, 0x3d, 0x87, 0xf4,
+	0x82, 0x9d, 0xc8, 0x22, 0x7d, 0x2f, 0x8b, 0xd4, 0x9c, 0x21, 0x32, 0x78, 0x05, 0xaa, 0x68, 0xc1,
+	0xd8, 0x1c, 0x58, 0x9c, 0xfc, 0x6c, 0x4d, 0x4d, 0xc7, 0xd3, 0x76, 0xa4, 0x48, 0x2d, 0xfb, 0x3d,
+	0x6d, 0x74, 0xf4, 0x7e, 0x9f, 0x12, 0xc6, 0x70, 0x5a, 0x32, 0x4f, 0x7c, 0x62, 0xc3, 0x43, 0x5f,
+	0x41, 0x86, 0x92, 0x4b, 0x97, 0x93, 0x45, 0xb1, 0xba, 0x46, 0xbc, 0xe3, 0x53, 0xe7, 0x6a, 0x15,
+	0x22, 0xcc, 0x73, 0xb4, 0x8c, 0xe8, 0x3b, 0x16, 0x8f, 0xe8, 0x33, 0x40, 0x13, 0x8b, 0x9b, 0x9c,
+	0x5a, 0xd7, 0x84, 0x32, 0x6b, 0x6c, 0x7a, 0x2e, 0xe5, 0x1a, 0x92, 0x04, 0x75, 0x62, 0xf1, 0x5e,
+	0x08, 0x74, 0x5c, 0xca, 0x8b, 0xbf, 0x47, 0x21, 0x25, 0xbb, 0x8d, 0xaf, 0xc6, 0xa4, 0xeb, 0x11,
+	0x1b, 0x7d, 0x02, 0xd1, 0x4b, 0xc2, 0x2d, 0x39, 0x67, 0x89, 0x4a, 0x26, 0x48, 0xa1, 0x7d, 0xfe,
+	0x96, 0xd8, 0xbc, 0x45, 0xb8, 0x85, 0x25, 0x8c, 0x9a, 0x90, 0x12, 0x43, 0xe5, 0x52, 0x73, 0x68,
+	0x4d, 0xfa, 0x63, 0x22, 0x47, 0x2f, 0x51, 0xd9, 0x2b, 0x8f, 0x86, 0xe5, 0x99, 0xe1, 0x29, 0x99,
+	0xd6, 0x25, 0x5a, 0x55, 0xdf, 0xdd, 0x1c, 0x24, 0xaf, 0xc9, 0xc4, 0xb1, 0xc9, 0xab, 0xe2, 0x88,
+	0x4c, 0x8b, 0x72, 0x44, 0xdb, 0xd4, 0x87, 0xd1, 0xb7, 0x90, 0xbe, 0xa6, 0x17, 0xa2, 0xd8, 0xa1,
+	0x5d, 0x24, 0xa8, 0xc0, 0x68, 0x58, 0xfe, 0x9e, 0x5e, 0xcc, 0x8d, 0xd2, 0xef, 0x6e, 0x0e, 0x20,
+	0x30, 0xa2, 0xe4, 0x02, 0x27, 0xaf, 0x17, 0x50, 0x74, 0x04, 0x09, 0x46, 0x6d, 0xd3, 0xf2, 0xcb,
+	0xa5, 0x45, 0x0b, 0x91, 0x52, 0xa2, 0x92, 0x5d, 0x2e, 0x63, 0xfb, 0xfc, 0x2d, 0x06, 0x46, 0xed,
+	0x60, 0x89, 0x9e, 0x42, 0x4c, 0xa8, 0xd8, 0x40, 0xdb, 0x2a, 0x44, 0x4a, 0x29, 0xbc, 0xc5, 0xa8,
+	0xdd, 0x1d, 0x08, 0xb3, 0x3e, 0xe3, 0x33, 0xb3, 0xd8, 0x03, 0x66, 0x7d, 0xc6, 0x17, 0xcc, 0x84,
+	0x8a, 0x0d, 0xb4, 0x6d, 0xdf, 0xac, 0xcf, 0x78, 0x77, 0x80, 0x5e, 0x42, 0x5a, 0x6c, 0x8b, 0x66,
+	0x98, 0xd4, 0x9a, 0x0c, 0x88, 0x16, 0x97, 0x7e, 0x28, 0xf0, 0x6b, 0x1e, 0x89, 0x7e, 0x60, 0x81,
+	0xe0, 0x64, 0x9f, 0xf1, 0xd9, 0x4a, 0x28, 0x45, 0x76, 0x0b, 0xca, 0x27, 0xeb, 0x95, 0x8c, 0xda,
+	0x73, 0xa5, 0x0e, 0xbb, 0x8c, 0xd8, 0x57, 0xd4, 0xe1, 0x53, 0xd3, 0x62, 0xcc, 0xb5, 0x1d, 0xff,
+	0x96, 0x00, 0x59, 0xdb, 0xf4, 0xe2, 0x61, 0xef, 0xea, 0x38, 0x1b, 0x72, 0xf5, 0x39, 0xb5, 0x58,
+	0x83, 0xec, 0xac, 0x9b, 0x98, 0xfc, 0x74, 0x45, 0x18, 0x6f, 0xb1, 0x01, 0x2a, 0xc3, 0x36, 0xf5,
+	0x57, 0x9a, 0x22, 0x93, 0xb9, 0x73, 0x73, 0x84, 0xb3, 0x84, 0x43, 0x52, 0xf1, 0x53, 0xd8, 0x99,
+	0x23, 0xdc, 0xe2, 0x57, 0x0c, 0xed, 0x41, 0x2c, 0x68, 0xb5, 0x98, 0xb4, 0x18, 0x0e, 0x56, 0xc5,
+	0x5f, 0x14, 0xc8, 0x2c, 0x84, 0x64, 0x9e, 0x3b, 0x61, 0x04, 0x7d, 0x0d, 0x60, 0x79, 0x8e, 0xc9,
+	0xa4, 0x56, 0x2a, 0xd2, 0xb3, 0xe3, 0xa1, 0x7b, 0x8e, 0xef, 0x59, 0x4d, 0xff, 0x77, 0x73, 0xb0,
+	0xc0, 0xc3, 0x4f, 0xac, 0x10, 0x42, 0x65, 0x88, 0x05, 0xe2, 0x70, 0x50, 0x97, 0x13, 0xf6, 0x25,
+	0x01, 0xab, 0xd8, 0x84, 0xdd, 0x7b, 0x59, 0x88, 0x37, 0x3f, 0x82, 0x38, 0x0d, 0x96, 0xc1, 0xab,
+	0x6b, 0xcb, 0x4e, 0x21, 0x1d, 0xcf, 0x98, 0x87, 0x3f, 0x04, 0xa7, 0x2c, 0xbc, 0x53, 0xd1, 0x3e,
+	0x64, 0x1b, 0x9d, 0x6e, 0xcd, 0x30, 0x3b, 0xb8, 0xdd, 0x6b, 0x1b, 0xed, 0xa6, 0x79, 0xd6, 0x3e,
+	0xab, 0xa9, 0x1b, 0xe8, 0x29, 0x64, 0x96, 0x00, 0xbd, 0xae, 0x2a, 0x68, 0x0f, 0xd0, 0xd2, 0x76,
+	0xad, 0xdb, 0x51, 0x37, 0x0f, 0xff, 0x88, 0x40, 0x76, 0xc5, 0xcd, 0x86, 0x9e, 0xc1, 0x7b, 0xb5,
+	0x33, 0x03, 0xbf, 0xe9, 0xf4, 0x1a, 0xed, 0x33, 0x53, 0x6f, 0x9e, 0xb4, 0x71, 0xa3, 0x57, 0x6f,
+	0x85, 0x51, 0x3e, 0x86, 0xc2, 0x4a, 0x58, 0xaf, 0x75, 0xcd, 0x13, 0xa3, 0x65, 0x3e, 0xaf, 0xbc,
+	0x54, 0x95, 0x47, 0x59, 0x95, 0x2f, 0xbe, 0x54, 0x37, 0x1f, 0x64, 0x19, 0x81, 0x57, 0xe4, 0x71,
+	0xd6, 0x71, 0x45, 0x8d, 0x3e, 0xca, 0x12, 0x11, 0xb7, 0x1e, 0x66, 0x55, 0x0d, 0x19, 0x31, 0xf6,
+	0x38, 0xeb, 0xb8, 0xa2, 0x6e, 0x3f, 0xca, 0x12, 0x11, 0xe3, 0x6b, 0xcb, 0xf9, 0x4d, 0xad, 0xfb,
+	0x42, 0x7d, 0x82, 0x0a, 0xf0, 0xc1, 0x4a, 0xd8, 0xa8, 0xeb, 0xe2, 0xa3, 0xc2, 0xe1, 0x9f, 0x0a,
+	0xec, 0xaf, 0xf9, 0x4d, 0x44, 0x1f, 0xc2, 0x33, 0xfd, 0x75, 0xaf, 0x5e, 0x3b, 0xeb, 0x35, 0x0c,
+	0x7d, 0x75, 0xbf, 0x72, 0xb0, 0xb7, 0x4c, 0xf1, 0x7b, 0xa0, 0x2a, 0x6b, 0x30, 0xc3, 0x68, 0xa9,
+	0x9b, 0x62, 0xcc, 0x96, 0xb0, 0x7a, 0x4b, 0x37, 0xd4, 0x08, 0xca, 0x43, 0x6e, 0x95, 0xa8, 0x6a,
+	0x98, 0xdd, 0xba, 0xae, 0x46, 0x2b, 0xaf, 0x61, 0x4b, 0x0e, 0x2c, 0x6a, 0x2e, 0x9c, 0x5c, 0x83,
+	0x12, 0x8b, 0x13, 0x94, 0xbb, 0x3f, 0xf0, 0xe1, 0xc5, 0x90, 0x7b, 0x7f, 0xdd, 0x61, 0x68, 0xb1,
+	0x41, 0x71, 0xa3, 0x9a, 0xfb, 0xeb, 0x36, 0xaf, 0xfc, 0x7d, 0x9b, 0x57, 0xfe, 0xb9, 0xcd, 0x2b,
+	0xbf, 0xfd, 0x9b, 0xdf, 0xf8, 0x31, 0x3e, 0xb4, 0xc6, 0xf2, 0xff, 0xc5, 0x79, 0x4c, 0x7e, 0xbd,
+	0xf8, 0x3f, 0x00, 0x00, 0xff, 0xff, 0xc8, 0xec, 0x7e, 0x8e, 0x1a, 0x09, 0x00, 0x00,
 }

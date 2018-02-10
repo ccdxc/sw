@@ -55,6 +55,19 @@ message Key {
   }
 }
 
+// IPSec security association object
+message IpsecSA {
+  IpsecProtocol                  protocol                  = 10;    // ESP or AH
+  AuthenticationAlgorithm        authentication_algorithm  = 11;   // authentication algorithm
+  Key                            authentication_key        = 12;   // authenticaion key
+  EncryptionAlgorithm            encryption_algorithm      = 13;   // encryption algorithm
+  Key                            encryption_key            = 14;   // encryption key
+  types.IPAddress                local_gateway_ip          = 15;   // local VPN GW IP
+  types.IPAddress                remote_gateway_ip         = 16;   // remote VPN GW IP
+  uint32                         spi                       = 17;   // security parameters index
+  uint32                         nat_traversal_port        = 18;   // NAT-T port, if non-zero
+}
+
 // IpsecRuleSpec is the user intent for the IPSec rule
 message IpsecRuleSpec {
   types.ObjectMeta               meta                      = 1;    // common object meta
@@ -69,16 +82,8 @@ message IpsecRuleSpec {
   repeated types.L4PortRange     dst_port_range            = 8;    // dst port range
   repeated types.L4PortRange     src_port_range            = 9;    // src port range
 
-  // action parameters
-  IpsecProtocol                  protocol                  = 10;    // ESP or AH
-  AuthenticationAlgorithm        authentication_algorithm  = 11;   // authentication algorithm
-  Key                            authentication_key        = 12;   // authenticaion key
-  EncryptionAlgorithm            encryption_algorithm      = 13;   // encryption algorithm
-  Key                            encryption_key            = 14;   // encryption key
-  types.IPAddress                local_gateway_ip          = 15;   // local VPN GW IP
-  types.IPAddress                remote_gateway_ip         = 16;   // remote VPN GW IP
-  uint32                         spi                       = 17;   // security parameters index
-  uint32                         nat_traversal_port        = 18;   // NAT-T port, if non-zero
+  // IPSec security associaton parameters
+  IpsecSA                        security_association      = 10;   // security association parameters
 }
 
 // IpsecRuleRequestMsg is the batched add or modify of NAT rule request
@@ -86,7 +91,7 @@ message IpsecRuleRequestMsg {
   repeated IpsecRuleSpec    request = 1;    // batched request
 }
 
-// IpsecRuleStatus reflects the current opertional status of the IPSec rule
+// IpsecRuleStatus reflects the current operational status of the IPSec rule
 message IpsecRuleStatus {
   fixed64    handle = 1;    // id of the IPSec rule returned by HAL
 }
