@@ -10,7 +10,14 @@
 using namespace std;
 
 typedef enum state {front_door_e, back_door_e, air_slave_e } cpu_access_type_e;
-typedef enum cpu_acc_flags {none_acc_e=0, secure_acc_e=1<<0, none_byte_acc_e=2, secure_byte_acc_e=3} cpu_acc_flags_e;
+typedef enum cpu_acc_flags {
+    none_acc_e=0, 
+    secure_acc_e=1<<0, 
+    none_byte_acc_e= 1 << 1, 
+    secure_byte_acc_e= (1 << 1) | 1, 
+    none_byte_2_acc_e = 1 << 2,
+    secure_byte_2_acc_e= (1 <<2)| 1
+} cpu_acc_flags_e;
 
 class cpu_csr_node_info_base {
     public:

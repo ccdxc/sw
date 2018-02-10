@@ -73,6 +73,9 @@ SOURCES = \
     cap_msh_csr.cc \
     cap_mss_csr.cc \
     cap_em_csr.cc \
+    cap_emm_csr.cc \
+    cap_emmc_csr.cc \
+    emmc_SDHOST_Memory_Map.cc \
     LogMsg.cc \
     cpu.cc \
     cpu_hal_if.cc \

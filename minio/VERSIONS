@@ -1,6 +1,6 @@
 # format: <name> <version>
 
-asic_libs 472a9a9
-ncc_tools 472a9a9
+asic_libs 0baad57
+ncc_tools 0baad57
 third_party_libs 1.1.33
-pbc_config 472a9a9
+pbc_config 0baad57
