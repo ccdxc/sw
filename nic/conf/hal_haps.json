@@ -3,7 +3,7 @@
   "asic": {
     "name": "capri",
     "loader_info_file" : "capri_loader.conf",
-    "init_with_pbc_hbm" : true
+    "default_config_dir" : "init_bins/8x25_hbm"
   },
   "sw" : {
     "grpc_port": "50054",

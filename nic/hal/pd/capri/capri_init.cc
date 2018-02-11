@@ -24,7 +24,7 @@
  * Load any bin files needed for initializing default configs
  */
 hal_ret_t
-capri_default_config_init (bool init_with_pbc_hbm)
+capri_default_config_init (const std::string& default_config_dir)
 {
     hal_ret_t   ret = HAL_RET_OK;
     char        *cfg_path;
@@ -40,21 +40,16 @@ capri_default_config_init (bool init_with_pbc_hbm)
     }
 
     for (i = 0; i < num_phases; i++) {
-        hbm_full_path =  std::string(cfg_path) + "/init_bins/" + "hbminit_" + 
-            std::to_string(i) + "_bin";
-        full_path =  std::string(cfg_path) + "/init_bins/" + "init_" + 
-            std::to_string(i) + "_bin";
-        if (init_with_pbc_hbm && (access(hbm_full_path.c_str(), R_OK) ==  0)) {
-            full_path = hbm_full_path;        
-        }
+        full_path =  std::string(cfg_path) + "/" + default_config_dir + "/init_" + 
+                                            std::to_string(i) + "_bin";
+
+        HAL_TRACE_DEBUG("Init phase {} Binaries dir: {}", i, full_path.c_str());
 
         // Check if directory is present
         if (access(full_path.c_str(), R_OK) < 0) {
             HAL_TRACE_DEBUG("Skipping init binaries");
             return HAL_RET_OK;
         }
-
-        HAL_TRACE_DEBUG("Init phase {} Binaries dir: {}", i, full_path.c_str());
 
         ret = capri_load_config((char *)full_path.c_str());
         if (ret != HAL_RET_OK) {
@@ -116,7 +111,7 @@ hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
     capri_cfg_t    capri_cfg;
 
     capri_cfg.loader_info_file = cfg->loader_info_file;
-    capri_cfg.init_with_pbc_hbm = cfg->init_with_pbc_hbm;
+    capri_cfg.default_config_dir = cfg->default_config_dir;
     capri_cfg.admin_cos = cfg->admin_cos;
     capri_cfg.pgm_name = cfg->pgm_name;
     return capri_init(&capri_cfg);
@@ -770,7 +765,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_default_config_init(cfg ? cfg->init_with_pbc_hbm : false);
+        ret = capri_default_config_init(cfg->default_config_dir);
     }
 
     if (ret == HAL_RET_OK) {

@@ -33,7 +33,7 @@ typedef struct hal_cfg_s {
     hal_feature_set_t       features;
     std::string             forwarding_mode;
     bool                    async_en;
-    bool                    init_with_pbc_hbm;
+    std::string             default_config_dir;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------

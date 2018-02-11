@@ -518,7 +518,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
 
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
-    asic_cfg.init_with_pbc_hbm = hal_cfg->init_with_pbc_hbm;
+    asic_cfg.default_config_dir = hal_cfg->default_config_dir;
 
     // TODO: Introduce a PD call to retrieve admin cos from PD
     // asic_cfg.admin_cos = qos_class_get_admin_cos();
