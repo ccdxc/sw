@@ -169,6 +169,7 @@ int pciehw_bar_finalize(pciehdev_t *pdev);
 void pciehw_bar_setaddr(pciehwbar_t *phwbar, const u_int64_t addr);
 void pciehw_bar_load(pciehwbar_t *phwbar);
 void pciehw_bar_enable(pciehwbar_t *phwbar, const int on);
+int pciehw_bar_getsz(pciehwbar_t *phwbar);
 void pciehw_barrd_notify(pciehwdev_t *phwdev,
                          const pcie_stlp_t *stlp,
                          const pciehw_spmt_t *spmt);

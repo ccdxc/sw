@@ -40,6 +40,8 @@ int pciehw_memwr(const u_int64_t addr, const u_int8_t size, u_int64_t val);
 int pciehw_iord(const u_int32_t addr, const u_int8_t size, u_int32_t *valp);
 int pciehw_iowr(const u_int32_t addr, const u_int8_t size, u_int32_t val);
 
+int pciehw_barsz(const u_int16_t bdf, const int i);
+
 int pciehw_poll(void);
 
 #ifdef __cplusplus

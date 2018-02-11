@@ -658,6 +658,20 @@ pciehw_iowr(const u_int32_t addr, const u_int8_t size, u_int32_t val)
     return 0;
 }
 
+int
+pciehw_barsz(const u_int16_t bdf, const int i)
+{
+    pciehwdev_t *phwdev;
+    pciehwbar_t *phwbar;
+
+    phwdev = pciehwdev_by_bdf(bdf);
+    if (phwdev == NULL) {
+        return 0;
+    }
+    phwbar = &phwdev->bar[i];
+    return pciehw_bar_getsz(phwbar);
+}
+
 pciehw_params_t *
 pciehw_get_params(void)
 {

@@ -42,6 +42,7 @@ int pciehsvc_iowr(const u_int32_t addr,
                   const u_int8_t size,
                   u_int32_t val);
 
+int pciehsvc_barsz(const u_int32_t bdf, const int i);
 pciehsvc_params_t *pciehsvc_get_params(void);
 
 #ifdef __cplusplus

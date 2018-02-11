@@ -73,6 +73,15 @@ pciehw_bar_finalize(pciehdev_t *pdev)
     return 0;
 }
 
+int
+pciehw_bar_getsz(pciehwbar_t *phwbar)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    pciehw_spmt_t *spmt = &phwmem->spmt[phwbar->pmti];
+    return phwbar->valid ? spmt->barsize : 0;
+}
+
 void
 pciehw_bar_setaddr(pciehwbar_t *phwbar, const u_int64_t addr)
 {
