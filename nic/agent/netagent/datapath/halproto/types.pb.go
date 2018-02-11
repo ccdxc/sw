@@ -435,6 +435,11 @@
 		NatVpnMappingStatus
 		NatVpnMappingResponse
 		NatVpnMappingResponseMsg
+		NatVpnMappingGetRequest
+		NatVpnMappingGetRequestMsg
+		NatVpnMappingStats
+		NatVpnMappingGetResponse
+		NatVpnMappingGetResponseMsg
 		Device
 		NetworkSpec
 		NetworkRequestMsg

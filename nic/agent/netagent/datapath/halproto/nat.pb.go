@@ -525,6 +525,219 @@ func (m *NatVpnMappingResponseMsg) GetResponse() []*NatVpnMappingResponse {
 	return nil
 }
 
+// NatVpnMappingGetRequest is used to get information about a NAT VPN mapping
+type NatVpnMappingGetRequest struct {
+	Meta        *ObjectMeta             `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	KeyOrHandle *NatVpnMappingKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
+}
+
+func (m *NatVpnMappingGetRequest) Reset()                    { *m = NatVpnMappingGetRequest{} }
+func (m *NatVpnMappingGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*NatVpnMappingGetRequest) ProtoMessage()               {}
+func (*NatVpnMappingGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{16} }
+
+func (m *NatVpnMappingGetRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *NatVpnMappingGetRequest) GetKeyOrHandle() *NatVpnMappingKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// NatVpnMappingGetRequestMsg is batched GET request for NAT VPN mappings
+type NatVpnMappingGetRequestMsg struct {
+	Request []*NatVpnMappingGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NatVpnMappingGetRequestMsg) Reset()                    { *m = NatVpnMappingGetRequestMsg{} }
+func (m *NatVpnMappingGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatVpnMappingGetRequestMsg) ProtoMessage()               {}
+func (*NatVpnMappingGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{17} }
+
+func (m *NatVpnMappingGetRequestMsg) GetRequest() []*NatVpnMappingGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NatVpnMappingStats is the statistics object for each NAT VPN mapping
+type NatVpnMappingStats struct {
+	RxBytes              uint64 `protobuf:"varint,1,opt,name=rx_bytes,json=rxBytes,proto3" json:"rx_bytes,omitempty"`
+	RxPackets            uint64 `protobuf:"varint,2,opt,name=rx_packets,json=rxPackets,proto3" json:"rx_packets,omitempty"`
+	TxBytes              uint64 `protobuf:"varint,3,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
+	TxPackets            uint64 `protobuf:"varint,4,opt,name=tx_packets,json=txPackets,proto3" json:"tx_packets,omitempty"`
+	RxBytesDropped       uint64 `protobuf:"varint,5,opt,name=rx_bytes_dropped,json=rxBytesDropped,proto3" json:"rx_bytes_dropped,omitempty"`
+	RxPacketsDropped     uint64 `protobuf:"varint,6,opt,name=rx_packets_dropped,json=rxPacketsDropped,proto3" json:"rx_packets_dropped,omitempty"`
+	TxBytesDropped       uint64 `protobuf:"varint,7,opt,name=tx_bytes_dropped,json=txBytesDropped,proto3" json:"tx_bytes_dropped,omitempty"`
+	TxPacketsDropped     uint64 `protobuf:"varint,8,opt,name=tx_packets_dropped,json=txPacketsDropped,proto3" json:"tx_packets_dropped,omitempty"`
+	NumTcpSessions       uint32 `protobuf:"varint,9,opt,name=num_tcp_sessions,json=numTcpSessions,proto3" json:"num_tcp_sessions,omitempty"`
+	NumUdpSessions       uint32 `protobuf:"varint,10,opt,name=num_udp_sessions,json=numUdpSessions,proto3" json:"num_udp_sessions,omitempty"`
+	NumOtherSessions     uint32 `protobuf:"varint,11,opt,name=num_other_sessions,json=numOtherSessions,proto3" json:"num_other_sessions,omitempty"`
+	NumActiveConnections uint32 `protobuf:"varint,12,opt,name=num_active_connections,json=numActiveConnections,proto3" json:"num_active_connections,omitempty"`
+}
+
+func (m *NatVpnMappingStats) Reset()                    { *m = NatVpnMappingStats{} }
+func (m *NatVpnMappingStats) String() string            { return proto.CompactTextString(m) }
+func (*NatVpnMappingStats) ProtoMessage()               {}
+func (*NatVpnMappingStats) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{18} }
+
+func (m *NatVpnMappingStats) GetRxBytes() uint64 {
+	if m != nil {
+		return m.RxBytes
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetRxPackets() uint64 {
+	if m != nil {
+		return m.RxPackets
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetTxBytes() uint64 {
+	if m != nil {
+		return m.TxBytes
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetTxPackets() uint64 {
+	if m != nil {
+		return m.TxPackets
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetRxBytesDropped() uint64 {
+	if m != nil {
+		return m.RxBytesDropped
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetRxPacketsDropped() uint64 {
+	if m != nil {
+		return m.RxPacketsDropped
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetTxBytesDropped() uint64 {
+	if m != nil {
+		return m.TxBytesDropped
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetTxPacketsDropped() uint64 {
+	if m != nil {
+		return m.TxPacketsDropped
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetNumTcpSessions() uint32 {
+	if m != nil {
+		return m.NumTcpSessions
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetNumUdpSessions() uint32 {
+	if m != nil {
+		return m.NumUdpSessions
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetNumOtherSessions() uint32 {
+	if m != nil {
+		return m.NumOtherSessions
+	}
+	return 0
+}
+
+func (m *NatVpnMappingStats) GetNumActiveConnections() uint32 {
+	if m != nil {
+		return m.NumActiveConnections
+	}
+	return 0
+}
+
+// NatVpnMappingGetResponse reflects all the information about a NAT VPN mapping
+type NatVpnMappingGetResponse struct {
+	ApiStatus ApiStatus            `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Spec      *NatVpnMappingSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Status    *NatVpnMappingStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	Stats     *NatVpnMappingStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *NatVpnMappingGetResponse) Reset()                    { *m = NatVpnMappingGetResponse{} }
+func (m *NatVpnMappingGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*NatVpnMappingGetResponse) ProtoMessage()               {}
+func (*NatVpnMappingGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{19} }
+
+func (m *NatVpnMappingGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *NatVpnMappingGetResponse) GetSpec() *NatVpnMappingSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *NatVpnMappingGetResponse) GetStatus() *NatVpnMappingStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *NatVpnMappingGetResponse) GetStats() *NatVpnMappingStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// NatVpnMappingGetResponseMsg is batched response to NatVpnMappingGetRequestMsg
+type NatVpnMappingGetResponseMsg struct {
+	ApiStatus ApiStatus                   `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty" venice:api_status`
+	Response  []*NatVpnMappingGetResponse `protobuf:"bytes,2,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NatVpnMappingGetResponseMsg) Reset()                    { *m = NatVpnMappingGetResponseMsg{} }
+func (m *NatVpnMappingGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NatVpnMappingGetResponseMsg) ProtoMessage()               {}
+func (*NatVpnMappingGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNat, []int{20} }
+
+func (m *NatVpnMappingGetResponseMsg) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *NatVpnMappingGetResponseMsg) GetResponse() []*NatVpnMappingGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*NatPool)(nil), "nat.NatPool")
 	proto.RegisterType((*NatRuleSpec)(nil), "nat.NatRuleSpec")
@@ -542,6 +755,11 @@ func init() {
 	proto.RegisterType((*NatVpnMappingStatus)(nil), "nat.NatVpnMappingStatus")
 	proto.RegisterType((*NatVpnMappingResponse)(nil), "nat.NatVpnMappingResponse")
 	proto.RegisterType((*NatVpnMappingResponseMsg)(nil), "nat.NatVpnMappingResponseMsg")
+	proto.RegisterType((*NatVpnMappingGetRequest)(nil), "nat.NatVpnMappingGetRequest")
+	proto.RegisterType((*NatVpnMappingGetRequestMsg)(nil), "nat.NatVpnMappingGetRequestMsg")
+	proto.RegisterType((*NatVpnMappingStats)(nil), "nat.NatVpnMappingStats")
+	proto.RegisterType((*NatVpnMappingGetResponse)(nil), "nat.NatVpnMappingGetResponse")
+	proto.RegisterType((*NatVpnMappingGetResponseMsg)(nil), "nat.NatVpnMappingGetResponseMsg")
 	proto.RegisterEnum("nat.NatAction", NatAction_name, NatAction_value)
 }
 
@@ -561,6 +779,7 @@ type NatClient interface {
 	NatRuleGet(ctx context.Context, in *NatRuleGetRequestMsg, opts ...grpc.CallOption) (*NatRuleGetResponseMsg, error)
 	// NAT-VPN mappings related APIs
 	NatVpnMappingCreate(ctx context.Context, in *NatVpnMappingRequestMsg, opts ...grpc.CallOption) (*NatVpnMappingResponseMsg, error)
+	NatVpnMappingGet(ctx context.Context, in *NatVpnMappingGetRequestMsg, opts ...grpc.CallOption) (*NatVpnMappingGetResponseMsg, error)
 }
 
 type natClient struct {
@@ -598,6 +817,15 @@ func (c *natClient) NatVpnMappingCreate(ctx context.Context, in *NatVpnMappingRe
 	return out, nil
 }
 
+func (c *natClient) NatVpnMappingGet(ctx context.Context, in *NatVpnMappingGetRequestMsg, opts ...grpc.CallOption) (*NatVpnMappingGetResponseMsg, error) {
+	out := new(NatVpnMappingGetResponseMsg)
+	err := grpc.Invoke(ctx, "/nat.Nat/NatVpnMappingGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Nat service
 
 type NatServer interface {
@@ -606,6 +834,7 @@ type NatServer interface {
 	NatRuleGet(context.Context, *NatRuleGetRequestMsg) (*NatRuleGetResponseMsg, error)
 	// NAT-VPN mappings related APIs
 	NatVpnMappingCreate(context.Context, *NatVpnMappingRequestMsg) (*NatVpnMappingResponseMsg, error)
+	NatVpnMappingGet(context.Context, *NatVpnMappingGetRequestMsg) (*NatVpnMappingGetResponseMsg, error)
 }
 
 func RegisterNatServer(s *grpc.Server, srv NatServer) {
@@ -666,6 +895,24 @@ func _Nat_NatVpnMappingCreate_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Nat_NatVpnMappingGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NatVpnMappingGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NatServer).NatVpnMappingGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nat.Nat/NatVpnMappingGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NatServer).NatVpnMappingGet(ctx, req.(*NatVpnMappingGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Nat_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "nat.Nat",
 	HandlerType: (*NatServer)(nil),
@@ -681,6 +928,10 @@ var _Nat_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NatVpnMappingCreate",
 			Handler:    _Nat_NatVpnMappingCreate_Handler,
+		},
+		{
+			MethodName: "NatVpnMappingGet",
+			Handler:    _Nat_NatVpnMappingGet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1368,6 +1619,240 @@ func (m *NatVpnMappingResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *NatVpnMappingGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatVpnMappingGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Meta.Size()))
+		n22, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n23, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	return i, nil
+}
+
+func (m *NatVpnMappingGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatVpnMappingGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NatVpnMappingStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatVpnMappingStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.RxBytes != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.RxBytes))
+	}
+	if m.RxPackets != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.RxPackets))
+	}
+	if m.TxBytes != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.TxBytes))
+	}
+	if m.TxPackets != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.TxPackets))
+	}
+	if m.RxBytesDropped != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.RxBytesDropped))
+	}
+	if m.RxPacketsDropped != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.RxPacketsDropped))
+	}
+	if m.TxBytesDropped != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.TxBytesDropped))
+	}
+	if m.TxPacketsDropped != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.TxPacketsDropped))
+	}
+	if m.NumTcpSessions != 0 {
+		dAtA[i] = 0x48
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.NumTcpSessions))
+	}
+	if m.NumUdpSessions != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.NumUdpSessions))
+	}
+	if m.NumOtherSessions != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.NumOtherSessions))
+	}
+	if m.NumActiveConnections != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.NumActiveConnections))
+	}
+	return i, nil
+}
+
+func (m *NatVpnMappingGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatVpnMappingGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Spec.Size()))
+		n24, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n24
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Status.Size()))
+		n25, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n25
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.Stats.Size()))
+		n26, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n26
+	}
+	return i, nil
+}
+
+func (m *NatVpnMappingGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NatVpnMappingGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNat(dAtA, i, uint64(m.ApiStatus))
+	}
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintNat(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeVarintNat(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1645,6 +2130,110 @@ func (m *NatVpnMappingResponse) Size() (n int) {
 func (m *NatVpnMappingResponseMsg) Size() (n int) {
 	var l int
 	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NatVpnMappingGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	return n
+}
+
+func (m *NatVpnMappingGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNat(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NatVpnMappingStats) Size() (n int) {
+	var l int
+	_ = l
+	if m.RxBytes != 0 {
+		n += 1 + sovNat(uint64(m.RxBytes))
+	}
+	if m.RxPackets != 0 {
+		n += 1 + sovNat(uint64(m.RxPackets))
+	}
+	if m.TxBytes != 0 {
+		n += 1 + sovNat(uint64(m.TxBytes))
+	}
+	if m.TxPackets != 0 {
+		n += 1 + sovNat(uint64(m.TxPackets))
+	}
+	if m.RxBytesDropped != 0 {
+		n += 1 + sovNat(uint64(m.RxBytesDropped))
+	}
+	if m.RxPacketsDropped != 0 {
+		n += 1 + sovNat(uint64(m.RxPacketsDropped))
+	}
+	if m.TxBytesDropped != 0 {
+		n += 1 + sovNat(uint64(m.TxBytesDropped))
+	}
+	if m.TxPacketsDropped != 0 {
+		n += 1 + sovNat(uint64(m.TxPacketsDropped))
+	}
+	if m.NumTcpSessions != 0 {
+		n += 1 + sovNat(uint64(m.NumTcpSessions))
+	}
+	if m.NumUdpSessions != 0 {
+		n += 1 + sovNat(uint64(m.NumUdpSessions))
+	}
+	if m.NumOtherSessions != 0 {
+		n += 1 + sovNat(uint64(m.NumOtherSessions))
+	}
+	if m.NumActiveConnections != 0 {
+		n += 1 + sovNat(uint64(m.NumActiveConnections))
+	}
+	return n
+}
+
+func (m *NatVpnMappingGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNat(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovNat(uint64(l))
+	}
+	return n
+}
+
+func (m *NatVpnMappingGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNat(uint64(m.ApiStatus))
+	}
 	if len(m.Response) > 0 {
 		for _, e := range m.Response {
 			l = e.Size()
@@ -3684,6 +4273,749 @@ func (m *NatVpnMappingResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *NatVpnMappingGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatVpnMappingGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatVpnMappingGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &NatVpnMappingKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatVpnMappingGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatVpnMappingGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatVpnMappingGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NatVpnMappingGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatVpnMappingStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatVpnMappingStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatVpnMappingStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxBytes", wireType)
+			}
+			m.RxBytes = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxBytes |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxPackets", wireType)
+			}
+			m.RxPackets = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxPackets |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxBytes", wireType)
+			}
+			m.TxBytes = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxBytes |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxPackets", wireType)
+			}
+			m.TxPackets = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxPackets |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxBytesDropped", wireType)
+			}
+			m.RxBytesDropped = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxBytesDropped |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxPacketsDropped", wireType)
+			}
+			m.RxPacketsDropped = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxPacketsDropped |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxBytesDropped", wireType)
+			}
+			m.TxBytesDropped = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxBytesDropped |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxPacketsDropped", wireType)
+			}
+			m.TxPacketsDropped = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxPacketsDropped |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumTcpSessions", wireType)
+			}
+			m.NumTcpSessions = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumTcpSessions |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumUdpSessions", wireType)
+			}
+			m.NumUdpSessions = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumUdpSessions |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumOtherSessions", wireType)
+			}
+			m.NumOtherSessions = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumOtherSessions |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumActiveConnections", wireType)
+			}
+			m.NumActiveConnections = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumActiveConnections |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatVpnMappingGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatVpnMappingGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatVpnMappingGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &NatVpnMappingSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &NatVpnMappingStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &NatVpnMappingStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NatVpnMappingGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNat
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NatVpnMappingGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NatVpnMappingGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNat
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNat
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NatVpnMappingGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNat(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNat
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipNat(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3792,71 +5124,87 @@ var (
 func init() { proto.RegisterFile("nat.proto", fileDescriptorNat) }
 
 var fileDescriptorNat = []byte{
-	// 1044 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xee, 0xc6, 0x8e, 0x13, 0x3f, 0x3b, 0xc6, 0x99, 0xe6, 0xc7, 0x62, 0xda, 0x24, 0xac, 0x40,
-	0xb5, 0x22, 0x6a, 0x4a, 0x1a, 0x21, 0xc4, 0xa5, 0x72, 0x9a, 0x84, 0x86, 0x12, 0xdb, 0x1a, 0x9b,
-	0x4a, 0xe5, 0xb2, 0x9a, 0xec, 0x4e, 0x6c, 0xd7, 0xc9, 0xee, 0xb0, 0x33, 0x8e, 0x14, 0x09, 0x71,
-	0xe4, 0xc0, 0x89, 0x03, 0x07, 0xfe, 0x10, 0xfe, 0x08, 0x8e, 0xdc, 0x90, 0x38, 0x44, 0x28, 0x48,
-	0x1c, 0x38, 0xe6, 0x2f, 0x40, 0x33, 0x3b, 0xfb, 0x23, 0xf6, 0xa6, 0x04, 0xa9, 0x12, 0x27, 0xef,
-	0xcc, 0xfb, 0xbe, 0x6f, 0xde, 0x7b, 0xf3, 0xcd, 0x8c, 0xa1, 0xe8, 0x11, 0xd1, 0x60, 0x81, 0x2f,
-	0x7c, 0x94, 0xf3, 0x88, 0xa8, 0x95, 0xc4, 0x39, 0xa3, 0x3c, 0x9c, 0xa9, 0xcd, 0x8f, 0x06, 0xe1,
-	0x97, 0x75, 0x0c, 0x73, 0x2d, 0x22, 0x3a, 0xbe, 0x7f, 0x82, 0xea, 0x30, 0x47, 0x5c, 0x37, 0xa0,
-	0x9c, 0x9b, 0xc6, 0x46, 0xae, 0x5e, 0xda, 0xaa, 0x34, 0x42, 0x4e, 0x33, 0x9c, 0xc5, 0x51, 0x18,
-	0x7d, 0x04, 0xc0, 0xfc, 0x40, 0xd8, 0x01, 0xf1, 0xfa, 0xd4, 0x9c, 0xd9, 0x30, 0xea, 0xa5, 0x2d,
-	0xa4, 0xc1, 0x5f, 0x6c, 0x77, 0xfc, 0x40, 0x60, 0x19, 0xc1, 0x45, 0x16, 0x7d, 0x5a, 0xbf, 0xe7,
-	0xa1, 0xd4, 0x22, 0x02, 0x8f, 0x4f, 0x68, 0x97, 0x51, 0x07, 0xbd, 0x0f, 0xf9, 0x53, 0x2a, 0x88,
-	0x69, 0x28, 0xf2, 0xa2, 0x26, 0xb7, 0x8f, 0x5e, 0x51, 0x47, 0x1c, 0x52, 0x41, 0xb0, 0x0a, 0xa3,
-	0xcf, 0x61, 0x61, 0x44, 0xcf, 0x6d, 0x3f, 0xb0, 0x07, 0xc4, 0x73, 0x4f, 0xa2, 0xc5, 0x96, 0x1a,
-	0xa3, 0x41, 0x43, 0xcb, 0x3d, 0xa7, 0xe7, 0xcf, 0x54, 0x6c, 0xa7, 0x7a, 0x75, 0xb1, 0x5e, 0x3e,
-	0xa3, 0xde, 0xd0, 0xa1, 0x9f, 0x5a, 0x23, 0x7a, 0x6e, 0xe1, 0xd2, 0x88, 0x9e, 0xb7, 0x83, 0x30,
-	0x8c, 0xb6, 0xa1, 0xc4, 0x03, 0xc7, 0x8e, 0x6a, 0xcc, 0xa9, 0x1a, 0xef, 0xea, 0x95, 0x0f, 0x3a,
-	0xba, 0xca, 0xf6, 0xd1, 0x2b, 0x0c, 0x3c, 0x70, 0xf4, 0x10, 0x2d, 0x43, 0x41, 0xb2, 0x78, 0xdf,
-	0xcc, 0x6f, 0xe4, 0xea, 0x0b, 0x78, 0x96, 0x07, 0x4e, 0xb7, 0x2f, 0xc5, 0x5c, 0x2e, 0x62, 0xb1,
-	0xd9, 0xd7, 0x88, 0xb9, 0x5c, 0xa4, 0xc4, 0x24, 0x8b, 0xf7, 0xcd, 0x42, 0x28, 0xe6, 0x72, 0xd1,
-	0xed, 0xa3, 0x4f, 0xa0, 0x22, 0xa7, 0x53, 0x3d, 0x9d, 0x53, 0x7a, 0x59, 0x3d, 0x2d, 0xbb, 0x5c,
-	0xc4, 0x23, 0xc9, 0x94, 0xd9, 0xa5, 0x98, 0xf3, 0x37, 0x33, 0x79, 0xe0, 0x24, 0xcc, 0xed, 0x90,
-	0xe9, 0x11, 0x61, 0x13, 0x47, 0x0c, 0x7d, 0xcf, 0x2c, 0x6e, 0x18, 0xf5, 0xca, 0x56, 0xa5, 0x21,
-	0x8d, 0xd3, 0x22, 0xa2, 0xa9, 0x66, 0x15, 0x2b, 0x1e, 0x49, 0x96, 0xcc, 0x34, 0xc5, 0x82, 0x6c,
-	0x96, 0xcb, 0x45, 0xc2, 0x6a, 0x40, 0x39, 0x5a, 0x8b, 0xf9, 0xfe, 0x89, 0x59, 0x52, 0x9b, 0x58,
-	0x8e, 0x38, 0xd2, 0x7d, 0xaa, 0xe7, 0x91, 0x13, 0x1b, 0x50, 0x8e, 0x56, 0x51, 0xf8, 0x72, 0x16,
-	0x3e, 0x5c, 0x41, 0x7e, 0x5b, 0x4f, 0x60, 0x51, 0x9b, 0x01, 0xd3, 0xaf, 0xc7, 0x94, 0x8b, 0x43,
-	0xde, 0x47, 0x9b, 0x30, 0x17, 0x84, 0x23, 0x6d, 0xe7, 0x6a, 0xc4, 0x8f, 0x4c, 0x88, 0x23, 0x80,
-	0xf5, 0x00, 0x16, 0xa2, 0x79, 0x41, 0xc4, 0x98, 0xa3, 0x15, 0x28, 0x68, 0xc3, 0x49, 0x83, 0x16,
-	0xb0, 0x1e, 0x59, 0xdf, 0xc2, 0x5b, 0xf1, 0x4a, 0x9c, 0xf9, 0x1e, 0xa7, 0xe8, 0x09, 0x00, 0x61,
-	0x43, 0x9b, 0x2b, 0xa2, 0x82, 0x57, 0xb6, 0xaa, 0xd1, 0xc9, 0x61, 0xc3, 0x50, 0x70, 0xa7, 0xf2,
-	0xf7, 0xc5, 0x7a, 0x0a, 0x87, 0x8b, 0x24, 0x0a, 0xa1, 0x4d, 0x28, 0x68, 0x72, 0x74, 0x92, 0xd2,
-	0x79, 0x86, 0x70, 0x8d, 0xb0, 0xf6, 0x01, 0x4d, 0xac, 0x2f, 0x4b, 0x7d, 0x04, 0xf3, 0x81, 0x1e,
-	0xea, 0x5a, 0x97, 0xd2, 0x1a, 0x11, 0x14, 0xc7, 0x28, 0xeb, 0x3b, 0x23, 0x6e, 0xd9, 0x67, 0x54,
-	0xe8, 0xae, 0xfd, 0x0f, 0x87, 0xd2, 0x7a, 0x06, 0x4b, 0x53, 0x79, 0x84, 0x25, 0x4d, 0xec, 0xde,
-	0x4a, 0xba, 0xa2, 0x04, 0x9b, 0xec, 0xe1, 0x0f, 0x06, 0x94, 0x53, 0x4d, 0xe3, 0xa8, 0x0e, 0x55,
-	0x6f, 0x7c, 0x6a, 0x0b, 0x87, 0xd9, 0x9c, 0x72, 0x3e, 0xf4, 0xbd, 0x70, 0x7b, 0x16, 0x70, 0xc5,
-	0x1b, 0x9f, 0xf6, 0x1c, 0xd6, 0xd5, 0xb3, 0x11, 0x72, 0xec, 0xa6, 0x90, 0x33, 0x31, 0xf2, 0x4b,
-	0x37, 0x41, 0x7e, 0x00, 0x48, 0x22, 0x7d, 0x31, 0xa0, 0x41, 0x82, 0xcd, 0x29, 0xac, 0xd4, 0x68,
-	0xcb, 0x40, 0x84, 0xb6, 0x7e, 0x33, 0xe2, 0xed, 0x52, 0x19, 0x6b, 0xc7, 0xec, 0xdf, 0xca, 0x31,
-	0xcb, 0x57, 0x17, 0xeb, 0x8b, 0xba, 0x71, 0xd9, 0xc6, 0x79, 0x0f, 0xf2, 0x9c, 0x51, 0x47, 0xb7,
-	0x7f, 0xda, 0xde, 0x2a, 0x9a, 0xb2, 0x57, 0xee, 0xdf, 0xec, 0x85, 0x1e, 0xc0, 0xac, 0xfc, 0xe2,
-	0x66, 0x5e, 0x3b, 0x60, 0x02, 0xca, 0x71, 0x18, 0xb7, 0x7e, 0x34, 0x60, 0x79, 0xba, 0x32, 0xb9,
-	0x71, 0x6f, 0xaa, 0xb8, 0xc7, 0x29, 0x4f, 0xcf, 0x28, 0x07, 0xac, 0x4e, 0x39, 0x60, 0xca, 0xd6,
-	0x3f, 0xcf, 0x28, 0x5b, 0xbf, 0x60, 0xde, 0x21, 0x61, 0x6c, 0xe8, 0xf5, 0xff, 0xcb, 0x5b, 0xd3,
-	0xc9, 0xb6, 0x75, 0x4d, 0xdb, 0x3a, 0x11, 0xbd, 0xf5, 0x8b, 0xf3, 0x21, 0x00, 0xa7, 0xc1, 0xd9,
-	0xd0, 0xa1, 0xf6, 0x90, 0xe9, 0xf6, 0x57, 0x27, 0xdf, 0x08, 0x5c, 0xd4, 0x98, 0x03, 0x86, 0x1e,
-	0x42, 0xf1, 0x94, 0x30, 0x46, 0x5d, 0x89, 0xcf, 0xdf, 0x80, 0x9f, 0x0f, 0x21, 0x07, 0x0c, 0xed,
-	0x43, 0xe5, 0x2c, 0x38, 0xb6, 0x65, 0xd6, 0x3a, 0xe5, 0x59, 0xcd, 0x19, 0x0d, 0x1a, 0x2f, 0x82,
-	0xe3, 0x24, 0xd1, 0xca, 0xd5, 0xc5, 0x3a, 0xe8, 0x44, 0x03, 0x7a, 0x8c, 0xcb, 0x67, 0xa9, 0xa8,
-	0xf5, 0x1c, 0x56, 0xaf, 0x15, 0x78, 0xab, 0x73, 0x78, 0xbd, 0xc9, 0xc9, 0x39, 0x7c, 0x08, 0x77,
-	0xaf, 0x47, 0x5f, 0x7f, 0xa3, 0x7e, 0x1f, 0x3a, 0x29, 0xbd, 0xf8, 0x9b, 0xba, 0x58, 0x1f, 0x4d,
-	0x5c, 0xac, 0x66, 0x46, 0xea, 0xd7, 0xaf, 0x57, 0x0c, 0x66, 0x66, 0x2e, 0xb2, 0x13, 0x1f, 0x4f,
-	0x5d, 0xb2, 0xb5, 0x69, 0xbd, 0x69, 0x4f, 0x6e, 0x7e, 0x03, 0xc5, 0xe4, 0x25, 0x5c, 0x84, 0x85,
-	0x56, 0xb3, 0x67, 0xf7, 0x5e, 0x76, 0xf6, 0xec, 0x56, 0xbb, 0xb5, 0x57, 0xbd, 0x83, 0xde, 0x81,
-	0xd5, 0x78, 0xaa, 0xdb, 0x6b, 0xf6, 0x0e, 0x9e, 0xda, 0xcd, 0xdd, 0x5d, 0xbc, 0xd7, 0xed, 0x56,
-	0x0d, 0x74, 0x0f, 0xcc, 0x38, 0xb8, 0xfb, 0xb2, 0xd5, 0x3c, 0x4c, 0x45, 0x67, 0xd0, 0xbb, 0x70,
-	0xff, 0xa6, 0xa8, 0xdd, 0x69, 0xe3, 0x5e, 0x35, 0xb7, 0xf5, 0x97, 0x01, 0xb9, 0x16, 0x11, 0x68,
-	0x27, 0x7e, 0xe1, 0x9e, 0x06, 0x94, 0x08, 0x8a, 0x56, 0xae, 0xbf, 0x10, 0xd1, 0x86, 0xd7, 0x56,
-	0xb3, 0x5e, 0x8e, 0x43, 0xde, 0xb7, 0xee, 0xa0, 0x3d, 0x80, 0xe4, 0xf4, 0xa1, 0xb7, 0xb3, 0x2f,
-	0x64, 0xa9, 0x51, 0xbb, 0xe1, 0xa4, 0x86, 0x32, 0xbd, 0x09, 0x83, 0xe8, 0x84, 0xee, 0x65, 0x75,
-	0x33, 0x96, 0xbc, 0x7f, 0x73, 0xaf, 0x95, 0xea, 0x4e, 0xed, 0x97, 0xcb, 0x35, 0xe3, 0xd7, 0xcb,
-	0x35, 0xe3, 0x8f, 0xcb, 0x35, 0xe3, 0xa7, 0x3f, 0xd7, 0xee, 0x7c, 0x35, 0x3f, 0x20, 0x27, 0xea,
-	0x4f, 0xee, 0x51, 0x41, 0xfd, 0x3c, 0xfe, 0x27, 0x00, 0x00, 0xff, 0xff, 0x3a, 0xfa, 0x81, 0xde,
-	0x14, 0x0b, 0x00, 0x00,
+	// 1303 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0xcf, 0x6f, 0x1b, 0xc5,
+	0x17, 0xef, 0xc6, 0x8e, 0x63, 0x3f, 0x3b, 0xfe, 0x3a, 0xd3, 0x34, 0x71, 0xdd, 0xe6, 0xc7, 0x77,
+	0x05, 0xaa, 0x15, 0x51, 0x53, 0xd2, 0x08, 0x01, 0x97, 0xca, 0x69, 0x52, 0x1a, 0x4a, 0x1c, 0x6b,
+	0x6d, 0x8a, 0xca, 0x65, 0xb5, 0x59, 0x4f, 0x1c, 0xd7, 0xc9, 0xee, 0x32, 0x33, 0x8e, 0x12, 0x09,
+	0x71, 0xe4, 0xc0, 0x09, 0x21, 0x0e, 0x1c, 0xf9, 0x23, 0xb8, 0x73, 0xe5, 0xc8, 0x0d, 0x89, 0x43,
+	0x84, 0xca, 0x8d, 0x0b, 0xa8, 0x7f, 0x01, 0x9a, 0x1f, 0xfb, 0xc3, 0xbb, 0xeb, 0x34, 0x95, 0x82,
+	0x38, 0xc5, 0x3b, 0xef, 0xf3, 0x79, 0xf3, 0xde, 0x9b, 0xcf, 0xbc, 0x37, 0x81, 0x82, 0x63, 0xb1,
+	0x86, 0x47, 0x5c, 0xe6, 0xa2, 0x8c, 0x63, 0xb1, 0x5a, 0x91, 0x9d, 0x79, 0x98, 0xca, 0x95, 0x5a,
+	0x7e, 0x78, 0x28, 0x7f, 0xe9, 0x07, 0x30, 0xd3, 0xb2, 0x58, 0xdb, 0x75, 0x8f, 0x50, 0x1d, 0x66,
+	0xac, 0x5e, 0x8f, 0x60, 0x4a, 0xab, 0xda, 0x6a, 0xa6, 0x5e, 0x5c, 0x2f, 0x37, 0x24, 0xa7, 0x29,
+	0x57, 0x0d, 0xdf, 0x8c, 0xde, 0x01, 0xf0, 0x5c, 0xc2, 0x4c, 0x62, 0x39, 0x7d, 0x5c, 0x9d, 0x5a,
+	0xd5, 0xea, 0xc5, 0x75, 0xa4, 0xc0, 0x1f, 0x6f, 0xb4, 0x5d, 0xc2, 0x0c, 0x6e, 0x31, 0x0a, 0x9e,
+	0xff, 0x53, 0xff, 0x2d, 0x0b, 0xc5, 0x96, 0xc5, 0x8c, 0xd1, 0x11, 0xee, 0x78, 0xd8, 0x46, 0x6f,
+	0x42, 0xf6, 0x18, 0x33, 0xab, 0xaa, 0x09, 0xf2, 0x9c, 0x22, 0xef, 0xed, 0x3f, 0xc7, 0x36, 0xdb,
+	0xc5, 0xcc, 0x32, 0x84, 0x19, 0x7d, 0x04, 0xb3, 0x43, 0x7c, 0x66, 0xba, 0xc4, 0x3c, 0xb4, 0x9c,
+	0xde, 0x91, 0xbf, 0xd9, 0x7c, 0x63, 0x78, 0xd8, 0x50, 0xee, 0x9e, 0xe0, 0xb3, 0xc7, 0xc2, 0xb6,
+	0x59, 0x79, 0x79, 0xbe, 0x52, 0x3a, 0xc1, 0xce, 0xc0, 0xc6, 0x1f, 0xe8, 0x43, 0x7c, 0xa6, 0x1b,
+	0xc5, 0x21, 0x3e, 0xdb, 0x23, 0xd2, 0x8c, 0x36, 0xa0, 0x48, 0x89, 0x6d, 0xfa, 0x39, 0x66, 0x44,
+	0x8e, 0xd7, 0xd5, 0xce, 0x3b, 0x6d, 0x95, 0xe5, 0xde, 0xfe, 0x73, 0x03, 0x28, 0xb1, 0xd5, 0x27,
+	0xba, 0x01, 0x39, 0xce, 0xa2, 0xfd, 0x6a, 0x76, 0x35, 0x53, 0x9f, 0x35, 0xa6, 0x29, 0xb1, 0x3b,
+	0x7d, 0xee, 0xac, 0x47, 0x59, 0xe0, 0x6c, 0xfa, 0x02, 0x67, 0x3d, 0xca, 0x22, 0xce, 0x38, 0x8b,
+	0xf6, 0xab, 0x39, 0xe9, 0xac, 0x47, 0x59, 0xa7, 0x8f, 0xde, 0x83, 0x32, 0x5f, 0x8e, 0xd4, 0x74,
+	0x46, 0xf8, 0x4b, 0xab, 0x69, 0xa9, 0x47, 0x59, 0xf0, 0xc5, 0x99, 0x3c, 0xba, 0x08, 0x33, 0x3f,
+	0x99, 0x49, 0x89, 0x1d, 0x32, 0x37, 0x24, 0xd3, 0xb1, 0x98, 0x69, 0xd9, 0x6c, 0xe0, 0x3a, 0xd5,
+	0xc2, 0xaa, 0x56, 0x2f, 0xaf, 0x97, 0x1b, 0x5c, 0x38, 0x2d, 0x8b, 0x35, 0xc5, 0xaa, 0x60, 0x05,
+	0x5f, 0x9c, 0xc5, 0x23, 0x8d, 0xb0, 0x20, 0x9d, 0xd5, 0xa3, 0x2c, 0x64, 0x35, 0xa0, 0xe4, 0xef,
+	0xe5, 0xb9, 0xee, 0x51, 0xb5, 0x28, 0x0e, 0xb1, 0xe4, 0x73, 0xb8, 0xfa, 0x44, 0xcd, 0x7d, 0x25,
+	0x36, 0xa0, 0xe4, 0xef, 0x22, 0xf0, 0xa5, 0x34, 0xbc, 0xdc, 0x81, 0xff, 0xd6, 0x1f, 0xc0, 0x9c,
+	0x12, 0x83, 0x81, 0x3f, 0x1f, 0x61, 0xca, 0x76, 0x69, 0x1f, 0xad, 0xc1, 0x0c, 0x91, 0x5f, 0x4a,
+	0xce, 0x15, 0x9f, 0xef, 0x8b, 0xd0, 0xf0, 0x01, 0xfa, 0x1d, 0x98, 0xf5, 0xd7, 0x99, 0xc5, 0x46,
+	0x14, 0x2d, 0x40, 0x4e, 0x09, 0x8e, 0x0b, 0x34, 0x67, 0xa8, 0x2f, 0xfd, 0x4b, 0xf8, 0x5f, 0xb0,
+	0x13, 0xf5, 0x5c, 0x87, 0x62, 0xf4, 0x00, 0xc0, 0xf2, 0x06, 0x26, 0x15, 0x44, 0x01, 0x2f, 0xaf,
+	0x57, 0xfc, 0x9b, 0xe3, 0x0d, 0xa4, 0xc3, 0xcd, 0xf2, 0x9f, 0xe7, 0x2b, 0x11, 0x9c, 0x51, 0xb0,
+	0x7c, 0x13, 0x5a, 0x83, 0x9c, 0x22, 0xfb, 0x37, 0x29, 0x1a, 0xa7, 0x84, 0x2b, 0x84, 0xfe, 0x08,
+	0x50, 0x6c, 0x7f, 0x9e, 0xea, 0x3d, 0xc8, 0x13, 0xf5, 0xa9, 0x72, 0x9d, 0x8f, 0xfa, 0xf0, 0xa1,
+	0x46, 0x80, 0xd2, 0xbf, 0xd2, 0x82, 0x92, 0x7d, 0x88, 0x99, 0xaa, 0xda, 0x7f, 0x70, 0x29, 0xf5,
+	0xc7, 0x30, 0x9f, 0x88, 0x43, 0xa6, 0x14, 0x3b, 0xbd, 0x85, 0x68, 0x46, 0x21, 0x36, 0x3c, 0xc3,
+	0x6f, 0x34, 0x28, 0x45, 0x8a, 0x46, 0x51, 0x1d, 0x2a, 0xce, 0xe8, 0xd8, 0x64, 0xb6, 0x67, 0x52,
+	0x4c, 0xe9, 0xc0, 0x75, 0xe4, 0xf1, 0xcc, 0x1a, 0x65, 0x67, 0x74, 0xdc, 0xb5, 0xbd, 0x8e, 0x5a,
+	0xf5, 0x91, 0xa3, 0x5e, 0x04, 0x39, 0x15, 0x20, 0x3f, 0xe9, 0x85, 0xc8, 0xb7, 0x00, 0x71, 0xa4,
+	0xcb, 0x0e, 0x31, 0x09, 0xb1, 0x19, 0x81, 0xe5, 0x3e, 0xf6, 0xb8, 0xc1, 0x47, 0xeb, 0xbf, 0x6a,
+	0xc1, 0x71, 0x89, 0x88, 0x95, 0x62, 0x1e, 0x5d, 0x4a, 0x31, 0x37, 0x5e, 0x9e, 0xaf, 0xcc, 0xa9,
+	0xc2, 0xa5, 0x0b, 0xe7, 0x0d, 0xc8, 0x52, 0x0f, 0xdb, 0xaa, 0xfc, 0x49, 0x79, 0x0b, 0x6b, 0x44,
+	0x5e, 0x99, 0x57, 0xc9, 0x0b, 0xdd, 0x81, 0x69, 0xfe, 0x8b, 0x56, 0xb3, 0x4a, 0x01, 0x31, 0x28,
+	0x35, 0xa4, 0x5d, 0xff, 0x4e, 0x83, 0x1b, 0xc9, 0xcc, 0xf8, 0xc1, 0x5d, 0x55, 0x72, 0xf7, 0x23,
+	0x9a, 0x9e, 0x12, 0x0a, 0x58, 0x4c, 0x28, 0x20, 0x21, 0xeb, 0x1f, 0xa7, 0x84, 0xac, 0x9f, 0x7a,
+	0xce, 0xae, 0xe5, 0x79, 0x03, 0xa7, 0xff, 0x3a, 0xb3, 0xa6, 0x9d, 0x2e, 0xeb, 0x9a, 0x92, 0x75,
+	0xe8, 0xf4, 0xd2, 0x13, 0xe7, 0x6d, 0x00, 0x8a, 0xc9, 0xc9, 0xc0, 0xc6, 0xe6, 0xc0, 0x53, 0xe5,
+	0xaf, 0xc4, 0x67, 0x84, 0x51, 0x50, 0x98, 0x1d, 0x0f, 0xdd, 0x85, 0xc2, 0xb1, 0xe5, 0x79, 0xb8,
+	0xc7, 0xf1, 0xd9, 0x09, 0xf8, 0xbc, 0x84, 0xec, 0x78, 0xe8, 0x11, 0x94, 0x4f, 0xc8, 0x81, 0xc9,
+	0xa3, 0x56, 0x21, 0x4f, 0x2b, 0xce, 0xf0, 0xb0, 0xf1, 0x94, 0x1c, 0x84, 0x81, 0x96, 0x5f, 0x9e,
+	0xaf, 0x80, 0x0a, 0x94, 0xe0, 0x03, 0xa3, 0x74, 0x12, 0xb1, 0xea, 0x4f, 0x60, 0x71, 0x2c, 0xc1,
+	0x4b, 0xdd, 0xc3, 0xf1, 0x22, 0x87, 0xf7, 0xf0, 0x2e, 0x5c, 0x1f, 0xb7, 0x5e, 0xdc, 0x51, 0xbf,
+	0x96, 0x4a, 0x8a, 0x6e, 0x7e, 0x55, 0x8d, 0xf5, 0x5e, 0xac, 0xb1, 0x56, 0x53, 0x42, 0x1f, 0x6f,
+	0xaf, 0x06, 0x54, 0x53, 0x63, 0xe1, 0x95, 0x78, 0x37, 0xd1, 0x64, 0x6b, 0x49, 0x7f, 0x29, 0x9a,
+	0xfc, 0x56, 0x8b, 0x55, 0xf7, 0xf5, 0x1b, 0xee, 0x95, 0x2b, 0x53, 0xef, 0x42, 0x6d, 0x42, 0x4c,
+	0x32, 0xd5, 0xd8, 0xa1, 0xdf, 0x4e, 0x66, 0x9a, 0xd6, 0x82, 0xff, 0xce, 0x88, 0x7e, 0x37, 0x5e,
+	0x5e, 0x8a, 0x6e, 0x42, 0x9e, 0x9c, 0x9a, 0xfb, 0x67, 0x0c, 0xcb, 0x63, 0xcc, 0x1a, 0x33, 0xe4,
+	0x74, 0x93, 0x7f, 0xa2, 0x25, 0x00, 0x72, 0x6a, 0x7a, 0x96, 0x3d, 0xc4, 0x4c, 0x1e, 0x53, 0xd6,
+	0x28, 0x90, 0xd3, 0xb6, 0x5c, 0xe0, 0x4c, 0xe6, 0x33, 0x33, 0x92, 0xc9, 0x42, 0x26, 0x0b, 0x99,
+	0x59, 0xc9, 0x64, 0x01, 0xb3, 0x0e, 0x15, 0x7f, 0x4f, 0xb3, 0x47, 0x5c, 0x7e, 0x61, 0xc4, 0xe5,
+	0xc8, 0x1a, 0x65, 0xb5, 0xf7, 0x96, 0x5c, 0xe5, 0x2d, 0x3d, 0x0c, 0x21, 0xc0, 0xe6, 0x04, 0xb6,
+	0x12, 0x84, 0xe2, 0xa3, 0xeb, 0x50, 0x61, 0x71, 0xbf, 0x33, 0xd2, 0x2f, 0x4b, 0xf8, 0x65, 0x49,
+	0xbf, 0x79, 0xe9, 0x97, 0xa5, 0xf8, 0x4d, 0x0c, 0xab, 0xc2, 0xa5, 0x87, 0x15, 0xbc, 0xc6, 0xb0,
+	0x2a, 0xa6, 0x0f, 0x2b, 0xb4, 0x01, 0x0b, 0x1c, 0xcd, 0x9f, 0x75, 0x27, 0xd8, 0xb4, 0x5d, 0xc7,
+	0xc1, 0xe2, 0xf5, 0x46, 0xc5, 0xf3, 0x6b, 0xd6, 0x98, 0x77, 0x46, 0xc7, 0x4d, 0x61, 0x7c, 0x18,
+	0xda, 0xf4, 0xbf, 0xb4, 0xd8, 0x95, 0xf9, 0x37, 0x06, 0xdd, 0xda, 0xd8, 0xa0, 0x9b, 0xd4, 0x81,
+	0xe4, 0xb8, 0xbb, 0x17, 0x1b, 0x77, 0xaf, 0xbc, 0xf4, 0xe8, 0xee, 0xf8, 0xd0, 0x5b, 0x4c, 0x27,
+	0x04, 0xa3, 0xef, 0x07, 0x0d, 0x6e, 0x4d, 0xca, 0xf8, 0x2a, 0x07, 0xe0, 0xfb, 0x89, 0x01, 0xb8,
+	0x34, 0xe1, 0x16, 0xc6, 0x5b, 0xce, 0xda, 0x17, 0x50, 0x08, 0x1f, 0xdf, 0x73, 0x30, 0xdb, 0x6a,
+	0x76, 0xcd, 0xee, 0xb3, 0xf6, 0xb6, 0xd9, 0xda, 0x6b, 0x6d, 0x57, 0xae, 0xa1, 0x5b, 0xb0, 0x18,
+	0x2c, 0x75, 0xba, 0xcd, 0xee, 0xce, 0x43, 0xb3, 0xb9, 0xb5, 0x65, 0x6c, 0x77, 0x3a, 0x15, 0x0d,
+	0xdd, 0x86, 0x6a, 0x60, 0xdc, 0x7a, 0xd6, 0x6a, 0xee, 0x46, 0xac, 0x53, 0xe8, 0xff, 0xb0, 0x34,
+	0xc9, 0x6a, 0xb6, 0xf7, 0x8c, 0x6e, 0x25, 0xb3, 0xfe, 0xd3, 0x14, 0x64, 0x5a, 0x16, 0x43, 0x9b,
+	0xc1, 0xa3, 0xfa, 0x21, 0xc1, 0x16, 0xc3, 0x68, 0x61, 0xfc, 0x51, 0xea, 0xb7, 0x9b, 0xda, 0x62,
+	0xda, 0x63, 0x75, 0x97, 0xf6, 0xf5, 0x6b, 0x68, 0x1b, 0x20, 0x1c, 0xf8, 0xe8, 0x66, 0xfa, 0x1b,
+	0x90, 0xfb, 0xa8, 0x4d, 0x78, 0x1c, 0x48, 0x37, 0xdd, 0xd8, 0x4c, 0x52, 0x01, 0xdd, 0x4e, 0x6b,
+	0xe0, 0x81, 0xcb, 0xa5, 0xc9, 0xed, 0x5d, 0x7a, 0xfd, 0x14, 0x2a, 0xf1, 0xc3, 0x40, 0x2b, 0x17,
+	0x75, 0x4a, 0xee, 0x75, 0xf5, 0xc2, 0x43, 0x14, 0x8e, 0x37, 0x6b, 0x3f, 0xbf, 0x58, 0xd6, 0x7e,
+	0x79, 0xb1, 0xac, 0xfd, 0xfe, 0x62, 0x59, 0xfb, 0xfe, 0x8f, 0xe5, 0x6b, 0x9f, 0xe5, 0x0f, 0xad,
+	0x23, 0xf1, 0x0f, 0xfb, 0x7e, 0x4e, 0xfc, 0xb9, 0xff, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x69,
+	0x80, 0xe4, 0xee, 0xe0, 0x0f, 0x00, 0x00,
 }
