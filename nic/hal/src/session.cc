@@ -988,7 +988,7 @@ hal_ret_t
 session_init (void)
 {
     // Disable aging when FTE is disabled
-    if (getenv("DISABLE_FTE")) {
+    if (getenv("DISABLE_AGING")) {
         return HAL_RET_OK;
     }
 
@@ -1025,7 +1025,7 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 tcp_close_timer_schedule (session_t *session)
 {
-    if (getenv("DISABLE_FTE")) {
+    if (getenv("DISABLE_AGING")) {
         return HAL_RET_OK;
     }
 
