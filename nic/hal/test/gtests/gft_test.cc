@@ -1463,7 +1463,8 @@ TEST_F(gft_test, test1) {
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
     uint32_t tcscale = 1;
-    uint32_t tcid = 0;
+    int tcid = 0;
+    int tcid_filter = 0;
     uint32_t tx_enable = 0;
     uint32_t rx_enable = 0;
 
@@ -1485,129 +1486,147 @@ TEST_F(gft_test, test1) {
         tx_enable = 1;
     }
 
+    if (getenv("GFT_TCID")) {
+        tcid_filter = atoi(getenv("GFT_TCID"));
+    }
+
     if (rx_enable) {
         tcid++;
-        ipkt.resize(sizeof(g_snd_pkt1));
-        memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
-        epkt.resize(sizeof(g_rcv_pkt1));
-        memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
-        std::cout << "Rx: Testing wide key without overflow" << std::endl;
-        for (i = 0; i < tcscale; i++) {
-            printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
-            testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
-            if (!getenv("SKIP_VERIFY")) {
-                get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            ipkt.resize(sizeof(g_snd_pkt1));
+            memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
+            epkt.resize(sizeof(g_rcv_pkt1));
+            memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
+            std::cout << "Rx: Testing wide key without overflow" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+                testcase_begin(tcid, i+1);
+                step_network_pkt(ipkt, port);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                }
+                testcase_end(tcid, i+1);
             }
-            testcase_end(tcid, i+1);
         }
 
         tcid++;
-        ipkt.resize(sizeof(g_snd_pkt2));
-        memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
-        epkt.resize(sizeof(g_rcv_pkt2));
-        memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
-        std::cout << "Rx: Testing wide key with overflow" << std::endl;
-        for (i = 0; i < tcscale; i++) {
-            printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
-            testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
-            if (!getenv("SKIP_VERIFY")) {
-                get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            ipkt.resize(sizeof(g_snd_pkt2));
+            memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
+            epkt.resize(sizeof(g_rcv_pkt2));
+            memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
+            std::cout << "Rx: Testing wide key with overflow" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+                testcase_begin(tcid, i+1);
+                step_network_pkt(ipkt, port);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                }
+                testcase_end(tcid, i+1);
             }
-            testcase_end(tcid, i+1);
         }
 
         tcid++;
-        ipkt.resize(sizeof(g_snd_pkt3));
-        memcpy(ipkt.data(), g_snd_pkt3, sizeof(g_snd_pkt3));
-        epkt.resize(sizeof(g_rcv_pkt3));
-        memcpy(epkt.data(), g_rcv_pkt3, sizeof(g_rcv_pkt3));
-        std::cout << "Rx: Testing native RDMA flow" << std::endl;
-        for (i = 0; i < tcscale; i++) {
-            printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
-            testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
-            if (!getenv("SKIP_VERIFY")) {
-                get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            ipkt.resize(sizeof(g_snd_pkt3));
+            memcpy(ipkt.data(), g_snd_pkt3, sizeof(g_snd_pkt3));
+            epkt.resize(sizeof(g_rcv_pkt3));
+            memcpy(epkt.data(), g_rcv_pkt3, sizeof(g_rcv_pkt3));
+            std::cout << "Rx: Testing native RDMA flow" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+                testcase_begin(tcid, i+1);
+                step_network_pkt(ipkt, port);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                }
+                testcase_end(tcid, i+1);
             }
-            testcase_end(tcid, i+1);
         }
 
         tcid++;
-        ipkt.resize(sizeof(g_snd_pkt4));
-        memcpy(ipkt.data(), g_snd_pkt4, sizeof(g_snd_pkt4));
-        epkt.resize(sizeof(g_rcv_pkt4));
-        memcpy(epkt.data(), g_rcv_pkt4, sizeof(g_rcv_pkt4));
-        std::cout << "Rx: Testing tunneled RDMA flow" << std::endl;
-        for (i = 0; i < tcscale; i++) {
-            printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
-            testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
-            if (!getenv("SKIP_VERIFY")) {
-                get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            ipkt.resize(sizeof(g_snd_pkt4));
+            memcpy(ipkt.data(), g_snd_pkt4, sizeof(g_snd_pkt4));
+            epkt.resize(sizeof(g_rcv_pkt4));
+            memcpy(epkt.data(), g_rcv_pkt4, sizeof(g_rcv_pkt4));
+            std::cout << "Rx: Testing tunneled RDMA flow" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+                testcase_begin(tcid, i+1);
+                step_network_pkt(ipkt, port);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                }
+                testcase_end(tcid, i+1);
             }
-            testcase_end(tcid, i+1);
         }
     }
 
     if (tx_enable) {
         tcid++;
-        port = 7;
-        ipkt.resize(sizeof(g_snd_pkt5));
-        memcpy(ipkt.data(), g_snd_pkt5, sizeof(g_snd_pkt5));
-        epkt.resize(sizeof(g_rcv_pkt5));
-        memcpy(epkt.data(), g_rcv_pkt5, sizeof(g_rcv_pkt5));
-        std::cout << "Tx: Testing wide key without overflow" << std::endl;
-        for (i = 0; i < tcscale; i++) {
-            printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
-            testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
-            if (!getenv("SKIP_VERIFY")) {
-                get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            port = 7;
+            ipkt.resize(sizeof(g_snd_pkt5));
+            memcpy(ipkt.data(), g_snd_pkt5, sizeof(g_snd_pkt5));
+            epkt.resize(sizeof(g_rcv_pkt5));
+            memcpy(epkt.data(), g_rcv_pkt5, sizeof(g_rcv_pkt5));
+            std::cout << "Tx: Testing wide key without overflow" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+                testcase_begin(tcid, i+1);
+                step_network_pkt(ipkt, port);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                }
+                testcase_end(tcid, i+1);
             }
-            testcase_end(tcid, i+1);
         }
 
         tcid++;
-        port = 7;
-        ipkt.resize(sizeof(g_snd_pkt6));
-        memcpy(ipkt.data(), g_snd_pkt6, sizeof(g_snd_pkt6));
-        epkt.resize(sizeof(g_rcv_pkt6));
-        memcpy(epkt.data(), g_rcv_pkt6, sizeof(g_rcv_pkt6));
-        std::cout << "Tx: Testing native RDMA flow" << std::endl;
-        for (i = 0; i < tcscale; i++) {
-            printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
-            testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
-            if (!getenv("SKIP_VERIFY")) {
-                get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            port = 7;
+            ipkt.resize(sizeof(g_snd_pkt6));
+            memcpy(ipkt.data(), g_snd_pkt6, sizeof(g_snd_pkt6));
+            epkt.resize(sizeof(g_rcv_pkt6));
+            memcpy(epkt.data(), g_rcv_pkt6, sizeof(g_rcv_pkt6));
+            std::cout << "Tx: Testing native RDMA flow" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+                testcase_begin(tcid, i+1);
+                step_network_pkt(ipkt, port);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                }
+                testcase_end(tcid, i+1);
             }
-            testcase_end(tcid, i+1);
         }
 
         tcid++;
-        port = 7;
-        ipkt.resize(sizeof(g_snd_pkt7));
-        memcpy(ipkt.data(), g_snd_pkt7, sizeof(g_snd_pkt7));
-        epkt.resize(sizeof(g_rcv_pkt7));
-        memcpy(epkt.data(), g_rcv_pkt7, sizeof(g_rcv_pkt7));
-        std::cout << "Tx: Testing tunneled RDMA flow" << std::endl;
-        for (i = 0; i < tcscale; i++) {
-            printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
-            testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
-            if (!getenv("SKIP_VERIFY")) {
-                get_next_pkt(opkt, port, cos);
-                EXPECT_TRUE(opkt == epkt);
+        if (tcid_filter == 0 || tcid == tcid_filter) {
+            port = 7;
+            ipkt.resize(sizeof(g_snd_pkt7));
+            memcpy(ipkt.data(), g_snd_pkt7, sizeof(g_snd_pkt7));
+            epkt.resize(sizeof(g_rcv_pkt7));
+            memcpy(epkt.data(), g_rcv_pkt7, sizeof(g_rcv_pkt7));
+            std::cout << "Tx: Testing tunneled RDMA flow" << std::endl;
+            for (i = 0; i < tcscale; i++) {
+                printf("Starting Testcase TC%06d-%04d\n", tcid, i+1);
+                testcase_begin(tcid, i+1);
+                step_network_pkt(ipkt, port);
+                if (!getenv("SKIP_VERIFY")) {
+                    get_next_pkt(opkt, port, cos);
+                    EXPECT_TRUE(opkt == epkt);
+                }
+                testcase_end(tcid, i+1);
             }
-            testcase_end(tcid, i+1);
         }
     }
 
