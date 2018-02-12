@@ -1203,16 +1203,62 @@ int port_test(hal_client *hclient, int vrf_id)
     return 0;
 }
 
+static int
+create_l2segments(uint64_t   l2seg_id_start,
+                  uint64_t   encap_start,
+                  uint64_t   if_id_start,
+                  uint64_t   num_l2segments,
+                  uint64_t   nw_handle,
+                  uint64_t   vrf_id,
+                  uint64_t   num_uplinks,
+                  hal_client &hclient,
+                  uint64_t   *l2seg_handle_out)
+{
+    EncapInfo  l2seg_encap;
+    uint64_t   l2seg_handle = 0;
+    uint64_t   encap_value  = encap_start;
+
+    for (uint64_t l2seg_id = l2seg_id_start;
+                  l2seg_id < l2seg_id_start + num_l2segments;
+                  ++l2seg_id) {
+
+        // create L2 segments
+        l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
+        l2seg_encap.set_encap_value(encap_value);
+
+        l2seg_handle =
+            hclient.l2segment_create(vrf_id,
+                                     l2seg_id,
+                                     nw_handle,
+                                     ::types::L2_SEGMENT_TYPE_TENANT,
+                                     ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
+                                     ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
+                                     l2seg_encap);
+        assert(l2seg_handle != 0);
+
+        if (encap_value == 100) {
+            *l2seg_handle_out = l2seg_handle;
+        }
+
+        // bringup this L2seg on all uplinks
+        hclient.add_l2seg_on_uplinks(if_id_start,
+                                     num_uplinks,
+                                     l2seg_id);
+        encap_value++;
+    }
+
+    return 0;
+}
+
 // main test driver
 int
 main (int argc, char** argv)
 {
     uint64_t     vrf_handle, l2seg_handle, native_l2seg_handle, sg_handle;
     uint64_t     nw1_handle, nw2_handle, uplink_if_handle; //, session_handle;
-    uint64_t     lif_handle, enic_if_handle, cpu_if_handle;
+    uint64_t     lif_handle, enic_if_handle;
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint64_t     lif_id = 100;
-    uint64_t     cpu_lif_id = 1003;
     uint64_t     enic_if_id = 200;
     EncapInfo    l2seg_encap;
     bool         test_port = false;
@@ -1268,9 +1314,6 @@ main (int argc, char** argv)
     // delete a non-existent vrf
     hclient.vrf_delete_by_id(1);
 
-    cpu_if_handle = hclient.cpu_if_create(cpu_lif_id);
-    assert(cpu_if_handle != 0);
-
     // create a vrf and perform GETs
     vrf_handle = hclient.vrf_create(vrf_id);
     assert(vrf_handle != 0);
@@ -1297,6 +1340,23 @@ main (int argc, char** argv)
     nw2_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0200, 24, 0x020a0a0201, sg_id);
     assert(nw2_handle != 0);
 
+    uint64_t num_l2segments = 10;
+    uint64_t encap_value    = 100;
+    uint64_t num_uplinks    = 4;
+
+    // create uplinks with this L2 seg as native L2 seg
+    uplink_if_handle = hclient.uplinks_create(if_id,
+                                              num_uplinks,
+                                              l2seg_id);
+    assert(uplink_if_handle != 0);
+
+    create_l2segments(l2seg_id, encap_value, if_id, num_l2segments,
+                      nw1_handle, vrf_id, num_uplinks, hclient,
+                      &l2seg_handle);
+
+    native_l2seg_handle = l2seg_handle;
+
+#if 0
     // create L2 segments
     l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
     l2seg_encap.set_encap_value(100);
@@ -1311,22 +1371,30 @@ main (int argc, char** argv)
     uplink_if_handle = hclient.uplinks_create(if_id, 4, l2seg_id);
     // bringup this L2seg on all uplinks
     hclient.add_l2seg_on_uplinks(if_id, 4, l2seg_id);
+#endif
+
+    uint64_t dest_encap_value = encap_value + num_l2segments;
+    uint64_t dest_l2seg_id    = l2seg_id    + num_l2segments;
+    uint64_t dest_if_id       = if_id       + 1;
 
     l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
-    l2seg_encap.set_encap_value(101);
+    l2seg_encap.set_encap_value(dest_encap_value);
     l2seg_handle =
-        hclient.l2segment_create(vrf_id, l2seg_id + 1, nw2_handle,
+        hclient.l2segment_create(vrf_id,
+                                 dest_l2seg_id,
+                                 nw2_handle,
                                  ::types::L2_SEGMENT_TYPE_TENANT,
                                  ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
                                  ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
                                  l2seg_encap);
     assert(l2seg_handle != 0);
+
     // bringup this L2seg on all uplinks
-    hclient.add_l2seg_on_uplinks(if_id, 4, l2seg_id + 1);
+    hclient.add_l2seg_on_uplinks(if_id, 4, dest_l2seg_id);
 
     // create remote endpoints
     hclient.ep_create(vrf_id, l2seg_id, if_id, sg_id, 0x020a0a0102, 0x0a0a0102);
-    hclient.ep_create(vrf_id, l2seg_id + 1, if_id + 1, sg_id, 0x020a0a0202, 0x0a0a0202);
+    hclient.ep_create(vrf_id, dest_l2seg_id, dest_if_id, sg_id, 0x020a0a0202, 0x0a0a0202);
 
 #if 0
     // NOTE: uncomment this in smart nic mode
@@ -1346,7 +1414,7 @@ main (int argc, char** argv)
     enic_if_handle = hclient.enic_if_create(enic_if_id, lif_id,
                                             uplink_if_handle,  // pinned uplink
                                             native_l2seg_handle,
-                                            l2seg_id + 1);
+                                            dest_l2seg_id);
     assert(enic_if_handle != 0);
 
     // create EP with this ENIC

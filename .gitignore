@@ -32,6 +32,12 @@ bazel-*
 .project
 .cproject
 
+# HAL packaging
+fake_root_target
+hal.tar
+hal.tgz
+plugins.tar
+
 # Remove binaries in vendor
 vendor/**/*.png
 vendor/**/*.bin
