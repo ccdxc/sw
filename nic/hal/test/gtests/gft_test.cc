@@ -1409,6 +1409,7 @@ TEST_F(gft_test, test1) {
         .p4pd_pgm_name = "gft"
     };
     const char *hal_conf_file = "conf/hal.json";
+    char *default_config_dir = NULL;
 
     printf("Connecting to ASIC SIM\n");
     hal::utils::logger_init(0, 0);
@@ -1432,7 +1433,13 @@ TEST_F(gft_test, test1) {
     ASSERT_NE(ret, -1);
     ret = p4pd_asic_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
-    ret = capri_default_config_init("init_bins/8x25_hbm");
+
+    default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
+    if (default_config_dir) {
+        ret = capri_default_config_init(default_config_dir);
+    } else {
+        ret = capri_default_config_init("8x25_hbm");
+    }
     ASSERT_NE(ret, -1);
     ret = capri_tm_init();
     ASSERT_NE(ret, -1);

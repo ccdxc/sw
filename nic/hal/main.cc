@@ -171,7 +171,7 @@ int
 main (int argc, char **argv)
 {
     int              oc;
-    char             *cfg_file = NULL, *cfg_path;
+    char             *cfg_file = NULL, *cfg_path, *default_config_dir = NULL;
     std::string      full_path, ini_full_path, ini_file = "hal.ini";
     hal::hal_cfg_t    hal_cfg;
 
@@ -238,6 +238,13 @@ main (int argc, char **argv)
     if (hal::hal_parse_cfg(full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL config file parsing failed, quitting ...\n");
         exit(1);
+    }
+
+    default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
+    if (default_config_dir) {
+        hal_cfg.default_config_dir = std::string(default_config_dir);
+    } else {
+        hal_cfg.default_config_dir = std::string("8x25_hbm");
     }
 
     // parse the ini

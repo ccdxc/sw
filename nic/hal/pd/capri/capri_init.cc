@@ -40,7 +40,7 @@ capri_default_config_init (const std::string& default_config_dir)
     }
 
     for (i = 0; i < num_phases; i++) {
-        full_path =  std::string(cfg_path) + "/" + default_config_dir + "/init_" + 
+        full_path =  std::string(cfg_path) + "/init_bins/" + default_config_dir + "/init_" + 
                                             std::to_string(i) + "_bin";
 
         HAL_TRACE_DEBUG("Init phase {} Binaries dir: {}", i, full_path.c_str());

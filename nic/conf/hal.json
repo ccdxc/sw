@@ -2,8 +2,7 @@
   "mode": "sim",
   "asic": {
     "name": "capri",
-    "loader_info_file" : "gen/capri_loader.conf",
-    "default_config_dir" : "init_bins/8x25_hbm"
+    "loader_info_file" : "gen/capri_loader.conf"
   },
   "sw" : {
     "grpc_port": "50054",
