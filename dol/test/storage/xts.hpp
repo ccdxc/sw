@@ -169,6 +169,7 @@ public:
 
 int xts_multi_blk();
 int xts_in_place();
+int xts_netapp_data();
 
 
 }  // namespace tests
