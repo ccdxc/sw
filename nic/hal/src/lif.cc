@@ -1333,22 +1333,10 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
     rsp->set_error_code(0 - ret);
 }
 
-hal_ret_t lif_get(LifGetRequest& req,
-                  LifGetResponse *rsp)
+static void
+lif_process_get (lif_t *lif, LifGetResponse *rsp)
 {
-    lif_t   *lif;
     LifSpec *spec;
-
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    lif = lif_lookup_key_or_handle(req.key_or_handle());
-    if (!lif) {
-        rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
-        return HAL_RET_INVALID_ARG;
-    }
 
     // fill in the config spec of this lif.
     spec = rsp->mutable_spec();
@@ -1359,6 +1347,41 @@ hal_ret_t lif_get(LifGetRequest& req,
     spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
 
     rsp->set_api_status(types::API_STATUS_OK);
+}
+
+static bool
+lif_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    LifGetResponseMsg *rsp          = (LifGetResponseMsg *)ctxt;
+    LifGetResponse *response        = rsp->add_response();
+    lif_t          *lif             = NULL;
+
+    lif = (lif_t *)hal_handle_get_obj(entry->handle_id);
+    lif_process_get(lif, response);
+
+    // Always return false here, so that we walk through all hash table
+    // entries. 
+    return false;
+}
+
+hal_ret_t
+lif_get (LifGetRequest& req, LifGetResponseMsg *rsp)
+{
+    lif_t   *lif;
+
+    if (!req.has_key_or_handle()) {
+        g_hal_state->lif_id_ht()->walk(lif_get_ht_cb, rsp);
+    } else {
+        auto response = rsp->add_response();
+        lif = lif_lookup_key_or_handle(req.key_or_handle());
+        if (!lif) {
+            response->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+            return HAL_RET_INVALID_ARG;
+        }
+        lif_process_get(lif, response);
+    }
+
     return HAL_RET_OK;
 }
 

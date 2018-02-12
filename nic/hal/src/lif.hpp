@@ -21,6 +21,7 @@ using intf::LifDeleteRequest;
 using intf::LifDeleteResponse;
 using intf::LifGetRequest;
 using intf::LifGetResponse;
+using intf::LifGetResponseMsg;
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -235,7 +236,7 @@ hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
 hal_ret_t lif_update(LifSpec& spec, LifResponse *rsp);
 hal_ret_t lif_delete(LifDeleteRequest& req,
                      LifDeleteResponse *rsp);
-hal_ret_t lif_get(LifGetRequest& req, LifGetResponse *rsp);
+hal_ret_t lif_get(LifGetRequest& req, LifGetResponseMsg *rsp);
 
 }    // namespace hal
 

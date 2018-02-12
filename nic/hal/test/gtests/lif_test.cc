@@ -9,6 +9,8 @@
 
 using intf::LifSpec;
 using intf::LifResponse;
+using intf::LifGetRequest;
+using intf::LifGetResponseMsg;
 using kh::LifKeyHandle;
 using hal::lif_hal_info_t;
 
@@ -75,7 +77,7 @@ TEST_F(lif_test, test1)
 }
 
 // ----------------------------------------------------------------------------
-// Creating muliple lifs with hwlifid
+// Creating muliple lifs with hwlifid and test get
 // ----------------------------------------------------------------------------
 TEST_F(lif_test, test2) 
 {
@@ -106,8 +108,10 @@ TEST_F(lif_test, test2)
 TEST_F(lif_test, test3) 
 {
     hal_ret_t            ret;
-    LifSpec spec;
-    LifResponse rsp;
+    LifSpec 		 spec;
+    LifResponse 	 rsp;
+    LifGetResponseMsg    get_rsp_msg;
+    LifGetRequest        get_req;
 
     for (int i = 0; i < 10; i++) {
         spec.set_vlan_strip_en(i & 1);
@@ -119,6 +123,24 @@ TEST_F(lif_test, test3)
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
+
+    // Request a specific lif and make sure that request is handled. 
+    get_req.mutable_key_or_handle()->set_lif_id(300);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_get(get_req, &get_rsp_msg);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(get_rsp_msg.response_size() == 1);
+
+    // Do not set a key or handle, and make sure that all Lifs are returned.
+    get_req.clear_key_or_handle();
+    get_rsp_msg.clear_response();
+    ret = hal::lif_get(get_req, &get_rsp_msg);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(get_rsp_msg.response_size() > 1);
 
 }
 
