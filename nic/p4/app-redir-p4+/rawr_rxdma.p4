@@ -24,17 +24,17 @@
 #define rx_table_s2_t2          rawr_mpage
 
 /*
- * Stage 3 table 0 is for hash defined in common rxdma
+ * Stage 3 is for hash defined in common rxdma
  */
-#define rx_table_s3_t1          rawr_chain_pindex_pre_alloc
+#define rx_table_s4_t1          rawr_chain_pindex_pre_alloc
 
-#define rx_table_s4_t0          rawr_cleanup_discard
-#define rx_table_s4_t1          rawr_chain_sem
+#define rx_table_s5_t0          rawr_cleanup_discard
+#define rx_table_s5_t1          rawr_chain_sem
 
-#define rx_table_s5_t0          rawr_desc_free
-#define rx_table_s5_t1          rawr_ppage_free
-#define rx_table_s5_t2          rawr_mpage_free
-#define rx_table_s5_t3          rawr_stats              // actually stage agnostic
+#define rx_table_s6_t0          rawr_desc_free
+#define rx_table_s6_t1          rawr_ppage_free
+#define rx_table_s6_t2          rawr_mpage_free
+#define rx_table_s6_t3          rawr_stats              // actually stage agnostic
 
 /*
  * L7 Raw Redirect stage 1
@@ -51,25 +51,25 @@
 #define rx_table_s2_t2_action   mpage_post_alloc
 
 /*
- * L7 Raw Redirect stage 3
- */
-#define rx_table_s3_t1_action   chain_pindex_pre_alloc
-
-/*
  * L7 Raw Redirect stage 4
  */
-#define rx_table_s4_t0_action   cleanup_discard
-#define rx_table_s4_t1_action   chain_xfer
-#define rx_table_s4_t1_action1  txq_post_read
-#define rx_table_s4_t1_action2  post_update
+#define rx_table_s4_t1_action   chain_pindex_pre_alloc
 
 /*
  * L7 Raw Redirect stage 5
  */
-#define rx_table_s5_t0_action   desc_free
-#define rx_table_s5_t1_action   ppage_free
-#define rx_table_s5_t2_action   mpage_free
-#define rx_table_s5_t3_action   err_stat_inc    // actually stage agnostic
+#define rx_table_s5_t0_action   cleanup_discard
+#define rx_table_s5_t1_action   chain_xfer
+#define rx_table_s5_t1_action1  txq_post_read
+#define rx_table_s5_t1_action2  post_update
+
+/*
+ * L7 Raw Redirect stage 6
+ */
+#define rx_table_s6_t0_action   desc_free
+#define rx_table_s6_t1_action   ppage_free
+#define rx_table_s6_t2_action   mpage_free
+#define rx_table_s6_t3_action   err_stat_inc    // actually stage agnostic
 
 
 #include "../common-p4+/common_rxdma.p4"
@@ -275,14 +275,7 @@ header_type common_global_phv_t {
  * to_stage PHV definitions
  */
 
-header_type to_stage_3_phv_t {
-    fields {
-        // (max 128 bits)
-        chain_ring_indices_addr         : 34;
-    }
-}
-
-header_type to_stage_4_phv_t {
+header_type to_stage_5_phv_t {
     fields {
         // (max 128 bits)
         desc                            : 34;
@@ -291,7 +284,7 @@ header_type to_stage_4_phv_t {
     }
 }
 
-header_type to_stage_5_phv_t {
+header_type to_stage_6_phv_t {
     fields {
         // (max 128 bits)
         desc                            : 34;
@@ -342,13 +335,15 @@ header_type common_t1_s2s_phv_t {
         chain_lif               : 11;
         chain_qtype             : 3;
         chain_qid               : 24;
+        chain_ring_indices_addr : 34;
     }
 }
 
 #define GENERATE_T1_S2S_K \
     modify_field(t1_s2s_scratch.chain_lif, t1_s2s.chain_lif); \
     modify_field(t1_s2s_scratch.chain_qtype, t1_s2s.chain_qtype); \
-    modify_field(t1_s2s_scratch.chain_qid, t1_s2s.chain_qid);
+    modify_field(t1_s2s_scratch.chain_qid, t1_s2s.chain_qid); \
+    modify_field(t1_s2s_scratch.chain_ring_indices_addr, t1_s2s.chain_ring_indices_addr);
     
 
 header_type common_t3_s2s_phv_t {
@@ -401,24 +396,19 @@ metadata common_global_phv_t            common_phv;
 metadata common_global_phv_t            common_global_scratch;
 
 @pragma pa_header_union ingress         app_header
-metadata p4_to_p4plus_cpu_header_t      rawr_app_header;
+metadata p4_to_p4plus_cpu_header_ext_t  rawr_app_header;
 @pragma scratch_metadata
-metadata p4_to_p4plus_cpu_header_t      rawr_scratch_app;
-
-@pragma pa_header_union ingress         to_stage_3
-metadata to_stage_3_phv_t               to_s3;
-@pragma scratch_metadata
-metadata to_stage_3_phv_t               to_s3_scratch;
-
-@pragma pa_header_union ingress         to_stage_4
-metadata to_stage_4_phv_t               to_s4;
-@pragma scratch_metadata
-metadata to_stage_4_phv_t               to_s4_scratch;
+metadata p4_to_p4plus_cpu_header_ext_t  rawr_scratch_app;
 
 @pragma pa_header_union ingress         to_stage_5
 metadata to_stage_5_phv_t               to_s5;
 @pragma scratch_metadata
 metadata to_stage_5_phv_t               to_s5_scratch;
+
+@pragma pa_header_union ingress         to_stage_6
+metadata to_stage_6_phv_t               to_s6;
+@pragma scratch_metadata
+metadata to_stage_6_phv_t               to_s6_scratch;
 
 @pragma dont_trim
 @pragma pa_header_union ingress         common_t1_s2s
@@ -516,6 +506,10 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     // packet_len is length of packet plus sizeof(p4_to_p4plus_cpu_pkt_t)
     // as set by P4 apps.p4
     modify_field(rawr_scratch_app.packet_len, rawr_app_header.packet_len);
+    modify_field(rawr_scratch_app.packet_type, rawr_app_header.packet_type);
+    modify_field(rawr_scratch_app.ip_sa, rawr_app_header.ip_sa);
+    modify_field(rawr_scratch_app.ip_da1, rawr_app_header.ip_da1);
+    modify_field(rawr_scratch_app.ip_da2, rawr_app_header.ip_da2);
 
     // from stage to stage
     
@@ -631,45 +625,10 @@ action mpage_post_alloc(page, pad) {
 }
 
 /*
- * Stage 3 table 1 action
+ * Stage 4 table 1 action
  */
 action chain_pindex_pre_alloc() {
 
-    // k + i for stage 3 table 1
-
-    // from to_stage 3
-    modify_field(to_s3_scratch.chain_ring_indices_addr, to_s3.chain_ring_indices_addr);
-
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // from stage to stage
-
-    // d for stage 3 table 1
-}
-
-/*
- * Stage 4 table 0 action
- */
-action cleanup_discard() {
-
-    // k + i for stage 4
-
-    // from to_stage 4
-    modify_field(to_s4_scratch.desc,  to_s4.desc);
-    modify_field(to_s4_scratch.ppage, to_s4.ppage);
-    modify_field(to_s4_scratch.mpage, to_s4.mpage);
-
-    // from ki global
-    GENERATE_GLOBAL_K
-    
-    // d for stage 4 table 0
-}
-
-/*
- * Stage 4 table 1 action1
- */
-action txq_post_read(pi_curr, ci_curr) {
     // k + i for stage 4 table 1
 
     // from to_stage 4
@@ -678,42 +637,77 @@ action txq_post_read(pi_curr, ci_curr) {
     GENERATE_GLOBAL_K
 
     // from stage to stage
+    GENERATE_T1_S2S_K
 
     // d for stage 4 table 1
+}
+
+/*
+ * Stage 5 table 0 action
+ */
+action cleanup_discard() {
+
+    // k + i for stage 5
+
+    // from to_stage 5
+    modify_field(to_s5_scratch.desc,  to_s5.desc);
+    modify_field(to_s5_scratch.ppage, to_s5.ppage);
+    modify_field(to_s5_scratch.mpage, to_s5.mpage);
+
+    // from ki global
+    GENERATE_GLOBAL_K
+    
+    // d for stage 5 table 0
+}
+
+/*
+ * Stage 5 table 1 action1
+ */
+action txq_post_read(pi_curr, ci_curr) {
+    // k + i for stage 5 table 1
+
+    // from to_stage 5
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage to stage
+
+    // d for stage 5 table 1
     modify_field(chain_txq_ring_indices_d.pi_curr, pi_curr);
     modify_field(chain_txq_ring_indices_d.ci_curr, ci_curr);
 }
 
 
 /*
- * Stage 4 table 1 action2
+ * Stage 5 table 1 action2
  */
 action post_update(ARQ_PI_PARAMS) {
-    // k + i for stage 4 table 1
+    // k + i for stage 5 table 1
 
-    // from to_stage 4
+    // from to_stage 5
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
 
-    // d for stage 4 table 1
+    // d for stage 5 table 1
     GENERATE_ARQ_PI_D(qidxr_chain_d)
 }
 
 
 /*
- * Stage 4 table 1 action2
+ * Stage 5 table 1 action2
  */
 action chain_xfer() {
 
-    // k + i for stage 4
+    // k + i for stage 5
 
-    // from to_stage 4
-    modify_field(to_s4_scratch.desc,  to_s4.desc);
-    modify_field(to_s4_scratch.ppage, to_s4.ppage);
-    modify_field(to_s4_scratch.mpage, to_s4.mpage);
+    // from to_stage 5
+    modify_field(to_s5_scratch.desc,  to_s5.desc);
+    modify_field(to_s5_scratch.ppage, to_s5.ppage);
+    modify_field(to_s5_scratch.mpage, to_s5.mpage);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -724,58 +718,58 @@ action chain_xfer() {
 
 
 /*
- * Stage 5 table 0 action
+ * Stage 6 table 0 action
  */
 action desc_free(pindex, pindex_full) {
-    // k + i for stage 5 table 0
+    // k + i for stage 6 table 0
     
-    // from to_stage 5
-    modify_field(to_s5_scratch.desc, to_s5.desc);
+    // from to_stage 6
+    modify_field(to_s6_scratch.desc, to_s6.desc);
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
 
-    // d for stage 5 table 0
+    // d for stage 6 table 0
     modify_field(sem_desc_d.pindex, pindex);
     modify_field(sem_desc_d.pindex_full, pindex_full);
 }
 
 /*
- * Stage 5 table 1 action
+ * Stage 6 table 1 action
  */
 action ppage_free(pindex, pindex_full) {
-    // k + i for stage 5 table 1
+    // k + i for stage 6 table 1
     
-    // from to_stage 5
-    modify_field(to_s5_scratch.ppage, to_s5.ppage);
+    // from to_stage 6
+    modify_field(to_s6_scratch.ppage, to_s6.ppage);
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
 
-    // d for stage 5 table 1
+    // d for stage 6 table 1
     modify_field(sem_ppage_d.pindex, pindex);
     modify_field(sem_ppage_d.pindex_full, pindex_full);
 }
 
 /*
- * Stage 5 table 2 action
+ * Stage 6 table 2 action
  */
 action mpage_free(pindex, pindex_full) {
-    // k + i for stage 5 table 2
+    // k + i for stage 6 table 2
     
-    // from to_stage 5
-    modify_field(to_s5_scratch.mpage, to_s5.mpage);
+    // from to_stage 6
+    modify_field(to_s6_scratch.mpage, to_s6.mpage);
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
 
-    // d for stage 5 table 2
+    // d for stage 6 table 2
     modify_field(sem_mpage_d.pindex, pindex);
     modify_field(sem_mpage_d.pindex_full, pindex_full);
 }

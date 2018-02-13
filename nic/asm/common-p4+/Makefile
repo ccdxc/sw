@@ -10,7 +10,7 @@ include $(TOPDIR)/make/Make.inc
 PROJ = common-p4+
 OBJ_DIR = ../../obj/p4plus_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR)
+INC_DIRS = -I. -I$(GEN_DIR)
 SRC_DIR = .
 
 
@@ -19,6 +19,7 @@ CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 SRC_FILES := \
     $(SRC_DIR)/rxdma_stage0.s \
     $(SRC_DIR)/txdma_stage0.s \
+    $(SRC_DIR)/rx_table_cpu_hash.s \
     $(SRC_DIR)/tx_stage0_lif_params_table.s \
 	$(SRC_DIR)/tx_table_s7_t4_lif_rate_limiter_table.s \
 	$(NULL)

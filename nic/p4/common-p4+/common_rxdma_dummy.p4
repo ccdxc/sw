@@ -35,6 +35,8 @@
 
 #define rx_table_s4_t1_action1	rx_table_dummy_action
 #define rx_table_s4_t1_action2	rx_table_dummy_action
+#define rx_table_s5_t1_action1	rx_table_dummy_action
+#define rx_table_s5_t1_action2	rx_table_dummy_action
 #define rx_table_s6_t1_action1	rx_table_dummy_action
 #define rx_table_s6_t1_action2	rx_table_dummy_action
 

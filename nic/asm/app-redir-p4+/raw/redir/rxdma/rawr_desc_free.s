@@ -17,7 +17,7 @@ struct rawr_desc_free_desc_free_d   d;
     
     .align
 
-rawr_s5_desc_free:
+rawr_s6_desc_free:
 
     CAPRI_CLEAR_TABLE0_VALID
 
@@ -33,8 +33,8 @@ rawr_s5_desc_free:
     mincr       r_table_idx, CAPRI_RNMDR_RING_SHIFT, r0
     add         r_table_base, r_table_base, r_table_idx, \
                 RNMDR_TABLE_ENTRY_SIZE_SHFT
-    memwr.d     r_table_base, k.{to_s5_desc_sbit0_ebit31...\
-                                 to_s5_desc_sbit32_ebit33}
+    memwr.d     r_table_base, k.{to_s6_desc_sbit0_ebit31...\
+                                 to_s6_desc_sbit32_ebit33}
     
     /*
      * Update CI

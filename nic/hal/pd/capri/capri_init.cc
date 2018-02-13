@@ -18,7 +18,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 84
+#define CAPRI_P4PLUS_NUM_SYMBOLS 85
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -651,7 +651,7 @@ capri_p4p_asm_init (void)
     symbols[75].params[0].name = NUM_CLOCK_TICKS_PER_US;
     symbols[75].params[0].val = 1000;
     
-    symbols[76].name = "rx_table_cpu_hash.bin";
+    symbols[76].name = "cpu_hash_calc_id.bin";
     symbols[76].num_params = 2;
     symbols[76].params[0].name = CAPRI_CPU_HASH_MASK;
     symbols[76].params[0].val = 0x1;
@@ -692,6 +692,13 @@ capri_p4p_asm_init (void)
     symbols[83].num_params = 1;
     symbols[83].params[0].name = ARQRX_BASE;
     symbols[83].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
+
+    symbols[84].name = "rawr_hash_calc_id.bin";
+    symbols[84].num_params = 2;
+    symbols[84].params[0].name = CAPRI_CPU_HASH_MASK;
+    symbols[84].params[0].val = 0x1;
+    symbols[84].params[1].name = CAPRI_CPU_MAX_ARQID;
+    symbols[84].params[1].val = 0x0; 
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

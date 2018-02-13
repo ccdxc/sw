@@ -26,49 +26,16 @@ cpu_rx_read_shared_stage0_start:
     phvwr   p.common_phv_flags, d.u.cpu_rxdma_initial_action_d.flags
 
 cpu_rx_hash_key:
-    // fill Symmetric hash key
-    addi    r1, r0, CPU_HASH_KEY_PREFIX 
-    sll     r2, r1, CPU_HASH_KEY_SHIFT
-    add     r2, r2, r1
-    phvwr   p.toeplitz_key0_data[63:0], r2
-    phvwr   p.toeplitz_key0_data[127:64], r2
-    phvwr   p.toeplitz_key1_data[63:0], r2
-    phvwr   p.toeplitz_key1_data[127:64], r2
-    phvwr   p.toeplitz_key2_data[127:64], r2
-    # store APP Type in the last 4 unused-bits of key2
-    phvwr   p.toeplitz_key2_data[3:0], P4PLUS_APPTYPE_CPU
 
-cpu_rx_hash_data:
-/* fill data for hash */
-    add     r1, r0, k.cpu_app_header_packet_type
-    .brbegin
-    br      r1[1:0]
-    nop
-        .brcase 0
-            b       table_read_DESC_SEMAPHORE
-            nop
-
-        .brcase 1
-            /* IPv4 */
-            phvwr   p.toeplitz_input0_data[63:32], k.{cpu_app_header_l4_sport...cpu_app_header_l4_dport_sbit8_ebit15}
-            phvwr   p.toeplitz_input0_data[127:64], k.cpu_app_header_ip_sa_sbit24_ebit127[87:24]
-            b       table_read_DESC_SEMAPHORE
-            nop
-
-        .brcase 2
-            /* IPv6 */
-            phvwr   p.toeplitz_input0_data, k.{cpu_app_header_ip_sa_sbit0_ebit15...cpu_app_header_ip_sa_sbit24_ebit127}
-            //phvwr   p.toeplitz_input1_data, k.{cpu_app_header_ip_da_sbit0_ebit87...cpu_app_header_ip_da_sbit88_ebit127}
-            phvwrpair p.toeplitz_input1_data[127:120], k.cpu_app_header_ip_da1_sbit0_ebit7,\
-                p.toeplitz_input1_data[119:64], k.cpu_app_header_ip_da1_sbit8_ebit63
-            phvwr   p.toeplitz_input1_data[63:0], k.cpu_app_header_ip_da2
-            phvwr   p.toeplitz_input2_data, k.{cpu_app_header_l4_sport...cpu_app_header_l4_dport_sbit8_ebit15}
-            b       table_read_DESC_SEMAPHORE
-            nop
-       
-        .brcase 3
-            illegal
-    .brend
+    /*
+     * Set up HW toeplitz hash
+     */
+    TOEPLITZ_KEY_DATA_SETUP(CPU_HASH_KEY_PREFIX,
+                            P4PLUS_APPTYPE_CPU,
+                            cpu_app_header,
+                            r1,
+                            r2,
+                            table_read_DESC_SEMAPHORE)
 
 table_read_DESC_SEMAPHORE:
     addi    r3, r0, RNMDR_ALLOC_IDX 

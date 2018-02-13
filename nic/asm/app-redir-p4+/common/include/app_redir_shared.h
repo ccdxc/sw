@@ -38,6 +38,25 @@
 #define APP_REDIR_PROXYC_RINGS_MAX          1
  
 /*
+ * Two ways of supporting visibility mode: using a mirror session or 
+ * ingress replication. 
+ *
+ * Mirror session has a limitation that P4 only parses up to the L2 header 
+ * on the span packet so we'd have to work around that with 
+ * app_redir_rx_span_parse_workaround() below.
+ *
+ * Ingress replication does not have such limitation but is available for
+ * ingress copy only. In addition, replication will back pressure the source
+ * if either the flow's destination queue or the replication-to queue is full.
+ *
+ * In the case of mirror session, the span copy would be dropped if the
+ * mirror-to queue were full.
+ * 
+ */
+#define APP_REDIR_VISIBILITY_USE_MIRROR_SESSION     0
+
+
+/*
  * rawrcb/rawccb creation for span;
  * HW always spans to qtype 0 and qid 0, lif is derived from the mirror
  * session's lport_id. Once in rawrcb, P4+ will hash on flow and spray to

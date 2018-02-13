@@ -8,6 +8,7 @@
 #include "../../../rdma/common/include/capri.h"
 #include "app_redir_shared.h"
 #include "app_redir_headers.h"
+#include "../../cpu-p4plus/include/cpu-defines.h"
 #include "../../cpu-p4plus/include/cpu-macros.h"
 
 /*
