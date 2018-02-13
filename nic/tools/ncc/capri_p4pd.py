@@ -120,7 +120,7 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
                         of.write(code_str)
                     code_str = '} ' + prog_name + 'p4pd_table_range_en;\n\n'
                     of.write(code_str)
-                    ####
+                    #### 
                     code_str = 'typedef enum '+ prog_name + 'p4pd_pipeline_dir_range_ {\n'
                     of.write(code_str)
                     code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_MIN = 0,\n'

@@ -842,7 +842,7 @@ capri_table_entry_write (uint32_t tableid,
                          uint8_t  *hwentry,
                          uint16_t hwentry_bit_len,
                          capri_table_mem_layout_t &tbl_info, int gress,
-                         bool is_oflow_table,
+                         bool is_oflow_table, bool ingress,
                          uint32_t ofl_parent_tbl_depth)
 {
     /* 1. When a Memory line is shared by multiple tables, only tableid's
@@ -888,7 +888,6 @@ capri_table_entry_write (uint32_t tableid,
                                  tbl_info.btm_right_y,
                                  tbl_info.num_buckets,
                                  tbl_info.entry_width);
-    p4pd_table_dir_en dir = (p4pd_table_dir_en) gress;
     int tbl_col = index % tbl_info.num_buckets;
     int blk = tbl_info.top_left_block
                  + ((tbl_col * tbl_info.entry_width) /
@@ -923,7 +922,7 @@ capri_table_entry_write (uint32_t tableid,
         for (int p = 15; p >= 0; p--) {
             temp[p] = *s; s++;
         }
-        if (dir == P4_GRESS_INGRESS) {
+        if (ingress) {
             cap_pics_csr_t *pics_csr = capri_global_pics_get(tableid);
             sram_block_data = 0;
             pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
@@ -946,46 +945,43 @@ int
 capri_table_entry_read (uint32_t tableid,
                         uint32_t index,
                         uint8_t  *hwentry,
-                        uint16_t *hwentry_bit_len)
+                        uint16_t *hwentry_bit_len,
+                        capri_table_mem_layout_t &tbl_info, int gress,
+                        bool is_oflow_table,
+                        uint32_t ofl_parent_tbl_depth)
 {
     /*
      * Unswizzing of the bytes into readable format is
      * expected to be done by caller of the API.
      */
-
     int sram_row, entry_start_block, entry_end_block;
     int entry_start_word;
-    p4pd_table_properties_t tbl_info;
-    p4pd_global_table_properties_get(tableid, &tbl_info);
-    assert(tbl_info.table_location != P4_TBL_LOCATION_HBM);
     // In case of overflow TCAM, SRAM associated with the table
     // is folded along with its parent's hash table.
     // Change index to parent table size + index
-    if (tbl_info.is_oflow_table) {
-        p4pd_table_properties_t ofl_tbl_parent_ctx;
-        p4pd_table_properties_get(tbl_info.oflow_table_id, &ofl_tbl_parent_ctx);
-        index += ofl_tbl_parent_ctx.tabledepth;
+    if (is_oflow_table) {
+        index += ofl_parent_tbl_depth;
     }
     capri_sram_entry_details_get(index,
                                  &sram_row, &entry_start_block,
                                  &entry_end_block, &entry_start_word,
-                                 tbl_info.sram_layout.top_left_x,
-                                 tbl_info.sram_layout.top_left_y,
-                                 tbl_info.sram_layout.top_left_block,
-                                 tbl_info.sram_layout.btm_right_y,
-                                 tbl_info.sram_layout.num_buckets,
-                                 tbl_info.sram_layout.entry_width);
-    int tbl_col = index % tbl_info.sram_layout.num_buckets;
-    int blk = tbl_info.sram_layout.top_left_block
-                 + ((tbl_col * tbl_info.sram_layout.entry_width) /
+                                 tbl_info.top_left_x,
+                                 tbl_info.top_left_y,
+                                 tbl_info.top_left_block,
+                                 tbl_info.btm_right_y,
+                                 tbl_info.num_buckets,
+                                 tbl_info.entry_width);
+    int tbl_col = index % tbl_info.num_buckets;
+    int blk = tbl_info.top_left_block
+                 + ((tbl_col * tbl_info.entry_width) /
                      CAPRI_SRAM_WORDS_PER_BLOCK);
     int block = blk;
-    int copy_bits = tbl_info.sram_layout.entry_width_bits;
+    int copy_bits = tbl_info.entry_width_bits;
     uint16_t *_hwentry = (uint16_t*)hwentry;
 
     capri_sram_shadow_mem_t *shadow_sram;
 
-    shadow_sram = get_sram_shadow_for_table(tableid, tbl_info.gress);
+    shadow_sram = get_sram_shadow_for_table(tableid, gress);
 
     while(copy_bits) {
         if (copy_bits >= 16) {
@@ -1009,7 +1005,7 @@ capri_table_entry_read (uint32_t tableid,
         }
     }
 
-    *hwentry_bit_len = tbl_info.sram_layout.entry_width_bits;
+    *hwentry_bit_len = tbl_info.entry_width_bits;
 
     return CAPRI_OK;
 }
@@ -1018,37 +1014,33 @@ int
 capri_table_hw_entry_read (uint32_t tableid,
                            uint32_t index,
                            uint8_t  *hwentry,
-                           uint16_t *hwentry_bit_len)
+                           uint16_t *hwentry_bit_len,
+                           capri_table_mem_layout_t &tbl_info, int gress,
+                           bool is_oflow_table, bool ingress,
+                           uint32_t ofl_parent_tbl_depth)
 {
     /*
      * Unswizzing of the bytes into readable format is
      * expected to be done by caller of the API.
      */
-
     int sram_row, entry_start_block, entry_end_block;
     int entry_start_word;
-    p4pd_table_properties_t tbl_info;
-    p4pd_global_table_properties_get(tableid, &tbl_info);
-    assert(tbl_info.table_location != P4_TBL_LOCATION_HBM);
     // In case of overflow TCAM, SRAM associated with the table
     // is folded along with its parent's hash table.
     // Change index to parent table size + index
-    if (tbl_info.is_oflow_table) {
-        p4pd_table_properties_t ofl_tbl_parent_ctx;
-        p4pd_table_properties_get(tbl_info.oflow_table_id, &ofl_tbl_parent_ctx);
-        index += ofl_tbl_parent_ctx.tabledepth;
+    if (is_oflow_table) {
+        index += ofl_parent_tbl_depth;
     }
     capri_sram_entry_details_get(index,
                                  &sram_row, &entry_start_block,
                                  &entry_end_block, &entry_start_word,
-                                 tbl_info.sram_layout.top_left_x,
-                                 tbl_info.sram_layout.top_left_y,
-                                 tbl_info.sram_layout.top_left_block,
-                                 tbl_info.sram_layout.btm_right_y,
-                                 tbl_info.sram_layout.num_buckets,
-                                 tbl_info.sram_layout.entry_width);
-    int copy_bits = tbl_info.sram_layout.entry_width_bits;
-    p4pd_table_dir_en dir = tbl_info.gress;
+                                 tbl_info.top_left_x,
+                                 tbl_info.top_left_y,
+                                 tbl_info.top_left_block,
+                                 tbl_info.btm_right_y,
+                                 tbl_info.num_buckets,
+                                 tbl_info.entry_width);
+    int copy_bits = tbl_info.entry_width_bits;
     uint8_t *_hwentry = (uint8_t*)hwentry;
     uint8_t  byte, to_copy;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -1057,7 +1049,7 @@ capri_table_hw_entry_read (uint32_t tableid,
     uint8_t temp[16];
     for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
          i += CAPRI_SRAM_ROWS) {
-        if (dir == P4_GRESS_INGRESS) {
+        if (ingress) {
             cap_pics_csr_t *pics_csr = capri_global_pics_get(tableid);
             pics_csr->dhs_sram.entry[i].read();
             sram_block_data = pics_csr->dhs_sram.entry[i].data();
@@ -1085,7 +1077,7 @@ capri_table_hw_entry_read (uint32_t tableid,
         _hwentry += to_copy_bytes;
         entry_start_word = 0;
     }
-    *hwentry_bit_len = tbl_info.sram_layout.entry_width_bits;
+    *hwentry_bit_len = tbl_info.entry_width_bits;
     return (CAPRI_OK);
 }
 
@@ -1146,7 +1138,9 @@ capri_tcam_table_entry_write (uint32_t tableid,
                               uint32_t index,
                               uint8_t  *trit_x,
                               uint8_t  *trit_y,
-                              uint16_t hwentry_bit_len)
+                              uint16_t hwentry_bit_len,
+                              capri_table_mem_layout_t &tbl_info,
+                              int gress, bool ingress)
 {
     /* 1. When a Memory line is shared by multiple tables, only tableid's
      *    table entry bits need to be modified in the memory line.
@@ -1168,33 +1162,29 @@ capri_tcam_table_entry_write (uint32_t tableid,
      */
     int tcam_row, entry_start_block, entry_end_block;
     int entry_start_word;
-    p4pd_table_properties_t tbl_info;
-    p4pd_table_properties_get(tableid, &tbl_info);
-    assert(tbl_info.table_location != P4_TBL_LOCATION_HBM);
 
     capri_tcam_entry_details_get(index,
                                  &tcam_row, &entry_start_block,
                                  &entry_end_block, &entry_start_word,
-                                 tbl_info.tcam_layout.top_left_y,
-                                 tbl_info.tcam_layout.top_left_block,
-                                 tbl_info.tcam_layout.btm_right_y,
-                                 tbl_info.tcam_layout.num_buckets,
-                                 tbl_info.tcam_layout.entry_width,
-                                 tbl_info.tcam_layout.start_index);
-    p4pd_table_dir_en dir = tbl_info.gress;
-    int tbl_col = index % tbl_info.tcam_layout.num_buckets;
-    int blk = tbl_info.tcam_layout.top_left_block
-                 + ((tbl_col * tbl_info.tcam_layout.entry_width) /
+                                 tbl_info.top_left_y,
+                                 tbl_info.top_left_block,
+                                 tbl_info.btm_right_y,
+                                 tbl_info.num_buckets,
+                                 tbl_info.entry_width,
+                                 tbl_info.start_index);
+    int tbl_col = index % tbl_info.num_buckets;
+    int blk = tbl_info.top_left_block
+                 + ((tbl_col * tbl_info.entry_width) /
                      CAPRI_TCAM_WORDS_PER_BLOCK);
     int block = blk;
     int copy_bits = hwentry_bit_len;
     uint16_t *_trit_x = (uint16_t*)trit_x;
     uint16_t *_trit_y = (uint16_t*)trit_y;
-    for (int j = 0; j < tbl_info.tcam_layout.entry_width; j++) {
+    for (int j = 0; j < tbl_info.entry_width; j++) {
         if (copy_bits >= 16) {
-            g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+            g_shadow_tcam_p4[gress]->mem_x[tcam_row]
                 [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_x;
-            g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+            g_shadow_tcam_p4[gress]->mem_y[tcam_row]
                 [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_y;
             _trit_x++;
             _trit_y++;
@@ -1204,9 +1194,9 @@ capri_tcam_table_entry_write (uint32_t tableid,
         } else {
             // do not match remaining bits from end of entry bits to next 16b
             // aligned word
-            g_shadow_tcam_p4[tbl_info.gress]->mem_x[tcam_row]
+            g_shadow_tcam_p4[gress]->mem_x[tcam_row]
                 [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
-            g_shadow_tcam_p4[tbl_info.gress]->mem_y[tcam_row]
+            g_shadow_tcam_p4[gress]->mem_y[tcam_row]
                 [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
         }
         entry_start_word++;
@@ -1224,15 +1214,15 @@ capri_tcam_table_entry_write (uint32_t tableid,
     uint8_t temp_x[16];
     uint8_t temp_y[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_TCAM_ROWS, blk++) {
-        uint8_t *s = (uint8_t*)(g_shadow_tcam_p4[dir]->mem_x[tcam_row][blk]);
+        uint8_t *s = (uint8_t*)(g_shadow_tcam_p4[gress]->mem_x[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
             temp_x[p] = *s; s++;
         }
-        s = (uint8_t*)(g_shadow_tcam_p4[dir]->mem_y[tcam_row][blk]);
+        s = (uint8_t*)(g_shadow_tcam_p4[gress]->mem_y[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
             temp_y[p] = *s; s++;
         }
-        if (dir == P4_GRESS_INGRESS) {
+        if (ingress) {
             cap_pict_csr_t & pict_csr = cap0.tsi.pict;
             tcam_block_data_x = 0;
             tcam_block_data_y = 0;
@@ -1254,27 +1244,6 @@ capri_tcam_table_entry_write (uint32_t tableid,
             pict_csr.dhs_tcam_xy.entry[i].write();
         }
     }
-
-
-#ifdef HAL_LOG_TBL_UPDATES
-    if (tbl_info.table_type != P4_TBL_TYPE_HASH && tbl_info.table_type != P4_TBL_TYPE_INDEX) {
-        char    buffer[2048];
-        memset(buffer, 0, sizeof(buffer));
-
-        uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
-                          * key byte has worst case byte padding
-                          */
-        uint8_t keymask[128] = {0};
-        uint8_t data[128] = {0};
-        HAL_TRACE_DEBUG("{}", "Read last installed table entry back into table key and action structures");
-        p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
-
-        p4pd_global_table_ds_decoded_string_get(tableid, index, (void*)key, (void*)keymask,
-                                                (void*)data, buffer, sizeof(buffer));
-        HAL_TRACE_DEBUG("{}", buffer);
-    }
-#endif
-
     return CAPRI_OK;
 }
 
@@ -1283,52 +1252,50 @@ capri_tcam_table_entry_read (uint32_t tableid,
                              uint32_t index,
                              uint8_t  *trit_x,
                              uint8_t  *trit_y,
-                             uint16_t *hwentry_bit_len)
+                             uint16_t *hwentry_bit_len,
+                             capri_table_mem_layout_t &tbl_info,
+                             int gress)
 {
     int tcam_row, entry_start_block, entry_end_block;
     int entry_start_word;
 
-    p4pd_table_properties_t tbl_info;
-    p4pd_table_properties_get(tableid, &tbl_info);
-    p4pd_table_dir_en dir = tbl_info.gress;
-    assert(tbl_info.table_location != P4_TBL_LOCATION_HBM);
     capri_tcam_entry_details_get(index,
                                 &tcam_row, &entry_start_block,
                                 &entry_end_block, &entry_start_word,
-                                tbl_info.tcam_layout.top_left_y,
-                                tbl_info.tcam_layout.top_left_block,
-                                tbl_info.tcam_layout.btm_right_y,
-                                tbl_info.tcam_layout.num_buckets,
-                                tbl_info.tcam_layout.entry_width,
-                                tbl_info.tcam_layout.start_index);
-    int tbl_col = index % tbl_info.tcam_layout.num_buckets;
-    int blk = tbl_info.tcam_layout.top_left_block
-                 + ((tbl_col * tbl_info.tcam_layout.entry_width) /
+                                tbl_info.top_left_y,
+                                tbl_info.top_left_block,
+                                tbl_info.btm_right_y,
+                                tbl_info.num_buckets,
+                                tbl_info.entry_width,
+                                tbl_info.start_index);
+    int tbl_col = index % tbl_info.num_buckets;
+    int blk = tbl_info.top_left_block
+                 + ((tbl_col * tbl_info.entry_width) /
                      CAPRI_TCAM_WORDS_PER_BLOCK);
     int block = blk;
-    int copy_bits = tbl_info.tcam_layout.entry_width_bits;
+    int copy_bits = tbl_info.entry_width_bits;
     int start_word = entry_start_word;
     uint16_t *_trit_x = (uint16_t*)trit_x;
     uint16_t *_trit_y = (uint16_t*)trit_y;
     while(copy_bits) {
         if (copy_bits >= 16) {
-            *_trit_x = g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+            *_trit_x = g_shadow_tcam_p4[gress]->mem_x[tcam_row]
                 [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
-            *_trit_y = g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+            *_trit_y = g_shadow_tcam_p4[gress]->mem_y[tcam_row]
                 [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
             _trit_x++;
             _trit_y++;
             copy_bits -= 16;
         } else if (copy_bits) {
             if (copy_bits > 8) {
-                *_trit_x = g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+                *_trit_x = g_shadow_tcam_p4[gress]->mem_x[tcam_row]
                     [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
-                *_trit_y = g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+                *_trit_y = g_shadow_tcam_p4[gress]->mem_y[tcam_row]
                     [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
             } else {
-                *(uint8_t*)_trit_x = g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+                *(uint8_t*)_trit_x = g_shadow_tcam_p4[gress]->mem_x[tcam_row]
                     [block%CAPRI_TCAM_BLOCK_COUNT][start_word] >> 8;
-                *(uint8_t*)_trit_y = g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+                *(uint8_t*)_trit_y = g_shadow_tcam_p4[gress]->mem_y[tcam_row]
                     [block%CAPRI_TCAM_BLOCK_COUNT][start_word] >> 8;
             }
             copy_bits = 0;
@@ -1341,7 +1308,7 @@ capri_tcam_table_entry_read (uint32_t tableid,
         }
     }
 
-    *hwentry_bit_len = tbl_info.tcam_layout.entry_width_bits;;
+    *hwentry_bit_len = tbl_info.entry_width_bits;;
 
     return CAPRI_OK;
 }
@@ -1351,25 +1318,23 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
                                 uint32_t index,
                                 uint8_t  *trit_x,
                                 uint8_t  *trit_y,
-                                uint16_t *hwentry_bit_len)
+                                uint16_t *hwentry_bit_len,
+                                capri_table_mem_layout_t &tbl_info,
+                                bool ingress)
 {
     int tcam_row, entry_start_block, entry_end_block;
     int entry_start_word;
 
-    p4pd_table_properties_t tbl_info;
-    p4pd_table_properties_get(tableid, &tbl_info);
-    p4pd_table_dir_en dir = tbl_info.gress;
-    assert(tbl_info.table_location != P4_TBL_LOCATION_HBM);
     capri_tcam_entry_details_get(index,
-                                &tcam_row, &entry_start_block,
-                                &entry_end_block, &entry_start_word,
-                                tbl_info.tcam_layout.top_left_y,
-                                tbl_info.tcam_layout.top_left_block,
-                                tbl_info.tcam_layout.btm_right_y,
-                                tbl_info.tcam_layout.num_buckets,
-                                tbl_info.tcam_layout.entry_width,
-                                tbl_info.tcam_layout.start_index);
-    int copy_bits = tbl_info.tcam_layout.entry_width_bits;
+                                 &tcam_row, &entry_start_block,
+                                 &entry_end_block, &entry_start_word,
+                                 tbl_info.top_left_y,
+                                 tbl_info.top_left_block,
+                                 tbl_info.btm_right_y,
+                                 tbl_info.num_buckets,
+                                 tbl_info.entry_width,
+                                 tbl_info.start_index);
+    int copy_bits = tbl_info.entry_width_bits;
     uint8_t byte, to_copy;
     uint8_t *_trit_x = (uint8_t*)trit_x;
     uint8_t *_trit_y = (uint8_t*)trit_y;
@@ -1382,7 +1347,7 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
     uint8_t temp_y[16];
     for (int i = entry_start_block; (i <= entry_end_block) && (copy_bits > 0);
          i += CAPRI_TCAM_ROWS) {
-        if (dir == P4_GRESS_INGRESS) {
+        if (ingress) {
             cap_pict_csr_t & pict_csr = cap0.tsi.pict;
             pict_csr.dhs_tcam_xy.entry[i].read();
             tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
@@ -1421,7 +1386,7 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
         entry_start_word = 0;
         copy_bits -= to_copy;
     }
-    *hwentry_bit_len = tbl_info.tcam_layout.entry_width_bits;;
+    *hwentry_bit_len = tbl_info.entry_width_bits;;
 
     return (CAPRI_OK);
 }
@@ -1430,36 +1395,15 @@ int
 capri_hbm_table_entry_write (uint32_t tableid,
                              uint32_t index,
                              uint8_t *hwentry,
-                             uint16_t entry_size)
+                             uint16_t entry_size,
+                             capri_table_mem_layout_t &tbl_info)
 {
-    p4pd_table_properties_t       tbl_info;
-    p4pd_table_properties_get(tableid, &tbl_info);
-
-
-    assert((entry_size >> 3) <= tbl_info.hbm_layout.entry_width);
+    assert((entry_size >> 3) <= tbl_info.entry_width);
     assert(index < tbl_info.tabledepth);
-
-    uint64_t entry_start_addr = (index * tbl_info.hbm_layout.entry_width);
-
-
+    uint64_t entry_start_addr = (index * tbl_info.entry_width);
+    
     hal::pd::asic_mem_write(get_start_offset(tbl_info.tablename) + entry_start_addr, 
                             hwentry, (entry_size >> 3));
-#ifdef HAL_LOG_TBL_UPDATES
-    char    buffer[2048];
-    memset(buffer, 0, sizeof(buffer));
-    uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
-                      * key byte has worst case byte padding
-                      */
-    uint8_t keymask[128] = {0};
-    uint8_t data[128] = {0};
-    HAL_TRACE_DEBUG("{}", "Read last installed hbm table entry back into table key and action structures");
-    p4pd_global_entry_read(tableid, index, (void*)key, (void*)keymask, (void*)data);
-
-    p4pd_global_table_ds_decoded_string_get(tableid, index, (void*)key, (void*)keymask,
-                                            (void*)data, buffer, sizeof(buffer));
-    HAL_TRACE_DEBUG("{}", buffer);
-#endif
-
     return CAPRI_OK;
 }
 
@@ -1467,18 +1411,15 @@ int
 capri_hbm_table_entry_read (uint32_t tableid,
                             uint32_t index,
                             uint8_t *hwentry,
-                            uint16_t *entry_size)
+                            uint16_t *entry_size,
+                            capri_table_mem_layout_t &tbl_info)
 {
-    p4pd_table_properties_t       tbl_info;
-    p4pd_table_properties_get(tableid, &tbl_info);
-
     assert(index < tbl_info.tabledepth);
-
-    uint64_t entry_start_addr = (index * tbl_info.hbm_layout.entry_width);
+    uint64_t entry_start_addr = (index * tbl_info.entry_width);
 
     hal::pd::asic_mem_read(get_start_offset(tbl_info.tablename) + entry_start_addr,
-                           hwentry, tbl_info.hbm_layout.entry_width);
-    *entry_size = tbl_info.hbm_layout.entry_width;
+                           hwentry, tbl_info.entry_width);
+    *entry_size = tbl_info.entry_width;
     return CAPRI_OK;
 }
 

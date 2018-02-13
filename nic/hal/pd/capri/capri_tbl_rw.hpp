@@ -57,6 +57,8 @@ typedef struct capri_table_mem_layout_ {
     uint16_t    btm_right_y;
     uint8_t     btm_right_block;
     uint8_t     num_buckets;
+    uint32_t    tabledepth;
+    char        *tablename;
 } capri_table_mem_layout_t;
 
 int capri_table_rw_init();
@@ -68,47 +70,60 @@ int capri_table_entry_write(uint32_t tableid,
                             uint8_t  *hwentry,
                             uint16_t hwentry_bit_len,
                             capri_table_mem_layout_t &tbl_info, int gress,
-                            bool is_oflow_table,
+                            bool is_oflow_table, bool ingress,
                             uint32_t ofl_parent_tbl_depth);
 
 int capri_table_entry_read(uint32_t tableid,
                            uint32_t index,
                            uint8_t  *hwentry,
-                           uint16_t *hwentry_bit_len);
+                           uint16_t *hwentry_bit_len,
+                           capri_table_mem_layout_t &tbl_info, int gress,
+                           bool is_oflow_table,
+                           uint32_t ofl_parent_tbl_depth);
 
 int capri_table_hw_entry_read(uint32_t tableid,
                               uint32_t index,
                               uint8_t  *hwentry,
-                              uint16_t *hwentry_bit_len);
+                              uint16_t *hwentry_bit_len,
+                              capri_table_mem_layout_t &tbl_info, int gress,
+                              bool is_oflow_table, bool ingress,
+                              uint32_t ofl_parent_tbl_depth);
 
-
-int capri_tcam_table_entry_write(uint32_t tableid,
-                                 uint32_t index,
-                                 uint8_t  *trit_x,
-                                 uint8_t  *trit_y,
-                                 uint16_t hwentry_bit_len);
+int capri_tcam_table_entry_write (uint32_t tableid,
+                                  uint32_t index,
+                                  uint8_t  *trit_x,
+                                  uint8_t  *trit_y,
+                                  uint16_t hwentry_bit_len,
+                                  capri_table_mem_layout_t &tbl_info,
+                                  int gress, bool ingress);
 
 int capri_tcam_table_entry_read(uint32_t tableid,
                                 uint32_t index,
                                 uint8_t  *trit_x,
                                 uint8_t  *trit_y,
-                                uint16_t *hwentry_bit_len);
+                                uint16_t *hwentry_bit_len,
+                                capri_table_mem_layout_t &tbl_info,
+                                int gress);
 
 int capri_tcam_table_hw_entry_read(uint32_t tableid,
                                    uint32_t index,
                                    uint8_t  *trit_x,
                                    uint8_t  *trit_y,
-                                   uint16_t *hwentry_bit_len);
+                                   uint16_t *hwentry_bit_len,
+                                   capri_table_mem_layout_t &tbl_info,
+                                   bool ingress);
 
 int capri_hbm_table_entry_write(uint32_t tableid,
                                 uint32_t index,
                                 uint8_t *hwentry,
-                                uint16_t entry_size);
+                                uint16_t entry_size,
+                                capri_table_mem_layout_t &tbl_info);
 
 int capri_hbm_table_entry_read(uint32_t tableid,
                                uint32_t index,
                                uint8_t *hwentry,
-                               uint16_t *entry_size);
+                               uint16_t *entry_size,
+                                capri_table_mem_layout_t &tbl_info);
 
 int capri_table_constant_write(uint64_t val, uint32_t stage,
                                uint32_t stage_tableid, bool ingress);
@@ -154,5 +169,9 @@ void capri_program_hbm_table_base_addr(int stage_tableid, char *tablename,
 void capri_p4plus_recirc_init();
 
 void capri_timer_init();
+
+uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc);
+
+uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid);
 
 #endif
