@@ -190,6 +190,7 @@ struct TestEntry {
 };
 
 int add_xts_tests(std::vector<TestEntry>& test_suite);
+int add_xts_perf_tests(std::vector<TestEntry>& test_suite);
 
 }  // namespace tests
 

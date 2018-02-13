@@ -24,6 +24,7 @@ const static uint32_t  kXtsPISize            = 4;
 const static uint32_t  kXtsQueueSize         = 1024;
 
 using namespace dp_mem;
+extern size_t tcid;
 
 namespace xts {
 extern std::vector<TestCtx> xts_tests;
@@ -113,13 +114,13 @@ int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en) {
     }
     return 0;
   };
-  Poller poll;
+  Poller poll(FLAGS_long_poll_interval);
   int rv = poll(func);
   if(0 == rv) {
-    if(decr_en) printf("Decr Opaque tag returned successfully \n");
-    else printf("Encr Opaque tag returned successfully \n");
+    if(decr_en) printf("Decr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
+    else printf("Encr Opaque tag exp %d addr %lx returned successfully \n", exp_opaque_tag, opaque_tag_addr);
   } else {
-    printf("Opaque tag expected value %u rcvd %u\n", exp_opaque_tag, opaque_tag);
+    printf("Opaque tag expected value %u rcvd %u addr %lx\n", exp_opaque_tag, opaque_tag, opaque_tag_addr);
   }
 
   return rv;
@@ -402,7 +403,7 @@ int XtsCtx::test_seq_xts() {
   }
 
   int rv = 0;
-  if(ring_db) {
+  if(copy_desc || ring_db) {
     rv = ring_doorbell();
     if(rv == 0 && verify_db)
       rv = verify_doorbell();
@@ -411,18 +412,25 @@ int XtsCtx::test_seq_xts() {
   return rv;
 }
 
+uint32_t pi;
+bool pi_inited = false;
 int XtsCtx::ring_doorbell() {
   if(use_seq) {
     // Kickstart the sequencer
     test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
   } else {
-    uint32_t pi;
-    read_reg(xts_ring_pi_addr, pi);
+    if(!pi_inited) {
+      read_reg(xts_ring_pi_addr, pi);
+      pi_inited = true;
+    }
+    if(pi == kXtsQueueSize) pi = 0; // roll-over case
     uint64_t ring_addr = xts_ring_base_addr + kXtsDescSize * pi;
     write_mem(ring_addr, (uint8_t*)xts_desc_addr, kXtsDescSize);
     pi += 1;
-    if(pi == kXtsQueueSize) pi = 0; // roll-over case
-    write_reg(xts_ring_pi_addr, pi);
+    if(ring_db) {
+      write_reg(xts_ring_pi_addr, pi);
+      pi_inited = false;
+    }
   }
   return 0;
 }
@@ -575,22 +583,34 @@ int add_xts_tests(std::vector<TestEntry>& test_suite) {
   return 0;
 }
 
+int add_xts_perf_tests(std::vector<TestEntry>& test_suite) {
+  test_suite.push_back({&tests::xts_multi_blk_1req, "XTS Multi Block 1 req", false});
+  test_suite.push_back({&tests::xts_multi_blk_64req, "XTS Multi Block 64 req", false});
+  test_suite.push_back({&tests::xts_multi_blk_128req, "XTS Multi Block 128 req", false});
 
-const static uint32_t  kTotalReqs = 128;
-const static uint32_t  kInitReqs = 64;
-const static uint32_t  kBatchSize = 32;
+  return 0;
+}
+
+const static uint32_t  kMaxReqs = 128;
+uint32_t  kTotalReqs = 128;
+uint32_t  kInitReqs = 64;
+uint32_t  kBatchSize = 32;
 const static uint32_t  kSectorSize = SECTOR_SIZE;
-const static uint32_t  kBufSize = kTotalReqs*(kSectorSize + PROT_INFO_SIZE);
+const static uint32_t  kBufSize = kTotalReqs*(kDefaultBufSize);
 
-int fill_ctx(XtsChainCtx* ctx, char* in_buff[kTotalReqs], char *stg_buff[kTotalReqs], char *out_buff[kTotalReqs]) {
+int fill_ctx(XtsChainCtx* ctx, char* in_buff[kMaxReqs], char *stg_buff[kMaxReqs], char *out_buff[kMaxReqs]) {
   for(uint32_t i = 0; i < kTotalReqs; i++) {
-    ctx[i].xts_ctx1.op = xts::AES_ENCR_N_T10;
+    ctx[i].xts_ctx1.op = xts::AES_ENCR_ONLY;
     ctx[i].xts_ctx1.use_seq = false;
     ctx[i].xts_ctx1.verify_db = false;
+    ctx[i].xts_ctx1.ring_db = false;
+    ctx[i].xts_ctx1.num_sectors = kDefaultBufSize/kSectorSize;
 
-    ctx[i].xts_ctx2.op = xts::AES_DECR_N_T10;
+    ctx[i].xts_ctx2.op = xts::AES_DECR_ONLY;
     ctx[i].xts_ctx2.use_seq = false;
     ctx[i].xts_ctx2.verify_db = false;
+    ctx[i].xts_ctx2.ring_db = false;
+    ctx[i].xts_ctx2.num_sectors = kDefaultBufSize/kSectorSize;
 
     ctx[i].xts_ctx1.src_buf = (void*)in_buff[i];
     ctx[i].xts_ctx1.is_src_hbm_buf = false;
@@ -603,23 +623,50 @@ int fill_ctx(XtsChainCtx* ctx, char* in_buff[kTotalReqs], char *stg_buff[kTotalR
     ctx[i].xts_ctx2.is_dst_hbm_buf = false;
 
     ctx[i].num_ops = 2;
-    ctx[i].xts_ctx1.init(kSectorSize + PROT_INFO_SIZE);
-    ctx[i].xts_ctx2.init(kSectorSize + PROT_INFO_SIZE, true);
+    ctx[i].xts_ctx1.init(kDefaultBufSize);
+    ctx[i].xts_ctx2.init(kDefaultBufSize, true);
   }
   return 0;
 }
 
+int xts_multi_blk_1req() {
+  kTotalReqs = 1;
+  kInitReqs = 1;
+  kBatchSize = 1;
+  exp_opaque_tag_encr = 0;
+  exp_opaque_tag_decr = 0;
+  return xts_multi_blk();
+}
+
+int xts_multi_blk_64req() {
+  kTotalReqs = 64;
+  kInitReqs = 64;
+  kBatchSize = 64;
+  exp_opaque_tag_encr = 0;
+  exp_opaque_tag_decr = 0;
+  return xts_multi_blk();
+}
+
+int xts_multi_blk_128req() {
+  kTotalReqs = 128;
+  kInitReqs = 128;
+  kBatchSize = 128;
+  exp_opaque_tag_encr = 0;
+  exp_opaque_tag_decr = 0;
+  return xts_multi_blk();
+}
+
 int xts_multi_blk() {
   int rv;
-  char *in_buff[kTotalReqs], *stg_buff[kTotalReqs], *out_buff[kTotalReqs];
+  char *in_buff[kMaxReqs], *stg_buff[kMaxReqs], *out_buff[kMaxReqs];
   char* in_buffer = (char *)alloc_host_mem(kBufSize);
   char* stg_buffer = (char *)alloc_host_mem(kBufSize);
   char* out_buffer = (char *)alloc_host_mem(kBufSize);
 
   for(uint32_t i = 0; i < kTotalReqs; i++) {
-    in_buff[i] = in_buffer + i * (kSectorSize + PROT_INFO_SIZE);
-    stg_buff[i] = stg_buffer + i * (kSectorSize + PROT_INFO_SIZE);
-    out_buff[i] = out_buffer + i * (kSectorSize + PROT_INFO_SIZE);
+    in_buff[i] = in_buffer + i * (kDefaultBufSize);
+    stg_buff[i] = stg_buffer + i * (kDefaultBufSize);
+    out_buff[i] = out_buffer + i * (kDefaultBufSize);
   }
 
   XtsChainCtx *ctx = new XtsChainCtx[kTotalReqs];
@@ -629,8 +676,11 @@ int xts_multi_blk() {
   uint32_t encr_reqs_comp = 0, decr_reqs_comp = 0;
   uint32_t pending_encr_reqs = kTotalReqs -kInitReqs,  pending_decr_reqs = kTotalReqs;
 
+  int iter = 1;
+  testcase_begin(tcid, iter);
   //Queue initial set of requests
   for(uint32_t i = 0; i < kInitReqs; i++) {
+    if(i == kInitReqs - 1) ctx[i].xts_ctx1.ring_db = true;
     rv = ctx[i].xts_ctx1.test_seq_xts();
     if(0 != rv) goto done;
   }
@@ -643,6 +693,7 @@ int xts_multi_blk() {
         printf("pending %u comp %u\n", pending_encr_reqs, encr_reqs_comp);
         goto done;
       }
+      testcase_end(tcid, iter++);
       encr_reqs_comp = exp_encr_opaque_tag;
       exp_encr_opaque_tag += kBatchSize;
     }
@@ -652,6 +703,8 @@ int xts_multi_blk() {
       for(uint32_t i = kTotalReqs - pending_encr_reqs;
           i < kTotalReqs - pending_encr_reqs + kBatchSize;
           i++) {
+        if(i == kTotalReqs - pending_encr_reqs + kBatchSize - 1) 
+          ctx[i].xts_ctx1.ring_db = true;
         rv = ctx[i].xts_ctx1.test_seq_xts();
         if(0 != rv) goto done;
       }
@@ -665,14 +718,18 @@ int xts_multi_blk() {
         printf("pending %u comp %u\n", pending_decr_reqs, decr_reqs_comp);
         goto done;
       }
+      testcase_end(tcid, iter++);
       decr_reqs_comp = exp_decr_opaque_tag;
     }
 
     //Queue next batch size of decr
     if(pending_decr_reqs >= kBatchSize) {
+      testcase_begin(tcid, iter);
       for(uint32_t i = kTotalReqs - pending_decr_reqs;
           i < kTotalReqs - pending_decr_reqs + kBatchSize;
           i++) {
+        if(i == kTotalReqs - pending_decr_reqs + kBatchSize - 1) 
+          ctx[i].xts_ctx2.ring_db = true;
         rv = ctx[i].xts_ctx2.test_seq_xts();
         if(0 != rv) goto done;
       }

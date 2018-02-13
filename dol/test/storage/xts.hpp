@@ -150,6 +150,7 @@ public:
   uint32_t start_sec_num = 5;
   xts::xts_aol_t* in_aol[MAX_AOLS];
   xts::xts_aol_t* out_aol[MAX_AOLS];
+  bool copy_desc = true;
   bool ring_db = true;
   bool verify_db = true;
   uint16_t seq_xts_index = 0;
@@ -173,6 +174,9 @@ public:
 int xts_multi_blk();
 int xts_in_place();
 int xts_netapp_data();
+int xts_multi_blk_1req();
+int xts_multi_blk_64req();
+int xts_multi_blk_128req();
 
 
 }  // namespace tests
