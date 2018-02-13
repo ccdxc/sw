@@ -14,8 +14,8 @@ cc_binary(
 
 cc_library(
     name = "pd_gft",
-    srcs = [] + glob(["*.cc"]),
-    hdrs = [] + glob(["*.hpp"]),
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hpp"]),
     deps = [
         "//nic:gft_p4pd",
         "//nic:p4pluspd_txdma",

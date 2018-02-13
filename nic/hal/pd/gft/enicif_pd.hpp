@@ -5,26 +5,17 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
+#include "nic/hal/pd/globalpd/gpd_utils.hpp"
 
 namespace hal {
 namespace pd {
 
 struct pd_enicif_s {
     // Hw Indices
-    uint32_t    inp_prop_mac_vlan_idx_host;     // Pkts from Host
-    uint32_t    inp_prop_mac_vlan_idx_upl;      // Pkts from Uplink
-    uint32_t    enic_lport_id;                  // lport
-    uint32_t    inp_prop_native_l2seg_clsc;     // Classic mode, pkts from host
+    uint32_t   rx_vport_idx; 
 
     // pi ptr
     void        *pi_if;
-} __PACK__;
-
-struct pd_if_l2seg_entry_s {
-    uint32_t    inp_prop_idx;
-
-    // pi ptr
-    void        *pi_if_l2seg_entry;
 } __PACK__;
 
 // ----------------------------------------------------------------------------
@@ -112,6 +103,10 @@ hal_ret_t pd_enicif_update(pd_if_update_args_t *args);
 hal_ret_t pd_enicif_delete(pd_if_delete_args_t *args);
 hal_ret_t pd_enicif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_enicif_mem_free(pd_if_mem_free_args_t *args);
+
+
+hal_ret_t pd_enicif_pgm_rx_vport(pd_enicif_t *pd_enicif, table_oper_t oper);
+// hal_ret_t pd_enicif_depgm_rx_vport(pd_enicif_t *pd_enicif);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_ENICIF_HPP__

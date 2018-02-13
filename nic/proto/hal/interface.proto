@@ -374,6 +374,7 @@ enum IfEnicType {
   IF_ENIC_TYPE_DIRECT   = 3;    // workload attachment used for SR-IOV,
                                 // VSS/DVS connectivity etc.
   IF_ENIC_TYPE_CLASSIC  = 4;    // enics in classic mode
+  IF_ENIC_TYPE_GFT      = 5;    // enics in gft mode
 }
 
 message EnicInfo {
@@ -394,7 +395,7 @@ message IfEnicInfo {
   kh.LifKeyHandle       lif_key_or_handle       = 2 [(gogoproto.moretags) = "venice:ref"]; // LIF identifier for this interface
   uint64                pinned_uplink_if_handle = 3; // uplink this enic is pinned to
   oneof enic_type_info {
-      EnicInfo          enic_info               = 4;
+      EnicInfo          enic_info               = 4; // enic info for non-classic types
       EnicClassicInfo   classic_enic_info       = 5;
   }
 }

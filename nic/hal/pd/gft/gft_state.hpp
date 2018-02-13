@@ -19,6 +19,8 @@
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 
 using sdk::lib::slab;
+using sdk::table::tcam;
+
 
 namespace hal {
 namespace pd {

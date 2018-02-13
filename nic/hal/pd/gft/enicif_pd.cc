@@ -9,6 +9,8 @@
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/gft/if_pd_utils.hpp"
+#include "sdk/tcam.hpp"
 // #include "nic/hal/pd/gft/p4pd_defaults.hpp"
 
 namespace hal {
@@ -23,8 +25,8 @@ pd_enicif_create(pd_if_create_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
 
-    HAL_TRACE_DEBUG("{}: creating pd state for enicif: {}", 
-                    __FUNCTION__, if_get_if_id(args->intf));
+    HAL_TRACE_DEBUG("creating pd state for enicif: {}", 
+                    if_get_if_id(args->intf));
 
     // Create Enic If PD
     pd_enicif = pd_enicif_alloc_init();
@@ -40,8 +42,8 @@ pd_enicif_create(pd_if_create_args_t *args)
     ret = pd_enicif_alloc_res(pd_enicif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("{}: unable to alloc. resources for enicif: {}",
-                      __FUNCTION__, if_get_if_id(args->intf));
+        HAL_TRACE_ERR("unable to alloc. resources for enicif: {}",
+                      if_get_if_id(args->intf));
         goto end;
     }
 
@@ -79,20 +81,19 @@ pd_enicif_delete (pd_if_delete_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("{}:deleting pd state for enicif: {}",
-                    __FUNCTION__, args->intf->if_id);
+    HAL_TRACE_DEBUG("deleting pd state for enicif: {}",
+                    args->intf->if_id);
     enicif_pd = (pd_enicif_t *)args->intf->pd_if;
 
     // deprogram HW
     ret = pd_enicif_deprogram_hw(enicif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("unable to deprogram hw. ret: {}", ret);
     }
 
     ret = pd_enicif_cleanup(enicif_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed pd enicif delete",
-                      __FUNCTION__);
+        HAL_TRACE_ERR("failed pd enicif delete. ret: {}", ret);
     }
 
     return ret;
@@ -143,8 +144,7 @@ pd_enicif_cleanup(pd_enicif_t *pd_enicif)
     // Releasing resources
     ret = pd_enicif_dealloc_res(pd_enicif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for enicif: {}", 
-                      __FUNCTION__, 
+        HAL_TRACE_ERR("unable to dealloc res for enicif: {}", 
                       ((if_t *)(pd_enicif->pi_if))->if_id);
         goto end;
     }
@@ -175,10 +175,95 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
 hal_ret_t
 pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t   ret     = HAL_RET_OK;
+    if_t        *hal_if = (if_t *)pd_enicif->pi_if;
 
+    if (hal_if->enic_type != intf::IF_ENIC_TYPE_GFT) {
+        HAL_TRACE_ERR("invalid enicif type {} in GFT", hal_if->enic_type);
+        goto end;
+    }
+
+    ret = pd_enicif_pgm_rx_vport(pd_enicif, TABLE_OPER_INSERT);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to program rx_vport ret: {}", ret);
+        goto end;
+    }
+
+end:
     return ret;
 }
+
+
+hal_ret_t
+pd_enicif_pgm_rx_vport(pd_enicif_t *pd_enicif, table_oper_t oper)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    rx_vport_swkey_t        key;
+    rx_vport_swkey_mask_t   mask;
+    rx_vport_actiondata     data;
+    mac_addr_t              *mac = NULL;
+    tcam                    *rx_vport_tbl = NULL;
+    uint32_t                hw_lif_id = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    rx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_RX_VPORT);
+    HAL_ASSERT_RETURN((rx_vport_tbl != NULL), HAL_RET_ERR);
+
+
+    // key
+    key.ethernet_1_valid = 0xFF;
+    mac = if_get_mac_addr((if_t*)pd_enicif->pi_if);
+    memcpy(key.ethernet_1_dstAddr, *mac, ETHER_ADDR_LEN);
+    memrev(key.ethernet_1_dstAddr, ETHER_ADDR_LEN);
+
+    // mask
+    mask.ethernet_1_valid_mask = 0xFF;
+    memset(mask.ethernet_1_dstAddr_mask, 0xFF, 6);
+
+    // data
+    ret = if_get_hw_lif_id((if_t*)pd_enicif->pi_if, &hw_lif_id);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to get hw_lif_id ret: {}", ret);
+        goto end;
+    }
+    data.rx_vport_action_u.rx_vport_rx_vport.vport = hw_lif_id;
+    // TODO: Take it from config
+    // data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 1;
+
+    if (oper == TABLE_OPER_INSERT) {
+        sdk_ret = rx_vport_tbl->insert(&key, &mask, &data,
+                                       &pd_enicif->rx_vport_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program rx_vport tbl. ret: {}",
+                          ret);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed rx_vport tbl at: {}",
+                            pd_enicif->rx_vport_idx);
+        }
+    } else {
+        sdk_ret = rx_vport_tbl->update(pd_enicif->rx_vport_idx, 
+                                       &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program rx_vport tbl. ret: {}",
+                          ret);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed rx_vport tbl at: {}",
+                            pd_enicif->rx_vport_idx);
+        }
+    }
+
+end:
+    return ret;
+}
+
 
 // ----------------------------------------------------------------------------
 // Makes a clone

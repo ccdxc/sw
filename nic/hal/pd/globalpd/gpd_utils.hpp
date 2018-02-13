@@ -16,17 +16,14 @@ namespace pd {
 DEFINE_ENUM(table_oper_t, OPER_TYPES)
 #undef OPER_TYPES
 
-
 // Utils
 uint8_t *memrev(uint8_t *block, size_t elnum);
-
 
 #if 0
 // Interface APIs
 bool if_is_cpu_if(if_t *pi_if);
 bool if_is_tunnel_if(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);
-uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_uplink_ifpc_id(if_t *pi_if);
 uint32_t if_get_uplink_lport_id(if_t *pi_if);
 vrf_t *if_get_pi_vrf(if_t *pi_if);
