@@ -156,7 +156,7 @@ gft_exact_match_profile_init (gft_exact_match_profile_t *profile)
     profile->hgem_profiles = NULL;
 
     profile->hal_handle = HAL_HANDLE_INVALID;
-    profile->pd     = NULL;
+    profile->pd = NULL;
 
     return profile;
 }
@@ -298,10 +298,10 @@ typedef struct gft_hdr_xposition_profile_s {
     uint32_t                             num_htp;       // number of header transposition profiles
     gft_hdr_group_xposition_profile_t    *hdr_xposition_profiles;
     
-    void                                 *pd;    // PD state, if any
-
     // operational state
     hal_handle_t          hal_handle;              // HAL allocated handle
+
+    void                                 *pd;    // PD state, if any
 } __PACK__ gft_hdr_xposition_profile_t;
 
 typedef struct gft_htp_create_app_ctxt_s {
@@ -338,7 +338,7 @@ gft_hdr_transposition_profile_init (gft_hdr_xposition_profile_t *profile)
     profile->hdr_xposition_profiles = NULL;
 
     profile->hal_handle = HAL_HANDLE_INVALID;
-    profile->pd     = NULL;
+    profile->pd = NULL;
 
     return profile;
 }
@@ -469,6 +469,9 @@ typedef enum gft_flow_entry_cache_hint_e {
 } gft_flow_entry_cache_hint_t;
 
 typedef struct gft_exact_match_flow_entry_s {
+    hal_spinlock_t                 slock;                              // lock to protect this structure
+    gft_flow_entry_id_t            flow_entry_id;                      // flow entry id allocated by the app
+
     uint32_t                       flags;                              // GFT_EMFE_XXX flags
     gft_table_id_t                 table_id;                           // table this entry belongs to
     vport_id_t                     vport_id;                           // vport to apply this flow entry to
@@ -477,14 +480,127 @@ typedef struct gft_exact_match_flow_entry_s {
     vport_id_t                     redirect_vport_id;                  // redirect vport id, if any
     vport_id_t                     ttl_one_redirect_vport_id;          // vport id to redirect to if TTL is one
     gft_flow_entry_cache_hint_t    cache_hint;                         // cache hint, if any
-    gft_flow_entry_id_t            flow_entry_id;                      // flow entry id allocated by the app
     uint32_t                       num_gft_hdr_group_exact_matches;    // # of header group exact matches
     uint32_t                       num_gft_hdr_group_xpositions;       // # of header group transpositions
     gft_hdr_group_exact_match_t    *exact_matches;                     // exact match list
     gft_hdr_group_xposition_t      *hdr_group_xpositions;              // header transposition list
 
+    // operational state
+    hal_handle_t          hal_handle;              // HAL allocated handle
+
     void                           *pd;                                // PD state, if any
 } __PACK__ gft_exact_match_flow_entry_t;
+
+typedef struct gft_emfe_create_app_ctxt_s {
+} __PACK__ gft_emfe_create_app_ctxt_t;
+
+#define HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES        1048576
+
+// allocate a GFT exact match flow entry instance
+static inline gft_exact_match_flow_entry_t *
+gft_exact_match_flow_entry_alloc (void)
+{
+    gft_exact_match_flow_entry_t    *flow_entry;
+
+    flow_entry = (gft_exact_match_flow_entry_t *)
+                      g_hal_state->gft_exact_match_flow_entry_slab()->alloc();
+    if (flow_entry == NULL) {
+        return NULL;
+    }
+    return flow_entry;
+}
+
+// initialize a GFT exact match flow entry instance
+static inline gft_exact_match_flow_entry_t *
+gft_exact_match_flow_entry_init (gft_exact_match_flow_entry_t *flow_entry)
+{
+    if (!flow_entry) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&flow_entry->slock, PTHREAD_PROCESS_PRIVATE);
+    flow_entry->flow_entry_id = 0;
+    flow_entry->flags = 0;
+    flow_entry->table_id = 0;
+    flow_entry->vport_id = 0;
+    flow_entry->match_profile_id = 0;
+    flow_entry->hdr_xposition_profile_id = 0;
+    flow_entry->redirect_vport_id = 0;
+    flow_entry->ttl_one_redirect_vport_id = 0;
+    flow_entry->cache_hint = GFT_FLOW_ENTRY_CACHE_HINT_NONE;
+    flow_entry->num_gft_hdr_group_exact_matches = 0;
+    flow_entry->num_gft_hdr_group_xpositions = 0;
+    flow_entry->exact_matches = NULL;
+    flow_entry->hdr_group_xpositions = NULL;
+
+    flow_entry->pd = NULL;
+    flow_entry->hal_handle = HAL_HANDLE_INVALID;
+
+    return flow_entry;
+}
+
+// allocate and initialize a GFT exact match flow entry instance
+static inline gft_exact_match_flow_entry_t *
+gft_exact_match_flow_entry_alloc_init (void)
+{
+    return gft_exact_match_flow_entry_init(gft_exact_match_flow_entry_alloc());
+}
+
+// free a GFT exact match flow entry instance
+static inline hal_ret_t
+gft_exact_match_flow_entry_free (gft_exact_match_flow_entry_t *flow_entry)
+{
+    HAL_SPINLOCK_DESTROY(&flow_entry->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY, flow_entry);
+    return HAL_RET_OK;
+}
+
+// cleanup and free a GFT exact match flow entry instance
+static inline hal_ret_t
+gft_exact_match_flow_entry_cleanup (gft_exact_match_flow_entry_t *flow_entry)
+{
+    gft_exact_match_flow_entry_free(flow_entry);
+    return HAL_RET_OK;
+}
+
+// find a GFT exact match flow entry instance by its id
+static inline gft_exact_match_flow_entry_t *
+find_gft_exact_match_flow_entry_by_id (gft_flow_entry_id_t flow_entry_id)
+{
+    hal_handle_id_ht_entry_t        *entry;
+    gft_exact_match_flow_entry_t    *flow_entry;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+                gft_exact_match_flow_entry_id_ht()->lookup(&flow_entry_id);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+                   HAL_OBJ_ID_GFT_EXACT_MATCH_FLOW_ENTRY);
+        flow_entry =
+            (gft_exact_match_flow_entry_t *)hal_handle_get_obj(entry->handle_id);
+        return flow_entry;
+    }
+    return NULL;
+}
+
+// find a GFT exact match flow entry instance by its handle
+static inline gft_exact_match_flow_entry_t *
+find_gft_exact_match_flow_entry_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("Failed to find object with handle {}", handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_GFT_EXACT_MATCH_FLOW_ENTRY) {
+        HAL_TRACE_DEBUG("Failed to find GFT exact match flow entry with handle {}",
+                        handle);
+        return NULL;
+    }
+    return (gft_exact_match_flow_entry_t *)hal_handle_get_obj(handle);
+}
 
 void *gft_exact_match_profile_id_get_key_func(void *entry);
 uint32_t gft_exact_match_profile_id_compute_hash_func(void *key,

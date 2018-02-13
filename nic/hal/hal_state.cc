@@ -320,6 +320,12 @@ hal_cfg_db::init(void)
                     hal::gft_hdr_transposition_profile_id_compare_key_func);
     HAL_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
 
+    gft_exact_match_flow_entry_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES,
+                                                    hal::gft_exact_match_flow_entry_id_get_key_func,
+                                                    hal::gft_exact_match_flow_entry_id_compute_hash_func,
+                                                    hal::gft_exact_match_flow_entry_id_compare_key_func);
+    HAL_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
+
     return true;
 }
 
@@ -394,6 +400,7 @@ hal_cfg_db::hal_cfg_db()
 
     gft_exact_match_profile_id_ht_ = NULL;
     gft_hdr_transposition_profile_id_ht_ = NULL;
+    gft_exact_match_flow_entry_id_ht_ = NULL;
 
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
 }
@@ -487,6 +494,7 @@ hal_cfg_db::~hal_cfg_db()
 
     gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_) : HAL_NOP;
     gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_) : HAL_NOP;
+    gft_exact_match_flow_entry_id_ht_ ? ht::destroy(gft_exact_match_flow_entry_id_ht_) : HAL_NOP;
 }
 
 void

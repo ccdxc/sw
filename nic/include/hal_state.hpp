@@ -140,6 +140,7 @@ public:
     // get APIs for GFT state
     ht *gft_exact_match_profile_id_ht(void) const { return gft_exact_match_profile_id_ht_; }
     ht *gft_hdr_transposition_profile_id_ht(void) const { return gft_hdr_transposition_profile_id_ht_; }
+    ht *gft_exact_match_flow_entry_id_ht(void) const { return gft_exact_match_flow_entry_id_ht_; }
 
     void set_forwarding_mode(std::string modestr);
     hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
@@ -297,6 +298,7 @@ private:
     struct {
         ht         *gft_exact_match_profile_id_ht_;
         ht         *gft_hdr_transposition_profile_id_ht_;
+        ht         *gft_exact_match_flow_entry_id_ht_;
     } __PACK__;
 
     wp_rwlock    rwlock_;
@@ -612,6 +614,7 @@ public:
     slab *gft_hdr_transposition_profile_slab(void) const { return mem_db_->gft_hdr_transposition_profile_slab(); }
     ht *gft_hdr_transposition_profile_id_ht(void) const { return cfg_db_->gft_hdr_transposition_profile_id_ht(); }
     slab *gft_exact_match_flow_entry_slab(void) const { return mem_db_->gft_exact_match_flow_entry_slab(); }
+    ht *gft_exact_match_flow_entry_id_ht(void) const { return cfg_db_->gft_exact_match_flow_entry_id_ht(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(std::string modestr) { 

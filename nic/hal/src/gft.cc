@@ -89,11 +89,51 @@ gft_hdr_transposition_profile_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+//----------------------------------------------------------------------------
+// get GFT exact match flow entry's key
+//----------------------------------------------------------------------------
+void *
+gft_exact_match_flow_entry_id_get_key_func (void *entry)
+{
+    hal_handle_id_ht_entry_t        *ht_entry;
+    gft_exact_match_flow_entry_t    *flow_entry = NULL;
+
+    HAL_ASSERT(entry != NULL);
+    ht_entry = (hal_handle_id_ht_entry_t *)entry;
+    flow_entry =
+        (gft_exact_match_flow_entry_t *)hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(flow_entry->flow_entry_id);
+}
+
+//------------------------------------------------------------------------------
+// compute the hash given GFT exact match flow entry's key (i.e., flow entry id)
+//------------------------------------------------------------------------------
+uint32_t
+gft_exact_match_flow_entry_id_compute_hash_func (void *key, uint32_t ht_size)
+{
+    HAL_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::fnv_hash(key,
+               sizeof(gft_flow_entry_id_t)) % ht_size;
+}
+
+//----------------------------------------------------------------------------
+// compare the keys of GFT exact match flow entries
+//----------------------------------------------------------------------------
+bool
+gft_exact_match_flow_entry_id_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(gft_flow_entry_id_t *)key1 == *(gft_flow_entry_id_t *)key2) {
+        return true;
+    }
+    return false;
+}
+
 //------------------------------------------------------------------------------
 // insert a GFT exact match profile to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-gft_empe_add_to_db (gft_exact_match_profile_t *profile, hal_handle_t handle)
+gft_emp_add_to_db (gft_exact_match_profile_t *profile, hal_handle_t handle)
 {
     hal_ret_t                   ret;
     sdk_ret_t                   sdk_ret;
