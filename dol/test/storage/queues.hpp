@@ -2,6 +2,7 @@
 #define _QUEUES_HPP_
 
 #include <stdint.h>
+#include "dol/test/storage/dp_mem.hpp"
 
 #define SQ_TYPE		0
 #define CQ_TYPE		1
@@ -20,20 +21,20 @@ void seq_queue_pdma_num_set(uint64_t& num_pdma_queues);
 int queues_setup();
 
 int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 
-                     uint32_t roce_qid, uint64_t base_addr, 
+                     uint32_t roce_qid, dp_mem_t *mem, 
                      uint32_t num_entries, uint32_t entry_size);
 int pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype,
-                     uint32_t roce_qid, uint64_t base_addr,
+                     uint32_t roce_qid, dp_mem_t *mem,
                      uint32_t num_entries, uint32_t entry_size,
                      uint64_t xlate_addr);
 
-void *nvme_sq_consume_entry(uint16_t qid, uint16_t *index);
+dp_mem_t *nvme_sq_consume_entry(uint16_t qid, uint16_t *index);
 
-void *pvm_sq_consume_entry(uint16_t qid, uint16_t *index);
+dp_mem_t *pvm_sq_consume_entry(uint16_t qid, uint16_t *index);
 
-void *nvme_cq_consume_entry(uint16_t qid, uint16_t *index);
+dp_mem_t *nvme_cq_consume_entry(uint16_t qid, uint16_t *index);
 
-void *pvm_cq_consume_entry(uint16_t qid, uint16_t *index);
+dp_mem_t *pvm_cq_consume_entry(uint16_t qid, uint16_t *index);
 
 uint16_t get_nvme_lif();
 

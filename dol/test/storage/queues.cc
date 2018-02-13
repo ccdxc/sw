@@ -97,8 +97,7 @@ uint64_t pvm_last_cq;
 uint64_t storage_hbm_ssd_bm_addr;
 
 typedef struct queues_ {
-  void *vaddr;
-  uint64_t paddr;
+  dp_mem_t *mem;
   uint16_t index; // p_ndx for tx queue, c_ndx for rx queue
   uint16_t entry_size;
   uint16_t num_entries;
@@ -173,33 +172,29 @@ void nvme_e2e_ssd_db_init(uint64_t db_addr, uint64_t db_data) {
 }
 
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
-  queue->vaddr = (uint8_t *)alloc_host_mem(num_entries * entry_size);
-  if (queue->vaddr == nullptr) {
-    printf("Unable to allocate host memory for queue\n");
-    return -1;
-  }
-  queue->paddr = host_mem_v2p(queue->vaddr);
+  queue->mem = new dp_mem_t(num_entries, entry_size);
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
 }
 
-int queue_pre_init(queues_t *queue, uint64_t base_addr, uint16_t num_entries,
+int queue_pre_init(queues_t *queue, dp_mem_t *mem, uint16_t num_entries,
                    uint16_t entry_size) {
-  queue->paddr = base_addr;
+  queue->mem = mem;
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
 }
 
-void *queue_consume_entry(queues_t *queue, uint16_t *index) {
-  if (!queue->vaddr || !index) return nullptr;
+dp_mem_t *queue_consume_entry(queues_t *queue, uint16_t *index) {
+  if (!queue->mem || !index) return nullptr;
   uint16_t curr_index = queue->index;
   queue->index = ((queue->index + 1)  % queue->num_entries);
   *index = queue->index;
-  return (void *) ((uint8_t *) queue->vaddr + (curr_index * queue->entry_size));
+
+  return queue->mem->entry_idx_set(curr_index);
 }
 
 
@@ -685,11 +680,11 @@ int queues_setup() {
 
 int
 pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
-                 uint64_t base_addr, uint32_t num_entries, uint32_t entry_size) {
+                 dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size) {
 
     uint32_t i = pvm_last_sq;
     // Initialize the queue in the DOL enviroment
-    if (queue_pre_init(&pvm_sqs[i], base_addr, NUM_TO_VAL(num_entries),
+    if (queue_pre_init(&pvm_sqs[i], mem, NUM_TO_VAL(num_entries),
                        NUM_TO_VAL(entry_size)) < 0) {
       printf("Unable to pre init PVM ROCE SQ %d\n", i);
       return -1;
@@ -711,12 +706,12 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
 
 int
 pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
-                 uint64_t base_addr, uint32_t num_entries, uint32_t entry_size,
+                 dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size,
                  uint64_t xlate_addr) {
 
     uint32_t i = pvm_last_cq;
     // Initialize the queue in the DOL enviroment
-    if (queue_pre_init(&pvm_cqs[i], base_addr, NUM_TO_VAL(num_entries),
+    if (queue_pre_init(&pvm_cqs[i], mem, NUM_TO_VAL(num_entries),
                        NUM_TO_VAL(entry_size)) < 0) {
       printf("Unable to pre init PVM ROCE CQ %d\n", i);
       return -1;
@@ -735,22 +730,22 @@ pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     return i;
 }
 
-void *nvme_sq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *nvme_sq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kNvmeNumSQs)) return nullptr;
   return queue_consume_entry(&nvme_sqs[qid], index);
 }
 
-void *pvm_sq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *pvm_sq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kPvmNumSQs)) return nullptr;
   return queue_consume_entry(&pvm_sqs[qid], index);
 }
 
-void *nvme_cq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *nvme_cq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kNvmeNumCQs)) return nullptr;
   return queue_consume_entry(&nvme_cqs[qid], index);
 }
 
-void *pvm_cq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *pvm_cq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kPvmNumCQs)) return nullptr;
   return queue_consume_entry(&pvm_cqs[qid], index);
 }

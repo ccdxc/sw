@@ -5,12 +5,15 @@
 #include <functional>
 #include <vector>
 #include "gflags/gflags.h"
+#include "dol/test/storage/dp_mem.hpp"
 
 DECLARE_uint64(poll_interval);
 DECLARE_uint64(long_poll_interval);
 DECLARE_uint64(num_pdma_queues);
 
 extern bool run_pdma_tests;
+
+using namespace dp_mem;
 
 namespace tests {
 
