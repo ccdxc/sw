@@ -13,6 +13,7 @@ rx_vport_stats:
                            capri_intrinsic_lif_sbit3_ebit10}, EXCEPTION_VPORT
     phvwr.c1        p.capri_txdma_intrinsic_valid, TRUE
     phvwr.c1        p.p4plus_to_p4_valid, TRUE
+    phvwr.c1        p.capri_intrinsic_tm_oq, 0
     phvwrpair.c1    p.capri_intrinsic_tm_oport, TM_PORT_EGRESS, \
                         p.capri_intrinsic_drop, FALSE
 
