@@ -305,10 +305,12 @@ int main(int argc, char**argv) {
     gettimeofday(&start, NULL);
     printf(" Starting test #: %d name: %s \n", (int) i, test_suite[i].test_name.c_str());
 
+    testcase_begin(i, 0);
     if (test_suite[i].test_fn() < 0)
       test_suite[i].test_succeded = false;
     else
       test_suite[i].test_succeded = true;
+    testcase_end(i, 0);
 
     gettimeofday(&end, NULL);
     printf(" Finished test #: %d name: %s status %d time %d \n", (int) i, test_suite[i].test_name.c_str(), 
