@@ -71,31 +71,16 @@ public:
     uint32_t object_size(hal_obj_id_t obj_id) const;
 
     ht *vrf_id_ht(void) const { return vrf_id_ht_; }
-
     ht *network_key_ht(void) const { return network_key_ht_; }
-    ht *network_hal_handle_ht(void) const { return network_hal_handle_ht_; }
-
     ht *nwsec_profile_id_ht(void) const { return nwsec_profile_id_ht_; }
-    ht *nwsec_profile_hal_handle_ht(void) const { return nwsec_profile_hal_handle_ht_ ; }
-
     ht *nwsec_policy_cfg_ht(void) const { return nwsec_policy_cfg_ht_; }
     ht *nwsec_group_ht(void) const { return nwsec_group_ht_; }
-
-    ht *dos_policy_hal_handle_ht(void) const { return dos_policy_hal_handle_ht_ ; }
-
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
-
     ht *mc_key_ht(void) const { return mc_key_ht_; }
-
     ht *lif_id_ht(void) const { return lif_id_ht_; }
-
     ht *if_id_ht(void) const { return if_id_ht_; }
-
-    ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
-
     ht *l4lb_ht(void) const { return l4lb_ht_; }
     ht *l4lb_hal_handle_ht(void) const { return l4lb_hal_handle_ht_; }
-
     ht *session_id_ht(void) const { return session_id_ht_; }
     ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
     ht *session_hal_iflow_ht(void)  const { return session_hal_iflow_ht_; }
@@ -154,7 +139,7 @@ public:
 
     // get APIs for GFT state
     ht *gft_exact_match_profile_id_ht(void) const { return gft_exact_match_profile_id_ht_; }
-    ht *gft_exact_match_profile_hal_handle_ht(void) const { return gft_exact_match_profile_hal_handle_ht_; }
+    ht *gft_hdr_transposition_profile_id_ht(void) const { return gft_hdr_transposition_profile_id_ht_; }
 
     void set_forwarding_mode(std::string modestr);
     hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
@@ -167,19 +152,16 @@ private:
     // vrf/vrf related config
     struct {
         ht         *vrf_id_ht_;
-        // ht         *vrf_hal_handle_ht_;
     } __PACK__;
 
     // network related config
     struct {
         ht         *network_key_ht_;
-        ht         *network_hal_handle_ht_;
     } __PACK__;
 
     // security profile related config
     struct {
         ht         *nwsec_profile_id_ht_;
-        ht         *nwsec_profile_hal_handle_ht_;
     } __PACK__;
 
     // security group policy related config
@@ -192,11 +174,6 @@ private:
         ht         *nwsec_group_ht_;
     }__PACK__;
 
-    // dos policy related config
-    struct {
-        ht         *dos_policy_hal_handle_ht_;
-    } __PACK__;
-
     // l2segment related config
     struct {
         ht         *l2seg_id_ht_;
@@ -205,7 +182,6 @@ private:
     // mc_entry related config
     struct {
         ht         *mc_key_ht_;
-        // ht         *mc_entry_hal_handle_ht_;
     } __PACK__;
 
     // LIF related config
@@ -216,11 +192,6 @@ private:
     // interface related config
     struct {
         ht         *if_id_ht_;
-    } __PACK__;
-
-    // endpoint related config
-    struct {
-        ht         *ep_hal_handle_ht_;
     } __PACK__;
 
     // flow/session related config
@@ -325,7 +296,7 @@ private:
     // GFT related config
     struct {
         ht         *gft_exact_match_profile_id_ht_;
-        ht         *gft_exact_match_profile_hal_handle_ht_;
+        ht         *gft_hdr_transposition_profile_id_ht_;
     } __PACK__;
 
     wp_rwlock    rwlock_;
@@ -413,6 +384,8 @@ public:
     slab *proxyrcb_slab(void) const { return proxyrcb_slab_; }
     slab *proxyccb_slab(void) const { return proxyccb_slab_; }
     slab *gft_exact_match_profile_slab(void) const { return gft_exact_match_profile_slab_; }
+    slab *gft_hdr_transposition_profile_slab(void) const { return gft_hdr_transposition_profile_slab_; }
+    slab *gft_exact_match_flow_entry_slab(void) const { return gft_exact_match_flow_entry_slab_; }
 
 private:
     bool init(void);
@@ -458,6 +431,8 @@ private:
     slab    *proxyrcb_slab_;
     slab    *proxyccb_slab_;
     slab    *gft_exact_match_profile_slab_;
+    slab    *gft_hdr_transposition_profile_slab_;
+    slab    *gft_exact_match_flow_entry_slab_;
 };
 
 //------------------------------------------------------------------------------
@@ -499,12 +474,10 @@ public:
     // get APIs for network related state
     slab *network_slab(void) const { return mem_db_->network_slab(); }
     ht *network_key_ht(void) const { return cfg_db_->network_key_ht(); }
-    ht *network_hal_handle_ht(void) const { return cfg_db_->network_hal_handle_ht(); }
 
     // get APIs for security profile related state
     slab *nwsec_profile_slab(void) const { return mem_db_->nwsec_profile_slab(); }
     ht *nwsec_profile_id_ht(void) const { return cfg_db_->nwsec_profile_id_ht(); }
-    ht *nwsec_profile_hal_handle_ht(void) const { return cfg_db_->nwsec_profile_hal_handle_ht(); }
 
     // get APIs for security Policy related state
     slab *nwsec_group_slab(void) const { return mem_db_->nwsec_group_slab(); }
@@ -517,7 +490,6 @@ public:
     
     // get APIs for dos policy related state
     slab *dos_policy_slab(void) const { return mem_db_->dos_policy_slab(); }
-    ht *dos_policy_hal_handle_ht(void) const { return cfg_db_->dos_policy_hal_handle_ht(); }
 
     // get APIs for L2 segment state
     slab *l2seg_slab(void) const { return mem_db_->l2seg_slab(); }
@@ -542,7 +514,6 @@ public:
     slab *ep_l3_entry_slab(void) const { return mem_db_->ep_l3_entry_slab(); }
     ht *ep_l2_ht(void) const { return oper_db_->ep_l2_ht(); }
     ht *ep_l3_entry_ht(void) const { return oper_db_->ep_l3_entry_ht(); }
-    ht *ep_hal_handle_ht(void) const { return cfg_db_->ep_hal_handle_ht(); }
 
     // get APIs for l4lb state
     slab *l4lb_slab(void) const { return mem_db_->l4lb_slab(); }
@@ -638,7 +609,9 @@ public:
     // get APIs for GFT state
     slab *gft_exact_match_profile_slab(void) const { return mem_db_->gft_exact_match_profile_slab(); }
     ht *gft_exact_match_profile_id_ht(void) const { return cfg_db_->gft_exact_match_profile_id_ht(); }
-    ht *gft_exact_match_profile_hal_handle_ht(void) const { return cfg_db_->gft_exact_match_profile_hal_handle_ht(); }
+    slab *gft_hdr_transposition_profile_slab(void) const { return mem_db_->gft_hdr_transposition_profile_slab(); }
+    ht *gft_hdr_transposition_profile_id_ht(void) const { return cfg_db_->gft_hdr_transposition_profile_id_ht(); }
+    slab *gft_exact_match_flow_entry_slab(void) const { return mem_db_->gft_exact_match_flow_entry_slab(); }
 
     // forwarding mode APIs
     void set_forwarding_mode(std::string modestr) { 

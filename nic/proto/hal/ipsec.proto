@@ -57,15 +57,15 @@ message Key {
 
 // IPSec security association object
 message IpsecSA {
-  IpsecProtocol                  protocol                  = 10;    // ESP or AH
-  AuthenticationAlgorithm        authentication_algorithm  = 11;   // authentication algorithm
-  Key                            authentication_key        = 12;   // authenticaion key
-  EncryptionAlgorithm            encryption_algorithm      = 13;   // encryption algorithm
-  Key                            encryption_key            = 14;   // encryption key
-  types.IPAddress                local_gateway_ip          = 15;   // local VPN GW IP
-  types.IPAddress                remote_gateway_ip         = 16;   // remote VPN GW IP
-  uint32                         spi                       = 17;   // security parameters index
-  uint32                         nat_traversal_port        = 18;   // NAT-T port, if non-zero
+  IpsecProtocol                  protocol                  = 1;    // ESP or AH
+  AuthenticationAlgorithm        authentication_algorithm  = 2;   // authentication algorithm
+  Key                            authentication_key        = 3;   // authenticaion key
+  EncryptionAlgorithm            encryption_algorithm      = 4;   // encryption algorithm
+  Key                            encryption_key            = 5;   // encryption key
+  types.IPAddress                local_gateway_ip          = 6;   // local VPN GW IP
+  types.IPAddress                remote_gateway_ip         = 7;   // remote VPN GW IP
+  uint32                         spi                       = 8;   // security parameters index
+  uint32                         nat_traversal_port        = 9;   // NAT-T port, if non-zero
 }
 
 // IpsecRuleSpec is the user intent for the IPSec rule

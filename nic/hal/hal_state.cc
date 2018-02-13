@@ -127,6 +127,7 @@ hal_cfg_db::init(void)
                                       hal::l4lb_compute_handle_hash_func,
                                       hal::l4lb_compare_handle_key_func);
     HAL_ASSERT_RETURN((l4lb_hal_handle_ht_ != NULL), false);
+
     // initialize TLS CB related data structures
     tlscb_id_ht_ = ht::factory(HAL_MAX_TLSCB,
                                hal::tlscb_get_key_func,
@@ -254,7 +255,6 @@ hal_cfg_db::init(void)
                                         hal::rawrcb_compute_handle_hash_func,
                                         hal::rawrcb_compare_handle_key_func);
     HAL_ASSERT_RETURN((rawrcb_hal_handle_ht_ != NULL), false);
-
  
     // initialize Raw Chain CB related data structures
     rawccb_id_ht_ = ht::factory(HAL_MAX_RAWCCB_HT_SIZE,
@@ -281,7 +281,6 @@ hal_cfg_db::init(void)
                                           hal::proxyrcb_compute_handle_hash_func,
                                           hal::proxyrcb_compare_handle_key_func);
     HAL_ASSERT_RETURN((proxyrcb_hal_handle_ht_ != NULL), false);
-
  
     // initialize Raw Chain CB related data structures
     proxyccb_id_ht_ = ht::factory(HAL_MAX_PROXYCCB_HT_SIZE,
@@ -308,6 +307,19 @@ hal_cfg_db::init(void)
                                   hal::nwsec_group_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
 
+    gft_exact_match_profile_id_ht_ = ht::factory(HAL_MAX_GFT_EXACT_MATCH_PROFILES,
+                                                 hal::gft_exact_match_profile_id_get_key_func,
+                                                 hal::gft_exact_match_profile_id_compute_hash_func,
+                                                 hal::gft_exact_match_profile_id_compare_key_func);
+    HAL_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
+
+    gft_hdr_transposition_profile_id_ht_ =
+        ht::factory(HAL_MAX_GFT_HDR_TRANSPOSITION_PROFILES,
+                    hal::gft_hdr_transposition_profile_id_get_key_func,
+                    hal::gft_hdr_transposition_profile_id_compute_hash_func,
+                    hal::gft_hdr_transposition_profile_id_compare_key_func);
+    HAL_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
+
     return true;
 }
 
@@ -321,15 +333,12 @@ hal_cfg_db::hal_cfg_db()
     network_key_ht_ = NULL;
 
     nwsec_profile_id_ht_ = NULL;
-    nwsec_profile_hal_handle_ht_ = NULL;
 
     l2seg_id_ht_ = NULL;
     mc_key_ht_ = NULL;
 
     lif_id_ht_ = NULL;
     if_id_ht_ = NULL;
-
-    ep_hal_handle_ht_ = NULL;
 
     session_id_ht_ = NULL;
     session_hal_handle_ht_ = NULL;
@@ -339,8 +348,6 @@ hal_cfg_db::hal_cfg_db()
     l4lb_ht_ = NULL;
     l4lb_hal_handle_ht_ = NULL;
 
-    nwsec_profile_id_ht_ = NULL;
-    nwsec_profile_hal_handle_ht_ = NULL;
     nwsec_policy_cfg_ht_  = NULL;
     nwsec_group_ht_       = NULL;
 
@@ -385,6 +392,9 @@ hal_cfg_db::hal_cfg_db()
     proxyccb_id_ht_ = NULL;
     proxyccb_hal_handle_ht_ = NULL;
 
+    gft_exact_match_profile_id_ht_ = NULL;
+    gft_hdr_transposition_profile_id_ht_ = NULL;
+
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
 }
 
@@ -416,12 +426,8 @@ hal_cfg_db::factory(void)
 hal_cfg_db::~hal_cfg_db()
 {
     vrf_id_ht_ ? ht::destroy(vrf_id_ht_) : HAL_NOP;
-
     network_key_ht_ ? ht::destroy(network_key_ht_) : HAL_NOP;
-
     nwsec_profile_id_ht_ ? ht::destroy(nwsec_profile_id_ht_) : HAL_NOP;
-    nwsec_profile_hal_handle_ht_ ? ht::destroy(nwsec_profile_hal_handle_ht_) : HAL_NOP;
-
     nwsec_policy_cfg_ht_ ? ht::destroy(nwsec_policy_cfg_ht_) : HAL_NOP;
     nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
 
@@ -430,8 +436,6 @@ hal_cfg_db::~hal_cfg_db()
 
     lif_id_ht_ ? ht::destroy(lif_id_ht_) : HAL_NOP;
     if_id_ht_ ? ht::destroy(if_id_ht_) : HAL_NOP;
-
-    ep_hal_handle_ht_ ? ht::destroy(ep_hal_handle_ht_) : HAL_NOP;
 
     session_id_ht_ ? ht::destroy(session_id_ht_) : HAL_NOP;
     session_hal_handle_ht_ ? ht::destroy(session_hal_handle_ht_) : HAL_NOP;
@@ -480,6 +484,9 @@ hal_cfg_db::~hal_cfg_db()
 
     proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
     proxyccb_hal_handle_ht_ ? ht::destroy(proxyccb_hal_handle_ht_) : HAL_NOP;
+
+    gft_exact_match_profile_id_ht_ ? ht::destroy(gft_exact_match_profile_id_ht_) : HAL_NOP;
+    gft_hdr_transposition_profile_id_ht_ ? ht::destroy(gft_hdr_transposition_profile_id_ht_) : HAL_NOP;
 }
 
 void
@@ -893,6 +900,20 @@ hal_mem_db::init(void)
                       16, false, true, true);
     HAL_ASSERT_RETURN((gft_exact_match_profile_slab_ != NULL), false);
 
+    gft_hdr_transposition_profile_slab_ =
+        slab::factory("gft_hdr_xposition_profile",
+                      HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
+                      sizeof(hal::gft_hdr_xposition_profile_t),
+                      16, false, true, true);
+    HAL_ASSERT_RETURN((gft_hdr_transposition_profile_slab_ != NULL), false);
+
+    gft_exact_match_flow_entry_slab_ =
+         slab::factory("gft_exact_match_flow_entry",
+                       HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
+                       sizeof(hal::gft_exact_match_flow_entry_t),
+                       16, false, true, true);
+    HAL_ASSERT_RETURN((gft_exact_match_flow_entry_slab_ != NULL), false);
+
     return true;
 }
 
@@ -940,6 +961,8 @@ hal_mem_db::hal_mem_db()
     proxyrcb_slab_ = NULL;
     proxyccb_slab_ = NULL;
     gft_exact_match_profile_slab_ = NULL;
+    gft_hdr_transposition_profile_slab_ = NULL;
+    gft_exact_match_flow_entry_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -1011,6 +1034,8 @@ hal_mem_db::~hal_mem_db()
     proxyccb_slab_ ? slab::destroy(proxyccb_slab_) : HAL_NOP;
     proxyccb_slab_ = NULL;
     gft_exact_match_profile_slab_ ? slab::destroy(gft_exact_match_profile_slab_) : HAL_NOP;
+    gft_hdr_transposition_profile_slab_ ? slab::destroy(gft_hdr_transposition_profile_slab_) : HAL_NOP;
+    gft_exact_match_flow_entry_slab_ ? slab::destroy(gft_exact_match_flow_entry_slab_) : HAL_NOP;
 }
 
 //----------------------------------------------------------------------------
@@ -1061,6 +1086,8 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(proxyrcb_slab_);
     GET_SLAB(proxyccb_slab_);
     GET_SLAB(gft_exact_match_profile_slab_);
+    GET_SLAB(gft_hdr_transposition_profile_slab_);
+    GET_SLAB(gft_exact_match_flow_entry_slab_);
 
     return NULL;
 }
@@ -1341,6 +1368,18 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_COPP:
         g_hal_state->copp_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_GFT_EXACT_MATCH_PROFILE:
+        g_hal_state->gft_exact_match_profile_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE:
+        g_hal_state->gft_hdr_transposition_profile_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY:
+        g_hal_state->gft_exact_match_flow_entry_slab()->free(elem);
         break;
 
     default:

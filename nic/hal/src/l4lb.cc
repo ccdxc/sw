@@ -3,7 +3,6 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/vrf.hpp"
-// #include <l4lb_svc.hpp>
 #include "nic/hal/src/l4lb.hpp"
 #include "nic/include/eth.h"
 #include <netinet/ether.h>
@@ -89,10 +88,8 @@ validate_l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceRespo
 // process a l4lb service request
 //------------------------------------------------------------------------------
 //
-
 hal_ret_t 
-l4lbservice_create(l4lb::L4LbServiceSpec& spec,
-                   l4lb::L4LbServiceResponse *rsp) 
+l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp) 
 {
     hal_ret_t                   ret;
     vrf_id_t                    tid;
@@ -100,7 +97,6 @@ l4lbservice_create(l4lb::L4LbServiceSpec& spec,
     l4lb_service_entry_t        *l4lb = NULL;
     pd::pd_l4lb_create_args_t   pd_l4lb_args = {0};
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-L4LBService:{}: L4LB Create for vrf: {}", __FUNCTION__, 
                     spec.meta().vrf_id());
 
@@ -166,7 +162,7 @@ l4lbservice_create(l4lb::L4LbServiceSpec& spec,
     rsp->mutable_status()->set_service_handle(l4lb->hal_handle);
 
 end:
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+
     return ret;
 }
     
@@ -174,14 +170,13 @@ end:
 // process a l4lb update request
 //------------------------------------------------------------------------------
 hal_ret_t
-l4lbservice_update(l4lb::L4LbServiceSpec& spec,
-                   l4lb::L4LbServiceResponse *rsp)
+l4lbservice_update (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
 {
     return HAL_RET_OK;
 }
 
 const char *
-l4lb_to_str(l4lb_service_entry_t *l4lb) 
+l4lb_to_str (l4lb_service_entry_t *l4lb)
 {
     static thread_local char       ep_str[4][100];
     static thread_local uint8_t    ep_str_next = 0;

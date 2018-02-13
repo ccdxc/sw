@@ -566,7 +566,7 @@ pd_gft_hdr_group_xposition_profile_create (pd_gft_args_t *gft_args)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (!gft_args->hdr_xposition_profile->num_hxp) {
+    if (!gft_args->hdr_xposition_profile->num_htp) {
         return HAL_RET_INVALID_ARG;
     }
 

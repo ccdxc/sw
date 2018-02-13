@@ -122,8 +122,8 @@ typedef struct gft_exact_match_profile_s {
     void                                   *pd;    // PD state, if any
 } __PACK__ gft_exact_match_profile_t;
 
-typedef struct gft_exact_match_profile_create_app_ctxt_s {
-} __PACK__ gft_exact_match_profile_create_app_ctxt_t;
+typedef struct gft_emp_create_app_ctxt_s {
+} __PACK__ gft_emp_create_app_ctxt_t;
 
 #define HAL_MAX_GFT_EXACT_MATCH_PROFILES    512
 
@@ -291,14 +291,122 @@ typedef struct gft_hdr_group_xposition_profile_s {
 #define GFT_HXP_CUSTOM_ACTION_PRESENT                              0x00000080
 #define GFT_HXP_META_ACTION_BEFORE_HEADER_TRANSPOSITION            0x00000100
 typedef struct gft_hdr_xposition_profile_s {
+    hal_spinlock_t                       slock;         // lock to protect this structure
+    gft_profile_id_t                     profile_id;    // profile id
     uint32_t                             flags;         // GFT_HXP_XXX flags, if any
     gft_table_type_t                     table_type;    // table type
-    gft_profile_id_t                     profile_id;    // profile id
-    uint32_t                             num_hxp;    
+    uint32_t                             num_htp;       // number of header transposition profiles
     gft_hdr_group_xposition_profile_t    *hdr_xposition_profiles;
     
     void                                 *pd;    // PD state, if any
+
+    // operational state
+    hal_handle_t          hal_handle;              // HAL allocated handle
 } __PACK__ gft_hdr_xposition_profile_t;
+
+typedef struct gft_htp_create_app_ctxt_s {
+} __PACK__ gft_htp_create_app_ctxt_t;
+
+#define HAL_MAX_GFT_HDR_TRANSPOSITION_PROFILES    65536
+
+// allocate a GFT header transposition profile instance
+static inline gft_hdr_xposition_profile_t *
+gft_hdr_transposition_profile_alloc (void)
+{
+    gft_hdr_xposition_profile_t    *profile;
+
+    profile = (gft_hdr_xposition_profile_t *)
+                  g_hal_state->gft_hdr_transposition_profile_slab()->alloc();
+    if (profile == NULL) {
+        return NULL;
+    }
+    return profile;
+}
+
+// initialize a GFT header transposition profile instance
+static inline gft_hdr_xposition_profile_t *
+gft_hdr_transposition_profile_init (gft_hdr_xposition_profile_t *profile)
+{
+    if (!profile) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_PRIVATE);
+    profile->profile_id = 0;
+    profile->flags = 0;
+    profile->table_type = GFT_TABLE_TYPE_NONE;
+    profile->num_htp = 0;
+    profile->hdr_xposition_profiles = NULL;
+
+    profile->hal_handle = HAL_HANDLE_INVALID;
+    profile->pd     = NULL;
+
+    return profile;
+}
+
+// allocate and initialize a GFT header transposition profile instance
+static inline gft_hdr_xposition_profile_t *
+gft_hdr_transposition_profile_alloc_init (void)
+{
+    return gft_hdr_transposition_profile_init(gft_hdr_transposition_profile_alloc());
+}
+
+// free a GFT header transposition profile instance
+static inline hal_ret_t
+gft_hdr_transposition_profile_free (gft_hdr_xposition_profile_t *profile)
+{
+    HAL_SPINLOCK_DESTROY(&profile->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE, profile);
+    return HAL_RET_OK;
+}
+
+// cleanup and free a GFT header transposition profile
+static inline hal_ret_t
+gft_hdr_transposition_profile_cleanup (gft_hdr_xposition_profile_t *profile)
+{
+    gft_hdr_transposition_profile_free(profile);
+    return HAL_RET_OK;
+}
+
+// find a GFT header transposition profile instance by its id
+static inline gft_hdr_xposition_profile_t *
+find_gft_hdr_xposition_profile_by_id (gft_profile_id_t profile_id)
+{
+    hal_handle_id_ht_entry_t       *entry;
+    gft_hdr_xposition_profile_t    *profile;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+                gft_hdr_transposition_profile_id_ht()->lookup(&profile_id);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+                   HAL_OBJ_ID_GFT_HDR_TRANSPOSITION_PROFILE);
+
+        profile =
+            (gft_hdr_xposition_profile_t *)hal_handle_get_obj(entry->handle_id);
+        return profile;
+    }
+    return NULL;
+}
+
+// find a GFT header transposition profile instance by its handle
+static inline gft_hdr_xposition_profile_t *
+find_gft_hdr_xposition_profile_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("Failed to find object with handle {}", handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_GFT_HDR_TRANSPOSITION_PROFILE) {
+        HAL_TRACE_DEBUG("Failed to find GFT header transposition profile with handle {}",
+                        handle);
+        return NULL;
+    }
+    return (gft_hdr_xposition_profile_t *)hal_handle_get_obj(handle);
+}
 
 // flags for GFT header group transposition
 #define GFT_HDR_GROUP_XPOSITION_DECREMENT_TTL_IF_NOT_ONE    0x00000001
@@ -382,6 +490,16 @@ void *gft_exact_match_profile_id_get_key_func(void *entry);
 uint32_t gft_exact_match_profile_id_compute_hash_func(void *key,
                                                       uint32_t ht_size);
 bool gft_exact_match_profile_id_compare_key_func(void *key1, void *key2);
+
+void *gft_hdr_transposition_profile_id_get_key_func(void *entry);
+uint32_t gft_hdr_transposition_profile_id_compute_hash_func(void *key,
+                                                            uint32_t ht_size);
+bool gft_hdr_transposition_profile_id_compare_key_func(void *key1, void *key2);
+
+void *gft_exact_match_flow_entry_id_get_key_func(void *entry);
+uint32_t gft_exact_match_flow_entry_id_compute_hash_func(void *key,
+                                                         uint32_t ht_size);
+bool gft_exact_match_flow_entry_id_compare_key_func(void *key1, void *key2);
 
 // SVC CRUD APIs
 hal_ret_t gft_exact_match_profile_create(GftExactMatchProfileSpec& spec,

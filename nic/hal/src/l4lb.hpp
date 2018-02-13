@@ -45,12 +45,6 @@ typedef struct l4lb_service_entry_s {
 // max. number of l4lb services supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_L4LB_SERVICES                (1 << 10)
 
-static inline l4lb_service_entry_t*
-find_l4lb_by_handle (hal_handle_t handle)
-{
-    return (l4lb_service_entry_t *)g_hal_state->l4lb_hal_handle_ht()->lookup(&handle);
-}
-
 static inline l4lb_service_entry_t *
 find_l4lb_by_key (l4lb_key_t *key)
 {
