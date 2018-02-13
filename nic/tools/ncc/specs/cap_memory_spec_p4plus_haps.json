@@ -1,0 +1,16 @@
+{
+  "sram": {
+    "ingress": {
+      "count": 3,
+      "depth": 4096,
+      "width": 128
+    }
+  },
+  "hbm": {
+    "02-p4_tables": {
+      "count": 1,
+      "depth": 536870912,
+      "width": 8
+    }
+  }
+}

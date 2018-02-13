@@ -3616,13 +3616,19 @@ def te_tbl_property_print(json_tbl_):
     pstr += '\tchain_shift = %s\n' % json_tbl_['chain_shift']['value']
     return pstr
 
-def capri_table_memory_spec_load(target):
+def capri_table_memory_spec_load(be):
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
-    if target == 'haps':
-        spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec_haps.json')
+    if be.args.target == 'haps':
+        if be.args.p4_plus:
+            spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec_p4plus_haps.json')
+        else:
+            spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec_haps.json')
     else:
-        spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec.json')
+        if be.args.p4_plus:
+            spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec_p4plus.json')
+        else:
+            spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec.json')
     spec_file = open(spec_file_path)
     spec = json.load(spec_file)
     spec_file.close()
