@@ -78,9 +78,9 @@ gft: platform capsim-master sdk
 	$(MAKE) post-make
 
 gtests_gft:
-	bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:lif_gft_test
-	bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:uplinkif_gft_test
-	bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:enicif_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:lif_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:uplinkif_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:enicif_gft_test
 	 @# Once PD is properly cleaned up gft_test should be compiled with the below cmd. Remove above cmds
 	#bazel build $(SDK_OPTS) --build_tag_filters=gft hal/test/gtests:all
 
