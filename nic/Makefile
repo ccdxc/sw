@@ -102,7 +102,9 @@ package-clean:
 	cd ../ && rm -rf fake_root_target && rm -f hal.tgz && rm -f hal.tar
 
 package: swig-cli package-clean
-	cd ../ && python nic/tools/package.py
+    ifeq ($(ARCH),aarch64)
+		cd ../ && python nic/tools/package.py
+    endif
 
 platform:
     ifeq ($(ARCH),aarch64)
