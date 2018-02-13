@@ -12,13 +12,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "nic/include/base.h"
+#include "sdk/catalog.hpp"
 
 // 320 bytes in one TM cell
 #define HAL_TM_CELL_SIZE            320
-#define HAL_TM_JUMBO_SIZE           9216 // Jumbo pkt size
 #define HAL_TM_HBM_FIFO_ALLOC_SIZE  64 // Min size of the HBM fifo in bytes
-#define HAL_TM_MAX_HBM_ETH_QS       32
-#define HAL_TM_MAX_HBM_DMA_QS       16
+#define HAL_TM_MAX_HBM_ETH_CONTEXTS 32
+#define HAL_TM_MAX_HBM_DMA_CONTEXTS 16
+#define HAL_TM_MAX_HBM_CONTEXTS     (HAL_TM_MAX_HBM_ETH_CONTEXTS > HAL_TM_MAX_HBM_DMA_CONTEXTS ? \
+                                    HAL_TM_MAX_HBM_ETH_CONTEXTS : HAL_TM_MAX_HBM_DMA_CONTEXTS)
 #define HAL_TM_COUNT_L0_NODES       32
 #define HAL_TM_COUNT_L1_NODES       16
 #define HAL_TM_COUNT_L2_NODES       4
@@ -67,70 +69,21 @@ typedef int32_t tm_q_t;
 
 #define TM_PORT_TYPES(ENTRY)                                \
     ENTRY(TM_PORT_TYPE_UPLINK,      0, "uplink")            \
-    ENTRY(TM_PORT_TYPE_BMC,         1, "bmc")               \
-    ENTRY(TM_PORT_TYPE_P4_IG,       2, "p4ig")              \
-    ENTRY(TM_PORT_TYPE_P4_EG,       3, "p4eg")              \
-    ENTRY(TM_PORT_TYPE_DMA,         4, "dma")               \
-    ENTRY(NUM_TM_PORT_TYPES,        5, "num-tm-port-types")
+    ENTRY(TM_PORT_TYPE_P4IG,        1, "p4ig")              \
+    ENTRY(TM_PORT_TYPE_P4EG,        2, "p4eg")              \
+    ENTRY(TM_PORT_TYPE_DMA,         3, "dma")               \
+    ENTRY(NUM_TM_PORT_TYPES,        4, "num-tm-port-types")
 
 DEFINE_ENUM(tm_port_type_e, TM_PORT_TYPES)
 #undef TM_PORT_TYPES
 
-static inline uint32_t
-capri_tm_get_num_iqs_for_port_type (tm_port_type_e port_type)
-{
-    switch(port_type) {
-        case TM_PORT_TYPE_UPLINK: 
-            return 8;
-        case TM_PORT_TYPE_BMC:
-            return 1;
-        case TM_PORT_TYPE_P4_IG:
-        case TM_PORT_TYPE_P4_EG:
-            return 32;
-        case TM_PORT_TYPE_DMA:
-            return 16;
-        case NUM_TM_PORT_TYPES:
-            return 0;
-    }
-    return 0;
-}
+#define TM_HBM_FIFO_TYPES(ENTRY) \
+    ENTRY(TM_HBM_FIFO_TYPE_UPLINK,      0, "uplink-hbm-fifo") \
+    ENTRY(TM_HBM_FIFO_TYPE_TXDMA,       1, "txdma-hbm-fifo") \
+    ENTRY(NUM_TM_HBM_FIFO_TYPES,        2, "num-tm-hbm-fifo-types")
 
-static inline uint32_t
-capri_tm_get_num_oqs_for_port_type (tm_port_type_e port_type)
-{
-    return capri_tm_get_num_iqs_for_port_type(port_type);
-}
-
-
-static inline uint32_t
-capri_tm_get_island_for_port_type (tm_port_type_e port_type)
-{
-    switch(port_type) {
-        case TM_PORT_TYPE_UPLINK: 
-        case TM_PORT_TYPE_BMC:
-        case TM_PORT_TYPE_P4_EG:
-            return 1;
-        case TM_PORT_TYPE_P4_IG:
-        case TM_PORT_TYPE_DMA:
-            return 0;
-        case NUM_TM_PORT_TYPES:
-            return 0;
-    }
-
-    return 0;
-}
-
-static inline uint32_t
-capri_tm_get_max_cells_for_island (uint32_t island)
-{
-    uint32_t cells = 0;
-    if (island == 0) {
-        cells = HAL_TM_BUFFER_ISLAND_0_CELL_COUNT; 
-    } else if (island == 1) {
-        cells = HAL_TM_BUFFER_ISLAND_1_CELL_COUNT; 
-    }
-    return cells;
-}
+DEFINE_ENUM(tm_hbm_fifo_type_e, TM_HBM_FIFO_TYPES)
+#undef TM_HBM_FIFO_TYPES
 
 static inline bool
 capri_tm_q_valid (tm_q_t tm_q)
@@ -141,63 +94,20 @@ capri_tm_q_valid (tm_q_t tm_q)
     return true;
 }
 
-tm_port_type_e
-capri_tm_get_port_type(tm_port_t port);
-
-uint32_t
-capri_tm_num_active_uplink_ports (void);
-
 bool 
 capri_tm_port_is_uplink_port(uint32_t port);
 bool 
 capri_tm_port_is_dma_port(uint32_t port);
 
-static inline uint32_t
-capri_tm_buffer_bytes_to_cells (uint32_t bytes)
-{
-    return (bytes + HAL_TM_CELL_SIZE - 1)/HAL_TM_CELL_SIZE;
-}
-
-static inline uint32_t
-capri_tm_get_pbc_cells_needed_for_port_type (tm_port_type_e port_type)
-{
-    // - Allocate 3 Jumbo cells per port in uplink 
-    // - Allocate 4 jumbo cells for p4 ig and p4 eg
-    // - Allocate 4 Jumbo cells per port in txdma 
-    switch(port_type) {
-        case TM_PORT_TYPE_UPLINK: 
-        case TM_PORT_TYPE_BMC:
-            return 3 * capri_tm_buffer_bytes_to_cells(HAL_TM_JUMBO_SIZE);
-        case TM_PORT_TYPE_P4_EG:
-        case TM_PORT_TYPE_P4_IG:
-            return 4 * capri_tm_buffer_bytes_to_cells(HAL_TM_JUMBO_SIZE);
-        case TM_PORT_TYPE_DMA:
-            return 4 * capri_tm_buffer_bytes_to_cells(HAL_TM_JUMBO_SIZE);
-        case NUM_TM_PORT_TYPES:
-            return 0;
-    }
-
-    return 0;
-}
-
 // APIs to update the hardware
 /* Pool group parameters */
 typedef struct tm_pg_params_s {
-    uint32_t reserved_min; // Number of cells for this PG
-    uint32_t xon_threshold;
-    uint32_t headroom;
-    uint32_t low_limit;
-    uint32_t alpha;
     uint32_t mtu;
 } tm_pg_params_t;
 
 typedef struct tm_hbm_fifo_params_s {
-    uint64_t payload_offset; // 64B aligned offset from the HBM base
-    uint64_t payload_size; // Size in 64B increments
-    uint64_t control_offset;
-    uint64_t control_size;
-    uint32_t xoff_threshold; // in 64B increments
-    uint32_t xon_threshold; // in 64B increments
+    uint32_t xoff_threshold; // in bytes
+    uint32_t xon_threshold; // in bytes
 } tm_hbm_fifo_params_t;
 
 /** capri_tm_pg_params_update
@@ -309,7 +219,7 @@ capri_tm_asic_init(void);
  * @return hal_ret_t: Status of the operation
  */
 hal_ret_t
-capri_tm_init(void);
+capri_tm_init(sdk::lib::catalog* catalog);
 
 /** capri_tm_repl_table_base_addr_set
  * API to program the base address in HBM for the replication table

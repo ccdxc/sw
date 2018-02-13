@@ -258,10 +258,6 @@ hal_state_pd::init(void)
     qos_rxdma_oq_idxr_ = sdk::lib::indexer::factory(HAL_MAX_RXDMA_ONLY_OQS);
     HAL_ASSERT_RETURN((qos_rxdma_oq_idxr_ != NULL), false);
 
-    for (unsigned island = 0; island < HAL_ARRAY_SIZE(qos_island_max_cells_); island++) {
-        qos_island_max_cells_[island] = capri_tm_get_max_cells_for_island(island);
-    }
-
     // initialize Copp PD related data structures
     copp_pd_slab_ = slab::factory("COPP_PD", HAL_SLAB_COPP_PD,
                                   sizeof(hal::pd::pd_copp_t), 8,
@@ -468,16 +464,6 @@ hal_state_pd::init(void)
     return true;
 }
 
-void
-hal_state_pd::qos_hbm_fifo_allocator_init (void) 
-{
-    uint32_t qos_hbm_fifo_size = get_size_kb(CAPRI_HBM_REG_QOS_HBM_FIFO) * 1024;
-    qos_hbm_fifo_size = (qos_hbm_fifo_size + HAL_TM_HBM_FIFO_ALLOC_SIZE - 1)/
-        HAL_TM_HBM_FIFO_ALLOC_SIZE;
-    qos_hbm_fifo_allocator_ = new hal::BMAllocator(qos_hbm_fifo_size);
-    HAL_ASSERT(qos_hbm_fifo_allocator_ != NULL);
-}
-
 //------------------------------------------------------------------------------
 // (private) constructor method
 //------------------------------------------------------------------------------
@@ -523,15 +509,6 @@ hal_state_pd::hal_state_pd()
     qos_uplink_iq_idxr_ = NULL;
     qos_common_oq_idxr_ = NULL;
     qos_rxdma_oq_idxr_ = NULL;
-    qos_hbm_fifo_allocator_ = NULL;
-   
-    for (unsigned island = 0; island < HAL_ARRAY_SIZE(qos_island_max_cells_); island++) {
-        qos_island_max_cells_[island] = 0;
-    }
-
-    for (unsigned island = 0; island < HAL_ARRAY_SIZE(qos_island_cur_cells_); island++) {
-        qos_island_cur_cells_[island] = 0;
-    }
 
     copp_pd_slab_ = NULL;
 
@@ -622,7 +599,6 @@ hal_state_pd::~hal_state_pd()
     qos_txdma_iq_idxr_ ? indexer::destroy(qos_txdma_iq_idxr_) : HAL_NOP;
     qos_common_oq_idxr_ ? indexer::destroy(qos_common_oq_idxr_) : HAL_NOP;
     qos_rxdma_oq_idxr_ ? indexer::destroy(qos_rxdma_oq_idxr_) : HAL_NOP;
-    qos_hbm_fifo_allocator_ ? delete qos_hbm_fifo_allocator_ : HAL_NOP;
 
     copp_pd_slab_ ? slab::destroy(copp_pd_slab_) : HAL_NOP;
 
@@ -1171,7 +1147,6 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
     // common asic pd init (must be called after capri asic init)
     p4pd_asic_init(&p4pd_cfg);
 
-    g_hal_state_pd->qos_hbm_fifo_allocator_init();
 
     return HAL_RET_OK;
 }

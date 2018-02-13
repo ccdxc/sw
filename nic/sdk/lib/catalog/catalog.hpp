@@ -38,6 +38,16 @@ typedef struct catalog_asic_s {
     catalog_asic_port_t ports[MAX_ASIC_PORTS];
 } catalog_asic_t;
 
+typedef struct qos_profile_s {
+    bool sw_init_enable;
+    bool sw_cfg_write_enable;
+    uint32_t jumbo_mtu;
+    uint32_t num_uplink_qs;
+    uint32_t num_p4ig_qs;
+    uint32_t num_p4eg_qs;
+    uint32_t num_dma_qs;
+} qos_profile_t;
+
 typedef struct catalog_s {
     uint32_t                 card_index;                        // card index for the board
     uint32_t                 max_mpu_per_stage;                 // max MPU per pipeline stage
@@ -49,6 +59,7 @@ typedef struct catalog_s {
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
     ptree                    qos_config_tree;                   // qos config information
+    qos_profile_t            qos_profile;                       // qos asic profile 
 } catalog_t;
 
 class catalog {
@@ -77,6 +88,9 @@ public:
     uint32_t   mpu_trace_size()    { return catalog_db_.mpu_trace_size;}
 
     ptree& catalog_qos_config_tree(void) { return catalog_db_.qos_config_tree; }
+
+    const qos_profile_t* qos_profile(void) { return &catalog_db_.qos_profile; }
+    bool qos_sw_init_enabled(void) { return catalog_db_.qos_profile.sw_init_enable; }
 
 private:
     catalog_t    catalog_db_;   // whole catalog database
@@ -113,6 +127,9 @@ private:
     sdk_ret_t populate_uplink_ports(ptree &prop_tree);
 
     catalog_uplink_port_t *uplink_port(uint32_t port);
+
+    // populate qos asic profile
+    sdk_ret_t populate_qos_profile(ptree &prop_tree);
 };
 
 }    // namespace lib

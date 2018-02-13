@@ -1120,8 +1120,8 @@ hal_qos_init (void)
 
     pt::ptree &qos_config_tree = g_hal_state->catalog()->catalog_qos_config_tree();
 
-    auto qos_class_configs = qos_config_tree.get_child_optional("configs.qos_class");
-    auto copp_configs = qos_config_tree.get_child_optional("configs.copp");
+    auto qos_class_configs = qos_config_tree.get_child_optional("qos_class");
+    auto copp_configs = qos_config_tree.get_child_optional("copp");
 
     hal_cfg_db_open(CFG_OP_WRITE);
 

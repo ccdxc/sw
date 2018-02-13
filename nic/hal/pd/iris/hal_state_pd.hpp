@@ -145,17 +145,6 @@ public:
     indexer *qos_uplink_iq_idxr(void) { return qos_uplink_iq_idxr_; }
     indexer *qos_common_oq_idxr(void) { return qos_common_oq_idxr_; }
     indexer *qos_rxdma_oq_idxr(void) { return qos_rxdma_oq_idxr_; }
-    uint32_t qos_island_cur_cells(uint32_t island) { 
-        return island < HAL_ARRAY_SIZE(qos_island_cur_cells_) ? qos_island_cur_cells_[island] : 0;
-    }
-    void qos_island_cur_cells(uint32_t island, uint32_t cells) { 
-        if (island < HAL_ARRAY_SIZE(qos_island_cur_cells_)) { qos_island_cur_cells_[island] = cells; }
-    }
-    uint32_t qos_island_max_cells(uint32_t island) { 
-        return island < HAL_ARRAY_SIZE(qos_island_max_cells_) ? qos_island_max_cells_[island] : 0;
-    }
-    BMAllocator *qos_hbm_fifo_allocator(void) { return qos_hbm_fifo_allocator_; }
-    void qos_hbm_fifo_allocator_init(void);
 
     // get APIs for Copp related state
     slab *copp_pd_slab(void) const { return copp_pd_slab_; }
@@ -391,10 +380,6 @@ private:
         indexer    *qos_uplink_iq_idxr_;
         indexer    *qos_common_oq_idxr_;
         indexer    *qos_rxdma_oq_idxr_;
-        // Buffer island configuration
-        uint32_t   qos_island_max_cells_[HAL_TM_NUM_BUFFER_ISLANDS];
-        uint32_t   qos_island_cur_cells_[HAL_TM_NUM_BUFFER_ISLANDS];
-        BMAllocator *qos_hbm_fifo_allocator_;
     } __PACK__;
 
     // Copp related state

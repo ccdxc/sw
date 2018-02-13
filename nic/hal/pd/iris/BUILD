@@ -37,6 +37,7 @@ cc_library(
         "@sdk//obj:sdk_tcam",
         "@sdk//obj:sdk_hash",
         "@sdk//obj:sdk_directmap",
+        "@sdk//obj:sdk_catalog",
         "//nic/include:base_includes",
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic:spdlog",

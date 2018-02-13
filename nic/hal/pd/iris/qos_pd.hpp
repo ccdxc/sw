@@ -44,14 +44,10 @@ DEFINE_ENUM(pd_qos_oq_type_e, HAL_PD_QOS_OQS)
 
 typedef struct pd_qos_uplink_iq_s {
     tm_q_t   iq;
-    uint64_t payload_hbm_offset[TM_NUM_UPLINK_PORTS];
-    uint64_t control_hbm_offset[TM_NUM_UPLINK_PORTS];
 } __PACK__ pd_qos_uplink_iq_t;
 
 typedef struct pd_qos_txdma_iq_s {
     tm_q_t   iq;
-    uint64_t payload_hbm_offset;
-    uint64_t control_hbm_offset;
 } __PACK__ pd_qos_txdma_iq_t;
 
 struct pd_qos_class_s {
@@ -62,13 +58,6 @@ struct pd_qos_class_s {
     pd_qos_oq_type_e   dest_oq_type;
     tm_q_t             dest_oq;
     bool               pcie_oq; // indicates if the rxdma oq is towards pcie/hbm
-    uint32_t           cells_per_mtu;
-    uint32_t           island_cells[HAL_TM_NUM_BUFFER_ISLANDS];
-    uint64_t           hbm_fifo_base;
-    uint32_t           hbm_fifo_size;
-    uint32_t           payload_hbm_size;
-    uint32_t           control_hbm_size;
-
 
     // pi ptr
     void               *pi_qos_class;

@@ -313,150 +313,6 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
     return ret;
 }
 
-static hal_ret_t
-qos_class_pd_alloc_buffers (pd_qos_class_t *pd_qos_class)
-{
-    hal_ret_t      ret = HAL_RET_OK;
-    qos_class_t    *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
-    int            hbm_fifo_base;
-    tm_port_type_e port_type;
-    uint32_t       cells_needed;
-    uint32_t       num_active_uplink_ports = capri_tm_num_active_uplink_ports();
-    uint32_t       pbc_cells_needed[HAL_TM_NUM_BUFFER_ISLANDS] = {0};
-    uint32_t       uplink_hbm_fifo_count = 0;
-    uint32_t       dma_fifo_count = 0;
-    uint32_t       hbm_fifo_mtus;
-    uint64_t       payload_fifo_size;
-    uint64_t       control_fifo_size;
-    uint64_t       hbm_fifo_size;
-    uint64_t       hbm_offset;
-    uint32_t       cur_cells;
-
-    // Verify the buffer configuration fits within the budget
-    // - Carve out the HBM fifo for both control and payload
-    if (capri_tm_q_valid(pd_qos_class->uplink.iq)) {
-        port_type = TM_PORT_TYPE_UPLINK;
-        // For every uplink port, 3 jumbo cells are needed
-        cells_needed = capri_tm_get_pbc_cells_needed_for_port_type(port_type);
-        pbc_cells_needed[capri_tm_get_island_for_port_type(port_type)] +=
-            cells_needed * num_active_uplink_ports;
-
-        uplink_hbm_fifo_count = num_active_uplink_ports;
-
-        if (qos_class_is_default(qos_class)) {
-            port_type = TM_PORT_TYPE_BMC;
-            cells_needed = capri_tm_get_pbc_cells_needed_for_port_type(port_type);
-            pbc_cells_needed[capri_tm_get_island_for_port_type(port_type)] +=
-                cells_needed;
-        }
-    }
-
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->txdma); i++) {
-        if (capri_tm_q_valid(pd_qos_class->txdma[i].iq)) {
-            port_type = TM_PORT_TYPE_DMA;
-            cells_needed = capri_tm_get_pbc_cells_needed_for_port_type(port_type);
-            pbc_cells_needed[capri_tm_get_island_for_port_type(port_type)] +=
-                cells_needed;
-            dma_fifo_count++;
-        }
-    }
-
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
-        if (capri_tm_q_valid(pd_qos_class->p4_ig_q[i])) {
-            port_type = TM_PORT_TYPE_P4_IG;
-            cells_needed = capri_tm_get_pbc_cells_needed_for_port_type(port_type);
-            pbc_cells_needed[capri_tm_get_island_for_port_type(port_type)] +=
-                cells_needed;
-
-            port_type = TM_PORT_TYPE_P4_EG;
-            cells_needed = capri_tm_get_pbc_cells_needed_for_port_type(port_type);
-            pbc_cells_needed[capri_tm_get_island_for_port_type(port_type)] +=
-                cells_needed;
-        }
-    }
-
-    HAL_TRACE_DEBUG("{}:{} pbc cells needed for qos_class: {}"
-                    "island-0 {} island-1 {}",
-                    __func__, __LINE__,
-                    qos_class->key,
-                    pbc_cells_needed[0], pbc_cells_needed[1]);
-
-    // Allocate the required number of cells
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pbc_cells_needed); i++) {
-        cur_cells = g_hal_state_pd->qos_island_cur_cells(i);
-        if (cur_cells + pbc_cells_needed[i] > 
-            g_hal_state_pd->qos_island_max_cells(i)) {
-            return HAL_RET_NO_RESOURCE;
-        }
-        pd_qos_class->island_cells[i] = pbc_cells_needed[i];
-        // Update the current cells
-        g_hal_state_pd->qos_island_cur_cells(i, cur_cells + pbc_cells_needed[i]);
-    }
-
-    // HBM carving
-    hbm_fifo_mtus = (qos_class->buffer.reserved_mtus + qos_class->buffer.headroom_mtus);
-    payload_fifo_size = hbm_fifo_mtus * qos_class->mtu;
-
-    // Control fifo should be sized to payload_fifo/50
-    control_fifo_size = (payload_fifo_size + 50 - 1)/50;
-
-    // Fifos are allocated in 64B chunks
-    payload_fifo_size = (payload_fifo_size + HAL_TM_HBM_FIFO_ALLOC_SIZE - 1)/
-                                                    HAL_TM_HBM_FIFO_ALLOC_SIZE;
-    control_fifo_size = (control_fifo_size + HAL_TM_HBM_FIFO_ALLOC_SIZE - 1)/
-                                                    HAL_TM_HBM_FIFO_ALLOC_SIZE;
-
-    hbm_fifo_size = (payload_fifo_size + control_fifo_size) * 
-                        (uplink_hbm_fifo_count + dma_fifo_count);
-
-    HAL_TRACE_DEBUG("{}:{} hbm fifo needed for qos_class: {} "
-                    "payload {} control {} uplink count {} dma count {} "
-                    "total fifo size {}",
-                    __func__, __LINE__,
-                    qos_class->key,
-                    payload_fifo_size, control_fifo_size, 
-                    uplink_hbm_fifo_count, dma_fifo_count,
-                    hbm_fifo_size);
-
-    if (hbm_fifo_size) {
-        hbm_fifo_base = g_hal_state_pd->qos_hbm_fifo_allocator()->Alloc(hbm_fifo_size);
-        if (hbm_fifo_base < 0) {
-            HAL_TRACE_ERR("{}:{} Error allocating hbm buffer fifo",
-                          __func__, __LINE__);
-            return HAL_RET_NO_RESOURCE;
-        }
-
-        pd_qos_class->hbm_fifo_base = (uint64_t)hbm_fifo_base;
-        pd_qos_class->hbm_fifo_size = hbm_fifo_size;
-
-        hbm_offset = pd_qos_class->hbm_fifo_base;
-
-        for (unsigned i = 0; i < uplink_hbm_fifo_count; i++) {
-            pd_qos_class->uplink.payload_hbm_offset[i] = hbm_offset;
-            hbm_offset += payload_fifo_size;
-            pd_qos_class->uplink.control_hbm_offset[i] = hbm_offset;
-            hbm_offset += control_fifo_size;
-        }
-
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->txdma); i++) {
-            if (capri_tm_q_valid(pd_qos_class->txdma[i].iq)) {
-                pd_qos_class->txdma[i].payload_hbm_offset = hbm_offset;
-                hbm_offset += payload_fifo_size;
-                pd_qos_class->txdma[i].control_hbm_offset = hbm_offset;
-                hbm_offset += control_fifo_size;
-            }
-        }
-
-        pd_qos_class->payload_hbm_size = payload_fifo_size;
-        pd_qos_class->control_hbm_size = control_fifo_size;
-
-        // If our math is right, hbm_offset should now be equal to the base + size
-        HAL_ASSERT(hbm_offset == (hbm_fifo_base + hbm_fifo_size));
-    }
-
-    return ret;
-}
-
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Qos-class
 // ----------------------------------------------------------------------------
@@ -466,19 +322,9 @@ qos_class_pd_alloc_res (pd_qos_class_t *pd_qos_class)
     hal_ret_t               ret = HAL_RET_OK;
     qos_class_t             *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
 
-    pd_qos_class->cells_per_mtu = capri_tm_buffer_bytes_to_cells(qos_class->mtu);
-
     ret = qos_class_pd_alloc_queues(pd_qos_class);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:{} Error allocating queues for qos-class {} ret {}",
-                      __func__, __LINE__,
-                      qos_class->key, ret);
-        return ret;
-    }
-
-    ret = qos_class_pd_alloc_buffers(pd_qos_class);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:{} Error allocating buffers for qos-class {} ret {}",
                       __func__, __LINE__,
                       qos_class->key, ret);
         return ret;
@@ -606,16 +452,8 @@ qos_class_pd_program_uplink_ports (pd_qos_class_t *pd_qos_class)
             memset(&pg_params, 0, sizeof(pg_params));
             memset(&hbm_params, 0, sizeof(hbm_params));
 
-            pg_params.mtu = pd_qos_class->cells_per_mtu;
+            pg_params.mtu = qos_class->mtu;
 
-            pg_params.reserved_min = 
-                    capri_tm_get_pbc_cells_needed_for_port_type(
-                                        capri_tm_get_port_type(port)); 
-
-            hbm_params.payload_offset = pd_qos_class->uplink.payload_hbm_offset[port];
-            hbm_params.payload_size = pd_qos_class->payload_hbm_size;
-            hbm_params.control_offset = pd_qos_class->uplink.control_hbm_offset[port];
-            hbm_params.control_size = pd_qos_class->control_hbm_size;
             hbm_params.xoff_threshold = qos_class->buffer.xoff_clear_limit;
             hbm_params.xon_threshold = qos_class->buffer.xon_threshold;
 
@@ -681,24 +519,12 @@ qos_class_pd_program_p4_ports (pd_qos_class_t *pd_qos_class)
             // Update the buffer pool parameters
             memset(&pg_params, 0, sizeof(pg_params));
 
-            pg_params.mtu = pd_qos_class->cells_per_mtu;
-
-            pg_params.reserved_min = 
-                capri_tm_get_pbc_cells_needed_for_port_type(
-                    capri_tm_get_port_type(port)); 
+            pg_params.mtu = qos_class->mtu;
 
             ret = capri_tm_pg_params_update(port, iq,
                                             &pg_params, NULL);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("{}: Error programming the buffer params for "
-                              "Qos-class {} on port {} ret {}",
-                              __func__, qos_class->key, port, ret);
-                return ret;
-            }
-
-            ret = program_iq(port, iq, iq);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("{}: Error programming the iq params for "
                               "Qos-class {} on port {} ret {}",
                               __func__, qos_class->key, port, ret);
                 return ret;
@@ -727,24 +553,12 @@ qos_class_pd_program_p4_ports (pd_qos_class_t *pd_qos_class)
             // Update the buffer pool parameters
             memset(&pg_params, 0, sizeof(pg_params));
 
-            pg_params.mtu = pd_qos_class->cells_per_mtu;
-
-            pg_params.reserved_min = 
-                capri_tm_get_pbc_cells_needed_for_port_type(
-                    capri_tm_get_port_type(port)); 
+            pg_params.mtu = qos_class->mtu;
 
             ret = capri_tm_pg_params_update(port, iq,
                                             &pg_params, NULL);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("{}: Error programming the buffer params for "
-                              "Qos-class {} on port {} ret {}",
-                              __func__, qos_class->key, port, ret);
-                return ret;
-            }
-
-            ret = program_iq(port, iq, iq);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("{}: Error programming the iq params for "
                               "Qos-class {} on port {} ret {}",
                               __func__, qos_class->key, port, ret);
                 return ret;
@@ -785,29 +599,12 @@ qos_class_pd_program_dma_ports (pd_qos_class_t *pd_qos_class)
                 memset(&pg_params, 0, sizeof(pg_params));
                 memset(&hbm_params, 0, sizeof(hbm_params));
 
-                pg_params.mtu = pd_qos_class->cells_per_mtu;
-
-                pg_params.reserved_min = 
-                    capri_tm_get_pbc_cells_needed_for_port_type(
-                        capri_tm_get_port_type(port)); 
-
-                hbm_params.payload_offset = pd_qos_class->txdma[i].payload_hbm_offset;
-                hbm_params.payload_size = pd_qos_class->payload_hbm_size;
-                hbm_params.control_offset = pd_qos_class->txdma[i].control_hbm_offset;
-                hbm_params.control_size = pd_qos_class->control_hbm_size;
+                pg_params.mtu = qos_class->mtu;
 
                 ret = capri_tm_pg_params_update(port, iq,
                                                 &pg_params, &hbm_params);
                 if (ret != HAL_RET_OK) {
                     HAL_TRACE_ERR("{}: Error programming the buffer params for "
-                                  "Qos-class {} on port {} ret {}",
-                                  __func__, qos_class->key, port, ret);
-                    return ret;
-                }
-
-                ret = program_iq(port, iq, iq);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("{}: Error programming the iq params for "
                                   "Qos-class {} on port {} ret {}",
                                   __func__, qos_class->key, port, ret);
                     return ret;

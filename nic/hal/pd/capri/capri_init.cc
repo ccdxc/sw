@@ -2,6 +2,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/hal_mem.hpp"
+#include "nic/include/hal_state.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
@@ -772,7 +773,9 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_default_config_init(cfg->default_config_dir);
+        if (!hal::g_hal_state->catalog()->qos_sw_init_enabled()) {
+            ret = capri_default_config_init(cfg->default_config_dir);
+        }
     }
 
     if (ret == HAL_RET_OK) {
@@ -788,7 +791,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_tm_init();
+        ret = capri_tm_init(hal::g_hal_state->catalog());
     }
 
     if (ret == HAL_RET_OK) {

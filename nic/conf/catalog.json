@@ -39,8 +39,18 @@
         {"port_num" : "8", "asic" : "0", "asic_port" : "7" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" }
     ],
 
-    "qos_config" : 
+    "qos" : 
     {
+        "profile" :
+        {
+            "sw_init_enable" : false,
+            "sw_cfg_write_enable" : false,
+            "jumbo_mtu" : 9216,
+            "num_uplink_qs" : 8,
+            "num_p4ig_qs" : 25,
+            "num_p4eg_qs" : 27,
+            "num_dma_qs" : 16
+        },
         "configs" : 
         {
             "qos_class" : 
