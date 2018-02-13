@@ -77,6 +77,10 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
         }
     }
 
+    if (!rx_qos_class && !tx_qos_class) {
+        qos_class = find_qos_class_by_group(hal::QOS_GROUP_DEFAULT);
+    }
+
     if (qos_class) {
         qos_class_en = true;
         pd::pd_qos_class_get_qos_class_id_args_t args;
