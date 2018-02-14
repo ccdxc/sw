@@ -42,14 +42,18 @@ action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
         modify_field(capri_intrinsic.tm_oq, tm_oq);
     }
 
-    if ((udp_opt_ocs.valid == FALSE) or
-        ((udp_opt_ocs.valid == TRUE) and ((capri_intrinsic.csum_err &
-                                           (1 << CSUM_HDR_UDP_OPT_OCS)) == 0))) {
-        if (udp_opt_timestamp.valid == TRUE) {
-            modify_field(p4_to_p4plus_roce.roce_opt_ts_valid, TRUE);
-        }
-        if (udp_opt_mss.valid == TRUE) {
-            modify_field(p4_to_p4plus_roce.roce_opt_mss_valid, TRUE);
+    if (icrc.valid == TRUE) {
+        // using icrc.valid to indicate that udp options are present : icrc is
+        // explicitly extracted in the parser only if udp options are present
+        if ((udp_opt_ocs.valid == FALSE) or
+            ((udp_opt_ocs.valid == TRUE) and
+             ((capri_intrinsic.csum_err & (1 << CSUM_HDR_UDP_OPT_OCS)) == 0))) {
+            if (udp_opt_timestamp.valid == TRUE) {
+                modify_field(p4_to_p4plus_roce.roce_opt_ts_valid, TRUE);
+            }
+            if (udp_opt_mss.valid == TRUE) {
+                modify_field(p4_to_p4plus_roce.roce_opt_mss_valid, TRUE);
+            }
         }
     }
 
