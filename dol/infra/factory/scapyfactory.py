@@ -10,6 +10,7 @@ import infra.common.utils       as utils
 
 from infra.factory.store        import FactoryStore as FactoryStore
 from infra.common.logging       import logger as logger
+from infra.common.glopts        import GlobalOptions as GlobalOptions
 
 class ScapyHeaderBuilder_BASE:
     def build(self, hdr):

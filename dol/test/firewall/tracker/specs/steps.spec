@@ -798,14 +798,14 @@ steps:
     - step:
         id          : IFLOW_DATA_PERF
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 128
+        payloadsize : 512
         fields      :
             flags   : ack
 
     - step:
         id          : RFLOW_DATA_PERF
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 128
+        payloadsize : 512
         fields      :
             flags   : ack
 
