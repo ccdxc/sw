@@ -424,7 +424,8 @@ def GetReferenceObject(key_type, ext_refs, external_constraints=None):
                 if external_constraints != constraints:
                     continue
             return ref_object.key_or_handle
-    return None 
+
+    return CreateConfigFromKeyType(key_type, ext_refs, external_constraints)
 
 # This is used to get the object being referred to from the key. Used in the context 
 # of callbacks, to check whether an object being referred to has some specific
@@ -435,7 +436,17 @@ def GetConfigMessageFromKey(key):
         if ref_object.key_or_handle == key:
             return ref_object._msg_cache[ConfigObjectMeta.CREATE]
 
+    object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
+    for ref_object in object_helper._reference_objects:
+        if ref_object.key_or_handle == key:
+            return ref_object._msg_cache[ConfigObjectMeta.CREATE]
+
     return None
+
+def CreateConfigFromKeyType(key_type, ext_refs={}, external_constraints=None):
+    object_helper = cfg_meta_mapper.key_type_to_config[key_type]
+    ref_object = object_helper.CreateConfigObject('API_STATUS_OK', ext_refs, external_constraints)
+    return ref_object.key_or_handle
 
 def CreateReferenceObject(ref_object_spec):
     key_handle = getattr(cfg_meta_mapper.kh_proto, ref_object_spec.key_handle)
@@ -445,8 +456,3 @@ def CreateReferenceObject(ref_object_spec):
         constraints = GrpcReqRspMsg.extract_constraints(ref_object_spec.constraints)[0]
     ref_object = object_helper.CreateConfigObject(ApiStatus.API_STATUS_OK, {}, constraints)
     reference_object_holder.reference_objects.append((ref_object_spec, ref_object))
-
-def CreateConfigFromKeyType(key_type, ext_refs={}, external_constraints=None):
-    object_helper = cfg_meta_mapper.key_type_to_config[key_type]
-    ref_object = object_helper.CreateConfigObject('API_STATUS_OK', ext_refs, external_constraints)
-    return ref_object.key_or_handle
