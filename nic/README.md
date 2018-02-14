@@ -14,6 +14,7 @@
     constructor can't do
   * if class instantiation fails in the middle (some buffers are allocated but
     some other failed), we can back off and unitialize cleanly
+* Implement a destroy() method as well for every class
 * Don't use malloc()/calloc() anywhere, instead use HAL_MALLOC instead
    * we may endup overloading new operator eventually to track allocs and frees
      to pin point mem leaks
@@ -24,8 +25,17 @@
   assert()
 * For protobuf, use 2 space indentation (not 4 space)
 * For C/C++, use 4 space indentation
-* NO tabs (except probably Makefile)
+* No tabs (except probably Makefile)
 * No blank spaces at the end of each line
+* No unnecessary blank lines in the code
+* Don't leave space after function name in C style function declarations
+* Leave space after function name in C style function declarations
+* Functions that are local to file must be declared static and for static
+  functions avoid declarations even within in the .cc file
+* Don't expose internal functions in header files by default. This only makes
+  module interactions confusing. If a real use case arises, then move the function
+  declaration to header files instead of putting all declarations in header
+  file.
 * Don't use C++ STL or boost etc. in the config or data path unless you are
   absolutely sure that there is no other way to do it. For example, it is ok to
   parse some config files in .json when HAL starts
@@ -36,6 +46,7 @@
 * Make sure each header file can compile fully by itself, i.e., each header
   file should include all header files it depends on. Ensure there are no
   circular dependencies
+* please use C++ commenting style instead of C commenting style
 
 ## Building and making sure HAL build is fine
 1. Under sw/, do "make pull-assets"

@@ -908,7 +908,6 @@ end:
     }
     gft_emfe_prepare_rsp(rsp, flow_entry, ret);
     return ret;
-    return HAL_RET_OK;
 }
 
 }    // namespace hal
