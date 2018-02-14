@@ -123,8 +123,6 @@ typedef struct p4pd_cfg_s {
     const char *p4pd_pgm_name;
 } p4pd_cfg_t;
 p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg);
-p4pd_error_t p4pd_asic_init(p4pd_cfg_t *p4pd_cfg);
-
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures
@@ -905,15 +903,4 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
 p4pd_error_t
 p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
 
-// START: Iris specific capri inits
-// TODO: These functions need to be moved to asic-pd common layer
-
-hal_ret_t p4pd_capri_toeplitz_init(void);
-hal_ret_t p4pd_capri_p4plus_table_init(void);
-hal_ret_t p4pd_capri_p4plus_recirc_init(void);
-hal_ret_t p4pd_capri_timer_init(void);
-
-// END: Iris specific capri inits
-
 #endif    // __P4PD_API_H__
-

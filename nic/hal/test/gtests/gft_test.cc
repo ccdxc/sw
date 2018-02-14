@@ -14,6 +14,7 @@
 #include "nic/gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 hal_ret_t capri_default_config_init (const std::string& );
 extern sdk::lib::catalog* hal_lib_catalog_init(void);
 using boost::property_tree::ptree;
@@ -1432,7 +1433,13 @@ TEST_F(gft_test, test1) {
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init();
     ASSERT_NE(ret, -1);
-    ret = p4pd_asic_init(&p4pd_cfg);
+    ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
+    ASSERT_NE(ret, -1);
+    ret = hal::pd::asicpd_program_table_mpu_pc();
+    ASSERT_NE(ret, -1);
+    ret = hal::pd::asicpd_deparser_init();
+    ASSERT_NE(ret, -1);
+    ret = hal::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_NE(ret, -1);
 
     sdk::lib::catalog* catalog = hal_lib_catalog_init();

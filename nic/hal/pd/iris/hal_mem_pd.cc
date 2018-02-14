@@ -45,64 +45,13 @@
 #include "nic/hal/pd/iris/dos_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 
 namespace hal {
 extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 namespace pd {
 
 class hal_state_pd *g_hal_state_pd;
-
-// START: Iris specific capri inits
-// TODO: These functions need to be moved to asic-pd common layer
-static hal_ret_t
-p4pd_capri_stats_region_init(void)
-{
-    p4pd_table_properties_t       tbl_ctx;
-    hbm_addr_t                    stats_base_addr;
-    uint64_t                      stats_region_start;
-    uint64_t                      stats_region_size;
-
-    stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
-    stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
-
-    // reset bit 31 (saves one ASM instruction)
-    stats_region_start &= 0x7FFFFFFF;
-    stats_base_addr &= 0x7FFFFFFF;
-
-    p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 5);
-
-    p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 6);
-
-    p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-    stats_base_addr += (tbl_ctx.tabledepth << 3);
-    assert(stats_base_addr <  (stats_region_start +  stats_region_size));
-    return HAL_RET_OK;
-}
-
-// END: Iris specific capri inits
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the slabs
@@ -1136,17 +1085,25 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
         .table_map_cfg_file = "iris/capri_p4_table_map.json",
         .p4pd_pgm_name = "iris"
     };
+    asicpd_stats_region_info_t region_arr[] = {{P4TBL_ID_FLOW_STATS, 5},
+                                               {P4TBL_ID_RX_POLICER_ACTION, 5},
+                                               {P4TBL_ID_COPP_ACTION, 5},
+                                               {P4TBL_ID_TX_STATS, 6},
+                                               {P4TBL_ID_INGRESS_TX_STATS, 3}};
+    int arrlen = sizeof(region_arr)/sizeof(asicpd_stats_region_info_t);
     
-    // iris specific capri inits, initialize the p4pd stats region
-    HAL_ASSERT(p4pd_capri_stats_region_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_capri_toeplitz_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_capri_p4plus_table_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_capri_p4plus_recirc_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_capri_timer_init() == HAL_RET_OK);
-
-    // common asic pd init (must be called after capri asic init)
-    p4pd_asic_init(&p4pd_cfg);
-
+    // Capri asic initializations
+    // Initialize the p4pd stats region
+    HAL_ASSERT(asicpd_stats_region_init(region_arr, arrlen) == HAL_RET_OK);
+    HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_p4plus_table_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_timer_init() == HAL_RET_OK);
+    // Following routines must be called after capri asic init
+    HAL_ASSERT(asicpd_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
+    HAL_ASSERT(asicpd_program_table_mpu_pc() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_deparser_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_program_hbm_table_base_addr() == HAL_RET_OK);
 
     return HAL_RET_OK;
 }

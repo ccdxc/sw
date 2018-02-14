@@ -221,6 +221,7 @@ cc_test(
         "@sdk//obj:sdk_pal",
         "@sdk//obj:sdk_catalog",
         "//nic/hal/pd/p4pd:p4pd",
+        "//nic/hal/pd/asicpd:asicpd",
         "//:gtest",
         ],
     linkopts = [] + gl_linkopts_list,

@@ -24,7 +24,6 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
-#include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/include/asic_pd.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
@@ -34,6 +33,7 @@
 #include "nic/asic/capri/model/utils/cpp_int_helper.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/csr/cpu_hal_if.h"
+#include "nic/hal/pd/capri/capri_loader.h"
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */
 #define CAPRI_CALLOC  calloc

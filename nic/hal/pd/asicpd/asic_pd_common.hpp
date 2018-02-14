@@ -4,10 +4,11 @@
 #define __HAL_PD_ASIC_PD_COMMON_HPP__
 
 #include "nic/include/base.h"
-#include <vector>
-#include <tuple>
-using std::vector;
-using std::tuple;
+
+typedef struct asicpd_stats_region_info_t_ {
+    int tblid;
+    int tbldepthshift;
+} __PACK__ asicpd_stats_region_info_t;
 
 namespace hal {
 namespace pd {
@@ -33,9 +34,19 @@ int asicpd_hbm_table_entry_write (uint32_t tableid, uint32_t index,
                                   uint8_t *hwentry, uint16_t *entry_size);
 uint8_t asicpd_get_action_pc(uint32_t tableid, uint8_t actionid);
 uint8_t asicpd_get_action_id(uint32_t tableid, uint8_t actionpc);
+hal_ret_t asicpd_toeplitz_init(void);
+hal_ret_t asicpd_p4plus_table_init(void);
+hal_ret_t asicpd_p4plus_recirc_init(void);
+hal_ret_t asicpd_timer_init(void);
+hal_ret_t asicpd_program_table_mpu_pc(void);
+hal_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
+hal_ret_t asicpd_deparser_init(void);
+hal_ret_t asicpd_program_hbm_table_base_addr(void);
+hal_ret_t asicpd_stats_region_init(asicpd_stats_region_info_t *region_arr,
+                                   int arrlen);
 
 }    // namespace pd
 }    // namespace hal
 
-#endif    // __HAL_PD_ASIC_RW_HPP__
+#endif
 

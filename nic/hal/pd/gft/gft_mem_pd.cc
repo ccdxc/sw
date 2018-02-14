@@ -7,6 +7,7 @@
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 
 namespace hal {
 namespace pd {
@@ -421,13 +422,16 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *arg)
     };
 
     // gft specific capri inits
-    HAL_ASSERT(p4pd_capri_toeplitz_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_capri_p4plus_table_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_capri_p4plus_recirc_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_capri_timer_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_p4plus_table_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_timer_init() == HAL_RET_OK);
 
     // common asic pd init (must be called after capri asic init)
-    p4pd_asic_init(&p4pd_cfg);
+    HAL_ASSERT(asicpd_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
+    HAL_ASSERT(asicpd_program_table_mpu_pc() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_deparser_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_program_hbm_table_base_addr() == HAL_RET_OK);
 
     // g_hal_state_pd->qos_hbm_fifo_allocator_init();
     return HAL_RET_OK;

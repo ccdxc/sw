@@ -4,13 +4,25 @@
 #include "nic/hal/pd/asic_pd.hpp"
 #include "sdk/pal.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/include/p4pd_table.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 // TODO: Need to remove capri references and use lib symbols instead
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
 #define HAL_LOG_TBL_UPDATES
+#define P4ACTION_NAME_MAX_LEN (100)
 
 namespace hal {
 namespace pd {
+
+// Store base address for the table
+static uint64_t capri_table_asm_err_offset[P4TBL_ID_TBLMAX];
+static uint64_t capri_table_asm_base[P4TBL_ID_TBLMAX];
 
 static void
 asicpd_copy_capri_table_info (capri_table_mem_layout_t *out,
@@ -64,9 +76,8 @@ asicpd_table_entry_write (uint32_t tableid,
         char    buffer[2048];
         memset(buffer, 0, sizeof(buffer));
 
-        uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
-                                 * key byte has worst case byte padding
-                                 */
+        uint8_t key[128] = {0}; // Atmost key is 64B. Assuming each
+                                // key byte has worst case byte padding
         uint8_t keymask[128] = {0};
         uint8_t data[128] = {0};
         HAL_TRACE_DEBUG("{}", "Read last installed table entry back into table key and action structures");
@@ -158,9 +169,8 @@ asicpd_tcam_table_entry_write (uint32_t tableid,
         char    buffer[2048];
         memset(buffer, 0, sizeof(buffer));
 
-        uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
-                          * key byte has worst case byte padding
-                          */
+        uint8_t key[128] = {0}; // Atmost key is 64B. Assuming each
+                                // key byte has worst case byte padding
         uint8_t keymask[128] = {0};
         uint8_t data[128] = {0};
         HAL_TRACE_DEBUG("{}", "Read last installed table entry back into table key and action structures");
@@ -232,9 +242,8 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
 #ifdef HAL_LOG_TBL_UPDATES
     char    buffer[2048];
     memset(buffer, 0, sizeof(buffer));
-    uint8_t key[128] = {0}; /* Atmost key is 64B. Assuming each
-                      * key byte has worst case byte padding
-                      */
+    uint8_t key[128] = {0}; // Atmost key is 64B. Assuming each
+                            // key byte has worst case byte padding
     uint8_t keymask[128] = {0};
     uint8_t data[128] = {0};
     HAL_TRACE_DEBUG("{}", "Read last installed hbm table entry back into table key and action structures");
@@ -275,6 +284,165 @@ uint8_t
 asicpd_get_action_id (uint32_t tableid, uint8_t actionpc)
 {
     return (capri_get_action_id(tableid, actionpc));
+}
+
+hal_ret_t
+asicpd_toeplitz_init (void)
+{
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
+                                     &tbl_ctx);
+    capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_p4plus_table_init (void)
+{
+    p4pd_table_properties_t tbl_ctx_apphdr;
+    p4pd_table_properties_t tbl_ctx_apphdr_off;
+    p4pd_table_properties_t tbl_ctx_txdma_act;
+
+    // P4 plus table inits
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+                                     &tbl_ctx_apphdr);
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
+                                     &tbl_ctx_apphdr_off);
+    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0,
+                                     &tbl_ctx_txdma_act);
+    capri_p4plus_table_init(tbl_ctx_apphdr.stage,
+                            tbl_ctx_apphdr.stage_tableid,
+                            tbl_ctx_apphdr_off.stage,
+                            tbl_ctx_apphdr_off.stage_tableid,
+                            tbl_ctx_txdma_act.stage,
+                            tbl_ctx_txdma_act.stage_tableid);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_p4plus_recirc_init (void)
+{
+    capri_p4plus_recirc_init();
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_timer_init (void)
+{
+    capri_timer_init();
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_program_table_mpu_pc (void)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        p4pd_table_properties_get(i, &tbl_ctx);
+        if (tbl_ctx.is_oflow_table &&
+            tbl_ctx.table_type == P4_TBL_TYPE_TCAM) {
+            // OTCAM and hash table share the same table id
+            // so mpu_pc shouldn't be overwritten
+            continue;
+        }
+        capri_program_table_mpu_pc(tbl_ctx.tableid,
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS),
+                                   tbl_ctx.stage,
+                                   tbl_ctx.stage_tableid,
+                                   capri_table_asm_err_offset[i],
+                                   capri_table_asm_base[i]);
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
+{
+    char action_name[P4ACTION_NAME_MAX_LEN] = {0};
+    char progname[P4ACTION_NAME_MAX_LEN] = {0};
+    uint64_t capri_action_asm_base;
+    //p4pd_table_properties_t tbl_ctx;
+
+    HAL_TRACE_DEBUG("In asicpd_table_mpu_base_init\n");
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
+        capri_program_to_base_addr(p4pd_cfg->p4pd_pgm_name, progname,
+                                   &capri_table_asm_base[i]);
+        for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
+            p4pd_get_action_name(i, j, action_name);
+            capri_action_asm_base = 0;
+            capri_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+                                          action_name, &capri_action_asm_base);
+            // Action base is in byte and 64B aligned...
+            HAL_ASSERT((capri_action_asm_base & 0x3f) == 0);
+            capri_action_asm_base >>= 6;
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_asm_base);
+            capri_set_action_asm_base(i, j, capri_action_asm_base);
+        }
+
+        // compute error program offset for each table
+        snprintf(action_name, P4ACTION_NAME_MAX_LEN, "%s_error",
+                 p4pd_tbl_names[i]);
+        capri_program_label_to_offset(p4pd_cfg->p4pd_pgm_name, progname,
+                                      action_name,
+                                      &capri_table_asm_err_offset[i]);
+        HAL_ASSERT((capri_table_asm_err_offset[i] & 0x3f) == 0);
+        capri_table_asm_err_offset[i] >>= 6;
+        HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                        progname, action_name, capri_table_asm_err_offset[i]);
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_deparser_init (void)
+{
+    capri_deparser_init(TM_PORT_INGRESS, TM_PORT_EGRESS);
+    return HAL_RET_OK;    
+}
+
+hal_ret_t
+asicpd_program_hbm_table_base_addr (void)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    // Program table base address into capri TE
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+        p4pd_global_table_properties_get(i, &tbl_ctx);
+        if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
+            continue;
+        }
+        capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
+                    tbl_ctx.tablename, tbl_ctx.stage,
+                    (tbl_ctx.gress == P4_GRESS_INGRESS));
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    hbm_addr_t                    stats_base_addr;
+    uint64_t                      stats_region_start;
+    uint64_t                      stats_region_size;
+
+    stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
+    stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
+
+    // reset bit 31 (saves one ASM instruction)
+    stats_region_start &= 0x7FFFFFFF;
+    stats_base_addr &= 0x7FFFFFFF;
+
+    for (int i = 0; i < arrlen; i++) {
+        p4pd_table_properties_get(region_arr[i].tblid, &tbl_ctx);
+        capri_table_constant_write(stats_base_addr,
+                                   tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS));
+        stats_base_addr += (tbl_ctx.tabledepth << region_arr[i].tbldepthshift);
+    }
+    assert(stats_base_addr <  (stats_region_start +  stats_region_size));
+    return HAL_RET_OK;
 }
 
 }    // namespace pd
