@@ -163,7 +163,7 @@ gft_emp_add_to_db (gft_exact_match_profile_t *profile, hal_handle_t handle)
 }
 
 //------------------------------------------------------------------------------
-// delete a nwsec from the config database
+// delete a GFT exact match profile from the config database
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 gft_emp_del_from_db (gft_exact_match_profile_t *profile)
@@ -244,7 +244,7 @@ gft_emp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     //app_ctxt = (gft_exact_match_profile_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
     profile = (gft_exact_match_profile_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("GFT exact match profile create add CB {}",
+    HAL_TRACE_DEBUG("GFT exact match profile create add callback {}",
                     profile->profile_id);
 
     // PD Call to allocate PD resources and h/w programming, if any
@@ -503,7 +503,7 @@ gft_htp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     //app_ctxt = (//gft_htp_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
     profile = (gft_hdr_xposition_profile_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("GFT hdr transposition profile create add CB {}",
+    HAL_TRACE_DEBUG("GFT hdr transposition profile create add callback {}",
                     profile->profile_id);
 
     // PD Call to allocate PD resources and h/w programming, if any
@@ -648,12 +648,266 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// insert a GFT exact match flow entry to HAL config db
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+gft_emfe_add_to_db (gft_exact_match_flow_entry_t *flow_entry,
+                    hal_handle_t handle)
+{
+    hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("Adding GFT exact match flow entry {} to db",
+                    flow_entry->flow_entry_id);
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+                hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        return HAL_RET_OOM;
+    }
+
+    // add mapping from flow entry id to its handle
+    entry->handle_id = handle;
+    sdk_ret = g_hal_state->gft_exact_match_flow_entry_id_ht()->
+                  insert_with_key(&flow_entry->flow_entry_id,
+                                  entry, &entry->ht_ctxt);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to add GFT exact flow entry {} to db, "
+                      "err : {}", flow_entry->flow_entry_id, ret);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+    }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// delete a GFT exact match flow entry from the config database
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+gft_emfe_del_from_db (gft_exact_match_flow_entry_t *flow_entry)
+{
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("Removing GFT exact match flow entry {} from db",
+                    flow_entry->flow_entry_id);
+
+    // remove from hash table
+    entry = (hal_handle_id_ht_entry_t *)
+                g_hal_state->gft_exact_match_flow_entry_id_ht()->
+                    remove(&flow_entry->flow_entry_id);
+
+    // free up
+    hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// validate a given GFT exact match flow entry config spec
+//------------------------------------------------------------------------------
+static hal_ret_t
+validate_gft_emfe_create (GftExactMatchFlowEntrySpec& spec,
+                          GftExactMatchFlowEntryResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// initialize GFT exact match flow entry object from the config spec
+//------------------------------------------------------------------------------
+static inline void
+gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
+                         GftExactMatchFlowEntrySpec& spec)
+{
+}
+
+//------------------------------------------------------------------------------
+// lookup GFT exact match flow entry from key or handle
+//------------------------------------------------------------------------------
+static gft_exact_match_flow_entry_t *
+gft_emfe_lookup_key_or_handle (const GftExactMatchFlowEntryKeyHandle& kh)
+{
+    gft_exact_match_flow_entry_t    *flow_entry = NULL;
+
+    if (kh.key_or_handle_case() == GftExactMatchFlowEntryKeyHandle::kFlowEntryId) {
+        flow_entry = find_gft_exact_match_flow_entry_by_id(kh.flow_entry_id());
+    } else if (kh.key_or_handle_case() ==
+               GftExactMatchFlowEntryKeyHandle::kFlowEntryHandle) {
+        flow_entry = find_gft_exact_match_flow_entry_by_handle(kh.flow_entry_handle());
+    }
+
+    return flow_entry;
+}
+
+//------------------------------------------------------------------------------
+// pd call to allocate pd resources and h/w programming for GFT exact match
+// flow entry
+//------------------------------------------------------------------------------
+static hal_ret_t
+gft_emfe_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                                    ret = HAL_RET_OK;
+    //pd::pd_gft_args_t                            pd_gft_args = { 0 };
+    dllist_ctxt_t                                *lnode = NULL;
+    dhl_entry_t                                  *dhl_entry = NULL;
+    gft_exact_match_flow_entry_t                 *flow_entry = NULL;
+    //gft_emfe_create_app_ctxt_t                   *app_ctxt = NULL;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("Failed to create GFT exact match flow entry");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    //app_ctxt = (gft_exact_match_profile_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    flow_entry = (gft_exact_match_flow_entry_t *)dhl_entry->obj;
+
+    HAL_TRACE_DEBUG("GFT exact match flow entry create add callback {}",
+                    flow_entry->flow_entry_id);
+
+    // PD Call to allocate PD resources and h/w programming, if any
+    //pd::pd_gft_exact_match_flow_entry_create_args_init(&pd_gft_args);
+    //pd_l2seg_args.l2seg = l2seg;
+    //pd_l2seg_args.vrf = app_ctxt->vrf;
+    //ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
+    //if (ret != HAL_RET_OK) {
+        //HAL_TRACE_ERR("{}:failed to create l2seg pd, err : {}",
+                      //__FUNCTION__, ret);
+    //}
+
+end:
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// update PI databases as gft_emfe_create_add_cb was a success
+//------------------------------------------------------------------------------
+static hal_ret_t
+gft_emfe_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// gft_emfe_create_add_cb was a failure, do the cleanup
+//------------------------------------------------------------------------------
+hal_ret_t
+gft_emfe_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// dummy create cleanup callback
+//-----------------------------------------------------------------------------
+static hal_ret_t
+gft_emfe_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// convert hal_ret_t to API status and prepare response to the API call
+//------------------------------------------------------------------------------
+static hal_ret_t
+gft_emfe_prepare_rsp (GftExactMatchFlowEntryResponse *rsp,
+                      gft_exact_match_flow_entry_t *flow_entry,
+                      hal_ret_t ret)
+{
+    if (ret == HAL_RET_OK) {
+        rsp->mutable_status()->set_flow_entry_handle(flow_entry->hal_handle);
+    }
+    rsp->set_api_status(hal_prepare_rsp(ret));
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // process a GFT exact match flow entry create request
 //------------------------------------------------------------------------------
 hal_ret_t
 gft_exact_match_flow_entry_create (GftExactMatchFlowEntrySpec &spec,
                                    GftExactMatchFlowEntryResponse *rsp)
 {
+    hal_ret_t                       ret;
+    gft_exact_match_flow_entry_t    *flow_entry;
+    gft_emfe_create_app_ctxt_t      app_ctxt; // = { 0 };
+    cfg_op_ctxt_t                   cfg_ctxt = { 0 };
+    dhl_entry_t                     dhl_entry = { 0 };
+
+    HAL_TRACE_DEBUG("GFT exact match flow entry create");
+
+    // validate the request message
+    ret = validate_gft_emfe_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        // api_status already set, just return
+        HAL_TRACE_ERR("GFT exact match flow entry object validation failure, "
+                      "err : {}", ret);
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("Creating GFT exact match flow entry id {}",
+                    spec.key_or_handle().flow_entry_id());
+
+    // check if this flow entry exists already, and reject if one is found
+    flow_entry = gft_emfe_lookup_key_or_handle(spec.key_or_handle());
+    if (flow_entry) {
+        HAL_TRACE_ERR("Failed to create GFT exact match flow entry {} "
+                      "exists already", spec.key_or_handle().flow_entry_id());
+        return HAL_RET_ENTRY_EXISTS;
+    }
+
+    // instantiate the gft exact match flow entry 
+    flow_entry = gft_exact_match_flow_entry_alloc_init();
+    if (flow_entry == NULL) {
+        ret = HAL_RET_OOM;
+        HAL_TRACE_ERR("Failed to allocate GFT exact match flow entry, err : {}",
+                      ret);
+        goto end;
+    }
+
+    // consume the config
+    gft_emfe_init_from_spec(flow_entry, spec);
+
+    // allocate hal handle id
+    flow_entry->hal_handle =
+        hal_handle_alloc(HAL_OBJ_ID_GFT_EXACT_MATCH_FLOW_ENTRY);
+    if (flow_entry->hal_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("Failed to alloc handle for GFT exact match flow entry {}",
+                      flow_entry->flow_entry_id);
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
+    }
+
+    // form ctxt and call infra add
+    dhl_entry.handle = flow_entry->hal_handle;
+    dhl_entry.obj = flow_entry;
+    cfg_ctxt.app_ctxt = &app_ctxt;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_add_obj(flow_entry->hal_handle, &cfg_ctxt,
+                             gft_emfe_create_add_cb,
+                             gft_emfe_create_commit_cb,
+                             gft_emfe_create_abort_cb,
+                             gft_emfe_create_cleanup_cb);
+
+end:
+
+    if (ret != HAL_RET_OK) {
+        if (flow_entry) {
+            flow_entry = NULL;
+        }
+    }
+    gft_emfe_prepare_rsp(rsp, flow_entry, ret);
+    return ret;
     return HAL_RET_OK;
 }
 
