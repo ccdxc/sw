@@ -417,7 +417,7 @@ void CreateInitiatorQP() {
   rq->set_num_sq_wqes(kNumSQWQEs);
   rq->set_num_rq_wqes(kNumRQWQEs);
   rq->set_pd(kRdmaPD);
-  rq->set_pmtu(4096);
+  rq->set_pmtu(9200);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
   rq->set_sq_lkey(kInitiatorSQLKey);
@@ -446,7 +446,7 @@ void CreateTargetQP() {
   rq->set_num_sq_wqes(kNumSQWQEs);
   rq->set_num_rq_wqes(kNumRQWQEs);
   rq->set_pd(kRdmaPD);
-  rq->set_pmtu(4096);
+  rq->set_pmtu(9200);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
   rq->set_sq_lkey(kTargetSQLKey);
