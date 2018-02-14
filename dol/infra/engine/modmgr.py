@@ -395,6 +395,9 @@ class ModuleDatabase:
         if GlobalOptions.rtl == True and pmod.rtl == False:
             return
 
+        if GlobalOptions.perf == True and pmod.perf == False:
+            return
+
         if GlobalOptions.latency == True and pmod.perf == False:
             return
 

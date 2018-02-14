@@ -104,6 +104,7 @@ class TestSpecObject(objects.FrameworkObject):
             self.session[0].step = step
 
         self.__merge()
+        self.__scale_up()
         self.selectors = TestSpecConfigSelectors(self.selectors)
         return
 
@@ -189,3 +190,87 @@ class TestSpecObject(objects.FrameworkObject):
         self.__merge_session()
         return
 
+    def __scale_up_obj(self, obj, s):
+        if not objects.IsFrameworkTemplateObject(obj):
+            return
+        for k,v in obj.__dict__.items():
+            if objects.IsFrameworkTemplateObject(v):
+                self.__scale_up_obj(v, s)
+            elif isinstance(v, list):
+                self.__scale_up_list(v, s)
+            elif objects.IsScaledReference(v):
+                v.ScaleUp(s)
+        return
+
+    def __scale_up_list(self, objlist, s):
+        for obj in objlist:
+            self.__scale_up_obj(obj, s)
+        return
+
+    def __scale_up_fix_refs(self, obj, s):
+        if getattr(obj, 'id', None):
+            obj.id = "%s_%s" % (obj.id, s)
+        self.__scale_up_obj(obj, s)
+        return
+
+    def __scale_up_common(self, obj, inner_attr):
+        objlist = []
+        outer_obj = obj
+        inner_obj = getattr(outer_obj, inner_attr, None)
+        if inner_obj is None:
+            objlist.append(obj)
+            return objlist
+
+        if getattr(inner_obj, 'scale', False) == False:
+            objlist.append(outer_obj)
+            return objlist
+
+        for s in range(self.scale_factor):
+            new_outer_obj = copy.copy(outer_obj)
+            new_inner_obj = copy.deepcopy(inner_obj)
+            self.__scale_up_fix_refs(new_inner_obj, s)
+            setattr(new_outer_obj, inner_attr, new_inner_obj)
+            objlist.append(new_outer_obj)
+        return objlist
+
+    def __scale_up_section(self, root, section, objname):
+        if root is None:
+            return
+
+        objs = []
+        section_objs = getattr(root, section, None)
+        if section_objs is None:
+            return
+
+        for sobj in section_objs:
+            new_objs = self.__scale_up_common(sobj, objname)
+            objs.extend(new_objs)
+
+        setattr(root, section, objs)
+        return
+    
+    def __scale_up_objects_section(self):
+        self.__scale_up_section(self, 'packets', 'packet')
+        self.__scale_up_section(self, 'descriptors', 'descriptor')
+        self.__scale_up_section(self, 'buffers', 'buffer')
+        return
+
+
+    def __scale_up_trig_exp_section(self, root):
+        self.__scale_up_section(root, 'packets', 'packet')
+        self.__scale_up_section(root, 'descriptors', 'descriptor')
+        return
+
+    def __scale_up(self):
+        scale_factor = getattr(self, 'scale_factor', None)
+        if objects.IsCallback(scale_factor):
+            scale_factor = scale_factor.call()
+
+        if scale_factor is None:
+            return
+        
+        self.scale_factor = scale_factor
+        self.__scale_up_objects_section()
+        self.__scale_up_trig_exp_section(self.trigger)
+        self.__scale_up_trig_exp_section(self.expect)
+        return

@@ -636,6 +636,10 @@ class ReferenceFieldAttr:
         self.id = value
         return
 
+    def ScaleUp(self, s):
+        self.id = "%s_%s" % (self.id, s)
+        return
+
 
 class ReferenceField(FrameworkFieldObject):
     def __init__(self, obj):
@@ -678,6 +682,17 @@ class ReferenceField(FrameworkFieldObject):
 
     def GetRootID(self):
         return self.rootid
+
+class ScaledReferenceField(ReferenceField):
+    def __init__(self, obj):
+        super().__init__(obj)
+        return
+
+    def ScaleUp(self, s):
+        for r in self.refattrs:
+            if r.is_object:
+                r.ScaleUp(s)
+        return
 
 # A Value object is a generic object. It is used in the following format.
 # type/param1[/param2/[param3]......]
@@ -837,6 +852,12 @@ TemplateFieldValueToObject = {
         'pcount': 1,
         'opcount': 128,
     },
+    'scale-ref://': {
+        'object': ScaledReferenceField,
+        'pcount': 1,
+        'opcount': 128,
+    },
+
 }
 
 
@@ -969,6 +990,8 @@ def IsAutoField(field):
 def IsReference(field):
     return isinstance(field, ReferenceField)
 
+def IsScaledReference(field):
+    return isinstance(field, ScaledReferenceField)
 
 def IsCallback(field):
     return isinstance(field, CallbackField)

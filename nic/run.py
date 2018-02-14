@@ -423,6 +423,8 @@ def run_dol(args):
         cmd.append('--lite')
     if args.gft is True:
         cmd.append('--gft')
+    if args.perf is True:
+        cmd.append('--perf')
 
     if args.coveragerun:
         #Increasing timeout for coverage runs only.
@@ -639,6 +641,8 @@ def main():
                         action='store_true', help='Lite Sanity Test.')
     parser.add_argument('--port_mode', dest='port_mode', default='nomac',
                         help='In RTL mode choose how many ports are active: (nomac/8x25/2x100)')
+    parser.add_argument('--perf', dest='perf', default=None,
+                        action='store_true', help='Run Perf tests.')
 
     args = parser.parse_args()
 

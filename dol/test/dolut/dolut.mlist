@@ -73,3 +73,7 @@ modules:
     - module:
         name    : ICRC
         spec    : sample_pkt_icrc.testspec
+
+    - module:
+        name    : SCALED_DESC_TO_PKT
+        spec    : scaled_sample_desc_to_pkt.testspec

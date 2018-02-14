@@ -68,6 +68,8 @@ parser.add_argument('--lite', dest='lite', default=False,
                     action='store_true', help='Lite Sanity Test.')
 parser.add_argument('--gft', dest='gft', default=False,
                     action='store_true', help='GFT Test.')
+parser.add_argument('--perf', dest='perf', default=False,
+                    action='store_true', help='Run only Perf tests.')
 
 GlobalOptions = parser.parse_args()
 
@@ -112,6 +114,9 @@ def ValidateGlopts():
     if GlobalOptions.pps:
         if not GlobalOptions.dryrun:
             GlobalOptions.tcscale = 1000
+        GlobalOptions.lite = True
+
+    if GlobalOptions.perf:
         GlobalOptions.lite = True
 
     if GlobalOptions.modscale:

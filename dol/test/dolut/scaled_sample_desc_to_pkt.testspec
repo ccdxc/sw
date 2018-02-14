@@ -1,0 +1,82 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://remote=False
+    dst:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://any
+    maxflows    : 1
+
+# Selected objects will be scaled up by this factor.
+# This can be a callback. No infra arguments to this callback. Only user args (if present)
+scale_factor    : 4 
+
+packets:
+    - packet:
+        id          : PKT100
+        # Enable scaling for this object.
+        scale       : True
+        payloadsize : random/64/128
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+
+buffers:
+    - buffer:
+        id      : BUF1
+        scale   : True
+        template: ref://factory/templates/id=DOLUT_BUFFER
+        fields:
+            # scale-ref://<reference> : Reference to the scaled copy of, say PKT100_S2
+           size: scale-ref://testcase/packets/id=PKT100/size
+           data: scale-ref://testcase/packets/id=PKT100/rawbytes
+
+    - buffer:
+        id      : BUF2
+        scale   : True
+        template: ref://factory/templates/id=DOLUT_BUFFER
+        fields:
+           size: scale-ref://testcase/packets/id=PKT100/size
+           data: scale-ref://testcase/packets/id=PKT100/rawbytes
+
+descriptors:
+    - descriptor:
+        scale   : True
+        id      : DESC1
+        template: ref://factory/templates/id=DOLUT_TX_DESCRIPTOR
+        fields:
+            num_buffs   : 2
+            b0_address  : scale-ref://testcase/buffers/id=BUF1/address
+            b0_len      : scale-ref://testcase/buffers/id=BUF1/size
+            b1_address  : scale-ref://testcase/buffers/id=BUF2/address
+            b1_len      : scale-ref://testcase/buffers/id=BUF2/size
+
+trigger:
+    descriptors:
+        - descriptor:
+            scale   : True
+            object  : scale-ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+
+expect:
+    packets:
+        - packet:
+            scale   : True
+            object  : scale-ref://testcase/packets/id=PKT100
+            port    : ref://testcase/config/dst/endpoint/intf/ports
