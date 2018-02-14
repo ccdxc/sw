@@ -41,7 +41,10 @@ storage_tx_roce_cq_cb_pop_start:
    // the popped entry (based on the working consumer index in GPR r6).
    LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size,
                         d.next_pc)
+
 clear_doorbell:
+   QUEUE_EMPTY(d.c_ndx, d.w_ndx, drop_n_exit)
+
    // Update the queue doorbell to clear the scheduler bit
    QUEUE_POP_DOORBELL_CLEAR
 
@@ -49,5 +52,12 @@ clear_doorbell:
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_0_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
 
+   b 		exit
+   nop
+
+drop_n_exit:
+   phvwr	p.p4_intr_global_drop, 1
+
+exit:
    // Nothing more to process in subsequent stages
    LOAD_NO_TABLES

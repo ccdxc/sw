@@ -412,6 +412,7 @@ int form_read_cmd_with_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
 {
   memset(read_buf, 0, kDefaultBufSize);
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  memset(nvme_cmd, 0, sizeof(struct NvmeCmd));
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // TODO: PRP list based on size
   read_cmd->prp.prp1 = host_mem_v2p(read_buf);
@@ -429,6 +430,7 @@ int form_write_cmd_with_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   uint8_t byte_val = get_next_byte();
   memset(write_buf, byte_val, kDefaultBufSize);
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  memset(nvme_cmd, 0, sizeof(struct NvmeCmd));
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // TODO: PRP list based on size
   write_cmd->prp.prp1 = host_mem_v2p(write_buf);
@@ -447,6 +449,7 @@ int form_read_cmd_with_hbm_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   // in HBM
   memset(read_buf, 0, kDefaultBufSize);
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  memset(nvme_cmd, 0, sizeof(struct NvmeCmd));
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // Use the HBM buffer setup by the sequencer
   read_cmd->prp.prp1 = read_hbm_buf;
@@ -466,6 +469,7 @@ int form_write_cmd_with_hbm_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   uint8_t byte_val = get_next_byte();
   memset(write_buf, byte_val, kDefaultBufSize);
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  memset(nvme_cmd, 0, sizeof(struct NvmeCmd));
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // Use the HBM buffer setup by the sequencer
   write_cmd->prp.prp1 = write_hbm_buf;
@@ -480,6 +484,7 @@ int form_write_cmd_with_hbm_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
 int form_read_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba)
 {
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  memset(nvme_cmd, 0, sizeof(struct NvmeCmd));
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   read_cmd->dw0.cid = get_next_cid(); 
   read_cmd->nsid = kDefaultNsid; 
@@ -492,6 +497,7 @@ int form_read_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba)
 int form_write_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba)
 {
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  memset(nvme_cmd, 0, sizeof(struct NvmeCmd));
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   write_cmd->dw0.cid = get_next_cid(); 
   write_cmd->nsid = kDefaultNsid; 
