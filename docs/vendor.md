@@ -11,11 +11,9 @@ We want vendoring tools to do the following.
 well.
 
 ### To commit or not commit the vendor folder
-dep can successfully build and pass all venice and agent tests. However dep ensure
-pulls in entire vendored repos, wherther we actually import the packages or not.
-However there is `dep prune` which removes all unused packages. The builds and tests are currently
-working even on the pruned version of vendor. The tool is [heading towards absorbing](https://github.com/golang/dep/issues/944)
-`dep prune` into `dep ensure`
+dep can successfully build and pass all venice and agent tests. `dep ensure`
+pulls in the entire vendored repo, then solves import dependency graph and prunes
+unused packages, go tests and non-go files in vendor.
 
 ### Committing entire vendor folder
 `Pros:`
@@ -39,32 +37,34 @@ working even on the pruned version of vendor. The tool is [heading towards absor
 - Most balanced approach of the above two.
 
 `Cons:`
-- Currently have issues with vendored CI code. `asset-build` tools have trouble currently with some of the transitive dependencies.
-Preferably CI binaries can be hosted on its own github repo with tracked releases.
+- PR diffs can still be huge for large vendor changes. However github [automatically collapses vendor diffs](https://github.com/github/linguist/blob/v5.2.0/lib/linguist/generated.rb#L328)
 
 ### Sample Workflows
+#### How do I install dep
+Please run `make ws-tools` to get the correct version of `dep`
+We are currently on `v0.4.1` of `dep`
+Avoid trusting os native package managers(brew, apt) and `go get`
+as this *won't* guarantee the correct version of dep binary.
+Also make sure that `which dep` always points to the one in `$GOPATH/bin`
+
 #### Adding newer dependencies
 - `dep ensure -add github.com/foo/bar`
 - import github.com/foo/bar in your code.
-- Run `dep prune` along with this. [Future releases of dep will not need this](https://github.com/golang/dep/issues/944)
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Updating existing dependencies
 - Update the semver in `Gopkg.toml`
 - Run `dep ensure`
-- Run `dep prune`. [Future releases of dep will not need this](https://github.com/golang/dep/issues/944)
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Removing dependencies
 - Remove the imports from source.
 - Run `dep ensure`
-- Run `dep prune` [Future releases of dep will not need this](https://github.com/golang/dep/issues/944)
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Working with pensando forks.
 - Submit a PR for the upstream fork and get it merged.
 - Run `dep ensure -update github.com/pensando/foo`
-- Run `dep prune`
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Semantic versioning cheatsheet
@@ -97,8 +97,7 @@ update `github.com/foo`, We will need a corresponding `Gopkg.toml` change to the
 ### Things to consider while adding newer packages
 - Preferably use a released version of the dependency which complies with semantic versioning
 - Avoid using different versions of the same repo. For eg. If you need a go package, github.com/foo/a
-and github.com/foo/b, consider using a single released version of github.com/foo. `dep prune` will take
-care of prunuing unused packages.
+and github.com/foo/b, consider using a single released version of github.com/foo.
 - Avoid using github.com/Sirpusen/logrus, the uppercase version as it is [deprecated](https://github.com/sirupsen/logrus)
 - Please ensure that any changes in the checked in vendor code has a corresponding, matching entry in `Gopkg.toml` and `Gopkg.lock`
 
@@ -116,6 +115,12 @@ we can do to sheild ourselves.
 - Find a compatible commit between 1.0 and 1.2 which satisfies github.com/foo/bar and github.com/foo/baz
 - If that fails, Use an override version for the offending package. This basically tells dep to freeze on that version and then try to get compatible versions for other packages.
 - If all else fails maintain a private fork by cherry picking required changes from the thid party code. (Usually we will never have to do this. The pains of doing this can far outweigh its benefits)
+
+## Last resort to get `dep ensure` to work a.k.a sledgehammer
+If you're having issues with dep solver, you can nuke `dep`'s cache.
+`dep` first git clones the master into `$GOPATH/pkg/dep/sources/` and iteratively does `git reset` to find the correct versions.
+If `dep` finds a package correctly resolved previously, it may fail to solve the dependency graph correctly.
+Doing a `rm -rf $GOPATH/pkg/dep/sources` will clean all dep state.
 
 PS: Considering the whole community is going towards `dep` and its flattened vendors, it is a fair assumption to expect that the
 packages will keep in sync. Having a [nested vendored tree can cause a lot of suffering](https://groups.google.com/forum/#!msg/golang-nuts/AnMr9NL6dtc/UnyUUKcMCAAJ)
