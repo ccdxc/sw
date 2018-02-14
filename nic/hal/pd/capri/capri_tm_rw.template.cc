@@ -1872,6 +1872,28 @@ populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+capri_tm_update_perf_run_config (void)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+    // ${pinfo["enum"]}
+    hbm_csr.hbm_port_${p}.cfg_hbm_parser.read();
+    hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(0);
+    hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(0);
+    hbm_csr.hbm_port_${p}.cfg_hbm_parser.default_cos(0);
+    hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(0);
+    hbm_csr.hbm_port_${p}.cfg_hbm_parser.show();
+    hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
+//::    #endif
+//:: #endfor
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 capri_tm_init (sdk::lib::catalog* catalog)
 {
@@ -1936,6 +1958,14 @@ capri_tm_init (sdk::lib::catalog* catalog)
     }
 
 #endif
+
+    char *perf_run = getenv("PERF_RUN");
+    if (perf_run) {
+        HAL_TRACE_DEBUG("capri-tm:: perf-run env {}", perf_run);
+        if (!strcmp(perf_run, "true")) {
+            capri_tm_update_perf_run_config();
+        }
+    }
     HAL_TRACE_DEBUG("capri-tm::{}: Init completed",
                     __func__);
 

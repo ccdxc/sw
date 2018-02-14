@@ -246,10 +246,8 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
     //
 
     if (qos_group == QOS_GROUP_SPAN) {
-        pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_COMMON] = HAL_TM_P4_SPAN_QUEUE;
         pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_COMMON] = HAL_TM_P4_SPAN_QUEUE;
     } else if (qos_group == QOS_GROUP_CPU_COPY) {
-        pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_COMMON] = HAL_TM_P4_CPU_COPY_QUEUE;
         pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_COMMON] = HAL_TM_P4_CPU_COPY_QUEUE;
     } else {
         // Allocate the iqs first in uplink and txdma
