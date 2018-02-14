@@ -549,7 +549,8 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
 }
 
 hal_ret_t process_msrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t        ret = HAL_RET_OK;
+    l4_alg_status_t *exp_flow = l4_sess;
 
     // Todo (Pavithra) Get the Firewall data and make sure that the UUID
     // is still allowed in the config
@@ -566,6 +567,8 @@ hal_ret_t process_msrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     ctx.register_completion_handler(msrpc_completion_hdlr);
     ctx.register_feature_session_state(&l4_sess->fte_feature_state);
 
+    // Decrement the ref count for the expected flow
+    dec_ref_count(&exp_flow->entry);
     return ret;
 }
 

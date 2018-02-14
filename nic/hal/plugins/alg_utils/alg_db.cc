@@ -43,6 +43,8 @@ hal_ret_t
 insert_expected_flow(expected_flow_t *entry)
 {
     HAL_TRACE_DEBUG("ALG::insert_expected_flow key={}", entry->key);
+    ref_init(&entry->ref_count, NULL);
+    entry->deleting = false;
     entry->expected_flow_ht_ctxt.reset();
     return hal_sdk_ret_to_hal_ret(expected_flow_ht()->
                                   insert(entry, &entry->expected_flow_ht_ctxt));
@@ -59,6 +61,32 @@ remove_expected_flow(const hal::flow_key_t &key)
 }
 
 //------------------------------------------------------------------------------
+// Decrement the reference count once done using the entry -- needed for exp flow 
+// timer expiry delete handling
+//------------------------------------------------------------------------------
+void 
+dec_ref_count(expected_flow_t *entry) 
+{
+    ref_dec(&entry->ref_count);
+}
+
+//------------------------------------------------------------------------------
+// Start a timer on the expected flow - Some ALGs such as SUNRPC, MSRPC need it
+//------------------------------------------------------------------------------
+void
+start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
+                          uint32_t time_intvl, sdk::lib::twheel_cb_t cb,
+                          void *timer_ctxt)
+{
+    entry->timer = hal::periodic::timer_schedule(timer_id, time_intvl,
+                                            (void *)timer_ctxt, cb, false);
+    if (!entry->timer) {
+        HAL_TRACE_ERR("Failed to start timer for expected flow with key: {}",
+                      entry->key);
+    }
+}
+
+//------------------------------------------------------------------------------
 // Lookup a expected_flow entry
 // This will do the following lookupos
 //  1. Exact match
@@ -69,14 +97,14 @@ remove_expected_flow(const hal::flow_key_t &key)
 expected_flow_t *
 lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
 {
-    expected_flow_t *entry;
+    expected_flow_t *entry = NULL;
 
     hal::flow_key_t key = ikey;
 
     // Exact match
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
         HAL_TRACE_DEBUG("ALG::lookup_expected_flow exact match key={}", key);
-        return entry;
+        goto end;
     }
 
     if (exact_match) {
@@ -96,7 +124,7 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     key.dip = ikey.sip;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
         HAL_TRACE_DEBUG("ALG::lookup_expected_flow reverse exact match key={}", key);
-        return entry;
+        goto end;
     }
 
     key = ikey;
@@ -105,7 +133,7 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     key.sport = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
         HAL_TRACE_DEBUG("ALG::lookup_expected_flow widcard sport key={}", key);
-        return entry;
+        goto end;
     }
 
     // Mask SIP, DIR and do lookup (RPC)
@@ -113,10 +141,19 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     key.dir = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
         HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport/dir key={}", key);
-        return entry;
+        goto end;
     }
 
-    return NULL;
+end:
+    if (entry) {
+        if (!entry->deleting) {
+            ref_inc(&entry->ref_count);
+        } else {
+            entry = NULL;
+        }
+    }
+
+    return entry;
 }
 
 } // namespace alg_utils

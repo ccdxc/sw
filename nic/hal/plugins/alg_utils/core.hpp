@@ -185,6 +185,10 @@ typedef struct l4_alg_status {
        ((l4_alg_status_t *)((char *)feature_state_ptr -      \
         offsetof(l4_alg_status_t, fte_feature_state)))
 
+#define expected_flow(timer_ptr)                             \
+       ((expected_flow_t *)((char *)timer_ptr -              \
+         offsetof(expected_flow_t, timer)))
+
 typedef void (*l4_sess_cleanup_hdlr_t) (l4_alg_status_t *exp_flow);
 typedef void (*app_sess_cleanup_hdlr_t) (app_session_t *app);
 
@@ -225,7 +229,9 @@ public:
     void cleanup_app_session(app_session_t *app);
     hal_ret_t alloc_and_insert_exp_flow(app_session_t *app_sess, 
                                         hal::flow_key_t key,
-                                        l4_alg_status_t **alg_status);
+                                        l4_alg_status_t **alg_status,
+                                        bool enable_timer=false,
+                                        uint32_t time_intvl=0);
     hal_ret_t alloc_and_insert_l4_sess(app_session_t *app_sess,
                                        l4_alg_status_t **alg_status); 
     hal_ret_t alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_sess);
@@ -244,7 +250,17 @@ private:
     ht                            *app_sess_ht_;              // App session hash table for the feature
     l4_sess_cleanup_hdlr_t         l4_sess_cleanup_hdlr_;     // Callback to cleanup any feature specific info 
     app_sess_cleanup_hdlr_t        app_sess_cleanup_hdlr_;    // Callback to cleanup any feature specific info
+
+    static void exp_flow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt);
 };
+
+//--------------------------------------------------------------------------------
+// Expected flow timer context
+//--------------------------------------------------------------------------------
+typedef struct exp_flow_timer_cb_ {
+    alg_state_t     *alg_state;
+    l4_alg_status_t *exp_flow;
+} exp_flow_timer_cb_t;
 
 } // namespace alg_utils
 } // namespace plugins

@@ -6,6 +6,10 @@ namespace hal {
 namespace plugins {
 namespace alg_utils {
 
+#define ALG_EXP_FLOW_TIMER_ID          0xFF
+#define ALG_EXP_FLOW_GRACE_TIMER_ID    0x100
+#define ALG_EXP_FLOW_GRACE_TIME_INTVL  (15 * 1000) // 15 secs
+
 /*
  * digit2bin
  */
@@ -253,7 +257,7 @@ alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
     alg_state    *state = NULL;
 
     mem = (alg_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
-                                       sizeof(alg_state_t));;
+                                       sizeof(alg_state_t));
     HAL_ABORT(mem != NULL);
     state = new (mem) alg_state();
     
@@ -272,10 +276,38 @@ alg_state::~alg_state() {
      app_sess_ht()->walk_safe(app_sess_walk_cb, (void *)this);
 }
 
+void alg_state::exp_flow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt) {
+    exp_flow_timer_cb_t  *timer_ctxt = (exp_flow_timer_cb_t *)ctxt;
+    l4_alg_status_t      *exp_flow = timer_ctxt->exp_flow;
+    alg_state_t          *alg_state = timer_ctxt->alg_state;
+
+    // Grace timer expiry. Is it ok to cleanup now ?
+    // Should we have retries ?
+    if (exp_flow->entry.deleting == true) {
+        goto cleanup;
+    }
+
+    exp_flow->entry.deleting = true;
+    if (ref_is_shared(&exp_flow->entry.ref_count)) {
+        // Start a grace timer
+        start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_GRACE_TIMER_ID,
+                                  ALG_EXP_FLOW_GRACE_TIME_INTVL, 
+                                  exp_flow_timeout_cb, (void *)timer_ctxt);
+        return;
+    }
+
+cleanup:
+    HAL_TRACE_DEBUG("Cleaning up expected flow with key: {}", exp_flow->entry.key);
+    alg_state->cleanup_exp_flow(exp_flow); 
+
+    HAL_FREE(hal::HAL_MEM_ALLOC_ALG, timer_ctxt);
+}
+
 hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
-                                               hal::flow_key_t key, 
-                                               l4_alg_status_t **expected_flow) {
-    l4_alg_status_t  *exp_flow = NULL;
+                      hal::flow_key_t key, l4_alg_status_t **expected_flow,
+                      bool enable_timer, uint32_t time_intvl) {
+    exp_flow_timer_cb_t   *timer_ctxt = NULL;
+    l4_alg_status_t       *exp_flow = NULL;
 
     exp_flow = (l4_alg_status_t *)l4_sess_slab()->alloc();
     if (exp_flow == NULL) {
@@ -289,6 +321,17 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
     dllist_reset(&exp_flow->exp_flow_lentry);
     dllist_add(&app_sess->exp_flow_lhead, &exp_flow->exp_flow_lentry);
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);
+
+    if (enable_timer == true) {
+        HAL_TRACE_DEBUG("Starting timer for expected flow with key: {}", key); 
+        timer_ctxt = (exp_flow_timer_cb_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
+                                       sizeof(exp_flow_timer_cb_t));
+        timer_ctxt->exp_flow = exp_flow;
+        timer_ctxt->alg_state = this;
+        start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID, 
+                                  time_intvl, exp_flow_timeout_cb, 
+                                  (void *)timer_ctxt);
+    }
 
     *expected_flow = exp_flow;
 

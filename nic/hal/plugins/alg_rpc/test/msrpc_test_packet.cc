@@ -6,12 +6,29 @@
 #include "nic/hal/plugins/alg_rpc/alg_msrpc.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/fte/fte_flow.hpp"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
+#include "nic/hal/test/utils/hal_base_test.hpp"
 
+using namespace std;
 using namespace fte;
 using namespace hal;
 using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::alg_rpc;
 
+using sdk::lib::twheel;
+
+/*
+ * Note: For now timer wheel is supposed to be non-thread safe.
+ * Reason: Update tick locks that slice and calls the callback function.
+ * During the callback function, we try to add or delete timer which will
+ * obviously wait indefinitely as there is not lock available.
+ */
+
+namespace hal {
+namespace periodic {
+extern twheel *g_twheel;
+}
+}  // namespace hal
 
 uint8_t MSRPC_BIND_REQ1[] = {0x00, 0x0c, 0x29, 0xbe, 0x2e, 0xe1, 0x00, 0x50, 
                                 0x56, 0xc0, 0x00, 0x09, 0x08, 0x00, 0x45, 0x00, 
@@ -232,7 +249,7 @@ uint8_t MSRPC_EPM_RSP2[] = {0x08, 0x00, 0x27, 0x96, 0xcb, 0x7c, 0x52, 0x54,
 #define MSRPC_EPM_RSP2_SZ 226
 #define MSRPC_EPM_RSP2_PAYLOAD_OFFSET 54
 
-class msrpc_test : public ::testing::Test {
+class msrpc_test : public hal_base_test {
  protected:
   msrpc_test() {
   }
@@ -244,6 +261,10 @@ class msrpc_test : public ::testing::Test {
 
     // will be called immediately after each test before the destructor
   virtual void TearDown() {}
+
+  static void SetUpTestCase() {
+        hal_base_test::SetUpTestCase();
+  }
 };
 
 TEST_F(msrpc_test, msrpc_parse_bind_req_rsp1) {
@@ -256,12 +277,16 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp1) {
     rpc_info_t       rpc_info;
     fte::cpu_rxhdr_t rxhdr;
     hal::flow_key_t  key;
+    app_session_t    app_sess;
 
     key.proto = (types::IPProtocol)IP_PROTO_TCP;
     memset(&alg_state, 0, sizeof(l4_alg_status_t));
     memset(&rpc_info, 0, sizeof(rpc_info_t));
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
+    memset(&app_sess, 0, sizeof(app_session_t));
+    HAL_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
     alg_state.info = &rpc_info;
+    alg_state.app_session = &app_sess;
     rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ1_PAYLOAD_OFFSET;
     ctx1.init(&rxhdr, MSRPC_BIND_REQ1, MSRPC_BIND_REQ1_SZ, iflow, rflow, &feature_state, num_features);
@@ -310,12 +335,16 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp2) {
     rpc_info_t       rpc_info;
     fte::cpu_rxhdr_t rxhdr;
     hal::flow_key_t  key;
+    app_session_t    app_sess;
 
     key.proto = (types::IPProtocol)IP_PROTO_TCP;
     memset(&alg_state, 0, sizeof(l4_alg_status_t));
     memset(&rpc_info, 0, sizeof(rpc_info_t));
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
+    memset(&app_sess, 0, sizeof(app_session_t));
+    HAL_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
     alg_state.info = &rpc_info;
+    alg_state.app_session = &app_sess;
     rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ2_PAYLOAD_OFFSET;
     ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, iflow, rflow, &feature_state, num_features);
@@ -352,4 +381,46 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp2) {
     ret = parse_msrpc_cn_control_flow(ctx4, &alg_state);
     ASSERT_EQ(ret, HAL_RET_OK);
     ASSERT_EQ(rpc_info.pkt_type, PDU_NONE);
+}
+
+TEST_F(msrpc_test, msrpc_exp_flow_timeout) {
+    slab            *appsess_slab_ = NULL;
+    slab            *l4sess_slab_ = NULL;
+    alg_state_t     *rpc_state;
+    app_session_t   *app_sess = NULL;
+    l4_alg_status_t *exp_flow = NULL;
+    hal::flow_key_t  key;
+    
+    key.proto = (types::IPProtocol)IP_PROTO_TCP;
+    key.sip.v4_addr = 0x14000001;
+    key.dip.v4_addr = 0x14000002;
+    key.sport = 12345;
+    key.dport = 111;    
+    appsess_slab_ = slab::factory("rpc_alg_appsess", HAL_SLAB_RPC_ALG_APPSESS,
+                                  sizeof(app_session_t), 64,
+                                  true, true, true);
+
+    l4sess_slab_ = slab::factory("rpc_alg_l4sess", HAL_SLAB_RPC_ALG_L4SESS,
+                                 sizeof(l4_alg_status_t), 64,
+                                 true, true, true);
+
+    rpc_state = alg_state_t::factory(FTE_FEATURE_ALG_RPC.c_str(),
+                          appsess_slab_, l4sess_slab_, NULL, NULL,
+                          NULL);
+    
+    rpc_state->alloc_and_init_app_sess(key, &app_sess);
+
+    key.dport = 22345;
+    rpc_state->alloc_and_insert_exp_flow(app_sess, key, &exp_flow, true, 8);
+    sleep(10);
+    ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
+
+    key.dport = 22346;
+    rpc_state->alloc_and_insert_exp_flow(app_sess, key, &exp_flow, true, 5);
+    exp_flow->entry.ref_count.count++;
+    sleep(5);
+    ASSERT_EQ(exp_flow->entry.deleting, true);
+    exp_flow->entry.ref_count.count--;
+    sleep(15);
+    ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 }

@@ -8,6 +8,7 @@
 #include "rpcb_prot.h"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/plugins/sfw/core.hpp"
+#include "nic/hal/plugins/alg_utils/alg_db.hpp"
 
 #define ADDR_NETID_BYTES 128
 #define LAST_RECORD_FRAG 0x80
@@ -295,7 +296,8 @@ static void sunrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
 }
 
 hal_ret_t process_sunrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t          ret = HAL_RET_OK;
+    l4_alg_status_t   *exp_flow = l4_sess;
 
     // Todo (Pavithra) Get the Firewall data and make sure that the UUID
     // is still allowed in the config
@@ -313,7 +315,9 @@ hal_ret_t process_sunrpc_data_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     // Register completion handler and session state
     ctx.register_completion_handler(sunrpc_completion_hdlr);
     ctx.register_feature_session_state(&l4_sess->fte_feature_state);
-
+    
+    // Decrement the ref count for the expected flow
+    dec_ref_count(&exp_flow->entry);
     return ret;
 }
 

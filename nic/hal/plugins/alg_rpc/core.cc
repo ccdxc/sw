@@ -73,7 +73,8 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     return HAL_RET_OK;
 }
 
-void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb) {
+void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb, 
+                        uint32_t timeout) {
     hal::flow_key_t  key = ctx.key();
     rpc_info_t      *rpc_info = NULL, *exp_flow_info = NULL;
     l4_alg_status_t *exp_flow = NULL;
@@ -95,7 +96,7 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb) 
     key.proto = (types::IPProtocol)rpc_info->prot;
     key.flow_type = (rpc_info->addr_family == IP_PROTO_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;
     ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
-                                                       key, &exp_flow);
+                                                  key, &exp_flow, true, timeout);
     HAL_ASSERT(ret == HAL_RET_OK);
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->alg = l4_sess->alg;
