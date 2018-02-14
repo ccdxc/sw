@@ -75,10 +75,10 @@ func TestMain(m *testing.M) {
 	tinfo.apiserverport = port
 	// Start the API Gateway
 	gwconfig := apigw.Config{
-		HTTPAddr:          ":0",
-		DebugMode:         true,
-		Logger:            l,
-		APIServerOverride: "localhost:" + port,
+		HTTPAddr:        ":0",
+		DebugMode:       true,
+		Logger:          l,
+		BackendOverride: map[string]string{"pen-apiserver": "localhost:" + port},
 	}
 	gw := apigwpkg.MustGetAPIGateway()
 	go gw.Run(gwconfig)

@@ -16,6 +16,30 @@ import (
 
 const srvName = "ApiGw"
 
+// makeOverrideMap creates a map from a string. examples for input strings
+//   "pen-apiserver=localhost:5000" -> map[pen-apiserver:localhost:5000]
+//   "pen-apiserver=localhost:5000,pen-search=localhost:5005" ->
+//      map[pen-apiserver:localhost:5000 pen-search:localhost:5005]
+func makeOverrideMap(in string) map[string]string {
+	if in == "" {
+		return nil
+	}
+	ret := make(map[string]string)
+	kvs := strings.Split(in, ",")
+	for _, v := range kvs {
+		if v == "" {
+			continue
+		}
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			if kv[0] != "" && kv[1] != "" {
+				ret[kv[0]] = kv[1]
+			}
+		}
+	}
+	return ret
+}
+
 func main() {
 	var (
 		httpaddr        = flag.String("port", ":"+globals.APIGwRESTPort, "HTTP port to listen on")
@@ -25,7 +49,7 @@ func main() {
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
-		override        = flag.String("override", "", "APIserver override port")
+		override        = flag.String("override", "", "backend override map eg: 'pen-apiserver=localhost:5000,pen-search=localhost:5005'")
 	)
 
 	flag.Parse()
@@ -65,7 +89,7 @@ func main() {
 		config.Resolvers = strings.Split(*resolverURLs, ",")
 		config.DevMode = *devmode
 		if *override != "" {
-			config.APIServerOverride = *override
+			config.BackendOverride = makeOverrideMap(*override)
 			config.Resolvers = []string{}
 		}
 	}

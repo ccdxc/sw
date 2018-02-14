@@ -31,8 +31,8 @@ type apiGw struct {
 		running bool
 		addr    net.Addr
 	}
-	apiSrvOverride string
-	devmode        bool
+	backendOverride map[string]string
+	devmode         bool
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -52,6 +52,8 @@ func initAPIGw() {
 	singletonAPIGw.svcname = make(map[string]string)
 	singletonAPIGw.doneCh = make(chan error)
 	singletonAPIGw.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
+	singletonAPIGw.backendOverride = make(map[string]string)
+
 }
 
 // Register a service with the APi Gateway service. Duplicate registrations
@@ -152,7 +154,9 @@ func (a *apiGw) Run(config apigw.Config) {
 	}
 
 	a.logger = config.Logger
-	a.apiSrvOverride = config.APIServerOverride
+	if config.BackendOverride != nil {
+		a.backendOverride = config.BackendOverride
+	}
 	a.devmode = config.DevMode
 
 	// Http Connection
@@ -236,15 +240,10 @@ func (a *apiGw) GetAddr() (net.Addr, error) {
 
 // GetApiServerAddr gets the API gateway address to connect to
 func (a *apiGw) GetAPIServerAddr(addr string) string {
-	// This will override any addresses that is to be resolved through the resolver.
-	//  If the address is in host:port form do not override.
-	_, _, err := net.SplitHostPort(addr)
-	if err == nil {
-		return addr
-	}
-	// return the override address if set or return the original address
-	if a.apiSrvOverride != "" {
-		return a.apiSrvOverride
+	// This will override any addresses that is available in the override map.
+	//  if not, the original address is returned
+	if v, ok := a.backendOverride[addr]; ok {
+		return v
 	}
 	return addr
 }

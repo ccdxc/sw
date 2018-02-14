@@ -45,7 +45,7 @@ type Config struct {
 	// HTTPAddr to start the Service on.
 	HTTPAddr string
 	// GrpcServerPort on which to start listening to the external GRPC requests.
-	APIServerOverride string
+	BackendOverride map[string]string
 	// DebugMode enables verbose logging and stack trace dump support.
 	DebugMode bool
 	// Logger to be used for logging.
