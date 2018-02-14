@@ -137,17 +137,17 @@ helper-containers:
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run --rm -v${PWD}:/import/src/github.com/pensando/sw -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8 sh -c "make ws-tools gen build"; \
+		echo "+++ building go sources"; docker run --rm -v${PWD}:/import/src/github.com/pensando/sw:cached -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8 sh -c "make ws-tools gen build"; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8 sh -c "make ws-tools gen build";\
+		echo "+++ rebuilding all go sources"; docker run --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8 sh -c "make ws-tools gen build";\
 	fi
 
 container-qcompile:
 	mkdir -p ${PWD}/bin/cbin
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8; \
+		echo "+++ building go sources"; docker run --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8;\
+		echo "+++ rebuilding all go sources"; docker run --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8;\
 	fi
 
 
@@ -225,4 +225,3 @@ e2e:
 	docker exec -it node0 sh -c 'E2E_TEST=1 go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/test/e2e/cluster/tb_config.json '
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
-	
