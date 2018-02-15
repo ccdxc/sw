@@ -33,6 +33,10 @@ using gft::GftHeaderTranspositionProfileStatus;
 using gft::GftHeaderTranspositionProfileResponse;
 using gft::GftHeaderTranspositionProfileResponseMsg;
 
+using gft::GftHeaders;
+using gft::GftHeaderFields;
+using gft::GftEthFields;
+
 using gft::GftExactMatchFlowEntrySpec;
 using gft::GftExactMatchFlowEntryRequestMsg;
 using gft::GftExactMatchFlowEntryStatus;
@@ -237,7 +241,7 @@ find_gft_exact_match_profile_by_handle (hal_handle_t handle)
 typedef struct gft_hdr_group_exact_match_s {
     uint32_t              flags;            // GFT_HDR_GROUP_EXACT_MATCH_XXX flags, if any
     uint32_t              headers;
-    uint64_t              match_fields;
+    uint64_t              fields;
     gft_eth_fields_t      eth_fields;
     ip_addr_t             src_ip_addr;
     ip_addr_t             dst_ip_addr;
@@ -419,7 +423,7 @@ typedef struct gft_hdr_group_xposition_s {
     uint32_t                            flags;    // GFT_HDR_GROUP_XPOSITION_XXX flags, if any
     gft_hdr_group_xposition_action_t    action;
     uint32_t                            headers;
-    uint64_t                            header_fields;
+    uint64_t                            fields;
     gft_eth_fields_t                    eth_fields;
     ip_addr_t                           src_ip_addr;
     ip_addr_t                           dst_ip_addr;
@@ -478,17 +482,17 @@ typedef struct gft_exact_match_flow_entry_s {
     gft_flow_entry_id_t            flow_entry_id;                      // flow entry id allocated by the app
 
     uint32_t                       flags;                              // GFT_EMFE_XXX flags
-    gft_table_id_t                 table_id;                           // table this entry belongs to
-    vport_id_t                     vport_id;                           // vport to apply this flow entry to
     hal_handle_t                   gft_emp_hal_handle;                 // exact match profile id
     hal_handle_t                   gft_htp_hal_handle;                 // header xposition profile id
+    gft_table_id_t                 table_id;                           // table this entry belongs to
+    vport_id_t                     vport_id;                           // vport to apply this flow entry to
     vport_id_t                     redirect_vport_id;                  // redirect vport id, if any
     vport_id_t                     ttl_one_redirect_vport_id;          // vport id to redirect to if TTL is one
     gft_flow_entry_cache_hint_t    cache_hint;                         // cache hint, if any
     uint32_t                       num_exact_matches;                  // # of header group exact matches
     uint32_t                       num_transpositions;                 // # of header group transpositions
     gft_hdr_group_exact_match_t    *exact_matches;                     // exact match list
-    gft_hdr_group_xposition_t      *hdr_group_xpositions;              // header transposition list
+    gft_hdr_group_xposition_t      *transpositions;                    // header transposition list
 
     // operational state
     hal_handle_t                   hal_handle;                         // HAL allocated handle
@@ -535,7 +539,7 @@ gft_exact_match_flow_entry_init (gft_exact_match_flow_entry_t *flow_entry)
     flow_entry->num_exact_matches = 0;
     flow_entry->num_transpositions = 0;
     flow_entry->exact_matches = NULL;
-    flow_entry->hdr_group_xpositions = NULL;
+    flow_entry->transpositions = NULL;
 
     flow_entry->pd = NULL;
     flow_entry->hal_handle = HAL_HANDLE_INVALID;
