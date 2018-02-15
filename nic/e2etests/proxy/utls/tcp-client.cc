@@ -1,4 +1,5 @@
 #include "nic/e2etests/proxy/ntls.hpp"
+#include <netinet/tcp.h>
 
 int bytes_recv;
 int port;
@@ -81,6 +82,12 @@ int create_socket() {
 
   int optval = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
+
+  optval = 8;
+  if (setsockopt(sockfd, IPPROTO_TCP, TCP_SYNCNT, &optval, sizeof(optval)) != 0) {
+      TLOG("can't bind port - %s", strerror(errno));
+      exit(-1);
+  }
 
   if ( bind(sockfd, (const struct sockaddr*)&src_addr, sizeof(src_addr)) != 0 ) {
       TLOG("can't bind port - %s", strerror(errno));
