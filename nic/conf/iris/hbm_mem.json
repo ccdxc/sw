@@ -2,7 +2,7 @@
     "regions": [
         {
             "name": "lif2qstate_map",
-            "size_kb": 20480
+            "size_kb": 131072
         },
         {
             "name": "ipsec-cb",
