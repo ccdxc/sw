@@ -103,103 +103,108 @@ message SecurityProfileSpec {
   types.ObjectMeta             meta                               = 1;    // common object meta
   kh.SecurityProfileKeyHandle  key_or_handle                      = 2 [(gogoproto.moretags) = "venice:\"key\""];
 
-  uint32                       session_idle_timeout               = 3;
-  uint32                       tcp_cnxn_setup_timeout             = 4;
-  uint32                       tcp_close_timeout                  = 5;
-  uint32                       tcp_close_wait_timeout             = 6;
-  uint32                       ip_normalize_ttl                   = 7 [(gogoproto.moretags) = "range:0-255"];
+  uint32                       session_idle_timeout               = 3 [(gogoproto.moretags) = "range:30-172800, venice:default=90"];
+  uint32                       tcp_cnxn_setup_timeout             = 4 [(gogoproto.moretags) = "range:1-60, venice:default=30"];
+  uint32                       tcp_close_timeout                  = 5 [(gogoproto.moretags) = "range:1-600, venice:default=15"];
+  uint32                       tcp_half_closed_timeout            = 6 [(gogoproto.moretags) = "range:1-300, venice:default=300"];
+  uint32                       ip_normalize_ttl                   = 7 [(gogoproto.moretags) = "range:0-255, venice:default=0"];
+  uint32                       tcp_drop_timeout                   = 8 [(gogoproto.moretags) = "range:1-300, venice:default=90"];
+  uint32                       udp_drop_timeout                   = 9 [(gogoproto.moretags) = "range:1-172800, venice:default=60"];
+  uint32                       icmp_drop_timeout                  = 10 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
+  uint32                       drop_timeout                       = 11 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
+  uint32                       tcp_timeout                        = 12 [(gogoproto.moretags) = "range:1-172800, venice:default=3600"];
+  uint32                       udp_timeout                        = 13 [(gogoproto.moretags) = "range:1-172800, venice:default=30"];
+  uint32                       icmp_timeout                       = 14 [(gogoproto.moretags) = "range:1-172800, venice:default=6"];
 
-
-  bool                         cnxn_tracking_en                   = 11;
-  bool                         ipsg_en                            = 12;
-  bool                         tcp_rtt_estimate_en                = 13;
-  bool                         ip_normalization_en                = 14;
-  bool                         tcp_normalization_en               = 15;
-  bool                         icmp_normalization_en              = 16;
-  bool                         ip_reassembly_en                   = 17;
+  bool                         cnxn_tracking_en                   = 15 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         ipsg_en                            = 16 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_rtt_estimate_en                = 17 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_normalization_en                = 18 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         tcp_normalization_en               = 19 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         icmp_normalization_en              = 20 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         ip_reassembly_en                   = 21 [(gogoproto.moretags) = "venice:default=false"];
 
   // IP normalization knobs
-  bool                         ip_ttl_change_detect_en            = 20;
-  bool                         ip_src_grd_en                      = 21;
-  NormalizationAction          ip_rsvd_flags_action               = 22;
-  NormalizationAction          ip_df_action                       = 23;
-  NormalizationAction          ip_options_action                  = 24;
-  NormalizationAction          ip_invalid_len_action              = 25;
-  bool                         ip_spoof_pkt_drop                  = 26;
-  bool                         ip_loose_src_routing_pkt_drop      = 27;
-  bool                         ip_malformed_option_pkt_drop       = 28;
-  bool                         ip_record_route_option_pkt_drop    = 29;
-  bool                         ip_strict_src_routing_pkt_drop     = 30;
-  bool                         ip_ts_option_pkt_drop              = 31;
-  bool                         ip_unknown_option_pkt_drop         = 32;
-  bool                         ip_stream_id_option_pkt_drop       = 33;
-  bool                         ip_rsvd_fld_set_pkt_drop           = 34;
-  bool                         ip_clear_df_bit                    = 35;
+  bool                         ip_ttl_change_detect_en            = 22 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_src_guard_en                    = 23 [(gogoproto.moretags) = "venice:default=false"];
+  NormalizationAction          ip_rsvd_flags_action               = 24 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
+  NormalizationAction          ip_df_action                       = 25 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_ALLOW"];
+  NormalizationAction          ip_options_action                  = 26 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_ALLOW"];
+  NormalizationAction          ip_invalid_len_action              = 27 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_TRIM"];
+  bool                         ip_spoof_pkt_drop                  = 28 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_loose_src_routing_pkt_drop      = 29 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_malformed_option_pkt_drop       = 30 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_record_route_option_pkt_drop    = 31 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_strict_src_routing_pkt_drop     = 32 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_ts_option_pkt_drop              = 33 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_unknown_option_pkt_drop         = 34 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_stream_id_option_pkt_drop       = 35 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_rsvd_fld_set_pkt_drop           = 36 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_clear_df_bit                    = 37 [(gogoproto.moretags) = "venice:default=false"];
 
   // IPv6 knobs
-  bool                         ipv6_anycast_src_drop              = 40;
-  bool                         ipv6_v4_compatible_addr_drop       = 41;
-  bool                         ipv6_needless_ip_frag_hdr_drop     = 42;
-  bool                         ipv6_invalid_options_pkt_drop      = 43;
-  bool                         ipv6_rsvd_fld_set_pkt_drop         = 44;
-  bool                         ipv6_rtg_hdr_pkt_drop              = 45;
-  bool                         ipv6_dst_options_hdr_pkt_drop      = 46;
-  bool                         ipv6_hop_by_hop_options_pkt_drop   = 47;
+  bool                         ipv6_anycast_src_drop              = 40 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         ipv6_v4_compatible_addr_drop       = 41 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         ipv6_needless_ip_frag_hdr_drop     = 42 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         ipv6_invalid_options_pkt_drop      = 43 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         ipv6_rsvd_fld_set_pkt_drop         = 44 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         ipv6_rtg_hdr_pkt_drop              = 45 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         ipv6_dst_options_hdr_pkt_drop      = 46 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         ipv6_hop_by_hop_options_pkt_drop   = 47 [(gogoproto.moretags) = "venice:default=false"];;
 
 
   // ICMP/ICMPv6 normalization knobs
-  NormalizationAction          icmp_invalid_code_action           = 50;
-  bool                         icmp_deprecated_msgs_drop          = 51;
-  bool                         icmp_redirect_msg_drop             = 52;
-  bool                         icmp_dst_unreach_ignore_payload    = 53;
-  bool                         icmp_param_prblm_ignore_payload    = 54;
-  bool                         icmp_pkt_too_big_ignore_payload    = 55;
-  bool                         icmp_redirect_ignore_payload       = 56;
-  bool                         icmp_time_exceed_ignore_payload    = 57;
-  bool                         icmp_error_drop                    = 58;
-  bool                         icmp_fragments_drop                = 59;
-  bool                         icmp_large_pkt_drop                = 60;
-  bool                         icmp_ping_zero_id_drop             = 61;
-  bool                         icmp_need_frag_suppress            = 62;
-  bool                         icmp_time_exceed_suppress          = 63;
-  bool                         icmpv6_large_msg_mtu_small_drop    = 64;
+  NormalizationAction          icmp_invalid_code_action           = 50 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
+  bool                         icmp_deprecated_msgs_drop          = 51 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         icmp_redirect_msg_drop             = 52 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         icmp_dst_unreach_ignore_payload    = 53 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_param_prblm_ignore_payload    = 54 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_pkt_too_big_ignore_payload    = 55 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_redirect_ignore_payload       = 56 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_time_exceed_ignore_payload    = 57 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_error_drop                    = 58 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_fragments_drop                = 59 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_large_pkt_drop                = 60 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_ping_zero_id_drop             = 61 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_need_frag_suppress            = 62 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmp_time_exceed_suppress          = 63 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         icmpv6_large_msg_mtu_small_drop    = 64 [(gogoproto.moretags) = "venice:default=false"];
 
 
   // TCP normalization knobs
-  bool                         tcp_split_handshake_drop           = 71;
-  NormalizationAction          tcp_rsvd_flags_action              = 72;
-  NormalizationAction          tcp_unexpected_mss_action          = 73;
-  NormalizationAction          tcp_unexpected_win_scale_action    = 74;
-  NormalizationAction          tcp_unexpected_sack_perm_action    = 75;
-  NormalizationAction          tcp_urg_ptr_not_set_action         = 76;
-  NormalizationAction          tcp_urg_flag_not_set_action        = 77;
-  NormalizationAction          tcp_urg_payload_missing_action     = 78;
-  NormalizationAction          tcp_rst_with_data_action           = 79;
-  NormalizationAction          tcp_data_len_gt_mss_action         = 80;
-  NormalizationAction          tcp_data_len_gt_win_size_action    = 81;
-  NormalizationAction          tcp_unexpected_ts_option_action    = 82;
-  NormalizationAction          tcp_unexpected_echo_ts_action      = 83;
-  NormalizationAction          tcp_unexpected_sack_option_action  = 84;
-  bool                         tcp_ts_not_present_drop            = 85;
-  bool                         tcp_non_syn_first_pkt_drop         = 86;
+  bool                         tcp_split_handshake_drop           = 71 [(gogoproto.moretags) = "venice:default=false"];
+  NormalizationAction          tcp_rsvd_flags_action              = 72 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
+  NormalizationAction          tcp_unexpected_mss_action          = 73 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_STRIP"];
+  NormalizationAction          tcp_unexpected_win_scale_action    = 74 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_STRIP"];
+  NormalizationAction          tcp_unexpected_sack_perm_action    = 75 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_STRIP"];
+  NormalizationAction          tcp_urg_ptr_not_set_action         = 76 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_RESET"];
+  NormalizationAction          tcp_urg_flag_not_set_action        = 77 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_RESET"];
+  NormalizationAction          tcp_urg_payload_missing_action     = 78 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_RESET"];
+  NormalizationAction          tcp_rst_with_data_action           = 79 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
+  NormalizationAction          tcp_data_len_gt_mss_action         = 80 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_TRIM"];
+  NormalizationAction          tcp_data_len_gt_win_size_action    = 81 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_TRIM"];
+  NormalizationAction          tcp_unexpected_ts_option_action    = 82 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_RESET"];
+  NormalizationAction          tcp_unexpected_echo_ts_action      = 83 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
+  NormalizationAction          tcp_unexpected_sack_option_action  = 84 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
+  bool                         tcp_ts_not_present_drop            = 85 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         tcp_non_syn_first_pkt_drop         = 86 [(gogoproto.moretags)="venice:default=true"];
 
   // We will check for the following cases for invalid TCP flags
   // 1. SYN + FIN
   // 2. SYN + RST
   // 3. All TCP flags set (tcp_flags = 0xFF)
   // 4. No TCP flags set (tcp_flags = 0x0)
-  bool                         tcp_invalid_flags_drop             = 87;
-  bool                         tcp_nonsyn_noack_drop              = 88;
-  bool                         tcp_syn_with_data_drop             = 89;
-  bool                         tcp_syn_ack_with_data_drop         = 90;
-  bool                         tcp_overlapping_segments_drop      = 91;
-  bool                         tcp_strip_ts_option                = 92;
-  bool                         tcp_conn_trk_bypass_window_err     = 93;
-  bool                         tcp_conn_trk_fin_rst_disable       = 94;
-  bool                         tcp_urg_flag_ptr_clear             = 95;
-  uint32                       tcp_mss                            = 96;
-
-  bool                         multicast_src_drop                 = 101;
+  bool                         tcp_invalid_flags_drop             = 87 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         tcp_nonsyn_noack_drop              = 88 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         tcp_syn_with_data_drop             = 89 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_syn_ack_with_data_drop         = 90 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_overlapping_segments_drop      = 91 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_strip_timestamp_option         = 92 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_conn_track_bypass_window_err   = 93 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_conn_track_fin_rst_disable     = 94 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_urg_flag_ptr_clear             = 95 [(gogoproto.moretags) = "venice:default=false"];
+  uint32                       tcp_mss                            = 96 [(gogoproto.moretags) = "venice:default=0"];
+  bool                         multicast_src_drop                 = 101 [(gogoproto.moretags) = "venice:default=true"];
 }
 
 // SecurityProfileRequestMsg is batched add or modify profile request

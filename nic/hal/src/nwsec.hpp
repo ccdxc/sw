@@ -37,7 +37,14 @@ typedef struct nwsec_profile_s {
     uint32_t              session_idle_timeout;
     uint32_t              tcp_cnxn_setup_timeout;
     uint32_t              tcp_close_timeout;
-    uint32_t              tcp_close_wait_timeout;
+    uint32_t              tcp_half_closed_timeout;
+    uint32_t              tcp_drop_timeout;
+    uint32_t              udp_drop_timeout;
+    uint32_t              icmp_drop_timeout;
+    uint32_t              drop_timeout;
+    uint32_t              tcp_timeout;
+    uint32_t              udp_timeout;
+    uint32_t              icmp_timeout;
 
     uint32_t              cnxn_tracking_en:1;
     uint32_t              ipsg_en:1;
@@ -48,7 +55,7 @@ typedef struct nwsec_profile_s {
     uint32_t              ip_reassembly_en:1;
 
     uint32_t              ip_ttl_change_detect_en:1;
-    uint32_t              ip_src_grd_en:1;
+    uint32_t              ip_src_guard_en:1;
     uint32_t              ip_rsvd_flags_action:2;
     uint32_t              ip_df_action:2;
     uint32_t              ip_options_action:2;
@@ -113,8 +120,8 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_syn_with_data_drop:1;
     uint32_t              tcp_syn_ack_with_data_drop:1;
     uint32_t              tcp_overlapping_segments_drop:1;
-    uint32_t              tcp_strip_ts_option:1;
-    uint32_t              tcp_conn_trk_bypass_window_err:1;
+    uint32_t              tcp_strip_timestamp_option:1;
+    uint32_t              tcp_conn_track_bypass_window_err:1;
     uint32_t              tcp_urg_flag_ptr_clear:1;
     uint32_t              tcp_mss;
 

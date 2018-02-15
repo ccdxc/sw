@@ -70,10 +70,10 @@ def generate_float(field):
     
 def generate_int(field):
     if is_range_field(field):
-        range_str = field.GetOptions().__str__().split(":")[-1].strip()
-        range_str = range_str.replace("\"", "")
-        range_str = range_str.split("-")
-        return random.randint(int(range_str[0]), int(range_str[1]))
+        regex_range = re.compile(r".*range:(\d+)-(\d+)")
+        expr = field.GetOptions().__str__()
+        val = re.match(regex_range, expr).groups()
+        return random.randint(int(val[0]), int(val[1]))
     return random.randint(0, 99999)
 
 def generate_bool(field):

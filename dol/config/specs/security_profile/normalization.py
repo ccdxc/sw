@@ -45,7 +45,7 @@ knobs_list = [
     ('NormalizationAction', 'tcp_rst_with_data_action', '49'),
     ('NormalizationAction', 'tcp_data_len_gt_mss_action', '50'),
     ('NormalizationAction', 'tcp_data_len_gt_win_size_action', '51'),
-    ('NormalizationAction', 'tcp_unexpected_ts_option_action', '52'),
+    ('NormalizationAction', 'tcp_unexpected_timestamp_option_action', '52'),
     ('NormalizationAction', 'tcp_unexpected_echo_ts_action', '53'),
     ('NormalizationAction', 'tcp_unexpected_sack_option_action', '54'),
     ('bool', 'tcp_ts_not_present_drop', '55'),

@@ -141,7 +141,14 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
     if (NWSEC_SPEC_CHECK(session_idle_timeout) ||
         NWSEC_SPEC_CHECK(tcp_cnxn_setup_timeout) ||
         NWSEC_SPEC_CHECK(tcp_close_timeout) ||
-        NWSEC_SPEC_CHECK(tcp_close_wait_timeout) ||
+        NWSEC_SPEC_CHECK(tcp_half_closed_timeout) ||
+        NWSEC_SPEC_CHECK(tcp_drop_timeout) ||
+        NWSEC_SPEC_CHECK(udp_drop_timeout) ||
+        NWSEC_SPEC_CHECK(icmp_drop_timeout) ||
+        NWSEC_SPEC_CHECK(drop_timeout) ||
+        NWSEC_SPEC_CHECK(tcp_timeout) ||
+        NWSEC_SPEC_CHECK(udp_timeout) ||
+        NWSEC_SPEC_CHECK(icmp_timeout) ||
         NWSEC_SPEC_CHECK(cnxn_tracking_en) ||
         NWSEC_SPEC_CHECK(ipsg_en) ||
         NWSEC_SPEC_CHECK(tcp_rtt_estimate_en) ||
@@ -150,7 +157,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
         NWSEC_SPEC_CHECK(icmp_normalization_en) ||
         NWSEC_SPEC_CHECK(ip_reassembly_en) ||
         NWSEC_SPEC_CHECK(ip_ttl_change_detect_en) ||
-        NWSEC_SPEC_CHECK(ip_src_grd_en) ||
+        NWSEC_SPEC_CHECK(ip_src_guard_en) ||
         NWSEC_SPEC_CHECK(ip_rsvd_flags_action) ||
         NWSEC_SPEC_CHECK(ip_df_action) ||
         NWSEC_SPEC_CHECK(ip_options_action) ||
@@ -210,8 +217,8 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
         NWSEC_SPEC_CHECK(tcp_syn_with_data_drop) ||
         NWSEC_SPEC_CHECK(tcp_syn_ack_with_data_drop) ||
         NWSEC_SPEC_CHECK(tcp_overlapping_segments_drop) ||
-        NWSEC_SPEC_CHECK(tcp_strip_ts_option) ||
-        NWSEC_SPEC_CHECK(tcp_conn_trk_bypass_window_err) ||
+        NWSEC_SPEC_CHECK(tcp_strip_timestamp_option) ||
+        NWSEC_SPEC_CHECK(tcp_conn_track_bypass_window_err) ||
         NWSEC_SPEC_CHECK(tcp_urg_flag_ptr_clear) ||
         NWSEC_SPEC_CHECK(tcp_mss) ||
         NWSEC_SPEC_CHECK(multicast_src_drop)) {
@@ -245,7 +252,14 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(session_idle_timeout);
     NWSEC_SPEC_ASSIGN(tcp_cnxn_setup_timeout);
     NWSEC_SPEC_ASSIGN(tcp_close_timeout);
-    NWSEC_SPEC_ASSIGN(tcp_close_wait_timeout);
+    NWSEC_SPEC_ASSIGN(tcp_half_closed_timeout);
+    NWSEC_SPEC_ASSIGN(tcp_drop_timeout);
+    NWSEC_SPEC_ASSIGN(udp_drop_timeout);
+    NWSEC_SPEC_ASSIGN(icmp_drop_timeout);
+    NWSEC_SPEC_ASSIGN(drop_timeout);
+    NWSEC_SPEC_ASSIGN(tcp_timeout);
+    NWSEC_SPEC_ASSIGN(udp_timeout);
+    NWSEC_SPEC_ASSIGN(icmp_timeout);
 
     NWSEC_SPEC_ASSIGN(cnxn_tracking_en);
     NWSEC_SPEC_ASSIGN(ipsg_en);
@@ -255,7 +269,7 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(icmp_normalization_en);
     NWSEC_SPEC_ASSIGN(ip_reassembly_en);
     NWSEC_SPEC_ASSIGN(ip_ttl_change_detect_en);
-    NWSEC_SPEC_ASSIGN(ip_src_grd_en);
+    NWSEC_SPEC_ASSIGN(ip_src_guard_en);
 
     NWSEC_SPEC_ASSIGN(ip_rsvd_flags_action);
     NWSEC_SPEC_ASSIGN(ip_df_action);
@@ -323,8 +337,8 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(tcp_syn_with_data_drop);
     NWSEC_SPEC_ASSIGN(tcp_syn_ack_with_data_drop);
     NWSEC_SPEC_ASSIGN(tcp_overlapping_segments_drop);
-    NWSEC_SPEC_ASSIGN(tcp_strip_ts_option);
-    NWSEC_SPEC_ASSIGN(tcp_conn_trk_bypass_window_err);
+    NWSEC_SPEC_ASSIGN(tcp_strip_timestamp_option);
+    NWSEC_SPEC_ASSIGN(tcp_conn_track_bypass_window_err);
     NWSEC_SPEC_ASSIGN(tcp_urg_flag_ptr_clear);
     NWSEC_SPEC_ASSIGN(tcp_mss);
 
@@ -563,7 +577,14 @@ security_profile_spec_print (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(session_idle_timeout);
     NWSEC_SPEC_FIELD_PRINT(tcp_cnxn_setup_timeout);
     NWSEC_SPEC_FIELD_PRINT(tcp_close_timeout);
-    NWSEC_SPEC_FIELD_PRINT(tcp_close_wait_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_half_closed_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_drop_timeout);
+    NWSEC_SPEC_FIELD_PRINT(udp_drop_timeout);
+    NWSEC_SPEC_FIELD_PRINT(icmp_drop_timeout);
+    NWSEC_SPEC_FIELD_PRINT(drop_timeout);
+    NWSEC_SPEC_FIELD_PRINT(tcp_timeout);
+    NWSEC_SPEC_FIELD_PRINT(udp_timeout);
+    NWSEC_SPEC_FIELD_PRINT(icmp_timeout);
     buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(cnxn_tracking_en);
     NWSEC_SPEC_FIELD_PRINT(ipsg_en);
@@ -573,7 +594,7 @@ security_profile_spec_print (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(icmp_normalization_en);
     NWSEC_SPEC_FIELD_PRINT(ip_reassembly_en);
     NWSEC_SPEC_FIELD_PRINT(ip_ttl_change_detect_en);
-    NWSEC_SPEC_FIELD_PRINT(ip_src_grd_en);
+    NWSEC_SPEC_FIELD_PRINT(ip_src_guard_en);
     buf.write("\n");
     NWSEC_SPEC_FIELD_PRINT(ip_rsvd_flags_action);
     NWSEC_SPEC_FIELD_PRINT(ip_df_action);
@@ -637,8 +658,8 @@ security_profile_spec_print (SecurityProfileSpec& spec)
     NWSEC_SPEC_FIELD_PRINT(tcp_syn_with_data_drop);
     NWSEC_SPEC_FIELD_PRINT(tcp_syn_ack_with_data_drop);
     NWSEC_SPEC_FIELD_PRINT(tcp_overlapping_segments_drop);
-    NWSEC_SPEC_FIELD_PRINT(tcp_strip_ts_option);
-    NWSEC_SPEC_FIELD_PRINT(tcp_conn_trk_bypass_window_err);
+    NWSEC_SPEC_FIELD_PRINT(tcp_strip_timestamp_option);
+    NWSEC_SPEC_FIELD_PRINT(tcp_conn_track_bypass_window_err);
     NWSEC_SPEC_FIELD_PRINT(tcp_urg_flag_ptr_clear);
     NWSEC_SPEC_FIELD_PRINT(tcp_mss);
     NWSEC_SPEC_FIELD_PRINT(multicast_src_drop);
@@ -1290,7 +1311,13 @@ security_profile_get (nwsec::SecurityProfileGetRequest& req,
     spec->set_session_idle_timeout(sec_prof->session_idle_timeout);
     spec->set_tcp_cnxn_setup_timeout(sec_prof->tcp_cnxn_setup_timeout);
     spec->set_tcp_close_timeout(sec_prof->tcp_close_timeout);
-    spec->set_tcp_close_wait_timeout(sec_prof->tcp_close_wait_timeout);
+    spec->set_tcp_drop_timeout(sec_prof->tcp_drop_timeout);
+    spec->set_udp_drop_timeout(sec_prof->udp_drop_timeout);
+    spec->set_icmp_drop_timeout(sec_prof->icmp_drop_timeout);
+    spec->set_drop_timeout(sec_prof->drop_timeout);
+    spec->set_tcp_timeout(sec_prof->tcp_timeout);
+    spec->set_udp_timeout(sec_prof->udp_timeout);
+    spec->set_icmp_timeout(sec_prof->icmp_timeout);
 
     spec->set_ip_normalization_en(sec_prof->ip_normalization_en);
     spec->set_tcp_normalization_en(sec_prof->tcp_normalization_en);

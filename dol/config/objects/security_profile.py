@@ -82,7 +82,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
             req_spec.session_idle_timeout = 65535
         req_spec.tcp_cnxn_setup_timeout = self.fields.tcp_cnxn_setup_timeout
         req_spec.tcp_close_timeout = self.fields.tcp_close_timeout
-        req_spec.tcp_close_wait_timeout = self.fields.tcp_close_wait_timeout
+        req_spec.tcp_half_closed_timeout = self.fields.tcp_half_closed_timeout
         req_spec.ip_normalization_en = self.fields.ip_normalization_en
         req_spec.tcp_normalization_en = self.fields.tcp_normalization_en
         req_spec.icmp_normalization_en = self.fields.icmp_normalization_en
@@ -136,7 +136,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
             self.fields.session_idle_timeout = get_resp.spec.session_idle_timeout
             self.fields.tcp_cnxn_setup_timeout = get_resp.spec.tcp_cnxn_setup_timeout
             self.fields.tcp_close_timeout = get_resp.spec.tcp_close_timeout
-            self.fields.tcp_close_wait_timeout = get_resp.spec.tcp_close_wait_timeout
+            self.fields.tcp_half_closed_timeout = get_resp.spec.tcp_half_closed_timeout
             self.fields.ip_normalization_en = get_resp.spec.ip_normalization_en
             self.fields.tcp_normalization_en = get_resp.spec.tcp_normalization_en
             self.fields.icmp_normalization_en = get_resp.spec.icmp_normalization_en
