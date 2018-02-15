@@ -14,5 +14,5 @@ k = {
   capri_p4_intrinsic_parser_err = 1;
   capri_p4_intrinsic_len_err = 1;
   capri_p4_intrinsic_crc_err = 1;
-  p4plus_to_p4_flags = P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN;
+  p4plus_to_p4_update_ip_len = 1;
 };

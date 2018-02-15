@@ -246,7 +246,7 @@ header_type p4_to_p4plus_cpu_pkt_t {
         tcp_ws              : 8;
 
         // qos
-        src_tm_iq           : 5; 
+        src_tm_iq           : 5;
         pad_1               : 3;
     }
 }
@@ -271,7 +271,33 @@ header_type p4plus_to_p4_header_t {
         rsvd                : 24;
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
+        gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
+                                  // that appear before L2 hdr
+        byte_align_pad0     : 2;
+        gso_offset          : 14; // should be adjusted to include size of all intrinsic hdrs
+                                  // that appear before L2 hdr
+        byte_align_pad1     : 1;
+        gso_valid           : 1;
         vlan_tag            : 16;
+    }
+}
+
+header_type p4plus_to_p4_s1_t {
+    fields {
+        p4plus_app_id       : 4;
+        pad                 : 4;
+        lkp_inst            : 1;
+        comp_inner_l4_csum  : 1;
+        comp_l4_csum        : 1;
+        insert_vlan_tag     : 1;
+        update_udp_len      : 1;
+        update_tcp_seq_no   : 1;
+        update_ip_len       : 1;
+        update_ip_id        : 1;
+        udp_opt_bytes       : 8;  // exclude these bytes from udp payload_len
+        rsvd                : 24;
+        ip_id_delta         : 16;
+        tcp_seq_delta       : 32;
         gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
                                   // that appear before L2 hdr
         byte_align_pad0     : 2;
@@ -282,24 +308,10 @@ header_type p4plus_to_p4_header_t {
     }
 }
 
-
-/*
- * flag bits:
- *  0 : forwarding and rewrite complete, just enqueue the packet
- *  1 : perform forwarding lookup, no rewrites
- *  2 : perform forwarding and rewrites
- *  3 : update stats
- */
-header_type cpu_to_p4_header_t {
+header_type p4plus_to_p4_s2_t {
     fields {
-        p4plus_app_id       : 4;
-        flags               : 4;
-        src_lif             : 11;
-        dst_lif             : 11;
-        iclass              : 4;
-        oclass              : 4;
-        dest_type           : 2;
-        dest                : 16;
-        oqueue              : 5;
+        pcp                 : 3;
+        dei                 : 1;
+        vid                 : 12;
     }
 }

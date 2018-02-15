@@ -93,8 +93,8 @@ f_check_parser_errors:
   // do not use c1 register in this function
   bbeq        k.control_metadata_uplink, TRUE, check_parser_errors_uplink
   seq         c2, k.capri_p4_intrinsic_len_err, 0
-  smneb.!c2   c2, k.p4plus_to_p4_flags, \
-                (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN|P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN), 0
+  smneb.!c2   c2, k.{p4plus_to_p4_update_udp_len...p4plus_to_p4_update_ip_len},\
+                0x5, 0
   jrcf        [c2], r7
   phvwr.!c2.e p.control_metadata_drop_reason[DROP_PARSER_LEN_ERR], 1
   phvwr       p.capri_intrinsic_drop, 1

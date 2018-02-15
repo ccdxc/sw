@@ -1259,11 +1259,11 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                                kbit = (p4fldwidth - 1 - _kbit) % 8
     /* Field Union Key bit */
 //::                                if p4fldwidth <= 32:
-    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}) << (${kbit} % 8);
-    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask) + ${kbyte}) << (${kbit} % 8);
+    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte});
+    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask) + ${kbyte});
 //::                                else:
-    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}])) << (${kbit} % 8);
-    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask[${kbyte}])) << (${kbit} % 8);
+    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}]));
+    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask[${kbyte}]));
 //::                                #endif
 
     trit_x = ((k & m) >> ${kbit}) & 0x1;
@@ -1351,11 +1351,11 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 //::                                kbit = (p4fldwidth - 1 - _kbit) % 8
     /* Header Union Key bit */
 //::                                if p4fldwidth <= 32:
-    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte}) << (${kbit} % 8);
-    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask) + ${kbyte}) << (${kbit} % 8);
+    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}) + ${kbyte});
+    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask) + ${kbyte});
 //::                                else:
-    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}])) << (${kbit} % 8);
-    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask[${kbyte}])) << (${kbit} % 8);
+    k = *((uint8_t*)&(swkey->${ustr}${p4fldname}[${kbyte}]));
+    m = *((uint8_t*)&(swkey_mask->${ustr}${p4fldname}_mask[${kbyte}]));
 //::                                #endif
 
     trit_x = ((k & m) >> ${kbit}) & 0x1;
@@ -2700,10 +2700,10 @@ ${table}_hwkey_hwmask_unbuild(uint32_t tableid,
 //::                        #endif
 
 //::                        if len(key_bit_format):
-//::                            for kmbit, kbit in key_bit_format:
+//::                            for kmbit, _kbit in key_bit_format:
 //::                                kbyte = (p4fldwidth - 1 - _kbit) / 8
 //::                                kbit = (p4fldwidth - 1 - _kbit) % 8
-    /* Field Union Key bit */
+    /* Header Union Key bit */
     trit_x = 0;
     trit_y = 0;
     p4pd_copy_single_bit(&trit_x,
@@ -4125,6 +4125,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                 }
 //::                    #endif
 //::                #endfor
+//::                i = 1
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
 //::                    if len(fldukeys) > 1:
@@ -4195,7 +4196,9 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                 }
 //::                        #endif
 //::                    #endfor
+//::                    i += 1
 //::                #endfor
+//::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
 //::                    if len(hdrukeys) > 1:
@@ -4264,6 +4267,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
                 }
 //::                        #endif
 //::                    #endfor
+//::                    i += 1
 //::                #endfor
             } else { /* Decode actiondata associated with TCAM key */
                 b = snprintf(buf, blen, "!!!! Decode Tcam table Action Data !!!! \n");
@@ -4728,6 +4732,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 }
 //::                    #endif
 //::                #endfor
+//::                i = 1
 //::                for fld_un_containers in pddict['tables'][table]['fldunion_keys']:
 //::                    fldcontainer, fldukeys = fld_un_containers
 //::                    if len(fldukeys) > 1:
@@ -4798,7 +4803,9 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 }
 //::                        #endif
 //::                    #endfor
+//::                    i += 1
 //::                #endfor
+//::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
 //::                    if len(hdrukeys) > 1:
@@ -4867,6 +4874,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
                 }
 //::                        #endif
 //::                    #endfor
+//::                    i += 1
 //::                #endfor
             }
             ${table}_actiondata *actiondata = (${table}_actiondata *)action_data;

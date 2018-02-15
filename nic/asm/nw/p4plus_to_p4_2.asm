@@ -14,8 +14,7 @@ f_p4plus_to_p4_2:
   seq           c4, k.ipv6_valid, TRUE
   sub.c4        r2, k.ipv6_payloadLen, r0
   sub           r2, r2, k.p4plus_to_p4_udp_opt_bytes
-  smeqb         c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN, \
-                    P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN
+  seq           c2, k.p4plus_to_p4_update_udp_len, TRUE
   phvwr.c2      p.udp_len, r2
   phvwr         p.control_metadata_udp_opt_bytes, k.p4plus_to_p4_udp_opt_bytes
 
@@ -26,13 +25,13 @@ f_p4plus_to_p4_2:
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC
   bcf           [!c1], f_p4plus_to_p4_2_other_apps
   phvwrpair.c1  p.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_L4_CHECKSUM], \
-                    k.p4plus_to_p4_flags[P4PLUS_TO_P4_FLAGS_COMPUTE_INNER_L4_CSUM_BIT_POS], \
+                    k.p4plus_to_p4_comp_inner_l4_csum, \
                     p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], \
-                    k.p4plus_to_p4_flags[P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM_BIT_POS]
+                    k.p4plus_to_p4_comp_l4_csum
 
   // remove the headers
   phvwr.e       p.capri_txdma_intrinsic_valid, FALSE
-  phvwr         p.p4plus_to_p4_valid, FALSE
+  phvwrpair     p.p4plus_to_p4_vlan_valid, FALSE, p.p4plus_to_p4_valid, FALSE
 
 f_p4plus_to_p4_2_other_apps:
   // compute IP header checksum if ipv4.valid is true
@@ -48,7 +47,7 @@ f_p4plus_to_p4_2_other_apps:
 
   // remove the headers
   phvwr.e       p.capri_txdma_intrinsic_valid, FALSE
-  phvwr         p.p4plus_to_p4_valid, FALSE
+  phvwrpair     p.p4plus_to_p4_vlan_valid, FALSE, p.p4plus_to_p4_valid, FALSE
 
 /*****************************************************************************/
 /* error function                                                            */

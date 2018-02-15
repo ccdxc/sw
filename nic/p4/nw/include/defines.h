@@ -351,8 +351,8 @@
 /* Recirc reason codes                                                       */
 /*****************************************************************************/
 #define RECIRC_NONE                    0
-#define RECIRC_FLOW_HASH_OVERFLOW      1 
-#define RECIRC_VM_BOUNCE               2 
+#define RECIRC_FLOW_HASH_OVERFLOW      1
+#define RECIRC_VM_BOUNCE               2
 
 /*****************************************************************************/
 /* Checksum/iCRC flags (bit positions)                                       */
@@ -586,6 +586,6 @@
 /* default, to enable write to DBG_HBM_EN and write a valid HBM base address */
 /* to DBG_HBM_BASE                                                           */
 /*****************************************************************************/
-#define DBG_HBM_EN      0 
+#define DBG_HBM_EN      0
 #define DBG_HBM_BASE    0x11AD37000
 #define DBG_HBM_COUNT   0x200

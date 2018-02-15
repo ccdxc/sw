@@ -109,6 +109,7 @@ header ethernet_t ethernet;
 header recirc_header_t recirc_header;
 header llc_header_t llc_header;
 header snap_header_t snap_header;
+@pragma pa_header_union ingress p4plus_to_p4_vlan
 header vlan_tag_t vlan_tag;
 header mpls_t mpls[MPLS_DEPTH];
 
@@ -296,7 +297,8 @@ header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 
 header p4_to_p4plus_p4pt_header_t p4_to_p4plus_p4pt;
 
-header p4plus_to_p4_header_t p4plus_to_p4;
+header p4plus_to_p4_s1_t p4plus_to_p4;
+header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 
 parser start {
     extract(capri_intrinsic);
@@ -435,6 +437,7 @@ parser parse_vm_bounce {
 parser parse_txdma {
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
+    extract(p4plus_to_p4_vlan);
     set_metadata(ohi.gso_start, p4plus_to_p4.gso_start + 0);
     set_metadata(ohi.gso_offset, p4plus_to_p4.gso_offset + 0);
     return select(p4plus_to_p4.gso_valid) {

@@ -148,11 +148,11 @@ header_type p4plus_to_p4_ipsec_header_t {
         rsvd                : 24;
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
-        vlan_tag            : 16;
         gso_start           : 14;
         gso_offset          : 14;
         byte_align_pad      : 3;
         gso_valid           : 1;
+        vlan_tag            : 16;
         ipsec_pad1          : 120;
     }
 }

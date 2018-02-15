@@ -583,12 +583,12 @@ table p4plus_app_prep {
 /*****************************************************************************/
 action f_p4plus_to_p4_1() {
     // update IP id
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID) != 0) {
+    if (p4plus_to_p4.update_ip_id == 1) {
         add(ipv4.identification, ipv4.identification, p4plus_to_p4.ip_id_delta);
     }
 
     // update IP length
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN) != 0) {
+    if (p4plus_to_p4.update_ip_len == 1) {
         if (vlan_tag.valid == TRUE) {
             subtract(scratch_metadata.packet_len,
                      capri_p4_intrinsic.packet_len, 18);
@@ -612,16 +612,16 @@ action f_p4plus_to_p4_1() {
     }
 
     // update TCP sequence number
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO) != 0) {
+    if (p4plus_to_p4.update_tcp_seq_no == 1) {
         add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
     }
 
     // insert vlan tag
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG) != 0) {
+    if (p4plus_to_p4.insert_vlan_tag == 1) {
         add_header(vlan_tag);
-        modify_field(vlan_tag.pcp, p4plus_to_p4.vlan_tag >> 13);
-        modify_field(vlan_tag.dei, p4plus_to_p4.vlan_tag >> 12);
-        modify_field(vlan_tag.vid, p4plus_to_p4.vlan_tag);
+        modify_field(vlan_tag.pcp, p4plus_to_p4_vlan.pcp);
+        modify_field(vlan_tag.dei, p4plus_to_p4_vlan.dei);
+        modify_field(vlan_tag.vid, p4plus_to_p4_vlan.vid);
         modify_field(vlan_tag.etherType, ethernet.etherType);
         modify_field(ethernet.etherType, ETHERTYPE_VLAN);
         add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
@@ -643,7 +643,7 @@ action f_p4plus_to_p4_2() {
         }
     }
     modify_field(control_metadata.udp_opt_bytes, p4plus_to_p4.udp_opt_bytes);
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN) != 0) {
+    if (p4plus_to_p4.update_udp_len == 1) {
         subtract(udp.len, scratch_metadata.packet_len,
                  p4plus_to_p4.udp_opt_bytes);
     }
@@ -651,11 +651,11 @@ action f_p4plus_to_p4_2() {
     // update checksum/icrc compute flags
     modify_field(scratch_metadata.size8, 0);
     if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) {
-        if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM) != 0) {
+        if (p4plus_to_p4.comp_l4_csum == 1) {
             bit_or(scratch_metadata.size8, scratch_metadata.size8,
                    (1 << CHECKSUM_CTL_L4_CHECKSUM));
         }
-        if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_COMPUTE_INNER_L4_CSUM) != 0) {
+        if (p4plus_to_p4.comp_inner_l4_csum == 1) {
             bit_or(scratch_metadata.size8, scratch_metadata.size8,
                    (1 << CHECKSUM_CTL_INNER_L4_CHECKSUM));
         }
@@ -680,6 +680,7 @@ action f_p4plus_to_p4_2() {
     modify_field(scratch_metadata.flag, p4plus_to_p4.gso_valid);
 
     remove_header(p4plus_to_p4);
+    remove_header(p4plus_to_p4_vlan);
     remove_header(capri_txdma_intrinsic);
 }
 

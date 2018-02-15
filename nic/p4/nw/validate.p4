@@ -158,9 +158,8 @@ action check_parser_errors() {
                          capri_intrinsic.csum_err);
         } else {
             if ((capri_p4_intrinsic.len_err != 0) and
-                ((p4plus_to_p4.flags &
-                  (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN|
-                   P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)) != 0)) {
+                ((p4plus_to_p4.update_ip_len == 0) and
+                 (p4plus_to_p4.update_udp_len == 0))) {
                 modify_field(control_metadata.drop_reason,
                              (1 << DROP_PARSER_LEN_ERR),
                              (1 << DROP_PARSER_LEN_ERR));

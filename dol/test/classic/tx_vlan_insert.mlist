@@ -5,7 +5,7 @@ feature:
     package     : test.classic
     module      : classic
     spec        : tx_vlan_insert.testspec
-    enable      : True
+    enable      : False
     ignore      : False
     runorder    : 10
 

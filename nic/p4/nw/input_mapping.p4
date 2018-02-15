@@ -90,10 +90,6 @@ action native_ipv4_packet() {
     }
 
     set_packet_type(ethernet.dstAddr);
-
-    // adding the following to avoid splitting ipv4_totalLen
-    // in the K structure (reduces instruction count by 1)
-    modify_field(scratch_metadata.flag, ah.valid);
 }
 
 action native_ipv6_packet() {
@@ -221,6 +217,7 @@ table input_properties_otcam {
     reads {
         entry_inactive.input_properties : ternary;
         capri_intrinsic.lif             : ternary;
+        p4plus_to_p4.insert_vlan_tag    : ternary;
         vlan_tag.valid                  : ternary;
         vlan_tag.vid                    : ternary;
         tunnel_metadata.tunnel_type     : ternary;
@@ -239,6 +236,7 @@ table input_properties {
     reads {
         entry_inactive.input_properties : exact;
         capri_intrinsic.lif             : exact;
+        p4plus_to_p4.insert_vlan_tag    : exact;
         vlan_tag.valid                  : exact;
         vlan_tag.vid                    : exact;
         tunnel_metadata.tunnel_type     : exact;
@@ -273,8 +271,8 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     }
 
     // These tunnel related params are used for multicast/bradcast with
-    // host pinning and overlay enabled. 
-    // tunnel_vnid is common to both input_properties and 
+    // host pinning and overlay enabled.
+    // tunnel_vnid is common to both input_properties and
     // input_properties_mac_vlan table and used for bounce cases too.
     modify_field(flow_miss_metadata.rewrite_index, rewrite_index);
     modify_field(flow_miss_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
@@ -292,8 +290,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
 action adjust_lkp_fields() {
     if (control_metadata.tm_iport == TM_PORT_DMA) {
-        modify_field(flow_lkp_metadata.lkp_inst,
-                     (p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_LKP_INST));
+        modify_field(flow_lkp_metadata.lkp_inst, p4plus_to_p4.lkp_inst);
         subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_TO_P4_HDR_SZ));
@@ -322,10 +319,9 @@ table input_properties_mac_vlan {
     reads {
         entry_inactive.input_mac_vlan : ternary;
         control_metadata.uplink       : ternary;
+        p4plus_to_p4.insert_vlan_tag  : ternary;
         vlan_tag.valid                : ternary;
         vlan_tag.vid                  : ternary;
-        p4plus_to_p4.valid            : ternary;
-        p4plus_to_p4.vlan_tag         : ternary;
         ethernet.srcAddr              : ternary;
     }
     actions {

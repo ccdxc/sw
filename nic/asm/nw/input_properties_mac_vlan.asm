@@ -13,8 +13,7 @@ input_properties_mac_vlan:
   K_DBG_WR(0x30)
   DBG_WR(0x38, 0x38)
   seq           c2, k.control_metadata_tm_iport, TM_PORT_DMA
-  phvwr.c2      p.flow_lkp_metadata_lkp_inst, \
-                  k.p4plus_to_p4_flags[P4PLUS_TO_P4_FLAGS_LKP_INST_BIT_POS]
+  phvwr.c2      p.flow_lkp_metadata_lkp_inst, k.p4plus_to_p4_lkp_inst
 
   cmov          r1, c2, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_TXDMA_INTRINSIC_HDR_SZ + P4PLUS_TO_P4_HDR_SZ), \

@@ -27,7 +27,7 @@
 #define ETH_DMA_CMD_START_FLIT      8  // Second DMA commands flit
 
 #define DMA_INTRINSIC(_r, n, _r_tmp) \
-    DMA_PHV2PKT_3(_r, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport), CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type), CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid), CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv), CAPRI_PHV_START_OFFSET(eth_tx_app_hdr##n##_p4plus_app_id), CAPRI_PHV_END_OFFSET(eth_tx_app_hdr##n##_gso_valid), _r_tmp);
+    DMA_PHV2PKT_3(_r, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport), CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type), CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid), CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv), CAPRI_PHV_START_OFFSET(eth_tx_app_hdr##n##_p4plus_app_id), CAPRI_PHV_END_OFFSET(eth_tx_app_hdr##n##_vlan_tag), _r_tmp);
 
 #define COMPUTE_BUF_ADDR(_r, n) \
     or          _r, k.eth_tx_to_s2_addr_lo##n, k.eth_tx_to_s2_addr_hi##n, sizeof(k.eth_tx_to_s2_addr_lo##n); \
