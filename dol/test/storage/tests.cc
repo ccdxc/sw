@@ -45,7 +45,7 @@ uint64_t write_hbm_buf;
 uint64_t read_hbm_buf2;
 uint64_t write_hbm_buf2;
 
-void *seq_db_data;
+dp_mem_t *seq_db_data;
 
 static uint16_t global_cid = 0x1;
 static uint64_t global_slba = 0x0000;
@@ -143,8 +143,8 @@ int test_setup() {
          read_hbm_buf2, write_hbm_buf2);
 
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
-  if ((seq_db_data = alloc_host_mem(kSeqDbDataSize)) == nullptr) return -1;
-  memset(seq_db_data, 0, kSeqDbDataSize);
+  if ((seq_db_data = new dp_mem_t(1, kSeqDbDataSize)) == nullptr) return -1;
+  seq_db_data->clear_thru();
 
   return 0;
 
@@ -404,7 +404,7 @@ uint64_t get_next_slba() {
 }
 
 void reset_seq_db_data() {
-  *((uint32_t *) seq_db_data) = 0;
+  seq_db_data->clear_thru();
 } 
 
 int form_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid, 
@@ -1346,7 +1346,7 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
     printf("Can't get R2N qaddr \n");
     return -1;
   }
-  seq_r2n_desc->write_bit_fields(0, 64, host_mem_v2p(r2n_wqe_buf));
+  seq_r2n_desc->write_bit_fields(0, 64, r2n_wqe_buf->pa());
   seq_r2n_desc->write_bit_fields(64, 32, kR2nWqeSize);
   seq_r2n_desc->write_bit_fields(96, 11, queues::get_pvm_lif());
   seq_r2n_desc->write_bit_fields(107, 3, SQ_TYPE);
@@ -1419,7 +1419,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   seq_pdma_desc->write_bit_fields(192, 64, host_mem_v2p(read_buf));
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
   // Form the intadd/data and enable it
-  seq_pdma_desc->write_bit_fields(312, 64, host_mem_v2p(seq_db_data));
+  seq_pdma_desc->write_bit_fields(312, 64, seq_db_data->pa());
   seq_pdma_desc->write_bit_fields(376, 32, kSeqDbDataMagic);
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
@@ -1446,8 +1446,8 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   // Poll for DMA completion of read data only if status is successful
   if (rc >= 0) {
     auto func2 = [] () {
-      if  (*((uint32_t *) seq_db_data) != kSeqDbDataMagic) {
-        //printf("Sequencer magic incorrect %lx \n", *((uint32_t *) seq_db_data));
+      if  (*((uint32_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
+        //printf("Sequencer magic incorrect %lx \n", *((uint32_t *) seq_db_data->read_thru()));
         return -1;
       }
       return 0;
@@ -1627,7 +1627,7 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
     printf("Can't get R2N qaddr \n");
     return -1;
   }
-  seq_r2n_desc->write_bit_fields(0, 64, host_mem_v2p(r2n_wqe_buf));
+  seq_r2n_desc->write_bit_fields(0, 64, r2n_wqe_buf->pa());
   seq_r2n_desc->write_bit_fields(64, 32, kR2nWqeSize);
   seq_r2n_desc->write_bit_fields(96, 11, queues::get_pvm_lif());
   seq_r2n_desc->write_bit_fields(107, 3, SQ_TYPE);
@@ -1712,7 +1712,7 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   seq_pdma_desc->write_bit_fields(192, 64, host_mem_v2p(read_buf));
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
   // Form the interrupt add/data and enable it
-  seq_pdma_desc->write_bit_fields(312, 64, host_mem_v2p(seq_db_data));
+  seq_pdma_desc->write_bit_fields(312, 64, seq_db_data->pa());
   seq_pdma_desc->write_bit_fields(376, 32, kSeqDbDataMagic);
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
@@ -1736,8 +1736,8 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   int rv = poll(func1);
 
   auto func2 = [] () {
-    if  (*((uint32_t *) seq_db_data) != kSeqDbDataMagic) {
-      //printf("Sequencer magic incorrect %lx \n", *((uint32_t *) seq_db_data));
+    if  (*((uint32_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
+      //printf("Sequencer magic incorrect %lx \n", *((uint32_t *) seq_db_data->read_thru()));
       return -1;
     }
     return 0;
@@ -1866,7 +1866,7 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr,
   seq_pdma_desc->write_bit_fields(300, 1, pdma_dst_lif_override);
   seq_pdma_desc->write_bit_fields(301, 11, pdma_dst_lif);
   // Form the interrupt add/data and enable it
-  seq_pdma_desc->write_bit_fields(312, 64, host_mem_v2p(seq_db_data));
+  seq_pdma_desc->write_bit_fields(312, 64, seq_db_data->pa());
   seq_pdma_desc->write_bit_fields(376, 32, kSeqDbDataMagic);
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
@@ -1927,7 +1927,7 @@ int test_run_rdma_e2e_write() {
 int test_seq_pdma_write(uint16_t seq_pdma_q,
                         void *curr_wr_buf,
                         uint64_t curr_wr_hbm_buf,
-                        void *curr_db_data,
+                        uint64_t curr_db_data_pa,
                         uint32_t exp_db_data_value) {
   uint16_t  seq_pdma_index;
   dp_mem_t  *seq_pdma_desc;
@@ -1942,7 +1942,7 @@ int test_seq_pdma_write(uint16_t seq_pdma_q,
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
 
   // Form the interrupt add/data and enable it
-  seq_pdma_desc->write_bit_fields(312, 64, host_mem_v2p(curr_db_data));
+  seq_pdma_desc->write_bit_fields(312, 64, curr_db_data_pa);
   seq_pdma_desc->write_bit_fields(376, 32, exp_db_data_value);
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
@@ -1957,7 +1957,7 @@ int test_seq_pdma_write(uint16_t seq_pdma_q,
 int test_seq_pdma_read(uint16_t seq_pdma_q,
                        void *curr_rd_buf,
                        uint64_t curr_rd_hbm_buf,
-                       void *curr_db_data,
+                       uint64_t curr_db_data_pa,
                        uint32_t exp_db_data_value) {
   uint16_t  seq_pdma_index;
   dp_mem_t  *seq_pdma_desc;
@@ -1971,7 +1971,7 @@ int test_seq_pdma_read(uint16_t seq_pdma_q,
   seq_pdma_desc->write_bit_fields(192, 64, host_mem_v2p(curr_rd_buf));
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
   // Form the interrupt add/data and enable it
-  seq_pdma_desc->write_bit_fields(312, 64, host_mem_v2p(curr_db_data));
+  seq_pdma_desc->write_bit_fields(312, 64, curr_db_data_pa);
   seq_pdma_desc->write_bit_fields(376, 32, exp_db_data_value);
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
@@ -1984,8 +1984,8 @@ int test_seq_pdma_read(uint16_t seq_pdma_q,
 }
 
 int test_run_seq_pdma_multi_xfers() {
-    uint32_t    *wr_seq_db_data;
-    uint32_t    *rd_seq_db_data;
+    dp_mem_t    *wr_seq_db_data;
+    dp_mem_t    *rd_seq_db_data;
     uint32_t    *exp_seq_db_data;
     void        *pdma_wr_buf;
     void        **pdma_rd_buf;
@@ -1996,12 +1996,20 @@ int test_run_seq_pdma_multi_xfers() {
     int         i;
     int         rc;
 
+    /*
+     * We allocate db_data as stream of bytes for easy comparison
+     */
     assert(val_pdma_queues);
     total_seq_db_data_size = kSeqDbDataSize * val_pdma_queues;
-    wr_seq_db_data = (uint32_t *)alloc_host_mem(total_seq_db_data_size);
-    assert(wr_seq_db_data);
-    rd_seq_db_data = (uint32_t *)alloc_host_mem(total_seq_db_data_size);
-    assert(rd_seq_db_data);
+    wr_seq_db_data = new dp_mem_t(1, total_seq_db_data_size);
+    wr_seq_db_data->clear_thru();
+
+    rd_seq_db_data = new dp_mem_t(1, total_seq_db_data_size);
+    rd_seq_db_data->clear_thru();
+
+#define SEQ_DB_DATA_ENTRY_PA(pa, i) \
+    (pa + (i * kSeqDbDataSize))
+
     exp_seq_db_data = (uint32_t *)alloc_host_mem(total_seq_db_data_size);
     assert(exp_seq_db_data);
 
@@ -2017,8 +2025,6 @@ int test_run_seq_pdma_multi_xfers() {
     // Set expected completion doorbell data value
     exp_db_data_value = 0xdbdbdbdb;
     memset(exp_seq_db_data, 0xdb, total_seq_db_data_size);
-    memset(wr_seq_db_data, 0, total_seq_db_data_size);
-    memset(rd_seq_db_data, 0, total_seq_db_data_size);
     
     for (i = 0; i < val_pdma_queues; i++) {
 
@@ -2027,7 +2033,8 @@ int test_run_seq_pdma_multi_xfers() {
         assert(utils::hbm_addr_alloc_page_aligned(kDefaultBufSize,
                                                   &pdma_wr_hbm_buf) == 0);
         test_seq_pdma_write(queues::get_pvm_seq_pdma_sq(i), pdma_wr_buf,
-                            pdma_wr_hbm_buf, &wr_seq_db_data[i],
+                            pdma_wr_hbm_buf, 
+                            SEQ_DB_DATA_ENTRY_PA(wr_seq_db_data->pa(), i),
                             exp_db_data_value);
 
         // Read into different per-queue destination host buffers, 
@@ -2035,7 +2042,8 @@ int test_run_seq_pdma_multi_xfers() {
         pdma_rd_buf[i] = alloc_page_aligned_host_mem(kDefaultBufSize);
         assert(pdma_rd_buf[i]);
         test_seq_pdma_read(queues::get_pvm_seq_pdma_sq(i), pdma_rd_buf[i],
-                           pdma_wr_hbm_buf, &rd_seq_db_data[i],
+                           pdma_wr_hbm_buf,
+                           SEQ_DB_DATA_ENTRY_PA(rd_seq_db_data->pa(), i),
                            exp_db_data_value);
         if (i && ((i % 100) == 0)) {
             printf("%s: submitted %d PDMA write/read transfer pairs\n",
@@ -2047,8 +2055,10 @@ int test_run_seq_pdma_multi_xfers() {
     auto dma_db_compl_verify = [wr_seq_db_data, rd_seq_db_data,
                                 exp_seq_db_data, total_seq_db_data_size] () {
 
-        if (memcmp(wr_seq_db_data, exp_seq_db_data, total_seq_db_data_size) ||
-            memcmp(rd_seq_db_data, exp_seq_db_data, total_seq_db_data_size)) {
+        if (memcmp(wr_seq_db_data->read_thru(), exp_seq_db_data,
+                   total_seq_db_data_size) ||
+            memcmp(rd_seq_db_data->read_thru(), exp_seq_db_data,
+                   total_seq_db_data_size)) {
             return -1;
         }
         return 0;
@@ -2060,11 +2070,11 @@ int test_run_seq_pdma_multi_xfers() {
     printf("%s: completed %d PDMA write/read transfer pairs. rc = %d\n",
            __FUNCTION__, (int)val_pdma_queues, rc);
     if (rc == 0) {
-        auto wr_rd_data_verify = [pdma_wr_buf, pdma_rd_buf] (int pos) {
+        auto wr_rd_data_verify = [pdma_wr_buf, pdma_rd_buf] (int qid) {
 
-            if (memcmp(pdma_rd_buf[pos], pdma_wr_buf, kDefaultBufSize)) {
-                printf("%s: all transfers completed but read buffer %d "
-                       "has incorrect data\n", __FUNCTION__, pos);
+            if (memcmp(pdma_rd_buf[qid], pdma_wr_buf, kDefaultBufSize)) {
+                printf("%s: all transfers completed but read buffer for "
+                       "queue %d has incorrect data\n", __FUNCTION__, qid);
                 return -1;
             }
             return 0;
@@ -2090,8 +2100,8 @@ int test_run_seq_pdma_multi_xfers() {
     free_host_mem(pdma_rd_buf);
     free_host_mem(pdma_wr_buf);
     free_host_mem(exp_seq_db_data);
-    free_host_mem(rd_seq_db_data);
-    free_host_mem(wr_seq_db_data);
+    delete rd_seq_db_data;
+    delete wr_seq_db_data;
 
     return rc;
 }
@@ -2126,8 +2136,8 @@ int test_run_rdma_e2e_read() {
   if (rc >= 0) {
     printf("Successfully retrived status \n");
     auto func2 = [] () {
-      if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
-        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
+      if  (*((uint64_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
+        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data->read_thru()));
         return -1;
       }
       return 0;
@@ -2204,7 +2214,7 @@ int test_run_rdma_lif_override() {
   if (rc >= 0) {
     printf("Successfully retrived status \n");
     auto func2 = [] () {
-      if  (*((uint32_t *) seq_db_data) != kSeqDbDataMagic) {
+      if  (*((uint32_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
         //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) uint32_t));
         return -1;
       }

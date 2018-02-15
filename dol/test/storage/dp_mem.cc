@@ -146,6 +146,7 @@ dp_mem_t::write_bit_fields(uint32_t start_bit_offset,
     if ((byte_offset + byte_size) > line_size) {
         printf("%s start_bit_offset %u size_in_bits %u too large\n",
                __FUNCTION__, start_bit_offset, size_in_bits);
+        assert((byte_offset + byte_size) <= line_size);
         return;
     }
 
@@ -201,6 +202,7 @@ dp_mem_t::fragment_find(uint32_t frag_offset,
     if ((frag_offset + frag_size) > line_size) {
         printf("%s frag_offset %u plus size %u exceeds line_size %u\n",
                __FUNCTION__, frag_offset, frag_size, line_size);
+        assert((frag_offset + frag_size) <= line_size);
         return nullptr;
     }
 
