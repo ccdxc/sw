@@ -2,6 +2,7 @@
 #include "dol/test/storage/utils.hpp"
 #include <assert.h>
 #include <unistd.h>
+#include <stddef.h>
 
 #define PRP_SIZE(x) (4096ul - ((x) & 0xfff))
 #define PRP_VALID(x) (((x) & 7ul) == 0)
@@ -25,22 +26,27 @@ void NvmeSsdCore::GetWorkingParams(SsdWorkingParams *params) {
   params->compq_nentries = kNumCompqEntries;
   params->subq = subq_;
   params->compq = compq_;
-  params->subq_pi_va = &ctrl_->subq_pi;
-  params->subq_pi_pa = DMAMemV2P(&ctrl_->subq_pi);
-  params->compq_ci_va = &ctrl_->compq_ci;
-  params->compq_ci_pa = DMAMemV2P(&ctrl_->compq_ci);
+  params->subq_pi = subq_pi_;
+  params->subq_ci = subq_ci_;
+  params->compq_pi = compq_pi_;
+  params->compq_ci = compq_ci_;
 }
 
 void NvmeSsdCore::Ctor() {
   data_.reset(new uint8_t[kCapacity]);
   subq_ = new dp_mem_t(kNumSubqEntries, sizeof(NvmeCmd));
-  subq_->clear_thru();
   compq_ = new dp_mem_t(kNumCompqEntries, sizeof(NvmeStatus));
-  compq_->clear_thru();
   phase_ = 1;
-  ctrl_ = (ctrl_data *)DMAMemAlloc(sizeof(*ctrl_));
-  assert(ctrl_ != nullptr);
-  bzero(ctrl_, sizeof(*ctrl_));
+  ctrl_ = new dp_mem_t(1, sizeof(struct ctrl_data));
+
+  subq_pi_ = ctrl_->fragment_find(offsetof(struct ctrl_data, subq_pi),
+                                  sizeof(((struct ctrl_data *)0)->subq_pi));
+  subq_ci_ = ctrl_->fragment_find(offsetof(struct ctrl_data, subq_ci),
+                                  sizeof(((struct ctrl_data *)0)->subq_ci));
+  compq_pi_ = ctrl_->fragment_find(offsetof(struct ctrl_data, compq_pi),
+                                   sizeof(((struct ctrl_data *)0)->compq_pi));
+  compq_ci_ = ctrl_->fragment_find(offsetof(struct ctrl_data, compq_ci),
+                                   sizeof(((struct ctrl_data *)0)->compq_ci));
   terminate_poll_ = false;
   tid_ = std::thread(&NvmeSsdCore::PollForIO, this);
 }
@@ -50,7 +56,7 @@ void NvmeSsdCore::Dtor() {
   tid_.join();
   delete subq_;
   delete compq_;
-  DMAMemFree(ctrl_);
+  delete ctrl_;
 }
 
 uint64_t NvmeSsdCore::MoveData(NvmeCmd *cmd, uint64_t prp, uint64_t offset,
@@ -141,13 +147,15 @@ bool NvmeSsdCore::HandleIO() {
 
   {
     std::lock_guard<std::mutex> l(req_lock_);
-    if (ctrl_->subq_pi == ctrl_->subq_ci)
+    uint32_t *pi = (uint32_t *)subq_pi_->read_thru();
+    uint32_t *ci = (uint32_t *)subq_ci_->read_thru();
+
+    if (*pi == *ci)
       return false;
-    subq_->line_set(ctrl_->subq_ci);
+    subq_->line_set(*ci);
     memcpy(&cmd, subq_->read_thru(), sizeof(cmd));
-    ctrl_->subq_ci++;
-    if (ctrl_->subq_ci == kNumSubqEntries)
-      ctrl_->subq_ci = 0;
+    *ci = (*ci + 1) % kNumSubqEntries;
+    subq_ci_->write_thru();
   }
   if (!NvmeSsdCore::ExecuteRW(&cmd)) {
     SendResp(&cmd, 2);
@@ -159,6 +167,8 @@ bool NvmeSsdCore::HandleIO() {
 
 void NvmeSsdCore::SendResp(NvmeCmd *cmd, uint32_t code) {
   NvmeStatus st;
+  uint32_t *pi;
+  uint32_t *ci;
 
   bzero(&st, sizeof(st));
   NVME_STATUS_SET_STATUS(st, code);
@@ -167,27 +177,31 @@ void NvmeSsdCore::SendResp(NvmeCmd *cmd, uint32_t code) {
   bool err = false;
   {
     std::lock_guard<std::mutex> l(comp_lock_);
-    uint16_t n = ctrl_->compq_pi;
     uint8_t ph = phase_;
-    ctrl_->compq_pi++;
-    if (ctrl_->compq_pi == kNumCompqEntries) {
-      ctrl_->compq_pi = 0;
+    pi = (uint32_t *)compq_pi_->read_thru();
+    ci = (uint32_t *)compq_ci_->read_thru();
+    uint32_t n = *pi;
+
+    (*pi)++;
+    if (*pi == kNumCompqEntries) {
+      *pi = 0;
       phase_ ^= 1;
     }
-    if (ctrl_->compq_pi == ctrl_->compq_ci) {
+    if (*pi == *ci) {
       err = true;
     } else {
       NVME_STATUS_SET_PHASE(st, ph);
-      st.dw2.sq_head = ctrl_->subq_ci;
+      st.dw2.sq_head = *((uint32_t *)subq_ci_->read_thru());
       compq_->line_set(n);
       memcpy(compq_->read(), &st, sizeof(st));
       compq_->write_thru();
+      compq_pi_->write_thru();
     }
   }
   if (err) {
     fprintf(stderr, "Internal error: response queue full\n");
   } else {
-    RaiseInterrupt(ctrl_->compq_pi);
+    RaiseInterrupt(*pi);
   }
 }
 

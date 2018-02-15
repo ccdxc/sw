@@ -329,12 +329,10 @@ void WriteBackBufKeysIncr() {
 
 void AllocRdmaMem() {
   initiator_cq_va = new dp_mem_t(1, 4096, true);
-  initiator_cq_va->clear_thru();
   initiator_sq_va = new dp_mem_t(1, 4096, true);
   initiator_rq_va = new dp_mem_t(1, 4096, true);
 
   target_cq_va = new dp_mem_t(1, 4096, true);
-  target_cq_va->clear_thru();
   target_sq_va = new dp_mem_t(1, 4096, true);
   target_rq_va = new dp_mem_t(1, 4096, true);
 
@@ -638,7 +636,7 @@ bool PullCQEntry(dp_mem_t *cq_va, uint16_t *cq_cindex, uint32_t ent_size,
 
 void GetR2NUspaceBuf(dp_mem_t **va, uint64_t *pa, uint32_t *size) {
   *size = kR2NBufSize;
-  *va = new dp_mem_t(1, *size);
+  *va = new dp_mem_t(1, *size, true);
   *pa = (*va)->pa();
 }
 
@@ -769,7 +767,7 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_c
   SendBufLKeyIncr();
   WriteBackBufKeysIncr();
 
-  // Get userspace R2N buffer for read command and data. 
+  // Get userspace R2N buffer for read command and data.
   dp_mem_t *r2n_buf_va;
   uint64_t r2n_buf_pa;
   uint32_t r2n_buf_size;
@@ -789,7 +787,7 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_c
   rd_buf->clear_thru();
   *read_buf_ptr = rd_buf;
 
-#if 0
+#ifdef RDMA_LIF_OVERRIDE_TEST_SUPPORTED
   // per VP, we need to find a different way to test LIF override since
   // all the RDMA buffers are now in HBM memory.
 

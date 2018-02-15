@@ -131,8 +131,10 @@ std::vector<tests::TestEntry> comp_tests = {
 
 std::vector<tests::TestEntry> rdma_tests = {
   {&tests::test_run_rdma_e2e_write, "E2E write over RDMA", false},
+#ifdef RDMA_LIF_OVERRIDE_TEST_SUPPORTED
   {&tests::test_run_rdma_e2e_read, "E2E read over RDMA", false},
   {&tests::test_run_rdma_lif_override, "E2E read LIF override", false},
+#endif
 };
 
 std::vector<tests::TestEntry> pdma_tests = {

@@ -144,7 +144,6 @@ int test_setup() {
 
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
   if ((seq_db_data = new dp_mem_t(1, kSeqDbDataSize)) == nullptr) return -1;
-  seq_db_data->clear_thru();
 
   return 0;
 
@@ -2002,10 +2001,7 @@ int test_run_seq_pdma_multi_xfers() {
     assert(val_pdma_queues);
     total_seq_db_data_size = kSeqDbDataSize * val_pdma_queues;
     wr_seq_db_data = new dp_mem_t(1, total_seq_db_data_size);
-    wr_seq_db_data->clear_thru();
-
     rd_seq_db_data = new dp_mem_t(1, total_seq_db_data_size);
-    rd_seq_db_data->clear_thru();
 
 #define SEQ_DB_DATA_ENTRY_PA(pa, i) \
     (pa + (i * kSeqDbDataSize))
@@ -2136,8 +2132,8 @@ int test_run_rdma_e2e_read() {
   if (rc >= 0) {
     printf("Successfully retrived status \n");
     auto func2 = [] () {
-      if  (*((uint64_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
-        //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data->read_thru()));
+      if  (*((uint32_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
+        //printf("Sequencer magic incorrect %lx \n", *((uint32_t *) seq_db_data->read_thru()));
         return -1;
       }
       return 0;

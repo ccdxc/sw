@@ -31,23 +31,33 @@ class SsdCoreTest : public testing::Test {
   }
 
   void PushCmd(const NvmeCmd &cmd) {
-    bcopy(&cmd, &params_.subq_va[subq_pi_], sizeof(cmd));
+    params_.subq->line_set(subq_pi_);
+    bcopy(&cmd, params_.subq->read_thru(), sizeof(cmd));
     subq_pi_++;
     if (subq_pi_ == params_.subq_nentries)
       subq_pi_ = 0;
-    *params_.subq_pi_va = subq_pi_;
+
+    uint32_t *pi = (uint32_t *)params.subq_pi->read();
+    *pi = subq_pi_;
+    params.subq_pi->write_thru();
   }
 
   bool PopCompletion(NvmeStatus *comp) {
-    if ((params_.compq_va[compq_ci_].dw3.status_phase & 1) != expected_phase_)
+    params_.compq->line_set(compq_ci_);
+    NvmeStatus *status = (NvmeStatus *)params_.compq->read_thru();
+
+    if ((status->dw3.status_phase & 1) != expected_phase_)
       return false;
-    bcopy(&params_.compq_va[compq_ci_], comp, sizeof (*comp));
+    bcopy(status, comp, sizeof (*comp));
     compq_ci_++;
     if (compq_ci_ == params_.compq_nentries) {
       compq_ci_ = 0;
       expected_phase_ ^= 1;
     }
-    *params_.compq_ci_va = compq_ci_;
+
+    uint32_t *ci = (uint32_t *)params.compq_ci->read();
+    *ci = compq_ci_;
+    params.compq_ci->write_thru();
     return true;
   }
 

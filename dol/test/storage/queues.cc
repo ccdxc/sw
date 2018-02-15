@@ -131,7 +131,7 @@ uint32_t pvm_nvme_cq_base;
 uint32_t pvm_r2n_cq_base;
 uint32_t pvm_nvme_be_cq_base;
 
-void *pndx_data_va;
+dp_mem_t *pndx_data;
 uint64_t pndx_data_pa;
 
 void lif_params_init(hal_if::lif_params_t *params, uint16_t type,
@@ -261,12 +261,8 @@ int queues_setup() {
   // R2N/PVM SQ etc.  // This is needed as a dummy for the P4+ program to write 
   // the pndx to a valid host address. The SSD emulation layer implements this 
   // for the E2E cases.
-  pndx_data_va = alloc_host_mem(sizeof(uint32_t));
-  if (pndx_data_va == nullptr) {
-    printf("Unable to allocate host memory for queue\n");
-    return -1;
-  }
-  pndx_data_pa = host_mem_v2p(pndx_data_va);
+  pndx_data = new dp_mem_t(1, sizeof(uint32_t));
+  pndx_data_pa = pndx_data->pa();
 
   // Create NVME and PVM LIFs
   hal_if::lif_params_t nvme_lif_params, pvm_lif_params;
@@ -453,7 +449,7 @@ int queues_setup() {
       // Get the PI's physical address from the SSD emulation layer
       storage_test::SsdWorkingParams params;
       nvme_e2e_ssd->GetWorkingParams(&params);
-      pi_pa = params.subq_pi_pa;
+      pi_pa = params.subq_pi->pa();
 
       // Initialize the doorbell of the CQ
       uint64_t db_addr;
@@ -840,7 +836,10 @@ void ring_nvme_e2e_ssd() {
   printf("*********** RINGING SSD DOORBELL for testing *********** \n");
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
-  *((uint32_t *) params.subq_pi_va) =   (*((uint32_t *) params.subq_pi_va)) + 1;
+  uint32_t *pi = (uint32_t *)params.subq_pi->read_thru();
+
+  *pi = (*pi + 1) % params.subq_nentries;
+  params.subq_pi->write_thru();
 }
 
 void get_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 

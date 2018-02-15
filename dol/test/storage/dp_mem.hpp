@@ -51,13 +51,14 @@ private:
     uint32_t        line_size;
     uint32_t        total_size;
     uint32_t        curr_line;
-    bool            is_fragment;
 
     /*
      * Fragments are elements that address some portions of the same
      * cache and datapath memory line.
      */
-	std::unordered_map<uint64_t, dp_mem_t*> fragments_map;
+    std::unordered_map<uint64_t, dp_mem_t*> fragments_map;
+    uint64_t        fragment_key;
+    dp_mem_t        *fragment_parent;
 };
 
 }  // namespace dp_mem

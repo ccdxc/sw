@@ -17,7 +17,8 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
     line_size(line_size),
     total_size(num_lines * line_size),
     curr_line(0),
-    is_fragment(false)
+    fragment_key(0),
+    fragment_parent(nullptr)
 {
     int         alloc_rc;
 
@@ -42,7 +43,14 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
             assert(cache);
         }
 
-        memset(cache, 0, total_size);
+        /*
+         * total_size can potentially be very large which needs
+         * to be broken up for write_mem.
+         */
+        for (curr_line = 0; curr_line < num_lines; curr_line++) {
+            clear_thru();
+        }
+        curr_line = 0;
     }
 }
 
@@ -54,19 +62,28 @@ dp_mem_t::~dp_mem_t()
     /*
      * Iterate and delete fragments
      */
-    fragment_it = fragments_map.begin();
-	while (fragment_it != fragments_map.end()) {
+    for (fragment_it =  fragments_map.begin();
+         fragment_it != fragments_map.end();
+         fragment_it++) {
+
         delete fragment_it->second;
-        fragment_it++;
     }
     fragments_map.clear();
     
     /*
-     * There are no methods to free HBM memory but at least we can free
-     * allocated local memory
+     * Take self out of parent's map
      */
-    if (!is_fragment && cache) {
-        delete[] cache;
+    if (fragment_parent) {
+        fragment_parent->fragments_map.erase(fragment_key);
+    } else {
+
+        /*
+         * There are no methods to free HBM memory but at least we can free
+         * allocated local memory
+         */
+        if (cache) {
+            delete[] cache;
+        }
     }
 }
 
@@ -195,7 +212,7 @@ dp_mem_t::fragment_find(uint32_t frag_offset,
                         uint32_t frag_size)
 {
     dp_mem_t    *fragment;
-    uint64_t    fragment_key;
+    uint64_t    local_key;
 	std::pair<uint64_t, dp_mem_t*> fragment_elem;
 	std::unordered_map<uint64_t, dp_mem_t*>::const_iterator fragment_it;
 
@@ -206,19 +223,20 @@ dp_mem_t::fragment_find(uint32_t frag_offset,
         return nullptr;
     }
 
-    fragment_key = ((uint64_t)(frag_offset + (curr_line * line_size)) << 32) |
-                   frag_size;
-    fragment_it = fragments_map.find(fragment_key);
+    local_key = ((uint64_t)(frag_offset + (curr_line * line_size)) << 32) |
+                frag_size;
+    fragment_it = fragments_map.find(local_key);
     if (fragment_it == fragments_map.end()) {
         fragment = new dp_mem_t(0, 0);
         fragment->num_lines = 1;
         fragment->line_size = frag_size;
         fragment->total_size = frag_size;
-        fragment->is_fragment = true;
         fragment->hbm_addr = hbm_line_addr() + frag_offset;
         fragment->cache = cache_line_addr() + frag_offset;
 
-        fragment_elem = std::make_pair(fragment_key, fragment);
+        fragment->fragment_key = local_key;
+        fragment->fragment_parent = this;
+        fragment_elem = std::make_pair(local_key, fragment);
         fragments_map.insert(fragment_elem);
 
     } else {

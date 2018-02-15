@@ -28,10 +28,17 @@ struct SsdWorkingParams {
   dp_mem_t *compq;
 
   // Producer/Consumer indices
-  uint32_t *subq_pi_va;
-  uint64_t subq_pi_pa;
-  uint32_t *compq_ci_va;
-  uint64_t compq_ci_pa;
+  dp_mem_t *subq_pi;
+  dp_mem_t *subq_ci;
+  dp_mem_t *compq_pi;
+  dp_mem_t *compq_ci;
+};
+
+struct ctrl_data {
+  uint32_t subq_pi;
+  uint32_t subq_ci;
+  uint32_t compq_pi;
+  uint32_t compq_ci;
 };
 
 // SSD simulation for DOL. Points to note:
@@ -84,12 +91,15 @@ class NvmeSsdCore {
   bool intr_enabled_ = false;
   dp_mem_t *subq_;
   dp_mem_t *compq_;
-  struct ctrl_data {
-    uint32_t subq_pi;
-    uint32_t subq_ci;
-    uint32_t compq_pi;
-    uint32_t compq_ci;
-  } *ctrl_;
+  dp_mem_t *ctrl_;
+
+  /*
+   * Fragments of ctrl_above
+   */
+  dp_mem_t *subq_pi_;
+  dp_mem_t *subq_ci_;
+  dp_mem_t *compq_pi_;
+  dp_mem_t *compq_ci_;
 }; 
 
 }  // namespace storage_test
