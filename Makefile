@@ -60,20 +60,20 @@ gen:
 # Doing the go list here avoids an additional global go list
 goimports-src: gen
 	$(info +++ goimports sources)
-	@GO_DIRS=$(go list -e -f '{{.Dir}}' ./... | egrep -v ${EXCLUDE_PATTERNS})
+	$(eval GO_FILES=`go list -e -f '{{.Dir}}/*.go' ./... | egrep -v ${EXCLUDE_PATTERNS}`)
 ifdef JOB_ID
 	@echo "Running in CI; checking goimports and fmt"
-	@$(eval IMPRT=`${GOIMPORTS_CMD} ${GO_DIRS}`)
+	@$(eval IMPRT := $(shell ${GOIMPORTS_CMD} ${GO_FILES}))
 	@echo "goimports found errors in the following files(if any):"
 	@echo $(IMPRT)
 	@test -z "$(IMPRT)"
 endif
-	@${GOIMPORTS_CMD} -w ${GO_DIRS}
+	@${GOIMPORTS_CMD} -w ${GO_FILES}
 
 # golint-src runs go linter and verifies code style matches golang recommendations
 golint-src: gen
 	$(info +++ golint sources)
-	@$(eval LINT=`golint ${GO_PKG} | grep -v pb.go`)
+	@$(eval LINT := $(shell golint ${GO_PKG} | grep -v pb.go))
 	@echo $(LINT)
 	@test -z "$(LINT)"
 
