@@ -4,6 +4,7 @@
 #include "nic/hal/src/vrf.hpp"
 #include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/include/ip.h"
+#include "nic/include/eth.h"
 
 using nw::NetworkSpec;
 using nw::NetworkStatus;
@@ -149,6 +150,27 @@ network_free (network_t *network)
     return HAL_RET_OK;
 }
 
+static bool
+network_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry      = (hal_handle_id_ht_entry_t *)ht_entry;
+    NetworkGetResponseMsg    *response   = (NetworkGetResponseMsg *)ctxt;
+    network_t                *nw         = NULL;
+    NetworkGetResponse       *rsp;
+
+    nw = (network_t *)hal_handle_get_obj(entry->handle_id);
+
+    rsp = response->add_response();
+    // fill config spec of this vrf
+    rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
+    rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    // Always return false here, so that we walk through all hash table
+    // entries.
+    return false;
+}
+
 // find a network instance by its id
 static inline network_t *
 find_network_by_key (vrf_id_t tid, const ip_prefix_t *ip_pfx)
@@ -215,7 +237,7 @@ hal_ret_t network_update(nw::NetworkSpec& spec,
 hal_ret_t network_delete(nw::NetworkDeleteRequest& req,
                          nw::NetworkDeleteResponse *rsp);
 hal_ret_t network_get(nw::NetworkGetRequest& req,
-                      nw::NetworkGetResponse *rsp);
+                      nw::NetworkGetResponseMsg *rsp);
 network_t *
 network_lookup_key_or_handle (NetworkKeyHandle& kh, vrf_id_t tid);
 }    // namespace hal

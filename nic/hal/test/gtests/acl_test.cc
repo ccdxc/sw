@@ -156,7 +156,7 @@ TEST_F(acl_test, test4)
     AclSpec       spec;
     AclResponse   rsp;
     AclGetRequest get_req;
-    AclGetResponse get_rsp;
+    AclGetResponseMsg get_rsp_msg;
     AclDeleteRequest del_req;
     AclDeleteResponse del_rsp;
 
@@ -193,31 +193,30 @@ TEST_F(acl_test, test4)
 
         // Get
         get_req.Clear();
-        get_rsp.Clear();
+        get_rsp_msg.Clear();
 
         get_req.mutable_key_or_handle()->set_acl_handle(acl_handle);
         hal::hal_cfg_db_open(hal::CFG_OP_READ);
-        ret = hal::acl_get(get_req, &get_rsp);
+        ret = hal::acl_get(get_req, &get_rsp_msg);
         hal::hal_cfg_db_close();
         ASSERT_EQ(ret, HAL_RET_OK);
 
-
-        ASSERT_TRUE(get_rsp.spec().priority() == spec.priority());
-        if (!MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match())) {
+        ASSERT_TRUE(get_rsp_msg.response(0).spec().priority() == spec.priority());
+        if (!MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().match(), spec.match())) {
             std::string str;
-            google::protobuf::TextFormat::PrintToString(get_rsp.spec().match(), &str);
+            google::protobuf::TextFormat::PrintToString(get_rsp_msg.response(0).spec().match(), &str);
             std::cout << str << std::endl;
             google::protobuf::TextFormat::PrintToString(spec.match(), &str);
             std::cout << str << std::endl;
-            ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match()));
+            ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().match(), spec.match()));
         }
-        if (!MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action())) {
+        if (!MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().action(), spec.action())) {
             std::string str;
-            google::protobuf::TextFormat::PrintToString(get_rsp.spec().action(), &str);
+            google::protobuf::TextFormat::PrintToString(get_rsp_msg.response(0).spec().action(), &str);
             std::cout << str << std::endl;
             google::protobuf::TextFormat::PrintToString(spec.action(), &str);
             std::cout << str << std::endl;
-            ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action()));
+            ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().action(), spec.action()));
         }
     }
 
@@ -257,34 +256,33 @@ TEST_F(acl_test, test4)
 
         // Get
         get_req.Clear();
-        get_rsp.Clear();
+        get_rsp_msg.Clear();
 
         get_req.mutable_key_or_handle()->set_acl_handle(acl_handle);
         hal::hal_cfg_db_open(hal::CFG_OP_READ);
-        ret = hal::acl_get(get_req, &get_rsp);
+        ret = hal::acl_get(get_req, &get_rsp_msg);
         hal::hal_cfg_db_close();
         ASSERT_EQ(ret, HAL_RET_OK);
-
 
         if (change_prio) {
             // Request didn't succeed. So it should match original spec
         } else {
-            ASSERT_TRUE(get_rsp.spec().priority() == spec.priority());
-            if (!MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match())) {
+            ASSERT_TRUE(get_rsp_msg.response(0).spec().priority() == spec.priority());
+            if (!MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().match(), spec.match())) {
                 std::string str;
-                google::protobuf::TextFormat::PrintToString(get_rsp.spec().match(), &str);
+                google::protobuf::TextFormat::PrintToString(get_rsp_msg.response(0).spec().match(), &str);
                 std::cout << str << std::endl;
                 google::protobuf::TextFormat::PrintToString(spec.match(), &str);
                 std::cout << str << std::endl;
-                ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().match(), spec.match()));
+                ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().match(), spec.match()));
             }
-            if (!MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action())) {
+            if (!MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().action(), spec.action())) {
                 std::string str;
-                google::protobuf::TextFormat::PrintToString(get_rsp.spec().action(), &str);
+                google::protobuf::TextFormat::PrintToString(get_rsp_msg.response(0).spec().action(), &str);
                 std::cout << str << std::endl;
                 google::protobuf::TextFormat::PrintToString(spec.action(), &str);
                 std::cout << str << std::endl;
-                ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().action(), spec.action()));
+                ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp_msg.response(0).spec().action(), spec.action()));
             }
         }
         change_prio = false;

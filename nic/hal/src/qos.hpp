@@ -312,6 +312,8 @@ hal_ret_t qos_class_update(qos::QosClassSpec& spec,
                            qos::QosClassResponse *rsp);
 hal_ret_t qos_class_delete(qos::QosClassDeleteRequest& req,
                            qos::QosClassDeleteResponse *rsp);
+hal_ret_t qos_class_get(qos::QosClassGetRequest& req,
+                        qos::QosClassGetResponseMsg *rsp);
 
 typedef struct policer_s {
     uint32_t bps_rate; // rate in bytes-per-sec

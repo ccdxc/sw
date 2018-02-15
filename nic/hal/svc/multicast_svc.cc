@@ -82,7 +82,6 @@ MulticastServiceImpl::MulticastEntryGet(ServerContext *context,
                                         MulticastEntryGetResponseMsg *rsp)
 {
     uint32_t                i, nreqs = req->request_size();
-    MulticastEntryGetResponse    *response;
 
     HAL_TRACE_DEBUG("Rcvd MulticastEntry Get Request");
     if (nreqs == 0) {
@@ -91,9 +90,8 @@ MulticastServiceImpl::MulticastEntryGet(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
-        response = rsp->add_response();
         auto request = req->request(i);
-        hal::multicast_entry_get(request, response);
+        hal::multicast_entry_get(request, rsp);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

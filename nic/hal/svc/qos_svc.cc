@@ -82,7 +82,19 @@ QOSServiceImpl::QosClassGet(ServerContext *context,
                            const QosClassGetRequestMsg *req,
                            QosClassGetResponseMsg *rsp)
 {
+    uint32_t             i, nreqs = req->request_size();
     HAL_TRACE_DEBUG("Rcvd QosClass Get Request");
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    for (i = 0; i < nreqs; i++) {
+        auto request = req->request(i);
+        hal::qos_class_get(request, rsp);
+    }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 

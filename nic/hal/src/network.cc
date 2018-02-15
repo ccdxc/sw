@@ -992,17 +992,20 @@ end:
 // process a vrf get request
 //------------------------------------------------------------------------------
 hal_ret_t
-network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
+network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
 {
     network_key_t         nw_key = { 0 };
     ip_prefix_t           ip_pfx = { 0 };
     network_t             *nw;
+    NetworkGetResponse    *response;
 
     if (!req.has_vrf_key_handle() ||
         req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
+        g_hal_state->network_key_ht()->walk(network_get_ht_cb, rsp);
+        return HAL_RET_OK;
     }
+
+    response = rsp->add_response();
 
     if (req.has_key_or_handle()) {
         auto kh = req.key_or_handle();
@@ -1018,24 +1021,24 @@ network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
                        NetworkKeyHandle::kNwHandle) {
             nw = find_network_by_handle(kh.nw_handle());
         } else {
-            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            response->set_api_status(types::API_STATUS_INVALID_ARG);
             return HAL_RET_INVALID_ARG;
         }
     } else {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        response->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
     if (nw == NULL) {
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_EP_NOT_FOUND;
     }
 
     // fill config spec of this vrf
-    rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
-    rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
+    response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
+    response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
 
-    rsp->set_api_status(types::API_STATUS_OK);
+    response->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 

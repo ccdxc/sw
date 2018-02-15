@@ -1941,7 +1941,29 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
         types::IPAddress *ip_addr_spec = response->mutable_spec()->mutable_endpoint_attrs()->add_ip_address();
         ip_addr_to_spec(ip_addr_spec, &pi_ip_entry->ip_addr);
     }
+
+    response->set_api_status(types::API_STATUS_OK);
 }
+
+static bool
+ep_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry      = (hal_handle_id_ht_entry_t *)ht_entry;
+    EndpointGetResponseMsg   *response   = (EndpointGetResponseMsg *)ctxt;
+    ep_t                     *ep         = NULL;
+    EndpointGetResponse      *rsp;
+
+    ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
+
+    rsp = response->add_response();
+
+    ep_to_ep_get_response(ep, rsp);
+
+    // Always return false here, so that we walk through all hash table
+    // entries.
+    return false;
+}
+
 
 //------------------------------------------------------------------------------
 // process a endpoint get request
@@ -1954,12 +1976,13 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
     ep_t                   *ep;
     EndpointGetResponse    *response;
 
-    response = rsp->add_response();
     if (!req.has_vrf_key_handle() ||
         req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
+        g_hal_state->ep_l2_ht()->walk(ep_get_ht_cb, rsp);
+        return HAL_RET_OK;
     }
+
+    response = rsp->add_response();
 
     if (req.has_key_or_handle()) {
         auto kh = req.key_or_handle();
@@ -1976,29 +1999,28 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
                                         ep_l3_key.ip_address());
                 ep = find_ep_by_l3_key(&l3_key);
             } else {
-                rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+                response->set_api_status(types::API_STATUS_INVALID_ARG);
                 return HAL_RET_INVALID_ARG;
             }
         } else if (kh.key_or_handle_case() ==
                        EndpointKeyHandle::kEndpointHandle) {
             ep = find_ep_by_handle(kh.endpoint_handle());
         } else {
-            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            response->set_api_status(types::API_STATUS_INVALID_ARG);
             return HAL_RET_INVALID_ARG;
         }
     } else {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        response->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
     if (ep == NULL) {
-        rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        response->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
         return HAL_RET_EP_NOT_FOUND;
     }
 
     ep_to_ep_get_response(ep, response);
-    response->set_api_status(types::API_STATUS_OK);
-    rsp->set_api_status(types::API_STATUS_OK);
+
     return HAL_RET_OK;
 }
 

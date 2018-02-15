@@ -571,9 +571,60 @@ hal_ret_t multicast_entry_delete(MulticastEntryDeleteRequest& req,
     return HAL_RET_OK;
 }
 
-hal_ret_t multicast_entry_get(MulticastEntryGetRequest& req,
-                              MulticastEntryGetResponse *rsp)
+static void
+mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
+                      mc_entry_t *mc_entry)
 {
+    dllist_ctxt_t                   *lnode = NULL;
+    hal_handle_id_list_entry_t      *entry = NULL;
+
+    dllist_for_each(lnode, &mc_entry->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        rsp->add_oif_handles(entry->handle_id);
+    }
+
+    rsp->set_api_status(types::API_STATUS_OK);
+}
+
+static bool
+mc_entry_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t        *entry      = (hal_handle_id_ht_entry_t *)ht_entry;
+    MulticastEntryGetResponseMsg    *response   = (MulticastEntryGetResponseMsg *)ctxt;
+    mc_entry_t                      *mc_entry   = NULL;
+    MulticastEntryGetResponse       *rsp;
+
+    mc_entry = (mc_entry_t *)hal_handle_get_obj(entry->handle_id);
+    rsp = response->add_response();
+
+    mc_entry_get_fill_rsp(rsp, mc_entry);
+
+    // Always return false here, so that we walk through all hash table
+    // entries.
+    return false;
+}
+
+hal_ret_t multicast_entry_get(MulticastEntryGetRequest& req,
+                              MulticastEntryGetResponseMsg *rsp)
+{
+    mc_entry_t                  *mc_entry;
+    MulticastEntryGetResponse   *response;
+
+    if (!req.has_key_or_handle()) {
+        g_hal_state->mc_key_ht()->walk(mc_entry_get_ht_cb, rsp);
+        return HAL_RET_OK;
+    }
+
+    auto kh = req.key_or_handle();
+    response = rsp->add_response();
+    mc_entry = mc_entry_lookup_key_or_handle(kh);
+    if (!mc_entry) {
+        response->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    mc_entry_get_fill_rsp(response, mc_entry);
+
     return HAL_RET_OK;
 }
 

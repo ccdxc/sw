@@ -76,6 +76,8 @@ using intf::InterfaceL2SegmentRequestMsg;
 using intf::InterfaceL2SegmentResponseMsg;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
+using intf::LifGetRequestMsg;
+using intf::LifGetResponseMsg;
 using intf::LifRequestMsg;
 using intf::LifResponseMsg;
 using intf::LifQStateMapEntry;
@@ -530,6 +532,28 @@ public:
                   << rsp_msg.response(0).api_status()
                   << std::endl;
         return 0;
+    }
+
+    void lif_get_all() {
+        LifGetRequestMsg    req_msg;
+        LifGetResponseMsg   rsp_msg;
+        ClientContext       context;
+        Status              status;
+        uint32_t            num_rsp;
+
+        req_msg.add_request();
+        status = intf_stub_->LifGet(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            num_rsp = rsp_msg.response_size();
+            std::cout << "Num of Rsps: " << num_rsp << std::endl;
+            for (uint32_t i = 0; i < num_rsp; i ++) { 
+                std::cout << "Lif ID = "
+                          << rsp_msg.response(i).spec().key_or_handle().lif_id()
+                          << std::endl;
+            }
+        } else {
+            std::cout << "Lif Get Failed" << std::endl;
+        }
     }
 
     uint64_t lif_create(uint32_t lif_id, uint32_t type_num) {
@@ -1407,8 +1431,10 @@ main (int argc, char** argv)
 #endif
 
     // create a lif
-    lif_handle = hclient.lif_create(lif_id, 1);
+    lif_handle = hclient.lif_create(100, 1);
     assert(lif_handle != 0);
+
+    hclient.lif_get_all();
 
     // create a ENIC interface
     enic_if_handle = hclient.enic_if_create(enic_if_id, lif_id,

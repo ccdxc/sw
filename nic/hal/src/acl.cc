@@ -1442,6 +1442,56 @@ end:
     return ret;
 }
 
+// Function to fill AclGetResponse
+static hal_ret_t
+acl_fill_rsp (AclGetResponse *rsp, acl_t *acl)
+{
+    AclSpec      *spec;
+    hal_ret_t    ret = HAL_RET_OK;
+
+    // fill config spec of this acl
+    spec = rsp->mutable_spec();
+    spec->mutable_key_or_handle()->set_acl_id(acl->key.acl_id);
+    spec->set_priority(acl->priority);
+
+    ret = populate_match_spec(&acl->match_spec, spec->mutable_match());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error populating match spec for acl {} ret {}",
+                      acl->key, ret);
+    }
+
+    ret = populate_action_spec(&acl->action_spec, spec->mutable_action());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error populating action spec for acl {} ret {}",
+                      acl->key, ret);
+    }
+
+    // fill operational state of this acl
+    rsp->mutable_status()->set_acl_handle(acl->hal_handle);
+
+    // fill stats of this acl
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return ret;
+}
+
+// Callback function to retrieve ACLs
+static bool
+acl_get_ht_cb(void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry     = (hal_handle_id_ht_entry_t *)ht_entry;
+    AclGetResponseMsg        *rsp       = (AclGetResponseMsg *)ctxt;
+    AclGetResponse           *response  = rsp->add_response();
+    acl_t                    *acl    = NULL;
+
+    acl = (acl_t *)find_acl_by_handle(entry->handle_id);
+    acl_fill_rsp(response, acl);
+
+    // Always return false here, so that we walk through all hash table
+    // entries.
+    return false;
+}
+
 //------------------------------------------------------------------------------
 // process a acl create request
 //------------------------------------------------------------------------------
@@ -1769,47 +1819,29 @@ end:
 // process a acl get request
 //------------------------------------------------------------------------------
 hal_ret_t
-acl_get (AclGetRequest& req, AclGetResponse *rsp)
+acl_get (AclGetRequest& req, AclGetResponseMsg *rsp)
 {
-    acl_t        *acl;
-    AclSpec      *spec;
-    hal_ret_t    ret = HAL_RET_OK;
+    acl_t          *acl;
+    AclGetResponse *response;
 
     hal_api_trace(" API Begin: acl get ");
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
+        g_hal_state->acl_ht()->walk(acl_get_ht_cb, rsp);
+        hal_api_trace(" API End: acl get ");
+        return HAL_RET_OK;
     }
+
+    response = rsp->add_response();
 
     acl = acl_lookup_by_key_or_handle(req.key_or_handle());
     if (acl == NULL) {
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_ACL_NOT_FOUND;
     }
 
-    // fill config spec of this acl
-    spec = rsp->mutable_spec();
-    spec->mutable_key_or_handle()->set_acl_id(acl->key.acl_id);
-    spec->set_priority(acl->priority);
+    acl_fill_rsp(response, acl);
 
-    ret = populate_match_spec(&acl->match_spec, spec->mutable_match());
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error populating match spec for acl {} ret {}",
-                      acl->key, ret);
-    }
-
-    ret = populate_action_spec(&acl->action_spec, spec->mutable_action());
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error populating action spec for acl {} ret {}",
-                      acl->key, ret);
-    }
-
-    // fill operational state of this acl
-    rsp->mutable_status()->set_acl_handle(acl->hal_handle);
-
-    // fill stats of this acl
-    rsp->set_api_status(types::API_STATUS_OK);
     hal_api_trace(" API End: acl get ");
     return HAL_RET_OK;
 }

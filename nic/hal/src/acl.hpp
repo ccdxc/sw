@@ -280,7 +280,7 @@ hal_ret_t acl_update(acl::AclSpec& spec,
 hal_ret_t acl_delete(acl::AclDeleteRequest& req,
                      acl::AclDeleteResponse *rsp);
 hal_ret_t acl_get(acl::AclGetRequest& req,
-                  acl::AclGetResponse *rsp);
+                  acl::AclGetResponseMsg *rsp);
 
 
 }    // namespace hal

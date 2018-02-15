@@ -170,7 +170,7 @@ hal_ret_t multicast_entry_update(MulticastEntrySpec& spec,
 hal_ret_t multicast_entry_delete(MulticastEntryDeleteRequest& req,
                                  MulticastEntryDeleteResponse *rsp);
 hal_ret_t multicast_entry_get(MulticastEntryGetRequest& req,
-                              MulticastEntryGetResponse *rsp);
+                              MulticastEntryGetResponseMsg *rsp);
 
 }    // namespace hal
 

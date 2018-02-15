@@ -155,6 +155,75 @@ qos_class_update_db (qos_class_t *qos_class, qos_class_t *qos_class_clone)
     return HAL_RET_OK;
 }
 
+static void
+qos_class_get_fill_rsp (qos::QosClassGetResponse *rsp,
+                        qos_class_t *qos_class)
+{
+    QosClassSpec    *spec;
+
+    spec = rsp->mutable_spec();
+    spec->mutable_key_or_handle()->set_qos_class_handle(qos_class->hal_handle);
+    spec->set_mtu(qos_class->mtu);
+    spec->mutable_buffer()->set_xon_threshold(qos_class->buffer.xon_threshold);
+    spec->mutable_buffer()->set_xoff_clear_limit(qos_class->buffer.xoff_clear_limit);
+    spec->mutable_pfc()->set_pfc_cos(qos_class->pfc_cos);
+    if (qos_class->sched.type == QOS_SCHED_TYPE_DWRR) {
+        spec->mutable_sched()->mutable_dwrr()->set_bw_percentage(qos_class->sched.dwrr.bw);
+    } else {
+        spec->mutable_sched()->mutable_strict()->set_bps(qos_class->sched.strict.bps);
+    }
+    for (uint32_t i = 0; i < HAL_ARRAY_SIZE(qos_class->uplink_cmap.ip_dscp); i ++) {
+        if (qos_class->uplink_cmap.ip_dscp[i]) {
+            spec->mutable_uplink_class_map()->add_ip_dscp(i);
+        }
+    }
+    spec->mutable_uplink_class_map()->set_dot1q_pcp(qos_class->uplink_cmap.dot1q_pcp);
+    spec->mutable_marking()->set_dot1q_pcp(qos_class->marking.pcp);
+    spec->mutable_marking()->set_dot1q_pcp_rewrite_en(qos_class->marking.pcp_rewrite_en);
+    spec->mutable_marking()->set_ip_dscp(qos_class->marking.dscp);
+    spec->mutable_marking()->set_ip_dscp_rewrite_en(qos_class->marking.dscp_rewrite_en);
+}
+
+static bool
+qos_class_get_ht_cb(void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t    *entry      = (hal_handle_id_ht_entry_t *)ht_entry;
+    qos::QosClassGetResponseMsg *rsp        = (QosClassGetResponseMsg *)ctxt;
+    qos::QosClassGetResponse    *response   = rsp->add_response();
+    qos_class_t                 *qos_class  = NULL;
+
+    qos_class = (qos_class_t *)find_qos_class_by_handle(entry->handle_id);
+    qos_class_get_fill_rsp(response, qos_class);
+
+    // Always return false here, so that we walk through all hash table
+    // entries.
+    return false;
+}
+
+hal_ret_t
+qos_class_get (qos::QosClassGetRequest& req,
+               qos::QosClassGetResponseMsg *rsp)
+{
+    qos_class_t                 *qos_class;
+    qos::QosClassGetResponse    *response;
+
+    if (!req.has_key_or_handle()) {
+        g_hal_state->qos_class_ht()->walk(qos_class_get_ht_cb, rsp);
+        return HAL_RET_OK;
+    }
+
+    auto kh = req.key_or_handle();
+    response = rsp->add_response();
+    qos_class = find_qos_class_by_key_handle(kh);
+    if (!qos_class) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    qos_class_get_fill_rsp(response, qos_class);
+
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 qos_class_free (qos_class_t *qos_class, bool free_pd)
 {
