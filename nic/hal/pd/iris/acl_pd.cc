@@ -473,7 +473,7 @@ acl_pd_program_hw(pd_acl_t *pd_acl, bool update)
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 acl_pd_cleanup(pd_acl_t *pd_acl)
 {
     hal_ret_t       ret = HAL_RET_OK;

@@ -196,10 +196,16 @@ hal_pd_load_symbols (void)
     // qos class
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_CREATE, pd_qos_class_create);
     PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_DELETE, pd_qos_class_delete);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_UPDATE, pd_qos_class_update);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
 
     // copp
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
     PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_DELETE, pd_copp_delete);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_UPDATE, pd_copp_update);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_MAKE_CLONE, pd_copp_make_clone);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_COPP_MEM_FREE, pd_copp_mem_free);
 
     // acl
     PD_SYMBOL_LOAD(PD_FUNC_ID_ACL_CREATE, pd_acl_create);
@@ -516,10 +522,16 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     // qos class
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_CREATE, pd_qos_class_create);
     PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_DELETE, pd_qos_class_delete);
+    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_UPDATE, pd_qos_class_update);
+    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
+    PD_SYMBOL_CALL(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
 
     // copp
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
     PD_SYMBOL_CALL(PD_FUNC_ID_COPP_DELETE, pd_copp_delete);
+    PD_SYMBOL_CALL(PD_FUNC_ID_COPP_UPDATE, pd_copp_update);
+    PD_SYMBOL_CALL(PD_FUNC_ID_COPP_MAKE_CLONE, pd_copp_make_clone);
+    PD_SYMBOL_CALL(PD_FUNC_ID_COPP_MEM_FREE, pd_copp_mem_free);
 
     // acl
     PD_SYMBOL_CALL(PD_FUNC_ID_ACL_CREATE, pd_acl_create);

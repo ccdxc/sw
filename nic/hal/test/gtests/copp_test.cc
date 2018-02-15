@@ -6,10 +6,15 @@
 #include <stdlib.h>
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include <google/protobuf/util/message_differencer.h>
+#include <google/protobuf/text_format.h>
+
+using google::protobuf::util::MessageDifferencer;
 
 using qos::CoppSpec;
 using qos::CoppResponse;
 using qos::CoppKeyHandle;
+using qos::CoppType;
 
 class copp_test : public hal_base_test {
 protected:
@@ -29,7 +34,8 @@ protected:
 
 };
 
-// Creating user-defined copps
+// Creating user-defined copps - this should fail because 
+// all copps are created as part of init
 TEST_F(copp_test, test1)
 {
     hal_ret_t    ret;
@@ -86,6 +92,96 @@ TEST_F(copp_test, test2)
     ret = hal::copp_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_INVALID_ARG);
+
+    spec.Clear();
+    // Re-create already created copp
+    spec.mutable_key_or_handle()->set_copp_type(qos::COPP_TYPE_ARP);
+    spec.mutable_policer()->set_bps_rate(10000);
+    spec.mutable_policer()->set_burst_size(1000);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::copp_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_ENTRY_EXISTS);
+}
+
+// Get and update 
+TEST_F(copp_test, test3)
+{
+    hal_ret_t    ret;
+    CoppSpec     spec;
+    CoppResponse rsp;
+    CoppGetRequest get_req;
+    CoppGetResponse get_rsp;
+    CoppType copp_type = qos::COPP_TYPE_FLOW_MISS;
+
+    get_req.Clear();
+    get_rsp.Clear();
+
+    get_req.mutable_key_or_handle()->set_copp_type(copp_type);
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    ret = hal::copp_get(get_req, &get_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_copp_type(copp_type);
+    spec.mutable_policer()->set_bps_rate(10000);
+    spec.mutable_policer()->set_burst_size(1000);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::copp_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_copp_type(copp_type);
+    spec.mutable_policer()->set_bps_rate(10000);
+    spec.mutable_policer()->set_burst_size(1000);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::copp_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_copp_type(copp_type);
+    // Update fail due to bps_rate is zero
+    spec.mutable_policer()->set_bps_rate(0);
+    spec.mutable_policer()->set_burst_size(0);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::copp_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_NE(ret, HAL_RET_OK);
+
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_copp_type(copp_type);
+    // Update fail due to bps_rate is zero
+    spec.mutable_policer()->set_bps_rate(500);
+    spec.mutable_policer()->set_burst_size(20);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::copp_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    get_req.Clear();
+    get_rsp.Clear();
+
+    get_req.mutable_key_or_handle()->set_copp_type(copp_type);
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    ret = hal::copp_get(get_req, &get_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    if (!MessageDifferencer::Equivalent(get_rsp.spec().policer(), spec.policer())) {
+        std::string str;
+        google::protobuf::TextFormat::PrintToString(get_rsp.spec().policer(), &str);
+        std::cout << str << std::endl;
+        google::protobuf::TextFormat::PrintToString(spec.policer(), &str);
+        std::cout << str << std::endl;
+        ASSERT_TRUE(MessageDifferencer::Equivalent(get_rsp.spec().policer(), spec.policer()));
+    }
 }
 
 int main(int argc, char **argv) {

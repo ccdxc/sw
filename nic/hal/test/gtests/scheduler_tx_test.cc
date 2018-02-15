@@ -52,7 +52,6 @@ void scheduler_tx_test::qos_init()
 
     spec.mutable_key_or_handle()->set_qos_group(cos_a_1);
     spec.set_mtu(2000);
-    spec.mutable_buffer()->set_reserved_mtus(2);
     spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(50);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(2);
     spec.mutable_uplink_class_map()->add_ip_dscp(10);
@@ -67,7 +66,6 @@ void scheduler_tx_test::qos_init()
     spec.Clear();
     spec.mutable_key_or_handle()->set_qos_group(cos_a_2);
     spec.set_mtu(2000);
-    spec.mutable_buffer()->set_reserved_mtus(2);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(3);
     spec.mutable_uplink_class_map()->add_ip_dscp(3);

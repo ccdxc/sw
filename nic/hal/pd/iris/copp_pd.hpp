@@ -16,7 +16,7 @@ struct pd_copp_s {
     uint32_t hw_policer_id;
 
     // pi ptr
-    void     *pi_copp;
+    copp_t   *pi_copp;
 } __PACK__;
 
 
@@ -72,15 +72,6 @@ copp_pd_mem_free (pd_copp_t *copp)
     hal::pd::delay_delete_to_slab(HAL_SLAB_COPP_PD, copp);
     return HAL_RET_OK;
 }
-
-hal_ret_t copp_pd_alloc_res(pd_copp_t *up_copp);
-hal_ret_t copp_pd_dealloc_res(pd_copp_t *up_copp);
-hal_ret_t copp_pd_cleanup(pd_copp_t *copp_pd);
-
-
-hal_ret_t copp_pd_program_hw(pd_copp_t *pd_copp);
-void copp_link_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp);
-void copp_delink_pi_pd(pd_copp_t *pd_copp, copp_t *pi_up_copp);
 
 }   // namespace pd
 }   // namespace hal

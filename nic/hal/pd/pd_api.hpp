@@ -1241,6 +1241,33 @@ pd_qos_class_delete_args_init (pd_qos_class_delete_args_t *args)
     return;
 }
 
+typedef struct pd_qos_class_update_args_s {
+    qos_class_t    *qos_class;
+} __PACK__ pd_qos_class_update_args_t;
+
+static inline void
+pd_qos_class_update_args_init (pd_qos_class_update_args_t *args)
+{
+    args->qos_class = NULL;
+    return;
+}
+
+typedef struct pd_qos_class_mem_free_args_s {
+    qos_class_t    *qos_class;
+} __PACK__ pd_qos_class_mem_free_args_t;
+
+static inline void
+pd_qos_class_mem_free_args_init (pd_qos_class_mem_free_args_t *args)
+{
+    args->qos_class = NULL;
+    return;
+}
+
+typedef struct pd_qos_class_make_clone_args_s {
+    qos_class_t *qos_class;
+    qos_class_t *clone;
+} __PACK__ pd_qos_class_make_clone_args_t;
+
 // copp
 typedef struct pd_copp_create_args_s {
     copp_t    *copp;
@@ -1263,6 +1290,33 @@ pd_copp_delete_args_init (pd_copp_delete_args_t *args)
     args->copp = NULL;
     return;
 }
+
+typedef struct pd_copp_update_args_s {
+    copp_t    *copp;
+} __PACK__ pd_copp_update_args_t;
+
+static inline void
+pd_copp_update_args_init (pd_copp_update_args_t *args)
+{
+    args->copp = NULL;
+    return;
+}
+
+typedef struct pd_copp_mem_free_args_s {
+    copp_t    *copp;
+} __PACK__ pd_copp_mem_free_args_t;
+
+static inline void
+pd_copp_mem_free_args_init (pd_copp_mem_free_args_t *args)
+{
+    args->copp = NULL;
+    return;
+}
+
+typedef struct pd_copp_make_clone_args_s {
+    copp_t *copp;
+    copp_t *clone;
+} __PACK__ pd_copp_make_clone_args_t;
 
 // acl
 typedef struct pd_acl_create_args_s {
@@ -2295,7 +2349,13 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_SYSTEM_DROP_ACTION,    196, "PD_FUNC_ID_SYSTEM_DROP_ACTION") \
     ENTRY(PD_FUNC_ID_MPU_TRACE_ENABLE,      197, "PD_FUNC_ID_MPU_TRACE_ENABLE")\
     ENTRY(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, 198, "PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK")\
-    ENTRY(PD_FUNC_ID_MAX,                   199, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_CLASS_UPDATE,      199, "PD_FUNC_ID_QOS_CLASS_UPDATE")     \
+    ENTRY(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE,  200, "PD_FUNC_ID_QOS_CLASS_MAKE_CLONE") \
+    ENTRY(PD_FUNC_ID_QOS_CLASS_MEM_FREE,    201, "PD_FUNC_ID_QOS_CLASS_MEM_FREE")   \
+    ENTRY(PD_FUNC_ID_COPP_UPDATE,           202, "PD_FUNC_ID_COPP_UPDATE")          \
+    ENTRY(PD_FUNC_ID_COPP_MAKE_CLONE,       203, "PD_FUNC_ID_COPP_MAKE_CLONE")      \
+    ENTRY(PD_FUNC_ID_COPP_MEM_FREE,         204, "PD_FUNC_ID_COPP_MEM_FREE")        \
+    ENTRY(PD_FUNC_ID_MAX,                   205, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2444,10 +2504,16 @@ PD_FUNCP_TYPEDEF(pd_proxyccb_get);
 // qos clas
 PD_FUNCP_TYPEDEF(pd_qos_class_create);
 PD_FUNCP_TYPEDEF(pd_qos_class_delete);
+PD_FUNCP_TYPEDEF(pd_qos_class_update);
+PD_FUNCP_TYPEDEF(pd_qos_class_mem_free);
+PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
 
 // copp
 PD_FUNCP_TYPEDEF(pd_copp_create);
 PD_FUNCP_TYPEDEF(pd_copp_delete);
+PD_FUNCP_TYPEDEF(pd_copp_update);
+PD_FUNCP_TYPEDEF(pd_copp_mem_free);
+PD_FUNCP_TYPEDEF(pd_copp_make_clone);
 
 // acl pd calls
 PD_FUNCP_TYPEDEF(pd_acl_create);
@@ -2742,9 +2808,15 @@ typedef struct pd_call_s {
         // qos clas
         PD_UNION_FIELD(pd_qos_class_create);
         PD_UNION_FIELD(pd_qos_class_delete);
+        PD_UNION_FIELD(pd_qos_class_update);
+        PD_UNION_FIELD(pd_qos_class_make_clone);
+        PD_UNION_FIELD(pd_qos_class_mem_free);
         // copp
         PD_UNION_FIELD(pd_copp_create);
         PD_UNION_FIELD(pd_copp_delete);
+        PD_UNION_FIELD(pd_copp_update);
+        PD_UNION_FIELD(pd_copp_make_clone);
+        PD_UNION_FIELD(pd_copp_mem_free);
 
         // acl
         PD_UNION_FIELD(pd_acl_create);

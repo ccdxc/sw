@@ -96,7 +96,7 @@ pd_qos_class_create(pd_qos_class_create_args_t *args)
     }
 
     // Link PI & PD
-    qos_class_link_pi_pd(pd_qos_class, args->qos_class);
+    qos_class_pd_link_pi_pd(pd_qos_class, args->qos_class);
 
     // Allocate Resources
     ret = qos_class_pd_alloc_res(pd_qos_class);
@@ -127,22 +127,20 @@ end:
     return ret;
 }
 
-#if 0
 // ----------------------------------------------------------------------------
 // Qos-class Update
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_update (pd_qos_class_args_t *pd_qos_class_upd_args)
+pd_qos_class_update (pd_qos_class_update_args_t *args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("{}: updating pd state for qos_class:{}",
                     __func__,
-                    pd_qos_class_upd_args->qos_class->key);
+                    args->qos_class->key);
 
     return ret;
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // PD Qos-class Delete
@@ -202,7 +200,7 @@ qos_class_pd_cleanup(pd_qos_class_t *qos_class_pd)
     }
 
     // Delinking PI<->PD
-    qos_class_delink_pi_pd(qos_class_pd, (qos_class_t *)qos_class_pd->pi_qos_class);
+    qos_class_pd_delink_pi_pd(qos_class_pd, (qos_class_t *)qos_class_pd->pi_qos_class);
 
     // Freeing PD
     qos_class_pd_free(qos_class_pd);
@@ -733,7 +731,7 @@ qos_class_pd_program_hw(pd_qos_class_t *pd_qos_class)
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void
-qos_class_link_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
+qos_class_pd_link_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
 {
     pd_qos_class->pi_qos_class = pi_qos_class;
     qos_class_set_pd_qos_class(pi_qos_class, pd_qos_class);
@@ -743,7 +741,7 @@ qos_class_link_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
 // De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void
-qos_class_delink_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
+qos_class_pd_delink_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
 {
     pd_qos_class->pi_qos_class = NULL;
     qos_class_set_pd_qos_class(pi_qos_class, NULL);
@@ -753,10 +751,12 @@ qos_class_delink_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_make_clone(qos_class_t *qos_class, qos_class_t *clone)
+pd_qos_class_make_clone (pd_qos_class_make_clone_args_t *args)
 {
-    hal_ret_t      ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
     pd_qos_class_t *pd_qos_class_clone = NULL;
+    qos_class_t *qos_class = args->qos_class;
+    qos_class_t *clone = args->clone;
 
     pd_qos_class_clone = qos_class_pd_alloc_init();
     if (pd_qos_class_clone == NULL) {
@@ -766,28 +766,26 @@ pd_qos_class_make_clone(qos_class_t *qos_class, qos_class_t *clone)
 
     memcpy(pd_qos_class_clone, qos_class->pd, sizeof(pd_qos_class_t));
 
-    qos_class_link_pi_pd(pd_qos_class_clone, clone);
+    qos_class_pd_link_pi_pd(pd_qos_class_clone, clone);
 
 end:
     return ret;
 }
 
-#if 0
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_qos_class_mem_free(pd_qos_class_args_t *args)
+pd_qos_class_mem_free(pd_qos_class_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
-    pd_qos_class_t        *qos_class_pd;
+    pd_qos_class_t        *pd_qos_class;
 
-    qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
-    qos_class_pd_mem_free(qos_class_pd);
+    pd_qos_class = (pd_qos_class_t *)args->qos_class->pd;
+    qos_class_pd_mem_free(pd_qos_class);
 
     return ret;
 }
-#endif
 
 hal_ret_t
 #if 0

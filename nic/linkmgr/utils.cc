@@ -302,6 +302,9 @@ hal_prepare_rsp (hal_ret_t ret)
     case HAL_RET_ACL_NOT_FOUND:
         return types:: API_STATUS_ACL_NOT_FOUND;
         break;
+    case HAL_RET_COPP_NOT_FOUND:
+        return types:: API_STATUS_COPP_NOT_FOUND;
+        break;
     default:
         return types::API_STATUS_ERR;
         break;

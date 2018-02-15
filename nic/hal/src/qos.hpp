@@ -12,21 +12,29 @@
 using sdk::lib::ht_ctxt_t;
 using hal::utils::bitmap;
 
-using qos::QosClassSpec;
 using qos::QosClassKeyHandle;
-using qos::QosClassRequestMsg;
+using qos::QosClassSpec;
+using qos::QosClassStatus;
 using qos::QosClassResponse;
+using qos::QosClassRequestMsg;
 using qos::QosClassResponseMsg;
+using qos::QosClassDeleteRequest;
+using qos::QosClassDeleteResponse;
 using qos::QosClassDeleteRequestMsg;
 using qos::QosClassDeleteResponseMsg;
+using qos::QosClassGetRequest;
 using qos::QosClassGetRequestMsg;
+using qos::QosClassGetResponse;
 using qos::QosClassGetResponseMsg;
-using qos::CoppSpec;
 using qos::CoppKeyHandle;
-using qos::CoppRequestMsg;
+using qos::CoppSpec;
+using qos::CoppStatus;
 using qos::CoppResponse;
+using qos::CoppRequestMsg;
 using qos::CoppResponseMsg;
+using qos::CoppGetRequest;
 using qos::CoppGetRequestMsg;
+using qos::CoppGetResponse;
 using qos::CoppGetResponseMsg;
 
 namespace hal {
@@ -68,9 +76,6 @@ inline std::ostream& operator<<(std::ostream& os, const qos_class_key_t& s)
 }
 
 typedef struct qos_buf_s {
-    uint32_t reserved_mtus;       // Number of bytes reserved
-    uint32_t headroom_mtus;       // Number of additional bytes reserved
-                                  // Before this is used, xoff will be asserted
     uint32_t xon_threshold;       // Relative threshold from the
                                   // max occupancy at which xoff will be cleared
     uint32_t xoff_clear_limit;    // When the pool occupancy goes
@@ -126,7 +131,7 @@ typedef struct qos_class_s {
     hal_handle_t         hal_handle;     // HAL allocated handle
 
     pd::pd_qos_class_t   *pd;
-} __PACK__               qos_class_t;
+} __PACK__ qos_class_t;
 
 // CB data structures
 typedef struct qos_class_create_app_ctxt_s {
@@ -165,14 +170,6 @@ static inline qos_class_t *
 qos_class_alloc_init (void)
 {
     return qos_class_init(qos_class_alloc());
-}
-
-static inline hal_ret_t
-qos_class_free (qos_class_t *qos_class)
-{
-    HAL_SPINLOCK_DESTROY(&qos_class->slock);
-    hal::delay_delete_to_slab(HAL_SLAB_COPP, qos_class);
-    return HAL_RET_OK;
 }
 
 static bool
@@ -313,6 +310,8 @@ hal_ret_t qos_class_create(qos::QosClassSpec& spec,
                            qos::QosClassResponse *rsp);
 hal_ret_t qos_class_update(qos::QosClassSpec& spec,
                            qos::QosClassResponse *rsp);
+hal_ret_t qos_class_delete(qos::QosClassDeleteRequest& req,
+                           qos::QosClassDeleteResponse *rsp);
 
 typedef struct policer_s {
     uint32_t bps_rate; // rate in bytes-per-sec
@@ -371,6 +370,7 @@ typedef struct copp_create_app_ctxt_s {
 } __PACK__ copp_create_app_ctxt_t;
 
 typedef struct copp_update_app_ctxt_s {
+    bool policer_changed;
 } __PACK__ copp_update_app_ctxt_t;
 
 // allocate a Copp instance
@@ -405,14 +405,6 @@ copp_alloc_init (void)
     return copp_init(copp_alloc());
 }
 
-static inline hal_ret_t
-copp_free (copp_t *copp)
-{
-    HAL_SPINLOCK_DESTROY(&copp->slock);
-    hal::delay_delete_to_slab(HAL_SLAB_COPP, copp);
-    return HAL_RET_OK;
-}
-
 static inline copp_type_t
 copp_spec_copp_type_to_copp_type (qos::CoppType copp_type)
 {
@@ -421,11 +413,27 @@ copp_spec_copp_type_to_copp_type (qos::CoppType copp_type)
             return COPP_TYPE_FLOW_MISS;
         case qos::COPP_TYPE_ARP:
             return COPP_TYPE_ARP;
-        case COPP_TYPE_DHCP:
+        case qos::COPP_TYPE_DHCP:
             return COPP_TYPE_DHCP;
         default:
             HAL_ASSERT(0);
             return COPP_TYPE_FLOW_MISS;
+    }
+}
+
+static inline qos::CoppType
+copp_type_to_spec_type (copp_type_t copp_type)
+{
+    switch(copp_type) {
+        case COPP_TYPE_FLOW_MISS:
+            return qos::COPP_TYPE_FLOW_MISS;
+        case COPP_TYPE_ARP:
+            return qos::COPP_TYPE_ARP;
+        case COPP_TYPE_DHCP:
+            return qos::COPP_TYPE_DHCP;
+        default:
+            HAL_ASSERT(0);
+            return qos::COPP_TYPE_FLOW_MISS;
     }
 }
 
@@ -487,9 +495,11 @@ extern bool copp_compare_key_func(void *key1, void *key2);
 
 // SVC CRUD APIs
 hal_ret_t copp_create(qos::CoppSpec& spec,
-                              qos::CoppResponse *rsp);
+                      qos::CoppResponse *rsp);
 hal_ret_t copp_update(qos::CoppSpec& spec,
-                              qos::CoppResponse *rsp);
+                      qos::CoppResponse *rsp);
+hal_ret_t copp_get(qos::CoppGetRequest& req,
+                   qos::CoppGetResponse *rsp);
 
 hal_ret_t hal_qos_init (void);
 

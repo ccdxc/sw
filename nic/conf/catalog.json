@@ -58,49 +58,41 @@
                 {
                     "keyOrHandle" : { "qosGroup" : "DEFAULT" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 },
                 {
                     "keyOrHandle" : { "qosGroup" : "CONTROL" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 },
                 {
                     "keyOrHandle" : { "qosGroup" : "SPAN" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 },
                 {
                     "keyOrHandle" : { "qosGroup" : "INTERNAL_RX_PROXY_NO_DROP" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 },
                 {
                     "keyOrHandle" : { "qosGroup" : "INTERNAL_RX_PROXY_DROP" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 },
                 {
                     "keyOrHandle" : { "qosGroup" : "INTERNAL_TX_PROXY_NO_DROP" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 },
                 {
                     "keyOrHandle" : { "qosGroup" : "INTERNAL_TX_PROXY_DROP" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 },
                 {
                     "keyOrHandle" : { "qosGroup" : "INTERNAL_CPU_COPY" },
                     "mtu" : 9216,
-                    "buffer" : { "reservedMtus" : 3 },
                     "sched" : { "strict" : { "bps" : 10000 } }
                 }
             ],

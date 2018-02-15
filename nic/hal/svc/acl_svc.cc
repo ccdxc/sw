@@ -37,7 +37,7 @@ AclServiceImpl::AclUpdate(ServerContext *context,
                               AclResponseMsg *rsp)
 {
     uint32_t          i, nreqs = req->request_size();
-    AclResponse    *response;
+    AclResponse       *response;
 
     HAL_TRACE_DEBUG("Rcvd Acl Update Request");
     if (nreqs == 0) {

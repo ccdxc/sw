@@ -70,7 +70,6 @@ class QosClassObject(base.ConfigObjectBase):
         req_spec.key_or_handle.qos_group = self.__getGroupEnum(self.spec.group)
         # Mandatory parameters
         req_spec.mtu = 2000
-        req_spec.buffer.reserved_mtus = 3
         req_spec.sched.dwrr.bw_percentage = 10
 
         if self.UplinkCmapNeeded():

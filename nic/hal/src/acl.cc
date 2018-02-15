@@ -137,7 +137,7 @@ acl_free (acl_t *acl, bool free_pd)
 //-----------------------------------------------------------------------------
 // Print acl spec
 //-----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 acl_spec_print (AclSpec& spec)
 {
     hal_ret_t           ret = HAL_RET_OK;

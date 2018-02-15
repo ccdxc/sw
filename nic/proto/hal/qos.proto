@@ -65,12 +65,9 @@ message QosClassKeyHandle {
 
 // QosBuffer specifies the buffer parameters
 message QosBuffer {
-  uint32 reserved_mtus    = 1;    // Number of bytes reserved in #mtus
-  uint32 headroom_mtus    = 2;    // Number of bytes reserved to absorb in-flight
-                                  // pkts for no-drop classes in #mtus
-  uint32 xon_threshold    = 3;    // Relative threshold from the
+  uint32 xon_threshold    = 1;    // Relative threshold from the
                                   // max occupancy at which to clear the xoff
-  uint32 xoff_clear_limit = 4;    // When the buffer occupancy goes
+  uint32 xoff_clear_limit = 2;    // When the buffer occupancy goes
                                   // below this limit, xoff will be cleared
 }
 
@@ -158,10 +155,16 @@ message QosClassDeleteRequestMsg {
   repeated QosClassDeleteRequest request = 1;    // batch of requests
 }
 
+// QosClassDeleteResponse is response to QosClass delete request
+message QosClassDeleteResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
 // QosClassDeleteResponseMsg is batched response to QosClassDeleteRequestMsg
 message QosClassDeleteResponseMsg {
-  repeated types.ApiStatus api_status = 1;    // API status code
+  repeated QosClassDeleteResponse response = 1;    // batched responses
 }
+
 
 // QosClassStats captures all the statistics of given QosClass
 message QosClassStats {
@@ -247,9 +250,10 @@ message CoppGetRequestMsg {
 
 // CoppGetResponse captures all the information about a Copp
 message CoppGetResponse {
-  CoppSpec     spec   = 1;    // Copp configuration
-  CoppStatus   status = 2;    // Copp operational status
-  PolicerStats stats  = 3;    // Copp statistics
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  CoppSpec        spec       = 2;    // Copp configuration
+  CoppStatus      status     = 3;    // Copp operational status
+  PolicerStats    stats      = 4;    // Copp statistics
 }
 
 // CoppGetResponseMsg is response to CoppGetRequestMsg

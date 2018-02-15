@@ -109,6 +109,7 @@ enum ApiStatus {
   API_STATUS_HW_READ_ERROR                = 73;    // hardware read error
   API_STATUS_HW_WRITE_ERROR               = 74;    // hardware write error
   API_STATUS_L2_SEGMENT_TYPE_INVALID      = 75;    // L2 Segment set to invalide type
+  API_STATUS_COPP_NOT_FOUND               = 76;    // COPP not found
 }
 
 // common meta object that is part of all other top level objects

@@ -8,147 +8,33 @@ namespace hal {
 namespace pd {
 
 // ----------------------------------------------------------------------------
-// Copp Create
+// Linking PI <-> PD
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_copp_create(pd_copp_create_args_t *args)
+static void
+copp_pd_link_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp)
 {
-    hal_ret_t      ret = HAL_RET_OK;;
-    pd_copp_t *pd_copp;
-
-    HAL_TRACE_DEBUG("{}: creating pd state for copp: {}",
-                    __func__, args->copp->key);
-
-    // Create copp PD
-    pd_copp = copp_pd_alloc_init();
-    if (pd_copp == NULL) {
-        ret = HAL_RET_OOM;
-        goto end;
-    }
-
-    // Link PI & PD
-    copp_link_pi_pd(pd_copp, args->copp);
-
-    // Allocate Resources
-    ret = copp_pd_alloc_res(pd_copp);
-    if (ret != HAL_RET_OK) {
-        // No Resources, dont allocate PD
-        HAL_TRACE_ERR("{}: Unable to alloc. resources for Copp: {} ret {}",
-                      __func__, args->copp->key, ret);
-        goto end;
-    }
-
-    // Program HW
-    ret = copp_pd_program_hw(pd_copp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Unable to program hw for Copp: {} ret {}",
-                      __func__, args->copp->key, ret);
-        goto end;
-    }
-
-end:
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Error in programming hw for Copp: {}: ret: {}",
-                      __func__, args->copp->key, ret);
-        // unlink_pi_pd(pd_copp, args->copp);
-        // copp_pd_free(pd_copp);
-        copp_pd_cleanup(pd_copp);
-    }
-
-    return ret;
+    pd_copp->pi_copp = pi_copp;
+    pi_copp->pd = pd_copp;
 }
 
-#if 0
 // ----------------------------------------------------------------------------
-// Copp Update
+// De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_copp_update (pd_copp_update_args_t *pd_copp_upd_args)
+static void
+copp_pd_delink_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-
-    HAL_TRACE_DEBUG("{}: updating pd state for copp:{}",
-                    __func__,
-                    pd_copp_upd_args->copp->key);
-
-    return ret;
+    if (pd_copp) {
+        pd_copp->pi_copp = NULL;
+    }
+    if (pi_copp) {
+        pi_copp->pd = NULL;
+    }
 }
-#endif
-
-//-----------------------------------------------------------------------------
-// PD Copp Delete
-//-----------------------------------------------------------------------------
-hal_ret_t
-pd_copp_delete (pd_copp_delete_args_t *args)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    pd_copp_t *pd_copp;
-
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("{}:deleting pd state for copp {}",
-                    __func__, args->copp->key);
-    pd_copp = (pd_copp_t *)args->copp->pd;
-
-    // free up the resource and memory
-    ret = copp_pd_cleanup(pd_copp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed pd copp cleanup Copp {}, ret {}",
-                      __func__, args->copp->key, ret);
-    }
-
-    return ret;
-}
-
-//-----------------------------------------------------------------------------
-// PD Copp Cleanup
-//  - Release all resources
-//  - Delink PI <-> PD
-//  - Free PD Copp
-//  Note:
-//      - Just free up whatever PD has.
-//      - Dont use this inplace of delete. Delete may result in giving callbacks
-//        to others.
-//-----------------------------------------------------------------------------
-hal_ret_t
-copp_pd_cleanup(pd_copp_t *pd_copp)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-
-    if (!pd_copp) {
-        // Nothing to do
-        goto end;
-    }
-
-    if (pd_copp->hw_policer_id != INVALID_INDEXER_INDEX) {
-        // TODO: deprogram hw
-
-    }
-
-    // Releasing resources
-    ret = copp_pd_dealloc_res(pd_copp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: unable to dealloc res for copp: {}",
-                      __func__,
-                      ((copp_t *)(pd_copp->pi_copp))->key);
-        goto end;
-    }
-
-    // Delinking PI<->PD
-    copp_delink_pi_pd(pd_copp, (copp_t *)pd_copp->pi_copp);
-
-    // Freeing PD
-    copp_pd_free(pd_copp);
-end:
-    return ret;
-}
-
 
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Copp
 // ----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 copp_pd_alloc_res (pd_copp_t *pd_copp)
 {
     hal_ret_t               ret = HAL_RET_OK;
@@ -160,12 +46,48 @@ copp_pd_alloc_res (pd_copp_t *pd_copp)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD Copp
 // ----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 copp_pd_dealloc_res(pd_copp_t *pd_copp)
 {
     hal_ret_t            ret = HAL_RET_OK;
 
     // Deallocate any hardware resources 
+    return ret;
+}
+
+
+static hal_ret_t
+copp_pd_cleanup_copp_tbl (pd_copp_t *pd_copp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t       sdk_ret;
+    directmap       *copp_tbl = NULL;
+
+    copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
+    HAL_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
+
+    sdk_ret = copp_tbl->remove(pd_copp->hw_policer_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: Unable to cleanup for copp: {}",
+                      __func__, pd_copp->pi_copp->key);
+    } else {
+        HAL_TRACE_DEBUG("{}: Programmed cleanup copp: {}",
+                        __func__, pd_copp->pi_copp->key);
+    }
+
+    return ret;
+}
+
+static hal_ret_t
+copp_pd_deprogram_hw (pd_copp_t *pd_copp)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    ret = copp_pd_cleanup_copp_tbl(pd_copp);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
     return ret;
 }
 
@@ -219,13 +141,13 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
 // ----------------------------------------------------------------------------
 // Program HW
 // ----------------------------------------------------------------------------
-hal_ret_t
-copp_pd_program_hw(pd_copp_t *pd_copp)
+static hal_ret_t
+copp_pd_program_hw(pd_copp_t *pd_copp, bool update)
 {
     hal_ret_t ret = HAL_RET_OK;
     copp_t    *copp = (copp_t *)pd_copp->pi_copp;
 
-    ret = copp_pd_program_copp_tbl(pd_copp, false);
+    ret = copp_pd_program_copp_tbl(pd_copp, update);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: Error programming the copp table "
                       "Copp {} ret {}",
@@ -236,38 +158,168 @@ copp_pd_program_hw(pd_copp_t *pd_copp)
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// Linking PI <-> PD
-// ----------------------------------------------------------------------------
-void
-copp_link_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp)
+//-----------------------------------------------------------------------------
+// PD Copp Cleanup
+//  - Release all resources
+//  - Delink PI <-> PD
+//  - Free PD Copp
+//  Note:
+//      - Just free up whatever PD has.
+//      - Dont use this inplace of delete. Delete may result in giving callbacks
+//        to others.
+//-----------------------------------------------------------------------------
+static hal_ret_t
+copp_pd_cleanup(pd_copp_t *pd_copp)
 {
-    pd_copp->pi_copp = pi_copp;
-    pi_copp->pd = pd_copp;
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!pd_copp) {
+        // Nothing to do
+        goto end;
+    }
+
+    if (pd_copp->hw_policer_id != INVALID_INDEXER_INDEX) {
+        // TODO: deprogram hw
+        ret = copp_pd_deprogram_hw(pd_copp);
+        HAL_TRACE_ERR("pd-copp:{}: unable to deprogram hw for copp: {}",
+                      __func__,
+                      pd_copp->pi_copp->key);
+        goto end;
+    }
+
+    // Releasing resources
+    ret = copp_pd_dealloc_res(pd_copp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: unable to dealloc res for copp: {}",
+                      __func__,
+                      ((copp_t *)(pd_copp->pi_copp))->key);
+        goto end;
+    }
+
+    // Delinking PI<->PD
+    copp_pd_delink_pi_pd(pd_copp, (copp_t *)pd_copp->pi_copp);
+
+    // Freeing PD
+    copp_pd_free(pd_copp);
+end:
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
-// De-Linking PI <-> PD
+// Copp Update
 // ----------------------------------------------------------------------------
-void
-copp_delink_pi_pd(pd_copp_t *pd_copp, copp_t *pi_copp)
+hal_ret_t
+pd_copp_update (pd_copp_update_args_t *args)
 {
-    if (pd_copp) {
-        pd_copp->pi_copp = NULL;
+    hal_ret_t ret = HAL_RET_OK;
+    pd_copp_t  *pd_copp;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
+
+    HAL_TRACE_DEBUG("{}: updating pd state for copp:{}",
+                    __func__,
+                    args->copp->key);
+
+    pd_copp = (pd_copp_t *)args->copp->pd;
+
+    ret = copp_pd_program_hw(pd_copp, true);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD Copp Delete
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_copp_delete (pd_copp_delete_args_t *args)
+{
+    // Deletion of copp is not allowed
+    return HAL_RET_INVALID_ARG;
+
+#if 0
+    hal_ret_t ret = HAL_RET_OK;
+    pd_copp_t *pd_copp;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("{}:deleting pd state for copp {}",
+                    __func__, args->copp->key);
+    pd_copp = (pd_copp_t *)args->copp->pd;
+
+    // free up the resource and memory
+    ret = copp_pd_cleanup(pd_copp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed pd copp cleanup Copp {}, ret {}",
+                      __func__, args->copp->key, ret);
     }
-    if (pi_copp) {
-        pi_copp->pd = NULL;
+
+    return ret;
+#endif
+}
+
+// ----------------------------------------------------------------------------
+// Copp Create
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_copp_create(pd_copp_create_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;;
+    pd_copp_t *pd_copp;
+
+    HAL_TRACE_DEBUG("{}: creating pd state for copp: {}",
+                    __func__, args->copp->key);
+
+    // Create copp PD
+    pd_copp = copp_pd_alloc_init();
+    if (pd_copp == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
     }
+
+    // Link PI & PD
+    copp_pd_link_pi_pd(pd_copp, args->copp);
+
+    // Allocate Resources
+    ret = copp_pd_alloc_res(pd_copp);
+    if (ret != HAL_RET_OK) {
+        // No Resources, dont allocate PD
+        HAL_TRACE_ERR("{}: Unable to alloc. resources for Copp: {} ret {}",
+                      __func__, args->copp->key, ret);
+        goto end;
+    }
+
+    // Program HW
+    ret = copp_pd_program_hw(pd_copp, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: Unable to program hw for Copp: {} ret {}",
+                      __func__, args->copp->key, ret);
+        goto end;
+    }
+
+end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: Error in programming hw for Copp: {}: ret: {}",
+                      __func__, args->copp->key, ret);
+        // unlink_pi_pd(pd_copp, args->copp);
+        // copp_pd_free(pd_copp);
+        copp_pd_cleanup(pd_copp);
+    }
+
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_make_clone(copp_t *copp, copp_t *clone)
+pd_copp_make_clone (pd_copp_make_clone_args_t *args)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd_copp_t *pd_copp_clone = NULL;
+    copp_t *copp = args->copp;
+    copp_t *clone = args->clone;
 
     pd_copp_clone = copp_pd_alloc_init();
     if (pd_copp_clone == NULL) {
@@ -277,18 +329,17 @@ pd_copp_make_clone(copp_t *copp, copp_t *clone)
 
     memcpy(pd_copp_clone, copp->pd, sizeof(pd_copp_t));
 
-    copp_link_pi_pd(pd_copp_clone, clone);
+    copp_pd_link_pi_pd(pd_copp_clone, clone);
 
 end:
     return ret;
 }
 
-#if 0
 // ----------------------------------------------------------------------------
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_copp_mem_free(pd_copp_args_t *args)
+pd_copp_mem_free(pd_copp_mem_free_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     pd_copp_t        *pd_copp;
@@ -298,7 +349,6 @@ pd_copp_mem_free(pd_copp_args_t *args)
 
     return ret;
 }
-#endif
 
 }    // namespace pd
 }    // namespace hal

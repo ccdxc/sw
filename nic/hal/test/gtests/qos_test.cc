@@ -10,6 +10,8 @@
 using qos::QosClassSpec;
 using qos::QosClassResponse;
 using qos::QosClassKeyHandle;
+using qos::QosClassDeleteRequest;
+using qos::QosClassDeleteResponse;
 
 class qos_class_test : public hal_base_test {
 protected:
@@ -39,7 +41,6 @@ TEST_F(qos_class_test, test1)
     spec.Clear();
     spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
     spec.set_mtu(2000);
-    spec.mutable_buffer()->set_reserved_mtus(2);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(3);
     spec.mutable_uplink_class_map()->add_ip_dscp(3);
@@ -56,7 +57,6 @@ TEST_F(qos_class_test, test1)
     spec.Clear();
     spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_2);
     spec.set_mtu(2000);
-    spec.mutable_buffer()->set_reserved_mtus(2);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(5);
     spec.mutable_uplink_class_map()->add_ip_dscp(3);
@@ -66,6 +66,71 @@ TEST_F(qos_class_test, test1)
     ret = hal::qos_class_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_NE(ret, HAL_RET_OK);
+
+    // Update
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
+    spec.set_mtu(2000);
+    spec.mutable_sched()->mutable_strict()->set_bps(10000);
+    spec.mutable_uplink_class_map()->set_dot1q_pcp(4);
+    spec.mutable_uplink_class_map()->add_ip_dscp(4);
+    spec.mutable_uplink_class_map()->add_ip_dscp(5);
+    spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
+    spec.mutable_marking()->set_dot1q_pcp(3);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::qos_class_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    // Now this should go through because contention on ip_dscp(3) is gone with
+    // the update
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_2);
+    spec.set_mtu(2000);
+    spec.mutable_sched()->mutable_strict()->set_bps(10000);
+    spec.mutable_uplink_class_map()->set_dot1q_pcp(5);
+    spec.mutable_uplink_class_map()->add_ip_dscp(3);
+    spec.mutable_uplink_class_map()->add_ip_dscp(2);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::qos_class_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    // Update fail because reuse same dot1_pcp as user-def-2
+    spec.Clear();
+    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
+    spec.set_mtu(2000);
+    spec.mutable_sched()->mutable_strict()->set_bps(10000);
+    spec.mutable_uplink_class_map()->set_dot1q_pcp(5);
+    spec.mutable_uplink_class_map()->add_ip_dscp(4);
+    spec.mutable_uplink_class_map()->add_ip_dscp(5);
+    spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
+    spec.mutable_marking()->set_dot1q_pcp(3);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::qos_class_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_NE(ret, HAL_RET_OK);
+
+    // Delete
+    QosClassDeleteRequest del_req;
+    QosClassDeleteResponse del_rsp;
+
+    del_req.Clear();
+    del_req.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::qos_class_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    del_req.Clear();
+    del_req.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::qos_class_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
 
 }
 
@@ -80,7 +145,6 @@ TEST_F(qos_class_test, test2)
 
     spec.mutable_key_or_handle()->set_qos_group(qos::INTERNAL_RX_PROXY_NO_DROP);
     spec.set_mtu(2000);
-    spec.mutable_buffer()->set_reserved_mtus(2);
     spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(100);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

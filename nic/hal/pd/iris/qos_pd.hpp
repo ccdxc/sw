@@ -132,8 +132,8 @@ hal_ret_t qos_class_pd_cleanup(pd_qos_class_t *qos_class_pd);
 
 
 hal_ret_t qos_class_pd_program_hw(pd_qos_class_t *pd_qos_class);
-void qos_class_link_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class);
-void qos_class_delink_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_up_qos_class);
+void qos_class_pd_link_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class);
+void qos_class_pd_delink_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_up_qos_class);
 
 }   // namespace pd
 }   // namespace hal
