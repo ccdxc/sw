@@ -190,16 +190,104 @@ static hal_ret_t
 validate_gft_emp_create (GftExactMatchProfileSpec& spec,
                          GftExactMatchProfileResponse *rsp)
 {
-    return HAL_RET_OK;
+    hal_ret_t       ret = HAL_RET_OK;
+    uint32_t        num_hgem_profiles = 0;
+
+    num_hgem_profiles = spec.exact_match_profiles_size();
+    if (!num_hgem_profiles) {
+        HAL_TRACE_ERR("No header group exact match profiles");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+
+    }
+
+end:
+    return ret;
 }
 
+#define GFT_EMP_READ_HDRS(SPEC_FLD_NAME, HDR_MASK_BIT)                      \
+    if (hdrs.SPEC_FLD_NAME()) {                                             \
+        tmp->headers |= GFT_HEADER_ ## HDR_MASK_BIT;                        \
+    }
+
+#define GFT_EMP_READ_FIELDS(SPEC_FLD_NAME, HDR_MASK_BIT)                    \
+    if (fields.SPEC_FLD_NAME()) {                                           \
+        tmp->match_fields |= GFT_HEADER_FIELD_ ## HDR_MASK_BIT;             \
+    }
 //------------------------------------------------------------------------------
 // initialize GFT exact match profile object from the config spec
 //------------------------------------------------------------------------------
-static inline void
+static inline hal_ret_t
 gft_emp_init_from_spec (gft_exact_match_profile_t *profile,
                         GftExactMatchProfileSpec& spec)
 {
+    hal_ret_t                               ret = HAL_RET_OK;
+    uint32_t                                num_hgem_profiles = 0;
+    GftHeaders                              hdrs;
+    GftHeaderFields                         fields;
+    gft_hdr_group_exact_match_profile_t     *tmp = NULL;
+    GftHeaderGroupExactMatchProfile         hg_emp;
+
+    num_hgem_profiles = spec.exact_match_profiles_size();
+    if (!num_hgem_profiles) {
+        HAL_TRACE_ERR("No header group exact match profiles");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+
+    }
+    profile->hgem_profiles = (gft_hdr_group_exact_match_profile_t *)
+        HAL_CALLOC(HAL_MEM_ALLOC_HGEM, 
+                   num_hgem_profiles * 
+                   sizeof(gft_hdr_group_exact_match_profile_t));
+    HAL_TRACE_DEBUG("Received {} of hdr group match profiles", 
+                    num_hgem_profiles);
+
+    profile->num_hdr_group_exact_match_profiles = num_hgem_profiles;
+
+    tmp = profile->hgem_profiles;
+    for (uint32_t i = 0; i < num_hgem_profiles; i++) {
+        hg_emp = spec.exact_match_profiles(i);
+        hdrs = hg_emp.headers();
+        fields = hg_emp.match_fields();
+
+        GFT_EMP_READ_HDRS(ethernet_header, ETHERNET);
+        GFT_EMP_READ_HDRS(ipv4_header, IPV4);
+        GFT_EMP_READ_HDRS(ipv6_header, IPV6);
+        GFT_EMP_READ_HDRS(tcp_header, TCP);
+        GFT_EMP_READ_HDRS(udp_header, UDP);
+        GFT_EMP_READ_HDRS(icmp_header, ICMP);
+        GFT_EMP_READ_HDRS(no_encap, NO_ENCAP);
+        GFT_EMP_READ_HDRS(ip_in_ip_encap, IP_IN_IP_ENCAP);
+        GFT_EMP_READ_HDRS(ip_in_gre_encap, IP_IN_GRE_ENCAP);
+        GFT_EMP_READ_HDRS(nvgre_encap, NVGRE_ENCAP);
+        GFT_EMP_READ_HDRS(vxlan_encap, VXLAN_ENCAP);
+
+        GFT_EMP_READ_FIELDS(dst_mac_addr, DST_MAC_ADDR);
+        GFT_EMP_READ_FIELDS(src_mac_addr, SRC_MAC_ADDR);
+        GFT_EMP_READ_FIELDS(eth_type, ETH_TYPE);
+        GFT_EMP_READ_FIELDS(customer_vlan_id, CUSTOMER_VLAN_ID);
+        GFT_EMP_READ_FIELDS(provider_vlan_id, PROVIDER_VLAN_ID);
+        GFT_EMP_READ_FIELDS(dot1p_priority, 8021P_PRIORITY);
+        GFT_EMP_READ_FIELDS(src_ip_addr, SRC_IP_ADDR);
+        GFT_EMP_READ_FIELDS(dst_ip_addr, DST_IP_ADDR);
+        GFT_EMP_READ_FIELDS(ip_ttl, TTL);
+        GFT_EMP_READ_FIELDS(ip_protocol, IP_PROTOCOL);
+        GFT_EMP_READ_FIELDS(ip_dscp, IP_DSCP);
+        GFT_EMP_READ_FIELDS(src_port, TRANSPORT_SRC_PORT);
+        GFT_EMP_READ_FIELDS(dst_port, TRANSPORT_DST_PORT);
+        GFT_EMP_READ_FIELDS(tcp_flags, TCP_FLAGS);
+        GFT_EMP_READ_FIELDS(tenant_id, TENANT_ID);
+        GFT_EMP_READ_FIELDS(icmp_type, ICMP_TYPE);
+        GFT_EMP_READ_FIELDS(icmp_code, ICMP_CODE);
+        GFT_EMP_READ_FIELDS(oob_vlan, OOB_VLAN);
+        GFT_EMP_READ_FIELDS(oob_tenant_id, OOB_TENANT_ID);
+        GFT_EMP_READ_FIELDS(gre_protocol, GRE_PROTOCOL);
+
+        tmp++;
+    }
+
+end:
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -227,11 +315,10 @@ static hal_ret_t
 gft_emp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                                    ret = HAL_RET_OK;
-    //pd::pd_gft_args_t                            pd_gft_args = { 0 };
+    pd::pd_gft_exact_match_profile_args_t        args = { 0 };
     dllist_ctxt_t                                *lnode = NULL;
     dhl_entry_t                                  *dhl_entry = NULL;
     gft_exact_match_profile_t                    *profile = NULL;
-    //gft_exact_match_profile_create_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("Failed to create GFT exact match profile");
@@ -241,21 +328,18 @@ gft_emp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    //app_ctxt = (gft_exact_match_profile_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
     profile = (gft_exact_match_profile_t *)dhl_entry->obj;
 
     HAL_TRACE_DEBUG("GFT exact match profile create add callback {}",
                     profile->profile_id);
 
     // PD Call to allocate PD resources and h/w programming, if any
-    //pd::pd_gft_exact_match_profile_create_args_init(&pd_gft_args);
-    //pd_l2seg_args.l2seg = l2seg;
-    //pd_l2seg_args.vrf = app_ctxt->vrf;
-    //ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
-    //if (ret != HAL_RET_OK) {
-        //HAL_TRACE_ERR("{}:failed to create l2seg pd, err : {}",
-                      //__FUNCTION__, ret);
-    //}
+    args.exact_match_profile = profile;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, 
+                          (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to create pd exact match profile, err : {}", ret);
+    }
 
 end:
 

@@ -23,6 +23,9 @@ using gft::GftExactMatchProfileRequestMsg;
 using gft::GftExactMatchProfileStatus;
 using gft::GftExactMatchProfileResponse;
 using gft::GftExactMatchProfileResponseMsg;
+using gft::GftHeaderGroupExactMatchProfile;
+using gft::GftHeaders;
+using gft::GftHeaderFields;
 
 using gft::GftHeaderTranspositionProfileSpec;
 using gft::GftHeaderTranspositionProfileRequestMsg;
@@ -71,6 +74,8 @@ using gft::GftExactMatchFlowEntryResponseMsg;
 #define GFT_HEADER_FIELD_OOB_VLAN                  0x00040000ULL
 #define GFT_HEADER_FIELD_OOB_TENANT_ID             0x00080000ULL
 #define GFT_HEADER_FIELD_GRE_PROTOCOL              0x00100000ULL
+
+
 
 namespace hal {
 

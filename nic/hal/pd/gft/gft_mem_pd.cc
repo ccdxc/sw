@@ -8,6 +8,7 @@
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
+#include "nic/hal/pd/gft/emp_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -45,6 +46,13 @@ hal_state_pd::init(void)
                                  false, true, true);
     HAL_ASSERT_RETURN((enicif_pd_slab_ != NULL), false);
 
+    // initiate GFT exact match profile
+    exact_match_profile_pd_slab_ = slab::factory("GFT_EMP_PD", 
+                                                 HAL_SLAB_GFT_EMP_PD,
+                                                 sizeof(hal::pd::pd_gft_emp_t), 
+                                                 8, false, true, true);
+    HAL_ASSERT_RETURN((exact_match_profile_pd_slab_ != NULL), false);
+
     return true;
 }
 
@@ -56,6 +64,7 @@ hal_state_pd::hal_state_pd()
     lif_pd_slab_ = NULL;
     uplinkif_pd_slab_ = NULL;
     enicif_pd_slab_ = NULL;
+    exact_match_profile_pd_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -70,6 +79,9 @@ hal_state_pd::~hal_state_pd()
 
     uplinkif_pd_slab_ ? slab::destroy(uplinkif_pd_slab_) : HAL_NOP;
     enicif_pd_slab_ ? slab::destroy(enicif_pd_slab_) : HAL_NOP;
+
+    exact_match_profile_pd_slab_ ? slab::destroy(exact_match_profile_pd_slab_) : 
+        HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -183,6 +195,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(lif_pd_slab_);
     GET_SLAB(uplinkif_pd_slab_);
     GET_SLAB(enicif_pd_slab_);
+    GET_SLAB(exact_match_profile_pd_slab_);
 
     return NULL;
 }
@@ -466,6 +479,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ENICIF_PD:
         g_hal_state_pd->enicif_pd_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_GFT_EMP_PD:
+        g_hal_state_pd->exact_match_profile_pd_slab()->free(elem);
         break;
 
     default:

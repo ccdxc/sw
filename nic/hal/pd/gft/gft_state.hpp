@@ -52,6 +52,11 @@ public:
     // get APIs for enicif  related state
     slab *enicif_pd_slab(void) const { return enicif_pd_slab_; }
 
+    // get APIs for exact match profile
+    slab *exact_match_profile_pd_slab(void) const { 
+        return exact_match_profile_pd_slab_; 
+    }
+
     // get APIs for TXS scheduler related state
     BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
 
@@ -125,6 +130,11 @@ private:
     // Enic IF related state
     struct {
         slab       *enicif_pd_slab_;
+    } __PACK__;
+
+    // Exact Match Profile 
+    struct {
+        slab      *exact_match_profile_pd_slab_;
     } __PACK__;
 
     // TXS scheduler related state

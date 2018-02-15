@@ -25,11 +25,13 @@ gft_exact_match_profile_link_pi_pd (pd_gft_exact_match_profile_t *pd,
     pi->pd = pd;
 }
 
+// TODO: Moved to emp_pd.cc. Cleanup
+#if 0
 //------------------------------------------------------------------------------
 // create necessary state for the GFT exact match profile
 //------------------------------------------------------------------------------
 hal_ret_t
-pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
+pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
 {
     hal_ret_t                              ret = HAL_RET_OK;
     sdk_ret_t                              sdk_ret;
@@ -517,6 +519,7 @@ end:
 
     return ret;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // link GFT header transposition profile's PI and PD states

@@ -2121,6 +2121,15 @@ typedef struct pd_gft_args_s {
     gft_exact_match_flow_entry_t    *exact_match_flow_entry;
 } __PACK__ pd_gft_args_t;
 
+typedef struct pd_gft_exact_match_profile_args_s {
+    gft_exact_match_profile_t       *exact_match_profile;
+} pd_gft_exact_match_profile_args_t;
+
+typedef struct pd_gft_exact_match_profile_make_clone_args_s {
+    gft_exact_match_profile_t       *exact_match_profile;
+    gft_exact_match_profile_t       *clone;
+} pd_gft_exact_match_profile_make_clone_args_t;
+
 static inline void
 pd_gft_args_init (pd_gft_args_t *args)
 {
@@ -2661,9 +2670,17 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_gen);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_verify);
 PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
 
-// gft apis
-PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_create, pd_gft);
+// gft exact match profile apis
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_create, pd_gft_exact_match_profile);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_delete, pd_gft_exact_match_profile);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_update, pd_gft_exact_match_profile);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_mem_free, pd_gft_exact_match_profile);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_make_clone);
+
+// gft group xposition profile 
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft);
+
+// gft match flow entry 
 PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft);
 
 //clock

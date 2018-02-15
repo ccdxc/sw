@@ -40,6 +40,7 @@ typedef struct pd_copp_s pd_copp_t;
 typedef struct pd_gft_exact_match_profile_s pd_gft_exact_match_profile_t;
 typedef struct pd_gft_hdr_xposition_profile_s pd_gft_hdr_xposition_profile_t;
 typedef struct pd_gft_exact_match_flow_entry_s pd_gft_exact_match_flow_entry_t;
+typedef struct pd_gft_emp_s pd_gft_emp_t;
 
 }    // namespace pd
 }    // namespace hal
