@@ -72,6 +72,9 @@ def TestCaseSetup(tc):
             print("Enabling reassembly support")
             tlscb.debug_dol = tlscb.debug_dol | tcp_tls_proxy.tls_debug_dol_dec_reasm_path
     tlscb.other_fid = 0xffff
+    tlscb.serq_pi = 0
+    tlscb.serq_ci = 0
+    tlscb.SetObjValPd()
 
     if tc.module.args.key_size == 16:
         tcp_tls_proxy.tls_aes128_decrypt_setup(tc, tlscb)

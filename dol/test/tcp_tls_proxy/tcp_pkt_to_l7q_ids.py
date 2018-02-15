@@ -46,6 +46,8 @@ def TestCaseSetup(tc):
     tlscb.debug_dol = 0
     tlscb.is_decrypt_flow = False
     tlscb.other_fid = 0xffff
+    tlscb.serq_pi = 0
+    tlscb.serq_ci = 0
     tlscb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification

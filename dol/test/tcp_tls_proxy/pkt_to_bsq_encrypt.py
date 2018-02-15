@@ -69,8 +69,10 @@ def TestCaseSetup(tc):
         tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb)
     elif tc.module.args.key_size == 32:
         tcp_tls_proxy.tls_aes256_encrypt_setup(tc, tlscb)
-
-    tlscb.GetObjValPd()
+    
+    tlscb.serq_pi = 0
+    tlscb.serq_ci = 0
+    tlscb.SetObjValPd()
     print("snapshot1: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
     print("snapshot1: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
 

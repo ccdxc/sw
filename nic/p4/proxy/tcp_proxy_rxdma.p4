@@ -153,6 +153,7 @@ header_type tcp_rx_d_t {
         snd_wnd                 : 16;
         rcv_mss                 : 16;
         ato                     : 16;
+        serq_pidx               : 16; 
         flag                    : 8;
         rto                     : 8;
         pred_flags              : 8;
@@ -297,7 +298,6 @@ header_type write_serq_d_t {
         debug_stage0_3_thread   : 16;
         debug_stage4_7_thread   : 16;
         ft_pi                   : 16;
-        serq_pidx               : 16; 
 
         // stats
         pkts_rcvd               : 8;
@@ -332,6 +332,7 @@ header_type to_stage_2_phv_t {
         seq                     : 32;
         ack_seq                 : 32;
         snd_nxt                 : 32;
+        serq_cidx               : 12;
     }
 }
 
@@ -360,6 +361,7 @@ header_type to_stage_6_phv_t {
         page                    : 34;
         descr                   : 32;
         payload_len             : 16;
+        serq_pidx               : 12;
     }
 }
 
@@ -775,8 +777,8 @@ action tcp_read_tls_stage0(TXDMA_PARAMS_BASE, pi_0, ci_0) {
 action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
         snd_una, snd_wl1, rto_deadline, max_window, bytes_rcvd,
         bytes_acked, snd_wnd, rcv_mss, rto, pred_flags, ecn_flags, state,
-        parsed_state, flag, ato, quick, snd_wscale, pending, ca_flags, write_serq,
-        pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q, alloc_descr) {
+        parsed_state, flag, ato, serq_pidx, quick, snd_wscale, pending, ca_flags,
+        write_serq, pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q, alloc_descr) {
     // k + i for stage 1
 
 
@@ -787,6 +789,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
         modify_field(to_s2_scratch.ack_seq, to_s2.ack_seq);
 
         modify_field(to_s2_scratch.snd_nxt, to_s2.snd_nxt);
+        modify_field(to_s2_scratch.serq_cidx, to_s2.serq_cidx);
     }
 
     if (write_serq == 0) {
@@ -836,6 +839,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
     modify_field(tcp_rx_d.parsed_state, parsed_state);
     modify_field(tcp_rx_d.flag, flag);
     modify_field(tcp_rx_d.ato, ato);
+    modify_field(tcp_rx_d.serq_pidx, serq_pidx);
     modify_field(tcp_rx_d.quick, quick);
     modify_field(tcp_rx_d.snd_wscale, snd_wscale);
     modify_field(tcp_rx_d.pending, pending);
@@ -1065,7 +1069,7 @@ action tcp_cc(curr_ts, prr_delivered, last_time, epoch_start, cnt,
  * Stage 6 table 0 action
  */
 action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
-        debug_stage0_3_thread, debug_stage4_7_thread, serq_pidx, ato,
+        debug_stage0_3_thread, debug_stage4_7_thread, ato,
         ooo_offset,
         pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
         debug_num_phv_to_mem, ft_pi) {
@@ -1075,6 +1079,7 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(to_s6_scratch.page, to_s6.page);
     modify_field(to_s6_scratch.descr, to_s6.descr);
     modify_field(to_s6_scratch.payload_len, to_s6.payload_len);
+    modify_field(to_s6_scratch.serq_pidx, to_s6.serq_pidx);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -1094,7 +1099,6 @@ action write_serq(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(write_serq_d.curr_ts, curr_ts);
     modify_field(write_serq_d.debug_stage0_3_thread, debug_stage0_3_thread);
     modify_field(write_serq_d.debug_stage4_7_thread, debug_stage4_7_thread);
-    modify_field(write_serq_d.serq_pidx, serq_pidx);
     modify_field(write_serq_d.pkts_rcvd, pkts_rcvd);
     modify_field(write_serq_d.pages_alloced, pages_alloced);
     modify_field(write_serq_d.desc_alloced, desc_alloced);

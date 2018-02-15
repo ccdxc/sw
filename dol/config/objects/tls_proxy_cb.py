@@ -45,6 +45,8 @@ class TlsCbObject(base.ConfigObjectBase):
             req_spec.is_decrypt_flow           = self.is_decrypt_flow
             req_spec.other_fid                 = self.other_fid
             req_spec.l7_proxy_type             = self.l7_proxy_type
+            req_spec.serq_pi                   = self.serq_pi
+            req_spec.serq_ci                   = self.serq_ci
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

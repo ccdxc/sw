@@ -103,6 +103,7 @@ modules:
         iterate :
             - flow: filter://type=IPV4
 
+
     - module:
         name    : OOO_PKT_TO_SERQ_V4
         spec    : ooo_pkt.testspec
@@ -417,6 +418,17 @@ modules:
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               srcseg    : filter://fabencap=VXLAN
               dstseg    : filter://fabencap=VXLAN
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_SERQ_FULL
+        spec    : uplink_to_uplink_serq_full.testspec
+        module  : pkt_to_p4
+        args    :
+            maxflows: 1
+            serq_full : True
+        iterate :
+            - flow: filter://type=IPV4
+
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_MULTI_PACKET

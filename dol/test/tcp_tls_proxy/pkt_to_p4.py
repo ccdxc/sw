@@ -40,6 +40,8 @@ def TestCaseSetup(tc):
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcp_proxy.init_tcb_inorder(tc, tcb)
+    if tc.pvtdata.serq_full:
+        tcb.serq_pi = 5
     tcb.SetObjValPd()
 
     TcpCbHelper.main(other_fid)
@@ -54,6 +56,20 @@ def TestCaseSetup(tc):
     tlscbid2 = "TlsCb%04d" % (other_fid)
     tlscb = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb2 = tc.infra_data.ConfigStore.objects.db[tlscbid2]
+    if tc.pvtdata.serq_full:
+        tlscb.serq_pi = 5
+        tlscb.serq_ci = 6
+        tlscb2.serq_pi = 5
+        tlscb2.serq_ci = 6
+    else:
+        tlscb.serq_pi = 0
+        tlscb.serq_pi = 0
+        tlscb.serq_ci = 0
+        tlscb.serq_ci = 0
+        tlscb2.serq_pi = 0
+        tlscb2.serq_pi = 0
+        tlscb2.serq_ci = 0
+        tlscb2.serq_ci = 0
 
     tlscb.debug_dol = 0
     tlscb2.debug_dol = 0
@@ -205,6 +221,17 @@ def TestCaseVerify(tc):
         num_tx_pkts = tc.pvtdata.num_pkts * 2
     else:
         num_tx_pkts = tc.pvtdata.num_pkts
+
+    if tc.pvtdata.serq_full:
+        # SERQ is full, pi/ci should not move
+        if tlscb_cur.serq_pi != tlscb.serq_pi or \
+                    tlscb_cur.serq_ci != tlscb.serq_ci:
+            print("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+                    (tlscb.serq_pi, tlscb.serq_ci,
+                     tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+            return False
+        return True
+
 
     # 1. Verify SERQ pi got updated
     if (tlscb_cur.serq_pi != tlscb.serq_pi + num_rx_pkts):

@@ -51,8 +51,15 @@ tcp_rx_process_start:
     sne             c2, d.u.tcp_rx_d.rcv_nxt, k.to_s2_seq
     slt             c3, k.to_s2_snd_nxt, k.to_s2_ack_seq
     // disable timestamp checking for now
-    setcf           c4, [c0]
+    //setcf           c4, [c0]
     //slt             c4, r4, d.u.tcp_rx_d.ts_recent
+    /*
+     * c4 = serq is full
+     */
+    add             r2, d.u.tcp_rx_d.serq_pidx, 1
+    and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
+    seq             c4, r2, k.to_s2_serq_cidx
+
     seq             c5, k.s1_s2s_payload_len, r0
     sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
     bcf             [c1 | c2 | c3 | c4 | c5 | c6], tcp_rx_slow_path
@@ -62,6 +69,9 @@ tcp_rx_process_start:
      * so overwrite it
      */
     phvwr           p.s6_s2s_ooo_offset, r0
+
+    phvwr           p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
+    tblmincri       d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
 
 tcp_rx_fast_path:
     /* tcp_store_ts_recent(tp)
@@ -695,7 +705,6 @@ tcp_rx_slow_path:
 
     seq             c1, k.common_phv_syn, 1
     tblwr.c1        d.u.tcp_rx_d.alloc_descr, 1
-    phvwri.c1       p.common_phv_write_serq, 1
 
     smeqb           c1, d.u.tcp_rx_d.parsed_state, \
                             TCP_PARSED_STATE_HANDLE_IN_CPU, \
@@ -722,6 +731,18 @@ tcp_rx_slow_path:
     slt             c7, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
+
+    /*
+     * If we have received data and serq is full,
+     * drop the frame
+     */
+    sne             c1, k.s1_s2s_payload_len, r0
+    add             r2, d.u.tcp_rx_d.serq_pidx, 1
+    and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
+    seq             c2, r2, k.to_s2_serq_cidx
+    setcf           c7, [c1 & c2]
+    phvwri.c7       p.p4_intr_global_drop, 1
+    b.c7            flow_rx_process_done
 
     /*   if (!(before(cp->ack_seq, tp->tx.snd_nxt))) { */
     sle             c1, k.to_s2_ack_seq, k.to_s2_snd_nxt
@@ -774,6 +795,8 @@ tcp_rx_slow_path:
     tbladd.c1       d.u.tcp_rx_d.rcv_nxt, 1
     tblwr.c1        d.u.tcp_rx_d.alloc_descr, 1
     phvwri.c1       p.common_phv_write_serq, 1
+    phvwr.c1        p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
+    tblmincri.c1    d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
     phvwr.c1        p.common_phv_pending_txdma, 1
     phvwr.c1        p.rx2tx_pending_ack_send, 1
     phvwr.c1        p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt

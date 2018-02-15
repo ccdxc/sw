@@ -27,22 +27,12 @@ tcp_rx_write_arq_stage_start:
     bcf         [!c1], flow_write_arq_process_done
     nop
 
-dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
 
-    /* Set the DMA_WRITE CMD for data */
-    add         r1, r0, k.to_s6_page
-    addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
-
     seq         c1, k.common_phv_write_tcp_app_hdr, 1
-    bcf         [c1], dma_cmd_cpu_hdr
-    nop
-
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s6_payload_len)
+    bcf         [!c1], dma_cmd_data
     add         r6, r0, k.to_s6_payload_len
 
-    b          dma_cmd_descr
-    nop
 dma_cmd_cpu_hdr:
     addi        r6, r0, NIC_CPU_HDR_SIZE_BYTES
     phvwri      p.cpu_hdr1_src_lif, 0
@@ -66,6 +56,17 @@ dma_cmd_cpu_hdr:
     add         r1, r0, k.to_s6_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr3_tcp_ws)
+dma_cmd_data:
+
+    seq         c1, k.to_s6_payload_len, r0
+    b.c1        dma_cmd_descr
+
+    /* Set the DMA_WRITE CMD for data */
+    add         r1, r0, k.to_s6_page
+    addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
+
+
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.to_s6_payload_len)
 
 dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */

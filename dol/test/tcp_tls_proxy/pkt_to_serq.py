@@ -99,6 +99,7 @@ def TestCaseVerify(tc):
     tlscbid = "TlsCb%04d" % id
     # 2. Verify pi/ci got update got updated
     tlscb = tc.pvtdata.db[tlscbid]
+    print("tlscb.serq_pi %d tlscb.serq_ci %d" % (tlscb.serq_pi, tlscb.serq_ci))
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     print("pre-sync: tlscb_cur.serq_pi %d tlscb_cur.serq_ci %d" % (tlscb_cur.serq_pi, tlscb_cur.serq_ci))
     tlscb_cur.GetObjValPd()

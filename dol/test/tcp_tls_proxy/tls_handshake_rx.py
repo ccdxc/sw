@@ -59,6 +59,8 @@ def TestCaseSetup(tc):
     tlscb_cur.debug_dol = (tcp_tls_proxy.tls_debug_dol_leave_in_arq | tcp_tls_proxy.tls_debug_dol_bypass_proxy | tcp_tls_proxy.tls_debug_dol_bypass_barco)
     tlscb_cur.other_fid = 0xffff
     tlscb_cur.is_decrypt_flow = 1
+    tlscb_cur.serq_pi = 0
+    tlscb_cur.serq_ci = 0
     tlscb_cur.SetObjValPd()
     tlscb = copy.deepcopy(tlscb_cur)
     tlscb.GetObjValPd()

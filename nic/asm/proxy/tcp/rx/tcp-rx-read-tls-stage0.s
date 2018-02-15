@@ -23,6 +23,9 @@ tcp_rx_read_tls_stage0_start:
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
     CAPRI_OPERAND_DEBUG(d.pi_0)
     CAPRI_OPERAND_DEBUG(d.ci_0)
+
+    phvwr       p.to_s2_serq_cidx, d.{ci_0}.hx
+
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_process_start, k.common_phv_qstate_addr,
                 TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)

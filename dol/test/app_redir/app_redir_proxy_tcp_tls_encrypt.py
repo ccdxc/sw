@@ -96,6 +96,8 @@ def TestCaseSetup(tc):
     tlscb.debug_dol = 0
     tlscb.other_fid = 0xffff
     tlscb.l7_proxy_type = 0
+    tlscb.serq_pi = 0
+    tlscb.serq_ci = 0
 
     if tc.module.args.key_size == 16:
         tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb)

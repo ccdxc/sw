@@ -100,8 +100,8 @@ dma_tcp_flags:
     add         r1, k.to_s6_descr, NIC_DESC_ENTRY_TCP_FLAGS_OFFSET
     CAPRI_DMA_CMD_PHV2MEM_SETUP(tcp_flags_dma_dma_cmd, r1, tcp_app_header_flags, tcp_app_header_flags)
 dma_cmd_serq_slot:
-    CAPRI_OPERAND_DEBUG(d.serq_pidx)
-    sll         r5, d.serq_pidx, NIC_SERQ_ENTRY_SIZE_SHIFT
+    CAPRI_OPERAND_DEBUG(k.to_s6_serq_pidx)
+    sll         r5, k.to_s6_serq_pidx, NIC_SERQ_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for SERQ slot */
     add         r1, r5, d.serq_base
     // increment serq pi as a part of ringing dorrbell
@@ -180,10 +180,10 @@ tcp_serq_produce:
     b           flow_write_serq_process_done
     nop
 ring_doorbell:
-    tblmincri   d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    add         r1, k.to_s6_serq_pidx, 1
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tls_doorbell_dma_cmd, LIF_TLS, 0,
                                  k.common_phv_fid, TLS_SCHED_RING_SERQ,
-                                 d.serq_pidx, db_data_pid, db_data_index)
+                                 r1, db_data_pid, db_data_index)
     sne         c1, k.common_phv_l7_proxy_en, r0
     bcf         [c1], flow_write_serq_process_done
     nop

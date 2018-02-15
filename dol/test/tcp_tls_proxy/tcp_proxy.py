@@ -66,6 +66,7 @@ def SetupProxyArgs(tc):
     timestamp = 0
     pkt_alloc = 0
     pkt_free = 0
+    serq_full = False
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -120,6 +121,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'pkt_free'):
         pkt_free = tc.module.args.pkt_free
         tc.module.logger.info("- pkt_free %s" % tc.module.args.pkt_free)
+    if hasattr(tc.module.args, 'serq_full'):
+        serq_full = tc.module.args.serq_full
+        tc.module.logger.info("- serq_full %s" % tc.module.args.serq_full)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -180,6 +184,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.timestamp = timestamp
     tc.pvtdata.pkt_alloc = pkt_alloc
     tc.pvtdata.pkt_free = pkt_free
+    tc.pvtdata.serq_full = serq_full
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -272,6 +277,8 @@ def init_tcb_inorder(tc, tcb):
         print("header_template = " + str(tcb.header_template))
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
+    tcb.serq_pi = 0
+    tcb.serq_ci = 0
 
 def init_tcb_inorder2(tc, tcb):
     tcb.rcv_nxt = 0x2ABABABA
@@ -338,3 +345,5 @@ def init_tcb_inorder2(tc, tcb):
         print("header_template = " + str(tcb.header_template))
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
+    tcb.serq_pi = 0
+    tcb.serq_ci = 0
