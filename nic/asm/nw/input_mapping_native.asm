@@ -11,7 +11,7 @@ struct phv_                   p;
 input_mapping_miss:
   K_DBG_WR(0x10)
   phvwr.e     p.control_metadata_drop_reason[DROP_INPUT_MAPPING], 1
-  phvwr       p.capri_intrinsic_drop, 1
+  phvwr.f     p.capri_intrinsic_drop, 1
 
 .align
 nop:
@@ -44,15 +44,16 @@ native_ipv4_packet_common:
                     p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
-  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
-                    p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
                     p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
+                    p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
+  phvwr.f       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
 
 native_ipv4_esp_packet:
+  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwr.e       p.flow_lkp_metadata_lkp_proto, IP_PROTO_IPSEC_ESP
   nop
 
@@ -75,16 +76,16 @@ native_ipv6_packet_common:
   phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
                     p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
 
-  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   phvwr         p.flow_lkp_metadata_lkp_src, k.{ipv6_srcAddr_sbit0_ebit31, \
                                                 ipv6_srcAddr_sbit32_ebit127}
   phvwr         p.flow_lkp_metadata_lkp_dst, k.{ipv6_dstAddr_sbit0_ebit31, \
                                                ipv6_dstAddr_sbit32_ebit127}
 
-  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp, \
+  phvwrpair     p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
-  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
+  phvwrpair.e   p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
                     p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
+  phvwr.f       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
@@ -106,7 +107,7 @@ native_non_ip_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[47:0], k.ethernet_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[47:0], k.ethernet_srcAddr
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
-  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+  phvwr.f       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
 
 /*****************************************************************************/
 /* error function                                                            */

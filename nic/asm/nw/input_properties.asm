@@ -27,7 +27,7 @@ input_properties:
                     p.control_metadata_allow_flood, d.input_properties_d.allow_flood
   phvwr         p.flow_miss_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
   phvwr.e       p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
-  phvwr         p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx
+  phvwr.f       p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx
 
 /*****************************************************************************/
 /* error function                                                            */

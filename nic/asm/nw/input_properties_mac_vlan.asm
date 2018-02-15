@@ -66,11 +66,11 @@ input_properties_mac_vlan:
                     d.input_properties_mac_vlan_d.allow_flood
   phvwr.e       p.flow_lkp_metadata_lkp_dir, \
                     d.input_properties_mac_vlan_d.dir
-  phvwr         p.l4_metadata_profile_idx, d.input_properties_mac_vlan_d.l4_profile_idx
+  phvwr.f       p.l4_metadata_profile_idx, d.input_properties_mac_vlan_d.l4_profile_idx
 
 dejavu_check_failed:
   phvwr.e       p.control_metadata_drop_reason[DROP_INPUT_MAPPING_DEJAVU], 1
-  phvwr         p.capri_intrinsic_drop, 1
+  phvwr.f         p.capri_intrinsic_drop, 1
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -30,7 +30,6 @@ tunneled_ipv4_packet_common:
   sub           r7, k.inner_ipv4_totalLen, r6, 2
   phvwr         p.l4_metadata_tcp_data_len, r7
 
-  phvwr         p.tunnel_metadata_tunnel_terminate, 1
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr
@@ -39,10 +38,11 @@ tunneled_ipv4_packet_common:
   phvwrpair     p.l3_metadata_ip_frag, k.l3_metadata_inner_ip_frag, \
                      p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
 
-  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol, \
+  phvwrpair     p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
-  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr, \
+  phvwrpair.e   p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr, \
                     p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
+  phvwr.f       p.tunnel_metadata_tunnel_terminate, 1
 
 .align
 tunneled_ipv6_packet:
@@ -59,14 +59,14 @@ tunneled_ipv6_packet_common:
   sub           r6, k.inner_ipv6_payloadLen, k.tcp_dataOffset, 2
   phvwr         p.l4_metadata_tcp_data_len, r6
 
-  phvwr         p.tunnel_metadata_tunnel_terminate, 1
   phvwr         p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
 
-  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.l3_metadata_inner_ipv6_ulp, \
+  phvwrpair     p.flow_lkp_metadata_lkp_proto, k.l3_metadata_inner_ipv6_ulp, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
-  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr, \
+  phvwrpair.e   p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr, \
                     p.flow_lkp_metadata_ip_ttl, k.inner_ipv6_hopLimit
+  phvwr.f       p.tunnel_metadata_tunnel_terminate, 1
 
 .align
 tunneled_non_ip_packet:
@@ -86,7 +86,7 @@ tunneled_non_ip_packet_common:
                     p.flow_lkp_metadata_lkp_src[47:0], k.inner_ethernet_srcAddr
   phvwr         p.flow_lkp_metadata_lkp_dport, k.inner_ethernet_etherType
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
-  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
+  phvwr.f       p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
