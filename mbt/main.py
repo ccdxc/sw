@@ -103,23 +103,27 @@ test_specs = parser.ParseDirectory("../mbt/mbt_test/specs", "*.spec")
 for test_spec in test_specs:
     if not test_spec.Enabled:
         continue
-    for _ in range(test_spec.LoopCount):
-        for step in test_spec.Steps:
-            print("Executing Step : ", step.step.op)
-            op_name = op_map[step.step.op]
-            for cfg_spec in config_mgr.GetOrderedConfigSpecs(rev=step.step.op=="Delete"):
-                if not cfg_spec._spec.enabled:
-                    continue
-                print("Executing Step  %s for Config %s and object %s" % (step.step.op, cfg_spec, cfg_spec._service_object.name))
-                method = getattr(cfg_spec, op_name)
-                try:
-                    ret = method(test_spec.MaxObjects, step.step.status)
-                except Exception as ex:
-                    print("Received Exception", ex)
-                    raise
-                if not ret:
-                    print("Step %s failed for Config %s" % (step.step.op, cfg_spec))
-                    sys.exit(1)
+    for step in test_spec.Steps:
+        print("Executing Step : ", step.step.op)
+        op_name = op_map[step.step.op]
+        for cfg_spec in config_mgr.GetOrderedConfigSpecs(rev=step.step.op=="Delete"):
+            if not cfg_spec._spec.enabled:
+                continue
+            print("Executing Step  %s for Config %s and object %s" % (step.step.op, cfg_spec, cfg_spec._service_object.name))
+            method = getattr(cfg_spec, op_name)
+            try:
+                ret = method(test_spec.MaxObjects, step.step.status)
+            except Exception as ex:
+                print("Received Exception", ex)
+                raise
+            if not ret:
+                print("Step %s failed for Config %s" % (step.step.op, cfg_spec))
+                sys.exit(1)
+
+    # The second part of the test of to loop through all the config objects created
+    # by performing Create/Delete/Get in a loop, as specified by the loop count in the
+    # test.
+    config_mgr.ConfigObjectLoopTest(test_spec.LoopCount)
 
 for cfg_spec in config_mgr.GetOrderedConfigSpecs():
     print("Object -> " + str(cfg_spec))

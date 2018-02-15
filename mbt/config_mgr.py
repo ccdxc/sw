@@ -312,6 +312,8 @@ class ConfigObjectHelper(object):
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
                 continue
+            if config_object._status == ConfigObject._CREATED:
+                continue
             ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, redo=True)
             if ret_status != status:
                 logger.critical("Status code does not match expected : %s," 
@@ -338,15 +340,15 @@ class ConfigObjectHelper(object):
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
                 return
-            if config_object._status == ConfigObject._CREATED:
-                exp_data = utils.convert_object_to_dict(config_object.data.exp_data)
-                actual_data = utils.convert_object_to_dict(config_object.data.actual_data)
-                result = utils.ObjectCompare(utils.DictToObj(actual_data),
-                                            utils.DictToObj(exp_data))
-                if result.not_empty():
-                    print(json.dumps(utils.convert_object_to_dict(result),indent=4))
-                    if ConfigObjectMeta.GET not in self._ignore_ops:
-                        return False 
+            # if config_object._status == ConfigObject._CREATED:
+            #     exp_data = utils.convert_object_to_dict(config_object.data.exp_data)
+            #     actual_data = utils.convert_object_to_dict(config_object.data.actual_data)
+            #     result = utils.ObjectCompare(utils.DictToObj(actual_data),
+            #                                 utils.DictToObj(exp_data))
+            #     if result.not_empty():
+            #         print(json.dumps(utils.convert_object_to_dict(result),indent=4))
+            #         if ConfigObjectMeta.GET not in self._ignore_ops:
+            #             return False 
             self.num_read_ops += 1
         return True
     
@@ -359,6 +361,7 @@ class ConfigObjectHelper(object):
                             "actual : %s" % (status, ret_status) )
                 if ConfigObjectMeta.UPDATE not in self._ignore_ops:
                     return False 
+            config_object._status = ConfigObject._CREATED
             self.num_update_ops += 1
         return True
     
@@ -366,6 +369,8 @@ class ConfigObjectHelper(object):
         print("Deleting configuration for %s, count : %d" % (self, count))
         for config_object in self._config_objects:
             if config_object.is_dol_config_modified:
+                continue
+            if config_object._status == ConfigObject._DELETED:
                 continue
             ret_status, _ = config_object.process(ConfigObjectMeta.DELETE)
             if ret_status and ret_status != status:
@@ -456,3 +461,18 @@ def CreateReferenceObject(ref_object_spec):
         constraints = GrpcReqRspMsg.extract_constraints(ref_object_spec.constraints)[0]
     ref_object = object_helper.CreateConfigObject(ApiStatus.API_STATUS_OK, {}, constraints)
     reference_object_holder.reference_objects.append((ref_object_spec, ref_object))
+
+def ConfigObjectLoopTest(loop_count):
+    for _, object_helper in cfg_meta_mapper.key_type_to_config.items():
+        for i in range(1,loop_count):
+            # Repeat Create/Delete/Get in a loop
+            # First is Create.
+            ret = object_helper.ReCreateConfigs(len(object_helper._config_objects), 'API_STATUS_OK')
+            if not ret:
+                print("Step Looping Create failed for Config %s" % (object_helper.service_object.name))
+                sys.exit(1)
+            # Next Delete
+            object_helper.DeleteConfigs(len(object_helper._config_objects), 'API_STATUS_OK')
+            if not ret:
+                print("Step Looping Delete failed for Config %s" % (object_helper.service_object.name))
+                sys.exit(1)
