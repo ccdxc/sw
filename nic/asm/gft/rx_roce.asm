@@ -16,14 +16,6 @@ nop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 rx_roce:
-    phvwrpair       p.p4_to_p4plus_roce_valid, TRUE, \
-                        p.capri_rxdma_intrinsic_valid, TRUE
-    phvwrpair       p.p4_to_p4plus_roce_rdma_hdr_len, d.u.rx_roce_d.len[5:0], \
-                        p.p4_to_p4plus_roce_raw_flags, d.u.rx_roce_d.raw_flags
-    phvwrpair       p.capri_rxdma_intrinsic_qid, k.roce_bth_destQP, \
-                        p.capri_rxdma_intrinsic_qtype, d.u.rx_roce_d.qtype
-    phvwr           p.capri_intrinsic_payload, FALSE
-
     seq             c1, d.u.rx_roce_d.tm_oq_overwrite, TRUE
     phvwr.c1        p.capri_intrinsic_tm_oq, d.u.rx_roce_d.tm_oq
 
@@ -33,7 +25,8 @@ rx_roce:
 
     smeqb           c1, k.roce_bth_opCode, 0xE0, 0x60
     add.c1          r1, r1, 14
-    phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, r1
+    phvwrpair       p.capri_rxdma_intrinsic_rx_splitter_offset, r1, \
+                        p.p4_to_p4plus_roce_ecn, k.roce_metadata_ecn
 
     // set payload len
     seq             c2, k.icrc_valid, TRUE
@@ -55,6 +48,14 @@ rx_roce:
                         k.udp_opt_mss_valid
 
 rx_roce_udp_options_done:
+    phvwrpair       p.p4_to_p4plus_roce_valid, TRUE, \
+                        p.capri_rxdma_intrinsic_valid, TRUE
+    phvwrpair       p.p4_to_p4plus_roce_rdma_hdr_len, d.u.rx_roce_d.len[5:0], \
+                        p.p4_to_p4plus_roce_raw_flags, d.u.rx_roce_d.raw_flags
+    phvwrpair       p.capri_rxdma_intrinsic_qid, k.roce_bth_destQP, \
+                        p.capri_rxdma_intrinsic_qtype, d.u.rx_roce_d.qtype
+    phvwr           p.capri_intrinsic_payload, FALSE
+
     // remove all headers
     .assert(offsetof(p, udp_2_valid) - offsetof(p, ethernet_1_valid) == 35)
     phvwrpair       p.ipv6_1_valid, 0, p.{udp_2_valid...ethernet_1_valid}, 0

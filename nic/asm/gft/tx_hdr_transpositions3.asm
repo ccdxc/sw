@@ -46,8 +46,9 @@ tx_l4_hdr_transpositions_layer0:
 
     // udp_01
     phvwr.c4        p.udp_01_valid, TRUE
-    phvwr.c4        p.udp_01_srcPort, d.tx_l4_hdr_transpositions_d.l4_sport_01
-    phvwr.c4        p.udp_01_dstPort, d.tx_l4_hdr_transpositions_d.l4_dport_01
+    phvwr.c4        p.{udp_01_srcPort,udp_01_dstPort}, \
+                        d.{tx_l4_hdr_transpositions_d.l4_sport_01,\
+                           tx_l4_hdr_transpositions_d.l4_dport_01}
     add.e           r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\
                            capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
                         d.tx_l4_hdr_transpositions_d.encap_len_01

@@ -26,7 +26,7 @@ rx_vport:
     sne.!c1     c1, k.capri_intrinsic_csum_err[3:0], 0
     sne.!c1     c1, k.capri_p4_intrinsic_crc_err, 0
     nop.e
-    phvwr.c1    p.capri_intrinsic_drop, TRUE
+    phvwr.c1.f  p.capri_intrinsic_drop, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -59,9 +59,9 @@ rx_checksum_3:
     sub             r1, k.ipv4_3_totalLen, k.ipv4_3_ihl, 2
     add.!c1         r1, r0, k.ipv6_3_payloadLen
     phvwr           p.capri_deparser_len_rx_l4_payload_len, r1
-    phvwr.e         p.tcp_3_csum, TRUE
-    phvwrpair       p.ipv4_3_tcp_csum, k.ipv4_3_valid, \
+    phvwrpair.e     p.ipv4_3_tcp_csum, k.ipv4_3_valid, \
                         p.ipv6_3_tcp_csum, k.ipv6_3_valid
+    phvwr.f         p.tcp_3_csum, TRUE
 
 rx_checksum_3_non_tcp:
     seq             c1, k.udp_3_valid, TRUE
@@ -69,7 +69,7 @@ rx_checksum_3_non_tcp:
     phvwrpair       p.ipv4_3_udp_csum, k.ipv4_3_valid, \
                         p.ipv6_3_udp_csum, k.ipv6_3_valid
     phvwr.e         p.udp_3_csum, TRUE
-    phvwr           p.capri_deparser_len_rx_l4_payload_len, \
+    phvwr.f         p.capri_deparser_len_rx_l4_payload_len, \
                         k.{udp_3_len_sbit0_ebit7,udp_3_len_sbit8_ebit15}
 
 

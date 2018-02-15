@@ -54,17 +54,16 @@ tx_fixup_upd_tcp_seq:
     phvwrpair.c1    p.ipv4_1_icrc, k.ipv4_1_valid, p.ipv6_1_icrc, k.ipv6_1_valid
     sub             r1, r1, k.p4plus_to_p4_udp_opt_bytes
     bcf             [c1], tx_fixup_done
-    phvwr.c1        p.capri_deparser_len_icrc_payload_len, r1
+    phvwr.c1.e      p.capri_deparser_len_icrc_payload_len, r1
 
     // set l4 checksum flags
     phvwr           p.capri_deparser_len_tx_l4_payload_len, r3
     phvwrpair       p.udp_1_csum, k.udp_1_valid, p.ipv4_1_udp_csum, k.udp_1_valid
-    phvwrpair       p.tcp_1_csum, k.tcp_1_valid, p.ipv4_1_tcp_csum, k.tcp_1_valid
+    phvwrpair.e     p.tcp_1_csum, k.tcp_1_valid, p.ipv4_1_tcp_csum, k.tcp_1_valid
 
 tx_fixup_done:
     // remove the headers
-    phvwr.e         p.capri_txdma_intrinsic_valid, FALSE
-    phvwr.f         p.p4plus_to_p4_valid, FALSE
+    phvwr.f         p.{p4plus_to_p4_valid,capri_txdma_intrinsic_valid}, 0
 
 /*****************************************************************************/
 /* error function                                                            */
