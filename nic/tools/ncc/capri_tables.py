@@ -5614,6 +5614,7 @@ class capri_table_mapper:
             table_size = table['width'] * table['depth']
             if end_pos < current_pos + table_size:
                 self.logger.critical("map_hbm_tables(): No space in %s region for table %s" % (region, table['name']))
+                assert 0
             else:
                 table['layout'] = OrderedDict()
                 table['layout']['top_left'] = {'block' : 0, 'x' : current_pos, 'y' : 0}
@@ -5663,6 +5664,7 @@ class capri_table_mapper:
                             if not table['layout']:
                                 self.logger.critical("Could not allocate memory for %s %s table \'%s\'." % \
                                                      (region, mem_type, table['name']))
+                                assert 0
 
                 capri_dump_table_memory(self.be, self.memory, self.tables, mem_type, region)
 
