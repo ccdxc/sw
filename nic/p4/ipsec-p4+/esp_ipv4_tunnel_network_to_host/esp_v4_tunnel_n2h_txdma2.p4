@@ -101,7 +101,7 @@ header_type ipsec_to_stage4_t {
 
 
 @pragma pa_header_union ingress app_header
-metadata p4plus_to_p4_ipsec_header_t p4plus2p4_hdr;
+metadata p4plus_to_p4_header_t p4plus2p4_hdr;
 
 //unionize
 @pragma pa_header_union ingress common_global 

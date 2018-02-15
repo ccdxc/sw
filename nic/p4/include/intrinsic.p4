@@ -265,7 +265,10 @@ header_type p4_to_p4plus_cpu_pkt_t {
 header_type p4plus_to_p4_header_t {
     fields {
         p4plus_app_id       : 4;
-        pad                 : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
         flags               : 8;
         udp_opt_bytes       : 8;  // exclude these bytes from udp payload_len
         rsvd                : 24;
