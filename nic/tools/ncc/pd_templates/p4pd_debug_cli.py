@@ -15,7 +15,7 @@ grpc_server = 'localhost:50054'
 
 import json
 import glob
-from   iris import *
+from   ${pddict['cli-name']} import *
 import ${pddict['cli-name']}
 //::    tabledict = {}
 //::    tableid = 1

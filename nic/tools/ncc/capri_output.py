@@ -3886,10 +3886,10 @@ def capri_p4pd_create_swig_makefile_click(be):
     content_str += 'endif\n'
     content_str += 'SHARED_LIBS    += -lhalproto\n'
     content_str += '\n'
-    content_str += 'default: iris\n'
+    content_str += 'default: ' + name + '\n'
     content_str += '\n'
     content_str += 'swig:\n'
-    content_str += '\tswig -c++ -python -I$(NIC_DIR)/gen/iris/include -I$(NIC_DIR)/hal/pd -o iris_wrap.cc iris.i\n'
+    content_str += '\tswig -c++ -python -I$(NIC_DIR)/gen/'+ name + '/include -I$(NIC_DIR)/hal/pd -o ' + name + '_wrap.cc ' +  name + '.i\n'
     content_str += '\n'
     content_str += 'iris: swig\n'
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o _iris.so iris_wrap.cc $(NIC_DIR)/gen/iris/src/p4pd_debug.cc $(ARCHIVES) $(SHARED_LIBS)\n'
@@ -3966,12 +3966,6 @@ def capri_p4pd_create_debug_cli_sh(be):
     content_str += 'SW_DIR=../../../..\n'
     content_str += 'NIC_DIR=$SW_DIR/nic\n'
     content_str += '\n'
-    content_str += '# generate swig files\n'
-    content_str += 'swig -c++ -python -I$NIC_DIR/gen/iris/include  -I$NIC_DIR/hal/pd  -o iris_wrap.cc iris.i\n'
-    content_str += '\n'
-    content_str += '# compile the shared lib\n'
-    content_str += 'g++ -shared -fPIC -o _iris.so iris_wrap.cc $NIC_DIR/gen/iris/src/p4pd_debug.cc -Wl,--allow-multiple-definition -Wl,--whole-archive $NIC_DIR/third-party/grpc/*.a /usr/local/lib/libgrpc.a -Wl,--no-whole-archive  -I$SW_DIR  -I/usr/include/python2.7 -L$NIC_DIR/obj/  -lhalproto -lprotobuf -lgrpc++\n'
-    content_str += '\n'
     content_str += '# dependent modules for python\n'
     content_str += 'export PYTHONPATH=$PYTHONPATH:$NIC_DIR/gen/proto/hal\n'
     content_str += '\n'
@@ -4019,7 +4013,7 @@ def capri_p4pd_create_swig_custom_hdr(be):
     content_str += '                   std::string regname,\n';
     content_str += '                   std::string filename);\n';
 
-    out_file = out_dir + 'iris_custom.h'
+    out_file = out_dir + name + '_custom.h'
     with open(out_file, "w") as of:
         of.write(content_str)
         of.close()
@@ -4088,8 +4082,8 @@ def capri_p4pd_create_swig_interface(be):
 %include "std_string.i"
 %{
     #include <thread>
-    #include "nic/gen/iris/include/p4pd_swig.h"
-    #include "iris_custom.h"
+    #include "nic/gen/"""+ name + """/include/p4pd_swig.h"
+    #include""" +' "' + name + """_custom.h"
     extern int capri_init(void);
     char p4pd_tbl_names[P4TBL_ID_TBLMAX][P4TBL_NAME_MAX_LEN];
     uint16_t p4pd_tbl_swkey_size[P4TBL_ID_TBLMAX];
@@ -4124,7 +4118,7 @@ typedef unsigned long long uint64_t;
 %free(uint32_t);
 %free(uint64_t);
 %include "p4pd_swig.h"
-%include "iris_custom.h"
+%include"""+' "' +  name + """_custom.h"
 """
     out_file = out_dir + '%s.i' % (name)
     with open(out_file, "w") as of:

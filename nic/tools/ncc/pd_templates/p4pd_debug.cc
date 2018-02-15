@@ -15,7 +15,7 @@
 //::    #endif
 //:: else:
 //::    p4prog = ''
-//::    hdrdir = 'iris'
+//::    hdrdir = pddict['p4program']
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //::	start_table_base = 1
@@ -29,7 +29,7 @@
 #include "nic/gen/proto/hal/debug.pb.h"
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
 #include <grpc++/grpc++.h>
-#include "nic/gen/iris/include/p4pd.h"
+#include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
 
 using grpc::Channel;
 using grpc::ClientContext;

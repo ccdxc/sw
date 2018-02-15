@@ -13,7 +13,7 @@
 
 import click
 from click_repl import register_repl
-import iris_debug_cli as backend
+import ${pddict['cli-name']}_debug_cli as backend
 //::    tabledict = {}
 //::    tableid = 1
 //::    for table in pddict['tables']:

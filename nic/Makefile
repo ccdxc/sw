@@ -63,6 +63,9 @@ hal-rtl: p4 platform capsim-master sdk
 ################## GFT ##########################
 #################################################
 
+swig-cli-gft: swig-cli-clean
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli gft
+	
 gft: platform capsim-master sdk
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
@@ -73,6 +76,7 @@ gft: platform capsim-master sdk
 	$(MAKE) pd_gft
 	$(MAKE) pd_stub
 	$(MAKE) gtests_gft
+	$(MAKE) swig-cli-gft
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:gft_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) utils/host_mem:all
 	$(MAKE) post-make
@@ -93,10 +97,10 @@ run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 #################################################
 
 swig-cli-clean:
-	make -C gen/iris/cli -f Makefile.click clean
+	make -C debug_cli clean
 
 swig-cli: swig-cli-clean
-	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C gen/iris/cli -f Makefile.click
+	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
 
 package-clean:
 	cd ../ && rm -rf fake_root_target && rm -f hal.tgz && rm -f hal.tar
