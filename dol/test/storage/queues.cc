@@ -146,8 +146,7 @@ int nvme_e2e_ssd_sq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_s
   // TODO: Fix to make this consistent or assert on the values
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
-  queue->vaddr = params.subq_va;
-  queue->paddr = params.subq_pa;
+  queue->mem = params.subq;
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
@@ -159,8 +158,7 @@ int nvme_e2e_ssd_cq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_s
   // TODO: Fix to make this consistent or assert on the values
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
-  queue->vaddr = params.compq_va;
-  queue->paddr = params.compq_pa;
+  queue->mem = params.compq;
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
@@ -194,7 +192,7 @@ dp_mem_t *queue_consume_entry(queues_t *queue, uint16_t *index) {
   queue->index = ((queue->index + 1)  % queue->num_entries);
   *index = queue->index;
 
-  return queue->mem->entry_idx_set(curr_index);
+  return queue->mem->line_set(curr_index);
 }
 
 
@@ -240,7 +238,7 @@ int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin,
   // Setup the queue state in Capri:
   if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, qid, pgm_bin, 
                                total_rings, host_rings, 
-                               kPvmNumSeqEntries, q_ptr->paddr,
+                               kPvmNumSeqEntries, q_ptr->mem->pa(),
                                kDefaultEntrySize, false, 0, 0,
                                0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
     printf("Failed to setup PVM Seq SQ %d state \n", qid);
@@ -323,7 +321,7 @@ int queues_setup() {
     // Setup the queue state in Capri
     if (qstate_if::setup_q_state(nvme_lif, SQ_TYPE, i, (char *) kNvmeSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kNvmeNumEntries, nvme_sqs[i].paddr,
+                                 kNvmeNumEntries, nvme_sqs[i].mem->pa(),
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE, 
                                  (i%2), 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
       printf("Failed to setup NVME SQ %d state \n", i);
@@ -349,7 +347,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(nvme_lif, CQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultHostRings, 
-                                     kNvmeNumEntries, nvme_cqs[i].paddr,
+                                     kNvmeNumEntries, nvme_cqs[i].mem->pa(),
                                      kNvmeCQEntrySize, pndx_data_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup NVME CQ %d state \n", i);
@@ -375,7 +373,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(pvm_lif, SQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultHostRings, 
-                                     kPvmNumEntries, pvm_sqs[i].paddr,
+                                     kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                      kPvmNvmeSQEntrySize, pndx_data_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup PVM NVME SQ %d state \n", i);
@@ -401,7 +399,7 @@ int queues_setup() {
     // Setup the queue state in Capri:
     if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, (char *) kR2nSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_sqs[i].paddr,
+                                 kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
                                  nvme_be_q, 0, 0, storage_hbm_ssd_bm_addr, 
                                  kPvmNumNvmeBeSQs, kDefaultEntrySize, 0) < 0) {
@@ -427,7 +425,7 @@ int queues_setup() {
     // Setup the queue state in Capri: 
     if (qstate_if::setup_pri_q_state(pvm_lif, SQ_TYPE, i, (char *) kNvmeBeSqHandler, 
                                      kNvmeBeTotalRings, kDefaultNoHostRings, 
-                                     kPvmNumEntries, pvm_sqs[i].paddr,
+                                     kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                      kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
                                      ssd_q, 0, 0, storage_hbm_ssd_bm_addr, 
                                      (j == kE2eSsdhandle)) < 0) {
@@ -484,7 +482,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(pvm_lif, SQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultNoHostRings, 
-                                     kPvmNumEntries, pvm_sqs[i].paddr,
+                                     kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                      kDefaultEntrySize, pi_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup PVM SSD SQ %d state \n", i);
@@ -540,7 +538,7 @@ int queues_setup() {
     // Setup the queue state in Capri:
     if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, (char *) kR2nSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_sqs[i].paddr,
+                                 kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
                                  nvme_be_q, 0, 0, storage_hbm_ssd_bm_addr, 
                                  kPvmNumNvmeBeSQs, kDefaultEntrySize, 0) < 0) {
@@ -603,7 +601,7 @@ int queues_setup() {
     // 2. no program address for these as these are in host
     if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kPvmCqHandler,
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_cqs[i].paddr,
+                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
                                  kDefaultEntrySize, false, 0, 0,
                                  0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
       printf("Failed to setup PVM NVME CQ %d state \n", i);
@@ -628,7 +626,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(pvm_lif, CQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultNoHostRings, 
-                                     kPvmNumEntries, pvm_cqs[i].paddr,
+                                     kPvmNumEntries, pvm_cqs[i].mem->pa(),
                                      kDefaultEntrySize, pndx_data_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup PVM NVME SQ %d state \n", i);
@@ -663,7 +661,7 @@ int queues_setup() {
     // Setup the queue state in Capri: 
     if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kNvmeBeCqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_cqs[i].paddr,
+                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
                                  kNvmeCQEntrySize, true, pvm_lif, CQ_TYPE,
                                  get_pvm_r2n_cq(0), 0, 0, storage_hbm_ssd_bm_addr, 0, 0,
                                  ssd_cndx_addr[j]) < 0) {
@@ -694,7 +692,7 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     // Setup the queue state in Capri:
     if (qstate_if::setup_roce_sq_state(pvm_lif, SQ_TYPE, i, (char *) kPvmRoceSqHandler, 
                                        kDefaultTotalRings, kDefaultHostRings, 
-                                       num_entries, pvm_sqs[i].paddr,
+                                       num_entries, pvm_sqs[i].mem->pa(),
                                        entry_size, false, 0, 0, 0, 
                                        roce_lif, roce_qtype, roce_qid) < 0) {
       printf("Failed to setup PVM ROCE SQ %d state \n", i);
@@ -721,7 +719,7 @@ pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     // Setup the queue state in Capri:
     if (qstate_if::setup_roce_cq_state(pvm_lif, CQ_TYPE, i, (char *) kPvmRoceCqHandler, 
                                        kDefaultTotalRings, kDefaultHostRings, 
-                                       num_entries, pvm_cqs[i].paddr, entry_size, 
+                                       num_entries, pvm_cqs[i].mem->pa(), entry_size, 
                                        xlate_addr, roce_lif, roce_qtype, roce_qid) < 0) {
       printf("Failed to setup PVM ROCE CQ %d state \n", i);
       return -1;

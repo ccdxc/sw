@@ -23,10 +23,8 @@ void NvmeSsdCore::GetWorkingParams(SsdWorkingParams *params) {
   params->num_blocks = kCapacity/4096;
   params->subq_nentries = kNumSubqEntries;
   params->compq_nentries = kNumCompqEntries;
-  params->subq_va = subq_;
-  params->compq_va = compq_;
-  params->subq_pa = DMAMemV2P(subq_);
-  params->compq_pa = DMAMemV2P(compq_);
+  params->subq = subq_;
+  params->compq = compq_;
   params->subq_pi_va = &ctrl_->subq_pi;
   params->subq_pi_pa = DMAMemV2P(&ctrl_->subq_pi);
   params->compq_ci_va = &ctrl_->compq_ci;
@@ -35,12 +33,10 @@ void NvmeSsdCore::GetWorkingParams(SsdWorkingParams *params) {
 
 void NvmeSsdCore::Ctor() {
   data_.reset(new uint8_t[kCapacity]);
-  subq_ = (NvmeCmd *)DMAMemAlloc(kNumSubqEntries * sizeof(NvmeCmd));
-  assert(subq_ != nullptr);
-  bzero(subq_, kNumSubqEntries * sizeof(NvmeCmd));
-  compq_ = (NvmeStatus *)DMAMemAlloc(kNumCompqEntries * sizeof(NvmeStatus));
-  assert(compq_ != nullptr);
-  bzero(compq_, kNumCompqEntries * sizeof(NvmeStatus));
+  subq_ = new dp_mem_t(kNumSubqEntries, sizeof(NvmeCmd));
+  subq_->clear_thru();
+  compq_ = new dp_mem_t(kNumCompqEntries, sizeof(NvmeStatus));
+  compq_->clear_thru();
   phase_ = 1;
   ctrl_ = (ctrl_data *)DMAMemAlloc(sizeof(*ctrl_));
   assert(ctrl_ != nullptr);
@@ -52,8 +48,8 @@ void NvmeSsdCore::Ctor() {
 void NvmeSsdCore::Dtor() {
   terminate_poll_ = true;
   tid_.join();
-  DMAMemFree(subq_);
-  DMAMemFree(compq_);
+  delete subq_;
+  delete compq_;
   DMAMemFree(ctrl_);
 }
 
@@ -147,7 +143,8 @@ bool NvmeSsdCore::HandleIO() {
     std::lock_guard<std::mutex> l(req_lock_);
     if (ctrl_->subq_pi == ctrl_->subq_ci)
       return false;
-    memcpy(&cmd, &subq_[ctrl_->subq_ci], sizeof(cmd));
+    subq_->line_set(ctrl_->subq_ci);
+    memcpy(&cmd, subq_->read_thru(), sizeof(cmd));
     ctrl_->subq_ci++;
     if (ctrl_->subq_ci == kNumSubqEntries)
       ctrl_->subq_ci = 0;
@@ -182,7 +179,9 @@ void NvmeSsdCore::SendResp(NvmeCmd *cmd, uint32_t code) {
     } else {
       NVME_STATUS_SET_PHASE(st, ph);
       st.dw2.sq_head = ctrl_->subq_ci;
-      memcpy(&compq_[n], &st, sizeof(st));
+      compq_->line_set(n);
+      memcpy(compq_->read(), &st, sizeof(st));
+      compq_->write_thru();
     }
   }
   if (err) {

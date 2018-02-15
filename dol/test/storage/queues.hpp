@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "dol/test/storage/dp_mem.hpp"
 
+using namespace dp_mem;
+
 #define SQ_TYPE		0
 #define CQ_TYPE		1
 #define HQ_TYPE		2

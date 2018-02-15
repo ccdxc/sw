@@ -8,20 +8,22 @@ namespace dp_mem {
 /*
  * DataPath memory
  */
-dp_mem_t::dp_mem_t(uint32_t num_entries,
-                   uint32_t entry_size,
+dp_mem_t::dp_mem_t(uint32_t num_lines,
+                   uint32_t line_size,
                    bool page_aligned) :
-    num_entries(num_entries),
-    entry_size(entry_size),
-    total_size(num_entries * entry_size),
-    curr_entry_idx(0),
-    is_member(false)
+    cache(nullptr),
+    hbm_addr(0),
+    num_lines(num_lines),
+    line_size(line_size),
+    total_size(num_lines * line_size),
+    curr_line(0),
+    is_fragment(false)
 {
     int         alloc_rc;
 
     /*
-     * total_size may equal 0 which would indicate a member creation,
-     * see member_find().
+     * total_size may equal 0 which would indicate a fragment creation,
+     * see fragment_find().
      */
     if (total_size) {
         alloc_rc = page_aligned ? 
@@ -47,56 +49,56 @@ dp_mem_t::dp_mem_t(uint32_t num_entries,
 
 dp_mem_t::~dp_mem_t()
 {
-	std::unordered_map<uint64_t, dp_mem_t*>::iterator member_it;
+	std::unordered_map<uint64_t, dp_mem_t*>::iterator fragment_it;
 
     /*
-     * Iterate and delete members
+     * Iterate and delete fragments
      */
-    member_it = member_map.begin();
-	while (member_it != member_map.end()) {
-        delete member_it->second;
-        member_it++;
+    fragment_it = fragments_map.begin();
+	while (fragment_it != fragments_map.end()) {
+        delete fragment_it->second;
+        fragment_it++;
     }
-    member_map.clear();
+    fragments_map.clear();
     
     /*
      * There are no methods to free HBM memory but at least we can free
      * allocated local memory
      */
-    if (!is_member) {
+    if (!is_fragment && cache) {
         delete[] cache;
     }
 }
 
 
 /*
- * Set current location index
+ * Set current line index
  */
 dp_mem_t *
-dp_mem_t::entry_set(uint32_t entry_idx)
+dp_mem_t::line_set(uint32_t line)
 {
-    if (entry_idx >= num_entries) {
+    if (line >= num_lines) {
         return nullptr;
     }
 
-    curr_entry_idx = entry_idx;
+    curr_line = line;
     return this;
 }
 
 
 /*
- * Clear memory at current cache location, but not its corresponding
+ * Clear memory at current cache line, but not its corresponding
  * datapath memory (see clear_thru()).
  */
 void
 dp_mem_t::clear(void)
 {
-    memset(cache_entry_addr(), 0, entry_size);
+    memset(cache_line_addr(), 0, line_size);
 }
 
 
 /*
- * Clear memory at current cache location and its corresponding
+ * Clear memory at current cache line and its corresponding
  * datapath memory.
  */
 void
@@ -108,29 +110,29 @@ dp_mem_t::clear_thru(void)
 
 
 /*
- * Return pointer to current cache location, allowing caller to
+ * Return pointer to current cache line, allowing caller to
  * modify its content.
  */
 uint8_t *
 dp_mem_t::read(void)
 {
-    return cache_entry_addr();
+    return cache_line_addr();
 }
 
 
 /*
- * Transfer corresponding datapath memory into current cache location.
+ * Transfer corresponding datapath memory into current cache line.
  */
 uint8_t *
 dp_mem_t::read_thru(void)
 {
-    read_mem(hbm_entry_addr(), cache_entry_addr(), entry_size);
+    read_mem(hbm_line_addr(), cache_line_addr(), line_size);
     return read();
 }
 
 
 /*
- * Update bit fields at the current cache location (but not its corresponding
+ * Update bit fields at the current cache line (but not its corresponding
  * datapath memory).
  */
 void
@@ -141,38 +143,39 @@ dp_mem_t::write_bit_fields(uint32_t start_bit_offset,
     uint32_t    byte_offset = start_bit_offset / BITS_PER_BYTE;
     uint32_t    byte_size = (size_in_bits + BITS_PER_BYTE - 1) / BITS_PER_BYTE;
 
-    if ((byte_offset + byte_size) > entry_size) {
+    if ((byte_offset + byte_size) > line_size) {
         printf("%s start_bit_offset %u size_in_bits %u too large\n",
                __FUNCTION__, start_bit_offset, size_in_bits);
         return;
     }
 
-    utils::write_bit_fields(cache_entry_addr(), start_bit_offset, size_in_bits, value);
+    utils::write_bit_fields(cache_line_addr(), start_bit_offset,
+                            size_in_bits, value);
 }
 
 
 /*
- * Write current value in current cache location to corresponding datapath memory.
+ * Write current value in current cache line to corresponding datapath memory.
  */
 void
 dp_mem_t::write_thru(void)
 {
-    write_mem(hbm_entry_addr(), cache_entry_addr(), entry_size);
+    write_mem(hbm_line_addr(), cache_line_addr(), line_size);
 }
 
 
 /*
- * Return physical address of the current datapath memory location.
+ * Return physical address of the current datapath memory line.
  */
 uint64_t
 dp_mem_t::pa(void)
 {
-    return hbm_entry_addr();
+    return hbm_line_addr();
 }
 
 
 /*
- * Return virtual address of the current datapath memory location
+ * Return virtual address of the current datapath memory line
  * (which is same as physical address)
  */
 uint64_t
@@ -184,63 +187,63 @@ dp_mem_t::va(void)
 
 /*
  * Find/create a new dp_mem_t which addresses a portion of the same
- * cache and datapath memory at the current location.
+ * cache and datapath memory at the current line.
  */
 dp_mem_t *
-dp_mem_t::member_find(uint32_t byte_offset,
-                      uint32_t byte_size)
+dp_mem_t::fragment_find(uint32_t frag_offset,
+                        uint32_t frag_size)
 {
-    dp_mem_t    *member;
-    uint64_t    member_key;
-	std::pair<uint64_t, dp_mem_t*> member_elem;
-	std::unordered_map<uint64_t, dp_mem_t*>::const_iterator member_it;
+    dp_mem_t    *fragment;
+    uint64_t    fragment_key;
+	std::pair<uint64_t, dp_mem_t*> fragment_elem;
+	std::unordered_map<uint64_t, dp_mem_t*>::const_iterator fragment_it;
 
-    if ((byte_offset + byte_size) > entry_size) {
-        printf("%s byte_offset %u plus size %u exceeds entry_size %u\n",
-               __FUNCTION__, byte_offset, byte_size, entry_size);
+    if ((frag_offset + frag_size) > line_size) {
+        printf("%s frag_offset %u plus size %u exceeds line_size %u\n",
+               __FUNCTION__, frag_offset, frag_size, line_size);
         return nullptr;
     }
 
-    member_key = ((uint64_t)(byte_offset + (curr_entry_idx * entry_size)) << 32) |
-                 byte_size;
-    member_it = member_map.find(member_key);
-    if (member_it == member_map.end()) {
-        member = new dp_mem_t(0, 0);
-        member->num_entries = 1;
-        member->entry_size = byte_size;
-        member->total_size = byte_size;
-        member->is_member = true;
-        member->hbm_addr = hbm_entry_addr() + byte_offset;
-        member->cache = cache_entry_addr() + byte_offset;
+    fragment_key = ((uint64_t)(frag_offset + (curr_line * line_size)) << 32) |
+                   frag_size;
+    fragment_it = fragments_map.find(fragment_key);
+    if (fragment_it == fragments_map.end()) {
+        fragment = new dp_mem_t(0, 0);
+        fragment->num_lines = 1;
+        fragment->line_size = frag_size;
+        fragment->total_size = frag_size;
+        fragment->is_fragment = true;
+        fragment->hbm_addr = hbm_line_addr() + frag_offset;
+        fragment->cache = cache_line_addr() + frag_offset;
 
-        member_elem = std::make_pair(member_key, member);
-        member_map.insert(member_elem);
+        fragment_elem = std::make_pair(fragment_key, fragment);
+        fragments_map.insert(fragment_elem);
 
     } else {
-        member = member_it->second;
+        fragment = fragment_it->second;
     }
 
-    return member;
+    return fragment;
 }
 
 
 /*
- * Return address of the current datapath memory location.
+ * Return address of the current datapath memory line..
  */
 uint64_t 
-dp_mem_t::hbm_entry_addr(void)
+dp_mem_t::hbm_line_addr(void)
 {
-    return hbm_addr + (curr_entry_idx * entry_size);
+    return hbm_addr + (curr_line * line_size);
 }
 
 
 /*
- * Return address of the current cache memory location.
+ * Return address of the current cache memory line.
  */
 uint8_t *
-dp_mem_t::cache_entry_addr(void)
+dp_mem_t::cache_line_addr(void)
 {
-    return &cache[curr_entry_idx * entry_size];
+    return &cache[curr_line * line_size];
 }
 
 } // namespace dp_mem

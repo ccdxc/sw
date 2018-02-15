@@ -272,8 +272,6 @@ int consume_nvme_pvm_sq_entries(uint16_t nvme_q, uint16_t pvm_q,
                                 dp_mem_t **nvme_cmd, dp_mem_t **pvm_cmd, 
                                 uint16_t *nvme_index, uint16_t *pvm_index) {
 
-  struct NvmeCmd  nvme_cmd_blank = {0};
-
   if (!nvme_cmd || !pvm_cmd || !nvme_index || !pvm_index) {
     return -1;
   }
@@ -285,8 +283,8 @@ int consume_nvme_pvm_sq_entries(uint16_t nvme_q, uint16_t pvm_q,
     return -1;
   }
 
-  *nvme_cmd->clear_thru();
-  *pvm_cmd->clear_thru();
+  (*nvme_cmd)->clear_thru();
+  (*pvm_cmd)->clear_thru();
   return 0;
 }
 
@@ -305,8 +303,8 @@ int consume_nvme_pvm_cq_entries(uint16_t nvme_q, uint16_t pvm_q,
     return -1;
   }
 
-  *nvme_status->clear_thru();
-  *pvm_status->clear_thru();
+  (*nvme_status)->clear_thru();
+  (*pvm_status)->clear_thru();
   return 0;
 }
 
@@ -337,7 +335,7 @@ int consume_r2n_entry(uint16_t r2n_q, uint16_t ssd_handle, uint8_t io_priority,
     printf("can't consume nvme command \n");
     return -1;
   }
-  *nvme_cmd->clear_thru();
+  (*nvme_cmd)->clear_thru();
   return 0;
 }
 
@@ -368,7 +366,7 @@ int form_r2n_seq_wqe(uint16_t ssd_handle, uint8_t io_priority, uint8_t is_read,
     printf("can't alloc nvme command \n");
     return -1;
   }
-  *nvme_cmd->clear_thru();
+  (*nvme_cmd)->clear_thru();
   return 0;
 }
 
@@ -382,7 +380,7 @@ int consume_ssd_entry(uint16_t ssd_q, dp_mem_t **ssd_cmd, uint16_t *ssd_index) {
     printf("can't consume ssd command \n");
     return -1;
   }
-  *ssd_cmd->clear_thru();
+  (*ssd_cmd)->clear_thru();
   return 0;
 }
 
@@ -422,7 +420,7 @@ int form_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   read_cmd->nsid = kDefaultNsid; 
   read_cmd->slba = slba;
   read_cmd->dw12.nlb = nlb;
-  read_cmd->write_thru();
+  nvme_cmd->write_thru();
 
   return 0;
 }
@@ -441,7 +439,7 @@ int form_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = nlb;
-  write_cmd->write_thru();
+  nvme_cmd->write_thru();
 
   return 0;
 }
@@ -461,7 +459,7 @@ int form_read_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   read_cmd->nsid = kDefaultNsid; 
   read_cmd->slba = slba;
   read_cmd->dw12.nlb = nlb;
-  read_cmd->write_thru();
+  nvme_cmd->write_thru();
 
   return 0;
 }
@@ -482,7 +480,7 @@ int form_write_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = nlb;
-  write_cmd->write_thru();
+  nvme_cmd->write_thru();
 
   return 0;
 }
@@ -496,7 +494,7 @@ int form_read_cmd_no_buf(dp_mem_t *nvme_cmd, uint64_t slba)
   read_cmd->nsid = kDefaultNsid; 
   read_cmd->slba = slba;
   read_cmd->dw12.nlb = kDefaultNlb;
-  read_cmd->write_thru();
+  nvme_cmd->write_thru();
 
   return 0;
 }
@@ -510,7 +508,7 @@ int form_write_cmd_no_buf(dp_mem_t *nvme_cmd, uint64_t slba)
   write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = kDefaultNlb;
-  write_cmd->write_thru();
+  nvme_cmd->write_thru();
 
   return 0;
 }
@@ -568,7 +566,7 @@ int test_run_nvme_pvm_admin_cmd() {
 int test_run_nvme_pvm_read_cmd() {
   int rc;
   uint16_t nvme_index, pvm_index;
-  uint8_t *nvme_cmd, *pvm_cmd;
+  dp_mem_t *nvme_cmd, *pvm_cmd;
 
   // Consume NVME queue 1 entry to post read command
   // Consume PVM queue 1 to check read command
@@ -597,7 +595,7 @@ int test_run_nvme_pvm_read_cmd() {
 int test_run_nvme_pvm_write_cmd() {
   int rc;
   uint16_t nvme_index, pvm_index;
-  uint8_t *nvme_cmd, *pvm_cmd;
+  dp_mem_t *nvme_cmd, *pvm_cmd;
 
   // Consume NVME queue 1 entry to post write command
   // Consume PVM queue 1 to check write command
@@ -656,7 +654,7 @@ int test_run_nvme_pvm_hashing1() {
 int test_run_nvme_pvm_hashing2() {
   int rc;
   uint16_t nvme_index, pvm_index;
-  uint8_t *nvme_cmd, *pvm_cmd;
+  dp_mem_t *nvme_cmd, *pvm_cmd;
 
   // Consume NVME queue 3 entry to post read command
   // Consume PVM queue 1 (by hashing) to check read command
@@ -685,9 +683,9 @@ int test_run_nvme_pvm_hashing2() {
 int pvm_status_trailer_update(dp_mem_t *pvm_status, uint16_t lif, 
                               uint8_t qtype, uint32_t qid) {
   uint64_t dst_qaddr;
-  dp_mem_t *pvm_trailer = pvm_status->member_find(offsetof(struct PvmStatus, pvm_trailer),
-                                                  sizeof(struct PvmStatus) -
-                                                  offsetof(struct PvmStatus, pvm_trailer));
+  dp_mem_t *pvm_trailer = pvm_status->fragment_find(offsetof(struct PvmStatus, pvm_trailer),
+                                                    sizeof(struct PvmStatus) -
+                                                    offsetof(struct PvmStatus, pvm_trailer));
 
   pvm_trailer->write_bit_fields(0, 11, lif);
   pvm_trailer->write_bit_fields(11, 3, qtype);
@@ -1184,8 +1182,8 @@ int test_run_nvme_e2e_io(uint16_t io_priority, uint16_t is_read) {
 #endif
 
   // Process the status
-  dp_mem_t *nvme_status = status_buf->member_find(kR2nStatusNvmeOffset,
-                                                  sizeof(struct NvmeStatus));
+  dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                    sizeof(struct NvmeStatus));
 
   // Poll for status
   auto func1 = [nvme_status, cmd_buf] () {
@@ -1360,8 +1358,8 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
   
   // Process the status
-  dp_mem_t *nvme_status = status_buf->member_find(kR2nStatusNvmeOffset,
-                                                  sizeof(struct NvmeStatus));
+  dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                    sizeof(struct NvmeStatus));
 
   // Poll for status
   auto func1 = [nvme_status, cmd_buf] () {
@@ -1435,8 +1433,8 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
   
   // Process the status
-  dp_mem_t *nvme_status = status_buf->member_find(kR2nStatusNvmeOffset,
-                                                  sizeof(struct NvmeStatus));
+  dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                    sizeof(struct NvmeStatus));
 
   // Poll for status
   auto func1 = [nvme_status, cmd_buf] () {
@@ -1641,8 +1639,8 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
 
   // Process the status
-  dp_mem_t *nvme_status = status_buf->member_find(kR2nStatusNvmeOffset,
-                                                  sizeof(struct NvmeStatus));
+  dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                    sizeof(struct NvmeStatus));
   auto func = [nvme_status, cmd_buf] () {
     return check_nvme_status(nvme_status, cmd_buf);
   };
@@ -1728,8 +1726,8 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // Process the status
-  dp_mem_t *nvme_status = status_buf->member_find(kR2nStatusNvmeOffset,
-                                                  sizeof(struct NvmeStatus));
+  dp_mem_t *nvme_status = status_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                    sizeof(struct NvmeStatus));
 
   auto func1 = [nvme_status, cmd_buf] () {
     return check_nvme_status(nvme_status, cmd_buf);
@@ -1898,8 +1896,8 @@ int test_run_rdma_e2e_write() {
   //utils::dump(cmd_buf);
 
   dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
-  dp_mem_t *nvme_status = rcv_buf->member_find(kR2nStatusNvmeOffset,
-                                               sizeof(struct NvmeStatus));
+  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                 sizeof(struct NvmeStatus));
   // Poll for status
   auto func1 = [nvme_status, cmd_buf] () {
     return check_nvme_status(nvme_status, cmd_buf);
@@ -2056,7 +2054,7 @@ int test_run_seq_pdma_multi_xfers() {
         return 0;
     };
 
-    Poller poll(FLAGS_long_poll_interval * FLAGS_num_pdma_queues * FLAGS_num_pdma_queues);
+    Poller poll(FLAGS_long_poll_interval * FLAGS_num_pdma_queues);
     rc = poll(dma_db_compl_verify);
 
     printf("%s: completed %d PDMA write/read transfer pairs. rc = %d\n",
@@ -2113,9 +2111,9 @@ int test_run_rdma_e2e_read() {
   //utils::dump(cmd_buf);
 
   // Process the status
-  dp_mem_t *rcv_buf = (uint8_t *) rdma_get_initiator_rcv_buf();
-  dp_mem_t *nvme_status = rcv_buf->member_find(kR2nStatusNvmeOffset,
-                                               sizeof(struct NvmeStatus));
+  dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
+  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                 sizeof(struct NvmeStatus));
 
   // Poll for status
   auto func1 = [nvme_status, cmd_buf] () {
@@ -2192,8 +2190,8 @@ int test_run_rdma_lif_override() {
 
   // Process the status
   dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
-  dp_mem_t *nvme_status = rcv_buf->member_find(kR2nStatusNvmeOffset,
-                                               sizeof(struct NvmeStatus));
+  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                 sizeof(struct NvmeStatus));
 
   // Poll for status
   auto func1 = [nvme_status, cmd_buf] () {

@@ -8,6 +8,7 @@
 #define R2N_OPCODE_PROCESS_WQE                  1
 #define R2N_OPCODE_BUF_POST                     2
 
+using namespace dp_mem;
 
 namespace r2n {
 

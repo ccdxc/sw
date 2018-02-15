@@ -5,7 +5,7 @@
 #include <functional>
 #include <vector>
 #include "gflags/gflags.h"
-#include "dol/test/storage/dp_mem.hpp"
+#include "dp_mem.hpp"
 
 DECLARE_uint64(poll_interval);
 DECLARE_uint64(long_poll_interval);
@@ -70,11 +70,11 @@ int test_setup_cp_seq_ent(cp_seq_params_t *params);
 
 int test_setup();
 
-int check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size);
+int check_ignore_cid(dp_mem_t *send_cmd, dp_mem_t *recv_cmd, uint32_t size);
 
-int form_read_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba);
+int form_read_cmd_no_buf(dp_mem_t *nvme_cmd, uint64_t slba);
 
-int form_write_cmd_no_buf(uint8_t *nvme_cmd, uint64_t slba);
+int form_write_cmd_no_buf(dp_mem_t *nvme_cmd, uint64_t slba);
 
 int test_run_nvme_pvm_admin_cmd();
 
