@@ -75,7 +75,7 @@ capri_tm_ctx_t g_tm_ctx_;
 capri_tm_ctx_t *g_tm_ctx;
 
 static void
-set_tm_ctx (capri_tm_cfg_profile_t *tm_cfg_profile, 
+set_tm_ctx (capri_tm_cfg_profile_t *tm_cfg_profile,
             capri_tm_asic_profile_t *asic_profile)
 {
     if (!g_tm_ctx) {
@@ -164,7 +164,7 @@ static inline uint32_t
 cells_to_chunks (uint32_t cells)
 {
     return (cells + tm_asic_profile()->cell_alloc_units - 1)/
-                                        tm_asic_profile()->cell_alloc_units;
+        tm_asic_profile()->cell_alloc_units;
 }
 
 static inline uint32_t
@@ -177,7 +177,7 @@ static inline uint32_t
 hbm_bytes_to_chunks (uint32_t bytes)
 {
     return (bytes + tm_asic_profile()->hbm_fifo_alloc_units - 1)/
-                                        tm_asic_profile()->hbm_fifo_alloc_units;
+        tm_asic_profile()->hbm_fifo_alloc_units;
 }
 
 static inline uint32_t
@@ -195,9 +195,9 @@ capri_tm_get_max_cell_chunks_for_island (uint32_t island)
         island = HAL_TM_NUM_BUFFER_ISLANDS - island - 1;
     }
     if (island == 0) {
-        cells = HAL_TM_BUFFER_ISLAND_0_CELL_COUNT; 
+        cells = HAL_TM_BUFFER_ISLAND_0_CELL_COUNT;
     } else if (island == 1) {
-        cells = HAL_TM_BUFFER_ISLAND_1_CELL_COUNT; 
+        cells = HAL_TM_BUFFER_ISLAND_1_CELL_COUNT;
     }
     return cells_to_chunks(cells);
 }
@@ -242,14 +242,14 @@ is_active_port (tm_port_t port)
 
     port_type = capri_tm_get_port_type(port);
     if (port_type == TM_PORT_TYPE_UPLINK) {
-        return (is_active_uplink_port(port) || 
+        return (is_active_uplink_port(port) ||
                 (port == TM_PORT_NCSI));
     }
     return true;
 }
 
 static inline uint32_t
-capri_tm_max_hbm_contexts_for_fifo(uint32_t fifo_type)
+capri_tm_max_hbm_contexts_for_fifo (uint32_t fifo_type)
 {
     switch (fifo_type) {
         case TM_HBM_FIFO_TYPE_UPLINK:
@@ -266,7 +266,7 @@ static inline uint32_t
 capri_tm_get_num_iqs_for_port_type (tm_port_type_e port_type)
 {
     switch(port_type) {
-        case TM_PORT_TYPE_UPLINK: 
+        case TM_PORT_TYPE_UPLINK:
             return 8;
         case TM_PORT_TYPE_P4IG:
         case TM_PORT_TYPE_P4EG:
@@ -283,7 +283,7 @@ static inline uint32_t
 capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 {
     switch(port_type) {
-        case TM_PORT_TYPE_UPLINK: 
+        case TM_PORT_TYPE_UPLINK:
         case TM_PORT_TYPE_P4EG:
             return 1;
         case TM_PORT_TYPE_P4IG:
@@ -337,7 +337,7 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //::        pinfo["type"] = "dma"
 //::        pinfo["pgs"] = 16
 //::        pinfo["l3"] = 1
-//::        pinfo["has_hbm"] = True 
+//::        pinfo["has_hbm"] = True
 //::     else:
 //::        pinfo["type"] = "p4"
 //::        pinfo["pgs"] = 32
@@ -360,9 +360,9 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //::            mg = re.search('\[(\d+)\]$', reg)
 //::            array_index = int(mg.groups()[0])
 //::            inst_name = inst_name + '[%s]' % array_index
-//::        #endif   
+//::        #endif
 //::        instances.append(inst_name)
-//::    #endif   
+//::    #endif
 //:: #endfor
 //:: return instances
 //:: #enddef
@@ -372,7 +372,7 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //:: #endwith
 //:: regs = data["cap_pbc"]["registers"]
 //:: memories = data["cap_pbc"]["memories"]
-//:: 
+//::
 //:: fns = OrderedDict()
 //:: fns["debug"] = set(['cnt', 'sta', 'sat'])
 //:: fns["config"] = set(['cfg'])
@@ -394,38 +394,38 @@ capri_tm_dump_${fn}_regs (void)
 //:: #endfor
 
 bool
-capri_tm_port_is_uplink_port(uint32_t port)
+capri_tm_port_is_uplink_port (uint32_t port)
 {
     return ((port >= TM_UPLINK_PORT_BEGIN) && (port <= TM_UPLINK_PORT_END));
 }
 
 bool
-capri_tm_port_is_dma_port(uint32_t port)
+capri_tm_port_is_dma_port (uint32_t port)
 {
     return ((port >= TM_DMA_PORT_BEGIN) && (port <= TM_DMA_PORT_END));
 }
 
 static bool
-is_valid_tm_port(uint32_t port)
+is_valid_tm_port (uint32_t port)
 {
     return ((port >= TM_PORT_UPLINK_0) && (port <= TM_PORT_INGRESS));
 }
 
 hal_ret_t
-capri_tm_pg_params_update(uint32_t port,
-                          uint32_t pool_group,
-                          tm_pg_params_t *pg_params,
-                          tm_hbm_fifo_params_t *hbm_params)
+capri_tm_pg_params_update (uint32_t port,
+                           uint32_t pool_group,
+                           tm_pg_params_t *pg_params,
+                           tm_hbm_fifo_params_t *hbm_params)
 {
     /* Do some sanity checks for port and pool_group */
     if (!is_valid_tm_port(port)) {
-        HAL_TRACE_ERR("capri-tm::{}: {} is not a valid TM port",
-                      __func__, port);
+        HAL_TRACE_ERR("{} is not a valid TM port",
+                      port);
         return HAL_RET_INVALID_ARG;
     }
 
     if (pg_params->mtu > tm_cfg_profile()->jumbo_mtu) {
-        HAL_TRACE_ERR("capri-tm: Invalid mtu {} larger than the jumbo {}",
+        HAL_TRACE_ERR("Invalid mtu {} larger than the jumbo {}",
                       pg_params->mtu, tm_cfg_profile()->jumbo_mtu);
         return HAL_RET_INVALID_ARG;
     }
@@ -446,95 +446,93 @@ capri_tm_pg_params_update(uint32_t port,
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
         case ${pinfo["enum"]}:
-        {
+            {
 //::    if pinfo["has_hbm"]:
 //::        pass
-            if (hbm_params == NULL) {
-                HAL_TRACE_ERR("capri-tm::{}:{} HBM parameters not passed for "
-                              "port {} pool_group {}",
-                              __func__, __LINE__,
-                              port, pool_group);
-                return HAL_RET_INVALID_ARG;
-            }
+                if (hbm_params == NULL) {
+                    HAL_TRACE_ERR("HBM parameters not passed for "
+                                  "port {} pool_group {}",
+                                  port, pool_group);
+                    return HAL_RET_INVALID_ARG;
+                }
 //::    else:
 //::        pass
-            if (hbm_params != NULL) {
-                HAL_TRACE_ERR("capri-tm::{}:{} HBM parameters passed for "
-                              "port {} pool_group {} and HBM not supported",
-                              __func__, __LINE__,
-                              port, pool_group);
-                return HAL_RET_INVALID_ARG;
-            }
-//::    #endif
-            switch (pool_group) {
-//::    for pg in range(port_info[p]["pgs"]):
-                case ${pg}:
-                {
-                    pbc_csr.port_${p}.cfg_account_mtu_table.read();
-
-                    /* Update the MTU in the MTU register */
-                    pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(pg_params->mtu);
-
-                    pbc_csr.port_${p}.cfg_account_mtu_table.show();
-                    if (tm_sw_cfg_write_enabled()) {
-                        pbc_csr.port_${p}.cfg_account_mtu_table.write();
-                    }
-                    break;
+                if (hbm_params != NULL) {
+                    HAL_TRACE_ERR("HBM parameters passed for "
+                                  "port {} pool_group {} and HBM not supported",
+                                  port, pool_group);
+                    return HAL_RET_INVALID_ARG;
                 }
+//::    #endif
+                switch (pool_group) {
+//::    for pg in range(port_info[p]["pgs"]):
+                    case ${pg}:
+                        {
+                            pbc_csr.port_${p}.cfg_account_mtu_table.read();
+
+                            /* Update the MTU in the MTU register */
+                            pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(pg_params->mtu);
+
+                            pbc_csr.port_${p}.cfg_account_mtu_table.show();
+                            if (tm_sw_cfg_write_enabled()) {
+                                pbc_csr.port_${p}.cfg_account_mtu_table.write();
+                            }
+                            break;
+                        }
 //::    #endfor
-                default:
-                    return HAL_RET_ERR;
-            }
+                    default:
+                        return HAL_RET_ERR;
+                }
 //::    if pinfo["has_hbm"]:
 //::        if pinfo["type"] == "uplink":
-            hbm_csr.cfg_hbm_threshold.read();
+                hbm_csr.cfg_hbm_threshold.read();
 
-            xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
-            xon_val = hbm_csr.cfg_hbm_threshold.xon();
-            hbm_context = pool_group + (num_hbm_contexts_per_port * ${pinfo["enum"]});
-            // xoff and xon thresholds are in 512B units in register. 
-            // So right shift by 9 (using ceil value)
-            xoff_threshold = (hbm_params->xoff_threshold + (1<<9) - 1) >> 9;
-            xon_threshold = (hbm_params->xon_threshold + (1<<9) - 1) >> 9;
-            // 20 bits per hbm_context
-            pbc_csr.hlp.set_slc(xoff_val, xoff_threshold,
-                                hbm_context * 20, ((hbm_context + 1) * 20) - 1);
-            // 20 bits per hbm_context
-            pbc_csr.hlp.set_slc(xon_val, xon_threshold,
-                                hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+                xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
+                xon_val = hbm_csr.cfg_hbm_threshold.xon();
+                hbm_context = pool_group + (num_hbm_contexts_per_port * ${pinfo["enum"]});
+                // xoff and xon thresholds are in 512B units in register.
+                // So right shift by 9 (using ceil value)
+                xoff_threshold = (hbm_params->xoff_threshold + (1<<9) - 1) >> 9;
+                xon_threshold = (hbm_params->xon_threshold + (1<<9) - 1) >> 9;
+                // 20 bits per hbm_context
+                pbc_csr.hlp.set_slc(xoff_val, xoff_threshold,
+                                    hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+                // 20 bits per hbm_context
+                pbc_csr.hlp.set_slc(xon_val, xon_threshold,
+                                    hbm_context * 20, ((hbm_context + 1) * 20) - 1);
 
-            hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
-            hbm_csr.cfg_hbm_threshold.xon(xon_val);
-            // Write all the registers
-            hbm_csr.cfg_hbm_threshold.show();
-            if (tm_sw_cfg_write_enabled()) {
-                hbm_csr.cfg_hbm_threshold.write();
-            }
+                hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
+                hbm_csr.cfg_hbm_threshold.xon(xon_val);
+                // Write all the registers
+                hbm_csr.cfg_hbm_threshold.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    hbm_csr.cfg_hbm_threshold.write();
+                }
 //::        #endif
 //::    #endif
-            break;
-        }
+                break;
+            }
 //:: #endfor
         default:
             return HAL_RET_ERR;
     }
 
 #endif
-    HAL_TRACE_DEBUG("capri-tm::{}: Updated the pool group {} on port {}",
-                    __func__, pool_group, port);
+    HAL_TRACE_DEBUG("Updated the pool group {} on port {}",
+                    pool_group, port);
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
-capri_tm_tc_map_update(uint32_t port,
-                       uint32_t count,
-                       tm_tc_to_pg_map_t *tc_map)
+capri_tm_tc_map_update (uint32_t port,
+                        uint32_t count,
+                        tm_tc_to_pg_map_t *tc_map)
 {
     /* Do some sanity checks for port */
     if (!capri_tm_port_is_uplink_port(port)) {
-        HAL_TRACE_ERR("capri-tm::{}: {} is not a valid TM uplink port",
-                      __func__, port);
+        HAL_TRACE_ERR("{} is not a valid TM uplink port",
+                      port);
         return HAL_RET_INVALID_ARG;
     }
 #ifndef HAL_GTEST
@@ -553,13 +551,13 @@ capri_tm_tc_map_update(uint32_t port,
 //::    pinfo = port_info[p]
 //::    if pinfo["type"] == "uplink":
         case ${pinfo["enum"]}:
-        {
-            npgs = ${pinfo["pgs"]};
-            nbits = ${int(math.log(pinfo["pgs"], 2))};
-            hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
-            tc_map_reg_val = hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table();
-            break;
-        }
+            {
+                npgs = ${pinfo["pgs"]};
+                nbits = ${int(math.log(pinfo["pgs"], 2))};
+                hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
+                tc_map_reg_val = hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table();
+                break;
+            }
 //::    #endif
 //:: #endfor
         default:
@@ -570,18 +568,18 @@ capri_tm_tc_map_update(uint32_t port,
         tc = tc_map[i].tc;
         pool_group = tc_map[i].pg;
         if (tc >= npgs) {
-            HAL_TRACE_ERR("capri-tm::{}: Invalid tc value {} on port {} pool group {}",
-                          __func__, tc, port, pool_group);
+            HAL_TRACE_ERR("Invalid tc value {} on port {} pool group {}",
+                          tc, port, pool_group);
             return HAL_RET_INVALID_ARG;
         }
         if (pool_group >= npgs) {
-            HAL_TRACE_ERR("capri-tm::{}: Invalid pool group {} on port {}",
-                          __func__, pool_group, port);
+            HAL_TRACE_ERR("Invalid pool group {} on port {}",
+                          pool_group, port);
             return HAL_RET_INVALID_ARG;
         }
 
-        pbc_csr.hlp.set_slc(tc_map_reg_val, pool_group, 
-                            tc * nbits, 
+        pbc_csr.hlp.set_slc(tc_map_reg_val, pool_group,
+                            tc * nbits,
                             ((tc+1) * nbits) - 1);
     }
 
@@ -590,16 +588,16 @@ capri_tm_tc_map_update(uint32_t port,
 //::    pinfo = port_info[p]
 //::    if pinfo["type"] == "uplink":
         case ${pinfo["enum"]}:
-        {
-            /* Update and write the tc to PG mapping */
-            hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table(tc_map_reg_val);
-            hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.show();
-            if (tm_sw_cfg_write_enabled()) {
-                hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.write();
+            {
+                /* Update and write the tc to PG mapping */
+                hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table(tc_map_reg_val);
+                hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.write();
+                }
+                break;
             }
-            break;
-        }
-//::    #endif            
+//::    #endif
 //:: #endfor
         default:
             return HAL_RET_INVALID_ARG;
@@ -615,8 +613,8 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 {
 
     if (!capri_tm_port_is_uplink_port(port)) {
-        HAL_TRACE_ERR("capri-tm::{}: {} is not a valid TM uplink port",
-                      __func__, port);
+        HAL_TRACE_ERR("{} is not a valid TM uplink port",
+                      port);
         return HAL_RET_INVALID_ARG;
     }
 #ifndef HAL_GTEST
@@ -629,8 +627,7 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 
     if ((imap->p4_oq < (signed)HAL_TM_P4_UPLINK_IQ_OFFSET) ||
         (imap->p4_oq >= (signed)capri_tm_get_num_iqs_for_port_type(TM_PORT_TYPE_P4IG))) {
-        HAL_TRACE_ERR("capri-tm::{}:{} Invalid P4 Oq {} for uplink port {}",
-                      __func__, __LINE__,
+        HAL_TRACE_ERR("Invalid P4 Oq {} for uplink port {}",
                       imap->p4_oq, port);
         return HAL_RET_INVALID_ARG;
     }
@@ -642,14 +639,14 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 //::        continue
 //::    #endif
         case ${pinfo["enum"]}:
-        {
-            hbm_csr.hbm_port_${p}.cfg_hbm_parser.read();
-            dscp_map_val = hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map();
+            {
+                hbm_csr.hbm_port_${p}.cfg_hbm_parser.read();
+                dscp_map_val = hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map();
 
-            pbc_csr.cfg_parser${p}.read();
-            oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
-            break;
-        }
+                pbc_csr.cfg_parser${p}.read();
+                oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
+                break;
+            }
 //:: #endfor
         default:
             return HAL_RET_INVALID_ARG;
@@ -678,22 +675,22 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 //::        continue
 //::    #endif
         case ${pinfo["enum"]}:
-        {
-            hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
-            hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(use_ip);
-            hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(dscp_map_val);
-            hbm_csr.hbm_port_${p}.cfg_hbm_parser.show();
-            if (tm_sw_cfg_write_enabled()) {
-                hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
-            }
+            {
+                hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
+                hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(use_ip);
+                hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(dscp_map_val);
+                hbm_csr.hbm_port_${p}.cfg_hbm_parser.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
+                }
 
-            pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
-            pbc_csr.cfg_parser${p}.show();
-            if (tm_sw_cfg_write_enabled()) {
-                pbc_csr.cfg_parser${p}.write();
+                pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
+                pbc_csr.cfg_parser${p}.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.cfg_parser${p}.write();
+                }
+                break;
             }
-            break;
-        }
 //:: #endfor
         default:
             return HAL_RET_INVALID_ARG;
@@ -706,8 +703,8 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 //::    parent_level = level+1
 hal_ret_t
 capri_tm_scheduler_map_update_l${level} (uint32_t port,
-                                  uint32_t node,
-                                  tm_queue_node_params_t *node_params)
+                                         uint32_t node,
+                                         tm_queue_node_params_t *node_params)
 {
 #ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -717,9 +714,9 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
     cpp_int strict_val;
 
     if (node >= HAL_TM_COUNT_L${level}_NODES) {
-        HAL_TRACE_ERR("capri-tm::{}: node {} exceeds the number of valid level "
+        HAL_TRACE_ERR("node {} exceeds the number of valid level "
                       "${level} nodes in port {}",
-                      __func__, node, port);
+                      node, port);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -728,39 +725,39 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
 //::    pinfo = port_info[p]
 //::    if pinfo["l"+str(parent_level)]:
         case ${pinfo["enum"]}:
-        {
-            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.read();
-            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.read();
+            {
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.read();
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.read();
 
-            strict_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority();
-            pbc_csr.hlp.set_slc(strict_val, 
-                                node_params->sched_type == TM_SCHED_TYPE_STRICT ? 1 : 0,
-                                node,
-                                node);
+                strict_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority();
+                pbc_csr.hlp.set_slc(strict_val,
+                                    node_params->sched_type == TM_SCHED_TYPE_STRICT ? 1 : 0,
+                                    node,
+                                    node);
 
-            // Reset the current node's association in all the parent level
-            // nodes
+                // Reset the current node's association in all the parent level
+                // nodes
 //::        for parent_node in range(pinfo["l"+str(parent_level)]):
-            // ${parent_node}
-            node_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}();
-            // Associate/disassociate the current node with the parent node
-            pbc_csr.hlp.set_slc(node_val, 
-                                node_params->parent_node == ${parent_node} ? 1 : 0,
-                                node,
-                                node);
-            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}(node_val);
+                // ${parent_node}
+                node_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}();
+                // Associate/disassociate the current node with the parent node
+                pbc_csr.hlp.set_slc(node_val,
+                                    node_params->parent_node == ${parent_node} ? 1 : 0,
+                                    node,
+                                    node);
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}(node_val);
 //::        #endfor
-            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority(strict_val);
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority(strict_val);
 
-            /* Write the registers */
-            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.show();
-            pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.show();
-            if (tm_sw_cfg_write_enabled()) {
-                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.write();
-                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.write();
+                /* Write the registers */
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.show();
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.write();
+                    pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.write();
+                }
+                break;
             }
-            break;
-        }
 //::    #endif
 //:: #endfor
         default:
@@ -768,9 +765,9 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
     }
 
 #endif
-    HAL_TRACE_DEBUG("capri-tm::{}: Updated the output queue scheduler on port {} "
+    HAL_TRACE_DEBUG("Updated the output queue scheduler on port {} "
                     "level {}, node {}",
-                    __func__, port, ${level}, node);
+                    port, ${level}, node);
 
     return HAL_RET_OK;
 }
@@ -778,16 +775,16 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
 //:: #endfor
 
 hal_ret_t
-capri_tm_scheduler_map_update(uint32_t port,
-                              tm_queue_node_type_e node_type,
-                              uint32_t node,
-                              tm_queue_node_params_t *node_params)
+capri_tm_scheduler_map_update (uint32_t port,
+                               tm_queue_node_type_e node_type,
+                               uint32_t node,
+                               tm_queue_node_params_t *node_params)
 {
     hal_ret_t ret = HAL_RET_OK;
 
     if (!is_valid_tm_port(port)) {
-        HAL_TRACE_ERR("capri-tm::{}: {} is not a valid TM port",
-                      __func__, port);
+        HAL_TRACE_ERR("{} is not a valid TM port",
+                      port);
         return HAL_RET_INVALID_ARG;
     }
     switch(node_type) {
@@ -806,12 +803,12 @@ capri_tm_scheduler_map_update(uint32_t port,
 
 /* Program the lif value on an uplink port */
 hal_ret_t
-capri_tm_uplink_lif_set(uint32_t port,
-                        uint32_t lif)
+capri_tm_uplink_lif_set (uint32_t port,
+                         uint32_t lif)
 {
     if (!capri_tm_port_is_uplink_port(port)) {
-        HAL_TRACE_ERR("capri-tm::{}: {} is not a valid TM uplink port",
-                      __func__, port);
+        HAL_TRACE_ERR("{} is not a valid TM uplink port",
+                      port);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -828,10 +825,10 @@ capri_tm_uplink_lif_set(uint32_t port,
 //::        continue
 //::    #endif
         case ${pinfo["enum"]}:
-        {
-            pbc_csr.cfg_src_port_to_lif_map.entry_${p}(lif);
-            break;
-        }
+            {
+                pbc_csr.cfg_src_port_to_lif_map.entry_${p}(lif);
+                break;
+            }
 //:: #endfor
         default:
             return HAL_RET_ERR;
@@ -842,8 +839,8 @@ capri_tm_uplink_lif_set(uint32_t port,
     pbc_csr.cfg_src_port_to_lif_map.write();
 #endif
 
-    HAL_TRACE_DEBUG("capri-tm::{}: Set the lif {} on port {}",
-                    __func__, lif, port);
+    HAL_TRACE_DEBUG("Set the lif {} on port {}",
+                    lif, port);
 
     return HAL_RET_OK;
 }
@@ -860,8 +857,8 @@ capri_tm_hw_config_load_poll (int phase)
 hal_ret_t
 capri_tm_asic_init (void)
 {
-//    cap_pb_init_start(0,0);
-//    cap_pb_init_done(0,0);
+    //    cap_pb_init_start(0,0);
+    //    cap_pb_init_done(0,0);
     return HAL_RET_OK;
 }
 
@@ -884,7 +881,7 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
 
     num_qs = tm_cfg_profile()->num_qs[port_type];
     if (port_type == TM_PORT_TYPE_UPLINK) {
-        num_qs = 
+        num_qs =
             1 + (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
     }
 
@@ -895,14 +892,14 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
 
     if (reserved_mtus) {
         // Allocate reserved_mtus and headroom_cells from the given island
-        reserved_cells = 
+        reserved_cells =
             bytes_to_cells(tm_cfg_profile()->jumbo_mtu) * reserved_mtus;
 
         reserved_chunks = cells_to_chunks(reserved_cells);
 
         chunks_needed = (reserved_chunks + headroom_chunks) * num_qs;
         if (pbc_cell_chunks[island] < chunks_needed) {
-            HAL_TRACE_ERR("capri-tm: Error allocating reserved pbc chunks "
+            HAL_TRACE_ERR("Error allocating reserved pbc chunks "
                           "island {} port_type {} num_qs {} reserved_cells {} "
                           "headroom_cells {} available {}",
                           island, port_type, num_qs, reserved_cells,
@@ -915,11 +912,11 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
         // Allocate the remaining chunks in the island for every queue
         chunks_per_q = pbc_cell_chunks[island]/num_qs;
         if (chunks_per_q < headroom_chunks) {
-            HAL_TRACE_ERR("capri-tm: Error allocating remaining pbc chunks "
+            HAL_TRACE_ERR("Error allocating remaining pbc chunks "
                           "island {} port_type {} num_qs {} "
                           "headroom_cells {} available {} per_q available",
                           island, port_type, num_qs,
-                          headroom_cells, 
+                          headroom_cells,
                           chunks_to_cells(pbc_cell_chunks[island]),
                           chunks_to_cells(chunks_per_q));
             return HAL_RET_NO_RESOURCE;
@@ -927,16 +924,16 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
         pbc_cell_chunks[island] -= chunks_per_q * num_qs;
         buf_cfg->chunks_per_q[port_type] = chunks_per_q - headroom_chunks;
     }
-    if (chunks_to_cells(buf_cfg->chunks_per_q[port_type]) < 
-                            bytes_to_cells(tm_cfg_profile()->jumbo_mtu)) {
-        HAL_TRACE_ERR("capri-tm: Error reserved cells {}/bytes {} is less than the "
+    if (chunks_to_cells(buf_cfg->chunks_per_q[port_type]) <
+        bytes_to_cells(tm_cfg_profile()->jumbo_mtu)) {
+        HAL_TRACE_ERR("Error reserved cells {}/bytes {} is less than the "
                       "jumbo mtu  {}",
                       chunks_to_cells(buf_cfg->chunks_per_q[port_type]),
                       cells_to_bytes(chunks_to_cells(buf_cfg->chunks_per_q[port_type])),
                       tm_cfg_profile()->jumbo_mtu);
         return HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("capri-tm: allocated cells {} port_type {} headroom {}",
+    HAL_TRACE_DEBUG("allocated cells {} port_type {} headroom {}",
                     chunks_to_cells(buf_cfg->chunks_per_q[port_type]),
                     port_type,
                     chunks_to_cells(headroom_chunks));
@@ -956,7 +953,7 @@ capri_tm_alloc_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
     /* First allocate buffer cells for the P4 ports and
      * then distribute the remaining equally among the different classes
-     */ 
+     */
     ret = alloc_cells(TM_PORT_TYPE_P4IG, pbc_cell_chunks, buf_cfg);
     if (ret != HAL_RET_OK) {
         return ret;
@@ -979,8 +976,8 @@ capri_tm_alloc_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
     }
 
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(pbc_cell_chunks); i++) {
-        HAL_TRACE_DEBUG("capri-tm: unallocated cells island {} cells {}",
-                       i, chunks_to_cells(pbc_cell_chunks[i])); 
+        HAL_TRACE_DEBUG("unallocated cells island {} cells {}",
+                        i, chunks_to_cells(pbc_cell_chunks[i]));
     }
 
     return HAL_RET_OK;
@@ -997,7 +994,7 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     //
     // Out of the whole available HBM payload and control has to be carved.
     // Control needs to be 1/50th of payload
-    num_hbm_contexts[TM_HBM_FIFO_TYPE_UPLINK] = 
+    num_hbm_contexts[TM_HBM_FIFO_TYPE_UPLINK] =
         tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK] * tm_cfg_profile()->num_active_uplink_ports;
     num_hbm_contexts[TM_HBM_FIFO_TYPE_TXDMA] = tm_cfg_profile()->num_qs[TM_PORT_TYPE_DMA];
 
@@ -1012,26 +1009,26 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     payload_chunks = control_chunks * tm_asic_profile()->hbm_fifo_control_scale_factor;
     HAL_ASSERT((payload_chunks + control_chunks) <= total_hbm_chunks);
 
-    HAL_TRACE_DEBUG("capri-tm: Available hbm chunks total {} payload {} control {}",
+    HAL_TRACE_DEBUG("Available hbm chunks total {} payload {} control {}",
                     total_hbm_chunks, payload_chunks, control_chunks);
 
     uint64_t total_reserved_hbm_chunks = 0;
     uint64_t total_hbm_contexts = 0;
     uint64_t reserved_hbm_chunks_per_context[NUM_TM_HBM_FIFO_TYPES] = {0};
     for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
-        reserved_hbm_chunks_per_context[fifo_type] = 
+        reserved_hbm_chunks_per_context[fifo_type] =
             hbm_bytes_to_chunks(
                 tm_asic_profile()->hbm_fifo_reserved_bytes_per_context[fifo_type]);
 
         if (num_hbm_contexts[fifo_type] > capri_tm_max_hbm_contexts_for_fifo(fifo_type)) {
-            HAL_TRACE_ERR("capri-tm: num hbm contexts {} for fifo {} exceeds "
+            HAL_TRACE_ERR("num hbm contexts {} for fifo {} exceeds "
                           "max available {}",
-                          num_hbm_contexts[fifo_type], 
+                          num_hbm_contexts[fifo_type],
                           fifo_type,
                           capri_tm_max_hbm_contexts_for_fifo(fifo_type));
             return HAL_RET_INVALID_ARG;
         }
-        uint64_t reserved_hbm_chunks = 
+        uint64_t reserved_hbm_chunks =
             reserved_hbm_chunks_per_context[fifo_type] * num_hbm_contexts[fifo_type];
 
         total_reserved_hbm_chunks += reserved_hbm_chunks;
@@ -1039,7 +1036,7 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     }
 
     if (payload_chunks < total_reserved_hbm_chunks) {
-        HAL_TRACE_ERR("capri-tm: Error allocating hbm fifo . Available chunks {} "
+        HAL_TRACE_ERR("Error allocating hbm fifo . Available chunks {} "
                       "total reserved required {} ",
                       payload_chunks, total_reserved_hbm_chunks);
         return HAL_RET_NO_RESOURCE;
@@ -1050,7 +1047,7 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     //
     uint64_t payload_chunks_per_context = rem_payload_chunks/total_hbm_contexts;
 
-    HAL_TRACE_DEBUG("capri-tm: HBM fifo allocation total payload {}, reserved {} "
+    HAL_TRACE_DEBUG("HBM fifo allocation total payload {}, reserved {} "
                     "remaining {} total_contexts {} "
                     "payload chunks per context {}",
                     payload_chunks, total_reserved_hbm_chunks,
@@ -1059,11 +1056,11 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     uint64_t offset = 0;
     for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
         for (uint32_t context = 0; context < num_hbm_contexts[fifo_type]; context++) {
-            uint64_t payload_chunks_needed = 
-                    payload_chunks_per_context + reserved_hbm_chunks_per_context[fifo_type];
-            uint64_t control_chunks_needed = 
+            uint64_t payload_chunks_needed =
+                payload_chunks_per_context + reserved_hbm_chunks_per_context[fifo_type];
+            uint64_t control_chunks_needed =
                 (payload_chunks_needed + tm_asic_profile()->hbm_fifo_control_scale_factor - 1)/
-                                            tm_asic_profile()->hbm_fifo_control_scale_factor;
+                tm_asic_profile()->hbm_fifo_control_scale_factor;
 
             buf_cfg->hbm_fifo[fifo_type][context].valid = true;
             buf_cfg->hbm_fifo[fifo_type][context].payload_offset = offset;
@@ -1075,7 +1072,7 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         }
     }
     HAL_ASSERT(offset <= (control_chunks + payload_chunks));
-    HAL_TRACE_DEBUG("capri-tm: unallocated hbm chunks {} total {}",
+    HAL_TRACE_DEBUG("unallocated hbm chunks {} total {}",
                     (control_chunks + payload_chunks) - offset,
                     total_hbm_chunks);
     return HAL_RET_OK;
@@ -1089,12 +1086,12 @@ iq_disabled (tm_port_t port, uint32_t iq)
     uint32_t max_iqs;
     uint32_t num_iqs;
     uint32_t disabled_iq_start, disabled_iq_end;
-    
+
     port_type = capri_tm_get_port_type(port);
     num_iqs = tm_cfg_profile()->num_qs[port_type];
 
     switch(port_type) {
-        case TM_PORT_TYPE_UPLINK: 
+        case TM_PORT_TYPE_UPLINK:
             if (port == TM_PORT_NCSI) {
                 // On the BMC port, only one pg is supported
                 num_iqs = 1;
@@ -1126,7 +1123,7 @@ iq_disabled (tm_port_t port, uint32_t iq)
     }
 
     if (disabled) {
-        HAL_TRACE_DEBUG("capri-tm: iq {} on port {} disabled",
+        HAL_TRACE_DEBUG("iq {} on port {} disabled",
                         iq, port);
     }
 
@@ -1155,7 +1152,7 @@ capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
     if (!iq_disabled(${pinfo["enum"]}, ${pg})) {
         if (tm_asic_profile()->port[port_type].uses_credits &&
             tm_asic_profile()->port[port_type].recirc_q != ${pg}) {
-            reserved_min = buf_cfg->chunks_per_q[port_type] + 
+            reserved_min = buf_cfg->chunks_per_q[port_type] +
                 cells_to_chunks(bytes_to_cells(tm_cfg_profile()->jumbo_mtu)) + 2;
             headroom = 0;
         } else {
@@ -1165,10 +1162,10 @@ capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
     }
 
     if (headroom) {
-        HAL_ASSERT(chunks_to_cells(reserved_min) >= 
-                            (bytes_to_cells(tm_cfg_profile()->jumbo_mtu) + 1));
-        xon_threshold = chunks_to_cells(reserved_min) - 
-                            (bytes_to_cells(tm_cfg_profile()->jumbo_mtu) + 1);
+        HAL_ASSERT(chunks_to_cells(reserved_min) >=
+                   (bytes_to_cells(tm_cfg_profile()->jumbo_mtu) + 1));
+        xon_threshold = chunks_to_cells(reserved_min) -
+            (bytes_to_cells(tm_cfg_profile()->jumbo_mtu) + 1);
     }
     pbc_csr.port_${p}.cfg_account_pg_${pg}.read();
     /* Update the PG parameters */
@@ -1305,7 +1302,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 //:: #endfor
 
     for (unsigned fifo_type = 0; fifo_type < HAL_ARRAY_SIZE(buf_cfg->hbm_fifo); fifo_type++) {
-        for (unsigned context = 0; 
+        for (unsigned context = 0;
              context < capri_tm_max_hbm_contexts_for_fifo(fifo_type); context++) {
             capri_tm_buf_hbm_cfg_t *hbm_cfg = &buf_cfg->hbm_fifo[fifo_type][context];
             if (hbm_cfg->valid) {
@@ -1313,7 +1310,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
                 payload_size = hbm_cfg->payload_chunks;
                 // payload occupancy is in units of 1024 bytes
                 // program it to drop when 1 jumbo-mtu worth of bytes still free
-                payload_occupancy = 
+                payload_occupancy =
                     (hbm_chunks_to_bytes(payload_size) - tm_cfg_profile()->jumbo_mtu) >> 10;
                 control_offset = hbm_cfg->control_offset;
                 control_size = hbm_cfg->control_chunks;
@@ -1370,14 +1367,14 @@ capri_tm_program_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
     ret = capri_tm_program_pbc_buffers(buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error programming pbc buffers ret {}",
+        HAL_TRACE_ERR("Error programming pbc buffers ret {}",
                       ret);
         return ret;
     }
 
     ret = capri_tm_program_p4_credits(buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error programming hbm buffers ret {}",
+        HAL_TRACE_ERR("Error programming hbm buffers ret {}",
                       ret);
         return ret;
     }
@@ -1392,10 +1389,10 @@ capri_tm_port_program_defaults (void)
     cpp_int tc_to_pg_val;
     cpp_int xoff2oq_map_val;
     tm_port_type_e port_type;
-   
+
     // For every port, program the tc_to_pg mapping
     // and mtu
-    
+
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
     // ${pinfo["enum"]}
@@ -1459,8 +1456,8 @@ capri_tm_port_program_defaults (void)
 //::    #endif
 //::    if pinfo["enum"] == "TM_PORT_INGRESS":
         pbc_csr.port_${p}.cfg_oq.packing_msb(
-            capri_tm_get_max_cell_chunks_for_island(0) > 
-                        capri_tm_get_max_cell_chunks_for_island(1) ? 0 : 1) ;
+            capri_tm_get_max_cell_chunks_for_island(0) >
+            capri_tm_get_max_cell_chunks_for_island(1) ? 0 : 1) ;
 //::    #endif
 //::    if pinfo["type"] == "dma":
         pbc_csr.port_${p}.cfg_oq.flow_control_enable_xoff(1);
@@ -1480,19 +1477,19 @@ capri_tm_init_pbc (capri_tm_buf_cfg_t *buf_cfg)
 
     ret = capri_tm_alloc_pbc_buffers(buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error allocating buffer configs {}", ret);
+        HAL_TRACE_ERR("Error allocating buffer configs {}", ret);
         return ret;
     }
 
     ret = capri_tm_program_buffers(buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error allocating buffer configs {}", ret);
+        HAL_TRACE_ERR("Error allocating buffer configs {}", ret);
         return ret;
     }
 
     ret = capri_tm_port_program_defaults();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error programming port defaults {}", ret);
+        HAL_TRACE_ERR("Error programming port defaults {}", ret);
         return ret;
     }
 
@@ -1518,7 +1515,7 @@ capri_tm_init_hbm_q_map (void)
 
     // On active uplink ports and the DMA port, setup the HBM queues
     num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
-    
+
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
 //::    if pinfo["has_hbm"]:
@@ -1526,7 +1523,7 @@ capri_tm_init_hbm_q_map (void)
 //::        if pinfo["type"] == "uplink":
     if (is_active_uplink_port(${pinfo["enum"]})) {
         // If we are an active port, then setup the HBM fifo contexts
-        num_contexts = num_hbm_contexts_per_port; 
+        num_contexts = num_hbm_contexts_per_port;
     } else {
         num_contexts = 0;
     }
@@ -1585,7 +1582,7 @@ capri_tm_init_hbm_q_map (void)
     hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(0);
 
     for (unsigned tc = 0; tc < tm_cfg_profile()->num_qs[port_type]; tc++) {
-        pbc_csr.hlp.set_slc(oq_map_val, p4_oq, tc * 5, ((tc+1)*5)-1);    
+        pbc_csr.hlp.set_slc(oq_map_val, p4_oq, tc * 5, ((tc+1)*5)-1);
     }
 
     pbc_csr.cfg_parser${p}.default_cos(0);
@@ -1617,7 +1614,7 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
 
     ret = capri_tm_alloc_hbm_buffers(buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error allocating hbm buffers ret {}",
+        HAL_TRACE_ERR("Error allocating hbm buffers ret {}",
                       ret);
         return ret;
     }
@@ -1625,26 +1622,26 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
     // Program the HBM buffers
     ret = capri_tm_program_hbm_buffers(buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error programming hbm buffers ret {}",
+        HAL_TRACE_ERR("Error programming hbm buffers ret {}",
                       ret);
         return ret;
     }
 
     ret = capri_tm_init_hbm_q_map();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error programming hbm q mapping ret {}",
+        HAL_TRACE_ERR("Error programming hbm q mapping ret {}",
                       ret);
         return ret;
     }
 
-    // On Eth ports, configure rate-limiter from HBM 
+    // On Eth ports, configure rate-limiter from HBM
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
 //::    if pinfo["type"] == "uplink" and pinfo["has_hbm"]:
     // ${pinfo["enum"]}
     hbm_csr.hbm_port_${p}.cfg_hbm.read();
     hbm_csr.hbm_port_${p}.cfg_hbm.rate_limiter(
-                    tm_asic_profile()->port[TM_PORT_TYPE_UPLINK].rate_limiter);
+        tm_asic_profile()->port[TM_PORT_TYPE_UPLINK].rate_limiter);
     hbm_csr.hbm_port_${p}.cfg_hbm.show();
     if (tm_sw_init_enabled()) {
         hbm_csr.hbm_port_${p}.cfg_hbm.write();
@@ -1675,13 +1672,13 @@ capri_tm_init_ports (void)
 
     ret = capri_tm_init_pbc(&buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error initing pbc {}", ret);
+        HAL_TRACE_ERR("Error initing pbc {}", ret);
         return ret;
     }
 
     ret = capri_tm_init_hbm(&buf_cfg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error initing hbm {}", ret);
+        HAL_TRACE_ERR("Error initing hbm {}", ret);
         return ret;
     }
 
@@ -1702,7 +1699,7 @@ capri_tm_global_init (void)
     uint32_t max_row[] = {4095, 2559};
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
-    
+
     pbc_csr.cfg_fc_mgr_0.read();
     pbc_csr.cfg_fc_mgr_1.read();
     pbc_csr.cfg_island_control.read();
@@ -1713,7 +1710,7 @@ capri_tm_global_init (void)
     pbc_csr.cfg_fc_mgr_0.init_reset(0);
     pbc_csr.cfg_fc_mgr_1.init_start(1);
     pbc_csr.cfg_fc_mgr_1.init_reset(0);
-    if (capri_tm_get_max_cell_chunks_for_island(0) > 
+    if (capri_tm_get_max_cell_chunks_for_island(0) >
         capri_tm_get_max_cell_chunks_for_island(1)) {
         pbc_csr.cfg_fc_mgr_0.max_row(max_row[0]);
         pbc_csr.cfg_fc_mgr_0.min_cell(min_cells[0]);
@@ -1746,7 +1743,7 @@ capri_tm_global_init (void)
         pbc_csr.cfg_island_control.write();
         pbc_csr.cfg_rc.write();
         pbc_csr.cfg_tail_drop.write();
-        HAL_TRACE_DEBUG("capri-tm: TM global init done");
+        HAL_TRACE_DEBUG("TM global init done");
     }
     return HAL_RET_OK;
 }
@@ -1781,7 +1778,7 @@ capri_tm_enable_ports (void)
 
     if (is_active_port(${pinfo["enum"]})) {
         enable = 1;
-    } 
+    }
 
     switch(port_type) {
         case TM_PORT_TYPE_UPLINK:
@@ -1816,8 +1813,8 @@ capri_tm_enable_ports (void)
     }
 
 //::    if pinfo["type"] == "p4":
-        pbc_csr.port_${p}.cfg_write_control.recirc_enable(1);
-        pbc_csr.port_${p}.cfg_write_control.recirc_oq(recirc_q);
+    pbc_csr.port_${p}.cfg_write_control.recirc_enable(1);
+    pbc_csr.port_${p}.cfg_write_control.recirc_oq(recirc_q);
 //::    #endif
 
     pbc_csr.port_${p}.cfg_write_control.show();
@@ -1829,15 +1826,15 @@ capri_tm_enable_ports (void)
     return ret;
 }
 
-static hal_ret_t 
-populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile, 
+static hal_ret_t
+populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
                       sdk::lib::catalog *catalog)
 {
     const sdk::lib::qos_profile_t *qos_profile;
 
     qos_profile = catalog->qos_profile();
     if (!qos_profile) {
-        HAL_TRACE_ERR("capri-tm: QOS asic profile does not exist in the catalog");
+        HAL_TRACE_ERR("QOS asic profile does not exist in the catalog");
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1855,18 +1852,18 @@ populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
 
 
     if ((tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] *
-        tm_cfg_profile->num_active_uplink_ports) > HAL_TM_MAX_HBM_ETH_CONTEXTS) {
-        HAL_TRACE_WARN("capri-tm: num_uplink_ports {} with {} qs cannot be supported"
+         tm_cfg_profile->num_active_uplink_ports) > HAL_TM_MAX_HBM_ETH_CONTEXTS) {
+        HAL_TRACE_WARN("num_uplink_ports {} with {} qs cannot be supported"
                        " reducing the num of qs to {}",
                        tm_cfg_profile->num_active_uplink_ports,
                        tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK],
                        HAL_TM_MAX_HBM_ETH_CONTEXTS/tm_cfg_profile->num_active_uplink_ports);
-        tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] = 
+        tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] =
             HAL_TM_MAX_HBM_ETH_CONTEXTS/tm_cfg_profile->num_active_uplink_ports;
     }
 
     if (!tm_cfg_profile->hbm_fifo_size) {
-        HAL_TRACE_ERR("capri-tm: HBM allocation for QOS overflow fifo not available");
+        HAL_TRACE_ERR("HBM allocation for QOS overflow fifo not available");
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;
@@ -1907,12 +1904,12 @@ capri_tm_init (sdk::lib::catalog* catalog)
     populate_asic_profile(&asic_profile);
     ret = populate_cfg_profile(tm_cfg_profile, catalog);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error populating config profile from the catalog ret {}",
+        HAL_TRACE_ERR("Error populating config profile from the catalog ret {}",
                       ret);
         return ret;
     }
 
-    HAL_TRACE_DEBUG("capri-tm: cfg-profile sw_init_en {} sw_cfg_write_en {} jumbo_mtu {} "
+    HAL_TRACE_DEBUG("cfg-profile sw_init_en {} sw_cfg_write_en {} jumbo_mtu {} "
                     "num_active_uplink_ports {} hbm_fifo_size {} hbm_fifo_base {:#x}",
                     tm_cfg_profile->sw_init_enabled,
                     tm_cfg_profile->sw_cfg_write_enabled,
@@ -1921,15 +1918,15 @@ capri_tm_init (sdk::lib::catalog* catalog)
                     tm_cfg_profile->hbm_fifo_size,
                     tm_cfg_profile->hbm_fifo_base);
     for (unsigned port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
-        if (tm_cfg_profile->num_qs[port_type] > 
-                capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type)) {
-            HAL_TRACE_ERR("capri-tm: Error cfg-profile port_type {} num_qs {} "
+        if (tm_cfg_profile->num_qs[port_type] >
+            capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type)) {
+            HAL_TRACE_ERR("Error cfg-profile port_type {} num_qs {} "
                           "supported {}",
                           (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type],
                           capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type));
             return HAL_RET_INVALID_ARG;
         }
-        HAL_TRACE_DEBUG("capri-tm: cfg-profile port_type {} num_qs {} ",
+        HAL_TRACE_DEBUG("cfg-profile port_type {} num_qs {} ",
                         (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type]);
     }
 
@@ -1937,13 +1934,13 @@ capri_tm_init (sdk::lib::catalog* catalog)
 
     ret = capri_tm_init_ports();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error initing ports ret {}", ret);
+        HAL_TRACE_ERR("Error initing ports ret {}", ret);
         return ret;
     }
 
     ret = capri_tm_global_init();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error initing global config ret {}", ret);
+        HAL_TRACE_ERR("Error initing global config ret {}", ret);
         return ret;
     }
     if (tm_sw_init_enabled()) {
@@ -1953,7 +1950,7 @@ capri_tm_init (sdk::lib::catalog* catalog)
 
     ret = capri_tm_enable_ports();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("capri-tm: Error enabling ports ret {}", ret);
+        HAL_TRACE_ERR("Error enabling ports ret {}", ret);
         return ret;
     }
 
@@ -1961,20 +1958,19 @@ capri_tm_init (sdk::lib::catalog* catalog)
 
     char *perf_run = getenv("PERF_RUN");
     if (perf_run) {
-        HAL_TRACE_DEBUG("capri-tm:: perf-run env {}", perf_run);
+        HAL_TRACE_DEBUG("perf-run env {}", perf_run);
         if (!strcmp(perf_run, "true")) {
             capri_tm_update_perf_run_config();
         }
     }
-    HAL_TRACE_DEBUG("capri-tm::{}: Init completed",
-                    __func__);
+    HAL_TRACE_DEBUG("Init completed");
 
     return ret;
 }
 
 /* Programs the base address in HBM for the replication table */
 hal_ret_t
-capri_tm_repl_table_base_addr_set(uint64_t addr)
+capri_tm_repl_table_base_addr_set (uint64_t addr)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -1986,7 +1982,7 @@ capri_tm_repl_table_base_addr_set(uint64_t addr)
 
 /* Programs the replication table token size */
 hal_ret_t
-capri_tm_repl_table_token_size_set(uint32_t size_in_bits)
+capri_tm_repl_table_token_size_set (uint32_t size_in_bits)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -2009,7 +2005,7 @@ capri_tm_repl_table_token_size_set(uint32_t size_in_bits)
 
 /* Get hw clock */
 hal_ret_t
-capri_tm_get_clock_tick(uint64_t *tick)
+capri_tm_get_clock_tick (uint64_t *tick)
 {
 #ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -2018,6 +2014,6 @@ capri_tm_get_clock_tick(uint64_t *tick)
 
     hbm_csr.sta_hbm_timestamp.read();
     *tick = (uint64_t)hbm_csr.sta_hbm_timestamp.value().convert_to<uint64_t>();
-#endif 
+#endif
     return HAL_RET_OK;
 }

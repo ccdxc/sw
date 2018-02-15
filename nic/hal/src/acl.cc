@@ -63,8 +63,7 @@ acl_add_to_db (acl_t *acl, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:adding to acl hash table",
-                    __func__);
+    HAL_TRACE_DEBUG("adding to acl hash table");
     // allocate an entry to establish mapping from acl-id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
@@ -77,8 +76,8 @@ acl_add_to_db (acl_t *acl, hal_handle_t handle)
     sdk_ret = g_hal_state->acl_ht()->insert_with_key(&acl->key,
                                                      entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add key to handle mapping, "
-                      "err : {}", __func__, ret);
+        HAL_TRACE_ERR("failed to add key to handle mapping, "
+                      "err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -97,14 +96,14 @@ acl_del_from_db (acl_t *acl)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:removing from hash table", __func__);
+    HAL_TRACE_DEBUG("removing from hash table");
 
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->acl_ht()->remove(&acl->key);
 
     if (entry) {
         // free up
-         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
 
     return HAL_RET_OK;
@@ -123,8 +122,8 @@ acl_free (acl_t *acl, bool free_pd)
         pd_acl_args.acl = acl;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_MEM_FREE, (void *)&pd_acl_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete acl pd, err : {}",
-                          __func__, ret);
+            HAL_TRACE_ERR("failed to delete acl pd, err : {}",
+                          ret);
             return ret;
         }
     }
@@ -140,7 +139,6 @@ acl_free (acl_t *acl, bool free_pd)
 static hal_ret_t
 acl_spec_print (AclSpec& spec)
 {
-    hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
 
     buf.write("Acl Spec: ");
@@ -230,7 +228,7 @@ acl_spec_print (AclSpec& spec)
                     buf.write("proto {}, ", ip_sel.ip_protocol());
                     break;
                 case acl::IPSelector::kIcmpSelector:
-                    buf.write("icmp code {}/{}, ", 
+                    buf.write("icmp code {}/{}, ",
                               ip_sel.icmp_selector().icmp_code_mask(),
                               ip_sel.icmp_selector().icmp_code());
 
@@ -308,7 +306,7 @@ acl_spec_print (AclSpec& spec)
     }
 
     HAL_TRACE_DEBUG("{}", buf.c_str());
-    return ret;
+    return HAL_RET_OK;
 }
 
 
@@ -325,7 +323,7 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_t             *acl = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -335,16 +333,16 @@ acl_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl = (acl_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:create add CB {}",
-                    __func__, acl->key);
+    HAL_TRACE_DEBUG("create add CB {}",
+                    acl->key);
 
     // PD Call to allocate PD resources and HW programming
     pd::pd_acl_create_args_init(&pd_acl_args);
     pd_acl_args.acl = acl;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_CREATE, (void *)&pd_acl_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to create acl pd, err : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to create acl pd, err : {}",
+                      ret);
     }
 
 end:
@@ -366,7 +364,7 @@ acl_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t  hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -378,19 +376,19 @@ acl_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl = (acl_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create commit CB {}",
-                    __func__, acl->key);
+    HAL_TRACE_DEBUG("create commit CB {}",
+                    acl->key);
 
     // Add to DB
     ret = acl_add_to_db (acl, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to add acl:{} to DB",
-                      __func__, acl->key);
+        HAL_TRACE_ERR("unable to add acl:{} to DB",
+                      acl->key);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:added acl:{} to DB",
-                  __func__, acl->key);
+    HAL_TRACE_DEBUG("added acl:{} to DB",
+                    acl->key);
 
     // TODO: Increment the ref counts of dependent objects
 
@@ -418,7 +416,7 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t       hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -429,7 +427,7 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl = (acl_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create abort CB {}", __func__);
+    HAL_TRACE_DEBUG("create abort CB");
 
     // 1. delete call to PD
     if (acl->pd) {
@@ -437,8 +435,8 @@ acl_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_acl_args.acl = acl;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete acl pd, err : {}",
-                          __func__, ret);
+            HAL_TRACE_ERR("failed to delete acl pd, err : {}",
+                          ret);
         }
     }
 
@@ -457,9 +455,7 @@ end:
 hal_ret_t
 acl_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -467,7 +463,7 @@ acl_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 //------------------------------------------------------------------------------
 hal_ret_t
 acl_prepare_rsp (AclResponse *rsp, hal_ret_t ret,
-                       hal_handle_t hal_handle)
+                 hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
         rsp->mutable_status()->set_acl_handle(hal_handle);
@@ -488,23 +484,21 @@ validate_acl_create (AclSpec& spec)
     acl_id_t     acl_id;
 
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}: ACL id not provided",
-                      __func__);
+        HAL_TRACE_ERR("ACL id not provided");
         return HAL_RET_INVALID_ARG;
     }
 
     if (spec.key_or_handle().key_or_handle_case() !=
         kh::AclKeyHandle::kAclId) {
-        HAL_TRACE_ERR("{}: ACL id not provided",
-                      __func__);
+        HAL_TRACE_ERR("ACL id not provided");
         return HAL_RET_INVALID_ARG;
     }
 
     acl_id = spec.key_or_handle().acl_id();
     acl = find_acl_by_id(acl_id);
     if (acl) {
-        HAL_TRACE_ERR("{} ACL with id {} already created",
-                      __func__, acl_id);
+        HAL_TRACE_ERR("ACL with id {} already created",
+                      acl_id);
         return HAL_RET_ENTRY_EXISTS;
     }
     return HAL_RET_OK;
@@ -535,7 +529,7 @@ validate_l4port_range(uint16_t port_start, uint16_t port_end,
     return HAL_RET_OK;
 }
 
-static hal_ret_t 
+static hal_ret_t
 key_mask_to_l4port_range(uint16_t key, uint16_t mask,
                          uint16_t *port_start_p, uint16_t *port_end_p)
 {
@@ -547,8 +541,8 @@ key_mask_to_l4port_range(uint16_t key, uint16_t mask,
         port_end = 0xffff;
     } else if (~mask & (~mask+1)) {
         // Mask should have all bits together in the MSB
-        HAL_TRACE_ERR("{}: Not a valid port mask {#x}",
-                      __func__, mask);
+        HAL_TRACE_ERR("Not a valid port mask {#x}",
+                      mask);
         ret = HAL_RET_INVALID_ARG;
         port_start = 0;
         port_end = 0;
@@ -605,9 +599,9 @@ extract_ip_common (acl_type_e acl_type,
                                             &ip_key->u.udp.sport,
                                             &ip_mask->u.udp.sport);
                 if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("{}: UDP sport range {} to {} cannot be supported"
+                    HAL_TRACE_ERR("UDP sport range {} to {} cannot be supported"
                                   " Only maskable ranges are supported",
-                                  __func__, port_start, port_end);
+                                  port_start, port_end);
                     ret = HAL_RET_INVALID_ARG;
                     goto end;
                 }
@@ -620,9 +614,9 @@ extract_ip_common (acl_type_e acl_type,
                                             &ip_key->u.udp.dport,
                                             &ip_mask->u.udp.dport);
                 if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("{}: UDP dport range {} to {} cannot be supported"
+                    HAL_TRACE_ERR("UDP dport range {} to {} cannot be supported"
                                   " Only maskable ranges are supported",
-                                  __func__, port_start, port_end);
+                                  port_start, port_end);
                     ret = HAL_RET_INVALID_ARG;
                     goto end;
                 }
@@ -641,9 +635,9 @@ extract_ip_common (acl_type_e acl_type,
                                             &ip_key->u.tcp.sport,
                                             &ip_mask->u.tcp.sport);
                 if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("{}: TCP sport range {} to {} cannot be supported"
+                    HAL_TRACE_ERR("TCP sport range {} to {} cannot be supported"
                                   " Only maskable ranges are supported",
-                                  __func__, port_start, port_end);
+                                  port_start, port_end);
                     ret = HAL_RET_INVALID_ARG;
                     goto end;
                 }
@@ -657,9 +651,9 @@ extract_ip_common (acl_type_e acl_type,
                                             &ip_key->u.tcp.dport,
                                             &ip_mask->u.tcp.dport);
                 if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("{}: TCP dport range {} to {} cannot be supported"
+                    HAL_TRACE_ERR("TCP dport range {} to {} cannot be supported"
                                   " Only maskable ranges are supported",
-                                  __func__, port_start, port_end);
+                                  port_start, port_end);
                     ret = HAL_RET_INVALID_ARG;
                     goto end;
                 }
@@ -736,7 +730,7 @@ end:
     return ret;
 }
 
-static hal_ret_t 
+static hal_ret_t
 populate_ip_common (acl_ip_match_spec_t *ip_key,
                     acl_ip_match_spec_t *ip_mask,
                     acl::IPSelector *ip_sel)
@@ -760,7 +754,7 @@ populate_ip_common (acl_ip_match_spec_t *ip_key,
             break;
         case IP_PROTO_UDP:
             if (ip_mask->u.udp.sport) {
-                ret = key_mask_to_l4port_range(ip_key->u.udp.sport, 
+                ret = key_mask_to_l4port_range(ip_key->u.udp.sport,
                                                ip_mask->u.udp.sport,
                                                &port_start,
                                                &port_end);
@@ -768,7 +762,7 @@ populate_ip_common (acl_ip_match_spec_t *ip_key,
                 ip_sel->mutable_udp_selector()->mutable_src_port_range()->set_port_high(port_end);
             }
             if (ip_mask->u.udp.dport) {
-                ret = key_mask_to_l4port_range(ip_key->u.udp.dport, 
+                ret = key_mask_to_l4port_range(ip_key->u.udp.dport,
                                                ip_mask->u.udp.dport,
                                                &port_start,
                                                &port_end);
@@ -778,7 +772,7 @@ populate_ip_common (acl_ip_match_spec_t *ip_key,
             break;
         case IP_PROTO_TCP:
             if (ip_mask->u.tcp.sport) {
-                ret = key_mask_to_l4port_range(ip_key->u.tcp.sport, 
+                ret = key_mask_to_l4port_range(ip_key->u.tcp.sport,
                                                ip_mask->u.tcp.sport,
                                                &port_start,
                                                &port_end);
@@ -786,7 +780,7 @@ populate_ip_common (acl_ip_match_spec_t *ip_key,
                 ip_sel->mutable_tcp_selector()->mutable_src_port_range()->set_port_high(port_end);
             }
             if (ip_mask->u.tcp.dport) {
-                ret = key_mask_to_l4port_range(ip_key->u.tcp.dport, 
+                ret = key_mask_to_l4port_range(ip_key->u.tcp.dport,
                                                ip_mask->u.tcp.dport,
                                                &port_start,
                                                &port_end);
@@ -1010,8 +1004,7 @@ extract_match_spec (acl_match_spec_t *ms,
         }
 
         if(src_if == NULL) {
-            HAL_TRACE_ERR("{}: Source interface not found",
-                          __func__);
+            HAL_TRACE_ERR("Source interface not found");
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         } else {
@@ -1032,8 +1025,7 @@ extract_match_spec (acl_match_spec_t *ms,
         }
 
         if(dest_if == NULL) {
-            HAL_TRACE_ERR("{}: Destination interface not found",
-                          __func__);
+            HAL_TRACE_ERR("Destination interface not found");
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         } else {
@@ -1054,8 +1046,7 @@ extract_match_spec (acl_match_spec_t *ms,
         }
 
         if(vrf == NULL) {
-            HAL_TRACE_ERR("{}: Vrf not found",
-                          __func__);
+            HAL_TRACE_ERR("Vrf not found");
             ret = HAL_RET_VRF_NOT_FOUND;
             goto end;
         } else {
@@ -1074,8 +1065,7 @@ extract_match_spec (acl_match_spec_t *ms,
         }
 
         if(l2seg == NULL) {
-            HAL_TRACE_ERR("{}: L2 segment not found",
-                          __func__);
+            HAL_TRACE_ERR("L2 segment not found");
             ret = HAL_RET_L2SEG_NOT_FOUND;
             goto end;
         } else {
@@ -1106,7 +1096,7 @@ extract_match_spec (acl_match_spec_t *ms,
             break;
         case ACL_TYPE_IPv4:
             if (sel.ip_selector().has_src_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->sip, 
+                ip_addr_spec_to_ip_addr(&ip_key->sip,
                                         sel.ip_selector().src_prefix().address());
                 // Convert prefix len to mask
                 ip_mask->sip.addr.v4_addr = ipv4_prefix_len_to_mask(
@@ -1114,7 +1104,7 @@ extract_match_spec (acl_match_spec_t *ms,
             }
 
             if (sel.ip_selector().has_dst_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->dip, 
+                ip_addr_spec_to_ip_addr(&ip_key->dip,
                                         sel.ip_selector().dst_prefix().address());
                 // Convert prefix len to mask
                 ip_mask->dip.addr.v4_addr = ipv4_prefix_len_to_mask(
@@ -1126,7 +1116,7 @@ extract_match_spec (acl_match_spec_t *ms,
             break;
         case ACL_TYPE_IPv6:
             if (sel.ip_selector().has_src_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->sip, 
+                ip_addr_spec_to_ip_addr(&ip_key->sip,
                                         sel.ip_selector().src_prefix().address());
                 // Convert prefix len to mask
                 ipv6_prefix_len_to_mask(&ip_mask->sip.addr.v6_addr,
@@ -1134,7 +1124,7 @@ extract_match_spec (acl_match_spec_t *ms,
             }
 
             if (sel.ip_selector().has_dst_prefix()) {
-                ip_addr_spec_to_ip_addr(&ip_key->dip, 
+                ip_addr_spec_to_ip_addr(&ip_key->dip,
                                         sel.ip_selector().dst_prefix().address());
                 // Convert prefix len to mask
                 ipv6_prefix_len_to_mask(&ip_mask->dip.addr.v6_addr,
@@ -1145,8 +1135,7 @@ extract_match_spec (acl_match_spec_t *ms,
                                     sel.ip_selector());
             break;
         case ACL_TYPE_INVALID:
-            HAL_TRACE_ERR("{}: ACL Type invalid",
-                          __func__);
+            HAL_TRACE_ERR("ACL Type invalid");
             ret = HAL_RET_INVALID_ARG;
             break;
     }
@@ -1160,8 +1149,7 @@ extract_match_spec (acl_match_spec_t *ms,
     // For production builds this needs to be removed
     // TODO: REMOVE
     if (sel.has_internal_key() != sel.has_internal_mask()) {
-        HAL_TRACE_ERR("{}: ACL Internal selector key/mask not specified",
-                      __func__);
+        HAL_TRACE_ERR("ACL Internal selector key/mask not specified");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1193,7 +1181,7 @@ end:
 
 static hal_ret_t
 populate_match_spec (acl_match_spec_t *ms,
-                    acl::AclSelector *sel)
+                     acl::AclSelector *sel)
 {
     hal_ret_t   ret = HAL_RET_OK;
     ip_prefix_t ip_pfx;
@@ -1216,7 +1204,7 @@ populate_match_spec (acl_match_spec_t *ms,
 
     if (ms->vrf_match) {
         sel->mutable_vrf_key_handle()->set_vrf_handle(ms->vrf_handle);
-    } 
+    }
 
     if (ms->l2seg_match) {
         sel->mutable_l2segment_key_handle()->set_l2segment_handle(ms->l2seg_handle);
@@ -1308,7 +1296,7 @@ extract_mirror_sessions (const acl::AclActionInfo &ainfo, uint8_t *ingress, uint
 
 static hal_ret_t
 extract_action_spec (acl_action_spec_t *as,
-                    const acl::AclActionInfo &ainfo)
+                     const acl::AclActionInfo &ainfo)
 {
     hal_ret_t    ret = HAL_RET_OK;
     if_t         *redirect_if = NULL;
@@ -1325,8 +1313,7 @@ extract_action_spec (acl_action_spec_t *as,
     as->action = ainfo.action();
     ret = extract_mirror_sessions(ainfo, &ingress, &egress);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Error extracting mirror sessions",
-                      __func__);
+        HAL_TRACE_ERR("Error extracting mirror sessions");
         goto end;
     }
     as->ing_mirror_en = ingress ? true : false;
@@ -1337,8 +1324,8 @@ extract_action_spec (acl_action_spec_t *as,
 
     if (ainfo.has_redirect_if_key_handle()) {
         if (as->action != acl::ACL_ACTION_REDIRECT) {
-            HAL_TRACE_ERR("{}: Redirect interface specified with action {} ",
-                          __func__, as->action);
+            HAL_TRACE_ERR("Redirect interface specified with action {} ",
+                          as->action);
             ret = HAL_RET_INVALID_ARG;
             goto end;
         }
@@ -1354,8 +1341,7 @@ extract_action_spec (acl_action_spec_t *as,
         }
 
         if(redirect_if == NULL) {
-            HAL_TRACE_ERR("{}: Redirect interface not found",
-                          __func__);
+            HAL_TRACE_ERR("Redirect interface not found");
             ret = HAL_RET_IF_NOT_FOUND;
             goto end;
         } else {
@@ -1369,9 +1355,9 @@ extract_action_spec (acl_action_spec_t *as,
     // TODO: REMOVE
     if (ainfo.has_internal_actions()) {
         if (as->action != acl::ACL_ACTION_REDIRECT) {
-            HAL_TRACE_ERR("{}: Redirect action fields specified for "
+            HAL_TRACE_ERR("Redirect action fields specified for "
                           "non-redirect action {}",
-                          __func__, as->action);
+                          as->action);
             ret = HAL_RET_INVALID_ARG;
             goto end;
         }
@@ -1397,8 +1383,7 @@ extract_action_spec (acl_action_spec_t *as,
         r_args.rw_idx = &as->int_as.rw_idx;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, (void *)&r_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Unable to find/alloc rw entry",
-                          __func__);
+            HAL_TRACE_ERR("Unable to find/alloc rw entry");
             goto end;
         }
     }
@@ -1431,7 +1416,7 @@ acl_populate_from_spec (acl_t *acl, AclSpec& spec)
 {
     hal_ret_t ret = HAL_RET_OK;
     // save the configs from the spec
-    if (spec.has_key_or_handle() && 
+    if (spec.has_key_or_handle() &&
         (spec.key_or_handle().key_or_handle_case() == AclKeyHandle::kAclId)) {
         acl->key.acl_id = spec.key_or_handle().acl_id();
     }
@@ -1439,17 +1424,17 @@ acl_populate_from_spec (acl_t *acl, AclSpec& spec)
     acl->priority = spec.priority();
     ret = extract_match_spec(&acl->match_spec, spec.match());
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Acl create request match parsing failed."
+        HAL_TRACE_ERR("Acl create request match parsing failed."
                       " Err: {}",
-                      __func__, ret);
+                      ret);
         goto end;
     }
 
     ret = extract_action_spec(&acl->action_spec, spec.action());
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Acl create request action parsing failed."
+        HAL_TRACE_ERR("Acl create request action parsing failed."
                       " Err: {}",
-                      __func__, ret);
+                      ret);
         goto end;
     }
 
@@ -1474,19 +1459,18 @@ acl_create (AclSpec& spec, AclResponse *rsp)
 
     ret = validate_acl_create(spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("Validation failed ret {}", ret);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: acl create for acl-id {} ",
-                    __func__,
+    HAL_TRACE_DEBUG("acl create for acl-id {} ",
                     spec.key_or_handle().acl_id());
 
     // instantiate acl
     acl = acl_alloc_init();
     if (acl == NULL) {
-        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("unable to allocate handle/memory ret: {}",
+                      ret);
         ret = HAL_RET_OOM;
         goto end;
     }
@@ -1495,16 +1479,14 @@ acl_create (AclSpec& spec, AclResponse *rsp)
     // populate from the spec
     ret = acl_populate_from_spec(acl, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: error in populating acl from spec",
-                      __func__);
+        HAL_TRACE_ERR("error in populating acl from spec");
         goto end;
     }
 
     // allocate hal handle id
     acl->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ACL);
     if (acl->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle",
-                      __func__);
+        HAL_TRACE_ERR("failed to alloc handle");
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -1549,7 +1531,7 @@ validate_acl_update (AclSpec& spec, AclResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __func__);
+        HAL_TRACE_ERR("spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1570,7 +1552,7 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_t                 *acl_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1580,16 +1562,16 @@ acl_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl_clone = (acl_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update upd CB {}",
-                    __func__, acl_clone->key);
+    HAL_TRACE_DEBUG("update upd CB {}",
+                    acl_clone->key);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_acl_update_args_init(&pd_acl_args);
     pd_acl_args.acl = acl_clone;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_UPDATE, (void *)&pd_acl_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to update acl pd, err : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to update acl pd, err : {}",
+                      ret);
     }
 
 end:
@@ -1622,8 +1604,7 @@ acl_make_clone (acl_t *acl, acl_t **acl_clone_p, AclSpec& spec)
     // Update with the new spec
     ret = acl_populate_from_spec(acl_clone, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: error in populating acl from spec",
-                      __func__);
+        HAL_TRACE_ERR("error in populating acl from spec");
         goto end;
     }
 
@@ -1643,7 +1624,7 @@ end:
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
-acl_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+acl_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t             ret = HAL_RET_OK;
     dllist_ctxt_t         *lnode = NULL;
@@ -1651,7 +1632,7 @@ acl_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     acl_t                 *acl = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1661,8 +1642,8 @@ acl_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     acl = (acl_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
-                    __func__, acl->key);
+    HAL_TRACE_DEBUG("update commit CB {}",
+                    acl->key);
 
     // Free PI.
     acl_free(acl, true);
@@ -1683,7 +1664,7 @@ acl_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_t             *acl_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-acl{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1693,8 +1674,8 @@ acl_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl_clone = (acl_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update abort CB {}",
-                    __func__, acl_clone->key);
+    HAL_TRACE_DEBUG("update abort CB {}",
+                    acl_clone->key);
 
     // Free Clone
     acl_free(acl_clone, true);
@@ -1730,27 +1711,26 @@ acl_update (AclSpec& spec, AclResponse *rsp)
     // validate the request message
     ret = validate_acl_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:acl delete validation failed, ret : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("acl delete validation failed, ret : {}",
+                      ret);
         goto end;
     }
 
     acl = acl_lookup_by_key_or_handle(kh);
     if (acl == NULL) {
-        HAL_TRACE_ERR("{}:failed to find acl, id {}, handle {}",
-                      __func__, kh.acl_id(), kh.acl_handle());
+        HAL_TRACE_ERR("failed to find acl, id {}, handle {}",
+                      kh.acl_id(), kh.acl_handle());
         ret = HAL_RET_ACL_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("{}:update acl {}", __func__,
+    HAL_TRACE_DEBUG("update acl {}",
                     acl->key);
 
     acl_make_clone(acl, (acl_t **)&dhl_entry.cloned_obj, spec);
 
     acl_clone = (acl_t *)dhl_entry.cloned_obj;
     if (acl->priority != acl_clone->priority) {
-        HAL_TRACE_ERR("{}: priority updates are currently not supported",
-                      __func__);
+        HAL_TRACE_ERR("priority updates are currently not supported");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1780,7 +1760,7 @@ end:
         }
     }
     acl_prepare_rsp(rsp, ret,
-                       acl ? acl->hal_handle : HAL_HANDLE_INVALID);
+                    acl ? acl->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: acl update ");
     return ret;
 }
@@ -1815,14 +1795,14 @@ acl_get (AclGetRequest& req, AclGetResponse *rsp)
 
     ret = populate_match_spec(&acl->match_spec, spec->mutable_match());
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Error populating match spec for acl {} ret {}",
-                      __func__, acl->key, ret);
+        HAL_TRACE_ERR("Error populating match spec for acl {} ret {}",
+                      acl->key, ret);
     }
 
     ret = populate_action_spec(&acl->action_spec, spec->mutable_action());
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Error populating action spec for acl {} ret {}",
-                      __func__, acl->key, ret);
+        HAL_TRACE_ERR("Error populating action spec for acl {} ret {}",
+                      acl->key, ret);
     }
 
     // fill operational state of this acl
@@ -1844,7 +1824,7 @@ validate_acl_delete_req (AclDeleteRequest& req, AclDeleteResponse *rsp)
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __func__);
+        HAL_TRACE_ERR("spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -1864,7 +1844,7 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl_t                       *acl        = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1878,16 +1858,16 @@ acl_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     acl = (acl_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:delete del CB {} handle {}",
-                    __func__, acl->key, acl->hal_handle);
+    HAL_TRACE_DEBUG("delete del CB {} handle {}",
+                    acl->key, acl->hal_handle);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_acl_delete_args_init(&pd_acl_args);
     pd_acl_args.acl = acl;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACL_DELETE, (void *)&pd_acl_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to delete acl pd, err : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to delete acl pd, err : {}",
+                      ret);
     }
 
 end:
@@ -1910,7 +1890,7 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1921,14 +1901,14 @@ acl_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     acl = (acl_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit CB {} handle {}",
-                    __func__, acl->key, acl->hal_handle);
+    HAL_TRACE_DEBUG("delete commit CB {} handle {}",
+                    acl->key, acl->hal_handle);
 
     // a. Remove from acl id hash table
     ret = acl_del_from_db(acl);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to del acl {} from db, err : {}",
-                      __func__, acl->key, ret);
+        HAL_TRACE_ERR("failed to del acl {} from db, err : {}",
+                      acl->key, ret);
         goto end;
     }
 
@@ -1977,21 +1957,21 @@ acl_delete (AclDeleteRequest& req, AclDeleteResponse *rsp)
     // validate the request message
     ret = validate_acl_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:acl delete validation failed, ret : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("acl delete validation failed, ret : {}",
+                      ret);
         goto end;
     }
 
     acl = acl_lookup_by_key_or_handle(kh);
     if (acl == NULL) {
-        HAL_TRACE_ERR("{}:failed to find acl, id {}, handle {}",
-                      __func__, kh.acl_id(), kh.acl_handle());
+        HAL_TRACE_ERR("failed to find acl, id {}, handle {}",
+                      kh.acl_id(), kh.acl_handle());
         ret = HAL_RET_ACL_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:deleting acl {} handle {}",
-                    __func__, acl->key, acl->hal_handle);
+    HAL_TRACE_DEBUG("deleting acl {} handle {}",
+                    acl->key, acl->hal_handle);
 
     // form ctxt and call infra add
     dhl_entry.handle = acl->hal_handle;

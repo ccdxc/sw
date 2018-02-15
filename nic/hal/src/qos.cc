@@ -96,8 +96,7 @@ qos_class_add_to_db (qos_class_t *qos_class, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:adding to qos_class hash table", 
-                    __func__);
+    HAL_TRACE_DEBUG("adding to qos_class hash table");
     // allocate an entry to establish mapping from qos_group to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
@@ -108,10 +107,10 @@ qos_class_add_to_db (qos_class_t *qos_class, hal_handle_t handle)
 
     entry->handle_id = handle;
     sdk_ret = g_hal_state->qos_class_ht()->insert_with_key(&qos_class->key,
-                                                   entry, &entry->ht_ctxt);
+                                                           entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add key to handle mapping, "
-                      "err : {}", __func__, ret);
+        HAL_TRACE_ERR("failed to add key to handle mapping, "
+                      "err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -132,13 +131,13 @@ qos_class_del_from_db (qos_class_t *qos_class)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:removing from hash table", __func__);
+    HAL_TRACE_DEBUG("removing from hash table");
 
     // Update the global bmps for the cmaps
     qos_class_cmap_db_delete(qos_class);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->qos_class_ht()->
-            remove(&qos_class->key);
+        remove(&qos_class->key);
 
     if (entry) {
         // free up
@@ -169,8 +168,8 @@ qos_class_free (qos_class_t *qos_class, bool free_pd)
         pd_qos_class_args.qos_class = qos_class;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_MEM_FREE, (void *)&pd_qos_class_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete qos_class pd, err : {}",
-                          __func__, ret);
+            HAL_TRACE_ERR("failed to delete qos_class pd, err : {}",
+                          ret);
             return ret;
         }
     }
@@ -185,7 +184,6 @@ qos_class_free (qos_class_t *qos_class, bool free_pd)
 static hal_ret_t
 qos_class_spec_print (QosClassSpec& spec)
 {
-    hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
 
     buf.write("QosClass Spec: ");
@@ -242,7 +240,7 @@ qos_class_spec_print (QosClassSpec& spec)
     }
 
     HAL_TRACE_DEBUG("{}", buf.c_str());
-    return ret;
+    return HAL_RET_OK;
 }
 
 static hal_ret_t
@@ -252,7 +250,7 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
 
     // mtu should be set
     if (!spec.mtu()) {
-        HAL_TRACE_ERR("{}:mtu not set in request", __func__);
+        HAL_TRACE_ERR("mtu not set in request");
         return HAL_RET_INVALID_ARG;
     }
 
@@ -265,39 +263,37 @@ validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group)
         if (spec.has_buffer() ||
             spec.buffer().xon_threshold() ||
             spec.buffer().xoff_clear_limit()) {
-            HAL_TRACE_ERR("{}:No-drop class buffer params set in request for drop class", 
-                          __func__);
+            HAL_TRACE_ERR("No-drop class buffer params set in request for drop class");
             return HAL_RET_INVALID_ARG;
         }
     } else {
         if (!spec.has_buffer() ||
             !spec.buffer().xon_threshold() ||
             !spec.buffer().xoff_clear_limit()) {
-            HAL_TRACE_ERR("{}:No-drop class buffer params not set in request", 
-                          __func__);
+            HAL_TRACE_ERR("No-drop class buffer params not set in request");
             return HAL_RET_INVALID_ARG;
         }
     }
 
     // Scheduler configuration should be set
     if (!spec.has_sched()) {
-        HAL_TRACE_ERR("{}:scheduler not set in request", __func__);
+        HAL_TRACE_ERR("scheduler not set in request");
         return HAL_RET_INVALID_ARG;
     }
 
     if (!valid_qos_group(qos_group)) {
-        HAL_TRACE_ERR("{}: Not valid qos group {}",
-                      __func__, spec.key_or_handle().qos_group());
+        HAL_TRACE_ERR("Not valid qos group {}",
+                      spec.key_or_handle().qos_group());
         return HAL_RET_INVALID_ARG;
     }
     // Validate the uplink-class-map
     if (qos_group_is_user_defined(qos_group)) {
         if (!spec.has_uplink_class_map()) {
-            HAL_TRACE_ERR("{}:uplink class map not set", __func__);
+            HAL_TRACE_ERR("uplink class map not set");
             return HAL_RET_INVALID_ARG;
         }
     } else if (spec.has_uplink_class_map()) {
-        HAL_TRACE_ERR("{}:uplink class map set for internal class", __func__);
+        HAL_TRACE_ERR("uplink class map set for internal class");
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;
@@ -314,43 +310,43 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:qos group not set in request", __func__);
+        HAL_TRACE_ERR("qos group not set in request");
         return HAL_RET_INVALID_ARG;
     }
 
     auto kh = spec.key_or_handle();
     if (kh.key_or_handle_case() != QosClassKeyHandle::kQosGroup) {
         // key-handle field set, but qos-group not provided
-        HAL_TRACE_ERR("{}:qos group not set in request", __func__);
+        HAL_TRACE_ERR("qos group not set in request");
         return HAL_RET_INVALID_ARG;
     }
 
     if (find_qos_class_by_key_handle(kh)) {
-        HAL_TRACE_ERR("{}:qos class already exists", __func__);
+        HAL_TRACE_ERR("qos class already exists");
         return HAL_RET_ENTRY_EXISTS;
     }
 
     qos_group = qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
     ret = validate_qos_class_spec(spec, qos_group);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: qos_class spec validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("qos_class spec validation failed ret {}", ret);
         return ret;
     }
 
     // Validate the uplink-class-map
     if (qos_group_is_user_defined(qos_group)) {
-        // Do validations to check that the dot1q_pcp and ip_dscp are not 
+        // Do validations to check that the dot1q_pcp and ip_dscp are not
         // associated with other classes
         if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.uplink_class_map().dot1q_pcp())) {
-            HAL_TRACE_ERR("{}: Dot1q pcp {} is already in use",
-                          __func__, spec.uplink_class_map().dot1q_pcp());
+            HAL_TRACE_ERR("Dot1q pcp {} is already in use",
+                          spec.uplink_class_map().dot1q_pcp());
             return HAL_RET_INVALID_ARG;
         }
 
         for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
             if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.uplink_class_map().ip_dscp(i))) {
-                HAL_TRACE_ERR("{}: IP dscp {} is already in use",
-                              __func__, spec.uplink_class_map().ip_dscp(i));
+                HAL_TRACE_ERR("IP dscp {} is already in use",
+                              spec.uplink_class_map().ip_dscp(i));
                 return HAL_RET_INVALID_ARG;
             }
         }
@@ -372,7 +368,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                 *qos_class = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -382,8 +378,8 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class = (qos_class_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:create add CB {}",
-                    __func__, qos_class->key);
+    HAL_TRACE_DEBUG("create add CB {}",
+                    qos_class->key);
 
     // PD Call to allocate PD resources and HW programming
     pd::pd_qos_class_create_args_init(&pd_qos_class_args);
@@ -391,8 +387,8 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // ret = pd::pd_qos_class_create(&pd_qos_class_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_CREATE, (void *)&pd_qos_class_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to create qos_class pd, err : {}", 
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to create qos_class pd, err : {}",
+                      ret);
     }
 
 end:
@@ -414,7 +410,7 @@ qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -426,19 +422,19 @@ qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create commit CB {}",
-                    __func__, qos_class->key);
+    HAL_TRACE_DEBUG("create commit CB {}",
+                    qos_class->key);
 
     // Add to DB
     ret = qos_class_add_to_db (qos_class, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to add qos class:{} to DB", 
-                      __func__, qos_class->key);
+        HAL_TRACE_ERR("unable to add qos class:{} to DB",
+                      qos_class->key);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:added qos class:{} to DB", 
-                  __func__, qos_class->key);
+    HAL_TRACE_DEBUG("added qos class:{} to DB",
+                    qos_class->key);
 
     // TODO: Increment the ref counts of dependent objects
 
@@ -453,7 +449,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI qos class 
+// 3. Free PI qos class
 //------------------------------------------------------------------------------
 hal_ret_t
 qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -466,7 +462,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t            hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -477,7 +473,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create abort CB {}", __func__);
+    HAL_TRACE_DEBUG("create abort CB {}");
 
     // 1. delete call to PD
     if (qos_class->pd) {
@@ -486,8 +482,8 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         // ret = pd::pd_qos_class_delete(&pd_qos_class_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete qos_class pd, err : {}", 
-                          __func__, ret);
+            HAL_TRACE_ERR("failed to delete qos_class pd, err : {}",
+                          ret);
         }
     }
 
@@ -506,16 +502,14 @@ end:
 hal_ret_t
 qos_class_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret, 
+qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret,
                        hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
@@ -527,7 +521,7 @@ qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret,
     return HAL_RET_OK;
 }
 
-static hal_ret_t 
+static hal_ret_t
 update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_buf_t   *buffer = &qos_class->buffer;
@@ -537,8 +531,8 @@ update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
         no_drop = true;
         qos_class->pfc_cos = spec.pfc().pfc_cos();
         if (qos_class->pfc_cos >= HAL_MAX_PFC_COS_VALS) {
-            HAL_TRACE_ERR("{}: Invalid pfc cos value {}", 
-                          __func__, qos_class->pfc_cos);
+            HAL_TRACE_ERR("Invalid pfc cos value {}",
+                          qos_class->pfc_cos);
             return HAL_RET_INVALID_ARG;
         }
     }
@@ -556,7 +550,7 @@ update_buffer_params (QosClassSpec& spec, qos_class_t *qos_class)
     return HAL_RET_OK;
 }
 
-static hal_ret_t 
+static hal_ret_t
 update_sched_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_sched_t *sched = &qos_class->sched;
@@ -581,15 +575,14 @@ static hal_ret_t
 update_cmap_params (QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_uplink_cmap_t *cmap = &qos_class->uplink_cmap;
-     
+
 
     if (!qos_class_is_user_defined(qos_class)) {
         return HAL_RET_OK;
     }
 
     if (!spec.has_uplink_class_map()) {
-        HAL_TRACE_ERR("{}: Invalid class map specified", 
-                      __func__);
+        HAL_TRACE_ERR("Invalid class map specified");
         return HAL_RET_INVALID_ARG;
     }
 
@@ -621,7 +614,7 @@ qos_class_populate_from_spec (qos_class_t *qos_class, QosClassSpec& spec)
 {
     hal_ret_t ret;
 
-    qos_class->key.qos_group = 
+    qos_class->key.qos_group =
         qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
     if (!valid_qos_group(qos_class->key.qos_group)) {
         return HAL_RET_INVALID_ARG;
@@ -669,19 +662,19 @@ qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 
     ret = validate_qos_class_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("Validation failed ret {}", ret);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: qos_class create for qos-group {} ", 
-                    __func__, 
+    HAL_TRACE_DEBUG("qos_class create for qos-group {} ",
+
                     qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group()));
 
-    // instantiate qos class 
+    // instantiate qos class
     qos_class = qos_class_alloc_init();
     if (qos_class == NULL) {
-        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("unable to allocate handle/memory ret: {}",
+                      ret);
         ret = HAL_RET_OOM;
         goto end;
     }
@@ -692,16 +685,14 @@ qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
     // populate from the spec
     ret = qos_class_populate_from_spec(qos_class, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: error in populating qos-class from spec",
-                      __func__);
+        HAL_TRACE_ERR("error in populating qos-class from spec");
         goto end;
     }
 
     // allocate hal handle id
     qos_class->hal_handle = hal_handle_alloc(HAL_OBJ_ID_QOS_CLASS);
     if (qos_class->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle", 
-                      __func__);
+        HAL_TRACE_ERR("failed to alloc handle");
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -714,10 +705,10 @@ qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(qos_class->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(qos_class->hal_handle, &cfg_ctxt,
                              qos_class_create_add_cb,
                              qos_class_create_commit_cb,
-                             qos_class_create_abort_cb, 
+                             qos_class_create_abort_cb,
                              qos_class_create_cleanup_cb);
 
     if (ret != HAL_RET_OK) {
@@ -748,22 +739,22 @@ validate_qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __func__);
+        HAL_TRACE_ERR("spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
     qos_class = find_qos_class_by_key_handle(spec.key_or_handle());
     if (qos_class == NULL) {
-        HAL_TRACE_ERR("{}:failed to find qos_class, group {}, handle {}",
-                      __func__, 
-                      spec.key_or_handle().qos_group(), 
+        HAL_TRACE_ERR("failed to find qos_class, group {}, handle {}",
+
+                      spec.key_or_handle().qos_group(),
                       spec.key_or_handle().qos_class_handle());
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
 
     ret = validate_qos_class_spec(spec, qos_class->key.qos_group);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: qos_class spec validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("qos_class spec validation failed ret {}", ret);
         return ret;
     }
 
@@ -784,7 +775,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                    *qos_class_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -794,16 +785,16 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update upd CB {}",
-                    __func__, qos_class_clone->key);
+    HAL_TRACE_DEBUG("update upd CB {}",
+                    qos_class_clone->key);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_qos_class_update_args_init(&pd_qos_class_args);
     pd_qos_class_args.qos_class = qos_class_clone;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_UPDATE, (void *)&pd_qos_class_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to update qos_class pd, err : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to update qos_class pd, err : {}",
+                      ret);
     }
 
 end:
@@ -816,8 +807,8 @@ end:
 // - Both PI and PD objects cloned.
 //------------------------------------------------------------------------------
 hal_ret_t
-qos_class_make_clone (qos_class_t *qos_class, 
-                      qos_class_t **qos_class_clone_p, 
+qos_class_make_clone (qos_class_t *qos_class,
+                      qos_class_t **qos_class_clone_p,
                       QosClassSpec& spec)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -838,8 +829,7 @@ qos_class_make_clone (qos_class_t *qos_class,
     // Update with the new spec
     ret = qos_class_populate_from_spec(qos_class_clone, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: error in populating qos_class from spec",
-                      __func__);
+        HAL_TRACE_ERR("error in populating qos_class from spec");
         goto end;
     }
 
@@ -859,7 +849,7 @@ end:
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
-qos_class_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+qos_class_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t             ret = HAL_RET_OK;
     dllist_ctxt_t         *lnode = NULL;
@@ -868,7 +858,7 @@ qos_class_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t           *qos_class_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -879,8 +869,8 @@ qos_class_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
-                    __func__, qos_class->key);
+    HAL_TRACE_DEBUG("update commit CB {}",
+                    qos_class->key);
 
     qos_class_update_db(qos_class, qos_class_clone);
 
@@ -903,7 +893,7 @@ qos_class_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t             *qos_class_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -913,8 +903,8 @@ qos_class_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update abort CB {}",
-                    __func__, qos_class_clone->key);
+    HAL_TRACE_DEBUG("update abort CB {}",
+                    qos_class_clone->key);
 
     // Free Clone
     qos_class_free(qos_class_clone, true);
@@ -933,16 +923,14 @@ static inline hal_ret_t
 qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                          qos_class_update_app_ctxt_t *app_ctxt)
 {
-    hal_ret_t ret = HAL_RET_OK;
-
     if (qos_class_is_user_defined(qos_class)) {
-        // Do validations to check that the dot1q_pcp and ip_dscp are not 
+        // Do validations to check that the dot1q_pcp and ip_dscp are not
         // associated with other classes
         qos_uplink_cmap_t *cmap = &qos_class->uplink_cmap;
         if (spec.uplink_class_map().dot1q_pcp() != cmap->dot1q_pcp) {
             if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.uplink_class_map().dot1q_pcp())) {
-                HAL_TRACE_ERR("{}: Dot1q pcp {} is already in use",
-                              __func__, spec.uplink_class_map().dot1q_pcp());
+                HAL_TRACE_ERR("Dot1q pcp {} is already in use",
+                              spec.uplink_class_map().dot1q_pcp());
                 return HAL_RET_INVALID_ARG;
             }
         }
@@ -950,15 +938,15 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
         for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
             if (!cmap->ip_dscp[spec.uplink_class_map().ip_dscp(i)]) {
                 if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.uplink_class_map().ip_dscp(i))) {
-                    HAL_TRACE_ERR("{}: IP dscp {} is already in use",
-                                  __func__, spec.uplink_class_map().ip_dscp(i));
+                    HAL_TRACE_ERR("IP dscp {} is already in use",
+                                  spec.uplink_class_map().ip_dscp(i));
                     return HAL_RET_INVALID_ARG;
                 }
             }
         }
     }
 
-    return ret;
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -982,25 +970,24 @@ qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
     // validate the request message
     ret = validate_qos_class_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:qos_class delete validation failed, ret : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("qos_class delete validation failed, ret : {}",
+                      ret);
         goto end;
     }
 
     qos_class = find_qos_class_by_key_handle(kh);
     if (qos_class == NULL) {
-        HAL_TRACE_ERR("{}:failed to find qos_class, group {}, handle {}",
-                      __func__, kh.qos_group(), kh.qos_class_handle());
+        HAL_TRACE_ERR("failed to find qos_class, group {}, handle {}",
+                      kh.qos_group(), kh.qos_class_handle());
         ret = HAL_RET_QOS_CLASS_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("{}:update qos_class {}", __func__,
+    HAL_TRACE_DEBUG("update qos_class {}",
                     qos_class->key);
 
     ret = qos_class_handle_update(spec, qos_class, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: qos_class failed to handle update for {} , ret: {}",
-                      __func__,
+        HAL_TRACE_ERR("qos_class failed to handle update for {} , ret: {}",
                       qos_class->key,
                       ret);
         goto end;
@@ -1023,7 +1010,7 @@ qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
 
 end:
     qos_class_prepare_rsp(rsp, ret,
-                       qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID);
+                          qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: qos_class update ");
     return ret;
 }
@@ -1039,15 +1026,14 @@ validate_qos_class_delete_req (QosClassDeleteRequest& req, QosClassDeleteRespons
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __func__);
+        HAL_TRACE_ERR("spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
     qos_class = find_qos_class_by_key_handle(req.key_or_handle());
     // Deletion is supported for user-defined classes only
     if (qos_class && !qos_class_is_user_defined(qos_class)) {
-        HAL_TRACE_ERR("{}: qos_class delete is supported on user defined classes only",
-                      __func__);
+        HAL_TRACE_ERR("qos_class delete is supported on user defined classes only");
         ret = HAL_RET_INVALID_ARG;
     }
 
@@ -1067,7 +1053,7 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                    *qos_class        = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1081,16 +1067,16 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class = (qos_class_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:delete del CB {} handle {}",
-                    __func__, qos_class->key, qos_class->hal_handle);
+    HAL_TRACE_DEBUG("delete del CB {} handle {}",
+                    qos_class->key, qos_class->hal_handle);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_qos_class_delete_args_init(&pd_qos_class_args);
     pd_qos_class_args.qos_class = qos_class;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_DELETE, (void *)&pd_qos_class_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to delete qos_class pd, err : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to delete qos_class pd, err : {}",
+                      ret);
     }
 
 end:
@@ -1113,7 +1099,7 @@ qos_class_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1124,14 +1110,14 @@ qos_class_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class = (qos_class_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:delete commit CB {} handle {}",
-                    __func__, qos_class->key, qos_class->hal_handle);
+    HAL_TRACE_DEBUG("delete commit CB {} handle {}",
+                    qos_class->key, qos_class->hal_handle);
 
     // a. Remove from qos_class id hash table
     ret = qos_class_del_from_db(qos_class);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to del qos_class {} from db, err : {}",
-                      __func__, qos_class->key, ret);
+        HAL_TRACE_ERR("failed to del qos_class {} from db, err : {}",
+                      qos_class->key, ret);
         goto end;
     }
 
@@ -1180,21 +1166,21 @@ qos_class_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
     // validate the request message
     ret = validate_qos_class_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:qos_class delete validation failed, ret : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("qos_class delete validation failed, ret : {}",
+                      ret);
         goto end;
     }
 
     qos_class = find_qos_class_by_key_handle(kh);
     if (qos_class == NULL) {
-        HAL_TRACE_ERR("{}:failed to find qos_class, group {}, handle {}",
-                      __func__, kh.qos_group(), kh.qos_class_handle());
+        HAL_TRACE_ERR("failed to find qos_class, group {}, handle {}",
+                      kh.qos_group(), kh.qos_class_handle());
         ret = HAL_RET_QOS_CLASS_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:deleting qos_class {} handle {}",
-                    __func__, qos_class->key, qos_class->hal_handle);
+    HAL_TRACE_DEBUG("deleting qos_class {} handle {}",
+                    qos_class->key, qos_class->hal_handle);
 
     // form ctxt and call infra add
     dhl_entry.handle = qos_class->hal_handle;
@@ -1220,8 +1206,8 @@ end:
 //------------------------------------------------------------------------------
 
 hal_ret_t
-find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
-                            uint32_t *cos)
+find_qos_cos_info_from_spec (QosClassKeyHandle kh, hal_handle_t pinned_uplink,
+                             uint32_t *cos)
 {
     if_t                    *pinned_uplink_if;
     hal_ret_t               ret = HAL_RET_OK;
@@ -1303,8 +1289,7 @@ copp_add_to_db (copp_t *copp, hal_handle_t handle)
     sdk_ret_t                   sdk_ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:adding to copp hash table", 
-                    __func__);
+    HAL_TRACE_DEBUG("adding to copp hash table");
     // allocate an entry to establish mapping from copp_type to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
@@ -1315,10 +1300,10 @@ copp_add_to_db (copp_t *copp, hal_handle_t handle)
 
     entry->handle_id = handle;
     sdk_ret = g_hal_state->copp_ht()->insert_with_key(&copp->key,
-                                                   entry, &entry->ht_ctxt);
+                                                      entry, &entry->ht_ctxt);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add key to handle mapping, "
-                      "err : {}", __func__, ret);
+        HAL_TRACE_ERR("failed to add key to handle mapping, "
+                      "err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1337,15 +1322,15 @@ copp_del_from_db (copp_t *copp)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("{}:removing from hash table", __func__);
+    HAL_TRACE_DEBUG("removing from hash table");
 
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->copp_ht()->
-            remove(&copp->key);
+        remove(&copp->key);
 
     if (entry) {
         // free up
-         hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
+        hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, entry);
     }
 
     return HAL_RET_OK;
@@ -1364,8 +1349,8 @@ copp_free (copp_t *copp, bool free_pd)
         pd_copp_args.copp = copp;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_MEM_FREE, (void *)&pd_copp_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete copp pd, err : {}",
-                          __func__, ret);
+            HAL_TRACE_ERR("failed to delete copp pd, err : {}",
+                          ret);
             return ret;
         }
     }
@@ -1380,7 +1365,6 @@ copp_free (copp_t *copp, bool free_pd)
 static hal_ret_t
 copp_spec_print (CoppSpec& spec)
 {
-    hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
 
     buf.write("Copp Spec: ");
@@ -1402,7 +1386,7 @@ copp_spec_print (CoppSpec& spec)
     }
 
     HAL_TRACE_DEBUG("{}", buf.c_str());
-    return ret;
+    return HAL_RET_OK;
 }
 
 static hal_ret_t
@@ -1410,7 +1394,7 @@ validate_copp_spec (CoppSpec& spec)
 {
     // Copp policer rate cannot be zero
     if (!spec.has_policer() || !spec.policer().bps_rate()) {
-        HAL_TRACE_ERR("{}:policer spec not set in request", __func__);
+        HAL_TRACE_ERR("policer spec not set in request");
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;
@@ -1425,25 +1409,25 @@ validate_copp_create (CoppSpec& spec)
     hal_ret_t ret = HAL_RET_OK;
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:copp-type not set in request", __func__);
+        HAL_TRACE_ERR("copp-type not set in request");
         return HAL_RET_INVALID_ARG;
     }
 
     auto kh = spec.key_or_handle();
     if (kh.key_or_handle_case() != CoppKeyHandle::kCoppType) {
         // key-handle field set, but copp-type not provided
-        HAL_TRACE_ERR("{}:copp-type not set in request", __func__);
+        HAL_TRACE_ERR("copp-type not set in request");
         return HAL_RET_INVALID_ARG;
     }
 
     if (find_copp_by_key_handle(kh)) {
-        HAL_TRACE_ERR("{}:copp already exists", __func__);
+        HAL_TRACE_ERR("copp already exists");
         return HAL_RET_ENTRY_EXISTS;
     }
 
     ret = validate_copp_spec(spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: copp spec validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("copp spec validation failed ret {}", ret);
         return ret;
     }
     return HAL_RET_OK;
@@ -1462,7 +1446,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t             *copp = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1472,8 +1456,8 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp = (copp_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:create add CB {}",
-                    __func__, copp->key);
+    HAL_TRACE_DEBUG("create add CB {}",
+                    copp->key);
 
     // PD Call to allocate PD resources and HW programming
     pd::pd_copp_create_args_init(&pd_copp_args);
@@ -1481,8 +1465,8 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // ret = pd::pd_copp_create(&pd_copp_args);
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_CREATE, (void *)&pd_copp_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to create copp pd, err : {}", 
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to create copp pd, err : {}",
+                      ret);
     }
 
 end:
@@ -1504,7 +1488,7 @@ copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t  hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1516,19 +1500,19 @@ copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create commit CB {}",
-                    __func__, copp->key);
+    HAL_TRACE_DEBUG("create commit CB {}",
+                    copp->key);
 
     // Add to DB
     ret = copp_add_to_db (copp, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to add copp:{} to DB", 
-                      __func__, copp->key);
+        HAL_TRACE_ERR("unable to add copp:{} to DB",
+                      copp->key);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}:added copp:{} to DB", 
-                  __func__, copp->key);
+    HAL_TRACE_DEBUG("added copp:{} to DB",
+                    copp->key);
 
     // TODO: Increment the ref counts of dependent objects
 
@@ -1543,7 +1527,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI copp 
+// 3. Free PI copp
 //------------------------------------------------------------------------------
 hal_ret_t
 copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1556,7 +1540,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t       hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1567,7 +1551,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp = (copp_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("{}:create abort CB {}", __func__);
+    HAL_TRACE_DEBUG("create abort CB {}");
 
     // 1. delete call to PD
     if (copp->pd) {
@@ -1576,8 +1560,8 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         // ret = pd::pd_copp_delete(&pd_copp_args);
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_DELETE, (void *)&pd_copp_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete copp pd, err : {}", 
-                          __func__, ret);
+            HAL_TRACE_ERR("failed to delete copp pd, err : {}",
+                          ret);
         }
     }
 
@@ -1596,17 +1580,15 @@ end:
 hal_ret_t
 copp_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-
-    return ret;
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-copp_prepare_rsp (CoppResponse *rsp, hal_ret_t ret, 
-                       hal_handle_t hal_handle)
+copp_prepare_rsp (CoppResponse *rsp, hal_ret_t ret,
+                  hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
         rsp->mutable_status()->set_copp_handle(hal_handle);
@@ -1620,7 +1602,7 @@ copp_prepare_rsp (CoppResponse *rsp, hal_ret_t ret,
 static hal_ret_t
 copp_populate_from_spec (copp_t *copp, CoppSpec& spec)
 {
-    copp->key.copp_type = 
+    copp->key.copp_type =
         copp_spec_copp_type_to_copp_type(spec.key_or_handle().copp_type());
     qos_policer_update_from_spec(spec.policer(), &copp->policer);
 
@@ -1644,19 +1626,19 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
 
     ret = validate_copp_create(spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("Validation failed ret {}", ret);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("{}: copp create for copp-type {} ", 
-                    __func__, 
+    HAL_TRACE_DEBUG("copp create for copp-type {} ",
+
                     copp_spec_copp_type_to_copp_type(spec.key_or_handle().copp_type()));
 
-    // instantiate copp 
+    // instantiate copp
     copp = copp_alloc_init();
     if (copp == NULL) {
-        HAL_TRACE_ERR("{}:unable to allocate handle/memory ret: {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("unable to allocate handle/memory ret: {}",
+                      ret);
         ret = HAL_RET_OOM;
         goto end;
     }
@@ -1667,16 +1649,14 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     // populate from the spec
     ret = copp_populate_from_spec(copp, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: error in populating copp from spec",
-                      __func__);
+        HAL_TRACE_ERR("error in populating copp from spec");
         goto end;
     }
 
     // allocate hal handle id
     copp->hal_handle = hal_handle_alloc(HAL_OBJ_ID_COPP);
     if (copp->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("{}: failed to alloc handle", 
-                      __func__);
+        HAL_TRACE_ERR("failed to alloc handle");
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -1689,10 +1669,10 @@ copp_create (CoppSpec& spec, CoppResponse *rsp)
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(copp->hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(copp->hal_handle, &cfg_ctxt,
                              copp_create_add_cb,
                              copp_create_commit_cb,
-                             copp_create_abort_cb, 
+                             copp_create_abort_cb,
                              copp_create_cleanup_cb);
 
     if (ret != HAL_RET_OK) {
@@ -1722,13 +1702,13 @@ validate_copp_update (CoppSpec& spec, CoppResponse *rsp)
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("{}:spec has no key or handle", __func__);
+        HAL_TRACE_ERR("spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
     }
 
     ret = validate_copp_spec(spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: copp spec validation failed ret {}", __func__, ret);
+        HAL_TRACE_ERR("copp spec validation failed ret {}", ret);
         return ret;
     }
     return ret;
@@ -1748,7 +1728,7 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t                    *copp_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1758,16 +1738,16 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp_clone = (copp_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update upd CB {}",
-                    __func__, copp_clone->key);
+    HAL_TRACE_DEBUG("update upd CB {}",
+                    copp_clone->key);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_copp_update_args_init(&pd_copp_args);
     pd_copp_args.copp = copp_clone;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COPP_UPDATE, (void *)&pd_copp_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to update copp pd, err : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("failed to update copp pd, err : {}",
+                      ret);
     }
 
 end:
@@ -1800,8 +1780,7 @@ copp_make_clone (copp_t *copp, copp_t **copp_clone_p, CoppSpec& spec)
     // Update with the new spec
     ret = copp_populate_from_spec(copp_clone, spec);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: error in populating copp from spec",
-                      __func__);
+        HAL_TRACE_ERR("error in populating copp from spec");
         goto end;
     }
 
@@ -1821,7 +1800,7 @@ end:
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
-copp_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+copp_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t     ret = HAL_RET_OK;
     dllist_ctxt_t *lnode = NULL;
@@ -1829,7 +1808,7 @@ copp_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     copp_t        *copp = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1839,8 +1818,8 @@ copp_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     copp = (copp_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("{}:update commit CB {}",
-                    __func__, copp->key);
+    HAL_TRACE_DEBUG("update commit CB {}",
+                    copp->key);
 
     // Free PI.
     copp_free(copp, true);
@@ -1861,7 +1840,7 @@ copp_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t             *copp_clone = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt", __func__);
+        HAL_TRACE_ERR("pi-copp{}:invalid cfg_ctxt");
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1871,8 +1850,8 @@ copp_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     copp_clone = (copp_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("{}:update abort CB {}",
-                    __func__, copp_clone->key);
+    HAL_TRACE_DEBUG("update abort CB {}",
+                    copp_clone->key);
 
     // Free Clone
     copp_free(copp_clone, true);
@@ -1892,7 +1871,7 @@ copp_handle_update (CoppSpec& spec, copp_t *copp,
                     copp_update_app_ctxt_t *app_ctxt)
 {
     policer_t policer = {0};
-    
+
     qos_policer_update_from_spec(spec.policer(), &policer);
     if (!qos_policer_spec_same(&copp->policer, &policer)) {
         app_ctxt->policer_changed = true;
@@ -1922,32 +1901,31 @@ copp_update (CoppSpec& spec, CoppResponse *rsp)
     // validate the request message
     ret = validate_copp_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:copp delete validation failed, ret : {}",
-                      __func__, ret);
+        HAL_TRACE_ERR("copp delete validation failed, ret : {}",
+                      ret);
         goto end;
     }
 
     copp = find_copp_by_key_handle(kh);
     if (copp == NULL) {
-        HAL_TRACE_ERR("{}:failed to find copp, type {}, handle {}",
-                      __func__, kh.copp_type(), kh.copp_handle());
+        HAL_TRACE_ERR("failed to find copp, type {}, handle {}",
+                      kh.copp_type(), kh.copp_handle());
         ret = HAL_RET_COPP_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("{}:update copp {}", __func__,
+    HAL_TRACE_DEBUG("update copp {}",
                     copp->key);
 
     ret = copp_handle_update(spec, copp, &app_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: copp failed to handle update for {} , ret: {}",
-                      __func__,
+        HAL_TRACE_ERR("copp failed to handle update for {} , ret: {}",
                       copp->key,
                       ret);
         goto end;
     }
 
     if (!app_ctxt.policer_changed) {
-        HAL_TRACE_ERR("{}: no change in copp update: noop", __func__);
+        HAL_TRACE_ERR("no change in copp update: noop");
         goto end;
     }
 
@@ -1968,7 +1946,7 @@ copp_update (CoppSpec& spec, CoppResponse *rsp)
 
 end:
     copp_prepare_rsp(rsp, ret,
-                       copp ? copp->hal_handle : HAL_HANDLE_INVALID);
+                     copp ? copp->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: copp update ");
     return ret;
 }
@@ -1998,7 +1976,7 @@ copp_get (CoppGetRequest& req, CoppGetResponse *rsp)
     // fill config spec of this copp
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_copp_type(
-                                copp_type_to_spec_type(copp->key.copp_type));
+        copp_type_to_spec_type(copp->key.copp_type));
     spec->mutable_policer()->set_bps_rate(copp->policer.bps_rate);
     spec->mutable_policer()->set_burst_size(copp->policer.burst_size);
 
@@ -2035,10 +2013,10 @@ hal_qos_init (void)
             write_json(ss, qos_class_config.second);
 
             google::protobuf::util::JsonStringToMessage(ss.str(), &qos_class_spec);
-            ret = qos_class_create(qos_class_spec, &qos_class_rsp); 
+            ret = qos_class_create(qos_class_spec, &qos_class_rsp);
             if (qos_class_rsp.api_status() != types::API_STATUS_OK) {
-                HAL_TRACE_ERR("{}: Error  creating qos class ret: {}",
-                              __func__, ret);
+                HAL_TRACE_ERR("Error  creating qos class ret: {}",
+                              ret);
                 goto end;
             }
         }
@@ -2054,10 +2032,10 @@ hal_qos_init (void)
             write_json(ss, copp_config.second);
 
             google::protobuf::util::JsonStringToMessage(ss.str(), &copp_spec);
-            ret = copp_create(copp_spec, &copp_rsp); 
+            ret = copp_create(copp_spec, &copp_rsp);
             if (copp_rsp.api_status() != types::API_STATUS_OK) {
-                HAL_TRACE_ERR("{}: Error  creating copp ret: {}",
-                              __func__, ret);
+                HAL_TRACE_ERR("Error  creating copp ret: {}",
+                              ret);
                 goto end;
             }
         }

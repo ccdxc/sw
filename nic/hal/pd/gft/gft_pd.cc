@@ -633,40 +633,16 @@ pd_lif_get_lport_id (pd_lif_get_lport_id_args_t *args)
     return HAL_RET_OK;
 }
 
-hal_ret_t
-pd_qos_class_create (pd_qos_class_create_args_t *args)
-{
-    return HAL_RET_OK;
+hal_ret_t    
+pd_qos_class_create (pd_qos_class_create_args_t *args)    
+{    
+    return HAL_RET_OK;    
 }
 
-hal_ret_t
-pd_qos_class_update (pd_qos_class_update_args_t *args)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_qos_class_delete (pd_qos_class_delete_args_t *args)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_copp_create (pd_copp_create_args_t *args)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_copp_update (pd_copp_update_args_t *args)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_copp_delete (pd_copp_delete_args_t *args)
-{
-    return HAL_RET_OK;
+hal_ret_t    
+pd_copp_create (pd_copp_create_args_t *args)    
+{    
+    return HAL_RET_OK;    
 }
 
 // TODO: this one also doesn't belong here .. we need to get the cpu tx/rx
