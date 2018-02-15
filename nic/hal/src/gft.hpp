@@ -50,19 +50,19 @@ using gft::GftExactMatchFlowEntryResponseMsg;
 #define GFT_HEADER_VXLAN_ENCAP                     0x00000400
 
 // bitmap of flags indicating header fields of interest per profile
-#define GFT_HEADER_FIELD_DEST_MAC_ADDR             0x00000001ULL
+#define GFT_HEADER_FIELD_DST_MAC_ADDR              0x00000001ULL
 #define GFT_HEADER_FIELD_SRC_MAC_ADDR              0x00000002ULL
 #define GFT_HEADER_FIELD_ETH_TYPE                  0x00000004ULL
 #define GFT_HEADER_FIELD_CUSTOMER_VLAN_ID          0x00000008ULL
 #define GFT_HEADER_FIELD_PROVIDER_VLAN_ID          0x00000010ULL
 #define GFT_HEADER_FIELD_8021P_PRIORITY            0x00000020ULL
 #define GFT_HEADER_FIELD_SRC_IP_ADDR               0x00000040ULL
-#define GFT_HEADER_FIELD_DEST_IP_ADDR              0x00000080ULL
+#define GFT_HEADER_FIELD_DST_IP_ADDR               0x00000080ULL
 #define GFT_HEADER_FIELD_TTL                       0x00000100ULL
 #define GFT_HEADER_FIELD_IP_PROTOCOL               0x00000200ULL
 #define GFT_HEADER_FIELD_IP_DSCP                   0x00000400ULL
 #define GFT_HEADER_FIELD_TRANSPORT_SRC_PORT        0x00000800ULL
-#define GFT_HEADER_FIELD_TRANSPORT_DEST_PORT       0x00001000ULL
+#define GFT_HEADER_FIELD_TRANSPORT_DST_PORT        0x00001000ULL
 #define GFT_HEADER_FIELD_TCP_FLAGS                 0x00002000ULL
 #define GFT_HEADER_FIELD_TENANT_ID                 0x00004000ULL
 #define GFT_HEADER_FIELD_ENTROPY                   0x00008000ULL
@@ -80,12 +80,12 @@ typedef uint32_t gft_table_id_t;
 typedef uint32_t gft_flow_entry_id_t;
 
 typedef struct gft_eth_fields_s {
-    uint8_t     dmac[ETH_ADDR_LEN];
-    uint8_t     smac[ETH_ADDR_LEN];
-    uint16_t    eth_type;
-    uint16_t    customer_vlan_id;
-    uint16_t    provider_vlan_id;
-    uint8_t     priority;
+    mac_addr_t    dmac;
+    mac_addr_t    smac;
+    uint16_t      eth_type;
+    uint16_t      customer_vlan_id;
+    uint16_t      provider_vlan_id;
+    uint8_t       priority;
 } __PACK__ gft_eth_fields_t;
 
 typedef enum gft_table_type_e {
@@ -475,18 +475,18 @@ typedef struct gft_exact_match_flow_entry_s {
     uint32_t                       flags;                              // GFT_EMFE_XXX flags
     gft_table_id_t                 table_id;                           // table this entry belongs to
     vport_id_t                     vport_id;                           // vport to apply this flow entry to
-    gft_profile_id_t               match_profile_id;                   // header group match profile id
-    gft_profile_id_t               hdr_xposition_profile_id;           // header exposition profile id
+    hal_handle_t                   gft_emp_hal_handle;                 // exact match profile id
+    hal_handle_t                   gft_htp_hal_handle;                 // header xposition profile id
     vport_id_t                     redirect_vport_id;                  // redirect vport id, if any
     vport_id_t                     ttl_one_redirect_vport_id;          // vport id to redirect to if TTL is one
     gft_flow_entry_cache_hint_t    cache_hint;                         // cache hint, if any
-    uint32_t                       num_gft_hdr_group_exact_matches;    // # of header group exact matches
-    uint32_t                       num_gft_hdr_group_xpositions;       // # of header group transpositions
+    uint32_t                       num_exact_matches;                  // # of header group exact matches
+    uint32_t                       num_transpositions;                 // # of header group transpositions
     gft_hdr_group_exact_match_t    *exact_matches;                     // exact match list
     gft_hdr_group_xposition_t      *hdr_group_xpositions;              // header transposition list
 
     // operational state
-    hal_handle_t          hal_handle;              // HAL allocated handle
+    hal_handle_t                   hal_handle;                         // HAL allocated handle
 
     void                           *pd;                                // PD state, if any
 } __PACK__ gft_exact_match_flow_entry_t;
@@ -522,13 +522,13 @@ gft_exact_match_flow_entry_init (gft_exact_match_flow_entry_t *flow_entry)
     flow_entry->flags = 0;
     flow_entry->table_id = 0;
     flow_entry->vport_id = 0;
-    flow_entry->match_profile_id = 0;
-    flow_entry->hdr_xposition_profile_id = 0;
+    flow_entry->gft_emp_hal_handle = HAL_HANDLE_INVALID;
+    flow_entry->gft_htp_hal_handle = HAL_HANDLE_INVALID;
     flow_entry->redirect_vport_id = 0;
     flow_entry->ttl_one_redirect_vport_id = 0;
     flow_entry->cache_hint = GFT_FLOW_ENTRY_CACHE_HINT_NONE;
-    flow_entry->num_gft_hdr_group_exact_matches = 0;
-    flow_entry->num_gft_hdr_group_xpositions = 0;
+    flow_entry->num_exact_matches = 0;
+    flow_entry->num_transpositions = 0;
     flow_entry->exact_matches = NULL;
     flow_entry->hdr_group_xpositions = NULL;
 

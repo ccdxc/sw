@@ -714,6 +714,27 @@ validate_gft_emfe_create (GftExactMatchFlowEntrySpec& spec,
     return HAL_RET_OK;
 }
 
+#define GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec, field, flag)          \
+do {                                                                         \
+    if ((spec).field()) {                                                    \
+        (flow_entry)->flags |= GFT_EMFE_ ## flag;                            \
+    }                                                                        \
+} while (0)
+
+#define GFT_EMFE_SET_HEADERS_FROM_SPEC(exact_match, hdrs_spec, hdr, flag)    \
+do {                                                                         \
+        if (hdrs_spec.hdr()) {                                               \
+            exact_match->headers |= GFT_HEADER_ ## flag;                     \
+        }                                                                    \
+} while (0)
+
+#define GFT_EMFE_SET_FIELDS_FROM_SPEC(exact_match, fields_spec, field, flag) \
+do {                                                                         \
+    if (fields_spec.field()) {                                               \
+        exact_match->match_fields |= GFT_HEADER_FIELD_ ## flag;              \
+    }                                                                        \
+} while (0)
+
 //------------------------------------------------------------------------------
 // initialize GFT exact match flow entry object from the config spec
 //------------------------------------------------------------------------------
@@ -721,6 +742,231 @@ static inline void
 gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
                          GftExactMatchFlowEntrySpec& spec)
 {
+    uint32_t                          i;
+    gft_exact_match_profile_t         *gft_emp;
+    gft_hdr_xposition_profile_t       *gft_htp;
+    gft_hdr_group_exact_match_t       *gft_em;
+
+    HAL_ASSERT(spec.key_or_handle().key_or_handle_case() ==
+                   GftExactMatchFlowEntryKeyHandle::kFlowEntryId);
+    gft_emp = gft_emp_lookup_key_or_handle(spec.exact_match_profile());
+    HAL_ASSERT(gft_emp);
+
+    gft_htp = gft_htp_lookup_key_or_handle(spec.transposition_profile());
+    HAL_ASSERT(gft_htp);
+
+    flow_entry->num_exact_matches = spec.exact_matches_size();
+    HAL_ASSERT(flow_entry->num_exact_matches != 0);
+    flow_entry->exact_matches =
+        (gft_hdr_group_exact_match_t *)HAL_CALLOC(HAL_MEM_ALLOC_GFT_EXACT_MATCH,
+                                                  flow_entry->num_exact_matches *
+                                                  sizeof(gft_hdr_group_exact_match_t));
+    HAL_ASSERT(flow_entry->exact_matches != NULL);
+
+    flow_entry->num_transpositions = spec.transpositions_size();
+    HAL_ASSERT(flow_entry->num_transpositions != 0);
+    flow_entry->hdr_group_xpositions =
+        (gft_hdr_group_xposition_t *)HAL_CALLOC(HAL_MEM_ALLOC_GFT_HDR_GROUP_TRANSPOSITION,
+                                                flow_entry->num_transpositions *
+                                                sizeof(gft_hdr_group_xposition_t));
+    HAL_ASSERT(flow_entry->hdr_group_xpositions != NULL);
+
+    flow_entry->flow_entry_id = spec.key_or_handle().flow_entry_id();
+    flow_entry->gft_emp_hal_handle = gft_emp->hal_handle;
+    flow_entry->gft_htp_hal_handle = gft_htp->hal_handle;
+
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 add_in_activated_state, ADD_IN_ACTIVATED_STATE);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 rdma_flow, RDMA_FLOW);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 redirect_to_vport_ingress_queue,
+                                 REDIRECT_TO_INGRESS_QUEUE_OF_VPORT);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 redirect_to_vport_egress_queue,
+                                 REDIRECT_TO_EGRESS_QUEUE_OF_VPORT);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 redirect_to_vport_ingress_queue_if_ttl_is_one,
+                                 REDIRECT_TO_INGRESS_QUEUE_OF_VPORT_IF_TTL_IS_ONE);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 redirect_to_vport_egress_queue_if_ttl_is_one,
+                                 REDIRECT_TO_EGRESS_QUEUE_OF_VPORT_IF_TTL_IS_ONE);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 copy_all_packets, COPY_ALL_PACKETS);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 copy_first_packet, COPY_FIRST_PACKET);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 copy_when_tcp_flag_set, COPY_WHEN_TCP_FLAG_SET);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 custom_action_present, CUSTOM_ACTION_PRESENT);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 meta_action_before_transposition,
+                                 META_ACTION_BEFORE_HEADER_TRANSPOSITION);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 copy_after_tcp_fin_flag_set,
+                                 COPY_AFTER_TCP_FIN_FLAG_SET);
+    GFT_EMFE_SET_FLAGS_FROM_SPEC(flow_entry, spec,
+                                 copy_after_tcp_rst_flag_set,
+                                 COPY_AFTER_TCP_RST_FLAG_SET);
+
+    flow_entry->table_id = spec.table_id();
+    flow_entry->vport_id = spec.vport_id();
+    flow_entry->redirect_vport_id = spec.redirect_vport_id();
+    flow_entry->ttl_one_redirect_vport_id = spec.ttl_one_redirect_vport_id();
+
+    for (i = 0; i < flow_entry->num_exact_matches; i++) {
+        auto em_spec = spec.exact_matches(i);
+        gft_em = &flow_entry->exact_matches[i];
+        gft_em->flags = 0;
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       ethernet_header, ETHERNET);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       ipv4_header, IPV4);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       ipv6_header, IPV6);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       tcp_header, TCP);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       udp_header, UDP);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       icmp_header, ICMP);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       no_encap, NO_ENCAP);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       ip_in_ip_encap, IP_IN_IP_ENCAP);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       ip_in_gre_encap, IP_IN_GRE_ENCAP);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       nvgre_encap, NVGRE_ENCAP);
+        GFT_EMFE_SET_HEADERS_FROM_SPEC(gft_em, em_spec.headers(),
+                                       vxlan_encap, VXLAN_ENCAP);
+
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      dst_mac_addr, DST_MAC_ADDR);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      src_mac_addr, SRC_MAC_ADDR);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      eth_type, ETH_TYPE);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      customer_vlan_id, CUSTOMER_VLAN_ID);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      provider_vlan_id, PROVIDER_VLAN_ID);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      dot1p_priority, 8021P_PRIORITY);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      src_ip_addr, SRC_IP_ADDR);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      dst_ip_addr, DST_IP_ADDR);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      ip_ttl, TTL);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      ip_protocol, IP_PROTOCOL);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      ip_dscp, IP_DSCP);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      src_port, TRANSPORT_SRC_PORT);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      dst_port, TRANSPORT_DST_PORT);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      tcp_flags, TCP_FLAGS);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      tenant_id, TENANT_ID);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      icmp_type, ICMP_TYPE);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      icmp_code, ICMP_CODE);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      oob_vlan, OOB_VLAN);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      oob_tenant_id, OOB_TENANT_ID);
+        GFT_EMFE_SET_FIELDS_FROM_SPEC(gft_em, em_spec.match_fields(),
+                                      gre_protocol, GRE_PROTOCOL);
+
+        if (gft_em->headers & GFT_HEADER_ETHERNET) {
+            if (gft_em->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {
+                MAC_UINT64_TO_ADDR(gft_em->eth_fields.dmac,
+                                   em_spec.eth_fields().dst_mac_addr());
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {
+                MAC_UINT64_TO_ADDR(gft_em->eth_fields.smac,
+                                   em_spec.eth_fields().src_mac_addr());
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_ETH_TYPE) {
+                gft_em->eth_fields.eth_type = em_spec.eth_fields().eth_type();
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {
+                gft_em->eth_fields.customer_vlan_id =
+                    em_spec.eth_fields().customer_vlan_id();
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_PROVIDER_VLAN_ID) {
+                gft_em->eth_fields.provider_vlan_id =
+                    em_spec.eth_fields().provider_vlan_id();
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_8021P_PRIORITY) {
+                gft_em->eth_fields.priority = em_spec.eth_fields().priority();
+            }
+        }
+
+        if (gft_em->headers & (GFT_HEADER_IPV4 | GFT_HEADER_IPV6)) {
+            if (gft_em->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {
+                ip_addr_spec_to_ip_addr(&gft_em->src_ip_addr,
+                                        em_spec.src_ip_addr());
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
+                ip_addr_spec_to_ip_addr(&gft_em->dst_ip_addr,
+                                        em_spec.dst_ip_addr());
+            }
+            gft_em->ttl = em_spec.ip_ttl();
+            gft_em->dscp = em_spec.ip_dscp();
+            gft_em->ip_proto = em_spec.ip_protocol();
+        }
+
+        if ((gft_em->headers & GFT_HEADER_UDP) && em_spec.has_udp_fields()) {
+            if (gft_em->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
+                gft_em->encap_or_transport.udp.sport =
+                    em_spec.udp_fields().sport();
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
+                gft_em->encap_or_transport.udp.dport =
+                    em_spec.udp_fields().dport();
+            }
+        }
+
+        if ((gft_em->headers & GFT_HEADER_TCP) && em_spec.has_tcp_fields()) {
+            if (gft_em->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
+                gft_em->encap_or_transport.tcp.sport =
+                    em_spec.tcp_fields().sport();
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
+                gft_em->encap_or_transport.tcp.dport =
+                    em_spec.tcp_fields().dport();
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_TCP_FLAGS) {
+                gft_em->encap_or_transport.tcp.tcp_flags =
+                    em_spec.tcp_fields().tcp_flags();
+            }
+        }
+
+        if ((gft_em->headers & GFT_HEADER_ICMP) && em_spec.has_icmp_fields()) {
+            if (gft_em->match_fields & GFT_HEADER_FIELD_ICMP_TYPE) {
+                gft_em->encap_or_transport.icmp.type =
+                    em_spec.icmp_fields().type();
+            }
+            if (gft_em->match_fields & GFT_HEADER_FIELD_ICMP_CODE) {
+                gft_em->encap_or_transport.icmp.code =
+                    em_spec.icmp_fields().code();
+            }
+        }
+
+#if 0
+        } else (em_spec.encap_or_transport(). == ) {
+            flow_entry->exact_matches[i].encap_or_transport.encap.tenant_id = ;
+            flow_entry->exact_matches[i].encap_or_transport.encap.gre_protocol = ;
+        }
+#endif
+    }
+    for (i = 0; i < flow_entry->num_transpositions;  i++) {
+    }
 }
 
 //------------------------------------------------------------------------------

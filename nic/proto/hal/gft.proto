@@ -274,7 +274,7 @@ message GftExactMatchFlowEntryStatus {
 
 // GftExactMatchFlowEntryResponse is response to GftExactMatchFlowEntrySpec
 message GftExactMatchFlowEntryResponse {
-  types.ApiStatus                api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  types.ApiStatus                 api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
   GftExactMatchFlowEntryStatus    status = 2;
 }
 

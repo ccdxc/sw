@@ -17,7 +17,6 @@ cc_library(
     copts = sdk_copts,
     deps = [
         # PD Cleanup Only
-        #"//nic/hal/pd/iris:p4pdapi",
         "//nic:iris_p4pd",
         "//nic:p4pluspd_txdma",
         "//nic:p4pluspd_rxdma",
@@ -26,7 +25,6 @@ cc_library(
         "//nic:gen_includes",
         "@sdk//:sdk_headers",
         "//nic/hal:hal_includes",
-        #"//nic/hal:hal_src",
         "//nic/hal/pd/capri",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd:pdcommon",

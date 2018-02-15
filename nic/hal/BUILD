@@ -19,7 +19,6 @@ cc_binary(
             "//nic/hal/svc:hal_svc",
             "//nic/utils/trace",
             "//nic/utils/print",
-            #"//nic/utils/host_mem",
             "//nic/hal/plugins",
             "//nic/hal/plugins/proxy:proxyplugin",
             "//nic/hal/lkl:lkl_api",

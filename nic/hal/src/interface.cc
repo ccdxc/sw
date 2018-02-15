@@ -1174,6 +1174,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     default:
         HAL_TRACE_ERR("invalid if type: {}", hal_if->if_type);
         ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_UPDATE, (void *)&pd_if_args);
@@ -1182,6 +1183,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
+
     return ret;
 }
 

@@ -82,29 +82,6 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
     }
 #endif
 
-#if 0
-    rx_key1_mask.ethernet_1_valid_mask = 0xFF;
-    rx_key1_mask.ipv4_1_valid_mask = 0xFF;
-    rx_key1_mask.ipv6_1_valid_mask = 0xFF;
-    rx_key1_mask.icmp_1_valid_mask = 0xFF;
-    rx_key1_mask.tcp_1_valid_mask = 0xFF;
-    rx_key1_mask.udp_1_valid_mask = 0xFF;
-    rx_key1_mask.tunnel_metadata_tunnel_type_1_mask = 0xFF;
-    rx_key1_mask.ethernet_2_valid_mask = 0xFF;
-    rx_key1_mask.ipv4_2_valid_mask = 0xFF;
-    rx_key1_mask.ipv6_2_valid_mask = 0xFF;
-    rx_key1_mask.icmp_2_valid_mask = 0xFF;
-    rx_key1_mask.tcp_2_valid_mask = 0xFF;
-    rx_key1_mask.udp_2_valid_mask = 0xFF;
-    rx_key1_mask.tunnel_metadata_tunnel_type_2_mask = 0xFF;
-    rx_key1_mask.ethernet_3_valid_mask = 0xFF;
-    rx_key1_mask.ipv4_3_valid_mask = 0xFF;
-    rx_key1_mask.ipv6_3_valid_mask = 0xFF;
-    rx_key1_mask.icmp_3_valid_mask = 0xFF;
-    rx_key1_mask.tcp_3_valid_mask = 0xFF;
-    rx_key1_mask.udp_3_valid_mask = 0xFF;
-#endif
-
     // set all the care bits in the key mask(s)
     memset(&rx_key1_mask, 0xFF, sizeof(rx_key1_mask));
     memset(&rx_key2_mask, 0xFF, sizeof(rx_key2_mask));
@@ -114,7 +91,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
     gft_emp = &gft_args->exact_match_profile->hgem_profiles[0];
     if (gft_emp->headers & GFT_HEADER_ETHERNET) {
         rx_key1.ethernet_1_valid = 1;
-        if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_MAC_ADDR) {
+        if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {
             rx_key1_action.rx_key1_action_u.rx_key1_rx_key1.match_fields |=
                 MATCH_ETHERNET_DST;
         }
@@ -137,7 +114,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
             rx_key1_action.rx_key1_action_u.rx_key1_rx_key1.match_fields |=
                 MATCH_IP_SRC;
         }
-        if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_IP_ADDR) {
+        if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
             rx_key1_action.rx_key1_action_u.rx_key1_rx_key1.match_fields |=
                 MATCH_IP_DST;
         }
@@ -159,7 +136,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
             rx_key1_action.rx_key1_action_u.rx_key1_rx_key1.match_fields |=
                 MATCH_IP_SRC;
         }
-        if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_IP_ADDR) {
+        if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
             rx_key1_action.rx_key1_action_u.rx_key1_rx_key1.match_fields |=
                 MATCH_IP_DST;
         }
@@ -192,7 +169,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                 MATCH_TRANSPORT_SRC_PORT_1;
         }
-        if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DEST_PORT) {
+        if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                 MATCH_TRANSPORT_DST_PORT_1;
         }
@@ -206,7 +183,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                 MATCH_TRANSPORT_SRC_PORT_1;
         }
-        if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DEST_PORT) {
+        if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                 MATCH_TRANSPORT_DST_PORT_1;
         }
@@ -236,7 +213,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
         gft_emp = &gft_args->exact_match_profile->hgem_profiles[1];
         if (gft_emp->headers & GFT_HEADER_ETHERNET) {
             rx_key1.ethernet_2_valid = 1;
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_MAC_ADDR) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {
                 rx_key2_action.rx_key2_action_u.rx_key2_rx_key2.match_fields |=
                     MATCH_ETHERNET_DST;
             }
@@ -259,7 +236,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key2_action.rx_key2_action_u.rx_key2_rx_key2.match_fields |=
                     MATCH_IP_SRC;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_IP_ADDR) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
                 rx_key2_action.rx_key2_action_u.rx_key2_rx_key2.match_fields |=
                     MATCH_IP_DST;
             }
@@ -281,7 +258,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key2_action.rx_key2_action_u.rx_key2_rx_key2.match_fields |=
                     MATCH_IP_SRC;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_IP_ADDR) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
                 rx_key2_action.rx_key2_action_u.rx_key2_rx_key2.match_fields |=
                     MATCH_IP_DST;
             }
@@ -314,7 +291,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_SRC_PORT_2;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DEST_PORT) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_DST_PORT_2;
             }
@@ -328,7 +305,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_SRC_PORT_2;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DEST_PORT) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_DST_PORT_2;
             }
@@ -363,7 +340,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
         gft_emp = &gft_args->exact_match_profile->hgem_profiles[2];
         if (gft_emp->headers & GFT_HEADER_ETHERNET) {
             rx_key1.ethernet_3_valid = 1;
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_MAC_ADDR) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {
                 rx_key3_action.rx_key3_action_u.rx_key3_rx_key3.match_fields |=
                     MATCH_ETHERNET_DST;
             }
@@ -386,7 +363,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key3_action.rx_key3_action_u.rx_key3_rx_key3.match_fields |=
                     MATCH_IP_SRC;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_IP_ADDR) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
                 rx_key3_action.rx_key3_action_u.rx_key3_rx_key3.match_fields |=
                     MATCH_IP_DST;
             }
@@ -408,7 +385,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key3_action.rx_key3_action_u.rx_key3_rx_key3.match_fields |=
                     MATCH_IP_SRC;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_DEST_IP_ADDR) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
                 rx_key3_action.rx_key3_action_u.rx_key3_rx_key3.match_fields |=
                     MATCH_IP_DST;
             }
@@ -441,7 +418,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_SRC_PORT_3;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DEST_PORT) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_DST_PORT_3;
             }
@@ -455,7 +432,7 @@ pd_gft_exact_match_profile_create (pd_gft_args_t *gft_args)
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_SRC_PORT_3;
             }
-            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DEST_PORT) {
+            if (gft_emp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
                 rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |=
                     MATCH_TRANSPORT_DST_PORT_3;
             }
