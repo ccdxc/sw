@@ -107,3 +107,19 @@ pcieport_set_ltssm_en(pcieport_t *p, const int on)
     }
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
+
+void
+pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq)
+{
+    const int pn = p->port;
+    u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
+#define CLOCK_FREQ_MASK \
+    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_TL_CLOCK_FREQ_FIELD_MASK
+#define CLOCK_FREQ_SHIFT \
+    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_TL_CLOCK_FREQ_LSB
+
+    reg &= ~CLOCK_FREQ_MASK;
+    reg |= freq << CLOCK_FREQ_SHIFT;
+
+    pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
+}

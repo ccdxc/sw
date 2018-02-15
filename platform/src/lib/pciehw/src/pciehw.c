@@ -92,7 +92,7 @@ pciehwdev_get_cfgspace(const pciehwdev_t *phwdev, cfgspace_t *cs)
     cs->size = PCIEHW_CFGSZ;
 }
 
-static int
+int
 pciehwdev_cfgrd(pciehwdev_t *phwdev,
                 const u_int16_t offset, const u_int8_t size, u_int32_t *valp)
 {
@@ -105,7 +105,7 @@ pciehwdev_cfgrd(pciehwdev_t *phwdev,
     return 0;
 }
 
-static int
+int
 pciehwdev_cfgwr(pciehwdev_t *phwdev,
                 const u_int16_t offset,
                 const u_int8_t size,
@@ -180,6 +180,7 @@ pciehw_init(pciehw_t *phw)
     pciehw_hdrt_init(phw);
     pciehw_portmap_init(phw);
     pciehw_notify_init(phw);
+    pciehw_indirect_init(phw);
 }
 
 int
@@ -195,7 +196,7 @@ pciehw_open(pciehw_params_t *hwparams)
         return 0;
     }
     phw->is_asic = 0; /* XXX runtime? */
-    phw->nports = phw->is_asic ? PCIEHW_NPORTS : 4;
+    phw->nports = PCIEHW_NPORTS;
     if (hwparams) {
         phw->hwparams = *hwparams;
     }
@@ -527,6 +528,12 @@ cmd_notify(int argc, char *argv[])
 }
 
 static void
+cmd_indirect(int argc, char *argv[])
+{
+    pciehw_indirect_dbg(argc, argv);
+}
+
+static void
 cmd_meminfo(int argc, char *argv[])
 {
     pciehw_t *phw = pciehw_get();
@@ -567,6 +574,7 @@ static cmd_t cmdtab[] = {
     CMDENT(portmap, "portmap", ""),
     CMDENT(meminfo, "meminfo", ""),
     CMDENT(notify, "notify", ""),
+    CMDENT(indirect, "indirect", ""),
     { NULL, NULL }
 };
 
@@ -684,6 +692,7 @@ pciehw_poll(void)
 {
     pciehw_t *phw = pciehw_get();
 
+    pciehw_indirect_poll(phw);
     pciehw_notify_poll(phw);
     return 0;
 }

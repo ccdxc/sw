@@ -15,6 +15,8 @@ SOURCES = \
 	port.c \
 	portmap.c \
 	notify.c \
+	indirect.c \
+	req_int.c \
 	event.c \
 	intr.c \
 	reset.c \

@@ -14,6 +14,7 @@ SOURCES = \
 LCFLAGS += \
 	-I $(ASIC_ROOT)/capri/model/cap_top \
 	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
+	-I ../../../../include/common \
 	-I ../../misc/include \
 	-I ../../pciehost/include \
 	-I ../../pal/include \

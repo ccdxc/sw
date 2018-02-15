@@ -11,6 +11,7 @@
 #include <setjmp.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/time.h>
 #ifdef BUILD_ARCH_x86_64
 #define USE_READLINE
 #endif
@@ -156,6 +157,20 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
         pdev = pciehdev_virtio_new(name, pres);
         if (pdev == NULL) {
             printf("pciehdev_virtio_new failed\n");
+            return NULL;
+        }
+    } else if (strcmp(type, "pciestress") == 0) {
+        if (namearg == NULL) {
+            static int pciestress_instance;
+            snprintf(lname, sizeof(lname), "pciestress%d",
+                     pciestress_instance++);
+            name = lname;
+        } else {
+            name = namearg;
+        }
+        pdev = pciehdev_pciestress_new(name, pres);
+        if (pdev == NULL) {
+            printf("pciehdev_pciestress_new failed\n");
             return NULL;
         }
     } else if (strcmp(type, "debug") == 0) {
@@ -471,6 +486,15 @@ cmd_cfg(int argc, char *argv[])
     }
 }
 
+static u_int64_t
+timestamp(void)
+{
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000 + tv.tv_usec);
+}
+
 static int poll_enabled;
 
 static void
@@ -485,11 +509,16 @@ cmd_poll(int argc, char *argv[])
     pciemgrenv_t *pme = pciemgrenv_get();
     sighandler_t osigint, osigterm, osigquit;
     useconds_t polltm_us = 500000;
-    int opt;
+    int opt, poll_port;
+    u_int64_t tm_start, tm_stop, tm_port;
 
+    poll_port = 1;
     getopt_reset(1, 1);
-    while ((opt = getopt(argc, argv, "t:")) != -1) {
+    while ((opt = getopt(argc, argv, "Pt:")) != -1) {
         switch (opt) {
+        case 'P':
+            poll_port = 0;
+            break;
         case 't':
             polltm_us = strtoull(optarg, NULL, 0);
             break;
@@ -503,8 +532,19 @@ cmd_poll(int argc, char *argv[])
     printf("Polling enabled every %dus, ^C to exit...\n", polltm_us);
     poll_enabled = 1;
     while (poll_enabled) {
-        pcieport_poll(pme->pport);
+        tm_start = timestamp();
+        if (poll_port) pcieport_poll(pme->pport);
+        tm_port = timestamp();
         pciehw_poll();
+        tm_stop = timestamp();
+
+        if (tm_port - tm_start > 1000000) {
+            printf("pcieport_poll: %ldus\n", tm_port - tm_start);
+        }
+        if (tm_stop - tm_port > 1000000) {
+            printf("pciehw_poll: %ldus\n", tm_stop - tm_port);
+        }
+
         if (polltm_us) usleep(polltm_us);
     }
     printf("Polling stopped\n");
@@ -664,7 +704,7 @@ process(int argc, char *argv[])
 static void
 pciemgr_evhandler(pciehdev_t *pdev, const pciehdev_eventdata_t *evd)
 {
-    printf("evhandler %d\n", evd->evtype);
+     verbose("evhandler %d\n", evd->evtype);
 }
 
 
@@ -684,11 +724,14 @@ main(int argc, char *argv[])
     char *line, prompt[32], *av[16];
     int ac;
     pciehdev_openparams_t p;
+    pcieport_hostconfig_t pcfg;
 
     memset(&p, 0, sizeof(p));
     p.inithw = 1;
     p.fake_bios_scan = 1;
     p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
+
+    memset(&pcfg, 0, sizeof(pcfg));
 
     /*
      * For simulation we want the virtual upstream port bridge
@@ -720,6 +763,8 @@ main(int argc, char *argv[])
                 printf("bad pcie spec: want gen%%dx%%d, got %s\n", optarg);
                 exit(1);
             }
+            pcfg.gen = p.cap_gen;
+            pcfg.width = p.cap_width;
             break;
         case 's':
             p.subdeviceid = strtoul(optarg, NULL, 0);
@@ -739,7 +784,7 @@ main(int argc, char *argv[])
         printf("pcieport_open failed\n");
         exit(1);
     }
-    if (pcieport_ctrl(pme->pport, PCIEPORT_CMD_HOSTCONFIG, NULL) < 0) {
+    if (pcieport_ctrl(pme->pport, PCIEPORT_CMD_HOSTCONFIG, &pcfg) < 0) {
         printf("pcieport_ctrl(HOSTCONFIG) failed\n");
         exit(1);
     }

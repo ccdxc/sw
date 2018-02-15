@@ -329,3 +329,42 @@ pciehw_cfgwr_notify(pciehwdev_t *phwdev,
         break;
     }
 }
+
+void
+pciehw_cfgrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = ientry->info.pmti;
+    const pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+    const pciehwdevh_t hwdevh = spmt->owner;
+    pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
+    u_int32_t val;
+
+    if (pciehwdev_cfgrd(phwdev, stlp->addr, stlp->size, &val) < 0) {
+        ientry->cpl = PCIECPL_CA;
+    } else {
+        ientry->data[0] = val;
+    }
+    pciehw_indirect_complete(ientry);
+
+    pciehw_cfgrd_notify(phwdev, stlp, spmt);
+}
+
+void
+pciehw_cfgwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = ientry->info.pmti;
+    const pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+    const pciehwdevh_t hwdevh = spmt->owner;
+    pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
+
+    if (pciehwdev_cfgwr(phwdev, stlp->addr, stlp->size, stlp->data) < 0) {
+        ientry->cpl = PCIECPL_CA;
+    }
+    pciehw_indirect_complete(ientry);
+
+    pciehw_cfgwr_notify(phwdev, stlp, spmt);
+}

@@ -9,6 +9,7 @@ SOURCES = \
 	accel.c \
 	virtio.c \
 	debug.c \
+	pciestress.c \
 	utils.c \
 	$(NULL)
 

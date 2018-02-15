@@ -26,11 +26,9 @@
 
 /* defines for PMT.type and PMR.type fields */
 #define PMT_TYPE_CFG    0       /* host cfg */
-#define PMT_TYPE_BAR    1       /* host mem/io bar */
-#define PMT_TYPE_RC     2       /* rc dma */
-/* these types were added later -- XXX check these */
 #define PMT_TYPE_MEM    1       /* host mem bar */
-#define PMT_TYPE_IO     1       /* host i/o bar */
+#define PMT_TYPE_RC     2       /* rc dma */
+#define PMT_TYPE_IO     5       /* host i/o bar */
 
 /* generic tcam entry format */
 typedef union {
@@ -38,9 +36,9 @@ typedef union {
         u_int64_t x;            /* tcam x */
         u_int64_t y;            /* tcam y */
         u_int32_t v;            /* 1=entry valid */
-    };
+    } __attribute__((packed));
     u_int32_t words[PMT_NWORDS];
-} __attribute__((packed)) pmt_tcam_entry_t;
+} pmt_tcam_entry_t;
 
 /* common pmt entry format */
 typedef struct {

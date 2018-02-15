@@ -27,10 +27,6 @@
 #define NOTIFY_RING_SIZE \
     (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
      CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_RING_SIZE_BYTE_OFFSET)
-#define NOTIFY_INT \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
-     CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_INT_BYTE_OFFSET)
-#define NOTIFY_INT_NWORDS 3
 
 #define NOTIFY_BASE \
     (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_TGT_NOTIFY_BYTE_OFFSET)
@@ -53,6 +49,25 @@ static u_int64_t
 req_notify_addr(const int port)
 {
     return REQ_NOTIFY_BASE + (port * REQ_NOTIFY_STRIDE);
+}
+
+static u_int64_t
+notify_int_addr(void)
+{
+    return (CAP_ADDR_BASE_PXB_PXB_OFFSET +
+            CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_INT_BYTE_OFFSET);
+}
+
+static void
+notify_int_set(const u_int64_t addr, const u_int32_t data)
+{
+    req_int_set(notify_int_addr(), addr, data);
+}
+
+static void
+notify_int_get(u_int64_t *addrp, u_int32_t *datap)
+{
+    req_int_get(notify_int_addr(), addrp, datap);
 }
 
 static void
@@ -162,26 +177,6 @@ notify_enable(const u_int32_t mask)
 }
 
 static void
-notify_int_set(pciehw_t *phw, const u_int64_t addr, const u_int32_t data)
-{
-    union {
-        struct {
-            u_int32_t data:32;
-            u_int32_t addrdw_lo:32;
-            u_int32_t addrdw_hi:2;
-        } __attribute__((packed));
-        u_int32_t w[NOTIFY_INT_NWORDS];
-    } in;
-    const u_int64_t addrdw = addr >> 2;
-
-    in.data = data;
-    in.addrdw_lo = addrdw;
-    in.addrdw_hi = addrdw >> 32;
-
-    pal_reg_wr32w(NOTIFY_INT, in.w, NOTIFY_INT_NWORDS);
-}
-
-static void
 notify_ring_init(pciehw_t *phw, const int port)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
@@ -196,11 +191,11 @@ static void
 notify_init(pciehw_t *phw)
 {
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-     u_int64_t pa;
+    u_int64_t pa;
     u_int32_t maxents, ring_size;
 
     pa = pal_mem_vtop(&phwmem->notify_intr_dest);
-    notify_int_set(phw, pa, 1);
+    notify_int_set(pa, 1);
 
     maxents = NOTIFY_NENTRIES;
 
@@ -210,6 +205,13 @@ notify_init(pciehw_t *phw)
      */
     for (ring_size = 1; ring_size; ring_size <<= 1) {
         if ((ring_size << 1) > maxents) break;
+    }
+    /*
+     * Limit default notify ring size on fpga to 256 to software
+     * doesn't get to far behind the ring causing pcie bus timeouts.
+     */
+    if (ring_size > 0x100) {
+        ring_size = 0x100;
     }
     if (ring_size) {
         phwmem->notify_ring_mask = ring_size - 1;
@@ -224,7 +226,7 @@ notify_ring_inc(const int idx, const int inc, const u_int32_t ring_mask)
 }
 
 static void
-pciehw_notify(notify_entry_t *nentry)
+pciehw_notify(pciehw_port_t *p, notify_entry_t *nentry)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
@@ -245,8 +247,8 @@ pciehw_notify(notify_entry_t *nentry)
                      nentry->info.pmt_hit     ? 'p' : '-',
                      nentry->info.is_direct   ? 'd' : '-',
                      nentry->info.is_indirect ? 'i' : '-',
-                     nentry->info.is_UR       ? 'u' : '-',
-                     nentry->info.is_CA       ? 'a' : '-',
+                     nentry->info.is_ur       ? 'u' : '-',
+                     nentry->info.is_ca       ? 'a' : '-',
                      (u_int64_t)nentry->info.direct_addr);
     }
 
@@ -261,16 +263,33 @@ pciehw_notify(notify_entry_t *nentry)
         case PCIE_STLP_CFGRD:
         case PCIE_STLP_CFGRD1:
             pciehw_cfgrd_notify(phwdev, stlp, spmt);
+            p->notcfgrd++;
             break;
         case PCIE_STLP_CFGWR:
         case PCIE_STLP_CFGWR1:
             pciehw_cfgwr_notify(phwdev, stlp, spmt);
+            p->notcfgwr++;
             break;
         case PCIE_STLP_MEMRD:
+        case PCIE_STLP_MEMRD64:
             pciehw_barrd_notify(phwdev, stlp, spmt);
+            p->notmemrd++;
             break;
         case PCIE_STLP_MEMWR:
+        case PCIE_STLP_MEMWR64:
             pciehw_barwr_notify(phwdev, stlp, spmt);
+            p->notmemwr++;
+            break;
+        case PCIE_STLP_IORD:
+            pciehw_barrd_notify(phwdev, stlp, spmt);
+            p->notiord++;
+            break;
+        case PCIE_STLP_IOWR:
+            pciehw_barwr_notify(phwdev, stlp, spmt);
+            p->notiowr++;
+            break;
+        default:
+            p->notunknown++;
             break;
         }
     }
@@ -308,6 +327,8 @@ pciehw_notify_intr(pciehw_t *phw, const int port)
     if (ci == pi) return -1;
 
     pici_delta = notify_pici_delta(pi, ci);
+
+    p->notify_cnt += pici_delta;
     if (pici_delta > p->notify_max) {
         p->notify_max = pici_delta;
     }
@@ -317,11 +338,24 @@ pciehw_notify_intr(pciehw_t *phw, const int port)
          i != endidx;
          i = notify_ring_inc(i, 1, ring_mask)) {
 
-        pciehw_notify(&notify_ring[i]);
+#if 1
+        notify_entry_t nentry;
+
+        /* XXX avoid an alignment crash on "io mem" */
+        pciehw_memcpy(&nentry, &notify_ring[i], sizeof(nentry));
+        pciehw_notify(p, &nentry);
+#else
+        pciehw_notify(p, &notify_ring[i]);
+#endif
+        /* return some slots occasionally while processing */
+        if ((i & 0xff) == 0) {
+            notify_set_ci(port, i);
+        }
     }
 
     /* we consumed these, adjust ci */
     notify_set_ci(port, pi);
+    phwmem->notify_intr_dest = 0;
     return 0;
 }
 
@@ -340,9 +374,8 @@ notify_show(void)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    u_int64_t addrdw;
     u_int32_t v;
-    u_int32_t in[NOTIFY_INT_NWORDS];
+    u_int64_t addr;
     int i;
     const int w = 20;
 
@@ -351,16 +384,17 @@ notify_show(void)
     v = pal_reg_rd32(NOTIFY_EN);
     pciehsys_log("%-*s : 0x%08x\n", w, "notify_en", v);
 
-    pal_reg_rd32w(NOTIFY_INT, in, NOTIFY_INT_NWORDS);
-    addrdw = in[2] & 0x3;
-    addrdw <<= 32;
-    addrdw |= in[1];
-    pciehsys_log("%-*s : 0x%08"PRIx64"\n", w, "int_addr", addrdw << 2);
-    pciehsys_log("%-*s : 0x%08x\n", w, "int_data", in[0]);
-    pciehsys_log("%-*s : %d\n", w, "notify_verbose", notify_verbose);
+    notify_int_get(&addr, &v);
+    pciehsys_log("%-*s : 0x%08"PRIx64"\n", w, "notify_int_addr", addr);
+    pciehsys_log("%-*s : 0x%08x\n", w, "notify_int_data", v);
+    pciehsys_log("%-*s : 0x%08x\n", w,
+                 "notify_intr_dest", phwmem->notify_intr_dest);
 
-    pciehsys_log("%-4s %-11s %5s %5s %4s\n",
-                 "port", "ring_base", "pi", "ci", "max");
+    pciehsys_log("%-*s : %d\n", w, "notify_verbose", notify_verbose);
+    pciehsys_log("%-*s : %d\n", w, "skip_notify", skip_notify);
+
+    pciehsys_log("%-4s %-11s %5s %5s %4s %4s\n",
+                 "port", "ring_base", "pi", "ci", "max", "cnt");
     for (i = 0; i < phw->nports; i++) {
         pciehw_port_t *p = &phwmem->port[i];
         u_int64_t ring_base;
@@ -369,8 +403,8 @@ notify_show(void)
         notify_get_ring_base(phw, i, &ring_base);
         notify_get_pici(i, &pi, &ci);
 
-        pciehsys_log("%-4d 0x%09"PRIx64" %5d %5d %4d\n",
-                     i, ring_base, pi, ci, p->notify_max);
+        pciehsys_log("%-4d 0x%09"PRIx64" %5d %5d %4d %4"PRId64"\n",
+                     i, ring_base, pi, ci, p->notify_max, p->notify_cnt);
     }
 }
 

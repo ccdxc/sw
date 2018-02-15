@@ -133,13 +133,48 @@ pciehw_barwr_notify(pciehwdev_t *phwdev,
     memset(&evd, 0, sizeof(evd));
     evd.evtype = PCIEHDEV_EV_MEMWR_NOTIFY;
     evd.mem_notify.baraddr = stlp->addr;
-    /* XXX baridx */
+    evd.mem_notify.baridx = 0; /* XXX baridx from spmt? */
     evd.mem_notify.baroffset = stlp->addr - spmt->baraddr;
     evd.mem_notify.size = stlp->size;
     evd.mem_notify.data = stlp->data;
     pciehw_event(phwdev, &evd);
 }
 
+void
+pciehw_barrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
+{
+#if 0
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = ientry->info.pmti;
+    const pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+    const pciehwdevh_t hwdevh = spmt->owner;
+    pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
+#endif
+    u_int64_t pa = ientry->info.direct_addr;
+    size_t sz = ientry->info.direct_size;
+
+    pal_mem_rd(pa, ientry->data, sz);
+    pciehw_indirect_complete(ientry);
+}
+
+void
+pciehw_barwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
+{
+#if 0
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    const u_int32_t pmti = ientry->info.pmti;
+    const pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
+    const pciehwdevh_t hwdevh = spmt->owner;
+    pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
+#endif
+    u_int64_t pa = ientry->info.direct_addr;
+    size_t sz = ientry->info.direct_size;
+
+    pal_mem_wr(pa, &stlp->data, sz);
+    pciehw_indirect_complete(ientry);
+}
 
 /******************************************************************
  * debug
@@ -277,7 +312,7 @@ cmd_load(int argc, char *argv[])
     }
 
     if (name == NULL || idx == -1) {
-        pciehsys_log("Usage: load -d <devname> -b <baridx> <addr>\n");
+        pciehsys_log("Usage: load -d <devname> -b <baridx>\n");
         return;
     }
 

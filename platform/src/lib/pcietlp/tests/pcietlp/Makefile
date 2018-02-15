@@ -4,6 +4,7 @@
 
 PROGRAM = pcietlp
 SOURCES = pcietlp.c
+LBUILD_ARCHES = x86_64
 
 LCFLAGS += \
 	$(NULL)

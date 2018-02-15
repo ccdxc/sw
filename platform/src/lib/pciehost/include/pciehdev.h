@@ -32,7 +32,6 @@ typedef struct pciehdev_openparams_s {
     u_int32_t fake_bios_scan:1; /* scan finalized topology, assign bus #'s */
     u_int32_t noexttag:1;       /* no extended tags capable */
     u_int32_t noexttag_en:1;    /* no extended tags enabled */
-    u_int32_t nomsicap:1;       /* no msi cap */
     u_int32_t nomsixcap:1;      /* no msix cap */
 } pciehdev_openparams_t;
 

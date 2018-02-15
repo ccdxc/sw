@@ -172,7 +172,6 @@ pciehcfg_setconf_defaults(pciehcfg_t *pcfg)
     pcfg->flr = 1;
     pcfg->exttag = !params->noexttag;
     pcfg->exttag_en = !params->noexttag_en;
-    pcfg->msicap = !params->nomsicap;
     pcfg->msixcap = !params->nomsixcap;
 }
 

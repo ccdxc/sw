@@ -9,6 +9,8 @@
 #include "cap_pxb_c_hdr.h"
 #include "pmt.h"
 #include "notify.h"
+#include "indirect.h"
+#include "req_int.h"
 #include "event.h"
 
 struct pciehw_s;
@@ -74,7 +76,23 @@ typedef struct pciehwdev_s {
 } pciehwdev_t;
 
 typedef struct pciehw_port_s {
+    u_int64_t indirect_cnt;             /* total count of indirect events */
+    u_int64_t notify_cnt;               /* total count of notify events */
     u_int32_t notify_max;               /* largest pending notify events */
+    u_int64_t notcfgrd;
+    u_int64_t notcfgwr;
+    u_int64_t notmemrd;
+    u_int64_t notmemwr;
+    u_int64_t notiord;
+    u_int64_t notiowr;
+    u_int64_t notunknown;
+    u_int64_t indcfgrd;
+    u_int64_t indcfgwr;
+    u_int64_t indmemrd;
+    u_int64_t indmemwr;
+    u_int64_t indiord;
+    u_int64_t indiowr;
+    u_int64_t indunknown;
 } pciehw_port_t;
 
 typedef struct pciehw_sprt_s {
@@ -128,6 +146,7 @@ typedef struct pciehw_mem_s {
                                      __attribute__((aligned(PCIEHW_NOTIFYSZ)));
     u_int32_t notify_intr_dest;         /* temporary notify intr dest */
     u_int32_t notify_ring_mask;
+    u_int32_t indirect_intr_dest;       /* temporary indirect intr dest */
 } pciehw_mem_t;
 
 typedef struct pciehw_s {
@@ -157,12 +176,26 @@ pciehwdev_t *pciehwdev_find_by_name(const char *name);
 
 int pciehw_cfg_init(pciehw_t *phw);
 int pciehw_cfg_finalize(pciehdev_t *pdev);
+int pciehwdev_cfgrd(pciehwdev_t *phwdev,
+                    const u_int16_t offset,
+                    const u_int8_t size,
+                    u_int32_t *valp);
+int pciehwdev_cfgwr(pciehwdev_t *phwdev,
+                    const u_int16_t offset,
+                    const u_int8_t size,
+                    const u_int32_t val);
+
 void pciehw_cfgrd_notify(pciehwdev_t *phwdev,
                          const pcie_stlp_t *stlp,
                          const pciehw_spmt_t *spmt);
 void pciehw_cfgwr_notify(pciehwdev_t *phwdev,
                          const pcie_stlp_t *stlp,
                          const pciehw_spmt_t *spmt);
+
+struct indirect_entry_s;
+typedef struct indirect_entry_s indirect_entry_t;
+void pciehw_cfgrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp);
+void pciehw_cfgwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp);
 
 int pciehw_bar_init(pciehw_t *phw);
 int pciehw_bar_finalize(pciehdev_t *pdev);
@@ -176,6 +209,8 @@ void pciehw_barrd_notify(pciehwdev_t *phwdev,
 void pciehw_barwr_notify(pciehwdev_t *phwdev,
                          const pcie_stlp_t *stlp,
                          const pciehw_spmt_t *spmt);
+void pciehw_barrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp);
+void pciehw_barwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp);
 void pciehw_bar_dbg(int argc, char *argv[]);
 
 void pciehw_prt_init(pciehw_t *phw);

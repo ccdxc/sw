@@ -47,9 +47,9 @@ vfstride_set(pciehw_t *phw,
             u_int32_t d:5;
             u_int32_t f:5;
             u_int32_t addrmaxdw:10;
-        };
+        } __attribute__((packed));
         u_int32_t w;
-    } __attribute__((packed)) e;
+    } e;
 
     e.p = pshift;
     e.b = bshift;

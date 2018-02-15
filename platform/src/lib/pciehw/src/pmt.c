@@ -33,9 +33,9 @@ static char *
 pmt_type_str(int type)
 {
     static char *typestr[] = {
-        "cfg", "mem", "rc", "UNK"
+        "cfg", "mem", "rc", "UNK3", "UNK4", "io", "UNK5", "UNK6", "UNK7"
     };
-    return typestr[type & 0x3];
+    return typestr[type & 0x7];
 }
 
 static int
@@ -235,54 +235,52 @@ static void
 pmt_set_bar(const int pmti,
             const u_int8_t port,
             const u_int16_t bdf,
-            const u_int64_t addr,
-            const u_int64_t addrm,
-            const u_int32_t prtbase,
-            const u_int32_t prtcount,
-            const u_int32_t prtsize,
-            const u_int8_t qtypestart,
-            const u_int8_t qtypemask,
-            const u_int8_t notify,
-            const u_int8_t indirect)
+            const pciehw_spmt_t *spmt)
 {
     pmt_t pmt = { 0 };
     pmt_bar_t *d = (pmt_bar_t *)&pmt.data;
     pmt_bar_t *m = (pmt_bar_t *)&pmt.mask;
     pmr_bar_t *r = (pmr_bar_t *)&pmt.pmr;
+    const u_int64_t addr = spmt->baraddr;
+    const u_int64_t addrm = ~((1 << (ffsl(spmt->barsize) - 1)) - 1);
 
-    assert((prtcount & (prtcount - 1)) == 0);
-    assert((prtsize & (prtsize - 1)) == 0);
+    assert((spmt->prtcount & (spmt->prtcount - 1)) == 0);
+    assert((spmt->prtsize & (spmt->prtsize - 1)) == 0);
 
     d->valid     = 1;
-    d->tblid     = 0;
-    d->type      = PMT_TYPE_BAR;
-    d->port      = port;
-    d->rw        = 0;
-    d->addrdw    = addr >> 2;
-
     m->valid     = 0x1;
+
+    d->tblid     = 0;
     m->tblid     = 0x0; /* don't care, for now */
+
+    d->type      = spmt->type;
     m->type      = 0x7;
+
+    d->port      = port;
     m->port      = 0x7;
+
+    d->rw        = 0;
     m->rw        = 0;
+
+    d->addrdw    = addr >> 2;
     m->addrdw    = addrm >> 2;
 
     r->valid     = 1;
-    r->type      = PMT_TYPE_BAR;
+    r->type      = spmt->type;
     r->vfbase    = 0;
-    r->indirect  = indirect;
-    r->notify    = notify;
-    r->prtbase   = prtbase;
-    r->prtcount  = prtcount;
-    r->prtsize   = ffs(prtsize) - 1;
-    r->vfstart   = r->prtsize + ffs(prtcount) - 1;
+    r->indirect  = spmt->indirect;
+    r->notify    = spmt->notify;
+    r->prtbase   = spmt->prtbase;
+    r->prtcount  = spmt->prtcount;
+    r->prtsize   = ffs(spmt->prtsize) - 1;
+    r->vfstart   = r->prtsize + ffs(spmt->prtcount) - 1;
     r->vfend     = r->vfstart + 1;
     r->vflimit   = 1;
     r->bdf       = bdf;
     r->td        = 0;
     r->pagesize  = 0;   /* 4k page size for now */
-    r->qtypestart= qtypestart;
-    r->qtypemask = qtypemask;
+    r->qtypestart= spmt->qtypestart;
+    r->qtypemask = spmt->qtypemask;
     r->qidstart  = 0;
     r->qidend    = 1;
 
@@ -348,23 +346,13 @@ pmt_load_bar(pciehwbar_t *phwbar)
     const u_int32_t pmti = phwbar->pmti;
     const pciehw_spmt_t *spmt = &phwmem->spmt[pmti];
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
-    const u_int64_t addr = spmt->baraddr;
-    const u_int64_t addrm = ~((1 << (ffsl(spmt->barsize) - 1)) - 1);
 
     assert(phwbar->valid);
 
     pmt_set_bar(pmti,
                 phwdev->port,
                 phwdev->bdf,
-                addr,
-                addrm,
-                spmt->prtbase,
-                spmt->prtcount,
-                spmt->prtsize,
-                spmt->qtypestart,
-                spmt->qtypemask,
-                spmt->notify,
-                spmt->indirect);
+                spmt);
 }
 
 /******************************************************************
@@ -651,8 +639,10 @@ pmt_show_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
         }
         pmt_show_cfg_entry(phw, pmti, pmt);
         break;
-    case PMT_TYPE_BAR:
-        if (last_hdr_displayed != PMT_TYPE_BAR) {
+    case PMT_TYPE_MEM:
+    case PMT_TYPE_IO:
+        if (last_hdr_displayed != PMT_TYPE_MEM &&
+            last_hdr_displayed != PMT_TYPE_IO) {
             pmt_show_bar_entry_hdr();
         }
         pmt_show_bar_entry(phw, pmti, pmt);
@@ -763,7 +753,8 @@ pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on)
                 r->notify = on;
                 break;
             }
-            case PMT_TYPE_BAR: {
+            case PMT_TYPE_MEM:
+            case PMT_TYPE_IO: {
                 pmr_bar_t *r = (pmr_bar_t *)&pmt.pmr;
                 r->notify = on;
                 break;

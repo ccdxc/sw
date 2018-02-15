@@ -34,9 +34,9 @@ typedef union {
         u_int32_t skip_notify_if_qfull:1;
         u_int32_t fbe_holes_allow:1;
         u_int32_t fence_dis:1;
-    };
+    } __attribute__((packed));
     u_int32_t w;
-} __attribute__((packed)) portcfg_t;
+} portcfg_t;
 
 
 static u_int64_t

@@ -38,9 +38,13 @@ typedef struct pciehbarreg_s {
 #define PCIEHBARREGF_NOTIFYRD   0x0004  /* notify on read access */
 #define PCIEHBARREGF_NOTIFYWR   0x0008  /* notify on write access */
 #define PCIEHBARREGF_NOTIFYRW   (PCIEHBARREGF_NOTIFYRD | PCIEHBARREGF_NOTIFYWR)
-#define PCIEHBARREGF_MSIX_TBL   0x0010  /* region contains msix table */
-#define PCIEHBARREGF_MSIX_PBA   0x0020  /* region contains msix pba */
-#define PCIEHBARREGF_DBQIDADDR  0x0040  /* qid source: address */
+#define PCIEHBARREGF_INDIRECTRD 0x0010  /* indirect on read access */
+#define PCIEHBARREGF_INDIRECTWR 0x0020  /* indirect on write access */
+#define PCIEHBARREGF_INDIRECTRW (PCIEHBARREGF_INDIRECTRD | \
+                                 PCIEHBARREGF_INDIRECTWR)
+#define PCIEHBARREGF_MSIX_TBL   0x0040  /* region contains msix table */
+#define PCIEHBARREGF_MSIX_PBA   0x0080  /* region contains msix pba */
+#define PCIEHBARREGF_DBQIDADDR  0x0100  /* qid source: address */
 
 /* BAR region type - regtype */
 #define PCIEHBARREGT_RES        0       /* resource region */

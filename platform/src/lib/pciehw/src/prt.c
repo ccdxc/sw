@@ -319,6 +319,9 @@ pciehw_prt_alloc(pciehwdev_t *phwdev, const pciehbar_t *bar)
         if (reg->flags & PCIEHBARREGF_NOTIFYRW) {
             sprt->notify = 1;
         }
+        if (reg->flags & PCIEHBARREGF_INDIRECTRW) {
+            sprt->indirect = 1;
+        }
     }
     return prtbase;
 }
@@ -348,6 +351,7 @@ pciehw_prt_load(const int prtbase, const int prtcount)
                         sprt->notify, sprt->indirect);
             break;
         case PRT_TYPE_DB64:
+            assert(phwdev->lif_valid);
             prt_set_db64(prtbase + i, phwdev->lif, sprt->updvec);
             break;
         case PRT_TYPE_DB32:

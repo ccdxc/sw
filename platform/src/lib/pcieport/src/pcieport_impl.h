@@ -31,6 +31,10 @@ typedef enum pcieportev_e {
 
 struct pcieport_s {
     int port;
+    int gen;
+    int width;
+    u_int16_t subvendorid;
+    u_int16_t subdeviceid;
     u_int32_t open:1;
     u_int32_t host:1;
     u_int32_t config:1;
@@ -56,6 +60,7 @@ void pcieport_set_serdes_reset(pcieport_t *p, const int on);
 void pcieport_set_pcs_reset(pcieport_t *p, const int on);
 void pcieport_set_mac_reset(pcieport_t *p, const int on);
 void pcieport_set_ltssm_en(pcieport_t *p, const int on);
+void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);
 
 void pcieport_fsm_dbg(int argc, char *argv[]);
 

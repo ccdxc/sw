@@ -34,14 +34,6 @@ bitcount(u_int32_t n)
     return count;
 }
 
-static void
-pcietlp_clr_error(void)
-{
-    pcietlp_info_t *pi = &pcietlp_info;
-    pi->error_str[0] = '\0';
-    pi->error = 0;
-}
-
 static int pcietlp_set_error(const char *fmt, ...)
     __attribute__((format (printf, 1, 2)));
 static int pcietlp_set_error(const char *fmt, ...)
@@ -59,11 +51,12 @@ static int pcietlp_set_error(const char *fmt, ...)
     return -1;
 }
 
-char *
-pcietlp_get_error(void)
+static void
+pcietlp_clr_error(void)
 {
     pcietlp_info_t *pi = &pcietlp_info;
-    return pi->error_str;
+    pi->error_str[0] = '\0';
+    pi->error = 0;
 }
 
 static int
@@ -71,6 +64,13 @@ pcietlp_is_error(void)
 {
     pcietlp_info_t *pi = &pcietlp_info;
     return pi->error;
+}
+
+char *
+pcietlp_get_error(void)
+{
+    pcietlp_info_t *pi = &pcietlp_info;
+    return pi->error_str;
 }
 
 static u_int32_t
@@ -792,4 +792,3 @@ pcietlp_str(const pcie_stlp_t *stlp)
 
     return pcietlp_buf(stlp, buf, sizeof(buf));
 }
-
