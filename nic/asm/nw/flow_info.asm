@@ -65,19 +65,14 @@ flow_info:
                     d.u.flow_info_d.rewrite_index, \
                     p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
 
-  phvwr         p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
-  ASSERT_PHVWR(p, nat_metadata_nat_l4_port, nat_metadata_twice_nat_idx,
-               d, u.flow_info_d.nat_l4_port, u.flow_info_d.twice_nat_idx)
-  phvwr         p.{nat_metadata_nat_l4_port, \
-                  nat_metadata_twice_nat_idx}, \
-                d.{u.flow_info_d.nat_l4_port, \
-                  u.flow_info_d.twice_nat_idx}
-
   /* tunnel info */
-  phvwr.e       p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
-  phvwrpair     p.rewrite_metadata_tunnel_rewrite_index[9:0], \
-                  d.u.flow_info_d.tunnel_rewrite_index, \
-                p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
+  phvwr         p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
+  phvwrpair.e   p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+                    d.u.flow_info_d.tunnel_rewrite_index, \
+                    p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
+  // rewrite info
+  phvwr.f       p.{nat_metadata_nat_ip...nat_metadata_twice_nat_idx}, \
+                    d.{u.flow_info_d.nat_ip...u.flow_info_d.twice_nat_idx}
 
 .align
 flow_miss:
