@@ -67,13 +67,6 @@ pd_lif_update (pd_lif_update_args_t *args)
         }
     }
 
-    if (args->tx_policer_changed) {
-        ret = lif_pd_tx_policer_program_hw(pd_lif);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-    }
-
     // Process VLAN offload config changes
     if (args->vlan_strip_en_changed) {
         // Program output mapping table
@@ -103,6 +96,16 @@ pd_lif_update (pd_lif_update_args_t *args)
         }
         ret = scheduler_tx_pd_program_hw((pd_lif_t *)args->lif->pd_lif);
         if (ret != HAL_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (args->tx_policer_changed || args->qstate_map_init_set) {
+        HAL_TRACE_DEBUG("pd-lif:{}: tx policer changed ", __FUNCTION__);
+
+        ret = lif_pd_tx_policer_program_hw(pd_lif, true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx policer", __FUNCTION__);
             goto end;
         }
     }
@@ -309,19 +312,13 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     hal_ret_t            ret;
     lif_t                *lif = (lif_t *)pd_lif->pi_lif;
 
-    // Program the policers
+    // Program the rx-policer.
     ret = lif_pd_rx_policer_program_hw(pd_lif, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to program hw for rx policer");
         goto end;
     }
     
-    ret = lif_pd_tx_policer_program_hw(pd_lif);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to program hw for tx policer");
-        goto end;
-    }
-
     // Program output mapping table
     ret = lif_pd_pgm_output_mapping_tbl(pd_lif, NULL, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
@@ -329,9 +326,17 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
         goto end;
     }
 
+    // Program TX scheduler and Policer.
     ret = scheduler_tx_pd_program_hw(pd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to program hw for tx scheduler");
+        goto end;
+    }
+
+
+    ret = lif_pd_tx_policer_program_hw(pd_lif, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx policer", __FUNCTION__);
         goto end;
     }
 
@@ -398,10 +403,56 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_update_args_t *args)
     return lif->vlan_strip_en;
 }
 
+#define TX_POLICER_ACTION(_arg) d.tx_table_s7_t4_lif_rate_limiter_table_action_u.tx_table_s7_t4_lif_rate_limiter_table_tx_stage7_lif_egress_rl_params._arg
 hal_ret_t
-lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif)
+lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 {
     hal_ret_t             ret = HAL_RET_OK;
+    sdk_ret_t             sdk_ret;
+    lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
+    directmap             *tx_policer_tbl = NULL;
+    tx_table_s7_t4_lif_rate_limiter_table_actiondata d = {0};
+
+    tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S7_T4_LIF_RATE_LIMITER_TABLE);
+    HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
+
+    d.actionid = TX_TABLE_S7_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE7_LIF_EGRESS_RL_PARAMS_ID;
+    if (pi_lif->qos_info.tx_policer.bps_rate == 0) {
+        TX_POLICER_ACTION(entry_valid) = 0;
+    } else {
+        TX_POLICER_ACTION(entry_valid) = 1;
+        TX_POLICER_ACTION(pkt_rate) = 0;
+        //TODO does this need memrev ?
+        memcpy(TX_POLICER_ACTION(burst), &pi_lif->qos_info.tx_policer.burst_size, sizeof(uint32_t));
+        // TODO convert the rate into token-rate 
+        memcpy(TX_POLICER_ACTION(rate), &pi_lif->qos_info.tx_policer.bps_rate, sizeof(uint32_t));
+    }
+
+    if (update) {
+        sdk_ret = tx_policer_tbl->update(pd_lif->hw_lif_id, &d);
+    } else {
+        sdk_ret = tx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id);
+    }
+
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}: tx policer table write failure, lif {}, ret {}",
+                      __FUNCTION__, lif_get_lif_id(pi_lif), ret);
+        return ret;
+    }
+
+    // Program mapping from rate-limiter-table to scheduler-table rate-limiter-group (RLG) for pausing.
+    ret = policer_tx_pd_program_hw(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx policer", __FUNCTION__);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("pd-lif:{}: lif {} hw_lif_id {} rate {} burst {} programmed",
+                    __FUNCTION__, lif_get_lif_id(pi_lif),
+                    pd_lif->hw_lif_id, pi_lif->qos_info.tx_policer.bps_rate,
+                    pi_lif->qos_info.tx_policer.burst_size);
+end:
     return ret;
 }
 
@@ -409,6 +460,21 @@ hal_ret_t
 lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
 {
     hal_ret_t             ret = HAL_RET_OK;
+    sdk_ret_t             sdk_ret;
+    directmap             *tx_policer_tbl = NULL;
+
+    tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S7_T4_LIF_RATE_LIMITER_TABLE);
+    HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
+
+    sdk_ret = tx_policer_tbl->remove(pd_lif->hw_lif_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},unable to deprogram tx policer table",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    } else {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},deprogrammed tx policer table",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    }
 
     return ret;
 }

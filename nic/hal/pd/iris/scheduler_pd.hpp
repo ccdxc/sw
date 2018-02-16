@@ -15,6 +15,7 @@ hal_ret_t scheduler_tx_pd_alloc (pd_lif_t *pd_lif);
 hal_ret_t scheduler_tx_pd_dealloc (pd_lif_t *pd_lif);
 hal_ret_t scheduler_tx_pd_program_hw(pd_lif_t *pd_lif);
 hal_ret_t scheduler_tx_pd_deprogram_hw(pd_lif_t *pd_lif);
+hal_ret_t policer_tx_pd_program_hw(pd_lif_t *pd_lif);
 
 }   // namespace pd
 }   // namespace hal

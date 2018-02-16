@@ -131,8 +131,8 @@ capri_txs_scheduler_init (uint32_t admin_cos)
         psp_csr.cfg_npv_cos_to_tm_oq_map[i].write();
     }
 
-    HAL_TRACE_DEBUG("CAPRI-TXS::{}: Set hbm base addr for TXS sched to {:#x}, dtdm_lo_map {:#x}, dtdm_hi_map {:#x}",
-                    __func__, txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);
+    HAL_TRACE_DEBUG("Set hbm base addr for TXS sched to {:#x}, dtdm_lo_map {:#x}, dtdm_hi_map {:#x}",
+                    txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);
     return HAL_RET_OK;
 }
 
@@ -183,9 +183,36 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, txs_sched_lif_params_t
         }
     }
 
-    HAL_TRACE_DEBUG("CAPRI-TXS::{}: Programmed sched-table-offset {} and entries-per-cos {}"
-                    "and cos-bmp {:#x} for hw-lif-id {}", __func__, txs_hw_params->sched_table_offset,
+    HAL_TRACE_DEBUG("Programmed sched-table-offset {} and entries-per-cos {}"
+                    "and cos-bmp {:#x} for hw-lif-id {}", txs_hw_params->sched_table_offset,
                      txs_hw_params->num_entries_per_cos, lif_cos_bmp, hw_lif_id);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_txs_policer_lif_params_update(uint32_t hw_lif_id, txs_policer_lif_params_t *txs_hw_params) 
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t &txs_csr = cap0.txs.txs;
+
+    if ((hw_lif_id >= TXS_MAX_TABLE_ENTRIES) ||
+        (txs_hw_params->sched_table_end_offset >= TXS_MAX_TABLE_ENTRIES)) {
+        HAL_TRACE_ERR("CAPRI-TXS::{}: Invalid parameters to function {},{}",__func__, hw_lif_id,
+                       txs_hw_params->sched_table_end_offset);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // Program mapping from rate-limiter-table entry (indexed by hw-lif-id) to scheduler table entries.
+    // The scheduler table entries (also called Rate-limiter-group, RLG)  will be paused when rate-limiter entry goes red.
+    txs_csr.dhs_sch_rlid_map_sram.entry[hw_lif_id].read();
+    txs_csr.dhs_sch_rlid_map_sram.entry[hw_lif_id].sg_start(txs_hw_params->sched_table_start_offset);
+    txs_csr.dhs_sch_rlid_map_sram.entry[hw_lif_id].sg_end(txs_hw_params->sched_table_end_offset);
+    txs_csr.dhs_sch_rlid_map_sram.entry[hw_lif_id].write();
+
+    HAL_TRACE_DEBUG("Programmed sched-table-start-offset {} and sched-table-end-offset {}"
+                    "for hw-lif-id {}", txs_hw_params->sched_table_start_offset,
+                     txs_hw_params->sched_table_end_offset, hw_lif_id);
 
     return HAL_RET_OK;
 }

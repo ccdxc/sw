@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
-#include "nic/gen/proto/hal/qos.pb.h" 
+#include "nic/gen/proto/hal/qos.pb.h"
 
 using intf::LifSpec;
 using intf::LifResponse;
@@ -77,7 +77,6 @@ void scheduler_tx_test::qos_init()
     ret = hal::qos_class_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
-
 }
 
 
@@ -90,14 +89,15 @@ TEST_F(scheduler_tx_test, test1)
     LifSpec lif_spec;
     LifResponse lif_rsp;
 
-    // Create a lif with two queue types and specify qos-class.
+    // Create a lif with two queue types and specify qos-class and tx-policer
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
-
     lif_spec.mutable_tx_qos_class()->set_qos_group(cos_a_1);
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
     lif_spec.mutable_lif_qstate_map(0)->set_size(1);
     lif_spec.mutable_lif_qstate_map(0)->set_entries(15);
+    lif_spec.mutable_tx_policer()->set_bps_rate(10000);
+    lif_spec.mutable_tx_policer()->set_burst_size(200);
 
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(1)->set_type_num(1);
@@ -182,6 +182,9 @@ TEST_F(scheduler_tx_test, test3)
     lif_spec.mutable_lif_qstate_map(1)->set_size(1);
     lif_spec.mutable_lif_qstate_map(1)->set_entries(4);
 
+    lif_spec.mutable_tx_policer()->set_bps_rate(20000);
+    lif_spec.mutable_tx_policer()->set_burst_size(400);
+
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(lif_spec, &lif_rsp);
     hal::hal_cfg_db_close();
@@ -212,6 +215,8 @@ TEST_F(scheduler_tx_test, test4)
     spec.mutable_lif_qstate_map(0)->set_type_num(1);
     spec.mutable_lif_qstate_map(0)->set_size(1);
     spec.mutable_lif_qstate_map(0)->set_entries(13);
+    spec.mutable_tx_policer()->set_bps_rate(10000);
+    spec.mutable_tx_policer()->set_burst_size(200);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);

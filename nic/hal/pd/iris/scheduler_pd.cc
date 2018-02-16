@@ -154,7 +154,37 @@ hal_ret_t scheduler_tx_pd_deprogram_hw (pd_lif_t *lif_pd)
     }
 end:
     return ret;     
-}                    
+}
+
+hal_ret_t policer_tx_pd_program_hw (pd_lif_t *lif_pd)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    lif_t                       *pi_lif;
+    txs_policer_lif_params_t    txs_hw_params = {0};
+    uint32_t                    num_cos_values = 0;
+
+    if (!lif_pd) {
+        // Nothing to do
+        goto end;
+    }
+
+    pi_lif = (lif_t *)lif_pd->pi_lif;
+    num_cos_values = num_set_bits(pi_lif->qos_info.cos_bmp);
+
+    if (num_cos_values && lif_pd->tx_sched_num_table_entries) {
+        txs_hw_params.sched_table_start_offset  = lif_pd->tx_sched_table_offset;
+        txs_hw_params.sched_table_end_offset = (lif_pd->tx_sched_table_offset + lif_pd->tx_sched_num_table_entries - 1);
+
+        ret = capri_txs_policer_lif_params_update(lif_pd->hw_lif_id, &txs_hw_params);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to program tx policer lif params in hw",
+                              __FUNCTION__, lif_get_lif_id(pi_lif));
+        }
+    }
+end:
+    return ret;
+}
+
 }    // namespace pd
 }    // namespace hal
 

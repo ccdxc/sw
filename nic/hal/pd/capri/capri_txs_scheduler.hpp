@@ -22,6 +22,12 @@ typedef struct txs_sched_lif_params_s {
     uint16_t             cos_bmp;
 } txs_sched_lif_params_t;
 
+/* (lif,cos) mapping params in policer table */
+typedef struct txs_policer_lif_params_s {
+    uint32_t             sched_table_start_offset;
+    uint32_t             sched_table_end_offset;
+} txs_policer_lif_params_t;  
+
 /** capri_txs_scheduler_init
  * API to init the txs scheduler module
  *
@@ -39,5 +45,15 @@ hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos);
  */
 hal_ret_t capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, 
                                                 txs_sched_lif_params_t *txs_hw_params);
+
+/** capri_txs_policer_lif_params_update
+ * API to program txs policer table with lif,cos scheduler-table mappings.
+ *      
+ * @param  hw_lif_id[in]: hw lif id for this entry.
+ * @param  txs_hw_params[in]. scheduler table params for this entry.
+ * @return hal_ret_t: Status of the operation
+ */     
+hal_ret_t capri_txs_policer_lif_params_update(uint32_t hw_lif_id,
+                                                txs_policer_lif_params_t *txs_hw_params);
 
 #endif
