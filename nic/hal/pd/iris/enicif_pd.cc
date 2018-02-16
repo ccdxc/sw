@@ -132,7 +132,7 @@ pd_enicif_upd_pinned_uplink_change(pd_if_update_args_t *args)
 
     // Program input prop. entries for new l2segs
     ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, &hal_if->l2seg_list_clsc_head,
-                                    args, TABLE_OPER_UPDATE);
+                                    args, NULL, TABLE_OPER_UPDATE);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(" failed to repgm input prop."
                 "for l2segs. ret:{}", ret);
@@ -164,7 +164,7 @@ pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args)
         native_l2seg = l2seg_lookup_by_handle(args->new_native_l2seg_clsc);
         ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
                                               native_l2seg,
-                                              NULL, args,
+                                              NULL, args, NULL,
                                               TABLE_OPER_INSERT);
     }
 
@@ -192,7 +192,7 @@ pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args)
 
     // Program input prop. entries for new l2segs
     ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, args->add_l2seg_clsclist,
-                                    args, TABLE_OPER_INSERT);
+                                    args, NULL, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(" failed to pgm input prop."
                 "for new l2segs. ret:{}", ret);
@@ -446,34 +446,42 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     sdk_ret_t           sdk_ret;
     tcam                *inp_prop_mac_vlan_tbl = NULL;
 
-    inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
-                            P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
-    HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
-    sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_host);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram inp mac vlan table "
-                      "for host traffic",
-                      __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
-        goto end;
-    } else {
-        HAL_TRACE_ERR("{}:deprogrammed inp mac vlan table for "
-                      "host traffic",
-                      __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
+    if (pd_enicif->inp_prop_mac_vlan_idx_host != INVALID_INDEXER_INDEX) {
+        inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
+                                                           P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
+        HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
+
+        sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_host);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}:unable to deprogram inp mac vlan table "
+                          "for host traffic at: {}",
+                          __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
+            goto end;
+        } else {
+            HAL_TRACE_ERR("{}:deprogrammed inp mac vlan table for "
+                          "host traffic at: {}",
+                          __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
+            pd_enicif->inp_prop_mac_vlan_idx_host = INVALID_INDEXER_INDEX;
+
+        }
     }
 
-    sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_upl);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:unable to deprogram inp mac vlan table "
-                      "for uplink traffic",
-                      __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
-        goto end;
-    } else {
-        HAL_TRACE_ERR("{}:deprogrammed inp mac vlan table for "
-                      "uplink traffic",
-                      __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
+    if (pd_enicif->inp_prop_mac_vlan_idx_upl != INVALID_INDEXER_INDEX) {
+        sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_upl);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}:unable to deprogram inp mac vlan table "
+                          "for uplink traffic at: {}",
+                          __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
+            goto end;
+        } else {
+            HAL_TRACE_ERR("{}:deprogrammed inp mac vlan table for "
+                          "uplink traffic at: {}",
+                          __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
+            pd_enicif->inp_prop_mac_vlan_idx_upl = INVALID_INDEXER_INDEX;
+        }
     }
 
 end:
@@ -537,7 +545,7 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, 
                                         &hal_if->l2seg_list_clsc_head,
-                                        NULL, TABLE_OPER_INSERT);
+                                        NULL, NULL, TABLE_OPER_INSERT);
 
         // Program native l2seg
         if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
@@ -545,7 +553,7 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
                 l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
             ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
                                                   native_l2seg_clsc,
-                                                  NULL, NULL,
+                                                  NULL, NULL, NULL,
                                                   TABLE_OPER_INSERT);
         }
     }
@@ -560,6 +568,7 @@ hal_ret_t
 pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif, 
                           dllist_ctxt_t *l2sege_list,
                           pd_if_update_args_t *args,
+                          pd_if_lif_update_args_t *lif_args,
                           table_oper_t oper)
 {
     hal_ret_t               ret = HAL_RET_OK;
@@ -580,7 +589,7 @@ pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
         ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, l2seg, 
                                               (pd_if_l2seg_entry_t *)
                                               pi_l2seg_entry->pd,
-                                              args, oper);
+                                              args, lif_args, oper);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("{}:unable to pgm for l2seg:{}, if{}",
                            l2seg->seg_id, 
@@ -648,6 +657,7 @@ hal_ret_t
 pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                                 pd_if_l2seg_entry_t *if_l2seg,
                                 pd_if_update_args_t *args,
+                                pd_if_lif_update_args_t *lif_args,
                                 table_oper_t oper)
 {
     hal_ret_t                               ret = HAL_RET_OK;
@@ -657,10 +667,12 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     input_properties_actiondata             data;
     if_t                                    *hal_if = (if_t *)pd_enicif->pi_if;
     if_t                                    *uplink = NULL;
+    lif_t                                   *lif = NULL;
     pd_l2seg_t                              *l2seg_pd;
     sdk_hash                                *inp_prop_tbl = NULL;
     uint32_t                                hash_idx = INVALID_INDEXER_INDEX;
     bool                                    direct_to_otcam = false;
+    bool                                    vlan_insert_en = false;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -676,6 +688,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
         key_mask->vlan_tag_vid_mask = 0xFFFF;
         key_mask->vlan_tag_valid_mask = 0xFF;
         key_mask->entry_inactive_input_properties_mask = 0xFF;
+        key_mask->p4plus_to_p4_insert_vlan_tag_mask = 0xFF;
         direct_to_otcam = true;
     }
 
@@ -689,11 +702,23 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
         uplink = find_if_by_handle(hal_if->pinned_uplink);
     }
 
+    lif = if_get_lif(hal_if);
+    HAL_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
 
     // Key
     key.capri_intrinsic_lif = if_get_hw_lif_id(hal_if);
     if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
-        key.vlan_tag_valid = 1;
+        if (lif_args && lif_args->vlan_insert_en_changed) {
+            vlan_insert_en = lif_args->vlan_insert_en;
+        } else {
+            vlan_insert_en = lif->vlan_insert_en;
+        }
+        if (vlan_insert_en) {
+            // vlan tag is in sideband
+            key.p4plus_to_p4_insert_vlan_tag = 1;
+        } else {
+            key.vlan_tag_valid = 1;
+        }
         key.vlan_tag_vid = l2seg_get_wire_encap_val(l2seg);
     }
 
@@ -862,8 +887,8 @@ pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx)
                       __FUNCTION__, inp_prop_idx);
         goto end;
     } else {
-        HAL_TRACE_ERR("{}:classic: deprogrammed at:{} ",
-                      __FUNCTION__, inp_prop_idx);
+        HAL_TRACE_DEBUG("{}:classic: deprogrammed at:{} ",
+                        __FUNCTION__, inp_prop_idx);
     }
 end:
     return ret;
@@ -879,15 +904,24 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
+    if_t                 *hal_if;
 
+    // TODO: Currently only classic ENIC Is being handled. May have to handle
+    //       other types. For eg. vlan_insert_en
     HAL_TRACE_DEBUG("{}: updating lif params for enicif: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+    hal_if = (if_t *)pd_enicif->pi_if;
 
     // Program Output Mapping 
     ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, 
                                               TABLE_OPER_UPDATE);
+
+    // Program Input Properties
+    ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, 
+                                    &hal_if->l2seg_list_clsc_head,
+                                    NULL, args, TABLE_OPER_UPDATE);
 
     return ret;
 }

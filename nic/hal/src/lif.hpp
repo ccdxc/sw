@@ -104,10 +104,12 @@ typedef struct lif_update_app_ctxt_s {
     LifResponse  *rsp;
     bool         vlan_strip_en;
     bool         qstate_map_init_set;
+    bool         vlan_insert_en_changed:1;
     uint64_t     vlan_strip_en_changed:1;
     uint64_t     pinned_uplink_changed:1;
     uint64_t     rx_policer_changed:1;
     uint64_t     tx_policer_changed:1;
+    uint64_t     vlan_insert_en;
     hal_handle_t new_pinned_uplink;
     bool         rss_config_changed;
 } __PACK__ lif_update_app_ctxt_t;
@@ -221,10 +223,14 @@ find_lif_by_handle (hal_handle_t handle)
 extern void *lif_id_get_key_func(void *entry);
 extern uint32_t lif_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool lif_id_compare_key_func(void *key1, void *key2);
-hal_ret_t lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en);
 void lif_print_ifs(lif_t *lif);
 void lif_print(lif_t *lif);
 hal_ret_t lif_spec_print (LifSpec& spec);
+hal_ret_t lif_update_trigger_if (lif_t *lif, 
+                                 bool vlan_strip_en_changed,
+                                 bool vlan_strip_en,
+                                 bool vlan_insert_en_changed,
+                                 bool vlan_insert_en);
 
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);

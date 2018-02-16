@@ -1517,14 +1517,18 @@ if_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
                       ret);
     }
 
-    // Free mbr lists
-    interface_cleanup_handle_list(&app_ctxt->add_mbrlist);
-    interface_cleanup_handle_list(&app_ctxt->del_mbrlist);
-    interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
+    if (intf->if_type == intf::IF_TYPE_UPLINK_PC) {
+        // Free mbr lists
+        interface_cleanup_handle_list(&app_ctxt->add_mbrlist);
+        interface_cleanup_handle_list(&app_ctxt->del_mbrlist);
+        interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
+    }
 
-    // Free l2segs lists for classic enic if
-    enicif_cleanup_l2seg_entry_list(&app_ctxt->add_l2segclsclist);
-    enicif_cleanup_l2seg_entry_list(&app_ctxt->del_l2segclsclist);
+    if (intf->if_type == intf::IF_TYPE_ENIC) {
+        // Free l2segs lists for classic enic if
+        enicif_cleanup_l2seg_entry_list(&app_ctxt->add_l2segclsclist);
+        enicif_cleanup_l2seg_entry_list(&app_ctxt->del_l2segclsclist);
+    }
 
     // Free PI
     if_free(intf);

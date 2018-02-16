@@ -55,6 +55,10 @@ pd_enicif_init (pd_enicif_t *enicif)
     }
 
     // Set here if you want to initialize any fields
+    enicif->inp_prop_mac_vlan_idx_host = INVALID_INDEXER_INDEX;
+    enicif->inp_prop_mac_vlan_idx_upl  = INVALID_INDEXER_INDEX;
+    enicif->enic_lport_id              = INVALID_INDEXER_INDEX;
+    enicif->inp_prop_native_l2seg_clsc = INVALID_INDEXER_INDEX;
 
     return enicif;
 }
@@ -126,6 +130,7 @@ hal_ret_t
 pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif, 
                           dllist_ctxt_t *l2sege_list,
                           pd_if_update_args_t *args,
+                          pd_if_lif_update_args_t *lif_args,
                           table_oper_t oper);
 hal_ret_t
 pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif);
@@ -139,6 +144,7 @@ hal_ret_t
 pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                                 pd_if_l2seg_entry_t *if_l2seg,
                                 pd_if_update_args_t *args,
+                                pd_if_lif_update_args_t *lif_args,
                                 table_oper_t oper);
 hal_ret_t pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args);
 hal_ret_t pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, 

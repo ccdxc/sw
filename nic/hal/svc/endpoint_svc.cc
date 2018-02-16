@@ -58,7 +58,21 @@ EndpointServiceImpl::EndpointDelete(ServerContext *context,
                                     const EndpointDeleteRequestMsg *req,
                                     EndpointDeleteResponseMsg *rsp)
 {
+    uint32_t                i, nreqs = req->request_size();
+    EndpointDeleteResponse  *response;
+
     HAL_TRACE_DEBUG("Rcvd Endpoint Delete Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::endpoint_delete(spec, response);
+    }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
