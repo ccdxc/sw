@@ -159,6 +159,14 @@ unit-test-verbose:
 	$(info +++ running go tests verbose)
 	@VENICE_DEV=1 $(GOCMD) test -v -p 1 ${GO_PKG}; \
 
+install_box:
+	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
+
+test-debug-ui: install_box
+	box -t venice-ui:test-debug venice/ui/box.rb
+	docker rm -f venice-ui || :
+	docker run --name venice-ui -p 80:3000 -it -v "${PWD}:/go/src/github.com/pensando/sw" venice-ui:test-debug bash
+
 # Target to run on Mac to start kibana docker, this connects to the Elastic running on vagrant cluster
 start-kibana:
 	docker run --name kibana -e ELASTICSEARCH_URL=http://192.168.30.10:9200 -e XPACK_SECURITY_ENABLED=false -p 127.0.0.1:5601:5601 -d kibana:5.4.1

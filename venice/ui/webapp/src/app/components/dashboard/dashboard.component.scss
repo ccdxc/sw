@@ -1,0 +1,70 @@
+:host {
+    position: relative;
+    display: block;
+    height: 100%;
+    width: 100%;
+}  
+
+h1 {
+    font-size: 22px;
+    padding: 0 20px;
+    height: 50px;
+    margin: 0;
+}
+
+.dsbd-toolbar {
+    position: relative;
+    width: 100%;
+    padding: 0 20px;
+    height: 100px;
+}
+
+.dsbd-main-gridster-content {
+    position: relative;
+    padding: 0 10px;
+    top: 0px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height:650px;
+    overflow-y: auto;
+}
+
+.dsbd-panel-heading {
+    border-bottom: 1px solid #F0F0F0;
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    top: 0;
+}
+.pdsbd-anel-heading .dsbd-panel-title {
+    padding: 10px;
+    margin: 0;
+}
+
+.dsbd-panel-body {
+    padding: 10px;
+}
+
+/*====== CUSTOMIZATION =====*/
+.dsbd-main-content .gridster-item-inner{
+    border:1px solid #ccc;
+}
+.dsbd-panel-div{
+    border:1px solid #ccc;
+    width:250;
+    height:300px;
+}
+
+/* .dsbd-panel-div.bsdb-SystemCompacity{
+    width:250;
+    height:300px;
+} */
+
+
+
+.bsdb-SoftwareVersion-content{
+    font-size: 28px;
+    color: #86A9E7;
+}
+/*----- CUSTOMIZATION -----*/

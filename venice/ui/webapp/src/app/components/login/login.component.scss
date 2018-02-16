@@ -1,0 +1,331 @@
+/**
+    This is pensando ui login page CSS. 
+
+    Note:
+
+*/
+
+/* set height to view-port height, set background image */
+.login-outter-div {
+  width: 100%;
+  height: 100vh;
+  background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-2.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: table;
+  font-family: FiraSans;
+  color: #231f20;
+  /** define animation */
+  -webkit-animation: login-background-animation 350s infinite;
+  -moz-animation: login-background-animation 350s infinite;
+  -o-animation: login-background-animation 350s infinite;
+  animation: login-background-animation 350s infinite;
+}
+
+@keyframes login-background-animation {
+  0% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-2.jpg");
+  }
+
+  15% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-1.jpg");
+  }
+
+  30% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-3.jpg");
+  }
+
+  45% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-4.jpg");
+  }
+
+  60% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-5.jpg");
+  }
+
+  75% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-6.jpg");
+  }
+
+  90% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-7.jpg");
+  }
+
+  100% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-8.jpg");
+  }
+}
+
+@-webkit-keyframes login-background-animation {
+  0% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-2.jpg");
+  }
+
+  15% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-1.jpg");
+  }
+
+  30% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-3.jpg");
+  }
+
+  45% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-4.jpg");
+  }
+
+  60% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-5.jpg");
+  }
+
+  75% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-6.jpg");
+  }
+
+  90% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-7.jpg");
+  }
+
+  100% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-8.jpg");
+  }
+}
+
+@-moz-keyframes login-background-animation {
+  0% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-2.jpg");
+  }
+
+  15% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-1.jpg");
+  }
+
+  30% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-3.jpg");
+  }
+
+  45% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-4.jpg");
+  }
+
+  60% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-5.jpg");
+  }
+
+  75% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-6.jpg");
+  }
+
+  90% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-7.jpg");
+  }
+
+  100% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-8.jpg");
+  }
+}
+
+@-o-keyframes login-background-animation {
+  0% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-2.jpg");
+  }
+
+  15% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-1.jpg");
+  }
+
+  30% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-3.jpg");
+  }
+
+  45% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-4.jpg");
+  }
+
+  60% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-5.jpg");
+  }
+
+  75% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-6.jpg");
+  }
+
+  90% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-7.jpg");
+  }
+
+  100% {
+    background-image: url("../../../assets/images/venice/venice-pictures-wallpapers-8.jpg");
+  }
+}
+
+.container.login-container {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.login-centere-div {
+  width: 600px;
+  opacity: 0.8;
+  background-color: #ffffff;
+  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
+  margin: auto;
+  border-radius: 2px;
+}
+
+.login-form {
+  padding: 50px 100px;
+}
+
+.loign-image {
+  margin: -10px auto 15px auto;
+  clear: both;
+  display: block;
+}
+
+.login-label {
+  font-size: 40px;
+  color: #231f20;
+}
+
+.login-input {
+  font-size: 24px;
+  border-radius: 2px;
+  text-indent: 2px;
+  width: 400px;
+  height: 50px;
+  border-radius: 2px;
+}
+
+.login-signin-btn {
+  width: 400px;
+  height: 50px;
+  border-radius: 2px;
+  background-color: #fec32f;
+  border-color: #fec32f;
+  color: #231f20;
+  font-size: 20px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+}
+
+.login-error {
+  width: 400px;
+  height: 50px;
+  border-radius: 2px;
+  background-color: #df6262;
+  color: #fff;
+  font-size: 20px;
+  padding: 10px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: condensed;
+  line-height: normal;
+  letter-spacing: normal;
+  text-align: center;
+  margin: auto;
+  margin-top: 120px;
+}
+
+.login-progress {
+  padding: 3px;
+  border-radius: 0px;
+  border-color: #fec32f;
+  background-color: #fec32f;
+  animation: loginProgress 5s; /* IE 10+, Fx 29+ */
+  -moz-animation: loginProgress 5s infinite; /* Firefox */
+  -webkit-animation: loginProgress 5s infinite; /* Safari and Chrome */
+  -o-animation: loginProgress 5s infinite; /* Opera 12+ */
+}
+
+@keyframes loginProgress {
+  /*  0%   {background:#fec32f;}
+    50%  {background:yellow;}
+    100%   {background:#fec32f;} */
+  0% {
+    opacity: 0;
+    width: 5%;
+  }
+
+  25% {
+    opacity: 0.25;
+    width: 25%;
+  }
+
+  50% {
+    opacity: 0.5;
+    width: 50%;
+  }
+
+  75% {
+    opacity: 0.75;
+    width: 75%;
+  }
+
+  100% {
+    opacity: 1;
+    width: 100%;
+  }
+}
+
+@-moz-keyframes loginProgress {
+  0% {
+    opacity: 0;
+    width: 5%;
+  }
+
+  25% {
+    opacity: 0.25;
+    width: 25%;
+  }
+
+  50% {
+    opacity: 0.5;
+    width: 50%;
+  }
+
+  75% {
+    opacity: 0.75;
+    width: 75%;
+  }
+
+  100% {
+    opacity: 1;
+    width: 100%;
+  }
+}
+
+@-webkit-keyframes loginProgress {
+  0% {
+    opacity: 0;
+    background: #fec32f;
+    width: 5%;
+  }
+
+  25% {
+    opacity: 0.25;
+    background: yellow;
+    width: 25%;
+  }
+
+  50% {
+    opacity: 0.5;
+    background: #fec32f;
+    width: 50%;
+  }
+
+  75% {
+    opacity: 0.75;
+    background: #fec32f;
+    width: 75%;
+  }
+
+  100% {
+    opacity: 1;
+    background: yellow;
+    width: 100%;
+  }
+}

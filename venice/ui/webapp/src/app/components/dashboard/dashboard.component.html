@@ -1,0 +1,144 @@
+<h1>
+  {{title}}
+</h1>
+<!-- <div class="dsbd-toolbar">
+  Lanes:
+  <button (click)="removeLine(gridster)">-</button>
+  {{ gridsterOptions.lanes }}
+  <button (click)="addLine(gridster)">+</button>
+
+  <br> Direction
+  <label>
+    <input type="radio" [(ngModel)]="gridsterOptions.direction" value="horizontal" (change)="gridster.setOption('direction', 'horizontal')">Horizontal
+  </label>
+  <label>
+    <input type="radio" [(ngModel)]="gridsterOptions.direction" value="vertical" (change)="gridster.setOption('direction', 'vertical')">Vertical
+  </label>
+</div> -->
+<div class="dsbd-main-gridster-content">
+  <gridster [options]="gridsterOptions" #gridster>
+    <gridster-item *ngFor="let widget of widgets" [x]="widget.x" [y]="widget.y" [w]="widget.w" [h]="widget.h" [ngSwitch]="widget.id">
+     <!--  -->
+     <div *ngSwitchCase="'system_capacity'">
+        <ng-container *ngTemplateOutlet="dashboardSystemCompacity; context:{item:widget}" ></ng-container>
+     </div>
+     <div *ngSwitchCase="'software_version'">
+        <ng-container *ngTemplateOutlet="dashboardSoftwareVersion; context:{item:widget}" ></ng-container>
+     </div>
+     <div *ngSwitchCase="'naples'">
+        <ng-container *ngTemplateOutlet="dashboardNaples; context:{item:widget}" ></ng-container>
+     </div>
+     <div *ngSwitchCase="'workloads'">
+        <ng-container *ngTemplateOutlet="dashboardWorkloads; context:{item:widget}" ></ng-container>
+     </div>
+     <div *ngSwitchCase="'policy_health'">
+      <ng-container *ngTemplateOutlet="dashboardPolicyHealth; context:{item:widget}" ></ng-container>
+     </div>
+     <div *ngSwitchDefault>
+        <ng-container *ngTemplateOutlet="dashboarddefault; context:{item:widget}" ></ng-container>
+     </div>
+    </gridster-item>
+  </gridster>
+</div>
+<div class="dsbd-main-table-content">
+  <div> alert table here</div>
+</div>
+
+<ng-template #dashboardSystemCompacity let-item="item" >
+    <div class="dsbd-panel-div bsdb-SystemCompacity">
+        <div class="dsbd-panel-heading">
+        </div>
+        <div class="dsbd-panel-body" >
+          <p>{{ item.content }}</p>
+          <p-chart type="bar" [data]="item.data" [options]="item.options" (onDataSelect)="onSelectData($event, 'system_capacity')" ></p-chart>
+        </div>
+      </div>
+</ng-template>
+
+
+<ng-template #dashboardSoftwareVersion let-item="item" >
+    <div class="dsbd-panel-div bsdb-SoftwareVersion">
+        <div class="dsbd-panel-heading">
+        </div>
+        <div class="dsbd-panel-body" >
+          <p>{{ item.title }}</p> 
+          <p class="bsdb-SoftwareVersion-content">{{ item.content }}</p>        
+        </div>
+      </div>
+</ng-template>
+
+<ng-template #dashboardWorkloads let-item="item" >
+  <div class="dsbd-panel-div bsdb-Workloads">
+      <div class="dsbd-panel-heading">
+      </div>
+      <div class="dsbd-panel-body" >
+        <p>{{ item.content }}</p>
+        <p-chart type="bar" [data]="item.data" [options]="item.options" (onDataSelect)="onSelectData($event, 'workloads')" ></p-chart>
+      </div>
+    </div>
+</ng-template>
+
+<ng-template #dashboardPolicyHealth let-item="item" >
+    <div class="dsbd-panel-div bsdb-Policyhealth">
+        <div class="dsbd-panel-heading"><!-- 
+          <h5 class="dsbd-panel-title">{{ item.title }}</h5> -->
+        </div>
+        <div class="dsbd-panel-body"  style="position: relative; width:300px; height:250px;">
+            <p>{{ item.content }}</p>
+            <canvas id="policy_health_text" 
+                  style="z-index: -1; 
+                        position: absolute;                        
+                        left: 0px; 
+                        top: 0px;" 
+            ></canvas>
+            <p-chart type="doughnut" [data]="item.data" [options]="item.options" (onDataSelect)="onSelectData($event, 'policy_health')" ></p-chart>
+        </div>
+      </div>
+</ng-template>
+
+<ng-template #dashboardNaples let-item="item" >
+  <div class="dsbd-panel-div bsdb-Naples">
+      <div class="dsbd-panel-heading">
+      </div>
+      <div class="dsbd-panel-body" style="position: relative; width:350px; height:300px;">
+          <p>{{ item.content }}</p>
+          <canvas id="naples_text" 
+                  style="z-index: -1; 
+                        position: absolute;   
+                        width:300px;
+                        height:300px;                     
+                        left: 0px; 
+                        top: 0px;" 
+            ></canvas>
+          <p-chart type="doughnut" [data]="item.data" [options]="item.options" (onDataSelect)="onSelectData($event, 'dashboardNaples')" ></p-chart>
+      </div>
+    </div>
+</ng-template>
+
+<!-- <ng-template #dashboardNaples let-item="item" >
+    <div class="dsbd-panel-div bsdb-Naples">
+        <div class="dsbd-panel-heading">
+          <h5 class="dsbd-panel-title">{{ item.title }}</h5>
+        </div>
+        <div class="dsbd-panel-body" >
+          <pw-plotly-chart *ngIf="item.data" [data]="item.data" [layout]="item.layout" [options]="item.options">
+          </pw-plotly-chart>
+        </div>
+      </div>
+  </ng-template> -->
+
+<ng-template #dashboarddefault let-item="item" >
+    <div class="dsbd-panel-div">
+        <div class="dsbd-panel-heading">
+          <h5 class="dsbd-panel-title">{{ item.title }}</h5>
+          <button (click)="setWidth(item, item.w+1, $event)">w +</button>
+          <button (click)="setWidth(item, item.w-1, $event)">w -</button>
+          <button (click)="setHeight(item, item.h+1, $event)">h +</button>
+          <button (click)="setHeight(item, item.h-1, $event)">h-</button>
+        </div>
+
+        <div class="dsbd-panel-body">
+          <p>{{ item.content }}</p>          
+        </div>
+      </div>
+</ng-template>

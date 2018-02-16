@@ -1,0 +1,18 @@
+<div class="wlWidget">
+  <div class="wlWidget-north">
+     <a (click)="itemClick($event)"> {{content}}</a>
+  </div>
+  <div class="wlWidget-south">
+    <div class="wlWidget-pin">
+
+    </div>
+    <div class="wlWidget-chart">
+       <!--  <pw-bar-chart *ngIf="data" [data]="data"></pw-bar-chart> -->
+      <pw-plotly-chart
+       [data]="data"  
+       [layout]="layout" 
+       [options]="options" >
+      </pw-plotly-chart>
+    </div>
+  </div>
+</div>

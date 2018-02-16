@@ -1,0 +1,27 @@
+
+<div class="login-outter-div">
+    <div class="container login-container">
+        <div class="row login-centere-div">
+            
+            <div *ngIf="successMessage" class="alert alert-success login-progress"></div>
+            <form (ngSubmit)="login()" class="login-form">
+                <img class="loign-image" src="../../../assets/images/pensando-logo.svg" alt="Pensando Venice"/>                
+                <div class="form-group">                    
+                    <input type="text" class="form-control login-input" name="username" placeholder="Username" [(ngModel)]="credentials.username">
+                </div>
+    
+                <div class="form-group">
+                    <input type="password" class="form-control login-input" name="password" placeholder="Password" [(ngModel)]="credentials.password">
+                    <!-- <span>
+                        <img class="loign-image" src="../../../assets/images/login/login-hidepassword.svg" alt="Hide password">  
+                        <img class="loign-image" src="../../../assets/images/login/login-showpassword.svg" alt="Show password">  
+                    </span> -->
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-info button-bg login-signin-btn" [disabled]="!isLoginInputValided()">SIGN IN</button>
+                </div>
+            </form>
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-danger login-error">{{ errorMessage }}</div>
+    </div>
+</div>

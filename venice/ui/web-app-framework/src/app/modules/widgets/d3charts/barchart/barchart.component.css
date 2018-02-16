@@ -1,0 +1,14 @@
+.pw-d3-barchart {
+  width: 100%;
+  height: 400px;
+}
+
+.pw-d3-barchart .axis path,
+.pw-d3-barchart .axis line {
+  stroke: #999;
+}
+
+.pw-d3-barchart .axis text {
+  fill: #999;
+}
+  

@@ -1,0 +1,51 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div [class.alternative]="otherTheme">
+  <!-- <div class="alternative"> -->
+  <!--  class="alternative" will trigger theme.scss alternative setting -->
+  <ng-container *ngIf="true" >
+    <mat-toolbar color="primary">
+      <mat-toolbar-row>
+        <span>Venice UI Framework</span>
+        <button type="button" mat-button (click)="sidenav.toggle()">
+          Toggle Sidenav
+        </button>
+        <span class="app-fw-shell-spacer"></span>
+
+        <!-- <button mat-button>About</button>
+        <button mat-button>Services</button>
+        <button mat-button>Contact</button> -->
+        <button mat-icon-button routerLink="settings" class="hidden-sm-down">
+            <mat-icon>settings</mat-icon>
+        </button>
+      </mat-toolbar-row>
+    </mat-toolbar>
+
+    <mat-sidenav-container class="app-fw-shell-container">
+      <mat-sidenav #sidenav class="app-fw-shell-sidenav" mode="side" >
+          <!-- Sidenav content goes here! -->
+          <pw-recursivelist 
+              [data]="data" 
+              (itemClick) ="onItemSelect($event)"
+          ></pw-recursivelist> 
+      </mat-sidenav>
+
+      <mat-sidenav-content >        
+        <router-outlet></router-outlet>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </ng-container>
+  <mat-toolbar class="app-fw-shell-footer">Pensendo UI</mat-toolbar>
+</div>
+<!-- <hr/>
+<app-recursivelist></app-recursivelist>
+<hr/>
+<h2>Gridster Drag and Drop component</h2>
+<app-gridster></app-gridster> -->
+<!-- <app-testplotly></app-testplotly>
+<hr/>
+<app-testbarchart></app-testbarchart>
+<hr/> 
+<app-test-recursive-list></app-test-recursive-list> -->
+ 
+
+

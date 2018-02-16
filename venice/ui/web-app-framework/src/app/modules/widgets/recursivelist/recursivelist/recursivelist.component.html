@@ -1,0 +1,28 @@
+
+<!-- -->
+<ul #recursivelist [ngClass]="getStyleClass()">
+  <ng-template #recursiveList let-list>
+    <li *ngFor="let item of list">
+      <a (click)="selectItem(item)">{{getListLabel(item)}}</a>
+      <ul *ngIf="item.children.length > 0">
+        <ng-container *ngTemplateOutlet="recursiveList; context:{ $implicit: item.children }"></ng-container>
+      </ul>
+    </li>
+  </ng-template>
+  <ng-container *ngTemplateOutlet="recursiveList; context:{ $implicit: list }"></ng-container>
+</ul> 
+
+<!-- 
+<mat-nav-list>    
+  <ng-template #recursiveList let-list>
+      {{item.title}}
+    <mat-list-item (click)="selectItem(item)" *ngFor="let item of list">
+        <mat-icon mat-list-icon>home</mat-icon>
+        <p matLine *ngIf="isExpanded">{{item.title}}</p>
+        <mat-nav-list *ngIf="item.children.length > 0">
+            <ng-container *ngTemplateOutlet="recursiveList; context:{ $implicit: item.children }"></ng-container>
+        </mat-nav-list>
+     </mat-list-item>
+  </ng-template>
+</mat-nav-list>  
+ -->

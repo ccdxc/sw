@@ -1,0 +1,9 @@
+$veniceui-light-primary: mat-palette($mat-grey, 200, 500, 300);
+$veniceui-light-accent: mat-palette($mat-brown, 200);
+$veniceui-light-warn: mat-palette($mat-deep-orange, 200);
+
+$veniceui-light-theme: mat-light-theme(
+  $veniceui-light-primary,
+  $veniceui-light-accent,
+  $veniceui-light-warn
+);

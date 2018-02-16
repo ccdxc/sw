@@ -1,0 +1,18 @@
+{
+	"result": "success",
+	"response": {
+		"context": {
+			"requestId": "aa9246d9-abd8-e646-1169-96fa3b3b1251",
+			"initiatedBy": "PensendoLoginUI",
+			"timestamp": "2017-03-15T18:16Z",
+			"requestName": "PENSANDO_USERR_SIGNIN_REQUEST",
+			"servicedBy": "DataAccessPlatform,RESTService",
+			"responseName": "PENSANDO_USERR_SIGNIN_RESPONSE"
+		},
+		"data": {
+            "username":"Pensando",
+            "role":"Admin"
+		}
+	},
+	"message": null
+}

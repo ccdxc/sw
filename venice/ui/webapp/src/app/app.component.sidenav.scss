@@ -1,0 +1,158 @@
+/* ---------------------------------------------------
+    SIDEBAR STYLE
+----------------------------------------------------- */
+.app-wrapper {
+  display: flex;
+  align-items: stretch;
+  perspective: 1500px;
+}
+
+#app-sidebar {
+  min-width: 200px;
+  max-width: 200px;
+  color: #fff;
+  transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
+  -webkit-transform-origin: bottom left;
+  transform-origin: bottom left;
+  margin-top: 0px;
+  margin-left: 0px;
+}
+
+#app-sidebar.active {
+  min-width: 80px;
+  max-width: 80px;
+  text-align: center;
+}
+
+#app-sidebar.active .sidebar-header h3,
+#app-sidebar.active .CTAs {
+  display: none;
+}
+
+#app-sidebar.active .sidebar-header strong {
+  display: block;
+}
+
+#app-sidebar ul li a {
+  text-align: left;
+}
+
+#app-sidebar.active ul li a {
+  padding: 20px 10px;
+  text-align: center;
+  font-size: 0.85em;
+}
+
+#app-sidebar.active ul li a i {
+  margin-right: 0;
+  display: block;
+  font-size: 1.8em;
+  margin-bottom: 5px;
+}
+
+#app-sidebar.active ul ul a {
+  padding: 10px !important;
+}
+
+#app-sidebar.active a[aria-expanded="false"]::before,
+#app-sidebar.active a[aria-expanded="true"]::before {
+  top: auto;
+  bottom: 5px;
+  right: 50%;
+  -webkit-transform: translateX(50%);
+  -ms-transform: translateX(50%);
+  transform: translateX(50%);
+}
+
+#app-sidebar .sidebar-header {
+  padding: 20px;
+  background: #353532;
+}
+
+#app-sidebar .sidebar-header strong {
+  display: none;
+  font-size: 1.8em;
+}
+
+#app-sidebar ul.components {
+  padding: 5px 0;
+  border-bottom: 1px solid #47748b;
+}
+
+#app-sidebar ul li a {
+  padding: 10px;
+  font-size: 1.1em;
+  display: block;
+}
+
+#app-sidebar ul li a:hover {
+  color: #7386d5;
+  background: #fff;
+}
+
+#app-sidebar ul li a i {
+  margin-right: 10px;
+}
+
+#app-sidebar ul li.active > a,
+a[aria-expanded="true"] {
+  color: #47748b;
+}
+
+
+/* When pindown button dismiss SideNav panel. We set SideNav to hide */
+#app-sidebar  nav.pindown {
+  display: none !important;
+}
+
+#app-sidebar a[data-toggle="collapse"] {
+  position: relative;
+}
+
+#app-sidebar a[aria-expanded="false"]::before,
+a[aria-expanded="true"]::before {
+  content: '\e259';
+  display: block;
+  position: absolute;
+  right: 20px;
+  font-family: 'Glyphicons Halflings';
+  font-size: 0.6em;
+}
+
+#app-sidebar a[aria-expanded="true"]::before {
+  content: '\e260';
+}
+
+#app-sidebar ul ul a {
+  font-size: 0.9em !important;
+  padding-left: 30px !important;
+  background: #6d7fcc;
+  color: #fff;
+}
+
+#app-sidebar ul.CTAs {
+  padding: 20px;
+}
+
+#app-sidebar ul.CTAs a {
+  text-align: center;
+  font-size: 0.9em !important;
+  display: block;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+#app-sidebar a.download {
+  background: #fff;
+  color: #7386d5;
+}
+
+#app-sidebar a.article,
+a.article:hover {
+  background: #353532 !important;
+  color: #97b8df !important;
+}
+
+.app-sidenav-item {
+  color: #6d7fcc;
+}

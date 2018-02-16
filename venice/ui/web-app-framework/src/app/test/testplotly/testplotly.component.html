@@ -1,0 +1,69 @@
+<!-- Chart will appear here 
+<div #chart>
+  
+</div>  
+-->
+
+<h3>Test Using plotly chart Component</h3>
+<h5>plotly to image widget</h5>
+<div class="test-plotly-chart-toimage-widget-outter-div">
+    <pw-plotlyimage 
+        [data]="plotlyDataToImageWidget"  
+        [fillcolor]="plotlyDataToImageWidget_fillcolor" 
+        [imageWidth]="plotlyDataToImageWidget_width" 
+        [imageHeight]="plotlyDataToImageWidget_height"
+    ></pw-plotlyimage>
+</div>
+<br/>
+<h5>plotly to image </h5>
+<div class="test-plotly-chart-toimage-outter-div">
+    <pw-plotly-chart *ngIf="plotlyChartToImageShow" 
+        [data]="plotlyDataToImage"  
+        [layout]="plotlyLayoutToImage" 
+        [options]="plotlyOptionsToImage" 
+        [callback]="plotlyCallbackToImage"
+    ></pw-plotly-chart>
+    <div class="test-plotly-image-div" >
+        <img id="png-export" src="{{plotlyToImageSrc}}"/>
+    </div>
+</div>
+<br/>
+<h5>plotly - test animation frame (bar chart)</h5>
+<div class="test-plotly-chart-div">
+    <pw-plotly-chart 
+        [data]="plotlyDataFrame"  
+        [layout]="plotlyLayoutFrame" 
+        [options]="plotlyOptionsFrame" 
+        [callback]="plotlyCallbackFrame"
+    ></pw-plotly-chart>
+</div>
+<h5>plotly - test animation frame (line chart)</h5>
+<div class="test-plotly-chart-div">
+    <pw-plotly-chart 
+        [data]="plotlyDataAnimation"  
+        [layout]="plotlyLayoutAnimation" 
+        [options]="plotlyOptionsAnimation" 
+        [callback]="plotlyCallbackAnimation"
+        
+    ></pw-plotly-chart>
+</div>
+<h5>plotly - 3D chart</h5>
+<div class="test-plotly-chart-div">
+    <pw-plotly-chart 
+        [data]="plotly3DData"  
+        [layout]="plotly3DLayout" 
+        [options]="plotly3DOptions" 
+    ></pw-plotly-chart>
+</div>
+<hr/>
+<h5>plotly - chart update on every 3 seconds</h5>
+<div class="test-plotly-chart-div">
+    <pw-plotly-chart 
+        [data]="plotlyData"  
+        [layout]="plotlyLayout" 
+        [options]="plotlyOptions" 
+    ></pw-plotly-chart>
+</div>
+
+
+

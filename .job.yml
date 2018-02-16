@@ -12,6 +12,7 @@ references:
   - nic/agent
   - test
   - docs
+  - venice/ui
 dependencies:
   dol: nic
   nic/agent: venice

@@ -1,0 +1,21 @@
+///* 
+$veniceui-black-primary: mat-palette($mat-grey, 900, 500, 900);
+$veniceui-black-accent: mat-palette($mat-green, A200);
+$veniceui-black-warn: mat-palette($mat-red, A200);
+
+$veniceui-black-theme: mat-dark-theme(
+  $veniceui-black-primary,
+  $veniceui-black-accent,
+  $veniceui-black-warn
+); 
+//*/
+
+/* $veniceui-black-primary: mat-palette($mat-deep-purple, 600);
+$veniceui-black-accent: mat-palette($mat-lime, 100);
+$veniceui-black-warn: mat-palette($mat-red);
+
+$veniceui-black-theme: mat-dark-theme(
+  $veniceui-black-primary,
+  $veniceui-black-accent,
+  $veniceui-black-warn
+);  */

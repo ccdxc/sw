@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pensando Venice</title>
+  <base href="/">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.png">
+    <!-- css -->
+    <!-- load bootstrap and some simple css -->
+     
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">   
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <!-- -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* body { 
+          padding: 10px 10px;
+          margin:auto; 
+        } */
+        .pensendo-ui{          
+          width: 100vw;
+          height: 100vh;
+          padding: 0px;
+          font-family: "Fira Sans Condensed" !important;
+        }
+        .app-loading {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+        }
+
+        .app-loading .spinner {
+          height: 200px;
+          width: 200px;
+          animation: rotate 2s linear infinite;
+          transform-origin: center center;
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: auto;
+        }
+
+        .app-loading .spinner .path {
+          stroke-dasharray: 1, 200;
+          stroke-dashoffset: 0;
+          animation: dash 1.5s ease-in-out infinite;
+          stroke-linecap: round;
+          stroke: #ddd;
+        }
+
+        @keyframes rotate {
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes dash {
+          0% {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+          }
+          50% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -35px;
+          }
+          100% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -124px;
+          }
+        }
+    
+    </style>
+      <!-- jQuery CDN -->
+      <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+      <!-- Bootstrap Js CDN -->
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</head>
+<body class="pensendo-ui">
+  <app-root>
+      <div class="app-loading">
+        <div class="logo"></div>
+        <svg class="spinner" viewBox="25 25 50 50">
+          <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"/>
+        </svg>
+      </div>
+  </app-root>
+</body>
+</html>

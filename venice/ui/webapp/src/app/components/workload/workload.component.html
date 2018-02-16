@@ -1,0 +1,94 @@
+<!-- 
+<h1>Workload Using Framework Bar Chart Component</h1>
+        <pw-bar-chart [data]="content.totalworkloads.chartData"></pw-bar-chart>
+<hr/> 
+-->
+<h1>Workload Using Framework plotly Chart Component</h1>
+    <div class="test-3d-plotly-div">
+        <pw-plotly-chart 
+            [data]="content.plotly3Dchart.plotlyData"  
+            [layout]="content.plotly3Dchart.plotlyLayout" 
+            [options]="content.plotly3Dchart.plotlyOptions" 
+        ></pw-plotly-chart>
+    </div>
+
+<hr/> 
+<div class="row">
+    <!-- <div class="col-md-3">
+        <app-workloadwidget [data]="content.totalworkloads.chartData" [content]="content.totalworkloads.text"> </app-workloadwidget>
+    </div> -->
+    <div class="col-md-3">
+            <app-workloadwidget [data]="content.totalworkloads.data" 
+                                [layout]="content.totalworkloads.layout" 
+                                [options]="content.totalworkloads.options" 
+                                [id]="content.totalworkloads.id"
+                                [content]="content.totalworkloads.text"
+                                (widgetHeaderClick)="workloadClickHandler($event)"
+                                > 
+            </app-workloadwidget>
+        </div>
+    <div class="col-md-3">
+        <app-workloadwidget [data]="content.newworkloads.data" 
+                            [layout]="content.newworkloads.layout" 
+                            [options]="content.newworkloads.options" 
+                            [id]="content.newworkloads.id"
+                            [content]="content.newworkloads.text"
+                            (widgetHeaderClick)="workloadClickHandler($event)"> 
+        </app-workloadwidget>
+    </div>
+    <div class="col-md-6">
+        <pw-plotly-chart 
+            [data]="content.plotlychart.plotlyData"  
+            [layout]="content.plotlychart.plotlyLayout" 
+            [options]="content.plotlychart.plotlyOptions" 
+        ></pw-plotly-chart>
+    </div>
+</div>
+Datatable
+<!--
+    2018-01-04. REST API's response JSON is like this. 
+    {
+      "Kind": "Endpoint",
+      "APIVersion": "v1",
+      "meta": {
+        "Name": "192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01",
+        "Tenant": "default",
+        "ResourceVersion": "57408",
+        "UUID": "99e008f1-da16-4c26-b23e-214b0153594a",
+        "CreationTime": "2018-01-04T22:37:11.10908642Z",
+        "ModTime": "2018-01-04T22:37:11.109088162Z"
+      },
+      "spec": {},
+      "status": {
+        "endpoint-uuid": "192.168.30.10:8989:virtualmachine-63::00:50:0a:01:00:01",
+        "workload-uuid": "192.168.30.10:8989:virtualmachine-63",
+        "workload-name": "vm1",
+        "network": "default",
+        "homing-host-addr": "02:02:02:02:02:01",
+        "homing-host-name": "02:02:02:02:02:01",
+        "ipv4-address": "10.1.0.1/16",
+        "ipv4-gateway": "10.1.254.254",
+        "mac-address": "00:50:0a:01:00:01",
+        "node-uuid": "02:02:02:02:02:01",
+        "micro-segment-vlan": 2
+      }
+    }
+-->
+<div>
+    <p-dataTable [value]="items" >
+        <p-column field="Kind" header="Kind"></p-column>
+        <p-column field="meta.Name" header="Workload Name"></p-column>
+        <p-column field="meta.ResourceVersion" header="meta.ResourceVersion"></p-column>
+        <p-column field="meta" header="meta.CreationTime">
+          <ng-template let-col let-record="rowData" pTemplate="body">
+              {{record[col.field]['CreationTime']|amUtc|amDateFormat: 'YYYY-MM-DD HH:mm:ss a z' }}
+          </ng-template>
+        </p-column>
+        <p-column field="meta" header="meta.ModTime">
+            <ng-template let-col let-record="rowData" pTemplate="body">
+                {{record[col.field]['ModTime']| date:'yyyy-MM-dd HH:mm a z':'-0800'}}
+            </ng-template>
+          </p-column>        
+    </p-dataTable>
+
+</div>

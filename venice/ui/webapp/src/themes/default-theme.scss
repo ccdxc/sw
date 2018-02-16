@@ -1,0 +1,6 @@
+$veniceui-primary: mat-palette($mat-indigo);
+$veniceui-accent:  mat-palette($mat-pink, A200, A100, A400);
+// The warn palette is optional (defaults to red).
+$veniceui-warn:    mat-palette($mat-red);
+$veniceui-theme: mat-light-theme($veniceui-primary, $veniceui-accent, $veniceui-warn); 
+

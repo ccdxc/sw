@@ -1,0 +1,19 @@
+@import '~@angular/material/theming';
+@include mat-core();
+
+@import 'default-theme.scss';
+@import 'light-theme.scss';
+@import 'black-theme.scss';
+
+/* 
+.default-theme {
+  @include angular-material-theme($veniceui-theme);
+}
+ */
+.light-theme {
+  @include angular-material-theme($veniceui-light-theme);
+}
+
+.black-theme {
+  @include angular-material-theme($veniceui-black-theme);
+}

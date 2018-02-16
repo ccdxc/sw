@@ -1,0 +1,51 @@
+.app-fw-shell-icon {
+    padding: 0 14px;
+  }
+  
+  .app-fw-shell-spacer {
+    flex: 1 1 auto;
+  }
+
+  .app-fw-shell-container {
+    position: absolute;
+    top: 60px;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+  }
+  
+  .app-fw-shell-sidenav {
+    display: flex;
+    align-items: top;
+    justify-content: center;
+    width: 100px;
+   /*  background: rgba(255, 0, 0, 0.5); */
+   background: #C5CAE9;
+  }
+
+  
+  
+.app-fw-shell-sidenav-content {
+    display: flex;
+    height: 100%;
+    align-items: top;
+    justify-content: center;
+}
+  
+.app-fw-shell-sidenav {
+    padding: 2px;
+}
+  .app-fw-shell-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  .app-fw-shell-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #5C6BC0;
+  }

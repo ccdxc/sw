@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="46" height="46" viewBox="0 0 46 46">
+    <defs>
+        <path id="a" d="M23 0C10.297 0 0 10.297 0 23c0 10.185 6.62 18.824 15.793 21.848V13.62h10.53c1.217 0 2.471.18 3.76.539 1.29.36 2.444.979 3.465 1.858 1.02.88 1.862 2.038 2.525 3.474.663 1.436.994 3.232.994 5.386 0 1.939-.295 3.635-.885 5.09-.59 1.454-1.368 2.665-2.334 3.635a9.17 9.17 0 0 1-3.328 2.154c-1.252.467-2.54.7-3.863.7h-4.508v9.527c.282.01.566.016.851.016 12.702 0 23-10.298 23-23C46 10.297 35.702 0 23 0m2.732 31H22V19h3.732c1.536 0 2.799.463 3.786 1.387.988.924 1.482 2.4 1.482 4.426 0 2.028-.494 3.565-1.482 4.614-.987 1.049-2.25 1.573-3.786 1.573"/>
+        <linearGradient id="b" x1="27.691%" x2="85.17%" y1="12.741%" y2="85.993%">
+            <stop offset="0%" stop-opacity="0"/>
+            <stop offset="100%"/>
+        </linearGradient>
+        <linearGradient id="d" x1="64.247%" x2="13.281%" y1="96.154%" y2="17.358%">
+            <stop offset="0%" stop-opacity="0"/>
+            <stop offset="100%"/>
+        </linearGradient>
+    </defs>
+    <g fill="none" fill-rule="evenodd">
+        <mask id="c" fill="#fff">
+            <use xlink:href="#a"/>
+        </mask>
+        <use fill="#464646" xlink:href="#a"/>
+        <circle cx="27.5" cy="19.5" r="17.5" fill="url(#b)" mask="url(#c)"/>
+        <circle cx="21.5" cy="28.5" r="17.5" fill="url(#d)" mask="url(#c)"/>
+    </g>
+</svg>

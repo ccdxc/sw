@@ -1,0 +1,24 @@
+.test-plotly-chart-div {
+  width: 650px;
+  height: 500px;
+}
+
+.test-plotly-chart-toimage-outter-div {
+  position: relative;
+  width: 150px;
+  height: 60px;
+}
+
+.test-plotly-image-div {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+.test-plotly-chart-toimage-widget-outter-div {
+  width: 250px;
+  height: 200px;
+  border: 1px solid #eeeeee;
+}

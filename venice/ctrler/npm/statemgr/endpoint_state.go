@@ -68,6 +68,13 @@ func (eps *EndpointState) AddSecurityGroup(sgs *SecurityGroupState) error {
 	eps.Status.SecurityGroups = append(eps.Status.SecurityGroups, sgs.Name)
 	eps.groups[sgs.Name] = sgs
 
+	// save it to api server
+	err := eps.Write(false)
+	if err != nil {
+		log.Errorf("Error writing the endpoint state to api server. Err: %v", err)
+		return err
+	}
+
 	return eps.stateMgr.memDB.UpdateObject(eps)
 }
 
