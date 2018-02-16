@@ -73,7 +73,8 @@ PACKAGES = %w[
   hwloc-devel
   iptables-devel
   libdnet-devel
-  zlib-devel  
+  zlib-devel
+  iproute
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -258,7 +259,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.11"
+tag "pensando/nic:1.12"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
