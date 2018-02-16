@@ -830,7 +830,7 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_c
   sqwqe->write_bit_fields(192, 32, r2n_data_len);  // data len
 
   // Local read command buffer goes into SGE
-  sqwqe->write_bit_fields(256, 64, (uint64_t) r2n_buf_va);  // SGE-va
+  sqwqe->write_bit_fields(256, 64, r2n_buf_va->va());  // SGE-va
   sqwqe->write_bit_fields(256+64, 32, r2n_data_len);
   sqwqe->write_bit_fields(256+64+32, 32, SendBufLKey);
   sqwqe->write_thru();
