@@ -76,6 +76,9 @@ class EthRingObject(ring.RingObject):
         descriptor.Bind(self._mem + (self.desc_size * self.ci))
         # Retreive descriptor for completion processing
         d = self.queue.descriptors[self.ci]
+        if d is None:
+            cfglogger.error("Consume(): Descriptor not found in map.")
+            return status.RETRY
         if descriptor.GetBuffer() is not None and d.GetBuffer() is not None:
             descriptor.GetBuffer().Bind(d.GetBuffer()._mem)
         descriptor.Read()
