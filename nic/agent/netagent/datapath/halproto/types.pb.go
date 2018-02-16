@@ -232,11 +232,13 @@
 		GftHeaderTranspositionProfileStatus
 		GftHeaderTranspositionProfileResponse
 		GftHeaderTranspositionProfileResponseMsg
+		EncapOrTransportMatch
+		GftHeaderGroupExactMatch
 		UdpTranspositionFields
 		TcpTranspositionFields
 		IcmpTranspositionFields
 		EncapTranspositionFields
-		GftHeaderGroupExactMatch
+		EncapOrTransportTransposition
 		GftHeaderGroupTransposition
 		GftExactMatchFlowEntrySpec
 		GftExactMatchFlowEntryRequestMsg

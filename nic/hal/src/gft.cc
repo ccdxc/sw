@@ -7,6 +7,28 @@
 #include "nic/hal/src/gft.hpp"
 #include "nic/include/pd_api.hpp"
 
+#define GFT_EMFE_SET_FLAGS_FROM_SPEC(entry, spec, field, flag)               \
+do {                                                                         \
+    if ((spec).field()) {                                                    \
+        (entry)->flags |= GFT_EMFE_ ## flag;                                 \
+    }                                                                        \
+} while (0)
+
+#define GFT_EMFE_SET_HEADERS_FROM_SPEC(headers, hdrs_spec, hdr, flag)        \
+do {                                                                         \
+        if (hdrs_spec.hdr()) {                                               \
+            *headers |= GFT_HEADER_ ## flag;                                 \
+        }                                                                    \
+} while (0)
+
+#define GFT_EMFE_SET_FIELDS_FROM_SPEC(fields, fields_spec, field, flag)      \
+do {                                                                         \
+    if (fields_spec.field()) {                                               \
+        *fields |= GFT_HEADER_FIELD_ ## flag;                                \
+    }                                                                        \
+} while (0)
+
+
 namespace hal {
 
 //----------------------------------------------------------------------------
@@ -798,27 +820,6 @@ validate_gft_emfe_create (GftExactMatchFlowEntrySpec& spec,
     return HAL_RET_OK;
 }
 
-#define GFT_EMFE_SET_FLAGS_FROM_SPEC(entry, spec, field, flag)               \
-do {                                                                         \
-    if ((spec).field()) {                                                    \
-        (entry)->flags |= GFT_EMFE_ ## flag;                                 \
-    }                                                                        \
-} while (0)
-
-#define GFT_EMFE_SET_HEADERS_FROM_SPEC(headers, hdrs_spec, hdr, flag)        \
-do {                                                                         \
-        if (hdrs_spec.hdr()) {                                               \
-            *headers |= GFT_HEADER_ ## flag;                                 \
-        }                                                                    \
-} while (0)
-
-#define GFT_EMFE_SET_FIELDS_FROM_SPEC(fields, fields_spec, field, flag)      \
-do {                                                                         \
-    if (fields_spec.field()) {                                               \
-        *fields |= GFT_HEADER_FIELD_ ## flag;                                \
-    }                                                                        \
-} while (0)
-
 static inline void
 gft_emfe_init_flags_from_spec (gft_exact_match_flow_entry_t *flow_entry,
                               GftExactMatchFlowEntrySpec& spec)
@@ -964,13 +965,117 @@ gft_emfe_init_eth_fields_from_spec (uint32_t headers, uint64_t fields,
 }
 
 static inline void
-gft_emfe_init_ip_fields_from_spec (void)
+gft_emfe_init_ip_match_fields_from_spec (gft_hdr_group_exact_match_t *gft_em,
+                                         GftHeaderGroupExactMatch& em_spec)
 {
+    if (gft_em->headers & (GFT_HEADER_IPV4 | GFT_HEADER_IPV6)) {
+        if (gft_em->fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {
+            ip_addr_spec_to_ip_addr(&gft_em->src_ip_addr,
+                                    em_spec.src_ip_addr());
+        }
+        if (gft_em->fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
+            ip_addr_spec_to_ip_addr(&gft_em->dst_ip_addr,
+                                    em_spec.dst_ip_addr());
+        }
+        gft_em->ttl = em_spec.ip_ttl();
+        gft_em->dscp = em_spec.ip_dscp();
+        gft_em->ip_proto = em_spec.ip_protocol();
+    }
 }
 
 static inline void
-gft_emfe_init_encap_fields_from_spec (void)
+gft_emfe_init_ip_xposition_fields_from_spec (gft_hdr_group_xposition_t *gft_ht,
+    GftHeaderGroupTransposition& ht_spec)
 {
+    if (gft_ht->headers & (GFT_HEADER_IPV4 | GFT_HEADER_IPV6)) {
+        if (gft_ht->fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {
+            ip_addr_spec_to_ip_addr(&gft_ht->src_ip_addr,
+                                    ht_spec.src_ip_addr());
+        }
+        if (gft_ht->fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
+            ip_addr_spec_to_ip_addr(&gft_ht->dst_ip_addr,
+                                    ht_spec.dst_ip_addr());
+        }
+        gft_ht->ttl = ht_spec.ip_ttl();
+        gft_ht->dscp = ht_spec.ip_dscp();
+        gft_ht->ip_proto = ht_spec.ip_protocol();
+    }
+}
+
+// TODO: take care of vxlan
+static inline void
+gft_emfe_init_match_encap_fields_from_spec (uint32_t headers, uint64_t fields,
+    encap_or_transport_match_t *encap_or_transport,
+    const EncapOrTransportMatch& encap_or_transport_spec)
+
+{
+    if ((headers & GFT_HEADER_UDP) && encap_or_transport_spec.has_udp_fields()) {
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
+            encap_or_transport->udp.sport =
+                encap_or_transport_spec.udp_fields().sport();
+        }
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
+            encap_or_transport->udp.dport =
+                encap_or_transport_spec.udp_fields().dport();
+        }
+    }
+
+    if ((headers & GFT_HEADER_TCP) && encap_or_transport_spec.has_tcp_fields()) {
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
+            encap_or_transport->tcp.sport =
+                encap_or_transport_spec.tcp_fields().sport();
+        }
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
+            encap_or_transport->tcp.dport =
+                encap_or_transport_spec.tcp_fields().dport();
+        }
+        if (fields & GFT_HEADER_FIELD_TCP_FLAGS) {
+            encap_or_transport->tcp.tcp_flags =
+                encap_or_transport_spec.tcp_fields().tcp_flags();
+        }
+    }
+
+    if ((headers & GFT_HEADER_ICMP) && encap_or_transport_spec.has_icmp_fields()) {
+        if (fields & GFT_HEADER_FIELD_ICMP_TYPE) {
+            encap_or_transport->icmp.type =
+                encap_or_transport_spec.icmp_fields().type();
+        }
+        if (fields & GFT_HEADER_FIELD_ICMP_CODE) {
+            encap_or_transport->icmp.code =
+                encap_or_transport_spec.icmp_fields().code();
+        }
+    }
+}
+
+// TODO: take care of vxlan
+static inline void
+gft_emfe_init_xposition_encap_fields_from_spec (uint32_t headers,
+    uint64_t fields,
+    encap_or_transport_xposition_t *encap_or_transport,
+    const EncapOrTransportTransposition& encap_or_transport_spec)
+
+{
+    if ((headers & GFT_HEADER_UDP) && encap_or_transport_spec.has_udp_fields()) {
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
+            encap_or_transport->udp.sport =
+                encap_or_transport_spec.udp_fields().sport();
+        }
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
+            encap_or_transport->udp.dport =
+                encap_or_transport_spec.udp_fields().dport();
+        }
+    }
+
+    if ((headers & GFT_HEADER_TCP) && encap_or_transport_spec.has_tcp_fields()) {
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
+            encap_or_transport->tcp.sport =
+                encap_or_transport_spec.tcp_fields().sport();
+        }
+        if (fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
+            encap_or_transport->tcp.dport =
+                encap_or_transport_spec.tcp_fields().dport();
+        }
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -1021,6 +1126,7 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
     flow_entry->redirect_vport_id = spec.redirect_vport_id();
     flow_entry->ttl_one_redirect_vport_id = spec.ttl_one_redirect_vport_id();
 
+    // initialize exact matches
     for (i = 0; i < flow_entry->num_exact_matches; i++) {
         auto em_spec = spec.exact_matches(i);
         gft_em = &flow_entry->exact_matches[i];
@@ -1038,64 +1144,17 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
                                            &gft_em->eth_fields,
                                            em_spec.eth_fields());
 
-        if (gft_em->headers & (GFT_HEADER_IPV4 | GFT_HEADER_IPV6)) {
-            if (gft_em->fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {
-                ip_addr_spec_to_ip_addr(&gft_em->src_ip_addr,
-                                        em_spec.src_ip_addr());
-            }
-            if (gft_em->fields & GFT_HEADER_FIELD_DST_IP_ADDR) {
-                ip_addr_spec_to_ip_addr(&gft_em->dst_ip_addr,
-                                        em_spec.dst_ip_addr());
-            }
-            gft_em->ttl = em_spec.ip_ttl();
-            gft_em->dscp = em_spec.ip_dscp();
-            gft_em->ip_proto = em_spec.ip_protocol();
-        }
+        // set IP fields
+        gft_emfe_init_ip_match_fields_from_spec(gft_em, em_spec);
 
-        if ((gft_em->headers & GFT_HEADER_UDP) && em_spec.has_udp_fields()) {
-            if (gft_em->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
-                gft_em->encap_or_transport.udp.sport =
-                    em_spec.udp_fields().sport();
-            }
-            if (gft_em->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
-                gft_em->encap_or_transport.udp.dport =
-                    em_spec.udp_fields().dport();
-            }
-        }
+        // set encap or transport fields
+        gft_emfe_init_match_encap_fields_from_spec(gft_em->headers,
+            gft_em->fields, &gft_em->encap_or_transport,
+            em_spec.encap_or_transport());
 
-        if ((gft_em->headers & GFT_HEADER_TCP) && em_spec.has_tcp_fields()) {
-            if (gft_em->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {
-                gft_em->encap_or_transport.tcp.sport =
-                    em_spec.tcp_fields().sport();
-            }
-            if (gft_em->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {
-                gft_em->encap_or_transport.tcp.dport =
-                    em_spec.tcp_fields().dport();
-            }
-            if (gft_em->fields & GFT_HEADER_FIELD_TCP_FLAGS) {
-                gft_em->encap_or_transport.tcp.tcp_flags =
-                    em_spec.tcp_fields().tcp_flags();
-            }
-        }
-
-        if ((gft_em->headers & GFT_HEADER_ICMP) && em_spec.has_icmp_fields()) {
-            if (gft_em->fields & GFT_HEADER_FIELD_ICMP_TYPE) {
-                gft_em->encap_or_transport.icmp.type =
-                    em_spec.icmp_fields().type();
-            }
-            if (gft_em->fields & GFT_HEADER_FIELD_ICMP_CODE) {
-                gft_em->encap_or_transport.icmp.code =
-                    em_spec.icmp_fields().code();
-            }
-        }
-
-#if 0
-        } else (em_spec.encap_or_transport(). == ) {
-            flow_entry->exact_matches[i].encap_or_transport.encap.tenant_id = ;
-            flow_entry->exact_matches[i].encap_or_transport.encap.gre_protocol = ;
-        }
-#endif
     }
+
+    // initialize transpositions
     for (i = 0; i < flow_entry->num_transpositions;  i++) {
         auto ht_spec = spec.transpositions(i);
         gft_ht = &flow_entry->transpositions[i];
@@ -1109,6 +1168,19 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
         // set fields bitmap
         gft_emfe_init_fields_from_spec(&gft_ht->fields,
                                        ht_spec.header_fields());
+
+        // set eth fields
+        gft_emfe_init_eth_fields_from_spec(gft_ht->headers,
+                                           gft_ht->fields,
+                                           &gft_ht->eth_fields,
+                                           ht_spec.eth_fields());
+        // set IP fields
+        gft_emfe_init_ip_xposition_fields_from_spec(gft_ht, ht_spec);
+
+        // set encap or transport fields
+        gft_emfe_init_xposition_encap_fields_from_spec(gft_ht->headers,
+            gft_ht->fields, &gft_ht->encap_or_transport,
+            ht_spec.encap_or_transport());
     }
 }
 

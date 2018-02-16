@@ -180,6 +180,27 @@ message GftHeaderTranspositionProfileResponseMsg {
   repeated GftHeaderTranspositionProfileResponse    response = 1;    // batched response
 }
 
+message EncapOrTransportMatch {
+  oneof encap_or_transport {
+    UdpMatchFields      udp_fields   = 1;
+    TcpMatchFields      tcp_fields   = 2;
+    IcmpMatchFields     icmp_fields  = 3;
+    EncapMatchFields    encap_fields = 4;
+  }
+}
+
+message GftHeaderGroupExactMatch {
+  GftHeaders               headers            = 1;
+  GftHeaderFields          match_fields       = 2;
+  GftEthFields             eth_fields         = 3;
+  types.IPAddress          src_ip_addr        = 4;
+  types.IPAddress          dst_ip_addr        = 5;
+  uint32                   ip_ttl             = 6;
+  uint32                   ip_dscp            = 7;
+  uint32                   ip_protocol        = 8;
+  EncapOrTransportMatch    encap_or_transport = 9;
+}
+
 message UdpTranspositionFields {
   uint32     sport        = 1;
   uint32     dport        = 2;
@@ -200,39 +221,26 @@ message EncapTranspositionFields {
   uint32     gre_protocol = 2;
 }
 
-message GftHeaderGroupExactMatch {
-  GftHeaders               headers      = 1;
-  GftHeaderFields          match_fields = 2;
-  GftEthFields             eth_fields   = 3;
-  types.IPAddress          src_ip_addr  = 4;
-  types.IPAddress          dst_ip_addr  = 5;
-  uint32                   ip_ttl       = 6;
-  uint32                   ip_dscp      = 7;
-  uint32                   ip_protocol  = 8;
+message EncapOrTransportTransposition {
   oneof encap_or_transport {
-    UdpMatchFields         udp_fields   = 9;
-    TcpMatchFields         tcp_fields   = 10;
-    IcmpMatchFields        icmp_fields  = 11;
-    EncapMatchFields       encap_fields = 12;
+    UdpTranspositionFields      udp_fields    = 1;
+    TcpTranspositionFields      tcp_fields    = 2;
+    IcmpTranspositionFields     icmp_fields   = 3;
+    EncapTranspositionFields    encap_fields  = 4;
   }
 }
 
 message GftHeaderGroupTransposition {
-  GftHeaderGroupTranspostionAction     action        = 1;
-  GftHeaders                           headers       = 2;
-  GftHeaderFields                      header_fields = 3;
-  GftEthFields                         eth_fields    = 4;
-  types.IPAddress                      src_ip_addr   = 5;
-  types.IPAddress                      dst_ip_addr   = 6;
-  uint32                               ip_ttl        = 7;
-  uint32                               ip_dscp       = 8;
-  uint32                               ip_protocol   = 9;
-  oneof encap_or_transport {
-    UdpTranspositionFields             udp_fields    = 10;
-    TcpTranspositionFields             tcp_fields    = 11;
-    IcmpTranspositionFields            icmp_fields   = 12;
-    EncapTranspositionFields           encap_fields  = 13;
-  }
+  GftHeaderGroupTranspostionAction     action             = 1;
+  GftHeaders                           headers            = 2;
+  GftHeaderFields                      header_fields      = 3;
+  GftEthFields                         eth_fields         = 4;
+  types.IPAddress                      src_ip_addr        = 5;
+  types.IPAddress                      dst_ip_addr        = 6;
+  uint32                               ip_ttl             = 7;
+  uint32                               ip_dscp            = 8;
+  uint32                               ip_protocol        = 9;
+  EncapOrTransportTransposition        encap_or_transport = 10;
 }
 
 message GftExactMatchFlowEntrySpec {

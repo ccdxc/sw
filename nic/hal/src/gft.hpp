@@ -36,6 +36,10 @@ using gft::GftHeaderTranspositionProfileResponseMsg;
 using gft::GftHeaders;
 using gft::GftHeaderFields;
 using gft::GftEthFields;
+using gft::EncapOrTransportMatch;
+using gft::EncapOrTransportTransposition;
+using gft::GftHeaderGroupTransposition;
+using gft::GftHeaderGroupExactMatch;
 
 using gft::GftExactMatchFlowEntrySpec;
 using gft::GftExactMatchFlowEntryRequestMsg;
@@ -96,6 +100,42 @@ typedef struct gft_eth_fields_s {
     uint16_t      provider_vlan_id;
     uint8_t       priority;
 } __PACK__ gft_eth_fields_t;
+
+typedef union encap_or_transport_match_u {
+    struct {
+        uint16_t    sport;
+        uint16_t    dport;
+    } __PACK__ udp;
+    struct {
+        uint16_t    sport;
+        uint16_t    dport;
+        uint8_t     tcp_flags;
+    } __PACK__ tcp;
+    struct {
+        uint8_t     type;
+        uint8_t     code;
+    } __PACK__ icmp;
+    struct {
+        uint32_t    tenant_id;
+        uint16_t    gre_protocol;
+    } __PACK__ encap;
+} __PACK__ encap_or_transport_match_t;
+
+typedef union encap_or_transport_xposition_u {
+    struct {
+        uint16_t    sport;
+        uint16_t    dport;
+    } __PACK__ udp;
+    struct {
+        uint16_t    sport;
+        uint16_t    dport;
+    } __PACK__ tcp;
+    struct {
+        uint32_t    tenant_id;
+        uint16_t    gre_protocol;
+        uint16_t    entropy;
+    } __PACK__ encap;
+} __PACK__ encap_or_transport_xposition_t;
 
 typedef enum gft_table_type_e {
     GFT_TABLE_TYPE_NONE,
@@ -239,34 +279,16 @@ find_gft_exact_match_profile_by_handle (hal_handle_t handle)
 #define GFT_HDR_GROUP_EXACT_MATCH_IS_TTL_ONE        0x00000001
 
 typedef struct gft_hdr_group_exact_match_s {
-    uint32_t              flags;            // GFT_HDR_GROUP_EXACT_MATCH_XXX flags, if any
-    uint32_t              headers;
-    uint64_t              fields;
-    gft_eth_fields_t      eth_fields;
-    ip_addr_t             src_ip_addr;
-    ip_addr_t             dst_ip_addr;
-    uint8_t               ttl;
-    uint8_t               dscp;
-    uint8_t               ip_proto;
-    union {
-        struct {
-            uint16_t      sport;
-            uint16_t      dport;
-        } __PACK__ udp;
-        struct {
-            uint16_t      sport;
-            uint16_t      dport;
-            uint8_t       tcp_flags;
-        } __PACK__ tcp;
-        struct {
-            uint8_t       type;
-            uint8_t       code;
-        } __PACK__ icmp;
-        struct {
-            uint32_t      tenant_id;
-            uint16_t      gre_protocol;
-        } __PACK__ encap;
-    } __PACK__ encap_or_transport;
+    uint32_t                      flags;            // GFT_HDR_GROUP_EXACT_MATCH_XXX flags, if any
+    uint32_t                      headers;
+    uint64_t                      fields;
+    gft_eth_fields_t              eth_fields;
+    ip_addr_t                     src_ip_addr;
+    ip_addr_t                     dst_ip_addr;
+    uint8_t                       ttl;
+    uint8_t                       dscp;
+    uint8_t                       ip_proto;
+    encap_or_transport_match_t    encap_or_transport;
 } __PACK__ gft_hdr_group_exact_match_t;
 
 // header transposition actions
@@ -430,21 +452,7 @@ typedef struct gft_hdr_group_xposition_s {
     uint8_t                             ttl;
     uint8_t                             dscp;
     uint8_t                             ip_proto;
-    union {
-        struct {
-            uint16_t                    sport;
-            uint16_t                    dport;
-        } __PACK__ udp;
-        struct {
-            uint16_t                    sport;
-            uint16_t                    dport;
-        } __PACK__ tcp;
-        struct {
-            uint32_t                    tenant_id;
-            uint16_t                    gre_protocol;
-            uint16_t                    entropy;
-        } __PACK__ encap;
-    } __PACK__ encap_or_transport;
+    encap_or_transport_xposition_t      encap_or_transport;
 } __PACK__ gft_hdr_group_xposition_t;
 
 // exact match flow entry flags
