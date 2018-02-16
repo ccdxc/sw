@@ -52,11 +52,13 @@ flow_info:
                     p.flow_info_metadata_session_state_index, \
                     d.u.flow_info_d.session_state_index
 
+#if 0
+  /* Commenting this to bring down the # of phvwr done in this table */
   /* ttl change detected */
-  seq           c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
+  sne           c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
   phvwr.c1      p.flow_info_metadata_flow_ttl_change_detected, \
                     k.l4_metadata_ip_ttl_change_detect_en
-
+#endif /* 0 */
   /* Flow Connection Tracking enable */
   phvwr         p.l4_metadata_flow_conn_track, d.u.flow_info_d.flow_conn_track
 
