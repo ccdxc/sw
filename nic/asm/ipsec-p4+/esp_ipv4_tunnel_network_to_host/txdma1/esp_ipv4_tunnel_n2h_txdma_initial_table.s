@@ -42,19 +42,17 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     memwr.dx  r4, r3
     tbladd d.cb_cindex, 1
  
-    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
     phvwri p.app_header_table1_valid, 1 
     phvwri p.common_te1_phv_table_lock_en, 1 
     phvwri p.common_te1_phv_table_pc, esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 2
-    phvwr p.common_te1_phv_table_addr, r3 
+    phvwri p.common_te1_phv_table_addr, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX 
 
     phvwri p.app_header_table2_valid, 1 
     phvwri p.common_te2_phv_table_lock_en, 1 
     phvwri p.common_te2_phv_table_pc, esp_v4_tunnel_n2h_load_part2[33:6] 
     phvwri p.common_te2_phv_table_raw_table_size, 3
-    add r4, r0, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
-    addi r4, r4, 64
+    add r4, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}, 64
     phvwr p.common_te2_phv_table_addr, r4 
 
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx

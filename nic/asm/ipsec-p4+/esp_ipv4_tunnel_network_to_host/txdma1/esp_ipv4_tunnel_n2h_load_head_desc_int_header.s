@@ -10,30 +10,25 @@ struct phv_ p;
         .param esp_v4_tunnel_n2h_write_barco_req
         .align
 esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
-    add r1, r0, d.in_desc
-    addi r2, r1, 56
-    addi r3, r1, 64
+    add r2, d.in_desc, 56
+    add r3, d.in_desc, 64
     phvwr p.barco_req_input_list_address, r3.dx
     phvwr p.barco_req_status_address, r2.dx
-    add r1, r0, d.out_desc 
-    addi r1, r1, 64
+    add r1, d.out_desc, 64
     phvwr p.barco_req_output_list_address, r1.dx
 
     seq c1, d.spi, k.ipsec_to_stage2_spi
     phvwri.!c1 p.ipsec_to_stage3_new_key, 1 
      
     // iv_address = in_page+payload_start-4
-    add r1, r0, d.in_page
-    add r1, r1, d.headroom_offset
+    add r1, d.in_page, d.headroom_offset
     addi r1, r1, ESP_FIXED_HDR_SIZE 
     phvwr p.barco_req_iv_address, r1.dx 
 
-    add r1, r0, d.tailroom_offset
-    add r1, r1, d.in_page
+    add r1, d.tailroom_offset, d.in_page
     phvwr p.barco_req_auth_tag_addr, r1.dx
 
     // Header size is iv_size+ESP_FIXED header size 
-    add r3, r0, k.t0_s2s_iv_size
     addi r3, r0, ESP_FIXED_HDR_SIZE 
     phvwr p.barco_req_header_size, r3.wx
 
@@ -45,9 +40,8 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
 
      
 esp_ipv4_tunnel_n2h_txdma1_ipsec_encap_fill_zero_in_out_desc:
-    addi r1, r0, 96 
-    add r2, r1, d.in_desc
-    add r3, r1, d.out_desc
+    add r2, d.in_desc, 96
+    add r3, d.out_desc, 96
 
     phvwri p.brq_in_desc_zero_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.brq_in_desc_zero_dma_cmd_addr, r2 

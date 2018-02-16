@@ -11,9 +11,8 @@ struct phv_ p;
         .param esp_v4_tunnel_n2h_txdma1_update_cb
         .align
 esp_v4_tunnel_n2h_write_barco_req:
-    add r1, r0, k.ipsec_to_stage3_barco_req_addr
     phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwr p.brq_req_write_dma_cmd_addr, r1
+    phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage3_barco_req_addr 
     phvwri p.brq_req_write_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
     phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
     seq c1, k.ipsec_to_stage3_new_key, 1
@@ -21,11 +20,9 @@ esp_v4_tunnel_n2h_write_barco_req:
     phvwr.!c1 p.barco_req_key_desc_index, d.{key_index}.wx
 
 esp_v4_tunnel_n2h_post_to_barco_ring:
-    add r2, r0, d.barco_ring_base_addr
-    add r3, r0, d.barco_pindex
-    andi r3, r3, IPSEC_BARCO_RING_INDEX_MASK
+    and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
-    add r3, r3, r2
+    add r3, r3, d.barco_ring_base_addr 
     phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
     phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
