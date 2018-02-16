@@ -9,7 +9,7 @@
 
 using qos::QosClassSpec;
 using qos::QosClassResponse;
-using qos::QosClassKeyHandle;
+using kh::QosClassKeyHandle;
 using qos::QosClassDeleteRequest;
 using qos::QosClassDeleteResponse;
 
@@ -39,7 +39,7 @@ TEST_F(qos_class_test, test1)
     QosClassResponse rsp;
 
     spec.Clear();
-    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
+    spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(3);
@@ -55,7 +55,7 @@ TEST_F(qos_class_test, test1)
 
     // Negative test with using same dscp value as above
     spec.Clear();
-    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_2);
+    spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_2);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(5);
@@ -69,7 +69,7 @@ TEST_F(qos_class_test, test1)
 
     // Update
     spec.Clear();
-    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
+    spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(4);
@@ -86,7 +86,7 @@ TEST_F(qos_class_test, test1)
     // Now this should go through because contention on ip_dscp(3) is gone with
     // the update
     spec.Clear();
-    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_2);
+    spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_2);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(5);
@@ -100,7 +100,7 @@ TEST_F(qos_class_test, test1)
 
     // Update fail because reuse same dot1_pcp as user-def-2
     spec.Clear();
-    spec.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
+    spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
     spec.mutable_uplink_class_map()->set_dot1q_pcp(5);
@@ -119,14 +119,14 @@ TEST_F(qos_class_test, test1)
     QosClassDeleteResponse del_rsp;
 
     del_req.Clear();
-    del_req.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_1);
+    del_req.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qos_class_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
     del_req.Clear();
-    del_req.mutable_key_or_handle()->set_qos_group(qos::USER_DEFINED_2);
+    del_req.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qos_class_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -143,7 +143,7 @@ TEST_F(qos_class_test, test2)
 
     spec.Clear();
 
-    spec.mutable_key_or_handle()->set_qos_group(qos::INTERNAL_RX_PROXY_NO_DROP);
+    spec.mutable_key_or_handle()->set_qos_group(kh::INTERNAL_RX_PROXY_NO_DROP);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(100);
 

@@ -362,6 +362,7 @@
 		NatRuleKeyHandle
 		NatVpnMappingKeyHandle
 		IpsecRuleKeyHandle
+		QosClassKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
 		L2SegmentStatus
@@ -618,7 +619,6 @@
 		ProxyrCbGetResponseMsg
 		PolicerSpec
 		PolicerStats
-		QosClassKeyHandle
 		QosBuffer
 		QosPFC
 		QosSched

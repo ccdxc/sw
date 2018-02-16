@@ -63,7 +63,7 @@ class QosClassObject(base.ConfigObjectBase):
         return
 
     def __getGroupEnum(self, group):
-        return haldefs.qos.QosGroup.Value(group)
+        return haldefs.kh.QosGroup.Value(group)
 
     def PrepareHALRequestSpec(self, req_spec):
 

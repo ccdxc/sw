@@ -133,13 +133,18 @@ class ConfigObject():
         crud_op = self._cfg_meta_object.OperHandler(op_type)
         return crud_op._post_cb
 
-    def send_message(self, op_type, req_message, should_call_callback):
+    def send_message(self, op_type, req_message, should_call_callback, redo=False):
         crud_oper = self._cfg_meta_object.OperHandler(op_type)
         if crud_oper._api == None:
             return ApiStatus.API_STATUS_OK
 
         if crud_oper._pre_cb and should_call_callback:
             crud_oper._pre_cb.call(self.data, req_message, None)
+
+        if op_type == ConfigObjectMeta.CREATE and not redo:
+            self.key_or_handle = GrpcReqRspMsg.GetKeyObject(req_message)
+            self.ext_ref_objects = GrpcReqRspMsg.GetExtRefObjects(req_message)
+            self.immutable_objects = GrpcReqRspMsg.GetImmutableObjects(req_message)
 
         # Send the message to HAL
         api = self.get_api(op_type)
@@ -174,7 +179,7 @@ class ConfigObject():
 
         should_call_callback = (op_type != ConfigObjectMeta.CREATE and not redo)
 
-        return self.send_message(op_type, req_message, should_call_callback)
+        return self.send_message(op_type, req_message, should_call_callback, redo)
  
     def process(self, op_type, redo=False, ext_refs={}, dol_message=None, external_constraints=None):
         req_message = None
@@ -193,14 +198,7 @@ class ConfigObject():
         else:
             req_message = self._msg_cache[op_type]
         
-        if op_type == ConfigObjectMeta.CREATE and not redo:
-            self.key_or_handle = GrpcReqRspMsg.GetKeyObject(req_message)
-            self.ext_ref_objects = GrpcReqRspMsg.GetExtRefObjects(req_message)
-            self.immutable_objects = GrpcReqRspMsg.GetImmutableObjects(req_message)
-
         should_call_callback = not (op_type == ConfigObjectMeta.CREATE and redo)
-        if crud_oper._pre_cb and should_call_callback:
-            crud_oper._pre_cb.call(self.data, req_message, None)
 
         return self.send_message(op_type, req_message, should_call_callback)      
 # Top level manager for a given config spec. Catering to one service, can have multiple
@@ -321,8 +319,8 @@ class ConfigObjectHelper(object):
                 if config_object.is_dol_created or ConfigObjectMeta.CREATE not in self._ignore_ops:
                     config_object._status = ConfigObject._DELETED
                     return False
-                else:
-                    config_object._status = ConfigObject._CREATED
+            else:
+                config_object._status = ConfigObject._CREATED
             self.num_create_ops += 1
         return True
                  

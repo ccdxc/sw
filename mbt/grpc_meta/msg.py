@@ -165,12 +165,15 @@ class GrpcReqRspMsg:
             GrpcReqRspMsg.generate_ip_prefix(message.ip_prefix)
         else:
             # If the field is a protobuf message, generate the message
-            if message.DESCRIPTOR.fields[0].type != descriptor.FieldDescriptor.TYPE_MESSAGE:
+            if message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_INT32 or \
+               message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_UINT32:
                 # Include offset of 65535 to not clash with DOL key ids
                 setattr(message, key_name, KeyIdAllocator.get() + 65535)
-            else:
+            elif message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_MESSAGE:
                 sub_message = getattr(message, key_name)
                 GrpcReqRspMsg.static_generate_message(sub_message, key, ext_refs, external_constraints)
+            else:
+                GrpcReqRspMsg.generate_scalar_field(message, message.DESCRIPTOR.fields[0])
 
     @staticmethod
     def extract_constraints(constraint_str):

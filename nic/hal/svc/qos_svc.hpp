@@ -11,7 +11,7 @@ using grpc::Status;
 
 using qos::QOS;
 using qos::QosClassSpec;
-using qos::QosClassKeyHandle;
+using kh::QosClassKeyHandle;
 using qos::QosClassRequestMsg;
 using qos::QosClassResponse;
 using qos::QosClassResponseMsg;

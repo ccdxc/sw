@@ -37,8 +37,8 @@ protected:
   }
 
   static void qos_init(void); 
-  static const qos::QosGroup cos_a_1 = qos::USER_DEFINED_2;
-  static const qos::QosGroup cos_a_2 = qos::USER_DEFINED_1;
+  static const kh::QosGroup cos_a_1 = kh::USER_DEFINED_2;
+  static const kh::QosGroup cos_a_2 = kh::USER_DEFINED_1;
 };
 
 void scheduler_tx_test::qos_init()

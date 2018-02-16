@@ -222,3 +222,31 @@ message IpsecRuleKeyHandle {
         fixed64    rule_handle = 2;  // handle for IPSec rule returned by HAL
     }
 }
+
+// QosGroup identifier
+enum QosGroup {
+  DEFAULT                   = 0;     // Default qos group
+  USER_DEFINED_1            = 1;     // User defined qos group 1
+  USER_DEFINED_2            = 2;     // User defined qos group 2
+  USER_DEFINED_3            = 3;     // User defined qos group 3
+  USER_DEFINED_4            = 4;     // User defined qos group 4
+  USER_DEFINED_5            = 5;     // User defined qos group 5
+  USER_DEFINED_6            = 6;     // User defined qos group 6
+  CONTROL                   = 7;     // Control traffic
+  SPAN                      = 8;     // Span traffic
+  INTERNAL_RX_PROXY_NO_DROP = 9;     // TODO: REMOVE DOL only - Internal group for Rx Proxy no drop traffic
+  INTERNAL_RX_PROXY_DROP    = 10;    // TODO: REMOVE DOL only - Internal group for Rx Proxy drop traffic
+  INTERNAL_TX_PROXY_NO_DROP = 11;    // TODO: REMOVE DOL only - Internal group for Tx Proxy no drop traffic
+  INTERNAL_TX_PROXY_DROP    = 12;    // TODO: REMOVE DOL only - Internal group for Tx Proxy drop traffic
+  INTERNAL_CPU_COPY         = 13;    // TODO: REMOVE DOL only - Internal group for CPU Copy traffic
+}
+
+// QosClassKeyHandle uniquely identifies a QosClass
+message QosClassKeyHandle {
+  oneof key_or_handle {
+    QosGroup qos_group        = 1;    // Qos Group
+    fixed64  qos_class_handle = 2;    // id of QosClass returned by HAL
+  }
+}
+
+

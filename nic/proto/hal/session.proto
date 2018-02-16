@@ -7,7 +7,7 @@ syntax = "proto3";
 import "types.proto";
 import "telemetry.proto";
 import "nwsec.proto";
-import "qos.proto";
+import "kh.proto";
 
 package session;
 option go_package="halproto";
@@ -129,7 +129,7 @@ message FlowInfo {
   uint32                             nat_dport            = 6;     // dstination port to NAT to
   fixed64                            nat_dmac             = 7;     // For DSR
   FlowTCPState                       tcp_state            = 8;     // TCP state, if any
-  qos.QosClassKeyHandle              qos_class_key_handle = 9;     // QOS class for the flow
+  kh.QosClassKeyHandle               qos_class_key_handle = 9;     // QOS class for the flow
   repeated telemetry.MirrorSessionId ing_mirror_sessions  = 10;    // Mirror sessions to copy the flow to
   repeated telemetry.MirrorSessionId egr_mirror_sessions  = 11;    // Mirror sessions to copy the flow to
 }

@@ -12,7 +12,7 @@
 using sdk::lib::ht_ctxt_t;
 using hal::utils::bitmap;
 
-using qos::QosClassKeyHandle;
+using kh::QosClassKeyHandle;
 using qos::QosClassSpec;
 using qos::QosClassStatus;
 using qos::QosClassResponse;
@@ -179,36 +179,36 @@ valid_qos_group (qos_group_t qos_group)
 }
 
 static inline qos_group_t
-qos_spec_qos_group_to_qos_group (qos::QosGroup qos_group)
+qos_spec_qos_group_to_qos_group (kh::QosGroup qos_group)
 {
     switch(qos_group) {
-        case qos::DEFAULT: 
+        case kh::DEFAULT: 
             return QOS_GROUP_DEFAULT;
-        case qos::USER_DEFINED_1: 
+        case kh::USER_DEFINED_1: 
             return QOS_GROUP_USER_DEFINED_1;
-        case qos::USER_DEFINED_2: 
+        case kh::USER_DEFINED_2: 
             return QOS_GROUP_USER_DEFINED_2;
-        case qos::USER_DEFINED_3: 
+        case kh::USER_DEFINED_3: 
             return QOS_GROUP_USER_DEFINED_3;
-        case qos::USER_DEFINED_4: 
+        case kh::USER_DEFINED_4: 
             return QOS_GROUP_USER_DEFINED_4;
-        case qos::USER_DEFINED_5: 
+        case kh::USER_DEFINED_5: 
             return QOS_GROUP_USER_DEFINED_5;
-        case qos::USER_DEFINED_6: 
+        case kh::USER_DEFINED_6: 
             return QOS_GROUP_USER_DEFINED_6;
-        case qos::CONTROL: 
+        case kh::CONTROL: 
             return QOS_GROUP_CONTROL;
-        case qos::SPAN: 
+        case kh::SPAN: 
             return QOS_GROUP_SPAN;
-        case qos::INTERNAL_RX_PROXY_NO_DROP: 
+        case kh::INTERNAL_RX_PROXY_NO_DROP: 
             return QOS_GROUP_RX_PROXY_NO_DROP;
-        case qos::INTERNAL_RX_PROXY_DROP: 
+        case kh::INTERNAL_RX_PROXY_DROP: 
             return QOS_GROUP_RX_PROXY_DROP;
-        case qos::INTERNAL_TX_PROXY_NO_DROP: 
+        case kh::INTERNAL_TX_PROXY_NO_DROP: 
             return QOS_GROUP_TX_PROXY_NO_DROP;
-        case qos::INTERNAL_TX_PROXY_DROP: 
+        case kh::INTERNAL_TX_PROXY_DROP: 
             return QOS_GROUP_TX_PROXY_DROP;
-        case qos::INTERNAL_CPU_COPY: 
+        case kh::INTERNAL_CPU_COPY: 
             return QOS_GROUP_CPU_COPY;
         default:
             HAL_TRACE_ERR("pi-qos:{}: Invalid qos group {}", 

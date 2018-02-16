@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "kh.proto";
 
 package qos;
 option go_package="halproto";
@@ -35,32 +36,6 @@ message PolicerStats {
   uint64 permitted_bytes   = 2;    // Count of permitted bytes by the policer
   uint64 dropped_packets   = 3;    // Count of dropped packets by the policer
   uint64 dropped_bytes     = 4;    // Count of dropped bytes by the policer
-}
-
-// QosGroup identifier
-enum QosGroup {
-  DEFAULT                   = 0;     // Default qos group
-  USER_DEFINED_1            = 1;     // User defined qos group 1
-  USER_DEFINED_2            = 2;     // User defined qos group 2
-  USER_DEFINED_3            = 3;     // User defined qos group 3
-  USER_DEFINED_4            = 4;     // User defined qos group 4
-  USER_DEFINED_5            = 5;     // User defined qos group 5
-  USER_DEFINED_6            = 6;     // User defined qos group 6
-  CONTROL                   = 7;     // Control traffic
-  SPAN                      = 8;     // Span traffic
-  INTERNAL_RX_PROXY_NO_DROP = 9;     // TODO: REMOVE DOL only - Internal group for Rx Proxy no drop traffic
-  INTERNAL_RX_PROXY_DROP    = 10;    // TODO: REMOVE DOL only - Internal group for Rx Proxy drop traffic
-  INTERNAL_TX_PROXY_NO_DROP = 11;    // TODO: REMOVE DOL only - Internal group for Tx Proxy no drop traffic
-  INTERNAL_TX_PROXY_DROP    = 12;    // TODO: REMOVE DOL only - Internal group for Tx Proxy drop traffic
-  INTERNAL_CPU_COPY         = 13;    // TODO: REMOVE DOL only - Internal group for CPU Copy traffic
-}
-
-// QosClassKeyHandle uniquely identifies a QosClass
-message QosClassKeyHandle {
-  oneof key_or_handle {
-    QosGroup qos_group        = 1;    // Qos Group
-    fixed64  qos_class_handle = 2;    // id of QosClass returned by HAL
-  }
 }
 
 // QosBuffer specifies the buffer parameters
@@ -111,15 +86,15 @@ message QosMarking {
 
 // QosClass specification
 message QosClassSpec {
-  types.ObjectMeta  meta             = 1;    // object meta
+  types.ObjectMeta     meta             = 1;    // object meta
   // key_or_handle is QosClass's key or handle
-  QosClassKeyHandle key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  uint32            mtu              = 3;    // MTU
-  QosBuffer         buffer           = 4;    // Buffering configuration
-  QosPFC            pfc              = 5;    // PFC configuration
-  QosSched          sched            = 6;    // Scheduling configuration
-  QosUplinkClassMap uplink_class_map = 7;    // Class map for class derivation on uplinks
-  QosMarking        marking          = 8;    // Marking policy for host-to-network traffic
+  kh.QosClassKeyHandle key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  uint32               mtu              = 3;    // MTU
+  QosBuffer            buffer           = 4;    // Buffering configuration
+  QosPFC               pfc              = 5;    // PFC configuration
+  QosSched             sched            = 6;    // Scheduling configuration
+  QosUplinkClassMap    uplink_class_map = 7;    // Class map for class derivation on uplinks
+  QosMarking           marking          = 8;    // Marking policy for host-to-network traffic
 }
 
 // QosClassRequestMsg is batched request to create/update the QosClasss
@@ -134,7 +109,7 @@ message QosClassStatus {
 
 // QosClassResponse is response to one QosClassSpec
 message QosClassResponse {
-  types.ApiStatus api_status = 1;    // API status code
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   QosClassStatus  status     = 2;    // operational status
 }
 
@@ -145,9 +120,9 @@ message QosClassResponseMsg {
 
 // QosClassDeleteRequest  is used to delete a QosClass object
 message QosClassDeleteRequest {
-  types.ObjectMeta  meta          = 1;    // object meta
+  types.ObjectMeta     meta          = 1;    // object meta
   // key_or_handle is to identify QosClass being deleted
-  QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // QosClassDeleteRequestMsg is used to delete a batch of QosClasss
@@ -165,16 +140,15 @@ message QosClassDeleteResponseMsg {
   repeated QosClassDeleteResponse response = 1;    // batched responses
 }
 
-
 // QosClassStats captures all the statistics of given QosClass
 message QosClassStats {
 }
 
 // QosClassGetRequest is used to get information about a QosClass
 message QosClassGetRequest {
-  types.ObjectMeta  meta          = 1;    // object meta
+  types.ObjectMeta     meta          = 1;    // object meta
   // key_or_handle is to identify QosClass being deleted
-  QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // Batched request message to get the stats about a batch of QosClasss
@@ -228,7 +202,7 @@ message CoppStatus {
 
 // CoppResponse is response to one Copp
 message CoppResponse {
-  types.ApiStatus api_status = 1;    // API status code
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   CoppStatus      status     = 2;    // Copp operational state
 }
 

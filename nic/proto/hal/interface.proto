@@ -5,8 +5,8 @@
 syntax = "proto3";
 
 import "types.proto";
-import "kh.proto";
 import "qos.proto";
+import "kh.proto";
 
 package intf;
 option go_package="halproto";
@@ -133,8 +133,8 @@ message LifSpec {
   LifRssSpec                 rss                         = 13;   // ETH: LIF RSS configuration
   qos.PolicerSpec            tx_policer                  = 14;   // QOS Policer for tx traffic
   qos.PolicerSpec            rx_policer                  = 15;   // QOS Policer for rx traffic
-  qos.QosClassKeyHandle      rx_qos_class                = 16;   // QOS class-of-service for Rx traffic.
-  qos.QosClassKeyHandle      tx_qos_class                = 17;   // QOS class-of-service for Tx traffic.
+  kh.QosClassKeyHandle       rx_qos_class                = 16;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 17;   // QOS class-of-service for Tx traffic.
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
