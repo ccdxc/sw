@@ -15,8 +15,7 @@ esp_ipv4_tunnel_n2h_update_output_desc_aol:
     add r1, r0, k.t1_s2s_out_page_addr
     phvwr p.barco_desc_out_A0_addr, r1.dx 
     // get the correct way of giving it as a single 14 bit field
-    add r2, r0, k.ipsec_to_stage3_payload_size
-    add r2, r2, ESP_FIXED_HDR_SIZE
+    add r2, k.ipsec_to_stage3_payload_size, ESP_FIXED_HDR_SIZE
     phvwr p.barco_desc_out_L0, r2.wx 
     phvwri p.barco_desc_out_O0, 0
     nop.e

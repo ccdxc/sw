@@ -20,13 +20,11 @@ esp_ipv4_tunnel_n2h_update_input_desc_aol:
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwr p.common_te0_phv_table_addr, k.ipsec_to_stage3_ipsec_cb_addr 
 
-    add r2, r0, k.ipsec_to_stage3_iv_salt_off
-    add r2, r2, k.t0_s2s_in_page_addr
+    add r2, k.ipsec_to_stage3_iv_salt_off, k.t0_s2s_in_page_addr
     subi r5, r2, ESP_FIXED_HDR_SIZE 
     phvwr p.barco_desc_in_A0_addr, r5.dx 
     phvwri p.barco_desc_in_O0, 0
     addi r4, r0, ESP_FIXED_HDR_SIZE
-    //add r4, r4, k.ipsec_to_stage3_iv_size 
     phvwr p.barco_desc_in_L0, r4.wx 
 
 
@@ -53,8 +51,7 @@ dma_cmd_to_move_input_pkt_to_mem:
 
 dma_cmd_to_write_salt_after_seq_no:
     phvwri p.dma_cmd_iv_salt_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    add r1, r0, k.ipsec_to_stage3_iv_salt_off
-    add r1, r1, k.t0_s2s_in_page_addr
+    add r1, k.ipsec_to_stage3_iv_salt_off, k.t0_s2s_in_page_addr
     phvwr p.dma_cmd_iv_salt_dma_cmd_addr, r1
     phvwr p.dma_cmd_iv_salt_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_SALT_START 
     phvwr p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END 

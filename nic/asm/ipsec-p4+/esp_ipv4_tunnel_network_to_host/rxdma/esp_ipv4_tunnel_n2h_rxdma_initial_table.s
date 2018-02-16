@@ -29,12 +29,10 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
 
     //Ethernet header excluding IP, ESP, IV
     phvwr p.ipsec_int_header_headroom, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
-    add r3, r0, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
-    add r3, r3, k.p42p4plus_hdr_ip_hdr_size
+    add r3, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}, k.p42p4plus_hdr_ip_hdr_size
     phvwr p.ipsec_int_header_headroom_offset, r3 
   
-    add r1, r0, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
-    add r1, r1, k.p42p4plus_hdr_ip_hdr_size
+    add r1, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}, k.p42p4plus_hdr_ip_hdr_size
     addi r1, r1, ESP_FIXED_HDR_SIZE
     add r1, r1, d.iv_size
     subi r2, r2, IPSEC_SALT_HEADROOM
@@ -50,8 +48,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     addi.c1 r2, r2, IPV6_HDR_SIZE
     phvwr p.ipsec_global_packet_length, r2 
      
-    add r6, r0, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
-    add r6, r6, k.p42p4plus_hdr_ip_hdr_size
+    add r6, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}, k.p42p4plus_hdr_ip_hdr_size
     addi r6, r6, ESP_FIXED_HDR_SIZE 
     phvwr p.ipsec_to_stage3_iv_salt_off, r6
     //phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt 
@@ -78,8 +75,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
 
 .align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no:
-    add r1, r0, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
-    phvwr p.t2_s2s_last_replay_seq_no, r1 
+    phvwr p.t2_s2s_last_replay_seq_no, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31} 
     addi r1, r1, 1
     tblwr d.expected_seq_no, r1 
     nop
