@@ -10,11 +10,9 @@ struct phv_ p;
         .align
         .param esp_ipv4_tunnel_n2h_txdma2_load_pad_size_l4_proto
 esp_ipv4_tunnel_n2h_txdma2_load_out_desc:
-    add r1, r0, d.addr0
-    phvwr p.t0_s2s_out_page_addr, r1.dx
-    add r2, r0, r1.dx
+    phvwr p.t0_s2s_out_page_addr, d.{addr0}.dx
     add r3, r0, d.length0
-    add r2, r2, r3.wx
+    add r2, d.{addr0}.dx, r3.wx
     subi r2, r2, 2
     phvwri p.app_header_table1_valid, 0
 
