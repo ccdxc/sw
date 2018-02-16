@@ -26,15 +26,12 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr,  IPSEC_TXDMA2_APP_HEADER_END 
     // Ethernet Header 
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    add r1, r0, k.ipsec_to_stage3_ipsec_cb_addr
-    addi r1, r1, IPSEC_IP_HDR_OFFSET
+    add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET
     phvwr  p.eth_hdr_dma_cmd_addr, r1
     //phvwr  p.eth_hdr_dma_cmd_size, k.t0_s2s_headroom_offset
     phvwri  p.eth_hdr_dma_cmd_size, ETH_FIXED_HDR_SIZE 
     // Outer-IP  
     phvwri p.ip_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    add r1, r0, k.ipsec_to_stage3_ipsec_cb_addr
-    addi r1, r1, IPSEC_IP_HDR_OFFSET
     addi r1, r1, 14
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
     seq c1, k.ipsec_to_stage3_is_v6, 1
@@ -46,25 +43,20 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri.c3 p.p4plus2p4_hdr_flags, 0x2a 
     //ESP Header with IV 
     phvwri p.esp_iv_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    add r1, r0, k.t0_s2s_in_page_addr
-    phvwr p.esp_iv_hdr_dma_cmd_addr, r1
-    add r2, r0, k.txdma2_global_iv_size
-    addi r2, r2, ESP_FIXED_HDR_SIZE 
+    phvwr p.esp_iv_hdr_dma_cmd_addr, k.t0_s2s_in_page_addr 
+    add r2, k.txdma2_global_iv_size, ESP_FIXED_HDR_SIZE 
     phvwr p.esp_iv_hdr_dma_cmd_size, r2
     // Payload
     phvwri p.enc_pay_load_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    add r4, r0, k.t0_s2s_out_page_addr
-    addi r4, r4, ESP_FIXED_HDR_SIZE 
+    add r4, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE 
     phvwr p.enc_pay_load_dma_cmd_addr, r4 
-    add r3, r0, k.txdma2_global_payload_size
-    add r3, r3, k.txdma2_global_pad_size
+    add r3, k.txdma2_global_payload_size, k.txdma2_global_pad_size
     addi r3, r3, 2
     phvwr p.enc_pay_load_dma_cmd_size, r3
     //ICV
     phvwri p.icv_header_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr p.icv_header_dma_cmd_size, k.txdma2_global_icv_size
-    add r1, r0, k.t0_s2s_out_page_addr
-    addi r1, r1, ESP_FIXED_HDR_SIZE 
+    add r1, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE 
     add r1, r1, k.txdma2_global_pad_size
     add r1, r1, k.t0_s2s_tailroom_offset
     addi r1, r1, 2
