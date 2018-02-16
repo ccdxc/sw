@@ -360,7 +360,7 @@ gft_emp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, 
                           (void *)&args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create pd exact match profile, err : {}", ret);
+        HAL_TRACE_ERR("Failed to create pd exact match profile, err : {}", ret);
     }
 
 end:
@@ -1209,12 +1209,11 @@ gft_emfe_lookup_key_or_handle (const GftExactMatchFlowEntryKeyHandle& kh)
 static hal_ret_t
 gft_emfe_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                                    ret = HAL_RET_OK;
-    //pd::pd_gft_args_t                            pd_gft_args = { 0 };
-    dllist_ctxt_t                                *lnode = NULL;
-    dhl_entry_t                                  *dhl_entry = NULL;
-    gft_exact_match_flow_entry_t                 *flow_entry = NULL;
-    //gft_emfe_create_app_ctxt_t                   *app_ctxt = NULL;
+    hal_ret_t                                   ret = HAL_RET_OK;
+    pd::pd_gft_exact_match_flow_entry_args_t    pd_args = { 0 };
+    dllist_ctxt_t                               *lnode = NULL;
+    dhl_entry_t                                 *dhl_entry = NULL;
+    gft_exact_match_flow_entry_t                *flow_entry = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("Failed to create GFT exact match flow entry");
@@ -1224,21 +1223,21 @@ gft_emfe_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    //app_ctxt = (gft_exact_match_profile_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
     flow_entry = (gft_exact_match_flow_entry_t *)dhl_entry->obj;
 
     HAL_TRACE_DEBUG("GFT exact match flow entry create add callback {}",
                     flow_entry->flow_entry_id);
 
     // PD Call to allocate PD resources and h/w programming, if any
-    //pd::pd_gft_exact_match_flow_entry_create_args_init(&pd_gft_args);
-    //pd_l2seg_args.l2seg = l2seg;
-    //pd_l2seg_args.vrf = app_ctxt->vrf;
-    //ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
-    //if (ret != HAL_RET_OK) {
-        //HAL_TRACE_ERR("{}:failed to create l2seg pd, err : {}",
-                      //__FUNCTION__, ret);
-    //}
+    pd_args.exact_match_profile = NULL;
+    pd_args.hdr_xposition_profile = NULL;
+    pd_args.exact_match_flow_entry = flow_entry;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE,
+                          (void *)&pd_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create exact match flow entry pd, err : {}",
+                      ret);
+    }
 
 end:
 

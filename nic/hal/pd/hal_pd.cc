@@ -359,9 +359,12 @@ hal_pd_load_symbols (void)
     PD_SYMBOL_LOAD(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
 
     // gft
-    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, pd_gft_exact_match_profile_create);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, pd_gft_hdr_group_xposition_profile_create);
-    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, pd_gft_exact_match_flow_entry_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE,
+                   pd_gft_exact_match_profile_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE,
+                   pd_gft_hdr_group_xposition_profile_create);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE,
+                   pd_gft_exact_match_flow_entry_create);
 
     // slab
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_SLAB, pd_get_slab);
@@ -686,9 +689,15 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
 
     // gft
-    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, pd_gft_exact_match_profile_create, pd_gft_exact_match_profile);
-    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, pd_gft_hdr_group_xposition_profile_create, pd_gft);
-    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, pd_gft_exact_match_flow_entry_create, pd_gft);
+    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE,
+                        pd_gft_exact_match_profile_create,
+                        pd_gft_exact_match_profile);
+    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE,
+                        pd_gft_hdr_group_xposition_profile_create,
+                        pd_gft_hdr_group_xposition_profile);
+    PD_SYMBOL_ARGS_CALL(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE,
+                        pd_gft_exact_match_flow_entry_create,
+                        pd_gft_exact_match_flow_entry);
 
     // slab
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_SLAB, pd_get_slab);

@@ -66,7 +66,7 @@ hal-rtl: p4 platform capsim-master sdk
 swig-cli-gft: swig-cli-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli gft
 	
-gft: platform capsim-master sdk
+gft: platform capsim-master sdk go-proto
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
 	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT"

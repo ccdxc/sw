@@ -318,9 +318,12 @@ PD_FUNC_STUB(pd_conv_sw_clock_to_hw_clock);
 PD_FUNC_STUB(pd_clock_delta_comp);
 
 // gft
-PD_FUNC_STUB_ARGS(pd_gft_exact_match_profile_create, pd_gft_exact_match_profile);
-PD_FUNC_STUB_ARGS(pd_gft_hdr_group_xposition_profile_create, pd_gft);
-PD_FUNC_STUB_ARGS(pd_gft_exact_match_flow_entry_create, pd_gft);
+PD_FUNC_STUB_ARGS(pd_gft_exact_match_profile_create,
+                  pd_gft_exact_match_profile);
+PD_FUNC_STUB_ARGS(pd_gft_hdr_group_xposition_profile_create,
+                  pd_gft_hdr_group_xposition_profile);
+PD_FUNC_STUB_ARGS(pd_gft_exact_match_flow_entry_create,
+                  pd_gft_exact_match_flow_entry);
 
 // slab
 PD_FUNC_STUB(pd_get_slab);

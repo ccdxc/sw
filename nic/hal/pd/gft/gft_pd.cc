@@ -533,20 +533,20 @@ gft_hdr_group_xposition_link_pi_pd (pd_gft_hdr_xposition_profile_t *pd,
 }
 
 hal_ret_t
-pd_gft_hdr_group_xposition_profile_create (pd_gft_args_t *gft_args)
+pd_gft_hdr_group_xposition_profile_create (pd_gft_hdr_group_xposition_profile_args_t *gft_args)
 {
     pd_gft_hdr_xposition_profile_t    *gft_hdr_xposition_profile_pd = NULL;
 
-    if (!gft_args || !gft_args->hdr_xposition_profile) {
+    if (!gft_args || !gft_args->profile) {
         return HAL_RET_INVALID_ARG;
     }
 
-    if (gft_args->hdr_xposition_profile->profile_id ==
+    if (gft_args->profile->profile_id ==
             HAL_GFT_INVALID_PROFILE_ID) {
         return HAL_RET_INVALID_ARG;
     }
 
-    if (!gft_args->hdr_xposition_profile->num_htp) {
+    if (!gft_args->profile->num_htp) {
         return HAL_RET_INVALID_ARG;
     }
 
@@ -558,7 +558,7 @@ pd_gft_hdr_group_xposition_profile_create (pd_gft_args_t *gft_args)
 
     // link PI and PD states
     gft_hdr_group_xposition_link_pi_pd(gft_hdr_xposition_profile_pd,
-                                       gft_args->hdr_xposition_profile);
+                                       gft_args->profile);
 
 #if 0
     ret = gft_hdr_group_xposition_profile_pd_add_to_db();
@@ -597,7 +597,7 @@ gft_program_rx_xpositions (gft_hdr_group_xposition_t *xpositions,
 }
 
 hal_ret_t
-pd_gft_exact_match_flow_entry_create (pd_gft_args_t *gft_args)
+pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *gft_args)
 {
     pd_gft_exact_match_flow_entry_t    *gft_exact_match_flow_entry_pd = NULL;
 

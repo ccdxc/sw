@@ -2115,27 +2115,78 @@ typedef struct pd_capri_barco_sym_hash_process_request_args_s {
 } __PACK__ pd_capri_barco_sym_hash_process_request_args_t;
 
 // gft
-typedef struct pd_gft_args_s {
-    gft_exact_match_profile_t       *exact_match_profile;
-    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
-    gft_exact_match_flow_entry_t    *exact_match_flow_entry;
-} __PACK__ pd_gft_args_t;
-
 typedef struct pd_gft_exact_match_profile_args_s {
     gft_exact_match_profile_t       *exact_match_profile;
-} pd_gft_exact_match_profile_args_t;
+} __PACK__ pd_gft_exact_match_profile_args_t;
 
 typedef struct pd_gft_exact_match_profile_make_clone_args_s {
     gft_exact_match_profile_t       *exact_match_profile;
     gft_exact_match_profile_t       *clone;
-} pd_gft_exact_match_profile_make_clone_args_t;
+} __PACK__ pd_gft_exact_match_profile_make_clone_args_t;
 
 static inline void
-pd_gft_args_init (pd_gft_args_t *args)
+pd_gft_exact_match_profile_args_init (pd_gft_exact_match_profile_args_t *args)
+{
+    args->exact_match_profile = NULL;
+}
+
+static inline void
+pd_gft_exact_match_profile_make_clone_args_init (pd_gft_exact_match_profile_make_clone_args_t *args)
+{
+    args->exact_match_profile = NULL;
+    args->clone = NULL;
+}
+
+typedef struct pd_gft_hdr_group_xposition_profile_args_s {
+    gft_hdr_xposition_profile_t    *profile;
+} __PACK__ pd_gft_hdr_group_xposition_profile_args_t;
+
+typedef struct pd_gft_hdr_group_xposition_profile_make_clone_args_s {
+    gft_hdr_xposition_profile_t    *profile;
+    gft_hdr_xposition_profile_t    *clone;
+} __PACK__ pd_gft_hdr_group_xposition_profile_make_clone_args_t;
+
+static inline void
+pd_gft_hdr_group_xposition_profile_args_init (pd_gft_hdr_group_xposition_profile_args_t *args)
+{
+    args->profile = NULL;
+}
+
+static inline void
+pd_gft_hdr_group_xposition_profile_make_clone_args_init (pd_gft_hdr_group_xposition_profile_make_clone_args_t *args)
+{
+    args->profile = NULL;
+    args->clone = NULL;
+}
+
+typedef struct pd_gft_exact_match_flow_entry_args_s {
+    gft_exact_match_profile_t       *exact_match_profile;
+    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
+    gft_exact_match_flow_entry_t    *exact_match_flow_entry;
+} __PACK__ pd_gft_exact_match_flow_entry_args_t;
+
+typedef struct pd_gft_exact_match_flow_entry_make_clone_args_s {
+    gft_exact_match_profile_t       *exact_match_profile;
+    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
+    gft_exact_match_flow_entry_t    *exact_match_flow_entry;
+    gft_exact_match_flow_entry_t    *clone;
+} __PACK__ pd_gft_exact_match_flow_entry_make_clone_args_t;
+
+static inline void
+pd_gft_exact_match_flow_entry_args_init (pd_gft_exact_match_flow_entry_args_t *args)
 {
     args->exact_match_profile = NULL;
     args->hdr_xposition_profile = NULL;
     args->exact_match_flow_entry = NULL;
+}
+
+static inline void
+pd_gft_exact_match_flow_entry_make_clone_args_init (pd_gft_exact_match_flow_entry_make_clone_args_t *args)
+{
+    args->exact_match_profile = NULL;
+    args->hdr_xposition_profile = NULL;
+    args->exact_match_flow_entry = NULL;
+    args->clone = NULL;
 }
 
 // clock
@@ -2678,12 +2729,20 @@ PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_profile_mem_free, pd_gft_exact_match_pr
 PD_FUNCP_TYPEDEF(pd_gft_exact_match_profile_make_clone);
 
 // gft group xposition profile 
-PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_create, pd_gft_hdr_group_xposition_profile);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_delete, pd_gft_hdr_group_xposition_profile);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_update, pd_gft_hdr_group_xposition_profile);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_hdr_group_xposition_profile_mem_free, pd_gft_hdr_group_xposition_profile);
+PD_FUNCP_TYPEDEF(pd_gft_hdr_group_xposition_profile_make_clone);
 
 // gft match flow entry 
-PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_create, pd_gft_exact_match_flow_entry);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_delete, pd_gft_exact_match_flow_entry);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_update, pd_gft_exact_match_flow_entry);
+PD_FUNCP_ARGS_TYPEDEF(pd_gft_exact_match_flow_entry_mem_free, pd_gft_exact_match_flow_entry);
+PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_make_clone);
 
-//clock
+// clock
 PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
 PD_FUNCP_TYPEDEF(pd_conv_sw_clock_to_hw_clock);
 PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
