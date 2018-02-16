@@ -9,7 +9,19 @@
 using sdk::lib::dllist_ctxt_t;
 namespace hal {
 
-#define HAL_MAX_NAME_STR         16
+enum {
+    HAL_THREAD_ID_CFG        = 0,
+    HAL_THREAD_ID_PERIODIC   = 1,
+    HAL_THREAD_ID_FTE_MIN    = 2,
+    HAL_THREAD_ID_FTE_MAX    = 4,
+    HAL_THREAD_ID_ASIC_RW    = 5,
+    HAL_THREAD_ID_MAX        = 6,
+};
+
+#define HAL_MAX_NAME_STR  16
+const uint16_t MAX_FTE_THREADS =
+               HAL_THREAD_ID_FTE_MAX - HAL_THREAD_ID_FTE_MIN + 1;
+
 typedef enum hal_platform_mode_s {
     HAL_PLATFORM_MODE_NONE,
     HAL_PLATFORM_MODE_SIM,
@@ -25,15 +37,19 @@ typedef enum hal_feature_set_s {
 } hal_feature_set_t;
 
 typedef struct hal_cfg_s {
-    hal_platform_mode_t     platform_mode;
-    char                    asic_name[HAL_MAX_NAME_STR];
-    std::string             grpc_port;
-    std::string             loader_info_file;
-    char                    feature_set[HAL_MAX_NAME_STR];
-    hal_feature_set_t       features;
-    std::string             forwarding_mode;
-    bool                    async_en;
-    std::string             default_config_dir;
+    hal_platform_mode_t  platform_mode;
+    char                 asic_name[HAL_MAX_NAME_STR];
+    std::string          grpc_port;
+    std::string          loader_info_file;
+    char                 feature_set[HAL_MAX_NAME_STR];
+    hal_feature_set_t    features;
+    std::string          forwarding_mode;
+    bool                 async_en;
+    std::string          default_config_dir;
+    uint16_t             num_control_threads;
+    uint16_t             num_data_threads;
+    uint64_t             control_cores_mask;
+    uint64_t             data_cores_mask;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------
@@ -84,20 +100,6 @@ typedef hal_ret_t (*hal_cfg_op_cb_t)(cfg_op_ctxt_t *ctxt);
 typedef hal_ret_t (*hal_cfg_commit_cb_t)(cfg_op_ctxt_t *ctxt);
 typedef hal_ret_t (*hal_cfg_abort_cb_t)(cfg_op_ctxt_t *ctxt);
 typedef hal_ret_t (*hal_cfg_cleanup_cb_t)(cfg_op_ctxt_t *ctxt);
-
-//------------------------------------------------------------------------------
-// TODO - following should come from cfg file or should be derived from platform
-//        type/cfg
-//------------------------------------------------------------------------------
-enum {
-    HAL_THREAD_ID_CFG        = 0,
-    HAL_THREAD_ID_PERIODIC   = 1,
-    HAL_THREAD_ID_FTE_MIN    = 2,
-    HAL_THREAD_ID_FTE_MAX    = 4,
-    HAL_THREAD_ID_ASIC_RW    = 5,
-    HAL_THREAD_ID_MAX        = 6,
-};
-
 
 //------------------------------------------------------------------------------
 // HAL config object identifiers

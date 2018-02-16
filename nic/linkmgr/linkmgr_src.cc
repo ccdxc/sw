@@ -269,6 +269,8 @@ linkmgr_init()
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(catalog);
 
+    sdk::lib::thread::control_cores_mask_set(0x1);
+
     sdk_cfg.platform_type = linkmgr_cfg.platform_type;
     sdk_cfg.hw_mock = linkmgr_cfg.hw_mock;
 

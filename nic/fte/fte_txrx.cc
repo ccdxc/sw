@@ -15,8 +15,6 @@
 namespace fte {
 
 static const uint16_t MAX_SOFTQ_SLOTS(1024);
-static const uint8_t  MAX_FTE_THREADS =
-    hal::HAL_THREAD_ID_FTE_MAX - hal::HAL_THREAD_ID_FTE_MIN + 1;
 
 //------------------------------------------------------------------------------
 // FTE Instance
@@ -50,7 +48,7 @@ private:
 //------------------------------------------------------------------------------
 // Per thread FTE instances
 //------------------------------------------------------------------------------
-static inst_t *g_inst_list[MAX_FTE_THREADS];
+static inst_t *g_inst_list[hal::MAX_FTE_THREADS];
 
 //------------------------------------------------------------------------------
 // FTE instance of current thread
@@ -65,7 +63,7 @@ void
 fte_start(uint8_t fte_id)
 {
     HAL_ASSERT(g_inst == NULL);
-    HAL_ASSERT(fte_id < MAX_FTE_THREADS);
+    HAL_ASSERT(fte_id < hal::MAX_FTE_THREADS);
     HAL_ASSERT(g_inst_list[fte_id] == NULL);
 
     g_inst = g_inst_list[fte_id] = new inst_t(fte_id);
@@ -106,7 +104,7 @@ hal_ret_t
 fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
 {
     HAL_ASSERT_RETURN(g_inst == NULL, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(fte_id < MAX_FTE_THREADS, HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN(fte_id < hal::MAX_FTE_THREADS, HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN(fn, HAL_RET_INVALID_ARG);
 
     inst_t *inst = g_inst_list[fte_id];

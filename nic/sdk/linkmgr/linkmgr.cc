@@ -174,6 +174,7 @@ static sdk_ret_t
 thread_init (void)
 {
     int    thread_prio = 0, thread_id = 0;
+    uint64_t cores_mask = 0x0;
 
     thread_prio = sched_get_priority_max(SCHED_OTHER);
     if (thread_prio < 0) {
@@ -191,7 +192,8 @@ thread_init (void)
         sdk::lib::thread::factory(
                         std::string("linkmgr-periodic").c_str(),
                         thread_id,
-                        CONTROL_CORE_ID,
+                        sdk::lib::THREAD_ROLE_CONTROL,
+                        cores_mask,
                         linkmgr_periodic_thread_start,
                         thread_prio - 1,
                         SCHED_OTHER,
@@ -210,7 +212,8 @@ thread_init (void)
     g_linkmgr_threads[thread_id] =
         sdk::lib::thread::factory(std::string("linkmgr-ctrl").c_str(),
                                   thread_id,
-                                  CONTROL_CORE_ID,
+                                  sdk::lib::THREAD_ROLE_CONTROL,
+                                  cores_mask,
                                   linkmgr_event_loop,
                                   thread_prio -1,
                                   SCHED_OTHER,
@@ -221,7 +224,8 @@ thread_init (void)
     g_linkmgr_threads[thread_id] =
         sdk::lib::thread::factory(std::string("linkmgr-cfg").c_str(),
                                   thread_id,
-                                  CONTROL_CORE_ID,
+                                  sdk::lib::THREAD_ROLE_CONTROL,
+                                  cores_mask,
                                   sdk::lib::thread::dummy_entry_func,
                                   thread_prio -1,
                                   SCHED_OTHER,

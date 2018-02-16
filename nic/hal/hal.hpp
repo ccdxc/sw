@@ -17,9 +17,6 @@ extern LIFManager *g_lif_manager;
 
 using sdk::lib::thread;
 
-#define HAL_MAX_CORES                                4
-#define HAL_CONTROL_CORE_ID                          0
-
 extern thread *g_hal_threads[HAL_THREAD_ID_MAX];
 thread *hal_get_current_thread(void);
 

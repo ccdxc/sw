@@ -11,23 +11,30 @@
 namespace sdk {
 namespace lib {
 
-thread_local thread* thread::t_curr_thread_ = NULL;
+thread_local
+thread*  thread::t_curr_thread_      = NULL;
+
+uint64_t thread::control_cores_mask_ = 0;
+uint64_t thread::data_cores_free_    = 0;
+uint64_t thread::data_cores_mask_    = 0;
 
 //------------------------------------------------------------------------------
 // thread instance initialization
 //------------------------------------------------------------------------------
 int
-thread::init(const char *name, uint32_t thread_id, uint32_t core_id,
+thread::init(const char *name, uint32_t thread_id,
+             thread_role_t thread_role, uint64_t cores_mask,
              thread_entry_func_t entry_func, uint32_t prio,
              int sched_policy, bool can_yield)
 {
     strncpy(name_, name, SDK_MAX_THREAD_NAME_LEN);
     thread_id_ = thread_id;
-    core_id_ = core_id;
     entry_func_ = entry_func;
     prio_ = prio;
     sched_policy_ = sched_policy;
     can_yield_ = can_yield;
+    cores_mask_ = cores_mask;
+    thread_role_ = thread_role;
 
     pthread_id_ = 0;
     running_ = false;
@@ -35,11 +42,53 @@ thread::init(const char *name, uint32_t thread_id, uint32_t core_id,
     return 0;
 }
 
+sdk_ret_t
+thread::cores_mask_validate(thread_role_t thread_role,
+                            uint64_t mask)
+{
+    switch (thread_role) {
+    case THREAD_ROLE_CONTROL:
+        // check if the mask bits are present in control cores mask
+        if (mask != 0 &&
+            (mask & control_cores_mask_) == 0) {
+            SDK_TRACE_ERR("Invalid control core mask %lu."
+                        " Expected: %lu\n",
+                        mask, control_cores_mask_);
+            return SDK_RET_ERR;
+        }
+        break;
+
+    default:
+        // check if the mask bit is present in data cores mask
+        if ((mask & data_cores_free_) == 0) {
+            SDK_TRACE_ERR("Invalid data core mask %lu."
+                        " Expected, one of: %lu\n",
+                        mask, data_cores_free_);
+            return SDK_RET_ERR;
+        }
+
+        // check if only one bit is set in mask
+        if ((mask & (mask - 1)) != 0) {
+            SDK_TRACE_ERR("Invalid data core mask %lu."
+                        " Expected, one of: %lu\n",
+                        mask, data_cores_free_);
+            return SDK_RET_ERR;
+        }
+
+        // mark the core bit as taken
+        data_cores_free_ = data_cores_free_ & ~mask;
+        break;
+    }
+
+    return SDK_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
 thread *
-thread::factory(const char *name, uint32_t thread_id, uint32_t core_id,
+thread::factory(const char *name, uint32_t thread_id,
+                thread_role_t thread_role, uint64_t cores_mask,
                 thread_entry_func_t entry_func, uint32_t prio,
                 int sched_policy, bool can_yield)
 {
@@ -51,7 +100,7 @@ thread::factory(const char *name, uint32_t thread_id, uint32_t core_id,
         return NULL;
     }
 
-    if (core_id >= sysconf(_SC_NPROCESSORS_ONLN)) {
+    if (cores_mask_validate(thread_role, cores_mask) != SDK_RET_OK) {
         return NULL;
     }
 
@@ -60,8 +109,8 @@ thread::factory(const char *name, uint32_t thread_id, uint32_t core_id,
         return NULL;
     }
     new_thread = new (mem) thread();
-    rv = new_thread->init(name, thread_id, core_id, entry_func,
-                          prio, sched_policy, can_yield);
+    rv = new_thread->init(name, thread_id, thread_role, cores_mask,
+                          entry_func, prio, sched_policy, can_yield);
     if (rv < 0) {
         new_thread->~thread();
         SDK_FREE(HAL_MEM_ALLOC_LIB_THREAD, new_thread);
@@ -98,9 +147,10 @@ sdk_ret_t
 thread::start(void *ctxt)
 {
     int                   rv;
-    cpu_set_t             cpus;
     pthread_attr_t        attr;
     struct sched_param    sched_params;
+    uint64_t              mask = cores_mask_;
+    cpu_set_t             cpu_cores;
 
     if (running_) {
         return SDK_RET_OK;
@@ -113,10 +163,26 @@ thread::start(void *ctxt)
         return SDK_RET_ERR;
     }
 
+    CPU_ZERO(&cpu_cores);
+
+    switch (thread_role_) {
+    case THREAD_ROLE_CONTROL:
+        if (mask == 0x0) {
+            mask = thread::control_cores_mask_;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    while (mask != 0) {
+        CPU_SET(ffsl(mask) - 1, &cpu_cores);
+        mask = mask & (mask - 1);
+    }
+
     // set core affinity
-    CPU_ZERO(&cpus);
-    CPU_SET(core_id_, &cpus);
-    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu_cores);
     if (rv != 0) {
         SDK_TRACE_ERR("pthread_attr_setaffinity_np failure, err : %d", rv);
         return SDK_RET_ERR;

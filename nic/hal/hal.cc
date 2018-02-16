@@ -179,36 +179,54 @@ hal_sig_init (void)
 static hal_ret_t
 hal_thread_init (hal_cfg_t *hal_cfg)
 {
-    uint32_t              tid, core_id;
-    int                   rv, thread_prio;
-    char                  thread_name[16];
-    struct sched_param    sched_param = { 0 };
-    pthread_attr_t        attr;
-    cpu_set_t             cpus;
+    uint32_t            tid;
+    int                 rv, thread_prio;
+    char                thread_name[16];
+    struct sched_param  sched_param = { 0 };
+    pthread_attr_t      attr;
+    uint64_t            data_cores_mask = hal_cfg->data_cores_mask;
+    uint64_t            cores_mask = 0x0;
 
     // spawn data core threads and pin them to their cores
     thread_prio = sched_get_priority_max(SCHED_FIFO);
     assert(thread_prio >= 0);
-    for (tid = HAL_THREAD_ID_FTE_MIN, core_id = 1;
-         tid <= HAL_THREAD_ID_FTE_MAX;       // TODO: fix the env !!
-         tid++, core_id++) {
+
+    for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
+
+        // pin each data thread to a specific core
+        cores_mask = 1 << (ffsl(data_cores_mask) - 1);
+
+        tid = HAL_THREAD_ID_FTE_MIN + i;
+
         HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
-        snprintf(thread_name, sizeof(thread_name), "fte-core-%u", core_id);
+
+        snprintf(thread_name, sizeof(thread_name), "fte-core-%u", ffsl(data_cores_mask) - 1);
+
         g_hal_threads[tid] =
-            thread::factory(static_cast<const char *>(thread_name), tid,
-                            core_id, fte_pkt_loop_start,
+            thread::factory(static_cast<const char *>(thread_name),
+                            tid,
+                            sdk::lib::THREAD_ROLE_DATA,
+                            cores_mask,
+                            fte_pkt_loop_start,
                             thread_prio,
                             gl_super_user ? SCHED_FIFO : SCHED_OTHER,
                             false);
-        g_hal_threads[tid]->set_data(hal_cfg);
+
         HAL_ABORT(g_hal_threads[tid] != NULL);
+
+        g_hal_threads[tid]->set_data(hal_cfg);
+
+        data_cores_mask = data_cores_mask & (data_cores_mask-1);
     }
+
+    cores_mask = 0x0;
 
     // spawn periodic thread that does background tasks
     g_hal_threads[HAL_THREAD_ID_PERIODIC] =
         thread::factory(std::string("periodic-thread").c_str(),
                         HAL_THREAD_ID_PERIODIC,
-                        HAL_CONTROL_CORE_ID,
+                        sdk::lib::THREAD_ROLE_CONTROL,
+                        cores_mask,
                         hal_periodic_loop_start,
                         thread_prio - 1,
                         gl_super_user ? SCHED_RR : SCHED_OTHER,
@@ -224,8 +242,14 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     }
 
     // set core affinity
+    cpu_set_t cpus;
     CPU_ZERO(&cpus);
-    CPU_SET(HAL_CONTROL_CORE_ID, &cpus);
+    uint64_t mask = sdk::lib::thread::control_cores_mask();
+    while (mask != 0) {
+        CPU_SET(ffsl(mask) - 1, &cpus);
+        mask = mask & (mask - 1);
+    }
+
     rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
     if (rv != 0) {
         HAL_TRACE_ERR("pthread_attr_setaffinity_np failure, err : {}", rv);
@@ -246,7 +270,8 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     g_hal_threads[HAL_THREAD_ID_CFG] =
         thread::factory(std::string("cfg-thread").c_str(),
                         HAL_THREAD_ID_CFG,
-                        HAL_CONTROL_CORE_ID,
+                        sdk::lib::THREAD_ROLE_CONTROL,
+                        cores_mask,
                         thread::dummy_entry_func,
                         sched_param.sched_priority,
                         gl_super_user ? SCHED_RR : SCHED_OTHER,
@@ -329,6 +354,26 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     return ret;
 }
 
+static hal_ret_t
+hal_parse_thread_cfg (ptree &pt, hal_cfg_t *hal_cfg)
+{
+    std::string str = "";
+
+    str = pt.get<std::string>("sw.control_cores_mask");
+    hal_cfg->control_cores_mask = std::stoul (str, nullptr, 16);
+    sdk::lib::thread::control_cores_mask_set(hal_cfg->control_cores_mask);
+    hal_cfg->num_control_threads =
+                    hal_lib_set_bits_count(hal_cfg->control_cores_mask);
+
+    str = pt.get<std::string>("sw.data_cores_mask");
+    hal_cfg->data_cores_mask = std::stoul (str, nullptr, 16);
+    sdk::lib::thread::data_cores_mask_set(hal_cfg->data_cores_mask);
+    hal_cfg->num_data_threads =
+                    hal_lib_set_bits_count(hal_cfg->data_cores_mask);
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // parse HAL configuration
 //------------------------------------------------------------------------------
@@ -376,6 +421,10 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             HAL_TRACE_ERR("Uknown feature set {}", sparam.c_str());
         }
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
+
+        // parse threads config
+        hal_parse_thread_cfg(pt, hal_cfg);
+
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return HAL_RET_INVALID_ARG;
@@ -463,7 +512,8 @@ hal_init (hal_cfg_t *hal_cfg)
     hal_ret_t    ret = HAL_RET_OK;
 
     // Initialize the logger
-    hal::utils::logger_init(HAL_CONTROL_CORE_ID, hal_cfg->async_en);
+    hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
+                            hal_cfg->async_en);
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
 
@@ -481,6 +531,10 @@ hal_init (hal_cfg_t *hal_cfg)
 
     sdk::lib::catalog* catalog = hal_lib_catalog_init();
     g_hal_state->set_catalog(catalog);
+
+    // validate control/data cores
+    HAL_ABORT (catalog->cores_mask() ==
+               (hal_cfg->control_cores_mask | hal_cfg->data_cores_mask));
 
     // initialize config parameters from the JSON file
     HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
@@ -515,7 +569,8 @@ hal_init (hal_cfg_t *hal_cfg)
         !getenv("DISABLE_FTE") &&
         !(hal_cfg->forwarding_mode == "classic")) {
         // start fte threads
-        for (tid = HAL_THREAD_ID_FTE_MIN; tid <= HAL_THREAD_ID_FTE_MAX; tid++) {
+        for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
+            tid = HAL_THREAD_ID_FTE_MIN + i;
             g_hal_threads[tid]->start(g_hal_threads[tid]);
             break;
         }

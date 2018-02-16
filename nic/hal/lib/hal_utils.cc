@@ -17,3 +17,14 @@ hal_lib_catalog_init (void)
 
     return sdk::lib::catalog::factory(catalog_file);
 }
+
+uint16_t
+hal_lib_set_bits_count (uint64_t mask)
+{
+    uint16_t count = 0;
+    while (mask != 0) {
+        count++;
+        mask = mask & (mask - 1);
+    }
+    return count;
+}

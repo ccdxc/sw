@@ -52,6 +52,7 @@ typedef struct catalog_s {
     uint32_t                 card_index;                        // card index for the board
     uint32_t                 max_mpu_per_stage;                 // max MPU per pipeline stage
     uint32_t                 mpu_trace_size;                    // MPU trace size
+    uint64_t                 cores_mask;                        // mask of all control/data cores
     uint32_t                 num_asics;                         // number of asics on the board
     uint32_t                 num_uplink_ports;                  // number of uplinks in the board
     platform_type_t          platform_type;                     // platform type
@@ -84,8 +85,15 @@ public:
     uint32_t     mac_ch    (uint32_t port, uint32_t lane);
     uint32_t     sbus_addr (uint32_t port, uint32_t lane);
 
-    uint32_t   max_mpu_per_stage() { return catalog_db_.max_mpu_per_stage;}
-    uint32_t   mpu_trace_size()    { return catalog_db_.mpu_trace_size;}
+    uint32_t max_mpu_per_stage(void) const {
+        return catalog_db_.max_mpu_per_stage;
+    }
+
+    uint32_t mpu_trace_size (void) const {
+        return catalog_db_.mpu_trace_size;
+    }
+
+    uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
 
     ptree& catalog_qos_config_tree(void) { return catalog_db_.qos_config_tree; }
 

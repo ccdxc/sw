@@ -64,10 +64,6 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
-// TODO - port should come from some global cfg file or
-//        command line argument
-const std::string&    hal_svc_endpoint_("localhost:50052");
-
 void
 svc_reg (const std::string& server_addr)
 {

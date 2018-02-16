@@ -5,6 +5,8 @@
 
     "mpu_trace_size" : "2048",
 
+    "cores_mask": "0xf",
+
     "num_asics" : "1",
     "asics" :
     [

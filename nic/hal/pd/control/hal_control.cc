@@ -24,9 +24,10 @@ hal_control_start (void *ctxt)
 {
     SDK_THREAD_INIT(ctxt);
 
+    uint64_t cores_mask = 0x0;
+
     hal_cfg_t *hal_cfg =
                 (hal_cfg_t *)hal::hal_get_current_thread()->data();
-                
     if (hal_cfg == NULL) {
         return NULL;
     }
@@ -35,7 +36,9 @@ hal_control_start (void *ctxt)
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
     g_hal_threads[HAL_THREAD_ID_ASIC_RW] =
         thread::factory(std::string("asic-rw").c_str(),
-                HAL_THREAD_ID_ASIC_RW, HAL_CONTROL_CORE_ID,
+                HAL_THREAD_ID_ASIC_RW,
+                sdk::lib::THREAD_ROLE_CONTROL,
+                cores_mask,
                 hal::pd::asic_rw_start,
                 sched_get_priority_max(SCHED_RR),
                 gl_super_user ? SCHED_RR : SCHED_OTHER,

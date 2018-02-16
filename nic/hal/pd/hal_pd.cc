@@ -771,6 +771,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_pgm_def_entries_args_t pgm_def_args;
     pd_pgm_def_p4plus_entries_args_t pgm_p4p_args;
     pd_clock_delta_comp_args_t       clock_args;
+    uint64_t cores_mask = 0x0;
 
     HAL_ASSERT(hal_cfg != NULL);
 
@@ -798,8 +799,11 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     // start the asic-rw thread
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
     g_hal_threads[HAL_THREAD_ID_ASIC_RW] =
-        thread::factory(std::string("asic-rw").c_str(),
-                HAL_THREAD_ID_ASIC_RW, HAL_CONTROL_CORE_ID,
+        thread::factory(
+                std::string("asic-rw").c_str(),
+                HAL_THREAD_ID_ASIC_RW,
+                sdk::lib::THREAD_ROLE_CONTROL,
+                cores_mask,
                 hal::pd::asic_rw_start,
                 sched_get_priority_max(SCHED_RR),
                 gl_super_user ? SCHED_RR : SCHED_OTHER,

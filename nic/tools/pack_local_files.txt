@@ -15,4 +15,4 @@ nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so  /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so  /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so     /nic/lib/
 bazel-bin/nic/hal/pd/pd_stub/libpd_stub.so                       /nic/lib/
-bazel-bin/nic/hal/pd/iris/libpd_iris.so                          /nic/lib/
+bazel-bin/nic/hal/pd/iris/libiris.so                             /nic/lib/

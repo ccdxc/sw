@@ -143,6 +143,10 @@ catalog::populate_catalog(ptree &prop_tree)
     catalog_db_.card_index = prop_tree.get<uint32_t>("card_index", 0);
     catalog_db_.max_mpu_per_stage = prop_tree.get<uint32_t>("max_mpu_per_stage", 0);
     catalog_db_.mpu_trace_size = prop_tree.get<uint32_t>("mpu_trace_size", 0);
+
+    std::string str = prop_tree.get<std::string>("cores_mask", "");
+    catalog_db_.cores_mask = std::stoul (str, nullptr, 16);
+
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
     catalog_db_.num_uplink_ports =
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
