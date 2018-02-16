@@ -19,6 +19,20 @@ uplink:
         sriov   : True
         status  : UP
 
+    - entry:
+        id      : Uplink3
+        port    : 3
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+    - entry:
+        id      : Uplink4
+        port    : 4
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
 uplinkpc: None
 
 acls: None
@@ -36,6 +50,15 @@ tenants:
         count   : 1
         lifns   : range/200/203
         uplink  : ref://store/objects/id=Uplink2
+    -   spec    : ref://store/specs/id=TENANT_CLASSIC_PROMISCUOUS
+        count   : 1
+        lifns   : range/300/303
+        uplink  : ref://store/objects/id=Uplink3
+    -   spec    : ref://store/specs/id=TENANT_CLASSIC_ACCESS_PROMISCUOUS
+        count   : 1
+        lifns   : range/400/403
+        uplink  : ref://store/objects/id=Uplink4
+
 
 cpu:
     - entry:

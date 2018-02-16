@@ -1,12 +1,12 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
         segment     : filter://any
         endpoint    : filter://remote=False,access=False
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
         segment     : filter://any
         endpoint    : filter://remote=False,access=False
         interface   : filter://any

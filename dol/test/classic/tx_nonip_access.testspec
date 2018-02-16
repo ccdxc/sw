@@ -1,11 +1,11 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://type=TENANT
+        tenant  : filter://type=TENANT,label=ACCESS
         segment : filter://any
         endpoint: filter://remote=False,access=True
     dst:
-        tenant  : filter://type=TENANT
+        tenant  : filter://type=TENANT,label=ACCESS
         segment : filter://any
         endpoint: filter://remote=True
     flow        : filter://fwtype=L2,type=MAC

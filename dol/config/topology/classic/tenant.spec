@@ -4,10 +4,11 @@ meta:
 
 type    : tenant
 overlay : vlan
+label   : CLASSIC
 
 enics:
     classic     : 4
-    promiscous  : 1
+    promiscuous : 0
     allmulti    : 1
 
 segments:

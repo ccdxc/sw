@@ -38,7 +38,7 @@ class LifObject(base.ConfigObjectBase):
         self.status     = haldefs.interface.IF_STATUS_UP
         self.hw_lif_id = -1
         self.qstate_base = {}
-        self.promiscous = False
+        self.promiscuous = False
         self.allmulticast = False
 
         self.c_lib_name = getattr(spec, 'c_lib', None)
@@ -63,6 +63,7 @@ class LifObject(base.ConfigObjectBase):
         self.rdma_kt_base_addr = 0
 
         self.vlan_strip_en = False
+        self.vlan_insert_en = False
 
         self.queue_types = objects.ObjectDatabase(cfglogger)
         self.obj_helper_q = queue_type.QueueTypeObjectHelper()
@@ -200,6 +201,7 @@ class LifObject(base.ConfigObjectBase):
         req_spec.rdma_max_keys = self.rdma_max_keys
         req_spec.rdma_max_pt_entries = self.rdma_max_pt_entries
         req_spec.vlan_strip_en = self.vlan_strip_en
+        req_spec.vlan_insert_en = self.vlan_insert_en
         if self.tx_qos_class:
             req_spec.tx_qos_class.qos_class_handle = self.tx_qos_class.hal_handle
         if self.rx_qos_class:
@@ -207,7 +209,7 @@ class LifObject(base.ConfigObjectBase):
 
         if GlobalOptions.classic:
             req_spec.packet_filter.receive_broadcast = True
-            req_spec.packet_filter.receive_promiscuous = self.promiscous
+            req_spec.packet_filter.receive_promiscuous = self.promiscuous
             req_spec.packet_filter.receive_all_multicast = self.allmulticast
         req_spec.rss.enable = self.rss_enable
         req_spec.rss.type = self.rss_type
@@ -280,12 +282,12 @@ class LifObject(base.ConfigObjectBase):
         self.ConfigureQueueTypes()
 
     def SetPromiscous(self):
-        cfglogger.info("Setting PROMISCOUS mode for LIF:%s" % self.GID())
-        self.promiscous = True
+        cfglogger.info("Setting PROMISCUOUS mode for LIF:%s" % self.GID())
+        self.promiscuous = True
         return
 
     def IsPromiscous(self):
-        return self.promiscous
+        return self.promiscuous
 
     def SetAllMulticast(self):
         cfglogger.info("Setting ALL MULTICAST mode for LIF:%s" % self.GID())

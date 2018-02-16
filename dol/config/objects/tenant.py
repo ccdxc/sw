@@ -151,6 +151,8 @@ class TenantObject(base.ConfigObjectBase):
         summary = ''
         summary += 'GID:%s' % self.GID()
         summary += '/Type:%s' % self.type
+        if self.label:
+            summary += '/Label:%s' % self.label
         if self.IsInfra():
             summary += '/LocTep:%s' % self.local_tep.get()
             summary += '/GIPo:%s/%d' % (self.gipo_prefix.get(), self.gipo_len)
@@ -211,7 +213,7 @@ class TenantObject(base.ConfigObjectBase):
         n_prom = 0
         n_allmc = 0
         if enic_spec:
-            n_prom = getattr(enic_spec, 'promiscous', 0)
+            n_prom = getattr(enic_spec, 'promiscuous', 0)
             n_allmc = getattr(enic_spec, 'allmulti', 0)
         self.spec.lif = self.spec.lif.Get(Store)
         self.obj_helper_lif.Generate(self, self.spec.lif,

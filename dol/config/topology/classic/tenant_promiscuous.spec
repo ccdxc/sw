@@ -1,20 +1,20 @@
 # Configuration Template.
 meta:
-    id: TENANT_CLASSIC_ACCESS
+    id: TENANT_CLASSIC_PROMISCUOUS
 
 type    : tenant
 overlay : vlan
-label   : ACCESS
+label   : PROMISCUOUS
 
 enics:
     classic     : 4
-    promiscuous : 0
+    promiscuous : 1
     allmulti    : 1
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_CLASSIC_DEFAULT
       count : 1
-    - spec  : ref://store/specs/id=SEGMENT_CLASSIC_ENIC_NATIVE
+    - spec  : ref://store/specs/id=SEGMENT_CLASSIC_NATIVE
       count : 1
 
 sessions:
