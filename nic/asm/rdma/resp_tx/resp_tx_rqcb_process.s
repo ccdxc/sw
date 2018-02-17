@@ -187,7 +187,6 @@ ack_nak:
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_ack_process, RQCB1_P)
     
-exit:
     nop.e
     nop
 
@@ -199,5 +198,7 @@ all_rings_empty:
     DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3)
     tblwr       d.ring_empty_sched_eval_done, 1
 
+exit:
 skip_doorbell_eval:
     phvwr.e     p.common.p4_intr_global_drop, 1
+    nop
