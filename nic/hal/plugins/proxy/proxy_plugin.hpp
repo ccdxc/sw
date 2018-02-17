@@ -18,6 +18,9 @@ hal_ret_t
 tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv4_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, uint16_t hw_vlan_id,
               types::AppRedirType l7_proxy_type);
 
+hal_ret_t
+tcp_create_cb_v6(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, uint16_t hw_vlan_id, types::AppRedirType l7_proxy_type);
+
 void tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif);
 hal_ret_t tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp);
 void tcp_ring_doorbell(uint32_t qid);

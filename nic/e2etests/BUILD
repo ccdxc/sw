@@ -50,8 +50,8 @@ cc_library(
 cc_library(
     name = "hntap-lib",
     srcs = [
-        	"hntap/dev.cc",
-        	"hntap/hntap.cc"
+            "hntap/dev.cc",
+            "hntap/hntap.cc"
            ],
     hdrs = glob(["hntap/*.hpp"]),
         deps = [
@@ -73,6 +73,31 @@ cc_library(
 )
 
 cc_library(
+    name = "hntapv6-lib",
+    srcs = [
+            "hntap/dev.cc",
+            "hntap/hntap-v6.cc"
+           ],
+    hdrs = glob(["hntap/*.hpp"]),
+        deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        # PI
+        "//nic/e2etests:driver",
+        "//nic/e2etests:hntap_common_includes",
+        "//nic/e2etests:e2etest-lib",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
+        "//nic:openssl-native",
+
+        # PD
+        "//nic/model_sim:model_client",
+    ],
+
+)
+
+cc_library(
     name = "nic_proxy-e2etest_hntap",
     srcs = [
         "hntap/hntap.cc",
@@ -83,7 +108,7 @@ cc_library(
         # PI
         "//nic/e2etests:driver",
         "//nic/e2etests:hntap_common_includes",
-	"//nic/e2etests:e2etest-lib",
+    "//nic/e2etests:e2etest-lib",
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/utils/host_mem:host_mem_src",
@@ -95,3 +120,25 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "nic_proxy-v6e2etest_hntap",
+    srcs = [
+        "hntap/hntap-v6.cc",
+        "hntap/dev.cc",
+    ],
+    deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        # PI
+        "//nic/e2etests:driver",
+        "//nic/e2etests:hntap_common_includes",
+    "//nic/e2etests:e2etest-lib",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        "//nic/utils/host_mem:host_mem_src",
+        "//nic/utils/bm_allocator:bm_allocator",
+        "//nic:openssl-native",
+
+        # PD
+        "//nic/model_sim:model_client",
+    ],
+)

@@ -16,54 +16,10 @@ extern "C" {
 #include "lkl_host.h"
 }
 
-
 namespace hal {
 
-ht                       *lklshim_flow_db;
-ht                       *lklshim_host_lsock_db;
-ht                       *lklshim_net_lsock_db;
-slab                     *lklshim_flowdb_slab;
-slab                     *lklshim_lsockdb_slab;
-lklshim_flow_t           *lklshim_flow_by_qid[MAX_PROXY_FLOWS];
-
-void *
-lklshim_flow_get_key_func(void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((lklshim_flow_t *)entry)->key);
-}
-
-uint32_t
-lklshim_flow_compute_key_hash_func(void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(lklshim_flow_key_t)) % ht_size;
-}
-
-void *
-lklshim_lsock_get_key_func(void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((lklshim_listen_sockets_t *)entry)->tcp_portnum);
-}
-
-uint32_t
-lklshim_lsock_compute_key_hash_func(void *key, uint32_t ht_size)
-{
-    return sdk::lib::hash_algo::fnv_hash(key, sizeof(int)) % ht_size;
-}
-
-bool
-lklshim_compare_key_func(void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(lklshim_flow_key_t))) {
-        return true;
-    }
-    return false;
-}
-
 // byte array to hex string for logging
-std::string hex_dump(const uint8_t *buf, size_t sz)
+std::string hex_dump6(const uint8_t *buf, size_t sz)
 {
     std::ostringstream result;
 
@@ -77,82 +33,9 @@ std::string hex_dump(const uint8_t *buf, size_t sz)
     return result.str();
 }
 
-bool
-lklshim_mem_init(void)
-{
-    // initialize SLAB for flow entry allocations
-    lklshim_flowdb_slab = slab::factory("lklshim_flowdb", HAL_SLAB_LKLSHIM_FLOWDB,
-                                sizeof(lklshim_flow_t), 16,
-                                false, true, true);
-    HAL_ASSERT_RETURN((lklshim_flowdb_slab != NULL), false);
-
-    // initialize SLAB for listen-socket entry allocations
-    lklshim_lsockdb_slab = slab::factory("lklshim_lsockdb", HAL_SLAB_LKLSHIM_LSOCKDB,
-                                sizeof(lklshim_listen_sockets_t), 16,
-                                false, true, true);
-    HAL_ASSERT_RETURN((lklshim_lsockdb_slab != NULL), false);
-
-    // initialize hash-table for lklshim flow entries
-    lklshim_flow_db = ht::factory(HAL_MAX_LKLSHIM_FLOWS,
-                           lklshim_flow_get_key_func,
-                           lklshim_flow_compute_key_hash_func,
-                           lklshim_compare_key_func);
-    HAL_ASSERT_RETURN((lklshim_flow_db != NULL), false);
-
-    // initialize hash-table for lklshim listen socket entries in host NS
-    lklshim_host_lsock_db = ht::factory(HAL_SLAB_LKLSHIM_LSOCKS,
-                           lklshim_lsock_get_key_func,
-                           lklshim_lsock_compute_key_hash_func,
-                           lklshim_compare_key_func);
-    HAL_ASSERT_RETURN((lklshim_host_lsock_db != NULL), false);
-
-    // initialize hash-table for lklshim listen socket entries in Network NS
-    lklshim_net_lsock_db = ht::factory(HAL_SLAB_LKLSHIM_LSOCKS,
-                           lklshim_lsock_get_key_func,
-                           lklshim_lsock_compute_key_hash_func,
-                           lklshim_compare_key_func);
-    HAL_ASSERT_RETURN((lklshim_net_lsock_db != NULL), false);
-    return true;
-}
-
-lklshim_flow_t *
-lklshim_flow_entry_create (lklshim_flow_key_t *flow_key)
-{
-    lklshim_flow_t *flow;
-
-    flow = (lklshim_flow_t *) lklshim_flowdb_slab->alloc();
-    HAL_ASSERT_RETURN((flow != NULL), NULL);
-
-    memcpy(&flow->key, flow_key, sizeof(flow->key));
-    flow->ht_ctxt.reset();
-    lklshim_flow_db->insert(flow, &flow->ht_ctxt);
-    return(flow);
-}
-
-lklshim_flow_t *
-lklshim_flow_entry_get_or_create (lklshim_flow_key_t *flow_key)
-{
-    lklshim_flow_t *entry;
-
-    entry = lklshim_flow_entry_lookup(flow_key);
-    if (!entry) {
-        entry = lklshim_flow_entry_create(flow_key);
-    }
-    return entry;
-}
-
-void
-lklshim_flow_entry_delete (lklshim_flow_t *flow)
-{
-    if (!flow) return;
-
-    lklshim_flow_db->remove(&flow->key);
-    return lklshim_flowdb_slab->free(flow);
-}
-
 #define IF_NAME 10
 
-static bool lklshim_setsockopt_and_bind(int fd,
+static bool lklshim_v6_setsockopt_and_bind(int fd,
                                         char *dst_mac,
                                         char *src_mac,
                                         char *vlan,
@@ -161,26 +44,19 @@ static bool lklshim_setsockopt_and_bind(int fd,
                                         char* ifname,
                                         uint16_t bind_portnum)
 {
-    struct sockaddr_in       local;
+    struct sockaddr_in6       local;
+    int ret=0;
     int optval = 1;
-    int proto=0x0800;
+    int proto = 0x86dd;
     if (lkl_sys_setsockopt(fd, LKL_SOL_SOCKET, LKL_SO_REUSEADDR,
               (char*)&optval, sizeof(optval)) < 0) {
         perror("setsockopt()");
         lkl_sys_close(fd);
         return false;
     }
-
     if (lkl_sys_setsockopt(fd, SOL_SOCKET, LKL_SO_PAGEHDR_SMAC,
                            src_mac, MAC_SIZE) < 0)  {
         perror("SO_PAGEHDR_SMAC");
-        lkl_sys_close(fd);
-        return false;
-    }
-
-    if (lkl_sys_setsockopt(fd, SOL_SOCKET, LKL_SO_PAGEHDR_PROTO,
-                           (char*)&proto, MAC_SIZE) < 0)  {
-        perror("SO_PAGEHDR_PROTO");
         lkl_sys_close(fd);
         return false;
     }
@@ -191,10 +67,17 @@ static bool lklshim_setsockopt_and_bind(int fd,
         return false;
     }
 
-    HAL_TRACE_DEBUG("lklshim: setsockopt vlan={}", hex_dump((uint8_t *)vlan, 2));
+    HAL_TRACE_DEBUG("lklshim: setsockopt vlan={}", hex_dump6((uint8_t *)vlan, 2));
     if (lkl_sys_setsockopt(fd, SOL_SOCKET, LKL_SO_PAGEHDR_VLAN,
                            vlan, VLAN_SIZE) < 0)  {
         perror("SO_PAGEHDR_VLAN");
+        lkl_sys_close(fd);
+        return false;
+    }
+
+    if (lkl_sys_setsockopt(fd, SOL_SOCKET, LKL_SO_PAGEHDR_PROTO,
+                           (char*)&proto, MAC_SIZE) < 0)  {
+        perror("SO_PAGEHDR_PROTO");
         lkl_sys_close(fd);
         return false;
     }
@@ -215,7 +98,7 @@ static bool lklshim_setsockopt_and_bind(int fd,
 
     if (src_ip) {
         if (lkl_sys_setsockopt(fd, SOL_SOCKET, LKL_SO_PAGEHDR_SIP,
-                               src_ip, sizeof(in_addr_t)) < 0)  {
+                               src_ip, sizeof(ipv6_addr_t)) < 0)  {
             perror("SO_PAGEHDR_DMAC");
             lkl_sys_close(fd);
             return false;
@@ -223,14 +106,15 @@ static bool lklshim_setsockopt_and_bind(int fd,
     }
 
     memset(&local, 0, sizeof(local));
-    local.sin_family = AF_INET;
+    local.sin6_family = AF_INET6;
     if (src_ip) {
-        local.sin_addr.s_addr = htonl(flow->key.src_ip.v4_addr);
+        memcpy(&local.sin6_addr, &flow->key.src_ip.v6_addr.addr8, sizeof(flow->key.src_ip.v6_addr.addr8));
     } else {
-        local.sin_addr.s_addr = htonl(INADDR_ANY);
+        local.sin6_addr = in6addr_any;
     }
-    local.sin_port = htons(bind_portnum);
-    if (lkl_sys_bind(fd, (struct lkl_sockaddr*) &local, sizeof(local)) != 0) {
+    local.sin6_port = htons(bind_portnum);
+    ret = lkl_sys_bind(fd, reinterpret_cast<lkl_sockaddr*>(&local), sizeof(local));
+    if (ret != 0) {
         perror("bind");
         lkl_sys_close(fd);
         return false;
@@ -239,25 +123,18 @@ static bool lklshim_setsockopt_and_bind(int fd,
 }
 
 bool
-lklshim_create_listen_sockets (hal::flow_direction_t dir, lklshim_flow_t *flow)
+lklshim_create_v6_listen_sockets (hal::flow_direction_t dir, lklshim_flow_t *flow)
 {
     lklshim_listen_sockets_t *lsock;
     char *src_mac = NULL, *dst_mac = NULL, *vlan = NULL;
     int fd;
     char if_to_bind[IF_NAME];
 
-    /*
-     * Get config from TCP/TLS Agents, and for each of the layer-4
-     * Ports that the service needs to be enabled, we'll create
-     * an IPv4 and IPv6 listen socket with {INADDR(6)_ANY, port-num}
-     * to capture all the H-flow and N-flow connection requests.
-     *
-     */
     lsock = (lklshim_listen_sockets_t *) lklshim_lsockdb_slab->alloc();
     HAL_ASSERT_RETURN((lsock != NULL), false);
     lsock->ht_ctxt.reset();
     lsock->tcp_portnum = flow->key.dst_port;
-    fd = lsock->ipv4_sockfd = lkl_sys_socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); 
+    fd = lsock->ipv6_sockfd = lkl_sys_socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0); 
 
     memset(if_to_bind, 0, sizeof(char)*IF_NAME);
     strncpy(if_to_bind, flow->hostns.dev, sizeof(char)*IF_NAME);
@@ -278,7 +155,7 @@ lklshim_create_listen_sockets (hal::flow_direction_t dir, lklshim_flow_t *flow)
                     lsock->tcp_portnum,
                     flow->key.dst_port,
                     flow->key.src_port);
-    if (!lklshim_setsockopt_and_bind(fd,
+    if (!lklshim_v6_setsockopt_and_bind(fd,
                                      src_mac,
                                      dst_mac,
                                      vlan,
@@ -298,16 +175,16 @@ lklshim_create_listen_sockets (hal::flow_direction_t dir, lklshim_flow_t *flow)
 }
 
 bool
-lklshim_trigger_flow_connection (lklshim_flow_t *flow, hal::flow_direction_t dir)
+lklshim_trigger_v6_flow_connection (lklshim_flow_t *flow, hal::flow_direction_t dir)
 {
-    struct sockaddr_in con_sa;
+    struct sockaddr_in6 con_sa;
     char if_to_bind[IF_NAME];
     int fd;
     char *src_mac, *dst_mac, *src_ip, *vlan;
 
     memset(if_to_bind, 0, sizeof(char)*IF_NAME);
-    src_ip = (char*)&flow->key.src_ip.v4_addr;
-    fd = lkl_sys_socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    src_ip = (char*)&flow->key.src_ip.v6_addr;
+    fd = lkl_sys_socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0);
     HAL_ASSERT_RETURN((fd >= 0), false);
     strncpy(if_to_bind, flow->netns.dev, sizeof(char)*IF_NAME);
     if (dir != hal::FLOW_DIR_FROM_ENIC) {
@@ -322,8 +199,7 @@ lklshim_trigger_flow_connection (lklshim_flow_t *flow, hal::flow_direction_t dir
         vlan = (char*)flow->hostns.vlan;
     }
 
-
-    if (!lklshim_setsockopt_and_bind(fd,
+    if (!lklshim_v6_setsockopt_and_bind(fd,
                                      dst_mac,
                                      src_mac,
                                      vlan,
@@ -333,76 +209,67 @@ lklshim_trigger_flow_connection (lklshim_flow_t *flow, hal::flow_direction_t dir
                                      flow->key.src_port)) {
         return false;
     }
-
     flow->netns.state = FLOW_STATE_CONNECT_PENDING;
     memset(&con_sa, 0, sizeof(con_sa));
-    con_sa.sin_family = AF_INET;
-    con_sa.sin_addr.s_addr = htonl(flow->key.dst_ip.v4_addr);
-    con_sa.sin_port = htons(flow->key.dst_port);
-    lkl_sys_connect(fd, (struct lkl_sockaddr *) &con_sa, sizeof(con_sa));
+    con_sa.sin6_family = AF_INET6;
+    memcpy(&con_sa.sin6_addr, &flow->key.dst_ip.v6_addr.addr8, sizeof(flow->key.dst_ip.v6_addr.addr8));
+    con_sa.sin6_port = htons(flow->key.dst_port);
+    lkl_sys_connect(fd, reinterpret_cast<lkl_sockaddr*>(&con_sa), sizeof(con_sa));
 
-    //flow->netns.state = FLOW_STATE_ESTABLISHED;
     return true;
 }
 
-void
-lklshim_flowdb_init ()
-{
-    lklshim_mem_init();
-}
-
 bool 
-lklshim_release_client_syn(uint16_t qid) 
+lklshim_release_client_syn6(uint16_t qid) 
 {
     lklshim_flow_t *flow = lklshim_flow_by_qid[qid];
-
     
     if (flow == NULL) {
       HAL_TRACE_ERR("lklshim: flow does't exist to release client syn for qid = {}", qid);
       return false;
     }
     
-    HAL_TRACE_DEBUG("lklshim: trying to release client syn for qid = {}", qid);
+    HAL_TRACE_DEBUG("lklshim: trying to release client syn6 for qid = {}", qid);
 
     if (flow->hostns.skbuff != NULL) {
       void *pkt_skb = flow->hostns.skbuff;
       ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
-      ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+      ipv6_header_t *ip = (ipv6_header_t*)lkl_get_network_start(pkt_skb);
       tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
 
-      HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
-      HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
-      HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
+      HAL_TRACE_DEBUG("lklshim: skb={}", pkt_skb);
+      HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump6((uint8_t*)eth, 18));
+      HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump6((uint8_t*)ip, sizeof(ipv6_header_t)));
+      HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump6((uint8_t*)tcp, sizeof(tcp_header_t)));
 
-      lkl_tcp_v4_rcv(pkt_skb);
+      lkl_tcp_v6_rcv(pkt_skb);
     }
 
     return true;
 }
 
 bool
-lklshim_process_flow_hit_rx_packet (void *pkt_skb,
+lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb,
                                     hal::flow_direction_t dir,
                                     const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr)
 {
     lklshim_flow_t     *flow;
-    lklshim_flow_key_t flow_key;
 
-    ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+    ipv6_header_t *ip = (ipv6_header_t*)lkl_get_network_start(pkt_skb);
     tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
     HAL_TRACE_DEBUG("lklshim: daddr={}, saddr={}, dport={}, sport={}, seqno={}, ackseqno={} ", 
                     ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq), ntohl(tcp->ack_seq));
-
-    lklshim_make_flow_v4key(&flow_key, ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport));
-    flow = lklshim_flow_entry_get_or_create(&flow_key);
+    HAL_TRACE_DEBUG("lklshim: flow hit pkt rxhdr->qid={}", rxhdr->qid);
+    flow = lklshim_flow_by_qid[rxhdr->qid];
     if (!flow) return false;
     if (flow->itor_dir != dir) {
         flow->dst_lif = rxhdr->src_lif;
         HAL_TRACE_DEBUG("lklshim: updating flow dst lif = {}", flow->dst_lif);
     }
-    if (lkl_tcp_v4_rcv(pkt_skb)) {
+    if (lkl_tcp_v6_rcv(pkt_skb)) {
         //return false;
     }
+    HAL_TRACE_DEBUG("lklshim: flow hit pkt iqid={} rqid={}", flow->iqid, flow->rqid);
 
     /*
      * If the TLS bypass mode is set, we're doing TCP proxy only, so we can
@@ -410,9 +277,9 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
      */
     if (!hal::tls::proxy_tls_bypass_mode) {
         if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
-	    hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid, true);
+	    hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid, false);
 	} else {
-            hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid, true);
+            hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid, false);
 	}
     } else {
 
@@ -421,13 +288,14 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
 			ip->daddr, ip->saddr, ntohs(tcp->dport), ntohs(tcp->sport), ntohl(tcp->seq),
 			ntohl(tcp->ack_seq));
         // Inform LKL  
-        lklshim_release_client_syn(flow->iqid);
+        lklshim_release_client_syn6(flow->iqid);
     }
  
     return true;
 }
+
 bool
-lklshim_process_flow_hit_rx_header (void *pkt_skb,
+lklshim_process_v6_flow_hit_rx_header (void *pkt_skb,
                                     hal::flow_direction_t dir,
                                     const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr)
 {
@@ -437,7 +305,7 @@ lklshim_process_flow_hit_rx_header (void *pkt_skb,
       __be32        words[5];                                     
     } *tp = (union tcp_word_hdr*)lkl_get_transport_start(pkt_skb);                                                              
 
-    ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+    ipv6_header_t *ip = (ipv6_header_t*)lkl_get_network_start(pkt_skb);
 
 
     HAL_TRACE_DEBUG("lklshim: dir={} lif={} qid ={} lkp_vrf={} "
@@ -455,20 +323,20 @@ lklshim_process_flow_hit_rx_header (void *pkt_skb,
     lkl_skb_set_src_lif(pkt_skb, 0);
     HAL_TRACE_DEBUG("Key : [dir={}, sa={}, da={}, sp={}, dp={}]", 
                     flow->itor_dir,
-                    flow->key.src_ip.v4_addr, flow->key.dst_ip.v4_addr, flow->key.src_port, flow->key.dst_port);
+                    flow->key.src_ip.v6_addr, flow->key.dst_ip.v6_addr, flow->key.src_port, flow->key.dst_port);
 
     HAL_TRACE_DEBUG("pkt={} iph={} tcp={}", pkt_skb, (void*)ip, (void *)tp);
     if (rxhdr->lkp_dir == 0) {
-      ip->saddr = flow->key.src_ip.v4_addr;
-      ip->daddr = flow->key.dst_ip.v4_addr;
-      ip->version = 4;
-      ip->ihl = 5;
-      ip->protocol = 6;
-      ip->tos = 0;
-      ip->tot_len = htons(40);
-      ip->id = 0;
-      ip->frag_off = 0;
-      ip->check = 0;
+      memcpy(ip->saddr, &flow->key.src_ip.v6_addr.addr8, sizeof(flow->key.src_ip.v6_addr.addr8));
+      memcpy(ip->daddr, &flow->key.dst_ip.v6_addr.addr8, sizeof(flow->key.dst_ip.v6_addr.addr8));
+      ip->version = 6;
+      ip->tc_high = 0;
+      ip->tc_low = 0;
+      ip->flow_lbl_high = 0;
+      ip->flow_lbl[0] = ip->flow_lbl[1] = 0;
+      ip->payload_len = htons(20);
+      ip->nexthdr = 6;
+      ip->hop_limit = 64;
       tp->words[3] = 0;
       tp->hdr.sport = htons(flow->key.src_port);
       tp->hdr.dport = htons(flow->key.dst_port);
@@ -478,16 +346,16 @@ lklshim_process_flow_hit_rx_header (void *pkt_skb,
       tp->hdr.seq = htonl(rxhdr->tcp_seq_num);
       tp->hdr.ack_seq = htonl(rxhdr->tcp_ack_num);
     } else {
-      ip->saddr = flow->key.dst_ip.v4_addr;
-      ip->daddr = flow->key.src_ip.v4_addr;
-      ip->version = 4;
-      ip->ihl = 5;
-      ip->protocol = 6;
-      ip->tos = 0;
-      ip->tot_len = htons(40);
-      ip->id = 0;
-      ip->frag_off = 0;
-      ip->check = 0;
+      memcpy(ip->daddr, &flow->key.src_ip.v6_addr.addr8, sizeof(flow->key.src_ip.v6_addr.addr8));
+      memcpy(ip->saddr, &flow->key.dst_ip.v6_addr.addr8, sizeof(flow->key.dst_ip.v6_addr.addr8));
+      ip->version = 6;
+      ip->tc_high = 0;
+      ip->tc_low = 0;
+      ip->flow_lbl_high = 0;
+      ip->flow_lbl[0] = ip->flow_lbl[1] = 0;
+      ip->payload_len = htons(20);
+      ip->nexthdr = 6;
+      ip->hop_limit = 64;
       tp->words[3] = 0;
       tp->hdr.sport = htons(flow->key.dst_port);
       tp->hdr.dport = htons(flow->key.src_port);
@@ -507,16 +375,15 @@ lklshim_process_flow_hit_rx_header (void *pkt_skb,
         flow->dst_lif = rxhdr->src_lif;
         HAL_TRACE_DEBUG("lklshim: updating flow dst lif = {}", flow->dst_lif);
     }
-
-    if (lkl_tcp_v4_rcv(pkt_skb)) {
+    HAL_TRACE_DEBUG("lklshim: calling lkl_tcp_v6_rcv");
+    if (!lkl_tcp_v6_rcv(pkt_skb)) {
         return false;
     }
-
     return true;
 }
 
 bool
-lklshim_process_flow_miss_rx_packet (void *pkt_skb,
+lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
                                      hal::flow_direction_t dir,
                                      uint32_t iqid, uint32_t rqid, 
 				     uint16_t src_lif, uint16_t hw_vlan_id)
@@ -524,19 +391,18 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     lklshim_flow_t      *flow;
     lklshim_flow_key_t  flow_key;
 
-
     ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
-    ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+    ipv6_header_t *ip6 = (ipv6_header_t*)lkl_get_network_start(pkt_skb);
     tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
     vlan_header_t *vlan = (vlan_header_t *)lkl_get_mac_start(pkt_skb);
-    HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
-    HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
-    HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
+    HAL_TRACE_DEBUG("lklshim: flow miss pkt iqid={} rqid={}", iqid, rqid);
+    HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump6((uint8_t*)eth, 18));
+    HAL_TRACE_DEBUG("lklshim: flow miss rx ip6={}", hex_dump6((uint8_t*)ip6, sizeof(ipv6_header_t)));
+    HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump6((uint8_t*)tcp, sizeof(tcp_header_t)));
 
-    lklshim_make_flow_v4key(&flow_key, ip->saddr, ip->daddr, ntohs(tcp->sport), ntohs(tcp->dport));
+    lklshim_make_flow_v6key(&flow_key, ip6->saddr, ip6->daddr, ntohs(tcp->sport), ntohs(tcp->dport));
     flow = lklshim_flow_entry_get_or_create(&flow_key);
     if (!flow) return false;
-
     /*
      * Cache the pointer to the packet as we'll process it later.
      */
@@ -548,10 +414,10 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     lklshim_flow_by_qid[rqid] = flow;
     flow->src_lif = src_lif;
 
-    proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true, hw_vlan_id, 
-                         proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid));
-    proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false, hw_vlan_id,
-                         proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid));
+    proxy::tcp_create_cb_v6(flow->iqid, flow->src_lif, eth, vlan, ip6, tcp, true, hw_vlan_id,
+                            proxyccb_tcpcb_l7_proxy_type_eval(flow->iqid));
+    proxy::tcp_create_cb_v6(flow->rqid, flow->src_lif, eth, vlan, ip6, tcp, false, hw_vlan_id,
+                            proxyccb_tcpcb_l7_proxy_type_eval(flow->rqid));
 
     // create tlscb
     hal::tls::tls_api_init_flow(flow->iqid, false);
@@ -561,6 +427,8 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
         hal::tls::tls_api_init_flow(flow->iqid, flow->rqid);
         flow->hostns.skbuff = pkt_skb;
         flow->netns.skbuff = NULL;
+        HAL_TRACE_DEBUG("lklshim: flow->hostns.skbuff={}", flow->hostns.skbuff);
+        HAL_TRACE_DEBUG("lklshim: flow->netns.skbuff={}", flow->netns.skbuff);
         flow->hostns.state = FLOW_STATE_SYN_RCVD;
         strncpy(flow->hostns.dev, "eth0", 16);
         strncpy(flow->netns.dev, "eth1", 16);
@@ -573,12 +441,12 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
           vlan_header_t *vlan = (vlan_header_t*)lkl_get_mac_start(pkt_skb);
           memcpy(flow->hostns.vlan, &(vlan->vlan_tag), sizeof(vlan->vlan_tag));
           HAL_TRACE_DEBUG("lklshim: flow hostns vlan={}",
-                          hex_dump(flow->hostns.vlan, sizeof(vlan->vlan_tag)));
+                          hex_dump6(flow->hostns.vlan, sizeof(vlan->vlan_tag)));
         } else {
           HAL_TRACE_DEBUG("lklshim: flow hostns vlan not set");
         }
-        lklshim_create_listen_sockets(dir, flow);
-        lklshim_trigger_flow_connection(flow, dir);
+        lklshim_create_v6_listen_sockets(dir, flow);
+        lklshim_trigger_v6_flow_connection(flow, dir);
     } else {
         hal::tls::tls_api_init_flow(flow->rqid, flow->iqid);
         flow->netns.skbuff = pkt_skb;
@@ -594,65 +462,14 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
           vlan_header_t *vlan = (vlan_header_t*)lkl_get_mac_start(pkt_skb);
           memcpy(flow->netns.vlan, &(vlan->vlan_tag), sizeof(vlan->vlan_tag));
           HAL_TRACE_DEBUG("lklshim: flow netns vlan={}",
-                          hex_dump(flow->netns.vlan, sizeof(vlan->vlan_tag)));
+                          hex_dump6(flow->netns.vlan, sizeof(vlan->vlan_tag)));
         } else {
           HAL_TRACE_DEBUG("lklshim: flow netns vlan not set");
         }
-        lklshim_create_listen_sockets(dir, flow);
-        lklshim_trigger_flow_connection(flow, dir);
+        lklshim_create_v6_listen_sockets(dir, flow);
+        lklshim_trigger_v6_flow_connection(flow, dir);
     }
     return true;
-}
-
-void lklshim_update_tcpcb(void *tcpcb, uint32_t qid, uint32_t src_lif)
-{
-    if (tcpcb == NULL) 
-        return;
-    proxy::tcp_update_cb(tcpcb, qid, src_lif);
-}
-
-void lklshim_process_tx_packet(unsigned char* pkt,
-                               unsigned int len,
-                               void* flowp,
-                               bool is_connect_req,
-                               void *tcpcb,
-                               bool tx_pkt) 
-{
-    if (pkt) {
-        HAL_TRACE_DEBUG("lklshim_process_tx_packet len={} pkt={}", len, hex_dump((const uint8_t *)pkt, len));
-    } else {
-       HAL_TRACE_DEBUG("lklshim_process_tx_packet sending ack");
-    }
-    if (tcpcb != NULL)  {
-        HAL_TRACE_DEBUG("flowp={} is_connect_req={} tcpcb={} tx_pkt={}", flowp, is_connect_req, tcpcb, tx_pkt);
-    } else {
-        HAL_TRACE_DEBUG("flowp={} is_connect_req={} tcpcb=NULL tx_pkt={}", flowp, is_connect_req, tx_pkt);
-    }
-    lklshim_flow_t* flow = (lklshim_flow_t*)flowp;
-    if (flow) {
-        uint32_t qid = (is_connect_req?flow->rqid:flow->iqid);
-        HAL_TRACE_DEBUG("flow dst lif={} src lif={}", flow->dst_lif, flow->src_lif);
-        lklshim_update_tcpcb(tcpcb, qid, flow->src_lif);
-        if (tx_pkt) {
-            HAL_TRACE_DEBUG("Calling tcp_transmit_pkt");
-            proxy::tcp_transmit_pkt(pkt, len, is_connect_req, flow->dst_lif, flow->src_lif, flow->itor_dir, flow->hw_vlan_id);
-        } else {
-            HAL_TRACE_DEBUG("Calling tcp_ring_doorbell");
-            proxy::tcp_ring_doorbell(qid);
-        }
-    }
-}
- 
-hal::flow_direction_t
-lklshim_get_flow_hit_pkt_direction(uint16_t qid) {
-    lklshim_flow_t *flow = lklshim_flow_by_qid[qid];
-    if (qid == flow->iqid) {
-        HAL_TRACE_DEBUG("itor returning direction={}", flow->itor_dir);
-        return flow->itor_dir;
-    } else {
-        HAL_TRACE_DEBUG("rtor returning direction={}", ((flow->itor_dir==hal::FLOW_DIR_FROM_ENIC)?"hal::FLOW_DIR_FROM_UPLINK":"hal::FLOW_DIR_FROM_ENIC"));
-        return ((flow->itor_dir==hal::FLOW_DIR_FROM_ENIC)?hal::FLOW_DIR_FROM_UPLINK:hal::FLOW_DIR_FROM_ENIC);
-    }
 }
 
 } // namespace hal

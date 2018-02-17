@@ -84,6 +84,7 @@ void read_queue(uint64_t lif, queue_type qtype, uint32_t qid);
 void print_queue(uint64_t lif, queue_type qtype, uint32_t qid);
 
 uint8_t *alloc_buffer(uint16_t size);
+void free_buffer(void *Addr);
 void post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t size);
 void consume_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t *size);
 

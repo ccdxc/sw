@@ -25,7 +25,7 @@ typedef struct hs_out_args_s {
 
 // Callbacks
 typedef hal_ret_t (*nw_send_cb)(conn_id_t id, uint8_t* data, size_t len);
-typedef hal_ret_t (*hs_done_cb)(conn_id_t id, conn_id_t oflowid, hal_ret_t ret, hs_out_args_t* args);
+typedef hal_ret_t (*hs_done_cb)(conn_id_t id, conn_id_t oflowid, hal_ret_t ret, hs_out_args_t* args, bool is_v4_flow);
 
 /* Opaque OpenSSL structures to fetch keys */
 #define u64 uint64_t
@@ -96,6 +96,14 @@ public:
         oflowid = oflowid_;
     }
 
+    bool get_flow_type() const {
+        return is_v4_flow;
+    }
+
+    void set_flow_type(bool type) {
+        is_v4_flow = type;
+    }
+
 private:
     hal_ret_t   handle_ssl_ret(int ret);
     hal_ret_t   transmit_pending_data();
@@ -104,6 +112,7 @@ private:
     SSL_CTX     *ctx;
     conn_id_t   id;
     conn_id_t   oflowid;
+    bool        is_v4_flow;
     SSL         *ssl;
     BIO*        ibio;   // Internal BIO towards SSL
     BIO*        nbio;   // BIO towards the network
@@ -115,7 +124,7 @@ public:
     ~SSLHelper(){};
 
     hal_ret_t init(void);
-    hal_ret_t start_connection(conn_id_t id, conn_id_t oflowid);
+    hal_ret_t start_connection(conn_id_t id, conn_id_t oflowid, bool type);
     hal_ret_t process_nw_data(conn_id_t id, uint8_t* data, size_t len);
 
     void set_send_cb(nw_send_cb cb) {send_cb = cb;};

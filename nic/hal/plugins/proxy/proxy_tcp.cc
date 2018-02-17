@@ -37,6 +37,18 @@ thread_local fte::ctx_t *gl_ctx;
     _buf[_i++] = 0xfa; \
     _buf[_i++] = 0x71;
 
+#define SET_COMMON_IP6_HDR(_buf, _i) \
+    _buf[_i++] = 0x86; \
+    _buf[_i++] = 0xdd; \
+    _buf[_i++] = 0x60; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x28; \
+    _buf[_i++] = 0x06; \
+    _buf[_i++] = 0x40;
+
 // byte array to hex string for logging
 std::string hex_dump(const uint8_t *buf, size_t sz)
 {
@@ -127,6 +139,76 @@ proxy_create_hdr_template(TcpCbSpec &spec,
 }
 
 hal_ret_t
+proxy_create_v6_hdr_template(TcpCbSpec &spec,
+                          ether_header_t *eth,
+                          vlan_header_t* vlan,
+                          ipv6_header_t *ip,
+                          tcp_header_t *tcp,
+                          bool is_itor_dir,
+                          uint16_t hw_vlan_id)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    uint8_t         buf[64];
+    uint8_t         i = 0;
+    uint16_t        vlan_id;
+    uint16_t        sport, dport;
+    ipv6_addr_t     sip, dip;
+    mac_addr_t      smac, dmac;
+
+    HAL_TRACE_DEBUG("tcp-proxy: header template eth={}", hex_dump((uint8_t*)eth, 18));
+    HAL_TRACE_DEBUG("tcp-proxy: header template ip6={}", hex_dump((uint8_t*)ip, sizeof(ipv6_header_t)));
+    HAL_TRACE_DEBUG("tcp-proxy: header template tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
+
+    if (is_itor_dir) {
+        sport = tcp->sport;
+        dport = tcp->dport;
+        memcpy(&sip.addr8, &ip->saddr, sizeof(ip->saddr));
+        memcpy(&dip.addr8, &ip->daddr, sizeof(ip->daddr));
+        memcpy(&smac, eth->smac, ETH_ADDR_LEN);
+        memcpy(&dmac, eth->dmac, ETH_ADDR_LEN);
+        vlan_id = htons(hw_vlan_id);
+    } else {
+        sport = tcp->dport;
+        dport = tcp->sport;
+        memcpy(&sip.addr8, &ip->daddr, sizeof(ip->daddr));
+        memcpy(&dip.addr8, &ip->saddr, sizeof(ip->saddr));
+        memcpy(&smac, eth->dmac, ETH_ADDR_LEN);
+        memcpy(&dmac, eth->smac, ETH_ADDR_LEN);
+        vlan_id = vlan->vlan_tag;
+     }
+    HAL_TRACE_DEBUG("tcp-proxy: sport={}", hex_dump((uint8_t*)&sport, sizeof(sport)));
+    HAL_TRACE_DEBUG("tcp-proxy: dport={}", hex_dump((uint8_t*)&dport, sizeof(dport)));
+    HAL_TRACE_DEBUG("tcp-proxy: sip={}", hex_dump((uint8_t*)&sip, sizeof(sip)));
+    HAL_TRACE_DEBUG("tcp-proxy: dip={}", hex_dump((uint8_t*)&dip, sizeof(dip)));
+    HAL_TRACE_DEBUG("tcp-proxy: smac={}", hex_dump((uint8_t*)smac, sizeof(smac)));
+    HAL_TRACE_DEBUG("tcp-proxy: dmac={}", hex_dump((uint8_t*)dmac, sizeof(dmac)));
+    HAL_TRACE_DEBUG("tcp-proxy: vlan={}", hex_dump((uint8_t*)&vlan_id, sizeof(vlan_id)));
+
+    spec.set_source_port(ntohs(dport));
+    spec.set_dest_port(ntohs(sport));
+    memcpy(&buf[i], &smac, sizeof(smac));
+    i += sizeof(smac);
+    memcpy(&buf[i], &dmac, sizeof(dmac));
+    i += sizeof(smac);
+    buf[i++] = 0x81;
+    buf[i++] = 0x00;
+    memcpy(&buf[i], &vlan_id, sizeof(vlan_id));
+    i += sizeof(vlan_id);
+    SET_COMMON_IP6_HDR(buf, i);
+    memcpy(&buf[i], &dip, sizeof(dip));
+    i += sizeof(dip);
+    memcpy(&buf[i], &sip, sizeof(sip));
+    i += sizeof(sip);
+
+    HAL_ABORT(i < sizeof(buf));
+
+    HAL_TRACE_DEBUG("Header template = {}", hex_dump((uint8_t*)buf, sizeof(buf)));
+    spec.set_header_template(buf, i);
+    spec.set_header_len(i);
+    return ret;
+}
+
+hal_ret_t
 proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 {
     spec.set_snd_wnd(8000);
@@ -179,6 +261,48 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* v
     return ret;
 }
 
+hal_ret_t
+tcp_create_cb_v6(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv6_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, uint16_t hw_vlan_id, types::AppRedirType l7_proxy_type)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    TcpCbSpec       spec;
+    TcpCbResponse   rsp;
+    fte::ctx_t &ctx = *gl_ctx;
+    if(ctx.dif() == NULL || ctx.dif()->if_type == intf::IF_TYPE_TUNNEL) {
+        HAL_TRACE_DEBUG("Skipping TCPCB creation for TUNNEL interface");
+        return HAL_RET_OK;
+    }
+
+    HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
+    spec.mutable_key_or_handle()->set_tcpcb_id(qid);
+    if (is_itor_dir) {
+        spec.set_source_lif(hal::SERVICE_LIF_CPU);
+    } else {
+        spec.set_source_lif(src_lif);
+    }
+    ret = proxy_tcp_cb_init_def_params(spec);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize CB");
+        return ret;
+    }
+
+    ret = proxy_create_v6_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir, hw_vlan_id);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize header templates");
+        return ret;
+    }
+
+    spec.set_l7_proxy_type(l7_proxy_type);
+    ret = tcpcb_create(spec, &rsp);
+    if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
+        HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: ",
+                        qid, ret, rsp.api_status());
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("Successfully created TCPCB for id: {}", qid);
+    return ret;
+}
 
 void
 tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
@@ -204,12 +328,13 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     HAL_TRACE_DEBUG("tcp-proxy: tcpcb={}", hex_dump((uint8_t*)tcpcb, 2048));
 
     if (tcpcb) {
-        HAL_TRACE_DEBUG("lkl rcv_nxt={}, snd_nxt={}, snd_una={}, rcv_tsval={}, ts_recent={}",
+        HAL_TRACE_DEBUG("lkl rcv_nxt={}, snd_nxt={}, snd_una={}, rcv_tsval={}, ts_recent={} state={}",
                         hal::pd::lkl_get_tcpcb_rcv_nxt(tcpcb),
                         hal::pd::lkl_get_tcpcb_snd_nxt(tcpcb),
                         hal::pd::lkl_get_tcpcb_snd_una(tcpcb),
                         hal::pd::lkl_get_tcpcb_rcv_tsval(tcpcb),
-                        hal::pd::lkl_get_tcpcb_ts_recent(tcpcb));
+                        hal::pd::lkl_get_tcpcb_ts_recent(tcpcb),
+                        hal::pd::lkl_get_tcpcb_state(tcpcb));
 
         spec->set_rcv_nxt(hal::pd::lkl_get_tcpcb_rcv_nxt(tcpcb));
         spec->set_snd_nxt(hal::pd::lkl_get_tcpcb_snd_nxt(tcpcb));

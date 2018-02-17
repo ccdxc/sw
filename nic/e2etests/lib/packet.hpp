@@ -72,7 +72,30 @@ struct tcp_header_t {
     uint16_t  urg_ptr;
 }__attribute__ ((__packed__));
 
+struct tcp6_pseudohdr {
+  struct      in6_addr  saddr;
+  struct      in6_addr daddr;
+  uint32_t    len;
+  uint32_t    protocol;  /* including padding */
+};
 
+struct ipv6_header_t {
+#if __BYTE_ORDER == __BIG_ENDIAN
+        __u8                    priority:4,
+                                version:4;
+#else
+        __u8                    version:4,
+                                priority:4;
+#endif
+        __u8                    flow_lbl[3];
+
+        __be16                  payload_len;
+        __u8                    nexthdr;
+        __u8                    hop_limit;
+
+        struct  in6_addr        saddr;
+        struct  in6_addr        daddr;
+} __attribute__ ((__packed__));
 
 struct tcp_pseudo /*the tcp pseudo header*/
 {
@@ -85,8 +108,10 @@ struct tcp_pseudo /*the tcp pseudo header*/
 
 
 int dump_pkt(char *pkt, int len, uint32_t htnp_port = 0);
+int dump_pkt6(char *pkt, int len, uint32_t htnp_port = 0);
 long checksum(unsigned short *addr, unsigned int count);
 long get_tcp_checksum(struct ipv4_header_t * myip, struct tcp_header_t * mytcp);
+long get_tcp_checksumv6(struct ipv6_header_t * myip, struct tcp_header_t * mytcp);
 uint16_t hntap_get_etype(struct ether_header_t *eth);
 
 #endif

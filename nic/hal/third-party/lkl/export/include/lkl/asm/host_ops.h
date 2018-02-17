@@ -161,6 +161,7 @@ void lkl_skb_set_qid(void *skb, unsigned short qid);
 void lkl_skb_set_src_lif(void *skb, unsigned short src_lif);
 
 int lkl_tcp_v4_rcv(void* skb);
+int lkl_tcp_v6_rcv(void* skb);
 void* lkl_create_net_ns(void);
 void* lkl_dev_get_by_name(const char* name);
 void lkl_dev_net_set(void* dev, void* net);

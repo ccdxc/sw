@@ -43,10 +43,10 @@ tls_svr_process = None
 tcp_svr_process = None
 sock_stats = []
 
-hntap_log = nic_dir + "/hntap.log"
-tls_svr_log = nic_dir + "/tls_server.log"
-tcp_svr_log = nic_dir + "/tcp_server.log"
-tcp_clt_log = nic_dir + "/tcp_client.log"
+hntap_log = nic_dir + "/hntap-v6.log"
+tls_svr_log = nic_dir + "/tls_server-v6.log"
+tcp_svr_log = nic_dir + "/tcp_server-v6.log"
+tcp_clt_log = nic_dir + "/tcp_client-v6.log"
 HalChannel = None
 
 def hal_init():
@@ -83,9 +83,9 @@ def set_proxy_tls_bypass_mode(bypass_mode):
     print("Set TLS Proxy bypass mode:%d" % bypass_mode)
     return    
 
-def run_hntap(tcp_port):
+def run_hntap():
     log = open(hntap_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_hntap', '-p', tcp_port]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_hntap']
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p
@@ -108,7 +108,7 @@ def run_hntap(tcp_port):
 
 def run_tls_server(tcp_port):
     log = open(tls_svr_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tls-server', tcp_port ]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_tls-server', tcp_port ]
     p = Popen(cmd, stdout=log, stderr=log)
     global tls_svr_process
     tls_svr_process = p
@@ -119,7 +119,7 @@ def run_tls_server(tcp_port):
 
 def run_tcp_server(tcp_port):
     log = open(tcp_svr_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-server', tcp_port ]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_tcp-server', tcp_port ]
     p = Popen(cmd, stdout=log, stderr=log)
     global tcp_svr_process
     tcp_svr_process = p
@@ -131,7 +131,7 @@ def run_tcp_server(tcp_port):
 
 def run_tcp_client(tcp_port):
     log = open(tcp_clt_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', 'from-host']
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', 'from-host']
     p = Popen(cmd, stdout=log, stderr=log)
     print("* Starting TCP Client on port %s, pid (%s)" % (tcp_port, str(p.pid)))
     print("    - Log file: " + tcp_clt_log + "\n")
@@ -220,7 +220,7 @@ def run_test(testnum, testname, tcp_port, bypass_tls):
     print("Test %d: Running E2E %s test, tcp-port %s\n" % (testnum, testname, tcp_port))
     start_time = time.time()
 
-    run_hntap(tcp_port)
+    run_hntap()
 
     if (bypass_tls == 1):
         set_proxy_tls_bypass_mode(True)
@@ -262,7 +262,7 @@ def main():
     log.close()
     log = open(hntap_log, "w")
     log.close()
-
+ 
     status = run_test(1, "TLS Proxy", str(80), 0)
     if status == 0:
         time.sleep(5)

@@ -11,6 +11,7 @@ cc_library(
     srcs = [
         "lkl_api.cc",
         "lklshim.cc",
+        "lklshim_v6.cc",
     ],
     hdrs = [
         "lkl_api.hpp",

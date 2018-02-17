@@ -763,7 +763,7 @@ modules:
         name    : PKT_TO_ARQ_TO_UPLINK_V6
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
-        rtl     : True
+        enable  : False
         spec    : pkt_to_arq_to_uplink.testspec
         iterate :
             - flow: filter://type=IPV6
@@ -772,7 +772,7 @@ modules:
         name    : FLOWS_TO_ARQ_TO_UPLINK
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
-        rtl     : True
+        enable  : False
         spec    : pkt_to_arq_to_uplink.testspec
         args    :
             maxflows: 4
@@ -824,6 +824,17 @@ modules:
             maxflows: 1
         iterate :
             - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_LKL_V6
+        enable  : False
+        package : test.tcp_tls_proxy
+        module  : pkt_to_lkl
+        spec    : pkt_to_lkl.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV6
 
     - module:
         name    : CRYPTO_API_ASYM_ECC_POINT_MUL_P256

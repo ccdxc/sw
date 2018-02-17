@@ -3,10 +3,11 @@
 SCRIPT_DIR='diname $0'
 LKL_DIR='../'
 LKL_EXPORT_INC_DIR='../export/include/'
-LKL_EXPORT_BIN_DIR='../export/bin/'
 
 cd $LKL_DIR
 
+X86_64=0
+AARCH64=0
 CLONE=0
 BUILD=0
 CLEAN=0
@@ -20,11 +21,20 @@ then
     CLONE=1
     BUILD=1
     REPLACE=1
+    X86_64=1
 fi
 
 for i in "$@"
 do
 case $i in
+    -x|--x86_64)
+    X86_64=1
+    #shift # past argument=value
+    ;;
+    -a|--aarch64)
+    AARCH64=1
+    #shift # past argument=value
+    ;;
     -b|--build)
     BUILD=1
     #shift # past argument=value
@@ -58,6 +68,18 @@ case $i in
     ;;
 esac
 done
+
+if [ "$X86_64" -eq "1" ]
+then
+    echo "Building for x86_64"
+    LKL_EXPORT_BIN_DIR="../export/x86_64/bin/"
+fi
+
+if [ "$AARCH64" -eq "1" ]
+then
+    echo "Building for aarch64"
+    LKL_EXPORT_BIN_DIR="../export/aarch64/bin/"
+fi
 
 if [ "$CLONE" -eq "1" ]
 then

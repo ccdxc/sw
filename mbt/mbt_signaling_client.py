@@ -2,10 +2,7 @@
 import zmq
 import os
 import sys
-
-ws_top = os.path.dirname(sys.argv[0]) + '/../'
-ws_top = os.path.abspath(ws_top)
-os.environ['WS_TOP'] = ws_top
+import pdb
 
 class SignalingClientHelper():
     def Connect(self, ):

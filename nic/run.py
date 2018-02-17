@@ -527,6 +527,18 @@ def cleanup(keep_logs=True):
         else:
             print "- " + log + " - not found"
 
+def run_v6_e2e_tlsproxy_dol():
+    os.chdir(nic_dir)
+    cmd = ['./tools/run_v6_e2e_tlsproxy_test.py']
+    p = Popen(cmd)
+    print "* Starting E2E TLS Proxy DOL, pid (" + str(p.pid) + ")"
+    lock = open(lock_file, "a+")
+    lock.write(str(p.pid) + "\n")
+    lock.close()
+    p.communicate()
+    print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E TLS Proxy DOL, exit code ", p.returncode
+    return p.returncode
+
 def run_e2e_tlsproxy_dol():
     os.chdir(nic_dir)
     cmd = ['./tools/run_e2e_tlsproxy_test.py']
@@ -613,6 +625,8 @@ def main():
                         help="Run Config tests.")
     parser.add_argument("--config-only", dest='configonly', action="store_true",
                         help="Generate ASM coverage for this run")
+    parser.add_argument("--v6-e2e-tls-dol", dest='v6e2etls', action="store_true",
+                        default=None, help="Run V6 E2E TLS DOL")
     parser.add_argument("--e2e-tls-dol", dest='e2etls', action="store_true",
                         default=None, help="Run E2E TLS DOL")
     parser.add_argument("--e2e-l7-dol", dest='e2el7', action="store_true",
@@ -719,6 +733,9 @@ def main():
 
             if (args.e2el7):
                 status = run_e2e_l7_dol()
+            if status == 0:
+                if (args.v6e2etls):
+                    status = run_v6_e2e_tlsproxy_dol()
 
     if args.coveragerun:
         dump_coverage_data()

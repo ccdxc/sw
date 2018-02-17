@@ -175,7 +175,7 @@ tls_api_update_cb(uint32_t id,
 }
 
 hal_ret_t
-tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* args)
+tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* args, bool is_v4_flow)
 {
     uint32_t            enc_key_index = 0;
     uint32_t            dec_key_index = 0;
@@ -237,7 +237,10 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
     }
       
     // Inform LKL  
-    lklshim_release_client_syn(id);
+    if (is_v4_flow)
+        lklshim_release_client_syn(id);
+    else
+        lklshim_release_client_syn6(id);
 
     return ret;
 }
@@ -328,7 +331,7 @@ tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 }
 
 hal_ret_t
-tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid)
+tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid, bool is_v4_flow)
 {
     // Start handskake towards decrypt
     // register this qid to send context
@@ -339,7 +342,7 @@ tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid)
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, (void *)&args);
     // hal::pd::cpupkt_register_tx_queue(asesq_ctx, types::WRING_TYPE_ASESQ, dec_qid);
 
-    return g_ssl_helper.start_connection(dec_qid, enc_qid);
+    return g_ssl_helper.start_connection(dec_qid, enc_qid, is_v4_flow);
 }
 
 hal_ret_t

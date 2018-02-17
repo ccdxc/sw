@@ -30,6 +30,7 @@ using sdk::lib::slab;
 namespace hal {
 
 bool lklshim_release_client_syn(uint16_t qid) ;
+bool lklshim_release_client_syn6(uint16_t qid) ;
 } //namespace hal
 
 #endif // _LKLSHIM_HPP_

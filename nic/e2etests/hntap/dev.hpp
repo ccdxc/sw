@@ -47,6 +47,10 @@ dev_handle_t* hntap_create_tunnel_device(tap_endpoint_t type,
         const char *dev, const char *dev_ip, const char *dev_ipmask,
         const char *route_dest, const char *route_gw);
 
+dev_handle_t* hntap_create_tunnel_devicev6(tap_endpoint_t type,
+        const char *dev, const char *dev_ip,
+        const char *route_dest, const char *route_gw);
+
 dev_handle_t* hntap_create_tap_device(tap_endpoint_t type,
         const char *dev, const char *dev_ip, const char *dev_ipmask);
 

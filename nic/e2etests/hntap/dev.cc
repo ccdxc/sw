@@ -2,6 +2,7 @@
 
 #include <net/if.h>
 #include <linux/if_tun.h>
+#include <linux/ipv6.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -35,6 +36,26 @@ hntap_route_add (int sockfd, const char *dest_addr, const char *gateway_addr) {
   if ((err = ioctl(sockfd, SIOCADDRT, &route)) < 0) {
       perror("Route add failed");
       return -1;
+  }
+  return 1;
+}
+
+
+int hntap_route_addv6 (int sockfd, const char *dest_addr, const char *gateway_addr, int ifid) {
+  struct in6_rtmsg     route;
+
+  int err = 0;
+  memset(&route, 0, sizeof(route));
+  inet_pton(AF_INET6, gateway_addr, &route.rtmsg_gateway);
+  inet_pton(AF_INET6, dest_addr, &route.rtmsg_dst);
+  route.rtmsg_dst_len = 128;
+  route.rtmsg_flags = RTF_HOST | RTF_UP;
+  route.rtmsg_ifindex = ifid;
+
+  if ((err = ioctl(sockfd, SIOCADDRT, &route)) < 0) {
+      perror("Route add failed");
+      close(sockfd);
+      abort();
   }
   return 1;
 }
@@ -123,6 +144,102 @@ dev_handle_t* hntap_create_tunnel_device (tap_endpoint_t type,
  *    * Add a route to the host/nw dest reachable thru this tap device.
  *       */
   if ((err = hntap_route_add(sock, route_dest, route_gw)) < 0) {
+      perror("IP Route add failed");
+      close(sock);
+      close(fd);
+      abort();
+      goto out;
+  }
+
+  handle = (dev_handle_t*)malloc(sizeof(dev_handle_t));
+  handle->sock = sock;
+  handle->fd = fd;
+  handle->tap_ep = type;
+  handle->type = HNTAP_TUN;
+
+out:
+  return handle;
+}
+
+dev_handle_t* hntap_create_tunnel_devicev6 (tap_endpoint_t type,
+             const char *dev, const char *dev_ip,
+             const char *route_dest, const char *route_gw)
+{
+  struct ifreq ifr;
+  struct in6_ifreq ifr6;
+  int      fd, err, sock;
+  const char *tapdev = "/dev/net/tun";
+  dev_handle_t *handle = NULL;
+
+  if ((fd = open(tapdev, O_RDWR)) < 0 ) {
+      TLOG("Failed to open Tap device %s\n", strerror(errno));
+      abort();
+      goto out;
+  }
+
+  memset(&ifr, 0, sizeof(ifr));
+  ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+  strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  /* create the device */
+  if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
+      TLOG("Failed to set Tap device property %s\n", strerror(errno));
+      close(fd);
+      abort();
+      goto out;
+  }
+
+  sock = socket(AF_INET6,SOCK_DGRAM,0);
+  if (sock < 0) {
+      TLOG("Failed to open socket %s\n", strerror(errno));
+      close(fd);
+      abort();
+      goto out;
+  }
+
+  memset(&ifr, 0, sizeof(ifr));
+  ifr.ifr_flags = IFF_UP | IFF_RUNNING | IFF_PROMISC;
+  strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+
+  /* Set the device UP */
+  if ((err = ioctl(sock, SIOCSIFFLAGS, (void *) &ifr)) < 0 ) {
+    TLOG("Failed to bring up Tap device %s\n", strerror(errno));
+    close(sock);
+    close(fd);
+    abort();
+    goto out;
+  }
+
+  if ((err = ioctl(sock, SIOGIFINDEX, &ifr)) < 0) {
+    TLOG("Failed to get ifindex %s\n", strerror(errno));
+    perror("SIOGIFINDEX");
+    close(sock);
+    close(fd);
+    abort();
+    goto out;
+  }
+
+  memset(&ifr6, 0, sizeof(ifr6));
+  struct sockaddr_in6 sa;
+  memset(&sa, 0, sizeof(struct sockaddr_in6));
+  sa.sin6_family = AF_INET6;
+  inet_pton(AF_INET6, (const char *)dev_ip, &sa.sin6_addr);
+  memcpy(ifr6.ifr6_addr.s6_addr, sa.sin6_addr.s6_addr, 16);
+  ifr6.ifr6_prefixlen = 120;
+  ifr6.ifr6_ifindex = ifr.ifr_ifindex;
+
+  if ((err = ioctl(sock, SIOCSIFADDR, &ifr6)) < 0) {
+    perror("IP address config failed");
+    close(sock);
+    close(fd);
+    abort();
+    goto out;
+  }
+
+  /*
+ *    * Add a route to the host/nw dest reachable thru this tap device.
+ *       */
+  if ((err = hntap_route_addv6(sock, route_dest, route_gw, ifr.ifr_ifindex)) < 0) {
       perror("IP Route add failed");
       close(sock);
       close(fd);

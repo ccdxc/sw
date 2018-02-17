@@ -4,6 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 extern "C" {
 #include "lkl.h"
@@ -49,10 +50,11 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
         HAL_TRACE_DEBUG("LKL call!"); 
         return NULL;
     }
-    HAL_TRACE_DEBUG("Allocating SKBUFF direction {}\n",
-                           (direction==hal::FLOW_DIR_FROM_ENIC)?"from host":"from net");
+    HAL_TRACE_DEBUG("Allocating SKBUFF direction {} host_dev {} net_dev {}\n",
+                           (direction==hal::FLOW_DIR_FROM_ENIC)?"from host":"from net", host_dev, net_dev);
     void *dev = NULL;
     bool is_pkt_src_uplink = FALSE;
+    uint32_t pktlen, tpt_offset, nw_offset;
     if (direction == hal::FLOW_DIR_FROM_ENIC) {
         dev = host_dev;
     } else {
@@ -60,13 +62,28 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
         is_pkt_src_uplink = TRUE;
     }
     void* skb;
+    bool is_v4_pkt = ((rxhdr->lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4) ||
+                       (lklshim_flow_by_qid[rxhdr->qid] && lklshim_flow_by_qid[rxhdr->qid]->key.type == hal::FLOW_TYPE_V4));
+    if (pkt_len == 0) {
+        if (is_v4_pkt) {
+            HAL_TRACE_DEBUG("lklshim: v4 pkt");
+            pktlen = 40;
+            tpt_offset = 20;
+            nw_offset = 0;
+        } else {
+            HAL_TRACE_DEBUG("lklshim: v6 pkt");
+            pktlen = 100;
+            tpt_offset = 80;
+            nw_offset = 40;
+        }
+    }
 
     if (pkt_len == 0) {
-        skb = lkl_alloc_skb(40, dev, is_pkt_src_uplink);
-        HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len to 40");
+        skb = lkl_alloc_skb(pktlen, dev, is_pkt_src_uplink);
+        HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len to {} dev={} skb={}", pktlen, dev, skb);
     } else {
         skb = lkl_alloc_skb(pkt_len, dev, is_pkt_src_uplink);
-        HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len={}", pkt_len);
+        HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len={} dev={} skb={}", pkt_len, dev, skb);
     }
     if (skb) {
         lkl_skb_reserve(skb);
@@ -75,14 +92,14 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
         HAL_TRACE_DEBUG("lkl_alloc_skbuff : l3 offset = {} l4 offset = {}", 
                         rxhdr->l3_offset, rxhdr->l4_offset);
         if (rxhdr->l4_offset == -1) {
-            lkl_skb_set_transport_header(skb, 20);
-            HAL_TRACE_DEBUG("lkl_alloc_skbuff: setting transport header offset 20");
+            lkl_skb_set_transport_header(skb, tpt_offset);
+            HAL_TRACE_DEBUG("lkl_alloc_skbuff: setting transport header offset {}", tpt_offset);
         } else {
             lkl_skb_set_transport_header(skb, rxhdr->l4_offset);
             HAL_TRACE_DEBUG("lkl_alloc_skbuff: setting transport header offset={}", rxhdr->l4_offset);
         }
         if (rxhdr->l3_offset == -1) {
-            lkl_skb_set_network_header(skb, 0);
+            lkl_skb_set_network_header(skb, nw_offset);
             HAL_TRACE_DEBUG("lkl_alloc_skbuff: setting network header offset 0");
         } else {
             lkl_skb_set_network_header(skb, rxhdr->l3_offset);
@@ -92,19 +109,25 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
     return skb;
 }
 
-  bool lkl_handle_flow_miss_pkt(void* skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, const p4_to_p4plus_cpu_pkt_t *rxhdr, uint16_t hw_vlan_id) {
+bool lkl_handle_flow_miss_pkt(void* skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, const p4_to_p4plus_cpu_pkt_t *rxhdr, uint16_t hw_vlan_id) {
     if (!skb) return false;
-    return hal::lklshim_process_flow_miss_rx_packet(skb, dir, iqid, rqid, rxhdr->src_lif, hw_vlan_id);
+    if (rxhdr->lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4)
+        return hal::lklshim_process_flow_miss_rx_packet(skb, dir, iqid, rqid, rxhdr->src_lif, hw_vlan_id);
+    return hal::lklshim_process_v6_flow_miss_rx_packet(skb, dir, iqid, rqid, rxhdr->src_lif, hw_vlan_id);
 }
 
 bool lkl_handle_flow_hit_pkt(void* skb, hal::flow_direction_t dir, const p4_to_p4plus_cpu_pkt_t* rxhdr) {
     if (!skb) return false;
-    return hal::lklshim_process_flow_hit_rx_packet(skb, dir, rxhdr);
+    if (rxhdr->lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4)
+        return hal::lklshim_process_flow_hit_rx_packet(skb, dir, rxhdr);
+    return hal::lklshim_process_v6_flow_hit_rx_packet(skb, dir, rxhdr);
 }
 
 bool lkl_handle_flow_hit_hdr(void* skb, hal::flow_direction_t dir, const p4_to_p4plus_cpu_pkt_t* rxhdr) {
     if (!skb) return false;
-    return hal::lklshim_process_flow_hit_rx_header(skb, dir, rxhdr);
+    if (lklshim_flow_by_qid[rxhdr->qid]->key.type == hal::FLOW_TYPE_V4)
+        return hal::lklshim_process_flow_hit_rx_header(skb, dir, rxhdr);
+    return hal::lklshim_process_v6_flow_hit_rx_header(skb, dir, rxhdr);
 }
 
 uint32_t lkl_get_tcpcb_rcv_nxt(void *tcpcb)

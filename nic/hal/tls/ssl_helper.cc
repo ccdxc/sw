@@ -134,7 +134,7 @@ SSLConnection::do_handshake()
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SSL: handshake failed for id: {}", id);
         if(helper && helper->get_hs_done_cb()) {
-            helper->get_hs_done_cb()(id, oflowid, ret, NULL);
+            helper->get_hs_done_cb()(id, oflowid, ret, NULL, is_v4_flow);
         }
         return ret;
     }
@@ -144,7 +144,7 @@ SSLConnection::do_handshake()
         HAL_TRACE_DEBUG("SSL: handshake complete");
         if(helper && helper->get_hs_done_cb()) {
             get_hs_args(hsargs);
-            helper->get_hs_done_cb()(id, oflowid, ret, &hsargs);
+            helper->get_hs_done_cb()(id, oflowid, ret, &hsargs, is_v4_flow);
         }
     }
 
@@ -268,7 +268,7 @@ SSLHelper::init_ssl_ctxt()
 }
 
 hal_ret_t
-SSLHelper::start_connection(conn_id_t id, conn_id_t oflow_id)
+SSLHelper::start_connection(conn_id_t id, conn_id_t oflow_id, bool type)
 {
     if(!client_ctx || !server_ctx) {
         HAL_TRACE_ERR("SSL client/server context not initialized");
@@ -279,6 +279,7 @@ SSLHelper::start_connection(conn_id_t id, conn_id_t oflow_id)
     // Initialize connection
     conn[id].init(this, id, client_ctx);
     conn[id].set_oflowid(oflow_id);
+    conn[id].set_flow_type(type);
     return conn[id].do_handshake();
 }
 

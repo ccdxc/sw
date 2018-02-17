@@ -287,6 +287,12 @@ alloc_buffer(uint16_t size) {
 }
 
 void
+free_buffer(void *Addr)
+{
+    g_host_mem->Free(Addr);
+}
+
+void
 post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t size) {
   queue_info_t qi = get_queue_info(lif, qtype, qid);
 

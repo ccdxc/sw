@@ -33,11 +33,11 @@ typedef enum {
 } lklshim_flow_state_e;
 
 typedef struct lklshim_flow_key_t_ {
-    in_addr_t src_ip;
-    in_addr_t dst_ip;
+    ipvx_addr_t src_ip;
+    ipvx_addr_t dst_ip;
     uint16_t    src_port;
     uint16_t    dst_port;
-    //uint16_t    protocol;
+    uint8_t     type;
 } PACKED lklshim_flow_key_t;
 
 #define MAC_SIZE 6
@@ -87,6 +87,9 @@ typedef struct lklshim_listen_sockets_t_ {
 /*
  * Extern definitions.
  */
+extern ht                       *lklshim_host_lsock_db;
+extern ht                       *lklshim_net_lsock_db;
+extern slab                     *lklshim_lsockdb_slab;
 extern slab *lklshim_flowdb_slab;
 extern slab *lklshim_lsockdb_slab;
 extern ht *lklshim_flow_db;
@@ -96,10 +99,25 @@ static inline void
 lklshim_make_flow_v4key (lklshim_flow_key_t *key, in_addr_t src, in_addr_t dst,
 			 uint16_t sport, uint16_t dport)
 {
-    key->src_ip = src;
-    key->dst_ip = dst;
+    memset(key, 0, sizeof(lklshim_flow_key_t));
+    key->src_ip.v4_addr = src;
+    key->dst_ip.v4_addr = dst;
     key->src_port = sport;
     key->dst_port = dport;
+    key->type = hal::FLOW_TYPE_V4;
+}
+
+static inline void
+lklshim_make_flow_v6key (lklshim_flow_key_t *key,
+                         uint8_t *src, uint8_t *dst,
+                         uint16_t sport, uint16_t dport)
+{
+    memset(key, 0, sizeof(lklshim_flow_key_t));
+    memcpy(key->src_ip.v6_addr.addr8, src, sizeof(key->src_ip.v6_addr.addr8));
+    memcpy(key->dst_ip.v6_addr.addr8, dst, sizeof(key->dst_ip.v6_addr.addr8));
+    key->src_port = sport;
+    key->dst_port = dport;
+    key->type = hal::FLOW_TYPE_V6;
 }
 
 static inline lklshim_flow_t *
@@ -114,14 +132,19 @@ lklshim_flow_entry_lookup (lklshim_flow_key_t *key)
 }
 
 bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
+bool lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 bool lklshim_process_flow_hit_rx_header (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
+bool lklshim_process_v6_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
+bool lklshim_process_v6_flow_hit_rx_header (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 void lklshim_process_tx_packet(unsigned char* pkt, unsigned int len, void* flow, bool is_connect_req, void *tcpcb, bool tx_pkt);
 
 void lklshim_flowdb_init(void);
 void lklshim_update_tcpcb(void *tcpcb, uint32_t qid, uint32_t src_lif);
 hal::flow_direction_t lklshim_get_flow_hit_pkt_direction(uint16_t qid);
 
+lklshim_flow_t *
+lklshim_flow_entry_get_or_create (lklshim_flow_key_t *flow_key);
 } //namespace hal
 
 #endif // _LKLSHIM_HPP_

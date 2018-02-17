@@ -110,12 +110,11 @@ hntap_host_tx_to_model (dev_handle_t *dev_handle, char *pktbuf, int size)
   memcpy(buf, ipkt.data(), ipkt.size());
   TLOG("buf %p size %lu\n", buf, ipkt.size());
   //TODO
-  dump_pkt((char *)buf, ipkt.size());
+  dump_pkt6((char *)buf, ipkt.size());
 
   // Transmit Packet
   TLOG("Writing packet to model! size: %d on port: %d\n", ipkt.size(), port);
   post_buffer(lif_id, TX, 0, buf, ipkt.size());
-
   // Wait for packet to come out of port
   count = 0;
   do {
@@ -168,10 +167,10 @@ hntap_handle_host_tx (dev_handle_t *dev_handle,
   TLOG("Host-Tx to Model: packet sent with %d bytes\n", nread);
   if (nread < (int) sizeof(struct ether_header)) return;
 
-  dump_pkt(pktbuf, nread);
+  dump_pkt6(pktbuf, nread);
   eth_header = (struct ether_header_t *) pktbuf;
 
-  if (hntap_get_etype(eth_header) == ETHERTYPE_IP) {
+  if (hntap_get_etype(eth_header) == ETHERTYPE_IPV6) {
     TLOG("Ether-type IP, sending to Model\n");
     //hntap_host_client_to_server_nat(pktbuf, nread);
     dev_handle->nat_cb(pktbuf, nread, PKT_DIRECTION_FROM_DEV);
@@ -228,7 +227,6 @@ hntap_net_rx_to_model (dev_handle_t *dev_handle, char *pktbuf, int size)
   assert(buf != NULL);
   memset(buf, 0, 9126);
   post_buffer(lif_id, RX, 0, buf, 9126);
-
   // Send packet to Model
   TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), port);
   step_network_pkt(ipkt, port);
@@ -292,7 +290,7 @@ hntap_net_rx_to_model (dev_handle_t *dev_handle, char *pktbuf, int size)
  send_to_hosttap:
 
   if (rsize) {
-    dump_pkt((char *)buf, rsize);
+    dump_pkt6((char *)buf, rsize);
     /*
      * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
      */
@@ -331,9 +329,9 @@ hntap_handle_net_rx (dev_handle_t *dev_handle, char *pktbuf, int nread)
   TLOG("Net-Rx to Model: packet sent with %d bytes\n", nread);
   if (nread < (int) sizeof(struct ether_header)) return;
 
-  dump_pkt(pktbuf, nread);
+  dump_pkt6(pktbuf, nread);
   eth_header = (struct ether_header_t *) pktbuf;
-  if ((ntohs(eth_header->etype) == ETHERTYPE_IP) ||
+  if ((ntohs(eth_header->etype) == ETHERTYPE_IPV6) ||
       (ntohs(eth_header->etype) == ETHERTYPE_VLAN)) {
       TLOG("Ether-type IP, sending to Model\n");
       //hntap_net_server_to_client_nat(pktbuf, nread);
@@ -350,7 +348,7 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
 {
   struct ether_header_t *eth;
   struct vlan_header_t *vlan;
-  struct ipv4_header_t *ip;
+  struct ipv6_header_t *ip;
   struct tcp_header_t *tcp;
   uint16_t etype;
 
@@ -360,15 +358,15 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
     vlan = (struct vlan_header_t*)pkt;
     etype = ntohs(vlan->etype);
-    ip = (ipv4_header_t *)(vlan+1);
+    ip = (ipv6_header_t *)(vlan+1);
   } else {
     etype = ntohs(eth->etype);
-    ip = (ipv4_header_t *)(eth+1);
+    ip = (ipv6_header_t *)(eth+1);
   }
 
-  if (etype == ETHERTYPE_IP) {
+  if (etype == ETHERTYPE_IPV6) {
 
-    if (ip->protocol == IPPROTO_TCP) {
+    if (ip->nexthdr == IPPROTO_TCP) {
       tcp = (struct tcp_header_t*)(ip+1);
 #if 0
       if (ntohl(tcp->seq) == *seqnum) {
@@ -451,8 +449,8 @@ hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
                           abort();
                         }
 
-                        if (p[sizeof(struct vlan_header_t)] != 0x45) {
-                          TLOG("Not an IP packet 0x%x\n", p[sizeof(struct vlan_header_t)]);
+                        if (p[sizeof(struct vlan_header_t)] != 0x60) {
+                          TLOG("Not an IPv6 packet 0x%x\n", p[sizeof(struct vlan_header_t)]);
                           continue;
                         }
 
@@ -461,7 +459,7 @@ hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
                         if (dev_handle->pre_process) {
                             dev_handle->pre_process(pktbuf, PKTBUF_LEN);
                         }
-                        int ret = dump_pkt(pktbuf, nread + sizeof(struct vlan_header_t), dev_handle->tap_ports[0]);
+                        int ret = dump_pkt6(pktbuf, nread + sizeof(struct vlan_header_t), dev_handle->tap_ports[0]);
                          if (ret == -1) {
                              TLOG("Not a desired TCP packet\n");
                              continue;
@@ -494,8 +492,8 @@ hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
                         abort();
                         }
 
-                        if (p[sizeof(struct ether_header_t)] != 0x45) {
-                        TLOG("Not an IP packet 0x%x\n", p[sizeof(struct ether_header_t)]);
+                        if (p[sizeof(struct ether_header_t)] != 0x60) {
+                        TLOG("Not an IPv6 packet 0x%x\n", p[sizeof(struct ether_header_t)]);
                         continue;
                         }
                         num_nettap_pkts++;
@@ -504,7 +502,7 @@ hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
                             dev_handle->pre_process(pktbuf, PKTBUF_LEN);
                         }
                         TLOG("Added ether header\n");
-                        int ret = dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
+                        int ret = dump_pkt6(pktbuf, nread + sizeof(struct ether_header_t));
                         if (ret == -1) {
                           TLOG("Not a desired TCP packet\n");
                             continue;
