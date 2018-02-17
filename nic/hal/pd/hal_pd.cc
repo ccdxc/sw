@@ -771,7 +771,6 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_pgm_def_entries_args_t pgm_def_args;
     pd_pgm_def_p4plus_entries_args_t pgm_p4p_args;
     pd_clock_delta_comp_args_t       clock_args;
-    uint64_t cores_mask = 0x0;
 
     HAL_ASSERT(hal_cfg != NULL);
 
@@ -803,7 +802,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
                 std::string("asic-rw").c_str(),
                 HAL_THREAD_ID_ASIC_RW,
                 sdk::lib::THREAD_ROLE_CONTROL,
-                cores_mask,
+                0x0 /* use all control cores */,
                 hal::pd::asic_rw_start,
                 sched_get_priority_max(SCHED_RR),
                 gl_super_user ? SCHED_RR : SCHED_OTHER,

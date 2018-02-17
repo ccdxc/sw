@@ -114,6 +114,8 @@ main (int argc, char **argv)
 {
     linkmgr::linkmgr_sig_init();
 
+    sdk::lib::thread::control_cores_mask_set(0x1);
+
     // Initialize the logger
     hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
                             0);

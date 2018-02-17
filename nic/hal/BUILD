@@ -70,6 +70,7 @@ cc_library(
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_logger",
         "@sdk//obj:sdk_thread",
+        "@sdk//obj:sdk_utils",
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic/fte:fte_includes",
         "//nic/hal:hal_includes",

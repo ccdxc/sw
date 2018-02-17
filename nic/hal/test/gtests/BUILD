@@ -220,6 +220,7 @@ cc_test(
         "@sdk//obj:sdk_logger",
         "@sdk//obj:sdk_pal",
         "@sdk//obj:sdk_catalog",
+        "@sdk//obj:sdk_utils",
         "//nic/hal/pd/p4pd:p4pd",
         "//nic/hal/pd/asicpd:asicpd",
         "//:gtest",

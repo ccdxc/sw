@@ -155,3 +155,14 @@ cc_library(
         "//:sdk_headers",
     ],
 )
+
+# utils library
+cc_library(
+    name = "sdk_utils",
+    srcs = [
+        "libutils.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)

@@ -36,6 +36,7 @@ cc_binary(
         "//nic:libprotobuf",
         "//nic/utils/trace:trace",
         "@sdk//obj:sdk_linkmgr",
+        "@sdk//obj:sdk_utils",
         "//nic:google_includes",
     ],
     linkopts = [

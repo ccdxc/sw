@@ -23,13 +23,13 @@
 #include "nic/hal/plugins/plugins.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "sdk/logger.hpp"
+#include "sdk/utils.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/qos.hpp"
-#include "nic/hal/lib/hal_utils.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -219,14 +219,12 @@ hal_thread_init (hal_cfg_t *hal_cfg)
         data_cores_mask = data_cores_mask & (data_cores_mask-1);
     }
 
-    cores_mask = 0x0;
-
     // spawn periodic thread that does background tasks
     g_hal_threads[HAL_THREAD_ID_PERIODIC] =
         thread::factory(std::string("periodic-thread").c_str(),
                         HAL_THREAD_ID_PERIODIC,
                         sdk::lib::THREAD_ROLE_CONTROL,
-                        cores_mask,
+                        0x0 /* use all control cores */,
                         hal_periodic_loop_start,
                         thread_prio - 1,
                         gl_super_user ? SCHED_RR : SCHED_OTHER,
@@ -271,7 +269,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
         thread::factory(std::string("cfg-thread").c_str(),
                         HAL_THREAD_ID_CFG,
                         sdk::lib::THREAD_ROLE_CONTROL,
-                        cores_mask,
+                        0x0 /* use all control cores */,
                         thread::dummy_entry_func,
                         sched_param.sched_priority,
                         gl_super_user ? SCHED_RR : SCHED_OTHER,
@@ -363,13 +361,13 @@ hal_parse_thread_cfg (ptree &pt, hal_cfg_t *hal_cfg)
     hal_cfg->control_cores_mask = std::stoul (str, nullptr, 16);
     sdk::lib::thread::control_cores_mask_set(hal_cfg->control_cores_mask);
     hal_cfg->num_control_threads =
-                    hal_lib_set_bits_count(hal_cfg->control_cores_mask);
+                    sdk::lib::set_bits_count(hal_cfg->control_cores_mask);
 
     str = pt.get<std::string>("sw.data_cores_mask");
     hal_cfg->data_cores_mask = std::stoul (str, nullptr, 16);
     sdk::lib::thread::data_cores_mask_set(hal_cfg->data_cores_mask);
     hal_cfg->num_data_threads =
-                    hal_lib_set_bits_count(hal_cfg->data_cores_mask);
+                    sdk::lib::set_bits_count(hal_cfg->data_cores_mask);
 
     return HAL_RET_OK;
 }
@@ -501,6 +499,29 @@ hal_cpu_if_create (uint32_t lif_id)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+hal_cores_validate (uint64_t sys_core,
+                    uint64_t control_core,
+                    uint64_t data_core)
+{
+    if ((control_core & data_core) != 0) {
+        HAL_TRACE_ERR("control core mask 0x{0:x} overlaps with"
+                      " data core mask 0x{1:x}",
+                      control_core, data_core);
+        return HAL_RET_ERR;
+    }
+
+    if ((sys_core & (control_core | data_core)) !=
+                    (control_core | data_core)) {
+        HAL_TRACE_ERR("control core mask 0x{0:x} and data core mask 0x{1:x}"
+                      " does not match or exceeds system core mask 0x{2:x}",
+                      control_core, data_core, sys_core);
+        return HAL_RET_ERR;
+    }
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
@@ -529,12 +550,13 @@ hal_init (hal_cfg_t *hal_cfg)
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
 
-    sdk::lib::catalog* catalog = hal_lib_catalog_init();
+    sdk::lib::catalog* catalog = sdk::lib::catalog_init();
     g_hal_state->set_catalog(catalog);
 
-    // validate control/data cores
-    HAL_ABORT (catalog->cores_mask() ==
-               (hal_cfg->control_cores_mask | hal_cfg->data_cores_mask));
+    // validate control/data cores against catalog
+    HAL_ABORT(hal_cores_validate(catalog->cores_mask(),
+                                 hal_cfg->control_cores_mask,
+                                 hal_cfg->data_cores_mask) == HAL_RET_OK);
 
     // initialize config parameters from the JSON file
     HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
@@ -572,7 +594,6 @@ hal_init (hal_cfg_t *hal_cfg)
         for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
             tid = HAL_THREAD_ID_FTE_MIN + i;
             g_hal_threads[tid]->start(g_hal_threads[tid]);
-            break;
         }
     }
 

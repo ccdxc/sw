@@ -14,11 +14,11 @@
 #include "sdk/pal.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/list.hpp"
+#include "sdk/utils.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_state.hpp"
 #include "nic/linkmgr/utils.hpp"
-#include "nic/hal/lib/hal_utils.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -263,13 +263,11 @@ linkmgr_init()
     g_linkmgr_state = linkmgr_state::factory();
     HAL_ASSERT_RETURN((g_linkmgr_state != NULL), HAL_RET_ERR);
 
-    sdk::lib::catalog *catalog = hal_lib_catalog_init();
+    sdk::lib::catalog *catalog = sdk::lib::catalog_init();
     HAL_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(catalog);
-
-    sdk::lib::thread::control_cores_mask_set(0x1);
 
     sdk_cfg.platform_type = linkmgr_cfg.platform_type;
     sdk_cfg.hw_mock = linkmgr_cfg.hw_mock;

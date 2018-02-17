@@ -1,7 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
+#include <sys/sysinfo.h>
 #include "lib/catalog/catalog.hpp"
 #include "sdk/mem.hpp"
+#include "sdk/utils.hpp"
 
 namespace sdk {
 namespace lib {
@@ -147,6 +149,16 @@ catalog::populate_catalog(ptree &prop_tree)
     std::string str = prop_tree.get<std::string>("cores_mask", "");
     catalog_db_.cores_mask = std::stoul (str, nullptr, 16);
 
+    // validate cores_mask against the number of available processor cores
+    if (catalog_db_.cores_mask == 0 ||
+        ffs_msb(catalog_db_.cores_mask) > get_nprocs()) {
+        SDK_TRACE_ERR("Invalid cores_mask 0x%lx."
+                      " Available cores: %d\n",
+                      catalog_db_.cores_mask,
+                      get_nprocs());
+        return SDK_RET_ERR;
+    }
+
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
     catalog_db_.num_uplink_ports =
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
@@ -168,9 +180,7 @@ catalog::init(std::string catalog_file)
     ptree prop_tree;
     boost::property_tree::read_json(catalog_file, prop_tree);
 
-    populate_catalog(prop_tree);
-
-    return SDK_RET_OK;
+    return populate_catalog(prop_tree);
 }
 
 //------------------------------------------------------------------------------

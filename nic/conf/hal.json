@@ -9,6 +9,6 @@
     "grpc_port": "50054",
     "feature_set": "iris",
     "control_cores_mask": "0x1",
-    "data_cores_mask": "0xE"
+    "data_cores_mask": "0x2"
   }
 }
