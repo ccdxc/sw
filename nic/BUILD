@@ -29,6 +29,8 @@ cc_library(
         "asic/capri/model/cap_mpu/cap_mpu_csr.h",
         "asic/capri/model/cap_pic/cap_pics_csr.cc",
         "asic/capri/model/cap_pic/cap_pics_csr.h",
+        "asic/capri/model/cap_pic/cap_picc_csr.cc",
+        "asic/capri/model/cap_pic/cap_picc_csr.h",
         "asic/capri/model/cap_pcie/cap_pxb_csr.cc",
         "asic/capri/model/cap_pcie/cap_pxb_csr.h",
         "asic/capri/model/cap_pcie/cap_pp_csr.cc",
