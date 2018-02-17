@@ -872,7 +872,7 @@ dos_policy_get (nwsec::DoSPolicyGetRequest& req,
     // lookup this dos policy
     dosp = find_dos_policy_by_handle(req.dos_handle());
     if (!dosp) {
-        rsp->set_api_status(types::API_STATUS_DOS_POLICY_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_INVALID_ARG;
     }
 

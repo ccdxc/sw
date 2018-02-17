@@ -111,7 +111,7 @@ l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         ret = HAL_RET_INVALID_ARG;
-        rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         goto end;
     }
 

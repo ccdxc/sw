@@ -10,6 +10,9 @@ Steps :
         op     : Delete
         status : API_STATUS_OK
     - step:
+        op     : Get
+        status : API_STATUS_NOT_FOUND
+    - step:
         op     : ReCreate
         status : API_STATUS_OK
     - step:

@@ -181,7 +181,7 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_ENTRY, (void *)&pd_wring_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
@@ -246,7 +246,7 @@ wring_get_meta (WRingSpec& spec, WRingGetMetaResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_META, (void *)&pd_wring_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
@@ -289,7 +289,7 @@ wring_set_meta (WRingSpec& spec, WRingSetMetaResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_SET_META, (void *)&pd_wring_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 

@@ -556,7 +556,7 @@ session_get (SessionGetRequest& req, SessionGetResponse *response)
     session = find_session_by_handle(req.session_handle());
 
     if (session == NULL) {
-        response->set_api_status(types::API_STATUS_SESSION_NOT_FOUND);
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_SESSION_NOT_FOUND;
     }
 

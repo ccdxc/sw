@@ -178,7 +178,7 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
 
     rawrcb = find_rawrcb_by_id(kh.rawrcb_id());
     if (rawrcb == NULL) {
-        rsp->set_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_RAWR_CB_NOT_FOUND;
     }
     
@@ -204,7 +204,7 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_UPDATE, (void *)&pd_rawrcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: Update Failed, err: ", ret);
-        rsp->set_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     
@@ -229,7 +229,7 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
 
     rawrcb = find_rawrcb_by_id(kh.rawrcb_id());
     if (rawrcb == NULL) {
-        rsp->set_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_RAWR_CB_NOT_FOUND;
     }
     
@@ -241,7 +241,7 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_GET, (void *)&pd_rawrcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
@@ -310,7 +310,7 @@ rawrcb_delete (rawrcb::RawrCbDeleteRequest& req, rawrcb::RawrCbDeleteResponseMsg
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWRCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWRCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_RAWR_CB_NOT_FOUND);
+        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     

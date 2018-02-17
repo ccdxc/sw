@@ -474,3 +474,8 @@ def ConfigObjectLoopTest(loop_count):
             if not ret:
                 print("Step Looping Delete failed for Config %s" % (object_helper.service_object.name))
                 sys.exit(1)
+            # Next Get
+            object_helper.VerifyConfigs(len(object_helper._config_objects), 'API_STATUS_NOT_FOUND')
+            if not ret:
+                print("Step Looping Get failed for Config %s" % (object_helper.service_object.name))
+                sys.exit(1)

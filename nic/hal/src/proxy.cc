@@ -535,7 +535,7 @@ proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
     }
 
     if (proxy == NULL) {
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
 
@@ -547,7 +547,7 @@ proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
     ret = pd::pd_proxy_get(&pd_proxy_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXY: Failed to get, err: ", ret);
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
@@ -586,7 +586,7 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
     tid = req.meta().vrf_id();
     vrf = vrf_lookup_by_id(tid); 
     if(vrf == NULL) {
-        rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
         return HAL_RET_INVALID_ARG;    
     }
@@ -739,7 +739,7 @@ validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
     tid = req.meta().vrf_id();
     vrf = vrf_lookup_by_id(tid); 
     if(vrf == NULL) {
-        rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
         return HAL_RET_INVALID_ARG;    
     }
@@ -794,7 +794,7 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
     pfi = proxy_get_flow_info(req.spec().proxy_type(), &flow_key);
     if(!pfi) {
         HAL_TRACE_ERR("proxy: flow info not found for the flow {}", flow_key);
-        rsp->set_api_status(types::API_STATUS_PROXY_FLOW_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_PROXY_NOT_FOUND;
     }
 

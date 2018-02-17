@@ -177,7 +177,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
         HAL_TRACE_DEBUG("tcpcb_update cb not found: {}", kh.tcpcb_id());
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
  
@@ -210,7 +210,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_UPDATE, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: Update Failed, err: ", ret);
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     
@@ -236,7 +236,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
         HAL_TRACE_ERR("TCPCB get: Failed to find cb with id {}", kh.tcpcb_id());
-	rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+	rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
     
@@ -248,7 +248,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_GET, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
@@ -345,7 +345,7 @@ tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TCPCB_DELETE, (void *)&pd_tcpcb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TCPCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     

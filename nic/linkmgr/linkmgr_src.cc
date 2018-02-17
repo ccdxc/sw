@@ -1200,7 +1200,7 @@ port_get (PortGetRequest& req, PortGetResponse *rsp)
 
     pi_p = port_lookup_key_or_handle(req.key_or_handle());
     if (!pi_p) {
-        rsp->set_api_status(types::API_STATUS_PORT_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_INVALID_ARG;
     }
 

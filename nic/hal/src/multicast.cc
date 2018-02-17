@@ -498,7 +498,7 @@ hal_ret_t multicast_entry_create(MulticastEntrySpec& spec,
         HAL_TRACE_ERR("{}:failed to create a mc_entry, "
                       "l2seg {} {} doesnt exist", __FUNCTION__,
                       kh.segment_id(), kh.l2segment_handle());
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
     }

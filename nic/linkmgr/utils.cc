@@ -258,19 +258,19 @@ hal_prepare_rsp (hal_ret_t ret)
         return types::API_STATUS_INVALID_ARG;
         break;
     case HAL_RET_VRF_NOT_FOUND:
-        return types::API_STATUS_VRF_NOT_FOUND;
+        return types::API_STATUS_NOT_FOUND;
         break;
     case HAL_RET_L2SEG_NOT_FOUND:
-        return types::API_STATUS_L2_SEGMENT_NOT_FOUND;
+        return types::API_STATUS_NOT_FOUND;
         break;
     case HAL_RET_IF_NOT_FOUND:
-        return types::API_STATUS_INTERFACE_NOT_FOUND;
+        return types::API_STATUS_NOT_FOUND;
         break;
     case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
-        return types::API_STATUS_NWSEC_PROFILE_NOT_FOUND;
+        return types::API_STATUS_NOT_FOUND;
         break;
     case HAL_RET_QOS_CLASS_NOT_FOUND:
-        return types::API_STATUS_QOS_CLASS_NOT_FOUND;
+        return types::API_STATUS_NOT_FOUND;
         break;
     case HAL_RET_HANDLE_INVALID:
         return types::API_STATUS_HANDLE_INVALID;
@@ -300,10 +300,10 @@ hal_prepare_rsp (hal_ret_t ret)
         return types::API_STATUS_OBJECT_IN_USE;
         break;
     case HAL_RET_ACL_NOT_FOUND:
-        return types:: API_STATUS_ACL_NOT_FOUND;
+        return types:: API_STATUS_NOT_FOUND;
         break;
     case HAL_RET_COPP_NOT_FOUND:
-        return types:: API_STATUS_COPP_NOT_FOUND;
+        return types:: API_STATUS_NOT_FOUND;
         break;
     default:
         return types::API_STATUS_ERR;

@@ -194,7 +194,7 @@ public:
             case types::API_STATUS_OK:
                 return true;
 
-            case types::API_STATUS_PORT_NOT_FOUND:
+            case types::API_STATUS_NOT_FOUND:
                 std::cout << "Port "
                           << port_id
                           << " not found"

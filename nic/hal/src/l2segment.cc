@@ -1721,7 +1721,7 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponseMsg *rsp)
         l2seg = l2seg_lookup_key_or_handle(req.key_or_handle());
         auto response = rsp->add_response();
         if (l2seg == NULL) {
-            response->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
             return HAL_RET_L2SEG_NOT_FOUND;
         } else {
             l2segment_process_get(l2seg, response);

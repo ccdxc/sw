@@ -1402,7 +1402,7 @@ lif_get (LifGetRequest& req, LifGetResponseMsg *rsp)
         auto response = rsp->add_response();
         lif = lif_lookup_key_or_handle(req.key_or_handle());
         if (!lif) {
-            response->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
             return HAL_RET_INVALID_ARG;
         }
         lif_process_get(lif, response);

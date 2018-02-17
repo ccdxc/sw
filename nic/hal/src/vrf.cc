@@ -430,7 +430,7 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
             HAL_TRACE_ERR("Failed to create vrf, "
                           "security profile with handle {} not found", 
                           vrf->nwsec_profile_handle);
-            rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
+            rsp->set_api_status(types::API_STATUS_NOT_FOUND);
             vrf_free(vrf);
             ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
             goto end;

@@ -1746,7 +1746,7 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponseMsg *rsp)
 
         auto response = rsp->add_response();
         if (!hal_if) {
-            response->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
             return HAL_RET_INVALID_ARG;
         } else {
             if_process_get(hal_if, response);
@@ -2918,7 +2918,7 @@ get_lif_handle_for_enic_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     if (lif == NULL) {
         HAL_TRACE_ERR("lif handle not found for id:{} hdl:{}",
                       lif_id, lif_handle);
-        rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         ret = HAL_RET_LIF_NOT_FOUND;
         goto end;
     } else {
@@ -2955,7 +2955,7 @@ get_lif_handle_for_cpu_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     if (lif == NULL) {
         HAL_TRACE_ERR("PI-CPUif:LIF handle not found for ID:{} HDL:{}",
                       lif_id, lif_handle);
-        rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
          ret = HAL_RET_LIF_NOT_FOUND;
          goto end;
     } else {
@@ -2992,7 +2992,7 @@ get_lif_handle_for_app_redir_if (InterfaceSpec& spec, InterfaceResponse *rsp,
     if (lif == NULL) {
         HAL_TRACE_ERR("LIF handle not found for ID:{} HDL:{}",
                       lif_id, lif_handle);
-        rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
          ret = HAL_RET_LIF_NOT_FOUND;
          goto end;
     } else {

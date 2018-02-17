@@ -177,7 +177,7 @@ proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
 
     proxyccb = find_proxyccb_by_id(kh.proxyccb_id());
     if (proxyccb == NULL) {
-        rsp->set_api_status(types::API_STATUS_PROXYC_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_PROXYC_CB_NOT_FOUND;
     }
     
@@ -202,7 +202,7 @@ proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYCCB_UPDATE, (void *)&pd_proxyccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYCCB: Update Failed, err: ", ret);
-        rsp->set_api_status(types::API_STATUS_PROXYC_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     
@@ -227,7 +227,7 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponse *rsp)
 
     proxyccb = find_proxyccb_by_id(kh.proxyccb_id());
     if (proxyccb == NULL) {
-        rsp->set_api_status(types::API_STATUS_PROXYC_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_PROXYC_CB_NOT_FOUND;
     }
     
@@ -239,7 +239,7 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYCCB_GET, (void *)&pd_proxyccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYCCB: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_PROXYC_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
@@ -306,7 +306,7 @@ proxyccb_delete (proxyccb::ProxycCbDeleteRequest& req, proxyccb::ProxycCbDeleteR
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROXYCCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXYCCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_PROXYC_CB_NOT_FOUND);
+        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     

@@ -1879,7 +1879,7 @@ endpoint_delete (EndpointDeleteRequest& req,
         HAL_TRACE_ERR("{}:failed to find vrf for tid:{}", 
                       __FUNCTION__, tid);
         ret = HAL_RET_VRF_NOT_FOUND;
-        // rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
+        // rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         goto end;
     }
 
@@ -2015,7 +2015,7 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
     }
 
     if (ep == NULL) {
-        response->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_EP_NOT_FOUND;
     }
 

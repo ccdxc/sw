@@ -165,7 +165,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
 
     tlscb = find_tlscb_by_id(kh.tlscb_id());
     if (tlscb == NULL) {
-        rsp->set_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TLS_CB_NOT_FOUND;
     }
     
@@ -192,7 +192,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_UPDATE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: Update Failed, err: ", ret);
-        rsp->set_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     
@@ -217,7 +217,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
 
     tlscb = find_tlscb_by_id(kh.tlscb_id());
     if (tlscb == NULL) {
-        rsp->set_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TLS_CB_NOT_FOUND;
     }
     
@@ -229,7 +229,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_GET, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
 
@@ -299,7 +299,7 @@ tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_TLSCB_DELETE, (void *)&pd_tlscb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD TLSCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_TLS_CB_NOT_FOUND);
+        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     
