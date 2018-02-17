@@ -13,7 +13,8 @@ struct cpu_tx_initial_action_d d;
 cpu_tx_stage0_start:
     /* Check if PI == CI */
     seq     c1, d.{u.cpu_tx_initial_action_d.ci_0}.hx, d.{u.cpu_tx_initial_action_d.pi_0}.hx
-    b.c1    cpu_tx_initial_action_done
+    b.c1    cpu_tx_abort
+    nop
 
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add     r6, r0, r0
@@ -46,6 +47,11 @@ table_read_asq_cindex:
     memwr.dx        r4, r3
    
 cpu_tx_initial_action_done:
+    nop.e
+    nop
+
+cpu_tx_abort:
+    phvwri  p.p4_intr_global_drop, 1
     nop.e
     nop
 
