@@ -7,6 +7,9 @@
 #include <strings.h>
 #include <thread>
 #include "dol/test/storage/nvme.hpp"
+#include "dol/test/storage/dp_mem.hpp"
+
+using namespace dp_mem;
 
 namespace storage_test {
 
@@ -21,16 +24,21 @@ struct SsdWorkingParams {
   // Queue parameters
   uint64_t subq_nentries;
   uint64_t compq_nentries;
-  struct NvmeCmd *subq_va;
-  struct NvmeStatus *compq_va;
-  uint64_t subq_pa;
-  uint64_t compq_pa;
+  dp_mem_t *subq;
+  dp_mem_t *compq;
 
   // Producer/Consumer indices
-  uint32_t *subq_pi_va;
-  uint64_t subq_pi_pa;
-  uint32_t *compq_ci_va;
-  uint64_t compq_ci_pa;
+  dp_mem_t *subq_pi;
+  dp_mem_t *subq_ci;
+  dp_mem_t *compq_pi;
+  dp_mem_t *compq_ci;
+};
+
+struct ctrl_data {
+  uint32_t subq_pi;
+  uint32_t subq_ci;
+  uint32_t compq_pi;
+  uint32_t compq_ci;
 };
 
 // SSD simulation for DOL. Points to note:
@@ -81,14 +89,17 @@ class NvmeSsdCore {
   std::mutex req_lock_, comp_lock_;
   uint64_t intr_addr_, intr_data_;
   bool intr_enabled_ = false;
-  NvmeCmd *subq_;
-  NvmeStatus *compq_;
-  struct ctrl_data {
-    uint32_t subq_pi;
-    uint32_t subq_ci;
-    uint32_t compq_pi;
-    uint32_t compq_ci;
-  } *ctrl_;
+  dp_mem_t *subq_;
+  dp_mem_t *compq_;
+  dp_mem_t *ctrl_;
+
+  /*
+   * Fragments of ctrl_above
+   */
+  dp_mem_t *subq_pi_;
+  dp_mem_t *subq_ci_;
+  dp_mem_t *compq_pi_;
+  dp_mem_t *compq_ci_;
 }; 
 
 }  // namespace storage_test

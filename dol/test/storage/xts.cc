@@ -8,6 +8,7 @@
 #include "dol/test/storage/xts.hpp"
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/queues.hpp"
+#include "dol/test/storage/dp_mem.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -22,6 +23,7 @@ const static uint32_t  kXtsDescSize          = 128;
 const static uint32_t  kXtsPISize            = 4;
 const static uint32_t  kXtsQueueSize         = 1024;
 
+using namespace dp_mem;
 
 namespace xts {
 extern std::vector<TestCtx> xts_tests;
@@ -219,11 +221,11 @@ unsigned char key[64] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0
 unsigned char iv_src[IV_SIZE] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
 
 int XtsCtx::test_seq_xts() {
-  uint8_t *seq_xts_desc;
+  dp_mem_t *seq_xts_desc;
 
   // Sequencer #1: XTS descriptor
-  seq_xts_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
-  memset(seq_xts_desc, 0, kSeqDescSize);
+  seq_xts_desc = queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
+  seq_xts_desc->clear();
 
   iv = (unsigned char*)alloc_host_mem(IV_SIZE);
   memcpy(iv, iv_src, IV_SIZE);
@@ -391,11 +393,12 @@ int XtsCtx::test_seq_xts() {
 
   if(use_seq) {
     // Fill the XTS Seq descriptor
-    utils::write_bit_fields(seq_xts_desc, 0, 64, host_mem_v2p(xts_desc_addr));
-    utils::write_bit_fields(seq_xts_desc, 64, 32, (uint64_t) log2(kXtsDescSize));  //2^7 which will be 128 - xts desc size
-    utils::write_bit_fields(seq_xts_desc, 96, 16, (uint64_t) log2(kXtsPISize));  //2^2 which will be 4 - prod index size
-    utils::write_bit_fields(seq_xts_desc, 146, 34, xts_ring_base_addr);
-    utils::write_bit_fields(seq_xts_desc, 112, 34, xts_ring_pi_addr);
+    seq_xts_desc->write_bit_fields(0, 64, host_mem_v2p(xts_desc_addr));
+    seq_xts_desc->write_bit_fields(64, 32, (uint64_t) log2(kXtsDescSize));  //2^7 which will be 128 - xts desc size
+    seq_xts_desc->write_bit_fields(96, 16, (uint64_t) log2(kXtsPISize));  //2^2 which will be 4 - prod index size
+    seq_xts_desc->write_bit_fields(146, 34, xts_ring_base_addr);
+    seq_xts_desc->write_bit_fields(112, 34, xts_ring_pi_addr);
+    seq_xts_desc->write_thru();
   }
 
   int rv = 0;

@@ -1,6 +1,10 @@
 #ifndef _RDMA_HPP_
 #define _RDMA_HPP_
 
+#include "dol/test/storage/dp_mem.hpp"
+
+using namespace dp_mem;
+
 typedef struct __attribute__((packed)) sqwqe {
                                // Offsets
   uint64_t wrid;               // 0
@@ -25,8 +29,8 @@ int rdma_init();
 
 void rdma_uspace_test();
 
-void *rdma_get_initiator_rcv_buf();
-uint8_t *rdma_get_target_write_data_buf();
+dp_mem_t *rdma_get_initiator_rcv_buf();
+dp_mem_t *rdma_get_target_write_data_buf();
 
 void PostTargetRcvBuf1();
 void PostInitiatorRcvBuf1();
@@ -34,9 +38,9 @@ void PostInitiatorRcvBuf1();
 void IncrTargetRcvBufPtr();
 void IncrInitiatorRcvBufPtr();
 
-int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, uint8_t **nvme_cmd_ptr, uint64_t slba);
-int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, uint8_t **nvme_cmd_ptr, 
-                     uint8_t **read_buf_ptr, uint64_t slba,
+int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd_ptr, uint64_t slba);
+int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_cmd_ptr, 
+                     dp_mem_t **read_buf_ptr, uint64_t slba,
                      uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif, uint32_t bdf);
 
 #endif  // _RDMA_HPP_

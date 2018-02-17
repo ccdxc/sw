@@ -97,8 +97,7 @@ uint64_t pvm_last_cq;
 uint64_t storage_hbm_ssd_bm_addr;
 
 typedef struct queues_ {
-  void *vaddr;
-  uint64_t paddr;
+  dp_mem_t *mem;
   uint16_t index; // p_ndx for tx queue, c_ndx for rx queue
   uint16_t entry_size;
   uint16_t num_entries;
@@ -132,7 +131,7 @@ uint32_t pvm_nvme_cq_base;
 uint32_t pvm_r2n_cq_base;
 uint32_t pvm_nvme_be_cq_base;
 
-void *pndx_data_va;
+dp_mem_t *pndx_data;
 uint64_t pndx_data_pa;
 
 void lif_params_init(hal_if::lif_params_t *params, uint16_t type,
@@ -147,8 +146,7 @@ int nvme_e2e_ssd_sq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_s
   // TODO: Fix to make this consistent or assert on the values
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
-  queue->vaddr = params.subq_va;
-  queue->paddr = params.subq_pa;
+  queue->mem = params.subq;
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
@@ -160,8 +158,7 @@ int nvme_e2e_ssd_cq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_s
   // TODO: Fix to make this consistent or assert on the values
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
-  queue->vaddr = params.compq_va;
-  queue->paddr = params.compq_pa;
+  queue->mem = params.compq;
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
@@ -173,33 +170,29 @@ void nvme_e2e_ssd_db_init(uint64_t db_addr, uint64_t db_data) {
 }
 
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
-  queue->vaddr = (uint8_t *)alloc_host_mem(num_entries * entry_size);
-  if (queue->vaddr == nullptr) {
-    printf("Unable to allocate host memory for queue\n");
-    return -1;
-  }
-  queue->paddr = host_mem_v2p(queue->vaddr);
+  queue->mem = new dp_mem_t(num_entries, entry_size);
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
 }
 
-int queue_pre_init(queues_t *queue, uint64_t base_addr, uint16_t num_entries,
+int queue_pre_init(queues_t *queue, dp_mem_t *mem, uint16_t num_entries,
                    uint16_t entry_size) {
-  queue->paddr = base_addr;
+  queue->mem = mem;
   queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
 }
 
-void *queue_consume_entry(queues_t *queue, uint16_t *index) {
-  if (!queue->vaddr || !index) return nullptr;
+dp_mem_t *queue_consume_entry(queues_t *queue, uint16_t *index) {
+  if (!queue->mem || !index) return nullptr;
   uint16_t curr_index = queue->index;
   queue->index = ((queue->index + 1)  % queue->num_entries);
   *index = queue->index;
-  return (void *) ((uint8_t *) queue->vaddr + (curr_index * queue->entry_size));
+
+  return queue->mem->line_set(curr_index);
 }
 
 
@@ -245,7 +238,7 @@ int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin,
   // Setup the queue state in Capri:
   if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, qid, pgm_bin, 
                                total_rings, host_rings, 
-                               kPvmNumSeqEntries, q_ptr->paddr,
+                               kPvmNumSeqEntries, q_ptr->mem->pa(),
                                kDefaultEntrySize, false, 0, 0,
                                0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
     printf("Failed to setup PVM Seq SQ %d state \n", qid);
@@ -268,12 +261,8 @@ int queues_setup() {
   // R2N/PVM SQ etc.  // This is needed as a dummy for the P4+ program to write 
   // the pndx to a valid host address. The SSD emulation layer implements this 
   // for the E2E cases.
-  pndx_data_va = alloc_host_mem(sizeof(uint32_t));
-  if (pndx_data_va == nullptr) {
-    printf("Unable to allocate host memory for queue\n");
-    return -1;
-  }
-  pndx_data_pa = host_mem_v2p(pndx_data_va);
+  pndx_data = new dp_mem_t(1, sizeof(uint32_t));
+  pndx_data_pa = pndx_data->pa();
 
   // Create NVME and PVM LIFs
   hal_if::lif_params_t nvme_lif_params, pvm_lif_params;
@@ -328,7 +317,7 @@ int queues_setup() {
     // Setup the queue state in Capri
     if (qstate_if::setup_q_state(nvme_lif, SQ_TYPE, i, (char *) kNvmeSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kNvmeNumEntries, nvme_sqs[i].paddr,
+                                 kNvmeNumEntries, nvme_sqs[i].mem->pa(),
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE, 
                                  (i%2), 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
       printf("Failed to setup NVME SQ %d state \n", i);
@@ -354,7 +343,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(nvme_lif, CQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultHostRings, 
-                                     kNvmeNumEntries, nvme_cqs[i].paddr,
+                                     kNvmeNumEntries, nvme_cqs[i].mem->pa(),
                                      kNvmeCQEntrySize, pndx_data_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup NVME CQ %d state \n", i);
@@ -380,7 +369,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(pvm_lif, SQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultHostRings, 
-                                     kPvmNumEntries, pvm_sqs[i].paddr,
+                                     kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                      kPvmNvmeSQEntrySize, pndx_data_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup PVM NVME SQ %d state \n", i);
@@ -406,7 +395,7 @@ int queues_setup() {
     // Setup the queue state in Capri:
     if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, (char *) kR2nSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_sqs[i].paddr,
+                                 kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
                                  nvme_be_q, 0, 0, storage_hbm_ssd_bm_addr, 
                                  kPvmNumNvmeBeSQs, kDefaultEntrySize, 0) < 0) {
@@ -432,7 +421,7 @@ int queues_setup() {
     // Setup the queue state in Capri: 
     if (qstate_if::setup_pri_q_state(pvm_lif, SQ_TYPE, i, (char *) kNvmeBeSqHandler, 
                                      kNvmeBeTotalRings, kDefaultNoHostRings, 
-                                     kPvmNumEntries, pvm_sqs[i].paddr,
+                                     kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                      kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
                                      ssd_q, 0, 0, storage_hbm_ssd_bm_addr, 
                                      (j == kE2eSsdhandle)) < 0) {
@@ -460,7 +449,7 @@ int queues_setup() {
       // Get the PI's physical address from the SSD emulation layer
       storage_test::SsdWorkingParams params;
       nvme_e2e_ssd->GetWorkingParams(&params);
-      pi_pa = params.subq_pi_pa;
+      pi_pa = params.subq_pi->pa();
 
       // Initialize the doorbell of the CQ
       uint64_t db_addr;
@@ -489,7 +478,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(pvm_lif, SQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultNoHostRings, 
-                                     kPvmNumEntries, pvm_sqs[i].paddr,
+                                     kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                      kDefaultEntrySize, pi_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup PVM SSD SQ %d state \n", i);
@@ -545,7 +534,7 @@ int queues_setup() {
     // Setup the queue state in Capri:
     if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, (char *) kR2nSqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_sqs[i].paddr,
+                                 kPvmNumEntries, pvm_sqs[i].mem->pa(),
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
                                  nvme_be_q, 0, 0, storage_hbm_ssd_bm_addr, 
                                  kPvmNumNvmeBeSQs, kDefaultEntrySize, 0) < 0) {
@@ -608,7 +597,7 @@ int queues_setup() {
     // 2. no program address for these as these are in host
     if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kPvmCqHandler,
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_cqs[i].paddr,
+                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
                                  kDefaultEntrySize, false, 0, 0,
                                  0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
       printf("Failed to setup PVM NVME CQ %d state \n", i);
@@ -633,7 +622,7 @@ int queues_setup() {
     // 3. The push address is that of the SSD's SQ's PI 
     if (qstate_if::setup_pci_q_state(pvm_lif, CQ_TYPE, i,
                                      kDefaultTotalRings, kDefaultNoHostRings, 
-                                     kPvmNumEntries, pvm_cqs[i].paddr,
+                                     kPvmNumEntries, pvm_cqs[i].mem->pa(),
                                      kDefaultEntrySize, pndx_data_pa, 
                                      0, 0, 0) < 0) {
       printf("Failed to setup PVM NVME SQ %d state \n", i);
@@ -668,7 +657,7 @@ int queues_setup() {
     // Setup the queue state in Capri: 
     if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kNvmeBeCqHandler, 
                                  kDefaultTotalRings, kDefaultHostRings, 
-                                 kPvmNumEntries, pvm_cqs[i].paddr,
+                                 kPvmNumEntries, pvm_cqs[i].mem->pa(),
                                  kNvmeCQEntrySize, true, pvm_lif, CQ_TYPE,
                                  get_pvm_r2n_cq(0), 0, 0, storage_hbm_ssd_bm_addr, 0, 0,
                                  ssd_cndx_addr[j]) < 0) {
@@ -685,11 +674,11 @@ int queues_setup() {
 
 int
 pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
-                 uint64_t base_addr, uint32_t num_entries, uint32_t entry_size) {
+                 dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size) {
 
     uint32_t i = pvm_last_sq;
     // Initialize the queue in the DOL enviroment
-    if (queue_pre_init(&pvm_sqs[i], base_addr, NUM_TO_VAL(num_entries),
+    if (queue_pre_init(&pvm_sqs[i], mem, NUM_TO_VAL(num_entries),
                        NUM_TO_VAL(entry_size)) < 0) {
       printf("Unable to pre init PVM ROCE SQ %d\n", i);
       return -1;
@@ -699,7 +688,7 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     // Setup the queue state in Capri:
     if (qstate_if::setup_roce_sq_state(pvm_lif, SQ_TYPE, i, (char *) kPvmRoceSqHandler, 
                                        kDefaultTotalRings, kDefaultHostRings, 
-                                       num_entries, pvm_sqs[i].paddr,
+                                       num_entries, pvm_sqs[i].mem->pa(),
                                        entry_size, false, 0, 0, 0, 
                                        roce_lif, roce_qtype, roce_qid) < 0) {
       printf("Failed to setup PVM ROCE SQ %d state \n", i);
@@ -711,12 +700,12 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
 
 int
 pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
-                 uint64_t base_addr, uint32_t num_entries, uint32_t entry_size,
+                 dp_mem_t *mem, uint32_t num_entries, uint32_t entry_size,
                  uint64_t xlate_addr) {
 
     uint32_t i = pvm_last_cq;
     // Initialize the queue in the DOL enviroment
-    if (queue_pre_init(&pvm_cqs[i], base_addr, NUM_TO_VAL(num_entries),
+    if (queue_pre_init(&pvm_cqs[i], mem, NUM_TO_VAL(num_entries),
                        NUM_TO_VAL(entry_size)) < 0) {
       printf("Unable to pre init PVM ROCE CQ %d\n", i);
       return -1;
@@ -726,7 +715,7 @@ pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     // Setup the queue state in Capri:
     if (qstate_if::setup_roce_cq_state(pvm_lif, CQ_TYPE, i, (char *) kPvmRoceCqHandler, 
                                        kDefaultTotalRings, kDefaultHostRings, 
-                                       num_entries, pvm_cqs[i].paddr, entry_size, 
+                                       num_entries, pvm_cqs[i].mem->pa(), entry_size, 
                                        xlate_addr, roce_lif, roce_qtype, roce_qid) < 0) {
       printf("Failed to setup PVM ROCE CQ %d state \n", i);
       return -1;
@@ -735,22 +724,22 @@ pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     return i;
 }
 
-void *nvme_sq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *nvme_sq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kNvmeNumSQs)) return nullptr;
   return queue_consume_entry(&nvme_sqs[qid], index);
 }
 
-void *pvm_sq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *pvm_sq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kPvmNumSQs)) return nullptr;
   return queue_consume_entry(&pvm_sqs[qid], index);
 }
 
-void *nvme_cq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *nvme_cq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kNvmeNumCQs)) return nullptr;
   return queue_consume_entry(&nvme_cqs[qid], index);
 }
 
-void *pvm_cq_consume_entry(uint16_t qid, uint16_t *index) {
+dp_mem_t *pvm_cq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kPvmNumCQs)) return nullptr;
   return queue_consume_entry(&pvm_cqs[qid], index);
 }
@@ -847,7 +836,10 @@ void ring_nvme_e2e_ssd() {
   printf("*********** RINGING SSD DOORBELL for testing *********** \n");
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
-  *((uint32_t *) params.subq_pi_va) =   (*((uint32_t *) params.subq_pi_va)) + 1;
+  uint32_t *pi = (uint32_t *)params.subq_pi->read_thru();
+
+  *pi = (*pi + 1) % params.subq_nentries;
+  params.subq_pi->write_thru();
 }
 
 void get_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
