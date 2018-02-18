@@ -57,6 +57,11 @@ public:
         return exact_match_profile_pd_slab_; 
     }
 
+    // get APIs for exact flow entry
+    slab *exact_match_flow_entry_pd_slab(void) const { 
+        return exact_match_flow_entry_pd_slab_; 
+    }
+
     // get APIs for TXS scheduler related state
     BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
 
@@ -135,6 +140,11 @@ private:
     // Exact Match Profile 
     struct {
         slab      *exact_match_profile_pd_slab_;
+    } __PACK__;
+
+    // Exact Flow entry
+    struct {
+        slab      *exact_match_flow_entry_pd_slab_;
     } __PACK__;
 
     // TXS scheduler related state

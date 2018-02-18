@@ -7,7 +7,7 @@
 #include "sdk/mem.hpp"
 #include "lib/slab/slab.hpp"
 
-#define SDK_DEBUG 0
+#define SDK_DEBUG 1
 
 namespace sdk {
 namespace lib {

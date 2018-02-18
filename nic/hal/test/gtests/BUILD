@@ -265,3 +265,12 @@ cc_test(
     tags = ["gft"],
     copts = sdk_copts,
 )
+
+cc_test(
+    name = "efe_gft_test",
+    srcs = ["efe_gft_test.cc"],
+    deps = gl_deps_list + test_deps_list,
+    linkopts = gl_linkopts_list,
+    tags = ["gft"],
+    copts = sdk_copts,
+)

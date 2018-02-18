@@ -9,6 +9,7 @@
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/gft/emp_pd.hpp"
+#include "nic/hal/pd/gft/efe_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -53,6 +54,13 @@ hal_state_pd::init(void)
                                                  8, false, true, true);
     HAL_ASSERT_RETURN((exact_match_profile_pd_slab_ != NULL), false);
 
+    // initiate GFT exact flow entry 
+    exact_match_flow_entry_pd_slab_ = slab::factory("GFT_EFE_PD", 
+                                                    HAL_SLAB_GFT_EFE_PD,
+                                                    sizeof(hal::pd::pd_gft_efe_t), 
+                                                    8, false, true, true);
+    HAL_ASSERT_RETURN((exact_match_flow_entry_pd_slab_ != NULL), false);
+
     return true;
 }
 
@@ -65,6 +73,7 @@ hal_state_pd::hal_state_pd()
     uplinkif_pd_slab_ = NULL;
     enicif_pd_slab_ = NULL;
     exact_match_profile_pd_slab_ = NULL;
+    exact_match_flow_entry_pd_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -81,6 +90,9 @@ hal_state_pd::~hal_state_pd()
     enicif_pd_slab_ ? slab::destroy(enicif_pd_slab_) : HAL_NOP;
 
     exact_match_profile_pd_slab_ ? slab::destroy(exact_match_profile_pd_slab_) : 
+        HAL_NOP;
+    exact_match_flow_entry_pd_slab_ ? 
+        slab::destroy(exact_match_flow_entry_pd_slab_) :
         HAL_NOP;
 
     if (dm_tables_) {
@@ -278,18 +290,19 @@ hal_state_pd::init_tables(void)
             break;
 
         case P4_TBL_TYPE_HASH:
-        /*
-            if (tinfo.has_oflow_table) {
-                p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
+            // TODO: May need another flow_table for TX_GFT_HASH
+            if (tid == P4TBL_ID_RX_GFT_HASH) {
+                if (tinfo.has_oflow_table) {
+                    p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
+                }
+                flow_table_ =
+                    Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
+                                  tinfo.tabledepth, ctinfo.tabledepth,
+                                  tinfo.key_struct_size,
+                                  sizeof(gft_flow_hash_data_t), 10,    // no. of hints
+                                  static_cast<Flow::HashPoly>(tinfo.hash_type));
+                HAL_ASSERT(flow_table_ != NULL);
             }
-            flow_table_ =
-                Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
-                              tinfo.tabledepth, ctinfo.tabledepth,
-                              tinfo.key_struct_size,
-                              sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints
-                              static_cast<Flow::HashPoly>(tinfo.hash_type));
-            HAL_ASSERT(flow_table_ != NULL);
-        */
             break;
 
         case P4_TBL_TYPE_MPU:

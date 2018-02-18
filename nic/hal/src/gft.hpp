@@ -129,7 +129,12 @@ typedef union encap_or_transport_xposition_u {
     struct {
         uint16_t    sport;
         uint16_t    dport;
+        uint8_t     tcp_flags;  // Do we need this?
     } __PACK__ tcp;
+    struct {
+        uint8_t     type;
+        uint8_t     code;
+    } __PACK__ icmp;
     struct {
         uint32_t    tenant_id;
         uint16_t    gre_protocol;
@@ -444,7 +449,7 @@ find_gft_hdr_xposition_profile_by_handle (hal_handle_t handle)
 typedef struct gft_hdr_group_xposition_s {
     uint32_t                            flags;    // GFT_HDR_GROUP_XPOSITION_XXX flags, if any
     gft_hdr_group_xposition_action_t    action;
-    uint32_t                            headers;
+    uint32_t                            headers;  // GFT_HEADER_XX
     uint64_t                            fields;
     gft_eth_fields_t                    eth_fields;
     ip_addr_t                           src_ip_addr;
@@ -642,6 +647,7 @@ hal_ret_t gft_header_transposition_profile_create(GftHeaderTranspositionProfileS
 hal_ret_t gft_exact_match_flow_entry_create(GftExactMatchFlowEntrySpec &spec,
                                             GftExactMatchFlowEntryResponse *rsp);
 
+void gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe);
 }    // namespace hal
 
 #endif    // __GFT_HPP__

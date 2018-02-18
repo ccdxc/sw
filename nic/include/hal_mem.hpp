@@ -121,9 +121,10 @@ typedef enum hal_slab_e {
     HAL_SLAB_COPP_PD                         = 1033,
     HAL_SLAB_APP_REDIR_IF_PD                 = 1034,
     HAL_SLAB_GFT_EMP_PD                      = 1035,
-    HAL_SLAB_PD_MAX                          = 1036,   // NOTE: MUST be last PD slab id
-    HAL_SLAB_RSVD                            = 1037,   // all non-delay delete slabs can use this
-    HAL_SLAB_MAX                             = 1038,
+    HAL_SLAB_GFT_EFE_PD                      = 1036,
+    HAL_SLAB_PD_MAX                          = 1037,   // NOTE: MUST be last PD slab id
+    HAL_SLAB_RSVD                            = 1038,   // all non-delay delete slabs can use this
+    HAL_SLAB_MAX                             = 1039,
     HAL_SLAB_ALL                             = 0xFFFFFFFF,  // reserved and shouldn't be used
 } hal_slab_t;
 

@@ -596,6 +596,7 @@ gft_program_rx_xpositions (gft_hdr_group_xposition_t *xpositions,
     return HAL_RET_OK;
 }
 
+#if 0
 hal_ret_t
 pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *gft_args)
 {
@@ -621,6 +622,7 @@ pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *gft_
 
     return HAL_RET_OK;
 }
+#endif
 
 hal_ret_t
 pd_asic_init (pd_asic_init_args_t *args)

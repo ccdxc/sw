@@ -211,7 +211,7 @@ end:
     gft_hgmp = &gft_emp->hgem_profiles[LAYER - 1];                          \
     if (gft_hgmp->headers & GFT_HEADER_ETHERNET) {                          \
         rx_key1.ethernet_ ## LAYER ## _valid = 1;                           \
-        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {      \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {       \
             rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
             _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_ETHERNET_DST;                                         \
@@ -239,7 +239,7 @@ end:
             _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_SRC;                                               \
         }                                                                   \
-        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {       \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
             rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
             _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_DST;                                               \
@@ -266,7 +266,7 @@ end:
             _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_SRC;                                               \
         }                                                                   \
-        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {       \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
             rx_key ## LAYER ## _action.rx_key ## LAYER ##                   \
             _action_u.rx_key ## LAYER ## _rx_key ## LAYER.match_fields |=   \
                 MATCH_IP_DST;                                               \
@@ -301,25 +301,25 @@ end:
         rx_key1.tcp_ ## LAYER ## _valid = 1;                                \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
-            MATCH_TRANSPORT_SRC_PORT_ ## LAYER ;                           \
+            MATCH_TRANSPORT_SRC_PORT_ ## LAYER ;                            \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
-            MATCH_TRANSPORT_DST_PORT_ ## LAYER ;                           \
+            MATCH_TRANSPORT_DST_PORT_ ## LAYER ;                            \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TCP_FLAGS) {          \
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
             MATCH_TCP_FLAGS_ ## LAYER ;                                     \
         }                                                                   \
-    } else if (gft_hgmp->headers & GFT_HEADER_UDP) {                       \
+    } else if (gft_hgmp->headers & GFT_HEADER_UDP) {                        \
         rx_key1.udp_ ## LAYER ## _valid = 1;                                \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
-            MATCH_TRANSPORT_SRC_PORT_ ## LAYER ;                           \
+            MATCH_TRANSPORT_SRC_PORT_ ## LAYER ;                            \
         }                                                                   \
         if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
             rx_key4_action.rx_key4_action_u.rx_key4_rx_key4.match_fields |= \
-            MATCH_TRANSPORT_DST_PORT_ ## LAYER ;                           \
+            MATCH_TRANSPORT_DST_PORT_ ## LAYER ;                            \
         }                                                                   \
     }                                                                       
 

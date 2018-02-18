@@ -265,6 +265,7 @@ gft_emp_init_from_spec (gft_exact_match_profile_t *profile,
                     num_hgem_profiles);
 
     profile->num_hdr_group_exact_match_profiles = num_hgem_profiles;
+    profile->profile_id = spec.key_or_handle().profile_id();
 
     tmp = profile->hgem_profiles;
     for (uint32_t i = 0; i < num_hgem_profiles; i++) {
@@ -374,7 +375,34 @@ end:
 static hal_ret_t
 gft_emp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    return HAL_RET_OK;
+    hal_ret_t                   ret        = HAL_RET_OK;
+    dllist_ctxt_t               *lnode     = NULL;
+    dhl_entry_t                 *dhl_entry = NULL;
+    gft_exact_match_profile_t   *prof      = NULL;
+    hal_handle_t                hal_handle = 0;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("invalid cfg_ctxt");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // assumption is there is only one element in the list
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    prof = (gft_exact_match_profile_t  *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    ret = gft_emp_add_to_db(prof, hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to add prof {} to db, err : {}", 
+                prof->profile_id, ret);
+        goto end;
+    }
+
+end:
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -1087,7 +1115,7 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
 {
     uint32_t                          i;
     gft_exact_match_profile_t         *gft_emp;
-    gft_hdr_xposition_profile_t       *gft_htp;
+    // gft_hdr_xposition_profile_t       *gft_htp;
     gft_hdr_group_exact_match_t       *gft_em;
     gft_hdr_group_xposition_t         *gft_ht;
 
@@ -1096,8 +1124,11 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
     gft_emp = gft_emp_lookup_key_or_handle(spec.exact_match_profile());
     HAL_ASSERT(gft_emp);
 
+#if 0
+    // No need of xposition profile
     gft_htp = gft_htp_lookup_key_or_handle(spec.transposition_profile());
     HAL_ASSERT(gft_htp);
+#endif
 
     flow_entry->num_exact_matches = spec.exact_matches_size();
     HAL_ASSERT(flow_entry->num_exact_matches != 0);
@@ -1120,7 +1151,8 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
     // set the flags field
     gft_emfe_init_flags_from_spec(flow_entry, spec);
     flow_entry->gft_emp_hal_handle = gft_emp->hal_handle;
-    flow_entry->gft_htp_hal_handle = gft_htp->hal_handle;
+    // No need of xposition profile
+    // flow_entry->gft_htp_hal_handle = gft_htp->hal_handle;
     flow_entry->table_id = spec.table_id();
     flow_entry->vport_id = spec.vport_id();
     flow_entry->redirect_vport_id = spec.redirect_vport_id();
@@ -1346,6 +1378,8 @@ gft_exact_match_flow_entry_create (GftExactMatchFlowEntrySpec &spec,
         goto end;
     }
 
+    gft_exact_match_flow_entry_print(flow_entry);
+
     // form ctxt and call infra add
     dhl_entry.handle = flow_entry->hal_handle;
     dhl_entry.obj = flow_entry;
@@ -1368,6 +1402,143 @@ end:
     }
     gft_emfe_prepare_rsp(rsp, flow_entry, ret);
     return ret;
+}
+
+#define GFT_HDRS_FIELDS(VAR)                                                \
+    if (VAR->headers & GFT_HEADER_ETHERNET) {                               \
+        HAL_TRACE_DEBUG("Ethernet");                                        \
+        if (VAR->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {                  \
+            HAL_TRACE_DEBUG("Src Mac: {}", macaddr2str(VAR->eth_fields.smac));\
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {                  \
+            HAL_TRACE_DEBUG("Dst Mac: {}", macaddr2str(VAR->eth_fields.dmac));\
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_ETH_TYPE) {                      \
+            HAL_TRACE_DEBUG("Eth Type: {}", VAR->eth_fields.eth_type);      \
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {              \
+            HAL_TRACE_DEBUG("CVlan: {}", VAR->eth_fields.customer_vlan_id); \
+        }                                                                   \
+    }                                                                       \
+    if (VAR->headers & GFT_HEADER_IPV4 ||                                   \
+        VAR->headers & GFT_HEADER_IPV6) {                                   \
+        HAL_TRACE_DEBUG("{}",                                               \
+                        (VAR->headers & GFT_HEADER_IPV4) ? "IPv4" : "IPv6");\
+        if (VAR->fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {                   \
+            HAL_TRACE_DEBUG("Src IP: {}", ipaddr2str(&VAR->src_ip_addr));   \
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_DST_IP_ADDR) {                   \
+            HAL_TRACE_DEBUG("Dst IP: {}", ipaddr2str(&VAR->dst_ip_addr));   \
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_IP_DSCP) {                       \
+            HAL_TRACE_DEBUG("DSCP: {}",VAR->dscp );                         \
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_IP_PROTOCOL) {                   \
+            HAL_TRACE_DEBUG("IP Proto: {}",VAR->ip_proto);                  \
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_TTL) {                           \
+            HAL_TRACE_DEBUG("TTL: {}", VAR->ttl);                           \
+        }                                                                   \
+    }                                                                       \
+    if (VAR->headers & GFT_HEADER_ICMP) {                                   \
+        HAL_TRACE_DEBUG("ICMP");                                            \
+        if (VAR->fields & GFT_HEADER_FIELD_ICMP_TYPE) {                     \
+            HAL_TRACE_DEBUG("Type: {}", VAR->encap_or_transport.icmp.type); \
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_ICMP_CODE) {                     \
+            HAL_TRACE_DEBUG("Code: {}", VAR->encap_or_transport.icmp.code); \
+        }                                                                   \
+    }                                                                       \
+    if (VAR->headers & GFT_HEADER_TCP) {                                    \
+        HAL_TRACE_DEBUG("TCP");                                             \
+        if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {            \
+            HAL_TRACE_DEBUG("Sport: {}", VAR->encap_or_transport.tcp.sport);\
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {            \
+            HAL_TRACE_DEBUG("Dport: {}", VAR->encap_or_transport.tcp.dport);\
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_TCP_FLAGS) {                     \
+            HAL_TRACE_DEBUG("Dport: {}", VAR->encap_or_transport.tcp.tcp_flags);\
+        }                                                                   \
+    }                                                                       \
+    if (VAR->headers & GFT_HEADER_UDP) {                                    \
+        HAL_TRACE_DEBUG("UDP");                                             \
+        if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {            \
+            HAL_TRACE_DEBUG("Sport: {}", VAR->encap_or_transport.udp.sport);\
+        }                                                                   \
+        if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {            \
+            HAL_TRACE_DEBUG("Dport: {}", VAR->encap_or_transport.udp.dport);\
+        }                                                                   \
+    }                                                                       \
+    if (VAR->headers & GFT_HEADER_IP_IN_GRE_ENCAP) {                        \
+        HAL_TRACE_DEBUG("GRE");                                             \
+        if (VAR->fields & GFT_HEADER_FIELD_GRE_PROTOCOL) {                  \
+            HAL_TRACE_DEBUG("Proto: {}", VAR->encap_or_transport.encap.gre_protocol);\
+        }                                                                   \
+    }                                                                       \
+    if (VAR->headers & GFT_HEADER_VXLAN_ENCAP) {                            \
+        HAL_TRACE_DEBUG("Vxlan");                                           \
+        if (VAR->fields & GFT_HEADER_FIELD_TENANT_ID) {                     \
+            HAL_TRACE_DEBUG("Tenant Id: {}", VAR->encap_or_transport.encap.tenant_id);\
+        }                                                                   \
+    }                                                                       
+
+    
+
+
+
+
+#if 0
+        if (VAR ## ->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {              \
+            HAL_TRACE_DEBUG("Src IP: {}", ipaddr2str(&VAR->src_ip_addr));   \
+        }                                                                   \
+        if (VAR ## ->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {              \
+            HAL_TRACE_DEBUG("Dst IP: {}", ipaddr2str(&VAR->dst_ip_addr));   \
+        }                                                                   \
+        if (VAR ## ->fields & GFT_HEADER_FIELD_ETH_TYPE) {              \
+            HAL_TRACE_DEBUG("Eth Type: {}", VAR->);   \
+        }                                               
+#endif
+
+
+void
+gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
+{
+    gft_hdr_group_exact_match_t *ghem;
+    gft_hdr_group_xposition_t   *xpos;
+
+    if (!fe) {
+        return;
+    }
+
+    HAL_TRACE_DEBUG("Flow entry id: {}", fe->flow_entry_id);
+    HAL_TRACE_DEBUG("EMP hal_handle: {}, HXP hal_handle: {}",
+                    fe->gft_emp_hal_handle, fe->gft_htp_hal_handle);
+    HAL_TRACE_DEBUG("table_id: {}, vport_id: {}, redirect_vport_id: {}"
+                    "ttl_one_redirect_vport_id: {}, cache_hint: {}", 
+                    fe->table_id, fe->vport_id, fe->redirect_vport_id,
+                    fe->ttl_one_redirect_vport_id,
+                    fe->cache_hint);
+    HAL_TRACE_DEBUG("num_exact_matches: {}, num_transpositions: {}",
+                    fe->num_exact_matches, fe->num_transpositions);
+    HAL_TRACE_DEBUG("Match Profiles:");
+    ghem = fe->exact_matches;
+    for (uint32_t i = 0; i < fe->num_exact_matches; i++) {
+        HAL_TRACE_DEBUG("Match Profile {}:", i);
+        HAL_TRACE_DEBUG("flags: {}", ghem->flags);
+        GFT_HDRS_FIELDS(ghem);
+        ghem++;
+    }
+
+    HAL_TRACE_DEBUG("Transpositions:");
+    xpos = fe->transpositions;
+    for (uint32_t i = 0; i < fe->num_transpositions; i++) {
+        HAL_TRACE_DEBUG("Transposition {}:", i);
+        HAL_TRACE_DEBUG("flags: {}", xpos->flags);
+        HAL_TRACE_DEBUG("action: {}", xpos->action);
+        GFT_HDRS_FIELDS(xpos);
+        xpos++;
+    }
 }
 
 }    // namespace hal
