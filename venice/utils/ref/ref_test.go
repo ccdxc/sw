@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -91,12 +92,60 @@ type UserSpec struct {
 	BoolFlag           bool               `json:"boolFlag, omitempty"`
 	FloatVal           float64            `json:"floatVal,omitempty"`
 	AllocatedIPv4Addrs []byte             `json:"allocated-ipv4-addrs,omitempty" venice:"sskip"`
+	CustomObj          *CustomObj         `json:"custom-obj,omitempty"`
 }
 
 type UserList struct {
 	TypeMeta `json:",inline"`
 	ListMeta `json:"meta"`
 	Items    []User
+}
+
+type Record struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type CustomObj struct {
+	Records []Record `json:"records,omitempty"`
+}
+
+func (c *CustomObj) Print() string {
+	pairs := []string{}
+	for ii := range c.Records {
+		pairs = append(pairs, fmt.Sprintf("%v=%v", c.Records[ii].Key, c.Records[ii].Value))
+	}
+	return strings.Join(pairs, ",")
+}
+
+func Parse(in string) (CustomObj, error) {
+	var c CustomObj
+	recs := strings.Split(in, ",")
+	for ii := range recs {
+		kvs := strings.Split(recs[ii], "=")
+		if len(kvs) != 2 {
+			return c, fmt.Errorf("Failed to parse %v", in)
+		}
+		c.Records = append(c.Records, Record{Key: kvs[0], Value: kvs[1]})
+	}
+	return c, nil
+}
+
+// testCustomerParser implements ref.CustomParser for CustomObj.
+type testCustomParser struct {
+}
+
+func (t *testCustomParser) Print(v reflect.Value) string {
+	c, ok := v.Interface().(CustomObj)
+	if !ok {
+		return ""
+	}
+	return (&c).Print()
+}
+
+func (t *testCustomParser) Parse(in string) (reflect.Value, error) {
+	c, err := Parse(in)
+	return reflect.ValueOf(c), err
 }
 
 func TestWalkStruct(t *testing.T) {
@@ -179,10 +228,16 @@ func TestWalkStruct(t *testing.T) {
     BoolFlag: bool
     FloatVal: float64
     AllocatedIPv4Addrs: []uint8
+    *CustomObj: {
+      Records: []{
+        Key: string
+        Value: string
+      }
+    }
   }
 }
 `
-	refCtx := &RfCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	outStr := WalkStruct(User{}, refCtx)
 	if outStr != expectedStr {
 		t.Fatalf("Out:\n--%s--\nExpected:\n--%s--\n", outStr, expectedStr)
@@ -190,7 +245,7 @@ func TestWalkStruct(t *testing.T) {
 }
 
 func TestEmptyGet(t *testing.T) {
-	refCtx := &RfCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	kvs := make(map[string]FInfo)
 	GetKvs(User{}, refCtx, kvs)
 	total := 0
@@ -445,6 +500,11 @@ func TestEmptyGet(t *testing.T) {
 		t.Fatalf("AllocatedIPv4Addrs not found in kvs")
 	}
 	total++
+	if _, ok := kvs["CustomObj"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("CustomObj not found in kvs")
+	}
+	total++
 
 	if len(kvs) != total {
 		printKvs("kvs", kvs, true)
@@ -499,10 +559,22 @@ func TestGet(t *testing.T) {
 			BoolFlag:           true,
 			FloatVal:           77.983,
 			AllocatedIPv4Addrs: byteArray,
+			CustomObj: &CustomObj{
+				Records: []Record{
+					{
+						Key:   "k1",
+						Value: "v1",
+					},
+					{
+						Key:   "k2",
+						Value: "v2",
+					},
+				},
+			},
 		},
 	}
 	kvs := make(map[string]FInfo)
-	refCtx := &RfCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	GetKvs(u, refCtx, kvs)
 
 	if fi, ok := kvs["Name"]; ok {
@@ -878,6 +950,15 @@ func TestGet(t *testing.T) {
 	} else {
 		t.Fatalf("AllocatedIPv4Addrs not found")
 	}
+
+	if fi, ok := kvs["CustomObj"]; ok {
+		if fi.ValueStr[0] != "k1=v1,k2=v2" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Invalid CustomObj found '%+v'", fi)
+		}
+	} else {
+		t.Fatalf("CustomObj not found")
+	}
 }
 
 func TestUpdate(t *testing.T) {
@@ -927,6 +1008,18 @@ func TestUpdate(t *testing.T) {
 			Conditions: []*NodeCondition{&cond1, &cond2},
 			BoolFlag:   false,
 			FloatVal:   11.322,
+			CustomObj: &CustomObj{
+				Records: []Record{
+					{
+						Key:   "k1",
+						Value: "v1",
+					},
+					{
+						Key:   "k2",
+						Value: "v2",
+					},
+				},
+			},
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -952,8 +1045,9 @@ func TestUpdate(t *testing.T) {
 	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 	kvs["BoolFlag"] = NewFInfo([]string{"true"})
 	kvs["FloatVal"] = NewFInfo([]string{"901.019"})
+	kvs["CustomObj"] = NewFInfo([]string{"k1=x1,k2=x2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	newObj := WriteKvs(u, refCtx, kvs)
 	newUser := newObj.(User)
 
@@ -1088,6 +1182,11 @@ func TestUpdate(t *testing.T) {
 		t.Fatalf("unable to write FloatVal")
 	}
 
+	if newUser.Spec.CustomObj.Print() != "k1=x1,k2=x2" {
+		fmt.Printf("newCustomObj: %+v\n\n", newUser.Spec.CustomObj)
+		t.Fatalf("unable to write CustomObj")
+	}
+
 }
 
 func TestNewWrite(t *testing.T) {
@@ -1129,8 +1228,9 @@ func TestNewWrite(t *testing.T) {
 	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 	kvs["BoolFlag"] = NewFInfo([]string{"true"})
 	kvs["FloatVal"] = NewFInfo([]string{"901.109"})
+	kvs["CustomObj"] = NewFInfo([]string{"k1=v1,k2=v2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj}
+	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	newObj := WriteKvs(User{}, refCtx, kvs)
 	newUser := newObj.(User)
 
@@ -1273,6 +1373,11 @@ func TestNewWrite(t *testing.T) {
 	if newUser.Spec.FloatVal != 901.109 {
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write FloatVal")
+	}
+
+	if newUser.Spec.CustomObj.Print() != "k1=v1,k2=v2" {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write CustomObj")
 	}
 }
 
@@ -1446,6 +1551,13 @@ func subObj(kind string) interface{} {
 	case "NodeCondition":
 		var v NodeCondition
 		return &v
+	case "CustomObj":
+		var v CustomObj
+		return &v
+	case "Record":
+		var v Record
+		return &v
 	}
+
 	return nil
 }

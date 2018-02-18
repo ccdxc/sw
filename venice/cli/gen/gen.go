@@ -23,7 +23,7 @@ type genObj struct {
 	Name        string
 	Package     string
 	GrpcService string
-	Perms       string
+	Perms       []string
 	CreateAttrs map[string]string
 	Attrs       map[string]string
 	Structs     []string
@@ -38,7 +38,12 @@ func parenthesis(inp string) string {
 }
 
 func checkPerms(obj genObj, perm string) bool {
-	return strings.Contains(obj.Perms, perm)
+	for ii := range obj.Perms {
+		if obj.Perms[ii] == perm {
+			return true
+		}
+	}
+	return false
 }
 
 func unTitle(inp string) string {
@@ -156,7 +161,7 @@ func genFromTemplates(ofile string, ifiles ...string) error {
 }
 
 func cleanAPIObjs() {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	for _, apiObj := range api.Objs {
 		if _, ok := genObjs[apiObj.Name]; ok {

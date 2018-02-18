@@ -87,10 +87,16 @@ func TestWalkStructJson(t *testing.T) {
     boolFlag: bool
     floatVal: float64
     allocated-ipv4-addrs: []uint8
+    *custom-obj: {
+      records: []{
+        key: string
+        value: string
+      }
+    }
   }
 }
 `
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true}
+	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	outStr := WalkStruct(User{}, refCtx)
 	if outStr != expectedStr {
 		t.Fatalf("Out:\n--%s--\nExpected:\n--%s--\n", outStr, expectedStr)
@@ -98,7 +104,7 @@ func TestWalkStructJson(t *testing.T) {
 }
 
 func TestEmptyGetJson(t *testing.T) {
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true}
+	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	kvs := make(map[string]FInfo)
 	GetKvs(User{}, refCtx, kvs)
 	total := 0
@@ -353,6 +359,11 @@ func TestEmptyGetJson(t *testing.T) {
 		t.Fatalf("allocated-ipv4-addrs not found in kvs")
 	}
 	total++
+	if _, ok := kvs["custom-obj"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("custom-obj not found in kvs")
+	}
+	total++
 
 	if len(kvs) != total {
 		printKvs("kvs", kvs, true)
@@ -407,10 +418,22 @@ func TestGetJson(t *testing.T) {
 			BoolFlag:           true,
 			FloatVal:           77.983,
 			AllocatedIPv4Addrs: byteArray,
+			CustomObj: &CustomObj{
+				Records: []Record{
+					{
+						Key:   "k1",
+						Value: "v1",
+					},
+					{
+						Key:   "k2",
+						Value: "v2",
+					},
+				},
+			},
 		},
 	}
 	kvs := make(map[string]FInfo)
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true}
+	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	GetKvs(u, refCtx, kvs)
 
 	if fi, ok := kvs["name"]; ok {
@@ -786,6 +809,15 @@ func TestGetJson(t *testing.T) {
 	} else {
 		t.Fatalf("allocated-ipv4-addrs not found")
 	}
+
+	if fi, ok := kvs["custom-obj"]; ok {
+		if fi.ValueStr[0] != "k1=v1,k2=v2" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Invalid custom-obj found '%+v'", fi)
+		}
+	} else {
+		t.Fatalf("custom-obj not found")
+	}
 }
 
 func TestUpdateJson(t *testing.T) {
@@ -835,6 +867,18 @@ func TestUpdateJson(t *testing.T) {
 			Conditions: []*NodeCondition{&cond1, &cond2},
 			BoolFlag:   false,
 			FloatVal:   11.322,
+			CustomObj: &CustomObj{
+				Records: []Record{
+					{
+						Key:   "k1",
+						Value: "v1",
+					},
+					{
+						Key:   "k2",
+						Value: "v2",
+					},
+				},
+			},
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -860,8 +904,9 @@ func TestUpdateJson(t *testing.T) {
 	kvs["lastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 	kvs["boolFlag"] = NewFInfo([]string{"true"})
 	kvs["floatVal"] = NewFInfo([]string{"901.019"})
+	kvs["custom-obj"] = NewFInfo([]string{"k1=x1,k2=x2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true}
+	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	newObj := WriteKvs(u, refCtx, kvs)
 	newUser := newObj.(User)
 
@@ -996,6 +1041,10 @@ func TestUpdateJson(t *testing.T) {
 		t.Fatalf("unable to write FloatVal")
 	}
 
+	if newUser.Spec.CustomObj.Print() != "k1=x1,k2=x2" {
+		fmt.Printf("newCustomObj: %+v\n\n", newUser.Spec.CustomObj)
+		t.Fatalf("unable to write CustomObj")
+	}
 }
 
 func TestNewWriteJson(t *testing.T) {
@@ -1037,8 +1086,9 @@ func TestNewWriteJson(t *testing.T) {
 	kvs["lastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 	kvs["boolFlag"] = NewFInfo([]string{"true"})
 	kvs["floatVal"] = NewFInfo([]string{"901.109"})
+	kvs["custom-obj"] = NewFInfo([]string{"k1=v1,k2=v2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true}
+	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
 	newObj := WriteKvs(User{}, refCtx, kvs)
 	newUser := newObj.(User)
 
@@ -1181,5 +1231,10 @@ func TestNewWriteJson(t *testing.T) {
 	if newUser.Spec.FloatVal != 901.109 {
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write FloatVal")
+	}
+
+	if newUser.Spec.CustomObj.Print() != "k1=v1,k2=v2" {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write CustomObj")
 	}
 }

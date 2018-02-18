@@ -547,15 +547,6 @@
             "required": false,
             "type": "integer",
             "format": "int64"
-          },
-          {
-            "name": "Status.WorkloadAttributes",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         ],
         "tags": [
@@ -1465,16 +1456,6 @@
             "format": "date-time"
           },
           {
-            "name": "Spec.WorkloadSelector",
-            "description": "endpoint UUID.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
             "name": "Spec.ServiceSelector",
             "description": "VM or container UUID.",
             "in": "query",
@@ -2297,6 +2278,40 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
+    "labelsRequirement": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "description": "The label key that the condition applies to."
+        },
+        "Operator": {
+          "type": "string",
+          "description": "Condition checked for the key."
+        },
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+        }
+      },
+      "description": "Requirement defines a single matching condition for a selector."
+    },
+    "labelsSelector": {
+      "type": "object",
+      "properties": {
+        "Requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/labelsRequirement"
+          },
+          "description": "Requirements are ANDed."
+        }
+      },
+      "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
+    },
     "networkAutoMsgEndpointWatchHelper": {
       "type": "object",
       "properties": {
@@ -2486,8 +2501,8 @@
           "format": "int64"
         },
         "WorkloadAttributes": {
-          "type": "array",
-          "items": {
+          "type": "object",
+          "additionalProperties": {
             "type": "string"
           }
         }
@@ -2750,10 +2765,7 @@
       "type": "object",
       "properties": {
         "WorkloadSelector": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
+          "$ref": "#/definitions/labelsSelector",
           "title": "endpoint UUID"
         },
         "ServiceSelector": {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/debug"
@@ -325,7 +326,7 @@ func TestSecurityGroupRPC(t *testing.T) {
 			Name:   "testsg",
 		},
 		Spec: network.SecurityGroupSpec{
-			WorkloadSelector: []string{"env:production", "app:procurement"},
+			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}),
 		},
 	}
 	// create an sg in statemgr
@@ -396,7 +397,7 @@ func TestSecurityGroupRPC(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: network.SecurityGroupSpec{
-			WorkloadSelector: []string{"env:production", "app:procurement"},
+			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}),
 		},
 	}
 	err = stateMgr.CreateSecurityGroup(&sgp2)

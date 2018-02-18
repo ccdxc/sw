@@ -1,9 +1,19 @@
 {
-	"kind": "sg",
+	"kind": "securityGroup",
 	"meta": {
 		"name": "dev-sg"
 	},
 	"spec": {
-		"workload-labels" : [ "io.pensando.network.sg:dev-sg" ]
+	    "workload-selector" : {
+		"requirements": [
+		    {
+			"key": "io.pensando.network.sg",
+			"operator": "equals",
+			"values": [
+			    "dev-sg"
+			]
+		    }
+		]
+	    }
 	}
 }

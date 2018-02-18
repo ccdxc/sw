@@ -17,7 +17,7 @@ message EndpointSpec {
     string WorkloadUUID = 2;
     string WorkloadName = 3;
     string NetworkName  = 4;
-    repeated string WorkloadLabels = 5;
+    map<string,string> WorkloadAttributes = 5;
     repeated string SecurityGroups = 6;
 }
 

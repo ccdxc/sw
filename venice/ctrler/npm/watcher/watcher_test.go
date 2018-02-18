@@ -3,10 +3,12 @@
 package watcher
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/debug"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -133,7 +135,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	}, "Network not found in statemgr")
 
 	// create a endpoint
-	var attrs []string
+	var attrs map[string]string
 	err = watcher.CreateEndpoint("testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
 	AssertOk(t, err, "Error creating endpoint")
 
@@ -197,7 +199,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	AssertEquals(t, "testTenant", ts.Name, "Tenant name did not match")
 
 	// create an sg
-	err = watcher.CreateSecurityGroup("testTenant", "testsg", []string{"env:production", "app:procurement"})
+	err = watcher.CreateSecurityGroup("testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating sg")
 
 	// verify sg got created
@@ -208,8 +210,8 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	sg, err := stateMgr.FindSecurityGroup("testTenant", "testsg")
 	AssertOk(t, err, "Could not find the sg")
 	Assert(t, (sg.TypeMeta.Kind == "SecurityGroup"), "sg object type meta did not match", sg)
-	Assert(t, (len(sg.Spec.WorkloadSelector) == 2), "sg selector did not match", sg)
-	Assert(t, (sg.Spec.WorkloadSelector[0] == "env:production"), "sg selector did not match", sg)
+	Assert(t, (len(sg.Spec.WorkloadSelector.GetRequirements()) == 2), "sg selector did not match", sg)
+	Assert(t, strings.Contains(sg.Spec.WorkloadSelector.Print(), "env=production"), "sg selector did not match", sg)
 
 	// trigger a delete event
 	err = watcher.DeleteSecurityGroup("testTenant", "testsg")
@@ -252,7 +254,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertEquals(t, "testTenant", ts.Name, "Tenant name did not match")
 
 	// create an sg
-	err = watcher.CreateSecurityGroup("testTenant", "testsg", []string{"env:production", "app:procurement"})
+	err = watcher.CreateSecurityGroup("testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating sg")
 
 	// wait a little for watch even to propagate
@@ -400,7 +402,7 @@ func TestRestartWatchers(t *testing.T) {
 	Assert(t, nw.TypeMeta.Kind == "Network", "Network type meta did not match", nw)
 
 	// security group and security group policy objects
-	err = w.CreateSecurityGroup("testTenant", "testsg", []string{"env:production", "app:procurement"})
+	err = w.CreateSecurityGroup("testTenant", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating sg")
 
 	// wait a little for watch even to propagate
@@ -441,7 +443,7 @@ func TestRestartWatchers(t *testing.T) {
 	Assert(t, len(sgp.Spec.OutRules) == 1, "sg policy rules did not match", sgp)
 
 	// create a endpoint
-	var attrs []string
+	var attrs map[string]string
 	err = w.CreateEndpoint("testTenant", "testNetwork", "testEndpoint", "testVm", "01:02:03:04:05:06", "testHost", "20.1.1.1", attrs, 101)
 	AssertOk(t, err, "Error creating endpoint")
 

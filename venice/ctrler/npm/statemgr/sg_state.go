@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
@@ -46,7 +47,7 @@ func (sg *SecurityGroupState) attachEndpoints() error {
 	// walk the endpoints and see which ones match
 	for _, ep := range eps {
 		if ep.Tenant == sg.Tenant {
-			if ep.MatchAttributes(sg.Spec.WorkloadSelector) {
+			if sg.Spec.WorkloadSelector.Matches(labels.Set(ep.Status.WorkloadAttributes)) {
 				err = ep.AddSecurityGroup(sg)
 				if err != nil {
 					log.Errorf("Error attaching endpoint %s to sg %s. Err: %v", ep.Name, sg.Name, err)

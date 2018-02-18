@@ -34,10 +34,21 @@ func NilSubObj(string) interface{} {
 	return nil
 }
 
+// CustomParser is an interface to be implemented by objects that have custom
+// parsers. For example, label selectors are represented as a string in cli and
+// parsed in to labels.Selector when passed to the backend.
+type CustomParser interface {
+	// Parse a string representation of the object
+	Parse(string) (reflect.Value, error)
+	// Print an object to its string representation
+	Print(reflect.Value) string
+}
+
 // RfCtx is context used by the package to pass on intermediate context or user context
 type RfCtx struct {
-	GetSubObj  GetSubObjFn
-	UseJSONTag bool
+	GetSubObj     GetSubObjFn
+	UseJSONTag    bool
+	CustomParsers map[string]CustomParser
 }
 
 type kvContext struct {
@@ -45,6 +56,7 @@ type kvContext struct {
 	prefixKey string
 	sskip     bool
 	isKey     bool
+	typeName  string
 	fieldName string
 	inSlice   bool
 }
@@ -209,10 +221,11 @@ func getFieldName(kvCtx *kvContext, refCtx *RfCtx, typeField *reflect.StructFiel
 	return fieldName
 }
 
-func insertTag(kvCtx *kvContext, veniceTag string, fieldName string) (string, bool, bool) {
+func insertTag(kvCtx *kvContext, veniceTag, typeName, fieldName string) (string, bool, bool) {
 	insTag := veniceTagString(veniceTag, "ins")
 	sskip := kvCtx.sskip
 	isKey := kvCtx.isKey
+	kvCtx.typeName = typeName
 	kvCtx.fieldName = fieldName
 	kvCtx.sskip = veniceTagBool(veniceTag, "sskip")
 	kvCtx.isKey = veniceTagBool(veniceTag, "key")
@@ -235,6 +248,7 @@ func removeTag(kvCtx *kvContext, insTag string, sskip, isKey bool) {
 	kvCtx.sskip = sskip
 	kvCtx.isKey = isKey
 	kvCtx.fieldName = ""
+	kvCtx.typeName = ""
 }
 
 // getKvs is shadow routine that works recursively for GetKvs
@@ -246,6 +260,15 @@ func getKvs(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FIn
 			getKvs(elem, kvCtx, refCtx, kvs)
 		}
 	case reflect.Struct:
+		if cp, ok := refCtx.CustomParsers[kvCtx.typeName]; ok {
+			kvs[kvCtx.fieldName] = FInfo{
+				ValueStr: []string{cp.Print(v)},
+				TypeStr:  reflect.String.String(),
+				SSkip:    kvCtx.sskip,
+				Key:      kvCtx.isKey,
+			}
+			return
+		}
 		getKvsStruct(v, kvCtx, refCtx, kvs)
 
 	case reflect.Slice, reflect.Array:
@@ -362,10 +385,11 @@ func getKvsStruct(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[stri
 					TypeStr:  t,
 					ValueStr: []string{v},
 					SSkip:    veniceTagBool(veniceTag, "sskip"),
-					Key:      veniceTagBool(veniceTag, "key")}
+					Key:      veniceTagBool(veniceTag, "key"),
+				}
 			}
 		} else {
-			insTag, sskip, isKey := insertTag(kvCtx, veniceTag, fieldName)
+			insTag, sskip, isKey := insertTag(kvCtx, veniceTag, fmt.Sprintf("%v", typeField.Type), fieldName)
 			getKvs(val, kvCtx, refCtx, kvs)
 			removeTag(kvCtx, insTag, sskip, isKey)
 		}
@@ -401,6 +425,17 @@ func writeKvs(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[
 	mapKey := reflect.Value{}
 	switch orig.Kind() {
 	case reflect.Struct:
+		if cp, ok := refCtx.CustomParsers[kvCtx.typeName]; ok {
+			info, ok := kvs[kvCtx.fieldName]
+			if ok {
+				delete(kvs, kvCtx.fieldName)
+				v, err := cp.Parse(info.ValueStr[0])
+				if err == nil {
+					new.Set(v)
+					return reflect.ValueOf("")
+				}
+			}
+		}
 		mapKey = writeKvsStruct(new, orig, kvCtx, refCtx, kvs)
 
 	case reflect.Slice, reflect.Array:
@@ -607,7 +642,7 @@ func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kv
 		if isLeaf {
 			mapKey = writeKvsOne(fieldName, v, newField, origField, kvCtx, refCtx, kvs)
 		} else {
-			insTag, sskip, key := insertTag(kvCtx, veniceTag, fieldName)
+			insTag, sskip, key := insertTag(kvCtx, veniceTag, fmt.Sprintf("%v", typeField.Type), fieldName)
 			mapKey = writeKvs(newField, origField, kvCtx, refCtx, kvs)
 			removeTag(kvCtx, insTag, sskip, key)
 		}

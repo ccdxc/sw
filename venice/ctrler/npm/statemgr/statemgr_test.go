@@ -9,6 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -35,7 +36,7 @@ func createNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string) error {
 	return stateMgr.CreateNetwork(&np)
 }
 
-func createSg(stateMgr *Statemgr, tenant, sgname string, selectors []string) (*network.SecurityGroup, error) {
+func createSg(stateMgr *Statemgr, tenant, sgname string, selector *labels.Selector) (*network.SecurityGroup, error) {
 	// sg object
 	sg := network.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
@@ -44,7 +45,7 @@ func createSg(stateMgr *Statemgr, tenant, sgname string, selectors []string) (*n
 			Name:   sgname,
 		},
 		Spec: network.SecurityGroupSpec{
-			WorkloadSelector: selectors,
+			WorkloadSelector: selector,
 		},
 	}
 
@@ -441,13 +442,13 @@ func TestSgCreateDelete(t *testing.T) {
 		return
 	}
 	// create sg
-	sg, err := createSg(stateMgr, "default", "testSg", []string{"env:production", "app:procurement"})
+	sg, err := createSg(stateMgr, "default", "testSg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
 
 	// verify we can find the sg
 	sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
 	AssertOk(t, err, "Could not find the security group")
-	AssertEquals(t, sgs.Spec.WorkloadSelector, sg.Spec.WorkloadSelector, "Security group params did not match")
+	AssertEquals(t, sgs.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
 
 	// delete the security group
 	err = stateMgr.DeleteSecurityGroup("default", "testSg")
@@ -466,7 +467,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 		return
 	}
 	// create sg
-	_, err = createSg(stateMgr, "default", "testSg", []string{"env:production", "app:procurement"})
+	_, err = createSg(stateMgr, "default", "testSg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
 	sg, err := stateMgr.FindSecurityGroup("default", "testSg")
 	AssertOk(t, err, "Error finding sg")
@@ -491,7 +492,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 			Network:            "default",
 			HomingHostAddr:     "192.168.1.1",
 			HomingHostName:     "testHost",
-			WorkloadAttributes: []string{"env:production", "app:procurement"},
+			WorkloadAttributes: map[string]string{"env": "production", "app": "procurement"},
 		},
 	}
 
@@ -512,7 +513,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 	Assert(t, (sg.Status.Workloads[0] == eps.Name), "Endpoint is not linked to sg", sg)
 
 	// create a new sg
-	_, err = createSg(stateMgr, "default", "testSg2", []string{"env:production", "app:procurement"})
+	_, err = createSg(stateMgr, "default", "testSg2", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
 	sg2, err := stateMgr.FindSecurityGroup("default", "testSg2")
 	AssertOk(t, err, "Error finding sg")
@@ -550,9 +551,9 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 		return
 	}
 	// create sg
-	_, err = createSg(stateMgr, "default", "procurement", []string{"env:production", "app:procurement"})
+	_, err = createSg(stateMgr, "default", "procurement", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
-	_, err = createSg(stateMgr, "default", "catalog", []string{"env:production", "app:catalog"})
+	_, err = createSg(stateMgr, "default", "catalog", labels.SelectorFromSet(labels.Set{"env": "production", "app": "catalog"}))
 	AssertOk(t, err, "Error creating security group")
 
 	// sg policy
@@ -665,7 +666,7 @@ func TestEndpointConcurrency(t *testing.T) {
 					Network:            "default",
 					HomingHostAddr:     "192.168.1.1",
 					HomingHostName:     "testHost",
-					WorkloadAttributes: []string{"env:production", "app:procurement"},
+					WorkloadAttributes: map[string]string{"env": "production", "app": "procurement"},
 				},
 			}
 
@@ -682,7 +683,7 @@ func TestEndpointConcurrency(t *testing.T) {
 	// create few SGs concurrently that match on endpoints
 	for i := 0; i < concurrency; i++ {
 		go func(idx int) {
-			_, serr := createSg(stateMgr, "default", fmt.Sprintf("testSg-%d", idx), []string{"env:production", "app:procurement"})
+			_, serr := createSg(stateMgr, "default", fmt.Sprintf("testSg-%d", idx), labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 			waitCh <- serr
 		}(i)
 	}
@@ -745,9 +746,9 @@ func TestTenantCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating network")
 
 	// create security groups
-	_, err = createSg(stateMgr, "testTenant", "testSg1", []string{"env:production", "app:procurement"})
+	_, err = createSg(stateMgr, "testTenant", "testSg1", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
-	_, err = createSg(stateMgr, "testTenant", "testSg2", []string{"env:production", "app:procurement"})
+	_, err = createSg(stateMgr, "testTenant", "testSg2", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating security group")
 
 	// create endpoints

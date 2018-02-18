@@ -11,6 +11,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/pensando/sw/venice/cli/api"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // File processing
@@ -95,7 +96,7 @@ func processDir(ctx *context, filename, kind string) error {
 
 // processURL fetches the objects to be crate from a URL and posts them
 func processURL(ctx *context, url, kind string) error {
-	inp, err := httpGetRaw(url)
+	inp, err := netutils.HTTPGetRaw(url)
 	if err != nil {
 		return fmt.Errorf("Error fetching URL %s: %s", url, err)
 	}

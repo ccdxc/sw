@@ -65,14 +65,13 @@ func HTTPPost(url string, req interface{}, resp interface{}) error {
 		return err
 	}
 
-	defer res.Body.Close()
-
 	// Check the response code
 	if res.StatusCode == http.StatusInternalServerError {
 		eBody, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return errors.New("HTTP StatusInternalServerError" + err.Error())
 		}
+		res.Body.Close()
 		return errors.New(string(eBody))
 	}
 
@@ -86,6 +85,11 @@ func HTTPPost(url string, req interface{}, resp interface{}) error {
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
 		return err
+	}
+	defer res.Body.Close()
+
+	if resp == nil {
+		return nil
 	}
 
 	// Convert response json to struct
@@ -150,14 +154,13 @@ func HTTPPut(url string, req interface{}, resp interface{}) error {
 		return err
 	}
 
-	defer res.Body.Close()
-
 	// Check the response code
 	if res.StatusCode == http.StatusInternalServerError {
 		eBody, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return errors.New("HTTP StatusInternalServerError" + err.Error())
 		}
+		res.Body.Close()
 		return errors.New(string(eBody))
 	}
 
@@ -166,12 +169,17 @@ func HTTPPut(url string, req interface{}, resp interface{}) error {
 		return errors.New("HTTP Error response")
 	}
 
+	if resp == nil {
+		return nil
+	}
+
 	// Read the entire response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
 		return err
 	}
+	defer res.Body.Close()
 
 	// Convert response json to struct
 	err = json.Unmarshal(body, resp)
@@ -186,11 +194,15 @@ func HTTPPut(url string, req interface{}, resp interface{}) error {
 // HTTPDelete provides wrapper for http DELETE operations.
 func HTTPDelete(url string, req interface{}, resp interface{}) error {
 	client := &http.Client{}
-	// Convert the req to json
-	jsonStr, err := json.Marshal(req)
-	if err != nil {
-		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return err
+	jsonStr := []byte{}
+	var err error
+	if req != nil {
+		// Convert the req to json
+		jsonStr, err = json.Marshal(req)
+		if err != nil {
+			log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
+			return err
+		}
 	}
 
 	request, err := http.NewRequest(http.MethodDelete, url, strings.NewReader(string(jsonStr)))
@@ -207,14 +219,13 @@ func HTTPDelete(url string, req interface{}, resp interface{}) error {
 		return err
 	}
 
-	defer res.Body.Close()
-
 	// Check the response code
 	if res.StatusCode == http.StatusInternalServerError {
 		eBody, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return errors.New("HTTP StatusInternalServerError" + err.Error())
 		}
+		res.Body.Close()
 		return errors.New(string(eBody))
 	}
 
@@ -228,6 +239,11 @@ func HTTPDelete(url string, req interface{}, resp interface{}) error {
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
 		return err
+	}
+	defer res.Body.Close()
+
+	if resp == nil {
+		return nil
 	}
 
 	// Convert response json to struct

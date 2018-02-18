@@ -3,14 +3,12 @@ package labels
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
-
-	lproto "github.com/pensando/sw/api/labels/lproto"
 )
 
 /*
@@ -37,20 +35,10 @@ limitations under the License.
 // LabelSelector is an interface that implements a label selector.
 type LabelSelector interface {
 	// Matches returns true if this selector matches the given set of labels.
-	Matches(labels.Labels) bool
+	Matches(Labels) bool
 
 	// Print returns a human readable string that represents this selector.
 	Print() string
-}
-
-// Requirement is a wrapper for lproto.Requirement, it enables extra methods.
-type Requirement struct {
-	lproto.Requirement
-}
-
-// Selector is a wrapper for lproto.Selector, it enables extra methods.
-type Selector struct {
-	lproto.Selector
 }
 
 // ByKey sorts requirements by key to obtain deterministic parser
@@ -69,16 +57,16 @@ func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 //     require one Value. In, NotIn require one or more Values.
 // (3) The key is invalid due to its length, or sequence
 //     of characters. See validateLabelKey for more details.
-func NewRequirement(key string, op lproto.Operator, vals []string) (*Requirement, error) {
+func NewRequirement(key string, op Operator, vals []string) (*Requirement, error) {
 	if err := validateLabelKey(key); err != nil {
 		return nil, err
 	}
 	switch op {
-	case lproto.Operator_equals, lproto.Operator_notEquals:
+	case Operator_equals, Operator_notEquals:
 		if len(vals) != 1 {
 			return nil, fmt.Errorf("values must contain one value")
 		}
-	case lproto.Operator_in, lproto.Operator_notIn:
+	case Operator_in, Operator_notIn:
 		if len(vals) == 0 {
 			return nil, fmt.Errorf("values must contain one or more values")
 		}
@@ -92,7 +80,7 @@ func NewRequirement(key string, op lproto.Operator, vals []string) (*Requirement
 		}
 	}
 	sort.Strings(vals)
-	return &Requirement{lproto.Requirement{Key: key, Operator: lproto.Operator_name[int32(op)], Values: vals}}, nil
+	return &Requirement{Key: key, Operator: Operator_name[int32(op)], Values: vals}, nil
 }
 
 func (r *Requirement) hasValue(value string) bool {
@@ -110,15 +98,14 @@ func (r *Requirement) hasValue(value string) bool {
 //     value for that key is in Requirement's value set.
 // (2) The operator is NotEquals or NotIn, Labels has the Requirement's key and
 //     Labels' value for that key is not in Requirement's value set.
-func (r *Requirement) Matches(ls labels.Labels) bool {
-	op := lproto.Operator(lproto.Operator_value[r.Operator])
-	switch op {
-	case lproto.Operator_equals, lproto.Operator_in:
+func (r *Requirement) Matches(ls Labels) bool {
+	switch Operator(Operator_value[r.Operator]) {
+	case Operator_equals, Operator_in:
 		if !ls.Has(r.Key) {
 			return false
 		}
 		return r.hasValue(ls.Get(r.Key))
-	case lproto.Operator_notEquals, lproto.Operator_notIn:
+	case Operator_notEquals, Operator_notIn:
 		if !ls.Has(r.Key) {
 			return true
 		}
@@ -132,18 +119,17 @@ func (r *Requirement) Matches(ls labels.Labels) bool {
 // Requirement. If called on an invalid Requirement, an error is
 // returned. See NewRequirement for creating a valid Requirement.
 func (r *Requirement) Print() string {
-	op := lproto.Operator(lproto.Operator_value[r.Operator])
 	var buffer bytes.Buffer
 	buffer.WriteString(r.Key)
 
-	switch op {
-	case lproto.Operator_equals:
+	switch Operator(Operator_value[r.Operator]) {
+	case Operator_equals:
 		buffer.WriteString("=")
-	case lproto.Operator_notEquals:
+	case Operator_notEquals:
 		buffer.WriteString("!=")
-	case lproto.Operator_in:
+	case Operator_in:
 		buffer.WriteString(" in ")
-	case lproto.Operator_notIn:
+	case Operator_notIn:
 		buffer.WriteString(" notin ")
 	}
 
@@ -158,13 +144,12 @@ func (r *Requirement) Print() string {
 
 // Matches for a Selector returns true if all of the Requirements match the
 // provided labels. It returns false for an empty selector.
-func (s *Selector) Matches(l labels.Labels) bool {
+func (s *Selector) Matches(l Labels) bool {
 	if len(s.Requirements) == 0 {
 		return false
 	}
 	for ii := range s.Requirements {
-		r := Requirement{*s.Requirements[ii]}
-		if matches := r.Matches(l); !matches {
+		if matches := s.Requirements[ii].Matches(l); !matches {
 			return false
 		}
 	}
@@ -175,10 +160,15 @@ func (s *Selector) Matches(l labels.Labels) bool {
 func (s *Selector) Print() string {
 	var reqs []string
 	for ii := range s.Requirements {
-		r := Requirement{*s.Requirements[ii]}
-		reqs = append(reqs, r.Print())
+		reqs = append(reqs, s.Requirements[ii].Print())
 	}
 	return strings.Join(reqs, ",")
+}
+
+// Validate validates the selector.
+// Dummy function to help compile .ext.go files that include Selector.
+func (s *Selector) Validate(ver string, ignoreStatus bool) bool {
+	return true
 }
 
 // Token represents constant definition for lexer token
@@ -444,9 +434,9 @@ func (p *Parser) parseRequirement() (*Requirement, error) {
 	}
 	var values sets.String
 	switch operator {
-	case lproto.Operator_in, lproto.Operator_notIn:
+	case Operator_in, Operator_notIn:
 		values, err = p.parseValues()
-	case lproto.Operator_equals, lproto.Operator_notEquals:
+	case Operator_equals, Operator_notEquals:
 		values, err = p.parseExactValue()
 	}
 	if err != nil {
@@ -457,8 +447,8 @@ func (p *Parser) parseRequirement() (*Requirement, error) {
 }
 
 // parseKeyAndInferOperator parse literals.
-func (p *Parser) parseKeyAndInferOperator() (string, lproto.Operator, error) {
-	var operator lproto.Operator
+func (p *Parser) parseKeyAndInferOperator() (string, Operator, error) {
+	var operator Operator
 	tok, literal := p.consume(Values)
 	if tok != IdentifierToken {
 		err := fmt.Errorf("found '%s', expected: identifier", literal)
@@ -472,18 +462,18 @@ func (p *Parser) parseKeyAndInferOperator() (string, lproto.Operator, error) {
 
 // parseOperator return operator and eventually matchType
 // matchType can be exact
-func (p *Parser) parseOperator() (op lproto.Operator, err error) {
+func (p *Parser) parseOperator() (op Operator, err error) {
 	tok, lit := p.consume(KeyAndOperator)
 	switch tok {
 	// DoesNotExistToken shouldn't be here because it's a unary operator, not a binary operator
 	case InToken:
-		op = lproto.Operator_in
+		op = Operator_in
 	case EqualsToken:
-		op = lproto.Operator_equals
+		op = Operator_equals
 	case NotInToken:
-		op = lproto.Operator_notIn
+		op = Operator_notIn
 	case NotEqualsToken:
-		op = lproto.Operator_notEquals
+		op = Operator_notEquals
 	default:
 		return -1, fmt.Errorf("found '%s', expected: '=', '!=', 'in', notin'", lit)
 	}
@@ -595,22 +585,16 @@ func (p *Parser) parseExactValue() (sets.String, error) {
 //      of the VALUEs in its requirement or does not exist
 //  (3) The empty string is a valid VALUE
 //
-func Parse(selector string) (Selector, error) {
+func Parse(selector string) (*Selector, error) {
 	p := &Parser{l: &Lexer{s: selector, pos: 0}}
 	requirements, err := p.parse()
 	if err != nil {
-		return Selector{}, err
+		return &Selector{}, err
 	}
 	sort.Sort(ByKey(requirements)) // sort to grant determistic parsing
-	lrequirements := make([]*lproto.Requirement, 0)
-	for _, req := range requirements {
-		lrequirements = append(lrequirements, &req.Requirement)
-	}
-	return Selector{
-		lproto.Selector{
-			Requirements: lrequirements,
-		},
-	}, err
+	return &Selector{
+		Requirements: requirements,
+	}, nil
 }
 
 func validateLabelKey(k string) error {
@@ -635,21 +619,15 @@ func SelectorFromSet(ls Set) *Selector {
 	}
 	requirements := make([]*Requirement, 0)
 	for label, value := range ls {
-		r, err := NewRequirement(label, lproto.Operator_equals, []string{value})
+		r, err := NewRequirement(label, Operator_equals, []string{value})
 		if err == nil {
 			requirements = append(requirements, r)
 		}
 	}
 	// sort to have deterministic string representation
 	sort.Sort(ByKey(requirements))
-	lrequirements := make([]*lproto.Requirement, 0)
-	for _, req := range requirements {
-		lrequirements = append(lrequirements, &req.Requirement)
-	}
 	return &Selector{
-		lproto.Selector{
-			Requirements: lrequirements,
-		},
+		Requirements: requirements,
 	}
 }
 
@@ -662,17 +640,31 @@ func SelectorFromValidatedSet(ls Set) *Selector {
 	}
 	requirements := make([]*Requirement, 0)
 	for label, value := range ls {
-		requirements = append(requirements, &Requirement{lproto.Requirement{Key: label, Operator: lproto.Operator_name[int32(lproto.Operator_equals)], Values: []string{value}}})
+		requirements = append(requirements, &Requirement{Key: label, Operator: Operator_name[int32(Operator_equals)], Values: []string{value}})
 	}
 	// sort to have deterministic string representation
 	sort.Sort(ByKey(requirements))
-	lrequirements := make([]*lproto.Requirement, 0)
-	for _, req := range requirements {
-		lrequirements = append(lrequirements, &req.Requirement)
-	}
 	return &Selector{
-		lproto.Selector{
-			Requirements: lrequirements,
-		},
+		Requirements: requirements,
 	}
+}
+
+// SelectorParser implements ref.CustomParser for label selector.
+type SelectorParser struct {
+}
+
+func (s *SelectorParser) Print(v reflect.Value) string {
+	if v.Kind() == reflect.Ptr {
+		v = reflect.Indirect(v)
+	}
+	sel, ok := v.Interface().(Selector)
+	if !ok {
+		return ""
+	}
+	return (&sel).Print()
+}
+
+func (s *SelectorParser) Parse(in string) (reflect.Value, error) {
+	sel, err := Parse(in)
+	return reflect.ValueOf(*sel), err
 }

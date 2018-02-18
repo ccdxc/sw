@@ -12,6 +12,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/network"
 	_ "github.com/pensando/sw/api/hooks"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -171,7 +172,7 @@ func TestSgWriter(t *testing.T) {
 			Name:   "testsg",
 		},
 		Spec: network.SecurityGroupSpec{
-			WorkloadSelector: []string{"env:prod", "tier:front"},
+			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "prod", "tier": "front"}),
 		},
 	}
 

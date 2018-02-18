@@ -6,8 +6,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
-
-	lproto "github.com/pensando/sw/api/labels/lproto"
 )
 
 /*
@@ -287,18 +285,18 @@ func TestParserLookahead(t *testing.T) {
 func TestRequirementConstructor(t *testing.T) {
 	requirementConstructorTests := []struct {
 		Key     string
-		Op      lproto.Operator
+		Op      Operator
 		Vals    sets.String
 		Success bool
 	}{
-		{"x", lproto.Operator_equals, nil, false},
-		{"x", lproto.Operator_notEquals, sets.NewString(), false},
-		{"x", lproto.Operator_equals, sets.NewString("foo"), true},
-		{"x", lproto.Operator_in, sets.NewString("foo", "bar"), true},
-		{"x", lproto.Operator_notEquals, sets.NewString("foo"), true},
-		{"x", lproto.Operator_notIn, sets.NewString("foo", "bar"), true},
-		{"1foo", lproto.Operator_equals, sets.NewString("bar"), true},
-		{"1234", lproto.Operator_equals, sets.NewString("bar"), true},
+		{"x", Operator_equals, nil, false},
+		{"x", Operator_notEquals, sets.NewString(), false},
+		{"x", Operator_equals, sets.NewString("foo"), true},
+		{"x", Operator_in, sets.NewString("foo", "bar"), true},
+		{"x", Operator_notEquals, sets.NewString("foo"), true},
+		{"x", Operator_notIn, sets.NewString("foo", "bar"), true},
+		{"1foo", Operator_equals, sets.NewString("bar"), true},
+		{"1234", Operator_equals, sets.NewString("bar"), true},
 	}
 	for _, rc := range requirementConstructorTests {
 		if _, err := NewRequirement(rc.Key, rc.Op, rc.Vals.List()); err == nil && !rc.Success {

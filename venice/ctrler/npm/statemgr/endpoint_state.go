@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
@@ -37,7 +38,7 @@ func EndpointStateFromObj(obj memdb.Object) (*EndpointState, error) {
 // AttributeExists returns true if an attribute is found
 func (eps *EndpointState) AttributeExists(matchAttr string) bool {
 	// walk all attributes and see if it matches
-	for _, attr := range eps.Status.WorkloadAttributes {
+	for attr := range eps.Status.WorkloadAttributes {
 		if attr == matchAttr {
 			return true
 		}
@@ -110,7 +111,7 @@ func (eps *EndpointState) attachSecurityGroups() error {
 
 	// walk all sgs and see if endpoint matches the selector
 	for _, sg := range sgs {
-		if eps.MatchAttributes(sg.Spec.WorkloadSelector) {
+		if sg.Spec.WorkloadSelector.Matches(labels.Set(eps.Status.WorkloadAttributes)) {
 			err = sg.AddEndpoint(eps)
 			if err != nil {
 				log.Errorf("Error adding ep %s to sg %s. Err: %v", eps.Name, sg.Name, err)

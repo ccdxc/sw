@@ -2,6 +2,8 @@ package api
 
 import (
 	swapi "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 // ObjectRlnType is
@@ -34,41 +36,61 @@ type ObjectInfo struct {
 	Package     string
 	GrpcService string
 	URL         string
-	Perms       string
+	Perms       []string
 	Rlns        []ObjectRln
 	Structs     []string
 }
 
 // Objs are
 var Objs = map[string]ObjectInfo{
-	"node": {Name: "node", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/nodes", Perms: "rw",
+	"node": {Name: "node", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/nodes",
+		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"NodeCondition", "PortCondition", "ConditionStatus"}},
-	"cluster": {Name: "cluster", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/cluster", Perms: "rw", Structs: []string{"Timestamp"}},
-	"smartNIC": {Name: "smartNIC", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/smartnics", Perms: "rw",
+	"cluster": {Name: "cluster", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/cluster",
+		Perms:   []string{"put", "get", "list", "delete"},
+		Structs: []string{"Timestamp"}},
+	"smartNIC": {Name: "smartNIC", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/smartnics",
+		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"PortSpec", "PortStatus", "SmartNICCondition"}},
-	"tenant":        {Name: "tenant", Package: "network", GrpcService: "tenant", URL: "/v1/tenants/tenants", Perms: "rw"},
-	"network":       {Name: "network", Package: "network", GrpcService: "network", URL: "/v1/networks/:tenant/networks", Perms: "rw"},
-	"securityGroup": {Name: "securityGroup", Package: "network", GrpcService: "securityGroup", URL: "/v1/security-groups/:tenant/security-groups", Perms: "rw"},
-	"sgpolicy": {Name: "sgpolicy", Package: "network", GrpcService: "sgpolicy", URL: "/v1/sgpolicy/:tenant/sgpolicy", Perms: "rw",
+	"tenant": {Name: "tenant", Package: "network", GrpcService: "tenant", URL: "/v1/tenants/tenants",
+		Perms: []string{"post", "put", "get", "list", "delete"}},
+	"network": {Name: "network", Package: "network", GrpcService: "network", URL: "/v1/networks/:tenant/networks",
+		Perms: []string{"post", "put", "get", "list", "delete"}},
+	"securityGroup": {Name: "securityGroup", Package: "network", GrpcService: "securityGroup", URL: "/v1/security-groups/:tenant/security-groups",
+		Perms:   []string{"post", "put", "get", "list", "delete"},
+		Structs: []string{"Selector", "Requirement"}},
+	"sgpolicy": {Name: "sgpolicy", Package: "network", GrpcService: "sgpolicy", URL: "/v1/sgpolicy/:tenant/sgpolicy",
+		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"SGRule"}},
-	"service": {Name: "service", Package: "network", GrpcService: "service", URL: "/v1/services/:tenant/services", Perms: "rw",
+	"service": {Name: "service", Package: "network", GrpcService: "service", URL: "/v1/services/:tenant/services",
+		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"TLSServerPolicySpec", "TLSClientPolicySpec"}},
-	"lbPolicy": {Name: "lbPolicy", Package: "network", GrpcService: "lbPolicy", URL: "/v1/lb-policy/:tenant/lb-policy", Perms: "rw",
+	"lbPolicy": {Name: "lbPolicy", Package: "network", GrpcService: "lbPolicy", URL: "/v1/lb-policy/:tenant/lb-policy",
+		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"HealthCheckSpec"}},
-	"endpoint": {Name: "endpoint", Package: "network", GrpcService: "endpoint", URL: "/v1/endpoints/:tenant/endpoints", Perms: "rw"},
-	"user": {Name: "user", Package: "api", GrpcService: "api", URL: "/user", Perms: "rw",
+	"endpoint": {Name: "endpoint", Package: "network", GrpcService: "endpoint", URL: "/v1/endpoints/:tenant/endpoints",
+		Perms: []string{"post", "put", "get", "list", "delete"}},
+	"user": {Name: "user", Package: "api", GrpcService: "api", URL: "/user",
+		Perms:   []string{"post", "put", "get", "list", "delete"},
 		Structs: []string{"UserAuditLog"},
 		Rlns: []ObjectRln{
 			{Type: NamedRef, ToObj: "role", Field: "Spec.Roles"}}},
-	"role": {Name: "role", Package: "api", GrpcService: "api", URL: "/role", Perms: "rw",
+	"role": {Name: "role", Package: "api", GrpcService: "api", URL: "/role",
+		Perms: []string{"post", "put", "get", "list", "delete"},
 		Rlns: []ObjectRln{
 			{Type: NamedRef, ToObj: "permission", Field: "Spec.Permissions"},
 			{Type: BackRef, ToObj: "user", Field: "Status.Users"}}},
-	"permission": {Name: "permission", Package: "api", GrpcService: "api", URL: "/permission", Perms: "rw",
+	"permission": {Name: "permission", Package: "api", GrpcService: "api", URL: "/permission",
+		Perms: []string{"post", "put", "get", "list", "delete"},
 		Rlns: []ObjectRln{
 			{Type: SelectorRef, ToObj: "any", Field: "Spec.MatchLabels"},
 			{Type: SelectorRef, ToObj: "any", Field: "Spec.MatchFields"},
 			{Type: BackRef, ToObj: "role", Field: "Status.Roles"}}},
+}
+
+// CustomParsers to be used in refCtx
+var CustomParsers = map[string]ref.CustomParser{
+	"*labels.Selector": &labels.SelectorParser{},
 }
 
 // ObjectHeader is

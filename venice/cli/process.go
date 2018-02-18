@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // editCmd hands the edit command, which allows editing an existing object or a
@@ -122,7 +123,7 @@ func createCmdInternal(c *cli.Context, rmw bool) {
 		url := getURL(ctx, objName)
 		err := restGet(url, ctx.tenant, obj)
 		if err != nil {
-			fmt.Printf("Error getting %s '%s': %v", ctx.subcmd, objName, err)
+			log.Printf("Error getting %s '%s': %v", ctx.subcmd, objName, err)
 			return
 		}
 		log.Debugf("Fetched following object %v", obj)
@@ -133,11 +134,16 @@ func createCmdInternal(c *cli.Context, rmw bool) {
 		return
 	}
 
-	log.Debugf("specKvs = %+v \n", specKvs)
 	newObj := writeObj(obj, metaKvs, specKvs)
 
-	if err = postObj(ctx, newObj, rmw); err != nil {
-		log.Printf("%s", err)
+	if rmw {
+		if err = putObj(ctx, newObj); err != nil {
+			log.Printf("%s", err)
+		}
+	} else {
+		if err = postObj(ctx, newObj); err != nil {
+			log.Printf("%s", err)
+		}
 	}
 }
 
@@ -307,7 +313,7 @@ func labelCmd(c *cli.Context) {
 			if err := updateLabel(obj, newLabels); err != nil {
 				log.Printf("Error updating labels, obj %v, labels %s: %s\n", obj, newLabels, err)
 			}
-			if err := postObj(ctx, obj, true); err != nil {
+			if err := putObj(ctx, obj); err != nil {
 				log.Printf("%s", err)
 			}
 		}
@@ -343,7 +349,7 @@ func labelCmd(c *cli.Context) {
 
 		newObj := getObjFromList(objList, idx)
 		updateLabel(newObj, newLabels)
-		if err := postObj(ctx, newObj, true); err != nil {
+		if err := putObj(ctx, newObj); err != nil {
 			log.Printf("%s", err)
 		}
 	}
@@ -899,8 +905,8 @@ func getFilteredNames(ctx *context) []string {
 	return names
 }
 
-// post or put an object over the REST interface
-func postObj(ctx *context, obj interface{}, update bool) error {
+// post an object over the REST interface
+func postObj(ctx *context, obj interface{}) error {
 	url := getURL(ctx, "")
 
 	hdrBytes, err := json.Marshal(obj)
@@ -912,13 +918,39 @@ func postObj(ctx *context, obj interface{}, update bool) error {
 		return fmt.Errorf("Unable to find header in object (unmarshal): '%s'", string(hdrBytes))
 	}
 
-	if update {
-		err = restPut(url, ctx.tenant, obj)
-	} else {
-		err = restPost(url, ctx.tenant, obj)
-	}
+	err = restPost(url, ctx.tenant, obj)
 	if err != nil {
 		return fmt.Errorf("Error creating %s '%s': %v", ctx.subcmd, hdr.ObjectMeta.Name, err)
+	}
+
+	return nil
+}
+
+// put an object over the REST interface
+func putObj(ctx *context, obj interface{}) error {
+	runObj, ok := obj.(runtime.Object)
+	if !ok {
+		return fmt.Errorf("Not runtime object")
+	}
+	objm, err := runtime.GetObjectMeta(runObj)
+	if err != nil {
+		return err
+	}
+
+	url := getURL(ctx, objm.Name)
+
+	hdrBytes, err := json.Marshal(obj)
+	if err != nil {
+		return fmt.Errorf("Unable to find header in object (marshal): %+v", obj)
+	}
+	hdr := api.ObjectHeader{}
+	if err := json.Unmarshal(hdrBytes, &hdr); err != nil {
+		return fmt.Errorf("Unable to find header in object (unmarshal): '%s'", string(hdrBytes))
+	}
+
+	err = restPut(url, ctx.tenant, obj)
+	if err != nil {
+		return fmt.Errorf("Error updating %s '%s': %v", ctx.subcmd, hdr.ObjectMeta.Name, err)
 	}
 
 	return nil

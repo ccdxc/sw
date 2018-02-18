@@ -9,6 +9,7 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
 
 // ----------------------------- Tenant Object -----------------------------
 
@@ -120,12 +121,11 @@ service NetworkV1 {
 
 // security group configuration
 message SecurityGroupSpec {
-    // FIXME: maps are not working. change this after its fixed
-    // map<string, string> WorkloadSelector = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workload-labels,omitempty"];
+    // FIXME: need to change or remove ServiceSelector
     // map<string, string> ServiceSelector  = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "service-labels,omitempty"];
 
     // Workload selector (list of labels)
-    repeated string WorkloadSelector = 1 [(gogoproto.jsontag) = "workload-labels,omitempty"];
+    labels.Selector WorkloadSelector = 1 [(gogoproto.jsontag) = "workload-selector,omitempty"];
     // Service object selector
     repeated string ServiceSelector  = 2 [(gogoproto.jsontag) = "service-labels,omitempty"];
     // list of CIDRs that are part of this security group
@@ -468,9 +468,7 @@ message EndpointStatus {
     // micro-segment VLAN
     uint32 MicroSegmentVlan = 15 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "micro-segment-vlan,omitempty"];
     // VM or container attribute/labels
-    // FIXME: maps are not working. change this after its fixed
-    // map<string, string> WorkloadAttributes  = 16 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
-    repeated string WorkloadAttributes  = 17 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
+    map<string, string> WorkloadAttributes  = 16 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
 }
 
 // Endpoint represents a network endpoint

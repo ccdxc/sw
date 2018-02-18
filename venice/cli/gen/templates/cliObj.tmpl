@@ -3,7 +3,7 @@
 
 package vcli
 
-{{/* ToDo Remove special casing for Timestamp */}}
+{{/* ToDo Remove special casing for Timestamp/Selector */}}
 import (
 	contxt "context"
 	"encoding/json"
@@ -37,14 +37,18 @@ func getSubObj(kind string) interface{} {
 	{{ range $subObj := .Structs }}
 		{{ if eq (visited $subObj) false }}
 		    {{ if eq $subObj "Timestamp"}}
-        	    case "{{$subObj}}":
-        		    var v api2.{{$subObj}}
+        	       case "{{$subObj}}":
+        	       	    var v api2.{{$subObj}}
         		    return &v
-            {{ else }}
-        	    case "{{$subObj}}":
-        	        var v {{$obj.Package}}.{{$subObj}}
-                    return v
-            {{ end }}
+                    {{ else if or (eq $subObj "Selector") (eq $subObj "Requirement")}}
+        	       case "{{$subObj}}":
+        	       	    var v labels.{{$subObj}}
+        		    return &v
+                    {{ else }}
+        	       case "{{$subObj}}":
+        	            var v {{$obj.Package}}.{{$subObj}}
+                            return v
+                    {{ end }}
 		{{ end }}
 	{{ end }}
 {{ end }}
@@ -87,7 +91,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 	specKvs := []map[string]ref.FInfo{}
 	objmValidKvs := make(map[string]bool)
 	specValidKvs := make(map[string]bool)
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	switch ctx.subcmd {
 
@@ -124,14 +128,18 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 		{{ if eq (visited $subObj) false }}
 		    {{ if eq $subObj "Timestamp"}}
 		        func write{{ $subObj}}Obj(obj api2.{{ $subObj}}, specKvs map[string]ref.FInfo) *api2.{{ $subObj }} {
-            {{ else }}
-                func write{{ $subObj}}Obj(obj {{$obj.Package}}.{{ $subObj}}, specKvs map[string]ref.FInfo) *{{$obj.Package}}.{{ $subObj }} {
-            {{ end }}
-                    refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+                    {{ else if or (eq $subObj "Selector") (eq $subObj "Requirement")}}
+		        func write{{ $subObj}}Obj(obj labels.{{ $subObj}}, specKvs map[string]ref.FInfo) *labels.{{ $subObj }} {
+                    {{ else }}
+                        func write{{ $subObj}}Obj(obj {{$obj.Package}}.{{ $subObj}}, specKvs map[string]ref.FInfo) *{{$obj.Package}}.{{ $subObj }} {
+                    {{ end }}
+                    refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
                     new := ref.WriteKvs(obj, refCtx, specKvs)
 
                     {{ if eq $subObj "Timestamp"}}
                         new{{ $subObj }} := new.(api2.{{ $subObj }})
+                   {{ else if or (eq $subObj "Selector") (eq $subObj "Requirement")}}
+                        new{{ $subObj }} := new.(labels.{{ $subObj }})
                     {{ else }}
                         new{{ $subObj }} := new.({{$obj.Package}}.{{ $subObj }})
                     {{ end }}
@@ -144,7 +152,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 
 {{ range $obj := . }}
 func write{{title $obj.Name}}Obj(obj {{$obj.Package}}.{{title $obj.Name}}, metaKvs, specKvs map[string]ref.FInfo) *{{$obj.Package}}.{{title $obj.Name}} {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -160,15 +168,15 @@ func write{{title $obj.Name}}Obj(obj {{$obj.Package}}.{{title $obj.Name}}, metaK
 
 func createObjFromBytes(ctx *context, objName, inp string) error {
 	switch ctx.subcmd {
-{{ range $obj := . }}
+{{ range $obj := . }}{{if checkPerms $obj "post"}}
 	case "{{$obj.Name}}":
 		create{{title $obj.Name}}FromBytes(ctx, inp)
-{{ end }}
+{{ end }}{{end}}
 	}
 	return nil
 }
 
-{{ range $obj := . }}
+{{ range $obj := . }}{{if checkPerms $obj "post"}}
 func create{{title $obj.Name}}FromBytes(ctx *context, inp string) error {
 	{{$obj.Name}} := &{{$obj.Package}}.{{title $obj.Name}}{}
 	if err := json.Unmarshal([]byte(inp), {{$obj.Name}}); err != nil {
@@ -177,13 +185,40 @@ func create{{title $obj.Name}}FromBytes(ctx *context, inp string) error {
 	}
 
 	{{$obj.Name}}.Tenant = ctx.tenant
-	if err := postObj(ctx, {{$obj.Name}}, true); err != nil {
+	if err := postObj(ctx, {{$obj.Name}}); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
 	return nil
 }
-{{ end }}
+{{ end }}{{end}}
+
+func updateObjFromBytes(ctx *context, objName, inp string) error {
+	switch ctx.subcmd {
+{{ range $obj := . }}{{if checkPerms $obj "put"}}
+	case "{{$obj.Name}}":
+		update{{title $obj.Name}}FromBytes(ctx, inp)
+{{ end }}{{end}}
+	}
+	return nil
+}
+
+{{ range $obj := . }}{{if checkPerms $obj "put"}}
+func update{{title $obj.Name}}FromBytes(ctx *context, inp string) error {
+	{{$obj.Name}} := &{{$obj.Package}}.{{title $obj.Name}}{}
+	if err := json.Unmarshal([]byte(inp), {{$obj.Name}}); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	{{$obj.Name}}.Tenant = ctx.tenant
+	if err := putObj(ctx, {{$obj.Name}}); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+{{ end }}{{end}}
 
 
 func updateLabel(obj interface{}, newLabels map[string]string) error {
@@ -305,6 +340,7 @@ func restPut(url, tenant string, obj interface{}) error {
 	if len(urlStrs) < 3 {
 		return fmt.Errorf("invalid url: '%s'", url)
 	}
+	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
 
 	restcl, err := apiclient.NewRestAPIClient(hostName)
@@ -315,12 +351,14 @@ func restPut(url, tenant string, obj interface{}) error {
 {{ range $obj := . }}{{ if ne $obj.Package "api" }}
 	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
 		v.Tenant = tenant
-		_, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 {{ end }}{{ end }}
-	return httpPost(url, obj)
+	return httpPut(url, obj)
 }

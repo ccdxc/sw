@@ -4,7 +4,6 @@ package watcher
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -235,13 +234,6 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 		for _, nif := range evt.Nwifs {
 			log.Infof("VMM watcher: Got VMM NWIf event %v, Nwif: %+v", evtType, nif)
 
-			// convert attribute map to slice
-			var attrs []string
-			for k, v := range nif.Attributes {
-				attrs = append(attrs, fmt.Sprintf("%s:%s", k, v))
-			}
-
-			// convert attributes
 			// convert Nw IF to an endpoint
 			ep := network.Endpoint{
 				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -255,7 +247,7 @@ func (w *Watcher) handleVmmEvents(stream orch.OrchApi_WatchNwIFsClient) {
 					EndpointUUID:       nif.ObjectMeta.UUID,
 					WorkloadName:       nif.Status.WlName,
 					WorkloadUUID:       nif.Status.WlUUID,
-					WorkloadAttributes: attrs,
+					WorkloadAttributes: nif.Attributes,
 					MacAddress:         nif.Status.MacAddress,
 					IPv4Address:        nif.Status.IpAddress,
 					NodeUUID:           nif.Status.SmartNIC_ID,

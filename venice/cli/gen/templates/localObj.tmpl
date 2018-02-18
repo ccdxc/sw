@@ -33,6 +33,10 @@ func GetSubObj(kind string) interface{} {
 		        case "{{$subObj}}":
 		            var v api2.{{$subObj}}
 		            return &v
+                    {{ else if or (eq $subObj "Selector") (eq $subObj "Requirement")}}
+                        case "{{$subObj}}":
+                                var v labels.{{$subObj}}
+                                return &v
 		    {{ else }}
 			    case "{{$subObj}}":
 				    var v {{$apiObj.Package}}.{{$subObj}}

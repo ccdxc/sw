@@ -509,6 +509,9 @@ func (m *AutoMsgNetworkWatchHelper) Validate(ver string, ignoreStatus bool) bool
 }
 
 func (m *AutoMsgSecurityGroupWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -584,14 +587,25 @@ func (m *SGRule) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *SecurityGroup) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *SecurityGroupList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
 func (m *SecurityGroupSpec) Validate(ver string, ignoreStatus bool) bool {
+	if m.WorkloadSelector != nil && !m.WorkloadSelector.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 

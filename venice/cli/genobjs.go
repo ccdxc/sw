@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 
 	api2 "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cli/api"
@@ -90,6 +91,14 @@ func getSubObj(kind string) interface{} {
 	case "ConditionStatus":
 		var v cmd.ConditionStatus
 		return v
+
+	case "Selector":
+		var v labels.Selector
+		return &v
+
+	case "Requirement":
+		var v labels.Requirement
+		return &v
 
 	case "TLSServerPolicySpec":
 		var v network.TLSServerPolicySpec
@@ -338,7 +347,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 	specKvs := []map[string]ref.FInfo{}
 	objmValidKvs := make(map[string]bool)
 	specValidKvs := make(map[string]bool)
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	switch ctx.subcmd {
 
@@ -622,7 +631,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 
 func writeTimestampObj(obj api2.Timestamp, specKvs map[string]ref.FInfo) *api2.Timestamp {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newTimestamp := new.(api2.Timestamp)
@@ -632,7 +641,7 @@ func writeTimestampObj(obj api2.Timestamp, specKvs map[string]ref.FInfo) *api2.T
 
 func writeHealthCheckSpecObj(obj network.HealthCheckSpec, specKvs map[string]ref.FInfo) *network.HealthCheckSpec {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newHealthCheckSpec := new.(network.HealthCheckSpec)
@@ -642,7 +651,7 @@ func writeHealthCheckSpecObj(obj network.HealthCheckSpec, specKvs map[string]ref
 
 func writeNodeConditionObj(obj cmd.NodeCondition, specKvs map[string]ref.FInfo) *cmd.NodeCondition {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newNodeCondition := new.(cmd.NodeCondition)
@@ -652,7 +661,7 @@ func writeNodeConditionObj(obj cmd.NodeCondition, specKvs map[string]ref.FInfo) 
 
 func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) *cmd.PortCondition {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newPortCondition := new.(cmd.PortCondition)
@@ -662,7 +671,7 @@ func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) 
 
 func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FInfo) *cmd.ConditionStatus {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newConditionStatus := new.(cmd.ConditionStatus)
@@ -670,9 +679,29 @@ func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FIn
 	return &newConditionStatus
 }
 
+func writeSelectorObj(obj labels.Selector, specKvs map[string]ref.FInfo) *labels.Selector {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newSelector := new.(labels.Selector)
+
+	return &newSelector
+}
+
+func writeRequirementObj(obj labels.Requirement, specKvs map[string]ref.FInfo) *labels.Requirement {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newRequirement := new.(labels.Requirement)
+
+	return &newRequirement
+}
+
 func writeTLSServerPolicySpecObj(obj network.TLSServerPolicySpec, specKvs map[string]ref.FInfo) *network.TLSServerPolicySpec {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newTLSServerPolicySpec := new.(network.TLSServerPolicySpec)
@@ -682,7 +711,7 @@ func writeTLSServerPolicySpecObj(obj network.TLSServerPolicySpec, specKvs map[st
 
 func writeTLSClientPolicySpecObj(obj network.TLSClientPolicySpec, specKvs map[string]ref.FInfo) *network.TLSClientPolicySpec {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newTLSClientPolicySpec := new.(network.TLSClientPolicySpec)
@@ -692,7 +721,7 @@ func writeTLSClientPolicySpecObj(obj network.TLSClientPolicySpec, specKvs map[st
 
 func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.SGRule {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newSGRule := new.(network.SGRule)
@@ -702,7 +731,7 @@ func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.S
 
 func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortSpec {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newPortSpec := new.(cmd.PortSpec)
@@ -712,7 +741,7 @@ func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortS
 
 func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.PortStatus {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newPortStatus := new.(cmd.PortStatus)
@@ -722,7 +751,7 @@ func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.P
 
 func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref.FInfo) *cmd.SmartNICCondition {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newSmartNICCondition := new.(cmd.SmartNICCondition)
@@ -732,7 +761,7 @@ func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref
 
 func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *api.UserAuditLog {
 
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newUserAuditLog := new.(api.UserAuditLog)
@@ -741,7 +770,7 @@ func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *a
 }
 
 func writeClusterObj(obj cmd.Cluster, metaKvs, specKvs map[string]ref.FInfo) *cmd.Cluster {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -755,7 +784,7 @@ func writeClusterObj(obj cmd.Cluster, metaKvs, specKvs map[string]ref.FInfo) *cm
 }
 
 func writeEndpointObj(obj network.Endpoint, metaKvs, specKvs map[string]ref.FInfo) *network.Endpoint {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -769,7 +798,7 @@ func writeEndpointObj(obj network.Endpoint, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeLbPolicyObj(obj network.LbPolicy, metaKvs, specKvs map[string]ref.FInfo) *network.LbPolicy {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -783,7 +812,7 @@ func writeLbPolicyObj(obj network.LbPolicy, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeNetworkObj(obj network.Network, metaKvs, specKvs map[string]ref.FInfo) *network.Network {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -797,7 +826,7 @@ func writeNetworkObj(obj network.Network, metaKvs, specKvs map[string]ref.FInfo)
 }
 
 func writeNodeObj(obj cmd.Node, metaKvs, specKvs map[string]ref.FInfo) *cmd.Node {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -811,7 +840,7 @@ func writeNodeObj(obj cmd.Node, metaKvs, specKvs map[string]ref.FInfo) *cmd.Node
 }
 
 func writePermissionObj(obj api.Permission, metaKvs, specKvs map[string]ref.FInfo) *api.Permission {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -825,7 +854,7 @@ func writePermissionObj(obj api.Permission, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeRoleObj(obj api.Role, metaKvs, specKvs map[string]ref.FInfo) *api.Role {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -839,7 +868,7 @@ func writeRoleObj(obj api.Role, metaKvs, specKvs map[string]ref.FInfo) *api.Role
 }
 
 func writeSecurityGroupObj(obj network.SecurityGroup, metaKvs, specKvs map[string]ref.FInfo) *network.SecurityGroup {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -853,7 +882,7 @@ func writeSecurityGroupObj(obj network.SecurityGroup, metaKvs, specKvs map[strin
 }
 
 func writeServiceObj(obj network.Service, metaKvs, specKvs map[string]ref.FInfo) *network.Service {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -867,7 +896,7 @@ func writeServiceObj(obj network.Service, metaKvs, specKvs map[string]ref.FInfo)
 }
 
 func writeSgpolicyObj(obj network.Sgpolicy, metaKvs, specKvs map[string]ref.FInfo) *network.Sgpolicy {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -881,7 +910,7 @@ func writeSgpolicyObj(obj network.Sgpolicy, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeSmartNICObj(obj cmd.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *cmd.SmartNIC {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -895,7 +924,7 @@ func writeSmartNICObj(obj cmd.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *
 }
 
 func writeTenantObj(obj network.Tenant, metaKvs, specKvs map[string]ref.FInfo) *network.Tenant {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -909,7 +938,7 @@ func writeTenantObj(obj network.Tenant, metaKvs, specKvs map[string]ref.FInfo) *
 }
 
 func writeUserObj(obj api.User, metaKvs, specKvs map[string]ref.FInfo) *api.User {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -924,9 +953,6 @@ func writeUserObj(obj api.User, metaKvs, specKvs map[string]ref.FInfo) *api.User
 
 func createObjFromBytes(ctx *context, objName, inp string) error {
 	switch ctx.subcmd {
-
-	case "cluster":
-		createClusterFromBytes(ctx, inp)
 
 	case "endpoint":
 		createEndpointFromBytes(ctx, inp)
@@ -968,21 +994,6 @@ func createObjFromBytes(ctx *context, objName, inp string) error {
 	return nil
 }
 
-func createClusterFromBytes(ctx *context, inp string) error {
-	cluster := &cmd.Cluster{}
-	if err := json.Unmarshal([]byte(inp), cluster); err != nil {
-		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
-		return err
-	}
-
-	cluster.Tenant = ctx.tenant
-	if err := postObj(ctx, cluster, true); err != nil {
-		fmt.Printf("post error %s", err)
-	}
-
-	return nil
-}
-
 func createEndpointFromBytes(ctx *context, inp string) error {
 	endpoint := &network.Endpoint{}
 	if err := json.Unmarshal([]byte(inp), endpoint); err != nil {
@@ -991,7 +1002,7 @@ func createEndpointFromBytes(ctx *context, inp string) error {
 	}
 
 	endpoint.Tenant = ctx.tenant
-	if err := postObj(ctx, endpoint, true); err != nil {
+	if err := postObj(ctx, endpoint); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1006,7 +1017,7 @@ func createLbPolicyFromBytes(ctx *context, inp string) error {
 	}
 
 	lbPolicy.Tenant = ctx.tenant
-	if err := postObj(ctx, lbPolicy, true); err != nil {
+	if err := postObj(ctx, lbPolicy); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1021,7 +1032,7 @@ func createNetworkFromBytes(ctx *context, inp string) error {
 	}
 
 	network.Tenant = ctx.tenant
-	if err := postObj(ctx, network, true); err != nil {
+	if err := postObj(ctx, network); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1036,7 +1047,7 @@ func createNodeFromBytes(ctx *context, inp string) error {
 	}
 
 	node.Tenant = ctx.tenant
-	if err := postObj(ctx, node, true); err != nil {
+	if err := postObj(ctx, node); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1051,7 +1062,7 @@ func createPermissionFromBytes(ctx *context, inp string) error {
 	}
 
 	permission.Tenant = ctx.tenant
-	if err := postObj(ctx, permission, true); err != nil {
+	if err := postObj(ctx, permission); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1066,7 +1077,7 @@ func createRoleFromBytes(ctx *context, inp string) error {
 	}
 
 	role.Tenant = ctx.tenant
-	if err := postObj(ctx, role, true); err != nil {
+	if err := postObj(ctx, role); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1081,7 +1092,7 @@ func createSecurityGroupFromBytes(ctx *context, inp string) error {
 	}
 
 	securityGroup.Tenant = ctx.tenant
-	if err := postObj(ctx, securityGroup, true); err != nil {
+	if err := postObj(ctx, securityGroup); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1096,7 +1107,7 @@ func createServiceFromBytes(ctx *context, inp string) error {
 	}
 
 	service.Tenant = ctx.tenant
-	if err := postObj(ctx, service, true); err != nil {
+	if err := postObj(ctx, service); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1111,7 +1122,7 @@ func createSgpolicyFromBytes(ctx *context, inp string) error {
 	}
 
 	sgpolicy.Tenant = ctx.tenant
-	if err := postObj(ctx, sgpolicy, true); err != nil {
+	if err := postObj(ctx, sgpolicy); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1126,7 +1137,7 @@ func createSmartNICFromBytes(ctx *context, inp string) error {
 	}
 
 	smartNIC.Tenant = ctx.tenant
-	if err := postObj(ctx, smartNIC, true); err != nil {
+	if err := postObj(ctx, smartNIC); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1141,7 +1152,7 @@ func createTenantFromBytes(ctx *context, inp string) error {
 	}
 
 	tenant.Tenant = ctx.tenant
-	if err := postObj(ctx, tenant, true); err != nil {
+	if err := postObj(ctx, tenant); err != nil {
 		fmt.Printf("post error %s", err)
 	}
 
@@ -1156,8 +1167,249 @@ func createUserFromBytes(ctx *context, inp string) error {
 	}
 
 	user.Tenant = ctx.tenant
-	if err := postObj(ctx, user, true); err != nil {
+	if err := postObj(ctx, user); err != nil {
 		fmt.Printf("post error %s", err)
+	}
+
+	return nil
+}
+
+func updateObjFromBytes(ctx *context, objName, inp string) error {
+	switch ctx.subcmd {
+
+	case "cluster":
+		updateClusterFromBytes(ctx, inp)
+
+	case "endpoint":
+		updateEndpointFromBytes(ctx, inp)
+
+	case "lbPolicy":
+		updateLbPolicyFromBytes(ctx, inp)
+
+	case "network":
+		updateNetworkFromBytes(ctx, inp)
+
+	case "node":
+		updateNodeFromBytes(ctx, inp)
+
+	case "permission":
+		updatePermissionFromBytes(ctx, inp)
+
+	case "role":
+		updateRoleFromBytes(ctx, inp)
+
+	case "securityGroup":
+		updateSecurityGroupFromBytes(ctx, inp)
+
+	case "service":
+		updateServiceFromBytes(ctx, inp)
+
+	case "sgpolicy":
+		updateSgpolicyFromBytes(ctx, inp)
+
+	case "smartNIC":
+		updateSmartNICFromBytes(ctx, inp)
+
+	case "tenant":
+		updateTenantFromBytes(ctx, inp)
+
+	case "user":
+		updateUserFromBytes(ctx, inp)
+
+	}
+	return nil
+}
+
+func updateClusterFromBytes(ctx *context, inp string) error {
+	cluster := &cmd.Cluster{}
+	if err := json.Unmarshal([]byte(inp), cluster); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	cluster.Tenant = ctx.tenant
+	if err := putObj(ctx, cluster); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateEndpointFromBytes(ctx *context, inp string) error {
+	endpoint := &network.Endpoint{}
+	if err := json.Unmarshal([]byte(inp), endpoint); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	endpoint.Tenant = ctx.tenant
+	if err := putObj(ctx, endpoint); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateLbPolicyFromBytes(ctx *context, inp string) error {
+	lbPolicy := &network.LbPolicy{}
+	if err := json.Unmarshal([]byte(inp), lbPolicy); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	lbPolicy.Tenant = ctx.tenant
+	if err := putObj(ctx, lbPolicy); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateNetworkFromBytes(ctx *context, inp string) error {
+	network := &network.Network{}
+	if err := json.Unmarshal([]byte(inp), network); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	network.Tenant = ctx.tenant
+	if err := putObj(ctx, network); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateNodeFromBytes(ctx *context, inp string) error {
+	node := &cmd.Node{}
+	if err := json.Unmarshal([]byte(inp), node); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	node.Tenant = ctx.tenant
+	if err := putObj(ctx, node); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updatePermissionFromBytes(ctx *context, inp string) error {
+	permission := &api.Permission{}
+	if err := json.Unmarshal([]byte(inp), permission); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	permission.Tenant = ctx.tenant
+	if err := putObj(ctx, permission); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateRoleFromBytes(ctx *context, inp string) error {
+	role := &api.Role{}
+	if err := json.Unmarshal([]byte(inp), role); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	role.Tenant = ctx.tenant
+	if err := putObj(ctx, role); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateSecurityGroupFromBytes(ctx *context, inp string) error {
+	securityGroup := &network.SecurityGroup{}
+	if err := json.Unmarshal([]byte(inp), securityGroup); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	securityGroup.Tenant = ctx.tenant
+	if err := putObj(ctx, securityGroup); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateServiceFromBytes(ctx *context, inp string) error {
+	service := &network.Service{}
+	if err := json.Unmarshal([]byte(inp), service); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	service.Tenant = ctx.tenant
+	if err := putObj(ctx, service); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateSgpolicyFromBytes(ctx *context, inp string) error {
+	sgpolicy := &network.Sgpolicy{}
+	if err := json.Unmarshal([]byte(inp), sgpolicy); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	sgpolicy.Tenant = ctx.tenant
+	if err := putObj(ctx, sgpolicy); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateSmartNICFromBytes(ctx *context, inp string) error {
+	smartNIC := &cmd.SmartNIC{}
+	if err := json.Unmarshal([]byte(inp), smartNIC); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	smartNIC.Tenant = ctx.tenant
+	if err := putObj(ctx, smartNIC); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateTenantFromBytes(ctx *context, inp string) error {
+	tenant := &network.Tenant{}
+	if err := json.Unmarshal([]byte(inp), tenant); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	tenant.Tenant = ctx.tenant
+	if err := putObj(ctx, tenant); err != nil {
+		fmt.Printf("put error %s", err)
+	}
+
+	return nil
+}
+
+func updateUserFromBytes(ctx *context, inp string) error {
+	user := &api.User{}
+	if err := json.Unmarshal([]byte(inp), user); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	user.Tenant = ctx.tenant
+	if err := putObj(ctx, user); err != nil {
+		fmt.Printf("put error %s", err)
 	}
 
 	return nil
@@ -1753,6 +2005,7 @@ func restPut(url, tenant string, obj interface{}) error {
 	if len(urlStrs) < 3 {
 		return fmt.Errorf("invalid url: '%s'", url)
 	}
+	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
 
 	restcl, err := apiclient.NewRestAPIClient(hostName)
@@ -1763,95 +2016,115 @@ func restPut(url, tenant string, obj interface{}) error {
 
 	if v, ok := obj.(*cmd.Cluster); ok {
 		v.Tenant = tenant
-		_, err := restcl.CmdV1().Cluster().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.CmdV1().Cluster().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*network.Endpoint); ok {
 		v.Tenant = tenant
-		_, err := restcl.EndpointV1().Endpoint().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.EndpointV1().Endpoint().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*network.LbPolicy); ok {
 		v.Tenant = tenant
-		_, err := restcl.LbPolicyV1().LbPolicy().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.LbPolicyV1().LbPolicy().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*network.Network); ok {
 		v.Tenant = tenant
-		_, err := restcl.NetworkV1().Network().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.NetworkV1().Network().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*cmd.Node); ok {
 		v.Tenant = tenant
-		_, err := restcl.CmdV1().Node().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.CmdV1().Node().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*network.SecurityGroup); ok {
 		v.Tenant = tenant
-		_, err := restcl.SecurityGroupV1().SecurityGroup().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.SecurityGroupV1().SecurityGroup().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*network.Service); ok {
 		v.Tenant = tenant
-		_, err := restcl.ServiceV1().Service().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.ServiceV1().Service().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*network.Sgpolicy); ok {
 		v.Tenant = tenant
-		_, err := restcl.SgpolicyV1().Sgpolicy().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.SgpolicyV1().Sgpolicy().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*cmd.SmartNIC); ok {
 		v.Tenant = tenant
-		_, err := restcl.CmdV1().SmartNIC().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.CmdV1().SmartNIC().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
 	if v, ok := obj.(*network.Tenant); ok {
 		v.Tenant = tenant
-		_, err := restcl.TenantV1().Tenant().Update(ctx, v)
+		v.Name = objName
+		nv, err := restcl.TenantV1().Tenant().Update(ctx, v)
 		if err != nil {
 			return err
 		}
+		*v = *nv
 		return nil
 	}
 
-	return httpPost(url, obj)
+	return httpPut(url, obj)
 }
 
 var objOrder = []string{

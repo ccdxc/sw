@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-package lproto;
+package labels;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";

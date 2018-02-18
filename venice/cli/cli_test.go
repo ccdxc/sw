@@ -294,7 +294,7 @@ func TestNetworkUpdate(t *testing.T) {
 }
 
 func TestSecurityGroupCreate(t *testing.T) {
-	out := veniceCLI("create securityGroup sg10 --workload-labels key1:val1 --workload-labels key2:val2 --match-prefixes 12.1.1.0/22")
+	out := veniceCLI("create securityGroup sg10 --workload-selector key1=val1,key2=val2 --match-prefixes 12.1.1.0/22")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -304,9 +304,8 @@ func TestSecurityGroupCreate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sg.ResourceVersion != "1" || len(sg.Spec.WorkloadSelector) != 2 || len(sg.Spec.MatchPrefixes) != 1 ||
-		sg.Spec.WorkloadSelector[0] != "key1:val1" || sg.Spec.WorkloadSelector[1] != "key2:val2" ||
-		sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
+	if sg.ResourceVersion != "1" || len(sg.Spec.WorkloadSelector.Requirements) != 2 || len(sg.Spec.MatchPrefixes) != 1 ||
+		sg.Spec.WorkloadSelector.Print() != "key1=val1,key2=val2" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
 		t.Fatalf("Create operation failed: %+v \n", sg)
 	}
 
@@ -318,7 +317,7 @@ func TestSecurityGroupCreate(t *testing.T) {
 }
 
 func TestSecurityGroupUpdate(t *testing.T) {
-	out := veniceCLI("update securityGroup sg10 --workload-labels key3:val3")
+	out := veniceCLI("update securityGroup sg10 --workload-selector key3=val3")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -328,14 +327,14 @@ func TestSecurityGroupUpdate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sg.ResourceVersion != "2" || len(sg.Spec.WorkloadSelector) != 1 || len(sg.Spec.MatchPrefixes) != 1 ||
-		sg.Spec.WorkloadSelector[0] != "key3:val3" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
+	if sg.ResourceVersion != "2" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || len(sg.Spec.MatchPrefixes) != 1 ||
+		sg.Spec.WorkloadSelector.Print() != "key3=val3" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
 		t.Fatalf("Create operation failed: %+v \n", sg)
 	}
 }
 
 func TestSecurityGroupPolicyCreate(t *testing.T) {
-	out := veniceCLI("create securityGroup sg20 --workload-labels key5:val5")
+	out := veniceCLI("create securityGroup sg20 --workload-selector key5=val5")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create sg for sgpolicy: garbled output '%s'", out)
 	}
@@ -680,19 +679,6 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
 	}
 
-	out = veniceCLI("create cluster --virtual-ip --gbc")
-	if !strings.Contains(out, "{value}") {
-		t.Fatalf("command completion for string value failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("create cluster --label --gbc")
-	if !strings.Contains(out, "{key:value}") {
-		t.Fatalf("command completion for string-value map: invalid output '%s'", out)
-	}
-	out = veniceCLI("create cluster --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --auto-admit-nics --dns-subdomain --ntp-servers --quorum-nodes --virtual-ip {cluster}") {
-		t.Fatalf("cluster command completion: invalid output '%s'", out)
-	}
-
 	out = veniceCLI("create node --gbc")
 	if !strings.Contains(out, "--label --dry-run --file --roles {node}") {
 		t.Fatalf("node command completion: invalid output '%s'", out)
@@ -740,15 +726,15 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create securityGroup --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-labels {securityGroup}") {
+	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-selector {securityGroup}") {
 		t.Fatalf("security-group command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update securityGroup blah-sg --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-labels") {
+	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-selector") {
 		t.Fatalf("security-group command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update securityGroup blah-sg --match-prefixes 1.1.1.3/32 --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-labels") {
+	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-selector") {
 		t.Fatalf("security-group command completion: invalid output '%s'", out)
 	}
 
@@ -859,10 +845,6 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("delete help command completion: invalid output '%s'", out)
 	}
 
-	out = veniceCLI("create --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
 	out = veniceCLI("update --gbc")
 	if !strings.Contains(out, "cluster endpoint") {
 		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
@@ -1065,7 +1047,7 @@ spec:
 }
 
 func TestEditCommand(t *testing.T) {
-	veniceCLI("create securityGroup editsg --label one:two --label three:four --workload-labels tier:frontend")
+	veniceCLI("create securityGroup editsg --label one:two --label three:four --workload-selector tier=frontend")
 
 	// change the editor to cat command
 	oldEditor := os.Getenv("VENICE_EDITOR")
@@ -1078,7 +1060,7 @@ func TestEditCommand(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sg.ResourceVersion != "2" || len(sg.Spec.WorkloadSelector) != 1 || sg.Spec.WorkloadSelector[0] != "tier:frontend" ||
+	if sg.ResourceVersion != "2" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || sg.Spec.WorkloadSelector.Print() != "tier=frontend" ||
 		len(sg.Labels) != 2 || sg.Labels["one"] != "two" || sg.Labels["three"] != "four" {
 		t.Fatalf("Edit operation failed: %+v \n", sg)
 	}
@@ -1097,7 +1079,7 @@ func TestEditCommand(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sg.ResourceVersion != "3" || len(sg.Spec.WorkloadSelector) != 1 || sg.Spec.WorkloadSelector[0] != "tier:frontend" ||
+	if sg.ResourceVersion != "3" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || sg.Spec.WorkloadSelector.Print() != "tier=frontend" ||
 		len(sg.Labels) != 3 || sg.Labels["one"] != "two" || sg.Labels["three"] != "four" ||
 		sg.Labels["five"] != "six" {
 		t.Fatalf("Edit operation failed: %+v \n", sg)
@@ -1204,9 +1186,9 @@ func TestList(t *testing.T) {
 }
 
 func TestDeleteList(t *testing.T) {
-	veniceCLI("create securityGroup test1 --label key1:label1 --label key2:label2 --workload-labels tier:frontend")
-	veniceCLI("create securityGroup test2 --label key3:label3 --label key2:label2 --workload-labels tier:backend")
-	veniceCLI("create securityGroup test3 --label key1:label1 --label key4:label4 --workload-labels tier:app")
+	veniceCLI("create securityGroup test1 --label key1:label1 --label key2:label2 --workload-selector tier=frontend")
+	veniceCLI("create securityGroup test2 --label key3:label3 --label key2:label2 --workload-selector tier=backend")
+	veniceCLI("create securityGroup test3 --label key1:label1 --label key4:label4 --workload-selector tier=app")
 
 	veniceCLI("delete securityGroup --label key2:label2")
 	out := veniceCLI("read securityGroup")
@@ -1327,7 +1309,7 @@ func TestSnapshot(t *testing.T) {
 
 	// take a snapshot
 	out := veniceCLI("snapshot -f " + snapshotDir)
-	defer os.RemoveAll(snapshotDir)
+	//	defer os.RemoveAll(snapshotDir)
 	if !strings.Contains(out, "Successful - stored snapshot") {
 		t.Fatalf("unable to store snapshot: %s", out)
 	}
@@ -1397,12 +1379,12 @@ func TestSnapshot(t *testing.T) {
 
 func TestDefinition(t *testing.T) {
 	out := veniceCLI("definition securityGroup")
-	if !strings.Contains(out, "WorkloadSelector: []string") {
+	if !strings.Contains(out, "MatchPrefixes: []string") {
 		t.Fatalf("Unable to read multiple records based on names:\n%s", out)
 	}
 
 	out = veniceCLI("read securityGroup --show-definition")
-	if !strings.Contains(out, "WorkloadSelector: []string") {
+	if !strings.Contains(out, "MatchPrefixes: []string") {
 		t.Fatalf("Unable to read multiple records based on names:\n%s", out)
 	}
 }
@@ -1413,8 +1395,8 @@ func TestSecurityGroupDelete(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), sg); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if sg.ResourceVersion != "3" || len(sg.Spec.WorkloadSelector) != 1 || len(sg.Spec.MatchPrefixes) != 1 ||
-		sg.Spec.WorkloadSelector[0] != "key3:val3" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
+	if sg.ResourceVersion != "3" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || len(sg.Spec.MatchPrefixes) != 1 ||
+		sg.Spec.WorkloadSelector.Print() != "key3=val3" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
 		t.Fatalf("Delete operation failed: %+v \n", sg)
 	}
 }

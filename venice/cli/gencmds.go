@@ -14,7 +14,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "cluster",
-		Usage:        "create a cluster",
+		Usage:        "edit a cluster",
 		ArgsUsage:    "[cluster]",
 		Action:       editCmd,
 		BashComplete: bashEditClusterCompleter,
@@ -23,7 +23,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "endpoint",
-		Usage:        "create a endpoint",
+		Usage:        "edit a endpoint",
 		ArgsUsage:    "[endpoint]",
 		Action:       editCmd,
 		BashComplete: bashEditEndpointCompleter,
@@ -32,7 +32,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "lbPolicy",
-		Usage:        "create a lbPolicy",
+		Usage:        "edit a lbPolicy",
 		ArgsUsage:    "[lbPolicy]",
 		Action:       editCmd,
 		BashComplete: bashEditLbPolicyCompleter,
@@ -41,7 +41,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "network",
-		Usage:        "create a network",
+		Usage:        "edit a network",
 		ArgsUsage:    "[network]",
 		Action:       editCmd,
 		BashComplete: bashEditNetworkCompleter,
@@ -50,7 +50,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "node",
-		Usage:        "create a node",
+		Usage:        "edit a node",
 		ArgsUsage:    "[node]",
 		Action:       editCmd,
 		BashComplete: bashEditNodeCompleter,
@@ -59,7 +59,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "permission",
-		Usage:        "create a permission",
+		Usage:        "edit a permission",
 		ArgsUsage:    "[permission]",
 		Action:       editCmd,
 		BashComplete: bashEditPermissionCompleter,
@@ -68,7 +68,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "role",
-		Usage:        "create a role",
+		Usage:        "edit a role",
 		ArgsUsage:    "[role]",
 		Action:       editCmd,
 		BashComplete: bashEditRoleCompleter,
@@ -77,7 +77,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "securityGroup",
-		Usage:        "create a securityGroup",
+		Usage:        "edit a securityGroup",
 		ArgsUsage:    "[securityGroup]",
 		Action:       editCmd,
 		BashComplete: bashEditSecurityGroupCompleter,
@@ -86,7 +86,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "service",
-		Usage:        "create a service",
+		Usage:        "edit a service",
 		ArgsUsage:    "[service]",
 		Action:       editCmd,
 		BashComplete: bashEditServiceCompleter,
@@ -95,7 +95,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "sgpolicy",
-		Usage:        "create a sgpolicy",
+		Usage:        "edit a sgpolicy",
 		ArgsUsage:    "[sgpolicy]",
 		Action:       editCmd,
 		BashComplete: bashEditSgpolicyCompleter,
@@ -104,7 +104,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "smartNIC",
-		Usage:        "create a smartNIC",
+		Usage:        "edit a smartNIC",
 		ArgsUsage:    "[smartNIC]",
 		Action:       editCmd,
 		BashComplete: bashEditSmartNICCompleter,
@@ -113,7 +113,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "tenant",
-		Usage:        "create a tenant",
+		Usage:        "edit a tenant",
 		ArgsUsage:    "[tenant]",
 		Action:       editCmd,
 		BashComplete: bashEditTenantCompleter,
@@ -122,7 +122,7 @@ var editCommands = []cli.Command{
 
 	{
 		Name:         "user",
-		Usage:        "create a user",
+		Usage:        "edit a user",
 		ArgsUsage:    "[user]",
 		Action:       editCmd,
 		BashComplete: bashEditUserCompleter,
@@ -257,15 +257,6 @@ var createCommands = []cli.Command{
 		BashComplete: bashFileNameCompleter,
 		Usage:        "Specify comma separated file names, directory names or URLs",
 		ArgsUsage:    "[filename]",
-	},
-
-	{
-		Name:         "cluster",
-		Usage:        "create a cluster",
-		ArgsUsage:    "[cluster]",
-		Action:       createCmd,
-		BashComplete: bashCreateClusterCompleter,
-		Flags:        append(createFlags, CreateClusterFlags...),
 	},
 
 	{
@@ -1089,8 +1080,8 @@ var CreateSecurityGroupFlags = []cli.Flag{
 		Name: "service-labels",
 	},
 
-	cli.StringSliceFlag{
-		Name: "workload-labels",
+	cli.StringFlag{
+		Name: "workload-selector",
 	},
 }
 

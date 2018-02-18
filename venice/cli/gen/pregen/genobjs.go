@@ -7,6 +7,7 @@ import (
 	api2 "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/cli/api"
 )
 
@@ -79,6 +80,14 @@ func GetSubObj(kind string) interface{} {
 
 	case "ConditionStatus":
 		var v cmd.ConditionStatus
+		return &v
+
+	case "Selector":
+		var v labels.Selector
+		return &v
+
+	case "Requirement":
+		var v labels.Requirement
 		return &v
 
 	case "TLSServerPolicySpec":

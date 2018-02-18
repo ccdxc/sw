@@ -11,20 +11,20 @@ import (
 )
 
 var editCommands = []cli.Command{
-{{ range $obj := . }}{{if checkPerms $obj "w"}}
+{{ range $obj := . }}{{if checkPerms $obj "put"}}
 	{
 		Name:         "{{$obj.Name}}",
-		Usage:        "create a {{$obj.Name}}",
+		Usage:        "edit a {{$obj.Name}}",
 		ArgsUsage:    "[{{$obj.Name}}]",
 		Action:       editCmd,
 		BashComplete: bashEdit{{title $obj.Name}}Completer,
 		Flags:        append(editFlags, Create{{title $obj.Name}}Flags...),
 	},
-{{ end }}{{end}}
+{{ end }}{{ end }}
 }
 
 var updateCommands = []cli.Command{
-{{ range $obj := . }}{{if checkPerms $obj "w"}}
+{{ range $obj := . }}{{if checkPerms $obj "put"}}
 	{
 		Name:         "{{$obj.Name}}",
 		Usage:        "create a {{$obj.Name}}",
@@ -33,7 +33,7 @@ var updateCommands = []cli.Command{
 		BashComplete: bashUpdate{{title $obj.Name}}Completer,
 		Flags:        append(createFlags, Create{{title $obj.Name}}Flags...),
 	},
-{{ end }}{{end}}
+{{ end }}{{ end }}
 }
 
 var createCommands = []cli.Command{
@@ -44,7 +44,7 @@ var createCommands = []cli.Command{
 		Usage:        "Specify comma separated file names, directory names or URLs",
 		ArgsUsage:    "[filename]",
 	},
-{{ range $obj := . }}{{if checkPerms $obj "w"}}
+{{ range $obj := . }}{{if checkPerms $obj "post"}}
 	{
 		Name:         "{{$obj.Name}}",
 		Usage:        "create a {{$obj.Name}}",
@@ -53,11 +53,11 @@ var createCommands = []cli.Command{
 		BashComplete: bashCreate{{title $obj.Name}}Completer,
 		Flags:        append(createFlags, Create{{title $obj.Name}}Flags...),
 	},
-{{ end }}{{end}}
+{{ end }}{{ end }}
 }
 
 var readCommands = []cli.Command{
-{{ range $obj := . }}
+{{ range $obj := . }}{{if checkPerms $obj "get"}}
 	{
 		Name:         "{{$obj.Name}}",
 		ArgsUsage:    " ",
@@ -66,11 +66,11 @@ var readCommands = []cli.Command{
 		Flags:        readFlags,
 		BashComplete: bashRead{{title $obj.Name}}Completer,
 	},
-{{ end }}
+{{ end }}{{ end }}
 }
 
 var deleteCommands = []cli.Command{
-{{ range $obj := . }}
+{{ range $obj := . }}{{if checkPerms $obj "delete"}}
 	{
 		Name:         "{{$obj.Name}}",
 		ArgsUsage:    "[{{$obj.Name}}]",
@@ -79,7 +79,7 @@ var deleteCommands = []cli.Command{
 		Action:       deleteCmd,
 		BashComplete: bashDelete{{title $obj.Name}}Completer,
 	},
-{{ end }}
+{{ end }}{{ end }}
 }
 
 var labelCommands = []cli.Command{

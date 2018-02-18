@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -493,7 +494,7 @@ func (w *Watcher) DeleteNetwork(tenant, net string) error {
 }
 
 // CreateEndpoint injects an endpoint create event
-func (w *Watcher) CreateEndpoint(tenant, net, epName, vmName, macAddr, hostName, hostAddr string, attr []string, usegVlan uint32) error {
+func (w *Watcher) CreateEndpoint(tenant, net, epName, vmName, macAddr, hostName, hostAddr string, attr map[string]string, usegVlan uint32) error {
 	epInfo := network.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
@@ -559,7 +560,7 @@ func (w *Watcher) DeleteEndpoint(tenant, net, epName, vmName, macAddr, hostName,
 }
 
 // CreateSecurityGroup injects a create sg event on the watcher
-func (w *Watcher) CreateSecurityGroup(tenant, sgname string, selectors []string) error {
+func (w *Watcher) CreateSecurityGroup(tenant, sgname string, selector *labels.Selector) error {
 	// build sg object
 	sg := network.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
@@ -568,7 +569,7 @@ func (w *Watcher) CreateSecurityGroup(tenant, sgname string, selectors []string)
 			Tenant: tenant,
 		},
 		Spec: network.SecurityGroupSpec{
-			WorkloadSelector: selectors,
+			WorkloadSelector: selector,
 		},
 	}
 

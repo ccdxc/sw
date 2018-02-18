@@ -1,10 +1,10 @@
 # Makefile for building packages
 
 # Lists excluded patterns to go list
-EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim"
+EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels"
 
 # Lists venice venice protos and all things auto generated.
-TO_GEN := api api/labels/lproto venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
+TO_GEN := api api/labels venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
 venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
 venice/utils/runtime/test venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi venice/ctrler/evtsmgr/rpcserver/eventsproto \
