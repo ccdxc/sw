@@ -17,14 +17,17 @@
 
 #include "sdk/mem.hpp"
 #include "sdk/base.hpp"
-#include "lib/indexer/indexer.hpp"
-#include "lib/table/tcam/tcam_entry.hpp"
+#include "sdk/indexer.hpp"
+#include "sdk/ht.hpp"
+// #include "lib/table/tcam/tcam_entry.hpp"
 
 using sdk::lib::indexer;
 using sdk::lib::ht;
 
 namespace sdk {
 namespace table {
+
+typedef struct tcam_entry_s tcam_entry_t;
 
 typedef bool (*tcam_iterate_func_t)(const void *key,
                                     const void *key_mask,

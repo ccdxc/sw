@@ -12,7 +12,7 @@ cc_library(
     ],
     deps = [
             "//:sdk_headers",
-            "//lib/table/tcam:tcam",
+            #"//lib/table/tcam:tcam",
             "//lib/p4pd:p4pd_api",
             "@third_party//:boost",
     ],

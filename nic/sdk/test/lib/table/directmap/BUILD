@@ -13,6 +13,8 @@ cc_test(
     deps = [
         "//:sdk_headers",
         "//lib/table/directmap",
+        "//lib/indexer:indexer",
+        "//lib/ht:ht",
         "//lib/logger",
         "//test/lib/table/p4pd_mock",
         # External

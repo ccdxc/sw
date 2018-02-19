@@ -13,8 +13,11 @@ cc_test(
     deps = [
         "//:sdk_headers",
         "//lib/table/hash",
+        "//lib/table/tcam:tcam",
         "//lib/logger",
         "//test/lib/table/p4pd_mock",
+        "//lib/indexer:indexer",
+        "//lib/ht:ht",
         # External
         "//:gtest",
     ],

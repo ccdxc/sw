@@ -10,7 +10,7 @@
 
 #include "sdk/base.hpp"
 #include "sdk/mem.hpp"
-#include "lib/ht/ht.hpp"
+#include "sdk/ht.hpp"
 
 using sdk::lib::ht_ctxt_t;
 

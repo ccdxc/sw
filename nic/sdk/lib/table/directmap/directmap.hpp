@@ -12,7 +12,7 @@
 
 #include "sdk/mem.hpp"
 #include "sdk/base.hpp"
-#include "lib/indexer/indexer.hpp"
+#include "sdk/indexer.hpp"
 #include "lib/table/directmap/directmap_entry.hpp"
 
 using sdk::lib::ht;

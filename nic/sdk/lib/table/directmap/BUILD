@@ -11,8 +11,8 @@ cc_library(
     hdrs = ["directmap.hpp"],
     deps = [
             "//:sdk_headers",
-            "//lib/indexer:indexer",
-            "//lib/ht:ht",
+            #"//lib/indexer:indexer",
+            #"//lib/ht:ht",
             "//lib/p4pd:p4pd_api",
     ],
 )

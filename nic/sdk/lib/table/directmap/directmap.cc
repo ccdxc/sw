@@ -44,7 +44,7 @@ directmap::factory(char *name, uint32_t id,
                                         sizeof(uint64_t) * STATS_MAX);
 
     SDK_TRACE_DEBUG("directmap:: %-30s: tableid: %-4d swdata_len: %-4d "
-                    "hwdata_len_: %-4d, sharing_en:%d",
+                    "hwdata_len_: %-4d sharing_en:%d",
                     dm->name_, dm->id_, dm->swdata_len_, dm->hwdata_len_,
                     dm->sharing_en_);
 

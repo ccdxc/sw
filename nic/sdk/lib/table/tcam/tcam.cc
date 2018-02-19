@@ -2,6 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 #include "lib/table/tcam/tcam.hpp"
+#include "lib/table/tcam/tcam_entry.hpp"
 #include "lib/p4pd/p4pd_api.hpp"
 #include <cstring>
 
@@ -47,9 +48,9 @@ tcam::factory(char *name, uint32_t id,
     t->stats_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_ID_TCAM_STATS,
                                        sizeof(uint64_t) * STATS_MAX);
 
-    SDK_TRACE_DEBUG("tcam::%-30s: tableid: %-3d swkey_len: %-4d "
-                    "hwkey_len_: %-4d hwkeymask_len_: %-4d "
-                    "hwdata_len_: %-4d \n", t->name_, t->id_, t->swkey_len_, 
+    SDK_TRACE_DEBUG("tcam::%-30s: tableid: %-3u swkey_len: %-4u "
+                    "hwkey_len_: %-4u hwkeymask_len_: %-4u "
+                    "hwdata_len_: %-4u \n", t->name_, t->id_, t->swkey_len_, 
                     t->hwkey_len_, t->hwkeymask_len_, t->hwdata_len_);
     return t;
 }
