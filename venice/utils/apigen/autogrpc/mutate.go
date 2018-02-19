@@ -53,6 +53,12 @@ func getExtension(pb proto.Message, extname string) (interface{}, error) {
 	return e, err
 }
 
+func trimSlash(in string) string {
+	ret := strings.TrimSuffix(in, "/")
+	ret = strings.TrimPrefix(ret, "/")
+	return ret
+}
+
 func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype, oper string, watch bool, restopt *googapi.HttpRule) error {
 	operDesc, err := getExtensionDesc(&descriptor.MethodOptions{}, "venice.methodOper")
 	if err != nil {
@@ -309,6 +315,55 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, msg string) {
 	}
 }
 
+func isSingleton(m *descriptor.DescriptorProto) (bool, error) {
+	objpreext, err := getExtension(m.GetOptions(), "venice.objectPrefix")
+	if err != nil {
+		return false, fmt.Errorf("not found")
+	}
+	o := objpreext.(*venice.ObjectPrefix)
+	if o.GetSingleton() != "" {
+		return true, nil
+	}
+	return false, nil
+}
+
+// getMessageURIPrefix returns the message URI sans the service prefix and object ID
+func getMessageURIPrefix(m *descriptor.DescriptorProto) (string, error) {
+	opts := m.GetOptions()
+	if opts == nil {
+		return "", fmt.Errorf("not found")
+	}
+	objpreext, err := getExtension(m.GetOptions(), "venice.objectPrefix")
+	if err != nil {
+		return "", fmt.Errorf("not found")
+	}
+	o := objpreext.(*venice.ObjectPrefix)
+	path := trimSlash(o.Path)
+	prfx := ""
+	if prfx = o.GetCollection(); prfx == "" {
+		prfx = o.GetSingleton()
+	}
+	container := trimSlash(prfx)
+	if path != "" {
+		container = "/" + path + "/" + container
+	} else {
+		container = "/" + container
+	}
+	return container, nil
+}
+
+// GetMessageURI returns the message URI sans the service prefix
+func GetMessageURI(m *descriptor.DescriptorProto) (string, error) {
+	ret, err := getMessageURIPrefix(m)
+	if err != nil {
+		return "", err
+	}
+	if s, _ := isSingleton(m); s {
+		return ret, nil
+	}
+	return ret + "/{O.Name}", nil
+}
+
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
 func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 	crudMsgMap := make(map[string]bool)
@@ -357,7 +412,29 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 								default:
 									glog.Fatalf("unsupported REST verb %s", meth)
 								}
-								resteps[r.Object][meth] = r.Pattern
+								if m, ok := msgMap[r.Object]; !ok {
+									glog.Fatalf("unknown message [%s] in REST service definition", r.Object)
+								} else {
+									switch meth {
+									case "list":
+										if s, _ := isSingleton(m); s {
+											glog.Fatalf("list not allowed on singleton object")
+										}
+										fallthrough
+									case "post":
+										path, err := getMessageURIPrefix(m)
+										if err != nil {
+											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
+										}
+										resteps[r.Object][meth] = path
+									case "put", "get", "delete":
+										path, err := GetMessageURI(m)
+										if err != nil {
+											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
+										}
+										resteps[r.Object][meth] = path
+									}
+								}
 							}
 						}
 					}

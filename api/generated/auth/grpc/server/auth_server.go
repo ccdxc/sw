@@ -9,6 +9,7 @@ package authApiServer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -135,6 +136,10 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(auth.AuthenticationPolicy)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := auth.AuthenticationPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -248,6 +253,10 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(auth.User)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := auth.User{}
 			err := kvs.Get(ctx, key, &r)
@@ -294,34 +303,90 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("AuthV1")
 
 		s.endpointsAuthV1.fnAutoAddAuthenticationPolicy = srv.AddMethod("AutoAddAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoAddAuthenticationPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoAddAuthenticationPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.AuthenticationPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddUser = srv.AddMethod("AutoAddUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoAddUser")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoAddUser")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.User)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteAuthenticationPolicy = srv.AddMethod("AutoDeleteAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoDeleteAuthenticationPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoDeleteAuthenticationPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.AuthenticationPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteUser = srv.AddMethod("AutoDeleteUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoDeleteUser")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoDeleteUser")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.User)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetAuthenticationPolicy = srv.AddMethod("AutoGetAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoGetAuthenticationPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoGetAuthenticationPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.AuthenticationPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetUser = srv.AddMethod("AutoGetUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoGetUser")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoGetUser")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.User)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListAuthenticationPolicy = srv.AddMethod("AutoListAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.AuthenticationPolicyList"], "auth", "AutoListAuthenticationPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.AuthenticationPolicyList"], "auth", "AutoListAuthenticationPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListUser = srv.AddMethod("AutoListUser",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.UserList"], "auth", "AutoListUser")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["auth.UserList"], "auth", "AutoListUser")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateAuthenticationPolicy = srv.AddMethod("AutoUpdateAuthenticationPolicy",
-			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoUpdateAuthenticationPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.AuthenticationPolicy"], s.Messages["auth.AuthenticationPolicy"], "auth", "AutoUpdateAuthenticationPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.AuthenticationPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/authn-policy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateUser = srv.AddMethod("AutoUpdateUser",
-			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoUpdateUser")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["auth.User"], s.Messages["auth.User"], "auth", "AutoUpdateUser")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.User)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "auth/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoWatchUser = s.Messages["auth.User"].WatchFromKv
 
@@ -341,6 +406,9 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 		s.Messages["auth.User"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := auth.User{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(auth.AuthV1_AutoWatchUserServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -395,6 +463,9 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 		s.Messages["auth.AuthenticationPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := auth.AuthenticationPolicy{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(auth.AuthV1_AutoWatchAuthenticationPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

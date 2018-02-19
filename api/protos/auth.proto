@@ -35,7 +35,7 @@ message UserStatus {
 
 // User could be local or external
 message User {
-    option (venice.objectPrefix) = "user";
+    option (venice.objectPrefix) = { Collection: "users", Path: "/{O.Tenant}"};
     api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -130,7 +130,7 @@ message AuthenticationPolicyStatus {
 
 // AuthenticationPolicy defines various authentication mechanisms available and order in which they are used
 message AuthenticationPolicy {
-    option (venice.objectPrefix) = "authn-policy";
+    option (venice.objectPrefix) = { Collection: "authn-policy" };
     api.TypeMeta T                    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O                  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -152,22 +152,10 @@ service AuthV1 {
     
     option (venice.apiRestService) = {
          Object: "User"
-         Method: [ "get", "put", "delete" ]
-         Pattern: "/{O.Tenant}/users/{O.Name}"
-     };
-    option (venice.apiRestService) = {
-         Object: "User"
-         Method: [ "post", "list" ]
-         Pattern: "/{O.Tenant}/users"
+         Method: [ "get", "put", "delete", "post", "list" ]
      };
     option (venice.apiRestService) = {
          Object: "AuthenticationPolicy"
-         Method: [ "get", "delete" ]
-         Pattern: "/authn-policy/{O.Name}"
-     };
-    option (venice.apiRestService) = {
-         Object: "AuthenticationPolicy"
-         Method: [ "put", "post" ]
-         Pattern: "/authn-policy"
+         Method: [ "get", "delete", "put", "post" ]
      };
 }

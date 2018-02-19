@@ -863,13 +863,13 @@ var (
 
 	pattern_AppV1_AutoDeleteAppUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-users", "O.Name"}, ""))
 
-	pattern_AppV1_AutoDeleteAppUserGrp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-user-groups", "O.Name"}, ""))
+	pattern_AppV1_AutoDeleteAppUserGrp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-users-groups", "O.Name"}, ""))
 
 	pattern_AppV1_AutoGetApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
 	pattern_AppV1_AutoGetAppUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-users", "O.Name"}, ""))
 
-	pattern_AppV1_AutoGetAppUserGrp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-user-groups", "O.Name"}, ""))
+	pattern_AppV1_AutoGetAppUserGrp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-users-groups", "O.Name"}, ""))
 
 	pattern_AppV1_AutoListApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"apps"}, ""))
 
@@ -879,7 +879,7 @@ var (
 
 	pattern_AppV1_AutoUpdateAppUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-users", "O.Name"}, ""))
 
-	pattern_AppV1_AutoUpdateAppUserGrp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-user-groups", "O.Name"}, ""))
+	pattern_AppV1_AutoUpdateAppUserGrp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "app-users-groups", "O.Name"}, ""))
 )
 
 var (

@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
@@ -26,17 +27,22 @@ var funcMapExample = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Book) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "books/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "books/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *Order) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "orders/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *Publisher) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "publishers/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "publishers/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *Store) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store")
 }
 
 // MakeKey generates a KV store key for the object
@@ -58,6 +64,12 @@ func (m *PublisherList) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *StoreList) MakeKey(prefix string) string {
+	obj := Store{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgBookWatchHelper) MakeKey(prefix string) string {
 	obj := Book{}
 	return obj.MakeKey(prefix)
@@ -72,6 +84,12 @@ func (m *AutoMsgOrderWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgPublisherWatchHelper) MakeKey(prefix string) string {
 	obj := Publisher{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgStoreWatchHelper) MakeKey(prefix string) string {
+	obj := Store{}
 	return obj.MakeKey(prefix)
 }
 
@@ -95,6 +113,15 @@ func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) error {
 
 func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) error {
 	out, ok := into.(*AutoMsgPublisherWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgStoreWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgStoreWatchHelper)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -210,6 +237,42 @@ func (m *PublisherSpec) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *Store) Clone(into interface{}) error {
+	out, ok := into.(*Store)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *StoreList) Clone(into interface{}) error {
+	out, ok := into.(*StoreList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *StoreSpec) Clone(into interface{}) error {
+	out, ok := into.(*StoreSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *StoreStatus) Clone(into interface{}) error {
+	out, ok := into.(*StoreStatus)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 // Validators
 
 func (m *AutoMsgBookWatchHelper) Validate(ver string, ignoreStatus bool) bool {
@@ -230,6 +293,10 @@ func (m *AutoMsgPublisherWatchHelper) Validate(ver string, ignoreStatus bool) bo
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
+	return true
+}
+
+func (m *AutoMsgStoreWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -364,6 +431,22 @@ func (m *PublisherSpec) Validate(ver string, ignoreStatus bool) bool {
 			}
 		}
 	}
+	return true
+}
+
+func (m *Store) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *StoreList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *StoreSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *StoreStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 

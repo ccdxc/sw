@@ -27,7 +27,7 @@ message AppStatus {
 // App - Read-only objects auto-created by Venice
 // One object per App that can be identified by Naples
 message App {
-  option (venice.objectPrefix) = "apps";
+  option (venice.objectPrefix) = { Collection: "apps" };
   api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -52,7 +52,7 @@ message AppUserStatus {
 // other application authentication mechanisms. 
 // Created by Venice Admin or Tenant Admin
 message AppUser {
-  option (venice.objectPrefix) = "app-users";
+  option (venice.objectPrefix) = {Collection:"app-users", Path: "/{O.Tenant}"};
   api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -75,7 +75,7 @@ message AppUserGrpStatus {
 // AppUserGrp - Object representing group of AppUsers
 // Created by Venice Admin or Tenant Admin
 message AppUserGrp {
-  option (venice.objectPrefix) = "app-user-groups";
+  option (venice.objectPrefix) = {Collection: "app-users-groups", Path: "/{O.Tenant}"};
   api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -93,36 +93,18 @@ service AppV1 {
   option (venice.apiGrpcCrudService) = "App";
   option (venice.apiRestService) = {
     Object: "App"
-    Method: [ "get" ]
-    Pattern: "/apps/{O.Name}"
-  };
-  option (venice.apiRestService) = {
-    Object: "App"
-    Method: [ "list" ]
-    Pattern: "/apps"
+    Method: [ "get", "list"]
   };
 
   option (venice.apiGrpcCrudService) = "AppUser";
   option (venice.apiRestService) = {
     Object: "AppUser"
-    Method: [ "get", "put", "delete" ]
-    Pattern: "/{O.Tenant}/app-users/{O.Name}"
-  };
-  option (venice.apiRestService) = {
-    Object: "AppUser"
-    Method: [ "post", "list" ]
-    Pattern: "/{O.Tenant}/app-users"
+    Method: [ "get", "put", "delete", "post", "list" ]
   };
 
   option (venice.apiGrpcCrudService) = "AppUserGrp";
   option (venice.apiRestService) = {
     Object: "AppUserGrp"
-    Method: [ "get", "put", "delete" ]
-    Pattern: "/{O.Tenant}/app-user-groups/{O.Name}"
-  };
-  option (venice.apiRestService) = {
-    Object: "AppUserGrp"
-    Method: [ "post", "list" ]
-    Pattern: "/{O.Tenant}/app-users-groups"
+    Method: [ "get", "put", "delete", "post", "list" ]
   };
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
@@ -26,37 +27,37 @@ var funcMapNetwork = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Endpoint) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "endpoint/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "endpoints/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *LbPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "lb-policy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "lb-policy/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *Network) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "network/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "networks/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *SecurityGroup) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "security-group/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "security-groups/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *Service) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "service/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "services/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *Sgpolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "sgpolicy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "sgpolicy/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *Tenant) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "tenant/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "tenants/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object

@@ -1215,15 +1215,15 @@ func RegisterStatsPolicyV1HandlerWithClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_StatsPolicyV1_AutoAddStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "statsPolicy"}, ""))
+	pattern_StatsPolicyV1_AutoAddStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "StatsPolicy"}, ""))
 
-	pattern_StatsPolicyV1_AutoDeleteStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+	pattern_StatsPolicyV1_AutoDeleteStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "StatsPolicy", "O.Name"}, ""))
 
-	pattern_StatsPolicyV1_AutoGetStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+	pattern_StatsPolicyV1_AutoGetStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "StatsPolicy", "O.Name"}, ""))
 
-	pattern_StatsPolicyV1_AutoListStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "statsPolicy"}, ""))
+	pattern_StatsPolicyV1_AutoListStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "StatsPolicy"}, ""))
 
-	pattern_StatsPolicyV1_AutoUpdateStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "statsPolicy", "O.Name"}, ""))
+	pattern_StatsPolicyV1_AutoUpdateStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "StatsPolicy", "O.Name"}, ""))
 )
 
 var (

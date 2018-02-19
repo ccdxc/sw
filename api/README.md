@@ -19,7 +19,7 @@ always be `T` and `O` for consistency.
 ```
 message Cluster {
 
-    option (venice.objectPrefix) = "cluster";
+    option (venice.objectPrefix) = {Collection: "cluster"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,
@@ -44,7 +44,7 @@ e.g. definitions below use `(gogoproto.nullable) = false` to define it like this
 ```
 message Cluster {
 
-    option (venice.objectPrefix) = "cluster";
+    option (venice.objectPrefix) = {Collection: "cluster"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,
@@ -92,7 +92,7 @@ e.g. if we declare following definition
 ```
 // Endpoint represents a network endpoint
 message Endpoint {
-    option (venice.objectPrefix) = "endpoint";
+    option (venice.objectPrefix) = {Collection: "endpoint", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -107,7 +107,7 @@ Proto generation code would generate the list object automatically, called `Endp
 ```
 // Endpoint represents a network endpoint
 message Endpoint {
-    option (venice.objectPrefix) = "endpoint";
+    option (venice.objectPrefix) =  {Collection: "endpoint", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 

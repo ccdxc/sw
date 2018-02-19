@@ -489,22 +489,22 @@ func (r *EndpointsTrafficEncryptionPolicyV1RestClient) getHTTPRequest(ctx contex
 
 //
 func makeURITrafficEncryptionPolicyV1AutoAddTrafficEncryptionPolicyCreateOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant)
+	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant, "/trafficEncryptionPolicy")
 }
 
 //
 func makeURITrafficEncryptionPolicyV1AutoDeleteTrafficEncryptionPolicyDeleteOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant, "/trafficEncryptionPolicy")
+	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
 }
 
 //
 func makeURITrafficEncryptionPolicyV1AutoGetTrafficEncryptionPolicyGetOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant, "/trafficEncryptionPolicy")
+	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
 }
 
 //
 func makeURITrafficEncryptionPolicyV1AutoUpdateTrafficEncryptionPolicyUpdateOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant, "/trafficEncryptionPolicy")
+	return fmt.Sprint("/v1/trafficEncryptionPolicy", "/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
 }
 
 // AutoAddTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy

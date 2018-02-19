@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
@@ -26,12 +27,12 @@ var funcMapAuth = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "authn-policy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "authn-policy/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *User) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "user/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object

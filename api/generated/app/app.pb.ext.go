@@ -12,6 +12,8 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -21,17 +23,17 @@ var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
 func (m *App) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "apps/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "apps/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *AppUser) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "app-users/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *AppUserGrp) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "app-user-groups/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "app-users-groups/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object

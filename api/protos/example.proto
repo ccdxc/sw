@@ -8,13 +8,32 @@ package bookstore;
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+
+message StoreSpec {
+  string Contact = 1;
+}
+
+message StoreStatus {
+  repeated string CurrentOutages = 1;
+}
+
+message Store {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+
+  option (venice.objectPrefix) = {Singleton: "store"};
+
+  StoreSpec Spec = 3 [(gogoproto.nullable) = false];
+  StoreStatus Status = 4 [(gogoproto.nullable) = false];
+}
+
 message Publisher {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
 
   // Option to define writing to KV store and the prefix for the object. The option could also be
   // specified with dynamic parameters in {..} (for example tenant, namespace etc.) as needed.
-  option (venice.objectPrefix) = "publishers";
+  option (venice.objectPrefix) = {Collection: "publishers"};
 
   PublisherSpec Spec = 3 [(gogoproto.nullable) = false];
 }
@@ -29,7 +48,7 @@ message Book {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
 
-  option (venice.objectPrefix) = "books";
+  option (venice.objectPrefix) = {Collection: "books"};
 
   BookSpec Spec = 3 [(gogoproto.nullable) = false];
   BookStatus Status = 4 [(gogoproto.nullable) = false];
@@ -60,7 +79,7 @@ message Order {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
 
-  option (venice.objectPrefix) = "orders";
+  option (venice.objectPrefix) = {Collection: "orders"};
 
   // Spec is not allowed to be Null hence disabling nullable.
   OrderSpec Spec = 3 [(gogoproto.nullable) = false];
@@ -90,7 +109,7 @@ message OrderStatus {
 }
 
 service BookstoreV1 {
-  // ---- Service level parameters ----//    
+  // ---- Service level parameters ----//
   // Prefix for all resources served by this service.
   option (venice.apiPrefix) = "bookstore";
   // API Version.
@@ -99,6 +118,7 @@ service BookstoreV1 {
   option (venice.apiGrpcCrudService) = "Order";
   option (venice.apiGrpcCrudService) = "Book";
   option (venice.apiGrpcCrudService) = "Publisher";
+  option (venice.apiGrpcCrudService) = "Store";
 
   // REST resources exposed by the service. The Option specifies
   //   Object  - The resource
@@ -106,23 +126,16 @@ service BookstoreV1 {
   //   Pattern - Pattern for the URI
   option (venice.apiRestService) = {
         Object: "Book"
-        Method: [ "get" ]
-        Pattern: "/books/{O.Name}"
-     };
-  option (venice.apiRestService) = {
-      Object: "Book"
-      Method: [ "put" ]
-      Pattern: "/books/{O.Name}"
+        Method: [ "get", "put" ]
      };
 
   option (venice.apiRestService) = {
         Object: "Order"
-        Method: [ "put", "get", "delete" ]
-        Pattern: "/orders/{O.Name}"
+        Method: [ "put", "get", "delete", "post", "list" ]
      };
+
   option (venice.apiRestService) = {
-        Object: "Order"
-        Method: [ "post", "list" ]
-        Pattern: "/orders"
+        Object: "Store"
+        Method: [ "put", "get" ]
      };
 }

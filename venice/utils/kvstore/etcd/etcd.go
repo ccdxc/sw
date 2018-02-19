@@ -344,12 +344,16 @@ func (e *etcdStore) List(ctx context.Context, prefix string, into runtime.Object
 		ptr = true
 		elem = elem.Elem()
 	}
+	if elem.Kind() == reflect.Interface {
+		ptr = true
+	}
 
 	for _, kv := range resp.Kvs {
-		obj := reflect.New(elem).Interface().(runtime.Object)
-		if err := e.decode(kv.Value, obj, kv.ModRevision); err != nil {
+		obj, err := e.codec.Decode(kv.Value, nil)
+		if err != nil {
 			return err
 		}
+		e.objVersioner.SetVersion(obj, uint64(kv.ModRevision))
 		if ptr {
 			v.Set(reflect.Append(v, reflect.ValueOf(obj)))
 		} else {

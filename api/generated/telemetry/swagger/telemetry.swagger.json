@@ -15,6 +15,296 @@
     "application/json"
   ],
   "paths": {
+    "/{O.Tenant}/StatsPolicy": {
+      "get": {
+        "operationId": "AutoListStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryStatsPolicyList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "StatsPolicyV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryStatsPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryStatsPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "StatsPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/StatsPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryStatsPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CompactionInterval",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.RetentionTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.DownSampleRetentionTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatsPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryStatsPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatsPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateStatsPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryStatsPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryStatsPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "StatsPolicyV1"
+        ]
+      }
+    },
     "/{O.Tenant}/flowExportPolicy": {
       "get": {
         "operationId": "AutoListFlowExportPolicy",
@@ -74,6 +364,13 @@
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "LabelSelector",
@@ -202,6 +499,13 @@
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -334,6 +638,13 @@
             "format": "date-time"
           },
           {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "LabelSelector",
             "in": "query",
             "required": false,
@@ -462,6 +773,13 @@
             "format": "date-time"
           },
           {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Spec.RetentionTime",
             "in": "query",
             "required": false,
@@ -534,282 +852,6 @@
         ],
         "tags": [
           "FwlogPolicyV1"
-        ]
-      }
-    },
-    "/{O.Tenant}/statsPolicy": {
-      "get": {
-        "operationId": "AutoListStatsPolicy",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/telemetryStatsPolicyList"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.Namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.ResourceVersion",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.UUID",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.CreationTime.time",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.ModTime.time",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "LabelSelector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "FieldSelector",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "PrefixWatch",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "StatsPolicyV1"
-        ]
-      },
-      "post": {
-        "operationId": "AutoAddStatsPolicy",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/telemetryStatsPolicy"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/telemetryStatsPolicy"
-            }
-          }
-        ],
-        "tags": [
-          "StatsPolicyV1"
-        ]
-      }
-    },
-    "/{O.Tenant}/statsPolicy/{O.Name}": {
-      "get": {
-        "operationId": "AutoGetStatsPolicy",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/telemetryStatsPolicy"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "T.Kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "T.APIVersion",
-            "description": "APIVersion defines the version of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.Namespace",
-            "description": "Namespace of the object, for scoped objects.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.ResourceVersion",
-            "description": "Resource version in the object store. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.UUID",
-            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.CreationTime.time",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "O.ModTime.time",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "Spec.CompactionInterval",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.RetentionTime",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "Spec.DownSampleRetentionTime",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "StatsPolicyV1"
-        ]
-      },
-      "delete": {
-        "operationId": "AutoDeleteStatsPolicy",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/telemetryStatsPolicy"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "StatsPolicyV1"
-        ]
-      },
-      "put": {
-        "operationId": "AutoUpdateStatsPolicy",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/telemetryStatsPolicy"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/telemetryStatsPolicy"
-            }
-          }
-        ],
-        "tags": [
-          "StatsPolicyV1"
         ]
       }
     }
@@ -931,6 +973,10 @@
         "ModTime": {
           "$ref": "#/definitions/apiTimestamp",
           "title": "ModTime is the Last Modification time of Object"
+        },
+        "SelfLink": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."

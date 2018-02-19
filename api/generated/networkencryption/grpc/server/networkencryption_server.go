@@ -9,6 +9,7 @@ package networkencryptionApiServer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -132,6 +133,10 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(networkencryption.TrafficEncryptionPolicy)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := networkencryption.TrafficEncryptionPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -177,19 +182,45 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 		srv := apisrvpkg.NewService("TrafficEncryptionPolicyV1")
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoAddTrafficEncryptionPolicy = srv.AddMethod("AutoAddTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoAddTrafficEncryptionPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoAddTrafficEncryptionPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(networkencryption.TrafficEncryptionPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "trafficEncryptionPolicy/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoDeleteTrafficEncryptionPolicy = srv.AddMethod("AutoDeleteTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoDeleteTrafficEncryptionPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoDeleteTrafficEncryptionPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(networkencryption.TrafficEncryptionPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "trafficEncryptionPolicy/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoGetTrafficEncryptionPolicy = srv.AddMethod("AutoGetTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoGetTrafficEncryptionPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoGetTrafficEncryptionPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(networkencryption.TrafficEncryptionPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "trafficEncryptionPolicy/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoListTrafficEncryptionPolicy = srv.AddMethod("AutoListTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["networkencryption.TrafficEncryptionPolicyList"], "trafficEncryptionPolicy", "AutoListTrafficEncryptionPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["networkencryption.TrafficEncryptionPolicyList"], "trafficEncryptionPolicy", "AutoListTrafficEncryptionPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoUpdateTrafficEncryptionPolicy = srv.AddMethod("AutoUpdateTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoUpdateTrafficEncryptionPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["networkencryption.TrafficEncryptionPolicy"], s.Messages["networkencryption.TrafficEncryptionPolicy"], "trafficEncryptionPolicy", "AutoUpdateTrafficEncryptionPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(networkencryption.TrafficEncryptionPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "trafficEncryptionPolicy/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsTrafficEncryptionPolicyV1.fnAutoWatchTrafficEncryptionPolicy = s.Messages["networkencryption.TrafficEncryptionPolicy"].WatchFromKv
 
@@ -207,6 +238,9 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 		s.Messages["networkencryption.TrafficEncryptionPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := networkencryption.TrafficEncryptionPolicy{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(networkencryption.TrafficEncryptionPolicyV1_AutoWatchTrafficEncryptionPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

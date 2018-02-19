@@ -26,7 +26,7 @@ func TestMethodWiths(t *testing.T) {
 	f := mocks.NewFakeMethod(true).(*mocks.FakeMethod)
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodWiths").WithVersion("v1").WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc)
-	m = m.WithPostCommitHook(f.PostcommitfFunc).WithPostCommitHook(f.PostcommitfFunc).WithResponseWriter(f.RespWriterFunc)
+	m = m.WithPostCommitHook(f.PostcommitfFunc).WithPostCommitHook(f.PostcommitfFunc).WithResponseWriter(f.RespWriterFunc).WithMakeURI(f.MakeURIFunc)
 	m = m.WithOper("POST").WithVersion("Vtest")
 	reqmsg := TestType1{}
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
@@ -57,6 +57,9 @@ func TestMethodWiths(t *testing.T) {
 		t.Errorf("Expecting no KV reads but found %v", req.Kvreads)
 	}
 
+	if f.MakeURIs != 1 {
+		t.Errorf("expecting 1 MakeURI request got %d", f.MakeURIs)
+	}
 	m.Disable()
 	if mhdlr.enabled == true {
 		t.Errorf("method should have been disabled")

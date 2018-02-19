@@ -901,7 +901,7 @@ func makeURIAuthV1AutoListUserListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURIAuthV1AutoUpdateAuthenticationPolicyUpdateOper(in *AuthenticationPolicy) string {
-	return fmt.Sprint("/v1/auth", "/authn-policy")
+	return fmt.Sprint("/v1/auth", "/authn-policy/", in.Name)
 }
 
 //

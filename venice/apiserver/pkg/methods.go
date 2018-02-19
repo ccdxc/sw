@@ -45,21 +45,35 @@ type MethodHdlr struct {
 	oper apiserver.APIOperType
 	// version is the version of the API this method serves.
 	version string
+	// makeURIFunc generates the URI for the method.
+	makeURIFunc apiserver.MakeURIFunc
+}
+
+type errorStatus struct {
+	code codes.Code
+	err  string
+}
+
+func (e *errorStatus) makeError(msg string) error {
+	if msg != "" {
+		return grpc.Errorf(e.code, fmt.Sprintf("%s(%s)", e.err, msg))
+	}
+	return grpc.Errorf(e.code, e.err)
 }
 
 var (
-	errAPIDisabled        = grpc.Errorf(codes.ResourceExhausted, "API is disabled")
-	errRequestInfo        = grpc.Errorf(codes.InvalidArgument, "internal error (request information)")
-	errVersionTransform   = grpc.Errorf(codes.Unimplemented, "internal error (version transformation)")
-	errRequestValidation  = grpc.Errorf(codes.InvalidArgument, "request validation failed")
-	errKVStoreOperation   = grpc.Errorf(codes.AlreadyExists, "internal error (persisting)")
-	errKVStoreNotFound    = grpc.Errorf(codes.NotFound, "Not Found")
-	errResponseWriter     = grpc.Errorf(codes.Unimplemented, "internal error(response writer)")
-	errUnknownOperation   = grpc.Errorf(codes.Unimplemented, "unknown operation")
-	errPreOpChecksFailed  = grpc.Errorf(codes.FailedPrecondition, "failed pre conditions")
-	errTransactionFailed  = grpc.Errorf(codes.FailedPrecondition, "cannot execute operation")
-	errTransactionErrored = grpc.Errorf(codes.Internal, "transaction execution error")
-	errInternalError      = grpc.Errorf(codes.Internal, "internal error")
+	errAPIDisabled        = errorStatus{codes.ResourceExhausted, "API is disabled"}
+	errRequestInfo        = errorStatus{codes.InvalidArgument, "request information error"}
+	errVersionTransform   = errorStatus{codes.Unimplemented, "version transformation error"}
+	errRequestValidation  = errorStatus{codes.InvalidArgument, "request validation failed"}
+	errKVStoreOperation   = errorStatus{codes.AlreadyExists, "KV store error"}
+	errKVStoreNotFound    = errorStatus{codes.NotFound, "Not Found"}
+	errResponseWriter     = errorStatus{codes.Unimplemented, "error forming response"}
+	errUnknownOperation   = errorStatus{codes.Unimplemented, "unknown operation"}
+	errPreOpChecksFailed  = errorStatus{codes.FailedPrecondition, "failed pre conditions"}
+	errTransactionFailed  = errorStatus{codes.FailedPrecondition, "cannot execute operation"}
+	errTransactionErrored = errorStatus{codes.Internal, "transaction execution error"}
+	errInternalError      = errorStatus{codes.Internal, "internal error"}
 )
 
 // NewMethod initializes and returns a new Method object.
@@ -111,6 +125,17 @@ func (m *MethodHdlr) WithVersion(ver string) apiserver.Method {
 	return m
 }
 
+// WithMakeURI set the URI maker function for the method
+func (m *MethodHdlr) WithMakeURI(fn apiserver.MakeURIFunc) apiserver.Method {
+	m.makeURIFunc = fn
+	return m
+}
+
+// GetPrefix returns the prefix for the Method
+func (m *MethodHdlr) GetPrefix() string {
+	return m.svcPrefix
+}
+
 // GetRequestType returns the message corresponding to the request for the method.
 func (m *MethodHdlr) GetRequestType() apiserver.Message {
 	return m.requestType
@@ -129,6 +154,14 @@ func (m *MethodHdlr) getMethDbKey(in interface{}, oper apiserver.APIOperType) (s
 	return m.requestType.GetKVKey(in, m.svcPrefix)
 }
 
+// MakeURI generates the string for the URI if the method is exposed via REST
+func (m *MethodHdlr) MakeURI(i interface{}) (string, error) {
+	if m.makeURIFunc == nil {
+		return "", fmt.Errorf("not implemented")
+	}
+	return m.makeURIFunc(i)
+}
+
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
 func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, replaceStatus bool) (interface{}, error) {
 	if !singletonAPISrv.getRunState() {
@@ -138,7 +171,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	key, err := m.getMethDbKey(i, oper)
 	if err != nil {
 		l.ErrorLog("msg", "could not get key", "error", err, "oper", oper)
-		return nil, errInternalError
+		return nil, errInternalError.makeError(err.Error())
 	}
 	nonTxn := txn.IsEmpty()
 	kvOp := kvstore.OperUnknown
@@ -148,6 +181,12 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	)
 	switch oper {
 	case apiserver.CreateOper:
+		i, err = m.requestType.UpdateSelfLink(key, i)
+		if err != nil {
+			errors.Wrap(err, "Unable to update self link")
+			err = errKVStoreOperation.makeError(err.Error())
+			break
+		}
 		if nonTxn {
 			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, true, replaceStatus)
 			err = errors.Wrap(err, "oper: POST")
@@ -156,8 +195,17 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 			err = errors.Wrap(err, "oper: Txn POST")
 			resp = i
 		}
+		if err != nil {
+			err = errKVStoreOperation.makeError(err.Error())
+		}
 		kvOp = kvstore.OperUpdate
 	case apiserver.UpdateOper:
+		i, err = m.requestType.UpdateSelfLink(key, i)
+		if err != nil {
+			errors.Wrap(err, "Unable to update self link")
+			err = errKVStoreOperation.makeError(err.Error())
+			break
+		}
 		if nonTxn {
 			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, false, replaceStatus)
 			err = errors.Wrap(err, "oper: PUT")
@@ -165,6 +213,9 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, false)
 			err = errors.Wrap(err, "oper: Txn PUT")
 			resp = i
+		}
+		if err != nil {
+			err = errKVStoreOperation.makeError(err.Error())
 		}
 		kvOp = kvstore.OperUpdate
 	case apiserver.DeleteOper:
@@ -175,22 +226,31 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 			err = m.requestType.DelFromKvTxn(ctx, txn, key)
 			err = errors.Wrap(err, "oper: Txn DELETE")
 		}
+		if err != nil {
+			err = errKVStoreNotFound.makeError(err.Error())
+		}
 		kvOp = kvstore.OperDelete
 	case apiserver.GetOper:
 		// Transactions are not supported for a GET operation.
 		resp, err = m.requestType.GetFromKv(ctx, kvs, key)
 		err = errors.Wrap(err, "oper: GET")
+		if err != nil {
+			err = errKVStoreNotFound.makeError(err.Error())
+		}
 		kvOp = kvstore.OperGet
 	case apiserver.ListOper:
 		options := i.(api.ListWatchOptions)
 		resp, err = m.responseType.ListFromKv(ctx, kvs, &options, m.svcPrefix)
 		err = errors.Wrap(err, "oper: LIST")
+		if err != nil {
+			err = errKVStoreNotFound.makeError(err.Error())
+		}
 	default:
-		err = errors.Wrap(errUnknownOperation, fmt.Sprintf("oper: [%s]", oper))
+		err = errUnknownOperation.makeError(fmt.Sprintf("oper: [%s]", oper))
 	}
 	if err != nil {
 		l.ErrorLog("msg", "failed Kv store operation", "error", err, "resp", resp)
-		return nil, errKVStoreOperation
+		return nil, err
 	}
 	txnResp := kvstore.TxnResponse{}
 	if !nonTxn && (oper == apiserver.CreateOper || oper == apiserver.UpdateOper || oper == apiserver.DeleteOper) {
@@ -200,7 +260,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 		} else {
 			if !txnResp.Succeeded {
 				l.ErrorLog("msg", "transaction failed")
-				return nil, errTransactionFailed
+				return nil, errTransactionFailed.makeError("")
 			}
 			for _, t := range txnResp.Responses {
 				if t.Oper == kvOp && t.Key == key {
@@ -213,7 +273,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	}
 	if err != nil {
 		l.ErrorLog("msg", "failed Kv store transaction operation", "error", err, "resp", resp)
-		return nil, errTransactionErrored
+		return nil, errTransactionErrored.makeError(err.Error())
 	}
 	return resp, nil
 }
@@ -250,13 +310,13 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	l.DebugLog("service", m.svcPrefix, "method", m.name, "version", m.version)
 	if m.enabled == false {
 		l.Infof("Api is disabled ignoring invocation")
-		return nil, errAPIDisabled
+		return nil, errAPIDisabled.makeError("")
 	}
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		l.Errorf("unable to get metadata from context")
-		return nil, errRequestInfo
+		return nil, errRequestInfo.makeError("metadata")
 	}
 
 	if _, ok := md[apiserver.RequestParamReplaceStatusField]; ok {
@@ -279,7 +339,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		i, err = m.requestType.PrepareMsg(ver, singletonAPISrv.version, i)
 		if err != nil {
 			l.ErrorLog("msg", "Version transformation failed", "version-from", ver, "version-to", singletonAPISrv.version, "error", err)
-			return nil, errVersionTransform
+			return nil, errVersionTransform.makeError("")
 		}
 	}
 	// all operations on native object version from now on
@@ -303,26 +363,26 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		err = m.requestType.Validate(i, singletonAPISrv.version, replaceStatus)
 		if err != nil {
 			l.ErrorLog("msg", "request validation failed", "error", err, "replacestatus", replaceStatus)
-			return nil, errRequestValidation
+			return nil, errRequestValidation.makeError(err.Error())
 		}
 	}
 	if oper == apiserver.CreateOper {
 		i, err = m.requestType.CreateUUID(i)
 		if err != nil {
 			l.ErrorLog("msg", "UUID creation failed", "error", err)
-			return nil, errInternalError
+			return nil, errInternalError.makeError(err.Error())
 		}
 		i, err = m.requestType.WriteCreationTime(i)
 		if err != nil {
 			l.ErrorLog("msg", "CTime updation failed", "error", err)
-			return nil, errInternalError
+			return nil, errInternalError.makeError(err.Error())
 		}
 	}
 	if oper == apiserver.CreateOper || oper == apiserver.UpdateOper {
 		i, err = m.requestType.WriteModTime(i)
 		if err != nil {
 			l.ErrorLog("msg", "Mtime updation failed", "error", err)
-			return nil, errInternalError
+			return nil, errInternalError.makeError(err.Error())
 		}
 	}
 
@@ -337,13 +397,13 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		key, err = m.getMethDbKey(i, oper)
 		if err != nil {
 			l.ErrorLog("msg", "could not get key", "error", err)
-			return nil, errInternalError
+			return nil, errInternalError.makeError(err.Error())
 		}
 		kvold := kvwrite
 		i, kvwrite, err = v(ctx, kv, txn, key, oper, i)
 		if err != nil {
 			l.ErrorLog("msg", "precommit hook failed", "error", err)
-			return nil, errPreOpChecksFailed
+			return nil, errPreOpChecksFailed.makeError(err.Error())
 		}
 		kvwrite = kvwrite && kvold
 	}
@@ -366,7 +426,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// Invoke registered postcommit hooks
 	for _, v := range m.postcommitFunc {
-		v(ctx, oper, i)
+		v(ctx, oper, resp)
 	}
 
 	if span != nil {
@@ -378,7 +438,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		resp, err = m.responseWriter(ctx, kv, m.svcPrefix, i, old, oper)
 		if err != nil {
 			l.ErrorLog("msg", "response writer returned", "error", err)
-			return nil, errResponseWriter
+			return nil, errResponseWriter.makeError(err.Error())
 		}
 	}
 
@@ -387,8 +447,16 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		resp, err = m.requestType.PrepareMsg(singletonAPISrv.version, ver, resp)
 		if err != nil {
 			l.ErrorLog("msg", "response version transformation failed", "ver-from", singletonAPISrv.version, "ver-to", ver)
-			return nil, errVersionTransform
+			return nil, errVersionTransform.makeError(err.Error())
 		}
+	}
+
+	// Update the selflink
+	path, err := m.MakeURI(resp)
+	if err == nil {
+		resp, _ = m.responseType.UpdateSelfLink(path, resp)
+	} else {
+		resp, _ = m.responseType.UpdateSelfLink("", resp)
 	}
 	return resp, nil
 }

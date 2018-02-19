@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
@@ -25,8 +26,13 @@ var _ validators.DummyVar
 var funcMapEvents = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
+func (m *Event) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "events/", m.Tenant, "/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *EventPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "eventPolicy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "eventPolicy/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object

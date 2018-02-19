@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	{{if $validators.Fmap}}
 	validators "github.com/pensando/sw/venice/utils/apigen/validators" {{end}}
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -26,8 +27,9 @@ var funcMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{}
 {{range .Messages}}{{if (len (getDbKey .)) ne 0}}{{$sep := ", "}}
 // MakeKey generates a KV store key for the object
 func (m *{{.Name}}) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", {{range $index, $value := (getDbKey .)}}{{if ($index) ne 0}}{{$sep}}{{end}}{{if strEq $value.Type "prefix"}}"{{$value.Val}}"{{else}}m.{{$value.Val}}{{end}}{{$sep := ", "}}{{end}})
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", {{range $index, $value := (getDbKey .)}}{{if ($index) ne 0}}{{$sep}}{{end}}{{if strEq $value.Type "prefix"}}"{{$value.Val}}"{{else}}m.{{$value.Val}}{{end}}{{$sep := ", "}}{{end}})
 }{{end}}{{end}}
+
 {{range .Messages}}{{if isListHelper .}}{{$type := getListType . false}}
 // MakeKey generates a KV store key for the object
 func (m *{{.Name}})  MakeKey(prefix string) string {

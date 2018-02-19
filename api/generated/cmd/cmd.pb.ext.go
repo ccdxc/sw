@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
@@ -26,17 +27,17 @@ var funcMapCmd = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "cluster/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "cluster/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *Node) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "nodes/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "nodes/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *SmartNIC) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "smartnics/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "smartnics/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object

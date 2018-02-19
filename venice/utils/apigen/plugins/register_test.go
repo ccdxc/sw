@@ -18,7 +18,7 @@ import (
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 )
 
-func TestDdbPathGet(t *testing.T) {
+func TestDbPathGet(t *testing.T) {
 	var fds []*descriptor.FileDescriptorProto
 	for _, src := range []string{
 		`
@@ -39,7 +39,7 @@ func TestDdbPathGet(t *testing.T) {
 				type: TYPE_STRING
 				number: 2
 			>
-			options:<[venice.objectPrefix]:"{nest2_field}/{leaf_field}">
+			options:<[venice.objectPrefix]:{Collection: "prefix", Path:"{nest2_field}/{leaf_field}"}>
 		>
 		message_type <
 			name: 'testmsg'
@@ -64,7 +64,7 @@ func TestDdbPathGet(t *testing.T) {
 				type: TYPE_STRING
 				number: 3
 			>
-			options:<[venice.objectPrefix]:"prefix-{leaf_field}/qual{real_field.leaf_field}">
+			options:<[venice.objectPrefix]:{Collection:"prefix-{leaf_field}", Path:"/qual{real_field.leaf_field}"}>
 		>
 		syntax: "proto3"
 		`, `
@@ -78,7 +78,7 @@ func TestDdbPathGet(t *testing.T) {
 				type: TYPE_STRING
 				number: 1
 			>
-			options:<[venice.objectPrefix]:"prefix-{embedded_field">
+			options:<[venice.objectPrefix]:{Collection:"prefix", Path:"{embedded_field"}>
 		>
 		syntax: "proto2"
 		`,
@@ -98,7 +98,7 @@ func TestDdbPathGet(t *testing.T) {
 		t.Fatalf("Load Failed")
 	}
 
-	t.Logf("Test dbPath with [prefix-{leaf_field}/qual{real_field.leaf_field}]")
+	t.Logf("Test dbPath with [{collection:'prefix-{leaf_field}', Path:'qual{real_field.leaf_field}'}]")
 	testmsg, err := r.LookupMsg("", ".example.testmsg")
 	result := []KeyComponent{
 		{Type: "prefix", Val: "prefix-"},
@@ -113,12 +113,13 @@ func TestDdbPathGet(t *testing.T) {
 		t.Errorf("getDbKey failed")
 	}
 	if !reflect.DeepEqual(result, paths) {
-		t.Errorf("result does not match")
+		t.Errorf("result does not match got %+v", paths)
 	}
 
-	t.Logf("Test dbPath with [{nest2_field}/{leaf_field}]")
+	t.Logf("Test dbPath with [{Collection: 'prefix', Path:'{nest2_field}/{leaf_field}'}]")
 	testmsg, err = r.LookupMsg("", ".example.Nest1")
 	result = []KeyComponent{
+		{Type: "prefix", Val: "prefix/"},
 		{Type: "field", Val: "nest2_field"},
 		{Type: "prefix", Val: "/"},
 		{Type: "field", Val: "leaf_field"},
@@ -375,7 +376,7 @@ func TestGetTypes(t *testing.T) {
 				type: TYPE_STRING
 				number: 2
 			>
-			options:<[venice.objectPrefix]:"{nest2_field}/{leaf_field}">
+			options:<[venice.objectPrefix]:{Collection:"prefix", Path:"{nest2_field}/{leaf_field}"}>
 		>
 		message_type <
 			name: 'testmsg'
@@ -400,7 +401,7 @@ func TestGetTypes(t *testing.T) {
 				type: TYPE_STRING
 				number: 3
 			>
-			options:<[venice.objectPrefix]:"prefix-{leaf_field}/qual{real_field.leaf_field}">
+			options:<[venice.objectPrefix]:{Collection:"prefix" Path:"{leaf_field}/qual{real_field.leaf_field}"}>
 		>
 		service <
 			name: 'hybrid_crudservice'
@@ -560,6 +561,14 @@ func TestGetParams(t *testing.T) {
 				type: TYPE_STRING
 				number: 2
 			>
+			field <
+				name: 'O'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.ObjectMeta'
+				number: 3
+			>
+			options:<[venice.objectPrefix]:{Collection:"prefix-{str_field}", Path:"/qual{nest1_field.embedded_field}"}>
 		>
 		message_type <
 			name: 'testmsg'
@@ -592,9 +601,17 @@ func TestGetParams(t *testing.T) {
 				type: TYPE_MESSAGE
 				type_name: '.example.Nest1'
 				number: 2
-			>
-			options:<[venice.objectAutoGen]: "listhelper">
+			> 
 		>
+		message_type <
+		name: 'ObjectMeta'
+		field <
+			name: 'Name'
+			label: LABEL_OPTIONAL
+			type: TYPE_STRING
+			number: 2
+		>
+	>
 		service <
 			name: 'full_crudservice'
 			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1">
@@ -753,16 +770,13 @@ func TestGetParams(t *testing.T) {
 				t.Errorf("unknown method [%s]", mparams.Oper)
 			}
 
-			result1 := []KeyComponent{
-				{Type: "prefix", Val: "/prefix"},
+			result1 := URIKey{
+				Ref: true,
+				Str: "\"example/qual\", in.nest1_field.embedded_field, \"/prefix-\", in.str_field, \"/\", in.O.Name",
 			}
-			result2 := []KeyComponent{
-				{Type: "prefix", Val: "/prefix/"},
-				{Type: "field", Val: "str_field"},
-			}
-			keys, err := getURIKey(meth)
+			keys, err := getURIKey(meth, false)
 			if err != nil {
-				t.Errorf("error getting method URI key for [%s]", *meth.Name)
+				t.Errorf("error getting method URI key for [%s](%s)", *meth.Name, err)
 			}
 			switch *meth.Name {
 			case "noncrudsvc_get", "noncrudsvc_delete", "noncrudsvc_list":
@@ -774,7 +788,7 @@ func TestGetParams(t *testing.T) {
 					t.Errorf("key components do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
 				}
 			case "noncrudsvc_update":
-				if !reflect.DeepEqual(result2, keys) {
+				if !reflect.DeepEqual(result1, keys) {
 					t.Errorf("key components do not match for [%s] got [%+v]", *meth.Name, keys)
 				}
 

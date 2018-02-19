@@ -1673,27 +1673,27 @@ func (r *EndpointsStatsPolicyV1RestClient) getHTTPRequest(ctx context.Context, i
 
 //
 func makeURIStatsPolicyV1AutoAddStatsPolicyCreateOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy")
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy")
 }
 
 //
 func makeURIStatsPolicyV1AutoDeleteStatsPolicyDeleteOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy/", in.Name)
 }
 
 //
 func makeURIStatsPolicyV1AutoGetStatsPolicyGetOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy/", in.Name)
 }
 
 //
 func makeURIStatsPolicyV1AutoListStatsPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy")
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy")
 }
 
 //
 func makeURIStatsPolicyV1AutoUpdateStatsPolicyUpdateOper(in *StatsPolicy) string {
-	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/statsPolicy/", in.Name)
+	return fmt.Sprint("/v1/statsPolicy", "/", in.Tenant, "/StatsPolicy/", in.Name)
 }
 
 // AutoAddStatsPolicy CRUD method for StatsPolicy

@@ -1258,7 +1258,7 @@ func makeURIAppV1AutoDeleteAppUserDeleteOper(in *AppUser) string {
 
 //
 func makeURIAppV1AutoDeleteAppUserGrpDeleteOper(in *AppUserGrp) string {
-	return fmt.Sprint("/v1/app", "/", in.Tenant, "/app-user-groups/", in.Name)
+	return fmt.Sprint("/v1/app", "/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 //
@@ -1273,7 +1273,7 @@ func makeURIAppV1AutoGetAppUserGetOper(in *AppUser) string {
 
 //
 func makeURIAppV1AutoGetAppUserGrpGetOper(in *AppUserGrp) string {
-	return fmt.Sprint("/v1/app", "/", in.Tenant, "/app-user-groups/", in.Name)
+	return fmt.Sprint("/v1/app", "/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 //
@@ -1298,7 +1298,7 @@ func makeURIAppV1AutoUpdateAppUserUpdateOper(in *AppUser) string {
 
 //
 func makeURIAppV1AutoUpdateAppUserGrpUpdateOper(in *AppUserGrp) string {
-	return fmt.Sprint("/v1/app", "/", in.Tenant, "/app-user-groups/", in.Name)
+	return fmt.Sprint("/v1/app", "/", in.Tenant, "/app-users-groups/", in.Name)
 }
 
 // AutoAddApp CRUD method for App

@@ -67,7 +67,7 @@ message CertificateStatus {
 
 // Certificate represents a certificate with associated chain of trust
 message Certificate {
-     option (venice.objectPrefix) = "certificate";
+     option (venice.objectPrefix) = {Collection: "certificates", Path: "/{O.Tenant}"};
 
      api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 
@@ -92,14 +92,7 @@ service CertificateV1 {
 
      option (venice.apiRestService) = {
          Object: "Certificate"
-         Method: [ "get", "put", "delete" ]
-         Pattern: "/{O.Tenant}/certificates/{O.Name}"
-     };
-
-     option (venice.apiRestService) = {
-         Object: "Certificate"
-         Method: [ "post", "list" ]
-         Pattern: "/{O.Tenant}/certificates"
+         Method: [ "get", "put", "delete", "post", "list" ]
      };
 }
 

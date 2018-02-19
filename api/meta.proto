@@ -43,6 +43,12 @@ message ObjectMeta {
   Timestamp CreationTime = 7 [(gogoproto.nullable) = false];
   // ModTime is the Last Modification time of Object
   Timestamp ModTime = 8 [(gogoproto.nullable) = false];
+  // SelfLink is a link to accessing this object. When stored in the KV store this is
+  //  the key in the kvstore and when the object is served from the API-GW it is the
+  //  URI path. Examples
+  //    - "/venice/tenants/tenants/tenant2" in the kvstore
+  //    - "/v1/tenants/tenants/tenant2" when served by API Gateway.
+  string SelfLink = 9;
 }
 
 // ObjectRef contains identifying information about an object.

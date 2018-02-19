@@ -9,6 +9,7 @@ package telemetryApiServer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -156,6 +157,10 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(telemetry.FlowExportPolicy)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := telemetry.FlowExportPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -262,6 +267,10 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(telemetry.FwlogPolicy)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := telemetry.FwlogPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -367,6 +376,10 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(telemetry.StatsPolicy)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := telemetry.StatsPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -414,19 +427,49 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 		srv := apisrvpkg.NewService("FlowExportPolicyV1")
 
 		s.endpointsFlowExportPolicyV1.fnAutoAddFlowExportPolicy = srv.AddMethod("AutoAddFlowExportPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoAddFlowExportPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoAddFlowExportPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FlowExportPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "flowExportPolicy/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFlowExportPolicyV1.fnAutoDeleteFlowExportPolicy = srv.AddMethod("AutoDeleteFlowExportPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoDeleteFlowExportPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoDeleteFlowExportPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FlowExportPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "flowExportPolicy/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFlowExportPolicyV1.fnAutoGetFlowExportPolicy = srv.AddMethod("AutoGetFlowExportPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoGetFlowExportPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoGetFlowExportPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FlowExportPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "flowExportPolicy/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFlowExportPolicyV1.fnAutoListFlowExportPolicy = srv.AddMethod("AutoListFlowExportPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["telemetry.FlowExportPolicyList"], "flowExportPolicy", "AutoListFlowExportPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["telemetry.FlowExportPolicyList"], "flowExportPolicy", "AutoListFlowExportPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "flowExportPolicy/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFlowExportPolicyV1.fnAutoUpdateFlowExportPolicy = srv.AddMethod("AutoUpdateFlowExportPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoUpdateFlowExportPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FlowExportPolicy"], s.Messages["telemetry.FlowExportPolicy"], "flowExportPolicy", "AutoUpdateFlowExportPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FlowExportPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "flowExportPolicy/", in.Tenant, "/flowExportPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFlowExportPolicyV1.fnAutoWatchFlowExportPolicy = s.Messages["telemetry.FlowExportPolicy"].WatchFromKv
 
@@ -444,6 +487,9 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 		s.Messages["telemetry.FlowExportPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := telemetry.FlowExportPolicy{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(telemetry.FlowExportPolicyV1_AutoWatchFlowExportPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -501,19 +547,49 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 		srv := apisrvpkg.NewService("FwlogPolicyV1")
 
 		s.endpointsFwlogPolicyV1.fnAutoAddFwlogPolicy = srv.AddMethod("AutoAddFwlogPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoAddFwlogPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoAddFwlogPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FwlogPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "fwlogPolicy/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFwlogPolicyV1.fnAutoDeleteFwlogPolicy = srv.AddMethod("AutoDeleteFwlogPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoDeleteFwlogPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoDeleteFwlogPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FwlogPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "fwlogPolicy/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFwlogPolicyV1.fnAutoGetFwlogPolicy = srv.AddMethod("AutoGetFwlogPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoGetFwlogPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoGetFwlogPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FwlogPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "fwlogPolicy/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFwlogPolicyV1.fnAutoListFwlogPolicy = srv.AddMethod("AutoListFwlogPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["telemetry.FwlogPolicyList"], "fwlogPolicy", "AutoListFwlogPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["telemetry.FwlogPolicyList"], "fwlogPolicy", "AutoListFwlogPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "fwlogPolicy/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFwlogPolicyV1.fnAutoUpdateFwlogPolicy = srv.AddMethod("AutoUpdateFwlogPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoUpdateFwlogPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.FwlogPolicy"], s.Messages["telemetry.FwlogPolicy"], "fwlogPolicy", "AutoUpdateFwlogPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.FwlogPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "fwlogPolicy/", in.Tenant, "/fwlogPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsFwlogPolicyV1.fnAutoWatchFwlogPolicy = s.Messages["telemetry.FwlogPolicy"].WatchFromKv
 
@@ -531,6 +607,9 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 		s.Messages["telemetry.FwlogPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := telemetry.FwlogPolicy{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(telemetry.FwlogPolicyV1_AutoWatchFwlogPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -588,19 +667,49 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 		srv := apisrvpkg.NewService("StatsPolicyV1")
 
 		s.endpointsStatsPolicyV1.fnAutoAddStatsPolicy = srv.AddMethod("AutoAddStatsPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoAddStatsPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoAddStatsPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.StatsPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoDeleteStatsPolicy = srv.AddMethod("AutoDeleteStatsPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoDeleteStatsPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoDeleteStatsPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.StatsPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoGetStatsPolicy = srv.AddMethod("AutoGetStatsPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoGetStatsPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoGetStatsPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.StatsPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoListStatsPolicy = srv.AddMethod("AutoListStatsPolicy",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["telemetry.StatsPolicyList"], "statsPolicy", "AutoListStatsPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["telemetry.StatsPolicyList"], "statsPolicy", "AutoListStatsPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoUpdateStatsPolicy = srv.AddMethod("AutoUpdateStatsPolicy",
-			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoUpdateStatsPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["telemetry.StatsPolicy"], s.Messages["telemetry.StatsPolicy"], "statsPolicy", "AutoUpdateStatsPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(telemetry.StatsPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "statsPolicy/", in.Tenant, "/StatsPolicy/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsStatsPolicyV1.fnAutoWatchStatsPolicy = s.Messages["telemetry.StatsPolicy"].WatchFromKv
 
@@ -618,6 +727,9 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 		s.Messages["telemetry.StatsPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := telemetry.StatsPolicy{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(telemetry.StatsPolicyV1_AutoWatchStatsPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

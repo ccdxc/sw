@@ -14,7 +14,7 @@ import "github.com/pensando/sw/api/meta.proto";
 // Event Client module will be consumer of this policy.
 message EventPolicy {
 
-    option (venice.objectPrefix) = "eventPolicy";
+    option (venice.objectPrefix) =  {Collection: "eventPolicy", Path: "/{O.Tenant}"};
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = ",inline"];
@@ -59,13 +59,7 @@ service EventPolicyV1 {
 
     option (venice.apiRestService) = {
         Object: "EventPolicy"
-        Method: [ "get", "put", "delete" ]
-        Pattern: "/{O.Tenant}/eventPolicy/{O.Name}"
-    };
-    option (venice.apiRestService) = {
-        Object: "EventPolicy"
-        Method: [ "post" ]
-        Pattern: "/{O.Tenant}/eventPolicy"
+        Method: [ "get", "put", "delete", "post" ]
     };
 }
 
@@ -82,6 +76,8 @@ enum SeverityLevel {
 // that should be user visible. These objects are created internally by
 // Event client and persisted in EventDB.
 message Event {
+    option (venice.objectPrefix) = {Collection: "events", Path: "/{O.Tenant}"};
+    
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = ", inline"];
@@ -152,12 +148,6 @@ service EventV1 {
     // GET and LIST calls are handled by API gateway -> Query processor -> elastic DB(or events manager)
     option(venice.apiRestService) = {
         Object: "Event"
-        Method: ["get"]
-        Pattern: "/{O.Tenant}/events/{O.Name}"
-    };
-    option(venice.apiRestService) = {
-        Object: "Event"
-        Method: ["list"]
-        Pattern: "/{O.Tenant}/events"
+        Method: ["get", "list"]
     };
 }

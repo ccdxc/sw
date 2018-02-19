@@ -57,6 +57,8 @@ type MessageHdlr struct {
 	creationTimeWriter apisrv.SetCreationTimeFunc
 	// modTimeWriter is a function that sets the modification time of object
 	modTimeWriter apisrv.SetModTimeFunc
+	// updateSelfLinkFunc sets the SelfLink in the object.
+	selfLinkFunc apisrv.UpdateSelfLinkFunc
 }
 
 // NewMessage creates a new message performing all initialization needed.
@@ -134,6 +136,12 @@ func (m *MessageHdlr) WithKvListFunc(fn apisrv.ListFromKvFunc) apisrv.Message {
 // WithKvWatchFunc watches the KV store for changes to object(s)
 func (m *MessageHdlr) WithKvWatchFunc(fn apisrv.WatchKvFunc) apisrv.Message {
 	m.kvWatchFunc = fn
+	return m
+}
+
+// WithSelfLinkWriter updates the selflink in the object
+func (m *MessageHdlr) WithSelfLinkWriter(fn apisrv.UpdateSelfLinkFunc) apisrv.Message {
+	m.selfLinkFunc = fn
 	return m
 }
 
@@ -291,6 +299,14 @@ func (m *MessageHdlr) WriteModTime(i interface{}) (interface{}, error) {
 	return i, nil
 }
 
+//UpdateSelfLink update the object with the self link provided
+func (m *MessageHdlr) UpdateSelfLink(path string, i interface{}) (interface{}, error) {
+	if m.selfLinkFunc != nil {
+		return m.selfLinkFunc(path, i)
+	}
+	return i, nil
+}
+
 // WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
 func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
 	if !singletonAPISrv.getRunState() {
@@ -304,14 +320,14 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			l.ErrorLog("msg", "unable to get metadata from context")
-			return errRequestInfo
+			return errRequestInfo.makeError("metadata")
 		}
 
 		if v, ok := md[apisrv.RequestParamVersion]; ok {
 			ver = v[0]
 		} else {
 			l.ErrorLog("msg", "unable to get request version from context")
-			return errRequestInfo
+			return errRequestInfo.makeError("unable to determine version")
 		}
 		var span opentracing.Span
 		span = opentracing.SpanFromContext(ctx)

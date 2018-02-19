@@ -35,7 +35,8 @@
         "Messages": [
           "Order",
           "Book",
-          "Publisher"
+          "Publisher",
+          "Store"
         ]
       }
     },

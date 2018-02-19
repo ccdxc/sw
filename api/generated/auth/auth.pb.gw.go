@@ -278,6 +278,24 @@ func request_AuthV1_AutoUpdateAuthenticationPolicy_0(ctx context.Context, marsha
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
 	msg, err := client.AutoUpdateAuthenticationPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -631,7 +649,7 @@ var (
 
 	pattern_AuthV1_AutoListUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "users"}, ""))
 
-	pattern_AuthV1_AutoUpdateAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"authn-policy"}, ""))
+	pattern_AuthV1_AutoUpdateAuthenticationPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"authn-policy", "O.Name"}, ""))
 
 	pattern_AuthV1_AutoUpdateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "users", "O.Name"}, ""))
 )

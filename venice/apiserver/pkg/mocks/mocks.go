@@ -48,12 +48,13 @@ func NewFakeService() apisrv.Service {
 
 // FakeMethod is used as mock Method for testing.
 type FakeMethod struct {
-	Pres    int
-	Posts   int
-	Skipkv  bool
-	Enabled bool
-	ReqMsg  apisrv.Message
-	RespMsg apisrv.Message
+	Pres     int
+	Posts    int
+	MakeURIs int
+	Skipkv   bool
+	Enabled  bool
+	ReqMsg   apisrv.Message
+	RespMsg  apisrv.Message
 }
 
 // Enable is a mock method for testing
@@ -80,6 +81,16 @@ func (m *FakeMethod) WithOper(oper apisrv.APIOperType) apisrv.Method { return m 
 // WithVersion is a mock method for testing
 func (m *FakeMethod) WithVersion(ver string) apisrv.Method { return m }
 
+// WithMakeURI set the URI maker function for the method
+func (m *FakeMethod) WithMakeURI(fn apisrv.MakeURIFunc) apisrv.Method {
+	return m
+}
+
+// GetPrefix is a mock method for testing
+func (m *FakeMethod) GetPrefix() string {
+	return ""
+}
+
 // GetRequestType is a mock method for testing
 func (m *FakeMethod) GetRequestType() apisrv.Message { return m.ReqMsg }
 
@@ -89,6 +100,11 @@ func (m *FakeMethod) GetResponseType() apisrv.Message { return m.RespMsg }
 // HandleInvocation is a mock method for testing
 func (m *FakeMethod) HandleInvocation(ctx context.Context, i interface{}) (interface{}, error) {
 	return nil, nil
+}
+
+// MakeURI generates the URI for the method.
+func (m *FakeMethod) MakeURI(i interface{}) (string, error) {
+	return "", nil
 }
 
 // NewFakeMethod creates a new FakeMethod
@@ -135,6 +151,12 @@ func (m *FakeMethod) RespWriterFunc(ctx context.Context, kvs kvstore.Interface, 
 	return "TestResponse", nil
 }
 
+// MakeURIFunc is a mock method for testing
+func (m *FakeMethod) MakeURIFunc(i interface{}) (string, error) {
+	m.MakeURIs++
+	return "", nil
+}
+
 // FakeMessage is used as a mock object for testing.
 type FakeMessage struct {
 	CalledTxfms    []string
@@ -152,6 +174,7 @@ type FakeMessage struct {
 	Txndels        int
 	Objverwrite    int
 	Uuidwrite      int
+	SelfLinkWrites int
 	KvObj          interface{}
 }
 
@@ -205,6 +228,11 @@ func (m *FakeMessage) WithCreationTimeWriter(fn apisrv.SetCreationTimeFunc) apis
 
 // WithModTimeWriter is a mock method for testing
 func (m *FakeMessage) WithModTimeWriter(fn apisrv.SetModTimeFunc) apisrv.Message { return m }
+
+// WithSelfLinkWriter updates the selflink in the object
+func (m *FakeMessage) WithSelfLinkWriter(fn apisrv.UpdateSelfLinkFunc) apisrv.Message {
+	return m
+}
 
 // GetKind is a mock method for testing
 func (m *FakeMessage) GetKind() string { return "" }
@@ -285,6 +313,11 @@ func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) err
 	return errors.New("Setup to fail validation")
 }
 
+//UpdateSelfLink update the object with the self link provided
+func (m *FakeMessage) UpdateSelfLink(path string, i interface{}) (interface{}, error) {
+	return i, nil
+}
+
 // TransformCb is a mock method for testing
 func (m *FakeMessage) TransformCb(from, to string, i interface{}) interface{} {
 	r, _ := m.PrepareMsg(from, to, i)
@@ -349,6 +382,12 @@ func (m *FakeMessage) KvwatchFunc(l log.Logger, options *api.ListWatchOptions, k
 func (m *FakeMessage) KvListFunc(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 	m.Kvlists++
 	return nil, nil
+}
+
+// SelfLinkWriterFunc is mock method for testing
+func (m *FakeMessage) SelfLinkWriterFunc(path string, i interface{}) (interface{}, error) {
+	m.SelfLinkWrites++
+	return i, nil
 }
 
 // CreateUUID is a mock method for testing

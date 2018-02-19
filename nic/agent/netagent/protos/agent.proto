@@ -18,7 +18,7 @@ enum AgentMode {
 // Agent config object
 message Agent {
 
-    option (venice.objectPrefix) = "config";
+    option (venice.objectPrefix) = {Collection: "config"};
 
     api.TypeMeta TypeMeta      = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,

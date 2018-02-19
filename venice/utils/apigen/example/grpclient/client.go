@@ -156,6 +156,20 @@ func main() {
 		l.Fatalf("Deleted object does not match \n\t[%+v]\n\t[%+v]\n", pub.Spec, ret.Spec)
 	}
 
+	store := bookstore.Store{}
+	store.Spec.Contact = "Contact name and phone here"
+	apicl.BookstoreV1().Store().Delete(ctx, &meta)
+	_, err = apicl.BookstoreV1().Store().Create(ctx, &store)
+	if err != nil {
+		l.Fatalf("failed to create store object ()%s)", err)
+	}
+
+	str, err := apicl.BookstoreV1().Store().Get(ctx, &meta)
+	if err != nil {
+		l.Fatalf("Could not get store object")
+	}
+	fmt.Printf("Store object is %+v\n", str)
+
 	// Add a tenant
 	tenant := network.Tenant{
 		TypeMeta: api.TypeMeta{

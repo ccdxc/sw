@@ -9,6 +9,7 @@ package x509ApiServer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -130,6 +131,10 @@ func (s *sx509X509Backend) CompleteRegistration(ctx context.Context, logger log.
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(x509.Certificate)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := x509.Certificate{}
 			err := kvs.Get(ctx, key, &r)
@@ -175,19 +180,49 @@ func (s *sx509X509Backend) CompleteRegistration(ctx context.Context, logger log.
 		srv := apisrvpkg.NewService("CertificateV1")
 
 		s.endpointsCertificateV1.fnAutoAddCertificate = srv.AddMethod("AutoAddCertificate",
-			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoAddCertificate")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoAddCertificate")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(x509.Certificate)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "certificate/", in.Tenant, "/certificates/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCertificateV1.fnAutoDeleteCertificate = srv.AddMethod("AutoDeleteCertificate",
-			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoDeleteCertificate")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoDeleteCertificate")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(x509.Certificate)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "certificate/", in.Tenant, "/certificates/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCertificateV1.fnAutoGetCertificate = srv.AddMethod("AutoGetCertificate",
-			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoGetCertificate")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoGetCertificate")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(x509.Certificate)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "certificate/", in.Tenant, "/certificates/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCertificateV1.fnAutoListCertificate = srv.AddMethod("AutoListCertificate",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["x509.CertificateList"], "certificate", "AutoListCertificate")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["x509.CertificateList"], "certificate", "AutoListCertificate")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "certificate/", in.Tenant, "/certificates/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCertificateV1.fnAutoUpdateCertificate = srv.AddMethod("AutoUpdateCertificate",
-			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoUpdateCertificate")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["x509.Certificate"], s.Messages["x509.Certificate"], "certificate", "AutoUpdateCertificate")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(x509.Certificate)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "certificate/", in.Tenant, "/certificates/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCertificateV1.fnAutoWatchCertificate = s.Messages["x509.Certificate"].WatchFromKv
 
@@ -205,6 +240,9 @@ func (s *sx509X509Backend) CompleteRegistration(ctx context.Context, logger log.
 		s.Messages["x509.Certificate"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := x509.Certificate{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(x509.CertificateV1_AutoWatchCertificateServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

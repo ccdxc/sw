@@ -70,6 +70,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoAddPublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoAddPublisher")(lAutoAddPublisherEndpoint)
 	}
+	var lAutoAddStoreEndpoint endpoint.Endpoint
+	{
+		lAutoAddStoreEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoAddStore",
+			bookstore.EncodeGrpcReqStore,
+			bookstore.DecodeGrpcRespStore,
+			&bookstore.Store{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoAddStore")(lAutoAddStoreEndpoint)
+	}
 	var lAutoDeleteBookEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteBookEndpoint = grpctransport.NewClient(
@@ -111,6 +125,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeletePublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoDeletePublisher")(lAutoDeletePublisherEndpoint)
+	}
+	var lAutoDeleteStoreEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteStoreEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoDeleteStore",
+			bookstore.EncodeGrpcReqStore,
+			bookstore.DecodeGrpcRespStore,
+			&bookstore.Store{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoDeleteStore")(lAutoDeleteStoreEndpoint)
 	}
 	var lAutoGetBookEndpoint endpoint.Endpoint
 	{
@@ -154,6 +182,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoGetPublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetPublisher")(lAutoGetPublisherEndpoint)
 	}
+	var lAutoGetStoreEndpoint endpoint.Endpoint
+	{
+		lAutoGetStoreEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoGetStore",
+			bookstore.EncodeGrpcReqStore,
+			bookstore.DecodeGrpcRespStore,
+			&bookstore.Store{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetStore")(lAutoGetStoreEndpoint)
+	}
 	var lAutoListBookEndpoint endpoint.Endpoint
 	{
 		lAutoListBookEndpoint = grpctransport.NewClient(
@@ -195,6 +237,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListPublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoListPublisher")(lAutoListPublisherEndpoint)
+	}
+	var lAutoListStoreEndpoint endpoint.Endpoint
+	{
+		lAutoListStoreEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoListStore",
+			bookstore.EncodeGrpcReqListWatchOptions,
+			bookstore.DecodeGrpcRespStoreList,
+			&bookstore.StoreList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoListStore")(lAutoListStoreEndpoint)
 	}
 	var lAutoUpdateBookEndpoint endpoint.Endpoint
 	{
@@ -238,24 +294,43 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoUpdatePublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdatePublisher")(lAutoUpdatePublisherEndpoint)
 	}
+	var lAutoUpdateStoreEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateStoreEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoUpdateStore",
+			bookstore.EncodeGrpcReqStore,
+			bookstore.DecodeGrpcRespStore,
+			&bookstore.Store{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdateStore")(lAutoUpdateStoreEndpoint)
+	}
 	return bookstore.EndpointsBookstoreV1Client{
 		Client: bookstore.NewBookstoreV1Client(conn),
 
 		AutoAddBookEndpoint:         lAutoAddBookEndpoint,
 		AutoAddOrderEndpoint:        lAutoAddOrderEndpoint,
 		AutoAddPublisherEndpoint:    lAutoAddPublisherEndpoint,
+		AutoAddStoreEndpoint:        lAutoAddStoreEndpoint,
 		AutoDeleteBookEndpoint:      lAutoDeleteBookEndpoint,
 		AutoDeleteOrderEndpoint:     lAutoDeleteOrderEndpoint,
 		AutoDeletePublisherEndpoint: lAutoDeletePublisherEndpoint,
+		AutoDeleteStoreEndpoint:     lAutoDeleteStoreEndpoint,
 		AutoGetBookEndpoint:         lAutoGetBookEndpoint,
 		AutoGetOrderEndpoint:        lAutoGetOrderEndpoint,
 		AutoGetPublisherEndpoint:    lAutoGetPublisherEndpoint,
+		AutoGetStoreEndpoint:        lAutoGetStoreEndpoint,
 		AutoListBookEndpoint:        lAutoListBookEndpoint,
 		AutoListOrderEndpoint:       lAutoListOrderEndpoint,
 		AutoListPublisherEndpoint:   lAutoListPublisherEndpoint,
+		AutoListStoreEndpoint:       lAutoListStoreEndpoint,
 		AutoUpdateBookEndpoint:      lAutoUpdateBookEndpoint,
 		AutoUpdateOrderEndpoint:     lAutoUpdateOrderEndpoint,
 		AutoUpdatePublisherEndpoint: lAutoUpdatePublisherEndpoint,
+		AutoUpdateStoreEndpoint:     lAutoUpdateStoreEndpoint,
 	}
 }
 
@@ -773,10 +848,180 @@ func (a *restObjBookstoreV1Publisher) Allowed(oper apiserver.APIOperType) bool {
 	}
 }
 
+type grpcObjBookstoreV1Store struct {
+	logger log.Logger
+	client bookstore.ServiceBookstoreV1Client
+}
+
+func (a *grpcObjBookstoreV1Store) Create(ctx context.Context, in *bookstore.Store) (*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddStore(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Store) Update(ctx context.Context, in *bookstore.Store) (*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateStore(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Store) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Store{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetStore(nctx, &in)
+}
+
+func (a *grpcObjBookstoreV1Store) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Store{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteStore(nctx, &in)
+}
+
+func (a *grpcObjBookstoreV1Store) List(ctx context.Context, options *api.ListWatchOptions) ([]*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListStore(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchStore(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(bookstore.BookstoreV1_AutoWatchStoreClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjBookstoreV1Store struct {
+	endpoints bookstore.EndpointsBookstoreV1RestClient
+	instance  string
+}
+
+func (a *restObjBookstoreV1Store) Create(ctx context.Context, in *bookstore.Store) (*bookstore.Store, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddStore(ctx, in)
+}
+
+func (a *restObjBookstoreV1Store) Update(ctx context.Context, in *bookstore.Store) (*bookstore.Store, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateStore(ctx, in)
+}
+
+func (a *restObjBookstoreV1Store) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Store, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Store{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetStore(ctx, &in)
+}
+
+func (a *restObjBookstoreV1Store) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Store, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Store{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteStore(ctx, &in)
+}
+
+func (a *restObjBookstoreV1Store) List(ctx context.Context, options *api.ListWatchOptions) ([]*bookstore.Store, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListStore(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return false
+	case apiserver.UpdateOper:
+		return true
+	case apiserver.GetOper:
+		return true
+	case apiserver.DeleteOper:
+		return false
+	case apiserver.ListOper:
+		return false
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientBookstoreV1 struct {
 	grpcOrder     bookstore.OrderInterface
 	grpcBook      bookstore.BookInterface
 	grpcPublisher bookstore.PublisherInterface
+	grpcStore     bookstore.StoreInterface
 }
 
 // NewGrpcCrudClientBookstoreV1 creates a GRPC client for the service
@@ -787,6 +1032,7 @@ func NewGrpcCrudClientBookstoreV1(conn *grpc.ClientConn, logger log.Logger) book
 		grpcOrder:     &grpcObjBookstoreV1Order{client: client, logger: logger},
 		grpcBook:      &grpcObjBookstoreV1Book{client: client, logger: logger},
 		grpcPublisher: &grpcObjBookstoreV1Publisher{client: client, logger: logger},
+		grpcStore:     &grpcObjBookstoreV1Store{client: client, logger: logger},
 	}
 }
 
@@ -802,10 +1048,15 @@ func (a *crudClientBookstoreV1) Publisher() bookstore.PublisherInterface {
 	return a.grpcPublisher
 }
 
+func (a *crudClientBookstoreV1) Store() bookstore.StoreInterface {
+	return a.grpcStore
+}
+
 type crudRestClientBookstoreV1 struct {
 	restOrder     bookstore.OrderInterface
 	restBook      bookstore.BookInterface
 	restPublisher bookstore.PublisherInterface
+	restStore     bookstore.StoreInterface
 }
 
 // NewRestCrudClientBookstoreV1 creates a REST client for the service.
@@ -819,6 +1070,7 @@ func NewRestCrudClientBookstoreV1(url string) bookstore.BookstoreV1Interface {
 		restOrder:     &restObjBookstoreV1Order{endpoints: endpoints, instance: url},
 		restBook:      &restObjBookstoreV1Book{endpoints: endpoints, instance: url},
 		restPublisher: &restObjBookstoreV1Publisher{endpoints: endpoints, instance: url},
+		restStore:     &restObjBookstoreV1Store{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -832,4 +1084,8 @@ func (a *crudRestClientBookstoreV1) Book() bookstore.BookInterface {
 
 func (a *crudRestClientBookstoreV1) Publisher() bookstore.PublisherInterface {
 	return a.restPublisher
+}
+
+func (a *crudRestClientBookstoreV1) Store() bookstore.StoreInterface {
+	return a.restStore
 }

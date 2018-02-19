@@ -90,6 +90,13 @@
             "format": "date-time"
           },
           {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Spec.ISBNId",
             "in": "query",
             "required": false,
@@ -103,7 +110,7 @@
           },
           {
             "name": "Spec.IdProvider",
-            "description": "Spec is not allowed to be Null hence disabling nullable.",
+            "description": "Added in  version 2 of the API.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -233,6 +240,13 @@
             "format": "date-time"
           },
           {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "LabelSelector",
             "in": "query",
             "required": false,
@@ -356,6 +370,13 @@
             "format": "date-time"
           },
           {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Spec.Id",
             "in": "query",
             "required": false,
@@ -417,6 +438,133 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/store": {
+      "get": {
+        "operationId": "AutoGetStore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Tenant",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Contact",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.CurrentOutages",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateStore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
             }
           }
         ],
@@ -492,6 +640,10 @@
         "ModTime": {
           "$ref": "#/definitions/apiTimestamp",
           "title": "ModTime is the Last Modification time of Object"
+        },
+        "SelfLink": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -552,6 +704,17 @@
         }
       }
     },
+    "bookstoreAutoMsgStoreWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/bookstoreStore"
+        }
+      }
+    },
     "bookstoreBook": {
       "type": "object",
       "properties": {
@@ -562,8 +725,7 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/bookstoreBookSpec",
-          "description": "Added in  version 2 of the API."
+          "$ref": "#/definitions/bookstoreBookSpec"
         },
         "Status": {
           "$ref": "#/definitions/bookstoreBookStatus"
@@ -598,13 +760,14 @@
         },
         "IdProvider": {
           "type": "string",
-          "description": "Spec is not allowed to be Null hence disabling nullable."
+          "description": "Added in  version 2 of the API."
         },
         "Category": {
           "type": "string"
         },
         "UpdateTimestamp": {
-          "$ref": "#/definitions/apiTimestamp"
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "Used for performance monitoring tests"
         },
         "Terminate": {
           "type": "boolean",
@@ -631,7 +794,8 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/bookstoreOrderSpec"
+          "$ref": "#/definitions/bookstoreOrderSpec",
+          "description": "Spec is not allowed to be Null hence disabling nullable."
         },
         "Status": {
           "$ref": "#/definitions/bookstoreOrderStatus"
@@ -737,6 +901,59 @@
         },
         "WebAddr": {
           "type": "string"
+        }
+      }
+    },
+    "bookstoreStore": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/bookstoreStoreSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/bookstoreStoreStatus"
+        }
+      }
+    },
+    "bookstoreStoreList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreStore"
+          }
+        }
+      }
+    },
+    "bookstoreStoreSpec": {
+      "type": "object",
+      "properties": {
+        "Contact": {
+          "type": "string"
+        }
+      }
+    },
+    "bookstoreStoreStatus": {
+      "type": "object",
+      "properties": {
+        "CurrentOutages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

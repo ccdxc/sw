@@ -112,7 +112,7 @@ func TestCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Create(context.Background(), TestKey, obj)
 	if err != nil {
@@ -136,7 +136,7 @@ func TestDuplicateCreate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetu
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Create(context.Background(), TestKey, obj)
 	if err != nil {
@@ -156,7 +156,7 @@ func TestDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Create(context.Background(), TestKey, obj)
 	if err != nil {
@@ -187,7 +187,7 @@ func TestNonExistentDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Delete(context.Background(), TestKey, obj)
 	if err == nil || !kvstore.IsKeyNotFoundError(err) {
@@ -202,7 +202,7 @@ func TestAtomicDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Create(context.Background(), TestKey, obj)
 	if err != nil {
@@ -232,7 +232,7 @@ func TestPrefixDelete(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	testKeys := []string{"/abc/123", "/abc/456", "/abcd"}
 	expDelKeys := []string{"/abc/123", "/abc/456"}
@@ -267,7 +267,7 @@ func TestUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cC
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	if err := store.Update(context.Background(), TestKey, obj); err == nil {
 		t.Fatalf("Update of a non existent key passed")
@@ -296,7 +296,7 @@ func TestNonExistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSe
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Update(context.Background(), TestKey, obj)
 	if err == nil || !kvstore.IsKeyNotFoundError(err) {
@@ -311,7 +311,7 @@ func TestAtomicUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFu
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}}
 
 	err := store.Create(context.Background(), TestKey, obj)
 	if err != nil {
@@ -336,7 +336,7 @@ func TestConsistentUpdate(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSet
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
 	defer cCleanup(t, cluster)
 
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj"}, Counter: 0}
 	updateFunc := func(obj runtime.Object) (runtime.Object, error) {
 		obj.(*TestObj).Counter++
 		return obj, nil
@@ -387,7 +387,7 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 
 	keys := []string{"testObj1", "testObj2"}
 	for ii := range keys {
-		obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: keys[ii]}}
+		obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: keys[ii]}}
 		err := store.Create(context.Background(), TestKey+"/"+keys[ii], obj)
 		if err != nil {
 			t.Fatalf("Create failed with error: %v", err)
@@ -395,7 +395,7 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 	}
 
 	// This object should not be returned with List.
-	obj := &TestObj{ObjectMeta: api.ObjectMeta{Name: "abc"}}
+	obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "abc"}}
 	err := store.Create(context.Background(), TestKey+"abc", obj)
 	if err != nil {
 		t.Fatalf("Create failed with error: %v", err)

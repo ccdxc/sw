@@ -13,6 +13,7 @@
 		AutoMsgBookWatchHelper
 		AutoMsgOrderWatchHelper
 		AutoMsgPublisherWatchHelper
+		AutoMsgStoreWatchHelper
 		Book
 		BookList
 		BookSpec
@@ -25,6 +26,10 @@
 		Publisher
 		PublisherList
 		PublisherSpec
+		Store
+		StoreList
+		StoreSpec
+		StoreStatus
 */
 package bookstore
 
@@ -78,7 +83,7 @@ func (x BookSpec_BookCategories) String() string {
 	return proto.EnumName(BookSpec_BookCategories_name, int32(x))
 }
 func (BookSpec_BookCategories) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorExample, []int{5, 0}
+	return fileDescriptorExample, []int{6, 0}
 }
 
 type OrderStatus_OrderStatus int32
@@ -110,7 +115,7 @@ func (x OrderStatus_OrderStatus) String() string {
 	return proto.EnumName(OrderStatus_OrderStatus_name, int32(x))
 }
 func (OrderStatus_OrderStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorExample, []int{11, 0}
+	return fileDescriptorExample, []int{12, 0}
 }
 
 type AutoMsgBookWatchHelper struct {
@@ -187,18 +192,41 @@ func (m *AutoMsgPublisherWatchHelper) GetObject() *Publisher {
 	return nil
 }
 
+type AutoMsgStoreWatchHelper struct {
+	Type   string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
+	Object *Store `protobuf:"bytes,2,opt,name=Object" json:"Object,omitempty"`
+}
+
+func (m *AutoMsgStoreWatchHelper) Reset()                    { *m = AutoMsgStoreWatchHelper{} }
+func (m *AutoMsgStoreWatchHelper) String() string            { return proto.CompactTextString(m) }
+func (*AutoMsgStoreWatchHelper) ProtoMessage()               {}
+func (*AutoMsgStoreWatchHelper) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{3} }
+
+func (m *AutoMsgStoreWatchHelper) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgStoreWatchHelper) GetObject() *Store {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 type Book struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,inline"`
-	// Added in  version 2 of the API.
-	Spec   BookSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
-	Status BookStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
+	Spec           BookSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	Status         BookStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
 }
 
 func (m *Book) Reset()                    { *m = Book{} }
 func (m *Book) String() string            { return proto.CompactTextString(m) }
 func (*Book) ProtoMessage()               {}
-func (*Book) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{3} }
+func (*Book) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{4} }
 
 func (m *Book) GetSpec() BookSpec {
 	if m != nil {
@@ -223,7 +251,7 @@ type BookList struct {
 func (m *BookList) Reset()                    { *m = BookList{} }
 func (m *BookList) String() string            { return proto.CompactTextString(m) }
 func (*BookList) ProtoMessage()               {}
-func (*BookList) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{4} }
+func (*BookList) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{5} }
 
 func (m *BookList) GetItems() []*Book {
 	if m != nil {
@@ -235,9 +263,10 @@ func (m *BookList) GetItems() []*Book {
 type BookSpec struct {
 	ISBNId string `protobuf:"bytes,2,opt,name=ISBNId,proto3" json:"ISBNId,omitempty"`
 	Author string `protobuf:"bytes,3,opt,name=Author,proto3" json:"Author,omitempty"`
-	// Spec is not allowed to be Null hence disabling nullable.
-	IdProvider      string         `protobuf:"bytes,4,opt,name=IdProvider,proto3" json:"IdProvider,omitempty"`
-	Category        string         `protobuf:"bytes,5,opt,name=Category,proto3" json:"Category,omitempty"`
+	// Added in  version 2 of the API.
+	IdProvider string `protobuf:"bytes,4,opt,name=IdProvider,proto3" json:"IdProvider,omitempty"`
+	Category   string `protobuf:"bytes,5,opt,name=Category,proto3" json:"Category,omitempty"`
+	// Used for performance monitoring tests
 	UpdateTimestamp *api.Timestamp `protobuf:"bytes,6,opt,name=UpdateTimestamp" json:"UpdateTimestamp,omitempty"`
 	Terminate       bool           `protobuf:"varint,7,opt,name=Terminate,proto3" json:"Terminate,omitempty"`
 }
@@ -245,7 +274,7 @@ type BookSpec struct {
 func (m *BookSpec) Reset()                    { *m = BookSpec{} }
 func (m *BookSpec) String() string            { return proto.CompactTextString(m) }
 func (*BookSpec) ProtoMessage()               {}
-func (*BookSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{5} }
+func (*BookSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
 
 func (m *BookSpec) GetISBNId() string {
 	if m != nil {
@@ -296,7 +325,7 @@ type BookStatus struct {
 func (m *BookStatus) Reset()                    { *m = BookStatus{} }
 func (m *BookStatus) String() string            { return proto.CompactTextString(m) }
 func (*BookStatus) ProtoMessage()               {}
-func (*BookStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{6} }
+func (*BookStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{7} }
 
 func (m *BookStatus) GetInventory() int32 {
 	if m != nil {
@@ -308,14 +337,15 @@ func (m *BookStatus) GetInventory() int32 {
 type Order struct {
 	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,inline"`
-	Spec           OrderSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
-	Status         OrderStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
+	// Spec is not allowed to be Null hence disabling nullable.
+	Spec   OrderSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	Status OrderStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
 }
 
 func (m *Order) Reset()                    { *m = Order{} }
 func (m *Order) String() string            { return proto.CompactTextString(m) }
 func (*Order) ProtoMessage()               {}
-func (*Order) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{7} }
+func (*Order) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{8} }
 
 func (m *Order) GetSpec() OrderSpec {
 	if m != nil {
@@ -339,7 +369,7 @@ type OrderItem struct {
 func (m *OrderItem) Reset()                    { *m = OrderItem{} }
 func (m *OrderItem) String() string            { return proto.CompactTextString(m) }
 func (*OrderItem) ProtoMessage()               {}
-func (*OrderItem) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{8} }
+func (*OrderItem) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{9} }
 
 func (m *OrderItem) GetISBNId() string {
 	if m != nil {
@@ -364,7 +394,7 @@ type OrderList struct {
 func (m *OrderList) Reset()                    { *m = OrderList{} }
 func (m *OrderList) String() string            { return proto.CompactTextString(m) }
 func (*OrderList) ProtoMessage()               {}
-func (*OrderList) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{9} }
+func (*OrderList) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{10} }
 
 func (m *OrderList) GetItems() []*Order {
 	if m != nil {
@@ -381,7 +411,7 @@ type OrderSpec struct {
 func (m *OrderSpec) Reset()                    { *m = OrderSpec{} }
 func (m *OrderSpec) String() string            { return proto.CompactTextString(m) }
 func (*OrderSpec) ProtoMessage()               {}
-func (*OrderSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{10} }
+func (*OrderSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{11} }
 
 func (m *OrderSpec) GetId() string {
 	if m != nil {
@@ -405,7 +435,7 @@ type OrderStatus struct {
 func (m *OrderStatus) Reset()                    { *m = OrderStatus{} }
 func (m *OrderStatus) String() string            { return proto.CompactTextString(m) }
 func (*OrderStatus) ProtoMessage()               {}
-func (*OrderStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{11} }
+func (*OrderStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{12} }
 
 func (m *OrderStatus) GetStatus() string {
 	if m != nil {
@@ -430,7 +460,7 @@ type Publisher struct {
 func (m *Publisher) Reset()                    { *m = Publisher{} }
 func (m *Publisher) String() string            { return proto.CompactTextString(m) }
 func (*Publisher) ProtoMessage()               {}
-func (*Publisher) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{12} }
+func (*Publisher) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{13} }
 
 func (m *Publisher) GetSpec() PublisherSpec {
 	if m != nil {
@@ -448,7 +478,7 @@ type PublisherList struct {
 func (m *PublisherList) Reset()                    { *m = PublisherList{} }
 func (m *PublisherList) String() string            { return proto.CompactTextString(m) }
 func (*PublisherList) ProtoMessage()               {}
-func (*PublisherList) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{13} }
+func (*PublisherList) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{14} }
 
 func (m *PublisherList) GetItems() []*Publisher {
 	if m != nil {
@@ -466,7 +496,7 @@ type PublisherSpec struct {
 func (m *PublisherSpec) Reset()                    { *m = PublisherSpec{} }
 func (m *PublisherSpec) String() string            { return proto.CompactTextString(m) }
 func (*PublisherSpec) ProtoMessage()               {}
-func (*PublisherSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{14} }
+func (*PublisherSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{15} }
 
 func (m *PublisherSpec) GetId() string {
 	if m != nil {
@@ -489,10 +519,87 @@ func (m *PublisherSpec) GetWebAddr() string {
 	return ""
 }
 
+type Store struct {
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,inline"`
+	Spec           StoreSpec   `protobuf:"bytes,3,opt,name=Spec" json:"Spec"`
+	Status         StoreStatus `protobuf:"bytes,4,opt,name=Status" json:"Status"`
+}
+
+func (m *Store) Reset()                    { *m = Store{} }
+func (m *Store) String() string            { return proto.CompactTextString(m) }
+func (*Store) ProtoMessage()               {}
+func (*Store) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{16} }
+
+func (m *Store) GetSpec() StoreSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return StoreSpec{}
+}
+
+func (m *Store) GetStatus() StoreStatus {
+	if m != nil {
+		return m.Status
+	}
+	return StoreStatus{}
+}
+
+type StoreList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,embedded=T" json:"T"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,embedded=ListMeta" json:"ListMeta"`
+	Items        []*Store `protobuf:"bytes,4,rep,name=Items" json:"Items,omitempty"`
+}
+
+func (m *StoreList) Reset()                    { *m = StoreList{} }
+func (m *StoreList) String() string            { return proto.CompactTextString(m) }
+func (*StoreList) ProtoMessage()               {}
+func (*StoreList) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{17} }
+
+func (m *StoreList) GetItems() []*Store {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+type StoreSpec struct {
+	Contact string `protobuf:"bytes,1,opt,name=Contact,proto3" json:"Contact,omitempty"`
+}
+
+func (m *StoreSpec) Reset()                    { *m = StoreSpec{} }
+func (m *StoreSpec) String() string            { return proto.CompactTextString(m) }
+func (*StoreSpec) ProtoMessage()               {}
+func (*StoreSpec) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{18} }
+
+func (m *StoreSpec) GetContact() string {
+	if m != nil {
+		return m.Contact
+	}
+	return ""
+}
+
+type StoreStatus struct {
+	CurrentOutages []string `protobuf:"bytes,1,rep,name=CurrentOutages" json:"CurrentOutages,omitempty"`
+}
+
+func (m *StoreStatus) Reset()                    { *m = StoreStatus{} }
+func (m *StoreStatus) String() string            { return proto.CompactTextString(m) }
+func (*StoreStatus) ProtoMessage()               {}
+func (*StoreStatus) Descriptor() ([]byte, []int) { return fileDescriptorExample, []int{19} }
+
+func (m *StoreStatus) GetCurrentOutages() []string {
+	if m != nil {
+		return m.CurrentOutages
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*AutoMsgBookWatchHelper)(nil), "bookstore.AutoMsgBookWatchHelper")
 	proto.RegisterType((*AutoMsgOrderWatchHelper)(nil), "bookstore.AutoMsgOrderWatchHelper")
 	proto.RegisterType((*AutoMsgPublisherWatchHelper)(nil), "bookstore.AutoMsgPublisherWatchHelper")
+	proto.RegisterType((*AutoMsgStoreWatchHelper)(nil), "bookstore.AutoMsgStoreWatchHelper")
 	proto.RegisterType((*Book)(nil), "bookstore.Book")
 	proto.RegisterType((*BookList)(nil), "bookstore.BookList")
 	proto.RegisterType((*BookSpec)(nil), "bookstore.BookSpec")
@@ -505,6 +612,10 @@ func init() {
 	proto.RegisterType((*Publisher)(nil), "bookstore.Publisher")
 	proto.RegisterType((*PublisherList)(nil), "bookstore.PublisherList")
 	proto.RegisterType((*PublisherSpec)(nil), "bookstore.PublisherSpec")
+	proto.RegisterType((*Store)(nil), "bookstore.Store")
+	proto.RegisterType((*StoreList)(nil), "bookstore.StoreList")
+	proto.RegisterType((*StoreSpec)(nil), "bookstore.StoreSpec")
+	proto.RegisterType((*StoreStatus)(nil), "bookstore.StoreStatus")
 	proto.RegisterEnum("bookstore.BookSpec_BookCategories", BookSpec_BookCategories_name, BookSpec_BookCategories_value)
 	proto.RegisterEnum("bookstore.OrderStatus_OrderStatus", OrderStatus_OrderStatus_name, OrderStatus_OrderStatus_value)
 }
@@ -523,21 +634,27 @@ type BookstoreV1Client interface {
 	AutoAddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
 	AutoAddOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AutoAddPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoAddStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
 	AutoDeleteBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
 	AutoDeleteOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AutoDeletePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoDeleteStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
 	AutoGetBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
 	AutoGetOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AutoGetPublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoGetStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
 	AutoListBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*BookList, error)
 	AutoListOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*OrderList, error)
 	AutoListPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*PublisherList, error)
+	AutoListStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*StoreList, error)
 	AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error)
 	AutoUpdateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*Order, error)
 	AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
+	AutoUpdateStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
 	AutoWatchBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchBookClient, error)
 	AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error)
 	AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchPublisherClient, error)
+	AutoWatchStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchStoreClient, error)
 }
 
 type bookstoreV1Client struct {
@@ -575,6 +692,15 @@ func (c *bookstoreV1Client) AutoAddPublisher(ctx context.Context, in *Publisher,
 	return out, nil
 }
 
+func (c *bookstoreV1Client) AutoAddStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error) {
+	out := new(Store)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoAddStore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bookstoreV1Client) AutoDeleteBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error) {
 	out := new(Book)
 	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoDeleteBook", in, out, c.cc, opts...)
@@ -596,6 +722,15 @@ func (c *bookstoreV1Client) AutoDeleteOrder(ctx context.Context, in *Order, opts
 func (c *bookstoreV1Client) AutoDeletePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
 	out := new(Publisher)
 	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoDeletePublisher", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoDeleteStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error) {
+	out := new(Store)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoDeleteStore", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -629,6 +764,15 @@ func (c *bookstoreV1Client) AutoGetPublisher(ctx context.Context, in *Publisher,
 	return out, nil
 }
 
+func (c *bookstoreV1Client) AutoGetStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error) {
+	out := new(Store)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoGetStore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bookstoreV1Client) AutoListBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*BookList, error) {
 	out := new(BookList)
 	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoListBook", in, out, c.cc, opts...)
@@ -656,6 +800,15 @@ func (c *bookstoreV1Client) AutoListPublisher(ctx context.Context, in *api.ListW
 	return out, nil
 }
 
+func (c *bookstoreV1Client) AutoListStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*StoreList, error) {
+	out := new(StoreList)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoListStore", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bookstoreV1Client) AutoUpdateBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Book, error) {
 	out := new(Book)
 	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdateBook", in, out, c.cc, opts...)
@@ -677,6 +830,15 @@ func (c *bookstoreV1Client) AutoUpdateOrder(ctx context.Context, in *Order, opts
 func (c *bookstoreV1Client) AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error) {
 	out := new(Publisher)
 	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdatePublisher", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookstoreV1Client) AutoUpdateStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error) {
+	out := new(Store)
+	err := grpc.Invoke(ctx, "/bookstore.BookstoreV1/AutoUpdateStore", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -779,27 +941,65 @@ func (x *bookstoreV1AutoWatchPublisherClient) Recv() (*AutoMsgPublisherWatchHelp
 	return m, nil
 }
 
+func (c *bookstoreV1Client) AutoWatchStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchStoreClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_BookstoreV1_serviceDesc.Streams[3], c.cc, "/bookstore.BookstoreV1/AutoWatchStore", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &bookstoreV1AutoWatchStoreClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type BookstoreV1_AutoWatchStoreClient interface {
+	Recv() (*AutoMsgStoreWatchHelper, error)
+	grpc.ClientStream
+}
+
+type bookstoreV1AutoWatchStoreClient struct {
+	grpc.ClientStream
+}
+
+func (x *bookstoreV1AutoWatchStoreClient) Recv() (*AutoMsgStoreWatchHelper, error) {
+	m := new(AutoMsgStoreWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Server API for BookstoreV1 service
 
 type BookstoreV1Server interface {
 	AutoAddBook(context.Context, *Book) (*Book, error)
 	AutoAddOrder(context.Context, *Order) (*Order, error)
 	AutoAddPublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoAddStore(context.Context, *Store) (*Store, error)
 	AutoDeleteBook(context.Context, *Book) (*Book, error)
 	AutoDeleteOrder(context.Context, *Order) (*Order, error)
 	AutoDeletePublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoDeleteStore(context.Context, *Store) (*Store, error)
 	AutoGetBook(context.Context, *Book) (*Book, error)
 	AutoGetOrder(context.Context, *Order) (*Order, error)
 	AutoGetPublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoGetStore(context.Context, *Store) (*Store, error)
 	AutoListBook(context.Context, *api.ListWatchOptions) (*BookList, error)
 	AutoListOrder(context.Context, *api.ListWatchOptions) (*OrderList, error)
 	AutoListPublisher(context.Context, *api.ListWatchOptions) (*PublisherList, error)
+	AutoListStore(context.Context, *api.ListWatchOptions) (*StoreList, error)
 	AutoUpdateBook(context.Context, *Book) (*Book, error)
 	AutoUpdateOrder(context.Context, *Order) (*Order, error)
 	AutoUpdatePublisher(context.Context, *Publisher) (*Publisher, error)
+	AutoUpdateStore(context.Context, *Store) (*Store, error)
 	AutoWatchBook(*api.ListWatchOptions, BookstoreV1_AutoWatchBookServer) error
 	AutoWatchOrder(*api.ListWatchOptions, BookstoreV1_AutoWatchOrderServer) error
 	AutoWatchPublisher(*api.ListWatchOptions, BookstoreV1_AutoWatchPublisherServer) error
+	AutoWatchStore(*api.ListWatchOptions, BookstoreV1_AutoWatchStoreServer) error
 }
 
 func RegisterBookstoreV1Server(s *grpc.Server, srv BookstoreV1Server) {
@@ -860,6 +1060,24 @@ func _BookstoreV1_AutoAddPublisher_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookstoreV1_AutoAddStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Store)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoAddStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoAddStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoAddStore(ctx, req.(*Store))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _BookstoreV1_AutoDeleteBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Book)
 	if err := dec(in); err != nil {
@@ -910,6 +1128,24 @@ func _BookstoreV1_AutoDeletePublisher_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BookstoreV1Server).AutoDeletePublisher(ctx, req.(*Publisher))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoDeleteStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Store)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoDeleteStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoDeleteStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoDeleteStore(ctx, req.(*Store))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -968,6 +1204,24 @@ func _BookstoreV1_AutoGetPublisher_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookstoreV1_AutoGetStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Store)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoGetStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoGetStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoGetStore(ctx, req.(*Store))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _BookstoreV1_AutoListBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -1022,6 +1276,24 @@ func _BookstoreV1_AutoListPublisher_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookstoreV1_AutoListStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoListStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoListStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoListStore(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _BookstoreV1_AutoUpdateBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Book)
 	if err := dec(in); err != nil {
@@ -1072,6 +1344,24 @@ func _BookstoreV1_AutoUpdatePublisher_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BookstoreV1Server).AutoUpdatePublisher(ctx, req.(*Publisher))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookstoreV1_AutoUpdateStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Store)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookstoreV1Server).AutoUpdateStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bookstore.BookstoreV1/AutoUpdateStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookstoreV1Server).AutoUpdateStore(ctx, req.(*Store))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1139,6 +1429,27 @@ func (x *bookstoreV1AutoWatchPublisherServer) Send(m *AutoMsgPublisherWatchHelpe
 	return x.ServerStream.SendMsg(m)
 }
 
+func _BookstoreV1_AutoWatchStore_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(BookstoreV1Server).AutoWatchStore(m, &bookstoreV1AutoWatchStoreServer{stream})
+}
+
+type BookstoreV1_AutoWatchStoreServer interface {
+	Send(*AutoMsgStoreWatchHelper) error
+	grpc.ServerStream
+}
+
+type bookstoreV1AutoWatchStoreServer struct {
+	grpc.ServerStream
+}
+
+func (x *bookstoreV1AutoWatchStoreServer) Send(m *AutoMsgStoreWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bookstore.BookstoreV1",
 	HandlerType: (*BookstoreV1Server)(nil),
@@ -1156,6 +1467,10 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _BookstoreV1_AutoAddPublisher_Handler,
 		},
 		{
+			MethodName: "AutoAddStore",
+			Handler:    _BookstoreV1_AutoAddStore_Handler,
+		},
+		{
 			MethodName: "AutoDeleteBook",
 			Handler:    _BookstoreV1_AutoDeleteBook_Handler,
 		},
@@ -1166,6 +1481,10 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoDeletePublisher",
 			Handler:    _BookstoreV1_AutoDeletePublisher_Handler,
+		},
+		{
+			MethodName: "AutoDeleteStore",
+			Handler:    _BookstoreV1_AutoDeleteStore_Handler,
 		},
 		{
 			MethodName: "AutoGetBook",
@@ -1180,6 +1499,10 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _BookstoreV1_AutoGetPublisher_Handler,
 		},
 		{
+			MethodName: "AutoGetStore",
+			Handler:    _BookstoreV1_AutoGetStore_Handler,
+		},
+		{
 			MethodName: "AutoListBook",
 			Handler:    _BookstoreV1_AutoListBook_Handler,
 		},
@@ -1192,6 +1515,10 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _BookstoreV1_AutoListPublisher_Handler,
 		},
 		{
+			MethodName: "AutoListStore",
+			Handler:    _BookstoreV1_AutoListStore_Handler,
+		},
+		{
 			MethodName: "AutoUpdateBook",
 			Handler:    _BookstoreV1_AutoUpdateBook_Handler,
 		},
@@ -1202,6 +1529,10 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoUpdatePublisher",
 			Handler:    _BookstoreV1_AutoUpdatePublisher_Handler,
+		},
+		{
+			MethodName: "AutoUpdateStore",
+			Handler:    _BookstoreV1_AutoUpdateStore_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -1218,6 +1549,11 @@ var _BookstoreV1_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AutoWatchPublisher",
 			Handler:       _BookstoreV1_AutoWatchPublisher_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchStore",
+			Handler:       _BookstoreV1_AutoWatchStore_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -1326,6 +1662,40 @@ func (m *AutoMsgPublisherWatchHelper) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *AutoMsgStoreWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgStoreWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(m.Object.Size()))
+		n4, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+
 func (m *Book) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1344,35 +1714,35 @@ func (m *Book) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n5, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n5, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n5
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x12
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
-	n6, err := m.Spec.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n6, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n6
-	dAtA[i] = 0x22
+	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.Status.Size()))
-	n7, err := m.Status.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
+	n7, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n7
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.Status.Size()))
+	n8, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
 	return i, nil
 }
 
@@ -1394,19 +1764,19 @@ func (m *BookList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n8, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n8
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
-	n9, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n9, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n9
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
+	n10, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n10
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1465,11 +1835,11 @@ func (m *BookSpec) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x32
 		i++
 		i = encodeVarintExample(dAtA, i, uint64(m.UpdateTimestamp.Size()))
-		n10, err := m.UpdateTimestamp.MarshalTo(dAtA[i:])
+		n11, err := m.UpdateTimestamp.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n11
 	}
 	if m.Terminate {
 		dAtA[i] = 0x38
@@ -1525,35 +1895,35 @@ func (m *Order) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n11, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n11
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n12, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n12, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n12
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x12
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
-	n13, err := m.Spec.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n13, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n13
-	dAtA[i] = 0x22
+	dAtA[i] = 0x1a
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.Status.Size()))
-	n14, err := m.Status.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
+	n14, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n14
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.Status.Size()))
+	n15, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n15
 	return i, nil
 }
 
@@ -1604,19 +1974,19 @@ func (m *OrderList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n15, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n15
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
-	n16, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n16, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n16
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
+	n17, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n17
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1722,27 +2092,27 @@ func (m *Publisher) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n17, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n17
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n18, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n18, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n18
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x12
 	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
-	n19, err := m.Spec.MarshalTo(dAtA[i:])
+	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n19, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n19
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
+	n20, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n20
 	return i, nil
 }
 
@@ -1764,19 +2134,19 @@ func (m *PublisherList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
-	n20, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n20
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
-	n21, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n21, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n21
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
+	n22, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n22
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1828,6 +2198,159 @@ func (m *PublisherSpec) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Store) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Store) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
+	n23, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n23
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n24, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n24
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.Spec.Size()))
+	n25, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n25
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.Status.Size()))
+	n26, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n26
+	return i, nil
+}
+
+func (m *StoreList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StoreList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.TypeMeta.Size()))
+	n27, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n27
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintExample(dAtA, i, uint64(m.ListMeta.Size()))
+	n28, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n28
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintExample(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *StoreSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StoreSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Contact) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintExample(dAtA, i, uint64(len(m.Contact)))
+		i += copy(dAtA[i:], m.Contact)
+	}
+	return i, nil
+}
+
+func (m *StoreStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StoreStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.CurrentOutages) > 0 {
+		for _, s := range m.CurrentOutages {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
 func encodeVarintExample(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1866,6 +2389,20 @@ func (m *AutoMsgOrderWatchHelper) Size() (n int) {
 }
 
 func (m *AutoMsgPublisherWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovExample(uint64(l))
+	}
+	return n
+}
+
+func (m *AutoMsgStoreWatchHelper) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.Type)
@@ -2064,6 +2601,58 @@ func (m *PublisherSpec) Size() (n int) {
 	l = len(m.WebAddr)
 	if l > 0 {
 		n += 1 + l + sovExample(uint64(l))
+	}
+	return n
+}
+
+func (m *Store) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	l = m.Spec.Size()
+	n += 1 + l + sovExample(uint64(l))
+	l = m.Status.Size()
+	n += 1 + l + sovExample(uint64(l))
+	return n
+}
+
+func (m *StoreList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovExample(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovExample(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *StoreSpec) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Contact)
+	if l > 0 {
+		n += 1 + l + sovExample(uint64(l))
+	}
+	return n
+}
+
+func (m *StoreStatus) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.CurrentOutages) > 0 {
+		for _, s := range m.CurrentOutages {
+			l = len(s)
+			n += 1 + l + sovExample(uint64(l))
+		}
 	}
 	return n
 }
@@ -2391,6 +2980,118 @@ func (m *AutoMsgPublisherWatchHelper) Unmarshal(dAtA []byte) error {
 			}
 			if m.Object == nil {
 				m.Object = &Publisher{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgStoreWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgStoreWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgStoreWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &Store{}
 			}
 			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4063,6 +4764,475 @@ func (m *PublisherSpec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *Store) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Store: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Store: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StoreList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StoreList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StoreList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Store{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StoreSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StoreSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StoreSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Contact", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Contact = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StoreStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowExample
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StoreStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StoreStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CurrentOutages", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowExample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthExample
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CurrentOutages = append(m.CurrentOutages, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipExample(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthExample
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipExample(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4171,96 +5341,107 @@ var (
 func init() { proto.RegisterFile("example.proto", fileDescriptorExample) }
 
 var fileDescriptorExample = []byte{
-	// 1452 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xce, 0x3a, 0x8e, 0x13, 0x3f, 0xc7, 0x8e, 0x99, 0xa6, 0xa9, 0xd7, 0x54, 0x49, 0x58, 0x4a,
-	0x71, 0xd2, 0x60, 0xa7, 0x49, 0xa9, 0x50, 0x84, 0x04, 0x71, 0xe2, 0xa6, 0x16, 0x69, 0xec, 0xae,
-	0xd3, 0x16, 0xca, 0x0f, 0x69, 0xed, 0x1d, 0x39, 0x4b, 0xed, 0xdd, 0xd5, 0xee, 0x38, 0xa5, 0x42,
-	0x5c, 0x08, 0x8d, 0x84, 0xb8, 0xd1, 0x9e, 0x38, 0xf6, 0x98, 0x23, 0x37, 0x6e, 0x5c, 0x90, 0x7a,
-	0x41, 0xaa, 0xca, 0x05, 0xf5, 0x50, 0x50, 0xe1, 0xd4, 0xbf, 0x02, 0xcd, 0xcc, 0xee, 0x7a, 0xbd,
-	0xbb, 0x29, 0x81, 0xaa, 0x3d, 0xee, 0xcc, 0xf7, 0xbe, 0xf7, 0xeb, 0x7b, 0xb3, 0x33, 0x90, 0xc6,
-	0x5f, 0x28, 0x5d, 0xb3, 0x83, 0x8b, 0xa6, 0x65, 0x10, 0x03, 0x25, 0x9b, 0x86, 0x71, 0xc3, 0x26,
-	0x86, 0x85, 0xf3, 0x95, 0xb6, 0x46, 0x76, 0x7a, 0xcd, 0x62, 0xcb, 0xe8, 0x96, 0x4c, 0xac, 0xdb,
-	0x8a, 0xae, 0x1a, 0x25, 0xfb, 0x66, 0x69, 0x17, 0xeb, 0x5a, 0x0b, 0x97, 0x7a, 0x44, 0xeb, 0xd8,
-	0x25, 0xc5, 0xd4, 0xda, 0x58, 0x2f, 0x29, 0xba, 0x6e, 0x10, 0x85, 0x68, 0x86, 0x6e, 0x97, 0x34,
-	0xbd, 0xd5, 0xe9, 0xa9, 0xd8, 0xe6, 0x8c, 0xf9, 0x37, 0x0e, 0xa1, 0x51, 0x4c, 0xad, 0xd4, 0xc5,
-	0x44, 0xe1, 0x30, 0xe9, 0x43, 0x98, 0x5a, 0xed, 0x11, 0xe3, 0x92, 0xdd, 0x2e, 0x1b, 0xc6, 0x8d,
-	0x6b, 0x0a, 0x69, 0xed, 0x5c, 0xc4, 0x1d, 0x13, 0x5b, 0x68, 0x1c, 0xe2, 0xdb, 0xb7, 0x4c, 0x9c,
-	0x13, 0x66, 0x85, 0x42, 0x12, 0xcd, 0x40, 0xa2, 0xd6, 0xfc, 0x1c, 0xb7, 0x48, 0x2e, 0x36, 0x2b,
-	0x14, 0x52, 0x4b, 0x13, 0x45, 0x2f, 0xe2, 0x22, 0xb5, 0x5c, 0x99, 0x78, 0x74, 0x77, 0x32, 0x75,
-	0x93, 0xda, 0xef, 0x30, 0x7b, 0xe9, 0x3a, 0x9c, 0x70, 0x98, 0x6b, 0x96, 0x8a, 0xad, 0xc3, 0xa9,
-	0x67, 0x03, 0xd4, 0x59, 0x1f, 0x35, 0x33, 0x0d, 0x73, 0x37, 0xe1, 0x55, 0x87, 0xbb, 0xde, 0x6b,
-	0x76, 0x34, 0x7b, 0xe7, 0x59, 0xfc, 0xa7, 0x02, 0xfc, 0x93, 0x3e, 0x7e, 0xcf, 0x3c, 0xec, 0xe3,
-	0x0f, 0x01, 0xe2, 0x34, 0x33, 0xb4, 0x08, 0xc2, 0x36, 0xa3, 0x4a, 0x2d, 0xa5, 0x8b, 0x8a, 0xa9,
-	0x15, 0x29, 0xf7, 0x25, 0x4c, 0x94, 0xf2, 0xb1, 0xfb, 0x8f, 0x67, 0x86, 0x1e, 0x3c, 0x9e, 0x11,
-	0x9e, 0x3e, 0x9e, 0x19, 0x5d, 0xd0, 0xf4, 0x8e, 0xa6, 0x63, 0x59, 0xd8, 0x46, 0xe7, 0x41, 0xa8,
-	0x79, 0x75, 0xa2, 0x16, 0xdc, 0x3f, 0xb3, 0x39, 0xe1, 0xb3, 0x49, 0xd1, 0x46, 0x78, 0x76, 0x35,
-	0xf4, 0x16, 0xc4, 0x1b, 0x26, 0x6e, 0xe5, 0x86, 0x99, 0xe9, 0xb1, 0x40, 0x89, 0xe9, 0x56, 0x39,
-	0x4e, 0xcd, 0x65, 0x06, 0x43, 0xcb, 0x90, 0x68, 0x10, 0x85, 0xf4, 0xec, 0x5c, 0x9c, 0x19, 0x1c,
-	0x0f, 0x1a, 0xb0, 0x4d, 0xc7, 0xc4, 0x81, 0xae, 0x24, 0x1f, 0xde, 0x16, 0x47, 0x18, 0x4e, 0xfa,
-	0x56, 0x80, 0x31, 0x8a, 0xdb, 0xd4, 0x6c, 0x82, 0x24, 0x9a, 0x65, 0x2c, 0x2a, 0xcb, 0x31, 0x37,
-	0x62, 0x34, 0x07, 0x63, 0x14, 0x4b, 0x57, 0x9d, 0x18, 0x39, 0xd4, 0x5d, 0xf4, 0x41, 0xa7, 0x61,
-	0xa4, 0x4a, 0x70, 0x97, 0x86, 0x36, 0x1c, 0x25, 0x97, 0xcc, 0xa3, 0xbb, 0x93, 0xd0, 0xd1, 0x6c,
-	0xe2, 0x54, 0xfb, 0x97, 0x18, 0x8f, 0x85, 0x25, 0x36, 0x05, 0x89, 0x6a, 0xa3, 0xbc, 0x55, 0x55,
-	0x59, 0x40, 0x49, 0xd9, 0xf9, 0xa2, 0xeb, 0xab, 0x3d, 0xb2, 0x63, 0x58, 0xcc, 0x7b, 0x52, 0x76,
-	0xbe, 0xd0, 0x34, 0x40, 0x55, 0xad, 0x5b, 0xc6, 0xae, 0xa6, 0x62, 0x8b, 0x15, 0x23, 0x29, 0xfb,
-	0x56, 0xd0, 0xfb, 0x30, 0xb6, 0xa6, 0x10, 0xdc, 0x36, 0xac, 0x5b, 0xb9, 0x11, 0xba, 0x5b, 0x3e,
-	0x75, 0xb0, 0x2f, 0xce, 0x36, 0x88, 0x55, 0xd1, 0x7b, 0xdd, 0x82, 0xeb, 0x97, 0x45, 0xe6, 0x00,
-	0x35, 0x6c, 0xcf, 0xc9, 0x9e, 0x15, 0x7a, 0x07, 0x26, 0xae, 0x98, 0xaa, 0x42, 0xf0, 0xb6, 0xd6,
-	0xc5, 0x36, 0x51, 0xba, 0x66, 0x2e, 0xc1, 0x0a, 0x90, 0xe1, 0xb5, 0x72, 0x57, 0xe5, 0x20, 0x0c,
-	0x9d, 0x84, 0xe4, 0x36, 0xb6, 0xba, 0x9a, 0xae, 0x10, 0x9c, 0x1b, 0x9d, 0x15, 0x0a, 0x63, 0x72,
-	0x7f, 0x41, 0xaa, 0x41, 0x66, 0xd0, 0x29, 0xca, 0xc2, 0xf8, 0xda, 0x8e, 0xd6, 0x51, 0x2d, 0xac,
-	0xdb, 0x9b, 0x1a, 0xc9, 0x0e, 0xa1, 0x0c, 0xc0, 0x47, 0x46, 0x4f, 0x6f, 0xaf, 0xaa, 0xbd, 0x0e,
-	0xc9, 0x0a, 0x28, 0x05, 0xa3, 0x17, 0xb4, 0x16, 0x1d, 0xfa, 0x6c, 0x8c, 0x6e, 0x6e, 0x19, 0xba,
-	0xfb, 0x3d, 0x2c, 0xcd, 0x03, 0xf4, 0x5b, 0x4f, 0x9d, 0x57, 0xf5, 0x5d, 0xac, 0x13, 0x9a, 0x39,
-	0x95, 0xf0, 0x88, 0xdc, 0x5f, 0x90, 0xfe, 0x12, 0x60, 0x84, 0x0d, 0xd8, 0x4b, 0x94, 0x78, 0x71,
-	0x40, 0xe2, 0x93, 0xc1, 0x51, 0x0f, 0x69, 0xfc, 0x5c, 0x40, 0xe3, 0x53, 0x21, 0x8b, 0x28, 0x91,
-	0xc3, 0xc3, 0xdb, 0x62, 0xc2, 0xa0, 0xdb, 0xb6, 0x84, 0x21, 0xc9, 0x80, 0x54, 0x8e, 0xa8, 0xe0,
-	0x29, 0x8b, 0x9d, 0x0d, 0xe5, 0xec, 0xc1, 0xbe, 0x38, 0xde, 0x20, 0xd6, 0x26, 0xd6, 0x0b, 0xcb,
-	0x0b, 0x67, 0x17, 0xe7, 0x3c, 0xad, 0x15, 0x61, 0xec, 0x72, 0x4f, 0xd1, 0x89, 0x46, 0x6e, 0xb1,
-	0x3c, 0xd3, 0x65, 0x74, 0xb0, 0x2f, 0x66, 0xaa, 0x3a, 0x91, 0x15, 0xbd, 0x8d, 0x0b, 0x4b, 0x0b,
-	0xcb, 0x8b, 0x73, 0xb2, 0x87, 0x91, 0xbe, 0x13, 0x1c, 0x3f, 0x2f, 0x62, 0x9a, 0x66, 0x06, 0xa7,
-	0x29, 0x7c, 0x42, 0x06, 0xc7, 0x69, 0xc3, 0x09, 0x86, 0xd5, 0x30, 0x03, 0x31, 0x37, 0x61, 0x39,
-	0x56, 0x55, 0xd1, 0xbc, 0xd3, 0xf6, 0x5c, 0x8c, 0xb1, 0x85, 0x9a, 0x40, 0x5d, 0xc9, 0x1c, 0x22,
-	0xfd, 0x2a, 0x40, 0xca, 0x57, 0x67, 0xf4, 0xae, 0xd7, 0x8f, 0xe1, 0xf0, 0x20, 0xf9, 0x80, 0xfe,
-	0xe6, 0xcc, 0xb9, 0x7d, 0x41, 0x0b, 0x90, 0xb8, 0xa0, 0x75, 0x3a, 0x58, 0x75, 0x12, 0x89, 0xec,
-	0xbf, 0xec, 0x60, 0x24, 0x79, 0xd0, 0x75, 0x0a, 0x46, 0xd7, 0xe4, 0xca, 0xea, 0x76, 0x65, 0x9d,
-	0x0f, 0x45, 0x5d, 0xae, 0xad, 0x55, 0x1a, 0x8d, 0xea, 0xd6, 0x46, 0x56, 0x40, 0x00, 0x89, 0x0b,
-	0xd5, 0xcd, 0xcd, 0xca, 0x7a, 0x36, 0x46, 0x81, 0x8d, 0x8b, 0xd5, 0x7a, 0xbd, 0xb2, 0x9e, 0x1d,
-	0x46, 0x69, 0x48, 0xae, 0xd5, 0x2e, 0xd5, 0x37, 0x2b, 0xd4, 0x2e, 0x2e, 0xfd, 0x24, 0x40, 0xd2,
-	0x3b, 0xf4, 0x5f, 0xa2, 0xee, 0x97, 0x06, 0x74, 0x9f, 0x8b, 0xfa, 0x05, 0x05, 0xb5, 0xbf, 0x92,
-	0x79, 0x78, 0x5b, 0x04, 0xd3, 0xdd, 0xb6, 0xa5, 0x3b, 0x02, 0xa4, 0x3d, 0xf4, 0x8b, 0x90, 0xd9,
-	0xeb, 0x83, 0x32, 0x8b, 0xfe, 0x51, 0x06, 0xa5, 0x66, 0xf8, 0x82, 0xf2, 0xc9, 0x2d, 0xe6, 0xc9,
-	0x2d, 0x07, 0xa3, 0xab, 0xaa, 0x6a, 0x61, 0xdb, 0xd1, 0x8c, 0xec, 0x7e, 0xa2, 0x73, 0x30, 0x7a,
-	0x0d, 0x37, 0xe9, 0x17, 0x3f, 0xb4, 0xcb, 0xf9, 0x83, 0x7d, 0x71, 0xe4, 0x8a, 0x5c, 0x2d, 0xcc,
-	0x1d, 0xec, 0x8b, 0x69, 0x67, 0x2e, 0xcf, 0x2f, 0x2c, 0xbd, 0x7d, 0x7e, 0x4e, 0x76, 0xa1, 0x4b,
-	0x4f, 0xd3, 0x90, 0x2a, 0xbb, 0x81, 0x5d, 0x3d, 0x8b, 0xde, 0x83, 0x14, 0xbd, 0x0c, 0xac, 0xaa,
-	0x2a, 0xfb, 0x5d, 0x07, 0x7f, 0x35, 0xf9, 0xe0, 0x82, 0x94, 0xf9, 0xfd, 0xee, 0xa4, 0xf0, 0xe3,
-	0x37, 0x62, 0xa2, 0x65, 0x61, 0x85, 0x60, 0x74, 0x15, 0xc6, 0x1d, 0x02, 0x7e, 0x1a, 0x86, 0xc6,
-	0x2b, 0x1f, 0x5a, 0x91, 0xa4, 0x41, 0x8e, 0xaf, 0x7f, 0xfb, 0xfb, 0x4e, 0x2c, 0x03, 0x43, 0x2b,
-	0xc2, 0xbc, 0x34, 0x5a, 0xe2, 0x27, 0x0f, 0xda, 0x82, 0xac, 0xc3, 0xdb, 0x57, 0x5c, 0x64, 0x4d,
-	0xf3, 0x91, 0xab, 0xa1, 0x38, 0xcb, 0x90, 0xa1, 0x7c, 0xeb, 0xb8, 0x83, 0x09, 0xfe, 0xaf, 0xb9,
-	0xaa, 0xcc, 0x0a, 0x29, 0x30, 0xd1, 0xe7, 0x38, 0x7a, 0xba, 0xf3, 0x83, 0x34, 0x2c, 0xdd, 0x29,
-	0x18, 0x5a, 0x19, 0x9a, 0xcf, 0x3a, 0xd9, 0x96, 0xbe, 0xac, 0x15, 0xb7, 0x94, 0x2e, 0xfe, 0x0a,
-	0x5d, 0x86, 0x63, 0x7d, 0x17, 0xcf, 0x99, 0xb9, 0x13, 0xf5, 0x35, 0xde, 0xe2, 0x0d, 0x4c, 0x8e,
-	0x98, 0xf6, 0x69, 0x87, 0x60, 0xb8, 0x8d, 0x09, 0x0b, 0xf6, 0x38, 0x0d, 0x16, 0x4d, 0x94, 0x18,
-	0xae, 0x1f, 0xeb, 0xc7, 0xbc, 0xf5, 0x1b, 0x98, 0x1c, 0xbd, 0x16, 0x6f, 0x06, 0xb9, 0x59, 0x21,
-	0x50, 0xb8, 0x10, 0x1f, 0xf0, 0xfe, 0x6f, 0x60, 0xf2, 0xff, 0xaa, 0x90, 0xf2, 0x39, 0x42, 0x17,
-	0x79, 0xa4, 0x74, 0x6a, 0x59, 0x0d, 0x8e, 0x7b, 0x43, 0xcc, 0x6e, 0xbe, 0x35, 0x93, 0xbd, 0x02,
-	0xf2, 0xc1, 0x4b, 0x23, 0x05, 0x48, 0xe3, 0x0e, 0x51, 0x9c, 0x8e, 0x2d, 0xfa, 0x14, 0xd2, 0x2e,
-	0x13, 0x4f, 0xfa, 0x10, 0xaa, 0xd0, 0xe1, 0xcc, 0xb8, 0x66, 0xfc, 0x5c, 0x2c, 0xfd, 0x34, 0x4b,
-	0xdf, 0x53, 0xbd, 0x0c, 0xaf, 0xb8, 0xf4, 0xfd, 0xb4, 0x0f, 0x71, 0x11, 0x79, 0x0e, 0x46, 0x84,
-	0xfc, 0x19, 0x57, 0x3e, 0xbf, 0x5b, 0x1d, 0x51, 0x02, 0x9e, 0x64, 0x7b, 0xcc, 0xca, 0xeb, 0x94,
-	0x30, 0x9f, 0x0f, 0xc9, 0xa0, 0xc9, 0xa7, 0x82, 0xf3, 0x1f, 0x5d, 0x09, 0x67, 0x22, 0x5c, 0x9c,
-	0xe0, 0x2e, 0x0e, 0x1d, 0x0b, 0xee, 0xe3, 0x39, 0xc7, 0x82, 0xfb, 0x43, 0xd7, 0x79, 0x27, 0x59,
-	0x49, 0x9f, 0x25, 0x8a, 0xd7, 0x7c, 0x6c, 0xd1, 0xaf, 0x3d, 0x29, 0xed, 0x50, 0x8f, 0xb0, 0x27,
-	0xd0, 0xa2, 0x80, 0x3e, 0xe1, 0x25, 0xe7, 0x3c, 0xcf, 0x92, 0x89, 0x14, 0x26, 0x0f, 0x3e, 0xf8,
-	0xc2, 0xec, 0x2a, 0x20, 0x8f, 0xfd, 0x5f, 0x55, 0x72, 0x3a, 0xec, 0x21, 0xea, 0xd9, 0x17, 0xf2,
-	0x92, 0xff, 0x59, 0xf8, 0x7e, 0x4f, 0x8c, 0xed, 0x9e, 0xfd, 0x61, 0x4f, 0xec, 0x3f, 0xb0, 0xef,
-	0xed, 0x89, 0xfc, 0x6e, 0x73, 0x6f, 0x4f, 0x64, 0x0f, 0xbc, 0x7b, 0x7b, 0x62, 0xff, 0x4a, 0x70,
-	0xb0, 0x27, 0x9e, 0x74, 0xde, 0x7d, 0x74, 0xec, 0x42, 0x52, 0xf1, 0xef, 0x9b, 0xbd, 0xc8, 0xfd,
-	0x33, 0xee, 0xad, 0x9a, 0x02, 0x18, 0x0b, 0x72, 0xce, 0xb1, 0xb0, 0x2a, 0x18, 0x9d, 0x03, 0x8f,
-	0x9b, 0x86, 0x4d, 0x10, 0x13, 0x7c, 0xde, 0x9d, 0xa6, 0xf2, 0xf8, 0xfd, 0x27, 0xd3, 0xc2, 0x83,
-	0x27, 0xd3, 0xc2, 0x9f, 0x4f, 0xa6, 0x85, 0xfa, 0x50, 0x33, 0xc1, 0x9e, 0xed, 0xcb, 0xff, 0x04,
-	0x00, 0x00, 0xff, 0xff, 0xe1, 0xd5, 0xc3, 0x7a, 0x40, 0x10, 0x00, 0x00,
+	// 1629 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0x4b, 0x6f, 0xdb, 0xc6,
+	0x16, 0x36, 0xf5, 0xb4, 0x46, 0x0f, 0x2b, 0x13, 0xc7, 0x11, 0x75, 0xef, 0xb5, 0x1d, 0xde, 0x24,
+	0x57, 0xf6, 0x75, 0x25, 0xc7, 0x4e, 0x82, 0xc2, 0x28, 0xd0, 0x5a, 0xb6, 0xe2, 0xa8, 0x75, 0x2c,
+	0x87, 0x72, 0x1e, 0x4d, 0x1f, 0x00, 0x25, 0x0e, 0x64, 0x36, 0x12, 0x29, 0x90, 0x43, 0xa7, 0x41,
+	0xd1, 0x4d, 0xd5, 0x18, 0x28, 0xda, 0x55, 0x93, 0x45, 0xd1, 0x65, 0x96, 0x5a, 0x76, 0xdb, 0x75,
+	0x81, 0x6c, 0x0a, 0x04, 0xe9, 0xa6, 0xc8, 0x22, 0x68, 0x83, 0x74, 0xd3, 0x5f, 0x51, 0xcc, 0x0c,
+	0x49, 0x51, 0x24, 0xed, 0x2a, 0x09, 0x12, 0x74, 0xc9, 0xe1, 0x39, 0xdf, 0xf9, 0xe6, 0x9c, 0xef,
+	0x9c, 0x21, 0x07, 0xa4, 0xd1, 0xa7, 0x52, 0xa7, 0xdb, 0x46, 0xc5, 0xae, 0xae, 0x61, 0x0d, 0x26,
+	0x1a, 0x9a, 0x76, 0xd3, 0xc0, 0x9a, 0x8e, 0xf2, 0x95, 0x96, 0x82, 0x77, 0xcd, 0x46, 0xb1, 0xa9,
+	0x75, 0x4a, 0x5d, 0xa4, 0x1a, 0x92, 0x2a, 0x6b, 0x25, 0xe3, 0x56, 0x69, 0x0f, 0xa9, 0x4a, 0x13,
+	0x95, 0x4c, 0xac, 0xb4, 0x8d, 0x92, 0xd4, 0x55, 0x5a, 0x48, 0x2d, 0x49, 0xaa, 0xaa, 0x61, 0x09,
+	0x2b, 0x9a, 0x6a, 0x94, 0x14, 0xb5, 0xd9, 0x36, 0x65, 0x64, 0x30, 0xc4, 0xfc, 0xa9, 0x03, 0x60,
+	0xa4, 0xae, 0x52, 0xea, 0x20, 0x2c, 0x31, 0x33, 0xe1, 0x3a, 0x98, 0x5a, 0x35, 0xb1, 0x76, 0xc9,
+	0x68, 0x95, 0x35, 0xed, 0xe6, 0x35, 0x09, 0x37, 0x77, 0x2f, 0xa2, 0x76, 0x17, 0xe9, 0x30, 0x05,
+	0x22, 0x3b, 0xb7, 0xbb, 0x28, 0xc7, 0xcd, 0x72, 0x85, 0x04, 0x9c, 0x01, 0xb1, 0x5a, 0xe3, 0x13,
+	0xd4, 0xc4, 0xb9, 0xd0, 0x2c, 0x57, 0x48, 0x2e, 0x4d, 0x14, 0x1d, 0xc6, 0x45, 0xe2, 0xb9, 0x32,
+	0xf1, 0xf8, 0xde, 0x64, 0xf2, 0x16, 0xf1, 0xdf, 0xa5, 0xfe, 0xc2, 0x0d, 0x70, 0xdc, 0x42, 0xae,
+	0xe9, 0x32, 0xd2, 0x0f, 0x86, 0x9e, 0xf5, 0x40, 0x67, 0x5d, 0xd0, 0xd4, 0xd5, 0x8f, 0xdd, 0x00,
+	0xff, 0xb2, 0xb0, 0xb7, 0xcd, 0x46, 0x5b, 0x31, 0x76, 0x0f, 0xc3, 0x3f, 0xe9, 0xc1, 0x9f, 0x74,
+	0xe1, 0x3b, 0xee, 0x87, 0xf1, 0xaf, 0x13, 0xd3, 0x17, 0xe3, 0x4f, 0x5d, 0xfd, 0xd8, 0xbf, 0x73,
+	0x20, 0x42, 0xb2, 0x06, 0x17, 0x01, 0xb7, 0x43, 0x61, 0x92, 0x4b, 0xe9, 0xa2, 0xd4, 0x55, 0x8a,
+	0x04, 0xf7, 0x12, 0xc2, 0x52, 0xf9, 0xe8, 0x83, 0x27, 0x33, 0x63, 0x0f, 0x9f, 0xcc, 0x70, 0x7f,
+	0x3e, 0x99, 0x89, 0x2f, 0x28, 0x6a, 0x5b, 0x51, 0x91, 0xc8, 0xed, 0xc0, 0xf3, 0x80, 0xab, 0x39,
+	0x35, 0x20, 0x1e, 0x2c, 0x36, 0xf5, 0x39, 0xee, 0xf2, 0x49, 0x92, 0x22, 0x3b, 0x7e, 0x35, 0xf8,
+	0x06, 0x88, 0xd4, 0xbb, 0xa8, 0x99, 0x0b, 0x53, 0xd7, 0xa3, 0x9e, 0xf2, 0x91, 0x57, 0xe5, 0x08,
+	0x71, 0x17, 0xa9, 0x19, 0x5c, 0x06, 0xb1, 0x3a, 0x96, 0xb0, 0x69, 0xe4, 0x22, 0xd4, 0xe1, 0x98,
+	0xd7, 0x81, 0xbe, 0xb4, 0x5c, 0x2c, 0xd3, 0x95, 0xe4, 0xa3, 0x3b, 0x7c, 0x1c, 0x46, 0xa9, 0xa5,
+	0xf0, 0x15, 0x07, 0xc6, 0x89, 0xe5, 0xa6, 0x62, 0x60, 0x28, 0x90, 0x7d, 0x86, 0x82, 0xf6, 0x39,
+	0x6e, 0x73, 0x86, 0x73, 0x60, 0x9c, 0xd8, 0x92, 0x55, 0x8b, 0x25, 0x33, 0xb5, 0x17, 0x5d, 0xa6,
+	0xd3, 0x20, 0x5a, 0xc5, 0xa8, 0x43, 0xc8, 0x85, 0x83, 0xc4, 0x98, 0x79, 0x7c, 0x6f, 0x12, 0xb4,
+	0x15, 0x03, 0x5b, 0xf9, 0xfe, 0x29, 0xc4, 0xb8, 0xd0, 0xad, 0x4d, 0x81, 0x58, 0xb5, 0x5e, 0xde,
+	0xaa, 0xca, 0x94, 0x50, 0x42, 0xb4, 0x9e, 0xc8, 0xfa, 0xaa, 0x89, 0x77, 0x35, 0x9d, 0x46, 0x4f,
+	0x88, 0xd6, 0x13, 0x9c, 0x06, 0xa0, 0x2a, 0x6f, 0xeb, 0xda, 0x9e, 0x22, 0x23, 0x9d, 0xa6, 0x23,
+	0x21, 0xba, 0x56, 0xe0, 0x3b, 0x60, 0x7c, 0x4d, 0xc2, 0xa8, 0xa5, 0xe9, 0xb7, 0x73, 0x51, 0xf2,
+	0xb6, 0x7c, 0xb2, 0xbf, 0xcf, 0xcf, 0xd6, 0xb1, 0x5e, 0x51, 0xcd, 0x4e, 0xc1, 0x8e, 0x4b, 0x99,
+	0x59, 0x86, 0x0a, 0x32, 0xe6, 0x44, 0xc7, 0x0b, 0xbe, 0x09, 0x26, 0xae, 0x74, 0x65, 0x09, 0xa3,
+	0x1d, 0xa5, 0x83, 0x0c, 0x2c, 0x75, 0xba, 0xb9, 0x18, 0x4d, 0x40, 0x86, 0xe5, 0xca, 0x5e, 0x15,
+	0xbd, 0x66, 0xf0, 0xdf, 0x20, 0xb1, 0x83, 0xf4, 0x8e, 0xa2, 0x4a, 0x18, 0xe5, 0xe2, 0xb3, 0x5c,
+	0x61, 0x5c, 0x1c, 0x2c, 0x08, 0x35, 0x90, 0x19, 0x0e, 0x0a, 0xb3, 0x20, 0xb5, 0xb6, 0xab, 0xb4,
+	0x65, 0x1d, 0xa9, 0xc6, 0xa6, 0x82, 0xb3, 0x63, 0x30, 0x03, 0xc0, 0xfb, 0x9a, 0xa9, 0xb6, 0x56,
+	0x65, 0xb3, 0x8d, 0xb3, 0x1c, 0x4c, 0x82, 0xf8, 0x05, 0xa5, 0x49, 0x46, 0x4a, 0x36, 0x44, 0x5e,
+	0x6e, 0x69, 0xaa, 0xfd, 0x1c, 0x16, 0xe6, 0x01, 0x18, 0x14, 0x9f, 0x04, 0xaf, 0xaa, 0x7b, 0x48,
+	0xc5, 0x64, 0xe7, 0x44, 0xc4, 0x51, 0x71, 0xb0, 0x20, 0xfc, 0xc1, 0x81, 0x28, 0x6d, 0xdf, 0xd7,
+	0x28, 0xf2, 0xe2, 0x90, 0xc8, 0x27, 0xbd, 0x83, 0xc4, 0xa7, 0xf2, 0xb3, 0x1e, 0x95, 0x4f, 0xf9,
+	0x3c, 0x82, 0x64, 0x9e, 0x7a, 0x74, 0x87, 0x1f, 0x87, 0x31, 0x8d, 0x18, 0x18, 0x02, 0x02, 0x09,
+	0x6a, 0x4a, 0x04, 0x09, 0x0b, 0x8e, 0xb6, 0xe8, 0x6c, 0x28, 0x67, 0xfb, 0xfb, 0x7c, 0xaa, 0x8e,
+	0xf5, 0x4d, 0xa4, 0x16, 0x96, 0x17, 0xce, 0x2c, 0xce, 0x39, 0x6a, 0x2b, 0x82, 0xf1, 0xcb, 0xa6,
+	0xa4, 0x62, 0x05, 0xdf, 0xa6, 0x3b, 0x4d, 0x97, 0x61, 0x7f, 0x9f, 0xcf, 0x54, 0x55, 0x2c, 0x4a,
+	0x6a, 0x0b, 0x15, 0x96, 0x16, 0x96, 0x17, 0xe7, 0x44, 0xc7, 0x46, 0xf8, 0x9a, 0xb3, 0xe2, 0xbc,
+	0x8a, 0x7e, 0x9a, 0x19, 0xee, 0x27, 0xff, 0x04, 0xf6, 0x36, 0xd4, 0x86, 0x45, 0x86, 0x66, 0x31,
+	0x03, 0x42, 0xf6, 0x86, 0xc5, 0x50, 0x55, 0x86, 0xf3, 0x56, 0xe1, 0x73, 0x21, 0x8a, 0xe6, 0x2b,
+	0x03, 0x09, 0x25, 0x32, 0x13, 0xe1, 0x67, 0x0e, 0x24, 0x5d, 0x99, 0x86, 0x6f, 0x39, 0x15, 0x09,
+	0xfb, 0x5b, 0xc9, 0x65, 0xe8, 0x2e, 0xcf, 0x9c, 0x5d, 0x19, 0xb8, 0x00, 0x62, 0x17, 0x94, 0x76,
+	0x1b, 0xc9, 0xd6, 0x46, 0x02, 0x15, 0x20, 0x5a, 0x36, 0x82, 0x38, 0x1c, 0x3a, 0x09, 0xe2, 0x6b,
+	0x62, 0x65, 0x75, 0xa7, 0xb2, 0xce, 0xda, 0x62, 0x5b, 0xac, 0xad, 0x55, 0xea, 0xf5, 0xea, 0xd6,
+	0x46, 0x96, 0x83, 0x00, 0xc4, 0x2e, 0x54, 0x37, 0x37, 0x2b, 0xeb, 0xd9, 0x10, 0x31, 0xac, 0x5f,
+	0xac, 0x6e, 0x6f, 0x57, 0xd6, 0xb3, 0x61, 0x98, 0x06, 0x89, 0xb5, 0xda, 0xa5, 0xed, 0xcd, 0x0a,
+	0xf1, 0x8b, 0x08, 0x3f, 0x72, 0x20, 0xe1, 0x1c, 0x2a, 0xaf, 0x51, 0xf9, 0x4b, 0x43, 0xca, 0xcf,
+	0x05, 0x1d, 0x71, 0x5e, 0xf5, 0xaf, 0x64, 0x1f, 0xdd, 0xe1, 0x53, 0x10, 0x74, 0x6d, 0x03, 0x43,
+	0xb8, 0xcb, 0x81, 0xb4, 0x63, 0xff, 0x2a, 0x84, 0xf6, 0xdf, 0x61, 0xa1, 0x05, 0x1f, 0xc5, 0x5e,
+	0xb1, 0x69, 0x2e, 0x52, 0x2e, 0xc1, 0x85, 0x1c, 0xc1, 0xe5, 0x40, 0x7c, 0x55, 0x96, 0x75, 0x64,
+	0x58, 0xaa, 0x11, 0xed, 0x47, 0x78, 0x16, 0xc4, 0xaf, 0xa1, 0x06, 0x79, 0x62, 0x83, 0xbb, 0x9c,
+	0xef, 0xef, 0xf3, 0xd1, 0x2b, 0x62, 0xb5, 0x30, 0xd7, 0xdf, 0xe7, 0xd3, 0x56, 0x67, 0x9e, 0x5f,
+	0x58, 0x3a, 0x77, 0x7e, 0x4e, 0xb4, 0x4d, 0x85, 0x67, 0x1c, 0x88, 0xd2, 0x93, 0xfb, 0x1f, 0x31,
+	0xba, 0x28, 0x93, 0xe7, 0x1a, 0x5d, 0xcc, 0xe3, 0xc0, 0x13, 0x3a, 0x1f, 0xa5, 0x66, 0x74, 0xa4,
+	0x50, 0xd3, 0xd7, 0x3c, 0x52, 0xd8, 0x47, 0x91, 0xb7, 0xca, 0xa7, 0x2c, 0x32, 0x74, 0x77, 0x39,
+	0x10, 0x5f, 0xd3, 0x54, 0x2c, 0x35, 0xb1, 0x35, 0x57, 0xec, 0x47, 0xe1, 0x1c, 0x48, 0xba, 0xb6,
+	0x07, 0x4f, 0x83, 0xcc, 0x9a, 0xa9, 0xeb, 0x48, 0xc5, 0x35, 0x13, 0x4b, 0x2d, 0x64, 0xe4, 0xb8,
+	0xd9, 0x70, 0x21, 0x21, 0x7a, 0x56, 0x97, 0xbe, 0x3b, 0x02, 0x92, 0x65, 0x9b, 0xc1, 0xd5, 0x33,
+	0xf0, 0x6d, 0x90, 0x24, 0x5f, 0x77, 0xab, 0xb2, 0x4c, 0xbf, 0xc3, 0xbc, 0x5f, 0x10, 0x79, 0xef,
+	0x82, 0x90, 0xf9, 0xf5, 0xde, 0x24, 0xf7, 0xc3, 0x97, 0x7c, 0xac, 0xa9, 0x23, 0x09, 0x23, 0x78,
+	0x15, 0xa4, 0x2c, 0x00, 0x76, 0xc8, 0xf9, 0x66, 0x66, 0xde, 0xb7, 0x22, 0x08, 0xc3, 0x18, 0x5f,
+	0xfc, 0xf2, 0xec, 0x6e, 0x28, 0x03, 0xc6, 0x56, 0xb8, 0x79, 0x21, 0x5e, 0x62, 0xc7, 0x09, 0xdc,
+	0x02, 0x59, 0x0b, 0x77, 0x30, 0x46, 0x02, 0xdb, 0x24, 0x1f, 0xb8, 0xea, 0xe3, 0x59, 0x76, 0x78,
+	0x32, 0x45, 0xfb, 0x0a, 0x91, 0xf7, 0xad, 0x04, 0x60, 0x64, 0x08, 0xc6, 0x3a, 0x6a, 0x23, 0x8c,
+	0x9e, 0x37, 0x5f, 0x32, 0xf5, 0x82, 0x12, 0x98, 0x18, 0x60, 0x8c, 0x9e, 0xb2, 0xf9, 0x61, 0x18,
+	0x9a, 0xb2, 0x29, 0x30, 0xb6, 0x32, 0x36, 0x9f, 0xb5, 0x32, 0x56, 0xfa, 0xac, 0x56, 0xdc, 0x92,
+	0x3a, 0xe8, 0x73, 0x78, 0x19, 0x1c, 0x1d, 0x84, 0x78, 0xc9, 0xec, 0x59, 0xac, 0x2b, 0x6e, 0xd6,
+	0x2f, 0x90, 0x40, 0x0b, 0xe6, 0x1a, 0x53, 0xdb, 0x06, 0xc2, 0x23, 0x66, 0xef, 0xb4, 0x05, 0x10,
+	0x6e, 0x21, 0x4c, 0xf7, 0x7c, 0x8c, 0xec, 0x19, 0x4e, 0x94, 0xa8, 0xdd, 0x60, 0xcb, 0x1f, 0xb0,
+	0xea, 0x6e, 0x20, 0x3c, 0x7a, 0x4a, 0xff, 0xe7, 0xc5, 0xa6, 0xf9, 0x84, 0xfe, 0x7c, 0xbe, 0xc7,
+	0xa4, 0xb8, 0x81, 0xf0, 0x8b, 0x25, 0x33, 0xe9, 0x0a, 0x04, 0x2f, 0x3b, 0x4c, 0x47, 0x4f, 0xe3,
+	0x7f, 0xbc, 0x4c, 0x53, 0x94, 0x69, 0xac, 0x44, 0x8d, 0xe0, 0x45, 0x06, 0x49, 0x86, 0x0f, 0x4d,
+	0xeb, 0x31, 0x67, 0x16, 0xd1, 0x9f, 0xb5, 0x5a, 0x97, 0xfe, 0x18, 0xe7, 0xbd, 0xff, 0x3a, 0xc4,
+	0x40, 0x48, 0x59, 0xd0, 0x11, 0x32, 0x81, 0xe0, 0x47, 0x20, 0x6d, 0x23, 0xb1, 0x3c, 0x1e, 0x00,
+	0xe5, 0xfb, 0x9e, 0xa0, 0x58, 0x33, 0x6e, 0x2c, 0xca, 0x33, 0x4d, 0x79, 0x3a, 0x3d, 0x2d, 0x82,
+	0x23, 0x36, 0xfc, 0x20, 0x93, 0x07, 0x84, 0x08, 0x3c, 0xba, 0x03, 0x28, 0xbf, 0x3b, 0xa0, 0xcc,
+	0x12, 0x3a, 0x02, 0x65, 0x67, 0xd8, 0x7b, 0xb0, 0x3e, 0x66, 0xfd, 0xcd, 0x7e, 0x2e, 0x46, 0x54,
+	0xa8, 0xd3, 0x98, 0x26, 0xf5, 0x72, 0x84, 0xc4, 0xcd, 0xe7, 0x7d, 0x2a, 0x6d, 0xb0, 0x2e, 0x62,
+	0xf8, 0xa3, 0x0b, 0xf5, 0xff, 0x01, 0x21, 0x8e, 0xb3, 0x10, 0x07, 0x36, 0x3f, 0x8b, 0xf1, 0x92,
+	0xcd, 0xcf, 0xe2, 0xc1, 0xeb, 0x6e, 0xda, 0xa3, 0xab, 0xf6, 0x44, 0x00, 0xed, 0x34, 0xa3, 0x6d,
+	0x2b, 0xf7, 0x06, 0x2b, 0x1e, 0x2d, 0xd4, 0x61, 0xd2, 0x3d, 0xe1, 0x02, 0x0f, 0xbe, 0xa6, 0x11,
+	0xd2, 0x56, 0xb4, 0x28, 0xbd, 0x5f, 0x58, 0xe4, 0xe0, 0x87, 0xac, 0x98, 0x0c, 0xe7, 0x30, 0x31,
+	0x0b, 0x7e, 0x70, 0xef, 0x4d, 0x8d, 0x1f, 0x5d, 0x06, 0xd0, 0x41, 0xff, 0x5b, 0x2d, 0x9f, 0xf6,
+	0x47, 0x08, 0xba, 0xaf, 0x39, 0x7c, 0x0f, 0x87, 0xaa, 0x3b, 0x60, 0x0f, 0xde, 0xdb, 0x1a, 0x1f,
+	0x7a, 0xfe, 0x1b, 0xee, 0xdb, 0x1e, 0x1f, 0xda, 0x3b, 0xf3, 0x7d, 0x8f, 0x1f, 0xdc, 0xbb, 0xdd,
+	0xef, 0xf1, 0xec, 0x97, 0xe4, 0x7e, 0x8f, 0xa7, 0x77, 0x33, 0xf7, 0x7b, 0xfc, 0xe0, 0x4b, 0x9e,
+	0xbc, 0xa5, 0xc0, 0xfd, 0x1e, 0x9f, 0xb5, 0xee, 0x6e, 0xe8, 0x58, 0x0b, 0x77, 0x4d, 0xdc, 0xef,
+	0xf1, 0xa7, 0xec, 0x7f, 0x5d, 0xf2, 0xcc, 0xde, 0xd8, 0xb3, 0x3f, 0xd2, 0xd5, 0x0c, 0x0c, 0x69,
+	0xa3, 0xf5, 0x7b, 0xfc, 0x11, 0xfb, 0xcb, 0xd2, 0x31, 0x2c, 0xa7, 0x1e, 0x3c, 0x9d, 0xe6, 0x1e,
+	0x3e, 0x9d, 0xe6, 0x7e, 0x7b, 0x3a, 0xcd, 0x6d, 0x8f, 0x35, 0x62, 0xf4, 0x66, 0x6e, 0xf9, 0xaf,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x19, 0x57, 0x58, 0x2e, 0x23, 0x14, 0x00, 0x00,
 }

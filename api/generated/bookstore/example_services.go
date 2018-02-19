@@ -20,22 +20,28 @@ type ServiceBookstoreV1Client interface {
 	AutoAddBook(ctx context.Context, t *Book) (*Book, error)
 	AutoAddOrder(ctx context.Context, t *Order) (*Order, error)
 	AutoAddPublisher(ctx context.Context, t *Publisher) (*Publisher, error)
+	AutoAddStore(ctx context.Context, t *Store) (*Store, error)
 	AutoDeleteBook(ctx context.Context, t *Book) (*Book, error)
 	AutoDeleteOrder(ctx context.Context, t *Order) (*Order, error)
 	AutoDeletePublisher(ctx context.Context, t *Publisher) (*Publisher, error)
+	AutoDeleteStore(ctx context.Context, t *Store) (*Store, error)
 	AutoGetBook(ctx context.Context, t *Book) (*Book, error)
 	AutoGetOrder(ctx context.Context, t *Order) (*Order, error)
 	AutoGetPublisher(ctx context.Context, t *Publisher) (*Publisher, error)
+	AutoGetStore(ctx context.Context, t *Store) (*Store, error)
 	AutoListBook(ctx context.Context, t *api.ListWatchOptions) (*BookList, error)
 	AutoListOrder(ctx context.Context, t *api.ListWatchOptions) (*OrderList, error)
 	AutoListPublisher(ctx context.Context, t *api.ListWatchOptions) (*PublisherList, error)
+	AutoListStore(ctx context.Context, t *api.ListWatchOptions) (*StoreList, error)
 	AutoUpdateBook(ctx context.Context, t *Book) (*Book, error)
 	AutoUpdateOrder(ctx context.Context, t *Order) (*Order, error)
 	AutoUpdatePublisher(ctx context.Context, t *Publisher) (*Publisher, error)
+	AutoUpdateStore(ctx context.Context, t *Store) (*Store, error)
 
 	AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchOrderClient, error)
 	AutoWatchBook(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchBookClient, error)
 	AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchPublisherClient, error)
+	AutoWatchStore(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchStoreClient, error)
 }
 
 // ServiceBookstoreV1Server is the server interface for the service.
@@ -43,20 +49,26 @@ type ServiceBookstoreV1Server interface {
 	AutoAddBook(ctx context.Context, t Book) (Book, error)
 	AutoAddOrder(ctx context.Context, t Order) (Order, error)
 	AutoAddPublisher(ctx context.Context, t Publisher) (Publisher, error)
+	AutoAddStore(ctx context.Context, t Store) (Store, error)
 	AutoDeleteBook(ctx context.Context, t Book) (Book, error)
 	AutoDeleteOrder(ctx context.Context, t Order) (Order, error)
 	AutoDeletePublisher(ctx context.Context, t Publisher) (Publisher, error)
+	AutoDeleteStore(ctx context.Context, t Store) (Store, error)
 	AutoGetBook(ctx context.Context, t Book) (Book, error)
 	AutoGetOrder(ctx context.Context, t Order) (Order, error)
 	AutoGetPublisher(ctx context.Context, t Publisher) (Publisher, error)
+	AutoGetStore(ctx context.Context, t Store) (Store, error)
 	AutoListBook(ctx context.Context, t api.ListWatchOptions) (BookList, error)
 	AutoListOrder(ctx context.Context, t api.ListWatchOptions) (OrderList, error)
 	AutoListPublisher(ctx context.Context, t api.ListWatchOptions) (PublisherList, error)
+	AutoListStore(ctx context.Context, t api.ListWatchOptions) (StoreList, error)
 	AutoUpdateBook(ctx context.Context, t Book) (Book, error)
 	AutoUpdateOrder(ctx context.Context, t Order) (Order, error)
 	AutoUpdatePublisher(ctx context.Context, t Publisher) (Publisher, error)
+	AutoUpdateStore(ctx context.Context, t Store) (Store, error)
 
 	AutoWatchOrder(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchOrderServer) error
 	AutoWatchBook(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchBookServer) error
 	AutoWatchPublisher(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchPublisherServer) error
+	AutoWatchStore(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchStoreServer) error
 }

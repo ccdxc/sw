@@ -21,6 +21,19 @@ message RestEndpoint {
   string Pattern = 3;
 }
 
+// ObjectPrefix defines the way the object is identified in the kvstore and REST api.
+message ObjectPrefix {
+  // Path is the path component of the prefix - like tenant etc.
+  string Path  = 1;
+  // Target is the prefix for the object. Which is usually the containers name or singleton name
+  oneof Target {
+    // this object is part of a collection. Collection is the collections name
+    string Collection = 2;
+    // Singleton objects name
+    string Singleton = 3;
+  }
+}
+
 // Venice Option extensions applicable at the file level.
 extend google.protobuf.FileOptions {
   // GRPC destination. This is typically a service discovery key.
@@ -57,7 +70,7 @@ extend google.protobuf.MethodOptions {
 extend google.protobuf.MessageOptions {
   // Path prefix specification for the KV Store for this message. Needs to be specified for all objects that
   // the api server is to persist in the KV store.
-  string objectPrefix = 51290;
+  ObjectPrefix objectPrefix = 51290;
   // objectAutoGen is for internal use only
   string objectAutoGen = 41291;
 };

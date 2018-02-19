@@ -154,6 +154,7 @@ func TestCrudOps(t *testing.T) {
 			if !validateObjectSpec(&pub2, ret) {
 				t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", pub2, ret)
 			}
+			// Verify that the selflink in the objects
 			evp := pub2
 			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Created)
 		}
@@ -294,6 +295,10 @@ func TestCrudOps(t *testing.T) {
 		}
 		if !reflect.DeepEqual(retorder.Spec, order2.Spec) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
+		}
+		selflink := "/v1/bookstore/orders/" + retorder.Name
+		if selflink != retorder.SelfLink {
+			t.Errorf("Self link does not match expect [%s] got [%s]", selflink, retorder.SelfLink)
 		}
 		evp := order2
 		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Created)

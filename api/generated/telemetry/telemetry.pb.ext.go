@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
@@ -26,17 +27,17 @@ var funcMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *FlowExportPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "flowExportPolicy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "flowExportPolicy/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *FwlogPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "FwlogPolicy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "fwlogPolicy/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *StatsPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "StatsPolicy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "StatsPolicy/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object

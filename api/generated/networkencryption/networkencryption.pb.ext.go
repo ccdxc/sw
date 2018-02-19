@@ -12,6 +12,8 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -21,7 +23,7 @@ var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
 func (m *TrafficEncryptionPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "trafficEncryptionPolicy/", m.Name)
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "trafficEncryptionPolicy/", m.Tenant, "/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object

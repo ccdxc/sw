@@ -48,9 +48,21 @@ type PublisherInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
+// StoreInterface exposes the CRUD methods for Store
+type StoreInterface interface {
+	Create(ctx context.Context, in *Store) (*Store, error)
+	Update(ctx context.Context, in *Store) (*Store, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Store, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Store, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Store, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiserver.APIOperType) bool
+}
+
 // BookstoreV1Interface exposes objects with CRUD operations allowed by the service
 type BookstoreV1Interface interface {
 	Order() OrderInterface
 	Book() BookInterface
 	Publisher() PublisherInterface
+	Store() StoreInterface
 }

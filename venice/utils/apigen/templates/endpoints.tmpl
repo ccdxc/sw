@@ -228,8 +228,8 @@ func (r *Endpoints{{$svcname}}RestClient) getHTTPRequest(ctx context.Context, in
 }
 {{$svcparams := getSvcParams .}}{{range .Methods}}{{$methparams := getMethodParams .}}{{if (strEq $methparams.Oper "WatchOper")}} {{else}} {{ if isAutoGenMethod .}}{{if isRestExposed .}}
 // 
-func makeURI{{$svcname}}{{.Name}}{{$methparams.Oper}}(in *{{getInputType $pkgname . false}}) string { {{$sep := ", "}}
-	return fmt.Sprint("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", {{range $index, $value := (getURIKey .)}}{{if ($index) ne 0}}{{$sep}}{{end}}{{if strEq $value.Type "prefix"}}"{{$value.Val}}"{{else}}in.{{$value.Val}}{{end}}{{$sep := ", "}}{{end}})
+func makeURI{{$svcname}}{{.Name}}{{$methparams.Oper}}(in *{{getInputType $pkgname . false}}) string { {{$uri := getURIKey . true}}
+	return fmt.Sprint("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", {{$uri.Str}})
 }
 {{end}}{{end}}{{end}}{{end}}
 

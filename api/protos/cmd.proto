@@ -29,7 +29,7 @@ import "github.com/pensando/sw/api/meta.proto";
 //
 message Cluster {
 
-    option (venice.objectPrefix) = "cluster";
+    option (venice.objectPrefix) = {Collection: "cluster"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,
@@ -108,7 +108,7 @@ message ClusterStatus {
 //
 message Node {
 
-    option (venice.objectPrefix) = "nodes";
+    option (venice.objectPrefix) = {Collection: "nodes"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,
@@ -230,7 +230,7 @@ enum ConditionStatus {
 //
 message SmartNIC {
 
-    option (venice.objectPrefix) = "smartnics";
+    option (venice.objectPrefix) = {Collection: "smartnics"};
 
     api.TypeMeta T          = 1 [(gogoproto.embed) = true,
                                 (gogoproto.nullable) = false,
@@ -410,34 +410,16 @@ service CmdV1 {
 
     option(venice.apiRestService) = {
         Object: "Cluster"
-        Method: [ "list"]
-        Pattern: "/cluster"
-    };
-    option(venice.apiRestService) = {
-        Object: "Cluster"
-        Method: ["put", "get", "delete"]
-        Pattern: "/cluster/{O.Name}"
+        Method: ["put", "get", "delete", "list"]
     };
 
     option(venice.apiRestService) = {
         Object: "Node"
-        Method: ["put", "get", "delete"]
-        Pattern: "/nodes/{O.Name}"
-    };
-    option(venice.apiRestService) = {
-        Object: "Node"
-        Method: ["post", "list"]
-        Pattern: "/nodes"
+        Method: ["put", "get", "delete", "post", "list"]
     };
 
     option(venice.apiRestService) = {
         Object: "SmartNIC"
-        Method: ["put", "get", "delete"]
-        Pattern: "/smartnics/{O.Name}"
-    };
-    option(venice.apiRestService) = {
-        Object: "SmartNIC"
-        Method: ["post", "list"]
-        Pattern: "/smartnics"
+        Method: ["put", "get", "delete", "post", "list"]
     };
 }

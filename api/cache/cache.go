@@ -31,7 +31,6 @@ var (
 	deleteOps, listOps                 expvar.Int
 	markSweepInterval                  = time.Second * 10
 	kvWatcherRetryInterval             = time.Millisecond * 500
-	kvWatcherMaxRetry                  = time.Second * 300
 )
 
 // Interface is the cache interface exposed by the cache implementation. It provides a few additional operations
@@ -142,8 +141,26 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 			p.cancel()
 		}
 		kv := k.(kvstore.Interface)
+
 		p.ctx, p.cancel = context.WithCancel(ctx)
-		for time.Since(watchStart) < kvWatcherMaxRetry {
+		for {
+			if p.lastVer == "0" || p.lastVer == "" {
+				into := struct {
+					api.TypeMeta
+					api.ListMeta
+					Items []runtime.Object
+				}{}
+				if err = p.parent.listBackend(ctx, p.path, &into); err == nil {
+					p.lastVer = into.ResourceVersion
+					for _, v := range into.Items {
+						meta, ver := mustGetObjectMetaVersion(v)
+						if meta.SelfLink == "" {
+							log.Fatalf("invalid Self link for object")
+						}
+						p.parent.store.Set(meta.SelfLink, ver, v, updatefn)
+					}
+				}
+			}
 			w, err = kv.PrefixWatch(p.ctx, p.path, p.lastVer)
 			if err == nil {
 				return
@@ -156,7 +173,6 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 				return
 			}
 		}
-		p.parent.logger.Fatalf("cache could not establish watcher for path [%s]", p.path)
 	}
 	sweepFunc := func(ctx context.Context) {
 		select {
@@ -190,11 +206,10 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 					p.parent.logger.ErrorLog("func", "kvwatcher", "path", p.path, "msg", "watch error")
 					watchErrors.Add(1)
 					p.parent.store.Mark(p.path)
+
 					p.lastVer = "0"
-					// XXX-TBD(sanjayt): Move to backendList and immediate sweep rather than watch
-					//  and delayed sweep
 					establishWatcher()
-					go sweepFunc(p.ctx)
+					sweepFunc(p.ctx)
 					continue
 				}
 				evtype = ev.Type

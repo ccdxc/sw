@@ -6,12 +6,12 @@
                      |              |             |              |       |          |          |             |
                      +--------------+             +--------------+       +----------+          +-------------+
 
-The diagram above shows the different layers involved in the handling of API calls. 
+The diagram above shows the different layers involved in the handling of API calls.
 
-In a typical API request the REST call is handled by the API gateway and routed to the appropriate API server via a gRPC call. The API server processes the request by performing any transformations required on the request and then performs a KV store action on the resource, like creating, updating, deleting or retrieving the resource. The domain specific controller (like the network controller, the storage controller etc.) would typically watch for KV store updates and act on those notifications. 
+In a typical API request the REST call is handled by the API gateway and routed to the appropriate API server via a gRPC call. The API server processes the request by performing any transformations required on the request and then performs a KV store action on the resource, like creating, updating, deleting or retrieving the resource. The domain specific controller (like the network controller, the storage controller etc.) would typically watch for KV store updates and act on those notifications.
 
 The write up below walks through the definitions of the API endpoints and code generation that generates code to plumb the API call from the API Gateway till KV store operation performed by the API server. This writeup does not cover the actions on the controller.
-	
+
 # Defining API and KV store objects
 KV store objects and API endpoints are defined in a protobuf definition file. This document will walk through defining API endpoints, request and response structures and any objects that are to be saved to KV store.  
 
@@ -27,11 +27,11 @@ A protobuf specification is made up of
 1. Message definitions
 2. Service definitions
 3. Method definitions under the Service  
-  
+
 For a functional example protobuf example please look at sw/api/protos/example.proto. The example specifies an API definition for a hypothetical bookstore. That is used as an example in the following sections.
 
 ### Message definition
-Messages define the object structure. A message defines the structure of every unique request or response or an object that needs to be written to the KV store. Messages can be annotated with some predefined options. A later section lists the supported options. Protobuf supports nested structures. The snippet below shows a message definition. 
+Messages define the object structure. A message defines the structure of every unique request or response or an object that needs to be written to the KV store. Messages can be annotated with some predefined options. A later section lists the supported options. Protobuf supports nested structures. The snippet below shows a message definition.
 
 
     message Publisher {
@@ -40,7 +40,7 @@ Messages define the object structure. A message defines the structure of every u
         api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "metadata,inline"];
 
         // Option to define writing to KV store and the key structure.
-        option (venice.objectPrefix) = "publishers";
+        option (venice.objectPrefix) = {Collection: "publishers"};
 
         PublisherSpec Spec = 3;
     }
@@ -55,7 +55,7 @@ In the above definition the TypeMeta and ObjectMeta are embedded messages that a
 
 The option specified on the next line (venice.objectPrefix) is a custom pensando option. This option controls the path for the object when it is written to KV store. In this case the path would be /<version>/venice/<service prefix>/publishers/<Name from the Object Meta>. Version and "service prefix" used above are defined in the service definition covered next.
 
-The objectPrefix definition can be more complicated for example it could have been something like "tenant-{Tenant}/publishers" in which case the key might have been "/v1/venice/bookstore/tenant-Amazon/publishers/Oriely" for example. Here the tenant would have been from the ObjectMeta. Anything specified within "{..}" is parsed as a field from the object and it is filled in at runtime. The field could be in ObjectMeta or in the message itself. 
+The objectPrefix definition can be more complicated for example it could have been something like '{Collection: "tenants", Path:"{O.Tenant}"}' in which case the key might have been "/v1/venice/bookstore/tenant-Amazon/publishers/Oriely" for example. Here the tenant would have been from the ObjectMeta. Anything specified within "{..}" is parsed as a field from the object and it is filled in at runtime. The field could be in ObjectMeta or in the message itself.
 
 All objects that need to be written to KV store need a "venice.objectPrefix" definition.
 
@@ -111,16 +111,9 @@ A Service is a collection of a group of API endpoints of the same version. Multi
         // REST resources exposed by the service. The Option specifies
         //   Object  - The resource
         //   Method  - REST methods allowed on the resource (post, put, get, delete, list)
-        //   Pattern - Pattern for the URI
         option (venice.apiRestService) = {
             Object: "Order"
-            Method: [ "put", "get", "delete" ]
-            Pattern: "/orders/{O.Name}"
-        };
-        option (venice.apiRestService) = {
-            Object: "Order"
-            Method: [ "post", "list" ]
-            Pattern: "/orders"
+            Method: [ "put", "get", "delete", "post, "list"]
         };
     }
 
@@ -140,7 +133,7 @@ Examples:
 
 
 ## Code Generation
-Three code generation plugins are invoked by the Makefile. 
+Three code generation plugins are invoked by the Makefile.
     1. protobuf
     2. gateway and API server plugins
     3. Swagger definition
@@ -184,7 +177,7 @@ This code generation step, generates plugins that plug into the API Gateway and 
 
 All generated code is in the generated/ directory.
 
-All hand edited code goes in the hooks/ directory. This is an optional step. When the service needs to influence the API server handling of specific APIs via plugins, the service owner can handwrite hooks and register them with the API server. 
+All hand edited code goes in the hooks/ directory. This is an optional step. When the service needs to influence the API server handling of specific APIs via plugins, the service owner can handwrite hooks and register them with the API server.
 
 ## Controlling API server handling of requests with Hooks
 The API server allows the registering of the following hooks. All hooks are registered via hand written code placed in the hooks/ directory. Please look at sw/api/hooks/bookstore.go for a reference implementation.
@@ -193,7 +186,7 @@ The API server allows the registering of the following hooks. All hooks are regi
 #### Version Transform
 Messages can be transformed from the request version to the native version of the API server and vice-versa by registered TransformFuncs. Transformation functions are registered by specifying the from and to versions. Each registration is unidirectional. For example if a service creates a new version of the API, "v2" due to an incompatible change ("v1" being the original version), the service registers a transform function for ("v1" -> "v2") and a transform function for ("v2" -> "v1").
 
-#### Defaulting 
+#### Defaulting
 If non-standard defaults are to be applied then a Defaulter function registered can mutate the object as desired.
 
 #### Validation Function
@@ -204,7 +197,7 @@ If semantic validations are desired then a validation hook can be registered. Th
 This is invoked before the KV store operation is performed. The Hook can perform any operations (for example allocating IDs etc) needed before updating KV store, modify the request object and/or signal the API server to not perform the KV store operation.
 
 #### Post Commit Hook
-This is invoked by the API server after the KV store operation is performed. 
+This is invoked by the API server after the KV store operation is performed.
 
 #### Response writer
 Hook to modify the returned response. The hook can return a completely new type in the response if needed.
@@ -252,7 +245,7 @@ Services hosted on controllers that do not use the API server to frontend can al
 	// fileApiServerBacked should be set to false to indicate that the set of services defined in this
 	//   file are not backed by the API server.
 	option (venice.fileApiServerBacked) = false;
-	
+
 	message SearchRequest {
 	    string QueryString = 1;
 	    string Options = 2;
@@ -267,7 +260,7 @@ Services hosted on controllers that do not use the API server to frontend can al
 	    option (venice.apiPrefix) = "search";
 	    // API Version.
 	    option (venice.apiVersion) = "v1";
-	    // In the example below a query like 
+	    // In the example below a query like
 	    //    http://<...>/venice/v1/search/query?QueryString=XXXXX&options="YYY"
 	    //  generates a RPC call Query with the parameter as
 	    //  SearchRequest{ QueryString: "XXXXX", Options:"ABC"}
@@ -277,4 +270,3 @@ Services hosted on controllers that do not use the API server to frontend can al
 		};
 	    }
 	}
-

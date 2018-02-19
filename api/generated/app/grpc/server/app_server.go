@@ -9,6 +9,7 @@ package appApiServer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -141,6 +142,10 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(app.App)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := app.App{}
 			err := kvs.Get(ctx, key, &r)
@@ -246,6 +251,10 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(app.AppUser)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := app.AppUser{}
 			err := kvs.Get(ctx, key, &r)
@@ -338,6 +347,10 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(app.AppUserGrp)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := app.AppUserGrp{}
 			err := kvs.Get(ctx, key, &r)
@@ -401,49 +414,127 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		srv := apisrvpkg.NewService("AppV1")
 
 		s.endpointsAppV1.fnAutoAddApp = srv.AddMethod("AutoAddApp",
-			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoAddApp")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoAddApp")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoAddAppUser = srv.AddMethod("AutoAddAppUser",
-			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoAddAppUser")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoAddAppUser")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUser)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoAddAppUserGrp = srv.AddMethod("AutoAddAppUserGrp",
-			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoAddAppUserGrp")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoAddAppUserGrp")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUserGrp)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users-groups/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoDeleteApp = srv.AddMethod("AutoDeleteApp",
-			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoDeleteApp")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoDeleteApp")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoDeleteAppUser = srv.AddMethod("AutoDeleteAppUser",
-			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoDeleteAppUser")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoDeleteAppUser")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUser)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoDeleteAppUserGrp = srv.AddMethod("AutoDeleteAppUserGrp",
-			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoDeleteAppUserGrp")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoDeleteAppUserGrp")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUserGrp)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users-groups/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoGetApp = srv.AddMethod("AutoGetApp",
-			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoGetApp")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoGetApp")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.App)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/apps/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoGetAppUser = srv.AddMethod("AutoGetAppUser",
-			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoGetAppUser")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoGetAppUser")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUser)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoGetAppUserGrp = srv.AddMethod("AutoGetAppUserGrp",
-			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoGetAppUserGrp")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoGetAppUserGrp")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUserGrp)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users-groups/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoListApp = srv.AddMethod("AutoListApp",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["app.AppList"], "app", "AutoListApp")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["app.AppList"], "app", "AutoListApp")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/apps/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoListAppUser = srv.AddMethod("AutoListAppUser",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["app.AppUserList"], "app", "AutoListAppUser")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["app.AppUserList"], "app", "AutoListAppUser")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoListAppUserGrp = srv.AddMethod("AutoListAppUserGrp",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["app.AppUserGrpList"], "app", "AutoListAppUserGrp")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["app.AppUserGrpList"], "app", "AutoListAppUserGrp")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users-groups/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoUpdateApp = srv.AddMethod("AutoUpdateApp",
-			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoUpdateApp")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.App"], s.Messages["app.App"], "app", "AutoUpdateApp")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoUpdateAppUser = srv.AddMethod("AutoUpdateAppUser",
-			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoUpdateAppUser")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUser"], s.Messages["app.AppUser"], "app", "AutoUpdateAppUser")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUser)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoUpdateAppUserGrp = srv.AddMethod("AutoUpdateAppUserGrp",
-			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoUpdateAppUserGrp")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["app.AppUserGrp"], s.Messages["app.AppUserGrp"], "app", "AutoUpdateAppUserGrp")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(app.AppUserGrp)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "app/", in.Tenant, "/app-users-groups/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsAppV1.fnAutoWatchApp = s.Messages["app.App"].WatchFromKv
 
@@ -465,6 +556,9 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		s.Messages["app.App"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := app.App{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(app.AppV1_AutoWatchAppServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -519,6 +613,9 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		s.Messages["app.AppUser"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := app.AppUser{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(app.AppV1_AutoWatchAppUserServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -573,6 +670,9 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		s.Messages["app.AppUserGrp"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := app.AppUserGrp{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(app.AppV1_AutoWatchAppUserGrpServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

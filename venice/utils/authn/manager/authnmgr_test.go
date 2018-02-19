@@ -243,7 +243,7 @@ func TestAuthenticate(t *testing.T) {
 		}
 
 		// authenticate
-		autheduser, ok, err := authnmgr.Authenticate(password.LocalUserPasswordCredential{Username: testUser, Password: testPassword})
+		autheduser, ok, err := authnmgr.Authenticate(password.LocalUserPasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
 
 		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful local user authentication", testtype))
 		Assert(t, autheduser.Name == testUser, fmt.Sprintf("[%v] User returned by authentication manager didn't match user being authenticated", testtype))

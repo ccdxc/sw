@@ -26,7 +26,7 @@ message TenantStatus {
 
 // Tenant represents an org or a tenant
 message Tenant {
-     option (venice.objectPrefix) = "tenant";
+     option (venice.objectPrefix) = {Collection: "tenants"};
      api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
      api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -46,13 +46,7 @@ service TenantV1 {
      option (venice.apiGrpcCrudService) = "Tenant";
      option (venice.apiRestService) = {
          Object: "Tenant"
-         Method: [ "get", "put", "delete" ]
-         Pattern: "/tenants/{O.Name}"
-     };
-     option (venice.apiRestService) = {
-         Object: "Tenant"
-         Method: [ "post", "list" ]
-         Pattern: "/tenants"
+         Method: [ "get", "put", "delete", "post", "list" ]
      };
 }
 
@@ -86,7 +80,7 @@ message NetworkStatus {
 
 // Network represents a subnet
 message Network {
-     option (venice.objectPrefix) = "network";
+     option (venice.objectPrefix) = {Collection: "networks", Path: "/{O.Tenant}"};
      api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
      api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -107,13 +101,7 @@ service NetworkV1 {
      option (venice.apiGrpcCrudService) = "Network";
      option (venice.apiRestService) = {
          Object: "Network"
-         Method: [ "get", "put", "delete" ]
-         Pattern: "/{O.Tenant}/networks/{O.Name}"
-     };
-     option (venice.apiRestService) = {
-         Object: "Network"
-         Method: [ "post", "list" ]
-         Pattern: "/{O.Tenant}/networks"
+         Method: [ "get", "put", "delete", "post", "list" ]
      };
  }
 
@@ -142,7 +130,7 @@ message SecurityGroupStatus {
 
 // SecurityGroup represents a security zone or domain
 message SecurityGroup {
-  option (venice.objectPrefix) = "security-group";
+  option (venice.objectPrefix) = {Collection: "security-groups", Path: "/{O.Tenant}"};
   api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -163,13 +151,7 @@ service SecurityGroupV1 {
   option (venice.apiGrpcCrudService) = "SecurityGroup";
   option (venice.apiRestService) = {
     Object: "SecurityGroup"
-    Method: [ "get", "put", "delete" ]
-    Pattern: "/{O.Tenant}/security-groups/{O.Name}"
-  };
-  option (venice.apiRestService) = {
-    Object: "SecurityGroup"
-    Method: [ "post", "list" ]
-    Pattern: "/{O.Tenant}/security-groups"
+    Method: [ "get", "put", "delete", "post", "list" ]
   };
 }
 
@@ -211,7 +193,7 @@ message SgpolicyStatus {
 
 // Sgpolicy represents a security policy for security groups
 message Sgpolicy {
-    option (venice.objectPrefix) = "sgpolicy";
+    option (venice.objectPrefix) = {Collection: "sgpolicy", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -231,14 +213,8 @@ service SgpolicyV1 {
 
     option (venice.apiGrpcCrudService) = "Sgpolicy";
     option (venice.apiRestService) = {
-    Object: "Sgpolicy"
-        Method: [ "get", "put", "delete" ]
-        Pattern: "/{O.Tenant}/sgpolicy/{O.Name}"
-    };
-    option (venice.apiRestService) = {
         Object: "Sgpolicy"
-        Method: [ "post", "list" ]
-        Pattern: "/{O.Tenant}/sgpolicy"
+        Method: [ "get", "put", "delete", "post", "list" ]
     };
 }
 
@@ -333,7 +309,7 @@ message ServiceStatus {
 
 // Service represents a group of identical endpoints, such as servers in an app tier
 message Service {
-    option (venice.objectPrefix) = "service";
+    option (venice.objectPrefix) =  {Collection: "services", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -353,14 +329,8 @@ service ServiceV1 {
 
     option (venice.apiGrpcCrudService) = "Service";
     option (venice.apiRestService) = {
-    Object: "Service"
-        Method: [ "get", "put", "delete" ]
-        Pattern: "/{O.Tenant}/services/{O.Name}"
-    };
-    option (venice.apiRestService) = {
         Object: "Service"
-        Method: [ "post", "list" ]
-        Pattern: "/{O.Tenant}/services"
+        Method: [ "get", "put", "delete", "post", "list" ]
     };
 }
 
@@ -397,7 +367,7 @@ message LbPolicyStatus {
 
 // LbPolicy represents a load balancer policy
 message LbPolicy {
-    option (venice.objectPrefix) = "lb-policy";
+    option (venice.objectPrefix) = {Collection: "lb-policy", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -418,13 +388,7 @@ service LbPolicyV1 {
     option (venice.apiGrpcCrudService) = "LbPolicy";
     option (venice.apiRestService) = {
         Object: "LbPolicy"
-        Method: [ "get", "put", "delete" ]
-        Pattern: "/{O.Tenant}/lb-policy/{O.Name}"
-    };
-    option (venice.apiRestService) = {
-        Object: "LbPolicy"
-        Method: [ "post", "list" ]
-        Pattern: "/{O.Tenant}/lb-policy"
+        Method: [ "get", "put", "delete", "post", "list" ]
     };
 }
 
@@ -473,7 +437,7 @@ message EndpointStatus {
 
 // Endpoint represents a network endpoint
 message Endpoint {
-    option (venice.objectPrefix) = "endpoint";
+    option (venice.objectPrefix) = { Collection: "endpoints", Path: "/{O.Tenant}"};
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -494,12 +458,6 @@ service EndpointV1 {
     option (venice.apiGrpcCrudService) = "Endpoint";
     option (venice.apiRestService) = {
         Object: "Endpoint"
-        Method: [ "get", "put", "delete" ]
-        Pattern: "/{O.Tenant}/endpoints/{O.Name}"
-    };
-    option (venice.apiRestService) = {
-        Object: "Endpoint"
-        Method: [ "post", "list" ]
-        Pattern: "/{O.Tenant}/endpoints"
+        Method: [ "get", "put", "delete", "post", "list" ]
     };
 }

@@ -132,6 +132,10 @@ type PostCommitFunc func(ctx context.Context, oper APIOperType, i interface{})
 // In case of delete the "old" parameter contains the deleted object.
 type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, old interface{}, oper APIOperType) (interface{}, error)
 
+// MakeURIFunc functions is registered to the method and generates the REST URI that can be used
+//  to invoke the method if the method is exposed via REST. If not it returns a non nil error.
+type MakeURIFunc func(i interface{}) (string, error)
+
 // KeyGenFunc is a function that generates the key for input i. This is usually auto-generated code.
 type KeyGenFunc func(i interface{}, prefix string) string
 
@@ -173,6 +177,9 @@ type SetCreationTimeFunc func(i interface{}) (interface{}, error)
 
 // SetModTimeFunc is a function that sets the Modification time of object
 type SetModTimeFunc func(i interface{}) (interface{}, error)
+
+// UpdateSelfLinkFunc sets the SelfLink in the object
+type UpdateSelfLinkFunc func(path string, i interface{}) (interface{}, error)
 
 // Message is the interface satisfied by the representation of the Message in the Api Server infra.
 // A Message may be the definition of parameters passed in and out of a gRPC method or an object that
@@ -216,6 +223,8 @@ type MessageRegistration interface {
 	WithCreationTimeWriter(fn SetCreationTimeFunc) Message
 	// WithModTimeWriter registers ModTime Writer function
 	WithModTimeWriter(fn SetModTimeFunc) Message
+	// WithSelfLinkWriter updates the selflink in the object
+	WithSelfLinkWriter(fn UpdateSelfLinkFunc) Message
 }
 
 // MessageAction is the set of the Actions possible on a Message.
@@ -254,6 +263,8 @@ type MessageAction interface {
 	WriteCreationTime(i interface{}) (interface{}, error)
 	// WriteModTime writes the modification time of the object to now
 	WriteModTime(i interface{}) (interface{}, error)
+	//UpdateSelfLink update the object with the self link provided
+	UpdateSelfLink(path string, i interface{}) (interface{}, error)
 }
 
 // Method is the interface satisfied by the representation of the RPC Method in the API Server infra.
@@ -277,6 +288,8 @@ type MethodRegistration interface {
 	WithOper(oper APIOperType) Method
 	// With Version sets the version of the API
 	WithVersion(ver string) Method
+	// WithMakeURI set the URI maker function for the method
+	WithMakeURI(fn MakeURIFunc) Method
 }
 
 // MethodAction is the set of actions on a Method.
@@ -285,10 +298,14 @@ type MethodAction interface {
 	Enable()
 	// Disable disables the method from being invoked.
 	Disable()
+	// GetPrefix returns the prefix
+	GetPrefix() string
 	// GetRequestType returns input type for the method.
 	GetRequestType() Message
 	// GetResponseType returns the output type of the method.
 	GetResponseType() Message
+	// MakeURI generatesthe URI for the method.
+	MakeURI(i interface{}) (string, error)
 	// HandleInvcation handles the invocation of this method.
 	HandleInvocation(ctx context.Context, i interface{}) (interface{}, error)
 }

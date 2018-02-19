@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"strings"
 
     "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
@@ -125,6 +126,10 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func (path string, i interface{}) (interface{}, error){
+			r := i.({{$pkgname}}.{{.Name}})
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Get(ctx, key, &r)
@@ -169,7 +174,14 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 		s.endpoints{{$svcname}}.fn{{.Name}} = srv.AddMethod("{{.Name}}",
 			apisrvpkg.NewMethod(s.Messages["{{getInputType $pkgname . true}}"], s.Messages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key, oper string, i interface{}) (interface{}, bool, error) {
 			return i, false, nil
-		}){{end}}{{end}}.WithVersion("{{$svcver}}").HandleInvocation
+		}){{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . false}}{{if $uri.Ref}}
+			in, ok := i.({{getInputType $pkgname . true}})
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			} {{end}}
+			return fmt.Sprint("/{{$svcver}}/", {{$uri.Str}}), nil{{else}}
+			return "", fmt.Errorf("not rest endpoint"){{end}}
+		}).HandleInvocation
 		{{end}}{{end}}
 		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 		s.endpoints{{$svcname}}.fnAutoWatch{{.}} = s.Messages["{{$pkgname}}.{{.}}"].WatchFromKv
@@ -188,6 +200,9 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 		s.Messages["{{$pkgname}}.{{.}}"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := {{$pkgname}}.{{.}}{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.({{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Server)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

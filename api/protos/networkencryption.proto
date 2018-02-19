@@ -63,7 +63,7 @@ message TrafficEncryptionPolicyStatus {
 }
 
 message TrafficEncryptionPolicy {
-     option (venice.objectPrefix) = "trafficEncryptionPolicy";
+     option (venice.objectPrefix) = {Collection: "trafficEncryptionPolicy", Path: "/{O.Tenant}"};
      api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
      api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
@@ -85,13 +85,7 @@ service TrafficEncryptionPolicyV1 {
 
     option (venice.apiRestService) = {
         Object: "TrafficEncryptionPolicy"
-        Method: [ "get", "put", "delete" ]
-        Pattern: "/{O.Tenant}/trafficEncryptionPolicy"
-    };
-    option (venice.apiRestService) = {
-        Object: "TrafficEncryptionPolicy"
-        Method: [ "post" ]
-        Pattern: "/{O.Tenant}"
+        Method: [ "get", "put", "delete", "post" ]
     };
 }
 

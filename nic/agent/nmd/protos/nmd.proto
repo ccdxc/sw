@@ -14,7 +14,7 @@ import "github.com/pensando/sw/api/protos/cmd.proto";
 // Naples config object
 message Naples {
 
-    option (venice.objectPrefix) = "config";
+    option (venice.objectPrefix) = {Collection: "config"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
                             (gogoproto.nullable) = false,

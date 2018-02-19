@@ -66,7 +66,7 @@ func TestMessageWith(t *testing.T) {
 	f := mocks.NewFakeMessage("/test", true).(*mocks.FakeMessage)
 	m := NewMessage("TestType1").WithValidate(f.ValidateFunc).WithDefaulter(f.DefaultFunc)
 	m = m.WithKvUpdater(f.KvUpdateFunc).WithKvGetter(f.KvGetFunc).WithKvDelFunc(f.KvDelFunc).WithObjectVersionWriter(f.ObjverwriteFunc)
-	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc)
+	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc).WithSelfLinkWriter(f.SelfLinkWriterFunc)
 	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc)
 	m = m.WithUUIDWriter(f.CreateUUID)
 	singletonAPISrv.runstate.running = true
@@ -108,6 +108,10 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecting 1 call to CreateUUID found %d", f.Uuidwrite)
 	}
 
+	m.UpdateSelfLink("", nil)
+	if f.SelfLinkWrites != 1 {
+		t.Errorf("Expecgting 1 call to UpdateSelfLink found %d", f.SelfLinkWrites)
+	}
 	ctx := context.TODO()
 	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
 		apisrv.RequestParamMethod, "WATCH")

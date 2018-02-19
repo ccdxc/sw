@@ -58,6 +58,12 @@ func (a adapterBookstoreV1) AutoAddPublisher(oldctx oldcontext.Context, t *books
 	return a.service.AutoAddPublisher(ctx, t)
 }
 
+func (a adapterBookstoreV1) AutoAddStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoAddStore(ctx, t)
+}
+
 func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -74,6 +80,12 @@ func (a adapterBookstoreV1) AutoDeletePublisher(oldctx oldcontext.Context, t *bo
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoDeletePublisher(ctx, t)
+}
+
+func (a adapterBookstoreV1) AutoDeleteStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoDeleteStore(ctx, t)
 }
 
 func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
@@ -94,6 +106,12 @@ func (a adapterBookstoreV1) AutoGetPublisher(oldctx oldcontext.Context, t *books
 	return a.service.AutoGetPublisher(ctx, t)
 }
 
+func (a adapterBookstoreV1) AutoGetStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoGetStore(ctx, t)
+}
+
 func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.BookList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -110,6 +128,12 @@ func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoListPublisher(ctx, t)
+}
+
+func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.StoreList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoListStore(ctx, t)
 }
 
 func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
@@ -130,6 +154,12 @@ func (a adapterBookstoreV1) AutoUpdatePublisher(oldctx oldcontext.Context, t *bo
 	return a.service.AutoUpdatePublisher(ctx, t)
 }
 
+func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookstore.Store, options ...grpc.CallOption) (*bookstore.Store, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateStore(ctx, t)
+}
+
 func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchOrderClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchOrder(ctx, in)
@@ -143,6 +173,11 @@ func (a adapterBookstoreV1) AutoWatchBook(oldctx oldcontext.Context, in *api.Lis
 func (a adapterBookstoreV1) AutoWatchPublisher(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchPublisherClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchPublisher(ctx, in)
+}
+
+func (a adapterBookstoreV1) AutoWatchStore(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchStoreClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchStore(ctx, in)
 }
 
 func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,

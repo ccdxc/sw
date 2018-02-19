@@ -59,7 +59,7 @@ func request_TrafficEncryptionPolicyV1_AutoAddTrafficEncryptionPolicy_0(ctx cont
 }
 
 var (
-	filter_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
 func request_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client TrafficEncryptionPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -84,6 +84,17 @@ func request_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0(ctx c
 		return nil, metadata, err
 	}
 
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0); err != nil {
 		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -94,7 +105,7 @@ func request_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0(ctx c
 }
 
 var (
-	filter_TrafficEncryptionPolicyV1_AutoGetTrafficEncryptionPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_TrafficEncryptionPolicyV1_AutoGetTrafficEncryptionPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
 func request_TrafficEncryptionPolicyV1_AutoGetTrafficEncryptionPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client TrafficEncryptionPolicyV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -114,6 +125,17 @@ func request_TrafficEncryptionPolicyV1_AutoGetTrafficEncryptionPolicy_0(ctx cont
 	}
 
 	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
 
 	if err != nil {
 		return nil, metadata, err
@@ -149,6 +171,17 @@ func request_TrafficEncryptionPolicyV1_AutoUpdateTrafficEncryptionPolicy_0(ctx c
 	}
 
 	err = runtime.PopulateFieldFromPath(&protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
 
 	if err != nil {
 		return nil, metadata, err
@@ -311,13 +344,13 @@ func RegisterTrafficEncryptionPolicyV1HandlerWithClient(ctx context.Context, mux
 }
 
 var (
-	pattern_TrafficEncryptionPolicyV1_AutoAddTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0}, []string{"O.Tenant"}, ""))
+	pattern_TrafficEncryptionPolicyV1_AutoAddTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "trafficEncryptionPolicy"}, ""))
 
-	pattern_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "trafficEncryptionPolicy"}, ""))
+	pattern_TrafficEncryptionPolicyV1_AutoDeleteTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "trafficEncryptionPolicy", "O.Name"}, ""))
 
-	pattern_TrafficEncryptionPolicyV1_AutoGetTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "trafficEncryptionPolicy"}, ""))
+	pattern_TrafficEncryptionPolicyV1_AutoGetTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "trafficEncryptionPolicy", "O.Name"}, ""))
 
-	pattern_TrafficEncryptionPolicyV1_AutoUpdateTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1}, []string{"O.Tenant", "trafficEncryptionPolicy"}, ""))
+	pattern_TrafficEncryptionPolicyV1_AutoUpdateTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{1, 0, 4, 1, 5, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"O.Tenant", "trafficEncryptionPolicy", "O.Name"}, ""))
 )
 
 var (

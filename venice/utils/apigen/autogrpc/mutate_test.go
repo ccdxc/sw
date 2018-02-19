@@ -31,6 +31,7 @@ func TestMutator(t *testing.T) {
 				type_name: '.example.Nest2'
 				number: 1
 			>
+			options:<[venice.objectPrefix]:{Collection:"nest1"}>
 		>
 		message_type <
 			name: 'testmsg'
@@ -47,6 +48,18 @@ func TestMutator(t *testing.T) {
 				type: TYPE_STRING
 				number: 3
 			>
+			options:<[venice.objectPrefix]:{Collection:"testmsg"}>
+		>
+		message_type <
+			name: 'singletonmsg'
+			field <
+				name: 'real_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest1'
+				number: 2
+			>
+			options:<[venice.objectPrefix]:{Singleton:"singletonmsg"}>
 		>
 		service <
 			name: 'hybrid_crudservice'
@@ -106,7 +119,7 @@ func TestMutator(t *testing.T) {
 
 	expected["example.proto"] = &counts{
 		svcs:      make(map[string]*svccount),
-		msgcount:  6,
+		msgcount:  7,
 		autoList:  2,
 		autoWatch: 2,
 	}
@@ -160,6 +173,11 @@ func TestMutator(t *testing.T) {
 			}
 			if strings.Contains(*msgs.Name, "WatchHelper") {
 				c.autoWatch++
+			}
+			if strings.Contains(*msgs.Name, "singleton") {
+				if s, err := isSingleton(msgs); err != nil || !s {
+					t.Errorf("Single message %v did not return true in singleton check", *msgs.Name)
+				}
 			}
 		}
 		for _, svcs := range file.Service {

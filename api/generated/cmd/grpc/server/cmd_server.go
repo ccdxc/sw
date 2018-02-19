@@ -9,6 +9,7 @@ package cmdApiServer
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -144,6 +145,10 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(cmd.Cluster)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cmd.Cluster{}
 			err := kvs.Get(ctx, key, &r)
@@ -249,6 +254,10 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(cmd.Node)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cmd.Node{}
 			err := kvs.Get(ctx, key, &r)
@@ -358,6 +367,10 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				r.ModTime.Timestamp = *ts
 			}
 			return r, err
+		}).WithSelfLinkWriter(func(path string, i interface{}) (interface{}, error) {
+			r := i.(cmd.SmartNIC)
+			r.SelfLink = path
+			return r, nil
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := cmd.SmartNIC{}
 			err := kvs.Get(ctx, key, &r)
@@ -406,49 +419,135 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		srv := apisrvpkg.NewService("CmdV1")
 
 		s.endpointsCmdV1.fnAutoAddCluster = srv.AddMethod("AutoAddCluster",
-			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoAddCluster")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoAddCluster")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoAddNode = srv.AddMethod("AutoAddNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoAddNode")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoAddNode")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.Node)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/nodes/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoAddSmartNIC = srv.AddMethod("AutoAddSmartNIC",
-			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoAddSmartNIC")).WithOper(apiserver.CreateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoAddSmartNIC")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.SmartNIC)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/smartnics/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoDeleteCluster = srv.AddMethod("AutoDeleteCluster",
-			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoDeleteCluster")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoDeleteCluster")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.Cluster)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/cluster/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoDeleteNode = srv.AddMethod("AutoDeleteNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoDeleteNode")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoDeleteNode")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.Node)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/nodes/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoDeleteSmartNIC = srv.AddMethod("AutoDeleteSmartNIC",
-			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoDeleteSmartNIC")).WithOper(apiserver.DeleteOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoDeleteSmartNIC")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.SmartNIC)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/smartnics/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoGetCluster = srv.AddMethod("AutoGetCluster",
-			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoGetCluster")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoGetCluster")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.Cluster)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/cluster/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoGetNode = srv.AddMethod("AutoGetNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoGetNode")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoGetNode")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.Node)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/nodes/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoGetSmartNIC = srv.AddMethod("AutoGetSmartNIC",
-			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoGetSmartNIC")).WithOper(apiserver.GetOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoGetSmartNIC")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.SmartNIC)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/smartnics/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoListCluster = srv.AddMethod("AutoListCluster",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.ClusterList"], "cmd", "AutoListCluster")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.ClusterList"], "cmd", "AutoListCluster")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/cluster/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoListNode = srv.AddMethod("AutoListNode",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.NodeList"], "cmd", "AutoListNode")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.NodeList"], "cmd", "AutoListNode")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/nodes/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoListSmartNIC = srv.AddMethod("AutoListSmartNIC",
-			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.SmartNICList"], "cmd", "AutoListSmartNIC")).WithOper(apiserver.ListOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["api.ListWatchOptions"], s.Messages["cmd.SmartNICList"], "cmd", "AutoListSmartNIC")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/smartnics/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoUpdateCluster = srv.AddMethod("AutoUpdateCluster",
-			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoUpdateCluster")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Cluster"], s.Messages["cmd.Cluster"], "cmd", "AutoUpdateCluster")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.Cluster)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/cluster/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoUpdateNode = srv.AddMethod("AutoUpdateNode",
-			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoUpdateNode")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.Node"], s.Messages["cmd.Node"], "cmd", "AutoUpdateNode")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.Node)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/nodes/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoUpdateSmartNIC = srv.AddMethod("AutoUpdateSmartNIC",
-			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoUpdateSmartNIC")).WithOper(apiserver.UpdateOper).WithVersion("v1").HandleInvocation
+			apisrvpkg.NewMethod(s.Messages["cmd.SmartNIC"], s.Messages["cmd.SmartNIC"], "cmd", "AutoUpdateSmartNIC")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(cmd.SmartNIC)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/v1/", "cmd/smartnics/", in.Name), nil
+		}).HandleInvocation
 
 		s.endpointsCmdV1.fnAutoWatchCluster = s.Messages["cmd.Cluster"].WatchFromKv
 
@@ -470,6 +569,9 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		s.Messages["cmd.Cluster"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := cmd.Cluster{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(cmd.CmdV1_AutoWatchClusterServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -524,6 +626,9 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		s.Messages["cmd.Node"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := cmd.Node{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(cmd.CmdV1_AutoWatchNodeServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -578,6 +683,9 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 		s.Messages["cmd.SmartNIC"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := cmd.SmartNIC{}
 			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
 			wstream := stream.(cmd.CmdV1_AutoWatchSmartNICServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

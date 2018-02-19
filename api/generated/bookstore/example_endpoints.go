@@ -38,18 +38,23 @@ type EndpointsBookstoreV1Client struct {
 	AutoAddBookEndpoint         endpoint.Endpoint
 	AutoAddOrderEndpoint        endpoint.Endpoint
 	AutoAddPublisherEndpoint    endpoint.Endpoint
+	AutoAddStoreEndpoint        endpoint.Endpoint
 	AutoDeleteBookEndpoint      endpoint.Endpoint
 	AutoDeleteOrderEndpoint     endpoint.Endpoint
 	AutoDeletePublisherEndpoint endpoint.Endpoint
+	AutoDeleteStoreEndpoint     endpoint.Endpoint
 	AutoGetBookEndpoint         endpoint.Endpoint
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
+	AutoGetStoreEndpoint        endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListOrderEndpoint       endpoint.Endpoint
 	AutoListPublisherEndpoint   endpoint.Endpoint
+	AutoListStoreEndpoint       endpoint.Endpoint
 	AutoUpdateBookEndpoint      endpoint.Endpoint
 	AutoUpdateOrderEndpoint     endpoint.Endpoint
 	AutoUpdatePublisherEndpoint endpoint.Endpoint
+	AutoUpdateStoreEndpoint     endpoint.Endpoint
 }
 
 // EndpointsBookstoreV1RestClient is the REST client
@@ -61,21 +66,27 @@ type EndpointsBookstoreV1RestClient struct {
 	AutoAddBookEndpoint         endpoint.Endpoint
 	AutoAddOrderEndpoint        endpoint.Endpoint
 	AutoAddPublisherEndpoint    endpoint.Endpoint
+	AutoAddStoreEndpoint        endpoint.Endpoint
 	AutoDeleteBookEndpoint      endpoint.Endpoint
 	AutoDeleteOrderEndpoint     endpoint.Endpoint
 	AutoDeletePublisherEndpoint endpoint.Endpoint
+	AutoDeleteStoreEndpoint     endpoint.Endpoint
 	AutoGetBookEndpoint         endpoint.Endpoint
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
+	AutoGetStoreEndpoint        endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListOrderEndpoint       endpoint.Endpoint
 	AutoListPublisherEndpoint   endpoint.Endpoint
+	AutoListStoreEndpoint       endpoint.Endpoint
 	AutoUpdateBookEndpoint      endpoint.Endpoint
 	AutoUpdateOrderEndpoint     endpoint.Endpoint
 	AutoUpdatePublisherEndpoint endpoint.Endpoint
+	AutoUpdateStoreEndpoint     endpoint.Endpoint
 	AutoWatchBookEndpoint       endpoint.Endpoint
 	AutoWatchOrderEndpoint      endpoint.Endpoint
 	AutoWatchPublisherEndpoint  endpoint.Endpoint
+	AutoWatchStoreEndpoint      endpoint.Endpoint
 }
 
 // MiddlewareBookstoreV1Server adds middle ware to the server
@@ -86,22 +97,28 @@ type EndpointsBookstoreV1Server struct {
 	AutoAddBookEndpoint         endpoint.Endpoint
 	AutoAddOrderEndpoint        endpoint.Endpoint
 	AutoAddPublisherEndpoint    endpoint.Endpoint
+	AutoAddStoreEndpoint        endpoint.Endpoint
 	AutoDeleteBookEndpoint      endpoint.Endpoint
 	AutoDeleteOrderEndpoint     endpoint.Endpoint
 	AutoDeletePublisherEndpoint endpoint.Endpoint
+	AutoDeleteStoreEndpoint     endpoint.Endpoint
 	AutoGetBookEndpoint         endpoint.Endpoint
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
+	AutoGetStoreEndpoint        endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListOrderEndpoint       endpoint.Endpoint
 	AutoListPublisherEndpoint   endpoint.Endpoint
+	AutoListStoreEndpoint       endpoint.Endpoint
 	AutoUpdateBookEndpoint      endpoint.Endpoint
 	AutoUpdateOrderEndpoint     endpoint.Endpoint
 	AutoUpdatePublisherEndpoint endpoint.Endpoint
+	AutoUpdateStoreEndpoint     endpoint.Endpoint
 
 	watchHandlerOrder     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerBook      func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerPublisher func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerStore     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddBook is endpoint for AutoAddBook
@@ -143,6 +160,20 @@ func (e EndpointsBookstoreV1Client) AutoAddPublisher(ctx context.Context, in *Pu
 
 type respBookstoreV1AutoAddPublisher struct {
 	V   Publisher
+	Err error
+}
+
+// AutoAddStore is endpoint for AutoAddStore
+func (e EndpointsBookstoreV1Client) AutoAddStore(ctx context.Context, in *Store) (*Store, error) {
+	resp, err := e.AutoAddStoreEndpoint(ctx, in)
+	if err != nil {
+		return &Store{}, err
+	}
+	return resp.(*Store), nil
+}
+
+type respBookstoreV1AutoAddStore struct {
+	V   Store
 	Err error
 }
 
@@ -188,6 +219,20 @@ type respBookstoreV1AutoDeletePublisher struct {
 	Err error
 }
 
+// AutoDeleteStore is endpoint for AutoDeleteStore
+func (e EndpointsBookstoreV1Client) AutoDeleteStore(ctx context.Context, in *Store) (*Store, error) {
+	resp, err := e.AutoDeleteStoreEndpoint(ctx, in)
+	if err != nil {
+		return &Store{}, err
+	}
+	return resp.(*Store), nil
+}
+
+type respBookstoreV1AutoDeleteStore struct {
+	V   Store
+	Err error
+}
+
 // AutoGetBook is endpoint for AutoGetBook
 func (e EndpointsBookstoreV1Client) AutoGetBook(ctx context.Context, in *Book) (*Book, error) {
 	resp, err := e.AutoGetBookEndpoint(ctx, in)
@@ -227,6 +272,20 @@ func (e EndpointsBookstoreV1Client) AutoGetPublisher(ctx context.Context, in *Pu
 
 type respBookstoreV1AutoGetPublisher struct {
 	V   Publisher
+	Err error
+}
+
+// AutoGetStore is endpoint for AutoGetStore
+func (e EndpointsBookstoreV1Client) AutoGetStore(ctx context.Context, in *Store) (*Store, error) {
+	resp, err := e.AutoGetStoreEndpoint(ctx, in)
+	if err != nil {
+		return &Store{}, err
+	}
+	return resp.(*Store), nil
+}
+
+type respBookstoreV1AutoGetStore struct {
+	V   Store
 	Err error
 }
 
@@ -272,6 +331,20 @@ type respBookstoreV1AutoListPublisher struct {
 	Err error
 }
 
+// AutoListStore is endpoint for AutoListStore
+func (e EndpointsBookstoreV1Client) AutoListStore(ctx context.Context, in *api.ListWatchOptions) (*StoreList, error) {
+	resp, err := e.AutoListStoreEndpoint(ctx, in)
+	if err != nil {
+		return &StoreList{}, err
+	}
+	return resp.(*StoreList), nil
+}
+
+type respBookstoreV1AutoListStore struct {
+	V   StoreList
+	Err error
+}
+
 // AutoUpdateBook is endpoint for AutoUpdateBook
 func (e EndpointsBookstoreV1Client) AutoUpdateBook(ctx context.Context, in *Book) (*Book, error) {
 	resp, err := e.AutoUpdateBookEndpoint(ctx, in)
@@ -314,6 +387,20 @@ type respBookstoreV1AutoUpdatePublisher struct {
 	Err error
 }
 
+// AutoUpdateStore is endpoint for AutoUpdateStore
+func (e EndpointsBookstoreV1Client) AutoUpdateStore(ctx context.Context, in *Store) (*Store, error) {
+	resp, err := e.AutoUpdateStoreEndpoint(ctx, in)
+	if err != nil {
+		return &Store{}, err
+	}
+	return resp.(*Store), nil
+}
+
+type respBookstoreV1AutoUpdateStore struct {
+	V   Store
+	Err error
+}
+
 // AutoWatchOrder performs Watch for Order
 func (e EndpointsBookstoreV1Client) AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchOrderClient, error) {
 	return e.Client.AutoWatchOrder(ctx, in)
@@ -327,6 +414,11 @@ func (e EndpointsBookstoreV1Client) AutoWatchBook(ctx context.Context, in *api.L
 // AutoWatchPublisher performs Watch for Publisher
 func (e EndpointsBookstoreV1Client) AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchPublisherClient, error) {
 	return e.Client.AutoWatchPublisher(ctx, in)
+}
+
+// AutoWatchStore performs Watch for Store
+func (e EndpointsBookstoreV1Client) AutoWatchStore(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchStoreClient, error) {
+	return e.Client.AutoWatchStore(ctx, in)
 }
 
 // AutoAddBook implementation on server Endpoint
@@ -395,6 +487,28 @@ func MakeBookstoreV1AutoAddPublisherEndpoint(s ServiceBookstoreV1Server, logger 
 	return trace.ServerEndpoint("BookstoreV1:AutoAddPublisher")(f)
 }
 
+// AutoAddStore implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoAddStore(ctx context.Context, in Store) (Store, error) {
+	resp, err := e.AutoAddStoreEndpoint(ctx, in)
+	if err != nil {
+		return Store{}, err
+	}
+	return *resp.(*Store), nil
+}
+
+// MakeBookstoreV1AutoAddStoreEndpoint creates  AutoAddStore endpoints for the service
+func MakeBookstoreV1AutoAddStoreEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Store)
+		v, err := s.AutoAddStore(ctx, *req)
+		return respBookstoreV1AutoAddStore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoAddStore")(f)
+}
+
 // AutoDeleteBook implementation on server Endpoint
 func (e EndpointsBookstoreV1Server) AutoDeleteBook(ctx context.Context, in Book) (Book, error) {
 	resp, err := e.AutoDeleteBookEndpoint(ctx, in)
@@ -459,6 +573,28 @@ func MakeBookstoreV1AutoDeletePublisherEndpoint(s ServiceBookstoreV1Server, logg
 		}, nil
 	}
 	return trace.ServerEndpoint("BookstoreV1:AutoDeletePublisher")(f)
+}
+
+// AutoDeleteStore implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoDeleteStore(ctx context.Context, in Store) (Store, error) {
+	resp, err := e.AutoDeleteStoreEndpoint(ctx, in)
+	if err != nil {
+		return Store{}, err
+	}
+	return *resp.(*Store), nil
+}
+
+// MakeBookstoreV1AutoDeleteStoreEndpoint creates  AutoDeleteStore endpoints for the service
+func MakeBookstoreV1AutoDeleteStoreEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Store)
+		v, err := s.AutoDeleteStore(ctx, *req)
+		return respBookstoreV1AutoDeleteStore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoDeleteStore")(f)
 }
 
 // AutoGetBook implementation on server Endpoint
@@ -527,6 +663,28 @@ func MakeBookstoreV1AutoGetPublisherEndpoint(s ServiceBookstoreV1Server, logger 
 	return trace.ServerEndpoint("BookstoreV1:AutoGetPublisher")(f)
 }
 
+// AutoGetStore implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoGetStore(ctx context.Context, in Store) (Store, error) {
+	resp, err := e.AutoGetStoreEndpoint(ctx, in)
+	if err != nil {
+		return Store{}, err
+	}
+	return *resp.(*Store), nil
+}
+
+// MakeBookstoreV1AutoGetStoreEndpoint creates  AutoGetStore endpoints for the service
+func MakeBookstoreV1AutoGetStoreEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Store)
+		v, err := s.AutoGetStore(ctx, *req)
+		return respBookstoreV1AutoGetStore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoGetStore")(f)
+}
+
 // AutoListBook implementation on server Endpoint
 func (e EndpointsBookstoreV1Server) AutoListBook(ctx context.Context, in api.ListWatchOptions) (BookList, error) {
 	resp, err := e.AutoListBookEndpoint(ctx, in)
@@ -591,6 +749,28 @@ func MakeBookstoreV1AutoListPublisherEndpoint(s ServiceBookstoreV1Server, logger
 		}, nil
 	}
 	return trace.ServerEndpoint("BookstoreV1:AutoListPublisher")(f)
+}
+
+// AutoListStore implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoListStore(ctx context.Context, in api.ListWatchOptions) (StoreList, error) {
+	resp, err := e.AutoListStoreEndpoint(ctx, in)
+	if err != nil {
+		return StoreList{}, err
+	}
+	return *resp.(*StoreList), nil
+}
+
+// MakeBookstoreV1AutoListStoreEndpoint creates  AutoListStore endpoints for the service
+func MakeBookstoreV1AutoListStoreEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListStore(ctx, *req)
+		return respBookstoreV1AutoListStore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoListStore")(f)
 }
 
 // AutoUpdateBook implementation on server Endpoint
@@ -659,6 +839,28 @@ func MakeBookstoreV1AutoUpdatePublisherEndpoint(s ServiceBookstoreV1Server, logg
 	return trace.ServerEndpoint("BookstoreV1:AutoUpdatePublisher")(f)
 }
 
+// AutoUpdateStore implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoUpdateStore(ctx context.Context, in Store) (Store, error) {
+	resp, err := e.AutoUpdateStoreEndpoint(ctx, in)
+	if err != nil {
+		return Store{}, err
+	}
+	return *resp.(*Store), nil
+}
+
+// MakeBookstoreV1AutoUpdateStoreEndpoint creates  AutoUpdateStore endpoints for the service
+func MakeBookstoreV1AutoUpdateStoreEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Store)
+		v, err := s.AutoUpdateStore(ctx, *req)
+		return respBookstoreV1AutoUpdateStore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoUpdateStore")(f)
+}
+
 // AutoWatchOrder is the watch handler for Order on the server side.
 func (e EndpointsBookstoreV1Server) AutoWatchOrder(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchOrderServer) error {
 	return e.watchHandlerOrder(in, stream)
@@ -698,6 +900,19 @@ func MakeAutoWatchPublisherEndpoint(s ServiceBookstoreV1Server, logger log.Logge
 	}
 }
 
+// AutoWatchStore is the watch handler for Store on the server side.
+func (e EndpointsBookstoreV1Server) AutoWatchStore(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchStoreServer) error {
+	return e.watchHandlerStore(in, stream)
+}
+
+// MakeAutoWatchStoreEndpoint creates the Watch endpoint
+func MakeAutoWatchStoreEndpoint(s ServiceBookstoreV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(BookstoreV1_AutoWatchStoreServer)
+		return s.AutoWatchStore(options, wstream)
+	}
+}
+
 // MakeBookstoreV1ServerEndpoints creates server endpoints
 func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1Server, logger log.Logger) EndpointsBookstoreV1Server {
 	return EndpointsBookstoreV1Server{
@@ -705,22 +920,28 @@ func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1Server, logger log.Logge
 		AutoAddBookEndpoint:         MakeBookstoreV1AutoAddBookEndpoint(s, logger),
 		AutoAddOrderEndpoint:        MakeBookstoreV1AutoAddOrderEndpoint(s, logger),
 		AutoAddPublisherEndpoint:    MakeBookstoreV1AutoAddPublisherEndpoint(s, logger),
+		AutoAddStoreEndpoint:        MakeBookstoreV1AutoAddStoreEndpoint(s, logger),
 		AutoDeleteBookEndpoint:      MakeBookstoreV1AutoDeleteBookEndpoint(s, logger),
 		AutoDeleteOrderEndpoint:     MakeBookstoreV1AutoDeleteOrderEndpoint(s, logger),
 		AutoDeletePublisherEndpoint: MakeBookstoreV1AutoDeletePublisherEndpoint(s, logger),
+		AutoDeleteStoreEndpoint:     MakeBookstoreV1AutoDeleteStoreEndpoint(s, logger),
 		AutoGetBookEndpoint:         MakeBookstoreV1AutoGetBookEndpoint(s, logger),
 		AutoGetOrderEndpoint:        MakeBookstoreV1AutoGetOrderEndpoint(s, logger),
 		AutoGetPublisherEndpoint:    MakeBookstoreV1AutoGetPublisherEndpoint(s, logger),
+		AutoGetStoreEndpoint:        MakeBookstoreV1AutoGetStoreEndpoint(s, logger),
 		AutoListBookEndpoint:        MakeBookstoreV1AutoListBookEndpoint(s, logger),
 		AutoListOrderEndpoint:       MakeBookstoreV1AutoListOrderEndpoint(s, logger),
 		AutoListPublisherEndpoint:   MakeBookstoreV1AutoListPublisherEndpoint(s, logger),
+		AutoListStoreEndpoint:       MakeBookstoreV1AutoListStoreEndpoint(s, logger),
 		AutoUpdateBookEndpoint:      MakeBookstoreV1AutoUpdateBookEndpoint(s, logger),
 		AutoUpdateOrderEndpoint:     MakeBookstoreV1AutoUpdateOrderEndpoint(s, logger),
 		AutoUpdatePublisherEndpoint: MakeBookstoreV1AutoUpdatePublisherEndpoint(s, logger),
+		AutoUpdateStoreEndpoint:     MakeBookstoreV1AutoUpdateStoreEndpoint(s, logger),
 
 		watchHandlerOrder:     MakeAutoWatchOrderEndpoint(s, logger),
 		watchHandlerBook:      MakeAutoWatchBookEndpoint(s, logger),
 		watchHandlerPublisher: MakeAutoWatchPublisherEndpoint(s, logger),
+		watchHandlerStore:     MakeAutoWatchStoreEndpoint(s, logger),
 	}
 }
 
@@ -793,6 +1014,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddPublisher(ctx context.Context
 	resp, err = m.next.AutoAddPublisher(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoAddStore(ctx context.Context, in *Store) (resp *Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddStore(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareClient) AutoDeleteBook(ctx context.Context, in *Book) (resp *Book, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -830,6 +1064,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeletePublisher(ctx context.Cont
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeletePublisher", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeletePublisher(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoDeleteStore(ctx context.Context, in *Store) (resp *Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteStore(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareClient) AutoGetBook(ctx context.Context, in *Book) (resp *Book, err error) {
@@ -871,6 +1118,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetPublisher(ctx context.Context
 	resp, err = m.next.AutoGetPublisher(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoGetStore(ctx context.Context, in *Store) (resp *Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetStore(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareClient) AutoListBook(ctx context.Context, in *api.ListWatchOptions) (resp *BookList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -910,6 +1170,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListPublisher(ctx context.Contex
 	resp, err = m.next.AutoListPublisher(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoListStore(ctx context.Context, in *api.ListWatchOptions) (resp *StoreList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListStore(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareClient) AutoUpdateBook(ctx context.Context, in *Book) (resp *Book, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -947,6 +1220,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdatePublisher(ctx context.Cont
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdatePublisher", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdatePublisher(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoUpdateStore(ctx context.Context, in *Store) (resp *Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateStore(ctx, in)
 	return
 }
 
@@ -989,6 +1275,19 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchPublisher(ctx context.Conte
 	resp, err = m.next.AutoWatchPublisher(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareClient) AutoWatchStore(ctx context.Context, in *api.ListWatchOptions) (resp BookstoreV1_AutoWatchStoreClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoWatchStore(ctx, in)
+	return
+}
 
 func (m loggingBookstoreV1MiddlewareServer) AutoAddBook(ctx context.Context, in Book) (resp Book, err error) {
 	defer func(begin time.Time) {
@@ -1027,6 +1326,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoAddPublisher(ctx context.Context
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddPublisher", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddPublisher(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoAddStore(ctx context.Context, in Store) (resp Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddStore(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareServer) AutoDeleteBook(ctx context.Context, in Book) (resp Book, err error) {
@@ -1068,6 +1380,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoDeletePublisher(ctx context.Cont
 	resp, err = m.next.AutoDeletePublisher(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareServer) AutoDeleteStore(ctx context.Context, in Store) (resp Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteStore(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareServer) AutoGetBook(ctx context.Context, in Book) (resp Book, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1105,6 +1430,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoGetPublisher(ctx context.Context
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetPublisher", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetPublisher(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoGetStore(ctx context.Context, in Store) (resp Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetStore(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareServer) AutoListBook(ctx context.Context, in api.ListWatchOptions) (resp BookList, err error) {
@@ -1146,6 +1484,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoListPublisher(ctx context.Contex
 	resp, err = m.next.AutoListPublisher(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareServer) AutoListStore(ctx context.Context, in api.ListWatchOptions) (resp StoreList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListStore(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareServer) AutoUpdateBook(ctx context.Context, in Book) (resp Book, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1183,6 +1534,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoUpdatePublisher(ctx context.Cont
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdatePublisher", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdatePublisher(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoUpdateStore(ctx context.Context, in Store) (resp Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateStore(ctx, in)
 	return
 }
 
@@ -1225,6 +1589,19 @@ func (m loggingBookstoreV1MiddlewareServer) AutoWatchPublisher(in *api.ListWatch
 	err = m.next.AutoWatchPublisher(in, stream)
 	return
 }
+func (m loggingBookstoreV1MiddlewareServer) AutoWatchStore(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchStoreServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "BookstoreV1", "method", "AutoWatchStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchStore(in, stream)
+	return
+}
 func (r *EndpointsBookstoreV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -1262,6 +1639,11 @@ func makeURIBookstoreV1AutoGetOrderGetOper(in *Order) string {
 }
 
 //
+func makeURIBookstoreV1AutoGetStoreGetOper(in *Store) string {
+	return fmt.Sprint("/v1/bookstore", "/store")
+}
+
+//
 func makeURIBookstoreV1AutoListOrderListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/v1/bookstore", "/orders")
 }
@@ -1274,6 +1656,11 @@ func makeURIBookstoreV1AutoUpdateBookUpdateOper(in *Book) string {
 //
 func makeURIBookstoreV1AutoUpdateOrderUpdateOper(in *Order) string {
 	return fmt.Sprint("/v1/bookstore", "/orders/", in.Name)
+}
+
+//
+func makeURIBookstoreV1AutoUpdateStoreUpdateOper(in *Store) string {
+	return fmt.Sprint("/v1/bookstore", "/store")
 }
 
 // AutoAddOrder CRUD method for Order
@@ -1454,6 +1841,62 @@ func (r *EndpointsBookstoreV1RestClient) AutoListPublisher(ctx context.Context, 
 
 // AutoWatchPublisher CRUD method for Publisher
 func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context, in *Publisher) (*Publisher, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoAddStore CRUD method for Store
+func (r *EndpointsBookstoreV1RestClient) AutoAddStore(ctx context.Context, in *Store) (*Store, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateStore CRUD method for Store
+func (r *EndpointsBookstoreV1RestClient) AutoUpdateStore(ctx context.Context, in *Store) (*Store, error) {
+	path := makeURIBookstoreV1AutoUpdateStoreUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoUpdateStore(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Store), err
+}
+
+// AutoGetStore CRUD method for Store
+func (r *EndpointsBookstoreV1RestClient) AutoGetStore(ctx context.Context, in *Store) (*Store, error) {
+	path := makeURIBookstoreV1AutoGetStoreGetOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoGetStore(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Store), err
+}
+
+// AutoDeleteStore CRUD method for Store
+func (r *EndpointsBookstoreV1RestClient) AutoDeleteStore(ctx context.Context, in *Store) (*Store, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoListStore CRUD method for Store
+func (r *EndpointsBookstoreV1RestClient) AutoListStore(ctx context.Context, options *api.ListWatchOptions) (*StoreList, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoWatchStore CRUD method for Store
+func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, in *Store) (*Store, error) {
 	return nil, errors.New("not allowed")
 }
 

@@ -28,18 +28,23 @@ type grpcServerBookstoreV1 struct {
 	AutoAddBookHdlr         grpctransport.Handler
 	AutoAddOrderHdlr        grpctransport.Handler
 	AutoAddPublisherHdlr    grpctransport.Handler
+	AutoAddStoreHdlr        grpctransport.Handler
 	AutoDeleteBookHdlr      grpctransport.Handler
 	AutoDeleteOrderHdlr     grpctransport.Handler
 	AutoDeletePublisherHdlr grpctransport.Handler
+	AutoDeleteStoreHdlr     grpctransport.Handler
 	AutoGetBookHdlr         grpctransport.Handler
 	AutoGetOrderHdlr        grpctransport.Handler
 	AutoGetPublisherHdlr    grpctransport.Handler
+	AutoGetStoreHdlr        grpctransport.Handler
 	AutoListBookHdlr        grpctransport.Handler
 	AutoListOrderHdlr       grpctransport.Handler
 	AutoListPublisherHdlr   grpctransport.Handler
+	AutoListStoreHdlr       grpctransport.Handler
 	AutoUpdateBookHdlr      grpctransport.Handler
 	AutoUpdateOrderHdlr     grpctransport.Handler
 	AutoUpdatePublisherHdlr grpctransport.Handler
+	AutoUpdateStoreHdlr     grpctransport.Handler
 }
 
 // MakeGRPCServerBookstoreV1 creates a GRPC server for BookstoreV1 service
@@ -71,6 +76,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddPublisher", logger)))...,
 		),
 
+		AutoAddStoreHdlr: grpctransport.NewServer(
+			endpoints.AutoAddStoreEndpoint,
+			DecodeGrpcReqStore,
+			EncodeGrpcRespStore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStore", logger)))...,
+		),
+
 		AutoDeleteBookHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteBookEndpoint,
 			DecodeGrpcReqBook,
@@ -90,6 +102,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeletePublisher", logger)))...,
+		),
+
+		AutoDeleteStoreHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteStoreEndpoint,
+			DecodeGrpcReqStore,
+			EncodeGrpcRespStore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStore", logger)))...,
 		),
 
 		AutoGetBookHdlr: grpctransport.NewServer(
@@ -113,6 +132,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetPublisher", logger)))...,
 		),
 
+		AutoGetStoreHdlr: grpctransport.NewServer(
+			endpoints.AutoGetStoreEndpoint,
+			DecodeGrpcReqStore,
+			EncodeGrpcRespStore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStore", logger)))...,
+		),
+
 		AutoListBookHdlr: grpctransport.NewServer(
 			endpoints.AutoListBookEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -134,6 +160,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListPublisher", logger)))...,
 		),
 
+		AutoListStoreHdlr: grpctransport.NewServer(
+			endpoints.AutoListStoreEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespStoreList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStore", logger)))...,
+		),
+
 		AutoUpdateBookHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateBookEndpoint,
 			DecodeGrpcReqBook,
@@ -153,6 +186,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdatePublisher", logger)))...,
+		),
+
+		AutoUpdateStoreHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateStoreEndpoint,
+			DecodeGrpcReqStore,
+			EncodeGrpcRespStore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStore", logger)))...,
 		),
 	}
 }
@@ -211,6 +251,24 @@ func decodeHTTPrespBookstoreV1AutoAddPublisher(_ context.Context, r *http.Respon
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) AutoAddStore(ctx oldcontext.Context, req *Store) (*Store, error) {
+	_, resp, err := s.AutoAddStoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoAddStore).V
+	return &r, resp.(respBookstoreV1AutoAddStore).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoAddStore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Store
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerBookstoreV1) AutoDeleteBook(ctx oldcontext.Context, req *Book) (*Book, error) {
 	_, resp, err := s.AutoDeleteBookHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -261,6 +319,24 @@ func decodeHTTPrespBookstoreV1AutoDeletePublisher(_ context.Context, r *http.Res
 		return nil, errorDecoder(r)
 	}
 	var resp Publisher
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoDeleteStore(ctx oldcontext.Context, req *Store) (*Store, error) {
+	_, resp, err := s.AutoDeleteStoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoDeleteStore).V
+	return &r, resp.(respBookstoreV1AutoDeleteStore).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoDeleteStore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Store
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -319,6 +395,24 @@ func decodeHTTPrespBookstoreV1AutoGetPublisher(_ context.Context, r *http.Respon
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) AutoGetStore(ctx oldcontext.Context, req *Store) (*Store, error) {
+	_, resp, err := s.AutoGetStoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoGetStore).V
+	return &r, resp.(respBookstoreV1AutoGetStore).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoGetStore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Store
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerBookstoreV1) AutoListBook(ctx oldcontext.Context, req *api.ListWatchOptions) (*BookList, error) {
 	_, resp, err := s.AutoListBookHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -369,6 +463,24 @@ func decodeHTTPrespBookstoreV1AutoListPublisher(_ context.Context, r *http.Respo
 		return nil, errorDecoder(r)
 	}
 	var resp PublisherList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoListStore(ctx oldcontext.Context, req *api.ListWatchOptions) (*StoreList, error) {
+	_, resp, err := s.AutoListStoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoListStore).V
+	return &r, resp.(respBookstoreV1AutoListStore).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoListStore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp StoreList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -427,6 +539,24 @@ func decodeHTTPrespBookstoreV1AutoUpdatePublisher(_ context.Context, r *http.Res
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) AutoUpdateStore(ctx oldcontext.Context, req *Store) (*Store, error) {
+	_, resp, err := s.AutoUpdateStoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoUpdateStore).V
+	return &r, resp.(respBookstoreV1AutoUpdateStore).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoUpdateStore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Store
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerBookstoreV1) AutoWatchOrder(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchOrderServer) error {
 	return s.Endpoints.AutoWatchOrder(in, stream)
 }
@@ -437,6 +567,10 @@ func (s *grpcServerBookstoreV1) AutoWatchBook(in *api.ListWatchOptions, stream B
 
 func (s *grpcServerBookstoreV1) AutoWatchPublisher(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchPublisherServer) error {
 	return s.Endpoints.AutoWatchPublisher(in, stream)
+}
+
+func (s *grpcServerBookstoreV1) AutoWatchStore(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchStoreServer) error {
+	return s.Endpoints.AutoWatchStore(in, stream)
 }
 
 func encodeHTTPBook(ctx context.Context, req *http.Request, request interface{}) error {
@@ -844,5 +978,141 @@ func EncodeGrpcRespPublisherSpec(ctx context.Context, response interface{}) (int
 
 // DecodeGrpcRespPublisherSpec decodes GRPC response
 func DecodeGrpcRespPublisherSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStore(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStore(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Store
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStore encodes GRPC request
+func EncodeGrpcReqStore(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Store)
+	return req, nil
+}
+
+// DecodeGrpcReqStore decodes GRPC request
+func DecodeGrpcReqStore(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Store)
+	return req, nil
+}
+
+// EncodeGrpcRespStore encodes GRC response
+func EncodeGrpcRespStore(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStore decodes GRPC response
+func DecodeGrpcRespStore(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStoreList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStoreList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StoreList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStoreList encodes GRPC request
+func EncodeGrpcReqStoreList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StoreList)
+	return req, nil
+}
+
+// DecodeGrpcReqStoreList decodes GRPC request
+func DecodeGrpcReqStoreList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StoreList)
+	return req, nil
+}
+
+// EncodeGrpcRespStoreList endodes the GRPC response
+func EncodeGrpcRespStoreList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStoreList decodes the GRPC response
+func DecodeGrpcRespStoreList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStoreSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStoreSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StoreSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStoreSpec encodes GRPC request
+func EncodeGrpcReqStoreSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StoreSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqStoreSpec decodes GRPC request
+func DecodeGrpcReqStoreSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StoreSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespStoreSpec encodes GRC response
+func EncodeGrpcRespStoreSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStoreSpec decodes GRPC response
+func DecodeGrpcRespStoreSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPStoreStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPStoreStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StoreStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqStoreStatus encodes GRPC request
+func EncodeGrpcReqStoreStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StoreStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqStoreStatus decodes GRPC request
+func DecodeGrpcReqStoreStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StoreStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespStoreStatus encodes GRC response
+func EncodeGrpcRespStoreStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespStoreStatus decodes GRPC response
+func DecodeGrpcRespStoreStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

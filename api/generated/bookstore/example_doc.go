@@ -10,6 +10,7 @@ The following Messages are defined.
   AutoMsgBookWatchHelper
   AutoMsgOrderWatchHelper
   AutoMsgPublisherWatchHelper
+  AutoMsgStoreWatchHelper
   Book
   BookList
   BookSpec
@@ -22,6 +23,10 @@ The following Messages are defined.
   Publisher
   PublisherList
   PublisherSpec
+  Store
+  StoreList
+  StoreSpec
+  StoreStatus
 
 The following Services and Methods are defined.
 
@@ -29,21 +34,27 @@ The following Services and Methods are defined.
    AutoAddBook
    AutoAddOrder
    AutoAddPublisher
+   AutoAddStore
    AutoDeleteBook
    AutoDeleteOrder
    AutoDeletePublisher
+   AutoDeleteStore
    AutoGetBook
    AutoGetOrder
    AutoGetPublisher
+   AutoGetStore
    AutoListBook
    AutoListOrder
    AutoListPublisher
+   AutoListStore
    AutoUpdateBook
    AutoUpdateOrder
    AutoUpdatePublisher
+   AutoUpdateStore
    AutoWatchBook
    AutoWatchOrder
    AutoWatchPublisher
+   AutoWatchStore
 
 */
 package bookstore

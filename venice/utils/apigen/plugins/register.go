@@ -145,13 +145,20 @@ type MethodParams struct {
 	Oper string
 }
 
-// KeyComponent is a component of the key path, derived from the objectPrefix (and
-// objectIdentifier) option(s).
+// KeyComponent is a component of the key path, derived from the objectPrefix option.
 type KeyComponent struct {
 	// Type of the compoent - prefix or field
 	Type string
 	// Val holds a string literal or a field name depending on type
 	Val string
+}
+
+func parseObjectPrefix(val interface{}) (interface{}, error) {
+	c, ok := val.(*venice.ObjectPrefix)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
 }
 
 //--- Functions registered in the funcMap for the plugin  ---//
@@ -221,29 +228,57 @@ func getDbKey(m *descriptor.Message) ([]KeyComponent, error) {
 	if err != nil {
 		return output, nil
 	}
-	in := dbpath.(string)
-	if len(in) == 0 {
+	in := dbpath.(*venice.ObjectPrefix)
+	prefx := ""
+	singleton := false
+	if prefx = in.GetCollection(); prefx != "" {
+		prefx = strings.TrimPrefix(prefx, "/")
+	} else if prefx = in.GetSingleton(); prefx != "" {
+		singleton = true
+		prefx = strings.TrimPrefix(prefx, "/")
+	}
+	if len(prefx) == 0 {
 		return output, nil
 	}
-	if !strings.HasSuffix(in, "/") {
-		in = in + "/"
-	}
+	if in.Path != "" {
+		prefx = prefx + "/"
+		path := strings.TrimSuffix(in.Path, "/")
+		path = strings.TrimPrefix(path, "/")
+		prefx = prefx + path
 
-	if output, err = findComponentsHelper(m, in); err == nil {
+	}
+	if !singleton {
+		prefx = prefx + "/"
+	}
+	if output, err = findComponentsHelper(m, prefx); err == nil {
 		// The key generated is /venice/<service prefix>/<object prefix>/<name from object meta>
-		output = append(output, KeyComponent{Type: "field", Val: "Name"})
+		if !singleton {
+			output = append(output, KeyComponent{Type: "field", Val: "Name"})
+		}
 	}
 
 	glog.V(1).Infof("Built DB key [ %v ](%v)", output, err)
 	return output, err
 }
 
-func getURIKey(m *descriptor.Method) ([]KeyComponent, error) {
+// URIKey specifies a URI
+type URIKey struct {
+	// Str is the string for for the URI
+	Str string
+	// Ref is set to true if any references to the object exist in the URI
+	Ref bool
+}
+
+// getURIKey gets the URI key given the method. The req parameter specifies
+//  if this is in the req direction or resp. In the response direction the URI
+//  is always the URI that can be used to access the object.
+func getURIKey(m *descriptor.Method, req bool) (URIKey, error) {
 	var output []KeyComponent
+	var out URIKey
 
 	params, err := getMethodParams(m)
 	if err != nil {
-		return output, err
+		return out, err
 	}
 	msg := m.RequestType
 	if params.Oper == "ListOper" || params.Oper == "WatchOper" {
@@ -251,39 +286,75 @@ func getURIKey(m *descriptor.Method) ([]KeyComponent, error) {
 		if params.Oper == "ListOper" {
 			msgtype, err = getListType(m.ResponseType, true)
 			if err != nil {
-				return output, err
+				return out, err
 			}
 			msgtype = "." + msgtype
 		}
 		if params.Oper == "WatchOper" {
 			msgtype, err = getWatchType(m.ResponseType, true)
 			if err != nil {
-				return output, err
+				return out, err
 			}
 			msgtype = "." + msgtype
 		}
 		msg, err = m.Service.File.Reg.LookupMsg("", msgtype)
 		if err != nil {
-			return output, err
+			return out, err
 		}
 	}
-	r, err := reg.GetExtension("google.api.http", m)
+	svcParams, err := getSvcParams(m.Service)
+	if err != nil {
+		return out, err
+	}
+	if req {
+		r, err := reg.GetExtension("google.api.http", m)
+		rule := r.(*googapi.HttpRule)
+		pattern := ""
+		switch params.Oper {
+		case "CreateOper":
+			pattern = rule.GetPost()
+		case "GetOper", "ListOper":
+			pattern = rule.GetGet()
+		case "DeleteOper":
+			pattern = rule.GetDelete()
+		case "UpdateOper":
+			pattern = rule.GetPut()
+		}
+		if output, err = findComponentsHelper(msg, pattern); err != nil {
+			return out, err
+		}
+	} else {
+		if output, err = getMsgURI(msg, svcParams.Prefix); err != nil {
+			return out, err
+		}
+	}
+
+	out.Str = ""
+	out.Ref = false
+	sep := ""
+	for _, v := range output {
+		if v.Type == "prefix" {
+			out.Str = fmt.Sprintf("%s%s\"%s\"", out.Str, sep, v.Val)
+		} else if v.Type == "field" {
+			out.Ref = true
+			out.Str = fmt.Sprintf("%s%sin.%s", out.Str, sep, v.Val)
+		}
+		sep = ", "
+	}
+	return out, nil
+}
+
+// getMsgURI returns the key for the Message URI
+func getMsgURI(m *descriptor.Message, svcPrefix string) ([]KeyComponent, error) {
+	var output []KeyComponent
+	str, err := mutator.GetMessageURI(m.DescriptorProto)
 	if err != nil {
 		return output, err
 	}
-	rule := r.(*googapi.HttpRule)
-	pattern := ""
-	switch params.Oper {
-	case "CreateOper":
-		pattern = rule.GetPost()
-	case "GetOper", "ListOper":
-		pattern = rule.GetGet()
-	case "DeleteOper":
-		pattern = rule.GetDelete()
-	case "UpdateOper":
-		pattern = rule.GetPut()
-	}
-	if output, err = findComponentsHelper(msg, pattern); err != nil {
+	svcPrefix = strings.TrimSuffix(svcPrefix, "/")
+	svcPrefix = strings.TrimPrefix(svcPrefix, "/")
+	str = svcPrefix + str
+	if output, err = findComponentsHelper(m, str); err != nil {
 		return output, err
 	}
 	return output, nil
@@ -678,7 +749,6 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 						} else {
 						}
 						glog.Infof("setting pointer to [%v] for {%s]", pointer, *msg.Name+"/"+*fld.Name)
-
 						// if it is a embedded field, do not use field name rather use type
 						if fld.Embedded {
 							// fld.GetTypeName() -> e.g. ".events.EventAttributes"
@@ -1027,7 +1097,7 @@ func init() {
 	reg.RegisterOptionParser("venice.methodAutoGen", parseBoolOptions)
 	reg.RegisterOptionParser("venice.objectIdentifier", parseStringOptions)
 	reg.RegisterOptionParser("venice.objectAutoGen", parseStringOptions)
-	reg.RegisterOptionParser("venice.objectPrefix", parseStringOptions)
+	reg.RegisterOptionParser("venice.objectPrefix", parseObjectPrefix)
 	reg.RegisterOptionParser("venice.objRelation", parseObjRelation)
 	reg.RegisterOptionParser("google.api.http", parseGoogleAPIHTTP)
 	reg.RegisterOptionParser("venice.check", parseStringSliceOptions)

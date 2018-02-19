@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/{O.Tenant}": {
+    "/{O.Tenant}/trafficEncryptionPolicy": {
       "post": {
         "operationId": "AutoAddTrafficEncryptionPolicy",
         "responses": {
@@ -47,7 +47,7 @@
         ]
       }
     },
-    "/{O.Tenant}/trafficEncryptionPolicy": {
+    "/{O.Tenant}/trafficEncryptionPolicy/{O.Name}": {
       "get": {
         "operationId": "AutoGetTrafficEncryptionPolicy",
         "responses": {
@@ -66,6 +66,12 @@
             "type": "string"
           },
           {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "T.Kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
@@ -75,13 +81,6 @@
           {
             "name": "T.APIVersion",
             "description": "APIVersion defines the version of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -120,6 +119,13 @@
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "O.SelfLink",
+            "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "Spec.Mode",
@@ -183,6 +189,12 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -202,6 +214,12 @@
         "parameters": [
           {
             "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
             "in": "path",
             "required": true,
             "type": "string"
@@ -287,6 +305,10 @@
         "ModTime": {
           "$ref": "#/definitions/apiTimestamp",
           "title": "ModTime is the Last Modification time of Object"
+        },
+        "SelfLink": {
+          "type": "string",
+          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
