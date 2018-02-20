@@ -125,34 +125,26 @@ static bool lklshim_v6_setsockopt_and_bind(int fd,
 bool
 lklshim_create_v6_listen_sockets (hal::flow_direction_t dir, lklshim_flow_t *flow)
 {
-    lklshim_listen_sockets_t *lsock;
     char *src_mac = NULL, *dst_mac = NULL, *vlan = NULL;
     int fd;
     char if_to_bind[IF_NAME];
 
-    lsock = (lklshim_listen_sockets_t *) lklshim_lsockdb_slab->alloc();
-    HAL_ASSERT_RETURN((lsock != NULL), false);
-    lsock->ht_ctxt.reset();
-    lsock->tcp_portnum = flow->key.dst_port;
-    fd = lsock->ipv6_sockfd = lkl_sys_socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0); 
+    fd = lkl_sys_socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0); 
 
     memset(if_to_bind, 0, sizeof(char)*IF_NAME);
     strncpy(if_to_bind, flow->hostns.dev, sizeof(char)*IF_NAME);
 
     if (dir == hal::FLOW_DIR_FROM_ENIC) {
-        lklshim_host_lsock_db->insert(lsock, &lsock->ht_ctxt);
         src_mac = (char*)flow->hostns.src_mac;
         dst_mac = (char*)flow->hostns.dst_mac;
         vlan = (char*)flow->hostns.vlan;
     } else {
-        lklshim_net_lsock_db->insert(lsock, &lsock->ht_ctxt);
         src_mac = (char*)flow->netns.src_mac;
         dst_mac = (char*)flow->netns.dst_mac;
         vlan = (char*)flow->hostns.vlan;
     }
 
-    HAL_TRACE_DEBUG("tcp_portnum={} flow dp={} flow sp={}",
-                    lsock->tcp_portnum,
+    HAL_TRACE_DEBUG("flow dp={} flow sp={}",
                     flow->key.dst_port,
                     flow->key.src_port);
     if (!lklshim_v6_setsockopt_and_bind(fd,
@@ -162,7 +154,7 @@ lklshim_create_v6_listen_sockets (hal::flow_direction_t dir, lklshim_flow_t *flo
                                      flow,
                                      NULL,
                                      if_to_bind,
-                                     lsock->tcp_portnum)) {
+                                     flow->key.dst_port)) {
         return false;
     }
 
@@ -401,7 +393,7 @@ lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb,
     HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump6((uint8_t*)tcp, sizeof(tcp_header_t)));
 
     lklshim_make_flow_v6key(&flow_key, ip6->saddr, ip6->daddr, ntohs(tcp->sport), ntohs(tcp->dport));
-    flow = lklshim_flow_entry_get_or_create(&flow_key);
+    flow = lklshim_flow_entry_alloc(&flow_key);
     if (!flow) return false;
     /*
      * Cache the pointer to the packet as we'll process it later.

@@ -17,7 +17,6 @@
 extern "C" {
 #include <netinet/in.h>
 }
-using sdk::lib::ht_ctxt_t;
 using sdk::lib::slab;
 
 namespace hal {
@@ -59,14 +58,7 @@ typedef struct lklshim_flow_t_ {
     lklshim_flow_key_t      key;
     lklshim_flow_ns_t       hostns;
     lklshim_flow_ns_t       netns;
-    /*
-     * TLS related parameters for the N-flow.
-     */
-//    SSL_CTX             *ssl_ctx;
-//    SSL                 *ssl;
-//    SSL_METHOD          *ssl_meth;
 
-    ht_ctxt_t               ht_ctxt;
     hal::flow_direction_t   itor_dir;
     uint16_t                src_lif;
     uint16_t                dst_lif;
@@ -76,10 +68,9 @@ typedef struct lklshim_flow_t_ {
 } lklshim_flow_t;
 
 typedef struct lklshim_listen_sockets_t_ {
-    int       tcp_portnum; // Key
+    int       tcp_portnum;
     int       ipv4_sockfd;
     int       ipv6_sockfd;
-    ht_ctxt_t ht_ctxt;
 } PACKED lklshim_listen_sockets_t;
 
 #define MAX_PROXY_FLOWS 32768
@@ -87,12 +78,7 @@ typedef struct lklshim_listen_sockets_t_ {
 /*
  * Extern definitions.
  */
-extern ht                       *lklshim_host_lsock_db;
-extern ht                       *lklshim_net_lsock_db;
-extern slab                     *lklshim_lsockdb_slab;
 extern slab *lklshim_flowdb_slab;
-extern slab *lklshim_lsockdb_slab;
-extern ht *lklshim_flow_db;
 extern lklshim_flow_t           *lklshim_flow_by_qid[MAX_PROXY_FLOWS];
 
 static inline void
@@ -120,17 +106,6 @@ lklshim_make_flow_v6key (lklshim_flow_key_t *key,
     key->type = hal::FLOW_TYPE_V6;
 }
 
-static inline lklshim_flow_t *
-lklshim_flow_entry_lookup (lklshim_flow_key_t *key)
-{
-    lklshim_flow_t *lklshim_flow;
-
-    HAL_ASSERT(key != NULL);
-    lklshim_flow =
-        (lklshim_flow_t *)lklshim_flow_db->lookup(key);
-    return(lklshim_flow);
-}
-
 bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
 bool lklshim_process_v6_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
@@ -144,7 +119,7 @@ void lklshim_update_tcpcb(void *tcpcb, uint32_t qid, uint32_t src_lif);
 hal::flow_direction_t lklshim_get_flow_hit_pkt_direction(uint16_t qid);
 
 lklshim_flow_t *
-lklshim_flow_entry_get_or_create (lklshim_flow_key_t *flow_key);
+lklshim_flow_entry_alloc (lklshim_flow_key_t *flow_key);
 } //namespace hal
 
 #endif // _LKLSHIM_HPP_
