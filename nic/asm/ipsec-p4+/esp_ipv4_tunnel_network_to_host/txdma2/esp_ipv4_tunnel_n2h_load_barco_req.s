@@ -28,10 +28,8 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     phvwri p.common_te2_phv_table_lock_en, 1
     phvwri p.common_te2_phv_table_raw_table_size, 6 
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int[33:6] 
-    add r3, r0, d.{input_list_address}.dx
-    subi r3, r3, 64
+    sub r3, d.{input_list_address}.dx, 64
     phvwr  p.common_te2_phv_table_addr, r3 
-
     phvwr p.txdma2_global_in_desc_addr, r3 
     nop.e
     nop
