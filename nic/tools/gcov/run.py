@@ -396,7 +396,7 @@ def gen_bulls_eye_coverage():
     gen_model_bulls_eye_coverage()
     gen_hal_bulls_eye_coverage()
  
-def run(cmd, timeout=None):
+def run_cmd(cmd, timeout=None):
     try:
         ret = subprocess.call(cmd, shell=True, timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -414,9 +414,9 @@ def build_modules(data):
         module_data = data["modules"][module_name]
         print ("Building module: ", module_name)
         if "clean_cmd" in module_data:
-            run(module_data["clean_cmd"])
+            run_cmd(module_data["clean_cmd"])
         if "build_cmd" in module_data:
-            run(module_data["build_cmd"])
+            run_cmd(module_data["build_cmd"])
 
         #This is hack for now, move  *.gcno files to same level.
         if module_data["obj_dir_type"] == "bazel":
@@ -429,8 +429,8 @@ def build_modules(data):
  
 def run_and_generate_coverage(data):
 
-    def generate_run_coverage(run_name, sub_run_name=None):
-        for module_name in data["run"][run_name]["modules"]:
+    def generate_run_coverage(run_name, run, sub_run_name=None):
+        for module_name in run[run_name]["modules"]:
             module = data["modules"][module_name]
             dir_name = "_".join([run_name, sub_run_name]) if sub_run_name else run_name
             cov_output_dir = env.coverage_output_path + dir_name + "/" + module_name
@@ -449,19 +449,20 @@ def run_and_generate_coverage(data):
 
     
     module_infos = defaultdict(lambda: [])
-    for run_name in data["run"]:
-        if "cmd" in data["run"][run_name]:
-            run(data["run"][run_name]["cmd"], _get_max_job_run_time())
-            generate_run_coverage(run_name)
-        elif "cmd_cfg" in data["run"][run_name]:
-            with open(data["run"][run_name]["cmd_cfg"]) as cmd_cfg_file:
-                cmd_cfg_data = json.load(cmd_cfg_file)
-                for sub_run in cmd_cfg_data:
-                    run(cmd_cfg_data[sub_run], _get_max_job_run_time())
-                    generate_run_coverage(run_name, sub_run)
-        else:
-            #Run not specified, may be all the meta files already generated.
-            generate_run_coverage(run_name)
+    for run in data["run"]:
+        for run_name in run:
+            if "cmd" in run[run_name]:
+                run_cmd(run[run_name]["cmd"], _get_max_job_run_time())
+                generate_run_coverage(run_name, run)
+            elif "cmd_cfg" in run[run_name]:
+                with open(run[run_name]["cmd_cfg"]) as cmd_cfg_file:
+                    cmd_cfg_data = json.load(cmd_cfg_file)
+                    for sub_run in cmd_cfg_data:
+                        run_cmd(cmd_cfg_data[sub_run], _get_max_job_run_time())
+                        generate_run_coverage(run_name, run, sub_run)
+            else:
+                #Run not specified, may be all the meta files already generated.
+                generate_run_coverage(run_name, run)
 
     # Finally generate lcov combined output as well.
     for module_name in module_infos:

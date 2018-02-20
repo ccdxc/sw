@@ -91,7 +91,7 @@
             "cov_type" : "lcov"
         }
     },
-    "run": {
+    "run": [{
         "gtests": {
             "cmd": "make run-gtests c=1",
             "modules": [
@@ -103,6 +103,21 @@
             "modules": [
                 "hal", "model", "asm"
             ]
+        },
+        "mbt": {
+            "cmd": "./run.py --mbt",
+            "modules": [
+                "hal"
+            ]
+        }
+    },
+    {
+        "gft": {
+            "cmd": "/home/asic/tools/eda/bullseye/bin/cov01 -1 && make c=1 gft &&  /home/asic/tools/eda/bullseye/bin/cov01 -0  && ./run.py --gft_gtest --coverage",
+            "modules": [
+                "model", "asm"
+            ]
         }
     }
+    ]
 }

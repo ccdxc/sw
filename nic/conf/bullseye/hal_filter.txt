@@ -7,9 +7,9 @@ exclude folder __main__/nic/third-party/
 exclude folder __main__/nic/hal/third-party/
 exclude folder __main__/hal/znic/third-party/
 exclude folder __main__/nic/hal/test/
+exclude folder __main__/nic/e2etests/
 exclude folder __main__/nic/fte/test/
 exclude folder __main__/nic/hal/pd/iris/test/
 exclude folder __main__/nic/model_sim/
-exclude folder ../sdk/execroot/__main__/external/
-exclude folder ../sdk/execroot/__main__/test/
-exclude folder ../sdk/external/
+exclude folder __main__/external/gtest/
+exclude folder __main__/external/com_github_gflags_gflags/
