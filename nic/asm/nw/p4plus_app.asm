@@ -42,17 +42,17 @@ p4plus_app_classic_nic_no_vlan_strip:
   // checksum flags
   seq         c1, k.control_metadata_checksum_results, r0
   phvwr.c1    p.p4_to_p4plus_classic_nic_csum_ok, TRUE
-
-  phvwr       p.p4_to_p4plus_classic_nic_packet_len, r7
+  phvwrpair   p.p4_to_p4plus_classic_nic_valid, TRUE, \
+              p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, r7
-  phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
-  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
-  phvwr       p.p4_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_p4plus_app_id
-  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+  phvwrpair   p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
-              P4PLUS_CLASSIC_NIC_HDR_SZ)
-  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
-  phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
+              P4PLUS_CLASSIC_NIC_HDR_SZ), \
+              p.p4_to_p4plus_classic_nic_p4plus_app_id, \
+              k.control_metadata_p4plus_app_id[3:0]
+  phvwrpair.e p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
+              p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
+  phvwr.f     p.p4_to_p4plus_classic_nic_packet_len, r7
 
 .align
 p4plus_app_tcp_proxy:

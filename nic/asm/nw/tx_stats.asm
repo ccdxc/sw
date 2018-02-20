@@ -23,27 +23,24 @@ tx_stats:
   .brcase 0
   add         r7, d.tx_stats_d.tx_ucast_pkts, 1
   bgti        r7, 0xF, tx_ucast_overflow
-  tblwr       d.tx_stats_d.tx_ucast_pkts, r7[3:0]
-  tbladd.e    d.tx_stats_d.tx_ucast_bytes, \
+  tblwr.e     d.tx_stats_d.tx_ucast_pkts, r7[3:0]
+  tbladd.f    d.tx_stats_d.tx_ucast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  nop
   .brcase 1
   add         r7, d.tx_stats_d.tx_mcast_pkts, 1
   bgti        r7, 0xF, tx_mcast_overflow
-  tblwr       d.tx_stats_d.tx_mcast_pkts, r7[3:0]
-  tbladd.e    d.tx_stats_d.tx_mcast_bytes, \
+  tblwr.e     d.tx_stats_d.tx_mcast_pkts, r7[3:0]
+  tbladd.f    d.tx_stats_d.tx_mcast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  nop
   .brcase 2
   add         r7, d.tx_stats_d.tx_bcast_pkts, 1
   bgti        r7, 0xF, tx_bcast_overflow
-  tblwr       d.tx_stats_d.tx_bcast_pkts, r7[3:0]
-  tbladd.e    d.tx_stats_d.tx_bcast_bytes, \
+  tblwr.e     d.tx_stats_d.tx_bcast_pkts, r7[3:0]
+  tbladd.f    d.tx_stats_d.tx_bcast_bytes, \
                 k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                    capri_p4_intrinsic_packet_len_sbit6_ebit13}
-  nop
   .brcase 3
   nop.e
   nop
@@ -52,9 +49,8 @@ tx_stats:
 tx_egress_drops:
   add         r6, d.tx_stats_d.tx_egress_drops, 1
   bgti        r6, 0xF, tx_egress_drops_overflow
-  add         r4, r0, k.control_metadata_src_lif, 6
-  tblwr.e     d.tx_stats_d.tx_egress_drops, r6
-  nop
+  add.e       r4, r0, k.control_metadata_src_lif, 6
+  tblwr.f     d.tx_stats_d.tx_egress_drops, r6
 
 tx_ucast_overflow:
   add         r7, d.tx_stats_d.tx_ucast_bytes, \
@@ -69,7 +65,7 @@ tx_ucast_overflow:
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7
-  tblwr       d.tx_stats_d.tx_ucast_bytes, r0
+  tblwr.f     d.tx_stats_d.tx_ucast_bytes, r0
 
 tx_mcast_overflow:
   add         r7, d.tx_stats_d.tx_mcast_bytes, \
@@ -85,7 +81,7 @@ tx_mcast_overflow:
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7
-  tblwr       d.tx_stats_d.tx_mcast_bytes, r0
+  tblwr.f     d.tx_stats_d.tx_mcast_bytes, r0
 
 tx_bcast_overflow:
   add         r7, d.tx_stats_d.tx_bcast_bytes, \
@@ -101,7 +97,7 @@ tx_bcast_overflow:
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7
-  tblwr       d.tx_stats_d.tx_mcast_bytes, r0
+  tblwr.f     d.tx_stats_d.tx_mcast_bytes, r0
 
 tx_egress_drops_overflow:
   or          r7, r7, r5[31:27], 58
@@ -112,7 +108,7 @@ tx_egress_drops_overflow:
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7
-  tblwr       d.tx_stats_d.tx_egress_drops, r0
+  tblwr.f     d.tx_stats_d.tx_egress_drops, r0
 
 /*
  * stats allocation in the atomic add region:

@@ -43,7 +43,7 @@ p4plus_app_classic_nic_native_ipv4_tcp:
   bcf         [!c1], p4plus_app_classic_nic_native_ipv4_udp
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP
   nop
 
 p4plus_app_classic_nic_native_ipv4_udp:
@@ -51,7 +51,7 @@ p4plus_app_classic_nic_native_ipv4_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv4
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP
   nop
 
 p4plus_app_classic_nic_native_ipv6_tcp:
@@ -59,7 +59,7 @@ p4plus_app_classic_nic_native_ipv6_tcp:
   bcf         [!c1], p4plus_app_classic_nic_native_ipv6_udp
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP
   nop
 
 p4plus_app_classic_nic_native_ipv6_udp:
@@ -67,7 +67,7 @@ p4plus_app_classic_nic_native_ipv6_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv6
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP
   nop
 
 p4plus_app_classic_nic_tunneled:
@@ -82,7 +82,7 @@ p4plus_app_classic_nic_tunneled_ipv4_tcp:
   bcf         [!c1], p4plus_app_classic_nic_tunneled_ipv4_udp
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP
   nop
 
 p4plus_app_classic_nic_tunneled_ipv4_udp:
@@ -90,7 +90,7 @@ p4plus_app_classic_nic_tunneled_ipv4_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv4
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP
   nop
 
 p4plus_app_classic_nic_tunneled_ipv6_tcp:
@@ -98,7 +98,7 @@ p4plus_app_classic_nic_tunneled_ipv6_tcp:
   bcf         [!c1], p4plus_app_classic_nic_tunneled_ipv6_udp
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP
   nop
 
 p4plus_app_classic_nic_tunneled_ipv6_udp:
@@ -106,15 +106,15 @@ p4plus_app_classic_nic_tunneled_ipv6_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv6
   phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP
   nop
 
 p4plus_app_classic_nic_ipv4:
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4
   nop
 
 p4plus_app_classic_nic_ipv6:
-  phvwr.e     p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6
+  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6
   nop
 
 /*****************************************************************************/
