@@ -7,6 +7,8 @@
 
 namespace utils {
 
+extern const uint32_t kUtilsPageSize;
+
 void write_bit_fields(void *ptr, unsigned start_bit_offset,
                       unsigned size_in_bits, uint64_t value);
 

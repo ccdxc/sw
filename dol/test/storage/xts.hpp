@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 #include <string>
+#include "dol/test/storage/dp_mem.hpp"
+
+using namespace dp_mem;
 
 #define CAPRI_BARCO_MD_HENS_REG_BASE                    (0x6580000)
 
@@ -108,14 +111,14 @@ typedef struct TestCtx_{
 
 namespace tests {
 
-extern void *read_buf;
-extern  void *write_buf;
-extern  void *read_buf2;
+extern dp_mem_t *read_buf;
+extern  dp_mem_t *write_buf;
+extern  dp_mem_t *read_buf2;
 
-extern  uint64_t read_hbm_buf;
-extern uint64_t write_hbm_buf;
-extern uint64_t read_hbm_buf2;
-extern uint64_t write_hbm_buf2;
+extern  dp_mem_t *read_hbm_buf;
+extern dp_mem_t *write_hbm_buf;
+extern dp_mem_t *read_hbm_buf2;
+extern dp_mem_t *write_hbm_buf2;
 
 class XtsCtx {
 public:
@@ -129,9 +132,9 @@ public:
   int verify_doorbell();
   int queue_req_n_ring_db_from_host();
 
-  void* src_buf = write_buf;
+  void* src_buf = (void*)write_buf->va();
   bool is_src_hbm_buf = false;
-  void* dst_buf = read_buf;
+  void* dst_buf = (void*)read_buf->va();
   bool is_dst_hbm_buf = false;
   void* src_buf_phy = NULL;
   void* dst_buf_phy = NULL;
