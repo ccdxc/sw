@@ -4,8 +4,10 @@
 #include "nic/e2etests/lib/packet.hpp"
 
 enum tap_endpoint_t {
+    TAP_ENDPOINT_NONE,
     TAP_ENDPOINT_HOST,
-    TAP_ENDPOINT_NET
+    TAP_ENDPOINT_NET,
+    TAP_ENDPOINT_MAX
 };
 
 enum dev_type_t {
@@ -27,6 +29,9 @@ typedef struct dev_handle_t {
     tap_endpoint_t       tap_ep;
     int                  sock;
     int                  fd;
+    bool                 needs_vlan_tag; //Add vlan tag for Tunneled packets only.
+    int                  lif_id;
+    uint32_t             port;
     const char           name[50];
     const char           ip[50];
     const char           ip_mask[50];
@@ -52,8 +57,21 @@ dev_handle_t* hntap_create_tunnel_devicev6(tap_endpoint_t type,
         const char *route_dest, const char *route_gw);
 
 dev_handle_t* hntap_create_tap_device(tap_endpoint_t type,
-        const char *dev, const char *dev_ip, const char *dev_ipmask);
+        const char *dev, const char*mac_addr = NULL,
+        const char *dev_ip = NULL, const char *dev_ipmask = NULL);
 
 void hntap_do_select_loop(dev_handle_t *dev_handles[], uint32_t max_handles);
+
+static const char* hntap_type(tap_endpoint_t type) {
+    switch(type) {
+        case TAP_ENDPOINT_HOST:
+            return "Host Interface";
+        case TAP_ENDPOINT_NET:
+            return "Network Interface";
+        default:
+            abort();
+    }
+    return nullptr;
+}
 
 #endif

@@ -54,6 +54,11 @@ def Main():
     timeprofiler.InitTimeProfiler.Stop()
     generator.main(topofile)
 
+    if glopts.GlobalOptions.cfgjson:
+        #Dump the configuration to file.
+        cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson
+        generator.dump_configuration(cfg_file)
+
     if glopts.GlobalOptions.cfgonly:
         logger.info("CONFIG Only Run......Stopping.")
         return 0

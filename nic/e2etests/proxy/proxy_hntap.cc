@@ -27,6 +27,8 @@
 #define HNTAP_NET_TAPIF_IPMASK  "255.255.255.0"
 #define HNTAP_NET_ROUTE_DESTIP  "64.1.0.3"
 #define HNTAP_NET_ROUTE_GWIP    "64.0.0.2"
+#define HNTAP_LIF_ID             15
+#define HNTAP_NET_PORT           0
 
 
 extern uint32_t nw_retries;
@@ -335,6 +337,8 @@ int main(int argv, char *argc[])
   host_tap_hdl->pre_process = host_pkt_pre_process;
   host_tap_hdl->nat_cb = host_process_nat_cb;
   host_tap_hdl->tap_ports[0] = hntap_port;
+  host_tap_hdl->lif_id = HNTAP_LIF_ID;
+  host_tap_hdl->needs_vlan_tag = true;
 
   dev_handles[0] = host_tap_hdl;
   net_tap_hdl = hntap_create_tunnel_device(TAP_ENDPOINT_NET,
@@ -352,6 +356,9 @@ int main(int argv, char *argc[])
   net_tap_hdl->pre_process = net_pkt_pre_process;
   net_tap_hdl->nat_cb = net_process_nat_cb;
   net_tap_hdl->tap_ports[0] = hntap_port;
+  net_tap_hdl->lif_id = 0;
+  net_tap_hdl->port = HNTAP_NET_PORT;
+  net_tap_hdl->needs_vlan_tag = false;
   dev_handles[1] = net_tap_hdl;
 
   TLOG("  Setup done, listening on tap devices..\n");

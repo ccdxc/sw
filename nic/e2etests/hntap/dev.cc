@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <net/if_arp.h>
 #include <sys/time.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -15,6 +16,13 @@
 #include <net/route.h>
 #include "nic/e2etests/lib/helpers.hpp"
 #include "nic/e2etests/hntap/dev.hpp"
+
+static dev_handle_t*
+allocate_dev_handle() {
+  dev_handle_t *handle = (dev_handle_t*)malloc(sizeof(dev_handle_t));
+  bzero(handle, sizeof(dev_handle_t));
+  return handle;
+}
 
 static int
 hntap_route_add (int sockfd, const char *dest_addr, const char *gateway_addr) {
@@ -151,7 +159,7 @@ dev_handle_t* hntap_create_tunnel_device (tap_endpoint_t type,
       goto out;
   }
 
-  handle = (dev_handle_t*)malloc(sizeof(dev_handle_t));
+  handle = allocate_dev_handle();
   handle->sock = sock;
   handle->fd = fd;
   handle->tap_ep = type;
@@ -258,7 +266,8 @@ out:
 }
 
 dev_handle_t* hntap_create_tap_device (tap_endpoint_t type,
-        const char *dev, const char *dev_ip, const char *dev_ipmask)
+        const char *dev, const char *mac_addr,
+        const char *dev_ip, const char *dev_ipmask)
 {
   struct ifreq ifr;
   int      fd, err, sock;
@@ -281,7 +290,7 @@ dev_handle_t* hntap_create_tap_device (tap_endpoint_t type,
     goto out;
   }
 
-  sock = socket(PF_PACKET,SOCK_DGRAM,0);
+  sock = socket(AF_INET,SOCK_DGRAM,0);
   if (sock < 0) {
     close(fd);
     perror("3\n");
@@ -291,7 +300,6 @@ dev_handle_t* hntap_create_tap_device (tap_endpoint_t type,
   memset(&ifr, 0, sizeof(ifr));
   ifr.ifr_flags = IFF_UP | IFF_RUNNING | IFF_PROMISC;
   strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-
   /* Set the device UP */
   if ((err = ioctl(sock, SIOCSIFFLAGS, (void *) &ifr)) < 0 ) {
     close(sock);
@@ -300,36 +308,56 @@ dev_handle_t* hntap_create_tap_device (tap_endpoint_t type,
     goto out;
   }
 
-  memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-  struct sockaddr_in sa;
-  memset(&sa, 0, sizeof(struct sockaddr_in));
-  sa.sin_family = AF_INET;
-  sa.sin_addr.s_addr = inet_addr((const char *)dev_ip);
-  memcpy(&ifr.ifr_addr, &sa, sizeof(struct sockaddr));
-
-  if ((err = ioctl(sock, SIOCSIFADDR, &ifr)) < 0) {
-    perror("IP address config failed");
-    close(sock);
-    close(fd);
-    abort();
-    goto out;
+  if (mac_addr != nullptr) {
+      sscanf(mac_addr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+          &ifr.ifr_hwaddr.sa_data[0],
+          &ifr.ifr_hwaddr.sa_data[1],
+          &ifr.ifr_hwaddr.sa_data[2],
+          &ifr.ifr_hwaddr.sa_data[3],
+          &ifr.ifr_hwaddr.sa_data[4],
+          &ifr.ifr_hwaddr.sa_data[5]
+          );
+      ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+      if ((err = ioctl(sock, SIOCSIFHWADDR, (void *) &ifr)) < 0 ) {
+        close(sock);
+        close(fd);
+        abort();
+        goto out;
+      }
   }
 
-  memset(&sa, 0, sizeof(struct sockaddr_in));
-  sa.sin_family = AF_INET;
-  sa.sin_addr.s_addr = inet_addr((const char *)dev_ipmask);
-  memcpy(&ifr.ifr_addr, &sa, sizeof(struct sockaddr));
+  if (dev_ip != nullptr) {
+      memset(&ifr, 0, sizeof(ifr));
+      strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+      struct sockaddr_in sa;
+      memset(&sa, 0, sizeof(struct sockaddr_in));
+      sa.sin_family = AF_INET;
+      sa.sin_addr.s_addr = inet_addr((const char *)dev_ip);
+      memcpy(&ifr.ifr_addr, &sa, sizeof(struct sockaddr));
 
-  if ((err = ioctl(sock, SIOCSIFNETMASK, &ifr)) < 0) {
-    perror("IP address mask config failed");
-    close(sock);
-    close(fd);
-    abort();
-    goto out;
+      if ((err = ioctl(sock, SIOCSIFADDR, &ifr)) < 0) {
+        perror("IP address config failed");
+        close(sock);
+        close(fd);
+        abort();
+        goto out;
+      }
+
+      memset(&sa, 0, sizeof(struct sockaddr_in));
+      sa.sin_family = AF_INET;
+      sa.sin_addr.s_addr = inet_addr((const char *)dev_ipmask);
+      memcpy(&ifr.ifr_addr, &sa, sizeof(struct sockaddr));
+
+      if ((err = ioctl(sock, SIOCSIFNETMASK, &ifr)) < 0) {
+        perror("IP address mask config failed");
+        close(sock);
+        close(fd);
+        abort();
+        goto out;
+      }
   }
 
-  handle = (dev_handle_t*)malloc(sizeof(dev_handle_t));
+  handle = allocate_dev_handle();
   handle->sock = sock;
   handle->fd = fd;
   handle->tap_ep = type;

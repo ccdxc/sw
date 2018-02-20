@@ -1,7 +1,11 @@
 #! /usr/bin/python3
 import pdb
+import os
+import json
+from collections import defaultdict 
 
 import infra.common.defs            as defs
+import infra.common.utils           as utils
 import infra.common.parser          as parser
 import infra.common.timeprofiler    as timeprofiler
 import config.hal.api               as halapi
@@ -27,6 +31,7 @@ from config.objects.timer               import TimerHelper
 from config.objects.security_policy     import SecurityGroupPolicyHelper
 from infra.common.logging               import cfglogger as cfglogger
 from infra.asic.model                   import ModelConnector
+from config.store                       import Store
 
 def process(topospec):
     QosClassHelper.main(topospec)
@@ -99,3 +104,11 @@ def main(topofile):
     ModelConnector.ConfigDone()
     return
 
+def dump_configuration(conf_file):
+    config_dict = defaultdict(lambda:{})
+    for cfg_object in Store.objects.GetAll():
+        config_dict[cfg_object.__class__.__name__][cfg_object.GID()] = cfg_object.ToJson()
+    with open(conf_file, 'w') as fp:
+        json.dump(config_dict, fp, indent=4)
+    cfglogger.info("Dumped configuration to file %s" % conf_file)
+    

@@ -16,6 +16,8 @@ parser.add_argument('--pkglist', dest='pkglist', default=None,
                     help='Run only the tests in package list')
 parser.add_argument('--config-only', dest='cfgonly',
                     action='store_true', help='Test HAL Config Only')
+parser.add_argument('--cfgjson', dest='cfgjson', default=None,
+                    help='Dump configuration to json file')
 parser.add_argument('--dryrun', dest='dryrun', action='store_true',
                     help='Dry-Run mode. (No communication with HAL & Model)')
 parser.add_argument('--topo', dest='topology', default=None,

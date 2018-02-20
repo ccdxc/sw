@@ -31,8 +31,14 @@
 #include "nic/e2etests/lib/packet.hpp"
 
 #define PKTBUF_LEN        2000
-#define HNTAP_LIF_ID      15
 uint32_t hntap_port;
+
+typedef struct hntap_dev_stats_ {
+    uint32_t num_pkts_recvd;
+    uint32_t num_pkts_sent;
+}hntap_dev_stats_t;
+
+hntap_dev_stats_t dev_stats[TAP_ENDPOINT_MAX];
 
 bool hntap_go_thru_model = true; // Go thru model for host<->nw talk
 bool hntap_drop_rexmit = false;
@@ -69,98 +75,222 @@ get_dest_dev_handle(dev_handle_t *dev)
     return it->second;
 }
 
-void
-hntap_host_tx_to_model (dev_handle_t *dev_handle, char *pktbuf, int size)
+enum model_pkt_read_t {
+    MODEL_PKT_READ_P4      = 0,
+    MODEL_PKT_READ_P4_PLUS = 1
+};
+
+static bool
+model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
+       uint8_t *recv_buf, uint16_t &prev_cindex)
 {
-  uint16_t lif_id = (uint16_t) (HNTAP_LIF_ID & 0xffff);
-  uint32_t port = 0, cos = 0, count;
+    uint16_t rsize = 0;
+    bool pkt_sent = false;
+    uint32_t port = 0, cos = 0;
+    std::vector<uint8_t> opkt;
+    uint16_t offset = 0;
 
-  uint8_t *pkt = (uint8_t *) pktbuf;
-  std::vector<uint8_t> ipkt, opkt;
-  uint8_t *buf;
+    if (read_type == MODEL_PKT_READ_P4_PLUS) {
+#define POLL_RETRIES 4
+        if ((poll_queue(dest_dev->lif_id, RX, 0, POLL_RETRIES, &prev_cindex))) {
+              TLOG("Got some packet\n");
+              // Receive Packet
+              consume_buffer(dest_dev->lif_id, RX, 0, recv_buf, &rsize);
+              if (!rsize) {
+                  TLOG("Did not get packet back from host side of model!\n");
+              } else {
+                  TLOG("Got packet of size %d bytes back from host side of model!\n", rsize);
+                  dump_pkt((char *)recv_buf, rsize);
+              }
+        }
+    } else if (read_type == MODEL_PKT_READ_P4) {
+        uint16_t count = 0;
+        do {
+           get_next_pkt(opkt, port, cos);
+           if (opkt.size() == 0) {usleep(10000); count++;}
+        } while (count < (nw_retries*100) && !opkt.size());
+        if (!opkt.size()) {
+            TLOG("NO packet back from model! size: %d\n", opkt.size());
+        } else {
+            TLOG("Got packet back from model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
+            recv_buf = opkt.data();
+            rsize = opkt.size();
+        }
+    }
 
-  ipkt.resize(size);
-  opkt.resize(size);
-  memcpy(ipkt.data(), pkt, size);
-
-  if (!hntap_go_thru_model) {
-
-      /*
-       * Bypass the model and send packet to Network-tap directly. Test only
-       */
-      memcpy(opkt.data(), pkt, size);
-      TLOG("Host-Tx: Bypassing model, packet size: %d (%d), on port: %d cos %d\n",
-              opkt.size(), size, port, cos);
-      goto send_to_nettap;
-  }
-
-  lib_model_connect();
-
-  // --------------------------------------------------------------------------------------------------------//
-
-  // Create Queues
-  alloc_queue(lif_id, TX, 0, 1024);
-  alloc_queue(lif_id, RX, 0, 1024);
-
-  // --------------------------------------------------------------------------------------------------------//
-
-  // Post tx buffer
-  buf = alloc_buffer(ipkt.size());
-  assert(buf != NULL);
-  memcpy(buf, ipkt.data(), ipkt.size());
-  TLOG("buf %p size %lu\n", buf, ipkt.size());
-  //TODO
-  dump_pkt((char *)buf, ipkt.size());
-
-  // Transmit Packet
-  TLOG("Writing packet to model! size: %d on port: %d\n", ipkt.size(), port);
-  post_buffer(lif_id, TX, 0, buf, ipkt.size());
-
-  // Wait for packet to come out of port
-  count = 0;
-  do {
-     get_next_pkt(opkt, port, cos);
-     if (opkt.size() == 0) {usleep(10000); count++;}
-  } while (count < (nw_retries*100) && !opkt.size());
-  if (!opkt.size()) {
-      TLOG("NO packet back from model! size: %d\n", opkt.size());
-  } else {
-      TLOG("Got packet back from model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
-  }
-
-  lib_model_conn_close();
-
- send_to_nettap:
-
-  if (opkt.size()) {
-    /*
-     * Now that we got the packet from the Model, lets send it out on the Net-Tap interface.
-     */
-    int nwrite;
-    //hntap_net_client_to_server_nat((char *)opkt.data(), opkt.size());
-    dev_handle_t *dest_dev_handle = get_dest_dev_handle(dev_handle);
-    dest_dev_handle->nat_cb((char *)opkt.data(), opkt.size(), PKT_DIRECTION_TO_DEV);
-    if (hntap_go_thru_model) {
-        nwrite = write(dest_dev_handle->fd, opkt.data()+sizeof(struct ether_header_t), opkt.size()-sizeof(struct ether_header_t));
+    if (!rsize) {
+        TLOG("Did not get packet back from the model model!\n");
     } else {
-
+        TLOG("Got packet of size %d bytes back from host side of model!\n", rsize);
+        dump_pkt((char *)recv_buf, rsize);
         /*
-         * When not going thru model, we'll send the original packet as-is to the net-tap.
-	 */
-
-        nwrite = write(dest_dev_handle->fd, opkt.data() + sizeof(struct vlan_header_t), opkt.size() - sizeof(struct vlan_header_t));
+         * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
+         */
+        int nwrite;
+        if (dest_dev->nat_cb) {
+            dest_dev->nat_cb((char*)recv_buf, rsize,  PKT_DIRECTION_TO_DEV);
+        }
+        if (dest_dev->type == HNTAP_TUN) {
+            /*  Tunnelled Packets does not have ethernet header and vlan header.
+             *  If incoming packet has it, then packet going to destination should not have it.
+             * */
+            offset = dest_dev->needs_vlan_tag ?
+                    sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+            nwrite = write(dest_dev->fd, recv_buf + offset, rsize - offset);
+        } else if (dest_dev->type == HNTAP_TAP) {
+            nwrite = write(dest_dev->fd, recv_buf, rsize);
+        }
+        if (nwrite < 0) {
+          perror("Net-Rx 2: Writing data to host-tap");
+          abort();
+        } else {
+          TLOG("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - offset);
+        }
+        pkt_sent = true;
     }
 
-    if (nwrite < 0) {
-        perror("Host-Tx: Writing data to net-tap");
-    } else {
-        TLOG("Wrote packet with %lu bytes (%d) to Network Tap (Tx)\n", opkt.size() - sizeof(struct ether_header_t), nwrite);
-    }
-  }
+    return pkt_sent;
 }
 
 void
-hntap_handle_host_tx (dev_handle_t *dev_handle,
+hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
+{
+  uint16_t src_lif_id = (uint16_t) (dev_handle->lif_id & 0xffff);
+  dev_handle_t *dest_dev_handle = get_dest_dev_handle(dev_handle);
+  uint16_t dest_lif_id = (uint16_t)(dest_dev_handle->lif_id & 0xffff);
+  uint32_t port = 0, cos = 0;
+  uint16_t prev_cindex = 0xFFFF;
+  uint8_t *pkt = (uint8_t *) pktbuf;
+  std::vector<uint8_t> ipkt, opkt;
+  uint8_t *recv_buf = nullptr;
+  uint8_t *send_buf = nullptr;
+  bool pkt_sent = false;
+
+
+  if (!hntap_go_thru_model) {
+      /*
+       * Bypass the model and send packet to Network-tap directly. Test only
+       */
+      TLOG("Host-Tx: Bypassing model, packet size: %d, on port: %d cos %d\n",
+              size, port, cos);
+      int nwrite;
+      uint16_t offset = 0;
+      if (dest_dev_handle->type == HNTAP_TUN) {
+          offset = dest_dev_handle->needs_vlan_tag ? sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+      }
+      nwrite = write(dest_dev_handle->fd, pkt + offset, size - offset);
+      if (nwrite < 0) {
+        perror("Writing data");
+        abort();
+      } else {
+        TLOG("Wrote packet with %lu bytes to %s (Tx)\n", size - offset, hntap_type(dest_dev_handle->tap_ep));
+      }
+      return;
+  }
+
+    lib_model_connect();
+    /* Prepare Receiver before sending packet */
+    if (dest_dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
+      /* If Real lif, on destination, post a buffer */
+      // --------------------------------------------------------------------------------------------------------//
+
+      // Create Queues
+      alloc_queue(dest_lif_id, TX, 0, 1024);
+      alloc_queue(dest_lif_id, RX, 0, 1024);
+
+      // --------------------------------------------------------------------------------------------------------//
+
+      // Post buffer
+      recv_buf = alloc_buffer(9126);
+      assert(recv_buf != NULL);
+      memset(recv_buf, 0, 9126);
+      post_buffer(dest_lif_id, RX, 0, recv_buf, 9126);
+    } else if (dest_dev_handle->tap_ep == TAP_ENDPOINT_NET) {
+      opkt.resize(size);
+    } else {
+      abort();
+    }
+
+  if (dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
+      // --------------------------------------------------------------------------------------------------------//
+      // Create Queues
+      alloc_queue(src_lif_id, TX, 0, 1024);
+      alloc_queue(src_lif_id, RX, 0, 1024);
+      // --------------------------------------------------------------------------------------------------------//
+      // Post tx buffer
+      send_buf = alloc_buffer(size);
+      assert(send_buf != NULL);
+      memcpy(send_buf, pkt, size);
+      TLOG("buf %p size %lu\n", send_buf, size);
+      //TODO
+      dump_pkt((char *)send_buf, size);
+
+      // Transmit Packet
+      TLOG("Writing packet to model! size: %d on port: %d\n", size, port);
+      post_buffer(src_lif_id, TX, 0, send_buf, size);
+  } else if (dev_handle->tap_ep == TAP_ENDPOINT_NET)  {
+      // Send packet to Model
+      ipkt.resize(size);
+      memcpy(ipkt.data(), pkt, size);
+      TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), port);
+      step_network_pkt(ipkt, dev_handle->port);
+  } else {
+      abort();
+  }
+
+  if (dev_handle->tap_ep == TAP_ENDPOINT_NET &&
+          dest_dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
+      /*
+       * Check if packet is received on the Host side
+       * May be HAL/LKL will do proxy initially.
+       */
+      pkt_sent = model_read_and_send(MODEL_PKT_READ_P4_PLUS,
+              dest_dev_handle, recv_buf, prev_cindex);
+
+      if (!pkt_sent) {
+          /*
+           * Packet not sent to host, check HAL/LKL Proxy responding.
+           * Note, device should be the original device now.
+           */
+          pkt_sent = model_read_and_send(MODEL_PKT_READ_P4,
+                  dev_handle, recv_buf, prev_cindex);
+      } else {
+          goto done;
+      }
+  }
+
+  if (dest_dev_handle->tap_ep == TAP_ENDPOINT_NET) {
+      pkt_sent = model_read_and_send(MODEL_PKT_READ_P4,
+              dest_dev_handle, recv_buf, prev_cindex);
+
+      if (pkt_sent) {
+          goto done;
+      }
+
+  } else if (dest_dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
+
+      pkt_sent = model_read_and_send(MODEL_PKT_READ_P4_PLUS,
+              dest_dev_handle, recv_buf, prev_cindex);
+
+      if (pkt_sent) {
+          goto done;
+      }
+  } else {
+      abort();
+  }
+
+done:
+    if (recv_buf) {
+        free_buffer(recv_buf);
+    }
+    if (send_buf) {
+        free_buffer(send_buf);
+    }
+    lib_model_conn_close();
+}
+
+void
+hntap_pkt_process (dev_handle_t *dev_handle,
         char *pktbuf, int nread)
 {
   struct ether_header_t *eth_header;
@@ -171,181 +301,21 @@ hntap_handle_host_tx (dev_handle_t *dev_handle,
   dump_pkt(pktbuf, nread);
   eth_header = (struct ether_header_t *) pktbuf;
 
-  if (hntap_get_etype(eth_header) == ETHERTYPE_IP) {
+  if (hntap_get_etype(eth_header) == ETHERTYPE_IP ||
+          (hntap_get_etype(eth_header) == ETHERTYPE_ARP)) {
     TLOG("Ether-type IP, sending to Model\n");
     //hntap_host_client_to_server_nat(pktbuf, nread);
-    dev_handle->nat_cb(pktbuf, nread, PKT_DIRECTION_FROM_DEV);
-    hntap_host_tx_to_model(dev_handle, pktbuf, nread);
+    if (dev_handle->nat_cb) {
+        dev_handle->nat_cb(pktbuf, nread, PKT_DIRECTION_FROM_DEV);
+    }
+    hntap_model_process(dev_handle, pktbuf, nread);
   } else {
     TLOG("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
   }
 
 }
 
-void
-hntap_net_rx_to_model (dev_handle_t *dev_handle, char *pktbuf, int size)
-{
-  uint16_t lif_id = (uint16_t)(HNTAP_LIF_ID & 0xffff);
-  uint32_t port = 0;
-  uint16_t rsize = 0;
-  uint16_t prev_cindex = 0xFFFF;
-
-  uint8_t *pkt = (uint8_t *) pktbuf;
-  std::vector<uint8_t> ipkt,opkt;
-  uint8_t *buf;
-  bool got_nw_pkt = false;
-
-
-  ipkt.resize(size);
-  opkt.resize(size);
-
-  memcpy(ipkt.data(), pkt, size);
-
-  if (!hntap_go_thru_model) {
-
-      /*
-       * Bypass the model and send packet to Host-tap directly. Test only.
-       */
-      buf = (uint8_t *) pktbuf;
-      rsize = size;
-      TLOG("Net-Rx: Bypassing model, packet size %d!\n", rsize);
-      goto send_to_hosttap;
-
-  }
-
-  lib_model_connect();
-
-  // --------------------------------------------------------------------------------------------------------//
-
-  // Create Queues
-  alloc_queue(lif_id, TX, 0, 1024);
-  alloc_queue(lif_id, RX, 0, 1024);
-
-  // --------------------------------------------------------------------------------------------------------//
-
-  // Post buffer
-  buf = alloc_buffer(9126);
-  assert(buf != NULL);
-  memset(buf, 0, 9126);
-  post_buffer(lif_id, RX, 0, buf, 9126);
-
-  // Send packet to Model
-  TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), port);
-  step_network_pkt(ipkt, port);
-
-#define POLL_RETRIES 4
-
-  if (poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
-    TLOG("Got some packet\n");
-    // Receive Packet
-    consume_buffer(lif_id, RX, 0, buf, &rsize);
-    if (!rsize) {
-        TLOG("Did not get packet back from host side of model!\n");
-    } else {
-        TLOG("Got packet of size %d bytes back from host side of model!\n", rsize);
-    }
-  } else {
-    uint32_t port = 0, cos = 0;
-    uint32_t count = 0;
-    do {
-       get_next_pkt(opkt, port, cos);
-       if (opkt.size() == 0) {usleep(10000); count++;}
-    } while (count < (nw_retries*100) && !opkt.size());
-    if (!opkt.size()) {
-        TLOG("NO packet back from nw side of model! size: %d\n", opkt.size());
-    } else {
-        TLOG("Got packet back from nw side of model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
-	got_nw_pkt = true;
-    }
-    
-  }
-
-  if (got_nw_pkt) {
-
-    /*
-     * Now that we got the packet from the Model, lets send it out on the Net-Tap interface.
-     */
-    int nwrite;
-
-    //hntap_net_client_to_server_nat((char *)opkt.data(), opkt.size());
-    dev_handle->nat_cb((char *)opkt.data(), opkt.size(), PKT_DIRECTION_TO_DEV);
-
-    if ((nwrite = write(dev_handle->fd, opkt.data()+sizeof(struct ether_header_t), opkt.size()-sizeof(struct ether_header_t))) < 0){
-      perror("Net-Rx: Writing data to net-tap");
-    } else {
-      TLOG("Wrote packet with %lu bytes to Network Tap (Rx)\n", opkt.size() - sizeof(struct ether_header_t));
-    }
-  }
-
-  if (!rsize && poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
-      TLOG("Got some packet\n");
-    // Receive Packet                                                                                                                                            
-    consume_buffer(lif_id, RX, 0, buf, &rsize);
-    if (!rsize) {
-        TLOG("Did not get packet back from host side of model!\n");
-    } else {
-        TLOG("Got packet of size %d bytes back from host side of model!\n", rsize);
-    }
-  }
-
-
- send_to_hosttap:
-
-  if (rsize) {
-    dump_pkt((char *)buf, rsize);
-    /*
-     * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
-     */
-    int nwrite;
-
-    //hntap_host_server_to_client_nat((char*)buf,rsize);
-    dev_handle_t *dest_dev = get_dest_dev_handle(dev_handle);
-    dest_dev->nat_cb((char*)buf, rsize,  PKT_DIRECTION_TO_DEV);
-    if (hntap_go_thru_model) {
-
-        nwrite = write(dest_dev->fd, buf + sizeof(struct vlan_header_t),
-		       rsize - sizeof(struct vlan_header_t));
-    } else {
-
-        /*
-         * When not going thru model, we'll send the original packet as-is to the host-tap.
-         */
-        nwrite = write(dest_dev->fd, buf + sizeof(struct ether_header_t), rsize - sizeof(struct ether_header_t));
-    }
-
-    if (nwrite < 0) {
-      perror("Net-Rx: Writing data to host-tap");
-    } else {
-      TLOG("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - sizeof(struct vlan_header_t));
-    }
-  }
-
-  lib_model_conn_close();
-}
-
-void
-hntap_handle_net_rx (dev_handle_t *dev_handle, char *pktbuf, int nread)
-{
-  struct ether_header_t *eth_header;
-
-  TLOG("Net-Rx to Model: packet sent with %d bytes\n", nread);
-  if (nread < (int) sizeof(struct ether_header)) return;
-
-  dump_pkt(pktbuf, nread);
-  eth_header = (struct ether_header_t *) pktbuf;
-  if ((ntohs(eth_header->etype) == ETHERTYPE_IP) ||
-      (ntohs(eth_header->etype) == ETHERTYPE_VLAN)) {
-      TLOG("Ether-type IP, sending to Model\n");
-      //hntap_net_server_to_client_nat(pktbuf, nread);
-      dev_handle->nat_cb(pktbuf, nread, PKT_DIRECTION_FROM_DEV);
-      hntap_net_rx_to_model(dev_handle, pktbuf, nread);
-  } else {
-    TLOG("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
-  }
-
-}
-
-int
+static int
 hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int len)
 {
   struct ether_header_t *eth;
@@ -409,7 +379,6 @@ hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
   uint16_t  nread;
   char	    pktbuf[PKTBUF_LEN];
   char      *p = pktbuf;
-  unsigned  long int num_hosttap_pkts = 0, num_nettap_pkts = 0;
   int	    ret;
 
   while (1) {
@@ -440,96 +409,38 @@ hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
         for (uint32_t i = 0 ; i < max_handles; i++) {
             if (FD_ISSET(dev_handles[i]->fd, &rd_set)) {
                 dev_handle_t *dev_handle = dev_handles[i];
-                TLOG("Got stuff on type : %d\n", dev_handle->tap_ep);
-                if (dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
-                    if (dev_handle->type == HNTAP_TUN) {
-                        /*
-                         *  Data received from host-tap. We'll read it and write to the Host-mem for model to read (Host-Tx path).
-                         */
-                        if ((nread = read(dev_handle->fd, p+sizeof(struct vlan_header_t), PKTBUF_LEN)) < 0) {
-                          TLOG("Read from host-tap failed - %s\n", strerror(errno));
-                          abort();
-                        }
-
-                        if (p[sizeof(struct vlan_header_t)] != 0x45) {
-                          TLOG("Not an IP packet 0x%x\n", p[sizeof(struct vlan_header_t)]);
-                          continue;
-                        }
-
-                        num_hosttap_pkts++;
-                        TLOG("Host-Tap %d: Read %d bytes from host tap interface\n", num_hosttap_pkts, nread);
-                        if (dev_handle->pre_process) {
-                            dev_handle->pre_process(pktbuf, PKTBUF_LEN);
-                        }
-                        int ret = dump_pkt(pktbuf, nread + sizeof(struct vlan_header_t), dev_handle->tap_ports[0]);
-                         if (ret == -1) {
-                             TLOG("Not a desired TCP packet\n");
-                             continue;
-                         }
-
-                        if (hntap_do_drop_rexmit(dev_handle, 0,
-                                pktbuf, nread + sizeof(struct vlan_header_t))) {
-                                TLOG("Retransmitted TCP packet, seqno: 0x%x, dropping\n", dev_handle->flowtcp[0].seq);
-                            continue;
-                        }
-
-                        /*
-                         * Setup and write to the Host-memory interface for model to read.
-                         */
-                        hntap_handle_host_tx(dev_handle, pktbuf, nread + sizeof(struct vlan_header_t));
-                    } else if (dev_handle->type == HNTAP_TAP) {
-
-                    } else {
-                        abort();
-                    }
-
-                } else if (dev_handle->tap_ep == TAP_ENDPOINT_NET)  {
-                    if (dev_handle->type == HNTAP_TUN) {
-                        TLOG("Got stuff on net_tap_fd\n");
-                        /*
-                        * Data received from net-tap. We'll read it and write to the ZMQ to teh model (Net Rx path).
-                        */
-                        if ((nread = read(dev_handle->fd, p+sizeof(struct ether_header_t), PKTBUF_LEN)) < 0) {
-                        perror("Read from net-tap failed!");
-                        abort();
-                        }
-
-                        if (p[sizeof(struct ether_header_t)] != 0x45) {
-                        TLOG("Not an IP packet 0x%x\n", p[sizeof(struct ether_header_t)]);
-                        continue;
-                        }
-                        num_nettap_pkts++;
-                        TLOG("Net-Tap %d: Read %d bytes from network tap interface\n", num_nettap_pkts, nread);
-                        if (dev_handle->pre_process) {
-                            dev_handle->pre_process(pktbuf, PKTBUF_LEN);
-                        }
-                        TLOG("Added ether header\n");
-                        int ret = dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
-                        if (ret == -1) {
-                          TLOG("Not a desired TCP packet\n");
-                            continue;
-                        }
-
-                       if (hntap_do_drop_rexmit(dev_handle, 0,
-                               pktbuf, nread + sizeof(struct vlan_header_t))) {
-                               TLOG("Retransmitted TCP packet, seqno: 0x%x, dropping\n", dev_handle->flowtcp[0].seq);
-                           continue;
-                       }
-
-                      /*
-                       * Write to the ZMQ interface to modeal for Network Rx packet path.
-                       */
-                      hntap_handle_net_rx(dev_handle, pktbuf, nread + sizeof(struct ether_header_t));
-
-                    } else if (dev_handle->type == HNTAP_TAP) {
-
-                    } else {
-                        abort();
-                    }
-
-                } else {
-                    abort();
+                TLOG("Got stuff on type : %s\n", hntap_type(dev_handle->tap_ep));
+                uint16_t offset = 0;
+                if (dev_handle->type == HNTAP_TUN) {
+                    offset = dev_handle->needs_vlan_tag ? sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
                 }
+                if ((nread = read(dev_handle->fd, p + offset, PKTBUF_LEN)) < 0) {
+                  TLOG("Read from host-tap failed - %s\n", strerror(errno));
+                  abort();
+                }
+
+                if (dev_handle->type == HNTAP_TUN) {
+                    if (p[offset] != 0x45) {
+                      TLOG("Not an IP packet 0x%x\n", p[offset]);
+                      continue;
+                    }
+                }
+                dev_stats[dev_handle->tap_ep].num_pkts_recvd++;
+                TLOG("%s:%d Read %d bytes \n", hntap_type(dev_handle->tap_ep),
+                        dev_stats[dev_handle->tap_ep].num_pkts_recvd, nread);
+                if (dev_handle->pre_process) {
+                    dev_handle->pre_process(pktbuf, PKTBUF_LEN);
+                }
+                int ret = dump_pkt(pktbuf, nread + offset, dev_handle->tap_ports[0]);
+                 if (ret == -1) {
+                     TLOG("Not a desired packet\n");
+                     continue;
+                 }
+                 if (hntap_do_drop_rexmit(dev_handle, 0, pktbuf, nread + offset)) {
+                         TLOG("Retransmitted TCP packet, seqno: 0x%x, dropping\n", dev_handle->flowtcp[0].seq);
+                     continue;
+                 }
+                 hntap_pkt_process(dev_handle, pktbuf, nread + offset);
             }
         }
      }

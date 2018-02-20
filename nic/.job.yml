@@ -16,6 +16,7 @@ targets:
   proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy" ]
   e2etlsproxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --e2e-tls-dol" ]
   v6e2etlsproxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature proxy --config-only --v6-e2e-tls-dol" ]
+  e2enetworking:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo e2e --feature e2e --config-only --e2e-mode auto --cfgjson conf/dol.conf" ]
   ipsec:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo proxy --feature ipsec --no_error_check" ]
   networking:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo up2up --feature networking" ]
   vxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo vxlan --feature vxlan" ]

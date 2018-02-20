@@ -383,6 +383,9 @@ def run_dol(args):
     if args.test is not None:
         cmd.append('--test')
         cmd.append(args.test)
+    if args.cfgjson is not None:
+        cmd.append('--cfgjson')
+        cmd.append(args.cfgjson)
     if args.testcase is not None:
         cmd.append('--testcase')
         cmd.append(args.testcase)
@@ -565,6 +568,21 @@ def run_e2e_l7_dol():
 # main()
 
 
+def run_e2e_infra_dol(mode, e2espec = None):
+    os.chdir(nic_dir)
+    cmd = ['./e2etests/main.py', '--e2e-mode', mode]
+    if e2espec:
+        cmd.extend(['--e2e-spec', e2espec])
+    p = Popen(cmd)
+    print "* Starting E2E , pid (" + str(p.pid) + ")"
+    lock = open(lock_file, "a+")
+    lock.write(str(p.pid) + "\n")
+    lock.close()
+    p.communicate()
+    print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E ,DOL, exit code ", p.returncode
+    return p.returncode
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--build", action="store_true", help="run build")
@@ -631,6 +649,10 @@ def main():
                         default=None, help="Run E2E TLS DOL")
     parser.add_argument("--e2e-l7-dol", dest='e2el7', action="store_true",
                         default=None, help="Run E2E L7 DOL")
+    parser.add_argument('--e2e-mode', dest='e2e_mode', default=None,
+                    choices=["auto", "manual"], help='E2E Test mode.')
+    parser.add_argument('--e2e-spec', dest='e2e_spec', default=None,
+                        help='E2E Spec to bring up if manual mode.')
     parser.add_argument("--gft", dest='gft', action="store_true",
                         default=False, help="GFT tests")
     parser.add_argument("--gft_gtest", dest='gft_gtest', action="store_true",
@@ -657,6 +679,8 @@ def main():
                         help='In RTL mode choose how many ports are active: (nomac/8x25/2x100)')
     parser.add_argument('--perf', dest='perf', default=None,
                         action='store_true', help='Run Perf tests.')
+    parser.add_argument('--cfgjson', dest='cfgjson', default=None,
+                        help='Dump DOL configuration to json file')
 
     args = parser.parse_args()
 
@@ -727,15 +751,16 @@ def main():
             run_mbt(args, standalone=False)
 
         status = run_dol(args)
+        #status = 0
         if status == 0:
             if (args.e2etls):
                 status = run_e2e_tlsproxy_dol()
-
-            if (args.e2el7):
+            elif (args.e2el7):
                 status = run_e2e_l7_dol()
-            if status == 0:
-                if (args.v6e2etls):
+            elif (args.v6e2etls):
                     status = run_v6_e2e_tlsproxy_dol()
+            elif (args.e2e_mode):
+                status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec)
 
     if args.coveragerun:
         dump_coverage_data()

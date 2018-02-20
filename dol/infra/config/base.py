@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import copy
+import inspect
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -14,8 +15,26 @@ class ConfigObjectBase(objects.FrameworkObject):
         return
 
     def __str__(self):
-        return self.ID()
+        return str(self.ID())
 
+    def ToJson(self):
+        #Ignoring private attributes and complex objects for now.
+        #Function has to be enhanced to support deeper coversions.
+        dict = {}
+        for key, value in inspect.getmembers(self):
+            if  key.startswith("_"):
+                continue
+            if  (type(value) is int or type(value) is str or type(value) is bool):
+                dict[key] = value
+            elif (type(value).__str__ is not object.__str__):
+                dict[key] = str(value)
+            elif (type(value) in [list,set]):
+                items = []
+                for item in value:
+                    items.append(str(item))
+                dict[key] = items
+        return dict
+                
     def IsFilterMatch(self, filters):
         cfglogger.verbose("IsFilterMatch(): Object %s" % self.GID())
         if filters == None:
