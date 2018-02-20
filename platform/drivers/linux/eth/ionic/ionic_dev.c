@@ -66,7 +66,7 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 		return -EFAULT;
 
 	idev->db_pages = bar->vaddr;
-
+	idev->phy_db_pages = bar->bus_addr;
 	return 0;
 }
 
@@ -74,11 +74,13 @@ u8 ionic_dev_cmd_status(struct ionic_dev *idev)
 {
 	return ioread8(&idev->dev_cmd->comp.status);
 }
+EXPORT_SYMBOL_GPL(ionic_dev_cmd_status); //Need to remvoe later
 
 bool ionic_dev_cmd_done(struct ionic_dev *idev)
 {
 	return ioread32(&idev->dev_cmd->done) & DEV_CMD_DONE;
 }
+EXPORT_SYMBOL_GPL(ionic_dev_cmd_done); //Need to remvoe later
 
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 {
@@ -88,8 +90,9 @@ void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 	for (i = 0; i < ARRAY_SIZE(comp->words); i++)
 		comp->words[i] = ioread32(&idev->dev_cmd->comp.words[i]);
 }
+EXPORT_SYMBOL_GPL(ionic_dev_cmd_comp); //Need to remvoe later
 
-static void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
+void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 {
 	unsigned int i;
 
@@ -98,6 +101,7 @@ static void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 	iowrite32(0, &idev->dev_cmd->done);
 	iowrite32(1, &idev->dev_cmd_db->v);
 }
+EXPORT_SYMBOL_GPL(ionic_dev_cmd_go); //Need to remvoe later
 
 void ionic_dev_cmd_reset(struct ionic_dev *idev)
 {

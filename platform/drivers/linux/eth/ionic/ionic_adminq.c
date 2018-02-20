@@ -230,9 +230,9 @@ int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,
 			  desc_cb cb, void *cb_arg)
 {
 	switch (cmd->opcode) {
-	case CMD_OPCODE_RDMA_CMD1:
-	case CMD_OPCODE_RDMA_CMD2:
-	case CMD_OPCODE_RDMA_CMD3:
+	case CMD_OPCODE_RDMA_CREATE_CQ:
+	case CMD_OPCODE_RDMA_CREATE_MR:
+	case CMD_OPCODE_RDMA_CREATE_QP:
 		if (!ionic_q_has_space(adminq, 1))
 			return -ENOSPC;
 		ionic_q_post(adminq, true, cb, cb_arg);

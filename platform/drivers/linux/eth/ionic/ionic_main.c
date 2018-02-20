@@ -94,6 +94,7 @@ int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 		return err;
 	return ionic_dev_cmd_check_error(idev);
 }
+EXPORT_SYMBOL_GPL(ionic_dev_cmd_wait_check); //Need to remvoe later
 
 int ionic_set_dma_mask(struct ionic *ionic)
 {

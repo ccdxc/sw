@@ -40,9 +40,20 @@ enum cmd_opcode {
 	CMD_OPCODE_RX_FILTER_ADD		= 18,
 	CMD_OPCODE_RX_FILTER_DEL		= 19,
 
-	CMD_OPCODE_RDMA_CMD1			= 50,
-	CMD_OPCODE_RDMA_CMD2			= 51,
-	CMD_OPCODE_RDMA_CMD3			= 52,
+	CMD_OPCODE_RDMA_FIRST_CMD			= 50, //Keep this as first rdma cmd
+	CMD_OPCODE_RDMA_QUERY_PKEY			= 51,
+	CMD_OPCODE_RDMA_CREATE_PD			= 52,
+	CMD_OPCODE_RDMA_DESTROY_PD			= 53,
+	CMD_OPCODE_RDMA_CREATE_MR			= 54,
+	CMD_OPCODE_RDMA_DESTROY_MR			= 55,
+	CMD_OPCODE_RDMA_CREATE_CQ			= 56,
+	CMD_OPCODE_RDMA_DESTROY_CQ			= 57,
+	CMD_OPCODE_RDMA_RESIZE_CQ			= 58,
+	CMD_OPCODE_RDMA_CREATE_QP			= 59,
+	CMD_OPCODE_RDMA_MODIFY_QP			= 60,
+	CMD_OPCODE_RDMA_DESTROY_QP			= 61,
+	CMD_OPCODE_RDMA_QUERY_PORT			= 62,
+	CMD_OPCODE_RDMA_LAST_CMD			= 63, //Keep this as last rdma cmd
 
 	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
 };
@@ -955,6 +966,206 @@ struct debug_q_dump_comp {
 	u16 c_index1;
 	u32 rsvd2:31;
 	u32 color:1;
+};
+
+/******************************************************************
+ ******************* RDMA Commands ********************************
+ ******************************************************************/
+
+/**
+ * struct rdma_create_mr_cmd - Create Memory registration command
+ * @opcode:        opcode = 54
+ * @pd_num:        id of the pd
+ * @lif:           hardware lif id
+ * @access_flags:  access protaction requested for memory region
+ * @start:         starting virtual address of the memory region
+ * @length:        length of the memory region in bytes.
+ * @pdir_dma:      PA of the page translation table
+ * @page_size:     Host Page Size
+ * @nchunks:       number of physical pages in the PT table.
+ * @lkey:          local key
+ * @rkey:          remote key
+ *
+ **/
+struct create_mr_cmd {
+	u16 opcode;
+	u16 pd_num;
+	u16 lif;
+	u16 access_flags;
+	u64 start;
+	u64 length;
+	u64 pt_dma;
+	u32 page_size;
+	u32 nchunks;
+	u32 lkey;
+	u32 rkey;
+	u32 rsvd[4];
+};
+
+/**
+ * rdma_create_mr_comp - create_mr command completion
+ * @status:        Status of the command. 
+ *                  0 - Successful completion
+ **/
+struct create_mr_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
+};
+
+/**
+ * struct create_cq_cmd - Create RDMA Completion queue command
+ * @opcode:        opcode = 50
+ * @cq_wqe_size:   work queue entry size for CQ
+ * @num_cq_wqes:   number of wqes in CQ
+ * @cq_num:        queue id for CQ. Driver manages the space.
+ * @lif_id:        LIF ID
+ * @host_pg_size:  Host Page Size
+ * @cq_lkey:       local key for CQ memory
+ * @eq_id:         EQ ID
+ * @pt_base_addr:  page translation table base address for CQ memory
+ * @cq_va:         Starting virtual address of CQ memory
+ * @pt_size:       number of page translation table entries.
+ **/
+struct create_cq_cmd {
+	u16 opcode;
+	u16 cq_wqe_size;
+	u32 cq_num;
+	u16 num_cq_wqes;
+	u16 lif_id;
+	u32 host_pg_size;
+	u32 cq_lkey;
+	u32 eq_id;
+	u64 pt_base_addr;
+	u64 cq_va;
+	u64 va_len;
+	u32 pt_size;
+	u32 rsvd2[5];
+};
+
+/**
+ * struct create_cq_comp
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ */
+struct create_cq_comp {
+	u32 status:8;
+	u32 qtype:8;
+	u32 rsvd:16;
+	u32 rsvd2[3];
+};
+
+/**
+ * struct create_qp_cmd - Create RDMA SQ/RQ queue command
+ * @opcode:        opcode = 59
+ * @sq_wqe_size:   work queue entry size for SQ
+ * @rq_wqe_size:   work queue entry size for RQ
+ * @num_sq_wqes:   number of wqes in SQ
+ * @num_rq_wqes:   number of wqes in RQ
+ * @num_rsq_wqes:  number of wqes in RSQ
+ * @num_rrq_wqes:  number of wqes in RRQ
+ * @pd:            pd number
+ * @lif_id:        LIF ID
+ * @service:       RC/UD
+ * @flags:         qp flags
+ * @pmtu:          path mtu for qp
+ * @sq_cq_num:     cq for SQ
+ * @rq_cq_num:     cq for RQ
+ * @host_pg_size:  host page size
+ * @sq_lkey:       local key for SQ
+ * @rq_lkey:       local key for RQ
+ **/
+
+struct create_qp_cmd {
+	u16 opcode;
+	u16 sq_wqe_size;
+	u16 rq_wqe_size;    
+	u16 num_sq_wqes;
+	u16 num_rq_wqes;    
+	u16 num_rsq_wqes;
+	u16 num_rrq_wqes;    
+	u16 pd;
+	u16 lif_id;
+	u8  service;
+	u8  flags;
+	u32 pmtu;
+	u32 qp_num;
+	u32 sq_cq_num;
+	u32 rq_cq_num;    
+	u32 host_pg_size;
+	u32 sq_lkey;
+	u32 rq_lkey;
+
+#ifdef ADMINQ
+	/*
+	 * dev command is only 64 bytes right now. So for now do multiple calls to
+	 * register queue memory first and then create_qp.
+	 */
+	u64 sq_pt_base_addr;
+	u64 sq_cq_va;
+	u32 sq_pt_size;
+	u64 rq_pt_base_addr;
+	u64 rq_cq_va;
+	u32 rq_pt_size;
+#endif
+	
+	u32 rsvd2[2];
+};
+
+/**
+ * struct create_cq_comp
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ * @sq_qtype: qtype for SQ
+ * @rq_qtype: qtype for Q 
+ */
+
+struct create_qp_comp {
+	u32 status:8;
+	u32 sq_qtype:8;
+	u32 rq_qtype:8;    
+	u32 rsvd:8;
+	u32 rsvd2[3];
+};
+
+/**
+ * struct modify_qp_cmd - modify RDMA SQ/RQ queue command
+ * @opcode:        opcode = 60
+ * @lif_id:        lif id
+ * @attr_mask:     mask to indicate which attributes are being modified
+ * @qp_num:        qp number
+ * @dest_qp_num:   destination qp number
+ * @q_key:         q_key for UD
+ * @e_psn:         initial expected seq number
+ * @sq_psn:        initial send side psn
+ * @header_template: header tempalte
+ * @header_template_size: header template size
+ */
+struct modify_qp_cmd {
+	u16 opcode;
+	u16 lif_id;
+	u32 attr_mask;
+	u32 qp_num;
+	u32 dest_qp_num;    
+	u32 q_key;
+	u32 e_psn;
+	u32 sq_psn;
+	u64 header_template;
+	u32 header_template_size;
+	
+	u32 rsvd2[6];
+};
+
+/**
+ * struct create_qp_comp
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ */
+
+struct modify_qp_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
 };
 
 #pragma pack(pop)

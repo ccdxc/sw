@@ -232,12 +232,21 @@ static inline void ionic_struct_size_checks(void) {
 	BUILD_BUG_ON(sizeof(struct rx_filter_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct debug_q_dump_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct debug_q_dump_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct create_mr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct create_mr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct create_cq_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct create_cq_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct create_qp_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct create_qp_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct modify_qp_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct modify_qp_comp) != 16);
 }
 
 struct ionic_dev {
 	struct dev_cmd_regs __iomem *dev_cmd;
 	struct dev_cmd_db __iomem *dev_cmd_db;
 	struct doorbell __iomem *db_pages;
+	dma_addr_t phy_db_pages;
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
 };
@@ -315,6 +324,8 @@ struct cq {
 int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 		    unsigned int num_bars);
 
+union dev_cmd; //Need to remove it
+void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);

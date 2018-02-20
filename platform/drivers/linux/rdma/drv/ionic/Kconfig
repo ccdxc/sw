@@ -1,0 +1,6 @@
+config INFINIBAND_IONIC_RDMA
+	tristate "Pensando RDMA Driver"
+	depends on NETDEVICES && ETHERNET && PCI && INET
+	---help---
+	  This driver provides low-level InfiniBand support for
+	  Pensando PCI Express host channel adapters (HCAs).
