@@ -118,7 +118,7 @@ main (int argc, char **argv)
 
     // Initialize the logger
     hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
-                            0);
+                            true);
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 
     linkmgr::linkmgr_init();

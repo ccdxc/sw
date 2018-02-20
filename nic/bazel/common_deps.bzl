@@ -22,7 +22,6 @@ gl_deps_list = [
 
         ]
 
-
 gl_linkopts_list = [
     "-lzmq",
     "-lpthread",

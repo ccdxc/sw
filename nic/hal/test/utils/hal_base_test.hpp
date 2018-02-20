@@ -55,7 +55,7 @@ hal_initialize(const char c_file[])
     }
 
     // Disabling async
-    hal_cfg.async_en = false;
+    hal_cfg.sync_mode_logging = true;
     // initialize HAL
     if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL initialization failed, quitting ...\n");

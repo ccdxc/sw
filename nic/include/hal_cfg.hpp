@@ -44,7 +44,7 @@ typedef struct hal_cfg_s {
     char                 feature_set[HAL_MAX_NAME_STR];
     hal_feature_set_t    features;
     std::string          forwarding_mode;
-    bool                 async_en;
+    bool                 sync_mode_logging;
     std::string          default_config_dir;
     uint16_t             num_control_threads;
     uint16_t             num_data_threads;

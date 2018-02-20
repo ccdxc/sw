@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define SPDLOG_ENABLE_SYSLOG    1
+
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 
@@ -53,6 +55,23 @@
  * MyStruct m = { 1, "foo" };
  * log("m={}", m); 
  */
+
+namespace hal {
+namespace utils {
+
+using logger = spdlog::logger;
+
+void logger_init(uint32_t cpu_id, bool sync_mode);
+logger *hal_logger(void);
+logger *hal_syslogger(void);
+
+}    // namespace utils
+}    // namespace hal
+
+// HAL syslog macros
+#define HAL_SYSLOG_ERR(args...)     hal::utils::hal_syslogger()->error(args)
+#define HAL_SYSLOG_WARN(args...)    hal::utils::hal_syslogger()->warn(args)
+#define HAL_SYSLOG_INFO(args...)    hal::utils::hal_syslogger()->info(args)
 
 #define HAL_TRACE_ERR(args, ...)                                               \
 do {                                                                           \
@@ -131,13 +150,3 @@ do {                                                                           \
     }                                                                          \
 } while (0)
 
-namespace hal {
-namespace utils {
-
-using logger = spdlog::logger;
-
-void logger_init(int cpu_id, bool async_en);
-logger* hal_logger();
-
-} // namespace utils
-} // namespace hal

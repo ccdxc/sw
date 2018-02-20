@@ -17,7 +17,6 @@ cc_binary(
             # PI
             "//nic/fte",
             "//nic/hal/svc:hal_svc",
-            "//nic/utils/trace",
             "//nic/utils/print",
             "//nic/hal/plugins",
             "//nic/hal/plugins/proxy:proxyplugin",
@@ -28,6 +27,7 @@ cc_binary(
             "//nic:libprotobuf",
             "//nic:grpc",
             "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
+            "//nic/utils/trace",
 
             # PD
             "@sdk//obj:sdk_catalog",

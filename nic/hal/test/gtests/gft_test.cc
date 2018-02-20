@@ -1414,7 +1414,7 @@ TEST_F(gft_test, test1) {
     char *default_config_dir = NULL;
 
     printf("Connecting to ASIC SIM\n");
-    hal::utils::logger_init(0, 0);
+    hal::utils::logger_init(0, true);
     ret = sdk::lib::pal_init(true);
     ASSERT_NE(ret, -1);
     ret = capri_load_config((char *)"obj/gft/pgm_bin");

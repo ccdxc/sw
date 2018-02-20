@@ -533,8 +533,9 @@ hal_init (hal_cfg_t *hal_cfg)
     hal_ret_t    ret = HAL_RET_OK;
 
     // Initialize the logger
+    hal_cfg->sync_mode_logging = true;
     hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
-                            hal_cfg->async_en);
+                            hal_cfg->sync_mode_logging);
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
 

@@ -8,6 +8,7 @@
 #pragma once
 
 #define SPDLOG_VERSION "0.13.0"
+#define SPDLOG_ENABLE_SYSLOG    1
 
 #include "spdlog/tweakme.h"
 #include "spdlog/common.h"
