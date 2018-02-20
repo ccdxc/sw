@@ -210,6 +210,7 @@ cc_test(
         "//nic/model_sim:model_client",
         "//nic/hal/pd/capri:capri",
         "//nic/utils/trace",
+        "//nic/utils/mtrack",
         "//nic:grpc",
         "//nic:gen_proto_includes",
         "//nic:libprotobuf",

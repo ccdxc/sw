@@ -26,6 +26,7 @@ cc_test(
     deps = [
         ":pt",
         "//nic/utils/trace",
+        "//nic/utils/mtrack",
         "@sdk//obj:sdk_logger",
         "//nic/hal/test:hal_mock",
         # External

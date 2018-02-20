@@ -84,9 +84,6 @@ typedef uint64_t        hbm_addr_t;
 //------------------------------------------------------------------------------
 // HAL config version type
 //------------------------------------------------------------------------------
-typedef uint32_t cfg_version_t;
-#define HAL_CFG_VER_NONE            0
-
 #define __HAL_ASSERT__(x)            assert(x)
 
 #define HAL_ABORT(cond)                                    \

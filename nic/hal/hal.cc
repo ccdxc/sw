@@ -41,10 +41,6 @@ extern "C" void __gcov_flush(void);
 
 namespace hal {
 
-namespace utils {
-hal::utils::mem_mgr     g_hal_mem_mgr;
-}
-
 // process globals
 thread   *g_hal_threads[HAL_THREAD_ID_MAX];
 bool     gl_super_user = false;

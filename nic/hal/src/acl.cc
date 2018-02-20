@@ -1503,7 +1503,9 @@ acl_create (AclSpec& spec, AclResponse *rsp)
     dhl_entry_t   dhl_entry = { 0 };
     cfg_op_ctxt_t cfg_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: acl create");
+    HAL_TRACE_DEBUG("Rcvd acl create for acl-id {} ",
+                    spec.key_or_handle().acl_id());
+
     // dump spec
     acl_spec_print(spec);
 
@@ -1512,9 +1514,6 @@ acl_create (AclSpec& spec, AclResponse *rsp)
         HAL_TRACE_ERR("Validation failed ret {}", ret);
         goto end;
     }
-
-    HAL_TRACE_DEBUG("acl create for acl-id {} ",
-                    spec.key_or_handle().acl_id());
 
     // instantiate acl
     acl = acl_alloc_init();
@@ -1558,7 +1557,9 @@ acl_create (AclSpec& spec, AclResponse *rsp)
         // acl was freed during abort, pointer not valid anymore
         acl = NULL;
     }
+
 end:
+
     if (ret != HAL_RET_OK) {
         if (acl) {
             acl_free(acl, true);
@@ -1567,7 +1568,6 @@ end:
     }
 
     acl_prepare_rsp(rsp, ret, acl ? acl->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: acl create");
     return ret;
 }
 
@@ -1753,7 +1753,7 @@ acl_update (AclSpec& spec, AclResponse *rsp)
     const AclKeyHandle    &kh = spec.key_or_handle();
     acl_t                 *acl_clone = NULL;
 
-    hal_api_trace(" API Begin: acl update");
+    HAL_TRACE_DEBUG("Rcvd ACL update");
 
     // dump spec
     acl_spec_print(spec);
@@ -1773,8 +1773,7 @@ acl_update (AclSpec& spec, AclResponse *rsp)
         ret = HAL_RET_ACL_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("update acl {}",
-                    acl->key);
+    HAL_TRACE_DEBUG("update acl {}", acl->key);
 
     acl_make_clone(acl, (acl_t **)&dhl_entry.cloned_obj, spec);
 

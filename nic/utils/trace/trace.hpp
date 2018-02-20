@@ -65,6 +65,67 @@ void logger_init(uint32_t cpu_id, bool sync_mode);
 logger *hal_logger(void);
 logger *hal_syslogger(void);
 
+enum log_mode_e {
+    log_mode_sync     = 0,     // write logs in the context of the caller thread
+    log_mode_async    = 1,    // write logs/traces in the context of a backend thread
+};
+
+enum trace_level_e {
+    trace_none     = 0,        // traces disabled completely
+    trace_err      = 1,
+    trace_debug    = 2,
+};
+
+enum syslog_level_e {
+    log_none      = 0,
+    log_emerg     = 1,
+    log_alert     = 2,
+    log_crit      = 3,
+    log_err       = 4,
+    log_warn      = 5,
+    log_notice    = 6,
+    log_info      = 7,
+    log_debug     = 8,
+};
+
+class log {
+public:
+    static log *factory(uint32_t cpu_id, log_mode_e log_mode, bool syslogger,
+                        trace_level_e trace_level, syslog_level_e syslog_level);
+    static void destroy(log *logger_obj);
+    void set_trace_level(trace_level_e level);
+    trace_level_e trace_level(void) const;
+    void set_syslog_level(syslog_level_e level);
+    syslog_level_e syslog_level(void) const;
+    void flush(void);
+
+private:
+    uint32_t                           cpu_id_;              // CPU this logger is tied to
+    bool                               syslogger_;           // true, if this is for syslogs
+    trace_level_e                      trace_level_;         // trace level, if this is for traces
+    syslog_level_e                     log_level_;           // syslog level, if this is for syslogs
+    spdlog::logger                     *logger_;             // logger instance
+    const size_t                       k_async_qsize_;       // async queue size
+    const std::chrono::milliseconds    k_flush_intvl_ms_;    // flush interval
+    const size_t                       k_max_file_size_;     // max. trace file size
+    const size_t                       k_max_files_;         // max. number of trace files before rotating
+
+private:
+    log() : k_async_qsize_(64 * 1024),
+            k_flush_intvl_ms_(std::chrono::milliseconds(10)),
+            k_max_file_size_(10*1024*1024),
+            k_max_files_(10) {};
+    ~log();
+    bool init(uint32_t cpu_id, log_mode_e log_mode, bool syslogger,
+              trace_level_e trace_level, syslog_level_e syslog_level);
+    static void set_cpu_affinity(void);
+    spdlog::level::level_enum trace_level_to_spdlog_level(trace_level_e level);
+    spdlog::level::level_enum syslog_level_to_spdlog_level(syslog_level_e level);
+};
+
+extern log *trace_logger;
+extern log *syslog_logger;
+
 }    // namespace utils
 }    // namespace hal
 

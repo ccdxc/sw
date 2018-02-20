@@ -18,10 +18,6 @@ using types::ApiStatus;
 
 namespace hal {
 
-namespace utils {
-hal::utils::mem_mgr     g_hal_mem_mgr;
-}
-
 // thread local variables
 thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 

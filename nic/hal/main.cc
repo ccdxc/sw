@@ -145,7 +145,7 @@ svc_reg (const std::string& server_addr)
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
     hal::utils::hal_logger()->flush();
-    HAL_SYSLOG_INFO("HAL:UP");
+    HAL_SYSLOG_INFO("HAL-STATUS:UP");
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder.BuildAndStart());

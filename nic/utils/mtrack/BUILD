@@ -4,8 +4,12 @@ licenses(["notice"])  # MIT license
 
 cc_library(
     name = "mtrack",
+    srcs = [
+        "mtrack.cc"
+    ],
     hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/include:base_includes",
+        "//nic:spdlog",
     ],
 )

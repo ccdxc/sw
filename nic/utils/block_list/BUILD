@@ -24,7 +24,7 @@ cc_test(
         # Utils
         ":block_list",
         "//nic/utils/trace",
-        #"//nic:sdk_logger",
+        "//nic/utils/mtrack",
         "@sdk//obj:sdk_logger",
         "//nic/hal/periodic",
         "//nic/hal/test:hal_mock",
