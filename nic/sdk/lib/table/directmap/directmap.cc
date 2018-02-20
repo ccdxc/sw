@@ -1,10 +1,11 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#include "lib/table/directmap/directmap.hpp"
+
+#include <cstring>
+#include "directmap.hpp"
 #include "lib/p4pd/p4pd_api.hpp"
 #include "sdk/mem.hpp"
-#include <cstring>
 
 using sdk::table::directmap_entry_t;
 

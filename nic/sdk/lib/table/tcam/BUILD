@@ -9,8 +9,6 @@ cc_library(
     hdrs = glob(["tcam.hpp"]),
     deps = [
             "//:sdk_headers",
-            #"//lib/indexer:indexer",
-            #"//lib/ht:ht",
             "//lib/p4pd:p4pd_api",
     ],
 )

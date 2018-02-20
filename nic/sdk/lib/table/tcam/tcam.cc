@@ -1,10 +1,12 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
+
+#include <cstring>
 #include "lib/table/tcam/tcam.hpp"
 #include "lib/table/tcam/tcam_entry.hpp"
 #include "lib/p4pd/p4pd_api.hpp"
-#include <cstring>
+#include "tcam.hpp"
 
 using sdk::table::tcam_entry_t;
 
@@ -50,7 +52,7 @@ tcam::factory(char *name, uint32_t id,
 
     SDK_TRACE_DEBUG("tcam::%-30s: tableid: %-3u swkey_len: %-4u "
                     "hwkey_len_: %-4u hwkeymask_len_: %-4u "
-                    "hwdata_len_: %-4u \n", t->name_, t->id_, t->swkey_len_, 
+                    "hwdata_len_: %-4u", t->name_, t->id_, t->swkey_len_, 
                     t->hwkey_len_, t->hwkeymask_len_, t->hwdata_len_);
     return t;
 }
@@ -134,10 +136,6 @@ tcam::insert(void *key, void *key_mask, void *data,
     }
 
     SDK_TRACE_DEBUG("TCAM table %s insert at %d\n", name_, *index);
-#if 0
-    te = tcam_entry::factory(key, key_mask, swkey_len_,
-                             data, swdata_len_, *index);
-#endif
     te = tcam_entry_create(key, key_mask, swkey_len_,
                            data, swdata_len_, *index);
     // program hw
@@ -191,10 +189,6 @@ tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
         goto end;
     }
 
-#if 0
-    te = tcam_entry::factory(key, key_mask, swkey_len_, data,
-                             swdata_len_, index);
-#endif
     te = tcam_entry_create(key, key_mask, swkey_len_,
                            data, swdata_len_, index);
     // program hw

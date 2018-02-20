@@ -173,4 +173,5 @@ public:
 
 using sdk_hash = sdk::table::hash;
 
-#endif // __SDK_HASH_HPP__
+#endif    // __SDK_HASH_HPP__
+

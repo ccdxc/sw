@@ -49,4 +49,5 @@ tcam_entry_delete(tcam_entry_t *te);
 }    // namespace table
 }    // namespace sdk
 
-#endif // __SDK_TCAM_ENTRY_HPP__
+#endif    // __SDK_TCAM_ENTRY_HPP__
+

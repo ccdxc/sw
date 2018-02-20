@@ -1,8 +1,9 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#include "lib/table/tcam/tcam_entry.hpp"
+
 #include <cstring>
+#include "tcam_entry.hpp"
 
 namespace sdk {
 namespace table {

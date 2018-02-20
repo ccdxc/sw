@@ -19,7 +19,6 @@
 #include "sdk/base.hpp"
 #include "sdk/indexer.hpp"
 #include "sdk/ht.hpp"
-// #include "lib/table/tcam/tcam_entry.hpp"
 
 using sdk::lib::indexer;
 using sdk::lib::ht;

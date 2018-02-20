@@ -5,7 +5,7 @@
 #include <cstring>
 #include "sdk/tcam.hpp"
 #include "lib/p4pd/p4pd_api.hpp"
-#include "lib/table/hash/hash.hpp"
+#include "hash.hpp"
 
 namespace sdk {
 namespace table {

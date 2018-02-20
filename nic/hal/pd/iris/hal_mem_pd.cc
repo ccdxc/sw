@@ -679,7 +679,7 @@ pd_get_slab (pd_get_slab_args_t *args)
 }
 
 slab *
-hal_state_pd::get_slab(hal_slab_t slab_id) 
+hal_state_pd::get_slab (hal_slab_t slab_id)
 {
     GET_SLAB(vrf_slab_);
     GET_SLAB(l2seg_slab_);

@@ -76,4 +76,6 @@ public:
 
 }    // namespace table
 }    // namespace sdk
-#endif // __SDK_HASH_ENTRY_HPP__
+
+#endif    // __SDK_HASH_ENTRY_HPP__
+

@@ -2,9 +2,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#include "lib/table/hash/hash_entry.hpp"
-#include "sdk/mem.hpp"
 #include <cstring>
+#include "hash_entry.hpp"
+#include "sdk/mem.hpp"
 
 namespace sdk {
 namespace table {

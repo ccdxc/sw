@@ -1,8 +1,9 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
-#include "lib/table/directmap/directmap_entry.hpp"
+
 #include <cstring>
+#include "directmap_entry.hpp"
 
 namespace sdk {
 namespace table {
@@ -62,6 +63,4 @@ directmap_entry_free (directmap_entry_t *rwe)
 
 }   // namespace table
 }   // namespace sdk
-
-
 

@@ -7,6 +7,7 @@
 // - eventually calls P4 APIs to program.
 //
 //------------------------------------------------------------------------------
+
 #ifndef __SDK_DIRECT_MAP_HPP__
 #define __SDK_DIRECT_MAP_HPP__
 
@@ -129,5 +130,5 @@ public:
 
 using sdk::table::directmap;
 
-#endif // __SDK_DIRECT_MAP_HPP__
+#endif    // __SDK_DIRECT_MAP_HPP__
 

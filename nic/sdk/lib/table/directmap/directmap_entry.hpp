@@ -5,6 +5,7 @@
 //  - represents an entry in directmap table
 //  - used when sharing is enabled for directmap
 //------------------------------------------------------------------------------
+
 #ifndef __SDK_DIRECTMAP_ENTRY_HPP__
 #define __SDK_DIRECTMAP_ENTRY_HPP__
 
@@ -32,4 +33,5 @@ sdk_ret_t directmap_entry_free (directmap_entry_t *rwe);
 }    // namespace table
 }    // namespace sdk
 
-#endif // __SDK_DIRECTMAP_ENTRY_HPP__
+#endif    // __SDK_DIRECTMAP_ENTRY_HPP__
+
