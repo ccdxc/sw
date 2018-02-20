@@ -6,7 +6,7 @@ cc_binary(
     name = "libiris.so",
     linkshared = 1,
     deps = [
-            "//nic/hal/pd/iris:pd_iris"
+            "//nic/hal/pd/iris:pd_iris",
     ],
 )
 
@@ -25,7 +25,7 @@ cc_library(
         "//nic:gen_includes",
         "@sdk//:sdk_headers",
         "//nic/hal:hal_includes",
-        "//nic/hal/pd/capri",
+        "//nic/hal/pd/capri:capri",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd:pdcommon",
         "//nic/hal/pd/p4pd:p4pd",

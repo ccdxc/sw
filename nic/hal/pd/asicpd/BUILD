@@ -4,13 +4,8 @@ licenses(["notice"])  # MIT license
 
 cc_library(
     name = "asicpd",
-    srcs = [
-        "asic_pd_common.cc",
-    ],
-    hdrs = glob([
-        "*.hpp",
-        "*.h",
-    ]),
+    srcs = [] + glob(["*.cc"]),
+    hdrs = [] + glob(["*.hpp"]),
     deps = [
         "//nic/include:base_includes",
         "//nic/hal/pd:hal_pd_includes",
@@ -20,6 +15,8 @@ cc_library(
         "//nic:asic_includes",
         # TODO: Remove capri references
         "//nic/hal/pd/capri:capri_includes",
+        "//nic/hal:hal_utils_includes",
+        "//nic/hal/lib:hal_lib_includes",
         "//nic/p4/nw/include:p4_nw_includes",
     ],
     alwayslink = 1,

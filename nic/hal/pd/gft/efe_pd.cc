@@ -3,7 +3,6 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
-#include "nic/hal/pd/gft/scheduler_pd.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"

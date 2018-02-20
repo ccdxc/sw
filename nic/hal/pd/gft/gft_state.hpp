@@ -62,10 +62,6 @@ public:
         return exact_match_flow_entry_pd_slab_; 
     }
 
-    // get APIs for TXS scheduler related state
-    BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
-
-
     directmap *dm_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
             return NULL;
@@ -145,11 +141,6 @@ private:
     // Exact Flow entry
     struct {
         slab      *exact_match_flow_entry_pd_slab_;
-    } __PACK__;
-
-    // TXS scheduler related state
-    struct {
-        BMAllocator    *txs_scheduler_map_idxr_;
     } __PACK__;
 };
 

@@ -20,6 +20,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/src/qos.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/pd/capri/capri.hpp"
 
 #ifndef HAL_GTEST
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
@@ -31,6 +32,8 @@
 #define NUM_MAX_COSES 16
 #define CHECK_BIT(var,pos) ((var) & (1 << (pos)))
 #define DTDM_CALENDAR_SIZE 64
+
+extern class capri_state_pd *g_capri_state_pd;
 
 hal_ret_t
 capri_txs_scheduler_init (uint32_t admin_cos)
@@ -137,7 +140,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
 }
 
 hal_ret_t
-capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, txs_sched_lif_params_t *txs_hw_params) 
+capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_params_t *txs_hw_params) 
 {
 
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -146,8 +149,8 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, txs_sched_lif_params_t
     uint16_t      lif_cos_bmp = 0x0;
 
     lif_cos_bmp = txs_hw_params->cos_bmp;
-    if ((hw_lif_id >= TXS_MAX_TABLE_ENTRIES) ||  
-        (txs_hw_params->sched_table_offset >= TXS_MAX_TABLE_ENTRIES)) {
+    if ((hw_lif_id >= CAPRI_TXS_MAX_TABLE_ENTRIES) ||  
+        (txs_hw_params->sched_table_offset >= CAPRI_TXS_MAX_TABLE_ENTRIES)) {
         HAL_TRACE_ERR("CAPRI-TXS::{}: Invalid parameters to function {},{}",__func__, hw_lif_id, 
                        txs_hw_params->sched_table_offset);
         return HAL_RET_INVALID_ARG;
@@ -191,13 +194,14 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, txs_sched_lif_params_t
 }
 
 hal_ret_t
-capri_txs_policer_lif_params_update(uint32_t hw_lif_id, txs_policer_lif_params_t *txs_hw_params) 
+capri_txs_policer_lif_params_update (uint32_t hw_lif_id,
+                            capri_txs_policer_lif_params_t *txs_hw_params)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
 
-    if ((hw_lif_id >= TXS_MAX_TABLE_ENTRIES) ||
-        (txs_hw_params->sched_table_end_offset >= TXS_MAX_TABLE_ENTRIES)) {
+    if ((hw_lif_id >= CAPRI_TXS_MAX_TABLE_ENTRIES) ||
+        (txs_hw_params->sched_table_end_offset >= CAPRI_TXS_MAX_TABLE_ENTRIES)) {
         HAL_TRACE_ERR("CAPRI-TXS::{}: Invalid parameters to function {},{}",__func__, hw_lif_id,
                        txs_hw_params->sched_table_end_offset);
         return HAL_RET_INVALID_ARG;
@@ -216,3 +220,37 @@ capri_txs_policer_lif_params_update(uint32_t hw_lif_id, txs_policer_lif_params_t
 
     return HAL_RET_OK;
 }
+
+hal_ret_t
+capri_txs_scheduler_tx_alloc (capri_txs_sched_lif_params_t *tx_params,
+                              uint32_t *alloc_offset, uint32_t *alloc_units)
+{
+    hal_ret_t     ret = HAL_RET_OK;
+    uint32_t      total_qcount = 0;
+    
+    *alloc_offset = INVALID_INDEXER_INDEX;
+    *alloc_units = 0;
+    // Sched table can hold 8K queues per index and mandates new index for each cos.
+    total_qcount = tx_params->total_qcount;
+    *alloc_units  =  (total_qcount / CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY);
+    *alloc_units += ((total_qcount % CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY) ? 1 : 0);
+    *alloc_units *=   hal::get_num_set_bits(tx_params->cos_bmp);
+
+    if (*alloc_units > 0) {
+        //Allocate consecutive alloc_unit num of entries in sched table.
+        *alloc_offset = g_capri_state_pd->txs_scheduler_map_idxr()->Alloc(*alloc_units);
+        if (*alloc_offset < 0) {
+            ret = HAL_RET_NO_RESOURCE;
+        }
+    }
+    return ret;
+}
+
+hal_ret_t
+capri_txs_scheduler_tx_dealloc (uint32_t alloc_offset, uint32_t alloc_units)
+{
+    hal_ret_t     ret = HAL_RET_OK;
+    g_capri_state_pd->txs_scheduler_map_idxr()->Free(alloc_offset, alloc_units);
+    return ret;
+}
+

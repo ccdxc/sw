@@ -38,7 +38,6 @@
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
-#include "nic/hal/pd/iris/scheduler_pd.hpp"
 #include "nic/hal/pd/iris/rawccb_pd.hpp"
 #include "nic/hal/pd/iris/proxyrcb_pd.hpp"
 #include "nic/hal/pd/iris/proxyccb_pd.hpp"
@@ -46,6 +45,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
+#include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 
 namespace hal {
 extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
@@ -370,10 +370,6 @@ hal_state_pd::init(void)
                                     hal::pd::proxyrcb_pd_compute_hw_hash_func,
                                     hal::pd::proxyrcb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((proxyrcb_hwid_ht_ != NULL), false);
-
-    // BMAllocator based bmp range allocator to manage txs scheduler mapping
-    txs_scheduler_map_idxr_ = new hal::BMAllocator(TXS_SCHEDULER_MAP_MAX_ENTRIES);
-    HAL_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
 
     // initialize RAWCCB related data structures
     rawccb_slab_ = slab::factory("RAWCCB PD", HAL_SLAB_RAWCCB_PD,

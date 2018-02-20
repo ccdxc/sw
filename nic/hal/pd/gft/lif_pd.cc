@@ -3,17 +3,28 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"
-#include "nic/hal/pd/gft/scheduler_pd.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/eth.hpp"
-
+#include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 
 namespace hal {
 namespace pd {
+
+static void
+pd_lif_copy_asicpd_params (asicpd_scheduler_lif_params_t *out, pd_lif_t *lif_pd)
+{
+    out->lif_id = lif_get_lif_id((lif_t *)lif_pd->pi_lif),
+    out->tx_sched_table_offset = lif_pd->tx_sched_table_offset;
+    out->tx_sched_num_table_entries = lif_pd->tx_sched_num_table_entries;
+    out->total_qcount = lif_get_total_qcount(lif_pd->hw_lif_id);
+    out->hw_lif_id = lif_pd->hw_lif_id;
+    out->cos_bmp = ((lif_t *)lif_pd->pi_lif)->qos_info.cos_bmp;
+    return;
+}
 
 //-----------------------------------------------------------------------------
 // Lif Create in PD
@@ -86,12 +97,14 @@ pd_lif_update (pd_lif_update_args_t *args)
         }
     }
 
+    asicpd_scheduler_lif_params_t apd_lif;
+    pd_lif_copy_asicpd_params(&apd_lif, (pd_lif_t *)args->lif->pd_lif);
     if (args->qstate_map_init_set) {
-        ret = scheduler_tx_pd_alloc((pd_lif_t *)args->lif->pd_lif);
+        ret = asicpd_scheduler_tx_pd_alloc(&apd_lif);
         if (ret != HAL_RET_OK) {
             goto end;
         }
-        ret = scheduler_tx_pd_program_hw((pd_lif_t *)args->lif->pd_lif);
+        ret = asicpd_scheduler_tx_pd_program_hw(&apd_lif);
         if (ret != HAL_RET_OK) {
             goto end;
         }
@@ -151,9 +164,11 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
                     lif_get_lif_id((lif_t *)pd_lif->pi_lif),
                     pd_lif->hw_lif_id);
 
+    asicpd_scheduler_lif_params_t apd_lif;
+    pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
     //Allocate tx scheduler resource for this lif if qstate-map init is done.
     if (args->lif->qstate_init_done) {
-       ret = scheduler_tx_pd_alloc(pd_lif);
+       ret = asicpd_scheduler_tx_pd_alloc(&apd_lif);
        if (ret != HAL_RET_OK) {
             goto end;
        }
@@ -170,10 +185,12 @@ end:
 hal_ret_t
 lif_pd_dealloc_res(pd_lif_t *lif_pd)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-
+    hal_ret_t                       ret = HAL_RET_OK;
+    asicpd_scheduler_lif_params_t   apd_lif;
+    
+    pd_lif_copy_asicpd_params(&apd_lif, lif_pd);
     if (lif_pd->tx_sched_table_offset != INVALID_INDEXER_INDEX) {
-        ret = scheduler_tx_pd_dealloc(lif_pd);
+        ret = asicpd_scheduler_tx_pd_dealloc(&apd_lif);
         if (ret != HAL_RET_OK) {
             ret = HAL_RET_INVALID_OP;
             goto end;
@@ -281,7 +298,9 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
         goto end;
     }
 
-    ret = scheduler_tx_pd_program_hw(pd_lif);
+    asicpd_scheduler_lif_params_t   apd_lif;
+    pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
+    ret = asicpd_scheduler_tx_pd_program_hw(&apd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to program hw for tx scheduler");
         goto end;
@@ -307,8 +326,10 @@ hal_ret_t
 lif_pd_deprogram_hw (pd_lif_t *pd_lif)
 {
     hal_ret_t            ret = HAL_RET_OK;
-
-    ret = scheduler_tx_pd_deprogram_hw(pd_lif);
+    asicpd_scheduler_lif_params_t   apd_lif;
+    
+    pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
+    ret = asicpd_scheduler_tx_pd_deprogram_hw(&apd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to deprogram hw for tx scheduler");
         goto end;

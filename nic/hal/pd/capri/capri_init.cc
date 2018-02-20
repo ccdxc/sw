@@ -9,6 +9,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/gen/include/p4pd_table.h"
@@ -20,6 +21,8 @@
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 85
+
+class capri_state_pd *g_capri_state_pd;
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -801,6 +804,14 @@ capri_init (capri_cfg_t *cfg = NULL)
    if (cfg && !cfg->loader_info_file.empty()) {
         capri_list_program_addr(cfg->loader_info_file.c_str());
     }
+    
+    // TODO: Move to factory pattern
+    g_capri_state_pd = new capri_state_pd();
+    HAL_ASSERT(g_capri_state_pd != NULL);
+    // BMAllocator based bmp range allocator to manage txs scheduler mapping
+    g_capri_state_pd->txs_scheduler_map_idxr_ = 
+                                new hal::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
+    HAL_ASSERT(g_capri_state_pd->txs_scheduler_map_idxr_ != NULL);
 
     return ret;
 }

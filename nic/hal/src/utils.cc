@@ -536,4 +536,15 @@ custom_backtrace (void)
     }
 }
 
+// Helper function to count number of set bits.
+uint32_t
+get_num_set_bits (uint16_t v)
+{
+    // K & R way
+    unsigned int c;
+    for (c = 0; v; c++)
+        v &= v - 1;
+    return c;
+}
+
 }    // namespace hal

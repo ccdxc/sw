@@ -44,6 +44,7 @@ bool hal_handle_in_block_list(block_list *bl, hal_handle_t handle);
 hal_ret_t hal_add_to_handle_block_list(block_list *bl, hal_handle_t handle);
 hal_ret_t hal_remove_all_handles_block_list(block_list *bl);
 hal_ret_t hal_cleanup_handle_block_list(block_list **bl);
+uint32_t get_num_set_bits(uint16_t n);
 
 }    // namespace hal
 

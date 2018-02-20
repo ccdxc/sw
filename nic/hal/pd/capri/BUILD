@@ -17,6 +17,7 @@ cc_library(
         "capri_barco_crypto.hpp",
         "capri_pxb_pcie.hpp",
         "capri_tm_rw.hpp",
+        "capri_txs_scheduler.hpp",
     ],
 )
 
@@ -31,7 +32,6 @@ capri_pd_deps = [
     "//nic/hal/pd/capri/csr:capricsr",
     "//nic/hal/pd/capri/csr:hal_pknobs",
     "//nic/hal/pd:pdcommon",
-    "//nic/hal/pd/iris:iris_includes",
 ]
 
 cc_library(

@@ -208,7 +208,7 @@ cc_test(
         #"//nic/hal/test/utils:haltestutils",
         "//nic:gft_p4pd",
         "//nic/model_sim:model_client",
-        "//nic/hal/pd/capri",
+        "//nic/hal/pd/capri:capri",
         "//nic/utils/trace",
         "//nic:grpc",
         "//nic:gen_proto_includes",
