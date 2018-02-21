@@ -17,8 +17,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     add r1, d.out_desc, 64
     phvwr p.barco_req_output_list_address, r1.dx
     phvwr p.barco_req_iv_address, d.{in_page}.dx 
-    add r1, r0, d.pad_size
-    add r1, r1, d.tailroom_offset
+    add r1, d.pad_size, d.tailroom_offset
     addi r1, r1, 2
     addi r1, r1, ESP_FIXED_HDR_SIZE
     add r1, r1, d.out_page
