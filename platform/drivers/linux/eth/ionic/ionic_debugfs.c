@@ -29,57 +29,57 @@
 
 static int blob_open(struct inode *inode, struct file *filp)
 {
-        filp->private_data = inode->i_private;
-        return 0;
+	filp->private_data = inode->i_private;
+	return 0;
 }
 
-static ssize_t blob_read(struct file *filp, char __user * buffer,
+static ssize_t blob_read(struct file *filp, char __user *buffer,
 			 size_t count, loff_t *ppos)
 {
 	struct debugfs_blob_wrapper *blob = filp->private_data;
 
-        if (*ppos >= blob->size)
-                return 0;
-        if (*ppos + count > blob->size)
-                count = blob->size - *ppos;
+	if (*ppos >= blob->size)
+		return 0;
+	if (*ppos + count > blob->size)
+		count = blob->size - *ppos;
 
-        if (copy_to_user(buffer, blob->data + *ppos, count))
-                return -EFAULT;
+	if (copy_to_user(buffer, blob->data + *ppos, count))
+		return -EFAULT;
 
-        *ppos += count;
+	*ppos += count;
 
-        return count;
+	return count;
 }
 
-static ssize_t blob_write(struct file *filp, const char __user * buffer,
+static ssize_t blob_write(struct file *filp, const char __user *buffer,
 			  size_t count, loff_t *ppos)
 {
 	struct debugfs_blob_wrapper *blob = filp->private_data;
 
-        if (*ppos >= blob->size)
-                return 0;
-        if (*ppos + count > blob->size)
-                count = blob->size - *ppos;
+	if (*ppos >= blob->size)
+		return 0;
+	if (*ppos + count > blob->size)
+		count = blob->size - *ppos;
 
-        if (copy_from_user(blob->data + *ppos, buffer, count))
-                return -EFAULT;
+	if (copy_from_user(blob->data + *ppos, buffer, count))
+		return -EFAULT;
 
-        *ppos += count;
+	*ppos += count;
 
-        return count;
+	return count;
 }
-static struct file_operations blob_fops = {
-        .owner = THIS_MODULE,
-        .open = blob_open,
-        .read = blob_read,
-        .write = blob_write,
+static const struct file_operations blob_fops = {
+	.owner = THIS_MODULE,
+	.open = blob_open,
+	.read = blob_read,
+	.write = blob_write,
 };
 
 struct dentry *debugfs_create_blob(const char *name, umode_t mode,
 				   struct dentry *parent,
 				   struct debugfs_blob_wrapper *blob)
 {
-        return debugfs_create_file(name, mode | S_IWUSR, parent, blob,
+	return debugfs_create_file(name, mode | 0200, parent, blob,
 				   &blob_fops);
 }
 
@@ -124,7 +124,7 @@ static int scratch_bufs_add(struct device *dev, struct dentry *parent)
 		scratch_bufs_blob[i].data = scratch_bufs[i];
 		scratch_bufs_blob[i].size = SIZE_SCRATCH_BUF;
 		snprintf(name, sizeof(name), "0x%016llx", scratch_bufs_pa[i]);
-		debugfs_create_blob(name, S_IRUSR | S_IWUSR, scratch_dentry,
+		debugfs_create_blob(name, 0600, scratch_dentry,
 			&scratch_bufs_blob[i]);
 	}
 
@@ -145,18 +145,18 @@ static void scratch_bufs_free(struct device *dev)
 static struct dentry *ionic_dir;
 
 #define single(name) \
-static int name##_open(struct inode *inode, struct file *f)       \
-{                                                                 \
-	return single_open(f, name##_show, inode->i_private);     \
-}                                                                 \
-                                                                  \
-static const struct file_operations name##_fops = {               \
-	.owner = THIS_MODULE,                                     \
-	.open = name##_open,                                      \
-	.read = seq_read,                                         \
-	.llseek = seq_lseek,                                      \
-	.release = single_release,                                \
-};
+static int name##_open(struct inode *inode, struct file *f)	\
+{								\
+	return single_open(f, name##_show, inode->i_private);	\
+}								\
+								\
+static const struct file_operations name##_fops = {		\
+	.owner = THIS_MODULE,					\
+	.open = name##_open,					\
+	.read = seq_read,					\
+	.llseek = seq_lseek,					\
+	.release = single_release,				\
+}
 
 void ionic_debugfs_create(void)
 {
@@ -217,7 +217,7 @@ single(bars);
 
 int ionic_debugfs_add_bars(struct ionic *ionic)
 {
-	return debugfs_create_file("bars", S_IRUSR, ionic->dentry,
+	return debugfs_create_file("bars", 0400, ionic->dentry,
 				   ionic, &bars_fops) ? 0 : -ENOTSUPP;
 }
 
@@ -264,7 +264,7 @@ int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 	dev_cmd_regset->nregs = ARRAY_SIZE(dev_cmd_regs);
 	dev_cmd_regset->base = ionic->idev.dev_cmd;
 
-	dentry = debugfs_create_regset32("dev_cmd", S_IRUSR,
+	dentry = debugfs_create_regset32("dev_cmd", 0400,
 					 ionic->dentry, dev_cmd_regset);
 	if (IS_ERR_OR_NULL(dentry))
 		return PTR_ERR(dentry);
@@ -277,7 +277,7 @@ int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 	dev_cmd_regset->nregs = ARRAY_SIZE(dev_cmd_db_regs);
 	dev_cmd_regset->base = ionic->idev.dev_cmd_db;
 
-	dentry = debugfs_create_regset32("dev_cmd_db", S_IRUSR,
+	dentry = debugfs_create_regset32("dev_cmd_db", 0400,
 					 ionic->dentry, dev_cmd_regset);
 	if (IS_ERR_OR_NULL(dentry))
 		return PTR_ERR(dentry);
@@ -314,19 +314,19 @@ single(identity);
 
 int ionic_debugfs_add_ident(struct ionic *ionic)
 {
-	return debugfs_create_file("identity", S_IRUSR, ionic->dentry,
+	return debugfs_create_file("identity", 0400, ionic->dentry,
 				   ionic, &identity_fops) ? 0 : -ENOTSUPP;
 }
 
 int ionic_debugfs_add_sizes(struct ionic *ionic)
 {
-	debugfs_create_u32("nlifs", S_IRUSR, ionic->dentry,
+	debugfs_create_u32("nlifs", 0400, ionic->dentry,
 			   &ionic->ident->dev.nlifs);
-	debugfs_create_u32("ntxqs_per_lif", S_IRUSR, ionic->dentry,
+	debugfs_create_u32("ntxqs_per_lif", 0400, ionic->dentry,
 			   &ionic->ntxqs_per_lif);
-	debugfs_create_u32("nrxqs_per_lif", S_IRUSR, ionic->dentry,
+	debugfs_create_u32("nrxqs_per_lif", 0400, ionic->dentry,
 			   &ionic->nrxqs_per_lif);
-	debugfs_create_u32("nintrs", S_IRUSR, ionic->dentry, &ionic->nintrs);
+	debugfs_create_u32("nintrs", 0400, ionic->dentry, &ionic->nintrs);
 
 	return 0;
 }
@@ -385,36 +385,36 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 	if (IS_ERR_OR_NULL(qcq_dentry))
 		return PTR_ERR(qcq_dentry);
 
-	debugfs_create_x32("total_size", S_IRUSR, qcq_dentry, &qcq->total_size);
-	debugfs_create_x64("base_pa", S_IRUSR, qcq_dentry, &qcq->base_pa);
+	debugfs_create_x32("total_size", 0400, qcq_dentry, &qcq->total_size);
+	debugfs_create_x64("base_pa", 0400, qcq_dentry, &qcq->base_pa);
 
 	q_dentry = debugfs_create_dir("q", qcq_dentry);
 	if (IS_ERR_OR_NULL(q_dentry))
 		return PTR_ERR(q_dentry);
 
-	debugfs_create_u32("index", S_IRUSR, q_dentry, &q->index);
-	debugfs_create_x64("base_pa", S_IRUSR, q_dentry, &q->base_pa);
+	debugfs_create_u32("index", 0400, q_dentry, &q->index);
+	debugfs_create_x64("base_pa", 0400, q_dentry, &q->base_pa);
 	if (qcq->flags & QCQ_F_SG) {
-		debugfs_create_x64("sg_base_pa", S_IRUSR, q_dentry,
+		debugfs_create_x64("sg_base_pa", 0400, q_dentry,
 				   &q->sg_base_pa);
-		debugfs_create_u32("sg_desc_size", S_IRUSR, q_dentry,
+		debugfs_create_u32("sg_desc_size", 0400, q_dentry,
 				   &q->sg_desc_size);
 	}
-	debugfs_create_u32("num_descs", S_IRUSR, q_dentry, &q->num_descs);
-	debugfs_create_u32("desc_size", S_IRUSR, q_dentry, &q->desc_size);
-	debugfs_create_u32("pid", S_IRUSR, q_dentry, &q->pid);
-	debugfs_create_u32("qid", S_IRUSR, q_dentry, &q->qid);
-	debugfs_create_u32("qtype", S_IRUSR, q_dentry, &q->qtype);
+	debugfs_create_u32("num_descs", 0400, q_dentry, &q->num_descs);
+	debugfs_create_u32("desc_size", 0400, q_dentry, &q->desc_size);
+	debugfs_create_u32("pid", 0400, q_dentry, &q->pid);
+	debugfs_create_u32("qid", 0400, q_dentry, &q->qid);
+	debugfs_create_u32("qtype", 0400, q_dentry, &q->qtype);
 
-	debugfs_create_file("tail", S_IRUSR, q_dentry, q, &q_tail_fops);
-	debugfs_create_file("head", S_IRUSR, q_dentry, q, &q_head_fops);
+	debugfs_create_file("tail", 0400, q_dentry, q, &q_tail_fops);
+	debugfs_create_file("head", 0400, q_dentry, q, &q_head_fops);
 
 	desc_blob = devm_kzalloc(dev, sizeof(*desc_blob), GFP_KERNEL);
 	if (!desc_blob)
 		return -ENOMEM;
 	desc_blob->data = q->base;
 	desc_blob->size = q->num_descs * q->desc_size;
-	debugfs_create_blob("desc_blob", S_IRUSR, q_dentry, desc_blob);
+	debugfs_create_blob("desc_blob", 0400, q_dentry, desc_blob);
 
 	if (qcq->flags & QCQ_F_SG) {
 		desc_blob = devm_kzalloc(dev, sizeof(*desc_blob), GFP_KERNEL);
@@ -422,7 +422,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 			return -ENOMEM;
 		desc_blob->data = q->sg_base;
 		desc_blob->size = q->num_descs * q->sg_desc_size;
-		debugfs_create_blob("sg_desc_blob", S_IRUSR, q_dentry,
+		debugfs_create_blob("sg_desc_blob", 0400, q_dentry,
 				    desc_blob);
 	}
 
@@ -431,29 +431,29 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 		if (IS_ERR_OR_NULL(stats_dentry))
 			return PTR_ERR(stats_dentry);
 
-		debugfs_create_u64("dma_map_err", S_IRUSR, stats_dentry,
+		debugfs_create_u64("dma_map_err", 0400, stats_dentry,
 				   &qcq->stats.tx.dma_map_err);
-		debugfs_create_u64("pkts", S_IRUSR, stats_dentry,
+		debugfs_create_u64("pkts", 0400, stats_dentry,
 				   &qcq->stats.tx.pkts);
-		debugfs_create_u64("bytes", S_IRUSR, stats_dentry,
+		debugfs_create_u64("bytes", 0400, stats_dentry,
 				   &qcq->stats.tx.bytes);
-		debugfs_create_u64("clean", S_IRUSR, stats_dentry,
+		debugfs_create_u64("clean", 0400, stats_dentry,
 				   &qcq->stats.tx.clean);
-		debugfs_create_u64("drop", S_IRUSR, stats_dentry,
+		debugfs_create_u64("drop", 0400, stats_dentry,
 				   &qcq->stats.tx.drop);
-		debugfs_create_u64("linearize", S_IRUSR, stats_dentry,
+		debugfs_create_u64("linearize", 0400, stats_dentry,
 				   &qcq->stats.tx.linearize);
-		debugfs_create_u64("stop", S_IRUSR, stats_dentry,
+		debugfs_create_u64("stop", 0400, stats_dentry,
 				   &qcq->stats.tx.stop);
-		debugfs_create_u64("no_csum", S_IRUSR, stats_dentry,
+		debugfs_create_u64("no_csum", 0400, stats_dentry,
 				   &qcq->stats.tx.no_csum);
-		debugfs_create_u64("csum", S_IRUSR, stats_dentry,
+		debugfs_create_u64("csum", 0400, stats_dentry,
 				   &qcq->stats.tx.csum);
-		debugfs_create_u64("crc32_csum", S_IRUSR, stats_dentry,
+		debugfs_create_u64("crc32_csum", 0400, stats_dentry,
 				   &qcq->stats.tx.crc32_csum);
-		debugfs_create_u64("tso", S_IRUSR, stats_dentry,
+		debugfs_create_u64("tso", 0400, stats_dentry,
 				   &qcq->stats.tx.tso);
-		debugfs_create_u64("frags", S_IRUSR, stats_dentry,
+		debugfs_create_u64("frags", 0400, stats_dentry,
 				   &qcq->stats.tx.frags);
 	}
 
@@ -462,11 +462,11 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 		if (IS_ERR_OR_NULL(stats_dentry))
 			return PTR_ERR(stats_dentry);
 
-		debugfs_create_u64("dma_map_err", S_IRUSR, stats_dentry,
+		debugfs_create_u64("dma_map_err", 0400, stats_dentry,
 				   &qcq->stats.rx.dma_map_err);
-		debugfs_create_u64("pkts", S_IRUSR, stats_dentry,
+		debugfs_create_u64("pkts", 0400, stats_dentry,
 				   &qcq->stats.rx.pkts);
-		debugfs_create_u64("bytes", S_IRUSR, stats_dentry,
+		debugfs_create_u64("bytes", 0400, stats_dentry,
 				   &qcq->stats.rx.bytes);
 	}
 
@@ -474,29 +474,29 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 	if (IS_ERR_OR_NULL(cq_dentry))
 		return PTR_ERR(cq_dentry);
 
-	debugfs_create_x64("base_pa", S_IRUSR, cq_dentry, &cq->base_pa);
-	debugfs_create_u32("num_descs", S_IRUSR, cq_dentry, &cq->num_descs);
-	debugfs_create_u32("desc_size", S_IRUSR, cq_dentry, &cq->desc_size);
-	debugfs_create_u8("done_color", S_IRUSR, cq_dentry,
+	debugfs_create_x64("base_pa", 0400, cq_dentry, &cq->base_pa);
+	debugfs_create_u32("num_descs", 0400, cq_dentry, &cq->num_descs);
+	debugfs_create_u32("desc_size", 0400, cq_dentry, &cq->desc_size);
+	debugfs_create_u8("done_color", 0400, cq_dentry,
 			  (u8 *)&cq->done_color);
 
-	debugfs_create_file("tail", S_IRUSR, cq_dentry, cq, &cq_tail_fops);
+	debugfs_create_file("tail", 0400, cq_dentry, cq, &cq_tail_fops);
 
 	desc_blob = devm_kzalloc(dev, sizeof(*desc_blob), GFP_KERNEL);
 	if (!desc_blob)
 		return -ENOMEM;
 	desc_blob->data = cq->base;
 	desc_blob->size = cq->num_descs * cq->desc_size;
-	debugfs_create_blob("desc_blob", S_IRUSR, cq_dentry, desc_blob);
+	debugfs_create_blob("desc_blob", 0400, cq_dentry, desc_blob);
 
 	if (qcq->flags & QCQ_F_INTR) {
 		intr_dentry = debugfs_create_dir("intr", qcq_dentry);
 		if (IS_ERR_OR_NULL(intr_dentry))
 			return PTR_ERR(intr_dentry);
 
-		debugfs_create_u32("index", S_IRUSR, intr_dentry,
+		debugfs_create_u32("index", 0400, intr_dentry,
 				   &intr->index);
-		debugfs_create_u32("vector", S_IRUSR, intr_dentry,
+		debugfs_create_u32("vector", 0400, intr_dentry,
 				   &intr->vector);
 
 		intr_ctrl_regset = devm_kzalloc(dev, sizeof(*intr_ctrl_regset),
@@ -507,7 +507,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 		intr_ctrl_regset->nregs = ARRAY_SIZE(intr_ctrl_regs);
 		intr_ctrl_regset->base = intr->ctrl;
 
-		debugfs_create_regset32("intr_ctrl", S_IRUSR, intr_dentry,
+		debugfs_create_regset32("intr_ctrl", 0400, intr_dentry,
 					intr_ctrl_regset);
 	}
 
@@ -534,7 +534,7 @@ int ionic_debugfs_add_lif(struct lif *lif)
 	if (IS_ERR_OR_NULL(lif_dentry))
 		return PTR_ERR(lif_dentry);
 
-	netdev_dentry = debugfs_create_file("netdev", S_IRUSR, lif_dentry,
+	netdev_dentry = debugfs_create_file("netdev", 0400, lif_dentry,
 					    lif->netdev, &netdev_fops);
 	if (IS_ERR_OR_NULL(netdev_dentry))
 		return PTR_ERR(netdev_dentry);

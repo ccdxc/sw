@@ -149,8 +149,10 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 
 	printk(KERN_ERR "adminq_init.pid %d\n", cmd.adminq_init.pid);
 	printk(KERN_ERR "adminq_init.index %d\n", cmd.adminq_init.index);
-	printk(KERN_ERR "adminq_init.ring_base %llx\n", cmd.adminq_init.ring_base);
-	printk(KERN_ERR "adminq_init.ring_size %d\n", cmd.adminq_init.ring_size);
+	printk(KERN_ERR "adminq_init.ring_base %llx\n",
+	       cmd.adminq_init.ring_base);
+	printk(KERN_ERR "adminq_init.ring_size %d\n",
+	       cmd.adminq_init.ring_size);
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
@@ -381,7 +383,7 @@ int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		return -EINVAL;
 
 	ring_size = ilog2(num_descs);
-	if (2 > ring_size || ring_size > 16)
+	if (ring_size < 2 || ring_size > 16)
 		return -EINVAL;
 
 	cq->lif = lif;
@@ -456,7 +458,7 @@ int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
 		return -EINVAL;
 
 	ring_size = ilog2(num_descs);
-	if (2 > ring_size || ring_size > 16)
+	if (ring_size < 2 || ring_size > 16)
 		return -EINVAL;
 
 	q->lif = lif;
@@ -524,7 +526,9 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 			.p_index = q->head->index,
 		};
 
-		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring 0 p_index %d db %p\n", q->name, q->qid, q->head->index, q->db);
+		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
+		//	 "0 p_index %d db %p\n", q->name, q->qid,
+		//	 q->head->index, q->db);
 		writeq(*(u64 *)&db, q->db);
 	}
 }

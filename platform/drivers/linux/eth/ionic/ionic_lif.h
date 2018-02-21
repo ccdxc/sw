@@ -62,11 +62,11 @@ struct qcq {
 	unsigned int flags;
 };
 
-#define q_to_qcq(q) 		container_of(q, struct qcq, q)
-#define q_to_tx_stats(q) 	&q_to_qcq(q)->stats.tx
-#define q_to_rx_stats(q) 	&q_to_qcq(q)->stats.rx
+#define q_to_qcq(q)		container_of(q, struct qcq, q)
+#define q_to_tx_stats(q)	(&q_to_qcq(q)->stats.tx)
+#define q_to_rx_stats(q)	(&q_to_qcq(q)->stats.rx)
 #define napi_to_qcq(napi)	container_of(napi, struct qcq, napi)
-#define napi_to_cq(napi) 	&napi_to_qcq(napi)->cq
+#define napi_to_cq(napi)	(&napi_to_qcq(napi)->cq)
 
 #define LIF_NAME_MAX_SZ			(32)
 
@@ -87,8 +87,8 @@ struct lif {
 	u32 hw_features;
 };
 
-#define lif_to_txq(lif, i)	&lif->txqcqs[i]->q
-#define lif_to_rxq(lif, i)	&lif->rxqcqs[i]->q
+#define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
+#define lif_to_rxq(lif, i)	(&lif->rxqcqs[i]->q)
 
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);

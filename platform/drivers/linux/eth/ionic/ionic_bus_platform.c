@@ -27,7 +27,7 @@
 
 int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
 {
-	return platform_get_irq(ionic->pfdev, num);;
+	return platform_get_irq(ionic->pfdev, num);
 }
 
 const char *ionic_bus_info(struct ionic *ionic)
@@ -58,7 +58,7 @@ static int ionic_map_bars(struct ionic *ionic)
 		res = platform_get_resource(pfdev, IORESOURCE_MEM, i);
 		if (!res)
 			continue;
- 		base = devm_ioremap_resource(dev, res);
+		base = devm_ioremap_resource(dev, res);
 		if (IS_ERR(base)) {
 			dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
 			return -ENODEV;

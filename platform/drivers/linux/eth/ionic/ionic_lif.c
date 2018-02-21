@@ -1186,8 +1186,7 @@ int ionic_lifs_size(struct ionic *ionic)
 try_again:
 	nintrs = nlifs * (ntxqs_per_lif + nrxqs_per_lif + 1 /* adminq */);
 
-	while (nintrs > ident->dev.nintrs)
-	{
+	while (nintrs > ident->dev.nintrs) {
 		if (ntxqs_per_lif-- > 1)
 			goto try_again;
 		if (nrxqs_per_lif-- > 1)

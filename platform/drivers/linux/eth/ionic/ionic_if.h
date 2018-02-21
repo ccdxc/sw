@@ -528,14 +528,14 @@ struct txq_sg_desc {
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
  * @color:      Color bit.
-*/
+ */
 struct txq_comp {
-        u32 status:8;
-        u32 rsvd:8;
-        u32 comp_index:16;
-        u32 rsvd2[2];
-        u32 rsvd3:31;
-        u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 rsvd2[2];
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
 
@@ -701,7 +701,7 @@ enum rxq_comp_rss_type {
  *                checksum for both IP headers.
  * @V:            VLAN header was stripped and placed in @vlan_tci.
  * @color:        Color bit.
-*/
+ */
 struct rxq_comp {
 	u32 status:8;
 	u32 rsvd:8;
