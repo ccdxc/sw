@@ -55,7 +55,7 @@ def preamble_script(postamble)
     systemd-machine-id-setup
 
     ## Populate environment vars
-    echo 'export PATH=$PATH:/usr/local/go/bin:/opt/bin:/import/bin' >> /etc/profile.d/env.sh
+    echo 'export PATH=$PATH:/import/bin:/usr/local/go/bin:/opt/bin' >> /etc/profile.d/env.sh
     echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
     echo "export PENS_NODES=$3" >> /etc/profile.d/env.sh
     echo "export PENS_QUORUM_NODENAMES=$4" >> /etc/profile.d/env.sh
