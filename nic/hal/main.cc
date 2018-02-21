@@ -159,7 +159,7 @@ svc_reg (const std::string& server_addr)
 static void inline
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s -c|--config <cfg.json>\n", argv[0]);
+    fprintf(stdout, "Usage : %s -c|--config <cfg.json> [-p|--platform <catalog.json>] \n", argv[0]);
 }
 
 // TODO: need to figure a clean way for HAL to exit
@@ -168,88 +168,95 @@ print_usage (char **argv)
 int
 main (int argc, char **argv)
 {
-    int              oc;
-    char             *cfg_file = NULL, *cfg_path, *default_config_dir = NULL;
-    std::string      full_path, ini_full_path, ini_file = "hal.ini";
+    int               oc;
+    char              *cfg_file = NULL, *catalog_file = NULL;
+    char              *default_config_dir = NULL;
+    std::string       ini_file = "hal.ini";
     hal::hal_cfg_t    hal_cfg;
 
     bzero(&hal_cfg, sizeof(hal_cfg));
 	struct option longopts[] = {
-	   { "config",  required_argument, NULL, 'c' },
-	   { "help",    no_argument,       NULL, 'h' },
-	   { 0,         0,                 0,     0 }
+	   { "config",    required_argument, NULL, 'c' },
+	   { "platform",  optional_argument, NULL, 'p' },
+	   { "help",      no_argument,       NULL, 'h' },
+	   { 0,           0,                 0,     0 }
 	};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:W;", longopts, NULL)) != -1) {
-    switch (oc) {
-    case 'c':
-        cfg_file = optarg;
-        if (!cfg_file) {
-            fprintf(stderr, "config file is not specified\n");
+    while ((oc = getopt_long(argc, argv, ":hc:p:W;", longopts, NULL)) != -1) {
+        switch (oc) {
+        case 'c':
+            cfg_file = optarg;
+            if (!cfg_file) {
+                fprintf(stderr, "config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'p':
+            if (optarg) {
+                catalog_file = optarg;
+            } else {
+                fprintf(stderr, "platform catalog file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'h':
+            print_usage(argv);
+            exit(0);
+            break;
+
+        case ':':
+            fprintf(stderr, "%s: option -%c requires an argument\n",
+                    argv[0], optopt);
             print_usage(argv);
             exit(1);
+            break;
+
+        case '?':
+        default:
+            fprintf(stderr, "%s: option -%c is invalid, quitting ...\n",
+                    argv[0], optopt);
+            print_usage(argv);
+            exit(1);
+            break;
         }
-        break;
-
-    case 'h':
-        print_usage(argv);
-        exit(0);
-        break;
-
-    case ':':
-        fprintf(stderr, "%s: option -%c requires an argument\n",
-                argv[0], optopt);
-        print_usage(argv);
-        exit(1);
-        break;
-
-    case '?':
-    default:
-        fprintf(stderr, "%s: option -%c is invalid, quitting ...\n",
-                argv[0], optopt);
-        print_usage(argv);
-        exit(1);
-        break;
-    }
     }
 
-    // makeup the full file path
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + std::string(cfg_file);
-        std::cerr << "full path " << full_path << std::endl;
-        ini_full_path = std::string(cfg_path) + "/" + ini_file;
-        std::cerr << "ini file full path " << ini_full_path << std::endl;
-    } else {
-        full_path = std::string(cfg_file);
-    }
-
-    // make sure cfg file exists
-    if (access(full_path.c_str(), R_OK) < 0) {
-        fprintf(stderr, "config file %s has no read permissions\n",
-                full_path.c_str());
-        exit(1);
-    }
-
-    // parse the config
-    if (hal::hal_parse_cfg(full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
+    // parse the HAL config file
+    if (hal::hal_parse_cfg(cfg_file, &hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL config file parsing failed, quitting ...\n");
         exit(1);
     }
 
+    // set the full path of the catalog file
+    if (catalog_file) {
+        hal_cfg.catalog_file =
+            hal_cfg.cfg_path + "/" + std::string(catalog_file);
+    } else {
+        hal_cfg.catalog_file = hal_cfg.cfg_path + "/catalog.json";
+    }
+
+    // make sure catalog file exists
+    if (access(hal_cfg.catalog_file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "Catalog file %s has no read permissions\n",
+                hal_cfg.catalog_file.c_str());
+        exit(1);
+    }
+
+    // TODO: HAL_PBC_INIT_CONFIG will have to go away
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {
         hal_cfg.default_config_dir = std::string(default_config_dir);
     } else {
         hal_cfg.default_config_dir = std::string("8x25_hbm");
     }
-
-    // parse the ini
-    if (hal::hal_parse_ini(ini_full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
-        fprintf(stderr, "HAL ini file parsing failed, quitting ...\n");
-        exit(1);
-    }
+ 
+    // parse the ini file, if it exists
+    hal::hal_parse_ini(ini_file.c_str(), &hal_cfg);
 
     // initialize HAL
     if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {

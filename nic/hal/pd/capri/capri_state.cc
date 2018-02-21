@@ -10,7 +10,7 @@
 //------------------------------------------------------------------------------
 // (private) constructor method
 //------------------------------------------------------------------------------
-capri_state_pd::capri_state_pd ()
+capri_state_pd::capri_state_pd()
 {
     txs_scheduler_map_idxr_ = NULL;
 }
@@ -18,15 +18,16 @@ capri_state_pd::capri_state_pd ()
 //------------------------------------------------------------------------------
 // destructor
 //------------------------------------------------------------------------------
-capri_state_pd::~capri_state_pd ()
+capri_state_pd::~capri_state_pd()
 {
     txs_scheduler_map_idxr_ ? delete txs_scheduler_map_idxr_ : HAL_NOP;
 }
+
 //------------------------------------------------------------------------------
 // factory method
 //------------------------------------------------------------------------------
 capri_state_pd *
-capri_state_pd::factory (void)
+capri_state_pd::factory(void)
 {
     capri_state_pd *state;
 
@@ -43,7 +44,7 @@ capri_state_pd::factory (void)
 // init() function to instantiate the state
 //------------------------------------------------------------------------------
 bool
-capri_state_pd::init (void)
+capri_state_pd::init(void)
 {
     // BMAllocator based bmp range allocator to manage txs scheduler mapping
     txs_scheduler_map_idxr_ = 

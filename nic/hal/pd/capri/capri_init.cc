@@ -29,23 +29,16 @@ class capri_state_pd *g_capri_state_pd;
  * Load any bin files needed for initializing default configs
  */
 hal_ret_t
-capri_default_config_init (const std::string& default_config_dir)
+capri_default_config_init (capri_cfg_t *cfg)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    char        *cfg_path;
     std::string hbm_full_path;
     std::string full_path;
     int         num_phases = 2;
     int         i;
 
-    cfg_path = getenv("HAL_CONFIG_PATH");
-    if (!cfg_path) {
-        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
-
     for (i = 0; i < num_phases; i++) {
-        full_path =  std::string(cfg_path) + "/init_bins/" + default_config_dir + "/init_" + 
+        full_path =  std::string(cfg->cfg_path) + "/init_bins/" + cfg->default_config_dir + "/init_" +
                                             std::to_string(i) + "_bin";
 
         HAL_TRACE_DEBUG("Init phase {} Binaries dir: {}", i, full_path.c_str());
@@ -73,22 +66,16 @@ hal_ret_t
 capri_default_config_verify (void)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    char        *cfg_path;
     std::string full_path;
     int         num_phases = 2;
     int         i;
 
-    cfg_path = getenv("HAL_CONFIG_PATH");
-    if (!cfg_path) {
-        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
-
+    g_capri_state_pd->cfg_path();
     for (i = 0; i < num_phases; i++) {
-        full_path =  std::string(cfg_path) + "/init_bins/" + "init_" + 
-                                        std::to_string(i) + "_bin";
+        full_path =  g_capri_state_pd->cfg_path()  + "/init_bins/" + "init_" +
+                         std::to_string(i) + "_bin";
 
-        // Check if directory is present
+        // check if directory is present
         if (access(full_path.c_str(), R_OK) < 0) {
             HAL_TRACE_DEBUG("Skipping init binaries");
             return HAL_RET_OK;
@@ -111,12 +98,14 @@ capri_default_config_verify (void)
 // perform all the CAPRI specific initialization
 //------------------------------------------------------------------------------
 hal_ret_t
-hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
+hal::pd::asic_init (asic_cfg_t *cfg)
 {
     capri_cfg_t    capri_cfg;
 
+    HAL_ASSERT(cfg != NULL);
     capri_cfg.loader_info_file = cfg->loader_info_file;
     capri_cfg.default_config_dir = cfg->default_config_dir;
+    capri_cfg.cfg_path = cfg->cfg_path;
     capri_cfg.admin_cos = cfg->admin_cos;
     capri_cfg.pgm_name = cfg->pgm_name;
     return capri_init(&capri_cfg);
@@ -147,16 +136,9 @@ capri_p4_asm_init (capri_cfg_t *cfg)
 {
     hal_ret_t      ret = HAL_RET_OK;
     uint64_t       p4_prm_base_addr;
-    char           *cfg_path;
     std::string    full_path;
 
-    cfg_path = getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + cfg->pgm_name + "/" + "asm_bin";
-    } else {
-        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
+    full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name + "/" + "asm_bin";
     HAL_TRACE_DEBUG("P4 ASM Binaries dir: {}", full_path.c_str());
 
     // Check if directory is present
@@ -177,16 +159,9 @@ static hal_ret_t
 capri_p4_pgm_init (capri_cfg_t *cfg)
 {
     hal_ret_t      ret;
-    char           *cfg_path;
     std::string    full_path;
 
-    cfg_path = getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + cfg->pgm_name + "/" + "pgm_bin";
-    } else {
-        HAL_TRACE_ERR("HAL_CONFIG_PATH environment variable not set");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
+    full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name + "/" + "pgm_bin";
     HAL_TRACE_DEBUG("PGM Binaries dir: {}", full_path.c_str());
 
     // check if directory is present
@@ -201,7 +176,7 @@ capri_p4_pgm_init (capri_cfg_t *cfg)
     }
 
     // load the common p4plus program config
-    full_path =  std::string(cfg_path) + "/p4plus/pgm_bin";
+    full_path =  std::string(cfg->cfg_path) + "/p4plus/pgm_bin";
     // check if directory is present
     if (access(full_path.c_str(), R_OK) < 0) {
         HAL_TRACE_ERR("{} not present/no read permissions", full_path.c_str());
@@ -217,21 +192,15 @@ capri_p4_pgm_init (capri_cfg_t *cfg)
 }
 
 static hal_ret_t
-capri_p4p_asm_init (void)
+capri_p4p_asm_init (capri_cfg_t *cfg)
 {
     hal_ret_t                  ret = HAL_RET_OK;
     uint64_t                   p4plus_prm_base_addr;
-    char                       *cfg_path;
     std::string                full_path;
     capri_prog_param_info_t    *symbols;
 
-    cfg_path = getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + "p4plus_bin";
-        std::cerr << "full path " << full_path << std::endl;
-    } else {
-        full_path = std::string("p4plus_bin");
-    }
+    full_path =  std::string(cfg->cfg_path) + "/" + "p4plus_bin";
+    std::cerr << "full path " << full_path << std::endl;
     HAL_TRACE_DEBUG("P4+ ASM Binaries dir: {}", full_path.c_str());
 
     // Check if directory is present
@@ -727,7 +696,7 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
         return ret;
     }
 
-    ret = capri_p4p_asm_init();
+    ret = capri_p4p_asm_init(cfg);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -763,10 +732,14 @@ capri_init (capri_cfg_t *cfg = NULL)
         (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     HAL_ASSERT(hal_cfg);
 
-    ret = capri_hbm_parse(cfg->pgm_name.c_str());
+    g_capri_state_pd = capri_state_pd::factory();
+    HAL_ASSERT_RETURN((g_capri_state_pd != NULL), HAL_RET_ERR);
 
+    g_capri_state_pd->set_cfg_path(cfg->cfg_path);
+
+    capri_hbm_parse(cfg);
     ret = capri_hbm_regions_init(cfg);
-    
+    HAL_ASSERT(ret == HAL_RET_OK);
     if (capri_table_rw_init()) {
         return HAL_RET_ERR;
     }
@@ -778,7 +751,7 @@ capri_init (capri_cfg_t *cfg = NULL)
 
     if (ret == HAL_RET_OK) {
         if (!hal::g_hal_state->catalog()->qos_sw_init_enabled()) {
-            ret = capri_default_config_init(cfg->default_config_dir);
+            ret = capri_default_config_init(cfg);
         }
     }
 
@@ -806,8 +779,5 @@ capri_init (capri_cfg_t *cfg = NULL)
         capri_list_program_addr(cfg->loader_info_file.c_str());
     }
     
-    g_capri_state_pd = capri_state_pd::factory();
-    HAL_ASSERT_RETURN((g_capri_state_pd != NULL), HAL_RET_ERR);
-
     return ret;
 }

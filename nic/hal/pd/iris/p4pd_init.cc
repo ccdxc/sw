@@ -26,11 +26,6 @@ using hal::pd::utils::priority_t;
 
 #define P4ACTION_NAME_MAX_LEN (100)
 #define P4TBL_MAX_ACTIONS (64)
-#ifdef GFT
-#define P4_PGM_NAME            "gft"
-#else
-#define P4_PGM_NAME            "iris"
-#endif
 
 namespace hal {
 namespace pd {

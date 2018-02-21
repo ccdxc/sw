@@ -8,6 +8,7 @@ cc_library(
     name = "capri_includes",
     srcs = [],
     hdrs = [
+        "capri.hpp",
         "capri_hbm.hpp",
         "capri_loader.h",
         "capri_barco_rings.hpp",
@@ -18,6 +19,9 @@ cc_library(
         "capri_pxb_pcie.hpp",
         "capri_tm_rw.hpp",
         "capri_txs_scheduler.hpp",
+    ],
+    deps = [
+        "//nic/utils/bm_allocator:bm_allocator",
     ],
 )
 

@@ -17,6 +17,7 @@
 #define JTIMERS                  "timers"
 
 #include "nic/include/base.h"
+#include "nic/hal/pd/capri/capri.hpp"
 
 typedef struct capri_hbm_region_s {
     char        mem_reg_name[CAPRI_HBM_MEM_REG_NAME_MAX_LEN];
@@ -24,7 +25,7 @@ typedef struct capri_hbm_region_s {
     uint64_t    start_offset;
 } capri_hbm_region_t;
 
-hal_ret_t capri_hbm_parse(const char *pgm_name);
+hal_ret_t capri_hbm_parse(capri_cfg_t *cfg);
 uint64_t get_hbm_base(void);
 uint64_t get_hbm_offset(const char *reg_name);
 uint64_t get_start_offset(const char *reg_name);

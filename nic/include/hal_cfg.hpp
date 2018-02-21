@@ -45,7 +45,8 @@ typedef struct hal_cfg_s {
     hal_feature_set_t    features;
     std::string          forwarding_mode;
     bool                 sync_mode_logging;
-    std::string          cfg_dir;
+    std::string          cfg_path;                  // full HAL config path
+    std::string          catalog_file;              // full path of catalog file
     std::string          default_config_dir;        // TODO: remove this !!
     uint16_t             num_control_threads;
     uint16_t             num_data_threads;

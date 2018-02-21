@@ -14,14 +14,15 @@ namespace pd {
 
 typedef struct asic_cfg_s {
     std::string      loader_info_file;
-    std::string      default_config_dir;
+    std::string      default_config_dir;    // TODO: vasanth, pls. remove this up eventually
     uint32_t         admin_cos;
     std::string      pgm_name;
+    std::string      cfg_path;              // HAL config path
 } asic_cfg_t;
 
 // asic init
 typedef struct pd_asic_init_args_s {
-    asic_cfg_t *cfg;
+    asic_cfg_t   *cfg;
 } __PACK__ pd_asic_init_args_t;
 
 //------------------------------------------------------------------------------

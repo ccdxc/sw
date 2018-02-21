@@ -159,23 +159,6 @@ linkmgr_uplinks_create()
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// parse the catalog file and populate catalog DB
-//------------------------------------------------------------------------------
-sdk::lib::catalog*
-linkmgr_catalog_init(std::string catalog_file)
-{
-    char  *cfg_path = NULL;
-
-    // makeup the full file path
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        catalog_file = std::string(cfg_path) + "/" + catalog_file;
-    }
-
-    return sdk::lib::catalog::factory(catalog_file);
-}
-
 void
 svc_reg (const std::string& server_addr)
 {

@@ -24,7 +24,7 @@ set_cpu_affinity (void)
     cpu_set_t cpus;
     CPU_ZERO(&cpus);
     CPU_SET(cpu_id, &cpus);
-    pthread_t current_thread = pthread_self(); 
+    pthread_t current_thread = pthread_self();
     pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpus);
 }
 const std::function<void()> worker_thread_cb = set_cpu_affinity;

@@ -317,12 +317,20 @@ hal_wait (void)
 hal_ret_t
 hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg) 
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    std::string         line;
-    std::ifstream       in(inifile);     
+    std::string         ini_file, line;
 
+    // check if ini file exists
+    ini_file = hal_cfg->cfg_path + "/" + std::string(inifile);
+    if (access(ini_file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "HAL ini file %s doesn't exist or not accessible\n",
+                ini_file.c_str());
+        hal_cfg->forwarding_mode = "smart-switch";
+        return HAL_RET_OK;
+    }
+
+    std::ifstream in(ini_file.c_str());
     if (!in) {
-        HAL_TRACE_ERR("unable to open ini file ... "
+        HAL_TRACE_ERR("Failed to open ini file ... "
                       "setting forwarding mode to smart-switch");
         hal_cfg->forwarding_mode = "smart-switch";
         return HAL_RET_OK;
@@ -345,7 +353,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     }
     in.close();
 
-    return ret;
+    return HAL_RET_OK;
 }
 
 static hal_ret_t
@@ -376,12 +384,34 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
 {
     ptree             pt;
     std::string       sparam;
+    std::string       cfg_file;
+    char              *cfg_path;
 
     if (!cfgfile || !hal_cfg) {
         return HAL_RET_INVALID_ARG;
     }
 
-    std::ifstream json_cfg(cfgfile);
+   // makeup the full file path
+    cfg_path = std::getenv("HAL_CONFIG_PATH");
+    if (cfg_path) {
+        // stash this path so we can use it in all other modules
+        hal_cfg->cfg_path = std::string(cfg_path);
+        cfg_file =  hal_cfg->cfg_path + "/" + std::string(cfgfile);
+        std::cout << "HAL config file " << cfg_file << std::endl;
+    } else {
+        hal_cfg->cfg_path = "./";
+        cfg_file = hal_cfg->cfg_path + std::string(cfgfile);
+    }
+
+    // make sure cfg file exists
+    if (access(cfg_file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "HAL config file %s doesn't exist or not accessible\n",
+                cfg_file.c_str());
+        return HAL_RET_ERR;
+    }
+
+    // parse the config now
+    std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     try {
 		std::string mode = pt.get<std::string>("mode");
@@ -423,6 +453,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         std::cerr << e.what() << std::endl;
         return HAL_RET_INVALID_ARG;
     }
+
     return HAL_RET_OK;
 }
 

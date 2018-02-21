@@ -506,14 +506,15 @@ asic_rw_loop (void)
 void
 asic_rw_init (hal_cfg_t *hal_cfg)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-    asic_cfg_t  asic_cfg;
-    pal_ret_t   palrv;
+    hal_ret_t              ret = HAL_RET_OK;
+    asic_cfg_t             asic_cfg;
+    pd_asic_init_args_t    args;
+    pal_ret_t              palrv;
 
-    // Initialize PAL
+    // initialize PAL
     palrv = sdk::lib::pal_init(
-                    hal_cfg->platform_mode == HAL_PLATFORM_MODE_SIM ||
-                    hal_cfg->platform_mode == HAL_PLATFORM_MODE_RTL);
+                hal_cfg->platform_mode == HAL_PLATFORM_MODE_SIM ||
+                hal_cfg->platform_mode == HAL_PLATFORM_MODE_RTL);
     HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
 
     // do asic initialization
@@ -523,11 +524,10 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     // TODO: Introduce a PD call to retrieve admin cos from PD
     // asic_cfg.admin_cos = qos_class_get_admin_cos();
     asic_cfg.admin_cos = 1;
-    pd_asic_init_args_t args;
+    asic_cfg.cfg_path = hal_cfg->cfg_path;
     args.cfg = &asic_cfg;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, (void *)&args);
     HAL_ABORT(ret == HAL_RET_OK);
-    // HAL_ABORT(asic_init(&asic_cfg) == HAL_RET_OK);
 
     return;
 }
@@ -559,7 +559,7 @@ asic_rw_start (void *ctxt)
 }
 
 std::string
-asic_pd_csr_dump(char *csr_str)
+asic_pd_csr_dump (char *csr_str)
 {
     HAL_TRACE_DEBUG("{} csr string {}", __FUNCTION__, csr_str);
     // PD-Cleanup: Dont use capri apis

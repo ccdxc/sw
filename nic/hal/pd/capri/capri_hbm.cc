@@ -19,22 +19,15 @@ static int num_hbm_regions_;
 #define HBM_OFFSET(x)       CAPRI_HBM_OFFSET(x)
 
 hal_ret_t
-capri_hbm_parse(const char *pgm_name)
+capri_hbm_parse (capri_cfg_t *cfg)
 {
-    char             		*cfg_path;
     pt::ptree               json_pt;
     std::string             full_path;
     capri_hbm_region_t      *reg;
 
     // makeup the full file path
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + std::string(pgm_name) +
-                         "/" + std::string("hbm_mem.json");
-    } else {
-        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
+    full_path =  cfg->cfg_path + "/" + cfg->pgm_name +
+                     "/" + std::string("hbm_mem.json");
 
     HAL_TRACE_DEBUG("HBM Memory Json: {}", full_path.c_str());
 
