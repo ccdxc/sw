@@ -395,7 +395,7 @@ enum txq_desc_opcode {
  *                   TXQ_DESC_OPCODE_CALC_NO_CSUM:
  *
  *                      Non-offload send.  No segmentation,
- *                      fragmention or checksum calc/insertion is
+ *                      fragmentation or checksum calc/insertion is
  *                      performed by device; packet is prepared
  *                      to send by software stack and requires
  *                      no further manipulation from device.

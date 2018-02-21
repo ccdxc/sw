@@ -23,21 +23,36 @@
 
 #include "ionic_dev.h"
 
-static void ionic_adminq_txq_init_comp(struct queue *q,
-				       struct desc_info *desc_info,
-				       struct cq_info *cq_info, void *cb_arg)
-{
-	struct queue *txq = cb_arg;
-	struct txq_init_comp *comp = cq_info->cq_desc;
+#ifndef ADMINQ
 
-	txq->qid = comp->qid;
-	txq->qtype = comp->qtype;
-	txq->db = ionic_db_map(q->idev, txq);
+#define HZ		CONFIG_HZ	/* Internal kernel timer frequency */
+
+int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
+
+static int ionic_dev_cmd_wait(struct queue *adminq, desc_cb cb, void *cb_arg)
+{
+	struct admin_comp comp;
+	struct cq_info cq_info = {
+		.cq_desc = &comp,
+	};
+	int err;
+
+	err = ionic_dev_cmd_wait_check(adminq->idev, HZ * 2);
+	if (err)
+		return err;
+	ionic_dev_cmd_comp(adminq->idev, &comp);
+	if (cb)
+		cb(adminq, adminq->head, &cq_info, cb_arg);
+
+	return 0;
 }
+#endif
 
 int ionic_adminq_txq_init(struct queue *adminq, struct queue *txq,
-			  struct cq *cq, unsigned int cos)
+			  struct cq *cq, unsigned int cos, desc_cb cb,
+			  void *cb_arg)
 {
+#ifdef ADMINQ
 	struct txq_init_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -54,26 +69,19 @@ int ionic_adminq_txq_init(struct queue *adminq, struct queue *txq,
 	cmd->ring_base = txq->base_pa;
 	cmd->ring_size = ilog2(txq->num_descs);
 
-	ionic_q_post(adminq, true, ionic_adminq_txq_init_comp, txq);
+	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
-}
-
-static void ionic_adminq_rxq_init_comp(struct queue *q,
-				       struct desc_info *desc_info,
-				       struct cq_info *cq_info, void *cb_arg)
-{
-	struct queue *rxq = cb_arg;
-	struct rxq_init_comp *comp = cq_info->cq_desc;
-
-	rxq->qid = comp->qid;
-	rxq->qtype = comp->qtype;
-	rxq->db = ionic_db_map(q->idev, rxq);
+#else
+	ionic_dev_cmd_txq_init(adminq->idev, txq, cq, cos);
+	return ionic_dev_cmd_wait(adminq, cb, cb_arg);
+#endif
 }
 
 int ionic_adminq_rxq_init(struct queue *adminq, struct queue *rxq,
-			  struct cq *cq)
+			  struct cq *cq, desc_cb cb, void *cb_arg)
 {
+#ifdef ADMINQ
 	struct rxq_init_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -89,14 +97,19 @@ int ionic_adminq_rxq_init(struct queue *adminq, struct queue *rxq,
 	cmd->ring_base = rxq->base_pa;
 	cmd->ring_size = ilog2(rxq->num_descs);
 
-	ionic_q_post(adminq, true, ionic_adminq_rxq_init_comp, rxq);
+	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	ionic_dev_cmd_rxq_init(adminq->idev, rxq, cq);
+	return ionic_dev_cmd_wait(adminq, cb, cb_arg);
+#endif
 }
 
 int ionic_adminq_q_enable(struct queue *adminq, struct queue *q, desc_cb cb,
 			  void *cb_arg)
 {
+#ifdef ADMINQ
 	struct q_enable_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -109,11 +122,16 @@ int ionic_adminq_q_enable(struct queue *adminq, struct queue *q, desc_cb cb,
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	ionic_dev_cmd_q_enable(adminq->idev, q);
+	return ionic_dev_cmd_wait(adminq, cb, cb_arg);
+#endif
 }
 
 int ionic_adminq_q_disable(struct queue *adminq, struct queue *q, desc_cb cb,
 			   void *cb_arg)
 {
+#ifdef ADMINQ
 	struct q_disable_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -126,10 +144,15 @@ int ionic_adminq_q_disable(struct queue *adminq, struct queue *q, desc_cb cb,
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	ionic_dev_cmd_q_disable(adminq->idev, q);
+	return ionic_dev_cmd_wait(adminq, cb, cb_arg);
+#endif
 }
 
 int ionic_adminq_station_get(struct queue *adminq, desc_cb cb, void *cb_arg)
 {
+#ifdef ADMINQ
 	struct station_mac_addr_get_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -140,11 +163,16 @@ int ionic_adminq_station_get(struct queue *adminq, desc_cb cb, void *cb_arg)
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	ionic_dev_cmd_station_get(adminq->idev);
+	return ionic_dev_cmd_wait(adminq, cb, cb_arg);
+#endif
 }
 
 int ionic_adminq_mtu_set(struct queue *adminq, int new_mtu, desc_cb cb,
 			 void *cb_arg)
 {
+#ifdef ADMINQ
 	struct mtu_set_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -156,11 +184,16 @@ int ionic_adminq_mtu_set(struct queue *adminq, int new_mtu, desc_cb cb,
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	ionic_dev_cmd_mtu_set(adminq->idev, new_mtu);
+	return ionic_dev_cmd_wait(adminq, cb, cb_arg);
+#endif
 }
 
 int ionic_adminq_rx_mode_set(struct queue *adminq, unsigned int rx_mode,
 			     desc_cb cb, void *cb_arg)
 {
+#ifdef ADMINQ
 	struct rx_mode_set_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -172,11 +205,17 @@ int ionic_adminq_rx_mode_set(struct queue *adminq, unsigned int rx_mode,
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	// Issue cmd and forget...don't wait for completion
+	ionic_dev_cmd_rx_mode_set(adminq->idev, rx_mode);
+	return 0;
+#endif
 }
 
 int ionic_adminq_rx_filter_mac(struct queue *adminq, const u8 *addr, bool add,
 			       desc_cb cb, void *cb_arg)
 {
+#ifdef ADMINQ
 	struct rx_filter_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -190,11 +229,17 @@ int ionic_adminq_rx_filter_mac(struct queue *adminq, const u8 *addr, bool add,
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	// Issue cmd and forget...don't wait for completion
+	ionic_dev_cmd_rx_filter_mac(adminq->idev, addr, add);
+	return 0;
+#endif
 }
 
 int ionic_adminq_rx_filter_vlan(struct queue *adminq, u16 vid, bool add,
 				desc_cb cb, void *cb_arg)
 {
+#ifdef ADMINQ
 	struct rx_filter_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -208,11 +253,17 @@ int ionic_adminq_rx_filter_vlan(struct queue *adminq, u16 vid, bool add,
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	// Issue cmd and forget...don't wait for completion
+	ionic_dev_cmd_rx_filter_vlan(adminq->idev, vid, add);
+	return 0;
+#endif
 }
 
 int ionic_adminq_features(struct queue *adminq, u16 set, desc_cb cb,
 			  void *cb_arg)
 {
+#ifdef ADMINQ
 	struct features_cmd *cmd = adminq->head->desc;
 
 	if (!ionic_q_has_space(adminq, 1))
@@ -224,6 +275,10 @@ int ionic_adminq_features(struct queue *adminq, u16 set, desc_cb cb,
 	ionic_q_post(adminq, true, cb, cb_arg);
 
 	return 0;
+#else
+	ionic_dev_cmd_features(adminq->idev, set);
+	return ionic_dev_cmd_wait(adminq, cb, cb_arg);
+#endif
 }
 
 int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,

@@ -295,6 +295,16 @@ void ionic_dev_cmd_rx_filter_macvlan(struct ionic_dev *idev, struct queue *q,
 	memcpy(&cmd.rx_filter.addr, addr, sizeof(cmd.rx_filter.addr));
 	ionic_dev_cmd_go(idev, &cmd);
 }
+
+void ionic_dev_cmd_features(struct ionic_dev *idev, u16 set)
+{
+	union dev_cmd cmd = {
+		.features.opcode = CMD_OPCODE_FEATURES,
+		.features.set = set,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
 #endif
 
 char *ionic_dev_asic_name(u8 asic_type)

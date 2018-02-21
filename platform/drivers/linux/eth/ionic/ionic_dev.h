@@ -43,6 +43,7 @@ union dev_cmd {
 	struct mtu_set_cmd mtu_set;
 	struct rx_mode_set_cmd rx_mode_set;
 	struct rx_filter_cmd rx_filter;
+	struct features_cmd features;
 #endif
 };
 
@@ -64,6 +65,7 @@ union dev_cmd_comp {
 	mtu_set_comp mtu_set;
 	rx_mode_set_comp rx_mode_set;
 	struct rx_filter_comp rx_filter;
+	struct features_comp features;
 #endif
 };
 
@@ -350,6 +352,7 @@ void ionic_dev_cmd_rx_filter_mac(struct ionic_dev *idev, const u8 *addr,
 				 bool add);
 void ionic_dev_cmd_rx_filter_macvlan(struct ionic_dev *idev, struct queue *q,
 				     const u8 *addr, u16 vlan, bool add);
+void ionic_dev_cmd_features(struct ionic_dev *idev, u16 set);
 #endif
 
 char *ionic_dev_asic_name(u8 asic_type);

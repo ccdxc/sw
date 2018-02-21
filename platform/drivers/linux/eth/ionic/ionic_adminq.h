@@ -20,9 +20,10 @@
 #define _IONIC_ADMINQ_H_
 
 int ionic_adminq_txq_init(struct queue *adminq, struct queue *txq,
-			  struct cq *cq, unsigned int cos);
+			  struct cq *cq, unsigned int cos, desc_cb cb,
+			  void *cb_arg);
 int ionic_adminq_rxq_init(struct queue *adminq, struct queue *rxq,
-			  struct cq *cq);
+			  struct cq *cq, desc_cb cb, void *cb_arg);
 int ionic_adminq_q_enable(struct queue *adminq, struct queue *q, desc_cb cb,
 			  void *cb_arg);
 int ionic_adminq_q_disable(struct queue *adminq, struct queue *q, desc_cb cb,

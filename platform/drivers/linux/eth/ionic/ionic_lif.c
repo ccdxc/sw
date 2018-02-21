@@ -35,6 +35,52 @@ module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
 MODULE_PARM_DESC(nrxq_descs, "Descriptors per Rx queue, must be power of 2");
 
+struct ionic_waitq {
+	wait_queue_head_t q;
+	bool waiting;
+	u8 status;
+	desc_cb cb;
+	void *cb_arg;
+};
+
+static void ionic_waitq_init(struct ionic_waitq *wq, desc_cb cb, void *cb_arg)
+{
+	BUG_ON(in_interrupt());
+	init_waitqueue_head(&wq->q);
+	wq->waiting = true;
+	wq->status = 0;
+	wq->cb = cb;
+	wq->cb_arg = cb_arg;
+}
+
+static int ionic_waitq_wait(struct ionic_waitq *wq)
+{
+	int err;
+
+	err = wait_event_interruptible_timeout(wq->q, !wq->waiting, 2 * HZ);
+	if (err == -ERESTARTSYS)
+		return err;
+	if (err == 0)
+		return -ETIMEDOUT;
+
+	return 0;
+}
+
+static void ionic_waitq_cb(struct queue *q, struct desc_info *desc_info,
+			   struct cq_info *cq_info, void *cb_arg)
+{
+	struct ionic_waitq *wq = cb_arg;
+	struct admin_comp *comp = cq_info->cq_desc;
+
+	wq->status = comp->status;
+
+	if (wq->cb)
+		wq->cb(q, desc_info, cq_info, wq->cb_arg);
+
+	wq->waiting = false;
+	wake_up_interruptible(&wq->q);
+}
+
 static void ionic_get_drvinfo(struct net_device *netdev,
 			      struct ethtool_drvinfo *drvinfo)
 {
@@ -64,7 +110,6 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_ringparam		= ionic_get_ringparam,
 };
 
-#ifdef ADMINQ
 static void ionic_qcq_enable_cb(struct queue *q, struct desc_info *desc_info,
 				struct cq_info *cq_info, void *cb_arg)
 {
@@ -73,31 +118,26 @@ static void ionic_qcq_enable_cb(struct queue *q, struct desc_info *desc_info,
 	napi_enable(&qcq->napi);
 	ionic_intr_mask(&qcq->intr, false);
 }
-#endif
 
 static int ionic_qcq_enable(struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
 	struct lif *lif = q->lif;
-#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-#endif
-	struct ionic_dev *idev = &lif->ionic->idev;
-	q_enable_comp comp;
+	struct ionic_waitq wq;
 	int err;
 
-#ifdef ADMINQ
-	return ionic_adminq_q_enable(adminq, q, ionic_qcq_enable_cb, qcq);
-#else
-	ionic_dev_cmd_q_enable(idev, q);
-	err = ionic_dev_cmd_wait_check(idev, HZ * 2);
+	ionic_waitq_init(&wq, ionic_qcq_enable_cb, qcq);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_q_enable(adminq, q, ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
 	if (err)
 		return err;
-	ionic_dev_cmd_comp(idev, &comp);
-	napi_enable(&qcq->napi);
-	ionic_intr_mask(&qcq->intr, false);
-	return 0;
-#endif
+	err = ionic_waitq_wait(&wq);
+	if (err)
+		return err;
+
+	return wq.status;
 }
 
 static int ionic_open(struct net_device *netdev)
@@ -130,27 +170,27 @@ static int ionic_qcq_disable(struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
 	struct lif *lif = q->lif;
-#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-#endif
-	struct ionic_dev *idev = &lif->ionic->idev;
-	q_disable_comp comp;
+	struct ionic_waitq wq;
 	int err;
 
 	ionic_intr_mask(&qcq->intr, true);
 	synchronize_irq(qcq->intr.vector);
 	napi_disable(&qcq->napi);
 
-#ifdef ADMINQ
-	return ionic_adminq_q_disable(adminq, q, NULL, NULL);
-#else
-	ionic_dev_cmd_q_disable(idev, q);
-	err = ionic_dev_cmd_wait_check(idev, HZ * 2);
+	ionic_waitq_init(&wq, NULL, NULL);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_q_disable(adminq, q, ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
 	if (err)
 		return err;
-	ionic_dev_cmd_comp(idev, &comp);
-	return 0;
-#endif
+	err = ionic_waitq_wait(&wq);
+	if (err)
+		return err;
+
+	// XXX cleanup stale work on queue?
+
+	return wq.status;
 }
 
 static int ionic_stop(struct net_device *netdev)
@@ -203,74 +243,46 @@ static void ionic_get_stats64(struct net_device *netdev,
 	}
 }
 
-static void ionic_rx_filter_cb(struct queue *q, struct desc_info *desc_info,
-			       struct cq_info *cq_info, void *cb_arg)
-{
-	struct rx_filter_cmd *cmd = desc_info->desc;
-
-	switch (cmd->match) {
-	case RX_FILTER_MATCH_VLAN:
-		printk(KERN_ERR "adminq rx_filter vlan %d\n", cmd->vlan);
-		break;
-	case RX_FILTER_MATCH_MAC:
-		printk(KERN_ERR "adminq rx_filter mac %pM\n", cmd->addr);
-		break;
-	case RX_FILTER_MATCH_MAC_VLAN:
-		printk(KERN_ERR "adminq rx_filter mac/vlan %pM/%d on qid %d\n",
-		       cmd->addr, cmd->vlan, cmd->qid);
-		break;
-	}
-}
-
 static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 {
-#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
 
-	return ionic_adminq_rx_filter_mac(adminq, addr, add,
-					  ionic_rx_filter_cb, NULL);
-#else
-	struct ionic_dev *idev = &lif->ionic->idev;
-
 	printk(KERN_ERR "dev_cmd %s rx_filter %pM\n", add ? "add" : "del", addr);
-	ionic_dev_cmd_rx_filter_mac(idev, addr, add);
-	return 0;
-#endif
+	return ionic_adminq_rx_filter_mac(adminq, addr, add, NULL, NULL);
 }
 
 static int ionic_addr_add(struct net_device *netdev, const u8 *addr)
 {
 	struct lif *lif = netdev_priv(netdev);
+	int err;
 
-	return ionic_lif_addr(lif, addr, true);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_lif_addr(lif, addr, true);
+	spin_unlock(&lif->adminq_lock);
+
+	return err;
 }
 
 static int ionic_addr_del(struct net_device *netdev, const u8 *addr)
 {
 	struct lif *lif = netdev_priv(netdev);
 
-	return ionic_lif_addr(lif, addr, false);
+	int err;
+
+	spin_lock(&lif->adminq_lock);
+	err = ionic_lif_addr(lif, addr, false);
+	spin_unlock(&lif->adminq_lock);
+
+	return err;
 }
 
-#ifdef NOT_YET
-static void ionic_lif_rx_mode_cb(struct queue *q, struct desc_info *desc_info,
-				 struct cq_info *cq_info, void *cb_arg)
+static void ionic_lif_rx_mode(struct lif *lif)
 {
-	struct lif *lif = cb_arg;
-	printk(KERN_ERR "adminq set rx_mode %d\n", lif->rx_mode);
-}
-#endif
-
-static int ionic_lif_rx_mode(struct lif *lif)
-{
-#ifdef NOT_YET
 	struct queue *adminq = &lif->adminqcq->q;
 
-	return ionic_adminq_rx_mode_set(adminq, lif->rx_mode,
-					ionic_lif_rx_mode_cb, lif);
-#else
-	return 0;
-#endif
+	spin_lock(&lif->adminq_lock);
+	ionic_adminq_rx_mode_set(adminq, lif->rx_mode, NULL, NULL);
+	spin_unlock(&lif->adminq_lock);
 }
 
 static void ionic_set_rx_mode(struct net_device *netdev)
@@ -278,6 +290,8 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 	struct lif *lif = netdev_priv(netdev);
 	union identity *ident = lif->ionic->ident;
 	unsigned int rx_mode;
+
+	// XXX what if add/del addr takes a long long time?
 
 	rx_mode = RX_MODE_F_UNICAST;
 	rx_mode |= (netdev->flags & IFF_MULTICAST) ? RX_MODE_F_MULTICAST : 0;
@@ -302,11 +316,10 @@ static void ionic_set_rx_mode(struct net_device *netdev)
 static int ionic_set_mac_address(struct net_device *netdev, void *addr)
 {
 	// TODO implement
-	printk(KERN_ERR "%s SET MAC ADDRESS not implememnted\n", netdev->name);
+	printk(KERN_ERR "%s SET MAC ADDRESS not implemented\n", netdev->name);
 	return 0;
 }
 
-#ifdef ADMINQ
 static void ionic_change_mtu_cb(struct queue *q, struct desc_info *desc_info,
 				struct cq_info *cq_info, void *cb_arg)
 {
@@ -315,7 +328,9 @@ static void ionic_change_mtu_cb(struct queue *q, struct desc_info *desc_info,
 	struct mtu_set_cmd *cmd = desc_info->desc;
 	unsigned int i;
 
+#ifdef ADMINQ
 	rtnl_lock();
+#endif
 
 	netdev->mtu = cmd->mtu;
 
@@ -325,36 +340,32 @@ static void ionic_change_mtu_cb(struct queue *q, struct desc_info *desc_info,
 	if (netif_running(netdev))
 		ionic_open(netdev);
 
+#ifdef ADMINQ
 	rtnl_unlock();
-}
 #endif
+}
 
 static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 {
 	struct lif *lif = netdev_priv(netdev);
-#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-#else
-	unsigned int i;
-#endif
+	struct ionic_waitq wq;
+	int err;
 
 	if (netif_running(netdev))
 		ionic_stop(netdev);
 
-#ifdef ADMINQ
-	ionic_adminq_mtu_set(adminq, new_mtu, ionic_change_mtu_cb,
-				    NULL);
-#else
-	netdev->mtu = new_mtu;
+	ionic_waitq_init(&wq, ionic_change_mtu_cb, NULL);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_mtu_set(adminq, new_mtu, ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
+	if (err)
+		return err;
+	err = ionic_waitq_wait(&wq);
+	if (err)
+		return err;
 
-	for (i = 0; i < lif->nrxqcqs; i++)
-		ionic_rx_refill(&lif->rxqcqs[i]->q);
-
-	if (netif_running(netdev))
-		ionic_open(netdev);
-
-	return 0;
-#endif
+	return wq.status;
 }
 
 static void ionic_tx_timeout(struct net_device *netdev)
@@ -367,9 +378,22 @@ static int ionic_vlan_rx_add_vid(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct queue *adminq = &lif->adminqcq->q;
+	struct ionic_waitq wq;
+	int err;
 
-	return ionic_adminq_rx_filter_vlan(adminq, vid, true,
-					   ionic_rx_filter_cb, NULL);
+	ionic_waitq_init(&wq, NULL, NULL);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_rx_filter_vlan(adminq, vid, true,
+					  ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
+	spin_lock(&lif->adminq_lock);
+	if (err)
+		return err;
+	err = ionic_waitq_wait(&wq);
+	if (err)
+		return err;
+
+	return wq.status;
 }
 
 static int ionic_vlan_rx_kill_vid(struct net_device *netdev,
@@ -377,9 +401,21 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct queue *adminq = &lif->adminqcq->q;
+	struct ionic_waitq wq;
+	int err;
 
-	return ionic_adminq_rx_filter_vlan(adminq, vid, false,
-					   ionic_rx_filter_cb, NULL);
+	ionic_waitq_init(&wq, NULL, NULL);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_rx_filter_vlan(adminq, vid, false,
+					  ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
+	if (err)
+		return err;
+	err = ionic_waitq_wait(&wq);
+	if (err)
+		return err;
+
+	return wq.status;
 }
 
 static const struct net_device_ops ionic_netdev_ops = {
@@ -619,53 +655,6 @@ static void ionic_qcqs_free(struct lif *lif)
 	ionic_qcq_free(lif, lif->adminqcq);
 }
 
-static int ionic_set_features(struct lif *lif, struct net_device *netdev)
-{
-	netdev->features |= NETIF_F_HIGHDMA;
-
-	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
-		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
-	if (lif->hw_features & ETH_HW_RX_HASH)
-		netdev->hw_features |= NETIF_F_RXHASH;
-	if (lif->hw_features & ETH_HW_TX_SG)
-		netdev->hw_features |= NETIF_F_SG;
-
-	if (lif->hw_features & ETH_HW_TX_CSUM)
-		netdev->hw_enc_features |= NETIF_F_HW_CSUM;
-	if (lif->hw_features & ETH_HW_RX_CSUM)
-		netdev->hw_enc_features |= NETIF_F_RXCSUM;
-	if (lif->hw_features & ETH_HW_TSO)
-		netdev->hw_enc_features |= NETIF_F_TSO;
-	if (lif->hw_features & ETH_HW_TSO_IPV6)
-		netdev->hw_enc_features |= NETIF_F_TSO6;
-	if (lif->hw_features & ETH_HW_TSO_ECN)
-		netdev->hw_enc_features |= NETIF_F_TSO_ECN;
-	if (lif->hw_features & ETH_HW_TSO_GRE)
-		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
-	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
-		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
-	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
-		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
-	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
-		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
-	if (lif->hw_features & ETH_HW_TSO_UDP)
-		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
-	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
-		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
-	if (lif->hw_features & ETH_HW_SCTP_CSUM)
-		netdev->hw_enc_features |= NETIF_F_SCTP_CRC;
-
-	netdev->hw_features |= netdev->hw_enc_features;
-	netdev->features |= netdev->hw_features;
-	netdev->vlan_features |= netdev->features;
-
-	return 0;
-}
-
 static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 {
 	struct device *dev = ionic->dev;
@@ -689,12 +678,9 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->index = index;
 	lif->ntxqcqs = ionic->ntxqs_per_lif;
 	lif->nrxqcqs = ionic->nrxqs_per_lif;
+	spin_lock_init(&lif->adminq_lock);
 
 	snprintf(lif->name, sizeof(lif->name), "lif%u", index);
-
-	err = ionic_set_features(lif, netdev);
-	if (err)
-		goto err_out_free_netdev;
 
 	netdev->netdev_ops = &ionic_netdev_ops;
 	netdev->ethtool_ops = &ionic_ethtool_ops;
@@ -838,51 +824,37 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	return 0;
 }
 
-#ifdef ADMINQ
-static void ionic_station_set(struct queue *q, struct desc_info *desc_info,
-			      struct cq_info *cq_info, void *cb_arg)
+static void ionic_lif_txq_init_cb(struct queue *q, struct desc_info *desc_info,
+				  struct cq_info *cq_info, void *cb_arg)
 {
-	struct lif *lif = cb_arg;
-	struct net_device *netdev = lif->netdev;
-	struct station_mac_addr_get_comp *comp = cq_info->cq_desc;
+	struct queue *txq = cb_arg;
+	struct txq_init_comp *comp = cq_info->cq_desc;
 
-	printk(KERN_ERR "deleting station MAC addr %pM\n", netdev->dev_addr);
-	ionic_lif_addr(lif, netdev->dev_addr, false);
-	memcpy(netdev->dev_addr, comp->addr, netdev->addr_len);
-	printk(KERN_ERR "adding station MAC addr %pM\n", netdev->dev_addr);
-	ionic_lif_addr(lif, netdev->dev_addr, true);
+	txq->qid = comp->qid;
+	txq->qtype = comp->qtype;
+	txq->db = ionic_db_map(q->idev, txq);
 }
-#endif
 
 static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
 	struct cq *cq = &qcq->cq;
 	struct napi_struct *napi = &qcq->napi;
-#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-	struct cq *admincq = &lif->adminqcq->cq;
-#else
-	struct ionic_dev *idev = &lif->ionic->idev;
-	struct txq_init_comp comp;
-#endif
+	struct ionic_waitq wq;
 	int err;
 
-#ifdef ADMINQ
-	err = ionic_adminq_txq_init(adminq, q, cq, 0);
+	ionic_waitq_init(&wq, ionic_lif_txq_init_cb, q);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_txq_init(adminq, q, cq, 0, ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
 	if (err)
 		return err;
-	ionic_cq_service(admincq, 1, ionic_adminq_service, NULL);
-#else
-	ionic_dev_cmd_txq_init(idev, q, cq, 0);
-	err = ionic_dev_cmd_wait_check(idev, HZ * 2);
+	err = ionic_waitq_wait(&wq);
 	if (err)
 		return err;
-	ionic_dev_cmd_comp(idev, &comp);
-	q->qid = comp.qid;
-	q->qtype = comp.qtype;
-	q->db = ionic_db_map(idev, q);
-#endif
+	if (wq.status)
+		return wq.status;
 
 	netif_napi_add(lif->netdev, napi, ionic_tx_napi,
 		       NAPI_POLL_WEIGHT);
@@ -912,35 +884,37 @@ static int ionic_lif_txqs_init(struct lif *lif)
 	return 0;
 }
 
+static void ionic_lif_rxq_init_cb(struct queue *q, struct desc_info *desc_info,
+				  struct cq_info *cq_info, void *cb_arg)
+{
+	struct queue *rxq = cb_arg;
+	struct rxq_init_comp *comp = cq_info->cq_desc;
+
+	rxq->qid = comp->qid;
+	rxq->qtype = comp->qtype;
+	rxq->db = ionic_db_map(q->idev, rxq);
+}
+
 static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
 	struct cq *cq = &qcq->cq;
 	struct napi_struct *napi = &qcq->napi;
-#ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-	struct cq *admincq = &lif->adminqcq->cq;
-#else
-	struct ionic_dev *idev = &lif->ionic->idev;
-	struct rxq_init_comp comp;
-#endif
+	struct ionic_waitq wq;
 	int err;
 
-#ifdef ADMINQ
-	err = ionic_adminq_rxq_init(adminq, q, cq);
+	ionic_waitq_init(&wq, ionic_lif_rxq_init_cb, q);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_rxq_init(adminq, q, cq, ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
 	if (err)
 		return err;
-	ionic_cq_service(admincq, 1, ionic_adminq_service, NULL);
-#else
-	ionic_dev_cmd_rxq_init(idev, q, cq);
-	err = ionic_dev_cmd_wait_check(idev, HZ * 2);
+	err = ionic_waitq_wait(&wq);
 	if (err)
 		return err;
-	ionic_dev_cmd_comp(idev, &comp);
-	q->qid = comp.qid;
-	q->qtype = comp.qtype;
-	q->db = ionic_db_map(idev, q);
-#endif
+	if (wq.status)
+		return wq.status;
 
 	netif_napi_add(lif->netdev, napi, ionic_rx_napi,
 		       NAPI_POLL_WEIGHT);
@@ -970,12 +944,42 @@ static int ionic_lif_rxqs_init(struct lif *lif)
 	return 0;
 }
 
+static void ionic_station_set_cb(struct queue *q, struct desc_info *desc_info,
+				 struct cq_info *cq_info, void *cb_arg)
+{
+	struct lif *lif = cb_arg;
+	struct net_device *netdev = lif->netdev;
+	struct station_mac_addr_get_comp *comp = cq_info->cq_desc;
+
+	printk(KERN_ERR "deleting station MAC addr %pM\n", netdev->dev_addr);
+	ionic_lif_addr(lif, netdev->dev_addr, false);
+	memcpy(netdev->dev_addr, comp->addr, netdev->addr_len);
+	printk(KERN_ERR "adding station MAC addr %pM\n", netdev->dev_addr);
+	ionic_lif_addr(lif, netdev->dev_addr, true);
+}
+
+static int ionic_station_set(struct lif *lif)
+{
+	struct queue *adminq = &lif->adminqcq->q;
+	struct ionic_waitq wq;
+	int err;
+
+	ionic_waitq_init(&wq, ionic_station_set_cb, lif);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_station_get(adminq, ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
+	if (err)
+		return err;
+	err = ionic_waitq_wait(&wq);
+	if (err)
+		return err;
+
+	return wq.status;
+}
+
 static int ionic_lif_init(struct lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
-#ifndef ADMINQ
-	struct station_mac_addr_get_comp comp;
-#endif
 	int err;
 
 	ionic_dev_cmd_lif_init(idev, lif->index);
@@ -987,42 +991,31 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		return err;
 
+	/* Enabling interrupts on adminq from here on... */
+	ionic_intr_mask(&lif->adminqcq->intr, false);
+
 	err = ionic_lif_txqs_init(lif);
 	if (err)
-		return err;
+		goto err_out_mask_adminq;
 
 	err = ionic_lif_rxqs_init(lif);
 	if (err)
 		goto err_out_txqs_deinit;
 
-	// TODO move this above ionic_lif_txqs_init once ADMINQ is working...
-
-	/* Enabling interrupts on adminq from here on... */
-	ionic_intr_mask(&lif->adminqcq->intr, false);
-
-#ifdef ADMINQ
-	err = ionic_adminq_station_get(&lif->adminqcq->q,
-				       ionic_station_set, lif);
+	err = ionic_station_set(lif);
 	if (err)
-		goto err_out_mask_adminq;
-#else
-	ionic_dev_cmd_station_get(idev);
-	err = ionic_dev_cmd_wait_check(idev, HZ * 2);
-	if (err)
-		goto err_out_mask_adminq;
-	ionic_dev_cmd_comp(idev, &comp);
-	memcpy(lif->netdev->dev_addr, comp.addr, lif->netdev->addr_len);
-	ionic_lif_addr(lif, lif->netdev->dev_addr, true);
-#endif
+		goto err_out_rxqs_deinit;
 
 	ionic_set_rx_mode(lif->netdev);
 
 	return 0;
 
-err_out_mask_adminq:
-	ionic_intr_mask(&lif->adminqcq->intr, true);
+err_out_rxqs_deinit:
+	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:
 	ionic_lif_txqs_deinit(lif);
+err_out_mask_adminq:
+	ionic_intr_mask(&lif->adminqcq->intr, true);
 
 	return err;
 }
@@ -1043,10 +1036,98 @@ int ionic_lifs_init(struct ionic *ionic)
 	return 0;
 }
 
+static void ionic_get_features_comp(struct queue *q,
+				    struct desc_info *desc_info,
+				    struct cq_info *cq_info, void *cb_arg)
+{
+	struct lif *lif = cb_arg;
+	struct features_comp *comp = cq_info->cq_desc;
+
+	lif->hw_features = comp->supported;
+}
+
+static int ionic_get_features(struct lif *lif)
+{
+	struct queue *adminq = &lif->adminqcq->q;
+	struct ionic_waitq wq;
+	int err;
+
+	ionic_waitq_init(&wq, ionic_get_features_comp, lif);
+	spin_lock(&lif->adminq_lock);
+	err = ionic_adminq_features(adminq, FEATURE_SET_ETH_HW_FEATURES,
+				    ionic_waitq_cb, &wq);
+	spin_unlock(&lif->adminq_lock);
+	if (err)
+		return err;
+	err = ionic_waitq_wait(&wq);
+	if (err)
+		return err;
+
+	return wq.status;
+}
+
+static int ionic_set_features(struct lif *lif)
+{
+	struct net_device *netdev = lif->netdev;
+	int err;
+
+	err = ionic_get_features(lif);
+	if (err)
+		return err;
+
+	netdev->features |= NETIF_F_HIGHDMA;
+
+	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
+	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
+	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
+		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
+	if (lif->hw_features & ETH_HW_RX_HASH)
+		netdev->hw_features |= NETIF_F_RXHASH;
+	if (lif->hw_features & ETH_HW_TX_SG)
+		netdev->hw_features |= NETIF_F_SG;
+
+	if (lif->hw_features & ETH_HW_TX_CSUM)
+		netdev->hw_enc_features |= NETIF_F_HW_CSUM;
+	if (lif->hw_features & ETH_HW_RX_CSUM)
+		netdev->hw_enc_features |= NETIF_F_RXCSUM;
+	if (lif->hw_features & ETH_HW_TSO)
+		netdev->hw_enc_features |= NETIF_F_TSO;
+	if (lif->hw_features & ETH_HW_TSO_IPV6)
+		netdev->hw_enc_features |= NETIF_F_TSO6;
+	if (lif->hw_features & ETH_HW_TSO_ECN)
+		netdev->hw_enc_features |= NETIF_F_TSO_ECN;
+	if (lif->hw_features & ETH_HW_TSO_GRE)
+		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
+	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
+		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
+	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
+		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
+	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
+		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
+	if (lif->hw_features & ETH_HW_TSO_UDP)
+		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
+	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
+		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
+	if (lif->hw_features & ETH_HW_SCTP_CSUM)
+		netdev->hw_enc_features |= NETIF_F_SCTP_CRC;
+
+	netdev->hw_features |= netdev->hw_enc_features;
+	netdev->features |= netdev->hw_features;
+	netdev->vlan_features |= netdev->features;
+
+	return 0;
+}
+
 int ionic_lif_register(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 	int err;
+
+	err = ionic_set_features(lif);
+	if (err)
+		return err;
 
 	err = ionic_debugfs_add_lif(lif);
 	if (err)
