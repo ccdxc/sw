@@ -421,6 +421,23 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 }
 
 static void
+devcmd_features(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct features_cmd *cmd = (void *)acmd;
+    struct features_comp *comp = (void *)acomp;
+
+    simdev_log("devcmd_features:\n");
+
+    comp->status = 0;
+    comp->supported = 0;
+
+    if (cmd->set == FEATURE_SET_ETH_HW_FEATURES) {
+        comp->supported |= ETH_HW_TX_SG;
+        comp->supported |= ETH_HW_TX_CSUM;
+    }
+}
+
+static void
 devcmd_q_enable(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     struct q_enable_cmd *cmd = (void *)acmd;
@@ -599,6 +616,9 @@ devcmd(struct dev_cmd_regs *dc)
         break;
     case CMD_OPCODE_RXQ_INIT:
         devcmd_rxq_init(cmd, comp);
+        break;
+    case CMD_OPCODE_FEATURES:
+        devcmd_features(cmd, comp);
         break;
     case CMD_OPCODE_Q_ENABLE:
         devcmd_q_enable(cmd, comp);
