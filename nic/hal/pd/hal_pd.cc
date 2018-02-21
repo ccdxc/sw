@@ -714,25 +714,18 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
     std::string feature_set = std::string(hal_cfg->feature_set);
     std::string feature_pd_stub = "pd_stub";
 
-    const char* cfg_path =  std::getenv("HAL_CONFIG_PATH");
-    HAL_ASSERT(cfg_path);
-
     std::string pdlib_path, pdlib_stub_path;
     const char *path = std::getenv("HAL_PD_LIB_PATH");
     if (path) {
         pdlib_path = std::string(path);
         pdlib_stub_path = std::string(path);
     } else {
-        pdlib_path = std::string(cfg_path) + 
-            std::string("/../../bazel-bin/nic/hal/pd/") +
-            feature_set +  std::string("/");
-        pdlib_stub_path = std::string(cfg_path) + 
-            std::string("/../../bazel-bin/nic/hal/pd/") +
-            feature_pd_stub +  std::string("/");
+        pdlib_path = hal_cfg->cfg_path + "/" + feature_set + "/";
+        pdlib_stub_path = hal_cfg->cfg_path + "/" + feature_pd_stub + "/";
     }
      
-    pdlib_path += std::string("lib") + feature_set + std::string(".so");
-    pdlib_stub_path += std::string("lib") + feature_pd_stub + std::string(".so");
+    pdlib_path += "lib" + feature_set + ".so";
+    pdlib_stub_path += "lib" + feature_pd_stub + ".so";
 
     HAL_TRACE_DEBUG("pd-common: loading pd lib: {}", pdlib_path);
 

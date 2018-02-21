@@ -59,10 +59,10 @@ def print_core(executable, core):
     cmd.extend([executable, core])
     call(" ".join(cmd), universal_newlines=True, shell=True)
 
-def get_latest_core_file(path):                                          
-    list_of_files = glob.glob(path + "/core.*")                          
+def get_latest_core_file(path):
+    list_of_files = glob.glob(path + "/core.*")
     if list_of_files:
-        latest_file = max(list_of_files, key=os.path.getctime)           
+        latest_file = max(list_of_files, key=os.path.getctime)
         return latest_file
 
 def remove_core_files(path):
@@ -70,15 +70,15 @@ def remove_core_files(path):
         os.remove(filename)
 
 def remove_all_core_files():
-    remove_core_files(hal_core_path) 
-    remove_core_files(model_core_path) 
+    remove_core_files(hal_core_path)
+    remove_core_files(model_core_path)
 
-def process_core(executable, core_path):   
+def process_core(executable, core_path):
     core_file = get_latest_core_file(core_path)
     if core_file:
         print_core(executable, core_file)
         os.system("mv " + core_file + "  " + nic_dir + "/core." +  os.path.basename(executable))
-   
+
 
 def process_hal_core():
     process_core(hal_executable, hal_core_path)
@@ -89,7 +89,7 @@ def process_model_core():
 def process_cores():
     process_hal_core()
     process_model_core()
-          
+
 # build
 def build():
     print "* Starting build"
@@ -224,6 +224,7 @@ def run_hal(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["LD_LIBRARY_PATH"] = "/home/asic/bin/tools/lib64:" + os.environ["LD_LIBRARY_PATH"]
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/bin/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + os.environ["HAL_CONFIG_PATH"] + "/libs/sdk/"
     os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/daqs/"

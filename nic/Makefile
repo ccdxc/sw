@@ -138,8 +138,11 @@ capmodel:
 go-proto:
 	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto
 
+HAL_CONFIG_PATH = conf/
 sdk:
 	$(MAKE) -C sdk lib
+	@echo Copying over SDK libs to conf ...
+	cp sdk/obj/*.so $(HAL_CONFIG_PATH)/libs/sdk/
 
 DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
 #SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
