@@ -429,7 +429,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
 int
 hal_sdk_error_logger (const char *format, ...)
 {
-    char       logbuf[128];
+    char       logbuf[1024];
     va_list    args;
 
     va_start(args, format);
@@ -443,7 +443,7 @@ hal_sdk_error_logger (const char *format, ...)
 int
 hal_sdk_debug_logger (const char *format, ...)
 {
-    char       logbuf[128];
+    char       logbuf[1024];
     va_list    args;
 
     va_start(args, format);

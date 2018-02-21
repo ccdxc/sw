@@ -22,17 +22,23 @@ encap_vxlan:
   phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
                 p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
-  phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
-  phvwr       p.udp_dstPort, UDP_PORT_VXLAN
   add         r7, r5, 16
-  phvwrpair   p.udp_len, r7, p.udp_checksum, 0
 
-  phvwri      p.{vxlan_flags,vxlan_reserved}, 0x08000000
-  phvwrpair   p.vxlan_vni, k.rewrite_metadata_tunnel_vnid, \
-                p.vxlan_reserved2, 0
+  // vxlan header (flags, vni)
+  add         r1, r0, 0x08, 56
+  or          r1, r1, k.rewrite_metadata_tunnel_vnid, 8
 
-  phvwr       p.inner_ethernet_valid, 1
-  phvwrpair   p.vxlan_valid, 1, p.udp_valid, 1
+  // udp header (srcPort, dstPort, len)
+  add         r2, r0, k.rewrite_metadata_entropy_hash, 48
+  or          r2, r2, UDP_PORT_VXLAN, 32
+  or          r2, r2, r7, 16
+  phvwrpair   p.{vxlan_flags...vxlan_reserved2}, r1, \
+                p.{udp_srcPort...udp_checksum}, r2
+
+  // set inner_ethernet_valid, vxlan_valid and udp_valid
+  .assert(offsetof(p, inner_ethernet_valid) - offsetof(p, vxlan_valid) == 4)
+  .assert(offsetof(p, vxlan_valid) - offsetof(p, udp_valid) == 3)
+  phvwrmi     p.{inner_ethernet_valid...udp_valid}, 0xFF, 0x89
 
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6
@@ -116,33 +122,38 @@ encap_erspan:
   nop
 #endif /* PHASE2 */
 
+// r6 :  etherType (input)
 f_encap_vlan:
+  .assert(offsetof(p, ethernet_etherType) - offsetof(p, vlan_tag_etherType) == 32)
   phvwr       p.vlan_tag_valid, 1
-  phvwrpair   p.vlan_tag_vid, d.u.encap_vxlan_d.vlan_id, p.vlan_tag_etherType, r6
+  add         r3, r6, d.u.encap_vxlan_d.vlan_id, 16
+  add         r4, r0, ETHERTYPE_VLAN
+  phvwrpair   p.ethernet_etherType, r4, p.{vlan_tag_vid,vlan_tag_etherType}, r3
   seq         c7, k.qos_metadata_cos_en, 1
-  phvwr.c7    p.vlan_tag_pcp, k.qos_metadata_cos
-  phvwr       p.vlan_tag_dei, 0
   jr          r1
-  phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
+  phvwr.c7    p.vlan_tag_pcp, k.qos_metadata_cos
 
+// r6 : ttl, protocol (input)
+// r7 : payload length (input)
 f_insert_ipv4_header:
-  phvwr       p.{ipv4_version,ipv4_ihl,ipv4_diffserv}, 0x4500
+  add         r3, r7, 20
+  or          r3, r3, 0x4500, 16
+  phvwr       p.{ipv4_version...ipv4_totalLen}, r3
   phvwrpair   p.{ipv4_identification...ipv4_fragOffset}, 0, \
                 p.{ipv4_ttl...ipv4_protocol}, r6
   phvwrpair   p.ipv4_srcAddr, d.u.encap_vxlan_d.ip_sa, \
                 p.ipv4_dstAddr, d.u.encap_vxlan_d.ip_da
-  add         r7, r7, 20
-  phvwr       p.ipv4_totalLen, r7
   phvwr.e     p.ipv4_valid, 1
-  phvwr       p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
+  phvwr.f     p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
 #ifdef PHASE2
+// r6 : protocol, ttl (input)
 f_insert_ipv6_header:
   phvwri      p.{ipv6_version...ipv6_trafficClass}, 0x60000000
   phvwr       p.{ipv6_nextHdr,ipv6_hopLimit}, r6
   phvwr       p.{ipv6_srcAddr,ipv6_dstAddr}, d.{u.encap_vxlan_d.ip_sa,u.encap_vxlan_d.ip_da}
   phvwr.e     p.ipv6_payloadLen, r7
-  phvwr       p.ipv6_valid, 1
+  phvwr.f     p.ipv6_valid, 1
 
 .align
 encap_vxlan_gpe:

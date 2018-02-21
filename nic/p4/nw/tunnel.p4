@@ -148,9 +148,11 @@ action remove_tunnel_hdrs() {
     remove_header(genv);
     remove_header(nvgre);
     remove_header(gre);
+#ifdef PHASE2
     remove_header(mpls[0]);
     remove_header(mpls[1]);
     remove_header(mpls[2]);
+#endif
 }
 
 @pragma stage 1

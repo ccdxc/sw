@@ -56,7 +56,7 @@ action tx_vport_stats(permit_packets, permit_bytes,
     }
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma table_write
 table tx_vport_stats {
     reads {

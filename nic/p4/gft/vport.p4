@@ -55,7 +55,7 @@ action tx_vport(port) {
     modify_field(capri_intrinsic.tm_oport, port);
 }
 
-@pragma stage 5
+@pragma stage 4
 table tx_vport {
     reads {
         flow_action_metadata.tx_ethernet_dst : ternary;
