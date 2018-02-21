@@ -297,11 +297,21 @@ class ConfigObjectHelper(object):
 
     def CreateConfigs(self, count, status, forced_references=None):
         print("Creating configuration for %s, count : %d" % (self, count))
-        for _ in range(0, count):
-            config_object = self.CreateConfigObject(status, ext_refs={})
-            if config_object:
-                self._config_objects.append(config_object)
-                self.num_create_ops += 1
+        try:
+            constraints = getattr(self._service_object, 'constraints')
+            for constraint in constraints:
+                constraint = GrpcReqRspMsg.extract_constraints(constraint.constraint)
+                for _ in range(0, count):
+                    config_object = self.CreateConfigObject(status, ext_refs={}, external_constraints=constraint[0])
+                    if config_object:
+                        self._config_objects.append(config_object)
+                        self.num_create_ops += 1
+        except AttributeError:
+            for _ in range(0, count):
+                config_object = self.CreateConfigObject(status, ext_refs={})
+                if config_object:
+                    self._config_objects.append(config_object)
+                    self.num_create_ops += 1
 
         return True
 

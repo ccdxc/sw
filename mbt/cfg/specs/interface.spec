@@ -6,6 +6,11 @@ objects:
     - object :
         name : Interface
         key_handle : InterfaceKeyHandle
+        constraints :
+            - constraint : "venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}"
+            - constraint : "venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK_PC}"
+            - constraint : "venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_ENIC}"
+            - constraint : "venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_APP_REDIR}"
         ignore:
         create:
             api      : InterfaceCreate
