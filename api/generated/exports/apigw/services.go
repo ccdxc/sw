@@ -5,6 +5,8 @@ Package apisrvbackends is a auto generated package.
 package apisrvbackends
 
 import (
+	// blank import to pull in alerts service into api gateway
+	_ "github.com/pensando/sw/api/generated/alerts/gateway"
 	// blank import to pull in app service into api gateway
 	_ "github.com/pensando/sw/api/generated/app/gateway"
 	// blank import to pull in auth service into api gateway

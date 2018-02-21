@@ -1,0 +1,416 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+// Service name
+package alerts;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// -------------------------- Alert Object -------------------------------------
+// Alert is a notification to a user of a fault or condition that needs
+// user attention. Alerts are persisted by API Server and are objects.
+
+// Severity of an alert
+enum AlertSeverity {
+  WARNING     = 0;
+  CRITICAL    = 1;
+}
+
+// Source of an alert; for alerts generated from events, it maps to event.Source
+message AlertSource {
+  string Component    = 1 [(gogoproto.nullable) = true,
+                           (gogoproto.jsontag) = "component, omitempty"];
+  string NodeName     = 2 [(gogoproto.nullable) = true,
+                           (gogoproto.jsontag) = "node-name, omitempty"];
+}
+
+// One of the requirement from the expression that was met
+message MatchedRequirement {
+  // Requirement from the alert rule that was met
+  Requirement Requirement  = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];
+
+  // The value at which the requirement was met.
+  // same as Requirement.value for operator `Equals` but could vary for other operators
+  // e.g. requirement - CPU;Gt;90 could have a matching value 96
+  string ObservedValue     = 2 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "observed-value, omitempty"];
+}
+
+// AlertReason captures all the requirements with matched value from the alert policy rule
+// at the time of creating an alert.
+// e.g. "matched-requirements": [{"field": "cpu", "operator": "Gt", "values": [90], "observed-value": 95}]
+message AlertReason {
+  // List of requirements from the alert policy with it's matched value
+  repeated MatchedRequirement MatchedRequirements = 1 [(gogoproto.nullable) = true,
+                                                       (gogoproto.jsontag) = "matched-requirements, omitempty"];
+
+  // Alert Policy ID that matched
+  string PolicyID                                 = 2 [(gogoproto.nullable) = true,
+                                                       (gogoproto.jsontag) = "alert-policy-id, omitempty"];
+}
+
+
+// AuditInfo captures the user performed the action and the time at which the
+// action was performed.
+message AuditInfo {
+  // Name of the user performed some action.
+  string User               = 1 [(gogoproto.nullable) = true,
+                                 (gogoproto.jsontag) = "user, omitempty"];
+
+  // Time at which the action was performed.
+  api.Timestamp Time        = 2 [(gogoproto.nullable) = true,
+                                 (gogoproto.jsontag) = "time, omitempty"];
+}
+
+// User can change the state of the alert by changing the spec
+message AlertSpec {
+  // Possible alert states
+  enum AlertState {
+    OPEN         = 0;
+    RESOLVED     = 1;
+    ACKNOWLEDGED = 2;
+  }
+
+  string State        = 1 [(gogoproto.nullable) = true,
+                           (venice.check) = "StrEnum(AlertSpec.AlertState)",
+                           (gogoproto.jsontag) = "state, omitempty"];
+}
+// Status part of the alert object
+message AlertStatus {
+  // Severity of an alert
+  string Severity                 = 1 [(gogoproto.nullable) = true,
+                                       (venice.check) = "StrEnum(AlertSeverity)",
+                                       (gogoproto.jsontag) = "severity, omitempty"];
+
+  // Alert source or origin
+  AlertSource Source              = 2 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "source, omitempty"];
+
+  // Affected object
+  api.ObjectRef ObjectRef         = 3 [(gogoproto.nullable) = false,
+                                       (gogoproto.jsontag) = "object-ref, omitempty"];
+
+  // Message from the alert rule that triggered the alert
+  string Message                  = 4 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "message, omitempty"];
+
+  // Captures all the requirements from the alert policy rule with matched value.
+  // All these requirements must be cleared to auto-resolve an alert.
+  AlertReason Reason              = 5 [(gogoproto.nullable) = false,
+                                       (gogoproto.jsontag) = "reason, omitempty"];
+
+  // Username and time at which the alert was acknowledged
+  AuditInfo Acknowledged          = 6 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "acknowledged, omitempty"];
+
+  // Username and time at which the alert was resolved
+  AuditInfo Resolved              = 7 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "resolved, omitempty"];
+}
+
+// Alert defines an alert object
+message Alert {
+  // KV store prefix
+  option (venice.objectPrefix) =  {Collection: "alerts", Path: "/{O.Tenant}"};
+
+  api.TypeMeta T        = 1 [(gogoproto.embed) = true,
+                             (gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = ",inline"];
+
+  api.ObjectMeta O      = 2 [(gogoproto.embed) = true,
+                             (gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "meta, omitempty"];
+
+  AlertSpec Spec        = 3 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "spec, omitempty"];
+
+  AlertStatus Status    = 4 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "status, omitempty"];
+}
+
+//-------------------------------- R E S T  A P I ------------------------------
+service AlertsV1 {
+    // Prefix for all resources served by this service
+    option (venice.apiPrefix) = "alerts";
+
+    // API Version
+    option (venice.apiVersion) = "v1";
+
+    option(venice.apiRestService) = {
+        Object: "Alert"
+        Method: ["list"]
+        Pattern: "/{O.Tenant}/alerts"
+    };
+
+    option(venice.apiRestService) = {
+        Object: "Alert"
+        Method: ["put", "get"]
+        Pattern: "/{O.Tenant}/alerts/{O.Name}"
+    };
+}
+
+
+// -------------------------- Alert Policy Object --------------------------------
+// Alert Policy is a user-defined or system-defined policy to generate alerts
+// based on the given rule. Users have the ability to select target objects or metrics
+// using the `resource` field. Based on the given resource, the rules within the
+// policy gets interpreted differently.
+//
+// -----------------------------------------------------------------------------------------------------------------------
+// |  Type         |  Intended for     |     Example alert rule                                                          |
+// -----------------------------------------------------------------------------------------------------------------------
+// |   Object      |  alerts on the    | Alert unhealthy node status                                                     |
+// |               |  managed object   | { ...                                                                           |
+// |               |  model            |  "spec": {                                                                      |
+// |               |                   |    "resource": "Node",                                                          |
+// |               |                   |    "severity": "CRITICAL",                                                      |
+// |               |                   |    "message": "Unhealthy node status",                                          |
+// |               |                   |    "requirements":[{                                                            |
+// |               |                   |      "field-or-metric": "Spec.AdminState",                                      |
+// |               |                   |      "operator": "Equals",                                                      |
+// |               |                   |      "values": ["Healthy"]                                                      |
+// |               |                   |    },{                                                                          |
+// |               |                   |      "field-or-metric": "Status.Conditions.OperState",                          |
+// |               |                   |      "operator": "Equals",                                                      |
+// |               |                   |      "values": ["Bad"]                                                          |
+// |               |                   |    }],                                                                          |
+// |               |                   |    "persistence-duration": 60s,                                                 |
+// |               |                   |    "clear-duration": 60s,                                                       |
+// |               |                   |    "enable": true,                                                              |
+// |               |                   |    "auto-resolve": true,                                                        |
+// |               |                   |    "destinations": ["email-system-admins"] #name of the alert destinations      |
+// |               |                   |  }                                                                              |
+// |               |                   | ...                                                                             |
+// |               |                   | }                                                                               |
+// -----------------------------------------------------------------------------------------------------------------------
+// |   Event       |  alert on event   | Convert all node critical events on node to critical alert.                     |
+// |               |  object           | Message will be derived from the event.                                         |
+// |               |                   | { ...                                                                           |
+// |               |                   |  "spec": {                                                                      |
+// |               |                   |    "resource": "Event",                                                         |
+// |               |                   |    "severity": "CRITICAL",                                                      |
+// |               |                   |    "requirements": [{                                                           |
+// |               |                   |      "field-or-metric": "Severity",                                             |
+// |               |                   |      "operator": "Equals",                                                      |
+// |               |                   |      "values": ["CRITICAL"]                                                     |
+// |               |                   |    }, {                                                                         |
+// |               |                   |      "field-or-metric": "ObjRef.Kind",                                          |
+// |               |                   |      "operator": "Equals",                                                      |
+// |               |                   |      "values": ["Node"]                                                         |
+// |               |                   |    }],                                                                          |
+// |               |                   |    "enable": true,                                                              |
+// |               |                   |    "auto-resolve": true,                                                        |
+// |               |                   |    "destinations": ["email-system-admins"]  #name of the alert destinations     |
+// |               |                   |  }                                                                              |
+// |               |                   | ...                                                                             |
+// |               |                   | }                                                                               |
+// -----------------------------------------------------------------------------------------------------------------------
+// |   Metric      |  alerts on the    | // TODO                                                                         |
+// |               |  metrics          |                                                                                 |
+// -----------------------------------------------------------------------------------------------------------------------
+//
+
+// Requirement specifies each
+// {"field": "Status.Phase", "operator":"Equals", "values":["JOINED"]}
+message Requirement {
+  // List of allowed operators in the requirement
+  enum AllowedOperators {
+    Equals       = 0;
+    In           = 1;
+    NotEquals    = 2;
+    NotIn        = 3;
+    Gt           = 4;
+    Lt           = 5;
+  }
+
+  // name of the field or metric
+  string FieldOrMetric     = 1 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "field-or-metric, omitempty"];
+
+  string Operator          = 2 [(gogoproto.nullable) = true,
+                                (venice.check) = "StrEnum(Requirement.AllowedOperators)",
+                                (gogoproto.jsontag) = "operator, omitempty"];
+
+
+
+  // Values contains one or more values corresponding to the field-or-metric. "Equals",
+  // "NotEquals", "Gt" and "Lt" operators need a single value. "In" and "NotIn" operators
+  // can have one or more values.
+  repeated string Values   = 3 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "values, omitempty"];
+}
+
+message AlertPolicySpec {
+  // Resource type - target resource to run this policy.
+  // e.g. Network, Endpoint - object based alert policy
+  //      Event - event based alert policy
+  //      EndpointMetrics - metric based alert policy
+  // based on the resource type, the policy gets interpreted.
+  string Resource                   = 1 [(gogoproto.jsontag) = "resource, omitempty"];
+
+  // Severity to be set for an alert that gets triggered from this rule
+  string Severity                   = 2 [(gogoproto.nullable) = true,
+                                         (venice.check) = "StrEnum(AlertSeverity)",
+                                         (gogoproto.jsontag) = "severity, omitempty"];
+
+  // Message to be used while generating the alert
+  // XXX: Event based alerts should not carry a message. It will be derived from the event.
+  string Message                    = 3 [(gogoproto.nullable) = true,
+                                         (gogoproto.jsontag) = "message, omitempty"];
+
+  // List of requirements that needs to be met to trigger an alert
+  repeated Requirement Requirements = 4 [(gogoproto.nullable) = false,
+                                         (gogoproto.jsontag) = "requirements, omitempty"];
+
+  // Met rule (requirements) needs to sustain for the given duration to qualify to be an alert
+  string PersistenceDuration        = 5 [(gogoproto.jsontag) = "persistence-duration, omitempty"];
+
+  // Met rule (requirements) needs to be cleared for the given duration to resolve an alert
+  string ClearDuration              = 6 [(gogoproto.jsontag) = "clear-duration, omitempty"];
+
+
+  // User can disable the policy by setting this field.
+  // Disabled policies will not generate any more alerts but the outstanding ones will remain as is.
+  bool Enable                       = 7 [(gogoproto.jsontag) = "enable, omitempty"];
+
+  // If set, the underlying alert will be auto-resolved if the rule that
+  // triggered the alert is cleared
+  bool AutoResolve                  = 8 [(gogoproto.jsontag) = "auto-resolve, omitempty"];
+
+  // name of the alert destinations to be used to send out notification when an alert
+  // gets generated.
+  repeated string Destinations      = 9 [(gogoproto.jsontag) = "destinations, omitempty"];
+}
+
+message AlertPolicyStatus {
+  // Total hits on this policy
+  int32 TotalHits            = 1 [(gogoproto.nullable) = true,
+                                  (gogoproto.jsontag) = "total-hits, omitempty"];
+
+  // Open alerts based on this policy
+  int32 OpenAlerts           = 2 [(gogoproto.nullable) = true,
+                                  (gogoproto.jsontag) = "open-alerts, omitempty"];
+
+  // Acknowledged alerts based on this policy
+  int32 AcknowledgedAlerts   = 3 [(gogoproto.nullable) = true,
+                                  (gogoproto.jsontag) = "acknowledged-alerts, omitempty"];
+
+}
+
+// AlertPolicy - tenant scoped
+message AlertPolicy {
+  // KV store prefix
+  option (venice.objectPrefix) = {Collection: "alertPolicies", Path: "/{O.Tenant}"};
+
+  api.TypeMeta      T          = 1 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = ",inline"];
+
+  api.ObjectMeta    O          = 2 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "meta, omitempty"];
+
+  AlertPolicySpec   Spec       = 3 [(gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "spec, omitempty"];
+
+  AlertPolicyStatus Status     = 4 [(gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "status, omitempty"];
+}
+
+//-------------------------------- R E S T  A P I ------------------------------
+service AlertPolicyV1 {
+    // Prefix for all resources served by this service
+    option (venice.apiPrefix) = "alertPolicies";
+
+    // API Version
+    option (venice.apiVersion) = "v1";
+
+    option(venice.apiGrpcCrudService) = "AlertPolicy";
+
+    option(venice.apiRestService) = {
+        Object: "AlertPolicy"
+        Method: ["post", "list"]
+        Pattern: "/{O.Tenant}/alertPolicies"
+    };
+
+    option(venice.apiRestService) = {
+        Object: "AlertPolicy"
+        Method: ["put", "get", "delete"]
+        Pattern: "/{O.Tenant}/alertPolicies/{O.Name}"
+    };
+}
+
+// -------------------------- Alert Destination Object ------------------------
+// Alert Destination is a user-defined object which captures the details of all
+// the allowed notification mechanisms (Email, SNMP, etc.). These are reusable
+// objects in the system and can be used by any of the alert policies.
+
+message AlertDestinationSpec {
+  // If set, this will be the default notification option for the alert policies unless otherwise
+  // something else is mentioned.
+  bool default               = 1 [(gogoproto.jsontag) = "default, omitempty"];
+
+
+  // Email notification
+  repeated string EmailList  = 2 [(gogoproto.nullable) = true,
+                                  (gogoproto.jsontag) = "email-list, omitempty"];
+
+  // SNMP notification
+  // TODO
+}
+
+message AlertDestinationStatus {
+  // total number of notifications sent using this notification mechanism
+  int32 totalNotificationsSent    = 1 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "total-notifications-sent, omitempty"];
+}
+
+// AlertDestination - tenant scoped
+message AlertDestination {
+  // KV store prefix
+  option (venice.objectPrefix)   = {Collection: "alertDestinations", Path: "/{O.Tenant}"};
+
+  api.TypeMeta      T            = 1 [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = ",inline"];
+
+  api.ObjectMeta    O            = 2 [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "meta, omitempty"];
+
+  AlertDestinationSpec   Spec    = 3 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "spec, omitempty"];
+
+  AlertDestinationStatus Status  = 4 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "status, omitempty"];
+}
+
+
+//-------------------------------- R E S T  A P I ------------------------------
+service AlertDestinationV1 {
+    // Prefix for all resources served by this service
+    option (venice.apiPrefix) = "alertDestinations";
+
+    // API Version
+    option (venice.apiVersion) = "v1";
+
+    option(venice.apiGrpcCrudService) = "AlertDestination";
+
+    option(venice.apiRestService) = {
+        Object: "AlertDestination"
+        Method: ["post", "list"]
+        Pattern: "/{O.Tenant}/alertDestinations"
+    };
+
+    option(venice.apiRestService) = {
+        Object: "AlertDestination"
+        Method: ["put", "get", "delete"]
+        Pattern: "/{O.Tenant}/alertDestinations/{O.Name}"
+    };
+}

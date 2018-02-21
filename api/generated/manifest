@@ -1,4 +1,5 @@
 
+alerts.proto alerts true
 app.proto app true
 auth.proto auth true
 cmd.proto cmd true

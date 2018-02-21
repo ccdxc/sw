@@ -1,4 +1,23 @@
 {
+  "alerts": {
+    "Svcs": {
+      "AlertDestinationV1": {
+        "Version": "v1",
+        "Messages": [
+          "AlertDestination"
+        ]
+      },
+      "AlertPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "AlertPolicy"
+        ]
+      }
+    },
+    "Files": [
+      "protos/alerts.proto"
+    ]
+  },
   "app": {
     "Svcs": {
       "AppV1": {

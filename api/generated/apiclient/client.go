@@ -3,6 +3,8 @@
 package apiclient
 
 import (
+	alerts "github.com/pensando/sw/api/generated/alerts"
+	alertsClient "github.com/pensando/sw/api/generated/alerts/grpc/client"
 	app "github.com/pensando/sw/api/generated/app"
 	appClient "github.com/pensando/sw/api/generated/app/grpc/client"
 	auth "github.com/pensando/sw/api/generated/auth"
@@ -29,6 +31,10 @@ import (
 type Services interface {
 	Close() error
 
+	// Package is alerts and len of messages is 1
+	AlertDestinationV1() alerts.AlertDestinationV1Interface
+	// Package is alerts and len of messages is 1
+	AlertPolicyV1() alerts.AlertPolicyV1Interface
 	// Package is app and len of messages is 3
 	AppV1() app.AppV1Interface
 	// Package is auth and len of messages is 2
@@ -70,6 +76,8 @@ type apiGrpcServerClient struct {
 	logger log.Logger
 	client *rpckit.RPCClient
 
+	aAlertDestinationV1        alerts.AlertDestinationV1Interface
+	aAlertPolicyV1             alerts.AlertPolicyV1Interface
 	aAppV1                     app.AppV1Interface
 	aAuthV1                    auth.AuthV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
@@ -92,6 +100,14 @@ type apiGrpcServerClient struct {
 // Close closes the client
 func (a *apiGrpcServerClient) Close() error {
 	return a.client.Close()
+}
+
+func (a *apiGrpcServerClient) AlertDestinationV1() alerts.AlertDestinationV1Interface {
+	return a.aAlertDestinationV1
+}
+
+func (a *apiGrpcServerClient) AlertPolicyV1() alerts.AlertPolicyV1Interface {
+	return a.aAlertPolicyV1
 }
 
 func (a *apiGrpcServerClient) AppV1() app.AppV1Interface {
@@ -174,6 +190,8 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 		client: client,
 		logger: logger,
 
+		aAlertDestinationV1:        alertsClient.NewGrpcCrudClientAlertDestinationV1(client.ClientConn, logger),
+		aAlertPolicyV1:             alertsClient.NewGrpcCrudClientAlertPolicyV1(client.ClientConn, logger),
 		aAppV1:                     appClient.NewGrpcCrudClientAppV1(client.ClientConn, logger),
 		aAuthV1:                    authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
 		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
@@ -197,6 +215,8 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 type apiRestServerClient struct {
 	url string
 
+	aAlertDestinationV1        alerts.AlertDestinationV1Interface
+	aAlertPolicyV1             alerts.AlertPolicyV1Interface
 	aAppV1                     app.AppV1Interface
 	aAuthV1                    auth.AuthV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
@@ -219,6 +239,14 @@ type apiRestServerClient struct {
 // Close closes the client
 func (a *apiRestServerClient) Close() error {
 	return nil
+}
+
+func (a *apiRestServerClient) AlertDestinationV1() alerts.AlertDestinationV1Interface {
+	return a.aAlertDestinationV1
+}
+
+func (a *apiRestServerClient) AlertPolicyV1() alerts.AlertPolicyV1Interface {
+	return a.aAlertPolicyV1
 }
 
 func (a *apiRestServerClient) AppV1() app.AppV1Interface {
@@ -294,6 +322,8 @@ func NewRestAPIClient(url string) (Services, error) {
 	return &apiRestServerClient{
 		url: url,
 
+		aAlertDestinationV1:        alertsClient.NewRestCrudClientAlertDestinationV1(url),
+		aAlertPolicyV1:             alertsClient.NewRestCrudClientAlertPolicyV1(url),
 		aAppV1:                     appClient.NewRestCrudClientAppV1(url),
 		aAuthV1:                    authClient.NewRestCrudClientAuthV1(url),
 		aBookstoreV1:               bookstoreClient.NewRestCrudClientBookstoreV1(url),
