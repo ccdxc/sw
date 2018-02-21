@@ -55,6 +55,7 @@ cc_library(
         "capri_tm_rw.cc",
         "capri_txs_scheduler.cc",
         "capri_pd.cc",
+        "capri_state.cc",
     ],
     hdrs = [
     ] + glob(["*.hpp"]) + glob(["*.h"]),

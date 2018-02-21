@@ -1,4 +1,4 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.h"
 #include "nic/include/hal_mem.hpp"
@@ -19,6 +19,7 @@
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
+#include "nic/hal/pd/capri/capri_state.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 85
 
@@ -805,13 +806,8 @@ capri_init (capri_cfg_t *cfg = NULL)
         capri_list_program_addr(cfg->loader_info_file.c_str());
     }
     
-    // TODO: Move to factory pattern
-    g_capri_state_pd = new capri_state_pd();
-    HAL_ASSERT(g_capri_state_pd != NULL);
-    // BMAllocator based bmp range allocator to manage txs scheduler mapping
-    g_capri_state_pd->txs_scheduler_map_idxr_ = 
-                                new hal::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
-    HAL_ASSERT(g_capri_state_pd->txs_scheduler_map_idxr_ != NULL);
+    g_capri_state_pd = capri_state_pd::factory();
+    HAL_ASSERT_RETURN((g_capri_state_pd != NULL), HAL_RET_ERR);
 
     return ret;
 }
