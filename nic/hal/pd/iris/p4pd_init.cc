@@ -1730,6 +1730,28 @@ p4pd_forwarding_mode_init (void)
     val = htobe64(val);
     capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                                (tbl_ctx.gress == P4_GRESS_INGRESS));
+
+    // Flow_info table is split into multiple threads in Capri so that
+    // we can limit the # of phvwr to less than 8. Internally
+    // multiple tables lookups will be launched with the same key to the
+    // to same table and multiple MPU will be invoked. Table constant
+    // value programmed for each thread will determine which chunk of
+    // code to execute and this branching is done in ASM Code.
+    // Here we need to program a different table constant for each
+    // thread.
+    uint8_t tid = 0;
+    p4pd_table_properties_get(P4TBL_ID_FLOW_INFO, &tbl_ctx);
+    for (int i = 0; i < tbl_ctx.table_thread_count; i++) {
+        if (i != 0) {
+            tid = tbl_ctx.thread_table_id[i];
+        } else {
+            tid = tbl_ctx.stage_tableid;
+        }
+        capri_table_constant_write(i, tbl_ctx.stage, tid,
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS)); 
+        HAL_TRACE_DEBUG("{}:setting flow_info table constant, tid = {}, constant = {}", 
+                        __FUNCTION__, tid, i);
+    }
     return HAL_RET_OK;
 }
 

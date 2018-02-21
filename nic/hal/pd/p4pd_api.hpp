@@ -47,6 +47,7 @@
 #define P4PD_TCAM_DC_UINT8                           0xFF
 #define P4PD_TCAM_DC_UINT16                          0xFFFF
 #define P4PD_TCAM_DC_UINT32                          0xFFFFFFFF
+#define P4PD_TABLE_MAX_CONCURRENCY                   (4)
 
 typedef enum p4pd_table_type_ {
     P4_TBL_TYPE_HASH = 0,
@@ -108,6 +109,8 @@ typedef struct p4pd_table_properties_ {
     p4pd_table_mem_layout_t sram_layout;
     p4pd_table_mem_layout_t tcam_layout; /* Will be not used in case of hash / index table. */
     p4pd_table_mem_layout_t hbm_layout; /* Only if HBM table.. */
+    uint8_t                 table_thread_count; /* Number of table execution threads. Min 1 */
+    uint8_t                 thread_table_id[P4PD_TABLE_MAX_CONCURRENCY];
 } p4pd_table_properties_t;
 
 

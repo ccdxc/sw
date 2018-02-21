@@ -36,6 +36,8 @@
 #define JSON_KEY_BTM_RIGHT_BLOCK    "layout.bottom_right.block"
 #define JSON_KEY_HASH_TYPE          "hash_type"
 #define JSON_KEY_NUM_BUCKETS        "num_buckets"
+#define JSON_KEY_THREAD_TBL_IDS     "thread_tbl_ids"
+#define JSON_KEY_NUM_THREADS        "num_threads"
 
 static p4pd_table_properties_t *_p4plus_txdma_tbls;
 
@@ -202,6 +204,14 @@ p4pluspd_txdma_tbl_packing_json_parse (const char *pgm)
             tbl->hbm_layout.end_index = _hbm.get().get<int>(JSON_KEY_ENTRY_END_INDEX);
         } else {
             tbl->table_location = P4_TBL_LOCATION_PIPE;
+        }
+        tbl->table_thread_count = p4_tbl.second.get<int>(JSON_KEY_NUM_THREADS);
+        boost::optional<pt::ptree&>_table_threads = p4_tbl.second.get_child_optional(JSON_KEY_THREAD_TBL_IDS);
+        if (tbl->table_thread_count > 1 && _table_threads) {
+            for (int k = 1; k < tbl->table_thread_count; k++) {
+                auto s = std::to_string(k);
+                tbl->thread_table_id[k] = _table_threads.get().get<int>(s.c_str());
+            }
         }
     }
     return P4PD_SUCCESS;

@@ -351,9 +351,49 @@ asicpd_program_table_mpu_pc (void)
                                    tbl_ctx.stage_tableid,
                                    capri_table_asm_err_offset[i],
                                    capri_table_asm_base[i]);
+        if (tbl_ctx.table_thread_count > 1) {
+            for (int j = 1; j < tbl_ctx.table_thread_count; j++) {
+                capri_program_table_mpu_pc(tbl_ctx.tableid,
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS),
+                                   tbl_ctx.stage,
+                                   tbl_ctx.thread_table_id[j],
+                                   capri_table_asm_err_offset[i],
+                                   capri_table_asm_base[i]);
+            }
+        }
     }
     return HAL_RET_OK;
 }
+
+hal_ret_t
+asicpd_program_table_constant (uint32_t tableid, uint64_t const_value)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    capri_table_constant_write(const_value, tbl_ctx.stage,
+                               tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id, uint64_t const_value)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    p4pd_table_properties_get(tableid, &tbl_ctx);
+    if (table_thread_id < tbl_ctx.table_thread_count) {
+        uint8_t tid = 0;
+        if (table_thread_id != 0) {
+            tid = tbl_ctx.thread_table_id[table_thread_id];
+        } else {
+            tid = tbl_ctx.stage_tableid;
+        }
+        capri_table_constant_write(const_value, tbl_ctx.stage, tid,
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS));
+    }
+    return HAL_RET_OK;
+}
+
 
 hal_ret_t
 asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
@@ -415,6 +455,13 @@ asicpd_program_hbm_table_base_addr (void)
         capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
                     tbl_ctx.tablename, tbl_ctx.stage,
                     (tbl_ctx.gress == P4_GRESS_INGRESS));
+        if (tbl_ctx.table_thread_count > 1) {
+            for (int j = 1; j < tbl_ctx.table_thread_count; j++) {
+                capri_program_hbm_table_base_addr(tbl_ctx.thread_table_id[j],
+                                                  tbl_ctx.tablename, tbl_ctx.stage,
+                                                  (tbl_ctx.gress == P4_GRESS_INGRESS));
+            }
+        }
     }
     return HAL_RET_OK;
 }

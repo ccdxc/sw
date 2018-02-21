@@ -16,6 +16,9 @@ flow_info:
   DBG_WR(0x6a, d.u.flow_info_d.rewrite_flags)
   DBG_WR(0x6b, d.u.flow_info_d.tunnel_rewrite_index)
 
+  seq           c1, r5[0], 0
+  b.!c1         f_flow_info_thread_1
+  //bbne          r5[0], 0, f_flow_info_thread_1
   /* expected src lif check */
   seq           c1, d.u.flow_info_d.expected_src_lif_check_en, TRUE
   sne.c1        c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
@@ -31,6 +34,21 @@ flow_info:
                        u.flow_info_d.multicast_en}
   phvwr         p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
+  /* rewrite info */
+  phvwrpair     p.rewrite_metadata_rewrite_index[11:0], \
+                    d.u.flow_info_d.rewrite_index, \
+                    p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
+
+  /* tunnel info */
+  phvwr         p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
+  phvwrpair.e   p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+                    d.u.flow_info_d.tunnel_rewrite_index, \
+                    p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
+  // rewrite info
+  phvwr.f       p.{nat_metadata_nat_ip...nat_metadata_twice_nat_idx}, \
+                    d.{u.flow_info_d.nat_ip...u.flow_info_d.twice_nat_idx}
+
+f_flow_info_thread_1:
   /* qos class selection */
   seq           c1, d.u.flow_info_d.qos_class_en, 1
   phvwr.c1      p.qos_metadata_qos_class_id, d.u.flow_info_d.qos_class_id
@@ -47,39 +65,26 @@ flow_info:
   phvwr         p.control_metadata_egress_mirror_session_id, \
                     d.u.flow_info_d.egress_mirror_session_id
 
-  /* flow info */
-  phvwrpair     p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role, \
-                    p.flow_info_metadata_session_state_index, \
-                    d.u.flow_info_d.session_state_index
-
-#if 0
   /* Commenting this to bring down the # of phvwr done in this table */
   /* ttl change detected */
   sne           c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
   phvwr.c1      p.flow_info_metadata_flow_ttl_change_detected, \
                     k.l4_metadata_ip_ttl_change_detect_en
-#endif /* 0 */
+  /* flow info */
+  phvwrpair.e   p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role, \
+                    p.flow_info_metadata_session_state_index, \
+                    d.u.flow_info_d.session_state_index
+
   /* Flow Connection Tracking enable */
-  phvwr         p.l4_metadata_flow_conn_track, d.u.flow_info_d.flow_conn_track
+  phvwr.f       p.l4_metadata_flow_conn_track, d.u.flow_info_d.flow_conn_track
 
-  /* rewrite info */
-  phvwrpair     p.rewrite_metadata_rewrite_index[11:0], \
-                    d.u.flow_info_d.rewrite_index, \
-                    p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
-
-  /* tunnel info */
-  phvwr         p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
-  phvwrpair.e   p.rewrite_metadata_tunnel_rewrite_index[9:0], \
-                    d.u.flow_info_d.tunnel_rewrite_index, \
-                    p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
-  // rewrite info
-  phvwr.f       p.{nat_metadata_nat_ip...nat_metadata_twice_nat_idx}, \
-                    d.{u.flow_info_d.nat_ip...u.flow_info_d.twice_nat_idx}
 
 .align
 flow_miss:
   K_DBG_WR(0x60)
   DBG_WR(0x6c, 0x6c)
+  seq           c1, r5[0], 0
+  nop.!c1.e   
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   bcf           [c1], validate_ipv4_flow_key
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6

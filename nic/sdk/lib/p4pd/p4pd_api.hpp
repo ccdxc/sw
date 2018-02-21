@@ -72,6 +72,7 @@ typedef int p4pd_error_t;
 
 #define P4PD_SUCCESS                                0
 #define P4PD_FAIL                                   -1
+#define P4PD_TABLE_MAX_CONCURRENCY                  (4)
 
 typedef int p4pd_error_t;
 
@@ -135,6 +136,8 @@ typedef struct p4pd_table_properties_ {
     p4pd_table_mem_layout_t sram_layout;
     p4pd_table_mem_layout_t tcam_layout; /* Will be not used in case of hash / index table. */
     p4pd_table_mem_layout_t hbm_layout; /* Only if HBM table.. */
+    uint8_t                 table_thread_count;  /* Number of table execution threads. Min 1 */
+    uint8_t                 thread_table_id[P4PD_TABLE_MAX_CONCURRENCY];
 } p4pd_table_properties_t;
 
 

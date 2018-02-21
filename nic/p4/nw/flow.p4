@@ -245,6 +245,7 @@ action flow_hit_to_vm_bounce(dst_lport, qos_class_id) {
 
 @pragma stage 2
 @pragma hbm_table
+@pragma numthreads 2
 table flow_info {
     reads {
         flow_info_metadata.flow_index : exact;

@@ -201,8 +201,8 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     assert(stage_tableid < 16);
-    HAL_TRACE_DEBUG("===========Stage: {} Tbl_id: {}, Tbl base: {:#x}=========",
-                    stage, tableid, capri_table_asm_base);
+    HAL_TRACE_DEBUG("====Stage: {} Tbl_id: {}, Stg_Tbl_id {}, Tbl base: {:#x}==",
+                    stage, tableid, stage_tableid, capri_table_asm_base);
     if (ingress) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         // Push to HW/Capri from entry_start_block to block

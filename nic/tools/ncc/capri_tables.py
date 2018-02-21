@@ -250,6 +250,7 @@ class capri_table:
         self.d = d
         self.stage = -1
         self.tbl_id = -1      # within the state (0-15)
+        self.thread_tbl_ids = {}    # used for a multi-threaded table
         self.match_type = match_type.NONE    # hash, indexed, tcam
         self.num_entries = -1
         self.is_otcam = False
@@ -270,6 +271,8 @@ class capri_table:
         self.policer_colors = 0 # 2-color/3-color
         self.is_rate_limit_en = False
         self.token_refresh_profile = 0 # Token refresh profile id for policer/rate-limit
+        self.is_multi_threaded = False
+        self.num_threads = 1
         # flit numbers from which key(K+I) is built, Lookup can be
         # launched from the last flit when all the info is avaialble
         self.flits_used = []     # flits that provide K and I values
@@ -3921,7 +3924,7 @@ class capri_stage:
 
     def stg_create_key_makers(self):
         ct_list = []
-        tbl_id = 1  # avoid 0 ??
+        tbl_id = 1  # avoid 0 for debug
         for t in self.p4_table_list:
             if isinstance(t, p4.p4_conditional_node):
                 continue
@@ -3930,6 +3933,11 @@ class capri_stage:
             if not ct.is_otcam:
                 ct.tbl_id = tbl_id
                 tbl_id += 1
+                if ct.is_multi_threaded:
+                    for thd_id in range(1, ct.num_threads):
+                        ct.thread_tbl_ids[thd_id] = tbl_id
+                        tbl_id += 1
+
             # create km_profiles (logical) for each table, no hw resources are assigned yet
             ct.ct_create_km_profiles()
             ct.create_key_makers()
@@ -4255,10 +4263,23 @@ class capri_stage:
                 continue
 
             if len(flit_launch_tbls[fid]) == 1:
-                te_cycle.tbl = flit_launch_tbls[fid][0]
+                ct = flit_launch_tbls[fid][0]
+                if ct.p4_table.name == 'flow_info': pdb.set_trace()
+                for thd in range(1, ct.num_threads):
+                    # launch threads (parent aka thread0 will be launched last
+                    te_cyc = capri_te_cycle()
+                    te_cyc.tbl = ct # need to get table id for thread
+                    te_cyc.thread = thd
+                    te_cyc.adv_flit = False
+                    te_cyc.is_used = True
+                    te_cyc.fid = fid
+                    launch_seq.append(te_cyc)
+                    cycle += 1
+
+                te_cycle.tbl = ct
                 te_cycle.is_used = True
-                te_cycle.adv_flit = True
                 te_cycle.fid = fid
+                te_cycle.adv_flit = True
                 cycle += 1
                 launch_seq.append(te_cycle)
                 continue
@@ -4274,9 +4295,20 @@ class capri_stage:
                         break
 
             for ct in flit_launch_tbls[fid]:
+                # if ct.p4_table.name == 'flow_info': pdb.set_trace()
                 # launch all tables w/o advancing the flit on each successive cyc
                 if ct == last_ct:
                     continue
+                for thd in range(1, ct.num_threads):
+                    # launch threads (parent aka thread0 will be launched last
+                    te_cyc = capri_te_cycle()
+                    te_cyc.tbl = ct # need to get table id for thread
+                    te_cyc.thread = thd
+                    te_cyc.adv_flit = False
+                    te_cyc.is_used = True
+                    te_cyc.fid = fid
+                    launch_seq.append(te_cyc)
+                    cycle += 1
                 te_cyc = capri_te_cycle()
                 te_cyc.tbl = ct
                 te_cyc.adv_flit = False
@@ -4286,6 +4318,17 @@ class capri_stage:
                 cycle += 1
 
             if last_ct:
+                # if last_ct.p4_table.name == 'flow_info': pdb.set_trace()
+                for thd in range(1, last_ct.num_threads):
+                    # launch threads (parent aka thread0 will be launched last
+                    te_cyc = capri_te_cycle()
+                    te_cyc.tbl = last_ct # need to get table id for thread
+                    te_cyc.thread = thd
+                    te_cyc.adv_flit = False
+                    te_cyc.is_used = True
+                    te_cyc.fid = fid
+                    launch_seq.append(te_cyc)
+                    cycle += 1
                 # this table's key maker is not reused on the following flit
                 te_cyc = capri_te_cycle()
                 te_cyc.tbl = last_ct
@@ -4306,6 +4349,16 @@ class capri_stage:
         for ct in launch_any_time:
             # still some key-less mpu-only tables need to be launched
             #assert cycle < max_cycles
+            for thd in range(1, ct.num_threads):
+                # launch threads (parent aka thread0 will be launched last
+                te_cyc = capri_te_cycle()
+                te_cyc.tbl = ct # need to get table id for thread
+                te_cyc.thread = thd
+                te_cyc.adv_flit = False
+                te_cyc.is_used = True
+                te_cyc.fid = fid
+                launch_seq.append(te_cyc)
+                cycle += 1
             te_cyc = capri_te_cycle()
             te_cyc.tbl = ct
             te_cyc.adv_flit = False
@@ -4486,102 +4539,110 @@ class capri_stage:
         debug_info = OrderedDict()
         debug_info['Tables'] = OrderedDict()
         for ct in self.ct_list:
-            tbl_dbg_info = OrderedDict()
-            tbl_id_str = '%s' % ct.tbl_id
-            if ct.is_otcam:
-                tbl_id_str += '_%s' % ct.p4_table.name
-            tbl_dbg_info['name'] = ct.p4_table.name
-            tbl_dbg_info['type'] = ct.match_type.name
-            tbl_dbg_info['start_key_off'] = ct.start_key_off
-            tbl_dbg_info['end_key_off'] = ct.end_key_off
-            for k,_km in enumerate(ct.key_makers):
-                if _km.shared_km:
-                    km = _km.shared_km
+            for thd in range(ct.num_threads):
+                tbl_dbg_info = OrderedDict()
+                if thd == 0:
+                    tbl_id_str = '%s' % ct.tbl_id
                 else:
-                    km = _km
-                km_dbg_info = OrderedDict()
-                km_dbg_info['hw_id'] = str(km.hw_id)
-                km_dbg_info['key_maker_bytes'] = OrderedDict()
-                if not km.combined_profile:
-                    # key-less table
-                    km_dbg_info['km_profile_hw_id'] = str(-1)
-                    tbl_dbg_info['key_maker%d' % k] = km_dbg_info
-                    debug_info['Tables'][tbl_id_str] = tbl_dbg_info
-                    continue
-
-                gress_pa = self.gtm.tm.be.pa.gress_pa[self.gtm.d]
-                nbytes = (len(km.combined_profile.bit_sel) + 7) / 8
-                for b in range(len(km.combined_profile.byte_sel)):
-                    phc = km.combined_profile.byte_sel[b]
-                    if phc < 0:
-                        if b == km.combined_profile.bit_loc:
-                            km_byte = 'BIT_EXTRACTION_0'
-                        elif b == km.combined_profile.bit_loc1:
-                            km_byte = 'BIT_EXTRACTION_1'
-                        else:
-                            km_byte = 'UNUSED'
+                    tbl_id_str = '%s' % (ct.thread_tbl_ids[thd])
+                if ct.is_otcam:
+                    tbl_id_str += '_%s' % ct.p4_table.name
+                if thd == 0:
+                    tbl_dbg_info['name'] = ct.p4_table.name
+                else:
+                    tbl_dbg_info['name'] = ct.p4_table.name + '_thread' + str(thd)
+                tbl_dbg_info['type'] = ct.match_type.name
+                tbl_dbg_info['start_key_off'] = ct.start_key_off
+                tbl_dbg_info['end_key_off'] = ct.end_key_off
+                for k,_km in enumerate(ct.key_makers):
+                    if _km.shared_km:
+                        km = _km.shared_km
                     else:
-                        ftype = None
-                        if phc in ct.combined_profile.k_byte_sel:
-                            ftype = 'K'
-                        elif phc in ct.combined_profile.i1_byte_sel or \
-                            phc in ct.combined_profile.i2_byte_sel:
-                            ftype = 'I'
-                        elif phc in km.combined_profile.k_byte_sel:
-                            ftype = 'K(other)'
-                        elif phc in km.combined_profile.i1_byte_sel or \
-                            phc in km.combined_profile.i2_byte_sel:
-                            ftype = 'I(other)'
-                        else:
-                            ftype = 'unused'
-
-                        km_byte = OrderedDict()
-                        for fname, t in gress_pa.phcs[phc].fields.items():
-                            fname_str = "%s[%d:%d]" % (fname, t[1], t[1]+t[2]-1)
-                            km_byte[fname_str] = ftype
-                            km_byte['phv_byte'] = str(phc)
-                    km_dbg_info['key_maker_bytes'][str(b)] = km_byte
-
-                for b in range(len(km.combined_profile.byte_sel), max_kmB):
-                    km_dbg_info['key_maker_bytes'][str(b)] = 'UNUSED'
-
-                km_dbg_info['km_profile_hw_id'] = str(km.combined_profile.hw_id)
-                km_dbg_info['key_maker_bits'] = OrderedDict()
-                for b in range(len(km.combined_profile.bit_sel)):
-                    phv_bit = km.combined_profile.bit_sel[b]
-                    if phv_bit < 0:
-                        km_bit_str = "bit_%d" % b
-                        km_dbg_info['key_maker_bits'][str(b)] = {km_bit_str : "unused"}
+                        km = _km
+                    km_dbg_info = OrderedDict()
+                    km_dbg_info['hw_id'] = str(km.hw_id)
+                    km_dbg_info['key_maker_bytes'] = OrderedDict()
+                    if not km.combined_profile:
+                        # key-less table
+                        km_dbg_info['km_profile_hw_id'] = str(-1)
+                        tbl_dbg_info['key_maker%d' % k] = km_dbg_info
+                        debug_info['Tables'][tbl_id_str] = tbl_dbg_info
                         continue
-                    phc = phv_bit / 8
-                    sb = (phv_bit%8)
-                    ftype = None
-                    if phv_bit in ct.combined_profile.k_bit_sel:
-                        ftype = 'K'
-                    elif phv_bit in ct.combined_profile.i_bit_sel:
-                        ftype = 'I'
-                    elif phv_bit in km.combined_profile.k_bit_sel:
-                        ftype = 'K(other)'
-                    else:
-                        ftype = 'I(other)'
-                    flds = gress_pa.phcs[phc].get_flds(sb,1)
-                    km_bits = OrderedDict()
-                    for fname,t in flds.items():
-                        km_bit_str = "%s[%d:%d]" % (fname, t[0], t[0]+t[1]-1)
-                        km_bits[km_bit_str] = ftype
-                        km_bits['phv_bit'] = str(phv_bit)
-                    km_dbg_info['key_maker_bits'][str(b)] = km_bits
 
-                tbl_dbg_info['key_maker%d' % k] = km_dbg_info
-            #Add K+D details
-            tbl_dbg_info['k_plus_d'] = ct.k_plus_d
-            debug_info['Tables'][tbl_id_str] = tbl_dbg_info
+                    gress_pa = self.gtm.tm.be.pa.gress_pa[self.gtm.d]
+                    nbytes = (len(km.combined_profile.bit_sel) + 7) / 8
+                    for b in range(len(km.combined_profile.byte_sel)):
+                        phc = km.combined_profile.byte_sel[b]
+                        if phc < 0:
+                            if b == km.combined_profile.bit_loc:
+                                km_byte = 'BIT_EXTRACTION_0'
+                            elif b == km.combined_profile.bit_loc1:
+                                km_byte = 'BIT_EXTRACTION_1'
+                            else:
+                                km_byte = 'UNUSED'
+                        else:
+                            ftype = None
+                            if phc in ct.combined_profile.k_byte_sel:
+                                ftype = 'K'
+                            elif phc in ct.combined_profile.i1_byte_sel or \
+                                phc in ct.combined_profile.i2_byte_sel:
+                                ftype = 'I'
+                            elif phc in km.combined_profile.k_byte_sel:
+                                ftype = 'K(other)'
+                            elif phc in km.combined_profile.i1_byte_sel or \
+                                phc in km.combined_profile.i2_byte_sel:
+                                ftype = 'I(other)'
+                            else:
+                                ftype = 'unused'
+
+                            km_byte = OrderedDict()
+                            for fname, t in gress_pa.phcs[phc].fields.items():
+                                fname_str = "%s[%d:%d]" % (fname, t[1], t[1]+t[2]-1)
+                                km_byte[fname_str] = ftype
+                                km_byte['phv_byte'] = str(phc)
+                        km_dbg_info['key_maker_bytes'][str(b)] = km_byte
+
+                    for b in range(len(km.combined_profile.byte_sel), max_kmB):
+                        km_dbg_info['key_maker_bytes'][str(b)] = 'UNUSED'
+
+                    km_dbg_info['km_profile_hw_id'] = str(km.combined_profile.hw_id)
+                    km_dbg_info['key_maker_bits'] = OrderedDict()
+                    for b in range(len(km.combined_profile.bit_sel)):
+                        phv_bit = km.combined_profile.bit_sel[b]
+                        if phv_bit < 0:
+                            km_bit_str = "bit_%d" % b
+                            km_dbg_info['key_maker_bits'][str(b)] = {km_bit_str : "unused"}
+                            continue
+                        phc = phv_bit / 8
+                        sb = (phv_bit%8)
+                        ftype = None
+                        if phv_bit in ct.combined_profile.k_bit_sel:
+                            ftype = 'K'
+                        elif phv_bit in ct.combined_profile.i_bit_sel:
+                            ftype = 'I'
+                        elif phv_bit in km.combined_profile.k_bit_sel:
+                            ftype = 'K(other)'
+                        else:
+                            ftype = 'I(other)'
+                        flds = gress_pa.phcs[phc].get_flds(sb,1)
+                        km_bits = OrderedDict()
+                        for fname,t in flds.items():
+                            km_bit_str = "%s[%d:%d]" % (fname, t[0], t[0]+t[1]-1)
+                            km_bits[km_bit_str] = ftype
+                            km_bits['phv_bit'] = str(phv_bit)
+                        km_dbg_info['key_maker_bits'][str(b)] = km_bits
+
+                    tbl_dbg_info['key_maker%d' % k] = km_dbg_info
+                #Add K+D details
+                tbl_dbg_info['k_plus_d'] = ct.k_plus_d
+                debug_info['Tables'][tbl_id_str] = tbl_dbg_info
 
         return debug_info
 
 class capri_te_cycle:
     is_used = False
     tbl = None
+    thread = 0
     adv_flit = True
     is_last = False
     fid = -1
@@ -4780,6 +4841,17 @@ class capri_gress_tm:
 
                         ctable.token_refresh_profile = self.next_free_refresh_profile
                         self.next_free_refresh_profile += 1
+
+                    if t._parsed_pragmas and 'numthreads' in t._parsed_pragmas:
+                        ctable.num_threads = int(t._parsed_pragmas['numthreads'].keys()[0])
+                        assert ctable.num_threads > 0 and ctable.num_threads <= 4, \
+                            "Max 4 threads per table are supported"
+                        # No need to make it multithreaded if only 1 thread is specified
+                        if ctable.num_threads > 1:
+                            ctable.is_multi_threaded = True
+                        else:
+                            self.tm.logger("%s:%s pragma numthreads 1 has no effect.. ignored" % \
+                                (self.d.name, t.name))
 
                     is_ternary = False
                     for f, mtype, mask, in t.match_fields:
@@ -5685,6 +5757,9 @@ class capri_table_mapper:
             table_mapping['num_entries'] = table_spec['num_entries']
             table_mapping['overflow'] = table_spec['overflow']
             table_mapping['overflow_parent'] = table_spec['overflow_parent']
+            table_mapping['num_threads'] = table_spec['num_threads']
+            if table_spec['num_threads'] > 1:
+                table_mapping['thread_tbl_ids'] = table_spec['thread_tbl_ids']
 
             if 'tcam' in table_spec.keys():
                 for table in self.tables['tcam'][table_spec['region']]:
@@ -5834,6 +5909,11 @@ class capri_table_manager:
                 table_spec['num_entries'] = 0 if table.num_entries == None else table.num_entries
                 table_spec['overflow'] = ''
                 table_spec['overflow_parent'] = ''
+                table_spec['num_threads'] = table.num_threads
+                if table.num_threads > 1:
+                    table_spec['thread_tbl_ids'] = {}
+                    for k, v in table.thread_tbl_ids.items():
+                        table_spec['thread_tbl_ids'][str(k)] = v
 
                 if table.match_type == match_type.EXACT_IDX :
                     table_spec['hbm' if table.is_hbm else 'sram'] = {"width" : table.d_size}

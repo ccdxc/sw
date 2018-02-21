@@ -39,6 +39,8 @@ hal_ret_t asicpd_p4plus_table_init(void);
 hal_ret_t asicpd_p4plus_recirc_init(void);
 hal_ret_t asicpd_timer_init(void);
 hal_ret_t asicpd_program_table_mpu_pc(void);
+hal_ret_t asicpd_program_table_constant (uint32_t tableid, uint64_t const_value);
+hal_ret_t asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread, uint64_t const_value);
 hal_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 hal_ret_t asicpd_deparser_init(void);
 hal_ret_t asicpd_program_hbm_table_base_addr(void);

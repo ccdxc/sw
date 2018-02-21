@@ -3120,13 +3120,15 @@ def capri_te_cfg_output(stage):
         active_ctg = [act for act in stage.table_profiles[prof_val] if not act.is_otcam]
 
         json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
-        json_tbl_prof['mpu_results']['value'] = str(len(active_ctg))
+        # compute mpu res based on threads
+        mpu_res = sum(x.num_threads for x in active_ctg)
+        json_tbl_prof['mpu_results']['value'] = str(mpu_res)
         json_tbl_prof['_modified'] = True
 
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Table profile TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
                 (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'],
-                te['mask']['value'], prof_val, active_ctg, len(active_ctg)))
+                te['mask']['value'], prof_val, active_ctg, mpu_res))
 
         # h/w allows a flexible partitioning of the total (192) ctrl_sram entries per profile
         json_tbl_prof['seq_base']['value'] = str(sidx)
@@ -3198,7 +3200,11 @@ def capri_te_cfg_output(stage):
             ct = stage.table_sequencer[prof_val][cyc].tbl
             if ct:
                 assert se['tableid']['value'] == '-1', pdb.set_trace()
-                se['tableid']['value'] = str(ct.tbl_id)
+                if stage.table_sequencer[prof_val][cyc].thread == 0:
+                    se['tableid']['value'] = str(ct.tbl_id)
+                else:
+                    se['tableid']['value'] = str(\
+                        ct.thread_tbl_ids[stage.table_sequencer[prof_val][cyc].thread])
                 se['hash_sel']['value'] = str(ct.hash_type)
                 if ct.match_type == match_type.EXACT_IDX:
                     se['lkup']['value'] = te_consts['direct']
@@ -3311,157 +3317,170 @@ def capri_te_cfg_output(stage):
     for ct in stage.ct_list:
         if ct.is_otcam:
             continue
-        json_tbl_ = json_regs['cap_te_csr_cfg_table_property[%d]' % ct.tbl_id]
-        # update to asic doc - axi=1 => SRAM
-        if ct.is_hbm:
-            json_tbl_['axi']['value'] = str(0)
-            #json_tbl_['hbm']['value'] = str(1)
-        else:
-            # XXX there can be tables in host mem (not hbm) for which axi should set to 0
-            # currently there are no host tables supported (need a pragma)
-            json_tbl_['axi']['value'] = str(1)
-            #json_tbl_['hbm']['value'] = str(0)
-
-        if ct.is_hash_table() and ct.d_size < ct.start_key_off:
-            # Program APC location. APC location is always first byte
-            # in the hash table entry. However when axi-shift is programmed,
-            # APC byte location moves right by axi-shift number of bytes.
-            json_tbl_['mpu_pc_loc']['value'] = (((ct.start_key_off - ct.d_size) >> 4) << 1)
-
-        # key mask programming -
-        # hw bit numbering is 511:0 - little endian like
-        # which is opposite on ncc ordering
-        # ncc creates end_key_off such that it points to a bit after the key
-        # if only one km is used, it is at msb (??) so still adjust it using 512 bit
-        # hardware expects hi, lo mask as -
-        # (hi, lo] => hi=512 means we need bit 511, lo=496 means we need bit 496
-        # XXX hw does not have enough bits to store 512 - will be fixed soon
-        if ct.is_wide_key:
-            key_mask_hi = 512 - ct.last_flit_start_key_off
-            key_mask_lo = 512 - ct.last_flit_end_key_off
-        elif not ct.is_mpu_only():
-            assert ct.start_key_off >= 0, pdb.set_trace()
-            key_mask_hi = 512 - ct.start_key_off
-            key_mask_lo = 512 - ct.end_key_off
-        else:
-            key_mask_hi = 0
-            key_mask_lo = 0
-
-        # for index table the key_mask_lo must be specified in terms of 16bit chunks
-        if ct.is_index_table():
-            # do it for raw table also.. should not matter
-            key_mask_lo = key_mask_lo / 16  # model param for 16??
-
-        json_tbl_['key_mask_hi']['value'] = str(key_mask_hi)
-        json_tbl_['key_mask_lo']['value'] = str(key_mask_lo)
-
-        # XXX set mpu_pc_loc to 0
-        json_tbl_['mpu_pc_loc']['value'] = str(0)
-
-        # key size (applicable to hash and index tables), num bits to use as index
-        if ct.is_index_table():
-            #lg2_size = log2size(ct.num_entries)
-            # does not work correctly for raw tables
-            json_tbl_['addr_sz']['value'] = str(ct.final_key_size)
-        elif ct.is_hash_table():
-            if ct.is_overflow:
-                lg2_size = log2size(ct.num_entries)
-                json_tbl_['addr_sz']['value'] = str(lg2_size)
+        for thd in range(ct.num_threads):
+            if thd == 0:
+                tbl_id = ct.tbl_id
+                json_tbl_ = json_regs['cap_te_csr_cfg_table_property[%d]' % tbl_id]
             else:
-                lg2_size = log2size(ct.num_entries)
-                json_tbl_['addr_sz']['value'] = str(lg2_size)
+                tbl_id = ct.thread_tbl_ids[thd]
+                json_tbl_ = json_regs['cap_te_csr_cfg_table_property[%d]' % tbl_id]
 
-        # For asic  km0=>lo, km1=>hi (from te.cc)
-        # ncc uses km0 as high key and km1 as lo key bytes, so flip it
-        k = 1
-        for _km in ct.key_makers:
-            if k < 0:
-                break;  # handles wide-key tables
-            if _km.shared_km:
-                km = _km.shared_km
+            # update to asic doc - axi=1 => SRAM
+            if ct.is_hbm:
+                json_tbl_['axi']['value'] = str(0)
+                #json_tbl_['hbm']['value'] = str(1)
             else:
-                km = _km
+                # XXX there can be tables in host mem (not hbm) for which axi should set to 0
+                # currently there are no host tables supported (need a pragma)
+                json_tbl_['axi']['value'] = str(1)
+                #json_tbl_['hbm']['value'] = str(0)
 
-            json_tbl_['fullkey_km_sel%d' % k]['value'] = str(km.hw_id)
-            k -= 1
+            if ct.is_hash_table() and ct.d_size < ct.start_key_off:
+                # Program APC location. APC location is always first byte
+                # in the hash table entry. However when axi-shift is programmed,
+                # APC byte location moves right by axi-shift number of bytes.
+                json_tbl_['mpu_pc_loc']['value'] = (((ct.start_key_off - ct.d_size) >> 4) << 1)
 
-        if ct.is_writeback:
-            if ct.is_raw:
-                json_tbl_['lock_en_raw']['value'] = str(1)
+            # key mask programming -
+            # hw bit numbering is 511:0 - little endian like
+            # which is opposite on ncc ordering
+            # ncc creates end_key_off such that it points to a bit after the key
+            # if only one km is used, it is at msb (??) so still adjust it using 512 bit
+            # hardware expects hi, lo mask as -
+            # (hi, lo] => hi=512 means we need bit 511, lo=496 means we need bit 496
+            # XXX hw does not have enough bits to store 512 - will be fixed soon
+            if ct.is_wide_key:
+                key_mask_hi = 512 - ct.last_flit_start_key_off
+                key_mask_lo = 512 - ct.last_flit_end_key_off
+            elif not ct.is_mpu_only():
+                assert ct.start_key_off >= 0, pdb.set_trace()
+                key_mask_hi = 512 - ct.start_key_off
+                key_mask_lo = 512 - ct.end_key_off
             else:
-                if ct.match_type == match_type.TERNARY:
-                    json_tbl_['lock_en']['value'] = str(0)
+                key_mask_hi = 0
+                key_mask_lo = 0
+
+            # for index table the key_mask_lo must be specified in terms of 16bit chunks
+            if ct.is_index_table():
+                # do it for raw table also.. should not matter
+                key_mask_lo = key_mask_lo / 16  # model param for 16??
+
+            json_tbl_['key_mask_hi']['value'] = str(key_mask_hi)
+            json_tbl_['key_mask_lo']['value'] = str(key_mask_lo)
+
+            # XXX set mpu_pc_loc to 0
+            json_tbl_['mpu_pc_loc']['value'] = str(0)
+
+            # key size (applicable to hash and index tables), num bits to use as index
+            if ct.is_index_table():
+                #lg2_size = log2size(ct.num_entries)
+                # does not work correctly for raw tables
+                json_tbl_['addr_sz']['value'] = str(ct.final_key_size)
+            elif ct.is_hash_table():
+                if ct.is_overflow:
+                    lg2_size = log2size(ct.num_entries)
+                    json_tbl_['addr_sz']['value'] = str(lg2_size)
                 else:
-                    json_tbl_['lock_en']['value'] = str(1)
-        else:
-            json_tbl_['lock_en']['value'] = str(0)
+                    lg2_size = log2size(ct.num_entries)
+                    json_tbl_['addr_sz']['value'] = str(lg2_size)
 
-        if ct.num_actions() > 1 and not ct.is_raw:
-            json_tbl_['mpu_pc_dyn']['value'] = str(1)
-        else:
-            json_tbl_['mpu_pc_dyn']['value'] = str(0)
-        # set a fixed value for model testing XXX
-        json_tbl_['mpu_pc']['value'] = '0x2FEED00'
+            # For asic  km0=>lo, km1=>hi (from te.cc)
+            # ncc uses km0 as high key and km1 as lo key bytes, so flip it
+            k = 1
+            for _km in ct.key_makers:
+                if k < 0:
+                    break;  # handles wide-key tables
+                if _km.shared_km:
+                    km = _km.shared_km
+                else:
+                    km = _km
 
-        if ct.is_raw:
-            json_tbl_['mpu_pc_raw']['value'] = str(1)
-        else:
-            json_tbl_['mpu_pc_raw']['value'] = str(0)
-        json_tbl_['mpu_pc_ofst_err']['value'] = str(0)
-        json_tbl_['mpu_vec']['value'] = '0xF'    # all mpus for scheduling
-        json_tbl_['addr_base']['value'] = str(0)
-        json_tbl_['addr_vf_id_en']['value'] = str(0)
-        json_tbl_['addr_vf_id_loc']['value'] = str(0)
+                json_tbl_['fullkey_km_sel%d' % k]['value'] = str(km.hw_id)
+                k -= 1
 
-        if ct.num_entries and ct.otcam_ct:
-            #This value is used by Otcam table to jump to sram area
-            #associated with TCAM but present at end of hash-table's
-            #sram-area.
-            json_tbl_['oflow_base_idx']['value'] = str(ct.num_entries)
-
-        entry_size = ct.d_size
-        if ct.is_hash_table():
-            if ct.is_overflow:
-                entry_size += ct.hash_ct.key_phv_size
+            if ct.is_writeback:
+                if ct.is_raw:
+                    json_tbl_['lock_en_raw']['value'] = str(1)
+                else:
+                    if ct.match_type == match_type.TERNARY:
+                        json_tbl_['lock_en']['value'] = str(0)
+                    else:
+                        json_tbl_['lock_en']['value'] = str(1)
             else:
-                entry_size += ct.key_phv_size
+                json_tbl_['lock_en']['value'] = str(0)
 
-        entry_sizeB = (entry_size + 7) / 8   # convert to bytes
-        lg2entry_size = log2size(entry_sizeB)
+            if ct.num_actions() > 1 and not ct.is_raw:
+                json_tbl_['mpu_pc_dyn']['value'] = str(1)
+            else:
+                json_tbl_['mpu_pc_dyn']['value'] = str(0)
+            # set a fixed value for model testing XXX
+            json_tbl_['mpu_pc']['value'] = '0x2FEED00'
 
-        json_tbl_['tbl_entry_sz_raw']['value'] = str(0)
-        json_tbl_['addr_shift']['value'] = str(0)
-        json_tbl_['lg2_entry_size']['value'] = str(0)
-        if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
-            json_tbl_['addr_shift']['value'] = str(lg2entry_size)
-            json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
-        elif ct.is_raw_index:
-            # special handling, don't shift addr, but read entry_size bytes
-            json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
-        elif ct.is_raw:
-            # XXX need parameter or pragma if entry size is fixed - leave it to run-time for now
-            json_tbl_['tbl_entry_sz_raw']['value'] = str(1)
-        else:
-            pass
+            if ct.is_raw:
+                json_tbl_['mpu_pc_raw']['value'] = str(1)
+            else:
+                json_tbl_['mpu_pc_raw']['value'] = str(0)
 
-        # need to program chain shift for wide-key table - for toeplitz leave it as 0??
-        if ct.is_wide_key and not ct.is_toeplitz_hash():
-            json_tbl_['chain_shift']['value'] = str(6)
-            json_tbl_['lg2_entry_size']['value'] = str(6)
-        else:
-            json_tbl_['chain_shift']['value'] = str(0)
 
-        # special case - for hash table w/ no mem access, overwrite log2entry and axi values
-        if ct.num_entries == 0 and ct.is_hash_table():
-            # this also covers toeplitz hash
-            # special values (7) is used by h/w to not launch mem read operation
-            json_tbl_['lg2_entry_size']['value'] = str(7)
-            json_tbl_['axi']['value'] = str(0) # make it hbm for lg2_Entry_sz to take effect
+            json_tbl_['mpu_pc_ofst_err']['value'] = str(0)
+            json_tbl_['mpu_vec']['value'] = '0xF'    # all mpus for scheduling
+            json_tbl_['addr_base']['value'] = str(0)
+            json_tbl_['addr_vf_id_en']['value'] = str(0)
+            json_tbl_['addr_vf_id_loc']['value'] = str(0)
 
-        json_tbl_['_modified'] = True
-        stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \
-            (stage.gtm.d.name, stage.id, ct.p4_table.name, ct.tbl_id,
-            te_tbl_property_print(json_tbl_)))
+            if ct.num_entries and ct.otcam_ct:
+                #This value is used by Otcam table to jump to sram area
+                #associated with TCAM but present at end of hash-table's
+                #sram-area.
+                json_tbl_['oflow_base_idx']['value'] = str(ct.num_entries)
+
+            entry_size = ct.d_size
+            if ct.is_hash_table():
+                if ct.is_overflow:
+                    entry_size += ct.hash_ct.key_phv_size
+                else:
+                    entry_size += ct.key_phv_size
+
+            entry_sizeB = (entry_size + 7) / 8   # convert to bytes
+            lg2entry_size = log2size(entry_sizeB)
+            json_tbl_['tbl_entry_sz_raw']['value'] = str(0)
+            json_tbl_['addr_shift']['value'] = str(0)
+            json_tbl_['lg2_entry_size']['value'] = str(0)
+
+            if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
+                json_tbl_['addr_shift']['value'] = str(lg2entry_size)
+                json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
+            elif ct.is_raw_index:
+                # special handling, don't shift addr, but read entry_size bytes
+                json_tbl_['addr_shift']['value'] = str(0)
+                json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
+            elif ct.is_raw:
+                # XXX need parameter to pragma if entry size is fixed - leave it to run-time for now
+                json_tbl_['tbl_entry_sz_raw']['value'] = str(1)
+                json_tbl_['addr_shift']['value'] = str(0)
+                json_tbl_['lg2_entry_size']['value'] = str(0)
+            else:
+                json_tbl_['addr_shift']['value'] = str(0)
+                json_tbl_['lg2_entry_size']['value'] = str(0)
+
+            # need to program chain shift for wide-key table - for toeplitz leave it as 0??
+            if ct.is_wide_key and not ct.is_toeplitz_hash():
+                json_tbl_['chain_shift']['value'] = str(6)
+                json_tbl_['lg2_entry_size']['value'] = str(6)
+            else:
+                json_tbl_['chain_shift']['value'] = str(0)
+
+            # special case - for hash table w/ no mem access, overwrite log2entry and axi values
+            if ct.num_entries == 0 and ct.is_hash_table():
+                # this also covers toeplitz hash
+                # special values (7) is used by h/w to not launch mem read operation
+                json_tbl_['lg2_entry_size']['value'] = str(7)
+                json_tbl_['axi']['value'] = str(0) # make it hbm for lg2_Entry_sz to take effect
+
+            json_tbl_['_modified'] = True
+            stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \
+                (stage.gtm.d.name, stage.id, ct.p4_table.name, tbl_id,
+                te_tbl_property_print(json_tbl_)))
 
     #pdb.set_trace()
     json.dump(te_json['cap_te']['registers'],
