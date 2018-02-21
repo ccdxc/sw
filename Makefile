@@ -1,7 +1,7 @@
 # Makefile for building packages
 
 # Lists excluded patterns to go list
-EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels"
+EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|vendor"
 
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels venice/cmd/types venice/cmd/grpc venice/ctrler/ckm/rpcserver/ckmproto \
@@ -26,9 +26,10 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
-
+# Install gopkgs
+INSTALL := $(shell go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 # Lists all go packages. Auto ignores vendor
-GO_PKG := $(shell go list -e -f '{{.ImportPath}}' ./... | egrep -v ${EXCLUDE_PATTERNS})
+GO_PKG := $(shell gopkgs -short | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS})
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -60,7 +61,7 @@ gen:
 # Doing the go list here avoids an additional global go list
 goimports-src: gen
 	$(info +++ goimports sources)
-	$(eval GO_FILES=`go list -e -f '{{.Dir}}/*.go' ./... | egrep -v ${EXCLUDE_PATTERNS}`)
+	$(eval GO_FILES=`gopkgs -short -f '{{.Dir}}/*.go' | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}`)
 ifdef JOB_ID
 	@echo "Running in CI; checking goimports and fmt"
 	@$(eval IMPRT := $(shell ${GOIMPORTS_CMD} ${GO_FILES}))

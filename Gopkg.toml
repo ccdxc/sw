@@ -17,7 +17,8 @@ required = ["github.com/GeertJohan/go.rice",
             "github.com/minio/minio-go",
             "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway",
             "github.com/pensando/grpc-gateway/protoc-gen-swagger/genswagger",
-            "golang.org/x/tools/cmd/goimports"]
+            "golang.org/x/tools/cmd/goimports",
+            "github.com/haya14busa/gopkgs/cmd/gopkgs"]
 
 [[constraint]]
   branch = "master"
@@ -255,6 +256,10 @@ required = ["github.com/GeertJohan/go.rice",
 [[constraint]]
   name = "github.com/deckarep/golang-set"
   version = "1.7.0"
+
+[[constraint]]
+  name = "github.com/haya14busa/gopkgs"
+  branch = "master"
 
 [prune]
   non-go = true
