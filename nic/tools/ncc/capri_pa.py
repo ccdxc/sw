@@ -910,7 +910,7 @@ class capri_gress_pa:
                         # ignore any cfs that are used for widekey lookup
                         hdr_used = False
 
-                    if cf not in self.i2e_fields and \
+                    if (self.d == xgress.INGRESS or cf not in self.i2e_fields) and \
                         not cf.is_key and not cf.is_input:
                         cf.allow_relocation = True
 
@@ -2196,7 +2196,11 @@ class capri_gress_pa:
         if isinstance(hf, capri_field) and hf.allow_relocation:
             # try to allocate in prior flits and then this flit
             for fid in range(flit.id-1, -1, -1):
-                phv_bit = self.flits[fid].flit_chunk_alloc(hf.width, -1, 0, 0, 0, False)
+                if hf in self.i2e_fields:
+                    align = 8
+                else:
+                    align = 0
+                phv_bit = self.flits[fid].flit_chunk_alloc(hf.width, -1, align, 0, 0, False)
                 if phv_bit >= 0:
                     hf.phv_bit = phv_bit
                     self.pa.logger.debug("%s:Allocated %s at %d in closed flit %d" % \
@@ -2204,7 +2208,7 @@ class capri_gress_pa:
                     return True
 
             # try current flit
-            phv_bit = flit.flit_chunk_alloc(hf.width, -1, 0, 0, 0, False)
+            phv_bit = flit.flit_chunk_alloc(hf.width, -1, align, 0, 0, False)
             if phv_bit >= 0:
                 hf.phv_bit = phv_bit
                 return True

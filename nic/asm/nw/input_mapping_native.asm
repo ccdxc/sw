@@ -37,19 +37,21 @@ native_ipv4_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
-  phvwrpair     p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl, \
-                    p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
 
-  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
-                    p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
+  .assert(offsetof(p, flow_lkp_metadata_ipv4_hlen) - offsetof(p, flow_lkp_metadata_ipv4_flags) == 3)
+  .assert(offsetof(p, flow_lkp_metadata_lkp_dstMacAddr) - offsetof(p, flow_lkp_metadata_ip_ttl) == 8)
+  or            r1, k.ipv4_flags, k.ipv4_ihl, 3
+  or            r2, k.ipv4_ttl, k.ethernet_dstAddr, 8
+  phvwrpair     p.{flow_lkp_metadata_ipv4_hlen,flow_lkp_metadata_ipv4_flags}, r1, \
+                    p.{flow_lkp_metadata_lkp_dstMacAddr,flow_lkp_metadata_ip_ttl}, r2
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
 
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
   phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
                     p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
-  phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
-                    p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
+  phvwr         p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
+  phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwr.f       p.l4_metadata_tcp_data_len, r7
 
 native_ipv4_esp_packet:
@@ -80,8 +82,8 @@ native_ipv6_packet_common:
   phvwr         p.flow_lkp_metadata_lkp_dst, k.{ipv6_dstAddr_sbit0_ebit31, \
                                                ipv6_dstAddr_sbit32_ebit127}
 
-  phvwrpair     p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp, \
-                    p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
+  phvwr         p.flow_lkp_metadata_lkp_proto, k.l3_metadata_ipv6_ulp
+  phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
   phvwrpair.e   p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
                     p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
   phvwr.f       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6

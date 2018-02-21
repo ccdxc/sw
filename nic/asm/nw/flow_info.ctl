@@ -18,7 +18,8 @@ d = {
 };
 
 k = {
-  control_metadata_src_lif = 0x01bb;
+  control_metadata_src_lif_sbit0_ebit7 = 0x01;
+  control_metadata_src_lif_sbit8_ebit15 = 0xbb;
   p4plus_to_p4_p4plus_app_id = 0;
 };
 

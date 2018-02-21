@@ -22,7 +22,9 @@ flow_info:
   /* expected src lif check */
   seq           c1, d.u.flow_info_d.expected_src_lif_check_en, TRUE
   sne.c1        c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
-  sne.c1        c1, k.control_metadata_src_lif, d.u.flow_info_d.expected_src_lif
+  add           r1, k.control_metadata_src_lif_sbit8_ebit15, \
+                    k.control_metadata_src_lif_sbit0_ebit7, 8
+  sne.c1        c1, r1, d.u.flow_info_d.expected_src_lif
   phvwr.c1.e    p.control_metadata_drop_reason[DROP_SRC_LIF_MISMATCH], 1
   phvwr.c1      p.capri_intrinsic_drop, 1
 
@@ -37,13 +39,14 @@ flow_info:
   /* rewrite info */
   phvwrpair     p.rewrite_metadata_rewrite_index[11:0], \
                     d.u.flow_info_d.rewrite_index, \
-                    p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
+                    p.rewrite_metadata_tunnel_rewrite_index[9:0], \
+                    d.u.flow_info_d.tunnel_rewrite_index
 
   /* tunnel info */
   phvwr         p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
-  phvwrpair.e   p.rewrite_metadata_tunnel_rewrite_index[9:0], \
-                    d.u.flow_info_d.tunnel_rewrite_index, \
-                    p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
+  phvwrpair.e   p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid, \
+                    p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
+
   // rewrite info
   phvwr.f       p.{nat_metadata_nat_ip...nat_metadata_twice_nat_idx}, \
                     d.{u.flow_info_d.nat_ip...u.flow_info_d.twice_nat_idx}
@@ -84,7 +87,7 @@ flow_miss:
   K_DBG_WR(0x60)
   DBG_WR(0x6c, 0x6c)
   seq           c1, r5[0], 0
-  nop.!c1.e   
+  nop.!c1.e
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   bcf           [c1], validate_ipv4_flow_key
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
