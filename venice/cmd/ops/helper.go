@@ -20,7 +20,7 @@ import (
 
 // makeNode creates a new Node object.
 func makeNode(name string) *cmd.Node {
-	return &cmd.Node{
+	ret := &cmd.Node{
 		TypeMeta: api.TypeMeta{
 			Kind: "Node",
 		},
@@ -29,6 +29,8 @@ func makeNode(name string) *cmd.Node {
 			UUID: uuid.NewV4().String(),
 		},
 	}
+	ret.SelfLink = ret.MakeKey("cmd")
+	return ret
 }
 
 // response contains grpc response and error for a given host.

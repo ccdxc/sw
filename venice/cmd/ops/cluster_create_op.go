@@ -59,6 +59,7 @@ func (o *clusterCreateOp) Validate() error {
 func (o *clusterCreateOp) populateClusterDefaults() {
 	o.cluster.Kind = "Cluster"
 	o.cluster.UUID = uuid.NewV4().String()
+	o.cluster.SelfLink = o.cluster.MakeKey("cmd")
 	if len(o.cluster.Spec.NTPServers) == 0 {
 		o.cluster.Spec.NTPServers = append(o.cluster.Spec.NTPServers, defaultNTPServer)
 	}
