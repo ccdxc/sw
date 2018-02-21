@@ -41,23 +41,14 @@ req_tx_sqlkey_process:
      sub          r2, k.args.sge_va, d.base_va
      add          r2, r2, r5
 
-     // if ((transfer_offset + transfer_bytes) > pt_seg_size)
-     add          r5, r2, k.args.sge_bytes
+     // if ((transfer_bytes + (transfer_offset % pt_seg_size)) <= pt_seg_size)
+     add          r5, r2, 0
+     mincr        r5, r4, 0
+     add          r5, r5, k.args.sge_bytes
      //  pt_seg_size = 1 << (LOG_PAGE_SIZE + HBM_MUM_PT_ENTRIES_PER_CACHE_LINE)
      sllv         r6, 1, r4
-     blt          r6, r5, pt_unaligned_access
+     ble          r5, r6, pt_aligned_access
      add          r5, r2, r0 // Branch Delay Slot
-
-     // Aligned PT access
-pt_aligned_access:
-     // pt_offset = transfer_offset % pt_seg_size
-     mincr        r5, r4, r0
-
-     // pt_seg_p = (u64 *)my_pt_base_addr + ((transfer_offset /lkey_info_p->page_size) / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)
-     srlv         r2, r2, r4
-     b            set_arg
-     add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64  // Branch Delay Slot
-     //add          r3, r3, r2, LOG_HBM_CACHE_LINE_SIZE
 
      // Unaligned PT access
 pt_unaligned_access:
@@ -66,7 +57,17 @@ pt_unaligned_access:
 
      // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->log_page_size)
      srlv         r2, r2, d.log_page_size
-     add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64
+     b            set_arg
+     add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64 // Branch Delay Slot
+
+     // Aligned PT access
+pt_aligned_access:
+     // pt_offset = transfer_offset % pt_seg_size
+     mincr        r5, r4, r0
+
+     // pt_seg_p = (u64 *)my_pt_base_addr + ((transfer_offset / pt_seg_size) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)
+     srlv         r2, r2, r4
+     add          r3, r3, r2, (CAPRI_LOG_SIZEOF_U64 + LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE)
 
 set_arg:
      seq          c1, k.args.sge_index, 0
