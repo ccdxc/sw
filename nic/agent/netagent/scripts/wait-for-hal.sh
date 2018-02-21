@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# MAX_RETRIES guards the maxium time we wait for HAL to come up. It waits for 2**(MAX_RETRIES) - 1 seconds
-MAX_RETRIES=8
+# MAX_RETRIES guards the maximum time we wait for HAL to come up. It waits for 2**(MAX_RETRIES) - 1 seconds
+MAX_RETRIES=11
 HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
 HAL_SERVER="localhost:$HAL_GRPC_PORT"
 HAL_UP=-1
+
+echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
+
 until (( HAL_UP == 0 )) || (( i == MAX_RETRIES ))
 do
 	timeout="$((2 ** i))"
@@ -18,3 +21,4 @@ if [ $i -eq $MAX_RETRIES ]; then
 	echo "HAL server failed to come up"
 	exit 1
 fi
+echo "HAL WAIT END: `date +%x_%H:%M:%S:%N`"

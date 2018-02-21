@@ -11,4 +11,5 @@ export SNORT_LUA_PATH=$SNORT_EXPORT_DIR/lua/
 export LUA_PATH="$SNORT_EXPORT_DIR/lua/?.lua;;"
 export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/daqs/
 
+echo "STARTING HAL: `date +%x_%H:%M:%S:%N`"
 $GDB $NIC_DIR/../bazel-bin/nic/hal/hal -c hal.json 2>&1 | tee $NIC_DIR/hal.log
