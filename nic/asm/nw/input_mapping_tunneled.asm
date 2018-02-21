@@ -11,7 +11,7 @@ struct phv_                     p;
 nop:
   K_DBG_WR(0x20)
   DBG_WR(0x28, 0x28)
-  nop.e
+  phvwrm.e.f p[1:0], r0, 0
   nop
 
 .align

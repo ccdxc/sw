@@ -16,7 +16,7 @@ input_mapping_miss:
 .align
 nop:
   K_DBG_WR(0x10)
-  nop.e
+  phvwrm.e.f p[1:0], r0, 0
   nop
 
 .align
@@ -33,8 +33,8 @@ native_ipv4_packet:
 native_ipv4_packet_common:
   add           r6, k.ipv4_ihl, k.tcp_dataOffset
   sub           r7, k.ipv4_totalLen, r6, 2
-  phvwr         p.l4_metadata_tcp_data_len, r7
 
+  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
   phvwrpair     p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl, \
@@ -50,10 +50,9 @@ native_ipv4_packet_common:
                     p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
   phvwrpair.e   p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol, \
                     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
-  phvwr.f       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
+  phvwr.f       p.l4_metadata_tcp_data_len, r7
 
 native_ipv4_esp_packet:
-  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwr.e       p.flow_lkp_metadata_lkp_proto, IP_PROTO_IPSEC_ESP
   nop
 
