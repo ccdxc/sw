@@ -590,7 +590,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
 
     // init fte and hal plugins
-    hal::init_plugins(hal_cfg->forwarding_mode == "classic");
+    hal::init_plugins(hal_cfg);
 
     // spawn all necessary PI threads
     HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);

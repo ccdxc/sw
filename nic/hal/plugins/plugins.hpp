@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nic/include/base.h"
+#include "nic/include/hal_cfg.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include <dlfcn.h>
@@ -79,24 +80,20 @@ private:
 };
 } // namepsace plugins
 
-inline hal_ret_t init_plugins(bool classic_nic) {
+inline hal_ret_t init_plugins(hal_cfg_t *hal_cfg) {
     fte::init();
 
-    const char* cfg_path =  std::getenv("HAL_CONFIG_PATH");
-    HAL_ASSERT(cfg_path);
-
+    bool classic_nic = hal_cfg->forwarding_mode == "classic";
     std::string plugin_file;
 
     if (classic_nic) {
-        plugin_file =  std::string(cfg_path) + std::string("/classic-plugins.json");
+        plugin_file =  hal_cfg->cfg_path + std::string("/classic-plugins.json");
     } else {
-        plugin_file =  std::string(cfg_path) + std::string("/plugins.json");
+        plugin_file =  hal_cfg->cfg_path + std::string("/plugins.json");
     }
-
-    std::string plugin_path = std::string(cfg_path) + std::string("/plugins");;
+    std::string plugin_path = hal_cfg->cfg_path + std::string("/plugins");;
 
     plugins::plugin_manager_t &pluginmgr = plugins::plugin_manager_t::get();
-
     pluginmgr.parse(plugin_file, plugin_path);
     pluginmgr.load();
     hal::proxy::proxy_plugin_init();
@@ -121,6 +118,5 @@ inline void thread_exit_plugins(int tid) {
 
     pluginmgr.thread_exit(tid);
 }
-
 
 } // namespace hal
