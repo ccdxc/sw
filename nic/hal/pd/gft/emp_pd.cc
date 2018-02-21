@@ -419,6 +419,12 @@ emp_pd_rx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
         goto end;
     }
 
+    // Setting masks
+    memset(&rx_key1_mask, ~0, sizeof(rx_key1_swkey_mask_t));
+    memset(&rx_key2_mask, ~0, sizeof(rx_key2_swkey_mask_t));
+    memset(&rx_key3_mask, ~0, sizeof(rx_key3_swkey_mask_t));
+    memset(&rx_key4_mask, ~0, sizeof(rx_key4_swkey_mask_t));
+
     // Forming Key1 for layer 1
     RX_KEY_LAYER_FORM_KEY_DATA(1);
     RX_KEY_LAYER_FORM_L1L2_TUNNEL_KEY_DATA(1);
