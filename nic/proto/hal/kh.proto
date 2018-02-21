@@ -93,7 +93,7 @@ message PortKeyHandle {
 // LifKeyHandle uniquely identifies a LIF
 message LifKeyHandle {
   oneof key_or_handle {
-    fixed32         lif_id     = 1;     // app allocated unique LIF id
+    fixed64         lif_id     = 1;     // app allocated unique LIF id
     fixed64         lif_handle = 2;     // id of interface returned by HAL
   }
 }
