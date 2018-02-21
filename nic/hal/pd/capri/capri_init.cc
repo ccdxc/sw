@@ -714,6 +714,25 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
     return ret;
 }
 
+static hal_ret_t
+capri_cache_init ()
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    
+    // Program Global parameters of the cache.
+    ret = capri_hbm_cache_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    // Process all the regions.
+    ret = capri_hbm_cache_regions_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 // - link all the P4 programs, by resolving symbols, labels etc.
@@ -737,13 +756,21 @@ capri_init (capri_cfg_t *cfg = NULL)
 
     g_capri_state_pd->set_cfg_path(cfg->cfg_path);
 
-    capri_hbm_parse(cfg);
-    ret = capri_hbm_regions_init(cfg);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    ret = capri_hbm_parse(cfg);
+
+    if (ret == HAL_RET_OK) {
+        ret = capri_hbm_regions_init(cfg);
+    }
+    
     if (capri_table_rw_init()) {
         return HAL_RET_ERR;
     }
- 
+
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Initializing HBM cache.");
+        ret = capri_cache_init();
+    }
+
     // Do asic init before overwriting with the default configs
     if (ret == HAL_RET_OK) {
         ret = capri_tm_asic_init();

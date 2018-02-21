@@ -1425,6 +1425,10 @@ TEST_F(gft_test, test1) {
     cfg.pgm_name = "gft";
     ret = capri_hbm_parse(&cfg);
     ASSERT_NE(ret, -1);
+    if (getenv("HAL_PLATFORM_MODE_RTL")) {
+        hal_conf_file = "conf/hal_gft_rtl.json";
+    }
+
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     ret = capri_load_mpu_programs("gft", (char *)"obj/gft/asm_bin",
                                   asm_base_addr, NULL, 0);
@@ -1436,6 +1440,10 @@ TEST_F(gft_test, test1) {
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     ret = capri_table_rw_init();
+    ASSERT_NE(ret, -1);
+    ret = capri_hbm_cache_init();
+    ASSERT_NE(ret, -1);
+    ret = capri_hbm_cache_regions_init();
     ASSERT_NE(ret, -1);
     ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);

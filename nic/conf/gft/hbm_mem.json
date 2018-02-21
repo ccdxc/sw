@@ -86,51 +86,63 @@
         },
         {
             "name": "rx_gft_hash",
-            "size_kb": 262144
+            "size_kb": 262144,
+            "cache": "p4ig"
         },
         {
             "name": "rx_gft_hash_overflow",
-            "size_kb": 4096
+            "size_kb": 4096,
+            "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions0",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions1",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions2",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions3",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4ig"
         },
         {
             "name": "tx_gft_hash",
-            "size_kb": 262144
+            "size_kb": 262144,
+            "cache": "p4eg"
         },
         {
             "name": "tx_gft_hash_overflow",
-            "size_kb": 4096
+            "size_kb": 4096,
+            "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions0",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions1",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions2",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions3",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4eg"
         },
         {
             "name": "rss_indir_table",

@@ -701,6 +701,8 @@ def main():
     os.environ['ZMQ_SOC_DIR'] = zmq_soc_dir
     os.environ['MODEL_SHMKEY_PATH'] = nic_dir
     os.environ['MODEL_SHMKEY_PROJID'] = '1'
+    if args.rtl:
+        os.environ['HAL_PLATFORM_MODE_RTL'] = '1'
 
     if args.cleanup:
         if os.path.isfile(lock_file):

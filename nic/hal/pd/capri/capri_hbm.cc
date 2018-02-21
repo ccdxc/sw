@@ -11,6 +11,9 @@
 #include "boost/property_tree/json_parser.hpp"
 #include <arpa/inet.h>
 
+#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
+
 namespace pt = boost::property_tree;
 
 static capri_hbm_region_t *hbm_regions_;
@@ -62,6 +65,14 @@ capri_hbm_parse (capri_cfg_t *cfg)
 
         std::string reg_name = p4_tbl.second.get<std::string>(JKEY_REGION_NAME);
 
+        std::string cache_pipe_name = p4_tbl.second.get<std::string>(JKEY_CACHE_PIPE, "null");
+        if (cache_pipe_name == "p4ig") {
+            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4IG;
+        } else if (cache_pipe_name == "p4eg") {
+            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4EG;
+        } else {
+            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_NONE;
+        }
 
         strcpy(reg->mem_reg_name, reg_name.c_str());
         reg->size_kb = p4_tbl.second.get<int>(JKEY_SIZE_KB);
@@ -155,4 +166,81 @@ capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size)
 {
     hal_ret_t rc = hal::pd::asic_mem_write(addr, buf, size, true);
     return (rc == HAL_RET_OK) ? 0 : -EIO;
+}
+
+hal_ret_t
+capri_hbm_cache_init ()
+{
+    // Enable P4Plus RXDMA (inst_id = 0)
+
+    // Enable P4 Ingress (inst_id = 1)
+    cap_pics_csr_t & ig_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 1);
+    ig_pics_csr.picc.cfg_cache_global.bypass(0);
+    ig_pics_csr.picc.cfg_cache_global.hash_mode(0);
+    ig_pics_csr.picc.cfg_cache_global.write();
+
+    // Enable P4 Egress (inst_id = 2)
+    cap_pics_csr_t & eg_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 2);
+    eg_pics_csr.picc.cfg_cache_global.bypass(0);
+    eg_pics_csr.picc.cfg_cache_global.hash_mode(0);
+    eg_pics_csr.picc.cfg_cache_global.write();
+
+    // Enable P4Plus TXDMA (inst_id = 3)
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_hbm_cache_program_region (capri_hbm_region_t *reg, 
+                                uint32_t inst_id, 
+                                uint32_t filter_idx)
+{
+    cap_pics_csr_t & pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, inst_id);
+    pics_csr.picc.filter_addr_lo_s.data[filter_idx].read();
+    pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(reg->start_offset);
+    pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
+
+    pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
+    pics_csr.picc.filter_addr_hi_s.data[filter_idx].value(reg->start_offset + 
+                                                 (reg->size_kb * 1024));
+    pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
+
+    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
+    // set Valid + CacheEnable bits
+    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xc);
+    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].write();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_hbm_cache_regions_init ()
+{
+    capri_hbm_region_t      *reg;
+    uint32_t                p4ig_filter_idx = 0;
+    uint32_t                p4eg_filter_idx = 0;
+
+    for (int i = 0; i < num_hbm_regions_; i++) {
+        reg = &hbm_regions_[i];
+        if (reg->cache_pipe == CAPRI_HBM_CACHE_PIPE_NONE) {
+            continue;
+        }
+
+        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4IG) {
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4IG cache, "
+                            "start={} size={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb);
+            capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx);
+            p4ig_filter_idx++;
+        }
+
+        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4EG) {
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4EG cache, "
+                            "start={} size={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb);
+            capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx);
+            p4eg_filter_idx++;
+        }
+    }
+
+    return HAL_RET_OK;
 }
