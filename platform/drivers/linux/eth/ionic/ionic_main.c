@@ -161,12 +161,12 @@ int ionic_identify(struct ionic *ionic)
 	if (err)
 		goto err_out_unmap;
 
+	ionic->ident = ident;
+	ionic->ident_pa = ident_pa;
+
 	err = ionic_debugfs_add_ident(ionic);
 	if (err)
 		goto err_out_unmap;
-
-	ionic->ident = ident;
-	ionic->ident_pa = ident_pa;
 
 	return 0;
 
