@@ -67,6 +67,7 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
+
 	return 0;
 }
 
