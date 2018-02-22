@@ -337,6 +337,7 @@ hal_ret_t
 asicpd_program_table_mpu_pc (void)
 {
     p4pd_table_properties_t       tbl_ctx;
+
     for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
         p4pd_table_properties_get(i, &tbl_ctx);
         if (tbl_ctx.is_oflow_table &&
@@ -369,6 +370,7 @@ hal_ret_t
 asicpd_program_table_constant (uint32_t tableid, uint64_t const_value)
 {
     p4pd_table_properties_t       tbl_ctx;
+
     p4pd_table_properties_get(tableid, &tbl_ctx);
     capri_table_constant_write(const_value, tbl_ctx.stage,
                                tbl_ctx.stage_tableid,
@@ -377,9 +379,11 @@ asicpd_program_table_constant (uint32_t tableid, uint64_t const_value)
 }
 
 hal_ret_t
-asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id, uint64_t const_value)
+asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
+                                      uint64_t const_value)
 {
     p4pd_table_properties_t       tbl_ctx;
+
     p4pd_table_properties_get(tableid, &tbl_ctx);
     if (table_thread_id < tbl_ctx.table_thread_count) {
         uint8_t tid = 0;
@@ -398,10 +402,9 @@ asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
 hal_ret_t
 asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 {
-    char action_name[P4ACTION_NAME_MAX_LEN] = {0};
-    char progname[P4ACTION_NAME_MAX_LEN] = {0};
-    uint64_t capri_action_asm_base;
-    //p4pd_table_properties_t tbl_ctx;
+    char        action_name[P4ACTION_NAME_MAX_LEN] = {0};
+    char        progname[P4ACTION_NAME_MAX_LEN] = {0};
+    uint64_t    capri_action_asm_base;
 
     HAL_TRACE_DEBUG("In asicpd_table_mpu_base_init\n");
     for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {

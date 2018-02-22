@@ -44,9 +44,11 @@ typedef uint32_t  mc_entry_hw_id_t;
 typedef uint32_t  l2seg_hw_id_t;
 
 typedef struct pd_mem_init_args_s {
+    const char    *cfg_path;    // HAL config path
 } __PACK__ pd_mem_init_args_t;
 
 typedef struct pd_mem_init_phase2_args_s {
+    const char    *cfg_path;    // HAL config path
 } __PACK__ pd_mem_init_phase2_args_t;
 
 typedef struct pd_pgm_def_entries_args_s {
@@ -1606,26 +1608,6 @@ typedef struct pd_if_get_tm_oport_args_s {
     if_t *pi_if;
     uint32_t tm_oport;
 } __PACK__ pd_if_get_tm_oport_args_t;
-
-#if 0
-typedef struct pd_ep_pd_get_rw_tbl_idx_from_pi_ep_args_s {
-    ep_t *pi_ep;
-    rewrite_actions_en rw_ac;
-    uint32_t rw_tblidx;
-} pd_ep_pd_get_rw_tbl_idx_from_pi_ep_args_t;
-
-typedef struct pd_ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep_args_s {
-    ep_t *pi_ep;
-    tunnel_rewrite_actions_en tnnl_rw_act;
-    uint32_t tnll_rw_tblidx;
-} pd_ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep_args_t;
-
-typedef struct pd_l4lb_pd_get_rw_tbl_idx_from_pi_l4lb_args_s {
-    l4lb_service_entry_t *pi_l4lb;
-    rewrite_actions_en rw_act;
-    uint32_t rw_tblidx;
-} pd_l4lb_pd_get_rw_tbl_idx_from_pi_l4lb_args_t;
-#endif
 
 typedef enum twice_nat_actions_enum {
     TWICE_NAT_NOP_ID = 0,

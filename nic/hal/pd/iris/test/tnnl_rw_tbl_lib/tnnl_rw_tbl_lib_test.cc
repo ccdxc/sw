@@ -49,7 +49,7 @@ TEST_F(tnnl_rw_test, test1) {
 
     MAC_UINT64_TO_ADDR(key.mac_sa, mac_sa);
     MAC_UINT64_TO_ADDR(key.mac_da, mac_da);
-    key.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
+    key.tnnl_rw_act = (hal::tunnel_rewrite_actions_en)TUNNEL_REWRITE_ENCAP_VXLAN_ID;
 
     ret = tnnl_rw_entry_find(&key, &tnnl_rwe);
     ASSERT_TRUE(ret == HAL_RET_ENTRY_NOT_FOUND);
@@ -78,7 +78,10 @@ TEST_F(tnnl_rw_test, test1) {
 }
 
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  hal::pd::pd_mem_init(NULL);
-  return RUN_ALL_TESTS();
+    hal::pd::pd_mem_init_args_t    args;
+
+    ::testing::InitGoogleTest(&argc, argv);
+    args.cfg_path = std::getenv("HAL_CONFIG_PATH");
+    hal::pd::pd_mem_init(&args);
+    return RUN_ALL_TESTS();
 }

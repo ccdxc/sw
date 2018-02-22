@@ -122,8 +122,9 @@ typedef struct p4pd_table_properties_ {
  * initialization.
  */
 typedef struct p4pd_cfg_s {
-    const char *table_map_cfg_file;    // fully resolved path to the table map file
-    const char *p4pd_pgm_name;
+    const char     *table_map_cfg_file;    // fully resolved path to the table map file
+    const char     *p4pd_pgm_name;         // program name (iris/gft/...)
+    const char     *cfg_path;              // HAL config path
 } p4pd_cfg_t;
 p4pd_error_t p4pd_init(p4pd_cfg_t *p4pd_cfg);
 
@@ -403,7 +404,7 @@ p4pd_error_t p4pd_table_ds_decoded_string_get(uint32_t   tableid,
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pluspd_rxdma_init(const char *pgm);
+p4pd_error_t p4pluspd_rxdma_init(p4pd_cfg_t *cfg);
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures
@@ -572,7 +573,7 @@ p4pd_common_rxdma_actions_table_ds_decoded_string_get(uint32_t   tableid,
  * All p4pd APIs will fail if this API is not invoked at the time of
  * initialization.
  */
-p4pd_error_t p4pluspd_txdma_init(const char *pgm);
+p4pd_error_t p4pluspd_txdma_init(p4pd_cfg_t *cfg);
 
 /*
  * Invoking this function will cleanup all p4pd internal maintained structures

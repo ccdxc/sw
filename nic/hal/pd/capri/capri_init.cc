@@ -454,14 +454,14 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[44].params[0].name = RNMDR_TABLE_BASE;
     symbols[44].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
-    // TODO: This is a placeholder. Replace this with appropriate value based on 
+    // TODO: This is a placeholder. Replace this with appropriate value based on
     // clock frequency.
     symbols[45].name = "resp_rx_dcqcn_ecn_process.bin";
     symbols[45].num_params = 1;
     symbols[45].params[0].name = NUM_CLOCK_TICKS_PER_CNP;
     symbols[45].params[0].val = 50000; 
 
-    // TODO: This is a placeholder. Replace this with appropriate value based on 
+    // TODO: This is a placeholder. Replace this with appropriate value based on
     // clock frequency.
     symbols[46].name = "req_rx_dcqcn_ecn_process.bin";
     symbols[46].num_params = 1;

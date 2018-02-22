@@ -758,12 +758,12 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
 hal_ret_t
 hal_pd_init (hal_cfg_t *hal_cfg)
 {
-    hal_ret_t ret;
-    pd_mem_init_args_t mem_init_args;
-    pd_mem_init_phase2_args_t ph2_args;
-    pd_pgm_def_entries_args_t pgm_def_args;
-    pd_pgm_def_p4plus_entries_args_t pgm_p4p_args;
-    pd_clock_delta_comp_args_t       clock_args;
+    hal_ret_t                           ret;
+    pd_mem_init_args_t                  mem_init_args;
+    pd_mem_init_phase2_args_t           ph2_args;
+    pd_pgm_def_entries_args_t           pgm_def_args;
+    pd_pgm_def_p4plus_entries_args_t    pgm_p4p_args;
+    pd_clock_delta_comp_args_t          clock_args;
 
     HAL_ASSERT(hal_cfg != NULL);
 
@@ -781,7 +781,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         goto cleanup;
     }
 
-    // ret = hal_pd_mem_init();
+    mem_init_args.cfg_path = hal_cfg->cfg_path.c_str();
     ret = hal_pd_call(PD_FUNC_ID_MEM_INIT, (void *)&mem_init_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL PD init failed, err : {}", ret);
@@ -815,7 +815,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         pthread_yield();
     }
 
-    // ret = hal_pd_mem_init_phase_2();
+    ph2_args.cfg_path = mem_init_args.cfg_path;
     ret = hal_pd_call(PD_FUNC_ID_MEM_INIT_PHASE2, (void *)&ph2_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL PD init failed, err : {}", ret);

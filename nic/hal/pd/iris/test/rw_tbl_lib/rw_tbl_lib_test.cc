@@ -49,7 +49,7 @@ TEST_F(rw_test, test1) {
 
     MAC_UINT64_TO_ADDR(key.mac_sa, mac_sa);
     MAC_UINT64_TO_ADDR(key.mac_da, mac_da);
-    key.rw_act = REWRITE_REWRITE_ID;
+    key.rw_act = (hal::rewrite_actions_en)REWRITE_REWRITE_ID;
 
     ret = rw_entry_find(&key, &rwe);
     ASSERT_TRUE(ret == HAL_RET_ENTRY_NOT_FOUND);
@@ -92,7 +92,10 @@ TEST_F(rw_test, test1) {
 #endif
 
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  hal::pd::pd_mem_init(NULL);
-  return RUN_ALL_TESTS();
+    hal::pd::pd_mem_init_args_t    args;
+
+    ::testing::InitGoogleTest(&argc, argv);
+    args.cfg_path = std::getenv("HAL_CONFIG_PATH");
+    hal::pd::pd_mem_init(&args);
+    return RUN_ALL_TESTS();
 }

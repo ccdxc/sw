@@ -17,6 +17,7 @@
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/gft/include/p4pd.h"
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 
 using sdk::lib::slab;
 using sdk::table::tcam;
@@ -37,9 +38,9 @@ public:
     slab *get_slab(hal_slab_t slab_id);
 
 
-    hal_ret_t init_tables(void);
-    hal_ret_t p4plus_rxdma_init_tables(void);
-    hal_ret_t p4plus_txdma_init_tables(void);
+    hal_ret_t init_tables(pd_mem_init_args_t *args);
+    hal_ret_t p4plus_rxdma_init_tables(pd_mem_init_args_t *args);
+    hal_ret_t p4plus_txdma_init_tables(pd_mem_init_args_t *args);
 
 
     // get APIs for LIF related state

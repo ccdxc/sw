@@ -87,34 +87,24 @@ p4pluspd_txdma_get_table_type (const char *match_type)
     return P4_TBL_TYPE_INVALID;
 }
 
-#define P4PLUSPD_TXDMA_TBL_PACKING_JSON  "capri_p4_txdma_table_map.json"
-static
-p4pd_error_t
-p4pluspd_txdma_tbl_packing_json_parse (const char *pgm)
+static p4pd_error_t
+p4pluspd_txdma_tbl_packing_json_parse (p4pd_cfg_t *cfg)
 {
-    pt::ptree               json_pt;
-    p4pd_table_properties_t *tbl;
-    std::string             full_path;
-    char                    *cfg_path;
+    pt::ptree                  json_pt;
+    p4pd_table_properties_t    *tbl;
+    std::string                full_path;
 
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-         full_path =  std::string(cfg_path) + "/" + std::string(pgm) + "/" + P4PLUSPD_TXDMA_TBL_PACKING_JSON;
-     } else {
-         printf("Please specify HAL_CONFIG_PATH env. variable ... ");
-         exit(0);
-     }
+    full_path =  std::string(cfg->cfg_path) + "/" +
+                     std::string(cfg->table_map_cfg_file);
 
     std::ifstream tbl_json(full_path.c_str());
-
     read_json(tbl_json, json_pt);
-    
     boost::optional<pt::ptree&>table_pt = json_pt.get_child_optional(JSON_KEY_TABLES);
     if (!table_pt) {
         // Error
         return P4PD_FAIL;
     }
-    //int num_tables = json_pt.count(JSON_KEY_TABLES);
+
     int num_tables = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX;
     _p4plus_txdma_tbls = (p4pd_table_properties_t*)P4PD_CALLOC(num_tables, 
                                                 sizeof(p4pd_table_properties_t));
@@ -224,12 +214,12 @@ p4pluspd_txdma_cleanup (void)
 }
 
 p4pd_error_t
-p4pluspd_txdma_init (const char *pgm)
+p4pluspd_txdma_init (p4pd_cfg_t *cfg)
 {
     p4pd_common_txdma_actions_prep_p4tbl_names();
     p4pd_common_txdma_actions_prep_p4tbl_sw_struct_sizes();
 
-    if (p4pluspd_txdma_tbl_packing_json_parse(pgm) != P4PD_SUCCESS) {
+    if (p4pluspd_txdma_tbl_packing_json_parse(cfg) != P4PD_SUCCESS) {
         P4PD_FREE(_p4plus_txdma_tbls);
         return P4PD_FAIL;
     }

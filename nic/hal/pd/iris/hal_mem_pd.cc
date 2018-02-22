@@ -806,14 +806,15 @@ p4pd_table_info_dump_ (void)
 // initializing tables
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_state_pd::init_tables(void)
+hal_state_pd::init_tables(pd_mem_init_args_t *args)
 {
     uint32_t                   tid;
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file = "iris/capri_p4_table_map.json",
-        .p4pd_pgm_name = "iris"
+        .p4pd_pgm_name      = "iris",
+        .cfg_path           = args->cfg_path,
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -941,18 +942,23 @@ hal_state_pd::init_tables(void)
 }
 
 hal_ret_t
-hal_state_pd::p4plus_rxdma_init_tables(void)
+hal_state_pd::p4plus_rxdma_init_tables(pd_mem_init_args_t *args)
 {
     uint32_t                   tid;
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_error_t               rc;
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file = "iris/capri_p4_rxdma_table_map.json",
+        .p4pd_pgm_name      = "iris",
+        .cfg_path           = args->cfg_path,
+    };
 
     memset(&tinfo, 0, sizeof(tinfo));
     memset(&ctinfo, 0, sizeof(ctinfo));
 
     // parse the NCC generated table info file for p4+ tables
-    rc = p4pluspd_rxdma_init("iris");
+    rc = p4pluspd_rxdma_init(&p4pd_cfg);
     HAL_ASSERT(rc == P4PD_SUCCESS);
 
     // start instantiating tables based on the parsed information
@@ -990,18 +996,23 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
 }
 
 hal_ret_t
-hal_state_pd::p4plus_txdma_init_tables(void)
+hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
 {
     uint32_t                   tid;
     hal_ret_t                  ret = HAL_RET_OK;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_error_t               rc;
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file = "iris/capri_p4_txdma_table_map.json",
+        .p4pd_pgm_name      = "iris",
+        .cfg_path           = args->cfg_path,
+    };
 
     memset(&tinfo, 0, sizeof(tinfo));
     memset(&ctinfo, 0, sizeof(ctinfo));
 
     // parse the NCC generated table info file for p4+ tables
-    rc = p4pluspd_txdma_init("iris");
+    rc = p4pluspd_txdma_init(&p4pd_cfg);
     HAL_ASSERT(rc == P4PD_SUCCESS);
 
     // start instantiating tables based on the parsed information
@@ -1051,19 +1062,19 @@ pd_mem_init (pd_mem_init_args_t *args)
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     HAL_TRACE_DEBUG("Initializing p4 asic lib tables ...");
-    ret = g_hal_state_pd->init_tables();
+    ret = g_hal_state_pd->init_tables(args);
     if (ret != HAL_RET_OK) {
         delete g_hal_state_pd;
     }
 
     HAL_TRACE_DEBUG("Initializing p4plus asic lib tables ...");
-    ret = g_hal_state_pd->p4plus_rxdma_init_tables();
+    ret = g_hal_state_pd->p4plus_rxdma_init_tables(args);
     if (ret != HAL_RET_OK) {
         delete g_hal_state_pd;
     }
 
     HAL_TRACE_DEBUG("Initializing p4plus asic lib tables ...");
-    ret = g_hal_state_pd->p4plus_txdma_init_tables();
+    ret = g_hal_state_pd->p4plus_txdma_init_tables(args);
     if (ret != HAL_RET_OK) {
         delete g_hal_state_pd;
     }

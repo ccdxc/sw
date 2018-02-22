@@ -29,12 +29,11 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
                               const DebugRequestMsg *req,
                               DebugResponseMsg *rsp)
 {
-    bool         table_access = false;
-    bool         reg_access = false;
-    hal::pd::pd_debug_cli_read_args_t args;
-    string       data;
-
-    hal_ret_t    ret = HAL_RET_OK;
+    hal_ret_t                            ret;
+    bool                                 table_access = false;
+    bool                                 reg_access = false;
+    hal::pd::pd_debug_cli_read_args_t    args;
+    string                               data;
 
     HAL_TRACE_DEBUG("Rcvd Ddebug request");
 
@@ -69,14 +68,6 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
             args.swkey_mask = (void *)spec.swkey_mask().c_str();
             args.actiondata = (void *)spec.actiondata().c_str();
             ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_READ, (void *)&args);
-#if 0
-            ret = hal::pd::pd_debug_cli_read(
-                                    key_handle.table_id(),
-                                    spec.index(),
-                                    (void *)spec.swkey().c_str(),
-                                    (void *)spec.swkey_mask().c_str(),
-                                    (void *)spec.actiondata().c_str());
-#endif
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_DEBUG("{}: Hardware read failure, err : {}",
                                 __FUNCTION__, ret);
@@ -95,14 +86,6 @@ DebugServiceImpl::DebugInvoke(ServerContext *context,
             args.swkey_mask = (void *)spec.swkey_mask().c_str();
             args.actiondata = (void *)spec.actiondata().c_str();
             ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_DEBUG_CLI_WRITE, (void *)&args);
-#if 0
-            ret = hal::pd::pd_debug_cli_write(
-                                    key_handle.table_id(),
-                                    spec.index(),
-                                    (void *)spec.swkey().c_str(),
-                                    (void *)spec.swkey_mask().c_str(),
-                                    (void *)spec.actiondata().c_str());
-#endif
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_DEBUG("{}: Hardware write failure, err : {}",
                                 __FUNCTION__, ret);

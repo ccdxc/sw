@@ -20,6 +20,7 @@
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 
 using hal::BMAllocator;
 using sdk::lib::indexer;
@@ -205,9 +206,10 @@ public:
     indexer *cpupkt_descr_hw_id_idxr(void) {return cpupkt_descr_hwid_idxr_; }
     indexer *cpupkt_page_hw_id_idxr(void) {return cpupkt_page_hwid_idxr_; }
 
-    hal_ret_t init_tables(void);
-    hal_ret_t p4plus_rxdma_init_tables(void);
-    hal_ret_t p4plus_txdma_init_tables(void);
+    hal_ret_t init_tables(pd_mem_init_args_t *args);
+    hal_ret_t p4plus_rxdma_init_tables(pd_mem_init_args_t *args);
+    hal_ret_t p4plus_txdma_init_tables(pd_mem_init_args_t *args);
+
     directmap *dm_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
             return NULL;
