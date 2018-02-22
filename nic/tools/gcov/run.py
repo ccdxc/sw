@@ -16,9 +16,12 @@ import time
 parser = argparse.ArgumentParser(description='Coverage generator')
 parser.add_argument('--config', dest='conf_file',
                     default='coverage.json', help='Coverage config file')
+parser.add_argument('--run-only', dest='run_only',
+                    default=None, help='Run only job')
 parser.add_argument('--ignore-errors', dest='ignore_errors', action='store_true', help='Ignore Dol errors and continue coverage.)')
 parser.add_argument('--max-job-run-time', dest='max_job_run_time',
                     default=60, help='Maximum run time per job in minutes')
+parser.add_argument('--skip-asm-ins-stats', dest='skip_asm_ins_stats', action='store_true', help='Skip ASM pipeline .)')
 args = parser.parse_args()
 
 def _get_max_job_run_time():
@@ -348,24 +351,35 @@ class CapcovCoverage(CoverageBase):
             subprocess.call(["mv", tmp_file_name, dst_file_name])
         
         if not info_files:
-            return            
-        #First copy the capcov files from the directory of the first info file.
-        src_dir_name = os.path.dirname(info_files[0])
+            return 
+
         dst_dir_name = os.path.dirname(output_file)
-        copy_cmd = "cp -r " + src_dir_name + "/capcov_out " + dst_dir_name
-        subprocess.call([copy_cmd], shell=True)
-        
-        dst_files_map = get_cacov_file_map(dst_dir_name)
-        #Next merge the cacov files.
-        for file in info_files[1:]:
-            src_files_map = get_cacov_file_map(os.path.dirname(file))
-            for (_,src_file), (_, dst_file) in zip(src_files_map.items(), dst_files_map.items()):
-                merge_cacov_files(src_file, dst_file)
-        os.chdir(dst_dir_name +  "/capcov_out")
+        capcov_dst_dir_name = dst_dir_name + "/capov_out"
+        cmd = "mkdir -p " + capcov_dst_dir_name
+        subprocess.call([cmd], shell=True)
+        for info_file in info_files:
+            src_dir_name = os.path.dirname(info_file)
+            src_dir_files_map = get_cacov_file_map(src_dir_name)
+            dst_dir_files_map = get_cacov_file_map(capcov_dst_dir_name)
+            #Merge the interestion of 2 files maps
+            for file in (set(src_dir_files_map.keys()) & set(dst_dir_files_map.keys())):
+                merge_cacov_files(src_dir_files_map[file], dst_dir_files_map[file])
+            #Just copy the files if not found in the destination.
+            for file in (set(src_dir_files_map.keys()) -  set(dst_dir_files_map.keys())):
+                capcov_dir = src_dir_files_map[file].split("capcov_out")
+                cacov_file = capcov_dir[1][1:]
+                cur_dir = os.getcwd()
+                os.chdir(capcov_dir[0] + "/capcov_out")
+                files =  ('.').join(cacov_file.split('.')[:-1]) + ".*"
+                copy_cmd = "cp  --parents " + files + " " + capcov_dst_dir_name
+                subprocess.call([copy_cmd], shell=True)
+                os.chdir(cur_dir)
+            
+        os.chdir(capcov_dst_dir_name)
         for root, _, _ in os.walk("."):
             #Generate Directory level (Feature) coverage information.
             if len(root.split("/")) == 2:
-                root_output_dir = dst_dir_name + "/" + "capcov_out" + "/" + "/".join(root.split("/")[1:])
+                root_output_dir = capcov_dst_dir_name + "/" + "/".join(root.split("/")[1:])
                 CapcovCoverage.gen_html_local(root.split("/")[1], root_output_dir, dst_dir_name)
         os.chdir(env.nic_dir)
                 
@@ -451,6 +465,8 @@ def run_and_generate_coverage(data):
     module_infos = defaultdict(lambda: [])
     for run in data["run"]:
         for run_name in run:
+            if args.run_only and args.run_only != run_name:
+                continue
             if "cmd" in run[run_name]:
                 run_cmd(run[run_name]["cmd"], _get_max_job_run_time())
                 generate_run_coverage(run_name, run)
@@ -542,7 +558,7 @@ if __name__ == '__main__':
     run_and_generate_coverage(data)
     subprocess.call(["mkdir", "-p", env.p4_data_output_path])
     for module_name in data["modules"]:
-        if data["modules"][module_name]["cov_type"] == "capcov":
+        if not args.skip_asm_ins_stats and data["modules"][module_name]["cov_type"] == "capcov":
             asm_data_process.generate_pipeline_data(data["modules"][module_name], 
                                     env.asm_out_final, env.p4_data_output_path)
             asm_data_process.generate_pipeline_summary_page(env.p4_data_output_path,

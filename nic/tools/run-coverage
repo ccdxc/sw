@@ -11,8 +11,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS="kilc:s:t:"
-LONGOPTIONS="keep-data,configfile:,run-time:,skip-target:;ignore-errors,modellogs"
+OPTIONS="kilc:s:t:r:"
+LONGOPTIONS="keep-data,configfile:,run-time:,skip-target:;ignore-errors,modellogs,run-only:,skip-asm-ins-stats"
 
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -44,12 +44,20 @@ while true; do
             config_file=$2
             shift 2
             ;;
+        -r|--run-only)
+            run_only=$2
+            shift 2
+            ;;
         -t|--run-time)
             max_job_run_time=$2
             shift 2
             ;;
         -i|--ignore-errors)
             ignore_errors=1
+            shift
+            ;;
+        --skip-asm-ins-stats)
+            export SKIP_ASM_INS_STATS=--skip-asm-ins-stats
             shift
             ;;
         -l|--modellogs)
@@ -90,6 +98,10 @@ if [ $enable_model_logs -eq 1 ];then
     export MODEL_LOGGING_ENABLED=1
 fi
 
+if [[ -v run_only ]];then
+    export RUN_ONLY="--run-only $run_only"
+fi
+
 export MPU_COV_DUMP_FILE=$NIC_DIR/coverage/asm_cov.dump
 export MPU_PC_COV_DUMP_DIR=$NIC_DIR/coverage/asm_out_all
 
@@ -126,7 +138,7 @@ export PATH=$PATH:~/.local/bin/
 #Install Pandas 
 pipenv install pandas
 
-pipenv run python3 $NIC_DIR/tools/gcov/run.py $IGNORE_ERRORS --config $config_file --max-job-run-time $max_job_run_time 2>&1 | tee $NIC_DIR/coverage.log
+pipenv run python3 $NIC_DIR/tools/gcov/run.py $SKIP_ASM_INS_STATS $IGNORE_ERRORS --config $config_file --max-job-run-time  $max_job_run_time $RUN_ONLY 2>&1 | tee $NIC_DIR/coverage.log
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Coverage run failed."
