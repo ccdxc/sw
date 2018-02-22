@@ -28,7 +28,8 @@ cc_library(
     copts = sdk_copts,
     deps = [
         "//nic/hal/pd:hal_pd_includes",
-        "//nic/hal/pd/capri",
+        #"//nic/hal/pd/capri",
+        "//nic/hal/pd/p4pd",
         "//nic/include:base_includes",
         "//nic:spdlog",
         "@sdk//obj:sdk_indexer",
@@ -53,7 +54,6 @@ cc_test(
     linkopts = gl_linkopts_list,
     deps = [
             "//nic/hal/pd/iris:pd_iris",
-            "//nic/hal/pd/capri:capri",
             ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
 )

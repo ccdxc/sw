@@ -60,7 +60,6 @@ cc_test(
     ],
     deps = [
             "//nic/hal/pd/iris:pd_iris",
-            "//nic/hal/pd/capri:capri",
             ] + gl_deps_list + test_deps_list,
     copts = sdk_copts,
 )

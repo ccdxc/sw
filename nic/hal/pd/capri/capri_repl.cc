@@ -1,75 +1,23 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.h"
-#ifndef GFT
-#include "nic/gen/iris/include/p4pd.h"
-#endif
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/include/hal_pd_error.hpp"
 #include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
-//#include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/include/asic_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
 
 /* HBM base address in System memory map; Cached once at the init time */
-static uint64_t capri_hbm_base;
-static uint64_t hbm_repl_table_offset;
+uint64_t capri_hbm_base;
+uint64_t hbm_repl_table_offset;
 
 hal_ret_t
-capri_repl_entry_read(uint32_t index, capri_repl_table_entry* entry)
+capri_repl_init (capri_cfg_t *cfg)
 {
-    uint64_t entry_offset = index * CAPRI_REPL_ENTRY_WIDTH;
-    uint64_t base_in_entry_units = hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH;
-
-    HAL_ASSERT(index < CAPRI_REPL_TABLE_DEPTH);
-
-    hal::pd::asic_mem_read(capri_hbm_base + hbm_repl_table_offset + entry_offset,
-                           (uint8_t *)entry,
-                           CAPRI_REPL_ENTRY_WIDTH);
-
-    if (entry->get_last_entry() == 0) {
-        entry->set_next_ptr(entry->get_next_ptr() - base_in_entry_units);
-    }
-
-    return (HAL_RET_OK);
-}
-
-hal_ret_t
-capri_repl_entry_write(uint32_t index, capri_repl_table_entry* entry)
-{
-    uint64_t entry_offset = index * CAPRI_REPL_ENTRY_WIDTH;
-    uint64_t base_in_entry_units = hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH;
-
-    HAL_ASSERT(index < CAPRI_REPL_TABLE_DEPTH);
-
-    if (entry->get_last_entry() == 0) {
-        entry->set_next_ptr(entry->get_next_ptr() + base_in_entry_units);
-    }
-
-    hal::pd::asic_mem_write(capri_hbm_base + hbm_repl_table_offset + entry_offset,
-                            (uint8_t *)entry,
-                            CAPRI_REPL_ENTRY_WIDTH);
-
-    if (entry->get_last_entry() == 0) {
-        entry->set_next_ptr(entry->get_next_ptr() - base_in_entry_units);
-    }
-
-#ifdef HAL_LOG_TBL_UPDATES
-    HAL_TRACE_DEBUG("{}", "REPL-TABLE Written");
-#endif
-
-    return (HAL_RET_OK);
-}
-
-hal_ret_t
-capri_repl_init (void)
-{
-#ifndef GFT
     capri_hbm_base = get_hbm_base();
     hbm_repl_table_offset = get_hbm_offset(JP4_REPL);
-    capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
-    capri_tm_repl_table_token_size_set(P4_REPL_ENTRY_WIDTH * 8);
-#endif
+    if (hbm_repl_table_offset != CAPRI_INVALID_OFFSET) {
+        capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
+        capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
+    }
+
     return HAL_RET_OK;
 }

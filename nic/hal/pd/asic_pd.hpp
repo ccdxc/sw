@@ -16,6 +16,7 @@ typedef struct asic_cfg_s {
     std::string      loader_info_file;
     std::string      default_config_dir;    // TODO: vasanth, pls. remove this up eventually
     uint32_t         admin_cos;
+    uint32_t         repl_entry_width;
     std::string      pgm_name;
     std::string      cfg_path;              // HAL config path
 } asic_cfg_t;

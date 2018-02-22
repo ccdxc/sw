@@ -4,6 +4,7 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
+#include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -107,6 +108,7 @@ hal::pd::asic_init (asic_cfg_t *cfg)
     capri_cfg.default_config_dir = cfg->default_config_dir;
     capri_cfg.cfg_path = cfg->cfg_path;
     capri_cfg.admin_cos = cfg->admin_cos;
+    capri_cfg.repl_entry_width = cfg->repl_entry_width;
     capri_cfg.pgm_name = cfg->pgm_name;
     return capri_init(&capri_cfg);
 }
@@ -799,7 +801,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_repl_init();
+        ret = capri_repl_init(cfg);
     }
 
    if (cfg && !cfg->loader_info_file.empty()) {

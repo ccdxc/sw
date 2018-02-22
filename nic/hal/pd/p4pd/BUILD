@@ -6,6 +6,7 @@ cc_library(
     srcs = [
         "p4pd_utils.cc",
         "p4pd_api.cc",
+        "p4pd_repl.cc",
         "p4pluspd_rxdma_api.cc",
         "p4pluspd_txdma_api.cc",
     ],

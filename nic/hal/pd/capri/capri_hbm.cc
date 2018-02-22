@@ -107,7 +107,7 @@ get_hbm_offset(const char *reg_name)
         }
     }
 
-    return 0;
+    return CAPRI_INVALID_OFFSET;
 }
 
 uint64_t
