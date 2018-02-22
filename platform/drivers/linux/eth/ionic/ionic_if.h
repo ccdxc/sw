@@ -826,7 +826,7 @@ struct station_mac_addr_get_cmd {
  *                 0 = Successful completion
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
- * @addr:       Station MAC address
+ * @addr:       Station MAC address (network-byte order)
  * @color:      Color bit.
  */
 struct station_mac_addr_get_comp {
@@ -896,7 +896,7 @@ enum rx_filter_match_type {
  * @qid:        Queue ID
  * @qtype:      Queue type
  * @vlan:       VLAN ID
- * @addr:       MAC Address
+ * @addr:       MAC Address (network-byte order)
  */
 struct rx_filter_cmd {
 	u16 opcode;
