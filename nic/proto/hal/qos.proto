@@ -158,9 +158,10 @@ message QosClassGetRequestMsg {
 
 // QosClassGetResponse captures all the information about a QosClass
 message QosClassGetResponse {
-  QosClassSpec   spec   = 1;    // QosClass configuration
-  QosClassStatus status = 2;    // QosClass operational status
-  QosClassStats  stats  = 3;    // QosClass statistics
+  types.ApiStatus   api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  QosClassSpec      spec        = 2;    // QosClass configuration
+  QosClassStatus    status      = 3;    // QosClass operational status
+  QosClassStats     stats       = 4;    // QosClass statistics
 }
 
 // QosClassGetResponseMsg is response to QosClassGetRequestMsg

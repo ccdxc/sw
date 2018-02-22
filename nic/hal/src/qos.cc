@@ -182,6 +182,7 @@ qos_class_get_fill_rsp (qos::QosClassGetResponse *rsp,
     spec->mutable_marking()->set_dot1q_pcp_rewrite_en(qos_class->marking.pcp_rewrite_en);
     spec->mutable_marking()->set_ip_dscp(qos_class->marking.dscp);
     spec->mutable_marking()->set_ip_dscp_rewrite_en(qos_class->marking.dscp_rewrite_en);
+    rsp->set_api_status(types::API_STATUS_OK);
 }
 
 static bool
@@ -216,6 +217,7 @@ qos_class_get (qos::QosClassGetRequest& req,
     response = rsp->add_response();
     qos_class = find_qos_class_by_key_handle(kh);
     if (!qos_class) {
+        response->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
