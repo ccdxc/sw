@@ -23,11 +23,11 @@ def mac(s):
     return binascii.unhexlify(s.replace(b':', b''))
 
 @contextmanager
-def ioloop(m2t, t2m, poll_interval, verbose, examine, mac, fix_checksum):
+def ioloop(m2t, t2m, poll_interval, verbose, examine, mac, fix_checksum, tname):
     assert m2t or t2m
 
     print("tap: starting")
-    tap = pytun.TunTapDevice(flags=pytun.IFF_TAP|pytun.IFF_NO_PI)
+    tap = pytun.TunTapDevice(flags=pytun.IFF_TAP|pytun.IFF_NO_PI,name=tname)
     tap.hwaddr = mac
     tap.up()
     print("tap: started")
@@ -120,6 +120,7 @@ parser.add_argument("--fix_checksum", default=False)
 parser.add_argument("--mac", type=mac, default="ba:ba:ba:ba:ba:ba")
 parser.add_argument("dir", choices=["model2tap", "tap2model", "bidi"],
     default="bidi")
+parser.add_argument("-tname", default="")
 args = parser.parse_args()
 
 os.environ['MODEL_SOCK_PATH'] = os.getcwd()
@@ -127,7 +128,7 @@ os.environ['MODEL_SOCK_PATH'] = os.getcwd()
 print("ioloop: starting")
 m2t = args.dir in ["model2tap", "bidi"]
 t2m = args.dir in ["tap2model", "bidi"]
-with ioloop(m2t, t2m, args.poll_interval, args.verbose, args.examine, args.mac, args.fix_checksum) as stop:
+with ioloop(m2t, t2m, args.poll_interval, args.verbose, args.examine, args.mac, args.fix_checksum, args.tname) as stop:
     try:
         while True:
             time.sleep(1 << 31)

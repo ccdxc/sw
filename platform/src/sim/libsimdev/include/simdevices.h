@@ -25,6 +25,23 @@ typedef struct simdev_api_s {
     int (*write_reg)(u_int64_t addr, u_int32_t data);
     int (*read_mem)(u_int64_t addr, void *buf, size_t size);
     int (*write_mem)(u_int64_t addr, void *buf, size_t size);
+    int (*host_read_mem)(u_int64_t addr, void *buf, size_t size);
+    int (*host_write_mem)(const u_int64_t addr,
+                          const void *buf,
+                          const size_t size);
+    void (*hal_create_mr)(void *cmd,
+                          void *comp,
+                          u_int32_t *done);
+    void (*hal_create_cq)(void *cmd,
+                          void *comp,
+                          u_int32_t *done);
+    void (*hal_create_qp)(void *cmd,
+                          void *comp,
+                          u_int32_t *done);
+    void (*hal_modify_qp)(void *cmd,
+                          void *comp,
+                          u_int32_t *done);
+    void (*set_lif) (u_int32_t lif);
 } simdev_api_t;
 
 int simdev_open(simdev_api_t *api);

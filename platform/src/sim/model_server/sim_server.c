@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <inttypes.h>
@@ -20,6 +21,17 @@
 #include "simserver.h"
 #include "simdevices.h"
 #include "zmq_wait.h"
+
+/* Supply these for ionic_if.h */
+typedef u_int8_t u8;
+typedef u_int16_t u16;
+typedef u_int32_t u32;
+typedef u_int64_t u64;
+typedef u_int64_t dma_addr_t;
+#define BIT(n)  (1 << (n))
+
+#include "drivers/linux/eth/ionic/ionic_if.h"
+#include "lib_driver.hpp"
 
 typedef struct simctx_s {
     int serverfd;
@@ -126,6 +138,28 @@ sim_server_write_mem(u_int64_t addr, void *buf, size_t size)
     return model_server_write_mem(addr, buf, size) ? 0 : -1;
 }
 
+int 
+sim_server_read_clientmem(const u_int64_t addr, 
+                          void *buf,
+                          const size_t len)
+{
+     int s = simctx.clientfd;
+     u_int16_t bdf = 0x0300; /* XXX */
+     
+     return sims_memrd(s, bdf, addr, len, buf);
+}
+ 
+int 
+sim_server_write_clientmem(const u_int64_t addr,
+                           const void *buf, 
+                           const size_t len)
+{
+    int s = simctx.clientfd;
+    u_int16_t bdf = 0x0300; /* XXX */
+    
+    return sims_memwr(s, bdf, addr, len, buf);
+}
+
 static simdev_api_t sim_server_api = {
     .set_user  = sim_server_set_user,
     .log       = sim_server_log,
@@ -135,6 +169,13 @@ static simdev_api_t sim_server_api = {
     .write_reg = sim_server_write_reg,
     .read_mem  = sim_server_read_mem,
     .write_mem = sim_server_write_mem,
+    .host_read_mem = sim_server_read_clientmem,
+    .host_write_mem = sim_server_write_clientmem,
+    .hal_create_mr = hal_create_mr_wrapper,
+    .hal_create_cq = hal_create_cq_wrapper,
+    .hal_create_qp = hal_create_qp_wrapper,
+    .hal_modify_qp = hal_modify_qp_wrapper,
+    .set_lif = hal_set_lif_base,
 };
 
 /*
@@ -221,6 +262,7 @@ sim_server_init(int argc, char *argv[])
     pciehsvc_open(NULL);
     simctx.serverfd = sims_open(NULL, simdev_msg_handler);
     zmq_wait_add_fd(simctx.serverfd, zmq_sim_new_client, NULL);
+    init_lib_driver();
 }
 
 void
@@ -230,28 +272,6 @@ sim_server_shutdown(void)
     zmq_wait_remove_fd(simctx.clientfd);
     sims_close_client(simctx.clientfd);
     sims_close(simctx.serverfd);
-}
-
-int 
-sim_server_read_clientmem(const u_int64_t addr, 
-                          void *buf,
-                          const size_t len)
-{
-    int s = simctx.clientfd;
-    u_int16_t bdf = 0x0300; /* XXX */
-
-    return sims_memrd(s, bdf, addr, len, buf);
-}
-
-int 
-sim_server_write_clientmem(const u_int64_t addr,
-                           const void *buf, 
-                           const size_t len)
-{
-    int s = simctx.clientfd;
-    u_int16_t bdf = 0x0300; /* XXX */
-
-    return sims_memwr(s, bdf, addr, len, buf);
 }
 
 int

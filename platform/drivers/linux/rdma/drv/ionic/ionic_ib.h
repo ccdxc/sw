@@ -10,7 +10,7 @@
 #define ROCE_DRV_MODULE_NAME		"ionic"
 #define ROCE_DRV_MODULE_VERSION		"1.0.0"
 
-#define IONIC_DESC	"Broadcom NetXtreme-C/E RoCE Driver"
+#define IONIC_DESC	"Pensando RoCE v2 Driver"
 
 #define IONIC_PAGE_SIZE_4K		BIT(12)
 #define IONIC_PAGE_SIZE_8K		BIT(13)

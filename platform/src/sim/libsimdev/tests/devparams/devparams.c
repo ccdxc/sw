@@ -107,3 +107,11 @@ main(int argc, char *argv[])
 
     exit(0);
 }
+
+int 
+sim_server_read_clientmem(const u_int64_t addr, 
+                          void *buf,
+                          const size_t len)
+{
+    return 0;
+}

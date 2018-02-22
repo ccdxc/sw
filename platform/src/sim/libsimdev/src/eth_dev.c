@@ -37,18 +37,15 @@ typedef struct ethparams_s {
     int lif;
     int adq_type;
     int adq_count;
-    int adq_qidbase;
     int txq_type;
     int txq_count;
-    int txq_qidbase;
     int rxq_type;
     int rxq_count;
-    int rxq_qidbase;
     int intr_base;
     int intr_count;
-    int qidbase[8];
     int upd[8];
-    u_int64_t qstate_addr;
+    u_int64_t qstate_addr[8];
+    int qstate_size[8];
     mac_t mac;
 } ethparams_t;
 
@@ -114,54 +111,51 @@ static u_int64_t
 eth_qstate_addr(simdev_t *sd, const int type, const int qid)
 {
     ethparams_t *ep = sd->priv;
-    /* XXX assumes all qstate entries are 64B */
-    return (ep->qstate_addr + ((ep->qidbase[type] + qid) * sizeof(qstate_t)));
+    return (ep->qstate_addr[type] + (qid * ep->qstate_size[type]));
 }
 
 static int
 eth_read_qstate(simdev_t *sd, const int type, const int qid, qstate_t *qs)
 {
+    ethparams_t *ep = sd->priv;
     const u_int64_t addr = eth_qstate_addr(sd, type, qid);
-    return simdev_read_mem(addr, qs, sizeof(qstate_t));
+    return simdev_read_mem(addr, qs, ep->qstate_size[type]);
 }
 
 static int
 eth_write_qstate(simdev_t *sd, const int type, const int qid, qstate_t *qs)
 {
+    ethparams_t *ep = sd->priv;
     const u_int64_t addr = eth_qstate_addr(sd, type, qid);
-    return simdev_write_mem(addr, qs, sizeof(qstate_t));
+    return simdev_write_mem(addr, qs, ep->qstate_size[type]);
 }
 
 static int
 eth_read_txqstate(simdev_t *sd, const int txqid, qstate_t *qs)
 {
     ethparams_t *ep = sd->priv;
-    const int qid = ep->txq_qidbase + txqid;
-    return eth_read_qstate(sd, ep->txq_type, qid, qs);
+    return eth_read_qstate(sd, ep->txq_type, txqid, qs);
 }
 
 static int
 eth_write_txqstate(simdev_t *sd, const int txqid, qstate_t *qs)
 {
     ethparams_t *ep = sd->priv;
-    const int qid = ep->txq_qidbase + txqid;
-    return eth_write_qstate(sd, ep->txq_type, qid, qs);
+    return eth_write_qstate(sd, ep->txq_type, txqid, qs);
 }
 
 static int
 eth_read_rxqstate(simdev_t *sd, const int rxqid, qstate_t *qs)
 {
     ethparams_t *ep = sd->priv;
-    const int qid = ep->rxq_qidbase + rxqid;
-    return eth_read_qstate(sd, ep->rxq_type, qid, qs);
+    return eth_read_qstate(sd, ep->rxq_type, rxqid, qs);
 }
 
 static int
 eth_write_rxqstate(simdev_t *sd, const int rxqid, qstate_t *qs)
 {
     ethparams_t *ep = sd->priv;
-    const int qid = ep->rxq_qidbase + rxqid;
-    return eth_write_qstate(sd, ep->rxq_type, qid, qs);
+    return eth_write_qstate(sd, ep->rxq_type, rxqid, qs);
 }
 
 static u_int64_t
@@ -239,12 +233,12 @@ devcmd_identify(struct admin_cmd *acmd, struct admin_comp *acomp)
             .serial_num = "serial_num0001",
             .fw_version = "fwvers0002",
             .nlifs = 1,
-            .ndbpgs_per_lif = 1,
+            .ndbpgs_per_lif = 4,
             .ntxqs_per_lif = ep->txq_count,
             .nrxqs_per_lif = ep->rxq_count,
             .ncqs_per_lif = 0,
-            .nrdmasqs_per_lif = 0,
-            .nrdmarqs_per_lif = 0,
+            .nrdmasqs_per_lif = 16,
+            .nrdmarqs_per_lif = 16,
             .neqs_per_lif = 0,
             .nintrs = ep->intr_count,
             .nucasts_per_lif = 0,
@@ -288,7 +282,7 @@ devcmd_adminq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
                cmd->ring_base);
 
     comp->status = 0;
-    comp->qid = ep->adq_qidbase + cmd->index;
+    comp->qid = cmd->index;
     comp->qtype = ep->adq_type;
 }
 
@@ -353,7 +347,7 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     }
 
     comp->status = 0;
-    comp->qid = ep->txq_qidbase + cmd->index;
+    comp->qid = cmd->index;
     comp->qtype = ep->txq_type;
 }
 
@@ -416,7 +410,7 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
     }
 
     comp->status = 0;
-    comp->qid = ep->rxq_qidbase + cmd->index;
+    comp->qid = cmd->index;
     comp->qtype = ep->rxq_type;
 }
 
@@ -582,6 +576,50 @@ devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
 }
 
 static void
+devcmd_create_mr (struct admin_cmd  *acmd,
+                  struct admin_comp *acomp,
+                  u_int32_t         *done)
+{
+    struct create_mr_cmd *cmd = (void *)acmd;
+    struct create_mr_comp *comp = (void *)acomp;
+
+    simdev_hal_create_mr(cmd, comp, done);
+}
+
+static void
+devcmd_create_cq (struct admin_cmd  *acmd,
+                  struct admin_comp *acomp,
+                  u_int32_t         *done)
+{
+    struct create_cq_cmd *cmd = (void *)acmd;
+    struct create_cq_comp *comp = (void *)acomp;
+
+    simdev_hal_create_cq(cmd, comp, done);
+}
+
+static void
+devcmd_create_qp (struct admin_cmd  *acmd,
+                  struct admin_comp *acomp,
+                  u_int32_t         *done)
+{
+    struct create_qp_cmd *cmd = (void *)acmd;
+    struct create_qp_comp *comp = (void *)acomp;
+
+    simdev_hal_create_qp(cmd, comp, done);
+}
+
+static void
+devcmd_modify_qp (struct admin_cmd  *acmd,
+                  struct admin_comp *acomp,
+                  u_int32_t         *done)
+{
+    struct modify_qp_cmd *cmd = (void *)acmd;
+    struct modify_qp_comp *comp = (void *)acomp;
+
+    simdev_hal_modify_qp(cmd, comp, done);
+}
+
+static void
 devcmd(struct dev_cmd_regs *dc)
 {
     struct admin_cmd *cmd = (struct admin_cmd *)&dc->cmd;
@@ -644,13 +682,39 @@ devcmd(struct dev_cmd_regs *dc)
     case CMD_OPCODE_DEBUG_Q_DUMP:
         devcmd_debug_q_dump(cmd, comp);
         break;
+
+    case CMD_OPCODE_RDMA_CREATE_MR:
+        devcmd_create_mr(cmd, comp, &dc->done);
+        break;
+
+    case CMD_OPCODE_RDMA_CREATE_CQ:
+        devcmd_create_cq(cmd, comp, &dc->done);
+        break;
+
+    case CMD_OPCODE_RDMA_CREATE_QP:
+        devcmd_create_qp(cmd, comp, &dc->done);
+        break;
+
+    case CMD_OPCODE_RDMA_MODIFY_QP:
+        devcmd_modify_qp(cmd, comp, &dc->done);
+        break;
+
     default:
         simdev_error("devcmd: unknown opcode %d\n", cmd->opcode);
         comp->status = -1;
         break;
     }
 
-    dc->done = 1;
+    if ((cmd->opcode > CMD_OPCODE_RDMA_FIRST_CMD)
+        && (cmd->opcode < CMD_OPCODE_RDMA_LAST_CMD)) {
+        /*
+         * Dont set the done bit as these commands are asynchronously
+         * processed by HAL. This bit will be once HAL is finished with
+         * processing.
+         */
+    } else {
+        dc->done = 1;
+    }
 }
 
 /*
@@ -912,13 +976,14 @@ bar_db_wr(int bar, int reg,
     } PACKED db;
     u_int32_t qid;
     u_int8_t qtype, upd;
-
+    u_int32_t pid = offset >> 12;
+    
     if (size != 8) {
         simdev_error("doorbell: write size %d != 8, ignoring\n", size);
         return -1;
     }
     if (((offset & (8-1)) != 0) ||
-        offset >= sizeof(db) * 8) {
+        (offset & 0xFFF) >= sizeof(db) * 8) {
         simdev_error("doorbell: write offset 0x%"PRIx64", ignoring\n", offset);
         return -1;
     }
@@ -929,10 +994,10 @@ bar_db_wr(int bar, int reg,
     /* set UPD bits on doorbell based on qtype */
     qtype = (offset >> 3) & 0x7;
     upd = ep->upd[qtype];
-    offset |= (upd << 17);
+    offset = (offset & 0xFFF)|(upd << 17);
 
-    simdev_log("doorbell: upd 0x%x pid %d qid %d ring %d index %d\n",
-               upd, reg, qid, db.ring, db.p_index);
+    simdev_log("doorbell: offset %lx upd 0x%x pid %d qtype %d qid %d ring %d index %d\n",
+               offset, upd, pid, qtype, qid, db.ring, db.p_index);
     simdev_doorbell(base + offset, val);
     return 0;
 }
@@ -983,7 +1048,7 @@ bar_handler_t bar0_handler = {
 };
 
 bar_handler_t bar2_handler = {
-    .regsz = 4096,
+    .regsz = 16384,
     .regs = {
         &db_reg,
     },
@@ -1227,6 +1292,8 @@ eth_init(simdev_t *sd, const char *devparams)
 {
     ethparams_t *ep;
     char pbuf[80];
+    char qstate_size[80];
+    char qstate_addr[200];
 
     if (0) eth_read_txqstate(NULL, 0, NULL);
     if (0) eth_read_rxqstate(NULL, 0, NULL);
@@ -1236,15 +1303,15 @@ eth_init(simdev_t *sd, const char *devparams)
                      "    lif=<lif>\n"
                      "    adq_type=<adq_type>\n"
                      "    adq_count=<adq_count>\n"
-                     "    adq_qidbase=<adq_qidbase>\n"
                      "    txq_type=<txq_type>\n"
                      "    txq_count=<txq_count>\n"
-                     "    txq_qidbase=<txq_qidbase>\n"
                      "    rxq_type=<rxq_type>\n"
                      "    rxq_count=<rxq_count>\n"
-                     "    rxq_qidbase=<rxq_qidbase>\n"
+                     "    qstate_addr=<qstate_addr>\n"
+                     "    qstate_size=<qstate_size>\n"
                      "    intr_base=<intr_base>\n"
                      "    intr_count=<intr_count>\n");
+
         return -1;
     }
 
@@ -1261,28 +1328,38 @@ eth_init(simdev_t *sd, const char *devparams)
     GET_PARAM(lif, int);
     GET_PARAM(adq_type, int);
     GET_PARAM(adq_count, int);
-    GET_PARAM(adq_qidbase, int);
     GET_PARAM(txq_type, int);
     GET_PARAM(txq_count, int);
-    GET_PARAM(txq_qidbase, int);
     GET_PARAM(rxq_type, int);
     GET_PARAM(rxq_count, int);
-    GET_PARAM(rxq_qidbase, int);
     GET_PARAM(intr_base, int);
     GET_PARAM(intr_count, int);
-    GET_PARAM(qstate_addr, u64);
     GET_PARAM(mac, mac);
 
     /*
-     * qidbase=0:1:2:3:4:5:6:7
+     * qstate_size=1024:1024:64:64:64:32:32
      */
-    if (devparam_str(devparams, "qidbase", pbuf, sizeof(pbuf)) == 0) {
+    if (devparam_str(devparams, "qstate_size", qstate_size, sizeof(qstate_size)) == 0) {
         char *p, *q, *sp;
         int i;
-
-        q = pbuf;
+  
+        q = qstate_size;
         for (i = 0; i < 8 && (p = strtok_r(q, ":", &sp)) != NULL; i++) {
-            ep->qidbase[i] = strtoul(p, NULL, 0);
+            ep->qstate_size[i] = strtoul(p, NULL, 0);
+            if (q != NULL) q = NULL;
+        }
+    }
+
+    /*
+     * qstate_addr=1024:1024:64:64:64:32:32
+     */
+    if (devparam_str(devparams, "qstate_addr", qstate_addr, sizeof(qstate_addr)) == 0) {
+        char *p, *q, *sp;
+        int i;
+         
+        q = qstate_addr;
+        for (i = 0; i < 8 && (p = strtok_r(q, ":", &sp)) != NULL; i++) {
+            ep->qstate_addr[i] = strtoul(p, NULL, 0);
             if (q != NULL) q = NULL;
         }
     }
@@ -1301,11 +1378,15 @@ eth_init(simdev_t *sd, const char *devparams)
         }
     } else {
         /* UPD defaults */
+        for (int i = 0; i < 8; i++) {
+            ep->upd[i] = 0xb;
+        }
         ep->upd[ep->rxq_type] = 0x8; /* PI_SET */
         ep->upd[ep->txq_type] = 0xb; /* PI_SET | SCHED_SET */
     }
 
     eth_init_device(sd);
+    simdev_set_lif(ep->lif);
     return 0;
 }
 

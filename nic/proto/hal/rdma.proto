@@ -90,6 +90,8 @@ enum RdmaQpUpdateOper {
     RDMA_UPDATE_QP_OPER_SET_DEST_QP    = 0;  // Dest QP
     RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE = 1;  // L2/L3 Header Params
     RDMA_UPDATE_QP_OPER_SET_Q_KEY = 2; // Q_KEY
+    RDMA_UPDATE_QP_OPER_SET_E_PSN = 3; // E_PSN
+    RDMA_UPDATE_QP_OPER_SET_TX_PSN = 4; // TX_PSN
 }
  
 //****************   Update Queue Pair  ********************************//
@@ -102,6 +104,8 @@ message RdmaQpUpdateSpec {
   uint32                   dst_qp_num      = 5;    // Dest QP value
   bytes                    header_template = 6;    // Header Vector Params
   uint32                   q_key           = 7;    // Q_KEY
+  uint32                   e_psn           = 8;
+  uint32                   tx_psn          = 9;
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
@@ -167,9 +171,9 @@ message RdmaCqSpec {
   uint32                   hw_lif_id       = 3;    // LIF id
   uint32                   cq_wqe_size     = 4;    // CQWQE size
   uint32                   num_cq_wqes     = 5;    // Num CQWQEs
-  uint32                   hostmem_pg_size = 7;    // Path MTU
-  uint32                   cq_lkey         = 8;    // CQ's lkey
-  uint32                   eq_id           = 9;    // EQ id
+  uint32                   hostmem_pg_size = 6;    // Path MTU
+  uint32                   cq_lkey         = 7;    // CQ's lkey
+  uint32                   eq_id           = 8;    // EQ id
 }
 
 // RdmaCqRequestMsg is batched request used to create/update of Rdma QPs

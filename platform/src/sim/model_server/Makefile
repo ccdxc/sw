@@ -3,7 +3,7 @@
 #
 
 PROGRAM = model_server
-SOURCES = model_server.cc sim_server.c zmq_wait.c
+SOURCES = model_server.cc sim_server.c zmq_wait.c lib_driver.cc
 LBUILD_ARCHES = x86_64
 
 NIC = ../../../../nic
@@ -58,6 +58,9 @@ SYSTEM_LIBRARIES = \
 	-lcrypto \
 	-lpthread \
 	-ldl \
+	-lprotobuf \
+	-L$(TOPDIR)/../nic/obj/ -lhalproto \
+	-L/usr/local/lib/ -lgrpc++ \
 	$(NULL)
 
 TOPDIR = ../../..

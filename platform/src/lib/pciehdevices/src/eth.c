@@ -96,7 +96,7 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         memset(&preg, 0, sizeof(preg));
         preg.regtype = PCIEHBARREGT_DB64;
         preg.flags = PCIEHBARREGF_WR;
-        preg.size = 0x1000;
+        preg.size = 0x4000;
         preg.qtyshift = 3;
         preg.qtywidth = 3;
         /* eth rxq */

@@ -103,6 +103,9 @@ roundup_to_pow_2(uint32_t x)
 {
     uint32_t power = 1;
 
+    if (x == 1)
+        return (power << 1);
+    
     while(power < x)
         power*=2;
     return power;
@@ -1125,6 +1128,10 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                     spec.dst_qp_num());
     HAL_TRACE_DEBUG("{}: Inputs: header_template: {}", __FUNCTION__,
                     spec.header_template());
+    HAL_TRACE_DEBUG("{}: Inputs: e_psn: {}", __FUNCTION__,
+                    spec.e_psn());
+    HAL_TRACE_DEBUG("{}: Inputs: tx_psn: {}", __FUNCTION__,
+                    spec.tx_psn());
 
     // Read sqcb from HW
     memset(sqcb_p, 0, sizeof(sqcb_t));
@@ -1146,6 +1153,19 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             HAL_TRACE_DEBUG("{}: Update: Setting dst_qp to: {}", __FUNCTION__,
                     spec.dst_qp_num());
         break;
+        
+        case rdma::RDMA_UPDATE_QP_OPER_SET_E_PSN:
+            rqcb_p->rqcb0.e_psn = spec.e_psn();
+            HAL_TRACE_DEBUG("{}: Update: Setting e_psn to: {}", __FUNCTION__,
+                            spec.e_psn());
+            break;
+        
+        case rdma::RDMA_UPDATE_QP_OPER_SET_TX_PSN:
+            sqcb_p->sqcb1.tx_psn = spec.tx_psn();
+            sqcb_p->sqcb1.rexmit_psn = spec.tx_psn();
+            HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,
+                            spec.tx_psn());
+            break;
         
         case rdma::RDMA_UPDATE_QP_OPER_SET_Q_KEY:
             rqcb_p->rqcb0.q_key = spec.q_key();

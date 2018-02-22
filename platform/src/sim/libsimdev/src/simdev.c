@@ -95,6 +95,60 @@ simdev_doorbell(u_int64_t addr, u_int64_t data)
     return 0;
 }
 
+void simdev_hal_create_mr(void *cmd,
+                          void *comp,
+                          u_int32_t *done)
+{
+    simdev_api_t *api = simdevinfo_api();
+
+    if (api && api->hal_create_mr) {
+        return api->hal_create_mr(cmd, comp, done);
+    }
+}
+
+void simdev_hal_create_cq(void *cmd,
+                          void *comp,
+                          u_int32_t *done)
+{
+    simdev_api_t *api = simdevinfo_api();
+    
+    if (api && api->hal_create_cq) {
+        return api->hal_create_cq(cmd, comp, done);
+    }
+}
+
+void simdev_hal_create_qp(void *cmd,
+                          void *comp,
+                          u_int32_t *done)
+{
+    simdev_api_t *api = simdevinfo_api();
+    
+    if (api && api->hal_create_qp) {
+        return api->hal_create_qp(cmd, comp, done);
+    }
+}
+
+void simdev_hal_modify_qp(void *cmd,
+                          void *comp,
+                          u_int32_t *done)
+{
+    simdev_api_t *api = simdevinfo_api();
+    
+    if (api && api->hal_modify_qp) {
+        return api->hal_modify_qp(cmd, comp, done);
+    }
+}
+
+void
+simdev_set_lif(const u_int32_t lif)
+{
+    simdev_api_t *api = simdevinfo_api();
+
+    if (api && api->set_lif) {
+        api->set_lif(lif);
+    }
+}
+
 int
 simdev_read_reg(u_int64_t addr, u_int32_t *data)
 {
@@ -198,6 +252,36 @@ simdev_write_mem(u_int64_t addr, void *buf, size_t size)
         simdev_log("write_mem addr 0x%"PRIx64" size %ld\n", addr, size);
         simdev_log_buf(addr, buf, size);
         return api->write_mem(addr, buf, size);
+    }
+    return 0;
+}
+
+int
+simdev_read_host_mem(u_int64_t addr, void *buf, size_t size)
+{
+    simdev_api_t *api = simdevinfo_api();
+
+    if (api && api->host_read_mem) {
+        int r = api->host_read_mem(addr, buf, size);
+
+        if (r == 0) {
+            simdev_log("read_hostmem addr 0x%"PRIx64" size %ld\n", addr, size);
+            simdev_log_buf(addr, buf, size);
+        }
+        return r;
+    }
+    return 0;
+}
+
+int
+simdev_write_host_mem(u_int64_t addr, void *buf, size_t size)
+{
+    simdev_api_t *api = simdevinfo_api();
+
+    if (api && api->host_write_mem) {
+        simdev_log("write_hostmem addr 0x%"PRIx64" size %ld\n", addr, size);
+        simdev_log_buf(addr, buf, size);
+        return api->host_write_mem(addr, buf, size);
     }
     return 0;
 }
