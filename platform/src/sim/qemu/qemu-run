@@ -32,4 +32,4 @@ $GDB $QEMU_DIR/x86_64-softmmu/qemu-system-x86_64 \
     -device e1000,netdev=net0 \
     -device ioh3420,id=pcie_bus1 \
     -device simbridge,bus=pcie_bus1 \
-    -drive file=$DRIVE_IMG,if=virtio $QEMU_EXTRA $DRIVE_IMG
+    -drive file=$DRIVE_IMG,if=virtio $QEMU_EXTRA

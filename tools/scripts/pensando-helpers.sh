@@ -339,7 +339,7 @@ start_qemu_rxe() {
         -device e1000,netdev=net0 \
         -netdev bridge,id=net1,br=$RELAY_BRIDGE \
         -device e1000,netdev=net1 \
-        -drive file=$QEMU_IMAGE_RXE,if=virtio $QEMU_EXTRA $QEMU_IMAGE_RXE
+        -drive file=$QEMU_IMAGE_RXE,if=virtio $QEMU_EXTRA
 }
 
 ssh_qemu_rxe() {
