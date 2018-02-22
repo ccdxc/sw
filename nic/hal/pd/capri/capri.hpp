@@ -5,6 +5,9 @@
 
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 
+#define CAPRI_REPL_ENTRY_WIDTH          (64)
+#define CAPRI_REPL_TABLE_DEPTH          (64*1024)
+
 typedef struct capri_cfg_s {
     std::string      loader_info_file;
     std::string      default_config_dir;

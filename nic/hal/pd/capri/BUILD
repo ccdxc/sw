@@ -54,7 +54,6 @@ cc_library(
         "capri_loader.cc",
         "capri_pxb_pcie.cc",
         "capri_qstate.cc",
-        "capri_repl.cc",
         "capri_tbl_rw.cc",
         "capri_tm_rw.cc",
         "capri_txs_scheduler.cc",

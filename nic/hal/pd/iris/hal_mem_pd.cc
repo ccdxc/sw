@@ -36,7 +36,6 @@
 #include "nic/hal/pd/iris/cpucb_pd.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
-#include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/iris/rawccb_pd.hpp"
 #include "nic/hal/pd/iris/proxyrcb_pd.hpp"

@@ -4,7 +4,6 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
-#include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -25,6 +24,8 @@
 #define CAPRI_P4PLUS_NUM_SYMBOLS 85
 
 class capri_state_pd *g_capri_state_pd;
+uint64_t capri_hbm_base;
+uint64_t hbm_repl_table_offset;
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -735,6 +736,18 @@ capri_cache_init ()
     return ret;
 }
 
+hal_ret_t
+capri_repl_init (capri_cfg_t *cfg)
+{
+    capri_hbm_base = get_hbm_base();
+    hbm_repl_table_offset = get_hbm_offset(JP4_REPL);
+    if (hbm_repl_table_offset != CAPRI_INVALID_OFFSET) {
+        capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
+        capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
+    }
+
+    return HAL_RET_OK;
+}
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 // - link all the P4 programs, by resolving symbols, labels etc.
