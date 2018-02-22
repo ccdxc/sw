@@ -36,7 +36,7 @@ eth_tx_fetch_desc:
   add             r6, d.{c_index0}.hx, r2     // ci + to_do
   slt             c3, r1, r6                  // end-of-ring = ring_size < (ci + to_do)
   addi.c3         r2, r0, 1                   // to_do = 1 if end-of-ring
-  phvwr           p.eth_tx_t0_s2s_num_desc, r2
+  phvwr           p.eth_tx_t0_s2s_num_desc, r2    // R2 = num_desc_to_do
 
   // Compute the descriptor fetch address
   add             r3, d.{ring_base}.dx, d.{c_index0}.hx, LG2_TX_DESC_SIZE
@@ -55,6 +55,7 @@ eth_tx_fetch_desc:
   tblmincri.c1    d.color, 1, 1
 
   // Claim the descriptor
+  add             r7, r0, d.c_index0
   tblmincr.f      d.{c_index0}.hx, d.{ring_size}.hx, r2
   // !!! No table updates after this point !!!
 
@@ -68,7 +69,7 @@ eth_tx_fetch_desc:
   setcf           c4, [c3 | c4]    // read = 16 if to_do == 1 or end-of-ring else 64
   addi.c4         r6, r0, LG2_TX_DESC_SIZE
   addi.!c4        r6, r0, LG2_TX_DESC_SIZE + 2
-  phvwr           p.common_te0_phv_table_raw_table_size, r6
+  phvwr           p.common_te0_phv_table_raw_table_size, r6   // R6 = desc_ring_read_size
 
   phvwr           p.eth_tx_t0_s2s_sg_desc_addr, r4
 
@@ -77,7 +78,7 @@ eth_tx_fetch_desc:
   phvwri          p.eth_tx_t1_s2s_intr_assert_data, 0x01000000
 
   // Completion descriptor
-  phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
+  phvwr           p.eth_tx_cq_desc_comp_index, r7
   phvwr           p.eth_tx_cq_desc_color, d.color
 
   // Eval the doorbell only when pi == ci

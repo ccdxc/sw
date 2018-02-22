@@ -25,6 +25,7 @@ eth_rx_fetch_desc:
   add             r2, d.{cq_ring_base}.dx, d.{p_index1}.hx, LG2_RX_CMPL_DESC_SIZE
 
   // Claim the descriptor
+  add             r3, r0, d.c_index0
   tblmincri       d.{c_index0}.hx, d.{ring_size}.hx, 1
 
   // Claim the completion entry
@@ -40,7 +41,6 @@ eth_rx_fetch_desc:
   // Setup Descriptor read for next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
   phvwri          p.common_te0_phv_table_pc, eth_rx_packet[38:6]
-  //phvwri          p.common_te0_phv_table_lock_en, 1
   phvwr           p.common_te0_phv_table_addr, r1
   phvwri          p.common_te0_phv_table_raw_table_size, LG2_RX_DESC_SIZE
 
@@ -50,7 +50,7 @@ eth_rx_fetch_desc:
   phvwri          p.eth_rx_t0_s2s_intr_assert_data, 0x01000000
 
   // Build completion entry in the PHV
-  phvwr.e         p.eth_rx_cq_desc_comp_index, d.c_index0
+  phvwr.e         p.eth_rx_cq_desc_comp_index, r3
   phvwr           p.eth_rx_cq_desc_color, d.color
 
 abort_rx:

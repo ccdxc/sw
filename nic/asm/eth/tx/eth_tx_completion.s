@@ -35,7 +35,7 @@ eth_tx_interrupt:
 
   // DMA Interrupt
   DMA_CMD_PTR(r4, r5, r6, r7)
-  DMA_HOST_PHV2MEM(r4, c0, k.eth_tx_t1_s2s_intr_assert_addr, CAPRI_PHV_START_OFFSET(eth_tx_t1_s2s_intr_assert_data), CAPRI_PHV_END_OFFSET(eth_tx_t1_s2s_intr_assert_data), r7)
+  DMA_HBM_PHV2MEM(r4, c0, k.eth_tx_t1_s2s_intr_assert_addr, CAPRI_PHV_START_OFFSET(eth_tx_t1_s2s_intr_assert_data), CAPRI_PHV_END_OFFSET(eth_tx_t1_s2s_intr_assert_data), r7)
   DMA_CMD_NEXT(r5, r6, c2)
 
   phvwrpair       p.eth_tx_global_dma_cur_flit, r5, p.eth_tx_global_dma_cur_index, r6

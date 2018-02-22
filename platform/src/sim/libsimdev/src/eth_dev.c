@@ -83,8 +83,8 @@ typedef struct {
     uint64_t    ring_base;
     uint16_t    ring_size;
     uint64_t    cq_ring_base;
-    uint16_t    rss_type;
     uint32_t    intr_assert_addr;
+    uint16_t    rss_type;
 } __attribute__((packed)) qstate_app_ethrx_t;
 
 static simdev_t *current_sd;

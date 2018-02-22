@@ -37,7 +37,6 @@ header_type eth_rx_cq_desc_p {
  * D-vector Headers
  ***/
 
-// d for stage 0
 header_type eth_rx_qstate_d {
     // Max 512 bits
     fields {

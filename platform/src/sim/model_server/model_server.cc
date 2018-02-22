@@ -123,7 +123,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         case BUFF_TYPE_STEP_TIMER_WHEEL:
         {
             /* Call step timer wheel update in model */
-            env->step_tmr_wheel_update(buff->slowfast, buff->ctime);
+            //env->step_tmr_wheel_update(buff->slowfast, buff->ctime);
             buff->type = BUFF_TYPE_STATUS;
             buff->status = 0;
             std::cout << "step_tmr_wheel_update slowfast: " << buff->slowfast << " ctime: " << buff->ctime << std::endl;
