@@ -22,9 +22,7 @@ flow_info:
   /* expected src lif check */
   seq           c1, d.u.flow_info_d.expected_src_lif_check_en, TRUE
   sne.c1        c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
-  add           r1, k.control_metadata_src_lif_sbit8_ebit15, \
-                    k.control_metadata_src_lif_sbit0_ebit7, 8
-  sne.c1        c1, r1, d.u.flow_info_d.expected_src_lif
+  sne.c1        c1, k.control_metadata_src_lif, d.u.flow_info_d.expected_src_lif
   phvwr.c1.e    p.control_metadata_drop_reason[DROP_SRC_LIF_MISMATCH], 1
   phvwr.c1      p.capri_intrinsic_drop, 1
 
@@ -70,7 +68,9 @@ f_flow_info_thread_1:
 
   /* Commenting this to bring down the # of phvwr done in this table */
   /* ttl change detected */
-  sne           c1, d.u.flow_info_d.flow_ttl, k.flow_lkp_metadata_ip_ttl
+  sne           c1, d.u.flow_info_d.flow_ttl, \
+                    k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4,\
+                       flow_lkp_metadata_ip_ttl_sbit5_ebit7}
   phvwr.c1      p.flow_info_metadata_flow_ttl_change_detected, \
                     k.l4_metadata_ip_ttl_change_detect_en
   /* flow info */

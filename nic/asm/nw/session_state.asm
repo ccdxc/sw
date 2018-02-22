@@ -722,7 +722,9 @@ lb_tcp_session_responder_normalization:
 
 lb_tcp_data_len_gt_mss_size:
   b.c2         lb_tcp_data_len_gt_win_size
-  seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
+  seq          c2, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, \
+                      l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1},\
+                      NORMALIZATION_ACTION_ALLOW
   slt          c3, r4, r2
   b.!c3        lb_tcp_data_len_gt_win_size
   seq          c4, k.l4_metadata_tcp_data_len_gt_mss_action, NORMALIZATION_ACTION_DROP
@@ -751,12 +753,13 @@ lb_tcp_data_len_gt_mss_size:
 
 lb_tcp_data_len_gt_win_size:
   b.c2         lb_tcp_unexpected_sack_option
-  seq          c2, k.{l4_metadata_tcp_unexpected_sack_option_action_sbit0_ebit0, \
-                      l4_metadata_tcp_unexpected_sack_option_action_sbit1_ebit1}, \
+  seq          c2, k.l4_metadata_tcp_unexpected_sack_option_action, \
                       NORMALIZATION_ACTION_ALLOW
   slt          c3, r6, r2
   b.!c3        lb_tcp_unexpected_sack_option
-  seq          c4, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_DROP
+  seq          c4, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, \
+                      l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1},\
+                      NORMALIZATION_ACTION_DROP
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1
   // Edit
@@ -791,8 +794,7 @@ lb_tcp_unexpected_sack_option:
   seq          c3, d.u.tcp_session_state_info_d.tcp_sack_perm_option_negotiated, FALSE
   sne          c4, k.{tcp_option_four_sack_valid...tcp_option_one_sack_valid}, r0
   bcf          ![c3 & c4], lb_tcp_unexpected_ts_option
-  seq          c4, k.{l4_metadata_tcp_unexpected_sack_option_action_sbit0_ebit0, \
-                      l4_metadata_tcp_unexpected_sack_option_action_sbit1_ebit1}, \
+  seq          c4, k.l4_metadata_tcp_unexpected_sack_option_action, \
                       NORMALIZATION_ACTION_DROP
   phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4     p.capri_intrinsic_drop, 1

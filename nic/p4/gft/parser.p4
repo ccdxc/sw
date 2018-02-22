@@ -120,6 +120,7 @@ header vlan_tag_t ctag_1;
 header ipv4_t ipv4_1;
 header ipv6_t ipv6_1;
 @pragma pa_header_union xgress udp_1 tcp_1 icmp_1
+@pragma no_ohi xgress
 header udp_t udp_1;
 header tcp_t tcp_1;
 header icmp_t icmp_1;
@@ -134,6 +135,7 @@ header vlan_tag_t ctag_2;
 header ipv4_t ipv4_2;
 header ipv6_t ipv6_2;
 @pragma pa_header_union ingress udp_2 tcp_2 icmp_2
+@pragma no_ohi ingress
 header udp_t udp_2;
 header tcp_t tcp_2;
 header icmp_t icmp_2;

@@ -164,16 +164,16 @@ header tcp_option_nop_t tcp_option_nop_1;
 header tcp_option_mss_t tcp_option_mss;
 @pragma no_ohi xgress
 header tcp_option_ws_t tcp_option_ws;
-@pragma no_ohi xgress
+@pragma no_ohi egress
 header tcp_option_sack_perm_t tcp_option_sack_perm;
-@pragma pa_header_union xgress tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack
-@pragma no_ohi xgress
+@pragma pa_header_union egress tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack
+@pragma no_ohi egress
 header tcp_option_one_sack_t tcp_option_one_sack;
-@pragma no_ohi xgress
+@pragma no_ohi egress
 header tcp_option_two_sack_t tcp_option_two_sack;
-@pragma no_ohi xgress
+@pragma no_ohi egress
 header tcp_option_three_sack_t tcp_option_three_sack;
-@pragma no_ohi xgress
+@pragma no_ohi egress
 header tcp_option_four_sack_t tcp_option_four_sack;
 @pragma no_ohi xgress
 header tcp_option_timestamp_t tcp_option_timestamp;

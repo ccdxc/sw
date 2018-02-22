@@ -52,7 +52,7 @@ tx_key_ipv4:
 
 tx_key_ipv6:
     phvwr.c1    p.flow_lkp_metadata_ip_src_1, \
-                    k.{ipv6_1_srcAddr_sbit0_ebit7...ipv6_1_srcAddr_sbit96_ebit127}
+                    k.{ipv6_1_srcAddr_sbit0_ebit31...ipv6_1_srcAddr_sbit64_ebit127}
     phvwr.c2    p.flow_lkp_metadata_ip_dst_1[127:8], k.ipv6_1_dstAddr_sbit0_ebit119
     phvwr.c2    p.flow_lkp_metadata_ip_dst_1[7:0], k.ipv6_1_dstAddr_sbit120_ebit127
     add         r7, r0, r0
