@@ -9,7 +9,7 @@ endif
 
 # For code coverage
 ifeq ($(c),1)
-	TOPDIR_ABS = ${CURDIR}
+	TOPDIR_ABS = ${CURDIR}/..
 	COVFILE_NAME=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../bullseye_hal.cov)
         COV_OUTPUT_BASE = --output_base=$(shell realpath "$(TOPDIR_ABS)"/../bazel-out/../../../sdk)
 	export CC=/home/asic/tools/eda/bullseye/bin/gcc
