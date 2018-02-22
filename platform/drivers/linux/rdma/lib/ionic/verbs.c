@@ -150,7 +150,7 @@ struct ibv_cq *ionic_create_cq(struct ibv_context *ibvctx,
 	if (!cq)
 		return NULL;
 
-	cq->cqq.depth = roundup_pow_of_two(ncqe);
+	cq->cqq.depth = roundup_pow_of_two(ncqe + 1);
 	if (cq->cqq.depth > dev->max_cq_depth)
 		cq->cqq.depth = dev->max_cq_depth;
 	cq->cqq.stride = dev->cqe_size;
@@ -467,7 +467,7 @@ static int ionic_alloc_queues(struct ionic_qp *qp,
 	que = qp->sqq;
 	que->stride = ionic_get_sqe_size();
 
-	que->depth = roundup_pow_of_two(attr->cap.max_send_wr);
+	que->depth = roundup_pow_of_two(attr->cap.max_send_wr + 1);
 
 	if ((ret = ionic_alloc_aligned(qp->sqq, pg_size))) {
 		goto fail1;
@@ -478,7 +478,7 @@ static int ionic_alloc_queues(struct ionic_qp *qp,
 	if (qp->rqq) {
 		que = qp->rqq;
 		que->stride = ionic_get_rqe_size();
-		que->depth = roundup_pow_of_two(attr->cap.max_recv_wr);
+		que->depth = roundup_pow_of_two(attr->cap.max_recv_wr + 1);
         
 		if ((ret = ionic_alloc_aligned(qp->rqq, pg_size))) {
 			goto fail2;
