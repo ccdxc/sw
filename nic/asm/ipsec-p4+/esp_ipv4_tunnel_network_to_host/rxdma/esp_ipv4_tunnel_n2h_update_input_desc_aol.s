@@ -34,7 +34,6 @@ esp_ipv4_tunnel_n2h_update_input_desc_aol:
     phvwr p.barco_desc_in_A1_addr, r3.dx 
     phvwri p.barco_desc_in_O1, 0
     add r5, r0, k.ipsec_to_stage3_payload_size
-    //sub r5, r5, k.ipsec_to_stage3_iv_salt_off
     phvwr p.barco_desc_in_L1, r5.wx
 
 dma_cmd_to_move_input_pkt_to_mem:
