@@ -227,16 +227,16 @@ capri_hbm_cache_regions_init ()
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4IG) {
             HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4IG cache, "
-                            "start={} size={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb);
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb, p4ig_filter_idx);
             capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx);
             p4ig_filter_idx++;
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4EG) {
             HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4EG cache, "
-                            "start={} size={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb);
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb, p4eg_filter_idx);
             capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx);
             p4eg_filter_idx++;
         }
