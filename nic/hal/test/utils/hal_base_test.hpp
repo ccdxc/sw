@@ -28,6 +28,16 @@ hal_initialize (const char c_file[])
     }
     printf("Parsed cfg json file \n");
 
+    // set the full path of the catalog file
+    hal_cfg.catalog_file = hal_cfg.cfg_path + "/catalog.json";
+
+    // make sure catalog file exists
+    if (access(hal_cfg.catalog_file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "Catalog file %s has no read permissions\n",
+                hal_cfg.catalog_file.c_str());
+        exit(1);
+    }
+
     // parse the ini
     if (hal::hal_parse_ini(ini_file.c_str(), &hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL ini file parsing failed, quitting ...\n");

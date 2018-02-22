@@ -7,12 +7,12 @@ using hal::g_hal_state;
 using hal::utils::g_hal_mem_mgr;
 
 void
-hal_initialize()
+hal_initialize (void)
 {
-    char            cfg_file[] = "hal.json";
-    char            *cfg_path;
-    std::string     full_path;
-    hal::hal_cfg_t  hal_cfg;
+    char              cfg_file[] = "hal.json";
+    char              *cfg_path;
+    std::string       full_path;
+    hal::hal_cfg_t    hal_cfg;
 
     bzero(&hal_cfg, sizeof(hal_cfg));
     cfg_path = std::getenv("HAL_CONFIG_PATH");
@@ -29,7 +29,6 @@ hal_initialize()
                 full_path.c_str());
         exit(1);
     }
-
     printf("Json file: %s\n", full_path.c_str());
 
     if (hal::hal_parse_cfg(full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
@@ -37,6 +36,16 @@ hal_initialize()
         // ASSERT_TRUE(0);
     }
     printf("Parsed cfg json file \n");
+
+    // set the full path of the catalog file
+    hal_cfg.catalog_file = hal_cfg.cfg_path + "/catalog.json";
+
+    // make sure catalog file exists
+    if (access(hal_cfg.catalog_file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "Catalog file %s has no read permissions\n",
+                hal_cfg.catalog_file.c_str());
+        exit(1);
+    }
 
     // initialize HAL
     if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {
@@ -48,13 +57,13 @@ hal_initialize()
 
 // slab test utility
 void 
-hal_test_utils_slab_disable_delete()
+hal_test_utils_slab_disable_delete (void)
 {
     hal::g_delay_delete = false;
 }
 
 slab_stats_t *
-hal_test_utils_collect_slab_stats() 
+hal_test_utils_collect_slab_stats (void)
 {
     slab_stats_t    *stats = NULL, *t_stats = NULL;
     slab            *slab = NULL;
@@ -75,7 +84,7 @@ hal_test_utils_collect_slab_stats()
 }
 
 slab *
-hal_test_utils_get_slab(hal_slab_t slab_id) 
+hal_test_utils_get_slab (hal_slab_t slab_id)
 {
     hal_ret_t ret = HAL_RET_OK;
     slab *pi_slab = NULL;
@@ -85,7 +94,6 @@ hal_test_utils_get_slab(hal_slab_t slab_id)
     if (pi_slab) {
         return pi_slab;
     }
-
 
     args.slab_id = slab_id;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_SLAB, (void *)&args);
@@ -111,13 +119,14 @@ hal_test_utils_populate (slab_stats_t *stats, slab *slab)
 }
 
 void 
-hal_test_utils_slab_stats_free(slab_stats_t *stats)
+hal_test_utils_slab_stats_free (slab_stats_t *stats)
 {
     free(stats);
 }
 
 void
-hal_test_utils_check_slab_leak(slab_stats_t *pre, slab_stats_t *post, bool *is_leak)
+hal_test_utils_check_slab_leak (slab_stats_t *pre,
+                                slab_stats_t *post, bool *is_leak)
 {
     *is_leak = false;
     if (pre == NULL || post == NULL) {
@@ -141,7 +150,7 @@ hal_test_utils_check_slab_leak(slab_stats_t *pre, slab_stats_t *post, bool *is_l
 }
 
 void
-hal_test_utils_trace(slab_stats_t *pre, slab_stats_t *post)
+hal_test_utils_trace (slab_stats_t *pre, slab_stats_t *post)
 {
     if (pre == NULL || post == NULL) {
         return;
@@ -161,7 +170,7 @@ hal_test_utils_trace(slab_stats_t *pre, slab_stats_t *post)
 }
 
 bool 
-mtrack_cb(void *ctxt, uint32_t alloc_id, mtrack_info_t *minfo) 
+mtrack_cb (void *ctxt, uint32_t alloc_id, mtrack_info_t *minfo) 
 {
     mtrack_info_t       *mtrack_stats = (mtrack_info_t *)ctxt;
 
@@ -179,7 +188,7 @@ mtrack_cb(void *ctxt, uint32_t alloc_id, mtrack_info_t *minfo)
 
 
 mtrack_info_t *
-hal_test_utils_collect_mtrack_stats()
+hal_test_utils_collect_mtrack_stats (void)
 {
     mtrack_info_t       *mtrack_stats;
 
@@ -194,13 +203,14 @@ hal_test_utils_collect_mtrack_stats()
 }
 
 void 
-hal_test_utils_mtrack_info_free(mtrack_info_t *minfo)
+hal_test_utils_mtrack_info_free (mtrack_info_t *minfo)
 {
     free(minfo);
 }
 
 void 
-hal_test_utils_mtrack_trace (uint32_t i, mtrack_info_t *pre, mtrack_info_t *post)
+hal_test_utils_mtrack_trace (uint32_t i, mtrack_info_t *pre,
+                             mtrack_info_t *post)
 {
     if (pre == NULL || post == NULL) {
         return;
@@ -220,7 +230,8 @@ hal_test_utils_mtrack_trace (uint32_t i, mtrack_info_t *pre, mtrack_info_t *post
 }
 
 void
-hal_test_utils_check_mtrack_leak(mtrack_info_t *pre, mtrack_info_t *post, bool *is_leak)
+hal_test_utils_check_mtrack_leak (mtrack_info_t *pre,
+                                 mtrack_info_t *post, bool *is_leak)
 {
     *is_leak = false;
     if (pre == NULL || post == NULL) {
@@ -246,5 +257,4 @@ hal_test_utils_check_mtrack_leak(mtrack_info_t *pre, mtrack_info_t *post, bool *
 
     return;
 }
-
 

@@ -555,9 +555,10 @@ hal_cores_validate (uint64_t sys_core,
 hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
-    int          tid;
-    char         *user = NULL;
-    hal_ret_t    ret = HAL_RET_OK;
+    int                  tid;
+    char                 *user = NULL;
+    hal_ret_t            ret;
+    sdk::lib::catalog    *catalog;
 
     // Initialize the logger
     hal_cfg->sync_mode_logging = true;
@@ -578,7 +579,9 @@ hal_init (hal_cfg_t *hal_cfg)
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
 
-    sdk::lib::catalog* catalog = sdk::lib::catalog_init();
+    catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
+    HAL_ASSERT(catalog != NULL);
+
     g_hal_state->set_catalog(catalog);
 
     // validate control/data cores against catalog

@@ -226,12 +226,13 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 }
 
 hal_ret_t
-linkmgr_init()
+linkmgr_init (void)
 {
-    hal_ret_t       ret_hal        = HAL_RET_OK;
-    sdk_ret_t       sdk_ret        = SDK_RET_OK;
-    std::string     cfg_file       = "linkmgr.json";
-    char            *cfg_path      = NULL;
+    hal_ret_t            ret_hal   = HAL_RET_OK;
+    sdk_ret_t            sdk_ret   = SDK_RET_OK;
+    std::string          cfg_file  = "linkmgr.json";
+    char                 *cfg_path = NULL;
+    sdk::lib::catalog    *catalog;
 
     sdk::linkmgr::linkmgr_cfg_t   sdk_cfg;
 
@@ -239,6 +240,8 @@ linkmgr_init()
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
         cfg_file = std::string(cfg_path) + "/" + cfg_file;
+    } else {
+        HAL_ASSERT(FALSE);
     }
 
     linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);
@@ -246,7 +249,8 @@ linkmgr_init()
     g_linkmgr_state = linkmgr_state::factory();
     HAL_ASSERT_RETURN((g_linkmgr_state != NULL), HAL_RET_ERR);
 
-    sdk::lib::catalog *catalog = sdk::lib::catalog_init();
+    catalog =
+        sdk::lib::catalog::factory(std::string(cfg_path) + "/catalog.json");
     HAL_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 
     // store the catalog in global hal state

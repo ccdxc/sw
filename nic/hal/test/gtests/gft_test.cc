@@ -1415,6 +1415,7 @@ TEST_F(gft_test, test1) {
     const char *hal_conf_file = "conf/hal.json";
     char *default_config_dir = NULL;
     capri_cfg_t cfg;
+    sdk::lib::catalog    *catalog;
 
     printf("Connecting to ASIC SIM\n");
     hal::utils::logger_init(0, true);
@@ -1455,8 +1456,9 @@ TEST_F(gft_test, test1) {
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_NE(ret, -1);
 
-    sdk::lib::catalog* catalog = sdk::lib::catalog_init();
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
     ASSERT_TRUE(catalog != NULL);
+
     if (!catalog->qos_sw_init_enabled()) {
         default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
         if (default_config_dir) {
