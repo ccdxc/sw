@@ -51,11 +51,12 @@ eth_tx_fetch_desc:
   tblmincri       d.{p_index1}.hx, d.{ring_size}.hx, 1
 
   // Change color if end-of-ring
+  phvwr           p.eth_tx_cq_desc_color, d.color
   seq             c1, d.p_index1, 0
   tblmincri.c1    d.color, 1, 1
 
   // Claim the descriptor
-  add             r7, r0, d.c_index0
+  phvwr           p.eth_tx_cq_desc_comp_index, d.c_index0
   tblmincr.f      d.{c_index0}.hx, d.{ring_size}.hx, r2
   // !!! No table updates after this point !!!
 
@@ -76,10 +77,6 @@ eth_tx_fetch_desc:
   phvwr           p.eth_tx_t1_s2s_cq_desc_addr, r5
   phvwr           p.eth_tx_t1_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
   phvwri          p.eth_tx_t1_s2s_intr_assert_data, 0x01000000
-
-  // Completion descriptor
-  phvwr           p.eth_tx_cq_desc_comp_index, r7
-  phvwr           p.eth_tx_cq_desc_color, d.color
 
   // Eval the doorbell only when pi == ci
   seq             c3, d.{p_index0}.hx, d.{c_index0}.hx

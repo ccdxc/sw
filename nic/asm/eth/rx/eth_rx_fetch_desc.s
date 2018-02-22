@@ -25,13 +25,14 @@ eth_rx_fetch_desc:
   add             r2, d.{cq_ring_base}.dx, d.{p_index1}.hx, LG2_RX_CMPL_DESC_SIZE
 
   // Claim the descriptor
-  add             r3, r0, d.c_index0
+  phvwr           p.eth_rx_cq_desc_comp_index, d.c_index0
   tblmincri       d.{c_index0}.hx, d.{ring_size}.hx, 1
 
   // Claim the completion entry
   tblmincri       d.{p_index1}.hx, d.{ring_size}.hx, 1
 
   // Update color
+  phvwr           p.eth_rx_cq_desc_color, d.color
   seq             c1, d.p_index1, 0
   tblmincri.c1    d.color, 1, 1
 
@@ -46,12 +47,8 @@ eth_rx_fetch_desc:
 
   // Save completion and interrupt information
   phvwr           p.eth_rx_t0_s2s_cq_desc_addr, r2
-  phvwr           p.eth_rx_t0_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
+  phvwr.e         p.eth_rx_t0_s2s_intr_assert_addr, d.{intr_assert_addr}.wx
   phvwri          p.eth_rx_t0_s2s_intr_assert_data, 0x01000000
-
-  // Build completion entry in the PHV
-  phvwr.e         p.eth_rx_cq_desc_comp_index, r3
-  phvwr           p.eth_rx_cq_desc_color, d.color
 
 abort_rx:
   phvwr.e         p.p4_intr_global_drop, 1
