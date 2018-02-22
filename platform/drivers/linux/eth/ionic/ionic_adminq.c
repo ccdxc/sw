@@ -298,7 +298,6 @@ int ionic_adminq_rdma_cmd(struct queue *adminq, struct admin_cmd *cmd,
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(ionic_adminq_rdma_cmd);
 
 bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 			  void *cb_arg)
