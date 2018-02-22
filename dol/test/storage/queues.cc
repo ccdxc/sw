@@ -98,7 +98,6 @@ uint64_t storage_hbm_ssd_bm_addr;
 
 typedef struct queues_ {
   dp_mem_t *mem;
-  uint16_t index; // p_ndx for tx queue, c_ndx for rx queue
   uint16_t entry_size;
   uint16_t num_entries;
 } queues_t;
@@ -147,7 +146,7 @@ int nvme_e2e_ssd_sq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_s
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
   queue->mem = params.subq;
-  queue->index = 0;
+  queue->mem->line_set(0);
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
@@ -159,7 +158,7 @@ int nvme_e2e_ssd_cq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_s
   storage_test::SsdWorkingParams params;
   nvme_e2e_ssd->GetWorkingParams(&params);
   queue->mem = params.compq;
-  queue->index = 0;
+  queue->mem->line_set(0);
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
@@ -171,7 +170,6 @@ void nvme_e2e_ssd_db_init(uint64_t db_addr, uint64_t db_data) {
 
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
   queue->mem = new dp_mem_t(num_entries, entry_size);
-  queue->index = 0;
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
@@ -180,7 +178,7 @@ int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
 int queue_pre_init(queues_t *queue, dp_mem_t *mem, uint16_t num_entries,
                    uint16_t entry_size) {
   queue->mem = mem;
-  queue->index = 0;
+  queue->mem->line_set(0);
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;
@@ -188,11 +186,9 @@ int queue_pre_init(queues_t *queue, dp_mem_t *mem, uint16_t num_entries,
 
 dp_mem_t *queue_consume_entry(queues_t *queue, uint16_t *index) {
   if (!queue->mem || !index) return nullptr;
-  uint16_t curr_index = queue->index;
-  queue->index = ((queue->index + 1)  % queue->num_entries);
-  *index = queue->index;
-
-  return queue->mem->line_set(curr_index);
+  queue->mem->line_set(queue->mem->next_line_get());
+  *index = queue->mem->next_line_set();
+  return queue->mem;
 }
 
 

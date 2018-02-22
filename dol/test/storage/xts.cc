@@ -551,14 +551,14 @@ int add_xts_tests(std::vector<TestEntry>& test_suite) {
     ctx->xts_ctx2.num_aols = ent.num_mds;
     ctx->xts_ctx2.num_sub_aols = ent.num_aols;
     if(ent.stage_in_hbm == true) {
-      ctx->xts_ctx1.dst_buf = (void*)write_hbm_buf;
+      ctx->xts_ctx1.dst_buf = (void*)write_hbm_buf->va();
       ctx->xts_ctx1.is_dst_hbm_buf = true;
-      ctx->xts_ctx2.src_buf = (void*)write_hbm_buf;
+      ctx->xts_ctx2.src_buf = (void*)write_hbm_buf->va();
       ctx->xts_ctx2.is_src_hbm_buf = true;
     } else {
-      ctx->xts_ctx2.src_buf = (void*)read_buf;
+      ctx->xts_ctx2.src_buf = (void*)read_buf->va();
       ctx->xts_ctx2.is_src_hbm_buf = false;
-      ctx->xts_ctx2.dst_buf = (void*)read_buf2;
+      ctx->xts_ctx2.dst_buf = (void*)read_buf2->va();
       ctx->xts_ctx2.is_dst_hbm_buf = false;
     }
     if(xts::INVALID != ent.op2)
@@ -707,19 +707,24 @@ int xts_in_place() {
   ctx.xts_ctx2.op = xts::AES_DECR_ONLY;
 
   srand(time(NULL));
+  dp_mem_t *buf_sector = write_buf->fragment_find(0, kSectorSize);
   for(uint32_t i = 0; i < kSectorSize/sizeof(int); i++) {
-    ((int*)write_buf)[i] = rand();
+    ((int*)buf_sector->read())[i] = rand();
   }
+  buf_sector->write_thru();
 
-  write_mem(write_hbm_buf, (uint8_t*)write_buf, kSectorSize);
-  ctx.xts_ctx1.src_buf = (void*)write_hbm_buf;
+  dp_mem_t *hbm_sector = write_hbm_buf->fragment_find(0, kSectorSize);
+  memcpy(hbm_sector->read(), buf_sector->read(), kSectorSize);
+  hbm_sector->write_thru();
+
+  ctx.xts_ctx1.src_buf = (void*)write_hbm_buf->va();
   ctx.xts_ctx1.is_src_hbm_buf = true;
-  ctx.xts_ctx1.dst_buf = (void*)write_hbm_buf;
+  ctx.xts_ctx1.dst_buf = (void*)write_hbm_buf->va();
   ctx.xts_ctx1.is_dst_hbm_buf = true;
 
-  ctx.xts_ctx2.src_buf = (void*)write_hbm_buf;
+  ctx.xts_ctx2.src_buf = (void*)write_hbm_buf->va();
   ctx.xts_ctx2.is_src_hbm_buf = true;
-  ctx.xts_ctx2.dst_buf = (void*)write_hbm_buf;
+  ctx.xts_ctx2.dst_buf = (void*)write_hbm_buf->va();
   ctx.xts_ctx2.is_dst_hbm_buf = true;
 
   ctx.num_ops = 2;
@@ -727,8 +732,7 @@ int xts_in_place() {
   ctx.xts_ctx2.init(kDefaultBufSize, true);
   int rv = ctx();
   if(0 == rv) {
-    read_mem(write_hbm_buf, (uint8_t*)read_buf, kSectorSize);
-    rv = memcmp(write_buf, read_buf, kSectorSize);
+    rv = memcmp(buf_sector->read_thru(), hbm_sector->read_thru(), kSectorSize);
     if(0 != rv) {
       rv = -1;
       printf(" Memcmp failed %d \n", rv);
@@ -1267,21 +1271,24 @@ int xts_netapp_data_util(void* key_cp) {
   uint8_t iv_src_cp[] = {0x2c, 0x23, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   memcpy(key, key_cp, sizeof(key));
   memcpy(iv_src, iv_src_cp, sizeof(iv_src));
-  memcpy(write_buf, netapp_plain_text, kDefaultBufSize);
+  memcpy(write_buf->read(), netapp_plain_text, kDefaultBufSize);
+  write_buf->write_thru();
   key_desc_inited = false;
 
   srand(time(NULL));
   for(uint32_t i = 0; i < kDefaultBufSize/sizeof(int); i++) {
-    ((int*)read_buf)[i] = rand();
-    ((int*)read_buf2)[i] = rand();
+    ((int*)read_buf->read())[i] = rand();
+    ((int*)read_buf2->read())[i] = rand();
   }
+  read_buf->write_thru();
+  read_buf2->write_thru();
 
-  ctx.xts_ctx1.src_buf = (void*)write_buf;
-  ctx.xts_ctx1.dst_buf = (void*)read_buf2;
+  ctx.xts_ctx1.src_buf = (void*)write_buf->va();
+  ctx.xts_ctx1.dst_buf = (void*)read_buf2->va();
   ctx.xts_ctx1.num_sectors = kDefaultBufSize/SECTOR_SIZE;
 
-  ctx.xts_ctx2.src_buf = (void*)read_buf2;
-  ctx.xts_ctx2.dst_buf = (void*)read_buf;
+  ctx.xts_ctx2.src_buf = (void*)read_buf2->va();
+  ctx.xts_ctx2.dst_buf = (void*)read_buf->va();
   ctx.xts_ctx2.num_sectors = kDefaultBufSize/SECTOR_SIZE;
 
   ctx.num_ops = 2;
@@ -1289,7 +1296,7 @@ int xts_netapp_data_util(void* key_cp) {
   ctx.xts_ctx2.init(kDefaultBufSize, true);
   int rv = ctx();
   if(0 == rv) {
-    rv = memcmp(read_buf2, (void*)netapp_cipher_text, kDefaultBufSize);
+    rv = memcmp(read_buf2->read_thru(), (void*)netapp_cipher_text, kDefaultBufSize);
     if(0 != rv) {
       rv = -1;
       printf(" Memcmp of cipher text failed %d \n", rv);

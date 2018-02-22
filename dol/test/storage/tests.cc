@@ -36,14 +36,14 @@ const static uint32_t  kSeqDbDataMagic       = 0xAAAAAAAA;
 
 namespace tests {
 
-void *read_buf;
-void *write_buf;
-void *read_buf2;
+dp_mem_t *read_buf;
+dp_mem_t *write_buf;
+dp_mem_t *read_buf2;
 
-uint64_t read_hbm_buf;
-uint64_t write_hbm_buf;
-uint64_t read_hbm_buf2;
-uint64_t write_hbm_buf2;
+dp_mem_t *read_hbm_buf;
+dp_mem_t *write_hbm_buf;
+dp_mem_t *read_hbm_buf2;
+dp_mem_t *write_hbm_buf2;
 
 dp_mem_t *seq_db_data;
 
@@ -105,42 +105,29 @@ int test_setup() {
 
   // Allocate the read and write buffer
   // TODO: Have a fancy allocator with various pages
-  read_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
-  read_buf2 = alloc_page_aligned_host_mem(kDefaultBufSize);
-  write_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
-  if (!read_buf|| !write_buf || !read_buf2) return -1;
-  printf("read_buf address %p write_buf address %p\n", read_buf, write_buf);
+  read_buf = new dp_mem_t(1, kDefaultBufSize, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+  read_buf2 = new dp_mem_t(1, kDefaultBufSize, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+  write_buf = new dp_mem_t(1, kDefaultBufSize, DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+  printf("read_buf address %lx write_buf address %lx\n", read_buf->va(), write_buf->va());
 
   // Note: Read/Write buffer allocations have to be page aligned for use in PRP
   // Allocate the read buffer in HBM for the sequencer
-  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &read_hbm_buf) < 0) {
-    printf("Can't allocate Read HBM buffer \n");
-    return -1;
-  }
+  read_hbm_buf = new dp_mem_t(1, kHbmRWBufSize, DP_MEM_ALIGN_PAGE);
 
   // Allocate the write buffer in HBM for the sequencer
-  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &write_hbm_buf) < 0) {
-    printf("Can't allocate Write HBM buffer \n");
-    return -1;
-  }
+  write_hbm_buf = new dp_mem_t(1, kHbmRWBufSize, DP_MEM_ALIGN_PAGE);
 
   printf("HBM read_buf address %lx write_buf address %lx\n",
-         read_hbm_buf, write_hbm_buf);
+         read_hbm_buf->pa(), write_hbm_buf->pa());
 
   // Allocate the read buffer2 in HBM for the sequencer
-  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &read_hbm_buf2) < 0) {
-    printf("Can't allocate Read HBM buffer \n");
-    return -1;
-  }
+  read_hbm_buf2 = new dp_mem_t(1, kHbmRWBufSize, DP_MEM_ALIGN_PAGE);
 
   // Allocate the write buffer2 in HBM for the sequencer
-  if (utils::hbm_addr_alloc_page_aligned(kHbmRWBufSize, &write_hbm_buf2) < 0) {
-    printf("Can't allocate Write HBM buffer \n");
-    return -1;
-  }
+  write_hbm_buf2 = new dp_mem_t(1, kHbmRWBufSize, DP_MEM_ALIGN_PAGE);
 
   printf("HBM read_buf2 address %lx write_buf2 address %lx\n",
-         read_hbm_buf2, write_hbm_buf2);
+         read_hbm_buf2->pa(), write_hbm_buf2->pa());
 
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
   if ((seq_db_data = new dp_mem_t(1, kSeqDbDataSize)) == nullptr) return -1;
@@ -409,12 +396,12 @@ void reset_seq_db_data() {
 int form_read_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid, 
                            uint64_t slba, uint16_t nlb)
 {
-  memset(read_buf, 0, kDefaultBufSize);
+  read_buf->clear_thru();
   nvme_cmd->clear();
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd->read();
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // TODO: PRP list based on size
-  read_cmd->prp.prp1 = host_mem_v2p(read_buf);
+  read_cmd->prp.prp1 = read_buf->pa();
   read_cmd->dw0.cid = cid; 
   read_cmd->nsid = kDefaultNsid; 
   read_cmd->slba = slba;
@@ -428,12 +415,13 @@ int form_write_cmd_with_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
                             uint64_t slba, uint16_t nlb)
 {
   uint8_t byte_val = get_next_byte();
-  memset(write_buf, byte_val, kDefaultBufSize);
+  memset(write_buf->read(), byte_val, kDefaultBufSize);
+  write_buf->write_thru();
   nvme_cmd->clear();
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd->read();
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // TODO: PRP list based on size
-  write_cmd->prp.prp1 = host_mem_v2p(write_buf);
+  write_cmd->prp.prp1 = write_buf->pa();
   write_cmd->dw0.cid = cid; 
   write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
@@ -448,12 +436,12 @@ int form_read_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
 {
   // Init the read buf as this will be the final destination despite staging
   // in HBM
-  memset(read_buf, 0, kDefaultBufSize);
+  read_buf->clear_thru();
   nvme_cmd->clear();
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd->read();
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // Use the HBM buffer setup by the sequencer
-  read_cmd->prp.prp1 = read_hbm_buf;
+  read_cmd->prp.prp1 = read_hbm_buf->pa();
   read_cmd->dw0.cid = cid; 
   read_cmd->nsid = kDefaultNsid; 
   read_cmd->slba = slba;
@@ -469,12 +457,13 @@ int form_write_cmd_with_hbm_buf(dp_mem_t *nvme_cmd, uint32_t size, uint16_t cid,
   // Init the write buf as this will be the source despite staging
   // in HBM
   uint8_t byte_val = get_next_byte();
-  memset(write_buf, byte_val, kDefaultBufSize);
+  memset(write_buf->read(), byte_val, kDefaultBufSize);
+  write_buf->write_thru();
   nvme_cmd->clear();
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd->read();
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // Use the HBM buffer setup by the sequencer
-  write_cmd->prp.prp1 = write_hbm_buf;
+  write_cmd->prp.prp1 = write_hbm_buf->pa();
   write_cmd->dw0.cid = cid; 
   write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
@@ -1236,7 +1225,7 @@ int test_run_nvme_local_e2e(uint16_t io_priority) {
     return rc;
   } 
 
-  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  rc = memcmp(read_buf->read_thru(), write_buf->read_thru(), kDefaultBufSize);
   printf("\nE2E: post memcmp %d \n", rc);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
@@ -1332,8 +1321,8 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
                              seq_r2n_index, &db_addr, &db_data);
   seq_pdma_desc->write_bit_fields(0, 64, db_addr);
   seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
-  seq_pdma_desc->write_bit_fields(128, 64, host_mem_v2p(write_buf));
-  seq_pdma_desc->write_bit_fields(192, 64, write_hbm_buf);
+  seq_pdma_desc->write_bit_fields(128, 64, write_buf->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, write_hbm_buf->pa());
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
   // Enable the next doorbell
   seq_pdma_desc->write_bit_fields(408, 1, 1);
@@ -1414,8 +1403,8 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   seq_pdma_desc->clear();
 
   // Fill the PDMA descriptor
-  seq_pdma_desc->write_bit_fields(128, 64, read_hbm_buf);
-  seq_pdma_desc->write_bit_fields(192, 64, host_mem_v2p(read_buf));
+  seq_pdma_desc->write_bit_fields(128, 64, read_hbm_buf->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, read_buf->pa());
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
   // Form the intadd/data and enable it
   seq_pdma_desc->write_bit_fields(312, 64, seq_db_data->pa());
@@ -1468,7 +1457,7 @@ int test_seq_e2e_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   if (rc < 0) return -1;
 
   // Memcmp before reading
-  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  rc = memcmp(read_buf->read(), write_buf->read(), kDefaultBufSize);
   printf("\nE2E: pre memcmp %d \n", rc);
 
   // Send the read command and check status
@@ -1476,7 +1465,7 @@ int test_seq_e2e_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   if (rc < 0) return -1;
 
   // Memcmp after reading and verify its the same
-  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  rc = memcmp(read_buf->read_thru(), write_buf->read_thru(), kDefaultBufSize);
   printf("\nE2E: post memcmp %d \n", rc);
 
   return rc;
@@ -1595,14 +1584,14 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   seq_r2n_desc->clear();
 
   // Fill the PDMA descriptor
-  seq_pdma_desc->write_bit_fields(128, 64, host_mem_v2p(write_buf));
-  seq_pdma_desc->write_bit_fields(192, 64, write_hbm_buf2);
+  seq_pdma_desc->write_bit_fields(128, 64, write_buf->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, write_hbm_buf2->pa());
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
 
   xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.src_buf = (void*)write_hbm_buf2;
+  xts_ctx.src_buf = (void*)write_hbm_buf2->va();
   xts_ctx.is_src_hbm_buf = true;
-  xts_ctx.dst_buf = (void*)write_hbm_buf;
+  xts_ctx.dst_buf = (void*)write_hbm_buf->va();
   xts_ctx.is_dst_hbm_buf = true;
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
   xts_ctx.ring_db = false;
@@ -1692,9 +1681,9 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
 
   // Sequencer #1: XTS
   xts_ctx.op = xts::AES_DECR_ONLY;
-  xts_ctx.src_buf = (void*)read_hbm_buf;
+  xts_ctx.src_buf = (void*)read_hbm_buf->va();
   xts_ctx.is_src_hbm_buf = true;
-  xts_ctx.dst_buf = (void*)read_hbm_buf2;
+  xts_ctx.dst_buf = (void*)read_hbm_buf2->va();
   xts_ctx.is_dst_hbm_buf = true;
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
   xts_ctx.ring_db = false;
@@ -1707,8 +1696,8 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   // Sequencer #2: PDMA descriptor
 
   // Fill the PDMA descriptor
-  seq_pdma_desc->write_bit_fields(128, 64, read_hbm_buf2);
-  seq_pdma_desc->write_bit_fields(192, 64, host_mem_v2p(read_buf));
+  seq_pdma_desc->write_bit_fields(128, 64, read_hbm_buf2->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, read_buf->pa());
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
   // Form the interrupt add/data and enable it
   seq_pdma_desc->write_bit_fields(312, 64, seq_db_data->pa());
@@ -1751,7 +1740,7 @@ int test_seq_e2e_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   int rc;
   XtsCtx xts_ctx_write, xts_ctx_read;
 
-  memset(read_buf, 0x0, kDefaultBufSize);
+  read_buf->clear_thru();
 
   // Send the write command and check status
   rc = test_seq_write_xts_r2n(seq_pdma_q, seq_r2n_q, ssd_handle,
@@ -1759,7 +1748,7 @@ int test_seq_e2e_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   if (rc < 0) return -1;
 
   // Memcmp before reading
-  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  rc = memcmp(read_buf->read(), write_buf->read(), kDefaultBufSize);
   printf("\nE2E: pre memcmp %d \n", rc);
 
   // Send the read command and check status
@@ -1767,7 +1756,7 @@ int test_seq_e2e_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   if (rc < 0) return -1;
 
   // Memcmp after reading and verify its the same
-  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  rc = memcmp(read_buf->read_thru(), write_buf->read_thru(), kDefaultBufSize);
   printf("\nE2E: post memcmp %d \n", rc);
 
   return rc;
@@ -1924,8 +1913,8 @@ int test_run_rdma_e2e_write() {
 }
 
 int test_seq_pdma_write(uint16_t seq_pdma_q,
-                        void *curr_wr_buf,
-                        uint64_t curr_wr_hbm_buf,
+                        dp_mem_t *curr_wr_buf,
+                        dp_mem_t *curr_wr_hbm_buf,
                         uint64_t curr_db_data_pa,
                         uint32_t exp_db_data_value) {
   uint16_t  seq_pdma_index;
@@ -1936,8 +1925,8 @@ int test_seq_pdma_write(uint16_t seq_pdma_q,
   seq_pdma_desc->clear();
 
   // Fill the PDMA descriptor
-  seq_pdma_desc->write_bit_fields(128, 64, host_mem_v2p(curr_wr_buf));
-  seq_pdma_desc->write_bit_fields(192, 64, curr_wr_hbm_buf);
+  seq_pdma_desc->write_bit_fields(128, 64, curr_wr_buf->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, curr_wr_hbm_buf->pa());
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
 
   // Form the interrupt add/data and enable it
@@ -1954,8 +1943,8 @@ int test_seq_pdma_write(uint16_t seq_pdma_q,
 }
 
 int test_seq_pdma_read(uint16_t seq_pdma_q,
-                       void *curr_rd_buf,
-                       uint64_t curr_rd_hbm_buf,
+                       dp_mem_t *curr_rd_buf,
+                       dp_mem_t *curr_rd_hbm_buf,
                        uint64_t curr_db_data_pa,
                        uint32_t exp_db_data_value) {
   uint16_t  seq_pdma_index;
@@ -1966,8 +1955,8 @@ int test_seq_pdma_read(uint16_t seq_pdma_q,
   seq_pdma_desc->clear();
 
   // Fill the PDMA descriptor
-  seq_pdma_desc->write_bit_fields(128, 64, curr_rd_hbm_buf);
-  seq_pdma_desc->write_bit_fields(192, 64, host_mem_v2p(curr_rd_buf));
+  seq_pdma_desc->write_bit_fields(128, 64, curr_rd_hbm_buf->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, curr_rd_buf->pa());
   seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
   // Form the interrupt add/data and enable it
   seq_pdma_desc->write_bit_fields(312, 64, curr_db_data_pa);
@@ -1985,10 +1974,10 @@ int test_seq_pdma_read(uint16_t seq_pdma_q,
 int test_run_seq_pdma_multi_xfers() {
     dp_mem_t    *wr_seq_db_data;
     dp_mem_t    *rd_seq_db_data;
-    uint32_t    *exp_seq_db_data;
-    void        *pdma_wr_buf;
-    void        **pdma_rd_buf;
-    uint64_t    pdma_wr_hbm_buf;
+    dp_mem_t    *exp_seq_db_data;
+    dp_mem_t    *pdma_wr_buf;
+    dp_mem_t    *pdma_rd_buf;
+    dp_mem_t    *pdma_wr_hbm_buf;
     uint32_t    exp_db_data_value;
     uint32_t    total_seq_db_data_size;
     int         val_pdma_queues = NUM_TO_VAL(FLAGS_num_pdma_queues);
@@ -2002,32 +1991,30 @@ int test_run_seq_pdma_multi_xfers() {
     total_seq_db_data_size = kSeqDbDataSize * val_pdma_queues;
     wr_seq_db_data = new dp_mem_t(1, total_seq_db_data_size);
     rd_seq_db_data = new dp_mem_t(1, total_seq_db_data_size);
+    exp_seq_db_data = new dp_mem_t(1, total_seq_db_data_size,
+                                  DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
 
 #define SEQ_DB_DATA_ENTRY_PA(pa, i) \
     (pa + (i * kSeqDbDataSize))
 
-    exp_seq_db_data = (uint32_t *)alloc_host_mem(total_seq_db_data_size);
-    assert(exp_seq_db_data);
-
     // Write from the same source host buffer, but read into different
     // destination host buffers
-    pdma_wr_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
-    assert(pdma_wr_buf);
-    memset(pdma_wr_buf, 0x55, kDefaultBufSize);
-    pdma_rd_buf = (void **)alloc_host_mem(sizeof(void *) * val_pdma_queues);
-    assert(pdma_rd_buf);
-    memset(pdma_rd_buf, 0, sizeof(void *) * val_pdma_queues);
+    pdma_wr_buf = new dp_mem_t(1, kDefaultBufSize,
+                               DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+    memset(pdma_wr_buf->read(), 0x55, kDefaultBufSize);
+    pdma_rd_buf = new dp_mem_t(val_pdma_queues, kDefaultBufSize,
+                               DP_MEM_ALIGN_PAGE, DP_MEM_TYPE_HOST_MEM);
+    pdma_wr_hbm_buf = new dp_mem_t(val_pdma_queues, kDefaultBufSize,
+                                   DP_MEM_ALIGN_PAGE);
 
     // Set expected completion doorbell data value
     exp_db_data_value = 0xdbdbdbdb;
-    memset(exp_seq_db_data, 0xdb, total_seq_db_data_size);
+    memset(exp_seq_db_data->read(), 0xdb, total_seq_db_data_size);
     
     for (i = 0; i < val_pdma_queues; i++) {
 
         // Write from the same source host buffer, 
         // but to different per-queue destination HBM buffers
-        assert(utils::hbm_addr_alloc_page_aligned(kDefaultBufSize,
-                                                  &pdma_wr_hbm_buf) == 0);
         test_seq_pdma_write(queues::get_pvm_seq_pdma_sq(i), pdma_wr_buf,
                             pdma_wr_hbm_buf, 
                             SEQ_DB_DATA_ENTRY_PA(wr_seq_db_data->pa(), i),
@@ -2035,12 +2022,12 @@ int test_run_seq_pdma_multi_xfers() {
 
         // Read into different per-queue destination host buffers, 
         // from the different per-queue source HBM buffers above
-        pdma_rd_buf[i] = alloc_page_aligned_host_mem(kDefaultBufSize);
-        assert(pdma_rd_buf[i]);
-        test_seq_pdma_read(queues::get_pvm_seq_pdma_sq(i), pdma_rd_buf[i],
+        test_seq_pdma_read(queues::get_pvm_seq_pdma_sq(i), pdma_rd_buf,
                            pdma_wr_hbm_buf,
                            SEQ_DB_DATA_ENTRY_PA(rd_seq_db_data->pa(), i),
                            exp_db_data_value);
+        pdma_wr_hbm_buf->line_advance();
+        pdma_rd_buf->line_advance();
         if (i && ((i % 100) == 0)) {
             printf("%s: submitted %d PDMA write/read transfer pairs\n",
                    __FUNCTION__, i);
@@ -2051,9 +2038,9 @@ int test_run_seq_pdma_multi_xfers() {
     auto dma_db_compl_verify = [wr_seq_db_data, rd_seq_db_data,
                                 exp_seq_db_data, total_seq_db_data_size] () {
 
-        if (memcmp(wr_seq_db_data->read_thru(), exp_seq_db_data,
+        if (memcmp(wr_seq_db_data->read_thru(), exp_seq_db_data->read(),
                    total_seq_db_data_size) ||
-            memcmp(rd_seq_db_data->read_thru(), exp_seq_db_data,
+            memcmp(rd_seq_db_data->read_thru(), exp_seq_db_data->read(),
                    total_seq_db_data_size)) {
             return -1;
         }
@@ -2068,7 +2055,9 @@ int test_run_seq_pdma_multi_xfers() {
     if (rc == 0) {
         auto wr_rd_data_verify = [pdma_wr_buf, pdma_rd_buf] (int qid) {
 
-            if (memcmp(pdma_rd_buf[qid], pdma_wr_buf, kDefaultBufSize)) {
+            pdma_rd_buf->line_set(qid);
+            if (memcmp(pdma_rd_buf->read_thru(), pdma_wr_buf->read(),
+                       kDefaultBufSize)) {
                 printf("%s: all transfers completed but read buffer for "
                        "queue %d has incorrect data\n", __FUNCTION__, qid);
                 return -1;
@@ -2086,18 +2075,12 @@ int test_run_seq_pdma_multi_xfers() {
         }
     }
 
-    // There are no methods to free HBM memory but at least we can free
-    // allocated host buffers
-    for (i = 0; i < val_pdma_queues; i++) {
-        if (pdma_rd_buf[i]) {
-            free_host_mem(pdma_rd_buf[i]);
-        }
-    }
-    free_host_mem(pdma_rd_buf);
-    free_host_mem(pdma_wr_buf);
-    free_host_mem(exp_seq_db_data);
+    delete pdma_rd_buf;
+    delete pdma_wr_buf;
+    delete exp_seq_db_data;
     delete rd_seq_db_data;
     delete wr_seq_db_data;
+    delete pdma_wr_hbm_buf;
 
     return rc;
 }

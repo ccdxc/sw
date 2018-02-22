@@ -1,6 +1,7 @@
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/hal_if.hpp"
 #include "dol/test/storage/dp_mem.hpp"
+#include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
 namespace dp_mem {
@@ -10,13 +11,16 @@ namespace dp_mem {
  */
 dp_mem_t::dp_mem_t(uint32_t num_lines,
                    uint32_t line_size,
-                   bool page_aligned) :
+                   dp_mem_align_t mem_align,
+                   dp_mem_type_t mem_type) :
+    mem_type(mem_type),
     cache(nullptr),
     hbm_addr(0),
     num_lines(num_lines),
     line_size(line_size),
     total_size(num_lines * line_size),
     curr_line(0),
+    next_line(0),
     fragment_key(0),
     fragment_parent(nullptr)
 {
@@ -27,30 +31,66 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
      * see fragment_find().
      */
     if (total_size) {
-        alloc_rc = page_aligned ? 
-                   utils::hbm_addr_alloc_page_aligned(total_size, &hbm_addr) :
-                   utils::hbm_addr_alloc(total_size, &hbm_addr);
-        if (alloc_rc < 0) {
-          printf("%s unable to allocate HBM memory size %u\n",
-                 __FUNCTION__, total_size);
-          assert(alloc_rc >= 0);
-        }
-
-        cache = new (std::nothrow) uint8_t[total_size];
-        if (!cache) {
-            printf("%s unable to allocate host memory size %u\n",
-                   __FUNCTION__, total_size);
-            assert(cache);
-        }
 
         /*
-         * total_size can potentially be very large which needs
-         * to be broken up for write_mem.
+         * Validate alignment
          */
-        for (curr_line = 0; curr_line < num_lines; curr_line++) {
-            clear_thru();
+        if ((num_lines > 1) && (mem_align == DP_MEM_ALIGN_PAGE)) {
+            assert((line_size % utils::kUtilsPageSize) == 0);
         }
-        curr_line = 0;
+
+        switch (mem_type) {
+
+        case DP_MEM_TYPE_HBM:
+            alloc_rc = mem_align == DP_MEM_ALIGN_PAGE ? 
+                       utils::hbm_addr_alloc_page_aligned(total_size, &hbm_addr) :
+                       utils::hbm_addr_alloc(total_size, &hbm_addr);
+            if (alloc_rc < 0) {
+                printf("%s unable to allocate HBM memory size %u\n",
+                       __FUNCTION__, total_size);
+                assert(alloc_rc >= 0);
+            }
+
+            cache = new (std::nothrow) uint8_t[total_size];
+            if (!cache) {
+                printf("%s unable to allocate cache size %u\n",
+                       __FUNCTION__, total_size);
+                assert(cache);
+            }
+
+            /*
+             * total_size can potentially be very large which needs
+             * to be broken up for write_mem.
+             */
+            for (curr_line = 0; curr_line < num_lines; curr_line++) {
+                clear_thru();
+            }
+            curr_line = 0;
+            break;
+
+        case DP_MEM_TYPE_HOST_MEM:
+
+            /*
+             * cache is the same as the requested host mem
+             */
+            cache = mem_align == DP_MEM_ALIGN_PAGE ? 
+                    (uint8_t *)alloc_page_aligned_host_mem(total_size) :
+                    (uint8_t *)alloc_host_mem(total_size);
+            if (!cache) {
+                printf("%s unable to allocate host memory size %u\n",
+                       __FUNCTION__, total_size);
+                assert(cache);
+            }
+
+            memset(cache, 0, total_size);
+            break;
+
+        default:
+            printf("%s invalid memory type %u\n",
+                   __FUNCTION__, mem_type);
+            assert(mem_type < DP_MEM_TYPE_LAST);
+            break;
+        }
     }
 }
 
@@ -82,24 +122,69 @@ dp_mem_t::~dp_mem_t()
          * allocated local memory
          */
         if (cache) {
-            delete[] cache;
+            if (is_mem_type_host_mem()) {
+                free_host_mem(cache);
+            } else {
+                delete[] cache;
+            }
         }
     }
 }
 
 
 /*
- * Set current line index
+ * Return current line index
  */
-dp_mem_t *
+uint32_t
+dp_mem_t::line_get(void)
+{
+    return curr_line;
+}
+
+
+/*
+ * Return the next line index as it was last computed.
+ */
+uint32_t
+dp_mem_t::next_line_get(void)
+{
+    return next_line;
+}
+
+
+/*
+ * Set current line index (next line index is also reset to same value).
+ */
+void
 dp_mem_t::line_set(uint32_t line)
 {
-    if (line >= num_lines) {
-        return nullptr;
-    }
-
+    assert(line < num_lines);
     curr_line = line;
-    return this;
+    next_line = line;
+}
+
+
+/*
+ * Set only the next line index (the current line index remains unchanged).
+ */
+uint32_t
+dp_mem_t::next_line_set(void)
+{
+    assert(num_lines);
+    next_line = (curr_line + 1) % num_lines;
+    return next_line;
+}
+
+
+/*
+ * Advance current line index (next line index is also reset to same value).
+ */
+uint32_t
+dp_mem_t::line_advance(void)
+{
+    next_line_set();
+    curr_line = next_line;
+    return curr_line;
 }
 
 
@@ -143,7 +228,9 @@ dp_mem_t::read(void)
 uint8_t *
 dp_mem_t::read_thru(void)
 {
-    read_mem(hbm_line_addr(), cache_line_addr(), line_size);
+    if (is_mem_type_hbm()) {
+        read_mem(hbm_line_addr(), cache_line_addr(), line_size);
+    }
     return read();
 }
 
@@ -178,7 +265,9 @@ dp_mem_t::write_bit_fields(uint32_t start_bit_offset,
 void
 dp_mem_t::write_thru(void)
 {
-    write_mem(hbm_line_addr(), cache_line_addr(), line_size);
+    if (is_mem_type_hbm()) {
+        write_mem(hbm_line_addr(), cache_line_addr(), line_size);
+    }
 }
 
 
@@ -188,18 +277,26 @@ dp_mem_t::write_thru(void)
 uint64_t
 dp_mem_t::pa(void)
 {
-    return hbm_line_addr();
+    if (is_mem_type_hbm()) {
+        return hbm_line_addr();
+    }
+
+    return host_mem_v2p(cache_line_addr());
 }
 
 
 /*
- * Return virtual address of the current datapath memory line
- * (which is same as physical address)
+ * Return virtual address of the current datapath memory line.
+ * For HBM, it is the same as physical address.
  */
 uint64_t
 dp_mem_t::va(void)
 {
-    return pa();
+    if (is_mem_type_hbm()) {
+        return hbm_line_addr();
+    }
+
+    return (uint64_t)cache_line_addr();
 }
 
 
@@ -227,11 +324,13 @@ dp_mem_t::fragment_find(uint32_t frag_offset,
                 frag_size;
     fragment_it = fragments_map.find(local_key);
     if (fragment_it == fragments_map.end()) {
-        fragment = new dp_mem_t(0, 0);
+        fragment = new dp_mem_t(0, 0, DP_MEM_ALIGN_NONE, mem_type);
         fragment->num_lines = 1;
         fragment->line_size = frag_size;
         fragment->total_size = frag_size;
-        fragment->hbm_addr = hbm_line_addr() + frag_offset;
+        if (is_mem_type_hbm()) {
+            fragment->hbm_addr = hbm_line_addr() + frag_offset;
+        }
         fragment->cache = cache_line_addr() + frag_offset;
 
         fragment->fragment_key = local_key;
@@ -253,6 +352,7 @@ dp_mem_t::fragment_find(uint32_t frag_offset,
 uint64_t 
 dp_mem_t::hbm_line_addr(void)
 {
+    assert(is_mem_type_hbm());
     return hbm_addr + (curr_line * line_size);
 }
 
