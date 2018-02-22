@@ -57,7 +57,6 @@ action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
         }
     }
 
-#if 0
     remove_header(ethernet_1);
     remove_header(ctag_1);
     remove_header(ipv4_1);
@@ -81,7 +80,6 @@ action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
     remove_header(vxlan_3);
     remove_header(gre_3);
     remove_header(udp_3);
-#endif
 
     remove_header(icrc);
     remove_header(udp_opt_eol);

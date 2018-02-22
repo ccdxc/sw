@@ -248,7 +248,7 @@ parser start {
         22 : start_outer_vlan_vxlan_ipv4_bth;
         23 : start_outer_vxlan_ipv6_bth;
         24 : start_outer_vlan_vxlan_ipv6_bth;
-        default: parse_nic;
+        default: parse_ethernet_1;
         0x1 mask 0 : egress_start;
         0x1 mask 0 : rx_deparse_start;
     }
@@ -264,10 +264,6 @@ parser rx_deparse_start {
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
 #endif
-    return parse_nic;
-}
-
-parser parse_nic {
     return parse_ethernet_1;
 }
 
@@ -1747,7 +1743,25 @@ parser egress_start {
 #endif
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
+    return egress_start2;
+}
+
+@pragma xgress egress
+parser egress_start2 {
     return select(capri_intrinsic.csum_err) {
+        0 : parse_txdma;
+        1 : start_ipv4_bth_deth;
+        2 : start_vlan_ipv4_bth_deth;
+        3 : start_ipv6_bth_deth;
+        4 : start_vlan_ipv6_bth_deth;
+        5 : start_ipv4_bth_deth_immdt;
+        6 : start_vlan_ipv4_bth_deth_immdt;
+        7 : start_ipv6_bth_deth_immdt;
+        8 : start_vlan_ipv6_bth_deth_immdt;
+        9 : start_ipv4_bth;
+        10 : start_vlan_ipv4_bth;
+        11 : start_ipv6_bth;
+        12 : start_vlan_ipv6_bth;
         default: parse_txdma;
         0x1 mask 0 : egress_deparse_start;
     }
