@@ -61,12 +61,10 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     slt c1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, d.expected_seq_no
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno
     sub r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, d.expected_seq_no
-    addi r2, r0, IPSEC_WIN_REPLAY_MAX_DIFF
-    slt c2, r2, r1 
+    slt c2, IPSEC_WIN_REPLAY_MAX_DIFF, r1 
     bcf [c2], ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed
     nop
-    addi r7, r0, 1
-    sllv r3, r7, r1
+    sllv r3, 1, r1
     or r3, r3, d.replay_seq_no_bmp 
     tblwr  d.replay_seq_no_bmp, r3
     nop
@@ -87,14 +85,12 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no:
 
 .align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
-    sub r3, r2, r1
-    add r4, r0, d.expected_seq_no
-    add r4, r4, r3
+    sub r3, IPSEC_WIN_REPLAY_MAX_DIFF, r1
+    add r4, d.expected_seq_no, r3
     tblwr d.expected_seq_no, r4
     nop
     phvwr p.t2_s2s_last_replay_seq_no,  k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31} 
-    add r5, r0, d.replay_seq_no_bmp
-    sllv r6, r5, r3
+    sllv r6, d.replay_seq_no_bmp, r3
     sllv r7, 1, r3
     or r6, r6, r7
     tblwr d.replay_seq_no_bmp, r6
@@ -115,8 +111,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     ori r3, r3, 1
     tblwr d.replay_seq_no_bmp, r3
     nop
-    add r1, r0, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
-    addi r1, r1, 1
+    add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, 1
     tblwr d.expected_seq_no, r1 
     nop
     j ipsec_esp_v4_tunnel_n2h_good_pkt
@@ -126,11 +121,9 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
 
 .align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
-    addi r7, r0, 1
-    tblwr d.replay_seq_no_bmp, r7 
+    tblwr d.replay_seq_no_bmp, 1 
     nop
-    add r1, r0, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
-    addi r1, r1, 1
+    add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, 1
     tblwr d.expected_seq_no, r1 
     nop
     j ipsec_esp_v4_tunnel_n2h_good_pkt
