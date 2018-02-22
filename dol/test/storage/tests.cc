@@ -2241,6 +2241,56 @@ int test_run_rdma_lif_override() {
   return rc;
 }
 
+int test_run_rdma_e2e_xts_write(uint32_t qid,
+                                uint16_t ssd_handle,
+                                uint16_t io_priority)
+{
+  XtsCtx xts_ctx_write;
+  dp_mem_t *cmd_buf = NULL;
+  int rc;
+
+  // Get the SLBA to write to and read from
+  rolling_write_slba = get_next_slba();
+
+  StartXtsRoceWriteSeq(qid, ssd_handle, get_next_byte(), &cmd_buf,
+                       rolling_write_slba, xts_ctx_write);
+  printf("Started sequencer to PDMA + XTS + write command send over ROCE \n");
+
+  dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
+  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                 sizeof(struct NvmeStatus));
+  // Poll for status
+  auto func1 = [nvme_status, cmd_buf] () {
+    return check_nvme_status(nvme_status, cmd_buf);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  if (rc < 0)
+    printf("Failure in retrieving status \n");
+  else 
+    printf("Successfully retrieved status \n");
+
+  // Save the rolling write data buffer
+  rolling_write_data_buf = rdma_get_target_write_data_buf();
+
+  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
+  PostTargetRcvBuf1();
+  PostInitiatorRcvBuf1();
+
+  // Increment the Buffer pointers
+  IncrTargetRcvBufPtr();
+  IncrInitiatorRcvBufPtr();
+
+  return rc;
+}
+
+int test_run_rdma_e2e_xts_write1(void)
+{
+    return test_run_rdma_e2e_xts_write(0, // qid
+                                       2, 0);   // ssd_handle, io_priority
+}
+
 int test_setup_cp_seq_ent(cp_seq_params_t *params) {
   if (!params) return -1;
  

@@ -9,6 +9,7 @@
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/r2n.hpp"
+#include "dol/test/storage/xts.hpp"
 #include "dol/test/storage/qstate_if.hpp"
 #include "nic/gen/proto/hal/internal.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
@@ -719,6 +720,141 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
 		             r2n_hbm_buf_pa->pa(), data_len, 
                              sqwqe->pa(), 64);
 
+  return 0;
+}
+
+int StartXtsRoceWriteSeq(uint32_t qid,
+                         uint16_t ssd_handle,
+                         uint8_t byte_val,
+                         dp_mem_t **nvme_cmd_ptr,
+                         uint64_t slba,
+                         tests::XtsCtx& xts_ctx)
+{
+  uint16_t seq_pdma_index;
+  dp_mem_t *seq_pdma_desc;
+  uint16_t seq_roce_index;
+  dp_mem_t *seq_roce_desc;
+  uint64_t db_data;
+  uint64_t db_addr;
+  uint64_t qaddr;
+  uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(qid);
+  uint32_t seq_roce_q = queues::get_pvm_seq_roce_sq(qid);
+
+  // Increment the LKey at the beginning of each API
+  SendBufLKeyIncr();
+
+  // Get userspace R2N buffer for write command and data. 
+  dp_mem_t *r2n_buf = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
+
+  // Initialize and form the write command
+  r2n::r2n_nvme_be_cmd_buf_init(r2n_buf, NULL, 0, ssd_handle, 0, 0, 0, nvme_cmd_ptr);
+  tests::form_write_cmd_no_buf(*nvme_cmd_ptr, slba);
+
+  // Get the HBM buffer for the write data to be PDMA'ed to before sending over RDMA
+  dp_mem_t *r2n_hbm_buf = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
+#if 1
+  assert(tests::write_hbm_buf2->line_size_get() >= kR2NDataSize);
+  uint32_t data_len = MIN(kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf),
+                          tests::write_hbm_buf2->line_size_get());
+#else
+  uint32_t data_len = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
+#endif
+  printf("%s data_len %u\n", __FUNCTION__, data_len);
+
+  // Register R2N buf memory. Only LKey, no remote access.
+  RdmaMemRegister(r2n_hbm_buf->va(), r2n_hbm_buf->pa(),
+                  kR2NBufSize, SendBufLKey, 0, false);
+
+  // Initialize the write data buffer (of size 4K) at an offset from the NVME backend
+  // command
+  dp_mem_t *wr_buf = r2n_buf->fragment_find(kR2NDataBufOffset - offsetof(r2n::r2n_buf_t, cmd_buf),
+                                            kR2NDataSize);
+  memset(wr_buf->read(), byte_val, kR2NDataSize);
+  wr_buf->write_thru();
+
+  // Sequencer: R2N descriptor
+  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc->clear();
+
+  // Sequencer: PDMA descriptor
+  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc->clear();
+
+  // Fill the PDMA descriptor
+  seq_pdma_desc->write_bit_fields(128, 64, r2n_buf->pa());
+  seq_pdma_desc->write_bit_fields(256, 32, data_len);
+
+#if 1
+  seq_pdma_desc->write_bit_fields(192, 64, tests::write_hbm_buf2->pa());
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.src_buf = (void*)tests::write_hbm_buf2->va();
+  xts_ctx.is_src_hbm_buf = true;
+  xts_ctx.dst_buf = (void*)r2n_hbm_buf->va();
+  xts_ctx.is_dst_hbm_buf = true;
+  xts_ctx.num_sectors = data_len/SECTOR_SIZE;
+  xts_ctx.ring_db = false;
+  xts_ctx.init(data_len);
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, qid,
+                             seq_roce_index, &xts_ctx.xts_db_addr,
+                             &xts_ctx.exp_db_data);
+  xts_ctx.test_seq_xts();
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q,
+                             0, xts_ctx.seq_xts_index, &db_addr, &db_data);
+#else
+  seq_pdma_desc->write_bit_fields(192, 64, r2n_hbm_buf->pa());
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, qid,
+                             seq_roce_index, &db_addr, &db_data);
+#endif
+  seq_pdma_desc->write_bit_fields(0, 64, db_addr);
+  seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
+  // Enable the next doorbell
+  seq_pdma_desc->write_bit_fields(408, 1, 1);
+  seq_pdma_desc->write_thru();
+
+  // For the RCOCE send wqe
+  dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
+  sqwqe->clear();
+
+  sqwqe->write_bit_fields(0, 64, r2n_hbm_buf->pa());  // wrid 
+  sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
+  sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
+
+  // Store doorbell information of PVM's ROCE CQ in immediate data 
+  sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
+  sqwqe->write_bit_fields(107, 3, CQ_TYPE);
+  sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  sqwqe->write_bit_fields(192, 32, data_len);  // data len
+
+  // Form the SGE
+  sqwqe->write_bit_fields(256, 64, r2n_hbm_buf->pa());  // SGE-va, same as pa
+  sqwqe->write_bit_fields(256+64, 32, data_len);
+  sqwqe->write_bit_fields(256+64+32, 32, SendBufLKey);
+  sqwqe->write_thru();
+
+  // Consume an entry in the Submission queue as the sequencer will take it.
+  // If this is not done, subsequent cases wont work
+  initiator_sq_pindex++;
+  if (initiator_sq_pindex >= kNumSQWQEs)
+    initiator_sq_pindex = 0;
+
+  // Fill the Sequencer ROCE descriptor
+  if (qstate_if::get_qstate_addr(queues::get_pvm_lif(), SQ_TYPE,
+                                 g_rdma_pvm_roce_init_sq, &qaddr) < 0) {
+    printf("Can't get PVM's ROCE SQ qaddr \n");
+    return -1;
+  }
+  seq_roce_desc->write_bit_fields(0, 64, sqwqe->pa());
+  seq_roce_desc->write_bit_fields(64, 32, kSQWQESize);
+  seq_roce_desc->write_bit_fields(96, 11, queues::get_pvm_lif());
+  seq_roce_desc->write_bit_fields(107, 3, SQ_TYPE);
+  seq_roce_desc->write_bit_fields(110, 24, g_rdma_pvm_roce_init_sq);
+  seq_roce_desc->write_bit_fields(134, 34, qaddr);
+  seq_roce_desc->write_bit_fields(168, 8, 1);
+  seq_roce_desc->write_thru();
+
+  // Kickstart the sequencer 
+  tests::test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+                            seq_pdma_q, qid, seq_pdma_index);
   return 0;
 }
 

@@ -177,6 +177,8 @@ int test_run_rdma_e2e_read();
 
 int test_run_rdma_lif_override();
 
+int test_run_rdma_e2e_xts_write1(void);
+
 int test_run_seq_pdma_multi_xfers();
 
 void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,

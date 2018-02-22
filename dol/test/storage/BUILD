@@ -52,6 +52,7 @@ cc_library(
 	"queues.hpp",
         "tests.hpp",
         "dp_mem.hpp",
+        "xts.hpp",
         "r2n.hpp",
         "nvme.hpp",
         "qstate_if.hpp",
