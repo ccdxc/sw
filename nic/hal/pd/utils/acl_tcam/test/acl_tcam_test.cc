@@ -330,7 +330,8 @@ int main(int argc, char **argv)
 {
     p4pd_cfg_t    p4pd_cfg = {
         .table_map_cfg_file = "iris/capri_p4_table_map.json",
-        .p4pd_pgm_name = "iris"
+        .p4pd_pgm_name      = "iris",
+        .cfg_path           = std::getenv("HAL_CONFIG_PATH")
     };
 
     ::testing::InitGoogleTest(&argc, argv);

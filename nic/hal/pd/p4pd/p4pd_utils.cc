@@ -100,17 +100,9 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
     p4pd_table_properties_t    *tbl;
     std::string                full_path;
     int                        tableid, num_tables = P4TBL_ID_TBLMAX;
-    char                       *cfg_path;
 
-    // TODO: man, this logic shouldn't be in this lib ...
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-         full_path =  std::string(cfg_path) + "/" + p4pd_cfg->table_map_cfg_file;
-     } else {
-         printf("Please specify HAL_CONFIG_PATH env. variable ... ");
-         exit(0);
-     }
-
+    full_path = std::string(p4pd_cfg->cfg_path) + "/" +
+                    std::string(p4pd_cfg->table_map_cfg_file);
     std::ifstream tbl_json(full_path.c_str());
     read_json(tbl_json, json_pt);
     boost::optional<pt::ptree&>table_pt =

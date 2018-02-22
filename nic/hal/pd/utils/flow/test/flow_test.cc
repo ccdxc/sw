@@ -1287,6 +1287,7 @@ int main(int argc, char **argv) {
 
     p4pd_cfg.table_map_cfg_file = string("table_maps/capri_p4_table_map.json").c_str();
     p4pd_cfg.p4pd_pgm_name = string("iris").c_str();
+    p4pd_cfg.cfg_path = std::getenv("HAL_CONFIG_PATH");
     p4pd_init(&p4pd_cfg);
 
     // testing::GTEST_FLAG(filter) = "-*test18*";

@@ -1409,7 +1409,8 @@ TEST_F(gft_test, test1) {
     uint64_t asm_base_addr;
     p4pd_cfg_t    p4pd_cfg = {
         .table_map_cfg_file = "gft/capri_p4_table_map.json",
-        .p4pd_pgm_name = "gft"
+        .p4pd_pgm_name = "gft",
+        .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
     const char *hal_conf_file = "conf/hal.json";
     char *default_config_dir = NULL;
