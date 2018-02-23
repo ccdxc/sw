@@ -5,12 +5,11 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/pensando/sw/api"
+	svcsclient "github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
-	grpcclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
@@ -45,8 +44,7 @@ type CfgWatcherService struct {
 
 	// API client & API server related attributes
 	apiServerAddr string // apiserver address, in service name or IP:port format
-	clientConn    *grpc.ClientConn
-	apiClient     cmd.CmdV1Interface
+	svcsClient    svcsclient.Services
 
 	// Object watchers
 	clusterWatcher  kvstore.Watcher // Cluster object watcher
@@ -74,9 +72,9 @@ func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEv
 	k.smartNICEventHandler = snicHandler
 }
 
-// apiClientConn creates a gRPC client Connection to API server
-func (k *CfgWatcherService) apiClientConn() (*grpc.ClientConn, error) {
-	var rpcClient *rpckit.RPCClient
+// apiClient creates a client to API server
+func (k *CfgWatcherService) apiClient() (svcsclient.Services, error) {
+	var client svcsclient.Services
 	var err error
 	var r resolver.Interface
 
@@ -84,15 +82,15 @@ func (k *CfgWatcherService) apiClientConn() (*grpc.ClientConn, error) {
 		r = env.ResolverClient.(resolver.Interface)
 	}
 	if r != nil {
-		rpcClient, err = rpckit.NewRPCClient("cmd", k.apiServerAddr, rpckit.WithBalancer(balancer.New(r)))
+		client, err = svcsclient.NewGrpcAPIClient(k.apiServerAddr, env.Logger, rpckit.WithBalancer(balancer.New(r)))
 	} else {
-		rpcClient, err = rpckit.NewRPCClient("cmd", k.apiServerAddr)
+		client, err = svcsclient.NewGrpcAPIClient(k.apiServerAddr, env.Logger)
 	}
 	if err != nil {
 		k.logger.Errorf("#### RPC client creation failed with error: %v", err)
 		return nil, errors.NewInternalError(err)
 	}
-	return rpcClient.ClientConn, err
+	return client, err
 }
 
 // NewCfgWatcherService creates a new Config Watcher service.
@@ -120,11 +118,14 @@ func (k *CfgWatcherService) WatchObjects(kind string, watchChan chan memdb.Event
 	return k.cache.WatchObjects(kind, watchChan)
 }
 
-// APIClient returns an interface to APIClient. Allows for sharing of grpc connection between various modules
+// APIClient returns an interface to APIClient for cmdV1
 func (k *CfgWatcherService) APIClient() cmd.CmdV1Interface {
 	k.Lock()
 	defer k.Unlock()
-	return k.apiClient
+	if k.svcsClient != nil {
+		return k.svcsClient.CmdV1()
+	}
+	return nil
 }
 
 // Start the ConfigWatcher service.
@@ -154,8 +155,10 @@ func (k *CfgWatcherService) Stop() {
 	k.logger.Infof("Stopping config watcher service")
 	k.cancel()
 	k.cancel = nil
-	k.clientConn.Close()
-	k.clientConn = nil
+	if k.svcsClient != nil {
+		k.svcsClient.Close()
+		k.svcsClient = nil
+	}
 
 	// wait for all go routines to exit
 	k.Wait()
@@ -174,19 +177,17 @@ func (k *CfgWatcherService) waitForAPIServerOrCancel() {
 	for {
 		select {
 		case <-time.After(apiServerWaitTime):
-			c, err := k.apiClientConn()
+			c, err := k.apiClient()
 
 			k.logger.Infof("Apiclient: %+v err: %v ii: %d", c, err, ii)
 
 			if err != nil {
 				break
 			}
-			cl := grpcclient.NewGrpcCrudClientCmdV1(c, k.logger)
-			_, err = cl.Cluster().List(k.ctx, &opts)
+			_, err = c.CmdV1().Cluster().List(k.ctx, &opts)
 			if err == nil {
-				k.clientConn = c
 				k.Lock()
-				k.apiClient = cl
+				k.svcsClient = c
 				k.Unlock()
 				go k.runUntilCancel()
 				return
@@ -222,13 +223,13 @@ func (k *CfgWatcherService) runUntilCancel() {
 	opts := api.ListWatchOptions{}
 
 	// Init Node watcher
-	k.nodeWatcher, err = k.apiClient.Node().Watch(k.ctx, &opts)
+	k.nodeWatcher, err = k.svcsClient.CmdV1().Node().Watch(k.ctx, &opts)
 	ii := 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.nodeWatcher, err = k.apiClient.Node().Watch(k.ctx, &opts)
+			k.nodeWatcher, err = k.svcsClient.CmdV1().Node().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for Node watch to succeed for %v seconds", ii)
@@ -239,13 +240,13 @@ func (k *CfgWatcherService) runUntilCancel() {
 	}
 
 	// Init Cluster watcher
-	k.clusterWatcher, err = k.apiClient.Cluster().Watch(k.ctx, &opts)
+	k.clusterWatcher, err = k.svcsClient.CmdV1().Cluster().Watch(k.ctx, &opts)
 	ii = 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.clusterWatcher, err = k.apiClient.Cluster().Watch(k.ctx, &opts)
+			k.clusterWatcher, err = k.svcsClient.CmdV1().Cluster().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for Cluster watch to succeed for %v seconds", ii)
@@ -257,13 +258,13 @@ func (k *CfgWatcherService) runUntilCancel() {
 	}
 
 	// Init SmartNIC watcher
-	k.smartNICWatcher, err = k.apiClient.SmartNIC().Watch(k.ctx, &opts)
+	k.smartNICWatcher, err = k.svcsClient.CmdV1().SmartNIC().Watch(k.ctx, &opts)
 	ii = 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.smartNICWatcher, err = k.apiClient.SmartNIC().Watch(k.ctx, &opts)
+			k.smartNICWatcher, err = k.svcsClient.CmdV1().SmartNIC().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for SmartNIC watch to succeed for %v seconds", ii)
