@@ -24,8 +24,7 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
     add r2, k.ipsec_to_stage3_iv_size, ESP_FIXED_HDR_SIZE
     add r4, r1, k.t0_s2s_in_page_addr 
     phvwr p.barco_desc_in_A0_addr, r4.dx
-    addi r3, r0, ESP_FIXED_HDR_SIZE
-    phvwr p.barco_desc_in_L0, r3.wx 
+    phvwri p.barco_desc_in_L0, ESP_FIXED_HDR_SIZE_LI 
     phvwri p.barco_desc_in_O0, 0 
     add r5, r4, r2
     add r5, r5, k.t0_s2s_payload_start 

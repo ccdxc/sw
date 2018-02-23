@@ -29,8 +29,7 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     phvwr p.barco_req_auth_tag_addr, r1.dx
 
     // Header size is iv_size+ESP_FIXED header size 
-    addi r3, r0, ESP_FIXED_HDR_SIZE 
-    phvwr p.barco_req_header_size, r3.wx
+    phvwri p.barco_req_header_size, ESP_FIXED_HDR_SIZE_LI 
 
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_write_barco_req[33:6]

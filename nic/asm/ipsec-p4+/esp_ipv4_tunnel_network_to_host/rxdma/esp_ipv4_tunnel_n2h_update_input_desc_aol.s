@@ -24,17 +24,12 @@ esp_ipv4_tunnel_n2h_update_input_desc_aol:
     subi r5, r2, ESP_FIXED_HDR_SIZE 
     phvwr p.barco_desc_in_A0_addr, r5.dx 
     phvwri p.barco_desc_in_O0, 0
-    addi r4, r0, ESP_FIXED_HDR_SIZE
-    phvwr p.barco_desc_in_L0, r4.wx 
-
-
+    phvwri p.barco_desc_in_L0, ESP_FIXED_HDR_SIZE_LI 
     addi r3, r2, IPSEC_SALT_HEADROOM 
     add r3, r3, k.ipsec_to_stage3_iv_size
-
     phvwr p.barco_desc_in_A1_addr, r3.dx 
     phvwri p.barco_desc_in_O1, 0
-    add r5, r0, k.ipsec_to_stage3_payload_size
-    phvwr p.barco_desc_in_L1, r5.wx
+    phvwr p.barco_desc_in_L1, k.{ipsec_to_stage3_payload_size}.wx
 
 dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
@@ -44,7 +39,7 @@ dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.dma_cmd_pkt2mem2_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
     sub r3, r3, k.ipsec_to_stage3_iv_size 
     phvwr p.dma_cmd_pkt2mem2_dma_cmd_addr, r3 
-    add r5, r5, k.ipsec_to_stage3_iv_size
+    add r5, k.ipsec_to_stage3_payload_size, k.ipsec_to_stage3_iv_size
     add r5, r5, k.ipsec_global_icv_size
     phvwr p.dma_cmd_pkt2mem2_dma_cmd_size, r5 
 

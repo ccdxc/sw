@@ -28,11 +28,10 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwri p.common_te0_phv_table_lock_en, 1 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 3
-    add r1, r0, d.cb_cindex
-    tbladd d.cb_cindex, 1
-    sll r2, r1, 3
+    sll r2, d.cb_cindex, 3
     add r2, r2, d.cb_ring_base_addr_hi, 32
     add r2, r2, d.cb_ring_base_addr
+    tbladd d.cb_cindex, 1
     phvwr p.common_te0_phv_table_addr, r2
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, d.cb_cindex)
