@@ -62,14 +62,15 @@ FlowSpineEntry::form_action_data(void *action_data)
     FlowEntry       *root_fe = NULL;
     uint32_t        hint_bits = 0;
     uint32_t        fhct_idx = 0; 
-    hg_root_t       hg_root;
+    // hg_root_t       hg_root;
     uint8_t         *action_id;
     uint8_t         *entry_valid;
     void            *data;
-    hg_root_t       *first_hash_hint;
+    void            *first_hash_hint;
     uint8_t         *more_hashs;
-    uint16_t        *more_hints;
+    void            *more_hints;
     char            *loc = NULL;
+    uint32_t        hint_mem_len_B = get_ft_entry()->get_flow()->get_hint_mem_len_B();
     FlowHintGroupList::iterator itr;
 
     HAL_TRACE_DEBUG("FlowSE::{}: P4-API: Table: FT Call ...", __FUNCTION__);
@@ -101,14 +102,19 @@ FlowSpineEntry::form_action_data(void *action_data)
         root_fe = fhg->get_first_flow_entry();
         fhct_idx = root_fe->get_fhct_index();
 
-        hg_root.hash = hint_bits;
-        hg_root.hint = fhct_idx;
-        memcpy(loc, &hg_root, sizeof(hg_root));
-        loc += sizeof(hg_root);
+        // hg_root.hash = hint_bits;
+        // hg_root.hint = fhct_idx;
+        // memcpy(loc, &hg_root, sizeof(hg_root));
+        // loc += sizeof(hg_root);
+        memcpy(loc, &hint_bits, 2);
+        memcpy(loc + 2, &fhct_idx, hint_mem_len_B);
+        loc += (2 + hint_mem_len_B);
     }
     if (next_) {
         *more_hashs = 1;
-        *more_hints = next_->get_fhct_index();
+        // *more_hints = next_->get_fhct_index();
+        fhct_idx = next_->get_fhct_index();
+        memcpy(more_hints, &fhct_idx, hint_mem_len_B);
     }
 }
 

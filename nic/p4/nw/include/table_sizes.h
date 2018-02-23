@@ -8,7 +8,7 @@
 #define DDOS_SRC_DST_TABLE_SIZE                            512
 #define DDOS_SERVICE_TABLE_SIZE                            256
 #define FLOW_HASH_TABLE_SIZE                               2097152
-#define FLOW_HASH_OVERFLOW_TABLE_SIZE                      16384
+#define FLOW_HASH_OVERFLOW_TABLE_SIZE                      262144
 #define FLOW_TABLE_SIZE                                    1048576
 #define FLOW_STATE_TABLE_SIZE                              1048576
 #define REGISTERED_MACS_TABLE_SIZE                         8192

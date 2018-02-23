@@ -630,13 +630,17 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
     uint8_t         *action_id;
     uint8_t         *entry_valid;
     void            *data;
-    hg_root_t       *first_hash_hint;
+    void            *first_hash_hint;
     uint8_t         *more_hashs;
-    uint16_t        *more_hints;
+    void            *more_hints;
+    uint32_t        hint_bits = 0;
+    uint32_t        fhct_idx = 0; 
+    uint32_t        hint_mem_len_B = 0;
 
     oflow_table_id = get_flow_table_entry()->get_flow()->get_oflow_table_id();
     entire_data_len = get_flow_table_entry()->get_flow()->
                       get_flow_entire_data_len();
+    hint_mem_len_B = get_flow_table_entry()->get_flow()->get_hint_mem_len_B();
 
     swdata = HAL_CALLOC(HAL_MEM_ALLOC_ENTIRE_FLOW_ENTRY_DATA, 
                         entire_data_len);
@@ -654,8 +658,13 @@ FlowEntry::program_table_non_anchor_entry(FlowEntry *next_fe)
     memcpy(data, data_, data_len_); // export_en + flow_index is data
 
     if (next_fe) {
-        first_hash_hint->hash = next_fe->get_fh_group()->get_hint_bits();
-        first_hash_hint->hint = next_fe->get_fhct_index();
+        // first_hash_hint->hash = next_fe->get_fh_group()->get_hint_bits();
+        // first_hash_hint->hint = next_fe->get_fhct_index();
+        char *loc = (char *)first_hash_hint;
+        hint_bits = next_fe->get_fh_group()->get_hint_bits();
+        fhct_idx = next_fe->get_fhct_index();
+        memcpy(loc, &hint_bits, 2);
+        memcpy(loc + 2, &fhct_idx, hint_mem_len_B);
     }
 
     HAL_TRACE_DEBUG("FE::{}: OflowTID: {} P4 FHCT Write: {}", 

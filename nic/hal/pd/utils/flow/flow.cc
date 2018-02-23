@@ -91,26 +91,32 @@ Flow::Flow(std::string table_name, uint32_t table_id,
     // round off to higher byte
     hwkey_len_ = (hwkey_len_ >> 3) + ((hwkey_len_ & 0x7) ? 1 : 0);
     hwdata_len_ = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
+
+    // Len in sw data structure. Its being generated as multiples of 16.
+    hint_mem_len_B_ = (((hash_coll_tbl_key_len_ / 16) + 1) * 16) / 8;
     entire_data_len_ = 1 +                              /* action id */
                        1 +                              /* entry_valid */
                        data_len_ +                      /* data len */
-                       num_hints_per_flow_entry_  * 4 + /* hints, hashes */
+                       num_hints_per_flow_entry_ * 2 +  /* hash len */
+                       num_hints_per_flow_entry_  * hint_mem_len_B_ + /* coll idx */
                        1 +                              /* more_hashs */
-                       2;                               /* more_hints */
+                       hint_mem_len_B_;                 /* coll idx */
 
     // Initialize for Stats
     // stats_ = new uint64_t[STATS_MAX]();
     stats_ = (uint64_t *)HAL_CALLOC(HAL_MEM_ALLOC_FLOW_STATS,
                                     sizeof(uint64_t) * STATS_MAX);
 
-    HAL_TRACE_DEBUG("Flow:{}: key_len_: {}, data_len_: {}, entire_data_len: {}, "
-                    "hwkey_len: {}, hwdata_len: {}, "
-                    " hash_tbl_key_len_: {}, hash_coll_tbl_key_len_: {} "
-                    "hint_len: {} flow_hash_capacity_: {} flow_coll_capacity_: {}", 
+    HAL_TRACE_DEBUG("Flow:{}: key_len_: {} B, data_len_: {} B, entire_data_len: {} B, "
+                    "hwkey_len: {} B, hwdata_len: {} B, "
+                    " hash_tbl_key_len_: {} b, hash_coll_tbl_key_len_: {} b"
+                    "hint_len: {} b, hint_mem_len_B_: {}, flow_hash_capacity_: {} "
+                    "flow_coll_capacity_: {}", 
                     table_name_.c_str(), key_len_, data_len_, entire_data_len_,
                     hwkey_len_, hwdata_len_,
                     hash_tbl_key_len_, hash_coll_tbl_key_len_, 
-                    hint_len_, flow_hash_capacity_, flow_coll_capacity);
+                    hint_len_, hint_mem_len_B_,
+                    flow_hash_capacity_, flow_coll_capacity);
 
 }
            
@@ -643,17 +649,17 @@ Flow::free_fhct_index(uint32_t idx)
 #define FLOW_DATA_ACTION_ID_LEN 1
 #define FLOW_DATA_ENTRY_VALID_LEN 1
 #define FLOW_DATA_HASH_LEN 2
-#define FLOW_DATA_HINT_LEN 2
+// #define FLOW_DATA_HINT_LEN 2
 #define FLOW_DATA_MORE_HASHS_LEN 1
-#define FLOW_DATA_MORE_HINTS_LEN 2
+// #define FLOW_DATA_MORE_HINTS_LEN 2
 hal_ret_t
 Flow::flow_action_data_offsets (void *action_data,
                                 uint8_t **action_id,
                                 uint8_t **entry_valid,
                                 void **data,
-                                hg_root_t **first_hash_hint,
+                                void **first_hash_hint,
                                 uint8_t **more_hashs,
-                                uint16_t **more_hints)
+                                void **more_hints)
 {
     hal_ret_t   ret = HAL_RET_OK;
     uint8_t     *seek = NULL;
@@ -664,17 +670,17 @@ Flow::flow_action_data_offsets (void *action_data,
     *entry_valid     = seek + FLOW_DATA_ACTION_ID_LEN;
     *data            = seek + FLOW_DATA_ACTION_ID_LEN + 
                        FLOW_DATA_ENTRY_VALID_LEN;
-    *first_hash_hint = (hg_root_t *)(seek + FLOW_DATA_ACTION_ID_LEN + 
+    *first_hash_hint = (void *)(seek + FLOW_DATA_ACTION_ID_LEN + 
                                      FLOW_DATA_ENTRY_VALID_LEN + data_len_);
     *more_hashs      = seek + FLOW_DATA_ACTION_ID_LEN + 
                               FLOW_DATA_ENTRY_VALID_LEN + 
                               data_len_ + 
                               num_hints_per_flow_entry_ * (FLOW_DATA_HASH_LEN + 
-                                                           FLOW_DATA_HINT_LEN);
-    *more_hints      = (uint16_t *)(seek + FLOW_DATA_ACTION_ID_LEN + 
+                                                           hint_mem_len_B_);
+    *more_hints      = (void *)(seek + FLOW_DATA_ACTION_ID_LEN + 
                                     FLOW_DATA_ENTRY_VALID_LEN + data_len_ + 
                                     num_hints_per_flow_entry_ * 
-                                    (FLOW_DATA_HASH_LEN + FLOW_DATA_HINT_LEN) + 
+                                    (FLOW_DATA_HASH_LEN + hint_mem_len_B_) + 
                                     FLOW_DATA_MORE_HASHS_LEN);
 
     return ret;

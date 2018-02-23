@@ -174,15 +174,13 @@ header_type scratch_metadata_t {
         flow_hash3                 : 11;
         flow_hash4                 : 11;
         flow_hash5                 : 11;
-        flow_hash6                 : 11;
-        flow_hint1                 : 14;
-        flow_hint2                 : 14;
-        flow_hint3                 : 14;
-        flow_hint4                 : 14;
-        flow_hint5                 : 14;
-        flow_hint6                 : 14;
+        flow_hint1                 : 18;
+        flow_hint2                 : 18;
+        flow_hint3                 : 18;
+        flow_hint4                 : 18;
+        flow_hint5                 : 18;
         more_hashs                 : 1;
-        more_hints                 : 14;
+        more_hints                 : 18;
 
         // flow key
         lkp_inst                   : 1;

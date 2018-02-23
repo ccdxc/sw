@@ -45,6 +45,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 namespace hal {
 extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];
@@ -926,7 +927,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
                               tinfo.tabledepth, ctinfo.tabledepth,
                               tinfo.key_struct_size,
-                              sizeof(p4pd_flow_hash_data_t), 6,    // no. of hints
+                              sizeof(p4pd_flow_hash_data_t), P4_FLOW_NUM_HINTS_PER_ENTRY,
                               static_cast<Flow::HashPoly>(tinfo.hash_type));
             HAL_ASSERT(flow_table_ != NULL);
             break;

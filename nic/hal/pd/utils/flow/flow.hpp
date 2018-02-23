@@ -76,10 +76,12 @@ typedef std::map<uint32_t, FlowEntry*> FlowEntryMap;
   *
   * ---------------------------------------------------------------------------
 */
+#if 0
 typedef struct hg_root_ {
     uint16_t hash;
     uint16_t hint;
 } hg_root_t;
+#endif
 
 class Flow {
 public:
@@ -123,6 +125,7 @@ private:
     uint32_t            hash_tbl_key_len_;          // hash table key len (21)
     uint32_t            hash_coll_tbl_key_len_;     // coll table key len (14)
     uint32_t            hint_len_;                  // hint len (11)
+    uint32_t            hint_mem_len_B_;            // sw index into coll table
     uint32_t            num_hints_per_flow_entry_;  // HGs per Flow Entry (6)
 
     uint32_t            hwkey_len_;             // Key len for Flow Hash Table
@@ -231,6 +234,7 @@ public:
     uint32_t get_key_len() { return key_len_; }
     uint32_t get_hwkey_len() { return hwkey_len_; }
     uint32_t get_hwdata_len() { return hwdata_len_; }
+    uint32_t get_hint_mem_len_B(void) { return hint_mem_len_B_; }
 
 
     void set_delayed_del_en(bool en);
@@ -243,9 +247,9 @@ public:
                                        uint8_t **action_id,
                                        uint8_t **entry_valid,
                                        void **data,
-                                       hg_root_t **first_hash_hint,
+                                       void **first_hash_hint,
                                        uint8_t **more_hashs,
-                                       uint16_t **more_hints);
+                                       void **more_hints);
 
 };
 

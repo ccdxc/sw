@@ -183,7 +183,7 @@
         },
         {
             "name": "flow_hash_overflow",
-            "size_kb": 1024,
+            "size_kb": 16384,
             "cache": "p4ig"
         },
         {

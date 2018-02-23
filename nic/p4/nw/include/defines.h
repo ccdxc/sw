@@ -589,3 +589,8 @@
 #define DBG_HBM_EN      0
 #define DBG_HBM_BASE    0x11AD37000
 #define DBG_HBM_COUNT   0x200
+
+/*****************************************************************************/
+/* Number of Hints in Flow table                                             */
+/*****************************************************************************/
+#define P4_FLOW_NUM_HINTS_PER_ENTRY                 5

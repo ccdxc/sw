@@ -33,9 +33,6 @@ flow_hash_info:
   seq         c1, r1[31:21], d.flow_hash_info_d.hash5
   sne         c3, d.flow_hash_info_d.hint5, r0
   bcf         [c1&c2&c3], flow_hash_hint5
-  seq         c1, r1[31:21], d.flow_hash_info_d.hash6
-  sne         c3, d.flow_hash_info_d.hint6, r0
-  bcf         [c1&c2&c3], flow_hash_hint6
   seq         c1, d.flow_hash_info_d.more_hashs, 1
   bcf         [c1&c2], flow_hash_more_hashs
   phvwr       p.recirc_header_valid, 0
@@ -69,10 +66,6 @@ flow_hash_hint4:
 flow_hash_hint5:
   b           flow_hash_recirc
   add         r2, r0, d.flow_hash_info_d.hint5
-
-flow_hash_hint6:
-  b           flow_hash_recirc
-  add         r2, r0, d.flow_hash_info_d.hint6
 
 flow_hash_more_hashs:
   b           flow_hash_recirc

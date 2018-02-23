@@ -264,7 +264,7 @@ table flow_info {
 
 action flow_hash_info(entry_valid, export_en,
                       flow_index, hash1, hint1, hash2, hint2, hash3, hint3,
-                      hash4, hint4, hash5, hint5, hash6, hint6,
+                      hash4, hint4, hash5, hint5,
                       more_hashs, more_hints) {
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.entry_valid, entry_valid);
@@ -274,13 +274,11 @@ action flow_hash_info(entry_valid, export_en,
     modify_field(scratch_metadata.flow_hash3, hash3);
     modify_field(scratch_metadata.flow_hash4, hash4);
     modify_field(scratch_metadata.flow_hash5, hash5);
-    modify_field(scratch_metadata.flow_hash6, hash6);
     modify_field(scratch_metadata.flow_hint1, hint1);
     modify_field(scratch_metadata.flow_hint2, hint2);
     modify_field(scratch_metadata.flow_hint3, hint3);
     modify_field(scratch_metadata.flow_hint4, hint4);
     modify_field(scratch_metadata.flow_hint5, hint5);
-    modify_field(scratch_metadata.flow_hint6, hint6);
     modify_field(scratch_metadata.more_hashs, more_hashs);
     modify_field(scratch_metadata.more_hints, more_hints);
 
@@ -340,7 +338,7 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src,
                           lkp_dst, lkp_proto, lkp_sport, lkp_dport,
                           entry_valid, export_en, flow_index,
                           hash1, hint1, hash2, hint2, hash3, hint3,
-                          hash4, hint4, hash5, hint5, hash6, hint6,
+                          hash4, hint4, hash5, hint5,
                           more_hashs, more_hints) {
     // remove the recirc header
     remove_header(recirc_header);
@@ -391,13 +389,11 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src,
     modify_field(scratch_metadata.flow_hash3, hash3);
     modify_field(scratch_metadata.flow_hash4, hash4);
     modify_field(scratch_metadata.flow_hash5, hash5);
-    modify_field(scratch_metadata.flow_hash6, hash6);
     modify_field(scratch_metadata.flow_hint1, hint1);
     modify_field(scratch_metadata.flow_hint2, hint2);
     modify_field(scratch_metadata.flow_hint3, hint3);
     modify_field(scratch_metadata.flow_hint4, hint4);
     modify_field(scratch_metadata.flow_hint5, hint5);
-    modify_field(scratch_metadata.flow_hint6, hint6);
     modify_field(scratch_metadata.more_hashs, more_hashs);
     modify_field(scratch_metadata.more_hints, more_hints);
 
