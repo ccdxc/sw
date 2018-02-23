@@ -9,6 +9,8 @@ import http
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
+src_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
+
 def runCommand(cmd):
     # subprocess.call() is multithreaded but can mess up terminal settings.
     # hence we call 'stty sane' at the exit of the program
@@ -29,7 +31,7 @@ class TestMgmtNode:
     def runCmd(self,command):
         return runCommand("""docker exec -it {} """.format(self.name) + command)
     def startNode(self):
-        runCommand("""docker run -td -P -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v $GOPATH/src:/import/src --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.1 /bin/sh """.format(self.ipaddress, self.name, self.name))
+        runCommand("""docker run -td -P -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.1 /bin/sh """.format(self.ipaddress, src_dir, self.name, self.name))
         self.runCmd("""apk add openssh""")
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
@@ -53,7 +55,7 @@ class Node:
     def startNode(self):
         while runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name)) == 0:
             time.sleep(2)
-        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -P -l pens --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v $GOPATH/src:/import/src --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(self.ipaddress, self.name, self.name))
+        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -P -l pens --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(self.ipaddress, src_dir, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""".format(self.name)) != 0:
             time.sleep(2)
