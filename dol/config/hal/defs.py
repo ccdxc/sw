@@ -17,3 +17,4 @@ import acl_pb2              as acl
 import qos_pb2              as qos 
 import l4lb_pb2             as l4lb
 import kh_pb2               as kh
+import gft_pb2              as gft

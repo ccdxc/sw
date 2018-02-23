@@ -53,6 +53,10 @@ class GftExmProfileObject(base.ConfigObjectBase):
         req_spec.rdma_flow = self.rdma_flow
         tts = 'GFT_TABLE_TYPE_' + self.table_type
         req_spec.table_type = haldefs.gft.GftTableType.Value(tts)
+
+        for group in self.groups:
+            grp_req_spec = req_spec.exact_match_profiles.add()
+            group.PrepareHALRequestSpec(grp_req_spec)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

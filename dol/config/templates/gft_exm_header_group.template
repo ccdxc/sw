@@ -4,39 +4,39 @@ meta:
     package : config.objects
     module  : gft_exm_profiles
     feature_set:
-        - iris
+        - gft
 
 headers:
-    ethernet_header : None
-    ipv4_header     : None
-    ipv6_header     : None
-    tcp_header      : None
-    udp_header      : None
-    icmp_header     : None
-    no_encap        : None
-    ip_in_ip_encap  : None
-    ip_in_gre_encap : None
-    nvgre_encap     : None
-    vxlan_encap     : None
+    ethernet_header : False
+    ipv4_header     : False
+    ipv6_header     : False
+    tcp_header      : False
+    udp_header      : False
+    icmp_header     : False
+    no_encap        : False
+    ip_in_ip_encap  : False
+    ip_in_gre_encap : False
+    nvgre_encap     : False
+    vxlan_encap     : False
 
 fields:
-    dst_mac_addr    : None
-    src_mac_addr    : None
-    eth_type        : None
-    customer_vlan_id: None
-    provider_vlan_id: None
-    dot1p_priority  : None
-    src_ip_addr     : None
-    dst_ip_addr     : None
-    ip_ttl          : None
-    ip_protocol     : None
-    ip_dscp         : None
-    src_port        : None
-    dst_port        : None
-    tcp_flags       : None
-    tenant_id       : None
-    icmp_type       : None
-    icmp_code       : None
-    oob_vlan        : None
-    oob_tenant_id   : None
-    gre_protocol    : None
+    dst_mac_addr    : False
+    src_mac_addr    : False
+    eth_type        : False
+    customer_vlan_id: False
+    provider_vlan_id: False
+    dot1p_priority  : False
+    src_ip_addr     : False
+    dst_ip_addr     : False
+    ip_ttl          : False
+    ip_protocol     : False
+    ip_dscp         : False
+    src_port        : False
+    dst_port        : False
+    tcp_flags       : False
+    tenant_id       : False
+    icmp_type       : False
+    icmp_code       : False
+    oob_vlan        : False
+    oob_tenant_id   : False
+    gre_protocol    : False

@@ -4,7 +4,7 @@ meta:
     package : config.objects
     module  : gft_exm_profiles
     feature_set:
-        - iris
+        - gft
 
 spec        : None
 id          : None
