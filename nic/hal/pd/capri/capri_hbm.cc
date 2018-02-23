@@ -89,14 +89,14 @@ capri_hbm_parse (capri_cfg_t *cfg)
     return HAL_RET_OK;
 }
 
-uint64_t
-get_hbm_base(void)
+hbm_addr_t
+get_hbm_base (void)
 {
     return HBM_OFFSET(0);
 }
 
-uint64_t
-get_hbm_offset(const char *reg_name)
+hbm_addr_t
+get_hbm_offset (const char *reg_name)
 {
     capri_hbm_region_t *reg;
 
@@ -110,8 +110,8 @@ get_hbm_offset(const char *reg_name)
     return CAPRI_INVALID_OFFSET;
 }
 
-uint64_t
-get_start_offset(const char *reg_name)
+hbm_addr_t
+get_start_offset (const char *reg_name)
 {
     capri_hbm_region_t      *reg;
 
@@ -122,11 +122,11 @@ get_start_offset(const char *reg_name)
         }
     }
 
-    return 0;
+    return CAPRI_INVALID_OFFSET;
 }
 
 uint32_t
-get_size_kb(const char *reg_name)
+get_size_kb (const char *reg_name)
 {
     capri_hbm_region_t      *reg;
 
@@ -141,7 +141,7 @@ get_size_kb(const char *reg_name)
 }
 
 capri_hbm_region_t *
-get_hbm_region(char *reg_name)
+get_hbm_region (char *reg_name)
 {
     capri_hbm_region_t      *reg;
 
@@ -155,21 +155,21 @@ get_hbm_region(char *reg_name)
 }
 
 int32_t
-capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size)
+capri_hbm_read_mem (uint64_t addr, uint8_t *buf, uint32_t size)
 {
     hal_ret_t rc = hal::pd::asic_mem_read(addr, buf, size);
     return (rc == HAL_RET_OK) ? 0 : -EIO;
 }
 
 int32_t
-capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size)
+capri_hbm_write_mem (uint64_t addr, uint8_t *buf, uint32_t size)
 {
     hal_ret_t rc = hal::pd::asic_mem_write(addr, buf, size, true);
     return (rc == HAL_RET_OK) ? 0 : -EIO;
 }
 
 hal_ret_t
-capri_hbm_cache_init ()
+capri_hbm_cache_init (void)
 {
     // Enable P4Plus RXDMA (inst_id = 0)
 
@@ -213,7 +213,7 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
 }
 
 hal_ret_t
-capri_hbm_cache_regions_init ()
+capri_hbm_cache_regions_init (void)
 {
     capri_hbm_region_t      *reg;
     uint32_t                p4ig_filter_idx = 0;
