@@ -9,7 +9,7 @@ action decode_roce_opcode(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
         add_header(p4_to_p4plus_roce);
         modify_field(p4_to_p4plus_roce.raw_flags, raw_flags);
         modify_field(p4_to_p4plus_roce.rdma_hdr_len, len);
-        modify_field(p4_to_p4plus_roce.payload_len, (udp.len - 8 - len));
+        modify_field(p4_to_p4plus_roce.payload_len, (udp.len - 12 - len));
 
         if (tm_oq_overwrite == TRUE) {
             modify_field(capri_intrinsic.tm_oq, tm_oq);

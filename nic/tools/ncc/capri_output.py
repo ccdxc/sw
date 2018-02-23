@@ -2058,7 +2058,20 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     sram['mux_idx'][mux_id]['sel']['value'] = str(3)
                     sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
                     sram['mux_idx'][mux_id]['idx']['value'] = str(0)
+                    # adjust the constant in expr based on where the current is
+                    if add_off:
+                        if set_op.capri_expr.op3 == '-':
+                            delta_const = set_op.capri_expr.const - add_off
+                            if delta_const < 0:
+                                set_op.capri_expr.op3 = '+'
+                                set_op.capri_expr.const = (-1) * delta_const
+                            else:
+                                set_op.capri_expr.const = delta_const
+                        else:
+                            set_op.capri_expr.const += add_off
+
                     mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, set_op.capri_expr)
+
                     _build_mux_inst(parser, nxt_cs, None, sram['mux_inst'][mux_inst_id],
                         mux_id, set_op.capri_expr)
                     continue
@@ -2113,6 +2126,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     #pdb.set_trace()
     # ohi_inst
+
 
     hw_max_ohi_per_state = len(sram['ohi_inst'])
     s = 0
@@ -2256,6 +2270,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         sram['ohi_inst'][s]['idx_val']['value'] = str(0) # NA
         sram['ohi_inst'][s]['slot_num']['value'] = str(ohi_id)
         mux_inst_id_to_ohi_id_map[mux_inst_id] = ohi_id
+        ohi_inst_allocator[s] = (dst_name, ohi_id)
         parser.logger.debug('OHI (wr-only) instruction[%d]: ohi_slot %d, %s=%s' %
                             (s, ohi_id, dst_name, set_op))
         s += 1
@@ -2868,6 +2883,19 @@ def capri_parser_output_decoders(parser):
                 #init_profile['mux_sel%d' % r]['value'] =  str(0)
                 init_profile['lkp_val_pkt_idx%d' % r]['value'] =  str(0)
     parser.logger.debug("%s" % _parser_init_profile_print(parser, init_profile))
+
+    #Enable pre parser on all uplinks and p4-ingress.
+    pre_parser = ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_preparse']
+    pre_parser['tm_iport_enc_en']['value'] = str(0x8ff) # First 8 bits map to 8 uplink ports, b11 is
+                                                        # TM_PORT_INGRESS
+    pre_parser['bypass']['value'] = str(0)
+    pre_parser['udp_dstport_roce_val0']['value'] = str(4791)
+    pre_parser['udp_dstport_vxlan_val0']['value'] = str(4789)
+    pre_parser['udp_dstport_vxlan_val1']['value'] = str(4790)
+    pre_parser['vxlan_flag_mask']['value'] = str(0xfb) # vxlan-flags = |R|R|Ver|I|P|B|O|
+    pre_parser['vxlan_flag_val']['value'] = str(0x8)
+    pre_parser['_modified'] = True
+
     json.dump(ppa_json['cap_ppa']['registers'],
                 ppa_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
     ppa_cfg_file_mem.close()

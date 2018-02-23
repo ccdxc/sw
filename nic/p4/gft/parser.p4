@@ -301,6 +301,7 @@ parser start_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ipv4_1);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
@@ -308,6 +309,7 @@ parser start_vlan_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
@@ -334,6 +336,7 @@ parser start_vlan_ipv6_bth_deth_split {
 parser start_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
@@ -342,6 +345,7 @@ parser start_vlan_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
@@ -368,6 +372,7 @@ parser start_vlan_ipv6_bth_deth_immdt_split {
 parser start_ipv4_bth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
@@ -376,6 +381,7 @@ parser start_vlan_ipv4_bth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
@@ -428,6 +434,7 @@ parser parse_bth_2 {
 parser start_outer_vxlan_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth;
@@ -436,6 +443,7 @@ parser start_outer_vlan_vxlan_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth;
@@ -443,6 +451,7 @@ parser start_outer_vlan_vxlan_ipv4_bth_deth {
 parser start_outer_vxlan_ipv6_bth_deth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth;
@@ -451,6 +460,7 @@ parser start_outer_vlan_vxlan_ipv6_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth;
@@ -458,6 +468,7 @@ parser start_outer_vlan_vxlan_ipv6_bth_deth {
 parser start_outer_vxlan_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth_immdt;
@@ -466,6 +477,7 @@ parser start_outer_vlan_vxlan_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth_deth_immdt;
@@ -473,6 +485,7 @@ parser start_outer_vlan_vxlan_ipv4_bth_deth_immdt {
 parser start_outer_vxlan_ipv6_bth_deth_immdt {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth_immdt;
@@ -481,6 +494,7 @@ parser start_outer_vlan_vxlan_ipv6_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth_deth_immdt;
@@ -488,6 +502,7 @@ parser start_outer_vlan_vxlan_ipv6_bth_deth_immdt {
 parser start_outer_vxlan_ipv4_bth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth;
@@ -496,6 +511,7 @@ parser start_outer_vlan_vxlan_ipv4_bth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv4_bth;
@@ -503,6 +519,7 @@ parser start_outer_vlan_vxlan_ipv4_bth {
 parser start_outer_vxlan_ipv6_bth {
     extract(ethernet_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 14);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth;
@@ -511,6 +528,7 @@ parser start_outer_vlan_vxlan_ipv6_bth {
     extract(ethernet_1);
     extract(ctag_1);
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1___start_off, current + 18);
     set_metadata(ohi.ipv4_1___hdr_len, (ipv4_1.ihl << 2));
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_vxlan_ipv6_bth;

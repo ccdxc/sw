@@ -29,13 +29,16 @@ rx_roce:
                         p.p4_to_p4plus_roce_ecn, k.roce_metadata_ecn
 
     // set payload len
-    seq             c2, k.icrc_valid, TRUE
-    cmov            r2, c2, 12, 8
-    sub             r1, k.roce_metadata_udp_len, r2
+    sub             r1, k.roce_metadata_udp_len, 12
     add.c1          r1, r1, 40
     sub             r1, r1, d.u.rx_roce_d.len
     phvwrpair       p.p4_to_p4plus_roce_p4plus_app_id, P4PLUS_APPTYPE_RDMA, \
                         p.p4_to_p4plus_roce_payload_len, r1
+
+    // remove icrc for pre-parser optimized path
+    seq             c2, k.roce_bth_valid, FALSE
+    phvwr.c2        p.capri_deparser_len_trunc, TRUE
+    phvwr.c2        p.capri_deparser_len_trunc_pkt_len, r1
 
     // udp options
     bbne            k.icrc_valid, TRUE, rx_roce_udp_options_done

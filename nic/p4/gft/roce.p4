@@ -6,13 +6,8 @@ action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
     modify_field(p4_to_p4plus_roce.p4plus_app_id, P4PLUS_APPTYPE_RDMA);
     modify_field(p4_to_p4plus_roce.raw_flags, raw_flags);
     modify_field(p4_to_p4plus_roce.rdma_hdr_len, len);
-    if (icrc.valid == TRUE) {
-        modify_field(p4_to_p4plus_roce.payload_len,
-                     (roce_metadata.udp_len - 12 - len));
-    } else {
-        modify_field(p4_to_p4plus_roce.payload_len,
-                     (roce_metadata.udp_len - 8 - len));
-    }
+    modify_field(p4_to_p4plus_roce.payload_len,
+                 (roce_metadata.udp_len - 12 - len));
     modify_field(p4_to_p4plus_roce.ecn, roce_metadata.ecn);
 
     add_header(capri_rxdma_intrinsic);
@@ -55,6 +50,10 @@ action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
                 modify_field(p4_to_p4plus_roce.roce_opt_mss_valid, TRUE);
             }
         }
+    }
+
+    if (roce_bth.valid == FALSE) {
+        // pre-parser path, truncate udp payload to remove icrc
     }
 
     remove_header(ethernet_1);
