@@ -12,7 +12,8 @@ namespace dp_mem {
 dp_mem_t::dp_mem_t(uint32_t num_lines,
                    uint32_t line_size,
                    dp_mem_align_t mem_align,
-                   dp_mem_type_t mem_type) :
+                   dp_mem_type_t mem_type,
+                   uint32_t spec_align_size) :
     mem_type(mem_type),
     cache(nullptr),
     hbm_addr(0),
@@ -35,16 +36,36 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
         /*
          * Validate alignment
          */
-        if ((num_lines > 1) && (mem_align == DP_MEM_ALIGN_PAGE)) {
-            assert((line_size % utils::kUtilsPageSize) == 0);
+        if (mem_align == DP_MEM_ALIGN_PAGE) {
+            spec_align_size = utils::kUtilsPageSize;
+        }
+
+        if (mem_align != DP_MEM_ALIGN_NONE) {
+
+            /*
+             * align_spec_size should be a power of 2
+             */
+            if (!spec_align_size || (spec_align_size & (spec_align_size - 1))) {
+                printf("%s spec_align_size %u is not a valid power of 2\n", 
+                       __FUNCTION__, spec_align_size);
+                assert(spec_align_size && !(spec_align_size & (spec_align_size - 1)));
+            }
+
+            if (num_lines > 1) {
+                assert((line_size & (line_size - 1)) == 0);
+                if (spec_align_size > line_size) {
+                    assert((spec_align_size & (line_size - 1)) == 0);
+                }
+            }
         }
 
         switch (mem_type) {
 
         case DP_MEM_TYPE_HBM:
-            alloc_rc = mem_align == DP_MEM_ALIGN_PAGE ? 
-                       utils::hbm_addr_alloc_page_aligned(total_size, &hbm_addr) :
-                       utils::hbm_addr_alloc(total_size, &hbm_addr);
+            alloc_rc = mem_align == DP_MEM_ALIGN_NONE ? 
+                       utils::hbm_addr_alloc(total_size, &hbm_addr) :
+                       utils::hbm_addr_alloc_spec_aligned(total_size, &hbm_addr,
+                                                          spec_align_size);
             if (alloc_rc < 0) {
                 printf("%s unable to allocate HBM memory size %u\n",
                        __FUNCTION__, total_size);
@@ -73,9 +94,10 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
             /*
              * cache is the same as the requested host mem
              */
-            cache = mem_align == DP_MEM_ALIGN_PAGE ? 
-                    (uint8_t *)alloc_page_aligned_host_mem(total_size) :
-                    (uint8_t *)alloc_host_mem(total_size);
+            cache = mem_align == DP_MEM_ALIGN_NONE ? 
+                    (uint8_t *)alloc_host_mem(total_size) :
+                    (uint8_t *)alloc_spec_aligned_host_mem(total_size,
+                                                           spec_align_size);
             if (!cache) {
                 printf("%s unable to allocate host memory size %u\n",
                        __FUNCTION__, total_size);
@@ -248,8 +270,8 @@ dp_mem_t::write_bit_fields(uint32_t start_bit_offset,
     uint32_t    byte_size = (size_in_bits + BITS_PER_BYTE - 1) / BITS_PER_BYTE;
 
     if ((byte_offset + byte_size) > line_size) {
-        printf("%s start_bit_offset %u size_in_bits %u too large\n",
-               __FUNCTION__, start_bit_offset, size_in_bits);
+        printf("%s start_bit_offset %u size_in_bits %u > line_size %u\n",
+               __FUNCTION__, start_bit_offset, size_in_bits, line_size);
         assert((byte_offset + byte_size) <= line_size);
         return;
     }

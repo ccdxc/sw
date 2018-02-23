@@ -56,6 +56,14 @@ void *alloc_page_aligned_host_mem(size_t size) {
   return _alloc_host_mem(size, 4096);
 }
 
+void *alloc_spec_aligned_host_mem(size_t size, size_t spec_align_size) {
+  // spec_align_size must be a power of 2
+  if (spec_align_size && !(spec_align_size & (spec_align_size - 1))) {
+      return _alloc_host_mem(size, spec_align_size);
+  }
+  return nullptr;
+}
+
 void free_host_mem(void *ptr) {
   _free_host_mem(ptr);
 }

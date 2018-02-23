@@ -170,7 +170,11 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr,
                        uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif,
                        uint16_t db_lif, uint16_t db_qtype, uint32_t db_qid,
                        uint16_t db_ring, uint16_t db_index);
-
+int test_seq_write_roce_pdma_prefilled(uint16_t seq_pdma_q,
+                                       uint16_t seq_pdma_index,
+                                       uint32_t pvm_roce_sq,
+                                       dp_mem_t *seq_roce_desc,
+                                       dp_mem_t *sqwqe);
 int test_run_rdma_e2e_write();
 
 int test_run_rdma_e2e_read();
@@ -178,6 +182,8 @@ int test_run_rdma_e2e_read();
 int test_run_rdma_lif_override();
 
 int test_run_rdma_e2e_xts_write1(void);
+
+int test_run_rdma_e2e_xts_read1(void);
 
 int test_run_seq_pdma_multi_xfers();
 

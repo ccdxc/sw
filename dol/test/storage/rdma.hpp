@@ -2,7 +2,6 @@
 #define _RDMA_HPP_
 
 #include "dol/test/storage/dp_mem.hpp"
-#include "dol/test/storage/xts.hpp"
 
 using namespace dp_mem;
 
@@ -26,6 +25,10 @@ typedef struct __attribute__((packed)) sqwqe {
   uint8_t inline_data[32];     // 256
 } sqwqe_t;
 
+uint32_t rdma_r2n_data_size(void);
+uint32_t rdma_r2n_data_offset(void);
+uint32_t rdma_r2n_buf_size(void);
+
 int rdma_init();
 
 void rdma_uspace_test();
@@ -43,11 +46,15 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
 int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_cmd_ptr, 
                      dp_mem_t **read_buf_ptr, uint64_t slba,
                      uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif, uint32_t bdf);
-int StartXtsRoceWriteSeq(uint32_t qid,
-                         uint16_t ssd_handle,
-                         uint8_t byte_val,
-                         dp_mem_t **nvme_cmd_ptr,
-                         uint64_t slba,
-                         tests::XtsCtx& xts_ctx);
+int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
+                                uint16_t seq_pdma_index,
+                                dp_mem_t *seq_roce_desc,
+                                dp_mem_t *r2n_buf);
+int StartRoceReadWithNextLifQueue(dp_mem_t *r2n_send_buf,
+                                  dp_mem_t *r2n_write_buf,
+                                  uint32_t data_len,
+                                  uint32_t next_lif,
+                                  uint32_t next_qtype,
+                                  uint32_t next_qid);
 
 #endif  // _RDMA_HPP_

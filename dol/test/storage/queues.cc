@@ -133,6 +133,10 @@ uint32_t pvm_nvme_be_cq_base;
 dp_mem_t *pndx_data;
 uint64_t pndx_data_pa;
 
+// Forward declaration with default mem_type
+int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
+               dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
+
 void lif_params_init(hal_if::lif_params_t *params, uint16_t type,
                      uint16_t num_entries, uint16_t num_queues) {
   params->type[type].valid = true; 
@@ -168,8 +172,10 @@ void nvme_e2e_ssd_db_init(uint64_t db_addr, uint64_t db_data) {
   nvme_e2e_ssd->EnableInterrupt(db_addr, db_data);
 }
 
-int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
-  queue->mem = new dp_mem_t(num_entries, entry_size);
+int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size,
+               dp_mem_type_t mem_type) {
+  queue->mem = new dp_mem_t(num_entries, entry_size, DP_MEM_ALIGN_SPEC,
+                            mem_type, entry_size);
   queue->entry_size = entry_size;
   queue->num_entries = num_entries;
   return 0;

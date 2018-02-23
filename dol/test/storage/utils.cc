@@ -81,21 +81,28 @@ hbm_addr_alloc(uint32_t size, uint64_t *alloc_ptr)
 }
 
 int
-hbm_addr_alloc_page_aligned(uint32_t size, uint64_t *alloc_ptr)
+hbm_addr_alloc_spec_aligned(uint32_t size, uint64_t *alloc_ptr, uint32_t spec_align_size)
 {
+  // spec_align_size must be a power of 2
+  if (!spec_align_size || (spec_align_size & (spec_align_size - 1))) return -1;
   if (!alloc_ptr) return -1;
-  if (((storage_hbm_addr + storage_hbm_running_size) & (kUtilsPageSize - 1)) == 0)
+  if (((storage_hbm_addr + storage_hbm_running_size) & (spec_align_size - 1)) == 0)
     return hbm_addr_alloc(size, alloc_ptr);
-  uint32_t aligned_size = kUtilsPageSize + size;
+  uint32_t aligned_size = spec_align_size + size;
   if ((aligned_size + storage_hbm_running_size) >= storage_hbm_size) {
     printf("total size %u running size %u requested size %u aligned size %u can't fit \n",
            storage_hbm_size, storage_hbm_running_size, size, aligned_size);
     return -1;
   }
-  *alloc_ptr = (storage_hbm_addr + storage_hbm_running_size + kUtilsPageSize - 1) & kUtilsPageMask;
+  *alloc_ptr = (storage_hbm_addr + storage_hbm_running_size + spec_align_size - 1) & ~((uint64_t)spec_align_size - 1);
   storage_hbm_running_size += aligned_size;
   return 0;
 }
 
+int
+hbm_addr_alloc_page_aligned(uint32_t size, uint64_t *alloc_ptr)
+{
+  return hbm_addr_alloc_spec_aligned(size, alloc_ptr, kUtilsPageSize);
+}
 }  // namespace utils
 
