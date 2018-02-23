@@ -91,7 +91,7 @@ header_type ipv4_option_timestamp_t {
     max_length : 40;
 }
 
-#define IPV4_OPTION_SECURITY_VALUE 0x83
+#define IPV4_OPTION_LOOSE_SOURCE_ROUTE_VALUE 0x83
 header_type ipv4_option_lsr_t {
     fields {
         lsr_value : 8;
@@ -102,7 +102,7 @@ header_type ipv4_option_lsr_t {
     max_length : 40;
 }
 
-#define IPV4_OPTION_SECURITY_VALUE 0x89
+#define IPV4_OPTION_STRICT_SOURCE_ROUTE_VALUE 0x89
 header_type ipv4_option_ssr_t {
     fields {
         ssr_value : 8;
@@ -113,7 +113,7 @@ header_type ipv4_option_ssr_t {
     max_length : 40;
 }
 
-#define IPV4_OPTION_SECURITY_VALUE 0x87
+#define IPV4_OPTION_RECORD_ROUTE_VALUE 0x7
 header_type ipv4_option_rr_t {
     fields {
         rr_value : 8;

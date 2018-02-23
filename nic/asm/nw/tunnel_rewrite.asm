@@ -84,17 +84,17 @@ encap_erspan:
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
   phvwri      p.{gre_C...gre_proto}, GRE_PROTO_ERSPAN_T3
-  phvwr       p.{erspan_t3_header_version,erspan_t3_header_vlan}, 0x2000
-  phvwr       p.erspan_t3_header_priority, 0
-  phvwr       p.erspan_t3_header_span_id, k.capri_intrinsic_tm_span_session
+  phvwr       p.{erspan_t3_version,erspan_t3_vlan}, 0x2000
+  phvwr       p.erspan_t3_priority, 0
+  phvwr       p.erspan_t3_span_id, k.capri_intrinsic_tm_span_session
 #ifndef CAPRI_IGNORE_TIMESTAMP
-  phvwr       p.erspan_t3_header_timestamp, r6
+  phvwr       p.erspan_t3_timestamp, r6
 #endif
-  phvwr       p.{erspan_t3_header_sgt,erspan_t3_header_ft_d_other}, 0
+  phvwr       p.{erspan_t3_sgt,erspan_t3_ft_d_other}, 0
 
   phvwr       p.inner_ethernet_valid, 1
   phvwr       p.gre_valid, 1
-  phvwr       p.erspan_t3_header_valid, 1
+  phvwr       p.erspan_t3_valid, 1
 
   seq         c1, d.u.encap_vxlan_d.ip_type, IP_HEADER_TYPE_IPV4
   cmov        r6, c1, ETHERTYPE_IPV4, ETHERTYPE_IPV6

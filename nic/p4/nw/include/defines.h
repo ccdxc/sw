@@ -449,7 +449,7 @@
 /*****************************************************************************/
 #define CAPRI_RXDMA_INTRINSIC_HDR_SZ   15
 #define P4PLUS_ROCE_HDR_SZ             20
-#define P4PLUS_TCP_PROXY_HDR_SZ        71 /* 39 app hdr + 32 sack */
+#define P4PLUS_TCP_PROXY_HDR_SZ        62 /* 30 app hdr + 32 sack */
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      48
 #define P4PLUS_CPU_HDR_SZ              40
 #define P4PLUS_CPU_PKT_SZ              37

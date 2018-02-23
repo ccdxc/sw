@@ -433,7 +433,7 @@ action encap_gre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
 action f_insert_erspan_t3_header(mac_sa, mac_da) {
     copy_header(inner_ethernet, ethernet);
     add_header(gre);
-    add_header(erspan_t3_header);
+    add_header(erspan_t3);
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
     modify_field(gre.C, 0);
@@ -445,10 +445,10 @@ action f_insert_erspan_t3_header(mac_sa, mac_da) {
     modify_field(gre.flags, 0);
     modify_field(gre.ver, 0);
     modify_field(gre.proto, GRE_PROTO_ERSPAN_T3);
-    modify_field(erspan_t3_header.timestamp, capri_intrinsic.timestamp);
-    modify_field(erspan_t3_header.span_id, capri_intrinsic.tm_span_session);
-    modify_field(erspan_t3_header.version, 2);
-    modify_field(erspan_t3_header.sgt, 0);
+    modify_field(erspan_t3.timestamp, capri_intrinsic.timestamp);
+    modify_field(erspan_t3.span_id, capri_intrinsic.tm_span_session);
+    modify_field(erspan_t3.version, 2);
+    modify_field(erspan_t3.sgt, 0);
 }
 
 action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {

@@ -92,8 +92,10 @@ tcp_rx_read_shared_stage0_start:
     phvwr           p.to_s6_payload_len, k.tcp_app_header_payload_len
     phvwr           p.s1_s2s_payload_len, k.tcp_app_header_payload_len
 
-    phvwr           p.to_s3_rcv_tsval, k.tcp_app_header_ts
-    phvwr           p.s1_s2s_rcv_tsval, k.tcp_app_header_ts
+    phvwrpair       p.to_s3_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
+                        p.to_s3_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
+    phvwrpair       p.s1_s2s_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
+                        p.s1_s2s_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
     phvwr           p.to_s3_rcv_tsecr, k.tcp_app_header_prev_echo_ts
     CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
 

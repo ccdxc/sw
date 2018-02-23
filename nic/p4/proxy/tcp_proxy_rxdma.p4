@@ -683,7 +683,6 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_scratch_app.table1_valid, tcp_app_header.table1_valid);
     modify_field(tcp_scratch_app.table2_valid, tcp_app_header.table2_valid);
     modify_field(tcp_scratch_app.table3_valid, tcp_app_header.table3_valid);
-    modify_field(tcp_scratch_app.gft_flow_id, app_header.gft_flow_id);
 
     modify_field(tcp_scratch_app.num_sack_blocks, tcp_app_header.num_sack_blocks);
     modify_field(tcp_scratch_app.payload_len, tcp_app_header.payload_len);
@@ -696,9 +695,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_scratch_app.window, tcp_app_header.window);
     modify_field(tcp_scratch_app.urgentPtr, tcp_app_header.urgentPtr);
     modify_field(tcp_scratch_app.ts, tcp_app_header.ts);
-    modify_field(tcp_scratch_app.tcp_pad1, tcp_app_header.tcp_pad1);
     modify_field(tcp_scratch_app.prev_echo_ts, tcp_app_header.prev_echo_ts);
-    modify_field(tcp_scratch_app.tcp_pad, tcp_app_header.tcp_pad);
 
     // d for stage 0
     modify_field(read_tx2rxd.rsvd, rsvd);

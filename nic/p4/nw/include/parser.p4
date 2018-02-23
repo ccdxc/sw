@@ -143,7 +143,7 @@ header icrc_t icrc;
 
 header gre_t gre;
 header nvgre_t nvgre;
-header erspan_header_t3_t erspan_t3_header;
+header erspan_header_t3_t erspan_t3;
 
 @pragma pa_header_union ingress inner_udp icmp icmpv6
 header tcp_t tcp;
@@ -233,8 +233,6 @@ header ipv6_extn_generic_t inner_v6_generic;
 // name 'capri_i2e_metadata' has a special meaning
 header capri_i2e_metadata_t capri_i2e_metadata;
 
-header p4_to_p4plus_ipsec_header_t p4_to_p4plus_ipsec;
-
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_value udp_opt_timestamp.ts_value
 @pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_echo  udp_opt_timestamp.ts_echo
@@ -279,7 +277,6 @@ header p4_to_p4plus_ip_addr_t p4_to_p4plus_classic_nic_ip;
 @pragma pa_field_union egress p4_to_p4plus_classic_nic_inner_ip.ip_sa  inner_ipv6.srcAddr
 @pragma pa_field_union egress p4_to_p4plus_classic_nic_inner_ip.ip_da  inner_ipv6.dstAddr
 header p4_to_p4plus_ip_addr_t p4_to_p4plus_classic_nic_inner_ip;
-header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
 
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_cpu_ip.ip_sa             ipv6.srcAddr
@@ -293,9 +290,12 @@ header p4_to_p4plus_ip_addr_t p4_to_p4plus_cpu_ip;
 @pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_mss          tcp_option_mss.value
 @pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_ws           tcp_option_ws.value
 header p4_to_p4plus_cpu_pkt_t p4_to_p4plus_cpu_pkt;
-header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 
+@pragma pa_header_union egress p4_to_p4plus_cpu p4_to_p4plus_p4pt p4_to_p4plus_ipsec
+header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
+header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 header p4_to_p4plus_p4pt_header_t p4_to_p4plus_p4pt;
+header p4_to_p4plus_ipsec_header_t p4_to_p4plus_ipsec;
 
 header p4plus_to_p4_s1_t p4plus_to_p4;
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
@@ -1493,7 +1493,7 @@ parser parse_nvgre {
 }
 
 parser parse_erspan_t3 {
-    extract(erspan_t3_header);
+    extract(erspan_t3);
     return parse_inner_ethernet;
 }
 
