@@ -70,3 +70,4 @@ logfiles:
   - /sw/nic/core.cap_model
   - /sw/nic/http_client.log
   - /sw/nic/http_server.log
+  - /sw/nic/gen/capri_loader.conf

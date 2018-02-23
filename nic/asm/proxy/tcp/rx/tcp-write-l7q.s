@@ -27,7 +27,8 @@ tcp_rx_write_l7q_stage_start:
     //tblwr       d.debug_stage4_7_thread, k.s6_s2s_debug_stage4_7_thread
     sne         c1, k.common_phv_l7_proxy_en, r0
     seq         c2, k.to_s6_payload_len, r0
-    bcf         [!c1 | c2], flow_write_l7q_process_done
+    seq         c3, k.common_phv_skip_pkt_dma, 1
+    bcf         [!c1 | c2 | c3], flow_write_l7q_process_done
     nop
 
 dma_cmd_l7_descr:

@@ -12,7 +12,6 @@ int32_t get_pc_offset(const char *handle, const char *prog_name,
 #endif
 
 const static char *kHBMLabel = "lif2qstate_map";
-const static uint32_t kHBMSizeKB = 131072;
 const static uint32_t kAllocUnit = 4096;
 
 namespace hal {
@@ -28,9 +27,8 @@ LIFManager::LIFManager() {
 
   size_args.reg_name = kHBMLabel;
   pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, (void *)&size_args);
-  assert(size_args.size == kHBMSizeKB);
 
-  uint32_t num_units = (kHBMSizeKB * 1024) / kAllocUnit;
+  uint32_t num_units = (size_args.size * 1024) / kAllocUnit;
   if (hbm_addr & 0xFFF) {
     // Not 4K aligned.
     hbm_addr = (hbm_addr + 0xFFFull) & ~0xFFFull;

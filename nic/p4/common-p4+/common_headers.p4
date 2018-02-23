@@ -358,6 +358,16 @@ header_type dma_cmd_mem2pkt_t {
     modify_field(_dma_cmd_mem2pkt.dma_cmd_cache, _cache); \
     modify_field(_dma_cmd_mem2pkt.dma_cmd_host_addr, _host_addr); 
 
+header_type dma_cmd_skip_t {
+    fields {
+        dma_cmd_skip_pad        : 109;
+        dma_cmd_skip_to_eop     : 1;
+        dma_cmd_size            : 14;
+        dma_cmd_eop             : 1;
+        dma_cmd_type            : 3;
+    }
+}
+
 header_type doorbell_addr_t {
     fields {
         offset : 3;

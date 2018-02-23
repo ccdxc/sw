@@ -424,6 +424,10 @@
         phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \
         phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
 
+#define CAPRI_DMA_CMD_SKIP_SETUP(_dma_cmd_prefix)                                               \
+        phvwri      p.##_dma_cmd_prefix##_skip_to_eop, 1;                                       \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_SKIP
+
 #define CAPRI_DMA_CMD_PHV2MEM_SETUP_I(_dma_cmd_prefix, __addr, _sfield, _efield)                 \
         phvwri      p.##_dma_cmd_prefix##_addr, __addr;                                          \
         phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \

@@ -20,25 +20,30 @@ model_log = nic_dir + "/model.log"
 model1_log = nic_dir + "/model1.log"
 inscount_log = nic_dir + "/inscount.log"
 inscount_sort_log = nic_dir + "/inscount_sort.log"
-hal_log = nic_dir + "/hal.log"
+sym_log = nic_dir + "/gen/capri_loader.conf"
+sym_log2 = nic_dir + "/capri_loader.conf"
 dol_log = nic_dir + "/dol.log"
 print "- Model Log file: " + model_log
 print "- Model Log Output file: " + model1_log
-print "- HAL Log file: " + hal_log
+print "- SYM Log file: " + sym_log
 print "- DOL Log file: " + dol_log
 symbols = { 'address': 'name' }
 
 # build_symbols
 def build_symbols():
     print "* Building symbols....."
-    hal_file  = open(hal_log, "r")
-    for linenum, line in enumerate(hal_file):
-        if re.match("(.*) Successfully resolved program: name (.*)", line, re.I):
-            fields = re.split(r'(.*) Successfully resolved program: name (.*)\.bin, base address 0x(.*), size(.*)', line)
-            symbols['0x'+fields[3].upper()] =  fields[2]
-        elif re.match("(.*) label: name (.*)", line, re.I):
-            fields = re.split(r'(.*) label: name (.*) addr 0x(.*)', line)
-            symbols['0x'+fields[3].upper()] =  fields[2]
+    if os.path.isfile(sym_log):
+        sym_file  = open(sym_log, "r")
+    elif os.path.isfile(sym_log2):
+        sym_file  = open(sym_log2, "r")
+    else:
+        print "Cannot find symbol file"
+        sys.exit()
+    for line in sym_file:
+        fields = line.strip().split(",")
+        if len(fields) < 2:
+            continue
+        symbols['0x'+fields[1].upper()] =  fields[0][0:-4]
     return
 
 # parse_logs and create a new file with symbols resolved
@@ -52,10 +57,16 @@ def parse_logs():
     os.remove(inscount_sort_log) if os.path.exists(inscount_sort_log) else None
     inscount_sort_file  = open(inscount_sort_log, "a+")
     program = ""
+    programline = 0
     for linenum, line in enumerate(modelfile):
         if re.match("(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)", line, re.I):
             fields = re.split(r'(.*) Setting PC to 0x([0-9a-fA-F]+)(.*)', line)
-            program = symbols['0x'+fields[2].upper()]
+            key = '0x'+fields[2].upper()
+            if not key in symbols:
+                print linenum, '0x'+fields[2]
+                model1file.write(line)
+                continue
+            program = symbols[key]
             programline = linenum
             print linenum, '0x'+fields[2], program
             line = line.replace('0x'+fields[2], program)

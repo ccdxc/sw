@@ -38,6 +38,8 @@ tcp_rx_write_serq_stage_start:
     seq         c2, k.common_phv_write_serq, 1
     seq         c3, k.common_phv_l7_proxy_type_redirect, 1
     setcf       c7, [!c1 & !c2 & !c3]
+    seq         c4, k.common_phv_skip_pkt_dma, 1
+    setcf       c7, [c7 | c4]
     seq         c3, k.common_phv_fatal_error, 1
     bcf         [c7 | c3], flow_write_serq_drop
     nop
@@ -56,6 +58,9 @@ dma_cmd_data:
     seq         c1, k.to_s6_payload_len, 0
     b.c1        dma_cmd_descr
 
+    seq         c1, k.common_phv_skip_pkt_dma, 1
+    b.c1        dma_cmd_data_skip
+
     /* Set the DMA_WRITE CMD for data */
     add         r1, k.to_s6_page, k.s6_s2s_ooo_offset
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
@@ -70,6 +75,11 @@ dma_cmd_data:
     seq         c2, k.common_phv_pending_txdma, 1
     setcf       c1, [c1 & !c2]
     phvwr.c1    p.pkt_dma_dma_cmd_eop, 1
+    b           dma_cmd_descr
+    nop
+
+dma_cmd_data_skip:
+    CAPRI_DMA_CMD_SKIP_SETUP(pkt_dma_skip_dma_cmd)
 
 dma_cmd_descr:
     /*
@@ -170,6 +180,8 @@ tcp_serq_produce:
     seq         c4, k.common_phv_l7_proxy_en, 1
     setcf       c3, [!c1 & c2 & !c4]
     phvwri.c3   p.rx2tx_extra_dma_dma_cmd_eop, 1
+    seq         c1, k.common_phv_skip_pkt_dma, 1
+    phvwri.c1   p.rx2tx_extra_dma_dma_cmd_eop, 1
     nop
     // L7 IPS: write_serq is set to 0. it is already handled by write_serq flag
     // L7 IDS: write_l7q will do more DMA. So skip stop fence here 
@@ -209,12 +221,15 @@ debug_pkts_rcvd_stats_update_start:
 
     // Non-debug stats increment
 pkts_rcvd_stats_update_start:
+    seq         c1, k.common_phv_skip_pkt_dma, 1
+    bcf         [c1], debug_num_phv_to_mem_stats_update_end
+
     CAPRI_STATS_INC(pkts_rcvd, 8, 1, d.pkts_rcvd)
 pkts_rcvd_stats_update:
     CAPRI_STATS_INC_UPDATE(1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
 pkts_rcvd_stats_update_end:
 
-    sne         c1, k.common_phv_ooo_in_rx_q, r0
+    seq         c1, k.common_phv_ooo_in_rx_q, 1
     bcf         [c1], debug_num_phv_to_mem_stats_update_start
 pages_alloced_stats_update_start:
     CAPRI_STATS_INC(pages_alloced, 8, 1, d.pages_alloced)
@@ -250,6 +265,11 @@ flow_write_serq_drop:
     seq         c1, k.common_phv_pending_txdma, 1
     phvwri.!c1  p.p4_intr_global_drop, 1
     b.!c1       flow_write_serq_process_done
+    nop
+    seq         c1, k.common_phv_skip_pkt_dma, 1
+    phvwri.c1   p.tx_doorbell_or_timer_dma_cmd_eop, 1
+    phvwri.c1   p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
+    b.c1        dma_cmd_data_skip
     nop
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(rx2tx_or_cpu_hdr_dma_dma_cmd_type) / 16)
     b           dma_cmd_write_rx2tx_shared

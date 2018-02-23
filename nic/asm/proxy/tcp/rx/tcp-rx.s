@@ -87,8 +87,6 @@ bytes_rcvd_stats_update:
     CAPRI_STATS_INC_UPDATE(k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
 bytes_rcvd_stats_update_end:
 
-    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
-
     /* SCHEDULE_ACK(tp) */
     /* Set the pending txdma in phv for subsequent stage to issue dma
      * commands to update rx2tx shared state and ring the doorbell
@@ -216,6 +214,7 @@ table_read_setup_next:
     phvwr           p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
     phvwr           p.rx2tx_snd_una, d.u.tcp_rx_d.snd_una
+    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     /*
      * c7 = drop
      */
@@ -727,10 +726,21 @@ tcp_rx_slow_path:
     /* if pkt->seq > rcv_nxt, do ooo (SACK) processing */
     slt             c7, d.u.tcp_rx_d.rcv_nxt, k.to_s2_seq
     bcf             [c7], ooo_received
-    /* if rcv_nxt > pkt->seq, retransmission, drop the packet */
-    slt             c7, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
-    phvwri.c7       p.p4_intr_global_drop, 1
-    bcf             [c7], flow_rx_process_done
+    /*
+     * if pkt->seq < rcv_nxt, its a retransmission, drop the packet,
+     * but send ack. We don't partially accept unacknowledged bytes yet,
+     * the entire frame is dropped.
+     */
+    slt             c1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
+    phvwr.c1        p.common_phv_pending_txdma, 1
+    phvwr.c1        p.rx2tx_pending_ack_send, 1
+    sne             c2, k.s1_s2s_payload_len, 0
+    setcf           c3, [c1 & c2]
+    phvwr.c3        p.common_phv_skip_pkt_dma, 1
+    phvwr.c3        p.common_phv_write_serq, 0
+    // set c6 so that descriptors are not allocated
+    setcf.c3        c6, [c0]
+    bcf             [c3], flow_rx_process_done
 
     /*
      * If we have received data and serq is full,
@@ -799,7 +809,6 @@ tcp_rx_slow_path:
     tblmincri.c1    d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
     phvwr.c1        p.common_phv_pending_txdma, 1
     phvwr.c1        p.rx2tx_pending_ack_send, 1
-    phvwr.c1        p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
 
     phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
 
@@ -866,7 +875,6 @@ tcp_queue_rcv:
     add.c1          r1, r3, r0
     phvwr           p.to_s6_payload_len, r1
     tbladd          d.u.tcp_rx_d.rcv_nxt, r1
-    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.common_phv_ooo_in_rx_q, 1
 
     /*
@@ -908,7 +916,6 @@ ooo_received:
     /*
      * We need to send immediate ack (dupack)
      */
-    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.common_phv_pending_txdma, 1
     phvwr           p.rx2tx_pending_ack_send, 1
     /*

@@ -96,7 +96,8 @@
     modify_field(common_global_scratch.write_arq, common_phv.write_arq); \
     modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr); \
     modify_field(common_global_scratch.l7_proxy_en, common_phv.l7_proxy_en); \
-    modify_field(common_global_scratch.l7_proxy_type_redirect, common_phv.l7_proxy_type_redirect);
+    modify_field(common_global_scratch.l7_proxy_type_redirect, common_phv.l7_proxy_type_redirect); \
+    modify_field(common_global_scratch.skip_pkt_dma, common_phv.skip_pkt_dma);
 
 /******************************************************************************
  * D-vectors
@@ -408,6 +409,7 @@ header_type common_global_phv_t {
         write_tcp_app_hdr       : 1;
         l7_proxy_en             : 1;
         l7_proxy_type_redirect  : 1;
+        skip_pkt_dma            : 1;
     }
 }
 
@@ -630,6 +632,9 @@ metadata doorbell_data_t l7_db_data;
 
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t pkt_dma;                 // dma cmd 0
+@pragma dont_trim
+@pragma pa_header_union ingress pkt_dma
+metadata dma_cmd_skip_t pkt_dma_skip;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t pkt_descr_dma;           // dma cmd 1
 @pragma dont_trim
