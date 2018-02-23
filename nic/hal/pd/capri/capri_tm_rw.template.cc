@@ -1285,7 +1285,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 //:: regs = [('TM_HBM_FIFO_TYPE_UPLINK', 'eth'), ('TM_HBM_FIFO_TYPE_TXDMA', 'tx')]
 //:: for fifo_type, reg_name in regs:
     hbm_csr.cfg_hbm_${reg_name}_payload.read();
-    hbm_csr.cfg_hbm_${reg_name}_payload_occupancy.read();
+    hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.read();
     hbm_csr.cfg_hbm_${reg_name}_ctrl.read();
 //:: #endfor
 
@@ -1333,7 +1333,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
     hbm_csr.cfg_hbm_${reg_name}_payload.base(payload_base_val[${fifo_type}]);
     hbm_csr.cfg_hbm_${reg_name}_payload.mem_sz(payload_size_val[${fifo_type}]);
-    hbm_csr.cfg_hbm_${reg_name}_payload_occupancy.threshold(payload_occupancy_val[${fifo_type}]);
+    hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.threshold(payload_occupancy_val[${fifo_type}]);
     hbm_csr.cfg_hbm_${reg_name}_ctrl.base(control_base_val[${fifo_type}]);
     hbm_csr.cfg_hbm_${reg_name}_ctrl.mem_sz(control_size_val[${fifo_type}]);
 
@@ -1353,17 +1353,17 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
         cap_pbc_hbm_${reg_name}_occ_thr_t occ_thr_decoder;
         occ_thr_decoder.init();
-        occ_thr_decoder.all(hbm_csr.cfg_hbm_${reg_name}_payload_occupancy.all());
-        occ_thr_decoder.set_name("cap0.pb.pbc.hbm.cfg_hbm_${reg_name}_payload_occupancy.decoder");
+        occ_thr_decoder.all(hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.all());
+        occ_thr_decoder.set_name("cap0.pb.pbc.hbm.hbm_port_0.cfg_hbm_eth_payload_occupancy.decoder");
 //        occ_thr_decoder.show();
     }
 
     hbm_csr.cfg_hbm_${reg_name}_payload.show();
-    hbm_csr.cfg_hbm_${reg_name}_payload_occupancy.show();
+    hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.show();
     hbm_csr.cfg_hbm_${reg_name}_ctrl.show();
     if (tm_sw_init_enabled()) {
         hbm_csr.cfg_hbm_${reg_name}_payload.write();
-        hbm_csr.cfg_hbm_${reg_name}_payload_occupancy.write();
+        hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.write();
         hbm_csr.cfg_hbm_${reg_name}_ctrl.write();
     }
 //:: #endfor
