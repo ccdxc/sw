@@ -178,23 +178,28 @@
         },
         {
             "name": "flow_hash",
-            "size_kb": 131072
+            "size_kb": 131072,
+            "cache": "p4ig"
         },
         {
             "name": "flow_hash_overflow",
-            "size_kb": 1024
+            "size_kb": 1024,
+            "cache": "p4ig"
         },
         {
             "name": "flow_info",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4ig"
         },
         {
             "name": "session_state",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4ig"
         },
         {
             "name": "flow_stats",
-            "size_kb": 65536
+            "size_kb": 65536,
+            "cache": "p4ig"
         },
         {
             "name": "mcast_repl",
