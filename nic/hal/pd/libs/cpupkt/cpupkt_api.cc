@@ -133,7 +133,8 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
         HAL_TRACE_DEBUG("corrupted packet");
         return HAL_RET_HW_FAIL;
     }
-    uint8_t* buffer = (uint8_t* ) malloc(descr.l0 + descr.l1);
+    //hard-coding to 9K buffer for now. needs to be replaced with page.
+    uint8_t* buffer = (uint8_t* ) malloc(9216);
 
     uint64_t pktaddr = descr.a0 + descr.o0;
 

@@ -150,7 +150,7 @@ int lkl_printf(const char *, ...);
 void lkl_bug(const char *, ...);
 
 void lkl_skb_init(void);
-void* lkl_alloc_skb(int len, void* dev, unsigned char is_pkt_src_uplink);
+void* lkl_alloc_skb(void* pkt, int len, void* dev, unsigned char is_pkt_src_uplink);
 void lkl_kfree_skb(void* skb);
 void lkl_skb_reserve(void* skb);
 void lkl_skb_copy_to_linear_data(void* skb, char* pkt, unsigned int len);

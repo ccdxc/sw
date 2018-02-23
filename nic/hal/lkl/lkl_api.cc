@@ -72,22 +72,21 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
             nw_offset = 0;
         } else {
             HAL_TRACE_DEBUG("lklshim: v6 pkt");
-            pktlen = 100;
-            tpt_offset = 80;
-            nw_offset = 40;
+            pktlen = 60;
+            tpt_offset = 40;
+            nw_offset = 0;
         }
     }
 
     if (pkt_len == 0) {
-        skb = lkl_alloc_skb(pktlen, dev, is_pkt_src_uplink);
+        skb = lkl_alloc_skb((void*)pkt, pktlen, dev, is_pkt_src_uplink);
         HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len to {} dev={} skb={}", pktlen, dev, skb);
     } else {
-        skb = lkl_alloc_skb(pkt_len, dev, is_pkt_src_uplink);
+        skb = lkl_alloc_skb((void*)pkt, pkt_len, dev, is_pkt_src_uplink);
         HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len={} dev={} skb={}", pkt_len, dev, skb);
     }
     if (skb) {
         lkl_skb_reserve(skb);
-        lkl_skb_copy_to_linear_data(skb, (char*)pkt, (unsigned int)pkt_len); 
         lkl_skb_set_mac_header(skb, rxhdr->l2_offset);
         HAL_TRACE_DEBUG("lkl_alloc_skbuff : l3 offset = {} l4 offset = {}", 
                         rxhdr->l3_offset, rxhdr->l4_offset);
