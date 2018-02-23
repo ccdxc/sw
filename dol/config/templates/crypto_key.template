@@ -1,6 +1,8 @@
 # Crypto Key Object Template File.
 meta:
     id: CRYPTO_KEY
+    feature_set:
+        - iris
 
 id                    : None # Crypto Key local Id 
 keyindex              : 0

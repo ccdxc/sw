@@ -1,5 +1,7 @@
 meta:
     id: SLAB
+    feature_set:
+        - iris
 
 size        : None # Integer
 is_virtual  : None # Boolean

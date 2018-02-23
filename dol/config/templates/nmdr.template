@@ -1,5 +1,7 @@
 meta:
     id: NMDR
+    feature_set:
+        - iris
 
 pi      : 0
 ci      : 0

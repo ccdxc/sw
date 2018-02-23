@@ -1,6 +1,8 @@
 # TLS CB Object Template File.
 meta:
     id: TLSCB
+    feature_set:
+        - iris
 
 id                          : 0 # TLS CB Local ID
 spec                        : None # (REF) TLS CB Spec from Base Config.

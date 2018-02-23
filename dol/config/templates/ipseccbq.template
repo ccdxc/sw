@@ -1,6 +1,8 @@
 # IPSECCB CB Object Template File.
 meta:
     id: IPSECCBQ
+    feature_set:
+        - iris
 
 id                    : None
 pi                    : 0

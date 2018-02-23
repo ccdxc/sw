@@ -1,5 +1,7 @@
 meta:
     id: BRQ_GCM_ENTRY
+    feature_set:
+        - iris
 
 ilist_addr             : 0
 olist_addr             : 0

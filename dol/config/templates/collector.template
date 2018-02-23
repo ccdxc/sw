@@ -1,0 +1,6 @@
+# Collector Object Template
+meta:
+    id      : COLLECTOR
+    feature_set:
+        - iris
+

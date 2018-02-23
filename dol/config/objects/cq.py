@@ -32,6 +32,7 @@ from infra.common.glopts import GlobalOptions
 class CqObject(base.ConfigObjectBase):
     def __init__(self, pd, cq_id, spec):
         super().__init__()
+        self.Clone(Store.templates.Get('QSTATE_RDMA_CQ'))
         self.pd = pd
         self.remote = pd.remote
         self.id = cq_id

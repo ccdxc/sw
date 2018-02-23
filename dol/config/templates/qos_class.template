@@ -1,5 +1,7 @@
 meta:
     id: QOS_CLASS
+    feature_set:
+        - iris
 
 spec:
     group: None

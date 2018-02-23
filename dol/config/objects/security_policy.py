@@ -15,6 +15,7 @@ from    config.objects.security_group import SecurityGroupObject
 class SGPairObject(base.ConfigObjectBase):
     def __init__(self, sg_id, peer_sg_id, obj):
         super().__init__()
+        self.Clone(Store.templates.Get('SECURITY_GROUP_PAIR'))
         self.sg_id = sg_id
         self.peer_sg_id = peer_sg_id
         self.GID("SGPAIRSG%04dSG%04d" % (sg_id,peer_sg_id))

@@ -1,5 +1,7 @@
 meta:
     id: BRQ_CBC
+    feature_set:
+        - iris
 
 pi      : 0
 ci      : 0

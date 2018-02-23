@@ -27,9 +27,12 @@ class QInfoStruct(ctypes.Structure):
                 ("q0_addr", ctypes.c_uint64 * 8)]
 
 class LifObject(base.ConfigObjectBase):
-    def __init__(self, tenant, spec, namespace = None):
+    def __init__(self):
         super().__init__()
+        self.Clone(Store.templates.Get('LIF'))
+        return
 
+    def Init(self, tenant, spec, namespace = None):
         if namespace:
             self.id = namespace.get()
         else:
@@ -158,38 +161,6 @@ class LifObject(base.ConfigObjectBase):
             return 0
         self.obj_helper_q.Configure()
 
-    def __copy__(self):
-        lif = LifObject(self.tenant, self.spec)
-        lif.id = self.id
-        lif.status = self.status
-        lif.enable_rdma = self.enable_rdma
-        lif.rdma_max_pt_entries = self.rdma_max_pt_entries
-        lif.rdma_max_keys = self.rdma_max_keys
-        lif.queue_types = self.queue_types
-        lif.queue_types_list = []
-        lif.queue_list = []
-        for queue_type in self.queue_types.GetAll():
-            lif.queue_types_list.append(copy.copy(queue_type))
-        for queue in self.queue_list:
-            lif.queue_list.append(copy.copy(queue))
-
-        return lif
-
-    def Equals(self, other, lgh):
-        if not isinstance(other, self.__class__):
-            return False
-        fields = ["id", "status", "enable_rdma", "rdma_max_pt_entries",
-                   "rdma_max_keys"]
-        if not self.CompareObjectFields(other, fields, lgh):
-            return False
-
-        for c_qtype, o_q_type in zip(self.queue_types_list, other.queue_types_list):
-            if not c_qtype == o_q_type:
-                lgh.error("Queue Type mismatch")
-                return False
-
-        return True
-
     def Show(self):
         cfglogger.info("- LIF   : %s" % self.GID())
         cfglogger.info("  - # Queue Types    : %d" % len(self.obj_helper_q.queue_types))
@@ -242,27 +213,6 @@ class LifObject(base.ConfigObjectBase):
            cfglogger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
                           (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr))
 
-    def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.key_or_handle.lif_id = self.id
-
-    def ProcessHALGetResponse(self, get_req_spec, get_resp):
-        if get_resp.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
-            self.status = get_resp.spec.admin_status
-            self.enable_rdma = get_resp.spec.enable_rdma
-            self.rdma_max_keys = get_resp.spec.rdma_max_keys
-            self.rdma_max_pt_entries = get_resp.spec.rdma_max_pt_entries
-            for qstate_spec, queue_type in zip(get_resp.spec.lif_qstate_map, self.queue_types_list):
-                queue_type.ProcessHALGetResponse(qstate_spec)
-            #TODO Still.
-            #for q_spec, queue in zip(get_resp.spec.lif_qstate, self.queue_list):
-            #    queue.ProcessHALGetResponse(q_spec)
-        else:
-            self.status = None
-            self.enable_rdma = None
-            self.rdma_max_keys = None
-            self.rdma_max_pt_entries = None
-            self.queue_types_list = []
-
     def Get(self):
         halapi.GetLifs([self])
 
@@ -312,7 +262,8 @@ class LifObjectHelper:
         cfglogger.info("Creating %d Lifs. for Tenant:%s NProm:%d NAllmc:%d" %\
                        (count, tenant.GID(), n_prom, n_allmc))
         for l in range(count):
-            lif = LifObject(tenant, spec, namespace)
+            lif = LifObject()
+            lif.Init(tenant, spec, namespace)
             self.lifs.append(lif)
 
         if n_prom != 0:
@@ -327,6 +278,8 @@ class LifObjectHelper:
         return
 
     def Configure(self):
+        if not LifObject().InFeatureSet():
+            return
         cfglogger.info("Configuring %d LIFs." % len(self.lifs))
         halapi.ConfigureLifs(self.lifs)
         for lif in self.lifs:
@@ -345,7 +298,3 @@ class LifObjectHelper:
         lif = self.lifs[self.aidx]
         self.aidx += 1
         return lif
-
-def GetMatchingObjects(selectors):
-    lifs =  Store.objects.GetAllByClass(LifObject)
-    return [lif for lif in lifs if lif.IsFilterMatch(selectors.lif)]

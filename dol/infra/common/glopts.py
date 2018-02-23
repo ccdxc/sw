@@ -72,7 +72,6 @@ parser.add_argument('--gft', dest='gft', default=False,
                     action='store_true', help='GFT Test.')
 parser.add_argument('--perf', dest='perf', default=False,
                     action='store_true', help='Run only Perf tests.')
-
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():
@@ -123,3 +122,7 @@ def ValidateGlopts():
 
     if GlobalOptions.modscale:
         GlobalOptions.modscale = utils.ParseInteger(GlobalOptions.modscale)
+
+    GlobalOptions.feature_set = "iris"
+    if GlobalOptions.gft:
+        GlobalOptions.feature_set = "gft"

@@ -1,4 +1,6 @@
 meta:
     id: RING_REF_ENTRY
+    feature_set:
+        - iris
 
 DescAddr   :   0

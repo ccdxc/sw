@@ -21,6 +21,7 @@ import telemetry_pb2            as telemetry_pb2
 class CollectorObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
+        self.Clone(Store.templates.Get('COLLECTOR'))
         return
 
     def Init(self, tenant, spec):

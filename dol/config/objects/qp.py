@@ -36,6 +36,7 @@ from infra.common.glopts import GlobalOptions
 class QpObject(base.ConfigObjectBase):
     def __init__(self, pd, qp_id, spec):
         super().__init__()
+        self.Clone(Store.templates.Get('QPAIR_RDMA'))
         self.pd = pd
         self.remote = pd.remote
         self.id = qp_id

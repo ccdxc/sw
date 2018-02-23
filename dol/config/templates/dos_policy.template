@@ -3,6 +3,8 @@ meta:
     id      : DOS_POLICY
     package : config.objects
     module  : dos_policy
+    feature_set:
+        - iris
 
 ingress :
     peersg:

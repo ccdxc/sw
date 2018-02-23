@@ -19,6 +19,7 @@ class MrObject(base.ConfigObjectBase):
                  local_wr=False, remote_wr=False, 
                  remote_rd=False, remote_atomic=False):
         super().__init__()
+        self.Clone(Store.templates.Get('RDMA_MR'))
         self.pd = pd
         self.slab = slab
         self.lkey = pd.ep.intf.lif.GetMrKey()

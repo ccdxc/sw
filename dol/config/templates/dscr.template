@@ -1,5 +1,7 @@
 meta:
     id: DSCR
+    feature_set:
+        - iris
 
 DescAddr    :   0
 Addr1       :   0

@@ -1,4 +1,6 @@
 meta:
     id: NMDR_ENTRY
+    feature_set:
+        - iris
 
 DescAddr   :   0

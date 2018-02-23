@@ -2,5 +2,7 @@
 meta:
     id  : RING_RDMA_CQ
     base: ref://store/templates/id=RING 
+    feature_set:
+        - iris
 
 #template: template/config/objects/rdma/ID=RDMA_SQ_DESCRIPTOR

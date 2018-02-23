@@ -26,6 +26,7 @@ import socket
 class RdmaSessionObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
+        self.Clone(Store.templates.Get('RDMA_SESSION'))
         return
 
     def Init(self, session, lqp, rqp, vxlan):

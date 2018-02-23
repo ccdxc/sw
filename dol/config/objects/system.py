@@ -20,6 +20,7 @@ import config.objects.span      as span
 class SystemObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
+        self.Clone(Store.templates.Get('SYSTEM_OBJECT'))
         return
 
     def Init(self):

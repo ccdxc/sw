@@ -7,6 +7,7 @@ import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.common.utils       as utils
 
+from infra.common.glopts   import GlobalOptions as GlobalOptions
 from infra.common.logging  import cfglogger as cfglogger
 
 class ConfigObjectBase(objects.FrameworkObject):
@@ -118,3 +119,6 @@ class ConfigObjectBase(objects.FrameworkObject):
     
     def CompareObjectFields(self, other, fields, lgh):
         return utils.CompareObjectFields(self, other, fields, lgh)
+
+    def InFeatureSet(self):
+        return GlobalOptions.feature_set in self.meta.feature_set

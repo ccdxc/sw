@@ -2,6 +2,8 @@
 meta:
     id  : QSTATE_RDMA_SQ
     base: ref://store/templates/id=QSTATE 
+    feature_set:
+        - iris
 
 service     : None # (ATTR) template/config/rdma_qpair/service
 tx_psn      : None #

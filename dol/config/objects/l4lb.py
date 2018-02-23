@@ -100,6 +100,7 @@ class L4LbBackendObjectHelper:
 class L4LbServiceObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
+        self.Clone(Store.templates.Get('L4LB_SERVICE'))
         self.id = resmgr.L4LbServiceIdAllocator.get()
         self.GID("L4LbService%04d" % self.id)
         return

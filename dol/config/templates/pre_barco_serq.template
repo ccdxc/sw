@@ -1,6 +1,8 @@
 # TLS CB Object Template File.
 meta:
     id: SERQ
+    feature_set:
+        - iris
 
 id                    : None # TLS CB Local ID
 pi                    : 0

@@ -3,5 +3,7 @@ meta:
     id      : ENDPOINT
     package : config.objects
     module  : endpoint
+    feature_set:
+        - iris
 
 macaddr: None

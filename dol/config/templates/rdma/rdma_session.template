@@ -1,6 +1,8 @@
 # RDMA Session Object Template
 meta:
     id: RDMA_SESSION
+    feature_set:
+        - iris
 
 lqp: None
 rqp: None

@@ -1,0 +1,6 @@
+# Object Template
+meta:
+    id      : SECURITY_GROUP_PAIR
+    feature_set:
+        - iris
+

@@ -11,6 +11,8 @@ import config.objects.tenant    as tenant
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
+import config.objects.interface_segment_association as if_seg_assoc
+
 from infra.common.glopts        import GlobalOptions
 from infra.common.logging       import cfglogger
 from config.store               import Store
@@ -167,6 +169,7 @@ class UplinkObjectHelper:
     def __init__(self):
         self.objlist = []
         self.trunks = []
+        self.obj_helper_if_seg_assoc = if_seg_assoc.HalInterfaceSegmentAssociationObjectHelper()
         return
 
     def Configure(self):
@@ -186,7 +189,7 @@ class UplinkObjectHelper:
             for uplink in self.trunks:
                 uplink.SetNativeSegment(seg)
         self.ReConfigure()
-        halapi.ConfigureInterfaceSegmentAssociations(self.trunks, segs)
+        self.obj_helper_if_seg_assoc.Configure(self.trunks, segs)
         return
 
     def __configure_all_segments_classic_nic(self):
@@ -199,7 +202,7 @@ class UplinkObjectHelper:
                 intf.SetNativeSegment(seg)
                 break
             halapi.ConfigureInterfaces([intf], update = True)
-            halapi.ConfigureInterfaceSegmentAssociations([intf], segs)
+            self.obj_helper_if_seg_assoc.Configure([intf], segs)
         return
 
     def ConfigureAllSegments(self):

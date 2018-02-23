@@ -1,5 +1,7 @@
 meta:
     id: ACL
+    feature_set:
+        - iris
 
 fields: 
     id: None 

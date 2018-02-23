@@ -1,0 +1,6 @@
+# System Object Template
+meta:
+    id      : SYSTEM_OBJECT
+    feature_set:
+        - iris
+

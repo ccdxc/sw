@@ -8,6 +8,8 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 import config.objects.segment   as segment
 
+import config.objects.interface_segment_association as if_seg_assoc
+
 from infra.common.logging       import cfglogger
 from config.store               import Store
 
@@ -203,6 +205,7 @@ class UplinkPcObjectHelper:
     def __init__(self):
         self.uplinkpcs = []
         self.trunks = []
+        self.obj_helper_if_seg_assoc = if_seg_assoc.HalInterfaceSegmentAssociationObjectHelper()
         return
 
     def Configure(self):
@@ -225,7 +228,7 @@ class UplinkPcObjectHelper:
             for uplinkpc in self.trunks:
                 uplinkpc.SetNativeSegment(seg)
         self.ReConfigure()
-        halapi.ConfigureInterfaceSegmentAssociations(self.trunks, segs)
+        self.obj_helper_if_seg_assoc.Configure(self.trunks, segs)
         return
 
     def Generate(self, topospec):

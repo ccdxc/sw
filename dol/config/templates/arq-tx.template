@@ -1,5 +1,7 @@
 meta:
     id: ARQ-TX
+    feature_set:
+        - iris
 
 pi      : 0
 ci      : 0

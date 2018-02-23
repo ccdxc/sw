@@ -32,6 +32,7 @@ from infra.common.glopts import GlobalOptions
 class EqObject(base.ConfigObjectBase):
     def __init__(self, pd, eq_id, spec):
         super().__init__()
+        self.Clone(Store.templates.Get('QSTATE_RDMA_EQ'))
         self.pd = pd
         self.remote = pd.remote
         self.id = eq_id

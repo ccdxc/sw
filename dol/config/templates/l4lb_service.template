@@ -1,0 +1,6 @@
+# L4LB Service Object Template
+meta:
+    id      : L4LB_SERVICE
+    feature_set:
+        - iris
+

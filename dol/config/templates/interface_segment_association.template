@@ -1,0 +1,5 @@
+# Uplink Config Object Template
+meta:
+    id      : INTERFACE_SEGMENT_ASSOCIATION
+    feature_set:
+        - iris

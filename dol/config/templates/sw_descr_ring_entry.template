@@ -1,0 +1,6 @@
+# Collector Object Template
+meta:
+    id      : SW_DESCRIPTOR_RING_ENTRY
+    feature_set:
+        - iris
+

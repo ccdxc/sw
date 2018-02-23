@@ -1,6 +1,8 @@
 # OifList Object Template File.
 meta:
     id: OIF_LIST
+    feature_set:
+        - iris
 
 id  : None # List ID
 oifs:

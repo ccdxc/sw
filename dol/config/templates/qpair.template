@@ -1,4 +1,6 @@
 # Queue State Object Base Template
 meta:
     id: QPAIR
+    feature_set:
+        - iris
 

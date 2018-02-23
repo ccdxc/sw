@@ -3,4 +3,6 @@ meta:
     id      : SECURITY_GROUP
     package : config.objects
     module  : security_group
+    feature_set:
+        - iris
 

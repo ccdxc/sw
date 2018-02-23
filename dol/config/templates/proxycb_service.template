@@ -1,6 +1,8 @@
 # Service Proxy Object Template File.
 meta:
     id: PROXYCB
+    feature_set:
+        - iris
 
 qid            : 0
 session        : 0

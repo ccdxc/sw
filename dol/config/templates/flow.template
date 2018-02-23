@@ -19,6 +19,10 @@ meta:
                 name    : SessionGet
                 message : SessionGetRequestMsg
 
+    feature_set:
+        - iris
+        - gft
+
 # Internal Fields (DO NOT USE DIRECTLY)
 type    : None # (ATTR) IPV4 or IPV6 or MAC
 sep     : None # (OBJ) Source Endpoint

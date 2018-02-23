@@ -1,5 +1,7 @@
 meta:
     id: FLOW_ENDPOINT
+    feature_set:
+        - iris
 
 ep          : None
 type        : None

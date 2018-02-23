@@ -11,6 +11,8 @@ meta:
             get:
                 name                  : RawcCbGet
                 message               : RawcCbGetRequestMsg
+    feature_set:
+        - iris
 
 id                              : 0 # RAWC CB Local ID
 spec                            : None # (REF) RAWC CB Spec from Base Config.

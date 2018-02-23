@@ -13,6 +13,8 @@ meta:
             get: 
                 name    : SessionGet
                 message : SessionGetRequestMsg
+    feature_set:
+        - iris
 
 initiator   : None
 responder   : None

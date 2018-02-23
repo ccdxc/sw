@@ -1,6 +1,8 @@
 # Crypto Key Object Template File.
 meta:
     id: CRYPTO_KEY_AES128
+    feature_set:
+        - iris
 
 type                  : hal::types::CRYPTO_KEY_TYPE_AES128
 keySize               : 16

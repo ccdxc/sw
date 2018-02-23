@@ -1,0 +1,5 @@
+# Span Session Config Object Template
+meta:
+    id      : SPAN_SESSION
+    feature_set:
+        - iris

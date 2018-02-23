@@ -11,6 +11,8 @@ meta:
             get:
                 name                  : ProxycCbGet
                 message               : ProxycCbGetRequestMsg
+    feature_set:
+        - iris
 
 id                              : 0 # PROXYC CB Local ID
 spec                            : None # (REF) PROXYC CB Spec from Base Config.

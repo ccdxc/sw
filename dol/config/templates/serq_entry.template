@@ -1,4 +1,6 @@
 meta:
     id: SERQ_ENTRY
+    feature_set:
+        - iris
 
 DescAddr   :   0

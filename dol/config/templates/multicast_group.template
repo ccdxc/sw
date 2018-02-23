@@ -1,6 +1,8 @@
 # OifList Object Template File.
 meta:
     id: MULTICAST_GROUP
+    feature_set:
+        - iris
 
 id      : None # List ID
 type    : None # IPv4 or IPv6 or MAC

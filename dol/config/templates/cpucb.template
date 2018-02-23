@@ -1,6 +1,8 @@
 # CPU CB Object Template File.
 meta:
     id: CPUCB
+    feature_set:
+        - iris
     grpc:
         package                       : cpucb
         service                       : CpuCb

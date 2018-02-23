@@ -1,4 +1,6 @@
 meta:
     id: PAGE_VIA_REF
+    feature_set:
+        - iris
 
 DescAddr    :   0

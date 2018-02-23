@@ -1,6 +1,8 @@
 # App Redir Raw Chain CB Object Template File.
 meta:
     id: RAWCCBQ
+    feature_set:
+        - iris
 
 id                    : None
 pi                    : 0

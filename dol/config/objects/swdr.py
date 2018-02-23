@@ -101,6 +101,7 @@ HelperDB["PAGE_VIA_REF"] = SwPageObjectHelper()
 class SwDscrRingEntry(base.ConfigObjectBase):
     def __init__(self, ringname, entryidx, entrytype, ringidx = None):
         super().__init__()
+        self.Clone(Store.templates.Get('SW_DESCRIPTOR_RING_ENTRY'))
         self.handle = None
         self.idx = entryidx
         self.type = entrytype

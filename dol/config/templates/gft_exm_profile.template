@@ -1,0 +1,13 @@
+# Uplink Config Object Template
+meta:
+    id      : GFT_EXM_PROFILE
+    package : config.objects
+    module  : gft_exm_profiles
+    feature_set:
+        - iris
+
+spec        : None
+id          : None
+rdma_flow   : None
+table_type  : None
+groups      : None

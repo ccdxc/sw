@@ -11,6 +11,8 @@ meta:
             get:
                 name                  : TcpCbGet
                 message               : TcpCbGetRequestMsg
+    feature_set:
+        - iris
 
 id          : 0 # TCP Proxy CB Local ID
 spec        : None # (REF) TCP Proxy CB Spec from Base Config.

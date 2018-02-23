@@ -1,6 +1,8 @@
 # IPSEC Proxy CB Object Template File.
 meta:
     id: IPSECCB
+    feature_set:
+        - iris
 
 id               : None # IPSEC Proxy CB Local ID
 spec             : None # (REF) IPSEC Proxy CB Spec from Base Config.

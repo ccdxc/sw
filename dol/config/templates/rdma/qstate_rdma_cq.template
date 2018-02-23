@@ -1,6 +1,8 @@
 # RDMA Completion QueueState Template
 meta:
     id: QSTATE_RDMA_CQ
+    feature_set:
+        - iris
 
 eqid        : None # (ATTR)
 color       : None #

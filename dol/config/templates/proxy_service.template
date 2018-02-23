@@ -1,5 +1,7 @@
 # Service Proxy Object Template File.
 meta:
     id: SERVICE_LIF
+    feature_set:
+        - iris
 
 type        : None

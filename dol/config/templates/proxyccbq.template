@@ -1,6 +1,8 @@
 # App Redir Proxy Chain CB Object Template File.
 meta:
     id: PROXYCCBQ
+    feature_set:
+        - iris
 
 id                    : None
 pi                    : 0

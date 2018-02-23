@@ -1,6 +1,8 @@
 # CPU Config Object Template
 meta:
     id: CPU
+    feature_set:
+        - iris
 
 id         : None  # Name of the object
 lif_id     : 0

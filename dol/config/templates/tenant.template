@@ -3,6 +3,8 @@ meta:
     id      : TENANT
     package : config.objects
     module  : tenant
+    feature_set:
+        - iris
 
 id          : None # Tenant Local ID
 spec        : None # (REF) Tenant Spec from Base Config.

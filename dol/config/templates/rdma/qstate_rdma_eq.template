@@ -1,6 +1,8 @@
 # RDMA Event QueueState Template
 meta:
     id: QSTATE_RDMA_EQ
+    feature_set:
+        - iris
 
 int_num     : None # (ATTR) 
 

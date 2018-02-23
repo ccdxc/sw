@@ -3,6 +3,8 @@ meta:
     id      : SECURITY_PROFILE
     package : config.objects
     module  : security_profile
+    feature_set:
+        - iris
 
 fields:
     cnxn_tracking_en: 0
