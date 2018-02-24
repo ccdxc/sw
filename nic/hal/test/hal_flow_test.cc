@@ -16,6 +16,7 @@
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
 #include "nic/gen/proto/hal/endpoint.grpc.pb.h"
 #include "nic/gen/proto/hal/session.grpc.pb.h"
+#include "sdk/timestamp.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -696,13 +697,13 @@ public:
         return 0;
     }
 
-    uint64_t session_create(uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
+    uint64_t session_create(SessionRequestMsg &req_msg,
+                            uint64_t session_id, uint64_t vrf_id, uint32_t sip, uint32_t dip,
                             ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
-                            ::session::FlowAction action) {
+                            ::session::FlowAction action, bool& send) {
         SessionSpec               *spec;
-        SessionRequestMsg         req_msg;
-        SessionResponseMsg        rsp_msg;
         FlowSpec                  *flow;
+        SessionResponseMsg        rsp_msg;
         ClientContext             context;
         Status                    status;
 
@@ -729,18 +730,27 @@ public:
         flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(sport);
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
 
-        status = session_stub_->SessionCreate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
-            std::cout << "Session create succeeded, handle = "
-                      << rsp_msg.response(0).status().session_handle()
-                      << std::endl;
-            return rsp_msg.response(0).status().session_handle();
+        if (send) {
+            std::cout << "Batch Size " << req_msg.request_size() << std::endl;
+            status = session_stub_->SessionCreate(&context, req_msg, &rsp_msg);
+            req_msg.Clear();
+            if (status.ok()) {
+#if 0
+                for (int i = 0; i < rsp_msg.response_size(); i ++) {
+                    if (rsp_msg.response(i).api_status() == types::API_STATUS_OK) {
+                        std::cout << "Session create succeeded" << std::endl;
+                        return true;
+                    }
+                }
+#endif
+            } else {
+                std::cout << "Session create failed" << std::endl;
+            }
+            send = false;
+        } else {
+            return true;
         }
-        std::cout << "Session create failed, error = "
-                  << rsp_msg.response(0).api_status()
-                  << std::endl;
-        return 0;
+        return false;
     }
 
     uint64_t nw_create(uint64_t nw_id, uint64_t vrf_id, uint32_t ip_pfx,
@@ -1275,34 +1285,72 @@ create_l2segments(uint64_t   l2seg_id_start,
     return 0;
 }
 
-// main test driver
+//------------------------------------------------------------------------------
+// Supported arguments
+// --mode=seq: Source and Destination IP addresses of session are sequential (by
+//             default they are chosen at random)
+// --n=xx: Specify number of sessions to be created
+// --batch=xx: Specify batch size (Needs to be the last argument always)
+//------------------------------------------------------------------------------
 int
 main (int argc, char** argv)
 {
     uint64_t     vrf_handle, l2seg_handle, sg_handle;
-    uint64_t     nw1_handle, nw2_handle, uplink_if_handle, session_handle;
+    uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
     uint32_t     src_ip[15], dst_ip[15];
     EncapInfo    l2seg_encap;
-    bool         system_get = false, random = false;
+    bool         system_get = false, random = true, send = false;
     std::string  svc_endpoint = hal_svc_endpoint_;
+    uint32_t     num_sessions = 10, batch_size = 1;
+    timespec_t   start_ts, end_ts;
+    uint64_t     start_ns, end_ns;
+    uint64_t     num_l2segments = 10;
+    uint64_t     encap_value    = 100;
+    uint64_t     num_uplinks    = 4;
+    uint32_t     session_count = 0, batch_count = 0;
 
     if (argc > 1) {
         if (!strcmp(argv[1], "system_get")) {
             system_get = true;
-        } else if (!strcmp(argv[1], "-r")) {
-            random = true;
+        } else if (!strcmp(argv[1], "--mode=seq")) {
+            random = false;
+            if (argc == 3) {
+                if (sscanf(argv[2], "--n=%d", &num_sessions) == 1) {
+                } else {
+                    sscanf(argv[2], "--batch=%d", &batch_size);
+                } 
+            } else if (argc == 4) {
+                sscanf(argv[2], "--n=%d", &num_sessions);
+                sscanf(argv[3], "--batch=%d", &batch_size);
+            }
+        } else if (sscanf(argv[1], "--n=%d", &num_sessions) == 1) {
+            if (argc == 3) {
+                if (!strcmp(argv[2], "--mode=seq")) {
+                    random = false;
+                } else {
+                    sscanf(argv[2], "--batch=%d", &batch_size);
+                }
+            } else if (argc == 4) {
+                if (!strcmp(argv[2], "--mode=seq")) {
+                    random = false;
+                }
+                sscanf(argv[3], "--batch=%d", &batch_size);
+            }
+        } else if (sscanf(argv[1], "--batch=%d", &batch_size) == 1) {
         }
     }
 
     hal_client hclient(grpc::CreateChannel(svc_endpoint,
                 grpc::InsecureChannelCredentials()));
+
+    // do a system GET, if needed
     if (system_get == true) {
         hclient.system_get();
         return 0;
     }
 
-    // Create the vrf
+    // create the vrf
     vrf_handle = hclient.vrf_create(vrf_id);
     assert(vrf_handle != 0);
 
@@ -1311,20 +1359,16 @@ main (int argc, char** argv)
     assert(sg_handle != 0);
 
     // create network objects
-    nw1_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0100, 24, 0x020a0a0101, sg_id);
+    nw1_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0100, 24,
+                                   0x020a0a0101, sg_id);
     assert(nw1_handle != 0);
     nw_id++;
-    nw2_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0200, 24, 0x020a0a0201, sg_id);
+    nw2_handle = hclient.nw_create(nw_id, vrf_id, 0x0a0a0200, 24,
+                                   0x020a0a0201, sg_id);
     assert(nw2_handle != 0);
 
-    uint64_t num_l2segments = 10;
-    uint64_t encap_value    = 100;
-    uint64_t num_uplinks    = 4;
-
     // create uplinks with this L2 seg as native L2 seg
-    uplink_if_handle = hclient.uplinks_create(if_id,
-            num_uplinks,
-            l2seg_id);
+    uplink_if_handle = hclient.uplinks_create(if_id, num_uplinks, l2seg_id);
     assert(uplink_if_handle != 0);
 
     create_l2segments(l2seg_id, encap_value, if_id, num_l2segments,
@@ -1352,13 +1396,12 @@ main (int argc, char** argv)
 
     if (random) {
         // create random remote endpoints
-        /* Seed */
         std::random_device rd;
 
-        /* Random number generator */
+        // random number generator
         std::default_random_engine generator(rd());
 
-        /* Distribution on which to apply the generator */
+        // distribution on which to apply the generator
         std::uniform_int_distribution<> distribution(0x0a0a0a0a, 0x0f0f0f0f);
 
         for (int i = 0; i < 14; i++) {
@@ -1405,25 +1448,42 @@ main (int argc, char** argv)
     hclient.ep_create(vrf_id, dest_l2seg_id, dest_if_id, sg_id, 0x020a0a020f, dst_ip[13]);
 
     // NOTE: uncomment this in smart nic mode
-    // create a session
-    uint32_t session_count = 0;
+    // create sessions
+    SessionRequestMsg req_msg;
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+    sdk::timestamp_to_nsecs(&start_ts, &start_ns);
     for (int src_port = 5024; src_port < 7035; src_port ++) {
         for (int dst_port = 7050; dst_port < 9051; dst_port ++) {
-            for (int i = 0; i < 14; i ++) {
-                for (int j = 0; j < 14; j ++) {
-                    session_handle = hclient.session_create(1, vrf_id, src_ip[i], dst_ip[j],
-                            ::types::IPProtocol::IPPROTO_UDP,
-                            src_port, dst_port,
-                            ::session::FlowAction::FLOW_ACTION_ALLOW);
-                    assert(session_handle != 0);
-                    session_count ++;
-                    if (session_count == 1000000) {
-                        break;
+            for (int i = 0; i < 14; i ++) {        // src EPs
+                for (int j = 0; j < 14; j ++) {    // dst EPs
+                    batch_count++;
+                    if (batch_count == batch_size) {
+                        send = true;
+                        batch_count = 0;
+                    }
+                    session_count++;
+                    hclient.session_create(req_msg, session_count, vrf_id,
+                                           src_ip[i], dst_ip[j],
+                                           ::types::IPProtocol::IPPROTO_UDP,
+                                           src_port, dst_port,
+                                           ::session::FlowAction::FLOW_ACTION_ALLOW,
+                                           send);
+                    if (session_count == num_sessions) {
+                        goto done;
                     }
                 }
             }
         }
     }
 
+done:
+
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    sdk::timestamp_to_nsecs(&end_ts, &end_ns);
+    float time = (float(end_ns - start_ns)) /1000000000;
+
+    std::cout << "Time to create " << num_sessions << " sessions is "
+              << time << " secs" << std::endl;
+    std::cout << "Session/sec is " << num_sessions/time << std::endl;
     return 0;
 }
