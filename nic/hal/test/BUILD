@@ -20,6 +20,32 @@ cc_library(
 )
 
 cc_binary(
+    name = "hal_flow_test",
+    srcs = [
+        "hal_flow_test.cc",
+    ],
+    deps = [
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+        "@sdk//obj:sdk_thread",
+        "//nic:gen_proto_includes",
+        "//nic:halproto",
+        "//nic:grpc",
+        "//nic:grpc_includes",
+        "//nic:google_includes",
+        "//nic:libprotobuf",
+        "@sdk//obj:sdk_logger",
+    ],
+    linkopts = [
+        "-lzmq",
+        "-lpthread",
+        "-pthread",
+        "-lz",
+        "-lm",
+    ],
+)
+
+cc_binary(
     name = "hal_test",
     srcs = [
         "hal_test.cc",
