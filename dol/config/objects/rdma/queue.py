@@ -251,14 +251,14 @@ class RdmaCQstate(Packet):
         X3BytesField("eq_id", 0),
         BitField("arm", 0, 1),
         BitField("color", 0, 1),
-        BitField("rsvd2", 0, 6),
-        ByteField("rsvd3", 0),
-        ByteField("rsvd4", 0),
-        ByteField("rsvd5", 0),
-        ByteField("rsvd6", 0),
-        ByteField("rsvd7", 0),
-        ByteField("rsvd8", 0),
-        ByteField("rsvd9", 0),
+
+        BitField("wakeup_dpath", 0, 1),
+        BitField("wakeup_lif", 0, 12),
+        BitField("wakeup_qtype", 0, 3),
+        BitField("wakeup_qid", 0, 24),
+        BitField("wakeup_ring_id", 0, 3),
+
+        BitField("rsvd4", 0, 19),
     ]
 
 class RdmaEQstate(Packet):

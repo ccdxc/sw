@@ -13,6 +13,10 @@ struct cqcb_t d;
 #define PAGE_SEG_OFFSET     r4
 #define RQCB4_ADDR          r6
 
+#define DMA_CMD_BASE        r6
+#define DB_ADDR             r1
+#define DB_DATA             r2
+
 #define CQ_PT_INFO_T    struct resp_rx_cqcb_to_pt_info_t
 
 %%
@@ -55,6 +59,7 @@ resp_rx_cqcb_process:
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
     #copy fields cq_id, eq_id, and arm
     CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, arm, d.{cq_id...arm})
+    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, wakeup_dpath, d.wakeup_dpath)
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_seg_offset, PAGE_SEG_OFFSET)
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, PAGE_OFFSET)
 
@@ -71,9 +76,19 @@ resp_rx_cqcb_process:
     seq             c2, d.arm, 1
     tblwr.c2        d.arm, 0
 
+    bbne            d.wakeup_dpath, 1, skip_wakeup
+
     //for send with imm_as_dbell, set the pindex 
     //optimizing conditional checks
-    RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(CQ_P_INDEX_HX)
+    RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(CQ_P_INDEX_HX) //Branch Delay Slot
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_WAKEUP_DPATH)
+    RESP_RX_POST_WAKEUP_DPATH_INCR_PINDEX(DMA_CMD_BASE, 
+                                          d.wakeup_lif, d.wakeup_qtype, d.wakeup_qid, d.wakeup_ring_id, 
+                                          DB_ADDR, DB_DATA);
+    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
+
+skip_wakeup:
 
     nop.e
     nop

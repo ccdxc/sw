@@ -42,6 +42,8 @@
 #define RESP_RX_DMA_CMD_IMMDT_AS_DBELL (RESP_RX_MAX_DMA_CMDS - 3)
 #define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 2)
 #define RESP_RX_DMA_CMD_EQ          (RESP_RX_MAX_DMA_CMDS - 1)
+//wakeup dpath and EQ are mutually exclusive
+#define RESP_RX_DMA_CMD_WAKEUP_DPATH RESP_RX_DMA_CMD_EQ
 
 #define RESP_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
@@ -90,7 +92,18 @@
     phvwr       p.immdt_as_dbell_data, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, immdt_as_dbell_data, immdt_as_dbell_data, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
-       
+
+//immdt_as_dbell and wakeup_dpath are used mutually exclusively. Hence using the same phv field.
+//dma_cmd_idx is not the same though
+#define RESP_RX_POST_WAKEUP_DPATH_INCR_PINDEX(_dma_base_r, \
+                                       _lif, _qtype, _qid, _ring_id, \
+                                       _db_addr_r, _db_data_r) \
+    PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _db_addr_r, _db_data_r);\
+    phvwr       p.immdt_as_dbell_data, _db_data_r.dx; \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, immdt_as_dbell_data, immdt_as_dbell_data, _db_addr_r); \
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
+
+      
 #define RESP_RX_UPDATE_IMM_AS_DB_DATA_WITH_PINDEX(_pindex) \
     phvwr       p.immdt_as_dbell_data[63:48], _pindex;
 
@@ -317,7 +330,8 @@ struct resp_rx_cqcb_to_pt_info_t {
     cq_id: 24;
     eq_id: 24;
     arm: 1;
-    pad: 87;
+    wakeup_dpath: 1;
+    pad: 86;
 };
 
 struct resp_rx_cqpt_process_k_t {

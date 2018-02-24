@@ -104,9 +104,10 @@ struct req_rx_cqcb_to_pt_info_t {
     eq_id                   : 24;
     cq_id                   : 24;
     arm                     : 1;
+    wakeup_dpath            : 1;
     tbl_id                  : 3;
     rsvd                    : 4;
-    pad                     : 72;
+    pad                     : 71;
 };
 
 struct req_rx_cqcb_to_eq_info_t {

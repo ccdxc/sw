@@ -32,6 +32,7 @@ req_rx_cqpt_process:
     add             r4, r4, 1
 
     CAPRI_SET_TABLE_I_VALID(r6, 0)
+    bbeq            k.args.wakeup_dpath, 1, cqpt_exit
     seq             c2, k.args.arm, 1 
     bcf             [!c2], cqpt_exit
     DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_phv2mem_t, r2, !c2) //BD slot

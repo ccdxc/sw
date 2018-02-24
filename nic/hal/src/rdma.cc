@@ -1229,9 +1229,14 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
 
 
     HAL_TRACE_DEBUG("{}: Inputs: cq_num: {} cq_wqe_size: {} num_cq_wqes: {} "
-                    " hostmem_pg_size: {} cq_lkey: {} ", __FUNCTION__, spec.cq_num(),
+                    " hostmem_pg_size: {} cq_lkey: {} wakeup_dpath: {}", __FUNCTION__, spec.cq_num(),
                     spec.cq_wqe_size(), spec.num_cq_wqes(), spec.hostmem_pg_size(),
-                    spec.cq_lkey());
+                    spec.cq_lkey(), spec.wakeup_dpath());
+
+    if (spec.wakeup_dpath()) {
+        HAL_TRACE_DEBUG("{}: Inputs - Wakeup LIF: {}, QTYPE: {}, QID: {}, RING_ID: {}", 
+                        spec.wakeup_lif(), spec.wakeup_qtype(), spec.wakeup_qid(), spec.wakeup_ring_id());
+    }
 
     cqwqe_size = roundup_to_pow_2(spec.cq_wqe_size());
     num_cq_wqes = roundup_to_pow_2(spec.num_cq_wqes());
@@ -1250,6 +1255,12 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.eq_id = spec.eq_id();
     cqcb.color = 0;
     cqcb.arm = 0;   // Dont arm by default, only Arm it for tests which post/validate EQ
+
+    cqcb.wakeup_dpath = spec.wakeup_dpath();
+    cqcb.wakeup_lif = spec.wakeup_lif();
+    cqcb.wakeup_qtype = spec.wakeup_qtype();
+    cqcb.wakeup_qid = spec.wakeup_qid();
+    cqcb.wakeup_ring_id = spec.wakeup_ring_id();
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}", 

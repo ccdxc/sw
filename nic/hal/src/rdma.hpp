@@ -1168,10 +1168,14 @@ typedef struct srqcb_s {
 #define MAX_CQ_RINGS 1
 
 typedef struct cqcb_s {
-    uint8_t rsvd4[4];
+    uint32_t rsvd4:19;
 
-    uint32_t rsvd3:24;
-    uint32_t rsvd2:6;
+    uint32_t wakeup_ring_id:3;
+    uint32_t wakeup_qid:24;
+    uint32_t wakeup_qtype:3;
+    uint32_t wakeup_lif:12;
+    uint32_t wakeup_dpath:1;
+
     uint32_t color:1;
     uint32_t arm:1;
 

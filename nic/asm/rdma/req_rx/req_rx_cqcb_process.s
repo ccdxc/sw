@@ -61,7 +61,17 @@ req_rx_cqcb_process:
     tblmincri       CQ_P_INDEX, d.log_num_wqes, 1
     // if arm, disarm.
     seq             c2, d.arm, 1
-    tblwr.c2        d.arm, 0
 
+    bbne            d.wakeup_dpath, 1, skip_wakeup
+    tblwr.c2        d.arm, 0 //Branch Delay Slot
+
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_WAKEUP_DPATH)
+    PREPARE_DOORBELL_INC_PINDEX(d.wakeup_lif, d.wakeup_qtype, d.wakeup_qid, d.wakeup_ring_id, r1, r2)
+    phvwr          p.wakeup_dpath_data, r2.dx
+    DMA_HBM_PHV2MEM_SETUP(r6, wakeup_dpath_data, wakeup_dpath_data, r1)
+    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r6)
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
+
+skip_wakeup:
     nop.e
     nop

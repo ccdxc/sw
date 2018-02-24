@@ -26,10 +26,14 @@ struct cqcb_t {
 
     arm: 1;
     color: 1;
-    rsvd2: 6;
-    rsvd3: 24;
 
-    rsvd4: 32;
+    wakeup_dpath:1;
+    wakeup_lif:12;
+    wakeup_qtype:3;
+    wakeup_qid:24;
+    wakeup_ring_id:3;
+
+    rsvd4: 19;
     pad: 256;  // as d-vector is loaded only 256 bits, need this to interpret it correctly
 };
 

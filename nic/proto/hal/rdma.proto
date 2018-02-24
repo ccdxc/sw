@@ -174,6 +174,11 @@ message RdmaCqSpec {
   uint32                   hostmem_pg_size = 6;    // Path MTU
   uint32                   cq_lkey         = 7;    // CQ's lkey
   uint32                   eq_id           = 8;    // EQ id
+  bool                     wakeup_dpath    = 9;    // Wake up of Datapath thread required
+  uint32                   wakeup_lif      = 10;   // Wake up LIF
+  uint32                   wakeup_qtype    = 11;   // Wake up Qtype
+  uint32                   wakeup_qid      = 12;   // Wake up QID
+  uint32                   wakeup_ring_id  = 13;   // Wake up RING_ID
 }
 
 // RdmaCqRequestMsg is batched request used to create/update of Rdma QPs

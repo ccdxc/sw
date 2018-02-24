@@ -39,6 +39,7 @@ resp_rx_cqpt_process:
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqwqe, cqwqe, CQWQE_P)
 
     CAPRI_SET_TABLE_2_VALID(0)
+    bbeq            k.args.wakeup_dpath, 1, cqpt_exit
     seq             c2, k.args.arm, 1 
     bcf             [!c2], cqpt_exit
     DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_phv2mem_t, DMA_CMD_BASE, !c2) //BD slot

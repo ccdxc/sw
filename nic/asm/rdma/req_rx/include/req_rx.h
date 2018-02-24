@@ -22,12 +22,23 @@
 #define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
 #define REQ_RX_MAX_DMA_CMDS                16
 #define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 3)
+#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 2)
+//wakeup dpath and EQ are mutually exclusive
+#define REQ_RX_DMA_CMD_WAKEUP_DPATH        REQ_RX_DMA_CMD_EQ
+#define REQ_RX_DMA_CMD_EQ_INTR             (REQ_RX_MAX_DMA_CMDS - 2)
 
 // phv 
 struct req_rx_phv_t {
+    // flit 11-8
     // dma commands
 
     // scratch
+    //
+    //flit 7
+    wakeup_dpath_data       : 64;
+    rsvd7                   : (512 - 64);
+
+    //flit 6
     rexmit_psn              : 24;
     msn                     : 24;
     rsvd                    : 3;
@@ -38,6 +49,8 @@ struct req_rx_phv_t {
     struct eqwqe_t eqwqe;
     struct cqwqe_t cqwqe;
     my_token_id             : 8;
+
+    //flit 0-5
     // common rx
     struct phv_ common;
 };
