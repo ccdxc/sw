@@ -412,21 +412,27 @@ is_valid_tm_port (uint32_t port)
 }
 
 hal_ret_t
-capri_tm_pg_params_update (uint32_t port,
-                           uint32_t pool_group,
-                           tm_pg_params_t *pg_params,
-                           tm_hbm_fifo_params_t *hbm_params)
+capri_tm_uplink_iq_params_update (tm_port_t port,
+                                  tm_q_t iq,
+                                  tm_uplink_iq_params_t *iq_params)
 {
-    /* Do some sanity checks for port and pool_group */
-    if (!is_valid_tm_port(port)) {
-        HAL_TRACE_ERR("{} is not a valid TM port",
+    /* Do some sanity checks for port and iq */
+    if (!capri_tm_port_is_uplink_port(port)) {
+        HAL_TRACE_ERR("{} is not a valid TM uplink port",
                       port);
         return HAL_RET_INVALID_ARG;
     }
 
-    if (pg_params->mtu > tm_cfg_profile()->jumbo_mtu) {
+    if (iq_params->mtu > tm_cfg_profile()->jumbo_mtu) {
         HAL_TRACE_ERR("Invalid mtu {} larger than the jumbo {}",
-                      pg_params->mtu, tm_cfg_profile()->jumbo_mtu);
+                      iq_params->mtu, tm_cfg_profile()->jumbo_mtu);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if ((iq_params->p4_q < (signed)HAL_TM_P4_UPLINK_IQ_OFFSET) ||
+        (iq_params->p4_q >= (signed)capri_tm_get_num_iqs_for_port_type(TM_PORT_TYPE_P4IG))) {
+        HAL_TRACE_ERR("Invalid P4 Oq {} for uplink port {}",
+                      iq_params->p4_q, port);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -436,64 +442,70 @@ capri_tm_pg_params_update (uint32_t port,
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
     cpp_int xoff_val;
     cpp_int xon_val;
+    cpp_int oq_map_val;
     uint32_t xoff_threshold;
     uint32_t xon_threshold;
     uint32_t hbm_context;
     uint32_t num_hbm_contexts_per_port;
+    cap_pbc_oq_map_t oq_map_decoder;
+    oq_map_decoder.init();
 
     num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
     switch(port) {
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
         case ${pinfo["enum"]}:
             {
-//::    if pinfo["has_hbm"]:
-//::        pass
-                if (hbm_params == NULL) {
-                    HAL_TRACE_ERR("HBM parameters not passed for "
-                                  "port {} pool_group {}",
-                                  port, pool_group);
-                    return HAL_RET_INVALID_ARG;
+                // P4 oq derivation register
+                pbc_csr.cfg_parser${p}.read();
+                oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
+
+                pbc_csr.hlp.set_slc(oq_map_val, iq_params->p4_q,
+                                    iq * 5,
+                                    ((iq + 1) * 5) - 1);
+
+                pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
+
+                oq_map_decoder.all(pbc_csr.cfg_parser${p}.oq_map());
+                oq_map_decoder.set_name("cap0.pb.pbc.cfg_parser${p}.decoder");
+                oq_map_decoder.show();
+
+                pbc_csr.cfg_parser${p}.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.cfg_parser${p}.write();
                 }
-//::    else:
-//::        pass
-                if (hbm_params != NULL) {
-                    HAL_TRACE_ERR("HBM parameters passed for "
-                                  "port {} pool_group {} and HBM not supported",
-                                  port, pool_group);
-                    return HAL_RET_INVALID_ARG;
-                }
-//::    #endif
-                switch (pool_group) {
-//::    for pg in range(port_info[p]["pgs"]):
+
+                // MTU
+                pbc_csr.port_${p}.cfg_account_mtu_table.read();
+                switch (iq) {
+//::        for pg in range(port_info[p]["pgs"]):
                     case ${pg}:
                         {
-                            pbc_csr.port_${p}.cfg_account_mtu_table.read();
-
                             /* Update the MTU in the MTU register */
-                            pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(pg_params->mtu);
-
-                            pbc_csr.port_${p}.cfg_account_mtu_table.show();
-                            if (tm_sw_cfg_write_enabled()) {
-                                pbc_csr.port_${p}.cfg_account_mtu_table.write();
-                            }
+                            pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(iq_params->mtu);
                             break;
                         }
-//::    #endfor
+//::        #endfor
                     default:
                         return HAL_RET_ERR;
                 }
-//::    if pinfo["has_hbm"]:
-//::        if pinfo["type"] == "uplink":
+
+                pbc_csr.port_${p}.cfg_account_mtu_table.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_account_mtu_table.write();
+                }
+
+                // HBM Thresholds
                 hbm_csr.cfg_hbm_threshold.read();
 
                 xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
                 xon_val = hbm_csr.cfg_hbm_threshold.xon();
-                hbm_context = pool_group + (num_hbm_contexts_per_port * ${pinfo["enum"]});
+                hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
                 // xoff and xon thresholds are in 512B units in register.
                 // So right shift by 9 (using ceil value)
-                xoff_threshold = (hbm_params->xoff_threshold + (1<<9) - 1) >> 9;
-                xon_threshold = (hbm_params->xon_threshold + (1<<9) - 1) >> 9;
+                xoff_threshold = (iq_params->xoff_threshold + (1<<9) - 1) >> 9;
+                xon_threshold = (iq_params->xon_threshold + (1<<9) - 1) >> 9;
                 // 20 bits per hbm_context
                 pbc_csr.hlp.set_slc(xoff_val, xoff_threshold,
                                     hbm_context * 20, ((hbm_context + 1) * 20) - 1);
@@ -508,87 +520,55 @@ capri_tm_pg_params_update (uint32_t port,
                 if (tm_sw_cfg_write_enabled()) {
                     hbm_csr.cfg_hbm_threshold.write();
                 }
-//::        #endif
-//::    #endif
                 break;
             }
+//::    #endif
 //:: #endfor
         default:
             return HAL_RET_ERR;
     }
 
 #endif
-    HAL_TRACE_DEBUG("Updated the pool group {} on port {}",
-                    pool_group, port);
+    HAL_TRACE_DEBUG("Updated the iq {} on port {}",
+                    iq, port);
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
-capri_tm_tc_map_update (uint32_t port,
-                        uint32_t count,
-                        tm_tc_to_pg_map_t *tc_map)
+capri_tm_uplink_input_map_update (tm_port_t port,
+                                 uint32_t dot1q_pcp,
+                                 tm_q_t iq)
 {
-    /* Do some sanity checks for port */
     if (!capri_tm_port_is_uplink_port(port)) {
         HAL_TRACE_ERR("{} is not a valid TM uplink port",
                       port);
         return HAL_RET_INVALID_ARG;
     }
 #ifndef HAL_GTEST
-    uint32_t i;
-    uint32_t tc;
-    uint32_t npgs;
-    uint32_t nbits;
-    cpp_int  tc_map_reg_val = 0;
-    uint32_t pool_group;
-
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
+    cpp_int tc_map_reg_val;
+    uint32_t tc;
+    uint32_t nbits;
+
+    tc = dot1q_pcp;
+
     switch(port) {
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
 //::    if pinfo["type"] == "uplink":
         case ${pinfo["enum"]}:
             {
-                npgs = ${pinfo["pgs"]};
                 nbits = ${int(math.log(pinfo["pgs"], 2))};
                 hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
                 tc_map_reg_val = hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table();
-                break;
-            }
-//::    #endif
-//:: #endfor
-        default:
-            return HAL_RET_INVALID_ARG;
-    }
 
-    for (i = 0; i < count; i++) {
-        tc = tc_map[i].tc;
-        pool_group = tc_map[i].pg;
-        if (tc >= npgs) {
-            HAL_TRACE_ERR("Invalid tc value {} on port {} pool group {}",
-                          tc, port, pool_group);
-            return HAL_RET_INVALID_ARG;
-        }
-        if (pool_group >= npgs) {
-            HAL_TRACE_ERR("Invalid pool group {} on port {}",
-                          pool_group, port);
-            return HAL_RET_INVALID_ARG;
-        }
+                pbc_csr.hlp.set_slc(tc_map_reg_val, iq,
+                                    tc * nbits,
+                                    ((tc+1) * nbits) - 1);
 
-        pbc_csr.hlp.set_slc(tc_map_reg_val, pool_group,
-                            tc * nbits,
-                            ((tc+1) * nbits) - 1);
-    }
-
-    switch(port) {
-//:: for p in range(TM_PORTS):
-//::    pinfo = port_info[p]
-//::    if pinfo["type"] == "uplink":
-        case ${pinfo["enum"]}:
-            {
                 /* Update and write the tc to PG mapping */
                 hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table(tc_map_reg_val);
                 hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.show();
@@ -603,15 +583,13 @@ capri_tm_tc_map_update (uint32_t port,
             return HAL_RET_INVALID_ARG;
     }
 #endif
-
     return HAL_RET_OK;
 }
 
 hal_ret_t
-capri_tm_uplink_input_map_update (tm_port_t port,
-                                  tm_uplink_input_map_t *imap)
+capri_tm_uplink_input_dscp_map_update(tm_port_t port,
+                                      tm_uplink_input_dscp_map_t *dscp_map)
 {
-
     if (!capri_tm_port_is_uplink_port(port)) {
         HAL_TRACE_ERR("{} is not a valid TM uplink port",
                       port);
@@ -621,61 +599,29 @@ capri_tm_uplink_input_map_update (tm_port_t port,
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
-    cpp_int dscp_map_val = 0;
-    cpp_int oq_map_val = 0;
+    cpp_int dscp_map_val;
+    uint32_t tc;
     int use_ip = 0;
 
-    if ((imap->p4_oq < (signed)HAL_TM_P4_UPLINK_IQ_OFFSET) ||
-        (imap->p4_oq >= (signed)capri_tm_get_num_iqs_for_port_type(TM_PORT_TYPE_P4IG))) {
-        HAL_TRACE_ERR("Invalid P4 Oq {} for uplink port {}",
-                      imap->p4_oq, port);
-        return HAL_RET_INVALID_ARG;
-    }
+    tc = dscp_map->dot1q_pcp;
 
     switch(port) {
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
-//::    if pinfo["type"] != "uplink":
-//::        continue
-//::    #endif
+//::    if pinfo["type"] == "uplink":
         case ${pinfo["enum"]}:
             {
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.read();
                 dscp_map_val = hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map();
 
-                pbc_csr.cfg_parser${p}.read();
-                oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
-                break;
-            }
-//:: #endfor
-        default:
-            return HAL_RET_INVALID_ARG;
-    }
+                for (unsigned i = 0; i < HAL_ARRAY_SIZE(dscp_map->ip_dscp); i++) {
+                    if (dscp_map->ip_dscp[i]) {
+                        pbc_csr.hlp.set_slc(dscp_map_val, tc, i*3, ((i+1)*3)-1);
+                    }
+                }
 
-    pbc_csr.hlp.set_slc(oq_map_val, imap->p4_oq,
-                        imap->tc * 5,
-                        ((imap->tc + 1) * 5) - 1);
+                use_ip = (dscp_map_val ? 1 : 0);
 
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(imap->ip_dscp); i++) {
-        if (imap->ip_dscp[i]) {
-            pbc_csr.hlp.set_slc(dscp_map_val, imap->tc, i*3, ((i+1)*3)-1);
-        }
-    }
-
-    if (dscp_map_val == 0) {
-        use_ip = 0;
-    } else {
-        use_ip = 1;
-    }
-
-    switch(port) {
-//:: for p in range(TM_PORTS):
-//::    pinfo = port_info[p]
-//::    if pinfo["type"] != "uplink":
-//::        continue
-//::    #endif
-        case ${pinfo["enum"]}:
-            {
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(use_ip);
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(dscp_map_val);
@@ -683,19 +629,67 @@ capri_tm_uplink_input_map_update (tm_port_t port,
                 if (tm_sw_cfg_write_enabled()) {
                     hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
                 }
-
-                pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
-                pbc_csr.cfg_parser${p}.show();
-                if (tm_sw_cfg_write_enabled()) {
-                    pbc_csr.cfg_parser${p}.write();
-                }
                 break;
             }
+//::    #endif
 //:: #endfor
         default:
             return HAL_RET_INVALID_ARG;
     }
 #endif
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
+capri_tm_uplink_oq_update(tm_port_t port,
+                          tm_q_t oq,
+                          bool xoff_enable,
+                          uint32_t xoff_cos)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cpp_int xoff2oq_map_val;
+    cap_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder; 
+    xoff2oq_map_decoder.init();
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        HAL_TRACE_ERR("{} is not a valid TM uplink port",
+                      port);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // TODO: program the per oq xoff enable/disable register when available
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
+                xoff2oq_map_val = pbc_csr.port_${p}.cfg_oq_xoff2oq.map();
+
+                pbc_csr.hlp.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
+
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
+
+                xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
+                xoff2oq_map_decoder.set_name("cap0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
+                xoff2oq_map_decoder.show();
+
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.show();
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return HAL_RET_INVALID_ARG;
+    }
+
     return HAL_RET_OK;
 }
 
@@ -713,7 +707,9 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
     cpp_int node_val;
     cpp_int strict_val;
 
-    if (node >= HAL_TM_COUNT_L${level}_NODES) {
+    uint32_t max_nodes = HAL_TM_COUNT_L${level}_NODES;
+
+    if (node >= max_nodes) {
         HAL_TRACE_ERR("node {} exceeds the number of valid level "
                       "${level} nodes in port {}",
                       node, port);
@@ -764,6 +760,26 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
             return HAL_RET_ERR;
     }
 
+    pbc_csr.cfg_sched.enable_wrr(1);
+    pbc_csr.cfg_sched.dhs_selection( ${level}*2 );
+    if (tm_sw_cfg_write_enabled()) {
+        pbc_csr.cfg_sched.write();
+    }
+
+    pbc_csr.cfg_dhs_mem.address(port*max_nodes + node);
+    if (tm_sw_cfg_write_enabled()) {
+        pbc_csr.cfg_dhs_mem.write();
+    }
+
+    uint32_t quota = (node_params->sched_type == TM_SCHED_TYPE_STRICT ? 
+                      node_params->strict.rate : node_params->dwrr.weight);
+
+    pbc_csr.dhs_sched.entry[0].command(1);   //1: overwrite quota and credits
+    pbc_csr.dhs_sched.entry[0].current_credit(quota);
+    pbc_csr.dhs_sched.entry[0].quota(quota);
+    if (tm_sw_cfg_write_enabled()) {
+        pbc_csr.dhs_sched.entry[0].write();
+    }
 #endif
     HAL_TRACE_DEBUG("Updated the output queue scheduler on port {} "
                     "level {}, node {}",
@@ -1484,7 +1500,7 @@ capri_tm_port_program_defaults (void)
             capri_tm_get_max_cell_chunks_for_island(0) >
             capri_tm_get_max_cell_chunks_for_island(1) ? 1 : 0) ;
 //::    #endif
-//::    if pinfo["type"] == "dma":
+//::    if pinfo["type"] == "dma" or pinfo["type"] == "uplink":
         pbc_csr.port_${p}.cfg_oq.flow_control_enable_xoff(1);
 //::    #endif
     }

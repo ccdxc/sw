@@ -100,52 +100,37 @@ bool
 capri_tm_port_is_dma_port(uint32_t port);
 
 // APIs to update the hardware
-/* Pool group parameters */
-typedef struct tm_pg_params_s {
+typedef struct tm_uplink_iq_params_s {
     uint32_t mtu;
-} tm_pg_params_t;
+    uint32_t xoff_threshold;
+    uint32_t xon_threshold;
+    tm_q_t   p4_q;
+} __PACK__ tm_uplink_iq_params_t;
 
-typedef struct tm_hbm_fifo_params_s {
-    uint32_t xoff_threshold; // in bytes
-    uint32_t xon_threshold; // in bytes
-} tm_hbm_fifo_params_t;
-
-/** capri_tm_pg_params_update
- * API to update the pool group parameters on a Capri TM port
- *
- * @param port[in]: TM port number
- * @param pg[in]: Pool group number
- * @param pg_params[in]: Pool group parameters
- * @return hal_ret_t: Status of the operation
- */
-hal_ret_t 
-capri_tm_pg_params_update(tm_port_t port,
-                          uint32_t pg,
-                          tm_pg_params_t *pg_params,
-                          tm_hbm_fifo_params_t *hbm_params);
-
-typedef struct tm_tc_to_pg_map_s {
-    uint32_t tc;
-    uint32_t pg;
-} tm_tc_to_pg_map_t;
-
-/** capri_tm_tc_map_update
- * API to update the cos-map parameters on the port
- */
 hal_ret_t
-capri_tm_tc_map_update(tm_port_t port,
-                       uint32_t count,
-                       tm_tc_to_pg_map_t *tc_map);
-
-typedef struct tm_uplink_input_map_s {
-    bool        ip_dscp[HAL_TM_MAX_DSCP_VALS];
-    uint32_t    tc;
-    tm_q_t      p4_oq;
-} tm_uplink_input_map_t;
+capri_tm_uplink_iq_params_update(tm_port_t port,
+                                 tm_q_t iq,
+                                 tm_uplink_iq_params_t *iq_params);
 
 hal_ret_t
 capri_tm_uplink_input_map_update(tm_port_t port,
-                                 tm_uplink_input_map_t *imap);
+                                 uint32_t dot1q_pcp,
+                                 tm_q_t iq);
+
+typedef struct tm_uplink_input_dscp_map_s {
+    bool        ip_dscp[HAL_TM_MAX_DSCP_VALS];
+    uint32_t    dot1q_pcp;
+} tm_uplink_input_dscp_map_t;
+
+hal_ret_t
+capri_tm_uplink_input_dscp_map_update(tm_port_t port,
+                                      tm_uplink_input_dscp_map_t *dscp_map);
+
+hal_ret_t
+capri_tm_uplink_oq_update(tm_port_t port,
+                          tm_q_t oq,
+                          bool xoff_enable,
+                          uint32_t xoff_cos);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \

@@ -60,7 +60,7 @@ struct pd_qos_class_s {
     bool               pcie_oq; // indicates if the rxdma oq is towards pcie/hbm
 
     // pi ptr
-    void               *pi_qos_class;
+    qos_class_t        *pi_qos_class;
 } __PACK__;
 
 // allocate Qos-class Instance
@@ -125,16 +125,6 @@ qos_class_pd_mem_free (pd_qos_class_t *qos_class)
     hal::pd::delay_delete_to_slab(HAL_SLAB_QOS_CLASS_PD, qos_class);
     return HAL_RET_OK;
 }
-
-hal_ret_t qos_class_pd_alloc_res(pd_qos_class_t *up_qos_class);
-hal_ret_t qos_class_pd_dealloc_res(pd_qos_class_t *up_qos_class);
-hal_ret_t qos_class_pd_cleanup(pd_qos_class_t *qos_class_pd);
-
-
-hal_ret_t qos_class_pd_program_hw(pd_qos_class_t *pd_qos_class);
-void qos_class_pd_link_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class);
-void qos_class_pd_delink_pi_pd(pd_qos_class_t *pd_qos_class, qos_class_t *pi_up_qos_class);
-
 }   // namespace pd
 }   // namespace hal
 

@@ -844,6 +844,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                  *lnode = NULL;
     dhl_entry_t                    *dhl_entry = NULL;
     qos_class_t                    *qos_class_clone = NULL;
+    qos_class_update_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-qos_class{}:invalid cfg_ctxt");
@@ -853,6 +854,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    app_ctxt = (qos_class_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
@@ -862,6 +864,18 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_qos_class_update_args_init(&pd_qos_class_args);
     pd_qos_class_args.qos_class = qos_class_clone;
+    pd_qos_class_args.mtu_changed = app_ctxt->mtu_changed;
+    pd_qos_class_args.threshold_changed = app_ctxt->threshold_changed;
+    pd_qos_class_args.ip_dscp_changed = app_ctxt->ip_dscp_changed;
+    pd_qos_class_args.dot1q_pcp_changed = app_ctxt->dot1q_pcp_changed;
+    pd_qos_class_args.dot1q_pcp_src = app_ctxt->dot1q_pcp_src;
+    HAL_ASSERT(sizeof(pd_qos_class_args.ip_dscp_remove) == 
+               sizeof(app_ctxt->ip_dscp_remove));
+    memcpy(pd_qos_class_args.ip_dscp_remove, app_ctxt->ip_dscp_remove,
+           sizeof(app_ctxt->ip_dscp_remove));
+    pd_qos_class_args.pfc_changed = app_ctxt->pfc_changed;
+    pd_qos_class_args.scheduler_changed = app_ctxt->scheduler_changed;
+    pd_qos_class_args.marking_changed = app_ctxt->marking_changed;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_UPDATE, (void *)&pd_qos_class_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to update qos_class pd, err : {}",
@@ -994,11 +1008,16 @@ static inline hal_ret_t
 qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                          qos_class_update_app_ctxt_t *app_ctxt)
 {
+    bool ip_dscp_to_rem[HAL_MAX_IP_DSCP_VALS];
+
     if (qos_class_is_user_defined(qos_class)) {
         // Do validations to check that the dot1q_pcp and ip_dscp are not
         // associated with other classes
         qos_uplink_cmap_t *cmap = &qos_class->uplink_cmap;
         if (spec.uplink_class_map().dot1q_pcp() != cmap->dot1q_pcp) {
+            app_ctxt->dot1q_pcp_changed = true;
+            app_ctxt->dot1q_pcp_src = cmap->dot1q_pcp;
+
             if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.uplink_class_map().dot1q_pcp())) {
                 HAL_TRACE_ERR("Dot1q pcp {} is already in use",
                               spec.uplink_class_map().dot1q_pcp());
@@ -1006,8 +1025,15 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
             }
         }
 
+        memcpy(ip_dscp_to_rem, cmap->ip_dscp, sizeof(ip_dscp_to_rem));
+
         for (int i = 0; i < spec.uplink_class_map().ip_dscp_size(); i++) {
+            ip_dscp_to_rem[spec.uplink_class_map().ip_dscp(i)] = false;
+
             if (!cmap->ip_dscp[spec.uplink_class_map().ip_dscp(i)]) {
+
+                app_ctxt->ip_dscp_changed = true;
+
                 if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.uplink_class_map().ip_dscp(i))) {
                     HAL_TRACE_ERR("IP dscp {} is already in use",
                                   spec.uplink_class_map().ip_dscp(i));
@@ -1015,6 +1041,22 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                 }
             }
         }
+
+        for (unsigned i = 0; i < HAL_ARRAY_SIZE(ip_dscp_to_rem); i++) {
+            if (ip_dscp_to_rem[i]) {
+                app_ctxt->ip_dscp_changed = true;
+                break;
+            }
+        }
+
+        memcpy(app_ctxt->ip_dscp_remove, ip_dscp_to_rem, sizeof(ip_dscp_to_rem));
+    }
+
+    if (qos_class->no_drop != spec.has_pfc()) {
+        HAL_TRACE_ERR("{} class cannot be changed to {} class",
+                      qos_class->no_drop ? "No drop" : "Drop",
+                      spec.has_pfc() ? "No drop" : "Drop");
+        return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
@@ -1032,6 +1074,7 @@ qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     qos_class_update_app_ctxt_t app_ctxt;
     const QosClassKeyHandle     &kh = spec.key_or_handle();
+    qos_class_t                 *qos_class_clone;
 
     hal_api_trace(" API Begin: qos_class update");
 
@@ -1066,10 +1109,32 @@ qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
 
     qos_class_make_clone(qos_class, (qos_class_t **)&dhl_entry.cloned_obj, spec);
 
+    qos_class_clone = (qos_class_t *)dhl_entry.cloned_obj;
+
+    if (qos_class_clone->mtu != qos_class->mtu) {
+        app_ctxt.mtu_changed = true;
+    }
+
+    if (memcmp(&qos_class_clone->buffer, &qos_class->buffer, sizeof(qos_class->buffer))) {
+        app_ctxt.threshold_changed = true;
+    }
+
+    if (qos_class_clone->pfc_cos != qos_class->pfc_cos) {
+        app_ctxt.pfc_changed = true;
+    }
+
+    if (memcmp(&qos_class_clone->sched, &qos_class->sched, sizeof(qos_class->sched))) {
+        app_ctxt.scheduler_changed = true;
+    }
+
+    if (memcmp(&qos_class_clone->marking, &qos_class->marking, sizeof(qos_class->marking))) {
+        app_ctxt.marking_changed = true;
+    }
+
     // form ctxt and call infra update object
     dhl_entry.handle = qos_class->hal_handle;
     dhl_entry.obj = qos_class;
-    cfg_ctxt.app_ctxt = NULL;
+    cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);

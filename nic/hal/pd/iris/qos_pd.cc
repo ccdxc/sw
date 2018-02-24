@@ -77,131 +77,23 @@ pd_qos_get_alloc_q_count (qos_class_t *qos_class,
 }
 
 // ----------------------------------------------------------------------------
-// Qos-class Create
+// Linking PI <-> PD
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_class_create (pd_qos_class_create_args_t *args)
+static void
+qos_class_pd_link_pi_pd (pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
 {
-    hal_ret_t      ret = HAL_RET_OK;;
-    pd_qos_class_t *pd_qos_class;
-
-    HAL_TRACE_DEBUG("creating pd state for qos_class: {}",
-                    args->qos_class->key);
-
-    // Create qos_class PD
-    pd_qos_class = qos_class_pd_alloc_init();
-    if (pd_qos_class == NULL) {
-        ret = HAL_RET_OOM;
-        goto end;
-    }
-
-    // Link PI & PD
-    qos_class_pd_link_pi_pd(pd_qos_class, args->qos_class);
-
-    // Allocate Resources
-    ret = qos_class_pd_alloc_res(pd_qos_class);
-    if (ret != HAL_RET_OK) {
-        // No Resources, dont allocate PD
-        HAL_TRACE_ERR("Unable to alloc. resources for Qos-class: {} ret {}",
-                      args->qos_class->key, ret);
-        goto end;
-    }
-
-    // Program HW
-    ret = qos_class_pd_program_hw(pd_qos_class);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to program hw for Qos-class: {} ret {}",
-                      args->qos_class->key, ret);
-        goto end;
-    }
-
-end:
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error in programming hw for Qos-class: {}: ret: {}",
-                      args->qos_class->key, ret);
-        // unlink_pi_pd(pd_qos_class, args->qos_class);
-        // qos_class_pd_free(pd_qos_class);
-        qos_class_pd_cleanup(pd_qos_class);
-    }
-
-    return ret;
+    pd_qos_class->pi_qos_class = pi_qos_class;
+    qos_class_set_pd_qos_class(pi_qos_class, pd_qos_class);
 }
 
 // ----------------------------------------------------------------------------
-// Qos-class Update
+// De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_class_update (pd_qos_class_update_args_t *args)
+static void
+qos_class_pd_delink_pi_pd (pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
 {
-    HAL_TRACE_DEBUG("updating pd state for qos_class:{}",
-                    args->qos_class->key);
-
-    return HAL_RET_OK;
-}
-
-//-----------------------------------------------------------------------------
-// PD Qos-class Delete
-//-----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_class_delete (pd_qos_class_delete_args_t *args)
-{
-    hal_ret_t      ret;
-    pd_qos_class_t *qos_class_pd;
-
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->qos_class != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->qos_class->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("deleting pd state for qos_class {}",
-                    args->qos_class->key);
-    qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
-
-    // TODO: deprogram hw
-
-    // free up the resource and memory
-    ret = qos_class_pd_cleanup(qos_class_pd);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed pd qos_class cleanup Qos-class {}, ret {}",
-                      args->qos_class->key, ret);
-    }
-
-    return ret;
-}
-
-//-----------------------------------------------------------------------------
-// PD Qos-class Cleanup
-//  - Release all resources
-//  - Delink PI <-> PD
-//  - Free PD Qos-class
-//  Note:
-//      - Just free up whatever PD has.
-//      - Dont use this inplace of delete. Delete may result in giving callbacks
-//        to others.
-//-----------------------------------------------------------------------------
-hal_ret_t
-qos_class_pd_cleanup (pd_qos_class_t *qos_class_pd)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-
-    if (!qos_class_pd) {
-        // Nothing to do
-        goto end;
-    }
-
-    // Releasing resources
-    ret = qos_class_pd_dealloc_res(qos_class_pd);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to dealloc res for qos_class: {}",
-                      ((qos_class_t *)(qos_class_pd->pi_qos_class))->key);
-        goto end;
-    }
-
-    // Delinking PI<->PD
-    qos_class_pd_delink_pi_pd(qos_class_pd, (qos_class_t *)qos_class_pd->pi_qos_class);
-
-    // Freeing PD
-    qos_class_pd_free(qos_class_pd);
-end:
-    return ret;
+    pd_qos_class->pi_qos_class = NULL;
+    qos_class_set_pd_qos_class(pi_qos_class, NULL);
 }
 
 static hal_ret_t
@@ -210,7 +102,7 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
     hal_ret_t               ret;
     pd_qos_q_alloc_params_t q_alloc_params;
     indexer::status         rs = indexer::SUCCESS;
-    qos_class_t             *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
+    qos_class_t             *qos_class = pd_qos_class->pi_qos_class;
     qos_group_t             qos_group;
     uint32_t                p4_q_idx = 0;
 
@@ -236,7 +128,6 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
                     q_alloc_params.pcie_oq);
 
     // Allocate queues in all the ports
-    //
 
     if (qos_group == QOS_GROUP_SPAN) {
         pd_qos_class->p4_eg_q[HAL_PD_QOS_IQ_COMMON] = HAL_TM_P4_SPAN_QUEUE;
@@ -307,11 +198,11 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Qos-class
 // ----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 qos_class_pd_alloc_res (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    qos_class_t             *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
+    qos_class_t             *qos_class = pd_qos_class->pi_qos_class;
 
     ret = qos_class_pd_alloc_queues(pd_qos_class);
     if (ret != HAL_RET_OK) {
@@ -327,7 +218,7 @@ qos_class_pd_alloc_res (pd_qos_class_t *pd_qos_class)
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD Qos-class
 // ----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
 {
 
@@ -352,41 +243,41 @@ qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
     return HAL_RET_OK;
 }
 
-// Program the mapping from the traffic class to the iq for accounting purpose
-static hal_ret_t
-program_iq (tm_port_t port, uint32_t tc, tm_q_t iq)
-{
-    hal_ret_t           ret = HAL_RET_OK;
-    tm_tc_to_pg_map_t   tc_to_pg_map;
 
-    if (!capri_tm_q_valid(iq)) {
-        return HAL_RET_OK;
+//-----------------------------------------------------------------------------
+// PD Qos-class Cleanup
+//  - Release all resources
+//  - Delink PI <-> PD
+//  - Free PD Qos-class
+//  Note:
+//      - Just free up whatever PD has.
+//      - Dont use this inplace of delete. Delete may result in giving callbacks
+//        to others.
+//-----------------------------------------------------------------------------
+static hal_ret_t
+qos_class_pd_cleanup (pd_qos_class_t *qos_class_pd)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!qos_class_pd) {
+        // Nothing to do
+        goto end;
     }
 
-    tc_to_pg_map.tc = tc;
-    tc_to_pg_map.pg = iq;
+    // Releasing resources
+    ret = qos_class_pd_dealloc_res(qos_class_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to dealloc res for qos_class: {}",
+                      qos_class_pd->pi_qos_class->key);
+        goto end;
+    }
 
-    ret = capri_tm_tc_map_update(port, 1, &tc_to_pg_map);
-    return ret;
-}
+    // Delinking PI<->PD
+    qos_class_pd_delink_pi_pd(qos_class_pd, qos_class_pd->pi_qos_class);
 
-// Program the dscp to tc and the p4_oq map on uplinks
-static hal_ret_t
-program_uplink_map (tm_port_t port, pd_qos_class_t *pd_qos_class)
-{
-    hal_ret_t             ret = HAL_RET_OK;
-    tm_uplink_input_map_t tm_uplink_input_map = {};
-    qos_class_t           *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
-
-    HAL_ASSERT(HAL_ARRAY_SIZE(qos_class->uplink_cmap.ip_dscp) ==
-               HAL_ARRAY_SIZE(tm_uplink_input_map.ip_dscp));
-    memcpy(tm_uplink_input_map.ip_dscp, qos_class->uplink_cmap.ip_dscp,
-           HAL_ARRAY_SIZE(qos_class->uplink_cmap.ip_dscp));
-    tm_uplink_input_map.tc = qos_class->uplink_cmap.dot1q_pcp;
-    tm_uplink_input_map.p4_oq = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
-    HAL_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
-
-    ret = capri_tm_uplink_input_map_update(port, &tm_uplink_input_map);
+    // Freeing PD
+    qos_class_pd_free(qos_class_pd);
+end:
     return ret;
 }
 
@@ -425,183 +316,200 @@ program_oq (tm_port_t port, tm_q_t oq, qos_class_t *qos_class)
 }
 
 static hal_ret_t
-qos_class_pd_program_uplink_ports (pd_qos_class_t *pd_qos_class)
+qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    tm_pg_params_t       pg_params;
-    tm_hbm_fifo_params_t hbm_params;
-    tm_port_t            port;
-    qos_class_t          *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
-    tm_q_t               iq;
+    hal_ret_t             ret = HAL_RET_OK;
+    tm_uplink_iq_params_t iq_params;
+    tm_port_t             port;
+    qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
+    tm_q_t                iq;
+
+    iq = pd_qos_class->uplink.iq;
+    if (!capri_tm_q_valid(iq)) {
+        return HAL_RET_OK;
+    }
+
+    memset(&iq_params, 0, sizeof(iq_params));
+
+    iq_params.mtu = qos_class->mtu;
+    iq_params.xoff_threshold = qos_class->buffer.xoff_clear_limit;
+    iq_params.xon_threshold = qos_class->buffer.xon_threshold;
+    HAL_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
+    iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        iq = pd_qos_class->uplink.iq;
-        if (capri_tm_q_valid(iq)) {
-            // Update the buffer pool parameters
-            memset(&pg_params, 0, sizeof(pg_params));
-            memset(&hbm_params, 0, sizeof(hbm_params));
-
-            pg_params.mtu = qos_class->mtu;
-
-            hbm_params.xoff_threshold = qos_class->buffer.xoff_clear_limit;
-            hbm_params.xon_threshold = qos_class->buffer.xon_threshold;
-
-            if (port == TM_PORT_NCSI) {
-                ret = capri_tm_pg_params_update(port, iq,
-                                                &pg_params, NULL);
-            } else {
-                ret = capri_tm_pg_params_update(port, iq,
-                                                &pg_params, &hbm_params);
-            }
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the buffer params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
-
-            ret = program_iq(port, qos_class->uplink_cmap.dot1q_pcp, iq);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the iq params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
-
-            ret = program_uplink_map(port, pd_qos_class);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the uplink map params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
-        }
-
-        if (capri_tm_q_valid(pd_qos_class->dest_oq) &&
-            (pd_qos_class->dest_oq_type == HAL_PD_QOS_OQ_COMMON)) {
-            ret = program_oq(port, pd_qos_class->dest_oq, qos_class);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the oq params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
+        ret = capri_tm_uplink_iq_params_update(port, iq, &iq_params);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the iq params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
         }
     }
     return HAL_RET_OK;
 }
 
 static hal_ret_t
-qos_class_pd_program_p4_ports (pd_qos_class_t *pd_qos_class)
+qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
+{
+    // Program the dscp, dot1q to iq map
+    hal_ret_t                  ret = HAL_RET_OK;
+    tm_port_t                  port;
+    qos_class_t                *qos_class = pd_qos_class->pi_qos_class;
+    tm_q_t                     iq;
+    tm_uplink_input_dscp_map_t dscp_map = {0};
+
+    iq = pd_qos_class->uplink.iq;
+    if (!capri_tm_q_valid(iq)) {
+        return HAL_RET_OK;
+    }
+
+    HAL_ASSERT(sizeof(qos_class->uplink_cmap.ip_dscp) ==
+               sizeof(dscp_map.ip_dscp));
+    memcpy(dscp_map.ip_dscp, qos_class->uplink_cmap.ip_dscp,
+           sizeof(qos_class->uplink_cmap.ip_dscp));
+    dscp_map.dot1q_pcp = qos_class->uplink_cmap.dot1q_pcp;
+
+    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        ret = capri_tm_uplink_input_map_update(port, 
+                                               qos_class->uplink_cmap.dot1q_pcp,
+                                               iq);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the uplink map for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+
+        ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the uplink dscp map for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
+                                          bool *ip_dscp_vals, uint32_t cnt_ip_dscp)
+{
+    hal_ret_t                  ret = HAL_RET_OK;
+    tm_port_t                  port;
+    qos_class_t                *default_qos_class = NULL;
+    tm_uplink_input_dscp_map_t dscp_map = {0};
+    uint32_t                   default_qos_class_dot1q_pcp = 0;
+    tm_q_t                     default_qos_class_iq = 0;
+
+    default_qos_class = find_qos_class_by_group(QOS_GROUP_DEFAULT);
+    if (!default_qos_class) {
+        HAL_TRACE_ERR("Default qos class is not created");
+    } else {
+        default_qos_class_dot1q_pcp = default_qos_class->uplink_cmap.dot1q_pcp;
+        default_qos_class_iq = default_qos_class->pd->uplink.iq;
+    }
+
+    HAL_ASSERT(cnt_ip_dscp == HAL_ARRAY_SIZE(dscp_map.ip_dscp));
+    memcpy(dscp_map.ip_dscp, ip_dscp_vals, sizeof(dscp_map.ip_dscp));
+    dscp_map.dot1q_pcp = default_qos_class_dot1q_pcp;
+
+    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        if (dot1q_remove) {
+            ret = capri_tm_uplink_input_map_update(port, 
+                                                   dot1q_pcp,
+                                                   default_qos_class_iq);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming the uplink map "
+                              "on port {} ret {}",
+                              port, ret);
+                return ret;
+            }
+        }
+
+        ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the uplink dscp map "
+                          "on port {} ret {}",
+                          port, ret);
+            return ret;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
+{
+    hal_ret_t             ret = HAL_RET_OK;
+    tm_port_t             port;
+    qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
+
+    if (!capri_tm_q_valid(pd_qos_class->dest_oq) ||
+        (pd_qos_class->dest_oq_type != HAL_PD_QOS_OQ_COMMON)) {
+        return HAL_RET_OK;
+    }
+
+    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq, 
+                                        qos_class->no_drop, qos_class->pfc_cos);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the xoff params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+qos_class_pd_program_scheduler (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t            ret = HAL_RET_OK;
     tm_port_t            port;
-    qos_class_t          *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
-    tm_pg_params_t       pg_params;
-    tm_q_t               iq;
+    qos_class_t          *qos_class = pd_qos_class->pi_qos_class;
     tm_q_t               oq;
 
     port = TM_PORT_INGRESS;
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
-        iq = pd_qos_class->p4_ig_q[i];
-        if (capri_tm_q_valid(iq)) {
-            // Update the buffer pool parameters
-            memset(&pg_params, 0, sizeof(pg_params));
-
-            pg_params.mtu = qos_class->mtu;
-
-            ret = capri_tm_pg_params_update(port, iq,
-                                            &pg_params, NULL);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the buffer params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
-        }
-    }
-
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
         oq = pd_qos_class->p4_ig_q[i];
-        if (capri_tm_q_valid(oq)) {
-            ret = program_oq(port, oq, qos_class);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the oq params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
+        ret = program_oq(port, oq, qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the oq params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
         }
     }
 
     port = TM_PORT_EGRESS;
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_eg_q); i++) {
-        iq = pd_qos_class->p4_eg_q[i];
         oq = pd_qos_class->p4_eg_q[i];
-        if (capri_tm_q_valid(iq)) {
-            // Update the buffer pool parameters
-            memset(&pg_params, 0, sizeof(pg_params));
-
-            pg_params.mtu = qos_class->mtu;
-
-            ret = capri_tm_pg_params_update(port, iq,
-                                            &pg_params, NULL);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the buffer params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
+        ret = program_oq(port, oq, qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the oq params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
         }
     }
 
-    for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->p4_eg_q); i++) {
-        oq = pd_qos_class->p4_eg_q[i];
-        if (capri_tm_q_valid(oq)) {
-            ret = program_oq(port, oq, qos_class);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the oq params for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
-        }
-    }
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
-qos_class_pd_program_dma_ports (pd_qos_class_t *pd_qos_class)
-{
-    hal_ret_t            ret = HAL_RET_OK;
-    tm_port_t            port;
-    qos_class_t          *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
-    tm_pg_params_t       pg_params;
-    tm_hbm_fifo_params_t hbm_params;
-    tm_q_t               iq;
-
+    // On the DMA port
     for (port = TM_DMA_PORT_BEGIN; port <= TM_DMA_PORT_END; port++) {
-        for (unsigned i = 0; i < HAL_ARRAY_SIZE(pd_qos_class->txdma); i++) {
-            iq = pd_qos_class->txdma[i].iq;
-            if (capri_tm_q_valid(iq)) {
-                // Update the buffer pool parameters
-                memset(&pg_params, 0, sizeof(pg_params));
-                memset(&hbm_params, 0, sizeof(hbm_params));
-
-                pg_params.mtu = qos_class->mtu;
-
-                ret = capri_tm_pg_params_update(port, iq,
-                                                &pg_params, &hbm_params);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Error programming the buffer params for "
-                                  "Qos-class {} on port {} ret {}",
-                                  qos_class->key, port, ret);
-                    return ret;
-                }
-            }
+        ret = program_oq(port, pd_qos_class->dest_oq, qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the oq params for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
         }
+    }
 
-        if (capri_tm_q_valid(pd_qos_class->dest_oq)) {
+    // On the uplink port
+    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        if (pd_qos_class->dest_oq_type == HAL_PD_QOS_OQ_COMMON) {
             ret = program_oq(port, pd_qos_class->dest_oq, qos_class);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming the oq params for "
@@ -620,7 +528,7 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t      ret = HAL_RET_OK;
     sdk_ret_t      sdk_ret;
-    qos_class_t    *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
+    qos_class_t    *qos_class = pd_qos_class->pi_qos_class;
     directmap      *qos_tbl = NULL;
     qos_actiondata d;
     uint32_t       qos_class_id;
@@ -675,34 +583,40 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
 // ----------------------------------------------------------------------------
 // Program HW
 // ----------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t            ret = HAL_RET_OK;
-    qos_class_t          *qos_class = (qos_class_t *)pd_qos_class->pi_qos_class;
+    qos_class_t          *qos_class = pd_qos_class->pi_qos_class;
 
-    ret = qos_class_pd_program_uplink_ports(pd_qos_class);
+    ret = qos_class_pd_program_uplink_iq_params(pd_qos_class);
     if (ret != HAL_RET_OK) {
-        // TODO: What to do in case of hw programming error ?
-        HAL_TRACE_ERR("Error programming the uplink ports for "
+        HAL_TRACE_ERR("Error programming uplink iq params for "
                       "Qos-class {} ret {}",
                       qos_class->key, ret);
         return ret;
     }
 
-    ret = qos_class_pd_program_p4_ports(pd_qos_class);
+    ret = qos_class_pd_program_uplink_iq_map(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error programming uplink iq map for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+
+    ret = qos_class_pd_program_uplink_xoff(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error programming uplink oq xoff for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+
+    ret = qos_class_pd_program_scheduler(pd_qos_class);
     if (ret != HAL_RET_OK) {
         // TODO: What to do in case of hw programming error ?
         HAL_TRACE_ERR("Error programming the p4 ports for "
-                      "Qos-class {} ret {}",
-                      qos_class->key, ret);
-        return ret;
-    }
-
-    ret = qos_class_pd_program_dma_ports(pd_qos_class);
-    if (ret != HAL_RET_OK) {
-        // TODO: What to do in case of hw programming error ?
-        HAL_TRACE_ERR("Error programming the dma ports for "
                       "Qos-class {} ret {}",
                       qos_class->key, ret);
         return ret;
@@ -721,23 +635,163 @@ qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
 }
 
 // ----------------------------------------------------------------------------
-// Linking PI <-> PD
+// Qos-class Create
 // ----------------------------------------------------------------------------
-void
-qos_class_pd_link_pi_pd (pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
+hal_ret_t
+pd_qos_class_create (pd_qos_class_create_args_t *args)
 {
-    pd_qos_class->pi_qos_class = pi_qos_class;
-    qos_class_set_pd_qos_class(pi_qos_class, pd_qos_class);
+    hal_ret_t      ret = HAL_RET_OK;;
+    pd_qos_class_t *pd_qos_class;
+
+    HAL_TRACE_DEBUG("creating pd state for qos_class: {}",
+                    args->qos_class->key);
+
+    // Create qos_class PD
+    pd_qos_class = qos_class_pd_alloc_init();
+    if (pd_qos_class == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    // Link PI & PD
+    qos_class_pd_link_pi_pd(pd_qos_class, args->qos_class);
+
+    // Allocate Resources
+    ret = qos_class_pd_alloc_res(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        // No Resources, dont allocate PD
+        HAL_TRACE_ERR("Unable to alloc. resources for Qos-class: {} ret {}",
+                      args->qos_class->key, ret);
+        goto end;
+    }
+
+    // Program HW
+    ret = qos_class_pd_program_hw(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program hw for Qos-class: {} ret {}",
+                      args->qos_class->key, ret);
+        goto end;
+    }
+
+end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in programming hw for Qos-class: {}: ret: {}",
+                      args->qos_class->key, ret);
+        // unlink_pi_pd(pd_qos_class, args->qos_class);
+        // qos_class_pd_free(pd_qos_class);
+        qos_class_pd_cleanup(pd_qos_class);
+    }
+
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
-// De-Linking PI <-> PD
+// Qos-class Update
 // ----------------------------------------------------------------------------
-void
-qos_class_pd_delink_pi_pd (pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_class)
+hal_ret_t
+pd_qos_class_update (pd_qos_class_update_args_t *args)
 {
-    pd_qos_class->pi_qos_class = NULL;
-    qos_class_set_pd_qos_class(pi_qos_class, NULL);
+    hal_ret_t ret = HAL_RET_OK;
+    pd_qos_class_t *pd_qos_class;
+    qos_class_t *qos_class;
+
+    HAL_TRACE_DEBUG("updating pd state for qos_class:{}",
+                    args->qos_class->key);
+
+    qos_class = args->qos_class;
+    pd_qos_class = args->qos_class->pd;
+
+    if (args->mtu_changed || args->threshold_changed) {
+        ret = qos_class_pd_program_uplink_iq_params(pd_qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming uplink iq params for "
+                          "Qos-class {} ret {}",
+                          qos_class->key, ret);
+            return ret;
+        }
+    }
+
+    if (args->dot1q_pcp_changed || args->ip_dscp_changed) {
+        // Remove the old associations and program the new association
+        ret = qos_class_pd_program_uplink_iq_map(pd_qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming uplink iq map for "
+                          "Qos-class {} ret {}",
+                          qos_class->key, ret);
+            return ret;
+        }
+
+        ret = qos_class_pd_update_uplink_iq_map_remove(args->dot1q_pcp_changed, 
+                                                       args->dot1q_pcp_src,
+                                                       args->ip_dscp_remove,
+                                                       HAL_ARRAY_SIZE(args->ip_dscp_remove));
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error removing uplink iq map for "
+                          "Qos-class {} ret {}",
+                          qos_class->key, ret);
+            return ret;
+        }
+    }
+
+    if (args->pfc_changed) {
+        ret = qos_class_pd_program_uplink_xoff(pd_qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming uplink oq xoff for "
+                          "Qos-class {} ret {}",
+                          qos_class->key, ret);
+            return ret;
+        }
+    }
+
+    if (args->scheduler_changed) {
+        ret = qos_class_pd_program_scheduler(pd_qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the p4 ports for "
+                          "Qos-class {} ret {}",
+                          qos_class->key, ret);
+            return ret;
+        }
+    }
+
+    if (args->marking_changed) {
+        ret = qos_class_pd_program_qos_table(pd_qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the qos table for "
+                          "Qos-class {} ret {}",
+                          qos_class->key, ret);
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD Qos-class Delete
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_class_delete (pd_qos_class_delete_args_t *args)
+{
+    hal_ret_t      ret;
+    pd_qos_class_t *qos_class_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->qos_class != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->qos_class->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("deleting pd state for qos_class {}",
+                    args->qos_class->key);
+    qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
+
+    // TODO: deprogram hw
+
+    // free up the resource and memory
+    ret = qos_class_pd_cleanup(qos_class_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed pd qos_class cleanup Qos-class {}, ret {}",
+                      args->qos_class->key, ret);
+    }
+
+    return ret;
 }
 
 // ----------------------------------------------------------------------------

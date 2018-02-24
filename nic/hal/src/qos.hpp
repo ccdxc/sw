@@ -138,6 +138,15 @@ typedef struct qos_class_create_app_ctxt_s {
 } __PACK__ qos_class_create_app_ctxt_t;
 
 typedef struct qos_class_update_app_ctxt_s {
+    bool mtu_changed;
+    bool threshold_changed;
+    bool dot1q_pcp_changed;
+    uint32_t dot1q_pcp_src;
+    bool ip_dscp_changed;
+    bool ip_dscp_remove[HAL_MAX_IP_DSCP_VALS];
+    bool pfc_changed;
+    bool scheduler_changed;
+    bool marking_changed;
 } __PACK__ qos_class_update_app_ctxt_t;
 
 // allocate a QosClass instance
