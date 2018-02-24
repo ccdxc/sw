@@ -65,7 +65,7 @@ tcp_rx_read_shared_stage0_start:
     phvwr           p.to_s2_flags, k.tcp_app_header_flags
     phvwr           p.to_s2_seq, k.tcp_app_header_seqNo
     phvwr           p.to_s2_ack_seq, k.tcp_app_header_ackNo
-    phvwr           p.cpu_hdr2_tcp_window, k.{tcp_app_header_window}.hx
+    phvwr           p.{cpu_hdr2_tcp_window_1,cpu_hdr3_tcp_window_2}, k.{tcp_app_header_window}.hx
 
     //phvwr        p.prr_out, d.prr_out
     phvwr           p.to_s2_snd_nxt, d.snd_nxt

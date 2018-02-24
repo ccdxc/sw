@@ -434,6 +434,8 @@ metadata pkt_descr_t                    aol;
 
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_t         p4plus_cpu_pkt;
+@pragma dont_trim
+metadata p4_to_p4plus_cpu_tcp_pkt_t     p4plus_cpu_tcp_pkt;
 
 @pragma dont_trim
 metadata pen_app_redir_header_t         pen_app_redir_hdr;

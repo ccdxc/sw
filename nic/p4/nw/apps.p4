@@ -306,6 +306,7 @@ action f_egress_tcp_options_fixup () {
 
 action f_p4plus_cpu_pkt(offset) {
     add_header(p4_to_p4plus_cpu_pkt);
+    add_header(p4_to_p4plus_cpu_tcp_pkt);
 
     modify_field(p4_to_p4plus_cpu_pkt.src_lif, control_metadata.src_lif);
     modify_field(p4_to_p4plus_cpu_pkt.lif, capri_intrinsic.lif);
@@ -391,7 +392,7 @@ action f_p4plus_cpu_pkt(offset) {
 
     modify_field(p4_to_p4plus_cpu_pkt.payload_offset, scratch_metadata.offset);
     modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
-    modify_field(p4_to_p4plus_cpu_pkt.tcp_options, scratch_metadata.cpu_tcp_options);
+    modify_field(p4_to_p4plus_cpu_tcp_pkt.tcp_options, scratch_metadata.cpu_tcp_options);
 }
 
 action p4plus_app_cpu() {

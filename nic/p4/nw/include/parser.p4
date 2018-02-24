@@ -234,9 +234,11 @@ header ipv6_extn_generic_t inner_v6_generic;
 header capri_i2e_metadata_t capri_i2e_metadata;
 
 @pragma synthetic_header
-@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_value udp_opt_timestamp.ts_value
-@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_echo  udp_opt_timestamp.ts_echo
-@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_mss      udp_opt_mss.mss
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_value   udp_opt_timestamp.ts_value
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_ts_echo    udp_opt_timestamp.ts_echo
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_mss        udp_opt_mss.mss
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_opt_pad        tcp.srcPort
+@pragma pa_field_union egress p4_to_p4plus_roce.roce_int_recirc_hdr tcp.dstPort
 header p4_to_p4plus_roce_header_t p4_to_p4plus_roce;
 
 @pragma synthetic_header
@@ -283,19 +285,20 @@ header p4_to_p4plus_ip_addr_t p4_to_p4plus_classic_nic_inner_ip;
 @pragma pa_field_union egress p4_to_p4plus_cpu_ip.ip_da             ipv6.dstAddr
 header p4_to_p4plus_ip_addr_t p4_to_p4plus_cpu_ip;
 @pragma synthetic_header
-@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_flags        tcp.flags
-@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_seqNo        tcp.seqNo
-@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_ackNo        tcp.ackNo
-@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_window       tcp.window
-@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_mss          tcp_option_mss.value
-@pragma pa_field_union egress p4_to_p4plus_cpu_pkt.tcp_ws           tcp_option_ws.value
-header p4_to_p4plus_cpu_pkt_t p4_to_p4plus_cpu_pkt;
+@pragma pa_field_union egress p4_to_p4plus_cpu_tcp_pkt.tcp_flags    tcp.flags
+@pragma pa_field_union egress p4_to_p4plus_cpu_tcp_pkt.tcp_seqNo    tcp.seqNo
+@pragma pa_field_union egress p4_to_p4plus_cpu_tcp_pkt.tcp_ackNo    tcp.ackNo
+@pragma pa_field_union egress p4_to_p4plus_cpu_tcp_pkt.tcp_window   tcp.window
+@pragma pa_field_union egress p4_to_p4plus_cpu_tcp_pkt.tcp_mss      tcp_option_mss.value
+@pragma pa_field_union egress p4_to_p4plus_cpu_tcp_pkt.tcp_ws       tcp_option_ws.value
+header p4_to_p4plus_cpu_tcp_pkt_t p4_to_p4plus_cpu_tcp_pkt;
 
-@pragma pa_header_union egress p4_to_p4plus_cpu p4_to_p4plus_p4pt p4_to_p4plus_ipsec
+@pragma pa_header_union egress p4_to_p4plus_p4pt p4_to_p4plus_ipsec p4_to_p4plus_cpu_pkt
 header p4_to_p4plus_classic_nic_header_t p4_to_p4plus_classic_nic;
-header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 header p4_to_p4plus_p4pt_header_t p4_to_p4plus_p4pt;
 header p4_to_p4plus_ipsec_header_t p4_to_p4plus_ipsec;
+header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
+header p4_to_p4plus_cpu_pkt_t p4_to_p4plus_cpu_pkt;
 
 header p4plus_to_p4_s1_t p4plus_to_p4;
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
@@ -415,6 +418,7 @@ parser deparse_rxdma {
     extract(p4_to_p4plus_tcp_proxy);
     extract(p4_to_p4plus_tcp_proxy_sack);
     extract(p4_to_p4plus_cpu_pkt);
+    extract(p4_to_p4plus_cpu_tcp_pkt);
     extract(p4_to_p4plus_p4pt);
     return parse_ethernet;
 }

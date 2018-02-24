@@ -246,7 +246,7 @@ p4plus_app_p4pt:
 // input r6 : packet start offset
 // do not use c7 in this function
 f_p4plus_cpu_pkt:
-  phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
+  phvwr       p.{p4_to_p4plus_cpu_tcp_pkt_valid,p4_to_p4plus_cpu_pkt_valid}, 0x3
   phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
   or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
   phvwr       p.p4_to_p4plus_cpu_pkt_lif, r1[15:0].hx
@@ -311,7 +311,7 @@ lb_cpu_pkt_tcp:
   or.c1       r2, r2, CPU_TCP_OPTIONS_TIMESTAMP
   seq         c1, k.tcp_option_sack_perm_valid, TRUE
   or.c1       r2, r2, CPU_TCP_OPTIONS_SACK_PERMITTED
-  phvwr       p.p4_to_p4plus_cpu_pkt_tcp_options, r2
+  phvwr       p.p4_to_p4plus_cpu_tcp_pkt_tcp_options, r2
   jr          r7
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr.!c3    p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0

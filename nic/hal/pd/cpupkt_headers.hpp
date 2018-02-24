@@ -38,15 +38,6 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
     int16_t  l4_offset;
     int16_t  payload_offset;
 
-    // tcp
-    uint8_t   tcp_flags;
-    uint32_t  tcp_seq_num;
-    uint32_t  tcp_ack_num;
-    uint16_t  tcp_window;
-    uint8_t   tcp_options;
-    uint16_t  tcp_mss;
-    uint8_t   tcp_ws;
-
     // qos
 #if __BYTE_ORDER == __BIG_ENDIAN
     uint8_t   src_tm_iq : 5;
@@ -57,6 +48,15 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
 #else
 #error "architecture unknown"
 #endif
+
+    // tcp
+    uint8_t   tcp_flags;
+    uint32_t  tcp_seq_num;
+    uint32_t  tcp_ack_num;
+    uint16_t  tcp_window;
+    uint8_t   tcp_options;
+    uint16_t  tcp_mss;
+    uint8_t   tcp_ws;
 
 } __attribute__ ((__packed__)) p4_to_p4plus_cpu_pkt_t;
 

@@ -55,7 +55,7 @@ dma_cmd_cpu_hdr:
     add         r4, k.to_s6_opage, k.to_s6_next_tls_hdr_offset
     subi        r3, r4, NIC_CPU_HDR_SIZE_BYTES
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window_1)
 
 dma_cmd_descr:    
     /* Set the DMA_WRITE CMD for descr */

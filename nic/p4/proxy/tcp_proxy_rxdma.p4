@@ -801,7 +801,7 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tstamp, ts_recent, lrcv_time,
         modify_field(to_cpu2_scratch.tcp_flags, cpu_hdr2.tcp_flags);
         modify_field(to_cpu2_scratch.tcp_seqNo, cpu_hdr2.tcp_seqNo);
         modify_field(to_cpu2_scratch.tcp_AckNo, cpu_hdr2.tcp_AckNo);
-        modify_field(to_cpu2_scratch.tcp_window, cpu_hdr2.tcp_window);
+        modify_field(to_cpu2_scratch.tcp_window_1, cpu_hdr2.tcp_window_1);
     }
 
 
@@ -869,6 +869,7 @@ action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
         modify_field(to_s3_scratch.rcv_tsecr, to_s3.rcv_tsecr);
     }
     if (backoff == 1) {
+        modify_field(to_cpu3_scratch.tcp_window_2, cpu_hdr3.tcp_window_2);
         modify_field(to_cpu3_scratch.tcp_options, cpu_hdr3.tcp_options);
         modify_field(to_cpu3_scratch.tcp_mss, cpu_hdr3.tcp_mss);
         modify_field(to_cpu3_scratch.tcp_ws, cpu_hdr3.tcp_ws);

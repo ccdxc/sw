@@ -614,16 +614,21 @@ header_type p4_to_p4plus_cpu_pkt_2_t {
         l4_offset           : 16;
         payload_offset      : 16;
 
+        // qos
+        src_tm_iq           : 5;
+        pad_1               : 3;
+
         // tcp
         tcp_flags           : 8;
         tcp_seqNo           : 32;
         tcp_AckNo           : 32;
-        tcp_window          : 16;
+        tcp_window_1        : 8;
     }
 }
 
 header_type p4_to_p4plus_cpu_pkt_3_t {
     fields {
+        tcp_window_2        : 8;
         tcp_options         : 8;
         tcp_mss             : 16;
         tcp_ws              : 8;
