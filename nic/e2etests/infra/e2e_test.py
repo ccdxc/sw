@@ -64,9 +64,7 @@ class E2eTest(object):
         self._enabled = cfg["enabled"]
         self._src_ep = None
         self._dst_ep = None
-        module = consts.modules_dir + "/" + cfg["module"]
-        module = module.replace("/", ".")
-        self._module = importlib.import_module(module)        
+        self._modules = cfg["modules"]
     
     def __str__(self):
         return "E2E_TEST: %s" % self._name
@@ -103,16 +101,25 @@ class E2eTest(object):
         
     def Run(self):
         if not self._enabled:
-            return Truel
+            return True
         
-        print ("Running Test :", self._name)
-        run = getattr(self._module, "Run")
-        ret = run(self._src_ep, self._dst_ep)
-        if (ret):
-            print ("Test Passed")
-        else:
-            print ("Test Failed")
-        return ret
+        ret_code = True
+        for module_info in self._modules:
+            module = consts.modules_dir + "/" + module_info["module"]["program"]
+            module = module.replace("/", ".")
+            module = importlib.import_module(module)        
+            print ("Running Test :", module_info["module"]["name"])
+            run = getattr(module, "Run")
+            ret = run(self._src_ep, self._dst_ep)
+            if (ret):
+                print ("Test Passed")
+            else:
+                print ("Test Failed")
+                ret_code = False
+                
+            teadown = getattr(module, "Teardown")
+            teadown(self._src_ep, self._dst_ep)
+        return ret_code
         
         
     def PrintEnvironmentSummary(self):

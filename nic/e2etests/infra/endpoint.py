@@ -35,8 +35,8 @@ class Endpoint:
     def Delete(self):
         self._ns.Delete()
     
-    def Run(self, cmd, timeout=None):
-        return self._ns.Run(cmd, timeout)
+    def Run(self, cmd, timeout=None, background=False):
+        return self._ns.Run(cmd, timeout, background)
         
     def GetIp(self):
         return self._ip_address

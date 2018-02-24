@@ -28,6 +28,8 @@ def run_tests_in_auto_mode(spec=None):
     test_specs = get_test_specs()
     global e2e_test
     for cfg in test_specs:
+        if not cfg["enabled"]:
+            continue
         e2e_test = E2eTest(cfg)
         e2e_test.BringUp()
         e2e_test.PrintEnvironmentSummary()

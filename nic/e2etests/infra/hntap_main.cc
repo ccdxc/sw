@@ -112,7 +112,7 @@ int main(int argv, char *argc[])
 
       TLOG("  Setup done, listening on tap devices..\n");
       add_dev_handle_tap_pair(host_tap_hdl, net_tap_hdl);
-      hntap_do_select_loop(dev_handles, MAX_DEV_HANDLES);
+      hntap_work_loop(dev_handles, MAX_DEV_HANDLES, true);
   }
 
   return(0);

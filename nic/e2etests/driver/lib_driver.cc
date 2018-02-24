@@ -41,6 +41,7 @@ typedef struct {
     struct qstate *cq_qstate;
     uint64_t cq_queue_addr;
     void *cq_queue;
+    uint32_t cur_cq_index;
 } queue_info_t;
 
 map<tuple<uint64_t, uint32_t, uint32_t>, queue_info_t> queue_map;
@@ -142,6 +143,8 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
 
   struct tx_desc *txq;
   struct rx_desc *rxq;
+  struct rx_cq_desc *rx_cq;
+  struct tx_cq_desc *tx_cq;
 
   if (g_host_mem == NULL) {
     g_host_mem = utils::HostMem::New();
@@ -156,7 +159,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
     qi.queue_addr = g_host_mem->VirtToPhys(qi.queue);
 
     // Create TX completion descriptor ring
-    qi.cq_queue = g_host_mem->Alloc(size * 16);
+    qi.cq_queue = g_host_mem->Alloc(size * sizeof(struct tx_cq_desc));
     if (qi.cq_queue == NULL) {
       assert(0);
     }
@@ -164,6 +167,10 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
 
     txq = (struct tx_desc *) qi.queue;
     memset(txq, 0, sizeof(txq[0]) * size);
+
+    tx_cq = (struct tx_cq_desc*) qi.cq_queue;
+    memset(tx_cq, 0, sizeof(tx_cq[0]) * size);
+
     break;
 
   case RX:
@@ -175,7 +182,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
     qi.queue_addr = g_host_mem->VirtToPhys(qi.queue);
 
     // Create RX completion descriptor ring
-    qi.cq_queue = g_host_mem->Alloc(size * 16);
+    qi.cq_queue = g_host_mem->Alloc(size * sizeof(struct rx_cq_desc));
     if (qi.cq_queue == NULL) {
       assert(0);
     }
@@ -183,6 +190,9 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
  
     rxq = (struct rx_desc *) qi.queue;
     memset(rxq, 0, sizeof(rxq[0]) * size);
+
+    rx_cq = (struct rx_cq_desc*) qi.cq_queue;
+    memset(rx_cq, 0, sizeof(rx_cq[0]) * size);
     break;
 
   default:
@@ -194,6 +204,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
     assert(0);
   }
   qi.qstate = (struct qstate *) calloc(1, sizeof(struct qstate));
+  qi.cur_cq_index = 0;
   set_queue_info(lif, qtype, qid, qi);
 
   // Read-Modify-Write the qstate structure
@@ -203,20 +214,95 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
   qi.qstate->p_index1 = 0;
   qi.qstate->c_index1 = 0;
   qi.qstate->enable = 1;
+  qi.qstate->host = 1;
+  qi.qstate->total = 1;
+  //Start with color 1
+  qi.qstate->color = 1;
   qi.qstate->ring_base = g_host_mem->VirtToPhys(qi.queue);
   qi.qstate->ring_size = (uint16_t)log2(size);
-  qi.qstate->cq_ring_base = g_host_mem->VirtToPhys(qi.cq_queue);
+  qi.qstate->cq_ring_base = qi.cq_queue_addr;
   write_queue(lif, qtype, qid);
 
   printf("QSTATE: lif = %lu qtype = %d qid = %d addr = %lx ring_base %lx cq_ring_base %lx\n",
          lif, qtype, qid, qi.qstate_addr, qi.qstate->ring_base, qi.qstate->cq_ring_base);
 }
 
+
+void
+consume_queue(uint64_t lif, queue_type qtype, uint32_t qid,
+        pkt_read_cb pkt_cb, void *ctx) {
+
+    queue_info_t qi = get_queue_info(lif, qtype, qid);
+    struct rx_cq_desc* rx_cq_desc = (struct rx_cq_desc*)(qi.cq_queue);
+    struct rx_desc *rxq = (struct rx_desc *)(qi.queue);
+
+
+    if (rx_cq_desc[qi.cur_cq_index].color == qi.qstate->color) {
+      /* Color matched. */
+
+      //Retrieve the packet buffer.
+      uint8_t *buff = (uint8_t *)(g_host_mem->PhysToVirt(rxq[rx_cq_desc[qi.cur_cq_index].comp_index].addr));
+
+      uint32_t size = rxq[qi.qstate->c_index1].len;
+
+      pkt_cb(buff, size, ctx);
+      uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
+
+      printf("RX Consumed Buffer : cur_cq_index : %d, ring size : %d, expect color : %d\n",
+              qi.cur_cq_index, ring_size, qi.qstate->color);
+      if (qi.cur_cq_index++ == ring_size) {
+          //Flip the expectation.
+          qi.qstate->color = ~qi.qstate->color;
+          qi.cur_cq_index = 0;
+      }
+      set_queue_info(lif, qtype, qid, qi);
+      post_buffer(lif, qtype, 0, buff, 9126);
+  }
+
+}
+
+bool
+queue_has_space(uint64_t lif, queue_type qtype, uint32_t qid)
+{
+    queue_info_t qi = get_queue_info(lif, qtype, qid);
+    uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
+
+    if (((qi.qstate->p_index0 + 1) % (ring_size)) == qi.cur_cq_index) {
+         return false;
+    }
+
+    return true;
+}
+
+void
+tx_consume_queue(uint64_t lif, queue_type qtype, uint32_t qid)
+{
+    queue_info_t qi = get_queue_info(lif, qtype, qid);
+    struct tx_cq_desc* tx_cq_desc = (struct tx_cq_desc*)(qi.cq_queue);
+
+
+    if (tx_cq_desc[qi.cur_cq_index].color == qi.qstate->color) {
+      /* Color matched. */
+
+      uint32_t ring_size = (uint16_t) pow(2, qi.qstate->ring_size) - 1;
+
+      printf("TX Consumed Buffer : cur_cq_index : %d, ring size : %d, expect color : %d\n",
+              qi.cur_cq_index, ring_size, qi.qstate->color);
+      if (qi.cur_cq_index++ == ring_size) {
+          //Flip the expectation.
+          qi.qstate->color = ~qi.qstate->color;
+          qi.cur_cq_index = 0;
+      }
+      set_queue_info(lif, qtype, qid, qi);
+  }
+
+}
+
 bool
 poll_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint32_t max_count, uint16_t *prev_cindex) {
   queue_info_t qi = get_queue_info(lif, qtype, qid);
 
-  
+
   uint32_t count = 1;
 
   if (*prev_cindex == 0xFFFF) {
@@ -230,12 +316,22 @@ poll_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint32_t max_count, uin
       printf("Polling QSTATE[prev_cindex %d] ... %u tries\n", *prev_cindex, count);
     }
     read_queue(lif, qtype, qid);
+    if (max_count == 0) {
+        if (*prev_cindex != qi.qstate->c_index0) {
+            *prev_cindex = qi.qstate->c_index0;
+            return true;
+        } else {
+            return false;
+        }
+    }
     usleep(10000);
     if (count >= max_count*100)
       return false;
   } while (*prev_cindex == qi.qstate->c_index0);
+  *prev_cindex = qi.qstate->c_index0;
   return true;
 }
+
 
 void
 print_queue(uint64_t lif, queue_type qtype, uint32_t qid) {

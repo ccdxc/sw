@@ -1,6 +1,6 @@
 import pdb
 
-def SetUp(infra):
+def SetUp(src, dst):
     pass
     
 def Run(src, dst):
@@ -9,5 +9,5 @@ def Run(src, dst):
         return ret
     return dst.Run("ping -c 5  -d -i 3 " + src.GetIp())
     
-def Teardown(infra):
+def Teardown(src, dst):
     pass

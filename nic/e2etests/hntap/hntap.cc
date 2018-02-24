@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <mutex>
+#include <thread>
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/e2etests/driver/lib_driver.hpp"
@@ -45,9 +47,9 @@ bool hntap_drop_rexmit = false;
 bool hntap_allow_udp = false;
 uint32_t nw_retries = 0;
 
-#define ETH_ADDR_LEN 6
 
 std::map<dev_handle_t*,dev_handle_t*> dev_route_map;
+std::mutex model_mutex;
 
 void add_dev_handle_tap_pair(dev_handle_t *dev, dev_handle_t *other_dev)
 {
@@ -76,9 +78,168 @@ get_dest_dev_handle(dev_handle_t *dev)
 }
 
 enum model_pkt_read_t {
-    MODEL_PKT_READ_P4      = 0,
-    MODEL_PKT_READ_P4_PLUS = 1
+    MODEL_PKT_READ_UPLINK      = 0,
+    MODEL_PKT_READ_HOST        = 1
 };
+
+static void
+send_pkt_to_dev(dev_handle_t *dest_dev, uint8_t *recv_buf, uint16_t rsize)
+{
+    uint16_t offset = 0;
+
+    dump_pkt((char *)recv_buf, rsize);
+    /*
+     * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
+     */
+    int nwrite;
+    if (dest_dev->nat_cb) {
+        dest_dev->nat_cb((char*)recv_buf, rsize,  PKT_DIRECTION_TO_DEV);
+    }
+    if (dest_dev->type == HNTAP_TUN) {
+        /*  Tunnelled Packets does not have ethernet header and vlan header.
+         *  If incoming packet has it, then packet going to destination should not have it.
+         * */
+        offset = dest_dev->needs_vlan_tag ?
+                sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+        nwrite = write(dest_dev->fd, recv_buf + offset, rsize - offset);
+    } else if (dest_dev->type == HNTAP_TAP) {
+        nwrite = write(dest_dev->fd, recv_buf, rsize);
+    }
+
+    if (nwrite < 0) {
+      perror("Net-Rx 2: Writing data to host-tap");
+      abort();
+    } else {
+      TLOG("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - offset);
+    }
+}
+
+
+static void
+pkt_consume_cb(uint8_t *buf, uint32_t len, void *ctxt)
+{
+    dev_handle_t *dest_dev = (dev_handle_t*)ctxt;
+
+    send_pkt_to_dev(dest_dev, buf, len);
+}
+
+static void
+model_check_host_dev(dev_handle_t *dev_handles[], uint32_t max_handles)
+{
+    std::vector<uint8_t> opkt;
+
+    for (uint32_t i = 0 ; i < max_handles; i++) {
+        dev_handle_t * dest_dev = dev_handles[i];
+        //First read the Host side.
+        if (dest_dev->tap_ep == TAP_ENDPOINT_HOST) {
+            tx_consume_queue(dest_dev->lif_id, TX, 0);
+            consume_queue(dest_dev->lif_id, RX, 0, pkt_consume_cb, dest_dev);
+        }
+    }
+}
+
+
+static void
+model_check_uplinks(dev_handle_t *dev_handles[], uint32_t max_handles)
+{
+    uint32_t port = 0, cos = 0;
+    std::vector<uint8_t> opkt;
+
+    get_next_pkt(opkt, port, cos);
+    if (!opkt.size()) {
+        //TLOG("NO packet back from model! size: %d\n", opkt.size());
+    } else {
+        TLOG("Got packet back from network model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
+        for (uint32_t i = 0 ; i < max_handles; i++) {
+            dev_handle_t * dev_handle = dev_handles[i];
+            if (dev_handle->tap_ep == TAP_ENDPOINT_NET && dev_handle->port == port) {
+                send_pkt_to_dev(dev_handle, opkt.data(), opkt.size());
+            }
+        }
+    }
+
+}
+
+void
+hntap_model_send_process (dev_handle_t *dev_handle, char *pktbuf, int size)
+{
+  uint16_t src_lif_id = (uint16_t) (dev_handle->lif_id & 0xffff);
+  dev_handle_t *dest_dev_handle = get_dest_dev_handle(dev_handle);
+  uint32_t cos = 0;
+  uint8_t *pkt = (uint8_t *) pktbuf;
+  std::vector<uint8_t> ipkt, opkt;
+  uint8_t *send_buf = nullptr;
+  struct ether_header_t *eth_header;
+
+  TLOG("Host-Tx to Model: packet sent with %d bytes\n", size);
+  if (size < (int) sizeof(struct ether_header)) return;
+
+  eth_header = (struct ether_header_t *) pktbuf;
+
+  if (hntap_get_etype(eth_header) == ETHERTYPE_IP ||
+          (hntap_get_etype(eth_header) == ETHERTYPE_ARP)) {
+    TLOG("Ether-type IP, sending to Model\n");
+    if (dev_handle->nat_cb) {
+        dev_handle->nat_cb(pktbuf, size, PKT_DIRECTION_FROM_DEV);
+    }
+  } else {
+    TLOG("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
+    return;
+  }
+
+  dump_pkt(pktbuf, size);
+  if (!hntap_go_thru_model) {
+      /*
+       * Bypass the model and send packet to Network-tap directly. Test only
+       */
+      TLOG("Host-Tx: Bypassing model, packet size: %d, on port: %d cos %d\n",
+              size, dev_handle->port, cos);
+      int nwrite;
+      uint16_t offset = 0;
+      if (dest_dev_handle->type == HNTAP_TUN) {
+          offset = dest_dev_handle->needs_vlan_tag ? sizeof(struct vlan_header_t) : sizeof(struct ether_header_t);
+      }
+      nwrite = write(dest_dev_handle->fd, pkt + offset, size - offset);
+      if (nwrite < 0) {
+        perror("Writing data");
+        abort();
+      } else {
+        TLOG("Wrote packet with %lu bytes to %s (Tx)\n", size - offset, hntap_type(dest_dev_handle->tap_ep));
+      }
+      return;
+  }
+
+  model_mutex.lock();
+  if (dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
+      if (!queue_has_space(src_lif_id, TX, 0)) {
+          TLOG("DROPPING PACKET AS SEND BUFFER IS FULL.....\n");
+          goto done;
+      }
+      send_buf = alloc_buffer(size);
+      assert(send_buf != NULL);
+      memcpy(send_buf, pkt, size);
+      TLOG("buf %p size %lu\n", send_buf, size);
+      dump_pkt((char *)send_buf, size);
+      // Transmit Packet
+      TLOG("Writing packet to model! size: %d on lif: %d\n", size, dev_handle->lif_id);
+      post_buffer(src_lif_id, TX, 0, send_buf, size);
+  } else if (dev_handle->tap_ep == TAP_ENDPOINT_NET)  {
+      // Send packet to Model
+      ipkt.resize(size);
+      memcpy(ipkt.data(), pkt, size);
+      TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), dev_handle->port);
+      step_network_pkt(ipkt, dev_handle->port);
+  } else {
+      abort();
+  }
+
+done:
+    if (send_buf) {
+        free_buffer(send_buf);
+    }
+    model_mutex.unlock();
+}
+
 
 static bool
 model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
@@ -90,7 +251,7 @@ model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
     std::vector<uint8_t> opkt;
     uint16_t offset = 0;
 
-    if (read_type == MODEL_PKT_READ_P4_PLUS) {
+    if (read_type == MODEL_PKT_READ_HOST) {
 #define POLL_RETRIES 4
         if ((poll_queue(dest_dev->lif_id, RX, 0, POLL_RETRIES, &prev_cindex))) {
               TLOG("Got some packet\n");
@@ -103,7 +264,7 @@ model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
                   dump_pkt((char *)recv_buf, rsize);
               }
         }
-    } else if (read_type == MODEL_PKT_READ_P4) {
+    } else if (read_type == MODEL_PKT_READ_UPLINK) {
         uint16_t count = 0;
         do {
            get_next_pkt(opkt, port, cos);
@@ -153,7 +314,7 @@ model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
 }
 
 void
-hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
+hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
 {
   uint16_t src_lif_id = (uint16_t) (dev_handle->lif_id & 0xffff);
   dev_handle_t *dest_dev_handle = get_dest_dev_handle(dev_handle);
@@ -165,7 +326,24 @@ hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   uint8_t *recv_buf = nullptr;
   uint8_t *send_buf = nullptr;
   bool pkt_sent = false;
+  struct ether_header_t *eth_header;
 
+  TLOG("Host-Tx to Model: packet sent with %d bytes\n", size);
+  if (size < (int) sizeof(struct ether_header)) return;
+
+  dump_pkt(pktbuf, size);
+  eth_header = (struct ether_header_t *) pktbuf;
+
+  if (hntap_get_etype(eth_header) == ETHERTYPE_IP ||
+          (hntap_get_etype(eth_header) == ETHERTYPE_ARP)) {
+    TLOG("Ether-type IP, sending to Model\n");
+    if (dev_handle->nat_cb) {
+        dev_handle->nat_cb(pktbuf, size, PKT_DIRECTION_FROM_DEV);
+    }
+  } else {
+    TLOG("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
+    return;
+  }
 
   if (!hntap_go_thru_model) {
       /*
@@ -188,7 +366,7 @@ hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
       return;
   }
 
-    lib_model_connect();
+    //lib_model_connect();
     /* Prepare Receiver before sending packet */
     if (dest_dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
       /* If Real lif, on destination, post a buffer */
@@ -244,7 +422,7 @@ hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
        * Check if packet is received on the Host side
        * May be HAL/LKL will do proxy initially.
        */
-      pkt_sent = model_read_and_send(MODEL_PKT_READ_P4_PLUS,
+      pkt_sent = model_read_and_send(MODEL_PKT_READ_HOST,
               dest_dev_handle, recv_buf, prev_cindex);
 
       if (!pkt_sent) {
@@ -252,7 +430,7 @@ hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
            * Packet not sent to host, check HAL/LKL Proxy responding.
            * Note, device should be the original device now.
            */
-          pkt_sent = model_read_and_send(MODEL_PKT_READ_P4,
+          pkt_sent = model_read_and_send(MODEL_PKT_READ_UPLINK,
                   dev_handle, recv_buf, prev_cindex);
       } else {
           goto done;
@@ -260,7 +438,7 @@ hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   }
 
   if (dest_dev_handle->tap_ep == TAP_ENDPOINT_NET) {
-      pkt_sent = model_read_and_send(MODEL_PKT_READ_P4,
+      pkt_sent = model_read_and_send(MODEL_PKT_READ_UPLINK,
               dest_dev_handle, recv_buf, prev_cindex);
 
       if (pkt_sent) {
@@ -269,7 +447,7 @@ hntap_model_process (dev_handle_t *dev_handle, char *pktbuf, int size)
 
   } else if (dest_dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
 
-      pkt_sent = model_read_and_send(MODEL_PKT_READ_P4_PLUS,
+      pkt_sent = model_read_and_send(MODEL_PKT_READ_HOST,
               dest_dev_handle, recv_buf, prev_cindex);
 
       if (pkt_sent) {
@@ -286,34 +464,9 @@ done:
     if (send_buf) {
         free_buffer(send_buf);
     }
-    lib_model_conn_close();
+    //lib_model_conn_close();
 }
 
-void
-hntap_pkt_process (dev_handle_t *dev_handle,
-        char *pktbuf, int nread)
-{
-  struct ether_header_t *eth_header;
-
-  TLOG("Host-Tx to Model: packet sent with %d bytes\n", nread);
-  if (nread < (int) sizeof(struct ether_header)) return;
-
-  dump_pkt(pktbuf, nread);
-  eth_header = (struct ether_header_t *) pktbuf;
-
-  if (hntap_get_etype(eth_header) == ETHERTYPE_IP ||
-          (hntap_get_etype(eth_header) == ETHERTYPE_ARP)) {
-    TLOG("Ether-type IP, sending to Model\n");
-    //hntap_host_client_to_server_nat(pktbuf, nread);
-    if (dev_handle->nat_cb) {
-        dev_handle->nat_cb(pktbuf, nread, PKT_DIRECTION_FROM_DEV);
-    }
-    hntap_model_process(dev_handle, pktbuf, nread);
-  } else {
-    TLOG("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
-  }
-
-}
 
 static int
 hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int len)
@@ -372,17 +525,73 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
   return(0);
 }
 
+
+struct thread_data {
+    dev_handle_t **dev_handles;
+    uint32_t max_handles;
+};
+
+static void*
+model_poller(void *arg) {
+   struct thread_data *data = (struct thread_data*)arg;
+
+   while(1) {
+       std::this_thread::sleep_for (std::chrono::milliseconds(1));
+       model_mutex.lock();
+       model_check_host_dev(data->dev_handles, data->max_handles);
+       model_check_uplinks(data->dev_handles, data->max_handles);
+       model_mutex.unlock();
+   }
+
+   pthread_exit(NULL);
+}
+
+static void
+init_dev_handles(dev_handle_t *dev_handles[], uint32_t max_handles)
+{
+    dev_handle_t *dev_handle;
+
+    for (uint32_t i = 0 ; i < max_handles; i++) {
+        dev_handle = dev_handles[i];
+       if (dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
+
+         // Create Queues
+         uint16_t dest_lif_id = (uint16_t)(dev_handle->lif_id & 0xffff);
+         alloc_queue(dest_lif_id, RX, 0, TX_RX_QUEUE_SIZE);
+         alloc_queue(dest_lif_id, TX, 0, TX_RX_QUEUE_SIZE);
+
+         for (uint16_t i = 0; i < (TX_RX_QUEUE_SIZE - 1); i++) {
+             dev_handle->recv_buf[i] = alloc_buffer(9126);
+             assert(dev_handle->recv_buf[i] != NULL);
+             memset(dev_handle->recv_buf[i], 0, 9126);
+             // Post RX buffers initially.
+             post_buffer(dest_lif_id, RX, 0, dev_handle->recv_buf[i], 9126);
+         }
+       }
+    }
+}
+
 void
-hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
+hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles, bool parallel)
 {
   int		maxfd;
   uint16_t  nread;
   char	    pktbuf[PKTBUF_LEN];
   char      *p = pktbuf;
   int	    ret;
+  pthread_t thread;
+  struct thread_data data;
 
+
+  data.dev_handles = dev_handles;
+  data.max_handles = max_handles;
+
+  lib_model_connect();
+  if (parallel) {
+      init_dev_handles(dev_handles, max_handles);
+      ret = pthread_create(&thread, NULL, model_poller, &data);
+  }
   while (1) {
-
       fd_set rd_set;
       FD_ZERO(&rd_set);
       maxfd = -1;
@@ -440,10 +649,16 @@ hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
                          TLOG("Retransmitted TCP packet, seqno: 0x%x, dropping\n", dev_handle->flowtcp[0].seq);
                      continue;
                  }
-                 hntap_pkt_process(dev_handle, pktbuf, nread + offset);
+                 if (parallel) {
+                     hntap_model_send_process(dev_handle, pktbuf, nread + offset);
+                 } else {
+                     hntap_model_send_recv_process(dev_handle, pktbuf, nread + offset);
+                 }
             }
         }
      }
+
+   lib_model_conn_close();
 }
 
 

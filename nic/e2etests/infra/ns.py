@@ -2,15 +2,19 @@ import os
 import subprocess
 import sys
 
-def run(cmd, timeout=None):
+def run(cmd, timeout=None, background=False):
     print ("Running : ", cmd)
-    try:
-        p = subprocess.run(cmd, shell=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        print ("timed out : ", cmd)
-    if p.returncode:
-        print ("Command exit code : ", p.returncode)
-        return False
+    if background:
+        p = subprocess.Popen(cmd, shell=True)
+        return p 
+    else:
+        try:
+            p = subprocess.run(cmd, shell=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            print ("timed out : ", cmd)
+        if p.returncode:
+            print ("Command exit code : ", p.returncode)
+            return False
     
     print ("Success : ", cmd)
     return True
@@ -75,9 +79,9 @@ class NS(object):
             pass
         self.Init()
         
-    def Run(self, cmd, timeout=None):
+    def Run(self, cmd, timeout=None, background=False):
         cmd = self._cmd_prefix + " " + cmd
-        return run(cmd, timeout)
+        return run(cmd, timeout, background)
     
     def Delete(self):
         #Delete name space

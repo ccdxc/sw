@@ -401,7 +401,8 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
 }
 
 void
-hntap_do_select_loop (dev_handle_t *dev_handles[], uint32_t max_handles)
+hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles,
+        bool send_recv_parallel)
 {
   int		maxfd;
   uint16_t  nread;

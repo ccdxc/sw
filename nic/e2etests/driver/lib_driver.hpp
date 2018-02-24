@@ -45,6 +45,37 @@ struct rx_desc {    // 16 B
 
 } __attribute__((packed));
 
+struct tx_cq_desc {
+    uint32_t status:8;
+    uint32_t rsvd:8;
+    uint32_t comp_index:16;
+    uint32_t rsvd2[2];
+    uint32_t rsvd3:31;
+    uint32_t color:1;
+}__attribute__((packed));
+
+struct rx_cq_desc {
+   uint32_t status:8;
+   uint32_t rsvd:8;
+   uint32_t comp_index:16;
+   uint32_t rss_hash;
+   uint16_t csum;
+   uint16_t vlan_tci;
+   uint32_t len:14;
+   uint32_t rsvd2:2;
+   uint32_t rss_type:4;
+   uint32_t rsvd3:4;
+   uint32_t csum_tcp_ok:1;
+   uint32_t csum_tcp_bad:1;
+   uint32_t csum_udp_ok:1;
+   uint32_t csum_udp_bad:1;
+   uint32_t csum_ip_ok:1;
+   uint32_t csum_ip_bad:1;
+   uint32_t V:1;
+   uint32_t color:1;
+}__attribute__((packed));
+
+
 struct qstate {
 
     uint8_t     pc_offset;
@@ -87,5 +118,12 @@ uint8_t *alloc_buffer(uint16_t size);
 void free_buffer(void *Addr);
 void post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t size);
 void consume_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t *size);
+
+
+typedef void (*pkt_read_cb)(uint8_t *buf, uint32_t len, void *ctxt);
+void consume_queue(uint64_t lif, queue_type qtype, uint32_t qid,
+        pkt_read_cb pkt_cb, void *ctx);
+void tx_consume_queue(uint64_t lif, queue_type qtype, uint32_t qid);
+bool queue_has_space(uint64_t lif, queue_type qtype, uint32_t qid);
 
 #endif

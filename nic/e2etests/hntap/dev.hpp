@@ -25,6 +25,7 @@ typedef int (*pkt_process_nat_cb)(char *pktbuf, uint32_t len, pkt_direction_t di
 
 typedef struct dev_handle_t {
 #define MAX_TAP_APP_PORTS 1
+#define TX_RX_QUEUE_SIZE 16
     dev_type_t           type;
     tap_endpoint_t       tap_ep;
     int                  sock;
@@ -42,6 +43,7 @@ typedef struct dev_handle_t {
     uint32_t             tap_ports[MAX_TAP_APP_PORTS];
     uint32_t             seqnum[MAX_TAP_APP_PORTS];
     struct tcp_header_t  flowtcp[MAX_TAP_APP_PORTS];
+    uint8_t             *recv_buf[TX_RX_QUEUE_SIZE];
 
 } dev_handle_t;
 
@@ -60,7 +62,7 @@ dev_handle_t* hntap_create_tap_device(tap_endpoint_t type,
         const char *dev, const char*mac_addr = NULL,
         const char *dev_ip = NULL, const char *dev_ipmask = NULL);
 
-void hntap_do_select_loop(dev_handle_t *dev_handles[], uint32_t max_handles);
+void hntap_work_loop(dev_handle_t *dev_handles[], uint32_t max_handles, bool send_recv_parallel = false);
 
 static const char* hntap_type(tap_endpoint_t type) {
     switch(type) {
