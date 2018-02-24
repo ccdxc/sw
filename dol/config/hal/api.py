@@ -719,4 +719,10 @@ def ConfigureGftExmProfiles(objlist):
     __config(objlist, gft_pb2.GftExactMatchProfileRequestMsg,
              stub.GftExactMatchProfileCreate)
     return
-   
+
+def ConfigureGftFlows(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = gft_pb2.GftStub(HalChannel)
+    __config(objlist, gft_pb2.GftExactMatchFlowEntryRequestMsg,
+             stub.GftExactMatchFlowEntryCreate)
+    return

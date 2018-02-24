@@ -272,6 +272,16 @@ class FlowObject(base.ConfigObjectBase):
             self.icmpcode   = self.__sfep.icmp_code
         elif self.IsESP():
             self.espspi     = self.__sfep.esp_spi
+
+        self.smac = self.__sfep.ep.macaddr
+        self.dmac = self.__dfep.ep.macaddr
+        if self.IsIPV4():
+            self.ethertype = 0x800
+        elif self.IsIPV6():
+            self.ethertype = 0x86DD
+        else:
+            assert(0)
+
         return
 
     def __init_mac_flow_key(self):
@@ -381,6 +391,9 @@ class FlowObject(base.ConfigObjectBase):
 
     def IsIflow(self):
         return self.direction == 'IFLOW'
+
+    def GetSrcSegmentVlanid(self):
+        return self.__sseg.vlan_id
 
     def __configure_l4_key(self, l4_info):
         if self.HasL4Ports():

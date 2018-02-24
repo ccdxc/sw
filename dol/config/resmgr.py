@@ -11,6 +11,7 @@ import os
 HostMemoryAllocator     = None
 
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
+GftFlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
 L4LbServiceIdAllocator  = objects.TemplateFieldObject("range/1/4096")
 L4LbBackendIdAllocator  = objects.TemplateFieldObject("range/1/16384")
 InterfaceIdAllocator    = objects.TemplateFieldObject("range/5/32768")
@@ -78,7 +79,7 @@ SecurityGroupAllocator  = objects.TemplateFieldObject("range/1/128")
 DosPolicyAllocator      = objects.TemplateFieldObject("range/1/128")
 InterruptAllocator      = objects.TemplateFieldObject("range/1/4096")
 
-GftExmProfileIdAllocator = objects.TemplateFieldObject("range/0/32768")
+GftExmProfileIdAllocator = objects.TemplateFieldObject("range/1/32768")
 
 def CreateIpv4AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipstep/" + subnet + "/0.0.0.1")

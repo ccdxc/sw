@@ -26,6 +26,7 @@ from config.objects.app_redir_if        import AppRedirIfHelper
 from config.objects.system              import SystemHelper
 from config.objects.gft_hdr_groups      import GftHeaderGroupHelper
 from config.objects.gft_exm_profiles    import GftExmProfileHelper
+from config.objects.gft_flow            import GftFlowHelper
 
 from config.objects.swdr                import SwDscrRingHelper
 from config.objects.brq                 import BRQHelper
@@ -93,6 +94,7 @@ def process(topospec):
 
     GftHeaderGroupHelper.main(topospec)
     GftExmProfileHelper.main(topospec)
+    GftFlowHelper.main()
     return
 
 def main(topofile):

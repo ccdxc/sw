@@ -14,7 +14,7 @@ tunnels:
 
 security_profile: None
 
-gft_sessions:
+sessions:
     unidest:
         ipv4:
             - ref://store/specs/id=SESSION_UDP_SERVICES_GFT

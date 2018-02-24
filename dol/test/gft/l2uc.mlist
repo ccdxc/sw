@@ -1,0 +1,17 @@
+# Feature Test Modules List
+feature:
+    id          : gft
+    sub         : l2uc
+    package     : test.gft
+    module      : gft
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_UDP_QTAG
+        spec    : l2uc.testspec
+        perf    : True
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT
+              segment : filter://native=False

@@ -60,17 +60,17 @@ gftexm:
     hdrgroups   : ref://store/specs/id=GFT_EXM_HEADER_GROUPS
 
 tenants:
-    -   spec    : ref://store/specs/id=TENANT_INFRA_GFT
-        count   : 1
-        lifns   : range/100/100
+#    -   spec    : ref://store/specs/id=TENANT_INFRA_GFT
+#        count   : 1
+#        lifns   : range/100/100
     -   spec    : ref://store/specs/id=TENANT_GFT
         count   : 1
         lifns   : range/200/205
-    -   spec    : ref://store/specs/id=TENANT_GFT_VXLAN
-        count   : 1
-        lifns   : range/300/305
-    -   spec    : ref://store/specs/id=GFT_SPAN_VLAN
-        count   : 1
-        lifns   : range/400/405
+#    -   spec    : ref://store/specs/id=TENANT_GFT_VXLAN
+#        count   : 1
+#        lifns   : range/300/305
+#    -   spec    : ref://store/specs/id=GFT_SPAN_VLAN
+#        count   : 1
+#        lifns   : range/400/405
 
 cpu: None

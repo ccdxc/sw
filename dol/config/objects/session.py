@@ -460,17 +460,21 @@ class SessionObjectHelper:
         if getattr(tenant.spec, 'sessions', None) == None:
             return
 
-        if tenant.spec.sessions.unidest.ipv4:
-            self.__process_ipv4(flowep1, flowep2,
-                                tenant.spec.sessions.unidest.ipv4)
+        udest_spec = getattr(tenant.spec.sessions, 'unidest', None)
+        if udest_spec is None:
+            return
 
-        if tenant.spec.sessions.unidest.ipv6:
-            self.__process_ipv6(flowep1, flowep2,
-                                tenant.spec.sessions.unidest.ipv6)
+        ipv4_sessions_spec = getattr(udest_spec, 'ipv4', None)
+        if ipv4_sessions_spec:
+            self.__process_ipv4(flowep1, flowep2, ipv4_sessions_spec)
 
-        if tenant.spec.sessions.unidest.mac:
-            self.__process_mac(flowep1, flowep2,
-                               tenant.spec.sessions.unidest.mac)
+        ipv6_sessions_spec = getattr(udest_spec, 'ipv6', None)
+        if ipv6_sessions_spec:
+            self.__process_ipv6(flowep1, flowep2, ipv6_sessions_spec)
+
+        mac_sessions_spec = getattr(udest_spec, 'mac', None)
+        if mac_sessions_spec:
+            self.__process_mac(flowep1, flowep2, mac_sessions_spec)
         return
 
 
@@ -499,10 +503,8 @@ class SessionObjectHelper:
         if l4lbspec is None:
             return
 
-
         flowep1 = flowep.FlowEndpointObject(ep = ep)
         flowep2 = flowep.FlowEndpointObject(l4lbsvc = svc)
-
 
         # L2 DSR: Create only Sessions only in one L2 Segment
         if svc.IsNATDSR() and (flowep1.GetSegment() != flowep2.GetSegment()):

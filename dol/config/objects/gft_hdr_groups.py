@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import pdb
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -30,12 +31,16 @@ class GftExmHeaderGroupObject(base.ConfigObjectBase):
         bases = getattr(spec, 'inherit', [])
         for base in bases:
             self.__inherit_base(base)
+
+        self.Show()
         return
 
     def __inherit_base(self, baseref):
         base = baseref.Get(Store)
-        self.headers = objects.MergeObjects(base.headers, self.headers)
-        self.fields = objects.MergeObjects(base.fields, self.fields)
+        for k,v in base.headers.__dict__.items():
+            if v: self.headers.__dict__[k] = v
+        for k,v in base.fields.__dict__.items():
+            if v: self.fields.__dict__[k] = v
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -75,6 +80,45 @@ class GftExmHeaderGroupObject(base.ConfigObjectBase):
         req_spec.match_fields.gre_protocol = self.fields.gre_protocol
         return
 
+    def Show(self):
+        cfglogger.info("Creating Header Group : %s" % self.GID())
+        hdrs = ""
+        if self.headers.ethernet_header: hdrs += "Eth"
+        if self.headers.ipv4_header: hdrs += "/IPv4"
+        if self.headers.ipv6_header: hdrs += "/IPv6"
+        if self.headers.tcp_header: hdrs += "/TCP"
+        if self.headers.udp_header: hdrs += "/UDP"
+        if self.headers.icmp_header: hdrs += "/ICMP"
+        if self.headers.no_encap: hdrs += "/NoEncap"
+        if self.headers.ip_in_ip_encap: hdrs += "/IPinIP"
+        if self.headers.ip_in_gre_encap: hdrs += "/IPinGRE"
+        if self.headers.nvgre_encap: hdrs += "/NVGRE"
+        if self.headers.vxlan_encap: hdrs += "/VXLAN"
+        cfglogger.info("- Headers: %s" % hdrs)
+        fields = ""
+        if self.fields.dst_mac_addr: fields += "Dmac"
+        if self.fields.src_mac_addr: fields += "/Smac"
+        if self.fields.eth_type: fields += "/Etype"
+        if self.fields.customer_vlan_id: fields += "/CustVlanID"
+        if self.fields.provider_vlan_id: fields += "/ProvVlanID"
+        if self.fields.dot1p_priority: fields += "/Dot1P"
+        if self.fields.src_ip_addr: fields += "/Sip"
+        if self.fields.dst_ip_addr: fields += "/Dip"
+        if self.fields.ip_ttl: fields += "/Ttl"
+        if self.fields.ip_protocol: fields += "/Proto"
+        if self.fields.ip_dscp: fields += "/Dscp"
+        if self.fields.src_port: fields += "/Sport"
+        if self.fields.dst_port: fields += "/Dport"
+        if self.fields.tcp_flags: fields += "/TcpFlags"
+        if self.fields.tenant_id: fields += "/TenantID"
+        if self.fields.icmp_type: fields += "/IcmpType"
+        if self.fields.icmp_code: fields += "/IcmpCode"
+        if self.fields.oob_vlan: fields += "/OobVlan"
+        if self.fields.oob_tenant_id: fields += "/OobTenantID"
+        if self.fields.gre_protocol: fields += "/GREProto"
+        cfglogger.info("- Fields: %s" % fields)
+        return
+        
 class GftExmHeaderGroupObjectHelper:
     def __init__(self):
         self.objlist = []

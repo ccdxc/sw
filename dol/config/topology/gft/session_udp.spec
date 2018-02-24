@@ -7,15 +7,9 @@ proto: udp
 
 entries:
     - entry:
-        label: networking
+        label: GFT
         responder:
-            port : const/128
+            port : const/40001
         initiator: 
-            port : const/47273
+            port : const/41001
 
-    - entry:
-        label: gft_drop
-        responder:
-            port : const/129
-        initiator: 
-            port : const/47274

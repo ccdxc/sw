@@ -1,0 +1,6 @@
+# GFT Flow Object Template
+
+meta:
+    id: GFT_FLOW
+    feature_set:
+        - gft
