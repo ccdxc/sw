@@ -129,13 +129,23 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
      * App redirect proxied packets (from TCP/TLS) may use more than one
      * page (currently up to 2) to hold meta headers and payload.
      */
-    if((descr.l0 > JUMBO_FRAME_SIZE) || (descr.l1 > JUMBO_FRAME_SIZE)) {
+    if((descr.l0 > JUMBO_FRAME_SIZE) ||
+       (descr.l1 > JUMBO_FRAME_SIZE) ) {
         HAL_TRACE_DEBUG("corrupted packet");
         return HAL_RET_HW_FAIL;
     }
+    
+    if((descr.a0 == 0) ||
+       (descr.l0 + descr.l1) < sizeof(p4_to_p4plus_cpu_pkt_t)) {
+        // Packet should always have a valid address and
+        // packet length should be minimum of cpupkt header. 
+        HAL_TRACE_DEBUG("Received packet with invalid address/length");
+        return HAL_RET_HW_FAIL;
+    }
+    
     //hard-coding to 9K buffer for now. needs to be replaced with page.
     uint8_t* buffer = (uint8_t* ) malloc(9216);
-
+      
     uint64_t pktaddr = descr.a0 + descr.o0;
 
     if(!cpupkt_hbm_read(pktaddr, buffer, descr.l0)) {
