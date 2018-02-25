@@ -381,13 +381,13 @@ pd_cpupkt_poll_receive(pd_cpupkt_poll_receive_args_t *args)
         ret = cpupkt_descr_to_headers(descr, flow_miss_hdr, data, data_len);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to convert descr to headers");
+        } else {
+            ret = cpupkt_descr_free(descr_addr);
+            if(ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to free descr");    
+            }
         }
-        
         cpupkt_free_and_inc_queue_index(*qinst_info);
-        ret = cpupkt_descr_free(descr_addr);
-        if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to free descr");    
-        }
         return ret;
     }
 
