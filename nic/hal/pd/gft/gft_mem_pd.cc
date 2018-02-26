@@ -10,6 +10,7 @@
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/gft/emp_pd.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
+#include "nic/hal/pd/hal_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -477,7 +478,16 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *arg)
 hal_ret_t
 pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
 {
-    return HAL_RET_OK;
+    hal_ret_t   ret = HAL_RET_OK;
+    p4pd_def_cfg_t  p4pd_def_cfg;
+
+    HAL_TRACE_DEBUG("Programming table default entries ...");
+    ret = p4pd_table_defaults_init(&p4pd_def_cfg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program default entries, err: {}", ret);
+    }
+
+    return ret;
 }
 
 hal_ret_t

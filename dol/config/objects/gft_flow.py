@@ -27,7 +27,7 @@ class GftFlowObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.key_or_handle.flow_entry_id = self.id 
+        req_spec.key_or_handle.flow_entry_id = self.id
         req_spec.exact_match_profile.profile_id = 3
 
         req_spec.add_in_activated_state = False
@@ -57,7 +57,7 @@ class GftFlowObject(base.ConfigObjectBase):
 
         exm.match_fields.dst_mac_addr = True
         exm.match_fields.src_mac_addr = True
-        exm.match_fields.eth_type = True
+        #exm.match_fields.eth_type = True
         exm.match_fields.customer_vlan_id = True
         exm.match_fields.src_ip_addr = True
         exm.match_fields.dst_ip_addr = True
@@ -65,16 +65,16 @@ class GftFlowObject(base.ConfigObjectBase):
         exm.match_fields.src_port = True
         exm.match_fields.dst_port = True
 
-        exm.eth_fields.dst_mac_addr = self.flow.smac.getnum()
-        exm.eth_fields.src_mac_addr = self.flow.dmac.getnum()
-        exm.eth_fields.eth_type = self.flow.ethertype
+        exm.eth_fields.dst_mac_addr = self.flow.dmac.getnum()
+        exm.eth_fields.src_mac_addr = self.flow.smac.getnum()
+        #exm.eth_fields.eth_type = self.flow.ethertype
         exm.eth_fields.customer_vlan_id = self.flow.GetSrcSegmentVlanid()
         exm.src_ip_addr.ip_af = haldefs.common.IP_AF_INET
         exm.src_ip_addr.v4_addr = self.flow.sip.getnum()
         exm.dst_ip_addr.ip_af = haldefs.common.IP_AF_INET
         exm.dst_ip_addr.v4_addr = self.flow.dip.getnum()
         exm.ip_protocol = defs.ipprotos.id(self.flow.proto)
-        exm.encap_or_transport.udp_fields.sport = self.flow.sport 
+        exm.encap_or_transport.udp_fields.sport = self.flow.sport
         exm.encap_or_transport.udp_fields.dport = self.flow.dport
 
         trsp = req_spec.transpositions.add()
@@ -97,7 +97,7 @@ class GftFlowObject(base.ConfigObjectBase):
         cfglogger.info("  - UDP Header  : Sport:%d/Dport:%d" %\
                        (self.flow.sport, self.flow.dport))
         return
-        
+
 
 class GftFlowObjectHelper:
     def __init__(self):
@@ -115,7 +115,7 @@ class GftFlowObjectHelper:
             gft_iflow = GftFlowObject()
             gft_iflow.Init(ssn.iflow)
             self.objlist.append(gft_iflow)
-            
+
             gft_rflow = GftFlowObject()
             gft_rflow.Init(ssn.rflow)
             self.objlist.append(gft_rflow)

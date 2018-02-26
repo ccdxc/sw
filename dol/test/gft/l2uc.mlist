@@ -5,7 +5,7 @@ feature:
     package     : test.gft
     module      : gft
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
     - module:

@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://fwtype=L2
-    maxflows    : 1
+    maxflows    : 2
 
 packets:
     - packet:
@@ -80,7 +80,8 @@ expect:
     packets:
         - packet:
             object  : callback://networking/packets/GetL2UcExpectedPacket
-            port    : ref://testcase/config/dst/endpoint/intf/ports
+            port    : 1
+            #port    : ref://testcase/config/dst/endpoint/intf/ports
 
         - packet:
             object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT

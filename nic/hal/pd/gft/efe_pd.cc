@@ -212,6 +212,7 @@ efe_pd_program_hw (pd_gft_efe_t *pd_gft_efe)
 end:
     return ret;
 }
+// xpo ## TBL_ID ## _data.actionid = gft_hgxpos->action;               
 
 #define RX_XPOSITION_DATA(TBL_ID, LAYER)                                    \
     gft_hgxpos = &gft_efe->transpositions[TBL_ID];                          \
@@ -253,6 +254,7 @@ end:
     } else if (gft_hgxpos->action ==                                        \
                GFT_HDR_GROUP_XPOSITION_ACTION_MODIFY) {                     \
         if (gft_hgxpos->headers & GFT_HEADER_ETHERNET) {                    \
+            HAL_TRACE_DEBUG("Modifying ethernet hdr");                      \
             if (gft_hgxpos->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {       \
                 xpo ## TBL_ID ## _data.                                     \
                 rx_hdr_transpositions ## TBL_ID ## _action_u.               \
@@ -294,6 +296,11 @@ end:
                 ethernet_type = gft_hgxpos->eth_fields.eth_type;            \
             }                                                               \
             if (gft_hgxpos->fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {   \
+                HAL_TRACE_DEBUG("Modifying Vlan");                  \
+                xpo ## TBL_ID ## _data.                                     \
+                rx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.  \
+                hdr ## LAYER ## _bits |= TRANSPOSITIONS_POP_CTAG;           \
                 xpo ## TBL_ID ## _data.                                     \
                 rx_hdr_transpositions ## TBL_ID ## _action_u.               \
                 rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.  \
@@ -302,6 +309,10 @@ end:
                 rx_hdr_transpositions ## TBL_ID ## _action_u.               \
                 rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.  \
                 ctag = gft_hgxpos->eth_fields.customer_vlan_id;             \
+                xpo ## TBL_ID ## _data.                                     \
+                rx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.  \
+                ethernet_type = 0x0800;                                     \
             }                                                               \
         }                                                                   \
         if (gft_hgxpos->headers & GFT_HEADER_IPV4 ||                        \
@@ -444,7 +455,7 @@ end:
     rx_xpos_tbl = g_hal_state_pd->                                          \
                   dm_table(P4TBL_ID_RX_HDR_TRANSPOSITIONS ## TBL_ID);       \
     sdk_ret = rx_xpos_tbl->insert(&xpo ## TBL_ID ## _data,                  \
-                                  &pd_gft_efe->flow_table_idx);             \
+                                  &pd_gft_efe->flow_idx);                   \
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);                                  \
     if (ret != HAL_RET_OK) {                                                \
          HAL_TRACE_ERR(" Failed to insert into rx hdr xpos" #TBL_ID " table"\
@@ -452,7 +463,7 @@ end:
         goto end;                                                           \
     }                                                                       \
     HAL_TRACE_DEBUG("Programmed rx_hdr_xpos" #TBL_ID " at {}",              \
-                    pd_gft_efe->flow_table_idx);                            \
+                    pd_gft_efe->flow_idx);                                  \
 
 #define RX_XPOSITION_PGM_WITHID(TBL_ID)                                     \
     rx_xpos_tbl = g_hal_state_pd->                                          \
@@ -502,6 +513,10 @@ efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
 
     if (num_xpos == 0 || num_xpos > 0) {
         RX_XPOSITION_DATA(0, 1);
+        HAL_TRACE_DEBUG("action: {}, hdr1_bits: {}, ctag: {}",
+                        xpo0_data.actionid, 
+                        xpo0_data.rx_hdr_transpositions0_action_u.rx_hdr_transpositions0_rx_hdr_transpositions.hdr1_bits,
+                        xpo0_data.rx_hdr_transpositions0_action_u.rx_hdr_transpositions0_rx_hdr_transpositions.ctag);
         RX_XPOSITION_PGM(0);
     }
     if (num_xpos > 1) {
@@ -532,7 +547,7 @@ end:
         }                                                                   \
         if (gft_hgem->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {             \
             memcpy(gft_key.flow_lkp_metadata_ethernet_src_ ## LAYER,        \
-                   gft_hgem->eth_fields.dmac, ETH_ADDR_LEN);                \
+                   gft_hgem->eth_fields.smac, ETH_ADDR_LEN);                \
             memrev(gft_key.flow_lkp_metadata_ethernet_src_ ## LAYER,        \
                    ETH_ADDR_LEN);                                           \
         }                                                                   \

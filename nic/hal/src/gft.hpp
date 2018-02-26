@@ -648,6 +648,7 @@ hal_ret_t gft_exact_match_flow_entry_create(GftExactMatchFlowEntrySpec &spec,
                                             GftExactMatchFlowEntryResponse *rsp);
 
 void gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe);
+void gft_exact_match_profile_print (gft_exact_match_profile_t *mp);
 }    // namespace hal
 
 #endif    // __GFT_HPP__
