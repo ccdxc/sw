@@ -106,6 +106,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		return nil, err
 	}
 
+	var shouldStartAuthServer = false
 	if req.CertMgrBundle != nil && !env.CertMgr.IsReady() {
 		defer func() { c.peerTransportKey = nil }()
 		err := certutils.UnpackCertMgrBundle(env.CertMgr, req.CertMgrBundle, c.peerTransportKey)
@@ -117,7 +118,9 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			return nil, fmt.Errorf("Error starting CertMgr: %v", err)
 		}
 		if env.AuthRPCServer == nil {
-			go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
+			//  start the RPC server after creating the ResolverService (if applicable)
+			//	Hence move the start-Auth-server code towards end of the function
+			shouldStartAuthServer = true
 		}
 	}
 	env.QuorumNodes = req.QuorumNodes
@@ -247,6 +250,10 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
+
+	if shouldStartAuthServer {
+		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
+	}
 
 	return &grpc.ClusterJoinResp{}, nil
 }
