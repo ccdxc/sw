@@ -11,15 +11,16 @@ struct phv_ p;
 rx_vport_stats:
     seq             c1, k.{capri_intrinsic_lif_sbit0_ebit2, \
                            capri_intrinsic_lif_sbit3_ebit10}, EXCEPTION_VPORT
+    bcf             [!c1], rx_vport_stats_start
     phvwr.c1        p.capri_txdma_intrinsic_valid, TRUE
-    phvwr.c1        p.p4plus_to_p4_valid, TRUE
-    phvwr.c1        p.capri_intrinsic_tm_oq, 0
-    phvwrpair.c1    p.capri_intrinsic_tm_oport, TM_PORT_EGRESS, \
+    phvwr           p.p4plus_to_p4_valid, TRUE
+    phvwr           p.capri_intrinsic_tm_oq, 0
+    phvwrpair       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS, \
                         p.capri_intrinsic_drop, FALSE
 
+rx_vport_stats_start:
+    bbeq            k.capri_intrinsic_drop, TRUE, rx_vport_stats_drop
     phvwr.f         p.capri_p4_intrinsic_valid, TRUE
-    seq             c1, k.capri_intrinsic_drop, TRUE
-    bcf             [c1], rx_vport_stats_drop
     tbladd.!c1      d.rx_vport_stats_d.permit_packets, 1
     tbladd.e        d.rx_vport_stats_d.permit_bytes, \
                         k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\

@@ -11,7 +11,7 @@ struct phv_ p;
 tx_l4_hdr_transpositions:
     // flow stats
     tbladd          d.{tx_l4_hdr_transpositions_d.in_pkts}.dx, 1
-    tbladd          d.{tx_l4_hdr_transpositions_d.in_bytes}.dx, \
+    tbladd.f        d.{tx_l4_hdr_transpositions_d.in_bytes}.dx, \
                         k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                            capri_p4_intrinsic_packet_len_sbit6_ebit13}
 

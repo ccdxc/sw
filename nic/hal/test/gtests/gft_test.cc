@@ -1513,8 +1513,8 @@ TEST_F(gft_test, test1) {
 
     if (getenv("GFT_TEST_RX_ONLY")) {
         rx_enable = atoi(getenv("GFT_TEST_RX_ONLY"));
-    } 
-    
+    }
+
     // Run all tests, if none of these are set.
     if (!getenv("GFT_TEST_TX_ONLY") && !getenv("GFT_TEST_RX_ONLY")) {
         rx_enable = 1;
