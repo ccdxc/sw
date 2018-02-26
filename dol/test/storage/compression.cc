@@ -1,8 +1,12 @@
 // Compression DOLs.
-#include "dol/test/storage/compression.hpp"
-#include "dol/test/storage/compression_test.hpp"
-#include "dol/test/storage/tests.hpp"
-#include "dol/test/storage/utils.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+
+#include "compression.hpp"
+#include "compression_test.hpp"
+#include "tests.hpp"
+#include "utils.hpp"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
@@ -21,68 +25,97 @@ DECLARE_uint64(long_poll_interval);
 
 namespace tests {
 
-static const uint64_t cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
+static const uint64_t cp_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_GLB_BYTE_ADDRESS;
 
-static const uint64_t cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
+static const uint64_t cp_cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_BYTE_ADDRESS;
 
-static const uint64_t cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
+static const uint64_t cp_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_UENG_W0_BYTE_ADDRESS;
 
-static const uint64_t cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+static const uint64_t cp_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
 
-static const uint64_t cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
-
-static const uint64_t cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+static const uint64_t cp_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS;
 
-static const uint64_t cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
-
-static const uint64_t cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
+static const uint64_t cp_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_GLB_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_UENG_W0_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_PD_IDX_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
 
 static const uint32_t kNumSubqEntries = 4096;
 static const uint32_t kQueueMemSize = sizeof(cp_desc_t) * kNumSubqEntries;
-static void *queue_mem;
-static uint64_t queue_mem_pa;
-static uint16_t queue_index = 0;
+static void *cp_queue_mem;
+static uint64_t cp_queue_mem_pa;
+static uint16_t cp_queue_index = 0;
+static void *dc_queue_mem;
+static uint64_t dc_queue_mem_pa;
+static uint16_t dc_queue_index = 0;
 
-static const uint32_t kStatusBufSize = 4096;
-static void *status_buf;
-static uint64_t status_buf_pa;
+// Sample data generated during test.
+uint8_t all_zeros[65536] = {0};
+static constexpr uint32_t kUncompressedDataSize = 65536;
+static uint8_t uncompressed_data[kUncompressedDataSize];
+static constexpr uint32_t kCompressedBufSize = 65536 - 4096;
+static uint8_t compressed_data_buf[kCompressedBufSize];
+static uint16_t compressed_data_size;  // Calculated at run-time;
+static uint16_t last_cp_output_data_len;  // Calculated at run-time;
+static uint8_t *compressed_data_ptr = compressed_data_buf + 8;
 
-static const uint32_t kDatainBufSize = 4096;
-static void *datain_buf;
-static uint64_t datain_buf_pa;
+// Buffer (total 128K) layout in both HBM and host memory:
+static constexpr uint32_t kTotalBufSize = 128 * 1024;
+// 0 - (64K-1)              : Uncompressed data
+static constexpr uint32_t kUncompressedDataOffset = 0;
+// 64K - 126975 (128K-4K)   : compressed data
+static constexpr uint32_t kCompressedDataOffset = 65536;
+// 126976                   : Status (max 512 bytes)
+static constexpr uint32_t kStatusOffset = 126976;
+// 127488                   : Fake opaque tag (if needed)
+static constexpr uint32_t kOpaqueTagOffset = 127488;
+// 127496                   : Fake doorbell (if needed)
+static constexpr uint32_t kDoorbellOffset = 127496;
+// 128000                   : Sequencer entries (upto 1024 bytes).
+static constexpr uint32_t kSequencerOffset = 128000;
+// 129024                   : SGL entries (upto 1024 bytes);
+static constexpr uint32_t kSGLOffset = 129024;
 
-// Size defined in compression_test.hpp
-static void *dataout_buf;
-static uint64_t dataout_buf_pa;
+static uint64_t host_mem_pa;
+static uint8_t *host_mem;
+static uint64_t hbm_pa;
 
-static const uint32_t kSGLBufSize = 4096;
-static uint8_t *sgl_buf;
-static uint64_t sgl_buf_pa;
-
-static uint64_t hbm_datain_buf_pa;
-static uint64_t hbm_dataout_buf_pa;
-static uint64_t hbm_status_buf_pa;
-static uint64_t hbm_sgl_buf_pa;
+// Write zeros to the 1st 8 bytes of compressed data buffer in hostmem.
+void InvalidateHdrInHostMem() {
+  *((uint64_t *)(host_mem + kCompressedDataOffset)) = 0;
+}
 
 static bool status_poll(bool in_hbm) {
   auto func = [in_hbm] () -> int {
-    cp_status_sha512_t *s = (cp_status_sha512_t *)status_buf;
+    cp_status_sha512_t *s = (cp_status_sha512_t *)(host_mem + kStatusOffset);
     if (in_hbm) {
-      read_mem(hbm_status_buf_pa, (uint8_t *)status_buf, kStatusBufSize);
+      read_mem(hbm_pa + kStatusOffset, (uint8_t *)s, sizeof(cp_status_sha512_t));
     }
     if (s->valid) {
       if (in_hbm) {
         usleep(100);
-        // Do it once more as status is copied 1st and DB is rung next.
-        read_mem(hbm_status_buf_pa, (uint8_t *)status_buf, kStatusBufSize);
+        read_mem(hbm_pa + kStatusOffset, (uint8_t *)s, sizeof(cp_status_sha512_t));
       }
       printf("Got status %llx\n", *((unsigned long long *)s));
       return 0;
@@ -98,699 +131,409 @@ static bool status_poll(bool in_hbm) {
 void
 compression_init()
 {
-  queue_mem = alloc_page_aligned_host_mem(kQueueMemSize);
-  assert(queue_mem != nullptr);
-  queue_mem_pa = host_mem_v2p(queue_mem);
+  cp_queue_mem = alloc_page_aligned_host_mem(kQueueMemSize);
+  assert(cp_queue_mem != nullptr);
+  cp_queue_mem_pa = host_mem_v2p(cp_queue_mem);
+  dc_queue_mem = alloc_page_aligned_host_mem(kQueueMemSize);
+  assert(dc_queue_mem != nullptr);
+  dc_queue_mem_pa = host_mem_v2p(dc_queue_mem);
 
-  status_buf = alloc_page_aligned_host_mem(kStatusBufSize);
-  assert(status_buf != nullptr);
-  status_buf_pa = host_mem_v2p(status_buf);
-
-  datain_buf = alloc_page_aligned_host_mem(kDatainBufSize);
-  assert(datain_buf != nullptr);
-  datain_buf_pa = host_mem_v2p(datain_buf);
-
-  dataout_buf = alloc_page_aligned_host_mem(kDataoutBufSize);
-  assert(dataout_buf != nullptr);
-  dataout_buf_pa = host_mem_v2p(dataout_buf);
-
-  sgl_buf = (uint8_t *)alloc_page_aligned_host_mem(kSGLBufSize);
-  assert(sgl_buf != nullptr);
-  sgl_buf_pa = host_mem_v2p(sgl_buf);
-
-  assert(utils::hbm_addr_alloc_page_aligned(kDatainBufSize, &hbm_datain_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc_page_aligned(kDataoutBufSize, &hbm_dataout_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc_page_aligned(kStatusBufSize, &hbm_status_buf_pa) == 0);
-  assert(utils::hbm_addr_alloc_page_aligned(kSGLBufSize, &hbm_sgl_buf_pa) == 0);
+  host_mem = (uint8_t *)alloc_page_aligned_host_mem(kTotalBufSize);
+  assert(host_mem != nullptr);
+  host_mem_pa = host_mem_v2p(host_mem);
+  assert(utils::hbm_addr_alloc_page_aligned(kTotalBufSize, &hbm_pa) == 0);
 
   // Pre-fill input buffers.
-  bcopy(uncompressed_data, datain_buf, kDatainBufSize);
-  write_mem(hbm_datain_buf_pa, (uint8_t *)datain_buf, kDatainBufSize);
+  uint64_t *p64 = (uint64_t *)uncompressed_data;
+  for (uint64_t i = 0; i < (kUncompressedDataSize/sizeof(uint64_t)); i++)
+    p64[i] = i;
+  bcopy(uncompressed_data, host_mem + kUncompressedDataOffset, kUncompressedDataSize);
+  //write_mem(hbm_pa + kUncompressedDataOffset, (uint8_t *)uncompressed_data, kUncompressedDataSize);
 
-  // Write queue base.
   uint32_t lo_reg, hi_reg;
-  read_reg(cfg_glob, lo_reg);
-  write_reg(cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
-  write_reg(cfg_q_base, queue_mem_pa & 0xFFFFFFFFu);
-  write_reg(cfg_q_base + 4, (queue_mem_pa >> 32) & 0xFFFFFFFFu);
-  // Enable all 16 engines.
-  read_reg(cfg_ueng, lo_reg);
-  read_reg(cfg_ueng+4, hi_reg);
+  // Write cp queue base.
+  read_reg(cp_cfg_glob, lo_reg);
+  write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
+  write_reg(cp_cfg_q_base, cp_queue_mem_pa & 0xFFFFFFFFu);
+  write_reg(cp_cfg_q_base + 4, (cp_queue_mem_pa >> 32) & 0xFFFFFFFFu);
+  // Write dc queue base.
+  read_reg(dc_cfg_glob, lo_reg);
+  write_reg(dc_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
+  write_reg(dc_cfg_q_base, dc_queue_mem_pa & 0xFFFFFFFFu);
+  write_reg(dc_cfg_q_base + 4, (dc_queue_mem_pa >> 32) & 0xFFFFFFFFu);
+
+  // Enable all 16 cp engines.
+  read_reg(cp_cfg_ueng, lo_reg);
+  read_reg(cp_cfg_ueng+4, hi_reg);
   lo_reg |= 0xFFFF;
   hi_reg &= ~(1u << (54 - 32));
   hi_reg &= ~(1u << (53 - 32));
-  write_reg(cfg_ueng, lo_reg);
-  write_reg(cfg_ueng+4, hi_reg);
-  // Enable cold/warm queue.
-  read_reg(cfg_dist, lo_reg);
-  lo_reg |= 1;
-  write_reg(cfg_dist, lo_reg);
+  write_reg(cp_cfg_ueng, lo_reg);
+  write_reg(cp_cfg_ueng+4, hi_reg);
+  // Enable both DC engines.
+  read_reg(dc_cfg_ueng, lo_reg);
+  read_reg(dc_cfg_ueng+4, hi_reg);
+  lo_reg |= 0x3;
+  hi_reg &= ~(1u << (54 - 32));
+  hi_reg &= ~(1u << (53 - 32));
+  write_reg(dc_cfg_ueng, lo_reg);
+  write_reg(dc_cfg_ueng+4, hi_reg);
 
-  queue_index = 0;
+  // Enable cold/warm queue.
+  read_reg(cp_cfg_dist, lo_reg);
+  lo_reg |= 1;
+  write_reg(cp_cfg_dist, lo_reg);
+  read_reg(dc_cfg_dist, lo_reg);
+  lo_reg |= 1;
+  write_reg(dc_cfg_dist, lo_reg);
+
+  cp_queue_index = 0;
+  dc_queue_index = 0;
 
   printf("Compression init done\n");
 }
 
-static void populate_sgls(uint16_t data_len, uint16_t num_entries,
-                          void *sgl_va_in, uint64_t sgl_pa, uint64_t src_pa) {
-  bool sgl_in_host_mem = sgl_pa & 0x8000000000000000ull;
-  uint16_t chunk_size = data_len / num_entries;
-  uint16_t last_chunk_size = chunk_size + (data_len - (chunk_size * num_entries));
-  assert(chunk_size > 0);
-  uint16_t count = num_entries;
-  cp_sgl_t *sgl_va = (cp_sgl_t *)sgl_va_in;
-  cp_sgl_t sgl;
-  while (count > 0) {
-    bzero(&sgl, sizeof(sgl));
-    sgl.link = sgl_pa + sizeof(cp_sgl_t);
-    sgl.addr0 = src_pa;
-    sgl.len0 = (count == 1) ? last_chunk_size : chunk_size;
-    src_pa += sgl.len0;
-    count--;
-    if (count == 0)
-      break;
-
-    sgl.addr1 = src_pa;
-    sgl.len1 = (count == 1) ? last_chunk_size : chunk_size;
-    src_pa += sgl.len1;
-    count--;
-    if (count == 0)
-      break;
-
-    sgl.addr2 = src_pa;
-    sgl.len2 = (count == 1) ? last_chunk_size : chunk_size;
-    src_pa += sgl.len2;
-    count--;
-    if (count == 0)
-      break;
-    if (sgl_in_host_mem) {
-      bcopy(&sgl, sgl_va, sizeof(sgl));
-      sgl_va++;
-    } else {
-      write_mem(sgl_pa, (uint8_t *)&sgl, sizeof(sgl));
-    }
-    sgl_pa = sgl.link;
+// We only compare err and partial data from exp.
+static int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp) {
+  cp_status_sha512_t *s = (cp_status_sha512_t *)(host_mem + kStatusOffset);
+  bzero(s, sizeof(*s));
+  if (status_in_hbm) {
+    write_mem(hbm_pa + kStatusOffset, all_zeros, sizeof(*s));
   }
-  sgl.link = 0;
-  if (sgl_in_host_mem) {
-    bcopy(&sgl, sgl_va, sizeof(sgl));
-  } else {
-    write_mem(sgl_pa, (uint8_t *)&sgl, sizeof(sgl));
-  }
-}
+  desc->status_addr = (status_in_hbm ? hbm_pa : host_mem_pa) + kStatusOffset;
 
-static int run_cp_test(comp_test_t *params) {
-  static uint32_t counter = 0;
-  counter++;
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
+  cp_desc_t *dst_d = (cp_desc_t *)cp_queue_mem;
+  bcopy(desc, &dst_d[cp_queue_index], sizeof(*desc));
+  cp_queue_index++;
+  if (cp_queue_index == 4096)
+    cp_queue_index = 0;
+  write_reg(cp_cfg_q_pd_idx, cp_queue_index);
 
-  printf("Starting testcase %s\n", params->test_name.c_str());
-  d.cmd = params->cmd;
-  uint64_t bufin_pa = params->src_is_hbm ? hbm_datain_buf_pa : datain_buf_pa;
-  if (params->num_src_sgls == 1) {
-    d.src = bufin_pa;
-  } else {
-    if (params->src_sgl_is_hbm) {
-      populate_sgls(params->datain_len, params->num_src_sgls, nullptr,
-                    hbm_sgl_buf_pa, bufin_pa);
-      d.src = hbm_sgl_buf_pa;
-    } else {
-      populate_sgls(params->datain_len, params->num_src_sgls, sgl_buf,
-                    sgl_buf_pa, bufin_pa);
-      d.src = sgl_buf_pa;
-    }
-    d.cmd_bits.src_is_list = 1;
-  }
-
-  uint64_t bufout_pa = params->dst_is_hbm ? hbm_dataout_buf_pa : dataout_buf_pa;
-  if (params->output_same_as_input) {
-    bufout_pa = bufin_pa;
-  } else {
-    bzero(dataout_buf, kDataoutBufSize);
-    if (params->dst_is_hbm) {
-      write_mem(hbm_dataout_buf_pa, all_zeros, kDataoutBufSize);
-    }
-  }
-  if (params->cmd_bits.compression_en) {
-    if (params->num_dst_sgls == 1) {
-      d.dst = bufout_pa;
-    } else {
-      if (params->dst_sgl_is_hbm) {
-        populate_sgls(params->dataout_len, params->num_dst_sgls, nullptr,
-                      hbm_sgl_buf_pa + 2048, bufout_pa);
-        d.dst = hbm_sgl_buf_pa + 2048;
-      } else {
-        populate_sgls(params->dataout_len, params->num_dst_sgls, sgl_buf + 2048,
-                      sgl_buf_pa + 2048, bufout_pa);
-        d.dst = sgl_buf_pa + 2048;
-      }
-      d.cmd_bits.dst_is_list = 1;
-    }
-  } else {
-    d.dst = (uint64_t)-1;
-  }
-
-  bzero(status_buf, kStatusBufSize);
-  if (params->status_is_hbm) {
-    write_mem(hbm_status_buf_pa, all_zeros, kStatusBufSize);
-  }
-  const uint64_t kDBData = 0x11223344556677ull;
-  const uint32_t kTagData = 0x8899aabbu;
-  d.input_len = params->datain_len;
-  if (params->cmd_bits.compression_en) {
-    d.expected_len = params->dataout_len - 8;
-  }
-  d.status_addr = params->status_is_hbm ? hbm_status_buf_pa : status_buf_pa;
-  d.doorbell_addr = d.status_addr + 1024;
-  d.doorbell_data = kDBData;
-  d.opaque_tag_addr = d.status_addr + 2048;
-  d.opaque_tag_data = kTagData;
-  d.status_data = counter;
-
-  cp_desc_t *dst_d = (cp_desc_t *)queue_mem;
-  bcopy(&d, &dst_d[queue_index], sizeof(d));
-  queue_index++;
-  if (queue_index == 4096)
-    queue_index = 0;
-  write_reg(cfg_q_pd_idx, queue_index);
-
-  cp_status_sha512_t *st = (cp_status_sha512_t *)status_buf;
-  if (!status_poll(params->status_is_hbm)) {
-    printf("ERROR: Compression status never came\n");
+  if (!status_poll(status_in_hbm)) {
+    printf("ERROR: status never came\n");
     return -1;
   }
+  cp_status_sha512_t *st = (cp_status_sha512_t *)(host_mem + kStatusOffset);
   if (!st->valid) {
-    printf("ERROR: Compression valid bit not set\n");
+    printf("ERROR: Status valid bit not set\n");
     return -1;
   }
-  if (st->err) {
-    printf("ERROR: Compression generated err = 0x%x\n", st->err);
+  if (st->err != exp.err) {
+    printf("ERROR: status err 0x%x is unexpected\n", st->err);
     return -1;
   }
-  if (params->cmd_bits.compression_en) {
-    uint16_t expected_data_len = kCompressedDataSize;
-    if (params->cmd_bits.insert_header) {
-      expected_data_len += 8;
-    }
-    if (st->output_data_len != expected_data_len) {
-      printf("ERROR: output data len mismatch, expected %u, received %u\n",
-             expected_data_len, st->output_data_len);
+  if (st->partial_data != exp.partial_data) {
+    printf("ERROR: status partial data 0x%x is unexpected\n", st->partial_data);
+    return -1;
+  }
+  if (desc->cmd_bits.comp_decomp_en && desc->cmd_bits.insert_header && (st->err == 0)) {
+    cp_hdr_t *hdr = (cp_hdr_t *)(host_mem + kCompressedDataOffset);
+    if (hdr->version != kCPVersion) {
+      printf("Header version mismatch, expected 0x%x, received 0x%x\n",
+             kCPVersion, hdr->version);
       return -1;
     }
-    if (params->dst_is_hbm) {
-      read_mem(hbm_dataout_buf_pa, (uint8_t *)dataout_buf, expected_data_len);
-    }
-    uint8_t *data_start = (uint8_t *)dataout_buf;
-    if (params->cmd_bits.insert_header) {
-      cp_hdr_t *hdr = (cp_hdr_t *)dataout_buf;
-      uint32_t expected_cksum =
-          params->cmd_bits.cksum_adler ? kADLER32Sum : kCRC32Sum;
-      if (hdr->cksum != expected_cksum) {
-        printf("ERROR: CKSUM mismatch. Expected 0x%x, Got 0x%x\n",
-               expected_cksum, hdr->cksum);
-        return -1;
-      }
-      if (hdr->data_len != kCompressedDataSize) {
-        printf("ERROR: wrong data len in the compression header. "
-               "Expected %d, got %d\n", kCompressedDataSize, hdr->data_len);
-        return -1;
-      }
-      if (hdr->version != kCPVersion) {
-        printf("ERROR: wrong version in the compression header. "
-               "Expected 0x%x, got 0x%x\n", kCPVersion, hdr->version);
-        return -1;
-      }
-      data_start += 8;
-    }
-    if (st->partial_data != counter) {
-      printf("ERROR: partial data in status does not match the expected value\n");
+    if (hdr->cksum == 0) {
+      printf("ERROR: Header with zero cksum\n");
       return -1;
     }
-    if (bcmp(data_start, compressed_data, kCompressedDataSize) != 0) {
-      printf("ERROR: compressed data does not match with expected output.\n");
+    uint32_t datain_len = desc->datain_len;
+    if (datain_len == 0)
+      datain_len = 65536;
+    if ((hdr->data_len == 0) || (hdr->data_len > (kCompressedBufSize - 8))
+        || (hdr->data_len > datain_len)) {
+      printf("ERROR: Invalid data_len 0x%x\n", hdr->data_len);
       return -1;
     }
-  }  // If compression is enabled
-  if (params->cmd_bits.sha_en) {
-    int sha_len = params->cmd_bits.sha256 ? 32 : 64;
-    uint8_t *expected_sha = params->cmd_bits.sha256 ? sha256_post : sha512_post;
-    if (bcmp(st->sha512, expected_sha, sha_len) != 0) {
-      printf("ERROR: SHA mismatch.\nExpected:\n");
-      utils::dump(expected_sha, sha_len);
-      printf("Received:\n");
-      utils::dump(st->sha512, sha_len);
+    if (st->output_data_len != (hdr->data_len + 8)) {
+      printf("ERROR: output_data_len %u does not match hdr+8 %u\n",
+             st->output_data_len, hdr->data_len + 8);
       return -1;
     }
   }
-  uint64_t *db_data = (uint64_t *)(((uint8_t *)status_buf) + 1024);
-  if (params->cmd_bits.doorbell_on) {
-    auto func = [db_data] () ->int {
-      if (*db_data == kDBData)
-        return 0;
-      return 1;
-    };
-    tests::Poller poll;
-    if (poll(func) != 0) {
-      printf("ERROR: doorbell is not rung\n");
-      return -1;
-    }
-  } else {
-    if (*db_data == kDBData) {
-      printf("ERROR: doorbell is rung when not requested\n");
+  if (desc->cmd_bits.comp_decomp_en && (st->err == 0) && desc->cmd_bits.sha_en) {
+    int sha_size = desc->cmd_bits.sha_type ? 32 : 64;
+    if (bcmp(st->sha512, all_zeros, sha_size) == 0) {
+      printf("ERROR: Sha is all zero\n");
       return -1;
     }
   }
-  uint32_t *o = (uint32_t *)(((uint8_t *)status_buf) + 2048);
-  if (params->cmd_bits.opaque_tag_on) {
-    auto func = [o] () -> int {
-      if (*o == kTagData)
-        return 0;
-      return 1;
-    };
-    tests::Poller poll;
-    if (poll(func) != 0) {
-      printf("ERROR: Opaque tag not written\n");
-      return -1;
-    }
-  } else {
-    if (*o == kTagData) {
-      printf("ERROR: Opaque tag is written when not requested\n");
-      return -1;
-    }
+  if ((st->err == 0) && (st->integrity_data == 0)) {
+    printf("Integrity is all zero\n");
+    return -1;
   }
-
-  printf("Testcase %s passed\n", params->test_name.c_str());
+  last_cp_output_data_len = st->output_data_len;
+  printf("Last output data len = %u\n", last_cp_output_data_len);
   return 0;
 }
 
-int compress_host_flat() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
+// Only err, output_data_len and partial_data is compared from exp.
+static int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp) {
+  cp_status_sha512_t *s = (cp_status_sha512_t *)(host_mem + kStatusOffset);
+  bzero(s, sizeof(*s));
+  if (status_in_hbm) {
+    write_mem(hbm_pa + kStatusOffset, all_zeros, sizeof(*s));
+  }
+  desc->status_addr = (status_in_hbm ? hbm_pa : host_mem_pa) + kStatusOffset;
 
-  return run_cp_test(&spec);
-}
+  cp_desc_t *dst_d = (cp_desc_t *)dc_queue_mem;
+  bcopy(desc, &dst_d[dc_queue_index], sizeof(*desc));
+  dc_queue_index++;
+  if (dc_queue_index == 4096)
+    dc_queue_index = 0;
+  write_reg(dc_cfg_q_pd_idx, dc_queue_index);
 
-int compress_host_flat_same_buf() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.output_same_as_input = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_hbm_flat() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_is_hbm   = 1;
-  spec.dst_is_hbm   = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_hbm_flat_same_buf() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_is_hbm   = 1;
-  spec.dst_is_hbm   = 1;
-  spec.output_same_as_input = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_host_to_hbm_flat() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.dst_is_hbm   = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_hbm_to_host_flat() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_is_hbm   = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_host_sgl() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 3;
-  spec.num_dst_sgls = 2;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-
-  return run_cp_test(&spec);
-}
-
-int compress_hbm_sgl() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 3;
-  spec.num_dst_sgls = 2;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_is_hbm   = 1;
-  spec.dst_is_hbm   = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_host_nested_sgl() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 4;
-  spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-
-  return run_cp_test(&spec);
-}
-
-int compress_hbm_nested_sgl() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 4;
-  spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_is_hbm   = 1;
-  spec.dst_is_hbm   = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_nested_sgl_in_hbm() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 4;
-  spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_is_hbm   = 1;
-  spec.src_sgl_is_hbm   = 1;
-  spec.dst_is_hbm   = 1;
-  spec.dst_sgl_is_hbm   = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_return_through_hbm() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.num_src_sgls = 4;
-  spec.num_dst_sgls = 4;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.dst_is_hbm   = 1;
-  spec.dst_sgl_is_hbm   = 1;
-  spec.status_is_hbm = 1;
-
-  return run_cp_test(&spec);
-}
-
-int compress_adler_sha256() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.cmd_bits.sha_en = 1;
-  spec.cmd_bits.sha256 = 1;
-  spec.cmd_bits.cksum_adler = 1;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-
-  return run_cp_test(&spec);
-}
-
-int compress_crc_sha512() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.cmd_bits.sha_en = 1;
-  spec.cmd_bits.sha256 = 0;
-  spec.cmd_bits.cksum_adler = 0;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-
-  return run_cp_test(&spec);
-}
-
-int compress_doorbell_odata() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 5;
-  spec.cmd_bits.doorbell_on = 1;
-  spec.cmd_bits.opaque_tag_on = 1;
-  spec.num_src_sgls = 1;
-  spec.num_dst_sgls = 1;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-
-  return run_cp_test(&spec);
-}
-
-int compress_max_features() {
-  comp_test_t spec;
-  bzero(&spec, sizeof(spec));
-  spec.test_name    = __func__;
-  spec.cmd          = 0x7FD;
-  spec.cmd_bits.cksum_en = 0;
-  spec.num_src_sgls = 7;
-  spec.num_dst_sgls = 8;
-  spec.datain_len   = 4096;
-  spec.dataout_len  = 4096;
-  spec.src_sgl_is_hbm = 1;
-  spec.dst_is_hbm = 1;
-  spec.status_is_hbm = 1;
-
-  return run_cp_test(&spec);
-}
-
-// Run the compression output through sequencer.
-int compress_output_through_sequencer() {
-  cp_desc_t d;
-  bzero(&d, sizeof(d));
-
-  printf("Starting testcase compress_output_through_sequencer\n");
-  d.cmd = 5;
-  d.src = datain_buf_pa;
-  d.dst = hbm_dataout_buf_pa;
-  write_mem(hbm_dataout_buf_pa, all_zeros, kDataoutBufSize);
-  bzero(status_buf, kStatusBufSize);
-  write_mem(hbm_status_buf_pa, all_zeros, kStatusBufSize);
-  d.input_len = 4096;
-  d.expected_len = 4096 - 8;
-  d.status_addr = hbm_status_buf_pa;
-
-  // Lets divide the output into 4 buffers of variable size.
-  // 199, 537, 1123, 2237
-  cp_sq_ent_sgl_t seq_sgl;
-  bzero(&seq_sgl, sizeof(seq_sgl));
-  seq_sgl.status_host_pa = status_buf_pa;
-  seq_sgl.addr[0] = dataout_buf_pa;
-  seq_sgl.len[0] = 199;
-  seq_sgl.addr[1] = dataout_buf_pa + 199;
-  seq_sgl.len[1] = 537;
-  seq_sgl.addr[2] = dataout_buf_pa + 199 + 537;
-  seq_sgl.len[2] = 1123;
-  seq_sgl.addr[3] = dataout_buf_pa + 199 + 537 + 1123;
-  seq_sgl.len[3] = 2237;
-  write_mem(hbm_sgl_buf_pa, (uint8_t *)&seq_sgl, sizeof(seq_sgl));
-
-  const uint32_t kIntrData = 0x11223344;
-  cp_seq_params_t seq_params;
-  bzero(&seq_params, sizeof(seq_params));
-  seq_params.seq_ent.status_hbm_pa = hbm_status_buf_pa;
-  seq_params.seq_ent.src_hbm_pa = hbm_dataout_buf_pa;
-  seq_params.seq_ent.sgl_pa = hbm_sgl_buf_pa;
-  seq_params.seq_ent.intr_pa = status_buf_pa + 1024;
-  seq_params.seq_ent.intr_data = kIntrData;
-  seq_params.seq_ent.status_len = sizeof(cp_status_sha512_t);
-  seq_params.seq_ent.status_dma_en = 1;
-  seq_params.seq_ent.intr_en = 1;
-  seq_params.seq_index = 0;
-  if (test_setup_cp_seq_ent(&seq_params) != 0) {
-    printf("cp_seq_ent failed\n");
+  if (!status_poll(status_in_hbm)) {
+    printf("ERROR: status never came\n");
     return -1;
   }
-
-  d.doorbell_addr = seq_params.ret_doorbell_addr;
-  d.doorbell_data = seq_params.ret_doorbell_data;
-  d.cmd_bits.doorbell_on = 1;
-  d.cmd_bits.sha_en = 1;
-  cp_desc_t *dst_d = (cp_desc_t *)queue_mem;
-  bcopy(&d, &dst_d[queue_index], sizeof(d));
-  queue_index++;
-  if (queue_index == 4096)
-    queue_index = 0;
-  write_reg(cfg_q_pd_idx, queue_index);
-
-  // First poll for interrupt
-  uint32_t *o = (uint32_t *)(((uint8_t *)status_buf) + 1024);
-  auto func = [o] () -> int {
-    if (*o == kIntrData)
-      return 0;
-    return 1;
-  };
-  tests::Poller poll;
-  if (poll(func) != 0) {
-    printf("ERROR: Interrupt not written %x\n", *o);
-    return -1;
-  }
-  printf("Interrupt Read after test complete \n");
-
-  // Then poll for status
-  if (!status_poll(false)) {
-    printf("ERROR: Compression status never came\n");
-    return -1;
-  }
-  cp_status_sha512_t *st = (cp_status_sha512_t *)status_buf;
+  cp_status_sha512_t *st = (cp_status_sha512_t *)(host_mem + kStatusOffset);
   if (!st->valid) {
-    printf("ERROR: Compression valid bit not set\n");
+    printf("ERROR: Status valid bit not set\n");
     return -1;
   }
-  if (st->err) {
-    printf("ERROR: Compression generated err = 0x%x\n", st->err);
+  if (st->err != exp.err) {
+    printf("ERROR: status err 0x%x is unexpected\n", st->err);
     return -1;
   }
- 
-  // Finally check the data 
-  uint16_t expected_data_len = kCompressedDataSize + 8;
-  if (st->output_data_len != expected_data_len) {
-    printf("ERROR: output data len mismatch, expected %u, received %u\n",
-           expected_data_len, st->output_data_len);
+  if (st->partial_data != exp.partial_data) {
+    printf("ERROR: status partial data 0x%x is unexpected\n", st->partial_data);
     return -1;
   }
-  uint8_t *data_start = ((uint8_t *)dataout_buf) + 8;
-  if (bcmp(data_start, compressed_data, kCompressedDataSize) != 0) {
-    printf("ERROR: compressed data does not match with expected output.\n");
+  if ((st->err == 0) && (st->output_data_len != exp.output_data_len)) {
+    printf("ERROR: output data len mismatch, expected 0x%x, received 0x%x\n",
+           exp.output_data_len, st->output_data_len);
     return -1;
   }
-
-  int sha_len = 64;
-  uint8_t *expected_sha = sha512_post;
-  if (bcmp(st->sha512, expected_sha, sha_len) != 0) {
-    printf("ERROR: SHA mismatch.\nExpected:\n");
-    utils::dump(expected_sha, sha_len);
-    printf("Received:\n");
-    utils::dump(st->sha512, sha_len);
-    return -1;
-  }
-  
-  printf("testcase compress_output_through_sequencer passed\n");
-
   return 0;
 }
 
-// Run compression on a 4K flat buf continuously
-int compress_flat_host_buf_performance() {
+int compress_flat_64K_buf() {
+  printf("Starting testcase %s\n", __func__);
   cp_desc_t d;
   bzero(&d, sizeof(d));
-  uint32_t tag_terminal_value = 63; // total 64 commands
-
-  printf("Starting testcase compress_flat_host_buf_performance\n");
-  d.cmd_bits.compression_en = 1;
+  d.cmd_bits.comp_decomp_en = 1;
   d.cmd_bits.insert_header = 1;
-  d.cmd_bits.opaque_tag_on = 1;
   d.cmd_bits.sha_en = 1;
-  d.src = datain_buf_pa;
-  d.dst = dataout_buf_pa;
-  d.input_len = 4096;
-  d.expected_len = 4096 - 8;
-  d.status_addr = status_buf_pa;
-  d.opaque_tag_addr = d.status_addr + 2048;
+  d.src = host_mem_pa + kUncompressedDataOffset;
+  d.dst = host_mem_pa + kCompressedDataOffset;
+  d.datain_len = 0;  // 0 = 64K
+  d.threshold_len = kCompressedBufSize - 8;
+  d.status_data = 0x1234;
+  InvalidateHdrInHostMem();
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+  if (run_cp_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  // Save compressed data.
+  cp_hdr_t *hdr = (cp_hdr_t *)(host_mem + kCompressedDataOffset);
+  bcopy(hdr, compressed_data_buf, hdr->data_len + 8);
+  compressed_data_size = hdr->data_len + 8;
+  return 0;
+}
 
-  cp_desc_t *dst_d = (cp_desc_t *)queue_mem;
-  for (unsigned i = 0; i <= tag_terminal_value; i++) {
-    d.opaque_tag_data = i;
-    bcopy(&d, &dst_d[queue_index], sizeof(d));
-    queue_index++;
-    if (queue_index == 4096)
-      queue_index = 0;
-    write_reg(cfg_q_pd_idx, queue_index);
+int decompress_to_flat_64K_buf() {
+  bzero(host_mem, kTotalBufSize);
+  bcopy(compressed_data_buf, host_mem + kCompressedDataOffset, compressed_data_size);
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.header_present = 1;
+  d.cmd_bits.cksum_verify_en = 1;
+  d.dst = host_mem_pa + kUncompressedDataOffset;
+  d.src = host_mem_pa + kCompressedDataOffset;
+  d.datain_len = compressed_data_size;
+  d.threshold_len = 0;  // 64K, output len
+  d.status_data = 0x3456;
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x3456;
+  if (run_dc_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
   }
+  // Verify data buf
+  if (bcmp(host_mem + kUncompressedDataOffset, uncompressed_data, kUncompressedDataSize) != 0) {
+    printf("Data does not match after decompress\n");
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
 
-  // Wait for opaque tag to reach terminal value.
-  unsigned *tag_addr = (unsigned *)(((uint8_t *)status_buf) + 2048);
-  auto func = [tag_addr, tag_terminal_value] () -> int {
-    if (*tag_addr == tag_terminal_value)
-      return 0;
-    return 1;
-  };
-  tests::Poller poll(FLAGS_long_poll_interval);
-  if (poll(func) != 0) {
-    printf("testcase compress_flat_host_buf_performance failed : poll timeout\n");
+int compress_odd_size_buf() {
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.sha_en = 1;
+  d.src = host_mem_pa + kUncompressedDataOffset;
+  d.dst = host_mem_pa + kCompressedDataOffset;
+  d.datain_len = 567;  // 0 = 64K
+  d.threshold_len = 567 - 8;
+  d.status_data = 0x1234;
+  InvalidateHdrInHostMem();
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+  if (run_cp_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
     return -1;
   }
-  // Verify status
-  cp_status_sha512_t *st = (cp_status_sha512_t *)status_buf;
-  if (!st->valid) {
-    printf("ERROR: Compression valid bit not set\n");
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+int decompress_odd_size_buf() {
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.header_present = 1;
+  d.cmd_bits.cksum_verify_en = 1;
+  d.dst = host_mem_pa + kUncompressedDataOffset;
+  d.src = host_mem_pa + kCompressedDataOffset;
+  d.datain_len = last_cp_output_data_len;
+  d.threshold_len = 567;  // 64K, output len
+  d.status_data = 0x3456;
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x3456;
+  st.output_data_len = 567;
+  if (run_dc_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
     return -1;
   }
-  if (st->err) {
-    printf("ERROR: Compression generated err = 0x%x\n", st->err);
+  // Verify data buf
+  if (bcmp(host_mem + kUncompressedDataOffset, uncompressed_data, 567) != 0) {
+    printf("Data does not match after decompress\n");
+    printf("Testcase %s failed\n", __func__);
     return -1;
   }
-  printf("testcase compress_flat_host_buf_performance passed\n");
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+int compress_host_sgl_to_host_sgl() {
+  // Prepare source SGLs
+  uint64_t data_pa = host_mem_pa + kUncompressedDataOffset;
+  uint64_t sgl_pa = host_mem_pa + kSGLOffset;
+  cp_sgl_t sgl1 = {0}, sgl2 = {0};
+  sgl1.len0 = sgl1.len1 = sgl1.len2 = 1000;
+  sgl1.addr0 = data_pa + 0;
+  sgl1.addr1 = data_pa + 1000;
+  sgl1.addr2 = data_pa + 2000;
+  sgl1.link = sgl_pa + sizeof(cp_sgl_t);
+  sgl2.len0 = sgl2.len1 = sgl2.len2 = 1000;
+  sgl2.addr0 = data_pa + 3000;
+  sgl2.addr1 = data_pa + 4000;
+  sgl2.addr2 = data_pa + 5000;
+  bcopy(&sgl1, host_mem + kSGLOffset, sizeof(cp_sgl_t));
+  bcopy(&sgl2, host_mem + kSGLOffset + sizeof(cp_sgl_t), sizeof(cp_sgl_t));
+
+  // Prepare destination SGLs
+  data_pa = host_mem_pa + kCompressedDataOffset;
+  sgl_pa = host_mem_pa + kSGLOffset + (2*sizeof(cp_sgl_t));
+  sgl1 = {0}; sgl2 = {0};
+  sgl1.len0 = sgl1.len1 = sgl1.len2 = 1024;
+  sgl1.addr0 = data_pa + 0;
+  sgl1.addr1 = data_pa + 1024;
+  sgl1.addr2 = data_pa + 2048;
+  sgl1.link = sgl_pa + sizeof(cp_sgl_t);
+  sgl2.len0 = sgl2.len1 = sgl2.len2 = 1024;
+  sgl2.addr0 = data_pa + (3 * 1024);
+  sgl2.addr1 = data_pa + 4096;
+  sgl2.addr2 = data_pa + (5 * 1024);
+  bcopy(&sgl1, host_mem + kSGLOffset + (2*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
+  bcopy(&sgl2, host_mem + kSGLOffset + (3*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
+
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.sha_en = 1;
+  d.cmd_bits.src_is_list = 1;
+  d.cmd_bits.dst_is_list = 1;
+  d.src = host_mem_pa + kSGLOffset;
+  d.dst = host_mem_pa + kSGLOffset + (2*sizeof(cp_sgl_t));
+  d.datain_len = 6000;
+  d.threshold_len = 6000 - 8;
+  d.status_data = 0x1234;
+  InvalidateHdrInHostMem();
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+  if (run_cp_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+int decompress_host_sgl_to_host_sgl() {
+  // bzero some initial area.
+  bzero(host_mem + kUncompressedDataOffset, 1024);
+  // Prepare source SGLs
+  uint64_t data_pa = host_mem_pa + kCompressedDataOffset;
+  uint64_t sgl_pa = host_mem_pa + kSGLOffset;
+  cp_sgl_t sgl1 = {0};
+  cp_sgl_t sgl2;
+  sgl1.len0 = last_cp_output_data_len >> 1;
+  sgl1.len1 = last_cp_output_data_len - sgl1.len0;
+  sgl1.addr0 = data_pa + 0;
+  sgl1.addr1 = data_pa + sgl1.len0;
+
+  bcopy(&sgl1, host_mem + kSGLOffset, sizeof(cp_sgl_t));
+
+  // Prepare destination SGLs
+  data_pa = host_mem_pa + kUncompressedDataOffset;
+  sgl_pa = host_mem_pa + kSGLOffset + (2*sizeof(cp_sgl_t));
+  sgl1 = {0}; sgl2 = {0};
+  sgl1.len0 = sgl1.len1 = sgl1.len2 = 1024;
+  sgl1.addr0 = data_pa + 0;
+  sgl1.addr1 = data_pa + 1024;
+  sgl1.addr2 = data_pa + 2048;
+  sgl1.link = sgl_pa + sizeof(cp_sgl_t);
+  sgl2.len0 = sgl2.len1 = sgl2.len2 = 1024;
+  sgl2.addr0 = data_pa + (3 * 1024);
+  sgl2.addr1 = data_pa + 4096;
+  sgl2.addr2 = data_pa + (5 * 1024);
+  bcopy(&sgl1, host_mem + kSGLOffset + (2*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
+  bcopy(&sgl2, host_mem + kSGLOffset + (3*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
+
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.header_present = 1;
+  d.cmd_bits.cksum_verify_en = 1;
+  d.cmd_bits.src_is_list = 1;
+  d.cmd_bits.dst_is_list = 1;
+  d.src = host_mem_pa + kSGLOffset;
+  d.dst = host_mem_pa + kSGLOffset + (2*sizeof(cp_sgl_t));
+  d.datain_len = last_cp_output_data_len;
+  d.threshold_len = 6000;
+  d.status_data = 0x1234;
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+  st.output_data_len = 6000;
+  if (run_dc_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  if (bcmp(host_mem + kUncompressedDataOffset, uncompressed_data, 6000) != 0) {
+    printf("Data does not match after decompress\n");
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
   return 0;
 }
 
 }  // namespace tests
+
+#pragma GCC diagnostic pop

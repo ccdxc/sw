@@ -40,7 +40,6 @@ bool run_comp_tests = false;
 bool run_xts_tests = false;
 bool run_rdma_tests = false;
 bool run_pdma_tests = false;
-bool run_comp_perf_tests = false;
 bool run_xts_perf_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
@@ -100,34 +99,12 @@ std::vector<tests::TestEntry> local_e2e_tests = {
 };
 
 std::vector<tests::TestEntry> comp_tests = {
-  {&tests::compress_host_flat, "Compress Host->Host flat buf", false},
-  {&tests::compress_hbm_flat, "Compress HBM->HBM flat buf", false},
-  {&tests::compress_host_to_hbm_flat, "Compress Host->HBM flat buf", false},
-  {&tests::compress_hbm_to_host_flat, "Compress HBM->Host flat buf", false},
-  {&tests::compress_host_sgl, "Compress Host->Host sgl buf", false},
-  {&tests::compress_hbm_sgl, "Compress HBM->HBM sgl buf", false},
-  {&tests::compress_host_nested_sgl, "Compress Host->Host nested sgl buf", false},
-  {&tests::compress_hbm_nested_sgl, "Compress HBM->HBM nested sgl buf", false},
-  {&tests::compress_nested_sgl_in_hbm, "Compress Nested sgl buf in HBM", false},
-  {&tests::compress_return_through_hbm, "Compress Status/dest-buf in HBM", false},
-  {&tests::compress_adler_sha256, "Compress with Adler32 and SHA256", false},
-  {&tests::compress_crc_sha512, "Compress with CRC32 and SHA512", false},
-  {&tests::compress_doorbell_odata, "Compress with DMA end writes", false},
-  {&tests::compress_max_features, "Compress with multiple features", false},
-  {&tests::compress_output_through_sequencer, "Compress with out through seq", false},
-  {&tests::decompress_host_flat, "Decompress Host->Host flat buf", false},
-  {&tests::decompress_hbm_flat, "Decompress HBM->HBM flat buf", false},
-  {&tests::decompress_host_to_hbm_flat, "Decompress Host->HBM flat buf", false},
-  {&tests::decompress_hbm_to_host_flat, "Decompress HBM->Host flat buf", false},
-  {&tests::decompress_host_sgl, "Decompress Host->Host sgl buf", false},
-  {&tests::decompress_hbm_sgl, "Decompress HBM->HBM sgl buf", false},
-  {&tests::decompress_host_nested_sgl, "Decompress Host->Host nested sgl buf", false},
-  {&tests::decompress_hbm_nested_sgl, "Decompress HBM->HBM nested sgl buf", false},
-  {&tests::decompress_nested_sgl_in_hbm, "Decompress Nested sgl buf in HBM", false},
-  {&tests::decompress_return_through_hbm, "Decompress Status/dest-buf in HBM", false},
-  {&tests::decompress_adler, "Decompress with Adler32", false},
-  {&tests::decompress_crc, "Decompress with CRC32", false},
-  {&tests::decompress_doorbell_odata, "Decompress with DMA end writes", false},
+  {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
+  {&tests::decompress_to_flat_64K_buf, "Decompress Host->Host to flat 64K buf", false},
+  {&tests::compress_odd_size_buf, "Compress Host->Host to flat odd size buf", false},
+  {&tests::decompress_odd_size_buf, "Decompress Host->Host to flat odd size buf", false},
+  {&tests::compress_host_sgl_to_host_sgl, "Compress Host->Host using SGLs", false},
+  {&tests::decompress_host_sgl_to_host_sgl, "Decompress Host->Host using SGLs", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
@@ -140,13 +117,6 @@ std::vector<tests::TestEntry> rdma_tests = {
 
 std::vector<tests::TestEntry> pdma_tests = {
   {&tests::test_run_seq_pdma_multi_xfers, "PDMA multiple transfers", false},
-};
-
-std::vector<tests::TestEntry> comp_perf_tests = {
-  {&tests::compress_flat_host_buf_performance,
-   "Flat buf compression performance", false},
-  {&tests::decompress_flat_host_buf_performance,
-   "Flat buf decompression performance", false},
 };
 
 void sig_handler(int sig) {
@@ -179,10 +149,9 @@ int main(int argc, char**argv) {
       run_nvme_tests = true;
       run_nvme_be_tests = true;
       run_local_e2e_tests = true;
-      run_comp_tests = false;
+      run_comp_tests = true;
       run_xts_tests = true;
       run_rdma_tests = true;
-      run_comp_perf_tests = false;
       run_xts_perf_tests = true;
       run_pdma_tests = true;
   } else if (FLAGS_test_group == "unit") {
@@ -199,8 +168,6 @@ int main(int argc, char**argv) {
       run_xts_tests = true;
   } else if (FLAGS_test_group == "rdma") {
       run_rdma_tests = true;
-  } else if (FLAGS_test_group == "comp_perf") {
-      run_comp_perf_tests = true;
   } else if (FLAGS_test_group == "xts_perf") {
       run_xts_perf_tests = true;
   } else if (FLAGS_test_group == "pdma") {
@@ -221,10 +188,6 @@ int main(int argc, char**argv) {
   printf("Going to init compression\n");
   tests::compression_init();
   printf("Compression configuration completed \n");
-
-  printf("Going to init decompression\n");
-  tests::decompression_init();
-  printf("Decompression configuration completed \n");
 
   if (rdma_init() < 0) {
     printf("RDMA Setup failed\n");
@@ -304,12 +267,6 @@ int main(int argc, char**argv) {
     printf("Added PDMA tests \n");
   }
 
-  if (run_comp_perf_tests) {
-    for (size_t i = 0; i < comp_perf_tests.size(); i++) {
-      test_suite.push_back(comp_perf_tests[i]);
-    }
-    printf("Added comp_perf tests \n");
-  }
   printf("Formed test suite with %d cases \n", (int) test_suite.size());
 
   printf("Running test cases \n");

@@ -5,19 +5,24 @@
 
 namespace tests {
 
+static constexpr uint16_t kCPVersion = 0x1234;
+
 typedef struct ccmd {
-  uint16_t compression_en:1, // NOP for decompression
+  uint16_t comp_decomp_en:1, // 1-engine enable, 0-only SHA/integrity
            header_present:1, // must be 1 for decompression
            insert_header:1,  // must be 1 for compression
            doorbell_on:1,
            opaque_tag_on:1,
            src_is_list:1,
            dst_is_list:1,
-           cksum_en:1,
+           cksum_verify_en:1,// valid for decompression only
            cksum_adler:1,    // 0-ADLER32, 1-CRC32
            sha_en:1,
-           sha256:1,         // 0-512, 1-256
-           rsvd5b:5;
+           sha_type:2,       // 00-512, 01-256
+           // The following is N/A if comp_decomp_en = 0. In that case
+           // integrity_src always is input data.
+           integrity_src:1,  // 0-Compressed data, 1-Uncompressed data
+           integrity_type:3; // 000:M-CRC64, 001:CRC32C, 010:Adler32 011:M-Adler32
 } ccmd_t;
 
 typedef struct cp_desc {
@@ -27,9 +32,9 @@ typedef struct cp_desc {
     ccmd_t   cmd_bits;
     uint16_t cmd;
   };
-  uint16_t rsvd;
-  uint16_t input_len;
-  uint16_t expected_len;
+  uint16_t datain_len;  // Length of input data, 0 = 64KB
+  uint16_t extended_len;// High order input data len, valid only if comp_decomp_en = 0
+  uint16_t threshold_len;
   uint64_t status_addr;
   uint64_t doorbell_addr;
   uint64_t doorbell_data;
@@ -40,14 +45,14 @@ typedef struct cp_desc {
 
 typedef struct cp_sgl {
   uint64_t addr0;
-  uint64_t len0:16,
-           rsvd0:48;
+  uint32_t len0;
+  uint32_t rsvd0;
   uint64_t addr1;
-  uint64_t len1:16,
-           rsvd1:48;
+  uint32_t len1;
+  uint32_t rsvd1;
   uint64_t addr2;
-  uint64_t len2:16,
-           rsvd2:48;
+  uint32_t len2;
+  uint32_t rsvd2;
   uint64_t link;  // next descriptor
   uint64_t rsvd;
 } cp_sgl_t;
@@ -74,6 +79,7 @@ typedef struct cp_status_no_hash {
            valid:1;
   uint16_t output_data_len;
   uint32_t partial_data;
+  uint64_t integrity_data;
 } cp_status_no_hash_t;
 
 typedef struct cp_status_sha512 {
@@ -82,6 +88,7 @@ typedef struct cp_status_sha512 {
            valid:1;
   uint16_t output_data_len;
   uint32_t partial_data;
+  uint64_t integrity_data;
   uint8_t  sha512[64];
 } cp_status_sha512_t;
 
@@ -91,6 +98,7 @@ typedef struct cp_status_sha256 {
            valid:1;
   uint16_t output_data_len;  // Includes header length.
   uint32_t partial_data;
+  uint64_t integrity_data;
   uint8_t  sha256[32];
 } cp_status_sha256_t;
 
