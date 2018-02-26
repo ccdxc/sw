@@ -12,6 +12,12 @@
 #define CNP_RING_ID             4
 #define RRQ_RING_ID	        (MAX_SQ_RINGS - 1)
 
+#define CNP_PRI                 0
+#define FC_PRI                  1 
+#define SQ_BKTRACK_PRI          2
+#define TIMER_PRI               3
+#define SQ_PRI                  4
+
 #define SQ_RING_ID_BITMAP            0x01 // (1 << SQ_RING_ID)
 #define FC_RING_ID_BITMAP            0x02 // (1 << FC_RING_ID)
 #define SQ_BKTRACK_RING_ID_BITMAP    0x04 // (1 << SQ_BACKTRACK_RING_ID)

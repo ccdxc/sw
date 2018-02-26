@@ -770,8 +770,8 @@ hal_ret_t
 rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 {
     uint32_t     lif = spec.hw_lif_id();
-    uint8_t      num_sq_wqes, num_rq_wqes;
-    uint8_t      num_rrq_wqes, num_rsq_wqes;
+    uint32_t      num_sq_wqes, num_rq_wqes;
+    uint32_t      num_rrq_wqes, num_rsq_wqes;
     uint32_t     sqwqe_size, rqwqe_size;
     uint32_t     sq_size;
     sqcb_t       sqcb;
@@ -1221,7 +1221,7 @@ hal_ret_t
 rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
 {
     uint32_t     lif = spec.hw_lif_id();
-    uint8_t      num_cq_wqes, cqwqe_size;
+    uint32_t      num_cq_wqes, cqwqe_size;
     cqcb_t       cqcb;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
