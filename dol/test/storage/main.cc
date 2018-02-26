@@ -41,6 +41,7 @@ bool run_xts_tests = false;
 bool run_rdma_tests = false;
 bool run_pdma_tests = false;
 bool run_comp_perf_tests = false;
+bool run_xts_perf_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
 
@@ -80,7 +81,7 @@ std::vector<tests::TestEntry> nvme_be_tests = {
 };
 
 std::vector<tests::TestEntry> local_e2e_tests = {
-  {&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
+  /*{&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
   {&tests::test_run_nvme_local_e2e2, "NVME Local Tgt E2E 2", false},
   {&tests::test_run_nvme_local_e2e3, "NVME Local Tgt E2E 3", false},
   {&tests::test_run_seq_write1, "Seq Local Tgt Write 1", false},
@@ -94,7 +95,7 @@ std::vector<tests::TestEntry> local_e2e_tests = {
   {&tests::test_run_seq_e2e1, "Seq Local Tgt E2E 1", false},
   {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
-  {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
+  {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},*/
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
 };
 
@@ -161,6 +162,7 @@ void sig_handler(int sig) {
   exit(1);
 }
 
+size_t tcid = 0;
 int main(int argc, char**argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   signal(SIGSEGV, sig_handler);
@@ -181,6 +183,7 @@ int main(int argc, char**argv) {
       run_xts_tests = true;
       run_rdma_tests = true;
       run_comp_perf_tests = false;
+      run_xts_perf_tests = true;
       run_pdma_tests = true;
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
@@ -198,6 +201,8 @@ int main(int argc, char**argv) {
       run_rdma_tests = true;
   } else if (FLAGS_test_group == "comp_perf") {
       run_comp_perf_tests = true;
+  } else if (FLAGS_test_group == "xts_perf") {
+      run_xts_perf_tests = true;
   } else if (FLAGS_test_group == "pdma") {
       run_pdma_tests = true;
   } else {
@@ -277,6 +282,12 @@ int main(int argc, char**argv) {
     printf("Added XTS tests \n");
   }
 
+  // Add xts perf tests
+  if (run_xts_perf_tests) {
+    tests::add_xts_perf_tests(test_suite);
+    printf("Added XTS perf tests \n");
+  }
+
   // Add rdma tests
   if (run_rdma_tests) {
     for (size_t i = 0; i < rdma_tests.size(); i++) {
@@ -302,21 +313,21 @@ int main(int argc, char**argv) {
   printf("Formed test suite with %d cases \n", (int) test_suite.size());
 
   printf("Running test cases \n");
-  for (size_t i = 0; i < test_suite.size(); i++) {
+  for (tcid = 0; tcid < test_suite.size(); tcid++) {
     struct timeval start, end;
     gettimeofday(&start, NULL);
-    printf(" Starting test #: %d name: %s \n", (int) i, test_suite[i].test_name.c_str());
+    printf(" Starting test #: %d name: %s \n", (int) tcid, test_suite[tcid].test_name.c_str());
 
-    testcase_begin(i, 0);
-    if (test_suite[i].test_fn() < 0)
-      test_suite[i].test_succeded = false;
+    testcase_begin(tcid, 0);
+    if (test_suite[tcid].test_fn() < 0)
+      test_suite[tcid].test_succeded = false;
     else
-      test_suite[i].test_succeded = true;
-    testcase_end(i, 0);
+      test_suite[tcid].test_succeded = true;
+    testcase_end(tcid, 0);
 
     gettimeofday(&end, NULL);
-    printf(" Finished test #: %d name: %s status %d time %d \n", (int) i, test_suite[i].test_name.c_str(), 
-           test_suite[i].test_succeded, (int) (end.tv_sec - start.tv_sec));
+    printf(" Finished test #: %d name: %s status %d time %d \n", (int) tcid, test_suite[tcid].test_name.c_str(),
+           test_suite[tcid].test_succeded, (int) (end.tv_sec - start.tv_sec));
   }
   printf("Test case run complete, shutting down queues \n");
   queues::queues_shutdown();
