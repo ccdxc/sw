@@ -214,15 +214,15 @@ start_model_how() {
 }
 
 start_model_old() {
-    start_model_how type=eth,bdf=03:00.0,lif=3,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0003000,qidbase=0:1,mac=00:ee:00:00:00:02
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0003000,qidbase=0:1,mac=00:ee:00:00:00:02
 }
 
 start_model_eth2() {
-    start_model_how type=eth,bdf=03:00.0,lif=3,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0003000:0xc0003400:0xc0003800:0xc0004000:0xc000c000:0xc0014000:0xc0014400,qstate_size=64:64:64:1024:1024:32:32,mac=00:ee:00:00:00:02
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0003000:0xc0003400:0xc0003800:0xc0004000:0xc000c000:0xc0014000:0xc0014400,qstate_size=64:64:64:1024:1024:32:32,mac=00:ee:00:00:00:02
 }
 
 start_model() {
-    start_model_eth2
+    start_model_how type=eth,bdf=03:00.0,lif=5,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0003000:0xc0003040:0xc0003080,qstate_size=64:64:64,mac=00:ee:00:00:00:02
 }
 
 start_hal() {
