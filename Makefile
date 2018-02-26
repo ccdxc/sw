@@ -27,7 +27,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
 # Install gopkgs
-INSTALL := $(shell go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
+INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 # Lists all go packages. Auto ignores vendor
 GO_PKG := $(shell gopkgs -short | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS})
 
