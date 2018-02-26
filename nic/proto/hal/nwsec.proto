@@ -105,8 +105,8 @@ message SecurityProfileSpec {
 
   uint32                       session_idle_timeout               = 3 [(gogoproto.moretags) = "range:30-172800, venice:default=90"];
   uint32                       tcp_cnxn_setup_timeout             = 4 [(gogoproto.moretags) = "range:1-60, venice:default=30"];
-  uint32                       tcp_close_timeout                  = 5 [(gogoproto.moretags) = "range:1-600, venice:default=15"];
-  uint32                       tcp_half_closed_timeout            = 6 [(gogoproto.moretags) = "range:1-300, venice:default=300"];
+  uint32                       tcp_close_timeout                  = 5 [(gogoproto.moretags) = "range:1-300, venice:default=15"];
+  uint32                       tcp_half_closed_timeout            = 6 [(gogoproto.moretags) = "range:1-600, venice:default=120"];
   uint32                       ip_normalize_ttl                   = 7 [(gogoproto.moretags) = "range:0-255, venice:default=0"];
   uint32                       tcp_drop_timeout                   = 8 [(gogoproto.moretags) = "range:1-300, venice:default=90"];
   uint32                       udp_drop_timeout                   = 9 [(gogoproto.moretags) = "range:1-172800, venice:default=60"];

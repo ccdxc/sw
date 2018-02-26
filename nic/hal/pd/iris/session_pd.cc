@@ -944,6 +944,75 @@ pd_session_delete (pd_session_delete_args_t *args)
 hal_ret_t
 pd_session_get (pd_session_get_args_t *args)
 {
+    hal_ret_t                               ret = HAL_RET_OK;
+    sdk_ret_t                               sdk_ret;
+    session_state_actiondata                d = {0};
+    directmap                              *dm = NULL;
+    session_state_t                        *ss = args->session_state;
+    pd_flow_get_args_t                      flow_get_args;
+    pd_session_t                           *pd_session;
+    session_state_tcp_session_state_info_t  info;
+
+    if (args->session == NULL) {
+        return HAL_RET_INVALID_ARG;
+    }
+    pd_session = args->session->pd; 
+
+    if (args->session->config.conn_track_en) {
+        dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+        HAL_ASSERT(dm != NULL);
+  
+        sdk_ret = dm->retrieve(pd_session->session_state_idx, &d);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret == HAL_RET_OK) {
+            info = d.session_state_action_u.session_state_tcp_session_state_info;
+            ss->tcp_ts_option = info.tcp_ts_option_negotiated;
+            ss->tcp_sack_perm_option = info.tcp_sack_perm_option_negotiated;
+   
+            // Initiator flow specific information
+            ss->iflow_state.state = (session::FlowTCPState)info.iflow_tcp_state;
+            ss->iflow_state.tcp_seq_num = info.iflow_tcp_seq_num;
+            ss->iflow_state.tcp_ack_num = info.iflow_tcp_ack_num;
+            ss->iflow_state.tcp_win_sz = info.iflow_tcp_win_sz;
+            ss->iflow_state.syn_ack_delta = info.syn_cookie_delta;
+            ss->iflow_state.tcp_mss = info.iflow_tcp_mss;
+            ss->iflow_state.tcp_win_scale = info.iflow_tcp_win_scale;
+            ss->iflow_state.tcp_ws_option_sent = info.iflow_tcp_ws_option_sent;
+            ss->iflow_state.tcp_ts_option_sent = info.iflow_tcp_ts_option_sent;
+            ss->iflow_state.tcp_sack_perm_option_sent = 
+                                          info.iflow_tcp_sack_perm_option_sent;
+            ss->iflow_state.exception_bmap = info.iflow_exceptions_seen;
+
+            // Responder flow specific information
+            ss->rflow_state.state =
+              (session::FlowTCPState)info.rflow_tcp_state;
+            ss->rflow_state.tcp_seq_num = info.rflow_tcp_seq_num;
+            ss->rflow_state.tcp_ack_num = info.rflow_tcp_ack_num;
+            ss->rflow_state.tcp_win_sz = info.rflow_tcp_win_sz;
+            ss->rflow_state.tcp_mss = info.rflow_tcp_mss;
+            ss->rflow_state.tcp_win_scale = info.rflow_tcp_win_scale;
+            ss->rflow_state.exception_bmap = info.rflow_exceptions_seen;
+        } 
+    }
+
+    flow_get_args.pd_session = pd_session;
+    flow_get_args.role = FLOW_ROLE_INITIATOR;
+    flow_get_args.flow_state = &ss->iflow_state;
+    ret = pd_flow_get(&flow_get_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Initiator Flow get failed session {}", 
+                      args->session->config.session_id);
+    }
+    
+    flow_get_args.pd_session = pd_session;
+    flow_get_args.role = FLOW_ROLE_RESPONDER;
+    flow_get_args.flow_state = &ss->rflow_state;
+    ret = pd_flow_get(&flow_get_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Responder Flow get failed session {}",
+                      args->session->config.session_id);
+    }
+
     return HAL_RET_OK;
 }
 

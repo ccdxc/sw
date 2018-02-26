@@ -41,6 +41,7 @@ packets:
                 dport   : ref://testcase/tracker/step/fields/dport
                 seq     : ref://testcase/tracker/step/fields/seq
                 ack     : ref://testcase/tracker/step/fields/ack
+                flags   : ref://testcase/tracker/step/fields/flags
             udp:
                 sport   : ref://testcase/tracker/step/fields/sport
                 dport   : ref://testcase/tracker/step/fields/dport

@@ -26,7 +26,7 @@ const std::string FTE_FEATURE_ALG_FTP("pensando.io/alg_ftp:alg_ftp");
 
 // plugin.cc
 fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx);
-void alg_ftp_session_delete_cb(fte::ctx_t &ctx);
+fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx);
 
 }  // namespace alg_ftp
 }  // namespace plugins

@@ -30,7 +30,9 @@ typedef enum hal_timer_id_s {
     HAL_TIMER_ID_CLOCK_SYNC               = 0,
     HAL_TIMER_ID_SESSION_AGEOUT           = 1,
     HAL_TIMER_ID_TCP_CLOSE_WAIT           = 2,
-    HAL_TIMER_ID_MAX                      = 3, 
+    HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT     = 3,
+    HAL_TIMER_ID_TCP_CXNSETUP_WAIT        = 4,
+    HAL_TIMER_ID_MAX                      = 5, 
 } hal_timer_id_t;
 
 typedef enum hal_forwarding_mode_s {

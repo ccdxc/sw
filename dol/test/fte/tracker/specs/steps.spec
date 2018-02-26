@@ -159,24 +159,39 @@ steps:
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
             flags   : syn
+            seq     : 5000
+            ack     : 0
             sport   : 32001
             dport   : 32776
+
+        state       :
+            iflow   :
 
     - step:
         id          : RFLOW_SRPC_DATA_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
             flags   : syn,ack
+            seq     : 6000
+            ack     : 5001
             sport   : 32776
             dport   : 32001
+
+        state       :
+            rflow   :
 
     - step:
         id          : IFLOW_SRPC_DATA_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
             flags   : ack
+            seq     : 5001
+            ack     : 6001
             sport   : 32001
             dport   : 32776 
+
+        state       :
+            iflow   :
 
     - step:
         id          : IFLOW_MSRPC_DG_LE
@@ -270,7 +285,6 @@ steps:
         id          : IFLOW_MSRPC_BIND
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
-            flags   : syn
             sport   : 65528
             dport   : 135
             l7:
@@ -284,7 +298,6 @@ steps:
         id          : RFLOW_MSRPC_BIND_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
-            flags   : syn,ack
             sport   : 135
             dport   : 65528
             l7:
@@ -298,7 +311,6 @@ steps:
         id          : IFLOW_MSRPC_EPM_REQ
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
-            flags   : syn
             sport   : 65528
             dport   : 135
             l7:
@@ -313,7 +325,6 @@ steps:
         id          : RFLOW_MSRPC_EPM_RSP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
-            flags   : syn,ack
             dport   : 65528
             sport   : 135
             l7:
@@ -330,27 +341,43 @@ steps:
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
             flags   : syn
+            seq     : 5000
+            ack     : 0
             dport   : 49154
+
+        state       :
+            iflow   :
 
     - step:
         id          : RFLOW_MSRPC_DATA_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
             flags   : syn,ack
+            seq     : 6000
+            ack     : 5001
             sport   : 49154
+ 
+        state       :
+            rflow   :
 
     - step:
         id          : IFLOW_MSRPC_DATA_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
             flags   : syn
+            seq     : 6001
+            ack     : 5001
             dport   : 49154
+     
+        state       :
+            iflow   :
 
     - step:
         id          : IFLOW_FTP_SYN
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
             flags   : syn
+            ack     : 0
             dport   : 21 
 
     - step:
@@ -384,26 +411,86 @@ steps:
     - step:
         id          : IFLOW_FTP_DATA_SYN
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
         fields      :
             flags   : syn
+            seq     : 5000
+            ack     : 0
             sport   : 20
             dport   : 37075
+  
+        state       :
+            iflow   :
 
     - step:
         id          : RFLOW_FTP_DATA_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
         fields      :
             flags   : syn,ack
+            seq     : 6000
+            ack     : 5001
             sport   : 37075
             dport   : 20
+      
+        state       :
+            rflow   :
 
     - step:
         id          : IFLOW_FTP_DATA_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
         fields      :
             flags   : ack
+            seq     : 5001 
+            ack     : 6001
             sport   : 20
             dport   : 37075
+
+        state       :
+            iflow   :
+
+    - step:
+        id          : IFLOW_FTP_DATA_FIN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : fin,ack 
+            seq     : 5001
+            ack     : 6001 
+            sport   : 20
+            dport   : 37075
+
+        state       :
+            iflow   :
+
+    - step:
+        id          : RFLOW_FTP_DATA_FIN
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : fin,ack
+            seq     : 6001 
+            ack     : 5002
+            sport   : 37075
+            dport   : 20
+
+        state       :
+            rflow   : 
+ 
+    - step:
+        id          : IFLOW_FTP_DATA_FIN_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : ack
+            seq     : 5002
+            ack     : 6002
+            sport   : 20
+            dport   : 37075
+
+        state       :
+            iflow   :
 
     - step:
         id          : IFLOW_FTP_EPRT
@@ -446,3 +533,24 @@ steps:
         payloadsize : 60 
         fields      :
             sport   : 21
+
+    - step:
+        id          : IFLOW_FIN
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : fin,ack
+            dport   : 21
+
+    - step:
+        id          : RFLOW_FIN_ACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : fin,ack
+            sport   : 21
+
+    - step:
+        id          : IFLOW_ACK
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : ack
+            dport   : 21

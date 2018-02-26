@@ -39,6 +39,22 @@ modules:
               pkttemplate : ETH_IPV4_TCP
             - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
               pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FIN
+              pkttemplate : ETH_IPV4_TCP
+              cpu         : True
+            - step        : ref://trackerstore/steps/id=RFLOW_FIN_ACK
+              pkttemplate : ETH_IPV4_TCP
+              cpu         : True
+            - step        : ref://trackerstore/steps/id=IFLOW_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_FIN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_FIN
+              cpu         : True
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_FIN_ACK
+              pkttemplate : ETH_IPV4_TCP
               fte_done    : True
   
     - module:
@@ -100,6 +116,14 @@ modules:
             - step        : ref://trackerstore/steps/id=RFLOW_FTP_DATA_SYN_ACK
               pkttemplate : ETH_IPV4_TCP
             - step        : ref://trackerstore/steps/id=IFLOW_FTP_DATA_ACK
+              pkttemplate : ETH_IPV4_TCP
+            - step        : ref://trackerstore/steps/id=IFLOW_FIN
+              pkttemplate : ETH_IPV4_TCP
+              cpu         : True
+            - step        : ref://trackerstore/steps/id=RFLOW_FIN_ACK
+              pkttemplate : ETH_IPV4_TCP
+              cpu         : True
+            - step        : ref://trackerstore/steps/id=IFLOW_ACK
               pkttemplate : ETH_IPV4_TCP
               fte_done    : True
 

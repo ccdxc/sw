@@ -3,6 +3,7 @@
  */
 
 #include "core.hpp"
+#include "sdk/list.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 
@@ -27,21 +28,53 @@ static void incr_unknown_opcode(l4_alg_status_t *sess) {
 /*
  *  APP Session delete handler
  */
-void alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
+fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
     fte::feature_session_state_t  *alg_state = NULL;
     l4_alg_status_t               *l4_sess =  NULL;
+    app_session_t                 *app_sess = NULL;
 
     alg_state = ctx.feature_session_state();
     if (alg_state != NULL) {
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+        app_sess = l4_sess->app_session;
         if (l4_sess->isCtrl == TRUE) {
-            // Dont cleanup if control session is timed out
-            // we need to keep it around until the data session
-            // goes away
-            return;
+            if (dllist_empty(&app_sess->exp_flow_lhead) &&
+                dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+                ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
+                                 l4_alg_status_t, l4_sess_lentry)) == l4_sess) {
+                /*
+                 * If there are no expected flows or L4 data sessions
+                 * hanging off of this ctrl session, then go ahead and clean
+                 * up the app session
+                 */
+                 g_tftp_state->cleanup_app_session(l4_sess->app_session);
+            } else {
+                 /*
+                  * Dont cleanup if control session is timed out
+                  * we need to keep it around until the data session
+                  * goes away
+                  */
+                return fte::PIPELINE_END;
+            }
         }
-        g_tftp_state->cleanup_app_session(l4_sess->app_session);       
+        /*
+         * Cleanup the data session that is getting timed out
+         */
+        g_tftp_state->cleanup_l4_sess(l4_sess);
+        if (dllist_empty(&app_sess->exp_flow_lhead) &&
+            dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+            ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
+                      l4_alg_status_t, l4_sess_lentry))->session == NULL) {
+            /*
+             * If this was the last session hanging and there is no
+             * HAL session for control session. This is the right time
+             * to clean it
+             */
+            g_tftp_state->cleanup_app_session(l4_sess->app_session);
+        }
     }
+    
+    return fte::PIPELINE_CONTINUE;
 }
 
 /*

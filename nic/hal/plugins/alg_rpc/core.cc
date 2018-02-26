@@ -18,9 +18,22 @@ void incr_parse_error(l4_alg_status_t *sess) {
 }
 
 /*
- *  APP Session delete handler
+ *  Session delete handler
+ *
+ *  If it is a data session, go ahead and cleanup the L4 session. 
+ *  Check if there are no more data session/expected flows hanging
+ *  off of the app session. If there is none, cleanup the app session
+ *
+ *  If it is the ctrl session:
+ *  (1) check if there are no data session or expected flows. If so, 
+ *  cleanup app session.
+ *  (2) Check if we got here due to TCP FIN/RST being received. If so,
+ *  we want the HAL session cleanup to proceed without cleaning up the
+ *  Ctrl session in ALG
+ *  (3) If we got here due to session idle timout, then make sure that 
+ *  we dont clean up the HAL session as well.
  */
-void alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
+fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
     fte::feature_session_state_t  *alg_state = NULL;
     l4_alg_status_t               *l4_sess =  NULL;
     app_session_t                 *app_sess = NULL;
@@ -28,24 +41,56 @@ void alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
     alg_state = ctx.feature_session_state();
     if (alg_state != NULL) {
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+        app_sess = l4_sess->app_session;
         if (l4_sess->isCtrl == TRUE) {
-            // Dont cleanup if control session is timed out
-            // we need to keep it around until the data session
-            // goes away
-            return;
+            if (dllist_empty(&app_sess->exp_flow_lhead) &&
+                dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+                ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
+                                 l4_alg_status_t, l4_sess_lentry)) == l4_sess) {
+                /*
+                 * If there are no expected flows or L4 data sessions
+                 * hanging off of this ctrl session, then go ahead and clean
+                 * up the app session
+                 */
+                 g_rpc_state->cleanup_app_session(l4_sess->app_session);
+                 return fte::PIPELINE_CONTINUE;
+            } else if ((ctx.session()->iflow->state == session::FLOW_TCP_STATE_FIN_RCVD) ||
+                       (ctx.session()->rflow &&
+                        (ctx.session()->rflow->state == session::FLOW_TCP_STATE_FIN_RCVD))) {
+                /*
+                 * We received FIN/RST on the control session
+                 * We let the HAL cleanup happen while we keep the
+                 * app_session state if there are data sessions
+                 */
+                l4_sess->session = NULL;
+                return fte::PIPELINE_CONTINUE;
+            } else {
+               /*
+                * Dont cleanup if control session is timed out
+                * we need to keep it around until the data session
+                * goes away
+                */
+                return fte::PIPELINE_END;
+            }
         }
         /*
          * Cleanup the data session that is getting timed out
-         * If there are no more expected flows or data sessions
-         * attached to the app session, cleanup the app session
          */
-        app_sess = l4_sess->app_session;
         g_rpc_state->cleanup_l4_sess(l4_sess);
         if (dllist_empty(&app_sess->exp_flow_lhead) &&
-            dllist_empty(&app_sess->l4_sess_lhead)) {
-            g_rpc_state->cleanup_app_session(app_sess);
+            dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+            ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
+                      l4_alg_status_t, l4_sess_lentry))->session == NULL) {
+            /*
+             * If this was the last session hanging and there is no
+             * HAL session for control session. This is the right time
+             * to clean it
+             */
+            g_rpc_state->cleanup_app_session(l4_sess->app_session);
         }
     }
+   
+    return fte::PIPELINE_CONTINUE;
 }
 
 uint8_t *alloc_rpc_pkt(void) {

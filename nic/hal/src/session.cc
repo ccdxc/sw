@@ -25,7 +25,10 @@ namespace hal {
 
 thread_local void *g_session_timer;
 
-#define SESSION_SW_DEFAULT_TIMEOUT (3600 * TIME_NSECS_PER_SEC) 
+#define SESSION_SW_DEFAULT_TIMEOUT (3600 * TIME_NSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_NSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT (15 * TIME_NSECS_PER_SEC)
+#define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT (15 * TIME_NSECS_PER_SEC)
 
 void *
 session_get_key_func (void *entry)
@@ -645,6 +648,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     session->config = *args->session;
     session->vrf_handle = args->vrf->hal_handle;
     session->tcp_close_timer = NULL;
+    session->tcp_cxnsetup_timer = NULL;
 
     // fetch the security profile, if any
     if (args->vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
@@ -812,6 +816,16 @@ session_delete(const session_args_t *args, session_t *session)
     hal_ret_t                ret;
     pd::pd_session_delete_args_t    pd_session_args;
 
+    // Stop any timers that might be running
+    if (session->tcp_close_timer) {
+        periodic::timer_delete(session->tcp_close_timer);
+        session->tcp_close_timer = NULL;
+    }
+    if (session->tcp_cxnsetup_timer) {
+        periodic::timer_delete(session->tcp_cxnsetup_timer);
+        session->tcp_cxnsetup_timer = NULL;
+    } 
+
     // allocate all PD resources and finish programming, if any
     pd::pd_session_delete_args_init(&pd_session_args);
     pd_session_args.vrf =
@@ -837,8 +851,8 @@ session_delete(const session_args_t *args, session_t *session)
 #define HAL_TCP_CLOSE_WAIT_INTVL                     (10 * TIME_MSECS_PER_SEC)
 
 //------------------------------------------------------------------------------
-// determine aging timeout of a session based on its properties
-// TODO: look at the nwsec profile
+// Get session idle timeout based on the flow key 
+// Use a default timeout in case security profile is not found
 //------------------------------------------------------------------------------
 static uint64_t
 session_aging_timeout (session_t *session,
@@ -853,11 +867,25 @@ session_aging_timeout (session_t *session,
     if (vrf != NULL) {
         nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
         if (nwsec_prof != NULL) {
-            timeout = (uint64_t)(nwsec_prof->session_idle_timeout * TIME_NSECS_PER_SEC);
+            switch (iflow->config.key.proto) {
+                case IPPROTO_TCP: 
+                    timeout = nwsec_prof->tcp_timeout;
+                    break;
+
+                case IPPROTO_UDP:
+                    timeout = nwsec_prof->udp_timeout; 
+                    break;
+
+                case IPPROTO_ICMP:
+                    timeout = nwsec_prof->icmp_timeout;
+                    break;
+      
+                default: timeout = nwsec_prof->session_idle_timeout;
+            }
         }
     }
 
-    return timeout;
+    return ((uint64_t)(timeout * TIME_NSECS_PER_SEC));
 }
 
 //------------------------------------------------------------------------------
@@ -869,12 +897,12 @@ session_age_cb (void *entry, void *ctxt)
     pd::pd_conv_hw_clock_to_sw_clock_args_t    clock_args;
     hal_ret_t                                  ret;
     session_t                                 *session = (session_t *)entry;
-    flow_t                                    *iflow, *rflow;
-    flow_state_t                               iflow_state, rflow_state;
+    flow_t                                    *iflow, *rflow = NULL;
+    session_state_t                            session_state;
     uint64_t                                   ctime_ns = *(uint64_t *)ctxt;
     uint64_t                                   last_pkt_ts;
     uint64_t                                   session_timeout;
-    pd::pd_flow_get_args_t                     args;
+    pd::pd_session_get_args_t                  args;
     SessionSpec                                spec;
     SessionResponse                            rsp; 
 
@@ -891,42 +919,36 @@ session_age_cb (void *entry, void *ctxt)
                       session->config.session_id);
         return false;
     }
-    args.pd_session = session->pd;
-    args.role = FLOW_ROLE_INITIATOR;
-    args.flow_state = &iflow_state;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_GET, (void *)&args);
+
+    rflow = session->rflow;
+    args.session = session;
+    args.session_state = &session_state;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
                        session->config.session_id);
         return false;
     }
 
-    // read the responder flow record
-    rflow = session->rflow;
-    if (!rflow) {
-        HAL_TRACE_ERR("session {} has no rflow, ignoring ...",
-                      session->config.session_id);
-    } else {
-        args.pd_session = session->pd;
-        args.role = FLOW_ROLE_RESPONDER;
-        args.flow_state = &rflow_state;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_FLOW_GET, (void *)&args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to fetch rflow record of session {}",
-                          session->config.session_id);
-            return ret;
-        }
+    // Check if its a TCP flow with connection tracking enabled. 
+    // If it is enabled and the session is not in established state, then we 
+    // would either have connection setup timeout or TCP close timeout taking 
+    // care of this session. We dont need to age this out.
+    if (session->iflow->config.key.proto == IPPROTO_TCP && 
+        session->config.conn_track_en && 
+        (session_state.iflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED)) {
+        return false;
     }
 
     // check if iflow has expired now
-    session_timeout = session_aging_timeout(session, iflow, &iflow_state,
-                                            rflow, rflow ? &rflow_state : NULL);
+    session_timeout = session_aging_timeout(session, iflow, &session_state.iflow_state,
+                                            rflow, rflow ? &session_state.rflow_state : NULL);
 
     // Convert hw clock to sw clock resolving any deltas
-    clock_args.hw_tick = iflow_state.last_pkt_ts;
+    clock_args.hw_tick = session_state.iflow_state.last_pkt_ts;
     clock_args.sw_ns = &last_pkt_ts;
     pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, (void *)&clock_args);
-    HAL_TRACE_DEBUG("Hw tick: {}", iflow_state.last_pkt_ts);
+    HAL_TRACE_DEBUG("Hw tick: {}", session_state.iflow_state.last_pkt_ts);
     HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}", 
                     last_pkt_ts, ctime_ns, session_timeout);
     if ((ctime_ns - last_pkt_ts) < session_timeout) {
@@ -934,7 +956,7 @@ session_age_cb (void *entry, void *ctxt)
         return false;
     } else  {
         // no activity detected on initiator flow for a while, check responder
-        clock_args.hw_tick = rflow_state.last_pkt_ts;
+        clock_args.hw_tick = session_state.rflow_state.last_pkt_ts;
         clock_args.sw_ns = &last_pkt_ts;
         pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, (void *)&clock_args);
         if ((ctime_ns - last_pkt_ts) < session_timeout) {
@@ -1008,6 +1030,9 @@ session_init (void)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// callback invoked by the Session TCP close timer to cleanup session state
+//------------------------------------------------------------------------------
 void
 tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
@@ -1022,18 +1047,77 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     }    
 }
 
+typedef enum timeout_type_ {
+    TCP_CXNSETUP_TIMEOUT = 1,
+    TCP_HALF_CLOSED_TIMEOUT = 2,
+    TCP_CLOSE_TIMEOUT = 3,
+} timeout_type_t;
+//------------------------------------------------------------------------------
+// Get TCP timeout from nwsec profile
+//------------------------------------------------------------------------------
+static uint64_t
+get_tcp_timeout (session_t *session, timeout_type_t timeout)
+{
+    vrf_t              *vrf = NULL;
+    nwsec_profile_t    *nwsec_prof = NULL;
+
+    vrf = vrf_lookup_by_handle(session->vrf_handle);
+    if (vrf != NULL) {
+        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
+    }
+
+    switch (timeout) {
+        case TCP_CXNSETUP_TIMEOUT: 
+        {
+            if (nwsec_prof != NULL) {
+                return ((uint64_t)(nwsec_prof->tcp_cnxn_setup_timeout * TIME_NSECS_PER_SEC));
+            } else {
+                return (SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT);
+            } 
+        }
+        break;
+       
+        case TCP_HALF_CLOSED_TIMEOUT:
+        {
+            if (nwsec_prof != NULL) {
+                return ((uint64_t)(nwsec_prof->tcp_half_closed_timeout * TIME_NSECS_PER_SEC));
+            } else {
+                return (SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT);
+            }    
+        }
+        break;
+
+        case TCP_CLOSE_TIMEOUT:
+        {
+            if (nwsec_prof != NULL) {
+                return ((uint64_t)(nwsec_prof->tcp_close_timeout * TIME_NSECS_PER_SEC));
+            } else {
+                return (SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT);
+            }
+        }
+        break;
+   
+        default: break;
+    }
+
+    return 0;
+}
+
+//------------------------------------------------------------------------------
+// API to start timer on TCP close when RST is received or bidirectional
+// FIN is received
+//------------------------------------------------------------------------------
 hal_ret_t
-tcp_close_timer_schedule (session_t *session)
+schedule_tcp_close_timer (session_t *session)
 {
     if (getenv("DISABLE_AGING")) {
         return HAL_RET_OK;
     }
 
-    session->tcp_close_timer = hal::periodic::timer_schedule(HAL_TIMER_ID_TCP_CLOSE_WAIT,
-                                                       HAL_TCP_CLOSE_WAIT_INTVL,
-                                                       (void *)session,
-                                                       tcp_close_cb, false);
-
+    session->tcp_close_timer = hal::periodic::timer_schedule(
+                                     HAL_TIMER_ID_TCP_CLOSE_WAIT,
+                                     get_tcp_timeout(session, TCP_CLOSE_TIMEOUT),
+                                     (void *)session, tcp_close_cb, false);
     if (!session->tcp_close_timer) {
         return HAL_RET_ERR;
     }
@@ -1041,6 +1125,134 @@ tcp_close_timer_schedule (session_t *session)
                      session->config.session_id);
 
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Callback invoked when TCP half closed timer fires 
+//------------------------------------------------------------------------------
+void
+tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    hal_ret_t  ret;
+    session_t *session = (session_t *)ctxt;
+
+    ret = schedule_tcp_close_timer(session);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Couldnt start TCP close timer for session: {}",
+                      session->config.session_id);
+    }
+}
+
+//------------------------------------------------------------------------------
+// API to start timer when TCP FIN is seen for the first time on the session
+// This is to give enough time for other side to send the FIN
+//------------------------------------------------------------------------------
+hal_ret_t
+schedule_tcp_half_closed_timer (session_t *session)
+{
+    if (getenv("DISABLE_AGING")) {
+        return HAL_RET_OK;
+    }
+
+    session->tcp_close_timer = hal::periodic::timer_schedule(
+                                     HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT,
+                                     get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT),
+                                     (void *)session,
+                                     tcp_half_close_cb, false);
+
+    if (!session->tcp_close_timer) {
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("TCP Half Closed timer started for session {}",
+                     session->config.session_id);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// callback invoked by the Session TCP CXN setup timer. If the session is not
+// in established state then cleanup the session
+//------------------------------------------------------------------------------
+void
+tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    hal_ret_t                 ret;
+    session_t                *session = (session_t *)ctxt;
+    pd::pd_session_get_args_t args;
+    session_state_t           state;
+
+    args.session = session;
+    args.session_state = &state;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
+                       session->config.session_id);
+    }
+
+    HAL_TRACE_DEBUG("IFlow State: {}", state.iflow_state.state);
+
+    if (session->iflow)
+        session->iflow->state = state.iflow_state.state;
+    if (session->rflow)
+        session->rflow->state = state.rflow_state.state;
+
+    if (state.iflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED || 
+        state.rflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED) {
+        // session is not in established state yet. 
+        // Cleanup the session
+        ret = fte::session_delete(session);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete session {}",
+                          session->config.session_id);
+        }
+    }    
+}
+
+//------------------------------------------------------------------------------
+// API to start timer when TCP SYN received to make sure the session
+// goes to established state within the given timeout
+//------------------------------------------------------------------------------
+hal_ret_t
+schedule_tcp_cxnsetup_timer (session_t *session)
+{
+    if (getenv("DISABLE_AGING")) {
+        return HAL_RET_OK;
+    }
+
+    session->tcp_cxnsetup_timer = hal::periodic::timer_schedule(
+                                        HAL_TIMER_ID_TCP_CXNSETUP_WAIT,
+                                        get_tcp_timeout(session, TCP_CXNSETUP_TIMEOUT),
+                                        (void *)session,
+                                        tcp_cxnsetup_cb, false);
+
+    if (!session->tcp_cxnsetup_timer) {
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("TCP Cxn Setup timer started for session {}",
+                     session->config.session_id);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// API to set the runtime TCP state when FTE sees TCP close packets
+//------------------------------------------------------------------------------
+void 
+session_set_tcp_state (session_t *session, hal::flow_role_t role,
+                       FlowTCPState tcp_state)
+{
+    hal::flow_t *flow = NULL;
+
+    if (role == hal::FLOW_ROLE_INITIATOR) {
+        flow = session->iflow;
+    } else {
+        flow = session->rflow;
+    }
+
+    if (flow)
+        flow->state = tcp_state;
+
+    HAL_TRACE_DEBUG("Updated tcp state to {}", tcp_state);
 }
 
 }    // namespace hal

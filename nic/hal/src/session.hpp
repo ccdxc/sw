@@ -226,6 +226,7 @@ struct flow_s {
     flow_t            *reverse_flow;       // reverse flow data
     flow_t            *assoc_flow;         // valid only if flow has an associated flow
     session_t         *session;            // session this flow belongs to, if any
+    FlowTCPState      state;               // run-time state of the flow
 
     // PD state
     pd::pd_flow_t     *pd;                 // all PD specific state
@@ -252,6 +253,21 @@ typedef struct flow_state_s {
     uint8_t         tcp_ts_option_sent : 1;
     uint8_t         tcp_sack_perm_option_sent : 1;
 } __PACK__ flow_state_t;
+
+inline std::ostream& operator<<(std::ostream& os, const FlowTCPState& val)
+{
+    switch (val) {
+        case session::FLOW_TCP_STATE_INIT: return os << "init";
+        case session::FLOW_TCP_STATE_SYN_RCVD: return os << "syn rcvd";
+        case session::FLOW_TCP_STATE_ACK_RCVD: return os << "ack rcvd";
+        case session::FLOW_TCP_STATE_SYN_ACK_RCVD: return os << "syn ack rcvd";
+        case session::FLOW_TCP_STATE_ESTABLISHED: return os << "established";
+        case session::FLOW_TCP_STATE_FIN_RCVD: return os << "fin rcvd";
+        case session::FLOW_TCP_STATE_BIDIR_FIN_RCVD: return os << "bidir fin rcvd";
+        case session::FLOW_TCP_STATE_RESET: return os << "rst rcvd";
+        default: return os;
+    }
+}
 
 inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
 {
@@ -316,6 +332,7 @@ struct session_s {
     flow_t              *rflow;                   // responder flow, if any
     hal_handle_t        vrf_handle;               // vrf handle
     void                *tcp_close_timer;         // Timer to wait for FIN from both sides
+    void                *tcp_cxnsetup_timer;      // Timer to check connection establishment
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state
@@ -382,8 +399,12 @@ hal_ret_t session_delete(const session_args_t *args, session_t *session);
 hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
-bool session_age_cb (void *entry, void *ctxt);
-hal_ret_t tcp_close_timer_schedule (session_t *session);
+bool session_age_cb(void *entry, void *ctxt);
+hal_ret_t schedule_tcp_close_timer(session_t *session);
+hal_ret_t schedule_tcp_half_closed_timer(session_t *session);
+hal_ret_t schedule_tcp_cxnsetup_timer(session_t *session);
+void session_set_tcp_state(session_t *session, hal::flow_role_t role, 
+                           FlowTCPState tcp_state);
 
 }    // namespace hal
 

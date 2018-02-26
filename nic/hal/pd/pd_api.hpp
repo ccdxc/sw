@@ -766,10 +766,7 @@ pd_session_update_args_init (pd_session_update_args_t *args)
     return;
 }
 
-typedef struct pd_sessoin_get_args_s {
-    vrf_t              *vrf;
-    nwsec_profile_t    *nwsec_prof;
-    bool               update_iflow;
+typedef struct pd_session_get_args_s {
     session_t          *session;
     session_state_t    *session_state;
     SessionResponse    *rsp;
@@ -778,11 +775,9 @@ typedef struct pd_sessoin_get_args_s {
 static inline void
 pd_session_get_args_init (pd_session_get_args_t *args)
 {
-    args->vrf = NULL;
     args->session = NULL;
     args->session_state = NULL;
     args->rsp = NULL;
-    args->update_iflow = false;
 
     return;
 }

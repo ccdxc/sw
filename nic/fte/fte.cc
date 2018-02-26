@@ -273,7 +273,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
         ctx.set_feature_status(HAL_RET_OK);
         if (ctx.pipeline_event() == FTE_SESSION_DELETE) {
             if (feature->sess_del_cb) {
-                feature->sess_del_cb(ctx);
+                rc = feature->sess_del_cb(ctx);
             }
         } else {
             rc = feature->exec_handler(ctx);

@@ -11,9 +11,9 @@ fields:
     ipsg_en: 1
     tcp_rtt_estimate_en: 0
     session_idle_timeout: 4294967295 
-    tcp_cnxn_setup_timeout: 0
-    tcp_close_timeout: 0
-    tcp_half_closed_timeout: 0
+    tcp_cnxn_setup_timeout: 30 
+    tcp_close_timeout: 120 
+    tcp_half_closed_timeout: 300
     ip_normalization_en: 1
     tcp_normalization_en: 1
     icmp_normalization_en: 1
