@@ -531,6 +531,7 @@ capri_list_program_addr(const char *filename)
     capri_loader_ctx_t *ctx;
     capri_program_info_t *program_info;
     FILE *fp = NULL;
+    MpuSymbol *symbol;
 
     /* Input check  */
     if ((!filename) || (!(fp = fopen(filename, "w+")))) {
@@ -548,6 +549,15 @@ capri_list_program_addr(const char *filename)
                         program_info[i].base_addr,
                         ((program_info[i].base_addr + 
                           program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
+                for (int j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
+                    symbol = program_info[i].prog.symtab.get_byid(j);
+                    if (symbol != NULL && symbol->type == MPUSYM_LABEL &&
+                            symbol->val) {
+                        fprintf(fp, "%s.LAB,%lx,%lx\n", symbol->name.c_str(),
+                                program_info[i].base_addr + symbol->val,
+                                program_info[i].base_addr + symbol->val);
+                    }
+                }
                 fflush(fp);
             }
         } else {
