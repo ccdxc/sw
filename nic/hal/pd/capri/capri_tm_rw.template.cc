@@ -469,10 +469,10 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
 
                 oq_map_decoder.all(pbc_csr.cfg_parser${p}.oq_map());
                 oq_map_decoder.set_name("cap0.pb.pbc.cfg_parser${p}.decoder");
-                oq_map_decoder.show();
-
-                pbc_csr.cfg_parser${p}.show();
                 if (tm_sw_cfg_write_enabled()) {
+                    oq_map_decoder.show();
+
+                    pbc_csr.cfg_parser${p}.show();
                     pbc_csr.cfg_parser${p}.write();
                 }
 
@@ -491,8 +491,8 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                         return HAL_RET_ERR;
                 }
 
-                pbc_csr.port_${p}.cfg_account_mtu_table.show();
                 if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_account_mtu_table.show();
                     pbc_csr.port_${p}.cfg_account_mtu_table.write();
                 }
 
@@ -516,8 +516,8 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                 hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
                 hbm_csr.cfg_hbm_threshold.xon(xon_val);
                 // Write all the registers
-                hbm_csr.cfg_hbm_threshold.show();
                 if (tm_sw_cfg_write_enabled()) {
+                    hbm_csr.cfg_hbm_threshold.show();
                     hbm_csr.cfg_hbm_threshold.write();
                 }
                 break;
@@ -571,8 +571,8 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 
                 /* Update and write the tc to PG mapping */
                 hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table(tc_map_reg_val);
-                hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.show();
                 if (tm_sw_cfg_write_enabled()) {
+                    hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.show();
                     hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.write();
                 }
                 break;
@@ -625,8 +625,8 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(use_ip);
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(dscp_map_val);
-                hbm_csr.hbm_port_${p}.cfg_hbm_parser.show();
                 if (tm_sw_cfg_write_enabled()) {
+                    hbm_csr.hbm_port_${p}.cfg_hbm_parser.show();
                     hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
                 }
                 break;
@@ -649,6 +649,7 @@ capri_tm_uplink_oq_update(tm_port_t port,
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    uint32_t xoff_enable_val;
     cpp_int xoff2oq_map_val;
     cap_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder; 
     xoff2oq_map_decoder.init();
@@ -658,8 +659,6 @@ capri_tm_uplink_oq_update(tm_port_t port,
                       port);
         return HAL_RET_INVALID_ARG;
     }
-
-    // TODO: program the per oq xoff enable/disable register when available
 
     switch(port) {
 //:: for p in range(TM_PORTS):
@@ -674,13 +673,25 @@ capri_tm_uplink_oq_update(tm_port_t port,
 
                 pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
 
+                pbc_csr.port_${p}.cfg_mac_xoff.read();
+                xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().convert_to<uint32_t>();
+                if (xoff_enable) {
+                    xoff_enable_val &= ~(1<<xoff_cos);
+                } else {
+                    xoff_enable_val |= 1<<xoff_cos;
+                }
+                pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
+
                 xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
                 xoff2oq_map_decoder.set_name("cap0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
-                xoff2oq_map_decoder.show();
-
-                pbc_csr.port_${p}.cfg_oq_xoff2oq.show();
                 if (tm_sw_cfg_write_enabled()) {
+                    xoff2oq_map_decoder.show();
+
+                    pbc_csr.port_${p}.cfg_oq_xoff2oq.show();
                     pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
+
+                    pbc_csr.port_${p}.cfg_mac_xoff.show();
+                    pbc_csr.port_${p}.cfg_mac_xoff.write();
                 }
                 break;
             }
@@ -746,9 +757,10 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
                 pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority(strict_val);
 
                 /* Write the registers */
-                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.show();
-                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.show();
                 if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.show();
+                    pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.show();
+
                     pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.write();
                     pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.write();
                 }
@@ -1191,8 +1203,8 @@ capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
     pbc_csr.port_${p}.cfg_account_pg_${pg}.low_limit(0);
     pbc_csr.port_${p}.cfg_account_pg_${pg}.alpha(0);
 
-    pbc_csr.port_${p}.cfg_account_pg_${pg}.show();
     if (tm_sw_init_enabled()) {
+        pbc_csr.port_${p}.cfg_account_pg_${pg}.show();
         pbc_csr.port_${p}.cfg_account_pg_${pg}.write();
     }
 //::    #endfor
@@ -1237,8 +1249,8 @@ capri_tm_program_p4_credits (capri_tm_buf_cfg_t *buf_cfg)
             // Program credits
             // pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].read();
             pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].entry(credits);
-            pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].show();
             if (tm_sw_init_enabled()) {
+                pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].show();
                 pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].write();
             }
         }
@@ -1259,12 +1271,13 @@ capri_tm_program_p4_credits (capri_tm_buf_cfg_t *buf_cfg)
 
         max_growth_decoder.all(pbc_csr.cfg_credits_max_growth_${p}.cells());
         max_growth_decoder.set_name("cap0.pb.pbc.cfg_credits_max_growth_${p}.decoder");
-        max_growth_decoder.show();
-
-        pbc_csr.port_${p}.cfg_account_credit_return.show();
-        pbc_csr.port_${p}.cfg_oq_queue.show();
-        pbc_csr.cfg_credits_max_growth_${p}.show();
         if (tm_sw_init_enabled()) {
+            max_growth_decoder.show();
+
+            pbc_csr.port_${p}.cfg_account_credit_return.show();
+            pbc_csr.port_${p}.cfg_oq_queue.show();
+            pbc_csr.cfg_credits_max_growth_${p}.show();
+
             pbc_csr.port_${p}.cfg_account_credit_return.write();
             pbc_csr.port_${p}.cfg_oq_queue.write();
             pbc_csr.cfg_credits_max_growth_${p}.write();
@@ -1283,9 +1296,18 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    uint32_t num_contexts;
+    uint32_t base_offset;
+    cpp_int port_payload_base_val;
+    cpp_int port_payload_size_val;
+    cpp_int port_payload_occupancy_val;
+    cpp_int port_control_base_val;
+    cpp_int port_control_size_val;
+
     cpp_int payload_base_val[NUM_TM_HBM_FIFO_TYPES];
     cpp_int payload_size_val[NUM_TM_HBM_FIFO_TYPES];
-    cpp_int payload_occupancy_val[NUM_TM_HBM_FIFO_TYPES];
     cpp_int control_base_val[NUM_TM_HBM_FIFO_TYPES];
     cpp_int control_size_val[NUM_TM_HBM_FIFO_TYPES];
     cpp_int eth_xoff_val;
@@ -1296,60 +1318,131 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     uint64_t control_offset;
     uint64_t control_size;
 
+    uint32_t fifo_type;
 
-    // HBM buffer programming
-//:: regs = [('TM_HBM_FIFO_TYPE_UPLINK', 'eth'), ('TM_HBM_FIFO_TYPE_TXDMA', 'tx')]
-//:: for fifo_type, reg_name in regs:
-    hbm_csr.cfg_hbm_${reg_name}_payload.read();
-    hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.read();
-    hbm_csr.cfg_hbm_${reg_name}_ctrl.read();
-//:: #endfor
+    // On active uplink ports and the DMA port, setup the HBM queues
+    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
 
-    for (unsigned fifo_type = 0; fifo_type < HAL_ARRAY_SIZE(buf_cfg->hbm_fifo); fifo_type++) {
-        for (unsigned context = 0;
-             context < capri_tm_max_hbm_contexts_for_fifo(fifo_type); context++) {
-            capri_tm_buf_hbm_cfg_t *hbm_cfg = &buf_cfg->hbm_fifo[fifo_type][context];
-            if (hbm_cfg->valid) {
-                payload_offset = hbm_cfg->payload_offset;
-                payload_size = hbm_cfg->payload_chunks;
-                // payload occupancy is in units of 1024 bytes
-                // program it to drop when 1 jumbo-mtu worth of bytes still free
-                payload_occupancy =
-                    (hbm_chunks_to_bytes(payload_size) - tm_cfg_profile()->jumbo_mtu) >> 10;
-                control_offset = hbm_cfg->control_offset;
-                control_size = hbm_cfg->control_chunks;
-            } else {
-                payload_offset = 0;
-                payload_size = 0;
-                payload_occupancy = 0;
-                control_offset = 0;
-                control_size = 0;
-            }
+//:: reg_params = {"uplink": { "fifo_type" : "TM_HBM_FIFO_TYPE_UPLINK", "reg_name" : "eth"},
+//::               "dma" : {"fifo_type" : "TM_HBM_FIFO_TYPE_TXDMA", "reg_name" : "tx" } }
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["has_hbm"]:
+    // ${pinfo["enum"]}
+//::        fifo_type = reg_params[pinfo["type"]]["fifo_type"]
+//::        reg_name = reg_params[pinfo["type"]]["reg_name"]
+//::        if pinfo["type"] == "uplink":
+    if (is_active_uplink_port(${pinfo["enum"]})) {
+        // If we are an active port, then setup the HBM fifo contexts
+        num_contexts = num_hbm_contexts_per_port;
+    } else {
+        num_contexts = 0;
+    }
+    base_offset = ${p} * num_contexts;
+//::        elif pinfo["type"] == "dma":
+    num_contexts = capri_tm_max_hbm_contexts_for_fifo(TM_HBM_FIFO_TYPE_TXDMA);
+    base_offset = 0;
+//::        #endif
 
-            // 27 bits per hbm_q
-            pbc_csr.hlp.set_slc(payload_base_val[fifo_type], payload_offset,
-                                context * 27, ((context + 1) * 27) - 1);
-            // 23 bits per context
-            pbc_csr.hlp.set_slc(payload_size_val[fifo_type], payload_size,
-                                context * 23, ((context + 1) * 23) - 1);
-            // 19 bits per context
-            pbc_csr.hlp.set_slc(payload_occupancy_val[fifo_type], payload_occupancy,
-                                context * 19, ((context + 1) * 19) - 1);
-            // 27 bits per context
-            pbc_csr.hlp.set_slc(control_base_val[fifo_type], control_offset,
-                                context * 27, ((context + 1) * 27) - 1);
-            // 23 bits per context
-            pbc_csr.hlp.set_slc(control_size_val[fifo_type], control_size,
-                                context * 23, ((context + 1) * 23) - 1);
+    fifo_type = ${fifo_type};
+    port_payload_base_val = 0;
+    port_payload_size_val = 0;
+    port_payload_occupancy_val = 0;
+    port_control_base_val = 0;
+    port_control_size_val = 0;
+
+    for (unsigned q = 0; q < num_contexts; q++) {
+        context = base_offset + q;
+
+        capri_tm_buf_hbm_cfg_t *hbm_cfg = &buf_cfg->hbm_fifo[fifo_type][context];
+        if (hbm_cfg->valid) {
+            payload_offset = hbm_cfg->payload_offset;
+            payload_size = hbm_cfg->payload_chunks;
+            // payload occupancy is in units of 1024 bytes
+            // program it to drop when 1 jumbo-mtu worth of bytes still free
+            payload_occupancy =
+                (hbm_chunks_to_bytes(payload_size) - tm_cfg_profile()->jumbo_mtu) >> 10;
+            control_offset = hbm_cfg->control_offset;
+            control_size = hbm_cfg->control_chunks;
+        } else {
+            payload_offset = 0;
+            payload_size = 0;
+            payload_occupancy = 0;
+            control_offset = 0;
+            control_size = 0;
         }
+
+        // Per port registers
+        // 27 bits per hbm_q
+        pbc_csr.hlp.set_slc(port_payload_base_val, payload_offset,
+                            q * 27, ((q + 1) * 27) - 1);
+        // 23 bits per q
+        pbc_csr.hlp.set_slc(port_payload_size_val, payload_size,
+                            q * 23, ((q + 1) * 23) - 1);
+        // 19 bits per q
+        pbc_csr.hlp.set_slc(port_payload_occupancy_val, payload_occupancy,
+                            q * 19, ((q + 1) * 19) - 1);
+        // 27 bits per q
+        pbc_csr.hlp.set_slc(port_control_base_val, control_offset,
+                            q * 27, ((q + 1) * 27) - 1);
+        // 23 bits per q
+        pbc_csr.hlp.set_slc(port_control_size_val, control_size,
+                            q * 23, ((q + 1) * 23) - 1);
+
+        // Global registers
+        
+        // 27 bits per hbm_q
+        pbc_csr.hlp.set_slc(payload_base_val[fifo_type], payload_offset,
+                            context * 27, ((context + 1) * 27) - 1);
+        // 23 bits per context
+        pbc_csr.hlp.set_slc(payload_size_val[fifo_type], payload_size,
+                            context * 23, ((context + 1) * 23) - 1);
+        // 27 bits per context
+        pbc_csr.hlp.set_slc(control_base_val[fifo_type], control_offset,
+                            context * 27, ((context + 1) * 27) - 1);
+        // 23 bits per context
+        pbc_csr.hlp.set_slc(control_size_val[fifo_type], control_size,
+                            context * 23, ((context + 1) * 23) - 1);
     }
 
-//:: regs = [('TM_HBM_FIFO_TYPE_UPLINK', 'eth'), ('TM_HBM_FIFO_TYPE_TXDMA', 'tx')]
-//:: for fifo_type, reg_name in regs:
+    hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.base(port_payload_base_val);
+    hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.mem_sz(port_payload_size_val);
+    hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload_occupancy.threshold(port_payload_occupancy_val);
+
+//::        if pinfo["type"] == "uplink":
+    hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.base(port_control_base_val);
+    hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.mem_sz(port_control_size_val);
+//::        #endif
+
+
+    hbm_csr.hbm_port_${p}.cfg_hbm_context.read();
+    hbm_csr.hbm_port_${p}.cfg_hbm_context.enable((1ull<<num_contexts)-1);
+    hbm_csr.hbm_port_${p}.cfg_hbm_context.base(base_offset);
+    if (tm_sw_init_enabled()) {
+
+        hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.show();
+        hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.write();
+
+        hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload_occupancy.show();
+        hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload_occupancy.write();
+        
+//::        if pinfo["type"] == "uplink":
+        hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.show();
+        hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.write();
+//::        #endif
+
+        hbm_csr.hbm_port_${p}.cfg_hbm_context.show();
+        hbm_csr.hbm_port_${p}.cfg_hbm_context.write();
+    }
+//::    #endif
+//:: #endfor
+
+//:: for param in reg_params.values():
+//::    fifo_type = param["fifo_type"]
+//::    reg_name = param["reg_name"]
 
     hbm_csr.cfg_hbm_${reg_name}_payload.base(payload_base_val[${fifo_type}]);
     hbm_csr.cfg_hbm_${reg_name}_payload.mem_sz(payload_size_val[${fifo_type}]);
-    hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.threshold(payload_occupancy_val[${fifo_type}]);
     hbm_csr.cfg_hbm_${reg_name}_ctrl.base(control_base_val[${fifo_type}]);
     hbm_csr.cfg_hbm_${reg_name}_ctrl.mem_sz(control_size_val[${fifo_type}]);
 
@@ -1367,19 +1460,13 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         hbm_ctl_decoder.set_name("cap0.pb.pbc.hbm.cfg_hbm_${reg_name}_ctrl.decoder");
 //        hbm_ctl_decoder.show();
 
-        cap_pbc_hbm_${reg_name}_occ_thr_t occ_thr_decoder;
-        occ_thr_decoder.init();
-        occ_thr_decoder.all(hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.all());
-        occ_thr_decoder.set_name("cap0.pb.pbc.hbm.hbm_port_0.cfg_hbm_eth_payload_occupancy.decoder");
-//        occ_thr_decoder.show();
     }
 
-    hbm_csr.cfg_hbm_${reg_name}_payload.show();
-    hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.show();
-    hbm_csr.cfg_hbm_${reg_name}_ctrl.show();
     if (tm_sw_init_enabled()) {
+        hbm_csr.cfg_hbm_${reg_name}_payload.show();
+        hbm_csr.cfg_hbm_${reg_name}_ctrl.show();
+
         hbm_csr.cfg_hbm_${reg_name}_payload.write();
-        hbm_csr.hbm_port_0.cfg_hbm_eth_payload_occupancy.write();
         hbm_csr.cfg_hbm_${reg_name}_ctrl.write();
     }
 //:: #endfor
@@ -1441,17 +1528,16 @@ capri_tm_port_program_defaults (void)
 //::    #endfor
     pbc_csr.port_${p}.cfg_account_tc_to_pg.table(tc_to_pg_val);
 
-    {
+    if (tm_sw_init_enabled()) {
         cap_pbc_pg${pinfo["pgs"]}_map_t pg_map_decoder;
         pg_map_decoder.init();
         pg_map_decoder.all(pbc_csr.port_${p}.cfg_account_tc_to_pg.table());
         pg_map_decoder.set_name("cap0.pb.pbc.port_${p}.cfg_account_tc_to_pg.decoder");
         pg_map_decoder.show();
-    }
 
-    pbc_csr.port_${p}.cfg_account_mtu_table.show();
-    pbc_csr.port_${p}.cfg_account_tc_to_pg.show();
-    if (tm_sw_init_enabled()) {
+        pbc_csr.port_${p}.cfg_account_mtu_table.show();
+        pbc_csr.port_${p}.cfg_account_tc_to_pg.show();
+
         pbc_csr.port_${p}.cfg_account_mtu_table.write();
         pbc_csr.port_${p}.cfg_account_tc_to_pg.write();
     }
@@ -1469,13 +1555,27 @@ capri_tm_port_program_defaults (void)
 
     pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
     pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
-    pbc_csr.port_${p}.cfg_oq_xoff2oq.show();
     if (tm_sw_init_enabled()) {
+        pbc_csr.port_${p}.cfg_oq_xoff2oq.show();
+
         pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
     }
 //::    #endif
 //:: #endfor
 
+    // On uplink ports, disable xoff on all oqs
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+    // ${pinfo["enum"]}
+    pbc_csr.port_${p}.cfg_mac_xoff.read();
+    pbc_csr.port_${p}.cfg_mac_xoff.enable(0);
+    if (tm_sw_init_enabled()) {
+        pbc_csr.port_${p}.cfg_mac_xoff.show();
+        pbc_csr.port_${p}.cfg_mac_xoff.write();
+    }
+//::    #endif
+//:: #endfor
 
     // On uplink ports, set the number of header bytes to remove
 //:: for p in range(TM_PORTS):
@@ -1544,45 +1644,12 @@ capri_tm_init_hbm_q_map (void)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
-    uint32_t num_hbm_contexts_per_port;
-    uint32_t num_contexts;
-    uint32_t base_offset;
     tm_port_type_e port_type;
     uint32_t p4_oq;
     cpp_int oq_map_val;
     cpp_int hbm_tc_to_q_val;
     cap_pbc_oq_map_t oq_map_decoder;
     oq_map_decoder.init();
-
-    // On active uplink ports and the DMA port, setup the HBM queues
-    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
-
-//:: for p in range(TM_PORTS):
-//::    pinfo = port_info[p]
-//::    if pinfo["has_hbm"]:
-    // ${pinfo["enum"]}
-//::        if pinfo["type"] == "uplink":
-    if (is_active_uplink_port(${pinfo["enum"]})) {
-        // If we are an active port, then setup the HBM fifo contexts
-        num_contexts = num_hbm_contexts_per_port;
-    } else {
-        num_contexts = 0;
-    }
-    base_offset = ${p} * num_contexts;
-//::        elif pinfo["type"] == "dma":
-    num_contexts = capri_tm_max_hbm_contexts_for_fifo(TM_HBM_FIFO_TYPE_TXDMA);
-    base_offset = 0;
-//::        #endif
-
-    hbm_csr.hbm_port_${p}.cfg_hbm_context.read();
-    hbm_csr.hbm_port_${p}.cfg_hbm_context.enable((1ull<<num_contexts)-1);
-    hbm_csr.hbm_port_${p}.cfg_hbm_context.base(base_offset);
-    hbm_csr.hbm_port_${p}.cfg_hbm_context.show();
-    if (tm_sw_init_enabled()) {
-        hbm_csr.hbm_port_${p}.cfg_hbm_context.write();
-    }
-//::    #endif
-//:: #endfor
 
     // Map traffic to the contexts
     // On uplink by default, map everything to context 0
@@ -1601,16 +1668,15 @@ capri_tm_init_hbm_q_map (void)
     hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
     hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table(hbm_tc_to_q_val);
 
-    {
+    if (tm_sw_init_enabled()) {
         cap_pbc_pg${pinfo["pgs"]}_map_t pg_map_decoder;
         pg_map_decoder.init();
         pg_map_decoder.all(hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table());
         pg_map_decoder.set_name("cap0.pb.pbc.hbm.hbm_port_${p}.cfg_hbm_tc_to_q.decoder");
         pg_map_decoder.show();
-    }
 
-    hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.show();
-    if (tm_sw_init_enabled()) {
+        hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.show();
+
         hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.write();
     }
 //::    #endif
@@ -1640,12 +1706,13 @@ capri_tm_init_hbm_q_map (void)
 
     oq_map_decoder.all(pbc_csr.cfg_parser${p}.oq_map());
     oq_map_decoder.set_name("cap0.pb.pbc.cfg_parser${p}.decoder");
-    oq_map_decoder.show();
-
-    hbm_csr.hbm_port_${p}.cfg_hbm_parser.show();
-    pbc_csr.cfg_parser${p}.show();
 
     if (tm_sw_init_enabled()) {
+        oq_map_decoder.show();
+
+        hbm_csr.hbm_port_${p}.cfg_hbm_parser.show();
+        pbc_csr.cfg_parser${p}.show();
+
         hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
         pbc_csr.cfg_parser${p}.write();
     }
@@ -1693,8 +1760,8 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
     hbm_csr.hbm_port_${p}.cfg_hbm.read();
     hbm_csr.hbm_port_${p}.cfg_hbm.rate_limiter(
         tm_asic_profile()->port[TM_PORT_TYPE_UPLINK].rate_limiter);
-    hbm_csr.hbm_port_${p}.cfg_hbm.show();
     if (tm_sw_init_enabled()) {
+        hbm_csr.hbm_port_${p}.cfg_hbm.show();
         hbm_csr.hbm_port_${p}.cfg_hbm.write();
     }
 //::    #endif
@@ -1805,12 +1872,13 @@ capri_tm_global_init (void)
     pbc_csr.cfg_tail_drop.span_threshold(tm_asic_profile()->span_tail_drop_threshold);
 
     // Write all the registers
-    pbc_csr.cfg_fc_mgr_0.show();
-    pbc_csr.cfg_fc_mgr_1.show();
-    pbc_csr.cfg_island_control.show();
-    pbc_csr.cfg_rc.show();
-    pbc_csr.cfg_tail_drop.show();
     if (tm_sw_init_enabled()) {
+        pbc_csr.cfg_fc_mgr_0.show();
+        pbc_csr.cfg_fc_mgr_1.show();
+        pbc_csr.cfg_island_control.show();
+        pbc_csr.cfg_rc.show();
+        pbc_csr.cfg_tail_drop.show();
+
         pbc_csr.cfg_tail_drop.write();
         pbc_csr.cfg_fc_mgr_0.write();
         pbc_csr.cfg_fc_mgr_1.write();
@@ -1890,8 +1958,8 @@ capri_tm_enable_ports (void)
     pbc_csr.port_${p}.cfg_write_control.recirc_oq(recirc_q);
 //::    #endif
 
-    pbc_csr.port_${p}.cfg_write_control.show();
     if (tm_sw_init_enabled()) {
+        pbc_csr.port_${p}.cfg_write_control.show();
         pbc_csr.port_${p}.cfg_write_control.write();
     }
 //:: #endfor
