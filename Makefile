@@ -27,9 +27,9 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector nmd
 # Install gopkgs
-INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
+INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
 # Lists all go packages. Auto ignores vendor
-GO_PKG := $(shell gopkgs -short | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS})
+GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS})
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -46,7 +46,7 @@ default:
 # ws-tools installs all the binaries needed to generate, lint and build go sources
 ws-tools:
 	$(info +++ building WS tools)
-	@go install ${TO_INSTALL}
+	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_INSTALL}
 
 # checks ensure that the go code meets standards
 checks: gen goimports-src golint-src govet-src
@@ -87,19 +87,21 @@ govet-src: gen
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
 build:
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; go install ${GO_PKG}; \
+		echo "+++ building go sources"; CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${GO_PKG}; \
 	else \
-		echo "+++ rebuilding all go sources"; go install -a ${GO_PKG};\
+		echo "+++ rebuilding all go sources";CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -a ${GO_PKG};\
 	fi
 
 # VENICE_DEV=1 switches behavior of Venice components and libraries to test mode.
+# CGO_LDFLAGS_ALLOW captures whiltelisted CGO Flags. This will avoid code injection
+# attacks on go get.
 # For rpckit, it changes the default connection mode from "TLS on" to "TLS off"
 # See venice/utils/testenv
 # unit-test-cover uses go test wrappers in scripts/report/report.go and runs coverage tests.
 # this will return a non 0 error when coverage for a package is < 75.0%
 unit-test-cover:
 	$(info +++ running go tests)
-	@VENICE_DEV=1 go run scripts/report/report.go ${GO_PKG}
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
 
 c-start:
 	@tools/scripts/create-container.sh startCluster
@@ -131,7 +133,7 @@ clean: c-stop
 helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
-	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.8 .
+	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.9 .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.1 .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.1 .
 
@@ -139,28 +141,28 @@ container-compile:
 	mkdir -p ${PWD}/bin/cbin
 	mkdir -p ${PWD}/bin/pkg
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run --user $(shell id -u):$(shell id -g) --rm -v${PWD}:/import/src/github.com/pensando/sw:cached -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8 sh -c "make ws-tools gen build"; \
+		echo "+++ building go sources"; docker run --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw:cached -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.9 sh -c "make ws-tools gen build"; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run --user $(shell id -u):$(shell id -g) --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8 sh -c "make ws-tools gen build";\
+		echo "+++ rebuilding all go sources"; docker run --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.9 sh -c "make ws-tools gen build";\
 	fi
 
 container-qcompile:
 	mkdir -p ${PWD}/bin/cbin
 	mkdir -p ${PWD}/bin/pkg
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run --user $(shell id -u):$(shell id -g) --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8; \
+		echo "+++ building go sources"; docker run --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.9; \
 	else \
-		echo "+++ rebuilding all go sources"; docker run --user $(shell id -u):$(shell id -g) --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.8;\
+		echo "+++ rebuilding all go sources"; docker run --user $(shell id -u):$(shell id -g) -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v/usr/local/include/google/protobuf:/usr/local/include/google/protobuf -v${PWD}:/import/src/github.com/pensando/sw:cached -v${PWD}/bin/pkg:/import/pkg:cached -v${PWD}/bin/cbin:/import/bin:cached -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/pens-bld:v0.9;\
 	fi
 
 
 unit-race-test:
 	$(info +++ running go tests with race detector)
-	@VENICE_DEV=1 go test -race ${GO_PKG}
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go test -race ${GO_PKG}
 
 unit-test-verbose:
 	$(info +++ running go tests verbose)
-	@VENICE_DEV=1 $(GOCMD) test -v -p 1 ${GO_PKG}; \
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" $(GOCMD) test -v -p 1 ${GO_PKG}; \
 
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi

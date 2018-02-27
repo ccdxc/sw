@@ -14,8 +14,8 @@ end
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "nasuku/centos74"
-  config.vm.box_version = "0.6"
+  config.vm.box = "venice/centos74"
+  config.vm.box_version = "0.7"
   config.ssh.insert_key = false
   config.vm.provision :shell, inline: 'ulimit -n 4096'
 

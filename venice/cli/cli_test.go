@@ -1375,6 +1375,7 @@ func TestSnapshot(t *testing.T) {
 	if node.Labels["vCenter"] != "modified-vc1" || node.Spec.Roles[0] != cmd.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Restore object different from expectation: %+v \n", node)
 	}
+	os.RemoveAll(snapshotDir)
 }
 
 func TestDefinition(t *testing.T) {

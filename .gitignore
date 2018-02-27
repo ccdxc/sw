@@ -50,3 +50,6 @@ vendor/**/*.woff
 venice/ui/**/package-lock.json
 venice/ui/web-app-framework/package-lock.json
 venice/ui/linux_signing_key.pub
+
+# Remove go 1.10 cache dir
+.cache

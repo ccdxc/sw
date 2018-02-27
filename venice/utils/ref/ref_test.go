@@ -41,12 +41,12 @@ type SGRule struct {
 
 type Permission struct {
 	ToObj string `json:"toObj,omitempty"`
-	RWX   string `json:"rwx, omitempty"`
+	RWX   string `json:"rwx,omitempty"`
 }
 
 type Policy struct {
 	ToGroup   string `json:"toGroup,omitempty"`
-	FromGroup string `json:"fromGroup, omitempty"`
+	FromGroup string `json:"fromGroup,omitempty"`
 }
 
 type IPOpt struct {
@@ -89,7 +89,7 @@ type UserSpec struct {
 	FixedRules         [2]SGRule          `json:"fixedRule,omitempty" venice:"ins=fix"`
 	NodeRoles          []NodeSpecNodeRole `json:"nodeRoles,omitempty"`
 	Conditions         []*NodeCondition   `json:"conditions,omitempty"`
-	BoolFlag           bool               `json:"boolFlag, omitempty"`
+	BoolFlag           bool               `json:"boolFlag,omitempty"`
 	FloatVal           float64            `json:"floatVal,omitempty"`
 	AllocatedIPv4Addrs []byte             `json:"allocated-ipv4-addrs,omitempty" venice:"sskip"`
 	CustomObj          *CustomObj         `json:"custom-obj,omitempty"`

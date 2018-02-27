@@ -54,7 +54,7 @@ func ecdh1DeriveParamBytes(key []byte) (paramBytes []byte, free func()) {
 		ulSharedDataLen: C.CK_ULONG(0),
 		pSharedData:     nil,
 		ulPublicDataLen: C.CK_ULONG(len(key)),
-		pPublicData:     C.CK_BYTE_PTR(keyBytes),
+		pPublicData:     &(*(*C.uchar)(keyBytes)),
 	}
 
 	paramBytes = C.GoBytes(unsafe.Pointer(&params), C.CK_ECDH1_DERIVE_PARAMS_SIZE)

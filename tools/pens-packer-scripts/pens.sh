@@ -46,9 +46,9 @@ sudo yum install -y net-tools tcpdump wget git gcc gcc-c++ CUnit-devel  \
 
 
 cd /tmp
-wget https://storage.googleapis.com/golang/go1.9.2.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.9.2.linux-amd64.tar.gz
-rm go1.9.2.linux-amd64.tar.gz
+wget https://dl.google.com/go/go1.10.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.10.linux-amd64.tar.gz
+rm go1.10.linux-amd64.tar.gz
 
 
 # Install Swagger

@@ -139,8 +139,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     venice_node_names = num_venice_nodes.times.collect { |n| "node#{n+1}" }
 
     config.vm.define node_name do |node|
-      node.vm.box = "nasuku/centos74"
-      node.vm.box_version = "0.6"
+      node.vm.box = "venice/centos74"
+      node.vm.box_version = "0.7"
       # Control Interface
       node.vm.network :private_network, ip: node_addr, virtualbox__intnet:get_user_specific_nw("control")
 

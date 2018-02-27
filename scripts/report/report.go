@@ -15,7 +15,7 @@ import (
 
 // minCoverage is the minimum expected coverage for a package
 const (
-	goTestCmd   = "GOPATH=%s VENICE_DEV=1 go test -cover -tags test -p 1 %s"
+	goTestCmd   = "GOPATH=%s VENICE_DEV=1 CGO_LDFLAGS_ALLOW=-I/usr/local/share/libtool go test -cover -tags test -p 1 %s"
 	minCoverage = 75.0
 	failPrefix  = "--- FAIL:"
 	// report should not enforce coverage when there are no test files.

@@ -1,4 +1,4 @@
-from "golang:1.9.2"
+from "golang:1.10.0"
 
 PACKAGE = "github.com/pensando/sw"
 DIR     = "/go/src/#{PACKAGE}"
@@ -14,6 +14,7 @@ run "unzip protoc-3.4.0-linux-x86_64.zip"
 run "mv bin/protoc /usr/local/bin"
 run "mv include/google /usr/local/include/"
 env "VENICE_DEV" => "1"
+env "CGO_LDFLAGS_ALLOW" => "-I/usr/local/share/libtool"
 run "env"
 
 run "mkdir -p '#{DIR}'"

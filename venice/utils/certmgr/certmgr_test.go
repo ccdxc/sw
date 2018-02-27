@@ -146,7 +146,7 @@ func TestKeyTransport(t *testing.T) {
 	// generate a certificate on CM2 and verify it on CM1
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	AssertOk(t, err, "Error generating private key")
-	csr, err := certs.CreateCSR(privateKey, []string{"Hello World"}, nil)
+	csr, err := certs.CreateCSR(privateKey, []string{"test.pensando.io"}, nil)
 	AssertOk(t, err, "Error creating CSR")
 	cert, err := cm2.Ca().Sign(csr)
 	AssertOk(t, err, "Error getting CSR signed")

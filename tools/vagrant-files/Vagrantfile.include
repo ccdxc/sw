@@ -63,6 +63,7 @@ def preamble_script(postamble)
     echo 'export KUBECONFIG=$HOME/admin.conf' >> /etc/profile.d/env.sh
     echo "export PYTHONIOENCODING=utf-8" >> /etc/profile.d/env.sh
     echo "export VENICE_DEV=1" >> /etc/profile.d/env.sh
+    echo "export CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool"" >> /etc/profile.d/env.sh
     source /etc/profile.d/env.sh
 
     # Increase mmap count to support elasticsearch
