@@ -12,8 +12,14 @@ namespace tls {
 
 static SSLHelper g_ssl_helper;
 static hal::pd::cpupkt_ctxt_t* asesq_ctx = NULL;
-//static int tcpfd = 0;
-static int port = 80;
+
+//#define TLS_TEST_BYPASS_MODEL
+
+#ifdef TLS_TEST_BYPASS_MODEL
+static int tcpfd = 0;
+#endif
+
+static int port = 56789;
 
 /*
  * Global to indicate bypass mode for TLS proxy for all
@@ -54,7 +60,7 @@ int create_socket() {
 hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
 {
     HAL_TRACE_DEBUG("tls: tx data of len: {}", len);
-    /*
+#ifdef TLS_TEST_BYPASS_MODEL
     uint8_t buf[1024];
     send(tcpfd, data, len, 0);
     size_t bytes = recv(tcpfd, buf, 1024, 0);
@@ -62,7 +68,7 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
         tls_api_data_receive(id, buf, bytes);
     }
     return HAL_RET_OK;
-    */
+#endif
 
     hal::pd::pd_cpupkt_send_args_t args;
     args.ctxt = asesq_ctx;
@@ -93,7 +99,7 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
 }
 
 hal_ret_t
-tls_api_program_crypto_key(char* key, uint32_t* key_index)
+tls_api_program_crypto_key(const uint8_t* key, uint32_t* key_index)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     CryptoKeyCreateRequest      create_req;
@@ -119,7 +125,7 @@ tls_api_program_crypto_key(char* key, uint32_t* key_index)
     spec->set_keyindex(*key_index);
     spec->set_key_type(types::CRYPTO_KEY_TYPE_AES128);
     spec->set_key_size(16);
-    spec->mutable_key()->assign(key, 16);
+    spec->mutable_key()->assign((const char*)key, 16);
     ret = cryptokey_update(update_req, &update_resp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: failed to update key, ret: {}", ret);
@@ -178,42 +184,14 @@ tls_api_update_cb(uint32_t id,
 hal_ret_t
 tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* args, bool is_v4_flow)
 {
-    uint32_t            enc_key_index = 0;
-    uint32_t            dec_key_index = 0;
-
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SSL Handshake failed, err: {}", ret);
         return ret;
     }
-
-    // Program dec key
-    ret = tls_api_program_crypto_key((char*)args->read_key, &dec_key_index);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program dec crypto key, ret {}", ret);
-        return ret;
-    }
-
-    for (int i =0; i < 16; i++) {
-      char buf[16] = {0};
-      uint32_t dummy_key_index;
-      // Program dec key
-      ret = tls_api_program_crypto_key((char*)buf, &dummy_key_index);
-      if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program dec crypto key, ret {}", ret);
-        return ret;
-      }
-    }      
-    // Program enc key
-    ret = tls_api_program_crypto_key((char*)args->write_key, &enc_key_index);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program enc crypto key, ret {}", ret);
-        return ret;
-    }
-
-
+    
     // program tlscb for decr
     ret = tls_api_update_cb(id,
-                            dec_key_index,
+                            args->read_key_index,
                             0x30100000,
                             *((uint32_t*)args->read_iv),
                             *((uint64_t*)args->read_seq_num),
@@ -226,7 +204,7 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
 
     // program encr flow
     ret = tls_api_update_cb(oflowid,
-                            enc_key_index,
+                            args->write_key_index,
                             0x30000000,
                             *((uint32_t*)args->write_iv),
                             *((uint64_t*)args->write_seq_num),
@@ -244,6 +222,22 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
         lklshim_release_client_syn6(id);
 
     return ret;
+}
+
+hal_ret_t
+tls_api_key_prog_cb(uint32_t id, const uint8_t* key, size_t key_len, uint32_t* key_hw_index) 
+{
+    hal_ret_t ret = HAL_RET_OK;
+    if(!key) {
+        return HAL_RET_INVALID_ARG;    
+    }
+    //HAL_TRACE_DEBUG("Programming key for id: {}, key: {}", id, key);
+    ret = tls_api_program_crypto_key(key, key_hw_index);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program dec crypto key, ret {}", ret);
+        return ret;
+    }
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -300,9 +294,11 @@ tls_api_init(void)
 
     g_ssl_helper.set_send_cb(&tls_api_send_data_cb);
     g_ssl_helper.set_hs_done_cb(&tls_api_hs_done_cb);
-
-    //tcpfd = create_socket();
-    //tls_api_start_handshake(100, 101);
+    g_ssl_helper.set_key_prog_cb(&tls_api_key_prog_cb);
+#ifdef  TLS_TEST_BYPASS_MODEL
+    tcpfd = create_socket();
+    tls_api_start_handshake(100, 101, true);
+#endif
 
     return ret;
 }

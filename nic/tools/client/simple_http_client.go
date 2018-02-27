@@ -13,7 +13,7 @@ var (
 
 const (
 	maxIdleConnections = 20
-	requestTimeout     = 60
+	requestTimeout     = 180
 )
 
 // init HTTPClient

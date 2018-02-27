@@ -1,0 +1,84 @@
+diff --git a/include/openssl/ssl3.h b/include/openssl/ssl3.h
+index 4ca434e..a8ee671 100644
+--- a/include/openssl/ssl3.h
++++ b/include/openssl/ssl3.h
+@@ -220,6 +220,13 @@ extern "C" {
+ # define TLS1_RT_CRYPTO_IV               (TLS1_RT_CRYPTO | 0x7)
+ # define TLS1_RT_CRYPTO_FIXED_IV         (TLS1_RT_CRYPTO | 0x8)
+ 
++/* Pseudo content types for Pensendo specific parameters */
++# define PEN_MSG_WRITEP                  9
++# define PEN_TLS_RT_HS                   0x2000
++# define PEN_TLS_RT_HS_READ              0x0000
++# define PEN_TLS_RT_HS_WRITE             0x0100
++# define PEN_TLS_RT_HS_SEQ_NUM           (PEN_TLS_RT_HS | 0x1)
++
+ /* Pseudo content type for SSL/TLS header info */
+ # define SSL3_RT_HEADER                  0x100
+ 
+diff --git a/ssl/s3_enc.c b/ssl/s3_enc.c
+index 093e527..a16f95f 100644
+--- a/ssl/s3_enc.c
++++ b/ssl/s3_enc.c
+@@ -235,9 +235,9 @@ int ssl3_change_cipher_state(SSL *s, int which)
+             TLS1_RT_CRYPTO_WRITE : TLS1_RT_CRYPTO_READ;
+         s->msg_callback(2, s->version, wh | TLS1_RT_CRYPTO_MAC,
+                         mac_secret, EVP_MD_size(m), s, s->msg_callback_arg);
+-        if (c->key_len)
++        if (EVP_CIPHER_key_length(c))
+             s->msg_callback(2, s->version, wh | TLS1_RT_CRYPTO_KEY,
+-                            key, c->key_len, s, s->msg_callback_arg);
++                            key, EVP_CIPHER_key_length(c), s, s->msg_callback_arg);
+         if (k) {
+             s->msg_callback(2, s->version, wh | TLS1_RT_CRYPTO_IV,
+                             iv, k, s, s->msg_callback_arg);
+diff --git a/ssl/statem/statem_lib.c b/ssl/statem/statem_lib.c
+index 637c610..aa5720b 100644
+--- a/ssl/statem/statem_lib.c
++++ b/ssl/statem/statem_lib.c
+@@ -22,6 +22,7 @@
+ #include <openssl/objects.h>
+ #include <openssl/evp.h>
+ #include <openssl/x509.h>
++#include "../record/record_locl.h"
+ 
+ /*
+  * send s->init_buf in records of type 'type' (SSL3_RT_HANDSHAKE or
+@@ -333,8 +334,20 @@ WORK_STATE tls_finish_handshake(SSL *s, WORK_STATE wst)
+             s->d1->next_handshake_write_seq = 0;
+             dtls1_clear_received_buffer(s);
+         }
++#ifdef OPENSSL_SSL_TRACE_CRYPTO
++        if (s->msg_callback) {
++            // Using writep as 9 for Pensando messages
++            s->msg_callback(PEN_MSG_WRITEP, s->version,
++                            PEN_TLS_RT_HS_READ | PEN_TLS_RT_HS_SEQ_NUM,
++                            RECORD_LAYER_get_read_sequence(&s->rlayer),
++                            SEQ_NUM_SIZE, s, s->msg_callback_arg);
++            s->msg_callback(PEN_MSG_WRITEP, s->version,
++                            PEN_TLS_RT_HS_WRITE | PEN_TLS_RT_HS_SEQ_NUM,
++                            RECORD_LAYER_get_write_sequence(&s->rlayer),
++                            SEQ_NUM_SIZE, s, s->msg_callback_arg);
++        }
++#endif
+     }
+-
+     return WORK_FINISHED_STOP;
+ }
+ 
+diff --git a/ssl/t1_enc.c b/ssl/t1_enc.c
+index 0fb88af..6e48179 100644
+--- a/ssl/t1_enc.c
++++ b/ssl/t1_enc.c
+@@ -320,9 +320,9 @@ int tls1_change_cipher_state(SSL *s, int which)
+             s->msg_callback(2, s->version, wh | TLS1_RT_CRYPTO_MAC,
+                             mac_secret, *mac_secret_size,
+                             s, s->msg_callback_arg);
+-        if (c->key_len)
++        if (EVP_CIPHER_key_length(c))
+             s->msg_callback(2, s->version, wh | TLS1_RT_CRYPTO_KEY,
+-                            key, c->key_len, s, s->msg_callback_arg);
++                            key, EVP_CIPHER_key_length(c), s, s->msg_callback_arg);
+         if (k) {
+             if (EVP_CIPHER_mode(c) == EVP_CIPH_GCM_MODE)
+                 wh |= TLS1_RT_CRYPTO_FIXED_IV;

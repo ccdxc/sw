@@ -8,6 +8,9 @@
 #include "nic/include/base.h"
 
 #define MAX_SSL_CONNECTIONS 16000
+#define MAX_KEY_SIZE        16
+#define MAX_IV_SIZE         4
+#define MAX_SEQ_NUM_SIZE    8
 namespace hal {
 namespace tls {
 
@@ -15,8 +18,8 @@ class SSLHelper;
 typedef uint32_t conn_id_t;
 
 typedef struct hs_out_args_s {
-    unsigned char   *read_key;
-    unsigned char   *write_key;
+    uint32_t        read_key_index;
+    uint32_t        write_key_index;
     unsigned char   *read_iv;
     unsigned char   *write_iv;
     unsigned char   *read_seq_num;
@@ -26,57 +29,8 @@ typedef struct hs_out_args_s {
 // Callbacks
 typedef hal_ret_t (*nw_send_cb)(conn_id_t id, uint8_t* data, size_t len);
 typedef hal_ret_t (*hs_done_cb)(conn_id_t id, conn_id_t oflowid, hal_ret_t ret, hs_out_args_t* args, bool is_v4_flow);
-
-/* Opaque OpenSSL structures to fetch keys */
-#define u64 uint64_t
-#define u32 uint32_t
-#define u8 uint8_t
-
-typedef struct {
-  u64 hi, lo;
-} u128;
-
-typedef struct {
-  /* Following 6 names follow names in GCM specification */
-  union {
-    u64 u[2];
-    u32 d[4];
-    u8 c[16];
-    size_t t[16 / sizeof(size_t)];
-  } Yi, EKi, EK0, len, Xi, H;
-  /*
-   * Relative position of Xi, H and pre-computed Htable is used in some
-   * assembler modules, i.e. don't change the order!
-   */
-#if TABLE_BITS==8
-  u128 Htable[256];
-#else
-  u128 Htable[16];
-  void (*gmult) (u64 Xi[2], const u128 Htable[16]);
-  void (*ghash) (u64 Xi[2], const u128 Htable[16], const u8 *inp,
-                 size_t len);
-#endif
-  unsigned int mres, ares;
-  block128_f block;
-  void *key;
-} gcm128_context_alias;
-
-typedef struct {
-  union {
-    double align;
-    AES_KEY ks;
-  } ks;                       /* AES key schedule to use */
-  int key_set;                /* Set if key initialised */
-  int iv_set;                 /* Set if an iv is set */
-  gcm128_context_alias gcm;
-  unsigned char *iv;          /* Temporary IV store */
-  int ivlen;                  /* IV length */
-  int taglen;
-  int iv_gen;                 /* It is OK to generate IVs */
-  int tls_aad_len;            /* TLS AAD length */
-  ctr128_f ctr;
-} EVP_AES_GCM_CTX;
-
+typedef hal_ret_t (*key_prog_cb)(conn_id_t id, const uint8_t* key, size_t key_len,
+                                 uint32_t* key_hw_index);
 
 class SSLConnection {
 public:
@@ -87,35 +41,33 @@ public:
     hal_ret_t   terminate();
     hal_ret_t   do_handshake();
     hal_ret_t   process_nw_data(uint8_t* data, size_t len);
-
-    conn_id_t get_oflowid() const {
-        return oflowid;
-    }
-
-    void set_oflowid(conn_id_t oflowid_) {
-        oflowid = oflowid_;
-    }
-
-    bool get_flow_type() const {
-        return is_v4_flow;
-    }
-
-    void set_flow_type(bool type) {
-        is_v4_flow = type;
-    }
+    
+    conn_id_t   get_id() const {return id;};
+    conn_id_t get_oflowid() const {return oflowid;}
+    void set_oflowid(conn_id_t oflowid_) {oflowid = oflowid_; }
+    bool get_flow_type() const {return is_v4_flow;}
+    void set_flow_type(bool type) {is_v4_flow = type;}
+    void ssl_msg_cb(int writep, int version, int contentType,
+                    const void* buf, size_t len, SSL* ssl, void *arg);
 
 private:
-    hal_ret_t   handle_ssl_ret(int ret);
-    hal_ret_t   transmit_pending_data();
-    void        get_hs_args(hs_out_args_t& args);
-    SSLHelper   *helper;
-    SSL_CTX     *ctx;
-    conn_id_t   id;
-    conn_id_t   oflowid;
-    bool        is_v4_flow;
-    SSL         *ssl;
-    BIO*        ibio;   // Internal BIO towards SSL
-    BIO*        nbio;   // BIO towards the network
+    hal_ret_t       handle_ssl_ret(int ret);
+    hal_ret_t       transmit_pending_data();
+    void            get_hs_args(hs_out_args_t& args);
+    SSLHelper       *helper;
+    SSL_CTX         *ctx;
+    conn_id_t       id;
+    conn_id_t       oflowid;
+    bool            is_v4_flow;
+    SSL             *ssl;
+    BIO*            ibio;   // Internal BIO towards SSL
+    BIO*            nbio;   // BIO towards the network
+    uint32_t        read_key_index;
+    uint32_t        write_key_index;
+    uint8_t         read_iv[MAX_IV_SIZE];
+    uint8_t         write_iv[MAX_IV_SIZE];
+    uint8_t         read_seq_num[MAX_SEQ_NUM_SIZE];
+    uint8_t         write_seq_num[MAX_SEQ_NUM_SIZE];
 };
 
 class SSLHelper {
@@ -133,6 +85,9 @@ public:
     void set_hs_done_cb(hs_done_cb cb) {hs_cb = cb;};
     hs_done_cb get_hs_done_cb(void){return hs_cb;};
 
+    void set_key_prog_cb(key_prog_cb cb) {key_cb = cb;};
+    key_prog_cb get_key_prog_cb(void) {return key_cb;};
+
 private:
     hal_ret_t init_ssl_ctxt(void);
 
@@ -143,6 +98,7 @@ private:
     // Callbacks
     nw_send_cb      send_cb;
     hs_done_cb      hs_cb;
+    key_prog_cb     key_cb;
 };
 
 } // namespace tls

@@ -1,0 +1,3 @@
+nic/hal/third-party/openssl/x86_64/*
+nic/hal/third-party/openssl/aarch64/*
+

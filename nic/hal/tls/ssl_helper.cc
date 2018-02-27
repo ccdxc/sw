@@ -35,15 +35,16 @@ void ssl_info_callback(const SSL* ssl, int where, int ret)
 }
 
 // MSG CALLBACK
-void ssl_msg_callback(int writep,
-                      int version,
-                      int contentType,
-                      const void* buf,
-                      size_t len,
-                      SSL* ssl,
-                      void *arg)
+void ssl_msg_callback(int writep, int version, int contentType,
+                const void* buf, size_t len, SSL* ssl, void *arg)
 {
-    HAL_TRACE_DEBUG("SSL: Message callback with length: {}", len);
+    HAL_TRACE_DEBUG("SSL: Message callback: writep: {}, type: {} len: {}",
+                        writep, contentType, len);
+    if(arg) {
+        hal::tls::SSLConnection* conn = (hal::tls::SSLConnection *)arg;
+        HAL_TRACE_DEBUG("SSL: id: {}", conn->get_id());
+        conn->ssl_msg_cb(writep, version, contentType, buf, len, ssl, arg); 
+    }
 }
 
 namespace hal {
@@ -73,6 +74,9 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx)
     ctx = _ctx;
     id = _id;
     ssl = SSL_new(ctx);
+    SSL_set_msg_callback(ssl, ssl_msg_callback);
+    SSL_set_msg_callback_arg(ssl, this);
+
     BIO_new_bio_pair(&ibio, 0, &nbio, 0);
     if(ibio == NULL || nbio == NULL) {
         HAL_TRACE_ERR("Failed to allocate bio");
@@ -97,23 +101,14 @@ SSLConnection::terminate()
 void
 SSLConnection::get_hs_args(hs_out_args_t& args)
 {
-    EVP_CIPHER_CTX * write_ctx = ssl->enc_write_ctx;
-    EVP_CIPHER_CTX * read_ctx = ssl->enc_read_ctx;
-
-    EVP_AES_GCM_CTX* gcm_write = (EVP_AES_GCM_CTX*)(write_ctx->cipher_data);
-    EVP_AES_GCM_CTX* gcm_read = (EVP_AES_GCM_CTX*)(read_ctx->cipher_data);
-
-    args.write_key = (unsigned char*)(gcm_write->gcm.key);
-    args.read_key = (unsigned char*)(gcm_read->gcm.key);
-
-    HAL_TRACE_DEBUG("Key, write: {}, read: {}", hex_dump(args.write_key, 16), hex_dump(args.read_key,16));
-
-    args.write_iv = gcm_write->iv;
-    args.read_iv = gcm_read->iv;
+    args.read_key_index = read_key_index;
+    args.write_key_index = write_key_index;
+    args.read_iv = read_iv;
+    args.write_iv = write_iv;
+    args.read_seq_num = read_seq_num;
+    args.write_seq_num = write_seq_num;
+    HAL_TRACE_DEBUG("Key, write: {}, read: {}", args.write_key_index, args.read_key_index);
     HAL_TRACE_DEBUG("IV, write: {}, read: {}", hex_dump(args.write_iv,4), hex_dump(args.read_iv,4));
-
-    args.write_seq_num = ssl->s3->write_sequence;
-    args.read_seq_num = ssl->s3->read_sequence;
     HAL_TRACE_DEBUG("SeqNum, write: {}, read: {}", hex_dump(args.write_seq_num,8), hex_dump(args.read_seq_num,8));
 }
 
@@ -218,6 +213,69 @@ SSLConnection::handle_ssl_ret(int ret)
     }
     return HAL_RET_OK;
 }
+
+void
+SSLConnection::ssl_msg_cb(int writep, int version, int contentType,
+                          const void* buf, size_t len, SSL* ssl, void *arg)
+{
+    if(writep != 2 && writep != PEN_MSG_WRITEP)
+        return;
+ 
+    switch(contentType) {
+        case TLS1_RT_CRYPTO_READ | TLS1_RT_CRYPTO_KEY:
+            HAL_TRACE_DEBUG("read key: {}",
+                                hex_dump((uint8_t *)buf, len));
+            if(helper && helper->get_key_prog_cb()) {
+                helper->get_key_prog_cb()(id, 
+                                          (const uint8_t *)buf,
+                                          len,
+                                          &read_key_index);     
+            }
+            break;
+
+        case TLS1_RT_CRYPTO_WRITE | TLS1_RT_CRYPTO_KEY:
+            HAL_TRACE_DEBUG("write key: {}",
+                                hex_dump((uint8_t *)buf, len));
+            if(helper && helper->get_key_prog_cb()) {
+                helper->get_key_prog_cb()(id,
+                                          (const uint8_t*)buf,
+                                          len,
+                                          &write_key_index);     
+            }
+            break;
+        
+        case TLS1_RT_CRYPTO_READ | TLS1_RT_CRYPTO_IV:
+        case TLS1_RT_CRYPTO_READ | TLS1_RT_CRYPTO_FIXED_IV:
+            HAL_TRACE_DEBUG("read iv: {}",
+                                hex_dump((uint8_t *)buf, len));
+            memcpy(read_iv, buf, len);
+            break;
+        
+        case TLS1_RT_CRYPTO_WRITE | TLS1_RT_CRYPTO_IV:
+        case TLS1_RT_CRYPTO_WRITE | TLS1_RT_CRYPTO_FIXED_IV:
+            HAL_TRACE_DEBUG("write iv: {}",
+                                hex_dump((uint8_t *)buf, len));
+            memcpy(write_iv, buf, len);
+            break;
+        
+        case PEN_TLS_RT_HS_SEQ_NUM | PEN_TLS_RT_HS_READ:
+            HAL_TRACE_DEBUG("Read_seq_num: {}",
+                                hex_dump((uint8_t *)buf, len));
+            memcpy(read_seq_num, buf, len);
+            break;
+        
+        case PEN_TLS_RT_HS_SEQ_NUM | PEN_TLS_RT_HS_WRITE:
+            HAL_TRACE_DEBUG("write_seq_num: {}",
+                                hex_dump((uint8_t *)buf, len));
+            memcpy(write_seq_num, buf, len);
+            break;
+
+        default:
+            HAL_TRACE_ERR("Invalid content type: {}", contentType);
+            break;
+    }
+}
+
 /*------------------------------
  * SSL Context/Helper
  *------------------------------*/
@@ -255,7 +313,6 @@ SSLHelper::init_ssl_ctxt()
     SSL_CTX_set_options(client_ctx, SSL_OP_NO_SSLv2);
     SSL_CTX_set_cipher_list(client_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
     SSL_CTX_set_info_callback(client_ctx, ssl_info_callback);
-    SSL_CTX_set_msg_callback(client_ctx, ssl_msg_callback);
 
     // Server
     server_ctx = SSL_CTX_new(SSLv23_server_method());
@@ -263,7 +320,6 @@ SSLHelper::init_ssl_ctxt()
     SSL_CTX_set_options(server_ctx, SSL_OP_NO_SSLv2);
     SSL_CTX_set_cipher_list(server_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
     SSL_CTX_set_info_callback(server_ctx, ssl_info_callback);
-    SSL_CTX_set_msg_callback(server_ctx, ssl_msg_callback);
     return HAL_RET_OK;
 }
 

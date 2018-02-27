@@ -132,12 +132,16 @@ cc_library(
 
     srcs = select ({
         "//conditions:default" : [
-            "openssl/x86_64/lib/libssl.a",
-            "openssl/x86_64/lib/libcrypto.a",
+            "openssl/x86_64/lib/libssl.so",
+            "openssl/x86_64/lib/libssl.so.1.1",
+            "openssl/x86_64/lib/libcrypto.so",
+            "openssl/x86_64/lib/libcrypto.so.1.1",
         ],
         ":aarch64_mode" : [
-            "openssl/aarch64/lib/libssl.a",
-            "openssl/aarch64/lib/libcrypto.a",
+            "openssl/aarch64/lib/libssl.so",
+            "openssl/aarch64/lib/libssl.so.1.1",
+            "openssl/aarch64/lib/libcrypto.so",
+            "openssl/aarch64/lib/libcrypto.so.1.1",
         ],
     }),
 
