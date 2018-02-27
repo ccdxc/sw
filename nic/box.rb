@@ -1,11 +1,11 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.12"
+from "registry.test.pensando.io:5000/pensando/nic:1.13"
 
 env GOPATH: "/usr"
 
 inside "/etc" do
   run "rm localtime"
   run "ln -s /usr/share/zoneinfo/US/Pacific localtime"
-end 
+end
 
 workdir "/sw"
 

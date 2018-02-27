@@ -83,7 +83,7 @@ yum install -y nfs-utils nfs-utils-lib
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
-curl -sSL https://dl.google.com/go/go1.9.2.linux-amd64.tar.gz | tar xz -C /usr/local
+curl -sSL https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar xz -C /usr/local
 go get github.com/golang/protobuf/... google.golang.org/grpc
 go get golang.org/x/tools/cmd/goimports
 

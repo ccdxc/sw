@@ -83,7 +83,7 @@ run "yum install -y #{PACKAGES.join(" ")}"
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
 # Install go 1.9
-run "curl -sSL https://dl.google.com/go/go1.9.2.linux-amd64.tar.gz | tar xz -C /usr/local"
+run "curl -sSL https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/..."
 
 inside BASE_BUILD_DIR do
@@ -250,7 +250,7 @@ run "mkdir -p /var/log/snort && \
      mkdir -p /etc/snort/rules && \
      mkdir -p /etc/snort/preproc_rules && \
      mkdir -p /etc/snort/so_rules && \
-     mkdir -p /etc/snort/etc 
+     mkdir -p /etc/snort/etc
      cp -r #{BASE_BUILD_DIR}/odp /etc/snort/odp"
 
 run "mkdir -p #{ROOT}"
@@ -259,7 +259,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.12"
+tag "pensando/nic:1.13"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
