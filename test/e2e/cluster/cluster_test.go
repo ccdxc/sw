@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -48,6 +49,33 @@ var _ = Describe("cluster tests", func() {
 				}
 				return ""
 			}, 95, 1).Should(BeEmpty(), "All pods should be in Running state")
+		})
+	})
+
+	Context("Naples Node Object validation ", func() {
+		var (
+			nodes []*cmd.Node
+			err   error
+		)
+		BeforeEach(func() {
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+			nodeIf := cmdClient.Node()
+			nodes, err = nodeIf.List(context.Background(), &api.ListWatchOptions{})
+		})
+		By(fmt.Sprintf("Got Nodes: %#v", nodes))
+		It("Node fields should be ok", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+			numNaplesNodes := 0
+			for _, node := range nodes {
+				for _, role := range node.Spec.Roles {
+					if role == cmd.NodeSpec_WORKLOAD.String() {
+						numNaplesNodes++
+						Expect(node.Status.Phase).Should(Equal(cmd.NodeStatus_JOINED.String()))
+					}
+				}
+			}
+			Expect(numNaplesNodes).Should(Equal(ts.tu.NumNaplesNodes))
 		})
 	})
 

@@ -110,6 +110,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
+	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/n4sagent/nmd
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 

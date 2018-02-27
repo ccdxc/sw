@@ -1,7 +1,8 @@
 {
     "ClusterVIP": "192.168.30.10",
-    "NumVeniceNodes" : 5,
-    "NumQuorumNodes" : 3,
+    "NumVeniceNodes" : 2,
+    "NumQuorumNodes" : 1,
+    "NumNaplesNodes" : 2,
     "SSHUser":        "root",
     "SSHPasswd":      "vagrant",
     "SSHAuthMethod":  "password",

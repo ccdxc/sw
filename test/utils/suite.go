@@ -27,6 +27,7 @@ import (
 type TestBedConfig struct {
 	NumVeniceNodes int    `json:",omitempty"`
 	NumQuorumNodes int    `json:",omitempty"`
+	NumNaplesNodes int    `json:",omitempty"`
 	ClusterVIP     string `json:",omitempty"`
 	SSHUser        string `json:",omitempty"`
 	SSHPasswd      string `json:",omitempty"`
@@ -38,6 +39,7 @@ type TestBedConfig struct {
 var defaultTestBedConfig = TestBedConfig{
 	NumQuorumNodes: 3,
 	NumVeniceNodes: 5,
+	NumNaplesNodes: 2,
 	ClusterVIP:     "192.168.30.10",
 	SSHUser:        "vagrant",
 	SSHPasswd:      "vagrant",
