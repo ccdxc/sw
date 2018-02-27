@@ -3,6 +3,7 @@
 #include <thread>
 #include <math.h>
 #include <random>
+#include <getopt.h>
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/types.grpc.pb.h"
 #include "nic/gen/proto/hal/vrf.grpc.pb.h"
@@ -1287,10 +1288,11 @@ create_l2segments(uint64_t   l2seg_id_start,
 
 //------------------------------------------------------------------------------
 // Supported arguments
-// --mode=seq: Source and Destination IP addresses of session are sequential (by
-//             default they are chosen at random)
-// --n=xx: Specify number of sessions to be created
-// --batch=xx: Specify batch size (Needs to be the last argument always)
+// --m seq | random or --mode seq | random: Source and Destination IP addresses 
+//                                          of session are sequential | random
+//                                          (default they are chosen at random)
+// --n xx or --num-sessions xx: Specify number of sessions to be created
+// --b xx or --batch-size xx: Specify batch size (Needs to be the last argument always)
 //------------------------------------------------------------------------------
 int
 main (int argc, char** argv)
@@ -1309,35 +1311,42 @@ main (int argc, char** argv)
     uint64_t     encap_value    = 100;
     uint64_t     num_uplinks    = 4;
     uint32_t     session_count = 0, batch_count = 0;
+    int          oc;
 
-    if (argc > 1) {
-        if (!strcmp(argv[1], "system_get")) {
+    struct option longopts[] = {
+       { "system-get",    no_argument,        NULL, 's' },
+       { "mode",          required_argument,  NULL, 'm' },
+       { "num-sessions",  required_argument,  NULL, 'n' },
+       { "batch-size",    required_argument,  NULL, 'b' },
+       { 0,               0,                  0,    0 }
+    };
+
+    // parse CLI options
+    while ((oc = getopt_long(argc, argv, ":sm:n:b:", longopts, NULL)) != -1) {
+        switch (oc) {
+        case 's':
             system_get = true;
-        } else if (!strcmp(argv[1], "--mode=seq")) {
-            random = false;
-            if (argc == 3) {
-                if (sscanf(argv[2], "--n=%d", &num_sessions) == 1) {
-                } else {
-                    sscanf(argv[2], "--batch=%d", &batch_size);
-                } 
-            } else if (argc == 4) {
-                sscanf(argv[2], "--n=%d", &num_sessions);
-                sscanf(argv[3], "--batch=%d", &batch_size);
+            break;
+        case 'm':
+            if (!strcmp(optarg, "seq")) {
+                random = false;
+            } else if (!strcmp(optarg, "random")) {
+                random = true;
             }
-        } else if (sscanf(argv[1], "--n=%d", &num_sessions) == 1) {
-            if (argc == 3) {
-                if (!strcmp(argv[2], "--mode=seq")) {
-                    random = false;
-                } else {
-                    sscanf(argv[2], "--batch=%d", &batch_size);
-                }
-            } else if (argc == 4) {
-                if (!strcmp(argv[2], "--mode=seq")) {
-                    random = false;
-                }
-                sscanf(argv[3], "--batch=%d", &batch_size);
-            }
-        } else if (sscanf(argv[1], "--batch=%d", &batch_size) == 1) {
+            break;
+        case 'n':
+            num_sessions = atoi(optarg);
+            break;
+        case 'b':
+            batch_size = atoi(optarg);
+            break;
+        case ':':
+            break;
+        case '?':
+        default:
+            std::cout << "Invalid Argument" << std::endl;
+            exit(0);
+            break;
         }
     }
 
@@ -1349,6 +1358,10 @@ main (int argc, char** argv)
         hclient.system_get();
         return 0;
     }
+
+    std::cout << "Mode is " << (random ? "random" : "sequential") << std::endl
+              << "Number of Sessions to be created is " << num_sessions << std::endl
+              << "Batch size is " << batch_size << std::endl;
 
     // create the vrf
     vrf_handle = hclient.vrf_create(vrf_id);
@@ -1485,5 +1498,6 @@ done:
     std::cout << "Time to create " << num_sessions << " sessions is "
               << time << " secs" << std::endl;
     std::cout << "Session/sec is " << num_sessions/time << std::endl;
+
     return 0;
 }
