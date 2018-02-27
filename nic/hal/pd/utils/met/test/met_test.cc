@@ -1,5 +1,6 @@
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "sdk/pal.hpp"
+#include "sdk/types.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 
@@ -47,7 +48,8 @@ TEST_F(met_test, test1) {
     uint32_t repl_list_idx = 0;
     std::string table_name = "Test_Table";
 	hal_pd_replication_tbl_mbr_entry_t entry;
-    sdk::lib::pal_init(true);
+
+    sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 

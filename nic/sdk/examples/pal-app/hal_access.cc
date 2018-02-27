@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "sdk/pal.hpp"
+#include "sdk/types.hpp"
 
 void tcam_mem_dump(uint64_t base_addr,
                    uint32_t num_entries,
@@ -39,7 +40,7 @@ void egress_parser_tcam_dump()
 
 int main (int argc, char **arv)
 {
-    sdk::lib::pal_init(false);
+    sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW);
 
     egress_parser_tcam_dump();
 

@@ -119,6 +119,8 @@ catalog::catalog_platform_type_to_platform_type(std::string platform_type)
         return platform_type_t::PLATFORM_TYPE_HW;
     } else if (platform_type == "sim") {
         return platform_type_t::PLATFORM_TYPE_SIM;
+    } else if (platform_type == "mock") {
+        return platform_type_t::PLATFORM_TYPE_MOCK;
     }
 
     return platform_type_t::PLATFORM_TYPE_NONE;

@@ -7,6 +7,7 @@ cc_library(
         "pal.cc",
         "pal_sim.cc",
         "pal_hw.cc",
+        "pal_mock.cc",
     ],
     hdrs = [
         "pal.hpp",

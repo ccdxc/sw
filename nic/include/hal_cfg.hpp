@@ -28,6 +28,7 @@ typedef enum hal_platform_mode_s {
     HAL_PLATFORM_MODE_HW,
     HAL_PLATFORM_MODE_HAPS,
     HAL_PLATFORM_MODE_RTL,
+    HAL_PLATFORM_MODE_MOCK,
 } hal_platform_mode_t;
 
 typedef enum hal_feature_set_s {

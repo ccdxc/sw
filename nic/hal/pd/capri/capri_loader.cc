@@ -131,10 +131,10 @@ param_check(capri_prog_param_info_t *prog_param_ptr, std::string param, uint64_t
  * Return: Index of program on success, < 0 on failure
  */
 int
-capri_load_mpu_programs(const char *handle,
-                        char *pathname, uint64_t hbm_base_addr,
-                        capri_prog_param_info_t *prog_param_info,
-                        int num_prog_params)
+capri_load_mpu_programs (const char *handle,
+                         char *pathname, uint64_t hbm_base_addr,
+                         capri_prog_param_info_t *prog_param_info,
+                         int num_prog_params)
 {
     int i, j, prog_index;
     capri_loader_ctx_t *ctx;
@@ -146,7 +146,7 @@ capri_load_mpu_programs(const char *handle,
 
     /* ISA library initialization */
     if (libcapisa_init() < 0) {
-	HAL_TRACE_ERR("Libcapisa initialization failed!");
+	    HAL_TRACE_ERR("Libcapisa initialization failed!");
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 

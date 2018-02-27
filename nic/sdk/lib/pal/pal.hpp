@@ -4,6 +4,7 @@
 #define __PAL_HPP__
 
 #include "sdk/base.hpp"
+#include "sdk/types.hpp"
 
 namespace sdk {
 namespace lib {
@@ -16,7 +17,7 @@ typedef enum pal_ret_s {
 #define IS_PAL_API_SUCCESS(_ret) ((_ret) == sdk::lib::PAL_RET_OK)
 #define IS_PAL_API_FAILURE(_ret) ((_ret) != sdk::lib::PAL_RET_OK)
 
-pal_ret_t pal_init(bool sim);
+pal_ret_t pal_init(sdk::types::platform_type_t platform_type);
 pal_ret_t pal_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words = 1);
 pal_ret_t pal_reg_write(uint64_t addr, uint32_t *data, uint32_t num_words = 1);
 pal_ret_t pal_mem_read(uint64_t addr, uint8_t *data, uint32_t size);

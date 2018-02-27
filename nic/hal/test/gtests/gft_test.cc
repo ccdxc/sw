@@ -7,6 +7,7 @@
 #include "nic/model_sim/include/lib_model_client.h"
 #include "sdk/pal.hpp"
 #include "sdk/utils.hpp"
+#include "sdk/types.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -1419,7 +1420,7 @@ TEST_F(gft_test, test1) {
 
     printf("Connecting to ASIC SIM\n");
     hal::utils::logger_init(0, true);
-    ret = sdk::lib::pal_init(true);
+    ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_NE(ret, -1);
     ret = capri_load_config((char *)"obj/gft/pgm_bin");
     ASSERT_NE(ret, -1);

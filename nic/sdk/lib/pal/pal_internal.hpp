@@ -22,8 +22,8 @@ typedef struct pal_rwvectors_s {
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
-    bool                sim;
-    pal_rwvectors_t    rwvecs;
+    sdk::types::platform_type_t platform_type;
+    pal_rwvectors_t             rwvecs;
 } __PACK__ pal_info_t;
 
 typedef struct pal_mmap_regions_s {
@@ -34,6 +34,7 @@ typedef struct pal_mmap_regions_s {
 
 pal_ret_t pal_init_sim(void);
 pal_ret_t pal_hw_init(void);
+pal_ret_t pal_mock_init(void);
 
 }    // namespace lib
 }    // namespace sdk

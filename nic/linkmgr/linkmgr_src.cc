@@ -44,72 +44,73 @@ current_thread (void)
     return sdk::lib::thread::current_thread();
 }
 
-bool
+static bool
 hw_mock (void)
 {
     return linkmgr_cfg.hw_mock;
 }
 
-sdk::lib::catalog*
-catalog()
+static sdk::lib::catalog*
+catalog (void)
 {
     return g_linkmgr_state->catalog();
 }
 
-uint32_t
-num_uplink_ports()
+static uint32_t
+num_uplink_ports (void)
 {
     return catalog()->num_uplink_ports();
 }
 
-port_speed_t
-port_speed(uint32_t port)
+static port_speed_t
+port_speed (uint32_t port)
 {
     return catalog()->port_speed(port);
 }
 
-port_type_t
-port_type(uint32_t port)
+static port_type_t
+port_type (uint32_t port)
 {
     return catalog()->port_type(port);
 }
 
-uint32_t
-num_lanes(uint32_t port)
+static uint32_t
+num_lanes (uint32_t port)
 {
     return catalog()->num_lanes(port);
 }
 
-bool
-enabled(uint32_t port)
+static bool
+enabled (uint32_t port)
 {
     return catalog()->enabled(port);
 }
 
-uint32_t
-mac_id(uint32_t port, uint32_t lane)
+static uint32_t
+mac_id (uint32_t port, uint32_t lane)
 {
     return catalog()->mac_id(port, lane);
 }
 
-uint32_t
-mac_ch(uint32_t port, uint32_t lane)
+static uint32_t
+mac_ch (uint32_t port, uint32_t lane)
 {
     return catalog()->mac_ch(port, lane);
 }
 
-uint32_t
+static uint32_t
 sbus_addr (uint32_t port, uint32_t lane)
 {
     return catalog()->sbus_addr(port, lane);
 }
 
-platform_type_t platform_type()
+static platform_type_t
+platform_type (void)
 {
     return linkmgr_cfg.platform_type;
 }
 
-hal_ret_t
+static hal_ret_t
 linkmgr_uplink_create(uint32_t uplink_port)
 {
     hal_ret_t     ret  = HAL_RET_OK;
@@ -141,7 +142,7 @@ linkmgr_uplink_create(uint32_t uplink_port)
 //------------------------------------------------------------------------------
 // create uplink ports in the catalog file
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 linkmgr_uplinks_create()
 {
     uint32_t  uplink_port = 0;
@@ -159,7 +160,7 @@ linkmgr_uplinks_create()
     return ret;
 }
 
-void
+static void
 svc_reg (const std::string& server_addr)
 {
     PortServiceImpl   port_svc;
@@ -187,7 +188,7 @@ svc_reg (const std::string& server_addr)
 //------------------------------------------------------------------------------
 // parse configuration
 //------------------------------------------------------------------------------
-hal_ret_t
+static hal_ret_t
 linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 {
     ptree             pt;
@@ -228,12 +229,11 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 hal_ret_t
 linkmgr_init (void)
 {
-    hal_ret_t            ret_hal   = HAL_RET_OK;
-    sdk_ret_t            sdk_ret   = SDK_RET_OK;
-    std::string          cfg_file  = "linkmgr.json";
-    char                 *cfg_path = NULL;
-    sdk::lib::catalog    *catalog;
-
+    hal_ret_t                     ret_hal   = HAL_RET_OK;
+    sdk_ret_t                     sdk_ret   = SDK_RET_OK;
+    std::string                   cfg_file  = "linkmgr.json";
+    char                          *cfg_path = NULL;
+    sdk::lib::catalog             *catalog;
     sdk::linkmgr::linkmgr_cfg_t   sdk_cfg;
 
     // makeup the full file path
@@ -265,7 +265,7 @@ linkmgr_init (void)
         return HAL_RET_ERR;
     }
 
-    if(sdk::lib::pal_init(hw_mock()) != sdk::lib::PAL_RET_OK) {
+    if (sdk::lib::pal_init(platform_type()) != sdk::lib::PAL_RET_OK) {
         HAL_TRACE_ERR("{} pal init failed", __FUNCTION__);
         return HAL_RET_ERR;
     }

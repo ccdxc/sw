@@ -423,6 +423,8 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             hal_cfg->platform_mode = HAL_PLATFORM_MODE_RTL;
         } else if (mode == "haps") {
             hal_cfg->platform_mode = HAL_PLATFORM_MODE_HAPS;
+        } else if (mode == "mock") {
+            hal_cfg->platform_mode = HAL_PLATFORM_MODE_MOCK;
         }
 
         sparam = pt.get<std::string>("asic.name");
