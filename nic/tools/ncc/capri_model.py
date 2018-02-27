@@ -7,10 +7,10 @@ capri_model = {
     'name': 'Capri-Asic',
     'phv': {
         'max_size' : 4096,
-        'num_flits' : 10,   # change containers as well (below)
+        'num_flits' : 8,   # change containers as well (below)
         'max_hw_flits' : 12,    # max allowed value for num_flits
         'flit_size' : 512, # max_size/num_flits
-        'containers': {8: 640}, # {size:num} all 8 bit containers
+        'containers': {8: 512}, # {size:num} all 8 bit containers
         'wide_key_start_flit' : 2,
         'gso_csum_phv_start' : 496, # bits 496:511 i.e. byte 62:63 in flit
         'parser_end_off_flit_loc' : 480,  # bits 480:495 i.e. byte 60:61 in flit

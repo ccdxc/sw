@@ -257,13 +257,13 @@ f_p4plus_cpu_pkt:
                   k.control_metadata_lkp_flags_egress[5:0]
   seq         c1, k.control_metadata_lkp_flags_egress[CPU_LKP_FLAGS_LKP_DIR], FLOW_DIR_FROM_DMA
   phvwr.c1    p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.control_metadata_src_tm_iq
-  phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_payload_offset}, -1
   // r1 : offset
   // r2 : flags
   add         r1, r0, r6
   add         r2, r0, r0
   seq         c1, k.ethernet_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_cpu_pkt_l2_offset, r1.hx
+  phvwr.!c1   p.p4_to_p4plus_cpu_pkt_l2_offset, -1
   seq         c2, k.vlan_tag_valid, TRUE
   or.c2       r2, r2, CPU_FLAGS_VLAN_VALID
   cmov        r3, c2, 18, 14
@@ -272,6 +272,7 @@ f_p4plus_cpu_pkt:
   seq         c2, k.ipv6_valid, TRUE
   setcf       c3, [c1|c2]
   phvwr.c3    p.p4_to_p4plus_cpu_pkt_l3_offset, r1.hx
+  phvwr.!c3   p.p4_to_p4plus_cpu_pkt_l3_offset, -1
   add.c1      r1, r1, k.ipv4_ihl, 2
   or.c1       r2, r2, CPU_FLAGS_IPV4_VALID
   add.c2      r1, r1, 40
@@ -288,6 +289,7 @@ f_p4plus_cpu_pkt:
   seq         c4, k.ah_valid, 1
   setcf       c5, [c2|c3|c4]
   phvwr.c5    p.p4_to_p4plus_cpu_pkt_l4_offset, r1.hx
+  phvwr.!c5   p.p4_to_p4plus_cpu_pkt_l4_offset, -1
   add.c2      r1, r1, 8
   add.c3      r1, r1, 4
   add.c4      r1, r1, 12
