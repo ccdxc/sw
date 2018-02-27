@@ -1,4 +1,4 @@
-.PHONY: p4 asm proto gen hal utils linkmgr sdk
+.PHONY: p4 asm hal utils linkmgr sdk
 
 default: all
 
@@ -49,8 +49,8 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
 hal-rtl: p4 platform capsim-master sdk
 	$(MAKE) AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP" asm
-	$(MAKE) proto
-	$(MAKE) gen
+	$(MAKE) gen-proto 
+	$(MAKE) build-proto
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
@@ -70,8 +70,8 @@ gft: platform capsim-master sdk go-proto
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
 	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT"
-	$(MAKE) -C proto
-	$(MAKE) -j4 -C gen/proto/hal
+	$(MAKE) gen-proto
+	$(MAKE) -j4 build-proto
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
 	$(MAKE) pd_gft
 	$(MAKE) pd_stub
@@ -163,13 +163,13 @@ p4:
 asm:
 	$(MAKE) -C asm
 
-proto:
+gen-proto:
 	$(MAKE) -C proto
 
-gen: proto
+build-proto:
 	$(MAKE) -j8 -C gen/proto/hal
 
-hal: p4 asm gen sdk capsim-master platform
+hal:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
 
 plugins:
@@ -187,11 +187,26 @@ post-make:
 
 pd: pd_iris pd_stub
 
-nic: hal pd plugins utils linkmgr capmodel go-proto
-	$(MAKE) post-make
-	$(MAKE) package
+# code generation stage
+stage0: p4 gen-proto go-proto sdk utils capsim-master
 
-all: nic tests
+# lib building stage
+stage1: asm capmodel build-proto
+
+# app building stage
+stage2: plugins linkmgr platform pd hal
+
+# post build stage
+stage3: post-make package
+
+nic:
+	$(MAKE) stage0
+	$(MAKE) stage1
+	$(MAKE) stage2
+	$(MAKE) stage3
+
+all: nic
+	$(MAKE) tests
 
 clean: platform-clean capsim-master-clean
 	bazel clean
