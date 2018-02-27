@@ -62,8 +62,9 @@ class SegmentObject(base.ConfigObjectBase):
             self.vlan_id    = resmgr.BlackHoleSegVlanAllocator.get()
             self.vxlan_id   = resmgr.BlackHoleSegVxlanAllocator.get()
         else:
-            self.vlan_id    = resmgr.SegVlanAllocator.get()
-            self.vxlan_id   = resmgr.SegVxlanAllocator.get()
+            self.vlan_id = resmgr.SegVlanAllocator.get()
+            self.provider_vlan_id = resmgr.SegProviderVlanAllocator.get()
+            self.vxlan_id = resmgr.SegVxlanAllocator.get()
 
         self.macaddr    = resmgr.RouterMacAllocator.get()
         if self.IsInfraSegment():
@@ -264,6 +265,24 @@ class SegmentObject(base.ConfigObjectBase):
         if backend:
             return self.obj_helper_ep.backend_remote
         return self.obj_helper_ep.remote
+
+    def GetExmProfile(self, profstr):
+        if self.native == False:
+            profstr += '_QTAG'
+        else:
+            profstr += '_NATIVE'
+        profstr = 'GFT_EXMP_' + profstr
+        profile = Store.objects.Get(profstr)
+        return profile
+
+    def GetTrspnProfile(self, profstr):
+        if self.native == False:
+            profstr += '_QTAG'
+        else:
+            profstr += '_NATIVE'
+        profstr = 'GFT_TRSPNP_' + profstr
+        profile = Store.objects.Get(profstr)
+        return profile
 
     def ConfigureEndpoints(self):
         return self.obj_helper_ep.Configure()

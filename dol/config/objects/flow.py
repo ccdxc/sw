@@ -395,6 +395,19 @@ class FlowObject(base.ConfigObjectBase):
     def GetSrcSegmentVlanid(self):
         return self.__sseg.vlan_id
 
+    def GetSrcSegmentGftExmProfile(self):
+        if self.IsIP():
+            profstr = self.type + '_' + self.proto
+        else:
+            profstr = 'ETH'
+        profile = self.__sseg.GetExmProfile(profstr)
+        return profile
+    
+    def GetDstSegmentGftTrspnProfile(self):
+        #profile = self.__dseg.GetTrspnProfile()
+        #return profile
+        return 0
+
     def __configure_l4_key(self, l4_info):
         if self.HasL4Ports():
             l4_info.tcp_udp.sport = self.sport

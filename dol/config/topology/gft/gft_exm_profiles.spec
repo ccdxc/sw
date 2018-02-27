@@ -31,3 +31,9 @@ profiles:
         table   : EXACT_MATCH_INGRESS
         groups  :
             - ref://store/objects/id=GFT_HGEXM_IPV4_TCP_QTAG
+
+    - profile:
+        name    : GFT_EXMP_IPV4_ICMP_QTAG
+        table   : EXACT_MATCH_INGRESS
+        groups  :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_ICMP_QTAG

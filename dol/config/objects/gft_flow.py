@@ -28,7 +28,10 @@ class GftFlowObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.flow_entry_id = self.id
-        req_spec.exact_match_profile.profile_id = 3
+        exm_profile = self.flow.GetSrcSegmentGftExmProfile()
+        trsp_profile = self.flow.GetDstSegmentGftTrspnProfile()
+        req_spec.exact_match_profile.profile_id = exm_profile.id
+        #req_spec.transposition_profile.profile_id = trsp_profile.id
 
         req_spec.add_in_activated_state = False
         req_spec.rdma_flow = False
@@ -49,33 +52,9 @@ class GftFlowObject(base.ConfigObjectBase):
         req_spec.redirect_vport_id = 0
         req_spec.ttl_one_redirect_vport_id = 0
 
-        exm = req_spec.exact_matches.add()
-        exm.headers.ethernet_header = True
-        exm.headers.ethernet_header = True
-        exm.headers.ipv4_header = True
-        exm.headers.udp_header = True
-
-        exm.match_fields.dst_mac_addr = True
-        exm.match_fields.src_mac_addr = True
-        #exm.match_fields.eth_type = True
-        exm.match_fields.customer_vlan_id = True
-        exm.match_fields.src_ip_addr = True
-        exm.match_fields.dst_ip_addr = True
-        exm.match_fields.ip_protocol = True
-        exm.match_fields.src_port = True
-        exm.match_fields.dst_port = True
-
-        exm.eth_fields.dst_mac_addr = self.flow.dmac.getnum()
-        exm.eth_fields.src_mac_addr = self.flow.smac.getnum()
-        #exm.eth_fields.eth_type = self.flow.ethertype
-        exm.eth_fields.customer_vlan_id = self.flow.GetSrcSegmentVlanid()
-        exm.src_ip_addr.ip_af = haldefs.common.IP_AF_INET
-        exm.src_ip_addr.v4_addr = self.flow.sip.getnum()
-        exm.dst_ip_addr.ip_af = haldefs.common.IP_AF_INET
-        exm.dst_ip_addr.v4_addr = self.flow.dip.getnum()
-        exm.ip_protocol = defs.ipprotos.id(self.flow.proto)
-        exm.encap_or_transport.udp_fields.sport = self.flow.sport
-        exm.encap_or_transport.udp_fields.dport = self.flow.dport
+        for grp in exm_profile.groups:
+            exm = req_spec.exact_matches.add()
+            grp.PrepareGftFlowHALRequestSpec(exm, self.flow)
 
         trsp = req_spec.transpositions.add()
         trsp.action = haldefs.gft.GftHeaderGroupTranspostionAction.Value('TRANSPOSITION_ACTION_MODIFY')
@@ -85,6 +64,11 @@ class GftFlowObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
+        self.hal_handle = resp_spec.status.flow_entry_handle
+        cfglogger.info("- GFT Flow %s = %s(HDL = %x)" %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
+                        self.hal_handle))
+
         return
 
     def Show(self):
@@ -94,8 +78,15 @@ class GftFlowObject(base.ConfigObjectBase):
                        (self.flow.smac.get(), self.flow.dmac.get(), 0x800))
         cfglogger.info("  - IPv4 Header : Sip:%s/Dip:%s/Proto:%s" %\
                        (self.flow.sip.get(), self.flow.dip.get(), self.flow.proto))
-        cfglogger.info("  - UDP Header  : Sport:%d/Dport:%d" %\
-                       (self.flow.sport, self.flow.dport))
+        if self.flow.IsUDP():
+            cfglogger.info("  - UDP Header  : Sport:%d/Dport:%d" %\
+                           (self.flow.sport, self.flow.dport))
+        if self.flow.IsTCP():
+            cfglogger.info("  - TCP Header  : Sport:%d/Dport:%d" %\
+                           (self.flow.sport, self.flow.dport))
+        if self.flow.IsICMP():
+            cfglogger.info("  - ICMP Header : Type:%d/Code:%d" %\
+                           (self.flow.icmptype, self.flow.icmpcode))
         return
 
 

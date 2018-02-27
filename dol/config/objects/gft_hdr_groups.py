@@ -43,6 +43,50 @@ class GftExmHeaderGroupObject(base.ConfigObjectBase):
             if v: self.fields.__dict__[k] = v
         return
 
+    def PrepareGftFlowHALRequestSpec(self, req_spec, flow):
+        self.PrepareHALRequestSpec(req_spec)
+        if self.fields.dst_mac_addr:
+            req_spec.eth_fields.dst_mac_addr = flow.dmac.getnum()
+        if self.fields.src_mac_addr:
+            req_spec.eth_fields.src_mac_addr = flow.smac.getnum()
+        if self.fields.eth_type:
+            req_spec.eth_fields.eth_type = flow.ethertype
+        if self.fields.customer_vlan_id:
+            req_spec.eth_fields.customer_vlan_id = flow.GetSrcSegmentVlanid()
+        if self.fields.provider_vlan_id:
+            req_spec.eth_fields.provider_vlan_id = 0 # TBD
+        if self.fields.src_ip_addr:
+            req_spec.src_ip_addr.ip_af = haldefs.common.IP_AF_INET
+            req_spec.src_ip_addr.v4_addr = flow.sip.getnum()
+        if self.fields.dst_ip_addr:
+            req_spec.dst_ip_addr.ip_af = haldefs.common.IP_AF_INET
+            req_spec.dst_ip_addr.v4_addr = flow.dip.getnum()
+        if self.fields.ip_ttl:
+            req_spec.ip_ttl = 0 # TBD
+        if self.fields.ip_protocol:
+            req_spec.ip_protocol = defs.ipprotos.id(flow.proto)
+
+        if self.fields.src_port:
+            if flow.IsTCP():
+                req_spec.encap_or_transport.tcp_fields.sport = flow.sport
+            elif flow.IsUDP():
+                req_spec.encap_or_transport.udp_fields.sport = flow.sport
+            else:
+                assert(0)
+                
+        if self.fields.dst_port:
+            if flow.IsTCP():
+                req_spec.encap_or_transport.tcp_fields.dport = flow.dport
+            elif flow.IsUDP():
+                req_spec.encap_or_transport.udp_fields.sport = flow.sport
+            else:
+                assert(0)
+
+        if self.fields.icmp_type:
+            req_spec.encap_or_transport.icmp_fields.type = flow.icmptype
+            req_spec.encap_or_transport.icmp_fields.code = flow.icmpcode
+        return
+
     def PrepareHALRequestSpec(self, req_spec):
         # Set the headers.
         req_spec.headers.ethernet_header = self.headers.ethernet_header
@@ -81,7 +125,7 @@ class GftExmHeaderGroupObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Creating Header Group : %s" % self.GID())
+        cfglogger.info("Header Group : %s" % self.GID())
         hdrs = ""
         if self.headers.ethernet_header: hdrs += "Eth"
         if self.headers.ipv4_header: hdrs += "/IPv4"
@@ -118,7 +162,7 @@ class GftExmHeaderGroupObject(base.ConfigObjectBase):
         if self.fields.gre_protocol: fields += "/GREProto"
         cfglogger.info("- Fields: %s" % fields)
         return
-        
+
 class GftExmHeaderGroupObjectHelper:
     def __init__(self):
         self.objlist = []

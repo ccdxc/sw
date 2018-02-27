@@ -26,6 +26,7 @@ class GftExmProfileObject(base.ConfigObjectBase):
         self.groups = []
 
         self.__process_groups()
+        self.Show()
         return
 
     def __process_groups(self):
@@ -39,6 +40,9 @@ class GftExmProfileObject(base.ConfigObjectBase):
                        (self.GID(), self.id))
         cfglogger.info("- rdma_flow     : ", self.rdma_flow)
         cfglogger.info("- table_type    : ", self.table_type)
+        cfglogger.info("- Header Groups:")
+        for g in self.groups:
+            cfglogger.info("  - Group: %s" % g.GID())
         return
 
     def Summary(self):

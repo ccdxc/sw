@@ -23,9 +23,10 @@ OifListIdAllocator      = objects.TemplateFieldObject("range/1/65535")
 RdmaOifListIdAllocator  = objects.TemplateFieldObject("range/1/65535")
 MulticastGroupIdAllocator   = objects.TemplateFieldObject("range/1/65535")
 
-SegVlanAllocator        = objects.TemplateFieldObject("range/2/1000")
-EncapVlanAllocator      = objects.TemplateFieldObject("range/3001/4000")
-SegVxlanAllocator       = objects.TemplateFieldObject("range/0xFF0000/0xFFFFFF")
+SegVlanAllocator            = objects.TemplateFieldObject("range/2/1000")
+SegProviderVlanAllocator    = objects.TemplateFieldObject("range/1001/2000")
+EncapVlanAllocator          = objects.TemplateFieldObject("range/3001/4000")
+SegVxlanAllocator           = objects.TemplateFieldObject("range/0xFF0000/0xFFFFFF")
 
 BlackHoleSegVlanAllocator   = objects.TemplateFieldObject("range/4090/4095")
 BlackHoleSegVxlanAllocator  = objects.TemplateFieldObject("range/0xDDDDD0/0xDDDDDF")

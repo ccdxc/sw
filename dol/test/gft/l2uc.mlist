@@ -15,3 +15,19 @@ modules:
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=GFT
               segment : filter://native=False
+
+    - module:
+        name    : IPV4_TCP_QTAG
+        spec    : l2uc.testspec
+        perf    : True
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT
+              segment : filter://native=False
+
+    - module:
+        name    : IPV4_ICMP_QTAG
+        spec    : l2uc.testspec
+        perf    : True
+        iterate :
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT
+              segment : filter://native=False

@@ -24,8 +24,8 @@ sessions:
     unidest:
         ipv4:
             - ref://store/specs/id=SESSION_UDP_GFT
-#            - ref://store/specs/id=SESSION_TCP_GFT
-#            - ref://store/specs/id=SESSION_ICMP_GFT
+            - ref://store/specs/id=SESSION_TCP_GFT
+            - ref://store/specs/id=SESSION_ICMP_GFT
 #        ipv6:
 #            - ref://store/specs/id=SESSION_UDP_GFT
 #            - ref://store/specs/id=SESSION_TCP_GFT

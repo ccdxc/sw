@@ -135,3 +135,33 @@ header_groups:
         fields  :
             src_port        : True
             dst_port        : True
+
+    - group:
+        name    : GFT_HGEXM_IPV4_ICMP_NATIVE
+        inherit :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_NATIVE
+        headers :
+            icmp_header     : True
+        fields  :
+            icmp_type       : True
+            icmp_code       : True
+
+    - group:
+        name    : GFT_HGEXM_IPV4_ICMP_QTAG
+        inherit :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_QTAG
+        headers :
+            icmp_header     : True
+        fields  :
+            icmp_type       : True
+            icmp_code       : True
+
+    - group:
+        name    : GFT_HGEXM_IPV4_ICMP_QINQ
+        inherit :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_QINQ
+        headers :
+            icmp_header     : True
+        fields  :
+            icmp_type       : True
+            icmp_code       : True
