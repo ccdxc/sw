@@ -1100,6 +1100,19 @@ table common_p4plus_stage0_app_header_table {
 
 @pragma stage 0
 @pragma raw_index_table
+//@pragma table_write
+table common_p4plus_stage0_app_header_ext_table {
+    reads { 
+        COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_KEY
+    }
+    actions {
+        COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_ACTIONS
+    }
+}
+
+
+@pragma stage 0
+@pragma raw_index_table
 @pragma table_write
 table common_p4plus_stage0_app_header_table_offset_64 {
     reads { 
@@ -1313,6 +1326,7 @@ control common_p4plus_stage0 {
         apply(common_p4plus_stage0_app_header_table_offset_64);
     } else {
         apply(common_p4plus_stage0_app_header_table);
+        apply(common_p4plus_stage0_app_header_ext_table);
     }
 
     if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
@@ -1334,9 +1348,7 @@ control common_p4plus_stage0 {
         apply(rx_stage0_load_rdma_params);
         // apply(rx_table_s0_t0);
         // apply(rx_table_s0_t1);
-        if (app_header.table2_valid == 1) {
-            apply(rx_table_s0_t2); 
-        }
+        // apply(rx_table_s0_t2); 
         if (app_header.table3_valid == 1) {
             apply(rx_table_s0_t3);
         }

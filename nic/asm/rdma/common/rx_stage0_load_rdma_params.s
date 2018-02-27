@@ -28,16 +28,16 @@ rx_stage0_load_rdma_params:
     # is it sq or rq ?
     seq c2, k.p4_rxdma_intr_qtype, d.u.rx_stage0_load_rdma_params_d.sq_qtype
 
-    #add r1, r0, offsetof(struct phv_, to_stage_2_to_stage_data) //BD slot
-    #CAPRI_SET_FIELD(r1, TO_S_EXT_HDR_INFO_T, ext_hdr_data, k.{ext_app_header_app_data3_sbit0_ebit31...ext_app_header_app_data3_sbit32_ebit63})
-    phvwr p.to_stage_2_to_stage_data, k.ext_app_header_app_data3
-
     add r1, r0, offsetof(struct phv_, common_global_global_data)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.pt_base_addr_page_id)
     bcf [c2], sq
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.rx_stage0_load_rdma_params_d.log_num_pt_entries)   //BD Slot
 
 rq:
+    #add r1, r0, offsetof(struct phv_, to_stage_2_to_stage_data)
+    #CAPRI_SET_FIELD(r1, TO_S_EXT_HDR_INFO_T, ext_hdr_data, k.{ext_app_header_app_data3_sbit0_ebit31...ext_app_header_app_data3_sbit32_ebit63})
+    phvwr p.to_stage_2_to_stage_data, k.ext_app_header_app_data3
+
     // copy to stage 4 and 6
     add r2, r0, offsetof(struct phv_, to_stage_4_to_stage_data)
     CAPRI_SET_FIELD(r2, RESP_RX_TO_S4_T, wb1.cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)

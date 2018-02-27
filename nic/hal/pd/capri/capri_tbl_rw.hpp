@@ -158,8 +158,10 @@ void capri_timer_init_helper(uint32_t key_lines);
 int capri_toeplitz_init(int stage, int stage_tableid);
 
 int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
+                            int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                             int stage_apphdr_off, int stage_tableid_apphdr_off,
-                            int stage_txdma_act, int stage_tableid_txdma_act);
+                            int stage_txdma_act, int stage_tableid_txdma_act,
+                            int stage_txdma_act_ext, int stage_tableid_txdma_act_ext);
 
 void capri_deparser_init(int tm_port_ingress, int tm_port_egress);
 

@@ -7,7 +7,7 @@
  * p4pt for now only use 5 stages and one table across all of them
  * following needs adjustment if we launch multiple lookups in any stage
  */
-#define common_p4plus_stage0_app_header_table	p4pt_start
+//#define common_p4plus_stage0_app_header_table	p4pt_start
 #define rx_table_s1_t0          p4pt_update_tcb
 #define rx_table_s2_t0          p4pt_update_tcb_rec
 #define rx_table_s3_t0          p4pt_update_tcb_stats

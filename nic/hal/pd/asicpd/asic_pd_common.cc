@@ -300,22 +300,32 @@ hal_ret_t
 asicpd_p4plus_table_init (void)
 {
     p4pd_table_properties_t tbl_ctx_apphdr;
+    p4pd_table_properties_t tbl_ctx_apphdr_ext;
     p4pd_table_properties_t tbl_ctx_apphdr_off;
     p4pd_table_properties_t tbl_ctx_txdma_act;
+    p4pd_table_properties_t tbl_ctx_txdma_act_ext;
 
     // P4 plus table inits
     p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx_apphdr);
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_EXT_TABLE,
+                                     &tbl_ctx_apphdr_ext);
     p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
                                      &tbl_ctx_apphdr_off);
     p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
+    p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T1,
+                                     &tbl_ctx_txdma_act_ext);
     capri_p4plus_table_init(tbl_ctx_apphdr.stage,
                             tbl_ctx_apphdr.stage_tableid,
+                            tbl_ctx_apphdr_ext.stage,
+                            tbl_ctx_apphdr_ext.stage_tableid,
                             tbl_ctx_apphdr_off.stage,
                             tbl_ctx_apphdr_off.stage_tableid,
                             tbl_ctx_txdma_act.stage,
-                            tbl_ctx_txdma_act.stage_tableid);
+                            tbl_ctx_txdma_act.stage_tableid,
+                            tbl_ctx_txdma_act_ext.stage,
+                            tbl_ctx_txdma_act_ext.stage_tableid);
     return HAL_RET_OK;
 }
 

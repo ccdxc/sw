@@ -1,8 +1,9 @@
 #include "./p4pt.h"
 
 
-struct p4pt_start_k  k;
-struct p4pt_start_d  d;
+//struct p4pt_start_k  k;
+struct common_p4plus_stage0_app_header_table_k k;
+struct common_p4plus_stage0_app_header_table_d d;
 struct phv_ p;
 
 %%

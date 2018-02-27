@@ -3,8 +3,7 @@
 
 struct req_rx_phv_t p;
 struct sqcb0_t d;
-//struct req_rx_s0_k_t k;
-struct rdma_stage0_table_k k;
+struct common_p4plus_stage0_app_header_table_k k;
 
 #define SQCB0_TO_SQCB1_T struct req_rx_sqcb0_to_sqcb1_info_t
 #define SQCB0_TO_STAGE_T struct req_rx_to_stage_t
@@ -17,17 +16,18 @@ struct rdma_stage0_table_k k;
 .align
 req_rx_sqcb_process:
 
-    // global fields
-    add            r1, r0, offsetof(struct phv_, common_global_global_data)
+#   //moving to _ext program
+#   // global fields
+#   add            r1, r0, offsetof(struct phv_, common_global_global_data)
 
-    // qstate addr is available as instrinsic data
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
-    CAPRI_SET_FIELD_RANGE(r1, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, flags, CAPRI_APP_DATA_RAW_FLAGS)
+#   // qstate addr is available as instrinsic data
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
+#   CAPRI_SET_FIELD_RANGE(r1, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, flags, CAPRI_APP_DATA_RAW_FLAGS)
 
-    // set DMA CMD ptr
-    RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID)
+#   // set DMA CMD ptr
+#   RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID)
 
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, TABLE_0_ARG)  
 

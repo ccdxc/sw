@@ -30,22 +30,24 @@ req_tx_sqcb_process:
 
     seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0
     bcf            [!c1], process_recirc
+    nop
 
-    // copy intrinsic to global
-    add            r1, r0, offsetof(struct phv_, common_global_global_data) 
+#   // moving to _ext program
+#   // copy intrinsic to global
+#   add            r1, r0, offsetof(struct phv_, common_global_global_data) 
 
-    // enable below code after spr_tbladdr special purpose register is available in capsim
-    #mfspr         r1, spr_tbladdr
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(SQCB_ADDR_SHIFT))
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_TXDMA_INTRINSIC_LIF)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
-    // Is it UD service?
-    seq            c1, d.service, RDMA_SERV_TYPE_UD
-    CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags, REQ_TX_FLAG_UD_SERVICE, c1)
+#   // enable below code after spr_tbladdr special purpose register is available in capsim
+#   #mfspr         r1, spr_tbladdr
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(SQCB_ADDR_SHIFT))
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_TXDMA_INTRINSIC_LIF)
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
+#   // Is it UD service?
+#   seq            c1, d.service, RDMA_SERV_TYPE_UD
+#   CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags, REQ_TX_FLAG_UD_SERVICE, c1)
 
-    //set dma_cmd_ptr in phv
-    TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_START_FLIT_CMD_ID)
+#   //set dma_cmd_ptr in phv
+#   TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_START_FLIT_CMD_ID)
 
     .brbegin
     brpri          r7[MAX_SQ_HOST_RINGS-1: 0], [CNP_PRI, TIMER_PRI, SQ_BKTRACK_PRI, FC_PRI, SQ_PRI]

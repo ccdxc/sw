@@ -270,7 +270,9 @@ capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr,
 
 #define CAPRI_P4PLUS_HANDLE         "p4plus"
 #define CAPRI_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
+#define CAPRI_P4PLUS_RXDMA_EXT_PROG	"rxdma_stage0_ext.bin"
 #define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
+#define CAPRI_P4PLUS_TXDMA_EXT_PROG	"txdma_stage0_ext.bin"
 
 void
 capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
@@ -378,8 +380,10 @@ capri_toeplitz_init (int stage, int stage_tableid)
 
 int
 capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
+                         int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                          int stage_apphdr_off, int stage_tableid_apphdr_off,
-                         int stage_txdma_act, int stage_tableid_txdma_act)
+                         int stage_txdma_act, int stage_tableid_txdma_act,
+                         int stage_txdma_act_ext, int stage_tableid_txdma_act_ext)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_te_csr_t *te_csr = NULL;
@@ -416,6 +420,29 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
 
+
+    // Resolve the p4plus rxdma stage 0 "ext" program to its action pc
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
+                                   &capri_action_p4plus_asm_base) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
+                    capri_action_p4plus_asm_base);
+
+    // Program app-header table config @(stage, stage_tableid) with the PC
+    te_csr = &cap0.pcr.te[stage_apphdr_ext];
+    capri_program_p4plus_table_mpu_pc_args(
+            stage_tableid_apphdr_ext, te_csr,
+            capri_action_p4plus_asm_base,
+            CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
+
+
     // Resolve the p4plus txdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_PROG,
@@ -441,6 +468,33 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
         // TODO: This should 16 as we can process 16 packets per doorbell.
         te_csr->cfg_table_property[stage_tableid_txdma_act].max_bypass_cnt(0x10); 
         te_csr->cfg_table_property[stage_tableid_txdma_act].write();
+    }
+
+    // Resolve the p4plus txdma stage 0 "ext" program to its action pc
+    if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
+                                   (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
+                                   &capri_action_p4plus_asm_base) < 0) {
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+                        (char *) CAPRI_P4PLUS_HANDLE,
+                        (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG);
+        return CAPRI_FAIL;
+    }
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+                    (char *) CAPRI_P4PLUS_HANDLE,
+                    (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
+                    capri_action_p4plus_asm_base);
+
+    // Program table config @(stage, stage_tableid) with the PC
+    te_csr = &cap0.pct.te[stage_txdma_act_ext];
+    capri_program_p4plus_table_mpu_pc_args(
+            stage_tableid_txdma_act_ext, te_csr,
+            capri_action_p4plus_asm_base, 0);
+
+    if (stage_txdma_act_ext == 0 &&
+        hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
+        // TODO: This should 16 as we can process 16 packets per doorbell.
+        te_csr->cfg_table_property[stage_tableid_txdma_act_ext].max_bypass_cnt(0x10); 
+        te_csr->cfg_table_property[stage_tableid_txdma_act_ext].write();
     }
 
     return CAPRI_OK ;

@@ -4,7 +4,7 @@
 
 #include "../common-p4+/common_rxdma_dummy.p4"
 
-#define common_p4plus_stage0_app_header_table rdma_stage0_table
+//#define common_p4plus_stage0_app_header_table rdma_stage0_table
 #define common_p4plus_stage0_app_header_table_action_dummy rdma_stage0_bth_action
 #define common_p4plus_stage0_app_header_table_action_dummy1 rdma_stage0_bth_immeth_action
 #define common_p4plus_stage0_app_header_table_action_dummy2 rdma_stage0_bth_reth_action

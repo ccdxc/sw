@@ -1008,16 +1008,18 @@ table tx_table_s0_t2 {
     }
 }
 
+//s0-t1 is used to do non-lockable work like
+//PHV writes etc.. to reduce the load on s0-t0
 @pragma stage 0
-@pragma raw_table common_te1_phv.table_pc
-@pragma table_write // lock_en_raw=1
+@pragma raw_index_table
+//@pragma table_write
 table tx_table_s0_t1 {
     reads {
-       common_te1_phv.table_addr : exact;
+       p4_txdma_intr.qstate_addr : exact;
     }
     actions {
-        tx_table_s0_t1_action;
-        tx_table_s0_t1_cfg_action;
+        tx_table_s0_t0_action;
+        tx_table_s0_t0_cfg_action;
     }
 }
 
@@ -1085,6 +1087,7 @@ table tx_stage0_lif_params_table {
 
 control common_tx_p4plus_stage0 {
     apply(tx_table_s0_t0);
+    apply(tx_table_s0_t1);
     if (p4_intr.recirc == 0) {
         apply(tx_stage0_lif_params_table);
     }
@@ -1102,7 +1105,6 @@ control ingress {
         apply(tx_table_s7_t0);
     }
     if (app_header.table1_valid == 1) {
-        apply(tx_table_s0_t1);
         apply(tx_table_s1_t1);
         apply(tx_table_s2_t1);
         apply(tx_table_s3_t1);

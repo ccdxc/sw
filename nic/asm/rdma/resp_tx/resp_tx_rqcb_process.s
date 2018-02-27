@@ -35,23 +35,23 @@ resp_tx_rqcb_process:
     seq            c1, r7[MAX_RQ_RINGS-1:0], r0
     bcf            [c1], all_rings_empty
 
-    // copy intrinsic to global
-    add            r1, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
-
     // reset sched_eval_done
-    tblwr          d.ring_empty_sched_eval_done, 0
+    tblwr          d.ring_empty_sched_eval_done, 0 //BD Slot
 
-    // enable below code after spr_tbladdr special purpose register is available in capsim
-    #mfspr         r1, spr_tbladdr
-    #srl           r1, r1, SQCB_ADDR_SHIFT
-    #CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, r1)
-    add            r2, r0, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
-    srl            r2, r2, RQCB_ADDR_SHIFT
+#   // moving to _ext program
+#   // copy intrinsic to global
+#   add            r1, r0, offsetof(struct phv_, common_global_global_data)
 
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, r2)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_TXDMA_INTRINSIC_LIF)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
+#   add            r2, r0, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
+#   srl            r2, r2, RQCB_ADDR_SHIFT
+
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, r2)
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_TXDMA_INTRINSIC_LIF)
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
+#   CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
+
+#   // set DMA cmd ptr   (dma cmd idx with in flit is zero)
+#   TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID, 0)
 
     CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r4)
     //TODO: migrate to efficient way of demuxing work (based on r7)
@@ -59,8 +59,7 @@ resp_tx_rqcb_process:
     // Process DCQCN algo ring first as its the highest priority.
     seq         c1, DCQCN_RATE_COMPUTE_C_INDEX, DCQCN_RATE_COMPUTE_P_INDEX
     bcf         [c1], check_dcqcn_timer_q
-    // set DMA cmd ptr   (dma cmd idx with in flit is zero)
-    TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID, 0) // BD-slot
+    nop //BD Slot
 
     // Increment c-index for rate-compute-ring.
     tblmincri   DCQCN_RATE_COMPUTE_C_INDEX, 16, 1

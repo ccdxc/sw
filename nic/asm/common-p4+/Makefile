@@ -18,7 +18,9 @@ CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
     $(SRC_DIR)/rxdma_stage0.s \
+    $(SRC_DIR)/rxdma_stage0_ext.s \
     $(SRC_DIR)/txdma_stage0.s \
+    $(SRC_DIR)/txdma_stage0_ext.s \
     $(SRC_DIR)/rx_table_cpu_hash.s \
     $(SRC_DIR)/tx_stage0_lif_params_table.s \
 	$(SRC_DIR)/tx_table_s7_t4_lif_rate_limiter_table.s \

@@ -43,9 +43,9 @@ logger_init (uint32_t logger_cpu_id, bool sync_mode)
                                std::chrono::milliseconds::zero(),
                                NULL);
     }
-    //_logger = spdlog::stdout_logger_mt("hal");
-    _logger = spdlog::rotating_logger_mt("hal", LOG_FILENAME,
-                                         LOG_MAX_FILESIZE, LOG_MAX_FILES);
+    _logger = spdlog::stdout_logger_mt("hal");
+    //_logger = spdlog::rotating_logger_mt("hal", LOG_FILENAME,
+     //                                    LOG_MAX_FILESIZE, LOG_MAX_FILES);
     // trigger flush if the log severity is error or higher
     _logger->flush_on(spdlog::level::err);
 
