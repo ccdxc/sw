@@ -29,7 +29,6 @@
 		nic.proto
 		nw.proto
 		nwsec.proto
-		nwsec_1.proto
 		port.proto
 		proxy.proto
 		proxyccb.proto
@@ -341,6 +340,7 @@
 		NetworkKeyHandle
 		L2SegmentKeyHandle
 		SecurityRuleKeyHandle
+		SecurityPolicyKeyHandle
 		SecurityGroupPolicyId
 		SecurityGroupPolicyKeyHandle
 		SecurityGroupKeyHandle
@@ -524,12 +524,6 @@
 		DoSPolicyStats
 		DoSPolicyGetResponse
 		DoSPolicyGetResponseMsg
-		AddressSpec
-		AddressStatus
-		AddressGroupSpec
-		AddressGroupStatus
-		AddressGroup
-		IPAddressSpec
 		App
 		ApplicationSpec
 		ApplicationStatus
@@ -539,19 +533,20 @@
 		AppGroup
 		SecurityRuleAction
 		SecurityRuleSpec
-		SecurityRuleStatus
-		SecurityRule
-		SecurityRuleRequestMsg
-		SecurityRuleResponse
-		SecurityRuleResponseMsg
-		SecurityRuleDeleteRequest
-		SecurityRuleDeleteRequestMsg
-		SecurityRuleDeleteResponse
-		SecurityRuleDeleteResponseMsg
-		SecurityRuleGet
-		SecurityRuleGetMsg
-		SecurityRuleGetResponse
-		SecurityRuleGetResponseMsg
+		SecurityPolicySpec
+		SecurityPolicyRequestMsg
+		SecurityPolicyStatus
+		SecurityPolicyResponse
+		SecurityPolicyResponseMsg
+		SecurityPolicyDeleteRequest
+		SecurityPolicyDeleteRequestMsg
+		SecurityPolicyDeleteResponse
+		SecurityPolicyDeleteResponseMsg
+		SecurityPolicyGetRequest
+		SecurityPolicyGetRequestMsg
+		SecurityPolicyStats
+		SecurityPolicyGetResponse
+		SecurityPolicyGetResponseMsg
 		PortSpec
 		PortRequestMsg
 		PortResponse
