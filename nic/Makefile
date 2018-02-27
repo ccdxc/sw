@@ -163,8 +163,12 @@ p4:
 asm:
 	$(MAKE) -C asm
 
+gen-clean:
+	rm -rf gen/hal
+
 gen-proto:
 	$(MAKE) -C proto
+	python3 ./tools/hal/hal_svc_generator.py
 
 build-proto:
 	$(MAKE) -j8 -C gen/proto/hal
@@ -219,6 +223,7 @@ clean: platform-clean capsim-master-clean
 	$(MAKE) -C sdk clean
 	rm -rf  $(shell realpath "$(TOPDIR_ABS)"/../bazel-out/..)
 	rm -rf gen/capri_loader.conf
+	$(MAKE) gen-clean
 	$(MAKE) check_clean
 
 check_clean:

@@ -175,21 +175,17 @@ extern uint32_t dos_policy_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool dos_policy_id_compare_key_func(void *key1, void *key2);
 dos_policy_t *dos_policy_lookup_handle (const nwsec::DoSPolicySpec& dp);
 
-// extern void *dos_policy_get_handle_key_func(void *entry);
-// extern uint32_t dos_policy_compute_handle_hash_func(void *key, uint32_t ht_size);
-// extern bool dos_policy_compare_handle_key_func(void *key1, void *key2);
+hal_ret_t dospolicy_create(nwsec::DoSPolicySpec& spec,
+                           nwsec::DoSPolicyResponse *rsp);
 
-hal_ret_t dos_policy_create(nwsec::DoSPolicySpec& spec,
-                            nwsec::DoSPolicyResponse *rsp);
+hal_ret_t dospolicy_update(nwsec::DoSPolicySpec& spec,
+                           nwsec::DoSPolicyResponse *rsp);
 
-hal_ret_t dos_policy_update(nwsec::DoSPolicySpec& spec,
-                            nwsec::DoSPolicyResponse *rsp);
+hal_ret_t dospolicy_delete(nwsec::DoSPolicyDeleteRequest& req,
+                           nwsec::DoSPolicyDeleteResponse *rsp);
 
-hal_ret_t dos_policy_delete(nwsec::DoSPolicyDeleteRequest& req,
-                            nwsec::DoSPolicyDeleteResponse *rsp);
-
-hal_ret_t dos_policy_get(nwsec::DoSPolicyGetRequest& req,
-                         nwsec::DoSPolicyGetResponse *rsp);
+hal_ret_t dospolicy_get(nwsec::DoSPolicyGetRequest& req,
+                        nwsec::DoSPolicyGetResponse *rsp);
 
 }    // namespace hal
 

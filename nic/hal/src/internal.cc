@@ -1,15 +1,12 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-//#include <internal_svc.hpp>
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/hal/src/internal.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/if_utils.hpp"
-// #include "nic/hal/pd/capri/capri_hbm.hpp"
-// #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -49,9 +46,10 @@ int capri_program_label_to_offset(const char *handle,
 
 namespace hal {
 
-void GetProgramAddress(const internal::ProgramAddressReq &req,
-                       internal::ProgramAddressResp *resp) {
+void getprogram_address(const internal::ProgramAddressReq &req,
+                        internal::ProgramAddressResponseMsg *rsp) {
     uint64_t addr;
+    internal::ProgramAddressResp *resp = rsp->add_response();
     if (req.resolve_label()) {
         pd::pd_capri_program_label_to_offset_args_t args = {0};
         args.handle = req.handle().c_str();
@@ -78,8 +76,8 @@ void GetProgramAddress(const internal::ProgramAddressReq &req,
     }
 }
 
-void AllocHbmAddress(const internal::HbmAddressReq &req,
-                       internal::HbmAddressResp *resp) {
+void allochbm_address(const internal::HbmAddressReq &req,
+                      internal::HbmAddressResp *resp) {
     pd::pd_get_start_offset_args_t args;
     args.reg_name = req.handle().c_str();
     pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, (void *)&args);
@@ -102,8 +100,8 @@ void AllocHbmAddress(const internal::HbmAddressReq &req,
     }
 }
 
-void ConfigureLifBdf(const internal::LifBdfReq &req,
-                     internal::LifBdfResp *resp) {
+void configurelif_bdf(const internal::LifBdfReq &req,
+                      internal::LifBdfResp *resp) {
    pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
    args.lif = req.lif();
    args.bdf = req.bdf();

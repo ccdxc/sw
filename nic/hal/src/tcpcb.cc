@@ -2,8 +2,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/tcpcb.hpp"
-// #include "nic/hal/svc/tcpcb_svc.hpp"
+#include "nic/hal/src/tcp_proxy_cb.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 
@@ -224,12 +223,13 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
 // process a TCP CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
+tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 {
     hal_ret_t              ret = HAL_RET_OK; 
     tcpcb_t                rtcpcb;
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_get_args_t    pd_tcpcb_args;
+    TcpCbGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
 

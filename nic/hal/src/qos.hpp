@@ -315,14 +315,14 @@ qos_class_is_default (qos_class_t *qos_class)
 
 
 // SVC CRUD APIs
-hal_ret_t qos_class_create(qos::QosClassSpec& spec,
-                           qos::QosClassResponse *rsp);
-hal_ret_t qos_class_update(qos::QosClassSpec& spec,
-                           qos::QosClassResponse *rsp);
-hal_ret_t qos_class_delete(qos::QosClassDeleteRequest& req,
-                           qos::QosClassDeleteResponse *rsp);
-hal_ret_t qos_class_get(qos::QosClassGetRequest& req,
-                        qos::QosClassGetResponseMsg *rsp);
+hal_ret_t qosclass_create(qos::QosClassSpec& spec,
+                          qos::QosClassResponse *rsp);
+hal_ret_t qosclass_update(qos::QosClassSpec& spec,
+                          qos::QosClassResponse *rsp);
+hal_ret_t qosclass_delete(qos::QosClassDeleteRequest& req,
+                          qos::QosClassDeleteResponse *rsp);
+hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
+                       qos::QosClassGetResponseMsg *rsp);
 
 typedef struct policer_s {
     uint32_t bps_rate; // rate in bytes-per-sec
@@ -510,7 +510,7 @@ hal_ret_t copp_create(qos::CoppSpec& spec,
 hal_ret_t copp_update(qos::CoppSpec& spec,
                       qos::CoppResponse *rsp);
 hal_ret_t copp_get(qos::CoppGetRequest& req,
-                   qos::CoppGetResponse *rsp);
+                   qos::CoppGetResponseMsg *rsp);
 
 hal_ret_t hal_qos_init (void);
 

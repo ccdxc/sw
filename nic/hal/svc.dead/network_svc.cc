@@ -1,22 +1,21 @@
 //------------------------------------------------------------------------------
-// acl service implementation
-// Vasanth Kumar (Pensando Systems)
+// network service implementation
 //------------------------------------------------------------------------------
-//
+
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
-#include "nic/hal/svc/acl_svc.hpp"
-#include "nic/hal/src/acl.hpp"
+#include "nic/hal/svc/network_svc.hpp"
+#include "nic/hal/src/nw.hpp"
 
 Status
-AclServiceImpl::AclCreate(ServerContext *context,
-                              const AclRequestMsg *req,
-                              AclResponseMsg *rsp)
+NetworkServiceImpl::NetworkCreate(ServerContext *context,
+                                const NetworkRequestMsg *req,
+                                NetworkResponseMsg *rsp)
 {
-    uint32_t       i, nreqs = req->request_size();
-    AclResponse    *response;
+    uint32_t           i, nreqs = req->request_size();
+    NetworkResponse    *response;
 
-    HAL_TRACE_DEBUG("Rcvd Acl Create Request");
+    HAL_TRACE_DEBUG("Rcvd Network Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -25,21 +24,21 @@ AclServiceImpl::AclCreate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::acl_create(spec, response);
+        hal::network_create(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
 }
 
 Status
-AclServiceImpl::AclUpdate(ServerContext *context,
-                              const AclRequestMsg *req,
-                              AclResponseMsg *rsp)
+NetworkServiceImpl::NetworkUpdate(ServerContext *context,
+                                const NetworkRequestMsg *req,
+                                NetworkResponseMsg *rsp)
 {
-    uint32_t          i, nreqs = req->request_size();
-    AclResponse       *response;
+    uint32_t           i, nreqs = req->request_size();
+    NetworkResponse    *response;
 
-    HAL_TRACE_DEBUG("Rcvd Acl Update Request");
+    HAL_TRACE_DEBUG("Rcvd Network Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -48,21 +47,22 @@ AclServiceImpl::AclUpdate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::acl_update(spec, response);
+        hal::network_update(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
 }
 
-Status
-AclServiceImpl::AclDelete(ServerContext *context,
-                              const AclDeleteRequestMsg *req_msg,
-                              AclDeleteResponseMsg *rsp)
-{
-    uint32_t            i, nreqs = req_msg->request_size();
-    AclDeleteResponse   *response;
 
-    HAL_TRACE_DEBUG("Rcvd Acl Delete Request");
+Status
+NetworkServiceImpl::NetworkDelete(ServerContext *context,
+                                const NetworkDeleteRequestMsg *req,
+                                NetworkDeleteResponseMsg *rsp)
+{
+    uint32_t     i, nreqs = req->request_size();
+    NetworkDeleteResponse    *response;
+
+    HAL_TRACE_DEBUG("Rcvd Network Delete Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -70,21 +70,21 @@ AclServiceImpl::AclDelete(ServerContext *context,
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
-        auto req = req_msg->request(i);
-        hal::acl_delete(req, response);
+        auto spec = req->request(i);
+        hal::network_delete(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
 }
 
 Status
-AclServiceImpl::AclGet(ServerContext *context,
-                           const AclGetRequestMsg *req,
-                           AclGetResponseMsg *rsp)
+NetworkServiceImpl::NetworkGet(ServerContext *context,
+                             const NetworkGetRequestMsg *req,
+                             NetworkGetResponseMsg *rsp)
 {
     uint32_t             i, nreqs = req->request_size();
 
-    HAL_TRACE_DEBUG("Rcvd Acl Get Request");
+    HAL_TRACE_DEBUG("Rcvd Network Get Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -92,7 +92,7 @@ AclServiceImpl::AclGet(ServerContext *context,
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
-        hal::acl_get(request, rsp);
+        hal::network_get(request, rsp);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

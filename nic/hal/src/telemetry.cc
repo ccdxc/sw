@@ -6,7 +6,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/telemetry.hpp"
 #include "nic/gen/proto/hal/telemetry.pb.h"
-// #include "nic/hal/svc/telemetry_svc.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 
 using telemetry::MirrorSession;

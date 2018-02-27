@@ -1,4 +1,4 @@
-#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/tcp_proxy_cb.hpp"
 #include "nic/gen/proto/hal/tcp_proxy_cb.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
@@ -41,6 +41,7 @@ TEST_F(tcpcb_test, test1)
     TcpCbResponse rsp;
     TcpCbGetRequest getReq;
     TcpCbGetResponse getRsp;
+    TcpCbGetResponseMsg rsp_msg;
 
     spec.mutable_key_or_handle()->set_tcpcb_id(0);
     spec.set_rcv_nxt(100);
@@ -50,8 +51,9 @@ TEST_F(tcpcb_test, test1)
     printf("TCP CB create done\n");
 
     getReq.mutable_key_or_handle()->set_tcpcb_id(0);
-    ret = hal::tcpcb_get(getReq, &getRsp);
+    ret = hal::tcpcb_get(getReq, &rsp_msg);
     ASSERT_TRUE(ret == HAL_RET_OK);
+    getRsp = rsp_msg.response(0);
     printf("cb_id: %d\n", getRsp.spec().key_or_handle().tcpcb_id());
     printf("rcv_nxt: %d\n", getRsp.spec().rcv_nxt());
     ASSERT_TRUE(100 == getRsp.spec().rcv_nxt());

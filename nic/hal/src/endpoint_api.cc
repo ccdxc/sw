@@ -2,7 +2,7 @@
 #include "nic/include/endpoint_api.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/interface_api.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/utils.hpp"
 
 namespace hal {

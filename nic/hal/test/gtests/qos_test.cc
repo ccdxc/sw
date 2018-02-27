@@ -49,7 +49,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_marking()->set_dot1q_pcp(3);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_create(spec, &rsp);
+    ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
@@ -63,7 +63,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_uplink_class_map()->add_ip_dscp(2);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_create(spec, &rsp);
+    ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_NE(ret, HAL_RET_OK);
 
@@ -79,7 +79,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_marking()->set_dot1q_pcp(3);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_update(spec, &rsp);
+    ret = hal::qosclass_update(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
@@ -94,7 +94,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_uplink_class_map()->add_ip_dscp(2);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_create(spec, &rsp);
+    ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
@@ -110,7 +110,7 @@ TEST_F(qos_class_test, test1)
     spec.mutable_marking()->set_dot1q_pcp(3);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_update(spec, &rsp);
+    ret = hal::qosclass_update(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_NE(ret, HAL_RET_OK);
 
@@ -121,14 +121,14 @@ TEST_F(qos_class_test, test1)
     del_req.Clear();
     del_req.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_delete(del_req, &del_rsp);
+    ret = hal::qosclass_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
     del_req.Clear();
     del_req.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_delete(del_req, &del_rsp);
+    ret = hal::qosclass_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
@@ -148,7 +148,7 @@ TEST_F(qos_class_test, test2)
     spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(100);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_create(spec, &rsp);
+    ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     // Internal classes are created during init. So this should fail
     ASSERT_NE(ret, HAL_RET_OK);

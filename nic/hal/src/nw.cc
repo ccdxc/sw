@@ -4,7 +4,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/if_utils.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/include/pd_api.hpp"
 
 namespace hal {

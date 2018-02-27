@@ -116,10 +116,10 @@ hal_ret_t cpucb_update(cpucb::CpuCbSpec& spec,
                        cpucb::CpuCbResponse *rsp);
 
 hal_ret_t cpucb_delete(cpucb::CpuCbDeleteRequest& req,
-                       cpucb::CpuCbDeleteResponseMsg *rsp);
+                       cpucb::CpuCbDeleteResponse *rsp);
 
 hal_ret_t cpucb_get(cpucb::CpuCbGetRequest& req,
-                    cpucb::CpuCbGetResponse *rsp);
+                    cpucb::CpuCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __CPUCB_HPP__

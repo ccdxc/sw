@@ -1,4 +1,4 @@
-#include "nic/hal/src/dos.hpp"
+#include "nic/hal/src/nwsec.hpp"
 #include "nic/include/dos_api.hpp"
 
 namespace hal {

@@ -22,8 +22,8 @@ service Endpoint {
   rpc EndpointUpdate (EndpointUpdateRequestMsg) returns (EndpointUpdateResponseMsg) {}
   rpc EndpointDelete (EndpointDeleteRequestMsg) returns (EndpointDeleteResponseMsg) {}
   rpc EndpointGet (EndpointGetRequestMsg) returns (EndpointGetResponseMsg) {}
-  rpc EndpointGetAll(EndpointGetAllRequestMsg) returns (EndpointGetResponseMsg) {}
-  rpc EndpointGetByInterface(EndpointGetByInterfaceRequestMsg) returns (EndpointGetResponseMsg) {}
+  //rpc EndpointGetAll(EndpointGetAllRequestMsg) returns (EndpointGetResponseMsg) {}
+  //rpc EndpointGetByInterface(EndpointGetByInterfaceRequestMsg) returns (EndpointGetResponseMsg) {}
 }
 
 enum EndpointVMotionState {
@@ -147,11 +147,15 @@ message EndpointGetRequestMsg {
   repeated EndpointGetRequest    request = 1;    // batched get request
 }
 
-// EndpointGetByInterfaceRequestMsg is used to GET endpoints by interface
-message EndpointGetByInterfaceRequestMsg {
+message EndpointGetByInterfaceRequest {
   types.ObjectMeta      meta                 = 1;    // object meta
   kh.VrfKeyHandle       vrf_key_handle       = 2 [(gogoproto.moretags) = "venice:ref"];
   kh.InterfaceKeyHandle interface_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];
+}
+
+// EndpointGetByInterfaceRequestMsg is used to GET endpoints by interface
+message EndpointGetByInterfaceRequestMsg {
+  repeated EndpointGetByInterfaceRequest    request = 1;
 }
 
 // EndpointGetAllRequestMsg is used to GET all the endpoints

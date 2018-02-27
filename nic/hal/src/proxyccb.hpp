@@ -157,16 +157,16 @@ extern uint32_t proxyccb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool proxyccb_compare_handle_key_func(void *key1, void *key2);
 
 hal_ret_t proxyccb_create(proxyccb::ProxycCbSpec& spec,
-                        proxyccb::ProxycCbResponse *rsp);
+                          proxyccb::ProxycCbResponse *rsp);
 
 hal_ret_t proxyccb_update(proxyccb::ProxycCbSpec& spec,
-                        proxyccb::ProxycCbResponse *rsp);
+                          proxyccb::ProxycCbResponse *rsp);
 
 hal_ret_t proxyccb_delete(proxyccb::ProxycCbDeleteRequest& req,
-                        proxyccb::ProxycCbDeleteResponseMsg *rsp);
+                          proxyccb::ProxycCbDeleteResponseMsg *rsp);
 
 hal_ret_t proxyccb_get(proxyccb::ProxycCbGetRequest& req,
-                     proxyccb::ProxycCbGetResponse *rsp);
+                       proxyccb::ProxycCbGetResponseMsg *rsp);
 /*
  * A given tcpcb will be enabled for L7 redirect if there's a corresponding
  * proxy chain CB which forwards to SERVICE_LIF_TLS_PROXY. In other words,

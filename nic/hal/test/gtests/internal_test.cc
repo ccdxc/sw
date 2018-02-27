@@ -8,6 +8,7 @@
 
 using internal::ProgramAddressReq;
 using internal::ProgramAddressResp;
+using internal::ProgramAddressResponseMsg;
 using internal::HbmAddressReq;
 using internal::HbmAddressResp;
 
@@ -37,12 +38,14 @@ TEST_F(internal_test, test1)
 {
     ProgramAddressReq req;
     ProgramAddressResp rsp;
+    ProgramAddressResponseMsg resp;
 
     req.set_handle("p4plus");
     req.set_prog_name("txdma_stage0.bin");
     req.set_resolve_label(false);
 
-    hal::GetProgramAddress(req, &rsp);
+    hal::getprogram_address(req, &resp);
+    rsp = resp.response(0);
     ASSERT_TRUE((uint64_t)rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
 }
 
@@ -53,13 +56,15 @@ TEST_F(internal_test, test2)
 {
     ProgramAddressReq req;
     ProgramAddressResp rsp;
+    ProgramAddressResponseMsg resp;
 
     req.set_handle("p4plus");
     req.set_prog_name("txdma_stage0.bin");
     req.set_resolve_label(true);
     req.set_label("storage_tx_stage0");
 
-    hal::GetProgramAddress(req, &rsp);
+    hal::getprogram_address(req, &resp);
+    rsp = resp.response(0);
     ASSERT_TRUE((uint64_t)rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
 }
 
@@ -73,7 +78,7 @@ TEST_F(internal_test, test3)
 
     req.set_handle("storage");
 
-    hal::AllocHbmAddress(req, &rsp);
+    hal::allochbm_address(req, &rsp);
     ASSERT_TRUE((uint64_t)rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
 }
 

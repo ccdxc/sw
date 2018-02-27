@@ -394,7 +394,7 @@ hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t crypto_api_invoke(cryptoapis::CryptoApiRequest &req, 
+hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req, 
         cryptoapis::CryptoApiResponse *resp)
 {
 

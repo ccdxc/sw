@@ -1,7 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-// #include "nic/hal/svc/crypto_keys_svc.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/crypto_keys.hpp"
 
@@ -9,7 +8,7 @@ using std::string;
 
 namespace hal {
 
-hal_ret_t   crypto_key_create(cryptokey::CryptoKeyCreateRequest &request,
+hal_ret_t   cryptokey_create(cryptokey::CryptoKeyCreateRequest &request,
         cryptokey::CryptoKeyCreateResponse *response)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -30,7 +29,7 @@ hal_ret_t   crypto_key_create(cryptokey::CryptoKeyCreateRequest &request,
     return ret;
 }
 
-hal_ret_t   crypto_key_read(cryptokey::CryptoKeyReadRequest &request,
+hal_ret_t   cryptokey_read(cryptokey::CryptoKeyReadRequest &request,
         cryptokey::CryptoKeyReadResponse *response)
 {
     hal_ret_t                   ret = HAL_RET_OK;
@@ -63,7 +62,7 @@ hal_ret_t   crypto_key_read(cryptokey::CryptoKeyReadRequest &request,
     return ret;
 }
 
-hal_ret_t   crypto_key_update(cryptokey::CryptoKeyUpdateRequest &request,
+hal_ret_t   cryptokey_update(cryptokey::CryptoKeyUpdateRequest &request,
         cryptokey::CryptoKeyUpdateResponse *response)
 {
     hal_ret_t                   ret = HAL_RET_OK;
@@ -96,7 +95,7 @@ hal_ret_t   crypto_key_update(cryptokey::CryptoKeyUpdateRequest &request,
     return ret;
 }
 
-hal_ret_t   crypto_key_delete(cryptokey::CryptoKeyDeleteRequest &request,
+hal_ret_t   cryptokey_delete(cryptokey::CryptoKeyDeleteRequest &request,
         cryptokey::CryptoKeyDeleteResponse *response)
 {
     hal_ret_t                   ret = HAL_RET_OK;

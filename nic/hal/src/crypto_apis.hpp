@@ -26,7 +26,7 @@ namespace hal {
 #define CRYPTO_SHA384_DIGEST_LEN 48
 #define CRYPTO_SHA512_DIGEST_LEN 64
 
-hal_ret_t crypto_api_invoke(cryptoapis::CryptoApiRequest &req, 
+hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req, 
         cryptoapis::CryptoApiResponse *resp);
 
 }    // namespace hal

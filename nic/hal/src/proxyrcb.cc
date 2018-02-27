@@ -245,12 +245,13 @@ proxyrcb_update (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
 // process a PROXYR CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponse *rsp)
+proxyrcb_get (ProxyrCbGetRequest& req, ProxyrCbGetResponseMsg *resp)
 {
     hal_ret_t               ret = HAL_RET_OK; 
     proxyrcb_t              rproxyrcb;
     proxyrcb_t              *proxyrcb;
     pd::pd_proxyrcb_get_args_t  pd_proxyrcb_args;
+    ProxyrCbGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
 

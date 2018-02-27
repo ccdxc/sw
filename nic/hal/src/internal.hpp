@@ -12,14 +12,14 @@
 
 namespace hal {
 
-void GetProgramAddress(const internal::ProgramAddressReq& req,
-                       internal::ProgramAddressResp *resp);
+void getprogram_address(const internal::ProgramAddressReq& req,
+                        internal::ProgramAddressResponseMsg *rsp);
 
-void AllocHbmAddress(const internal::HbmAddressReq &req,
-                       internal::HbmAddressResp *resp);
+void allochbm_address(const internal::HbmAddressReq &req,
+                      internal::HbmAddressResp *resp);
 
-void ConfigureLifBdf(const internal::LifBdfReq &req,
-                     internal::LifBdfResp *resp);
+void configurelif_bdf(const internal::LifBdfReq &req,
+                      internal::LifBdfResp *resp);
 
 }    // namespace hal
 

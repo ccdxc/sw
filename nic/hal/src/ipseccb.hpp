@@ -148,7 +148,7 @@ hal_ret_t ipseccb_delete(ipseccb::IpsecCbDeleteRequest& req,
                        ipseccb::IpsecCbDeleteResponseMsg *rsp);
 
 hal_ret_t ipseccb_get(ipseccb::IpsecCbGetRequest& req,
-                    ipseccb::IpsecCbGetResponse *rsp);
+                    ipseccb::IpsecCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __IPSECCB_HPP__

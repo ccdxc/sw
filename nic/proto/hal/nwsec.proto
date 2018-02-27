@@ -15,8 +15,7 @@ service NwSecurity {
     rpc SecurityProfileUpdate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
     rpc SecurityProfileDelete (SecurityProfileDeleteRequestMsg) returns (SecurityProfileDeleteResponseMsg) {}
     rpc SecurityProfileGet (SecurityProfileGetRequestMsg) returns (SecurityProfileGetResponseMsg) {}
-    
-    
+
     rpc SecurityGroupPolicyCreate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
     rpc SecurityGroupPolicyUpdate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
     rpc SecurityGroupPolicyDelete (SecurityGroupPolicyDeleteRequestMsg) returns (SecurityGroupPolicyDeleteResponseMsg) {}
@@ -26,7 +25,7 @@ service NwSecurity {
     rpc SecurityGroupUpdate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
     rpc SecurityGroupDelete (SecurityGroupDeleteRequestMsg) returns (SecurityGroupDeleteResponseMsg) {}
     rpc SecurityGroupGet (SecurityGroupGetRequestMsg) returns (SecurityGroupGetResponseMsg) {}
-    
+
     rpc DoSPolicyCreate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
     rpc DoSPolicyUpdate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
     rpc DoSPolicyDelete (DoSPolicyDeleteRequestMsg) returns (DoSPolicyDeleteResponseMsg) {}

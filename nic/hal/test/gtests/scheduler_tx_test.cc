@@ -58,7 +58,7 @@ void scheduler_tx_test::qos_init()
     spec.mutable_uplink_class_map()->add_ip_dscp(15);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_create(spec, &rsp);
+    ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
@@ -74,7 +74,7 @@ void scheduler_tx_test::qos_init()
     spec.mutable_marking()->set_dot1q_pcp(3);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qos_class_create(spec, &rsp);
+    ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 }

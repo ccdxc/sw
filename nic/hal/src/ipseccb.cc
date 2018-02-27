@@ -299,12 +299,13 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 // process a IPSEC CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
+ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
 {
     hal_ret_t              ret = HAL_RET_OK; 
     ipseccb_t                ripseccb;
     ipseccb_t*               ipseccb;
     pd::pd_ipseccb_get_args_t    pd_ipseccb_args;
+    IpsecCbGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
 

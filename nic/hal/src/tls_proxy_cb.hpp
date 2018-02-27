@@ -151,7 +151,7 @@ hal_ret_t tlscb_delete(tlscb::TlsCbDeleteRequest& req,
                        tlscb::TlsCbDeleteResponseMsg *rsp);
 
 hal_ret_t tlscb_get(tlscb::TlsCbGetRequest& req,
-                    tlscb::TlsCbGetResponse *rsp);
+                    tlscb::TlsCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __TLSCB_HPP__

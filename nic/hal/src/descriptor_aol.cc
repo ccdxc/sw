@@ -5,16 +5,15 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/descriptor_aol.hpp"
 
-
-
 namespace hal {
 
 hal_ret_t
-descriptor_aol_get(DescrAolRequest& request, DescrAolSpec *response)
+descraol_get(DescrAolRequest& request, DescrAolResponseMsg *resp_msg)
 {
     pd::pd_descr_aol_t      pd_descr, *pd_descr_ptr;
     hal_ret_t               ret = HAL_RET_OK;
     pd::pd_descriptor_aol_get_args_t args;
+    DescrAolSpec *response = resp_msg->add_response();
 
     pd_descr_ptr = (pd::pd_descr_aol_t*) request.descr_aol_handle();
     args.src = pd_descr_ptr;

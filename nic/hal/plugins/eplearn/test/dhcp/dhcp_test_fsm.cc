@@ -12,7 +12,7 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/session.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"

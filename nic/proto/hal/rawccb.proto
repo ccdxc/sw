@@ -92,9 +92,13 @@ message RawcCbDeleteRequestMsg {
   repeated RawcCbDeleteRequest    request = 1;    // batched delete request
 }
 
+message RawcCbDeleteResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+}
+
 // RawcCbDeleteResponseMsg is batched response to RawcCbDeleteRequestMsg
 message RawcCbDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated RawcCbDeleteResponse response = 1;
 }
 
 // RawcCbGetRequest is used to get information about a rawccb

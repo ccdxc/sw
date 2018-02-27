@@ -5,7 +5,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/network_svc.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 
 Status
 NetworkServiceImpl::NetworkCreate(ServerContext *context,

@@ -214,12 +214,13 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
 // process a RAWC CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
+rawccb_get (RawcCbGetRequest& req, RawcCbGetResponseMsg *resp)
 {
     hal_ret_t               ret = HAL_RET_OK; 
     rawccb_t                rrawccb;
     rawccb_t*               rawccb;
     pd::pd_rawccb_get_args_t    pd_rawccb_args;
+    RawcCbGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
 
@@ -282,7 +283,7 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponse *rsp)
 // process a RAWC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponseMsg *rsp)
+rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK; 
     rawccb_t*               rawccb;
@@ -292,7 +293,7 @@ rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponseMsg
     auto kh = req.key_or_handle();
     rawccb = find_rawccb_by_id(kh.rawccb_id());
     if (rawccb == NULL) {
-        rsp->add_api_status(types::API_STATUS_OK);
+        rsp->set_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
  
@@ -303,12 +304,12 @@ rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponseMsg
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_RAWCCB_DELETE, (void *)&del_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD RAWCCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     
     // fill stats of this RAWC CB
-    rsp->add_api_status(types::API_STATUS_OK);
+    rsp->set_api_status(types::API_STATUS_OK);
  
     return HAL_RET_OK;
 }

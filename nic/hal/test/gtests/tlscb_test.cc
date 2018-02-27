@@ -1,4 +1,4 @@
-#include "nic/hal/src/tlscb.hpp"
+#include "nic/hal/src/tls_proxy_cb.hpp"
 #include "nic/gen/proto/hal/tls_proxy_cb.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
@@ -41,6 +41,7 @@ TEST_F(tlscb_test, test1)
     TlsCbResponse rsp;
     TlsCbGetRequest getReq;
     TlsCbGetResponse getRsp;
+    TlsCbGetResponseMsg resp_msg;
 
 
     spec.mutable_key_or_handle()->set_tlscb_id(0);
@@ -53,8 +54,9 @@ TEST_F(tlscb_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     getReq.mutable_key_or_handle()->set_tlscb_id(0);
-    ret = hal::tlscb_get(getReq, &getRsp);
+    ret = hal::tlscb_get(getReq, &resp_msg);
     ASSERT_TRUE(ret == HAL_RET_OK);
+    getRsp = resp_msg.response(0);
     printf("cb_id: %d\n", getRsp.spec().key_or_handle().tlscb_id());
     printf("Done with test1\n");
 }

@@ -1,9 +1,8 @@
 #include "tls_api.hpp"
 #include "ssl_helper.hpp"
 #include "nic/include/tcp_common.h"
-// #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
-#include "nic/hal/src/tlscb.hpp"
+#include "nic/hal/src/tls_proxy_cb.hpp"
 #include "nic/hal/lkl/lklshim_tls.hpp"
 #include "nic/hal/src/crypto_keys.hpp"
 #include "nic/hal/src/proxyccb.hpp"
@@ -102,7 +101,7 @@ tls_api_program_crypto_key(char* key, uint32_t* key_index)
     CryptoKeyUpdateRequest      update_req;
     CryptoKeyUpdateResponse     update_resp;
 
-    ret = crypto_key_create(create_req, &create_resp);
+    ret = cryptokey_create(create_req, &create_resp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create crypto key: {}", ret);
         return ret;
@@ -121,7 +120,7 @@ tls_api_program_crypto_key(char* key, uint32_t* key_index)
     spec->set_key_type(types::CRYPTO_KEY_TYPE_AES128);
     spec->set_key_size(16);
     spec->mutable_key()->assign(key, 16);
-    ret = crypto_key_update(update_req, &update_resp);
+    ret = cryptokey_update(update_req, &update_resp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: failed to update key, ret: {}", ret);
         return ret;
@@ -144,14 +143,16 @@ tls_api_update_cb(uint32_t id,
     TlsCbResponse       resp;
     TlsCbGetRequest     get_req;
     TlsCbGetResponse    get_resp;
+    TlsCbGetResponseMsg resp_msg;
 
     // get existing values from the hw
     get_req.mutable_key_or_handle()->set_tlscb_id(id);
-    ret = tlscb_get(get_req, &get_resp);
+    ret = tlscb_get(get_req, &resp_msg);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get tlscb for id: {}", id);
         return ret;
     }
+    get_resp = resp_msg.response(0);
     spec.mutable_key_or_handle()->set_tlscb_id(id);
     spec.set_crypto_key_idx(key_index);
     spec.set_command(command);

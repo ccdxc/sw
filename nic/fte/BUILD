@@ -19,7 +19,7 @@ cc_library(
         "//nic:halproto",
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic/hal:hal_src",
-        "//nic/hal/svc:hal_svc",
+        "//nic:hal_svc_gen",
         "//nic/include:base_includes",
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic:spdlog",

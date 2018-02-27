@@ -1,5 +1,5 @@
 #include "nic/hal/src/vrf.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
@@ -84,7 +84,7 @@ TEST_F(vrf_test, test1)
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -213,7 +213,7 @@ TEST_F(vrf_test, test2)
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -222,7 +222,7 @@ TEST_F(vrf_test, test2)
     sp_spec1.mutable_key_or_handle()->set_profile_id(21);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
@@ -335,7 +335,7 @@ TEST_F(vrf_test, test3)
     sp_spec.mutable_key_or_handle()->set_profile_id(31);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -344,7 +344,7 @@ TEST_F(vrf_test, test3)
     sp_spec1.mutable_key_or_handle()->set_profile_id(32);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
@@ -446,7 +446,7 @@ TEST_F(vrf_test, test4)
     sp_spec.mutable_key_or_handle()->set_profile_id(41);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -455,7 +455,7 @@ TEST_F(vrf_test, test4)
     sp_spec1.mutable_key_or_handle()->set_profile_id(42);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
@@ -558,7 +558,7 @@ TEST_F(vrf_test, test5)
     sp_spec.mutable_key_or_handle()->set_profile_id(51);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -567,7 +567,7 @@ TEST_F(vrf_test, test5)
     sp_spec1.mutable_key_or_handle()->set_profile_id(52);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
@@ -661,7 +661,7 @@ TEST_F(vrf_test, test6)
     sp_spec.mutable_key_or_handle()->set_profile_id(61);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -714,7 +714,7 @@ TEST_F(vrf_test, test7)
     sp_spec.mutable_key_or_handle()->set_profile_id(71);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -723,7 +723,7 @@ TEST_F(vrf_test, test7)
     sp_spec1.mutable_key_or_handle()->set_profile_id(72);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
@@ -770,7 +770,7 @@ TEST_F(vrf_test, test8)
     sp_spec.mutable_key_or_handle()->set_profile_id(81);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -779,7 +779,7 @@ TEST_F(vrf_test, test8)
     sp_spec1.mutable_key_or_handle()->set_profile_id(82);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
@@ -911,7 +911,7 @@ TEST_F(vrf_test, test9)
     sp_spec.mutable_key_or_handle()->set_profile_id(91);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -920,7 +920,7 @@ TEST_F(vrf_test, test9)
     sp_spec1.mutable_key_or_handle()->set_profile_id(92);
     sp_spec1.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
@@ -1019,7 +1019,7 @@ TEST_F(vrf_test, test9)
     sp_spec.mutable_key_or_handle()->set_profile_id(91);
     sp_spec.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_update(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_update(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1116,7 +1116,7 @@ TEST_F(vrf_test, test9)
     // Remove nwsec, errors out
     sp_del_req.mutable_key_or_handle()->set_profile_id(92);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    ret = hal::securityprofile_delete(sp_del_req, &sp_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
 
@@ -1130,12 +1130,12 @@ TEST_F(vrf_test, test9)
     // Remove both nwsecs
     sp_del_req.mutable_key_or_handle()->set_profile_id(91);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    ret = hal::securityprofile_delete(sp_del_req, &sp_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     sp_del_req.mutable_key_or_handle()->set_profile_id(92);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    ret = hal::securityprofile_delete(sp_del_req, &sp_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1169,7 +1169,7 @@ TEST_F(vrf_test, test10)
     sp_spec.mutable_key_or_handle()->set_profile_id(10);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -1188,7 +1188,7 @@ TEST_F(vrf_test, test10)
     // Try to delete nwsec
     sp_del_req.mutable_key_or_handle()->set_profile_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    ret = hal::securityprofile_delete(sp_del_req, &sp_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
 
@@ -1204,7 +1204,7 @@ TEST_F(vrf_test, test10)
     // Delete nwsec
     sp_del_req.mutable_key_or_handle()->set_profile_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    ret = hal::securityprofile_delete(sp_del_req, &sp_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1233,7 +1233,7 @@ TEST_F(vrf_test, test12)
     sp_spec.mutable_key_or_handle()->set_profile_id(12);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -1309,7 +1309,7 @@ TEST_F(vrf_test, test11)
     sp_spec.mutable_key_or_handle()->set_profile_id(11);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();

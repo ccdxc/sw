@@ -163,14 +163,14 @@ mc_entry_t *mc_entry_lookup_key_or_handle (const MulticastEntryKeyHandle& kh);
 char *mc_key_to_string (mc_key_t *key);
 
 // SVC CRUD APIs
-hal_ret_t multicast_entry_create(MulticastEntrySpec& spec,
+hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
+                                MulticastEntryResponse *rsp);
+hal_ret_t multicastentry_update(MulticastEntrySpec& spec,
                                  MulticastEntryResponse *rsp);
-hal_ret_t multicast_entry_update(MulticastEntrySpec& spec,
-                                 MulticastEntryResponse *rsp);
-hal_ret_t multicast_entry_delete(MulticastEntryDeleteRequest& req,
-                                 MulticastEntryDeleteResponse *rsp);
-hal_ret_t multicast_entry_get(MulticastEntryGetRequest& req,
-                              MulticastEntryGetResponseMsg *rsp);
+hal_ret_t multicastentry_delete(MulticastEntryDeleteRequest& req,
+                                MulticastEntryDeleteResponse *rsp);
+hal_ret_t multicastentry_get(MulticastEntryGetRequest& req,
+                             MulticastEntryGetResponseMsg *rsp);
 
 }    // namespace hal
 

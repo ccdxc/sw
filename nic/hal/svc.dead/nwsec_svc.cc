@@ -5,7 +5,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/nwsec_svc.hpp"
-#include "nic/hal/src/nwsec_group.hpp"
+#include "nic/hal/src/nwsec.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/hal/src/dos.hpp"
 

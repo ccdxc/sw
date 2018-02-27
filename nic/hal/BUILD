@@ -16,6 +16,7 @@ cc_binary(
             ":hal_src",
             # PI
             "//nic/fte",
+            "//nic:hal_svc_gen",
             "//nic/hal/svc:hal_svc",
             "//nic/utils/print",
             "//nic/hal/plugins",
@@ -48,6 +49,8 @@ cc_library(
     ] + glob(["src/*.hpp"]),
     deps = [
         "//nic/hal/lib:hal_lib_includes",
+        "//nic/include:base_includes",
+        "//nic/hal/periodic:hal_periodic_includes",
     ]
 )
 

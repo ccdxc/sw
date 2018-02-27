@@ -11,15 +11,15 @@ option go_package="halproto";
 // The L4 LB service definition
 service L4Lb {
   rpc L4LbServiceCreate (L4LbServiceRequestMsg) returns (L4LbServiceResponseMsg) {}
-  rpc L4LbServiceUpdate (L4LbServiceRequestMsg) returns (L4LbServiceResponseMsg) {}
-  rpc L4LbServiceDelete (L4LbServiceDeleteRequestMsg) returns (L4LbServiceDeleteResponseMsg) {}
+  //rpc L4LbServiceUpdate (L4LbServiceRequestMsg) returns (L4LbServiceResponseMsg) {}
+  //rpc L4LbServiceDelete (L4LbServiceDeleteRequestMsg) returns (L4LbServiceDeleteResponseMsg) {}
   // L4LbServiceGet API will also cover "get all"
-  rpc L4LbServiceGet (L4LbServiceGetRequestMsg) returns (L4LbServiceGetResponseMsg) {}
-  rpc L4LbBackendCreate (L4LbBackendRequestMsg) returns (L4LbBackendResponseMsg) {}
-  rpc L4LbBackendUpdate (L4LbBackendRequestMsg) returns (L4LbBackendResponseMsg) {}
-  rpc L4LbBackendDelete (L4LbBackendDeleteRequestMsg) returns (L4LbBackendDeleteResponseMsg) {}
+  //rpc L4LbServiceGet (L4LbServiceGetRequestMsg) returns (L4LbServiceGetResponseMsg) {}
+  //rpc L4LbBackendCreate (L4LbBackendRequestMsg) returns (L4LbBackendResponseMsg) {}
+  //rpc L4LbBackendUpdate (L4LbBackendRequestMsg) returns (L4LbBackendResponseMsg) {}
+  //rpc L4LbBackendDelete (L4LbBackendDeleteRequestMsg) returns (L4LbBackendDeleteResponseMsg) {}
   // L4LbBackendGet API will also cover "get all"
-  rpc L4LbBackendGet (L4LbBackendGetRequestMsg) returns (L4LbBackendGetResponseMsg) {}
+  //rpc L4LbBackendGet (L4LbBackendGetRequestMsg) returns (L4LbBackendGetResponseMsg) {}
 }
 
 // session stickiness selectors - once a session is load balanced to a backend
@@ -145,9 +145,13 @@ message L4LbServiceDeleteRequestMsg {
   repeated L4LbServiceDeleteRequest request = 1;   // batched delete request
 }
 
+message L4LbServiceDeleteResponse {
+  types.ApiStatus    api_status = 1;      // API status code
+}
+
 // L4LbServiceDeleteResponseMsg is batched response to L4LbServiceDeleteRequestMsg
 message L4LbServiceDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;      // API status code
+  repeated L4LbServiceDeleteResponse response = 1;    // API status code
 }
 
 // L4LbServiceStats captures all the statistics of given L4LB service

@@ -19,13 +19,13 @@
 		gft.proto
 		interface.proto
 		internal.proto
-		ipsec.proto
+		ipsec.proto.draft
 		ipseccb.proto
 		kh.proto
 		l2segment.proto
 		l4lb.proto
 		multicast.proto
-		nat.proto
+		nat.proto.draft
 		nic.proto
 		nw.proto
 		nwsec.proto
@@ -103,6 +103,7 @@
 		CpuCbResponseMsg
 		CpuCbDeleteRequest
 		CpuCbDeleteRequestMsg
+		CpuCbDeleteResponse
 		CpuCbDeleteResponseMsg
 		CpuCbGetRequest
 		CpuCbGetRequestMsg
@@ -193,6 +194,7 @@
 		EndpointDeleteResponseMsg
 		EndpointGetRequest
 		EndpointGetRequestMsg
+		EndpointGetByInterfaceRequest
 		EndpointGetByInterfaceRequestMsg
 		EndpointGetAllRequestMsg
 		EndpointStats
@@ -388,6 +390,7 @@
 		L4LbServiceResponseMsg
 		L4LbServiceDeleteRequest
 		L4LbServiceDeleteRequestMsg
+		L4LbServiceDeleteResponse
 		L4LbServiceDeleteResponseMsg
 		L4LbServiceStats
 		L4LbBackendKey
@@ -651,6 +654,7 @@
 		RawcCbResponseMsg
 		RawcCbDeleteRequest
 		RawcCbDeleteRequestMsg
+		RawcCbDeleteResponse
 		RawcCbDeleteResponseMsg
 		RawcCbGetRequest
 		RawcCbGetRequestMsg
@@ -717,6 +721,7 @@
 		SessionResponseMsg
 		SessionDeleteRequest
 		SessionDeleteRequestMsg
+		SessionDeleteResponse
 		SessionDeleteResponseMsg
 		SessionGetRequest
 		SessionGetRequestMsg

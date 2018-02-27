@@ -41,7 +41,7 @@ cc_library(
             "tcpcb.hpp",
             "qos.hpp",
             "nwsec.hpp",
-            "network.hpp",
+            "nw.hpp",
             "lif_manager.hpp",
             "lif_manager_base.hpp",
             "l2segment.hpp",

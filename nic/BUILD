@@ -323,6 +323,19 @@ cc_library(
 )
 
 cc_library(
+    name = "hal_svc_gen",
+    srcs = glob(["gen/hal/svc/*.cc", "gen/hal/svc/*.hpp"]),
+    hdrs = glob(["gen/hal/svc/*.hpp"]),
+    deps = [
+        "//nic:gen_proto_includes",
+        "//nic/hal:hal_src",
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+        "//nic:grpc_includes",
+    ],
+)
+
+cc_library(
     name = "gen_proto_includes",
     srcs = [
     ] + glob(["gen/proto/hal/*.hpp"]),

@@ -41,16 +41,16 @@ typedef struct crypto_key_s {
     uint8_t                 key[CRYPTO_KEY_SIZE_MAX];
 } __PACK__ crypto_key_t;
 
-hal_ret_t   crypto_key_create(cryptokey::CryptoKeyCreateRequest &request,
+hal_ret_t   cryptokey_create(cryptokey::CryptoKeyCreateRequest &request,
         cryptokey::CryptoKeyCreateResponse *response);
 
-hal_ret_t   crypto_key_read(cryptokey::CryptoKeyReadRequest &request,
+hal_ret_t   cryptokey_read(cryptokey::CryptoKeyReadRequest &request,
         cryptokey::CryptoKeyReadResponse *response);
 
-hal_ret_t   crypto_key_update(cryptokey::CryptoKeyUpdateRequest &request,
+hal_ret_t   cryptokey_update(cryptokey::CryptoKeyUpdateRequest &request,
         cryptokey::CryptoKeyUpdateResponse *response);
 
-hal_ret_t   crypto_key_delete(cryptokey::CryptoKeyDeleteRequest &request,
+hal_ret_t   cryptokey_delete(cryptokey::CryptoKeyDeleteRequest &request,
         cryptokey::CryptoKeyDeleteResponse *response);
 
 

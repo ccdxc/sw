@@ -3,7 +3,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/vrf.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/multicast.hpp"
@@ -11,9 +11,9 @@
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/hal/src/event.hpp"
-#include "nic/hal/src/nwsec_group.hpp"
-#include "nic/hal/src/tlscb.hpp"
-#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/tls_proxy_cb.hpp"
+#include "nic/hal/src/tcp_proxy_cb.hpp"
 #include "nic/hal/src/qos.hpp"
 #include "nic/hal/src/acl.hpp"
 #include "nic/hal/src/wring.hpp"
@@ -25,7 +25,7 @@
 #include "nic/hal/src/rawccb.hpp"
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/hal/src/proxyccb.hpp"
-#include "nic/hal/src/dos.hpp"
+//#include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/gft.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
@@ -43,9 +43,9 @@ hal_cfg_db::init(void)
 {
     // initialize vrf related data structures
     vrf_id_ht_ = ht::factory(HAL_MAX_VRFS,
-                                hal::vrf_id_get_key_func,
-                                hal::vrf_id_compute_hash_func,
-                                hal::vrf_id_compare_key_func);
+                             hal::vrf_id_get_key_func,
+                             hal::vrf_id_compute_hash_func,
+                             hal::vrf_id_compare_key_func);
     HAL_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
 
     // initialize network related data structures

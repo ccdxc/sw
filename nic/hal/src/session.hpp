@@ -392,8 +392,9 @@ hal_ret_t extract_flow_key_from_spec(vrf_id_t tid,
                                      flow_key_t *flow_key, 
                                      const FlowKey& flow_spec_key);
 hal_ret_t session_init(void);
-hal_ret_t session_create(const session_args_t *args,
-                         hal_handle_t *session_handle, session_t **sess);
+hal_ret_t
+session_create(const session_args_t *args, hal_handle_t *session_handle,
+               session_t **session_p);
 hal_ret_t session_update(const session_args_t *args, session_t *session);
 hal_ret_t session_delete(const session_args_t *args, session_t *session);
 hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);

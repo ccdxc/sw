@@ -5,6 +5,12 @@ licenses(["notice"])  # MIT license
 load("//nic/bazel:common_deps.bzl", "sdk_copts")
 
 cc_library(
+    name = "hal_periodic_includes",
+    srcs = [],
+    hdrs = glob(["*.hpp"]),
+)
+
+cc_library(
     name = "periodic",
     srcs = [
         "periodic.cc",

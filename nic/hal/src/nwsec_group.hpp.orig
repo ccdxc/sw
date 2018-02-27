@@ -467,17 +467,17 @@ del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle);
 dllist_ctxt_t *
 get_nw_list_for_security_group(uint32_t sg_id);
 
-hal_ret_t security_group_create(nwsec::SecurityGroupSpec& req,
+hal_ret_t securitygroup_create(nwsec::SecurityGroupSpec& req,
                                nwsec::SecurityGroupResponse *rsp);
 
-hal_ret_t security_group_update(nwsec::SecurityGroupSpec& req,
+hal_ret_t securitygroup_update(nwsec::SecurityGroupSpec& req,
                                nwsec::SecurityGroupResponse *rsp);
 
-hal_ret_t security_group_delete(nwsec::SecurityGroupSpec& req,
+hal_ret_t securitygroup_delete(nwsec::SecurityGroupSpec& req,
                                nwsec::SecurityGroupResponse *rsp);
 
-hal_ret_t security_group_get(nwsec::SecurityGroupGetRequest& req,
-                               nwsec::SecurityGroupGetResponse *rsp);
+hal_ret_t securitygroup_get(nwsec::SecurityGroupGetRequest& req,
+                            nwsec::SecurityGroupGetResponse *rsp);
 
 hal_ret_t security_group_policy_create(nwsec::SecurityGroupPolicySpec& req,
                                        nwsec::SecurityGroupPolicyResponse *rsp);

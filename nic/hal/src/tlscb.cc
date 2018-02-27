@@ -2,7 +2,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/tlscb.hpp"
+#include "nic/hal/src/tls_proxy_cb.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 
@@ -206,12 +206,13 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
 // process a TLS CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
+tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
 {
     hal_ret_t              ret = HAL_RET_OK; 
     tlscb_t                rtlscb;
     tlscb_t*               tlscb;
     pd::pd_tlscb_get_args_t    pd_tlscb_args;
+    TlsCbGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
 

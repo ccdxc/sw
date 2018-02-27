@@ -129,7 +129,7 @@ int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id) {
   internal::ConfigureLifBdfRequestMsg req_msg;
   internal::ConfigureLifBdfResponseMsg resp_msg;
 
-  auto req = req_msg.add_reqs();
+  auto req = req_msg.add_request();
   req->set_lif(hw_lif_id);
   req->set_bdf(bdf_id);
 
@@ -140,7 +140,7 @@ int set_lif_bdf(uint32_t hw_lif_id, uint32_t bdf_id) {
   }
 
   // TODO: Check number of responses ? 
-  if (resp_msg.resps(0).status() != 0) return -1;
+  if (resp_msg.response(0).status() != 0) return -1;
   else return 0;
 }
 
@@ -152,7 +152,7 @@ int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {
   if (!prog_name || !base_addr)
     return -1;
 
-  auto req = req_msg.add_reqs();
+  auto req = req_msg.add_request();
   req->set_handle("p4plus");
   req->set_prog_name(prog_name);
   req->set_resolve_label(false);
@@ -164,7 +164,7 @@ int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {
   }
 
   // TODO: Check number of responses ? 
-  *base_addr = resp_msg.resps(0).addr();
+  *base_addr = resp_msg.response(0).addr();
   return 0;
 }
 
@@ -176,7 +176,7 @@ int get_pgm_label_offset(const char *prog_name, const char *label, uint8_t *off)
   if (!prog_name || !label || !off)
     return -1;
 
-  auto req = req_msg.add_reqs();
+  auto req = req_msg.add_request();
   req->set_handle("p4plus");
   req->set_prog_name(prog_name);
   req->set_resolve_label(true);
@@ -189,7 +189,7 @@ int get_pgm_label_offset(const char *prog_name, const char *label, uint8_t *off)
   }
 
   // TODO: Check number of responses ? 
-  *off = ((resp_msg.resps(0).addr()) >> 6) & 0xFF;
+  *off = ((resp_msg.response(0).addr()) >> 6) & 0xFF;
   return 0;
 }
 
@@ -292,7 +292,7 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
   if (!addr || !size) 
     return -1;
 
-  auto req = req_msg.add_reqs();
+  auto req = req_msg.add_request();
   req->set_handle("storage");
 
   auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
@@ -302,8 +302,8 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
   }
 
   // TODO: Check number of responses ? 
-  *addr = resp_msg.resps(0).addr();
-  *size = resp_msg.resps(0).size();
+  *addr = resp_msg.response(0).addr();
+  *size = resp_msg.response(0).size();
   return 0;
 }
 
@@ -316,7 +316,7 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr) {
   if (!addr)
     return -1;
 
-  auto req = req_msg.add_reqs();
+  auto req = req_msg.add_request();
   if(is_decr)
     req->set_handle("brq-ring-xts1");
   else
@@ -329,7 +329,7 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr) {
   }
 
   // TODO: Check number of responses ?
-  *addr = resp_msg.resps(0).addr();
+  *addr = resp_msg.response(0).addr();
 
   return 0;
 }

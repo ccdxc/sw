@@ -113,14 +113,17 @@ TEST_F(copp_test, test3)
     CoppResponse rsp;
     CoppGetRequest get_req;
     CoppGetResponse get_rsp;
+    CoppGetResponseMsg resp_msg;
     CoppType copp_type = qos::COPP_TYPE_FLOW_MISS;
 
     get_req.Clear();
     get_rsp.Clear();
+    resp_msg.Clear();
 
     get_req.mutable_key_or_handle()->set_copp_type(copp_type);
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    ret = hal::copp_get(get_req, &get_rsp);
+    ret = hal::copp_get(get_req, &resp_msg);
+    get_rsp = resp_msg.response(0);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
 
@@ -168,10 +171,12 @@ TEST_F(copp_test, test3)
 
     get_req.Clear();
     get_rsp.Clear();
+    resp_msg.Clear();
 
     get_req.mutable_key_or_handle()->set_copp_type(copp_type);
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    ret = hal::copp_get(get_req, &get_rsp);
+    ret = hal::copp_get(get_req, &resp_msg);
+    get_rsp = resp_msg.response(0);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
     if (!MessageDifferencer::Equivalent(get_rsp.spec().policer(), spec.policer())) {

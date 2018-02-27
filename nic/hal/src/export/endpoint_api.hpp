@@ -11,7 +11,7 @@
 #define __ENDPOINT_API_HPP__
 
 #include "nic/hal/src/l2segment.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/session.hpp"
 

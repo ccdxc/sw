@@ -4,7 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/nwsec_group.hpp"
+#include "nic/hal/src/nwsec.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
@@ -281,8 +281,8 @@ extract_rules_from_sg_spec(SecurityGroupPolicySpec& spec,
 }
 
 hal_ret_t
-security_group_policy_create(nwsec::SecurityGroupPolicySpec& spec,
-                             nwsec::SecurityGroupPolicyResponse *rsp)
+securitygrouppolicy_create(nwsec::SecurityGroupPolicySpec& spec,
+                           nwsec::SecurityGroupPolicyResponse *rsp)
 {
     hal_ret_t                           ret;
     nwsec_policy_cfg_t                  *nwsec_plcy_cfg = NULL;
@@ -358,7 +358,7 @@ end:
 
 
 hal_ret_t
-security_group_policy_update(nwsec::SecurityGroupPolicySpec& spec,
+securitygrouppolicy_update(nwsec::SecurityGroupPolicySpec& spec,
                       nwsec::SecurityGroupPolicyResponse *res)
 {
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -370,8 +370,8 @@ security_group_policy_update(nwsec::SecurityGroupPolicySpec& spec,
 }  
 
 hal_ret_t
-security_group_policy_delete(nwsec::SecurityGroupPolicySpec& spec,
-                      nwsec::SecurityGroupPolicyResponse *res)
+securitygrouppolicy_delete(nwsec::SecurityGroupPolicyDeleteRequest& spec,
+                           nwsec::SecurityGroupPolicyDeleteResponse *res)
 {
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
@@ -380,8 +380,8 @@ security_group_policy_delete(nwsec::SecurityGroupPolicySpec& spec,
 }    
 
 hal_ret_t
-security_group_policy_get(nwsec::SecurityGroupPolicyGetRequest& spec,
-                   nwsec::SecurityGroupPolicyGetResponse *res)
+securitygrouppolicy_get(nwsec::SecurityGroupPolicyGetRequest& spec,
+                   nwsec::SecurityGroupPolicyGetResponseMsg *res)
 {
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
@@ -549,8 +549,8 @@ nwsec_group_prepare_rsp(SecurityGroupResponse  *rsp,
 }
 
 hal_ret_t
-security_group_create(nwsec::SecurityGroupSpec&     spec,
-                      nwsec::SecurityGroupResponse *res)
+securitygroup_create(nwsec::SecurityGroupSpec&     spec,
+                     nwsec::SecurityGroupResponse *res)
 {
     hal_ret_t                     ret;
     nwsec_group_t                 *nwsec_grp = NULL;
@@ -614,8 +614,8 @@ end:
 }
 
 hal_ret_t
-security_group_update(nwsec::SecurityGroupSpec& spec,
-                      nwsec::SecurityGroupResponse *res)
+securitygroup_update(nwsec::SecurityGroupSpec& spec,
+                     nwsec::SecurityGroupResponse *res)
 {
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Updating nwsec group, sg_id {} handle {}", __FUNCTION__,
@@ -626,8 +626,8 @@ security_group_update(nwsec::SecurityGroupSpec& spec,
 }
 
 hal_ret_t
-security_group_delete(nwsec::SecurityGroupSpec& spec,
-                      nwsec::SecurityGroupResponse *res)
+securitygroup_delete(nwsec::SecurityGroupDeleteRequest& spec,
+                     nwsec::SecurityGroupDeleteResponseMsg *res)
 {
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
@@ -636,8 +636,8 @@ security_group_delete(nwsec::SecurityGroupSpec& spec,
 }
 
 hal_ret_t
-security_group_get(nwsec::SecurityGroupGetRequest& spec,
-                   nwsec::SecurityGroupGetResponse *res)
+securitygroup_get(nwsec::SecurityGroupGetRequest& spec,
+                  nwsec::SecurityGroupGetResponseMsg *res)
 {
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,

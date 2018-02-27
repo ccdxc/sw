@@ -5,7 +5,7 @@
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/include/l2segment_api.hpp"
 #include "nic/hal/src/nwsec.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/lif_manager.hpp"
 
 namespace hal {

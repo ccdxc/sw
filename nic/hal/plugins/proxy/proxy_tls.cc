@@ -1,10 +1,9 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-// #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/hal/tls/tls_api.hpp"
-#include "nic/hal/src/tlscb.hpp"
+#include "nic/hal/src/tls_proxy_cb.hpp"
 
 #define TLS_DDOL_ARM_LOOP_CTRL_PKTS     16   /* Loopback control packets in ARM */
 
@@ -22,6 +21,7 @@ tls_exec(fte::ctx_t& ctx)
     uint32_t datalen = ctx.pkt_len();
     TlsCbGetRequest     get_req;
     TlsCbGetResponse    get_resp;
+    TlsCbGetResponseMsg resp_msg;
 
     // Give the data to SSL/TLS library
     ret = hal::tls::tls_api_data_receive(cpu_rxhdr->qid, data, datalen);
@@ -31,11 +31,12 @@ tls_exec(fte::ctx_t& ctx)
 
     // get tlscb
     get_req.mutable_key_or_handle()->set_tlscb_id(cpu_rxhdr->qid);
-    ret = tlscb_get(get_req, &get_resp);
+    ret = tlscb_get(get_req, &resp_msg);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("tls-proxy: tlscb for id not found: {}", cpu_rxhdr->qid);
 	    return fte::PIPELINE_CONTINUE;
     }
+    get_resp = resp_msg.response(0);
 
     HAL_TRACE_DEBUG("tls-proxy: received debug_dol: {:#x}", get_resp.spec().debug_dol());
     if(get_resp.spec().debug_dol() & TLS_DDOL_ARM_LOOP_CTRL_PKTS) {

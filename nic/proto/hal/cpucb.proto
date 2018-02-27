@@ -63,9 +63,13 @@ message CpuCbDeleteRequestMsg {
   repeated CpuCbDeleteRequest    request = 1;    // batched delete request
 }
 
+message CpuCbDeleteResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+}
+
 // CpuCbDeleteResponseMsg is batched response to CpuCbDeleteRequestMsg
 message CpuCbDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated CpuCbDeleteResponse response = 1;
 }
 
 // CpuCbGetRequest is used to get information about a cpucb

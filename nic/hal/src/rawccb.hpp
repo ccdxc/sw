@@ -161,10 +161,10 @@ hal_ret_t rawccb_update(rawccb::RawcCbSpec& spec,
                         rawccb::RawcCbResponse *rsp);
 
 hal_ret_t rawccb_delete(rawccb::RawcCbDeleteRequest& req,
-                        rawccb::RawcCbDeleteResponseMsg *rsp);
+                        rawccb::RawcCbDeleteResponse *rsp);
 
 hal_ret_t rawccb_get(rawccb::RawcCbGetRequest& req,
-                     rawccb::RawcCbGetResponse *rsp);
+                     rawccb::RawcCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __RAWCCB_HPP__

@@ -671,8 +671,8 @@ security_profile_spec_print (SecurityProfileSpec& spec)
 
 // create an instance of security profile
 hal_ret_t
-security_profile_create (SecurityProfileSpec& spec,
-                         SecurityProfileResponse *rsp)
+securityprofile_create (SecurityProfileSpec& spec,
+                        SecurityProfileResponse *rsp)
 {
     hal_ret_t                       ret;
     nwsec_profile_t                 *sec_prof = NULL;
@@ -1006,8 +1006,8 @@ nwsec_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 
 // update a security profile instance
 hal_ret_t
-security_profile_update (nwsec::SecurityProfileSpec& spec,
-                         nwsec::SecurityProfileResponse *rsp)
+securityprofile_update (nwsec::SecurityProfileSpec& spec,
+                        nwsec::SecurityProfileResponse *rsp)
 {
     hal_ret_t                      ret       = HAL_RET_OK;
     nwsec_profile_t                *sec_prof = NULL;
@@ -1224,8 +1224,8 @@ validate_nwsec_delete (nwsec_profile_t *nwsec)
 // process a nwsec delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-security_profile_delete (SecurityProfileDeleteRequest& req, 
-                         SecurityProfileDeleteResponse *rsp)
+securityprofile_delete (SecurityProfileDeleteRequest& req, 
+                        SecurityProfileDeleteResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     nwsec_profile_t                 *nwsec = NULL;
@@ -1283,11 +1283,12 @@ end:
 }
 
 hal_ret_t
-security_profile_get (nwsec::SecurityProfileGetRequest& req,
-                      nwsec::SecurityProfileGetResponse *rsp)
+securityprofile_get (nwsec::SecurityProfileGetRequest& req,
+                     nwsec::SecurityProfileGetResponseMsg *resp)
 {
     nwsec::SecurityProfileSpec    *spec;
     nwsec_profile_t               *sec_prof;
+    nwsec::SecurityProfileGetResponse *rsp = resp->add_response();
 
     // key or handle field must be set
     if (!req.has_key_or_handle()) {

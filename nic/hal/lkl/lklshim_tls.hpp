@@ -6,8 +6,6 @@
 #include "sdk/list.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-//#include "nic/hal/src/tcpcb.hpp"
-//#include "nic/hal/src/tlscb.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/src/session.hpp"
@@ -15,11 +13,6 @@
 #include <netinet/in.h>
 #include <memory>
 #include <map>
-//#include <openssl/crypto.h>
-//#include <openssl/x509.h>
-//#include <openssl/pem.h>
-//#include <openssl/ssl.h>
-//#include <openssl/err.h>
 
 extern "C" {
 #include <netinet/in.h>

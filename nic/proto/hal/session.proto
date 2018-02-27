@@ -249,9 +249,14 @@ message SessionDeleteRequestMsg {
   repeated SessionDeleteRequest    request = 1;  // batched delete request
 }
 
+// SessionDeleteResponse is response to session delete request
+message SessionDeleteResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
 // SessionDeleteResponseMsg is batched response to SessionDeleteRequestMsg
 message SessionDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated SessionDeleteResponse response = 1;    // batched response
 }
 
 // SessionGetRequest  is used to get information about a session

@@ -202,8 +202,8 @@ qos_class_get_ht_cb(void *ht_entry, void *ctxt)
 }
 
 hal_ret_t
-qos_class_get (qos::QosClassGetRequest& req,
-               qos::QosClassGetResponseMsg *rsp)
+qosclass_get (qos::QosClassGetRequest& req,
+              qos::QosClassGetResponseMsg *rsp)
 {
     qos_class_t                 *qos_class;
     qos::QosClassGetResponse    *response;
@@ -720,7 +720,7 @@ qos_class_populate_from_spec (qos_class_t *qos_class, QosClassSpec& spec)
 // process a qos_class create request
 //------------------------------------------------------------------------------
 hal_ret_t
-qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
+qosclass_create (QosClassSpec& spec, QosClassResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     qos_class_t                 *qos_class = NULL;
@@ -1066,7 +1066,7 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
 // process a qos_class update request
 //------------------------------------------------------------------------------
 hal_ret_t
-qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
+qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     qos_class_t                 *qos_class = NULL;
@@ -1289,7 +1289,7 @@ qos_class_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // process a qos_class delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-qos_class_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
+qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     qos_class_t             *qos_class = NULL;
@@ -2091,10 +2091,11 @@ end:
 // process a copp get request
 //------------------------------------------------------------------------------
 hal_ret_t
-copp_get (CoppGetRequest& req, CoppGetResponse *rsp)
+copp_get (CoppGetRequest& req, CoppGetResponseMsg *resp)
 {
     copp_t        *copp;
     CoppSpec      *spec;
+    CoppGetResponse *rsp = resp->add_response();
 
     hal_api_trace(" API Begin: copp get ");
     // key-handle field must be set
@@ -2149,7 +2150,7 @@ hal_qos_init (void)
             write_json(ss, qos_class_config.second);
 
             google::protobuf::util::JsonStringToMessage(ss.str(), &qos_class_spec);
-            ret = qos_class_create(qos_class_spec, &qos_class_rsp);
+            ret = qosclass_create(qos_class_spec, &qos_class_rsp);
             if (qos_class_rsp.api_status() != types::API_STATUS_OK) {
                 HAL_TRACE_ERR("Error  creating qos class ret: {}",
                               ret);

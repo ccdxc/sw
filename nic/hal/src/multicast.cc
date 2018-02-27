@@ -450,8 +450,8 @@ mc_entry_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
     return ret;
 }
 
-hal_ret_t multicast_entry_create(MulticastEntrySpec& spec,
-                                 MulticastEntryResponse *rsp)
+hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
+                                MulticastEntryResponse *rsp)
 {
     hal_ret_t                   ret;
     mc_entry_t                  *mc_entry = NULL;
@@ -559,14 +559,14 @@ end:
     return ret;
 }
 
-hal_ret_t multicast_entry_update(MulticastEntrySpec& spec,
-                                 MulticastEntryResponse *rsp)
+hal_ret_t multicastentry_update(MulticastEntrySpec& spec,
+                                MulticastEntryResponse *rsp)
 {
     return HAL_RET_OK;
 }
 
-hal_ret_t multicast_entry_delete(MulticastEntryDeleteRequest& req,
-                                 MulticastEntryDeleteResponse *rsp)
+hal_ret_t multicastentry_delete(MulticastEntryDeleteRequest& req,
+                                MulticastEntryDeleteResponse *rsp)
 {
     return HAL_RET_OK;
 }
@@ -604,8 +604,8 @@ mc_entry_get_ht_cb (void *ht_entry, void *ctxt)
     return false;
 }
 
-hal_ret_t multicast_entry_get(MulticastEntryGetRequest& req,
-                              MulticastEntryGetResponseMsg *rsp)
+hal_ret_t multicastentry_get(MulticastEntryGetRequest& req,
+                             MulticastEntryGetResponseMsg *rsp)
 {
     mc_entry_t                  *mc_entry;
     MulticastEntryGetResponse   *response;

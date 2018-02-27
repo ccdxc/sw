@@ -4,7 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/dos.hpp"
+#include "nic/hal/src/nwsec.hpp"
 #include "nic/include/pd_api.hpp"
 
 namespace hal {
@@ -324,8 +324,8 @@ dos_policy_prepare_rsp (DoSPolicyResponse *rsp, hal_ret_t ret,
 
 // create an instance of dos policy
 hal_ret_t
-dos_policy_create (nwsec::DoSPolicySpec& spec,
-                   nwsec::DoSPolicyResponse *rsp)
+dospolicy_create (nwsec::DoSPolicySpec& spec,
+                  nwsec::DoSPolicyResponse *rsp)
 {
     hal_ret_t                   ret;
     dos_policy_t                *dosp = NULL;
@@ -595,8 +595,8 @@ dos_policy_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctx)
 
 // update a dos policy instance
 hal_ret_t
-dos_policy_update (nwsec::DoSPolicySpec& spec,
-                   nwsec::DoSPolicyResponse *rsp)
+dospolicy_update (nwsec::DoSPolicySpec& spec,
+                  nwsec::DoSPolicyResponse *rsp)
 {
     hal_ret_t                   ret;
     dos_policy_t                *dosp = NULL;
@@ -809,8 +809,8 @@ dos_policy_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctx)
 // process a dosp delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-dos_policy_delete (DoSPolicyDeleteRequest& req, 
-                   DoSPolicyDeleteResponse *rsp)
+dospolicy_delete (DoSPolicyDeleteRequest& req, 
+                  DoSPolicyDeleteResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
     dos_policy_t    *dosp = NULL;
@@ -857,11 +857,12 @@ end:
 }
 
 hal_ret_t
-dos_policy_get (nwsec::DoSPolicyGetRequest& req,
-                nwsec::DoSPolicyGetResponse *rsp)
+dospolicy_get (nwsec::DoSPolicyGetRequest& req,
+               nwsec::DoSPolicyGetResponseMsg *resp)
 {
     hal_ret_t       ret = HAL_RET_OK;
     dos_policy_t    *dosp;
+    nwsec::DoSPolicyGetResponse *rsp = resp->add_response();
 
     if (req.dos_handle() == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}:dosp update validation failed, ret : {}", 

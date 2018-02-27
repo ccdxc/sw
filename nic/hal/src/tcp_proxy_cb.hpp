@@ -180,7 +180,7 @@ hal_ret_t tcpcb_delete(tcpcb::TcpCbDeleteRequest& req,
                        tcpcb::TcpCbDeleteResponseMsg *rsp);
 
 hal_ret_t tcpcb_get(tcpcb::TcpCbGetRequest& req,
-                    tcpcb::TcpCbGetResponse *rsp);
+                    tcpcb::TcpCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __TCPCB_HPP__

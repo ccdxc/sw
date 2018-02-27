@@ -178,7 +178,7 @@ hal_ret_t proxyrcb_delete(proxyrcb::ProxyrCbDeleteRequest& req,
                           proxyrcb::ProxyrCbDeleteResponseMsg *rsp);
 
 hal_ret_t proxyrcb_get(proxyrcb::ProxyrCbGetRequest& req,
-                       proxyrcb::ProxyrCbGetResponse *rsp);
+                       proxyrcb::ProxyrCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __PROXYRCB_HPP__

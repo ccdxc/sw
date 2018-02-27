@@ -38,11 +38,11 @@ message ProgramAddressResp {
 }
 
 message GetProgramAddressRequestMsg {
-  repeated ProgramAddressReq reqs = 1;
+  repeated ProgramAddressReq request = 1;
 }
 
 message ProgramAddressResponseMsg {
-  repeated ProgramAddressResp resps = 1;
+  repeated ProgramAddressResp response = 1;
 }
 
 message HbmAddressReq {
@@ -56,11 +56,11 @@ message HbmAddressResp {
 }
 
 message AllocHbmAddressRequestMsg {
-  repeated HbmAddressReq reqs = 1;
+  repeated HbmAddressReq request = 1;
 }
 
 message AllocHbmAddressResponseMsg {
-  repeated HbmAddressResp resps = 1;
+  repeated HbmAddressResp response = 1;
 }
 
 message LifBdfReq {
@@ -74,10 +74,10 @@ message LifBdfResp {
   int32  status = 3;
 }
 message ConfigureLifBdfRequestMsg {
-  repeated LifBdfReq reqs = 1;
+  repeated LifBdfReq request = 1;
 }
 
 message ConfigureLifBdfResponseMsg {
-  repeated LifBdfResp resps = 1;
+  repeated LifBdfResp response = 1;
 }
 

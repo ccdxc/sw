@@ -192,12 +192,13 @@ cpucb_update (CpuCbSpec& spec, CpuCbResponse *rsp)
 // process a CPU CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-cpucb_get (CpuCbGetRequest& req, CpuCbGetResponse *rsp)
+cpucb_get (CpuCbGetRequest& req, CpuCbGetResponseMsg *resp)
 {
     hal_ret_t              ret = HAL_RET_OK; 
     cpucb_t                rcpucb;
     cpucb_t*               cpucb;
     pd::pd_cpucb_get_args_t    pd_cpucb_args;
+    CpuCbGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
 
@@ -234,7 +235,7 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponse *rsp)
 // process a CPU CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-cpucb_delete (cpucb::CpuCbDeleteRequest& req, cpucb::CpuCbDeleteResponseMsg *rsp)
+cpucb_delete (cpucb::CpuCbDeleteRequest& req, cpucb::CpuCbDeleteResponse *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK; 
     cpucb_t*               cpucb;
@@ -243,7 +244,7 @@ cpucb_delete (cpucb::CpuCbDeleteRequest& req, cpucb::CpuCbDeleteResponseMsg *rsp
     auto kh = req.key_or_handle();
     cpucb = find_cpucb_by_id(kh.cpucb_id());
     if (cpucb == NULL) {
-        rsp->add_api_status(types::API_STATUS_OK);
+        rsp->set_api_status(types::API_STATUS_OK);
         return HAL_RET_OK;
     }
  
@@ -253,12 +254,12 @@ cpucb_delete (cpucb::CpuCbDeleteRequest& req, cpucb::CpuCbDeleteResponseMsg *rsp
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_DELETE, (void *)&pd_cpucb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD CPUCB: delete Failed, err: {}", ret);
-        rsp->add_api_status(types::API_STATUS_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
     
     // fill stats of this CPU CB
-    rsp->add_api_status(types::API_STATUS_OK);
+    rsp->set_api_status(types::API_STATUS_OK);
  
     return HAL_RET_OK;
 }

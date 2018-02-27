@@ -4,7 +4,7 @@
 #include <iomanip>
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/tcp_proxy_cb.hpp"
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/interface_api.hpp"
@@ -312,6 +312,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     TcpCbResponse rsp;
     TcpCbGetRequest *get_req = new TcpCbGetRequest;
     TcpCbGetResponse get_rsp;
+    TcpCbGetResponseMsg resp_msg;
     TcpCbKeyHandle kh;
     uint8_t data[64];
 
@@ -321,7 +322,8 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     }
     kh.set_tcpcb_id(qid);
     get_req->set_allocated_key_or_handle(&kh);
-    tcpcb_get(*get_req, &get_rsp);
+    tcpcb_get(*get_req, &resp_msg);
+    get_rsp = resp_msg.response(0);
     HAL_TRACE_DEBUG("Get response: {}", get_rsp.api_status());
     spec->set_allocated_key_or_handle(&kh);
     HAL_TRACE_DEBUG("tcp-proxy: tcpcb={}\n", tcpcb);
@@ -389,12 +391,14 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     TcpCbResponse rsp;
     TcpCbGetRequest *get_req = new TcpCbGetRequest;
     TcpCbGetResponse get_rsp;
+    TcpCbGetResponseMsg resp_msg;
     TcpCbKeyHandle kh;
     uint8_t data[64];
 
     kh.set_tcpcb_id(qid);
     get_req->set_allocated_key_or_handle(&kh);
-    tcpcb_get(*get_req, &get_rsp);
+    tcpcb_get(*get_req, &resp_msg);
+    get_rsp = resp_msg.response(0);
 
     spec->set_allocated_key_or_handle(&kh);
     if (tcp != NULL) {

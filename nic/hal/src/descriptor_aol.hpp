@@ -13,7 +13,7 @@ using descraol::DescrAolRequestMsg;
 using descraol::DescrAolResponseMsg;
 
 namespace hal {
-hal_ret_t descriptor_aol_get(descraol::DescrAolRequest& request, 
-                             descraol::DescrAolSpec *response);
+hal_ret_t descraol_get(descraol::DescrAolRequest& request, 
+                       descraol::DescrAolResponseMsg *response);
 }
 #endif /* __DESCRIPTOR_AOL_HPP__ */

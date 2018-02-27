@@ -1,5 +1,5 @@
 #include "nic/hal/src/interface.hpp"
-#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/nw.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/vrf.pb.h"
@@ -165,7 +165,7 @@ TEST_F(uplinkpc_test, test3)
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
@@ -482,7 +482,7 @@ TEST_F(uplinkpc_test, test6)
     sp_spec.mutable_key_or_handle()->set_profile_id(6);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
