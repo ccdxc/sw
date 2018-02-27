@@ -20,7 +20,5 @@ nic/hal/third-party/openssl-native/lib/libssl.a
 
 nic/third-party/googletest-release-1.8.0/googletest/make/*.a
 
-nic/hal/third-party/snort3/export/bin/libsnort.so
-nic/hal/third-party/snort3/export/bin/libsnort.so.0
-nic/hal/third-party/snort3/export/bin/libsnort.so.0.0.0
-nic/hal/third-party/snort3/export/daqs/daq_fte.so
+nic/hal/third-party/snort3/export/x86_64/*
+nic/hal/third-party/snort3/export/aarch64/*

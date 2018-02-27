@@ -80,9 +80,14 @@ cc_library(
 
 cc_library(
     name = "snort3",
-    srcs = [
-        "snort3/export/bin/libsnort.so",
-    ],
+    srcs = select({
+        "//conditions:default": [
+            "snort3/export/x86_64/lib/libsnort.so",
+        ],
+        ":aarch64_mode": [
+            "snort3/export/aarch64/lib/libsnort.so",
+        ],
+    }),
     hdrs = glob(["snort3/export/include/*.h"]),
     includes = [
         "snort3/export/include",

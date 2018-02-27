@@ -54,13 +54,13 @@ static bool scanner_dlopen()
     memset(&snort_dl, 0, sizeof(snort_dl));
 
     // get libsnort path
-    const char* str = std::getenv("SNORT_LUA_PATH");
+    const char* str = std::getenv("SNORT_DAQ_PATH");
     if (str == nullptr) {
-        HAL_TRACE_WARN("missing environment variable SNORT_LUA_PATH");
+        HAL_TRACE_WARN("missing environment variable SNORT_DAQ_PATH");
         return false;
     }
     std::string lib_path {str};
-    lib_path += "../bin/libsnort.so";
+    lib_path += "../lib/libsnort.so";
 
     // open libsnort
     HAL_TRACE_INFO("scanner_dlopen loading so {}", lib_path);
