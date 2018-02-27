@@ -25,6 +25,14 @@ pd_lif_copy_asicpd_params (asicpd_scheduler_lif_params_t *out, pd_lif_t *lif_pd)
     return;
 }
 
+static void
+pd_lif_copy_asicpd_sched_params (pd_lif_t *lif_pd, asicpd_scheduler_lif_params_t *apd_lif)
+{
+    lif_pd->tx_sched_table_offset = apd_lif->tx_sched_table_offset;
+    lif_pd->tx_sched_num_table_entries = apd_lif->tx_sched_num_table_entries;
+    return;
+}
+
 //-----------------------------------------------------------------------------
 // Lif Create in PD
 //-----------------------------------------------------------------------------
@@ -107,10 +115,13 @@ pd_lif_update (pd_lif_update_args_t *args)
         if (ret != HAL_RET_OK) {
             goto end;
         }
-        ret = asicpd_scheduler_tx_pd_program_hw(&apd_lif);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
+       // Copy scheduler info back to pd_lif.
+       pd_lif_copy_asicpd_sched_params(pd_lif, &apd_lif);
+
+       ret = asicpd_scheduler_tx_pd_program_hw(&apd_lif);
+       if (ret != HAL_RET_OK) {
+           goto end;
+       }
     }
 
     if (args->tx_policer_changed || args->qstate_map_init_set) {
@@ -207,6 +218,8 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
        if (ret != HAL_RET_OK) {
             goto end;
        }
+       // Copy scheduler-info back to pd_lif.
+       pd_lif_copy_asicpd_sched_params(pd_lif, &apd_lif);
     }
 
 end:
