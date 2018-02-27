@@ -931,8 +931,12 @@ session_age_cb (void *entry, void *ctxt)
     }
 
     // check if iflow has expired now
+    // If there is no timeout configured then we do not age the session
     session_timeout = session_aging_timeout(session, iflow, &session_state.iflow_state,
                                             rflow, rflow ? &session_state.rflow_state : NULL);
+    if (!session_timeout) {
+        return false;
+    }
 
     // Convert hw clock to sw clock resolving any deltas
     clock_args.hw_tick = session_state.iflow_state.last_pkt_ts;
