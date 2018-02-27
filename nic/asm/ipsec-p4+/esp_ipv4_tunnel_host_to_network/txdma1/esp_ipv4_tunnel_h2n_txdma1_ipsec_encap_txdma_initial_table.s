@@ -36,12 +36,11 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, d.cb_cindex)
     memwr.dx  r4, r3
-    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
     phvwri p.app_header_table1_valid, 1 
     phvwri p.common_te1_phv_table_lock_en, 1 
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 2
-    phvwr p.common_te1_phv_table_addr, r3 
+    phvwri p.common_te1_phv_table_addr, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX 
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     tbladd d.{rxdma_ring_cindex}.hx, 1
 
