@@ -286,8 +286,6 @@ Flow::insert(void *key, void *data, uint32_t *index)
     }
 
     if (rs == HAL_RET_OK || rs == HAL_RET_FLOW_COLL) {
-        HAL_TRACE_DEBUG("Flow::{}: Insert SUCCESS ...", __FUNCTION__);
-
         // insert into flow entry indexer map ... For retrieval
         flow_entry_map_[fe_idx] = entry;
         entry->set_global_index(fe_idx);
@@ -304,10 +302,12 @@ Flow::insert(void *key, void *data, uint32_t *index)
         rs1 = free_flow_entry_index_(fe_idx);
         HAL_ASSERT(rs1 == HAL_RET_OK);
     }
+
 end:
+
     // Uncomment for debugging
 	// print_flow();
-    HAL_TRACE_DEBUG("Flow::{} ret:{}", __FUNCTION__, rs);
+    //HAL_TRACE_DEBUG("Flow::{} ret:{}", __FUNCTION__, rs);
     stats_update(INSERT, rs);
     return rs;
 }

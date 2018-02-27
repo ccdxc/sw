@@ -14,7 +14,7 @@
 // TODO: Need to remove capri references and use lib symbols instead
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
-#define HAL_LOG_TBL_UPDATES
+//#define HAL_LOG_TBL_UPDATES
 #define P4ACTION_NAME_MAX_LEN (100)
 
 namespace hal {

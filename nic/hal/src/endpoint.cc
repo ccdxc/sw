@@ -2067,25 +2067,25 @@ ep_add_session (ep_t *ep, session_t *session)
         goto end;
     }
 
-    // Allocate the entry
+    // allocate the entry
     entry = (hal_handle_id_list_entry_t *)g_hal_state->
-        hal_handle_id_list_entry_slab()->alloc();
+                hal_handle_id_list_entry_slab()->alloc();
     if (entry == NULL) {
         ret = HAL_RET_OOM;
         goto end;
     }
     entry->handle_id = session->hal_handle;
 
-    ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
-    // Insert into the list
+    ep_lock(ep, __FILENAME__, __LINE__, __func__);
     sdk::lib::dllist_add(&ep->session_list_head, &entry->dllist_ctxt);
-    ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
+    ep_unlock(ep, __FILENAME__, __LINE__, __func__);
 
 end:
-    HAL_TRACE_DEBUG("{}: add ep => session, ids: {} => {}, "
-                    "hdls: {} => {}, ret:{}",
-                    __FUNCTION__, ep_l2_key_to_str(ep), session->config.session_id, 
-                    ep->hal_handle, session->hal_handle, ret);
+
+    HAL_TRACE_DEBUG("add ep {}/{} => session {}/{}, ret : {}",
+                    ep_l2_key_to_str(ep), ep->hal_handle,
+                    session->config.session_id, session->hal_handle,
+                    ret);
     return ret;
 }
 

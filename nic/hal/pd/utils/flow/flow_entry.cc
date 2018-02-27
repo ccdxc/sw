@@ -64,8 +64,8 @@ FlowEntry::FlowEntry(void *key, uint32_t key_len,
     std::memcpy(data_, data, data_len);
 
     if (log) {
-        HAL_TRACE_DEBUG("FlowEe:: key_len: {}, data_len: {}", key_len, data_len);
-        HAL_TRACE_DEBUG("FlowE:: key: {} data: {}", key_, data_);
+        //HAL_TRACE_DEBUG("FlowE:: key_len: {}, data_len: {}", key_len, data_len);
+        //HAL_TRACE_DEBUG("FlowE:: key: {} data: {}", key_, data_);
     }
 
     hash_val_ = 0;

@@ -36,6 +36,8 @@ logger_init (uint32_t logger_cpu_id, bool sync_mode)
     cpu_id = logger_cpu_id;
     spdlog::set_level(spdlog::level::debug);
     spdlog::set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
+    freopen(LOG_FILENAME, "w", stdout);
+    freopen(LOG_FILENAME, "w", stderr);
     if (!sync_mode) {
         spdlog::set_async_mode(LOG_ASYNC_QUEUE_SIZE, LOG_OVERFLOW_POLICY,
                                worker_thread_cb,

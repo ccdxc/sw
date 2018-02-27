@@ -56,8 +56,6 @@ session_compare_key_func (void *key1, void *key2)
 void *
 session_get_handle_key_func(void *entry)
 {
-    HAL_TRACE_DEBUG("Entry HAL Handle:{}", ((session_t*)entry)->hal_handle);
-
     HAL_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->hal_handle);
 }
@@ -365,23 +363,15 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                    ep_t *sep, ep_t *dep, if_t *sif, if_t *dif,
                    session_t *session)
 {
-    HAL_TRACE_DEBUG("Entering ADD session to DB:{}", session->hal_handle);
-
-
     session->session_id_ht_ctxt.reset();
     g_hal_state->session_id_ht()->insert(session,
                                          &session->session_id_ht_ctxt);
-    HAL_TRACE_DEBUG("Session: {:p} session id ht ctxt: {:p}", (void *)session, 
-                    (void *)session->session_id_ht_ctxt.entry);
-
     session->hal_handle_ht_ctxt.reset();
     g_hal_state->session_hal_handle_ht()->insert(session,
                                                  &session->hal_handle_ht_ctxt);
-
     session->hal_iflow_ht_ctxt.reset();
     g_hal_state->session_hal_iflow_ht()->insert(session,
                                                 &session->hal_iflow_ht_ctxt);
-   
     if (session->rflow) {
         session->hal_rflow_ht_ctxt.reset();
         g_hal_state->session_hal_rflow_ht()->insert_with_key(

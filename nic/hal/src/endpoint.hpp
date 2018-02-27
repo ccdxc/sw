@@ -151,9 +151,9 @@ static inline void
 ep_lock (ep_t *ep, const char *fname,
           int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking ep:{} from {}:{}:{}", 
-                    __FUNCTION__, ep_l2_key_to_str(ep),
-                    fname, lineno, fxname);
+    //HAL_TRACE_DEBUG("{}:operlock:locking ep:{} from {}:{}:{}", 
+                    //__FUNCTION__, ep_l2_key_to_str(ep),
+                    //fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&ep->slock);
 }
 
@@ -161,9 +161,9 @@ static inline void
 ep_unlock (ep_t *ep, const char *fname,
             int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking ep:{} from {}:{}:{}", 
-                    __FUNCTION__, ep_l2_key_to_str(ep),
-                    fname, lineno, fxname);
+    //HAL_TRACE_DEBUG("{}:operlock:unlocking ep:{} from {}:{}:{}", 
+                    //__FUNCTION__, ep_l2_key_to_str(ep),
+                    //fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&ep->slock);
 }
 // allocate a ep instance

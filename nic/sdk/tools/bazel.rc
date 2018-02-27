@@ -8,8 +8,6 @@
 
 # Do not show warnings from 
 #   - external dependencies 
-#   - nic/asic/capri
-#build --output_filter="^//" --output_filter="^nic/asic/capri"
 build --output_filter="^//"
 
 # colored output
