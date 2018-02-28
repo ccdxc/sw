@@ -119,6 +119,10 @@ int capri_hbm_table_entry_write(uint32_t tableid,
                                 uint16_t entry_size,
                                 capri_table_mem_layout_t &tbl_info);
 
+int capri_hbm_table_entry_cache_invalidate (bool ingress,
+                                            uint64_t entry_addr,
+                                            capri_table_mem_layout_t &tbl_info);
+
 int capri_hbm_table_entry_read(uint32_t tableid,
                                uint32_t index,
                                uint8_t *hwentry,

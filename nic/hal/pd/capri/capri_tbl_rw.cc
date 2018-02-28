@@ -1368,11 +1368,34 @@ capri_hbm_table_entry_write (uint32_t tableid,
     assert((entry_size >> 3) <= tbl_info.entry_width);
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
-    
-    hal::pd::asic_mem_write(get_start_offset(tbl_info.tablename) + entry_start_addr, 
+
+    hal::pd::asic_mem_write(get_start_offset(tbl_info.tablename) + entry_start_addr,
                             hwentry, (entry_size >> 3));
     return CAPRI_OK;
 }
+
+int
+capri_hbm_table_entry_cache_invalidate (bool ingress,
+                                        uint64_t entry_addr,
+                                        capri_table_mem_layout_t &tbl_info)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    if (ingress) {
+        cap_pics_csr_t & pics_csr = cap0.ssi.pics;
+        // write upper 28b of 34b hbm addr.
+        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
+        pics_csr.picc.dhs_cache_invalidate.entry.write();
+    } else {
+        cap_pics_csr_t & pics_csr = cap0.sse.pics;
+        // write upper 28b of 34b hbm addr.
+        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_start_offset(tbl_info.tablename) + entry_addr) >> 6);
+        pics_csr.picc.dhs_cache_invalidate.entry.write();
+    }
+
+    return CAPRI_OK;
+}
+
 
 int
 capri_hbm_table_entry_read (uint32_t tableid,
