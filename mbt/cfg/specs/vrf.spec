@@ -1,7 +1,7 @@
 ProtoObject: vrf_pb2
 Service: Vrf
 enabled : True
-graphEnabled : True
+dolEnabled : True
 objects:
     - object :
         name : Vrf

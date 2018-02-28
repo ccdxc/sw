@@ -1,7 +1,7 @@
 ProtoObject: acl_pb2
 Service: Acl
 enabled : True
-graphEnabled : True
+dolEnabled : True
 objects:
     - object:
         name : Acl

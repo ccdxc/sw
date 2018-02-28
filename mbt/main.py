@@ -52,7 +52,7 @@ def start_zmq_server():
         #  Wait for next request from client
         message = socket.recv().decode("utf-8")
         print( "Received Config Complete for message type: ", message)
-        config_mgr.ModifyConfigFromDol(message)
+        # config_mgr.ModifyConfigFromDol(message)
         socket.send_string ("Proceed")
 
 # Create a thread for zmq signaling with DOL
@@ -84,9 +84,8 @@ hal_channel = get_hal_channel()
 
 config_specs = parser.ParseDirectory("../mbt/cfg/specs", "*.spec")
 for config_spec in config_specs:
-    if config_spec.graphEnabled:
-        print("Adding config spec for service : " , config_spec.Service)
-        config_mgr.AddConfigSpec(config_spec, hal_channel)
+    print("Adding config spec for service : " , config_spec.Service)
+    config_mgr.AddConfigSpec(config_spec, hal_channel)
 
 print("Building Config dependency information")
 

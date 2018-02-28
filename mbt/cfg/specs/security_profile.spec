@@ -1,7 +1,7 @@
 ProtoObject: nwsec_pb2
 Service: NwSecurity
 enabled : True
-graphEnabled : True
+dolEnabled : True
 objects: 
     - object : 
         name : SecurityProfile

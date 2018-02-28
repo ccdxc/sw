@@ -1,7 +1,7 @@
 ProtoObject: nw_pb2
 Service: Network
 enabled : True
-graphEnabled : True
+dolEnabled : True
 objects:
     - object:
         name : Network

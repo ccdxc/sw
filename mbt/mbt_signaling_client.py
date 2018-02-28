@@ -7,6 +7,9 @@ import pdb
 class SignalingClientHelper():
     def Connect(self, ):
         context = zmq.Context()
+        ws_top = os.path.dirname(sys.argv[0]) + '/../'
+        ws_top = os.path.abspath(ws_top)
+        #os.environ['WS_TOP'] = ws_top
         print( "Connecting to signaling server at %s/zmqsockmbt" %(ws_top))
         self.socket = context.socket(zmq.REQ)
         self.socket.connect("ipc://%s/zmqsockmbt" % ws_top)

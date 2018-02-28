@@ -1,7 +1,7 @@
 ProtoObject: interface_pb2
 Service: Interface
 enabled : True
-graphEnabled : True
+dolEnabled : True
 objects:
     - object :
         name : Interface

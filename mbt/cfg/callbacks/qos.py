@@ -73,9 +73,12 @@ def PreUpdateCb(data, req_spec, resp_spec):
         req_spec.request[0].ClearField("buffer")
 
     # Add back the pcp/dscp stored earlier to the pool of choices.
-    pcp, dscp = reclaim_dict[req_spec.request[0].key_or_handle.qos_group]
-    dot1q_pcp.append(pcp)
-    ip_dscp.append(dscp)
+    try:
+        pcp, dscp = reclaim_dict[req_spec.request[0].key_or_handle.qos_group]
+        dot1q_pcp.append(pcp)
+        ip_dscp.append(dscp)
+    except KeyError:
+        pass
 
 def PostUpdateCb(data, req_spec, resp_spec):
     PostCreateCb(data, req_spec, resp_spec)

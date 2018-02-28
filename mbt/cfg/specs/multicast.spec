@@ -1,7 +1,7 @@
 ProtoObject: multicast_pb2
 Service: Multicast
 enabled : True
-graphEnabled : True
+dolEnabled : True
 objects:
     - object:
         name : Multicast

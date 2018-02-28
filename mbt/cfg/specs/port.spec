@@ -1,7 +1,7 @@
 ProtoObject: port_pb2
 Service: Port
 enabled : False
-graphEnabled : False
+dolEnabled : False
 objects:
     - object :
         name : Port

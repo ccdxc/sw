@@ -407,9 +407,15 @@ def CreateConfigFromDol(incoming_message):
         # This object hasn't been enabled in MBT as yet. Return
         print("Not reading config from DOL for %s" %(type(incoming_message)))
         return None, True
+
+    # If this object has not been enabled for DOL yet, skip over it.
     # We handle one request as a config object for which the CRUD operations can be performed.
     # The message sent by DOL contains several requests, so split them here. 
     messages = GrpcReqRspMsg.split_repeated_messages(incoming_message)
+    if not object_helper._spec.dolEnabled:
+        print("Not reading config from DOL for %s" %(type(incoming_message)))
+        return None, True
+
     resp_message = None
     err = False
     for message in messages:

@@ -1,7 +1,7 @@
 ProtoObject: qos_pb2
 Service: QOS
 enabled : True
-graphEnabled : True
+dolEnabled : False
 objects:
     - object:
         name : Qos
