@@ -371,6 +371,7 @@
 		NatVpnMappingKeyHandle
 		IpsecRuleKeyHandle
 		QosClassKeyHandle
+		CoppKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
 		L2SegmentStatusIris
@@ -644,7 +645,6 @@
 		QosClassGetRequestMsg
 		QosClassGetResponse
 		QosClassGetResponseMsg
-		CoppKeyHandle
 		CoppSpec
 		CoppRequestMsg
 		CoppStatus

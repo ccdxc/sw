@@ -138,6 +138,22 @@ catalog::populate_qos_profile(ptree &prop_tree)
     qos_profile.num_p4ig_qs = prop_tree.get<uint32_t>("qos.profile.num_p4ig_qs", 0);
     qos_profile.num_p4eg_qs = prop_tree.get<uint32_t>("qos.profile.num_p4eg_qs", 0);
     qos_profile.num_dma_qs = prop_tree.get<uint32_t>("qos.profile.num_dma_qs", 0);
+
+    auto qos_class_configs = prop_tree.get_child_optional("qos.configs.qos_class");
+    auto copp_configs = prop_tree.get_child_optional("qos.configs.copp");
+
+    if (qos_class_configs) {
+        std::stringstream ss;
+        write_json(ss, *qos_class_configs);
+        catalog_db_.qos_class_configs = ss.str();
+    }
+
+    if (copp_configs) {
+        std::stringstream ss;
+        write_json(ss, *copp_configs);
+        catalog_db_.copp_configs = ss.str();
+    }
+
     return SDK_RET_OK;
 }
 
@@ -168,7 +184,6 @@ catalog::populate_catalog(ptree &prop_tree)
     populate_uplink_ports(prop_tree);
 
     populate_qos_profile(prop_tree);
-    catalog_db_.qos_config_tree = prop_tree.get_child("qos.configs");
 
     return SDK_RET_OK;
 }

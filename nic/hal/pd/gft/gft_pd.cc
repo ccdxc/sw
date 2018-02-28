@@ -638,6 +638,12 @@ pd_lif_get_lport_id (pd_lif_get_lport_id_args_t *args)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+pd_acl_create (pd_acl_create_args_t *args)
+{
+    return HAL_RET_OK;    
+}
+
 hal_ret_t    
 pd_qos_class_create (pd_qos_class_create_args_t *args)    
 {    

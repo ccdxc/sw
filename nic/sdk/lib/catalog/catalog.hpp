@@ -59,7 +59,8 @@ typedef struct catalog_s {
     bool                     access_mock_mode;                  // do not access HW, dump only reads/writes
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
-    ptree                    qos_config_tree;                   // qos config information
+    std::string              qos_class_configs;                       // Qos config specs in json
+    std::string              copp_configs;                      // Copp config specs in json
     qos_profile_t            qos_profile;                       // qos asic profile 
 } catalog_t;
 
@@ -95,7 +96,8 @@ public:
 
     uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
 
-    ptree& catalog_qos_config_tree(void) { return catalog_db_.qos_config_tree; }
+    const std::string& qos_class_configs (void) const { return catalog_db_.qos_class_configs; }
+    const std::string& copp_configs (void) const { return catalog_db_.copp_configs; }
 
     const qos_profile_t* qos_profile(void) { return &catalog_db_.qos_profile; }
     bool qos_sw_init_enabled(void) { return catalog_db_.qos_profile.sw_init_enable; }

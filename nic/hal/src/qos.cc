@@ -6,11 +6,6 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"
-#include "boost/property_tree/ptree.hpp"
-#include "boost/property_tree/json_parser.hpp"
-#include <google/protobuf/util/json_util.h>
-
-namespace pt = boost::property_tree;
 
 namespace hal {
 
@@ -2127,61 +2122,4 @@ copp_get (CoppGetRequest& req, CoppGetResponseMsg *resp)
 }
 
 // copp_delete is not supported
-
-hal_ret_t
-hal_qos_init (void)
-{
-    hal_ret_t   ret = HAL_RET_OK;
-
-    pt::ptree &qos_config_tree = g_hal_state->catalog()->catalog_qos_config_tree();
-
-    auto qos_class_configs = qos_config_tree.get_child_optional("qos_class");
-    auto copp_configs = qos_config_tree.get_child_optional("copp");
-
-    hal_cfg_db_open(CFG_OP_WRITE);
-
-    if (qos_class_configs) {
-        // Create qos-classes
-        for (auto &qos_class_config : *qos_class_configs) {
-            std::stringstream ss;
-            QosClassSpec qos_class_spec;
-            QosClassResponse qos_class_rsp;
-
-            write_json(ss, qos_class_config.second);
-
-            google::protobuf::util::JsonStringToMessage(ss.str(), &qos_class_spec);
-            ret = qosclass_create(qos_class_spec, &qos_class_rsp);
-            if (qos_class_rsp.api_status() != types::API_STATUS_OK) {
-                HAL_TRACE_ERR("Error  creating qos class ret: {}",
-                              ret);
-                goto end;
-            }
-        }
-    }
-
-    if (copp_configs) {
-        // Create copp objects
-        for (auto &copp_config : *copp_configs) {
-            std::stringstream ss;
-            CoppSpec copp_spec;
-            CoppResponse copp_rsp;
-
-            write_json(ss, copp_config.second);
-
-            google::protobuf::util::JsonStringToMessage(ss.str(), &copp_spec);
-            ret = copp_create(copp_spec, &copp_rsp);
-            if (copp_rsp.api_status() != types::API_STATUS_OK) {
-                HAL_TRACE_ERR("Error  creating copp ret: {}",
-                              ret);
-                goto end;
-            }
-        }
-    }
-
-end:
-    hal_cfg_db_close();
-    return ret;
-
-}
-
 }    // namespace hal

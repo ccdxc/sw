@@ -270,25 +270,27 @@ acl_spec_print (AclSpec& spec)
         if (sel.has_internal_key()) {
             buf.write("flow_miss {}, outer_dst_mac {}, "
                       "ip_options {}, ip_frag {}, "
-                      "tunnel_terminate {}, direction {}, ",
+                      "tunnel_terminate {}, direction {}, from_cpu {}, ",
                       sel.internal_key().flow_miss(),
                       sel.internal_key().outer_dst_mac(),
                       sel.internal_key().ip_options(),
                       sel.internal_key().ip_frag(),
                       sel.internal_key().tunnel_terminate(),
-                      sel.internal_key().direction());
+                      sel.internal_key().direction(),
+                      sel.internal_key().from_cpu());
         }
 
         if (sel.has_internal_mask()) {
             buf.write("flow_miss_mask {}, outer_dst_mac_mask {}, "
                       "ip_options_mask {}, ip_frag_mask {}, "
-                      "tunnel_terminate_mask {}, direction_mask {}, ",
+                      "tunnel_terminate_mask {}, direction_mask {}, from_cpu {}, ",
                       sel.internal_mask().flow_miss(),
                       sel.internal_mask().outer_dst_mac(),
                       sel.internal_mask().ip_options(),
                       sel.internal_mask().ip_frag(),
                       sel.internal_mask().tunnel_terminate(),
-                      sel.internal_mask().direction());
+                      sel.internal_mask().direction(),
+                      sel.internal_mask().from_cpu());
         }
     }
 
@@ -1157,6 +1159,8 @@ extract_match_spec (acl_match_spec_t *ms,
     if (sel.has_internal_key()) {
         ms->int_key.direction = sel.internal_key().direction();
         ms->int_mask.direction = sel.internal_mask().direction();
+        ms->int_key.from_cpu = sel.internal_key().from_cpu();
+        ms->int_mask.from_cpu = sel.internal_mask().from_cpu();
         ms->int_key.flow_miss = sel.internal_key().flow_miss();
         ms->int_mask.flow_miss = sel.internal_mask().flow_miss();
         ms->int_key.ip_options = sel.internal_key().ip_options();
@@ -1303,6 +1307,8 @@ extract_action_spec (acl_action_spec_t *as,
     if_id_t      redirect_if_id;
     hal_handle_t redirect_if_handle = 0;
     uint8_t      ingress, egress;
+    bool         copp_needed = false;
+    copp_t       *copp = NULL;
 #ifdef ACL_DOL_TEST_ONLY
     // Internal fields for use only with DOL/testing infra
     // For production builds this needs to be removed
@@ -1320,7 +1326,6 @@ extract_action_spec (acl_action_spec_t *as,
     as->ing_mirror_session = ingress;
     as->egr_mirror_en = egress ? true : false;
     as->egr_mirror_session = egress;
-    as->copp_policer_handle = ainfo.copp_policer_handle();
 
     if (ainfo.has_redirect_if_key_handle()) {
         if (as->action != acl::ACL_ACTION_REDIRECT) {
@@ -1347,7 +1352,40 @@ extract_action_spec (acl_action_spec_t *as,
         } else {
             as->redirect_if_handle = redirect_if->hal_handle;
         }
+    } else if (as->action == acl::ACL_ACTION_REDIRECT) {
+        HAL_TRACE_ERR("Redirect interface not specified ");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
+
+    if ((as->action == acl::ACL_ACTION_LOG) ||
+        ((as->action == acl::ACL_ACTION_REDIRECT) && 
+         (redirect_if->if_type == intf::IF_TYPE_CPU))) {
+        copp_needed = true;
+    }
+
+    if (ainfo.has_copp_key_handle()) {
+        if (!copp_needed) {
+            HAL_TRACE_ERR("Copp specified with non cpu redirect/log");
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+        copp = find_copp_by_key_handle(ainfo.copp_key_handle());
+        if (!copp) {
+            HAL_TRACE_ERR("Copp not found");
+            ret = HAL_RET_COPP_NOT_FOUND;
+            goto end;
+        }
+        as->copp_handle = copp->hal_handle;
+    } else {
+        if (copp_needed) {
+            HAL_TRACE_ERR("Copp not specified with cpu redirect/log");
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+        as->copp_handle = HAL_HANDLE_INVALID;
+    }
+
 
 #ifdef ACL_DOL_TEST_ONLY
     // Internal fields for use only with DOL/testing infra
@@ -1364,6 +1402,8 @@ extract_action_spec (acl_action_spec_t *as,
         as->int_as.mac_sa_rewrite = ainfo.internal_actions().mac_sa_rewrite_en();
         as->int_as.mac_da_rewrite = ainfo.internal_actions().mac_da_rewrite_en();
         as->int_as.ttl_dec = ainfo.internal_actions().ttl_dec_en();
+        as->int_as.qid = ainfo.internal_actions().qid();
+        as->int_as.qid_en = ainfo.internal_actions().qid_valid();
 
         if (ainfo.internal_actions().has_encap_info()) {
             as->int_as.tnnl_vnid = ainfo.internal_actions().encap_info().encap_value();
@@ -1397,7 +1437,7 @@ populate_action_spec (acl_action_spec_t *as,
                       acl::AclActionInfo *ainfo)
 {
     ainfo->set_action(as->action);
-    ainfo->set_copp_policer_handle(as->copp_policer_handle);
+    ainfo->mutable_copp_key_handle()->set_copp_handle(as->copp_handle);
     ainfo->mutable_redirect_if_key_handle()->set_if_handle(as->redirect_if_handle);
 #ifdef ACL_DOL_TEST_ONLY
     // Internal fields for use only with DOL/testing infra
@@ -1405,6 +1445,8 @@ populate_action_spec (acl_action_spec_t *as,
     ainfo->mutable_internal_actions()->set_mac_sa_rewrite_en(as->int_as.mac_sa_rewrite);
     ainfo->mutable_internal_actions()->set_mac_da_rewrite_en(as->int_as.mac_da_rewrite);
     ainfo->mutable_internal_actions()->set_ttl_dec_en(as->int_as.ttl_dec);
+    ainfo->mutable_internal_actions()->set_qid(as->int_as.qid);
+    ainfo->mutable_internal_actions()->set_qid_valid(as->int_as.qid_en);
     ainfo->mutable_internal_actions()->mutable_encap_info()->set_encap_value(as->int_as.tnnl_vnid);
     // TODO rewrite actions
 #endif
@@ -1775,7 +1817,11 @@ acl_update (AclSpec& spec, AclResponse *rsp)
     }
     HAL_TRACE_DEBUG("update acl {}", acl->key);
 
-    acl_make_clone(acl, (acl_t **)&dhl_entry.cloned_obj, spec);
+    ret = acl_make_clone(acl, (acl_t **)&dhl_entry.cloned_obj, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error making acl clone acl {} ret {}", acl->key, ret);
+        goto end;
+    }
 
     acl_clone = (acl_t *)dhl_entry.cloned_obj;
     if (acl->priority != acl_clone->priority) {

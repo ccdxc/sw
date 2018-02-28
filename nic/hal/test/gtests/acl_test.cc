@@ -10,6 +10,8 @@
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include <google/protobuf/util/message_differencer.h>
 #include <google/protobuf/text_format.h>
+#include "nic/hal/src/qos.hpp"
+#include "nic/gen/proto/hal/qos.pb.h"
 
 using google::protobuf::util::MessageDifferencer;
 using acl::AclSpec;
@@ -59,7 +61,7 @@ TEST_F(acl_test, test1)
     action = spec.mutable_action();
     action->set_action(acl::AclAction::ACL_ACTION_DENY);
 
-    spec.mutable_key_or_handle()->set_acl_id(1);
+    spec.mutable_key_or_handle()->set_acl_id(1000);
     spec.set_priority(1000);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -220,6 +222,23 @@ TEST_F(acl_test, test4)
         }
     }
 
+
+    CoppGetRequest copp_get_req;
+    CoppGetResponse copp_get_rsp;
+    CoppGetResponseMsg copp_resp_msg;
+
+    copp_get_req.Clear();
+    copp_get_rsp.Clear();
+    copp_resp_msg.Clear();
+
+    copp_get_req.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_FLOW_MISS);
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    ret = hal::copp_get(copp_get_req, &copp_resp_msg);
+    copp_get_rsp = copp_resp_msg.response(0);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    uint64_t copp_handle = copp_get_rsp.status().copp_handle();
+
     bool change_prio = true;
     for (auto &entry : entries) {
         spec.Clear();
@@ -233,6 +252,7 @@ TEST_F(acl_test, test4)
 
         action = spec.mutable_action();
         action->set_action(acl::AclAction::ACL_ACTION_LOG);
+        action->mutable_copp_key_handle()->set_copp_handle(copp_handle);
 
         acl_handle = entry.first;
         spec.mutable_key_or_handle()->set_acl_handle(acl_handle);

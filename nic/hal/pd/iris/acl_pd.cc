@@ -13,6 +13,7 @@
 #include "nic/hal/pd/iris/l2seg_pd.hpp"
 #include "nic/include/l2segment_api.hpp"
 #include "nic/include/eth.h"
+#include "nic/hal/pd/iris/copp_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -103,10 +104,8 @@ populate_ip_common (nacl_swkey_t *key, nacl_swkey_mask_t *mask,
 static void
 populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
 {
-    // TODO Get the index from copp policer handle and mirror session
+    // TODO Get the index from mirror session
     // handles
-    data->nacl_action_u.nacl_nacl_permit.policer_index =
-        as->copp_policer_handle;
     data->nacl_action_u.nacl_nacl_permit.ingress_mirror_en =
         as->ing_mirror_en;
     data->nacl_action_u.nacl_nacl_permit.egress_mirror_en =
@@ -143,6 +142,9 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     uint16_t                               l2seg_mask = 0;
     uint16_t                               ten_mask = 0;
     uint8_t                                ten_shift = 0;
+    uint32_t                               qid;
+    copp_t                                 *copp;
+    uint32_t                               copp_index = 0;
 
     ms = &pi_acl->match_spec;
     as = &pi_acl->action_spec;
@@ -156,13 +158,32 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
 
+    copp = find_copp_by_handle(as->copp_handle);
+    if (copp) {
+        copp_index = copp->pd->hw_policer_id;
+    }
+
     // Populate the data
     switch(as->action) {
         case acl::ACL_ACTION_LOG:
+            if (!copp) {
+                HAL_TRACE_ERR("Acl {} copp not specified for log", pi_acl->key);
+                return HAL_RET_INVALID_ARG;
+            }
+
             data.actionid = NACL_NACL_PERMIT_ID;
             data.nacl_action_u.nacl_nacl_permit.log_en = 1;
+            qid = types::CPUCB_ID_NACL_LOG;
+#ifdef ACL_DOL_TEST_ONLY
+            if (as->int_as.qid_en) {
+                data.nacl_action_u.nacl_nacl_permit.qid = as->int_as.qid;
+            }
+#endif
             data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
-            data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_LOG;
+            data.nacl_action_u.nacl_nacl_permit.qid = qid;
+
+            data.nacl_action_u.nacl_nacl_permit.policer_index = copp_index;
+
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_REDIRECT:
@@ -175,8 +196,20 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
             if (if_is_cpu_if(redirect_if)) {
                 // If going to CPU, do not do any rewrites on packet. So set
                 // the rewrite indexes to 0 (nop)
+                if (!copp) {
+                    HAL_TRACE_ERR("Acl {} copp not specified for redirect to cpu",
+                                  pi_acl->key);
+                    return HAL_RET_INVALID_ARG;
+                }
+
+                qid = types::CPUCB_ID_NACL_REDIRECT;
+#ifdef ACL_DOL_TEST_ONLY
+                if (as->int_as.qid_en) {
+                    qid = as->int_as.qid;
+                }
+#endif
                 data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
-                data.nacl_action_u.nacl_nacl_permit.qid = types::CPUCB_ID_NACL_REDIRECT;
+                data.nacl_action_u.nacl_nacl_permit.qid = qid;
                 data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
@@ -185,6 +218,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
                 data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
                 data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
                 data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
+
+                data.nacl_action_u.nacl_nacl_permit.policer_index = copp_index;
             } else {
                 // TODO: Figure out how to get these values
                 data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 0;
@@ -387,6 +422,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
            sizeof(mask.control_metadata_drop_reason_mask));
     key.flow_lkp_metadata_lkp_dir = ms->int_key.direction;
     mask.flow_lkp_metadata_lkp_dir_mask = ms->int_mask.direction;
+    if (ms->int_mask.from_cpu) {
+        key.control_metadata_from_cpu = ms->int_key.from_cpu;
+        mask.control_metadata_from_cpu_mask = ms->int_mask.from_cpu;
+    }
 #endif
 
     acl_tbl = g_hal_state_pd->acl_table();

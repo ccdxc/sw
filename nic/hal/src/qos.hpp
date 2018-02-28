@@ -26,7 +26,7 @@ using qos::QosClassGetRequest;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponse;
 using qos::QosClassGetResponseMsg;
-using qos::CoppKeyHandle;
+using kh::CoppKeyHandle;
 using qos::CoppSpec;
 using qos::CoppStatus;
 using qos::CoppResponse;
@@ -417,14 +417,14 @@ copp_alloc_init (void)
 }
 
 static inline copp_type_t
-copp_spec_copp_type_to_copp_type (qos::CoppType copp_type)
+copp_spec_copp_type_to_copp_type (kh::CoppType copp_type)
 {
     switch(copp_type) {
-        case qos::COPP_TYPE_FLOW_MISS:
+        case kh::COPP_TYPE_FLOW_MISS:
             return COPP_TYPE_FLOW_MISS;
-        case qos::COPP_TYPE_ARP:
+        case kh::COPP_TYPE_ARP:
             return COPP_TYPE_ARP;
-        case qos::COPP_TYPE_DHCP:
+        case kh::COPP_TYPE_DHCP:
             return COPP_TYPE_DHCP;
         default:
             HAL_ASSERT(0);
@@ -432,19 +432,19 @@ copp_spec_copp_type_to_copp_type (qos::CoppType copp_type)
     }
 }
 
-static inline qos::CoppType
+static inline kh::CoppType
 copp_type_to_spec_type (copp_type_t copp_type)
 {
     switch(copp_type) {
         case COPP_TYPE_FLOW_MISS:
-            return qos::COPP_TYPE_FLOW_MISS;
+            return kh::COPP_TYPE_FLOW_MISS;
         case COPP_TYPE_ARP:
-            return qos::COPP_TYPE_ARP;
+            return kh::COPP_TYPE_ARP;
         case COPP_TYPE_DHCP:
-            return qos::COPP_TYPE_DHCP;
+            return kh::COPP_TYPE_DHCP;
         default:
             HAL_ASSERT(0);
-            return qos::COPP_TYPE_FLOW_MISS;
+            return kh::COPP_TYPE_FLOW_MISS;
     }
 }
 
@@ -511,9 +511,6 @@ hal_ret_t copp_update(qos::CoppSpec& spec,
                       qos::CoppResponse *rsp);
 hal_ret_t copp_get(qos::CoppGetRequest& req,
                    qos::CoppGetResponseMsg *rsp);
-
-hal_ret_t hal_qos_init (void);
-
 }    // namespace hal
 
 #endif    // __QOS_HPP__

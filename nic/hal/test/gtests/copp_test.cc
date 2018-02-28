@@ -13,8 +13,8 @@ using google::protobuf::util::MessageDifferencer;
 
 using qos::CoppSpec;
 using qos::CoppResponse;
-using qos::CoppKeyHandle;
-using qos::CoppType;
+using kh::CoppKeyHandle;
+using kh::CoppType;
 
 class copp_test : public hal_base_test {
 protected:
@@ -44,7 +44,7 @@ TEST_F(copp_test, test1)
 
     spec.Clear();
 
-    spec.mutable_key_or_handle()->set_copp_type(qos::COPP_TYPE_FLOW_MISS);
+    spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_FLOW_MISS);
     spec.mutable_policer()->set_bps_rate(10000);
     spec.mutable_policer()->set_burst_size(1000);
 
@@ -55,7 +55,7 @@ TEST_F(copp_test, test1)
 
 
     spec.Clear();
-    spec.mutable_key_or_handle()->set_copp_type(qos::COPP_TYPE_ARP);
+    spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_ARP);
     spec.mutable_policer()->set_bps_rate(10000);
     spec.mutable_policer()->set_burst_size(1000);
 
@@ -74,7 +74,7 @@ TEST_F(copp_test, test2)
 
     spec.Clear();
 
-    spec.mutable_key_or_handle()->set_copp_type(qos::COPP_TYPE_DHCP);
+    spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_DHCP);
     // rate is 0
     spec.mutable_policer()->set_burst_size(1000);
 
@@ -95,7 +95,7 @@ TEST_F(copp_test, test2)
 
     spec.Clear();
     // Re-create already created copp
-    spec.mutable_key_or_handle()->set_copp_type(qos::COPP_TYPE_ARP);
+    spec.mutable_key_or_handle()->set_copp_type(kh::COPP_TYPE_ARP);
     spec.mutable_policer()->set_bps_rate(10000);
     spec.mutable_policer()->set_burst_size(1000);
 
@@ -114,7 +114,7 @@ TEST_F(copp_test, test3)
     CoppGetRequest get_req;
     CoppGetResponse get_rsp;
     CoppGetResponseMsg resp_msg;
-    CoppType copp_type = qos::COPP_TYPE_FLOW_MISS;
+    CoppType copp_type = kh::COPP_TYPE_FLOW_MISS;
 
     get_req.Clear();
     get_rsp.Clear();

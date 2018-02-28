@@ -131,6 +131,7 @@ message AclInternalSelector {
   repeated DropReason drop_reason      = 5;    // Drop reason
   bool                tunnel_terminate = 6;    // Tunnel terminate
   bool                direction        = 7;    // Flow direction
+  bool                from_cpu         = 8;    // Match if from cpu
 }
 
 // AclInternalActionInfo has action parameters for internal use only with 
@@ -144,6 +145,8 @@ message AclInternalActionInfo {
   uint64          mac_da            = 4;    // MAC DA to rewrite with
   bool            ttl_dec_en        = 5;    // Perform a ttl decrement
   types.EncapInfo encap_info        = 6;    // encap info
+  types.CpucbId   qid               = 7;    // qid
+  bool            qid_valid         = 8;    // qid is valid
 }
 
 // AclSelector has all the match criteria for an ACL entry
@@ -177,7 +180,7 @@ message AclActionInfo {
   AclAction                          action                 = 1;    // forwarding action
   repeated telemetry.MirrorSessionId ing_mirror_sessions    = 2;    // ingress mirror sessions
   repeated telemetry.MirrorSessionId egr_mirror_sessions    = 3;    // egress mirror sessions 
-  fixed64                            copp_policer_handle    = 4;    // egress copp policer
+  kh.CoppKeyHandle                   copp_key_handle        = 4 [(gogoproto.moretags) = "venice:ref"];    // copp policer
   kh.InterfaceKeyHandle              redirect_if_key_handle = 5 [(gogoproto.moretags) = "venice:ref"];    // redirect interface
                                                                     // TODO: REMOVE
   AclInternalActionInfo              internal_actions       = 6;    // Internal action fields
@@ -188,7 +191,7 @@ message AclSpec {
   types.ObjectMeta meta          = 1;    // common object meta
   // key_or_handle is ACL's key or handle
   kh.AclKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  uint32           priority      = 3 [(gogoproto.moretags) = "venice:immutable"];    // priority of the rule (0 being lowest)
+  uint32           priority      = 3 [(gogoproto.moretags) = "venice:immutable"];    // priority of the rule (0 being highest)
                                          // TBD: is this per-vrf priority ? or global ?
   AclSelector      match         = 4;    // match conditions
   AclActionInfo    action        = 5;    // action(s)

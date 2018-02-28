@@ -323,6 +323,8 @@ class AclObject(base.ConfigObjectBase):
         if self.ActionRedirect():
             reqspec.action.redirect_if_key_handle.if_handle = \
                     self.fields.action.redirect_if.hal_handle
+        if self.ActionSupRedirect() or self.ActionLog():
+            reqspec.action.copp_key_handle.copp_type = haldefs.kh.CoppType.Value("COPP_TYPE_FLOW_MISS")
         if self.ActionTunnelRedirect() or self.ActionUplinkRedirect():
             reqspec.action.internal_actions.mac_sa_rewrite_en = True
             reqspec.action.internal_actions.mac_sa = self.fields.action.macsa.getnum()
@@ -602,6 +604,9 @@ class AclObject(base.ConfigObjectBase):
         if self.fields.action.action == 'redirect' and self.fields.action.intf == 'cpu':
             return True
         return False
+
+    def ActionLog(self):
+        return self.fields.action.action == 'log'
 
     def ActionMirror(self):
         if len(self.ing_mirror_sessions) or len(self.egr_mirror_sessions):

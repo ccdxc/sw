@@ -19,6 +19,8 @@ using sdk::lib::ht_ctxt_t;
 using kh::AclKeyHandle;
 
 using acl::AclSpec;
+using acl::AclSelector;
+using acl::AclActionInfo;
 using acl::AclStatus;
 using acl::AclResponse;
 using acl::AclRequestMsg;
@@ -35,6 +37,17 @@ using acl::AclGetResponseMsg;
 namespace hal {
 
 #define HAL_MAX_ACLS 512 
+
+#define ACL_IP_FRAGMENT_DROP_ENTRY_ID    0
+#define ACL_QUIESCE_ENTRY_ID             1
+#define ACL_EPLEARN_ENTRY_ID_BEGIN       2
+#define ACL_EPLEARN_ENTRY_ID_END         6
+
+#define ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    0
+#define ACL_QUIESCE_ENTRY_PRIORITY             1
+#define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       2
+#define ACL_EPLEARN_ENTRY_PRIORITY_END         6
+
 
 typedef struct acl_eth_match_spec_s {
     uint16_t    ether_type;
@@ -88,6 +101,7 @@ typedef struct acl_internal_match_spec_s {
     bool       ip_options;
     bool       ip_frag;
     bool       tunnel_terminate;
+    bool       from_cpu;
     uint64_t   drop_reason;
     mac_addr_t outer_mac_da;
 } __PACK__ acl_internal_match_spec_t;
@@ -128,11 +142,13 @@ typedef struct acl_match_spec_s {
     // For production builds this needs to be removed
     // TODO: REMOVE
 typedef struct acl_internal_action_spec_s {
-    bool     mac_sa_rewrite;
-    bool     mac_da_rewrite;
-    bool     ttl_dec;
-    uint32_t rw_idx;              // rewrite index
-    uint32_t tnnl_vnid;           // tunnel vnid / encap vlan
+    bool           mac_sa_rewrite;
+    bool           mac_da_rewrite;
+    bool           ttl_dec;
+    types::CpucbId qid;
+    bool           qid_en;
+    uint32_t       rw_idx;              // rewrite index
+    uint32_t       tnnl_vnid;           // tunnel vnid / encap vlan
 } __PACK__ acl_internal_action_spec_t;
 #endif
 
@@ -145,7 +161,7 @@ typedef struct acl_action_spec_s {
     hal_handle_t   egr_mirror_session_handle;
     uint8_t        egr_mirror_session;   // Mirror sessions in egress direction
     uint8_t        ing_mirror_session;   // Mirror sessions in ingress direction
-    hal_handle_t   copp_policer_handle;
+    hal_handle_t   copp_handle;
     hal_handle_t   redirect_if_handle;
 #ifdef ACL_DOL_TEST_ONLY
     // Internal fields for use only with DOL/testing infra

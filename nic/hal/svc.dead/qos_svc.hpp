@@ -20,7 +20,7 @@ using qos::QosClassDeleteResponseMsg;
 using qos::QosClassGetRequestMsg;
 using qos::QosClassGetResponseMsg;
 using qos::CoppSpec;
-using qos::CoppKeyHandle;
+using kh::CoppKeyHandle;
 using qos::CoppRequestMsg;
 using qos::CoppResponse;
 using qos::CoppResponseMsg;

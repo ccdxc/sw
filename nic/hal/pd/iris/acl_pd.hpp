@@ -11,12 +11,6 @@ using hal::pd::utils::acl_tcam_entry_handle_t;
 namespace hal {
 namespace pd {
 
-#define NACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    0
-#define NACL_QUIESCE_ENTRY_PRIORITY             1
-#define NACL_EP_LEARN_ENTRY_PRIORITY_BEGIN      2
-#define NACL_EP_LEARN_ENTRY_PRIORITY_END        6
-#define NACL_USER_DEFINED_ENTRY_PRIORITY_BEGIN  100
-
 typedef struct pd_acl_s {
     // ACL TCAM entry handle
     acl_tcam_entry_handle_t handle;
