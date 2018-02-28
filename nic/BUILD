@@ -347,12 +347,25 @@ cc_library(
 
 cc_library(
     name = "halproto",
-    srcs = [
-        "obj/libhalproto.so",
-    ],
-    linkopts = [
-        "-Lnic/obj",
-    ],
+    srcs = select ({
+        "//conditions:default" : [
+            "gen/x86_64/lib/libhalproto.so",
+        ],
+
+        ":aarch64_mode" : [
+            "gen/aarch64/lib/libhalproto.so",
+        ],
+    }),
+
+    linkopts = select ({
+        "//conditions:default" : [
+            "-Lnic/gen/x86_64/lib/libhalproto.so",
+        ],
+
+        ":aarch64_mode" : [
+            "-Lnic/gen/aarch64/lib/libhalproto.so",
+        ],
+    }),
 )
 
 cc_library(

@@ -1,6 +1,5 @@
-
 TOPDIR = ../../..
-SHAREDLIBRARY = libhalproto.so
+LIBRARY = libhalproto.so
 
 LCXXFLAGS = \
 			-I/usr/local/include \
@@ -12,9 +11,5 @@ LCXXFLAGS = \
 
 SOURCES = $(wildcard *.cc)
 
-include $(TOPDIR)/make/Makefile.inc
-include $(TOPDIR)/build.mk
-
-# Adding more clean files
-# LCLEANFILES = $(OBJ_DIR)/*.pb.o $(GEN_DIR)/*.pb.* $(GEN_DIR)/*.pb-c.*
-
+include $(TOPDIR)/make/Makefile_platform.inc
+include $(TOPDIR)/make/build.mk

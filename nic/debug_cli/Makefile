@@ -32,9 +32,11 @@ ARCHIVES       =  -Wl,--allow-multiple-definition
 ARCHIVES       += $(NIC_DIR)/hal/third-party/grpc/$(ARCH)/lib/libgrpc*.a -Wl,--no-whole-archive
 
 SHARED_LIBS    =  $(NIC_DIR)/hal/third-party/google/$(ARCH)/lib/libprotobuf.so.14
-SHARED_LIBS    += -L$(NIC_DIR)/obj
 ifeq ($(ARCH),aarch64)
 SHARED_LIBS    += -L$(TOOLCHAIN_PATH)/aarch64-linux-gnu/usr/lib
+SHARED_LIBS    += -L$(NIC_DIR)/gen/aarch64/lib
+else
+SHARED_LIBS    += -L$(NIC_DIR)/gen/x86_64/lib
 endif
 SHARED_LIBS    += -lhalproto
 

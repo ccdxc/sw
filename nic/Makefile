@@ -165,13 +165,15 @@ asm:
 
 gen-clean:
 	rm -rf gen/hal
+	rm -rf gen/x86_64
+	rm -rf gen/aarch64
 
 gen-proto:
 	$(MAKE) -C proto
 	python3 ./tools/hal/hal_svc_generator.py
 
 build-proto:
-	$(MAKE) -j8 -C gen/proto/hal
+	$(PATH_OPTS) $(MAKE) -j8 $(BUILD_OPTS) -C gen/proto/hal
 
 hal:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
