@@ -488,6 +488,7 @@ gft_exact_match_profile_create (GftExactMatchProfileSpec& spec,
     // consume the config
     gft_emp_init_from_spec(profile, spec);
 
+    // Prints match profile to be created
     gft_exact_match_profile_print(profile);
 
     // allocate hal handle id
@@ -1410,106 +1411,98 @@ end:
 
 #define GFT_HDRS_FIELDS(VAR)                                                \
     if (VAR->headers & GFT_HEADER_ETHERNET) {                               \
-        HAL_TRACE_DEBUG("Ethernet");                                        \
+        buf.write(" › Ethernet: [ ");                                       \
         if (VAR->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {                  \
-            HAL_TRACE_DEBUG("Src Mac: {}", macaddr2str(VAR->eth_fields.smac));\
+            buf.write("SMac: {} ", macaddr2str(VAR->eth_fields.smac));      \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {                  \
-            HAL_TRACE_DEBUG("Dst Mac: {}", macaddr2str(VAR->eth_fields.dmac));\
+            buf.write("DMac: {} ", macaddr2str(VAR->eth_fields.smac));      \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_ETH_TYPE) {                      \
-            HAL_TRACE_DEBUG("Eth Type: {}", VAR->eth_fields.eth_type);      \
+            buf.write("EthType: {} ", VAR->eth_fields.eth_type);            \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {              \
-            HAL_TRACE_DEBUG("CVlan: {}", VAR->eth_fields.customer_vlan_id); \
+            buf.write("CVlan: {} ", VAR->eth_fields.customer_vlan_id);      \
         }                                                                   \
+        buf.write("] ");                                                    \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_IPV4 ||                                   \
         VAR->headers & GFT_HEADER_IPV6) {                                   \
-        HAL_TRACE_DEBUG("{}",                                               \
-                        (VAR->headers & GFT_HEADER_IPV4) ? "IPv4" : "IPv6");\
+        buf.write("{}: [ ",                                                 \
+                  (VAR->headers & GFT_HEADER_IPV4) ? "IPv4" : "IPv6");      \
         if (VAR->fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {                   \
-            HAL_TRACE_DEBUG("Src IP: {}", ipaddr2str(&VAR->src_ip_addr));   \
+            buf.write("SIP:{} ", ipaddr2str(&VAR->src_ip_addr));            \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_DST_IP_ADDR) {                   \
-            HAL_TRACE_DEBUG("Dst IP: {}", ipaddr2str(&VAR->dst_ip_addr));   \
+            buf.write("DIP:{} ", ipaddr2str(&VAR->dst_ip_addr));            \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_IP_DSCP) {                       \
-            HAL_TRACE_DEBUG("DSCP: {}",VAR->dscp );                         \
+            buf.write("DSCP:{} ", VAR->dscp );                              \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_IP_PROTOCOL) {                   \
-            HAL_TRACE_DEBUG("IP Proto: {}",VAR->ip_proto);                  \
+            buf.write("IPProto:{} ", VAR->ip_proto);                        \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_TTL) {                           \
-            HAL_TRACE_DEBUG("TTL: {}", VAR->ttl);                           \
+            buf.write("TTL:{} ", VAR->ttl);                                 \
         }                                                                   \
+        buf.write("] ");                                                    \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_ICMP) {                                   \
-        HAL_TRACE_DEBUG("ICMP");                                            \
+        buf.write(" ICMP: [ ");                                             \
         if (VAR->fields & GFT_HEADER_FIELD_ICMP_TYPE) {                     \
-            HAL_TRACE_DEBUG("Type: {}", VAR->encap_or_transport.icmp.type); \
+            buf.write("Type:{} ", VAR->encap_or_transport.icmp.type);       \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_ICMP_CODE) {                     \
-            HAL_TRACE_DEBUG("Code: {}", VAR->encap_or_transport.icmp.code); \
+            buf.write("Code:{} ", VAR->encap_or_transport.icmp.code);       \
         }                                                                   \
+        buf.write("] ");                                                    \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_TCP) {                                    \
-        HAL_TRACE_DEBUG("TCP");                                             \
+        buf.write(" TCP: [ ");                                              \
         if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {            \
-            HAL_TRACE_DEBUG("Sport: {}", VAR->encap_or_transport.tcp.sport);\
+            buf.write("Sport:{} ", VAR->encap_or_transport.tcp.sport);      \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {            \
-            HAL_TRACE_DEBUG("Dport: {}", VAR->encap_or_transport.tcp.dport);\
+            buf.write("Dport:{} ", VAR->encap_or_transport.tcp.dport);      \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_TCP_FLAGS) {                     \
-            HAL_TRACE_DEBUG("Dport: {}", VAR->encap_or_transport.tcp.tcp_flags);\
+            buf.write("TCPFlags:{} ", VAR->encap_or_transport.tcp.tcp_flags);\
         }                                                                   \
+        buf.write("] ");                                                    \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_UDP) {                                    \
-        HAL_TRACE_DEBUG("UDP");                                             \
+        buf.write(" UDP: [ ");                                              \
         if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {            \
-            HAL_TRACE_DEBUG("Sport: {}", VAR->encap_or_transport.udp.sport);\
+            buf.write("Sport:{} ", VAR->encap_or_transport.udp.sport);      \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {            \
-            HAL_TRACE_DEBUG("Dport: {}", VAR->encap_or_transport.udp.dport);\
+            buf.write("Dport:{} ", VAR->encap_or_transport.udp.dport);      \
         }                                                                   \
+        buf.write("] ");                                                    \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_IP_IN_GRE_ENCAP) {                        \
-        HAL_TRACE_DEBUG("GRE");                                             \
+        buf.write(" GRE: [ ");                                              \
         if (VAR->fields & GFT_HEADER_FIELD_GRE_PROTOCOL) {                  \
-            HAL_TRACE_DEBUG("Proto: {}", VAR->encap_or_transport.encap.gre_protocol);\
+            buf.write("GREProto:{} ", VAR->encap_or_transport.encap.gre_protocol);\
         }                                                                   \
+        buf.write("] ");                                                    \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_VXLAN_ENCAP) {                            \
-        HAL_TRACE_DEBUG("Vxlan");                                           \
+        buf.write(" Vxlan: [ ");                                            \
         if (VAR->fields & GFT_HEADER_FIELD_TENANT_ID) {                     \
-            HAL_TRACE_DEBUG("Tenant Id: {}", VAR->encap_or_transport.encap.tenant_id);\
+            buf.write("TenantId:{} ", VAR->encap_or_transport.encap.tenant_id);\
         }                                                                   \
-    }                                                                       
-
-    
-
-
-
-
-#if 0
-        if (VAR ## ->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {              \
-            HAL_TRACE_DEBUG("Src IP: {}", ipaddr2str(&VAR->src_ip_addr));   \
-        }                                                                   \
-        if (VAR ## ->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {              \
-            HAL_TRACE_DEBUG("Dst IP: {}", ipaddr2str(&VAR->dst_ip_addr));   \
-        }                                                                   \
-        if (VAR ## ->fields & GFT_HEADER_FIELD_ETH_TYPE) {              \
-            HAL_TRACE_DEBUG("Eth Type: {}", VAR->);   \
-        }                                               
-#endif
-
+        buf.write("]");                                                     \
+    }                                                                       \
+    HAL_TRACE_DEBUG("{}", buf.c_str());                                     \
+    buf.clear();                                                            \
 
 void
 gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
 {
     gft_hdr_group_exact_match_t *ghem;
     gft_hdr_group_xposition_t   *xpos;
+    fmt::MemoryWriter           buf;
 
     if (!fe) {
         return;
@@ -1526,20 +1519,24 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
     HAL_TRACE_DEBUG("num_exact_matches: {}, num_transpositions: {}",
                     fe->num_exact_matches, fe->num_transpositions);
     HAL_TRACE_DEBUG("Match Profiles:");
+    HAL_TRACE_DEBUG("---------------");
     ghem = fe->exact_matches;
     for (uint32_t i = 0; i < fe->num_exact_matches; i++) {
-        HAL_TRACE_DEBUG("Match Profile {}:", i);
-        HAL_TRACE_DEBUG("flags: {}", ghem->flags);
+        HAL_TRACE_DEBUG(" Key Match {}:", i);
+        HAL_TRACE_DEBUG("  Match flags: {}", ghem->flags);
+        buf.write(" ");
         GFT_HDRS_FIELDS(ghem);
         ghem++;
     }
 
     HAL_TRACE_DEBUG("Transpositions:");
+    HAL_TRACE_DEBUG("---------------");
     xpos = fe->transpositions;
     for (uint32_t i = 0; i < fe->num_transpositions; i++) {
         HAL_TRACE_DEBUG("Transposition {}:", i);
-        HAL_TRACE_DEBUG("flags: {}", xpos->flags);
-        HAL_TRACE_DEBUG("action: {}", xpos->action);
+        HAL_TRACE_DEBUG(" Transp. flags: {}", xpos->flags);
+        HAL_TRACE_DEBUG(" Transp. action: {}", 
+                        gft_xpos_action_to_str(xpos->action));
         GFT_HDRS_FIELDS(xpos);
         xpos++;
     }
@@ -1547,87 +1544,110 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
 
 #define GFT_HDRS_MATCH_FIELDS(VAR)                                          \
     if (VAR->headers & GFT_HEADER_ETHERNET) {                               \
-        HAL_TRACE_DEBUG("Ethernet");                                        \
+        buf.write(" › Ethernet: [ ");                                       \
         if (VAR->match_fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {            \
-            HAL_TRACE_DEBUG("Src Mac");                                     \
+            buf.write("SMac ");                                             \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {            \
-            HAL_TRACE_DEBUG("Dst Mac");                                     \
+            buf.write("DMac ");                                             \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_ETH_TYPE) {                \
-            HAL_TRACE_DEBUG("Eth Type");                                    \
+            buf.write("EthType ");                                          \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {        \
-            HAL_TRACE_DEBUG("CVlan");                                       \
+            buf.write("CVlan ");                                            \
         }                                                                   \
+        buf.write("]");                                                     \
+        HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
+        buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_IPV4 ||                                   \
         VAR->headers & GFT_HEADER_IPV6) {                                   \
-        HAL_TRACE_DEBUG("{}",                                               \
-                        (VAR->headers & GFT_HEADER_IPV4) ? "IPv4" : "IPv6");\
+        buf.write(" › {}: [ ",                                              \
+                  (VAR->headers & GFT_HEADER_IPV4) ? "IPv4" : "IPv6");      \
         if (VAR->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {             \
-            HAL_TRACE_DEBUG("Src IP");                                      \
+            buf.write("SIP ");                                              \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {             \
-            HAL_TRACE_DEBUG("Dst IP");                                      \
+            buf.write("DIP ");                                              \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_IP_DSCP) {                 \
-            HAL_TRACE_DEBUG("DSCP");                                        \
+            buf.write("DSCP ");                                             \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_IP_PROTOCOL) {             \
-            HAL_TRACE_DEBUG("IP Proto");                                    \
+            buf.write("IPProto ");                                          \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_TTL) {                     \
-            HAL_TRACE_DEBUG("TTL");                                         \
+            buf.write("TTL ");                                              \
         }                                                                   \
+        buf.write("]");                                                     \
+        HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
+        buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_ICMP) {                                   \
-        HAL_TRACE_DEBUG("ICMP");                                            \
+        buf.write(" › ICMP: [ ");                                           \
         if (VAR->match_fields & GFT_HEADER_FIELD_ICMP_TYPE) {               \
-            HAL_TRACE_DEBUG("Type");                                        \
+            buf.write("Type ");                                             \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_ICMP_CODE) {               \
-            HAL_TRACE_DEBUG("Code");                                        \
+            buf.write("Code ");                                             \
         }                                                                   \
+        buf.write("]");                                                     \
+        HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
+        buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_TCP) {                                    \
-        HAL_TRACE_DEBUG("TCP");                                             \
+        buf.write(" › TCP: [ ");                                            \
         if (VAR->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {      \
-            HAL_TRACE_DEBUG("Sport");                                       \
+            buf.write("Sport ");                                            \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {      \
-            HAL_TRACE_DEBUG("Dport");                                       \
+            buf.write("Dport ");                                            \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_TCP_FLAGS) {               \
-            HAL_TRACE_DEBUG("Dport");                                       \
+            buf.write("TCPFlags ");                                         \
         }                                                                   \
+        buf.write("]");                                                     \
+        HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
+        buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_UDP) {                                    \
-        HAL_TRACE_DEBUG("UDP");                                             \
+        buf.write(" › UDP: [ ");                                            \
         if (VAR->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {      \
-            HAL_TRACE_DEBUG("Sport");                                       \
+            buf.write("Sport ");                                            \
         }                                                                   \
         if (VAR->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {      \
-            HAL_TRACE_DEBUG("Dport");                                       \
+            buf.write("Dport ");                                            \
         }                                                                   \
+        buf.write("]");                                                     \
+        HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
+        buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_IP_IN_GRE_ENCAP) {                        \
-        HAL_TRACE_DEBUG("GRE");                                             \
+        buf.write(" › GRE: [ ");                                            \
         if (VAR->match_fields & GFT_HEADER_FIELD_GRE_PROTOCOL) {            \
-            HAL_TRACE_DEBUG("Proto");                                       \
+            buf.write("GREProto ");                                         \
         }                                                                   \
+        buf.write("]");                                                     \
+        HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
+        buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_VXLAN_ENCAP) {                            \
-        HAL_TRACE_DEBUG("Vxlan");                                           \
+        buf.write(" › Vxlan: [ ");                                          \
         if (VAR->match_fields & GFT_HEADER_FIELD_TENANT_ID) {               \
-            HAL_TRACE_DEBUG("Tenant Id");                                   \
+            buf.write("TenantId ");                                         \
         }                                                                   \
-    }                                                                       
+        buf.write("]");                                                     \
+        HAL_TRACE_DEBUG("{}", buf.c_str());                                 \
+        buf.clear();                                                        \
+    }                                                                       \
+    
 
 void
 gft_exact_match_profile_print (gft_exact_match_profile_t *mp)
 {
     gft_hdr_group_exact_match_profile_t *hgmp;
+    fmt::MemoryWriter                   buf;
 
     if (!mp) {
         return;
@@ -1640,7 +1660,7 @@ gft_exact_match_profile_print (gft_exact_match_profile_t *mp)
                     mp->num_hdr_group_exact_match_profiles);
     hgmp = mp->hgem_profiles;
     for (uint32_t i = 0; i < mp->num_hdr_group_exact_match_profiles; i++) {
-        HAL_TRACE_DEBUG("Headers to match for hdr_group{}:", i);
+        HAL_TRACE_DEBUG("Header group {}:", i);
         GFT_HDRS_MATCH_FIELDS(hgmp);
     }
 }

@@ -216,6 +216,7 @@ end:
 
 #define RX_XPOSITION_DATA(TBL_ID, LAYER)                                    \
     gft_hgxpos = &gft_efe->transpositions[TBL_ID];                          \
+    hgem = &gft_efe->exact_matches[TBL_ID];                                 \
     if (gft_hgxpos->action == GFT_HDR_GROUP_XPOSITION_ACTION_POP) {         \
         if (gft_hgxpos->headers & GFT_HEADER_ETHERNET) {                    \
             xpo ## TBL_ID ## _data.                                         \
@@ -254,7 +255,6 @@ end:
     } else if (gft_hgxpos->action ==                                        \
                GFT_HDR_GROUP_XPOSITION_ACTION_MODIFY) {                     \
         if (gft_hgxpos->headers & GFT_HEADER_ETHERNET) {                    \
-            HAL_TRACE_DEBUG("Modifying ethernet hdr");                      \
             if (gft_hgxpos->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {       \
                 xpo ## TBL_ID ## _data.                                     \
                 rx_hdr_transpositions ## TBL_ID ## _action_u.               \
@@ -296,7 +296,6 @@ end:
                 ethernet_type = gft_hgxpos->eth_fields.eth_type;            \
             }                                                               \
             if (gft_hgxpos->fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {   \
-                HAL_TRACE_DEBUG("Modifying Vlan");                  \
                 xpo ## TBL_ID ## _data.                                     \
                 rx_hdr_transpositions ## TBL_ID ## _action_u.               \
                 rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.  \
@@ -309,10 +308,17 @@ end:
                 rx_hdr_transpositions ## TBL_ID ## _action_u.               \
                 rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.  \
                 ctag = gft_hgxpos->eth_fields.customer_vlan_id;             \
-                xpo ## TBL_ID ## _data.                                     \
-                rx_hdr_transpositions ## TBL_ID ## _action_u.               \
-                rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.  \
-                ethernet_type = 0x0800;                                     \
+                if (hgem->headers & GFT_HEADER_IPV4) {                      \
+                    xpo ## TBL_ID ## _data.                                 \
+                    rx_hdr_transpositions ## TBL_ID ## _action_u.           \
+                    rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.\
+                    ethernet_type = ETHERTYPE_IPV4;                         \
+                } else {                                                    \
+                    xpo ## TBL_ID ## _data.                                 \
+                    rx_hdr_transpositions ## TBL_ID ## _action_u.           \
+                    rx_hdr_transpositions ## TBL_ID ## _rx_hdr_transpositions.\
+                    ethernet_type = ETHERTYPE_IPV6;                         \
+                }                                                           \
             }                                                               \
         }                                                                   \
         if (gft_hgxpos->headers & GFT_HEADER_IPV4 ||                        \
@@ -490,6 +496,7 @@ efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
     sdk_ret_t                               sdk_ret;
     gft_exact_match_flow_entry_t            *gft_efe;
     gft_hdr_group_xposition_t               *gft_hgxpos;
+    gft_hdr_group_exact_match_t             *hgem = NULL;
     uint32_t                                num_xpos = 0;
     rx_hdr_transpositions0_actiondata       xpo0_data = { 0 }; 
     rx_hdr_transpositions1_actiondata       xpo1_data = { 0 }; 

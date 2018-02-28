@@ -306,6 +306,18 @@ typedef enum gft_hdr_group_xposition_action_e {
     GFT_HDR_GROUP_XPOSITION_ACTION_MAX,
 } gft_hdr_group_xposition_action_t;
 
+static inline const char *
+gft_xpos_action_to_str(gft_hdr_group_xposition_action_t act) {
+    switch (act) {
+        case GFT_HDR_GROUP_XPOSITION_ACTION_NONE: return "NONE";
+        case GFT_HDR_GROUP_XPOSITION_ACTION_MODIFY: return "MODIFY";
+        case GFT_HDR_GROUP_XPOSITION_ACTION_IGNORE: return "IGNORE";
+        case GFT_HDR_GROUP_XPOSITION_ACTION_PUSH: return "PUSH";
+        case GFT_HDR_GROUP_XPOSITION_ACTION_POP: return "POP";
+        default: return "ERROR";
+    }
+}
+
 // flags for header group transposition profile
 #define GFT_HDR_GROUP_XPOSITION_PROFILE_DECREMENT_TTL_IF_NOT_ONE    0x00000001
 
