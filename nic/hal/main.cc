@@ -25,7 +25,6 @@
 #include <getopt.h>
 #include "nic/hal/hal.hpp"
 
-#include "nic/hal/svc/network_svc.hpp"
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/rdma_svc.hpp"
 #include "nic/hal/svc/session_svc.hpp"
@@ -39,6 +38,7 @@
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 
+#include "nic/gen/hal/svc/nw_svc_gen.hpp"
 #include "nic/gen/hal/svc/tls_proxy_cb_svc_gen.hpp"
 #include "nic/gen/hal/svc/tcp_proxy_cb_svc_gen.hpp"
 #include "nic/gen/hal/svc/proxyccb_svc_gen.hpp"
@@ -74,7 +74,7 @@ svc_reg (const std::string& server_addr,
          hal::hal_feature_set_t feature_set)
 {
     VrfServiceImpl           vrf_svc;
-    NetworkServiceImpl       network_svc;
+    NetworkServiceImpl       nw_svc;
     InterfaceServiceImpl     if_svc;
     InternalServiceImpl      internal_svc;
     RdmaServiceImpl          rdma_svc;
@@ -117,7 +117,7 @@ svc_reg (const std::string& server_addr,
     // register all services
     if (feature_set == hal::HAL_FEATURE_SET_IRIS) {
         server_builder.RegisterService(&vrf_svc);
-        server_builder.RegisterService(&network_svc);
+        server_builder.RegisterService(&nw_svc);
         server_builder.RegisterService(&if_svc);
         server_builder.RegisterService(&internal_svc);
         server_builder.RegisterService(&rdma_svc);
