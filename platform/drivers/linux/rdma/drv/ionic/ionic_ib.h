@@ -1,11 +1,15 @@
 #ifndef __IONIC_H__
 #define __IONIC_H__
 
-#include "../../../eth/ionic/ionic.h"
-#include "../../../eth/ionic/ionic_lif.h"
-#include "../../../eth/ionic/ionic_if.h"
+#include <ionic_api.h>
+#include <ionic_if.h>
+
+/* XXX broken abstraction */
+#include <ionic.h>
+#include <ionic_lif.h>
+/* XXX broken abstraction */
+
 #include "ib_verbs.h"
-//#include "ionic_dev.h"
 
 #define ROCE_DRV_MODULE_NAME		"ionic"
 #define ROCE_DRV_MODULE_VERSION		"1.0.0"
@@ -43,9 +47,6 @@
 #define IONIC_NUM_RSQ_WQE         4
 #define IONIC_NUM_RRQ_WQE         4
 
-#define PID_PAGE_ETH      0  //Page 0 is reserved for ETH driver
-#define PID_PAGE_RDMA     1  //Pages 1 and above are for RDMA
-
 #define IONIC_FLAG_TASK_IN_PROG		     0
 #define IONIC_FLAG_IBDEV_REGISTERED      1
 
@@ -56,8 +57,12 @@ struct ionic_ib_dev {
 	struct ib_device       ibdev;
 	struct list_head	   list;    
 	struct pci_dev        *pdev;
-    struct lif            *lif;
-    struct ionic          *ionic;
+	struct lif            *lif;
+
+	/* XXX broken abstraction */
+	struct ionic          *ionic;
+	/* XXX broken abstraction */
+
 	void __iomem          *regs;
     unsigned long		   flags;
 	bool                   ib_active;
@@ -173,9 +178,27 @@ extern void ionic_page_dir_cleanup(struct ionic_ib_dev *dev, struct ionic_page_d
 extern int ionic_page_dir_insert_dma(struct ionic_page_dir *pdir, u64 idx, dma_addr_t daddr);
 extern int ionic_page_dir_insert_umem(struct ionic_page_dir *pdir, struct ib_umem *umem, u64 offset);
 extern void ionic_page_dir_print(struct ionic_page_dir *pdir);
-extern int
-ionic_rdma_cmd_post(struct ionic_ib_dev *dev,
-                    void *req,
-                    void *resp);
+
+/* TODO: this will go away, to be refactored inline. */
+static inline int
+ionic_rdma_cmd_post(struct ionic_ib_dev *rdev, void *req, void *resp)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+	};
+	int rc;
+
+	memcpy(&ctx.cmd, req, sizeof(ctx.cmd));
+
+	rc = ionic_api_adminq_post(rdev->lif, &ctx);
+	if (rc)
+		return rc;
+
+	wait_for_completion(&ctx.work);
+
+	memcpy(resp, &ctx.comp, sizeof(ctx.comp));
+
+	return 0;
+}
 
 #endif /* __IONIC_H__ */

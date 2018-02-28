@@ -20,7 +20,7 @@
 //#include "ionic_dev.h"
 #include "ib_verbs.h"
 //#include <rdma/ionic-abi.h>
-#include "../../include/ionic-abi.h"
+#include <ionic-abi.h>
 
 //global key for memory regions
 u32 g_key = 0;
@@ -259,8 +259,7 @@ struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 
 	context->dev = rdev;
 
-    //Ideally pid has to be diffrent for each process.
-    context->pid = 1;    //pid 0 is used by ETH driver.
+	context->pid = ionic_api_get_dbid(rdev->lif);
 
     //context->db_pages = (struct doorbell *) db_pages;
 
@@ -287,8 +286,12 @@ struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 
 int ionic_dealloc_ucontext(struct ib_ucontext *ibuctx)
 {
-    pr_info("\n%s:", __FUNCTION__);
-	kfree(ibuctx);
+	struct ionic_ucontext *context = to_ionic_ucontext(ibuctx);
+
+	pr_info("\n%s:", __FUNCTION__);
+
+	ionic_api_put_dbid(context->dev->lif, context->pid);
+	kfree(context);
 
 	return 0;
 }

@@ -1,3 +1,5 @@
 obj-$(CONFIG_INFINIBAND_IONIC_RDMA)	+= ionic_rdma.o
 
-ionic_rdma-y :=	main.o ib_verbs.o ionic_cmd.o ionic_misc.o 
+ccflags-y := -I$(M)/../../include -I$(M)/../../../eth/ionic
+
+ionic_rdma-y :=	main.o ib_verbs.o ionic_misc.o 

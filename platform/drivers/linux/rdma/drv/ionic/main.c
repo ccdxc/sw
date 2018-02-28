@@ -1,6 +1,5 @@
 #include <linux/module.h>
 #include <linux/netdevice.h>
-#include <linux/ethtool.h>
 #include <linux/mutex.h>
 #include <linux/list.h>
 #include <linux/rculist.h>
@@ -19,7 +18,7 @@
 
 #include "ionic_ib.h"
 //#include <rdma/ionic-abi.h>
-#include "../../include/ionic-abi.h"
+#include <ionic-abi.h>
 #include "ib_verbs.h"
 
 #define DRIVER_NAME "ionic_ib"
@@ -81,23 +80,8 @@ static struct ionic_ib_dev *ionic_from_netdev(struct net_device *netdev)
 	return NULL;
 }
 
-static bool is_ionic_dev(struct net_device *netdev)
-{
-	struct ethtool_drvinfo drvinfo;
-
-	if (netdev->ethtool_ops && netdev->ethtool_ops->get_drvinfo) {
-		memset(&drvinfo, 0, sizeof(drvinfo));
-		netdev->ethtool_ops->get_drvinfo(netdev, &drvinfo);
-
-		if (strcmp(drvinfo.driver, "ionic"))
-			return false;
-		return true;
-	}
-	return false;
-}
-
 static struct ionic_ib_dev *ionic_ib_dev_add(struct net_device *netdev,
-                                           struct lif *lif)
+					     struct lif *lif)
 {
 	struct ionic_ib_dev *rdev;
 
@@ -112,10 +96,15 @@ static struct ionic_ib_dev *ionic_ib_dev_add(struct net_device *netdev,
 	}
 	/* Default values */
 	rdev->netdev = netdev;
+	/* XXX missing dev_put() */
 	dev_hold(rdev->netdev);
 	rdev->lif = lif;
-    rdev->pdev = lif->ionic->pdev;
-    rdev->ionic = lif->ionic;
+
+	/* XXX broken abstraction */
+	rdev->pdev = lif->ionic->pdev;
+	rdev->ionic = lif->ionic;
+	/* XXX broken abstraction */
+
 	rdev->id = rdev->pdev->devfn;
 	INIT_LIST_HEAD(&rdev->qp_list);
 	mutex_init(&rdev->qp_lock);
@@ -136,32 +125,28 @@ static struct ionic_ib_dev *ionic_ib_dev_add(struct net_device *netdev,
 	return rdev;
 }
 
-static int ionic_ib_dev_reg(struct ionic_ib_dev **rdev, struct net_device *netdev)
+static struct ionic_ib_dev *ionic_ib_dev_reg(struct net_device *netdev)
 {
-	struct lif *lif = netdev_priv(netdev);
-	int rc = 0;
+	struct lif *lif = get_netdev_ionic_lif(netdev, IONIC_API_VERSION);
+	struct ionic_ib_dev *rdev;
 
-    pr_info("\n%s:", __FUNCTION__);
-	if (!is_ionic_dev(netdev))
-		return -ENODEV;
+	pr_info("\n%s:", __FUNCTION__);
 
-    // TODO: need bump up the netdev refcount
-	if (!try_module_get(lif->ionic->pdev->driver->driver.owner)) {
-        rc = -ENODEV;
-        goto exit;
-    }
-    
-    dev_hold(netdev);
-    
-	*rdev = ionic_ib_dev_add(netdev, lif);
-	if (!*rdev) {
-		rc = -ENOMEM;
-        dev_put(netdev);
-		goto exit;
-	}
-exit:
-    
-	return rc;
+	if (!lif)
+		return ERR_PTR(-ENODEV);
+
+	/* XXX needed? taken care of by dev_hold()? only bnxt_re does this. */
+	if (!try_module_get(netdev->dev.parent->driver->owner))
+		return ERR_PTR(-ENODEV);
+
+	/* XXX needed here? we also do dev_hold in ionic_ib_dev_add() */
+	dev_hold(netdev);
+
+	rdev = ionic_ib_dev_add(netdev, lif);
+	if (IS_ERR(rdev))
+		dev_put(netdev);
+
+	return rdev;
 }
 
 static void ionic_init_one(struct ionic_ib_dev *rdev)
@@ -411,14 +396,16 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 
 		if (rdev)
 			break;
-		rc = ionic_ib_dev_reg(&rdev, real_dev);
-		if (rc == -ENODEV)
-			break;
-		if (rc) {
-			pr_err("Failed to register with the device %s: %#x\n",
-			       real_dev->name, rc);
+
+		rdev = ionic_ib_dev_reg(real_dev);
+		if (IS_ERR(rdev)) {
+			rc = PTR_ERR(rdev);
+			if (rc != -ENODEV)
+				pr_err("Failed to register with the device %s: %#x\n",
+				       real_dev->name, rc);
 			break;
 		}
+
 		ionic_init_one(rdev);
 
 		sch_work = true;        
