@@ -1,0 +1,12 @@
+# Test Spec
+selectors:
+    root            : ref://store/templates/id=ENDPOINT
+    endpoint        : filter://remote=True
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+    #maxsessions    : 2
+
+trigger:
+
+expect:
+    delay   : callback://eplearn/arp/GetExpectDelay

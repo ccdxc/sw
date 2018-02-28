@@ -39,7 +39,7 @@ def GetArpDestIP(testcase, packet):
     return "1.1.1.1"
 
 def GetExpectDelay(testcase):
-    return 10
+    return 1
 
 def GetPacketEncaps(testcase, packet):
     encaps = []

@@ -1,6 +1,6 @@
 # Feature Test Modules List
 feature:
-    id       : fte2
+    id       : fte
     sub      : eplearn
     package  : test.fte.eplearn
     module   : ep_learn
@@ -12,23 +12,30 @@ feature:
 
 modules:
     - module:
-        name    : NDP_LOCAL_SOLICIT
-        spec    : ndp_learn_local.testspec
+        name    : NDP_LOCAL_SOLICIT_SEND
+        spec    : ndp_learn_local_send.testspec
         iterate :
               - type     : NDP_SOLICIT
                 root     : ref://store/templates/id=ENDPOINT
                 endpoint : filter://remote=False
     - module:
-        name    : NDP_REMOTE_SOLICIT
-        spec    : ndp_learn_remote.testspec
+        name    : NDP_REMOTE_SOLICIT_SEND
+        spec    : ndp_learn_remote_send.testspec
         iterate :
               - type     : NDP_SOLICIT
                 root     : ref://store/templates/id=ENDPOINT
                 endpoint : filter://remote=True
     - module:
-        name    : ARP_REMOTE_REQ
-        spec    : arp_learn_remote.testspec
+        name    : ARP_REMOTE_REQ_SEND
+        spec    : arp_learn_remote_send.testspec
         iterate :
               - type     : ARP_REQ
                 root     : ref://store/templates/id=ENDPOINT
                 endpoint : filter://remote=True
+    - module:
+        name    : ARP_LOCAL_REQ_SEND
+        spec    : arp_learn_local_send.testspec
+        iterate :
+              - type     : ARP_REQ
+                root     : ref://store/templates/id=ENDPOINT
+                endpoint : filter://remote=False

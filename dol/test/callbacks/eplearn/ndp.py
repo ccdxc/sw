@@ -13,7 +13,7 @@ def GetNdpDestIP(testcase, packet):
     return "fe80::c002:3ff:fee4:0"
 
 def GetExpectDelay(testcase):
-    return 10
+    return 1
 
 def GetPacketEncaps(testcase, packet):
     encaps = []

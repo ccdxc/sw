@@ -1,0 +1,11 @@
+# Test Spec
+selectors:
+    root            : ref://store/templates/id=ENDPOINT
+    endpoint        : filter://remote=True
+    tenant          : filter://overlay=VXLAN,type=TENANT
+    segment         : filter://fabencap=VXLAN
+
+trigger:
+
+expect:
+    delay   : callback://eplearn/arp/GetExpectDelay

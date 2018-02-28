@@ -1,40 +1,39 @@
 # Feature Test Modules List
 feature:
-    id       : fte
+    id       : ftevxlan
     sub      : eplearn
     package  : test.fte.eplearn
-    module   : ep_learn
-    runorder : 0
+    module   : ep_learn_verify
+    runorder : 1
     enable   : True
     ignore   : True
     rtl      : False
-    args     :
 
 modules:
     - module:
-        name    : NDP_LOCAL_SOLICIT
-        spec    : ndp_learn_local.testspec
+        name    : NDP_LOCAL_SOLICIT_VERIFY
+        spec    : ndp_learn_local_vxlan_verify.testspec
         iterate :
               - type     : NDP_SOLICIT
                 root     : ref://store/templates/id=ENDPOINT
                 endpoint : filter://remote=False
     - module:
-        name    : NDP_REMOTE_SOLICIT
-        spec    : ndp_learn_remote.testspec
+        name    : NDP_REMOTE_SOLICIT_VERIFY
+        spec    : ndp_learn_remote_vxlan_verify.testspec
         iterate :
               - type     : NDP_SOLICIT
                 root     : ref://store/templates/id=ENDPOINT
                 endpoint : filter://remote=True
     - module:
-        name    : ARP_REMOTE_REQ
-        spec    : arp_learn_remote.testspec
+        name    : ARP_REMOTE_REQ_VERIFY
+        spec    : arp_learn_remote_vxlan_verify.testspec
         iterate :
               - type     : ARP_REQ
                 root     : ref://store/templates/id=ENDPOINT
                 endpoint : filter://remote=True
     - module:
-        name    : ARP_LOCAL_REQ
-        spec    : arp_learn_local.testspec
+        name    : ARP_LOCAL_REQ_VERIFY
+        spec    : arp_learn_local_vxlan_verify.testspec
         iterate :
               - type     : ARP_REQ
                 root     : ref://store/templates/id=ENDPOINT
