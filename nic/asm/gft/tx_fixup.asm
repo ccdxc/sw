@@ -8,6 +8,10 @@ struct phv_ p;
 %%
 
 tx_fixup:
+    sne             c7, k.p4plus_to_p4_flow_index, r0
+    phvwr.c7        p.control_metadata_skip_flow_lkp, TRUE
+    phvwr.c7        p.flow_action_metadata_flow_index, k.p4plus_to_p4_flow_index
+
     seq             c3, k.ipv4_1_valid, TRUE
     seq             c4, k.ipv6_1_valid, TRUE
 
@@ -50,15 +54,22 @@ tx_fixup_upd_tcp_seq:
     // set compute_icrc flag (rdma)
     // TDB: seq             c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
     seq             c1, k.udp_1_valid, TRUE
-    phvwrpair.c1    p.roce_bth_1_icrc, TRUE, p.udp_1_icrc, TRUE
-    phvwrpair.c1    p.ipv4_1_icrc, k.ipv4_1_valid, p.ipv6_1_icrc, k.ipv6_1_valid
+    bcf             [!c1], tx_fixup_rdma_done
+    .assert(offsetof(p, roce_bth_1_icrc) - offsetof(p, udp_1_icrc) == 10)
+    phvwrmi.c1      p.{roce_bth_1_icrc...udp_1_icrc}, 0xFFFF, 0x401
+    .assert(offsetof(p, ipv4_1_icrc) - offsetof(p, ipv6_1_icrc) == 9)
+    or              r7, k.ipv6_1_valid, k.ipv4_1_valid, 9
+    phvwrm.c1       p.{ipv4_1_icrc...ipv6_1_icrc}, r7, 0x201
     sub             r1, r1, k.p4plus_to_p4_udp_opt_bytes
     bcf             [c1], tx_fixup_done
     phvwr.c1.e      p.capri_deparser_len_icrc_payload_len, r1
 
-    // set l4 checksum flags
+tx_fixup_rdma_done:
     phvwr           p.capri_deparser_len_tx_l4_payload_len, r3
-    phvwrpair       p.udp_1_csum, k.udp_1_valid, p.ipv4_1_udp_csum, k.udp_1_valid
+    // set l4 checksum flags
+    .assert(offsetof(p, udp_1_csum) - offsetof(p, ipv4_1_udp_csum) == 3)
+    or              r7, k.udp_1_valid, k.udp_1_valid, 3
+    phvwrm          p.{udp_1_csum...ipv4_1_udp_csum}, r7, 0x9
     phvwrpair.e     p.tcp_1_csum, k.tcp_1_valid, p.ipv4_1_tcp_csum, k.tcp_1_valid
 
 tx_fixup_done:

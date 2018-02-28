@@ -105,6 +105,7 @@ header_type control_metadata_t {
         update_checksum_1   : 1;
         update_checksum_2   : 1;
         update_checksum_3   : 1;
+        skip_flow_lkp       : 1;
     }
 }
 

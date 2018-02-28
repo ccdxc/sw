@@ -272,7 +272,7 @@ header_type p4plus_to_p4_header_t {
         table3_valid        : 1;
         flags               : 8;
         udp_opt_bytes       : 8;  // exclude these bytes from udp payload_len
-        rsvd                : 24;
+        flow_index          : 24;
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
         gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
@@ -299,7 +299,7 @@ header_type p4plus_to_p4_s1_t {
         update_ip_len       : 1;
         update_ip_id        : 1;
         udp_opt_bytes       : 8;  // exclude these bytes from udp payload_len
-        rsvd                : 24;
+        flow_index          : 24;
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
         gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs

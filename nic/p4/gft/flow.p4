@@ -201,7 +201,9 @@ table tx_gft_hash_overflow {
 }
 
 control tx_flow_lookup {
-    apply(tx_gft_hash);
+    if (control_metadata.skip_flow_lkp == FALSE) {
+        apply(tx_gft_hash);
+    }
     if (flow_action_metadata.overflow_lkp == TRUE) {
         apply(tx_gft_hash_overflow);
     }

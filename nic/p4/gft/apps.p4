@@ -58,6 +58,11 @@ action tx_fixup() {
         }
     }
 
+    if (p4plus_to_p4.flow_index != 0) {
+        modify_field(flow_action_metadata.flow_index, p4plus_to_p4.flow_index);
+        modify_field(control_metadata.skip_flow_lkp, TRUE);
+    }
+
     remove_header(p4plus_to_p4);
     remove_header(capri_txdma_intrinsic);
 }
