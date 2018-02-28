@@ -40,6 +40,10 @@ typedef struct ipv4_header_s {
     uint32_t   daddr;
 } __PACK__ ipv4_header_t;
 
+// minimum IPv4 header length
+#define IPV4_HDR_MIN_LEN                             20
+#define IPV4_HDR_MIN_LEN_IN_WORDS                    5
+
 typedef struct ipv6_header_s {
 #if __BYTE_ORDER == __BIG_ENDIAN
     uint8_t    version:4;
@@ -93,6 +97,11 @@ typedef struct tcp_header_s {
     uint16_t  check;
     uint16_t  urg_ptr;
 } __PACK__ tcp_header_t;
+
+// minimum TCP header length
+#define TCP_HDR_MIN_LEN                             20
+#define TCP_DEFAULT_MSS                             546    // RFC6691
+#define TCP_DEFAULT_WINDOW_SIZE                     512
 
 typedef struct udp_header_s {
     uint16_t  sport;

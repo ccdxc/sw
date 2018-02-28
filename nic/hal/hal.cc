@@ -567,6 +567,7 @@ hal_init (hal_cfg_t *hal_cfg)
                             hal_cfg->sync_mode_logging);
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
+    srand(time(NULL));
 
     // do SDK initialization, if any
     hal_sdk_init();
