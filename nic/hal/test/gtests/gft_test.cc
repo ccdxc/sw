@@ -1035,7 +1035,7 @@ rx_create_gft_entry4() {
 
     // data
     data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
-    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
+    data.rx_gft_hash_action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx4;
 
     rx_gft_entry_write(&key, &data);
 }

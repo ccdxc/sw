@@ -272,6 +272,8 @@ parser rx_deparse_start {
  *****************************************************************************/
 parser parse_bth_deth {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(roce_bth_1);
@@ -280,6 +282,8 @@ parser parse_bth_deth {
 }
 parser parse_bth_deth_immdt {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     // This state needs 5 ohi instructions. Due to lack of instructions
     // and to keep roce pkt path optimized, udp.checksum of incoming
     // packet should be zero because udp.len is not used to verify checksum
@@ -292,6 +296,8 @@ parser parse_bth_deth_immdt {
 }
 parser parse_bth {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(roce_bth_1);
@@ -409,6 +415,8 @@ parser start_vlan_ipv6_bth_split {
 // tunneled roce
 parser parse_bth_deth_2 {
     extract(udp_2);
+    set_metadata(l4_metadata.l4_sport_2, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_2, latest.dstPort);
     set_metadata(ohi.l4_2_len, udp_2.len + 0);
     set_metadata(ohi.icrc_len, udp_2.len + parser_metadata.icrc_len);
     extract(roce_bth_2);
@@ -417,6 +425,8 @@ parser parse_bth_deth_2 {
 }
 parser parse_bth_deth_immdt_2 {
     extract(udp_2);
+    set_metadata(l4_metadata.l4_sport_2, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_2, latest.dstPort);
     set_metadata(ohi.l4_2_len, udp_2.len + 0);
     set_metadata(ohi.icrc_len, udp_2.len + parser_metadata.icrc_len);
     extract(roce_bth_2);
@@ -425,6 +435,8 @@ parser parse_bth_deth_immdt_2 {
 }
 parser parse_bth_2 {
     extract(udp_2);
+    set_metadata(l4_metadata.l4_sport_2, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_2, latest.dstPort);
     set_metadata(ohi.l4_2_len, udp_2.len + 0);
     set_metadata(ohi.icrc_len, udp_2.len + parser_metadata.icrc_len);
     extract(roce_bth_2);
@@ -536,9 +548,13 @@ parser start_outer_vlan_vxlan_ipv6_bth {
 
 parser parse_vxlan_ipv4_bth_deth {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
+    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_VXLAN);
+    set_metadata(tunnel_metadata.tunnel_vni_1, latest.vni);
     extract(ethernet_2);
     return parse_vxlan_ipv4_bth_deth_split;
 }
@@ -550,9 +566,13 @@ parser parse_vxlan_ipv4_bth_deth_split {
 }
 parser parse_vxlan_ipv6_bth_deth {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
+    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_VXLAN);
+    set_metadata(tunnel_metadata.tunnel_vni_1, latest.vni);
     extract(ethernet_2);
     return parse_vxlan_ipv6_bth_deth_split;
 }
@@ -563,9 +583,13 @@ parser parse_vxlan_ipv6_bth_deth_split {
 }
 parser parse_vxlan_ipv4_bth_deth_immdt {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
+    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_VXLAN);
+    set_metadata(tunnel_metadata.tunnel_vni_1, latest.vni);
     extract(ethernet_2);
     return parse_vxlan_ipv4_bth_deth_immdt_split;
 }
@@ -578,8 +602,12 @@ parser parse_vxlan_ipv4_bth_deth_immdt_split {
 }
 parser parse_vxlan_ipv6_bth_deth_immdt {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     extract(vxlan_1);
+    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_VXLAN);
+    set_metadata(tunnel_metadata.tunnel_vni_1, latest.vni);
     extract(ethernet_2);
     return parse_vxlan_ipv6_bth_deth_immdt_split;
 }
@@ -590,9 +618,13 @@ parser parse_vxlan_ipv6_bth_deth_immdt_split {
 }
 parser parse_vxlan_ipv4_bth {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
+    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_VXLAN);
+    set_metadata(tunnel_metadata.tunnel_vni_1, latest.vni);
     extract(ethernet_2);
     return parse_vxlan_ipv4_bth_split;
 }
@@ -604,9 +636,13 @@ parser parse_vxlan_ipv4_bth_split {
 }
 parser parse_vxlan_ipv6_bth {
     extract(udp_1);
+    set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
+    set_metadata(l4_metadata.l4_dport_1, latest.dstPort);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     set_metadata(ohi.icrc_len, udp_1.len + parser_metadata.icrc_len);
     extract(vxlan_1);
+    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_VXLAN);
+    set_metadata(tunnel_metadata.tunnel_vni_1, latest.vni);
     extract(ethernet_2);
     return parse_vxlan_ipv6_bth_split;
 }
