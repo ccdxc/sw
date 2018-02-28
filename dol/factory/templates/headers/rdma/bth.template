@@ -9,7 +9,7 @@ fields:
     m       : const/0x0
     padcnt  : const/0x0
     tver    : const/0x0
-    p_key   : const/0x0
+    p_key   : const/0xffff
     f_r     : const/0x0
     b_r     : const/0x0
     rsvd    : const/0x0

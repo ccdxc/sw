@@ -24,6 +24,7 @@
 #define BTH_PSN                 p.bth.psn
 #define BTH_ACK_REQ             p.bth.a
 #define BTH_OPCODE              p.bth.opcode
+#define BTH_PKEY                p.bth.pkey
 
 #define IMMDT_DATA              p.immeth.data
 

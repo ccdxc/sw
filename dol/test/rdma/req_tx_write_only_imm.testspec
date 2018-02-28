@@ -56,6 +56,7 @@ packets:
                 opcode  : 11 # RDMA Write Only with Imm
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+                a       : 1                                
             reth: 
                 va      : ref://testcase/pvtdata/va
                 dma_len : ref://testcase/packets/id=BASE_PKT/size

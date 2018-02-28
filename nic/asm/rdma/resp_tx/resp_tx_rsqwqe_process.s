@@ -42,6 +42,9 @@ process_atomic:
     add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, k.args.serv_type, BTH_OPC_SVC_SHIFT
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, d.psn
 
+   // phv_p->bth.pkey = 0xffff
+   phvwr       p.bth.pkey, 0xffff  
+    
     // prepare atomicaeth header
     phvwr       p.atomicaeth.orig_data, d.{atomic.orig_data}.dx
 
@@ -145,6 +148,9 @@ process_read:
 
 next:
 
+    // phv_p->bth.pkey = 0xffff
+    phvwr       p.bth.pkey, 0xffff  
+    
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, CURR_PSN
 
     add         XFER_VA, d.read.va, BYTES_SENT

@@ -76,6 +76,9 @@ add_ack_header:
     add         r2, RDMA_PKT_OPC_ACK, k.to_stage.s5.rqcb1_wb.ack_nack_serv_type, BTH_OPC_SVC_SHIFT
     phvwrpair   p.bth.opcode, r2, p.bth.dst_qp, d.dst_qp
 
+    // phv_p->bth.pkey = 0xffff
+    phvwr       p.bth.pkey, 0xffff  
+    
     // prepare aeth
     phvwrpair   p.aeth.syndrome, d.aeth.syndrome, p.aeth.msn, d.aeth.msn
 

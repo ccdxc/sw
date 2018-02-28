@@ -231,6 +231,7 @@ packets:
                 opcode  : 2 # RDMA SEND Last
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=6
+                a       : 1                
             payload:
                 data    : ref://testcase/packets/id=SEND_LAST_PYLD/rawbytes
 
@@ -334,6 +335,7 @@ packets:
                 opcode  : 8 # RDMA WRITE Last
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=9
+                a       : 1                
             payload:
                 data    : ref://testcase/packets/id=WRITE_LAST_PYLD/rawbytes
 

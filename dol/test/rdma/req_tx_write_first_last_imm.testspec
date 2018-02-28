@@ -102,6 +102,7 @@ packets:
                 opcode  : 9 # RDMA WRITE Last
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
+                a       : 1                                                
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
             payload:

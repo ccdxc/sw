@@ -64,6 +64,7 @@ packets:
                 opcode  : 4 # RDMA SEND Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
+                a       : 1                
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
@@ -97,6 +98,7 @@ packets:
                 opcode  : 4 # RDMA SEND Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
+                a       : 1                
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 

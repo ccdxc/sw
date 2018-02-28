@@ -97,6 +97,7 @@ packets:
                 opcode  : 3 # RDMA SEND Last with Imm
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
+                a       : 1                
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
             payload:

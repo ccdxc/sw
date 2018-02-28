@@ -97,6 +97,7 @@ packets:
                 opcode  : 2 # RDMA SEND Last
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
+                a       : 1                
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 

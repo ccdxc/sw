@@ -46,6 +46,7 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
 
         .brcase RDMA_PKT_LAST
+            phvwr          BTH_ACK_REQ, 1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
 
@@ -62,6 +63,8 @@ req_tx_add_headers_process:
 
             // Update num addrs to 2 if UD service (bth, deth)
             seq            c3, d.service, RDMA_SERV_TYPE_UD
+            phvwr.!c3      BTH_ACK_REQ, 1
+
             DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 2, c3)
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
@@ -75,6 +78,7 @@ req_tx_add_headers_process:
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         .brcase RDMA_PKT_LAST
+            phvwr          BTH_ACK_REQ, 1
             // dma_cmd[2] - IETH hdr
             phvwr          IETH_R_KEY, d.inv_key
             // num addrs 2 (bth, ieth)
@@ -90,6 +94,7 @@ req_tx_add_headers_process:
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         .brcase RDMA_PKT_ONLY
+            phvwr          BTH_ACK_REQ, 1
             // check_credits = TRUE
             setcf          c5, [c0]
 
@@ -112,6 +117,7 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_LAST
+            phvwr          BTH_ACK_REQ, 1
             // dma_cmd[2] - IMMETH hdr, num addrs 2 (bth, immeth)
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 1)
@@ -132,6 +138,8 @@ req_tx_add_headers_process:
         
             // dma_cmd[2] - IMMETH hdr, num addrs 2 (bth, immeth) or 3 for UD (bth, deth, immeth)
             seq            c3, d.service, RDMA_SERV_TYPE_UD
+            phvwr.!c3          BTH_ACK_REQ, 1
+
             DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 2, !c3)
             DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 3, c3)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, immeth, immeth, 1, !c3)
@@ -173,6 +181,7 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_LAST
+            phvwr          BTH_ACK_REQ, 1
             // check_credits = TRUE; inc_lsn = TRUE
             crestore       [c5, c4], 0x30, 0x30
 
@@ -188,6 +197,7 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         
         .brcase RDMA_PKT_ONLY
+            phvwr          BTH_ACK_REQ, 1
             // check_credits = TRUE; inc_lsn = TRUE
             crestore       [c5, c4], 0x30, 0x30
 
@@ -208,7 +218,8 @@ req_tx_add_headers_process:
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
-        .brcase RDMA_PKT_LAST
+    .brcase RDMA_PKT_LAST
+            phvwr          BTH_ACK_REQ, 1
             // check_credits = TRUE
             setcf          c5, [c0]
 
@@ -228,6 +239,7 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_ONLY
+            phvwr          BTH_ACK_REQ, 1
             // check_credits = TRUE
             setcf          c5, [c0]
 
@@ -289,6 +301,8 @@ req_tx_add_headers_process:
     .brend
 
 op_type_end:
+   // phv_p->bth.pkey = 0xffff
+   phvwr          BTH_PKEY, 0xffff  
 
     b.!c6          inc_psn
     // phv_p->bth.psn = sqcb1_p->tx_psn

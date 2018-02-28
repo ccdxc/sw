@@ -138,6 +138,7 @@ packets:
                 opcode  : 22 # RDMA SEND Last with Invalidate
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=2
+                a       : 1                
             ieth:
                 r_key   : ref://testcase/pvtdata/inv_r_key
             payload:
