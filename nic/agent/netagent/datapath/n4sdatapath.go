@@ -151,3 +151,23 @@ func (ndp *NaplesDatapath) ListTenant() []*netproto.Tenant {
 func (ndp *NaplesDatapath) UpdateTenant(tn *netproto.Tenant) error {
 	return nil
 }
+
+// CreateInterface creates an interface. Stubbed out to satisfy the interface
+func (ndp *NaplesDatapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	return nil
+}
+
+// DeleteInterface deletes an interface. Stubbed out to satisfy the datapath interface
+func (ndp *NaplesDatapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	return nil
+}
+
+// ListInterface lists all interfaces. Stubbed out to satisfy the datapath interface
+func (ndp *NaplesDatapath) ListInterface() []*netproto.Interface {
+	return nil
+}
+
+// UpdateInterface updates an interface. Stubbed out to satisfy the datapath interface
+func (ndp *NaplesDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	return nil
+}

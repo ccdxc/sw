@@ -111,6 +111,24 @@ import (
 
                             err := netutils.HTTPPost("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                         {{else if strEq $crudObject "Interface"}}
+                                                     {{lower .}}Data := netproto.Interface{
+                                                         TypeMeta: api.TypeMeta{Kind: "Interface"},
+                                                         ObjectMeta: api.ObjectMeta{
+                                                             Tenant: "default",
+                                                             Name:   "test{{title .}}{{title $crudObject}}",
+                                                         },
+                                                         Spec: netproto.{{title $crudObject}}Spec{
+                                                             Type: "ENIC",
+                                                             AdminStatus: "UP",
+                                                         },
+                                                         Status: netproto.{{title $crudObject}}Status{
+                                                             OperStatus:   "UP",
+
+                                                         },
+                                                     }
+                                                     err := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &{{lower .}}Data, &resp)
+                                                     getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
                         {{end}}
                         AssertOk(t, err, "Error posting {{lower $crudObject}} to REST Server")
                         AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
@@ -253,6 +271,34 @@ import (
                                                                     }
                                                                 }
                                  AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
+                            {{else if strEq $crudObject "Interface"}}
+                                var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
+                                updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                       Type: "UPLINK",
+                                                                       AdminStatus: "UP",
+                                                                    }
+                                {{lower .}}Data := netproto.{{title $crudObject}}{
+                                    TypeMeta: api.TypeMeta{Kind: "Interface"},
+                                    ObjectMeta: api.ObjectMeta{
+                                        Tenant: "default",
+                                        Name:   "preCreated{{title $crudObject}}",
+                                    },
+                                    Spec: updated{{title $crudObject}}Spec,
+                                }
+                                err := netutils.HTTPPut("http://"+agentRestURL+"/api/{{lower $crudObject}}s/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
+
+                                getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                                AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+
+
+                                 for _, o := range {{lower $crudObject}}List{
+                                                                    if o.Name == "preCreated{{title $crudObject}}"{
+                                                                        actual{{title $crudObject}}Spec = o.Spec
+                                                                        break
+                                                                    }
+                                                                }
+                                 AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
                             {{end}}
                         }
                 {{else if strEq . "delete"}}
@@ -328,6 +374,21 @@ import (
                              postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/tenants/", &{{lower .}}Data, &resp)
                              err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/tenants/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+                         {{else if strEq $crudObject "Interface"}}
+                              {{lower .}}Data := netproto.{{title $crudObject}}{
+                                                      TypeMeta: api.TypeMeta{Kind: "Interface"},
+                                                      ObjectMeta : api.ObjectMeta{
+                                                                          Tenant:"default",
+                                                                          Name: "test{{title .}}{{title $crudObject}}",
+                                                      },
+                                                      Spec: netproto.InterfaceSpec{
+                                                      			Type: "LIF",
+                                                      			AdminStatus: "UP",
+                                                      },
+                              }
+                              postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/interfaces/", &{{lower .}}Data, &resp)
+                              err := netutils.HTTPDelete( "http://"+agentRestURL+"/api/interfaces/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                              getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
                         {{end}}
                         AssertOk(t, postErr, "Error posting {{lower $crudObject}} to REST Server")
                         AssertOk(t, err, "Error deleting {{lower $crudObject}} from REST Server")

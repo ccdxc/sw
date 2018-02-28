@@ -67,6 +67,10 @@ type DB struct {
 	TenantDB         map[string]*halproto.VrfRequestMsg
 	TenantDelDB      map[string]*halproto.VrfDeleteRequestMsg
 	SgPolicyDB       map[string]*halproto.SecurityGroupPolicyRequestMsg
+	InterfaceDB      map[string]*halproto.InterfaceRequestMsg
+	LifDB            map[string]*halproto.LifRequestMsg
+	InterfaceDelDB   map[string]*halproto.InterfaceDeleteRequestMsg
+	LifDelDB         map[string]*halproto.LifDeleteRequestMsg
 }
 
 // HalDatapath contains mock and hal clients.
@@ -106,6 +110,10 @@ func NewHalDatapath(kind Kind) (*HalDatapath, error) {
 		TenantDB:         make(map[string]*halproto.VrfRequestMsg),
 		TenantDelDB:      make(map[string]*halproto.VrfDeleteRequestMsg),
 		SgPolicyDB:       make(map[string]*halproto.SecurityGroupPolicyRequestMsg),
+		InterfaceDB:      make(map[string]*halproto.InterfaceRequestMsg),
+		LifDB:            make(map[string]*halproto.LifRequestMsg),
+		InterfaceDelDB:   make(map[string]*halproto.InterfaceDeleteRequestMsg),
+		LifDelDB:         make(map[string]*halproto.LifDeleteRequestMsg),
 	}
 	haldp.DB = db
 	if haldp.Kind.String() == "hal" {
@@ -1006,6 +1014,222 @@ func (hd *HalDatapath) UpdateTenant(tn *netproto.Tenant) error {
 	delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
 	hd.Unlock()
 
+	return nil
+}
+
+// CreateInterface creates an interface
+func (hd *HalDatapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	var ifSpec *halproto.InterfaceSpec
+	switch intf.Spec.Type {
+	case "LIF":
+		lifReqMsg := &halproto.LifRequestMsg{
+			Request: []*halproto.LifSpec{
+				{
+					Meta: &halproto.ObjectMeta{
+						VrfId: tn.Status.TenantID,
+					},
+					KeyOrHandle: &halproto.LifKeyHandle{
+						KeyOrHandle: &halproto.LifKeyHandle_LifId{
+							LifId: intf.Status.InterfaceID,
+						},
+					},
+				},
+			},
+		}
+		_, err := hd.Hal.Ifclient.LifCreate(context.Background(), lifReqMsg)
+		if err != nil {
+			log.Errorf("Error creating lif. Err: %v", err)
+			return err
+		}
+		hd.Lock()
+		hd.DB.LifDB[objectKey(&tn.ObjectMeta)] = lifReqMsg
+		hd.Unlock()
+		return nil
+
+	case "UPLINK":
+		ifSpec = &halproto.InterfaceSpec{
+			Meta: &halproto.ObjectMeta{
+				VrfId: tn.Status.TenantID,
+			},
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
+			},
+			Type: halproto.IfType_IF_TYPE_UPLINK,
+		}
+
+	case "ENIC":
+		ifSpec = &halproto.InterfaceSpec{
+			Meta: &halproto.ObjectMeta{
+				VrfId: tn.Status.TenantID,
+			},
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
+			},
+			Type: halproto.IfType_IF_TYPE_ENIC,
+		}
+	default:
+		return errors.New("invalid interface type")
+	}
+
+	ifReqMsg := &halproto.InterfaceRequestMsg{
+		Request: []*halproto.InterfaceSpec{
+			ifSpec,
+		},
+	}
+	_, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), ifReqMsg)
+	if err != nil {
+		log.Errorf("Error creating inteface. Err: %v", err)
+		return err
+	}
+	hd.Lock()
+	hd.DB.InterfaceDB[objectKey(&tn.ObjectMeta)] = ifReqMsg
+	hd.Unlock()
+	return nil
+}
+
+// DeleteInterface deletes an interface
+func (hd *HalDatapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	var ifDelReq *halproto.InterfaceDeleteRequest
+	switch intf.Spec.Type {
+	case "LIF":
+		lifDelReqMsg := &halproto.LifDeleteRequestMsg{
+			Request: []*halproto.LifDeleteRequest{
+				{
+					Meta: &halproto.ObjectMeta{
+						VrfId: tn.Status.TenantID,
+					},
+					KeyOrHandle: &halproto.LifKeyHandle{
+						KeyOrHandle: &halproto.LifKeyHandle_LifId{
+							LifId: intf.Status.InterfaceID,
+						},
+					},
+				},
+			},
+		}
+		_, err := hd.Hal.Ifclient.LifDelete(context.Background(), lifDelReqMsg)
+		if err != nil {
+			log.Errorf("Error creating lif. Err: %v", err)
+			return err
+		}
+		// save the lif delete message
+		hd.Lock()
+		hd.DB.LifDelDB[objectKey(&intf.ObjectMeta)] = lifDelReqMsg
+		delete(hd.DB.LifDB, objectKey(&intf.ObjectMeta))
+		hd.Unlock()
+
+		return nil
+	case "ENIC":
+		fallthrough
+
+	case "UPLINK":
+		ifDelReq = &halproto.InterfaceDeleteRequest{
+			Meta: &halproto.ObjectMeta{
+				VrfId: tn.Status.TenantID,
+			},
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
+			},
+		}
+	default:
+		return errors.New("invalid interface type")
+	}
+
+	ifDelReqMsg := &halproto.InterfaceDeleteRequestMsg{
+		Request: []*halproto.InterfaceDeleteRequest{
+			ifDelReq,
+		},
+	}
+	_, err := hd.Hal.Ifclient.InterfaceDelete(context.Background(), ifDelReqMsg)
+	if err != nil {
+		log.Errorf("Error creating lif. Err: %v", err)
+		return err
+	}
+	// save the lif delete message
+	hd.Lock()
+	hd.DB.InterfaceDelDB[objectKey(&intf.ObjectMeta)] = ifDelReqMsg
+	delete(hd.DB.LifDB, objectKey(&intf.ObjectMeta))
+	hd.Unlock()
+	return nil
+
+}
+
+// UpdateInterface updates an interface
+func (hd *HalDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	var ifSpec *halproto.InterfaceSpec
+	switch intf.Spec.Type {
+	case "LIF":
+		lifReqMsg := &halproto.LifRequestMsg{
+			Request: []*halproto.LifSpec{
+				{
+					Meta: &halproto.ObjectMeta{
+						VrfId: tn.Status.TenantID,
+					},
+					KeyOrHandle: &halproto.LifKeyHandle{
+						KeyOrHandle: &halproto.LifKeyHandle_LifId{
+							LifId: intf.Status.InterfaceID,
+						},
+					},
+				},
+			},
+		}
+		_, err := hd.Hal.Ifclient.LifUpdate(context.Background(), lifReqMsg)
+		if err != nil {
+			log.Errorf("Error creating lif. Err: %v", err)
+			return err
+		}
+		hd.Lock()
+		hd.DB.LifDB[objectKey(&tn.ObjectMeta)] = lifReqMsg
+		hd.Unlock()
+		return nil
+
+	case "UPLINK":
+		ifSpec = &halproto.InterfaceSpec{
+			Meta: &halproto.ObjectMeta{
+				VrfId: tn.Status.TenantID,
+			},
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
+			},
+			Type: halproto.IfType_IF_TYPE_UPLINK,
+		}
+
+	case "ENIC":
+		ifSpec = &halproto.InterfaceSpec{
+			Meta: &halproto.ObjectMeta{
+				VrfId: tn.Status.TenantID,
+			},
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
+			},
+			Type: halproto.IfType_IF_TYPE_ENIC,
+		}
+	default:
+		return errors.New("invalid interface type")
+	}
+
+	ifReqMsg := &halproto.InterfaceRequestMsg{
+		Request: []*halproto.InterfaceSpec{
+			ifSpec,
+		},
+	}
+	_, err := hd.Hal.Ifclient.InterfaceUpdate(context.Background(), ifReqMsg)
+	if err != nil {
+		log.Errorf("Error creating inteface. Err: %v", err)
+		return err
+	}
+	hd.Lock()
+	hd.DB.InterfaceDB[objectKey(&tn.ObjectMeta)] = ifReqMsg
+	hd.Unlock()
 	return nil
 }
 

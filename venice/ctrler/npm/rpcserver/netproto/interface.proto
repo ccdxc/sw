@@ -22,10 +22,9 @@ message InterfaceStatus {
         UP                = 1;
         DOWN              = 2;
     }
-    uint64 InterfaceID          = 1; [(gogoproto.jsontag) = "id,omitempty")];
-    string Status               = 2; [(venice.check) = "StrEnum(InterfaceStatys.IFStatus)",
-                                      (gogoproto.jsontag) = "status,omitempty"];
-
+    uint64 InterfaceID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
+    string OperStatus               = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
+                                         (gogoproto.jsontag) = "oper-status,omitempty"];
 }
 
 // InterfaceSpec captures all the interface level configuration
@@ -39,6 +38,8 @@ message InterfaceSpec {
 
     string Type             = 1 [(venice.check) = "StrEnum(InterfaceSpec.IFType)",
                                  (gogoproto.jsontag) = "type,omitempty"];
+    string AdminStatus      = 2 [(venice.check) = "StrEnum(InterfaceStatus.IFStatus)",
+                                 (gogoproto.jsontag) = "admin-status,omitempty"];
 }
 
 // Interface object

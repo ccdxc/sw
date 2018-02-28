@@ -10,6 +10,7 @@
 		security.proto
 		service.proto
 		tenant.proto
+		interface.proto
 
 	It has these top-level messages:
 		NetworkSpec
@@ -41,6 +42,11 @@
 		Tenant
 		TenantList
 		TenantEvent
+		InterfaceStatus
+		InterfaceSpec
+		Interface
+		InterfaceList
+		InterfaceEvent
 */
 package netproto
 

@@ -70,6 +70,14 @@ func setup() (*RestServer, error) {
 		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
 		dp.Hal.MockClients.MockTnclient.EXPECT().VrfUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		dp.Hal.MockClients.MockTnclient.EXPECT().VrfDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+
+		dp.Hal.MockClients.MockIfclient.EXPECT().InterfaceCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
+		dp.Hal.MockClients.MockIfclient.EXPECT().InterfaceUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
+		dp.Hal.MockClients.MockIfclient.EXPECT().InterfaceDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+
+		dp.Hal.MockClients.MockIfclient.EXPECT().LifCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
+		dp.Hal.MockClients.MockIfclient.EXPECT().LifUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
+		dp.Hal.MockClients.MockIfclient.EXPECT().LifDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
 	err = populatePreTestData(nagent)
@@ -152,6 +160,66 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	}
 
 	err = nagent.CreateTenant(&tn)
+	if err != nil {
+		return
+	}
+
+	lif := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "preCreatedInterface",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type:        "LIF",
+			AdminStatus: "UP",
+		},
+		Status: netproto.InterfaceStatus{
+			OperStatus: "UP",
+		},
+	}
+
+	uplink := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "preCreatedUplink",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type:        "UPLINK",
+			AdminStatus: "UP",
+		},
+		Status: netproto.InterfaceStatus{
+			OperStatus: "UP",
+		},
+	}
+
+	enic := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "preCreatedEnic",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type:        "ENIC",
+			AdminStatus: "UP",
+		},
+		Status: netproto.InterfaceStatus{
+			OperStatus: "UP",
+		},
+	}
+
+	err = nagent.CreateInterface(&lif)
+	if err != nil {
+		return
+	}
+
+	err = nagent.CreateInterface(&uplink)
+	if err != nil {
+		return
+	}
+
+	err = nagent.CreateInterface(&enic)
 	if err != nil {
 		return
 	}

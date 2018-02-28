@@ -156,6 +156,26 @@ func (ag *fakeAgent) UpdateTenant(tn *netproto.Tenant) error {
 	return nil
 }
 
+// CreateInterface creates an interface. Stubbed out to satisfy the ctrlerIf interface
+func (ag *fakeAgent) CreateInterface(intf *netproto.Interface) error {
+	return nil
+}
+
+// DeleteInterface deletes an interface. Stubbed out to satisfy the ctrlerIf interface
+func (ag *fakeAgent) DeleteInterface(intf *netproto.Interface) error {
+	return nil
+}
+
+// ListInterface lists interfaces. Stubbed out to satisfy the ctrlerIf interface
+func (ag *fakeAgent) ListInterface() []*netproto.Interface {
+	return nil
+}
+
+// UpdateInterface updates an interface. Stubbed out to satisfy the ctrlerIf interface
+func (ag *fakeAgent) UpdateInterface(intf *netproto.Interface) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

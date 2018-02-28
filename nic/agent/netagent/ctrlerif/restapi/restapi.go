@@ -42,10 +42,11 @@ func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error
 	// setup the top level routes
 	router := mux.NewRouter()
 	prefixRoutes := map[string]routeAddFunc{
-		"/api/networks/":  addNetworkAPIRoutes,
-		"/api/endpoints/": addEndpointAPIRoutes,
-		"/api/sgs/":       addSecurityGroupAPIRoutes,
-		"/api/tenants/":   addTenantAPIRoutes,
+		"/api/networks/":   addNetworkAPIRoutes,
+		"/api/endpoints/":  addEndpointAPIRoutes,
+		"/api/sgs/":        addSecurityGroupAPIRoutes,
+		"/api/tenants/":    addTenantAPIRoutes,
+		"/api/interfaces/": addInterfaceAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

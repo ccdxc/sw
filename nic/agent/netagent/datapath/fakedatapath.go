@@ -180,3 +180,23 @@ func (fdp *FakeDatapath) UpdateTenant(tn *netproto.Tenant) error {
 func (fdp *FakeDatapath) ListTenant() []*netproto.Tenant {
 	return nil
 }
+
+// CreateInterface creates an interface. Stubbed out to satisfy datapath interface.
+func (fdp *FakeDatapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	return nil
+}
+
+// DeleteInterface deletes. Stubbed out to satisfy datapath interface.
+func (fdp *FakeDatapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	return nil
+}
+
+// UpdateInterface updates an interface. Stubbed out to satisfy datapath interface.
+func (fdp *FakeDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+	return nil
+}
+
+// ListInterface lists all interfaces. Stubbed out to satisfy datapath interface.
+func (fdp *FakeDatapath) ListInterface() []*netproto.Interface {
+	return nil
+}

@@ -15,6 +15,7 @@ const (
 	NetworkID       = "networkID"
 	SecurityGroupID = "sgID"
 	TenantID        = "tenantID"
+	InterfaceID     = "interfaceID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -25,15 +26,16 @@ type IntfInfo struct {
 
 // NetAgent is the network agent instance
 type NetAgent struct {
-	sync.Mutex                                    // global lock for the agent
-	store      emstore.Emstore                    // embedded db
-	nodeUUID   string                             // Node's UUID
-	datapath   NetDatapathAPI                     // network datapath
-	ctrlerif   CtrlerAPI                          // controller object
-	networkDB  map[string]*netproto.Network       // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
-	endpointDB map[string]*netproto.Endpoint      // Endpoint object db
-	secgroupDB map[string]*netproto.SecurityGroup // security group object db
-	tenantDB   map[string]*netproto.Tenant        // tenant object db
+	sync.Mutex                                     // global lock for the agent
+	store       emstore.Emstore                    // embedded db
+	nodeUUID    string                             // Node's UUID
+	datapath    NetDatapathAPI                     // network datapath
+	ctrlerif    CtrlerAPI                          // controller object
+	networkDB   map[string]*netproto.Network       // Network object db ToDo Add updating in memory state from persisted DB in case of agent restarts
+	endpointDB  map[string]*netproto.Endpoint      // Endpoint object db
+	secgroupDB  map[string]*netproto.SecurityGroup // security group object db
+	tenantDB    map[string]*netproto.Tenant        // tenant object db
+	interfaceDB map[string]*netproto.Interface     // interface object db
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -63,7 +65,11 @@ type CtrlerIntf interface {
 	CreateTenant(tn *netproto.Tenant) error                     // create a tenant
 	DeleteTenant(tn *netproto.Tenant) error                     // delete a tenant
 	ListTenant() []*netproto.Tenant                             // lists all tenants
-	UpdateTenant(tn *netproto.Tenant) error                     //updates a tenant
+	UpdateTenant(tn *netproto.Tenant) error                     // updates a tenant
+	CreateInterface(intf *netproto.Interface) error             // creates an interface
+	UpdateInterface(intf *netproto.Interface) error             // updates an interface
+	DeleteInterface(intf *netproto.Interface) error             // deletes an interface
+	ListInterface() []*netproto.Interface                       // lists all interfaces
 }
 
 // PluginIntf is the API provided by the netagent to plugins
@@ -89,7 +95,10 @@ type NetDatapathAPI interface {
 	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                              // deletes a security group
 	CreateTenant(tn *netproto.Tenant) error                                                                            // creates a tenant
 	DeleteTenant(tn *netproto.Tenant) error                                                                            // deletes a tenant
-	UpdateTenant(tn *netproto.Tenant) error                                                                            //updates a tenant
+	UpdateTenant(tn *netproto.Tenant) error                                                                            // updates a tenant
+	CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // creates an interface
+	UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // updates an interface
+	DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error                                               // deletes an interface
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths
