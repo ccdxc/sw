@@ -19,24 +19,6 @@
 #define ETH_TYPE_DOT1Q                                 0x8100
 #define ETH_TYPE_IPV6                                  0x86DD
 
-// ethernet header
-typedef struct eth_hdr_ {
-    mac_addr_t        daddr;
-    mac_addr_t        saddr;
-    etype_t           etype;
-} __PACK__ eth_hdr_t;
-
-// 802.1q header
-typedef struct eth_dot1q_hdr_ {
-    mac_addr_t        daddr;
-    mac_addr_t        saddr;
-    etype_t           ethtype;        // set to ETH_TYPE_DOT1Q
-    uint16_t          prio:3;
-    uint16_t          cfi:1;
-    uint16_t          vlan_id:12;
-    etype_t           etype;
-} __PACK__ eth_dot1q_hdr_t;
-
 #define MAC_TO_UINT64(mac_addr)                                           \
             ((mac_addr[5] & 0xFF)                                       | \
              ((mac_addr[4] & 0xFF) << 8) | ((mac_addr[3] & 0xFF) << 16) | \

@@ -141,7 +141,8 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
 }
 
 static inline bool 
-ip_addr_is_equal(ip_addr_t *ip_addr1, ip_addr_t *ip_addr2) {
+ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
+{
     if (!ip_addr1 || !ip_addr2) {
         return false;
     }
@@ -150,7 +151,8 @@ ip_addr_is_equal(ip_addr_t *ip_addr1, ip_addr_t *ip_addr2) {
 }
 
 static inline bool 
-ip_prefix_is_equal(ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2) {
+ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
+{
     if (!ip_prefix1 || !ip_prefix2) {
         return false;
     }
@@ -160,7 +162,8 @@ ip_prefix_is_equal(ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2) {
 
 
 static inline ipv4_addr_t 
-ipv4_prefix_len_to_mask(uint8_t len) {
+ipv4_prefix_len_to_mask (uint8_t len)
+{
     if (len > 32) {
         return 0;
     }
@@ -168,7 +171,7 @@ ipv4_prefix_len_to_mask(uint8_t len) {
 }
 
 static inline int 
-ipv4_mask_to_prefix_len(ipv4_addr_t v4_addr)
+ipv4_mask_to_prefix_len (ipv4_addr_t v4_addr)
 {
     ipv4_addr_t iv4_addr = ~v4_addr;
 
@@ -205,7 +208,7 @@ ipv6_prefix_len_to_mask (ipv6_addr_t *v6_addr, uint8_t len)
 }
 
 static inline int 
-ipv6_mask_to_prefix_len(ipv6_addr_t *v6_addr)
+ipv6_mask_to_prefix_len (ipv6_addr_t *v6_addr)
 {
     int prefix_len = 0;
     unsigned inv;
