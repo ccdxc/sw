@@ -2332,6 +2332,7 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   xts_ctx.dst_buf = (void*)r2n_pyld->va();
   xts_ctx.is_dst_hbm_buf = r2n_pyld->is_mem_type_hbm();
   xts_ctx.num_sectors = rdma_r2n_data_size() / SECTOR_SIZE;
+  xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
   xts_ctx.init(rdma_r2n_data_size());
 
@@ -2442,6 +2443,7 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   xts_ctx.dst_buf = (void*)read_hbm_buf->va();
   xts_ctx.is_dst_hbm_buf = read_hbm_buf->is_mem_type_hbm();
   xts_ctx.num_sectors = rdma_r2n_data_size() / SECTOR_SIZE;
+  xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
   xts_ctx.init(rdma_r2n_data_size());
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
