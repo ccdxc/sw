@@ -321,8 +321,8 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     // check if ini file exists
     ini_file = hal_cfg->cfg_path + "/" + std::string(inifile);
     if (access(ini_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "HAL ini file %s doesn't exist or not accessible\n",
-                ini_file.c_str());
+        HAL_TRACE_DEBUG("HAL ini file %s doesn't exist/not accessible, "
+                        "skipping ...", ini_file.c_str());
         hal_cfg->forwarding_mode = "smart-switch";
         return HAL_RET_OK;
     }
@@ -571,18 +571,11 @@ hal_init (hal_cfg_t *hal_cfg)
     // do SDK initialization, if any
     hal_sdk_init();
 
-    // check to see if HAL is running with root permissions
-    user = getenv("USER");
-    if (user && !strcmp(user, "root")) {
-        gl_super_user = true;
-    }
-
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
 
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     HAL_ASSERT(catalog != NULL);
-
     g_hal_state->set_catalog(catalog);
 
     // validate control/data cores against catalog
@@ -595,6 +588,12 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // init fte and hal plugins
     hal::init_plugins(hal_cfg);
+
+    // check to see if HAL is running with root permissions
+    user = getenv("USER");
+    if (user && !strcmp(user, "root")) {
+        gl_super_user = true;
+    }
 
     // spawn all necessary PI threads
     HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);

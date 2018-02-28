@@ -36,8 +36,13 @@ logger_init (uint32_t logger_cpu_id, bool sync_mode)
     cpu_id = logger_cpu_id;
     spdlog::set_level(spdlog::level::debug);
     spdlog::set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
-    freopen(LOG_FILENAME, "w", stdout);
-    freopen(LOG_FILENAME, "w", stderr);
+    // redirecting stdout, stderr will cause race conditions between spdlog
+    // writing to same file and stdout getting redirected to same file outside
+    // spdlog
+    //freopen(LOG_FILENAME, "w", stdout);
+    //freopen(LOG_FILENAME, "w", stderr);
+    //fflush(stdout);
+    //fflush(stderr);
     if (!sync_mode) {
         spdlog::set_async_mode(LOG_ASYNC_QUEUE_SIZE, LOG_OVERFLOW_POLICY,
                                worker_thread_cb,
@@ -45,9 +50,9 @@ logger_init (uint32_t logger_cpu_id, bool sync_mode)
                                std::chrono::milliseconds::zero(),
                                NULL);
     }
-    _logger = spdlog::stdout_logger_mt("hal");
-    //_logger = spdlog::rotating_logger_mt("hal", LOG_FILENAME,
-     //                                    LOG_MAX_FILESIZE, LOG_MAX_FILES);
+    //_logger = spdlog::stdout_logger_mt("hal");
+    _logger = spdlog::rotating_logger_mt("hal", LOG_FILENAME,
+                                         LOG_MAX_FILESIZE, LOG_MAX_FILES);
     // trigger flush if the log severity is error or higher
     _logger->flush_on(spdlog::level::err);
 
