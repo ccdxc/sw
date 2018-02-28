@@ -288,6 +288,12 @@
 		IfAppRedirInfo
 		InterfaceSpec
 		InterfaceRequestMsg
+		UplinkResponseInfo
+		EnicL2SegInfo
+		EnicResponseInfo
+		CpuIfResponseInfo
+		TunnelIfResponseInfo
+		AppRedirIfInfo
 		InterfaceStatus
 		InterfaceResponse
 		InterfaceResponseMsg
@@ -367,6 +373,8 @@
 		QosClassKeyHandle
 		L2SegmentSpec
 		L2SegmentRequestMsg
+		L2SegmentStatusIris
+		L2SegmentStatusGFT
 		L2SegmentStatus
 		L2SegmentResponse
 		L2SegmentResponseMsg
@@ -798,6 +806,8 @@
 		TlsCbGetResponseMsg
 		VrfSpec
 		VrfRequestMsg
+		VrfStatusIris
+		VrfStatusGFT
 		VrfStatus
 		VrfResponse
 		VrfResponseMsg

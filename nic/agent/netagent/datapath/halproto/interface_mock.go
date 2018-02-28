@@ -185,6 +185,64 @@ func (_mr *MockisInterfaceSpec_IfInfoMockRecorder) Size() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisInterfaceSpec_IfInfo)(nil).Size))
 }
 
+// MockisInterfaceStatus_IfResponseInfo is a mock of isInterfaceStatus_IfResponseInfo interface
+type MockisInterfaceStatus_IfResponseInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisInterfaceStatus_IfResponseInfoMockRecorder
+}
+
+// MockisInterfaceStatus_IfResponseInfoMockRecorder is the mock recorder for MockisInterfaceStatus_IfResponseInfo
+type MockisInterfaceStatus_IfResponseInfoMockRecorder struct {
+	mock *MockisInterfaceStatus_IfResponseInfo
+}
+
+// NewMockisInterfaceStatus_IfResponseInfo creates a new mock instance
+func NewMockisInterfaceStatus_IfResponseInfo(ctrl *gomock.Controller) *MockisInterfaceStatus_IfResponseInfo {
+	mock := &MockisInterfaceStatus_IfResponseInfo{ctrl: ctrl}
+	mock.recorder = &MockisInterfaceStatus_IfResponseInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisInterfaceStatus_IfResponseInfo) EXPECT() *MockisInterfaceStatus_IfResponseInfoMockRecorder {
+	return _m.recorder
+}
+
+// isInterfaceStatus_IfResponseInfo mocks base method
+func (_m *MockisInterfaceStatus_IfResponseInfo) isInterfaceStatus_IfResponseInfo() {
+	_m.ctrl.Call(_m, "isInterfaceStatus_IfResponseInfo")
+}
+
+// isInterfaceStatus_IfResponseInfo indicates an expected call of isInterfaceStatus_IfResponseInfo
+func (_mr *MockisInterfaceStatus_IfResponseInfoMockRecorder) isInterfaceStatus_IfResponseInfo() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isInterfaceStatus_IfResponseInfo", reflect.TypeOf((*MockisInterfaceStatus_IfResponseInfo)(nil).isInterfaceStatus_IfResponseInfo))
+}
+
+// MarshalTo mocks base method
+func (_m *MockisInterfaceStatus_IfResponseInfo) MarshalTo(_param0 []byte) (int, error) {
+	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (_mr *MockisInterfaceStatus_IfResponseInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisInterfaceStatus_IfResponseInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (_m *MockisInterfaceStatus_IfResponseInfo) Size() int {
+	ret := _m.ctrl.Call(_m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (_mr *MockisInterfaceStatus_IfResponseInfoMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisInterfaceStatus_IfResponseInfo)(nil).Size))
+}
+
 // MockInterfaceClient is a mock of InterfaceClient interface
 type MockInterfaceClient struct {
 	ctrl     *gomock.Controller

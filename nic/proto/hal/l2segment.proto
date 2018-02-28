@@ -62,11 +62,33 @@ message L2SegmentRequestMsg {
   repeated L2SegmentSpec    request = 1;    // batched request
 }
 
+// L2segment oper state for Iris pipeline
+message L2segmentStatusIris {
+  uint32                hw_l2seg_id         = 3;    // Used to compute l2seg_lookup_id along with hw_vrf_id
+  uint32                l2seg_lookup_id     = 4;    // l2seg id for flow lookup
+  uint32                l2seg_vlan_id_cpu   = 5;    // Vlan carried by CPU Tx packets to map to this l2seg
+  uint32                inp_prop_cpu_idx    = 6;    // Inpurt properties table idx. Installed for
+                                                    //  for CPU TX packets with CPU injecting into a VRF.
+  repeated uint32       inp_prop_idx        = 7;    // Input Prop. Table Idx For every Uplink/UplinkPC
+                                                    //  for .1q tagged packets
+  repeated uint32       inp_prop_idx_pr_tag = 8;    // Input Prop. Table Idx for every Uplink/UplinkPC
+                                                    //  for priority tagged packets.
+}
+
+// L2segment oper state for GFT pipeline
+message L2segmentStatusGFT {
+}
+
+
 // L2SegmentStatus represents the current status of the L2 segment
 message L2SegmentStatus {
-  fixed64       l2segment_handle    = 1;    // id of the L2 segment returned by HAL
-  uint32        vrf_id              = 2;    // TODO REMOVE DOL ONLY - hw vrf id
+  fixed64                   l2segment_handle    = 1;    // id of the L2 segment returned by HAL
+  uint32                    vrf_id              = 2;    // TODO REMOVE DOL ONLY - hw vrf id
   // TODO - add vNICs/uplinks this vlan is up on
+  oneof l2seg_info {
+      L2segmentStatusIris   iris_info           = 3;    // L2seg oper state for Iris pipeline
+      L2segmentStatusGFT    gft_info            = 4;    // L2seg oper state for GFT pipeline
+  }
 }
 
 // L2SegmentResponse is response to L2SegmentSpec
@@ -105,10 +127,9 @@ message L2SegmentDeleteResponseMsg {
 
 // L2SegmentGetRequest is used to get information about a L2 Segment
 message L2SegmentGetRequest {
-  types.ObjectMeta      meta             = 1;    // object meta
-  // key_or_handle is L2 segment's unique identifier
-  kh.L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.VrfKeyHandle vrf_key_handle         = 3 [(gogoproto.moretags) = "venice:ref"];
+  types.ObjectMeta      meta                = 1;    // object meta
+  kh.L2SegmentKeyHandle key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.VrfKeyHandle       vrf_key_handle      = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // L2SegmentGetRequestMsg is batched GET request for L2 segments
@@ -125,10 +146,10 @@ message L2SegmentStats {
 // L2SegmentGetResponse captures all the information about a L2 segment
 // only if api_status indicates success, other fields are valid
 message L2SegmentGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  L2SegmentSpec      spec       = 2;    // L2 segment configuration
-  L2SegmentStatus    status     = 3;    // operational state of L2 segment
-  L2SegmentStats     stats      = 4;    // stats of the L2 segment
+  types.ApiStatus       api_status          = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  L2SegmentSpec         spec                = 2;    // L2 segment configuration
+  L2SegmentStatus       status              = 3;    // operational state of L2 segment
+  L2SegmentStats        stats               = 4;    // stats of the L2 segment
 }
 
 // L2SegmentGetResponseMsg is the batched response to L2SegmentGetRequestMsg

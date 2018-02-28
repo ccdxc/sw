@@ -36,9 +36,34 @@ message VrfRequestMsg {
   repeated VrfSpec    request = 1;    // batched request
 }
 
+// Vrf oper state for Iris pipeline
+message VrfStatusIris {
+  uint32            hw_vrf_id           = 2;    // hw VRF id. Used to compute vrf_lookup_id
+  uint32            vrf_lookup_id       = 3;    // VRF id for flow lookup
+  uint32            vrf_vlan_id_cpu     = 4;    // Vlan carried by CPU Tx packets to map to this VRF
+  uint32            inp_prop_cpu_idx    = 5;    // Inpurt properties table idx. Installed for
+                                                //  for CPU TX packets with CPU injecting into a VRF.
+  repeated uint32   gipo_inp_map_nat_idx= 6;    // GIPo termination entries in Input Mappnig Native table
+                                                //  1. Inner IPv4
+                                                //  2. Inner IPv6
+                                                //  3. Inner MAC
+  repeated uint32   gipo_inp_map_tnl_idx= 7;    // GIPo termination entries in Input Mappnig Tunnel table
+                                                //  1. Inner IPv4
+                                                //  2. Inner IPv6
+                                                //  3. Inner MAC
+}
+
+// Vrf oper state for GFT pipeline
+message VrfStatusGFT {
+}
+
 // VrfStatus is the operational status of a given vrf
 message VrfStatus {
-  fixed64    vrf_handle     = 1;    // id of vrf returned by HAL
+  fixed64           vrf_handle          = 1;    // id of vrf returned by HAL
+  oneof vrf_info {
+      VrfStatusIris iris_info           = 2;    // Vrf oper state for Iris pipeline
+      VrfStatusGFT  gft_info            = 3;    // Vrf oper state for GFT pipeline
+  }
 }
 
 // VrfResponse is response to VrfSpec
@@ -77,9 +102,8 @@ message VrfDeleteResponseMsg {
 
 // VrfGetRequest is used to get information about a vrf
 message VrfGetRequest {
-  types.ObjectMeta             meta          = 1;    // object meta
-  // key_or_handle is vrf's unique identifier
-  kh.VrfKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  types.ObjectMeta  meta                = 1;    // object meta
+  kh.VrfKeyHandle   key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // VrfGetRequestMsg is batched GET requests for vrfs
@@ -98,10 +122,10 @@ message VrfStats {
 // VrfGetResponse captures all the information about a vrf
 // only if api_status indicates success, other fields are valid
 message VrfGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];     // API status code
-  VrfSpec            spec       = 2;    // vrf configuration
-  VrfStatus          status     = 3;    // operational state of vrf
-  VrfStats           stats      = 4;    // stats of the vrf
+  types.ApiStatus   api_status          = 1 [(gogoproto.moretags) = "venice:api_status"];     // API status code
+  VrfSpec           spec                = 2;    // vrf configuration
+  VrfStatus         status              = 3;    // operational state of vrf
+  VrfStats          stats               = 4;    // stats of the vrf
 }
 
 // VrfGetResponseMsg is batched response to VrfGetRequestMsg

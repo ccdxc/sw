@@ -96,21 +96,206 @@ func (m *VrfRequestMsg) GetRequest() []*VrfSpec {
 	return nil
 }
 
+// Vrf oper state for Iris pipeline
+type VrfStatusIris struct {
+	HwVrfId       uint32 `protobuf:"varint,2,opt,name=hw_vrf_id,json=hwVrfId,proto3" json:"hw_vrf_id,omitempty"`
+	VrfLookupId   uint32 `protobuf:"varint,3,opt,name=vrf_lookup_id,json=vrfLookupId,proto3" json:"vrf_lookup_id,omitempty"`
+	VrfVlanIdCpu  uint32 `protobuf:"varint,4,opt,name=vrf_vlan_id_cpu,json=vrfVlanIdCpu,proto3" json:"vrf_vlan_id_cpu,omitempty"`
+	InpPropCpuIdx uint32 `protobuf:"varint,5,opt,name=inp_prop_cpu_idx,json=inpPropCpuIdx,proto3" json:"inp_prop_cpu_idx,omitempty"`
+	//  for CPU TX packets with CPU injecting into a VRF.
+	GipoInpMapNatIdx []uint32 `protobuf:"varint,6,rep,packed,name=gipo_inp_map_nat_idx,json=gipoInpMapNatIdx" json:"gipo_inp_map_nat_idx,omitempty"`
+	//  1. Inner IPv4
+	//  2. Inner IPv6
+	//  3. Inner MAC
+	GipoInpMapTnlIdx []uint32 `protobuf:"varint,7,rep,packed,name=gipo_inp_map_tnl_idx,json=gipoInpMapTnlIdx" json:"gipo_inp_map_tnl_idx,omitempty"`
+}
+
+func (m *VrfStatusIris) Reset()                    { *m = VrfStatusIris{} }
+func (m *VrfStatusIris) String() string            { return proto.CompactTextString(m) }
+func (*VrfStatusIris) ProtoMessage()               {}
+func (*VrfStatusIris) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{2} }
+
+func (m *VrfStatusIris) GetHwVrfId() uint32 {
+	if m != nil {
+		return m.HwVrfId
+	}
+	return 0
+}
+
+func (m *VrfStatusIris) GetVrfLookupId() uint32 {
+	if m != nil {
+		return m.VrfLookupId
+	}
+	return 0
+}
+
+func (m *VrfStatusIris) GetVrfVlanIdCpu() uint32 {
+	if m != nil {
+		return m.VrfVlanIdCpu
+	}
+	return 0
+}
+
+func (m *VrfStatusIris) GetInpPropCpuIdx() uint32 {
+	if m != nil {
+		return m.InpPropCpuIdx
+	}
+	return 0
+}
+
+func (m *VrfStatusIris) GetGipoInpMapNatIdx() []uint32 {
+	if m != nil {
+		return m.GipoInpMapNatIdx
+	}
+	return nil
+}
+
+func (m *VrfStatusIris) GetGipoInpMapTnlIdx() []uint32 {
+	if m != nil {
+		return m.GipoInpMapTnlIdx
+	}
+	return nil
+}
+
+// Vrf oper state for GFT pipeline
+type VrfStatusGFT struct {
+}
+
+func (m *VrfStatusGFT) Reset()                    { *m = VrfStatusGFT{} }
+func (m *VrfStatusGFT) String() string            { return proto.CompactTextString(m) }
+func (*VrfStatusGFT) ProtoMessage()               {}
+func (*VrfStatusGFT) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{3} }
+
 // VrfStatus is the operational status of a given vrf
 type VrfStatus struct {
 	VrfHandle uint64 `protobuf:"fixed64,1,opt,name=vrf_handle,json=vrfHandle,proto3" json:"vrf_handle,omitempty"`
+	// Types that are valid to be assigned to VrfInfo:
+	//	*VrfStatus_IrisInfo
+	//	*VrfStatus_GftInfo
+	VrfInfo isVrfStatus_VrfInfo `protobuf_oneof:"vrf_info"`
 }
 
 func (m *VrfStatus) Reset()                    { *m = VrfStatus{} }
 func (m *VrfStatus) String() string            { return proto.CompactTextString(m) }
 func (*VrfStatus) ProtoMessage()               {}
-func (*VrfStatus) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{2} }
+func (*VrfStatus) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{4} }
+
+type isVrfStatus_VrfInfo interface {
+	isVrfStatus_VrfInfo()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type VrfStatus_IrisInfo struct {
+	IrisInfo *VrfStatusIris `protobuf:"bytes,2,opt,name=iris_info,json=irisInfo,oneof"`
+}
+type VrfStatus_GftInfo struct {
+	GftInfo *VrfStatusGFT `protobuf:"bytes,3,opt,name=gft_info,json=gftInfo,oneof"`
+}
+
+func (*VrfStatus_IrisInfo) isVrfStatus_VrfInfo() {}
+func (*VrfStatus_GftInfo) isVrfStatus_VrfInfo()  {}
+
+func (m *VrfStatus) GetVrfInfo() isVrfStatus_VrfInfo {
+	if m != nil {
+		return m.VrfInfo
+	}
+	return nil
+}
 
 func (m *VrfStatus) GetVrfHandle() uint64 {
 	if m != nil {
 		return m.VrfHandle
 	}
 	return 0
+}
+
+func (m *VrfStatus) GetIrisInfo() *VrfStatusIris {
+	if x, ok := m.GetVrfInfo().(*VrfStatus_IrisInfo); ok {
+		return x.IrisInfo
+	}
+	return nil
+}
+
+func (m *VrfStatus) GetGftInfo() *VrfStatusGFT {
+	if x, ok := m.GetVrfInfo().(*VrfStatus_GftInfo); ok {
+		return x.GftInfo
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*VrfStatus) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _VrfStatus_OneofMarshaler, _VrfStatus_OneofUnmarshaler, _VrfStatus_OneofSizer, []interface{}{
+		(*VrfStatus_IrisInfo)(nil),
+		(*VrfStatus_GftInfo)(nil),
+	}
+}
+
+func _VrfStatus_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*VrfStatus)
+	// vrf_info
+	switch x := m.VrfInfo.(type) {
+	case *VrfStatus_IrisInfo:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.IrisInfo); err != nil {
+			return err
+		}
+	case *VrfStatus_GftInfo:
+		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.GftInfo); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("VrfStatus.VrfInfo has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _VrfStatus_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*VrfStatus)
+	switch tag {
+	case 2: // vrf_info.iris_info
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(VrfStatusIris)
+		err := b.DecodeMessage(msg)
+		m.VrfInfo = &VrfStatus_IrisInfo{msg}
+		return true, err
+	case 3: // vrf_info.gft_info
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(VrfStatusGFT)
+		err := b.DecodeMessage(msg)
+		m.VrfInfo = &VrfStatus_GftInfo{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _VrfStatus_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*VrfStatus)
+	// vrf_info
+	switch x := m.VrfInfo.(type) {
+	case *VrfStatus_IrisInfo:
+		s := proto.Size(x.IrisInfo)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *VrfStatus_GftInfo:
+		s := proto.Size(x.GftInfo)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
 }
 
 // VrfResponse is response to VrfSpec
@@ -122,7 +307,7 @@ type VrfResponse struct {
 func (m *VrfResponse) Reset()                    { *m = VrfResponse{} }
 func (m *VrfResponse) String() string            { return proto.CompactTextString(m) }
 func (*VrfResponse) ProtoMessage()               {}
-func (*VrfResponse) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{3} }
+func (*VrfResponse) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{5} }
 
 func (m *VrfResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -146,7 +331,7 @@ type VrfResponseMsg struct {
 func (m *VrfResponseMsg) Reset()                    { *m = VrfResponseMsg{} }
 func (m *VrfResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfResponseMsg) ProtoMessage()               {}
-func (*VrfResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{4} }
+func (*VrfResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{6} }
 
 func (m *VrfResponseMsg) GetResponse() []*VrfResponse {
 	if m != nil {
@@ -165,7 +350,7 @@ type VrfDeleteRequest struct {
 func (m *VrfDeleteRequest) Reset()                    { *m = VrfDeleteRequest{} }
 func (m *VrfDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteRequest) ProtoMessage()               {}
-func (*VrfDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{5} }
+func (*VrfDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{7} }
 
 func (m *VrfDeleteRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -190,7 +375,7 @@ type VrfDeleteResponse struct {
 func (m *VrfDeleteResponse) Reset()                    { *m = VrfDeleteResponse{} }
 func (m *VrfDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteResponse) ProtoMessage()               {}
-func (*VrfDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{6} }
+func (*VrfDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{8} }
 
 func (m *VrfDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -214,7 +399,7 @@ type VrfDeleteRequestMsg struct {
 func (m *VrfDeleteRequestMsg) Reset()                    { *m = VrfDeleteRequestMsg{} }
 func (m *VrfDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteRequestMsg) ProtoMessage()               {}
-func (*VrfDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{7} }
+func (*VrfDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{9} }
 
 func (m *VrfDeleteRequestMsg) GetRequest() []*VrfDeleteRequest {
 	if m != nil {
@@ -231,7 +416,7 @@ type VrfDeleteResponseMsg struct {
 func (m *VrfDeleteResponseMsg) Reset()                    { *m = VrfDeleteResponseMsg{} }
 func (m *VrfDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteResponseMsg) ProtoMessage()               {}
-func (*VrfDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{8} }
+func (*VrfDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{10} }
 
 func (m *VrfDeleteResponseMsg) GetResponse() []*VrfDeleteResponse {
 	if m != nil {
@@ -242,15 +427,14 @@ func (m *VrfDeleteResponseMsg) GetResponse() []*VrfDeleteResponse {
 
 // VrfGetRequest is used to get information about a vrf
 type VrfGetRequest struct {
-	Meta *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
-	// key_or_handle is vrf's unique identifier
+	Meta        *ObjectMeta   `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
 	KeyOrHandle *VrfKeyHandle `protobuf:"bytes,2,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty" venice:"key"`
 }
 
 func (m *VrfGetRequest) Reset()                    { *m = VrfGetRequest{} }
 func (m *VrfGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetRequest) ProtoMessage()               {}
-func (*VrfGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{9} }
+func (*VrfGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{11} }
 
 func (m *VrfGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -274,7 +458,7 @@ type VrfGetRequestMsg struct {
 func (m *VrfGetRequestMsg) Reset()                    { *m = VrfGetRequestMsg{} }
 func (m *VrfGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetRequestMsg) ProtoMessage()               {}
-func (*VrfGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{10} }
+func (*VrfGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{12} }
 
 func (m *VrfGetRequestMsg) GetRequest() []*VrfGetRequest {
 	if m != nil {
@@ -294,7 +478,7 @@ type VrfStats struct {
 func (m *VrfStats) Reset()                    { *m = VrfStats{} }
 func (m *VrfStats) String() string            { return proto.CompactTextString(m) }
 func (*VrfStats) ProtoMessage()               {}
-func (*VrfStats) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{11} }
+func (*VrfStats) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{13} }
 
 func (m *VrfStats) GetNumL2Segments() uint32 {
 	if m != nil {
@@ -336,7 +520,7 @@ type VrfGetResponse struct {
 func (m *VrfGetResponse) Reset()                    { *m = VrfGetResponse{} }
 func (m *VrfGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetResponse) ProtoMessage()               {}
-func (*VrfGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{12} }
+func (*VrfGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{14} }
 
 func (m *VrfGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -374,7 +558,7 @@ type VrfGetResponseMsg struct {
 func (m *VrfGetResponseMsg) Reset()                    { *m = VrfGetResponseMsg{} }
 func (m *VrfGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetResponseMsg) ProtoMessage()               {}
-func (*VrfGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{13} }
+func (*VrfGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorVrf, []int{15} }
 
 func (m *VrfGetResponseMsg) GetResponse() []*VrfGetResponse {
 	if m != nil {
@@ -386,6 +570,8 @@ func (m *VrfGetResponseMsg) GetResponse() []*VrfGetResponse {
 func init() {
 	proto.RegisterType((*VrfSpec)(nil), "vrf.VrfSpec")
 	proto.RegisterType((*VrfRequestMsg)(nil), "vrf.VrfRequestMsg")
+	proto.RegisterType((*VrfStatusIris)(nil), "vrf.VrfStatusIris")
+	proto.RegisterType((*VrfStatusGFT)(nil), "vrf.VrfStatusGFT")
 	proto.RegisterType((*VrfStatus)(nil), "vrf.VrfStatus")
 	proto.RegisterType((*VrfResponse)(nil), "vrf.VrfResponse")
 	proto.RegisterType((*VrfResponseMsg)(nil), "vrf.VrfResponseMsg")
@@ -674,6 +860,96 @@ func (m *VrfRequestMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *VrfStatusIris) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VrfStatusIris) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.HwVrfId != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(m.HwVrfId))
+	}
+	if m.VrfLookupId != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(m.VrfLookupId))
+	}
+	if m.VrfVlanIdCpu != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(m.VrfVlanIdCpu))
+	}
+	if m.InpPropCpuIdx != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(m.InpPropCpuIdx))
+	}
+	if len(m.GipoInpMapNatIdx) > 0 {
+		dAtA7 := make([]byte, len(m.GipoInpMapNatIdx)*10)
+		var j6 int
+		for _, num := range m.GipoInpMapNatIdx {
+			for num >= 1<<7 {
+				dAtA7[j6] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j6++
+			}
+			dAtA7[j6] = uint8(num)
+			j6++
+		}
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(j6))
+		i += copy(dAtA[i:], dAtA7[:j6])
+	}
+	if len(m.GipoInpMapTnlIdx) > 0 {
+		dAtA9 := make([]byte, len(m.GipoInpMapTnlIdx)*10)
+		var j8 int
+		for _, num := range m.GipoInpMapTnlIdx {
+			for num >= 1<<7 {
+				dAtA9[j8] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j8++
+			}
+			dAtA9[j8] = uint8(num)
+			j8++
+		}
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(j8))
+		i += copy(dAtA[i:], dAtA9[:j8])
+	}
+	return i, nil
+}
+
+func (m *VrfStatusGFT) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VrfStatusGFT) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
 func (m *VrfStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -695,9 +971,44 @@ func (m *VrfStatus) MarshalTo(dAtA []byte) (int, error) {
 		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.VrfHandle))
 		i += 8
 	}
+	if m.VrfInfo != nil {
+		nn10, err := m.VrfInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn10
+	}
 	return i, nil
 }
 
+func (m *VrfStatus_IrisInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.IrisInfo != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(m.IrisInfo.Size()))
+		n11, err := m.IrisInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+func (m *VrfStatus_GftInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.GftInfo != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintVrf(dAtA, i, uint64(m.GftInfo.Size()))
+		n12, err := m.GftInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	return i, nil
+}
 func (m *VrfResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -722,11 +1033,11 @@ func (m *VrfResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.VrfStatus.Size()))
-		n6, err := m.VrfStatus.MarshalTo(dAtA[i:])
+		n13, err := m.VrfStatus.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n13
 	}
 	return i, nil
 }
@@ -780,21 +1091,21 @@ func (m *VrfDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.Meta.Size()))
-		n7, err := m.Meta.MarshalTo(dAtA[i:])
+		n14, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n7
+		i += n14
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n8, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n15, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n15
 	}
 	return i, nil
 }
@@ -823,11 +1134,11 @@ func (m *VrfDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n9, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n16, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n16
 	}
 	return i, nil
 }
@@ -911,21 +1222,21 @@ func (m *VrfGetRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.Meta.Size()))
-		n10, err := m.Meta.MarshalTo(dAtA[i:])
+		n17, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n17
 	}
 	if m.KeyOrHandle != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.KeyOrHandle.Size()))
-		n11, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		n18, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n11
+		i += n18
 	}
 	return i, nil
 }
@@ -1022,31 +1333,31 @@ func (m *VrfGetResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.Spec.Size()))
-		n12, err := m.Spec.MarshalTo(dAtA[i:])
+		n19, err := m.Spec.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
+		i += n19
 	}
 	if m.Status != nil {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.Status.Size()))
-		n13, err := m.Status.MarshalTo(dAtA[i:])
+		n20, err := m.Status.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n13
+		i += n20
 	}
 	if m.Stats != nil {
 		dAtA[i] = 0x22
 		i++
 		i = encodeVarintVrf(dAtA, i, uint64(m.Stats.Size()))
-		n14, err := m.Stats.MarshalTo(dAtA[i:])
+		n21, err := m.Stats.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n21
 	}
 	return i, nil
 }
@@ -1131,15 +1442,74 @@ func (m *VrfRequestMsg) Size() (n int) {
 	return n
 }
 
+func (m *VrfStatusIris) Size() (n int) {
+	var l int
+	_ = l
+	if m.HwVrfId != 0 {
+		n += 1 + sovVrf(uint64(m.HwVrfId))
+	}
+	if m.VrfLookupId != 0 {
+		n += 1 + sovVrf(uint64(m.VrfLookupId))
+	}
+	if m.VrfVlanIdCpu != 0 {
+		n += 1 + sovVrf(uint64(m.VrfVlanIdCpu))
+	}
+	if m.InpPropCpuIdx != 0 {
+		n += 1 + sovVrf(uint64(m.InpPropCpuIdx))
+	}
+	if len(m.GipoInpMapNatIdx) > 0 {
+		l = 0
+		for _, e := range m.GipoInpMapNatIdx {
+			l += sovVrf(uint64(e))
+		}
+		n += 1 + sovVrf(uint64(l)) + l
+	}
+	if len(m.GipoInpMapTnlIdx) > 0 {
+		l = 0
+		for _, e := range m.GipoInpMapTnlIdx {
+			l += sovVrf(uint64(e))
+		}
+		n += 1 + sovVrf(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *VrfStatusGFT) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
 func (m *VrfStatus) Size() (n int) {
 	var l int
 	_ = l
 	if m.VrfHandle != 0 {
 		n += 9
 	}
+	if m.VrfInfo != nil {
+		n += m.VrfInfo.Size()
+	}
 	return n
 }
 
+func (m *VrfStatus_IrisInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.IrisInfo != nil {
+		l = m.IrisInfo.Size()
+		n += 1 + l + sovVrf(uint64(l))
+	}
+	return n
+}
+func (m *VrfStatus_GftInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.GftInfo != nil {
+		l = m.GftInfo.Size()
+		n += 1 + l + sovVrf(uint64(l))
+	}
+	return n
+}
 func (m *VrfResponse) Size() (n int) {
 	var l int
 	_ = l
@@ -1621,6 +1991,306 @@ func (m *VrfRequestMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *VrfStatusIris) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVrf
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VrfStatusIris: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VrfStatusIris: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HwVrfId", wireType)
+			}
+			m.HwVrfId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVrf
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HwVrfId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VrfLookupId", wireType)
+			}
+			m.VrfLookupId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVrf
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VrfLookupId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VrfVlanIdCpu", wireType)
+			}
+			m.VrfVlanIdCpu = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVrf
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.VrfVlanIdCpu |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InpPropCpuIdx", wireType)
+			}
+			m.InpPropCpuIdx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVrf
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InpPropCpuIdx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowVrf
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.GipoInpMapNatIdx = append(m.GipoInpMapNatIdx, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowVrf
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthVrf
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowVrf
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.GipoInpMapNatIdx = append(m.GipoInpMapNatIdx, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field GipoInpMapNatIdx", wireType)
+			}
+		case 7:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowVrf
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.GipoInpMapTnlIdx = append(m.GipoInpMapTnlIdx, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowVrf
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthVrf
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowVrf
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.GipoInpMapTnlIdx = append(m.GipoInpMapTnlIdx, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field GipoInpMapTnlIdx", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVrf(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthVrf
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *VrfStatusGFT) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVrf
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VrfStatusGFT: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VrfStatusGFT: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVrf(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthVrf
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *VrfStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1660,6 +2330,70 @@ func (m *VrfStatus) Unmarshal(dAtA []byte) error {
 			}
 			m.VrfHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IrisInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVrf
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVrf
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &VrfStatusIris{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.VrfInfo = &VrfStatus_IrisInfo{v}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GftInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVrf
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVrf
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &VrfStatusGFT{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.VrfInfo = &VrfStatus_GftInfo{v}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipVrf(dAtA[iNdEx:])
@@ -2924,57 +3658,70 @@ var (
 func init() { proto.RegisterFile("vrf.proto", fileDescriptorVrf) }
 
 var fileDescriptorVrf = []byte{
-	// 831 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xdd, 0x6e, 0x1b, 0x45,
-	0x14, 0xee, 0xd6, 0xa9, 0xe3, 0x1c, 0xc7, 0xae, 0x3d, 0x6e, 0x2a, 0x13, 0x41, 0x12, 0x6d, 0x45,
-	0x14, 0x15, 0x30, 0x68, 0x89, 0x40, 0x70, 0x01, 0xd4, 0x94, 0x94, 0x42, 0xa3, 0x46, 0x6b, 0xf0,
-	0x05, 0x42, 0x5a, 0xad, 0xed, 0xb3, 0xf6, 0xe2, 0xfd, 0x19, 0x66, 0x76, 0x2d, 0xf6, 0x06, 0x09,
-	0x89, 0x17, 0xe0, 0x8e, 0xf7, 0xe0, 0x21, 0xe0, 0x92, 0x27, 0xb0, 0x50, 0x78, 0x03, 0x0b, 0x71,
-	0x8d, 0xe6, 0x67, 0xfd, 0x7f, 0x01, 0x52, 0x44, 0xaf, 0x3c, 0x3b, 0xe7, 0x3b, 0xdf, 0xcc, 0x77,
-	0xce, 0x37, 0xc7, 0xb0, 0x37, 0x61, 0x5e, 0x8b, 0xb2, 0x38, 0x89, 0x49, 0x61, 0xc2, 0xbc, 0xc3,
-	0x72, 0x92, 0x51, 0xe4, 0x6a, 0xe7, 0xb0, 0x34, 0x1e, 0xa9, 0x95, 0xf9, 0xf7, 0x6d, 0xd8, 0xed,
-	0x32, 0xaf, 0x43, 0xb1, 0x4f, 0x5e, 0x85, 0x9d, 0x10, 0x13, 0xb7, 0x69, 0x9c, 0x18, 0x67, 0x65,
-	0xab, 0xde, 0x52, 0x19, 0xcf, 0x7b, 0xdf, 0x60, 0x3f, 0xb9, 0xc4, 0xc4, 0xb5, 0x65, 0x98, 0x5c,
-	0x40, 0x65, 0x8c, 0x99, 0x13, 0x33, 0x67, 0xe4, 0x46, 0x83, 0x00, 0x9b, 0xb7, 0x25, 0xbe, 0xd6,
-	0x1a, 0x8f, 0x5a, 0x5d, 0xe6, 0x7d, 0x8e, 0xd9, 0xa7, 0x72, 0xbf, 0x5d, 0x9b, 0x4d, 0x8f, 0xf7,
-	0x27, 0x18, 0xf9, 0x7d, 0x7c, 0xdf, 0x1c, 0x63, 0x66, 0xda, 0xe5, 0x31, 0x66, 0xcf, 0x99, 0x0a,
-	0x93, 0xaf, 0xa1, 0xc1, 0xb1, 0x9f, 0x32, 0x3f, 0xc9, 0x1c, 0x41, 0xa8, 0xd9, 0x0a, 0x92, 0xed,
-	0x65, 0xc1, 0xd6, 0xd1, 0xe1, 0x2b, 0x16, 0x7b, 0x7e, 0x80, 0x0b, 0xe6, 0xea, 0x6c, 0x7a, 0x0c,
-	0x9a, 0x99, 0xa1, 0x67, 0xd7, 0x73, 0xa2, 0x39, 0x84, 0x7c, 0x08, 0xa5, 0x09, 0xf3, 0x1c, 0xa1,
-	0xa1, 0xb9, 0x73, 0x62, 0x9c, 0x55, 0xad, 0xaa, 0x16, 0xd4, 0x65, 0xde, 0x17, 0x19, 0xc5, 0xf6,
-	0xbd, 0xd9, 0xf4, 0xb8, 0xa6, 0x49, 0xfc, 0x30, 0x4c, 0x13, 0xb7, 0x17, 0xa0, 0xbd, 0x3b, 0x51,
-	0x61, 0xf2, 0x1a, 0x94, 0xc2, 0x2c, 0x41, 0xea, 0xf8, 0xb4, 0x79, 0x47, 0x2b, 0x54, 0x04, 0x4f,
-	0xaf, 0x1e, 0x0d, 0x06, 0x0c, 0x39, 0xb7, 0x77, 0x25, 0xe2, 0x29, 0x25, 0x6f, 0x41, 0x79, 0xe8,
-	0xd3, 0xd8, 0xa1, 0x0c, 0x3d, 0xff, 0xbb, 0x66, 0x51, 0xe2, 0xef, 0xce, 0xf1, 0x57, 0x72, 0xdb,
-	0x06, 0x81, 0x51, 0x6b, 0xf3, 0x5d, 0xa8, 0x74, 0x99, 0x67, 0xe3, 0xb7, 0x29, 0xf2, 0xe4, 0x92,
-	0x0f, 0xc9, 0x29, 0xec, 0x32, 0xf5, 0xd5, 0x34, 0x4e, 0x0a, 0x67, 0x65, 0x6b, 0xbf, 0x25, 0x5a,
-	0xa8, 0x9b, 0x63, 0xe7, 0x41, 0xf3, 0x21, 0xec, 0x89, 0xbd, 0xc4, 0x4d, 0x52, 0x4e, 0x5e, 0x01,
-	0x10, 0x2a, 0x75, 0xe9, 0x44, 0xe3, 0x8a, 0xb6, 0xe8, 0xbc, 0x2a, 0x82, 0xf9, 0xa3, 0x01, 0x65,
-	0x79, 0x0a, 0xa7, 0x71, 0xc4, 0x91, 0x5c, 0x00, 0xb8, 0xd4, 0x77, 0xb8, 0x4c, 0x96, 0xf0, 0xea,
-	0x5c, 0xd5, 0x23, 0xea, 0x2b, 0xd2, 0xf6, 0xc1, 0x6c, 0x7a, 0x5c, 0xd7, 0x85, 0x59, 0xc0, 0xed,
-	0x3d, 0x37, 0x47, 0x90, 0x37, 0xd4, 0xb1, 0x9a, 0x47, 0xf5, 0xbf, 0x3a, 0xbf, 0xae, 0x86, 0x4f,
-	0xf2, 0xa5, 0xf9, 0x01, 0x54, 0x97, 0x6e, 0x21, 0xc4, 0xbe, 0x0e, 0x25, 0xa6, 0x3f, 0xb5, 0xda,
-	0x5a, 0x9e, 0x9e, 0xc3, 0xec, 0x39, 0xc2, 0xfc, 0xc1, 0x80, 0x5a, 0x97, 0x79, 0x8f, 0x31, 0xc0,
-	0x04, 0x75, 0xc9, 0xfe, 0x67, 0xb7, 0x9a, 0x3f, 0x19, 0x50, 0x5f, 0xba, 0xc3, 0x0d, 0x17, 0xf4,
-	0xfc, 0x5f, 0xde, 0x72, 0xf5, 0x4e, 0x17, 0xd0, 0x58, 0x2f, 0x8b, 0x28, 0xee, 0x9b, 0xeb, 0x4e,
-	0x3a, 0xc8, 0x6b, 0xbb, 0x02, 0x5d, 0x58, 0xea, 0x33, 0xb8, 0xb7, 0x21, 0x4d, 0x10, 0x59, 0x1b,
-	0x5d, 0xba, 0xbf, 0xce, 0xb4, 0xd1, 0xab, 0xef, 0xa5, 0xaf, 0x9f, 0x60, 0xf2, 0x82, 0xfa, 0xf4,
-	0x91, 0xb4, 0xca, 0xe2, 0x7c, 0xe5, 0xb6, 0xb5, 0x82, 0x90, 0x5c, 0xc6, 0x02, 0xb7, 0xa8, 0xc6,
-	0x2f, 0x06, 0x94, 0xb4, 0x8d, 0x39, 0x39, 0x85, 0xbb, 0x51, 0x1a, 0x3a, 0x81, 0xe5, 0x70, 0x1c,
-	0x86, 0x18, 0x25, 0xaa, 0xcb, 0x15, 0xbb, 0x12, 0xa5, 0xe1, 0x33, 0xab, 0xa3, 0x37, 0x49, 0x0b,
-	0x1a, 0x02, 0x37, 0x1f, 0x68, 0x43, 0x16, 0xa7, 0x54, 0x3d, 0x8d, 0x8a, 0x5d, 0x8f, 0xd2, 0x30,
-	0x9f, 0x65, 0x4f, 0x64, 0x80, 0x3c, 0x84, 0xba, 0xe4, 0x3d, 0x0f, 0x7a, 0x0e, 0x47, 0x36, 0xf1,
-	0xfb, 0xc8, 0xe5, 0xe8, 0xab, 0xd8, 0xe2, 0xc0, 0x67, 0xe7, 0x41, 0xaf, 0xa3, 0xb7, 0xc9, 0x03,
-	0x10, 0x87, 0x39, 0x18, 0x0d, 0x68, 0xec, 0x8b, 0x1b, 0xec, 0x48, 0xdc, 0x7e, 0x94, 0x86, 0x9f,
-	0xe4, 0x7b, 0xe6, 0xaf, 0x86, 0x7c, 0x64, 0x52, 0xd0, 0x0d, 0x9b, 0xf3, 0x04, 0x76, 0x38, 0xc5,
-	0xbe, 0xee, 0xc8, 0xea, 0x58, 0x92, 0x11, 0x72, 0x0a, 0x45, 0x7d, 0x4a, 0x61, 0xeb, 0x2c, 0xd0,
-	0x51, 0xf2, 0x00, 0xee, 0x88, 0x95, 0x52, 0x50, 0xb6, 0x2a, 0xcb, 0x30, 0x6e, 0xab, 0x98, 0xf9,
-	0x58, 0x3e, 0xb4, 0x25, 0x21, 0xca, 0xd3, 0xeb, 0x56, 0x6c, 0xac, 0xf4, 0x70, 0xdd, 0x87, 0xd6,
-	0x5f, 0x06, 0x14, 0xba, 0xcc, 0x23, 0xef, 0xc8, 0x71, 0xf9, 0x31, 0x43, 0x37, 0x41, 0x42, 0x16,
-	0x43, 0x26, 0x37, 0xc7, 0x61, 0x63, 0x7d, 0xf0, 0x5c, 0xf2, 0xa1, 0x79, 0x4b, 0xe7, 0x7d, 0x49,
-	0x07, 0xff, 0x31, 0xaf, 0x2d, 0xf3, 0xd4, 0xf3, 0x20, 0xcd, 0xad, 0x0f, 0x4f, 0x64, 0xbf, 0xb4,
-	0xfd, 0x21, 0x29, 0x8e, 0xf7, 0xa0, 0xa8, 0x74, 0x91, 0x83, 0x4d, 0xa3, 0x8a, 0xec, 0xfb, 0x5b,
-	0xb4, 0xcb, 0xd4, 0xf6, 0xe1, 0x6f, 0xd7, 0x47, 0xc6, 0xef, 0xd7, 0x47, 0xc6, 0x1f, 0xd7, 0x47,
-	0xc6, 0xcf, 0x7f, 0x1e, 0xdd, 0xfa, 0xaa, 0x34, 0x72, 0x03, 0xf9, 0x5f, 0xdf, 0x2b, 0xca, 0x9f,
-	0xb7, 0xff, 0x09, 0x00, 0x00, 0xff, 0xff, 0x31, 0x93, 0x80, 0x6f, 0x1b, 0x08, 0x00, 0x00,
+	// 1039 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xcd, 0x6e, 0x23, 0x45,
+	0x10, 0xce, 0xac, 0xb3, 0xb6, 0x53, 0xce, 0x38, 0x76, 0x27, 0x59, 0x99, 0x08, 0x92, 0x68, 0x56,
+	0x1b, 0x22, 0x7e, 0x0c, 0x98, 0x08, 0x04, 0x07, 0x60, 0x9d, 0x25, 0x89, 0x21, 0x61, 0xa3, 0x49,
+	0xf0, 0x01, 0x21, 0x8d, 0x26, 0x9e, 0x1e, 0xbb, 0xf1, 0x78, 0xa6, 0xe9, 0xee, 0xf1, 0xc6, 0x17,
+	0x24, 0x24, 0x5e, 0x80, 0x1b, 0x3c, 0x07, 0x0f, 0x01, 0x47, 0x9e, 0x20, 0x42, 0xe1, 0x0d, 0x22,
+	0xc4, 0x15, 0xd4, 0x3f, 0x1e, 0xc7, 0x8e, 0x0f, 0x20, 0xad, 0xe0, 0x94, 0x76, 0xd5, 0x57, 0x5f,
+	0x77, 0x55, 0x7d, 0x55, 0x13, 0x58, 0x1a, 0xb2, 0xb0, 0x4e, 0x59, 0x22, 0x12, 0x94, 0x1b, 0xb2,
+	0x70, 0xa3, 0x24, 0x46, 0x14, 0x73, 0x6d, 0xd9, 0x28, 0xf6, 0x7b, 0xfa, 0xe4, 0xfc, 0x79, 0x0f,
+	0x0a, 0x6d, 0x16, 0x9e, 0x51, 0xdc, 0x41, 0x8f, 0x60, 0x71, 0x80, 0x85, 0x5f, 0xb3, 0xb6, 0xad,
+	0xdd, 0x52, 0xa3, 0x5a, 0xd7, 0x11, 0x4f, 0x2f, 0xbe, 0xc2, 0x1d, 0x71, 0x82, 0x85, 0xef, 0x2a,
+	0x37, 0x3a, 0x00, 0xbb, 0x8f, 0x47, 0x5e, 0xc2, 0xbc, 0x9e, 0x1f, 0x07, 0x11, 0xae, 0xdd, 0x53,
+	0xf8, 0x4a, 0xbd, 0xdf, 0xab, 0xb7, 0x59, 0xf8, 0x29, 0x1e, 0x1d, 0x29, 0x7b, 0xb3, 0x72, 0x73,
+	0xb5, 0xb5, 0x3c, 0xc4, 0x31, 0xe9, 0xe0, 0xf7, 0x9d, 0x3e, 0x1e, 0x39, 0x6e, 0xa9, 0x8f, 0x47,
+	0x4f, 0x99, 0x76, 0xa3, 0x2f, 0x61, 0x95, 0xe3, 0x4e, 0xca, 0x88, 0x18, 0x79, 0x92, 0xd0, 0xb0,
+	0xe5, 0x14, 0xdb, 0x8b, 0x92, 0xed, 0xcc, 0xb8, 0x4f, 0x59, 0x12, 0x92, 0x08, 0x4f, 0x98, 0xcb,
+	0x37, 0x57, 0x5b, 0x60, 0x98, 0x19, 0x0e, 0xdd, 0xea, 0x98, 0x28, 0x83, 0xa0, 0x0f, 0xa1, 0x38,
+	0x64, 0xa1, 0x27, 0x73, 0xa8, 0x2d, 0x6e, 0x5b, 0xbb, 0xe5, 0x46, 0xd9, 0x24, 0xd4, 0x66, 0xe1,
+	0xf9, 0x88, 0xe2, 0xe6, 0xda, 0xcd, 0xd5, 0x56, 0xc5, 0x90, 0x90, 0xc1, 0x20, 0x15, 0xfe, 0x45,
+	0x84, 0xdd, 0xc2, 0x50, 0xbb, 0xd1, 0xab, 0x50, 0x1c, 0x8c, 0x04, 0xa6, 0x1e, 0xa1, 0xb5, 0xfb,
+	0x26, 0x43, 0x4d, 0xd0, 0x3a, 0x7d, 0x1c, 0x04, 0x0c, 0x73, 0xee, 0x16, 0x14, 0xa2, 0x45, 0xd1,
+	0x9b, 0x50, 0xea, 0x12, 0x9a, 0x78, 0x94, 0xe1, 0x90, 0x5c, 0xd6, 0xf2, 0x0a, 0xbf, 0x92, 0xe1,
+	0x4f, 0x95, 0xd9, 0x05, 0x89, 0xd1, 0x67, 0xe7, 0x5d, 0xb0, 0xdb, 0x2c, 0x74, 0xf1, 0xd7, 0x29,
+	0xe6, 0xe2, 0x84, 0x77, 0xd1, 0x0e, 0x14, 0x98, 0xfe, 0x55, 0xb3, 0xb6, 0x73, 0xbb, 0xa5, 0xc6,
+	0x72, 0x5d, 0xb6, 0xd0, 0x34, 0xc7, 0x1d, 0x3b, 0x9d, 0xbf, 0x2c, 0x15, 0x79, 0x26, 0x7c, 0x91,
+	0xf2, 0x16, 0x23, 0x1c, 0x6d, 0xc0, 0x52, 0xef, 0x99, 0x27, 0xb3, 0x25, 0x81, 0x6a, 0x86, 0xed,
+	0x16, 0x7a, 0xcf, 0xda, 0x2c, 0x6c, 0x05, 0xc8, 0x01, 0x5b, 0x3a, 0xa2, 0x24, 0xe9, 0xa7, 0x54,
+	0xfa, 0x73, 0xca, 0x5f, 0x1a, 0xb2, 0xf0, 0x58, 0xd9, 0x5a, 0x01, 0x7a, 0x04, 0x2b, 0x12, 0x33,
+	0x8c, 0xfc, 0xd8, 0x23, 0x81, 0xd7, 0xa1, 0xa9, 0xaa, 0x98, 0xed, 0x2e, 0x0f, 0x59, 0xd8, 0x8e,
+	0xfc, 0xb8, 0x15, 0xec, 0xd3, 0x14, 0xbd, 0x0c, 0x15, 0x12, 0x53, 0x8f, 0xb2, 0x84, 0x4a, 0x8c,
+	0x47, 0x82, 0x4b, 0x55, 0x18, 0xdb, 0xb5, 0x49, 0x4c, 0x4f, 0x59, 0x42, 0xf7, 0x69, 0xda, 0x0a,
+	0x2e, 0x51, 0x1d, 0xd6, 0x54, 0x31, 0x24, 0x7a, 0xe0, 0x53, 0x2f, 0xf6, 0x85, 0x02, 0xe7, 0xb7,
+	0x73, 0xbb, 0xb6, 0x5b, 0x91, 0xbe, 0x56, 0x4c, 0x4f, 0x7c, 0xfa, 0x99, 0x2f, 0xe6, 0xe1, 0x45,
+	0x1c, 0x29, 0x7c, 0x61, 0x16, 0x7f, 0x1e, 0x47, 0xad, 0xe0, 0xd2, 0x29, 0xc3, 0x72, 0x56, 0x80,
+	0xc3, 0x83, 0x73, 0xe7, 0x47, 0x0b, 0x96, 0x32, 0x03, 0x7a, 0x09, 0x40, 0x66, 0x63, 0xd4, 0x24,
+	0xb5, 0x9c, 0x77, 0xe5, 0x30, 0x18, 0x5d, 0xbc, 0x05, 0x4b, 0x84, 0x11, 0xee, 0x91, 0x38, 0x4c,
+	0x8c, 0x72, 0x51, 0x56, 0xe8, 0xac, 0xa6, 0x47, 0x0b, 0x6e, 0x51, 0xc2, 0x5a, 0x71, 0x98, 0xa0,
+	0x3a, 0x14, 0xbb, 0xa1, 0xd0, 0x11, 0x39, 0x33, 0x1b, 0x53, 0x11, 0x87, 0x07, 0xe7, 0x47, 0x0b,
+	0x6e, 0xa1, 0x1b, 0x0a, 0x89, 0x6f, 0x82, 0x96, 0x9e, 0xc4, 0x3b, 0xdf, 0x59, 0x50, 0x52, 0x7d,
+	0xe6, 0x34, 0x89, 0x39, 0x46, 0x07, 0x00, 0x3e, 0x25, 0x1e, 0x57, 0x71, 0xea, 0x75, 0xe5, 0x4c,
+	0x57, 0x8f, 0x29, 0xd1, 0x7c, 0xcd, 0xf5, 0x9b, 0xab, 0xad, 0xaa, 0x91, 0xe6, 0x04, 0xee, 0x2e,
+	0xf9, 0x63, 0x04, 0x7a, 0x5d, 0x67, 0x69, 0x78, 0x74, 0x1e, 0xe5, 0xe9, 0x57, 0xa9, 0xac, 0xf5,
+	0xd1, 0xf9, 0x00, 0xca, 0xb7, 0x5e, 0x21, 0xe5, 0xf6, 0x1a, 0x14, 0x99, 0xf9, 0x69, 0xf4, 0x56,
+	0x19, 0x87, 0x8f, 0x61, 0x6e, 0x86, 0x70, 0xbe, 0xb5, 0xa0, 0xd2, 0x66, 0xe1, 0x13, 0x1c, 0x61,
+	0x81, 0x8d, 0x68, 0xff, 0xe3, 0x7d, 0xe1, 0x7c, 0x6f, 0x41, 0xf5, 0xd6, 0x1b, 0x9e, 0x73, 0x41,
+	0xf7, 0xfe, 0xe1, 0x2b, 0xa7, 0xdf, 0x74, 0x00, 0xab, 0xb3, 0x65, 0x91, 0xc5, 0x7d, 0x63, 0x76,
+	0x96, 0xd7, 0xc7, 0xb5, 0x9d, 0x82, 0x4e, 0x86, 0xfa, 0x13, 0x58, 0xbb, 0x93, 0x9a, 0x24, 0x6a,
+	0xdc, 0xe9, 0xd2, 0x83, 0x59, 0xa6, 0x3b, 0xbd, 0xfa, 0x46, 0xed, 0x87, 0x43, 0x2c, 0xfe, 0xa7,
+	0x3e, 0x7d, 0xa4, 0xa4, 0x32, 0xb9, 0x5f, 0xab, 0x6d, 0xa6, 0x20, 0xd9, 0xcc, 0x4d, 0x70, 0x93,
+	0x6a, 0xfc, 0x64, 0x41, 0xd1, 0xc8, 0x98, 0xa3, 0x1d, 0x58, 0x89, 0xd3, 0x81, 0x17, 0x35, 0x3c,
+	0x8e, 0xbb, 0x03, 0x1c, 0x0b, 0xdd, 0x65, 0xdb, 0xb5, 0xe3, 0x74, 0x70, 0xdc, 0x38, 0x33, 0x46,
+	0x54, 0x87, 0x55, 0x89, 0xcb, 0x3e, 0x29, 0x5d, 0x96, 0xa4, 0x94, 0x9b, 0x7d, 0x58, 0x8d, 0xd3,
+	0xc1, 0xf8, 0x6b, 0x72, 0xa8, 0x1c, 0xe8, 0x15, 0xa8, 0x2a, 0xde, 0xbd, 0xe8, 0xc2, 0xe3, 0x98,
+	0x0d, 0x49, 0x07, 0x73, 0xb3, 0x1d, 0xe5, 0x85, 0xc7, 0x7b, 0xd1, 0xc5, 0x99, 0x31, 0xa3, 0x87,
+	0x20, 0x2f, 0xf3, 0x70, 0x1c, 0xd0, 0x84, 0xc8, 0x17, 0x98, 0xfd, 0x18, 0xa7, 0x83, 0x8f, 0xc7,
+	0x36, 0xe7, 0x67, 0x4b, 0x0d, 0x99, 0x4a, 0xe8, 0x39, 0x8b, 0x73, 0x1b, 0x16, 0x39, 0xc5, 0x1d,
+	0xd3, 0x91, 0xe9, 0x0f, 0x83, 0xf2, 0xa0, 0x1d, 0xc8, 0x9b, 0x5b, 0x72, 0x73, 0x77, 0x81, 0xf1,
+	0xa2, 0x87, 0x70, 0x5f, 0x9e, 0x74, 0x06, 0xa5, 0x86, 0x7d, 0x1b, 0xc6, 0x5d, 0xed, 0x73, 0x9e,
+	0xa8, 0x41, 0xbb, 0x95, 0x88, 0xd6, 0xf4, 0xac, 0x14, 0x57, 0xa7, 0x7a, 0x38, 0xab, 0xc3, 0xc6,
+	0x1f, 0x16, 0xe4, 0xda, 0x2c, 0x44, 0xef, 0xa8, 0xed, 0xbc, 0xcf, 0xb0, 0x2f, 0x30, 0x42, 0x93,
+	0x25, 0x33, 0x16, 0xc7, 0xc6, 0xea, 0xec, 0xe2, 0x39, 0xe1, 0x5d, 0x67, 0xc1, 0xc4, 0x7d, 0x4e,
+	0x83, 0x7f, 0x19, 0xd7, 0x54, 0x71, 0x7a, 0x3c, 0x50, 0x6d, 0xee, 0xe0, 0xc9, 0xe8, 0x17, 0xe6,
+	0x0f, 0x92, 0xe6, 0x78, 0x0f, 0xf2, 0x3a, 0x2f, 0xb4, 0x7e, 0x57, 0xa8, 0x32, 0xfa, 0xc1, 0x9c,
+	0xdc, 0x55, 0x68, 0x73, 0xe3, 0x97, 0xeb, 0x4d, 0xeb, 0xd7, 0xeb, 0x4d, 0xeb, 0xb7, 0xeb, 0x4d,
+	0xeb, 0x87, 0xdf, 0x37, 0x17, 0xbe, 0x28, 0xf6, 0xfc, 0x48, 0xfd, 0xb7, 0x75, 0x91, 0x57, 0x7f,
+	0xde, 0xfe, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x6a, 0x8e, 0xeb, 0x40, 0x9d, 0x09, 0x00, 0x00,
 }

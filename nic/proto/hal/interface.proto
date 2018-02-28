@@ -477,10 +477,62 @@ message InterfaceRequestMsg {
   repeated InterfaceSpec    request = 1;    // batch of requests
 }
 
+// Uplink/Uplink PC's response
+message UplinkResponseInfo {
+    uint32      uplink_lport_id = 1;    // Uplink/Uplink PC's lport id
+    uint32      hw_lif_id       = 2;    // hw lif id for Uplink/UplinkPC
+    uint32      uplink_idx      = 3;    // Unique id for every Uplink/Uplink PC. Used to maintain l2seg membership
+}
+
+// Enic <-> L2seg membership info
+message EnicL2SegInfo {
+  kh.L2SegmentKeyHandle     l2segment_key_or_handle = 1 [(gogoproto.moretags) = "venice:ref"];
+  uint32                    inp_prop_idx            = 2;
+}
+
+// Enic's response
+message EnicResponseInfo {
+    uint32      enic_lport_id               = 1;    // Enic's lport id
+    uint32      inp_prop_mac_vlan_idx_host  = 2;    // Input prop. Mac Vlan table idx from host packets
+    uint32      inp_prop_mac_vlan_idx_net   = 3;    // Input prop. Mac Vlan table idx from network packets
+    uint32      inp_prop_nat_l2seg_classic  = 4;    // Input prop. table idx for native l2seg. Classic mode
+    repeated EnicL2SegInfo membership_info  = 5;    // L2seg membership info for Enic. Classic mode
+}
+
+// CPU If's response
+message CpuIfResponseInfo {
+    uint32  cpu_lport_id = 1;   // CPU Lport id
+}
+    
+// Tunnel If's response
+message TunnelIfResponseInfo {
+  repeated uint32   inp_map_nat_idx = 1;    // GIPo termination entries in Input Mappnig Native table
+                                            //  1. Inner IPv4
+                                            //  2. Inner IPv6
+                                            //  3. Inner MAC
+  repeated uint32   inp_map_tnl_idx = 2;    // GIPo termination entries in Input Mappnig Tunnel table
+                                            //  1. Inner IPv4
+                                            //  2. Inner IPv6
+                                            //  3. Inner MAC
+  uint32            tunnel_rw_idx   = 3;    // Tunnel Rewrite table idx
+}
+
+// App redir if's response
+message AppRedirIfInfo {
+    uint32 lport_id = 1;
+}
+
 // InterfaceStatus represents the current status of the interface
 message InterfaceStatus {
-  IfStatus    if_status    = 1;    // currrent status of the interface
-  fixed64     if_handle    = 2;    // id of the interface returned by HAL
+  IfStatus                  if_status         = 1;    // currrent status of the interface
+  fixed64                   if_handle         = 2;    // id of the interface returned by HAL
+  oneof if_response_info {
+    UplinkResponseInfo      uplink_info       = 3;    // Uplink/Uplink PC info
+    EnicResponseInfo        enic_info         = 4;    // Enic's info
+    CpuIfResponseInfo       cpu_info          = 5;    // CPU If's info
+    TunnelIfResponseInfo    tunnel_info       = 6;    // Tunnel If's info
+    AppRedirIfInfo          app_redir_info    = 7;    // App Redir info
+  }
 }
 
 // InterfaceResponse is response to one InterfaceSpec
@@ -536,16 +588,16 @@ message InterfaceGetRequestMsg {
 
 // InterfaceGetResponse captures all the information about a interface
 message InterfaceGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  InterfaceSpec      spec       = 2;    // interface specification/configuration
-  InterfaceStatus    status     = 3;    // interface status
-  InterfaceStats     stats      = 4;    // interface statistics
+  types.ApiStatus    api_status             = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  InterfaceSpec      spec                   = 2;    // interface specification/configuration
+  InterfaceStatus    status                 = 3;    // interface status
+  InterfaceStats     stats                  = 4;    // interface statistics
 }
 
 // InterfaceGetResponseMsg is response to InterfaceGetRequestMsg
 message InterfaceGetResponseMsg {
-  types.ApiStatus                  api_status = 1;    // API status code
-  repeated InterfaceGetResponse    response   = 2;    // batched get response
+  types.ApiStatus                  api_status   = 1;    // API status code
+  repeated InterfaceGetResponse    response     = 2;    // batched get response
 }
 
 // InterfaceL2SegmentSpec carries the user vlan that is being added or deleted

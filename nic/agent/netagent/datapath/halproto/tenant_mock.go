@@ -11,6 +11,64 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+// MockisVrfStatus_VrfInfo is a mock of isVrfStatus_VrfInfo interface
+type MockisVrfStatus_VrfInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisVrfStatus_VrfInfoMockRecorder
+}
+
+// MockisVrfStatus_VrfInfoMockRecorder is the mock recorder for MockisVrfStatus_VrfInfo
+type MockisVrfStatus_VrfInfoMockRecorder struct {
+	mock *MockisVrfStatus_VrfInfo
+}
+
+// NewMockisVrfStatus_VrfInfo creates a new mock instance
+func NewMockisVrfStatus_VrfInfo(ctrl *gomock.Controller) *MockisVrfStatus_VrfInfo {
+	mock := &MockisVrfStatus_VrfInfo{ctrl: ctrl}
+	mock.recorder = &MockisVrfStatus_VrfInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisVrfStatus_VrfInfo) EXPECT() *MockisVrfStatus_VrfInfoMockRecorder {
+	return _m.recorder
+}
+
+// isVrfStatus_VrfInfo mocks base method
+func (_m *MockisVrfStatus_VrfInfo) isVrfStatus_VrfInfo() {
+	_m.ctrl.Call(_m, "isVrfStatus_VrfInfo")
+}
+
+// isVrfStatus_VrfInfo indicates an expected call of isVrfStatus_VrfInfo
+func (_mr *MockisVrfStatus_VrfInfoMockRecorder) isVrfStatus_VrfInfo() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isVrfStatus_VrfInfo", reflect.TypeOf((*MockisVrfStatus_VrfInfo)(nil).isVrfStatus_VrfInfo))
+}
+
+// MarshalTo mocks base method
+func (_m *MockisVrfStatus_VrfInfo) MarshalTo(_param0 []byte) (int, error) {
+	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (_mr *MockisVrfStatus_VrfInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisVrfStatus_VrfInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (_m *MockisVrfStatus_VrfInfo) Size() int {
+	ret := _m.ctrl.Call(_m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (_mr *MockisVrfStatus_VrfInfoMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisVrfStatus_VrfInfo)(nil).Size))
+}
+
 // MockVrfClient is a mock of VrfClient interface
 type MockVrfClient struct {
 	ctrl     *gomock.Controller
