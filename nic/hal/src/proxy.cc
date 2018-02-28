@@ -209,6 +209,7 @@ proxy_program_lif(proxy_t* proxy)
         lif_spec.set_admin_status(intf::IF_STATUS_UP);
         lif_hal_info.with_hw_lif_id = true;
         lif_hal_info.hw_lif_id = meta_lif_info->lif_id;
+        lif_hal_info.dont_zero_qstate_mem = true;
         
         for(uint j = 0; j < meta_lif_info->num_qtype; j++) {
             meta_qtype_info = &(meta_lif_info->qtype_info[j]);

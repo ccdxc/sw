@@ -90,6 +90,7 @@ typedef struct lif_s {
 typedef struct lif_hal_info_s {
     bool        with_hw_lif_id;
     uint32_t    hw_lif_id;
+    bool        dont_zero_qstate_mem;
 } lif_hal_info_t;
 
 typedef struct lif_create_app_ctxt_s {

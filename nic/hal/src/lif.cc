@@ -110,7 +110,7 @@ lif_del_from_db (lif_t *lif)
 // init lif specific queue state, if any
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
+lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_zero_qstate_mem)
 {
     LIFQStateParams qs_params = { 0 };
     int32_t         ec        = 0;
@@ -148,6 +148,7 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
         lif->qinfo[ent.purpose()].num_queues = (uint16_t)pow(2, ent.entries());
     }
 
+    qs_params.dont_zero_memory = dont_zero_qstate_mem;
     // make sure that when you are creating with hw_lif_id the lif is alloced
     // already, otherwise this call may return an error
     if ((ec = g_lif_manager->InitLIFQState(hw_lif_id, &qs_params)) < 0) {
@@ -287,6 +288,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif_hal_info_t             *lif_hal_info, lif_info;
     lif_create_app_ctxt_t      *app_ctxt      = NULL;
     uint32_t                   hw_lif_id      = 0;
+    bool                       dont_zero_qstate_mem = false;
     std::unique_ptr<uint8_t[]> buf;
 
     if (cfg_ctxt == NULL) {
@@ -317,6 +319,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
             goto end;
         }
         memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
+        dont_zero_qstate_mem = lif_hal_info->dont_zero_qstate_mem;
     } else {
         hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
         if (((int32_t)hw_lif_id) < 0) {
@@ -331,7 +334,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     if (spec->lif_qstate_map_size()) {
         // init queue state map
-        ret = lif_qstate_map_init(*spec, hw_lif_id, lif);
+        ret = lif_qstate_map_init(*spec, hw_lif_id, lif, dont_zero_qstate_mem);
         if (ret != HAL_RET_OK) {
             goto end;
         }
@@ -748,7 +751,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     if (app_ctxt->qstate_map_init_set) {
         // init queue state map
-        ret = lif_qstate_map_init(*(app_ctxt->spec), hw_lif_id, lif);
+        ret = lif_qstate_map_init(*(app_ctxt->spec), hw_lif_id, lif, false);
         if (ret != HAL_RET_OK) {
             goto end;
         }
