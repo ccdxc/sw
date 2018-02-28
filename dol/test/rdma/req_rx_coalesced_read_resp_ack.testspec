@@ -376,7 +376,7 @@ session:
             doorbell:
                 object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
                 fields:
-                    upd : 0x3 # DB_SCHED_WR(1)
+                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
        
         expect:
             packets:

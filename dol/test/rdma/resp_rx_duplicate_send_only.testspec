@@ -132,7 +132,7 @@ trigger:
     doorbell:
         object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
         fields:
-            upd : 0x3 # DB_SCHED_WR(1)
+            upd : 0x9 # PI from DB data and DB_SCHED_EVAL
 
     packets:
         - packet:

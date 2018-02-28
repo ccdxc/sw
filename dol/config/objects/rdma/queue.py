@@ -330,7 +330,7 @@ class RdmaQstateObject(object):
     def set_pindex(self, ring, value):
         assert(ring < 7)
         setattr(self.data, 'p_index%d' % ring, value)
-        self.Write()
+        #Avoid writting Qstate/PI to ASIC, and let DB pick up updated PI (0x9)
 
     def set_cindex(self, ring, value):
         assert(ring < 7)
