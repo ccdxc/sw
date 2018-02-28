@@ -305,6 +305,17 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
 
     - module:
+        name    : CONN_SETUP_W_WIN_ZERO
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WIN_ZERO
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK_DROP
+
+    - module:
         name    : FULL
         tracker : True
         args    :
@@ -1681,6 +1692,18 @@ modules:
             connspec: ref://trackerstore/connections/id=DEFAULT
         iterate :
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_RST_FOR_SYN
+              cpu   : True
+
+    - module:
+        name    : INIT_SYN_W_WIN_ZERO_RESP_RST
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WIN_ZERO
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_RST_FOR_SYN
               cpu   : True

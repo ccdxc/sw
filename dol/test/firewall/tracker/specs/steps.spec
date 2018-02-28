@@ -114,6 +114,13 @@ steps:
         fields      :
             flags   : syn
 
+    - step:
+        id          : IFLOW_SYN_WIN_ZERO
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            window  : 0
+
     # Used for 5 way handshake. We need to decrement the seq
     # so that we send the original syn seq again.
     - step:
@@ -192,6 +199,13 @@ steps:
                 mss       : ref://step/rfstate/mss
                 timestamp : 0x23456789
                 sackok    : 0
+
+    - step:
+        id          : RFLOW_SYN_ACK_DROP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        permit      : False
+        fields      :
+            flags   : syn,ack
 
     - step:
         id          : IFLOW_ACK
