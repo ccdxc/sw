@@ -105,6 +105,8 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::decompress_odd_size_buf, "Decompress Host->Host to flat odd size buf", false},
   {&tests::compress_host_sgl_to_host_sgl, "Compress Host->Host using SGLs", false},
   {&tests::decompress_host_sgl_to_host_sgl, "Decompress Host->Host using SGLs", false},
+  {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
+  {&tests::decompress_to_flat_64K_buf_in_hbm, "Decompress HBM->HBM to flat 64K buf", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {

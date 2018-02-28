@@ -1,8 +1,4 @@
 // Compression DOLs.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wunused-function"
-
 #include "compression.hpp"
 #include "compression_test.hpp"
 #include "tests.hpp"
@@ -10,6 +6,9 @@
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
@@ -78,7 +77,6 @@ static constexpr uint32_t kCompressedBufSize = 65536 - 4096;
 static uint8_t compressed_data_buf[kCompressedBufSize];
 static uint16_t compressed_data_size;  // Calculated at run-time;
 static uint16_t last_cp_output_data_len;  // Calculated at run-time;
-static uint8_t *compressed_data_ptr = compressed_data_buf + 8;
 
 // Buffer (total 128K) layout in both HBM and host memory:
 static constexpr uint32_t kTotalBufSize = 128 * 1024;
@@ -104,6 +102,11 @@ static uint64_t hbm_pa;
 // Write zeros to the 1st 8 bytes of compressed data buffer in hostmem.
 void InvalidateHdrInHostMem() {
   *((uint64_t *)(host_mem + kCompressedDataOffset)) = 0;
+}
+
+// Write zeros to the 1st 8 bytes of compressed data buffer in hbm.
+void InvalidateHdrInHBM() {
+  write_mem(hbm_pa + kCompressedDataOffset, all_zeros, 8);
 }
 
 static bool status_poll(bool in_hbm) {
@@ -148,7 +151,13 @@ compression_init()
   for (uint64_t i = 0; i < (kUncompressedDataSize/sizeof(uint64_t)); i++)
     p64[i] = i;
   bcopy(uncompressed_data, host_mem + kUncompressedDataOffset, kUncompressedDataSize);
-  //write_mem(hbm_pa + kUncompressedDataOffset, (uint8_t *)uncompressed_data, kUncompressedDataSize);
+  // write_mem() cannot operate on more than 8K (12K?) at a time. So copy the data
+  // 8K at a time.
+  for (uint64_t i = 0; i < (kUncompressedDataSize/8192); i++) {
+    write_mem(hbm_pa + kUncompressedDataOffset + (i * 8192),
+              (uint8_t *)&uncompressed_data[i*8192],
+              std::min(8192ul, kUncompressedDataSize - (i*8192ul)));
+  }
 
   uint32_t lo_reg, hi_reg;
   // Write cp queue base.
@@ -228,6 +237,10 @@ static int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_h
   }
   if (desc->cmd_bits.comp_decomp_en && desc->cmd_bits.insert_header && (st->err == 0)) {
     cp_hdr_t *hdr = (cp_hdr_t *)(host_mem + kCompressedDataOffset);
+    // If the dst was hbm, copy over header from there.
+    if (!(desc->dst & (1ul << 63))) {
+      read_mem(hbm_pa + kCompressedDataOffset, (uint8_t *)hdr, sizeof(*hdr));
+    }
     if (hdr->version != kCPVersion) {
       printf("Header version mismatch, expected 0x%x, received 0x%x\n",
              kCPVersion, hdr->version);
@@ -534,6 +547,50 @@ int decompress_host_sgl_to_host_sgl() {
   return 0;
 }
 
-}  // namespace tests
+int compress_flat_64K_buf_in_hbm() {
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.sha_en = 1;
+  d.src = hbm_pa + kUncompressedDataOffset;
+  d.dst = hbm_pa + kCompressedDataOffset;
+  d.datain_len = 0;  // 0 = 64K
+  d.threshold_len = kCompressedBufSize - 8;
+  d.status_data = 0x1234;
+  InvalidateHdrInHBM();
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+  if (run_cp_test(&d, true, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
 
-#pragma GCC diagnostic pop
+int decompress_to_flat_64K_buf_in_hbm() {
+  write_mem(hbm_pa + kUncompressedDataOffset, all_zeros, 16);
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.header_present = 1;
+  d.cmd_bits.cksum_verify_en = 1;
+  d.dst = hbm_pa + kUncompressedDataOffset;
+  d.src = hbm_pa + kCompressedDataOffset;
+  d.datain_len = compressed_data_size;
+  d.threshold_len = 0;  // 64K, output len
+  d.status_data = 0x3456;
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x3456;
+  if (run_dc_test(&d, true, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+}  // namespace tests
