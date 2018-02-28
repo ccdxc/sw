@@ -386,7 +386,6 @@ static int ionic_vlan_rx_add_vid(struct net_device *netdev,
 	err = ionic_adminq_rx_filter_vlan(adminq, vid, true,
 					  ionic_waitq_cb, &wq);
 	spin_unlock(&lif->adminq_lock);
-	spin_lock(&lif->adminq_lock);
 	if (err)
 		return err;
 	err = ionic_waitq_wait(&wq);
