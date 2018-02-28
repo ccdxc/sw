@@ -140,11 +140,9 @@ void capri_set_action_rxdma_asm_base(int tableid, int actionid,
 void capri_set_action_txdma_asm_base(int tableid, int actionid,
                                      uint64_t asm_base);
 
-void capri_set_table_txdma_asm_base(int actionid,
-                                    uint64_t asm_base);
+void capri_set_table_rxdma_asm_base (int tableid, uint64_t asm_base);
 
-void capri_set_table_rxdma_asm_base(int actionid,
-                                    uint64_t asm_base);
+void capri_set_table_txdma_asm_base (int tableid, uint64_t asm_base);
 
 void capri_program_p4plus_sram_table_mpu_pc(int tableid, int stage_tbl_id,
                                             int stage);

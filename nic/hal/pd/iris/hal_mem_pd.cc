@@ -1101,6 +1101,7 @@ pd_mem_init_phase2 (pd_mem_init_phase2_args_t *args)
     
     // Capri asic initializations
     // Initialize the p4pd stats region
+    HAL_ASSERT(asicpd_p4plus_table_mpu_base_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_stats_region_init(region_arr, arrlen) == HAL_RET_OK);
     HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_table_init() == HAL_RET_OK);

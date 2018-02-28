@@ -49,6 +49,7 @@ hal_ret_t asicpd_deparser_init(void);
 hal_ret_t asicpd_program_hbm_table_base_addr(void);
 hal_ret_t asicpd_stats_region_init(asicpd_stats_region_info_t *region_arr,
                                    int arrlen);
+hal_ret_t asicpd_p4plus_table_mpu_base_init(void);
 
 }    // namespace pd
 }    // namespace hal

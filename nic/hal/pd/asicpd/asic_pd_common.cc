@@ -7,6 +7,8 @@
 #include "nic/gen/include/p4pd_table.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
+#include "nic/gen/include/common_rxdma_actions_p4pd_table.h"
+#include "nic/gen/include/common_txdma_actions_p4pd_table.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -408,6 +410,82 @@ asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+asicpd_p4plus_table_mpu_base_init (void)
+{
+    int ret = HAL_RET_OK;
+    char action_name[P4ACTION_NAME_MAX_LEN] = {0};
+    char progname[P4ACTION_NAME_MAX_LEN] = {0};
+    uint64_t capri_action_rxdma_asm_base;
+    uint64_t capri_action_txdma_asm_base;
+    uint64_t capri_table_rxdma_asm_base;
+    uint64_t capri_table_txdma_asm_base;
+
+    HAL_TRACE_DEBUG("In asicpd_p4plus_table_mpu_base_init\n");
+    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
+                 p4pd_common_rxdma_actions_tbl_names[i], ".bin");
+        ret = capri_program_to_base_addr("p4plus", progname,
+                                         &capri_table_rxdma_asm_base);
+        if (ret != 0) {
+            continue;
+        }
+        capri_set_table_rxdma_asm_base(i, capri_table_rxdma_asm_base);
+        for (int j = 0; j < p4pd_common_rxdma_actions_get_max_action_id(i); j++) {
+            p4pd_common_rxdma_actions_get_action_name(i, j, action_name);
+            capri_action_rxdma_asm_base = 0;
+            capri_program_label_to_offset("p4plus", progname, action_name,
+                                          &capri_action_rxdma_asm_base);
+            /* Action base is in byte and 64B aligned... */
+            capri_action_rxdma_asm_base >>= 6;
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_rxdma_asm_base);
+            capri_set_action_rxdma_asm_base(i, j, capri_action_rxdma_asm_base);
+        }
+    }
+
+    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
+                 p4pd_common_txdma_actions_tbl_names[i], ".bin");
+        ret = capri_program_to_base_addr("p4plus", progname,
+                                         &capri_table_txdma_asm_base);
+        if (ret != 0) {
+            continue;
+        }
+        capri_set_table_txdma_asm_base(i, capri_table_txdma_asm_base);
+        for (int j = 0; j < p4pd_common_txdma_actions_get_max_action_id(i); j++) {
+            p4pd_common_txdma_actions_get_action_name(i, j, action_name);
+            capri_action_txdma_asm_base = 0;
+            capri_program_label_to_offset("p4plus", progname, action_name,
+                                          &capri_action_txdma_asm_base);
+            /* Action base is in byte and 64B aligned... */
+            capri_action_txdma_asm_base>>= 6;
+            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
+                            progname, action_name, capri_action_txdma_asm_base);
+            capri_set_action_txdma_asm_base(i, j, capri_action_txdma_asm_base);
+        }
+    }
+    p4pd_table_properties_t tbl_info;
+    /* P4 plus - MPU PC initialize */
+    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        p4pd_global_table_properties_get(i, &tbl_info);
+        capri_program_p4plus_sram_table_mpu_pc(i,
+                                               tbl_info.stage_tableid,
+                                               tbl_info.stage);
+    }
+
+    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
+         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
+        p4pd_global_table_properties_get(i, &tbl_info);
+        capri_program_p4plus_sram_table_mpu_pc(i,
+                                               tbl_info.stage_tableid,
+                                               tbl_info.stage);
+    }
+    return HAL_RET_OK;
+}
 
 hal_ret_t
 asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)

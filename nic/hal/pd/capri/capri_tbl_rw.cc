@@ -39,12 +39,6 @@
 #define CAPRI_CALLOC  calloc
 #define CAPRI_FREE    free
 
-#ifdef GFT
-#include "nic/gen/gft/include/p4pd.h"
-#else
-#include "nic/gen/iris/include/p4pd.h"
-#endif
-
 typedef int capri_error_t;
 
 /*  Design decisions + Table Update Flow:
@@ -637,82 +631,6 @@ capri_mpu_icache_invalidate (void)
     }
 }
 
-/* TODO: Need to move this out to the apd layer. Need to figure out the
- * seuqencing issue which is causing the rxdma tests to fail before moving
- * this out */
-static void
-capri_p4plus_table_mpu_base_init (void)
-{
-    int ret;
-    char action_name[P4ACTION_NAME_MAX_LEN] = {0};
-    char progname[P4ACTION_NAME_MAX_LEN] = {0};
-    uint64_t capri_action_rxdma_asm_base;
-    uint64_t capri_action_txdma_asm_base;
-
-    HAL_TRACE_DEBUG("In capri_p4plus_table_mpu_base_init\n");
-    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
-        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
-                 p4pd_common_rxdma_actions_tbl_names[i], ".bin");
-        ret = capri_program_to_base_addr("p4plus", progname,
-                                         &capri_table_rxdma_asm_base[i]);
-        if (ret != 0) {
-            continue;
-        }
-        for (int j = 0; j < p4pd_common_rxdma_actions_get_max_action_id(i); j++) {
-            p4pd_common_rxdma_actions_get_action_name(i, j, action_name);
-            capri_action_rxdma_asm_base = 0;
-            capri_program_label_to_offset("p4plus", progname, action_name,
-                                          &capri_action_rxdma_asm_base);
-            /* Action base is in byte and 64B aligned... */
-            capri_action_rxdma_asm_base >>= 6;
-            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
-                            progname, action_name, capri_action_rxdma_asm_base);
-            capri_set_action_rxdma_asm_base(i, j, capri_action_rxdma_asm_base);
-        }
-    }
-
-    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
-        snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
-                 p4pd_common_txdma_actions_tbl_names[i], ".bin");
-        ret = capri_program_to_base_addr("p4plus", progname,
-                                         &capri_table_txdma_asm_base[i]);
-        if (ret != 0) {
-            continue;
-        }
-        for (int j = 0; j < p4pd_common_txdma_actions_get_max_action_id(i); j++) {
-            p4pd_common_txdma_actions_get_action_name(i, j, action_name);
-            capri_action_txdma_asm_base = 0;
-            capri_program_label_to_offset("p4plus", progname, action_name,
-                                          &capri_action_txdma_asm_base);
-            /* Action base is in byte and 64B aligned... */
-            capri_action_txdma_asm_base>>= 6;
-            HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
-                            progname, action_name, capri_action_txdma_asm_base);
-            capri_set_action_txdma_asm_base(i, j, capri_action_txdma_asm_base);
-        }
-    }
-    p4pd_table_properties_t tbl_info;
-    /* P4 plus - MPU PC initialize */
-    for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
-        p4pd_global_table_properties_get(i, &tbl_info);
-        capri_program_p4plus_sram_table_mpu_pc(i,
-                                               tbl_info.stage_tableid,
-                                               tbl_info.stage);
-    }
-
-    for (int i = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
-         i < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
-        p4pd_global_table_properties_get(i, &tbl_info);
-        capri_program_p4plus_sram_table_mpu_pc(i,
-                                               tbl_info.stage_tableid,
-                                               tbl_info.stage);
-    }
-    return;
-}
-
 void capri_debug_hbm_reset(void);
 int
 capri_table_rw_init (void)
@@ -760,11 +678,6 @@ capri_table_rw_init (void)
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
-
-#ifndef GFT
-    /* TODO: Need to move this out to the apd layer */
-    capri_p4plus_table_mpu_base_init();
-#endif /* !GFT */
 
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
 
@@ -1534,6 +1447,22 @@ capri_set_action_txdma_asm_base (int tableid, int actionid,
                                  uint64_t asm_base)
 {
     capri_action_txdma_asm_base[tableid][actionid] = asm_base;
+    return;
+}
+
+void
+capri_set_table_rxdma_asm_base (int tableid,
+                                uint64_t asm_base)
+{
+    capri_table_rxdma_asm_base[tableid] = asm_base;
+    return;
+}
+
+void
+capri_set_table_txdma_asm_base (int tableid,
+                                uint64_t asm_base)
+{
+    capri_table_txdma_asm_base[tableid] = asm_base;
     return;
 }
 
