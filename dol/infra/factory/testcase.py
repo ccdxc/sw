@@ -116,6 +116,7 @@ class TestCase(objects.FrameworkObject):
         self.drop = False
         self.loopid = None
         self.pendol = module.IsPendolHeaderEnabled()
+        self.__retry_enable = root.IsRetryEnabled()
         self.LockAttributes()
         
         self.GID(tcid)
@@ -163,6 +164,12 @@ class TestCase(objects.FrameworkObject):
 
     def IsIgnore(self):
         return self.module.IsIgnore()
+
+    def IsRetryEnabled(self):
+        return self.__retry_enable
+    def SetRetryEnabled(self, val):
+        self.__retry_enable = val
+        return
 
     def __setup_config(self, root):
         self.__root = root

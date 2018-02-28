@@ -122,3 +122,7 @@ class ConfigObjectBase(objects.FrameworkObject):
 
     def InFeatureSet(self):
         return GlobalOptions.feature_set in self.meta.feature_set
+
+    def IsRetryEnabled(self):
+        return False
+

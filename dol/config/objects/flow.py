@@ -89,6 +89,9 @@ class FlowObject(base.ConfigObjectBase):
             self.fte = True
         return
 
+    def IsRetryEnabled(self):
+        return self.fte
+
     def SetMulticast(self, mc):
         self.multicast = mc
         return

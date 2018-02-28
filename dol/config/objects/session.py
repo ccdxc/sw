@@ -91,6 +91,9 @@ class SessionObject(base.ConfigObjectBase):
 
     def IsFteEnabled(self):
         return self.fte
+    
+    def IsRetryEnabled(self):
+        return self.fte
 
     def SetLabel(self, label, update_iflow=True, update_rflow=True):
         cfglogger.info("Updating %s Label to %s" % (self.GID(), label))

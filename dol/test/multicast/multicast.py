@@ -27,6 +27,7 @@ def Setup(infra, module):
     return
 
 def TestCaseSetup(tc):
+    tc.SetRetryEnabled(True)
     iterelem = tc.module.iterator.Get()
 
     tc.pvtdata.priotag = False

@@ -33,7 +33,7 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     tc.pvtdata = ObjectDatabase(logger)
-
+    tc.SetRetryEnabled(True)
     tcp_proxy.SetupProxyArgs(tc)
 
     id1, id2 = ProxyCbServiceHelper.GetSessionQids(tc.config.flow._FlowObject__session)

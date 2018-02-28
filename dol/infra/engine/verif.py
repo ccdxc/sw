@@ -31,15 +31,19 @@ class VerifEngineObject:
         if GlobalOptions.dryrun:
             return True
 
-        if epktbuf is None or apktbuf is None:
+        if epktbuf is None:
+            tc.info("Packet Compare: Expected Buffer is None. Skipping")
+            return True
+
+        if apktbuf is None:
             tc.error("Packet Compare: ExpType:%s, ActType:%s" %\
                       (type(epktbuf), type(apktbuf)))
-            return defs.status.ERROR
+            return False
 
         # Make sure we are not accidentally comparing the same object
         if id(apktbuf) == id(epktbuf):
             tc.error("ExpBuf and ActBuf are same objects.")
-            return defs.status.ERROR
+            return False
 
         tc.verbose("Comparing Packets")
         pcr = comparators.PacketComparator(tc)
@@ -65,13 +69,13 @@ class VerifEngineObject:
         if ebuf is None or abuf is None:
             tc.error("Buffer Compare: ExpType:%s, ActType:%s" %\
                       (type(ebuf), type(abuf)))
-            return defs.status.ERROR
+            return False
 
         tc.info("Comparing Buffers: %s <--> %s " % (ebuf.GID(), abuf.GID()))
         # Make sure we are not accidentally comparing the same object
         if id(ebuf) == id(abuf):
             tc.error("ExpBuf and ActBuf are same objects.")
-            return defs.status.ERROR
+            return False
 
         return ebuf == abuf
 
@@ -93,6 +97,7 @@ class VerifEngineObject:
 
         # If this buffer is not a packet, then stop.
         if ebuf.IsPacket() is False:
+            tc.info("Buffer is not a packet. Skipping PktCompare.")
             return defs.status.SUCCESS
        
         epktbuf = self.__get_pktbuffer(ebuf, tc)
@@ -143,17 +148,22 @@ class VerifEngineObject:
             return value * RTL_RETRY_SCALE
         return value
 
-    def __get_num_retries(self, rxcount):
+    def __get_num_retries(self, tc, rxcount):
         if rxcount == 0:
             return self.__get_scaled_retry(MAX_DROP_RETRIES)
         return self.__get_scaled_retry(MAX_RETRIES)
+
+    def __is_retry_enabled(self, tc):
+        if tc.IsRetryEnabled() == False and GlobalOptions.rtl == False:
+            return False
+        return True
 
     def __consume_descriptor(self, edescr, ring, tc):
         if GlobalOptions.dryrun:
             return None
         
         adescr = copy.copy(edescr)
-        max_retries = self.__get_num_retries(tc)
+        max_retries = self.__get_num_retries(tc, None)
         for r in range(max_retries):
             status = ring.Consume(adescr)
             if status != defs.status.RETRY: break
@@ -185,7 +195,7 @@ class VerifEngineObject:
         return defs.status.SUCCESS
 
     def __receive_packets(self, pcr, step, tc):
-        max_retries = self.__get_num_retries(pcr.GetExPacketCount())
+        max_retries = self.__get_num_retries(tc, pcr.GetExPacketCount())
         for r in range(max_retries):
             mpkts = ModelConnector.Receive()
             for mpkt in mpkts:
@@ -197,6 +207,9 @@ class VerifEngineObject:
                     break
                 tc.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
                         (pcr.GetExPacketCount(), pcr.GetRxPacketCount()))
+
+            if self.__is_retry_enabled(tc) == False:
+                break
             self.__retry_wait(tc)
         return
 

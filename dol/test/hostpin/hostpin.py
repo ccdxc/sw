@@ -7,6 +7,7 @@ def Setup(infra, module):
     return
 
 def TestCaseSetup(tc):
+    tc.SetRetryEnabled(True)
     modcbs.TestCaseSetup(tc)
     oiflist = tc.config.src.segment.floodlist.enic_list
     tc.pvtdata.pruned_oiflist = []

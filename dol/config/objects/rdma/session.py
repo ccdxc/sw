@@ -138,6 +138,8 @@ class RdmaSessionObject(base.ConfigObjectBase):
         self.rqp.ShowTestcaseConfig(obj.rdmasession.rqp, logger)
         return
 
+    def IsRetryEnabled(self):
+        return False
 
 class RdmaSessionObjectHelper:
     def __init__(self):

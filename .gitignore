@@ -20,7 +20,7 @@ cscope.*
 *.DS_Store
 *.orig
 *.rej
-*.so
+*.so*
 *.a
 bazel-bin*
 bazel-genfiles*

@@ -47,7 +47,7 @@ def TestCaseSetup(tc):
     global proxyrcb
     global proxyccb
     global redir_span
-
+    tc.SetRetryEnabled(True)
     redir_span = getattr(tc.module.args, 'redir_span', False)
 
     tc.pvtdata = ObjectDatabase(logger)

@@ -10,6 +10,7 @@ def Setup(infra, module):
     return
 
 def TestCaseSetup(tc):
+    tc.SetRetryEnabled(True)
     modcbs.TestCaseSetup(tc)
     return
 
