@@ -1590,9 +1590,9 @@ int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
 
   xts_ctx.op = xts::AES_ENCR_ONLY;
   xts_ctx.src_buf = (void*)write_hbm_buf2->va();
-  xts_ctx.is_src_hbm_buf = true;
+  xts_ctx.is_src_hbm_buf = write_hbm_buf2->is_mem_type_hbm();
   xts_ctx.dst_buf = (void*)write_hbm_buf->va();
-  xts_ctx.is_dst_hbm_buf = true;
+  xts_ctx.is_dst_hbm_buf = write_hbm_buf->is_mem_type_hbm();
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
   xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
@@ -1683,9 +1683,9 @@ int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   // Sequencer #1: XTS
   xts_ctx.op = xts::AES_DECR_ONLY;
   xts_ctx.src_buf = (void*)read_hbm_buf->va();
-  xts_ctx.is_src_hbm_buf = true;
+  xts_ctx.is_src_hbm_buf = read_hbm_buf->is_mem_type_hbm();
   xts_ctx.dst_buf = (void*)read_hbm_buf2->va();
-  xts_ctx.is_dst_hbm_buf = true;
+  xts_ctx.is_dst_hbm_buf = read_hbm_buf2->is_mem_type_hbm();
   xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
   xts_ctx.copy_desc = false;
   xts_ctx.ring_db = false;
@@ -1825,6 +1825,39 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
 
   // Kickstart the sequencer 
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+  
+  return 0;
+}
+
+int test_seq_write_roce_pdma_prefilled(uint16_t seq_pdma_q,
+                                       uint16_t seq_pdma_index,
+                                       uint32_t pvm_roce_sq,
+                                       dp_mem_t *seq_roce_desc,
+                                       dp_mem_t *sqwqe)
+{
+  uint64_t qaddr;
+
+  printf("pdma_q %u, seq_pdma_index %u, roce_sq %u\n",
+         seq_pdma_q, seq_pdma_index, pvm_roce_sq);
+
+  // Fill the Sequencer ROCE descriptor
+  if (qstate_if::get_qstate_addr(queues::get_pvm_lif(), SQ_TYPE,
+                                 pvm_roce_sq, &qaddr) < 0) {
+    printf("Can't get PVM's ROCE SQ qaddr \n");
+    return -1;
+  }
+  seq_roce_desc->write_bit_fields(0, 64, sqwqe->pa());
+  seq_roce_desc->write_bit_fields(64, 32, sqwqe->line_size_get());
+  seq_roce_desc->write_bit_fields(96, 11, queues::get_pvm_lif());
+  seq_roce_desc->write_bit_fields(107, 3, SQ_TYPE);
+  seq_roce_desc->write_bit_fields(110, 24, pvm_roce_sq);
+  seq_roce_desc->write_bit_fields(134, 34, qaddr);
+  seq_roce_desc->write_bit_fields(168, 8, 1);
+  seq_roce_desc->write_thru();
+
+  // Kickstart the sequencer 
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q,
+                     0, seq_pdma_index);
   
   return 0;
 }
@@ -2132,7 +2165,6 @@ int test_run_rdma_e2e_read() {
       if (!rolling_write_data_buf) {
         printf("No write data buffer for comparison \n");
       } else {
-        rolling_write_data_buf->read_thru();
         // Enable this to debug as needed
         //printf("Dumping data buffer which contains NVME read data\n");
         //utils::dump(data_buf);
@@ -2239,6 +2271,293 @@ int test_run_rdma_lif_override() {
   IncrInitiatorRcvBufPtr();
 
   return rc;
+}
+
+int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
+                                uint16_t seq_xts_q,
+                                uint16_t seq_roce_q,
+                                uint16_t ssd_handle,
+                                uint16_t io_priority,
+                                XtsCtx& xts_ctx)
+{
+  dp_mem_t *seq_pdma_desc;
+  dp_mem_t *seq_roce_desc;
+  dp_mem_t *cmd_buf;
+  uint16_t seq_pdma_index;
+  uint16_t seq_roce_index;
+  uint64_t db_data;
+  uint64_t db_addr;
+  uint8_t  byte_val;
+  int rc;
+
+  // Get the SLBA to write to and read from
+  rolling_write_slba = get_next_slba();
+
+  // Get the HBM buffer for the write data to be PDMA'ed to
+  // before sending over RDMA
+  dp_mem_t *r2n_hbm_buf = new dp_mem_t(1, rdma_r2n_buf_size(), DP_MEM_ALIGN_PAGE);
+
+  // Initialize and form the write command
+  r2n::r2n_nvme_be_cmd_buf_init(r2n_hbm_buf, NULL, 0, ssd_handle,
+                                0, 0, 0, &cmd_buf);
+  tests::form_write_cmd_no_buf(cmd_buf, rolling_write_slba);
+
+  // initialize write data pattern
+  byte_val = get_next_byte();
+  memset(write_buf->read(), byte_val, kDefaultBufSize);
+  write_buf->write_thru();
+
+  // Sequencer: R2N descriptor
+  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc->clear();
+
+  // Sequencer: PDMA descriptor
+  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc->clear();
+
+  // Pre-fill the PDMA descriptor
+  assert(rdma_r2n_data_size() <= kDefaultBufSize);
+  seq_pdma_desc->write_bit_fields(128, 64, write_buf->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, write_hbm_buf->pa());
+  seq_pdma_desc->write_bit_fields(256, 32, kDefaultBufSize);
+
+  // encrypt data and store in r2n_hbm_buf payload area
+  dp_mem_t *r2n_pyld = r2n_hbm_buf->fragment_find(rdma_r2n_data_offset() - 
+                                                  offsetof(r2n::r2n_buf_t, cmd_buf),
+                                                  rdma_r2n_data_size());
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.seq_xts_q = seq_xts_q;
+  xts_ctx.src_buf = (void*)write_hbm_buf->va();
+  xts_ctx.is_src_hbm_buf = write_hbm_buf->is_mem_type_hbm();
+  xts_ctx.dst_buf = (void*)r2n_pyld->va();
+  xts_ctx.is_dst_hbm_buf = r2n_pyld->is_mem_type_hbm();
+  xts_ctx.num_sectors = rdma_r2n_data_size() / SECTOR_SIZE;
+  xts_ctx.copy_desc = false;
+  xts_ctx.ring_db = false;
+  xts_ctx.init(rdma_r2n_data_size());
+
+  // Xfer sequence is: pdma (seq_pdma_desc) -> xts encrypt -> seq roce (seq_roce_desc) ->
+  // RDMA roce initiator sq (sqwqe pointing to r2n_hbm_buf).
+  // 
+  // See StartRoceWritePdmaPrefilled() and test_seq_write_roce_pdma_prefilled().
+  
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0,
+                             seq_roce_index, &xts_ctx.xts_db_addr,
+                             &xts_ctx.exp_db_data);
+  printf("After XTS, db_addr is %lx db_data %lx\n",
+         xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
+  xts_ctx.test_seq_xts();
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
+                             xts_ctx.seq_xts_index, &db_addr, &db_data);
+  seq_pdma_desc->write_bit_fields(0, 64, db_addr);
+  seq_pdma_desc->write_bit_fields(64, 64, bswap_64(db_data));
+
+  // After PDMA, the next doorbell would be XTS
+  seq_pdma_desc->write_bit_fields(408, 1, 1);
+  seq_pdma_desc->write_thru();
+
+  StartRoceWritePdmaPrefilled(seq_pdma_q, seq_pdma_index,
+                              seq_roce_desc, r2n_hbm_buf);
+  printf("Sequencer to PDMA + XTS + wr_buf byte_val 0x%x sent over ROCE\n",
+         byte_val);
+
+  dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
+  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                 sizeof(struct NvmeStatus));
+  // Poll for status
+  auto func1 = [nvme_status, cmd_buf] () {
+    return check_nvme_status(nvme_status, cmd_buf);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  if (rc < 0)
+    printf("Failure in retrieving status \n");
+  else 
+    printf("Successfully retrieved status \n");
+
+  // Save the rolling write data buffer
+  rolling_write_data_buf = write_buf;
+
+#if 0
+  printf("Dumping raw data buffer\n");
+  utils::dump(write_hbm_buf->read_thru(), 128);
+  printf("Dumping encrypted data buffer\n");
+  utils::dump(r2n_pyld->read_thru(), 128);
+  printf("Dumping target_rcv_buf\n");
+  utils::dump(rdma_get_target_write_data_buf()->read_thru(), 128);
+#endif
+
+  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
+  PostTargetRcvBuf1();
+  PostInitiatorRcvBuf1();
+
+  // Increment the Buffer pointers
+  IncrTargetRcvBufPtr();
+  IncrInitiatorRcvBufPtr();
+
+  return rc;
+}
+
+int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
+                               uint16_t seq_xts_q,
+                               uint16_t ssd_handle,
+                               uint16_t io_priority,
+                               XtsCtx& xts_ctx)
+{
+  dp_mem_t *seq_pdma_desc;
+  dp_mem_t *cmd_buf;
+  uint16_t seq_pdma_index;
+  int rc;
+
+  reset_seq_db_data();
+
+  // Get userspace R2N buffer for read command and data.
+  dp_mem_t *r2n_send_buf = new dp_mem_t(1, rdma_r2n_buf_size(), DP_MEM_ALIGN_PAGE);
+
+  // Initialize and form the read command
+  r2n::r2n_nvme_be_cmd_buf_init(r2n_send_buf, NULL, 0, ssd_handle,
+                                0, 1, 0, &cmd_buf);
+  tests::form_read_cmd_no_buf(cmd_buf, rolling_write_slba);
+
+  // Get the HBM buffer for the write back data for the read command
+  dp_mem_t *r2n_write_buf = new dp_mem_t(1, rdma_r2n_buf_size(), DP_MEM_ALIGN_PAGE);
+
+  // Xfer sequence is: RDMA roce sq (write_wqe xfers from target_rcv_buf_va
+  // to r2n_write_buf) -> xts decrypt to read_hbm_buf -> PDMA to read_buf
+  // 
+  // See also StartRoceReadPdmaPrefilled()
+  
+  // Sequencer: PDMA descriptor
+  seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  seq_pdma_desc->clear();
+
+  // decrypt data from r2n_write_buf payload and store in read_hbm_buf
+  read_hbm_buf->clear_thru();
+  read_buf->clear_thru();
+
+  xts_ctx.op = xts::AES_DECR_ONLY;
+  xts_ctx.seq_xts_q = seq_xts_q;
+  xts_ctx.src_buf = (void*)r2n_write_buf->va();
+  xts_ctx.is_src_hbm_buf = r2n_write_buf->is_mem_type_hbm();
+  xts_ctx.dst_buf = (void*)read_hbm_buf->va();
+  xts_ctx.is_dst_hbm_buf = read_hbm_buf->is_mem_type_hbm();
+  xts_ctx.num_sectors = rdma_r2n_data_size() / SECTOR_SIZE;
+  xts_ctx.copy_desc = false;
+  xts_ctx.ring_db = false;
+  xts_ctx.init(rdma_r2n_data_size());
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+                             seq_pdma_index, &xts_ctx.xts_db_addr,
+                             &xts_ctx.exp_db_data);
+  printf("After XTS, db_addr is %lx db_data %lx\n",
+         xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
+  xts_ctx.test_seq_xts();
+
+  // Pre-fill the PDMA descriptor
+  seq_pdma_desc->write_bit_fields(128, 64, read_hbm_buf->pa());
+  seq_pdma_desc->write_bit_fields(192, 64, read_buf->pa());
+  seq_pdma_desc->write_bit_fields(256, 32, rdma_r2n_data_size());
+
+
+  // Form the interrupt add/data and enable it
+  seq_pdma_desc->write_bit_fields(312, 64, seq_db_data->pa());
+  seq_pdma_desc->write_bit_fields(376, 32, kSeqDbDataMagic);
+  seq_pdma_desc->write_bit_fields(409, 1, 1);
+  seq_pdma_desc->write_thru();
+
+  StartRoceReadWithNextLifQueue(r2n_send_buf, r2n_write_buf, rdma_r2n_data_size(),
+                                queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q);
+  printf("Sequencer to ROCE + XTS + PDMA to local bufer sent\n");
+
+  // Process the status
+  dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
+  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                 sizeof(struct NvmeStatus));
+
+  // Poll for status
+  auto func1 = [nvme_status, cmd_buf] () {
+    return check_nvme_status(nvme_status, cmd_buf);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  // Poll for DMA completion of read data only if status is successful
+  if (rc >= 0) {
+    printf("Successfully retrieved status \n");
+    auto func2 = [] () {
+      if  (*((uint32_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
+        return -1;
+      }
+      return 0;
+    };
+
+    rc = poll(func2);
+
+    // Now compare the contents
+    if (rc >= 0) {
+      printf("Successfully retrieved data \n");
+      if (!rolling_write_data_buf) {
+        printf("No write data buffer for comparison \n");
+      } else {
+        if (memcmp(read_buf->read_thru(), rolling_write_data_buf->read_thru(),
+                   rdma_r2n_data_size())) { 
+#if 0
+          printf("Dumping r2n_write_buf\n");
+          utils::dump(r2n_write_buf->read_thru(), 128);
+          printf("Dumping decrypted read_hbm_buf\n");
+          utils::dump(read_hbm_buf->read_thru(), 128);
+          printf("Dumping host data buffer which contains decrypted data\n");
+          utils::dump(read_buf->read_thru(), 128);
+#endif
+          printf("Comparison of RDMA read and write buffer failed \n");
+          rc = -1;
+        } else {
+          printf("Comparison of RDMA read and write buffer successful \n");
+          rc = 0;
+        } 
+      }
+    } else {
+      printf("Failure in retrieving data \n");
+    }
+  } else {
+    printf("Failure in retrieving status \n");
+  }
+
+#if 0
+  printf("Dumping target_rcv_buf\n");
+  utils::dump(rdma_get_target_write_data_buf()->read_thru(), 128);
+#endif
+
+  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
+  PostTargetRcvBuf1();
+  PostInitiatorRcvBuf1();
+
+  // Increment the Buffer pointers
+  IncrTargetRcvBufPtr();
+  IncrInitiatorRcvBufPtr();
+
+  return rc;
+}
+
+int test_run_rdma_e2e_xts_write1(void)
+{
+    XtsCtx xts_ctx;
+
+    return test_run_rdma_e2e_xts_write(queues::get_pvm_seq_pdma_sq(4),
+                                       queues::get_pvm_seq_xts_sq(4),
+                                       queues::get_pvm_seq_roce_sq(4),
+                                       2, 0,   // ssd_handle, io_priority
+                                       xts_ctx);
+}
+
+int test_run_rdma_e2e_xts_read1(void)
+{
+    XtsCtx xts_ctx;
+
+    return test_run_rdma_e2e_xts_read(queues::get_pvm_seq_pdma_sq(5),
+                                      queues::get_pvm_seq_xts_sq(5),
+                                      2, 0,   // ssd_handle, io_priority
+                                      xts_ctx);
 }
 
 int test_setup_cp_seq_ent(cp_seq_params_t *params) {

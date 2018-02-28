@@ -23,7 +23,8 @@ typedef enum {
 
 typedef enum {
     DP_MEM_ALIGN_NONE,
-    DP_MEM_ALIGN_PAGE
+    DP_MEM_ALIGN_PAGE,      // align to a default page size (4KB)
+    DP_MEM_ALIGN_SPEC       // align to a specified size
 } dp_mem_align_t;
 
 
@@ -37,7 +38,8 @@ public:
     dp_mem_t(uint32_t num_lines,
              uint32_t line_size,
              dp_mem_align_t mem_align = DP_MEM_ALIGN_NONE,
-             dp_mem_type_t mem_type = DP_MEM_TYPE_HBM);
+             dp_mem_type_t mem_type = DP_MEM_TYPE_HBM,
+             uint32_t spec_align_size = 0);
 
     ~dp_mem_t();
 
