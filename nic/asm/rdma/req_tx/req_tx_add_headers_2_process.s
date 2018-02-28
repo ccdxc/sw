@@ -4,7 +4,7 @@
 #include "defines.h"
 
 struct req_tx_phv_t p;
-struct req_tx_write_back_process_k_t k;
+struct req_tx_add_headers_process_k_t k;
 struct sqcb1_t d;
 
 %%
@@ -24,18 +24,15 @@ req_tx_add_headers_2_process:
 
     // dma_cmd[0] : addr3 - p4plus_to_p4_header
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, p4plus_to_p4, p4plus_to_p4, 2);
-    phvwrpair      P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
   
     #c3 - UD service. Needed only for send & send_imm
-    seq            c3, d.service, RDMA_SERV_TYPE_UD
+    seq            c3, k.args.service, RDMA_SERV_TYPE_UD
 
     //For UD, ah_handle comes in send req.
-    cmov           r3, c3, k.args.op.send_wr.ah_handle, d.header_template_addr
-    cmov           r4, c3, k.args.ah_size, d.header_template_size
-    sll            r3, r3, HDR_TEMP_ADDR_SHIFT
+    sll            r3, k.args.header_template_addr, HDR_TEMP_ADDR_SHIFT
     // dma_cmd[1] - header_template
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE)
-    DMA_HBM_MEM2PKT_SETUP(r6, r4, r3)
+    DMA_HBM_MEM2PKT_SETUP(r6, k.args.header_template_size, r3)
 
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
     // dma_cmd[2] : addr2 - deth only if it is UD service (bth setup in add_headers_process)
@@ -48,57 +45,51 @@ req_tx_add_headers_2_process:
     // For ICRC, can point to any 4 bytes of PHV so point to immeth to create 4B hdr
     //  space for ICRC Deparser in P4 calculate and fills ICRC here
 
-    // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
-    phvwr.!c3      BTH_DST_QP, d.dst_qp
-
-    crestore       [c6, c5], d.{roce_opt_ts_enable...roce_opt_mss_enable}, 0x3
+    crestore       [c6, c5], k.{args.roce_opt_ts_enable...args.roce_opt_mss_enable}, 0x3
     #c5 - mss_enable
     #c6 - ts_enable
     bcf            [!c5 & !c6],  skip_roce_udp_options
     CAPRI_SET_TABLE_3_VALID(0) //BD slot
     phvwrpair      p.roce_options.OCS_kind, ROCE_OPT_KIND_OCS, p.roce_options.OCS_value, 0
     phvwrpair      p.roce_options.TS_kind, ROCE_OPT_KIND_TS, p.roce_options.TS_len, ROCE_OPT_LEN_TS
-    //not enough bits on d[] vector to have 64 bit TS value
-    phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[31:16]}, d.{timestamp...timestamp_echo}
     phvwrpair      p.roce_options.MSS_kind, ROCE_OPT_KIND_MSS, p.roce_options.MSS_len, ROCE_OPT_LEN_MSS
-    phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 
 #define ROCE_MAX_OPTION_BYTES (sizeof(p.roce_options)/8)
 #define ROCE_TOTAL_OPTION_BYTES_TS (ROCE_MAX_OPTION_BYTES - ROCE_OPT_LEN_MSS)
 #define ROCE_TOTAL_OPTION_BYTES_MSS (ROCE_MAX_OPTION_BYTES - ROCE_OPT_LEN_TS)
 #define ROCE_TOTAL_OPTION_BYTES_TS_MSS (ROCE_MAX_OPTION_BYTES)
 
-        .csbegin
-        cswitch [c6, c5]
-        DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_UDP_OPTS) //BDS
-        .brcase 0 #both options not enabled
-            #should not have come this far if both flags were false
-            b              roce_udp_options_done
-            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, r0 //BDS
+    .csbegin
+    cswitch [c6, c5]
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_UDP_OPTS) //BDS
+    .brcase 0 #both options not enabled
+        #should not have come this far if both flags were false
+        b              roce_udp_options_done
+        phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, r0 //BDS
 
-        .brcase 1 #MSS enable
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 3)       #OCS kind, OCS value
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.MSS_kind, roce_options.MSS_value, 1) #MSS kind, MSS len, MSS value
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 2)        #EOL kind
-            b              roce_udp_options_done
-            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_MSS //BDS
+    .brcase 1 #MSS enable
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 3)       #OCS kind, OCS value
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.MSS_kind, roce_options.MSS_value, 1) #MSS kind, MSS len, MSS value
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 2)        #EOL kind
+        b              roce_udp_options_done
+        phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_MSS //BDS
 
-        .brcase 2 #TS enable
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 3)       #OCS kind, OCS value
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.TS_kind, roce_options.TS_echo, 1)    #TS kind, TS len, TS value
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 2)        #EOL kind
-            b              roce_udp_options_done
-            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_TS //BDS
+    .brcase 2 #TS enable
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 3)       #OCS kind, OCS value
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.TS_kind, roce_options.TS_echo, 1)    #TS kind, TS len, TS value
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 2)        #EOL kind
+        b              roce_udp_options_done
+        phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_TS //BDS
 
-        .brcase 3 #TS enable, MSS enable
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 4)       #OCS kind, OCS value
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.TS_kind, roce_options.TS_echo, 1)          #TS kind, TS len, TS value
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.MSS_kind, roce_options.MSS_value, 2)       #MSS kind, MSS len, MSS value
-            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 3)        #EOL kind
-            b              roce_udp_options_done
-            phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_TS_MSS //BDS
+    .brcase 3 #TS enable, MSS enable
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, roce_options.OCS_kind, roce_options.OCS_value, 4)       #OCS kind, OCS value
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.TS_kind, roce_options.TS_echo, 1)          #TS kind, TS len, TS value
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.MSS_kind, roce_options.MSS_value, 2)       #MSS kind, MSS len, MSS value
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, roce_options.EOL_kind, roce_options.EOL_kind, 3)        #EOL kind
+        b              roce_udp_options_done
+        phvwr          P4PLUS_TO_P4_UDP_OPT_BYTES, ROCE_TOTAL_OPTION_BYTES_TS_MSS //BDS
 
-        .csend
+    .csend
 
 roce_udp_options_done:
 skip_roce_udp_options:

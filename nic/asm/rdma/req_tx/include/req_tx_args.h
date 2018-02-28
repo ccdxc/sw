@@ -122,6 +122,15 @@ struct req_tx_sqcb_write_back_info_t {
     union op_t op;
 };
 
+struct req_tx_add_hdr_info_t {
+    service              : 4;
+    header_template_addr : 32;
+    header_template_size : 8;
+    roce_opt_ts_enable   : 1;
+    roce_opt_mss_enable  : 1;
+    pad                  : 114;
+};
+
 // Note: Do not change the order of log_pmtu to num_sges as
 // program uses concatenated copy like k.{log_pmtu...num_sges}
 // from  req_tx_sqcb0_to_sqcb1_info to req_tx_sqcb1_to_bktrack_wqe_info

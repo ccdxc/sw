@@ -15,6 +15,7 @@ struct req_tx_phv_t p;
 struct req_tx_write_back_process_k_t k;
 struct sqcb1_t d;
 
+#define ADD_HDR_T struct req_tx_add_hdr_info_t
 #define RDMA_PKT_MIDDLE      0
 #define RDMA_PKT_LAST        1
 #define RDMA_PKT_FIRST       2
@@ -363,8 +364,26 @@ cb1_byte_update:
     add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
     memwr.b        r3, r5
 
-    SQCB1_ADDR_GET(r1)
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_2_process, r1)
+    //For UD, ah_handle comes in send req
+    seq            c3, d.service, RDMA_SERV_TYPE_UD
+    cmov           r1, c3, k.args.op.send_wr.ah_handle, d.header_template_addr
+    cmov           r2, c3, k.args.ah_size, d.header_template_size
+
+    // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
+    phvwr.!c3      BTH_DST_QP, d.dst_qp
+    phvwrpair      P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+    //not enough bits on d[] vector to have 64 bit TS value
+    phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[31:16]}, d.{timestamp...timestamp_echo}
+    phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
+
+    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, ADD_HDR_T, service, d.service) 
+    CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_addr, r1)
+    CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_size, r2)
+    CAPRI_SET_FIELD_RANGE(r7, ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable,
+                          d.{roce_opt_ts_enable...roce_opt_mss_enable})
+
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_add_headers_2_process, r0)
 
 invalid_op_type:
     nop.e

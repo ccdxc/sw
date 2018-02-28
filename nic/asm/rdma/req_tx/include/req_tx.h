@@ -226,7 +226,7 @@ struct req_tx_sqptseg_process_k_t {
 
 struct req_tx_add_headers_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct req_tx_rrqwqe_to_hdr_info_t args;
+    struct req_tx_add_hdr_info_t args;
     struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
