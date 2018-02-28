@@ -70,7 +70,8 @@ using grpc::ServerContext;
 using grpc::Status;
 
 void
-svc_reg (const std::string& server_addr)
+svc_reg (const std::string& server_addr,
+         hal::hal_feature_set_t feature_set)
 {
     VrfServiceImpl           vrf_svc;
     NetworkServiceImpl       network_svc;
@@ -114,39 +115,47 @@ svc_reg (const std::string& server_addr)
                                     grpc::InsecureServerCredentials());
 
     // register all services
-    server_builder.RegisterService(&vrf_svc);
-    server_builder.RegisterService(&network_svc);
-    server_builder.RegisterService(&if_svc);
-    server_builder.RegisterService(&internal_svc);
-    server_builder.RegisterService(&rdma_svc);
-    server_builder.RegisterService(&l2seg_svc);
-    server_builder.RegisterService(&debug_svc);
-    server_builder.RegisterService(&session_svc);
-    server_builder.RegisterService(&endpoint_svc);
-    server_builder.RegisterService(&l4lb_svc);
-    server_builder.RegisterService(&nwsec_svc);
-    server_builder.RegisterService(&tlscb_svc);
-    server_builder.RegisterService(&tcpcb_svc);
-    server_builder.RegisterService(&qos_svc);
-    server_builder.RegisterService(&descraol_svc);
-    server_builder.RegisterService(&wring_svc);
-    server_builder.RegisterService(&proxy_svc);
-    server_builder.RegisterService(&acl_svc);
-    server_builder.RegisterService(&telemetry_svc);
-    server_builder.RegisterService(&ipseccb_svc);
-    server_builder.RegisterService(&cpucb_svc);
-    server_builder.RegisterService(&crypto_key_svc);
-    server_builder.RegisterService(&rawrcb_svc);
-    server_builder.RegisterService(&rawccb_svc);
-    server_builder.RegisterService(&proxyrcb_svc);
-    server_builder.RegisterService(&proxyccb_svc);
-    server_builder.RegisterService(&crypto_apis_svc);
-    server_builder.RegisterService(&event_svc);
-    server_builder.RegisterService(&quiesce_svc);
-    server_builder.RegisterService(&barco_rings_svc);
-    server_builder.RegisterService(&multicast_svc);
-    server_builder.RegisterService(&gft_svc);
-    server_builder.RegisterService(&system_svc);
+    if (feature_set == hal::HAL_FEATURE_SET_IRIS) {
+        server_builder.RegisterService(&vrf_svc);
+        server_builder.RegisterService(&network_svc);
+        server_builder.RegisterService(&if_svc);
+        server_builder.RegisterService(&internal_svc);
+        server_builder.RegisterService(&rdma_svc);
+        server_builder.RegisterService(&l2seg_svc);
+        server_builder.RegisterService(&debug_svc);
+        server_builder.RegisterService(&session_svc);
+        server_builder.RegisterService(&endpoint_svc);
+        server_builder.RegisterService(&l4lb_svc);
+        server_builder.RegisterService(&nwsec_svc);
+        server_builder.RegisterService(&tlscb_svc);
+        server_builder.RegisterService(&tcpcb_svc);
+        server_builder.RegisterService(&qos_svc);
+        server_builder.RegisterService(&descraol_svc);
+        server_builder.RegisterService(&wring_svc);
+        server_builder.RegisterService(&proxy_svc);
+        server_builder.RegisterService(&acl_svc);
+        server_builder.RegisterService(&telemetry_svc);
+        server_builder.RegisterService(&ipseccb_svc);
+        server_builder.RegisterService(&cpucb_svc);
+        server_builder.RegisterService(&crypto_key_svc);
+        server_builder.RegisterService(&rawrcb_svc);
+        server_builder.RegisterService(&rawccb_svc);
+        server_builder.RegisterService(&proxyrcb_svc);
+        server_builder.RegisterService(&proxyccb_svc);
+        server_builder.RegisterService(&crypto_apis_svc);
+        server_builder.RegisterService(&event_svc);
+        server_builder.RegisterService(&quiesce_svc);
+        server_builder.RegisterService(&barco_rings_svc);
+        server_builder.RegisterService(&multicast_svc);
+        server_builder.RegisterService(&system_svc);
+    } else if (feature_set == hal::HAL_FEATURE_SET_GFT) {
+        server_builder.RegisterService(&vrf_svc);
+        server_builder.RegisterService(&if_svc);
+        server_builder.RegisterService(&rdma_svc);
+        server_builder.RegisterService(&l2seg_svc);
+        server_builder.RegisterService(&gft_svc);
+        server_builder.RegisterService(&system_svc);
+    }
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
     hal::utils::hal_logger()->flush();
@@ -277,7 +286,7 @@ main (int argc, char **argv)
     }
 
     // register for all gRPC services
-    svc_reg(std::string("localhost:") + hal_cfg.grpc_port);
+    svc_reg(std::string("localhost:") + hal_cfg.grpc_port, hal_cfg.features);
 
     // wait for HAL threads to cleanup
     hal::hal_wait();

@@ -7,7 +7,7 @@
 #include "sdk/mem.hpp"
 #include "lib/slab/slab.hpp"
 
-#define SDK_DEBUG 1
+//#define SDK_DEBUG 1
 
 namespace sdk {
 namespace lib {
@@ -25,7 +25,7 @@ slab::alloc_block_(void)
     if (block == NULL) {
         SDK_TRACE_ERR("%s: slab block allocation failed."
                       " name: %s, slab_id: %d, elem_sz: %d,"
-                      " elems_per_block: %d, size %d\n",
+                      " elems_per_block: %d, size %d",
                       __FUNCTION__, name_, slab_id_, elem_sz_,
                       elems_per_block_, raw_block_sz_);
 #if SDK_DEBUG
