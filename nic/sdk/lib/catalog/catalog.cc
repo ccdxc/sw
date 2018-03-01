@@ -139,21 +139,6 @@ catalog::populate_qos_profile(ptree &prop_tree)
     qos_profile.num_p4eg_qs = prop_tree.get<uint32_t>("qos.profile.num_p4eg_qs", 0);
     qos_profile.num_dma_qs = prop_tree.get<uint32_t>("qos.profile.num_dma_qs", 0);
 
-    auto qos_class_configs = prop_tree.get_child_optional("qos.configs.qos_class");
-    auto copp_configs = prop_tree.get_child_optional("qos.configs.copp");
-
-    if (qos_class_configs) {
-        std::stringstream ss;
-        write_json(ss, *qos_class_configs);
-        catalog_db_.qos_class_configs = ss.str();
-    }
-
-    if (copp_configs) {
-        std::stringstream ss;
-        write_json(ss, *copp_configs);
-        catalog_db_.copp_configs = ss.str();
-    }
-
     return SDK_RET_OK;
 }
 
@@ -188,14 +173,32 @@ catalog::populate_catalog(ptree &prop_tree)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+catalog::get_ptree_ (std::string& catalog_file, ptree& prop_tree)
+{
+    if (access(catalog_file.c_str(), R_OK) < 0) {
+        SDK_TRACE_ERR("{}: config file {} has no read permissions",
+                      __FUNCTION__,  catalog_file.c_str());
+        return SDK_RET_ERR;
+    }
+
+    boost::property_tree::read_json(catalog_file, prop_tree);
+    return SDK_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // initialize an instance of catalog class
 //------------------------------------------------------------------------------
 sdk_ret_t
 catalog::init(std::string catalog_file)
 {
+    sdk_ret_t ret;
     ptree prop_tree;
-    boost::property_tree::read_json(catalog_file, prop_tree);
+
+    ret = get_ptree_(catalog_file, prop_tree);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     return populate_catalog(prop_tree);
 }
@@ -230,6 +233,30 @@ catalog::factory(std::string catalog_file) {
     }
 
     return new_catalog;
+}
+
+sdk_ret_t
+catalog::get_child_str (std::string catalog_file, std::string path, std::string& child_str) 
+{
+    sdk_ret_t ret;
+    ptree prop_tree;
+
+    child_str = "";
+
+    ret = get_ptree_(catalog_file, prop_tree);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    auto child = prop_tree.get_child_optional(path);
+
+    if (child) {
+        std::stringstream ss;
+        write_json(ss, *child);
+        child_str = ss.str();
+    }
+
+    return SDK_RET_OK;
 }
 
 //------------------------------------------------------------------------------

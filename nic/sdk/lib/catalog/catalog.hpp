@@ -59,8 +59,6 @@ typedef struct catalog_s {
     bool                     access_mock_mode;                  // do not access HW, dump only reads/writes
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
-    std::string              qos_class_configs;                       // Qos config specs in json
-    std::string              copp_configs;                      // Copp config specs in json
     qos_profile_t            qos_profile;                       // qos asic profile 
 } catalog_t;
 
@@ -72,6 +70,11 @@ public:
     static port_type_t catalog_type_to_port_type(std::string type);
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
+
+    static sdk_ret_t get_child_str(std::string catalog_file, 
+                                   std::string path,
+                                   std::string& child_str);
+
     catalog_t *catalog_db(void) { return &catalog_db_; }
     uint32_t num_uplink_ports(void) const { return catalog_db_.num_uplink_ports; }
     platform_type_t platform_type(void) const { return catalog_db_.platform_type; }
@@ -95,9 +98,6 @@ public:
     }
 
     uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
-
-    const std::string& qos_class_configs (void) const { return catalog_db_.qos_class_configs; }
-    const std::string& copp_configs (void) const { return catalog_db_.copp_configs; }
 
     const qos_profile_t* qos_profile(void) { return &catalog_db_.qos_profile; }
     bool qos_sw_init_enabled(void) { return catalog_db_.qos_profile.sw_init_enable; }
@@ -140,6 +140,8 @@ private:
 
     // populate qos asic profile
     sdk_ret_t populate_qos_profile(ptree &prop_tree);
+
+    static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
 };
 
 }    // namespace lib
