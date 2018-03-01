@@ -1,19 +1,11 @@
+#include "nic/include/base.h"
+#include "nic/include/pd.hpp"
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
+#include "sdk/utils.hpp"
 
 namespace hal {
 namespace pd {
-
-// TODO: Remove and use version in hal utils
-// Need to figure out the bazel dependency
-static uint32_t
-get_num_set_bits (uint16_t v)
-{
-    // K & R way
-    unsigned int c;
-    for (c = 0; v; c++)
-        v &= v - 1;
-    return c;
-}
 
 hal_ret_t
 asicpd_scheduler_tx_pd_alloc (asicpd_scheduler_lif_params_t *lif)
@@ -84,7 +76,7 @@ asicpd_scheduler_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif)
     if (!lif) {
         goto end;
     }
-    num_cos_values = get_num_set_bits(lif->cos_bmp);
+    num_cos_values = sdk::lib::set_bits_count(lif->cos_bmp);
     if (num_cos_values && lif->tx_sched_num_table_entries) {
         txs_hw_params.sched_table_offset  = lif->tx_sched_table_offset;
         txs_hw_params.num_entries_per_cos = (lif->tx_sched_num_table_entries / num_cos_values);
@@ -130,7 +122,7 @@ asicpd_policer_tx_pd_program_hw (asicpd_scheduler_lif_params_t *lif)
     if (!lif) {
         goto end;
     }
-    num_cos_values = get_num_set_bits(lif->cos_bmp);
+    num_cos_values = sdk::lib::set_bits_count(lif->cos_bmp);
     if (num_cos_values && lif->tx_sched_num_table_entries) {
         txs_hw_params.sched_table_start_offset  = lif->tx_sched_table_offset;
         txs_hw_params.sched_table_end_offset = (lif->tx_sched_table_offset + lif->tx_sched_num_table_entries - 1);

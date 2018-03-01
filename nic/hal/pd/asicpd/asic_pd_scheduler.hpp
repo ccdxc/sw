@@ -1,10 +1,6 @@
 #ifndef __ASICPD_SCHEDULER_HPP_
 #define __ASICPD_SCHEDULER_HPP_
 
-#include "nic/include/base.h"
-#include "nic/include/pd.hpp"
-#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
-
 typedef struct asicpd_scheduler_lif_params_s_ {
     uint32_t lif_id;
     uint32_t tx_sched_table_offset;
