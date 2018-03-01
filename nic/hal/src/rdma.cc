@@ -893,6 +893,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_ASSERT(offset == offset_verify);
 
     HAL_TRACE_DEBUG("SQCB Header Template Size: {}\n", sqcb_p->sqcb1.header_template_size);
+    HAL_TRACE_DEBUG("SQCB Log num WQEs: {}\n", sqcb_p->sqcb0.log_num_wqes);
+    HAL_TRACE_DEBUG("SQCB Log WQE size: {}\n", sqcb_p->sqcb0.log_wqe_size);
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writing initial SQCB State, SQCB->PT: {}", 

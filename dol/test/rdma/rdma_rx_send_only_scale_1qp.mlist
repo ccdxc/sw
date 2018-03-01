@@ -1,22 +1,23 @@
 # Feature Test Modules List
 # For RDMA perf tests
 feature:
-    id          : rdma_lat_tx_so_inline
+    id          : rdma_rx_send_only_scale_1qp
     sub         : rdma
     package     : test.rdma
     module      : rdma
     enable      : True
     ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
     selectors:
         maxrdmasessions: 1
 
 modules:
     - module:
-        name    : RDMA_TX_SEND_ONLY_INLINE
+        name    : RDMA_RX_SEND_ONLY
         enable  : True
         package : test.rdma
-        module  : req_tx_send_only
-        spec    : req_tx_send_only_inline.testspec
+        module  : resp_rx_send_only_scale_1qp
+        spec    : resp_rx_send_only_scale_1qp.testspec
         ignore  : False
-        modscale: 12
-

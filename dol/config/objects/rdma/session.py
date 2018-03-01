@@ -121,6 +121,10 @@ class RdmaSessionObject(base.ConfigObjectBase):
         cfglogger.debug("- RQP Filter Match =", match)
         if match == False: return  match
         
+        if hasattr(selectors.rdmasession, 'base'):
+            match = super().IsFilterMatch(selectors.rdmasession.base.filters)
+            if match == False: return  match
+
         if hasattr(selectors.rdmasession, 'session'):
             match = super().IsFilterMatch(selectors.rdmasession.session.filters)
             cfglogger.debug("- IsIPV6 Filter Match =", match)
@@ -195,6 +199,13 @@ class RdmaSessionObjectHelper:
             # 2 : v6 & non-VXLAN
             # 1 : v4 & VXLAN (enable after testspec changes)
             # 1 : v6 & VXLAN (enable after testspec changes)
+            # In case of Perf mode (GlobalOptions.perf is set), select them as below:
+            # we would like to pick different QPs for perf tests, so just pick all v4 sessions and zero v6 sessions
+            # we will need minimum 8 sessions to avoid critical section locking at stage 0 for a QP
+            # 8 : v4 & non-VXLAN
+            # 0 : v6 & non-VXLAN
+            # 1 : v4 & VXLAN (enable after testspec changes)
+            # 1 : v6 & VXLAN (enable after testspec changes)
 
             for lqp in ep1_qps:
                 if lqp in self.used_qps: continue
@@ -216,10 +227,16 @@ class RdmaSessionObjectHelper:
 
                     if not ipv6 and not vxlan:  # v4 non-vxlan
                        self.v4_non_vxlan_count += 1
-                       if self.v4_non_vxlan_count > 2: continue
+                       if GlobalOptions.perf:
+                           if self.v4_non_vxlan_count > 8: continue
+                       else:
+                           if self.v4_non_vxlan_count > 2: continue
                     elif ipv6 and not vxlan:    # v6 non-vxlan
                        self.v6_non_vxlan_count +=1
-                       if self.v6_non_vxlan_count > 2: continue
+                       if GlobalOptions.perf:
+                           if self.v6_non_vxlan_count > 0: continue
+                       else:
+                           if self.v6_non_vxlan_count > 2: continue
                     elif not ipv6 and vxlan:    # v4 vxlan
                        self.v4_vxlan_count += 1
                        if self.v4_vxlan_count > 1: continue

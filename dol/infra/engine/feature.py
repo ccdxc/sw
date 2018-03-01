@@ -51,6 +51,8 @@ class FeatureObject:
         self.rtl        = getattr(spec.feature, 'rtl', True)
         self.perf       = getattr(spec.feature, 'perf', False)
         self.pendol     = getattr(spec.feature, 'pendol', False)
+        self.tcscale    = getattr(spec.feature, 'tcscale', None)
+        self.modscale    = getattr(spec.feature, 'modscale', None)
         return
 
     def LoadModules(self):
@@ -70,6 +72,8 @@ class FeatureObject:
             mspec.rtl       = getattr(mspec, 'rtl', self.rtl)
             mspec.perf      = getattr(mspec, 'perf', self.perf)
             mspec.pendol    = getattr(mspec, 'pendol', self.pendol)
+            mspec.tcscale   = getattr(mspec, 'tcscale', self.tcscale)
+            mspec.modscale   = getattr(mspec, 'modscale', self.modscale)
             mspec.runorder  = self.runorder
             ModuleStore.Add(mspec)
         return

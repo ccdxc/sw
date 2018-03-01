@@ -330,6 +330,9 @@ inc_psn:
     // inc lsn for read, atomic, write (without imm)
     tblmincri.c4   d.lsn, 24, 1
 
+    // TODO:For RTL perf tests, disable check_credits
+    setcf          c5, [!c0]
+
     // if (check_credits && (sqcb1_p->ssn > sqcb1_p->lsn))
     //     phv_p->bth.a = 1
     //     write_back_info_p->set_credits = TRUE

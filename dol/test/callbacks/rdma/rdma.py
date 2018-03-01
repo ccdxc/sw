@@ -11,7 +11,18 @@ from test.callbacks.common.pktslicer import *
 import binascii
 
 def GetRqPreEpsn (tc, pkt):
-    return tc.pvtdata.rq_pre_qstate.e_psn
+    if GlobalOptions.perf:
+        curr_e_psn = tc.pvtdata.e_psn
+        tc.pvtdata.e_psn = tc.pvtdata.e_psn + 1
+        return curr_e_psn
+    else:
+        return tc.pvtdata.rq_pre_qstate.e_psn
+
+def GetRqPreEpsnMultiQPs (tc, pkt):
+    if GlobalOptions.perf:
+        return tc.pvtdata.e_psn
+    else:
+        return tc.pvtdata.rq_pre_qstate.e_psn
 
 def GetRqPreEpsnForTx (tc, pkt, args):
     return (tc.pvtdata.rq_pre_qstate.e_psn  + args.pkt_num)
@@ -19,6 +30,14 @@ def GetRqPreEpsnForTx (tc, pkt, args):
 
 def GetPktTxPsn (tc, pkt, args):
     return (tc.pvtdata.sq_pre_qstate.tx_psn + args.pkt_num)
+
+def GetRqPktPsn (tc, pkt):
+    if GlobalOptions.perf:
+        curr_tx_psn = tc.module.pvtdata.sq_pre_qstate.tx_psn
+        tc.module.pvtdata.sq_pre_qstate.tx_psn = tc.module.pvtdata.sq_pre_qstate.tx_psn + 1
+        return curr_tx_psn
+    else:
+        return tc.pvtdata.sq_pre_qstate.tx_psn
 
 def GetPktExpPsn (tc, pkt, args):
     return (tc.pvtdata.rq_pre_qstate.e_psn + args.pkt_num)

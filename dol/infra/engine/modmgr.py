@@ -86,6 +86,8 @@ class Module(objects.FrameworkObject):
         self.rtl        = getattr(spec, 'rtl', True)
         self.perf    = getattr(spec, 'perf', False)
         self.pendol     = getattr(spec, 'pendol', False)
+        self.tcscale    = getattr(spec, 'tcscale', None)
+        self.modscale    = getattr(spec, 'modscale', None)
         self.id         = self.runorder << 16 + ModuleIdAllocator.get()
         self.module_hdl = None
         self.infra_data = None
@@ -285,6 +287,8 @@ class Module(objects.FrameworkObject):
         nloops = 1
         if GlobalOptions.tcscale:
             nloops = int(GlobalOptions.tcscale)
+        if self.tcscale:
+            nloops = self.tcscale
 
         for tcid,root in matching_tcsets:
             for loopid in range(nloops):
@@ -418,8 +422,14 @@ class ModuleDatabase:
             logger.error("Duplicate Test : %s" % module.GID())
             assert(0)
 
+        nmods = None
         if GlobalOptions.modscale:
-            for s in range(GlobalOptions.modscale):
+            nmods = GlobalOptions.modscale
+        elif getattr(pmod, 'modscale', None):
+            nmods = pmod.modscale
+
+        if nmods:
+            for s in range(nmods):
                 newmod = copy.deepcopy(module)
                 newmod.InitCopy(s+1)
                 self.db[newmod.GID()] = newmod

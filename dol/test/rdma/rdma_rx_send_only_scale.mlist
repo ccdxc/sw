@@ -1,0 +1,47 @@
+# Feature Test Modules List
+# For RDMA perf tests
+feature:
+    id          : rdma_rx_send_only_scale
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
+
+modules:
+    - module:
+        name    : RDMA_RX_SEND_ONLY_SCALE_POST_BUFF
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_scale_post_buff
+        spec    : resp_rx_send_only_scale_post_buff.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_SCALE_SEND_PKTS
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_scale_send_pkts
+        spec    : resp_rx_send_only_scale_send_pkts.testspec
+        ignore  : False
+        modscale : 400
+        iterate :
+            - rdmasession:
+                    base : filter://id=1
+            - rdmasession:
+                    base : filter://id=2
+            - rdmasession:
+                    base : filter://id=3
+            - rdmasession:
+                    base : filter://id=4
+            - rdmasession:
+                    base : filter://id=5
+            - rdmasession:
+                    base : filter://id=6
+            - rdmasession:
+                    base : filter://id=7
+            - rdmasession:
+                    base : filter://id=8

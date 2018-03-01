@@ -379,6 +379,7 @@ class RdmaQueueObject(QueueObject):
     def Init(self, queue_type, spec):
         self.queue_type = queue_type
         self.id         = queue_type.GetQid()
+        self.qp_e_psn   = 0      #Needed for rx multi QP scale tests to pick next psn
         self.GID(str(self.id))
 
         self.rings      = objects.ObjectDatabase(cfglogger)
