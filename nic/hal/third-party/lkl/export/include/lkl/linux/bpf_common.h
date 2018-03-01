@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef __LKL__LINUX_BPF_COMMON_H__
 #define __LKL__LINUX_BPF_COMMON_H__
 

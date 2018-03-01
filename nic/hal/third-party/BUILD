@@ -104,6 +104,7 @@ cc_library(
     hdrs = [
        "lkl/export/include/lkl.h",
        "lkl/export/include/lkl_host.h",
+       "lkl/export/include/lkl_autoconf.h",
        "lkl/export/include/lkl/autoconf.h",
        #"third-party/lkl/export/include/lkl/asm/syscalls.h",
        #"third-party/lkl/export/include/lkl/linux/types.h",

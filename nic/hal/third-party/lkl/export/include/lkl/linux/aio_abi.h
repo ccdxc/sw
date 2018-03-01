@@ -28,6 +28,7 @@
 #define __LKL__LINUX__AIO_ABI_H
 
 #include <lkl/linux/types.h>
+#include <lkl/linux/fs.h>
 #include <lkl/asm/byteorder.h>
 
 typedef __lkl__kernel_ulong_t lkl_aio_context_t;
@@ -62,14 +63,6 @@ struct lkl_io_event {
 	__lkl__s64		res2;		/* secondary result */
 };
 
-#if defined(__BYTE_ORDER) ? __BYTE_ORDER == __LKL__LITTLE_ENDIAN : defined(__LKL__LITTLE_ENDIAN)
-#define LKL_PADDED(x,y)	x, y
-#elif defined(__BYTE_ORDER) ? __BYTE_ORDER == __LKL__BIG_ENDIAN : defined(__LKL__BIG_ENDIAN)
-#define LKL_PADDED(x,y)	y, x
-#else
-#error edit for your odd byteorder.
-#endif
-
 /*
  * we always use a 64bit lkl_off_t when communicating
  * with userland.  its up to libraries to do the
@@ -79,8 +72,16 @@ struct lkl_io_event {
 struct lkl_iocb {
 	/* these are internal to the kernel/libc. */
 	__lkl__u64	aio_data;	/* data to be returned in event's data */
-	__lkl__u32	LKL_PADDED(aio_key, aio_reserved1);
-				/* the kernel sets aio_key to the req # */
+
+#if defined(__BYTE_ORDER) ? __BYTE_ORDER == __LKL__LITTLE_ENDIAN : defined(__LKL__LITTLE_ENDIAN)
+	__lkl__u32	aio_key;	/* the kernel sets aio_key to the req # */
+	__lkl__kernel_rwf_t aio_rw_flags;	/* RWF_* flags */
+#elif defined(__BYTE_ORDER) ? __BYTE_ORDER == __LKL__BIG_ENDIAN : defined(__LKL__BIG_ENDIAN)
+	__lkl__kernel_rwf_t aio_rw_flags;	/* RWF_* flags */
+	__lkl__u32	aio_key;	/* the kernel sets aio_key to the req # */
+#else
+#error edit for your odd byteorder.
+#endif
 
 	/* common fields */
 	__lkl__u16	aio_lio_opcode;	/* see IOCB_CMD_ above */

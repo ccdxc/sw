@@ -1,8 +1,10 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef _LKL_LINUX_SHM_H_
 #define _LKL_LINUX_SHM_H_
 
 #include <lkl/linux/ipc.h>
 #include <lkl/linux/errno.h>
+#include <lkl/asm-generic/hugetlb_encode.h>
 #include <unistd.h>
 
 /*
@@ -38,11 +40,37 @@ struct lkl_shmid_ds {
 /* Include the definition of shmid64_ds and shminfo64 */
 #include <lkl/asm/shmbuf.h>
 
-/* permission flag for shmget */
+/*
+ * shmget() shmflg values.
+ */
+/* The bottom nine bits are the same as open(2) mode flags */
 #define LKL_SHM_R		0400	/* or S_IRUGO from <linux/stat.h> */
 #define LKL_SHM_W		0200	/* or S_IWUGO from <linux/stat.h> */
+/* Bits 9 & 10 are LKL_IPC_CREAT and LKL_IPC_EXCL */
+#define LKL_SHM_HUGETLB	04000	/* segment will use huge TLB pages */
+#define LKL_SHM_NORESERVE	010000	/* don't check for reservations */
 
-/* mode for attach */
+/*
+ * Huge page size encoding when LKL_SHM_HUGETLB is specified, and a huge page
+ * size other than the default is desired.  See hugetlb_encode.h
+ */
+#define LKL_SHM_HUGE_SHIFT	LKL_HUGETLB_FLAG_ENCODE_SHIFT
+#define LKL_SHM_HUGE_MASK	LKL_HUGETLB_FLAG_ENCODE_MASK
+
+#define LKL_SHM_HUGE_64KB	LKL_HUGETLB_FLAG_ENCODE_64KB
+#define LKL_SHM_HUGE_512KB	LKL_HUGETLB_FLAG_ENCODE_512KB
+#define LKL_SHM_HUGE_1MB	LKL_HUGETLB_FLAG_ENCODE_1MB
+#define LKL_SHM_HUGE_2MB	LKL_HUGETLB_FLAG_ENCODE_2MB
+#define LKL_SHM_HUGE_8MB	LKL_HUGETLB_FLAG_ENCODE_8MB
+#define LKL_SHM_HUGE_16MB	LKL_HUGETLB_FLAG_ENCODE_16MB
+#define LKL_SHM_HUGE_256MB	LKL_HUGETLB_FLAG_ENCODE_256MB
+#define LKL_SHM_HUGE_1GB	LKL_HUGETLB_FLAG_ENCODE_1GB
+#define LKL_SHM_HUGE_2GB	LKL_HUGETLB_FLAG_ENCODE_2GB
+#define LKL_SHM_HUGE_16GB	LKL_HUGETLB_FLAG_ENCODE_16GB
+
+/*
+ * shmat() shmflg values
+ */
 #define	LKL_SHM_RDONLY	010000	/* read-only access */
 #define	LKL_SHM_RND		020000	/* round attach address to SHMLBA boundary */
 #define	LKL_SHM_REMAP	040000	/* take-over region on attach */

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef __LKL__ASM_GENERIC_POLL_H
 #define __LKL__ASM_GENERIC_POLL_H
 

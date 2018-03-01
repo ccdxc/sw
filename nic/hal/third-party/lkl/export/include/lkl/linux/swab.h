@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef _LKL_LINUX_SWAB_H
 #define _LKL_LINUX_SWAB_H
 

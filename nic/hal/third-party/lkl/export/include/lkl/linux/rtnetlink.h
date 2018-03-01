@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef __LKL__LINUX_RTNETLINK_H
 #define __LKL__LINUX_RTNETLINK_H
 
@@ -122,6 +123,8 @@ enum {
 
 	LKL_RTM_NEWNETCONF = 80,
 #define LKL_RTM_NEWNETCONF LKL_RTM_NEWNETCONF
+	LKL_RTM_DELNETCONF,
+#define LKL_RTM_DELNETCONF LKL_RTM_DELNETCONF
 	LKL_RTM_GETNETCONF = 82,
 #define LKL_RTM_GETNETCONF LKL_RTM_GETNETCONF
 
@@ -143,6 +146,9 @@ enum {
 #define LKL_RTM_NEWSTATS LKL_RTM_NEWSTATS
 	LKL_RTM_GETSTATS = 94,
 #define LKL_RTM_GETSTATS LKL_RTM_GETSTATS
+
+	LKL_RTM_NEWCACHEREPORT = 96,
+#define LKL_RTM_NEWCACHEREPORT LKL_RTM_NEWCACHEREPORT
 
 	__LKL__RTM_MAX,
 #define LKL_RTM_MAX		(((__LKL__RTM_MAX + 3) & ~3) - 1)
@@ -276,6 +282,7 @@ enum lkl_rt_scope_t {
 #define LKL_RTM_F_EQUALIZE		0x400	/* Multipath equalizer: NI	*/
 #define LKL_RTM_F_PREFIX		0x800	/* Prefix addresses		*/
 #define LKL_RTM_F_LOOKUP_TABLE	0x1000	/* set rtm_table to FIB lookup result */
+#define LKL_RTM_F_FIB_MATCH	        0x2000	/* return full fib lookup match */
 
 /* Reserved table identifiers */
 
@@ -319,6 +326,7 @@ enum lkl_rtattr_type_t {
 	LKL_RTA_EXPIRES,
 	LKL_RTA_PAD,
 	LKL_RTA_UID,
+	LKL_RTA_TTL_PROPAGATE,
 	__LKL__RTA_MAX
 };
 
@@ -545,6 +553,8 @@ enum {
 	LKL_TCA_STATS2,
 	LKL_TCA_STAB,
 	LKL_TCA_PAD,
+	LKL_TCA_DUMP_INVISIBLE,
+	LKL_TCA_CHAIN,
 	__LKL__TCA_MAX
 };
 
@@ -658,6 +668,10 @@ enum lkl_rtnetlink_groups {
 #define LKL_RTNLGRP_NSID		LKL_RTNLGRP_NSID
 	LKL_RTNLGRP_MPLS_NETCONF,
 #define LKL_RTNLGRP_MPLS_NETCONF	LKL_RTNLGRP_MPLS_NETCONF
+	LKL_RTNLGRP_IPV4_MROUTE_R,
+#define LKL_RTNLGRP_IPV4_MROUTE_R	LKL_RTNLGRP_IPV4_MROUTE_R
+	LKL_RTNLGRP_IPV6_MROUTE_R,
+#define LKL_RTNLGRP_IPV6_MROUTE_R	LKL_RTNLGRP_IPV6_MROUTE_R
 	__LKL__RTNLGRP_MAX
 };
 #define LKL_RTNLGRP_MAX	(__LKL__RTNLGRP_MAX - 1)
@@ -668,10 +682,29 @@ struct lkl_tcamsg {
 	unsigned char	tca__pad1;
 	unsigned short	tca__pad2;
 };
+
+enum {
+	LKL_TCA_ROOT_UNSPEC,
+	LKL_TCA_ROOT_TAB,
+#define LKL_TCA_ACT_TAB LKL_TCA_ROOT_TAB
+#define LKL_TCAA_MAX LKL_TCA_ROOT_TAB
+	LKL_TCA_ROOT_FLAGS,
+	LKL_TCA_ROOT_COUNT,
+	LKL_TCA_ROOT_TIME_DELTA, /* in msecs */
+	__LKL__TCA_ROOT_MAX,
+#define	LKL_TCA_ROOT_MAX (__LKL__TCA_ROOT_MAX - 1)
+};
+
 #define LKL_TA_RTA(r)  ((struct lkl_rtattr*)(((char*)(r)) + LKL_NLMSG_ALIGN(sizeof(struct lkl_tcamsg))))
 #define LKL_TA_PAYLOAD(n) LKL_NLMSG_PAYLOAD(n,sizeof(struct lkl_tcamsg))
-#define LKL_TCA_ACT_TAB 1 /* attr type must be >=1 */	
-#define LKL_TCAA_MAX 1
+/* tcamsg flags stored in attribute LKL_TCA_ROOT_FLAGS
+ *
+ * LKL_TCA_FLAG_LARGE_DUMP_ON user->kernel to request for larger than TCA_ACT_MAX_PRIO
+ * actions in a dump. All dump responses will contain the number of actions
+ * being dumped stored in for user app's consumption in LKL_TCA_ROOT_COUNT
+ *
+ */
+#define LKL_TCA_FLAG_LARGE_DUMP_ON		(1 << 0)
 
 /* New extended info filters for LKL_IFLA_EXT_MASK */
 #define LKL_RTEXT_FILTER_VF		(1 << 0)

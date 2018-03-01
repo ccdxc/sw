@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef _LKL_LINUX_FS_H
 #define _LKL_LINUX_FS_H
 
@@ -272,6 +273,8 @@ struct lkl_fsxattr {
 #define LKL_FS_ENCRYPTION_MODE_AES_256_GCM		2
 #define LKL_FS_ENCRYPTION_MODE_AES_256_CBC		3
 #define LKL_FS_ENCRYPTION_MODE_AES_256_CTS		4
+#define LKL_FS_ENCRYPTION_MODE_AES_128_CBC		5
+#define LKL_FS_ENCRYPTION_MODE_AES_128_CTS		6
 
 struct lkl_fscrypt_policy {
 	__lkl__u8 version;
@@ -279,11 +282,24 @@ struct lkl_fscrypt_policy {
 	__lkl__u8 filenames_encryption_mode;
 	__lkl__u8 flags;
 	__lkl__u8 master_key_descriptor[LKL_FS_KEY_DESCRIPTOR_SIZE];
-} __attribute__((packed));
+};
 
 #define LKL_FS_IOC_SET_ENCRYPTION_POLICY	_LKL_IOR('f', 19, struct lkl_fscrypt_policy)
 #define LKL_FS_IOC_GET_ENCRYPTION_PWSALT	_LKL_IOW('f', 20, __lkl__u8[16])
 #define LKL_FS_IOC_GET_ENCRYPTION_POLICY	_LKL_IOW('f', 21, struct lkl_fscrypt_policy)
+
+/* Parameters for passing an encryption key into the kernel keyring */
+#define LKL_FS_KEY_DESC_PREFIX		"fscrypt:"
+#define LKL_FS_KEY_DESC_PREFIX_SIZE		8
+
+/* Structure that userspace passes to the kernel keyring */
+#define LKL_FS_MAX_KEY_SIZE			64
+
+struct lkl_fscrypt_key {
+	__lkl__u32 mode;
+	__lkl__u8 raw[LKL_FS_MAX_KEY_SIZE];
+	__lkl__u32 size;
+};
 
 /*
  * Inode flags (LKL_FS_IOC_GETFLAGS / LKL_FS_IOC_SETFLAGS)
@@ -343,9 +359,25 @@ struct lkl_fscrypt_policy {
 #define LKL_SYNC_FILE_RANGE_WRITE		2
 #define LKL_SYNC_FILE_RANGE_WAIT_AFTER	4
 
-/* flags for preadv2/pwritev2: */
-#define LKL_RWF_HIPRI			0x00000001 /* high priority request, poll if possible */
-#define LKL_RWF_DSYNC			0x00000002 /* per-IO LKL_O_DSYNC */
-#define LKL_RWF_SYNC			0x00000004 /* per-IO LKL_O_SYNC */
+/*
+ * Flags for preadv2/pwritev2:
+ */
+
+typedef int __lkl__bitwise __lkl__kernel_rwf_t;
+
+/* high priority request, poll if possible */
+#define LKL_RWF_HIPRI	((__lkl__kernel_rwf_t)0x00000001)
+
+/* per-IO LKL_O_DSYNC */
+#define LKL_RWF_DSYNC	((__lkl__kernel_rwf_t)0x00000002)
+
+/* per-IO LKL_O_SYNC */
+#define LKL_RWF_SYNC	((__lkl__kernel_rwf_t)0x00000004)
+
+/* per-IO, return -LKL_EAGAIN if operation would block */
+#define LKL_RWF_NOWAIT	((__lkl__kernel_rwf_t)0x00000008)
+
+/* mask of flags supported by the kernel */
+#define LKL_RWF_SUPPORTED	(LKL_RWF_HIPRI | LKL_RWF_DSYNC | LKL_RWF_SYNC | LKL_RWF_NOWAIT)
 
 #endif /* _LKL_LINUX_FS_H */

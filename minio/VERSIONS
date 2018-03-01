@@ -1,5 +1,5 @@
 # format: <name> <version>
-third_party_libs 1.1.40
+third_party_libs 1.1.41
 openssl_libs 1.1.0
 asic_libs 914e2a9
 ncc_tools 914e2a9

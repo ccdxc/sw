@@ -92,6 +92,8 @@ typedef __lkl__s64			lkl_s64;
 #include <lkl/asm/siginfo.h>
 #include <lkl/linux/utime.h>
 #include <lkl/asm/socket.h>
+#include <lkl/linux/icmp.h>
+#include <lkl/linux/ip.h>
 
 /* Define data structures used in system calls that are not defined in UAPI
  * headers */
@@ -122,6 +124,7 @@ struct lkl_sockaddr {
 #include <lkl/linux/netlink.h>
 #include <lkl/linux/neighbour.h>
 #include <lkl/linux/rtnetlink.h>
+#include <lkl/linux/fib_rules.h>
 
 #include <lkl/linux/kdev_t.h>
 #include <lkl/asm/irq.h>
@@ -168,6 +171,8 @@ struct lkl_ustat {
 	char			f_fname[6];
 	char			f_fpack[6];
 };
+
+typedef __lkl__kernel_rwf_t		lkl_rwf_t;
 
 #define LKL_AF_UNSPEC       0
 #define LKL_AF_UNIX         1
@@ -222,6 +227,7 @@ struct lkl_ustat {
 #define LKL_SOCK_PACKET		10
 
 #define LKL_MSG_TRUNC 0x20
+#define LKL_MSG_DONTWAIT 0x40
 
 /* avoid colision with system headers defines */
 #define lkl_sa_handler lkl_sa_handler

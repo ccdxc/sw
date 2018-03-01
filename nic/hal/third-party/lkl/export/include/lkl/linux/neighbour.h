@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef __LKL__LINUX_NEIGHBOUR_H
 #define __LKL__LINUX_NEIGHBOUR_H
 
@@ -41,6 +42,7 @@ enum {
 #define LKL_NTF_MASTER	0x04
 #define LKL_NTF_PROXY	0x08	/* == ATF_PUBL */
 #define LKL_NTF_EXT_LEARNED	0x10
+#define LKL_NTF_OFFLOADED   0x20
 #define LKL_NTF_ROUTER	0x80
 
 /*

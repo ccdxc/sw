@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef _LKL_ASM_GENERIC_ERRNO_BASE_H
 #define _LKL_ASM_GENERIC_ERRNO_BASE_H
 

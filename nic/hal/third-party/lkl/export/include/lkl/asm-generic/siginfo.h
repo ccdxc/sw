@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef _LKL_ASM_GENERIC_SIGINFO_H
 #define _LKL_ASM_GENERIC_SIGINFO_H
 
@@ -151,16 +152,6 @@ typedef struct lkl_siginfo {
 #define lkl_si_arch		_sifields._sigsys._arch
 #endif
 
-#define __LKL__SI_KILL	0
-#define __LKL__SI_TIMER	0
-#define __LKL__SI_POLL	0
-#define __LKL__SI_FAULT	0
-#define __LKL__SI_CHLD	0
-#define __LKL__SI_RT		0
-#define __LKL__SI_MESGQ	0
-#define __LKL__SI_SYS	0
-#define __LKL__SI_CODE(T,N)	(N)
-
 /*
  * si_code values
  * Digital reserves positive values for kernel-generated signals.
@@ -168,8 +159,8 @@ typedef struct lkl_siginfo {
 #define LKL_SI_USER		0		/* sent by kill, sigsend, raise */
 #define LKL_SI_KERNEL	0x80		/* sent by the kernel from somewhere */
 #define LKL_SI_QUEUE	-1		/* sent by sigqueue */
-#define LKL_SI_TIMER __LKL__SI_CODE(__LKL__SI_TIMER,-2) /* sent by timer expiration */
-#define LKL_SI_MESGQ __LKL__SI_CODE(__LKL__SI_MESGQ,-3) /* sent by real time mesq state change */
+#define LKL_SI_TIMER	-2		/* sent by timer expiration */
+#define LKL_SI_MESGQ	-3		/* sent by real time mesq state change */
 #define LKL_SI_ASYNCIO	-4		/* sent by AIO completion */
 #define LKL_SI_SIGIO	-5		/* sent by queued LKL_SIGIO */
 #define LKL_SI_TKILL	-6		/* sent by tkill system call */
@@ -181,86 +172,86 @@ typedef struct lkl_siginfo {
 /*
  * LKL_SIGILL si_codes
  */
-#define LKL_ILL_ILLOPC	(__LKL__SI_FAULT|1)	/* illegal opcode */
-#define LKL_ILL_ILLOPN	(__LKL__SI_FAULT|2)	/* illegal operand */
-#define LKL_ILL_ILLADR	(__LKL__SI_FAULT|3)	/* illegal addressing mode */
-#define LKL_ILL_ILLTRP	(__LKL__SI_FAULT|4)	/* illegal trap */
-#define LKL_ILL_PRVOPC	(__LKL__SI_FAULT|5)	/* privileged opcode */
-#define LKL_ILL_PRVREG	(__LKL__SI_FAULT|6)	/* privileged register */
-#define LKL_ILL_COPROC	(__LKL__SI_FAULT|7)	/* coprocessor error */
-#define LKL_ILL_BADSTK	(__LKL__SI_FAULT|8)	/* internal stack error */
+#define LKL_ILL_ILLOPC	1	/* illegal opcode */
+#define LKL_ILL_ILLOPN	2	/* illegal operand */
+#define LKL_ILL_ILLADR	3	/* illegal addressing mode */
+#define LKL_ILL_ILLTRP	4	/* illegal trap */
+#define LKL_ILL_PRVOPC	5	/* privileged opcode */
+#define LKL_ILL_PRVREG	6	/* privileged register */
+#define LKL_ILL_COPROC	7	/* coprocessor error */
+#define LKL_ILL_BADSTK	8	/* internal stack error */
 #define LKL_NSIGILL		8
 
 /*
  * LKL_SIGFPE si_codes
  */
-#define LKL_FPE_INTDIV	(__LKL__SI_FAULT|1)	/* integer divide by zero */
-#define LKL_FPE_INTOVF	(__LKL__SI_FAULT|2)	/* integer overflow */
-#define LKL_FPE_FLTDIV	(__LKL__SI_FAULT|3)	/* floating point divide by zero */
-#define LKL_FPE_FLTOVF	(__LKL__SI_FAULT|4)	/* floating point overflow */
-#define LKL_FPE_FLTUND	(__LKL__SI_FAULT|5)	/* floating point underflow */
-#define LKL_FPE_FLTRES	(__LKL__SI_FAULT|6)	/* floating point inexact result */
-#define LKL_FPE_FLTINV	(__LKL__SI_FAULT|7)	/* floating point invalid operation */
-#define LKL_FPE_FLTSUB	(__LKL__SI_FAULT|8)	/* subscript out of range */
+#define LKL_FPE_INTDIV	1	/* integer divide by zero */
+#define LKL_FPE_INTOVF	2	/* integer overflow */
+#define LKL_FPE_FLTDIV	3	/* floating point divide by zero */
+#define LKL_FPE_FLTOVF	4	/* floating point overflow */
+#define LKL_FPE_FLTUND	5	/* floating point underflow */
+#define LKL_FPE_FLTRES	6	/* floating point inexact result */
+#define LKL_FPE_FLTINV	7	/* floating point invalid operation */
+#define LKL_FPE_FLTSUB	8	/* subscript out of range */
 #define LKL_NSIGFPE		8
 
 /*
  * LKL_SIGSEGV si_codes
  */
-#define LKL_SEGV_MAPERR	(__LKL__SI_FAULT|1)	/* address not mapped to object */
-#define LKL_SEGV_ACCERR	(__LKL__SI_FAULT|2)	/* invalid permissions for mapped object */
-#define LKL_SEGV_BNDERR	(__LKL__SI_FAULT|3)  /* failed address bound checks */
-#define LKL_SEGV_PKUERR	(__LKL__SI_FAULT|4)  /* failed protection key checks */
+#define LKL_SEGV_MAPERR	1	/* address not mapped to object */
+#define LKL_SEGV_ACCERR	2	/* invalid permissions for mapped object */
+#define LKL_SEGV_BNDERR	3	/* failed address bound checks */
+#define LKL_SEGV_PKUERR	4	/* failed protection key checks */
 #define LKL_NSIGSEGV	4
 
 /*
  * LKL_SIGBUS si_codes
  */
-#define LKL_BUS_ADRALN	(__LKL__SI_FAULT|1)	/* invalid address alignment */
-#define LKL_BUS_ADRERR	(__LKL__SI_FAULT|2)	/* non-existent physical address */
-#define LKL_BUS_OBJERR	(__LKL__SI_FAULT|3)	/* object specific hardware error */
+#define LKL_BUS_ADRALN	1	/* invalid address alignment */
+#define LKL_BUS_ADRERR	2	/* non-existent physical address */
+#define LKL_BUS_OBJERR	3	/* object specific hardware error */
 /* hardware memory error consumed on a machine check: action required */
-#define LKL_BUS_MCEERR_AR	(__LKL__SI_FAULT|4)
+#define LKL_BUS_MCEERR_AR	4
 /* hardware memory error detected in process but not consumed: action optional*/
-#define LKL_BUS_MCEERR_AO	(__LKL__SI_FAULT|5)
+#define LKL_BUS_MCEERR_AO	5
 #define LKL_NSIGBUS		5
 
 /*
  * LKL_SIGTRAP si_codes
  */
-#define LKL_TRAP_BRKPT	(__LKL__SI_FAULT|1)	/* process breakpoint */
-#define LKL_TRAP_TRACE	(__LKL__SI_FAULT|2)	/* process trace trap */
-#define LKL_TRAP_BRANCH     (__LKL__SI_FAULT|3)  /* process taken branch trap */
-#define LKL_TRAP_HWBKPT     (__LKL__SI_FAULT|4)  /* hardware breakpoint/watchpoint */
+#define LKL_TRAP_BRKPT	1	/* process breakpoint */
+#define LKL_TRAP_TRACE	2	/* process trace trap */
+#define LKL_TRAP_BRANCH     3	/* process taken branch trap */
+#define LKL_TRAP_HWBKPT     4	/* hardware breakpoint/watchpoint */
 #define LKL_NSIGTRAP	4
 
 /*
  * LKL_SIGCHLD si_codes
  */
-#define LKL_CLD_EXITED	(__LKL__SI_CHLD|1)	/* child has exited */
-#define LKL_CLD_KILLED	(__LKL__SI_CHLD|2)	/* child was killed */
-#define LKL_CLD_DUMPED	(__LKL__SI_CHLD|3)	/* child terminated abnormally */
-#define LKL_CLD_TRAPPED	(__LKL__SI_CHLD|4)	/* traced child has trapped */
-#define LKL_CLD_STOPPED	(__LKL__SI_CHLD|5)	/* child has stopped */
-#define LKL_CLD_CONTINUED	(__LKL__SI_CHLD|6)	/* stopped child has continued */
+#define LKL_CLD_EXITED	1	/* child has exited */
+#define LKL_CLD_KILLED	2	/* child was killed */
+#define LKL_CLD_DUMPED	3	/* child terminated abnormally */
+#define LKL_CLD_TRAPPED	4	/* traced child has trapped */
+#define LKL_CLD_STOPPED	5	/* child has stopped */
+#define LKL_CLD_CONTINUED	6	/* stopped child has continued */
 #define LKL_NSIGCHLD	6
 
 /*
- * LKL_SIGPOLL si_codes
+ * LKL_SIGPOLL (or any other signal without signal specific si_codes) si_codes
  */
-#define LKL_POLL_IN		(__LKL__SI_POLL|1)	/* data input available */
-#define LKL_POLL_OUT	(__LKL__SI_POLL|2)	/* output buffers available */
-#define LKL_POLL_MSG	(__LKL__SI_POLL|3)	/* input message available */
-#define LKL_POLL_ERR	(__LKL__SI_POLL|4)	/* i/o error */
-#define LKL_POLL_PRI	(__LKL__SI_POLL|5)	/* high priority input available */
-#define LKL_POLL_HUP	(__LKL__SI_POLL|6)	/* device disconnected */
+#define LKL_POLL_IN		1	/* data input available */
+#define LKL_POLL_OUT	2	/* output buffers available */
+#define LKL_POLL_MSG	3	/* input message available */
+#define LKL_POLL_ERR	4	/* i/o error */
+#define LKL_POLL_PRI	5	/* high priority input available */
+#define LKL_POLL_HUP	6	/* device disconnected */
 #define LKL_NSIGPOLL	6
 
 /*
  * LKL_SIGSYS si_codes
  */
-#define LKL_SYS_SECCOMP		(__LKL__SI_SYS|1)	/* seccomp triggered */
-#define LKL_NSIGSYS	1
+#define LKL_SYS_SECCOMP	1	/* seccomp triggered */
+#define LKL_NSIGSYS		1
 
 /*
  * sigevent definitions

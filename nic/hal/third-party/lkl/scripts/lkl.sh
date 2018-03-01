@@ -115,7 +115,7 @@ then
     echo "Deleted $LKL_EXPORT_BIN_DIR/* ..."
     cp -rf tools/lkl/include/* $LKL_EXPORT_INC_DIR
     echo "Copied lkl/include to  $LKL_EXPORT_INC_DIR/* ..."
-    cp tools/lkl/liblkl.so $LKL_EXPORT_BIN_DIR
+    cp tools/lkl/lib/liblkl.so $LKL_EXPORT_BIN_DIR
     echo "Copied liblkl.so to  $LKL_EXPORT_BIN_DIR/* ..."
     cd ..
 fi

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef __LKL__ASM_GENERIC_POSIX_TYPES_H
 #define __LKL__ASM_GENERIC_POSIX_TYPES_H
 

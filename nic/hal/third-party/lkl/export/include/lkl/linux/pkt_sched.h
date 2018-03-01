@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef __LKL__LINUX_PKT_SCHED_H
 #define __LKL__LINUX_PKT_SCHED_H
 
@@ -616,6 +617,14 @@ struct lkl_tc_drr_stats {
 /* MQPRIO */
 #define LKL_TC_QOPT_BITMASK 15
 #define LKL_TC_QOPT_MAX_QUEUE 16
+
+enum {
+	LKL_TC_MQPRIO_HW_OFFLOAD_NONE,	/* no offload requested */
+	LKL_TC_MQPRIO_HW_OFFLOAD_TCS,	/* offload TCs, no queue counts */
+	__LKL__TC_MQPRIO_HW_OFFLOAD_MAX
+};
+
+#define LKL_TC_MQPRIO_HW_OFFLOAD_MAX (__LKL__TC_MQPRIO_HW_OFFLOAD_MAX - 1)
 
 struct lkl_tc_mqprio_qopt {
 	__lkl__u8	num_tc;

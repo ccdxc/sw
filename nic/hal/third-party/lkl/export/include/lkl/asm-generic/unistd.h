@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #include <lkl/asm/bitsperlong.h>
 
 /*
@@ -194,8 +195,7 @@ __LKL__SYSCALL(__lkl__NR_quotactl, sys_quotactl)
 
 /* fs/readdir.c */
 #define __lkl__NR_getdents64 61
-#define __LKL__ARCH_WANT_COMPAT_SYS_GETDENTS64
-__LKL__SC_COMP(__lkl__NR_getdents64, sys_getdents64, compat_sys_getdents64)
+__LKL__SYSCALL(__lkl__NR_getdents64, sys_getdents64)
 
 /* fs/read_write.c */
 #define __lkl__NR3264_lseek 62

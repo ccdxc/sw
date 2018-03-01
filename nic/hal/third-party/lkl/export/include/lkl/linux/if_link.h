@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef _LKL_LINUX_IF_LINK_H
 #define _LKL_LINUX_IF_LINK_H
 
@@ -157,6 +158,7 @@ enum {
 	LKL_IFLA_GSO_MAX_SIZE,
 	LKL_IFLA_PAD,
 	LKL_IFLA_XDP,
+	LKL_IFLA_EVENT,
 	__LKL__IFLA_MAX
 };
 
@@ -321,6 +323,7 @@ enum {
 	LKL_IFLA_BRPORT_MCAST_FLOOD,
 	LKL_IFLA_BRPORT_MCAST_TO_UCAST,
 	LKL_IFLA_BRPORT_VLAN_TUNNEL,
+	LKL_IFLA_BRPORT_BCAST_FLOOD,
 	__LKL__IFLA_BRPORT_MAX
 };
 #define LKL_IFLA_BRPORT_MAX (__LKL__IFLA_BRPORT_MAX - 1)
@@ -536,11 +539,18 @@ enum {
 #define LKL_IFLA_PPP_MAX (__LKL__IFLA_PPP_MAX - 1)
 
 /* GTP section */
+
+enum lkl_ifla_gtp_role {
+	LKL_GTP_ROLE_GGSN = 0,
+	LKL_GTP_ROLE_SGSN,
+};
+
 enum {
 	LKL_IFLA_GTP_UNSPEC,
 	LKL_IFLA_GTP_FD0,
 	LKL_IFLA_GTP_FD1,
 	LKL_IFLA_GTP_PDP_HASHSIZE,
+	LKL_IFLA_GTP_ROLE,
 	__LKL__IFLA_GTP_MAX,
 };
 #define LKL_IFLA_GTP_MAX (__LKL__IFLA_GTP_MAX - 1)
@@ -878,16 +888,42 @@ enum {
 /* XDP section */
 
 #define LKL_XDP_FLAGS_UPDATE_IF_NOEXIST	(1U << 0)
-#define LKL_XDP_FLAGS_MASK			(LKL_XDP_FLAGS_UPDATE_IF_NOEXIST)
+#define LKL_XDP_FLAGS_SKB_MODE		(1U << 1)
+#define LKL_XDP_FLAGS_DRV_MODE		(1U << 2)
+#define LKL_XDP_FLAGS_HW_MODE		(1U << 3)
+#define LKL_XDP_FLAGS_MODES			(LKL_XDP_FLAGS_SKB_MODE | \
+					 LKL_XDP_FLAGS_DRV_MODE | \
+					 LKL_XDP_FLAGS_HW_MODE)
+#define LKL_XDP_FLAGS_MASK			(LKL_XDP_FLAGS_UPDATE_IF_NOEXIST | \
+					 LKL_XDP_FLAGS_MODES)
+
+/* These are stored into LKL_IFLA_XDP_ATTACHED on dump. */
+enum {
+	LKL_XDP_ATTACHED_NONE = 0,
+	LKL_XDP_ATTACHED_DRV,
+	LKL_XDP_ATTACHED_SKB,
+	LKL_XDP_ATTACHED_HW,
+};
 
 enum {
 	LKL_IFLA_XDP_UNSPEC,
 	LKL_IFLA_XDP_FD,
 	LKL_IFLA_XDP_ATTACHED,
 	LKL_IFLA_XDP_FLAGS,
+	LKL_IFLA_XDP_PROG_ID,
 	__LKL__IFLA_XDP_MAX,
 };
 
 #define LKL_IFLA_XDP_MAX (__LKL__IFLA_XDP_MAX - 1)
+
+enum {
+	LKL_IFLA_EVENT_NONE,
+	LKL_IFLA_EVENT_REBOOT,		/* internal reset / reboot */
+	LKL_IFLA_EVENT_FEATURES,		/* change in offload features */
+	LKL_IFLA_EVENT_BONDING_FAILOVER,	/* change in active slave */
+	LKL_IFLA_EVENT_NOTIFY_PEERS,	/* re-sent grat. arp/ndisc */
+	LKL_IFLA_EVENT_IGMP_RESEND,		/* re-sent IGMP JOIN */
+	LKL_IFLA_EVENT_BONDING_OPTIONS,	/* change in bonding options */
+};
 
 #endif /* _LKL_LINUX_IF_LINK_H */

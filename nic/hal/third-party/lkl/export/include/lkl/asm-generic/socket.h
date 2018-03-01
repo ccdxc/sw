@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef __LKL__ASM_GENERIC_SOCKET_H
 #define __LKL__ASM_GENERIC_SOCKET_H
 
@@ -94,11 +95,23 @@
 
 #define LKL_SCM_TIMESTAMPING_OPT_STATS	54
 
-#define LKL_SO_PAGEHDR_SMAC              55
-#define LKL_SO_PAGEHDR_DMAC              56
-#define LKL_SO_PAGEHDR_PROTO             57
-#define LKL_SO_PAGEHDR_SIP               58
-#define LKL_SO_PAGEHDR_FLOW              59
-#define LKL_SO_PAGEHDR_VLAN              60
+#define LKL_SO_MEMINFO		55
+
+#define LKL_SO_INCOMING_NAPI_ID	56
+
+#define LKL_SO_COOKIE		57
+
+#define LKL_SCM_TIMESTAMPING_PKTINFO	58
+
+#define LKL_SO_PEERGROUPS		59
+
+#define LKL_SO_ZEROCOPY		60
+
+#define LKL_SO_PAGEHDR_SMAC              61
+#define LKL_SO_PAGEHDR_DMAC              62
+#define LKL_SO_PAGEHDR_PROTO             63
+#define LKL_SO_PAGEHDR_SIP               64
+#define LKL_SO_PAGEHDR_FLOW              65
+#define LKL_SO_PAGEHDR_VLAN              66
 
 #endif /* __LKL__ASM_GENERIC_SOCKET_H */

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note */
 /*
  * INET		An implementation of the TCP/IP protocol suite for the LINUX
  *		operating system.  INET is implemented using the  BSD Socket
@@ -66,6 +67,7 @@
 #define LKL_ETH_P_ATALK	0x809B		/* Appletalk DDP		*/
 #define LKL_ETH_P_AARP	0x80F3		/* Appletalk AARP		*/
 #define LKL_ETH_P_8021Q	0x8100          /* 802.1Q VLAN Extended Header  */
+#define LKL_ETH_P_ERSPAN	0x88BE		/* ERSPAN type II		*/
 #define LKL_ETH_P_IPX	0x8137		/* IPX over DIX			*/
 #define LKL_ETH_P_IPV6	0x86DD		/* IPv6 over bluebook		*/
 #define LKL_ETH_P_PAUSE	0x8808		/* IEEE Pause frames. See 802.3 31B */
@@ -98,11 +100,13 @@
 #define LKL_ETH_P_FIP	0x8914		/* FCoE Initialization Protocol */
 #define LKL_ETH_P_80221	0x8917		/* IEEE 802.21 Media Independent Handover Protocol */
 #define LKL_ETH_P_HSR	0x892F		/* IEC 62439-3 HSRv1	*/
+#define LKL_ETH_P_NSH	0x894F		/* Network Service Header */
 #define LKL_ETH_P_LOOPBACK	0x9000		/* Ethernet loopback packet, per IEEE 802.3 */
 #define LKL_ETH_P_QINQ1	0x9100		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
 #define LKL_ETH_P_QINQ2	0x9200		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
 #define LKL_ETH_P_QINQ3	0x9300		/* deprecated QinQ VLAN [ NOT AN OFFICIALLY REGISTERED ID ] */
 #define LKL_ETH_P_EDSA	0xDADA		/* Ethertype DSA [ NOT AN OFFICIALLY REGISTERED ID ] */
+#define LKL_ETH_P_IFE	0xED3E		/* ForCES inter-FE LFB type */
 #define LKL_ETH_P_AF_IUCV   0xFBFB		/* IBM af_iucv [ NOT AN OFFICIALLY REGISTERED ID ] */
 
 #define LKL_ETH_P_802_3_MIN	0x0600		/* If the value in the ethernet type is less than this value
@@ -137,6 +141,9 @@
 #define LKL_ETH_P_IEEE802154 0x00F6		/* IEEE802.15.4 frame		*/
 #define LKL_ETH_P_CAIF	0x00F7		/* ST-Ericsson CAIF protocol	*/
 #define LKL_ETH_P_XDSA	0x00F8		/* Multiplexed DSA protocol	*/
+#define LKL_ETH_P_MAP	0x00F9		/* Qualcomm multiplexing and
+					 * aggregation protocol
+					 */
 
 /*
  *	This is an Ethernet frame header.

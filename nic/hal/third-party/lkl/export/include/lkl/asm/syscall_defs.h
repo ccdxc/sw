@@ -229,6 +229,9 @@ LKL_SYSCALL_DEFINE1(_sched_get_priority_min,int,policy)
 #ifdef __lkl__NR_sched_rr_get_interval
 LKL_SYSCALL_DEFINE2(_sched_rr_get_interval,lkl_pid_t,pid,struct lkl_timespec *,interval)
 #endif
+#ifdef __lkl__NR_membarrier
+LKL_SYSCALL_DEFINE2(_membarrier,int,cmd,int,flags)
+#endif
 #ifdef __lkl__NR_syslog
 LKL_SYSCALL_DEFINE3(_syslog,int,type,char *,buf,int,len)
 #endif
@@ -288,9 +291,6 @@ LKL_SYSCALL_DEFINE1(_alarm,unsigned int,seconds)
 #endif
 #ifdef __lkl__NR_setitimer
 LKL_SYSCALL_DEFINE3(_setitimer,int,which,struct lkl_itimerval *,value,struct lkl_itimerval *,ovalue)
-#endif
-#ifdef __lkl__NR_membarrier
-LKL_SYSCALL_DEFINE2(_membarrier,int,cmd,int,flags)
 #endif
 #ifdef __lkl__NR_readahead
 LKL_SYSCALL_DEFINE3(_readahead,int,fd,lkl_loff_t,offset,lkl_size_t,count)
@@ -392,13 +392,13 @@ LKL_SYSCALL_DEFINE3(_writev,unsigned long,fd,const struct lkl_iovec *,vec,unsign
 LKL_SYSCALL_DEFINE5(_preadv,unsigned long,fd,const struct lkl_iovec *,vec,unsigned long,vlen,unsigned long,pos_l,unsigned long,pos_h)
 #endif
 #ifdef __lkl__NR_preadv2
-LKL_SYSCALL_DEFINE6(_preadv2,unsigned long,fd,const struct lkl_iovec *,vec,unsigned long,vlen,unsigned long,pos_l,unsigned long,pos_h,int,flags)
+LKL_SYSCALL_DEFINE6(_preadv2,unsigned long,fd,const struct lkl_iovec *,vec,unsigned long,vlen,unsigned long,pos_l,unsigned long,pos_h,lkl_rwf_t,flags)
 #endif
 #ifdef __lkl__NR_pwritev
 LKL_SYSCALL_DEFINE5(_pwritev,unsigned long,fd,const struct lkl_iovec *,vec,unsigned long,vlen,unsigned long,pos_l,unsigned long,pos_h)
 #endif
 #ifdef __lkl__NR_pwritev2
-LKL_SYSCALL_DEFINE6(_pwritev2,unsigned long,fd,const struct lkl_iovec *,vec,unsigned long,vlen,unsigned long,pos_l,unsigned long,pos_h,int,flags)
+LKL_SYSCALL_DEFINE6(_pwritev2,unsigned long,fd,const struct lkl_iovec *,vec,unsigned long,vlen,unsigned long,pos_l,unsigned long,pos_h,lkl_rwf_t,flags)
 #endif
 #ifdef __lkl__NR_sendfile
 LKL_SYSCALL_DEFINE4(_sendfile,int,out_fd,int,in_fd,lkl_off_t *,offset,lkl_size_t,count)

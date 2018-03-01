@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note */
 /*
  *  include/linux/eventpoll.h ( Efficient event polling implementation )
  *  Copyright (C) 2001,...,2006	 Davide Libenzi
@@ -26,8 +27,21 @@
 #define LKL_EPOLL_CTL_DEL 2
 #define LKL_EPOLL_CTL_MOD 3
 
+/* Epoll event masks */
+#define LKL_EPOLLIN		0x00000001
+#define LKL_EPOLLPRI	0x00000002
+#define LKL_EPOLLOUT	0x00000004
+#define LKL_EPOLLERR	0x00000008
+#define LKL_EPOLLHUP	0x00000010
+#define LKL_EPOLLRDNORM	0x00000040
+#define LKL_EPOLLRDBAND	0x00000080
+#define LKL_EPOLLWRNORM	0x00000100
+#define LKL_EPOLLWRBAND	0x00000200
+#define LKL_EPOLLMSG	0x00000400
+#define LKL_EPOLLRDHUP	0x00002000
+
 /* Set exclusive wakeup mode for the target file descriptor */
-#define LKL_EPOLLEXCLUSIVE (1 << 28)
+#define LKL_EPOLLEXCLUSIVE (1U << 28)
 
 /*
  * Request the handling of system wakeup events so as to prevent system suspends
@@ -39,13 +53,13 @@
  *
  * Requires LKL_CAP_BLOCK_SUSPEND
  */
-#define LKL_EPOLLWAKEUP (1 << 29)
+#define LKL_EPOLLWAKEUP (1U << 29)
 
 /* Set the One Shot behaviour for the target file descriptor */
-#define LKL_EPOLLONESHOT (1 << 30)
+#define LKL_EPOLLONESHOT (1U << 30)
 
 /* Set the Edge Triggered behaviour for the target file descriptor */
-#define LKL_EPOLLET (1 << 31)
+#define LKL_EPOLLET (1U << 31)
 
 /* 
  * On x86-64 make the 64bit structure have the same alignment as the

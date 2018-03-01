@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 /*
  * This is <linux/capability.h>
  *
@@ -60,9 +61,13 @@ typedef struct __lkl__user_cap_data_struct {
 #define LKL_VFS_CAP_U32_2           2
 #define LKL_XATTR_CAPS_SZ_2         (sizeof(__lkl__le32)*(1 + 2*LKL_VFS_CAP_U32_2))
 
-#define LKL_XATTR_CAPS_SZ           LKL_XATTR_CAPS_SZ_2
-#define LKL_VFS_CAP_U32             LKL_VFS_CAP_U32_2
-#define LKL_VFS_CAP_REVISION	LKL_VFS_CAP_REVISION_2
+#define LKL_VFS_CAP_REVISION_3	0x03000000
+#define LKL_VFS_CAP_U32_3           2
+#define LKL_XATTR_CAPS_SZ_3         (sizeof(__lkl__le32)*(2 + 2*LKL_VFS_CAP_U32_3))
+
+#define LKL_XATTR_CAPS_SZ           LKL_XATTR_CAPS_SZ_3
+#define LKL_VFS_CAP_U32             LKL_VFS_CAP_U32_3
+#define LKL_VFS_CAP_REVISION	LKL_VFS_CAP_REVISION_3
 
 struct lkl_vfs_cap_data {
 	__lkl__le32 magic_etc;            /* Little endian */
@@ -70,6 +75,18 @@ struct lkl_vfs_cap_data {
 		__lkl__le32 permitted;    /* Little endian */
 		__lkl__le32 inheritable;  /* Little endian */
 	} data[LKL_VFS_CAP_U32];
+};
+
+/*
+ * same as vfs_cap_data but with a rootid at the end
+ */
+struct lkl_vfs_ns_cap_data {
+	__lkl__le32 magic_etc;
+	struct {
+		__lkl__le32 permitted;    /* Little endian */
+		__lkl__le32 inheritable;  /* Little endian */
+	} data[LKL_VFS_CAP_U32];
+	__lkl__le32 rootid;
 };
 
 
@@ -203,7 +220,7 @@ struct lkl_vfs_cap_data {
 #define LKL_CAP_SYS_MODULE       16
 
 /* Allow ioperm/iopl access */
-/* Allow sending USB messages to any device via /proc/bus/usb */
+/* Allow sending USB messages to any device via /dev/bus/usb */
 
 #define LKL_CAP_SYS_RAWIO        17
 

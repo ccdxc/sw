@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 /* Copyright (c) 2011-2014 PLUMgrid, http://plumgrid.com
  *
  * This program is free software; you can redistribute it and/or
@@ -30,9 +31,14 @@
 #define LKL_BPF_FROM_LE	LKL_BPF_TO_LE
 #define LKL_BPF_FROM_BE	LKL_BPF_TO_BE
 
+/* jmp encodings */
 #define LKL_BPF_JNE		0x50	/* jump != */
+#define LKL_BPF_JLT		0xa0	/* LT is unsigned, '<' */
+#define LKL_BPF_JLE		0xb0	/* LE is unsigned, '<=' */
 #define LKL_BPF_JSGT	0x60	/* SGT is signed '>', GT in x86 */
 #define LKL_BPF_JSGE	0x70	/* SGE is signed '>=', GE in x86 */
+#define LKL_BPF_JSLT	0xc0	/* SLT is signed, '<' */
+#define LKL_BPF_JSLE	0xd0	/* SLE is signed, '<=' */
 #define LKL_BPF_CALL	0x80	/* function call */
 #define LKL_BPF_EXIT	0x90	/* function return */
 
@@ -81,6 +87,12 @@ enum lkl_bpf_cmd {
 	LKL_BPF_OBJ_GET,
 	LKL_BPF_PROG_ATTACH,
 	LKL_BPF_PROG_DETACH,
+	LKL_BPF_PROG_TEST_RUN,
+	LKL_BPF_PROG_GET_NEXT_ID,
+	LKL_BPF_MAP_GET_NEXT_ID,
+	LKL_BPF_PROG_GET_FD_BY_ID,
+	LKL_BPF_MAP_GET_FD_BY_ID,
+	LKL_BPF_OBJ_GET_INFO_BY_FD,
 };
 
 enum lkl_bpf_map_type {
@@ -96,6 +108,10 @@ enum lkl_bpf_map_type {
 	LKL_BPF_MAP_TYPE_LRU_HASH,
 	LKL_BPF_MAP_TYPE_LRU_PERCPU_HASH,
 	LKL_BPF_MAP_TYPE_LPM_TRIE,
+	LKL_BPF_MAP_TYPE_ARRAY_OF_MAPS,
+	LKL_BPF_MAP_TYPE_HASH_OF_MAPS,
+	LKL_BPF_MAP_TYPE_DEVMAP,
+	LKL_BPF_MAP_TYPE_SOCKMAP,
 };
 
 enum lkl_bpf_prog_type {
@@ -112,12 +128,17 @@ enum lkl_bpf_prog_type {
 	LKL_BPF_PROG_TYPE_LWT_IN,
 	LKL_BPF_PROG_TYPE_LWT_OUT,
 	LKL_BPF_PROG_TYPE_LWT_XMIT,
+	LKL_BPF_PROG_TYPE_SOCK_OPS,
+	LKL_BPF_PROG_TYPE_SK_SKB,
 };
 
 enum lkl_bpf_attach_type {
 	LKL_BPF_CGROUP_INET_INGRESS,
 	LKL_BPF_CGROUP_INET_EGRESS,
 	LKL_BPF_CGROUP_INET_SOCK_CREATE,
+	LKL_BPF_CGROUP_SOCK_OPS,
+	LKL_BPF_SK_SKB_STREAM_PARSER,
+	LKL_BPF_SK_SKB_STREAM_VERDICT,
 	__LKL__MAX_BPF_ATTACH_TYPE
 };
 
@@ -129,6 +150,13 @@ enum lkl_bpf_attach_type {
  */
 #define LKL_BPF_F_ALLOW_OVERRIDE	(1U << 0)
 
+/* If LKL_BPF_F_STRICT_ALIGNMENT is used in LKL_BPF_PROG_LOAD command, the
+ * verifier will perform strict alignment checking as if the kernel
+ * has been built with CONFIG_EFFICIENT_UNALIGNED_ACCESS not set,
+ * and NET_IP_ALIGN defined to 2.
+ */
+#define LKL_BPF_F_STRICT_ALIGNMENT	(1U << 0)
+
 #define LKL_BPF_PSEUDO_MAP_FD	1
 
 /* flags for LKL_BPF_MAP_UPDATE_ELEM command */
@@ -136,6 +164,7 @@ enum lkl_bpf_attach_type {
 #define LKL_BPF_NOEXIST	1 /* create new element if it didn't exist */
 #define LKL_BPF_EXIST	2 /* update existing element */
 
+/* flags for LKL_BPF_MAP_CREATE command */
 #define LKL_BPF_F_NO_PREALLOC	(1U << 0)
 /* Instead of having one common LRU list in the
  * BPF_MAP_TYPE_LRU_[PERCPU_]HASH map, use a percpu LRU list
@@ -144,6 +173,8 @@ enum lkl_bpf_attach_type {
  * across different LRU lists.
  */
 #define LKL_BPF_F_NO_COMMON_LRU	(1U << 1)
+/* Specify numa node during map creation */
+#define LKL_BPF_F_NUMA_NODE		(1U << 2)
 
 union lkl_bpf_attr {
 	struct { /* anonymous struct used by LKL_BPF_MAP_CREATE command */
@@ -151,7 +182,13 @@ union lkl_bpf_attr {
 		__lkl__u32	key_size;	/* size of key in bytes */
 		__lkl__u32	value_size;	/* size of value in bytes */
 		__lkl__u32	max_entries;	/* max number of entries in a map */
-		__lkl__u32	map_flags;	/* prealloc or not */
+		__lkl__u32	map_flags;	/* LKL_BPF_MAP_CREATE related
+					 * flags defined above.
+					 */
+		__lkl__u32	inner_map_fd;	/* fd pointing to the inner map */
+		__lkl__u32	numa_node;	/* numa node (effective only if
+					 * LKL_BPF_F_NUMA_NODE is set).
+					 */
 	};
 
 	struct { /* anonymous struct used by BPF_MAP_*_ELEM commands */
@@ -173,6 +210,7 @@ union lkl_bpf_attr {
 		__lkl__u32		log_size;	/* size of user buffer */
 		__lkl__aligned_u64	log_buf;	/* user supplied buffer */
 		__lkl__u32		kern_version;	/* checked when prog_type=kprobe */
+		__lkl__u32		prog_flags;
 	};
 
 	struct { /* anonymous struct used by BPF_OBJ_* commands */
@@ -186,6 +224,32 @@ union lkl_bpf_attr {
 		__lkl__u32		attach_type;
 		__lkl__u32		attach_flags;
 	};
+
+	struct { /* anonymous struct used by LKL_BPF_PROG_TEST_RUN command */
+		__lkl__u32		prog_fd;
+		__lkl__u32		retval;
+		__lkl__u32		data_size_in;
+		__lkl__u32		data_size_out;
+		__lkl__aligned_u64	data_in;
+		__lkl__aligned_u64	data_out;
+		__lkl__u32		repeat;
+		__lkl__u32		duration;
+	} test;
+
+	struct { /* anonymous struct used by BPF_*_GET_*_ID */
+		union {
+			__lkl__u32		start_id;
+			__lkl__u32		prog_id;
+			__lkl__u32		map_id;
+		};
+		__lkl__u32		next_id;
+	};
+
+	struct { /* anonymous struct used by LKL_BPF_OBJ_GET_INFO_BY_FD */
+		__lkl__u32		bpf_fd;
+		__lkl__u32		info_len;
+		__lkl__aligned_u64	info;
+	} info;
 } __attribute__((aligned(8)));
 
 /* BPF helper function descriptions:
@@ -249,7 +313,7 @@ union lkl_bpf_attr {
  *     jump into another BPF program
  *     @ctx: context pointer passed to next program
  *     @prog_array_map: pointer to map which type is LKL_BPF_MAP_TYPE_PROG_ARRAY
- *     @index: index inside array that selects specific program to run
+ *     @index: 32-bit index inside array that selects specific program to run
  *     Return: 0 on success or negative error
  *
  * int bpf_clone_redirect(skb, ifindex, flags)
@@ -290,26 +354,40 @@ union lkl_bpf_attr {
  *     @flags: room for future extensions
  *     Return: 0 on success or negative error
  *
- * lkl_u64 bpf_perf_event_read(&map, index)
- *     Return: Number events read or error code
+ * lkl_u64 bpf_perf_event_read(map, flags)
+ *     read perf event counter value
+ *     @map: pointer to perf_event_array map
+ *     @flags: index of event in the map or bitmask flags
+ *     Return: value of perf event counter read or error code
  *
  * int bpf_redirect(ifindex, flags)
  *     redirect to another netdev
  *     @ifindex: ifindex of the net device
- *     @flags: bit 0 - if set, redirect to ingress instead of egress
- *             other bits - reserved
- *     Return: TC_ACT_REDIRECT
+ *     @flags:
+ *	  cls_bpf:
+ *          bit 0 - if set, redirect to ingress instead of egress
+ *          other bits - reserved
+ *	  xdp_bpf:
+ *	    all bits - reserved
+ *     Return: cls_bpf: TC_ACT_REDIRECT on success or TC_ACT_SHOT on error
+ *	       xdp_bfp: LKL_XDP_REDIRECT on success or XDP_ABORT on error
+ * int bpf_redirect_map(map, key, flags)
+ *     redirect to endpoint in map
+ *     @map: pointer to dev map
+ *     @key: index in map to lookup
+ *     @flags: --
+ *     Return: LKL_XDP_REDIRECT on success or XDP_ABORT on error
  *
  * lkl_u32 bpf_get_route_realm(skb)
  *     retrieve a dst's tclassid
  *     @skb: pointer to skb
  *     Return: realm if != 0
  *
- * int bpf_perf_event_output(ctx, map, index, data, size)
+ * int bpf_perf_event_output(ctx, map, flags, data, size)
  *     output perf raw sample
  *     @ctx: struct pt_regs*
  *     @map: pointer to perf_event_array map
- *     @index: index of event in the map
+ *     @flags: index of event in the map or bitmask flags
  *     @data: data on stack to be output as raw data
  *     @size: size of data
  *     Return: 0 on success or negative error
@@ -456,6 +534,55 @@ union lkl_bpf_attr {
  *     Return:
  *       > 0 length of the string including the trailing NUL on success
  *       < 0 error
+ *
+ * lkl_u64 bpf_get_socket_cookie(skb)
+ *     Get the cookie for the socket stored inside sk_buff.
+ *     @skb: pointer to skb
+ *     Return: 8 Bytes non-decreasing number on success or 0 if the socket
+ *     field is missing inside sk_buff
+ *
+ * lkl_u32 bpf_get_socket_uid(skb)
+ *     Get the owner uid of the socket stored inside sk_buff.
+ *     @skb: pointer to skb
+ *     Return: uid of the socket owner on success or overflowuid if failed.
+ *
+ * lkl_u32 bpf_set_hash(skb, hash)
+ *     Set full skb->hash.
+ *     @skb: pointer to skb
+ *     @hash: hash to set
+ *
+ * int bpf_setsockopt(bpf_socket, level, optname, optval, optlen)
+ *     Calls setsockopt. Not all opts are available, only those with
+ *     integer optvals plus TCP_CONGESTION.
+ *     Supported levels: LKL_SOL_SOCKET and IPROTO_TCP
+ *     @bpf_socket: pointer to bpf_socket
+ *     @level: LKL_SOL_SOCKET or IPROTO_TCP
+ *     @optname: option name
+ *     @optval: pointer to option value
+ *     @optlen: length of optval in byes
+ *     Return: 0 or negative error
+ *
+ * int bpf_skb_adjust_room(skb, len_diff, mode, flags)
+ *     Grow or shrink room in sk_buff.
+ *     @skb: pointer to skb
+ *     @len_diff: (signed) amount of room to grow/shrink
+ *     @mode: operation mode (enum lkl_bpf_adj_room_mode)
+ *     @flags: reserved for future use
+ *     Return: 0 on success or negative error code
+ *
+ * int bpf_sk_redirect_map(map, key, flags)
+ *     Redirect skb to a sock in map using key as a lookup key for the
+ *     sock in map.
+ *     @map: pointer to sockmap
+ *     @key: key to lookup sock in map
+ *     @flags: reserved for future use
+ *     Return: LKL_SK_PASS
+ *
+ * int bpf_sock_map_update(skops, map, key, flags)
+ *	@skops: pointer to bpf_sock_ops
+ *	@map: pointer to sockmap to update
+ *	@key: key to insert/update sock in map
+ *	@flags: same flags as map update elem
  */
 #define __LKL__BPF_FUNC_MAPPER(FN)		\
 	FN(unspec),			\
@@ -503,7 +630,15 @@ union lkl_bpf_attr {
 	FN(get_numa_node_id),		\
 	FN(skb_change_head),		\
 	FN(xdp_adjust_head),		\
-	FN(probe_read_str),
+	FN(probe_read_str),		\
+	FN(get_socket_cookie),		\
+	FN(get_socket_uid),		\
+	FN(set_hash),			\
+	FN(setsockopt),			\
+	FN(skb_adjust_room),		\
+	FN(redirect_map),		\
+	FN(sk_redirect_map),		\
+	FN(sock_map_update),		\
 
 /* integer value in 'imm' field of LKL_BPF_CALL instruction selects which helper
  * function eBPF program intends to call
@@ -553,6 +688,11 @@ enum lkl_bpf_func_id {
 /* BPF_FUNC_perf_event_output for sk_buff input context. */
 #define LKL_BPF_F_CTXLEN_MASK		(0xfffffULL << 32)
 
+/* Mode for BPF_FUNC_skb_adjust_room helper. */
+enum lkl_bpf_adj_room_mode {
+	LKL_BPF_ADJ_ROOM_NET,
+};
+
 /* user accessible mirror of in-kernel sk_buff.
  * new fields can only be added to the end of this structure
  */
@@ -574,6 +714,16 @@ struct __lkl__sk_buff {
 	__lkl__u32 tc_classid;
 	__lkl__u32 data;
 	__lkl__u32 data_end;
+	__lkl__u32 napi_id;
+
+	/* accessed by BPF_PROG_TYPE_sk_skb types */
+	__lkl__u32 family;
+	__lkl__u32 remote_ip4;	/* Stored in network byte order */
+	__lkl__u32 local_ip4;	/* Stored in network byte order */
+	__lkl__u32 remote_ip6[4];	/* Stored in network byte order */
+	__lkl__u32 local_ip6[4];	/* Stored in network byte order */
+	__lkl__u32 remote_port;	/* Stored in network byte order */
+	__lkl__u32 local_port;	/* stored in host byte order */
 };
 
 struct lkl_bpf_tunnel_key {
@@ -609,20 +759,23 @@ struct lkl_bpf_sock {
 	__lkl__u32 family;
 	__lkl__u32 type;
 	__lkl__u32 protocol;
+	__lkl__u32 mark;
+	__lkl__u32 priority;
 };
 
 #define LKL_XDP_PACKET_HEADROOM 256
 
 /* User return codes for XDP prog type.
  * A valid XDP program must return one of these defined values. All other
- * return codes are reserved for future use. Unknown return codes will result
- * in packet drop.
+ * return codes are reserved for future use. Unknown return codes will
+ * result in packet drops and a warning via bpf_warn_invalid_xdp_action().
  */
 enum lkl_xdp_action {
 	LKL_XDP_ABORTED = 0,
 	LKL_XDP_DROP,
 	LKL_XDP_PASS,
 	LKL_XDP_TX,
+	LKL_XDP_REDIRECT,
 };
 
 /* user accessible metadata for XDP packet hook
@@ -632,5 +785,83 @@ struct lkl_xdp_md {
 	__lkl__u32 data;
 	__lkl__u32 data_end;
 };
+
+enum lkl_sk_action {
+	LKL_SK_DROP = 0,
+	LKL_SK_PASS,
+};
+
+#define LKL_BPF_TAG_SIZE	8
+
+struct lkl_bpf_prog_info {
+	__lkl__u32 type;
+	__lkl__u32 id;
+	__lkl__u8  tag[LKL_BPF_TAG_SIZE];
+	__lkl__u32 jited_prog_len;
+	__lkl__u32 xlated_prog_len;
+	__lkl__aligned_u64 jited_prog_insns;
+	__lkl__aligned_u64 xlated_prog_insns;
+} __attribute__((aligned(8)));
+
+struct lkl_bpf_map_info {
+	__lkl__u32 type;
+	__lkl__u32 id;
+	__lkl__u32 key_size;
+	__lkl__u32 value_size;
+	__lkl__u32 max_entries;
+	__lkl__u32 map_flags;
+} __attribute__((aligned(8)));
+
+/* User bpf_sock_ops struct to access socket values and specify request ops
+ * and their replies.
+ * Some of this fields are in network (bigendian) byte order and may need
+ * to be converted before use (bpf_ntohl() defined in samples/bpf/bpf_endian.h).
+ * New fields can only be added at the end of this structure
+ */
+struct lkl_bpf_sock_ops {
+	__lkl__u32 op;
+	union {
+		__lkl__u32 reply;
+		__lkl__u32 replylong[4];
+	};
+	__lkl__u32 family;
+	__lkl__u32 remote_ip4;	/* Stored in network byte order */
+	__lkl__u32 local_ip4;	/* Stored in network byte order */
+	__lkl__u32 remote_ip6[4];	/* Stored in network byte order */
+	__lkl__u32 local_ip6[4];	/* Stored in network byte order */
+	__lkl__u32 remote_port;	/* Stored in network byte order */
+	__lkl__u32 local_port;	/* stored in host byte order */
+};
+
+/* List of known BPF sock_ops operators.
+ * New entries can only be added at the end
+ */
+enum {
+	LKL_BPF_SOCK_OPS_VOID,
+	LKL_BPF_SOCK_OPS_TIMEOUT_INIT,	/* Should return SYN-RTO value to use or
+					 * -1 if default value should be used
+					 */
+	LKL_BPF_SOCK_OPS_RWND_INIT,		/* Should return initial advertized
+					 * window (in packets) or -1 if default
+					 * value should be used
+					 */
+	LKL_BPF_SOCK_OPS_TCP_CONNECT_CB,	/* Calls BPF program right before an
+					 * active connection is initialized
+					 */
+	LKL_BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB,	/* Calls BPF program when an
+						 * active connection is
+						 * established
+						 */
+	LKL_BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB,	/* Calls BPF program when a
+						 * passive connection is
+						 * established
+						 */
+	LKL_BPF_SOCK_OPS_NEEDS_ECN,		/* If connection's congestion control
+					 * needs ECN
+					 */
+};
+
+#define LKL_TCP_BPF_IW		1001	/* Set TCP initial congestion window */
+#define LKL_TCP_BPF_SNDCWND_CLAMP	1002	/* Set sndcwnd_clamp */
 
 #endif /* __LKL__LINUX_BPF_H__ */

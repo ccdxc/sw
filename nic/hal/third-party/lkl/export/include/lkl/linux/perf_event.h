@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 /*
  * Performance events:
  *
@@ -139,8 +140,9 @@ enum lkl_perf_event_sample_format {
 	LKL_PERF_SAMPLE_IDENTIFIER			= 1U << 16,
 	LKL_PERF_SAMPLE_TRANSACTION			= 1U << 17,
 	LKL_PERF_SAMPLE_REGS_INTR			= 1U << 18,
+	LKL_PERF_SAMPLE_PHYS_ADDR			= 1U << 19,
 
-	LKL_PERF_SAMPLE_MAX = 1U << 19,		/* non-ABI */
+	LKL_PERF_SAMPLE_MAX = 1U << 20,		/* non-ABI */
 };
 
 /*
@@ -174,6 +176,8 @@ enum lkl_perf_branch_sample_type_shift {
 	LKL_PERF_SAMPLE_BRANCH_NO_FLAGS_SHIFT	= 14, /* no flags */
 	LKL_PERF_SAMPLE_BRANCH_NO_CYCLES_SHIFT	= 15, /* no cycles */
 
+	LKL_PERF_SAMPLE_BRANCH_TYPE_SAVE_SHIFT	= 16, /* save branch type */
+
 	LKL_PERF_SAMPLE_BRANCH_MAX_SHIFT		/* non-ABI */
 };
 
@@ -198,7 +202,28 @@ enum lkl_perf_branch_sample_type {
 	LKL_PERF_SAMPLE_BRANCH_NO_FLAGS	= 1U << LKL_PERF_SAMPLE_BRANCH_NO_FLAGS_SHIFT,
 	LKL_PERF_SAMPLE_BRANCH_NO_CYCLES	= 1U << LKL_PERF_SAMPLE_BRANCH_NO_CYCLES_SHIFT,
 
+	LKL_PERF_SAMPLE_BRANCH_TYPE_SAVE	=
+		1U << LKL_PERF_SAMPLE_BRANCH_TYPE_SAVE_SHIFT,
+
 	LKL_PERF_SAMPLE_BRANCH_MAX		= 1U << LKL_PERF_SAMPLE_BRANCH_MAX_SHIFT,
+};
+
+/*
+ * Common flow change classification
+ */
+enum {
+	LKL_PERF_BR_UNKNOWN		= 0,	/* unknown */
+	LKL_PERF_BR_COND		= 1,	/* conditional */
+	LKL_PERF_BR_UNCOND		= 2,	/* unconditional  */
+	LKL_PERF_BR_IND		= 3,	/* indirect */
+	LKL_PERF_BR_CALL		= 4,	/* function call */
+	LKL_PERF_BR_IND_CALL	= 5,	/* indirect function call */
+	LKL_PERF_BR_RET		= 6,	/* function return */
+	LKL_PERF_BR_SYSCALL		= 7,	/* syscall */
+	LKL_PERF_BR_SYSRET		= 8,	/* syscall return */
+	LKL_PERF_BR_COND_CALL	= 9,	/* conditional function call */
+	LKL_PERF_BR_COND_RET	= 10,	/* conditional function return */
+	LKL_PERF_BR_MAX,
 };
 
 #define LKL_PERF_SAMPLE_BRANCH_PLM_ALL \
@@ -344,7 +369,8 @@ struct lkl_perf_event_attr {
 				use_clockid    :  1, /* use @clockid for time fields */
 				context_switch :  1, /* context switch data */
 				write_backward :  1, /* Write ring buffer from end to beginning */
-				__reserved_1   : 36;
+				namespaces     :  1, /* include namespaces data */
+				__reserved_1   : 35;
 
 	union {
 		__lkl__u32		wakeup_events;	  /* wakeup every n events */
@@ -610,6 +636,23 @@ struct lkl_perf_event_header {
 	__lkl__u16	size;
 };
 
+struct lkl_perf_ns_link_info {
+	__lkl__u64	dev;
+	__lkl__u64	ino;
+};
+
+enum {
+	LKL_NET_NS_INDEX		= 0,
+	LKL_UTS_NS_INDEX		= 1,
+	LKL_IPC_NS_INDEX		= 2,
+	LKL_PID_NS_INDEX		= 3,
+	LKL_USER_NS_INDEX		= 4,
+	LKL_MNT_NS_INDEX		= 5,
+	LKL_CGROUP_NS_INDEX		= 6,
+
+	LKL_NR_NAMESPACES,		/* number of available namespaces */
+};
+
 enum lkl_perf_event_type {
 
 	/*
@@ -773,6 +816,7 @@ enum lkl_perf_event_type {
 	 *	{ lkl_u64			transaction; } && LKL_PERF_SAMPLE_TRANSACTION
 	 *	{ lkl_u64			abi; # enum lkl_perf_sample_regs_abi
 	 *	  lkl_u64			regs[weight(mask)]; } && LKL_PERF_SAMPLE_REGS_INTR
+	 *	{ lkl_u64			phys_addr;} && LKL_PERF_SAMPLE_PHYS_ADDR
 	 * };
 	 */
 	LKL_PERF_RECORD_SAMPLE			= 9,
@@ -862,6 +906,18 @@ enum lkl_perf_event_type {
 	 */
 	LKL_PERF_RECORD_SWITCH_CPU_WIDE		= 15,
 
+	/*
+	 * struct {
+	 *	struct lkl_perf_event_header	header;
+	 *	lkl_u32				pid;
+	 *	lkl_u32				tid;
+	 *	lkl_u64				nr_namespaces;
+	 *	{ lkl_u64				dev, inode; } [nr_namespaces];
+	 *	struct lkl_sample_id		sample_id;
+	 * };
+	 */
+	LKL_PERF_RECORD_NAMESPACES			= 16,
+
 	LKL_PERF_RECORD_MAX,			/* non-ABI */
 };
 
@@ -885,12 +941,14 @@ enum lkl_perf_callchain_context {
  */
 #define LKL_PERF_AUX_FLAG_TRUNCATED		0x01	/* record was truncated to fit */
 #define LKL_PERF_AUX_FLAG_OVERWRITE		0x02	/* snapshot from overwrite mode */
+#define LKL_PERF_AUX_FLAG_PARTIAL		0x04	/* record contains gaps */
 
 #define LKL_PERF_FLAG_FD_NO_GROUP		(1UL << 0)
 #define LKL_PERF_FLAG_FD_OUTPUT		(1UL << 1)
 #define LKL_PERF_FLAG_PID_CGROUP		(1UL << 2) /* pid=cgroup id, per-cpu mode only */
 #define LKL_PERF_FLAG_FD_CLOEXEC		(1UL << 3) /* LKL_O_CLOEXEC */
 
+#if defined(__LKL__LITTLE_ENDIAN_BITFIELD)
 union lkl_perf_mem_data_src {
 	__lkl__u64 val;
 	struct {
@@ -899,9 +957,30 @@ union lkl_perf_mem_data_src {
 			mem_snoop:5,	/* snoop mode */
 			mem_lock:2,	/* lock instr */
 			mem_dtlb:7,	/* tlb access */
-			mem_rsvd:31;
+			mem_lvl_num:4,	/* memory hierarchy level number */
+			mem_remote:1,   /* remote */
+			mem_snoopx:2,	/* snoop mode, ext */
+			mem_rsvd:24;
 	};
 };
+#elif defined(__LKL__BIG_ENDIAN_BITFIELD)
+union lkl_perf_mem_data_src {
+	__lkl__u64 val;
+	struct {
+		__lkl__u64	mem_rsvd:24,
+			mem_snoopx:2,	/* snoop mode, ext */
+			mem_remote:1,   /* remote */
+			mem_lvl_num:4,	/* memory hierarchy level number */
+			mem_dtlb:7,	/* tlb access */
+			mem_lock:2,	/* lock instr */
+			mem_snoop:5,	/* snoop mode */
+			mem_lvl:14,	/* memory hierarchy level */
+			mem_op:5;	/* type of opcode */
+	};
+};
+#else
+#error "Unknown endianness"
+#endif
 
 /* type of opcode (load/store/prefetch,code) */
 #define LKL_PERF_MEM_OP_NA		0x01 /* not available */
@@ -928,6 +1007,22 @@ union lkl_perf_mem_data_src {
 #define LKL_PERF_MEM_LVL_UNC	0x2000 /* Uncached memory */
 #define LKL_PERF_MEM_LVL_SHIFT	5
 
+#define LKL_PERF_MEM_REMOTE_REMOTE	0x01  /* Remote */
+#define LKL_PERF_MEM_REMOTE_SHIFT	37
+
+#define LKL_PERF_MEM_LVLNUM_L1	0x01 /* L1 */
+#define LKL_PERF_MEM_LVLNUM_L2	0x02 /* L2 */
+#define LKL_PERF_MEM_LVLNUM_L3	0x03 /* L3 */
+#define LKL_PERF_MEM_LVLNUM_L4	0x04 /* L4 */
+/* 5-0xa available */
+#define LKL_PERF_MEM_LVLNUM_ANY_CACHE 0x0b /* Any cache */
+#define LKL_PERF_MEM_LVLNUM_LFB	0x0c /* LFB */
+#define LKL_PERF_MEM_LVLNUM_RAM	0x0d /* RAM */
+#define LKL_PERF_MEM_LVLNUM_PMEM	0x0e /* PMEM */
+#define LKL_PERF_MEM_LVLNUM_NA	0x0f /* N/A */
+
+#define LKL_PERF_MEM_LVLNUM_SHIFT	33
+
 /* snoop mode */
 #define LKL_PERF_MEM_SNOOP_NA	0x01 /* not available */
 #define LKL_PERF_MEM_SNOOP_NONE	0x02 /* no snoop */
@@ -935,6 +1030,10 @@ union lkl_perf_mem_data_src {
 #define LKL_PERF_MEM_SNOOP_MISS	0x08 /* snoop miss */
 #define LKL_PERF_MEM_SNOOP_HITM	0x10 /* snoop hit modified */
 #define LKL_PERF_MEM_SNOOP_SHIFT	19
+
+#define LKL_PERF_MEM_SNOOPX_FWD	0x01 /* forward */
+/* 1 free */
+#define LKL_PERF_MEM_SNOOPX_SHIFT	37
 
 /* locked instruction */
 #define LKL_PERF_MEM_LOCK_NA	0x01 /* not available */
@@ -968,6 +1067,7 @@ union lkl_perf_mem_data_src {
  *     in_tx: running in a hardware transaction
  *     abort: aborting a hardware transaction
  *    cycles: cycles from last branch (or 0 if not supported)
+ *      type: branch type
  */
 struct lkl_perf_branch_entry {
 	__lkl__u64	from;
@@ -977,7 +1077,8 @@ struct lkl_perf_branch_entry {
 		in_tx:1,    /* in transaction */
 		abort:1,    /* transaction abort */
 		cycles:16,  /* cycle count to last branch */
-		reserved:44;
+		type:4,     /* branch type */
+		reserved:40;
 };
 
 #endif /* _LKL_LINUX_PERF_EVENT_H */

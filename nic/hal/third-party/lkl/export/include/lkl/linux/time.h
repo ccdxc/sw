@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 #ifndef _LKL_LINUX_TIME_H
 #define _LKL_LINUX_TIME_H
 
@@ -54,7 +55,11 @@ struct lkl_itimerval {
 #define LKL_CLOCK_BOOTTIME			7
 #define LKL_CLOCK_REALTIME_ALARM		8
 #define LKL_CLOCK_BOOTTIME_ALARM		9
-#define LKL_CLOCK_SGI_CYCLE			10	/* Hardware specific */
+/*
+ * The driver implementing this got removed. The clock ID is kept as a
+ * place holder. Do not reuse!
+ */
+#define LKL_CLOCK_SGI_CYCLE			10
 #define LKL_CLOCK_TAI			11
 
 #define LKL_MAX_CLOCKS			16
