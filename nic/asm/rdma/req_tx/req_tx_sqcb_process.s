@@ -55,9 +55,9 @@ req_tx_sqcb_process:
 
     .brcase        SQ_RING_ID
         // reset sched_eval_done 
-        tblwr          d.ring_empty_sched_eval_done, 0
+        bbeq           d.poll_in_progress, 1, poll_for_work
 
-        crestore [c2,c1], d.{busy...cb1_busy}, 0x3
+        crestore [c2,c1], d.{busy...cb1_busy}, 0x3 //BD Slot
         
         // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
         bbeq           d.congestion_mgmt_enable, 0, process_send
@@ -81,6 +81,10 @@ process_send:
         seq            c3, SPEC_SQ_C_INDEX, SQ_P_INDEX
         bcf            [c3], exit
         
+poll_for_work:
+
+        tblwr          d.ring_empty_sched_eval_done, 0
+
         // Use speculative cindex to checkout wqe and start processing if SQCB
         // is not in in_progress state. Before state update at the end of pipeline,
         // check if speculative cindex is matching current cindex. If so,
@@ -96,18 +100,20 @@ process_send:
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
         CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
+        CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_WQE_T, poll_in_progress, color, d.{poll_in_progress...color})
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, remaining_payload_bytes, r4)
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, rrq_p_index, RRQ_P_INDEX)
         
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, r2)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
+        CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.poll_in_progress, d.poll_in_progress)
         
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, r2)
         
-        tblmincri.e    SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
-        nop
+        crestore.e     [c1], d.poll_in_progress, 0x1
+        tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
 
 pt_process:
         // log_num_wqe_per_page = (log_sq_page_size - log_wqe_size)
@@ -143,6 +149,7 @@ pt_process:
         //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, pd, d.pd)
         //write pd, log_pmtu together
         CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_PT_T, pd, log_pmtu, d.{pd...log_pmtu})
+        CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_PT_T, poll_in_progress, color, d.{poll_in_progress...color})
         //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, ud, r5)
         
         // populate t0 PC and table address
@@ -150,11 +157,10 @@ pt_process:
         
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
+        CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.poll_in_progress, d.poll_in_progress)
         
-        tblmincri      SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
-        
-        nop.e
-        nop
+        crestore.e     [c1], d.poll_in_progress, 0x1
+        tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
 
 in_progress:
         // do not speculate for in_progress processing
@@ -390,6 +396,22 @@ sq_bktrack2:
         nop
 
     .brcase        MAX_SQ_HOST_RINGS
+
+        crestore  [c3,c2,c1], d.{poll_for_work...poll_in_progress}, 0x7
+        #c3 - poll_for_work
+        #c2 - poll_success
+        #c1 - poll_in_progress
+
+        setcf c4, [c3 & !c2 & !c1]
+        bcf   [c4], poll_for_work
+        tblwr.c4 d.poll_in_progress, 1 //BD Slot
+
+        tblwr.c2 d.poll_success, 0
+#ifndef RTL
+        #in case of previous unsuccessful spurious event, poll_in_progress might be set to 1, clear it
+        tblwr    d.poll_in_progress, 0
+#endif
+        
         bbeq    d.ring_empty_sched_eval_done, 1, exit
         nop     //BD Slot                        
         

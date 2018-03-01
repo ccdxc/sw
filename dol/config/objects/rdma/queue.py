@@ -186,7 +186,10 @@ class RdmaSQstate(Packet):
         ShortField("spec_sq_cindex", 0),
         BitField("state", 0, 3),
         BitField("ring_empty_sched_eval_done", 0, 1),
-        BitField("rsvd2", 0, 4),
+        BitField("poll_for_work", 0, 1),
+        BitField("poll_success", 0, 1),
+        BitField("poll_in_progress", 0, 1),
+        BitField("color", 0, 1),
 
         # SQCB1 
         IntField("rrq_base_addr", 0),

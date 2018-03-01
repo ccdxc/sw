@@ -1,0 +1,23 @@
+# Feature Test Modules List
+feature:
+    id          : rdma_poll
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    selectors:
+        maxrdmasessions: 1
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_POLL
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_inline_poll
+        spec    : req_tx_send_only_inline_poll.testspec
+        ignore  : False
+        modscale: 10
+        iterate:
+           - rdmasession:
+               base : filter://id=5

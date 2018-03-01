@@ -48,6 +48,9 @@ def GetPktMsn (tc, pkt, args):
 def GetCQMsn (tc, pkt, args):
     return (tc.pvtdata.sq_pre_qstate.ssn + args.sq_wqe_num)
 
+def GetWQEColor (tc, pkt, args):
+    return (tc.pvtdata.sq_pre_qstate.color)
+
 def GetLastSuccessMsn (tc, pkt, args):
     return (tc.pvtdata.rq_pre_qstate.msn + args.num_msgs)   # increment by number of msgs received
 

@@ -897,7 +897,10 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  rsvd2: 4;
+    uint8_t  color: 1;
+    uint8_t  poll_for_work: 1;
+    uint8_t  poll_success: 1;
+    uint8_t  poll_in_progress: 1;
     uint8_t  ring_empty_sched_eval_done: 1;
     uint8_t  state: 3;
     uint16_t spec_sq_cindex;

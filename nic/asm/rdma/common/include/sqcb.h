@@ -107,7 +107,10 @@ struct sqcb0_t {
     spec_sq_cindex: 16;
     state: 3;
     ring_empty_sched_eval_done: 1;
-    rsvd2: 4;
+    poll_for_work: 1;
+    poll_success: 1;
+    poll_in_progress: 1;
+    color: 1;
 };
 
 struct sqcb1_t {

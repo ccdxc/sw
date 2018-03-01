@@ -18,6 +18,14 @@ struct req_tx_sqwqe_process_k_t k;
 .align
 req_tx_sqwqe_process:
 
+    bbne           k.args.poll_in_progress, 1, skip_color_check
+
+    //color check
+    seq            c1, k.args.color, d.base.color //BD Slot
+    bcf            [!c1], exit
+
+skip_color_check:
+
     add            r1, r0, d.base.op_type
 
     .brbegin
@@ -230,6 +238,7 @@ inline_data:
     nop.e
     nop
 
+exit:
 ud_error:
     //For UD we can silently drop
     phvwr.e   p.common.p4_intr_global_drop, 1

@@ -50,7 +50,7 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 
 BZL_NON_DOCK_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
 hal-rtl: p4 platform capsim-master sdk
-	$(MAKE) AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP" asm
+	$(MAKE) AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP -DRTL" asm
 	$(MAKE) gen-proto 
 	$(MAKE) build-proto
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal

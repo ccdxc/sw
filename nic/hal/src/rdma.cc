@@ -835,6 +835,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     //  rings as one less than max/total
     sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_RINGS - 1;
     sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_RINGS - 1;
+    sqcb_p->sqcb0.poll_for_work = 0;
+    sqcb_p->sqcb0.color = 1;
     if (spec.sq_in_nic_memory()) {
         sqcb_p->sqcb0.sq_in_hbm = 1;
         sq_size = num_sq_wqes * sqwqe_size;

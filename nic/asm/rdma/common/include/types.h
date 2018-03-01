@@ -470,7 +470,8 @@ struct sqwqe_base_t {
     solicited_event    : 1;
     inline_data_vld    : 1;
     num_sges           : 8;
-    rsvd2              : 16;
+    color              : 1;
+    rsvd2              : 15;
 };
 
 // RC send

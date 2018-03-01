@@ -32,11 +32,24 @@ write_back:
     tblwr         d.current_sge_id, k.args.current_sge_id
     tblwr         d.current_sge_offset, k.args.current_sge_offset
     tblwr         d.curr_wqe_ptr, k.to_stage.sq.wqe_addr
-    tblwr         d.curr_op_type, k.args.op_type
+    seq           c1, k.args.last, 1
+    bbeq          k.to_stage.sq.poll_in_progress, 0, skip_poll_success
+    tblwr         d.curr_op_type, k.args.op_type //Branch Delay Slot
+    //set poll_success to 1 and poll_in_progress to 0
+    tblwr         d.{poll_success...poll_in_progress}, 0x2 
+    tblmincri.c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1
+#ifndef RTL
+    #in case of standalone model, DOL would not have incremented pindex
+    #upon success in polling, do it in the program
+    tblmincri.c1  SQ_P_INDEX, d.log_num_wqes, 1
+#endif
+    seq           c2, SQ_P_INDEX, r0
+    tblmincri.c2  d.color, 1, 1
+
+skip_poll_success:
 
     // if (write_back_info_p->last)
     // RING_C_INDEX_INCREMENT(sqcb0_p, SQ_RING_ID)
-    seq           c1, k.args.last, 1
     tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
 
     // Ordering rules:
@@ -65,9 +78,11 @@ exit:
      nop
 
 revert_spec_cindex:
+    bbeq          k.to_stage.sq.poll_in_progress, 1, skip_revert
     add           r1, SQ_C_INDEX, 0
     mincr         r1, d.log_num_wqes, 1
     tblwr         SPEC_SQ_C_INDEX, r1
+skip_revert:
     phvwr         p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_3_VALID(0)
 

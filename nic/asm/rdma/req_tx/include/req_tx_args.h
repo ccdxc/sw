@@ -13,7 +13,9 @@ struct req_tx_sqcb_to_pt_info_t {
     pd                             : 32;
     log_pmtu                       : 5;
     //packed params end
-    pad                            : 64; // pad to 160bits for S2S data
+    poll_in_progress               : 1;
+    color                          : 1;
+    pad                            : 62; // pad to 160bits for S2S data
 };
 
 struct req_tx_sqcb_to_wqe_info_t {
@@ -26,7 +28,9 @@ struct req_tx_sqcb_to_wqe_info_t {
     remaining_payload_bytes        : 16;
     rrq_p_index                    : 8;
     pd                             : 32;
-    pad                            : 49;
+    poll_in_progress               : 1;
+    color                          : 1;
+    pad                            : 47;
 };
 
 struct req_tx_wqe_to_sge_info_t {
@@ -200,9 +204,10 @@ struct req_tx_sq_to_stage_t {
     wqe_addr                     : 64;
     spec_cindex                  : 16; 
     header_template_addr         : 32;
-    packet_len                   : 14;
+    packet_len                   : 13;
     congestion_mgmt_enable       : 1;   
     rate_enforce_failed          : 1;
+    poll_in_progress             : 1;
 };
 
 struct req_tx_bktrack_to_stage_t {

@@ -22,7 +22,8 @@ class RdmaSqDescriptorBase(Packet):
         BitField("solicited_event", 0, 1),
         BitField("inline_data_vld", 0, 1),
         ByteField("num_sges", 0),
-        ShortField("rsvd1", 0),
+        BitField("color", 0, 1),
+        BitField("rsvd1", 0, 15),
     ]
 
 class RdmaSqDescriptorSend(Packet):
@@ -200,10 +201,11 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         """
         inline_data_vld = self.spec.fields.inline_data_vld if hasattr(self.spec.fields, 'inline_data_vld') else 0
         num_sges = self.spec.fields.num_sges if hasattr(self.spec.fields, 'num_sges') else 0
-        cfglogger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d" % 
-                       (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges))
+        color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
+        cfglogger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d color: %d" % 
+                       (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges, color))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid,
-                                    inline_data_vld = inline_data_vld, num_sges=num_sges)
+                                    inline_data_vld = inline_data_vld, num_sges=num_sges, color=color)
         inline_data_len = 0
         inline_data = None
 

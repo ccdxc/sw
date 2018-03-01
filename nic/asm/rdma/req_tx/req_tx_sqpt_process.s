@@ -30,6 +30,7 @@ req_tx_sqpt_process:
     CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, rrq_p_index, k.args.rrq_p_index)
+    CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_WQE_T, poll_in_progress, color, k.{args.poll_in_progress...args.color})
     //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, pd, k.args.pd)
     
     //for now, use to_stage_args to pass the wqe_addr
