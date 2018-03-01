@@ -51,8 +51,8 @@ const uint32_t kR2NDataBufOffset = 4096;
 
 const uint32_t kMaxRDMAKeys = 64;
 const uint32_t kMaxRDMAPTEntries = 1024;
-const uint32_t kSQType = 0;
-const uint32_t kRQType = 1;
+const uint32_t kSQType = 3;
+const uint32_t kRQType = 4;
 const uint32_t kCQType = 5;
 const uint32_t kLifID = 109;
 const uint32_t kRdmaPD = 1;
@@ -116,12 +116,12 @@ int CreateRDMALIF(uint32_t sw_lif_id) {
 
   // Fill not-needed types with a single QPCB of 4K size
   // to avoid the assert in LIF manager (till fixed).
+  params.type[0].valid = true;
+  params.type[0].queue_size = 12;  // 4096
+  params.type[1].valid = true;
+  params.type[1].queue_size = 12;  // 4096
   params.type[2].valid = true;
   params.type[2].queue_size = 12;  // 4096
-  params.type[3].valid = true;
-  params.type[3].queue_size = 12;  // 4096
-  params.type[4].valid = true;
-  params.type[4].queue_size = 12;  // 4096
 
   // RDMA CQ
   params.type[kCQType].valid = true;

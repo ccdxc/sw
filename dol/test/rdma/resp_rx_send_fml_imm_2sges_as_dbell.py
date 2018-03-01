@@ -14,7 +14,7 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
 
     #fmt: <lif(11), qtype(3), qid(18)>
-    tc.pvtdata.imm_data = (rs.lqp.pd.ep.intf.lif.hw_lif_id << 21) | (1 << 18) | (rs.lqp.id) 
+    tc.pvtdata.imm_data = (rs.lqp.pd.ep.intf.lif.hw_lif_id << 21) | (0x4 << 18) | (rs.lqp.id) 
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()

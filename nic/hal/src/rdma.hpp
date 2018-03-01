@@ -133,11 +133,11 @@ typedef struct lif_init_attr_s {
 } lif_init_attr_t;
 
 typedef enum q_type_s {
-    Q_TYPE_SQ,
-    Q_TYPE_RQ,
+    Q_TYPE_RXQ,
     Q_TYPE_TXQ,
     Q_TYPE_ADMINQ,
-    Q_TYPE_RXQ,
+    Q_TYPE_SQ,
+    Q_TYPE_RQ,
     Q_TYPE_CQ,
     Q_TYPE_EQ,
     Q_TYPE_MAX
