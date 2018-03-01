@@ -1255,6 +1255,7 @@ gft_emfe_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t                               *lnode = NULL;
     dhl_entry_t                                 *dhl_entry = NULL;
     gft_exact_match_flow_entry_t                *flow_entry = NULL;
+    gft_emfe_create_app_ctxt_t                  *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("Failed to create GFT exact match flow entry");
@@ -1264,15 +1265,15 @@ gft_emfe_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    app_ctxt = (gft_emfe_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
     flow_entry = (gft_exact_match_flow_entry_t *)dhl_entry->obj;
 
     HAL_TRACE_DEBUG("GFT exact match flow entry create add callback {}",
                     flow_entry->flow_entry_id);
 
     // PD Call to allocate PD resources and h/w programming, if any
-    pd_args.exact_match_profile = NULL;
-    pd_args.hdr_xposition_profile = NULL;
     pd_args.exact_match_flow_entry = flow_entry;
+    pd_args.rsp = app_ctxt->rsp;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE,
                           (void *)&pd_args);
     if (ret != HAL_RET_OK) {
@@ -1392,6 +1393,7 @@ gft_exact_match_flow_entry_create (GftExactMatchFlowEntrySpec &spec,
     // form ctxt and call infra add
     dhl_entry.handle = flow_entry->hal_handle;
     dhl_entry.obj = flow_entry;
+    app_ctxt.rsp = rsp;
     cfg_ctxt.app_ctxt = &app_ctxt;
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);

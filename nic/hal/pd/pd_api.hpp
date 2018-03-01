@@ -2143,14 +2143,11 @@ pd_gft_hdr_group_xposition_profile_make_clone_args_init (pd_gft_hdr_group_xposit
 }
 
 typedef struct pd_gft_exact_match_flow_entry_args_s {
-    gft_exact_match_profile_t       *exact_match_profile;
-    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
     gft_exact_match_flow_entry_t    *exact_match_flow_entry;
+    GftExactMatchFlowEntryResponse  *rsp;
 } __PACK__ pd_gft_exact_match_flow_entry_args_t;
 
 typedef struct pd_gft_exact_match_flow_entry_make_clone_args_s {
-    gft_exact_match_profile_t       *exact_match_profile;
-    gft_hdr_xposition_profile_t     *hdr_xposition_profile;
     gft_exact_match_flow_entry_t    *exact_match_flow_entry;
     gft_exact_match_flow_entry_t    *clone;
 } __PACK__ pd_gft_exact_match_flow_entry_make_clone_args_t;
@@ -2158,16 +2155,12 @@ typedef struct pd_gft_exact_match_flow_entry_make_clone_args_s {
 static inline void
 pd_gft_exact_match_flow_entry_args_init (pd_gft_exact_match_flow_entry_args_t *args)
 {
-    args->exact_match_profile = NULL;
-    args->hdr_xposition_profile = NULL;
     args->exact_match_flow_entry = NULL;
 }
 
 static inline void
 pd_gft_exact_match_flow_entry_make_clone_args_init (pd_gft_exact_match_flow_entry_make_clone_args_t *args)
 {
-    args->exact_match_profile = NULL;
-    args->hdr_xposition_profile = NULL;
     args->exact_match_flow_entry = NULL;
     args->clone = NULL;
 }

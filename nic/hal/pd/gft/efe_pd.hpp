@@ -19,9 +19,9 @@ typedef struct gft_flow_hash_data_s {
 
 struct pd_gft_efe_s {
 
-    uint32_t	flow_table_idx;
-	uint32_t	flow_idx;
-    uint32_t    policer_idx;
+    uint32_t    flow_table_idx;     // Unique SW idx in flow lib
+    uint32_t    flow_idx;           // Index into transp. tables
+    uint32_t    policer_idx;        // Index into policer tables
 
     // pi ptr
     void        *pi_efe;

@@ -278,6 +278,8 @@ message GftExactMatchFlowEntryRequestMsg {
 // GftExactMatchFlowEntryStatus represents the current status of GFT exact match flow entry
 message GftExactMatchFlowEntryStatus {
   fixed64    flow_entry_handle = 1;    // handle of the GFT exact match flow entry returned by HAL
+  uint64     flow_index        = 2;    // sw index for this flow
+  uint64     flow_info_index   = 3;    // flow info index
 }
 
 // GftExactMatchFlowEntryResponse is response to GftExactMatchFlowEntrySpec

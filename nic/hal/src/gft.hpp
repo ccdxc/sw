@@ -540,6 +540,7 @@ typedef struct gft_exact_match_flow_entry_s {
 } __PACK__ gft_exact_match_flow_entry_t;
 
 typedef struct gft_emfe_create_app_ctxt_s {
+    GftExactMatchFlowEntryResponse *rsp;
 } __PACK__ gft_emfe_create_app_ctxt_t;
 
 #define HAL_MAX_GFT_EXACT_MATCH_FLOW_ENTRIES        1048576

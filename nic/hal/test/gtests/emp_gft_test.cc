@@ -55,7 +55,7 @@ TEST_F(emp_gft_test, test1)
     GftHeaders                          *headers;
     GftHeaderFields                     *hdr_fields;
 
-    spec.set_table_type(gft::GFT_TABLE_TYPE_WILDCARD_INGRESS);
+    spec.set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_INGRESS);
     emp = spec.add_exact_match_profiles();
     headers = emp->mutable_headers();
     headers->set_ethernet_header(true);
@@ -87,7 +87,7 @@ TEST_F(emp_gft_test, test2)
     GftHeaders                          *headers;
     GftHeaderFields                     *hdr_fields;
 
-    spec.set_table_type(gft::GFT_TABLE_TYPE_WILDCARD_EGRESS);
+    spec.set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_EGRESS);
     spec.mutable_key_or_handle()->set_profile_id(1);
     emp = spec.add_exact_match_profiles();
     headers = emp->mutable_headers();

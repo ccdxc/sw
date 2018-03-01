@@ -67,7 +67,7 @@ TEST_F(efe_gft_test, test1)
 
 
     // Match Profile
-    mp_spec.set_table_type(gft::GFT_TABLE_TYPE_WILDCARD_INGRESS);
+    mp_spec.set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_INGRESS);
     mp_spec.mutable_key_or_handle()->set_profile_id(1);
     efe = mp_spec.add_exact_match_profiles();
     mp_headers = efe->mutable_headers();
@@ -151,34 +151,9 @@ TEST_F(efe_gft_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-
-
-#if 0
-    hal_ret_t                           ret;
-    GftExactMatchProfileSpec            spec;
-    GftExactMatchProfileResponse        rsp;
-    GftHeaderGroupExactMatchProfile     *efe;
-    GftHeaders                          *headers;
-    GftHeaderFields                     *hdr_fields;
-
-    efe = spec.add_exact_match_profiles();
-    headers = efe->mutable_headers();
-    headers->set_ethernet_header(true);
-    headers->set_ipv4_header(true);
-    headers->set_tcp_header(true);
-
-    hdr_fields = efe->mutable_match_fields();
-    hdr_fields->set_tenant_id(true);
-    hdr_fields->set_src_ip_addr(true);
-    hdr_fields->set_dst_ip_addr(true);
-    hdr_fields->set_src_port(true);
-    hdr_fields->set_dst_port(true);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::gft_exact_match_profile_create(spec, &rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-#endif
+    HAL_TRACE_DEBUG("flow_index: {}, flow_info_index:{}", 
+                    rsp.mutable_status()->flow_index(),
+                    rsp.mutable_status()->flow_info_index());
 }
 
 // ----------------------------------------------------------------------------
@@ -201,7 +176,7 @@ TEST_F(efe_gft_test, test2)
 
 
     // Match Profile
-    mp_spec.set_table_type(gft::GFT_TABLE_TYPE_WILDCARD_EGRESS);
+    mp_spec.set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_EGRESS);
     mp_spec.mutable_key_or_handle()->set_profile_id(2);
     efe = mp_spec.add_exact_match_profiles();
     mp_headers = efe->mutable_headers();
@@ -222,8 +197,6 @@ TEST_F(efe_gft_test, test2)
     ret = hal::gft_exact_match_profile_create(mp_spec, &mp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-
-
 
     // Flow entry
     spec.mutable_exact_match_profile()->set_profile_id(2);
@@ -284,8 +257,118 @@ TEST_F(efe_gft_test, test2)
     ret = hal::gft_exact_match_flow_entry_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    HAL_TRACE_DEBUG("flow_index: {}, flow_info_index:{}", 
+                    rsp.mutable_status()->flow_index(),
+                    rsp.mutable_status()->flow_info_index());
 }
 
+// ----------------------------------------------------------------------------
+// Creating a efe TX
+// ----------------------------------------------------------------------------
+TEST_F(efe_gft_test, test3) 
+{
+    hal_ret_t                           ret;
+    GftExactMatchFlowEntrySpec          spec;
+    GftExactMatchFlowEntryResponse      rsp;
+    GftHeaderGroupExactMatch            *gem;
+    GftHeaderGroupTransposition         *gt;
+    GftHeaders                          *headers, *xpos_hdrs;
+    GftHeaderFields                     *hdr_fields, *xpos_fields;
+    GftExactMatchProfileSpec            mp_spec;
+    GftExactMatchProfileResponse        mp_rsp;
+    GftHeaderGroupExactMatchProfile     *efe;
+    GftHeaders                          *mp_headers;
+    GftHeaderFields                     *mp_hdr_fields;
+
+
+    // Match Profile
+    mp_spec.set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_EGRESS);
+    mp_spec.mutable_key_or_handle()->set_profile_id(3);
+    efe = mp_spec.add_exact_match_profiles();
+    mp_headers = efe->mutable_headers();
+    mp_headers->set_ethernet_header(true);
+    mp_headers->set_ipv4_header(true);
+    mp_headers->set_tcp_header(true);
+
+    mp_hdr_fields = efe->mutable_match_fields();
+    // mp_hdr_fields->set_tenant_id(true);
+    mp_hdr_fields->set_src_ip_addr(true);
+    mp_hdr_fields->set_dst_ip_addr(true);
+    mp_hdr_fields->set_src_port(true);
+    mp_hdr_fields->set_dst_port(true);
+    mp_hdr_fields->set_dst_mac_addr(true);
+    mp_hdr_fields->set_src_mac_addr(true);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::gft_exact_match_profile_create(mp_spec, &mp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Flow entry
+    spec.mutable_exact_match_profile()->set_profile_id(3);
+    gem = spec.add_exact_matches();
+    gt = spec.add_transpositions();
+
+    spec.mutable_key_or_handle()->set_flow_entry_id(3);
+
+    // Exact Match Headers
+    headers = gem->mutable_headers();
+    hdr_fields = gem->mutable_match_fields();
+
+    headers->set_ethernet_header(true);
+    hdr_fields->set_dst_mac_addr(true);
+    hdr_fields->set_src_mac_addr(true);
+    gem->mutable_eth_fields()->set_dst_mac_addr(0xDEADBEAF);
+    gem->mutable_eth_fields()->set_src_mac_addr(0xBEEFDEAD);
+
+    headers->set_ipv4_header(true);
+    hdr_fields->set_src_ip_addr(true);
+    hdr_fields->set_dst_ip_addr(true);
+    gem->mutable_src_ip_addr()->set_ip_af(types::IP_AF_INET);
+    gem->mutable_src_ip_addr()->set_v4_addr(0x0a000003);
+    gem->mutable_dst_ip_addr()->set_ip_af(types::IP_AF_INET);
+    gem->mutable_dst_ip_addr()->set_v4_addr(0x0a000004);
+
+    headers->set_tcp_header(true);
+    hdr_fields->set_src_port(true);
+    hdr_fields->set_dst_port(true);
+    gem->mutable_encap_or_transport()->mutable_tcp_fields()->set_sport(90);
+    gem->mutable_encap_or_transport()->mutable_tcp_fields()->set_dport(9090);
+
+    // Transpostions
+    xpos_hdrs = gt->mutable_headers();
+    xpos_fields = gt->mutable_header_fields();
+
+    xpos_hdrs->set_ethernet_header(true);
+    xpos_fields->set_dst_mac_addr(true);
+    xpos_fields->set_src_mac_addr(true);
+    gt->mutable_eth_fields()->set_dst_mac_addr(0xABCD);
+    gt->mutable_eth_fields()->set_src_mac_addr(0xABCD);
+
+    xpos_hdrs->set_ipv4_header(true);
+    xpos_fields->set_src_ip_addr(true);
+    xpos_fields->set_dst_ip_addr(true);
+    gt->mutable_src_ip_addr()->set_ip_af(types::IP_AF_INET);
+    gt->mutable_src_ip_addr()->set_v4_addr(0x0a000003);
+    gt->mutable_dst_ip_addr()->set_ip_af(types::IP_AF_INET);
+    gt->mutable_dst_ip_addr()->set_v4_addr(0x0a000004);
+
+    xpos_hdrs->set_tcp_header(true);
+    xpos_fields->set_src_port(true);
+    xpos_fields->set_dst_port(true);
+    gt->mutable_encap_or_transport()->mutable_tcp_fields()->set_sport(90);
+    gt->mutable_encap_or_transport()->mutable_tcp_fields()->set_dport(9090);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::gft_exact_match_flow_entry_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    HAL_TRACE_DEBUG("flow_index: {}, flow_info_index:{}", 
+                    rsp.mutable_status()->flow_index(),
+                    rsp.mutable_status()->flow_info_index());
+}
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

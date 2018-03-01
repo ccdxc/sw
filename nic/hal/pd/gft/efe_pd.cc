@@ -24,6 +24,8 @@ static hal_ret_t efe_pd_alloc_res(pd_gft_efe_t *pd_efe,
                                   pd_gft_exact_match_flow_entry_args_t *args);
 static hal_ret_t efe_pd_program_hw(pd_gft_efe_t *pd_efe);
 static hal_ret_t efe_pd_deprogram_hw (pd_gft_efe_t *pd_efe);
+static hal_ret_t efe_pd_populate_response(pd_gft_efe_t *pd_efe, 
+                                          pd_gft_exact_match_flow_entry_args_t *args);
 
 static void link_pi_pd(pd_gft_efe_t *pd_efe, gft_exact_match_flow_entry_t *pi_efe);
 static void delink_pi_pd(pd_gft_efe_t *pd_efe, gft_exact_match_flow_entry_t *pi_efe);
@@ -63,6 +65,9 @@ pd_gft_exact_match_flow_entry_create (pd_gft_exact_match_flow_entry_args_t *args
 
     // Program HW
     ret = efe_pd_program_hw(pd_gft_efe);
+
+    // Populate response
+    ret = efe_pd_populate_response(pd_gft_efe, args);
 
 end:
     if (ret != HAL_RET_OK) {
@@ -1383,6 +1388,28 @@ efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
 end:
     return ret;
 }
+
+//-----------------------------------------------------------------------------
+// Populate response
+//-----------------------------------------------------------------------------
+hal_ret_t
+efe_pd_populate_response(pd_gft_efe_t *pd_efe, 
+                         pd_gft_exact_match_flow_entry_args_t *args)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    if (!args->rsp) {
+        goto end;
+    }
+
+    // Populating flow index tables
+    args->rsp->mutable_status()->set_flow_index(pd_efe->flow_table_idx);
+    args->rsp->mutable_status()->set_flow_info_index(pd_efe->flow_idx);
+
+end:
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // DeProgram HW
 //-----------------------------------------------------------------------------
