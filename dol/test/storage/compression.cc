@@ -22,8 +22,6 @@
 #include "nic/model_sim/include/lib_model_client.h"
 #include "gflags/gflags.h"
 
-DECLARE_uint64(long_poll_interval);
-
 namespace tests {
 
 static const uint64_t cp_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
@@ -112,7 +110,7 @@ static comp_queue_t cp_hotq;
 static comp_queue_t dc_hotq;
 
 // Sample data generated during test.
-uint8_t all_zeros[65536] = {0};
+static const uint8_t all_zeros[65536] = {0};
 static constexpr uint32_t kUncompressedDataSize = 65536;
 static uint8_t uncompressed_data[kUncompressedDataSize];
 static constexpr uint32_t kCompressedBufSize = 65536 - 4096;
@@ -137,8 +135,8 @@ static constexpr uint32_t kSequencerOffset = 128000;
 // 129024                   : SGL entries (upto 1024 bytes);
 static constexpr uint32_t kSGLOffset = 129024;
 
-static uint64_t host_mem_pa;
 static uint8_t *host_mem;
+static uint64_t host_mem_pa;
 static uint64_t hbm_pa;
 
 // Forward declaration with default param values
@@ -150,13 +148,13 @@ int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &
                 uint32_t seq_comp_qid = 0);
 
 // Write zeros to the 1st 8 bytes of compressed data buffer in hostmem.
-void InvalidateHdrInHostMem() {
+static void InvalidateHdrInHostMem() {
   *((uint64_t *)(host_mem + kCompressedDataOffset)) = 0;
 }
 
 // Write zeros to the 1st 8 bytes of compressed data buffer in hbm.
-void InvalidateHdrInHBM() {
-  write_mem(hbm_pa + kCompressedDataOffset, all_zeros, 8);
+static void InvalidateHdrInHBM() {
+  write_mem(hbm_pa + kCompressedDataOffset, (uint8_t *) all_zeros, 8);
 }
 
 static bool status_poll(bool in_hbm) {
@@ -402,7 +400,7 @@ int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &
   cp_status_sha512_t *s = (cp_status_sha512_t *)(host_mem + kStatusOffset);
   bzero(s, sizeof(*s));
   if (status_in_hbm) {
-    write_mem(hbm_pa + kStatusOffset, all_zeros, sizeof(*s));
+    write_mem(hbm_pa + kStatusOffset, (uint8_t *) all_zeros, sizeof(*s));
   }
   desc->status_addr = (status_in_hbm ? hbm_pa : host_mem_pa) + kStatusOffset;
 
@@ -475,7 +473,7 @@ int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &
   cp_status_sha512_t *s = (cp_status_sha512_t *)(host_mem + kStatusOffset);
   bzero(s, sizeof(*s));
   if (status_in_hbm) {
-    write_mem(hbm_pa + kStatusOffset, all_zeros, sizeof(*s));
+    write_mem(hbm_pa + kStatusOffset, (uint8_t *) all_zeros, sizeof(*s));
   }
   desc->status_addr = (status_in_hbm ? hbm_pa : host_mem_pa) + kStatusOffset;
 
@@ -846,7 +844,7 @@ int seq_compress_flat_64K_buf_in_hbm() {
 
 int _decompress_to_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
                                        uint32_t seq_comp_qid) {
-  write_mem(hbm_pa + kUncompressedDataOffset, all_zeros, 16);
+  write_mem(hbm_pa + kUncompressedDataOffset, (uint8_t *) all_zeros, 16);
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
           __func__, push_type, seq_comp_qid);
   cp_desc_t d;
