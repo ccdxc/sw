@@ -1846,7 +1846,7 @@ func (a *restObjTenantV1Tenant) Allowed(oper apiserver.APIOperType) bool {
 }
 
 type crudClientEndpointV1 struct {
-	grpcEndpoint network.EndpointInterface
+	grpcEndpoint network.EndpointV1EndpointInterface
 }
 
 // NewGrpcCrudClientEndpointV1 creates a GRPC client for the service
@@ -1858,12 +1858,12 @@ func NewGrpcCrudClientEndpointV1(conn *grpc.ClientConn, logger log.Logger) netwo
 	}
 }
 
-func (a *crudClientEndpointV1) Endpoint() network.EndpointInterface {
+func (a *crudClientEndpointV1) Endpoint() network.EndpointV1EndpointInterface {
 	return a.grpcEndpoint
 }
 
 type crudRestClientEndpointV1 struct {
-	restEndpoint network.EndpointInterface
+	restEndpoint network.EndpointV1EndpointInterface
 }
 
 // NewRestCrudClientEndpointV1 creates a REST client for the service.
@@ -1878,12 +1878,12 @@ func NewRestCrudClientEndpointV1(url string) network.EndpointV1Interface {
 	}
 }
 
-func (a *crudRestClientEndpointV1) Endpoint() network.EndpointInterface {
+func (a *crudRestClientEndpointV1) Endpoint() network.EndpointV1EndpointInterface {
 	return a.restEndpoint
 }
 
 type crudClientLbPolicyV1 struct {
-	grpcLbPolicy network.LbPolicyInterface
+	grpcLbPolicy network.LbPolicyV1LbPolicyInterface
 }
 
 // NewGrpcCrudClientLbPolicyV1 creates a GRPC client for the service
@@ -1895,12 +1895,12 @@ func NewGrpcCrudClientLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) netwo
 	}
 }
 
-func (a *crudClientLbPolicyV1) LbPolicy() network.LbPolicyInterface {
+func (a *crudClientLbPolicyV1) LbPolicy() network.LbPolicyV1LbPolicyInterface {
 	return a.grpcLbPolicy
 }
 
 type crudRestClientLbPolicyV1 struct {
-	restLbPolicy network.LbPolicyInterface
+	restLbPolicy network.LbPolicyV1LbPolicyInterface
 }
 
 // NewRestCrudClientLbPolicyV1 creates a REST client for the service.
@@ -1915,12 +1915,12 @@ func NewRestCrudClientLbPolicyV1(url string) network.LbPolicyV1Interface {
 	}
 }
 
-func (a *crudRestClientLbPolicyV1) LbPolicy() network.LbPolicyInterface {
+func (a *crudRestClientLbPolicyV1) LbPolicy() network.LbPolicyV1LbPolicyInterface {
 	return a.restLbPolicy
 }
 
 type crudClientNetworkV1 struct {
-	grpcNetwork network.NetworkInterface
+	grpcNetwork network.NetworkV1NetworkInterface
 }
 
 // NewGrpcCrudClientNetworkV1 creates a GRPC client for the service
@@ -1932,12 +1932,12 @@ func NewGrpcCrudClientNetworkV1(conn *grpc.ClientConn, logger log.Logger) networ
 	}
 }
 
-func (a *crudClientNetworkV1) Network() network.NetworkInterface {
+func (a *crudClientNetworkV1) Network() network.NetworkV1NetworkInterface {
 	return a.grpcNetwork
 }
 
 type crudRestClientNetworkV1 struct {
-	restNetwork network.NetworkInterface
+	restNetwork network.NetworkV1NetworkInterface
 }
 
 // NewRestCrudClientNetworkV1 creates a REST client for the service.
@@ -1952,12 +1952,12 @@ func NewRestCrudClientNetworkV1(url string) network.NetworkV1Interface {
 	}
 }
 
-func (a *crudRestClientNetworkV1) Network() network.NetworkInterface {
+func (a *crudRestClientNetworkV1) Network() network.NetworkV1NetworkInterface {
 	return a.restNetwork
 }
 
 type crudClientSecurityGroupV1 struct {
-	grpcSecurityGroup network.SecurityGroupInterface
+	grpcSecurityGroup network.SecurityGroupV1SecurityGroupInterface
 }
 
 // NewGrpcCrudClientSecurityGroupV1 creates a GRPC client for the service
@@ -1969,12 +1969,12 @@ func NewGrpcCrudClientSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) 
 	}
 }
 
-func (a *crudClientSecurityGroupV1) SecurityGroup() network.SecurityGroupInterface {
+func (a *crudClientSecurityGroupV1) SecurityGroup() network.SecurityGroupV1SecurityGroupInterface {
 	return a.grpcSecurityGroup
 }
 
 type crudRestClientSecurityGroupV1 struct {
-	restSecurityGroup network.SecurityGroupInterface
+	restSecurityGroup network.SecurityGroupV1SecurityGroupInterface
 }
 
 // NewRestCrudClientSecurityGroupV1 creates a REST client for the service.
@@ -1989,12 +1989,12 @@ func NewRestCrudClientSecurityGroupV1(url string) network.SecurityGroupV1Interfa
 	}
 }
 
-func (a *crudRestClientSecurityGroupV1) SecurityGroup() network.SecurityGroupInterface {
+func (a *crudRestClientSecurityGroupV1) SecurityGroup() network.SecurityGroupV1SecurityGroupInterface {
 	return a.restSecurityGroup
 }
 
 type crudClientServiceV1 struct {
-	grpcService network.ServiceInterface
+	grpcService network.ServiceV1ServiceInterface
 }
 
 // NewGrpcCrudClientServiceV1 creates a GRPC client for the service
@@ -2006,12 +2006,12 @@ func NewGrpcCrudClientServiceV1(conn *grpc.ClientConn, logger log.Logger) networ
 	}
 }
 
-func (a *crudClientServiceV1) Service() network.ServiceInterface {
+func (a *crudClientServiceV1) Service() network.ServiceV1ServiceInterface {
 	return a.grpcService
 }
 
 type crudRestClientServiceV1 struct {
-	restService network.ServiceInterface
+	restService network.ServiceV1ServiceInterface
 }
 
 // NewRestCrudClientServiceV1 creates a REST client for the service.
@@ -2026,12 +2026,12 @@ func NewRestCrudClientServiceV1(url string) network.ServiceV1Interface {
 	}
 }
 
-func (a *crudRestClientServiceV1) Service() network.ServiceInterface {
+func (a *crudRestClientServiceV1) Service() network.ServiceV1ServiceInterface {
 	return a.restService
 }
 
 type crudClientSgpolicyV1 struct {
-	grpcSgpolicy network.SgpolicyInterface
+	grpcSgpolicy network.SgpolicyV1SgpolicyInterface
 }
 
 // NewGrpcCrudClientSgpolicyV1 creates a GRPC client for the service
@@ -2043,12 +2043,12 @@ func NewGrpcCrudClientSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) netwo
 	}
 }
 
-func (a *crudClientSgpolicyV1) Sgpolicy() network.SgpolicyInterface {
+func (a *crudClientSgpolicyV1) Sgpolicy() network.SgpolicyV1SgpolicyInterface {
 	return a.grpcSgpolicy
 }
 
 type crudRestClientSgpolicyV1 struct {
-	restSgpolicy network.SgpolicyInterface
+	restSgpolicy network.SgpolicyV1SgpolicyInterface
 }
 
 // NewRestCrudClientSgpolicyV1 creates a REST client for the service.
@@ -2063,12 +2063,12 @@ func NewRestCrudClientSgpolicyV1(url string) network.SgpolicyV1Interface {
 	}
 }
 
-func (a *crudRestClientSgpolicyV1) Sgpolicy() network.SgpolicyInterface {
+func (a *crudRestClientSgpolicyV1) Sgpolicy() network.SgpolicyV1SgpolicyInterface {
 	return a.restSgpolicy
 }
 
 type crudClientTenantV1 struct {
-	grpcTenant network.TenantInterface
+	grpcTenant network.TenantV1TenantInterface
 }
 
 // NewGrpcCrudClientTenantV1 creates a GRPC client for the service
@@ -2080,12 +2080,12 @@ func NewGrpcCrudClientTenantV1(conn *grpc.ClientConn, logger log.Logger) network
 	}
 }
 
-func (a *crudClientTenantV1) Tenant() network.TenantInterface {
+func (a *crudClientTenantV1) Tenant() network.TenantV1TenantInterface {
 	return a.grpcTenant
 }
 
 type crudRestClientTenantV1 struct {
-	restTenant network.TenantInterface
+	restTenant network.TenantV1TenantInterface
 }
 
 // NewRestCrudClientTenantV1 creates a REST client for the service.
@@ -2100,6 +2100,6 @@ func NewRestCrudClientTenantV1(url string) network.TenantV1Interface {
 	}
 }
 
-func (a *crudRestClientTenantV1) Tenant() network.TenantInterface {
+func (a *crudRestClientTenantV1) Tenant() network.TenantV1TenantInterface {
 	return a.restTenant
 }

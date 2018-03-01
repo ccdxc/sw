@@ -15,8 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// AlertDestinationInterface exposes the CRUD methods for AlertDestination
-type AlertDestinationInterface interface {
+// AlertDestinationV1AlertDestinationInterface exposes the CRUD methods for AlertDestination
+type AlertDestinationV1AlertDestinationInterface interface {
 	Create(ctx context.Context, in *AlertDestination) (*AlertDestination, error)
 	Update(ctx context.Context, in *AlertDestination) (*AlertDestination, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AlertDestination, error)
@@ -26,8 +26,13 @@ type AlertDestinationInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// AlertPolicyInterface exposes the CRUD methods for AlertPolicy
-type AlertPolicyInterface interface {
+// AlertDestinationV1Interface exposes objects with CRUD operations allowed by the service
+type AlertDestinationV1Interface interface {
+	AlertDestination() AlertDestinationV1AlertDestinationInterface
+}
+
+// AlertPolicyV1AlertPolicyInterface exposes the CRUD methods for AlertPolicy
+type AlertPolicyV1AlertPolicyInterface interface {
 	Create(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error)
 	Update(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AlertPolicy, error)
@@ -37,12 +42,7 @@ type AlertPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// AlertDestinationV1Interface exposes objects with CRUD operations allowed by the service
-type AlertDestinationV1Interface interface {
-	AlertDestination() AlertDestinationInterface
-}
-
 // AlertPolicyV1Interface exposes objects with CRUD operations allowed by the service
 type AlertPolicyV1Interface interface {
-	AlertPolicy() AlertPolicyInterface
+	AlertPolicy() AlertPolicyV1AlertPolicyInterface
 }

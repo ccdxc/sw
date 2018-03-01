@@ -34,6 +34,21 @@ message ObjectPrefix {
   }
 }
 
+// ActionEndpoint defines a action endpoint definition
+message ActionEndpoint {
+  // Target specifies whether the action is on a collection or an instance
+  oneof Target {
+    string Collection = 1;
+    string Object = 2;
+  }
+  // Action is the name of the Action
+  string Action = 3;
+  // Request is the request parameter message type. Should be defined in the same file
+  string Request = 4;
+  // Response is the response parameter message type. Should be defined in the same file
+  string Response = 5;
+}
+
 // Venice Option extensions applicable at the file level.
 extend google.protobuf.FileOptions {
   // GRPC destination. This is typically a service discovery key.
@@ -56,6 +71,8 @@ extend google.protobuf.ServiceOptions {
   repeated RestEndpoint apiRestService = 51253;
   // naplesRestService is used to specify the REST services for auto-generating rest endpoints and their corresponding tests in naples
   repeated RestEndpoint naplesRestService = 51254;
+  // apiAction specifies parameters for an action endpoints
+  repeated ActionEndpoint apiAction = 51255;
 };
 
 // Venice Option extensions applicable to rpc Methods.
@@ -63,7 +80,7 @@ extend google.protobuf.MethodOptions {
   // Valid only for Pure gRPC methods. Specifies the type of KV store operation the method results in.
   string methodOper = 51270;
   // methodAutoGen is for internal use only
-  bool methodAutoGen = 41291;
+  bool methodAutoGen = 51271;
 };
 
 // Venice Option extensions applicable to messages
@@ -72,7 +89,7 @@ extend google.protobuf.MessageOptions {
   // the api server is to persist in the KV store.
   ObjectPrefix objectPrefix = 51290;
   // objectAutoGen is for internal use only
-  string objectAutoGen = 41291;
+  string objectAutoGen = 51291;
 };
 
 extend google.protobuf.FieldOptions {

@@ -26,8 +26,18 @@ var _ validators.DummyVar
 var funcMapExample = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
+func (m *ApplyDiscountReq) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "orders/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *Book) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "books/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *Coupon) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Coupon/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
@@ -36,18 +46,39 @@ func (m *Order) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *OutageRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Store/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *Publisher) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "publishers/", m.Name)
 }
 
 // MakeKey generates a KV store key for the object
+func (m *RestockRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *RestockResponse) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "Book/", m.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *Store) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store")
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store", "Singleton")
 }
 
 // MakeKey generates a KV store key for the object
 func (m *BookList) MakeKey(prefix string) string {
 	obj := Book{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *CouponList) MakeKey(prefix string) string {
+	obj := Coupon{}
 	return obj.MakeKey(prefix)
 }
 
@@ -76,6 +107,12 @@ func (m *AutoMsgBookWatchHelper) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *AutoMsgCouponWatchHelper) MakeKey(prefix string) string {
+	obj := Coupon{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgOrderWatchHelper) MakeKey(prefix string) string {
 	obj := Order{}
 	return obj.MakeKey(prefix)
@@ -93,8 +130,26 @@ func (m *AutoMsgStoreWatchHelper) MakeKey(prefix string) string {
 	return obj.MakeKey(prefix)
 }
 
+func (m *ApplyDiscountReq) Clone(into interface{}) error {
+	out, ok := into.(*ApplyDiscountReq)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *AutoMsgBookWatchHelper) Clone(into interface{}) error {
 	out, ok := into.(*AutoMsgBookWatchHelper)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *AutoMsgCouponWatchHelper) Clone(into interface{}) error {
+	out, ok := into.(*AutoMsgCouponWatchHelper)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -165,6 +220,24 @@ func (m *BookStatus) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *Coupon) Clone(into interface{}) error {
+	out, ok := into.(*Coupon)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *CouponList) Clone(into interface{}) error {
+	out, ok := into.(*CouponList)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *Order) Clone(into interface{}) error {
 	out, ok := into.(*Order)
 	if !ok {
@@ -210,6 +283,15 @@ func (m *OrderStatus) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *OutageRequest) Clone(into interface{}) error {
+	out, ok := into.(*OutageRequest)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *Publisher) Clone(into interface{}) error {
 	out, ok := into.(*Publisher)
 	if !ok {
@@ -230,6 +312,24 @@ func (m *PublisherList) Clone(into interface{}) error {
 
 func (m *PublisherSpec) Clone(into interface{}) error {
 	out, ok := into.(*PublisherSpec)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RestockRequest) Clone(into interface{}) error {
+	out, ok := into.(*RestockRequest)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *RestockResponse) Clone(into interface{}) error {
+	out, ok := into.(*RestockResponse)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -275,10 +375,18 @@ func (m *StoreStatus) Clone(into interface{}) error {
 
 // Validators
 
+func (m *ApplyDiscountReq) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *AutoMsgBookWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
 		return false
 	}
+	return true
+}
+
+func (m *AutoMsgCouponWatchHelper) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -334,6 +442,14 @@ func (m *BookSpec) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *BookStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Coupon) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *CouponList) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -401,6 +517,10 @@ func (m *OrderStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *OutageRequest) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
 func (m *Publisher) Validate(ver string, ignoreStatus bool) bool {
 	if !m.Spec.Validate(ver, ignoreStatus) {
 		return false
@@ -431,6 +551,14 @@ func (m *PublisherSpec) Validate(ver string, ignoreStatus bool) bool {
 			}
 		}
 	}
+	return true
+}
+
+func (m *RestockRequest) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *RestockResponse) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 

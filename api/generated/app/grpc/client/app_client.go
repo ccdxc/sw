@@ -774,9 +774,9 @@ func (a *restObjAppV1AppUserGrp) Allowed(oper apiserver.APIOperType) bool {
 }
 
 type crudClientAppV1 struct {
-	grpcApp        app.AppInterface
-	grpcAppUser    app.AppUserInterface
-	grpcAppUserGrp app.AppUserGrpInterface
+	grpcApp        app.AppV1AppInterface
+	grpcAppUser    app.AppV1AppUserInterface
+	grpcAppUserGrp app.AppV1AppUserGrpInterface
 }
 
 // NewGrpcCrudClientAppV1 creates a GRPC client for the service
@@ -790,22 +790,22 @@ func NewGrpcCrudClientAppV1(conn *grpc.ClientConn, logger log.Logger) app.AppV1I
 	}
 }
 
-func (a *crudClientAppV1) App() app.AppInterface {
+func (a *crudClientAppV1) App() app.AppV1AppInterface {
 	return a.grpcApp
 }
 
-func (a *crudClientAppV1) AppUser() app.AppUserInterface {
+func (a *crudClientAppV1) AppUser() app.AppV1AppUserInterface {
 	return a.grpcAppUser
 }
 
-func (a *crudClientAppV1) AppUserGrp() app.AppUserGrpInterface {
+func (a *crudClientAppV1) AppUserGrp() app.AppV1AppUserGrpInterface {
 	return a.grpcAppUserGrp
 }
 
 type crudRestClientAppV1 struct {
-	restApp        app.AppInterface
-	restAppUser    app.AppUserInterface
-	restAppUserGrp app.AppUserGrpInterface
+	restApp        app.AppV1AppInterface
+	restAppUser    app.AppV1AppUserInterface
+	restAppUserGrp app.AppV1AppUserGrpInterface
 }
 
 // NewRestCrudClientAppV1 creates a REST client for the service.
@@ -822,14 +822,14 @@ func NewRestCrudClientAppV1(url string) app.AppV1Interface {
 	}
 }
 
-func (a *crudRestClientAppV1) App() app.AppInterface {
+func (a *crudRestClientAppV1) App() app.AppV1AppInterface {
 	return a.restApp
 }
 
-func (a *crudRestClientAppV1) AppUser() app.AppUserInterface {
+func (a *crudRestClientAppV1) AppUser() app.AppV1AppUserInterface {
 	return a.restAppUser
 }
 
-func (a *crudRestClientAppV1) AppUserGrp() app.AppUserGrpInterface {
+func (a *crudRestClientAppV1) AppUserGrp() app.AppV1AppUserGrpInterface {
 	return a.restAppUserGrp
 }

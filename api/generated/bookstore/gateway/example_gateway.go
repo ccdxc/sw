@@ -40,10 +40,28 @@ type adapterBookstoreV1 struct {
 	service bookstore.ServiceBookstoreV1Client
 }
 
+func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.OutageRequest, options ...grpc.CallOption) (*bookstore.Store, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AddOutage(ctx, t)
+}
+
+func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstore.ApplyDiscountReq, options ...grpc.CallOption) (*bookstore.Order, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.Applydiscount(ctx, t)
+}
+
 func (a adapterBookstoreV1) AutoAddBook(oldctx oldcontext.Context, t *bookstore.Book, options ...grpc.CallOption) (*bookstore.Book, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoAddBook(ctx, t)
+}
+
+func (a adapterBookstoreV1) AutoAddCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoAddCoupon(ctx, t)
 }
 
 func (a adapterBookstoreV1) AutoAddOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
@@ -70,6 +88,12 @@ func (a adapterBookstoreV1) AutoDeleteBook(oldctx oldcontext.Context, t *booksto
 	return a.service.AutoDeleteBook(ctx, t)
 }
 
+func (a adapterBookstoreV1) AutoDeleteCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoDeleteCoupon(ctx, t)
+}
+
 func (a adapterBookstoreV1) AutoDeleteOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -92,6 +116,12 @@ func (a adapterBookstoreV1) AutoGetBook(oldctx oldcontext.Context, t *bookstore.
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoGetBook(ctx, t)
+}
+
+func (a adapterBookstoreV1) AutoGetCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoGetCoupon(ctx, t)
 }
 
 func (a adapterBookstoreV1) AutoGetOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
@@ -118,6 +148,12 @@ func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListW
 	return a.service.AutoListBook(ctx, t)
 }
 
+func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.CouponList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoListCoupon(ctx, t)
+}
+
 func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*bookstore.OrderList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -142,6 +178,12 @@ func (a adapterBookstoreV1) AutoUpdateBook(oldctx oldcontext.Context, t *booksto
 	return a.service.AutoUpdateBook(ctx, t)
 }
 
+func (a adapterBookstoreV1) AutoUpdateCoupon(oldctx oldcontext.Context, t *bookstore.Coupon, options ...grpc.CallOption) (*bookstore.Coupon, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.AutoUpdateCoupon(ctx, t)
+}
+
 func (a adapterBookstoreV1) AutoUpdateOrder(oldctx oldcontext.Context, t *bookstore.Order, options ...grpc.CallOption) (*bookstore.Order, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -158,6 +200,18 @@ func (a adapterBookstoreV1) AutoUpdateStore(oldctx oldcontext.Context, t *bookst
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
 	return a.service.AutoUpdateStore(ctx, t)
+}
+
+func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstore.ApplyDiscountReq, options ...grpc.CallOption) (*bookstore.Order, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.Cleardiscount(ctx, t)
+}
+
+func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.RestockRequest, options ...grpc.CallOption) (*bookstore.RestockResponse, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	return a.service.Restock(ctx, t)
 }
 
 func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchOrderClient, error) {
@@ -178,6 +232,11 @@ func (a adapterBookstoreV1) AutoWatchPublisher(oldctx oldcontext.Context, in *ap
 func (a adapterBookstoreV1) AutoWatchStore(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchStoreClient, error) {
 	ctx := context.Context(oldctx)
 	return a.service.AutoWatchStore(ctx, in)
+}
+
+func (a adapterBookstoreV1) AutoWatchCoupon(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchCouponClient, error) {
+	ctx := context.Context(oldctx)
+	return a.service.AutoWatchCoupon(ctx, in)
 }
 
 func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,

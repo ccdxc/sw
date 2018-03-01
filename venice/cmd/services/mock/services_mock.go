@@ -576,17 +576,17 @@ type APIClient struct {
 }
 
 // Cluster returns mock ClusterInterface
-func (ma *APIClient) Cluster() cmd.ClusterInterface {
+func (ma *APIClient) Cluster() cmd.CmdV1ClusterInterface {
 	return &ma.DummyCluster
 }
 
 // Node return mock NodeInterface - nil till we need this functionality
-func (ma *APIClient) Node() cmd.NodeInterface {
+func (ma *APIClient) Node() cmd.CmdV1NodeInterface {
 	return nil
 }
 
 // SmartNIC returns mock SmartNICInterface - nill till we need this functionality
-func (ma *APIClient) SmartNIC() cmd.SmartNICInterface {
+func (ma *APIClient) SmartNIC() cmd.CmdV1SmartNICInterface {
 	return nil
 }
 

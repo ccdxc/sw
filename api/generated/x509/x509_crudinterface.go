@@ -15,8 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// CertificateInterface exposes the CRUD methods for Certificate
-type CertificateInterface interface {
+// CertificateV1CertificateInterface exposes the CRUD methods for Certificate
+type CertificateV1CertificateInterface interface {
 	Create(ctx context.Context, in *Certificate) (*Certificate, error)
 	Update(ctx context.Context, in *Certificate) (*Certificate, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Certificate, error)
@@ -28,5 +28,5 @@ type CertificateInterface interface {
 
 // CertificateV1Interface exposes objects with CRUD operations allowed by the service
 type CertificateV1Interface interface {
-	Certificate() CertificateInterface
+	Certificate() CertificateV1CertificateInterface
 }

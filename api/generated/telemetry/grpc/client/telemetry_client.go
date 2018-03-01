@@ -806,7 +806,7 @@ func (a *restObjStatsPolicyV1StatsPolicy) Allowed(oper apiserver.APIOperType) bo
 }
 
 type crudClientFlowExportPolicyV1 struct {
-	grpcFlowExportPolicy telemetry.FlowExportPolicyInterface
+	grpcFlowExportPolicy telemetry.FlowExportPolicyV1FlowExportPolicyInterface
 }
 
 // NewGrpcCrudClientFlowExportPolicyV1 creates a GRPC client for the service
@@ -818,12 +818,12 @@ func NewGrpcCrudClientFlowExportPolicyV1(conn *grpc.ClientConn, logger log.Logge
 	}
 }
 
-func (a *crudClientFlowExportPolicyV1) FlowExportPolicy() telemetry.FlowExportPolicyInterface {
+func (a *crudClientFlowExportPolicyV1) FlowExportPolicy() telemetry.FlowExportPolicyV1FlowExportPolicyInterface {
 	return a.grpcFlowExportPolicy
 }
 
 type crudRestClientFlowExportPolicyV1 struct {
-	restFlowExportPolicy telemetry.FlowExportPolicyInterface
+	restFlowExportPolicy telemetry.FlowExportPolicyV1FlowExportPolicyInterface
 }
 
 // NewRestCrudClientFlowExportPolicyV1 creates a REST client for the service.
@@ -838,12 +838,12 @@ func NewRestCrudClientFlowExportPolicyV1(url string) telemetry.FlowExportPolicyV
 	}
 }
 
-func (a *crudRestClientFlowExportPolicyV1) FlowExportPolicy() telemetry.FlowExportPolicyInterface {
+func (a *crudRestClientFlowExportPolicyV1) FlowExportPolicy() telemetry.FlowExportPolicyV1FlowExportPolicyInterface {
 	return a.restFlowExportPolicy
 }
 
 type crudClientFwlogPolicyV1 struct {
-	grpcFwlogPolicy telemetry.FwlogPolicyInterface
+	grpcFwlogPolicy telemetry.FwlogPolicyV1FwlogPolicyInterface
 }
 
 // NewGrpcCrudClientFwlogPolicyV1 creates a GRPC client for the service
@@ -855,12 +855,12 @@ func NewGrpcCrudClientFwlogPolicyV1(conn *grpc.ClientConn, logger log.Logger) te
 	}
 }
 
-func (a *crudClientFwlogPolicyV1) FwlogPolicy() telemetry.FwlogPolicyInterface {
+func (a *crudClientFwlogPolicyV1) FwlogPolicy() telemetry.FwlogPolicyV1FwlogPolicyInterface {
 	return a.grpcFwlogPolicy
 }
 
 type crudRestClientFwlogPolicyV1 struct {
-	restFwlogPolicy telemetry.FwlogPolicyInterface
+	restFwlogPolicy telemetry.FwlogPolicyV1FwlogPolicyInterface
 }
 
 // NewRestCrudClientFwlogPolicyV1 creates a REST client for the service.
@@ -875,12 +875,12 @@ func NewRestCrudClientFwlogPolicyV1(url string) telemetry.FwlogPolicyV1Interface
 	}
 }
 
-func (a *crudRestClientFwlogPolicyV1) FwlogPolicy() telemetry.FwlogPolicyInterface {
+func (a *crudRestClientFwlogPolicyV1) FwlogPolicy() telemetry.FwlogPolicyV1FwlogPolicyInterface {
 	return a.restFwlogPolicy
 }
 
 type crudClientStatsPolicyV1 struct {
-	grpcStatsPolicy telemetry.StatsPolicyInterface
+	grpcStatsPolicy telemetry.StatsPolicyV1StatsPolicyInterface
 }
 
 // NewGrpcCrudClientStatsPolicyV1 creates a GRPC client for the service
@@ -892,12 +892,12 @@ func NewGrpcCrudClientStatsPolicyV1(conn *grpc.ClientConn, logger log.Logger) te
 	}
 }
 
-func (a *crudClientStatsPolicyV1) StatsPolicy() telemetry.StatsPolicyInterface {
+func (a *crudClientStatsPolicyV1) StatsPolicy() telemetry.StatsPolicyV1StatsPolicyInterface {
 	return a.grpcStatsPolicy
 }
 
 type crudRestClientStatsPolicyV1 struct {
-	restStatsPolicy telemetry.StatsPolicyInterface
+	restStatsPolicy telemetry.StatsPolicyV1StatsPolicyInterface
 }
 
 // NewRestCrudClientStatsPolicyV1 creates a REST client for the service.
@@ -912,6 +912,6 @@ func NewRestCrudClientStatsPolicyV1(url string) telemetry.StatsPolicyV1Interface
 	}
 }
 
-func (a *crudRestClientStatsPolicyV1) StatsPolicy() telemetry.StatsPolicyInterface {
+func (a *crudRestClientStatsPolicyV1) StatsPolicy() telemetry.StatsPolicyV1StatsPolicyInterface {
 	return a.restStatsPolicy
 }

@@ -15,8 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// EndpointInterface exposes the CRUD methods for Endpoint
-type EndpointInterface interface {
+// EndpointV1EndpointInterface exposes the CRUD methods for Endpoint
+type EndpointV1EndpointInterface interface {
 	Create(ctx context.Context, in *Endpoint) (*Endpoint, error)
 	Update(ctx context.Context, in *Endpoint) (*Endpoint, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
@@ -26,8 +26,13 @@ type EndpointInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// LbPolicyInterface exposes the CRUD methods for LbPolicy
-type LbPolicyInterface interface {
+// EndpointV1Interface exposes objects with CRUD operations allowed by the service
+type EndpointV1Interface interface {
+	Endpoint() EndpointV1EndpointInterface
+}
+
+// LbPolicyV1LbPolicyInterface exposes the CRUD methods for LbPolicy
+type LbPolicyV1LbPolicyInterface interface {
 	Create(ctx context.Context, in *LbPolicy) (*LbPolicy, error)
 	Update(ctx context.Context, in *LbPolicy) (*LbPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*LbPolicy, error)
@@ -37,8 +42,13 @@ type LbPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// NetworkInterface exposes the CRUD methods for Network
-type NetworkInterface interface {
+// LbPolicyV1Interface exposes objects with CRUD operations allowed by the service
+type LbPolicyV1Interface interface {
+	LbPolicy() LbPolicyV1LbPolicyInterface
+}
+
+// NetworkV1NetworkInterface exposes the CRUD methods for Network
+type NetworkV1NetworkInterface interface {
 	Create(ctx context.Context, in *Network) (*Network, error)
 	Update(ctx context.Context, in *Network) (*Network, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
@@ -48,8 +58,13 @@ type NetworkInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// SecurityGroupInterface exposes the CRUD methods for SecurityGroup
-type SecurityGroupInterface interface {
+// NetworkV1Interface exposes objects with CRUD operations allowed by the service
+type NetworkV1Interface interface {
+	Network() NetworkV1NetworkInterface
+}
+
+// SecurityGroupV1SecurityGroupInterface exposes the CRUD methods for SecurityGroup
+type SecurityGroupV1SecurityGroupInterface interface {
 	Create(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
 	Update(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
@@ -59,8 +74,13 @@ type SecurityGroupInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// ServiceInterface exposes the CRUD methods for Service
-type ServiceInterface interface {
+// SecurityGroupV1Interface exposes objects with CRUD operations allowed by the service
+type SecurityGroupV1Interface interface {
+	SecurityGroup() SecurityGroupV1SecurityGroupInterface
+}
+
+// ServiceV1ServiceInterface exposes the CRUD methods for Service
+type ServiceV1ServiceInterface interface {
 	Create(ctx context.Context, in *Service) (*Service, error)
 	Update(ctx context.Context, in *Service) (*Service, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
@@ -70,8 +90,13 @@ type ServiceInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// SgpolicyInterface exposes the CRUD methods for Sgpolicy
-type SgpolicyInterface interface {
+// ServiceV1Interface exposes objects with CRUD operations allowed by the service
+type ServiceV1Interface interface {
+	Service() ServiceV1ServiceInterface
+}
+
+// SgpolicyV1SgpolicyInterface exposes the CRUD methods for Sgpolicy
+type SgpolicyV1SgpolicyInterface interface {
 	Create(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
 	Update(ctx context.Context, in *Sgpolicy) (*Sgpolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Sgpolicy, error)
@@ -81,8 +106,13 @@ type SgpolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// TenantInterface exposes the CRUD methods for Tenant
-type TenantInterface interface {
+// SgpolicyV1Interface exposes objects with CRUD operations allowed by the service
+type SgpolicyV1Interface interface {
+	Sgpolicy() SgpolicyV1SgpolicyInterface
+}
+
+// TenantV1TenantInterface exposes the CRUD methods for Tenant
+type TenantV1TenantInterface interface {
 	Create(ctx context.Context, in *Tenant) (*Tenant, error)
 	Update(ctx context.Context, in *Tenant) (*Tenant, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Tenant, error)
@@ -92,37 +122,7 @@ type TenantInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// EndpointV1Interface exposes objects with CRUD operations allowed by the service
-type EndpointV1Interface interface {
-	Endpoint() EndpointInterface
-}
-
-// LbPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type LbPolicyV1Interface interface {
-	LbPolicy() LbPolicyInterface
-}
-
-// NetworkV1Interface exposes objects with CRUD operations allowed by the service
-type NetworkV1Interface interface {
-	Network() NetworkInterface
-}
-
-// SecurityGroupV1Interface exposes objects with CRUD operations allowed by the service
-type SecurityGroupV1Interface interface {
-	SecurityGroup() SecurityGroupInterface
-}
-
-// ServiceV1Interface exposes objects with CRUD operations allowed by the service
-type ServiceV1Interface interface {
-	Service() ServiceInterface
-}
-
-// SgpolicyV1Interface exposes objects with CRUD operations allowed by the service
-type SgpolicyV1Interface interface {
-	Sgpolicy() SgpolicyInterface
-}
-
 // TenantV1Interface exposes objects with CRUD operations allowed by the service
 type TenantV1Interface interface {
-	Tenant() TenantInterface
+	Tenant() TenantV1TenantInterface
 }

@@ -15,8 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// TrafficEncryptionPolicyInterface exposes the CRUD methods for TrafficEncryptionPolicy
-type TrafficEncryptionPolicyInterface interface {
+// TrafficEncryptionPolicyV1TrafficEncryptionPolicyInterface exposes the CRUD methods for TrafficEncryptionPolicy
+type TrafficEncryptionPolicyV1TrafficEncryptionPolicyInterface interface {
 	Create(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
 	Update(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
@@ -28,5 +28,5 @@ type TrafficEncryptionPolicyInterface interface {
 
 // TrafficEncryptionPolicyV1Interface exposes objects with CRUD operations allowed by the service
 type TrafficEncryptionPolicyV1Interface interface {
-	TrafficEncryptionPolicy() TrafficEncryptionPolicyInterface
+	TrafficEncryptionPolicy() TrafficEncryptionPolicyV1TrafficEncryptionPolicyInterface
 }

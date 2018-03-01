@@ -418,6 +418,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		}
 	} else {
 		l.DebugLog("msg", "KV operation over-ridden")
+		resp = i
 	}
 
 	if span != nil {

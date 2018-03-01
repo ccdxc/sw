@@ -15,8 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// AppInterface exposes the CRUD methods for App
-type AppInterface interface {
+// AppV1AppInterface exposes the CRUD methods for App
+type AppV1AppInterface interface {
 	Create(ctx context.Context, in *App) (*App, error)
 	Update(ctx context.Context, in *App) (*App, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*App, error)
@@ -26,8 +26,8 @@ type AppInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// AppUserInterface exposes the CRUD methods for AppUser
-type AppUserInterface interface {
+// AppV1AppUserInterface exposes the CRUD methods for AppUser
+type AppV1AppUserInterface interface {
 	Create(ctx context.Context, in *AppUser) (*AppUser, error)
 	Update(ctx context.Context, in *AppUser) (*AppUser, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AppUser, error)
@@ -37,8 +37,8 @@ type AppUserInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// AppUserGrpInterface exposes the CRUD methods for AppUserGrp
-type AppUserGrpInterface interface {
+// AppV1AppUserGrpInterface exposes the CRUD methods for AppUserGrp
+type AppV1AppUserGrpInterface interface {
 	Create(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error)
 	Update(ctx context.Context, in *AppUserGrp) (*AppUserGrp, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AppUserGrp, error)
@@ -50,7 +50,7 @@ type AppUserGrpInterface interface {
 
 // AppV1Interface exposes objects with CRUD operations allowed by the service
 type AppV1Interface interface {
-	App() AppInterface
-	AppUser() AppUserInterface
-	AppUserGrp() AppUserGrpInterface
+	App() AppV1AppInterface
+	AppUser() AppV1AppUserInterface
+	AppUserGrp() AppV1AppUserGrpInterface
 }

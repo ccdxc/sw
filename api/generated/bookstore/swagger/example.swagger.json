@@ -15,6 +15,32 @@
     "application/json"
   ],
   "paths": {
+    "/books/Restock": {
+      "post": {
+        "operationId": "Restock",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreRestockResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreRestockRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
     "/books/{O.Name}": {
       "get": {
         "operationId": "AutoGetBook",
@@ -110,7 +136,7 @@
           },
           {
             "name": "Spec.IdProvider",
-            "description": "Added in  version 2 of the API.",
+            "description": "Spec is not allowed to be Null hence disabling nullable.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -446,6 +472,70 @@
         ]
       }
     },
+    "/orders/{O.Name}/applydiscount": {
+      "post": {
+        "operationId": "Applydiscount",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreApplyDiscountReq"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/orders/{O.Name}/cleardiscount": {
+      "post": {
+        "operationId": "Cleardiscount",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreOrder"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreApplyDiscountReq"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
     "/store": {
       "get": {
         "operationId": "AutoGetStore",
@@ -548,6 +638,44 @@
           "BookstoreV1"
         ]
       },
+      "delete": {
+        "operationId": "AutoDeleteStore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        },
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "post": {
+        "operationId": "AutoAddStore",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
       "put": {
         "operationId": "AutoUpdateStore",
         "responses": {
@@ -565,6 +693,32 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      }
+    },
+    "/store/AddOutage": {
+      "post": {
+        "operationId": "AddOutage",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreOutageRequest"
             }
           }
         ],
@@ -671,6 +825,20 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
+    "bookstoreApplyDiscountReq": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Coupon": {
+          "type": "string"
+        }
+      }
+    },
     "bookstoreAutoMsgBookWatchHelper": {
       "type": "object",
       "properties": {
@@ -679,6 +847,17 @@
         },
         "Object": {
           "$ref": "#/definitions/bookstoreBook"
+        }
+      }
+    },
+    "bookstoreAutoMsgCouponWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/bookstoreCoupon"
         }
       }
     },
@@ -725,7 +904,8 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/bookstoreBookSpec"
+          "$ref": "#/definitions/bookstoreBookSpec",
+          "description": "Added in  version 2 of the API."
         },
         "Status": {
           "$ref": "#/definitions/bookstoreBookStatus"
@@ -760,14 +940,13 @@
         },
         "IdProvider": {
           "type": "string",
-          "description": "Added in  version 2 of the API."
+          "description": "Spec is not allowed to be Null hence disabling nullable."
         },
         "Category": {
           "type": "string"
         },
         "UpdateTimestamp": {
-          "$ref": "#/definitions/apiTimestamp",
-          "title": "Used for performance monitoring tests"
+          "$ref": "#/definitions/apiTimestamp"
         },
         "Terminate": {
           "type": "boolean",
@@ -784,6 +963,37 @@
         }
       }
     },
+    "bookstoreCoupon": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "DiscountCode": {
+          "type": "string"
+        }
+      }
+    },
+    "bookstoreCouponList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreCoupon"
+          }
+        }
+      }
+    },
     "bookstoreOrder": {
       "type": "object",
       "properties": {
@@ -794,8 +1004,7 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "Spec": {
-          "$ref": "#/definitions/bookstoreOrderSpec",
-          "description": "Spec is not allowed to be Null hence disabling nullable."
+          "$ref": "#/definitions/bookstoreOrderSpec"
         },
         "Status": {
           "$ref": "#/definitions/bookstoreOrderStatus"
@@ -859,6 +1068,20 @@
         }
       }
     },
+    "bookstoreOutageRequest": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Reason": {
+          "type": "string"
+        }
+      }
+    },
     "bookstorePublisher": {
       "type": "object",
       "properties": {
@@ -901,6 +1124,41 @@
         },
         "WebAddr": {
           "type": "string"
+        }
+      }
+    },
+    "bookstoreRestockRequest": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Reason": {
+          "type": "string"
+        }
+      }
+    },
+    "bookstoreRestockResponse": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Books": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Count": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

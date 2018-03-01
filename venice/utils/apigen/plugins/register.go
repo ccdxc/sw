@@ -122,6 +122,14 @@ func parseNaplesRestService(val interface{}) (interface{}, error) {
 	return c, nil
 }
 
+func parseAPIActions(val interface{}) (interface{}, error) {
+	c, ok := val.([]*venice.ActionEndpoint)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
 // ServiceParams is the parameters related to the Service used by templates
 type ServiceParams struct {
 	// Version is the version of the Service
@@ -254,6 +262,8 @@ func getDbKey(m *descriptor.Message) ([]KeyComponent, error) {
 		// The key generated is /venice/<service prefix>/<object prefix>/<name from object meta>
 		if !singleton {
 			output = append(output, KeyComponent{Type: "field", Val: "Name"})
+		} else {
+			output = append(output, KeyComponent{Type: "prefix", Val: "Singleton"})
 		}
 	}
 
@@ -984,6 +994,42 @@ func getPackageCrudObjects(file *descriptor.File) ([]string, error) {
 	return ret, nil
 }
 
+// ActionEndpoints specifies parameters of an action
+type ActionEndpoints struct {
+	Name              string
+	Request, Response string
+}
+
+func getSvcCrudObjects(svc *descriptor.Service) ([]string, error) {
+	var ret []string
+	cruds, err := reg.GetExtension("venice.apiGrpcCrudService", svc)
+	if err == nil {
+		ret = cruds.([]string)
+	}
+	return ret, nil
+}
+
+func getSvcActionEndpoints(svc *descriptor.Service, target string) ([]ActionEndpoints, error) {
+	var ret []ActionEndpoints
+	act, err := reg.GetExtension("venice.apiAction", svc)
+	if err != nil {
+		return ret, nil
+	}
+	for _, r := range act.([]*venice.ActionEndpoint) {
+		tgt := ""
+		if tgt = r.GetCollection(); tgt == "" {
+			if tgt = r.GetObject(); tgt == "" {
+				continue
+			}
+		}
+		if tgt == target {
+			obj := ActionEndpoints{Name: strings.Title(r.Action), Request: r.Request, Response: r.Response}
+			ret = append(ret, obj)
+		}
+	}
+	return ret, nil
+}
+
 func isAutoGenMethod(meth *descriptor.Method) bool {
 	if v, err := reg.GetExtension("venice.methodAutoGen", meth); err == nil {
 		return v.(bool)
@@ -1104,6 +1150,7 @@ func init() {
 	reg.RegisterOptionParser("gogoproto.nullable", parseBoolOptions)
 	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
 	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
+	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
 
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
@@ -1130,6 +1177,7 @@ func init() {
 	reg.RegisterFunc("isWatchHelper", isWatchHelper)
 	reg.RegisterFunc("isListHelper", isListHelper)
 	reg.RegisterFunc("getPackageCrudObjects", getPackageCrudObjects)
+	reg.RegisterFunc("getSvcCrudObjects", getSvcCrudObjects)
 	reg.RegisterFunc("isAutoGenMethod", isAutoGenMethod)
 	reg.RegisterFunc("getAutoRestOper", getAutoRestOper)
 	reg.RegisterFunc("isRestExposed", isRestExposed)
@@ -1146,6 +1194,7 @@ func init() {
 	reg.RegisterFunc("saveInt", scratch.setInt)
 	reg.RegisterFunc("getInt", scratch.getInt)
 	reg.RegisterFunc("isAPIServerServed", isAPIServerServed)
+	reg.RegisterFunc("getSvcActionEndpoints", getSvcActionEndpoints)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

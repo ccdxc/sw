@@ -74,6 +74,11 @@ func TestMutator(t *testing.T) {
 			name: 'full_crudservice'
 			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1">
 		>
+		service <
+			name: 'action_service'
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1" [venice.apiAction]: {Collection: "Nest1", Action:"testaction", Request:"Nest1", Response:"Nest1"} [venice.apiAction]: {Object: "Nest1", Action:"testObjaction", Request:"Nest1", Response:"Nest1"}>
+
+		>
 		`, `
 		name: 'another.proto'
 		package: 'example'
@@ -134,6 +139,15 @@ func TestMutator(t *testing.T) {
 	}
 	expected["example.proto"].svcs["full_crudservice"] = &svccount{
 		methodcount: 6,
+		autoCreate:  1,
+		autoUpdate:  1,
+		autoDelete:  1,
+		autoGet:     1,
+		autoList:    1,
+		autoWatch:   1,
+	}
+	expected["example.proto"].svcs["action_service"] = &svccount{
+		methodcount: 8,
 		autoCreate:  1,
 		autoUpdate:  1,
 		autoDelete:  1,
@@ -237,6 +251,9 @@ func TestMutator(t *testing.T) {
 				expected[protoName].svcs["full_crudservice"], found[protoName].svcs["full_crudservice"])
 			t.Logf("hybrid_crud expected: %+v\nhybrid_crud found %+v",
 				expected[protoName].svcs["hybrid_crudservice"], found[protoName].svcs["hybrid_crudservice"])
+			t.Logf("action_service expected: %+v\action_service found %+v",
+				expected[protoName].svcs["action_service"], found[protoName].svcs["action_service"])
+
 		}
 		t.Fatalf("expected and found do not match")
 	}

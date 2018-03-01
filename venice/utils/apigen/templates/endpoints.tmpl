@@ -227,13 +227,13 @@ func (r *Endpoints{{$svcname}}RestClient) getHTTPRequest(ctx context.Context, in
 	return req, nil
 }
 {{$svcparams := getSvcParams .}}{{range .Methods}}{{$methparams := getMethodParams .}}{{if (strEq $methparams.Oper "WatchOper")}} {{else}} {{ if isAutoGenMethod .}}{{if isRestExposed .}}
-// 
+//
 func makeURI{{$svcname}}{{.Name}}{{$methparams.Oper}}(in *{{getInputType $pkgname . false}}) string { {{$uri := getURIKey . true}}
 	return fmt.Sprint("/{{$svcparams.Version}}/{{$svcparams.Prefix}}", {{$uri.Str}})
 }
 {{end}}{{end}}{{end}}{{end}}
 
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$svc := . }}{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$svc := . }}{{range $cruds}}{{$crudop := .}}
 // AutoAdd{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoAdd{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) { {{if isRestMethod $svc "AutoAdd" .}}
 	path := makeURI{{$svcname}}AutoAdd{{.}}CreateOper(in)
@@ -337,7 +337,25 @@ func (r *Endpoints{{$svcname}}RestClient) AutoList{{.}}(ctx context.Context, opt
 // AutoWatch{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoWatch{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) {
 	return nil, errors.New("not allowed")
-}{{end}}{{end}}
+}
+{{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
+func (r *Endpoints{{$svcname}}RestClient) {{.Name}}{{$crudop}}(ctx context.Context, in *{{.Request}}) (*{{.Response}}, error) {
+	path := makeURI{{$svcname}}{{.Name}}CreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPresp{{$svcname}}{{.Name}}(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*{{.Response}}), err
+}
+{{end}}{{end}}{{end}}
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isAutoGenMethod .}}{{else}}
 func (r *Endpoints{{$svcname}}RestClient) {{$svcname}}{{.Name}}Endpoint(ctx context.Context, in *{{.RequestType.Name}}) (*{{.ResponseType.Name}}, error) {
 	return nil, errors.New("not allowed")

@@ -19,7 +19,7 @@ import (
 var _ = Describe("node tests", func() {
 	Context("When a non-quorum node is added", func() {
 		var (
-			nodeIf   cmd.NodeInterface
+			nodeIf   cmd.CmdV1NodeInterface
 			nonQnode string // the node being added and remove from cluster
 			err      error
 		)

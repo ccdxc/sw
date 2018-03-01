@@ -76,6 +76,34 @@ func (s *bookstoreHooks) processDelBook(ctx context.Context, oper apiserver.APIO
 	return
 }
 
+func (s *bookstoreHooks) processApplyDiscountAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+	s.logger.InfoLog("msg", "action routine called")
+	// This hook could act on the KV store (get/store) or make gRPC call etc.
+	obj, err := s.svc.GetCrudService("Order", apiserver.UpdateOper).GetRequestType().GetFromKv(ctx, kv, key)
+	if err != nil {
+		return bookstore.Order{}, false, errors.Wrap(err, "invalid order update")
+	}
+	order := obj.(bookstore.Order)
+	order.Status.Status = "DISCOUNTED"
+	s.logger.Infof("got object %+v", obj)
+	// skip KV store operationl
+	return order, false, nil
+}
+
+func (s *bookstoreHooks) processClearDiscountAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+	s.logger.InfoLog("msg", "action routine called")
+	// This hook could act on the KV store (get/store) or make gRPC call etc.
+	obj, err := s.svc.GetCrudService("Order", apiserver.UpdateOper).GetRequestType().GetFromKv(ctx, kv, key)
+	if err != nil {
+		return bookstore.Order{}, false, errors.Wrap(err, "invalid order update")
+	}
+	order := obj.(bookstore.Order)
+	order.Status.Status = "PROCESSING"
+	s.logger.Infof("got object %+v", obj)
+	// skip KV store operationl
+	return order, false, nil
+}
+
 // This hook is to validate that all the items in the order are valid books.
 func (s *bookstoreHooks) validateOrder(i interface{}, ver string, ignStatus bool) error {
 	r := i.(bookstore.Order)
@@ -86,6 +114,22 @@ func (s *bookstoreHooks) validateOrder(i interface{}, ver string, ignStatus bool
 	return nil
 }
 
+func (s *bookstoreHooks) processAddOutageAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+	s.logger.InfoLog("msg", "action routine called")
+	// Would add a outage to store object. Returning a dummy object here
+	obj := bookstore.Store{}
+	obj.Status.CurrentOutages = []string{"Test Outage"}
+	return obj, false, nil
+}
+
+func (s *bookstoreHooks) processRestockAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+	s.logger.InfoLog("msg", "action routine called")
+	// Would add a outage to store object. Returning a dummy object here
+	obj := bookstore.RestockResponse{}
+	obj.Count = 3
+	return obj, false, nil
+}
+
 func registerBookstoreHooks(svc apiserver.Service, logger log.Logger) {
 	r := bookstoreHooks{}
 	r.svc = svc
@@ -94,6 +138,10 @@ func registerBookstoreHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Order", apiserver.CreateOper).WithPreCommitHook(r.createNeworderID).GetRequestType().WithValidate(r.validateOrder)
 	svc.GetCrudService("Order", apiserver.UpdateOper).WithPreCommitHook(r.createNeworderID).GetRequestType().WithValidate(r.validateOrder)
 	svc.GetCrudService("Book", apiserver.DeleteOper).WithPostCommitHook(r.processDelBook)
+	svc.GetMethod("Applydiscount").WithPreCommitHook(r.processApplyDiscountAction)
+	svc.GetMethod("Cleardiscount").WithPreCommitHook(r.processClearDiscountAction)
+	svc.GetMethod("AddOutage").WithPreCommitHook(r.processAddOutageAction)
+	svc.GetMethod("Restock").WithPreCommitHook(r.processRestockAction)
 }
 
 func init() {

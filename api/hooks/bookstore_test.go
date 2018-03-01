@@ -101,3 +101,60 @@ func TestCreateNewOrderId(t *testing.T) {
 		t.Errorf("expecting validation to pass")
 	}
 }
+
+func TestActionFunction(t *testing.T) {
+	ctx := context.Background()
+	logConfig := log.GetDefaultConfig("TestBookstoreHooks")
+	l := log.GetNewLogger(logConfig)
+	order := bookstore.Order{
+		ObjectMeta: api.ObjectMeta{
+			Name:            "Bad Order Name",
+			ResourceVersion: "10",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Order",
+		},
+		Spec: bookstore.OrderSpec{
+			Id: "Bad Order Id",
+		},
+		Status: bookstore.OrderStatus{
+			Status: "JunkValue",
+		},
+	}
+	service := apisrvmocks.NewFakeService()
+	method := apisrvmocks.NewFakeMethod(true)
+	msg := apisrvmocks.NewFakeMessage("/test/path", false)
+	apisrvmocks.SetFakeMessageKvObj(order, msg)
+	apisrvmocks.SetFakeMethodReqType(msg, method)
+	service.AddMethod("test", method)
+	s := &bookstoreHooks{
+		logger: l,
+		svc:    service,
+	}
+	storecfg := store.Config{
+		Type:  store.KVStoreTypeMemkv,
+		Codec: runtime.NewJSONCodec(runtime.NewScheme()),
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	txn := kvs.NewTxn()
+	_, ok, err := s.processApplyDiscountAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+	if err != nil || ok {
+		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
+	}
+
+	_, ok, err = s.processClearDiscountAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+	if err != nil || ok {
+		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
+	}
+	_, ok, err = s.processRestockAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+	if err != nil || ok {
+		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
+	}
+	_, ok, err = s.processAddOutageAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+	if err != nil || ok {
+		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
+	}
+}

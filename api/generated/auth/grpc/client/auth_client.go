@@ -530,8 +530,8 @@ func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) 
 }
 
 type crudClientAuthV1 struct {
-	grpcUser                 auth.UserInterface
-	grpcAuthenticationPolicy auth.AuthenticationPolicyInterface
+	grpcUser                 auth.AuthV1UserInterface
+	grpcAuthenticationPolicy auth.AuthV1AuthenticationPolicyInterface
 }
 
 // NewGrpcCrudClientAuthV1 creates a GRPC client for the service
@@ -544,17 +544,17 @@ func NewGrpcCrudClientAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.Auth
 	}
 }
 
-func (a *crudClientAuthV1) User() auth.UserInterface {
+func (a *crudClientAuthV1) User() auth.AuthV1UserInterface {
 	return a.grpcUser
 }
 
-func (a *crudClientAuthV1) AuthenticationPolicy() auth.AuthenticationPolicyInterface {
+func (a *crudClientAuthV1) AuthenticationPolicy() auth.AuthV1AuthenticationPolicyInterface {
 	return a.grpcAuthenticationPolicy
 }
 
 type crudRestClientAuthV1 struct {
-	restUser                 auth.UserInterface
-	restAuthenticationPolicy auth.AuthenticationPolicyInterface
+	restUser                 auth.AuthV1UserInterface
+	restAuthenticationPolicy auth.AuthV1AuthenticationPolicyInterface
 }
 
 // NewRestCrudClientAuthV1 creates a REST client for the service.
@@ -570,10 +570,10 @@ func NewRestCrudClientAuthV1(url string) auth.AuthV1Interface {
 	}
 }
 
-func (a *crudRestClientAuthV1) User() auth.UserInterface {
+func (a *crudRestClientAuthV1) User() auth.AuthV1UserInterface {
 	return a.restUser
 }
 
-func (a *crudRestClientAuthV1) AuthenticationPolicy() auth.AuthenticationPolicyInterface {
+func (a *crudRestClientAuthV1) AuthenticationPolicy() auth.AuthV1AuthenticationPolicyInterface {
 	return a.restAuthenticationPolicy
 }

@@ -286,7 +286,7 @@ func (a *restObjEventPolicyV1EventPolicy) Allowed(oper apiserver.APIOperType) bo
 }
 
 type crudClientEventPolicyV1 struct {
-	grpcEventPolicy events.EventPolicyInterface
+	grpcEventPolicy events.EventPolicyV1EventPolicyInterface
 }
 
 // NewGrpcCrudClientEventPolicyV1 creates a GRPC client for the service
@@ -298,12 +298,12 @@ func NewGrpcCrudClientEventPolicyV1(conn *grpc.ClientConn, logger log.Logger) ev
 	}
 }
 
-func (a *crudClientEventPolicyV1) EventPolicy() events.EventPolicyInterface {
+func (a *crudClientEventPolicyV1) EventPolicy() events.EventPolicyV1EventPolicyInterface {
 	return a.grpcEventPolicy
 }
 
 type crudRestClientEventPolicyV1 struct {
-	restEventPolicy events.EventPolicyInterface
+	restEventPolicy events.EventPolicyV1EventPolicyInterface
 }
 
 // NewRestCrudClientEventPolicyV1 creates a REST client for the service.
@@ -318,6 +318,6 @@ func NewRestCrudClientEventPolicyV1(url string) events.EventPolicyV1Interface {
 	}
 }
 
-func (a *crudRestClientEventPolicyV1) EventPolicy() events.EventPolicyInterface {
+func (a *crudRestClientEventPolicyV1) EventPolicy() events.EventPolicyV1EventPolicyInterface {
 	return a.restEventPolicy
 }

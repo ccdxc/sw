@@ -15,8 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// ClusterInterface exposes the CRUD methods for Cluster
-type ClusterInterface interface {
+// CmdV1ClusterInterface exposes the CRUD methods for Cluster
+type CmdV1ClusterInterface interface {
 	Create(ctx context.Context, in *Cluster) (*Cluster, error)
 	Update(ctx context.Context, in *Cluster) (*Cluster, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
@@ -26,8 +26,8 @@ type ClusterInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// NodeInterface exposes the CRUD methods for Node
-type NodeInterface interface {
+// CmdV1NodeInterface exposes the CRUD methods for Node
+type CmdV1NodeInterface interface {
 	Create(ctx context.Context, in *Node) (*Node, error)
 	Update(ctx context.Context, in *Node) (*Node, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Node, error)
@@ -37,8 +37,8 @@ type NodeInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// SmartNICInterface exposes the CRUD methods for SmartNIC
-type SmartNICInterface interface {
+// CmdV1SmartNICInterface exposes the CRUD methods for SmartNIC
+type CmdV1SmartNICInterface interface {
 	Create(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
 	Update(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
@@ -50,7 +50,7 @@ type SmartNICInterface interface {
 
 // CmdV1Interface exposes objects with CRUD operations allowed by the service
 type CmdV1Interface interface {
-	Cluster() ClusterInterface
-	Node() NodeInterface
-	SmartNIC() SmartNICInterface
+	Cluster() CmdV1ClusterInterface
+	Node() CmdV1NodeInterface
+	SmartNIC() CmdV1SmartNICInterface
 }

@@ -774,9 +774,9 @@ func (a *restObjCmdV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
 }
 
 type crudClientCmdV1 struct {
-	grpcCluster  cmd.ClusterInterface
-	grpcNode     cmd.NodeInterface
-	grpcSmartNIC cmd.SmartNICInterface
+	grpcCluster  cmd.CmdV1ClusterInterface
+	grpcNode     cmd.CmdV1NodeInterface
+	grpcSmartNIC cmd.CmdV1SmartNICInterface
 }
 
 // NewGrpcCrudClientCmdV1 creates a GRPC client for the service
@@ -790,22 +790,22 @@ func NewGrpcCrudClientCmdV1(conn *grpc.ClientConn, logger log.Logger) cmd.CmdV1I
 	}
 }
 
-func (a *crudClientCmdV1) Cluster() cmd.ClusterInterface {
+func (a *crudClientCmdV1) Cluster() cmd.CmdV1ClusterInterface {
 	return a.grpcCluster
 }
 
-func (a *crudClientCmdV1) Node() cmd.NodeInterface {
+func (a *crudClientCmdV1) Node() cmd.CmdV1NodeInterface {
 	return a.grpcNode
 }
 
-func (a *crudClientCmdV1) SmartNIC() cmd.SmartNICInterface {
+func (a *crudClientCmdV1) SmartNIC() cmd.CmdV1SmartNICInterface {
 	return a.grpcSmartNIC
 }
 
 type crudRestClientCmdV1 struct {
-	restCluster  cmd.ClusterInterface
-	restNode     cmd.NodeInterface
-	restSmartNIC cmd.SmartNICInterface
+	restCluster  cmd.CmdV1ClusterInterface
+	restNode     cmd.CmdV1NodeInterface
+	restSmartNIC cmd.CmdV1SmartNICInterface
 }
 
 // NewRestCrudClientCmdV1 creates a REST client for the service.
@@ -822,14 +822,14 @@ func NewRestCrudClientCmdV1(url string) cmd.CmdV1Interface {
 	}
 }
 
-func (a *crudRestClientCmdV1) Cluster() cmd.ClusterInterface {
+func (a *crudRestClientCmdV1) Cluster() cmd.CmdV1ClusterInterface {
 	return a.restCluster
 }
 
-func (a *crudRestClientCmdV1) Node() cmd.NodeInterface {
+func (a *crudRestClientCmdV1) Node() cmd.CmdV1NodeInterface {
 	return a.restNode
 }
 
-func (a *crudRestClientCmdV1) SmartNIC() cmd.SmartNICInterface {
+func (a *crudRestClientCmdV1) SmartNIC() cmd.CmdV1SmartNICInterface {
 	return a.restSmartNIC
 }

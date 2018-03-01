@@ -364,6 +364,47 @@ func GetMessageURI(m *descriptor.DescriptorProto) (string, error) {
 	return ret + "/{O.Name}", nil
 }
 
+func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDescriptorProto, msgMap map[string]*descriptor.DescriptorProto) {
+	opts := s.GetOptions()
+	act, err := getExtension(opts, "venice.apiAction")
+	if err != nil {
+		glog.V(1).Infof("No action endpoints defined for %s (%s)", *s.Name, err)
+	} else {
+		for _, r := range act.([]*venice.ActionEndpoint) {
+			path := ""
+			if t := r.GetCollection(); t != "" {
+				if _, ok := msgMap[t]; !ok {
+					glog.Fatalf("unknown message [%s] in action definition", t)
+				}
+				path, err = getMessageURIPrefix(msgMap[t])
+				if err != nil {
+					glog.Fatalf("could not get message URI prefix for collection [%s]", t)
+				}
+			} else if t := r.GetObject(); t != "" {
+				if _, ok := msgMap[t]; !ok {
+					glog.Fatalf("unknown message [%s] in action definition", t)
+				}
+				path, err = GetMessageURI(msgMap[t])
+				if err != nil {
+					glog.Fatalf("could not get message URI for target [%s]", t)
+				}
+			} else {
+				glog.Fatalf("empty Target")
+			}
+			if msgMap[r.Request] == nil || msgMap[r.Response] == nil {
+				glog.Fatalf("unknown message in request or response")
+			}
+			name := strings.Title(r.GetAction())
+			path = path + "/" + r.GetAction()
+			opt := googapi.HttpRule_Post{Post: path}
+			restopt := &googapi.HttpRule{Pattern: &opt, Body: "*"}
+			reqType := "." + *f.Package + "." + r.Request
+			respType := "." + *f.Package + "." + r.Response
+			insertMethod(s, name, reqType, respType, "create", false, restopt)
+		}
+	}
+}
+
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
 func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 	crudMsgMap := make(map[string]bool)
@@ -438,6 +479,8 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 							}
 						}
 					}
+					// Process any actions defined
+					processActions(f, s, msgMap)
 
 					for _, m := range msgs {
 						if _, ok := msgMap[m]; ok {

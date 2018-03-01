@@ -546,7 +546,7 @@ func (a *restObjAlertPolicyV1AlertPolicy) Allowed(oper apiserver.APIOperType) bo
 }
 
 type crudClientAlertDestinationV1 struct {
-	grpcAlertDestination alerts.AlertDestinationInterface
+	grpcAlertDestination alerts.AlertDestinationV1AlertDestinationInterface
 }
 
 // NewGrpcCrudClientAlertDestinationV1 creates a GRPC client for the service
@@ -558,12 +558,12 @@ func NewGrpcCrudClientAlertDestinationV1(conn *grpc.ClientConn, logger log.Logge
 	}
 }
 
-func (a *crudClientAlertDestinationV1) AlertDestination() alerts.AlertDestinationInterface {
+func (a *crudClientAlertDestinationV1) AlertDestination() alerts.AlertDestinationV1AlertDestinationInterface {
 	return a.grpcAlertDestination
 }
 
 type crudRestClientAlertDestinationV1 struct {
-	restAlertDestination alerts.AlertDestinationInterface
+	restAlertDestination alerts.AlertDestinationV1AlertDestinationInterface
 }
 
 // NewRestCrudClientAlertDestinationV1 creates a REST client for the service.
@@ -578,12 +578,12 @@ func NewRestCrudClientAlertDestinationV1(url string) alerts.AlertDestinationV1In
 	}
 }
 
-func (a *crudRestClientAlertDestinationV1) AlertDestination() alerts.AlertDestinationInterface {
+func (a *crudRestClientAlertDestinationV1) AlertDestination() alerts.AlertDestinationV1AlertDestinationInterface {
 	return a.restAlertDestination
 }
 
 type crudClientAlertPolicyV1 struct {
-	grpcAlertPolicy alerts.AlertPolicyInterface
+	grpcAlertPolicy alerts.AlertPolicyV1AlertPolicyInterface
 }
 
 // NewGrpcCrudClientAlertPolicyV1 creates a GRPC client for the service
@@ -595,12 +595,12 @@ func NewGrpcCrudClientAlertPolicyV1(conn *grpc.ClientConn, logger log.Logger) al
 	}
 }
 
-func (a *crudClientAlertPolicyV1) AlertPolicy() alerts.AlertPolicyInterface {
+func (a *crudClientAlertPolicyV1) AlertPolicy() alerts.AlertPolicyV1AlertPolicyInterface {
 	return a.grpcAlertPolicy
 }
 
 type crudRestClientAlertPolicyV1 struct {
-	restAlertPolicy alerts.AlertPolicyInterface
+	restAlertPolicy alerts.AlertPolicyV1AlertPolicyInterface
 }
 
 // NewRestCrudClientAlertPolicyV1 creates a REST client for the service.
@@ -615,6 +615,6 @@ func NewRestCrudClientAlertPolicyV1(url string) alerts.AlertPolicyV1Interface {
 	}
 }
 
-func (a *crudRestClientAlertPolicyV1) AlertPolicy() alerts.AlertPolicyInterface {
+func (a *crudRestClientAlertPolicyV1) AlertPolicy() alerts.AlertPolicyV1AlertPolicyInterface {
 	return a.restAlertPolicy
 }

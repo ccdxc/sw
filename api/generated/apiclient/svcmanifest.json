@@ -55,7 +55,8 @@
           "Order",
           "Book",
           "Publisher",
-          "Store"
+          "Store",
+          "Coupon"
         ]
       }
     },

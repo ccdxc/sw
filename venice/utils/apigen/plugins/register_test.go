@@ -539,6 +539,192 @@ func TestGetPackageCrudObjs(t *testing.T) {
 	}
 }
 
+func TestGetSvcCrudObjs(t *testing.T) {
+	var fds []*descriptor.FileDescriptorProto
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+			name: 'Nest1'
+			field <
+				name: 'nest1_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest2'
+				number: 1
+			>
+		>
+		message_type <
+			name: 'testmsg'
+			field <
+				name: 'real_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest1'
+				number: 2
+			>
+			field <
+				name: 'leaf_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 3
+			>
+		>
+		service <
+			name: 'hybrid_crudservice'
+			method: <
+				name: 'noncrudsvc'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+			>
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1" [venice.apiGrpcCrudService]:"testmsg">
+		>
+		service <
+			name: 'full_crudservice'
+			options:<[venice.apiGrpcCrudService]:"Nest1">
+			method: <
+			name: 'dummy'
+			input_type: '.example.Nest1'
+			output_type: '.example.Nest1'
+		>
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		fds = append(fds, &fd)
+	}
+	r := reg.NewRegistry()
+	var req gogoplugin.CodeGeneratorRequest
+	req.FileToGenerate = []string{"example.proto"}
+	req.ProtoFile = fds
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	for _, svc := range file.Services {
+		out, err := getSvcCrudObjects(svc)
+		if err != nil {
+			t.Fatalf("failed to get getPackageCrudObjects()")
+		}
+
+		if *svc.Name == "hybrid_crudservice" {
+			if len(out) != 2 {
+				t.Fatalf("failed to get correct getSvcCrudObjects()")
+			}
+		}
+		if *svc.Name == "full_crudservice" {
+			if len(out) != 1 {
+				t.Fatalf("failed to get correct getSvcCrudObjects()")
+			}
+		}
+	}
+
+}
+
+func TestGetActionEndpoints(t *testing.T) {
+	var fds []*descriptor.FileDescriptorProto
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+			name: 'Nest1'
+			field <
+				name: 'nest1_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest2'
+				number: 1
+			>
+		>
+		message_type <
+			name: 'testmsg'
+			field <
+				name: 'real_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest1'
+				number: 2
+			>
+			field <
+				name: 'leaf_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 3
+			>
+		>
+		service <
+			name: 'hybrid_crudservice'
+			method: <
+				name: 'noncrudsvc'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+			>
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1" [venice.apiGrpcCrudService]:"testmsg"
+			[venice.apiAction]: {Collection: "Nest1", Action:"nestaction1", Request:"testmsg", Response:"Nest1"}
+			[venice.apiAction]: {Object: "Nest1", Action:"nestobjaction1", Request:"testmsg", Response:"Nest1"}
+			[venice.apiAction]: {Collection: "testmsg", Action:"testmsgaction1", Request:"testmsg", Response:"Nest1"}
+		  [venice.apiAction]: {Collection: "Nest1", Action:"nestaction2", Request:"Nest1", Response:"testmsg"}>
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		fds = append(fds, &fd)
+	}
+	r := reg.NewRegistry()
+	var req gogoplugin.CodeGeneratorRequest
+	req.FileToGenerate = []string{"example.proto"}
+	req.ProtoFile = fds
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed (%s)", err)
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	expected := make(map[string][]ActionEndpoints)
+	expected["Nest1"] = []ActionEndpoints{
+		{Name: "Nestaction1", Request: "testmsg", Response: "Nest1"},
+		{Name: "Nestobjaction1", Request: "testmsg", Response: "Nest1"},
+		{Name: "Nestaction2", Request: "Nest1", Response: "testmsg"},
+	}
+	expected["testmsg"] = []ActionEndpoints{
+		{Name: "Testmsgaction1", Request: "testmsg", Response: "Nest1"},
+	}
+
+	found := make(map[string][]ActionEndpoints)
+	msgs := []string{"Nest1", "testmsg"}
+	for _, svc := range file.Services {
+		for _, m := range msgs {
+			a, err := getSvcActionEndpoints(svc, m)
+			if err != nil {
+				t.Errorf("getActionEndpoint failed for %s/%s", *svc.Name, a)
+			}
+			for _, v := range a {
+				old := found[m]
+				found[m] = append(old, v)
+			}
+		}
+	}
+	for _, m := range msgs {
+		if !reflect.DeepEqual(found[m], expected[m]) {
+			t.Errorf("Mismatched [%s]\n  Expected %+v \n  found %+v", m, expected[m], found[m])
+		}
+	}
+}
+
 func TestGetParams(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{
@@ -601,7 +787,7 @@ func TestGetParams(t *testing.T) {
 				type: TYPE_MESSAGE
 				type_name: '.example.Nest1'
 				number: 2
-			> 
+			>
 		>
 		message_type <
 		name: 'ObjectMeta'

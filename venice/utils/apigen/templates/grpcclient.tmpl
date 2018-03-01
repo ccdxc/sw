@@ -60,7 +60,7 @@ func New{{$srvname}}Backend(conn *grpc.ClientConn, logger log.Logger) {{$pkgname
 }
 {{end}}
 
-{{range .Services}}{{$svc := .}}{{$srvname := .Name}}{{$version := getExtension "venice.apiVersion" .}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+{{range .Services}}{{$svc := .}}{{$srvname := .Name}}{{$version := getExtension "venice.apiVersion" .}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}{{$crudop := .}}
 type grpcObj{{$srvname}}{{.}} struct {
 	logger log.Logger
 	client {{$pkgname}}.Service{{$srvname}}Client
@@ -154,6 +154,16 @@ func (a *grpcObj{{$srvname}}{{.}}) Watch(ctx context.Context, options *api.ListW
 	lw.Run()
 	return lw, nil
 }
+{{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
+func (a *grpcObj{{$srvname}}{{$crudop}}) {{.Name}}(ctx context.Context, in *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{{.}}", "oper", "{{.Name}}")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "{{$version}}")
+	return a.client.{{.Name}}(nctx, in)
+}
+{{end}}
 
 func (a *grpcObj{{$srvname}}{{.}}) Allowed(oper apiserver.APIOperType) bool {
 	return true
@@ -229,13 +239,19 @@ func (a *restObj{{$srvname}}{{.}}) Allowed(oper apiserver.APIOperType) bool {
 		return false
 	}
 }
-
+{{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
+func (a *restObj{{$srvname}}{{$crudop}}) {{.Name}}(ctx context.Context, in *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.{{.Name}}{{$crudop}}(ctx, in)
+}{{end}}
 {{end}}{{end}}{{end}}
 
 {{range .Services}}{{$srvname := .Name}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}
 type crudClient{{$srvname}} struct {
 	{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-	grpc{{.}} {{$pkgname}}.{{.}}Interface{{end}}
+	grpc{{.}} {{$pkgname}}.{{$srvname}}{{.}}Interface{{end}}
 }
 
 // NewGrpcCrudClient{{$srvname}} creates a GRPC client for the service
@@ -247,14 +263,14 @@ func NewGrpcCrudClient{{$srvname}}(conn *grpc.ClientConn, logger log.Logger) {{$
 	}
 }
 {{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-func (a *crudClient{{$srvname}}) {{title .}}() {{$pkgname}}.{{.}}Interface {
+func (a *crudClient{{$srvname}}) {{title .}}() {{$pkgname}}.{{$srvname}}{{.}}Interface {
 	return a.grpc{{.}}
 }
 {{end}}
 
 type crudRestClient{{$srvname}} struct {
 	{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-	rest{{.}} {{$pkgname}}.{{.}}Interface{{end}}
+	rest{{.}} {{$pkgname}}.{{$srvname}}{{.}}Interface{{end}}
 }
 
 // NewRestCrudClient{{$srvname}} creates a REST client for the service.
@@ -269,7 +285,7 @@ func NewRestCrudClient{{$srvname}}(url string) {{$pkgname}}.{{$srvname}}Interfac
 	}
 }
 {{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-func (a *crudRestClient{{$srvname}}) {{title .}}() {{$pkgname}}.{{.}}Interface {
+func (a *crudRestClient{{$srvname}}) {{title .}}() {{$pkgname}}.{{$srvname}}{{.}}Interface {
 	return a.rest{{.}}
 }
 {{end}}

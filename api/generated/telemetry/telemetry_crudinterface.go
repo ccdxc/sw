@@ -15,8 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// FlowExportPolicyInterface exposes the CRUD methods for FlowExportPolicy
-type FlowExportPolicyInterface interface {
+// FlowExportPolicyV1FlowExportPolicyInterface exposes the CRUD methods for FlowExportPolicy
+type FlowExportPolicyV1FlowExportPolicyInterface interface {
 	Create(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error)
 	Update(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FlowExportPolicy, error)
@@ -26,8 +26,13 @@ type FlowExportPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// FwlogPolicyInterface exposes the CRUD methods for FwlogPolicy
-type FwlogPolicyInterface interface {
+// FlowExportPolicyV1Interface exposes objects with CRUD operations allowed by the service
+type FlowExportPolicyV1Interface interface {
+	FlowExportPolicy() FlowExportPolicyV1FlowExportPolicyInterface
+}
+
+// FwlogPolicyV1FwlogPolicyInterface exposes the CRUD methods for FwlogPolicy
+type FwlogPolicyV1FwlogPolicyInterface interface {
 	Create(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
 	Update(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FwlogPolicy, error)
@@ -37,8 +42,13 @@ type FwlogPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// StatsPolicyInterface exposes the CRUD methods for StatsPolicy
-type StatsPolicyInterface interface {
+// FwlogPolicyV1Interface exposes objects with CRUD operations allowed by the service
+type FwlogPolicyV1Interface interface {
+	FwlogPolicy() FwlogPolicyV1FwlogPolicyInterface
+}
+
+// StatsPolicyV1StatsPolicyInterface exposes the CRUD methods for StatsPolicy
+type StatsPolicyV1StatsPolicyInterface interface {
 	Create(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
 	Update(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
@@ -48,17 +58,7 @@ type StatsPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// FlowExportPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type FlowExportPolicyV1Interface interface {
-	FlowExportPolicy() FlowExportPolicyInterface
-}
-
-// FwlogPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type FwlogPolicyV1Interface interface {
-	FwlogPolicy() FwlogPolicyInterface
-}
-
 // StatsPolicyV1Interface exposes objects with CRUD operations allowed by the service
 type StatsPolicyV1Interface interface {
-	StatsPolicy() StatsPolicyInterface
+	StatsPolicy() StatsPolicyV1StatsPolicyInterface
 }

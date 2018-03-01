@@ -25,26 +25,35 @@ var _ api.ObjectMeta
 type grpcServerBookstoreV1 struct {
 	Endpoints EndpointsBookstoreV1Server
 
+	AddOutageHdlr           grpctransport.Handler
+	ApplydiscountHdlr       grpctransport.Handler
 	AutoAddBookHdlr         grpctransport.Handler
+	AutoAddCouponHdlr       grpctransport.Handler
 	AutoAddOrderHdlr        grpctransport.Handler
 	AutoAddPublisherHdlr    grpctransport.Handler
 	AutoAddStoreHdlr        grpctransport.Handler
 	AutoDeleteBookHdlr      grpctransport.Handler
+	AutoDeleteCouponHdlr    grpctransport.Handler
 	AutoDeleteOrderHdlr     grpctransport.Handler
 	AutoDeletePublisherHdlr grpctransport.Handler
 	AutoDeleteStoreHdlr     grpctransport.Handler
 	AutoGetBookHdlr         grpctransport.Handler
+	AutoGetCouponHdlr       grpctransport.Handler
 	AutoGetOrderHdlr        grpctransport.Handler
 	AutoGetPublisherHdlr    grpctransport.Handler
 	AutoGetStoreHdlr        grpctransport.Handler
 	AutoListBookHdlr        grpctransport.Handler
+	AutoListCouponHdlr      grpctransport.Handler
 	AutoListOrderHdlr       grpctransport.Handler
 	AutoListPublisherHdlr   grpctransport.Handler
 	AutoListStoreHdlr       grpctransport.Handler
 	AutoUpdateBookHdlr      grpctransport.Handler
+	AutoUpdateCouponHdlr    grpctransport.Handler
 	AutoUpdateOrderHdlr     grpctransport.Handler
 	AutoUpdatePublisherHdlr grpctransport.Handler
 	AutoUpdateStoreHdlr     grpctransport.Handler
+	CleardiscountHdlr       grpctransport.Handler
+	RestockHdlr             grpctransport.Handler
 }
 
 // MakeGRPCServerBookstoreV1 creates a GRPC server for BookstoreV1 service
@@ -55,11 +64,32 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 	}
 	return &grpcServerBookstoreV1{
 		Endpoints: endpoints,
+		AddOutageHdlr: grpctransport.NewServer(
+			endpoints.AddOutageEndpoint,
+			DecodeGrpcReqOutageRequest,
+			EncodeGrpcRespStore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AddOutage", logger)))...,
+		),
+
+		ApplydiscountHdlr: grpctransport.NewServer(
+			endpoints.ApplydiscountEndpoint,
+			DecodeGrpcReqApplyDiscountReq,
+			EncodeGrpcRespOrder,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Applydiscount", logger)))...,
+		),
+
 		AutoAddBookHdlr: grpctransport.NewServer(
 			endpoints.AutoAddBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBook", logger)))...,
+		),
+
+		AutoAddCouponHdlr: grpctransport.NewServer(
+			endpoints.AutoAddCouponEndpoint,
+			DecodeGrpcReqCoupon,
+			EncodeGrpcRespCoupon,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCoupon", logger)))...,
 		),
 
 		AutoAddOrderHdlr: grpctransport.NewServer(
@@ -90,6 +120,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBook", logger)))...,
 		),
 
+		AutoDeleteCouponHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteCouponEndpoint,
+			DecodeGrpcReqCoupon,
+			EncodeGrpcRespCoupon,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCoupon", logger)))...,
+		),
+
 		AutoDeleteOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteOrderEndpoint,
 			DecodeGrpcReqOrder,
@@ -116,6 +153,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBook", logger)))...,
+		),
+
+		AutoGetCouponHdlr: grpctransport.NewServer(
+			endpoints.AutoGetCouponEndpoint,
+			DecodeGrpcReqCoupon,
+			EncodeGrpcRespCoupon,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCoupon", logger)))...,
 		),
 
 		AutoGetOrderHdlr: grpctransport.NewServer(
@@ -146,6 +190,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBook", logger)))...,
 		),
 
+		AutoListCouponHdlr: grpctransport.NewServer(
+			endpoints.AutoListCouponEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespCouponList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCoupon", logger)))...,
+		),
+
 		AutoListOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoListOrderEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -174,6 +225,13 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBook", logger)))...,
 		),
 
+		AutoUpdateCouponHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateCouponEndpoint,
+			DecodeGrpcReqCoupon,
+			EncodeGrpcRespCoupon,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCoupon", logger)))...,
+		),
+
 		AutoUpdateOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateOrderEndpoint,
 			DecodeGrpcReqOrder,
@@ -194,7 +252,57 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			EncodeGrpcRespStore,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStore", logger)))...,
 		),
+
+		CleardiscountHdlr: grpctransport.NewServer(
+			endpoints.CleardiscountEndpoint,
+			DecodeGrpcReqApplyDiscountReq,
+			EncodeGrpcRespOrder,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Cleardiscount", logger)))...,
+		),
+
+		RestockHdlr: grpctransport.NewServer(
+			endpoints.RestockEndpoint,
+			DecodeGrpcReqRestockRequest,
+			EncodeGrpcRespRestockResponse,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Restock", logger)))...,
+		),
 	}
+}
+
+func (s *grpcServerBookstoreV1) AddOutage(ctx oldcontext.Context, req *OutageRequest) (*Store, error) {
+	_, resp, err := s.AddOutageHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AddOutage).V
+	return &r, resp.(respBookstoreV1AddOutage).Err
+}
+
+func decodeHTTPrespBookstoreV1AddOutage(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Store
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) Applydiscount(ctx oldcontext.Context, req *ApplyDiscountReq) (*Order, error) {
+	_, resp, err := s.ApplydiscountHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1Applydiscount).V
+	return &r, resp.(respBookstoreV1Applydiscount).Err
+}
+
+func decodeHTTPrespBookstoreV1Applydiscount(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Order
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
 }
 
 func (s *grpcServerBookstoreV1) AutoAddBook(ctx oldcontext.Context, req *Book) (*Book, error) {
@@ -211,6 +319,24 @@ func decodeHTTPrespBookstoreV1AutoAddBook(_ context.Context, r *http.Response) (
 		return nil, errorDecoder(r)
 	}
 	var resp Book
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoAddCoupon(ctx oldcontext.Context, req *Coupon) (*Coupon, error) {
+	_, resp, err := s.AutoAddCouponHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoAddCoupon).V
+	return &r, resp.(respBookstoreV1AutoAddCoupon).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoAddCoupon(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Coupon
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -287,6 +413,24 @@ func decodeHTTPrespBookstoreV1AutoDeleteBook(_ context.Context, r *http.Response
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) AutoDeleteCoupon(ctx oldcontext.Context, req *Coupon) (*Coupon, error) {
+	_, resp, err := s.AutoDeleteCouponHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoDeleteCoupon).V
+	return &r, resp.(respBookstoreV1AutoDeleteCoupon).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoDeleteCoupon(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Coupon
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerBookstoreV1) AutoDeleteOrder(ctx oldcontext.Context, req *Order) (*Order, error) {
 	_, resp, err := s.AutoDeleteOrderHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -355,6 +499,24 @@ func decodeHTTPrespBookstoreV1AutoGetBook(_ context.Context, r *http.Response) (
 		return nil, errorDecoder(r)
 	}
 	var resp Book
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoGetCoupon(ctx oldcontext.Context, req *Coupon) (*Coupon, error) {
+	_, resp, err := s.AutoGetCouponHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoGetCoupon).V
+	return &r, resp.(respBookstoreV1AutoGetCoupon).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoGetCoupon(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Coupon
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -431,6 +593,24 @@ func decodeHTTPrespBookstoreV1AutoListBook(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) AutoListCoupon(ctx oldcontext.Context, req *api.ListWatchOptions) (*CouponList, error) {
+	_, resp, err := s.AutoListCouponHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoListCoupon).V
+	return &r, resp.(respBookstoreV1AutoListCoupon).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoListCoupon(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp CouponList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerBookstoreV1) AutoListOrder(ctx oldcontext.Context, req *api.ListWatchOptions) (*OrderList, error) {
 	_, resp, err := s.AutoListOrderHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -503,6 +683,24 @@ func decodeHTTPrespBookstoreV1AutoUpdateBook(_ context.Context, r *http.Response
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) AutoUpdateCoupon(ctx oldcontext.Context, req *Coupon) (*Coupon, error) {
+	_, resp, err := s.AutoUpdateCouponHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoUpdateCoupon).V
+	return &r, resp.(respBookstoreV1AutoUpdateCoupon).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoUpdateCoupon(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Coupon
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerBookstoreV1) AutoUpdateOrder(ctx oldcontext.Context, req *Order) (*Order, error) {
 	_, resp, err := s.AutoUpdateOrderHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -557,6 +755,42 @@ func decodeHTTPrespBookstoreV1AutoUpdateStore(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerBookstoreV1) Cleardiscount(ctx oldcontext.Context, req *ApplyDiscountReq) (*Order, error) {
+	_, resp, err := s.CleardiscountHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1Cleardiscount).V
+	return &r, resp.(respBookstoreV1Cleardiscount).Err
+}
+
+func decodeHTTPrespBookstoreV1Cleardiscount(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Order
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) Restock(ctx oldcontext.Context, req *RestockRequest) (*RestockResponse, error) {
+	_, resp, err := s.RestockHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1Restock).V
+	return &r, resp.(respBookstoreV1Restock).Err
+}
+
+func decodeHTTPrespBookstoreV1Restock(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RestockResponse
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerBookstoreV1) AutoWatchOrder(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchOrderServer) error {
 	return s.Endpoints.AutoWatchOrder(in, stream)
 }
@@ -571,6 +805,44 @@ func (s *grpcServerBookstoreV1) AutoWatchPublisher(in *api.ListWatchOptions, str
 
 func (s *grpcServerBookstoreV1) AutoWatchStore(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchStoreServer) error {
 	return s.Endpoints.AutoWatchStore(in, stream)
+}
+
+func (s *grpcServerBookstoreV1) AutoWatchCoupon(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchCouponServer) error {
+	return s.Endpoints.AutoWatchCoupon(in, stream)
+}
+
+func encodeHTTPApplyDiscountReq(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPApplyDiscountReq(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ApplyDiscountReq
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqApplyDiscountReq encodes GRPC request
+func EncodeGrpcReqApplyDiscountReq(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ApplyDiscountReq)
+	return req, nil
+}
+
+// DecodeGrpcReqApplyDiscountReq decodes GRPC request
+func DecodeGrpcReqApplyDiscountReq(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ApplyDiscountReq)
+	return req, nil
+}
+
+// EncodeGrpcRespApplyDiscountReq encodes GRC response
+func EncodeGrpcRespApplyDiscountReq(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespApplyDiscountReq decodes GRPC response
+func DecodeGrpcRespApplyDiscountReq(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
 }
 
 func encodeHTTPBook(ctx context.Context, req *http.Request, request interface{}) error {
@@ -706,6 +978,74 @@ func EncodeGrpcRespBookStatus(ctx context.Context, response interface{}) (interf
 
 // DecodeGrpcRespBookStatus decodes GRPC response
 func DecodeGrpcRespBookStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPCoupon(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPCoupon(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Coupon
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqCoupon encodes GRPC request
+func EncodeGrpcReqCoupon(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Coupon)
+	return req, nil
+}
+
+// DecodeGrpcReqCoupon decodes GRPC request
+func DecodeGrpcReqCoupon(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Coupon)
+	return req, nil
+}
+
+// EncodeGrpcRespCoupon encodes GRC response
+func EncodeGrpcRespCoupon(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespCoupon decodes GRPC response
+func DecodeGrpcRespCoupon(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPCouponList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPCouponList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req CouponList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqCouponList encodes GRPC request
+func EncodeGrpcReqCouponList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CouponList)
+	return req, nil
+}
+
+// DecodeGrpcReqCouponList decodes GRPC request
+func DecodeGrpcReqCouponList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CouponList)
+	return req, nil
+}
+
+// EncodeGrpcRespCouponList endodes the GRPC response
+func EncodeGrpcRespCouponList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespCouponList decodes the GRPC response
+func DecodeGrpcRespCouponList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -879,6 +1219,40 @@ func DecodeGrpcRespOrderStatus(ctx context.Context, response interface{}) (inter
 	return response, nil
 }
 
+func encodeHTTPOutageRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPOutageRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req OutageRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqOutageRequest encodes GRPC request
+func EncodeGrpcReqOutageRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OutageRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqOutageRequest decodes GRPC request
+func DecodeGrpcReqOutageRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OutageRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespOutageRequest encodes GRC response
+func EncodeGrpcRespOutageRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespOutageRequest decodes GRPC response
+func DecodeGrpcRespOutageRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPPublisher(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -978,6 +1352,74 @@ func EncodeGrpcRespPublisherSpec(ctx context.Context, response interface{}) (int
 
 // DecodeGrpcRespPublisherSpec decodes GRPC response
 func DecodeGrpcRespPublisherSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRestockRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRestockRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RestockRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRestockRequest encodes GRPC request
+func EncodeGrpcReqRestockRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RestockRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqRestockRequest decodes GRPC request
+func DecodeGrpcReqRestockRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RestockRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespRestockRequest encodes GRC response
+func EncodeGrpcRespRestockRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRestockRequest decodes GRPC response
+func DecodeGrpcRespRestockRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRestockResponse(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRestockResponse(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RestockResponse
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRestockResponse encodes GRPC request
+func EncodeGrpcReqRestockResponse(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RestockResponse)
+	return req, nil
+}
+
+// DecodeGrpcReqRestockResponse decodes GRPC request
+func DecodeGrpcReqRestockResponse(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RestockResponse)
+	return req, nil
+}
+
+// EncodeGrpcRespRestockResponse encodes GRC response
+func EncodeGrpcRespRestockResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRestockResponse decodes GRPC response
+func DecodeGrpcRespRestockResponse(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

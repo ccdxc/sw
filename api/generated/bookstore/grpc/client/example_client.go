@@ -28,6 +28,34 @@ var _ kvstore.Interface
 // NewBookstoreV1 sets up a new client for BookstoreV1
 func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceBookstoreV1Client {
 
+	var lAddOutageEndpoint endpoint.Endpoint
+	{
+		lAddOutageEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AddOutage",
+			bookstore.EncodeGrpcReqOutageRequest,
+			bookstore.DecodeGrpcRespStore,
+			&bookstore.Store{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAddOutageEndpoint = trace.ClientEndPoint("BookstoreV1:AddOutage")(lAddOutageEndpoint)
+	}
+	var lApplydiscountEndpoint endpoint.Endpoint
+	{
+		lApplydiscountEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"Applydiscount",
+			bookstore.EncodeGrpcReqApplyDiscountReq,
+			bookstore.DecodeGrpcRespOrder,
+			&bookstore.Order{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lApplydiscountEndpoint = trace.ClientEndPoint("BookstoreV1:Applydiscount")(lApplydiscountEndpoint)
+	}
 	var lAutoAddBookEndpoint endpoint.Endpoint
 	{
 		lAutoAddBookEndpoint = grpctransport.NewClient(
@@ -41,6 +69,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoAddBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoAddBook")(lAutoAddBookEndpoint)
+	}
+	var lAutoAddCouponEndpoint endpoint.Endpoint
+	{
+		lAutoAddCouponEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoAddCoupon",
+			bookstore.EncodeGrpcReqCoupon,
+			bookstore.DecodeGrpcRespCoupon,
+			&bookstore.Coupon{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddCouponEndpoint = trace.ClientEndPoint("BookstoreV1:AutoAddCoupon")(lAutoAddCouponEndpoint)
 	}
 	var lAutoAddOrderEndpoint endpoint.Endpoint
 	{
@@ -98,6 +140,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoDeleteBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoDeleteBook")(lAutoDeleteBookEndpoint)
 	}
+	var lAutoDeleteCouponEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteCouponEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoDeleteCoupon",
+			bookstore.EncodeGrpcReqCoupon,
+			bookstore.DecodeGrpcRespCoupon,
+			&bookstore.Coupon{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteCouponEndpoint = trace.ClientEndPoint("BookstoreV1:AutoDeleteCoupon")(lAutoDeleteCouponEndpoint)
+	}
 	var lAutoDeleteOrderEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteOrderEndpoint = grpctransport.NewClient(
@@ -153,6 +209,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoGetBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetBook")(lAutoGetBookEndpoint)
+	}
+	var lAutoGetCouponEndpoint endpoint.Endpoint
+	{
+		lAutoGetCouponEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoGetCoupon",
+			bookstore.EncodeGrpcReqCoupon,
+			bookstore.DecodeGrpcRespCoupon,
+			&bookstore.Coupon{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetCouponEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetCoupon")(lAutoGetCouponEndpoint)
 	}
 	var lAutoGetOrderEndpoint endpoint.Endpoint
 	{
@@ -210,6 +280,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoListBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoListBook")(lAutoListBookEndpoint)
 	}
+	var lAutoListCouponEndpoint endpoint.Endpoint
+	{
+		lAutoListCouponEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoListCoupon",
+			bookstore.EncodeGrpcReqListWatchOptions,
+			bookstore.DecodeGrpcRespCouponList,
+			&bookstore.CouponList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListCouponEndpoint = trace.ClientEndPoint("BookstoreV1:AutoListCoupon")(lAutoListCouponEndpoint)
+	}
 	var lAutoListOrderEndpoint endpoint.Endpoint
 	{
 		lAutoListOrderEndpoint = grpctransport.NewClient(
@@ -266,6 +350,20 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoUpdateBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdateBook")(lAutoUpdateBookEndpoint)
 	}
+	var lAutoUpdateCouponEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateCouponEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoUpdateCoupon",
+			bookstore.EncodeGrpcReqCoupon,
+			bookstore.DecodeGrpcRespCoupon,
+			&bookstore.Coupon{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateCouponEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdateCoupon")(lAutoUpdateCouponEndpoint)
+	}
 	var lAutoUpdateOrderEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateOrderEndpoint = grpctransport.NewClient(
@@ -308,29 +406,66 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoUpdateStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdateStore")(lAutoUpdateStoreEndpoint)
 	}
+	var lCleardiscountEndpoint endpoint.Endpoint
+	{
+		lCleardiscountEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"Cleardiscount",
+			bookstore.EncodeGrpcReqApplyDiscountReq,
+			bookstore.DecodeGrpcRespOrder,
+			&bookstore.Order{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lCleardiscountEndpoint = trace.ClientEndPoint("BookstoreV1:Cleardiscount")(lCleardiscountEndpoint)
+	}
+	var lRestockEndpoint endpoint.Endpoint
+	{
+		lRestockEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"Restock",
+			bookstore.EncodeGrpcReqRestockRequest,
+			bookstore.DecodeGrpcRespRestockResponse,
+			&bookstore.RestockResponse{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lRestockEndpoint = trace.ClientEndPoint("BookstoreV1:Restock")(lRestockEndpoint)
+	}
 	return bookstore.EndpointsBookstoreV1Client{
 		Client: bookstore.NewBookstoreV1Client(conn),
 
+		AddOutageEndpoint:           lAddOutageEndpoint,
+		ApplydiscountEndpoint:       lApplydiscountEndpoint,
 		AutoAddBookEndpoint:         lAutoAddBookEndpoint,
+		AutoAddCouponEndpoint:       lAutoAddCouponEndpoint,
 		AutoAddOrderEndpoint:        lAutoAddOrderEndpoint,
 		AutoAddPublisherEndpoint:    lAutoAddPublisherEndpoint,
 		AutoAddStoreEndpoint:        lAutoAddStoreEndpoint,
 		AutoDeleteBookEndpoint:      lAutoDeleteBookEndpoint,
+		AutoDeleteCouponEndpoint:    lAutoDeleteCouponEndpoint,
 		AutoDeleteOrderEndpoint:     lAutoDeleteOrderEndpoint,
 		AutoDeletePublisherEndpoint: lAutoDeletePublisherEndpoint,
 		AutoDeleteStoreEndpoint:     lAutoDeleteStoreEndpoint,
 		AutoGetBookEndpoint:         lAutoGetBookEndpoint,
+		AutoGetCouponEndpoint:       lAutoGetCouponEndpoint,
 		AutoGetOrderEndpoint:        lAutoGetOrderEndpoint,
 		AutoGetPublisherEndpoint:    lAutoGetPublisherEndpoint,
 		AutoGetStoreEndpoint:        lAutoGetStoreEndpoint,
 		AutoListBookEndpoint:        lAutoListBookEndpoint,
+		AutoListCouponEndpoint:      lAutoListCouponEndpoint,
 		AutoListOrderEndpoint:       lAutoListOrderEndpoint,
 		AutoListPublisherEndpoint:   lAutoListPublisherEndpoint,
 		AutoListStoreEndpoint:       lAutoListStoreEndpoint,
 		AutoUpdateBookEndpoint:      lAutoUpdateBookEndpoint,
+		AutoUpdateCouponEndpoint:    lAutoUpdateCouponEndpoint,
 		AutoUpdateOrderEndpoint:     lAutoUpdateOrderEndpoint,
 		AutoUpdatePublisherEndpoint: lAutoUpdatePublisherEndpoint,
 		AutoUpdateStoreEndpoint:     lAutoUpdateStoreEndpoint,
+		CleardiscountEndpoint:       lCleardiscountEndpoint,
+		RestockEndpoint:             lRestockEndpoint,
 	}
 }
 
@@ -435,6 +570,24 @@ func (a *grpcObjBookstoreV1Order) Watch(ctx context.Context, options *api.ListWa
 	return lw, nil
 }
 
+func (a *grpcObjBookstoreV1Order) Applydiscount(ctx context.Context, in *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{Applydiscount ApplyDiscountReq Order}", "oper", "Applydiscount")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.Applydiscount(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Order) Cleardiscount(ctx context.Context, in *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{Cleardiscount ApplyDiscountReq Order}", "oper", "Cleardiscount")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.Cleardiscount(nctx, in)
+}
+
 func (a *grpcObjBookstoreV1Order) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
@@ -508,6 +661,19 @@ func (a *restObjBookstoreV1Order) Allowed(oper apiserver.APIOperType) bool {
 	default:
 		return false
 	}
+}
+
+func (a *restObjBookstoreV1Order) Applydiscount(ctx context.Context, in *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.ApplydiscountOrder(ctx, in)
+}
+func (a *restObjBookstoreV1Order) Cleardiscount(ctx context.Context, in *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.CleardiscountOrder(ctx, in)
 }
 
 type grpcObjBookstoreV1Book struct {
@@ -604,6 +770,15 @@ func (a *grpcObjBookstoreV1Book) Watch(ctx context.Context, options *api.ListWat
 	return lw, nil
 }
 
+func (a *grpcObjBookstoreV1Book) Restock(ctx context.Context, in *bookstore.RestockRequest) (*bookstore.RestockResponse, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{Restock RestockRequest RestockResponse}", "oper", "Restock")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.Restock(nctx, in)
+}
+
 func (a *grpcObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
@@ -677,6 +852,13 @@ func (a *restObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
 	default:
 		return false
 	}
+}
+
+func (a *restObjBookstoreV1Book) Restock(ctx context.Context, in *bookstore.RestockRequest) (*bookstore.RestockResponse, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.RestockBook(ctx, in)
 }
 
 type grpcObjBookstoreV1Publisher struct {
@@ -942,6 +1124,15 @@ func (a *grpcObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWa
 	return lw, nil
 }
 
+func (a *grpcObjBookstoreV1Store) AddOutage(ctx context.Context, in *bookstore.OutageRequest) (*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{AddOutage OutageRequest Store}", "oper", "AddOutage")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AddOutage(nctx, in)
+}
+
 func (a *grpcObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
@@ -1001,11 +1192,187 @@ func (a *restObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWa
 func (a *restObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return false
+		return true
 	case apiserver.UpdateOper:
 		return true
 	case apiserver.GetOper:
 		return true
+	case apiserver.DeleteOper:
+		return true
+	case apiserver.ListOper:
+		return false
+	case apiserver.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
+func (a *restObjBookstoreV1Store) AddOutage(ctx context.Context, in *bookstore.OutageRequest) (*bookstore.Store, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AddOutageStore(ctx, in)
+}
+
+type grpcObjBookstoreV1Coupon struct {
+	logger log.Logger
+	client bookstore.ServiceBookstoreV1Client
+}
+
+func (a *grpcObjBookstoreV1Coupon) Create(ctx context.Context, in *bookstore.Coupon) (*bookstore.Coupon, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddCoupon(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Coupon) Update(ctx context.Context, in *bookstore.Coupon) (*bookstore.Coupon, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateCoupon(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Coupon) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Coupon, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Coupon{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetCoupon(nctx, &in)
+}
+
+func (a *grpcObjBookstoreV1Coupon) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Coupon, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Coupon{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteCoupon(nctx, &in)
+}
+
+func (a *grpcObjBookstoreV1Coupon) List(ctx context.Context, options *api.ListWatchOptions) ([]*bookstore.Coupon, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListCoupon(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjBookstoreV1Coupon) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchCoupon(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(bookstore.BookstoreV1_AutoWatchCouponClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			ev := kvstore.WatchEvent{
+				Type:   kvstore.WatchEventType(r.Type),
+				Object: r.Object,
+			}
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjBookstoreV1Coupon) Allowed(oper apiserver.APIOperType) bool {
+	return true
+}
+
+type restObjBookstoreV1Coupon struct {
+	endpoints bookstore.EndpointsBookstoreV1RestClient
+	instance  string
+}
+
+func (a *restObjBookstoreV1Coupon) Create(ctx context.Context, in *bookstore.Coupon) (*bookstore.Coupon, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddCoupon(ctx, in)
+}
+
+func (a *restObjBookstoreV1Coupon) Update(ctx context.Context, in *bookstore.Coupon) (*bookstore.Coupon, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateCoupon(ctx, in)
+}
+
+func (a *restObjBookstoreV1Coupon) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Coupon, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Coupon{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetCoupon(ctx, &in)
+}
+
+func (a *restObjBookstoreV1Coupon) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Coupon, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := bookstore.Coupon{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteCoupon(ctx, &in)
+}
+
+func (a *restObjBookstoreV1Coupon) List(ctx context.Context, options *api.ListWatchOptions) ([]*bookstore.Coupon, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	r, err := a.endpoints.AutoListCoupon(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjBookstoreV1Coupon) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (a *restObjBookstoreV1Coupon) Allowed(oper apiserver.APIOperType) bool {
+	switch oper {
+	case apiserver.CreateOper:
+		return false
+	case apiserver.UpdateOper:
+		return false
+	case apiserver.GetOper:
+		return false
 	case apiserver.DeleteOper:
 		return false
 	case apiserver.ListOper:
@@ -1018,10 +1385,11 @@ func (a *restObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
 }
 
 type crudClientBookstoreV1 struct {
-	grpcOrder     bookstore.OrderInterface
-	grpcBook      bookstore.BookInterface
-	grpcPublisher bookstore.PublisherInterface
-	grpcStore     bookstore.StoreInterface
+	grpcOrder     bookstore.BookstoreV1OrderInterface
+	grpcBook      bookstore.BookstoreV1BookInterface
+	grpcPublisher bookstore.BookstoreV1PublisherInterface
+	grpcStore     bookstore.BookstoreV1StoreInterface
+	grpcCoupon    bookstore.BookstoreV1CouponInterface
 }
 
 // NewGrpcCrudClientBookstoreV1 creates a GRPC client for the service
@@ -1033,30 +1401,36 @@ func NewGrpcCrudClientBookstoreV1(conn *grpc.ClientConn, logger log.Logger) book
 		grpcBook:      &grpcObjBookstoreV1Book{client: client, logger: logger},
 		grpcPublisher: &grpcObjBookstoreV1Publisher{client: client, logger: logger},
 		grpcStore:     &grpcObjBookstoreV1Store{client: client, logger: logger},
+		grpcCoupon:    &grpcObjBookstoreV1Coupon{client: client, logger: logger},
 	}
 }
 
-func (a *crudClientBookstoreV1) Order() bookstore.OrderInterface {
+func (a *crudClientBookstoreV1) Order() bookstore.BookstoreV1OrderInterface {
 	return a.grpcOrder
 }
 
-func (a *crudClientBookstoreV1) Book() bookstore.BookInterface {
+func (a *crudClientBookstoreV1) Book() bookstore.BookstoreV1BookInterface {
 	return a.grpcBook
 }
 
-func (a *crudClientBookstoreV1) Publisher() bookstore.PublisherInterface {
+func (a *crudClientBookstoreV1) Publisher() bookstore.BookstoreV1PublisherInterface {
 	return a.grpcPublisher
 }
 
-func (a *crudClientBookstoreV1) Store() bookstore.StoreInterface {
+func (a *crudClientBookstoreV1) Store() bookstore.BookstoreV1StoreInterface {
 	return a.grpcStore
 }
 
+func (a *crudClientBookstoreV1) Coupon() bookstore.BookstoreV1CouponInterface {
+	return a.grpcCoupon
+}
+
 type crudRestClientBookstoreV1 struct {
-	restOrder     bookstore.OrderInterface
-	restBook      bookstore.BookInterface
-	restPublisher bookstore.PublisherInterface
-	restStore     bookstore.StoreInterface
+	restOrder     bookstore.BookstoreV1OrderInterface
+	restBook      bookstore.BookstoreV1BookInterface
+	restPublisher bookstore.BookstoreV1PublisherInterface
+	restStore     bookstore.BookstoreV1StoreInterface
+	restCoupon    bookstore.BookstoreV1CouponInterface
 }
 
 // NewRestCrudClientBookstoreV1 creates a REST client for the service.
@@ -1071,21 +1445,26 @@ func NewRestCrudClientBookstoreV1(url string) bookstore.BookstoreV1Interface {
 		restBook:      &restObjBookstoreV1Book{endpoints: endpoints, instance: url},
 		restPublisher: &restObjBookstoreV1Publisher{endpoints: endpoints, instance: url},
 		restStore:     &restObjBookstoreV1Store{endpoints: endpoints, instance: url},
+		restCoupon:    &restObjBookstoreV1Coupon{endpoints: endpoints, instance: url},
 	}
 }
 
-func (a *crudRestClientBookstoreV1) Order() bookstore.OrderInterface {
+func (a *crudRestClientBookstoreV1) Order() bookstore.BookstoreV1OrderInterface {
 	return a.restOrder
 }
 
-func (a *crudRestClientBookstoreV1) Book() bookstore.BookInterface {
+func (a *crudRestClientBookstoreV1) Book() bookstore.BookstoreV1BookInterface {
 	return a.restBook
 }
 
-func (a *crudRestClientBookstoreV1) Publisher() bookstore.PublisherInterface {
+func (a *crudRestClientBookstoreV1) Publisher() bookstore.BookstoreV1PublisherInterface {
 	return a.restPublisher
 }
 
-func (a *crudRestClientBookstoreV1) Store() bookstore.StoreInterface {
+func (a *crudRestClientBookstoreV1) Store() bookstore.BookstoreV1StoreInterface {
 	return a.restStore
+}
+
+func (a *crudRestClientBookstoreV1) Coupon() bookstore.BookstoreV1CouponInterface {
+	return a.restCoupon
 }

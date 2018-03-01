@@ -7,7 +7,9 @@ Input file: protos/example.proto
 
 The following Messages are defined.
 
+  ApplyDiscountReq
   AutoMsgBookWatchHelper
+  AutoMsgCouponWatchHelper
   AutoMsgOrderWatchHelper
   AutoMsgPublisherWatchHelper
   AutoMsgStoreWatchHelper
@@ -15,14 +17,19 @@ The following Messages are defined.
   BookList
   BookSpec
   BookStatus
+  Coupon
+  CouponList
   Order
   OrderItem
   OrderList
   OrderSpec
   OrderStatus
+  OutageRequest
   Publisher
   PublisherList
   PublisherSpec
+  RestockRequest
+  RestockResponse
   Store
   StoreList
   StoreSpec
@@ -31,30 +38,40 @@ The following Messages are defined.
 The following Services and Methods are defined.
 
  Service: BookstoreV1
+   AddOutage
+   Applydiscount
    AutoAddBook
+   AutoAddCoupon
    AutoAddOrder
    AutoAddPublisher
    AutoAddStore
    AutoDeleteBook
+   AutoDeleteCoupon
    AutoDeleteOrder
    AutoDeletePublisher
    AutoDeleteStore
    AutoGetBook
+   AutoGetCoupon
    AutoGetOrder
    AutoGetPublisher
    AutoGetStore
    AutoListBook
+   AutoListCoupon
    AutoListOrder
    AutoListPublisher
    AutoListStore
    AutoUpdateBook
+   AutoUpdateCoupon
    AutoUpdateOrder
    AutoUpdatePublisher
    AutoUpdateStore
    AutoWatchBook
+   AutoWatchCoupon
    AutoWatchOrder
    AutoWatchPublisher
    AutoWatchStore
+   Cleardiscount
+   Restock
 
 */
 package bookstore

@@ -103,11 +103,47 @@ message OrderStatus {
     FILLED = 2;
     SHIPPED = 3;
     COMPLETED = 4;
+    DISCOUNTED = 5;
   }
   string Status = 3 [(venice.check) = "StrEnum(OrderStatus.OrderStatus)"];
   repeated OrderSpec Filled = 4;
 }
 
+message Coupon {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+  option (venice.objectPrefix) = {Collection: "Coupon"};
+  string DiscountCode = 3;
+}
+
+message ApplyDiscountReq {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+  option (venice.objectPrefix) = {Collection: "orders"};
+  string Coupon = 3;
+}
+
+message OutageRequest {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+  option (venice.objectPrefix) = {Collection: "Store"};
+  string Reason = 3;
+}
+
+message RestockRequest {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+  option (venice.objectPrefix) = {Collection: "Book"};
+  string Reason = 3;
+}
+
+message RestockResponse {
+  api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+  option (venice.objectPrefix) = {Collection: "Book"};
+  repeated string Books = 3;
+  int32 Count = 4;
+}
 service BookstoreV1 {
   // ---- Service level parameters ----//
   // Prefix for all resources served by this service.
@@ -119,6 +155,7 @@ service BookstoreV1 {
   option (venice.apiGrpcCrudService) = "Book";
   option (venice.apiGrpcCrudService) = "Publisher";
   option (venice.apiGrpcCrudService) = "Store";
+  option (venice.apiGrpcCrudService) = "Coupon";
 
   // REST resources exposed by the service. The Option specifies
   //   Object  - The resource
@@ -136,6 +173,35 @@ service BookstoreV1 {
 
   option (venice.apiRestService) = {
         Object: "Store"
-        Method: [ "put", "get" ]
+        Method: [ "put", "get", "post", "delete" ]
      };
+
+  // Action on a Object
+  option (venice.apiAction) = {
+      Object: "Order"
+      Action: "applydiscount"
+      Request: "ApplyDiscountReq"
+      Response: "Order"
+     };
+  // Multiple actions on the same object
+  option (venice.apiAction) = {
+      Object: "Order"
+      Action: "cleardiscount"
+      Request: "ApplyDiscountReq"
+      Response: "Order"
+     };
+  // Action on a Singleton
+  option (venice.apiAction) = {
+     Object: "Store"
+     Action: "AddOutage"
+     Request: "OutageRequest"
+     Response: "Store"
+    };
+  // Action on a collection
+  option (venice.apiAction) = {
+       Collection: "Book"
+       Action: "Restock"
+       Request: "RestockRequest"
+       Response: "RestockResponse"
+    };
 }

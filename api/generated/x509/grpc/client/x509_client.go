@@ -286,7 +286,7 @@ func (a *restObjCertificateV1Certificate) Allowed(oper apiserver.APIOperType) bo
 }
 
 type crudClientCertificateV1 struct {
-	grpcCertificate x509.CertificateInterface
+	grpcCertificate x509.CertificateV1CertificateInterface
 }
 
 // NewGrpcCrudClientCertificateV1 creates a GRPC client for the service
@@ -298,12 +298,12 @@ func NewGrpcCrudClientCertificateV1(conn *grpc.ClientConn, logger log.Logger) x5
 	}
 }
 
-func (a *crudClientCertificateV1) Certificate() x509.CertificateInterface {
+func (a *crudClientCertificateV1) Certificate() x509.CertificateV1CertificateInterface {
 	return a.grpcCertificate
 }
 
 type crudRestClientCertificateV1 struct {
-	restCertificate x509.CertificateInterface
+	restCertificate x509.CertificateV1CertificateInterface
 }
 
 // NewRestCrudClientCertificateV1 creates a REST client for the service.
@@ -318,6 +318,6 @@ func NewRestCrudClientCertificateV1(url string) x509.CertificateV1Interface {
 	}
 }
 
-func (a *crudRestClientCertificateV1) Certificate() x509.CertificateInterface {
+func (a *crudRestClientCertificateV1) Certificate() x509.CertificateV1CertificateInterface {
 	return a.restCertificate
 }

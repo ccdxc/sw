@@ -286,7 +286,7 @@ func (a *restObjTrafficEncryptionPolicyV1TrafficEncryptionPolicy) Allowed(oper a
 }
 
 type crudClientTrafficEncryptionPolicyV1 struct {
-	grpcTrafficEncryptionPolicy networkencryption.TrafficEncryptionPolicyInterface
+	grpcTrafficEncryptionPolicy networkencryption.TrafficEncryptionPolicyV1TrafficEncryptionPolicyInterface
 }
 
 // NewGrpcCrudClientTrafficEncryptionPolicyV1 creates a GRPC client for the service
@@ -298,12 +298,12 @@ func NewGrpcCrudClientTrafficEncryptionPolicyV1(conn *grpc.ClientConn, logger lo
 	}
 }
 
-func (a *crudClientTrafficEncryptionPolicyV1) TrafficEncryptionPolicy() networkencryption.TrafficEncryptionPolicyInterface {
+func (a *crudClientTrafficEncryptionPolicyV1) TrafficEncryptionPolicy() networkencryption.TrafficEncryptionPolicyV1TrafficEncryptionPolicyInterface {
 	return a.grpcTrafficEncryptionPolicy
 }
 
 type crudRestClientTrafficEncryptionPolicyV1 struct {
-	restTrafficEncryptionPolicy networkencryption.TrafficEncryptionPolicyInterface
+	restTrafficEncryptionPolicy networkencryption.TrafficEncryptionPolicyV1TrafficEncryptionPolicyInterface
 }
 
 // NewRestCrudClientTrafficEncryptionPolicyV1 creates a REST client for the service.
@@ -318,6 +318,6 @@ func NewRestCrudClientTrafficEncryptionPolicyV1(url string) networkencryption.Tr
 	}
 }
 
-func (a *crudRestClientTrafficEncryptionPolicyV1) TrafficEncryptionPolicy() networkencryption.TrafficEncryptionPolicyInterface {
+func (a *crudRestClientTrafficEncryptionPolicyV1) TrafficEncryptionPolicy() networkencryption.TrafficEncryptionPolicyV1TrafficEncryptionPolicyInterface {
 	return a.restTrafficEncryptionPolicy
 }

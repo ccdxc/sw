@@ -88,6 +88,8 @@ func TestCrudOps(t *testing.T) {
 	var pRcvWatchEvents, pExpectWatchEvents []kvstore.WatchEvent
 	// For orders
 	var oRcvWatchEvents, oExpectWatchEvents []kvstore.WatchEvent
+	// For Store
+	var sRcvWatchEvents, sExpectWatchEvents []kvstore.WatchEvent
 	var wg sync.WaitGroup
 	wctx, cancel := context.WithCancel(ctx)
 	waitWatch := make(chan bool)
@@ -102,10 +104,14 @@ func TestCrudOps(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to start watch (%s)\n", err)
 		}
+		storeWatcher, err := apicl.BookstoreV1().Store().Watch(wctx, &opts)
+		if err != nil {
+			t.Fatalf("Failed to start watch (%s)\n", err)
+		}
+
 		close(waitWatch)
-		ow := true
-		pw := true
-		for ow && pw {
+		active := true
+		for active {
 			select {
 			case ev, ok := <-watcher.EventChan():
 				t.Logf("received event [%v]", ok)
@@ -114,7 +120,7 @@ func TestCrudOps(t *testing.T) {
 					pRcvWatchEvents = append(pRcvWatchEvents, *ev)
 				} else {
 					t.Logf("publisher watcher closed")
-					pw = false
+					active = false
 				}
 			case ev, ok := <-orderWatcher.EventChan():
 				t.Logf("received event [%v]", ok)
@@ -123,7 +129,16 @@ func TestCrudOps(t *testing.T) {
 					oRcvWatchEvents = append(oRcvWatchEvents, *ev)
 				} else {
 					t.Logf("order watcher closed")
-					ow = false
+					active = false
+				}
+			case ev, ok := <-storeWatcher.EventChan():
+				t.Logf("received event [%v]", ok)
+				if ok {
+					t.Logf("  event [%+v]", *ev)
+					sRcvWatchEvents = append(sRcvWatchEvents, *ev)
+				} else {
+					t.Logf("Store watcher closed")
+					active = false
 				}
 			}
 		}
@@ -425,6 +440,132 @@ func TestCrudOps(t *testing.T) {
 		}
 	}
 
+	// ===== Test Operations on Singleton Object ===== //
+	{ // Create via the gRPC
+		storeObj := bookstore.Store{}
+		storeObj.Spec.Contact = "Test Store"
+		_, err := apicl.BookstoreV1().Store().Create(ctx, &storeObj)
+		if err != nil {
+			t.Fatalf("gRPC create of singleton failed (%s)", err)
+		}
+		evp := storeObj
+		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Created)
+	}
+
+	{ // Create Duplicate via the gRPC
+		storeObj := bookstore.Store{}
+		storeObj.Spec.Contact = "Test Store2"
+		_, err := apicl.BookstoreV1().Store().Create(ctx, &storeObj)
+		if err == nil {
+			t.Fatalf("gRPC create of duplicate singleton succeded")
+		}
+	}
+
+	{ // Get via the gRPC
+		objectMeta := api.ObjectMeta{Name: "Dummy Store"}
+		ret, err := apicl.BookstoreV1().Store().Get(ctx, &objectMeta)
+		if err != nil {
+			t.Fatalf("gRPC Get of singleton failed")
+		}
+		if ret.Spec.Contact != "Test Store" {
+			t.Fatalf("Singleton object does notmatch exp[Test Store] got [%s]", ret.Spec.Contact)
+		}
+	}
+	{ // Create via the gRPC
+		storeObj := bookstore.Store{}
+		storeObj.Spec.Contact = "Test Store2"
+		_, err := apicl.BookstoreV1().Store().Update(ctx, &storeObj)
+		if err != nil {
+			t.Fatalf("gRPC create of singleton failed (%s)", err)
+		}
+		evp := storeObj
+		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Updated)
+	}
+	{ // List via the gRPC
+		opts := api.ListWatchOptions{}
+		ret, err := apicl.BookstoreV1().Store().List(ctx, &opts)
+		if err != nil {
+			t.Fatalf("gRPC list of singleton failed ")
+		}
+		if len(ret) != 1 {
+			t.Fatalf("Singleton object list got more than one item [%v] ", ret)
+		}
+		if ret[0].Spec.Contact != "Test Store2" {
+			t.Fatalf("Singleton object does notmatch exp[Test Store] got [%s]", ret[0].Spec.Contact)
+		}
+	}
+	{ // Delete via gRPC
+		meta := api.ObjectMeta{Name: "Dummy"}
+		storeObj, err := apicl.BookstoreV1().Store().Delete(ctx, &meta)
+		if err != nil {
+			t.Fatalf("Failed to delete singleton object (%s)", err)
+		}
+		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, storeObj, kvstore.Deleted)
+		opts := api.ListWatchOptions{}
+		ret, err := apicl.BookstoreV1().Store().List(ctx, &opts)
+		if err != nil {
+			t.Fatalf("gRPC List of singleton failed")
+		}
+		if len(ret) != 0 {
+			t.Fatalf("Singleton object list got more than one item [%v] ", ret)
+		}
+	}
+
+	// ===== Test Operations on Singleton object via REST ===== //
+	{ // Create via the gRPC
+		storeObj := bookstore.Store{}
+		storeObj.Spec.Contact = "Test Store"
+		_, err := restcl.BookstoreV1().Store().Create(ctx, &storeObj)
+		if err != nil {
+			t.Fatalf("REST create of singleton failed (%s)", err)
+		}
+		evp := storeObj
+		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Created)
+	}
+
+	{ // Create Duplicate via the gRPC
+		storeObj := bookstore.Store{}
+		storeObj.Spec.Contact = "Test Store2"
+		_, err := restcl.BookstoreV1().Store().Create(ctx, &storeObj)
+		if err == nil {
+			t.Fatalf("REST create of duplicate singleton succeded")
+		}
+	}
+
+	{ // Get via the gRPC
+		objectMeta := api.ObjectMeta{Name: "Dummy Store"}
+		ret, err := restcl.BookstoreV1().Store().Get(ctx, &objectMeta)
+		if err != nil {
+			t.Fatalf("REST Get of singleton failed")
+		}
+		if ret.Spec.Contact != "Test Store" {
+			t.Fatalf("Singleton object does notmatch exp[Test Store] got [%s]", ret.Spec.Contact)
+		}
+	}
+	{ // Create via the gRPC
+		storeObj := bookstore.Store{}
+		storeObj.Spec.Contact = "Test Store2"
+		_, err := restcl.BookstoreV1().Store().Update(ctx, &storeObj)
+		if err != nil {
+			t.Fatalf("REST create of singleton failed (%s)", err)
+		}
+		evp := storeObj
+		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, &evp, kvstore.Updated)
+	}
+	{ // Delete via gRPC
+		meta := api.ObjectMeta{Name: "Dummy"}
+		storeObj, err := restcl.BookstoreV1().Store().Delete(ctx, &meta)
+		if err != nil {
+			t.Fatalf("Failed to delete singleton object (%s)", err)
+		}
+		sExpectWatchEvents = addToWatchList(&sExpectWatchEvents, storeObj, kvstore.Deleted)
+		objectMeta := api.ObjectMeta{Name: "Test Strore2"}
+		_, err = restcl.BookstoreV1().Store().Get(ctx, &objectMeta)
+		if err == nil {
+			t.Fatalf("REST get succeeded after Delete")
+		}
+	}
+
 	// ===== Validate Watch Events received === //
 	AssertEventually(t,
 		func() (bool, interface{}) { return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil },
@@ -433,6 +574,11 @@ func TestCrudOps(t *testing.T) {
 		"9s")
 	AssertEventually(t,
 		func() (bool, interface{}) { return len(oExpectWatchEvents) == len(oRcvWatchEvents), nil },
+		"failed to receive all watch events",
+		"10ms",
+		"9s")
+	AssertEventually(t,
+		func() (bool, interface{}) { return len(sExpectWatchEvents) == len(sRcvWatchEvents), nil },
 		"failed to receive all watch events",
 		"10ms",
 		"9s")
@@ -455,4 +601,81 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("watch event object [%s] does not match \n\t[%+v]\n\t[%+v]", oExpectWatchEvents[k].Type, oExpectWatchEvents[k].Object, oRcvWatchEvents[k].Object)
 		}
 	}
+
+	for k := range sExpectWatchEvents {
+		if sExpectWatchEvents[k].Type != sRcvWatchEvents[k].Type {
+			t.Fatalf("mismatched event type expected (%s) got (%s)", sExpectWatchEvents[k].Type, sRcvWatchEvents[k].Type)
+		}
+		if !validateObjectSpec(sExpectWatchEvents[k].Object, sRcvWatchEvents[k].Object) {
+			t.Fatalf("watch event object [%s] does not match \n\t[%+v]\n\t[%+v]", sExpectWatchEvents[k].Type, sExpectWatchEvents[k].Object, sRcvWatchEvents[k].Object)
+		}
+	}
+
+	// Test Action Functions - gRPC
+	actreq := bookstore.ApplyDiscountReq{}
+	actreq.Name = "order-2"
+	ret, err := apicl.BookstoreV1().Order().Applydiscount(ctx, &actreq)
+	if err != nil {
+		t.Errorf("gRPC: apply discount action failed (%s)", err)
+	}
+	if ret.Status.Status != "DISCOUNTED" {
+		t.Errorf("gRPC: hook did not run")
+	}
+
+	// Reset the object:
+	ret, err = apicl.BookstoreV1().Order().Cleardiscount(ctx, &actreq)
+	if err != nil {
+		t.Errorf("gRPC: clear discount action failed (%s)", err)
+	}
+	if ret.Status.Status != "PROCESSING" {
+		t.Errorf("gRPC: hook did not run")
+	}
+
+	// Restock action on Collection
+	restockReq := bookstore.RestockRequest{}
+	restkresp, err := apicl.BookstoreV1().Book().Restock(ctx, &restockReq)
+	if err != nil {
+		t.Errorf("gRPC: Restock action failed (%s)", err)
+	}
+	if restkresp.Count != 3 {
+		t.Errorf("gRPC: restock action did not go through hook")
+	}
+
+	// Action on singleton object
+	outReq := bookstore.OutageRequest{}
+	outresp, err := apicl.BookstoreV1().Store().AddOutage(ctx, &outReq)
+	if err != nil {
+		t.Errorf("gRPC: Outage action failed (%s)", err)
+	}
+	if len(outresp.Status.CurrentOutages) != 1 {
+		t.Errorf("gRPC: Outage action did not go through hook")
+	}
+
+	// Test Action Functions - REST
+	ret, err = restcl.BookstoreV1().Order().Applydiscount(ctx, &actreq)
+	if err != nil {
+		t.Errorf("REST: apply discount action failed (%s)", err)
+	}
+	if ret.Status.Status != "DISCOUNTED" {
+		t.Errorf("REST: hook did not run")
+	}
+
+	// Restock action on Collection
+	restkresp, err = restcl.BookstoreV1().Book().Restock(ctx, &restockReq)
+	if err != nil {
+		t.Errorf("REST: Restock action failed (%s)", err)
+	}
+	if restkresp.Count != 3 {
+		t.Errorf("REST: restock action did not go through hook")
+	}
+
+	// Action on singleton object
+	outresp, err = restcl.BookstoreV1().Store().AddOutage(ctx, &outReq)
+	if err != nil {
+		t.Errorf("REST: Outage action failed (%s)", err)
+	}
+	if len(outresp.Status.CurrentOutages) != 1 {
+		t.Errorf("REST: Outage action did not go through hook")
+	}
+
 }
