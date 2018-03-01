@@ -1829,16 +1829,16 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   return 0;
 }
 
-int test_seq_write_roce_pdma_prefilled(uint16_t seq_pdma_q,
-                                       uint16_t seq_pdma_index,
-                                       uint32_t pvm_roce_sq,
-                                       dp_mem_t *seq_roce_desc,
-                                       dp_mem_t *sqwqe)
+int test_seq_roce_op_pdma_prefilled(uint16_t seq_start_q,
+                                    uint16_t seq_start_index,
+                                    dp_mem_t *seq_roce_desc,
+                                    uint32_t pvm_roce_sq,
+                                    dp_mem_t *sqwqe)
 {
   uint64_t qaddr;
 
-  printf("pdma_q %u, seq_pdma_index %u, roce_sq %u\n",
-         seq_pdma_q, seq_pdma_index, pvm_roce_sq);
+  printf("seq_start_q %u, seq_start_index %u, pvm_roce_sq %u\n", 
+         seq_start_q, seq_start_index, pvm_roce_sq);
 
   // Fill the Sequencer ROCE descriptor
   if (qstate_if::get_qstate_addr(queues::get_pvm_lif(), SQ_TYPE,
@@ -1846,6 +1846,8 @@ int test_seq_write_roce_pdma_prefilled(uint16_t seq_pdma_q,
     printf("Can't get PVM's ROCE SQ qaddr \n");
     return -1;
   }
+
+  // Sequencer: R2N descriptor
   seq_roce_desc->write_bit_fields(0, 64, sqwqe->pa());
   seq_roce_desc->write_bit_fields(64, 32, sqwqe->line_size_get());
   seq_roce_desc->write_bit_fields(96, 11, queues::get_pvm_lif());
@@ -1856,31 +1858,49 @@ int test_seq_write_roce_pdma_prefilled(uint16_t seq_pdma_q,
   seq_roce_desc->write_thru();
 
   // Kickstart the sequencer 
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q,
-                     0, seq_pdma_index);
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_start_q,
+                     0, seq_start_index);
   
   return 0;
 }
 
-int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr, 
-                       uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_roce_sq,
+                       uint64_t pdma_src_addr, uint64_t pdma_dst_addr, uint32_t pdma_data_size,
                        uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif,
-                       uint16_t db_lif, uint16_t db_qtype, uint32_t db_qid,
-                       uint16_t db_ring, uint16_t db_index) {
+                       uint64_t roce_wqe_addr, uint32_t roce_wqe_size) {
 
   uint16_t seq_pdma_index;
   dp_mem_t *seq_pdma_desc;
+  uint16_t seq_roce_index;
+  dp_mem_t *seq_roce_desc;
 
   reset_seq_db_data();
 
-  printf("seq_pdma_q %u, pdma_src_addr %lx, pdma_dst_addr %lx, " 
-         "pdma_data_size %u, pdma_dst_lif_override %u, pdma_dst_lif %u, "
-         "db_lif %u, db_qtype %u, db_qid %u, db_ring %u, db_index %u \n", 
-	 seq_pdma_q, pdma_src_addr, pdma_dst_addr, pdma_data_size,
-         pdma_dst_lif_override, pdma_dst_lif,
-	 db_lif, db_qtype, db_qid, db_ring, db_index);
+  printf("seq_pdma_q %u, seq_roce_q %u, pvm_roce_sq %u, "
+         "pdma_src_addr %lx, pdma_dst_addr %lx, " 
+         "pdma_data_size %u, pdma_dst_lif_override %u, pdma_dst_lif %u\n",
+	     seq_pdma_q, seq_roce_q, pvm_roce_sq, pdma_src_addr, 
+         pdma_dst_addr, pdma_data_size, pdma_dst_lif_override, pdma_dst_lif);
 
-  // Sequencer #1: PDMA descriptor
+  // Sequencer #1: R2N descriptor
+  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc->clear();
+
+  uint64_t qaddr;
+  if (qstate_if::get_qstate_addr(queues::get_pvm_lif(), SQ_TYPE, pvm_roce_sq, &qaddr) < 0) {
+    printf("Can't get PVM's ROCE SQ qaddr \n");
+    return -1;
+  }
+  seq_roce_desc->write_bit_fields(0, 64, roce_wqe_addr);
+  seq_roce_desc->write_bit_fields(64, 32, roce_wqe_size);
+  seq_roce_desc->write_bit_fields(96, 11, queues::get_pvm_lif());
+  seq_roce_desc->write_bit_fields(107, 3, SQ_TYPE);
+  seq_roce_desc->write_bit_fields(110, 24, pvm_roce_sq);
+  seq_roce_desc->write_bit_fields(134, 34, qaddr);
+  seq_roce_desc->write_bit_fields(168, 8, 1);
+  seq_roce_desc->write_thru();
+
+  // Sequencer #2: PDMA descriptor
   seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
   seq_pdma_desc->write_bit_fields(128, 64, pdma_src_addr);
@@ -1894,57 +1914,10 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr,
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
 
-  // Kickstart the ROCE program 
-  tests::test_ring_doorbell(db_lif, db_qtype, db_qid, db_ring, db_index);
+  // Kickstart the sequencer 
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0, seq_roce_index);
   
   return 0;
-}
-
-// Keep a rolling write data buffer and slba to pair up with read case for comparison
-dp_mem_t *rolling_write_data_buf = NULL;
-uint64_t rolling_write_slba = 0;
-
-int test_run_rdma_e2e_write() {
-  uint16_t ssd_handle = 2; // the SSD handle
-  dp_mem_t *cmd_buf = NULL;
-  int rc;
-
-  // Get the SLBA to write to and read from
-  rolling_write_slba = get_next_slba();
-
-  StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf, rolling_write_slba);
-  printf("Started sequencer to PDMA + write command send over ROCE \n");
-
-  //printf("Dumping NVME command sent \n");
-  //utils::dump(cmd_buf);
-
-  dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
-  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
-                                                 sizeof(struct NvmeStatus));
-  // Poll for status
-  auto func1 = [nvme_status, cmd_buf] () {
-    return check_nvme_status(nvme_status, cmd_buf);
-  };
-  Poller poll;
-  rc = poll(func1);
-
-  if (rc < 0)
-    printf("Failure in retriving status \n");
-  else 
-    printf("Successfully retrived status \n");
-
-  // Save the rolling write data buffer
-  rolling_write_data_buf = rdma_get_target_write_data_buf();
-
-  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
-  PostTargetRcvBuf1();
-  PostInitiatorRcvBuf1();
-
-  // Increment the Buffer pointers
-  IncrTargetRcvBufPtr();
-  IncrInitiatorRcvBufPtr();
-
-  return rc;
 }
 
 int test_seq_pdma_write(uint16_t seq_pdma_q,
@@ -2120,15 +2093,63 @@ int test_run_seq_pdma_multi_xfers() {
     return rc;
 }
 
+// Keep a rolling write data buffer and slba to pair up with read case for comparison
+dp_mem_t *rolling_write_data_buf = NULL;
+uint64_t rolling_write_slba = 0;
+
+int test_run_rdma_e2e_write() {
+  uint16_t ssd_handle = 2; // the SSD handle
+  dp_mem_t *cmd_buf = NULL;
+  int rc;
+
+  // Get the SLBA to write to and read from
+  rolling_write_slba = get_next_slba();
+
+  StartRoceWriteSeq(ssd_handle, get_next_byte(), &cmd_buf, rolling_write_slba);
+  printf("Started sequencer to PDMA + write command send over ROCE \n");
+
+  //printf("Dumping NVME command sent \n");
+  //utils::dump(cmd_buf);
+
+  dp_mem_t *rcv_buf = rdma_get_initiator_rcv_buf();
+  dp_mem_t *nvme_status = rcv_buf->fragment_find(kR2nStatusNvmeOffset,
+                                                 sizeof(struct NvmeStatus));
+  // Poll for status
+  auto func1 = [nvme_status, cmd_buf] () {
+    return check_nvme_status(nvme_status, cmd_buf);
+  };
+  Poller poll;
+  rc = poll(func1);
+
+  if (rc < 0)
+    printf("Failure in retriving status \n");
+  else 
+    printf("Successfully retrived status \n");
+
+  // Save the rolling write data buffer
+  rolling_write_data_buf = rdma_get_target_write_data_buf();
+
+  // Post the buffers back so that RDMA can reuse them. TODO: Verify this in P4+
+  PostTargetRcvBuf1();
+  PostInitiatorRcvBuf1();
+
+  // Increment the Buffer pointers
+  IncrTargetRcvBufPtr();
+  IncrInitiatorRcvBufPtr();
+
+  return rc;
+}
+
 int test_run_rdma_e2e_read() {
   uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(3);
+  uint32_t seq_roce_q = queues::get_pvm_seq_roce_sq(3);
   uint16_t ssd_handle = 2; // the SSD handle
   dp_mem_t *cmd_buf = NULL;
   dp_mem_t *data_buf = NULL;
   int rc;
 
 
-  StartRoceReadSeq(seq_pdma_q, ssd_handle, &cmd_buf, &data_buf, rolling_write_slba, 0, 0, 0);
+  StartRoceReadSeq(seq_pdma_q, seq_roce_q, ssd_handle, &cmd_buf, &data_buf, rolling_write_slba, 0, 0, 0);
   printf("Started read command send over ROCE \n");
 
   //printf("Dumping NVME command sent \n");
@@ -2198,13 +2219,14 @@ int test_run_rdma_e2e_read() {
 
 int test_run_rdma_lif_override() {
   uint32_t seq_pdma_q = queues::get_pvm_seq_pdma_sq(4);
+  uint32_t seq_roce_q = queues::get_pvm_seq_roce_sq(4);
   uint16_t ssd_handle = 2; // the SSD handle
   dp_mem_t *cmd_buf = NULL;
   dp_mem_t *data_buf = NULL;
   int rc;
 
 
-  StartRoceReadSeq(seq_pdma_q, ssd_handle, &cmd_buf, &data_buf, rolling_write_slba,
+  StartRoceReadSeq(seq_pdma_q, seq_roce_q, ssd_handle, &cmd_buf, &data_buf, rolling_write_slba,
                    1, queues::get_nvme_lif(), queues::get_nvme_bdf());
   printf("Started read command send over ROCE \n");
 
@@ -2357,6 +2379,7 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
   seq_pdma_desc->write_thru();
 
   StartRoceWritePdmaPrefilled(seq_pdma_q, seq_pdma_index,
+                              seq_roce_q, seq_roce_index,
                               seq_roce_desc, r2n_hbm_buf);
   printf("Sequencer to PDMA + XTS + wr_buf byte_val 0x%x sent over ROCE\n",
          byte_val);
@@ -2401,13 +2424,16 @@ int test_run_rdma_e2e_xts_write(uint16_t seq_pdma_q,
 
 int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
                                uint16_t seq_xts_q,
+                               uint16_t seq_roce_q,
                                uint16_t ssd_handle,
                                uint16_t io_priority,
                                XtsCtx& xts_ctx)
 {
   dp_mem_t *seq_pdma_desc;
+  dp_mem_t *seq_roce_desc;
   dp_mem_t *cmd_buf;
   uint16_t seq_pdma_index;
+  uint16_t seq_roce_index;
   int rc;
 
   reset_seq_db_data();
@@ -2428,6 +2454,10 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   // 
   // See also StartRoceReadPdmaPrefilled()
   
+  // Sequencer: R2N descriptor
+  seq_roce_desc = queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  seq_roce_desc->clear();
+
   // Sequencer: PDMA descriptor
   seq_pdma_desc = queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   seq_pdma_desc->clear();
@@ -2465,8 +2495,10 @@ int test_run_rdma_e2e_xts_read(uint16_t seq_pdma_q,
   seq_pdma_desc->write_bit_fields(409, 1, 1);
   seq_pdma_desc->write_thru();
 
-  StartRoceReadWithNextLifQueue(r2n_send_buf, r2n_write_buf, rdma_r2n_data_size(),
-                                queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q);
+  StartRoceReadWithNextLifQueue(seq_roce_q, seq_roce_index, seq_roce_desc, 
+                                r2n_send_buf, r2n_write_buf,
+                                rdma_r2n_data_size(), queues::get_pvm_lif(),
+                                SQ_TYPE, xts_ctx.seq_xts_q);
   printf("Sequencer to ROCE + XTS + PDMA to local bufer sent\n");
 
   // Process the status
@@ -2543,9 +2575,9 @@ int test_run_rdma_e2e_xts_write1(void)
 {
     XtsCtx xts_ctx;
 
-    return test_run_rdma_e2e_xts_write(queues::get_pvm_seq_pdma_sq(4),
-                                       queues::get_pvm_seq_xts_sq(4),
-                                       queues::get_pvm_seq_roce_sq(4),
+    return test_run_rdma_e2e_xts_write(queues::get_pvm_seq_pdma_sq(5),
+                                       queues::get_pvm_seq_xts_sq(5),
+                                       queues::get_pvm_seq_roce_sq(5),
                                        2, 0,   // ssd_handle, io_priority
                                        xts_ctx);
 }
@@ -2554,8 +2586,9 @@ int test_run_rdma_e2e_xts_read1(void)
 {
     XtsCtx xts_ctx;
 
-    return test_run_rdma_e2e_xts_read(queues::get_pvm_seq_pdma_sq(5),
-                                      queues::get_pvm_seq_xts_sq(5),
+    return test_run_rdma_e2e_xts_read(queues::get_pvm_seq_pdma_sq(6),
+                                      queues::get_pvm_seq_xts_sq(6),
+                                      queues::get_pvm_seq_roce_sq(6),
                                       2, 0,   // ssd_handle, io_priority
                                       xts_ctx);
 }

@@ -560,7 +560,7 @@ int queues_setup() {
   pvm_seq_roce_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqRoceSQs); j++, i++) {
     if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqR2nSqHandler,
-                        kDefaultTotalRings, kDefaultNoHostRings) < 0) {
+                        kDefaultTotalRings, kDefaultHostRings) < 0) {
       printf("Failed to setup PVM Seq ROCE queue %d \n", i);
       return -1;
     }

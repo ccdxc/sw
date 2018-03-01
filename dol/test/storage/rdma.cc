@@ -697,8 +697,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   wr_buf->write_thru();
 
   // For the send wqe
-  dp_mem_t *sqwqe = initiator_sq_va->fragment_find(0, kSQWQESize);
-  sqwqe->clear();
+  dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_hbm_buf_pa->pa());  // wrid 
   sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
@@ -724,14 +723,16 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   tests::test_seq_write_roce(queues::get_pvm_seq_pdma_sq(0),
                              queues::get_pvm_seq_roce_sq(0), 
                              g_rdma_pvm_roce_init_sq, r2n_buf_va->pa(), 
-		             r2n_hbm_buf_pa->pa(), data_len, 
-                             sqwqe->pa(), 64);
+                             r2n_hbm_buf_pa->pa(), data_len, 
+                             sqwqe->pa(), kSQWQESize);
 
   return 0;
 }
 
 int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
                                 uint16_t seq_pdma_index,
+                                uint16_t seq_roce_q,
+                                uint16_t seq_roce_index,
                                 dp_mem_t *seq_roce_desc,
                                 dp_mem_t *r2n_buf)
 {
@@ -744,8 +745,7 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
                   SendBufLKey, 0, false);
 
   // For the send wqe
-  dp_mem_t *sqwqe = initiator_sq_va->fragment_find(0, kSQWQESize);
-  sqwqe->clear();
+  dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_buf->pa());  // wrid 
   sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
@@ -768,15 +768,14 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
   initiator_sq_va->line_advance();
 
   // Now kickstart the sequencer
-  tests::test_seq_write_roce_pdma_prefilled(seq_pdma_q, seq_pdma_index,
-                                            g_rdma_pvm_roce_init_sq, 
-                                            seq_roce_desc, sqwqe);
+  tests::test_seq_roce_op_pdma_prefilled(seq_pdma_q, seq_pdma_index, seq_roce_desc,
+                                         g_rdma_pvm_roce_init_sq, sqwqe);
 
   return 0;
 }
 
-int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_cmd_ptr, 
-                     dp_mem_t **read_buf_ptr, uint64_t slba, 
+int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_handle,
+                     dp_mem_t **nvme_cmd_ptr, dp_mem_t **read_buf_ptr, uint64_t slba, 
                      uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif, uint32_t bdf) {
 
   if (!nvme_cmd_ptr || !read_buf_ptr) return -1;
@@ -826,8 +825,7 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_c
 
 
   // For the RDMA send WQE
-  dp_mem_t *sqwqe = initiator_sq_va->fragment_find(0, kSQWQESize);
-  sqwqe->clear();
+  dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_buf_va->pa());  // wrid 
   sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
@@ -877,14 +875,18 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint16_t ssd_handle, dp_mem_t **nvme_c
   initiator_sq_va->line_advance();
 
   // Now kickstart the sequencer
-  tests::test_seq_read_roce(seq_pdma_q, r2n_hbm_buf_pa->pa(), rd_buf->pa(),
+  tests::test_seq_read_roce(seq_pdma_q, seq_roce_q, g_rdma_pvm_roce_init_sq,
+                            r2n_hbm_buf_pa->pa(), rd_buf->pa(),
                             kR2NDataSize, pdma_dst_lif_override, pdma_dst_lif,
-                            g_rdma_hw_lif_id, kSQType, 0, 0, initiator_sq_va->line_get());
+                            sqwqe->pa(), kSQWQESize);
 
   return 0;
 }
 
-int StartRoceReadWithNextLifQueue(dp_mem_t *r2n_send_buf,
+int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
+                                  uint16_t seq_roce_index,
+                                  dp_mem_t *seq_roce_desc,
+                                  dp_mem_t *r2n_send_buf,
                                   dp_mem_t *r2n_write_buf,
                                   uint32_t data_len,
                                   uint32_t next_lif,
@@ -907,8 +909,7 @@ int StartRoceReadWithNextLifQueue(dp_mem_t *r2n_send_buf,
                   WriteBackBufLKey, WriteBackBufRKey, true);
 
   // For the RDMA send WQE
-  dp_mem_t *sqwqe = initiator_sq_va->fragment_find(0, kSQWQESize);
-  sqwqe->clear();
+  dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   /*
    * Point sqwqe to the nvme command in r2n_buf
@@ -962,9 +963,9 @@ int StartRoceReadWithNextLifQueue(dp_mem_t *r2n_send_buf,
 
   initiator_sq_va->line_advance();
 
-  // Now kickstart the sequencer, starting from RDMA
-  tests::test_ring_doorbell(g_rdma_hw_lif_id, kSQType, 0,
-                            0, initiator_sq_va->line_get());
+  // Now kickstart the sequencer
+  tests::test_seq_roce_op_pdma_prefilled(seq_roce_q, seq_roce_index, seq_roce_desc,
+                                         g_rdma_pvm_roce_init_sq, sqwqe);
   return 0;
 }
 
