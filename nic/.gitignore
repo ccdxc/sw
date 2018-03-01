@@ -27,7 +27,8 @@ dol.log*
 *.cacov
 sample_client.log
 tags
-hal/third-party/snort3/export/bin/*
+hal/third-party/snort3/export/x86_64/*
+hal/third-party/snort3/export/aarch64/*
 hal/third-party/isc/*
 hal/third-party/zmq/*
 hal/third-party/google/*

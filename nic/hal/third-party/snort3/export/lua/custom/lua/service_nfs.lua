@@ -186,22 +186,25 @@ function DetectorValidator()
         msg_type = DC.getLongHostFormat(msg_type, 4)
         if (msg_type == 0) then
             -- request, store xid
+            DC.printf ('%s:DetectorValidator(): request, store xid=%d\n', gServiceName, xid);
             if (not rft) then
                 rft = FT.addFlowTracker(flowKey, {flow_xid=xid})
             else
                 rft.flow_xid = xid
             end
-            return serviceSuccess(context)
-        else if (msg_type == 1) then
+            return serviceInProcess(context)
+        elseif (msg_type == 1) then
             -- response, check xid
-            if (rft and (rft.flow_xid == xid)) then
-                return serviceSuccess(context)
+            if (rft) then
+                DC.printf ('%s:DetectorValidator(): response, xid=%d, flow_xid=%d\n', gServiceName, xid, rft.flow_xid);
+                if (rft.flow_xid == xid) then
+                    return serviceSuccess(context)
+                end
             end
         end
     end
 
     return serviceFail(context)
-    --return serviceFail(context)
 end
 
 --[[Required DetectorFini function

@@ -216,7 +216,7 @@
 328	NetScout	0	0	0	~	netscout
 329	Netware	0	0	0	~	netware
 330	NFA	0	0	0	~	nfa
-331	NFS	0	0	0	~	nfs
+331	NFS	331	0	0	~	nfs
 332	NI FTP	0	0	0	~	ni_ftp
 333	NI Mail	0	0	0	~	ni_mail
 334	NIP	0	0	0	~	nip

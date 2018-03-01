@@ -178,7 +178,7 @@ function DetectorValidator()
             if (matched) then
                 resp_type = DC.binaryStringToNumber(resp_type, 1)
                 size_header = DC.getShortHostFormat(size_header)
-                if (size_header == size and (resp_type == 2 || resp_type == 11)) then
+                if (size_header == size and (resp_type == 2 or resp_type == 11)) then
                     return serviceSuccess(context)
                 else
                     return serviceFail(context)
