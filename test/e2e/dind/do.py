@@ -14,6 +14,8 @@ src_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
 #debug = True
 debug = False
 
+exposedPortBase = 10000
+
 def runCommand(cmd):
     # subprocess.call() is multithreaded but can mess up terminal settings.
     # hence we call 'stty sane' at the exit of the program
@@ -26,7 +28,8 @@ def runCommand(cmd):
     # return os.system(cmd)
 
 class TestMgmtNode:
-    def __init__(self, name, ipaddress, quorumNames, quorumIPs, nodes, ipList, clustervip):
+    def __init__(self, name, ipaddress, quorumNames, quorumIPs, nodes, ipList, clustervip, containerIndex):
+        self.containerIndex = containerIndex
         self.debug = False
         self.name = name
         self.ipaddress = ipaddress
@@ -38,7 +41,7 @@ class TestMgmtNode:
     def runCmd(self,command):
         return runCommand("""docker exec -it {} """.format(self.name) + command)
     def startNode(self):
-        runCommand("""docker run -td -P -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.1 /bin/sh """.format(self.ipaddress, src_dir, self.name, self.name))
+        runCommand("""docker run -td -p {}:9200 -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.1 /bin/sh """.format(exposedPortBase + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
         self.runCmd("""apk add openssh""")
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
@@ -53,7 +56,8 @@ class TestMgmtNode:
         self.runCmd("""sh -c 'echo export PENSERVER=http://{}:9000 >> ~/.bashrc' """.format(self.clustervip))
         self.runCmd("""sh -c 'echo source /etc/bash_completion.d/venice >> ~/.bashrc' """)
 class Node:
-    def __init__(self, name, ipaddress):
+    def __init__(self, name, ipaddress, containerIndex):
+        self.containerIndex = containerIndex
         self.debug = False
         self.name = name
         self.ipaddress = ipaddress
@@ -62,7 +66,7 @@ class Node:
     def startNode(self):
         while debug or runCommand("""docker inspect {} >/dev/null 2>&1""".format(self.name)) == 0:
             time.sleep(2)
-        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -P -l pens -l pens-dind --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(self.ipaddress, src_dir, self.name, self.name))
+        runCommand("""docker run -v/sys/fs/cgroup:/sys/fs/cgroup:ro -p {}:9200 -l pens -l pens-dind --network pen-dind-net --ip {} -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm -d --name {} -h {} registry.test.pensando.io:5000/pens-dind:v0.1""".format(exposedPortBase + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
         # hitting https://github.com/kubernetes/kubernetes/issues/50770 on docker-ce on mac but not on linux
         while self.runCmd("""docker ps >/dev/null 2>&1""".format(self.name)) != 0:
             time.sleep(2)
@@ -95,8 +99,8 @@ class Node:
         self.runCmd("""sh -c 'for i in /import/src/github.com/pensando/sw/bin/tars/pen* ; do docker load -i  $i; done'""")
         self.startCluster()
 class NaplesNode(Node):
-    def __init__(self, name, ipaddress):
-        Node.__init__(self,name,ipaddress)
+    def __init__(self, name, ipaddress, containerIndex):
+        Node.__init__(self,name,ipaddress, containerIndex)
     def doCluster(self):
         self.startNode()
         self.startCluster()
@@ -150,16 +154,19 @@ def deleteCluster():
     runCommand("""docker stop -t 3 node0 >/dev/null 2>&1""")
     runCommand(""" for i in $(docker ps -f label=pens-dind --format '{{.ID}}'); do docker exec -it $i init 0; done """)
     runCommand("""docker stop -t 3 $(docker ps -f label=pens --format '{{.ID}}') >/dev/null 2>&1""")
+    runCommand("""docker network remove pen-dind-net 2>/dev/null""")
+    runCommand("""docker network remove pen-dind-hnet 2>/dev/null""")
+    runCommand("""docker network remove pen-dind-nnet 2>/dev/null""")
 def stopCluster(nodeList, nodes, quorum, clustervip):
     pool = ThreadPool(len(nodeList))
     pool.map(lambda x: x.stopCluster(), nodes)
 def createCluster(nodeList, nodes, quorum, clustervip):
     pool = ThreadPool(len(nodes))
     runCommand("""if ! docker network inspect pen-dind-hnet >/dev/null 2>&1; then
-        docker network create --ip-range 192.168.28.1/24 --subnet 192.168.28.0/24 pen-dind-hnet
+        docker network create --internal --ip-range 192.168.28.1/24 --subnet 192.168.28.0/24 pen-dind-hnet
     fi""")
     runCommand("""if ! docker network inspect pen-dind-nnet >/dev/null 2>&1; then
-        docker network create --ip-range 192.168.29.1/24 --subnet 192.168.29.0/24 pen-dind-nnet
+        docker network create --internal --ip-range 192.168.29.1/24 --subnet 192.168.29.0/24 pen-dind-nnet
     fi""")
     runCommand("""if ! docker network inspect pen-dind-net >/dev/null 2>&1; then
         docker network create --ip-range 192.168.30.1/24 --subnet 192.168.30.0/24 pen-dind-net
@@ -230,15 +237,21 @@ naplesIPs = []
 for i in range(1, num_naples + 1):
     naplesIPs.append("192.168.30.{}".format(20+i))
 
+# this is a global index of all the containers running in the e2e system
+# node0 has containerIndex=0.
+# a containerIndex is given to every type of node (venice, naples, e2e)
+containerIndex = 1
 
 nodes = []
 for addr in xrange(len(nodeList)):
-    node = Node(nodeList[addr], ipList[addr])
+    node = Node(nodeList[addr], ipList[addr], containerIndex)
+    containerIndex = containerIndex + 1
     nodes.append(node)
 
 naplesNodes = []
 for addr in xrange(len(naplesNames)):
-    node = NaplesNode(naplesNames[addr], naplesIPs[addr])
+    node = NaplesNode(naplesNames[addr], naplesIPs[addr], containerIndex)
+    containerIndex = containerIndex + 1
     naplesNodes.append(node)
 
 
@@ -261,7 +274,7 @@ if args.delete:
     sys.exit(0)
 
 deleteCluster()
-testMgmtNode=TestMgmtNode("node0","192.168.30.9", quorumNames, quorumIPs, nodes, ipList, clustervip)
+testMgmtNode=TestMgmtNode("node0","192.168.30.9", quorumNames, quorumIPs, nodes, ipList, clustervip, 0)
 createCluster(nodeList, nodes + naplesNodes, quorumNames, clustervip)
 testMgmtNode.startNode()
 
