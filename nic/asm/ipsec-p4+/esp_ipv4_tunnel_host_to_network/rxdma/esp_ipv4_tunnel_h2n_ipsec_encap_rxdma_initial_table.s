@@ -7,15 +7,10 @@ struct common_p4plus_stage0_app_header_table_k k;
 struct phv_ p;
 
 %%
-        .param          esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
-        .param          esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore
-        .param          esp_ipv4_tunnel_h2n_allocate_input_page_semaphore
-        .param          esp_ipv4_tunnel_h2n_allocate_output_page_semaphore
         .param          IPSEC_PAD_BYTES_HBM_TABLE_BASE
         .align 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
-    phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
-    phvwr p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
+    phvwrpair p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index, p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
     smeqb c1, d.flags, IPSEC_FLAGS_V6_MASK, IPSEC_FLAGS_V6_MASK 
     cmov r1, c1, IPV6_HDR_SIZE+ESP_FIXED_HDR_SIZE, IPV4_HDR_SIZE+ESP_FIXED_HDR_SIZE
     add r2, r1, d.iv_size
@@ -42,9 +37,6 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     addi r7, r7, 2
     phvwrpair p.ipsec_int_header_tailroom, r7, p.ipsec_int_header_payload_size, r3
     phvwrpair p.ipsec_int_header_pad_size, r5, p.ipsec_int_header_l4_protocol, k.p42p4plus_hdr_l4_protocol
-    phvwr p.ipsec_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
-    //phvwr p.ipsec_global_qtype, k.p4_rxdma_intr_qtype
-    //phvwr p.ipsec_global_qid, k.p4_rxdma_intr_qid
     add  r1, r0, k.p42p4plus_hdr_ipsec_payload_end
     add.c1 r1, r1, IPV6_HDR_SIZE 
     smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
@@ -53,36 +45,41 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt
     phvwr p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     phvwrpair p.esp_header_spi, d.spi, p.esp_header_seqno, d.esn_lo
-    phvwr p.esp_header_iv, d.iv
+    phvwr.f p.esp_header_iv, d.iv
 
-    phvwri p.app_header_table0_valid, 1
+
+    // I understand that I need to take care of 32 bit overflow into esn-hi etc.
+    tbladd d.esn_lo, 1
+    tbladd.f d.iv, 1
+    nop.e
+    nop
+ 
+    
+        .param          esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
+        .param          esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore
+        .param          esp_ipv4_tunnel_h2n_allocate_input_page_semaphore
+        .param          esp_ipv4_tunnel_h2n_allocate_output_page_semaphore
+        .align
+esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2:
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 15
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 3
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
-    phvwri p.app_header_table1_valid, 1
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 3
     phvwri p.common_te1_phv_table_lock_en, 0
     phvwri p.common_te1_phv_table_addr, OUTDESC_SEMAPHORE_ADDR
   
-    phvwri p.app_header_table2_valid, 1
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_input_page_semaphore[33:6] 
     phvwri p.common_te2_phv_table_raw_table_size, 3
     phvwri p.common_te2_phv_table_lock_en, 0
     phvwri p.common_te2_phv_table_addr, INPAGE_SEMAPHORE_ADDR
 
-    phvwri p.app_header_table3_valid, 1
     phvwri p.common_te3_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_page_semaphore[33:6] 
     phvwri p.common_te3_phv_table_raw_table_size, 3
     phvwri p.common_te3_phv_table_lock_en, 0
-    phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
-
-    // I understand that I need to take care of 32 bit overflow into esn-hi etc.
-    tbladd d.esn_lo, 1
-    tbladd d.iv, 1
+    phvwri.f p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
     nop.e
     nop
- 
-    

@@ -2,6 +2,7 @@
 
 #define rx_table_s0_t0_action ipsec_encap_rxdma_initial_table 
 #define common_p4plus_stage0_app_header_table_action_dummy      ipsec_encap_rxdma_initial_table 
+#define rx_table_s0_t1_action ipsec_encap_rxdma_initial_table
 
 #define rx_table_s1_t0_action allocate_input_desc_semaphore 
 #define rx_table_s1_t1_action allocate_output_desc_semaphore 
