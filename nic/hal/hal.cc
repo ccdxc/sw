@@ -829,6 +829,51 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// initialize HAL logging
+//------------------------------------------------------------------------------
+static hal_ret_t
+hal_logger_init (hal_cfg_t *hal_cfg)
+{
+    std::string          logfile;
+    char                 *logdir;
+    struct stat          st = { 0 };
+
+    logdir = std::getenv("HAL_LOG_DIR");
+    if (!logdir) {
+        // log in the current dir
+        logfile = std::string("./hal.log");
+    } else {
+        // check if this log dir exists
+        if (stat(logdir, &st) == -1) {
+            // doesn't exist, try to create
+            if (mkdir(logdir, 0755) < 0) {
+                fprintf(stderr,
+                        "Log directory %s/ doesn't exist, failed to create one\n",
+                        logdir);
+                return HAL_RET_ERR;
+            }
+        } else {
+            // log dir exists, check if we have write permissions
+            if (access(logdir, W_OK) < 0) {
+                // don't have permissions to create this directory
+                fprintf(stderr,
+                        "No permissions to create log file in %s\n",
+                        logdir);
+                return HAL_RET_ERR;
+            }
+        }
+        logfile = logdir + std::string("/hal.log");
+    }
+
+    // initialize the logger
+    hal_cfg->sync_mode_logging = true;
+    hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
+                            hal_cfg->sync_mode_logging, logfile);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -839,11 +884,10 @@ hal_init (hal_cfg_t *hal_cfg)
     hal_ret_t            ret;
     sdk::lib::catalog    *catalog;
 
-    // Initialize the logger
-    hal_cfg->sync_mode_logging = true;
-    hal::utils::logger_init(ffsl(sdk::lib::thread::control_cores_mask()) - 1,
-                            hal_cfg->sync_mode_logging);
-
+    // initialize the logger
+    if (hal_logger_init(hal_cfg) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
+    }
     HAL_TRACE_DEBUG("Initializing HAL ...");
     srand(time(NULL));
 

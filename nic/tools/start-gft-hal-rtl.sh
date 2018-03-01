@@ -11,4 +11,4 @@ export SNORT_LUA_PATH=$SNORT_EXPORT_DIR/lua/
 export LUA_PATH="$SNORT_EXPORT_DIR/lua/?.lua;;"
 export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 
-$GDB $NIC_DIR/../bazel-bin/nic/hal/hal -c hal_gft_rtl.json 2>&1 | tee $NIC_DIR/hal.log
+$GDB $NIC_DIR/../bazel-bin/nic/hal/hal -c hal_gft_rtl.json 2>&1

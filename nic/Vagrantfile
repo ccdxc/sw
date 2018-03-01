@@ -126,6 +126,7 @@ cd /tmp
 
 # install all python3 packages
 pip3 install --upgrade ruamel.yaml scapy-python3 google-api-python-client Tenjin enum34 protobuf grpcio zmq cmd2
+pip3 install tenjin
 
 # install all python2.7 packages
 pip install --upgrade ply==3.9 cmd2

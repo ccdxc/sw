@@ -61,7 +61,7 @@ namespace utils {
 
 using logger = spdlog::logger;
 
-void logger_init(uint32_t cpu_id, bool sync_mode);
+void logger_init(uint32_t cpu_id, bool sync_mode, std::string logfile);
 logger *hal_logger(void);
 logger *hal_syslogger(void);
 

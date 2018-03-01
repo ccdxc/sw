@@ -722,7 +722,7 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
 
     HAL_TRACE_DEBUG("Loading pd lib: {}", pdlib_path);
 
-	// With deepbind, its taking the symbol the PD is taking from PI
+    // with deepbind, its taking the symbol the PD is taking from PI
     // void *so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
     void *so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
     if (!so) {
@@ -731,7 +731,7 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
     }
     g_hal_state->set_pd_so(so);
 
-    // TODO: Load stub library
+    // open PD stub library
     HAL_TRACE_DEBUG("Loading pd stub lib: {}", pdlib_stub_path);
     void *stub_so = dlopen(pdlib_stub_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
     if (!stub_so) {

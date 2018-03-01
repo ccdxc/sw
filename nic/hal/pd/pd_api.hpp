@@ -4,8 +4,6 @@
 #include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/nwsec.hpp"
-//#include "nic/hal/src/nwsec.hpp"
-//#include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/multicast.hpp"
@@ -14,7 +12,6 @@
 #include "nic/hal/src/tls_proxy_cb.hpp"
 #include "nic/hal/src/tcp_proxy_cb.hpp"
 #include "nic/hal/src/qos.hpp"
-//#include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/acl.hpp"
 #include "nic/hal/src/wring.hpp"
 #include "nic/hal/src/telemetry.hpp"
@@ -37,8 +34,6 @@
 
 namespace hal {
 namespace pd {
-
-#define EXTC extern "C"
 
 typedef uint32_t  mc_entry_hw_id_t;
 typedef uint32_t  l2seg_hw_id_t;

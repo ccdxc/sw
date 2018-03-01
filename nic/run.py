@@ -240,8 +240,10 @@ def run_hal(args):
     if args.gft:
         jsonfile = 'hal_gft.json'
 
+    os.environ["HAL_LOG_DIR"] = nic_dir
     if args.test_suf is not None:
          hal_log = nic_dir + "/logs_%s/hal.log" % args.test_suf
+         os.environ["HAL_LOG_DIR"] = nic_dir + "/logs_%s/" % args.test_suf
     os.system("cp " + nic_dir + "/conf/hal_switch.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
@@ -250,8 +252,7 @@ def run_hal(args):
         #jsonfile = 'hal_classic.json'
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
 
-    log = open(hal_log, "w")
-    p = Popen(["../bazel-bin/nic/hal/hal", "--config", jsonfile], stdout=log, stderr=log)
+    p = Popen(["../bazel-bin/nic/hal/hal", "--config", jsonfile])
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"

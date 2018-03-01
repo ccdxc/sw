@@ -63,16 +63,14 @@ end:
 }
 
 hal_ret_t
-// pd_drop_stats_get (pd_system_args_t *pd_sys_args)
-pd_drop_stats_get(pd_drop_stats_get_args_t *args)
+pd_drop_stats_get (pd_drop_stats_get_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;
     pd_system_args_t        *pd_sys_args = args->pd_sys_args;
     SystemResponse          *rsp = pd_sys_args->rsp;
     DropStatsEntry          *stats_entry = NULL;
 
-    HAL_TRACE_DEBUG("PD-System: Querying drop stats");
-
+    HAL_TRACE_DEBUG("Querying drop stats");
     for (int i = 0; i < DROP_STATS_TABLE_SIZE; i++) {
         stats_entry = rsp->mutable_stats()->mutable_drop_stats()->
             add_drop_entries();
@@ -96,19 +94,19 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
     case P4TBL_ID_INGRESS_TX_STATS:
         p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
         stats_base_addr += (tbl_ctx.tabledepth << 6);
-        // Fall through
+        // fall through
     case P4TBL_ID_TX_STATS:
         p4pd_table_properties_get(P4TBL_ID_COPP_ACTION, &tbl_ctx);
         stats_base_addr += (tbl_ctx.tabledepth << 5);
-        // Fall through
+        // fall through
     case P4TBL_ID_COPP_ACTION:
         p4pd_table_properties_get(P4TBL_ID_RX_POLICER_ACTION, &tbl_ctx);
         stats_base_addr += (tbl_ctx.tabledepth << 5);
-        // Fall through
+        // fall through
     case P4TBL_ID_RX_POLICER_ACTION:
         p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
         stats_base_addr += (tbl_ctx.tabledepth << 5);
-        // Fall through
+        // fall through
     case P4TBL_ID_FLOW_STATS:
     default:
         break;
@@ -133,9 +131,9 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
     return stats_base_addr;
 }
 
-
 hal_ret_t
-pd_system_drop_stats_set (int id, drop_stats_actiondata *data) {
+pd_system_drop_stats_set (int id, drop_stats_actiondata *data)
+{
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
     tcam                     *tcam;
@@ -154,9 +152,9 @@ pd_system_drop_stats_set (int id, drop_stats_actiondata *data) {
     return HAL_RET_OK;
 }
 
-
-EXTC hal_ret_t
-pd_system_drop_action(pd_system_drop_action_args_t *args) {
+hal_ret_t
+pd_system_drop_action (pd_system_drop_action_args_t *args)
+{
     SystemConfigSpec *spec = args->spec;
     uint8_t sessns = 0;
     drop_stats_actiondata    data = { 0 };
@@ -428,7 +426,6 @@ pd_system_populate_table_stats (sys::TableStatsEntry *stats_entry,
 }
 
 hal_ret_t
-// pd_table_stats_get (pd_system_args_t *pd_sys_args)
 pd_table_stats_get(pd_table_stats_get_args_t *args)
 {
     hal_ret_t               ret = HAL_RET_OK;
@@ -454,7 +451,7 @@ pd_table_stats_get(pd_table_stats_get_args_t *args)
 //------------------------------------------------------------------------------
 // convert hardware timestamp to software timestamp
 //------------------------------------------------------------------------------
-EXTC hal_ret_t
+hal_ret_t
 pd_conv_hw_clock_to_sw_clock (pd_conv_hw_clock_to_sw_clock_args_t *args)
 {
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
@@ -469,9 +466,9 @@ pd_conv_hw_clock_to_sw_clock (pd_conv_hw_clock_to_sw_clock_args_t *args)
 }
 
 //------------------------------------------------------------------------------
-//// convert hardware timestamp to software timestamp
-////------------------------------------------------------------------------------
-EXTC hal_ret_t
+// convert hardware timestamp to software timestamp
+//------------------------------------------------------------------------------
+hal_ret_t
 pd_conv_sw_clock_to_hw_clock (pd_conv_sw_clock_to_hw_clock_args_t *args)
 {
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
@@ -484,7 +481,7 @@ pd_conv_sw_clock_to_hw_clock (pd_conv_sw_clock_to_hw_clock_args_t *args)
 }
 
 //------------------------------------------------------------------------------
-// Compute delta between sw and hw clock
+// compute delta between sw and hw clock
 //----------------------------------------------------------------------
 static void
 clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
@@ -518,10 +515,10 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 }
 
 //------------------------------------------------------------------------------
-// Start a periodic timer for Hw and sw clock delta computation
+// start a periodic timer for Hw and sw clock delta computation
 //------------------------------------------------------------------------------
-EXTC hal_ret_t
-pd_clock_delta_comp(pd_clock_delta_comp_args_t *args)
+hal_ret_t
+pd_clock_delta_comp (pd_clock_delta_comp_args_t *args)
 {
     // wait until the periodic thread is ready
     while (!hal::periodic::periodic_thread_is_running()) {

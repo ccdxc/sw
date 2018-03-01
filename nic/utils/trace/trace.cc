@@ -30,7 +30,8 @@ set_cpu_affinity (void)
 const std::function<void()> worker_thread_cb = set_cpu_affinity;
 
 void
-logger_init (uint32_t logger_cpu_id, bool sync_mode)
+logger_init (uint32_t logger_cpu_id, bool sync_mode,
+             std::string logfile)
 {
     // instantiate the logger
     cpu_id = logger_cpu_id;
@@ -51,8 +52,10 @@ logger_init (uint32_t logger_cpu_id, bool sync_mode)
                                NULL);
     }
     //_logger = spdlog::stdout_logger_mt("hal");
-    _logger = spdlog::rotating_logger_mt("hal", LOG_FILENAME,
-                                         LOG_MAX_FILESIZE, LOG_MAX_FILES);
+    _logger =
+        spdlog::rotating_logger_mt("hal",
+                                   logfile.empty() ? LOG_FILENAME : logfile,
+                                   LOG_MAX_FILESIZE, LOG_MAX_FILES);
     // trigger flush if the log severity is error or higher
     _logger->flush_on(spdlog::level::err);
 
