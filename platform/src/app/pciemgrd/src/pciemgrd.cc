@@ -250,7 +250,7 @@ cmd_add(int argc, char *argv[])
     name = NULL;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "d:D:I:L:i:n:p:")) != -1) {
+    while ((opt = getopt(argc, argv, "d:D:I:L:i:n:p:P:")) != -1) {
         switch (opt) {
         case 'd':
             r.devcmdpa = strtoull(optarg, NULL, 0);
@@ -273,6 +273,9 @@ cmd_add(int argc, char *argv[])
             break;
         case 'p':
             r.port = strtoul(optarg, NULL, 0);
+            break;
+        case 'P':
+            r.npids = strtoul(optarg, NULL, 0);
             break;
         default:
             printf("bad argument: %c\n", opt);
@@ -744,7 +747,7 @@ main(int argc, char *argv[])
     p.first_bus = 1;
 #endif
 
-    while ((opt = getopt(argc, argv, "b:FhHP:s:v")) != -1) {
+    while ((opt = getopt(argc, argv, "b:FhHP:D:V:v")) != -1) {
         switch (opt) {
         case 'b':
             p.first_bus = strtoul(optarg, NULL, 0);
@@ -766,8 +769,13 @@ main(int argc, char *argv[])
             pcfg.gen = p.cap_gen;
             pcfg.width = p.cap_width;
             break;
-        case 's':
+        case 'D':
             p.subdeviceid = strtoul(optarg, NULL, 0);
+            pcfg.subdeviceid = p.subdeviceid;
+            break;
+        case 'V':
+            p.subvendorid = strtoul(optarg, NULL, 0);
+            pcfg.subvendorid = p.subvendorid;
             break;
         case 'v':
             verbose_flag = 1;

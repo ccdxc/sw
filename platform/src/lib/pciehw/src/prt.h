@@ -23,7 +23,7 @@ typedef struct {
     u_int64_t type      :2;
     u_int64_t indirect  :1;
     u_int64_t notify    :1;
-} __attribute__((packed)) prt_common_t;
+} __attribute__((packed)) prt_cmn_t;
 
 /* resource prt entry format */
 typedef struct {
@@ -41,11 +41,6 @@ typedef struct {
     u_int64_t spare     :3;
     u_int64_t rsrv      :52;
 } __attribute__((packed)) prt_res_t;
-
-#define DBTYPE64        0x0
-#define DBTYPE64        0x0
-#define DBTYPE64        0x0
-#define DBTYPE64        0x0
 
 /* db64/db32/db16 prt entry format */
 typedef struct {
@@ -67,6 +62,25 @@ typedef struct {
     u_int64_t rsrv      :52;
 } __attribute__((packed)) prt_db_t;
 
-typedef u_int32_t prt_t[PRT_NWORDS];
+typedef union {
+    prt_cmn_t cmn;
+    prt_res_t res;
+    prt_db_t db;
+    u_int32_t w[PRT_NWORDS];
+} prt_t;
+
+struct pciehw_s;
+typedef struct pciehw_s pciehw_t;
+struct pciehwdev_s;
+typedef struct pciehwdev_s pciehwdev_t;
+struct pciehwbar_s;
+typedef struct pciehwbar_s pciehwbar_t;
+
+void pciehw_prt_init(pciehw_t *phw);
+int pciehw_prt_alloc(pciehwdev_t *phwdev, const pciehbar_t *bar);
+void pciehw_prt_free(const int prtbase, const int prtcount);
+int pciehw_prt_load(const int prtbase, const int prtcount);
+void pciehw_prt_unload(const int prtbase, const int prtcount);
+void pciehw_prt_dbg(int argc, char *argv[]);
 
 #endif /* __PRT_H__ */

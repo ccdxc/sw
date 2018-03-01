@@ -30,16 +30,6 @@
 #define PMT_TYPE_RC     2       /* rc dma */
 #define PMT_TYPE_IO     5       /* host i/o bar */
 
-/* generic tcam entry format */
-typedef union {
-    struct {
-        u_int64_t x;            /* tcam x */
-        u_int64_t y;            /* tcam y */
-        u_int32_t v;            /* 1=entry valid */
-    } __attribute__((packed));
-    u_int32_t words[PMT_NWORDS];
-} pmt_tcam_entry_t;
-
 /* common pmt entry format */
 typedef struct {
     u_int64_t valid     :1;
@@ -47,7 +37,7 @@ typedef struct {
     u_int64_t type      :3;
     u_int64_t port      :3;
     u_int64_t rw        :1;
-} __attribute__((packed)) pmt_common_t;
+} __attribute__((packed)) pmt_cmn_format_t;
 
 /* cfg pmt entry format */
 typedef struct {
@@ -59,7 +49,7 @@ typedef struct {
     u_int64_t bdf       :16;
     u_int64_t addrdw    :10;
     u_int64_t rsrv      :28;
-} __attribute__((packed)) pmt_cfg_t;
+} __attribute__((packed)) pmt_cfg_format_t;
 
 /* bar pmt entry format */
 typedef struct {
@@ -70,14 +60,7 @@ typedef struct {
     u_int64_t rw        :1;
     u_int64_t addrdw    :50;
     u_int64_t rsrv      :4;
-} __attribute__((packed)) pmt_bar_t;
-
-/* common pmr entry format */
-typedef struct {
-    /* u_int64_t [0] */
-    u_int64_t valid     :1;
-    u_int64_t type      :3;
-} __attribute__((packed)) pmr_common_t;
+} __attribute__((packed)) pmt_bar_format_t;
 
 /* cfg pmr entry format */
 typedef struct {
@@ -103,7 +86,7 @@ typedef struct {
     u_int64_t romsksel  :7;
     u_int64_t spare     :8;
     u_int64_t rsrv      :18;
-} __attribute__((packed)) pmr_cfg_t;
+} __attribute__((packed)) pmr_cfg_entry_t;
 
 /* bar pmr entry format */
 typedef struct {
@@ -129,15 +112,41 @@ typedef struct {
     u_int64_t qidend    :5;
     u_int64_t spare     :3;
     u_int64_t rsrv      :18;
-} __attribute__((packed)) pmr_bar_t;
+} __attribute__((packed)) pmr_bar_entry_t;
 
-typedef u_int32_t pmr_t[PMR_NWORDS];
+typedef union {
+    pmt_cmn_format_t cmn;
+    pmt_cfg_format_t cfg;
+    pmt_bar_format_t bar;
+    u_int64_t all;
+} pmt_format_t;
 
 typedef struct {
-    u_int32_t valid;
-    u_int64_t data;
-    u_int64_t mask;
-    pmr_t pmr;
+    pmt_format_t data;
+    pmt_format_t mask;
+} pmt_datamask_t;
+
+/* tcam entry format */
+typedef struct {
+    u_int64_t x;                /* tcam x */
+    u_int64_t y;                /* tcam y */
+    u_int32_t v;                /* 1=entry valid */
+} __attribute__((packed)) pmt_tcam_t;
+
+typedef union {
+    pmt_tcam_t tcam;
+    u_int32_t w[PMT_NWORDS];
+} pmt_entry_t;
+
+typedef union {
+    pmr_cfg_entry_t cfg;
+    pmr_bar_entry_t bar;
+    u_int32_t w[PMR_NWORDS];
+} pmr_entry_t;
+
+typedef struct {
+    pmt_entry_t pmte;
+    pmr_entry_t pmre;
 } pmt_t;
 
 struct pciehw_s;
@@ -156,6 +165,5 @@ void pciehw_pmt_setaddr(pciehwbar_t *phwbar, const u_int64_t addr);
 void pciehw_pmt_load_bar(pciehwbar_t *phwbar);
 void pciehw_pmt_enable_bar(pciehwbar_t *phwbar, const int on);
 void pciehw_pmt_dbg(int argc, char *argv[]);
-void pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on);
 
 #endif /* __PMT_H__ */

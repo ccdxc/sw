@@ -38,10 +38,37 @@ pcieport_mac_k_gen(pcieport_t *p)
 }
 
 static void
-pcieport_hostconfig(pcieport_t *p)
+pcieport_mac_k_pciconf(pcieport_t *p)
 {
     const int pn = p->port;
+    u_int32_t val;
+    extern int vga_support;
 
+    /* class code */
+    val = 0x06040000;
+    pal_reg_wr32(PXC_(CFG_C_MAC_K_PCICONF, pn) + 4, 0x06040000);
+
+    /* vga supported */
+    val = pal_reg_rd32(PXC_(CFG_C_MAC_K_PCICONF, pn) + 0xc);
+    val &= ~(1 << 4);
+    val |= (vga_support << 4);
+    pal_reg_wr32(PXC_(CFG_C_MAC_K_PCICONF, pn) + 0xc, val);
+}
+
+static void
+pcieport_mac_set_ids(pcieport_t *p)
+{
+    const int pn = p->port;
+    u_int32_t val;
+
+    /* set subvendor/deviceid */
+    val = (p->subdeviceid << 16) | p->subvendorid;
+    pal_reg_wr32(PXC_(CFG_C_MAC_SSVID_CAP, pn), val);
+}
+
+static void
+pcieport_hostconfig(pcieport_t *p)
+{
     /* toggle these resets */
     pcieport_set_serdes_reset(p, 1);
     pcieport_set_pcs_reset(p, 1);
@@ -52,12 +79,14 @@ pcieport_hostconfig(pcieport_t *p)
     pal_reg_wr32(PP_(CFG_PP_SW_RESET), 0xfffc);
 
     pcieport_mac_k_gen(p);
-
-    pal_reg_wr32(PXC_(CFG_C_MAC_K_PCICONF, pn) + 4, 0x06040000); /*class code*/
+    pcieport_mac_k_pciconf(p);
+    pcieport_mac_set_ids(p);
 
     pcieport_set_mac_reset(p, 0); /* mac unreset */
+
     /* XXX !is_asic only XXX */
     pcieport_set_clock_freq(p, 8);
+
     pcieport_set_ltssm_en(p, 1);  /* ready for ltssm */
 }
 
@@ -99,6 +128,9 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
         p->width = 4;
     }
     if (p->subvendorid == 0) {
+        p->subvendorid = PCI_VENDOR_ID_PENSANDO;
+    }
+    if (p->subdeviceid == 0) {
         p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
     }
 

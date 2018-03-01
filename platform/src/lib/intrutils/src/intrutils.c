@@ -263,3 +263,24 @@ intr_fwcfg_mode(const int intr, const int legacy, const int fmask)
     }
     intr_fwcfg_function_mask(intr, fmask);
 }
+
+static void
+intr_cfg_legacy_intx(void)
+{
+    const u_int64_t pa =
+        (INTR_BASE + CAP_INTR_CSR_CFG_LEGACY_INTX_PCIE_MSG_HDR_BYTE_ADDRESS);
+    u_int32_t w[4];
+
+    pal_reg_rd32w(pa, w, NWORDS(w));
+    w[0] = 0x34;
+    pal_reg_wr32w(pa, w, NWORDS(w));
+}
+
+/*
+ * One-time hardware initialization.
+ */
+void
+intr_hwinit(void)
+{
+    intr_cfg_legacy_intx();
+}

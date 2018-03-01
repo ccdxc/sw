@@ -8,6 +8,7 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
 #include "pmt.h"
+#include "prt.h"
 #include "notify.h"
 #include "indirect.h"
 #include "req_int.h"
@@ -100,9 +101,15 @@ typedef struct pciehw_sprt_s {
     u_int8_t type;                      /* PRT_TYPE_* */
     u_int32_t notify:1;                 /* notify access */
     u_int32_t indirect:1;               /* indirect access */
+    u_int32_t qidsel:1;                 /* db32/16: qid in 0:addr 1:data */
+    u_int32_t pmvdis:1;                 /* disable PMV violation check */
     u_int32_t ressize;                  /* size of mapping */
     u_int64_t resaddr;                  /* mapped resource address */
     u_int64_t updvec;                   /* per-qtype UPD vector */
+    u_int8_t idxshift;                  /* db32/16: shift data for index */
+    u_int8_t idxwidth;                  /* db32/16: index width in data */
+    u_int8_t qidshift;                  /* db32/16: if qiddata, shift data */
+    u_int8_t qidwidth;                  /* db32/16: if qiddata, qid width */
 } pciehw_sprt_t;
 
 typedef struct pciehw_spmt_s {
@@ -116,6 +123,8 @@ typedef struct pciehw_spmt_s {
     u_int32_t prtbase;                  /* start of contiguous prt entries */
     u_int32_t prtcount;                 /* count of contiguous prt entries */
     u_int32_t prtsize;                  /* size of each prt */
+    u_int16_t npids;                    /* db: number of pids */
+    u_int16_t nlifs;                    /* db: number of lifs */
     u_int8_t qtypestart;                /* prt db: qtype low bit */
     u_int8_t qtypemask;                 /* prt db: qtype mask */
 } pciehw_spmt_t;
@@ -212,13 +221,6 @@ void pciehw_barwr_notify(pciehwdev_t *phwdev,
 void pciehw_barrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp);
 void pciehw_barwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp);
 void pciehw_bar_dbg(int argc, char *argv[]);
-
-void pciehw_prt_init(pciehw_t *phw);
-int pciehw_prt_alloc(pciehwdev_t *phwdev, const pciehbar_t *bar);
-void pciehw_prt_free(const int prtbase, const int prtcount);
-int pciehw_prt_load(const int prtbase, const int prtcount);
-void pciehw_prt_unload(const int prtbase, const int prtcount);
-void pciehw_prt_dbg(int argc, char *argv[]);
 
 #define ROMSK_RDONLY 1
 

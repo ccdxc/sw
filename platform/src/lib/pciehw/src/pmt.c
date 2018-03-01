@@ -32,8 +32,8 @@ pmt_size(void)
 static char *
 pmt_type_str(int type)
 {
-    static char *typestr[] = {
-        "cfg", "mem", "rc", "UNK3", "UNK4", "io", "UNK5", "UNK6", "UNK7"
+    static char *typestr[8] = {
+        "cfg", "mem", "rc", "UNK3", "UNK4", "io", "UNK6", "UNK7"
     };
     return typestr[type & 0x7];
 }
@@ -85,27 +85,27 @@ pmr_addr(const int pmti)
 }
 
 static void
-pmt_get_tcam(const int pmti, pmt_tcam_entry_t *e)
+pmt_get_entry(const int pmti, pmt_entry_t *pmte)
 {
-    pal_reg_rd32w(pmt_addr(pmti), e->words, PMT_NWORDS);
+    pal_reg_rd32w(pmt_addr(pmti), pmte->w, PMT_NWORDS);
 }
 
 static void
-pmt_set_tcam(const int pmti, const pmt_tcam_entry_t *e)
+pmt_set_entry(const int pmti, const pmt_entry_t *pmte)
 {
-    pal_reg_wr32w(pmt_addr(pmti), e->words, PMT_NWORDS);
+    pal_reg_wr32w(pmt_addr(pmti), pmte->w, PMT_NWORDS);
 }
 
 static void
-pmt_get_pmr(const int pmti, pmr_t pmr)
+pmr_get_entry(const int pmti, pmr_entry_t *pmre)
 {
-    pal_reg_rd32w(pmr_addr(pmti), pmr, PMR_NWORDS);
+    pal_reg_rd32w(pmr_addr(pmti), pmre->w, PMR_NWORDS);
 }
 
 static void
-pmt_set_pmr(const int pmti, const pmr_t pmr)
+pmr_set_entry(const int pmti, const pmr_entry_t *pmre)
 {
-    pal_reg_wr32w(pmr_addr(pmti), pmr, PMR_NWORDS);
+    pal_reg_wr32w(pmr_addr(pmti), pmre->w, PMR_NWORDS);
 }
 
 /*
@@ -114,52 +114,31 @@ pmt_set_pmr(const int pmti, const pmr_t pmr)
 static void
 pmt_get(const int pmti, pmt_t *p)
 {
-    pmt_tcam_entry_t e;
-
-    pmt_get_tcam(pmti, &e);
-    p->valid = e.v;
-    p->data = e.x;
-    p->mask = e.x ^ e.y;
-
-    pmt_get_pmr(pmti, p->pmr);
+    pmt_get_entry(pmti, &p->pmte);
+    pmr_get_entry(pmti, &p->pmre);
 }
 
 /*
- * Install tcam entry.
- *     "p->data" is the entry data values
- *     "p->mask" has 1's for bits we want to match in "data",
- *               0's for bits in "data" we want to ignore.
- *
- * {X Y} result
- * -------
- * {0 0} (always match)
- * {0 1} 0
- * {1 0} 1
- * {1 1} (never match)
+ * Install an entry in hardware at the specified index.
  */
 static void
 pmt_set(const int pmti, const pmt_t *p)
 {
-    pmt_tcam_entry_t e;
-
-    e.x =  p->data & p->mask;
-    e.y = ~p->data & p->mask;
-    e.v = p->valid;
-
     /*
      * Set PMR entry first, then TCAM, so by the time a tcam search
      * can hit an entry the corresponding ram entry is valid too.
      */
-    pmt_set_pmr(pmti, p->pmr);
-    pmt_set_tcam(pmti, &e);
+    pmr_set_entry(pmti, &p->pmre);
+    pmt_set_entry(pmti, &p->pmte);
 }
 
 static void
 pmt_clr_tcam(const int pmti)
 {
-    const pmt_tcam_entry_t e = { 0 };
+    pmt_entry_t pmte;
 
-    pmt_set_tcam(pmti, &e);
+    memset(&pmte, 0, sizeof(pmte));
+    pmt_set_entry(pmti, &pmte);
 }
 
 /*
@@ -173,40 +152,78 @@ pmt_clr(const int pmti)
     pmt_clr_tcam(pmti);
 }
 
+static int
+pmt_is_valid(const pmt_t *pmt)
+{
+    return pmt->pmte.tcam.v;
+}
+
+/*
+ * dm->data is the entry data values
+ * dm->mask is the entry mask bits,
+ *     1's for bits we want to match in "data",
+ *     0's for bits in "data" we want to ignore.
+ *
+ * {X Y} result
+ * -------
+ * {0 0} (always match)
+ * {0 1} match if 0
+ * {1 0} match if 1
+ * {1 1} (never match)
+ */
 static void
-pmt_set_cfg(pciehwdev_t *phwdev,
-            const int pmti,
-            const u_int64_t cfgpa,
-            const u_int16_t addr,
-            const u_int16_t addrm,
-            const u_int8_t romsksel,
-            const u_int8_t notify,
-            const u_int8_t indirect)
+pmt_make_entry(pmt_entry_t *pmte, const pmt_datamask_t *dm)
+{
+    const u_int64_t data = dm->data.all;
+    const u_int64_t mask = dm->mask.all;
+
+    pmte->tcam.x =  data & mask;
+    pmte->tcam.y = ~data & mask;
+    pmte->tcam.v = 1;
+}
+
+static void
+pmt_datamask_get(pmt_datamask_t *dm, const pmt_entry_t *pmte)
+{
+    dm->data.all = pmte->tcam.x;
+    dm->mask.all = pmte->tcam.x ^ pmte->tcam.y;
+}
+
+static void
+pmt_make_cfg(pmt_t *pmt,
+             pciehwdev_t *phwdev,
+             const u_int64_t cfgpa,
+             const u_int16_t addr,
+             const u_int16_t addrm,
+             const u_int8_t romsksel,
+             const u_int8_t notify,
+             const u_int8_t indirect)
 {
     const u_int64_t cfgpadw = cfgpa >> 2;
     const u_int16_t bdf = phwdev->bdf;
-    pmt_t pmt = { 0 };
-    pmt_cfg_t *d = (pmt_cfg_t *)&pmt.data;
-    pmt_cfg_t *m = (pmt_cfg_t *)&pmt.mask;
-    pmr_cfg_t *r = (pmr_cfg_t *)&pmt.pmr;
+    pmt_datamask_t dm;
+    pmr_cfg_entry_t *r = &pmt->pmre.cfg;
 
-    d->valid     = 1;
-    d->tblid     = 0;
-    d->type      = PMT_TYPE_CFG;
-    d->port      = phwdev->port;
-    d->rw        = 0;
-    d->bdf       = bdf;
-    d->addrdw    = addr >> 2;
-    d->rsrv      = 0x0;
+    pciehw_memset(pmt, 0, sizeof(*pmt));
 
-    m->valid     = 0x1;
-    m->tblid     = 0x0; /* don't care, for now */
-    m->type      = 0x7;
-    m->port      = 0x7;
-    m->rw        = 0;
-    m->bdf       = 0xffff;
-    m->addrdw    = addrm >> 2;
-    m->rsrv      = 0x0; /* don't care */
+    dm.data.all = 0;
+    dm.mask.all = 0;
+
+#define DM_SET_CFG(dm, field, dval, mval)       \
+    do {                                        \
+        dm.data.cfg.field = dval;               \
+        dm.mask.cfg.field = mval;               \
+    } while (0)
+
+    DM_SET_CFG(dm, valid, 1, 0x1);
+    DM_SET_CFG(dm, tblid, 0, 0x0); /* don't care, for now */
+    DM_SET_CFG(dm, type, PMT_TYPE_CFG, 0x7);
+    DM_SET_CFG(dm, port, phwdev->port, 0x7);
+    DM_SET_CFG(dm, rw, 0, 0x0);
+    DM_SET_CFG(dm, bdf, bdf, 0xffff);
+    DM_SET_CFG(dm, addrdw, addr >> 2, addrm >> 2);
+
+    pmt_make_entry(&pmt->pmte, &dm);
 
     r->valid     = 1;
     r->type      = PMT_TYPE_CFG;
@@ -226,44 +243,41 @@ pmt_set_cfg(pciehwdev_t *phwdev,
     r->addrdw    = cfgpadw;
     r->aspace    = 0;    /* cfgpadw is local not host */
     r->romsksel  = romsksel;
-
-    pmt.valid = 1;
-    pmt_set(pmti, &pmt);
 }
 
 static void
-pmt_set_bar(const int pmti,
-            const u_int8_t port,
-            const u_int16_t bdf,
-            const pciehw_spmt_t *spmt)
+pmt_make_bar(pmt_t *pmt,
+             const u_int8_t port,
+             const u_int16_t bdf,
+             const pciehw_spmt_t *spmt)
 {
-    pmt_t pmt = { 0 };
-    pmt_bar_t *d = (pmt_bar_t *)&pmt.data;
-    pmt_bar_t *m = (pmt_bar_t *)&pmt.mask;
-    pmr_bar_t *r = (pmr_bar_t *)&pmt.pmr;
     const u_int64_t addr = spmt->baraddr;
     const u_int64_t addrm = ~((1 << (ffsl(spmt->barsize) - 1)) - 1);
+    pmt_datamask_t dm;
+    pmr_bar_entry_t *r = &pmt->pmre.bar;
 
     assert((spmt->prtcount & (spmt->prtcount - 1)) == 0);
     assert((spmt->prtsize & (spmt->prtsize - 1)) == 0);
 
-    d->valid     = 1;
-    m->valid     = 0x1;
+    pciehw_memset(pmt, 0, sizeof(*pmt));
 
-    d->tblid     = 0;
-    m->tblid     = 0x0; /* don't care, for now */
+    dm.data.all = 0;
+    dm.mask.all = 0;
 
-    d->type      = spmt->type;
-    m->type      = 0x7;
+#define DM_SET_BAR(dm, field, dval, mval)       \
+    do {                                        \
+        dm.data.bar.field = dval;               \
+        dm.mask.bar.field = mval;               \
+    } while (0)
 
-    d->port      = port;
-    m->port      = 0x7;
+    DM_SET_BAR(dm, valid, 1, 0x1);
+    DM_SET_BAR(dm, tblid, 0, 0x0); /* don't care, for now */
+    DM_SET_BAR(dm, type, spmt->type, 0x7);
+    DM_SET_BAR(dm, port, port, 0x7);
+    DM_SET_BAR(dm, rw, 0, 0x0);
+    DM_SET_BAR(dm, addrdw, addr >> 2, addrm >> 2);
 
-    d->rw        = 0;
-    m->rw        = 0;
-
-    d->addrdw    = addr >> 2;
-    m->addrdw    = addrm >> 2;
+    pmt_make_entry(&pmt->pmte, &dm);
 
     r->valid     = 1;
     r->type      = spmt->type;
@@ -282,9 +296,34 @@ pmt_set_bar(const int pmti,
     r->qtypestart= spmt->qtypestart;
     r->qtypemask = spmt->qtypemask;
     r->qidstart  = 0;
-    r->qidend    = 1;
+    r->qidend    = 0;
+}
 
-    pmt.valid = 1;
+static void
+pmt_set_cfg(pciehwdev_t *phwdev,
+            const int pmti,
+            const u_int64_t cfgpa,
+            const u_int16_t addr,
+            const u_int16_t addrm,
+            const u_int8_t romsksel,
+            const u_int8_t notify,
+            const u_int8_t indirect)
+{
+    pmt_t pmt;
+
+    pmt_make_cfg(&pmt, phwdev, cfgpa, addr, addrm, romsksel, notify, indirect);
+    pmt_set(pmti, &pmt);
+}
+
+static void
+pmt_set_bar(const int pmti,
+            const u_int8_t port,
+            const u_int16_t bdf,
+            const pciehw_spmt_t *spmt)
+{
+    pmt_t pmt;
+
+    pmt_make_bar(&pmt, port, bdf, spmt);
     pmt_set(pmti, &pmt);
 }
 
@@ -305,11 +344,11 @@ pmt_grst(void)
 static void
 pmt_pmr_init(void)
 {
-    const pmr_t pmr = { 0 };
+    const pmr_entry_t pmre = { 0 };
     int i;
 
     for (i = 0; i < pmt_size(); i++) {
-        pmt_set_pmr(i, pmr);
+        pmr_set_entry(i, &pmre);
     }
 }
 
@@ -421,8 +460,9 @@ pciehw_pmt_alloc_bar(pciehwdev_t *phwdev, const pciehbar_t *bar)
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
+    pciehbarreg_t *reg;
     pciehw_spmt_t *spmt;
-    int pmti, prti;
+    int i, pmti, prti;
 
     pmti = pmt_alloc(hwdevh);
     if (pmti < 0) {
@@ -441,9 +481,43 @@ pciehw_pmt_alloc_bar(pciehwdev_t *phwdev, const pciehbar_t *bar)
     spmt->prtbase = prti;
     spmt->prtcount = bar->nregs;
     spmt->prtsize = bar->size / bar->nregs;
-    /* XXX get these from bar->reg[] */
-    spmt->qtypestart = 3;
-    spmt->qtypemask = 0x7;
+
+    for (reg = bar->regs, i = 0; i < bar->nregs; i++, reg++) {
+        /*
+         * qtypestart/mask are stored in PMT so this value
+         * is shared for all regions, so all regions must
+         * request the same value.  Verify that if a region
+         * requests a qtypestart/mask that it matches what
+         * we have already.
+         */
+        if (reg->qtywidth) {
+            const u_int8_t qtypestart = reg->qtyshift;
+            const u_int8_t qtypemask = (1 << reg->qtywidth) - 1;
+
+            if (!spmt->qtypemask) {
+                spmt->qtypestart = qtypestart;
+                spmt->qtypemask = qtypemask;
+            } else {
+                assert(spmt->qtypestart == qtypestart);
+                assert(spmt->qtypemask == qtypemask);
+            }
+        }
+        /*
+         * npids is a property of PMT so npids must have
+         * the same value for all regions.
+         */
+        if (reg->npids) {
+            const unsigned int npids = reg->npids;
+
+            /* must be power-of-2 */
+            assert((npids & (npids - 1)) == 0);
+            if (!spmt->npids) {
+                spmt->npids = npids;
+            } else {
+                assert(spmt->npids == npids);
+            }
+        }
+    }
     return pmti;
 }
 
@@ -538,6 +612,12 @@ pciehw_pmt_init(pciehw_t *phw)
  * debug
  */
 
+#define PMTF_BAR        0x01
+#define PMTF_CFG        0x02
+#define PMTF_RAW        0x04
+
+static int last_hdr_displayed;
+
 /*
 idx  id typ rw p:00:00.0 0xreg_
                                 vfid port 00:00.0 vfst romsk 0xaddress VINTA
@@ -553,13 +633,18 @@ pmt_show_cfg_entry_hdr(void)
 }
 
 static void
-pmt_show_cfg_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
+pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 {
-    const pmt_cfg_t *d = (pmt_cfg_t *)&pmt->data;
-    const pmt_cfg_t *m = (pmt_cfg_t *)&pmt->mask;
-    const pmr_cfg_t *r = (pmr_cfg_t *)&pmt->pmr;
+    const pmt_cfg_format_t *d = &dm->data.cfg;
+    const pmt_cfg_format_t *m = &dm->mask.cfg;
+    const pmr_cfg_entry_t *r = &pmt->pmre.cfg;
     const int rw = d->rw;
     const int rw_m = m->rw;
+
+    if (last_hdr_displayed != PMTF_CFG) {
+        pmt_show_cfg_entry_hdr();
+        last_hdr_displayed = PMTF_CFG;
+    }
 
     pciehsys_log("%4d %2d %-3s %c%c %1d:%-7s 0x%04x "
                  "%4d %d:%-7s %4d %5d 0x%09"PRIx64" %c%c%c%c%c\n",
@@ -581,78 +666,113 @@ pmt_show_cfg_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
                  r->aspace ? 'h' : '-');
 }
 
+/*
+ * 6                               3
+ * 3                               1                              0
+ * ................................................................
+ * bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbVVVVLLLPPPPP......TTT...
+ * ........................................VVVVVVLLLLLPPPP...TTT...
+ * bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbppppppp.................
+ *
+ *
+ * idx id typ rw p:bb:dd.f baraddr     vf  lif   prt   pid  qtype
+ *   0  0 mem rw 0:00:00.0 0x90600000     18:15 15:12 17:12 05:03
+ *     prt 15 res  0x13e000000 4k -n--
+ *     prt 16 db64 idx 0:0 qid 0:0  --d -pp:spp:spp:spp:spp:-pp:-pp:---
+ *
+ *
+ * idx  tid typ rw p-bb:dd.f baraddr prtsize pgsz
+ *
+ * idx  tid typ rw p-bb:dd.f baraddr    vfid prts      prtsize vfrange   vflim bdf     pgsz qty:m qid
+ *  32    0 mem rw 0 0x00000000    0    1 +8        4K   15 +16      1 02:00.0 0      0:0  0-1
+ *  33  0 mem rw 0 0x00000000    0    9 +1       16K   14 +15      1 02:00.0 0      3:7  0-1
+
+ *
+ */
 static void
 pmt_show_bar_entry_hdr(void)
 {
-    pciehsys_log("%-4s %-2s %-3s %-2s %-1s %-10s "
-                 "%-4s %-9s %-7s %-9s %-5s "
-                 "%-7s %-4s %-5s %-5s\n",
-                 "idx", "id", "typ", "rw", "p", "baraddr",
-                 "vfid", "prts", "prtsize", "vfrange", "vflim",
-                 "bdf", "pgsz", "qty:m", "qid");
+    pciehsys_log("%-4s %-2s %-3s %-2s %-9s %-10s "
+                 "%-5s %-5s %-5s %-5s %-5s\n",
+                 "idx", "id", "typ", "rw", "p:bb:dd.f", "baraddr",
+                 " vf  ", " lif ", " prt ", " pid ", "qtype");
+
+}
+
+static u_int32_t
+pmr_pagesize_dec(const u_int32_t encoded_pagesize)
+{
+    static u_int32_t pagesize_tab[8] = {
+        0x1000, 0x2000, 0x10000, 0x40000, 0x100000, 0x400000, 0, 0
+    };
+
+    return pagesize_tab[encoded_pagesize & 0x7];
 }
 
 static void
-pmt_show_bar_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
+pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 {
-    const pmt_bar_t *d = (pmt_bar_t *)&pmt->data;
-    const pmt_bar_t *m = (pmt_bar_t *)&pmt->mask;
-    const pmr_bar_t *r = (pmr_bar_t *)&pmt->pmr;
+    const pmt_bar_format_t *d = &dm->data.bar;
+    const pmt_bar_format_t *m = &dm->mask.bar;
+    const pmr_bar_entry_t *r = &pmt->pmre.bar;
+    const u_int32_t pagesize = pmr_pagesize_dec(r->pagesize);
     const int rw = d->rw;
     const int rw_m = m->rw;
+    int pid_s, pid_e, qtype_s, qtype_e;
+    int vf_s, vf_e, lif_s, lif_e, prt_s, prt_e;
 
-    pciehsys_log("%4d %2d %-3s %c%c %1d 0x%08"PRIx64" "
-                 "%4d %4d +%-3d %7s %4d +%-3d %5d "
-                 "%-7s %-4d %3d:%1d %2d-%-2d\n",
+    if (last_hdr_displayed != PMTF_BAR) {
+        pmt_show_bar_entry_hdr();
+        last_hdr_displayed = PMTF_BAR;
+    }
+
+    vf_s = r->vfstart;
+    vf_e = r->vfend - 1;
+
+    lif_s = lif_e = 0;
+    prt_s = prt_e = 0;
+    pid_s = pid_e = 0;
+    qtype_s = qtype_e = 0;    
+
+    if (r->qtypemask) {
+        /* 64b db pmt entry */
+        lif_s = r->prtsize;
+        lif_e = r->vfstart;
+
+        prt_s = r->prtsize; /* no real prt selection for 64b db */
+        prt_e = r->prtsize;
+
+        pid_s = ffs(pagesize) - 1;
+        pid_e = r->prtsize - 1;
+
+        qtype_s = r->qtypestart;
+        qtype_e = r->qtypemask ? qtype_s + ffs(r->qtypemask + 1) - 2 : qtype_s;
+
+    } else if (r->qidend) {
+        /* 32b/16b db pmt entry */
+        lif_s = lif_e = -1;
+        qtype_s = qtype_e = -1;
+
+    } else {
+        /* resource pmt entry */
+        prt_s = r->prtsize;
+        prt_e = r->prtsize + (ffs(r->prtsize) - 1);
+    }
+
+    pciehsys_log("%4d %2d %-3s %c%c %1d:%-7s 0x%08"PRIx64" "
+                 "%2d:%-2d %2d:%-2d %2d:%-2d %2d:%-2d %2d:%-2d\n",
                  pmti, d->tblid,
                  d->type == r->type ? pmt_type_str(d->type) : "BAD",
                  ((!rw && rw_m) || !rw_m) ? 'r' : ' ',
                  (( rw && rw_m) || !rw_m) ? 'w' : ' ',
                  d->port,
-                 (u_int64_t)d->addrdw << 2,
-                 r->vfbase,
-                 r->prtbase,
-                 r->prtcount,
-                 human_readable(1 << r->prtsize),
-                 r->vfstart,
-                 r->vfend,
-                 r->vflimit,
                  bdf_to_str(r->bdf),
-                 r->pagesize,
-                 r->qtypestart,
-                 r->qtypemask,
-                 r->qidstart,
-                 r->qidend);
-}
-
-static int last_hdr_displayed = -1;
-
-static void
-pmt_show_entry(pciehw_t *phw, const int pmti, pmt_t *pmt)
-{
-    pmt_common_t *pmt_common = (pmt_common_t *)&pmt->data;
-
-    switch (pmt_common->type) {
-    case PMT_TYPE_CFG:
-        if (last_hdr_displayed != PMT_TYPE_CFG) {
-            pmt_show_cfg_entry_hdr();
-        }
-        pmt_show_cfg_entry(phw, pmti, pmt);
-        break;
-    case PMT_TYPE_MEM:
-    case PMT_TYPE_IO:
-        if (last_hdr_displayed != PMT_TYPE_MEM &&
-            last_hdr_displayed != PMT_TYPE_IO) {
-            pmt_show_bar_entry_hdr();
-        }
-        pmt_show_bar_entry(phw, pmti, pmt);
-        break;
-    case PMT_TYPE_RC:
-        break;
-    default:
-        break;
-    }
-    last_hdr_displayed = pmt_common->type;
+                 (u_int64_t)d->addrdw << 2,
+                 vf_e, vf_s,
+                 lif_e, lif_s,
+                 prt_e, prt_s,
+                 pid_e, pid_s,
+                 qtype_e, qtype_s);
 }
 
 static void
@@ -663,19 +783,61 @@ pmt_show_raw_entry_hdr(void)
 }
 
 static void
-pmt_show_raw_entry(pciehw_t *phw, const int pmti,
-                   const pmt_tcam_entry_t *e,
-                   const pmr_t pmr)
+pmt_show_raw_entry(const int pmti,
+                   const pmt_t *pmt,
+                   const pmt_datamask_t *dm)
 {
-    const u_int32_t *w = pmr;
+    const pmt_tcam_t *tcam = &pmt->pmte.tcam;
+    const u_int32_t *w = pmt->pmre.w;
+
+    if (last_hdr_displayed != PMTF_RAW) {
+        pmt_show_raw_entry_hdr();
+        last_hdr_displayed = PMTF_RAW;
+    }
 
     pciehsys_log("%4d %016"PRIx64" %016"PRIx64" %08x %08x %08x %08x\n",
-                 pmti, e->x, e->y,
+                 pmti, tcam->x, tcam->y,
                  w[0], w[1], w[2], w[3]);
 }
 
 static void
-pmt_show(pciehw_t *phw)
+pmt_show_entry(const int pmti, const pmt_t *pmt, const int flags)
+{
+    pmt_datamask_t dm;
+    const pmt_cmn_format_t *cmn;
+
+    pmt_datamask_get(&dm, &pmt->pmte);
+    cmn = &dm.data.cmn;
+
+    switch (cmn->type) {
+    case PMT_TYPE_CFG:
+        if (flags & PMTF_CFG) {
+            if (flags & PMTF_RAW) {
+                pmt_show_raw_entry(pmti, pmt, &dm);
+            } else {
+                pmt_show_cfg_entry(pmti, pmt, &dm);
+            }
+        }
+        break;
+    case PMT_TYPE_MEM:
+    case PMT_TYPE_IO:
+        if (flags & PMTF_BAR) {
+            if (flags & PMTF_RAW) {
+                pmt_show_raw_entry(pmti, pmt, &dm);
+            } else {
+                pmt_show_bar_entry(pmti, pmt, &dm);
+            }
+        }
+        break;
+    case PMT_TYPE_RC:
+        break;
+    default:
+        break;
+    }
+}
+
+static void
+pmt_show(const int flags)
 {
     pmt_t pmt;
     int i;
@@ -683,25 +845,8 @@ pmt_show(pciehw_t *phw)
     last_hdr_displayed = -1;
     for (i = 0; i < pmt_size(); i++) {
         pmt_get(i, &pmt);
-        if (pmt.valid) {
-            pmt_show_entry(phw, i, &pmt);
-        }
-    }
-}
-
-static void
-pmt_show_raw(pciehw_t *phw)
-{
-    pmt_tcam_entry_t e;
-    pmr_t pmr;
-    int i;
-
-    pmt_show_raw_entry_hdr();
-    for (i = 0; i < pmt_size(); i++) {
-        pmt_get_tcam(i, &e);
-        pmt_get_pmr(i, pmr);
-        if (e.v) {
-            pmt_show_raw_entry(phw, i, &e, pmr);
+        if (pmt_is_valid(&pmt)) {
+            pmt_show_entry(i, &pmt, flags);
         }
     }
 }
@@ -709,60 +854,28 @@ pmt_show_raw(pciehw_t *phw)
 void
 pciehw_pmt_dbg(int argc, char *argv[])
 {
-    pciehw_t *phw = pciehw_get();
-    int opt, raw;
+    int opt, flags;
 
-    raw = 0;
+    flags = 0;
     optind = 0;
-    while ((opt = getopt(argc, argv, "r")) != -1) {
+    while ((opt = getopt(argc, argv, "bcr")) != -1) {
         switch (opt) {
+        case 'b':
+            flags |= PMTF_BAR;
+            break;
+        case 'c':
+            flags |= PMTF_CFG;
+            break;
         case 'r':
-            raw = 1;
+            flags |= PMTF_RAW;
             break;
         default:
             return;
         }
     }
-
-    if (raw) {
-        pmt_show_raw(phw);
-    } else {
-        pmt_show(phw);
+    if ((flags & (PMTF_BAR | PMTF_CFG)) == 0) {
+        flags |= PMTF_BAR | PMTF_CFG;
     }
-}
 
-void
-pciehw_pmt_set_notify(pciehwdev_t *phwdev, const int on)
-{
-    pciehw_t *phw = pciehw_get();
-    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
-    pciehw_spmt_t *spmt;
-    pmt_t pmt;
-    int i;
-
-    for (spmt = phwmem->spmt, i = 0; i < pmt_size(); i++, spmt++) {
-        if (spmt->owner == hwdevh) {
-            pmt_common_t *pmt_common;
-
-            pmt_get(i, &pmt);
-            pmt_common = (pmt_common_t *)&pmt.data;
-            switch (pmt_common->type) {
-            case PMT_TYPE_CFG: {
-                pmr_cfg_t *r = (pmr_cfg_t *)&pmt.pmr;
-                r->notify = on;
-                break;
-            }
-            case PMT_TYPE_MEM:
-            case PMT_TYPE_IO: {
-                pmr_bar_t *r = (pmr_bar_t *)&pmt.pmr;
-                r->notify = on;
-                break;
-            }
-            default:
-                break;
-            }
-            pmt_set(i, &pmt);
-        }
-    }
+    pmt_show(flags);
 }

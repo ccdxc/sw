@@ -30,7 +30,7 @@ prt_size(void)
 static char *
 prt_type_str(int type)
 {
-    static char *typestr[] = {
+    static char *typestr[4] = {
         "res", "db64", "db32", "db16"
     };
     return typestr[type & 0x3];
@@ -63,15 +63,27 @@ prt_addr(const int prti)
 }
 
 static void
-prt_get(const int prti, prt_t prt)
+prt_get(const int prti, prt_t *prt)
 {
-    pal_reg_rd32w(prt_addr(prti), prt, PRT_NWORDS);
+    pal_reg_rd32w(prt_addr(prti), prt->w, PRT_NWORDS);
 }
 
 static void
-prt_set(const int prti, const prt_t prt)
+prt_set(const int prti, const prt_t *prt)
 {
-    pal_reg_wr32w(prt_addr(prti), prt, PRT_NWORDS);
+    pal_reg_wr32w(prt_addr(prti), prt->w, PRT_NWORDS);
+}
+
+static int
+prt_is_valid(const prt_t *prt)
+{
+    return prt->cmn.valid;
+}
+
+static u_int32_t
+prt_get_type(const prt_t *prt)
+{
+    return prt->cmn.type;
 }
 
 /*
@@ -154,10 +166,11 @@ prt_set_res(const int prti,
             const u_int64_t addr,
             const u_int64_t size,
             const u_int8_t notify,
-            const u_int8_t indirect)
+            const u_int8_t indirect,
+            const u_int8_t pmvdis)
 {
     prt_t prt = { 0 };
-    prt_res_t *p = (prt_res_t *)prt;
+    prt_res_t *p = &prt.res;
     const u_int32_t size_enc = prt_size_encode(size);
 
     p->valid     = 1;
@@ -168,9 +181,9 @@ prt_set_res(const int prti,
     p->aspace    = 0;    /* local addr */
     p->addrdw    = addr >> 2;
     p->sizedw    = size_enc;
-    p->pmvdis    = 0;
+    p->pmvdis    = pmvdis;
 
-    prt_set(prti, prt);
+    prt_set(prti, &prt);
 }
 
 static void
@@ -186,7 +199,7 @@ prt_set_db(const int prti,
            const u_int8_t qidsel)
 {
     prt_t prt = { 0 };
-    prt_db_t *p = (prt_db_t *)prt;
+    prt_db_t *p = &prt.db;
 
     p->valid     = 1;
     p->type      = dbtype;
@@ -202,7 +215,7 @@ prt_set_db(const int prti,
     p->qidwidth  = qidwidth;
     p->qidsel    = qidsel;
 
-    prt_set(prti, prt);
+    prt_set(prti, &prt);
 }
 
 static void
@@ -224,13 +237,31 @@ prt_set_db64(const int prti,
 }
 
 static void
+prt_set_db32(const int prti,
+             const u_int32_t lif,
+             const u_int64_t updvec)
+{
+    const u_int8_t dbtype    = PRT_TYPE_DB64;
+    const u_int8_t stridesel = 0x1;
+
+    const u_int8_t idxshift  = 0;
+    const u_int8_t idxwidth  = 0;
+    const u_int8_t qidshift  = 0;
+    const u_int8_t qidwidth  = 0;
+    const u_int8_t qidsel    = 0;
+
+    prt_set_db(prti, dbtype, lif, updvec, stridesel,
+               idxshift, idxwidth, qidshift, qidwidth, qidsel);
+}
+
+static void
 prt_init(void)
 {
     const prt_t prt = { 0 };
     int i;
 
     for (i = 0; i < prt_size(); i++) {
-        prt_set(i, prt);
+        prt_set(i, &prt);
     }
 }
 
@@ -302,7 +333,7 @@ pciehw_prt_alloc(pciehwdev_t *phwdev, const pciehbar_t *bar)
 
     prtbase = prt_alloc(phw, hwdevh, bar->nregs);
     if (prtbase < 0) {
-        pciehsys_error("prt_load: prt_alloc %d failed\n", bar->nregs);
+        pciehsys_error("prt_alloc %d failed\n", bar->nregs);
         return -1;
     }
 
@@ -313,7 +344,13 @@ pciehw_prt_alloc(pciehwdev_t *phwdev, const pciehbar_t *bar)
         sprt->type = reg_type_to_prt_type(reg->regtype);
         sprt->resaddr = reg->paddr;
         sprt->ressize = reg->size;
-        if (sprt->type == PRT_TYPE_DB64) {
+        sprt->idxshift = reg->idxshift;
+        sprt->idxwidth = reg->idxwidth;
+        sprt->qidshift = reg->qidshift;
+        sprt->qidwidth = reg->qidwidth;
+        if (sprt->type == PRT_TYPE_DB64 ||
+            sprt->type == PRT_TYPE_DB32 ||
+            sprt->type == PRT_TYPE_DB16) {
             sprt->updvec = mkupdvec(reg->upd);
         }
         if (reg->flags & PCIEHBARREGF_NOTIFYRW) {
@@ -321,6 +358,9 @@ pciehw_prt_alloc(pciehwdev_t *phwdev, const pciehbar_t *bar)
         }
         if (reg->flags & PCIEHBARREGF_INDIRECTRW) {
             sprt->indirect = 1;
+        }
+        if (reg->flags & PCIEHBARREGF_MEM) {
+            sprt->pmvdis = 1;
         }
     }
     return prtbase;
@@ -348,13 +388,16 @@ pciehw_prt_load(const int prtbase, const int prtcount)
         case PRT_TYPE_RES:
             prt_set_res(prtbase + i,
                         sprt->resaddr, sprt->ressize,
-                        sprt->notify, sprt->indirect);
+                        sprt->notify, sprt->indirect,
+                        sprt->pmvdis);
             break;
         case PRT_TYPE_DB64:
             assert(phwdev->lif_valid);
             prt_set_db64(prtbase + i, phwdev->lif, sprt->updvec);
             break;
         case PRT_TYPE_DB32:
+            prt_set_db32(prtbase + i, phwdev->lif, sprt->updvec);
+            break;
         case PRT_TYPE_DB16:
             /* XXX add these */
             assert(0);
@@ -374,7 +417,7 @@ pciehw_prt_unload(const int prtbase, const int prtcount)
     int i;
 
     for (i = 0; i < prt_size(); i++) {
-        prt_set(i, prt);
+        prt_set(i, &prt);
     }
 }
 
@@ -399,11 +442,11 @@ prt_show_res_entry_hdr(void)
 }
 
 static void
-prt_show_res_entry(const int prti, prt_t prt)
+prt_show_res_entry(const int prti, prt_t *prt)
 {
-    const prt_res_t *r = (prt_res_t *)prt;
+    const prt_res_t *r = &prt->res;
 
-    pciehsys_log("%4d %-4s %4d 0x%09"PRIx64" %-4s %c%c%c\n",
+    pciehsys_log("%4d %-4s %4d 0x%09"PRIx64" %-4s %c%c%c%c\n",
                  prti,
                  prt_type_str(r->type),
                  r->vfstride,
@@ -411,7 +454,8 @@ prt_show_res_entry(const int prti, prt_t prt)
                  human_readable(prt_size_decode(r->sizedw)),
                  r->indirect ? 'i' : '-',
                  r->notify ? 'n' : '-',
-                 r->aspace ? 'h' : '-');
+                 r->aspace ? 'h' : '-',
+                 r->pmvdis ? 'p' : '-');
 }
 
 static char *
@@ -465,9 +509,9 @@ prt_show_db_entry_hdr(void)
 }
 
 static void
-prt_show_db_entry(const int prti, prt_t prt, const int raw)
+prt_show_db_entry(const int prti, prt_t *prt, const int raw)
 {
-    const prt_db_t *r = (prt_db_t *)prt;
+    const prt_db_t *r = &prt->db;
 
     pciehsys_log("%4d %-4s %4d %4d %1d:%-2d %1d:%-2d %c%c%c   %-31s\n",
                  prti,
@@ -485,11 +529,11 @@ prt_show_db_entry(const int prti, prt_t prt, const int raw)
 static int last_hdr_displayed = -1;
 
 static void
-prt_show_entry(const int prti, prt_t prt, const int raw)
+prt_show_entry(const int prti, prt_t *prt, const int raw)
 {
-    prt_common_t *prt_common = (prt_common_t *)prt;
+    const u_int32_t prt_type = prt_get_type(prt);
 
-    switch (prt_common->type) {
+    switch (prt_type) {
     case PRT_TYPE_RES:
         if (last_hdr_displayed != PRT_TYPE_RES) {
             prt_show_res_entry_hdr();
@@ -509,7 +553,7 @@ prt_show_entry(const int prti, prt_t prt, const int raw)
     default:
         break;
     }
-    last_hdr_displayed = prt_common->type;
+    last_hdr_displayed = prt_type;
 }
 
 static void
@@ -520,10 +564,9 @@ prt_show(const int raw)
 
     last_hdr_displayed = -1;
     for (i = 0; i < prt_size(); i++) {
-        prt_common_t *prt_common = (prt_common_t *)prt;
-        prt_get(i, prt);
-        if (prt_common->valid) {
-            prt_show_entry(i, prt, raw);
+        prt_get(i, &prt);
+        if (prt_is_valid(&prt)) {
+            prt_show_entry(i, &prt, raw);
         }
     }
 }

@@ -408,22 +408,8 @@ notify_show(void)
     }
 }
 
-static void
-notify_dev(const char *devname, const int on)
-{
-    pciehwdev_t *phwdev = pciehwdev_find_by_name(devname);
-
-    if (phwdev == NULL) {
-        pciehsys_log("%s: not found\n", devname);
-        return;
-    }
-    pciehw_pmt_set_notify(phwdev, on);
-}
-
 //
 // notify
-// notify -e eth0
-// notify -d eth0
 // notify <mask>
 //
 void
@@ -431,27 +417,12 @@ pciehw_notify_dbg(int argc, char *argv[])
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    int opt, do_enable, do_disable;
-    int port;
-    char *devname;
+    int opt, port;
 
-    do_enable = 0;
-    do_disable = 0;
     port = 0;
-    devname = NULL;
     optind = 0;
-    while ((opt = getopt(argc, argv, "d:efp:r:s:v")) != -1) {
+    while ((opt = getopt(argc, argv, "fp:r:s:v")) != -1) {
         switch (opt) {
-        case 'd':
-            devname = optarg;
-            do_enable = 0;
-            do_disable = 1;
-            break;
-        case 'e':
-            devname  = optarg;
-            do_enable = 1;
-            do_disable = 0;
-            break;
         case 'f': /* flush */
             notify_reset_pici(port);
             break;
@@ -480,11 +451,5 @@ pciehw_notify_dbg(int argc, char *argv[])
         return;
     }
 
-    if (do_enable) {
-        notify_dev(devname, 1);
-    } else if (do_disable) {
-        notify_dev(devname, 0);
-    } else {
-        notify_show();
-    }
+    notify_show();
 }

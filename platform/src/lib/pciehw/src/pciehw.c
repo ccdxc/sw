@@ -171,8 +171,32 @@ pciehw_closemem(pciehw_t *phw)
 }
 
 static void
+pciehw_db_init(pciehw_t *phw)
+{
+#define DOORBELL_BASE \
+    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
+     CAP_PXB_CSR_CFG_TGT_DOORBELL_BASE_BYTE_OFFSET)
+    union {
+        struct {
+            u_int32_t addr_33_24:10;
+            u_int32_t db_host_sel:2;
+            u_int32_t db_32b_sel:2;
+        } __attribute__((packed));
+        u_int32_t w;
+    } e;
+
+    e.addr_33_24 = 0x8;
+    e.db_host_sel = 0x1;
+    e.db_32b_sel = 0x3;
+
+    pal_reg_wr32(DOORBELL_BASE, e.w);
+}
+
+static void
 pciehw_init(pciehw_t *phw)
 {
+    pciehw_intrhw_init(phw);
+    pciehw_db_init(phw);
     pciehw_cfg_init(phw);
     pciehw_bar_init(phw);
     pciehw_vfstride_init(phw);

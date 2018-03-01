@@ -21,50 +21,28 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 
     /* bar mem64 */
     memset(&pbar, 0, sizeof(pbar));
-    memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_RES;
-    preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = 0x13f000000;
-    preg.size = 0x1000;
-    preg.align = 0;
-    pciehbar_add_reg(&pbar, &preg);
-
-    memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_RES;
-    preg.flags = (PCIEHBARREGF_RW |
-                  PCIEHBARREGF_NOTIFYWR);
-    preg.paddr = 0x13f001000;
-    preg.size = 0x1000;
-    preg.align = 0;
-    pciehbar_add_reg(&pbar, &preg);
-
     pbar.type = PCIEHBARTYPE_MEM64;
+    {
+        memset(&preg, 0, sizeof(preg));
+        preg.regtype = PCIEHBARREGT_RES;
+        preg.flags = PCIEHBARREGF_RW | PCIEHBARREGF_MEM;
+        preg.paddr = 0x80000000;
+        preg.size = 128 * 1024 * 1024;
+        pciehbar_add_reg(&pbar, &preg);
+    }
     pciehbars_add_bar(pbars, &pbar);
 
-    /* bar mem */
+    /* bar mem64 */
     memset(&pbar, 0, sizeof(pbar));
-    memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_RES;
-    preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = 0x13f000000;
-    preg.size = 0x1000;
-    preg.align = 0;
-    pciehbar_add_reg(&pbar, &preg);
-
-    pbar.type = PCIEHBARTYPE_MEM;
-    pciehbars_add_bar(pbars, &pbar);
-
-    /* bar io */
-    memset(&pbar, 0, sizeof(pbar));
-    memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_RES;
-    preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = 0x13f000000;
-    preg.size = 0x10;
-    preg.align = 0;
-    pciehbar_add_reg(&pbar, &preg);
-
-    pbar.type = PCIEHBARTYPE_IO;
+    pbar.type = PCIEHBARTYPE_MEM64;
+    {
+        memset(&preg, 0, sizeof(preg));
+        preg.regtype = PCIEHBARREGT_RES;
+        preg.flags = PCIEHBARREGF_RW;
+        preg.paddr = 0;
+        preg.size = 128 * 1024 * 1024;
+        pciehbar_add_reg(&pbar, &preg);
+    }
     pciehbars_add_bar(pbars, &pbar);
 }
 

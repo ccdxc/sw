@@ -66,6 +66,18 @@ cmd_fsm(int argc, char *argv[])
     pcieport_fsm_dbg(argc, argv);
 }
 
+int vga_support;
+
+static void
+cmd_vga_support(int argc, char *argv[])
+{
+    if (argc < 2) {
+        pciehsys_log("vga_support %d\n", vga_support);
+        return;
+    }
+    vga_support = strtoul(argv[1], NULL, 0);
+}
+
 typedef struct cmd_s {
     const char *name;
     void (*f)(int argc, char *argv[]);
@@ -77,6 +89,7 @@ static cmd_t cmdtab[] = {
 #define CMDENT(name, desc, helpstr) \
     { #name, cmd_##name, desc, helpstr }
     CMDENT(fsm, "fsm", ""),
+    CMDENT(vga_support, "vga_support", ""),
     { NULL, NULL }
 };
 

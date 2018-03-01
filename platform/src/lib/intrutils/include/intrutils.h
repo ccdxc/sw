@@ -68,6 +68,8 @@ int intr_fwcfg_function_mask(const int intr, const int on);
 void intr_fwcfg_mode(const int intr, const int legacy, const int fmask);
 void intr_fwcfg_local(const int intr, const int on);
 
+void intr_hwinit(void);
+
 #ifdef __cplusplus
 }
 #endif

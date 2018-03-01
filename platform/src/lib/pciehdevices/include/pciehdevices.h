@@ -22,6 +22,8 @@ typedef struct pciehdevice_resources_s {
     u_int8_t port;              /* pcie port id */
     u_int32_t intrb;            /* interrupt base */
     u_int32_t intrc;            /* interrupt count */
+    u_int32_t npids;            /* number of rdma pids */
+    u_int32_t nlifs;            /* number of lifs */
     u_int64_t devcmdpa;         /* devcmd region physical address */
     u_int64_t devcmddbpa;       /* devcmd doorbell physical address */
 } pciehdevice_resources_t;

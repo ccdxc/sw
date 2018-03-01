@@ -12,9 +12,6 @@
 #include "pciehdevices.h"
 #include "utils_impl.h"
 
-#define PCI_VENDOR_ID_REDHAT            0x1111 /* XXX */
-#define PCI_DEVICE_ID_VIRTIO_NET        0x1111 /* should be 0x0001 */
-
 static void
 init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 {

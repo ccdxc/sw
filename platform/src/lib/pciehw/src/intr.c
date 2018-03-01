@@ -124,3 +124,9 @@ pciehw_intr_init(pciehwdev_t *phwdev)
     init_intr_drvcfg(phwdev);
     init_intr_msixcfg(phwdev);
 }
+
+void
+pciehw_intrhw_init(pciehw_t *phw)
+{
+    intr_hwinit();
+}
