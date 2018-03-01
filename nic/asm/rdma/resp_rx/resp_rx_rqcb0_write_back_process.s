@@ -76,6 +76,8 @@ incr_c_index_exit:
     RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB1_ADDR, TMP)
     // for read/atomic operations, do not ring doorbell
     bcf         [c1], invoke_wb1
+    // respond with ack only when test requested for, otherwise dont send ack unconditionally
+    //bcf         [!c7 | c1], invoke_wb1
     nop         //BD Slot
     RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
                                    k.global.lif,

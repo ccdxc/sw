@@ -6,8 +6,9 @@ feature:
     module      : rdma
     enable      : True
     ignore      : False
-    selectors:
-        maxrdmasessions: 1
+    perf        : True
+    rtl         : True
+    pps         : True
 
 modules:
     - module:
@@ -17,7 +18,6 @@ modules:
         module  : req_tx_send_only_inline_poll
         spec    : req_tx_send_only_inline_poll.testspec
         ignore  : False
-        modscale: 10
         iterate:
            - rdmasession:
                base : filter://id=5

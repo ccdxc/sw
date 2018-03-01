@@ -7,6 +7,9 @@ feature:
     module      : rdma
     enable      : True
     ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
     selectors:
         maxrdmasessions: 1
 
@@ -18,5 +21,4 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
-        modscale: 12
 
