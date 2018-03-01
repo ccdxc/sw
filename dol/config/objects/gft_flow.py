@@ -47,7 +47,9 @@ class GftFlowObject(base.ConfigObjectBase):
         req_spec.copy_after_tcp_fin_flag_set = False
         req_spec.copy_after_tcp_rst_flag_set = False
 
-        req_spec.table_id = 0
+        self.table_type = 'EXACT_MATCH_INGRESS'
+        tts = 'GFT_TABLE_TYPE_' + self.table_type
+        req_spec.table_type = haldefs.gft.GftTableType.Value(tts)
         req_spec.vport_id = 0
         req_spec.redirect_vport_id = 0
         req_spec.ttl_one_redirect_vport_id = 0

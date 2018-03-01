@@ -31,6 +31,9 @@ do {                                                                         \
 
 namespace hal {
 
+
+gft_table_type_t gft_spec_to_hal_table_type(GftTableType type);
+
 //----------------------------------------------------------------------------
 // get GFT exact match profile's key
 //----------------------------------------------------------------------------
@@ -266,6 +269,7 @@ gft_emp_init_from_spec (gft_exact_match_profile_t *profile,
 
     profile->num_hdr_group_exact_match_profiles = num_hgem_profiles;
     profile->profile_id = spec.key_or_handle().profile_id();
+    profile->table_type = gft_spec_to_hal_table_type(spec.table_type());
 
     tmp = profile->hgem_profiles;
     for (uint32_t i = 0; i < num_hgem_profiles; i++) {
@@ -1134,6 +1138,7 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
     HAL_ASSERT(gft_htp);
 #endif
 
+    flow_entry->table_type = gft_spec_to_hal_table_type(spec.table_type());
     flow_entry->num_exact_matches = spec.exact_matches_size();
     HAL_ASSERT(flow_entry->num_exact_matches != 0);
     flow_entry->exact_matches =
@@ -1157,7 +1162,7 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
     flow_entry->gft_emp_hal_handle = gft_emp->hal_handle;
     // No need of xposition profile
     // flow_entry->gft_htp_hal_handle = gft_htp->hal_handle;
-    flow_entry->table_id = spec.table_id();
+    // flow_entry->table_id = spec.table_id();
     flow_entry->vport_id = spec.vport_id();
     flow_entry->redirect_vport_id = spec.redirect_vport_id();
     flow_entry->ttl_one_redirect_vport_id = spec.ttl_one_redirect_vport_id();
@@ -1511,9 +1516,10 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
     HAL_TRACE_DEBUG("Flow entry id: {}", fe->flow_entry_id);
     HAL_TRACE_DEBUG("EMP hal_handle: {}, HXP hal_handle: {}",
                     fe->gft_emp_hal_handle, fe->gft_htp_hal_handle);
-    HAL_TRACE_DEBUG("table_id: {}, vport_id: {}, redirect_vport_id: {}"
+    HAL_TRACE_DEBUG("table_type: {}, vport_id: {}, redirect_vport_id: {}"
                     "ttl_one_redirect_vport_id: {}, cache_hint: {}", 
-                    fe->table_id, fe->vport_id, fe->redirect_vport_id,
+                    gft_table_type_to_str(fe->table_type), fe->vport_id, 
+                    fe->redirect_vport_id,
                     fe->ttl_one_redirect_vport_id,
                     fe->cache_hint);
     HAL_TRACE_DEBUG("num_exact_matches: {}, num_transpositions: {}",
@@ -1654,7 +1660,8 @@ gft_exact_match_profile_print (gft_exact_match_profile_t *mp)
     }
 
     HAL_TRACE_DEBUG("ExactMatchProfile: {}", mp->profile_id);
-    HAL_TRACE_DEBUG("table_type: {}", mp->table_type);
+    HAL_TRACE_DEBUG("---------------------");
+    HAL_TRACE_DEBUG("table_type: {}", gft_table_type_to_str(mp->table_type));
 
     HAL_TRACE_DEBUG("num_hdr_groups: {}", 
                     mp->num_hdr_group_exact_match_profiles);
@@ -1662,6 +1669,18 @@ gft_exact_match_profile_print (gft_exact_match_profile_t *mp)
     for (uint32_t i = 0; i < mp->num_hdr_group_exact_match_profiles; i++) {
         HAL_TRACE_DEBUG("Header group {}:", i);
         GFT_HDRS_MATCH_FIELDS(hgmp);
+    }
+}
+
+gft_table_type_t
+gft_spec_to_hal_table_type(GftTableType type)
+{
+    switch(type) {
+        case gft::GFT_TABLE_TYPE_WILDCARD_INGRESS: return GFT_TABLE_TYPE_WILDCARD_INGRESS;
+        case gft::GFT_TABLE_TYPE_WILDCARD_EGRESS: return GFT_TABLE_TYPE_WILDCARD_EGRESS;
+        case gft::GFT_TABLE_TYPE_EXACT_MATCH_INGRESS: return GFT_TABLE_TYPE_EXACT_MATCH_INGRESS;
+        case gft::GFT_TABLE_TYPE_EXACT_MATCH_EGRESS: return GFT_TABLE_TYPE_EXACT_MATCH_EGRESS;
+        default: return GFT_TABLE_TYPE_NONE;
     }
 }
 

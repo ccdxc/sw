@@ -726,7 +726,7 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
     // void *so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
     void *so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
     if (!so) {
-        HAL_TRACE_ERR("dlopen failed {}", pdlib_path, dlerror());
+        HAL_TRACE_ERR("dlopen failed {}:{}", pdlib_path, dlerror());
         HAL_ASSERT(0);
     }
     g_hal_state->set_pd_so(so);

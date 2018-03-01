@@ -153,6 +153,7 @@ tcam::insert(void *key, void *key_mask, void *data,
 
 end:
 
+    entry_trace_(te);
     stats_update_(INSERT, rs);
     return rs;
 }
@@ -824,6 +825,9 @@ tcam::entry_trace_(tcam_entry_t *te)
     char            buff[4096] = {0};
     p4pd_error_t    p4_err;
 
+    if (!te) {
+        return SDK_RET_OK;
+    }
     p4_err = p4pd_table_ds_decoded_string_get(id_, te->index,
             te->key, te->key_mask, te->data, 
             buff, sizeof(buff));

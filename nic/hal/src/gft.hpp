@@ -40,6 +40,7 @@ using gft::EncapOrTransportMatch;
 using gft::EncapOrTransportTransposition;
 using gft::GftHeaderGroupTransposition;
 using gft::GftHeaderGroupExactMatch;
+using gft::GftTableType;
 
 using gft::GftExactMatchFlowEntrySpec;
 using gft::GftExactMatchFlowEntryRequestMsg;
@@ -152,6 +153,19 @@ typedef enum gft_table_type_e {
     GFT_TABLE_TYPE_MAX,
 } gft_table_type_t;
 
+static inline const char *
+gft_table_type_to_str(gft_table_type_t type) {
+    switch (type) {
+        case GFT_TABLE_TYPE_NONE: return "NONE";
+        case GFT_TABLE_TYPE_WILDCARD_INGRESS: return "WILDCARD_INGRESS";
+        case GFT_TABLE_TYPE_WILDCARD_EGRESS: return "WILDCARD_EGRESS";
+        case GFT_TABLE_TYPE_EXACT_MATCH_INGRESS: return "EXACT_INGRESS";
+        case GFT_TABLE_TYPE_EXACT_MATCH_EGRESS: return "EXACT_EGRESS";
+        case GFT_TABLE_TYPE_PACKET_DIRECT:
+        default: return "ERROR";
+    }
+}
+
 // flags for GFT header group exact match profile
 #define GFT_HDR_GROUP_EXACT_MATCH_PROFILE_IS_TTL_ONE    0x00000001
 typedef struct gft_hdr_group_exact_match_profile_s {
@@ -171,7 +185,7 @@ typedef struct gft_exact_match_profile_s {
     gft_hdr_group_exact_match_profile_t    *hgem_profiles;
 
     // operational state
-    hal_handle_t          hal_handle;              // HAL allocated handle
+    hal_handle_t                           hal_handle;              // HAL allocated handle
 
     void                                   *pd;    // PD state, if any
 } __PACK__ gft_exact_match_profile_t;
@@ -509,7 +523,7 @@ typedef struct gft_exact_match_flow_entry_s {
     uint32_t                       flags;                              // GFT_EMFE_XXX flags
     hal_handle_t                   gft_emp_hal_handle;                 // exact match profile id
     hal_handle_t                   gft_htp_hal_handle;                 // header xposition profile id
-    gft_table_id_t                 table_id;                           // table this entry belongs to
+    gft_table_type_t               table_type;
     vport_id_t                     vport_id;                           // vport to apply this flow entry to
     vport_id_t                     redirect_vport_id;                  // redirect vport id, if any
     vport_id_t                     ttl_one_redirect_vport_id;          // vport id to redirect to if TTL is one
@@ -554,7 +568,7 @@ gft_exact_match_flow_entry_init (gft_exact_match_flow_entry_t *flow_entry)
     HAL_SPINLOCK_INIT(&flow_entry->slock, PTHREAD_PROCESS_PRIVATE);
     flow_entry->flow_entry_id = 0;
     flow_entry->flags = 0;
-    flow_entry->table_id = 0;
+    flow_entry->table_type = GFT_TABLE_TYPE_NONE;
     flow_entry->vport_id = 0;
     flow_entry->gft_emp_hal_handle = HAL_HANDLE_INVALID;
     flow_entry->gft_htp_hal_handle = HAL_HANDLE_INVALID;

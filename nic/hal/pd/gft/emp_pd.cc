@@ -3,10 +3,10 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/emp_pd.hpp"
+#include "nic/hal/pd/gft/pd_utils.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
-// #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/eth.hpp"
 #include "nic/p4/gft/include/defines.h"
@@ -31,6 +31,7 @@ static hal_ret_t emp_pd_cleanup(pd_gft_emp_t *emp_pd);
 static hal_ret_t pd_emp_make_clone(gft_exact_match_profile_t *emp, 
                                    gft_exact_match_profile_t *clone);
 static hal_ret_t emp_pd_rx_keys_program_hw (pd_gft_emp_t *pd_gft_emp);
+static hal_ret_t emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp);
 
 //-----------------------------------------------------------------------------
 // EMP Create in PD
@@ -183,6 +184,10 @@ emp_pd_init (pd_gft_emp_t *emp)
     }
     // Set here if you want to initialize any fields
     emp->rx_key1_idx = INVALID_INDEXER_INDEX;
+    emp->rx_key2_idx = INVALID_INDEXER_INDEX;
+    emp->rx_key3_idx = INVALID_INDEXER_INDEX;
+    emp->rx_key4_idx = INVALID_INDEXER_INDEX;
+    emp->tx_key1_idx = INVALID_INDEXER_INDEX;
 
     return emp;
 }
@@ -194,13 +199,32 @@ static hal_ret_t
 emp_pd_program_hw (pd_gft_emp_t *pd_gft_emp)
 {
     hal_ret_t                 ret = HAL_RET_OK;
+    gft_exact_match_profile_t *gft_emp = NULL;
 
-    // Program the Rx Keys
-    ret = emp_pd_rx_keys_program_hw(pd_gft_emp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to program hw for rx keys: ret:{}", ret);
+    gft_emp = (gft_exact_match_profile_t *)pd_gft_emp->pi_emp;
+
+    if (!gft_emp) {
+        HAL_TRACE_ERR("pi is null");
+        ret = HAL_RET_INVALID_ARG;
         goto end;
     }
+
+    if (gft_match_prof_is_ingress(gft_emp->table_type)) {
+        // Program the Rx Keys
+        ret = emp_pd_rx_keys_program_hw(pd_gft_emp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program hw for rx keys: ret:{}", ret);
+            goto end;
+        }
+    } else {
+        // Program Tx Key
+        ret = emp_pd_tx_keys_program_hw(pd_gft_emp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program hw for tx keys: ret:{}", ret);
+            goto end;
+        }
+    }
+
     
 end:
     return ret;
@@ -381,6 +405,9 @@ end:
     pd_gft_emp->rx_key ## TBL_ID ## _idx = tcam_idx;                        \
     HAL_TRACE_DEBUG("Programmed rx_key" #TBL_ID " at {}", tcam_idx);        \
 
+//-----------------------------------------------------------------------------
+// Program RX Keys
+//-----------------------------------------------------------------------------
 static hal_ret_t
 emp_pd_rx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
 {
@@ -460,6 +487,186 @@ end:
     return ret;
 
 }
+
+#define TX_KEY_LAYER_FORM_KEY_DATA(LAYER)                                   \
+    gft_hgmp = &gft_emp->hgem_profiles[LAYER - 1];                          \
+    if (gft_hgmp->headers & GFT_HEADER_ETHERNET) {                          \
+        tx_key1.ethernet_ ## LAYER ## _valid = 1;                           \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {       \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_ETHERNET_DST;                                         \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {       \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_ETHERNET_SRC;                                         \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ETH_TYPE) {           \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_ETHERNET_TYPE;                                        \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {   \
+            tx_key## LAYER ## _action.tx_key_action_u.tx_key_tx_key.        \
+            match_fields |=                                                 \
+                MATCH_CUSTOMER_VLAN_ID;                                     \
+        }                                                                   \
+    }                                                                       \
+    if (gft_hgmp->headers & GFT_HEADER_IPV4) {                              \
+        tx_key1.ipv4_ ## LAYER ## _valid = 1;                               \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {        \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_SRC;                                               \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_DST;                                               \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_DSCP) {            \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_DSCP;                                              \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_PROTOCOL) {        \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_PROTO;                                             \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TTL) {                \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_TTL;                                               \
+        }                                                                   \
+    } else if (gft_hgmp->headers & GFT_HEADER_IPV6) {                       \
+        tx_key1.ipv6_ ## LAYER ## _valid = 1;                               \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {        \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_SRC;                                               \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_DST;                                               \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_DSCP) {            \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_DSCP;                                              \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_IP_PROTOCOL) {        \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_PROTO;                                             \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TTL) {                \
+            tx_key ## LAYER ## _action.tx_key_action_u.tx_key_tx_key.       \
+            match_fields |=                                                 \
+                MATCH_IP_TTL;                                               \
+        }                                                                   \
+    }                                                                       \
+    if (gft_hgmp->headers & GFT_HEADER_ICMP) {                              \
+        tx_key1.icmp_ ## LAYER ## _valid = 1;                               \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ICMP_TYPE) {          \
+            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            MATCH_ICMP_TYPE_1 << 16;                                        \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_ICMP_CODE) {          \
+            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            MATCH_ICMP_CODE_1 << 16;                                        \
+        }                                                                   \
+    } else if (gft_hgmp->headers & GFT_HEADER_TCP) {                        \
+        tx_key1.tcp_ ## LAYER ## _valid = 1;                                \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
+            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            MATCH_TRANSPORT_SRC_PORT_1 << 16;                               \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
+            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            MATCH_TRANSPORT_DST_PORT_1 << 16;                               \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TCP_FLAGS) {          \
+            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            MATCH_TCP_FLAGS_1 << 16;                                        \
+        }                                                                   \
+    } else if (gft_hgmp->headers & GFT_HEADER_UDP) {                        \
+        tx_key1.udp_ ## LAYER ## _valid = 1;                                \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
+            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            MATCH_TRANSPORT_SRC_PORT_1 << 16;                               \
+        }                                                                   \
+        if (gft_hgmp->match_fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
+            tx_key1_action.tx_key_action_u.tx_key_tx_key.match_fields |=    \
+            MATCH_TRANSPORT_DST_PORT_1 << 16;                               \
+        }                                                                   \
+    }                                                                       
+
+#define TX_KEY_PGM(TBL_ID)                                                  \
+    key_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_TX_KEY);                  \
+    sdk_ret = key_tbl->insert(&tx_key ## TBL_ID, &tx_key ## TBL_ID ## _mask,\
+                              &tx_key ## TBL_ID ##_action, &tcam_idx);      \
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);                                  \
+    if (ret == HAL_RET_DUP_INS_FAIL) {                                      \
+        HAL_TRACE_ERR("Duplicate insert failure for tx_key ## TBL_ID ## "); \
+        goto end;                                                           \
+    } else if (ret != HAL_RET_OK) {                                         \
+        HAL_TRACE_ERR("Failed to insert into tx key" #TBL_ID " tcam table"  \
+                      "err : {}", ret);                                     \
+        return ret;                                                         \
+    }                                                                       \
+    pd_gft_emp->tx_key ## TBL_ID ## _idx = tcam_idx;                        \
+    HAL_TRACE_DEBUG("Programmed tx_key" #TBL_ID " at {}", tcam_idx);        \
+
+//-----------------------------------------------------------------------------
+// Program TX Key
+//-----------------------------------------------------------------------------
+static hal_ret_t
+emp_pd_tx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
+{
+    hal_ret_t                              ret = HAL_RET_OK;
+    sdk_ret_t                              sdk_ret;
+    gft_exact_match_profile_t              *gft_emp = NULL;
+    gft_hdr_group_exact_match_profile_t    *gft_hgmp = NULL;
+    uint32_t                               num_profiles = 0;
+    uint32_t                               tcam_idx = 0;
+    tx_key_swkey_t                         tx_key1 = { 0 };
+    tx_key_swkey_mask_t                    tx_key1_mask = { 0 };
+    tx_key_actiondata                      tx_key1_action = { 0 };
+    tcam                                   *key_tbl;
+
+    gft_emp = (gft_exact_match_profile_t *)pd_gft_emp->pi_emp;
+
+    if (!gft_emp) {
+        HAL_TRACE_ERR("pi is null");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    num_profiles = gft_emp->num_hdr_group_exact_match_profiles;
+    if (!num_profiles || num_profiles > 1) {
+        HAL_TRACE_ERR("Invalid no. of profiles: {}", num_profiles);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Setting masks
+    memset(&tx_key1_mask, ~0, sizeof(tx_key_swkey_mask_t));
+
+    // Forming Key1 for layer 1
+    TX_KEY_LAYER_FORM_KEY_DATA(1);
+    // Assign action id
+    tx_key1_action.actionid = TX_KEY_TX_KEY_ID;
+
+    // Program Tx Keys
+    TX_KEY_PGM(1);
+
+end: 
+    return ret;
+}
+
 
 //-----------------------------------------------------------------------------
 // DeProgram HW

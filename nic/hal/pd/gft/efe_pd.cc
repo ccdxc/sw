@@ -9,6 +9,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/eth.hpp"
 #include "nic/p4/gft/include/defines.h"
+#include "nic/hal/pd/gft/pd_utils.hpp"
 
 
 namespace hal {
@@ -31,6 +32,8 @@ static hal_ret_t pd_efe_make_clone(gft_exact_match_flow_entry_t *efe,
                                    gft_exact_match_flow_entry_t *clone);
 static hal_ret_t efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe);
 static hal_ret_t efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe);
+static hal_ret_t efe_pd_program_tx_transpositions(pd_gft_efe_t *pd_gft_efe);
+static hal_ret_t efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe);
 
 //-----------------------------------------------------------------------------
 // EFE Create in PD
@@ -194,19 +197,42 @@ efe_pd_init (pd_gft_efe_t *efe)
 static hal_ret_t
 efe_pd_program_hw (pd_gft_efe_t *pd_gft_efe)
 {
-    hal_ret_t                 ret = HAL_RET_OK;
+    hal_ret_t                       ret = HAL_RET_OK;
+    gft_exact_match_flow_entry_t    *gft_efe;
 
-    // Program transpositions
-    ret = efe_pd_program_transpositions(pd_gft_efe);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to program transpostions: ret:{}", ret);
+    gft_efe = (gft_exact_match_flow_entry_t *)pd_gft_efe->pi_efe;
+    if (!gft_efe) {
+        HAL_TRACE_ERR("pi is null");
+        ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    // Program flow entry
-    ret = efe_pd_program_flow(pd_gft_efe);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to program flow : ret:{}", ret);
-        goto end;
+
+    if (gft_match_prof_is_ingress(gft_efe->table_type)) {
+        // Program transpositions
+        ret = efe_pd_program_transpositions(pd_gft_efe);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program transpostions: ret:{}", ret);
+            goto end;
+        }
+        // Program flow entry
+        ret = efe_pd_program_flow(pd_gft_efe);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program flow : ret:{}", ret);
+            goto end;
+        }
+    } else {
+        // Program Tx transpositions
+        ret = efe_pd_program_tx_transpositions(pd_gft_efe);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program transpostions: ret:{}", ret);
+            goto end;
+        }
+        // Program Tx Flow entry
+        ret = efe_pd_program_tx_flow(pd_gft_efe);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program flow : ret:{}", ret);
+            goto end;
+        }
     }
 
 end:
@@ -475,7 +501,7 @@ end:
     rx_xpos_tbl = g_hal_state_pd->                                          \
                   dm_table(P4TBL_ID_RX_HDR_TRANSPOSITIONS ## TBL_ID);       \
     sdk_ret = rx_xpos_tbl->insert_withid(&xpo ## TBL_ID ## _data,           \
-                                         pd_gft_efe->flow_table_idx);       \
+                                         pd_gft_efe->flow_idx);             \
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);                                  \
     if (ret != HAL_RET_OK) {                                                \
          HAL_TRACE_ERR(" Failed to insert into rx hdr xpos" #TBL_ID " table"\
@@ -483,11 +509,11 @@ end:
         goto end;                                                           \
     }                                                                       \
     HAL_TRACE_DEBUG("Programmed rx_hdr_xpos" #TBL_ID " at {}",              \
-                    pd_gft_efe->flow_table_idx);                            \
+                    pd_gft_efe->flow_idx);                                  \
 
 
 //-----------------------------------------------------------------------------
-// Program transpostions
+// Program Rx transpostions
 //-----------------------------------------------------------------------------
 static hal_ret_t
 efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
@@ -520,10 +546,6 @@ efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
 
     if (num_xpos == 0 || num_xpos > 0) {
         RX_XPOSITION_DATA(0, 1);
-        HAL_TRACE_DEBUG("action: {}, hdr1_bits: {}, ctag: {}",
-                        xpo0_data.actionid, 
-                        xpo0_data.rx_hdr_transpositions0_action_u.rx_hdr_transpositions0_rx_hdr_transpositions.hdr1_bits,
-                        xpo0_data.rx_hdr_transpositions0_action_u.rx_hdr_transpositions0_rx_hdr_transpositions.ctag);
         RX_XPOSITION_PGM(0);
     }
     if (num_xpos > 1) {
@@ -693,6 +715,674 @@ end:
     return ret;
 }
 
+/*
+ * TBL_ID: Tx Transposition table id
+ *
+ * TBL_ID:
+ *      0, 1, 2, 3
+ *
+ * LAYER:
+ *      _ID + 1
+ *
+ * P4_LAYER
+ *      00, 01, 1
+ *
+ *  Valid:
+ *
+ *  Pop/Modify
+ *      › Populate hdr1_bits
+ *  Push:
+ *      › Populate hdr0_bits
+ *
+ *  Modify: [ 1 ]
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS0: Modify MAC, Ctag, IP
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS4: Modify L4 Header
+ *
+ *  Push, Modify: [ 01, 1 ]
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS0: Push 01 MAC, Ctag, IP
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS1: Modify Layer MAC, Ctag, IP
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS4: Push 01 L4 Header. Modify 1 Layer L4 Header
+ *
+ *  Push, Push, Modify: [ 00, 01, 1 ]
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS0: Push 00 MAC, Ctag, IP
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS1: Push 01 MAC, Ctag, IP
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS2: Modify 1 MAC, Ctag, IP
+ *      P4TBL_ID_RX_HDR_TRANSPOSITIONS3: Push 00, 01 L4 Header. Modify 1 Layer L4 Header
+ */
+
+#define TX_XPOSITION_DATA(TBL_ID, P4_LAYER)                                 \
+    gft_hgxpos = &gft_efe->transpositions[TBL_ID];                          \
+    hgem = &gft_efe->exact_matches[TBL_ID];                                 \
+    if (gft_hgxpos->action == GFT_HDR_GROUP_XPOSITION_ACTION_POP) {         \
+        if (gft_hgxpos->headers & GFT_HEADER_ETHERNET) {                    \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr1_bits |= TRANSPOSITIONS_POP_ETHERNET;                       \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr1_bits |= TRANSPOSITIONS_POP_CTAG;                           \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_IPV4) {                        \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr1_bits |= TRANSPOSITIONS_POP_IPV4;                           \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_IPV6) {                        \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr1_bits |= TRANSPOSITIONS_POP_IPV6;                           \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_VXLAN_ENCAP) {                 \
+            xpo3_data.                                                      \
+            tx_hdr_transpositions3_action_u.                                \
+            tx_hdr_transpositions3_tx_l4_hdr_transpositions.                \
+            hdr_bits |= TRANSPOSITIONS_POP_VXLAN_1;                         \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_UDP) {                         \
+            xpo3_data.                                                      \
+            tx_hdr_transpositions3_action_u.                                \
+            tx_hdr_transpositions3_tx_l4_hdr_transpositions.                \
+            hdr_bits |= TRANSPOSITIONS_POP_UDP_1;                           \
+        }                                                                   \
+    } else if (gft_hgxpos->action == GFT_HDR_GROUP_XPOSITION_ACTION_PUSH) { \
+        if (gft_hgxpos->headers & GFT_HEADER_ETHERNET) {                    \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr0_bits |= TRANSPOSITIONS_PUSH_ETHERNET_ ## P4_LAYER;         \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr0_bits |= TRANSPOSITIONS_PUSH_CTAG_ ## P4_LAYER;             \
+            /* Fields */                                                    \
+            /* Dmac */                                                      \
+            memcpy(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ethernet_dst, gft_hgxpos->eth_fields.dmac,               \
+                   ETH_ADDR_LEN);                                           \
+            memrev(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ethernet_dst, ETH_ADDR_LEN);                             \
+            /* Smac */                                                      \
+            memcpy(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ethernet_src, gft_hgxpos->eth_fields.smac,               \
+                   ETH_ADDR_LEN);                                           \
+            memrev(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ethernet_src, ETH_ADDR_LEN);                             \
+            /* EtherType */                                                 \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ethernet_type = gft_hgxpos->eth_fields.eth_type;                \
+            /* CVlan */                                                     \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ctag = gft_hgxpos->eth_fields.customer_vlan_id;                 \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_IPV4) {                        \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr0_bits |= TRANSPOSITIONS_PUSH_IPV4_ ## P4_LAYER;             \
+            /* Src IP */                                                    \
+            memcpy(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ip_src, &gft_hgxpos->src_ip_addr.addr,                   \
+                   IP6_ADDR8_LEN);                                          \
+            /* Dst IP */                                                    \
+            memcpy(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ip_dst, &gft_hgxpos->dst_ip_addr.addr,                   \
+                   IP6_ADDR8_LEN);                                          \
+            /* DSCP */                                                      \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ip_dscp = gft_hgxpos->dscp;                                     \
+            /* TTL */                                                       \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ip_ttl = gft_hgxpos->ttl;                                       \
+            /* Ip Proto */                                                  \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ip_proto = gft_hgxpos->ip_proto;                                \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_IPV6) {                        \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            hdr0_bits |= TRANSPOSITIONS_PUSH_IPV6_ ## P4_LAYER;             \
+            /* Src IP */                                                    \
+            memcpy(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ip_src, &gft_hgxpos->src_ip_addr.addr,                   \
+                   IP6_ADDR8_LEN);                                          \
+            if (gft_hgxpos->src_ip_addr.af == IP_AF_IPV6) {                 \
+                memrev(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ip_src, IP6_ADDR8_LEN);                              \
+            }                                                               \
+            /* Dst IP */                                                    \
+            memcpy(xpo ## TBL_ID ## _data.                                  \
+                   tx_hdr_transpositions ## TBL_ID ## _action_u.            \
+                   tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                   ip_dst, &gft_hgxpos->dst_ip_addr.addr,                   \
+                   IP6_ADDR8_LEN);                                          \
+            if (gft_hgxpos->dst_ip_addr.af == IP_AF_IPV6) {                 \
+                memrev(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ip_dst, IP6_ADDR8_LEN);                              \
+            }                                                               \
+            /* DSCP */                                                      \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ip_dscp = gft_hgxpos->dscp;                                     \
+            /* TTL */                                                       \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ip_ttl = gft_hgxpos->ttl;                                       \
+            /* Ip Proto */                                                  \
+            xpo ## TBL_ID ## _data.                                         \
+            tx_hdr_transpositions ## TBL_ID ## _action_u.                   \
+            tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.      \
+            ip_proto = gft_hgxpos->ip_proto;                                \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_VXLAN_ENCAP) {                 \
+            xpo3_data.                                                      \
+            tx_hdr_transpositions3_action_u.                                \
+            tx_hdr_transpositions3_tx_l4_hdr_transpositions.                \
+            hdr0_bits |= TRANSPOSITIONS_PUSH_VXLAN_ ## P4_LAYER;          \
+            /* Tenant Id */                                                 \
+            xpo3_data.                                                      \
+            tx_hdr_transpositions3_action_u.                                \
+            tx_hdr_transpositions3_tx_l4_hdr_transpositions.                \
+            tenant_id_ ## P4_LAYER = gft_hgxpos->encap_or_transport.encap.tenant_id;\
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_UDP) {                         \
+            xpo3_data.                                                      \
+            tx_hdr_transpositions3_action_u.                                \
+            tx_hdr_transpositions3_tx_l4_hdr_transpositions.                \
+            hdr0_bits |= TRANSPOSITIONS_PUSH_UDP_ ## P4_LAYER;              \
+            /* L4 Sport */                                                  \
+            xpo3_data.                                                      \
+            tx_hdr_transpositions3_action_u.                                \
+            tx_hdr_transpositions3_tx_l4_hdr_transpositions.                \
+            l4_sport_ ## P4_LAYER = gft_hgxpos->encap_or_transport.udp.sport;\
+            /* L4 Dport */                                                  \
+            xpo3_data.                                                      \
+            tx_hdr_transpositions3_action_u.                                \
+            tx_hdr_transpositions3_tx_l4_hdr_transpositions.                \
+            l4_dport_ ## P4_LAYER = gft_hgxpos->encap_or_transport.udp.dport;\
+        }                                                                   \
+    } else if (gft_hgxpos->action ==                                        \
+               GFT_HDR_GROUP_XPOSITION_ACTION_MODIFY) {                     \
+        if (gft_hgxpos->headers & GFT_HEADER_ETHERNET) {                    \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {       \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_ETHERNET_DST;            \
+                memcpy(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ethernet_dst, gft_hgxpos->eth_fields.dmac,           \
+                       ETH_ADDR_LEN);                                       \
+                memrev(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ethernet_dst, ETH_ADDR_LEN);                         \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {       \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_ETHERNET_SRC;            \
+                memcpy(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ethernet_src, gft_hgxpos->eth_fields.smac,           \
+                       ETH_ADDR_LEN);                                       \
+                memrev(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ethernet_src, ETH_ADDR_LEN);                         \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_ETH_TYPE) {           \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_ETHERNET_TYPE;\
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                ethernet_type = gft_hgxpos->eth_fields.eth_type;            \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {   \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_POP_CTAG;           \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_CTAG;        \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                ctag = gft_hgxpos->eth_fields.customer_vlan_id;             \
+                if (hgem->headers & GFT_HEADER_IPV4) {                      \
+                    xpo ## TBL_ID ## _data.                                 \
+                    tx_hdr_transpositions ## TBL_ID ## _action_u.           \
+                    tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                    ethernet_type = ETHERTYPE_IPV4;                         \
+                } else {                                                    \
+                    xpo ## TBL_ID ## _data.                                 \
+                    tx_hdr_transpositions ## TBL_ID ## _action_u.           \
+                    tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                    ethernet_type = ETHERTYPE_IPV6;                         \
+                }                                                           \
+            }                                                               \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_IPV4 ||                        \
+            gft_hgxpos->headers & GFT_HEADER_IPV6) {                        \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {        \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_IP_SRC;      \
+                memcpy(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ip_src, &gft_hgxpos->src_ip_addr.addr,               \
+                       IP6_ADDR8_LEN);                                      \
+                if (gft_hgxpos->src_ip_addr.af == IP_AF_IPV6) {             \
+                    memrev(xpo ## TBL_ID ## _data.                          \
+                           tx_hdr_transpositions ## TBL_ID ## _action_u.    \
+                           tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                           ip_src, IP6_ADDR8_LEN);                          \
+                }                                                           \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_DST_IP_ADDR) {        \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_IP_DST;      \
+                memcpy(xpo ## TBL_ID ## _data.                              \
+                       tx_hdr_transpositions ## TBL_ID ## _action_u.        \
+                       tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                       ip_dst, &gft_hgxpos->dst_ip_addr.addr,               \
+                       IP6_ADDR8_LEN);                                      \
+                if (gft_hgxpos->dst_ip_addr.af == IP_AF_IPV6) {             \
+                    memrev(xpo ## TBL_ID ## _data.                          \
+                           tx_hdr_transpositions ## TBL_ID ## _action_u.    \
+                           tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.\
+                           ip_dst, IP6_ADDR8_LEN);                          \
+                }                                                           \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_IP_DSCP) {            \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_IP_DSCP;     \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                ip_dscp = gft_hgxpos->dscp;                                 \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_TTL) {                \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_IP_TTL;      \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                ip_ttl = gft_hgxpos->ttl;                                   \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_IP_PROTOCOL) {        \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                hdr1_bits |= TRANSPOSITIONS_MODIFY_IP_PROTO;    \
+                xpo ## TBL_ID ## _data.                                     \
+                tx_hdr_transpositions ## TBL_ID ## _action_u.               \
+                tx_hdr_transpositions ## TBL_ID ## _tx_hdr_transpositions.  \
+                ip_proto = gft_hgxpos->ip_proto;                            \
+            }                                                               \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_TCP) {                         \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                hdr_bits |= TRANSPOSITIONS_MODIFY_TCP_SPORT_1;              \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                l4_sport_1 = gft_hgxpos->encap_or_transport.tcp.sport;      \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                hdr_bits |= TRANSPOSITIONS_MODIFY_TCP_DPORT_1;              \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                l4_dport_1 = gft_hgxpos->encap_or_transport.tcp.dport;      \
+            }                                                               \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_UDP) {                         \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) { \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                hdr_bits |= TRANSPOSITIONS_MODIFY_UDP_SPORT_1;              \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                l4_sport_1 = gft_hgxpos->encap_or_transport.udp.sport;      \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) { \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                hdr_bits |= TRANSPOSITIONS_MODIFY_UDP_DPORT_1;              \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                l4_dport_1 = gft_hgxpos->encap_or_transport.udp.dport;      \
+            }                                                               \
+        }                                                                   \
+        if (gft_hgxpos->headers & GFT_HEADER_ICMP) {                        \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_ICMP_TYPE) {          \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                hdr_bits |= TRANSPOSITIONS_MODIFY_ICMP_TYPE_1;              \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                l4_sport_1 = gft_hgxpos->encap_or_transport.icmp.type;      \
+            }                                                               \
+            if (gft_hgxpos->fields & GFT_HEADER_FIELD_ICMP_CODE) {          \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                hdr_bits |= TRANSPOSITIONS_MODIFY_ICMP_CODE_1;              \
+                xpo3_data.                                                  \
+                tx_hdr_transpositions3_action_u.                            \
+                tx_hdr_transpositions3_tx_l4_hdr_transpositions.            \
+                l4_dport_1 = gft_hgxpos->encap_or_transport.icmp.code;      \
+            }                                                               \
+        }                                                                   \
+    }
+
+#define TX_XPOSITION_PGM(TBL_ID)                                            \
+    tx_xpos_tbl = g_hal_state_pd->                                          \
+                  dm_table(P4TBL_ID_TX_HDR_TRANSPOSITIONS ## TBL_ID);       \
+    sdk_ret = tx_xpos_tbl->insert(&xpo ## TBL_ID ## _data,                  \
+                                  &pd_gft_efe->flow_idx);                   \
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);                                  \
+    if (ret != HAL_RET_OK) {                                                \
+         HAL_TRACE_ERR(" Failed to insert into tx hdr xpos" #TBL_ID " table"\
+                       "err : {}", ret);                                    \
+        goto end;                                                           \
+    }                                                                       \
+    HAL_TRACE_DEBUG("Programmed tx_hdr_xpos" #TBL_ID " at {}",              \
+                    pd_gft_efe->flow_idx);                                  \
+
+#define TX_XPOSITION_PGM_WITHID(TBL_ID)                                     \
+    tx_xpos_tbl = g_hal_state_pd->                                          \
+                  dm_table(P4TBL_ID_TX_HDR_TRANSPOSITIONS ## TBL_ID);       \
+    sdk_ret = tx_xpos_tbl->insert_withid(&xpo ## TBL_ID ## _data,           \
+                                         pd_gft_efe->flow_idx);             \
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);                                  \
+    if (ret != HAL_RET_OK) {                                                \
+         HAL_TRACE_ERR(" Failed to insert into tx hdr xpos" #TBL_ID " table"\
+                       "err : {}", ret);                                    \
+        goto end;                                                           \
+    }                                                                       \
+    HAL_TRACE_DEBUG("Programmed tx_hdr_xpos" #TBL_ID " at {}",              \
+                    pd_gft_efe->flow_table_idx);                            \
+
+
+
+
+//-----------------------------------------------------------------------------
+// Program Tx transpostions
+//-----------------------------------------------------------------------------
+static hal_ret_t
+efe_pd_program_tx_transpositions(pd_gft_efe_t *pd_gft_efe)
+{
+    hal_ret_t                               ret = HAL_RET_OK;
+    sdk_ret_t                               sdk_ret;
+    gft_exact_match_flow_entry_t            *gft_efe;
+    gft_hdr_group_xposition_t               *gft_hgxpos;
+    gft_hdr_group_exact_match_t             *hgem = NULL;
+    uint32_t                                num_xpos = 0;
+    tx_hdr_transpositions0_actiondata       xpo0_data = { 0 }; 
+    tx_hdr_transpositions1_actiondata       xpo1_data = { 0 }; 
+    tx_hdr_transpositions2_actiondata       xpo2_data = { 0 }; 
+    tx_hdr_transpositions3_actiondata       xpo3_data = { 0 }; 
+    directmap                               *tx_xpos_tbl = NULL;
+
+    gft_efe = (gft_exact_match_flow_entry_t *)pd_gft_efe->pi_efe;
+    if (!gft_efe) {
+        HAL_TRACE_ERR("pi is null");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    num_xpos = gft_efe->num_transpositions;
+    if (num_xpos > 3) {
+        HAL_TRACE_ERR("Invalid no. of xpos: {}", num_xpos);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    /*
+     * P4 Layers
+     *
+     * 00, 01, 1, ‹Payload›
+     */
+
+    if (num_xpos > 0) {
+        if (num_xpos == 1) {
+            // Modify layer 1
+            TX_XPOSITION_DATA(0, 00);
+        } else if (num_xpos == 2) {
+            // Pushing layer 01
+            TX_XPOSITION_DATA(0, 01);
+        } else if (num_xpos == 3) {
+            // Pushing layer 00
+            TX_XPOSITION_DATA(0, 00);
+        }
+        TX_XPOSITION_PGM(0);
+    }
+
+    if (num_xpos > 1) {
+        if (num_xpos == 2) {
+            // Modify layer 1
+            TX_XPOSITION_DATA(1, 00);
+        } else if (num_xpos == 3) {
+            // Pushing layer 01
+            TX_XPOSITION_DATA(1, 01);
+        }
+        TX_XPOSITION_PGM_WITHID(1);
+    }
+
+    if (num_xpos > 2) {
+        if (num_xpos == 3) {
+            // Modify layer 1
+            TX_XPOSITION_DATA(2, 00);
+        }
+        TX_XPOSITION_PGM_WITHID(2);
+    }
+
+    if (!num_xpos) {
+        TX_XPOSITION_PGM_WITHID(3);
+    }
+
+end:
+    return ret;
+}
+
+#define TX_GFT_KEY_FORM(LAYER)                                              \
+    gft_hgem = &gft_efe->exact_matches[LAYER - 1];                          \
+    if (gft_hgem->headers & GFT_HEADER_ETHERNET) {                          \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {             \
+            memcpy(gft_key.flow_lkp_metadata_ethernet_dst_ ## LAYER,        \
+                   gft_hgem->eth_fields.dmac, ETH_ADDR_LEN);                \
+            memrev(gft_key.flow_lkp_metadata_ethernet_dst_ ## LAYER,        \
+                   ETH_ADDR_LEN);                                           \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {             \
+            memcpy(gft_key.flow_lkp_metadata_ethernet_src_ ## LAYER,        \
+                   gft_hgem->eth_fields.smac, ETH_ADDR_LEN);                \
+            memrev(gft_key.flow_lkp_metadata_ethernet_src_ ## LAYER,        \
+                   ETH_ADDR_LEN);                                           \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_ETH_TYPE) {                 \
+            gft_key.flow_lkp_metadata_ethernet_type_ ## LAYER =             \
+            gft_hgem->eth_fields.eth_type;                                  \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_CUSTOMER_VLAN_ID) {         \
+            gft_key.flow_lkp_metadata_ctag_ ## LAYER =                      \
+            gft_hgem->eth_fields.customer_vlan_id;                          \
+        }                                                                   \
+    }                                                                       \
+    if (gft_hgem->headers & GFT_HEADER_IPV4 ||                              \
+        gft_hgem->headers & GFT_HEADER_IPV6) {                              \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {              \
+            memcpy(gft_key.flow_lkp_metadata_ip_src_ ## LAYER,              \
+                   &gft_hgem->src_ip_addr.addr, IP6_ADDR8_LEN);             \
+            if (gft_hgem->headers & GFT_HEADER_IPV6) {                      \
+                memrev(gft_key.flow_lkp_metadata_ip_src_ ## LAYER,          \
+                       IP6_ADDR8_LEN);                                      \
+            }                                                               \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_DST_IP_ADDR) {              \
+            memcpy(gft_key.flow_lkp_metadata_ip_dst_ ## LAYER,              \
+                   &gft_hgem->dst_ip_addr.addr, IP6_ADDR8_LEN);             \
+            if (gft_hgem->headers & GFT_HEADER_IPV6) {                      \
+                memrev(gft_key.flow_lkp_metadata_ip_dst_ ## LAYER,          \
+                       IP6_ADDR8_LEN);                                      \
+            }                                                               \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_IP_DSCP) {                  \
+            gft_key.flow_lkp_metadata_ip_dscp_ ## LAYER =                   \
+            gft_hgem->dscp;                                                 \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_IP_PROTOCOL) {              \
+            gft_key.flow_lkp_metadata_ip_proto_ ## LAYER =                  \
+            gft_hgem->ip_proto;                                             \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_TTL) {                      \
+            gft_key.flow_lkp_metadata_ip_ttl_ ## LAYER =                    \
+            gft_hgem->ttl;                                                  \
+        }                                                                   \
+    }                                                                       \
+    if (gft_hgem->headers & GFT_HEADER_ICMP) {                              \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_ICMP_TYPE) {                \
+            gft_key.flow_lkp_metadata_l4_sport_ ## LAYER =                  \
+            gft_hgem->encap_or_transport.icmp.type;                         \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_ICMP_CODE) {                \
+            gft_key.flow_lkp_metadata_l4_dport_ ## LAYER =                  \
+            gft_hgem->encap_or_transport.icmp.code;                         \
+        }                                                                   \
+    } else if (gft_hgem->headers & GFT_HEADER_TCP) {                        \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {       \
+            gft_key.flow_lkp_metadata_l4_sport_ ## LAYER =                  \
+            gft_hgem->encap_or_transport.tcp.sport;                         \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {       \
+            gft_key.flow_lkp_metadata_l4_dport_ ## LAYER =                  \
+            gft_hgem->encap_or_transport.tcp.dport;                         \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_TCP_FLAGS) {                \
+            gft_key.flow_lkp_metadata_tcp_flags_ ## LAYER =                 \
+            gft_hgem->encap_or_transport.tcp.tcp_flags;                     \
+        }                                                                   \
+    } else if (gft_hgem->headers & GFT_HEADER_UDP) {                        \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {       \
+            gft_key.flow_lkp_metadata_l4_sport_ ## LAYER =                  \
+            gft_hgem->encap_or_transport.udp.sport;                         \
+        }                                                                   \
+        if (gft_hgem->fields & GFT_HEADER_FIELD_TRANSPORT_DST_PORT) {       \
+            gft_key.flow_lkp_metadata_l4_dport_ ## LAYER =                  \
+            gft_hgem->encap_or_transport.udp.dport;                         \
+        }                                                                   \
+    }                                                                       \
+
+//-----------------------------------------------------------------------------
+// Program Tx flow 
+//-----------------------------------------------------------------------------
+static hal_ret_t
+efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
+{
+    hal_ret_t                               ret = HAL_RET_OK;
+    gft_exact_match_flow_entry_t            *gft_efe;
+    gft_hdr_group_exact_match_t             *gft_hgem = NULL;
+    tx_gft_hash_swkey_t                     gft_key = { 0 };
+    gft_flow_hash_data_t                    data = { 0 };
+    uint32_t                                num_matches = 0;
+
+    gft_efe = (gft_exact_match_flow_entry_t *)pd_gft_efe->pi_efe;
+
+    if (!gft_efe) {
+        HAL_TRACE_ERR("pi is null");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    num_matches = gft_efe->num_exact_matches;
+    if (num_matches != 1) {
+        HAL_TRACE_ERR("In TX: No: of matches have to be 1");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    TX_GFT_KEY_FORM(1);
+
+    // Populate data
+    data.flow_index = pd_gft_efe->flow_idx;
+    data.policer_index = pd_gft_efe->policer_idx;
+
+    ret = g_hal_state_pd->flow_table()->insert(&gft_key, 
+                                               &data,
+                                               &pd_gft_efe->flow_table_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Flow inserted at: {}", pd_gft_efe->flow_table_idx);
+
+
+end:
+    return ret;
+}
 //-----------------------------------------------------------------------------
 // DeProgram HW
 //-----------------------------------------------------------------------------

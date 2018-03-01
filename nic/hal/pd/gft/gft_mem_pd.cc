@@ -7,8 +7,10 @@
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/pd/gft/uplinkif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
+#include "nic/hal/pd/gft/endpoint_pd.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/gft/emp_pd.hpp"
+#include "nic/hal/pd/gft/vrf_pd.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
 
@@ -24,6 +26,7 @@ hal_state_pd::init(void)
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
     flow_table_ = NULL;
+    tx_flow_table_ = NULL;
     p4plus_rxdma_dm_tables_ = NULL;
     p4plus_txdma_dm_tables_ = NULL;
 
@@ -36,6 +39,12 @@ hal_state_pd::init(void)
     lif_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_LIFS);
     HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
 
+    // initialize vrf related data structures
+    vrf_pd_slab_ = slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
+                                 sizeof(hal::pd::pd_vrf_t), 8,
+                                 false, true, true);
+    HAL_ASSERT_RETURN((vrf_pd_slab_ != NULL), false);
+
     // initialize Uplink If PD related data structures
     uplinkif_pd_slab_ = slab::factory("UPLINKIF_PD", HAL_SLAB_UPLINKIF_PD,
                                  sizeof(hal::pd::pd_uplinkif_t), 8,
@@ -47,6 +56,12 @@ hal_state_pd::init(void)
                                  sizeof(hal::pd::pd_enicif_t), 8,
                                  false, true, true);
     HAL_ASSERT_RETURN((enicif_pd_slab_ != NULL), false);
+
+    // initialize EP PD related data structures
+    ep_pd_slab_ = slab::factory("EP_PD", HAL_SLAB_EP_PD,
+                                 sizeof(hal::pd::pd_ep_t), 8,
+                                 false, true, true);
+    HAL_ASSERT_RETURN((ep_pd_slab_ != NULL), false);
 
     // initiate GFT exact match profile
     exact_match_profile_pd_slab_ = slab::factory("GFT_EMP_PD", 
@@ -71,8 +86,10 @@ hal_state_pd::init(void)
 hal_state_pd::hal_state_pd()
 {
     lif_pd_slab_ = NULL;
+    vrf_pd_slab_ = NULL;
     uplinkif_pd_slab_ = NULL;
     enicif_pd_slab_ = NULL;
+    ep_pd_slab_ = NULL;
     exact_match_profile_pd_slab_ = NULL;
     exact_match_flow_entry_pd_slab_ = NULL;
 }
@@ -87,8 +104,12 @@ hal_state_pd::~hal_state_pd()
     lif_pd_slab_ ? slab::destroy(lif_pd_slab_) : HAL_NOP;
     lif_hwid_idxr_ ? indexer::destroy(lif_hwid_idxr_) : HAL_NOP;
 
+    vrf_pd_slab_ ? slab::destroy(vrf_pd_slab_) : HAL_NOP;
+
     uplinkif_pd_slab_ ? slab::destroy(uplinkif_pd_slab_) : HAL_NOP;
     enicif_pd_slab_ ? slab::destroy(enicif_pd_slab_) : HAL_NOP;
+
+    ep_pd_slab_ ? slab::destroy(ep_pd_slab_) : HAL_NOP;
 
     exact_match_profile_pd_slab_ ? slab::destroy(exact_match_profile_pd_slab_) : 
         HAL_NOP;
@@ -126,6 +147,10 @@ hal_state_pd::~hal_state_pd()
 
     if (flow_table_) {
         Flow::destroy(flow_table_);
+    }
+
+    if (tx_flow_table_) {
+        Flow::destroy(tx_flow_table_);
     }
 
     if (p4plus_rxdma_dm_tables_) {
@@ -206,8 +231,10 @@ slab *
 hal_state_pd::get_slab(hal_slab_t slab_id) 
 {
     GET_SLAB(lif_pd_slab_);
+    GET_SLAB(vrf_pd_slab_);
     GET_SLAB(uplinkif_pd_slab_);
     GET_SLAB(enicif_pd_slab_);
+    GET_SLAB(ep_pd_slab_);
     GET_SLAB(exact_match_profile_pd_slab_);
 
     return NULL;
@@ -304,6 +331,18 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                   sizeof(gft_flow_hash_data_t), 10,    // no. of hints
                                   static_cast<Flow::HashPoly>(tinfo.hash_type));
                 HAL_ASSERT(flow_table_ != NULL);
+            }
+            if (tid == P4TBL_ID_TX_GFT_HASH) {
+                if (tinfo.has_oflow_table) {
+                    p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
+                }
+                tx_flow_table_ =
+                    Flow::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
+                                  tinfo.tabledepth, ctinfo.tabledepth,
+                                  tinfo.key_struct_size,
+                                  sizeof(gft_flow_hash_data_t), 10,    // no. of hints
+                                  static_cast<Flow::HashPoly>(tinfo.hash_type));
+                HAL_ASSERT(tx_flow_table_ != NULL);
             }
             break;
 
@@ -507,12 +546,20 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->lif_pd_slab()->free(elem);
         break;
 
+    case HAL_SLAB_VRF_PD:
+        g_hal_state_pd->vrf_pd_slab()->free(elem);
+        break;
+
     case HAL_SLAB_UPLINKIF_PD:
         g_hal_state_pd->uplinkif_pd_slab()->free(elem);
         break;
 
     case HAL_SLAB_ENICIF_PD:
         g_hal_state_pd->enicif_pd_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_EP_PD:
+        g_hal_state_pd->ep_pd_slab()->free(elem);
         break;
 
     case HAL_SLAB_GFT_EMP_PD:

@@ -245,23 +245,23 @@ message GftHeaderGroupTransposition {
 
 message GftExactMatchFlowEntrySpec {
   types.ObjectMeta                             meta                                           = 1;    // common object meta
-  kh.GftExactMatchFlowEntryKeyHandle           key_or_handle                                  = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  kh.GftExactMatchProfileKeyHandle             exact_match_profile                            = 3 [(gogoproto.moretags) = "venice:ref"];
-  kh.GftHeaderTranspositionProfileKeyHandle    transposition_profile                          = 4 [(gogoproto.moretags) = "venice:ref"];
-  bool                                         add_in_activated_state                         = 5;
-  bool                                         rdma_flow                                      = 6;
-  bool                                         redirect_to_vport_ingress_queue                = 7;
-  bool                                         redirect_to_vport_egress_queue                 = 8;
-  bool                                         redirect_to_vport_ingress_queue_if_ttl_is_one  = 9;
-  bool                                         redirect_to_vport_egress_queue_if_ttl_is_one   = 10;
-  bool                                         copy_all_packets                               = 11;
-  bool                                         copy_first_packet                              = 12;
-  bool                                         copy_when_tcp_flag_set                         = 13;
-  bool                                         custom_action_present                          = 14;
-  bool                                         meta_action_before_transposition               = 15;
-  bool                                         copy_after_tcp_fin_flag_set                    = 16;
-  bool                                         copy_after_tcp_rst_flag_set                    = 17;
-  uint32                                       table_id                                       = 18;
+  GftTableType                                 table_type                                     = 2;
+  kh.GftExactMatchFlowEntryKeyHandle           key_or_handle                                  = 3 [(gogoproto.moretags) = "venice:\"key\""];
+  kh.GftExactMatchProfileKeyHandle             exact_match_profile                            = 4 [(gogoproto.moretags) = "venice:ref"];
+  kh.GftHeaderTranspositionProfileKeyHandle    transposition_profile                          = 5 [(gogoproto.moretags) = "venice:ref"];
+  bool                                         add_in_activated_state                         = 6;
+  bool                                         rdma_flow                                      = 7;
+  bool                                         redirect_to_vport_ingress_queue                = 8;
+  bool                                         redirect_to_vport_egress_queue                 = 9;
+  bool                                         redirect_to_vport_ingress_queue_if_ttl_is_one  = 10;
+  bool                                         redirect_to_vport_egress_queue_if_ttl_is_one   = 11;
+  bool                                         copy_all_packets                               = 12;
+  bool                                         copy_first_packet                              = 13;
+  bool                                         copy_when_tcp_flag_set                         = 14;
+  bool                                         custom_action_present                          = 15;
+  bool                                         meta_action_before_transposition               = 16;
+  bool                                         copy_after_tcp_fin_flag_set                    = 17;
+  bool                                         copy_after_tcp_rst_flag_set                    = 18;
   uint32                                       vport_id                                       = 19;
   uint32                                       redirect_vport_id                              = 20;
   uint32                                       ttl_one_redirect_vport_id                      = 21;

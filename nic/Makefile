@@ -86,6 +86,7 @@ gtests_gft:
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:lif_gft_test
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:uplinkif_gft_test
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:enicif_gft_test
+	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:endpoint_gft_test
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:emp_gft_test
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal/test/gtests:efe_gft_test
 	 @# Once PD is properly cleaned up gft_test should be compiled with the below cmd. Remove above cmds
@@ -94,6 +95,8 @@ gtests_gft:
 run-gft-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/lif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/lif_gft_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/uplinkif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkif_gft_test.xml"
+	$(CMD_OPTS) ./nic/hal/test/gtests/enicif_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/enicif_gft_test.xml"
+	$(CMD_OPTS) ./nic/hal/test/gtests/endpoint_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/endpoint_gft_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/emp_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/emp_gft_test.xml"
 	$(CMD_OPTS) ./nic/hal/test/gtests/efe_gft_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/efe_gft_test.xml"
 

@@ -47,11 +47,17 @@ public:
     slab *lif_pd_slab(void) const { return lif_pd_slab_; }
     indexer *lif_hwid_idxr(void) const { return lif_hwid_idxr_; }
 
+    // get APIs for EP related state
+    slab *vrf_pd_slab(void) const { return vrf_pd_slab_; }
+
     // get APIs for Uplinkif  related state
     slab *uplinkif_pd_slab(void) const { return uplinkif_pd_slab_; }
 
     // get APIs for enicif  related state
     slab *enicif_pd_slab(void) const { return enicif_pd_slab_; }
+
+    // get APIs for EP related state
+    slab *ep_pd_slab(void) const { return ep_pd_slab_; }
 
     // get APIs for exact match profile
     slab *exact_match_profile_pd_slab(void) const { 
@@ -89,6 +95,10 @@ public:
         return flow_table_;
     }
 
+    Flow *tx_flow_table(void) const {
+        return tx_flow_table_;
+    }
+
     directmap *p4plus_rxdma_dm_table(uint32_t tid) const {
         if ((tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN) ||
             (tid > P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX)) {
@@ -115,6 +125,7 @@ private:
     sdk_hash     **hash_tcam_tables_;
     tcam         **tcam_tables_;
     Flow         *flow_table_;
+    Flow         *tx_flow_table_;
     directmap    **p4plus_rxdma_dm_tables_;
     directmap    **p4plus_txdma_dm_tables_;
 
@@ -122,6 +133,11 @@ private:
     struct {
         slab       *lif_pd_slab_;
         indexer    *lif_hwid_idxr_;         // Used even by Uplink IF/PCs
+    } __PACK__;
+
+    // VRF related state
+    struct {
+        slab       *vrf_pd_slab_;
     } __PACK__;
 
     // Uplink IF related state
@@ -132,6 +148,11 @@ private:
     // Enic IF related state
     struct {
         slab       *enicif_pd_slab_;
+    } __PACK__;
+
+    // Endpoint related state
+    struct {
+        slab       *ep_pd_slab_;
     } __PACK__;
 
     // Exact Match Profile 

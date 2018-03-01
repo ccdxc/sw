@@ -28,6 +28,8 @@ struct pd_gft_emp_s {
     uint32_t    rx_key3_idx;
     uint32_t    rx_key4_idx;
 
+    uint32_t    tx_key1_idx;
+
     // pi ptr
     void        *pi_emp;
 } __PACK__;

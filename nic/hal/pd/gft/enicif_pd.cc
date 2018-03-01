@@ -9,7 +9,7 @@
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
-#include "nic/hal/pd/gft/if_pd_utils.hpp"
+#include "nic/hal/pd/gft/pd_utils.hpp"
 #include "sdk/tcam.hpp"
 
 namespace hal {

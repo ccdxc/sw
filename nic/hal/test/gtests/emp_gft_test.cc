@@ -55,6 +55,40 @@ TEST_F(emp_gft_test, test1)
     GftHeaders                          *headers;
     GftHeaderFields                     *hdr_fields;
 
+    spec.set_table_type(gft::GFT_TABLE_TYPE_WILDCARD_INGRESS);
+    emp = spec.add_exact_match_profiles();
+    headers = emp->mutable_headers();
+    headers->set_ethernet_header(true);
+    headers->set_ipv4_header(true);
+    headers->set_tcp_header(true);
+
+    hdr_fields = emp->mutable_match_fields();
+    hdr_fields->set_tenant_id(true);
+    hdr_fields->set_src_ip_addr(true);
+    hdr_fields->set_dst_ip_addr(true);
+    hdr_fields->set_src_port(true);
+    hdr_fields->set_dst_port(true);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::gft_exact_match_profile_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Creating a emp for tX
+// ----------------------------------------------------------------------------
+TEST_F(emp_gft_test, test2) 
+{
+    hal_ret_t                           ret;
+    GftExactMatchProfileSpec            spec;
+    GftExactMatchProfileResponse        rsp;
+    GftHeaderGroupExactMatchProfile     *emp;
+    GftHeaders                          *headers;
+    GftHeaderFields                     *hdr_fields;
+
+    spec.set_table_type(gft::GFT_TABLE_TYPE_WILDCARD_EGRESS);
+    spec.mutable_key_or_handle()->set_profile_id(1);
     emp = spec.add_exact_match_profiles();
     headers = emp->mutable_headers();
     headers->set_ethernet_header(true);

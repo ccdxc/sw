@@ -216,7 +216,7 @@ directmap::insert(void *data, uint32_t *index)
     }
 
     // Print entry
-    // entry_trace_(data, *index);
+    entry_trace_(data, *index);
 
     // P4-API: write API
     pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data); 

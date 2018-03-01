@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/hal/pd/gft/if_pd_utils.hpp"
+#include "nic/hal/pd/gft/pd_utils.hpp"
 #include "lif_pd.hpp"
 #include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
@@ -53,6 +53,21 @@ if_get_hw_lif_id(if_t *pi_if, uint32_t *hw_lif_id)
 end:
     return HAL_RET_OK;
 }
+
+//-----------------------------------------------------------------------------
+// Check if gft table type is ingress
+//-----------------------------------------------------------------------------
+bool 
+gft_match_prof_is_ingress(gft_table_type_t type)
+{
+    if (type == GFT_TABLE_TYPE_WILDCARD_INGRESS || 
+        type == GFT_TABLE_TYPE_EXACT_MATCH_INGRESS) {
+        return true;
+    }
+
+    return false;
+}
+
 
 }   // namespace pd
 }   // namespace hal
