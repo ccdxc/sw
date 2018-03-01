@@ -9,9 +9,9 @@ entries :
         name        : TNMDR
         haltype     : 2
         type        : DESCR_AOL_VIA_REF
-        count       : 128
+        count       : 1024 
     - entry:
         name        : RNMDR
         haltype     : 3
         type        : DESCR_AOL_VIA_REF
-        count       : 128
+        count       : 1024 

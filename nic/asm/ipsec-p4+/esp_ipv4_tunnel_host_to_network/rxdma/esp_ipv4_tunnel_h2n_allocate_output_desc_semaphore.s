@@ -19,6 +19,6 @@ esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore:
     sll r1, d.{out_desc_ring_index}.dx, 3 
     addui r1, r1, hiword(TNMDR_TABLE_BASE)
     addi r1, r1, loword(TNMDR_TABLE_BASE)
-    phvwr p.common_te1_phv_table_addr, r1
+    phvwr.f p.common_te1_phv_table_addr, r1
     nop.e 
     nop
