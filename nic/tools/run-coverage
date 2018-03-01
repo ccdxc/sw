@@ -136,7 +136,7 @@ pip3 install --user pipenv
 #Setup path for Pipenv
 export PATH=$PATH:~/.local/bin/
 #Install Pandas 
-pipenv install pandas
+pipenv install pandas tenjin
 
 pipenv run python3 $NIC_DIR/tools/gcov/run.py $SKIP_ASM_INS_STATS $IGNORE_ERRORS --config $config_file --max-job-run-time  $max_job_run_time $RUN_ONLY 2>&1 | tee $NIC_DIR/coverage.log
 OUT=$?
