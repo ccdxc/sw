@@ -38,10 +38,10 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid,
                         uint64_t *qaddr);
 int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate);
 int alloc_hbm_address(uint64_t *addr, uint32_t *size);
-int get_xts_ring_base_address(bool is_decr, uint64_t *addr);
+int get_xts_ring_base_address(bool is_decr, uint64_t *addr, bool is_gcm=false);
 int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, uint32_t* key_index);
 int delete_key(uint32_t key_index);
-int get_xts_opaque_tag_addr(bool is_decr, uint64_t* addr);
+int get_xts_opaque_tag_addr(bool is_decr, uint64_t* addr, bool is_gcm=false);
 
 }  // namespace hal_if
 

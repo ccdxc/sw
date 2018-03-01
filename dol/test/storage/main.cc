@@ -42,6 +42,7 @@ bool run_rdma_tests = false;
 bool run_pdma_tests = false;
 bool run_xts_perf_tests = false;
 bool run_comp_perf_tests = false;
+bool run_noc_perf_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
 
@@ -134,6 +135,11 @@ std::vector<tests::TestEntry> pdma_tests = {
   {&tests::test_run_seq_pdma_multi_xfers, "PDMA multiple transfers", false},
 };
 
+std::vector<tests::TestEntry> noc_perf_tests = {
+  {&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
+  {&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
+};
+
 void sig_handler(int sig) {
   void *array[16];
   size_t size;
@@ -167,7 +173,7 @@ int main(int argc, char**argv) {
       run_comp_tests = true;
       run_xts_tests = true;
       run_rdma_tests = true;
-      run_xts_perf_tests = true;
+      run_xts_perf_tests = false;
       run_comp_perf_tests = false;
       run_pdma_tests = true;
   } else if (FLAGS_test_group == "unit") {
@@ -190,6 +196,8 @@ int main(int argc, char**argv) {
       run_comp_perf_tests = true;
   } else if (FLAGS_test_group == "pdma") {
       run_pdma_tests = true;
+  } else if (FLAGS_test_group == "noc_perf") {
+      run_noc_perf_tests = true;
   } else {
     printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma] "
            " [--poll_interval <yyy>] \n");
@@ -291,6 +299,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(pdma_tests[i]);
     }
     printf("Added PDMA tests \n");
+  }
+
+  // Add NOC perf tests
+  if (run_noc_perf_tests) {
+    for (size_t i = 0; i < noc_perf_tests.size(); i++) {
+      test_suite.push_back(noc_perf_tests[i]);
+    }
+    printf("Added NOC Perf tests \n");
   }
 
   printf("Formed test suite with %d cases \n", (int) test_suite.size());

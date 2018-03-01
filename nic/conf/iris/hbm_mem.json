@@ -231,7 +231,7 @@
         },
         {
             "name": "storage",
-            "size_kb": 4352
+            "size_kb": 131072
         },
         {
             "name": "ipfix",
@@ -292,6 +292,14 @@
         {
             "name": "mpu-trace",
             "size_kb": 96
-        }
+        },
+        {
+            "name": "brq-ring-gcm0",
+            "size_kb": 128
+        },
+        {
+            "name": "brq-ring-gcm1",
+            "size_kb": 128
+        }        
     ]
 }
