@@ -9,7 +9,6 @@ TOPDIR_ABS = ${CURDIR}
 	$(Q)mkdir -p $(@D) && touch $@
 
 include $(TOPDIR)/make/Make.inc
-#include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Makefile.docker
 include $(TOPDIR)/make/Makefile.tests
 include $(TOPDIR)/make/Makefile.jobs

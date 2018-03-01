@@ -1,6 +1,6 @@
 ---
 targets:
-  main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make nic && make sanity-tests && make gtests && make run-gtests && make clean" ]
+  main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make -j4 all && make run-gtests && make clean" ]
   arm_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make capsim-master && make ARCH=aarch64 nic && make ARCH=aarch64 sanity-tests && make ARCH=aarch64 gtests && make clean" ]
   storage:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --storage" ]
   # config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --configtest" ]

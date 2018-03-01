@@ -83,6 +83,7 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
                                        ${output_name} *rsp)
 {
     uint32_t    i, nreqs = req->request_size();
+
     HAL_TRACE_DEBUG("Rcvd ${method[0]}");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");

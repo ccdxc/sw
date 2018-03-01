@@ -1571,10 +1571,7 @@ class capri_p4pd:
         return kd_dict
 
     def generate_swig(self):
-        #capri_p4pd_create_swig_makefile(self.be)
-        #capri_p4pd_create_swig_makefile_click(self.be)
         capri_p4pd_create_swig_interface(self.be)
-        capri_p4pd_create_swig_main(self.be)
         capri_p4pd_create_debug_cli_sh(self.be)
         capri_p4pd_create_bazel_build(self.be)
         capri_p4pd_create_swig_custom_hdr(self.be)

@@ -4022,7 +4022,7 @@ def capri_p4pd_create_debug_cli_sh(be):
     content_str += 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/gen/x86_64/lib\n'
     content_str += '\n'
     content_str += '# start the debug CLI prompt\n'
-    content_str += 'python debugshell.py repl\n'
+    content_str += 'python3 debugshell.py repl\n'
 
     out_file = out_dir + 'debug_hal_cli.sh'
     with open(out_file, "w") as of:
