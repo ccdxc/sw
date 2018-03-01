@@ -1,4 +1,4 @@
-# Usage: make v=1 c=1 j=4 bazel-build
+# Usage: make V=1 c=1 j=4 bazel-build
 #
 #   V: Verbose. Prints the commands bazel is executing
 #   g: Enables debug. For now strip is always disabled.

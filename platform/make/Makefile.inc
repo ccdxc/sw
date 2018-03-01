@@ -341,7 +341,7 @@ clean:
 quiet_cmd_cc_o_c     = CC      $<
       cmd_cc_o_c     = $(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 quiet_cmd_cc_o_c_pic = CC PIC  $<
-      cmd_cc_o_c_pic = $(CC) $(CPPFLAGS) $(CFLAGS) -fpic -c -o $@ $<
+      cmd_cc_o_c_pic = $(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -c -o $@ $<
 
 $(GENDIR)/%.o: %.c
 	$(call cmd,cc_o_c)
@@ -352,7 +352,7 @@ $(GENPICS)/%.o: %.c
 quiet_cmd_cxx_o_cc     = CXX     $<
       cmd_cxx_o_cc     = $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 quiet_cmd_cxx_o_cc_pic = CXX PIC $<
-      cmd_cxx_o_cc_pic = $(CXX) $(CPPFLAGS) $(CXXFLAGS) -fpic -c -o $@ $<
+      cmd_cxx_o_cc_pic = $(CXX) $(CPPFLAGS) $(CXXFLAGS) -fPIC -c -o $@ $<
 
 $(GENDIR)/%.o: %.cc
 	$(call cmd,cxx_o_cc)
@@ -365,7 +365,7 @@ quiet_cmd_as_o_s = AS      $<
 quiet_cmd_cc_o_s     = CC      $<
       cmd_cc_o_s     = $(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 quiet_cmd_cc_o_s_pic = CC PIC  $<
-      cmd_cc_o_s_pic = $(CC) $(CPPFLAGS) $(CFLAGS) -fpic -c -o $@ $<
+      cmd_cc_o_s_pic = $(CC) $(CPPFLAGS) $(CFLAGS) -fPIC -c -o $@ $<
 
 $(GENDIR)/%.o: %.s
 	$(call cmd,cc_o_s)
