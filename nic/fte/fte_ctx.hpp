@@ -553,6 +553,8 @@ public:
 
     pipeline_event_t  pipeline_event(void) { return event_; }
     void set_pipeline_event(pipeline_event_t ev) { event_ = ev; }
+    bool force_delete() { return force_delete_; }
+    void set_force_delete(bool val) { force_delete_ = val; }
 
     // protected methods accessed by gtest
 protected:
@@ -605,6 +607,7 @@ private:
     hal_handle_t          sep_handle_;
     hal_handle_t          dep_handle_;
     pipeline_event_t      event_;
+    bool                  force_delete_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

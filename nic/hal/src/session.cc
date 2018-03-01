@@ -637,8 +637,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     dllist_reset(&session->feature_list_head);
     session->config = *args->session;
     session->vrf_handle = args->vrf->hal_handle;
-    session->tcp_close_timer = NULL;
-    session->tcp_cxnsetup_timer = NULL;
+    session->tcp_cxntrack_timer = NULL;
 
     // fetch the security profile, if any
     if (args->vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
@@ -807,14 +806,10 @@ session_delete(const session_args_t *args, session_t *session)
     pd::pd_session_delete_args_t    pd_session_args;
 
     // Stop any timers that might be running
-    if (session->tcp_close_timer) {
-        periodic::timer_delete(session->tcp_close_timer);
-        session->tcp_close_timer = NULL;
+    if (session->tcp_cxntrack_timer) {
+        periodic::timer_delete(session->tcp_cxntrack_timer);
+        session->tcp_cxntrack_timer = NULL;
     }
-    if (session->tcp_cxnsetup_timer) {
-        periodic::timer_delete(session->tcp_cxnsetup_timer);
-        session->tcp_cxnsetup_timer = NULL;
-    } 
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_delete_args_init(&pd_session_args);
@@ -896,8 +891,15 @@ session_age_cb (void *entry, void *ctxt)
     SessionSpec                                spec;
     SessionResponse                            rsp; 
 
-    if (session->tcp_close_timer != NULL) {
-        HAL_TRACE_DEBUG("FIN/RST is being processed for session {} -- bailing aging",
+    // Check if its a TCP flow with connection tracking enabled.
+    // And connection tracking timer is not NULL. This means the session
+    // is one of connection establishment or connection close phase. Disable
+    // aging at that time as the timer would eventually fire and clean up the
+    // session anyway.
+    if (session->iflow->config.key.proto == IPPROTO_TCP &&
+        session->config.conn_track_en &&
+        session->tcp_cxntrack_timer != NULL) {
+        HAL_TRACE_DEBUG("Session connection tracking timer is on -- bailing aging", 
                         session->config.session_id);
         return false;
     }
@@ -915,18 +917,8 @@ session_age_cb (void *entry, void *ctxt)
     args.session_state = &session_state;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, (void *)&args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
+        HAL_TRACE_ERR("Failed to fetch session state for session {}",
                        session->config.session_id);
-        return false;
-    }
-
-    // Check if its a TCP flow with connection tracking enabled. 
-    // If it is enabled and the session is not in established state, then we 
-    // would either have connection setup timeout or TCP close timeout taking 
-    // care of this session. We dont need to age this out.
-    if (session->iflow->config.key.proto == IPPROTO_TCP && 
-        session->config.conn_track_en && 
-        (session_state.iflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED)) {
         return false;
     }
 
@@ -1108,11 +1100,11 @@ schedule_tcp_close_timer (session_t *session)
         return HAL_RET_OK;
     }
 
-    session->tcp_close_timer = hal::periodic::timer_schedule(
+    session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
                                      HAL_TIMER_ID_TCP_CLOSE_WAIT,
                                      get_tcp_timeout(session, TCP_CLOSE_TIMEOUT),
                                      (void *)session, tcp_close_cb, false);
-    if (!session->tcp_close_timer) {
+    if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
     HAL_TRACE_DEBUG("TCP Close timer started for session {}",
@@ -1148,13 +1140,13 @@ schedule_tcp_half_closed_timer (session_t *session)
         return HAL_RET_OK;
     }
 
-    session->tcp_close_timer = hal::periodic::timer_schedule(
+    session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
                                      HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT,
                                      get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT),
                                      (void *)session,
                                      tcp_half_close_cb, false);
 
-    if (!session->tcp_close_timer) {
+    if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
     HAL_TRACE_DEBUG("TCP Half Closed timer started for session {}",
@@ -1213,13 +1205,13 @@ schedule_tcp_cxnsetup_timer (session_t *session)
         return HAL_RET_OK;
     }
 
-    session->tcp_cxnsetup_timer = hal::periodic::timer_schedule(
+    session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
                                         HAL_TIMER_ID_TCP_CXNSETUP_WAIT,
                                         get_tcp_timeout(session, TCP_CXNSETUP_TIMEOUT),
                                         (void *)session,
                                         tcp_cxnsetup_cb, false);
 
-    if (!session->tcp_cxnsetup_timer) {
+    if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
     HAL_TRACE_DEBUG("TCP Cxn Setup timer started for session {}",

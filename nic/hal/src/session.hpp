@@ -331,8 +331,8 @@ struct session_s {
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     hal_handle_t        vrf_handle;               // vrf handle
-    void                *tcp_close_timer;         // Timer to wait for FIN from both sides
-    void                *tcp_cxnsetup_timer;      // Timer to check connection establishment
+    void                *tcp_cxntrack_timer;      // Timer to check connection establishment
+                                                  // and connection close
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state

@@ -43,14 +43,14 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
         app_sess = l4_sess->app_session;
         if (l4_sess->isCtrl == TRUE) {
-            if (dllist_empty(&app_sess->exp_flow_lhead) &&
-                dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+            if (ctx.force_delete() || (dllist_empty(&app_sess->exp_flow_lhead)\
+                && dllist_count(&app_sess->l4_sess_lhead) == 1 &&
                 ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                                 l4_alg_status_t, l4_sess_lentry)) == l4_sess) {
+                                 l4_alg_status_t, l4_sess_lentry)) == l4_sess)) {
                 /*
-                 * If there are no expected flows or L4 data sessions
-                 * hanging off of this ctrl session, then go ahead and clean
-                 * up the app session
+                 * Clean up app session if (a) its a force delete or
+                 * (b) if there are no expected flows or L4 data sessions
+                 * hanging off of this ctrl session.
                  */
                  g_rpc_state->cleanup_app_session(l4_sess->app_session);
                  return fte::PIPELINE_CONTINUE;

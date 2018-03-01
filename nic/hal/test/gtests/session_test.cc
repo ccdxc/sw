@@ -257,8 +257,8 @@ TEST_F(session_test, test2)
     ::google::protobuf::uint32  ip3 = 0x40020001;
     ::google::protobuf::uint32  ip4 = 0x40020002;
     NetworkKeyHandle                *nkh = NULL;
-    //timespec_t                  ctime;
-    //uint64_t                    ctime_ns;
+    timespec_t                  ctime;
+    uint64_t                    ctime_ns;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(2);
@@ -475,10 +475,11 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    //clock_gettime(CLOCK_MONOTONIC, &ctime);
-    //sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
-    //hal::session_age_cb((void *)hal::find_session_by_id(3), (void *)&ctime_ns);
-    //ASSERT_TRUE(hal::find_session_by_id(3) == NULL);
+    clock_gettime(CLOCK_MONOTONIC, &ctime);
+    sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+    ctime_ns += 1000000000ULL;
+    hal::session_age_cb((void *)hal::find_session_by_id(3), (void *)&ctime_ns);
+    ASSERT_TRUE(hal::find_session_by_id(3) == NULL);
 }
 
 // ----------------------------------------------------------------------------

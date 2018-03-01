@@ -96,7 +96,7 @@ process_tcp_close(fte::ctx_t& ctx)
         if ((ctx.session()->iflow->state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD ||
              (ctx.session()->rflow && 
               ctx.session()->rflow->state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD)) ||
-             ctx.session()->tcp_close_timer == NULL) {
+             ctx.session()->tcp_cxntrack_timer == NULL) {
             /*
              * We are here because we already have seen one of FIN/RST or both of them 
              * (a duplicate/retry ?) and in case of FIN the timer is NULL which means 
@@ -109,7 +109,7 @@ process_tcp_close(fte::ctx_t& ctx)
               * timer is still pending and we received a FIN/RST now. So, we can go 
               * ahead and delete the half closed timer and start the TCP close timer
               */
-             hal::periodic::timer_delete(ctx.session()->tcp_close_timer);
+             hal::periodic::timer_delete(ctx.session()->tcp_cxntrack_timer);
              state = session::FLOW_TCP_STATE_BIDIR_FIN_RCVD;
         } 
     }

@@ -12,6 +12,8 @@ namespace hal {
 namespace plugins {
 namespace alg_ftp {
 
+#define FTP_DATA_PORT 20
+
 using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
@@ -32,14 +34,14 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
         app_sess = l4_sess->app_session;
         if (l4_sess->isCtrl == TRUE) {
-            if (dllist_empty(&app_sess->exp_flow_lhead) &&
+            if (ctx.force_delete() || (dllist_empty(&app_sess->exp_flow_lhead) &&
                 dllist_count(&app_sess->l4_sess_lhead) == 1 &&
                 ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                                 l4_alg_status_t, l4_sess_lentry)) == l4_sess) {
+                                 l4_alg_status_t, l4_sess_lentry)) == l4_sess)) {
                 /*
-                 * If there are no expected flows or L4 data sessions
-                 * hanging off of this ctrl session, then go ahead and clean
-                 * up the app session
+                 * Clean up app session if (a) its a force delete or    
+                 * (b) if there are no expected flows or L4 data sessions
+                 * hanging off of this ctrl session.
                  */
                  g_ftp_state->cleanup_app_session(l4_sess->app_session);
                  HAL_TRACE_DEBUG("Cleaned up app session");
@@ -466,7 +468,7 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
          memset(&key, 0, sizeof(hal::flow_key_t));
          key = ctx.key();
          key.dir = 0;
-         key.sport = 0;
+         key.sport = FTP_DATA_PORT;
          memset(&key.sip, 0, sizeof(ipvx_addr_t));
          if (!isNullip(info->ip, (info->isIPv6)?IP_PROTO_IPV6:IP_PROTO_IPV4)) {
              memcpy(&key.dip, &info->ip, sizeof(ipvx_addr_t));

@@ -268,14 +268,14 @@ class msrpc_test : public hal_base_test {
 };
 
 TEST_F(msrpc_test, msrpc_parse_bind_req_rsp1) {
-    hal_ret_t    ret;
-    fte::ctx_t   ctx1, ctx2, ctx3, ctx4;
-    fte::flow_t iflow[2], rflow[2];
-    uint16_t num_features = 0;
-    fte::feature_state_t feature_state;
+    hal_ret_t        ret;
+    ctx_t            ctx1, ctx2, ctx3, ctx4;
+    fte::flow_t      iflow[2], rflow[2];
+    uint16_t         num_features = 0;
+    feature_state_t  feature_state;
     l4_alg_status_t  alg_state;
     rpc_info_t       rpc_info;
-    fte::cpu_rxhdr_t rxhdr;
+    cpu_rxhdr_t      rxhdr;
     hal::flow_key_t  key;
     app_session_t    app_sess;
 
@@ -326,14 +326,14 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp1) {
 }
 
 TEST_F(msrpc_test, msrpc_parse_bind_req_rsp2) {
-    hal_ret_t    ret;
-    fte::ctx_t   ctx1, ctx2, ctx3, ctx4;
-    fte::flow_t iflow[2], rflow[2];
-    uint16_t num_features = 0;
-    fte::feature_state_t feature_state;
+    hal_ret_t        ret;
+    ctx_t            ctx1, ctx2, ctx3, ctx4;
+    fte::flow_t      iflow[2], rflow[2];
+    uint16_t         num_features = 0;
+    feature_state_t  feature_state;
     l4_alg_status_t  alg_state;
     rpc_info_t       rpc_info;
-    fte::cpu_rxhdr_t rxhdr;
+    cpu_rxhdr_t      rxhdr;
     hal::flow_key_t  key;
     app_session_t    app_sess;
 
@@ -345,6 +345,7 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp2) {
     HAL_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
     alg_state.info = &rpc_info;
     alg_state.app_session = &app_sess;
+    alg_state.isCtrl = TRUE;
     rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ2_PAYLOAD_OFFSET;
     ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, iflow, rflow, &feature_state, num_features);
@@ -384,43 +385,75 @@ TEST_F(msrpc_test, msrpc_parse_bind_req_rsp2) {
 }
 
 TEST_F(msrpc_test, msrpc_exp_flow_timeout) {
-    slab            *appsess_slab_ = NULL;
-    slab            *l4sess_slab_ = NULL;
-    alg_state_t     *rpc_state;
     app_session_t   *app_sess = NULL;
     l4_alg_status_t *exp_flow = NULL;
-    hal::flow_key_t  key;
+    hal::flow_key_t  app_sess_key, exp_flow_key;
     
-    key.proto = (types::IPProtocol)IP_PROTO_TCP;
-    key.sip.v4_addr = 0x14000001;
-    key.dip.v4_addr = 0x14000002;
-    key.sport = 12345;
-    key.dport = 111;    
-    appsess_slab_ = slab::factory("rpc_alg_appsess", HAL_SLAB_RPC_ALG_APPSESS,
-                                  sizeof(app_session_t), 64,
-                                  true, true, true);
+    app_sess_key.proto = (types::IPProtocol)IP_PROTO_TCP;
+    app_sess_key.sip.v4_addr = 0x14000001;
+    app_sess_key.dip.v4_addr = 0x14000002;
+    app_sess_key.sport = 12345;
+    app_sess_key.dport = 111;    
 
-    l4sess_slab_ = slab::factory("rpc_alg_l4sess", HAL_SLAB_RPC_ALG_L4SESS,
-                                 sizeof(l4_alg_status_t), 64,
-                                 true, true, true);
+    g_rpc_state->alloc_and_init_app_sess(app_sess_key, &app_sess);
 
-    rpc_state = alg_state_t::factory(FTE_FEATURE_ALG_RPC.c_str(),
-                          appsess_slab_, l4sess_slab_, NULL, NULL,
-                          NULL);
-    
-    rpc_state->alloc_and_init_app_sess(key, &app_sess);
-
-    key.dport = 22345;
-    rpc_state->alloc_and_insert_exp_flow(app_sess, key, &exp_flow, true, 8);
+    exp_flow_key = app_sess_key;
+    exp_flow_key.dport = 22345;
+    g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key, 
+                                         &exp_flow, true, 8);
     sleep(10);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 
-    key.dport = 22346;
-    rpc_state->alloc_and_insert_exp_flow(app_sess, key, &exp_flow, true, 5);
+    exp_flow_key.dport = 22346;
+    g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key, 
+                                         &exp_flow, true, 5);
     exp_flow->entry.ref_count.count++;
     sleep(5);
     ASSERT_EQ(exp_flow->entry.deleting, true);
     exp_flow->entry.ref_count.count--;
     sleep(15);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
+}
+
+TEST_F(msrpc_test, app_sess_force_delete) {
+    pipeline_action_t      fte_ret;
+    feature_state_t        feature_state[1];
+    app_session_t         *app_sess = NULL;
+    hal::flow_key_t        app_sess_key;
+    ctx_t                  ctx;
+    fte::flow_t            iflow[2], rflow[2];
+    uint16_t               num_features = 1;
+    l4_alg_status_t       *l4_sess = NULL;
+    cpu_rxhdr_t            rxhdr;
+    hal_ret_t              ret;
+     
+    app_sess_key.proto = (types::IPProtocol)IP_PROTO_TCP;
+    app_sess_key.sip.v4_addr = 0x14000001;
+    app_sess_key.dip.v4_addr = 0x14000002;
+    app_sess_key.sport = 12345;
+    app_sess_key.dport = 111;   
+
+    g_rpc_state->alloc_and_init_app_sess(app_sess_key, &app_sess);
+
+    // Test session force delete
+    ret = g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(l4_sess->app_session, app_sess);
+  
+    // Init ctxt 
+    memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
+    HAL_SPINLOCK_INIT(&app_sess->slock, PTHREAD_PROCESS_PRIVATE);
+    l4_sess->isCtrl = TRUE;
+    ctx.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, iflow, rflow, 
+                                    feature_state, num_features);
+  
+    // Set the feature state
+    feature_state[0].session_state = &l4_sess->fte_feature_state;
+
+    // Invoke delete callback
+    ctx.set_force_delete(TRUE);
+    fte_ret = alg_rpc_session_delete_cb(ctx);
+    ASSERT_EQ(fte_ret, PIPELINE_CONTINUE);
+    ASSERT_EQ(g_rpc_state->lookup_app_sess(app_sess_key, app_sess), 
+                                               HAL_RET_ENTRY_NOT_FOUND); 
 }

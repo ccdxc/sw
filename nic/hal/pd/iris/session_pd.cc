@@ -1002,6 +1002,7 @@ pd_session_get (pd_session_get_args_t *args)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Initiator Flow get failed session {}", 
                       args->session->config.session_id);
+        return ret;
     }
     
     flow_get_args.pd_session = pd_session;
@@ -1011,6 +1012,7 @@ pd_session_get (pd_session_get_args_t *args)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Responder Flow get failed session {}",
                       args->session->config.session_id);
+        return ret;
     }
 
     return HAL_RET_OK;
