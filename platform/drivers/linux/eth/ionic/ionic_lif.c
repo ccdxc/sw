@@ -266,7 +266,6 @@ static int ionic_addr_add(struct net_device *netdev, const u8 *addr)
 static int ionic_addr_del(struct net_device *netdev, const u8 *addr)
 {
 	struct lif *lif = netdev_priv(netdev);
-
 	int err;
 
 	spin_lock(&lif->adminq_lock);
@@ -950,8 +949,10 @@ static void ionic_station_set_cb(struct queue *q, struct desc_info *desc_info,
 	struct net_device *netdev = lif->netdev;
 	struct station_mac_addr_get_comp *comp = cq_info->cq_desc;
 
-	printk(KERN_ERR "deleting station MAC addr %pM\n", netdev->dev_addr);
-	ionic_lif_addr(lif, netdev->dev_addr, false);
+	if (!is_zero_ether_addr(netdev->dev_addr)) {
+		printk(KERN_ERR "deleting station MAC addr %pM\n", netdev->dev_addr);
+		ionic_lif_addr(lif, netdev->dev_addr, false);
+	}
 	memcpy(netdev->dev_addr, comp->addr, netdev->addr_len);
 	printk(KERN_ERR "adding station MAC addr %pM\n", netdev->dev_addr);
 	ionic_lif_addr(lif, netdev->dev_addr, true);
