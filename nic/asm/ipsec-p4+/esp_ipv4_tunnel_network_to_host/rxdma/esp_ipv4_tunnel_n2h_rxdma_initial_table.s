@@ -48,10 +48,8 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     addi.c1 r2, r2, IPV6_HDR_SIZE
     phvwr p.ipsec_global_packet_length, r2 
      
-    //add r6, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}, k.p42p4plus_hdr_ip_hdr_size
     addi r6, r3, ESP_FIXED_HDR_SIZE 
     phvwr p.ipsec_to_stage3_iv_salt_off, r6
-    //phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
