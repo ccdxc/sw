@@ -28,8 +28,12 @@ struct tx_table_s2_t3_d d;
 tls_dec_serq_consume_process:
     CAPRI_CLEAR_TABLE3_VALID
 
+    seq     c4, k.tls_global_phv_pending_rx_serq, 1
+    b.!c4   tls_dec_serq_consume_done
+    nop
+
     /* address will be in r4 */
-    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
     add	    r1, k.tls_global_phv_fid, r0
 
     /*
@@ -44,5 +48,6 @@ tls_dec_serq_consume_process:
 
     memwr.dx  	 r4, r3
 
+tls_dec_serq_consume_done:	
     nop.e
     nop

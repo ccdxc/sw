@@ -27,8 +27,15 @@ tls_mac_bsq_consume_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 
+    /*
+     * Check if we need to ring the BSQ doorbell for CI update (we do only if ci == pi).
+     */
+    seq          c4, k.tls_global_phv_pending_rx_bsq, 1
+    b.!c4        table_read_QUEUE_ENC_BRQ
+    nop
+	
     /* address will be in r4 */
-    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
     add		r1, k.tls_global_phv_fid, r0
 
     /*

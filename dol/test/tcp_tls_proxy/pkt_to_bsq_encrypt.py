@@ -101,6 +101,11 @@ def TestCaseVerify(tc):
     if GlobalOptions.dryrun:
         return True
 
+    num_pkts = 1
+    if hasattr(tc.module.args, 'num_pkts'):
+        num_pkts = int(tc.module.args.num_pkts)
+
+
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
@@ -148,8 +153,8 @@ def TestCaseVerify(tc):
         print("pre crypto pipeline threading was not ok 0x%x" % tlscb_cur.pre_debug_stage0_7_thread)
         return False
 
-    if (tlscb_cur.post_debug_stage0_7_thread != 0x11111):
-        print("post crypto pipeline threading was not ok 0x%x" % tlscb_cur.pre_debug_stage0_7_thread)
+    if (tlscb_cur.post_debug_stage0_7_thread != 0x3091111):
+        print("post crypto pipeline threading was not ok 0x%x" % tlscb_cur.post_debug_stage0_7_thread)
         return False
 
 
@@ -187,27 +192,27 @@ def TestCaseVerify(tc):
         brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
     brq_cur.GetMeta()
     if brq_cur.pi > 0:
-        brq_cur.GetRingEntries([brq_cur.pi - 1, brq_cur.pi])
+        brq_cur.GetRingEntries([brq_cur.pi - num_pkts, brq_cur.pi - 1, brq_cur.pi])
     else:
         brq_cur.GetRingEntries([brq_cur.pi])
 
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
 
-    # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+1):
+    # 4. Verify PI for RNMDR got incremented by num_pkts
+    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
 
-    # 5. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
+    # 5. Verify PI for TNMDR got incremented by num_pkts
+    if (tnmdr_cur.pi != tnmdr.pi+num_pkts):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
 
 
-    # 6. Verify PI for TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi+1):
+    # 6. Verify PI for TNMPR got incremented by num_pkts
+    if (tnmpr_cur.pi != tnmpr.pi + num_pkts):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
@@ -216,13 +221,13 @@ def TestCaseVerify(tc):
 
 
     # 7. Verify descriptor on the BRQ
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40)):
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].ilist_addr - 0x40)):
         print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
         return False
 
 
     # 8. Verify descriptor on the BRQ
-    if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40)):
+    if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-num_pkts].olist_addr - 0x40)):
         print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr))
         return False
 
@@ -261,12 +266,12 @@ def TestCaseVerify(tc):
 
     # When using random value for IV from DRBG or AES-CBC-HMAC-SHA2 cipher, the IV field from tlscb will not match, as expected.
     if ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) != tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
-        if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tls_explicit_iv:
+        if brq_cur.ring_entries[brq_cur.pi-num_pkts].explicit_iv != tls_explicit_iv:
             print("Explicit IV Check Failed: Got 0x%x, Expected: 0x%x" %
-                  (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
+                  (brq_cur.ring_entries[brq_cur.pi-num_pkts].explicit_iv, tls_explicit_iv))
             return False
     print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
-          (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
+          (brq_cur.ring_entries[brq_cur.pi-num_pkts].explicit_iv, tls_explicit_iv))
 
     # 14. Verify header size, this is the AAD size and is 13 bytes 
     #     In case of AES-CBC-HMAC-SHA2 (MAC-then-encrypt) ciphers, there is no header with

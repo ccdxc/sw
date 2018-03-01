@@ -13,18 +13,18 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=True
         qpair       : filter://any 
-    flow        : filter://proto=TCP,label=TCP-PROXY
-    maxflows    : 1
+    flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
 
 # Packet section defines the set of input and output packets. Input packets
 # will be used in triggers and output packets will be used in expect
 
 scale_factor        : 10
+
 packets:
     - packet:
         id          : BASE_PKT_IN
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO128/size
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
@@ -46,7 +46,7 @@ packets:
                 seq     : 0
                 ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+                data: ref://factory/payloads/id=PAYLOAD_ZERO128/data 
 
     - packet:
         id          : IN_PKT
@@ -56,44 +56,6 @@ packets:
             tcp:
                 seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
 
-    - packet:
-        id          : BASE_PKT_OUT
-        template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
-        headers     :
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                seq     : 0
-                ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
-                options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
-                window  : 1000
-                flags   : ack
-            payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
-
-    - packet:
-        id          : OUT_PKT
-        clone       : ref://testcase/packets/id=BASE_PKT_OUT
-        scale       : True
-        headers     :
-            tcp:
-                seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
-
 trigger:
     packets:
         - packet:
@@ -102,8 +64,3 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-    packets:
-        - packet:
-            scale   : True
-            object  : scale-ref://testcase/packets/id=OUT_PKT
-            port    : ref://testcase/config/dst/endpoint/intf/ports

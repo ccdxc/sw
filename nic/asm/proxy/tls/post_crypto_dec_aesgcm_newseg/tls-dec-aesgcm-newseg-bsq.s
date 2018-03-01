@@ -30,11 +30,11 @@ tls_dec_post_crypto_aesgcm_newseg_process:
 
 
    /* Increment CI in stage 0 and acknowledge the BSQ doorbell */
-    tbladd      D(ci_1).hx, 1
+    tbladd.f    D(ci_1).hx, 1
 	
     /* Acknowledge BSQ Doorbell */
     /* address will be in r4 */
-    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
     add		r1, k.p4_txdma_intr_qid, r0
 
     /* data will be in r3

@@ -32,6 +32,12 @@ tls_dec_post_crypto_process:
     /* Increment CI in stage 0 */
     tbladd      d.{u.read_tls_stg0_d.ci_1}.hx, 1
 
+    /*
+     * Check if pi == ci, in which case we need to ring the BSQ doorbell later.
+     */
+    seq         c4, d.{u.read_tls_stg0_d.ci_1}.hx, d.{u.read_tls_stg0_d.pi_1}.hx
+    phvwri.c4   p.tls_global_phv_pending_rx_bsq, 1
+
     phvwr       p.to_s5_debug_dol, d.u.read_tls_stg0_d.debug_dol
     sne         c1, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_NONE
     phvwri.c1   p.tls_global_phv_l7_proxy_en, 1

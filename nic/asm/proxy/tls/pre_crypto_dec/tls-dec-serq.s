@@ -38,11 +38,11 @@ tls_dec_pre_crypto_process:
 
     /* Increment CI in stage 0 */
     tblmincri   d.{u.read_tls_stg0_d.ci_0}.hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    seq         c4, d.{u.read_tls_stg0_d.ci_0}.hx, d.{u.read_tls_stg0_d.pi_0}.hx
+    phvwri.c4   p.tls_global_phv_pending_rx_serq, 1
 	
     //add         r3, r0, r0
     add         r3, r3, d.u.read_tls_stg0_d.serq_base
-
-    phvwri      p.tls_global_phv_pending_rx_serq, 1
 
     phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 

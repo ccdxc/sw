@@ -40,7 +40,7 @@ dma_cmd_enc_data_len:
     add         r1, k.to_s5_cur_tls_data_len, TLS_HDR_SIZE
     phvwr       p.to_s5_cur_tls_data_len, k.to_s5_cur_tls_data_len
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, to_s5_cur_tls_data_len, to_s5_cur_tls_data_len)
+    //CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, to_s5_cur_tls_data_len, to_s5_cur_tls_data_len)
 
     /*
             SET_DESC_ENTRY(brq.odesc, 0, 
@@ -138,9 +138,10 @@ dma_cmd_output_list_addr:
         
 dma_cmd_ring_bsq_doorbell:
 
-    CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd7_dma_cmd, LIF_TLS, 0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0,
-                                crypto_iv_explicit_iv)
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd7_dma_cmd)
+    /*
+     * The DMA for BSQ doorbell is already setup in previous 'bld-barco-req' stage with
+     * PIDX_SET.
+     */
     b           tls_queue_brq_process_done
     nop
 

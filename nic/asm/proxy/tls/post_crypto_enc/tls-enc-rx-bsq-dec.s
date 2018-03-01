@@ -14,7 +14,7 @@
 
 struct tx_table_s1_t0_k k       ;
 struct phv_ p	;
-struct tx_table_s1_t0_tls_rx_bsq_d d	;
+struct tx_table_s1_t0_tls_rx_bsq_dummy_d d	;
 	
 %%
 	.param		tls_enc_read_desc_process

@@ -23,7 +23,7 @@ struct tx_table_s0_t0_d d;
 tls_stage0:
      CAPRI_OPERAND_DEBUG(r7)
 	.brbegin
-	    brpri		r7[2:0], [0,1]
+	    brpri		r7[2:0], [2,1,0]
 	    nop
 	        .brcase 0
 	            j tls_pre_crypto_process
@@ -36,9 +36,12 @@ tls_stage0:
 	            j tls_mac_post_crypto_process
 	            nop
 	        .brcase 3
-	            nop.e
+	            b tls_prog_abort
 	            nop
 	.brend
 
-	nop.e
+tls_prog_abort:
+    phvwri          p.p4_intr_global_drop, 1
+    CAPRI_CLEAR_TABLE_VALID(0)
+    nop.e
     nop

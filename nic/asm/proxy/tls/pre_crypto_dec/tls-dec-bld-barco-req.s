@@ -50,12 +50,20 @@ table_read_QUEUE_BRQ:
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_command)
 
     /* address will be in r4 */
-    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_TLS)
     phvwr       p.barco_desc_doorbell_address, r4.dx
     CAPRI_OPERAND_DEBUG(r4.dx)
 
-        /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
+    /*
+     * data will be in r3
+     *
+     * We maintain a shadow-copy of the BSQ PI in qstate CB which we'll increment
+     * and use as 'PIDX_SET' instead of using the 'PIDX_INC' auto-increment feature
+     * of the doorbell, for better performance.
+     */
+    tbladd.f    d.{u.tls_bld_brq5_d.sw_bsq_pi}.hx, 1
+    add         r6, r0, d.{u.tls_bld_brq5_d.sw_bsq_pi}.hx
+    CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6)
     phvwr       p.barco_desc_doorbell_data, r3.dx
     CAPRI_OPERAND_DEBUG(r3.dx)
 

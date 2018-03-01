@@ -1,6 +1,6 @@
 /* 
  *  Read odesc to setup the DMA request
- *  Stage 4, Table 0
+ *  Stage 5, Table 0
  */
 
 #include "tls-constants.h"
@@ -11,11 +11,12 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
-struct tx_table_s4_t0_d     d;
-struct tx_table_s4_t0_k     k;
+struct tx_table_s5_t0_d     d;
+struct tx_table_s5_t0_k     k;
 struct phv_                 p;
 
 %%
+    .param	tls_enc_queue_sesq_process
     .param      tls_enc_read_aad_process
 
 tls_enc_post_read_odesc:
@@ -27,9 +28,9 @@ tls_enc_post_read_odesc:
      * Note: The branch delay slots for the two 'bbeq' instructions below are used to
      * execute common instructions instead of nop.
      */
-    bbeq        k.to_s4_do_post_cbc_enc, 1, tls_enc_post_read_odesc_do_cbc
+    bbeq        k.to_s5_do_post_cbc_enc, 1, tls_enc_post_read_odesc_do_cbc
     phvwr       p.odesc_A0, d.u.tls_read_odesc_d.A0
-    bbeq        k.to_s4_do_post_ccm_enc, 1, tls_enc_post_read_odesc_do_ccm
+    bbeq        k.to_s5_do_post_ccm_enc, 1, tls_enc_post_read_odesc_do_ccm
     phvwr       p.odesc_O0, d.u.tls_read_odesc_d.O0
         
 
@@ -44,8 +45,13 @@ tls_enc_post_read_odesc:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r1, tls_hdr_tls_hdr_type, tls_hdr_tls_iv)    
 
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_read_aad_process,
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, tls_enc_read_aad_process,
                            r1, TABLE_SIZE_512_BITS)
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_queue_sesq_process,
+                                 k.tls_global_phv_qstate_addr,
+                                 TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+
 
 tls_enc_post_read_odesc_done:
     nop.e
@@ -83,8 +89,13 @@ tls_enc_post_read_odesc_do_ccm:
      * (d.{u.tls_read_odesc_d.A0}.dx + d.{u.tls_read_odesc_d.O0}.wx +  TLS_AES_CCM_HEADER_AAD_OFFSET)
      */
     subi         r1, r2, 1
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_read_aad_process,
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, tls_enc_read_aad_process,
                           r1, TABLE_SIZE_512_BITS)
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_queue_sesq_process,
+                                 k.tls_global_phv_qstate_addr,
+                                 TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+
     nop.e
     nop
         
@@ -106,8 +117,13 @@ tls_enc_post_read_odesc_do_cbc:
 
     add         r5, d.{u.tls_read_odesc_d.A0}.dx, r3
         
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_read_aad_process,
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, tls_enc_read_aad_process,
                           r5, TABLE_SIZE_512_BITS)
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_queue_sesq_process,
+                                 k.tls_global_phv_qstate_addr,
+                                 TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+
     nop.e
     nop
     

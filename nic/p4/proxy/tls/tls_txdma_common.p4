@@ -22,7 +22,7 @@ header_type tlscb_0_t {
         sw_sesq_pi                      : 16;
         sw_sesq_ci                      : 16;
 
-        sw_bsq_ci                       : 16;
+        sw_bsq_pi                       : 16;
         dec_flow                        : 8;
         debug_dol                       : 32;
 
@@ -37,7 +37,7 @@ header_type tlscb_0_t {
 
 #define TLSCB_0_PARAMS                                                                                              \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, pi_2, ci_2, active_segment, pad,    \
-serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow,                   \
+serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_pi, dec_flow,                   \
 debug_dol, barco_command, barco_key_desc_index, explicit_iv, l7_proxy_type
 
 #define GENERATE_TLSCB_0_D                                                                               \
@@ -63,7 +63,7 @@ debug_dol, barco_command, barco_key_desc_index, explicit_iv, l7_proxy_type
     modify_field(tlscb_0_d.sesq_base, sesq_base);                                                        \
     modify_field(tlscb_0_d.sw_sesq_pi, sw_sesq_pi);                                                      \
     modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                      \
-    modify_field(tlscb_0_d.sw_bsq_ci, sw_bsq_ci);                                                        \
+    modify_field(tlscb_0_d.sw_bsq_pi, sw_bsq_pi);                                                        \
     modify_field(tlscb_0_d.dec_flow, dec_flow);                                                          \
     modify_field(tlscb_0_d.debug_dol, debug_dol);                                                        \
     modify_field(tlscb_0_d.barco_command, barco_command);                                                \

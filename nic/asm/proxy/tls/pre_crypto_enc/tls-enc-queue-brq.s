@@ -40,7 +40,7 @@ dma_cmd_enc_data_len:
 	add		    r1, k.to_s5_cur_tls_data_len, TLS_HDR_SIZE
 	phvwr		p.to_s5_cur_tls_data_len, k.to_s5_cur_tls_data_len
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, to_s5_cur_tls_data_len, to_s5_cur_tls_data_len)
+    //CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, to_s5_cur_tls_data_len, to_s5_cur_tls_data_len)
 
 	/*
 	    SET_DESC_ENTRY(brq.odesc, 0, 

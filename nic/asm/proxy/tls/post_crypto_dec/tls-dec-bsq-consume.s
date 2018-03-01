@@ -26,8 +26,15 @@ tls_dec_bsq_consume_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 
+    /*
+     * Check if we need to ring the BSQ doorbell for CI update (we do only if ci == pi).
+     */
+    seq          c4, k.tls_global_phv_pending_rx_bsq, 1
+    b.!c4        tls_enc_check_barco_status
+    nop
+
     /* address will be in r4 */
-    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
+    addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
     add		r1, k.tls_global_phv_fid, r0
 
     /*
@@ -41,6 +48,8 @@ tls_dec_bsq_consume_process:
     CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_BSQ, r2)
 
     memwr.dx  	 r4, r3
+
+tls_enc_check_barco_status:
 	
     /* For now, if we have a Barco Op error, bail out right here */
     sne     c1, r0, k.tls_global_phv_barco_op_failed

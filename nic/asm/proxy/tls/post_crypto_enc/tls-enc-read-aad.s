@@ -1,6 +1,6 @@
 /* 
  *  Read AAD to setup the TLS header
- *  Stage 5, Table 0
+ *  Stage 6, Table 1
  */
 
 #include "tls-constants.h"
@@ -11,8 +11,8 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
-struct tx_table_s5_t0_d     d;
-struct tx_table_s5_t0_k     k;
+struct tx_table_s6_t1_d     d;
+struct tx_table_s6_t1_k     k;
 struct phv_                 p;
 
 %%
@@ -20,6 +20,8 @@ struct phv_                 p;
 
 
 tls_enc_read_aad_process:
+    CAPRI_SET_DEBUG_STAGE4_7(p.to_s7_debug_stage4_7_thread, CAPRI_MPU_STAGE_6, CAPRI_MPU_TABLE_1)
+    CAPRI_CLEAR_TABLE1_VALID
     phvwr       p.tls_hdr_tls_hdr_type, d.u.tls_read_aad_d.aad_type
     phvwr       p.tls_hdr_tls_hdr_version_major, d.u.tls_read_aad_d.aad_version_major
     phvwr       p.tls_hdr_tls_hdr_version_minor, d.u.tls_read_aad_d.aad_version_minor
@@ -31,8 +33,5 @@ tls_enc_read_aad_process:
     phvwr       p.tls_hdr_tls_hdr_len, r1
 
 tls_enc_read_aad_process_done:
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_queue_sesq_process,
-                           k.tls_global_phv_qstate_addr,
-                           TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop

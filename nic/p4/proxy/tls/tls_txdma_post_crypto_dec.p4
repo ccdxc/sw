@@ -61,6 +61,7 @@ header_type l7_desc_alloc_d_t {
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
         modify_field(tls_global_phv_scratch.barco_op_failed, tls_global_phv.barco_op_failed);           \
+        modify_field(tls_global_phv_scratch.pending_rx_bsq, tls_global_phv.pending_rx_bsq);             \
         modify_field(tls_global_phv_scratch.pad, tls_global_phv.pad);                                   \
         modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
         modify_field(tls_global_phv_scratch.l7_proxy_en, tls_global_phv.l7_proxy_en);                   \
@@ -73,7 +74,8 @@ header_type tls_global_phv_t {
         fid                             : 16;
         dec_flow                        : 8;
         barco_op_failed                 : 1;
-        pad                             : 7;
+        pending_rx_bsq                  : 1;
+        pad                             : 6;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
         l7_proxy_en                     : 1;
         l7_proxy_type_span              : 1;

@@ -67,6 +67,7 @@ def SetupProxyArgs(tc):
     pkt_alloc = 0
     pkt_free = 0
     serq_full = False
+    snd_cwnd = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -124,6 +125,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'serq_full'):
         serq_full = tc.module.args.serq_full
         tc.module.logger.info("- serq_full %s" % tc.module.args.serq_full)
+    if hasattr(tc.module.args, 'snd_cwnd'):
+        snd_cwnd = tc.module.args.snd_cwnd
+        tc.module.logger.info("- snd_cwnd %s" % tc.module.args.snd_cwnd)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -185,6 +189,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.pkt_alloc = pkt_alloc
     tc.pvtdata.pkt_free = pkt_free
     tc.pvtdata.serq_full = serq_full
+    tc.pvtdata.snd_cwnd = snd_cwnd
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -198,7 +203,10 @@ def init_tcb_inorder(tc, tcb):
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_wnd = 1000
-    tcb.snd_cwnd = 10        # snd_cwnd is in packets
+    if tc.pvtdata.snd_cwnd:
+        tcb.snd_cwnd = tc.pvtdata.snd_cwnd
+    else:
+        tcb.snd_cwnd = 10        # snd_cwnd is in packets
     if tc.pvtdata.test_cong_avoid:
         tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
     tcb.rcv_mss = 9216
@@ -292,7 +300,10 @@ def init_tcb_inorder2(tc, tcb):
     tcb.rcv_tsval = 0x2AFAFAFA
     tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_wnd = 1000
-    tcb.snd_cwnd = 10        # snd_cwnd is in packets
+    if tc.pvtdata.snd_cwnd:
+        tcb.snd_cwnd = tc.pvtdata.snd_cwnd
+    else:
+        tcb.snd_cwnd = 10        # snd_cwnd is in packets
     if tc.pvtdata.test_cong_avoid:
         tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
     tcb.rcv_mss = 9216

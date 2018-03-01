@@ -222,6 +222,13 @@ def TestCaseVerify(tc):
     else:
         num_tx_pkts = tc.pvtdata.num_pkts
 
+    if hasattr(tc.module.args, 'num_retx_pkts'):
+        tc.pvtdata.flow2_bytes_txed += (tc.pvtdata.flow2_bytes_txed * int(tc.module.args.num_retx_pkts))
+
+    if hasattr(tc.module.args, 'fin'):
+        tc.pvtdata.flow1_bytes_rxed -= int(tc.module.args.fin)
+        tc.pvtdata.flow2_bytes_txed -= int(tc.module.args.fin)
+
     if tc.pvtdata.serq_full:
         # SERQ is full, pi/ci should not move
         if tlscb_cur.serq_pi != tlscb.serq_pi or \
@@ -266,8 +273,10 @@ def TestCaseVerify(tc):
         print("pkt rx stats not as expected")
         return False
 
+    print("Stats - 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x" % (tc.pvtdata.flow2_bytes_txed, tc.pvtdata.flow2_bytes_rxed, tc.pvtdata.flow1_bytes_txed, tc.pvtdata.flow1_bytes_rxed, num_tx_pkts, num_rx_pkts))
+
     if tcpcb_cur.bytes_rcvd - tcpcb.bytes_rcvd != \
-            tc.packets.Get('PKT1').payloadsize * num_rx_pkts:
+            tc.pvtdata.flow1_bytes_rxed:
         print("Warning! pkt rx byte stats not as expected %d %d" % \
                 (tcpcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
 
@@ -284,8 +293,8 @@ def TestCaseVerify(tc):
         return False
 
     if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
-            tc.packets.Get('PKT1').payloadsize * num_tx_pkts:
-        print("Warning! pkt tx byte stats not as expected %d %d" % (other_tcpcb_cur.bytes_sent, other_tcpcb.bytes_sent))
+            tc.pvtdata.flow2_bytes_txed:
+        print("Warning! pkt tx byte stats not as expected 0x%x 0x%x" % (other_tcpcb_cur.bytes_sent, other_tcpcb.bytes_sent))
         return False
 
     # 7. Verify phv2pkt
@@ -300,12 +309,12 @@ def TestCaseVerify(tc):
 
     # 9  Verify phv2mem
     if same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow1_snd_nxt + \
-            tc.packets.Get('PKT1').payloadsize:
+            tc.pvtdata.flow2_bytes_txed:
         print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
         print("mem2pkt failed pvtdata snd_nxt = 0x%x" % tc.pvtdata.flow1_snd_nxt)
         return False
     elif not same_flow and other_tcpcb_cur.snd_nxt != \
-            tc.pvtdata.flow2_snd_nxt + tc.packets.Get('PKT1').payloadsize:
+            tc.pvtdata.flow2_snd_nxt + tc.pvtdata.flow2_bytes_txed:
         print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
 
     # 10. Verify pkt tx (in testspec)
@@ -331,9 +340,9 @@ def TestCaseVerify(tc):
             print("retx_xmit_cursor is 0")
             return False
         if other_tcpcb_cur.retx_snd_una != tc.pvtdata.flow2_snd_una + \
-                 tc.packets.Get('PKT1').payloadsize:
-            print("retx_snd_una %d is not %d" % 
-                    (other_tcpcb_cur.retx_snd_una, tc.packets.Get('PKT1').payloadsize))
+                 tc.pvtdata.flow2_bytes_txed / 2:
+            print("retx_snd_una 0x%x is not 0x%x" % 
+                    (other_tcpcb_cur.retx_snd_una, tc.pvtdata.flow2_bytes_txed))
             return False
 
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'complete':
@@ -341,11 +350,9 @@ def TestCaseVerify(tc):
             print("retx_xmit_cursor is not 0")
             return False
         if other_tcpcb_cur.retx_snd_una != tc.pvtdata.flow2_snd_una + \
-                 tc.packets.Get('PKT1').payloadsize + \
-                 tc.packets.Get('PKT2').payloadsize:
-            print("retx_snd_una %d is not %d" % 
-                    (other_tcpcb_cur.retx_snd_una, tc.packets.Get('PKT1').payloadsize + \
-                            tc.packets.Get('PKT2').payloadsize))
+                 tc.pvtdata.flow1_bytes_rxed:
+            print("retx_snd_una 0x%x is not 0x%x" % 
+                    (other_tcpcb_cur.retx_snd_una, tc.pvtdata.flow1_bytes_rxed))
             return False
 
     if tc.pvtdata.test_retx and (tc.pvtdata.test_retx == 'partial' \

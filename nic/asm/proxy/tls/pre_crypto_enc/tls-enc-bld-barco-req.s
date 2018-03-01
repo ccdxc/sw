@@ -94,19 +94,26 @@ tls_enc_bld_barco_desc:
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)
 
     /* address will be in r4 */
-    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_TLS)
     phvwr       p.barco_desc_doorbell_address, r4.dx
     CAPRI_OPERAND_DEBUG(r4.dx)
 
-    
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
+    /*
+     * data will be in r3
+     *
+     * We maintain a shadow-copy of the BSQ PI in qstate CB which we'll increment
+     * and use as 'PIDX_SET' instead of using the 'PIDX_INC' auto-increment feature
+     * of the doorbell, for better performance.
+     */
+    tbladd.f    d.{u.tls_bld_brq4_d.sw_bsq_pi}.hx, 1
+    add         r6, r0, d.{u.tls_bld_brq4_d.sw_bsq_pi}.hx
+    CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6)
     phvwr       p.barco_desc_doorbell_data, r3.dx
     CAPRI_OPERAND_DEBUG(r3.dx)
 
     /* The barco-command[31:24] is checked for GCM/CCM/CBC. endian-swapped */
-    smeqb  c4, d.u.tls_bld_brq4_d.barco_command[7:0], 0xf0, 0x30
-    bcf    [!c4], tls_enc_queue_to_brq_mpp_ring
+    smeqb       c4, d.u.tls_bld_brq4_d.barco_command[7:0], 0xf0, 0x30
+    bcf         [!c4], tls_enc_queue_to_brq_mpp_ring
     nop
 
     addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
@@ -119,7 +126,19 @@ tls_enc_bld_barco_desc:
     nop
 
 tls_enc_queue_to_brq_mpp_ring:
-        
+
+    /*
+     * If we're doing BYPASS-BARCO, we'll use the 'PIDX_SET' for the BSQ PI using
+     * the sw shadow copy in the doorbell.
+     */
+    smeqb       c4, k.to_s4_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+    bcf         [!c4], tls_enc_bsq_doorbell_skip
+    nop
+    CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd7_dma_cmd, LIF_TLS, 0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6,
+                                       crypto_iv_explicit_iv)
+    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd7_dma_cmd)
+
+tls_enc_bsq_doorbell_skip:	
     addi        r3, r0, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX
     /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
      * enable this once it is fixed
