@@ -8,6 +8,7 @@ nic/gen/iris/cli/iris_debug_cli.py                               /nic/cli/
 nic/gen/iris/cli/iris.py                                         /nic/cli/
 nic/gen/iris/cli/debugshell.py                                   /nic/cli/
 nic/gen/iris/cli/_iris.so                                        /nic/cli/
+nic/sdk/obj/*.so                                                 /nic/lib/
 nic/gen/aarch64/lib/libhalproto.so                               /nic/lib/
 nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so             /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so  /nic/lib/

@@ -224,7 +224,7 @@ def run_hal(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["LD_LIBRARY_PATH"] = "/home/asic/bin/tools/lib64:" + os.environ["LD_LIBRARY_PATH"]
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/x86_64/lib/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + os.environ["HAL_CONFIG_PATH"] + "/libs/sdk/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/sdk/obj"
     os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/x86_64/lib/"

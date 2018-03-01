@@ -110,6 +110,19 @@ swig-cli-clean:
 swig-cli: swig-cli-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C debug_cli
 
+package-size-check:
+    ifeq ($(ARCH),aarch64)
+	$(eval FILE_NAME = ../hal.tar)
+	# max file size is 108MB
+	$(eval MAX_FILE_SIZE = 113246208)
+	$(eval FILE_SIZE=$(shell stat -L -c %s $(FILE_NAME)))
+
+	if [ $(FILE_SIZE) -gt $(MAX_FILE_SIZE) ] ; then \
+		echo $(FILE_NAME) size is $(FILE_SIZE). Expected to be less than $(MAX_FILE_SIZE);  \
+		exit 1; \
+	fi
+    endif
+
 package-clean:
 	cd ../ && rm -rf fake_root_target && rm -f hal.tgz && rm -f hal.tar
 
@@ -127,6 +140,7 @@ platform-clean:
 	cd ../platform && make $(BUILD_OPTS) clean
 
 capsim-master:
+	cd asic/capri/model/capsim-master && $(MAKE)
 	cd asic/capri/model/capsim-master && $(PATH_OPTS) make $(BUILD_OPTS)
 
 capsim-master-clean:
@@ -142,11 +156,8 @@ capmodel:
 go-proto:
 	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto
 
-HAL_CONFIG_PATH = conf/
 sdk:
 	$(MAKE) -C sdk lib
-	@echo Copying over SDK libs to conf ...
-	cp sdk/obj/*.so $(HAL_CONFIG_PATH)/libs/sdk/
 
 DEL_PKGS = --deleted_packages=nic/sdk/include,nic/sdk,nic/sdk/obj
 #SDK_OPTS = $(DEL_PKGS) --copt=-Wno-unused-function 
@@ -207,7 +218,7 @@ stage1: asm capmodel build-proto
 stage2: plugins linkmgr platform pd hal
 
 # post build stage
-stage3: post-make package
+stage3: post-make package package-size-check
 
 nic:
 	$(MAKE) stage0
