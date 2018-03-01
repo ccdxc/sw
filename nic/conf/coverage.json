@@ -105,7 +105,7 @@
             ]
         },
         "mbt": {
-            "cmd": "./run.py --mbt",
+            "cmd": "./run.py --mbt; ./run.py --topo=up2up --feature=networking --mbt",
             "modules": [
                 "hal"
             ]
