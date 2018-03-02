@@ -56,8 +56,10 @@ qos : True
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
 
 gftexm:
-    profiles    : ref://store/specs/id=GFT_EXM_PROFILES
-    hdrgroups   : ref://store/specs/id=GFT_EXM_HEADER_GROUPS
+    profiles        : ref://store/specs/id=GFT_EXM_PROFILES
+    hdrgroups       : ref://store/specs/id=GFT_HEADER_GROUPS
+    transpositions  : ref://store/specs/id=GFT_TRANSPOSITION_PROFILES
+    transposition_hdrgroups : ref://store/specs/id=GFT_TRANSPOSITION_HEADER_GROUPS
 
 tenants:
 #    -   spec    : ref://store/specs/id=TENANT_INFRA_GFT

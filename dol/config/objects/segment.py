@@ -136,6 +136,9 @@ class SegmentObject(base.ConfigObjectBase):
     def IsSpanSegment(self):
         return self.type == 'SPAN'
 
+    def IsNative(self):
+        return self.native
+
     def IsFabEncapVlan(self):
         return self.fabencap == 'VLAN'
     def IsFabEncapVxlan(self):

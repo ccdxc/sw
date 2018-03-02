@@ -63,7 +63,7 @@ packets:
         headers     :
             qtag:
                 prio    : ref://testcase/config/flow/txqos/cos
-                vlan    : 100
+                vlan    : callback://networking/packets/GetExpectedVlanId
             ipv4:
                 tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:

@@ -24,9 +24,11 @@ from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 from config.objects.cpu                 import CpuHelper
 from config.objects.app_redir_if        import AppRedirIfHelper
 from config.objects.system              import SystemHelper
-from config.objects.gft_hdr_groups      import GftHeaderGroupHelper
-from config.objects.gft_exm_profiles    import GftExmProfileHelper
+from config.objects.gft_hdr_group       import GftHeaderGroupHelper
+from config.objects.gft_exm_profile     import GftExmProfileHelper
 from config.objects.gft_flow            import GftFlowHelper
+from config.objects.gft_transposition_profile import GftTranspositionProfileHelper
+from config.objects.gft_transposition_hdr_group       import GftTranspositionHeaderGroupHelper
 
 from config.objects.swdr                import SwDscrRingHelper
 from config.objects.brq                 import BRQHelper
@@ -94,6 +96,8 @@ def process(topospec):
 
     GftHeaderGroupHelper.main(topospec)
     GftExmProfileHelper.main(topospec)
+    GftTranspositionHeaderGroupHelper.main(topospec)
+    GftTranspositionProfileHelper.main(topospec)
     GftFlowHelper.main()
     return
 

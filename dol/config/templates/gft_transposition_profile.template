@@ -1,0 +1,57 @@
+# Uplink Config Object Template
+meta:
+    id      : GFT_TRSPN_PROFILE
+    package : config.objects
+    module  : gft_transposition_profile
+    feature_set:
+        - gft
+
+name    : None
+action  : None
+
+headers :
+    ethernet_header : False
+    ipv4_header     : False
+    ipv6_header     : False
+    tcp_header      : False
+    udp_header      : False
+    icmp_header     : False
+    no_encap        : False
+    ip_in_ip_encap  : False
+    ip_in_gre_encap : False
+    nvgre_encap     : False
+    vxlan_encap     : False
+
+fields:
+    dst_mac_addr    : False
+    src_mac_addr    : False
+    eth_type        : False
+    customer_vlan_id: False
+    provider_vlan_id: False
+    dot1p_priority  : False
+    src_ip_addr     : False
+    dst_ip_addr     : False
+    ip_ttl          : False
+    ip_protocol     : False
+    ip_dscp         : False
+    src_port        : False
+    dst_port        : False
+    tcp_flags       : False
+    tenant_id       : False
+    icmp_type       : False
+    icmp_code       : False
+    oob_vlan        : False
+    oob_tenant_id   : False
+    gre_protocol    : False
+
+redirect_to_vport_ingress_queue : False
+redirect_to_vport_egress_queue  : False
+redirect_to_vport_ingress_queue_if_ttl_is_one   : False
+redirect_to_vport_egress_queue_if_ttl_is_one    : False
+copy_all_packets    : False
+copy_first_packet   : False
+copy_when_tcp_flag_set  : False
+copy_after_tcp_fin_flag_set : False
+copy_after_tcp_rst_flag_set : False
+custom_action_present   : False
+meta_action_before_transposition    : False

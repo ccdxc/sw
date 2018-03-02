@@ -397,6 +397,8 @@ class FlowObject(base.ConfigObjectBase):
 
     def GetSrcSegmentVlanid(self):
         return self.__sseg.vlan_id
+    def GetDstSegmentVlanid(self):
+        return self.__dseg.vlan_id
 
     def GetSrcSegmentGftExmProfile(self):
         if self.IsIP():
@@ -406,10 +408,20 @@ class FlowObject(base.ConfigObjectBase):
         profile = self.__sseg.GetExmProfile(profstr)
         return profile
     
-    def GetDstSegmentGftTrspnProfile(self):
-        #profile = self.__dseg.GetTrspnProfile()
-        #return profile
-        return 0
+    def GetGftTranspositionProfile(self):
+        trp_name = "GFT_TRSPN_"
+        if self.__sseg.IsFabEncapVlan() == self.__dseg.IsFabEncapVlan():
+            trp_name += "VLAN_"
+            if self.__sseg.IsNative() == self.__dseg.IsNative():
+                # Both are tagged OR Both are untagged.
+                trp_name += "MODIFY"
+            elif self.__sseg.IsNative():
+                # SrcSegment is untagged and DstSegment is tagged.
+                trp_name += "PUSH"
+            else:
+                # SrcSegment is tagged and DstSegment is untagged.
+                trp_name += "POP"
+        return Store.objects.Get(trp_name)
 
     def __configure_l4_key(self, l4_info):
         if self.HasL4Ports():

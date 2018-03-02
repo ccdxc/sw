@@ -1,7 +1,7 @@
 # GFT Exact Match Profiles Specification
 # Profile Defaults:
 meta:
-    id: GFT_EXM_HEADER_GROUPS
+    id: GFT_HEADER_GROUPS
 
 header_groups:
     - group:

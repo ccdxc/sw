@@ -29,26 +29,16 @@ class GftFlowObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.flow_entry_id = self.id
         exm_profile = self.flow.GetSrcSegmentGftExmProfile()
-        trsp_profile = self.flow.GetDstSegmentGftTrspnProfile()
+        trsp_profile = self.flow.GetGftTranspositionProfile()
         req_spec.exact_match_profile.profile_id = exm_profile.id
-        #req_spec.transposition_profile.profile_id = trsp_profile.id
+        req_spec.transposition_profile.profile_id = trsp_profile.id
 
         req_spec.add_in_activated_state = False
         req_spec.rdma_flow = False
-        req_spec.redirect_to_vport_ingress_queue = False
-        req_spec.redirect_to_vport_egress_queue = False
-        req_spec.redirect_to_vport_ingress_queue_if_ttl_is_one = False
-        req_spec.redirect_to_vport_egress_queue_if_ttl_is_one = False
-        req_spec.copy_all_packets = False
-        req_spec.copy_first_packet = False
-        req_spec.copy_when_tcp_flag_set = False
-        req_spec.custom_action_present = False
-        req_spec.meta_action_before_transposition = False
-        req_spec.copy_after_tcp_fin_flag_set = False
-        req_spec.copy_after_tcp_rst_flag_set = False
+        
+        trsp_profile.FillTranspositionActions(req_spec)
 
-        self.table_type = 'EXACT_MATCH_INGRESS'
-        tts = 'GFT_TABLE_TYPE_' + self.table_type
+        tts = 'GFT_TABLE_TYPE_' + exm_profile.table_type
         req_spec.table_type = haldefs.gft.GftTableType.Value(tts)
         req_spec.vport_id = 0
         req_spec.redirect_vport_id = 0
@@ -58,11 +48,9 @@ class GftFlowObject(base.ConfigObjectBase):
             exm = req_spec.exact_matches.add()
             grp.PrepareGftFlowHALRequestSpec(exm, self.flow)
 
-        trsp = req_spec.transpositions.add()
-        trsp.action = haldefs.gft.GftHeaderGroupTranspostionAction.Value('TRANSPOSITION_ACTION_MODIFY')
-        trsp.headers.ethernet_header = True
-        trsp.header_fields.customer_vlan_id = True
-        trsp.eth_fields.customer_vlan_id = 100
+        for trp_grp in trsp_profile.groups:
+            grp_spec = req_spec.transpositions.add()
+            trp_grp.PrepareGftFlowHALRequestSpec(grp_spec, self.flow)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
