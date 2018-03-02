@@ -16,7 +16,7 @@ import (
 
 // FakeService is a mock for Service
 type FakeService struct {
-	retMethod apisrv.Method
+	retMethod map[string]apisrv.Method
 }
 
 // Disable disables the Service
@@ -27,23 +27,23 @@ func (s *FakeService) Enable() {}
 
 // GetMethod returns the Method object registered given its name. Returns nil when not found
 func (s *FakeService) GetMethod(t string) apisrv.Method {
-	return s.retMethod
+	return s.retMethod[t]
 }
 
 // GetCrudService returns the Auto generated CRUD service method for a given (service, operation)
 func (s *FakeService) GetCrudService(in string, oper apisrv.APIOperType) apisrv.Method {
-	return s.retMethod
+	return s.retMethod[in]
 }
 
 // AddMethod add a method to the list of methods served by the Service.
 func (s *FakeService) AddMethod(n string, m apisrv.Method) apisrv.Method {
-	s.retMethod = m
+	s.retMethod[n] = m
 	return m
 }
 
 // NewFakeService creates a new FakeService
 func NewFakeService() apisrv.Service {
-	return &FakeService{}
+	return &FakeService{retMethod: make(map[string]apisrv.Method)}
 }
 
 // FakeMethod is used as mock Method for testing.
@@ -175,7 +175,9 @@ type FakeMessage struct {
 	Objverwrite    int
 	Uuidwrite      int
 	SelfLinkWrites int
-	KvObj          interface{}
+
+	listFromKvFunc apisrv.ListFromKvFunc
+	getFromKvFunc  apisrv.GetFromKvFunc
 }
 
 // TxnTestKey is the kvstore key used by mock functions
@@ -197,7 +199,10 @@ func (m *FakeMessage) WithKeyGenerator(fn apisrv.KeyGenFunc) apisrv.Message { re
 func (m *FakeMessage) WithKvUpdater(fn apisrv.UpdateKvFunc) apisrv.Message { return m }
 
 // WithKvGetter is a mock method for testing
-func (m *FakeMessage) WithKvGetter(fn apisrv.GetFromKvFunc) apisrv.Message { return m }
+func (m *FakeMessage) WithKvGetter(fn apisrv.GetFromKvFunc) apisrv.Message {
+	m.getFromKvFunc = fn
+	return m
+}
 
 // WithKvDelFunc is a mock method for testing
 func (m *FakeMessage) WithKvDelFunc(fn apisrv.DelFromKvFunc) apisrv.Message { return m }
@@ -212,7 +217,10 @@ func (m *FakeMessage) WithKvTxnDelFunc(fn apisrv.DelFromKvTxnFunc) apisrv.Messag
 func (m *FakeMessage) WithKvTxnUpdater(fn apisrv.UpdateKvTxnFunc) apisrv.Message { return m }
 
 // WithKvListFunc is a mock method for testing
-func (m *FakeMessage) WithKvListFunc(fn apisrv.ListFromKvFunc) apisrv.Message { return m }
+func (m *FakeMessage) WithKvListFunc(fn apisrv.ListFromKvFunc) apisrv.Message {
+	m.listFromKvFunc = fn
+	return m
+}
 
 // WithKvWatchFunc is a mock method for testing
 func (m *FakeMessage) WithKvWatchFunc(fn apisrv.WatchKvFunc) apisrv.Message { return m }
@@ -243,6 +251,9 @@ func (m *FakeMessage) WriteObjVersion(i interface{}, version string) interface{}
 // ListFromKv is a mock method for testing
 func (m *FakeMessage) ListFromKv(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 	m.Kvlists++
+	if m.listFromKvFunc != nil {
+		return m.listFromKvFunc(ctx, kvs, options, prefix)
+	}
 	return nil, nil
 }
 
@@ -291,7 +302,10 @@ func (m *FakeMessage) WriteToKv(ctx context.Context, kv kvstore.Interface, i int
 // GetFromKv is a mock method for testing
 func (m *FakeMessage) GetFromKv(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
 	m.Kvreads++
-	return m.KvObj, nil
+	if m.getFromKvFunc != nil {
+		return m.getFromKvFunc(ctx, kv, key)
+	}
+	return nil, nil
 }
 
 // PrepareMsg is a mock method for testing
@@ -410,14 +424,4 @@ func (m *FakeMessage) WriteModTime(i interface{}) (interface{}, error) {
 func NewFakeMessage(Kvpath string, validateResult bool) apisrv.Message {
 	r := FakeMessage{Kvpath: Kvpath, ValidateRslt: validateResult}
 	return &r
-}
-
-// SetFakeMessageKvObj sets the KV object returned by the FakeMessage
-func SetFakeMessageKvObj(obj interface{}, i apisrv.Message) bool {
-	m, ok := i.(*FakeMessage)
-	if !ok {
-		return false
-	}
-	m.KvObj = obj
-	return true
 }

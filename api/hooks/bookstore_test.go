@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvmocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -49,25 +50,35 @@ func TestCreateNewOrderId(t *testing.T) {
 
 	service := apisrvmocks.NewFakeService()
 	method := apisrvmocks.NewFakeMethod(true)
-	msg := apisrvmocks.NewFakeMessage("/test/path", false)
-	apisrvmocks.SetFakeMessageKvObj(order, msg)
+	msg := apisrvmocks.NewFakeMessage("/test/path", false).WithKvGetter(
+		func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			retval := bookstore.Order{}
+			err2 := kvs.Get(ctx, key, &retval)
+			return retval, err2
+		})
+
 	apisrvmocks.SetFakeMethodReqType(msg, method)
-	service.AddMethod("test", method)
+	service.AddMethod("Order", method)
 	s := &bookstoreHooks{
 		logger: l,
 		svc:    service,
 	}
 	storecfg := store.Config{
-		Type:  store.KVStoreTypeMemkv,
-		Codec: runtime.NewJSONCodec(runtime.NewScheme()),
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
 	}
 	kvs, err := store.New(storecfg)
 	if err != nil {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
 	txn := kvs.NewTxn()
+	err = kvs.Create(ctx, order.MakeKey(""), &order)
+	if err != nil {
+		t.Errorf("object creation should succeed in KV (%s)", err)
+	}
 
-	i, ok, err := s.createNeworderID(ctx, kvs, txn, "/test/key", apiserver.CreateOper, order)
+	i, ok, err := s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
 	if !ok {
 		t.Errorf("hook failed, expecting pass")
 	}
@@ -75,23 +86,27 @@ func TestCreateNewOrderId(t *testing.T) {
 	if ret.Name != fmt.Sprintf("order-%d", s.orderID) {
 		t.Errorf("expecting name [%s] to be changed, found [%s]", fmt.Sprintf("order-%d", s.orderID), ret.Name)
 	}
-
 	if ret.Status.Status != "PROCESSING" {
 		t.Errorf("unexpected Status field [%s]", ret.Status.Status)
 	}
 
-	i, ok, err = s.createNeworderID(ctx, kvs, txn, "/test/key", apiserver.CreateOper, book)
+	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, book)
 	if ok {
 		t.Errorf("hook expected to fail due to wrong type")
 	}
 
-	i, ok, err = s.createNeworderID(ctx, kvs, txn, "/test/key", apiserver.UpdateOper, order)
+	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.UpdateOper, order)
 	if !ok {
-		t.Errorf("expecting to succeed")
+		t.Errorf("expecting to succeed but got error(%s)", err)
 	}
+
 	order.Status.Status = "SHIPPED"
-	apisrvmocks.SetFakeMessageKvObj(order, msg)
-	i, ok, err = s.createNeworderID(ctx, kvs, txn, "/test/key", apiserver.UpdateOper, order)
+	err = kvs.Update(ctx, order.MakeKey(""), &order)
+	if err != nil {
+		t.Errorf("object updation should succeed in KV (%s)", err)
+	}
+
+	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.UpdateOper, order)
 	if ok {
 		t.Errorf("expecting to fail")
 	}
@@ -123,37 +138,48 @@ func TestActionFunction(t *testing.T) {
 	}
 	service := apisrvmocks.NewFakeService()
 	method := apisrvmocks.NewFakeMethod(true)
-	msg := apisrvmocks.NewFakeMessage("/test/path", false)
-	apisrvmocks.SetFakeMessageKvObj(order, msg)
+	msg := apisrvmocks.NewFakeMessage("/test/path", false).WithKvGetter(
+		func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			retval := bookstore.Order{}
+			err2 := kvs.Get(ctx, key, &retval)
+			return retval, err2
+		})
 	apisrvmocks.SetFakeMethodReqType(msg, method)
-	service.AddMethod("test", method)
+	service.AddMethod("Order", method)
 	s := &bookstoreHooks{
 		logger: l,
 		svc:    service,
 	}
 	storecfg := store.Config{
-		Type:  store.KVStoreTypeMemkv,
-		Codec: runtime.NewJSONCodec(runtime.NewScheme()),
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
 	}
 	kvs, err := store.New(storecfg)
 	if err != nil {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
 	txn := kvs.NewTxn()
-	_, ok, err := s.processApplyDiscountAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+
+	err = kvs.Create(ctx, order.MakeKey(""), &order)
+	if err != nil {
+		t.Errorf("object creation should succeed in KV (%s)", err)
+	}
+
+	_, ok, err := s.processApplyDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
 
-	_, ok, err = s.processClearDiscountAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+	_, ok, err = s.processClearDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
-	_, ok, err = s.processRestockAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+	_, ok, err = s.processRestockAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
-	_, ok, err = s.processAddOutageAction(ctx, kvs, txn, "/test/path", apiserver.CreateOper, order)
+	_, ok, err = s.processAddOutageAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
