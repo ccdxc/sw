@@ -11,18 +11,3 @@ modules:
     - module:
         name    : HTTP TEST
         program : http_test
-    - module:
-        name    : HTTP TEST
-        program : http_test
-    - module:
-        name    : HTTP TEST
-        program : http_test
-    - module:
-        name    : HTTP TEST
-        program : http_test
-    - module:
-        name    : HTTP TEST
-        program : http_test
-    - module:
-        name    : HTTP TEST
-        program : http_test
