@@ -29,6 +29,7 @@ SRC_FILES := \
     esp_ipv4_tunnel_h2n_allocate_input_page_index.s \
     esp_ipv4_tunnel_h2n_allocate_output_page_index.s \
     esp_ipv4_tunnel_h2n_update_input_desc_aol.s \
+    esp_ipv4_tunnel_h2n_update_input_desc_aol2.s \
     esp_ipv4_tunnel_h2n_update_output_desc_aol.s \
     esp_ipv4_tunnel_h2n_read_random_number_from_barco.s \
     esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc.s 

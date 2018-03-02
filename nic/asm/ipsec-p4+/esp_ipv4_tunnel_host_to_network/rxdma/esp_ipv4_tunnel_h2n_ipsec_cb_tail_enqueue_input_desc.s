@@ -14,10 +14,7 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
     phvwr p.ipsec_int_header_in_desc, k.t0_s2s_in_desc_addr
     phvwri p.p4_rxdma_intr_dma_cmd_ptr, H2N_RXDMA_IPSEC_DMA_COMMANDS_OFFSET 
-    phvwri p.app_header_table0_valid, 0
-    phvwri p.app_header_table1_valid, 0
-    phvwri p.app_header_table2_valid, 0
-    phvwri p.app_header_table3_valid, 0
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     phvwr p.esp_header_spi, d.spi
     phvwr p.esp_header_seqno, d.esn_lo
     phvwr p.esp_header_iv, d.iv

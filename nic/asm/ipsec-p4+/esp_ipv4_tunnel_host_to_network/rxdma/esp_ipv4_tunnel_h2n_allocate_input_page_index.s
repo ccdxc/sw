@@ -15,6 +15,7 @@ struct phv_ p;
     .align
 esp_ipv4_tunnel_h2n_allocate_input_page_index:
     phvwr p.t0_s2s_in_page_addr, d.in_page_index
+    phvwr p.t3_s2s_in_page_addr, d.in_page_index
     phvwr p.ipsec_int_header_in_page, d.in_page_index 
     seq c1, k.ipsec_to_stage2_is_random, 1 
     bcf [c1], esp_ipv4_tunnel_h2n_enable_read_random

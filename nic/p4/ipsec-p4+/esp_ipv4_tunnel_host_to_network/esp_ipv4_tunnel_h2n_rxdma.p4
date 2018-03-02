@@ -17,6 +17,7 @@
 #define rx_table_s3_t0_action update_input_desc_aol 
 #define rx_table_s3_t1_action update_output_desc_aol 
 #define rx_table_s3_t2_action read_random_number_from_barco 
+#define rx_table_s3_t3_action update_input_desc_aol2 
 
 #define rx_table_s4_t0_action ipsec_cb_tail_enqueue_input_desc 
 
@@ -84,7 +85,7 @@ header_type ipsec_table2_s2s {
 
 header_type ipsec_table3_s2s {
     fields {
-        out_desc_addr : ADDRESS_WIDTH;
+        in_page_addr : ADDRESS_WIDTH;
         out_page_addr : ADDRESS_WIDTH; 
         s2s3_pad : 32;
     }
@@ -231,7 +232,7 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
     modify_field(scratch_t2_s2s.s2s2_pad, t2_s2s.s2s2_pad);
 
 #define IPSEC_SCRATCH_T3_S2S \
-    modify_field(scratch_t3_s2s.out_desc_addr, t3_s2s.out_desc_addr); \
+    modify_field(scratch_t3_s2s.in_page_addr, t3_s2s.in_page_addr); \
     modify_field(scratch_t3_s2s.out_page_addr, t3_s2s.out_page_addr); \
     modify_field(scratch_t3_s2s.s2s3_pad, t3_s2s.s2s3_pad);
 
@@ -292,10 +293,35 @@ action update_output_desc_aol(addr0, offset0, length0,
     modify_field(barco_desc_out.A0_addr, t1_s2s.out_page_addr);
     modify_field(barco_desc_out.O0, 0);
     modify_field(barco_desc_out.L0, 0); 
-    modify_field(ipsec_to_stage3_scratch.pad_size, ipsec_to_stage3.pad_size);
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
+    modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
+    modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size); 
+    modify_field(ipsec_to_stage3_scratch.packet_len, ipsec_to_stage3.packet_len); 
+    modify_field(ipsec_to_stage3_scratch.pad_addr, ipsec_to_stage3.pad_addr); 
+    modify_field(ipsec_to_stage3_scratch.pad_size, ipsec_to_stage3.pad_size); 
+}
+
+//stage 3 
+action update_input_desc_aol2 (addr0, offset0, length0,
+                              addr1, offset1, length1,
+                              addr2, offset2, length2,
+                              nextptr, rsvd)
+{
+    IPSEC_SCRATCH_GLOBAL
+    IPSEC_SCRATCH_T3_S2S
     modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size);
+    // Original pkt to input descriptor pkt2mem 
+    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0+4+ipsec_to_stage3.iv_size, ipsec_to_stage3.packet_len, 0, 0)
+    // Pad bytes from HBM - mem2mem 
+    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_pad_byte_src, dma_cmd_pad_byte_dst, ipsec_to_stage3.pad_addr, 0, addr0+length0, 0, ipsec_to_stage3.pad_size, 0, 0, 0)
+    // DMA_COMMAND SALT
+    modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
+    modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size); 
+    modify_field(ipsec_to_stage3_scratch.packet_len, ipsec_to_stage3.packet_len); 
+    modify_field(ipsec_to_stage3_scratch.pad_addr, ipsec_to_stage3.pad_addr); 
+    modify_field(ipsec_to_stage3_scratch.pad_size, ipsec_to_stage3.pad_size); 
+
 }
 
 //stage 3
@@ -326,6 +352,11 @@ action update_input_desc_aol (addr0, offset0, length0,
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0) 
     // DMA IV to beginning of INPUT DESC 
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv, addr0+IPSEC_SALT_HEADROOM, IPSEC_IN_DESC_IV_START, IPSEC_IN_DESC_IV_END, 0, 0, 0, 0)
+    modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
+    modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size); 
+    modify_field(ipsec_to_stage3_scratch.packet_len, ipsec_to_stage3.packet_len); 
+    modify_field(ipsec_to_stage3_scratch.pad_addr, ipsec_to_stage3.pad_addr); 
+    modify_field(ipsec_to_stage3_scratch.pad_size, ipsec_to_stage3.pad_size); 
 }
 
 //stage 2 
