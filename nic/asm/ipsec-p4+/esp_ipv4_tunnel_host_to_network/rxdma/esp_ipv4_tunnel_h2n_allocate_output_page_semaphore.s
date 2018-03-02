@@ -17,8 +17,8 @@ esp_ipv4_tunnel_h2n_allocate_output_page_semaphore:
     addui r1, r1, hiword(TNMPR_TABLE_BASE)
     addi r1, r1, loword(TNMPR_TABLE_BASE)
     phvwr p.common_te3_phv_table_addr, r1
-    phvwri p.common_te3_phv_table_raw_table_size, 3
-    phvwri p.common_te3_phv_table_lock_en, 1
-    phvwri p.common_te3_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_page_index[33:6] 
+    //phvwri p.common_te3_phv_table_raw_table_size, 3
+    phvwri p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, ((1 << 3) | 3)
+    phvwri.f p.common_te3_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_output_page_index[33:6] 
     nop.e 
     nop

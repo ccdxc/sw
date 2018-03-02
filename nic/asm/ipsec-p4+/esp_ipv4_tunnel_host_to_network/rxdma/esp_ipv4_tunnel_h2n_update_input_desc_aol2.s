@@ -38,13 +38,13 @@ dma_cmd_to_write_pad_size_l4_proto:
     add r2, r2, k.ipsec_to_stage3_pad_size
     phvwr p.tail_2_bytes_dma_cmd_addr, r2
     phvwri p.tail_2_bytes_dma_cmd_phv_start_addr, IPSEC_TAIL_2_BYTES_PHV_START
-    phvwri p.tail_2_bytes_dma_cmd_phv_end_addr, IPSEC_TAIL_2_BYTES_PHV_END
+    phvwr p.tail_2_bytes_dma_cmd_phv_end_addr, IPSEC_TAIL_2_BYTES_PHV_END 
 
 dma_cmd_write_salt_to_in_desc:
     phvwri p.dma_cmd_iv_salt_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_iv_salt_dma_cmd_addr, k.t3_s2s_in_page_addr[51:0]
     phvwri p.dma_cmd_iv_salt_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_SALT_START
-    phvwri.f p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END 
+    phvwri.f p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END  
     nop.e 
     nop
 
