@@ -4,5 +4,7 @@ meta:
     base: ref://store/templates/id=RING 
     feature_set:
         - iris
+        - gft
+
 
 #template: template/config/objects/rdma/ID=RDMA_SQ_DESCRIPTOR

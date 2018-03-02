@@ -3,6 +3,8 @@ meta:
     id: RDMA_SESSION
     feature_set:
         - iris
+        - gft
+
 
 lqp: None
 rqp: None

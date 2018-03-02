@@ -2,6 +2,7 @@ meta:
     id: RDMA_MR
     feature_set:
         - iris
+        - gft
 
 slab    : None  # Instance of ref://store/objects/slabs/id=XXX
 lkey    : None

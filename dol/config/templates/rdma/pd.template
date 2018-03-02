@@ -3,6 +3,7 @@ meta:
     id: RDMA_PD
     feature_set:
         - iris
+        - gft
 
 lif     : None  # Parent object
 pdid    : None  # LIF Local ID of this PD

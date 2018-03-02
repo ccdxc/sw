@@ -3,6 +3,7 @@ meta:
     id: QSTATE_RDMA_CQ
     feature_set:
         - iris
+        - gft
 
 eqid        : None # (ATTR)
 color       : None #

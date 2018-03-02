@@ -4,6 +4,7 @@ meta:
     base: ref://store/templates/id=QPAIR
     feature_set:
         - iris
+        - gft
 
 id      : None
 service : None

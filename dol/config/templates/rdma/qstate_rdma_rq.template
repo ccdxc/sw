@@ -4,6 +4,7 @@ meta:
     base: ref://store/templates/id=QSTATE
     feature_set:
         - iris
+        - gft
 
 service     : None # (ATTR) template/config/rdma_qpair/service
 pmtu        : None #
