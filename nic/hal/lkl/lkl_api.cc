@@ -15,6 +15,13 @@ struct lkl_netdev *lkl_register_netdev_fd(int fd);
 namespace hal {
 namespace pd {
 
+static void lkl_printk(const char *str, int len) 
+{
+    char* mystr = (char*) str;
+    mystr[len-1]='\0';
+    HAL_TRACE_DEBUG("{}", str);
+}
+
 void *host_ns, *net_ns, *host_dev, *net_dev;
 int lkl_init(void) {
     int ret;
@@ -26,6 +33,7 @@ int lkl_init(void) {
     if (ret < 0) {
 	printf("failed to add netdev: %s\n",lkl_strerror(ret));
     }
+    lkl_host_ops.print = lkl_printk;
     ret = lkl_start_kernel(&lkl_host_ops, "mem=16M loglevel=8");
     if (ret) {
         HAL_TRACE_DEBUG("LKL could not be started: %s\n", lkl_strerror(ret));

@@ -21,7 +21,6 @@ using sdk::lib::slab;
 
 namespace hal {
 
-#define HAL_MAX_LKLSHIM_FLOWS  (1024 * 8)
 #define PACKED __attribute__((__packed__))
 
 typedef enum {
