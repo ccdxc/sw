@@ -1016,8 +1016,7 @@ typedef struct rqcb0_s {
 
     uint16_t proxy_cindex;
 
-    uint8_t rsvd1:5;
-    uint8_t rq_in_hbm:1;
+    uint8_t rsvd1:6;
     uint8_t read_rsp_in_progress:1;
     uint8_t read_rsp_lock:1;
     uint32_t cur_read_rsp_psn:24;
@@ -1042,7 +1041,8 @@ typedef struct rqcb0_s {
     uint32_t  log_rq_page_size: 5;
     uint32_t  log_pmtu: 5;
 
-    uint8_t  rsvd0: 7;
+    uint8_t  rsvd0: 6;
+    uint8_t  rq_in_hbm:1;
     uint8_t  ring_empty_sched_eval_done: 1;
     uint8_t  rsq_pindex_prime;
     uint8_t  nxt_to_go_token_id;

@@ -43,10 +43,10 @@ def TestCaseSetup(tc):
         # so skip QPs with LIF same as sending LIF
         if endpoint.intf.lif == transmit_lif:
             continue
-        # For now we need to post and validate for QPs with QPID less than 5, otherwise ignore
+        # For now we need to post and validate for QPs with QPID less than 6, otherwise ignore
         for qp in endpoint.GetUdQps():
             tc.info("            EP: %s QP: %s " % (endpoint.GID(), qp.GID()))
-            if qp.id > 5:
+            if qp.id > 6:
                 continue
             #tc.pvtdata.udqps_pruned_list.append(endpoint.intf.lif, qp)
             pair = (endpoint.intf.lif, qp)

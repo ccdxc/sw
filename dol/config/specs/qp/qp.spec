@@ -19,7 +19,7 @@ rc:
     rq_in_nic       : 0
 
 perf_rc:
-    count           : 0
+    count           : 1
     svc_name        : "RC"
     service         : 0
     hostmem_pg_size : 4096

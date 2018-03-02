@@ -55,7 +55,8 @@ class RdmaRQstate(Packet):
         ByteField("nxt_to_go_token_id", 0),
         ByteField("rsq_pindex_prime", 0),                                            
         BitField("ring_empty_sched_eval_done", 0, 1),
-        BitField("rsvd", 0, 7),
+        BitField("rq_in_hbm", 0, 1),
+        BitField("rsvd", 0, 6),
 
         BitField("log_pmtu", 0xa, 5),
         BitField("log_rq_page_size", 0xc, 5),
@@ -80,8 +81,7 @@ class RdmaRQstate(Packet):
         X3BytesField("curr_read_rsp_psn", 0),
         BitField("read_rsp_lock", 0, 1),
         BitField("read_rsp_in_progress", 0, 1),
-        BitField("rq_in_hbm", 0, 1),
-        BitField("rsvd", 0, 5),
+        BitField("rsvd", 0, 6),
 
         LEShortField("proxy_cindex", 0),
         LEShortField("spec_cindex", 0),

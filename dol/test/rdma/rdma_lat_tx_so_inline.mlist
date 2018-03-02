@@ -10,8 +10,8 @@ feature:
     perf        : True
     rtl         : True
     pps         : True
-    selectors:
-        maxrdmasessions: 1
+#    selectors:
+#        maxrdmasessions: 1
 
 modules:
     - module:
@@ -21,4 +21,8 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only_inline.testspec
         ignore  : False
+        iterate:
+           - rdmasession:
+               base : filter://id=5
+
 

@@ -73,7 +73,8 @@ class CqObject(base.ConfigObjectBase):
 
     def Show(self):
         cfglogger.info('CQ: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
-        cfglogger.info('CQ num_wqes: %d wqe_size: %d' %(self.num_cq_wqes, self.cqwqe_size)) 
+        cfglogger.info('CQ num_wqes: %d wqe_size: %d, EQ-ID: %d' 
+                       %(self.num_cq_wqes, self.cqwqe_size, self.pd.id)) 
 
     def PrepareHALRequestSpec(self, req_spec):
         cfglogger.info("CQ: %s PD: %s Remote: %s LKey: %d LIF: %d\n" %\

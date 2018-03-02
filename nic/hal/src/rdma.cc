@@ -982,13 +982,13 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rsp->set_header_temp_addr(header_template_addr);
 
     // For UD QPs, please add it to the Segment's Broadcast OIFs list
-    // For testing purpose, please add only Queuepairs with QID less than or equal to 5
+    // For testing purpose, please add only Queuepairs with QID less than or equal to 6
     // In final implementation, we will be registering QPs to a Mcast group(ID'ed by IP address)
     // but for now, we are testing this with Bcast/Flood functionality.
 
     HAL_TRACE_DEBUG("Check if this QP to be added to oif_list for LIF:{} PD:{} QP:{}, If_hdl: {}",
                     lif, spec.pd(), spec.qp_num(), spec.if_handle());
-    if (((uint8_t)spec.svc() == RDMA_SERV_TYPE_UD) && (spec.qp_num() <= 5)) {
+    if (((uint8_t)spec.svc() == RDMA_SERV_TYPE_UD) && (spec.qp_num() <= 6)) {
         hal_if = find_if_by_handle(spec.if_handle());
         HAL_ASSERT(hal_if != NULL);
         l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
@@ -1242,9 +1242,9 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA CQ Create for lif {}", __FUNCTION__, lif);
 
 
-    HAL_TRACE_DEBUG("{}: Inputs: cq_num: {} cq_wqe_size: {} num_cq_wqes: {} "
+    HAL_TRACE_DEBUG("{}: Inputs: cq_num: {} cq_wqe_size: {} num_cq_wqes: {} eq_id: {}"
                     " hostmem_pg_size: {} cq_lkey: {} wakeup_dpath: {}", __FUNCTION__, spec.cq_num(),
-                    spec.cq_wqe_size(), spec.num_cq_wqes(), spec.hostmem_pg_size(),
+                    spec.cq_wqe_size(), spec.num_cq_wqes(), spec.eq_id(), spec.hostmem_pg_size(),
                     spec.cq_lkey(), spec.wakeup_dpath());
 
     if (spec.wakeup_dpath()) {
