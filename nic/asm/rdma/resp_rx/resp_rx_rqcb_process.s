@@ -21,6 +21,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define ECN_INFO_T  struct resp_rx_ecn_info_t
 #define RQCB_TO_RD_ATOMIC_T struct resp_rx_rqcb_to_read_atomic_rkey_info_t
 #define TO_S_ATOMIC_INFO_T struct resp_rx_to_stage_atomic_info_t
+#define WQE_INFO_T struct resp_rx_rqcb_to_wqe_info_t
 
 #define REM_PYLD_BYTES  r6
 #define RSQWQE_P r2
@@ -35,6 +36,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 %%
     .param    resp_rx_rqpt_process
+    .param    resp_rx_dummy_rqpt_process
     .param    resp_rx_rqcb1_in_progress_process
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rsq_backtrack_process
@@ -660,7 +662,27 @@ rc_checkout:
 
     // checkout a descriptor
     add         r1, r0, SPEC_RQ_C_INDEX
-    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1
+
+    bbne        d.rq_in_hbm, 1, pt_process
+    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1 //BD Slot
+
+    sll         r2, r1, d.log_wqe_size
+    add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
+
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) 
+
+    //CAPRI_SET_FIELD(r4, WQE_INFO__T, cache, )
+    CAPRI_SET_FIELD(r4, WQE_INFO_T, remaining_payload_bytes, REM_PYLD_BYTES)
+    CAPRI_SET_FIELD(r4, WQE_INFO_T, curr_wqe_ptr, r2)
+    CAPRI_SET_FIELD(r4, WQE_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
+
+    //MPU only
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_dummy_rqpt_process, r0)
+    nop.e
+    nop
+
+pt_process:
+
     sub         r2, d.log_rq_page_size, d.log_wqe_size
     // page_index = c_index >> (log_rq_page_size - log_wqe_size)
     srlv        r3, r1, r2

@@ -390,8 +390,13 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing RQ Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
+        if self.mem_handle:
+            cfglogger.info("Writing RQ Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
                        (self.mem_handle.va, self.mem_handle.pa, self.wrid, self.spec.fields.num_sges))
+        else:
+            cfglogger.info("Writing RQ Descriptor @(address:0x%x) = wrid: 0x%x num_sges: %d" % 
+                       (self.address, self.wrid, self.spec.fields.num_sges))
+
         desc = RdmaRqDescriptorBase(wrid=self.wrid,
                                     num_sges=self.spec.fields.num_sges)
         for sge in self.spec.fields.sges:
@@ -399,37 +404,58 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
             sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
             desc = desc/sge_entry
               
-        #model_wrap.write_mem(self.address, bytes(desc), len(desc))
-        resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
-        #self.Read()
+        desc.show()
+        if self.mem_handle:
+            resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
+        else:
+            model_wrap.write_mem(self.address, bytes(desc), len(desc))
+
+        self.Read()
 
     def Read(self):
         """
         Reads a Descriptor from "self.address"
         :return:
         """
-        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
-        desc = RdmaRqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, 32))
+
+        if self.mem_handle:
+            self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
+            mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+            desc = RdmaRqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, 32))
+        else:
+            hbm_addr = self.address
+            desc = RdmaRqDescriptorBase(model_wrap.read_mem(hbm_addr, 32))
+
         desc.show()
         self.wrid = desc.wrid
         self.num_sges = desc.num_sges
         cfglogger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d" % 
                        (self.address, self.wrid, self.num_sges))
-        self.sges = []
-        mem_handle.va += 32
-        for i in range(self.num_sges):
-            self.sges.append(RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16)))
-            #sge = RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16))
-            #self.sges.append(sge)
-            #cfglogger.info("Read Sge[%d] = va: 0x%x len: %d l_key: %d" % 
-            #               (i, sge.va, sge.len, sge.l_key))
-            mem_handle.va += 16
 
-        #for sge in self.sges:
-        #    print('%s' % type(sge))
-        #    print('0x%x' % sge.va)
-        #print('id: %s' %id(self))
+        self.sges = []
+        if self.mem_handle:
+            mem_handle.va += 32
+        else:
+            hbm_addr += 32
+
+        for i in range(self.num_sges):
+            
+            if self.mem_handle:
+                self.sges.append(RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16)))
+            else:
+                self.sges.append(RdmaSge(model_wrap.read_mem(hbm_addr, 16)))
+
+            if self.mem_handle:
+                mem_handle.va += 16
+            else:
+                hbm_addr += 16
+
+        for sge in self.sges:
+            print('%s' % type(sge))
+            print('va: 0x%x' % sge.va)
+            print('len: 0x%x' % sge.len)
+            print('lkey: 0x%x' % sge.l_key)
+        print('id: %s' %id(self))
 
     def Show(self):
         desc = RdmaRqDescriptor(addr=self.wrid, len=self.num_sges)

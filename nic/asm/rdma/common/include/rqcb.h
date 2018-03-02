@@ -44,7 +44,10 @@ struct rqcb0_t {
     struct capri_intrinsic_ring_t ring4;
     struct capri_intrinsic_ring_t ring5;
 
-    pt_base_addr: 32;
+    union {
+        pt_base_addr: 32;
+        hbm_rq_base_addr: 32;
+    };
 
     union {
         rsq_base_addr: 32;
@@ -84,7 +87,8 @@ struct rqcb0_t {
     curr_read_rsp_psn: 24;
     read_rsp_lock: 1;          // rsvd 6 is not free, need total of 1B here for DMA of read_rsp_lock
     read_rsp_in_progress: 1;
-    rsvd: 6;
+    rq_in_hbm: 1;
+    rsvd: 5;
 
     proxy_cindex: 16; // place holder for a copy of c_index to avoid
                        // scheduler ringing RQ all the time.

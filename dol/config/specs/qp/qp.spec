@@ -16,6 +16,7 @@ rc:
     num_rq_wqes     : 64
     num_rsq_wqes    : 4
     sq_in_nic       : 0
+    rq_in_nic       : 0
 
 perf_rc:
     count           : 0
@@ -31,6 +32,7 @@ perf_rc:
     num_rq_wqes     : 64
     num_rsq_wqes    : 4
     sq_in_nic       : 1
+    rq_in_nic       : 1
  
 ud:
     count           : 2
@@ -46,4 +48,5 @@ ud:
     num_rq_wqes     : 16
     num_rsq_wqes    : 4
     sq_in_nic       : 0
+    rq_in_nic       : 0
 

@@ -45,7 +45,7 @@ class RdmaRQstate(Packet):
         LEShortField("p_index5", 0),
         LEShortField("c_index5", 0),
     
-        IntField("pt_base_addr", 0),
+        IntField("pt_base_addr/rq_hbm_base_addr", 0),
 
         IntField("rsq_base_addr", 0),
 
@@ -80,7 +80,8 @@ class RdmaRQstate(Packet):
         X3BytesField("curr_read_rsp_psn", 0),
         BitField("read_rsp_lock", 0, 1),
         BitField("read_rsp_in_progress", 0, 1),
-        BitField("rsvd", 0, 6),
+        BitField("rq_in_hbm", 0, 1),
+        BitField("rsvd", 0, 5),
 
         LEShortField("proxy_cindex", 0),
         LEShortField("spec_cindex", 0),

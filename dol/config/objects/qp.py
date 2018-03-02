@@ -50,6 +50,7 @@ class QpObject(base.ConfigObjectBase):
         self.hostmem_pg_size = spec.hostmem_pg_size
         self.atomic_enabled = spec.atomic_enabled
         self.sq_in_nic = spec.sq_in_nic
+        self.rq_in_nic = spec.rq_in_nic
 
         self.num_sq_sges = spec.num_sq_sges
         self.num_sq_wqes = self.__roundup_to_pow_2(spec.num_sq_wqes)
@@ -187,6 +188,7 @@ class QpObject(base.ConfigObjectBase):
             req_spec.sq_cq_num = self.sq_cq.id
             req_spec.rq_cq_num = self.rq_cq.id
             req_spec.sq_in_nic_memory = self.sq_in_nic
+            req_spec.rq_in_nic_memory = self.rq_in_nic
     
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
@@ -208,6 +210,7 @@ class QpObject(base.ConfigObjectBase):
             self.rrq_base_addr = resp_spec.rrq_base_addr
             self.header_temp_addr = resp_spec.header_temp_addr
             self.nic_sq_base_addr = resp_spec.nic_sq_base_addr
+            self.nic_rq_base_addr = resp_spec.nic_rq_base_addr
             if self.sq_in_nic:
                 self.sq.SetRingParams('SQ', True, True,
                                   None,
@@ -220,7 +223,14 @@ class QpObject(base.ConfigObjectBase):
                                   self.sq_slab.address, 
                                   self.num_sq_wqes, 
                                   self.sqwqe_size)
-            self.rq.SetRingParams('RQ', True, False,
+            if self.rq_in_nic:
+                self.rq.SetRingParams('RQ', True, True,
+                                  None,
+                                  self.nic_rq_base_addr,
+                                  self.num_rq_wqes, 
+                                  self.rqwqe_size)
+            else:
+                self.rq.SetRingParams('RQ', True, False,
                                   self.rq_slab.mem_handle,
                                   self.rq_slab.address,
                                   self.num_rq_wqes, 

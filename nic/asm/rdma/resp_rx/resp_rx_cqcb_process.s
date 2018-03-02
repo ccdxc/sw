@@ -28,12 +28,10 @@ resp_rx_cqcb_process:
 
     seq             c1, CQ_P_INDEX, 0
     // flip the color if cq is wrap around
-    add             r1, r0, CQ_COLOR
-    mincr.c1        r1, 1, 1     
-    tblwr.c1        CQ_COLOR, r1
+    tblmincri.c1    CQ_COLOR, 1, 1
 
     // set the color in cqwqe
-    phvwr           p.cqwqe.color, r1
+    phvwr           p.cqwqe.color, CQ_COLOR
 
     // page_index = p_index >> (log_rq_page_size - log_wqe_size)
     add             r1, r0, CQ_P_INDEX

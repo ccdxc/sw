@@ -106,6 +106,7 @@ class RDMAManager {
 #define RRQ_BASE_ADDR_SHIFT 3
 #define RSQ_BASE_ADDR_SHIFT 3
 #define HBM_SQ_BASE_ADDR_SHIFT 3
+#define HBM_RQ_BASE_ADDR_SHIFT 3
 
 // all the page_ids are encoded as 22-bits, assuming 4K page size (12-bits)
 // appropriate shift will make 34-bit (22+12) hbm address.
@@ -1015,7 +1016,8 @@ typedef struct rqcb0_s {
 
     uint16_t proxy_cindex;
 
-    uint8_t rsvd1:6;
+    uint8_t rsvd1:5;
+    uint8_t rq_in_hbm:1;
     uint8_t read_rsp_in_progress:1;
     uint8_t read_rsp_lock:1;
     uint32_t cur_read_rsp_psn:24;
@@ -1053,7 +1055,10 @@ typedef struct rqcb0_s {
         uint32_t q_key;
     };
 
-    uint32_t pt_base_addr;
+    union {
+        uint32_t pt_base_addr;          //common
+        uint32_t hbm_rq_base_addr;
+    };
 
     qpcb_ring_t           rings[MAX_RQ_RINGS];
 
