@@ -33,9 +33,9 @@ rx_key1_ipv4:
     or.c3       r7, r7, k.ipv4_1_diffserv, 16
     or.c4       r7, r7, k.ipv4_1_protocol, 8
     or.c5       r7, r7, k.ipv4_1_ttl
-    nop.e
-    phvwr.f     p.{flow_lkp_metadata_ip_dscp_1,flow_lkp_metadata_ip_proto_1, \
+    phvwr.f.e   p.{flow_lkp_metadata_ip_dscp_1,flow_lkp_metadata_ip_proto_1, \
                    flow_lkp_metadata_ip_ttl_1}, r7
+    nop
 
 rx_key1_ipv6:
     phvwr.c1    p.flow_lkp_metadata_ip_src_1[127:64], \
@@ -49,9 +49,9 @@ rx_key1_ipv6:
                            ipv6_1_trafficClass_sbit4_ebit7}, 16
     or.c4       r7, r7, k.ipv6_1_nextHdr, 8
     or.c5       r7, r7, k.ipv6_1_hopLimit
-    nop.e
-    phvwr.f     p.{flow_lkp_metadata_ip_dscp_1,flow_lkp_metadata_ip_proto_1, \
+    phvwr.f.e   p.{flow_lkp_metadata_ip_dscp_1,flow_lkp_metadata_ip_proto_1, \
                    flow_lkp_metadata_ip_ttl_1}, r7
+    nop
 
 /*****************************************************************************/
 /* error function                                                            */
