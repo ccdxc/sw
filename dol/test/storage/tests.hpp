@@ -165,16 +165,15 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
 			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
 			uint64_t roce_wqe_addr, uint32_t roce_wqe_size);
 
-int test_seq_read_roce(uint32_t seq_pdma_q, uint64_t pdma_src_addr, 
-                       uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_roce_sq,
+                       uint64_t pdma_src_addr, uint64_t pdma_dst_addr, uint32_t pdma_data_size,
                        uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif,
-                       uint16_t db_lif, uint16_t db_qtype, uint32_t db_qid,
-                       uint16_t db_ring, uint16_t db_index);
-int test_seq_write_roce_pdma_prefilled(uint16_t seq_pdma_q,
-                                       uint16_t seq_pdma_index,
-                                       uint32_t pvm_roce_sq,
-                                       dp_mem_t *seq_roce_desc,
-                                       dp_mem_t *sqwqe);
+                       uint64_t roce_wqe_addr, uint32_t roce_wqe_size);
+int test_seq_roce_op_pdma_prefilled(uint16_t seq_start_q,
+                                    uint16_t seq_start_index,
+                                    dp_mem_t *seq_roce_desc,
+                                    uint32_t pvm_roce_sq,
+                                    dp_mem_t *sqwqe);
 int test_run_rdma_e2e_write();
 
 int test_run_rdma_e2e_read();
