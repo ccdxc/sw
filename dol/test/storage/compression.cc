@@ -348,6 +348,30 @@ int compress_flat_64K_buf() {
   return 0;
 }
 
+int compress_same_src_and_dst() {
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.sha_en = 1;
+  d.src = host_mem_pa + kCompressedDataOffset;
+  bcopy(host_mem + kUncompressedDataOffset,
+        host_mem + kCompressedDataOffset, 4096);
+  d.dst = host_mem_pa + kCompressedDataOffset;
+  d.datain_len = 4096;
+  d.threshold_len = 4096 - 8;
+  d.status_data = 0x1234;
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+  if (run_cp_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
 int decompress_to_flat_64K_buf() {
   bzero(host_mem, kTotalBufSize);
   bcopy(compressed_data_buf, host_mem + kCompressedDataOffset, compressed_data_size);
@@ -589,6 +613,166 @@ int decompress_to_flat_64K_buf_in_hbm() {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+// Route the compressed output through sequencer to handle output block
+// boundry issues of compression engine.
+int compress_output_through_sequencer() {
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.sha_en = 1;
+  d.src = host_mem_pa + kUncompressedDataOffset;
+  d.dst = hbm_pa + kCompressedDataOffset;
+  d.datain_len = 0;  // 0 = 64K
+  d.threshold_len = kCompressedBufSize - 8;
+  d.status_data = 0x1234;
+  InvalidateHdrInHBM();
+  InvalidateHdrInHostMem();
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+
+  // Prepare an SGL for the sequencer to output data.
+  cp_sq_ent_sgl_t seq_sgl;
+  bzero(&seq_sgl, sizeof(seq_sgl));
+  seq_sgl.status_host_pa = host_mem_pa + kStatusOffset;
+  bzero(host_mem + kStatusOffset, sizeof(cp_status_sha512_t));
+  seq_sgl.addr[0] = host_mem_pa + kCompressedDataOffset;
+  seq_sgl.len[0] = 199;
+  seq_sgl.addr[1] = host_mem_pa + kCompressedDataOffset + 199;
+  seq_sgl.len[1] = 537;
+  seq_sgl.addr[2] = host_mem_pa + kCompressedDataOffset + 199 + 537;
+  seq_sgl.len[2] = 1123;
+  seq_sgl.addr[3] = host_mem_pa + kCompressedDataOffset + 199 + 537 + 1123;
+  seq_sgl.len[3] = kCompressedBufSize - (199 + 537 + 1123);
+  write_mem(hbm_pa + kSGLOffset, (uint8_t *)&seq_sgl, sizeof(seq_sgl));
+
+  const uint32_t kIntrData = 0x11223344;
+  cp_seq_params_t seq_params;
+  bzero(&seq_params, sizeof(seq_params));
+  seq_params.seq_ent.status_hbm_pa = hbm_pa + kStatusOffset;
+  seq_params.seq_ent.src_hbm_pa = hbm_pa + kCompressedDataOffset;
+  seq_params.seq_ent.sgl_pa = hbm_pa + kSGLOffset;
+  seq_params.seq_ent.intr_pa = host_mem_pa + kOpaqueTagOffset;
+  seq_params.seq_ent.intr_data = kIntrData;
+  bzero(host_mem + kOpaqueTagOffset, 8);  // Clear the area where interrupt from sequencer is going to come.
+  seq_params.seq_ent.status_len = sizeof(cp_status_sha512_t);
+  seq_params.seq_ent.status_dma_en = 1;
+  seq_params.seq_ent.intr_en = 1;
+  seq_params.seq_index = 0;
+  if (test_setup_cp_seq_ent(&seq_params) != 0) {
+    printf("cp_seq_ent failed\n");
+    return -1;
+  }
+  d.doorbell_addr = seq_params.ret_doorbell_addr;
+  d.doorbell_data = seq_params.ret_doorbell_data;
+  d.cmd_bits.doorbell_on = 1;
+
+  // Verify(wait for) that the status makes it to HBM.
+  // We could directly poll for sequencer but this is just additional verification.
+  if (run_cp_test(&d, true, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  // Now poll for sequencer interrupt.
+  auto seq_intr_poll_func = [kIntrData] () -> int {
+    uint32_t *p = (uint32_t *)(host_mem + kOpaqueTagOffset);
+    if (*p == kIntrData)
+      return 0;
+    return 1;
+  };
+  tests::Poller intr_poll;
+  if (intr_poll(seq_intr_poll_func) != 0) {
+    printf("ERROR: Interrupt from sequencer never came.\n");
+  }
+  // By this time we should have data and status.
+  cp_status_sha512_t *st2 = (cp_status_sha512_t *)(host_mem + kStatusOffset);
+  if (!st2->valid) {
+    printf("ERROR: Status valid bit not set\n");
+    return -1;
+  }
+  if (st2->err) {
+    printf("ERROR: status err 0x%x is unexpected\n", st2->err);
+    return -1;
+  }
+  if (st2->partial_data != 0x1234) {
+    printf("ERROR: status partial data 0x%x is unexpected\n", st2->partial_data);
+    return -1;
+  }
+  cp_hdr_t *hdr = (cp_hdr_t *)(host_mem + kCompressedDataOffset);
+  if (hdr->version != kCPVersion) {
+    printf("Header version mismatch, expected 0x%x, received 0x%x\n",
+           kCPVersion, hdr->version);
+    return -1;
+  }
+  if (hdr->cksum == 0) {
+    printf("ERROR: Header with zero cksum\n");
+    return -1;
+  }
+  uint32_t datain_len = 65536;
+  if ((hdr->data_len == 0) || (hdr->data_len > (kCompressedBufSize - 8))
+      || (hdr->data_len > datain_len)) {
+    printf("ERROR: Invalid data_len 0x%x\n", hdr->data_len);
+    return -1;
+  }
+  if (st2->output_data_len != (hdr->data_len + 8)) {
+    printf("ERROR: output_data_len %u does not match hdr+8 %u\n",
+           st2->output_data_len, hdr->data_len + 8);
+    return -1;
+  }
+  if ((st2->err == 0) && (st2->integrity_data == 0)) {
+    printf("Integrity is all zero\n");
+    return -1;
+  }
+  if (bcmp(host_mem + kCompressedDataOffset, compressed_data_buf, st2->output_data_len) != 0) {
+    printf("ERROR: compressed data size mismatch\n");
+    return -1;
+  }
+  // Status verification done.
+
+  printf("Testcase %s passed\n", __func__);
+  return 0;
+}
+
+// Verify integrity of >64K buffer
+int verify_integrity_for_gt64K() {
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  bzero(&d, sizeof(d));
+  d.src = host_mem_pa + kUncompressedDataOffset;
+  // Give 68K length
+  d.datain_len = 4096;
+  d.extended_len = 1;
+  d.status_data = 0x7654;
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x7654;
+  if (run_cp_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  cp_status_sha512_t *st2 = (cp_status_sha512_t *)(host_mem + kStatusOffset);
+  uint64_t old_integiry = st2->integrity_data;
+
+  // Now repeat the test using only 4K data i.e. higher 16 bits are zero.
+  bzero(&d, sizeof(d));
+  d.src = host_mem_pa + kUncompressedDataOffset;
+  d.datain_len = 4096;
+  d.status_data = 0x5454;
+  st = {0};
+  st.partial_data = 0x5454;
+  if (run_cp_test(&d, false, st) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+  if (st2->integrity_data == old_integiry) {
+    printf("ERROR: Same integrity data for different data sizes\n");
+    return -1;
+  }
+
   printf("Testcase %s passed\n", __func__);
   return 0;
 }

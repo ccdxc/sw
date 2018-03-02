@@ -100,6 +100,7 @@ std::vector<tests::TestEntry> local_e2e_tests = {
 
 std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
+  {&tests::compress_same_src_and_dst, "Compress with same src and dst", false},
   {&tests::decompress_to_flat_64K_buf, "Decompress Host->Host to flat 64K buf", false},
   {&tests::compress_odd_size_buf, "Compress Host->Host to flat odd size buf", false},
   {&tests::decompress_odd_size_buf, "Decompress Host->Host to flat odd size buf", false},
@@ -107,6 +108,9 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::decompress_host_sgl_to_host_sgl, "Decompress Host->Host using SGLs", false},
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
   {&tests::decompress_to_flat_64K_buf_in_hbm, "Decompress HBM->HBM to flat 64K buf", false},
+  {&tests::compress_output_through_sequencer, "Compress and pull data from HBM through sequencer", false},
+  // Enable this once the model is fixed.
+  //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
