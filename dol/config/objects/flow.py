@@ -41,6 +41,7 @@ class FlowObject(base.ConfigObjectBase):
         self.__dten     = self.__dseg.tenant
         self.__span     = span
         self.__flowhash = None
+        self.__gft_flow = None
         self.multicast  = False 
         self.ing_mirror_sessions = []
         self.egr_mirror_sessions = []
@@ -87,6 +88,10 @@ class FlowObject(base.ConfigObjectBase):
 
         if self.__session.IsFteEnabled():
             self.fte = True
+        return
+
+    def SetGftFlow(self, gft_flow):
+        self.__gft_flow = gft_flow
         return
 
     def IsRetryEnabled(self):
@@ -412,8 +417,11 @@ class FlowObject(base.ConfigObjectBase):
         trp_name = "GFT_TRSPN_"
         if self.__sseg.IsFabEncapVlan() == self.__dseg.IsFabEncapVlan():
             trp_name += "VLAN_"
-            if self.__sseg.IsNative() == self.__dseg.IsNative():
-                # Both are tagged OR Both are untagged.
+            if self.__sseg.IsNative() and self.__dseg.IsNative():
+                # Both are untagged.
+                trp_name += "NONE"
+            elif self.__sseg.IsNative() == self.__dseg.IsNative():
+                # Both are tagged.
                 trp_name += "MODIFY"
             elif self.__sseg.IsNative():
                 # SrcSegment is untagged and DstSegment is tagged.
@@ -784,6 +792,7 @@ class FlowObject(base.ConfigObjectBase):
 
     def SetupTestcaseConfig(self, obj):
         obj.flow = self
+        obj.gft_flow = self.__gft_flow
         obj.src.tenant = self.__sten
         obj.dst.tenant = self.__dten
         obj.src.segment = self.__sseg
@@ -822,6 +831,8 @@ class FlowObject(base.ConfigObjectBase):
     def ShowTestcaseConfig(self, obj, lg):
         lg.info("Testcase Config Objects:")
         lg.info("- Flow  : %s" % obj.flow.Summary())
+        if obj.gft_flow:
+            lg.info("- GftFlow: %s" % obj.gft_flow.Summary())
         lg.info("- Source:")
         self.__show_testcase_config(obj.src, lg)
         lg.info("- Destination:")

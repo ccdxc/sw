@@ -9,3 +9,19 @@ header_groups:
             ethernet_header : True
         fields  :
             customer_vlan_id: True
+
+    - group:
+        name    : GFT_TRSPN_HDR_GRP_VLAN_PUSH
+        action  : PUSH
+        headers :
+            ethernet_header : True
+        fields  :
+            customer_vlan_id: True
+
+    - group:
+        name    : GFT_TRSPN_HDR_GRP_VLAN_POP
+        action  : POP
+        headers :
+            ethernet_header : True
+        fields  :
+            customer_vlan_id: True

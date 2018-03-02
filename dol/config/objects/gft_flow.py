@@ -23,32 +23,39 @@ class GftFlowObject(base.ConfigObjectBase):
 
     def Init(self, flow):
         self.flow = flow
+        self.exm_profile = self.flow.GetSrcSegmentGftExmProfile()
+        self.trsp_profile = self.flow.GetGftTranspositionProfile()
         self.Show()
         return
 
+    def Summary(self):
+        summary = ""
+        summary += "GftFlow:%s" % self.GID()
+        summary += "/ExmProfile:%s" % self.exm_profile.GID()
+        summary += "/TrspProfile:%s" % self.trsp_profile.GID()
+        return summary
+
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.flow_entry_id = self.id
-        exm_profile = self.flow.GetSrcSegmentGftExmProfile()
-        trsp_profile = self.flow.GetGftTranspositionProfile()
-        req_spec.exact_match_profile.profile_id = exm_profile.id
-        req_spec.transposition_profile.profile_id = trsp_profile.id
+        req_spec.exact_match_profile.profile_id = self.exm_profile.id
+        req_spec.transposition_profile.profile_id = self.trsp_profile.id
 
         req_spec.add_in_activated_state = False
         req_spec.rdma_flow = False
         
-        trsp_profile.FillTranspositionActions(req_spec)
+        self.trsp_profile.FillTranspositionActions(req_spec)
 
-        tts = 'GFT_TABLE_TYPE_' + exm_profile.table_type
+        tts = 'GFT_TABLE_TYPE_' + self.exm_profile.table_type
         req_spec.table_type = haldefs.gft.GftTableType.Value(tts)
         req_spec.vport_id = 0
         req_spec.redirect_vport_id = 0
         req_spec.ttl_one_redirect_vport_id = 0
 
-        for grp in exm_profile.groups:
+        for grp in self.exm_profile.groups:
             exm = req_spec.exact_matches.add()
             grp.PrepareGftFlowHALRequestSpec(exm, self.flow)
 
-        for trp_grp in trsp_profile.groups:
+        for trp_grp in self.trsp_profile.groups:
             grp_spec = req_spec.transpositions.add()
             trp_grp.PrepareGftFlowHALRequestSpec(grp_spec, self.flow)
         return
@@ -96,10 +103,12 @@ class GftFlowObjectHelper:
             gft_iflow = GftFlowObject()
             gft_iflow.Init(ssn.iflow)
             self.objlist.append(gft_iflow)
+            ssn.iflow.SetGftFlow(gft_iflow)
 
             gft_rflow = GftFlowObject()
             gft_rflow.Init(ssn.rflow)
             self.objlist.append(gft_rflow)
+            ssn.rflow.SetGftFlow(gft_rflow)
         return
 
     def main(self):

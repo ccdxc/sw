@@ -27,13 +27,31 @@ profiles:
             - ref://store/objects/id=GFT_HGEXM_IPV4_UDP_QTAG
 
     - profile:
+        name    : GFT_EXMP_IPV4_UDP_NATIVE
+        table   : EXACT_MATCH_INGRESS
+        groups  :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_UDP_NATIVE
+
+    - profile:
         name    : GFT_EXMP_IPV4_TCP_QTAG
         table   : EXACT_MATCH_INGRESS
         groups  :
             - ref://store/objects/id=GFT_HGEXM_IPV4_TCP_QTAG
 
     - profile:
+        name    : GFT_EXMP_IPV4_TCP_NATIVE
+        table   : EXACT_MATCH_INGRESS
+        groups  :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_TCP_NATIVE
+
+    - profile:
         name    : GFT_EXMP_IPV4_ICMP_QTAG
         table   : EXACT_MATCH_INGRESS
         groups  :
             - ref://store/objects/id=GFT_HGEXM_IPV4_ICMP_QTAG
+
+    - profile:
+        name    : GFT_EXMP_IPV4_ICMP_NATIVE
+        table   : EXACT_MATCH_INGRESS
+        groups  :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_ICMP_NATIVE

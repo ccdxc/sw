@@ -6,28 +6,44 @@ feature:
     module      : gft
     enable      : True
     ignore      : False
+    spec        : l2uc.testspec
 
 modules:
     - module:
-        name    : IPV4_UDP_QTAG
-        spec    : l2uc.testspec
-        perf    : True
+        name    : IPV4_UDP_QTAG_MODIFY
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=GFT
               segment : filter://native=False
 
     - module:
-        name    : IPV4_TCP_QTAG
-        spec    : l2uc.testspec
-        perf    : True
+        name    : IPV4_TCP_QTAG_MODIFY
         iterate :
             - flow    : filter://type=IPV4,proto=TCP,label=GFT
               segment : filter://native=False
 
     - module:
-        name    : IPV4_ICMP_QTAG
-        spec    : l2uc.testspec
-        perf    : True
+        name    : IPV4_ICMP_QTAG_MODIFY
         iterate :
             - flow    : filter://type=IPV4,proto=ICMP,label=GFT
               segment : filter://native=False
+
+    - module:
+        name    : IPV4_UDP_UTAG
+        ignore  : True
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT
+              segment : filter://native=True
+
+    - module:
+        name    : IPV4_TCP_UTAG
+        ignore  : True
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT
+              segment : filter://native=True
+
+    - module:
+        name    : IPV4_ICMP_UTAG
+        ignore  : True
+        iterate :
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT
+              segment : filter://native=True

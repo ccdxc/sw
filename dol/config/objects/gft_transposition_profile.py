@@ -54,7 +54,8 @@ class GftTranspositionProfileObject(base.ConfigObjectBase):
         return
 
     def __process_groups(self):
-        for g in self.spec.groups:
+        spec_groups = getattr(self.spec, 'groups', [])
+        for g in spec_groups:
             group = g.Get(Store)
             self.groups.append(group)
         return

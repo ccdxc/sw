@@ -1148,12 +1148,13 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
     HAL_ASSERT(flow_entry->exact_matches != NULL);
 
     flow_entry->num_transpositions = spec.transpositions_size();
-    HAL_ASSERT(flow_entry->num_transpositions != 0);
-    flow_entry->transpositions =
-        (gft_hdr_group_xposition_t *)HAL_CALLOC(HAL_MEM_ALLOC_GFT_HDR_GROUP_TRANSPOSITION,
-                                                flow_entry->num_transpositions *
-                                                sizeof(gft_hdr_group_xposition_t));
-    HAL_ASSERT(flow_entry->transpositions != NULL);
+    if (flow_entry->num_transpositions != 0) {
+        flow_entry->transpositions =
+            (gft_hdr_group_xposition_t *)HAL_CALLOC(HAL_MEM_ALLOC_GFT_HDR_GROUP_TRANSPOSITION,
+                                                    flow_entry->num_transpositions *
+                                                    sizeof(gft_hdr_group_xposition_t));
+        HAL_ASSERT(flow_entry->transpositions != NULL);
+    }
 
     flow_entry->flow_entry_id = spec.key_or_handle().flow_entry_id();
 

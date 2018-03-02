@@ -549,7 +549,7 @@ efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
         goto end;
     }
 
-    if (num_xpos == 0 || num_xpos > 0) {
+    if (num_xpos > 0) {
         RX_XPOSITION_DATA(0, 1);
         RX_XPOSITION_PGM(0);
     }
@@ -562,7 +562,7 @@ efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
         RX_XPOSITION_PGM_WITHID(2);
     }
 
-    if (!num_xpos) {
+    if (num_xpos) {
         RX_XPOSITION_PGM_WITHID(3);
     }
 

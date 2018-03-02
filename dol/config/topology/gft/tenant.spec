@@ -8,8 +8,8 @@ overlay : vlan
 segments:
     - spec  : ref://store/specs/id=SEGMENT_GFT
       count : 2
-#    - spec  : ref://store/specs/id=SEGMENT_NATIVE_GFT
-#      count : 1
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE_GFT
+      count : 1
 #    - spec  : ref://store/specs/id=SEGMENT_BLACKHOLE
 #      count : 1
 

@@ -1,0 +1,101 @@
+# Feature Test Modules List
+feature:
+    id      : gft
+    sub     : l3uc
+    package : test.gft
+    module  : gft
+    enable  : True
+    ignore  : True
+    spec    : l3uc.testspec
+
+modules:
+    - module:
+        name    : IPV4_TCP_QTAG_POP
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=GFT
+              srcseg    : filter://native=False
+              dstseg    : filter://native=True
+
+    - module:
+        name    : IPV4_UDP_QTAG_POP
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=GFT
+              srcseg    : filter://native=False
+              dstseg    : filter://native=True
+
+    - module:
+        name    : IPV4_ICMP_QTAG_POP
+        iterate :
+            - flow      : filter://type=IPV4,proto=ICMP,label=GFT
+              srcseg    : filter://native=False
+              dstseg    : filter://native=True
+
+    - module:
+        name    : IPV4_TCP_QTAG_PUSH
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=GFT
+              srcseg    : filter://native=True
+              dstseg    : filter://native=False
+
+    - module:
+        name    : IPV4_UDP_QTAG_PUSH
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=GFT
+              srcseg    : filter://native=True
+              dstseg    : filter://native=False
+
+    - module:
+        name    : IPV4_ICMP_QTAG_PUSH
+        iterate :
+            - flow      : filter://type=IPV4,proto=ICMP,label=GFT
+              srcseg    : filter://native=True
+              dstseg    : filter://native=False
+
+    - module:
+        name    : IPV6_TCP_QTAG_PUSH
+        enable  : False
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=GFT
+              srcseg    : filter://native=True
+              dstseg    : filter://native=False
+
+    - module:
+        name    : IPV6_UDP_QTAG_PUSH
+        enable  : False
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=GFT
+              srcseg    : filter://native=True
+              dstseg    : filter://native=False
+
+    - module:
+        name    : IPV6_ICMPV6_QTAG_PUSH
+        enable  : False
+        iterate :
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT
+              srcseg    : filter://native=True
+              dstseg    : filter://native=False
+
+    - module:
+        name    : IPV6_TCP_QTAG_POP
+        enable  : False
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=GFT
+              srcseg    : filter://native=False
+              dstseg    : filter://native=True
+
+    - module:
+        name    : IPV6_UDP_QTAG_POP
+        enable  : False
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=GFT
+              srcseg    : filter://native=False
+              dstseg    : filter://native=True
+
+    - module:
+        name    : IPV6_ICMPV6_QTAG_POP
+        enable  : False
+        iterate :
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT
+              srcseg    : filter://native=False
+              dstseg    : filter://native=True
+
