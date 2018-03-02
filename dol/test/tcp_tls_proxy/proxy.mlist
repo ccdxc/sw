@@ -8,6 +8,7 @@ feature:
     enable      : True
     rtl         : False
     ignore      : False
+    runorder    : 10
 
 modules:
     - module:
@@ -743,129 +744,6 @@ modules:
             maxflows: 1
         iterate :
             - flow: filter://type=IPV4
-    - module:
-        name    : TLS_HANDSHAKE_RX
-        package : test.tcp_tls_proxy
-        module  : tls_handshake_rx
-        rtl     : True
-        spec    : tls_handshake.testspec
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : PKT_TO_ARQ
-        package : test.tcp_tls_proxy
-        module  : pkt_to_arq
-        rtl     : True
-        spec    : pkt_to_arq.testspec
-        iterate :
-            - flow: filter://type=IPV4
- 
-    - module:
-        name    : FLOWS_TO_ARQ
-        package : test.tcp_tls_proxy
-        module  : flows_to_arq
-        rtl     : True
-        spec    : flows_to_arq.testspec
-        iterate :
-            - flow: filter://type=IPV4
-    
-    - module:
-        name    : FLOWS_TO_ARQ_V6
-        package : test.tcp_tls_proxy
-        module  : flows_to_arq
-        rtl     : True
-        spec    : flows_to_arq.testspec
-        iterate :
-            - flow: filter://type=IPV6
-
-    - module:
-        name    : PKT_TO_ARQ_TO_UPLINK
-        package : test.tcp_tls_proxy
-        module  : pkt_to_arq_to_uplink
-        spec    : pkt_to_arq_to_uplink.testspec
-        enable  : False
-        iterate :
-            - flow: filter://type=IPV4
-    
-    - module:
-        name    : PKT_TO_ARQ_TO_UPLINK_V6
-        package : test.tcp_tls_proxy
-        module  : pkt_to_arq_to_uplink
-        enable  : False
-        spec    : pkt_to_arq_to_uplink.testspec
-        iterate :
-            - flow: filter://type=IPV6
-
-    - module:
-        name    : FLOWS_TO_ARQ_TO_UPLINK
-        package : test.tcp_tls_proxy
-        module  : pkt_to_arq_to_uplink
-        enable  : False
-        spec    : pkt_to_arq_to_uplink.testspec
-        args    :
-            maxflows: 4
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : SYN_ACK_TO_ARQ
-        package : test.tcp_tls_proxy
-        module  : syn_ack_to_arq
-        rtl     : False
-        spec    : syn_ack.testspec
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV4
-
-
-    - module:
-        name    : TLS_HANDSHAKE_TX
-        package : test.tcp_tls_proxy
-        module  : tls_handshake_tx
-        rtl     : False
-        spec    : tls_handshake.testspec
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : ACK_SYN_ACK_TX
-        enable  : False
-        package : test.tcp_tls_proxy
-        module  : ack_syn_ack_tx
-        spec    : ack_syn_ack_tx.testspec
-        args    :
-            maxflows        : 1
-            send_ack_flow1  : 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : PKT_TO_LKL_V4
-        enable  : False
-        package : test.tcp_tls_proxy
-        module  : pkt_to_lkl
-        spec    : pkt_to_lkl.testspec
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : PKT_TO_LKL_V6
-        enable  : False
-        package : test.tcp_tls_proxy
-        module  : pkt_to_lkl
-        spec    : pkt_to_lkl.testspec
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV6
 
     - module:
         name    : CRYPTO_API_ASYM_ECC_POINT_MUL_P256
@@ -1141,17 +1019,4 @@ modules:
         iterate  :
             - flow: filter://type=IPV4
 
-    - module:
-        name    : QUIESCE_FLOWS
-        package : test.tcp_tls_proxy
-        module  : quiesce_flows
-        spec    : quiesce_flows.testspec
-        rtl     : True
-        args :
-              bypass_barco : 1
-              maxflows : 1
-              same_flow : 1
-        iterate :
-            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
-              segment   : filter://native=False
 
