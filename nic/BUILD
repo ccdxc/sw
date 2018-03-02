@@ -220,7 +220,7 @@ config_setting(
 
 cc_library(
     name = "iris_p4pd",
-    srcs = ["gen/iris/src/p4pd.cc"],
+    srcs = ["gen/iris/src/p4pd.cc", "gen/iris/src/p4pd_table_range.cc"],
     hdrs = [
         "gen/iris/include/p4pd.h",
     ],
@@ -232,7 +232,7 @@ cc_library(
 
 cc_library(
     name = "gft_p4pd",
-    srcs = ["gen/gft/src/p4pd.cc"],
+    srcs = ["gen/gft/src/p4pd.cc", "gen/gft/src/p4pd_table_range.cc"],
     hdrs = [
         "gen/gft/include/p4pd.h",
     ],
@@ -274,9 +274,9 @@ cc_library(
             "gen/iris/include/p4pd.h",
             "gen/iris/include/p4plus_egress.h",
             "gen/iris/include/p4plus_ingress.h",
-            "gen/include/p4pd_table.h",
-            "gen/include/common_txdma_actions_p4pd_table.h",
-            "gen/include/common_rxdma_actions_p4pd_table.h",
+            "gen/iris/include/p4pd_table.h",
+            "gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h",
+            "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h",
             "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
             "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
             "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
@@ -298,9 +298,9 @@ cc_library(
             "gen/gft/include/p4pd.h",
             "gen/gft/include/p4plus_egress.h",
             "gen/gft/include/p4plus_ingress.h",
-            "gen/include/p4pd_table.h",
-            "gen/include/common_txdma_actions_p4pd_table.h",
-            "gen/include/common_rxdma_actions_p4pd_table.h",
+            "gen/gft/include/p4pd_table.h",
+            "gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h",
+            "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h",
             "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
             "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
             "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",

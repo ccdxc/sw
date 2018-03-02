@@ -8,7 +8,7 @@
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
-#include "nic/gen/include/common_rxdma_actions_p4pd_table.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include <string>
 

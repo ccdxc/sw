@@ -4,7 +4,6 @@
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/gen/include/p4pd_table.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
@@ -52,7 +51,7 @@ namespace pt = boost::property_tree;
 static uint16_t
 p4pd_get_tableid_from_tablename (const char *tablename)
 {
-    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
         if (!strcmp(p4pd_tbl_names[i], tablename)) {
             return i;
         }
@@ -99,7 +98,7 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
     pt::ptree                  json_pt;
     p4pd_table_properties_t    *tbl;
     std::string                full_path;
-    int                        tableid, num_tables = P4TBL_ID_TBLMAX;
+    int                        tableid, num_tables = p4pd_tableid_max_get();
 
     full_path = std::string(p4pd_cfg->cfg_path) + "/" +
                     std::string(p4pd_cfg->table_map_cfg_file);
@@ -255,7 +254,7 @@ p4pd_init (p4pd_cfg_t *p4pd_cfg)
 p4pd_error_t
 p4pd_table_properties_get (uint32_t tableid, p4pd_table_properties_t *tbl_ctx)
 {
-    if (tableid >= P4TBL_ID_TBLMAX || !_p4tbls) {
+    if (tableid >= p4pd_tableid_max_get() || !_p4tbls) {
         return P4PD_FAIL;
     }
     memcpy(tbl_ctx, _p4tbls + tableid, sizeof(p4pd_table_properties_t));

@@ -6,16 +6,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/rdma.hpp"
-#ifndef GFT
-// #include "nic/hal/pd/iris/rdma_pd.hpp"
-#endif
 #include "nic/utils/host_mem/host_mem.hpp"
-// #include "nic/hal/pd/capri/capri_hbm.hpp"
-#ifndef GFT
-// #include "nic/hal/pd/iris/if_pd_utils.hpp"
-// #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#endif
-// #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/p4/include/common_defines.h"
 #include "nic/include/oif_list_api.hpp"
 

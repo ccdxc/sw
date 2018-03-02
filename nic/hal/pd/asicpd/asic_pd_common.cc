@@ -4,11 +4,10 @@
 #include "nic/hal/pd/asic_pd.hpp"
 #include "sdk/pal.hpp"
 #include "nic/hal/pd/p4pd_api.hpp"
-#include "nic/gen/include/p4pd_table.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
-#include "nic/gen/include/common_rxdma_actions_p4pd_table.h"
-#include "nic/gen/include/common_txdma_actions_p4pd_table.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
@@ -17,14 +16,13 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
 //#define HAL_LOG_TBL_UPDATES
-#define P4ACTION_NAME_MAX_LEN (100)
 
 namespace hal {
 namespace pd {
 
 // Store base address for the table
-static uint64_t capri_table_asm_err_offset[P4TBL_ID_TBLMAX];
-static uint64_t capri_table_asm_base[P4TBL_ID_TBLMAX];
+static uint64_t capri_table_asm_err_offset[P4TBL_ID_MAX];
+static uint64_t capri_table_asm_base[P4TBL_ID_MAX];
 
 static void
 asicpd_copy_capri_table_info (capri_table_mem_layout_t *out,
@@ -352,7 +350,7 @@ asicpd_program_table_mpu_pc (void)
 {
     p4pd_table_properties_t       tbl_ctx;
 
-    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
         p4pd_table_properties_get(i, &tbl_ctx);
         if (tbl_ctx.is_oflow_table &&
             tbl_ctx.table_type == P4_TBL_TYPE_TCAM) {
@@ -497,7 +495,7 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     uint64_t    capri_action_asm_base;
 
     HAL_TRACE_DEBUG("In asicpd_table_mpu_base_init\n");
-    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
         capri_program_to_base_addr(p4pd_cfg->p4pd_pgm_name, progname,
                                    &capri_table_asm_base[i]);
@@ -540,7 +538,7 @@ asicpd_program_hbm_table_base_addr (void)
 {
     p4pd_table_properties_t       tbl_ctx;
     // Program table base address into capri TE
-    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
+    for (uint32_t i = p4pd_tableid_min_get(); i < p4pd_tableid_max_get(); i++) {
         p4pd_global_table_properties_get(i, &tbl_ctx);
         if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
             continue;

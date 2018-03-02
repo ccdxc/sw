@@ -13,9 +13,8 @@
 #include "nic/include/capri_common.h"
 
 #include "nic/p4/nw/include/defines.h"
-#include "nic/gen/include/p4pd_table.h"
-#include "nic/gen/include/common_rxdma_actions_p4pd_table.h"
-#include "nic/gen/include/common_txdma_actions_p4pd_table.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
@@ -109,9 +108,6 @@ typedef int capri_error_t;
 #define CAPRI_TCAM_WORDS_PER_BLOCK  (8)
 #define CAPRI_TCAM_ROWS             (0x400) // 1K
 
-#define P4ACTION_NAME_MAX_LEN (100)
-#define P4TBL_MAX_ACTIONS (64)
-
 typedef struct capri_sram_shadow_mem_ {
     uint8_t zones;          // Using entire memory as one zone.
                             // TBD: carve into multiple zones
@@ -148,8 +144,8 @@ static capri_sram_shadow_mem_t *g_shadow_sram_txdma;
 static capri_sram_shadow_mem_t *
 get_sram_shadow_for_table (uint32_t tableid, int gress)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         HAL_TRACE_DEBUG("Working with p4 sram shadow for table {}\n", tableid);
         return (g_shadow_sram_p4[gress]);
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
@@ -170,7 +166,7 @@ get_sram_shadow_for_table (uint32_t tableid, int gress)
 static uint64_t hbm_mem_base_addr;
 
 /* Store action pc for every action of the table. */
-static uint64_t capri_action_asm_base[P4TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
+static uint64_t capri_action_asm_base[P4TBL_ID_MAX][P4TBL_MAX_ACTIONS];
 static uint64_t capri_action_rxdma_asm_base[P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
 static uint64_t capri_action_txdma_asm_base[P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX][P4TBL_MAX_ACTIONS];
 static uint64_t capri_table_rxdma_asm_base[P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX];
@@ -640,7 +636,7 @@ capri_table_rw_init (void)
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
     /* 1. Create shadow memory and init to zero */
-    for (int i = P4_PIPE_GRESS_MIN; i < P4_PIPE_GRESS_MAX; i++) {
+    for (int i = P4_GRESS_INGRESS; i <= P4_GRESS_EGRESS; i++) {
         g_shadow_sram_p4[i] = (capri_sram_shadow_mem_t*)
             CAPRI_CALLOC(1, sizeof(capri_sram_shadow_mem_t));
         g_shadow_tcam_p4[i] = (capri_tcam_shadow_mem_t*)
@@ -690,7 +686,7 @@ capri_table_rw_init (void)
 void
 capri_table_rw_cleanup (void)
 {
-    for (int i = P4_PIPE_GRESS_MIN; i < P4_PIPE_GRESS_MAX; i++) {
+    for (int i = P4_GRESS_INGRESS; i <= P4_GRESS_EGRESS; i++) {
         if (g_shadow_sram_p4[i]) {
             CAPRI_FREE(g_shadow_sram_p4[i]);
         }
@@ -713,8 +709,8 @@ capri_table_rw_cleanup (void)
 uint8_t
 capri_get_action_pc (uint32_t tableid, uint8_t actionid)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         return ((uint8_t)capri_action_asm_base[tableid][actionid]);
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
@@ -730,8 +726,8 @@ capri_get_action_pc (uint32_t tableid, uint8_t actionid)
 uint8_t
 capri_get_action_id (uint32_t tableid, uint8_t actionpc)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         for (int j = 0; j < p4pd_get_max_action_id(tableid); j++) {
             if (capri_action_asm_base[tableid][j] == actionpc) {
                 return j;
@@ -788,8 +784,8 @@ cap_pics_csr_t *
 capri_global_pics_get (uint32_t tableid)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         return &cap0.ssi.pics;
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {

@@ -17,9 +17,6 @@
 #include "nic/hal/src/proxyccb.hpp"
 #include "nic/hal/src/p4pt.hpp"
 #include "nic/hal/src/session.hpp"
-#ifndef GFT
-// #include "nic/hal/pd/iris/if_pd_utils.hpp"
-#endif
 #include "nic/hal/tls/tls_api.hpp"
 
 namespace hal {

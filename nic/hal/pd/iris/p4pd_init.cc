@@ -24,9 +24,6 @@ using sdk::table::tcam;
 using hal::pd::utils::acl_tcam_entry_handle_t;
 using hal::pd::utils::priority_t;
 
-#define P4ACTION_NAME_MAX_LEN (100)
-#define P4TBL_MAX_ACTIONS (64)
-
 namespace hal {
 namespace pd {
 

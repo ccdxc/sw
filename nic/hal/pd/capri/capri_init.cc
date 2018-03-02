@@ -12,7 +12,6 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "nic/gen/include/p4pd_table.h"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"

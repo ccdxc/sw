@@ -80,9 +80,6 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
         os.mkdir(output_c_dir)
     if output_py_dir and not os.path.exists(output_py_dir):
         os.mkdir(output_py_dir)
-    outdir = gen_dir + '/include/'
-    if outdir and not os.path.exists(outdir):
-        os.mkdir(outdir)
 
     templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, pd_dict['cli-name'])
     _prog_name = ''
@@ -98,7 +95,7 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
                                           prefix=tenjin_prefix)
             of.close()
             if p4tbl_types:
-                outfile = gen_dir + '/include/' + prog_name + 'p4pd_table.h'
+                outfile = output_h_dir + '/' + prog_name + 'p4pd_table.h'
                 with open(outfile, "w") as of:
                     file_prologue =  \
                             '/* ' + prog_name + 'p4pd_table.h\n'+\
@@ -121,29 +118,6 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, output
                     code_str = '} ' + prog_name + 'p4pd_table_range_en;\n\n'
                     of.write(code_str)
                     ####
-                    code_str = 'typedef enum '+ prog_name + 'p4pd_pipeline_dir_range_ {\n'
-                    of.write(code_str)
-                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_MIN = 0,\n'
-                    of.write(code_str)
-                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_INGRESS = ' + 'P4_' + prog_name.upper() + 'PIPE_GRESS_MIN,\n'
-                    of.write(code_str)
-                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_EGRESS,\n'
-                    of.write(code_str)
-                    code_str = '    ' 'P4_' + prog_name.upper() + 'PIPE_GRESS_MAX,\n'
-                    of.write(code_str)
-                    code_str = '} ' + prog_name + 'p4pd_pipeline_dir_range_en;\n\n'
-                    of.write(code_str)
-                    ####
-                    code_extern_funcs = \
-                    '#define _P4TBL_NAME_MAX_LEN        80\n' + \
-                    'extern void p4pd_' + prog_name + 'prep_p4tbl_sw_struct_sizes(void);\n' + \
-                    'extern void p4pd_' + prog_name + 'prep_p4tbl_names(void);\n' + \
-                    'extern int p4pd_'  + prog_name + 'get_max_action_id(uint32_t tableid);\n' + \
-                    'extern void p4pd_' + prog_name + 'get_action_name(uint32_t tableid, int actionid, char *action_name);\n' + \
-                    'extern char p4pd_' + prog_name + 'tbl_names[' + 'P4' + _prog_name.upper() + 'TBL_ID_TBLMAX][' + '_P4TBL_NAME_MAX_LEN];\n' + \
-                    'extern uint16_t p4pd_' + prog_name + 'tbl_swkey_size[P4' + _prog_name.upper() + 'TBL_ID_TBLMAX];\n'+ \
-                    'extern uint16_t p4pd_' + prog_name + 'tbl_sw_action_data_size[P4' + _prog_name.upper() + 'TBL_ID_TBLMAX];\n\n\n'
-                    of.write(code_extern_funcs)
                     code_str = '#endif\n\n'
                     of.write(code_str)
                     of.close()

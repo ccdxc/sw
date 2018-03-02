@@ -6,9 +6,8 @@
 #include <stdlib.h>
 
 #include "nic/include/base.h"
-#include "nic/gen/include/p4pd_table.h"
-#include "nic/gen/include/common_rxdma_actions_p4pd_table.h"
-#include "nic/gen/include/common_txdma_actions_p4pd_table.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 
 /*
@@ -22,8 +21,8 @@ p4pd_global_hwentry_query (uint32_t tableid,
                            uint32_t *hwkeymask_len,
                            uint32_t *hwactiondata_len)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         p4pd_hwentry_query(tableid, hwkey_len, hwkeymask_len, hwactiondata_len);
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
@@ -51,8 +50,8 @@ p4pd_global_entry_write (uint32_t tableid,
                          uint8_t   *hwkey_mask,
                          void      *actiondata)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         return (p4pd_entry_write(tableid, index, hwkey, hwkey_mask, actiondata));
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
@@ -80,8 +79,8 @@ p4pd_global_entry_read (uint32_t tableid,
                         void       *swkey_mask,
                         void       *actiondata)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         return (p4pd_entry_read(tableid, index, swkey, swkey_mask, actiondata));
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
@@ -108,8 +107,8 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
                                          char*      buffer,
                                          uint16_t   buf_len)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         return (p4pd_table_ds_decoded_string_get(tableid,
                 index, sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
@@ -146,8 +145,8 @@ p4pd_global_table_ds_decoded_string_get (uint32_t   tableid,
 p4pd_error_t
 p4pd_global_table_properties_get (uint32_t tableid, void *tbl_ctx)
 {
-    if ((tableid >= P4TBL_ID_TBLMIN) &&
-        (tableid <= P4TBL_ID_TBLMAX)) {
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
         return (p4pd_table_properties_get(tableid,
                 (p4pd_table_properties_t*)tbl_ctx));
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
