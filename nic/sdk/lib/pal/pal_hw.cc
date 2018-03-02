@@ -27,9 +27,9 @@ pal_mmap_regions[] = {
     }
 };
 
-inline int
-pal_virtual_addr_from_physical_addr(uint64_t phy_addr,
-                                    uint64_t *mmap_addr)
+inline pal_ret_t
+pal_hw_physical_addr_to_virtual_addr(uint64_t phy_addr,
+                                     uint64_t *virtual_addr)
 {
     uint32_t i      = 0;
     uint64_t offset = 0;
@@ -40,13 +40,35 @@ pal_virtual_addr_from_physical_addr(uint64_t phy_addr,
                        pal_mmap_regions[i].size) {
 
             offset = phy_addr - pal_mmap_regions[i].phy_addr_base;
-            *mmap_addr = pal_mmap_regions[i].virtual_addr_base + offset;
+            *virtual_addr = pal_mmap_regions[i].virtual_addr_base + offset;
 
-            return 0;
+            return PAL_RET_OK;
         }
     }
 
-    return -1;
+    return PAL_RET_NOK;
+}
+
+inline pal_ret_t
+pal_hw_virtual_addr_to_physical_addr(uint64_t virtual_addr,
+                                     uint64_t *phy_addr)
+{
+    uint32_t i      = 0;
+    uint64_t offset = 0;
+
+    for (i = 0; i < NELEMS(pal_mmap_regions); i++) {
+        if (virtual_addr >= pal_mmap_regions[i].virtual_addr_base &&
+            virtual_addr < pal_mmap_regions[i].virtual_addr_base +
+                       pal_mmap_regions[i].size) {
+
+            offset = virtual_addr - pal_mmap_regions[i].virtual_addr_base;
+            *phy_addr = pal_mmap_regions[i].phy_addr_base + offset;
+
+            return PAL_RET_OK;
+        }
+    }
+
+    return PAL_RET_NOK;
 }
 
 pal_ret_t
@@ -54,9 +76,9 @@ pal_hw_reg_read(uint64_t addr, uint32_t *data, uint32_t num_words)
 {
     uint64_t mmap_addr = 0x0;
 
-    int valid = pal_virtual_addr_from_physical_addr(addr, &mmap_addr);
+    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
 
-    if (valid == -1) {
+    if (ret != PAL_RET_OK) {
         SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
                         __FUNCTION__, addr);
         return PAL_RET_NOK;
@@ -76,9 +98,9 @@ pal_hw_reg_write(uint64_t addr, uint32_t *data, uint32_t num_words)
 {
     uint64_t mmap_addr = 0x0;
 
-    int valid = pal_virtual_addr_from_physical_addr(addr, &mmap_addr);
+    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
 
-    if (valid == -1) {
+    if (ret != PAL_RET_OK) {
         SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
                         __FUNCTION__, addr);
         return PAL_RET_NOK;
@@ -98,9 +120,9 @@ pal_hw_mem_read (uint64_t addr, uint8_t * data, uint32_t size)
 {
     uint64_t mmap_addr = 0x0;
 
-    int valid = pal_virtual_addr_from_physical_addr(addr, &mmap_addr);
+    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
 
-    if (valid == -1) {
+    if (ret != PAL_RET_OK) {
         SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
                         __FUNCTION__, addr);
         return PAL_RET_NOK;
@@ -118,9 +140,9 @@ pal_hw_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
 {
     uint64_t mmap_addr = 0x0;
 
-    int valid = pal_virtual_addr_from_physical_addr(addr, &mmap_addr);
+    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
 
-    if (valid == -1) {
+    if (ret != PAL_RET_OK) {
         SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
                         __FUNCTION__, addr);
         return PAL_RET_NOK;
@@ -142,9 +164,9 @@ pal_hw_ring_doorbell (uint64_t addr, uint64_t data)
 
     addr += 0x8000000;
 
-    int valid = pal_virtual_addr_from_physical_addr(addr, &mmap_addr);
+    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
 
-    if (valid == -1) {
+    if (ret != PAL_RET_OK) {
         SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
                         __FUNCTION__, addr);
         return PAL_RET_NOK;
@@ -196,6 +218,10 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_read = pal_hw_mem_read;
     gl_pal_info.rwvecs.mem_write = pal_hw_mem_write;
     gl_pal_info.rwvecs.ring_doorbell = pal_hw_ring_doorbell;
+    gl_pal_info.rwvecs.physical_addr_to_virtual_addr =
+                            pal_hw_physical_addr_to_virtual_addr;
+    gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
+                            pal_hw_virtual_addr_to_physical_addr;
 
     return PAL_RET_OK;
 }

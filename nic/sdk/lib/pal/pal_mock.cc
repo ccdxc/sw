@@ -8,13 +8,6 @@ namespace lib {
 
 extern pal_info_t   gl_pal_info;
 
-inline int
-pal_virtual_addr_from_physical_addr(uint64_t phy_addr,
-                                    uint64_t *mmap_addr)
-{
-    return -1;
-}
-
 pal_ret_t
 pal_mock_reg_read(uint64_t addr, uint32_t *data, uint32_t num_words)
 {
@@ -45,6 +38,22 @@ pal_mock_ring_doorbell (uint64_t addr, uint64_t data)
     return PAL_RET_OK;
 }
 
+inline pal_ret_t
+pal_mock_physical_addr_to_virtual_addr(uint64_t phy_addr,
+                                       uint64_t *virtual_addr)
+{
+    *virtual_addr = phy_addr;
+    return PAL_RET_OK;;
+}
+
+inline pal_ret_t
+pal_mock_virtual_addr_to_physical_addr(uint64_t virtual_addr,
+                                       uint64_t *phy_addr)
+{
+    *phy_addr = virtual_addr;
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_mock_init_rwvectors (void)
 {
@@ -53,6 +62,10 @@ pal_mock_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_read      = pal_mock_mem_read;
     gl_pal_info.rwvecs.mem_write     = pal_mock_mem_write;
     gl_pal_info.rwvecs.ring_doorbell = pal_mock_ring_doorbell;
+    gl_pal_info.rwvecs.physical_addr_to_virtual_addr =
+                            pal_mock_physical_addr_to_virtual_addr;
+    gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
+                            pal_mock_virtual_addr_to_physical_addr;
 
     return PAL_RET_OK;
 }

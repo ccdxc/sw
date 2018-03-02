@@ -19,6 +19,11 @@ typedef struct pal_rwvectors_s {
                              uint32_t size);
     pal_ret_t   (*ring_doorbell)(uint64_t addr, uint64_t data);
     pal_ret_t   (*step_cpu_pkt)(const uint8_t* pkt, size_t pkt_len);
+
+    pal_ret_t   (*physical_addr_to_virtual_addr)(uint64_t phy_addr,
+                                                 uint64_t *virtual_addr);
+    pal_ret_t   (*virtual_addr_to_physical_addr)(uint64_t virtual_addr,
+                                                 uint64_t *phy_addr);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {

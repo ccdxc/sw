@@ -80,5 +80,21 @@ pal_step_cpu_pkt(const uint8_t* pkt, size_t pkt_len)
     return gl_pal_info.rwvecs.step_cpu_pkt(pkt, pkt_len);
 }
 
+inline pal_ret_t
+pal_physical_addr_to_virtual_addr(uint64_t phy_addr,
+                                  uint64_t *virtual_addr)
+{
+    return gl_pal_info.rwvecs.physical_addr_to_virtual_addr(
+                                          phy_addr, virtual_addr);
+}
+
+inline pal_ret_t
+pal_virtual_addr_to_physical_addr(uint64_t virtual_addr,
+                                  uint64_t *phy_addr)
+{
+    return gl_pal_info.rwvecs.virtual_addr_to_physical_addr(
+                                      virtual_addr, phy_addr);
+}
+
 }    // namespace lib
 }    // namespace sdk
