@@ -98,4 +98,51 @@ var _ = Describe("cluster tests", func() {
 			Expect(cl.UUID).ShouldNot(BeEmpty())
 		})
 	})
+
+	Context("Failover test", func() {
+		var (
+			obj         api.ObjectMeta
+			cl          *cmd.Cluster
+			clusterIf   cmd.CmdV1ClusterInterface
+			err         error
+			oldLeader   string
+			oldLeaderIP string
+		)
+		BeforeEach(func() {
+			if ts.tu.NumQuorumNodes < 3 {
+				Skip(fmt.Sprintf("Skipping failover test: %d quorum nodes found, need >= 3", ts.tu.NumQuorumNodes))
+			}
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+			clusterIf = cmdClient.Cluster()
+			obj = api.ObjectMeta{Name: "testCluster"}
+			cl, err = clusterIf.Get(context.Background(), &obj)
+		})
+		It("Pause the master", func() {
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(cl.Status.Leader).ShouldNot(Equal(""))
+			oldLeader = cl.Status.Leader
+			oldLeaderIP = ts.tu.NameToIPMap[oldLeader]
+			By(fmt.Sprintf("Pausing cmd on old leader %v", oldLeader))
+			ts.tu.CommandOutput(oldLeaderIP, "docker pause pen-cmd")
+			Eventually(func() bool {
+				cl, err = clusterIf.Get(context.Background(), &obj)
+				if err != nil {
+					return false
+				}
+				if cl.Status.Leader == "" {
+					return false
+				}
+				if cl.Status.Leader == oldLeader {
+					return false
+				}
+				By(fmt.Sprintf("Found new leader %v", cl.Status.Leader))
+				return true
+			}, 30, 1).Should(BeTrue(), "Did not find a new leader")
+		})
+		AfterEach(func() {
+			By(fmt.Sprintf("Resuming cmd on %v", oldLeader))
+			ts.tu.CommandOutput(oldLeaderIP, "docker unpause pen-cmd")
+		})
+	})
 })
