@@ -43,9 +43,9 @@ resp_rx_rqcb1_write_back_process:
 
 skip_updates:
 
-    // stats to be called in s6/t1 from cqcb process at s5/t2 
-    // if completion is not set, then cqcb process is not called, so
-    // call stats bubble up routine
+    // stats to be called in table-3
+    // if completion is set, cqcb_process will call it
+    // if not call the stats mpu-only bubble up program from here on table-3
     bbne        k.global.flags.resp_rx._completion, 1, stats_bubble_up
 
     // if both non-first/only & completion for a send packet is set, 
@@ -89,11 +89,9 @@ completion:
 
 stats_bubble_up:
 
-    //assumption is that write back is called with table 2
-    // for stats bubble up action, just call with memory only table. need to call at stage5/table2
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
-    CAPRI_SET_FIELD(ARG_P, STATS_INFO_T, bubble_up, 1)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
+    // call stats on table-3
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
+    CAPRI_SET_TABLE_2_VALID(0)
 
 exit:
 

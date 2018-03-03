@@ -266,6 +266,7 @@ class capri_table:
         self.is_hbm = False # If table resides in HBM, it will be set to true.
                             # A pragma is used in P4 to qualify the table.
         self.is_writeback = False # True when MPU writes to table entry - need lock
+        self.is_memory_only = False
         self.is_wide_key = False
         self.is_policer = False
         self.policer_colors = 0 # 2-color/3-color
@@ -4822,6 +4823,11 @@ class capri_gress_tm:
                     # Check if table is marked as HBM table.
                     if t._parsed_pragmas and 'table_write' in t._parsed_pragmas:
                         ctable.is_writeback = True
+
+                    # Check if table is marked as mem only.. i.e. it does not perform phvwrs
+                    # so hardware does not have to wait for mpu to finish execution
+                    if t._parsed_pragmas and 'memory_only' in t._parsed_pragmas:
+                        ctable.is_memory_only = True
 
                     # Check if a hash type has been specified for the table.
                     if t._parsed_pragmas and 'policer_table' in t._parsed_pragmas:

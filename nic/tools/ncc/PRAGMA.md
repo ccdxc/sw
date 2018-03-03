@@ -40,6 +40,8 @@ Pragmas
     * table_write
     * toeplitz_key
     * toeplitz_seed
+    * num_threads <N>
+    * memory_only
 
 * Checksum
     * checksum gress

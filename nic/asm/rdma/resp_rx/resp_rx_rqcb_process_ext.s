@@ -44,7 +44,7 @@ skip_roce_opt_parsing:
 #   CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
 #   CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
-    CAPRI_GET_STAGE_6_ARG(resp_rx_phv_t, r4)
+    CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_CQPT_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 recirc_pkt:

@@ -29,7 +29,8 @@ resp_rx_inv_rkey_process:
     // update the state to FREE
     tblwr       d.state, KEY_STATE_FREE
 
-    CAPRI_SET_TABLE_3_VALID(0)
+    //Do not clear this bit - as stage-6/table-3 is used by stats
+    //CAPRI_SET_TABLE_3_VALID(0)
 
     nop.e
     nop

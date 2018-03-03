@@ -22,13 +22,12 @@ struct rqcb4_t d;
 .align
 resp_rx_stats_process:
 
-    bbne              k.args.bubble_up, 0, bubble_down_to_next_stage
-    
-    add              GLOBAL_FLAGS, r0, k.global.flags //BD slot
+    // Pin stats process to stage 7
+    mfspr            r1, spr_mpuid
+    seq              c1, r1[4:2], STAGE_7
+    bcf              [!c1], bubble_to_next_stage
 
-    //Release the PHV while updating the stats
-    CAPRI_SET_TABLE_1_VALID(0)
-    phvwrm.f         p[0], r0, 0
+    add              GLOBAL_FLAGS, r0, k.global.flags //BD slot
 
     tbladd           d.num_bytes, k.to_stage.s6.cqpt_stats.bytes
     tblmincri        d.num_pkts, MASK_32, 1
@@ -44,7 +43,7 @@ resp_rx_stats_process:
 
     bcf              [c4 | c3 | c2 | c1], done
 
-    ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND) //BDF
+    ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND) //BD Slot
     tblmincri.c6     d.num_send_msgs_imm_data, MASK_16, 1
     ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_WRITE)
     tblmincri.c6     d.num_write_msgs_imm_data, MASK_16, 1
@@ -74,27 +73,18 @@ done:
     nop.e
     nop
 
-bubble_down_to_next_stage:
-    
-    // We are here means, this is stats bubble up process at stage5/t2, now we need to
-    // call stats process at stage 6/table 1
-    // need to switch from T2 to T1 (set t2 invalid and t1 as valid) for next stage (s6)
-    CAPRI_SET_TABLE_2_VALID(0)
+bubble_to_next_stage:
+    seq           c1, r1[4:2], STAGE_6
+    bcf           [!c1], exit
 
-    // label and pc cannot be same, so calculate cur pc using bal 
-    // and compute start pc deducting the current instruction position
-    bal            STATS_PC, calculate_raw_table_pc_1
-    nop            //BD Slot
-
-calculate_raw_table_pc_1:
-    // "$" here denores releative current instruction position
-    sub            STATS_PC, STATS_PC, $
-
+    //invoke the same routine, but with valid d[]
+    //using static config, stage-7/table-3 is set as memory_only - to improve on latency
+    CAPRI_GET_TABLE_3_K(resp_rx_phv_t, r7) //BD Slot
     RQCB4_ADDR_GET(RQCB4_ADDR)
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4) // set STATS_INFO_T->bubble_up to zero
-    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, STATS_PC, RQCB4_ADDR)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RQCB4_ADDR)
 
+exit:
     nop.e
     nop
+
 

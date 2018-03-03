@@ -63,10 +63,9 @@ resp_rx_cqcb_process:
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
-    // always call stats process at stage6/table1
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, ARG_P)   // sets STATS_INFO_T->bubble_up to 0
-    RQCB4_ADDR_GET(RQCB4_ADDR)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_stats_process, RQCB4_ADDR)
+    //call stats process mpu-only at stage6/table3
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
+
 
     // increment p_index
     tblmincri       CQ_P_INDEX, d.log_num_wqes, 1

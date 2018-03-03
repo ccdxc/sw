@@ -3149,7 +3149,7 @@ def capri_te_cfg_output(stage):
 
         json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
         # compute mpu res based on threads
-        mpu_res = sum(x.num_threads for x in active_ctg)
+        mpu_res = sum(x.num_threads for x in active_ctg if not x.is_memory_only)
         json_tbl_prof['mpu_results']['value'] = str(mpu_res)
         json_tbl_prof['_modified'] = True
 
@@ -3504,6 +3504,10 @@ def capri_te_cfg_output(stage):
                 # special values (7) is used by h/w to not launch mem read operation
                 json_tbl_['lg2_entry_size']['value'] = str(7)
                 json_tbl_['axi']['value'] = str(0) # make it hbm for lg2_Entry_sz to take effect
+
+            if ct.is_memory_only:
+                json_tbl_['memory_only']['value'] = '0x1'
+            # else leave default value
 
             json_tbl_['_modified'] = True
             stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \
