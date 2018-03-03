@@ -35,7 +35,7 @@ clean:
 	@rm -fR $(OBJ_DIR)/*.bin
 
 %.bin: %.s
-	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIR) $< -o $(OBJ_DIR)/$@
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIR) $(AS_DEFINES) $< -o $(OBJ_DIR)/$@
 
 TEST_FILES := \
     $(SRC_DIR)/ctl/req_tx_sqcb_process.ctl
