@@ -14,6 +14,7 @@ selectors:
     rdmasession     :
         lqp         : filter://svc=0
         rqp         : filter://svc=0
+        base        : filter://any
 #    maxflows    : 1 
 #    maxrdmasessions     : 4 
 

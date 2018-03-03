@@ -4,6 +4,14 @@ from test.rdma.utils import *
 from infra.common.glopts import GlobalOptions
 
 def Setup(infra, module):
+    iterelem = module.iterator.Get()
+
+    module.logger.info("Iterator Selectors")
+
+    if iterelem:
+        if 'base' in iterelem.rdmasession.__dict__:
+            module.logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
+            module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
     return
 
 def Teardown(infra, module):
