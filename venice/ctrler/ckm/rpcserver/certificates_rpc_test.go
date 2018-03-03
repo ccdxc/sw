@@ -36,14 +36,14 @@ func TestCertificatesRPC(t *testing.T) {
 
 	// create RPC server
 	rpcServer, err := NewRPCServer(serverName, "localhost:0", cm)
-	defer rpcServer.rpcServer.Stop()
 	AssertOk(t, err, "Error creating RPC server")
+	defer rpcServer.rpcServer.Stop()
 	serverURL := rpcServer.GetListenURL()
 
 	// create RPC client
 	rpcClient, err := rpckit.NewRPCClient(serverName, serverURL)
-	defer rpcClient.ClientConn.Close()
 	AssertOk(t, err, "Error creating RPC client")
+	defer rpcClient.ClientConn.Close()
 	client := ckmgrpc.NewCertificatesClient(rpcClient.ClientConn)
 
 	// Fetch trust roots and compare against those in Certificate Manager
