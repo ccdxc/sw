@@ -90,6 +90,13 @@ FlowSpineEntry::form_action_data(void *action_data)
         *entry_valid = 1;
     }
     if (anchor_entry_) {
+        fmt::MemoryWriter buf;
+        uint8_t *tmp = (uint8_t *)anchor_entry_->get_data();
+        for (uint32_t i = 0; i < anchor_entry_->get_data_len(); i++, tmp++) {
+            buf.write("{:#x} ", (uint8_t)*tmp);
+        }
+        HAL_TRACE_DEBUG("Data:");
+        HAL_TRACE_DEBUG("{}", buf.c_str());
         // +1 for entry_valid. export_en + flow_index is data
         memcpy(data, anchor_entry_->get_data(), anchor_entry_->get_data_len());
     }

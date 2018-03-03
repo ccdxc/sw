@@ -5,6 +5,7 @@ meta:
     module  : enic
     feature_set:
         - iris
+        - gft
 
 id      : None  # Name of the object
 txqos   :

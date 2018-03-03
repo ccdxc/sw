@@ -42,10 +42,26 @@ class GftFlowObject(base.ConfigObjectBase):
 
         req_spec.add_in_activated_state = False
         req_spec.rdma_flow = False
-        
+
         self.trsp_profile.FillTranspositionActions(req_spec)
 
-        tts = 'GFT_TABLE_TYPE_' + self.exm_profile.table_type
+        #req_spec.redirect_to_vport_ingress_queue = False
+        #req_spec.redirect_to_vport_egress_queue = False
+        #req_spec.redirect_to_vport_ingress_queue_if_ttl_is_one = False
+        #req_spec.redirect_to_vport_egress_queue_if_ttl_is_one = False
+        #req_spec.copy_all_packets = False
+        #req_spec.copy_first_packet = False
+        #req_spec.copy_when_tcp_flag_set = False
+        #req_spec.custom_action_present = False
+        #req_spec.meta_action_before_transposition = False
+        #req_spec.copy_after_tcp_fin_flag_set = False
+        #req_spec.copy_after_tcp_rst_flag_set = False
+
+        if self.flow.SepIsRemote():
+            self.table_type = 'EXACT_MATCH_INGRESS'
+        else:
+            self.table_type = 'EXACT_MATCH_EGRESS'
+        tts = 'GFT_TABLE_TYPE_' + self.table_type
         req_spec.table_type = haldefs.gft.GftTableType.Value(tts)
         req_spec.vport_id = 0
         req_spec.redirect_vport_id = 0

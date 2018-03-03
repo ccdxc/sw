@@ -2,6 +2,7 @@ meta:
     id: QOS_CLASS
     feature_set:
         - iris
+        - gft
 
 spec:
     group: None

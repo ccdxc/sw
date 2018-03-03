@@ -155,6 +155,11 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&l2seg_svc);
         server_builder.RegisterService(&gft_svc);
         server_builder.RegisterService(&system_svc);
+        // Revisit. DOL was not able to create Lif without qos class
+        server_builder.RegisterService(&qos_svc);
+        // Revisit. DOL was not able to create Tenant with security profile.
+        server_builder.RegisterService(&nwsec_svc);     
+        server_builder.RegisterService(&endpoint_svc);
     }
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());

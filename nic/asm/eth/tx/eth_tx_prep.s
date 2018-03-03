@@ -25,7 +25,11 @@ eth_tx_prep:
 #endif
 
   // Set intrinsics
+#ifndef GFT
   phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_INGRESS
+#else
+  phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_EGRESS
+#endif
 
   // Setup DMA CMD PTR
   phvwr           p.p4_txdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET

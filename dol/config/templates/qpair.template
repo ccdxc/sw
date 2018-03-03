@@ -3,4 +3,5 @@ meta:
     id: QPAIR
     feature_set:
         - iris
+        - gft
 

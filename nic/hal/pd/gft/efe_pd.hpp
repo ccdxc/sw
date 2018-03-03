@@ -12,7 +12,6 @@ namespace hal {
 namespace pd {
 
 typedef struct gft_flow_hash_data_s {
-     uint8_t     export_en:1;
      uint16_t    flow_index;
      uint16_t    policer_index;
  } __PACK__ gft_flow_hash_data_t;

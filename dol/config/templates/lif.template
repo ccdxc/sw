@@ -5,6 +5,7 @@ meta:
     module  : lif
     feature_set:
         - iris
+        - gft
 
 id      : None  # LIF ID
 macaddr : None  # Mac Address

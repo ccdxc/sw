@@ -29,21 +29,18 @@ modules:
 
     - module:
         name    : IPV4_UDP_UTAG
-        ignore  : True
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=GFT
               segment : filter://native=True
 
     - module:
         name    : IPV4_TCP_UTAG
-        ignore  : True
         iterate :
             - flow    : filter://type=IPV4,proto=TCP,label=GFT
               segment : filter://native=True
 
     - module:
         name    : IPV4_ICMP_UTAG
-        ignore  : True
         iterate :
             - flow    : filter://type=IPV4,proto=ICMP,label=GFT
               segment : filter://native=True

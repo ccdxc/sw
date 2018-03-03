@@ -4,6 +4,7 @@ meta:
     size    : None
     feature_set:
         - iris
+        - gft
 
 address:
     bits_update : None

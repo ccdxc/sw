@@ -150,12 +150,14 @@ static hal_ret_t
 pd_enicif_program_hw (pd_enicif_t *pd_enicif)
 {
     hal_ret_t   ret     = HAL_RET_OK;
+#if 0
     if_t        *hal_if = (if_t *)pd_enicif->pi_if;
 
     if (hal_if->enic_type != intf::IF_ENIC_TYPE_GFT) {
         HAL_TRACE_ERR("invalid enicif type {} in GFT", hal_if->enic_type);
         goto end;
     }
+#endif
 
     ret = pd_enicif_pgm_rx_vport(pd_enicif, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {

@@ -5,6 +5,7 @@ meta:
     module  : segment
     feature_set:
         - iris
+        - gft
 
 id      : None # Segment Local ID
 spec    : None # (REF) Segment Spec Object

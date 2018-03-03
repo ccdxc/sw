@@ -5,6 +5,7 @@ meta:
     module  : uplink
     feature_set:
         - iris
+        - gft
 
 id      : None  # Name of the object
 port    : None  # Port Number of the object

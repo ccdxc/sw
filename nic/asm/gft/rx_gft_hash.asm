@@ -17,7 +17,7 @@ rx_gft_hash_info:
 
     // copy flow index (12 bits) to the top bits of ethernet src address
     // for packet verification
-    phvwr       p.ethernet_1_srcAddr[47:36], d.rx_gft_hash_info_d.flow_index
+    // phvwr       p.ethernet_1_srcAddr[47:36], d.rx_gft_hash_info_d.flow_index
 
     // copy hint only if is non-zero
     sne         c1, d.rx_gft_hash_info_d.hint9, r0

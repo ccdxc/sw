@@ -1,32 +1,36 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/include/hal_lock.hpp"
-#include "nic/hal/pd/gft/gft_state.hpp"
-#include "nic/hal/pd/gft/emp_pd.hpp"
-#include "nic/hal/pd/gft/pd_utils.hpp"
+#include "nic/hal/src/eth.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/interface_api.hpp"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/hal/src/eth.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/gft/emp_pd.hpp"
+#include "nic/hal/pd/gft/pd_utils.hpp"
+#include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/p4/gft/include/defines.h"
+#include "nic/include/interface_api.hpp"
 
 
 namespace hal {
 namespace pd {
 
-static pd_gft_emp_t *emp_pd_alloc ();
-static pd_gft_emp_t *emp_pd_init (pd_gft_emp_t *emp);
-static pd_gft_emp_t *emp_pd_alloc_init ();
-static hal_ret_t emp_pd_free (pd_gft_emp_t *emp);
-static hal_ret_t emp_pd_mem_free (pd_gft_emp_t *emp);
+//-----------------------------------------------------------------------------
+// Function Prototypes
+//-----------------------------------------------------------------------------
+static pd_gft_emp_t *emp_pd_alloc();
+static pd_gft_emp_t *emp_pd_init(pd_gft_emp_t *emp);
+static pd_gft_emp_t *emp_pd_alloc_init();
+static hal_ret_t emp_pd_free(pd_gft_emp_t *emp);
+static hal_ret_t emp_pd_mem_free(pd_gft_emp_t *emp);
 static hal_ret_t emp_pd_alloc_res(pd_gft_emp_t *pd_emp, 
                                   pd_gft_exact_match_profile_args_t *args);
 static hal_ret_t emp_pd_program_hw(pd_gft_emp_t *pd_emp);
 static hal_ret_t emp_pd_deprogram_hw (pd_gft_emp_t *pd_emp);
 
-static void link_pi_pd(pd_gft_emp_t *pd_emp, gft_exact_match_profile_t *pi_emp);
-static void delink_pi_pd(pd_gft_emp_t *pd_emp, gft_exact_match_profile_t *pi_emp);
+static void link_pi_pd(pd_gft_emp_t *pd_emp, 
+                       gft_exact_match_profile_t *pi_emp);
+static void delink_pi_pd(pd_gft_emp_t *pd_emp, 
+                         gft_exact_match_profile_t *pi_emp);
 static hal_ret_t emp_pd_cleanup(pd_gft_emp_t *emp_pd);
 static hal_ret_t pd_emp_make_clone(gft_exact_match_profile_t *emp, 
                                    gft_exact_match_profile_t *clone);
@@ -42,7 +46,7 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;
     pd_gft_emp_t         *pd_gft_emp = NULL;
 
-    // Create emp PD
+    // Alloc memory
     pd_gft_emp = emp_pd_alloc_init();
     if (pd_gft_emp == NULL) {
         ret = HAL_RET_OOM;
@@ -95,7 +99,8 @@ pd_gft_exact_match_profile_delete (pd_gft_exact_match_profile_args_t *args)
 // Allocate resources for PD EMP
 //-----------------------------------------------------------------------------
 static hal_ret_t 
-emp_pd_alloc_res(pd_gft_emp_t *pd_gft_emp, pd_gft_exact_match_profile_args_t *args)
+emp_pd_alloc_res (pd_gft_emp_t *pd_gft_emp, 
+                  pd_gft_exact_match_profile_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;
     
@@ -106,7 +111,7 @@ emp_pd_alloc_res(pd_gft_emp_t *pd_gft_emp, pd_gft_exact_match_profile_args_t *ar
 // De-Allocate resources. 
 //-----------------------------------------------------------------------------
 static hal_ret_t
-emp_pd_dealloc_res(pd_gft_emp_t *emp_pd)
+emp_pd_dealloc_res (pd_gft_emp_t *emp_pd)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
@@ -124,7 +129,7 @@ emp_pd_dealloc_res(pd_gft_emp_t *emp_pd)
 //        to others.
 //-----------------------------------------------------------------------------
 static hal_ret_t
-emp_pd_cleanup(pd_gft_emp_t *emp_pd)
+emp_pd_cleanup (pd_gft_emp_t *emp_pd)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -224,7 +229,6 @@ emp_pd_program_hw (pd_gft_emp_t *pd_gft_emp)
             goto end;
         }
     }
-
     
 end:
     return ret;
@@ -485,7 +489,6 @@ emp_pd_rx_keys_program_hw (pd_gft_emp_t *pd_gft_emp)
 
 end:
     return ret;
-
 }
 
 #define TX_KEY_LAYER_FORM_KEY_DATA(LAYER)                                   \

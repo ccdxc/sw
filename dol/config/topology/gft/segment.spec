@@ -10,5 +10,5 @@ l4lb        : False
 endpoints   :
     useg    : 0
     pvlan   : 0
-    direct  : 0
+    direct  : 2
     remote  : 2 # Remote TEPs

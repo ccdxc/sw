@@ -5,6 +5,7 @@ meta:
     module  : security_profile
     feature_set:
         - iris
+        - gft
 
 fields:
     cnxn_tracking_en: 0

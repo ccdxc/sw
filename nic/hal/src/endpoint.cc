@@ -742,6 +742,7 @@ end:
     // TODO: Free up ip_entry and l3_entry
 
     ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
+    HAL_TRACE_DEBUG("ret:{}", ret);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }

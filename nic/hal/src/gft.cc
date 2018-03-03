@@ -1424,7 +1424,7 @@ end:
             buf.write("SMac: {} ", macaddr2str(VAR->eth_fields.smac));      \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_DST_MAC_ADDR) {                  \
-            buf.write("DMac: {} ", macaddr2str(VAR->eth_fields.smac));      \
+            buf.write("DMac: {} ", macaddr2str(VAR->eth_fields.dmac));      \
         }                                                                   \
         if (VAR->fields & GFT_HEADER_FIELD_ETH_TYPE) {                      \
             buf.write("EthType: {} ", VAR->eth_fields.eth_type);            \

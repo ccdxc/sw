@@ -16,5 +16,10 @@ pd_qos_class_get_admin_cos (pd_qos_class_get_admin_cos_args_t *args)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+pd_qos_class_get_qos_class_id (pd_qos_class_get_qos_class_id_args_t *q_args)
+{
+    return HAL_RET_OK;
+}
 }    // namespace pd
 }    // namespace hal

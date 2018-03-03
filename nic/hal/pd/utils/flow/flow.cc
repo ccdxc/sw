@@ -90,6 +90,12 @@ Flow::Flow(std::string table_name, uint32_t table_id,
 
     // round off to higher byte
     hwkey_len_ = (hwkey_len_ >> 3) + ((hwkey_len_ & 0x7) ? 1 : 0);
+    if (hwkey_len_ * 8 > 512) { 
+        if (hwkey_len_ % 64) {
+            hwkey_len_ +=  (64 - (hwkey_len_ % 64));
+        }
+    }
+
     hwdata_len_ = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
 
     // Len in sw data structure. Its being generated as multiples of 16.
@@ -229,8 +235,8 @@ Flow::insert(void *key, void *data, uint32_t *index)
     rs = alloc_flow_entry_index_(&fe_idx);
     if (rs != HAL_RET_OK) goto end;
 
-    HAL_TRACE_DEBUG("Flow::{}: Insert flow_entry_pi_idx: {} ", 
-                    __FUNCTION__, fe_idx);
+    HAL_TRACE_DEBUG("Flow::{}: Insert flow_entry_pi_idx: {} for tbl_id:{}", 
+                    __FUNCTION__, fe_idx, table_id_);
 
     // create a flow entry
     // entry = new FlowEntry(key, key_len_, data, data_len_, hwkey_len_, true);

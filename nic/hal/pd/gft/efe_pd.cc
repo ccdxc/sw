@@ -1,20 +1,21 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/include/hal_lock.hpp"
-#include "nic/hal/pd/gft/gft_state.hpp"
-#include "nic/hal/pd/gft/efe_pd.hpp"
-#include "nic/hal/src/proxy.hpp"
-#include "nic/include/pd_api.hpp"
-#include "nic/include/interface_api.hpp"
-#include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/eth.hpp"
-#include "nic/p4/gft/include/defines.h"
+#include "nic/hal/src/proxy.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/gft/efe_pd.hpp"
 #include "nic/hal/pd/gft/pd_utils.hpp"
+#include "nic/hal/pd/gft/gft_state.hpp"
+#include "nic/p4/gft/include/defines.h"
+#include "nic/include/interface_api.hpp"
 
 
 namespace hal {
 namespace pd {
 
+//-----------------------------------------------------------------------------
+// Function Prototypes
+//-----------------------------------------------------------------------------
 static pd_gft_efe_t *efe_pd_alloc ();
 static pd_gft_efe_t *efe_pd_init (pd_gft_efe_t *efe);
 static pd_gft_efe_t *efe_pd_alloc_init ();
@@ -1373,9 +1374,13 @@ efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
 
     // Populate data
     data.flow_index = pd_gft_efe->flow_idx;
-    data.policer_index = pd_gft_efe->policer_idx;
+    data.policer_index = 0xABCD;
+    // data.flow_index = htons(pd_gft_efe->flow_idx);
+    // data.policer_index = pd_gft_efe->policer_idx;
+    // data.policer_index = htons(0xABCD);
 
-    ret = g_hal_state_pd->flow_table()->insert(&gft_key, 
+
+    ret = g_hal_state_pd->tx_flow_table()->insert(&gft_key, 
                                                &data,
                                                &pd_gft_efe->flow_table_idx);
     if (ret != HAL_RET_OK) {

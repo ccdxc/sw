@@ -5,6 +5,8 @@
 struct tx_fixup_k k;
 struct phv_ p;
 
+#define TXDMA_SZ (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ + P4PLUS_TO_P4_HDR_SZ)
+
 %%
 
 tx_fixup:
@@ -16,9 +18,9 @@ tx_fixup:
     seq             c4, k.ipv6_1_valid, TRUE
 
     seq             c1, k.ctag_1_valid, TRUE
-    cmov            r1, c1, 18, 14
-    sub             r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
-                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
+    cmov            r1, c1, (18 + TXDMA_SZ), (14 + TXDMA_SZ)
+    sub             r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, \
+                        capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
     sub.c3          r2, r1, k.ipv4_1_ihl, 2
     sub.c4          r2, r1, 40
 
@@ -52,8 +54,8 @@ tx_fixup_upd_tcp_seq:
     phvwr.c3        p.ipv4_1_csum, TRUE
 
     // set compute_icrc flag (rdma)
-    // TDB: seq             c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
-    seq             c1, k.udp_1_valid, TRUE
+    seq             c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    // seq             c1, k.udp_1_valid, TRUE
     bcf             [!c1], tx_fixup_rdma_done
     .assert(offsetof(p, roce_bth_1_icrc) - offsetof(p, udp_1_icrc) == 10)
     phvwrmi.c1      p.{roce_bth_1_icrc...udp_1_icrc}, 0xFFFF, 0x401

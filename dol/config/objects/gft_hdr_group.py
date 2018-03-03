@@ -71,12 +71,12 @@ class GftHeaderGroupObject(base.ConfigObjectBase):
                 req_spec.encap_or_transport.udp_fields.sport = flow.sport
             else:
                 assert(0)
-                
+
         if self.fields.dst_port:
             if flow.IsTCP():
                 req_spec.encap_or_transport.tcp_fields.dport = flow.dport
             elif flow.IsUDP():
-                req_spec.encap_or_transport.udp_fields.sport = flow.sport
+                req_spec.encap_or_transport.udp_fields.dport = flow.dport
             else:
                 assert(0)
 

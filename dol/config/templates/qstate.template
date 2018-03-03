@@ -3,4 +3,5 @@ meta:
     id: QSTATE
     feature_set:
         - iris
+        - gft
 

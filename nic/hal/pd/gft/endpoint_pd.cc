@@ -231,7 +231,8 @@ ep_pd_pgm_tx_vport (pd_ep_t *pd_ep, table_oper_t oper)
     memset(mask.flow_action_metadata_tx_ethernet_dst_mask, 0xFF, 6);
 
     if_get_hw_lif_id(pi_if, &hw_lif_id);
-    data.tx_vport_action_u.tx_vport_tx_vport.port = hw_lif_id;
+    // data.tx_vport_action_u.tx_vport_tx_vport.port = hw_lif_id;
+    data.tx_vport_action_u.tx_vport_tx_vport.port = uplinkif_get_port_num(pi_if);
     // TODO: Take it from config
     // data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 1;
 
