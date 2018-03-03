@@ -40,8 +40,8 @@ func TestSOAP(t *testing.T) {
 		c := counts[m.Property]
 		counts[m.Property] = c + 1
 
-		if counts[defs.HostPropConfig] == 1 &&
-			counts[defs.VMPropConfig] == 2 {
+		if counts[defs.HostPropConfig] >= 1 &&
+			counts[defs.VMPropConfig] >= 2 {
 			if !stopped {
 				stopped = true
 				vcp.Stop()
