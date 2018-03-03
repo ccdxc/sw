@@ -55,7 +55,7 @@ func TestMemdbAddDelete(t *testing.T) {
 	Assert(t, (len(objs) == 1), "List returned incorrect number of objs", objs)
 	Assert(t, (objs[0].GetObjectMeta().Name == obj.Name), "Got invalid object", objs)
 
-	// verify we cant update an object that doesnt esist
+	// verify we can't update an object that doesn't exist
 	newObj := obj
 	newObj.Name = "testName2"
 	err = md.UpdateObject(&newObj)
@@ -247,4 +247,52 @@ func TestMemdbConcurrency(t *testing.T) {
 	// verify all of them were deleted
 	objs = md.ListObjects("testObj")
 	Assert(t, (len(objs) == 0), "Some objects were not deleted", objs)
+}
+
+func TestStopWatchObjects(t *testing.T) {
+	numWatchers := 10
+
+	// create a new memdb
+	md := NewMemdb()
+
+	// test object
+	obj := testObj{
+		TypeMeta: api.TypeMeta{Kind: "testObj"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "tenant",
+			Name:   "testName",
+		},
+		field: "testField",
+	}
+
+	// setup watchers
+	watchers := map[int]chan Event{}
+	for i := 0; i < numWatchers; i++ {
+		watchers[i] = make(chan Event, 2)
+		err := md.WatchObjects("testObj", watchers[i])
+		AssertOk(t, err, "Error creating watcher")
+	}
+	err := md.AddObject(&obj)
+	AssertOk(t, err, "error creating object")
+
+	for _, w := range watchers {
+		_ = waitForWatch(t, w, CreateEvent)
+	}
+
+	for i := 0; i < numWatchers; i++ {
+		md.StopWatchObjects(obj.GetKind(), watchers[i])
+		delete(watchers, i)
+		storedObj := md.getObjdb(obj.GetKind())
+		// check number of channels
+		Assert(t, len(storedObj.watchers) == (numWatchers-i-1),
+			fmt.Sprintf("mismatch in number of watchers, expected %d (got %d) %+v",
+				numWatchers-i-1, len(storedObj.watchers), storedObj))
+
+		err := md.UpdateObject(&obj)
+		AssertOk(t, err, "error updating object")
+
+		for _, w := range watchers {
+			_ = waitForWatch(t, w, UpdateEvent)
+		}
+	}
 }
