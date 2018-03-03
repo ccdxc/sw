@@ -131,6 +131,17 @@ def write_mem (addr, data, size):
             error_exit()
     return
 
+def write_mem_pcie (addr, data, size):
+    socket = zmq_connect()
+    buff = pack('iiiiiiiQ', 24, size, 0, 0, 0, 0, 0, addr) + data
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    return
+
 def step_doorbell(addr, data):
     socket = zmq_connect()
     buff = pack('iiiiiiiQQ', 6, 0, 0, 0, 0, 0, 0, addr, data)

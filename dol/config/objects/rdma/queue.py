@@ -309,7 +309,7 @@ class RdmaQstateObject(object):
     def Write(self):
         if (GlobalOptions.dryrun): return
         cfglogger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
-        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
 
     def Read(self):
         if (GlobalOptions.dryrun):

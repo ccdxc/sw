@@ -269,6 +269,40 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 }
 
 
+bool write_mem_pcie (uint64_t addr, uint8_t * data, uint32_t size)
+{
+    int rc;
+     // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
+    char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
+    buffer_hdr_t *buff;
+
+    if (__lmodel_env)
+        return true;
+    buff = (buffer_hdr_t *) buffer;
+    buff->type = BUFF_TYPE_MEM_WRITE_PCIE;
+    buff->addr = addr;
+    buff->size = size;
+    memcpy(buff->data, data, size);
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
+
+    if (!__write_verify_enable)
+        return true;
+
+    uint8_t obuff[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
+    read_mem(addr, obuff, size);
+    if (memcmp(obuff, data, size))
+        assert(0);
+
+    return true;
+}
+
+
+
 bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 {
     int rc;

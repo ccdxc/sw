@@ -32,6 +32,7 @@ typedef enum buff_type_e_ {
     BUFF_TYPE_TESTCASE_BEGIN = 21,
     BUFF_TYPE_TESTCASE_END = 22,
     BUFF_TYPE_EOS_IGNORE_ADDR = 23,
+    BUFF_TYPE_MEM_WRITE_PCIE = 24,
 } buff_type_e;
 
 typedef struct buffer_port_s_ {

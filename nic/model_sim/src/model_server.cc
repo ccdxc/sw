@@ -196,6 +196,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         }
             break;
         case BUFF_TYPE_MEM_WRITE:
+        case BUFF_TYPE_MEM_WRITE_PCIE:
         {
             uint64_t addr = buff->addr;
             bool ret = env->write_mem(addr, buff->data, buff->size);
