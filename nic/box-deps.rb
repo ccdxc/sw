@@ -32,6 +32,10 @@ PIP3_PACKAGES = %w[
   zmq
   cmd2
   bitstring
+  PyOpenSSL
+  pysendfile
+  pyftpdlib
+  tftpy 
 ]
 
 PACKAGES = %w[
@@ -259,7 +263,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.13"
+tag "pensando/nic:1.14"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
