@@ -276,3 +276,7 @@ required = ["github.com/GeertJohan/go.rice",
     name = "github.com/pensando/grpc-gateway"
     unused-packages = false
     non-go = false
+
+[[constraint]]
+  name = "github.com/patrickmn/go-cache"
+  version = "2.1.0"
