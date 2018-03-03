@@ -67,6 +67,7 @@ skip_poll_success:
     //DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, SQ_C_INDEX, r2, r3)
 
     SQCB1_ADDR_GET(r1)
+    //It is assumed that hdr_template_inline flag is passed untouched to next table-3.
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r1)
  
     bbeq          d.retry_timer_on, 1, exit

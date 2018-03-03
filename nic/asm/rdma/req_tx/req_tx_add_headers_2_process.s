@@ -29,14 +29,22 @@ req_tx_add_headers_2_process:
     // dma_cmd[0] : addr3 - p4plus_to_p4_header
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, p4plus_to_p4, p4plus_to_p4, 2);
   
-    #c3 - UD service. Needed only for send & send_imm
+    #for inline data, to save on latency, hdr_template is streamed thru PHV rather than
+    #from HBM. 
+    bbeq           k.args.hdr_template_inline, 1, hdr_template_inline
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE) //BD slot
+
+    //transfer hdr_template from HBM(memory)
+    sll            r3, k.args.header_template_addr, HDR_TEMP_ADDR_SHIFT
+    DMA_HBM_MEM2PKT_SETUP(r6, k.args.header_template_size, r3)
+    b              hdr_template_done
+    seq            c3, k.args.service, RDMA_SERV_TYPE_UD //BD Slot
+
+hdr_template_inline:
+    DMA_PHV2PKT_START_LEN_SETUP(r6, r3, pad1, k.args.header_template_size);
     seq            c3, k.args.service, RDMA_SERV_TYPE_UD
 
-    //For UD, ah_handle comes in send req.
-    sll            r3, k.args.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    // dma_cmd[1] - header_template
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_HEADER_TEMPLATE)
-    DMA_HBM_MEM2PKT_SETUP(r6, k.args.header_template_size, r3)
+hdr_template_done:
 
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
     // dma_cmd[2] : addr2 - deth only if it is UD service (bth setup in add_headers_process)

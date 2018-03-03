@@ -24,6 +24,7 @@ struct rdma_stage0_table_k k;
     .param    req_tx_write_back_process
     .param    req_tx_sqcb1_cnp_process
     .param    req_tx_sqcb1_dcqcn_addr_fetch_process
+    .param    req_tx_sqcb1_hdr_template_addr_fetch_process
 
 .align
 req_tx_sqcb_process:
@@ -54,7 +55,7 @@ req_tx_sqcb_process:
     nop
 
     .brcase        SQ_RING_ID
-        // reset sched_eval_done 
+
         bbeq           d.poll_in_progress, 1, poll_for_work
 
         crestore [c2,c1], d.{busy...cb1_busy}, 0x3 //BD Slot
@@ -66,6 +67,7 @@ req_tx_sqcb_process:
                                   CAPRI_TABLE_SIZE_512_BITS,
                                   req_tx_sqcb1_dcqcn_addr_fetch_process,
                                   r1)
+
 process_send:
         bbeq           d.need_credits, 1, exit
                               
@@ -83,6 +85,16 @@ process_send:
         
 poll_for_work:
 
+        //Remove this piece with a simple copy from sqcb0 to to_stage when there is room
+        //in sqcb0. Also remove the called function
+        //Load sqcb1 to fetch hdr_template_addr 
+        add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES //Branch Delay Slot
+        CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS,
+                                  CAPRI_TABLE_SIZE_512_BITS,
+                                  req_tx_sqcb1_hdr_template_addr_fetch_process,
+                                  r1)
+
+        // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
 
         // Use speculative cindex to checkout wqe and start processing if SQCB

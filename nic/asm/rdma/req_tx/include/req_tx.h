@@ -286,4 +286,8 @@ struct req_tx_bktrack_sqcb1_write_back_process_k_t {
     struct phv_global_common_t global;
 };
 
+struct req_tx_hdr_template_t {
+    data: 512;
+};
+
 #endif //__REQ_TX_H

@@ -18,6 +18,7 @@ struct req_tx_add_headers_process_k_t k;
 %%
     .param rdma_num_clock_ticks_per_us
     .param req_tx_write_back_process
+    .param req_tx_load_hdr_template_process
 
 .align
 req_tx_dcqcn_enforce_process:
@@ -91,8 +92,14 @@ ring_dcqcn_doorbell:
 load_write_back:            
     // DCQCN rate-enforcement passed. Load stage 5 for write-back
     SQCB0_ADDR_GET(r2)
+    //It is assumed that hdr_template_inline flag is passed untouched to next table-3.
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
 
+    bbne          k.args.hdr_template_inline, 1, skip_hdr_template_inline
+    sll           r2, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT //BD slot
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_hdr_template_process, r2)
+
+skip_hdr_template_inline:
     nop.e
     nop
 

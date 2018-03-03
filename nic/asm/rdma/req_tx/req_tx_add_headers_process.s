@@ -381,6 +381,7 @@ cb1_byte_update:
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, ADD_HDR_T, service, d.service) 
+    CAPRI_SET_FIELD(r7, ADD_HDR_T, hdr_template_inline, k.args.hdr_template_inline) 
     CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_addr, r1)
     CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_size, r2)
     CAPRI_SET_FIELD_RANGE(r7, ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable,

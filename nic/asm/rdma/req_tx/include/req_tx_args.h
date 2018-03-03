@@ -102,6 +102,8 @@ struct req_tx_rrqwqe_to_hdr_info_t {
 };
 
 struct req_tx_sqcb_write_back_info_t {
+    //keep this variable same as in req_tx_add_hdr_info_t
+    hdr_template_inline          : 1;
     busy                         : 1;
     in_progress                  : 1;
     //keep op_type...first contiguous
@@ -112,7 +114,7 @@ struct req_tx_sqcb_write_back_info_t {
     set_li_fence                 : 1;
     empty_rrq_bktrack            : 1;
     release_cb1_busy             : 1;
-    num_sges                     : 8;
+    num_sges                     : 7;
     current_sge_id               : 8;
     current_sge_offset           : 32;
     sq_c_index                   : 16;
@@ -127,12 +129,14 @@ struct req_tx_sqcb_write_back_info_t {
 };
 
 struct req_tx_add_hdr_info_t {
+    //keep this variable same as in req_tx_sqcb_write_back_info_t
+    hdr_template_inline  : 1;
     service              : 4;
     header_template_addr : 32;
     header_template_size : 8;
     roce_opt_ts_enable   : 1;
     roce_opt_mss_enable  : 1;
-    pad                  : 114;
+    pad                  : 113;
 };
 
 // Note: Do not change the order of log_pmtu to num_sges as

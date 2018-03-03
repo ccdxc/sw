@@ -226,6 +226,7 @@ inline_data:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
+    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, hdr_template_inline, 1)
     // should work for both send/write as imm_data is located at same offset in wqe for both operations
     CAPRI_SET_FIELD_RANGE(r7, RRQWQE_TO_HDR_T, op.send_wr.imm_data, op.send_wr.inv_key, d.{send.imm_data...send.inv_key})
     CAPRI_SET_FIELD_C(r7, RRQWQE_TO_HDR_T, op.send_wr.ah_handle, r2, c1)
