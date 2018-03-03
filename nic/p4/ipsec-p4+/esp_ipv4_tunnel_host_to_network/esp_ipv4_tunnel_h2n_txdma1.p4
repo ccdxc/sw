@@ -6,6 +6,7 @@
 #define tx_table_s1_t1_action allocate_barco_req_pindex 
 
 #define tx_table_s2_t0_action ipsec_encap_txdma_load_head_desc_int_header 
+#define tx_table_s2_t1_action ipsec_encap_txdma_load_head_desc_int_header2 
 
 #define tx_table_s3_t0_action ipsec_write_barco_req
 
@@ -239,6 +240,28 @@ action ipsec_get_barco_req_index_ptr(barco_req_index_address)
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, txdma1_global.ipsec_cb_addr);
     modify_field(p4plus2p4_hdr.table2_valid, 0);
+}
+
+//stage 2 - table0
+action ipsec_encap_txdma_load_head_desc_int_header2(in_desc, out_desc, in_page, out_page,
+                                                   ipsec_cb_index, headroom, 
+                                                   tailroom, headroom_offset,
+                                                   tailroom_offset, payload_start,
+                                                   buf_size, payload_size, pad_size, l4_protocol)
+{
+    IPSEC_INT_HDR_SCRATCH
+    IPSEC_TXDMA1_S2S1_SCRATCH_INIT
+    modify_field(barco_req.input_list_address, in_desc);
+    modify_field(barco_req.output_list_address, out_desc);
+    modify_field(barco_req.iv_address, in_page);
+
+    modify_field(p4plus2p4_hdr.table0_valid, 1);
+    modify_field(common_te0_phv.table_pc, 0);
+    modify_field(common_te0_phv.table_raw_table_size, 3);
+    modify_field(common_te0_phv.table_lock_en, 0);
+    modify_field(common_te0_phv.table_addr, txdma1_global.ipsec_cb_addr);
+
+    modify_field(scratch_to_s2.barco_req_addr, ipsec_to_stage2.barco_req_addr);
 }
 
 //stage 2 - table0

@@ -39,10 +39,7 @@ esp_ipv4_tunnel_h2n_dma_cmd_incr_barco_pindex:
     tbladd d.barco_pindex, 1
     phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET 
     tbland d.barco_pindex, 0x3F
-    phvwri p.app_header_table0_valid, 0
-    phvwri p.app_header_table1_valid, 0
-    phvwri p.app_header_table2_valid, 0
-    phvwri p.app_header_table3_valid, 0
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_do_nothing:
     nop.e
