@@ -159,7 +159,7 @@ int main(int argc, char**argv) {
       run_local_e2e_tests = true;
       run_comp_tests = true;
       run_xts_tests = true;
-      run_rdma_tests = true;
+      run_rdma_tests = false;
       run_xts_perf_tests = false;
       run_pdma_tests = true;
   } else if (FLAGS_test_group == "unit") {
