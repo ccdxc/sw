@@ -689,6 +689,17 @@ modules:
               segment   : filter://native=True
 
     - module:
+        name    : UL_TO_HOST_BYPASS_BARCO_MULTI_PACKET
+        spec    : uplink_to_host_multi.testspec
+        module  : pkt_to_p4
+        rtl     : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_pkts : 10
+            snd_cwnd : 10
+
+    - module:
         name    : HOST_TO_UL_BYPASS_BARCO_SAME_FLOW
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
@@ -733,6 +744,17 @@ modules:
               segment   : filter://native=False
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=True
+
+    - module:
+        name    : HOST_TO_UL_BYPASS_BARCO_MULTI_PACKET
+        spec    : host_to_uplink_multi.testspec
+        module  : pkt_to_p4
+        rtl     : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_pkts : 10
+            snd_cwnd : 10
 
     - module:
         name    : PKT_TO_SESQ
