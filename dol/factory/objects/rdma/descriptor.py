@@ -283,7 +283,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         if self.mem_handle:
             resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
         else:
-            model_wrap.write_mem_pcie(self.address, bytes(desc), len(desc))
+            model_wrap.write_mem(self.address, bytes(desc), len(desc))
 
         self.Read()
 
@@ -408,7 +408,7 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         if self.mem_handle:
             resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
         else:
-            model_wrap.write_mem_pcie(self.address, bytes(desc), len(desc))
+            model_wrap.write_mem(self.address, bytes(desc), len(desc))
 
         self.Read()
 

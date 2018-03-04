@@ -38,7 +38,9 @@ write_back:
     //set poll_success to 1 and poll_in_progress to 0
     tblwr         d.{poll_success...poll_in_progress}, 0x2 
     tblmincri.c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1
-#ifndef RTL
+#ifdef CAPRI_IGNORE_TIMESTAMP
+#else
+    #on non-RTL
     #in case of standalone model, DOL would not have incremented pindex
     #upon success in polling, do it in the program
     tblmincri.c1  SQ_P_INDEX, d.log_num_wqes, 1

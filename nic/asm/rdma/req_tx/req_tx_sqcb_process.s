@@ -419,7 +419,10 @@ sq_bktrack2:
         tblwr.c4 d.poll_in_progress, 1 //BD Slot
 
         tblwr.c2 d.poll_success, 0
-#ifndef RTL
+
+#ifdef CAPRI_IGNORE_TIMESTAMP
+#else
+        #on non-RTL
         #in case of previous unsuccessful spurious event, poll_in_progress might be set to 1, clear it
         tblwr    d.poll_in_progress, 0
 #endif
