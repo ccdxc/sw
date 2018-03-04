@@ -17,6 +17,10 @@ hal_ret_t pd_oif_list_add_oif(pd_oif_list_add_oif_args_t *args)
 {
     return HAL_RET_OK;
 }
+hal_ret_t pd_oif_list_add_qp_oif(pd_oif_list_add_qp_oif_args_t *args)
+{
+    return HAL_RET_OK;
+}
 }    // namespace pd
 }    // namespace hal
 

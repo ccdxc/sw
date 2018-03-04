@@ -107,7 +107,6 @@ static sram_lif_entry_t g_sram_lif_entry[MAX_LIFS];
 hal_ret_t
 rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
 {
-#ifndef GFT
     hal_ret_t   ret;
 
 	hal::pd::pd_rxdma_table_entry_add_args_s rx_args;
@@ -148,7 +147,6 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
         HAL_ASSERT(0);
         return ret;
     }
-#endif
 
     memcpy(&g_sram_lif_entry[lif], entry_p, sizeof(sram_lif_entry_t));
 

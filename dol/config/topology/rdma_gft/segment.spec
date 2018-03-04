@@ -9,8 +9,8 @@ multicast   : drop
 l4lb        : True
 endpoints   :
     useg    : 0
-    pvlan   : 2
-    direct  : 0
+    pvlan   : 0
+    direct  : 2
     remote  : 4 # Remote TEPs
     rdma:
         pd      : ref://store/specs/id=PD_RDMA
