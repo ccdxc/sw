@@ -211,7 +211,8 @@
         },
         {
             "name": "rdma",
-            "size_kb": 131072
+            "size_kb": 131072,
+            "cache": "p4plus-both"
         },
         {
             "name": "rdma-atomic-resource-addr",

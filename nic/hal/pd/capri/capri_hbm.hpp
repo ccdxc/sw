@@ -28,8 +28,9 @@ typedef enum capri_hbm_cache_pipe_s {
     CAPRI_HBM_CACHE_PIPE_P4IG       = 1,
     CAPRI_HBM_CACHE_PIPE_P4EG       = 2,
     CAPRI_HBM_CACHE_PIPE_P4IG_P4EG  = 3,
-    CAPRI_HBM_CACHE_PIPE_P4PTX      = 4,
-    CAPRI_HBM_CACHE_PIPE_P4PRX      = 8,
+    CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA  = 4,
+    CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA  = 8,
+    CAPRI_HBM_CACHE_PIPE_P4PLUS_BOTH  = 12,
 } capri_hbm_cache_pipe_t;
 
 typedef struct capri_hbm_region_s {

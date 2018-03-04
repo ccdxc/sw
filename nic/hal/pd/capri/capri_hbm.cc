@@ -70,6 +70,12 @@ capri_hbm_parse (capri_cfg_t *cfg)
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4IG;
         } else if (cache_pipe_name == "p4eg") {
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4EG;
+        } else if (cache_pipe_name == "p4plus-txdma") {
+            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA;
+        } else if (cache_pipe_name == "p4plus-rxdma") {
+            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA;
+        } else if (cache_pipe_name == "p4plus-both") {
+            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_BOTH;
         } else {
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_NONE;
         }
@@ -172,6 +178,10 @@ hal_ret_t
 capri_hbm_cache_init (void)
 {
     // Enable P4Plus RXDMA (inst_id = 0)
+    cap_pics_csr_t & rxdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 0);
+    rxdma_pics_csr.picc.cfg_cache_global.bypass(0);
+    rxdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
+    rxdma_pics_csr.picc.cfg_cache_global.write();
 
     // Enable P4 Ingress (inst_id = 1)
     cap_pics_csr_t & ig_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 1);
@@ -186,6 +196,11 @@ capri_hbm_cache_init (void)
     eg_pics_csr.picc.cfg_cache_global.write();
 
     // Enable P4Plus TXDMA (inst_id = 3)
+    cap_pics_csr_t & txdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 3);
+    txdma_pics_csr.picc.cfg_cache_global.bypass(0);
+    txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
+    txdma_pics_csr.picc.cfg_cache_global.write();
+
     return HAL_RET_OK;
 }
 
@@ -205,8 +220,8 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
     pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
     pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
-    // set Valid + CacheEnable bits
-    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xc);
+    // set Valid + CacheEnable + Invalidate&Fill bits
+    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xe);
     pics_csr.picc.filter_addr_ctl_s.value[filter_idx].write();
 
     return HAL_RET_OK;
@@ -218,6 +233,8 @@ capri_hbm_cache_regions_init (void)
     capri_hbm_region_t      *reg;
     uint32_t                p4ig_filter_idx = 0;
     uint32_t                p4eg_filter_idx = 0;
+    uint32_t                p4plus_txdma_filter_idx = 0;
+    uint32_t                p4plus_rxdma_filter_idx = 0;
 
     for (int i = 0; i < num_hbm_regions_; i++) {
         reg = &hbm_regions_[i];
@@ -239,6 +256,36 @@ capri_hbm_cache_regions_init (void)
                             reg->start_offset, reg->size_kb, p4eg_filter_idx);
             capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx);
             p4eg_filter_idx++;
+        }
+
+        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA) {
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS TXDMA cache, "
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb, p4plus_txdma_filter_idx);
+            capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx);
+            p4plus_txdma_filter_idx++;
+        }
+
+        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS RXDMA cache, "
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb, p4plus_rxdma_filter_idx);
+            capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx);
+            p4plus_rxdma_filter_idx++;
+        }
+
+        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_BOTH) {
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS TXDMA cache, "
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb, p4plus_txdma_filter_idx);
+            capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx);
+
+            p4plus_txdma_filter_idx++;
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS RXDMA cache, "
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            reg->start_offset, reg->size_kb, p4plus_rxdma_filter_idx);
+            capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx);
+            p4plus_rxdma_filter_idx++;
         }
     }
 
