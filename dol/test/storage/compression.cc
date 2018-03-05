@@ -177,6 +177,7 @@ compression_init()
   lo_reg |= 0xFFFF;
   hi_reg &= ~(1u << (54 - 32));
   hi_reg &= ~(1u << (53 - 32));
+  hi_reg |= 1u << (55 - 32);
   write_reg(cp_cfg_ueng, lo_reg);
   write_reg(cp_cfg_ueng+4, hi_reg);
   // Enable both DC engines.
@@ -185,6 +186,7 @@ compression_init()
   lo_reg |= 0x3;
   hi_reg &= ~(1u << (54 - 32));
   hi_reg &= ~(1u << (53 - 32));
+  hi_reg |= 1u << (55 - 32);
   write_reg(dc_cfg_ueng, lo_reg);
   write_reg(dc_cfg_ueng+4, hi_reg);
 
@@ -775,6 +777,92 @@ int verify_integrity_for_gt64K() {
 
   printf("Testcase %s passed\n", __func__);
   return 0;
+}
+
+int max_data_rate() {
+  printf("Starting testcase %s\n", __func__);
+  cp_desc_t d;
+  cp_desc_t *dst_d = (cp_desc_t *)cp_queue_mem;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.opaque_tag_on = 1;
+  d.src = hbm_pa + kUncompressedDataOffset;
+  d.dst = hbm_pa + kUncompressedDataOffset + 4096;
+  d.status_addr = hbm_pa + kStatusOffset;
+  d.datain_len = 4096;
+  d.threshold_len = 4096 - 8;;
+  d.status_data = 0x1234;
+  // We will use 4K bytes at host_mem + kUncompressedDataOffset + (2 * 4096) to store
+  // all interrupts (opaque tags).
+  bzero(host_mem + kUncompressedDataOffset + (2 * 4096), 4096);
+  for (uint32_t i = 0; i < 16; i++) {
+    d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset + (2 * 4096) + i*8;
+    // Why add 0x10000? mem is init to 0 and 1st tag is also zero.
+    d.opaque_tag_data = 0x10000 + i;
+    bcopy(&d, &dst_d[cp_queue_index], sizeof(d));
+    cp_queue_index++;
+    if (cp_queue_index == 4096)
+      cp_queue_index = 0;
+  }
+  // Dont ring the doorbell yet.
+  // Add descriptors for decompression also.
+  dst_d = (cp_desc_t *)dc_queue_mem;
+  bzero(&d, sizeof(d));
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.header_present = 1;
+  d.cmd_bits.opaque_tag_on = 1;
+  d.src = hbm_pa + kCompressedDataOffset;
+  d.dst = hbm_pa + kUncompressedDataOffset + (4096*4);
+  d.status_addr = hbm_pa + kStatusOffset;
+  d.datain_len = 4096;
+  d.threshold_len = 4096*4;
+  d.status_data = 0x4321;
+  for (uint32_t i = 0; i < 2; i++) {
+    d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset +
+                        (2 * 4096) + 2048 + i*8;
+    d.opaque_tag_data = 0x10000 + i;
+    bcopy(&d, &dst_d[dc_queue_index], sizeof(d));
+    dc_queue_index++;
+    if (dc_queue_index == 4096)
+      dc_queue_index = 0;
+  }
+
+  // Now ring doorbells
+  write_reg(cp_cfg_q_pd_idx, cp_queue_index);
+  write_reg(dc_cfg_q_pd_idx, dc_queue_index);
+
+  // Wait for all the interrupts
+  auto func = [] () -> int {
+    uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096));
+    for (int i = 0; i < 16; i++) {
+      if (intr_ptr[i] == 0)
+        return 1;
+    }
+    intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096) + 2048);
+    for (int i = 0; i < 2; i++) {
+      if (intr_ptr[i] == 0)
+        return 1;
+    }
+    return 0;
+  };
+  tests::Poller poll;
+  if (poll(func) == 0) {
+    printf("Testcase %s passed\n", __func__);
+    return 0;
+  }
+  uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096));
+  for (int i = 0; i < 16; i++) {
+    if (intr_ptr[i] == 0)
+      printf("Compression request %d did not complete\n", i);
+  }
+  intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096) + 2048);
+  for (int i = 0; i < 2; i++) {
+    if (intr_ptr[i] == 0)
+      printf("Decompression request %d did not complete\n", i);
+  }
+  printf("ERROR: Timed out waiting for all the commands to complete\n");
+  return -1;
 }
 
 }  // namespace tests
