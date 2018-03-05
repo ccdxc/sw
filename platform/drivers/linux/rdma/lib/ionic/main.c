@@ -77,6 +77,10 @@ static int ionic_init_context(struct verbs_device *vdev,
 	cntx->udpi.dbpage = (struct ionic_doorbell *) mmap(NULL, dev->pg_size,
                                                        PROT_WRITE,
                                                        MAP_SHARED, cmd_fd, 0);
+
+	pthread_mutex_init(&cntx->mut, NULL);
+	tbl_init(&cntx->qp_tbl);
+	list_head_init(&cntx->cq_list);
     
     pthread_spin_init(&cntx->udpi.db_lock,
                       PTHREAD_PROCESS_PRIVATE);
@@ -95,6 +99,8 @@ static void ionic_uninit_context(struct verbs_device *vdev,
 	dev = to_ionic_dev(&vdev->device);
 	cntx = to_ionic_context(ibvctx);
 
+	tbl_destroy(&cntx->qp_tbl);
+	pthread_mutex_destroy(&cntx->mut);
 
 	/* Un-map DPI only for the first PD that was
 	 * allocated in this context.

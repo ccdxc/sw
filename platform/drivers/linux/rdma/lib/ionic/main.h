@@ -12,6 +12,7 @@
 
 #include "ionic-abi.h"
 #include "memory.h"
+#include "table.h"
 
 #define DEV	"ionic : "
 
@@ -31,12 +32,20 @@ struct ionic_context {
 	struct ibv_context ibvctx;
 	uint32_t max_qp;
 	struct ionic_dpi udpi;
-    struct ionic_qp *qp_tbl[1024]; //TODO hardcoding max qp supported
+
+	pthread_mutex_t		mut;
+	struct tbl_root		qp_tbl;
+	struct list_head	cq_list;
 };
 
 struct ionic_cq {
 	struct ibv_cq		ibvcq;
+	struct list_node	ctx_ent;
+
 	uint32_t            cqid;
+
+	pthread_spinlock_t        lock;
+
     uint8_t             qtype;
     uint8_t             done_color;
 	struct ionic_queue  cqq;
@@ -329,5 +338,37 @@ static inline void ionic_change_cq_phase(struct ionic_cq *cq)
 		cq->phase = (~cq->phase & IONIC_BCQE_PH_MASK);
 }
 #endif
+
+static inline void ionic_lock_all_cqs(struct ionic_context *ctx)
+{
+	struct ionic_cq *cq;
+
+	/* To avoid deadlock, this is the only place where a thread is allowed
+	 * to acquire the lock for more than one cq.  The order in the list is
+	 * the locking order.  All other cq lock holders may acquire at most
+	 * one cq lock at a time.
+	 *
+	 * All cq locks must be held when modifying the qp_tbl.  Any one cq
+	 * lock can be held to exclude modifying the table.  A cq polling
+	 * thread should only acquire the lock for that cq.  Other cq may be
+	 * polled by other threads in parallel.  Unlike a reader-writer lock,
+	 * any one cq may be polled by at most one thread at a time.
+	 *
+	 * In addition to cq locks, the context mutex must also be held when
+	 * modifying the qp table or accessing the cq list.  The mutex must
+	 * have already been acquired by the caller of this function.
+	 */
+	list_for_each(&ctx->cq_list, cq, ctx_ent)
+		pthread_spin_lock(&cq->lock);
+}
+
+static inline void ionic_unlock_all_cqs(struct ionic_context *ctx)
+{
+	struct ionic_cq *cq;
+
+	/* unlock in reverse order of acquire */
+	list_for_each_rev(&ctx->cq_list, cq, ctx_ent)
+		pthread_spin_unlock(&cq->lock);
+}
 
 #endif

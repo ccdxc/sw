@@ -158,7 +158,7 @@ struct ibv_cq *ionic_create_cq(struct ibv_context *ibvctx,
 	if (ionic_alloc_aligned(&cq->cqq, dev->pg_size))
 		goto fail;
 
-	pthread_spin_init(&cq->cqq.qlock, PTHREAD_PROCESS_PRIVATE);
+	pthread_spin_init(&cq->lock, PTHREAD_PROCESS_PRIVATE);
 
 	cmd.cq_va = (uintptr_t)cq->cqq.va;
 	cmd.cq_bytes = cq->cqq.bytes;
@@ -174,6 +174,11 @@ struct ibv_cq *ionic_create_cq(struct ibv_context *ibvctx,
 	cq->udpi = &cntx->udpi; //TODO: Dont need this.
     cq->done_color = 1;
     cq->cntxt = cntx;
+
+	pthread_mutex_lock(&cntx->mut);
+	list_add_tail(&cntx->cq_list, &cq->ctx_ent);
+	pthread_mutex_unlock(&cntx->mut);
+
 	return &cq->ibvcq;
 cmdfail:
 	ionic_free_aligned(&cq->cqq);
@@ -190,12 +195,18 @@ int ionic_resize_cq(struct ibv_cq *ibvcq, int ncqe)
 int ionic_destroy_cq(struct ibv_cq *ibvcq)
 {
 	int status;
+	struct ionic_context *ctx = to_ionic_context(ibvcq->context);
 	struct ionic_cq *cq = to_ionic_cq(ibvcq);
 
 	status = ibv_cmd_destroy_cq(ibvcq);
 	if (status)
 		return status;
 
+	pthread_mutex_lock(&ctx->mut);
+	list_del(&cq->ctx_ent);
+	pthread_mutex_unlock(&ctx->mut);
+
+	pthread_spin_destroy(&cq->lock);
 	ionic_free_aligned(&cq->cqq);
 	free(cq);
 
@@ -280,6 +291,7 @@ static int ionic_poll_one(struct ionic_cq *cq,
     struct ionic_qp *qp;
     __u32 qp_num;
 
+again:
 	cqe = get_cqe(cq, &has_data);
 	if (has_data == 0) {
         return -EAGAIN;
@@ -292,8 +304,14 @@ static int ionic_poll_one(struct ionic_cq *cq,
         wc->status = ionic_to_ibv_wc_status(cqe->status);        
     }
 
-    qp_num = ((uint32_t)cqe->qp_hi << 16) | be16toh(cqe->qp_lo);
-    qp = cq->cntxt->qp_tbl[qp_num];
+	qp_num = ((uint32_t)cqe->qp_hi << 16) | be16toh(cqe->qp_lo);
+
+	qp = tbl_lookup(&cq->cntxt->qp_tbl, qp_num);
+
+	if (!qp) {
+		ionic_cq_incr(cq);
+		goto again;
+	}
 
     // XXX handle if qp_num > max_qp or if qp == NULL
 
@@ -363,14 +381,14 @@ int ionic_poll_cq(struct ibv_cq *ibvcq, int nwc, struct ibv_wc *wc)
 	if (nwc < 1 || wc == NULL)
 		return 0;
 
-	pthread_spin_lock(&cq->cqq.qlock);
+	pthread_spin_lock(&cq->lock);
     npolled = 0;
     while (npolled < nwc) { 
         if (ionic_poll_one(cq, (wc + npolled), &npolled)) {
             break;
         }
     }
-	pthread_spin_unlock(&cq->cqq.qlock);
+	pthread_spin_unlock(&cq->lock);
 
 	return npolled;
 }
@@ -553,9 +571,15 @@ struct ibv_qp *ionic_create_qp(struct ibv_pd *ibvpd,
 	cap->max_inline = attr->cap.max_inline_data;
 	cap->sqsig = attr->sq_sig_all;
 
-    cntx->qp_tbl[qp->qpid] = qp;
     qp->cntxt = cntx;
     
+	pthread_mutex_lock(&cntx->mut);
+	tbl_alloc_node(&cntx->qp_tbl);
+	ionic_lock_all_cqs(cntx);
+	tbl_insert(&cntx->qp_tbl, qp, qp->qpid);
+	ionic_unlock_all_cqs(cntx);
+	pthread_mutex_unlock(&cntx->mut);
+
 	return &qp->ibvqp;
 failcmd:
 	ionic_free_queues(qp);
@@ -621,6 +645,7 @@ int ionic_query_qp(struct ibv_qp *ibvqp,
 
 int ionic_destroy_qp(struct ibv_qp *ibvqp)
 {
+	struct ionic_context *ctx = to_ionic_context(ibvqp->context);
 	struct ionic_qp *qp = to_ionic_qp(ibvqp);
 	int status;
 
@@ -628,6 +653,13 @@ int ionic_destroy_qp(struct ibv_qp *ibvqp)
 	status = ibv_cmd_destroy_qp(ibvqp);
 	if (status)
 		return status;
+
+	pthread_mutex_lock(&ctx->mut);
+	tbl_free_node(&ctx->qp_tbl);
+	ionic_lock_all_cqs(ctx);
+	tbl_delete(&ctx->qp_tbl, qp->qpid);
+	ionic_unlock_all_cqs(ctx);
+	pthread_mutex_unlock(&ctx->mut);
 
 #if TODO    
 	ionic_cleanup_cq(qp, qp->rcq);
