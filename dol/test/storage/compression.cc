@@ -36,8 +36,14 @@ static const uint64_t cp_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
 static const uint64_t cp_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
 
+static const uint64_t cp_cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
+
 static const uint64_t cp_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS;
+
+static const uint64_t cp_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
 
 static const uint64_t cp_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_BYTE_ADDRESS;
@@ -54,8 +60,14 @@ static const uint64_t dc_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
 static const uint64_t dc_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
 
+static const uint64_t dc_cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
+
 static const uint64_t dc_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_PD_IDX_BYTE_ADDRESS;
+
+static const uint64_t dc_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
 
 static const uint64_t dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
@@ -68,6 +80,13 @@ static uint16_t cp_queue_index = 0;
 static void *dc_queue_mem;
 static uint64_t dc_queue_mem_pa;
 static uint16_t dc_queue_index = 0;
+
+static void *cp_hotq_mem;
+static uint64_t cp_hotq_mem_pa;
+static uint16_t cp_hotq_index = 0;
+static void *dc_hotq_mem;
+static uint64_t dc_hotq_mem_pa;
+static uint16_t dc_hotq_index = 0;
 
 // Sample data generated during test.
 uint8_t all_zeros[65536] = {0};
@@ -141,6 +160,13 @@ compression_init()
   assert(dc_queue_mem != nullptr);
   dc_queue_mem_pa = host_mem_v2p(dc_queue_mem);
 
+  cp_hotq_mem = alloc_page_aligned_host_mem(kQueueMemSize);
+  assert(cp_hotq_mem != nullptr);
+  cp_hotq_mem_pa = host_mem_v2p(cp_hotq_mem);
+  dc_hotq_mem = alloc_page_aligned_host_mem(kQueueMemSize);
+  assert(dc_hotq_mem != nullptr);
+  dc_hotq_mem_pa = host_mem_v2p(dc_hotq_mem);
+
   host_mem = (uint8_t *)alloc_page_aligned_host_mem(kTotalBufSize);
   assert(host_mem != nullptr);
   host_mem_pa = host_mem_v2p(host_mem);
@@ -165,11 +191,18 @@ compression_init()
   write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
   write_reg(cp_cfg_q_base, cp_queue_mem_pa & 0xFFFFFFFFu);
   write_reg(cp_cfg_q_base + 4, (cp_queue_mem_pa >> 32) & 0xFFFFFFFFu);
+
+  write_reg(cp_cfg_hotq_base, cp_hotq_mem_pa & 0xFFFFFFFFu);
+  write_reg(cp_cfg_hotq_base + 4, (cp_hotq_mem_pa >> 32) & 0xFFFFFFFFu);
+
   // Write dc queue base.
   read_reg(dc_cfg_glob, lo_reg);
   write_reg(dc_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
   write_reg(dc_cfg_q_base, dc_queue_mem_pa & 0xFFFFFFFFu);
   write_reg(dc_cfg_q_base + 4, (dc_queue_mem_pa >> 32) & 0xFFFFFFFFu);
+
+  write_reg(dc_cfg_hotq_base, dc_hotq_mem_pa & 0xFFFFFFFFu);
+  write_reg(dc_cfg_hotq_base + 4, (dc_hotq_mem_pa >> 32) & 0xFFFFFFFFu);
 
   // Enable all 16 cp engines.
   read_reg(cp_cfg_ueng, lo_reg);
@@ -200,6 +233,9 @@ compression_init()
 
   cp_queue_index = 0;
   dc_queue_index = 0;
+
+  cp_hotq_index = 0;
+  dc_hotq_index = 0;
 
   printf("Compression init done\n");
 }
@@ -862,6 +898,102 @@ int max_data_rate() {
       printf("Decompression request %d did not complete\n", i);
   }
   printf("ERROR: Timed out waiting for all the commands to complete\n");
+  return -1;
+}
+
+int compress_dualq_flat_64K_buf() {
+  printf("Starting testcase %s\n", __func__);
+
+  InvalidateHdrInHostMem();
+
+  // Setup compression descriptor for low prirority queue
+  cp_desc_t lq_desc;
+  bzero(&lq_desc, sizeof(lq_desc));
+
+  lq_desc.cmd_bits.comp_decomp_en = 1;
+  lq_desc.cmd_bits.insert_header = 1;
+  lq_desc.cmd_bits.sha_en = 1;
+
+  lq_desc.src = host_mem_pa + kUncompressedDataOffset;
+  lq_desc.dst = host_mem_pa + kCompressedDataOffset;
+  lq_desc.datain_len = 4096;
+  lq_desc.threshold_len = 4096 - 8;
+
+  lq_desc.status_addr = host_mem_pa + kStatusOffset;
+  lq_desc.status_data = 0x1234;
+
+  // Setup compression descriptor for high prirority queue
+  cp_desc_t hq_desc;
+  bzero(&hq_desc, sizeof(hq_desc));
+
+  hq_desc.cmd_bits.comp_decomp_en = 1;
+  hq_desc.cmd_bits.insert_header = 1;
+  hq_desc.cmd_bits.sha_en = 1;
+
+  hq_desc.src = host_mem_pa + kUncompressedDataOffset + 4096;
+  hq_desc.dst = host_mem_pa + kCompressedDataOffset + 4096;
+  hq_desc.datain_len = 4096;
+  hq_desc.threshold_len = 4096 - 8;
+
+  hq_desc.status_addr = host_mem_pa + kStatusOffset +
+	  sizeof(cp_status_sha512_t);
+  hq_desc.status_data = 0x5678;
+
+  // Initialize status for both the requests
+  cp_status_sha512_t *s;
+  s = (cp_status_sha512_t *) (host_mem + kStatusOffset);
+  bzero(s, sizeof(*s));
+
+  s = (cp_status_sha512_t *) (host_mem + kStatusOffset +
+		  sizeof(cp_status_sha512_t));
+  bzero(s, sizeof(*s));
+
+  // Add descriptor for both high and low priority queue
+  cp_desc_t *dst_desc;
+  dst_desc = (cp_desc_t *) cp_queue_mem;
+  bcopy(&lq_desc, &dst_desc[cp_queue_index], sizeof(lq_desc));
+  cp_queue_index++;
+  if (cp_queue_index == 4096)
+      cp_queue_index = 0;
+
+  // Dont ring the doorbell yet
+  dst_desc = (cp_desc_t *) cp_hotq_mem;
+  bcopy(&hq_desc, &dst_desc[cp_hotq_index], sizeof(hq_desc));
+  cp_hotq_index++;
+  if (cp_hotq_index == 4096)
+      cp_hotq_index = 0;
+
+  // Now ring door bells for both high and low queue
+  write_reg(cp_cfg_q_pd_idx, cp_queue_index);
+  write_reg(cp_cfg_hotq_pd_idx, cp_hotq_index);
+
+  // Check status update to both the descriptors
+  auto func = [] () -> int {
+    cp_status_sha512_t *s;
+    s = (cp_status_sha512_t *) (host_mem + kStatusOffset);
+    if (!s->valid) {
+      printf("Compression request in low queue did not complete "
+	  "status: %llx\n", *((unsigned long long *) s));
+      return -1;
+    }
+
+    s = (cp_status_sha512_t *) (host_mem + kStatusOffset +
+				sizeof(cp_status_sha512_t));
+    if (!s->valid) {
+      printf("Compression request in high/hot queue did not complete "
+	  "status: %llx\n", *((unsigned long long *) s));
+      return -1;
+    }
+
+    return 0;
+  };
+
+  tests::Poller poll;
+  if (poll(func) == 0) {
+    printf("Testcase %s passed\n", __func__);
+    return 0;
+  }
+
   return -1;
 }
 
