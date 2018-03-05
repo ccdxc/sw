@@ -65,28 +65,32 @@ def get_constraints(field):
             return constraints.split('=')
     return None
 
-def generate_float(field):
+def generate_float(field, negative_test=False):
     return random.uniform(0.0, 99999.99)
     
-def generate_int(field):
+def generate_int(field, negative_test=False):
     if is_range_field(field):
         regex_range = re.compile(r".*range:(\d+)-(\d+)")
         expr = field.GetOptions().__str__()
         val = re.match(regex_range, expr).groups()
-        return random.randint(int(val[0]), int(val[1]))
+        if negative_test:
+            # If we're running a negative test we want wrong values.
+            return random.randint(int(val[1]) + 1 , 2147483647)
+        else:
+            return random.randint(int(val[0]), int(val[1]))
     return random.randint(0, 99999)
 
-def generate_bool(field):
+def generate_bool(field, negative_test=False):
     return random.choice([True, False])
 
-def generate_string(field):
+def generate_string(field, negative_test=False):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for _ in range(16))
 
-def generate_enum(field):
+def generate_enum(field, negative_test=False):
     return random.randint(0, len(field.enum_type.values) - 1)
 
-def generate_bytes(field):
+def generate_bytes(field, negative_test=False):
     return random.getrandbits(128).to_bytes(16, byteorder='big')
 
 type_map = {

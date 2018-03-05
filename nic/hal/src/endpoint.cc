@@ -705,7 +705,10 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         for (i = 0; i < num_sgs; i++) {
             /* Lookup the SG by handle and then get the SG-id */
             nwsec_group = nwsec_group_lookup_key_or_handle(spec.endpoint_attrs().sg_key_handle(i));
-            HAL_ASSERT(nwsec_group);
+            if (!nwsec_group) {
+                ret = HAL_RET_NWSEC_ID_INVALID;
+                goto end;
+            }
             ep->sgs.arr_sg_id[i] = nwsec_group->sg_id;
             ep->sgs.sg_id_cnt++;
             ep->sgs.next_sg_p = NULL;

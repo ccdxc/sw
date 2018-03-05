@@ -294,7 +294,10 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
 
     for (i = 0; i < num_sgs; i++) {
         sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
-        HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
+        if (!sg) {
+            return HAL_RET_INVALID_ARG;
+        }
+        
         // Add to aggregated list
         sg_handle = sg->hal_handle;
         hal_add_to_handle_list(&nw->sg_list_head, sg_handle);

@@ -495,3 +495,22 @@ def ConfigObjectLoopTest(loop_count):
             if not ret:
                 print("Step Looping Get failed for Config %s" % (object_helper.service_object.name))
                 sys.exit(1)
+
+def ConfigObjectNegativeTest():
+    for _, object_helper in cfg_meta_mapper.key_type_to_config.items():
+        # Delete all objects at first
+        object_helper.DeleteConfigs(len(object_helper._config_objects), 'API_STATUS_OK')
+        for config_object in object_helper._config_objects:
+            create_message = config_object._msg_cache[ConfigObjectMeta.CREATE]
+            delete_message = config_object._msg_cache[ConfigObjectMeta.DELETE]
+            for neg_message in GrpcReqRspMsg.negative_test_generator(create_message):
+                print("The original message is " + str(create_message))
+                print("The negative test message is " + str(neg_message))
+                ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, neg_message, False) 
+                if ret_status == ApiStatus.API_STATUS_OK:
+                    print("Expected an error in API Return Status, but API_STATUS_OK was returned")
+                else:
+                    print("API Status returned as error correctly")
+                # Delete the message just to be safe, in case it was incorrectly created in HAL, so that 
+                # the next test case will be correctly executed
+                config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 

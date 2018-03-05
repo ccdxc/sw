@@ -119,6 +119,9 @@ for test_spec in test_specs:
                 print("Step %s failed for Config %s" % (step.step.op, cfg_spec))
                 sys.exit(1)
 
+    # Run negative test cases.
+    config_mgr.ConfigObjectNegativeTest()
+
     # The second part of the test of to loop through all the config objects created
     # by performing Create/Delete/Get in a loop, as specified by the loop count in the
     # test.

@@ -131,9 +131,9 @@ class GrpcReqRspMsg:
         return str(self._meta_obj)
 
     @staticmethod
-    def generate_scalar_field(message, field):
+    def generate_scalar_field(message, field, negative_test=False):
         type_specific_func = grpc_meta_types.type_map[field.type]
-        val = type_specific_func(field)
+        val = type_specific_func(field, negative_test)
         if field.label == descriptor.FieldDescriptor.LABEL_REPEATED:
             sub_message = getattr(message, field.name)
             sub_message.extend([val])
@@ -189,6 +189,72 @@ class GrpcReqRspMsg:
         if 'constraint' in options:
             return GrpcReqRspMsg.extract_constraints(options)
         return None, None
+
+    @staticmethod
+    def generate_random_non_scalar_field(message):
+        for field in message.ListFields():
+            if field[0].label == descriptor.FieldDescriptor.LABEL_REPEATED:
+                if field[0].type == descriptor.FieldDescriptor.TYPE_MESSAGE:
+                    sub_message = field[1][0]
+                    GrpcReqRspMsg.generate_random_non_scalar_field(sub_message)
+                else:
+                    GrpcReqRspMsg.generate_scalar_field(message, field[0], negative_test=True)
+            else:
+                if field[0].type == descriptor.FieldDescriptor.TYPE_MESSAGE:
+                    sub_message = getattr(message, field[0].name)
+                    GrpcReqRspMsg.generate_random_non_scalar_field(sub_message)
+                else:
+                    GrpcReqRspMsg.generate_scalar_field(message, field[0], negative_test=True)
+
+    @staticmethod
+    def _negative_test_generator(message, top_message):
+        for field in message.ListFields():
+            if field[0].label == descriptor.FieldDescriptor.LABEL_REPEATED:
+                if field[0].type == descriptor.FieldDescriptor.TYPE_MESSAGE:
+                    if grpc_meta_types.is_ext_ref_field(field[0]):
+                        sub_message = getattr(message, field[0].name)[0]
+                        orig_sub_message = type(sub_message)()
+                        orig_sub_message.CopyFrom(sub_message)
+                        GrpcReqRspMsg.generate_random_non_scalar_field(sub_message)
+                        yield top_message
+                        sub_message.CopyFrom(orig_sub_message)
+                    sub_message = field[1][0]
+                    yield from GrpcReqRspMsg._negative_test_generator(sub_message, top_message)
+                else:
+                    if grpc_meta_types.is_range_field(field[0]) or \
+                       grpc_meta_types.is_immutable_field(field[0]):
+                        orig_val = getattr(message, field[0].name)[0]
+                        GrpcReqRspMsg.generate_scalar_field(message, field[0], negative_test=True)
+                        yield top_message
+                        val = getattr(message, field[0].name)
+                        setattr(val[0], field[0].name, orig_val)
+            elif field[0].cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
+                if grpc_meta_types.is_ext_ref_field(field[0]):
+                    # We want to generate invalid values for this field. Store the original message, 
+                    # and then add a bad value for this field.
+                    sub_message = getattr(message, field[0].name)
+                    orig_sub_message = type(sub_message)()
+                    orig_sub_message.CopyFrom(sub_message)
+                    GrpcReqRspMsg.generate_random_non_scalar_field(sub_message)
+                    yield top_message
+                    sub_message.CopyFrom(orig_sub_message)
+                elif grpc_meta_types.is_key_field(field[0]):
+                    continue
+                else:
+                    sub_message = getattr(message, field[0].name)
+                    yield from GrpcReqRspMsg._negative_test_generator(sub_message, top_message)
+            else:
+                if grpc_meta_types.is_range_field(field[0]) or \
+                   grpc_meta_types.is_immutable_field(field[0]):
+                    orig_val = getattr(message, field[0].name)
+                    GrpcReqRspMsg.generate_scalar_field(message, field[0], negative_test=True)
+                    yield top_message
+                    setattr(message, field[0].name, orig_val)
+
+    @staticmethod
+    def negative_test_generator(message):
+        for item in GrpcReqRspMsg._negative_test_generator(message, message):
+            yield item
 
     @staticmethod
     # Pre constraints include externally passed constraints and immutable object fields.
