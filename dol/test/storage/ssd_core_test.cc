@@ -37,9 +37,7 @@ class SsdCoreTest : public testing::Test {
     if (subq_pi_ == params_.subq_nentries)
       subq_pi_ = 0;
 
-    uint32_t *pi = (uint32_t *)params.subq_pi->read();
-    *pi = subq_pi_;
-    params.subq_pi->write_thru();
+    *params_.subq_pi_va = subq_pi_;
   }
 
   bool PopCompletion(NvmeStatus *comp) {
@@ -55,9 +53,7 @@ class SsdCoreTest : public testing::Test {
       expected_phase_ ^= 1;
     }
 
-    uint32_t *ci = (uint32_t *)params.compq_ci->read();
-    *ci = compq_ci_;
-    params.compq_ci->write_thru();
+    *params_.compq_ci_va = compq_ci_;
     return true;
   }
 

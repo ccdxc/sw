@@ -10,6 +10,7 @@ cc_library(
     hdrs = [
         "hal_if.hpp",
     ],
+    copts = [ "-g" ],
     deps = [
         "//external:gflags",
         "//nic:halproto",
@@ -25,6 +26,7 @@ cc_library(
         "utils.cc",
         "utils.hpp",
     ],
+    copts = [ "-g" ],
     deps = [
         ":hal_if",
     ]
@@ -36,6 +38,7 @@ cc_library(
         "qstate_if.cc",
         "qstate_if.hpp",
     ],
+    copts = [ "-g" ],
     deps = [
         ":hal_if",
         ":utils",
@@ -56,6 +59,7 @@ cc_library(
         "nvme.hpp",
         "qstate_if.hpp",
     ],
+    copts = [ "-g" ],
     deps = [
         ":hal_if",
         ":qstate_if",
@@ -97,6 +101,7 @@ cc_library(
         "nvme.hpp",
         "dp_mem.hpp",
     ],
+    copts = [ "-g" ],
     deps = [
         ":utils",
         "//nic/utils/host_mem:host_mem_src",
@@ -115,6 +120,7 @@ cc_library(
     hdrs = [
         "ssd_core.hpp",
     ],
+    copts = [ "-g" ],
     deps = [
         ":utils",
     ]
@@ -125,6 +131,7 @@ cc_test(
     srcs = [
         "ssd_core_test.cc",
     ],
+    copts = [ "-g" ],
     deps = [
         ":ssd_core",
         "//:gtest",
@@ -139,6 +146,7 @@ cc_library(
     hdrs = [
         "ssd.hpp",
     ],
+    copts = [ "-g" ],
     deps = [
         ":ssd_core",
         "//nic/utils/host_mem:host_mem_src",
@@ -173,7 +181,7 @@ cc_library(
         "//nic/model_sim:model_client",
     ],
     copts = [
-        "-std=c++14",
+        "-std=c++14 -g",
     ]
 )
 
