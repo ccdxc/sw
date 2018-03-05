@@ -348,30 +348,67 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //:: #endfor
 //::
 //::
-//:: import json
+//:: import yaml 
 //:: def get_reg_instances(regs, types):
 //:: import re
 //:: instances = []
-//:: for reg,data in sorted(regs.items()):
-//::    if types is None or len(set(reg.split('_')) & types):
-//::        is_array = int(data["is_array"])
-//::        inst_name = data["inst_name"][4:]
-//::        if is_array:
-//::            mg = re.search('\[(\d+)\]$', reg)
-//::            array_index = int(mg.groups()[0])
-//::            inst_name = inst_name + '[%s]' % array_index
-//::        #endif
-//::        instances.append(inst_name)
+//:: for reg in sorted(regs):
+//::    regn = reg.split('.')[-1]
+//::    if types is None or len(set(regn.split('_')) & types):
+//::        instances.append(reg)
 //::    #endif
 //:: #endfor
 //:: return instances
 //:: #enddef
 //::
+//:: def parse_block(data, block, type, path_to_here, regs):
+//::     global parse_block
+//::     path = path_to_here[:]
+//::     block_type = data[block]['type']
+//::     if block_type == type:
+//::        regs.append(path)
+//::        return 
+//::     #endif
+//::     if block_type != 'block':
+//::         return
+//::     #endif
+//::     for field, field_d in data[block]['fields'].items():
+//::        lpath = path + '.' + field
+//::        is_array = False
+//::        if field_d['array'] != 1:
+//::            is_array = True
+//::        #endif
+//::        apath = lpath[:]
+//::        for i in range(field_d['array']):
+//::            if is_array:
+//::                apath = lpath + '[%d]' % i
+//::            #endif
+//::            parse_block(data, field_d['decoder'], type, apath, regs)
+//::        #endfor
+//::     #endfor
+//:: #enddef
+//::
+//:: def normalize(data):
+//::    d = {}
+//::    for block_name, block_data in data.items():
+//::        d[block_name] = {x.keys()[0]:x.values()[0] for x in block_data}
+//::        d[block_name]['fields'] = {x.keys()[0]:x.values()[0] for x in d[block_name]['fields']}
+//::        for field_name, field_d in d[block_name]['fields'].items():
+//::            d[block_name]['fields'][field_name] = {x.keys()[0]:x.values()[0] for x in field_d}
+//::        #endfor
+//::    #endfor
+//::    return d
+//:: #enddef
+//::    
 //:: with open(_context['args']) as data_file:
-//::    data = json.load(data_file)
+//::    data = yaml.load(data_file)
 //:: #endwith
-//:: regs = data["cap_pbc"]["registers"]
-//:: memories = data["cap_pbc"]["memories"]
+//:: regs = []
+//:: memories = []
+//::
+//:: data = normalize(data)
+//:: parse_block(data, 'cap_pbc_csr', 'register', 'pbc_csr', regs)
+//:: parse_block(data, 'cap_pbc_csr', 'memory', 'cap0.pb', memories)
 //::
 //:: fns = OrderedDict()
 //:: fns["debug"] = set(['cnt', 'sta', 'sat'])

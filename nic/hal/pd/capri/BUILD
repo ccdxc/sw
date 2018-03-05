@@ -88,11 +88,11 @@ cc_library(
 genrule(
     name = "capri_tm_rw_gen",
     srcs = ["//nic:tools/ncc/tenjin_wrapper.py", ":capri_tm_rw.template.cc",
-            "//nic:asic/capri/model/cap_pb/cap_pbc_csr.json"
+            "//nic:asic/capri/verif/common/csr_gen/pbc.yaml"
             ],
     outs = [":capri_tm_rw.cc"],
     cmd = "python2 $(location //nic:tools/ncc/tenjin_wrapper.py) \
            --template $(location :capri_tm_rw.template.cc) \
            --outfile $(location :capri_tm_rw.cc) \
-           --args $(location //nic:asic/capri/model/cap_pb/cap_pbc_csr.json)"
+           --args $(location //nic:asic/capri/verif/common/csr_gen/pbc.yaml)"
 )
