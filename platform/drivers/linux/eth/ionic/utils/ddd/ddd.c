@@ -111,6 +111,7 @@ void dump_rxcq(char *path)
 		printf("[%04x]", i);
 		printf(" status %d comp_index 0x%x color %d",
 		       comp.status, comp.comp_index, comp.color);
+		printf(" len %4d", comp.len);
 		printf(" csum/flags 0x%04x/[%s%s%s%s%s%s]", comp.csum,
 		       comp.csum_tcp_ok ?  " TCP_OK"  : "",
 		       comp.csum_tcp_bad ? " TCP_BAD" : "",
