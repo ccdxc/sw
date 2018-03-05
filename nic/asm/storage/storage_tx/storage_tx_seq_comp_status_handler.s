@@ -23,7 +23,7 @@ storage_tx_seq_comp_status_handler_start:
    phvwr	p.storage_kivec5_status_err, d.err
   
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC4_SGL_ADDR, 
-                             STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                             storage_tx_seq_comp_sgl_handler_start)
+   LOAD_TABLE_FOR_ADDR_PC_IMM(STORAGE_KIVEC4_SGL_ADDR, 
+                              STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                              storage_tx_seq_comp_sgl_handler_start)
 

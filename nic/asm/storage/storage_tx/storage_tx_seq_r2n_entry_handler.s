@@ -26,23 +26,23 @@ storage_tx_seq_r2n_entry_handler_start:
 
    // Setup the source of the mem2mem DMA into DMA cmd 1.
    // For now, not using any override LIF parameters.
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.r2n_wqe_addr, d.r2n_wqe_size,
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.r2n_wqe_addr, d.r2n_wqe_size[13:0],
                      r0, r0, dma_m2m_1)
 
    // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
    // the size). For now, not using any override LIF parameters.
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, d.r2n_wqe_size,
-                     r0, r0, dma_m2m_2)
+   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, d.r2n_wqe_size[13:0],
+                              r0, r0, dma_m2m_2)
 
    seq		c1, d.is_remote, 1
    bcf		[c1], seq_pvm_roce_sq_push
    nop
 
    // Set the table and program address for the push to R2N
-   LOAD_TABLE_FOR_ADDR_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                             storage_tx_seq_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
+                               storage_tx_seq_q_state_push_start)
 
 seq_pvm_roce_sq_push:
    // Set the table and program address for the push to ROCE
-   LOAD_TABLE_FOR_ADDR_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                             storage_tx_seq_pvm_roce_sq_cb_push_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
+                               storage_tx_seq_pvm_roce_sq_cb_push_start)

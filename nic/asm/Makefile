@@ -1,10 +1,10 @@
 LIBDIRS = \
+          storage \
           nw \
           common-p4+ \
           proxy \
           rdma \
           ipsec-p4+ \
-          storage \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
@@ -17,12 +17,12 @@ LIBDIRS = \
           $(NULL)
 
 IRIS_SUBDIRS = \
+          storage \
           nw \
           common-p4+ \
           proxy \
           rdma \
           ipsec-p4+ \
-          storage \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
@@ -34,11 +34,11 @@ IRIS_SUBDIRS = \
           $(NULL)
 
 MSFT_GFT_SUBDIRS= \
+          storage \
           common-p4+ \
           proxy \
           rdma \
           ipsec-p4+ \
-          storage \
           cpu-p4plus \
           gc \
           app-redir-p4+ \

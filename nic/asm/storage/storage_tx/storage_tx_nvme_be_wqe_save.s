@@ -41,7 +41,7 @@ storage_tx_nvme_be_wqe_save_start:
    // calculated by SSD_CMD_ENTRY_ADDR_CALC and stored in GRP r7.
    // Note: pri_q_push uses dma_p2m_3 for push because dma_p2m_2 is needed here
    //       to save the SSD bitmap
-   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pad, r7, dma_p2m_2)
+   DMA_PHV2MEM_SETUP_ADDR64(r2n_wqe_handle, r2n_wqe_pad, r7, dma_p2m_2)
 
    // Setup the DMA command to push the NVME command entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the
@@ -49,5 +49,5 @@ storage_tx_nvme_be_wqe_save_start:
    DMA_PHV2MEM_SETUP(nvme_cmd_opc, nvme_cmd_dw15, r0, dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                             storage_tx_pci_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+                               storage_tx_pci_q_state_push_start)

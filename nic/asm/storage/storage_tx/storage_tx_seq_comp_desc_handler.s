@@ -59,6 +59,6 @@ check_intr:
 tbl_load:
    // Setup the start and end DMA pointers
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(d.status_addr, STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                             storage_tx_seq_comp_status_handler_start)
+   LOAD_TABLE_FOR_ADDR_PC_IMM(d.status_addr, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                              storage_tx_seq_comp_status_handler_start)
 

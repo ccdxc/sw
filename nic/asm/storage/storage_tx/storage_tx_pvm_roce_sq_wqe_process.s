@@ -37,8 +37,8 @@ storage_tx_pvm_roce_sq_wqe_process_start:
 
    
    // Set the table and the program address for the next stage
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                             storage_tx_roce_rq_push_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+                               storage_tx_roce_rq_push_start)
 
 exit:
    // No need to setup the start and end DMA pointers, just drop PHV

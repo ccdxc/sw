@@ -58,5 +58,5 @@ dma_nvme_cmd:
                      dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                             storage_tx_pci_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+                               storage_tx_pci_q_state_push_start)

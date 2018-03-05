@@ -26,5 +26,5 @@ storage_tx_nvme_be_cmd_handler_start:
    phvwr	p.r2n_wqe_nvme_cmd_cid, d.cid
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC1_SRC_QADDR, Q_STATE_SIZE,
-                             storage_tx_pri_q_state_incr_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC1_SRC_QADDR, Q_STATE_SIZE,
+                               storage_tx_pri_q_state_incr_start)

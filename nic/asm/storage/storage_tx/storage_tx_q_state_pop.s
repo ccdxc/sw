@@ -52,7 +52,7 @@ storage_tx_q_state_pop_start:
    
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
-   LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size,
+   LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size[2:0],
                         d.next_pc)
 
 clear_doorbell:

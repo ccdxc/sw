@@ -101,35 +101,51 @@
 #define CAPRI_DMA_M2M_TYPE_DST		1
 
 // Load a table based on absolute address
-// PC input must be a 28-bit value
-#define LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc)		\
-  phvwri	p.app_header_table0_valid, 1;				\
-  phvwri	p.common_te0_phv_table_lock_en, 1;			\
-  phvwr		p.common_te0_phv_table_pc, _pc;				\
-  phvwr		p.common_te0_phv_table_addr, _table_addr;		\
-  phvwr.e	p.common_te0_phv_table_raw_table_size, _load_size;	\
-  nop;									\
+// _pc is in register or in a dvec, AND
+// _table_addr is 64 bits
+#define LOAD_TABLE_FOR_ADDR64(_table_addr, _load_size, _pc)		\
+  phvwri	p.app_header_table0_valid, 1;				        \
+  phvwrpair.e p.common_te0_phv_table_lock_en, 1,			    \
+            p.common_te0_phv_table_raw_table_size, _load_size;  \
+  phvwrpair p.common_te0_phv_table_pc, _pc,				        \
+            p.common_te0_phv_table_addr, _table_addr;           \
+            
+// Load a table based on absolute address,
+// where phvwrpair is unusable because
+//    _pc is a param resolved by the loader, OR
+//    _table_addr is not 64 bits
+#define LOAD_TABLE_FOR_ADDR_PC_IMM(_table_addr, _load_size, _pc) \
+  addi		r1, r0, _pc[33:6];					                \
+  LOAD_TABLE_FOR_ADDR64(_table_addr, _load_size, r1)			\
 
+#define LOAD_TABLE_FOR_ADDR34(_table_addr, _load_size, _pc)		\
+  phvwri	p.app_header_table0_valid, 1;				        \
+  phvwrpair p.common_te0_phv_table_lock_en, 1,			        \
+            p.common_te0_phv_table_raw_table_size, _load_size;  \
+  phvwr.e   p.common_te0_phv_table_pc, _pc;				        \
+  phvwr     p.common_te0_phv_table_addr, _table_addr;           \
+            
+#define LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc)		\
+  LOAD_TABLE_FOR_ADDR64(_table_addr, _load_size, _pc)			\
+            
 // Load a table based on absolute address and size specified without immediate
 // PC input is a .param resolved by the loader (34-bit value)
 #define LOAD_TABLE_FOR_ADDR_SIZE_PARAM(_table_addr, _load_size, _pc)	\
-  addi		r1, r0, _pc[33:6];					\
-  LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, r1)			\
+  LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc[33:6])			\
 
 // Load a table based on absolute address
 // PC input is a .param resolved by the loader (34-bit value)
 #define LOAD_TABLE_FOR_ADDR_PARAM(_table_addr, _load_size, _pc)		\
-  addi		r1, r0, _pc[33:6];					\
-  addi		r2, r0, _load_size;					\
-  LOAD_TABLE_FOR_ADDR(_table_addr, r2, r1)				\
+  LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc[33:6])				\
+
+#define LOAD_TABLE_FOR_ADDR34_PARAM(_table_addr, _load_size, _pc)		\
+  LOAD_TABLE_FOR_ADDR34(_table_addr, _load_size, _pc[33:6])				\
 
 // Calculate a table address based on index and size
 // addr = _table_base + (_entry_index * (2 ^_entry_size))
 #define TABLE_ADDR_FOR_INDEX(_table_base, _entry_index, _entry_size)	\
-  add		r1, r0, _table_base;					\
-  add 		r2, r0, _entry_size;					\
-  sllv		r3, _entry_index, r2;					\
-  add		r7, r1, r3;						\
+  sll 		r7, _entry_index, _entry_size;			\
+  add		r7, r7, _table_base;					\
 
 // Load a table based with a calculation based on index
 // addr = _table_base + (_entry_index * (2 ^_entry_size))
@@ -155,15 +171,11 @@
 #define LOAD_TABLE_FOR_PRI_INDEX(_table_base, _entry_index,		\
                                  _num_entries, _pri, _entry_size,	\
                                  _load_size, _pc)			\
-  add		r1, r0, _table_base;					\
-  add		r2, r0, _num_entries;					\
-  sllv		r3, _pri, r2;						\
+  sll		r3, _pri, _num_entries;					\
   add		r3, r3, _entry_index;					\
-  add 		r2, r0, _entry_size;					\
-  sllv		r3, r3, r2;						\
-  add		r1, r1, r3;						\
+  sll 		r3, r3, _entry_size;    				\
+  add		r1, r3, _table_base;					\
   LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)				\
-
 
 // Used in the last stage of a pipeline to clear all table valid bits
 #define LOAD_NO_TABLES							\
@@ -183,30 +195,60 @@
 //              and the destination address. Can specify 0 destination
 //              address via GPR r0, which be update later.
 #define DMA_PHV2MEM_SETUP(_start, _end, _addr, _dma_cmd_X)		\
-   phvwri	p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM;		\
-   phvwri	p._dma_cmd_X##_dma_cmd_phv_start_addr,			\
+   phvwrpair p._dma_cmd_X##_dma_cmd_addr, _addr,            \
+             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM;\
+   phvwrpair p._dma_cmd_X##_dma_cmd_phv_end_addr,			\
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _end)),	\
+        	p._dma_cmd_X##_dma_cmd_phv_start_addr,			\
                 CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		\
                                       sizeof(p._start) - 1);		\
-   phvwri	p._dma_cmd_X##_dma_cmd_phv_end_addr,			\
-                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _end));		\
-   phvwr	p._dma_cmd_X##_dma_cmd_addr, _addr;			\
-   srl		r1, _addr, 63;						\
-   seq		c1, r1, 1;						\
-   phvwr.c1	p._dma_cmd_X##_dma_cmd_host_addr, 1;			\
+   phvwr	p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];			\
+
+#define DMA_PHV2MEM_SETUP_ADDR64(_start, _end, _addr, _dma_cmd_X)		\
+   phvwrpair p._dma_cmd_X##_dma_cmd_addr, _addr,            \
+             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM;\
+   phvwri    p._dma_cmd_X##_dma_cmd_phv_end_addr,			\
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _end));	\
+   phvwri    p._dma_cmd_X##_dma_cmd_phv_start_addr,			\
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		\
+                                      sizeof(p._start) - 1);		\
+   phvwr	p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];			\
+   
+#define DMA_PHV2MEM_SETUP_ADDR34(_start, _end, _addr, _dma_cmd_X)	\
+   phvwrpair p._dma_cmd_X##_dma_cmd_addr[33:0], _addr,              \
+             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM;        \
+   phvwri    p._dma_cmd_X##_dma_cmd_phv_end_addr,			        \
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _end));	        \
+   phvwri    p._dma_cmd_X##_dma_cmd_phv_start_addr,			        \
+                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		\
+                                      sizeof(p._start) - 1);		\
+   
+#define DMA_MEM2MEM_SETUP_ADDR64(_type, _addr, _size, _use_override_lif,    \
+                                 _override_lif, _dma_cmd_X)			\
+   phvwrpair p._dma_cmd_X##_dma_cmd_mem2mem_type, _type,		\
+             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_MEM2MEM;		\
+   phvwrpair p._dma_cmd_X##_dma_cmd_override_lif, _override_lif,	\
+             p._dma_cmd_X##_dma_cmd_use_override_lif, _use_override_lif;					\
+   phvwrpair p._dma_cmd_X##_dma_cmd_size, _size,			\
+          	 p._dma_cmd_X##_dma_cmd_addr, _addr;			\
+   phvwr	p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];	\
+
+#define DMA_MEM2MEM_SETUP_REG_ADDR(_type, _addr, _size, _use_override_lif,    \
+                                   _override_lif, _dma_cmd_X)			\
+   phvwrpair p._dma_cmd_X##_dma_cmd_mem2mem_type, _type,		\
+             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_MEM2MEM;		\
+   phvwrpair p._dma_cmd_X##_dma_cmd_override_lif, _override_lif,	\
+             p._dma_cmd_X##_dma_cmd_use_override_lif, _use_override_lif;					\
+   phvwrpair p._dma_cmd_X##_dma_cmd_size, _size,			\
+          	 p._dma_cmd_X##_dma_cmd_addr, _addr;			\
+   phvwr     p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];	\
 
 #define DMA_MEM2MEM_SETUP(_type, _addr, _size, _use_override_lif,	\
                           _override_lif, _dma_cmd_X)			\
-   phvwri	p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_MEM2MEM;		\
-   phvwri	p._dma_cmd_X##_dma_cmd_mem2mem_type, _type;		\
-   phvwr	p._dma_cmd_X##_dma_cmd_use_override_lif,		\
-		_use_override_lif;					\
-   phvwr	p._dma_cmd_X##_dma_cmd_override_lif, _override_lif;	\
-   phvwr	p._dma_cmd_X##_dma_cmd_size, _size;			\
-   phvwr	p._dma_cmd_X##_dma_cmd_addr, _addr;			\
-   srl		r1, _addr, 63;						\
-   seq		c1, r1, 1;						\
-   phvwr.c1	p._dma_cmd_X##_dma_cmd_host_addr, 1;			\
-
+   add      r1, r0, _addr;  \
+   DMA_MEM2MEM_SETUP_REG_ADDR(_type, r1, _size, _use_override_lif,	\
+                              _override_lif, _dma_cmd_X)
+   
 // DMA fence update: Set the fence bit for the PHV2MEM DMA command
 #define DMA_PHV2MEM_FENCE(_dma_cmd_X)					\
    phvwri	p._dma_cmd_X##_dma_cmd_wr_fence, 1;			\
@@ -214,10 +256,8 @@
 
 // DMA address update: Specify the destination address for the DMA command
 #define DMA_ADDR_UPDATE(_addr, _dma_cmd_X)				\
-   phvwr	p._dma_cmd_X##_dma_cmd_addr, _addr;			\
-   srl		r1, _addr, 63;						\
-   seq		c1, r1, 1;						\
-   phvwr.c1	p._dma_cmd_X##_dma_cmd_host_addr, 1;			\
+   phvwr    p._dma_cmd_X##_dma_cmd_addr, _addr;	\
+   phvwr    p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];	\
    
 // Setup the start and end DMA pointers
 #define DMA_PTR_SETUP(_start, _dma_cmd_eop, _dma_cmd_ptr)		\
@@ -229,19 +269,16 @@
 
 // Setup the doorbell data. Write back the data in little endian format
 #define DOORBELL_DATA_SETUP(_db_data, _index, _ring, _qid, _pid)	\
-   add		r1, r0, _index;						\
-   add		r1, r1, _ring, DOORBELL_DATA_RING_SHIFT;		\
+   add		r1, _index, _ring, DOORBELL_DATA_RING_SHIFT;	\
    add		r1, r1, _qid, DOORBELL_DATA_QID_SHIFT;			\
    add		r1, r1, _pid, DOORBELL_DATA_PID_SHIFT;			\
    phvwr	p._db_data, r1.dx;					\
 
 // Setup the doorbell address. Output will be stored in GPR r7.
 #define DOORBELL_ADDR_SETUP(_lif, _qtype, _sched_wr, _upd)		\
-   add		r7, r0, _qtype, DOORBELL_ADDR_QTYPE_SHIFT;		\
+   addi		r7, r0, DOORBELL_ADDR_WA_LOCAL_BASE + _sched_wr + _upd;			\
+   add		r7, r7, _qtype, DOORBELL_ADDR_QTYPE_SHIFT;		\
    add		r7, r7, _lif, DOORBELL_ADDR_LIF_SHIFT;			\
-   addi		r7, r7, _sched_wr;					\
-   addi		r7, r7, _upd;						\
-   addi		r7, r7, DOORBELL_ADDR_WA_LOCAL_BASE;			\
 
 
 // Clear the doorbell as there was no work to be done. Note index can
@@ -377,7 +414,6 @@
 // Queue pop based on an increment value
 #define QUEUE_POP_INCR(_w_ndx, _num_entries, _incr)			\
    tblmincri	_w_ndx, _num_entries, _incr;				\
-   nop;									\
 
 // Queue push (default increment value of 1)
 #define QUEUE_POP(_w_ndx, _num_entries)					\
@@ -386,7 +422,6 @@
 // Queue push based on an increment value
 #define QUEUE_PUSH_INCR(_p_ndx, _num_entries, _incr)			\
    tblmincri	_p_ndx, _num_entries, _incr;				\
-   nop;									\
 
 // Queue push (default increment value of 1)
 #define QUEUE_PUSH(_p_ndx, _num_entries)				\
@@ -394,10 +429,8 @@
 
 // Get the address to push the entry to. Return value is in GPR r7.
 #define QUEUE_PUSH_ADDR(_base_addr, _p_ndx, _entry_size)		\
-   add 		r1, r0, _entry_size;					\
-   sllv		r2, _p_ndx, r1;						\
+   sll		r2, _p_ndx, _entry_size;						\
    add		r7, r2, _base_addr;					\
-
 
 // Priority queue pop check - based on queue empty AND 
 // priority counter < priority weight
@@ -414,10 +447,10 @@
 #define SERVICE_PRI_QUEUE(_w_ndx_pri, _pri_val)				\
    add		r6, r0, _w_ndx_pri;					\
    QUEUE_POP(_w_ndx_pri, d.num_entries)					\
-   phvwr	p.storage_kivec0_w_ndx, _w_ndx_pri;			\
-   phvwri	p.storage_kivec0_io_priority, _pri_val;			\
+   phvwrpair p.storage_kivec0_w_ndx, _w_ndx_pri,			\
+             p.storage_kivec0_io_priority, _pri_val;			\
    LOAD_TABLE_FOR_PRI_INDEX(d.base_addr, r6, d.num_entries, _pri_val,	\
-                            d.entry_size, d.entry_size, d.next_pc)	\
+                            d.entry_size, d.entry_size[2:0], d.next_pc)	\
    
    
 // Derive the priority queue push address and store it in register r7
@@ -425,11 +458,9 @@
 // Both entry_size and num_entries are to used as powers of 2.
 #define PRI_QUEUE_PUSH_ADDR(_pri, _base_addr, _p_ndx, _num_entries,	\
                             _entry_size)				\
-   add		r1, r0, _num_entries;					\
-   sllv		r2, _pri, r1;						\
+   sll		r2, _pri, _num_entries;						\
    add		r2, r2, _p_ndx;						\
-   add 		r1, r0, _entry_size;					\
-   sllv		r2, r2, r1;						\
+   sll		r2, r2, _entry_size;						\
    add		r7, r2, _base_addr;					\
 
 // Pushing into a priority queue:
@@ -515,11 +546,9 @@
 // address = (SSD_CMDS_HEADER_SIZE + (cmd_index * SSD_CMDS_ENTRY_SIZE))
 // Input: cmd_index stored in GRP r6. Output: Address tored in GPR r7
 #define SSD_CMD_ENTRY_ADDR_CALC						\
-   add		r1, STORAGE_KIVEC0_SSD_BM_ADDR, r0;			\
-   addi		r1, r1, SSD_CMDS_HEADER_SIZE;				\
-   muli		r2, r6, SSD_CMDS_ENTRY_SIZE;				\
-   add		r7, r1, r2;						\
-
+   add		r7, STORAGE_KIVEC0_SSD_BM_ADDR, SSD_CMDS_HEADER_SIZE; \
+   add      r7, r7, r6, SSD_CMDS_ENTRY_SHIFT;
+   
 // Setup the source of the mem2mem DMA into DMA cmd 1:
 //   Src Addr:  ROCE RQ WQE address calculated based on the R2N buffer 
 //              passed in the R2N WQE.  
@@ -530,8 +559,7 @@
 // the size, address will be filled by the push operation). 
 //
 #define R2N_BUF_POST_SETUP(_addr)					\
-   add		r4, r0, _addr;						\
-   subi		r4, r4, R2N_BUF_NVME_BE_CMD_OFFSET;			\
+   sub		r4, _addr, R2N_BUF_NVME_BE_CMD_OFFSET;			\
    addi		r5, r0, ROCE_RQ_WQE_SIZE;				\
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4, r5, r0, r0, dma_m2m_1)	\
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_2)	\
@@ -553,9 +581,8 @@
 //     this macro is invoked 
 #define COMP_SGL_DMA(_dma_cmd_ptr_src, _dma_cmd_ptr_dst, _addr, _len,	\
                      _branch_instr)					\
-   add		r4, r0, _len;						\
-   seq		c1, _len, 0;						\
-   addi.c1	r4, r0, 65536;						\
+   seq		c1, _len, r0;						\
+   cmov     r4, c1,	65536, _len;						\
    sle		c2, r6, r4;						\
    add.c2	r4, r0, r6;						\
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r4, 0, 0, 		\
@@ -563,8 +590,7 @@
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, _addr, r4, 0, 0,		\
                      _dma_cmd_ptr_dst)					\
    add		r7, r7, r4;						\
-   sub		r6, r6, r4;						\
    bcf		[c2], _branch_instr;					\
-   nop;									\
+   sub		r6, r6, r4;						\
 
 #endif     // STORAGE_ASM_DEFINES_H

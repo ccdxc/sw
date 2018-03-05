@@ -26,8 +26,8 @@ storage_tx_roce_r2n_wqe_prep_start:
    // Setup the DMA command to push the R2N WQE entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pad, r0, dma_p2m_1)
+   DMA_PHV2MEM_SETUP_ADDR64(r2n_wqe_handle, r2n_wqe_pad, r0, dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                             storage_tx_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
+                               storage_tx_q_state_push_start)

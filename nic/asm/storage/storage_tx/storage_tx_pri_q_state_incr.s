@@ -37,6 +37,6 @@ check_lo:
 
 tbl_load:
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_SSD_BM_ADDR, 
+   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_SSD_BM_ADDR, 
                              STORAGE_DEFAULT_TBL_LOAD_SIZE,
                              storage_tx_nvme_be_wqe_save_start)

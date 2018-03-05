@@ -59,8 +59,8 @@ check_remote:
    // Setup the DMA command to copy the NVME backend status entry from PHV 
    // to the R2N buffer
    addi		r7, r6, R2N_BUF_STATUS_BUF_OFFSET
-   DMA_PHV2MEM_SETUP(nvme_be_sta_hdr_time_us, nvme_sta_status, r7, 
-                     dma_p2m_1)
+   DMA_PHV2MEM_SETUP_ADDR64(nvme_be_sta_hdr_time_us, nvme_sta_status, r7, 
+                            dma_p2m_1)
 
    // If read command, send read data back via RDMA write
    seq		c1, d.is_read[0], 1
@@ -72,8 +72,8 @@ check_remote:
    // Destination address (in DMA command 4) to be set by the push operation.
    addi		r7, r6, R2N_BUF_WRITE_REQ_OFFSET
    addi		r5, r0, ROCE_SQ_WQE_SIZE
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r5, r0, r0, dma_m2m_3)
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_4)
+   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r7, r5, r0, r0, dma_m2m_3)
+   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_4)
 
    
    // Push status descriptor (RDMA send) from R2N buffer to the ROCE SQ
@@ -82,8 +82,8 @@ push_remote_status:
    // Destination address (in DMA command 6) to be set by the push operation.
    addi		r7, r6, R2N_BUF_STATUS_REQ_OFFSET
    addi		r5, r0, ROCE_SQ_WQE_SIZE
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r7, r5, r0, r0, dma_m2m_5)
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_6)
+   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_SRC, r7, r5, r0, r0, dma_m2m_5)
+   DMA_MEM2MEM_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_6)
 
    // Jump to loading the tables
    b		load_tbl
@@ -93,10 +93,10 @@ push_local_status:
    // Setup the DMA command to push the NVME backend status entry. For now keep 
    // the destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP(nvme_be_sta_hdr_time_us, nvme_sta_status, r0, 
-                     dma_p2m_1)
+   DMA_PHV2MEM_SETUP_ADDR64(nvme_be_sta_hdr_time_us, nvme_sta_status, r0, 
+                            dma_p2m_1)
 
 load_tbl:
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(d.pri_qaddr, Q_STATE_SIZE,
-                             storage_tx_pri_q_state_decr_start)
+   LOAD_TABLE_FOR_ADDR34_PARAM(d.pri_qaddr, Q_STATE_SIZE,
+                               storage_tx_pri_q_state_decr_start)

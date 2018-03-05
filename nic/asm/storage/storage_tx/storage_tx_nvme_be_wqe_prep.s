@@ -21,14 +21,14 @@ storage_tx_nvme_be_wqe_prep_start:
 		d.{src_queue_id...r2n_buf_handle}
 
    // Save the SSD handle and priority into the K+I vector
-   phvwr	p.storage_kivec0_ssd_handle, d.ssd_handle
-   phvwr	p.storage_kivec0_io_priority, d.io_priority
+   phvwrpair	p.storage_kivec0_io_priority, d.io_priority, \
+        	p.storage_kivec0_ssd_handle, d.ssd_handle
 
    // Setup the DMA command to push the NVME backend status entry. For now keep 
    // the destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pad, r0, 
-                     dma_p2m_1)
+   DMA_PHV2MEM_SETUP_ADDR64(r2n_wqe_handle, r2n_wqe_pad, r0, 
+                            dma_p2m_1)
 
    // Calculate the priority queue state address based on SSD handle
    // Output will be in GPR r7
@@ -40,5 +40,5 @@ storage_tx_nvme_be_wqe_prep_start:
    phvwr	p.r2n_wqe_pri_qaddr, r7
 
    // Use the address calculated above to set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(r7, Q_STATE_SIZE,
-                             storage_tx_pri_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR_PC_IMM(r7, Q_STATE_SIZE,
+                              storage_tx_pri_q_state_push_start)
