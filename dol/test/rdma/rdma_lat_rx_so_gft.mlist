@@ -1,0 +1,28 @@
+# Feature Test Modules List
+# For RDMA latency tests
+feature:
+    id          : rdma_lat_rx_so_gft
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
+#    selectors:
+#        maxrdmasessions: 1
+
+modules:
+    - module:
+        name    : RDMA_RX_SEND_ONLY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only
+        spec    : resp_rx_send_only.testspec
+        ignore  : False
+        iterate:
+           - rdmasession:
+               base : filter://id=3
+
+

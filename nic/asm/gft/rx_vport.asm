@@ -18,7 +18,7 @@ rx_vport:
     cmov        r1, c1, d.rx_vport_d.vport, EXCEPTION_VPORT
     seq         c7, k.capri_p4_intrinsic_parser_err, TRUE
     nop.!c7.e
-    phvwrpair   p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0, \
+    phvwrpair   p.capri_intrinsic_tm_oport, TM_PORT_DMA, \
                     p.capri_intrinsic_lif, r1
 
     // handler parser errors

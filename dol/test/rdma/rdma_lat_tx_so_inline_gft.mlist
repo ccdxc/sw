@@ -1,0 +1,26 @@
+# Feature Test Modules List
+# For RDMA perf tests
+feature:
+    id          : rdma_lat_tx_so_inline_gft
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
+#    selectors:
+#        maxrdmasessions: 1
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+        iterate:
+           - rdmasession:
+               base : filter://id=3

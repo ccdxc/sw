@@ -70,7 +70,7 @@ swig-cli-gft: swig-cli-clean
 gft: platform capsim-master sdk go-proto
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C p4 msft_gft
-	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT"
+	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT -DCAPRI_IGNORE_TIMESTAMP"
 	$(MAKE) gen-proto
 	$(MAKE) -j4 build-proto
 	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal

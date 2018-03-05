@@ -4,8 +4,8 @@ feature:
     sub         : l2uc
     package     : test.gft
     module      : gft
-    enable      : True
-    ignore      : False
+    enable      : False
+    ignore      : True
     spec        : l2uc.testspec
 
 modules:

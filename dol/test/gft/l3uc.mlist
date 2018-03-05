@@ -4,7 +4,7 @@ feature:
     sub     : l3uc
     package : test.gft
     module  : gft
-    enable  : True
+    enable  : False
     ignore  : True
     spec    : l3uc.testspec
 

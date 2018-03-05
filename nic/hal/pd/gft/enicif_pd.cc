@@ -15,6 +15,8 @@
 namespace hal {
 namespace pd {
 
+pd_lif_t *pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif);
+
 //-----------------------------------------------------------------------------
 // allocate resources for PD EnicIf
 //-----------------------------------------------------------------------------
@@ -82,6 +84,7 @@ pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
     rx_vport_actiondata     data;
     mac_addr_t              *mac = NULL;
     tcam                    *rx_vport_tbl = NULL;
+    pd_lif_t                *pd_lif             = NULL;
     uint32_t                hw_lif_id = 0;
 
     memset(&key, 0, sizeof(key));
@@ -91,6 +94,7 @@ pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
     rx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_RX_VPORT);
     HAL_ASSERT_RETURN((rx_vport_tbl != NULL), HAL_RET_ERR);
 
+    pd_lif = pd_enicif_get_pd_lif(pd_enicif);
 
     // key
     key.ethernet_1_valid = 0xFF;
@@ -109,8 +113,8 @@ pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
         goto end;
     }
     data.rx_vport_action_u.rx_vport_rx_vport.vport = hw_lif_id;
-    // TODO: Take it from config
-    // data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 1;
+     data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 
+         pd_lif ? lif_get_enable_rdma((lif_t *)pd_lif->pi_lif) : false;
 
     if (oper == TABLE_OPER_INSERT) {
         sdk_ret = rx_vport_tbl->insert(&key, &mask, &data,
@@ -301,5 +305,23 @@ pd_enicif_mem_free (pd_if_mem_free_args_t *args)
     return ret;
 }
 
+pd_lif_t *
+pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
+{
+    if_t        *pi_if = NULL;
+    pd_lif_t    *pd_lif = NULL;
+    lif_t       *pi_lif = NULL;
+
+    pi_if = (if_t *)pd_enicif->pi_if;
+    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+
+    pi_lif = if_get_lif(pi_if);
+    HAL_ASSERT(pi_lif != NULL);
+
+    pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
+    HAL_ASSERT(pi_lif != NULL);
+
+    return pd_lif;
+}
 }    // namespace pd
 }    // namespace hal
