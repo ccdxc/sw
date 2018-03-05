@@ -19,6 +19,7 @@ int compress_flat_64K_buf_in_hbm();
 int decompress_to_flat_64K_buf_in_hbm();
 int compress_output_through_sequencer();
 int verify_integrity_for_gt64K();
+int max_data_rate();
 
 }  // namespace tests
 

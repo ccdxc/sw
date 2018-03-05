@@ -41,6 +41,7 @@ bool run_xts_tests = false;
 bool run_rdma_tests = false;
 bool run_pdma_tests = false;
 bool run_xts_perf_tests = false;
+bool run_comp_perf_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
 
@@ -109,8 +110,14 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
   {&tests::decompress_to_flat_64K_buf_in_hbm, "Decompress HBM->HBM to flat 64K buf", false},
   {&tests::compress_output_through_sequencer, "Compress and pull data from HBM through sequencer", false},
-  // Enable this once the model is fixed.
+  // Enable when model is fixed.
   //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
+};
+
+std::vector<tests::TestEntry> comp_perf_tests = {
+  {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
+  {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
+  {&tests::max_data_rate, "Test max data rate", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
@@ -161,6 +168,7 @@ int main(int argc, char**argv) {
       run_xts_tests = true;
       run_rdma_tests = false;
       run_xts_perf_tests = false;
+      run_comp_perf_tests = false;
       run_pdma_tests = true;
   } else if (FLAGS_test_group == "unit") {
       run_unit_tests = true;
@@ -178,6 +186,8 @@ int main(int argc, char**argv) {
       run_rdma_tests = true;
   } else if (FLAGS_test_group == "xts_perf") {
       run_xts_perf_tests = true;
+  } else if (FLAGS_test_group == "comp_perf") {
+      run_comp_perf_tests = true;
   } else if (FLAGS_test_group == "pdma") {
       run_pdma_tests = true;
   } else {
@@ -245,6 +255,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(comp_tests[i]);
     }
     printf("Added comp tests \n");
+  }
+ 
+  // Add comp_perf tests
+  if (run_comp_perf_tests) {
+    for (size_t i = 0; i < comp_perf_tests.size(); i++) {
+      test_suite.push_back(comp_perf_tests[i]);
+    }
+    printf("Added comp perf tests \n");
   }
 
   // Add xts tests
