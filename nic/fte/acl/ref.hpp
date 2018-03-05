@@ -15,7 +15,7 @@ struct ref_t {
 static inline void
 ref_inc(const ref_t *ref_count)
 {
-    if (ref_count) 
+    if (ref_count && ref_count->free) 
         ((ref_t *)ref_count)->count++;
 }
 
@@ -29,16 +29,14 @@ ref_clone(const ref_t *ref_count)
 static inline void
 ref_dec(const ref_t *ref_count)
 {
-    if (!ref_count) {
+    if (!ref_count || !ref_count->free) {
         return;
     }
 
     SDK_ASSERT(ref_count->count > 0);
 
     if (--((ref_t *)ref_count)->count == 0) {
-        if (ref_count->free) {
-            ref_count->free(ref_count);
-        }
+        ref_count->free(ref_count);
     }
 }
 

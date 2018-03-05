@@ -81,7 +81,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_ACL_CTX                         = 67,
     HAL_SLAB_ACL_LIST                        = 68,
     HAL_SLAB_ACL_LIST_ITEM                   = 69,
-    HAL_SLAB_PI_MAX                          = 70,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_ACL_ITREE                       = 70,
+    HAL_SLAB_ACL_ITREE_NODE                  = 71,
+    HAL_SLAB_PI_MAX                          = 72,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

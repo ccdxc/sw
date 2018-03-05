@@ -19,7 +19,7 @@ public:
     uint32_t size() const { return num_entries_; }
     bool empty() const { return first_ == NULL; }
 
-    const ref_t *find(const void *arg, cb_t cb) const;
+    const ref_t *find(const void *arg = NULL, cb_t cb = NULL) const;
     bool walk(const void *arg, cb_t cb) const;
 
     // list update methods, updates the list pointer

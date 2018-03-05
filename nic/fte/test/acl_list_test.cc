@@ -12,7 +12,7 @@ struct entry_t {
 };
 
 static slab* entry_slab_ =
-    slab::factory("test_entry", 0, sizeof(entry_t), 16, true, true, true);
+    slab::factory("test_entry", 0, sizeof(entry_t), 10*1024, true, true, true);
 
 static entry_t *entry_alloc(int val) {
     entry_t *entry = (entry_t*)entry_slab_->alloc();

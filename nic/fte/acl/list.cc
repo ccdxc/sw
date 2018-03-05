@@ -7,7 +7,7 @@ namespace acl {
 // static memeber initializers
 slab *list_t::list_item_slab_ =
     slab::factory("acl_list_item", hal::HAL_SLAB_ACL_LIST_ITEM,
-                  sizeof(item_t), 1024, true, true, true);
+                  sizeof(item_t), 4*1024, true, true, true);
 slab *list_t::list_slab_ =
     slab::factory("acl_list", hal::HAL_SLAB_ACL_LIST,
                   sizeof(list_t), 256, true, true, true);
