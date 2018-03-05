@@ -211,12 +211,12 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
 {
     cap_pics_csr_t & pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, inst_id);
     pics_csr.picc.filter_addr_lo_s.data[filter_idx].read();
-    pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(reg->start_offset);
+    pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(HBM_OFFSET(reg->start_offset) >> 6); //28 MSB bits only
     pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
 
     pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
-    pics_csr.picc.filter_addr_hi_s.data[filter_idx].value(reg->start_offset + 
-                                                 (reg->size_kb * 1024));
+    pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+                                                 (reg->size_kb * 1024)) >> 6);
     pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
     pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
@@ -243,47 +243,33 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4IG) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4IG cache, "
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4IG cache(region 1), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb, p4ig_filter_idx);
+                            HBM_OFFSET(reg->start_offset), reg->size_kb, p4ig_filter_idx);
             capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx);
             p4ig_filter_idx++;
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4EG) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4EG cache, "
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4EG cache(region 2), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb, p4eg_filter_idx);
+                            HBM_OFFSET(reg->start_offset), reg->size_kb, p4eg_filter_idx);
             capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx);
             p4eg_filter_idx++;
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS TXDMA cache, "
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS TXDMA cache(region 3), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb, p4plus_txdma_filter_idx);
+                            HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_txdma_filter_idx);
             capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx);
             p4plus_txdma_filter_idx++;
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS RXDMA cache, "
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS RXDMA cache(region 0), "
                             "start={} size={} index={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb, p4plus_rxdma_filter_idx);
-            capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx);
-            p4plus_rxdma_filter_idx++;
-        }
-
-        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_BOTH) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS TXDMA cache, "
-                            "start={} size={} index={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb, p4plus_txdma_filter_idx);
-            capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx);
-
-            p4plus_txdma_filter_idx++;
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS RXDMA cache, "
-                            "start={} size={} index={}", reg->mem_reg_name,
-                            reg->start_offset, reg->size_kb, p4plus_rxdma_filter_idx);
+                            HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_rxdma_filter_idx);
             capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx);
             p4plus_rxdma_filter_idx++;
         }
