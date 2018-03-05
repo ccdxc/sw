@@ -576,7 +576,7 @@ int add_xts_tests(std::vector<TestEntry>& test_suite) {
     test_suite.push_back({*ctx, ctx->get_name(), false});
     delete ctx;
   }
-  //test_suite.push_back({&tests::xts_multi_blk, "XTS Multi Block", false});
+  test_suite.push_back({&tests::xts_multi_blk, "XTS Multi Block", false});
   test_suite.push_back({&tests::xts_in_place, "XTS HBM  Buffer In-Place", false});
   //test_suite.push_back({&tests::xts_netapp_data, "XTS Netapp Data", false});
 

@@ -119,7 +119,8 @@ dp_mem_t::dp_mem_t(uint32_t num_lines,
 
 dp_mem_t::~dp_mem_t()
 {
-	std::unordered_map<uint64_t, dp_mem_t*>::iterator fragment_it;
+    std::unordered_map<uint64_t, dp_mem_t*>::iterator fragment_it;
+    dp_mem_t    *fragment;
 
     /*
      * Iterate and delete fragments
@@ -128,9 +129,10 @@ dp_mem_t::~dp_mem_t()
          fragment_it != fragments_map.end();
          fragment_it++) {
 
-        delete fragment_it->second;
+        fragment = fragment_it->second;
+        fragments_map.erase(fragment_it);
+        delete fragment;
     }
-    fragments_map.clear();
     
     /*
      * Take self out of parent's map
