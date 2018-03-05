@@ -57,7 +57,7 @@ func setup() {
 	}
 	// api server client
 	logger := log.WithContext("Pkg", "password_test")
-	apicl, err = apiclient.NewGrpcAPIClient(apiSrvAddr, logger)
+	apicl, err = apiclient.NewGrpcAPIClient("password_test", apiSrvAddr, logger)
 	if err != nil {
 		panic("Error creating api client")
 	}

@@ -28,11 +28,11 @@ type AuthenticationManager struct {
 }
 
 // NewAuthenticationManager returns an instance of AuthenticationManager
-func NewAuthenticationManager(apiServer string, resolverUrls string, tokenExpiration time.Duration) (*AuthenticationManager, error) {
+func NewAuthenticationManager(name, apiServer string, resolverUrls string, tokenExpiration time.Duration) (*AuthenticationManager, error) {
 	l := log.WithContext("Pkg", "authn")
 	// create a resolver
-	r := resolver.New(&resolver.Config{Name: "authn", Servers: strings.Split(resolverUrls, ",")})
-	apicl, err := apiclient.NewGrpcAPIClient(apiServer, l, rpckit.WithBalancer(balancer.New(r)))
+	r := resolver.New(&resolver.Config{Name: name, Servers: strings.Split(resolverUrls, ",")})
+	apicl, err := apiclient.NewGrpcAPIClient(name, apiServer, l, rpckit.WithBalancer(balancer.New(r)))
 	if err != nil {
 		log.Errorf("Failed to connect to API server [%s]\n", apiServer)
 		return nil, err

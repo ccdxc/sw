@@ -79,6 +79,13 @@ type testInfo struct {
 	certSrv        *certsrv.CertSrv
 	rpcServer      *rpckit.RPCServer
 	smartNICServer *smartnic.RPCServer
+	resolverServer *rpckit.RPCServer
+}
+
+type nmdInfo struct {
+	agent          *nmd.Agent
+	resolverClient resolver.Interface
+	dbPath         string
 }
 
 var tInfo testInfo
@@ -128,9 +135,10 @@ func launchCMDServer(m *testing.M, url string) (*rpckit.RPCServer, error) {
 	// Also create a mock resolver
 	rs := mock.NewResolverService()
 	resolverHandler := service.NewRPCHandler(rs)
-	resolverServer, err := rpckit.NewRPCServer("resolver", *resolverURL, rpckit.WithTracerEnabled(true))
+	resolverServer, err := rpckit.NewRPCServer(globals.Cmd, *resolverURL, rpckit.WithTracerEnabled(true))
 	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
 	resolverServer.Start()
+	tInfo.resolverServer = resolverServer
 
 	return rpcServer, nil
 }
@@ -149,7 +157,7 @@ func createRPCServer(m *testing.M) *rpckit.RPCServer {
 }
 
 // Create NMD and Agent
-func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error) {
+func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmdInfo, error) {
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -168,18 +176,24 @@ func createNMD(t *testing.T, dbPath, nodeID, restURL string) (*nmd.Agent, error)
 	ag, err := nmd.NewAgent(pa, dbPath, nodeID, *cmdURL, "", restURL, *mode, resolverClient)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
+		return nil, err
 	}
 
-	return ag, err
+	ni := &nmdInfo{
+		agent:          ag,
+		resolverClient: resolverClient,
+		dbPath:         dbPath,
+	}
+	return ni, err
 }
 
 // stopAgent stops NMD server and deletes emDB file
-func stopNMD(t *testing.T, ag *nmd.Agent, dbPath string) {
-
-	ag.Stop()
-	err := os.Remove(dbPath)
+func stopNMD(t *testing.T, i *nmdInfo) {
+	i.agent.Stop()
+	i.resolverClient.Stop()
+	err := os.Remove(i.dbPath)
 	if err != nil {
-		log.Fatalf("Error deleting emDB file: %s, err: %v", dbPath, err)
+		log.Fatalf("Error deleting emDB file: %s, err: %v", i.dbPath, err)
 	}
 }
 
@@ -213,11 +227,11 @@ func TestCreateNMDs(t *testing.T) {
 					os.Remove(dbPath)
 
 					// create Agent and NMD
-					ag, err := createNMD(t, dbPath, nodeID, restURL)
-					defer stopNMD(t, ag, dbPath)
-					Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
+					nmdInst, err := createNMD(t, dbPath, nodeID, restURL)
+					defer stopNMD(t, nmdInst)
+					Assert(t, (err == nil && nmdInst.agent != nil), "Failed to create agent", err)
 
-					nm := ag.GetNMD()
+					nm := nmdInst.agent.GetNMD()
 
 					if *mode == "classic" {
 						// Validate default classic mode
@@ -437,7 +451,7 @@ func Setup(m *testing.M) {
 
 	// Create api client
 	apiServerAddr := "localhost" + ":" + tInfo.apiServerPort
-	apiCl, err := apicache.NewGrpcUpstream(apiServerAddr, tInfo.l)
+	apiCl, err := apicache.NewGrpcUpstream("nic_admission_test", apiServerAddr, tInfo.l, apicache.WithServerName(globals.APIServer))
 	if err != nil {
 		fmt.Printf("Cannot create gRPC client - %v", err)
 		os.Exit(-1)
@@ -489,6 +503,11 @@ func Teardown(m *testing.M) {
 
 	// stop certificate server
 	tInfo.certSrv.Stop()
+
+	// stop resolver server
+	tInfo.resolverServer.Stop()
+
+	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 
 	log.Infof("#### ApiServer and CMD smartnic server is STOPPED")
 }

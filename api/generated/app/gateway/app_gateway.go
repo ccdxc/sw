@@ -22,6 +22,7 @@ import (
 	app "github.com/pensando/sw/api/generated/app"
 	"github.com/pensando/sw/api/generated/app/grpc/client"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -217,7 +218,7 @@ func (e *sAppV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr 
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("AppV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}

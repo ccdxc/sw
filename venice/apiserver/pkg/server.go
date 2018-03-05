@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -194,7 +195,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	// Create the GRPC connection for the server.
 	var s *rpckit.RPCServer
 	{
-		s, err = rpckit.NewRPCServer("APIServer", config.GrpcServerPort, opts...)
+		s, err = rpckit.NewRPCServer(globals.APIServer, config.GrpcServerPort, opts...)
 		if err != nil {
 			panic(fmt.Sprintf("Could not start Server on port %v err(%s)", config.GrpcServerPort, err))
 		}

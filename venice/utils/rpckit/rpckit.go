@@ -60,6 +60,7 @@ type options struct {
 	tlsProvider       TLSProvider       // provides TLS parameters for all RPC clients and servers
 	customTLSProvider bool              // a flag that indicates that user has explicitly passed in a TLS provider
 	balancer          grpc.Balancer     // Load balance RPCs between available servers (client option)
+	remoteServerName  string            // The name of the server that client is connecting to (client option)
 }
 
 // RPCServer contains RPC server state
@@ -132,6 +133,15 @@ func WithMiddleware(m Middleware) Option {
 func WithBalancer(b grpc.Balancer) Option {
 	return func(o *options) {
 		o.balancer = b
+	}
+}
+
+// WithRemoteServerName passes the name of the server that client is connecting to
+// This name is expected to appear as a SAN in the server certificate if TLS is enabled.
+// If it is not provided, remoteURL is used in its place.
+func WithRemoteServerName(name string) Option {
+	return func(o *options) {
+		o.remoteServerName = name
 	}
 }
 
@@ -332,6 +342,12 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 		serviceTarget = true
 	}
 
+	// set remoteServerName to remoteURL if it was not provided
+	if rpcClient.options.remoteServerName == "" {
+		rpcClient.options.remoteServerName = remoteURL
+	}
+	serverName := rpcClient.options.remoteServerName
+
 	// add default middlewares
 	if rpcClient.enableStats {
 		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats) //stats
@@ -357,7 +373,7 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 
 	// Get credentials
 	if rpcClient.tlsProvider != nil {
-		tlsOpt, terr := rpcClient.tlsProvider.GetDialOptions(mysvcName)
+		tlsOpt, terr := rpcClient.tlsProvider.GetDialOptions(serverName)
 		if terr != nil {
 			log.Errorf("Failed to get dial options for server %v. Err: %v", mysvcName, terr)
 			return nil, err
@@ -386,13 +402,13 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(remoteURL, grpcOpts...)
 	if err != nil {
-		log.Errorf("could not connect to %s. Err: %v", remoteURL, err)
+		log.Errorf("Service %v could not connect to service %s, URL: %v, err: %v", mysvcName, serverName, remoteURL, err)
 		return nil, err
 	}
 
 	rpcClient.ClientConn = conn
 
-	log.Infof("Client %s Connected to %s", mysvcName, remoteURL)
+	log.Infof("Client %s Connected to %s at %s", mysvcName, serverName, remoteURL)
 
 	return rpcClient, nil
 }
@@ -413,9 +429,9 @@ func (c *RPCClient) Reconnect() error {
 	var err error
 	// Get credentials
 	if c.tlsProvider != nil {
-		opts, err = c.tlsProvider.GetDialOptions(c.mysvcName)
+		opts, err = c.tlsProvider.GetDialOptions(c.options.remoteServerName)
 		if err != nil {
-			log.Errorf("Failed to get dial options for server %v. Err: %v", c.mysvcName, err)
+			log.Errorf("Failed to get dial options for server %v. Err: %v", c.remoteURL, err)
 			return err
 		}
 	} else {
@@ -450,6 +466,11 @@ func (c *RPCClient) Close() error {
 	if c.tlsProvider != nil {
 		c.tlsProvider.Close()
 		c.tlsProvider = nil
+	}
+
+	if c.balancer != nil {
+		c.balancer.Close()
+		c.balancer = nil
 	}
 
 	return nil

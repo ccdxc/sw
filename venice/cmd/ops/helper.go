@@ -47,7 +47,7 @@ type postProcessFn func(host string, obj interface{}) error
 
 // defaultClusterClientFn creates a default gRPC cluster client.
 func defaultClusterClientFn(host string) (grpc.ClusterClient, error) {
-	rpcClient, err := rpckit.NewRPCClient("cmd", fmt.Sprintf("%s:%s", host, globals.CMDClusterMgmtPort), rpckit.WithTLSProvider(nil))
+	rpcClient, err := rpckit.NewRPCClient(globals.Cmd, fmt.Sprintf("%s:%s", host, globals.CMDClusterMgmtPort), rpckit.WithTLSProvider(nil))
 	if err != nil {
 		log.Errorf("RPC client creation for %v failed with error: %v", host, err)
 		return nil, errors.NewInternalError(err)

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"testing"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -19,6 +20,11 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
+	"github.com/pensando/sw/venice/cmd/grpc/service"
+	"github.com/pensando/sw/venice/cmd/services/mock"
+	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/testenv"
@@ -44,6 +50,8 @@ type integTestSuite struct {
 	certSrv      *certsrv.CertSrv
 	datapathKind datapath.Kind
 	numAgents    int
+	resolverSrv  *rpckit.RPCServer
+	resolverCli  resolver.Interface
 }
 
 // test args
@@ -79,16 +87,41 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
+	// Create a mock resolver
+	m := mock.NewResolverService()
+	resolverHandler := service.NewRPCHandler(m)
+	resolverServer, err := rpckit.NewRPCServer(globals.Cmd, "localhost:0", rpckit.WithTracerEnabled(false))
+	c.Assert(err, IsNil)
+	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+	resolverServer.Start()
+	it.resolverSrv = resolverServer
+
+	// populate the mock resolver with apiserver instance.
+	npmSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-npm-test",
+		},
+		Service: globals.Npm,
+		Node:    "localhost",
+		URL:     integTestRPCURL,
+	}
+	m.AddServiceInstance(&npmSi)
+
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, "", "", nil)
+	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
+	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, "", "", rc)
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
+	it.resolverCli = rc
 
 	log.Infof("Creating %d/%d agents", it.numAgents, *numAgents)
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(it.datapathKind, fmt.Sprintf("dummy-uuid-%d", i), integTestRPCURL)
+		agent, err := CreateAgent(it.datapathKind, fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, rc)
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -116,6 +149,12 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 	it.ctrler = nil
 	it.certSrv.Stop()
 	it.certSrv = nil
+	it.resolverSrv.Stop()
+	it.resolverSrv = nil
+	it.resolverCli.Stop()
+	it.resolverCli = nil
+
+	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 
 	log.Infof("Stopped all servers and clients")
 }

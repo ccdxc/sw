@@ -348,7 +348,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	// create tls & non-tls RPC client
 	rpcClient, err := NewRPCClient("testNonTLSClient", nontlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC client")
-	tlsRPCClient, err := NewRPCClient("testServer", tlsURL, WithTLSProvider(tlsProvider))
+	tlsRPCClient, err := NewRPCClient("testServer", tlsURL, WithTLSProvider(tlsProvider), WithRemoteServerName("testServer"))
 	AssertOk(t, err, "Error creating TLS RPC client")
 	testClient := NewTestClient(rpcClient.ClientConn)
 	tlsTestClient := NewTestClient(tlsRPCClient.ClientConn)
@@ -484,7 +484,7 @@ func TestRPCBalancing(t *testing.T) {
 	addServerToResolver(t, m, rpcServer2, "testService", "t2")
 
 	// Now create a rpc client with a balancer
-	r := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
+	r := resolver.New(&resolver.Config{Name: "testService", Servers: []string{resolverServer.GetListenURL()}})
 	b := balancer.New(r)
 	client, err := NewRPCClient("RPCBalanceTest", "testService", WithBalancer(b), WithTLSProvider(nil))
 	AssertOk(t, err, "Failed to create RPC Client")
@@ -520,7 +520,7 @@ func TestRPCBlockingWithBalancer(t *testing.T) {
 	sleepTime := time.Millisecond * 100
 	go func() {
 		// Now create a rpc client with a balancer
-		r := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
+		r := resolver.New(&resolver.Config{Name: "testService", Servers: []string{resolverServer.GetListenURL()}})
 		b := balancer.New(r)
 		client, err := NewRPCClient("RPCBlockingWithBalancerTest", "testService", WithBalancer(b), WithTLSProvider(nil))
 		AssertOk(t, err, "Failed to create RPC Client")

@@ -33,22 +33,26 @@ func TestCMDBasedProviderInit(t *testing.T) {
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
 	// null CMD Endpoint URL
-	_, err = NewCMDBasedProvider("", km)
+	_, err = NewCMDBasedProvider("", "ep", km)
+	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
+
+	// null endpoint ID
+	_, err = NewCMDBasedProvider("localhost:0", "", km)
 	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
 	// invalid CMD Endpoint
-	_, err = NewCMDBasedProvider("foo", km)
+	_, err = NewCMDBasedProvider("foo", "ep", km)
 	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
 	// unavailable CMD Endpoint
-	_, err = NewCMDBasedProvider("localhost:123", km)
+	_, err = NewCMDBasedProvider("localhost:123", "ep", km)
 	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 
 	// good CMD but nil KeyMgr
 	srv, err := certsrv.NewCertSrv("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	defer srv.Stop()
 	AssertOk(t, err, "Error creating CMD controller at localhost:0")
-	_, err = NewCMDBasedProvider(srv.GetListenURL(), nil)
+	_, err = NewCMDBasedProvider(srv.GetListenURL(), "ep", nil)
 	Assert(t, err != nil, "CMDBasedProvider instantiation succceeded while expected to fail")
 }
 
@@ -66,7 +70,7 @@ func TestCMDBasedProviderRPC(t *testing.T) {
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
 	// create TLS provider
-	tlsProvider, err := NewCMDBasedProvider(srv.GetListenURL(), km)
+	tlsProvider, err := NewCMDBasedProvider(srv.GetListenURL(), "test", km)
 	AssertOk(t, err, "TLS provider initialization failed")
 
 	// create server
@@ -78,7 +82,7 @@ func TestCMDBasedProviderRPC(t *testing.T) {
 	rpcServer.Start()
 
 	// create client
-	rpcClient, err := rpckit.NewRPCClient("testServer", rpcServer.GetListenURL(), rpckit.WithTLSProvider(tlsProvider), rpckit.WithTracerEnabled(true))
+	rpcClient, err := rpckit.NewRPCClient("testClient", rpcServer.GetListenURL(), rpckit.WithTLSProvider(tlsProvider), rpckit.WithTracerEnabled(true), rpckit.WithRemoteServerName("test"))
 	defer rpcClient.Close()
 	AssertOk(t, err, "Error creating test client")
 	testClient := rpckit.NewTestClient(rpcClient.ClientConn)
@@ -135,7 +139,7 @@ func TestRPCBalancing(t *testing.T) {
 	m.AddServiceInstance(&si2)
 
 	// Now create a rpc client with a balancer
-	r := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
+	r := resolver.New(&resolver.Config{Name: "certsrv", Servers: []string{resolverServer.GetListenURL()}})
 	b := balancer.New(r)
 
 	// create KeyMgr
@@ -146,7 +150,7 @@ func TestRPCBalancing(t *testing.T) {
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
 	// create TLS provider
-	tlsProvider, err := NewCMDBasedProvider("certsrv", km, WithBalancer(b))
+	tlsProvider, err := NewCMDBasedProvider("certsrv", "test", km, WithBalancer(b))
 	AssertOk(t, err, "Error instantiating CMDBasedProvider")
 	defer tlsProvider.Close()
 

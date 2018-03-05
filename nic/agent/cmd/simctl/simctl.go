@@ -115,7 +115,7 @@ func main() {
 
 	// create a rest client to apigw
 	l := log.GetNewLogger(log.GetDefaultConfig("SimCtl"))
-	grpcClient, err := apiclient.NewGrpcAPIClient(*apisrvURL, l)
+	grpcClient, err := apiclient.NewGrpcAPIClient("sim-ctl", *apisrvURL, l)
 	if err != nil {
 		log.Fatalf("cannot create REST client. Err: %v", err)
 	}

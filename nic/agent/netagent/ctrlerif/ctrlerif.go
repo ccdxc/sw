@@ -387,7 +387,7 @@ func (client *NpmClient) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
+	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
 		return nil, err
@@ -424,7 +424,7 @@ func (client *NpmClient) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto
 	client.Unlock()
 
 	// create a grpc client
-	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL)
+	rpcClient, err := rpckit.NewRPCClient(client.getAgentName(), client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server. Err: %v", err)
 		return nil, err

@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/grpc-gateway/runtime"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -129,7 +130,7 @@ func (e *s{{.Name}}GwService) newClient(ctx context.Context, grpcAddr string, rs
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("{{.Name}}GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}

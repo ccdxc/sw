@@ -179,8 +179,8 @@ func (a *apiGrpcServerClient) CertificateV1() x509.CertificateV1Interface {
 }
 
 // NewGrpcAPIClient returns a gRPC client
-func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Services, error) {
-	client, err := rpckit.NewRPCClient("ApiClient", url, opts...)
+func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.Option) (Services, error) {
+	client, err := rpckit.NewRPCClient(clientName, url, opts...)
 	if err != nil {
 		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
 		return nil, err

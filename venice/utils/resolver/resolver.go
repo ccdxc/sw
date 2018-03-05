@@ -6,11 +6,11 @@ import (
 	"time"
 
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -64,7 +64,7 @@ type resolverClient struct {
 
 // New creates a new resolver client.
 func New(c *Config) Interface {
-	if len(c.Servers) == 0 {
+	if len(c.Servers) == 0 || c.Name == "" {
 		return nil
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -86,16 +86,19 @@ func New(c *Config) Interface {
 // runUntilCancel implements the business logic of the resolver client.
 func (r *resolverClient) runUntilCancel() {
 	s := rand.NewSource(time.Now().UnixNano())
-	var conn *grpc.ClientConn
+	var rpcClient *rpckit.RPCClient
+	var err error
 	defer func() {
-		if conn != nil {
-			conn.Close()
+		if rpcClient != nil {
+			rpcClient.Close()
+			rpcClient = nil
 		}
 	}()
 	for {
 		// Check if cancelled.
 		r.Lock()
 		if r.cancel == nil {
+			r.Unlock()
 			return
 		}
 		r.Unlock()
@@ -103,18 +106,22 @@ func (r *resolverClient) runUntilCancel() {
 		// Pick one of the servers at random.
 		i := rand.New(s).Intn(len(r.config.Servers))
 
-		if conn != nil {
-			conn.Close()
+		if rpcClient != nil {
+			rpcClient.Close()
+			rpcClient = nil
 		}
 
 		// grpc client setup
-		rpcClient, err := rpckit.NewRPCClient(r.config.Name, r.config.Servers[i], r.config.Options...)
+		// By default resolver server uses TLS and is hosted by CMD.
+		// If client passes different options, they override
+		rpcOptions := []rpckit.Option{rpckit.WithRemoteServerName(globals.Cmd)}
+		rpcOptions = append(rpcOptions, r.config.Options...)
+		rpcClient, err = rpckit.NewRPCClient(r.config.Name, r.config.Servers[i], rpcOptions...)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 			continue
 		}
-		conn = rpcClient.ClientConn
-		client := types.NewServiceAPIClient(conn)
+		client := types.NewServiceAPIClient(rpcClient.ClientConn)
 
 		// watch for events in a loop.
 		watcher, err := client.WatchServiceInstances(r.ctx, &api.Empty{})

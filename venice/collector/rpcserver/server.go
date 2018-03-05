@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api"
 	tec "github.com/pensando/sw/venice/collector"
 	"github.com/pensando/sw/venice/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -34,7 +35,7 @@ type CollRPCSrv struct {
 
 // NewCollRPCSrv creates and starts a collector RPC server
 func NewCollRPCSrv(listenURL string, c *tec.Collector) (*CollRPCSrv, error) {
-	s, err := rpckit.NewRPCServer("Collector", listenURL, rpckit.WithLoggerEnabled(false))
+	s, err := rpckit.NewRPCServer(globals.Collector, listenURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Infof("failed to start grpc server: %v", err)
 		return nil, err

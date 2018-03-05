@@ -16,6 +16,7 @@ import (
 	otext "github.com/opentracing/opentracing-go/ext"
 
 	"github.com/pensando/sw/venice/apigw"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -174,7 +175,7 @@ func (a *apiGw) Run(config apigw.Config) {
 	var rslvr resolver.Interface
 	{
 		if len(config.Resolvers) > 0 {
-			rslvr = resolver.New(&resolver.Config{Name: "apigw", Servers: config.Resolvers})
+			rslvr = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
 		}
 	}
 	a.logger.Infof("Resolving via %v", config.Resolvers)

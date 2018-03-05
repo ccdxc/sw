@@ -59,7 +59,7 @@ func setup() {
 	}
 	// api server client
 	logger := log.WithContext("Pkg", "ldap_test")
-	apicl, err = apiclient.NewGrpcAPIClient(apiSrvAddr, logger)
+	apicl, err = apiclient.NewGrpcAPIClient("authn_test", apiSrvAddr, logger)
 	if err != nil {
 		panic("Error creating api client")
 	}
@@ -237,7 +237,7 @@ func TestAuthenticate(t *testing.T) {
 	for testtype, policy := range authenticationPoliciesData() {
 		createAuthenticationPolicy(policy)
 
-		authnmgr, err := NewAuthenticationManager(apiSrvAddr, "", time.Duration(expiration))
+		authnmgr, err := NewAuthenticationManager("authn", apiSrvAddr, "", time.Duration(expiration))
 		if err != nil {
 			panic("Error creating authentication manager")
 		}
@@ -259,7 +259,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 	for testtype, policy := range authenticationPoliciesData() {
 		createAuthenticationPolicy(policy)
 
-		authnmgr, err := NewAuthenticationManager(apiSrvAddr, "", time.Duration(expiration))
+		authnmgr, err := NewAuthenticationManager("authn", apiSrvAddr, "", time.Duration(expiration))
 		if err != nil {
 			panic("Error creating authentication manager")
 		}
@@ -298,7 +298,7 @@ func TestNotYetImplementedAuthenticator(t *testing.T) {
 	}
 	createAuthenticationPolicy(policy)
 
-	authnmgr, err := NewAuthenticationManager(apiSrvAddr, "", time.Duration(expiration))
+	authnmgr, err := NewAuthenticationManager("authn", apiSrvAddr, "", time.Duration(expiration))
 
 	Assert(t, err != nil, "No error returned for un-implemented authenticator")
 	Assert(t, authnmgr == nil, "An instance of AuthenticationManager returned when unimplemented authenticator is configured")
@@ -351,7 +351,7 @@ func TestAuthenticateWithDisabledAuthenticators(t *testing.T) {
 	for testtype, policy := range disabledLocalAuthenticatorPolicyData() {
 		createAuthenticationPolicy(policy)
 
-		authnmgr, err := NewAuthenticationManager(apiSrvAddr, "", time.Duration(expiration))
+		authnmgr, err := NewAuthenticationManager("authn", apiSrvAddr, "", time.Duration(expiration))
 		if err != nil {
 			panic("Error creating authentication manager")
 		}

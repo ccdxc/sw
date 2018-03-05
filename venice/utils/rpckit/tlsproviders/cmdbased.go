@@ -42,6 +42,9 @@ type CMDBasedProvider struct {
 	// the CMD gRPC client
 	cmdClient certapi.CertificatesClient
 
+	// Client/Server Name. Used when asking for certificate
+	endpointID string
+
 	// When providing credentials for a client, use the same certificate for all connections
 	clientCertificate *tls.Certificate
 
@@ -80,13 +83,11 @@ func WithBalancer(b grpc.Balancer) CMDProviderOption {
 }
 
 func (p *CMDBasedProvider) getCkmDialOptions() []grpc.DialOption {
-	// Right now the CMD API is not authenticated.
-	// We cannot use TLS because the API itself is meant to supply TLS certificates
+	// The CMD API is not authenticated. We cannot use TLS because the API itself is meant to supply TLS certificates.
 	dialOptions := []grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second * 3)}
 	if p.balancer != nil {
 		dialOptions = append(dialOptions, grpc.WithBalancer(p.balancer))
 	}
-
 	return dialOptions
 }
 
@@ -160,9 +161,12 @@ func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 }
 
 // NewCMDBasedProvider instantiates a new CMD-based TLS provider
-func NewCMDBasedProvider(cmdEpNameOrURL string, km *keymgr.KeyMgr, opts ...CMDProviderOption) (*CMDBasedProvider, error) {
+func NewCMDBasedProvider(cmdEpNameOrURL, endpointID string, km *keymgr.KeyMgr, opts ...CMDProviderOption) (*CMDBasedProvider, error) {
 	if cmdEpNameOrURL == "" {
 		return nil, fmt.Errorf("Requires CMD endpoint name or URL in form hostname:port")
+	}
+	if endpointID == "" {
+		return nil, fmt.Errorf("endpointID is required")
 	}
 	if km == nil {
 		return nil, fmt.Errorf("Requires valid instance of KeyMgr")
@@ -171,6 +175,7 @@ func NewCMDBasedProvider(cmdEpNameOrURL string, km *keymgr.KeyMgr, opts ...CMDPr
 	provider := &CMDBasedProvider{
 		keyMgr:             km,
 		cmdEndpointURL:     cmdEpNameOrURL,
+		endpointID:         endpointID,
 		serverCertificates: make(map[string](*tls.Certificate)),
 		trustRoots:         x509.NewCertPool(),
 	}
@@ -227,7 +232,7 @@ func NewDefaultCMDBasedProvider(cmdEpNameOrURL, endpointID string, opts ...CMDPr
 		be.Close()
 		return nil, errors.Wrapf(err, "Error instantiating keymgr")
 	}
-	prov, err := NewCMDBasedProvider(cmdEpNameOrURL, km, opts...)
+	prov, err := NewCMDBasedProvider(cmdEpNameOrURL, endpointID, km, opts...)
 	if err != nil {
 		km.Close()
 		return nil, errors.Wrapf(err, "Error instantiating keymgr")
@@ -237,7 +242,14 @@ func NewDefaultCMDBasedProvider(cmdEpNameOrURL, endpointID string, opts ...CMDPr
 
 // getServerCertificate is the callback that returns server certificates
 func (p *CMDBasedProvider) getServerCertificate(clientHelloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	// FIXME: we should not mint certificates based on what client is asking but
+	// have server explicitly declare which names are allowed and provide default
+	// if client is asking for something we don't have
+
 	serverName := clientHelloInfo.ServerName
+	if serverName == "" {
+		serverName = p.endpointID
+	}
 
 	p.srvCertMapMutex.Lock()
 	tlsCert := p.serverCertificates[serverName]
@@ -276,9 +288,7 @@ func (p *CMDBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, e
 	// (as opposed to ServerOptions, which are used for all incoming connections) and rpckit
 	// reinvokes GetDialOptions() if client performs a Reconnect() call on an existing RPCClient
 	if p.clientCertificate == nil {
-		// TODO: replace "client" with actual client name
-		// note that most TLS implementations do not check client certificate subject
-		cert, err := p.getTLSCertificate("client")
+		cert, err := p.getTLSCertificate(p.endpointID)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error retrieving client certificate")
 		}

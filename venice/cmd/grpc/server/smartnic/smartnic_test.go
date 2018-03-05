@@ -832,7 +832,7 @@ func testSetup() {
 
 	// Create api client
 	tInfo.apiServerAddr = addr
-	apiCl, err := apicache.NewGrpcUpstream(tInfo.apiServerAddr, tInfo.l)
+	apiCl, err := apicache.NewGrpcUpstream("smartnic_test", tInfo.apiServerAddr, tInfo.l)
 	if err != nil {
 		fmt.Printf("Cannot create gRPC client - %v", err)
 		os.Exit(-1)

@@ -26,7 +26,7 @@ func main() {
 	l := log.GetNewLogger(config)
 	url := *grpcaddr
 
-	apicl, err := client.NewGrpcUpstream(url, l)
+	apicl, err := client.NewGrpcUpstream("example", url, l)
 	if err != nil {
 		l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
 	}

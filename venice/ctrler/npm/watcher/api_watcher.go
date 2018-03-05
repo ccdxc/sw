@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -187,7 +188,7 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, rpckit.WithBalancer(b))
+		apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l, rpckit.WithBalancer(b))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", apisrvURL)
 		} else {
@@ -288,7 +289,7 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL string, resolver res
 	// loop forever
 	for {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL, rpckit.WithBalancer(b))
+		rpcClient, err := rpckit.NewRPCClient(globals.Npm, vmmURL, rpckit.WithBalancer(b))
 		if err != nil {
 			log.Warnf("Error connecting to grpc server. Err: %v", err)
 		} else {

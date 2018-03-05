@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // Dpagent is an agent instance
@@ -32,7 +33,7 @@ func (it *integTestSuite) pollTimeout() string {
 }
 
 // CreateAgent creates an instance of agent
-func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string) (*Dpagent, error) {
+func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string, resolver resolver.Interface) (*Dpagent, error) {
 	// mock datapath
 	dp, err := datapath.NewHalDatapath(kind)
 	if err != nil {
@@ -46,7 +47,7 @@ func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string) (*Dpagent, error) 
 	}
 
 	// create new network agent
-	nagent, err := netagent.NewAgent(dp, "", nodeUUID, srvURL, "", nil)
+	nagent, err := netagent.NewAgent(dp, "", nodeUUID, srvURL, "", resolver)
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err

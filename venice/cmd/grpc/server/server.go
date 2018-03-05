@@ -18,7 +18,7 @@ import (
 func RunUnauthServer(url string, stopChannel chan bool) {
 	// create an RPC server for cluster management and certificates
 	// It uses a nil TLS provider because clients cannot do TLS before acquiring a certificate
-	rpcServer, err := rpckit.NewRPCServer("cmd", url, rpckit.WithTLSProvider(nil))
+	rpcServer, err := rpckit.NewRPCServer(globals.Cmd, url, rpckit.WithTLSProvider(nil), rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Fatalf("Error creating grpc server: %v", err)
 	}

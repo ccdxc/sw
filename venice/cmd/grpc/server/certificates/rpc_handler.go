@@ -5,9 +5,11 @@ package certificates
 import (
 	"crypto/x509"
 	"fmt"
+	"net"
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/peer"
 
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
@@ -20,26 +22,37 @@ type RPCHandler struct {
 	CertMgr *certmgr.CertificateMgr
 }
 
+func getPeerID(ctx context.Context) string {
+	peer, ok := peer.FromContext(ctx)
+	if !ok || peer.Addr == net.Addr(nil) {
+		return "N/A"
+	}
+	return peer.Addr.String()
+}
+
 // SignCertificateRequest checks a CSR submitted by a client, signs it and returns a certificate
 func (h *RPCHandler) SignCertificateRequest(ctx context.Context, req *certapi.CertificateSignReq) (*certapi.CertificateSignResp, error) {
+	peerID := getPeerID(ctx)
 	if !h.CertMgr.IsReady() {
+		log.Errorf("Received invalid certificate request, peerID %v, error: CertMgr not ready", peerID)
 		return nil, fmt.Errorf("CertMgr not ready")
 	}
 	csr, err := x509.ParseCertificateRequest(req.GetCsr())
 	if err != nil {
-		log.Errorf("Received invalid certificate request, error: %v", err)
+		log.Errorf("Received invalid certificate request, peerID: %v, error: %v", peerID, err)
 		return nil, errors.Wrap(err, "Invalid certificate request")
 	}
 	err = csr.CheckSignature()
 	if err != nil {
-		log.Errorf("Received CSR with invalid signature, error: %v", err)
+		log.Errorf("Received CSR with invalid signature, peerID: %v, error: %v", peerID, err)
 		return nil, errors.Wrap(err, "Certificate request has invalid signature")
 	}
 	cert, err := h.CertMgr.Ca().Sign(csr)
 	if err != nil {
-		log.Errorf("Error signing CSR: %v", err)
+		log.Errorf("Error signing CSR, peerID: %v, error: %v", peerID, err)
 		return nil, errors.Wrap(err, "Error signing certificate request")
 	}
+	log.Infof("Returning certificate, peerID: %v, CN:%v, SANs: %v", peerID, cert.Subject.Names, cert.DNSNames)
 	return &certapi.CertificateSignResp{
 		Certificate: &certapi.Certificate{Certificate: cert.Raw},
 	}, nil

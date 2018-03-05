@@ -318,7 +318,7 @@ func setupAPIServer(kvtype string, cluster []string, pool int) {
 	tinfo.apiserverAddr = "localhost" + ":" + port
 
 	for i := 0; i < clientPoolSize; i++ {
-		apicl, err := client.NewGrpcUpstream(tinfo.apiserverAddr, tinfo.l, client.WithSetDevMode(false))
+		apicl, err := client.NewGrpcUpstream("perf_benchmark", tinfo.apiserverAddr, tinfo.l, client.WithSetDevMode(false))
 		if err != nil {
 			panic(fmt.Sprintf("cannot create grpc client [%s] (%s)", tinfo.apiserverAddr, err))
 		}

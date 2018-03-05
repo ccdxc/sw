@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	vchserver "github.com/pensando/sw/venice/orch/vchub/server"
 	vchstore "github.com/pensando/sw/venice/orch/vchub/store"
@@ -85,7 +86,7 @@ func TestApiWatcher(t *testing.T) {
 
 	// create an api server client
 	l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
 	AssertOk(t, err, "Error creating api server client")
 
 	// create a default tenant
@@ -202,7 +203,7 @@ func TestApiServerClient(t *testing.T) {
 
 		// create an api server client
 		l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
-		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l)
+		apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
 		AssertOk(t, err, "Error creating api server client")
 
 		// network watcher

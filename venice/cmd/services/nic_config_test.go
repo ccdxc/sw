@@ -380,7 +380,7 @@ func Setup(m *testing.M) {
 
 	// Create api client
 	tInfo.apiServerAddr = addr
-	apiCl, err := apicache.NewGrpcUpstream(tInfo.apiServerAddr, tInfo.l)
+	apiCl, err := apicache.NewGrpcUpstream("nic_config_test", tInfo.apiServerAddr, tInfo.l)
 	if err != nil {
 		fmt.Printf("Cannot create gRPC client - %v", err)
 		os.Exit(-1)

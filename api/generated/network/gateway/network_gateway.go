@@ -22,6 +22,7 @@ import (
 	network "github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/network/grpc/client"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -147,7 +148,7 @@ func (e *sEndpointV1GwService) newClient(ctx context.Context, grpcAddr string, r
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("EndpointV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
@@ -276,7 +277,7 @@ func (e *sLbPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, r
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("LbPolicyV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
@@ -405,7 +406,7 @@ func (e *sNetworkV1GwService) newClient(ctx context.Context, grpcAddr string, rs
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("NetworkV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
@@ -534,7 +535,7 @@ func (e *sSecurityGroupV1GwService) newClient(ctx context.Context, grpcAddr stri
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("SecurityGroupV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
@@ -663,7 +664,7 @@ func (e *sServiceV1GwService) newClient(ctx context.Context, grpcAddr string, rs
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("ServiceV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
@@ -792,7 +793,7 @@ func (e *sSgpolicyV1GwService) newClient(ctx context.Context, grpcAddr string, r
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("SgpolicyV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
@@ -921,7 +922,7 @@ func (e *sTenantV1GwService) newClient(ctx context.Context, grpcAddr string, rsl
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("TenantV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}

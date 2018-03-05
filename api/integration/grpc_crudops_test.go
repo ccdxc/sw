@@ -41,7 +41,7 @@ func TestCrudOps(t *testing.T) {
 
 	ctx := context.Background()
 	// gRPC client
-	apicl, err := client.NewGrpcUpstream(apiserverAddr, tinfo.l)
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
 	if err != nil {
 		t.Fatalf("cannot create grpc client")
 	}

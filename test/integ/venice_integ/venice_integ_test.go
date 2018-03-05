@@ -28,8 +28,10 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/simapi"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -62,17 +64,19 @@ const (
 
 // veniceIntegSuite is the state of integ test
 type veniceIntegSuite struct {
-	apiSrv       apiserver.Server
-	apiGw        apigw.APIGateway
-	certSrv      *certsrv.CertSrv
-	ctrler       *npm.Netctrler
-	agents       []*netagent.Agent
-	datapaths    []*datapath.HalDatapath
-	datapathKind datapath.Kind
-	numAgents    int
-	restClient   apiclient.Services
-	apisrvClient apiclient.Services
-	vcHub        vchSuite
+	apiSrv         apiserver.Server
+	apiGw          apigw.APIGateway
+	certSrv        *certsrv.CertSrv
+	ctrler         *npm.Netctrler
+	agents         []*netagent.Agent
+	datapaths      []*datapath.HalDatapath
+	datapathKind   datapath.Kind
+	numAgents      int
+	restClient     apiclient.Services
+	apisrvClient   apiclient.Services
+	vcHub          vchSuite
+	resolverSrv    *rpckit.RPCServer
+	resolverClient resolver.Interface
 }
 
 // test args
@@ -116,24 +120,38 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// Now create a mock resolver
 	m := mock.NewResolverService()
 	resolverHandler := service.NewRPCHandler(m)
-	resolverServer, err := rpckit.NewRPCServer("resolver", "localhost:0", rpckit.WithTracerEnabled(true))
+	resolverServer, err := rpckit.NewRPCServer(globals.Cmd, "localhost:0", rpckit.WithTracerEnabled(true))
 	c.Assert(err, IsNil)
 	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
 	resolverServer.Start()
+	it.resolverSrv = resolverServer
 
 	// populate the mock resolver with apiserver instance.
-	si := types.ServiceInstance{
+	apiSrvSi := types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "pen-apiserver-test",
 		},
-		Service: "pen-apiserver",
+		Service: globals.APIServer,
 		Node:    "localhost",
-		URL:     "localhost:8082",
+		URL:     integTestApisrvURL,
 	}
-	m.AddServiceInstance(&si)
+	m.AddServiceInstance(&apiSrvSi)
+
+	npmSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-npm-test",
+		},
+		Service: globals.Npm,
+		Node:    "localhost",
+		URL:     integTestNpmURL,
+	}
+	m.AddServiceInstance(&npmSi)
 
 	// api server config
 	sch := runtime.NewScheme()
@@ -166,7 +184,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	go it.apiGw.Run(apigwConfig)
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, integTestApisrvURL, "", nil)
+	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
+	it.resolverClient = rc
+	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, globals.APIServer, "", rc)
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 
@@ -185,7 +205,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		}
 
 		// agent
-		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "", nil)
+		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, "", rc)
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -199,7 +219,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 
 	// create api server client
 	l := log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest"))
-	apicl, err := apiclient.NewGrpcAPIClient(integTestApisrvURL, l)
+	apicl, err := apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, l, rpckit.WithBalancer(balancer.New(rc)))
 	if err != nil {
 		c.Fatalf("cannot create grpc client")
 	}
@@ -238,6 +258,8 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.apiGw.Stop()
 	it.certSrv.Stop()
 	it.vcHub.TearDown()
+	it.resolverClient.Stop()
+	it.resolverSrv.Stop()
 	it.apisrvClient.Close()
 }
 
@@ -284,7 +306,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 // Verify basic vchub functionality
 func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 	// setup vchub client
-	rpcClient, err := rpckit.NewRPCClient("vchTestURL", vchTestURL)
+	rpcClient, err := rpckit.NewRPCClient("venice_integ_test", vchTestURL, rpckit.WithRemoteServerName(globals.VCHub))
 	defer rpcClient.Close()
 	c.Assert(err, IsNil)
 

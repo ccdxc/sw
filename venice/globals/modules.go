@@ -4,6 +4,7 @@ package globals
 const (
 	APIGw                 = "pen-apigw"
 	APIServer             = "pen-apiserver"
+	Cmd                   = "pen-cmd"
 	Filebeat              = "pen-filebeat"
 	Ntp                   = "pen-ntp"
 	VCHub                 = "pen-vchub"

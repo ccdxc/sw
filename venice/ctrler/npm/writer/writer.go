@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -50,7 +51,7 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 
 	// create the api client
 	l := log.WithContext("Pkg", "NpmApiWriter")
-	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l, rpckit.WithBalancer(balancer.New(wr.resolver)))
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, wr.apisrvURL, l, rpckit.WithBalancer(balancer.New(wr.resolver)))
 	if err != nil {
 		log.Errorf("Failed to connect to gRPC server [%s]\n", wr.apisrvURL)
 		return nil, err

@@ -84,6 +84,7 @@ func main() {
 func getBackEnds(resolvers string) []string {
 	rList := strings.Split(resolvers, ",")
 	cfg := &resolver.Config{
+		Name:    globals.Collector,
 		Servers: rList,
 	}
 

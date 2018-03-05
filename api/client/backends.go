@@ -9,7 +9,8 @@ import (
 )
 
 type options struct {
-	devMode bool
+	devMode    bool
+	serverName string
 }
 
 // WithSetDevMode sets the DevMode for the client. true by default.
@@ -19,11 +20,19 @@ func WithSetDevMode(val bool) Option {
 	}
 }
 
+// WithServerName supplies the expected name of the upstream server,
+// so that it can be properly authenticated.
+func WithServerName(val string) Option {
+	return func(o *options) {
+		o.serverName = val
+	}
+}
+
 // Option is a options modifier for the client.
 type Option func(opt *options)
 
 // NewGrpcUpstream creates a cache with a gRPC Upstream
-func NewGrpcUpstream(url string, logger log.Logger, opts ...Option) (apiclient.Services, error) {
+func NewGrpcUpstream(clientName, url string, logger log.Logger, opts ...Option) (apiclient.Services, error) {
 	o := options{
 		devMode: true,
 	}
@@ -39,6 +48,10 @@ func NewGrpcUpstream(url string, logger log.Logger, opts ...Option) (apiclient.S
 		rpcopts = append(rpcopts, rpckit.WithLoggerEnabled(false))
 		rpcopts = append(rpcopts, rpckit.WithStatsEnabled(false))
 	}
+	if o.serverName != "" {
+		rpcopts = append(rpcopts, rpckit.WithRemoteServerName(o.serverName))
+	}
+
 	rpcopts = append(rpcopts, rpckit.WithMaxMsgSize(math.MaxInt32))
-	return apiclient.NewGrpcAPIClient(url, logger, rpcopts...)
+	return apiclient.NewGrpcAPIClient(clientName, url, logger, rpcopts...)
 }

@@ -14,6 +14,7 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/vchub/store"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -216,7 +217,7 @@ func (as *VchServer) Inspect(c context.Context, e *orch.Empty) (*orch.Stats, err
 // NewVCHServer creates and starts a vchub api server
 func NewVCHServer(listenURL string) (*VchServer, error) {
 	name := "VCHub-API"
-	server, err := rpckit.NewRPCServer(name, listenURL)
+	server, err := rpckit.NewRPCServer(globals.VCHub, listenURL)
 	if err != nil {
 		log.Infof("failed to listen: %v", err)
 		return nil, err

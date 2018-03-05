@@ -48,7 +48,7 @@ func findPkcs11Lib() string {
 			return p
 		}
 	}
-	log.Errorf("Unable to find SoftHSM .so module")
+	log.Infof("Unable to find SoftHSM .so module")
 	return ""
 }
 

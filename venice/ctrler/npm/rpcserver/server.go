@@ -5,6 +5,7 @@ package rpcserver
 import (
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -29,7 +30,7 @@ func (rs *RPCServer) Stop() error {
 // NewRPCServer creates a new instance of
 func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, debugStats *debug.Stats) (*RPCServer, error) {
 	// create an RPC server
-	grpcServer, err := rpckit.NewRPCServer("netctrler", listenURL)
+	grpcServer, err := rpckit.NewRPCServer(globals.Npm, listenURL)
 	if err != nil {
 		log.Fatalf("Error creating rpc server. Err; %v", err)
 	}

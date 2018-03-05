@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -18,7 +19,7 @@ import (
 func RunAuthServer(url string, stopChannel chan bool) {
 	// create and start authenticated RPC server.
 	// These require TLS so depend on certificate services being available
-	rpcServer, err := rpckit.NewRPCServer("cmd", url)
+	rpcServer, err := rpckit.NewRPCServer(globals.Cmd, url)
 	if err != nil {
 		log.Fatalf("Error creating grpc server at %v: %v", url, err)
 	}

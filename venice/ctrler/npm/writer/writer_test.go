@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -62,7 +63,7 @@ func TestNetworkWriter(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -110,7 +111,7 @@ func TestEndpointWriter(t *testing.T) {
 
 	// app server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -161,7 +162,7 @@ func TestSgWriter(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -208,7 +209,7 @@ func TestSgPolicyWriter(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	// network object
@@ -261,7 +262,7 @@ func TestTenantWriter(t *testing.T) {
 
 	// api server client
 	logger := log.WithContext("Pkg", "writer_test")
-	apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, logger)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, logger)
 	AssertOk(t, err, "Error creating api client")
 
 	tn := network.Tenant{
