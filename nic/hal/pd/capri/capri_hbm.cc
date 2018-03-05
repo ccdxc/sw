@@ -220,8 +220,8 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
     pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
     pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
-    // set Valid + CacheEnable + Invalidate&Fill bits
-    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xe);
+    // set Valid + CacheEnable
+    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xc);
     pics_csr.picc.filter_addr_ctl_s.value[filter_idx].write();
 
     return HAL_RET_OK;

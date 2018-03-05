@@ -2,8 +2,7 @@
     "regions": [
         {
             "name": "lif2qstate_map",
-            "size_kb": 131072,
-            "cache": "p4plus-both"
+            "size_kb": 131072
         },
         {
             "name": "ipsec-cb",
@@ -212,8 +211,7 @@
         },
         {
             "name": "rdma",
-            "size_kb": 131072,
-            "cache": "p4plus-both"
+            "size_kb": 131072
         },
         {
             "name": "rdma-atomic-resource-addr",
