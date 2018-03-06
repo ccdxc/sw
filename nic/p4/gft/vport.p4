@@ -1,12 +1,11 @@
 /******************************************************************************/
 /* Rx pipeline                                                                */
 /******************************************************************************/
-action rx_vport(vport, rdma_enabled) {
+action rx_vport(vport, tm_oport, rdma_enabled) {
     modify_field(capri_p4_intrinsic.packet_len,
                  capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
 
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
-    modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
 
     if (capri_p4_intrinsic.parser_err == TRUE) {
         if (capri_p4_intrinsic.len_err != 0) {
@@ -23,10 +22,12 @@ action rx_vport(vport, rdma_enabled) {
 
     // if (capri_register.c1)
     modify_field(capri_intrinsic.lif, vport);
+    modify_field(capri_intrinsic.tm_oport, tm_oport);
     modify_field(roce_metadata.rdma_enabled, rdma_enabled);
 
     // if (not capri_register.c1)
     modify_field(capri_intrinsic.lif, EXCEPTION_VPORT);
+    modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
 }
 
 @pragma stage 1

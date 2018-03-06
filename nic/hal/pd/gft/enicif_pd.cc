@@ -8,7 +8,7 @@
 #include "nic/hal/pd/gft/if_pd.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/gft/include/defines.h"
 #include "nic/hal/pd/gft/pd_utils.hpp"
 #include "sdk/tcam.hpp"
 
@@ -113,7 +113,8 @@ pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
         goto end;
     }
     data.rx_vport_action_u.rx_vport_rx_vport.vport = hw_lif_id;
-     data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 
+    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
+    data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled =
          pd_lif ? lif_get_enable_rdma((lif_t *)pd_lif->pi_lif) : false;
 
     if (oper == TABLE_OPER_INSERT) {

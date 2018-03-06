@@ -15,6 +15,7 @@ namespace pd {
 // Prototypes
 // ----------------------------------------------------------------------------
 static hal_ret_t ep_pd_pgm_tx_vport (pd_ep_t *pd_ep, table_oper_t oper);
+static hal_ret_t ep_pd_pgm_rx_vport (pd_ep_t *pd_ep, table_oper_t oper);
 static hal_ret_t ep_pd_alloc_res(pd_ep_t *up_ep);
 static hal_ret_t ep_pd_dealloc_res(pd_ep_t *up_ep);
 static hal_ret_t ep_pd_cleanup(pd_ep_t *ep_pd);
@@ -190,6 +191,17 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
         goto end;
     }
 
+    // Program Rx Vport table. 
+    //  - In real GFT pipeline the hair-pin case is 
+    //    Uplink -> Ingress -> RXDMA -> TXDMA -> Egress -> Uplink
+    // This programming is only for DOLs
+    //    Uplink -> Ingress -> Uplinnk
+    ret = ep_pd_pgm_rx_vport(pd_ep, TABLE_OPER_INSERT);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program rx_vport_table. ret:{}", ret);
+        goto end;
+    }
+
 end:
     return ret;
 }
@@ -266,6 +278,85 @@ end:
 
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// Program Rx Vport
+// ----------------------------------------------------------------------------
+hal_ret_t
+ep_pd_pgm_rx_vport (pd_ep_t *pd_ep, table_oper_t oper)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    rx_vport_swkey_t        key;
+    rx_vport_swkey_mask_t   mask;
+    rx_vport_actiondata     data;
+    mac_addr_t              *mac = NULL;
+    tcam                    *rx_vport_tbl = NULL;
+    if_t                    *pi_if = NULL;
+    ep_t                    *pi_ep = (ep_t *)pd_ep->pi_ep;
+    uint32_t                hw_lif_id = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    rx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_RX_VPORT);
+    HAL_ASSERT_RETURN((rx_vport_tbl != NULL), HAL_RET_ERR);
+
+    pi_if = find_if_by_handle(pi_ep->if_handle);
+
+    // key
+    key.ethernet_1_valid = 0xFF;
+    mac = ep_get_mac_addr(pi_ep);
+    memcpy(key.ethernet_1_dstAddr, *mac, ETHER_ADDR_LEN);
+    memrev(key.ethernet_1_dstAddr, ETHER_ADDR_LEN);
+
+    // mask
+    mask.ethernet_1_valid_mask = 0xFF;
+    memset(mask.ethernet_1_dstAddr_mask, 0xFF, 6);
+
+    // data
+    ret = if_get_hw_lif_id(pi_if, &hw_lif_id);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to get hw_lif_id ret: {}", ret);
+        goto end;
+    }
+    data.rx_vport_action_u.rx_vport_rx_vport.vport = hw_lif_id;
+    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport = 
+        uplinkif_get_port_num(pi_if);
+    data.rx_vport_action_u.rx_vport_rx_vport.rdma_enabled = 0;
+
+    if (oper == TABLE_OPER_INSERT) {
+        sdk_ret = rx_vport_tbl->insert(&key, &mask, &data,
+                                       &pd_ep->rx_vport_idx);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program rx_vport tbl. ret: {}",
+                          ret);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed rx_vport tbl at: {}",
+                            pd_ep->rx_vport_idx);
+        }
+    } else {
+        sdk_ret = rx_vport_tbl->update(pd_ep->rx_vport_idx, 
+                                       &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program rx_vport tbl. ret: {}",
+                          ret);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed(upd) rx_vport tbl at: {}",
+                            pd_ep->rx_vport_idx);
+        }
+    }
+
+end:
+    return ret;
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD

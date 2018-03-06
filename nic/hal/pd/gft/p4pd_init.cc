@@ -8,6 +8,7 @@
 #include "sdk/tcam.hpp"
 #include "nic/p4/rdma/include/rdma_defines.h"
 #include "nic/p4/include/common_defines.h"
+#include "nic/p4/gft/include/defines.h"
 
 using sdk::table::tcam;
 
@@ -19,7 +20,7 @@ p4pd_rx_vport_init (void)
 {
     hal_ret_t               ret;
     sdk_ret_t               sdk_ret;
-    uint32_t                idx; 
+    uint32_t                idx;
     rx_vport_swkey_t        key;
     rx_vport_swkey_mask_t   mask;
     rx_vport_actiondata     data;
@@ -31,6 +32,8 @@ p4pd_rx_vport_init (void)
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+
+    data.rx_vport_action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
 
     sdk_ret = rx_vport->insert(&key, &mask, &data, &idx, false);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -268,8 +271,9 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     // hack for initial set of DOLs for Uplink -> Uplink
     HAL_ASSERT(p4pd_rx_vport_init() == HAL_RET_OK);
 
-    // Reserve 0th entry
+    // Reserve 0th entry for tx and rx transposition tables
     HAL_ASSERT(p4pd_tx_transp_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_rx_transp_init() == HAL_RET_OK);
 
     HAL_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
 

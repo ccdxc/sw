@@ -12,6 +12,8 @@ namespace pd {
 
 struct pd_ep_s {
     uint32_t    tx_vport_idx;
+    // Only for DOLs to support Uplink -> Ingress -> Uplink path
+    uint32_t    rx_vport_idx;
 
     // pi ptr
     void        *pi_ep;

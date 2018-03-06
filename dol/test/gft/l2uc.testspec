@@ -80,8 +80,8 @@ expect:
     packets:
         - packet:
             object  : callback://networking/packets/GetL2UcExpectedPacket
-            port    : 1
-            #port    : ref://testcase/config/dst/endpoint/intf/ports
+            #port    : 1
+            port    : ref://testcase/config/dst/endpoint/intf/ports
 
         - packet:
             object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT
