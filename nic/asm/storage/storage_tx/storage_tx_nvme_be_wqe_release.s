@@ -29,8 +29,8 @@ storage_tx_nvme_be_wqe_release_start:
 
    // Set the table and program address to push status over ROCE
    // SQ using PVM's ROCE SQ CB for obtaining the p_ndx
-   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                               storage_tx_pvm_roce_sq_cb_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+                                storage_tx_pvm_roce_sq_cb_push_start)
 
 push_r2n_status:
    // Setup the DMA command to push the NVME backend status entry. For now keep 
@@ -40,5 +40,5 @@ push_r2n_status:
                             dma_p2m_1)
 
    // Set the table and program address to push status to local R2N CQ
-   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                               storage_tx_pci_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+                                storage_tx_pci_q_state_push_start)

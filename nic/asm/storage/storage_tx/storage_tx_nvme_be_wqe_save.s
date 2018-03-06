@@ -20,8 +20,7 @@ storage_tx_nvme_be_wqe_save_start:
    // Find first clear bit in the bitmap and set it. Store the free bit (cmd_index)
    // in GPR r6 to be used as input to SSD_CMD_ENTRY_ADDR_CALC.
    ffcv		r6, d.bitmap, r0
-   addi		r7, r0, 1
-   sllv		r7, r7, r6
+   sll		r7, 1, r6
 
    // Write the bitmap back to the table and set the command index in PHV
    tblor	d.bitmap, r7
@@ -49,5 +48,5 @@ storage_tx_nvme_be_wqe_save_start:
    DMA_PHV2MEM_SETUP(nvme_cmd_opc, nvme_cmd_dw15, r0, dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                               storage_tx_pci_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+                                storage_tx_pci_q_state_push_start)

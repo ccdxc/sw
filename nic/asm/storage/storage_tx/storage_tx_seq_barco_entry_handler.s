@@ -47,6 +47,6 @@ storage_tx_seq_barco_entry_handler_start:
    DMA_PHV2MEM_FENCE(dma_p2m_3)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.xts_pndx_addr, d.xts_pndx_size[2:0],
-                               storage_tx_seq_barco_ring_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.xts_pndx_addr, d.xts_pndx_size[2:0],
+                                storage_tx_seq_barco_ring_push_start)
 

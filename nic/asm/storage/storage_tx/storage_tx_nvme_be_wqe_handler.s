@@ -20,20 +20,18 @@ storage_tx_nvme_be_wqe_handler_start:
    R2N_WQE_FULL_COPY
 
    // Restore the fields in the NVME backend status to saved values
-   phvwr	p.nvme_be_sta_hdr_r2n_buf_handle, d.r2n_buf_handle
-   phvwr	p.nvme_sta_cid, d.nvme_cmd_cid
+   phvwrpair	p.nvme_be_sta_hdr_r2n_buf_handle, d.r2n_buf_handle, \
+                p.nvme_sta_cid, d.nvme_cmd_cid
 
    // Save the SSD handle and priority into the K+I vector
-   phvwr	p.storage_kivec0_ssd_handle, d.ssd_handle
-   phvwr	p.storage_kivec0_io_priority, d.io_priority
-
-   // Store whether command is a read command into the PHV
-   phvwr	p.storage_kivec0_is_read, d.is_read[0]
+   phvwrpair    p.storage_kivec0_io_priority, d.io_priority, \
+        	p.storage_kivec0_ssd_handle, d.ssd_handle
 
    // Ring the sequencer doorbell if enabled
    seq		c1, d.db_enable, 1
    bcf		![c1], check_remote
-   nop
+   phvwr	p.storage_kivec0_is_read, d.is_read[0]  // delay slot
+   
    SEQUENCER_DOORBELL_FORM_UPDATE_RING(dma_p2m_3)
 
    // If R2N WQE is remote, push write data (if any) and status over ROCE
@@ -47,14 +45,11 @@ check_remote:
    phvwr	p.storage_kivec0_is_remote, 1
    
    // Save the remote destination from R2N WQE into PHV
-   phvwr	p.storage_kivec0_dst_qaddr, d.dst_qaddr
-   phvwr	p.storage_kivec0_dst_lif, d.dst_lif
-   phvwr	p.storage_kivec0_dst_qtype, d.dst_qtype
-   phvwr	p.storage_kivec0_dst_qid, d.dst_qid
+   phvwr	p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr}, \
+                d.{dst_lif...dst_qaddr}
 
    // Calculate the base address of R2N buffer and store it in GPR r6
-   add		r6, r0, d.handle
-   subi		r6, r6, R2N_BUF_NVME_BE_CMD_OFFSET
+   sub		r6, d.handle, R2N_BUF_NVME_BE_CMD_OFFSET
 
    // Setup the DMA command to copy the NVME backend status entry from PHV 
    // to the R2N buffer
@@ -87,6 +82,7 @@ push_remote_status:
 
    // Jump to loading the tables
    b		load_tbl
+   nop
   
    // If R2N WQE is local, push status to local R2N CQ
 push_local_status:
@@ -98,5 +94,5 @@ push_local_status:
 
 load_tbl:
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.pri_qaddr, Q_STATE_SIZE,
-                               storage_tx_pri_q_state_decr_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.pri_qaddr, Q_STATE_SIZE,
+                                storage_tx_pri_q_state_decr_start)

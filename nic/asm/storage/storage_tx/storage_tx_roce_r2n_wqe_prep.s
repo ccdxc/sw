@@ -29,5 +29,5 @@ storage_tx_roce_r2n_wqe_prep_start:
    DMA_PHV2MEM_SETUP_ADDR64(r2n_wqe_handle, r2n_wqe_pad, r0, dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                               storage_tx_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
+                                storage_tx_q_state_push_start)

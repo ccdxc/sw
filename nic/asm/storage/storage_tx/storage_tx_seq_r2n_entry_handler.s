@@ -39,10 +39,10 @@ storage_tx_seq_r2n_entry_handler_start:
    nop
 
    // Set the table and program address for the push to R2N
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                               storage_tx_seq_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
+                                storage_tx_seq_q_state_push_start)
 
 seq_pvm_roce_sq_push:
    // Set the table and program address for the push to ROCE
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                               storage_tx_seq_pvm_roce_sq_cb_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
+                                storage_tx_seq_pvm_roce_sq_cb_push_start)

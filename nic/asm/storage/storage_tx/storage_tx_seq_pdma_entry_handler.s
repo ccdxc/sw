@@ -59,6 +59,7 @@ check_intr:
 
    // Done firing the interrupt, exit
    b		tbl_load
+   nop
 
 pdma_only:
    // Setup the start and end DMA pointers to just the PDMA portions

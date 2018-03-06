@@ -33,5 +33,5 @@ storage_tx_pvm_cq_handler_start:
                             dma_p2m_1)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                               storage_tx_pci_q_state_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
+                                storage_tx_pci_q_state_push_start)

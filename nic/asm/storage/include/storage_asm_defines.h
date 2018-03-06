@@ -118,6 +118,10 @@
   addi		r1, r0, _pc[33:6];					                \
   LOAD_TABLE_FOR_ADDR64(_table_addr, _load_size, r1)			\
 
+#define LOAD_TABLE_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc) \
+  addi		r1, r0, _pc[33:6];					                \
+  LOAD_TABLE_FOR_ADDR34(_table_addr, _load_size, r1)			\
+
 #define LOAD_TABLE_FOR_ADDR34(_table_addr, _load_size, _pc)		\
   phvwri	p.app_header_table0_valid, 1;				        \
   phvwrpair p.common_te0_phv_table_lock_en, 1,			        \
@@ -530,6 +534,28 @@
    bcf		![c1 | c2 | c3 | c4 | c5 | c6], _branch_instr;		\
    nop;									\
    
+#define PRP_ASSIST_CHECK_NEW(_is_q0, _opc, _pdst, _nlb, _dptr1, _dptr2,	\
+                         _branch_instr)					\
+   sne		c1, r0, _is_q0;						\
+   sne		c2, _opc, NVME_READ_CMD_OPCODE;				\
+   sne		c3, _opc, NVME_WRITE_CMD_OPCODE;			\
+   seq		c4, _pdst, r0;						\
+   add		r1, r0, _nlb;						\
+   sll		r1, r1, LB_SIZE_SHIFT;					\
+   addi		r1, r1, 1;						\
+   addi		r4, r0, MAX_ASSIST_SIZE;				\
+   sle		c5, r1, r4;						\
+   addi		r2, r0, PRP_SIZE_SUB;					\
+   add		r5, r0, _dptr1;						\
+   andi		r5, r5, PRP_SIZE_MASK;					\
+   sub		r5, r2, r5;						\
+   add		r3, r0, _dptr2;						\
+   andi		r3, r3, PRP_SIZE_MASK;					\
+   sub		r3, r2, r3;						\
+   add		r7, r5, r3;						\
+   sle		c6, r7, r4;						\
+   bcf		![c1 | c2 | c3 | c4 | c5 | c6], _branch_instr;		\
+   nop;									\
 
 #define R2N_WQE_BASE_COPY						\
    phvwr 	p.{r2n_wqe_handle...r2n_wqe_dst_qaddr},			\

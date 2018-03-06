@@ -31,9 +31,9 @@ storage_tx_roce_sq_xlate_start:
    phvwr	p.r2n_wqe_dst_qaddr, d.dst_qaddr
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PARAM(STORAGE_KIVEC0_DST_QADDR,
-                               STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                               storage_tx_roce_r2n_wqe_prep_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC0_DST_QADDR,
+                                STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                                storage_tx_roce_r2n_wqe_prep_start)
 
 xfer_done:
    // 1. Transfer done event processing
@@ -45,5 +45,5 @@ xfer_done:
    phvwr	p.storage_kivec0_dst_qaddr, d.dst_qaddr
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                               storage_tx_pvm_roce_sq_cb_update_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
+                                storage_tx_pvm_roce_sq_cb_update_start)

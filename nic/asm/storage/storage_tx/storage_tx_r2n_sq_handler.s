@@ -28,9 +28,9 @@ storage_tx_r2n_sq_handler_start:
 
    // Process WQE => Set the table and program address for loading the
    // WQE pointer
-#if 0      
-   LOAD_TABLE_FOR_ADDR_EXTRA(d.handle, STORAGE_DEFAULT_TBL_LOAD_SIZE,
-                             storage_tx_nvme_be_wqe_prep_start)
+#if 1      
+   LOAD_TABLE_FOR_ADDR_PC_IMM(d.handle, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+                              storage_tx_nvme_be_wqe_prep_start)
 #else
   addi		r1, r0, storage_tx_nvme_be_wqe_prep_start[33:6];
   phvwri	p.app_header_table0_valid, 1;
@@ -56,9 +56,9 @@ check_buf_post:
    
    // Set the program address and table address based on the destination passed 
    // in the WQE to post the R2N buffer to ROCE RQ
-#if 0      
-   LOAD_TABLE_FOR_ADDR34_PARAM(d.dst_qaddr, Q_STATE_SIZE,
-                               storage_tx_roce_rq_push_start)
+#if 1      
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
+                                storage_tx_roce_rq_push_start)
 #else
   phvwri	p.app_header_table0_valid, 1;
   phvwrpair p.common_te0_phv_table_lock_en, 1,			        \
