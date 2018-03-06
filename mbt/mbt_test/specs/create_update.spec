@@ -7,6 +7,9 @@ Steps :
         op     : Create
         status : API_STATUS_OK
     - step:
+        op     : GetAll
+        status : API_STATUS_OK
+    - step:
         op     : Delete
         status : API_STATUS_OK
     - step:

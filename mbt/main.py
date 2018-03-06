@@ -76,6 +76,7 @@ op_map = {
         "Create"   : "CreateConfigs",
         "ReCreate" : "ReCreateConfigs",
         "Get"      : "VerifyConfigs",
+        "GetAll"   : "GetAllConfigs",
         "Update"   : "UpdateConfigs",
         "Delete"   : "DeleteConfigs"
     }

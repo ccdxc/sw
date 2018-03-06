@@ -7,6 +7,7 @@ objects:
         name : SecurityProfile
         key_handle : SecurityProfileKeyHandle
         ignore:
+            - op : GetAll
         create:
             api      : SecurityProfileCreate
             request  : SecurityProfileRequestMsg
@@ -39,6 +40,7 @@ objects:
             - op : Update
             - op : Delete
             - op : Create
+            - op : GetAll
         create:
             api      : SecurityGroupCreate
             request  : SecurityGroupRequestMsg
@@ -71,6 +73,7 @@ objects:
             - op : Update
             - op : Delete
             - op : Create
+            - op : GetAll
         create:
             api      : SecurityGroupPolicyCreate
             request  : SecurityGroupPolicyRequestMsg

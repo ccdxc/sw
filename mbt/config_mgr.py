@@ -58,6 +58,8 @@ class ConfigObjectMeta():
         pass
     class DELETE:
         pass
+    class GETALL:
+        pass
 
     class ReqRespObject():
         def __init__(self, pb2, stub, spec, service_object):
@@ -86,7 +88,8 @@ class ConfigObjectMeta():
         op_map =  { ConfigObjectMeta.CREATE  :  self._create,
                     ConfigObjectMeta.GET     :  self._get,
                     ConfigObjectMeta.UPDATE  :  self._update,
-                    ConfigObjectMeta.DELETE  :  self._delete }
+                    ConfigObjectMeta.DELETE  :  self._delete,
+                    ConfigObjectMeta.GETALL  :  self._get }
         return op_map[op_type]
 
 class ConfigData():
@@ -116,7 +119,12 @@ class ConfigObject():
 
     def generate(self, op_type, ext_refs={}, external_constraints=None):
         crud_op = self._cfg_meta_object.OperHandler(op_type)
-        message = crud_op._req_meta_obj.generate_message(key=self.key_or_handle,
+        message = None
+        if op_type == ConfigObjectMeta.GETALL:
+            message = crud_op._req_msg()
+            message.request.add()
+        else:
+            message = crud_op._req_meta_obj.generate_message(key=self.key_or_handle,
                                                           ext_refs = ext_refs, external_constraints=external_constraints,
                                                           immutable_objects=self.immutable_objects)
         return message
@@ -210,6 +218,7 @@ class ConfigObjectHelper(object):
                  "Create" : ConfigObjectMeta.CREATE,
                  "Update" : ConfigObjectMeta.UPDATE,
                  "Get"    : ConfigObjectMeta.GET,
+                 "GetAll" : ConfigObjectMeta.GETALL,
                }
     def __init__(self, spec, hal_channel, service_object):
         self._spec = spec
@@ -280,6 +289,17 @@ class ConfigObjectHelper(object):
 
         return resp_message, False
 
+    def GetAllConfigs(self, count, status):
+        config_object = ConfigObject(self._cfg_meta, self)
+        ret_status, _ = config_object.process(ConfigObjectMeta.GETALL)
+
+        if ret_status != status:
+            logger.critical("Status code does not match expected : %s," 
+                        "actual : %s" % (status, ret_status) )
+            if ConfigObjectMeta.GETALL not in self._ignore_ops:
+                return False
+        return True
+
     def CreateConfigObject(self, status, ext_refs={}, external_constraints=None):
         config_object = ConfigObject(self._cfg_meta, self)
         ret_status, _ = config_object.process(ConfigObjectMeta.CREATE, ext_refs=ext_refs, external_constraints=external_constraints)
@@ -348,15 +368,6 @@ class ConfigObjectHelper(object):
                 logger.critical("Status code does not match expected : %s," 
                             "actual : %s" % (status, ret_status) )
                 return
-            # if config_object._status == ConfigObject._CREATED:
-            #     exp_data = utils.convert_object_to_dict(config_object.data.exp_data)
-            #     actual_data = utils.convert_object_to_dict(config_object.data.actual_data)
-            #     result = utils.ObjectCompare(utils.DictToObj(actual_data),
-            #                                 utils.DictToObj(exp_data))
-            #     if result.not_empty():
-            #         print(json.dumps(utils.convert_object_to_dict(result),indent=4))
-            #         if ConfigObjectMeta.GET not in self._ignore_ops:
-            #             return False 
             self.num_read_ops += 1
         return True
     
