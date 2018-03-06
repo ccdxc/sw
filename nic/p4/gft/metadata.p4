@@ -132,6 +132,7 @@ header_type scratch_metadata_t {
         policer_burst       : 40;
         policer_rate        : 40;
         policer_tbkt        : 40;
+        parsed_hdrs_len     : 8;
     }
 }
 

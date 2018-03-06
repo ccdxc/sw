@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* ROCEv2 processing                                                         */
 /*****************************************************************************/
-action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
+action rx_roce(raw_flags, len, parsed_hdrs_len, qtype, tm_oq_overwrite, tm_oq) {
     add_header(p4_to_p4plus_roce);
     modify_field(p4_to_p4plus_roce.p4plus_app_id, P4PLUS_APPTYPE_RDMA);
     modify_field(p4_to_p4plus_roce.raw_flags, raw_flags);
@@ -54,6 +54,7 @@ action rx_roce(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
 
     if (roce_bth.valid == FALSE) {
         // pre-parser path, truncate udp payload to remove icrc
+        modify_field(scratch_metadata.parsed_hdrs_len, parsed_hdrs_len);
     }
 
     remove_header(ethernet_1);

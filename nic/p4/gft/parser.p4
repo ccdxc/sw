@@ -260,10 +260,6 @@ parser rx_deparse_start {
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
     extract(p4_to_p4plus_roce);
-#ifdef TXHACK
-    extract(capri_txdma_intrinsic);
-    extract(p4plus_to_p4);
-#endif
     return parse_ethernet_1;
 }
 
@@ -1792,9 +1788,6 @@ calculated_field parser_metadata.icrc {
 @pragma xgress egress
 parser egress_start {
     extract(capri_intrinsic);
-#ifdef TXHACK
-    extract(capri_p4_intrinsic);
-#endif
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
     return egress_start2;

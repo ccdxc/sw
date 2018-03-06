@@ -55,7 +55,6 @@ tx_fixup_upd_tcp_seq:
 
     // set compute_icrc flag (rdma)
     seq             c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
-    // seq             c1, k.udp_1_valid, TRUE
     bcf             [!c1], tx_fixup_rdma_done
     .assert(offsetof(p, roce_bth_1_icrc) - offsetof(p, udp_1_icrc) == 10)
     phvwrmi.c1      p.{roce_bth_1_icrc...udp_1_icrc}, 0xFFFF, 0x401

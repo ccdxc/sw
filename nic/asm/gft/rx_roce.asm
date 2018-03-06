@@ -24,14 +24,15 @@ rx_roce:
     add.c1          r1, r1, 40
     sub             r1, r1, d.u.rx_roce_d.len
 
+    // payload len(r1) => r7[13:0], app_id => r7[47:44]
+    add             r7, r1, P4PLUS_APPTYPE_RDMA, 44
+
     // remove icrc
     seq             c2, k.roce_bth_valid, FALSE
     phvwr.c2        p.{capri_intrinsic_payload,capri_deparser_len_trunc}, 0x1
     phvwr.!c2       p.capri_intrinsic_payload, FALSE
-    phvwr.c2        p.capri_deparser_len_trunc_pkt_len, r1
-
-    // payload len(r1) => r7[13:0], app_id => r7[47:44]
-    add             r7, r1, P4PLUS_APPTYPE_RDMA, 44
+    sub             r2, k.roce_metadata_udp_len, d.u.rx_roce_d.parsed_hdrs_len
+    phvwr.c2        p.capri_deparser_len_trunc_pkt_len, r2
 
     // splitter offset => r7[61:52]
     add             r1, d.u.rx_roce_d.len, \
