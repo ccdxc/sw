@@ -21,12 +21,14 @@ struct cqcb_t d;
 
 %%
     .param  resp_rx_cqpt_process
-    .param  resp_rx_stats_process
 
 .align
 resp_rx_cqcb_process:
 
-    seq             c1, CQ_P_INDEX, 0
+    // if completion is not necessary, die down
+    bbeq    k.global.flags.resp_rx._completion, 0, exit
+
+    seq             c1, CQ_P_INDEX, 0   //BD Slot
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
@@ -63,10 +65,6 @@ resp_rx_cqcb_process:
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
-    //call stats process mpu-only at stage6/table3
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
-
-
     // increment p_index
     tblmincri       CQ_P_INDEX, d.log_num_wqes, 1
     // if arm, disarm.
@@ -86,6 +84,9 @@ resp_rx_cqcb_process:
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
 
 skip_wakeup:
-
     nop.e
     nop
+
+exit:
+    nop.e
+    CAPRI_SET_TABLE_2_VALID(0) //Exit slot

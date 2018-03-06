@@ -56,6 +56,7 @@ packets:
                 opcode  : 10
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+                a       : 1
             reth: 
                 va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=1024
                 dma_len : ref://testcase/packets/id=BASE_PKT/size

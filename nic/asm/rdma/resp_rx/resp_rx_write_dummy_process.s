@@ -5,7 +5,7 @@
 #include "ingress.h"
 
 struct resp_rx_phv_t p;
-struct rqcb1_t d;
+struct rqcb3_t d;
 struct resp_rx_write_dummy_process_k_t k;
 
 #define RKEY_INFO_T struct resp_rx_key_info_t

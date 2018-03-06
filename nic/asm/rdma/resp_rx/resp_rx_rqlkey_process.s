@@ -17,16 +17,16 @@ struct key_entry_aligned_t d;
 #define DB_ADDR r4
 #define DB_DATA r5
 #define GLOBAL_FLAGS r6
+#define RQCB2_ADDR r7
 #define RQCB1_ADDR r7
-#define RQCB0_ADDR r7
 #define T2_ARG r5
 
 #define LKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
-#define INFO_WBCB0_T struct resp_rx_rqcb0_write_back_info_t
+#define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t
 
 %%
     .param  resp_rx_ptseg_process
-    .param  resp_rx_rqcb0_write_back_process
+    .param  resp_rx_rqcb1_write_back_process
 
 .align
 resp_rx_rqlkey_process:
@@ -134,12 +134,12 @@ skip_pt:
     
 check_write_back:
     bbeq        k.args.invoke_writeback, 0, exit
-    RQCB0_ADDR_GET(RQCB0_ADDR)      //BD Slot
+    RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, k.args.incr_nxt_to_go_token_id)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, k.args.incr_c_index)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, RQCB0_ADDR)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, incr_nxt_to_go_token_id, k.args.incr_nxt_to_go_token_id)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, incr_c_index, k.args.incr_c_index)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 
 exit:
     nop.e
@@ -166,12 +166,12 @@ error_completion:
     add r3, r0, offsetof(struct phv_, common_global_global_data)
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, GLOBAL_FLAGS)
 
-    RQCB1_ADDR_GET(RQCB1_ADDR)
+    RQCB2_ADDR_GET(RQCB2_ADDR)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c2)
 
     // prepare for NAK
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \
+    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
                                    k.global.lif,
                                    k.global.qtype,
                                    k.global.qid,

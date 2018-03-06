@@ -15,10 +15,6 @@ struct resp_rx_cqpt_process_k_t k;
 #define ARG_P           r7
 
 
-//TODO: verify if it is in right order
-//#define PHV_CQWQE_START cqwqe.id.wrid
-//#define PHV_CQWQE_END   cqwqe.r_key
-
 #define EQ_INFO_T struct resp_rx_cqcb_to_eq_info_t
 
 %%

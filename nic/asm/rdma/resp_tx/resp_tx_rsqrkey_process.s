@@ -19,11 +19,10 @@ struct key_entry_aligned_t d;
 #define IN_PROGRESS r2
 
 #define PTSEG_INFO_T    struct resp_tx_rkey_to_ptseg_info_t
-#define RQCB1_WB_INFO_T struct resp_tx_rqcb1_write_back_info_t
+#define RQCB0_WB_INFO_T struct resp_tx_rqcb0_write_back_info_t
 
 %%
     .param      resp_tx_rsqptseg_process
-    .param      resp_tx_rqcb1_write_back_process
     .param      resp_tx_dcqcn_enforce_process
 
 resp_tx_rsqrkey_process:
@@ -141,13 +140,13 @@ add_headers:
 invoke_dcqcn:
     // Note: Next stage(DCQCN) does not use stage-to-stage keys. So this will be passed to write-back stage untouched!
     CAPRI_GET_TABLE_1_ARG(resp_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, curr_read_rsp_psn, k.args.curr_read_rsp_psn)
+    CAPRI_SET_FIELD(r7, RQCB0_WB_INFO_T, curr_read_rsp_psn, k.args.curr_read_rsp_psn)
     seq         c1, k.args.last_or_only, 1
     cmov        IN_PROGRESS, c1, 0, 1
-    CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, read_rsp_in_progress, IN_PROGRESS)
+    CAPRI_SET_FIELD(r7, RQCB0_WB_INFO_T, read_rsp_in_progress, IN_PROGRESS)
 
-    bbeq           k.to_stage.s3.rsq_rkey.congestion_mgmt_enable, 1, dcqcn
-    add            r3,  r0, k.to_stage.s3.rsq_rkey.dcqcn_cb_addr // BD slot
+    bbeq           k.to_stage.s3.dcqcn.congestion_mgmt_enable, 1, dcqcn
+    add            r3,  r0, k.to_stage.s3.dcqcn.dcqcn_cb_addr // BD slot
 
 dcqcn_mpu_only:
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r3)

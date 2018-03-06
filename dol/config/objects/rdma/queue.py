@@ -22,6 +22,8 @@ from scapy.all import *
 class RdmaRQstate(Packet):
     name = "RdmaRQstate"
     fields_desc = [
+        
+        # RQCB0
         ByteField("pc_offset", 0),
         ByteField("rsvd0", 0),
         BitField("cosB", 0, 4),
@@ -44,78 +46,125 @@ class RdmaRQstate(Packet):
         LEShortField("c_index4", 0),
         LEShortField("p_index5", 0),
         LEShortField("c_index5", 0),
-    
+
         IntField("pt_base_addr/rq_hbm_base_addr", 0),
-
-        IntField("rsq_base_addr", 0),
-
-        BitField("state", 0, 3),
-        BitField("log_rsq_size", 0, 5),
-        ByteField("token_id", 0),
-        ByteField("nxt_to_go_token_id", 0),
-        ByteField("rsq_pindex_prime", 0),                                            
-        BitField("ring_empty_sched_eval_done", 0, 1),
-        BitField("rq_in_hbm", 0, 1),
-        BitField("rsvd", 0, 6),
-
-        BitField("log_pmtu", 0xa, 5),
+        
         BitField("log_rq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
+        BitField("congestion_mgmt_enable", 0, 1),
+        BitField("state", 0, 3),
+        BitField("log_rsq_size", 0, 5),
         BitField("serv_type", 0, 3),
+        BitField("log_pmtu", 0xa, 5),
+        
+        IntField("rsq_base_addr", 0),
+    
+        IntField("pd", 0),
+
+        IntField("header_template_addr", 0),
+
+        X3BytesField("dst_qp", 0),
+        BitField("read_rsp_lock", 0, 1),
+        BitField("read_rsp_in_progress", 0, 1),
+        BitField("rq_in_hbm", 0, 1),
+        # though busy is not used in actual asm code, keeping it in 
+        # dol qstate as multiple testcases are still verifying it to be 0
+        BitField("busy", 0, 1), 
+        BitField("rqcb0_rsvd0", 0, 4),
+
+        X3BytesField("curr_read_rsp_psn", 0),
+        ByteField("p4plus_to_p4_flags", 0),
+
+        ByteField("header_template_size", 0),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        BitField("rqcb0_rsvd1", 0, 7),
+        BitField("rqcb0_pad", 0, 16),
+
+        # RQCB1
+        ByteField("pc_offset", 0),
+        IntField("pt_base_addr/rq_hbm_base_addr", 0),
+        
+        BitField("log_rq_page_size", 0xc, 5),
+        BitField("log_wqe_size", 6, 5),
+        BitField("log_num_wqes", 0, 5),
+        BitField("congestion_mgmt_enable", 0, 1),
+        BitField("state", 0, 3),
+        BitField("log_rsq_size", 0, 5),
+        BitField("serv_type", 0, 3),
+        BitField("log_pmtu", 0xa, 5),
+        
+        IntField("rsq_base_addr", 0),
+    
+        IntField("pd", 0),
+
+        IntField("header_template_addr", 0),
+
+        ByteField("token_id", 0),
+        ByteField("nxt_to_go_token_id", 0),
+        ByteField("rsq_pindex_prime", 0),                                            
         BitField("srq_enabled", 0, 1),
-        BitField("busy", 0, 1),
-        BitField("in_progress", 0, 1),
+        BitField("cache", 0, 1),
+        BitField("immdt_as_dbell", 0, 1),
+        BitField("rq_in_hbm", 0, 1),
+        BitField("rqcb1_rsvd0", 0, 4),
+
         BitField("disable_speculation", 0, 1),
         BitField("adjust_rsq_c_index_in_progress", 0, 1),
         BitField("rsq_quiesce", 0, 1),
-        BitField("cache", 0, 1),
-        BitField("immdt_as_dbell", 0, 1),
-        BitField("congestion_mgmt_enable", 0, 1),
+        BitField("rqcb1_rsvd1", 0, 5),
+        BitField("in_progress", 0, 1),
+        BitField("rqcb1_rsvd2", 0, 7),
+        LEShortField("spec_cindex", 0),
 
         X3BytesField("e_psn", 0),
         ByteField("adjust_rsq_c_index", 0),
 
         X3BytesField("msn", 0),
-
-        X3BytesField("curr_read_rsp_psn", 0),
-        BitField("read_rsp_lock", 0, 1),
-        BitField("read_rsp_in_progress", 0, 1),
-        BitField("rsvd", 0, 6),
+        ByteField("header_template_size", 0),
 
         LEShortField("proxy_cindex", 0),
-        LEShortField("spec_cindex", 0),
+        LEShortField("proxy_pindex", 0),
 
-        # RQCB1 
+        X3BytesField("cq_id", 0),
+        ByteField("rqcb1_rsvd3", 0),
+
+        ByteField("rsq_pindex", 0),
+
+        LongField("curr_wqe_ptr", 0),
+        IntField("current_sge_offset", 0),
+        ByteField("current_sge_id", 0),
+        ByteField("num_sges", 0),
+
+        X3BytesField("srq_id", 0),
+        BitField("rqcb1_pad", 0, 8),
+
+        # RQCB2
+        ByteField("rqcb2_rsvd0", 0),
+        X3BytesField("ack_nak_psn", 0),
+
+        ByteField("aeth_syndrome", 0),
+        X3BytesField("aeth_msn", 0),
+
+        BitField("rqcb2_pad", 0, 448),
+
+        # RQCB3
         LongField("va", 0),
         IntField("len", 0),
         IntField("r_key", 0),
-        LongField("wrid", 0),
-        X3BytesField("cq_id", 0),
-        X3BytesField("ack_nak_psn", 0),
-        ByteField("aeth_syndrome", 0),
-        X3BytesField("aeth_msn", 0),
-        X3BytesField("last_ack_nak_psn", 0),
-        IntField("header_template_addr", 0),
-        X3BytesField("dst_qp", 0),
-        LongField("curr_wqe_ptr", 0),
-        ByteField("current_sge_id", 0),
-        IntField("pd", 0),
-        ByteField("num_sges", 0),
-        IntField("current_sge_offset", 0),
-        ByteField("p4plus_to_p4_flags", 0),
-        ByteField("header_template_size", 0),
 
-        #RQCB2
-        BitField("rqcb2", 0, 512),
-
-        #RQCB3
         IntField("roce_opt_ts_value", 0),
         IntField("roce_opt_ts_echo", 0),
-        ShortField("roce_opt_mss", 0),
-        BitField("rqcb3_pad", 0, 432),
 
-        #RQCB4 - RESP_RX stats
+        ShortField("roce_opt_mss", 0),
+        BitField("rqcb3_rsvd1", 0, 16),
+
+        BitField("rqcb3_pad", 0, 288),
+
+        #RQCB4 - RESP_TX stats
+        BitField("rqcb4", 0, 512),
+
+        #RQCB5 - RESP_RX stats
         LongField("num_bytes", 0),
         IntField("num_pkts", 0),
         ShortField("num_send_msgs", 0),

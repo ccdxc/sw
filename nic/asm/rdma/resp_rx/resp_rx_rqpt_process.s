@@ -14,7 +14,6 @@ struct resp_rx_rqpt_process_k_t k;
 #define GLOBAL_FLAGS r7
 
 %%
-    .param  resp_rx_rqwqe_wrid_process
     .param  resp_rx_rqwqe_process
 
 .align
@@ -42,15 +41,12 @@ resp_rx_rqpt_process:
     //CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, current_sge_offset, 0)
     //CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, num_valid_sges, 0)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, curr_wqe_ptr, r3)
-    //2 fields: cache, remaining_payload_bytes
-    CAPRI_SET_FIELD_RANGE(TBL_ARG_P, INFO_OUT1_T, cache, remaining_payload_bytes, k.{args.cache...args.remaining_payload_bytes})
+    CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
-    ARE_ALL_FLAGS_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
-
-    // if write_with_imm, load resp_rx_rqwqe_wrid_process, 
-    // else load resp_rx_rqwqe_process
-    CAPRI_NEXT_TABLE_I_READ_PC_C(TBL_KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_wrid_process, resp_rx_rqwqe_process, r3, c1)
+    // we don't need to handle write_with_imm as we don't need to get
+    // wrid for completion purpose (driver would take care of it).
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, r3)
 
     nop.e
     nop

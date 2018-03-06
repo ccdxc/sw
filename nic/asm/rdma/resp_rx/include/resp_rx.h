@@ -9,10 +9,10 @@
 #define RESP_RX_MAX_DMA_CMDS        16
 
 #define RESP_RX_CQCB_ADDR_GET(_r, _cqid) \
-    CQCB_ADDR_GET(_r, _cqid, k.to_stage.s4.wb1.cqcb_base_addr_page_id);
+    CQCB_ADDR_GET(_r, _cqid, k.to_stage.s3.wb1.cqcb_base_addr_page_id);
 
 #define RESP_RX_EQCB_ADDR_GET(_r, _tmp_r, _eqid) \
-    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.to_stage.s6.cqpt_stats.cqcb_base_addr_page_id, k.to_stage.s6.cqpt_stats.log_num_cq_entries);
+    EQCB_ADDR_GET(_r, _tmp_r, _eqid, k.to_stage.s5.cqpt.cqcb_base_addr_page_id, k.to_stage.s5.cqpt.log_num_cq_entries);
 
 // currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
 // dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will
@@ -54,8 +54,8 @@
 //TODO: put ack_info.aeth, ack_info.psn adjacent to each other in PHV and also
 //      adjacent to each other in rqcb1, in right order. This will eliminate
 //      one DMA instruction
-#define RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb1_addr_r, _tmp_r) \
-    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb2_addr_r, _tmp_r) \
+    add         _tmp_r, _rqcb2_addr_r, FIELD_OFFSET(rqcb2_t, ack_nak_psn); \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.aeth.msn, _tmp_r); \
 
 #define RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(_dma_base_r, \
@@ -67,10 +67,10 @@
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data1, db_data1, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
     
-#define RESP_RX_POST_ACK_INFO_TO_TXDMA(_dma_base_r, _rqcb1_addr_r, _tmp_r, \
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA(_dma_base_r, _rqcb2_addr_r, _tmp_r, \
                                        _lif, _qtype, _qid, \
                                        _db_addr_r, _db_data_r) \
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb1_addr_r, _tmp_r); \
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb2_addr_r, _tmp_r); \
     RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(_dma_base_r, \
                                        _lif, _qtype, _qid, \
                                        _db_addr_r, _db_data_r); \
@@ -178,11 +178,9 @@ struct resp_rx_rqcb_to_pt_info_t {
     in_progress: 1;
     page_seg_offset: 3;
     tbl_id: 3;
+    rsvd: 1;
     page_offset: 16;
-    //field packing begin
-    cache: 1;
     remaining_payload_bytes: 16;
-    //field packing end
     pad: 120;
 };
 
@@ -195,21 +193,16 @@ struct resp_rx_rqpt_process_k_t {
 
 // 20
 struct resp_rx_rqcb_to_wqe_info_t {
-    //rqcb1
+    rsvd: 6;
+    recirc_path:1;
     in_progress:1;
-    //field packing begin
-    cache:1;
     remaining_payload_bytes: 16;
-    //field packing end
-    current_sge_id: 6;
-    //rqcb2
     curr_wqe_ptr: 64;
     current_sge_offset: 32;
-    //computed
-    num_valid_sges: 6;
+    current_sge_id: 8;
+    num_valid_sges: 8;
     dma_cmd_index: 8;
-    recirc_path:1;
-    pad: 25;
+    pad: 16;
 };
 
 struct resp_rx_rqwqe_process_k_t {
@@ -245,43 +238,21 @@ struct resp_rx_key_process_k_t {
 };
 
 //20
-struct resp_rx_rqcb0_write_back_info_t {
+struct resp_rx_rqcb1_write_back_info_t {
     in_progress: 1;
     incr_nxt_to_go_token_id: 1;
     incr_c_index: 1;
     tbl_id: 3;
-    cache: 1;
-    rsvd: 1;
-    //do_not_invalidate_tbl: 1;
-    // wb1 info
+    update_wqe_ptr: 1;
+    update_num_sges: 1;
+    curr_wqe_ptr: 64;
     current_sge_offset: 32;
     current_sge_id: 8;
-    curr_wqe_ptr: 64;
-    //update_num_sges: 1;
-    //update_wqe_ptr: 1;
-    //num_sges: 8;
-    pad: 48;
+    num_sges: 8;
+    pad: 40;
 };
 
 struct resp_rx_rqcb0_write_back_process_k_t {
-    struct capri_intrinsic_raw_k_t intrinsic;
-    struct resp_rx_rqcb0_write_back_info_t args;
-    struct resp_rx_to_stage_t to_stage;
-    struct phv_global_common_t global;
-};
-
-//20
-struct resp_rx_rqcb1_write_back_info_t {
-    current_sge_offset: 32;
-    current_sge_id: 8;
-    curr_wqe_ptr: 64;
-    //update_num_sges: 1;
-    //update_wqe_ptr: 1;
-    //num_sges: 8;
-    pad: 56;
-};
-
-struct resp_rx_rqcb1_write_back_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct resp_rx_rqcb1_write_back_info_t args;
     struct resp_rx_to_stage_t to_stage;
@@ -356,10 +327,14 @@ struct resp_rx_eqcb_process_k_t {
 
 //20
 struct resp_rx_rqcb_to_rqcb1_info_t {
-    in_progress: 1;
     rsvd: 7;
-    remaining_payload_bytes: 32;
-    pad: 120;
+    in_progress: 1;
+    remaining_payload_bytes: 16;
+    curr_wqe_ptr: 64;
+    current_sge_offset: 32;
+    current_sge_id: 8;
+    num_sges: 8;
+    pad: 24;
 };
 
 struct resp_rx_rqcb1_in_progress_process_k_t {
@@ -457,8 +432,7 @@ struct resp_rx_rsq_backtrack_adjust_process_k_t {
 
 //20
 struct resp_rx_stats_info_t {
-    bubble_up: 1;
-    pad : 159;
+    pad : 160;
 };
 
 

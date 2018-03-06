@@ -3,12 +3,20 @@
 #include "capri.h"
 
 #define MAX_RQ_RINGS                6
+
 #define RQ_RING_ID                  0
 #define RSQ_RING_ID                 1
 #define ACK_NAK_RING_ID             2
 #define RSQ_BT_RING_ID              3
 #define DCQCN_RATE_COMPUTE_RING_ID  4
 #define DCQCN_TIMER_RING_ID         5
+
+#define RQ_PRI                      3
+#define RSQ_PRI                     4
+#define ACK_NAK_PRI                 5
+#define RSQ_BT_PRI                  2
+#define DCQCN_RATE_COMPUTE_PRI      0
+#define DCQCN_TIMER_PRI             1
 
 #define RQ_P_INDEX d.{ring0.pindex}.hx
 #define RQ_C_INDEX d.{ring0.cindex}.hx
@@ -29,12 +37,14 @@
 #define DCQCN_TIMER_C_INDEX d.{ring5.cindex}.hx
 
 #define PROXY_RQ_C_INDEX   d.{proxy_cindex}.hx
+#define PROXY_RQ_P_INDEX   d.{proxy_pindex}.hx
 
 #define SPEC_RQ_C_INDEX d.{spec_cindex}.hx
 
 #define RSQ_C_INDEX_OFFSET          FIELD_OFFSET(rqcb0_t, ring1.cindex)
 #define RQCB0_CURR_READ_RSP_PSN     FIELD_OFFSET(rqcb0_t, curr_read_rsp_psn)
 
+// Tx only cb
 struct rqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
     struct capri_intrinsic_ring_t ring0;
@@ -44,86 +54,150 @@ struct rqcb0_t {
     struct capri_intrinsic_ring_t ring4;
     struct capri_intrinsic_ring_t ring5;
 
+    // need for prefetch
     union {
-        pt_base_addr: 32;
-        hbm_rq_base_addr: 32;
+        pt_base_addr: 32;       //Ronly
+        hbm_rq_base_addr: 32;   //Ronly
     };
 
-    union {
-        rsq_base_addr: 32;
-        q_key: 32;
-    };
-
-    state: 3;
-    log_rsq_size: 5;
+    log_rq_page_size: 5;        //Ronly
+    log_wqe_size: 5;            //Ronly
+    log_num_wqes: 5;            //Ronly
+    congestion_mgmt_enable:1;   //Ronly
+    state: 3;                   //Ronly?
+    log_rsq_size: 5;            //Ronly
+    serv_type: 3;               //Ronly
+    log_pmtu: 5;                //Ronly
     
-    token_id: 8;
-    nxt_to_go_token_id: 8;
-    rsq_pindex_prime: 8;
-    ring_empty_sched_eval_done: 1;
-    rq_in_hbm: 1;
-    rsvd0: 6;
+    union {
+        rsq_base_addr: 32;      //Ronly
+        q_key : 32;             //Ronly
+    };
 
-    log_pmtu: 5;
-    log_rq_page_size: 5;
-    log_wqe_size: 5;
-    log_num_wqes: 5;
-    serv_type: 3;
-    srq_enabled: 1;
-    busy: 1;
-    in_progress: 1;
-    disable_speculation: 1;
-    adjust_rsq_c_index_in_progress: 1;
-    rsq_quiesce: 1;
-    cache: 1;
-    immdt_as_dbell: 1;
-    congestion_mgmt_enable:1;
+    pd: 32;                     //Ronly
 
+    header_template_addr: 32;   //Ronly
 
-    e_psn: 24;
-    adjust_rsq_c_index: 8;
+    dst_qp: 24;                 //Ronly
+    read_rsp_lock: 1;           //Rw by S0 and S4 ?
+    read_rsp_in_progress: 1;    //Rw by S0 and S4 ?
+    rq_in_hbm: 1;               //Ronly
+    rsvd0: 5;
 
-    msn:24; 
+    curr_read_rsp_psn: 24;      //Rw by S0 ?
+    p4plus_to_p4_flags: 8;      //Ronly
 
-    curr_read_rsp_psn: 24;
-    read_rsp_lock: 1;          // rsvd 6 is not free, need total of 1B here for DMA of read_rsp_lock
-    read_rsp_in_progress: 1;
-    rsvd: 6;
-
-    proxy_cindex: 16; // place holder for a copy of c_index to avoid
-                       // scheduler ringing RQ all the time.
-    spec_cindex: 16;  // cindex used for speculation
+    header_template_size: 8;    //Ronly
+    ring_empty_sched_eval_done: 1;  //rw in S0
+    rsvd1: 7;
+    pad: 16;   // 2B
 };
 
+//Rx only cb
 struct rqcb1_t {
-    va: 64;
+    pc: 8;
+    union {
+        pt_base_addr: 32;       //Ronly
+        hbm_rq_base_addr: 32;   //Ronly
+    };
+
+    log_rq_page_size: 5;    //Ronly
+    log_wqe_size: 5;        //Ronly
+    log_num_wqes: 5;        //Ronly
+    congestion_mgmt_enable:1;   //Ronly
+    state: 3;               //Ronly ?
+    log_rsq_size: 5;        //Ronly     
+    serv_type: 3;           //Ronly
+    log_pmtu: 5;            //Ronly
+    
+    union {
+        rsq_base_addr: 32;  //Ronly
+        q_key: 32;          //Ronly
+    };
+
+    pd: 32;                 //Ronly
+
+    header_template_addr: 32;   //Ronly
+
+    token_id: 8;            //rw by S0
+    nxt_to_go_token_id: 8;  // written by S4, read by S0
+    rsq_pindex_prime: 8;    //TBD
+    srq_enabled: 1;         //Ronly
+    cache: 1;               //Ronly
+    immdt_as_dbell: 1;      //Ronly
+    rq_in_hbm: 1;           //Ronly
+    rsvd0: 4;
+
+    disable_speculation: 1; //rw by S0
+    adjust_rsq_c_index_in_progress: 1;  //TBD
+    rsq_quiesce: 1; //TBD
+    rsvd1: 5;
+    in_progress: 1;         // wirtten by S4, read by S0
+    rsvd2: 7;
+    spec_cindex: 16;  // cindex used for speculation
+                      // rw by S0
+                      
+    e_psn: 24;        //rw by S0
+    adjust_rsq_c_index: 8;  //TBD
+
+    msn:24;                 //rw by S0 ?
+    header_template_size: 8;    //Ronly
+
+    // place holder for a copy of c_index/p_index to avoid
+    // scheduler ringing RQ all the time.
+    proxy_cindex: 16;   // written by S4, read by S0
+    proxy_pindex: 16;   // written by TxDMA, read by RxDMA
+                       
+
+    cq_id: 24;                  //Ronly
+    rsvd3: 8;
+
+    rsq_pindex: 8;  // written by S0
+
+    // multi-packet send variables
+    // written by S4, read by S0/S1 
+    curr_wqe_ptr: 64;
+    current_sge_offset: 32;
+    current_sge_id: 8;
+    num_sges: 8;
+
+    srq_id: 24;
+    pad: 8;  //1B
+};
+
+// rx -> tx cb. i.e., written by rxdma, read by txdma
+struct rqcb2_t {
+    rsvd0: 8;                    //1B
+    ack_nak_psn: 24;            //3B
+    struct rdma_aeth_t aeth;    //4B
+
+    //backtrack info
+    pad: 448;   //56B
+};
+
+// Multi-packet write fields used in resp_rx
+struct rqcb3_t {
+    va: 64;         
     len: 32;
     r_key: 32;
-    wrid: 64;
-    cq_id: 24;
-    ack_nak_psn: 24;
-    struct rdma_aeth_t aeth;
-    last_ack_nak_psn: 24;
-    header_template_addr: 32;
-    dst_qp: 24;
-    curr_wqe_ptr: 64;
-    current_sge_id: 8;
-    pd: 32; 
-    num_sges: 8;
-    current_sge_offset: 32;
-    p4plus_to_p4_flags: 8;
-    header_template_size: 8;
-};
 
-struct rqcb3_t {
     //Temporarily storing these params here for DOL testing purpose
     roce_opt_ts_value: 32;
     roce_opt_ts_echo:  32;
     roce_opt_mss:      16;
-    pad: 432;
+    rsvd1:             16;
+
+    pad: 288; //36B
 };
 
+//resp_tx stats
 struct rqcb4_t {
+    //TBD
+    pad: 512;
+};
+
+// resp_rx stats
+struct rqcb5_t {
     num_bytes: 64;
     num_pkts: 32;
     num_send_msgs: 16;
@@ -144,9 +218,10 @@ struct rqcb4_t {
 struct rqcb_t {
     struct rqcb0_t rqcb0;
     struct rqcb1_t rqcb1;
-    struct rqcb1_t rqcb2;
-    struct rqcb1_t rqcb3;
+    struct rqcb2_t rqcb2;
+    struct rqcb3_t rqcb3;
     struct rqcb4_t rqcb4;
+    struct rqcb5_t rqcb5;
 };
 
 #endif // __RQCB_H

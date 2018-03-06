@@ -448,16 +448,16 @@ modules:
 
 
     # RQ Duplicate testcases
-    - module:
-        name    : RDMA_RX_DUPLICATE_QUIESCE
-        enable  : True
-        package : test.rdma
-        module  : resp_rx_duplicate_quiesce
-        spec    : resp_rx_duplicate_quiesce.testspec
-        ignore  : False
+    #- module:
+    #    name    : RDMA_RX_DUPLICATE_QUIESCE
+    #    enable  : True
+    #    package : test.rdma
+    #    module  : resp_rx_duplicate_quiesce
+    #    spec    : resp_rx_duplicate_quiesce.testspec
+    #    ignore  : False
         # fix for this require code re-org of CBs which
         # is planned next week, then will enable in RTL
-        rtl     : False
+    #    rtl     : False
     
     # RQ Recirc testcases
     - module:

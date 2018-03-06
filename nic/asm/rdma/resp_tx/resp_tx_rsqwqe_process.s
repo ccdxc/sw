@@ -10,7 +10,6 @@ struct rsqwqe_d_t d;
 struct resp_tx_rsqwqe_process_k_t k;
 
 #define RKEY_INFO_T struct resp_tx_rsqwqe_to_rkey_info_t
-#define RQCB1_WB_INFO_T struct resp_tx_rqcb1_write_back_info_t
 
 #define CURR_PSN            r1
 #define BYTES_SENT          r2
@@ -29,7 +28,6 @@ struct resp_tx_rsqwqe_process_k_t k;
 
 %%
     .param      resp_tx_rsqrkey_process
-    .param      resp_tx_rqcb1_write_back_process
     .param      resp_tx_dcqcn_enforce_process
 
 resp_tx_rsqwqe_process:

@@ -5,7 +5,7 @@
 #include "ingress.h"
 
 struct resp_rx_phv_t p;
-struct rqcb0_t d;
+struct rqcb1_t d;
 //struct resp_rx_rqcb_process_k_t k;
 struct common_p4plus_stage0_app_header_table_k k;
 
@@ -13,11 +13,10 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define INFO_OUT1_T struct resp_rx_rqcb_to_pt_info_t
 #define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
 #define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
-#define TO_S_FWD_INFO_T struct resp_rx_to_stage_wb0_info_t
+#define TO_S_FWD_INFO_T struct resp_rx_to_stage_wb1_info_t
 #define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
 #define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
-#define STATS_INFO_T struct resp_rx_stats_info_t
-#define TO_S_CQPT_STATS_INFO_T struct resp_rx_to_stage_cqpt_stats_info_t
+#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
 #define ECN_INFO_T  struct resp_rx_ecn_info_t
 #define RQCB_TO_RD_ATOMIC_T struct resp_rx_rqcb_to_read_atomic_rkey_info_t
 #define TO_S_ATOMIC_INFO_T struct resp_rx_to_stage_atomic_info_t
@@ -32,7 +31,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define DB_ADDR r4
 #define DB_DATA r5
 #define NEW_RSQ_P_INDEX r6
-#define RQCB1_ADDR r6
+#define RQCB2_ADDR r6
 
 %%
     .param    resp_rx_rqpt_process
@@ -41,14 +40,20 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rsq_backtrack_process
     .param    resp_rx_rqcb1_recirc_sge_process
-    .param    resp_rx_rqcb1_ecn_process
-    .param    resp_rx_rqcb1_cnp_process
+    .param    resp_rx_dcqcn_ecn_process
+    .param    resp_rx_dcqcn_cnp_process
     .param    rdma_atomic_resource_addr
     .param    resp_rx_read_mpu_only_process
     .param    resp_rx_atomic_resource_process
+    .param    resp_rx_recirc_mpu_only_process
 
 .align
 resp_rx_rqcb_process:
+    // table 0 valid bit would be set by the time we get into S0 because
+    // to get +64 logic, p4 program would have set table 0 valid bit to TRUE.
+    // we need to this bit back to 0 right way otherwise table 0 gets fired
+    // unnecessarily in further stages and cause wrong behavior (mainly for write/read/atomic)
+    CAPRI_SET_TABLE_0_VALID(0)
     add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
 
     // is this a fresh packet ?
@@ -59,21 +64,22 @@ resp_rx_rqcb_process:
     // populate global fields
     add r3, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
 
-#   // moved to _ext program
-#   CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
-#   CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
+   // moved to _ext program
+   CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
+   CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
 
 #   //Temporary code to test UDP options
 #   //For now, checking on ts flag for both options ts and mss to avoid performance cost
-#   bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
-#   CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE) //BD Slot
-#   //get rqcb3 address
-#   add      r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB3_OFFSET_BYTES
-#   memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
-#   add      r5, r5, 8
-#   memwr.h  r5, CAPRI_APP_DATA_ROCE_OPT_MSS
+   bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
+   CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE) //BD Slot
+   //get rqcb3 address
+   add      r6, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
+   add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_ts_value)
+   memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
+   add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_mss)
+   memwr.h  r5, CAPRI_APP_DATA_ROCE_OPT_MSS
 
-#skip_roce_opt_parsing:
+skip_roce_opt_parsing:
 
     // get a tokenid for the fresh packet
     phvwr  p.common.rdma_recirc_token_id, d.token_id
@@ -81,8 +87,8 @@ resp_rx_rqcb_process:
     CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
-#   CAPRI_GET_STAGE_6_ARG(resp_rx_phv_t, r4)
-#   CAPRI_SET_FIELD(r4, TO_S_CQPT_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
+    CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 start_recirc_packet:
     add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
@@ -101,17 +107,16 @@ start_recirc_packet:
     //Process sending CNP packet to the requester.
     CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, ECN_INFO_T, p_key, CAPRI_APP_DATA_BTH_P_KEY)
-    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES                         
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_ecn_process, r5) 
+    add     r5, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_ecn_process, r5) 
 
 skip_cnp_send:
     // Check if its CNP packet.
     sne     c2, CAPRI_APP_DATA_BTH_OPCODE, RDMA_PKT_OPC_CNP
     bcf     [c7 | c2], skip_cnp_receive
 
-    // Load rqcb1-->dcqcn_cb to cut rate based on dcqcn algorithm.
-    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES                         
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_cnp_process, r5) 
+    add     r5, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr // BD Slot
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_dcqcn_cnp_process, r5) 
     nop.e
     nop
 
@@ -187,7 +192,8 @@ process_send_write_fml:
      
 /****** Slow path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
-    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    // load rqcb3
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     // only first packet has reth header
@@ -227,9 +233,12 @@ write_non_first_pkt:
 
 wr_skip_immdt_as_dbell:
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, incr_c_index, 1)
-    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
-    b           rc_checkout
-    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
+    // increment the spec_cindex, but we don't need to access the
+    // actual wqe to get the WRID as driver is now taking care of 
+    // wrid population when application reads cqwqe.
+    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1
+    phvwrpair.e p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    phvwr       p.cqwqe.imm_data, IMM_DATA //Exit Slot
 
 /****** Slow path: SEND FIRST/MIDDLE/LAST ******/
 process_send:
@@ -249,7 +258,7 @@ process_send:
     nop         //BD Slot
 
     phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
-    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4)
+    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_WB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_check_immdt:
@@ -279,10 +288,11 @@ send_skip_immdt_as_dbell:
     phvwr       p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA //BD Slot
 
 send_in_progress:
-    add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_in_progress_process, r3)
+    //invoke an MPU only program to continue the activity
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_in_progress_process, r0)
 
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) //BD Slot
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD_RANGE(r4, RQCB_TO_RQCB1_T, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, in_progress, d.in_progress)
     b           exit
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, remaining_payload_bytes, REM_PYLD_BYTES)   //BD Slot
@@ -341,7 +351,7 @@ process_send_only:
     phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD //BD Slot
 
     bcf         [!c7], send_only_check_immdt
-    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4) //BD Slot
+    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4) //BD Slot
 
     phvwrpair   p.cqwqe.rkey_inv_vld, 1, p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
 
@@ -379,7 +389,8 @@ send_only_skip_immdt_as_dbell:
 process_write_only:
     crestore    [c6], r7, (RESP_RX_FLAG_IMMDT)
     
-    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    // load rqcb3
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_write_dummy_process, r5)
 
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
@@ -415,9 +426,12 @@ process_write_only:
     
 wr_only_skip_immdt_as_dbell:
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, incr_c_index, 1)
-    phvwrpair   p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
-    b           rc_checkout
-    phvwr       p.cqwqe.imm_data, IMM_DATA //BD Slot
+    // increment the spec_cindex, but we don't need to access the
+    // actual wqe to get the WRID as driver is now taking care of 
+    // wrid population when application reads cqwqe.
+    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1
+    phvwrpair.e p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM, p.cqwqe.imm_data_vld, 1
+    phvwr       p.cqwqe.imm_data, IMM_DATA //Exit Slot
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
@@ -425,7 +439,7 @@ process_read_atomic:
     //                      (sizeof(rsqwqe_t) * p_index));
     seq         c1, d.rsq_quiesce, 1
     // if rsq_quiesce is on, use rsq_p_index_prime, else use rsq_p_index
-    cmov        NEW_RSQ_P_INDEX, c1, d.rsq_pindex_prime, RSQ_P_INDEX
+    cmov        NEW_RSQ_P_INDEX, c1, d.rsq_pindex_prime, d.rsq_pindex
     sll         RSQWQE_P, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
     add         RSQWQE_P, RSQWQE_P, NEW_RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
     // p_index/c_index are in little endian
@@ -442,6 +456,7 @@ process_read_atomic:
     // stop dropping new requests if quiesce mode is on.
     // 
     tblwr.c1    d.rsq_pindex_prime, NEW_RSQ_P_INDEX
+    tblwr.!c1   d.rsq_pindex, NEW_RSQ_P_INDEX
 
     // common params for both read/atomic
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
@@ -538,53 +553,56 @@ duplicate_wr_send:
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
 
 duplicate_rd_atomic:
-    // recirc if threre is already another duplicate req in progress
-    seq             c1, d.adjust_rsq_c_index_in_progress, 1
-    bcf             [c1], recirc_wait_for_turn
-    nop             //BD Slot
-
-    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_READ_REQ)
-    // RETH and ATOMICETH have VA, r_key at same location 
-    cmov            r6, c2, CAPRI_RXDMA_RETH_DMA_LEN, 8
-
-    // since there is no space in stage-to-stage data, using to-stage
-    // to populate va/r_key/len so that it is accessible to backtrack_process
-    // function which may get called multiple times in successive stages
-    // during backtrack process
-    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, CAPRI_RXDMA_RETH_VA)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
-    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
-
-    seq         c3, d.rsq_quiesce, 1
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, search_psn, CAPRI_APP_DATA_BTH_PSN)
-    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, d.rsq_pindex_prime, c3)
-    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, RSQ_P_INDEX, !c3)
-    add         r5, r0, RSQ_P_INDEX
-    mincr       r5, d.log_rsq_size, -1
-    // in quiesce mode, make sure hi_index is 1 more than RSQ_P_INDEX.
-    // since previous mincr has decremented by 1, we are incrementing by 2 here.
-    mincr.c3    r5, d.log_rsq_size, +2
-    seq         c4, RSQ_P_INDEX, RSQ_C_INDEX
-    add         r6, r0, RSQ_C_INDEX
-    // if rsq is empty, we need to start with c_index-1
-    mincr.c4    r6, d.log_rsq_size, -1
-
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, hi_index, r5)
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, index, r6)
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, rsq_base_addr, d.rsq_base_addr)
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_pmtu, d.log_pmtu)
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, walk, RSQ_EVAL_MIDDLE)
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_rsq_size, d.log_rsq_size)
-    
-    cmov        r5, c2, RSQ_OP_TYPE_READ, RSQ_OP_TYPE_ATOMIC 
-    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, read_or_atomic, r5)
-    
-    //load entry at cindex first
-    sll         r3, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
-    add         r3, r3, r6, LOG_SIZEOF_RSQWQE_T
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rsq_backtrack_process, r3)
+    // TBD: Disabling duplicate read/atomic handling for now.
+    // need to change to new logic
+        
+//    // recirc if threre is already another duplicate req in progress
+//    seq             c1, d.adjust_rsq_c_index_in_progress, 1
+//    bcf             [c1], recirc_wait_for_turn
+//    nop             //BD Slot
+//
+//    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_READ_REQ)
+//    // RETH and ATOMICETH have VA, r_key at same location 
+//    cmov            r6, c2, CAPRI_RXDMA_RETH_DMA_LEN, 8
+//
+//    // since there is no space in stage-to-stage data, using to-stage
+//    // to populate va/r_key/len so that it is accessible to backtrack_process
+//    // function which may get called multiple times in successive stages
+//    // during backtrack process
+//    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, r4)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, CAPRI_RXDMA_RETH_VA)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, CAPRI_RXDMA_RETH_R_KEY)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+//
+//    seq         c3, d.rsq_quiesce, 1
+//    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, search_psn, CAPRI_APP_DATA_BTH_PSN)
+//    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, d.rsq_pindex_prime, c3)
+//    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, RSQ_P_INDEX, !c3)
+//    add         r5, r0, RSQ_P_INDEX
+//    mincr       r5, d.log_rsq_size, -1
+//    // in quiesce mode, make sure hi_index is 1 more than RSQ_P_INDEX.
+//    // since previous mincr has decremented by 1, we are incrementing by 2 here.
+//    mincr.c3    r5, d.log_rsq_size, +2
+//    seq         c4, RSQ_P_INDEX, RSQ_C_INDEX
+//    add         r6, r0, RSQ_C_INDEX
+//    // if rsq is empty, we need to start with c_index-1
+//    mincr.c4    r6, d.log_rsq_size, -1
+//
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, hi_index, r5)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, index, r6)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, rsq_base_addr, d.rsq_base_addr)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_pmtu, d.log_pmtu)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, walk, RSQ_EVAL_MIDDLE)
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_rsq_size, d.log_rsq_size)
+//    
+//    cmov        r5, c2, RSQ_OP_TYPE_READ, RSQ_OP_TYPE_ATOMIC 
+//    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, read_or_atomic, r5)
+//    
+//    //load entry at cindex first
+//    sll         r3, d.rsq_base_addr, RSQ_BASE_ADDR_SHIFT
+//    add         r3, r3, r6, LOG_SIZEOF_RSQWQE_T
+//    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rsq_backtrack_process, r3)
 
     nop.e
     nop
@@ -603,12 +621,12 @@ seq_err_nak:
 nak: 
     phvwrpair   p.ack_info.psn, d.e_psn, p.ack_info.aeth.msn, d.msn
       
-    add         RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    add         RQCB2_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c2)
 
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \
+    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
                                    CAPRI_RXDMA_INTRINSIC_LIF, \
                                    CAPRI_RXDMA_INTRINSIC_QTYPE, \
                                    CAPRI_RXDMA_INTRINSIC_QID, \
@@ -718,6 +736,9 @@ ud_drop:
     
 /****** Logic to recirc packets ******/
 recirc_wait_for_turn:
+    // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+
     phvwr       p.common.p4_intr_recirc, 1
     phvwr.e     p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
     nop
@@ -744,11 +765,12 @@ recirc_sge_work_pending:
     // required information to process further sges. If middle
     // packet is recircing, it may need some info from rqcb1 as
     // well (such as curr_wqe_ptr, num_sges etc.)
-    // Hence load RQCB1 recirc process code. There are no arguments
-    // to pass as of now
+    // Hence pass these RQCB1 variables to recirc process code. 
     
-    add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_recirc_sge_process, r3)
+    //invoke an MPU only program to continue the activity
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD_RANGE(r4, RQCB_TO_RQCB1_T, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_recirc_sge_process, r0)
 
     nop.e
     nop

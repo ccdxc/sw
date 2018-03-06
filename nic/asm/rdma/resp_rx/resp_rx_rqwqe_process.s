@@ -9,9 +9,8 @@ struct resp_rx_rqwqe_process_k_t k;
 struct rqwqe_base_t d;
 
 #define INFO_LKEY_T struct resp_rx_key_info_t
-#define INFO_WBCB0_T struct resp_rx_rqcb0_write_back_info_t
+#define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t
 #define TO_S_RECIRC_T struct resp_rx_to_stage_recirc_info_t
-#define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
 
 
 #define SGE_OFFSET_SHIFT 32
@@ -22,15 +21,15 @@ struct rqwqe_base_t d;
 #define REM_PYLD_BYTES  r5
 #define CURR_SGE_OFFSET r1[31:0]
 
-#define T2_ARG          r5
+#define T2_ARG          r6
 #define RECIRC_ARG      r6
-#define WB1_ARG         r6
 
 #define F_FIRST_PASS  c7
 
 %%
     .param  resp_rx_rqlkey_process
-    .param  resp_rx_rqcb0_write_back_process
+    .param  resp_rx_rqcb1_write_back_process
+    .param  resp_rx_recirc_mpu_only_process
 
 .align
 resp_rx_rqwqe_process:
@@ -56,15 +55,10 @@ resp_rx_rqwqe_process:
                 (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS)),  \
                 (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
-    //phv_p->cqwqe.id.wrid = wqe_p->wrid;
+    // temporarily adding this code back, because not populating wrid is breaking
+    // storage testcases. For now, see if populating wrid for send only packets
+    // is good enough.
     phvwr.!c1   p.cqwqe.id.wrid, d.wrid
-    
-    // rqcb1_p->wrid = wqe_p->wrid
-    //TODO: make sure wrid is at byte boundary so that below divison works
-    // wrid address needs some work as offset does not directly gives. 
-    RQCB1_WRID_ADDR_GET(r6)
-    //TODO: change to DMA
-    memwr.d.!c1 r6, d.wrid
 
     add         REM_PYLD_BYTES, r0, k.args.remaining_payload_bytes
    
@@ -170,14 +164,13 @@ exit:
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
     seq         c3, k.args.recirc_path, 1
     bcf         [!c2 | c3], non_first_or_recirc_pkt
-    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, WB1_ARG) //BD Slot
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)    //BD Slot
+
 
     // only first packet need to set num_sges and wqe_ptr values into
     // rqcb1. middle/last packets will simply use these fields from cb
-    //CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_num_sges, 1, c2)    
-    //CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_wqe_ptr, 1, c2)
-    CAPRI_SET_FIELD_RANGE_C(WB1_ARG, TO_S_WB1_T, update_wqe_ptr, update_num_sges, 3, c2)
-    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, num_sges, NUM_VALID_SGES, c2)
+    CAPRI_SET_FIELD_RANGE_C(T2_ARG, INFO_WBCB1_T, update_wqe_ptr, update_num_sges, 3, c2)
+    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB1_T, num_sges, NUM_VALID_SGES, c2)
 
 non_first_or_recirc_pkt:
 
@@ -185,35 +178,32 @@ non_first_or_recirc_pkt:
     // to process more sges
     bcf         [!c5],  recirc
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY) //BD Slot
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-
     .csbegin
     cswitch     [c1]
     nop
 
     .cscase 0
 
-    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 1)
-    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB0_T, in_progress, incr_nxt_to_go_token_id, 3)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, tbl_id, TABLE_2)
+    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, in_progress, 1)
+    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, in_progress, incr_nxt_to_go_token_id, 3)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, tbl_id, TABLE_2)
 
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_id, r1[63:32])
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, current_sge_id, r1[63:32])
 
     b       cb0_cb1_wb_exit
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_offset, CURR_SGE_OFFSET) //BD Slot
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, current_sge_offset, CURR_SGE_OFFSET) //BD Slot
 
     .cscase 1
     
     b       cb0_cb1_wb_exit
     // incr_nxt_to_go_token_id, incr_c_index, tbl_id
-    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) //BD Slot
+    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) //BD Slot
     .csend
 
 cb0_cb1_wb_exit:
     
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
     // Current program is going to spawn 4 parallel lookups for next stage.
     // They are: T0-Lkey0, T1-Lkey1, T2-WB0, T3-WB1. 
     // T2 and T3 programs would reset their table valid bits upon completing
@@ -225,10 +215,10 @@ cb0_cb1_wb_exit:
     // invalidate T2 in case completion is involved.
 
     //IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
-    //CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, do_not_invalidate_tbl, 1, c3)
+    //CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB1_T, do_not_invalidate_tbl, 1, c3)
 
-    RQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb0_write_back_process, r2)
+    RQCB1_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, r2)
 
     nop.e
     nop
@@ -249,14 +239,15 @@ recirc:
 
     // store recirc info so that stage 1 program upon recirculation
     // can access this info
-    
-    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, dma_cmd_index, r2)
     CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
     CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, current_sge_id, r1[63:32])
     CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, current_sge_offset, CURR_SGE_OFFSET)
     CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, num_sges, NUM_VALID_SGES)
     CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, remaining_payload_bytes, REM_PYLD_BYTES)
     
+    // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+
     // set recirc
     phvwr.e p.common.p4_intr_recirc, 1
     phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING //Exit Slot

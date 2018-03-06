@@ -5,7 +5,7 @@
 #include "ingress.h"
 
 struct resp_rx_phv_t p;
-struct rqcb1_t d;
+// this is an mpu only program, hence there is no d-vector
 struct resp_rx_rqcb1_in_progress_process_k_t k;
 
 #define WQE_OFFSET      r1
@@ -24,30 +24,14 @@ resp_rx_rqcb1_in_progress_process:
     //  wqe_offset = RX_SGE_OFFSET +
     //  rqcb1_p->current_sge_id * sizeof(sge_t);
 
-    add     WQE_OFFSET, RQWQE_SGE_OFFSET, d.current_sge_id, LOG_SIZEOF_SGE_T 
-    add     ADDR_TO_LOAD, d.curr_wqe_ptr, WQE_OFFSET
-    sub     NUM_VALID_SGES, d.num_sges, d.current_sge_id
-    
-    // resp_rx_rqcb_to_wqe_info_t *rqcb_to_wqe_info_p =
-    //  (resp_rx_rqcb_to_wqe_info_t *) PHV_TABLE_I_ARG_PTR_GET(phv_p, tbl_id);
-    // rqcb_to_wqe_info_p->in_progress = info_p->in_progress;
-    // rqcb_to_wqe_info_p->remaining_payload_bytes = 
-    //         info_p->remaining_payload_bytes;
-    // rqcb_to_wqe_info_p->current_sge_id = rqcb1_p->current_sge_id;
-    // rqcb_to_wqe_info_p->current_sge_offset = rqcb1_p->current_sge_offset;
-    // rqcb_to_wqe_info_p->num_valid_sges =
-    //         rqcb1_p->num_sges - rqcb1_p->current_sge_id;
-    // rqcb_to_wqe_info_p->curr_wqe_ptr = rqcb1_p->curr_wqe_ptr;
+    add     WQE_OFFSET, RQWQE_SGE_OFFSET, k.args.current_sge_id, LOG_SIZEOF_SGE_T 
+    add     ADDR_TO_LOAD, k.args.curr_wqe_ptr, WQE_OFFSET
+    sub     NUM_VALID_SGES, k.args.num_sges, k.args.current_sge_id
     
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, in_progress, k.args.in_progress)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, current_sge_id, d.current_sge_id)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, current_sge_offset, d.current_sge_offset)
+    CAPRI_SET_FIELD_RANGE(r4, RQCB_TO_WQE_T, in_progress, current_sge_id, k.{args.in_progress...args.current_sge_id})
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, num_valid_sges, NUM_VALID_SGES)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, curr_wqe_ptr, d.curr_wqe_ptr)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
-    //CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, tbl_id, 0)
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 

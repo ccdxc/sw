@@ -140,6 +140,7 @@ packets:
                 opcode  : 3    # RDMA SEND Last with Immediate Data 
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : ref://testcase/pvtdata/send_last_psn
+                a       : 1
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
 

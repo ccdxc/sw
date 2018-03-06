@@ -50,12 +50,17 @@
 #define RQCB1_ADDR_GET(_r) \
     add     _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, RQCB_ADDR_SHIFT;
 
-#define RQCB1_WRID_ADDR_GET(_r) \
-    add     _r, (CB_UNIT_SIZE_BYTES + FIELD_OFFSET(rqcb1_t, wrid)), k.global.cb_addr, RQCB_ADDR_SHIFT;
-    
-//RESP_RX_STATS
+#define RQCB2_ADDR_GET(_r) \
+    add     _r, (2 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, RQCB_ADDR_SHIFT;
+
+#define RQCB3_ADDR_GET(_r) \
+    add     _r, (3 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, RQCB_ADDR_SHIFT;
+
 #define RQCB4_ADDR_GET(_r) \
     add     _r, (4 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, RQCB_ADDR_SHIFT;
+    
+#define RQCB5_ADDR_GET(_r) \
+    add     _r, (5 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, RQCB_ADDR_SHIFT;
     
 #define MAX_PYLD_DMA_CMDS_PER_SGE   3
 
@@ -138,7 +143,7 @@ struct rdma_atomiceth_t {
 #define RQ_CREDITS_GET(_credits, _tmp, _tmp_c) \
     add             _tmp, r0, d.log_num_wqes; \
     sllv            _tmp, 1, _tmp; \
-    add             _credits, RQ_P_INDEX, _tmp; \
+    add             _credits, PROXY_RQ_P_INDEX, _tmp; \
     sub             _credits, _credits, PROXY_RQ_C_INDEX; \
     mincr           _credits, d.log_num_wqes, 0; \
     seq             _tmp_c, _credits, r0; \
@@ -610,6 +615,8 @@ struct rqwqe_base_t {
 
 struct cqwqe_t {
     union {
+        // resp_rx doesn't populate wrid anymore. 
+        // expecting that driver would take care of it  
         wrid: 64;
         msn: 32;
     } id;

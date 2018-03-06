@@ -1012,52 +1012,34 @@ typedef union header_template_s {
 #define MAX_RQ_RINGS          6
 
 typedef struct rqcb0_s {
-    uint16_t spec_cindex;
-
-    uint16_t proxy_cindex;
-
-    uint8_t rsvd1:6;
-    uint8_t read_rsp_in_progress:1;
-    uint8_t read_rsp_lock:1;
-    uint32_t cur_read_rsp_psn:24;
-
-    uint32_t msn:24;
-
-    uint8_t  adjust_rsq_c_index;
-    uint32_t e_psn: 24;
-
-    uint32_t  congestion_mgmt_enable:1;
-    uint32_t  immdt_as_dbell:1;
-    uint32_t  cache: 1;
-    uint32_t  rsq_quiesce: 1;
-    uint32_t  adjust_rsq_c_index_in_progress: 1;
-    uint32_t  disable_speculation:1;
-    uint32_t  in_progress: 1;
-    uint32_t  busy: 1;
-    uint32_t  srq_enabled: 1;
-    uint32_t  serv_type: 3;
-    uint32_t  log_num_wqes: 5;
-    uint32_t  log_wqe_size: 5;
-    uint32_t  log_rq_page_size: 5;
-    uint32_t  log_pmtu: 5;
-
-    uint8_t  rsvd0: 6;
-    uint8_t  rq_in_hbm:1;
-    uint8_t  ring_empty_sched_eval_done: 1;
-    uint8_t  rsq_pindex_prime;
-    uint8_t  nxt_to_go_token_id;
-    uint8_t  token_id;
-    uint8_t  log_rsq_size: 5;
-    uint8_t  state: 3;
-
+    uint16_t    pad;
+    uint8_t     rsvd1 : 7;
+    uint8_t     ring_empty_sched_eval_done : 1;
+    uint8_t     header_template_size;
+    uint32_t    p4plus_to_p4_flags : 8;
+    uint32_t    curr_read_rsp_psn : 24;
+    uint32_t    rsvd0 : 5;
+    uint32_t    rq_in_hbm : 1;
+    uint32_t    read_rsp_in_progress : 1;
+    uint32_t    read_rsp_lock : 1;
+    uint32_t    dst_qp : 24;
+    uint32_t    header_template_addr;   
+    uint32_t    pd;
     union {
-        uint32_t rsq_base_addr;
-        uint32_t q_key;
+        uint32_t    rsq_base_addr;
+        uint32_t    q_key;
     };
-
+    uint32_t    log_pmtu : 5;
+    uint32_t    serv_type : 3;
+    uint32_t    log_rsq_size : 5;
+    uint32_t    state : 3;
+    uint32_t    congestion_mgmt_enable : 1;
+    uint32_t    log_num_wqes : 5;
+    uint32_t    log_wqe_size : 5;
+    uint32_t    log_rq_page_size : 5;
     union {
-        uint32_t pt_base_addr;          //common
-        uint32_t hbm_rq_base_addr;
+        uint32_t    pt_base_addr;
+        uint32_t    hbm_rq_base_addr;
     };
 
     qpcb_ring_t           rings[MAX_RQ_RINGS];
@@ -1068,69 +1050,107 @@ typedef struct rqcb0_s {
 
 //rqcb1_t is the 2nd 64B of rqcb
 typedef struct rqcb1_s {
-    uint8_t header_template_size;
-    uint8_t p4plus_to_p4_flags;
-    uint32_t current_sge_offset;
-    uint8_t  num_sges:8;
-    uint32_t pd;
-    uint8_t  current_sge_id;
-    uint64_t curr_wqe_ptr;
-    uint32_t dst_qp:24;
-    uint32_t header_template_addr;
-    uint32_t last_ack_nak_psn:24;
-    rdma_aeth_t aeth;
-    uint32_t ack_nak_psn:24;
-    uint32_t cq_id:24;
-    uint64_t wrid;
-    //cached {va, len, r_key} from first packet of write req
-    uint32_t r_key;
-    uint32_t len;
-    uint64_t va; 
+    uint8_t     pad;
+    uint32_t    srq_id: 24;
+    uint8_t     num_sges;
+    uint8_t     current_sge_id;
+    uint32_t    current_sge_offset;
+    uint64_t    curr_wqe_ptr;
+    uint8_t     rsq_pindex;
+    uint32_t    rsvd3 : 8;
+    uint32_t    cq_id : 24;
+    uint16_t    proxy_pindex;
+    uint16_t    proxy_cindex;
+    uint32_t    header_template_size : 8;
+    uint32_t    msn : 24;
+    uint32_t    adjust_rsq_c_index : 8;
+    uint32_t    e_psn : 24;
+    uint16_t    spec_cindex;
+    uint8_t     rsvd2 : 7;
+    uint8_t     in_progress : 1;
+    uint8_t     rsvd1 : 5;
+    uint8_t     rsq_quiesce : 1;
+    uint8_t     adjust_rsq_c_index_in_progress : 1;
+    uint8_t     disable_speculation : 1;
+    uint8_t     rsvd0 : 4;
+    uint8_t     rq_in_hbm : 1;
+    uint8_t     immdt_as_dbell : 1;
+    uint8_t     cache : 1;
+    uint8_t     srq_enabled : 1;
+    uint8_t     rsq_pindex_prime : 8;
+    uint8_t     nxt_to_go_token_id : 8;
+    uint8_t     token_id : 8;
+    uint32_t    header_template_addr;   
+    uint32_t    pd;
+    union {
+        uint32_t    rsq_base_addr;
+        uint32_t    q_key;
+    };
+    uint32_t    log_pmtu : 5;
+    uint32_t    serv_type : 3;
+    uint32_t    log_rsq_size : 5;
+    uint32_t    state : 3;
+    uint32_t    congestion_mgmt_enable : 1;
+    uint32_t    log_num_wqes : 5;
+    uint32_t    log_wqe_size : 5;
+    uint32_t    log_rq_page_size : 5;
+    union {
+        uint32_t    pt_base_addr;
+        uint32_t    hbm_rq_base_addr;
+    };
+    uint8_t   pc;
 } PACKED rqcb1_t;
 
 //rqcb2_t is the 3rd 64B of rqcb
 typedef struct rqcb2_s {
-    qpcb_ring_t         cache_rq_ring;
-    uint16_t            num_rqwqes_per_cpage;
-    uint16_t            rqwqe_size;
-    uint16_t            new_page_add_retry:2;
-    uint16_t            page_chkout_retry:2;
-    uint16_t            rsvd:12;
-    uint32_t            cache_pt[CRQ_PT_SIZE];   
-    uint8_t             rsvd1[6];
+    uint8_t     pad[56];
+    rdma_aeth_t aeth;
+    uint32_t    ack_nak_psn : 24;
+    uint32_t    rsvd0 : 8;
 } PACKED rqcb2_t;
 
+//rqcb3_t is the 4th 64B of rqcb
 typedef struct rqcb3_s {
-    uint8_t  pad[54];
-    uint16_t roce_opt_mss;
-    uint32_t roce_opt_ts_echo;
-    uint32_t roce_opt_ts_value;
+    uint8_t     pad[36];
+    uint16_t    rsvd1;
+    uint16_t    roce_opt_mss;
+    uint32_t    roce_opt_ts_echo;
+    uint32_t    roce_opt_ts_value;
+
+    uint32_t    r_key;
+    uint32_t    len;
+    uint64_t    va;
 } PACKED rqcb3_t;
 
 typedef struct rqcb4_s {
-    uint8_t  rsvd[28];
-    uint16_t max_pkts_in_any_msg;
-    uint16_t num_pkts_in_cur_msg;
-    uint16_t num_ring_dbell;
-    uint16_t num_ack_requested;
-    uint16_t num_write_msgs_imm_data;
-    uint16_t num_send_msgs_imm_data;
-    uint16_t num_send_msgs_inv_rkey;
-    uint16_t num_atomic_cswap_msgs;
-    uint16_t num_atomic_fna_msgs;
-    uint16_t num_read_req_msgs;
-    uint16_t num_write_msgs;
-    uint16_t num_send_msgs;
-    uint32_t num_pkts;
-    uint64_t num_bytes;
+    uint8_t     pad[64];
 } rqcb4_t;
 
+typedef struct rqcb5_s {
+    uint8_t     rsvd[28];
+    uint16_t    max_pkts_in_any_msg;
+    uint16_t    num_pkts_in_cur_msg;
+    uint16_t    num_ring_dbell;
+    uint16_t    num_ack_requested;
+    uint16_t    num_write_msgs_imm_data;
+    uint16_t    num_send_msgs_imm_data;
+    uint16_t    num_send_msgs_inv_rkey;
+    uint16_t    num_atomic_cswap_msgs;
+    uint16_t    num_atomic_fna_msgs;
+    uint16_t    num_read_req_msgs;
+    uint16_t    num_write_msgs;
+    uint16_t    num_send_msgs;
+    uint32_t    num_pkts;
+    uint64_t    num_bytes;
+} rqcb5_t;
+
 typedef struct rqcb_s {
-    rqcb0_t  rqcb0; // 0-63 bytes
-    rqcb1_t  rqcb1; // 63-127 bytes
-    rqcb2_t  rqcb2; // 63-127 bytes
-    uint8_t  rsvd[64];
-    rqcb4_t  rqcb4; // RESP_RX stats
+    rqcb0_t     rqcb0; // 0-63 bytes    Tx
+    rqcb1_t     rqcb1; // 63-127 bytes  Rx
+    rqcb2_t     rqcb2; // 128-191 bytes  Tx
+    rqcb3_t     rqcb3; // 192-255 bytes Rx
+    rqcb4_t     rqcb4; // RESP_TX stats
+    rqcb5_t     rqcb5; // RESP_RX stats
 } PACKED rqcb_t;
 
 //dcqcn_cb_t dynamically allocated to store dcqcn related info in HBM

@@ -6,8 +6,8 @@
 #include "ingress.h"
 
 struct resp_tx_phv_t p;
-struct resp_tx_rqcb1_write_back_process_k_t k;
-struct rqcb1_t d;
+struct resp_tx_rqcb0_write_back_process_k_t k;
+struct rqcb0_t d;
 
 #define DB_ADDR             r2
 #define DB_DATA             r3
@@ -16,7 +16,7 @@ struct rqcb1_t d;
 
 %%
 
-resp_tx_rqcb1_write_back_process:
+resp_tx_rqcb0_write_back_process:
 
     bbeq       k.args.rate_enforce_failed, 1, dcqcn_rl_failure
     CAPRI_SET_TABLE_1_VALID(0) // BD slot
@@ -45,52 +45,32 @@ add_headers_common:
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4);
     phvwrpair       P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
 
-    bbeq           k.to_stage.s5.rqcb1_wb.ack_nak_process, 1, add_ack_header
+    bbeq           k.to_stage.s5.rqcb0_wb.ack_nak_process, 1, add_ack_header
     phvwr          P4PLUS_TO_P4_VLAN_TAG, 0 //BD-slot
 
 rsq_write_back:
-    phvwr       p.read_rsp_in_progress, k.args.read_rsp_in_progress
+    tblwr       d.read_rsp_in_progress, k.args.read_rsp_in_progress
     seq         c1, k.args.read_rsp_in_progress, 1
     cmov        CURR_READ_RSP_PSN, c1, k.args.curr_read_rsp_psn, 0
-    add.c1      CURR_READ_RSP_PSN, CURR_READ_RSP_PSN, 1
-    phvwr       p.curr_read_rsp_psn, CURR_READ_RSP_PSN
-
-    // TODO: ordering rules
-    // Need to release lock and increment rsq's ci at same time to avoid tx scheduler issues
-    // Also need to increment ci first and then release rsp lock (must fence)
-    phvwr   p.rsq_c_index, k.{to_stage.s5.rqcb1_wb.new_c_index}.hx
-    phvwri  p.read_rsp_lock, 0
-
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_READ_RSP_LOCK)
-    RQCB0_ADDR_GET(r5)
-    add            r6, r5, RQCB0_CURR_READ_RSP_PSN
-    DMA_HBM_PHV2MEM_SETUP_F(DMA_CMD_BASE, curr_read_rsp_psn, rsvd, r6)
+    mincr.c1    CURR_READ_RSP_PSN, 24, 1
+    tblwr       d.curr_read_rsp_psn, CURR_READ_RSP_PSN
 
     // Update RSQ_C_INDEX to NEW_RSQ_C_INDEX only when read rsp NOT in progress (!c1)
-    bcf         [c1], exit
-
-    add            r6, r5, RSQ_C_INDEX_OFFSET
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_RSQ_C_IDX) //BD slot
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsq_c_index, rsq_c_index, r6)
+    //TBD: do we need hx somewhere ?
+    tblwr.!c1   RSQ_C_INDEX, k.{to_stage.s5.rqcb0_wb.new_c_index}
+    tblwr       d.read_rsp_lock, 0
 
     nop.e
     nop
 
     
 add_ack_header:
-    add         r2, RDMA_PKT_OPC_ACK, k.to_stage.s5.rqcb1_wb.ack_nack_serv_type, BTH_OPC_SVC_SHIFT
+    add         r2, RDMA_PKT_OPC_ACK, d.serv_type, BTH_OPC_SVC_SHIFT
     phvwrpair   p.bth.opcode, r2, p.bth.dst_qp, d.dst_qp
 
     // phv_p->bth.pkey = 0xffff
     phvwr       p.bth.pkey, 0xffff  
     
-    // prepare aeth
-    phvwrpair   p.aeth.syndrome, d.aeth.syndrome, p.aeth.msn, d.aeth.msn
-
-    // prepare BTH
-    phvwr       p.bth.psn, d.ack_nak_psn
-    tblwr       d.last_ack_nak_psn, d.ack_nak_psn
-
     // header_template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
     sll         r5, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
@@ -110,16 +90,14 @@ add_ack_header:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
-    //updating c_index in stage0 itself.
-    //DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, ACK_NAK_RING_ID, k.to_stage.s5.rqcb1_wb.new_c_index, DB_ADDR, DB_DATA)
     nop.e
     nop
     
 dcqcn_rl_failure:
-    bbeq           k.to_stage.s5.rqcb1_wb.ack_nak_process, 1, exit
+    bbeq            k.to_stage.s5.rqcb0_wb.ack_nak_process, 1, exit
     nop
     // release read_rsp_lock only in rsq path.
-    //tblwr       d.read_rsp_lock, 0   //TODO: For now avoid this, as moved this to RQCB0
+    tblwr           d.read_rsp_lock, 0   //TODO: For now avoid this, as moved this to RQCB0
 
 exit:
     nop.e

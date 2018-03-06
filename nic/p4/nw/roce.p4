@@ -22,6 +22,10 @@ action decode_roce_opcode(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
             modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
         }
         modify_field(capri_rxdma_intrinsic.qtype, qtype);
+
+        if (qtype == Q_TYPE_RDMA_RQ) {
+            modify_field(p4_to_p4plus_roce.table0_valid, TRUE);
+        }
         add(capri_rxdma_intrinsic.rx_splitter_offset, len,
             (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
              P4PLUS_ROCE_HDR_SZ));

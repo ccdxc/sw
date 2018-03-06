@@ -5,7 +5,7 @@ struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
 
 // Note: This stage doesn't have any stage-to-stage info. k is used only to access to-stage info.
-struct resp_tx_rqcb1_write_back_process_k_t k;
+struct resp_tx_rqcb0_write_back_process_k_t k;
 
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Feeding timestamp from dcqcn_cb for now since model doesn't have timestamps.
@@ -15,11 +15,11 @@ struct resp_tx_rqcb1_write_back_process_k_t k;
 #define NUM_TOKENS_ACQUIRED  r4
 #define NUM_TOKENS_REQUIRED  r5
 
-#define RQCB1_WB_INFO_T struct resp_tx_rqcb1_write_back_info_t  
+#define RQCB0_WB_INFO_T struct resp_tx_rqcb0_write_back_info_t  
 
 %%
     .param rdma_num_clock_ticks_per_us
-    .param resp_tx_rqcb1_write_back_process
+    .param resp_tx_rqcb0_write_back_process
 
 .align
 resp_tx_dcqcn_enforce_process:
@@ -93,8 +93,8 @@ ring_dcqcn_doorbell:
     
 load_write_back:            
     // DCQCN rate-enforcement passed. Load stage 5 for write-back.
-    RQCB1_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_write_back_process, r2)
+    RQCB0_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb0_write_back_process, r2)
 
     nop.e
     nop
@@ -118,10 +118,10 @@ drop_phv:
     phvwr         p.common.p4_intr_global_drop, 1 
 
     CAPRI_GET_TABLE_1_ARG(resp_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RQCB1_WB_INFO_T, rate_enforce_failed, 1)
+    CAPRI_SET_FIELD(r7, RQCB0_WB_INFO_T, rate_enforce_failed, 1)
 
-    RQCB1_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb1_write_back_process, r2)
+    RQCB0_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb0_write_back_process, r2)
 
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 

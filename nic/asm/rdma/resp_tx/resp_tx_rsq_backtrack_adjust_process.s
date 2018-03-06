@@ -16,6 +16,7 @@ struct rqcb1_t d;
 
 %%
 
+//RAJA: This code needs to be rewritten based on new backtrack approach
 resp_tx_rsq_backtrack_adjust_process:
 
 add_headers:

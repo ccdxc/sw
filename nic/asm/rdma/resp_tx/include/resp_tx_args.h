@@ -15,16 +15,17 @@ struct resp_tx_to_stage_dcqcn_info_t {
 
 struct resp_tx_to_stage_rqcb1_wb_info_t {
     new_c_index: 16;
-    ack_nack_serv_type: 3;
     ack_nak_process: 1;
-    rsvd: 108;
+    rsvd: 111;
 };
 
+#if 0
 struct resp_tx_to_stage_rsq_rkey_info_t {
     dcqcn_cb_addr: 34;
     congestion_mgmt_enable: 1;
     rsvd: 93;
 };
+#endif
 
 struct resp_tx_to_stage_wqe_info_t {
     dcqcn_cb_addr: 34;
@@ -48,7 +49,6 @@ struct resp_tx_s2_info_t {
 
 struct resp_tx_s3_info_t {
     union {
-       struct resp_tx_to_stage_rsq_rkey_info_t rsq_rkey;
        struct resp_tx_to_stage_dcqcn_info_t dcqcn;
     };
 };
@@ -61,7 +61,7 @@ struct resp_tx_s4_info_t {
 
 struct resp_tx_s5_info_t {
     union {
-       struct resp_tx_to_stage_rqcb1_wb_info_t rqcb1_wb;
+       struct resp_tx_to_stage_rqcb1_wb_info_t rqcb0_wb;
     };
 };
 

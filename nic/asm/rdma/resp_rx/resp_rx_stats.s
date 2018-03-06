@@ -5,12 +5,10 @@
 
 struct resp_rx_phv_t p;
 struct resp_rx_stats_process_k_t k;
-struct rqcb4_t d;
-
-#define STATS_INFO_T struct resp_rx_stats_info_t
+struct rqcb5_t d;
 
 #define GLOBAL_FLAGS r7
-#define RQCB4_ADDR   r3
+#define RQCB5_ADDR   r3
 #define STATS_PC     r6
 
 
@@ -29,7 +27,7 @@ resp_rx_stats_process:
 
     add              GLOBAL_FLAGS, r0, k.global.flags //BD slot
 
-    tbladd           d.num_bytes, k.to_stage.s6.cqpt_stats.bytes
+    tbladd           d.num_bytes, k.to_stage.s7.stats.bytes
     tblmincri        d.num_pkts, MASK_32, 1
 
     crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_RING_DBELL | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ)
@@ -80,8 +78,8 @@ bubble_to_next_stage:
     //invoke the same routine, but with valid d[]
     //using static config, stage-7/table-3 is set as memory_only - to improve on latency
     CAPRI_GET_TABLE_3_K(resp_rx_phv_t, r7) //BD Slot
-    RQCB4_ADDR_GET(RQCB4_ADDR)
-    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RQCB4_ADDR)
+    RQCB5_ADDR_GET(RQCB5_ADDR)
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RQCB5_ADDR)
 
 exit:
     nop.e

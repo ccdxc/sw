@@ -6,7 +6,8 @@
 #include "ingress.h"
 
 struct resp_tx_phv_t p;
-struct rqcb1_t d;
+struct rqcb2_t d;
+struct resp_tx_ack_process_k_t k;
 
 #define TO_STAGE_T struct resp_tx_to_stage_t
 
@@ -15,10 +16,9 @@ struct rqcb1_t d;
 
 resp_tx_ack_process:
 
-    // Pass dcqcn_cb_addr to stage 3.
-    add         r2, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    CAPRI_GET_STAGE_3_ARG(resp_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, s3.dcqcn.dcqcn_cb_addr, r2)
+    // prepare aeth
+    phvwrpair   p.aeth.syndrome, d.aeth.syndrome, p.aeth.msn, d.aeth.msn
+    phvwr       p.bth.psn, d.ack_nak_psn
 
     // invoke MPU only dcqcn in table 1.
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)

@@ -580,15 +580,19 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         cfglogger.info('\nother(actual):')
         other.Show()
 
+        # don't compare wrid anymore as asm is no longer populating it.
+        self.desc.wrid = other.desc.wrid
+
         if self.desc.status == 0: #CQ_STATUS_SUCCESS
             return self.desc == other.desc
 
         cfglogger.info('status is not 0\n')
 
-        if self.desc.wrid != other.desc.wrid:
-            return False
+        # don't compare wrid anymore as asm is no longer populating it.
+        #if self.desc.wrid != other.desc.wrid:
+        #    return False
 
-        cfglogger.info('wrid matched\n')
+        #cfglogger.info('wrid matched\n')
 
         if self.desc.op_type != other.desc.op_type:
             return False

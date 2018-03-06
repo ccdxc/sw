@@ -7,7 +7,7 @@
 
 struct resp_tx_phv_t p;
 struct dcqcn_cb_t d;
-struct resp_tx_rqcb1_process_k_t k;
+struct resp_tx_rqcb2_process_k_t k;
 
 #define  RATE_ENFORCED  r3
 #define  TARGET_RATE    r4

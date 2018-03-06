@@ -101,6 +101,7 @@ packets:
                 opcode  : 8
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
+                a       : 1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 

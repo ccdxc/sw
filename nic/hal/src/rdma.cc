@@ -906,6 +906,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     if (spec.rq_in_nic_memory()) {
         rqcb_p->rqcb0.rq_in_hbm = 1;
+        rqcb_p->rqcb1.rq_in_hbm = 1;
         rq_size = num_rq_wqes * rqwqe_size;
         hbm_rq_base_addr = g_rdma_manager->HbmAlloc(rq_size);
         HAL_ASSERT(hbm_rq_base_addr);
@@ -913,15 +914,19 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
         // Make sure hbm_rq_base_addr is 8 byte aligned
         HAL_ASSERT(hbm_rq_base_addr % 8 == 0);
         rqcb_p->rqcb0.hbm_rq_base_addr = hbm_rq_base_addr >> HBM_RQ_BASE_ADDR_SHIFT;
+        rqcb_p->rqcb1.hbm_rq_base_addr = rqcb_p->rqcb0.hbm_rq_base_addr;
     } else {
         rqcb_p->rqcb0.rq_in_hbm = 0;
+        rqcb_p->rqcb1.rq_in_hbm = 0;
         hbm_rq_base_addr = 0;
         rqcb_p->rqcb0.pt_base_addr =
             rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.rq_lkey())) >> PT_BASE_ADDR_SHIFT;
+        rqcb_p->rqcb1.pt_base_addr = rqcb_p->rqcb0.pt_base_addr;
     }
 
     HAL_ASSERT(rqcb.rqcb0.pt_base_addr);
     rqcb.rqcb0.log_rsq_size = log2(num_rsq_wqes);
+    rqcb.rqcb1.log_rsq_size = rqcb.rqcb0.log_rsq_size;
 
     rsq_base_addr = 
         g_rdma_manager->HbmAlloc(sizeof(rsqwqe_t) << rqcb.rqcb0.log_rsq_size);
@@ -930,29 +935,38 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // Make sure rsq_base_addr is 8 byte aligned
     HAL_ASSERT(rsq_base_addr % 8 == 0);
     rqcb.rqcb0.rsq_base_addr = rsq_base_addr >> RSQ_BASE_ADDR_SHIFT;
+    rqcb.rqcb1.rsq_base_addr = rqcb.rqcb0.rsq_base_addr;
 
     rqcb.rqcb0.serv_type = spec.svc();
     rqcb.rqcb0.log_rq_page_size = log2(spec.hostmem_pg_size());
     rqcb.rqcb0.log_wqe_size = log2(rqwqe_size);
     rqcb.rqcb0.log_num_wqes = log2(num_rq_wqes);
     rqcb.rqcb0.log_pmtu = log2(spec.pmtu());
-    rqcb.rqcb0.cache = FALSE;
-    rqcb.rqcb0.immdt_as_dbell = spec.immdt_as_dbell();
+    rqcb.rqcb1.serv_type = rqcb.rqcb0.serv_type;
+    rqcb.rqcb1.log_rq_page_size = rqcb.rqcb0.log_rq_page_size;
+    rqcb.rqcb1.log_wqe_size = rqcb.rqcb0.log_wqe_size;
+    rqcb.rqcb1.log_num_wqes = rqcb.rqcb0.log_num_wqes;
+    rqcb.rqcb1.log_pmtu = rqcb.rqcb0.log_pmtu;
+
+    rqcb.rqcb1.cache = FALSE;
+    rqcb.rqcb1.immdt_as_dbell = spec.immdt_as_dbell();
     rqcb.rqcb0.congestion_mgmt_enable = FALSE;
-    // initialize last_ack_nak_psn to a value which is different from ack_nak_psn
-    rqcb.rqcb1.last_ack_nak_psn = rqcb.rqcb1.ack_nak_psn - 1;
-    rqcb.rqcb1.pd = spec.pd();
+    rqcb.rqcb1.congestion_mgmt_enable = rqcb.rqcb0.congestion_mgmt_enable;
+    rqcb.rqcb0.pd = spec.pd();
+    rqcb.rqcb1.pd = rqcb.rqcb0.pd;
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
-    rqcb.rqcb1.header_template_addr = 
+    rqcb.rqcb0.header_template_addr = 
                             header_template_addr >> HDR_TEMP_ADDR_SHIFT;
-    rqcb.rqcb1.header_template_size = sizeof(header_template_v4_t);
-    rqcb.rqcb1.p4plus_to_p4_flags = 0xA;
+    rqcb.rqcb0.header_template_size = sizeof(header_template_v4_t);
+    rqcb.rqcb1.header_template_addr = rqcb.rqcb0.header_template_addr;
+    rqcb.rqcb1.header_template_size = rqcb.rqcb0.header_template_size;
+    rqcb.rqcb0.p4plus_to_p4_flags = 0xA;
     //rqcb.rqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                 P4PLUS_TO_P4_UPDATE_IP_LEN);
-    rqcb.rqcb2.num_rqwqes_per_cpage = HBM_PAGE_SIZE / rqwqe_size;
 
     stage0_resp_rx_prog_addr(&offset);
     rqcb.rqcb0.ring_header.pc = offset >> 6;
+    rqcb.rqcb1.pc = offset >> 6;
 
     stage0_resp_tx_prog_addr(&offset_verify);
     HAL_ASSERT(offset == offset_verify);
@@ -1160,14 +1174,14 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     switch (oper) {
 
         case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QP:
-            rqcb_p->rqcb1.dst_qp = spec.dst_qp_num();
+            rqcb_p->rqcb0.dst_qp = spec.dst_qp_num();
             sqcb_p->sqcb1.dst_qp = spec.dst_qp_num();
             HAL_TRACE_DEBUG("{}: Update: Setting dst_qp to: {}", __FUNCTION__,
                     spec.dst_qp_num());
         break;
         
         case rdma::RDMA_UPDATE_QP_OPER_SET_E_PSN:
-            rqcb_p->rqcb0.e_psn = spec.e_psn();
+            rqcb_p->rqcb1.e_psn = spec.e_psn();
             HAL_TRACE_DEBUG("{}: Update: Setting e_psn to: {}", __FUNCTION__,
                             spec.e_psn());
             break;
@@ -1181,6 +1195,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
         
         case rdma::RDMA_UPDATE_QP_OPER_SET_Q_KEY:
             rqcb_p->rqcb0.q_key = spec.q_key();
+            rqcb_p->rqcb1.q_key = rqcb_p->rqcb0.q_key;
             sqcb_p->sqcb1.q_key = spec.q_key();
             HAL_TRACE_DEBUG("{}: Update: Setting q_key to: {}", __FUNCTION__,
                             spec.q_key());
@@ -1189,7 +1204,8 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
         case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
 
             sqcb_p->sqcb1.header_template_size = spec.header_template().size();
-            rqcb_p->rqcb1.header_template_size = spec.header_template().size();
+            rqcb_p->rqcb0.header_template_size = spec.header_template().size();
+            rqcb_p->rqcb1.header_template_size = rqcb_p->rqcb0.header_template_size;
 
             header_template_addr = sqcb_p->sqcb1.header_template_addr;
             header_template_addr <<= HDR_TEMP_ADDR_SHIFT;

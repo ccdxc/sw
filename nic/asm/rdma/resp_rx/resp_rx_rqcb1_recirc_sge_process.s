@@ -5,8 +5,7 @@
 #include "ingress.h"
 
 struct resp_rx_phv_t p;
-struct rqcb1_t d;
-
+// this is an mpu only program, hence there is no d-vector
 struct resp_rx_rqcb1_in_progress_process_k_t k;
 
 #define WQE_OFFSET      r1
@@ -36,22 +35,25 @@ resp_rx_rqcb1_recirc_sge_process:
     // rqcb1 is not yet populated with wqe_ptr and num_sges field.
     // In these cases, take the wqe_ptr and num_sges from recirc info
 
-    cmov    WQE_PTR, c1, k.to_stage.s1.recirc.curr_wqe_ptr, d.curr_wqe_ptr
+    cmov    WQE_PTR, c1, k.to_stage.s1.recirc.curr_wqe_ptr, k.args.curr_wqe_ptr
     add     ADDR_TO_LOAD, WQE_PTR, WQE_OFFSET
 
-    cmov    NUM_VALID_SGES, c1, k.to_stage.s1.recirc.num_sges, d.num_sges
+    cmov    NUM_VALID_SGES, c1, k.to_stage.s1.recirc.num_sges, k.args.num_sges
 
     sub     NUM_VALID_SGES, NUM_VALID_SGES, k.to_stage.s1.recirc.current_sge_id
     
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, in_progress, 1)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, recirc_path, 1)
+    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, in_progress, 1)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, remaining_payload_bytes, k.to_stage.s1.recirc.remaining_payload_bytes)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, current_sge_id, k.to_stage.s1.recirc.current_sge_id)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, current_sge_offset, k.to_stage.s1.recirc.current_sge_offset)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, num_valid_sges, NUM_VALID_SGES)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, curr_wqe_ptr, WQE_PTR)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, dma_cmd_index, k.to_stage.s1.recirc.dma_cmd_index)
+    // currently our DMA commands exhaust upon one recirculation, hence 
+    // below static formula to compute dma_cmd_index works.
+    // for a generic case, we need to make this multiple of recirc_count
+    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, dma_cmd_index, (RESP_RX_DMA_CMD_PYLD_BASE + (MAX_PYLD_DMA_CMDS_PER_SGE * 2)))
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 

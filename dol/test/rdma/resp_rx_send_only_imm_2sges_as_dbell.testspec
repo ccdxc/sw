@@ -56,6 +56,7 @@ packets:
                 opcode  : 5  #RDMA SEND Only with Immediate
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : ref://testcase/pvtdata/send_only_psn
+                a       : 1
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
             payload:

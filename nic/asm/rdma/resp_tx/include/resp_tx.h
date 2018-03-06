@@ -18,8 +18,6 @@
 #define RESP_TX_DMA_CMD_CNP_RSVD        5 // CNP packets do not have AETH header. Re-using index.
 #define RESP_TX_DMA_CMD_ATOMICAETH      6 
 #define RESP_TX_DMA_CMD_PYLD_BASE       6 // consumes 3 DMA commands
-#define RESP_TX_DMA_CMD_RSQ_C_IDX      (RESP_TX_MAX_DMA_CMDS - 4)
-#define RESP_TX_DMA_CMD_READ_RSP_LOCK  (RESP_TX_MAX_DMA_CMDS - 3)
 #define RESP_TX_DMA_CMD_PAD_ICRC       (RESP_TX_MAX_DMA_CMDS - 2)
 #define RESP_TX_DMA_CMD_UDP_OPTIONS    (RESP_TX_MAX_DMA_CMDS - 1)
 
@@ -59,11 +57,7 @@ struct resp_tx_phv_t {
     //ICRC data does not need to be given as zero as Capri overtites icrc after computation
     icrc     :  32;                              //  4B
     rsq_c_index   : 16;                          //  2B
-    curr_read_rsp_psn: 24;
-    read_rsp_lock: 1;
-    read_rsp_in_progress: 1;
-    rsvd: 6;
-    rsvd2    : 264;                              // 33B
+    rsvd2    : 296;                              // 37B
     struct p4plus_to_p4_header_t p4plus_to_p4;   // 18B
 
     /* flit 6 */
@@ -89,6 +83,7 @@ struct resp_tx_phv_global_t {
 // stage to stage argument structures
 
 //20
+#if 0
 struct resp_tx_rqcb_to_rqcb1_info_t {
     rsqwqe_addr: 64;
     log_pmtu: 5;
@@ -105,22 +100,53 @@ struct resp_tx_rqcb1_process_k_t {
     struct resp_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
+#endif
 
-//20
-struct resp_tx_rqcb1_to_rsqwqe_info_t {
+struct resp_tx_rqcb_to_rqcb2_info_t {
+    rsqwqe_addr: 64;
     curr_read_rsp_psn: 24;
     log_pmtu: 5;
     serv_type: 3;
     header_template_addr: 32;
-    read_rsp_in_progress: 1;
-    rsvd0: 7;
     header_template_size: 8;
-    pad: 80;
+    read_rsp_in_progress: 1;
+    pad: 23;
+};
+
+struct resp_tx_rqcb2_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_tx_rqcb_to_rqcb2_info_t args;
+    struct resp_tx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+//20
+struct resp_tx_rqcb_to_ack_info_t {
+    header_template_addr: 32;
+    pad: 128;
+};
+
+struct resp_tx_ack_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_tx_rqcb_to_ack_info_t args;
+    struct resp_tx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+//20
+struct resp_tx_rqcb2_to_rsqwqe_info_t {
+    curr_read_rsp_psn: 24;
+    log_pmtu: 5;
+    serv_type: 3;
+    header_template_addr: 32;
+    header_template_size: 8;
+    read_rsp_in_progress: 1;
+    pad: 87;
 };
 
 struct resp_tx_rsqwqe_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct resp_tx_rqcb1_to_rsqwqe_info_t args;
+    struct resp_tx_rqcb2_to_rsqwqe_info_t args;
     struct resp_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
@@ -147,16 +173,16 @@ struct resp_tx_rsqrkey_process_k_t {
 };
 
 //20
-struct resp_tx_rqcb1_write_back_info_t {
+struct resp_tx_rqcb0_write_back_info_t {
     curr_read_rsp_psn: 24;
     read_rsp_in_progress: 1;
     rate_enforce_failed: 1;
     pad: 134;
 };
 
-struct resp_tx_rqcb1_write_back_process_k_t {
+struct resp_tx_rqcb0_write_back_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct resp_tx_rqcb1_write_back_info_t args;
+    struct resp_tx_rqcb0_write_back_info_t args;
     struct resp_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

@@ -140,6 +140,7 @@ packets:
                 opcode  : 2 
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : ref://testcase/pvtdata/send_last_psn
+                a       : 1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 

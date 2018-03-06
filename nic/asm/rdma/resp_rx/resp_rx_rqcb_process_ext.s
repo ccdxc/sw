@@ -5,11 +5,11 @@
 #include "ingress.h"
 
 struct resp_rx_phv_t p;
-struct rqcb0_t d;
+struct rqcb1_t d;
 struct common_p4plus_stage0_app_header_table_k k;
 
-#define TO_S_FWD_INFO_T struct resp_rx_to_stage_wb0_info_t
-#define TO_S_CQPT_STATS_INFO_T struct resp_rx_to_stage_cqpt_stats_info_t
+#define TO_S_FWD_INFO_T struct resp_rx_to_stage_wb1_info_t
+#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
 
 %%
 
@@ -45,7 +45,7 @@ skip_roce_opt_parsing:
 #   CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
     CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, TO_S_CQPT_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
+    CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 recirc_pkt:
 exit:
