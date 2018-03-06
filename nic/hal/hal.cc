@@ -31,6 +31,7 @@
 #include "nic/hal/src/qos.hpp"
 #include "nic/hal/src/acl.hpp"
 #include <google/protobuf/util/json_util.h>
+#include "nic/hal/src/nwsec_group.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -952,6 +953,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // do per module initialization
     // TODO: needed only in smart nic mode
     HAL_ABORT(hal::session_init() == HAL_RET_OK);
+
 
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??

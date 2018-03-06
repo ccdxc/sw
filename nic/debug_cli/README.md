@@ -1,8 +1,9 @@
 Debug   CLI:
 ==================
-
+Install click, swig
 0. Install click_repl if not installed from nic dir:
 sudo pip install -e debug_cli/click_repl
+
 
 1. nic/debug_cli/cli.sh  (Ignore the warnings thats show up)
 

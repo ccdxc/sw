@@ -7,6 +7,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/endpoint_api.hpp"
 #include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
 // #include <netinet/ether.h>
 
 namespace hal {

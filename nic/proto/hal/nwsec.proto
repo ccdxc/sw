@@ -31,10 +31,10 @@ service NwSecurity {
     rpc DoSPolicyDelete (DoSPolicyDeleteRequestMsg) returns (DoSPolicyDeleteResponseMsg) {}
     rpc DoSPolicyGet (DoSPolicyGetRequestMsg) returns (DoSPolicyGetResponseMsg) {}
 
-    //rpc SecurityPolicyCreate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
-    //rpc SecurityPolicyUpdate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
-    //rpc SecurityPolicyDelete (SecurityPolicyDeleteRequestMsg) returns (SecurityPolicyDeleteResponseMsg) {}
-    //rpc SecurityPolicyGet (SecurityPolicyGetRequestMsg) returns (SecurityPolicyGetResponseMsg) {}
+    rpc SecurityPolicyCreate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
+    rpc SecurityPolicyUpdate (SecurityPolicyRequestMsg) returns (SecurityPolicyResponseMsg) {}
+    rpc SecurityPolicyDelete (SecurityPolicyDeleteRequestMsg) returns (SecurityPolicyDeleteResponseMsg) {}
+    rpc SecurityPolicyGet (SecurityPolicyGetRequestMsg) returns (SecurityPolicyGetResponseMsg) {}
 }
 
 // normalization feature actions upon detecting malformed packets
@@ -838,7 +838,7 @@ message SecurityPolicyStatus {
 
 // SecurityPolicyResponse is the response to SecurityPolicyRequest 
 message SecurityPolicyResponse {
-    types.ApiStatus       api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
+    types.ApiStatus       api_status         = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
     SecurityPolicyStatus  policy_status      = 2;  // operational status
 }
 
@@ -849,7 +849,7 @@ message SecurityPolicyResponseMsg {
 
 // SecurityPolicyDeleteRequest is used to delete a security rule 
 message SecurityPolicyDeleteRequest {
-    types.ObjectMeta                meta                = 1; // object meta
+    types.ObjectMeta                meta                  = 1; // object meta
     kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""]; // policy_handle 
 }
 
@@ -869,7 +869,7 @@ message SecurityPolicyDeleteResponseMsg {
 
 // SecurityPolicyGet is used to get information about a security policy 
 message SecurityPolicyGetRequest {
-    types.ObjectMeta              meta = 1; // object meta
+    types.ObjectMeta              meta          = 1; // object meta
     // key_or_handle is the security policy's unique identifier
     kh.SecurityPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }

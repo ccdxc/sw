@@ -33,7 +33,10 @@ cc_library(
     hdrs = [
         "fte.hpp",
         "fte_ctx.hpp",
-    ],
+        "acl/acl.hpp",
+        "acl/ref.hpp"
+    ]
+    #+glob(["acl/*.hpp"])
 )
 
 cc_test(

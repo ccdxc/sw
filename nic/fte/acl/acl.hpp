@@ -121,7 +121,7 @@ class acl_ctx_t;
  *   acl_deref()/acl_delete()
  */
 const acl_ctx_t *
-acl_create(const acl_config_t *cfg);
+lib_acl_create(const acl_config_t *cfg);
 
 /**
  * Remove the ctx from the global list and release the reference.
@@ -130,7 +130,7 @@ acl_create(const acl_config_t *cfg);
  *   ACL context to free
  */
 void
-acl_delete(const acl_ctx_t *ctx);
+lib_acl_delete(const acl_ctx_t *ctx);
 
 /**
  * Lookup an existing ACL context by name

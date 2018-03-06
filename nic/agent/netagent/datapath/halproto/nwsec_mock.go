@@ -612,6 +612,78 @@ func (_mr *MockNwSecurityClientMockRecorder) DoSPolicyGet(arg0, arg1 interface{}
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "DoSPolicyGet", reflect.TypeOf((*MockNwSecurityClient)(nil).DoSPolicyGet), _s...)
 }
 
+// SecurityPolicyCreate mocks base method
+func (_m *MockNwSecurityClient) SecurityPolicyCreate(ctx context.Context, in *SecurityPolicyRequestMsg, opts ...grpc.CallOption) (*SecurityPolicyResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityPolicyCreate", _s...)
+	ret0, _ := ret[0].(*SecurityPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyCreate indicates an expected call of SecurityPolicyCreate
+func (_mr *MockNwSecurityClientMockRecorder) SecurityPolicyCreate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyCreate", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityPolicyCreate), _s...)
+}
+
+// SecurityPolicyUpdate mocks base method
+func (_m *MockNwSecurityClient) SecurityPolicyUpdate(ctx context.Context, in *SecurityPolicyRequestMsg, opts ...grpc.CallOption) (*SecurityPolicyResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityPolicyUpdate", _s...)
+	ret0, _ := ret[0].(*SecurityPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyUpdate indicates an expected call of SecurityPolicyUpdate
+func (_mr *MockNwSecurityClientMockRecorder) SecurityPolicyUpdate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyUpdate", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityPolicyUpdate), _s...)
+}
+
+// SecurityPolicyDelete mocks base method
+func (_m *MockNwSecurityClient) SecurityPolicyDelete(ctx context.Context, in *SecurityPolicyDeleteRequestMsg, opts ...grpc.CallOption) (*SecurityPolicyDeleteResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityPolicyDelete", _s...)
+	ret0, _ := ret[0].(*SecurityPolicyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyDelete indicates an expected call of SecurityPolicyDelete
+func (_mr *MockNwSecurityClientMockRecorder) SecurityPolicyDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyDelete", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityPolicyDelete), _s...)
+}
+
+// SecurityPolicyGet mocks base method
+func (_m *MockNwSecurityClient) SecurityPolicyGet(ctx context.Context, in *SecurityPolicyGetRequestMsg, opts ...grpc.CallOption) (*SecurityPolicyGetResponseMsg, error) {
+	_s := []interface{}{ctx, in}
+	for _, _x := range opts {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "SecurityPolicyGet", _s...)
+	ret0, _ := ret[0].(*SecurityPolicyGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyGet indicates an expected call of SecurityPolicyGet
+func (_mr *MockNwSecurityClientMockRecorder) SecurityPolicyGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0, arg1}, arg2...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyGet", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityPolicyGet), _s...)
+}
+
 // MockNwSecurityServer is a mock of NwSecurityServer interface
 type MockNwSecurityServer struct {
 	ctrl     *gomock.Controller
@@ -841,4 +913,56 @@ func (_m *MockNwSecurityServer) DoSPolicyGet(_param0 context.Context, _param1 *D
 // DoSPolicyGet indicates an expected call of DoSPolicyGet
 func (_mr *MockNwSecurityServerMockRecorder) DoSPolicyGet(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "DoSPolicyGet", reflect.TypeOf((*MockNwSecurityServer)(nil).DoSPolicyGet), arg0, arg1)
+}
+
+// SecurityPolicyCreate mocks base method
+func (_m *MockNwSecurityServer) SecurityPolicyCreate(_param0 context.Context, _param1 *SecurityPolicyRequestMsg) (*SecurityPolicyResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityPolicyCreate", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyCreate indicates an expected call of SecurityPolicyCreate
+func (_mr *MockNwSecurityServerMockRecorder) SecurityPolicyCreate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyCreate", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityPolicyCreate), arg0, arg1)
+}
+
+// SecurityPolicyUpdate mocks base method
+func (_m *MockNwSecurityServer) SecurityPolicyUpdate(_param0 context.Context, _param1 *SecurityPolicyRequestMsg) (*SecurityPolicyResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityPolicyUpdate", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyUpdate indicates an expected call of SecurityPolicyUpdate
+func (_mr *MockNwSecurityServerMockRecorder) SecurityPolicyUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyUpdate", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityPolicyUpdate), arg0, arg1)
+}
+
+// SecurityPolicyDelete mocks base method
+func (_m *MockNwSecurityServer) SecurityPolicyDelete(_param0 context.Context, _param1 *SecurityPolicyDeleteRequestMsg) (*SecurityPolicyDeleteResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityPolicyDelete", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityPolicyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyDelete indicates an expected call of SecurityPolicyDelete
+func (_mr *MockNwSecurityServerMockRecorder) SecurityPolicyDelete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyDelete", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityPolicyDelete), arg0, arg1)
+}
+
+// SecurityPolicyGet mocks base method
+func (_m *MockNwSecurityServer) SecurityPolicyGet(_param0 context.Context, _param1 *SecurityPolicyGetRequestMsg) (*SecurityPolicyGetResponseMsg, error) {
+	ret := _m.ctrl.Call(_m, "SecurityPolicyGet", _param0, _param1)
+	ret0, _ := ret[0].(*SecurityPolicyGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecurityPolicyGet indicates an expected call of SecurityPolicyGet
+func (_mr *MockNwSecurityServerMockRecorder) SecurityPolicyGet(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityPolicyGet", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityPolicyGet), arg0, arg1)
 }

@@ -5,9 +5,9 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/nwsec_svc.hpp"
-#include "nic/hal/src/nwsec.hpp"
-#include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/nwsec_group_src_svc.hpp"
 #include "nic/hal/src/dos.hpp"
+using namespace hal;
 
 Status
 NwSecurityServiceImpl::SecurityProfileCreate(ServerContext *context,
@@ -355,6 +355,111 @@ NwSecurityServiceImpl::DoSPolicyGet(ServerContext *context,
         response = rsp->add_response();
         auto request = req->request(i);
         hal::dos_policy_get(request, response);
+    }
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+
+/*
+ * Security Rule Implementation
+ */
+Status
+NwSecurityServiceImpl::SecurityPolicyCreate(ServerContext                     *context,
+                                            const SecurityPolicyRequestMsg    *req,
+                                            SecurityPolicyResponseMsg         *rsp)
+{
+    uint32_t                     i, nreqs = req->request_size();
+    SecurityPolicyResponse         *response = NULL;
+
+    HAL_TRACE_DEBUG("Rcvd SecurityPolicyCreate Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    //hal::security_policy_create_pre_commit();
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        // Create a strcuture to hold all the rules. At any point in time there
+        // will be two strucutures. One old and one new.
+        // If grpc cannot fit in single grpc, we have to use the incremental
+        // approach.
+        // In incremental approach it is expected agent or any user app will
+        // give additions deletions.
+        // We need a check whether it is a incremental or bulk updateA
+        //current_policy_profile = glbl_rule_profile[0];
+        hal::security_policy_create(spec, response);
+    }
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+Status
+NwSecurityServiceImpl::SecurityPolicyUpdate(ServerContext                *context,
+                                          const SecurityPolicyRequestMsg *req,
+                                          SecurityPolicyResponseMsg      *rsp)
+{
+    uint32_t                            i, nreqs = req->request_size();
+    SecurityPolicyResponse              *response = NULL;
+
+    HAL_TRACE_DEBUG("Rcvd SecurityPolicyUpdate Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::security_policy_update(spec, response);
+    }
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+Status
+NwSecurityServiceImpl::SecurityPolicyDelete(ServerContext                               *context,
+                                            const SecurityPolicyDeleteRequestMsg        *req,
+                                            SecurityPolicyDeleteResponseMsg             *rsp)
+{
+    uint32_t                      i, nreqs = req->request_size();
+    SecurityPolicyDeleteResponse  *response = NULL;
+    HAL_TRACE_DEBUG("Rcvd SecurityPolicyDelete Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::security_policy_delete(spec, response);
+    }
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+NwSecurityServiceImpl::SecurityPolicyGet(ServerContext                     *context,
+                                         const SecurityPolicyGetRequestMsg *req,
+                                         SecurityPolicyGetResponseMsg      *rsp)
+{
+    uint32_t                   i, nreqs = req->request_size();
+    SecurityPolicyGetResponse    *response = NULL;
+
+    HAL_TRACE_DEBUG("Rcvd SecurityPolicyGet Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto request = req->request(i);
+        hal::security_policy_get(request, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

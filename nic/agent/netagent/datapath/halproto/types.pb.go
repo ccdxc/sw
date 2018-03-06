@@ -348,6 +348,7 @@
 		NetworkKeyHandle
 		L2SegmentKeyHandle
 		SecurityRuleKeyHandle
+		SecurityPolicyKey
 		SecurityPolicyKeyHandle
 		SecurityGroupPolicyId
 		SecurityGroupPolicyKeyHandle

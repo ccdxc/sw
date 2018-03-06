@@ -6,6 +6,7 @@
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/gen/proto/hal/nwsec.grpc.pb.h"
+#include "nic/hal/src/nwsec.hpp"
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -54,7 +55,19 @@ using nwsec::SecurityGroupPolicyGetRequestMsg;
 using nwsec::SecurityGroupPolicyGetResponseMsg;
 using nwsec::SecurityGroupPolicyGetResponse;
 
+
+using nwsec::SecurityPolicyResponse;
+using nwsec::SecurityPolicyRequestMsg;
+using nwsec::SecurityPolicyResponseMsg;
+using nwsec::SecurityPolicyDeleteRequestMsg;
+using nwsec::SecurityPolicyDeleteResponseMsg;
+using nwsec::SecurityPolicyGetRequestMsg;
+using nwsec::SecurityPolicyGetResponseMsg;
+using nwsec::SecurityPolicyGetResponse;
+using nwsec::SecurityPolicyDeleteResponse;
+
 class NwSecurityServiceImpl final : public NwSecurity::Service {
+
 public:
     Status SecurityProfileCreate(ServerContext *context,
                                  const SecurityProfileRequestMsg *req,
@@ -83,11 +96,11 @@ public:
     Status SecurityGroupDelete(ServerContext *context,
                                const SecurityGroupDeleteRequestMsg *req,
                                SecurityGroupDeleteResponseMsg      *rsp) override;
-    
+
     Status SecurityGroupGet(ServerContext *context,
                             const SecurityGroupGetRequestMsg *req,
                             SecurityGroupGetResponseMsg      *rsp) override;
-    
+
     Status SecurityGroupPolicyCreate(ServerContext *context,
                                      const SecurityGroupPolicyRequestMsg *req,
                                      SecurityGroupPolicyResponseMsg      *rsp) override;
@@ -99,7 +112,7 @@ public:
     Status SecurityGroupPolicyDelete(ServerContext *context,
                                      const SecurityGroupPolicyDeleteRequestMsg *req,
                                      SecurityGroupPolicyDeleteResponseMsg      *rsp) override;
-    
+
     Status SecurityGroupPolicyGet(ServerContext *context,
                                   const SecurityGroupPolicyGetRequestMsg *req,
                                   SecurityGroupPolicyGetResponseMsg      *rsp) override;
@@ -119,6 +132,22 @@ public:
     Status DoSPolicyGet(ServerContext *context,
                         const DoSPolicyGetRequestMsg *req,
                         DoSPolicyGetResponseMsg *rsp) override;
+
+    Status SecurityPolicyCreate(ServerContext                 *context,
+                              const SecurityPolicyRequestMsg  *req,
+                              SecurityPolicyResponseMsg       *rsp) override;
+
+    Status SecurityPolicyUpdate(ServerContext                *context,
+                              const SecurityPolicyRequestMsg *req,
+                              SecurityPolicyResponseMsg      *rsp) override;
+
+    Status SecurityPolicyDelete(ServerContext                      *context,
+                              const SecurityPolicyDeleteRequestMsg *req,
+                              SecurityPolicyDeleteResponseMsg      *rsp) override;
+
+    Status SecurityPolicyGet(ServerContext                   *context,
+                           const SecurityPolicyGetRequestMsg *req,
+                           SecurityPolicyGetResponseMsg      *rsp) override;
 };
 
 #endif    // __NWSEC_SVC_HPP__

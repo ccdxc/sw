@@ -36,6 +36,18 @@ cc_test(
 )
 
 cc_test(
+    name = "nwsec_policy_test",
+    srcs = ["nwsec_policy_test.cc"],
+    deps = [
+        "//nic/hal/plugins/sfw:sfw",
+        "//nic/hal/plugins/app_redir:app_redir_includes",
+        "//nic/hal/plugins/alg_utils:alg_utils",
+    ] + gl_deps_list + test_deps_list,
+    linkopts = [] + gl_linkopts_list,
+    copts = sdk_copts,
+)
+
+cc_test(
     name = "tunnelif_test",
     srcs = ["tunnelif_test.cc"],
     deps = [] + gl_deps_list + test_deps_list,

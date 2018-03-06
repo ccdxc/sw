@@ -4,6 +4,7 @@
 #include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/nwsec.hpp"
+#include "nic/include/nwsec_group_api.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/multicast.hpp"

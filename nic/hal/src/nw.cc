@@ -6,6 +6,9 @@
 #include "nic/hal/src/if_utils.hpp"
 #include "nic/hal/src/nw.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/nwsec_group_api.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
+
 
 namespace hal {
 

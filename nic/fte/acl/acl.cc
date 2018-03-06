@@ -20,7 +20,7 @@ static const acl_ctx_t *g_ctx;  // single instance for now
 // by other threads using acl_get(name)
 //------------------------------------------------------------------------
 const acl_ctx_t *
-acl_create(const acl_config_t *cfg)
+lib_acl_create(const acl_config_t *cfg)
 {
     const acl_ctx_t *ctx = acl_ctx_t::create(cfg);
 
@@ -68,7 +68,7 @@ acl_deref(const acl_ctx_t *ctx)
 // Remove the ctx from the global list and release the reference.
 //------------------------------------------------------------------------
 void
-acl_delete(const acl_ctx_t *ctx)
+lib_acl_delete(const acl_ctx_t *ctx)
 {
     // remove from global list and deref
     SDK_ASSERT(SDK_SPINLOCK_LOCK(&g_ctx_lock) == 0);
