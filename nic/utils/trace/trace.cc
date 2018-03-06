@@ -14,8 +14,8 @@ static std::shared_ptr<spdlog::logger> _syslogger = NULL;
 static int cpu_id = 0;
 // const auto LOG_FLUSH_INTERVAL = std::chrono::milliseconds(100);
 const auto LOG_FILENAME = "hal.log";
-const auto LOG_MAX_FILESIZE = 10*1024*1024;
-const auto LOG_MAX_FILES = 10;
+const auto LOG_MAX_FILESIZE = 30*1024*1024;
+const auto LOG_MAX_FILES = 20;
 
 // this will be run in the context of worker thread(s) spawned by spdlog
 static void

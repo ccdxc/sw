@@ -252,7 +252,8 @@ def run_hal(args):
         #jsonfile = 'hal_classic.json'
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
 
-    p = Popen(["../bazel-bin/nic/hal/hal", "--config", jsonfile])
+    FNULL = open(os.devnull, 'w')
+    p = Popen(["../bazel-bin/nic/hal/hal", "--config", jsonfile], stdout=FNULL, stderr=FNULL)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"
