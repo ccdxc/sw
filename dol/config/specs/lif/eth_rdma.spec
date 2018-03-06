@@ -4,8 +4,8 @@ meta:
 
 rdma:
     enable: True
-    max_pt_entries: 1024
-    max_keys: 1024
+    max_pt_entries: 8192
+    max_keys: 8192
 
 queue_types:
     - queue_type:

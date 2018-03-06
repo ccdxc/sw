@@ -16,6 +16,7 @@ req_tx_bktrack_write_back_process:
      tblwr.c1      d.cb1_busy, 0
      tblwr         d.num_sges, k.args.num_sges
      tblwr         d.in_progress, k.args.in_progress
+     tblwr         d.bktrack_in_progress, k.args.bktrack_in_progress
      tblwr         d.current_sge_id, k.args.current_sge_id
      tblwr         d.current_sge_offset, k.args.current_sge_offset
      tblwr         d.curr_wqe_ptr, k.to_stage.bktrack.wqe_addr

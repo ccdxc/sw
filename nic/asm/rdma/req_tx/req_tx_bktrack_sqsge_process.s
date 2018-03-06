@@ -53,6 +53,8 @@ sge_loop:
     // tx_psn = rexmit_psn
     add            r3, k.to_stage.bktrack.rexmit_psn, r0
 
+    // bktrack_in_progress = false
+    setcf          c6, [!c0]
     b              sqcb_writeback
     // set empty_rrq_bktrack to true on completion of bktracking
     setcf          c7, [c0] // Branch Delay Slot
@@ -84,8 +86,10 @@ next_sge_start:
     mfspr          r5, spr_mpuid
     seq            c1, r5[4:2], CAPRI_STAGE_LAST-1
     bcf            [c1], sqcb_writeback
+    // bktrack_in_progress = true
+    setcf          c6, [c0] // Branch Delay Slot
 
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7) // Branch Delay Slot
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
 
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, r3)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, ssn, k.args.ssn)
@@ -126,10 +130,11 @@ sqcb_writeback:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
 
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, in_progress, 1)
+    CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, bktrack_in_progress, 1, c6)
+
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
     sub            r1, (HBM_NUM_SGES_PER_CACHELINE - 1), r1
     add            r1, k.args.current_sge_id, r1
-
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_offset, r2)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_id, r1)
     //sub            r2, k.args.num_sges, r1

@@ -275,12 +275,13 @@ in_progress:
         // take both the busy flags
         tblwr          d.{busy...cb1_busy}, 0x3
         
-        bbeq           d.in_progress, 1, sq_bktrack1
+        sslt           c1, r0, d.in_progress, d.bktrack_in_progress
+        bcf            [c1], sq_bktrack1
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
         
         mincr          r1, d.log_num_wqes, -1
-        seq            c1, r1, SQ_P_INDEX
-        bcf            [c1], invalid_bktrack
+        seq            c2, r1, SQ_P_INDEX
+        bcf            [c2], invalid_bktrack
 
 sq_bktrack1:
         CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
@@ -301,8 +302,7 @@ sq_bktrack1:
         
         // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
         //     sqcb0_to_sqcb1_info_p->cur_wqe_addr = sqcb0_p->curr_wqe_ptr
-        ssle           c1, r0, d.in_progress, d.bktrack_in_progress
-        cmov           r1, c1, r0, d.curr_wqe_ptr
+        cmov           r1, c1, d.curr_wqe_ptr, r0
         
         //copy backtrack params to TO_STAGE: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
         CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
@@ -340,12 +340,13 @@ sq_bktrack1:
         // take both the busy flags
         tblwr          d.{busy...cb1_busy}, 0x3
         
-        bbeq           d.in_progress, 1, sq_bktrack2
+        sslt           c1, r0, d.in_progress, d.bktrack_in_progress
+        bcf            [c1], sq_bktrack2
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
         
         mincr          r1, d.log_num_wqes, -1
-        seq            c1, r1, SQ_P_INDEX
-        bcf            [c1], invalid_bktrack
+        seq            c2, r1, SQ_P_INDEX
+        bcf            [c2], invalid_bktrack
 
 sq_bktrack2:
         CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
@@ -366,8 +367,7 @@ sq_bktrack2:
         
         // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
         //     sqcb0_to_sqcb1_info_p->cur_wqe_addr = sqcb0_p->curr_wqe_ptr
-        ssle           c1, r0, d.in_progress, d.bktrack_in_progress
-        cmov           r1, c1, r0, d.curr_wqe_ptr
+        cmov           r1, c1, d.curr_wqe_ptr, r0
         
         //copy backtrack params to TO_STAGE: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
         CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)

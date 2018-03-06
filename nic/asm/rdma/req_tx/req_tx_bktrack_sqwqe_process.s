@@ -45,6 +45,8 @@ req_tx_bktrack_sqwqe_process:
     mincr          r6, 24, r0
 
 wqe_bktrack:
+    // set bktrack_in_progress to true to start with
+    setcf          c6, [c0]
     //if (rexmit_psn < tx_psn)
     slt            c2, k.to_stage.bktrack.rexmit_psn, r1
     bcf            [!c2], wqe_match
@@ -85,6 +87,10 @@ wqe_bktrack:
     sll.c1         r5, r4, k.to_stage.bktrack.log_wqe_size
     add.c1         r5, k.to_stage.bktrack.wqe_addr, r5
 
+    mfspr          r7, spr_mpuid
+    seq            c1, r7[4:2], CAPRI_STAGE_LAST-1
+    bcf            [c1], sqcb_writeback
+    
     // Upate wqe addr to the previos wqe
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
@@ -101,10 +107,6 @@ wqe_bktrack:
     CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
 
-    mfspr          r7, spr_mpuid
-    seq            c1, r7[4:2], CAPRI_STAGE_LAST-1
-    bcf            [c1], sqcb_writeback
-    
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, tx_psn, r1)
@@ -144,6 +146,8 @@ read_or_sge_bktrack:
     // is modified to start from the rexmit_psn. if there's retransmission
     // again, then it should use this rexmit_psn as the wqe_start_psn
     add           r1, k.to_stage.bktrack.rexmit_psn, r0 
+    // set bktrack_in_progress to false
+    setcf         c6, [!c0]
 
     b            sqcb_writeback
     // set empty_rrq to true as bktrack is completed
@@ -193,6 +197,8 @@ wqe_match:
     // set empty_rrq to true as bktrack is completed
     setcf          c7, [c0]
 
+    // bktrack_in_progres = False
+    setcf          c6, [!c0]
     // Fall throguh to retransmit from this matching wqe's start psn
 
 wqe_page_bktrack:
@@ -201,6 +207,18 @@ wqe_page_bktrack:
 
 sqcb_writeback:
     phvwr          p.common.p4_intr_global_drop, 1
+
+    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+
+    CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
+
+    CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r5)
 
     CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, wqe_start_psn, r1)
@@ -216,6 +234,7 @@ sqcb_writeback:
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb1_write_back_process, r5)
 
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, bktrack_in_progress, 1, c6)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_offset, k.args.current_sge_offset)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, current_sge_id, k.args.current_sge_id)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, num_sges, k.args.num_sges)
