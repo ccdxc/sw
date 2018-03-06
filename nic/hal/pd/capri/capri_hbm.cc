@@ -32,8 +32,7 @@ capri_hbm_parse (capri_cfg_t *cfg)
     full_path =  cfg->cfg_path + "/" + cfg->pgm_name +
                      "/" + std::string("hbm_mem.json");
 
-    HAL_TRACE_DEBUG("HBM Memory Json: {}", full_path.c_str());
-
+    HAL_TRACE_DEBUG("HBM memory config file : {}", full_path.c_str());
     // make sure cfg file exists
     if (access(full_path.c_str(), R_OK) < 0) {
         HAL_TRACE_ERR("{} not_present/no_read_permissions", full_path.c_str());
@@ -82,11 +81,11 @@ capri_hbm_parse (capri_cfg_t *cfg)
 
         strcpy(reg->mem_reg_name, reg_name.c_str());
         reg->size_kb = p4_tbl.second.get<int>(JKEY_SIZE_KB);
-        // reg->start_offset = p4_tbl.second.get<int>(JKEY_START_OFF);
         reg->start_offset = offset;
 
-        HAL_TRACE_DEBUG("Region: {0:}, Size_KB: {1:}, Start_Off: 0x{2:x}", 
-                reg->mem_reg_name, reg->size_kb, HBM_OFFSET(reg->start_offset));
+        HAL_TRACE_DEBUG("hbm region : {}, size : {}kb, start offset : {:#x}",
+                        reg->mem_reg_name, reg->size_kb,
+                        HBM_OFFSET(reg->start_offset));
 
         offset += reg->size_kb * 1024;
         idx++;
