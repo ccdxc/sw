@@ -141,31 +141,6 @@ class SessionObject(base.ConfigObjectBase):
         cfglogger.info(" Responder SPAN sessions : %d/%d" % (ilen, elen))
         return
 
-    def __copy__(self):
-        session = SessionObject()
-        session.id = self.id
-        session.hal_handle = self.hal_handle
-        session.conn_track_en = self.conn_track_en
-        session.tcp_ts_option = self.tcp_ts_option
-        session.tcp_sack_perm_option = self.tcp_sack_perm_option
-        session.iflow = copy.copy(self.iflow)
-        session.rflow = copy.copy(self.rflow)
-
-        return session
-
-    def Equals(self, other, lgh):
-        if not isinstance(other, self.__class__):
-            return False
-
-        fields = ["id", "hal_handle", "tcp_ts_option", "conn_track_en", "tcp_sack_perm_optionr"]
-        if not self.CompareObjectFields(other, fields, lgh):
-            return False
-
-        if not self.iflow.Equals(other.iflow, lgh) or not self.rflow.Equals(other.rflow, lgh):
-            return False
-
-        return True
-
     def Get(self):
         halapi.GetSessions([self])
 
@@ -301,9 +276,20 @@ class SessionObjectHelper:
         self.ldb[session.label].append(session)
         return
 
-    def __add_session(self, session):
+    def __create_one_session(self, fep1, fep2, spec):
+        session = SessionObject()
+        status = session.Init(fep1, fep2, spec)
         self.objs.append(session)
         self.__add_to_ldb(session)
+        if session.IsFteEnabled():
+            cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
+            self.ftessns.append(session)
+        elif GlobalOptions.classic:
+            cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
+            self.classicssns.append(session)
+        else:
+            cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
+            self.ssns.append(session)
         return
 
     def __get_fep_pair_key(self, fep1, fep2):
@@ -338,22 +324,8 @@ class SessionObjectHelper:
         tenant = ep1.tenant
         flowep1 = flowep.FlowEndpointObject(ep = ep1)
         flowep1.InitMulticastSourceFlowEndpoint(group)
-
         flowep2 = flowep.FlowEndpointObject(group = group)
-
-        session = SessionObject()
-        session.Init(flowep1, flowep2, group.session_spec)
-
-        self.__add_session(session)
-        if session.IsFteEnabled():
-            cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
-            self.ftessns.append(session)
-        elif GlobalOptions.classic:
-            cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
-            self.classicssns.append(session)
-        else:
-            cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
-            self.ssns.append(session)
+        self.__create_one_session(flowep1, flowep2, group.session_spec)
         return
 
     def __process_multicast(self, ep_list):
@@ -391,20 +363,7 @@ class SessionObjectHelper:
                 self.__pre_process_spec_entry(t.entry)
                 count = getattr(t.entry, 'count', 1)
                 for i in range(count):
-                    session = SessionObject()
-                    status = session.Init(flowep1, flowep2, t.entry)
-                    if status != defs.status.SUCCESS:
-                        continue
-                    self.__add_session(session)
-                    if session.IsFteEnabled():
-                        cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
-                        self.ftessns.append(session)
-                    elif GlobalOptions.classic:
-                        cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
-                        self.classicssns.append(session)
-                    else:
-                        cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
-                        self.ssns.append(session)
+                    self.__create_one_session(flowep1, flowep2, t.entry)
         return
 
     def __process_ipv6(self, flowep1, flowep2, entries):

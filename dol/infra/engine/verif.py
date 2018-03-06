@@ -201,7 +201,8 @@ class VerifEngineObject:
             for mpkt in mpkts:
                 pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])
             if pcr.GetExPacketCount() == 0:
-                tc.info("0 Packets expected: Waiting for Excess packets")
+                #tc.info("0 Packets expected: Waiting for Excess packets")
+                break
             else:
                 if pcr.GetRxPacketCount() >= pcr.GetExPacketCount():
                     break
