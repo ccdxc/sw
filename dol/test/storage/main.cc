@@ -112,6 +112,7 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::decompress_to_flat_64K_buf_in_hbm, "Decompress HBM->HBM to flat 64K buf", false},
   {&tests::compress_output_through_sequencer, "Compress and pull data from HBM through sequencer", false},
   {&tests::compress_dualq_flat_64K_buf, "Compress Host-Host flat 64K buf on hot and cold queues", false},
+  {&tests::compress_dualq_flat_64K_buf_in_hbm, "Compress HBM-HBM flat 64K buf on hot and cold queues", false},
   // Enable when model is fixed.
   //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
 };
