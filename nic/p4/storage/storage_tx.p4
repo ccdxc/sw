@@ -1,4 +1,9 @@
+/*****************************************************************************
+ * storage_tx.p4: Storage_tx P4+ program that implements PVM initiator and
+ *                PVM target
+ *****************************************************************************/
 
+#include "common/storage_tx_p4_hdr.h"
 
 #include "../common-p4+/common_txdma_dummy.p4"
 
@@ -130,12 +135,9 @@ metadata barco_xts_ring_t xts_doorbell_data;
 @pragma dont_trim
 metadata storage_capri_addr_t r2n_data_buff_addr;
 
-// TODO: Remove this when NCC supports pragma for aligning this at 16 byte boundary
-@pragma dont_trim
-metadata storage_pad1_t storage_pad1;
-  
 // DMA commands metadata
 @pragma dont_trim
+@pragma pa_align 128
 metadata dma_cmd_phv2mem_t dma_p2m_0;
 @pragma dont_trim
 @pragma pa_header_union ingress dma_p2m_0
@@ -236,13 +238,13 @@ metadata pvm_roce_sq_cb_t pvm_roce_sq_cb_scratch;
 metadata roce_rq_cb_t roce_rq_cb_scratch;
 
 @pragma scratch_metadata
-metadata nvme_be_cmd_hdr_t nvme_be_cmd_hdr;
+metadata nvme_be_cmd_hdr_t nvme_be_cmd_hdr_scratch;
 
 @pragma scratch_metadata
-metadata storage_capri_addr_t doorbell_addr;
+metadata storage_capri_addr_t doorbell_addr_scratch;
 
 @pragma scratch_metadata
-metadata storage_capri_addr_t pci_intr_addr;
+metadata storage_capri_addr_t pci_intr_addr_scratch;
 
 @pragma scratch_metadata
 metadata storage_kivec0_t storage_kivec0_scratch;
@@ -263,22 +265,22 @@ metadata storage_kivec4_t storage_kivec4_scratch;
 metadata storage_kivec5_t storage_kivec5_scratch;
 
 @pragma scratch_metadata
-metadata ssd_cmds_t ssd_cmds;
+metadata ssd_cmds_t ssd_cmds_scratch;
 
 @pragma scratch_metadata
 metadata r2n_wqe_t r2n_wqe_scratch;
 
 @pragma scratch_metadata
-metadata pvm_sta_trailer_t pvm_sta_trailer;
+metadata pvm_sta_trailer_t pvm_sta_trailer_scratch;
 
 @pragma scratch_metadata
-metadata seq_pdma_entry_t seq_pdma_entry;
+metadata seq_pdma_entry_t seq_pdma_entry_scratch;
 
 @pragma scratch_metadata
-metadata seq_r2n_entry_t seq_r2n_entry;
+metadata seq_r2n_entry_t seq_r2n_entry_scratch;
 
 @pragma scratch_metadata
-metadata seq_barco_entry_t seq_barco_entry;
+metadata seq_barco_entry_t seq_barco_entry_scratch;
 
 @pragma scratch_metadata
 metadata roce_cq_wqe_t roce_cq_wqe_scratch;
@@ -403,10 +405,10 @@ action pvm_cq_handler(cspec, rsvd, sq_head, sq_id, cid, phase, status,
   NVME_STATUS_COPY(nvme_sta)
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(pvm_sta_trailer.dst_lif, dst_lif);
-  modify_field(pvm_sta_trailer.dst_qtype, dst_qtype);
-  modify_field(pvm_sta_trailer.dst_qid, dst_qid);
-  modify_field(pvm_sta_trailer.dst_qaddr, dst_qaddr);
+  modify_field(pvm_sta_trailer_scratch.dst_lif, dst_lif);
+  modify_field(pvm_sta_trailer_scratch.dst_qtype, dst_qtype);
+  modify_field(pvm_sta_trailer_scratch.dst_qid, dst_qid);
+  modify_field(pvm_sta_trailer_scratch.dst_qaddr, dst_qaddr);
 
   // Overwrite the K+I vector for the push operation to derive the correct 
   // destination queue
@@ -500,7 +502,7 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
                         r2n_buf_handle) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  NVME_BE_CMD_HDR_COPY(nvme_be_cmd_hdr)
+  NVME_BE_CMD_HDR_COPY(nvme_be_cmd_hdr_scratch)
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -525,7 +527,7 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
   // Load the NVME backkend SQ context for the next stage to push the command
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
                         storage_kivec0.dst_qaddr + 
-                        nvme_be_cmd_hdr.ssd_handle * storage_kivec2.ssd_q_size,
+                        nvme_be_cmd_hdr_scratch.ssd_handle * storage_kivec2.ssd_q_size,
                         Q_STATE_SIZE, pri_q_state_push_start)
 }
 
@@ -593,7 +595,7 @@ action nvme_be_cmd_handler(opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3,
 action nvme_be_wqe_save(bitmap) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(ssd_cmds.bitmap, bitmap);
+  modify_field(ssd_cmds_scratch.bitmap, bitmap);
   
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -712,7 +714,7 @@ action nvme_be_wqe_handler(handle, data_size, opcode, status, db_enable, db_lif,
   // Rewrite the destination as needed
   if (r2n_wqe_scratch.db_enable == 1) {
     // TODO: In ASM calculate from LIF/Type/Qid etc.
-    modify_field(doorbell_addr.addr, 0);
+    modify_field(doorbell_addr_scratch.addr, 0);
     modify_field(seq_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
                              0,
@@ -789,7 +791,7 @@ action nvme_be_wqe_handler(handle, data_size, opcode, status, db_enable, db_lif,
 action nvme_be_wqe_release(bitmap) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(ssd_cmds.bitmap, bitmap);
+  modify_field(ssd_cmds_scratch.bitmap, bitmap);
   
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -993,7 +995,7 @@ action pvm_roce_sq_cb_update(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 
   // Form the doorbell and setup the DMA command to push the entry by
   // incrementing p_ndx
-  modify_field(doorbell_addr.addr,
+  modify_field(doorbell_addr_scratch.addr,
                STORAGE_DOORBELL_ADDRESS(storage_kivec0.dst_qtype, 
                                         storage_kivec0.dst_lif,
                                         DOORBELL_SCHED_WR_SET, 

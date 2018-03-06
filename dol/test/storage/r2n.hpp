@@ -114,21 +114,9 @@ typedef struct r2n_write_desc_ {
   };
 } r2n_write_desc_t;
 
-typedef struct r2n_iob_ctx_ {
-  union {
-    uint8_t bytes[64];
-  };
-} r2n_iob_ctx_t;
-
-typedef struct r2n_seq_desc_list_ {
-  union {
-    uint8_t bytes[640];
-  };
-} r2n_seq_desc_list_t;
-
 typedef struct r2n_pad_ {
   union {
-    uint8_t bytes[2872];
+    uint8_t bytes[3576];
   };
 } r2n_pad_t;
 
@@ -139,16 +127,14 @@ typedef struct r2n_iob_ctx_id_ {
 } r2n_iob_ctx_id_t;
 
 typedef struct r2n_buf_ {
-  r2n_iob_ctx_t		io_ctx;
-  r2n_seq_desc_list_t	seq_desc_list;
-  r2n_prp_list_t	prp_buf;
-  nvme_be_sta_t		sta_buf;
-  r2n_buf_post_desc_t	buf_post_desc;
-  r2n_sta_desc_t	sta_desc;
-  r2n_pad_t		pad;
-  nvme_be_cmd_t		cmd_buf;
-  r2n_write_desc_t	write_desc;
-  r2n_iob_ctx_id_t	io_ctx_id;
+   r2n_buf_post_desc_t	buf_post_desc;
+   r2n_prp_list_t	prp_buf;
+   nvme_be_sta_t	sta_buf;
+   r2n_sta_desc_t	sta_desc;
+   r2n_pad_t		pad;
+   nvme_be_cmd_t	cmd_buf;
+   r2n_write_desc_t	write_desc;
+   r2n_iob_ctx_id_t	io_ctx_id;
 } r2n_buf_t;
 
 typedef struct r2n_wqe_ {
