@@ -245,3 +245,14 @@ clean: platform-clean capsim-master-clean
 
 check_clean:
 	@tools/check_clean.sh gen
+
+sanity_logs:
+	tar cvzf nic_sanity_logs.tar.gz -T /dev/null  \
+        $(shell ls                    \
+                core.hal              \
+                core.capmodel         \
+                gen/capri_loader.conf \
+                *.log                 \
+                *.log.*               \
+                ../dol/*.log          \
+                ../dol/*.log.*)
