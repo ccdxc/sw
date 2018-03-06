@@ -208,7 +208,7 @@ start_model_how() {
     export GDB="gdb -ex run -e ~/.gdbinit --args"
     # IRIS_DEBUG=1 LOG_LEVEL=“info”
 
-    LD_LIBRARY_PATH="$PWD/../nic/obj" \
+    LD_LIBRARY_PATH="$PWD/../nic/gen/x86_64/lib" \
     ZMQ_SOC_DIR="$PWD/../nic" \
     src/sim/model_server/start-model -d "$@"
 }
