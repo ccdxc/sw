@@ -59,7 +59,7 @@ SYSTEM_LIBRARIES = \
 	-lpthread \
 	-ldl \
 	-lprotobuf \
-	-L$(TOPDIR)/../nic/obj/ -lhalproto \
+	-L$(TOPDIR)/../nic/gen/x86_64/lib -lhalproto \
 	-L/usr/local/lib/ -lgrpc++ \
 	$(NULL)
 
