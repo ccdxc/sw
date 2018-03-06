@@ -208,10 +208,6 @@ hal_ret_t crypto_pd_init(void)
     key_mem_size = region_sz / CRYPTO_KEY_SIZE_MAX;
     assert(key_mem_size >= CRYPTO_KEY_COUNT_MAX);
 
-    ret = capri_barco_crypto_init();
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
     ret = crypto_init_ipsec_pad_table();
     if (ret != HAL_RET_OK) {
         return ret;

@@ -38,6 +38,12 @@ hal_ret_t capri_barco_crypto_init(void)
     hal_ret_t                           ret = HAL_RET_OK;
 
     key_desc_array_base = get_start_offset(key_desc_array);
+    if (key_desc_array_base == CAPRI_INVALID_OFFSET) {
+        /* For non IRIS scenarios, the region may not be defined
+         * in that case bail out silently
+         */
+        return ret;
+    }
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */

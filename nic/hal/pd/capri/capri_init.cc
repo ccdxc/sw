@@ -16,6 +16,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 85
 
@@ -910,6 +911,12 @@ capri_init (capri_cfg_t *cfg = NULL)
 
    if (cfg && !cfg->loader_info_file.empty()) {
         capri_list_program_addr(cfg->loader_info_file.c_str());
+    }
+
+    if (ret == HAL_RET_OK) {
+        if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) {
+            ret = hal::pd::capri_barco_crypto_init();
+        }
     }
     
     return ret;
