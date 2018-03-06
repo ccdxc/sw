@@ -177,11 +177,12 @@ capri_hbm_write_mem (uint64_t addr, uint8_t *buf, uint32_t size)
 hal_ret_t
 capri_hbm_cache_init (void)
 {
+    // Disable RXDMA and TXDMA initializations until P4+ cache is fully enabled
     // Enable P4Plus RXDMA (inst_id = 0)
-    cap_pics_csr_t & rxdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 0);
-    rxdma_pics_csr.picc.cfg_cache_global.bypass(0);
-    rxdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
-    rxdma_pics_csr.picc.cfg_cache_global.write();
+    //cap_pics_csr_t & rxdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 0);
+    //rxdma_pics_csr.picc.cfg_cache_global.bypass(0);
+    //rxdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
+    //rxdma_pics_csr.picc.cfg_cache_global.write();
 
     // Enable P4 Ingress (inst_id = 1)
     cap_pics_csr_t & ig_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 1);
@@ -196,10 +197,10 @@ capri_hbm_cache_init (void)
     eg_pics_csr.picc.cfg_cache_global.write();
 
     // Enable P4Plus TXDMA (inst_id = 3)
-    cap_pics_csr_t & txdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 3);
-    txdma_pics_csr.picc.cfg_cache_global.bypass(0);
-    txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
-    txdma_pics_csr.picc.cfg_cache_global.write();
+    //cap_pics_csr_t & txdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 3);
+    //txdma_pics_csr.picc.cfg_cache_global.bypass(0);
+    //txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
+    //txdma_pics_csr.picc.cfg_cache_global.write();
 
     return HAL_RET_OK;
 }
