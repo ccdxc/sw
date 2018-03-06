@@ -187,13 +187,13 @@ func (f *fakeStore) Delete(key string, rev uint64, cb SuccessCbFunc) (runtime.Ob
 	return nil, nil
 }
 
-func (f *fakeStore) List(key string, opts api.ListWatchOptions) []runtime.Object {
+func (f *fakeStore) List(key string, opts api.ListWatchOptions) ([]runtime.Object, error) {
 	f.lists++
 	if f.listfn != nil {
-		return f.listfn(key, opts)
+		return f.listfn(key, opts), nil
 	}
 	var ret []runtime.Object
-	return ret
+	return ret, nil
 }
 
 func (f *fakeStore) Mark(key string) {
@@ -262,7 +262,7 @@ type fakeWatchEventQ struct {
 	dqCh                      chan error
 }
 
-func (f *fakeWatchEventQ) Enqueue(evType kvstore.WatchEventType, obj runtime.Object) error {
+func (f *fakeWatchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error {
 	f.enqueues++
 	return nil
 }
@@ -792,12 +792,12 @@ func TestTxnCommit(t *testing.T) {
 		Responses: resps,
 	}
 	setfn := func(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error {
-		cb(key, b1)
+		cb(key, b1, nil)
 		return nil
 	}
 	str.setfn = setfn
 	delfn := func(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error) {
-		cb(key, b1)
+		cb(key, b1, nil)
 		return b1, nil
 	}
 	str.deletefn = delfn

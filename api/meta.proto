@@ -66,6 +66,7 @@ message ListWatchOptions {
   string LabelSelector = 2;
   string FieldSelector = 3;
   bool PrefixWatch = 4;
+  repeated string FieldChangeSelector = 5;
 }
 
 // StatusResult contains possible statuses for a NIC.

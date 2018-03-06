@@ -241,6 +241,12 @@
         "PrefixWatch": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "FieldChangeSelector": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

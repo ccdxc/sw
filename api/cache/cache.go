@@ -22,10 +22,12 @@ import (
 )
 
 var (
-	errorNotFound                      = fmt.Errorf("object not found")
-	errorNotCorrectRev                 = fmt.Errorf("object revision mismatch")
-	errorRevBackpedals                 = fmt.Errorf("revision backpedals")
-	errorCacheInactive                 = fmt.Errorf("cache is inactive")
+	errorNotFound          = errors.New("object not found")
+	errorNotCorrectRev     = errors.New("object revision mismatch")
+	errorRevBackpedals     = errors.New("revision backpedals")
+	errorCacheInactive     = errors.New("cache is inactive")
+	errorKVStoreConnection = errors.New("unable to get a kv store connection")
+
 	watchEvents, watchers, watchErrors expvar.Int
 	createOps, updateOps, getOps       expvar.Int
 	deleteOps, listOps                 expvar.Int
@@ -38,7 +40,7 @@ var (
 type Interface interface {
 	kvstore.Interface
 	ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
-	WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) kvstore.Watcher
+	WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error)
 	Start() error
 	Clear()
 }
@@ -55,7 +57,7 @@ type Config struct {
 }
 
 // filterFn returns true if the object passes the filter.
-type filterFn func(obj runtime.Object) bool
+type filterFn func(obj, prev runtime.Object) bool
 
 // cache is an implementation of the cache.Interface
 type cache struct {
@@ -123,10 +125,10 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
-	updatefn := func(key string, obj runtime.Object) {
+	updatefn := func(key string, obj, prev runtime.Object) {
 		qs := p.parent.queues.Get(key)
 		for i := range qs {
-			qs[i].Enqueue(evtype, obj)
+			qs[i].Enqueue(evtype, obj, prev)
 		}
 	}
 
@@ -282,10 +284,10 @@ type txn struct {
 func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	t.parent.logger.DebugLog("oper", "txnCommit", "msg", "called")
 	var evtype kvstore.WatchEventType
-	updatefn := func(key string, obj runtime.Object) {
+	updatefn := func(key string, obj, prev runtime.Object) {
 		qs := t.parent.queues.Get(key)
 		for i := range qs {
-			qs[i].Enqueue(evtype, obj)
+			qs[i].Enqueue(evtype, obj, prev)
 		}
 	}
 	resp, err := t.Txn.Commit(ctx)
@@ -378,10 +380,10 @@ func (c *cache) Clear() {
 // getCbFunc is a helper func used to generate SuccessCbFunc for use with cache
 //  operations. The returned function handles generating Watch events on cache update.
 func (c *cache) getCbFunc(evType kvstore.WatchEventType) SuccessCbFunc {
-	return func(p string, obj runtime.Object) {
+	return func(p string, obj, prev runtime.Object) {
 		qs := c.queues.Get(p)
 		for _, q := range qs {
-			q.Enqueue(evType, obj)
+			q.Enqueue(evType, obj, prev)
 		}
 	}
 }
@@ -535,7 +537,10 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 		ptr = true
 		elem = elem.Elem()
 	}
-	items := c.store.List(prefix, opts)
+	items, err := c.store.List(prefix, opts)
+	if err != nil {
+		return err
+	}
 	for _, kvo := range items {
 		if ptr {
 			v.Set(reflect.Append(v, reflect.ValueOf(kvo)))
@@ -566,7 +571,7 @@ func (c *cache) listBackend(ctx context.Context, prefix string, into runtime.Obj
 	c.logger.DebugLog("oper", "listBackend", "msg", "called")
 	k := c.pool.GetFromPool().(kvstore.Interface)
 	if k == nil {
-		return fmt.Errorf("unable to get a kv store connection")
+		return errorKVStoreConnection
 	}
 	err := k.List(ctx, prefix, into)
 	if err != nil {
@@ -578,19 +583,22 @@ func (c *cache) listBackend(ctx context.Context, prefix string, into runtime.Obj
 }
 
 // WatchFiltered returns a watcher. Watch events are filtered as per the opts passed in
-func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) kvstore.Watcher {
+func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error) {
 	defer c.RUnlock()
 	c.RLock()
 	if !c.active {
-		return nil
+		return nil, errorCacheInactive
 	}
 	c.logger.DebugLog("oper", "watchfiltered", "msg", "called")
-	filters := getFilters(opts)
+	filters, err := getFilters(opts)
+	if err != nil {
+		return nil, err
+	}
 	nctx, cancel := context.WithCancel(ctx)
 	ret := newWatchServer(cancel)
-	watchHandler := func(evType kvstore.WatchEventType, item runtime.Object) {
+	watchHandler := func(evType kvstore.WatchEventType, item, prev runtime.Object) {
 		for _, fn := range filters {
-			if !fn(item) {
+			if !fn(item, prev) {
 				return
 			}
 		}
@@ -604,7 +612,6 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 		c.queues.Del(key)
 	}
 	var fromVer uint64
-	var err error
 	if opts.ResourceVersion != "" {
 		fromVer, err = strconv.ParseUint(opts.ResourceVersion, 10, 64)
 		if err != nil {
@@ -614,7 +621,7 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	c.logger.DebugLog("oper", "watchfiltered", "msg", "starting watcher with version", fromVer)
 	watchers.Add(1)
 	go wq.Dequeue(nctx, fromVer, watchHandler, cleanupFn)
-	return ret
+	return ret, nil
 }
 
 // Watch returns a watcher.
@@ -627,7 +634,7 @@ func (c *cache) Watch(ctx context.Context, key string, fromVersion string) (kvst
 	c.logger.DebugLog("oper", "watch", "msg", "called")
 	opts := api.ListWatchOptions{}
 	opts.ResourceVersion = fromVersion
-	return c.WatchFiltered(ctx, key, opts), nil
+	return c.WatchFiltered(ctx, key, opts)
 }
 
 // PrefixWatch returns a watcher waching on the prefix passed in.
@@ -640,7 +647,7 @@ func (c *cache) PrefixWatch(ctx context.Context, prefix string, fromVersion stri
 	c.logger.DebugLog("oper", "prefixwatch", "msg", "called")
 	opts := api.ListWatchOptions{}
 	opts.ResourceVersion = fromVersion
-	return c.WatchFiltered(ctx, prefix, opts), nil
+	return c.WatchFiltered(ctx, prefix, opts)
 }
 
 // Contest is a wrapper around kvstore Context API.

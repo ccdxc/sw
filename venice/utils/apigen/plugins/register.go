@@ -263,7 +263,7 @@ func getDbKey(m *descriptor.Message) ([]KeyComponent, error) {
 		if !singleton {
 			output = append(output, KeyComponent{Type: "field", Val: "Name"})
 		} else {
-			output = append(output, KeyComponent{Type: "prefix", Val: "Singleton"})
+			output = append(output, KeyComponent{Type: "prefix", Val: "/Singleton"})
 		}
 	}
 

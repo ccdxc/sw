@@ -1,15 +1,18 @@
 package cache
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 func fromVersionFilterFn(fromVer uint64) filterFn {
-	return func(obj runtime.Object) bool {
+	return func(obj, prev runtime.Object) bool {
 		objm := obj.(runtime.ObjectMetaAccessor)
 		meta := objm.GetObjectMeta()
 		ver, err := strconv.ParseUint(meta.ResourceVersion, 10, 64)
@@ -21,7 +24,7 @@ func fromVersionFilterFn(fromVer uint64) filterFn {
 }
 
 func nameFilterFn(name string) filterFn {
-	return func(obj runtime.Object) bool {
+	return func(obj, prev runtime.Object) bool {
 		objm := obj.(runtime.ObjectMetaAccessor)
 		meta := objm.GetObjectMeta()
 		return meta.Name == name
@@ -29,7 +32,7 @@ func nameFilterFn(name string) filterFn {
 }
 
 func tenantFilterFn(tenant string) filterFn {
-	return func(obj runtime.Object) bool {
+	return func(obj, prev runtime.Object) bool {
 		objm := obj.(runtime.ObjectMetaAccessor)
 		meta := objm.GetObjectMeta()
 		return meta.Tenant == tenant
@@ -37,14 +40,37 @@ func tenantFilterFn(tenant string) filterFn {
 }
 
 func namespaceFilterFn(namespace string) filterFn {
-	return func(obj runtime.Object) bool {
+	return func(obj, prev runtime.Object) bool {
 		objm := obj.(runtime.ObjectMetaAccessor)
 		meta := objm.GetObjectMeta()
 		return meta.Namespace == namespace
 	}
 }
 
-func getFilters(opts api.ListWatchOptions) []filterFn {
+func labelSelectorFilterFn(selector *labels.Selector) filterFn {
+	return func(obj, prev runtime.Object) bool {
+		meta, _ := mustGetObjectMetaVersion(obj)
+		labels := labels.Set(meta.Labels)
+		return selector.Matches(labels)
+	}
+}
+
+func fieldChangeSelectorFilterFn(selectors []string) filterFn {
+	return func(obj, prev runtime.Object) bool {
+		diffs, ok := ref.ObjDiff(obj, prev)
+		if !ok {
+			return false
+		}
+		for _, f := range selectors {
+			if diffs.Lookup(f) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func getFilters(opts api.ListWatchOptions) ([]filterFn, error) {
 	var filters []filterFn
 	if opts.ResourceVersion != "" {
 		ver, err := strconv.ParseUint(opts.ResourceVersion, 10, 64)
@@ -66,5 +92,16 @@ func getFilters(opts api.ListWatchOptions) []filterFn {
 		filters = append(filters, namespaceFilterFn(opts.Namespace))
 	}
 
-	return filters
+	if opts.LabelSelector != "" {
+		selector, err := labels.Parse(opts.LabelSelector)
+		if err != nil {
+			return nil, fmt.Errorf("invalid label selector sepecification")
+		}
+		filters = append(filters, labelSelectorFilterFn(selector))
+	}
+
+	if len(opts.FieldChangeSelector) != 0 {
+		filters = append(filters, fieldChangeSelectorFilterFn(opts.FieldChangeSelector))
+	}
+	return filters, nil
 }

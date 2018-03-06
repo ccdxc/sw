@@ -28,7 +28,7 @@ var (
 	defEvictInterval     = (10 * time.Second)
 )
 
-type eventHandlerFn func(evType kvstore.WatchEventType, item runtime.Object)
+type eventHandlerFn func(evType kvstore.WatchEventType, item, prev runtime.Object)
 
 // WatchEventQConfig specifies the behavior of the event queue
 type WatchEventQConfig struct {
@@ -48,7 +48,7 @@ type WatchEventQConfig struct {
 
 // WatchEventQ is a interface for a Watch Q which is used to mux events to watchers.
 type WatchEventQ interface {
-	Enqueue(evType kvstore.WatchEventType, obj runtime.Object) error
+	Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error
 	Dequeue(ctx context.Context, fromver uint64, cb eventHandlerFn, cleanupfn func())
 	// Stop signals a watcher exiting. Returns true when the last
 	//  watcher has returned
@@ -92,6 +92,7 @@ type watchEvent struct {
 	evType  kvstore.WatchEventType
 	enqts   time.Time
 	item    runtime.Object
+	prev    runtime.Object
 }
 
 // watchEventQStats is a container for stats for the watchEventQ
@@ -246,7 +247,7 @@ func (w *watchedPrefixes) GetExact(path string) WatchEventQ {
 }
 
 // Enqueue enqueues an watch event to the queue.
-func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj runtime.Object) error {
+func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error {
 	start := time.Now()
 	objm := obj.(runtime.ObjectMetaAccessor)
 	objmeta := objm.GetObjectMeta()
@@ -261,6 +262,7 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj runtime.Object)
 		version: v,
 		evType:  evType,
 		item:    obj,
+		prev:    prev,
 		enqts:   time.Now(),
 	}
 	w.eventList.Insert(i)
@@ -290,7 +292,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 		tracker.Lock()
 		hdr.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
-			cb(obj.evType, obj.item)
+			cb(obj.evType, obj.item, obj.prev)
 			close(sendCh)
 		}()
 		select {
@@ -322,7 +324,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 					Message: fmt.Sprintf("version too old"),
 					Code:    http.StatusGone,
 				}
-				cb(kvstore.WatcherError, &errmsg)
+				cb(kvstore.WatcherError, &errmsg, nil)
 				return
 			}
 			for item != nil && obj != nil && obj.version < fromver {
@@ -364,9 +366,11 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	//  to the eventList. The Cond variable wakes this go-routine via the
 	//  condCh when there are events enqueued.
 	prev = w.eventList.Back()
-	objs := w.store.List(w.path, opts)
-	for _, obj := range objs {
-		cb(kvstore.Created, obj)
+	objs, err := w.store.List(w.path, opts)
+	if err == nil {
+		for _, obj := range objs {
+			cb(kvstore.Created, obj, nil)
+		}
 	}
 	for {
 		select {
@@ -479,11 +483,27 @@ func (w *watchEventQ) notify() {
 }
 
 func (w *watchEventQ) start() {
-	w.stats.enqueues = expvar.NewInt(fmt.Sprintf("api.cache.watchq[%s].enqueue", w.path))
-	w.stats.dequeues = expvar.NewInt(fmt.Sprintf("api.cache.watchq[%s].dequeue", w.path))
-	w.stats.ageoutEvictions = expvar.NewInt(fmt.Sprintf("api.cache.watchq[%s].ageEvictions", w.path))
-	w.stats.depthEvictions = expvar.NewInt(fmt.Sprintf("api.cache.watchq[%s].depthEvictions", w.path))
-	w.stats.clientEvictions = expvar.NewInt(fmt.Sprintf("api.cache.watchq[%s].clientEvictions", w.path))
+	w.log.DebugLog("msg", "starting watch queue", "queue", w.path)
+	k := fmt.Sprintf("api.cache.watchq[%s].enqueue", w.path)
+	if v := expvar.Get(k); v == nil {
+		w.stats.enqueues = expvar.NewInt(k)
+	}
+	k = fmt.Sprintf("api.cache.watchq[%s].dequeue", w.path)
+	if v := expvar.Get(k); v == nil {
+		w.stats.dequeues = expvar.NewInt(k)
+	}
+	k = fmt.Sprintf("api.cache.watchq[%s].ageEvictions", w.path)
+	if v := expvar.Get(k); v == nil {
+		w.stats.ageoutEvictions = expvar.NewInt(k)
+	}
+	k = fmt.Sprintf("api.cache.watchq[%s].depthEvictions", w.path)
+	if v := expvar.Get(k); v == nil {
+		w.stats.depthEvictions = expvar.NewInt(k)
+	}
+	k = fmt.Sprintf("api.cache.watchq[%s].clientEvictions", w.path)
+	if v := expvar.Get(k); v == nil {
+		w.stats.clientEvictions = expvar.NewInt(k)
+	}
 	go w.janitor()
 	go w.notifier()
 }

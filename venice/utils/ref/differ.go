@@ -18,6 +18,10 @@ const (
 	defaultMaxDepth = 32
 )
 
+var (
+	subscriptRe = regexp.MustCompile(subscriptsRegex)
+)
+
 // visit keeps track of checks that are
 // in progress. The comparison algorithm assumes that all
 // checks in progress are true when it reencounters them.
@@ -331,8 +335,9 @@ func deepDiff(v1, v2 reflect.Value, visited map[visit]bool, opts *options, depth
 // ObjDiff returns a Diffs object with diffs and a bool that is set to true if there is a diff.
 //  The returned Diff is typically used through accessor functions Lookup() and List()
 func ObjDiff(x, y interface{}, opts ...Option) (Diffs, bool) {
+	ret := Diffs{re: subscriptRe}
 	if x == nil || y == nil {
-		return Diffs{}, !(x == nil && y == nil)
+		return ret, !(x == nil && y == nil)
 	}
 	o := options{
 		maxDepth: defaultMaxDepth,
@@ -343,11 +348,12 @@ func ObjDiff(x, y interface{}, opts ...Option) (Diffs, bool) {
 	v1 := reflect.ValueOf(x)
 	v2 := reflect.ValueOf(y)
 	if v1.Type() != v2.Type() {
-		return Diffs{}, true
+		return ret, true
 	}
 	root := Elem{Elems: make(map[string]Elem), Field: "<root>", Parent: ""}
 	if deepDiff(v1, v2, make(map[visit]bool), &o, 0, root, "<root>", "") {
-		return Diffs{}, false
+		return ret, false
 	}
-	return Diffs{Root: root.Elems["<root>"], re: regexp.MustCompile(subscriptsRegex)}, true
+	ret.Root = root.Elems["<root>"]
+	return ret, true
 }

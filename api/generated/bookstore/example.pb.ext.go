@@ -67,7 +67,7 @@ func (m *RestockResponse) MakeKey(prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Store) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store", "Singleton")
+	return fmt.Sprint(globals.RootPrefix, "/", prefix, "/", "store", "/Singleton")
 }
 
 // MakeKey generates a KV store key for the object

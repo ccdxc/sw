@@ -26,14 +26,14 @@ var storeID uint32
 
 // SuccessCbFunc is called when a Store operation succeeds. The call happens in
 // the critical path hence the function should the min needed.
-type SuccessCbFunc func(key string, obj runtime.Object)
+type SuccessCbFunc func(key string, obj, prev runtime.Object)
 
 // Store is the interface for the Local Object Store
 type Store interface {
 	Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error
 	Get(key string) (runtime.Object, error)
 	Delete(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error)
-	List(key string, opts api.ListWatchOptions) []runtime.Object
+	List(key string, opts api.ListWatchOptions) ([]runtime.Object, error)
 	Mark(key string)
 	Sweep(key string, cb SuccessCbFunc)
 	Clear()
@@ -71,6 +71,7 @@ func NewStore() Store {
 func (s *store) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) (err error) {
 	start := time.Now()
 	success := true
+	var prev runtime.Object
 	defer func() {
 		hdr.Record("store.Set", time.Since(start))
 	}()
@@ -78,7 +79,7 @@ func (s *store) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc
 	if cb != nil {
 		defer func() {
 			if success == true {
-				cb(key, obj)
+				cb(key, obj, prev)
 			}
 		}()
 	}
@@ -89,6 +90,7 @@ func (s *store) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc
 		cobj := v.(*cacheObj)
 		if cobj.revision <= rev {
 			success = cobj.revision < rev
+			prev = cobj.obj
 			cobj.obj = obj
 			cobj.revision = rev
 			cobj.deleted = false
@@ -139,7 +141,7 @@ func (s *store) Delete(key string, rev uint64, cb SuccessCbFunc) (obj runtime.Ob
 	if cb != nil {
 		defer func() {
 			if err == nil {
-				cb(key, obj)
+				cb(key, obj, nil)
 			}
 		}()
 	}
@@ -164,18 +166,21 @@ func (s *store) Delete(key string, rev uint64, cb SuccessCbFunc) (obj runtime.Ob
 
 // List lists all the onbjects for the prefix specified in key after applying a filter
 //  as per the opts parameter.
-func (s *store) List(key string, opts api.ListWatchOptions) []runtime.Object {
+func (s *store) List(key string, opts api.ListWatchOptions) ([]runtime.Object, error) {
 	start := time.Now()
 	defer func() {
 		hdr.Record("store.List", time.Since(start))
 	}()
 	var ret []runtime.Object
 	prefix := patricia.Prefix(key)
-	filters := getFilters(opts)
+	filters, err := getFilters(opts)
+	if err != nil {
+		return ret, err
+	}
 	visitfunc := func(prefix patricia.Prefix, item patricia.Item) error {
 		v := item.(*cacheObj)
 		for _, fn := range filters {
-			if !fn(v.obj) {
+			if !fn(v.obj, nil) {
 				return nil
 			}
 		}
@@ -186,7 +191,7 @@ func (s *store) List(key string, opts api.ListWatchOptions) []runtime.Object {
 	s.RLock()
 	s.objs.VisitSubtree(prefix, visitfunc)
 	s.stats.lists.Add(1)
-	return ret
+	return ret, nil
 }
 
 // Mark marks all objects in the cache for deletion. This is used in conjunction with
@@ -217,7 +222,7 @@ func (s *store) Sweep(key string, cb SuccessCbFunc) {
 		v := item.(*cacheObj)
 		if v.deleted {
 			s.objs.Delete(prefix)
-			cb(string(prefix), v.obj)
+			cb(string(prefix), v.obj, nil)
 		}
 		return nil
 	}

@@ -28,7 +28,7 @@ func TestStoreOper(t *testing.T) {
 	b2.ResourceVersion = "9"
 	b2.Name = "changed"
 	cbCalled := 0
-	cbfunc := func(str string, obj runtime.Object) {
+	cbfunc := func(str string, obj, prev runtime.Object) {
 		cbCalled++
 	}
 	err = s.Set("/venice/books/book/Example", 9, &b2, cbfunc)
@@ -99,7 +99,10 @@ func TestStoreOper(t *testing.T) {
 
 	t.Logf("  ->List Multiple objects")
 	opts := api.ListWatchOptions{}
-	rs := s.List("/venice/books/book", opts)
+	rs, err := s.List("/venice/books/book", opts)
+	if err != nil {
+		t.Errorf("List failed (%s)", err)
+	}
 	if len(rs) != 3 {
 		t.Errorf("expecting 3 objects")
 	}
@@ -120,7 +123,10 @@ func TestStoreOper(t *testing.T) {
 	}
 	t.Logf("  ->List filtered on version")
 	opts.ResourceVersion = "10"
-	rs = s.List("/venice/books/book", opts)
+	rs, err = s.List("/venice/books/book", opts)
+	if err != nil {
+		t.Errorf("List failed (%s)", err)
+	}
 	if len(rs) != 2 {
 		t.Errorf("expecting 2 objects")
 	}
@@ -154,7 +160,10 @@ func TestStoreOper(t *testing.T) {
 	}
 	s.Sweep("/venice/books/book/", cbfunc)
 	opts.ResourceVersion = ""
-	rs = s.List("/venice/books/book", opts)
+	rs, err = s.List("/venice/books/book", opts)
+	if err != nil {
+		t.Errorf("List failed (%s)", err)
+	}
 	if len(rs) != 2 {
 		t.Errorf("expecting 2 objects")
 	}

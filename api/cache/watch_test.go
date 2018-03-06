@@ -108,7 +108,7 @@ func TestWatchEventQ(t *testing.T) {
 	ctx := context.Background()
 	rcvdEvents := 0
 	rcvdErrors := 0
-	cbfunc := func(evType kvstore.WatchEventType, obj runtime.Object) {
+	cbfunc := func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
 		t.Logf("received object %+v", obj)
 		if evType == kvstore.WatcherError {
 			rcvdErrors++
@@ -135,7 +135,7 @@ func TestWatchEventQ(t *testing.T) {
 	b4.ResourceVersion = "114"
 	b5 := testObj{}
 	b5.ResourceVersion = "115"
-	q.Enqueue(kvstore.Created, &b1)
+	q.Enqueue(kvstore.Created, &b1, nil)
 	if q.eventList.Len() != 1 || q.watcherList.Len() != 0 {
 		t.Errorf("expecing events: 1 and watcher: 0 , found %d/%d", q.eventList.Len(), q.watcherList.Len())
 	}
@@ -144,7 +144,7 @@ func TestWatchEventQ(t *testing.T) {
 	nctx, cancel = context.WithCancel(ctx)
 	go q.Dequeue(nctx, 0, cbfunc, nil)
 	time.Sleep(100 * time.Millisecond)
-	q.Enqueue(kvstore.Created, &b2)
+	q.Enqueue(kvstore.Created, &b2, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		return rcvdEvents == 1, nil
 	}, "expecting 1 events", "10ms", "10000ms")
@@ -155,7 +155,7 @@ func TestWatchEventQ(t *testing.T) {
 	}, "expecting watcher to exit", "10ms", "100ms")
 
 	t.Logf(" --> dequeue instance with fromVer")
-	q.Enqueue(kvstore.Created, &b3)
+	q.Enqueue(kvstore.Created, &b3, nil)
 	rcvdEvents = 0
 	nctx, cancel = context.WithCancel(ctx)
 
@@ -209,8 +209,8 @@ func TestWatchEventQ(t *testing.T) {
 
 	t.Logf(" --> Enqueue with multiple active watchers")
 	rcvdEvents = 0
-	q.Enqueue(kvstore.Created, &b4)
-	q.Enqueue(kvstore.Created, &b5)
+	q.Enqueue(kvstore.Created, &b4, nil)
+	q.Enqueue(kvstore.Created, &b5, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("events is %d", rcvdEvents)
 		return rcvdEvents == 6, nil
@@ -229,7 +229,7 @@ func TestWatchEventQ(t *testing.T) {
 	t.Logf(" --> janitor slow watchers")
 	slowrcvd := 0
 	slowBlockCount := 3
-	slowcb := func(evType kvstore.WatchEventType, obj runtime.Object) {
+	slowcb := func(evType kvstore.WatchEventType, obj, prev runtime.Object) {
 		slowrcvd++
 		t.Logf("slowCb called")
 		if slowrcvd < slowBlockCount {
@@ -250,10 +250,10 @@ func TestWatchEventQ(t *testing.T) {
 	b2.ResourceVersion = "117"
 	b3.ResourceVersion = "118"
 	b4.ResourceVersion = "119"
-	q.Enqueue(kvstore.Created, &b1)
-	q.Enqueue(kvstore.Created, &b2)
-	q.Enqueue(kvstore.Created, &b3)
-	q.Enqueue(kvstore.Created, &b4)
+	q.Enqueue(kvstore.Created, &b1, nil)
+	q.Enqueue(kvstore.Created, &b2, nil)
+	q.Enqueue(kvstore.Created, &b3, nil)
+	q.Enqueue(kvstore.Created, &b4, nil)
 
 	if q.watcherList.Len() != 4 {
 		t.Errorf("incorrect number of watchers")
@@ -291,8 +291,8 @@ func TestWatchEventQ(t *testing.T) {
 		return q3.watcherList.Len() == watchersCount+1, nil
 	}, "expecting new watcher", "10ms", "100ms")
 	b5.ResourceVersion = "120"
-	q3.Enqueue(kvstore.Created, &b4)
-	q3.Enqueue(kvstore.Created, &b5)
+	q3.Enqueue(kvstore.Created, &b4, nil)
+	q3.Enqueue(kvstore.Created, &b5, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("slow rcvd are  %d", slowrcvd)
 		return slowrcvd == 2, nil
@@ -330,9 +330,9 @@ func TestWatchEventQ(t *testing.T) {
 	b3.ResourceVersion = "121"
 	b4.ResourceVersion = "122"
 	b5.ResourceVersion = "123"
-	q4.Enqueue(kvstore.Created, &b3)
-	q4.Enqueue(kvstore.Created, &b4)
-	q4.Enqueue(kvstore.Created, &b5)
+	q4.Enqueue(kvstore.Created, &b3, nil)
+	q4.Enqueue(kvstore.Created, &b4, nil)
+	q4.Enqueue(kvstore.Created, &b5, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("dequeues are %d/%d", dequeues, q4.stats.dequeues.Value())
 		return (q4.stats.dequeues.Value() - dequeues) == 3, nil
@@ -354,9 +354,9 @@ func TestWatchEventQ(t *testing.T) {
 	ageouts = q4.stats.ageoutEvictions.Value()
 	depthout = q4.stats.depthEvictions.Value()
 	dequeues = q4.stats.dequeues.Value()
-	q4.Enqueue(kvstore.Created, &b3)
-	q4.Enqueue(kvstore.Created, &b4)
-	q4.Enqueue(kvstore.Created, &b5)
+	q4.Enqueue(kvstore.Created, &b3, nil)
+	q4.Enqueue(kvstore.Created, &b4, nil)
+	q4.Enqueue(kvstore.Created, &b5, nil)
 	AssertEventually(t, func() (bool, interface{}) {
 		t.Logf("dequeues are %d/%d", dequeues, q4.stats.dequeues.Value())
 		return (q4.stats.dequeues.Value() - dequeues) == 3, nil
