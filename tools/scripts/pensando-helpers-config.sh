@@ -23,6 +23,9 @@ export HAL_GRPC_PORT=9990
 # Please use your own relay mac and ip subnet.
 RELAY_MAC_ADDR=ba:aa:aa:aa:aa:aa
 RELAY_IP_ADDR=172.0.0.1/24
+# Enable this if wanting IPv6 address on relay tap...pick your own address
+#RELAY_IPV6_ADDR=2001:172::1/64
+
 # If using a bridge device, also edit /etc/qemu/bridge.conf
 RELAY_BRIDGE=you_br
 

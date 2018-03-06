@@ -285,6 +285,14 @@ setup_tap() {
     if [ -z "$RELAY_BRIDGE" ] ; then
         #tap-only
         sudo ip addr add $RELAY_IP_ADDR dev $TAPIF
+        if [ -z "$RELAY_IPV6_ADDR" ] ; then
+            # disable ipv6 on tap interface
+            sudo sysctl net.ipv6.conf.$TAPIF.disable_ipv6=1
+        else
+            # enable ipv6 on tap interface and assign IPv6 addr
+            sudo sysctl net.ipv6.conf.$TAPIF.disable_ipv6=0
+            sudo ip addr add $RELAY_IPV6_ADDR dev $TAPIF
+        fi
         sudo ip link set $TAPIF up
 
         sudo ip addr show dev $TAPIF
@@ -292,6 +300,14 @@ setup_tap() {
         #with bridge
         sudo brctl addif $RELAY_BRIDGE $TAPIF
         sudo ip addr add $RELAY_IP_ADDR dev $RELAY_BRIDGE
+        if [ -z "$RELAY_IPV6_ADDR" ] ; then
+            # disable ipv6 on bridge interface
+            sudo sysctl net.ipv6.conf.$RELAY_BRIDGE.disable_ipv6=1
+        else
+            # enable ipv6 on bridge interface and assign IPv6 addr
+            sudo sysctl net.ipv6.conf.$RELAY_BRIDGE.disable_ipv6=0
+            sudo ip addr add $RELAY_IPV6_ADDR dev $RELAY_BRIDGE
+        fi
         sudo ip link set $RELAY_BRIDGE up
 
         sudo ip addr show dev $TAPIF
