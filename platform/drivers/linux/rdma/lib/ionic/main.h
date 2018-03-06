@@ -74,6 +74,17 @@ struct ionic_qpcap {
 	uint8_t	sqsig;
 };
 
+struct ionic_sq_meta {
+	uint64_t		wrid;
+	uint32_t		len;
+	uint8_t			op;
+};
+
+struct ionic_rq_meta {
+	uint64_t		wrid;
+	uint32_t		len; /* XXX byte_len must come from cqe */
+};
+
 struct ionic_qp {
 	struct ibv_qp		ibvqp;
 
@@ -81,12 +92,14 @@ struct ionic_qp {
 
 	pthread_spinlock_t	sq_lock;
 	struct ionic_queue	sq;
+	struct ionic_sq_meta	*sq_meta;
 
 	uint32_t		sq_local;
 	uint32_t		sq_msn;
 
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;
+	struct ionic_rq_meta	*rq_meta;
 
 	/* XXX cleanup */
 	struct ionic_srq *srq;
