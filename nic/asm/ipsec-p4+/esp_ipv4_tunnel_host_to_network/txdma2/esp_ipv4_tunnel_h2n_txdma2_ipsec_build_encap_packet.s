@@ -11,24 +11,20 @@ struct phv_ p;
         .param IPSEC_IP_HDR_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
-    phvwri p.app_header_table0_valid, 0
-    phvwri p.app_header_table1_valid, 0
-    phvwri p.app_header_table2_valid, 0
-    phvwri p.app_header_table3_valid, 0
-    phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA2_DMA_COMMANDS_OFFSET
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
+    //phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA2_DMA_COMMANDS_OFFSET
     // intrinsic
-    phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
-    phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
+    //phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    //phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
+    //phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
     // app-header
-    phvwri p.ipsec_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri p.ipsec_app_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_APP_HEADER_START 
-    phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr,  IPSEC_TXDMA2_APP_HEADER_END 
+    //phvwri p.ipsec_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    //phvwri p.ipsec_app_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_APP_HEADER_START 
+    //phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr,  IPSEC_TXDMA2_APP_HEADER_END 
     // Ethernet Header 
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET
     phvwr  p.eth_hdr_dma_cmd_addr, r1
-    //phvwr  p.eth_hdr_dma_cmd_size, k.t0_s2s_headroom_offset
     phvwri  p.eth_hdr_dma_cmd_size, ETH_FIXED_HDR_SIZE 
     // Outer-IP  
     phvwri p.ip_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
@@ -56,10 +52,9 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     //ICV
     phvwri p.icv_header_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr p.icv_header_dma_cmd_size, k.txdma2_global_icv_size
-    add r1, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE 
+    add r1, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE+2 
     add r1, r1, k.txdma2_global_pad_size
     add r1, r1, k.t0_s2s_tailroom_offset
-    addi r1, r1, 2
     phvwr p.icv_header_dma_cmd_addr, r1
     phvwri p.icv_header_dma_pkt_eop, 1
     phvwri p.icv_header_dma_cmd_eop, 1
