@@ -1,0 +1,121 @@
+================
+0. Overview
+----------------
+
+This describes the objects use by the pciemgr to create and
+manage pcie devices.
+
+================
+1. pciehdev
+----------------
+
+A pciehdev object represents a pcie bus host-facing device,
+and consists of two sub objects: pciehbars for the device bar
+resources, and pciehcfg for the device pcie config space.
+
+    #include "pciehost.h"
+
+    pciehdev_t *pdev = pciehdev_new(name, resources);
+    pciehbars_t *pbars = pciehbars_new();
+    pciehcfg_t *pcfg = pciehcfg_new();
+
+    // initialize bars and cfg objects here
+
+    // add initialized bars and cfg to device
+    pciehdev_set_bars(pdev, pbars);
+    pciehdev_set_cfg(pdev, pcfg);    
+
+================
+2. pciebars
+----------------
+
+The pciehbars object contains the description of the device bars.
+pciehbars contains a group of up to 6 pciehbar objects, one for each
+pcie bar a device implements.
+
+    pciehbars_t *pbars = pciehbars_new();
+    pciehbar_t pbar;
+
+    memset(&pbar, 0, sizeof(pbar));
+    pbar.type = PCIEHBARTYPE_MEM64;
+
+    // initialize bar here
+
+    // add bar to device bars
+    pciehbars_add_bar(pbars, &pbar);
+
+
+================
+2.1 pciebar
+----------------
+
+A pciehbar object represents a single device bar.  The pciehbar object
+consists of several pciehbarreg objects representing different resources
+mapped by the bar.
+
+    pciehbar_t pbar;
+    pciehbarreg_t preg;
+
+    memset(&pbar, 0, sizeof(pbar));
+    pbar.type = PCIEHBARTYPE_MEM64;
+
+    // initialize bar region preg here
+
+    // add bar region to this bar
+    pciehbar_add_reg(&pbar, &preg);
+
+================
+2.2 pciehbarreg
+----------------
+
+A pciehbarreg object represents a single contiguous Capri address range
+that is mapped by the bar.  The region consists of a Capri physical address,
+usually Capri registers or HBM.
+
+    pciehbarreg_t preg;
+
+    memset(&preg, 0, sizeof(preg));
+    preg.regtype = PCIEHBARREGT_RES;
+    preg.flags = PCIEHBARREGF_RW;
+    preg.paddr = <capri physical address>;
+    preg.size = <size of region>;
+
+    pciehbar_add_reg(&pbar, &preg);
+
+================
+3. pciehcfg
+----------------
+
+The pciehcfg object represents the device configuration space,
+containing identity information such as the PCIe vendor id,
+device id, and device class code.  The default vendor id is
+the Pensando vendor id 0x1dd8 but can be overriden with
+pciehcfg_setconf_vendorid() if desired.  Defaults are also
+provided for subvendor id and subdevice id.  These should rarely
+need to be overriden.
+
+Always initialize the device pciehbars first, then initialize
+the pciehcfg object, because the pciehcfg object uses the pciehbars
+information to set the correct values for the bars in config space.
+
+    pciehcfg_t *pcfg = pciehcfg_new();
+
+    // initialize device cfg space
+
+    // set device id
+    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_ACCEL);
+
+    // set device class code, subclass, revision
+    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
+
+    // set the number of interrupts claimed in MSI-X capability
+    pciehcfg_setconf_nintrs(pcfg, nintrs);
+
+    // set config header type 0 (endpoint)
+    pciehcfg_sethdr_type0(pcfg, pbars);
+
+    // append all the standard capability headers,
+    // and pcie extended capabilities
+    pciehcfg_add_standard_caps(pcfg);
+
+    pciehdev_set_cfg(pdev, pcfg);
