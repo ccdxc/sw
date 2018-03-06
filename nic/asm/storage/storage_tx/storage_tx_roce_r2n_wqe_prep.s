@@ -18,11 +18,9 @@ storage_tx_roce_r2n_wqe_prep_start:
 
    // Save the queue parameters to load PVM's R2N SQ (for sending R2N WQE)
    // into the PHV
-   phvwr	p.storage_kivec0_dst_lif, d.dst_lif
-   phvwr	p.storage_kivec0_dst_qtype, d.dst_qtype
-   phvwr	p.storage_kivec0_dst_qid, d.dst_qid
-   phvwr	p.storage_kivec0_dst_qaddr, d.dst_qaddr
-
+   phvwr	p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr}, \
+                d.{dst_lif...dst_qaddr}
+                
    // Setup the DMA command to push the R2N WQE entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.

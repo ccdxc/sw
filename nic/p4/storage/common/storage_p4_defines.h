@@ -93,10 +93,10 @@ header_type q_state_t {
     base_addr	: 64;	// Base address of queue entries
     entry_size	: 16;	// Size of each queue entry
     next_pc	: 28;	// Next program's PC
-    dst_qaddr	: 34;	// Destination queue state address
     dst_lif	: 11;	// Destination LIF number
     dst_qtype	: 3;	// Destination LIF type (within the LIF)
     dst_qid	: 24;	// Destination queue number (within the LIF)
+    dst_qaddr	: 34;	// Destination queue state address
     vf_id	: 16;   // VF id (valid only for NVME LIF)
     sq_id	: 16;   // Submission queue id (valid only for NVME LIF)
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
@@ -140,10 +140,10 @@ header_type pri_q_state_t {
     num_running	: 8;	// Total number of commands running
     max_cmds	: 8;	// Maximum number of commands than can be running
     next_pc	: 28;	// Next program's PC
-    dst_qaddr	: 34;	// Destination queue state address
     dst_lif	: 11;	// Destination LIF number
     dst_qtype	: 3;	// Destination LIF type (within the LIF)
     dst_qid	: 24;	// Destination queue number (within the LIF)
+    dst_qaddr	: 34;	// Destination queue state address
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
     pad		: 10;	// Align to 64 bytes
   }
@@ -264,10 +264,10 @@ header_type pvm_roce_sq_cb_t {
     roce_msn	: 32;	// ROCE message sequence number
     w_ndx	: 16;	// Working consumer index
     next_pc	: 28;	// Next program's PC
-    rrq_qaddr	: 34;	// ROCE RQ queue state address
     rrq_lif	: 11;	// ROCE RQ LIF number
     rrq_qtype	: 3;	// ROCE RQ LIF type (within the LIF)
     rrq_qid	: 24;	// ROCE RQ queue number (within the LIF)
+    rrq_qaddr	: 34;	// ROCE RQ queue state address
     rsq_lif	: 11;	// PVM's R2N LIF number
     rsq_qtype	: 3;	// PVM's R2N LIF type (within the LIF)
     rsq_qid	: 24;	// PVM's R2N queue number (within the LIF)
@@ -296,10 +296,10 @@ header_type pvm_roce_sq_cb_t {
   modify_field(q_state.base_addr, base_addr);		\
   modify_field(q_state.entry_size, entry_size);		\
   modify_field(q_state.next_pc, next_pc);		\
-  modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.dst_lif, dst_lif);		\
   modify_field(q_state.dst_qtype, dst_qtype);		\
   modify_field(q_state.dst_qid, dst_qid);		\
+  modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.vf_id, vf_id);			\
   modify_field(q_state.sq_id, sq_id);			\
   modify_field(q_state.ssd_bm_addr, ssd_bm_addr);	\
@@ -334,10 +334,10 @@ header_type pvm_roce_sq_cb_t {
   modify_field(q_state.num_running, num_running);	\
   modify_field(q_state.max_cmds, max_cmds);		\
   modify_field(q_state.next_pc, next_pc);		\
-  modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.dst_lif, dst_lif);		\
   modify_field(q_state.dst_qtype, dst_qtype);		\
   modify_field(q_state.dst_qid, dst_qid);		\
+  modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.ssd_bm_addr, ssd_bm_addr);	\
 
 #define PRI_Q_STATE_COPY(q_state)			\
@@ -396,10 +396,10 @@ header_type pvm_roce_sq_cb_t {
   modify_field(sq_cb.roce_msn, roce_msn);		\
   modify_field(sq_cb.w_ndx, w_ndx);			\
   modify_field(sq_cb.next_pc, next_pc);			\
-  modify_field(sq_cb.rrq_qaddr, rrq_qaddr);		\
   modify_field(sq_cb.rrq_lif, rrq_lif);			\
   modify_field(sq_cb.rrq_qtype, rrq_qtype);		\
   modify_field(sq_cb.rrq_qid, rrq_qid);			\
+  modify_field(sq_cb.rrq_qaddr, rrq_qaddr);		\
   modify_field(sq_cb.rsq_lif, rsq_lif);			\
   modify_field(sq_cb.rsq_qtype, rsq_qtype);		\
   modify_field(sq_cb.rsq_qid, rsq_qid);			\
@@ -814,10 +814,10 @@ header_type roce_rq_wqe_t {
 header_type roce_sq_xlate_entry_t {
   fields {
     next_pc	: 28;	// Next program's PC
-    dst_qaddr	: 34;	// Destination queue state address
     dst_lif	: 11;	// Destination LIF number
     dst_qtype	: 3;	// Destination LIF type (within the LIF)
     dst_qid	: 24;	// Destination queue number (within the LIF)
+    dst_qaddr	: 34;	// Destination queue state address
     pad		: 412;	// Align to 64 byte boundary
   }
 }
@@ -1115,10 +1115,10 @@ header_type seq_comp_status_t {
 
 #define ROCE_XLATE_ENTRY_COPY(entry)			\
   modify_field(entry.next_pc, next_pc);			\
-  modify_field(entry.dst_qaddr, dst_qaddr);		\
   modify_field(entry.dst_lif, dst_lif);			\
   modify_field(entry.dst_qtype, dst_qtype);		\
   modify_field(entry.dst_qid, dst_qid);			\
+  modify_field(entry.dst_qaddr, dst_qaddr);		\
   modify_field(entry.pad, pad);				\
   
 

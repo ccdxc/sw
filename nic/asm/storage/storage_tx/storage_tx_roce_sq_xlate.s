@@ -25,10 +25,8 @@ storage_tx_roce_sq_xlate_start:
    // 1. New command processing
    // Save the destination queue parameters in the R2N WQE
    // so that the response can be sent over ROCE
-   phvwr	p.r2n_wqe_dst_lif, d.dst_lif
-   phvwr	p.r2n_wqe_dst_qtype, d.dst_qtype
-   phvwr	p.r2n_wqe_dst_qid, d.dst_qid
-   phvwr	p.r2n_wqe_dst_qaddr, d.dst_qaddr
+   phvwr	p.{r2n_wqe_dst_lif...r2n_wqe_dst_qaddr}, \
+                d.{dst_lif...dst_qaddr}
 
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC0_DST_QADDR,
@@ -39,11 +37,9 @@ xfer_done:
    // 1. Transfer done event processing
    // Save the queue parameters to load PVM's ROCE SQ CB to reclaim
    // the SQ entries upto the message sequence number
-   phvwr	p.storage_kivec0_dst_lif, d.dst_lif
-   phvwr	p.storage_kivec0_dst_qtype, d.dst_qtype
-   phvwr	p.storage_kivec0_dst_qid, d.dst_qid
-   phvwr	p.storage_kivec0_dst_qaddr, d.dst_qaddr
-
+   phvwr	p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr}, \
+                d.{dst_lif...dst_qaddr}
+                
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR34_PC_IMM(d.dst_qaddr, Q_STATE_SIZE,
                                 storage_tx_pvm_roce_sq_cb_update_start)

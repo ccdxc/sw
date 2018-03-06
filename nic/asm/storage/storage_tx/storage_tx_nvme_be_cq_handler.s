@@ -53,17 +53,5 @@ storage_tx_nvme_be_cq_handler_start:
    SSD_CMD_ENTRY_ADDR_CALC
 
    // Set the table and program address 
-#if 1   
    LOAD_TABLE_FOR_ADDR_PC_IMM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                               storage_tx_nvme_be_wqe_handler_start)
-#else
-  addi		r1, r0, storage_tx_nvme_be_wqe_handler_start[33:6];
-  phvwri	p.app_header_table0_valid, 1;
-  phvwrpair.e p.common_te0_phv_table_lock_en, 1,			    \
-            p.common_te0_phv_table_raw_table_size, STORAGE_DEFAULT_TBL_LOAD_SIZE;
-//  phvwrpair p.common_te0_phv_table_pc, r1,				        \
-//            p.common_te0_phv_table_addr, r7;
-  phvwrpair p.common_te0_phv_table_pc, storage_tx_nvme_be_wqe_handler_start[33:6],				        \
-            p.common_te0_phv_table_addr, r7;
-#endif
-                             

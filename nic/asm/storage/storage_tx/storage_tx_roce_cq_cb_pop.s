@@ -30,13 +30,13 @@ storage_tx_roce_cq_cb_pop_start:
    QUEUE_POP(d.w_ndx, d.num_entries)
 
    // Store fields needed in the K+I vector into the PHV
-   phvwr	p.storage_kivec0_w_ndx, d.w_ndx
-   phvwr	p.storage_kivec0_dst_qaddr, d.xlate_addr
-   phvwr	p.storage_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
-   phvwr	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF
-   phvwr	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
-   phvwr	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID
-   
+   phvwrpair	p.storage_kivec0_w_ndx, d.w_ndx, \
+        	p.storage_kivec0_dst_qaddr, d.xlate_addr
+   phvwrpair	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF, \
+        	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
+   phvwrpair	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID, \
+   	        p.storage_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
+                
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
    

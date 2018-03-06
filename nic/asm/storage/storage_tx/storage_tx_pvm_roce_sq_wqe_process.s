@@ -22,7 +22,7 @@ storage_tx_pvm_roce_sq_wqe_process_start:
    // posted back
    add          r1, d.op_type, r0
    indexn       r1, r1, [ROCE_OP_TYPE_SEND, ROCE_OP_TYPE_SEND_INV, ROCE_OP_TYPE_SEND_IMM, ROCE_OP_TYPE_SEND_INV_IMM], 0
-   blt          r1, r0, exit
+   blt.s        r1, r0, exit
    nop   
    
    // In DOL environment, all buffer posting is done by infrastructure to serialize
