@@ -54,9 +54,23 @@ Use this is you dont want to migrate to new Makefile Infra and continue using th
 Example: nic/hal/Makefile
 
 
-### Handle Multiple Targets in a Makefile
+### 7. Handle Multiple Targets in a Makefile
 
 Provide one target to Makefile Infra and add other targets as LPOSTALL or LPREALL depending on the order you want the targets.
 This is being used today in pd utils to build the libpdutils.so and libpdutils_stub.so.
 
 Example: nic/hal/pd/utils/Makefile
+
+### 8. x86_64 and aarch64 builds
+
+Use the below commands to build both x86 and arm binaries in same workspace
+
+# x86_64 build
+TEST_TMPDIR=<path_to_bazel_x86_64_binaries> make nic
+
+# aarch64 build for haps
+TEST_TMPDIR=<path_to_bazel_aarch64_binaries> make PLATFORM=haps ARCH=aarch64 nic
+
+# aarch64 build for HW
+TEST_TMPDIR=<path_to_bazel_aarch64_binaries> make ARCH=aarch64 nic
+
