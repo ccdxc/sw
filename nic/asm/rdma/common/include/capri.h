@@ -150,6 +150,12 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_TABLE_LOCK_EN    1
 #define CAPRI_TABLE_LOCK_DIS   0
 
+#define CAPRI_SET_TABLE_FIELD_LOCAL(_base_r, _struct_name, _field_name, _src) \
+    tblwrp.l  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+
+#define CAPRI_SET_TABLE_FIELD_LOCAL_C(_base_r, _struct_name, _field_name, _src, _c_flag) \
+    tblwrp._c_flag.l  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+
 #define CAPRI_SET_FIELD(_base_r, _struct_name, _field_name, _src) \
     phvwrp  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
 

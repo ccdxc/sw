@@ -60,9 +60,11 @@ resp_rx_rqwqe_process:
     // is good enough.
     phvwr.!c1   p.cqwqe.id.wrid, d.wrid
 
+    cmov        r7, c1, offsetof(struct rqwqe_base_t, rsvd2), offsetof(struct rqwqe_base_t, rsvd)
+
     add         REM_PYLD_BYTES, r0, k.args.remaining_payload_bytes
    
-    CAPRI_RESET_TABLE_0_AND_1_ARG()
+   #CAPRI_RESET_TABLE_0_AND_1_ARG()
 
     // first_pass = TRUE
     setcf       F_FIRST_PASS, [c0]
@@ -77,26 +79,26 @@ loop:
     slt         c2, r6, REM_PYLD_BYTES
     cmov        r6, c2, r6, REM_PYLD_BYTES
 
-    CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(resp_rx_phv_t, r7, F_FIRST_PASS)
+   #CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(resp_rx_phv_t, r7, F_FIRST_PASS)
     // r2 <- sge_p->va
     CAPRI_TABLE_GET_FIELD(r2, SGE_P, SGE_T, va)
 
     // transfer_va = sge_p->va + current_sge_offset;
     add         r2, r2, CURR_SGE_OFFSET
     // sge_to_lkey_info_p->sge_va = transfer_va;
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, va, r2)
+    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, va, r2)
     // sge_to_lkey_info_p->sge_bytes = transfer_bytes;
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, len, r6)
+    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, len, r6)
     // sge_to_lkey_info_p->dma_cmd_start_index = dma_cmd_index;
     add         r2, r0, k.args.dma_cmd_index
     add.!F_FIRST_PASS r2, r2, MAX_PYLD_DMA_CMDS_PER_SGE
     //cmov        r2, F_FIRST_PASS, RESP_RX_DMA_CMD_PYLD_BASE, (RESP_RX_DMA_CMD_PYLD_BASE + MAX_PYLD_DMA_CMDS_PER_SGE)
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmd_start_index, r2)
+    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, dma_cmd_start_index, r2)
     //sge_to_lkey_info_p->sge_index = index;
-    CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, tbl_id, 1, !F_FIRST_PASS)
+    CAPRI_SET_TABLE_FIELD_LOCAL_C(r7, INFO_LKEY_T, tbl_id, 1, !F_FIRST_PASS)
     //CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR))
+    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
+    CAPRI_SET_TABLE_FIELD_LOCAL(r7, INFO_LKEY_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR))
 
     //remaining_payload_bytes -= transfer_bytes;
     sub         REM_PYLD_BYTES, REM_PYLD_BYTES, r6
@@ -139,6 +141,41 @@ loop:
     // are num_valid_sges <= 1 ?
     sle         c6, NUM_VALID_SGES, 1
 
+    // set dma_cmdeop for the last table (could be T0 or T1)
+    CAPRI_SET_TABLE_FIELD_LOCAL_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
+
+    .csbegin
+    cswitch [F_FIRST_PASS,c1]
+    nop
+
+    //!first_pass, !in_progress
+    //write from d.rsvd to p.common.common_t1_s2s_s2s_data
+    .cscase 0
+        b       write_done
+        phvwr  p.common.common_t1_s2s_s2s_data, d.rsvd[sizeof(INFO_LKEY_T):0] //BD Slot
+
+    //!first_pass, in_progress
+    //write from d.rsvd2 to p.common.common_t1_s2s_s2s_data
+    .cscase 1
+        b       write_done
+        phvwr  p.common.common_t1_s2s_s2s_data, d.rsvd2[sizeof(INFO_LKEY_T):0] //BD Slot
+
+    //first_pass, !in_progress
+    //write from d.rsvd to p.common.common_t0_s2s_s2s_data
+    .cscase 2
+        b       write_done
+        phvwr  p.common.common_t0_s2s_s2s_data, d.rsvd[sizeof(INFO_LKEY_T):0] //BD Slot
+
+    //!first_pass, in_progress
+    //write from d.rsvd2 to p.common.common_t0_s2s_s2s_data
+    .cscase 3
+        b       write_done
+        phvwr  p.common.common_t0_s2s_s2s_data, d.rsvd2[sizeof(INFO_LKEY_T):0] //BD Slot
+
+   .csend
+    
+write_done:
+
     // loop one more time ONLY if:
     // remaining_payload_bytes > 0 AND
     // did only one pass AND
@@ -147,14 +184,11 @@ loop:
     bcf         [c4], loop
     // make F_FIRST_PASS = FALSE only when we are going for second pass
     setcf.c4    F_FIRST_PASS, [!c0] // BD Slot
-    
+
 exit:
 
     CAPRI_SET_TABLE_0_VALID(1)
     CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
-
-    // set dma_cmdeop for the last table (could be T0 or T1)
-    CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
 
     add         r7, r0, k.global.flags
 
