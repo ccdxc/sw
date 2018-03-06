@@ -66,11 +66,11 @@ def PreUpdateCb(data, req_spec, resp_spec):
     req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice
     req_spec.request[0].mtu = random.randint(64,9217)
 
-    pfc_class_counter += 1
+    # pfc_class_counter += 1
 
-    if pfc_class_counter > max_pfc_class_counter:
-        req_spec.request[0].ClearField("pfc")
-        req_spec.request[0].ClearField("buffer")
+    # if pfc_class_counter > max_pfc_class_counter:
+    #     req_spec.request[0].ClearField("pfc")
+    #     req_spec.request[0].ClearField("buffer")
 
     # Add back the pcp/dscp stored earlier to the pool of choices.
     try:

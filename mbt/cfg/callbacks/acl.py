@@ -32,6 +32,9 @@ def PreCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].action.action != acl_pb2.ACL_ACTION_REDIRECT:
         req_spec.request[0].action.ClearField("redirect_if_key_handle")
 
+    if req_spec.request[0].action.action != acl_pb2.ACL_ACTION_LOG:
+        req_spec.request[0].action.ClearField("copp_key_handle")
+
     req_spec.request[0].action.ClearField("internal_actions")
 
 def PostCreateCb(data, req_spec, resp_spec):

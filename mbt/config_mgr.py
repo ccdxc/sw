@@ -136,7 +136,7 @@ class ConfigObject():
     def send_message(self, op_type, req_message, should_call_callback, redo=False):
         crud_oper = self._cfg_meta_object.OperHandler(op_type)
         if crud_oper._api == None:
-            return ApiStatus.API_STATUS_OK
+            return ApiStatus.API_STATUS_OK, None
 
         if crud_oper._pre_cb and should_call_callback:
             crud_oper._pre_cb.call(self.data, req_message, None)
@@ -191,7 +191,7 @@ class ConfigObject():
             ext_refs = self.ext_ref_objects
         crud_oper = self._cfg_meta_object.OperHandler(op_type)
         if crud_oper._api == None:
-            return ApiStatus.API_STATUS_OK
+            return ApiStatus.API_STATUS_OK, None
 
         if not redo:
             req_message = self.generate(op_type, ext_refs=ext_refs, external_constraints=external_constraints)

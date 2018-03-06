@@ -31,4 +31,38 @@ objects:
             response : QosClassGetResponseMsg
             pre_cb   : None
             post_cb  : None
+    - object:
+        name : Copp
+        key_handle : CoppKeyHandle
+        ignore:
+            - op : Get
+            - op : Update
+            - op : Delete
+            # - op : Create
+        create:
+            api      : CoppUpdate
+            request  : CoppRequestMsg
+            response : CoppResponseMsg
+            pre_cb   : None
+            post_cb  : None
+        update:
+            api      : CoppUpdate
+            request  : CoppRequestMsg
+            response : CoppResponseMsg
+            pre_cb   : None
+            post_cb  : None
+        delete:
+            api      : None
+            request  : None
+            response : None
+            pre_cb   : None
+            post_cb  : None
+        get:
+            api      : CoppGet
+            request  : CoppGetRequestMsg
+            response : CoppGetResponseMsg
+            pre_cb   : None
+            post_cb  : None
+
+
 

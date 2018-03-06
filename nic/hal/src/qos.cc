@@ -212,8 +212,8 @@ qosclass_get (qos::QosClassGetRequest& req,
     response = rsp->add_response();
     qos_class = find_qos_class_by_key_handle(kh);
     if (!qos_class) {
-        response->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
 
     qos_class_get_fill_rsp(response, qos_class);
