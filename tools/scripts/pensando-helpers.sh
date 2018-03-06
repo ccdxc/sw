@@ -285,7 +285,7 @@ setup_tap() {
     if [ -z "$RELAY_BRIDGE" ] ; then
         #tap-only
         sudo ip addr add $RELAY_IP_ADDR dev $TAPIF
-        sudo ip link set $RELAY_BRIDGE up
+        sudo ip link set $TAPIF up
 
         sudo ip addr show dev $TAPIF
     else
