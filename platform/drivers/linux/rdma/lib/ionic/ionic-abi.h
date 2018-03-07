@@ -142,7 +142,7 @@ enum ionic_shpg_offt {
 #define IONIC_MAX_INLINE_SIZE		0x100
 
 struct ionic_cntx_resp {
-	struct ibv_get_context_resp resp;
+	struct ib_uverbs_get_context_resp resp;
 	__u32 dev_id;
 	__u32 max_qp; /* To allocate qp-table */
 	__u32 pg_size;
@@ -152,12 +152,12 @@ struct ionic_cntx_resp {
 };
 
 struct ionic_pd_resp {
-	struct ibv_alloc_pd_resp resp;
+	struct ib_uverbs_alloc_pd_resp resp;
 	__u32 pdid;
 };
 
 struct ionic_mr_resp {
-	struct ibv_reg_mr_resp resp;
+	struct ib_uverbs_reg_mr_resp resp;
 };
 
 struct ionic_cq_req {
@@ -167,7 +167,7 @@ struct ionic_cq_req {
 };
 
 struct ionic_cq_resp {
-	struct ibv_create_cq_resp resp;
+	struct ib_uverbs_create_cq_resp resp;
 	__u32 cqid;
 	__u8  qtype;
 };
@@ -231,7 +231,7 @@ struct ionic_qp_req {
 };
 
 struct ionic_qp_resp {
-	struct ibv_create_qp_resp resp;
+	struct ib_uverbs_create_qp_resp resp;
 	__u32 qpid;
     __u8  sq_qtype;
     __u8  rq_qtype;

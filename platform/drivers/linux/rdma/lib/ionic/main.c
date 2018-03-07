@@ -21,7 +21,7 @@ static const struct verbs_match_ent cna_table[] = {
     {}
 };
 
-static struct ibv_context_ops ionic_cntx_ops = {
+static const struct verbs_context_ops ionic_ctx_ops = {
 	.query_device  = ionic_query_device,
 	.query_port    = ionic_query_port,
 	.alloc_pd      = ionic_alloc_pd,
@@ -50,23 +50,26 @@ static struct ibv_context_ops ionic_cntx_ops = {
 };
 
  /* Context Init functions */
-static int ionic_init_context(struct verbs_device *vdev,
-                              struct ibv_context  *ibvctx,
-                              int                  cmd_fd)
+static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
+						 int cmd_fd)
 {
+	struct ionic_dev *dev = to_ionic_dev(ibdev);
+	struct ionic_context *cntx;
 	struct ibv_get_context cmd;
 	struct ionic_cntx_resp resp;
-	struct ionic_dev *dev;
-	struct ionic_context *cntx;
+	int rc;
 
-	dev = to_ionic_dev(&vdev->device);
-	cntx = to_ionic_context(ibvctx);
+	cntx = verbs_init_and_alloc_context(ibdev, cmd_fd, cntx, vctx);
+	if (!cntx) {
+		rc = errno;
+		goto err_ctx;
+	}
 
-	memset(&resp, 0, sizeof(resp));
-	ibvctx->cmd_fd = cmd_fd;
-	if (ibv_cmd_get_context(ibvctx, &cmd, sizeof(cmd),
-				&resp.resp, sizeof(resp)))
-		return errno;
+	rc = ibv_cmd_get_context(&cntx->vctx, &cmd, sizeof(cmd),
+				&resp.resp, sizeof(resp));
+	if (rc)
+		goto err_cmd;
+
 
 	cntx->max_qp = resp.max_qp;
 	/* XXX cleanup, overwrites dev fields on each init ctx */
@@ -86,19 +89,21 @@ static int ionic_init_context(struct verbs_device *vdev,
     pthread_spin_init(&cntx->udpi.db_lock,
                       PTHREAD_PROCESS_PRIVATE);
 
-	ibvctx->ops = ionic_cntx_ops;
+	verbs_set_ops(&cntx->vctx, &ionic_ctx_ops);
 
-	return 0;
+	return &cntx->vctx;
+
+err_cmd:
+	verbs_uninit_context(&cntx->vctx);
+err_ctx:
+	errno = rc;
+	return NULL;
 }
 
-static void ionic_uninit_context(struct verbs_device *vdev,
-				   struct ibv_context *ibvctx)
+static void ionic_free_context(struct ibv_context *ibctx)
 {
-	struct ionic_dev *dev;
-	struct ionic_context *cntx;
-
-	dev = to_ionic_dev(&vdev->device);
-	cntx = to_ionic_context(ibvctx);
+	struct ionic_dev *dev = to_ionic_dev(ibctx->device);
+	struct ionic_context *cntx = to_ionic_context(ibctx);
 
 	tbl_destroy(&cntx->qp_tbl);
 	pthread_mutex_destroy(&cntx->mut);
@@ -111,10 +116,12 @@ static void ionic_uninit_context(struct verbs_device *vdev,
 		munmap(cntx->udpi.dbpage, dev->pg_size);
 		cntx->udpi.dbpage = NULL;
 	}
+
+	verbs_uninit_context(&cntx->vctx);
+	free(cntx);
 }
 
-static struct verbs_device *
-ionic_device_alloc(struct verbs_sysfs_dev *sysfs_dev)
+static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev)
 {
 	struct ionic_dev *dev;
 
@@ -122,11 +129,14 @@ ionic_device_alloc(struct verbs_sysfs_dev *sysfs_dev)
 	if (!dev)
 		return NULL;
 
-	dev->vdev.sz = sizeof(*dev);
-	dev->vdev.size_of_context =
-		sizeof(struct ionic_context) - sizeof(struct ibv_context);
-
 	return &dev->vdev;
+}
+
+static void ionic_uninit_device(struct verbs_device *vdev)
+{
+	struct ionic_dev *dev = to_ionic_dev(&vdev->device);
+
+	free(dev);
 }
 
 static const struct verbs_device_ops ionic_dev_ops = {
@@ -134,8 +144,9 @@ static const struct verbs_device_ops ionic_dev_ops = {
 	.match_min_abi_version = IONIC_ABI_VERSION,
 	.match_max_abi_version = IONIC_ABI_VERSION,
 	.match_table = cna_table,
-	.alloc_device = ionic_device_alloc,
-	.init_context = ionic_init_context,
-	.uninit_context = ionic_uninit_context,
+	.alloc_device = ionic_alloc_device,
+	.uninit_device = ionic_uninit_device,
+	.alloc_context = ionic_alloc_context,
+	.free_context = ionic_free_context,
 };
 PROVIDER_DRIVER(ionic_dev_ops);

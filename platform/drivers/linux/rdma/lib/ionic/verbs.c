@@ -560,7 +560,7 @@ static int ionic_check_qp_limits(struct ionic_context *cntx,
 	int ret;
 
     IONIC_LOG("");
-	ret = ionic_query_device(&cntx->ibvctx, &devattr);
+	ret = ionic_query_device(&cntx->vctx.context, &devattr);
 	if (ret)
 		return ret;
 	if (attr->cap.max_send_sge > devattr.max_sge)

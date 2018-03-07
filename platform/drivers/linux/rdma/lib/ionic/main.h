@@ -31,7 +31,7 @@ struct ionic_pd {
 };
 
 struct ionic_context {
-	struct ibv_context ibvctx;
+	struct verbs_context vctx;
 	uint32_t max_qp;
 	struct ionic_dpi udpi;
 
@@ -143,13 +143,13 @@ struct ionic_dev {
 /* pointer conversion functions*/
 static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibvdev)
 {
-	return container_of(ibvdev, struct ionic_dev, vdev);
+	return container_of(ibvdev, struct ionic_dev, vdev.device);
 }
 
 static inline struct ionic_context *to_ionic_context(
 		struct ibv_context *ibvctx)
 {
-	return container_of(ibvctx, struct ionic_context, ibvctx);
+	return container_of(ibvctx, struct ionic_context, vctx.context);
 }
 
 static inline struct ionic_pd *to_ionic_pd(struct ibv_pd *ibvpd)
