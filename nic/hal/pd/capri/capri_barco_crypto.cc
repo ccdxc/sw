@@ -16,10 +16,7 @@ namespace pd {
 char brq_region[] = CAPRI_HBM_REG_BRQ;
 char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
 
-uint64_t    ring_base = 0;
-uint32_t    ring_size = 0;
 uint64_t    key_desc_array_base = 0;
-uint32_t    key_desc_array_size = 0;
 
 // byte array to hex string for logging
 std::string barco_hex_dump(const uint8_t *buf, size_t sz)
@@ -36,76 +33,15 @@ std::string barco_hex_dump(const uint8_t *buf, size_t sz)
     return result.str();
 }
 
-hal_ret_t capri_barco_crypto_setup(uint64_t ring_base, uint32_t ring_size,
-        uint64_t key_desc_array_base, uint32_t key_desc_array_size)
-{
-
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    cap_hese_csr_t &                    hese = cap0.md.hese;
-
-    HAL_TRACE_DEBUG("Barco gcm0 key descriptor base setup @ {:x}, key descriptor count {}",
-            key_desc_array_base, key_desc_array_size);
-
-    /* Reset GCM0 ring */
-    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0xffffffff);
-    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
-    /* Bring out of reset */
-    hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0);
-    hens.dhs_crypto_ctl.gcm0_soft_rst.write();
-
-    hese.dhs_crypto_ctl.gcm0_key_array_base_w0.fld((uint32_t)(key_desc_array_base & 0xffffffff));
-    hese.dhs_crypto_ctl.gcm0_key_array_base_w0.write();
-    hese.dhs_crypto_ctl.gcm0_key_array_base_w1.fld((uint32_t)(key_desc_array_base >> 32));
-    hese.dhs_crypto_ctl.gcm0_key_array_base_w1.write();
-
-    hese.dhs_crypto_ctl.gcm0_key_array_size.fld(key_desc_array_size);
-    hese.dhs_crypto_ctl.gcm0_key_array_size.write();
-
-    HAL_TRACE_DEBUG("Barco gcm0 descriptor base setup @ {:x}, descriptor count {}",
-            ring_base, ring_size);
-
-    hens.dhs_crypto_ctl.gcm0_ring_base_w0.fld((uint32_t)(ring_base & 0xffffffff));
-    hens.dhs_crypto_ctl.gcm0_ring_base_w0.write();
-    hens.dhs_crypto_ctl.gcm0_ring_base_w1.fld((uint32_t)(ring_base >> 32));
-    hens.dhs_crypto_ctl.gcm0_ring_base_w1.write();
-
-    hens.dhs_crypto_ctl.gcm0_ring_size.fld(ring_size);
-    hens.dhs_crypto_ctl.gcm0_ring_size.write();
-
-    hens.dhs_crypto_ctl.gcm0_producer_idx.fld(0);
-    hens.dhs_crypto_ctl.gcm0_producer_idx.write();
-
-    // CI is read-only
-    //hens.dhs_crypto_ctl.gcm0_consumer_idx.fld(0);
-    //hens.dhs_crypto_ctl.gcm0_consumer_idx.write();
-
-    return HAL_RET_OK;
-} 
-
 hal_ret_t capri_barco_crypto_init(void)
 {
-    uint32_t                            region_sz = 0;
     hal_ret_t                           ret = HAL_RET_OK;
-
-    ring_base = get_start_offset(brq_region);
-    /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 128byte
-     * but confirm
-     */
-    assert((ring_base & (BARCO_CRYPTO_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(brq_region) * 1024;
-    ring_size = region_sz / BARCO_CRYPTO_DESC_SZ;
-    assert((ring_size & (ring_size - 1)) == 0);
 
     key_desc_array_base = get_start_offset(key_desc_array);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_desc_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = get_size_kb(key_desc_array) * 1024;
-    key_desc_array_size = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
-    /* Sanity check that we have enough memory to support the keys scale needed */
-    assert(key_desc_array_size >= CRYPTO_KEY_COUNT_MAX);
 
     ret = capri_barco_res_allocator_init();
     if (ret != HAL_RET_OK) {
@@ -113,12 +49,6 @@ hal_ret_t capri_barco_crypto_init(void)
     }
 
     ret = capri_barco_rings_init();
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    ret = capri_barco_crypto_setup(ring_base, ring_size,
-        key_desc_array_base, key_desc_array_size);
     if (ret != HAL_RET_OK) {
         return ret;
     }

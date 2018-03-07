@@ -132,6 +132,8 @@ typedef struct capri_barco_ring_s {
 #define BARCO_RING_MPP_BASE_STR "Barco MPP"
 #define BARCO_RING_MPP_STR(id)  "Barco MPP" ## #id
 #define BARCO_RING_ASYM_STR     "Barco Asym"
+#define BARCO_RING_GCM0_STR     "Barco GCM0"
+#define BARCO_RING_GCM1_STR     "Barco GCM1"
 #define BARCO_RING_XTS0_STR     "Barco XTS0"
 #define BARCO_RING_XTS1_STR     "Barco XTS1"
 #define BARCO_RING_MPP0_STR     "Barco MPP0"

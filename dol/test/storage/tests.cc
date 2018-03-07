@@ -59,7 +59,12 @@ int Poller::operator()(std::function<int(void)> poll_func) {
     rv = poll_func();
     if(0 == rv)
       return rv;
-    usleep(10000); //Sleep 10msec
+    if(fast_poll) {
+      usleep(10000); //Sleep 10msec
+    } else {
+      // For performance mode
+      sleep(30);
+    }
     end = std::time(nullptr);
   } while(end - start < timeout);
   printf("Polling timeout %d exceeded - Giving up! \n", timeout);

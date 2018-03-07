@@ -59,10 +59,11 @@ typedef struct cp_seq_params {
 class Poller {
 public:
   Poller() : timeout(FLAGS_poll_interval) { }
-  Poller(int timeout) : timeout(timeout) { }
+  Poller(int timeout, bool fast_poll=true) : timeout(timeout), fast_poll(fast_poll) { }
   int operator()(std::function<int(void)> poll_func);
 private:
   int timeout; //Default overall timeout
+  bool fast_poll = true;
 };
 
 // API return values: 0 => successs; < 0 => failure
@@ -198,6 +199,8 @@ struct TestEntry {
 
 int add_xts_tests(std::vector<TestEntry>& test_suite);
 int add_xts_perf_tests(std::vector<TestEntry>& test_suite);
+int xts_multi_blk_noc_stress_from_host();
+int xts_multi_blk_noc_stress_from_hbm();
 
 }  // namespace tests
 
