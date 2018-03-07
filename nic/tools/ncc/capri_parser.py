@@ -1118,7 +1118,7 @@ class capri_parser:
                         if self.d == xgress.INGRESS:
                             # issue a wanrning only for ingress, for egress set_meta operations
                             # are disabled
-                            self.logger.warning("%s:%s:Ignore set_metadata() to unused field %s" % \
+                            self.logger.warning("%s:%s:Ignoring set_metadata() to unused field %s" % \
                             (self.d.name, s.name, get_hfname(c[1])))
                         continue
                     elif not cfield.parser_local:
@@ -1130,6 +1130,8 @@ class capri_parser:
                         if self.d == xgress.EGRESS:
                             if 'allow_set_meta' not in s.p4_state._parsed_pragmas or \
                                 cfield.hfname not in s.p4_state._parsed_pragmas['allow_set_meta']:
+                                self.logger.warning("%s:%s:Ignoring set_metadata() to field %s" % \
+                                    (self.d.name, s.name, cfield.hfname))
                                 continue
                             self.logger.info("%s:%s:Allow set_metadata() to %s" % \
                                 (self.d.name, s.name, cfield.hfname))

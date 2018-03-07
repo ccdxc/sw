@@ -71,10 +71,10 @@ rx_roce_udp_options_done:
 
     nop.!c1.e
 
-    .assert(offsetof(p, vxlan_3_valid) - offsetof(p, icrc_valid) == 7)
-    .assert(offsetof(p, gre_3_valid) - offsetof(p, gre_1_valid) == 24)
-    phvwrpair       p.{vxlan_3_valid...icrc_valid}, 0, \
-                        p.{gre_3_valid...gre_1_valid}, 0
+    .assert(offsetof(p, udp_opt_eol_valid) - offsetof(p, icrc_valid) == 6)
+    .assert(offsetof(p, udp_3_valid) - offsetof(p, gre_1_valid) == 23)
+    phvwrpair       p.{udp_opt_eol_valid...icrc_valid}, 0, \
+                        p.{udp_3_valid...gre_1_valid}, 0
 
     // eth and IP header for UD
     seq             c1, k.ethernet_3_valid, TRUE

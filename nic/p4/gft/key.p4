@@ -220,12 +220,6 @@ action rx_key4(match_fields) {
     if ((match_fields & MATCH_ICMP_CODE_3) != 0) {
         modify_field(flow_lkp_metadata.l4_dport_3, icmp_3.icmp_code);
     }
-    if ((match_fields & MATCH_TENANT_ID_3) != 0) {
-        modify_field(flow_lkp_metadata.tenant_id_3, tunnel_metadata.tunnel_vni_3);
-    }
-    if ((match_fields & MATCH_GRE_PROTO_3) != 0) {
-        modify_field(flow_lkp_metadata.gre_proto_3, gre_3.proto);
-    }
 
     // normalize roce opcode
     if (roce_bth.valid == TRUE) {
@@ -418,8 +412,6 @@ control rx_key {
 /* Tx pipeline                                                                */
 /******************************************************************************/
 action tx_key(match_fields) {
-    modify_field(flow_action_metadata.tx_ethernet_dst, ethernet_1.dstAddr);
-
     // match_fields : lower 16 bits => L2/L3, upper 16 bits => L4
     if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_1, ethernet_1.dstAddr);
@@ -506,5 +498,7 @@ table tx_key {
 }
 
 control tx_key {
-    apply(tx_key);
+    if (control_metadata.skip_flow_lkp == FALSE) {
+        apply(tx_key);
+    }
 }

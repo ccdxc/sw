@@ -97,8 +97,6 @@ rx_key_start_3:
     phvwr.c3        p.flow_lkp_metadata_tcp_flags_3, k.tcp_3_flags
     or.c4           r7, r7, k.icmp_3_icmp_type, 16
     or.c5           r7, r7, k.icmp_3_icmp_code
-    phvwr.c6        p.flow_lkp_metadata_tenant_id_3, k.tunnel_metadata_tunnel_vni_3
-    phvwr.c7        p.flow_lkp_metadata_gre_proto_3, k.gre_3_proto
     phvwr.f.e       p.{flow_lkp_metadata_l4_sport_3,flow_lkp_metadata_l4_dport_3}, r7
     nop
 

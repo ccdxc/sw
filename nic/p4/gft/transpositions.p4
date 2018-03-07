@@ -421,9 +421,6 @@ action l4_hdr_transpositions_layer_2(hdr_bits, l4_sport, l4_dport) {
 }
 
 action l4_hdr_transpositions_layer_3(hdr_bits, l4_sport, l4_dport) {
-    if ((hdr_bits & TRANSPOSITIONS_POP_VXLAN_3) != 0) {
-        remove_header(vxlan_3);
-    }
     if ((hdr_bits & TRANSPOSITIONS_POP_UDP_3) != 0) {
         remove_header(udp_3);
     }

@@ -10,8 +10,6 @@ struct phv_ p;
 
 tx_key:
     nop.!c1.e
-    phvwr       p.flow_action_metadata_tx_ethernet_dst, k.ethernet_1_dstAddr
-
     crestore    [c7-c1], d.tx_key_d.match_fields[31:16], 0x7F
     add         r7, r0, r0
     or.c1       r7, r7, k.l4_metadata_l4_sport_1, 16

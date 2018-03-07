@@ -60,7 +60,6 @@ rx_l4_hdr_transpositions_layer2_next:
 
 rx_l4_hdr_transpositions_layer3:
     bcf             [!c1&!c2&!c3&!c4&!c5&!c6&!c7], rx_l4_hdr_transpositions_layer3_next
-    phvwr.c1        p.vxlan_3_valid, FALSE
     phvwr.c2        p.udp_3_valid, FALSE
     phvwr.c3        p.udp_3_srcPort, d.rx_l4_hdr_transpositions_d.l4_sport_3
     phvwr.c4        p.udp_3_dstPort, d.rx_l4_hdr_transpositions_d.l4_dport_3

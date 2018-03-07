@@ -77,8 +77,6 @@ action rx_roce(raw_flags, len, parsed_hdrs_len, qtype, tm_oq_overwrite, tm_oq) {
     remove_header(ctag_3);
     remove_header(ipv4_3);
     remove_header(ipv6_3);
-    remove_header(vxlan_3);
-    remove_header(gre_3);
     remove_header(udp_3);
 
     remove_header(icrc);

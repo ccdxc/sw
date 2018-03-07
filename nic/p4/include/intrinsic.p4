@@ -275,12 +275,10 @@ header_type p4plus_to_p4_header_t {
         flow_index          : 24;
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
-        gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
-                                  // that appear before L2 hdr
+        gso_start           : 14;
         byte_align_pad0     : 2;
-        gso_offset          : 14; // should be adjusted to include size of all intrinsic hdrs
-                                  // that appear before L2 hdr
-        byte_align_pad1     : 1;
+        gso_offset          : 14;
+        flow_index_valid    : 1;
         gso_valid           : 1;
         vlan_tag            : 16;
     }
@@ -302,12 +300,10 @@ header_type p4plus_to_p4_s1_t {
         flow_index          : 24;
         ip_id_delta         : 16;
         tcp_seq_delta       : 32;
-        gso_start           : 14; // Should be adjusted to include size of all intrinsic hdrs
-                                  // that appear before L2 hdr
+        gso_start           : 14;
         byte_align_pad0     : 2;
-        gso_offset          : 14; // should be adjusted to include size of all intrinsic hdrs
-                                  // that appear before L2 hdr
-        byte_align_pad1     : 1;
+        gso_offset          : 14;
+        flow_index_valid    : 1;
         gso_valid           : 1;
     }
 }

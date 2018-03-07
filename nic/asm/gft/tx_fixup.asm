@@ -10,8 +10,8 @@ struct phv_ p;
 %%
 
 tx_fixup:
-    sne             c7, k.p4plus_to_p4_flow_index, r0
-    phvwr.c7        p.control_metadata_skip_flow_lkp, TRUE
+    phvwr           p.flow_action_metadata_tx_ethernet_dst, k.ethernet_1_dstAddr
+    seq             c7, k.control_metadata_skip_flow_lkp, TRUE
     phvwr.c7        p.flow_action_metadata_flow_index, k.p4plus_to_p4_flow_index
 
     seq             c3, k.ipv4_1_valid, TRUE

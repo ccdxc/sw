@@ -153,8 +153,6 @@ header ipv6_t ipv6_3;
 header udp_t udp_3;
 header tcp_t tcp_3;
 header icmp_t icmp_3;
-header vxlan_t vxlan_3;
-header gre_t gre_3;
 
 // UDP payload and options
 @pragma hdr_len parser_metadata.l4_len
@@ -183,7 +181,7 @@ header roce_bth_t roce_bth_1;
 header roce_deth_t roce_deth_1;
 //TODO: roce_deth_immdt_1 cannot go into PHV due to parser flit violation.
 //      When this hdr goes into OHI, it takes away ohi instruction
-//      leading to instruction exhaustion in parse state sparse_bth_deth_immdt.
+//      leading to instruction exhaustion in parse state parse_bth_deth_immdt.
 //      For now udp.len is not loaded into ohi ; instead l4 len be set to zero.
 //      This implies incoming packet from uplink shoud have udp.csum = 0 for
 //      roce pkts hitting optimized path. When udp.checksum is non zero,
@@ -270,6 +268,8 @@ parser rx_deparse_start {
 /******************************************************************************
  * RoCE optimization
  *****************************************************************************/
+@pragma allow_set_meta l4_metadata.l4_sport_1
+@pragma allow_set_meta l4_metadata.l4_dport_1
 parser parse_bth_deth {
     extract(udp_1);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
@@ -280,6 +280,9 @@ parser parse_bth_deth {
     extract(roce_deth_1);
     return ingress;
 }
+
+@pragma allow_set_meta l4_metadata.l4_sport_1
+@pragma allow_set_meta l4_metadata.l4_dport_1
 parser parse_bth_deth_immdt {
     extract(udp_1);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
@@ -294,6 +297,9 @@ parser parse_bth_deth_immdt {
     extract(roce_deth_immdt_1);
     return ingress;
 }
+
+@pragma allow_set_meta l4_metadata.l4_sport_1
+@pragma allow_set_meta l4_metadata.l4_dport_1
 parser parse_bth {
     extract(udp_1);
     set_metadata(l4_metadata.l4_sport_1, latest.srcPort);
@@ -303,6 +309,7 @@ parser parse_bth {
     extract(roce_bth_1);
     return ingress;
 }
+
 parser start_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ipv4_1);
@@ -311,6 +318,7 @@ parser start_ipv4_bth_deth {
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
+
 parser start_vlan_ipv4_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
@@ -320,25 +328,30 @@ parser start_vlan_ipv4_bth_deth {
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
+
 parser start_ipv6_bth_deth {
     extract(ethernet_1);
     return start_ipv6_bth_deth_split;
 }
+
 parser start_ipv6_bth_deth_split {
     extract(ipv6_1);
     set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
+
 parser start_vlan_ipv6_bth_deth {
     extract(ethernet_1);
     extract(ctag_1);
     return start_vlan_ipv6_bth_deth_split;
 }
+
 parser start_vlan_ipv6_bth_deth_split {
     extract(ipv6_1);
     set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth;
 }
+
 parser start_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ipv4_1);
@@ -347,6 +360,7 @@ parser start_ipv4_bth_deth_immdt {
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
+
 parser start_vlan_ipv4_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
@@ -356,25 +370,30 @@ parser start_vlan_ipv4_bth_deth_immdt {
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
+
 parser start_ipv6_bth_deth_immdt {
     extract(ethernet_1);
     return start_ipv6_bth_deth_immdt_split;
 }
+
 parser start_ipv6_bth_deth_immdt_split {
     extract(ipv6_1);
     set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
+
 parser start_vlan_ipv6_bth_deth_immdt {
     extract(ethernet_1);
     extract(ctag_1);
     return start_vlan_ipv6_bth_deth_immdt_split;
 }
+
 parser start_vlan_ipv6_bth_deth_immdt_split {
     extract(ipv6_1);
     set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth_deth_immdt;
 }
+
 parser start_ipv4_bth {
     extract(ethernet_1);
     extract(ipv4_1);
@@ -383,6 +402,7 @@ parser start_ipv4_bth {
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
 }
+
 parser start_vlan_ipv4_bth {
     extract(ethernet_1);
     extract(ctag_1);
@@ -392,20 +412,24 @@ parser start_vlan_ipv4_bth {
     set_metadata(parser_metadata.icrc_len, 28); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
 }
+
 parser start_ipv6_bth {
     extract(ethernet_1);
     return start_ipv6_bth_split;
 }
+
 parser start_ipv6_bth_split {
     extract(ipv6_1);
     set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
     return parse_bth;
 }
+
 parser start_vlan_ipv6_bth {
     extract(ethernet_1);
     extract(ctag_1);
     return start_vlan_ipv6_bth_split;
 }
+
 parser start_vlan_ipv6_bth_split {
     extract(ipv6_1);
     set_metadata(parser_metadata.icrc_len, 48); //std ipv4 hdr size + 8 bytes of icrc invariant
@@ -928,21 +952,8 @@ parser parse_ipv4_3 {
         IP_PROTO_ICMP : parse_icmp_3;
         IP_PROTO_TCP : parse_tcp_3;
         IP_PROTO_UDP : parse_udp_3;
-        IP_PROTO_GRE : parse_gre_3;
-        IP_PROTO_IPV4 : parse_ipv4_in_ip_3;
-        IP_PROTO_IPV6 : parse_ipv6_in_ip_3;
         default: ingress;
     }
-}
-
-parser parse_ipv4_in_ip_3 {
-    set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_IP_IN_IP);
-    return ingress;
-}
-
-parser parse_ipv6_in_ip_3 {
-    set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_IP_IN_IP);
-    return ingress;
 }
 
 parser parse_ipv6_3 {
@@ -952,9 +963,6 @@ parser parse_ipv6_3 {
         IP_PROTO_ICMPV6 : parse_icmp_3;
         IP_PROTO_TCP : parse_tcp_3;
         IP_PROTO_UDP : parse_udp_3;
-        IP_PROTO_GRE : parse_gre_3;
-        IP_PROTO_IPV4 : parse_ipv4_in_ip_3;
-        IP_PROTO_IPV6 : parse_ipv6_in_ip_3;
         default : ingress;
     }
 }
@@ -978,38 +986,9 @@ parser parse_udp_3 {
     set_metadata(l4_metadata.l4_sport_3, latest.srcPort);
     set_metadata(l4_metadata.l4_dport_3, latest.dstPort);
     return select(latest.dstPort) {
-        UDP_PORT_VXLAN : parse_vxlan_3;
         UDP_PORT_ROCE_V2: parse_roce_v2;
         default: ingress;
-        0x1 mask 0x0: parse_gre_3; // for avoiding parser flit violation
     }
-}
-
-parser parse_gre_3 {
-    extract(gre_3);
-    return select(latest.C, latest.R, latest.K, latest.S, latest.s,
-                  latest.recurse, latest.flags, latest.ver, latest.proto) {
-        ETHERTYPE_IPV4 : parse_gre_ipv4_3;
-        ETHERTYPE_IPV6 : parse_gre_ipv6_3;
-        default: ingress;
-    }
-}
-
-parser parse_gre_ipv4_3 {
-    set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_GRE);
-    return ingress;
-}
-
-parser parse_gre_ipv6_3 {
-    set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_GRE);
-    return ingress;
-}
-
-parser parse_vxlan_3 {
-    extract(vxlan_3);
-    set_metadata(tunnel_metadata.tunnel_type_3, INGRESS_TUNNEL_TYPE_VXLAN);
-    set_metadata(tunnel_metadata.tunnel_vni_3, latest.vni);
-    return parse_end;
 }
 
 parser parse_roce_v2 {
@@ -1790,10 +1769,12 @@ calculated_field parser_metadata.icrc {
 /* Egress parser                                                              */
 /******************************************************************************/
 @pragma xgress egress
+@pragma allow_set_meta control_metadata.skip_flow_lkp
 parser egress_start {
     extract(capri_intrinsic);
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
+    set_metadata(control_metadata.skip_flow_lkp, p4plus_to_p4.flow_index_valid + 0);
     return egress_start2;
 }
 

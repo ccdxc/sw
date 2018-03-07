@@ -9,6 +9,11 @@ control rx_apps {
 /* Rx pipeline                                                                */
 /******************************************************************************/
 action tx_fixup() {
+    modify_field(flow_action_metadata.tx_ethernet_dst, ethernet_1.dstAddr);
+    if (control_metadata.skip_flow_lkp == TRUE) {
+        modify_field(flow_action_metadata.flow_index, p4plus_to_p4.flow_index);
+    }
+
     // update IP id
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID) != 0) {
         add(ipv4_1.identification, ipv4_1.identification,
@@ -62,11 +67,6 @@ action tx_fixup() {
         if ((udp_1.valid == TRUE) or (tcp_1.valid == TRUE)) {
             // compute l4 checksum
         }
-    }
-
-    if (p4plus_to_p4.flow_index != 0) {
-        modify_field(flow_action_metadata.flow_index, p4plus_to_p4.flow_index);
-        modify_field(control_metadata.skip_flow_lkp, TRUE);
     }
 
     remove_header(p4plus_to_p4);
