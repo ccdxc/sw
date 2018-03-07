@@ -28,13 +28,12 @@ storage_tx_roce_cq_handler_start:
    
    // Write the relevant fields into the PHV for forming the R2N WQE
    phvwr	p.r2n_wqe_handle, d.wrid_msn
-   phvwri	p.r2n_wqe_is_remote, 1
-   phvwri	p.r2n_wqe_opcode, R2N_OPCODE_PROCESS_WQE
+   phvwrpair    p.r2n_wqe_opcode, R2N_OPCODE_PROCESS_WQE, \
+                p.r2n_wqe_is_remote, 1
    phvwri	p.storage_kivec1_roce_cq_new_cmd, 1
    
    // Store the data buffer pointer in r5 and the R2N buffer pointer in r6
-   add		r6, r0, d.wrid_msn
-   subi		r6, r6, R2N_BUF_NVME_BE_CMD_OFFSET
+   sub		r6, d.wrid_msn, R2N_BUF_NVME_BE_CMD_OFFSET
    addi		r5, r6, R2N_BUF_DATA_OFFSET
 
    // Overwrite the PRP1 to point to the data buffer
@@ -75,8 +74,7 @@ check_xfer:
    phvwr	p.storage_kivec3_roce_msn, d.wrid_msn[31:0]
 
 tbl_load:
-   add		r5, r0, d.qp
-   addi		r5, r5, 1
+   add		r5, d.qp, 1
    addi		r6, r0, STORAGE_DEFAULT_TBL_LOAD_SIZE
    LOAD_TABLE_FOR_INDEX_PARAM(STORAGE_KIVEC0_DST_QADDR, r5, r6, r6,
                               storage_tx_roce_sq_xlate_start)

@@ -415,7 +415,7 @@ int update_xlate_entry(int lif, int qtype, int qid, uint64_t hbm_addr, char *pgm
   utils::write_bit_fields(data, 28, 11, lif);
   utils::write_bit_fields(data, 39, 3, qtype);
   utils::write_bit_fields(data, 42, 24, qid);
-  utils::write_bit_fields(data, 64, 34, qaddr);
+  utils::write_bit_fields(data, 66, 34, qaddr);
 
   write_mem(hbm_addr, data, 64);
   

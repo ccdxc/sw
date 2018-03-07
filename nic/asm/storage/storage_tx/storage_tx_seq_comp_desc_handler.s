@@ -23,14 +23,15 @@ struct phv_ p;
 storage_tx_seq_comp_desc_handler_start:
 
    // Store the various parts of the descriptor in the K+I vectors for later use
-   phvwr	p.storage_kivec4_sgl_addr, d.sgl_addr
-   phvwr	p.storage_kivec4_data_addr, d.data_addr
+   phvwrpair	p.storage_kivec4_sgl_addr, d.sgl_addr, \
+   	        p.storage_kivec4_data_addr, d.data_addr
    phvwr	p.storage_kivec4_data_len, d.data_len
-   phvwr	p.storage_kivec5_status_addr, d.status_addr
-   phvwr	p.storage_kivec5_status_len, d.status_len
-   phvwr	p.storage_kivec5_status_dma_en, d.status_dma_en
-   phvwr	p.storage_kivec5_data_len_from_desc, d.data_len_from_desc
   
+   phvwrpair	p.storage_kivec5_status_addr, d.status_addr, \
+   	        p.storage_kivec5_status_len, d.status_len
+   phvwrpair	p.storage_kivec5_status_dma_en, d.status_dma_en, \
+   	        p.storage_kivec5_data_len_from_desc, d.data_len_from_desc
+   
    // Order of evaluation of next doorbell and interrupts
    // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
    // 2. If next_db_en is not set and intr_en is set => raise interrupt

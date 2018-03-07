@@ -28,18 +28,8 @@ storage_tx_nvme_be_cq_handler_start:
    phvwr	p.ssd_ci_c_ndx, d.sq_head
 
    // Setup the DMA command to push the sq_head to the c_ndx of the SSD
-#if 0   
    DMA_PHV2MEM_SETUP_ADDR34(ssd_ci_c_ndx, ssd_ci_c_ndx, 
                             STORAGE_KIVEC1_DEVICE_ADDR, dma_p2m_2)
-#else
-   phvwrpair p.dma_p2m_2_dma_cmd_addr[33:0], STORAGE_KIVEC1_DEVICE_ADDR,            \
-             p.dma_p2m_2_dma_cmd_type, CAPRI_DMA_PHV2MEM;
-   phvwri    p.dma_p2m_2_dma_cmd_phv_end_addr,			\
-                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, ssd_ci_c_ndx));
-   phvwri    p.dma_p2m_2_dma_cmd_phv_start_addr,			\
-                CAPRI_PHV_BIT_TO_BYTE(offsetof(p, ssd_ci_c_ndx) + 		\
-                                      sizeof(p.ssd_ci_c_ndx) - 1);
-#endif                            
 
    // Obtain the saved command index from the command id in the status
    // and save it in the PHV. Store the result in GPR r6 to pass as input
