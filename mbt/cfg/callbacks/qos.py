@@ -60,7 +60,7 @@ def PreUpdateCb(data, req_spec, resp_spec):
     ip_dscp_choice = random.choice(ip_dscp)
     ip_dscp.remove(ip_dscp_choice)
 
-    req_spec.request[0].pfc.pfc_cos = random.randint(0,8)
+    req_spec.request[0].pfc.pfc_cos = random.randint(0,7)
 
     req_spec.request[0].uplink_class_map.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].uplink_class_map.ip_dscp[0] = ip_dscp_choice

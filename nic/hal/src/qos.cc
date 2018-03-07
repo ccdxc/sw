@@ -1102,7 +1102,13 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
         goto end;
     }
 
-    qos_class_make_clone(qos_class, (qos_class_t **)&dhl_entry.cloned_obj, spec);
+    ret = qos_class_make_clone(qos_class, (qos_class_t **)&dhl_entry.cloned_obj, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("qos_class failed to make a clone for {} , ret: {}",
+                      qos_class->key,
+                      ret);
+        goto end;
+    }
 
     qos_class_clone = (qos_class_t *)dhl_entry.cloned_obj;
 

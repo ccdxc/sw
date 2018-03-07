@@ -38,7 +38,7 @@ objects:
             - op : Get
             - op : Update
             - op : Delete
-            # - op : Create
+            - op : GetAll
         create:
             api      : CoppUpdate
             request  : CoppRequestMsg
