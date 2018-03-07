@@ -657,10 +657,10 @@ enum rxq_comp_rss_type {
  * @comp_index:   The index in the descriptor ring for which this
  *                is the completion.
  * @rss_hash:     32-bit RSS hash for the @rss_type indicated
- * @csum:         One's complement of the one's complement sum of the
- *                entire packet data 16-bit words.  If the packet is
- *                odd length, an extra zero-value byte is included in
- *                the @csum calculation but not included in @len.
+ * @csum:         One's complement 16-bit sum of the packet’s L2 payload.
+ *                If the packet’s L2 payload is odd length, an extra
+ *                zero-value byte is included in the @csum calculation but
+ *                not included in @len.
  * @vlan_tci:     VLAN tag stripped from the packet.  Valid if @V is
  *                set.  Includes .1p and .1q tags.
  * @len:          Received packet length, in bytes.  Excludes FCS.
