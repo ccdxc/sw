@@ -15,7 +15,7 @@ from config.objects.security_policy     import SecurityGroupPolicyHelper
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
-from config.hashgen             import TcpUdpHashGen 
+from config.hashgen             import TcpUdpHashGen
 
 FLOW_COLLISION_LABEL = 'FLOW-COLLISION'
 class FlowObject(base.ConfigObjectBase):
@@ -42,7 +42,7 @@ class FlowObject(base.ConfigObjectBase):
         self.__span     = span
         self.__flowhash = None
         self.__gft_flow = None
-        self.multicast  = False 
+        self.multicast  = False
         self.ing_mirror_sessions = []
         self.egr_mirror_sessions = []
         if span:
@@ -412,12 +412,12 @@ class FlowObject(base.ConfigObjectBase):
             profstr = 'ETH'
         profile = self.__sseg.GetExmProfile(profstr)
         return profile
-    
+
     def GetGftTranspositionProfile(self):
         trp_name = "GFT_TRSPN_"
         if self.__sseg.IsFabEncapVlan() == self.__dseg.IsFabEncapVlan():
             trp_name += "VLAN_"
-            if self.__sseg.IsNative() and self.__dseg.IsNative():
+            if (self.__sseg.IsNative() and self.__dseg.IsNative()) or self.label == "RDMA":
                 # Both are untagged.
                 trp_name += "NONE"
             elif self.__sseg.IsNative() == self.__dseg.IsNative():
@@ -528,7 +528,7 @@ class FlowObject(base.ConfigObjectBase):
 
         action = "FLOW_ACTION_" + self.action
         if action == "FLOW_ACTION_DENY":
-            action = "FLOW_ACTION_DROP"	
+            action = "FLOW_ACTION_DROP"
         req_spec.flow_data.flow_info.flow_action = haldefs.session.FlowAction.Value(action)
         nat_type = "NAT_TYPE_" + self.nat_type
         req_spec.flow_data.flow_info.nat_type = haldefs.session.NatType.Value(nat_type)

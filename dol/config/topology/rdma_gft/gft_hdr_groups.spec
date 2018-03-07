@@ -58,9 +58,7 @@ header_groups:
         fields  :
             src_ip_addr     : True
             dst_ip_addr     : True
-            ip_ttl          : True
             ip_protocol     : True
-            ip_dscp         : True
 
     - group:
         name    : GFT_HGEXM_IPV4_QINQ

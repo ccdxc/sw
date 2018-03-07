@@ -5,6 +5,7 @@
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
+#include "nic/hal/pd/gft/p4pd_defaults.hpp"
 #include "sdk/tcam.hpp"
 #include "nic/p4/rdma/include/rdma_defines.h"
 #include "nic/p4/include/common_defines.h"
@@ -76,7 +77,7 @@ p4pd_tx_transp_init (void)
     tx_hdr_transpositions2_actiondata       xpo2_data = { 0 }; 
     tx_hdr_transpositions3_actiondata       xpo3_data = { 0 }; 
     directmap                               *tx_xpos_tbl = NULL;
-    uint32_t                                idx = 0;
+    uint32_t                                idx = TX_TRANSPOSITION_NOP_ENTRY;
 
     TX_XPOSITION_PGM_WITHID_INIT(0);
     TX_XPOSITION_PGM_WITHID_INIT(1);
@@ -114,7 +115,7 @@ p4pd_rx_transp_init (void)
     rx_hdr_transpositions2_actiondata       xpo2_data = { 0 }; 
     rx_hdr_transpositions3_actiondata       xpo3_data = { 0 }; 
     directmap                               *rx_xpos_tbl = NULL;
-    uint32_t                                idx = 0;
+    uint32_t                                idx = RX_TRANSPOSITION_NOP_ENTRY;
 
     RX_XPOSITION_PGM_WITHID_INIT(0);
     RX_XPOSITION_PGM_WITHID_INIT(1);

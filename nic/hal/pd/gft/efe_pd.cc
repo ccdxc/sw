@@ -5,6 +5,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
 #include "nic/hal/pd/gft/pd_utils.hpp"
+#include "nic/hal/pd/gft/p4pd_defaults.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/include/interface_api.hpp"
@@ -704,7 +705,8 @@ efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe)
     }
 
     // Populate data
-    data.flow_index = pd_gft_efe->flow_idx;
+    data.flow_index = (pd_gft_efe->flow_idx != INVALID_INDEXER_INDEX) ?
+        pd_gft_efe->flow_idx : RX_TRANSPOSITION_NOP_ENTRY;
     data.policer_index = pd_gft_efe->policer_idx;
 
     ret = g_hal_state_pd->flow_table()->insert(&gft_key, 
@@ -1247,7 +1249,7 @@ efe_pd_program_tx_transpositions(pd_gft_efe_t *pd_gft_efe)
         TX_XPOSITION_PGM_WITHID(2);
     }
 
-    if (!num_xpos) {
+    if (num_xpos) {
         TX_XPOSITION_PGM_WITHID(3);
     }
 
@@ -1373,12 +1375,9 @@ efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
     TX_GFT_KEY_FORM(1);
 
     // Populate data
-    data.flow_index = pd_gft_efe->flow_idx;
-    data.policer_index = 0xABCD;
-    // data.flow_index = htons(pd_gft_efe->flow_idx);
-    // data.policer_index = pd_gft_efe->policer_idx;
-    // data.policer_index = htons(0xABCD);
-
+    data.flow_index = (pd_gft_efe->flow_idx != INVALID_INDEXER_INDEX) ?
+        pd_gft_efe->flow_idx : TX_TRANSPOSITION_NOP_ENTRY;
+    data.policer_index = pd_gft_efe->policer_idx;
 
     ret = g_hal_state_pd->tx_flow_table()->insert(&gft_key, 
                                                &data,
