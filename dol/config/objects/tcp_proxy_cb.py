@@ -115,7 +115,6 @@ class TcpCbObject(base.ConfigObjectBase):
             self.debug_num_mem_to_pkt = resp_spec.stats.debug_num_mem_to_pkt
             self.debug_num_pkt_to_mem = resp_spec.stats.debug_num_pkt_to_mem
             self.debug_num_phv_to_mem = resp_spec.stats.debug_num_phv_to_mem
-            self.debug_stage0_7_thread = resp_spec.stats.debug_stage0_7_thread
 
             self.debug_atomic_delta = resp_spec.stats.debug_atomic_delta
             self.debug_atomic0_incr1247 = resp_spec.stats.debug_atomic0_incr1247

@@ -302,7 +302,6 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_desc_alloced(rtcpcb.desc_alloced);
     rsp->mutable_stats()->set_debug_num_pkt_to_mem(rtcpcb.debug_num_pkt_to_mem);
     rsp->mutable_stats()->set_debug_num_phv_to_mem(rtcpcb.debug_num_phv_to_mem);
-    rsp->mutable_stats()->set_debug_stage0_7_thread(rtcpcb.debug_stage0_7_thread);
 
     rsp->mutable_stats()->set_debug_atomic_delta(rtcpcb.debug_atomic_delta);
     rsp->mutable_stats()->set_debug_atomic0_incr1247(rtcpcb.debug_atomic0_incr1247);

@@ -21,10 +21,6 @@ struct s6_t2_tcp_rx_write_l7q_d d;
 
 tcp_rx_write_l7q_stage_start:
     CAPRI_CLEAR_TABLE2_VALID
-    //CAPRI_OPERAND_DEBUG(k.s6_s2s_debug_stage0_3_thread)
-    //CAPRI_OPERAND_DEBUG(k.s6_s2s_debug_stage4_7_thread)
-    //tblwr       d.debug_stage0_3_thread, k.s6_s2s_debug_stage0_3_thread
-    //tblwr       d.debug_stage4_7_thread, k.s6_s2s_debug_stage4_7_thread
     sne         c1, k.common_phv_l7_proxy_en, r0
     seq         c2, k.to_s6_payload_len, r0
     seq         c3, k.common_phv_skip_pkt_dma, 1

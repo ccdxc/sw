@@ -104,7 +104,6 @@ struct s3_t0_tcp_rx_tcp_fra_d d;
     .param          tcp_rx_s4_bubble_start
     .align
 tcp_rx_fra_stage3_start:
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
     add             r6, r0, r0
@@ -382,7 +381,6 @@ flow_fra_process_done:
     //phvwr       p.to_s4_snd_ssthresh, d.snd_ssthresh
     
 table_read_CC:
-    phvwr       p.s6_s2s_debug_stage4_7_thread, 0
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_rx_s4_bubble_start)
     nop.e
     nop

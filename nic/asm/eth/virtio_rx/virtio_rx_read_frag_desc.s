@@ -83,7 +83,8 @@ virtio_rx_read_frag_desc_start:
     bcf         [c1], virtio_rx_read_frag_desc_no_interrupt
     nop
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(interrupt_cmd_dma_cmd, K(virtio_s2s_t0_phv_rx_intr_assert_addr), \
+    add         r1, K(virtio_s2s_t0_phv_rx_intr_assert_addr), r0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(interrupt_cmd_dma_cmd, r1, \
         virtio_s2s_t0_phv_rx_intr_assert_data, virtio_s2s_t0_phv_rx_intr_assert_data)
     CAPRI_DMA_CMD_STOP_FENCE(interrupt_cmd_dma_cmd)
 

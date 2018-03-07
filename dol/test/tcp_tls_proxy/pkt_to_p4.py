@@ -49,6 +49,11 @@ def TestCaseSetup(tc):
         if tc.pvtdata.serq_full:
             tcb.serq_pi = 5
         tcb.SetObjValPd()
+    else:
+        tc.pvtdata.flow1_bytes_rxed = 0
+        tc.pvtdata.flow1_bytes_txed = 0
+        tc.pvtdata.flow2_bytes_rxed = 0
+        tc.pvtdata.flow2_bytes_txed = 0
 
     TcpCbHelper.main(other_fid)
     tcbid2 = "TcpCb%04d" % (other_fid)
@@ -325,7 +330,6 @@ def TestCaseVerify(tc):
         print("Num mem2pkt not as expected")
         return False
 
-    # 9  Verify phv2mem
     if same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow1_snd_nxt + \
             tc.pvtdata.flow2_bytes_txed:
         print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)

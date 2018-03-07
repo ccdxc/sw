@@ -517,11 +517,6 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
             tcpcb_pd->tcpcb->debug_atomic0_incr1247,
             tcpcb_pd->tcpcb->debug_atomic1_incr247);
 
-    tcpcb_pd->tcpcb->debug_stage0_7_thread = (write_serq_d.debug_stage4_7_thread << 16) |
-            write_serq_d.debug_stage0_3_thread;
-    HAL_TRACE_DEBUG("debug_stage0_7_thread 0x{0:x}",
-            tcpcb_pd->tcpcb->debug_stage0_7_thread);
-
     return HAL_RET_OK;
 }
 

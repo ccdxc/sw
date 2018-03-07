@@ -8,7 +8,7 @@ tcp_debug_dol_pkt_to_serq = 0x1
 tcp_debug_dol_test_atomic_stats = 0x2
 tcp_debug_dol_dont_queue_to_serq = 0x4
 tcp_debug_dol_leave_in_arq = 0x8
-tcp_debug_dol_dont_ring_tx_doorbell = 0x10
+tcp_debug_dol_dont_send_ack = 0x10
 tcp_debug_dol_del_ack_timer = 0x20
 tcp_debug_dol_pkt_to_l7q = 0x40
 tcp_debug_dol_bypass_barco = 0x80
@@ -214,7 +214,7 @@ def init_tcb_inorder(tc, tcb):
     if tc.pvtdata.send_ack_flow1:
         tcb.debug_dol_tx = 0
     else:
-        tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell
+        tcb.debug_dol = tcp_debug_dol_dont_send_ack
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
@@ -311,7 +311,7 @@ def init_tcb_inorder2(tc, tcb):
     if tc.pvtdata.send_ack_flow2:
         tcb.debug_dol_tx = 0
     else:
-        tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell
+        tcb.debug_dol = tcp_debug_dol_dont_send_ack
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer

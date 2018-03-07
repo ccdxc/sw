@@ -58,7 +58,7 @@
 #define TCP_DDOL_TEST_ATOMIC_STATS      0x2
 #define TCP_DDOL_DONT_QUEUE_TO_SERQ     0x4
 #define TCP_DDOL_LEAVE_IN_ARQ           0x8
-#define TCP_DDOL_DONT_RING_TX_DOORBELL  0x10
+#define TCP_DDOL_DONT_SEND_ACK          0x10
 #define TCP_DDOL_DEL_ACK_TIMER          0x20
 #define TCP_DDOL_PKT_TO_L7Q             0x40
 #define TCP_DDOL_BYPASS_BARCO           0x80

@@ -342,4 +342,7 @@
 #define TCPOLEN_FASTOPEN_BASE  2
 #define TCPOLEN_EXP_FASTOPEN_BASE  4
 
+#define TCP_PENDING_TXDMA_ACK_SEND          0x1
+#define TCP_PENDING_TXDMA_SND_UNA_UPDATE    0x2
+
 #endif /* #ifndef CONSTANTS_H */

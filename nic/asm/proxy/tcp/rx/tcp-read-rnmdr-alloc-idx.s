@@ -22,7 +22,6 @@ struct s3_t1_tcp_rx_read_rnmdr_d d;
 tcp_rx_read_rnmdr_start:
 
     CAPRI_CLEAR_TABLE1_VALID
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_1)
 
     seq             c1, d.rnmdr_pidx_full, 1
     b.c1            tcp_read_rnmdr_fatal_error

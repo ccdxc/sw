@@ -20,7 +20,6 @@ struct s1_t0_tcp_rx_tcp_read_tls_stage0_d d;
     .param          tcp_rx_process_start
 
 tcp_rx_read_tls_stage0_start:
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
     CAPRI_OPERAND_DEBUG(d.pi_0)
     CAPRI_OPERAND_DEBUG(d.ci_0)
 

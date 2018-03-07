@@ -3,7 +3,6 @@
  */
 
 #include "tcp-constants.h"
-#include "tcp-phv.h"
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
@@ -34,8 +33,6 @@ tcp_rx_process_start:
     add             r4, r0, r0
     add             r6, r0, r0
 #endif
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
-
     tblwr           d.u.tcp_rx_d.alloc_descr, 1
     phvwri          p.common_phv_write_serq, 1
     tblwr           d.u.tcp_rx_d.flag, 0
@@ -92,7 +89,8 @@ bytes_rcvd_stats_update_end:
      * commands to update rx2tx shared state and ring the doorbell
      * to schedule the txdma processing for TCP
      */
-    phvwr           p.common_phv_pending_txdma, 1
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+                        TCP_PENDING_TXDMA_ACK_SEND
     /* The bit for actual specific pending processing needed in txdma
      * is set in the rx2tx shared state. In this case we need an
      * ack to be sent
@@ -156,7 +154,7 @@ delack_engine_init_done:
     slt.c2          c3, d.u.tcp_rx_d.rto, d.u.tcp_rx_d.ato
     /*     tp->fto.ato = tp->fto.rto */
     tblwr.c3        d.u.tcp_rx_d.ato, d.u.tcp_rx_d.rto
-    phvwr.c3        p.s6_s2s_ato, d.u.tcp_rx_d.rto
+    phvwr.c3        p.s6_t1_s2s_ato, d.u.tcp_rx_d.rto
     /* if (m > tp->fto.rto */
     slt.c2          c4, d.u.tcp_rx_d.rto, r1
     bal.c2          r7, tcp_incr_quickack
@@ -284,7 +282,8 @@ fast_tcp_snd_una_update:
     /* Update snd_una */
     tblwr           d.u.tcp_rx_d.snd_una, k.to_s2_ack_seq
 
-    phvwr           p.common_phv_pending_txdma, 1
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
+                        TCP_PENDING_TXDMA_SND_UNA_UPDATE
 
     tblor           d.u.tcp_rx_d.flag, FLAG_WIN_UPDATE
 fast_tcp_in_ack_event:
@@ -540,7 +539,8 @@ tcp_in_ack_event:
      nop
 
 tcp_in_ack_event_end:
-    phvwr           p.common_phv_pending_txdma, 1
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
+                        TCP_PENDING_TXDMA_SND_UNA_UPDATE
     phvwr           p.rx2tx_rx_flag, d.u.tcp_rx_d.flag
     jr              r7
 
@@ -630,7 +630,7 @@ tcp_incr_quickack:
 
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
     jr              r7
-    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
+    phvwr           p.s6_t1_s2s_ato, TCP_ATO_MIN
 
 #if 0
     // TODO : this needs to move to tx pipeline
@@ -692,7 +692,7 @@ tcp_enter_quickack_mode:
     tblwr           d.u.tcp_rx_d.pingpong, r0
     phvwr           p.common_phv_pingpong, d.u.tcp_rx_d.pingpong
     tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
+    phvwr           p.s6_t1_s2s_ato, TCP_ATO_MIN
     sne             c4, r7, r0
     jr.c4           r7
     add             r7, r0, r0
@@ -732,7 +732,8 @@ tcp_rx_slow_path:
      * the entire frame is dropped.
      */
     slt             c1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
-    phvwr.c1        p.common_phv_pending_txdma, 1
+    phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+                        TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_pending_ack_send, 1
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
@@ -807,8 +808,9 @@ tcp_rx_slow_path:
     phvwri.c1       p.common_phv_write_serq, 1
     phvwr.c1        p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri.c1    d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
-    phvwr.c1        p.common_phv_pending_txdma, 1
     phvwr.c1        p.rx2tx_pending_ack_send, 1
+    phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+                        TCP_PENDING_TXDMA_ACK_SEND
 
     phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
 
@@ -916,7 +918,8 @@ ooo_received:
     /*
      * We need to send immediate ack (dupack)
      */
-    phvwr           p.common_phv_pending_txdma, 1
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+                        TCP_PENDING_TXDMA_ACK_SEND
     phvwr           p.rx2tx_pending_ack_send, 1
     /*
      * We can receive upto window of rcv_nxt to rcv_nxt + CELL_SIZE *

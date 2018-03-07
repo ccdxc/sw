@@ -22,7 +22,6 @@ struct s3_t3_tcp_rx_l7_read_rnmdr_d d;
 tcp_rx_l7_read_rnmdr_start:
 
     CAPRI_CLEAR_TABLE3_VALID
-    //CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_1)
 
     // TODO : check for semaphore full
     add             r4, r0, d.{rnmdr_pidx}.wx

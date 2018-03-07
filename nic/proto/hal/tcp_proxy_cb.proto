@@ -118,7 +118,6 @@ message TcpCbStats {
   uint64                desc_alloced               = 4;
   uint64                debug_num_pkt_to_mem       = 5;
   uint64                debug_num_phv_to_mem       = 6;
-  uint32                debug_stage0_7_thread      = 7;
   uint32                debug_atomic_delta         = 8;
   uint32                debug_atomic0_incr1247     = 9;
   uint32                debug_atomic1_incr247      = 10;

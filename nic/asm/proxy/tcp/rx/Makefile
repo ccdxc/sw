@@ -44,6 +44,8 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \
     $(SRC_DIR)/tcp-write-serq.s \
+    $(SRC_DIR)/tcp-write-serq2.s \
+    $(SRC_DIR)/tcp-write-serq3.s \
     $(SRC_DIR)/tcp-write-arq.s \
     $(SRC_DIR)/tcp-write-l7q.s
 

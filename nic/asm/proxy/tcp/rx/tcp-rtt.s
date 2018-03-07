@@ -21,7 +21,6 @@ struct s3_t0_tcp_rx_tcp_rtt_d d;
 tcp_rx_rtt_start:
 
     CAPRI_CLEAR_TABLE0_VALID
-    CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
     add             r6, r0, r0

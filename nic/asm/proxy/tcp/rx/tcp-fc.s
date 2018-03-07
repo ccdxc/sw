@@ -17,17 +17,26 @@ struct s5_t0_tcp_rx_tcp_fc_d d;
     
 %%
     .param          tcp_rx_write_serq_stage_start
+    .param          tcp_rx_write_serq_stage_start2
+    .param          tcp_rx_write_serq_stage_start3
     .param          tcp_rx_write_arq_stage_start
     .param          tcp_rx_write_l7q_stage_start
     .param          ARQRX_QIDXR_BASE
     .align  
 tcp_rx_fc_stage_start:
-    CAPRI_SET_DEBUG_STAGE4_7(p.s6_s2s_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
-    sne         c1, k.common_phv_write_arq, r0
+    seq         c1, k.common_phv_write_arq, 1
     bcf         [c1], tcp_cpu_rx
+    nop
 
     // TODO : FC stage has to be implemented
 
+    // launch table 1 next stage
+    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_EN,
+                tcp_rx_write_serq_stage_start2, k.common_phv_qstate_addr,
+                TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_EN,
+                tcp_rx_write_serq_stage_start3, k.common_phv_qstate_addr,
+                TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
     
     /*
      * c1 = ooo received, store allocated page and descr in d

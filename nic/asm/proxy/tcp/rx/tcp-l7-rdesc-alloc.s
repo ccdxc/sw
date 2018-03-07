@@ -17,7 +17,6 @@ struct s4_t3_tcp_rx_l7_rdesc_alloc_d d;
     .align
 tcp_rx_l7_rdesc_alloc_start:
     CAPRI_CLEAR_TABLE3_VALID
-    //CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_1)
 
     CAPRI_OPERAND_DEBUG(d.desc)
     sne             c1, k.common_phv_ooo_rcv, r0
