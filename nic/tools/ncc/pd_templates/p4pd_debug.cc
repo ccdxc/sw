@@ -40,14 +40,14 @@ using ::debug::DebugRequestMsg;
 using ::debug::DebugSpec;
 using ::debug::DebugKeyHandle;
 using ::debug::DebugResponseMsg;
-
+//::
 //::     tabledict = OrderedDict() # key=table-name
 //::     tableid = start_table_base
 //::     for table in pddict['tables']:
 //::        tabledict[table] = tableid
 //::        tableid += 1
 //::     #endfor
-
+//::
 //::    if len(tabledict):
 //::        if pddict['p4plus']:
 //::            api_prefix = 'p4pd_' + pddict['p4program']
@@ -55,6 +55,21 @@ using ::debug::DebugResponseMsg;
 //::            api_prefix = 'p4pd'
 //::        #endif
 //::    #endif
+
+static std::shared_ptr<Channel>     channel;
+static std::unique_ptr<Debug::Stub> stub;
+
+p4pd_error_t
+${api_prefix}_cli_init(char *grpc_server_port)
+{
+    channel =
+        grpc::CreateChannel(grpc_server_port, grpc::InsecureChannelCredentials());
+
+    stub    = ::debug::Debug::NewStub(channel);
+
+    return (P4PD_SUCCESS);
+}
+
 p4pd_error_t
 ${api_prefix}_entry_write(uint32_t tableid,
                           uint32_t index,
@@ -67,11 +82,6 @@ ${api_prefix}_entry_write(uint32_t tableid,
     ClientContext    context;
     DebugSpec        *debug_spec    = NULL;
     DebugKeyHandle   *key_or_handle = NULL;
-
-    auto channel =
-        grpc::CreateChannel("localhost:50054", grpc::InsecureChannelCredentials());
-
-    auto stub    = ::debug::Debug::NewStub(channel);
 
     debug_spec = debug_req_msg.add_request();
 
@@ -160,11 +170,6 @@ ${api_prefix}_entry_read(uint32_t  tableid,
 
     debug_spec->set_opn_type(::debug::DEBUG_OP_TYPE_READ);
     debug_spec->set_index(index);
-
-    auto channel =
-        grpc::CreateChannel("localhost:50054", grpc::InsecureChannelCredentials());
-
-    auto stub    = ::debug::Debug::NewStub(channel);
 
     switch (tableid) {
         //::        for table, tid in tabledict.items():
@@ -280,7 +285,7 @@ p4pd_register_entry_read(std::string block_name, std::string   reg_name, std::st
     auto stub = ::debug::Debug::NewStub(channel);
 
     Status status = stub->DebugInvoke(&context, debug_req_msg, &debug_rsp_msg);
-    
+
     int reg_data_sz  = debug_rsp_msg.response(0).data_size();
     //*len = reg_data_sz;
     FILE *reg_fd = 0;
@@ -334,7 +339,7 @@ p4pd_register_list(std::string block_name, std::string   reg_name, std::string f
     auto stub = ::debug::Debug::NewStub(channel);
 
     Status status = stub->DebugInvoke(&context, debug_req_msg, &debug_rsp_msg);
-    
+
     int reg_data_sz  = debug_rsp_msg.response(0).data_size();
     FILE *reg_fd = 0;
     if (!filename.empty()) {

@@ -7,11 +7,6 @@
 #
 # ${pddict['cli-name']} DEBUG CLI
 #
-# import    grpc
-# import    debug_pb2
-# import    debug_pb2_grpc
-
-grpc_server = 'localhost:50054'
 
 import json
 import glob
@@ -64,19 +59,6 @@ p4pd_table_types_enum = [
     'INDEX',
     'MPU',
 ]
-
-def debug_grpc_setup():
-    global debug_client_stub
-
-    # create grpc client connection
-    debug_client_channel = grpc.insecure_channel(grpc_server)
-    debug_client_stub = debug_pb2_grpc.DebugStub(debug_client_channel)
-
-def debug_msg_send(ctx, debug_request_msg):
-    debug_grpc_setup()
-
-    global debug_client_stub
-    return debug_client_stub.DebugInvoke(debug_request_msg)
 
 def docstring_parameter(*sub):
     def dec(obj):
@@ -620,19 +602,8 @@ class ${table}():
 
         self.populate_table(ctx)
 
-        #create the grpc DEBUG Request
-        # debug_request_msg = debug_pb2.DebugRequestMsg()
-
-        # debug_request = debug_request_msg.request.add()
-        # debug_request.opn_type = debug_pb2.DebugOperationType.Value('DEBUG_OP_TYPE_' + ctx['opn'].upper())
-        # debug_request.key_or_handle.table_id = ctx['table_id']
         index = ctx['index']
 
-        #debug_request.swkey = iris.get_data_void(self.swkey_p)
-        #debug_request.swkey_mask = iris.get_data_void(self.swkey_mask_p)
-        #debug_request.actiondata = iris.get_data_void(self.actiondata_p)
-
-        #ret = debug_msg_send(ctx, debug_request_msg)
         ret = ${pddict['cli-name']}.p4pd_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p)
 
         if ret < 0:
@@ -999,6 +970,6 @@ def table_dump():
 
 def populate_register(ctx):
     if (ctx['opn'] == 'read'):
-        iris.p4pd_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
+        ${pddict['cli-name']}.p4pd_register_entry_read(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
     elif (ctx['opn'] == 'list'):
-        iris.p4pd_register_list(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))
+        ${pddict['cli-name']}.p4pd_register_list(str(ctx['block_name']), str(ctx['reg_name']), str(ctx['file_name']))

@@ -4066,6 +4066,9 @@ def capri_p4pd_create_swig_custom_hdr(be):
     content_str += '                   std::string regname,\n';
     content_str += '                   std::string filename);\n';
 
+    content_str += 'p4pd_error_t\n';
+    content_str += 'p4pd_cli_init(char* grpc_server_port);\n';
+
     out_file = out_dir + name + '_custom.h'
     with open(out_file, "w") as of:
         of.write(content_str)

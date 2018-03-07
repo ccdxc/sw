@@ -8,12 +8,14 @@
 # Debug CLI
 #
 
-
 //:: register_list =  ["ppa","sgi","rpc","intr","pxb","sge","pr","pp","pt","tsi","pcr","txs","tse","pct","pb","pm","db","ssi","sse","bx","md","tpc","dpr","mc","dpp","sema","mp", "ms","mx"]
 
 import click
 from click_repl import register_repl
 import ${pddict['cli-name']}_debug_cli as backend
+from   ${pddict['cli-name']} import *
+import ${pddict['cli-name']}
+import os
 //::    tabledict = {}
 //::    tableid = 1
 //::    for table in pddict['tables']:
@@ -274,6 +276,12 @@ def ${actionfldname}_cmd(arg_${actionfldname}):
 
 register_repl(dbg_cli)
 dbg_cli.add_command(debug)
+grpc_server_port = "localhost:50054"
+
+if 'HAL_GRPC_PORT' in os.environ.keys():
+    grpc_server_port = "localhost:" + os.environ['HAL_GRPC_PORT']
+
+${pddict['cli-name']}.p4pd_cli_init(grpc_server_port)
 
 if __name__ == '__main__':
     dbg_cli()
