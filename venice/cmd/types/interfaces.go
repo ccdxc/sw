@@ -5,6 +5,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -225,7 +226,7 @@ type NtpService interface {
 // knowing about Service instance creations/deletions.
 type ServiceInstanceObserver interface {
 	// OnNotifyServiceInstance allows an event to be "published" to interface implementations.
-	OnNotifyServiceInstance(ServiceInstanceEvent) error
+	OnNotifyServiceInstance(types.ServiceInstanceEvent) error
 }
 
 // ResolverService is the interface for service resolution.
@@ -240,21 +241,21 @@ type ResolverService interface {
 	Stop()
 
 	// Get a service by name.
-	Get(name string) *Service
+	Get(name string) *types.Service
 
 	// Get a service instance by service and instance name.
-	GetInstance(name, instance string) *ServiceInstance
+	GetInstance(name, instance string) *types.ServiceInstance
 
 	// List all services.
-	List() *ServiceList
+	List() *types.ServiceList
 
 	// List all service instances.
-	ListInstances() *ServiceInstanceList
+	ListInstances() *types.ServiceInstanceList
 
 	// AddSvcInstance to add a service instance explicitly without using k8s service
-	AddServiceInstance(si *ServiceInstance) error
+	AddServiceInstance(si *types.ServiceInstance) error
 	// DelSvcInstance to delete a service instance explicitly without using k8s service
-	DeleteServiceInstance(si *ServiceInstance) error
+	DeleteServiceInstance(si *types.ServiceInstance) error
 }
 
 // NodeEventHandler handles watch events for Node object
@@ -312,7 +313,7 @@ type ServiceTracker interface {
 	LeadershipObserver
 
 	// OnNotifyResolver is used to listen to resolver updates and inform location of interested services
-	OnNotifyResolver(e ServiceInstanceEvent) error
+	OnNotifyResolver(e types.ServiceInstanceEvent) error
 
 	// Run the service tracker. Supposed to be called with Run(resolver.Interface, NodeService)
 	//	but declared this way because of complex circular dependencies

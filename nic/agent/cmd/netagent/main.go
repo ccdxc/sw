@@ -1,4 +1,5 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+// Pensando NetworkAgent binary. This is expected to run on NAPLES
 
 package main
 
@@ -8,9 +9,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
-	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -24,19 +23,17 @@ func main() {
 	// command line flags
 	var (
 		hostIf       = flag.String("hostif", "ntrunk0", "Host facing interface")
-		uplinkIf     = flag.String("uplink", "eth2", "Uplink interface")
-		agentDbPath  = flag.String("agentdb", "/tmp/n4sagent.db", "Agent Database file")
+		agentDbPath  = flag.String("agentdb", "/tmp/naples-netagent.db", "Agent Database file")
 		npmURL       = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
-		logToFile    = flag.String("logtofile", "/var/log/pensando/n4sagent.log", "Redirect logs to file")
+		logToFile    = flag.String("logtofile", "/var/log/pensando/naples-netagent.log", "Redirect logs to file")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
-		datapathType = flag.String("datapath-type", "fswitch", "specify the agent datapath type either fswitch or hal")
 	)
 	flag.Parse()
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      "N4sAgent",
+		Module:      "NaplesNetAgent",
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
@@ -60,42 +57,36 @@ func main() {
 	// Set the TLS provider for rpckit
 	rpckit.SetN4STLSProvider()
 
-	// read the mac address of the host interface
 	macAddr, err := netutils.GetIntfMac(*hostIf)
 	if err != nil {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 	}
-	resolverClient := resolver.New(&resolver.Config{Name: "netagent", Servers: strings.Split(*resolverURLs, ",")})
 
+	// create a resolver
+	resolverClient := resolver.New(&resolver.Config{Name: "naples-netagent", Servers: strings.Split(*resolverURLs, ",")})
+	//
 	opt := tsdb.Options{
-		ClientName:     "netagent_" + macAddr.String(),
+		ClientName:     "naples-netagent-" + macAddr.String(),
 		ResolverClient: resolverClient,
 	}
+
 	err = tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
 	if err != nil {
 		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 	}
-	var dp state.NetDatapathAPI
 
-	// create a network datapath
-	if *datapathType == "hal" {
-		dp, err = hal.NewHalDatapath("hal")
-		if err != nil {
-			log.Fatalf("Error creating hal datapath. Err: %v", err)
-		}
-	} else {
-		dp, err = datapath.NewNaplesDatapath(*hostIf, *uplinkIf)
-		if err != nil {
-			log.Fatalf("Error creating fake datapath. Err: %v", err)
-		}
+	// Create a HAL Datapath // ToDo Make this hal
+	dp, err := hal.NewHalDatapath("mock")
+	if err != nil {
+		log.Fatal("Error initializing HAL Datapath")
 	}
 
 	// create the new NetAgent
 	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, ":"+globals.AgentRESTPort, resolverClient)
 	if err != nil {
-		log.Fatalf("Error creating NetAgent. Err: %v", err)
+		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}
-	log.Printf("NetAgent {%+v} is running", ag)
+	log.Printf("Naples NetAgent {%+v} is running", ag)
 
 	// wait forever
 	<-waitCh

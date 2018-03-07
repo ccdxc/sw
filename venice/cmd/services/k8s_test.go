@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
+	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -96,21 +97,21 @@ func TestK8sService(t *testing.T) {
 	verifyK8sServices(t, client)
 
 	// Create a dummy DaemonSet.
-	err := createDaemonSet(client, &types.Module{
+	err := createDaemonSet(client, &protos.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_DaemonSet,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Image: "pen-apigw",
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -122,21 +123,21 @@ func TestK8sService(t *testing.T) {
 	}
 
 	// Create a dummy DaemonSet.
-	createDaemonSet(client, &types.Module{
+	createDaemonSet(client, &protos.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_DaemonSet,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Image: "pen-apigw",
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -146,19 +147,19 @@ func TestK8sService(t *testing.T) {
 	verifyK8sServices(t, client)
 
 	// Create a dummy Deployment.
-	err = createDeployment(client, &types.Module{
+	err = createDeployment(client, &protos.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: deployment,
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_Deployment,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_Deployment,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Image: "pen-npm",
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: "pen-npm",
 							Port: runtime.MustUint32(globals.NpmRPCPort),
@@ -167,7 +168,7 @@ func TestK8sService(t *testing.T) {
 					Args: []string{"-vcenter-list http://user:pass@127.0.0.1:8989/sdk"},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -186,21 +187,21 @@ func TestK8sService(t *testing.T) {
 func TestK8sReduntantDaemonSetCreate(t *testing.T) {
 	client := k8sclient.NewSimpleClientset()
 	// Create a dummy DaemonSet.
-	err := createDaemonSet(client, &types.Module{
+	err := createDaemonSet(client, &protos.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_DaemonSet,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Image: "pen-apigw",
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -212,21 +213,21 @@ func TestK8sReduntantDaemonSetCreate(t *testing.T) {
 	}
 
 	// Try creating the same daemonset again.
-	err = createDaemonSet(client, &types.Module{
+	err = createDaemonSet(client, &protos.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_DaemonSet,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Image: "pen-apigw",
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -238,19 +239,19 @@ func TestK8sReduntantDaemonSetCreate(t *testing.T) {
 	}
 
 	// Create a dummy Deployment.
-	err = createDeployment(client, &types.Module{
+	err = createDeployment(client, &protos.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: deployment,
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_Deployment,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_Deployment,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Image: "pen-npm",
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: "pen-npm",
 							Port: runtime.MustUint32(globals.NpmRPCPort),
@@ -259,7 +260,7 @@ func TestK8sReduntantDaemonSetCreate(t *testing.T) {
 					Args: []string{"-vcenter-list http://user:pass@127.0.0.1:8989/sdk"},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -270,19 +271,19 @@ func TestK8sReduntantDaemonSetCreate(t *testing.T) {
 	}
 
 	// Try creating the same deployment again.
-	err = createDeployment(client, &types.Module{
+	err = createDeployment(client, &protos.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: deployment,
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: "dummy",
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_Deployment,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_Deployment,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Image: "pen-npm",
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: "pen-npm",
 							Port: runtime.MustUint32(globals.NpmRPCPort),
@@ -291,7 +292,7 @@ func TestK8sReduntantDaemonSetCreate(t *testing.T) {
 					Args: []string{"-vcenter-list http://user:pass@127.0.0.1:8989/sdk"},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},

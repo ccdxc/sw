@@ -3,12 +3,13 @@
 # Lists excluded patterns to "go list"
 EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|fields|vendor"
 
-# Lists venice protos and all things auto generated.
-TO_GEN := api api/labels api/fields venice/cmd/types venice/cmd/grpc \
-venice/ctrler/ckm/rpcserver/ckmproto \
-venice/ctrler/npm/rpcserver/netproto venice/collector/rpcserver/metric \
-venice/utils/runtime/test venice/utils/apigen/annotations venice/orch \
-venice/cmd/grpc/server/certificates/certapi venice/ctrler/evtsmgr/rpcserver/eventsproto \
+# Lists venice venice protos and all things auto generated.
+TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
+venice/ctrler/ckm/rpcserver/ckmproto venice/ctrler/npm/rpcserver/netproto \
+venice/collector/rpcserver/metric venice/utils/runtime/test \
+venice/utils/apigen/annotations venice/orch \
+venice/cmd/grpc/server/certificates/certapi \
+venice/ctrler/evtsmgr/rpcserver/eventsproto \
 nic/agent/nmd/protos nic/agent/netagent/protos
 
 # Lists all the vendored packages that need to be installed prior to the build.

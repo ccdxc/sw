@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
+	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -15,7 +16,7 @@ import (
 type resolverService struct {
 	sync.RWMutex
 	k8sSvc    types.K8sService
-	svcMap    map[string]types.Service
+	svcMap    map[string]protos.Service
 	running   bool
 	observers []types.ServiceInstanceObserver
 }
@@ -24,7 +25,7 @@ type resolverService struct {
 func NewResolverService(k8sSvc types.K8sService) types.ResolverService {
 	return &resolverService{
 		k8sSvc:    k8sSvc,
-		svcMap:    make(map[string]types.Service),
+		svcMap:    make(map[string]protos.Service),
 		observers: make([]types.ServiceInstanceObserver, 0),
 	}
 }
@@ -53,11 +54,11 @@ func (r *resolverService) Stop() {
 
 // OnNotifyK8sPodEvent satisifies the K8s notifier interface.
 func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
-	sInsts := make([]types.ServiceInstance, 0)
+	sInsts := make([]protos.ServiceInstance, 0)
 	for _, container := range e.Pod.Spec.Containers {
 		if len(container.Ports) > 0 {
 			for _, port := range container.Ports {
-				sInsts = append(sInsts, types.ServiceInstance{
+				sInsts = append(sInsts, protos.ServiceInstance{
 					TypeMeta: api.TypeMeta{
 						Kind: "ServiceInstance",
 					},
@@ -71,7 +72,7 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 				})
 			}
 		} else {
-			sInsts = append(sInsts, types.ServiceInstance{
+			sInsts = append(sInsts, protos.ServiceInstance{
 				TypeMeta: api.TypeMeta{
 					Kind: "ServiceInstance",
 				},
@@ -120,24 +121,24 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 	return nil
 }
 
-func (r *resolverService) AddServiceInstance(si *types.ServiceInstance) error {
+func (r *resolverService) AddServiceInstance(si *protos.ServiceInstance) error {
 	r.addSvcInstance(si)
 	return nil
 }
 
 // addSvcInstance adds a service instance to a service.
-func (r *resolverService) addSvcInstance(si *types.ServiceInstance) {
+func (r *resolverService) addSvcInstance(si *protos.ServiceInstance) {
 	r.Lock()
 	svc, ok := r.svcMap[si.Service]
 	if !ok {
-		svc = types.Service{
+		svc = protos.Service{
 			TypeMeta: api.TypeMeta{
 				Kind: "Service",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Name: si.Service,
 			},
-			Instances: make([]*types.ServiceInstance, 0),
+			Instances: make([]*protos.ServiceInstance, 0),
 		}
 		r.svcMap[svc.Name] = svc
 	}
@@ -152,19 +153,19 @@ func (r *resolverService) addSvcInstance(si *types.ServiceInstance) {
 	svc.Instances = append(svc.Instances, si)
 	r.svcMap[si.Service] = svc
 	r.Unlock()
-	r.notify(types.ServiceInstanceEvent{
-		Type:     types.ServiceInstanceEvent_Added,
+	r.notify(protos.ServiceInstanceEvent{
+		Type:     protos.ServiceInstanceEvent_Added,
 		Instance: si,
 	})
 }
 
-func (r *resolverService) DeleteServiceInstance(si *types.ServiceInstance) error {
+func (r *resolverService) DeleteServiceInstance(si *protos.ServiceInstance) error {
 	r.delSvcInstance(si)
 	return nil
 }
 
 // delSvcInstance deletes a service instance from a service.
-func (r *resolverService) delSvcInstance(si *types.ServiceInstance) {
+func (r *resolverService) delSvcInstance(si *protos.ServiceInstance) {
 	r.Lock()
 
 	svc, ok := r.svcMap[si.Service]
@@ -179,8 +180,8 @@ func (r *resolverService) delSvcInstance(si *types.ServiceInstance) {
 			svc.Instances = append(svc.Instances[:ii], svc.Instances[ii+1:]...)
 			r.svcMap[si.Service] = svc
 			r.Unlock()
-			r.notify(types.ServiceInstanceEvent{
-				Type:     types.ServiceInstanceEvent_Deleted,
+			r.notify(protos.ServiceInstanceEvent{
+				Type:     protos.ServiceInstanceEvent_Deleted,
 				Instance: si,
 			})
 			return
@@ -190,7 +191,7 @@ func (r *resolverService) delSvcInstance(si *types.ServiceInstance) {
 }
 
 // Get returns a Service.
-func (r *resolverService) Get(name string) *types.Service {
+func (r *resolverService) Get(name string) *protos.Service {
 	r.RLock()
 	defer r.RUnlock()
 	svc, ok := r.svcMap[name]
@@ -201,7 +202,7 @@ func (r *resolverService) Get(name string) *types.Service {
 }
 
 // GetInstance returns an instance of a Service.
-func (r *resolverService) GetInstance(name, instance string) *types.ServiceInstance {
+func (r *resolverService) GetInstance(name, instance string) *protos.ServiceInstance {
 	r.RLock()
 	defer r.RUnlock()
 	svc, ok := r.svcMap[name]
@@ -217,10 +218,10 @@ func (r *resolverService) GetInstance(name, instance string) *types.ServiceInsta
 }
 
 // List returns all Services.
-func (r *resolverService) List() *types.ServiceList {
+func (r *resolverService) List() *protos.ServiceList {
 	r.RLock()
 	defer r.RUnlock()
-	slist := &types.ServiceList{
+	slist := &protos.ServiceList{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceList",
 		},
@@ -233,10 +234,10 @@ func (r *resolverService) List() *types.ServiceList {
 }
 
 // ListInstances returns all Service instances.
-func (r *resolverService) ListInstances() *types.ServiceInstanceList {
+func (r *resolverService) ListInstances() *protos.ServiceInstanceList {
 	r.RLock()
 	defer r.RUnlock()
-	slist := &types.ServiceInstanceList{
+	slist := &protos.ServiceInstanceList{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstanceList",
 		},
@@ -270,7 +271,7 @@ func (r *resolverService) UnRegister(o types.ServiceInstanceObserver) {
 
 // All the observers are notified of the event even if someone fails,
 // returns first encountered error.
-func (r *resolverService) notify(e types.ServiceInstanceEvent) error {
+func (r *resolverService) notify(e protos.ServiceInstanceEvent) error {
 	r.RLock()
 	defer r.RUnlock()
 	var err error

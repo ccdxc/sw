@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/cmd/types"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )

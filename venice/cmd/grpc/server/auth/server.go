@@ -7,7 +7,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
-	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"

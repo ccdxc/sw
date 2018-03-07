@@ -36,7 +36,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"

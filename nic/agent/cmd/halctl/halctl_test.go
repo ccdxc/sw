@@ -4,16 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os/exec"
+	"strings"
 	"testing"
 
 	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"
 
-	"os/exec"
-
-	"strings"
-
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -51,7 +49,7 @@ var invalidFlagCmd = []string{"get", "vrf", "--foo", "42"}
 
 // veniceIntegSuite is the state of integ test
 type halCtlSuite struct {
-	dp      *datapath.HalDatapath
+	dp      *hal.Datapath
 	mockSrv *grpc.Server
 }
 
@@ -177,7 +175,7 @@ func TestHalCtl(t *testing.T) {
 func (h *halCtlSuite) SetUpSuite(c *C) {
 	// Start mock serves which has stubbed out CRUDS with spoof data
 	go h.runMockHALServer(c)
-	dp, err := datapath.NewHalDatapath("hal")
+	dp, err := hal.NewHalDatapath("hal")
 	c.Assert(err, IsNil)
 	h.dp = dp
 	_, err = exec.Command("go", "install", selfPkgName).CombinedOutput()

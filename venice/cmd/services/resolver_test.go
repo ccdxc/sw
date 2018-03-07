@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 )
 
 type mockServiceInstanceObserver struct {

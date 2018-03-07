@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/types"
+	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
@@ -361,14 +362,14 @@ func (m *K8sService) DeletePod(pod *v1.Pod) {
 // ResolverService is a mock implementation of service discovery.
 type ResolverService struct {
 	sync.Mutex
-	svcMap    map[string]types.Service
+	svcMap    map[string]protos.Service
 	observers []types.ServiceInstanceObserver
 }
 
 // NewResolverService creates a mock resolver service.
 func NewResolverService() *ResolverService {
 	return &ResolverService{
-		svcMap: make(map[string]types.Service),
+		svcMap: make(map[string]protos.Service),
 	}
 }
 
@@ -392,7 +393,7 @@ func (m *ResolverService) UnRegister(o types.ServiceInstanceObserver) {
 	m.observers = append(m.observers[:i], m.observers[i+1:]...)
 }
 
-func (m *ResolverService) notify(e types.ServiceInstanceEvent) error {
+func (m *ResolverService) notify(e protos.ServiceInstanceEvent) error {
 	var err error
 	for _, o := range m.observers {
 		er := o.OnNotifyServiceInstance(e)
@@ -412,7 +413,7 @@ func (m *ResolverService) Stop() {
 }
 
 // Get is a mock implementation of resolving a service.
-func (m *ResolverService) Get(name string) *types.Service {
+func (m *ResolverService) Get(name string) *protos.Service {
 	m.Lock()
 	defer m.Unlock()
 	svc, ok := m.svcMap[name]
@@ -423,7 +424,7 @@ func (m *ResolverService) Get(name string) *types.Service {
 }
 
 // GetInstance is a mock implementation of resolving a service instance.
-func (m *ResolverService) GetInstance(name, instance string) *types.ServiceInstance {
+func (m *ResolverService) GetInstance(name, instance string) *protos.ServiceInstance {
 	m.Lock()
 	defer m.Unlock()
 	svc, ok := m.svcMap[name]
@@ -439,10 +440,10 @@ func (m *ResolverService) GetInstance(name, instance string) *types.ServiceInsta
 }
 
 // List is a mock implementation of listing all services.
-func (m *ResolverService) List() *types.ServiceList {
+func (m *ResolverService) List() *protos.ServiceList {
 	m.Lock()
 	defer m.Unlock()
-	slist := &types.ServiceList{
+	slist := &protos.ServiceList{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceList",
 		},
@@ -455,10 +456,10 @@ func (m *ResolverService) List() *types.ServiceList {
 }
 
 // ListInstances returns all Service instances.
-func (m *ResolverService) ListInstances() *types.ServiceInstanceList {
+func (m *ResolverService) ListInstances() *protos.ServiceInstanceList {
 	m.Lock()
 	defer m.Unlock()
-	slist := &types.ServiceInstanceList{
+	slist := &protos.ServiceInstanceList{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstanceList",
 		},
@@ -473,19 +474,19 @@ func (m *ResolverService) ListInstances() *types.ServiceInstanceList {
 }
 
 // AddServiceInstance is used by test cases to add a service instance.
-func (m *ResolverService) AddServiceInstance(si *types.ServiceInstance) error {
+func (m *ResolverService) AddServiceInstance(si *protos.ServiceInstance) error {
 	m.Lock()
 	defer m.Unlock()
 	svc, ok := m.svcMap[si.Service]
 	if !ok {
-		svc = types.Service{
+		svc = protos.Service{
 			TypeMeta: api.TypeMeta{
 				Kind: "Service",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Name: si.Service,
 			},
-			Instances: make([]*types.ServiceInstance, 0),
+			Instances: make([]*protos.ServiceInstance, 0),
 		}
 	}
 	for ii := range svc.Instances {
@@ -495,15 +496,15 @@ func (m *ResolverService) AddServiceInstance(si *types.ServiceInstance) error {
 	}
 	svc.Instances = append(svc.Instances, si)
 	m.svcMap[svc.Name] = svc
-	m.notify(types.ServiceInstanceEvent{
-		Type:     types.ServiceInstanceEvent_Added,
+	m.notify(protos.ServiceInstanceEvent{
+		Type:     protos.ServiceInstanceEvent_Added,
 		Instance: si,
 	})
 	return nil
 }
 
 // DeleteServiceInstance is used by test cases to delete a service instance.
-func (m *ResolverService) DeleteServiceInstance(si *types.ServiceInstance) error {
+func (m *ResolverService) DeleteServiceInstance(si *protos.ServiceInstance) error {
 	m.Lock()
 	defer m.Unlock()
 	svc, ok := m.svcMap[si.Service]
@@ -514,8 +515,8 @@ func (m *ResolverService) DeleteServiceInstance(si *types.ServiceInstance) error
 		if svc.Instances[ii].Name == si.Name {
 			svc.Instances = append(svc.Instances[:ii], svc.Instances[ii+1:]...)
 			m.svcMap[svc.Name] = svc
-			m.notify(types.ServiceInstanceEvent{
-				Type:     types.ServiceInstanceEvent_Deleted,
+			m.notify(protos.ServiceInstanceEvent{
+				Type:     protos.ServiceInstanceEvent_Deleted,
 				Instance: si,
 			})
 		}

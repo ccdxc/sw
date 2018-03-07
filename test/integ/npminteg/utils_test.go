@@ -11,14 +11,14 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // Dpagent is an agent instance
 type Dpagent struct {
-	datapath *datapath.HalDatapath
+	datapath *hal.Datapath
 	nagent   *netagent.Agent
 }
 
@@ -33,9 +33,9 @@ func (it *integTestSuite) pollTimeout() string {
 }
 
 // CreateAgent creates an instance of agent
-func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string, resolver resolver.Interface) (*Dpagent, error) {
+func CreateAgent(kind hal.Kind, nodeUUID, srvURL string, resolver resolver.Interface) (*Dpagent, error) {
 	// mock datapath
-	dp, err := datapath.NewHalDatapath(kind)
+	dp, err := hal.NewHalDatapath(kind)
 	if err != nil {
 		log.Errorf("Error creating hal datapath. Err: %v", err)
 		return nil, err

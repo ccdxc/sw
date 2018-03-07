@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/pensando/sw/venice/cmd/types"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 

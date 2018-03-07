@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
+	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
@@ -47,14 +48,14 @@ func (m *ServiceTracker) Run(resolverClient interface{}, nodeService types.NodeS
 	srvInstanceList := m.resolverClient.Lookup(globals.KubeAPIServer)
 	if srvInstanceList != nil {
 		for _, i := range srvInstanceList.Items {
-			m.OnNotifyResolver(types.ServiceInstanceEvent{Type: types.ServiceInstanceEvent_Added, Instance: i})
+			m.OnNotifyResolver(protos.ServiceInstanceEvent{Type: protos.ServiceInstanceEvent_Added, Instance: i})
 		}
 	}
 
 	srvInstanceList = m.resolverClient.Lookup(globals.ElasticSearch)
 	if srvInstanceList != nil {
 		for _, i := range srvInstanceList.Items {
-			m.OnNotifyResolver(types.ServiceInstanceEvent{Type: types.ServiceInstanceEvent_Added, Instance: i})
+			m.OnNotifyResolver(protos.ServiceInstanceEvent{Type: protos.ServiceInstanceEvent_Added, Instance: i})
 		}
 	}
 
@@ -70,7 +71,7 @@ func (m *ServiceTracker) Stop() {
 // OnNotifyLeaderEvent is called on Quorum node when leadership changes
 func (m *ServiceTracker) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	if m.leaderAddr != e.Leader {
-		m.resolver.DeleteServiceInstance(&types.ServiceInstance{
+		m.resolver.DeleteServiceInstance(&protos.ServiceInstance{
 			TypeMeta: api.TypeMeta{
 				Kind: "ServiceInstance",
 			},
@@ -82,7 +83,7 @@ func (m *ServiceTracker) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		})
 	}
 	m.leaderAddr = e.Leader
-	m.resolver.AddServiceInstance(&types.ServiceInstance{
+	m.resolver.AddServiceInstance(&protos.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",
 		},
@@ -96,7 +97,7 @@ func (m *ServiceTracker) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 }
 
 // OnNotifyResolver is called when resolverClient finds an updated info
-func (m *ServiceTracker) OnNotifyResolver(e types.ServiceInstanceEvent) error {
+func (m *ServiceTracker) OnNotifyResolver(e protos.ServiceInstanceEvent) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -110,9 +111,9 @@ func (m *ServiceTracker) OnNotifyResolver(e types.ServiceInstanceEvent) error {
 	}
 
 	switch e.Type {
-	case types.ServiceInstanceEvent_Added:
+	case protos.ServiceInstanceEvent_Added:
 		addrs[e.Instance.Node] = struct{}{}
-	case types.ServiceInstanceEvent_Deleted:
+	case protos.ServiceInstanceEvent_Deleted:
 		delete(addrs, e.Instance.Node)
 	}
 	var list []string

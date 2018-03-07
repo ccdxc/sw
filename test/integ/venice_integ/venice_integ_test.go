@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -23,7 +23,7 @@ import (
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
@@ -69,8 +69,8 @@ type veniceIntegSuite struct {
 	certSrv        *certsrv.CertSrv
 	ctrler         *npm.Netctrler
 	agents         []*netagent.Agent
-	datapaths      []*datapath.HalDatapath
-	datapathKind   datapath.Kind
+	datapaths      []*hal.Datapath
+	datapathKind   hal.Kind
 	numAgents      int
 	restClient     apiclient.Services
 	apisrvClient   apiclient.Services
@@ -95,7 +95,7 @@ func TestVeniceInteg(t *testing.T) {
 func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// test parameters
 	it.numAgents = *numAgents
-	it.datapathKind = datapath.Kind(*datapathKind)
+	it.datapathKind = hal.Kind(*datapathKind)
 
 	logger := log.GetNewLogger(log.GetDefaultConfig("venice_integ"))
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
@@ -195,7 +195,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
 		// mock datapath
-		dp, aerr := datapath.NewHalDatapath(it.datapathKind)
+		dp, aerr := hal.NewHalDatapath(it.datapathKind)
 		c.Assert(aerr, IsNil)
 		it.datapaths = append(it.datapaths, dp)
 
@@ -249,7 +249,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 		ag.Stop()
 	}
 	it.agents = []*netagent.Agent{}
-	it.datapaths = []*datapath.HalDatapath{}
+	it.datapaths = []*hal.Datapath{}
 
 	// stop server and client
 	it.ctrler.Stop()

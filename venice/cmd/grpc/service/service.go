@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
+	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -18,44 +19,44 @@ const (
 type RPCHandler struct {
 	sync.Mutex
 	resolver types.ResolverService
-	watchChs []chan *types.ServiceInstanceEvent
+	watchChs []chan *protos.ServiceInstanceEvent
 }
 
 // NewRPCHandler returns a new service RPC handler.
 func NewRPCHandler(resolver types.ResolverService) *RPCHandler {
 	s := &RPCHandler{
 		resolver: resolver,
-		watchChs: make([]chan *types.ServiceInstanceEvent, 0),
+		watchChs: make([]chan *protos.ServiceInstanceEvent, 0),
 	}
 	resolver.Register(s)
 	return s
 }
 
 // ListServices lists all services.
-func (s *RPCHandler) ListServices(ctx context.Context, req *api.Empty) (*types.ServiceList, error) {
+func (s *RPCHandler) ListServices(ctx context.Context, req *api.Empty) (*protos.ServiceList, error) {
 	return s.resolver.List(), nil
 }
 
 // GetService gets a service by name.
-func (s *RPCHandler) GetService(ctx context.Context, req *api.ObjectMeta) (*types.Service, error) {
+func (s *RPCHandler) GetService(ctx context.Context, req *api.ObjectMeta) (*protos.Service, error) {
 	return s.resolver.Get(req.Name), nil
 }
 
 // ListServiceInstances lists all service instances.
-func (s *RPCHandler) ListServiceInstances(ctx context.Context, req *api.Empty) (*types.ServiceInstanceList, error) {
+func (s *RPCHandler) ListServiceInstances(ctx context.Context, req *api.Empty) (*protos.ServiceInstanceList, error) {
 	return s.resolver.ListInstances(), nil
 }
 
 // GetServiceInstance gets a service instance by service and instance name.
-func (s *RPCHandler) GetServiceInstance(ctx context.Context, req *types.ServiceInstanceReq) (*types.ServiceInstance, error) {
+func (s *RPCHandler) GetServiceInstance(ctx context.Context, req *protos.ServiceInstanceReq) (*protos.ServiceInstance, error) {
 	return s.resolver.GetInstance(req.Service, req.Instance), nil
 }
 
 // WatchServiceInstances watches changes on service instances. Sends a
 // ServiceInstanceEventList to enable batching in the future without
 // breaking compatibility.
-func (s *RPCHandler) WatchServiceInstances(req *api.Empty, server types.ServiceAPI_WatchServiceInstancesServer) error {
-	ch := make(chan *types.ServiceInstanceEvent, outCount)
+func (s *RPCHandler) WatchServiceInstances(req *api.Empty, server protos.ServiceAPI_WatchServiceInstancesServer) error {
+	ch := make(chan *protos.ServiceInstanceEvent, outCount)
 	defer close(ch)
 	s.Lock()
 	s.watchChs = append(s.watchChs, ch)
@@ -72,18 +73,18 @@ func (s *RPCHandler) WatchServiceInstances(req *api.Empty, server types.ServiceA
 	}()
 	// Send existing instances first.
 	sList := s.resolver.List()
-	in := make([]*types.ServiceInstanceEvent, 0)
+	in := make([]*protos.ServiceInstanceEvent, 0)
 	for ii := range sList.Items {
 		svc := sList.Items[ii]
 		for jj := range svc.Instances {
-			in = append(in, &types.ServiceInstanceEvent{
-				Type:     types.ServiceInstanceEvent_Added,
+			in = append(in, &protos.ServiceInstanceEvent{
+				Type:     protos.ServiceInstanceEvent_Added,
 				Instance: svc.Instances[jj],
 			})
 		}
 	}
 	if len(in) != 0 {
-		out := &types.ServiceInstanceEventList{
+		out := &protos.ServiceInstanceEventList{
 			Items: in,
 		}
 		if err := server.Send(out); err != nil {
@@ -95,8 +96,8 @@ func (s *RPCHandler) WatchServiceInstances(req *api.Empty, server types.ServiceA
 	for {
 		select {
 		case in := <-ch:
-			out := &types.ServiceInstanceEventList{
-				Items: []*types.ServiceInstanceEvent{in},
+			out := &protos.ServiceInstanceEventList{
+				Items: []*protos.ServiceInstanceEvent{in},
 			}
 			if err := server.Send(out); err != nil {
 				log.Errorf("Error sending service instance event %v, %v", out, err)
@@ -110,7 +111,7 @@ func (s *RPCHandler) WatchServiceInstances(req *api.Empty, server types.ServiceA
 
 // OnNotifyServiceInstance handles service notification events and sends
 // it to all watchers.
-func (s *RPCHandler) OnNotifyServiceInstance(e types.ServiceInstanceEvent) error {
+func (s *RPCHandler) OnNotifyServiceInstance(e protos.ServiceInstanceEvent) error {
 	for _, watchCh := range s.watchChs {
 		watchCh <- &e
 	}

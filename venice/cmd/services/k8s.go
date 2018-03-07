@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
+	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -44,26 +45,26 @@ type k8sService struct {
 	cancel    context.CancelFunc
 	running   bool
 	isLeader  bool
-	modCh     chan types.Module // set of modules(deployments, ds, etc.) that needs to be deployed
+	modCh     chan protos.Module // set of modules(deployments, ds, etc.) that needs to be deployed
 	observers []types.K8sPodEventObserver
 }
 
 // configVolume is a reusable volume definition for Pensando configs.
-var configVolume = types.ModuleSpec_Volume{
+var configVolume = protos.ModuleSpec_Volume{
 	Name:      "configs",
 	HostPath:  "/etc/pensando",
 	MountPath: "/etc/pensando",
 }
 
 // logVolume is a reusable volume definition for Pensando logs.
-var logVolume = types.ModuleSpec_Volume{
+var logVolume = protos.ModuleSpec_Volume{
 	Name:      "logs",
 	HostPath:  "/var/log/pensando",
 	MountPath: "/var/log/pensando",
 }
 
 // filebeatConfigVolume is config volume definition for Filebeat.
-var filebeatConfigVolume = types.ModuleSpec_Volume{
+var filebeatConfigVolume = protos.ModuleSpec_Volume{
 	Name:      "configs",
 	HostPath:  "/etc/pensando/filebeat.yml",
 	MountPath: "/usr/share/filebeat/filebeat.yml",
@@ -71,7 +72,7 @@ var filebeatConfigVolume = types.ModuleSpec_Volume{
 
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
-var k8sModules = map[string]types.Module{
+var k8sModules = map[string]protos.Module{
 	globals.APIGw: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
@@ -79,13 +80,13 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.APIGw,
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_DaemonSet,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.APIGw,
 					Image: globals.APIGw,
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.APIGw,
 							Port: runtime.MustUint32(globals.APIGwRESTPort),
@@ -94,7 +95,7 @@ var k8sModules = map[string]types.Module{
 					Args: []string{"-resolver-urls", "$RESOLVER_URLS"},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -107,15 +108,15 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Filebeat,
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_DaemonSet,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.Filebeat,
 					Image: "$REGISTRY_URL/beats/filebeat:5.4.1",
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&filebeatConfigVolume,
 				&logVolume,
 			},
@@ -128,16 +129,16 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Ntp,
 		},
-		Spec: &types.ModuleSpec{
-			Type: types.ModuleSpec_DaemonSet,
-			Submodules: []*types.ModuleSpec_Submodule{
+		Spec: &protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:       globals.Ntp,
 					Image:      "$REGISTRY_URL/pens-ntp:v0.2",
 					Privileged: true,
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 			},
 		},
@@ -149,14 +150,14 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.APIServer,
 		},
-		Spec: &types.ModuleSpec{
-			Type:      types.ModuleSpec_Deployment,
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*types.ModuleSpec_Submodule{
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.APIServer,
 					Image: globals.APIServer,
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.APIServer,
 							Port: runtime.MustUint32(globals.APIServerPort),
@@ -167,7 +168,7 @@ var k8sModules = map[string]types.Module{
 					},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -180,14 +181,14 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.VCHub,
 		},
-		Spec: &types.ModuleSpec{
-			Type:      types.ModuleSpec_Deployment,
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*types.ModuleSpec_Submodule{
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.VCHub,
 					Image: globals.VCHub,
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.VCHub,
 							Port: runtime.MustUint32(globals.VCHubAPIPort),
@@ -200,7 +201,7 @@ var k8sModules = map[string]types.Module{
 					},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -213,14 +214,14 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Npm,
 		},
-		Spec: &types.ModuleSpec{
-			Type:      types.ModuleSpec_Deployment,
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*types.ModuleSpec_Submodule{
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.Npm,
 					Image: globals.Npm,
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Npm,
 							Port: runtime.MustUint32(globals.NpmRPCPort),
@@ -231,7 +232,7 @@ var k8sModules = map[string]types.Module{
 					},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -244,14 +245,14 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Influx,
 		},
-		Spec: &types.ModuleSpec{
-			Type:      types.ModuleSpec_Deployment,
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*types.ModuleSpec_Submodule{
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.Influx,
 					Image: "$REGISTRY_URL/influxdb:1.4.2",
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Influx,
 							Port: runtime.MustUint32(globals.InfluxHTTPPort),
@@ -262,7 +263,7 @@ var k8sModules = map[string]types.Module{
 					},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -275,14 +276,14 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Collector,
 		},
-		Spec: &types.ModuleSpec{
-			Type:      types.ModuleSpec_Deployment,
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*types.ModuleSpec_Submodule{
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.Collector,
 					Image: globals.Collector,
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Collector,
 							Port: runtime.MustUint32(globals.CollectorAPIPort),
@@ -293,7 +294,7 @@ var k8sModules = map[string]types.Module{
 					},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -306,10 +307,10 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.ElasticSearch,
 		},
-		Spec: &types.ModuleSpec{
-			Type:      types.ModuleSpec_Deployment,
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*types.ModuleSpec_Submodule{
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.ElasticSearch,
 					Image: "$REGISTRY_URL/elasticsearch/elasticsearch:5.4.1-pen",
@@ -336,14 +337,14 @@ var k8sModules = map[string]types.Module{
 		ObjectMeta: api.ObjectMeta{
 			Name: globals.Tpm,
 		},
-		Spec: &types.ModuleSpec{
-			Type:      types.ModuleSpec_Deployment,
+		Spec: &protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
-			Submodules: []*types.ModuleSpec_Submodule{
+			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.Tpm,
 					Image: globals.Tpm,
-					Services: []*types.ModuleSpec_Submodule_Service{
+					Services: []*protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Tpm,
 							Port: runtime.MustUint32(globals.TpmRPCPort),
@@ -354,7 +355,7 @@ var k8sModules = map[string]types.Module{
 					},
 				},
 			},
-			Volumes: []*types.ModuleSpec_Volume{
+			Volumes: []*protos.ModuleSpec_Volume{
 				&configVolume,
 				&logVolume,
 			},
@@ -365,7 +366,7 @@ var k8sModules = map[string]types.Module{
 // NewK8sService creates a new kubernetes service.
 func NewK8sService() types.K8sService {
 	return &k8sService{
-		modCh:     make(chan types.Module, maxModules),
+		modCh:     make(chan protos.Module, maxModules),
 		observers: make([]types.K8sPodEventObserver, 0),
 	}
 }
@@ -471,7 +472,7 @@ func (k *k8sService) runUntilCancel() {
 				if err != nil {
 					break
 				}
-				modulesToDeploy := make(map[string]types.Module)
+				modulesToDeploy := make(map[string]protos.Module)
 				for name, module := range k8sModules {
 					if _, ok := foundModules[name]; !ok {
 						modulesToDeploy[name] = module
@@ -487,19 +488,19 @@ func (k *k8sService) runUntilCancel() {
 }
 
 // getModules gets deployed modules.
-func getModules(client k8sclient.Interface) (map[string]types.Module, error) {
-	foundModules := make(map[string]types.Module)
+func getModules(client k8sclient.Interface) (map[string]protos.Module, error) {
+	foundModules := make(map[string]protos.Module)
 	dsList, err := client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	for ii := range dsList.Items {
-		foundModules[dsList.Items[ii].Name] = types.Module{
+		foundModules[dsList.Items[ii].Name] = protos.Module{
 			TypeMeta: api.TypeMeta{
 				Kind: "Module",
 			},
-			Spec: &types.ModuleSpec{
-				Type: types.ModuleSpec_DaemonSet,
+			Spec: &protos.ModuleSpec{
+				Type: protos.ModuleSpec_DaemonSet,
 			},
 		}
 	}
@@ -508,12 +509,12 @@ func getModules(client k8sclient.Interface) (map[string]types.Module, error) {
 		return nil, err
 	}
 	for ii := range dList.Items {
-		foundModules[dList.Items[ii].Name] = types.Module{
+		foundModules[dList.Items[ii].Name] = protos.Module{
 			TypeMeta: api.TypeMeta{
 				Kind: "Module",
 			},
-			Spec: &types.ModuleSpec{
-				Type: types.ModuleSpec_Deployment,
+			Spec: &protos.ModuleSpec{
+				Type: protos.ModuleSpec_Deployment,
 			},
 		}
 	}
@@ -521,23 +522,23 @@ func getModules(client k8sclient.Interface) (map[string]types.Module, error) {
 }
 
 // deployModule deploys the provided module using k8s.
-func (k *k8sService) deployModule(module *types.Module) {
+func (k *k8sService) deployModule(module *protos.Module) {
 	switch module.Spec.Type {
-	case types.ModuleSpec_DaemonSet:
+	case protos.ModuleSpec_DaemonSet:
 		createDaemonSet(k.client, module)
-	case types.ModuleSpec_Deployment:
+	case protos.ModuleSpec_Deployment:
 		createDeployment(k.client, module)
 	}
 }
 
 // deployModules deploys the provided modules using k8s.
-func (k *k8sService) deployModules(modules map[string]types.Module) {
+func (k *k8sService) deployModules(modules map[string]protos.Module) {
 	for _, module := range modules {
 		k.deployModule(&module)
 	}
 }
 
-func makeVolumes(module *types.Module) ([]v1.Volume, []v1.VolumeMount) {
+func makeVolumes(module *protos.Module) ([]v1.Volume, []v1.VolumeMount) {
 	volumes := make([]v1.Volume, 0)
 	volumeMounts := make([]v1.VolumeMount, 0)
 	for _, vol := range module.Spec.Volumes {
@@ -594,7 +595,7 @@ func populateImage(image string) string {
 	return image
 }
 
-func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Container {
+func makeContainers(module *protos.Module, volumeMounts []v1.VolumeMount) []v1.Container {
 	containers := make([]v1.Container, 0)
 	for _, sm := range module.Spec.Submodules {
 		ports := make([]v1.ContainerPort, 0)
@@ -621,7 +622,7 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 }
 
 // createDaemonSet creates a DaemonSet object.
-func createDaemonSet(client k8sclient.Interface, module *types.Module) error {
+func createDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 	dsConfig := &clientTypes.DaemonSet{
@@ -657,7 +658,7 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) error {
 }
 
 // createDeployment creates a Deployment object.
-func createDeployment(client k8sclient.Interface, module *types.Module) error {
+func createDeployment(client k8sclient.Interface, module *protos.Module) error {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
@@ -694,12 +695,12 @@ func createDeployment(client k8sclient.Interface, module *types.Module) error {
 }
 
 // deleteModules deletes modules using k8s.
-func (k *k8sService) deleteModules(modules map[string]types.Module) {
+func (k *k8sService) deleteModules(modules map[string]protos.Module) {
 	for name, module := range modules {
 		switch module.Spec.Type {
-		case types.ModuleSpec_DaemonSet:
+		case protos.ModuleSpec_DaemonSet:
 			k.deleteDaemonSet(name)
-		case types.ModuleSpec_Deployment:
+		case protos.ModuleSpec_Deployment:
 			k.deleteDeployment(name)
 		}
 	}

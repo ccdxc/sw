@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package datapath
+package hal
 
 import (
 	"context"
@@ -73,8 +73,8 @@ type DB struct {
 	LifDelDB         map[string]*halproto.LifDeleteRequestMsg
 }
 
-// HalDatapath contains mock and hal clients.
-type HalDatapath struct {
+// Datapath contains mock and hal clients.
+type Datapath struct {
 	sync.Mutex
 	Kind Kind
 	Hal  Hal
@@ -97,10 +97,10 @@ func (hd *Hal) Fatalf(format string, args ...interface{}) {
 }
 
 // NewHalDatapath returns a mock hal datapath
-func NewHalDatapath(kind Kind) (*HalDatapath, error) {
+func NewHalDatapath(kind Kind) (*Datapath, error) {
 	var err error
 	var hal Hal
-	haldp := HalDatapath{}
+	haldp := Datapath{}
 	haldp.Kind = kind
 
 	db := DB{EndpointDB: make(map[string]*halproto.EndpointRequestMsg),
@@ -186,7 +186,7 @@ func ipv42int(ip net.IP) uint32 {
 
 // FindEndpoint finds an endpoint in datapath
 // used for testing mostly..
-func (hd *HalDatapath) FindEndpoint(epKey string) (*halproto.EndpointRequestMsg, error) {
+func (hd *Datapath) FindEndpoint(epKey string) (*halproto.EndpointRequestMsg, error) {
 	hd.Lock()
 	epr, ok := hd.DB.EndpointDB[epKey]
 	hd.Unlock()
@@ -199,7 +199,7 @@ func (hd *HalDatapath) FindEndpoint(epKey string) (*halproto.EndpointRequestMsg,
 
 // FindEndpointDel finds an endpoint delete record
 // used for testing mostly
-func (hd *HalDatapath) FindEndpointDel(epKey string) (*halproto.EndpointDeleteRequestMsg, error) {
+func (hd *Datapath) FindEndpointDel(epKey string) (*halproto.EndpointDeleteRequestMsg, error) {
 	hd.Lock()
 	epdr, ok := hd.DB.EndpointDelDB[epKey]
 	hd.Unlock()
@@ -211,19 +211,19 @@ func (hd *HalDatapath) FindEndpointDel(epKey string) (*halproto.EndpointDeleteRe
 }
 
 // GetEndpointCount returns number of endpoints in db
-func (hd *HalDatapath) GetEndpointCount() int {
+func (hd *Datapath) GetEndpointCount() int {
 	hd.Lock()
 	defer hd.Unlock()
 	return len(hd.DB.EndpointDB)
 }
 
 // SetAgent sets the agent for this datapath
-func (hd *HalDatapath) SetAgent(ag state.DatapathIntf) error {
+func (hd *Datapath) SetAgent(ag state.DatapathIntf) error {
 	return nil
 }
 
 // CreateLocalEndpoint creates an endpoint
-func (hd *HalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
+func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -317,7 +317,7 @@ func (hd *HalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 }
 
 // CreateRemoteEndpoint creates remote endpoint
-func (hd *HalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -410,7 +410,7 @@ func (hd *HalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.
 }
 
 // UpdateLocalEndpoint updates the endpoint
-func (hd *HalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
@@ -500,7 +500,7 @@ func (hd *HalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 }
 
 // UpdateRemoteEndpoint updates an existing endpoint
-func (hd *HalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
 	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
 
@@ -590,7 +590,7 @@ func (hd *HalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.
 }
 
 // DeleteLocalEndpoint deletes an endpoint
-func (hd *HalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
+func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
 	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
@@ -638,7 +638,7 @@ func (hd *HalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 }
 
 // DeleteRemoteEndpoint deletes remote endpoint
-func (hd *HalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
+func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
 	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
@@ -686,7 +686,7 @@ func (hd *HalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 }
 
 // CreateNetwork creates a network in datapath
-func (hd *HalDatapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
+func (hd *Datapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) error {
 	// construct vrf key that gets passed on to hal
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -730,7 +730,7 @@ func (hd *HalDatapath) CreateNetwork(nw *netproto.Network, tn *netproto.Tenant) 
 }
 
 // UpdateNetwork updates a network in datapath
-func (hd *HalDatapath) UpdateNetwork(nw *netproto.Network) error {
+func (hd *Datapath) UpdateNetwork(nw *netproto.Network) error {
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -766,7 +766,7 @@ func (hd *HalDatapath) UpdateNetwork(nw *netproto.Network) error {
 }
 
 // DeleteNetwork deletes a network from datapath
-func (hd *HalDatapath) DeleteNetwork(nw *netproto.Network) error {
+func (hd *Datapath) DeleteNetwork(nw *netproto.Network) error {
 	// build the segment message
 	seg := halproto.L2SegmentDeleteRequest{
 		Meta: &halproto.ObjectMeta{},
@@ -792,7 +792,7 @@ func (hd *HalDatapath) DeleteNetwork(nw *netproto.Network) error {
 }
 
 // CreateSecurityGroup creates a security group
-func (hd *HalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	var secGroupPolicyRequests []*halproto.SecurityGroupPolicySpec
 
 	// convert the rules
@@ -848,7 +848,7 @@ func (hd *HalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 }
 
 // UpdateSecurityGroup updates a security group
-func (hd *HalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
+func (hd *Datapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	var secGroupPolicyRequests []*halproto.SecurityGroupPolicySpec
 	// convert the rules
 	for _, rl := range sg.Spec.Rules {
@@ -902,7 +902,7 @@ func (hd *HalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 }
 
 // DeleteSecurityGroup deletes a security group
-func (hd *HalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+func (hd *Datapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	// build security group message
 	sgdel := halproto.SecurityGroupDeleteRequest{
 		Meta: &halproto.ObjectMeta{},
@@ -932,7 +932,7 @@ func (hd *HalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 }
 
 // CreateTenant creates a tenant
-func (hd *HalDatapath) CreateTenant(tn *netproto.Tenant) error {
+func (hd *Datapath) CreateTenant(tn *netproto.Tenant) error {
 	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
 			VrfId: tn.Status.TenantID,
@@ -962,7 +962,7 @@ func (hd *HalDatapath) CreateTenant(tn *netproto.Tenant) error {
 }
 
 // DeleteTenant deletes a tenant
-func (hd *HalDatapath) DeleteTenant(tn *netproto.Tenant) error {
+func (hd *Datapath) DeleteTenant(tn *netproto.Tenant) error {
 
 	vrfDelReq := halproto.VrfDeleteRequest{
 		Meta: &halproto.ObjectMeta{
@@ -991,7 +991,7 @@ func (hd *HalDatapath) DeleteTenant(tn *netproto.Tenant) error {
 }
 
 // UpdateTenant deletes a tenant
-func (hd *HalDatapath) UpdateTenant(tn *netproto.Tenant) error {
+func (hd *Datapath) UpdateTenant(tn *netproto.Tenant) error {
 	vrfSpec := halproto.VrfSpec{
 		Meta: &halproto.ObjectMeta{
 			VrfId: tn.Status.TenantID,
@@ -1018,7 +1018,7 @@ func (hd *HalDatapath) UpdateTenant(tn *netproto.Tenant) error {
 }
 
 // CreateInterface creates an interface
-func (hd *HalDatapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) CreateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
 	case "LIF":
@@ -1092,7 +1092,7 @@ func (hd *HalDatapath) CreateInterface(intf *netproto.Interface, tn *netproto.Te
 }
 
 // DeleteInterface deletes an interface
-func (hd *HalDatapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
 	var ifDelReq *halproto.InterfaceDeleteRequest
 	switch intf.Spec.Type {
 	case "LIF":
@@ -1160,7 +1160,7 @@ func (hd *HalDatapath) DeleteInterface(intf *netproto.Interface, tn *netproto.Te
 }
 
 // UpdateInterface updates an interface
-func (hd *HalDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
+func (hd *Datapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Tenant) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
 	case "LIF":
@@ -1233,7 +1233,7 @@ func (hd *HalDatapath) UpdateInterface(intf *netproto.Interface, tn *netproto.Te
 	return nil
 }
 
-func (hd *HalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.SecurityGroupPolicySpec, error) {
+func (hd *Datapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.SecurityGroupPolicySpec, error) {
 	//var policyRules *halproto.SGPolicy
 	// convert the action
 	act := halproto.FirewallAction_FIREWALL_ACTION_NONE

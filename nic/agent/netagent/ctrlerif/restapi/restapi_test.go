@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/hal"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,7 +33,7 @@ var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datap
 
 func setup() (*RestServer, error) {
 
-	dp, err := datapath.NewHalDatapath(datapath.Kind(*datapathKind))
+	dp, err := hal.NewHalDatapath(hal.Kind(*datapathKind))
 	if err != nil {
 		log.Errorf("Could not create HAL datapath. Kind: %v, Error %v", datapathKind, err)
 		return nil, err

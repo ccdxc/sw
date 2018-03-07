@@ -8,7 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
