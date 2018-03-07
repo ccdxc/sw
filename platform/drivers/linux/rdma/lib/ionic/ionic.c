@@ -162,7 +162,6 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 
 	/* XXX cleanup */
 	cq->qtype = resp.qtype;
-	cq->udpi = &ctx->udpi;
 	/* XXX cleanup */
 
 	pthread_mutex_lock(&ctx->mut);
@@ -415,8 +414,8 @@ again:
 
 static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 {
+	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
-	uint64_t *dbpage = (void *)cq->udpi->dbpage; /* XXX cleanup */
 	struct ionic_qp *qp;
 	struct cqwqe_be_t cqe;
 	uint16_t old_prod;
@@ -525,7 +524,7 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 
 out:
 	if (likely(cq->q.prod != old_prod)) {
-		ionic_dbell_ring(dbpage,
+		ionic_dbell_ring(ctx->dbpage,
 				 ionic_queue_dbell_val(&cq->q),
 				 IONIC_QTYPE_RDMA_COMP);
 	}
@@ -656,7 +655,6 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
 	qp->sq_qtype = resp.sq_qtype;
 	qp->rq_qtype = resp.rq_qtype;
 	qp->qpst = IBV_QPS_RESET;
-	qp->udpi = &ctx->udpi;
 
 	/* Save/return the altered Caps. */
 	cap->max_ssge = attr->cap.max_send_sge;
@@ -1050,7 +1048,6 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
-	uint64_t *dbpage = (void *)qp->udpi->dbpage; /* XXX cleanup */
 	struct sqwqe_t *sqe;
 	struct ionic_sq_meta *meta;
 	int ret = 0, bytes = 0, nreq = 0;
@@ -1151,7 +1148,7 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 
 out:
 	if (nreq) {
-		ionic_dbell_ring(dbpage,
+		ionic_dbell_ring(ctx->dbpage,
 				 ionic_queue_dbell_val(&qp->sq),
 				 IONIC_QTYPE_RDMA_SEND);
 	}
@@ -1165,7 +1162,6 @@ static int ionic_post_recv(struct ibv_qp *ibqp,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
-	uint64_t *dbpage = (void *)qp->udpi->dbpage; /* XXX cleanup */
 	struct rqwqe_t *rqe;
 	struct ionic_rq_meta *meta;
 	int ret = 0, nreq = 0, bytes = 0;
@@ -1212,7 +1208,7 @@ static int ionic_post_recv(struct ibv_qp *ibqp,
 
 out:
 	if (nreq) {
-		ionic_dbell_ring(dbpage,
+		ionic_dbell_ring(ctx->dbpage,
 				 ionic_queue_dbell_val(&qp->rq),
 				 IONIC_QTYPE_RDMA_RECV);
 	}
@@ -1325,17 +1321,15 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	dev->cqe_size = resp.cqe_size;
 	dev->max_cq_depth = resp.max_cqd;
 
-	/* mmap shared page. */
-	ctx->udpi.dbpage = (struct ionic_doorbell *) mmap(NULL, dev->pg_size,
-							   PROT_WRITE,
-							   MAP_SHARED, cmd_fd, 0);
+	ctx->dbpage = ionic_map_device(dev->pg_size, cmd_fd, 0);
+	if (!ctx->dbpage) {
+		rc = errno;
+		goto err_cmd;
+	}
 
 	pthread_mutex_init(&ctx->mut, NULL);
 	tbl_init(&ctx->qp_tbl);
 	list_head_init(&ctx->cq_list);
-
-	pthread_spin_init(&ctx->udpi.db_lock,
-			  PTHREAD_PROCESS_PRIVATE);
 
 	verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 
@@ -1356,14 +1350,7 @@ static void ionic_free_context(struct ibv_context *ibctx)
 	tbl_destroy(&ctx->qp_tbl);
 	pthread_mutex_destroy(&ctx->mut);
 
-	/* Un-map DPI only for the first PD that was
-	 * allocated in this context.
-	 */
-	if (ctx->udpi.dbpage && ctx->udpi.dbpage != MAP_FAILED) {
-		pthread_spin_destroy(&ctx->udpi.db_lock);
-		munmap(ctx->udpi.dbpage, dev->pg_size);
-		ctx->udpi.dbpage = NULL;
-	}
+	ionic_unmap(ctx->dbpage, dev->pg_size);
 
 	verbs_uninit_context(&ctx->vctx);
 	free(ctx);

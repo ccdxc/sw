@@ -20,11 +20,6 @@
 
 #define IONIC_UD_QP_HW_STALL	0x400000
 
-struct ionic_dpi {
-	struct ionic_doorbell	*dbpage;
-	pthread_spinlock_t	db_lock;
-};
-
 struct ionic_pd {
 	struct ibv_pd		ibpd;
 	uint32_t		pdid;
@@ -33,7 +28,8 @@ struct ionic_pd {
 struct ionic_ctx {
 	struct verbs_context	vctx;
 	uint32_t		max_qp;
-	struct ionic_dpi	udpi;
+
+	uint64_t		*dbpage;
 
 	pthread_mutex_t		mut;
 	struct tbl_root		qp_tbl;
@@ -51,7 +47,6 @@ struct ionic_cq {
 
 	/* XXX cleanup */
 	uint8_t			qtype;
-	struct ionic_dpi	*udpi;
 };
 
 struct ionic_srq {
@@ -102,7 +97,6 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta;
 
 	/* XXX cleanup */
-	struct ionic_dpi	*udpi;
 	struct ionic_qpcap	cap;
 
 	uint32_t		tbl_indx;
