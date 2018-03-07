@@ -573,6 +573,7 @@
 		PortGetRequestMsg
 		PortGetResponse
 		PortGetResponseMsg
+		MacStats
 		ProxyKeyHandle
 		ProxySpec
 		ProxyRequestMsg

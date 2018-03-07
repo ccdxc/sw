@@ -179,13 +179,13 @@ extern bool port_id_compare_key_func(void *key1, void *key2);
 
 // SVC CRUD APIs
 hal_ret_t port_create(PortSpec& spec,
-                           PortResponse *rsp);
+                      PortResponse *rsp);
 hal_ret_t port_update(PortSpec& spec,
-                           PortResponse *rsp);
+                      PortResponse *rsp);
 hal_ret_t port_delete(PortDeleteRequest& req,
-                           PortDeleteResponseMsg *rsp);
+                      PortDeleteResponseMsg *rsp);
 hal_ret_t port_get(port::PortGetRequest& req,
-                        port::PortGetResponse *rsp);
+                   port::PortGetResponse *rsp);
 
 hal_ret_t linkmgr_init();
 
