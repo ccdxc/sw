@@ -1,0 +1,31 @@
+# Topology Specification
+meta:
+    id: TOPO_CACHEPERF
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc: None
+acls    : None
+qos     : True
+
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
+
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_CACHEPERF
+        count   : 1
+        lifns   : range/101/101
+
+cpu: None
