@@ -339,6 +339,7 @@ itree_t::insert(const itree_t::node_t *node, uint32_t low, uint32_t high,
     return copy;
 }
 
+
 //------------------------------------------------------------------------
 // deletes the left most node in the tree
 //
@@ -656,6 +657,42 @@ itree_t::remove(const itree_t **treep, uint32_t low, uint32_t high,
     return HAL_RET_OK;
     
 }
+
+//------------------------------------------------------------------------
+// cost to lookup the specified interval if inserted into the subtree
+// rooted at node.
+//------------------------------------------------------------------------
+uint32_t
+itree_t::cost(uint32_t low, uint32_t high) const
+{
+    static uint32_t (*cost_)(const node_t *node, uint32_t low, uint32_t high) =
+        [] (const node_t *node, uint32_t low, uint32_t high) -> uint32_t {
+        if (EMPTY(node)) {
+            return 0;
+        }
+        
+        // will be insereted into left subtree when
+        //  - interval's low is less than node's low
+        //  - interval's high is less than node's high and low is
+        //    equal to node's low
+        // otherwise, into right subtree
+        if ((low < node->low) || (low == node->low && high < node->high)) {
+            return 1 + cost_(node->left, low, high);
+        } else if (low > node->low || high > node->high) {
+            return 1 + cost_(node->left, low, high);
+        }
+        
+        // interval mathces the cur node, then it will be appended to
+        // the per node list (so the cost of insertion will be 1 +
+        // all the existing entriees in the subtree whose interval
+        // intersects)
+        return 1 + walk(node, low, high, NULL,
+                        [](const void* arg, const ref_t *ref) { return true; });
+    };
+
+    return cost_(root_, low, high);
+}
+
 
 //------------------------------------------------------------------------
 // Check if all the red black properties are met

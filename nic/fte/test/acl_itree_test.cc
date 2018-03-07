@@ -368,6 +368,60 @@ TEST_F(acl_itree_test, itree_random)
     tree_empty->deref();     
 }
 
+TEST_F(acl_itree_test, itree_cost)
+{
+    uint32_t low, high;
+    int val;
+
+    const int num_intervals = 100000, max_range = 255, max_low = 1000, num_trees = 5; 
+
+    // genenrate random intervals
+    vector<tuple<int, uint32_t, uint32_t>> intervals;
+    for (int i = 0; i < num_intervals; i++) {
+        uint32_t low = myrandom(max_low);
+        uint32_t high = low + myrandom(max_range);
+        intervals.push_back({i, low, high});
+    }
+
+    // insert all entries into multiple trees optimizing cost
+    const itree_t *trees[num_trees];
+    
+    for (int i = 0; i < num_trees; i++)
+        trees[i] = itree_t::create();
+    
+    std::random_shuffle(intervals.begin(), intervals.end(), myrandom);
+    
+    for (auto entry: intervals) {
+        uint32_t cost = ~0;
+        int low_cost_idx = 0;
+        
+        tie(val, low, high) = entry;
+        for (int i = 0; i < num_trees; i++) {
+            uint32_t tmp = trees[i]->cost(low, high);
+            if (tmp < cost) {
+                cost = tmp;
+                low_cost_idx = i;
+            }
+        }
+        
+        EXPECT_EQ(insert(&trees[low_cost_idx], low, high, val), HAL_RET_OK);
+    }
+
+    uint32_t max_height = 0, min_height = ~0;
+    for (int i = 0; i < num_trees; i++) {
+        uint32_t height = trees[i]->check();
+        if (height > max_height)
+            max_height = height;
+
+        if (height < min_height)
+            min_height = height;
+
+        trees[i]->deref();
+    }
+
+    EXPECT_LE(max_height - min_height, 1);
+}
+
 void timeit(const std::string &msg, int count, std::function<void()> fn)
 {
     cout << msg << " " << count << " " << std::flush;
@@ -388,7 +442,7 @@ TEST_F(acl_itree_test, itree_benchmark)
     uint32_t low, high;
     int val;
 
-    const int num_intervals = 1000000,
+    const int num_intervals = 100000,
         max_low = 100*num_intervals,
         max_range = 255,
         num_updates = num_intervals/2,

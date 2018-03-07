@@ -22,7 +22,6 @@ union acl_field_val_t {
     uint8_t u8;
     uint16_t u16;
     uint32_t u32;
-    uint64_t u64;
 };
 
 /**
@@ -50,6 +49,9 @@ struct acl_field_t {
 	 * exact -> 0x06/0xff value=6, mask_range=0xff.
 	 */
 };
+
+#define EMPTY_FIELD(fld) \
+    ((fld).value.u32 == 0 && (fld).mask_range.u32 == 0)
 
 /**
  * Miscellaneous data for ACL rule.

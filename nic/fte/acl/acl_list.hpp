@@ -5,8 +5,6 @@
 
 namespace acl {
 
-struct acl_list_t;
-
 void *acl_list_create(const acl_config_t *cfg, uint8_t fid);
 const void *acl_list_clone(const acl_config_t *cfg, uint8_t fid,
                            const void *list);

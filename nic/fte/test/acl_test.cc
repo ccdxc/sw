@@ -4,6 +4,7 @@
 #include "nic/fte/acl/acl.hpp"
 #include "nic/fte/acl/acl_ctx.hpp"
 #include "nic/fte/acl/list.hpp"
+#include "nic/fte/acl/itree.hpp"
 
 using namespace acl;
 using namespace std;
@@ -80,6 +81,8 @@ protected:
         EXPECT_EQ(acl_ctx_t::num_ctx_in_use(), 0);
         EXPECT_EQ(list_t::num_lists_in_use(), 0);
         EXPECT_EQ(list_t::num_items_in_use(), 0);
+        EXPECT_EQ(itree_t::num_trees_in_use(), 0);
+        EXPECT_EQ(itree_t::num_nodes_in_use(), 0);
     }
 };
 

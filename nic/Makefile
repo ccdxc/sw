@@ -190,6 +190,11 @@ gen-proto:
 build-proto:
 	$(PATH_OPTS) $(MAKE) -j8 $(BUILD_OPTS) -C gen/proto/hal
 
+# make target to run bazel build with appropriate build OPTS
+# usage: make bazel-build target=fte:fte_test
+bazel-build:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) $(target)
+
 hal:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
 

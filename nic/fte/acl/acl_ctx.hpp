@@ -33,11 +33,18 @@ private:
     acl_config_t           cfg_;
     ref_t                  ref_count_;
     const void             *tables_[ACL_MAX_FIELDS];
+    const void             *def_list_; // default catch all list
 
 };
 
+
 bool acl_rule_match(const acl_config_t *cfg, const acl_rule_t *rule,
                     const uint8_t*key);
+
+uint32_t acl_field_key(const acl_config_t *cfg, uint8_t fid, const uint8_t *key);
+
+bool acl_field_interval(const acl_config_t *cfg, uint8_t fid, const acl_rule_t *rule,
+                        uint32_t *low, uint32_t *high);
 
 bool acl_rule_compare(const acl_rule_t *rule,
                      const acl_config_t *cfg, const acl_rule_t *other);

@@ -21,8 +21,7 @@ public:
     void deref() const {ref_dec(&this->ref_count_);}
     itree_t *copy() const;
 
-    uint32_t cost(uint32_t low, uint32_t high,
-                  const ref_t *entry, const void *arg, cb_t match) const;
+    uint32_t cost(uint32_t low, uint32_t high) const;
     uint32_t walk( uint32_t low, uint32_t high, const void *arg, cb_t cb) const;
 
     // itree update methods, updates the tree pointer
@@ -160,4 +159,5 @@ private:
     static uint32_t walk(const node_t *node, uint32_t low, uint32_t high,
                          const void* arg, cb_t cb);
 };
+
 } // namespace acl
