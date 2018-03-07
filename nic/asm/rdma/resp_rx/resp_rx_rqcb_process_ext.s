@@ -30,10 +30,12 @@ resp_rx_rqcb_process_ext:
     //For now, checking on ts flag for both options ts and mss to avoid performance cost
     bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
     CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE) //BD Slot
+
     //get rqcb3 address
-    add      r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB3_OFFSET_BYTES
+    add      r6, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
+    add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_ts_value)
     memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
-    add      r5, r5, 8
+    add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_mss)
     memwr.h  r5, CAPRI_APP_DATA_ROCE_OPT_MSS
 
 skip_roce_opt_parsing:

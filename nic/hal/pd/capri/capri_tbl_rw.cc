@@ -372,6 +372,7 @@ int
 capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
                          int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                          int stage_apphdr_off, int stage_tableid_apphdr_off,
+                         int stage_apphdr_ext_off, int stage_tableid_apphdr_ext_off,
                          int stage_txdma_act, int stage_tableid_txdma_act,
                          int stage_txdma_act_ext, int stage_tableid_txdma_act_ext)
 {
@@ -432,6 +433,11 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
             capri_action_p4plus_asm_base,
             CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0);
 
+    // Program app-header offset 64 table config @(stage, stage_tableid) with the same PC as above
+    capri_program_p4plus_table_mpu_pc_args(
+            stage_tableid_apphdr_ext_off, te_csr,
+            capri_action_p4plus_asm_base,
+            CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64);
 
     // Resolve the p4plus txdma stage 0 program to its action pc
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,

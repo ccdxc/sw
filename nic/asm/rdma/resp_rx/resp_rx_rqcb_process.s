@@ -64,20 +64,20 @@ resp_rx_rqcb_process:
     // populate global fields
     add r3, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
 
-   // moved to _ext program
-   CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
-   CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
+#  // moved to _ext program
+#  CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
+#  CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
 
 #   //Temporary code to test UDP options
 #   //For now, checking on ts flag for both options ts and mss to avoid performance cost
-   bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
-   CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE) //BD Slot
-   //get rqcb3 address
-   add      r6, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
-   add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_ts_value)
-   memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
-   add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_mss)
-   memwr.h  r5, CAPRI_APP_DATA_ROCE_OPT_MSS
+#  bbeq     CAPRI_APP_DATA_ROCE_OPT_TS_VALID, 0, skip_roce_opt_parsing
+#  CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE) //BD Slot
+#  //get rqcb3 address
+#  add      r6, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
+#  add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_ts_value)
+#  memwr.d  r5, CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO
+#  add      r5, r6, FIELD_OFFSET(rqcb3_t, roce_opt_mss)
+#  memwr.h  r5, CAPRI_APP_DATA_ROCE_OPT_MSS
 
 skip_roce_opt_parsing:
 
@@ -87,8 +87,8 @@ skip_roce_opt_parsing:
     CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
-    CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
+#   CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
+#   CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
 start_recirc_packet:
     add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
