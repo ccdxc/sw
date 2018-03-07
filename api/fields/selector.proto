@@ -1,0 +1,40 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+package fields;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+
+// Inspired by k8s field selector.
+
+// Selector is used to select objects by fields. Requirements in the selector are ANDed.
+// A selector with no Requirements does not select anything.
+message Selector {
+  // Requirements are ANDed.
+  repeated Requirement Requirements=1 [(gogoproto.jsontag) = "requirements,omitempty"];
+}
+
+// Operator defines the supported operators for each Requirement.
+enum Operator {
+  equals       = 0;  // Key should match the Value
+  notEquals    = 1;  // Key should not match the Value
+  in           = 2;  // Key should match one of the Values
+  notIn        = 3;  // Key should not match any of the Values
+}
+
+// Requirement defines a single matching condition for a selector.
+message Requirement {
+
+  // The label key that the condition applies to.
+  string Key=1 [(gogoproto.jsontag) = "key"];
+
+  // Condition checked for the key.
+  string Operator=2 [(gogoproto.jsontag) = "operator",
+                     (venice.check) = "StrEnum(Operator)"];
+
+  // Values contains one or more values corresponding to the label key. "equals" and
+  // "notEquals" operators need a single Value. "in" and "notIn" operators can have
+  // one or more values.
+  repeated string Values=3 [(gogoproto.jsontag) = "values"];
+}

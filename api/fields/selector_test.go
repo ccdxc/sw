@@ -1,4 +1,4 @@
-package labels
+package fields
 
 import (
 	"strings"
@@ -23,7 +23,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Adapted from k8s.io/apimachinery/pkg/labels/selector_test.go
+// Adapted from k8s.io/apimachinery/pkg/labels/selector_test.go &&
+//              k8s.io/apimachinery/pkg/fields/selector_test.go
 
 func TestSelectorParse(t *testing.T) {
 	testGoodStrings := []string{
@@ -80,6 +81,52 @@ func TestSelectorParse(t *testing.T) {
 	}
 }
 
+func TestSelectorParseWithEscape(t *testing.T) {
+	testGoodStrings := []string{
+		"",
+		"x=a\\=1,y=b\\\\2,z=c\\,3",
+		"x!=a\\=1,y=b\\\\2",
+	}
+	testGoodSetStrings := []string{
+		"x in (a\\=1,b\\\\2,c\\,3)",
+		"x in (a\\=1,b\\\\2),y in (c\\,3,d\\=4)",
+		"x notin (a\\=1,b\\\\2,c\\,3)",
+		"x in (a\\=1,b\\\\2),y notin (a\\=1,b\\\\2)",
+	}
+	testBadStrings := []string{
+		"x=a\\a||y=b",
+		"x=a\\b",
+		"x=(a\\\\1,b",
+		"x=\\",
+		"x in \\",
+		"x in (=\\)",
+	}
+	for _, test := range testGoodStrings {
+		lq, err := Parse(test)
+		if err != nil {
+			t.Errorf("%v: error %v (%#v)\n", test, err, err)
+		}
+		if strings.Replace(test, " ", "", -1) != lq.Print() {
+			t.Errorf("%v restring gave: %v\n", test, lq.Print())
+		}
+	}
+	for _, test := range testGoodSetStrings {
+		lq, err := Parse(test)
+		if err != nil {
+			t.Errorf("%v: error %v (%#v)\n", test, err, err)
+		}
+		if test != lq.Print() {
+			t.Errorf("%v restring gave: %v\n", test, lq.Print())
+		}
+	}
+	for _, test := range testBadStrings {
+		_, err := Parse(test)
+		if err == nil {
+			t.Errorf("%v: did not get expected error\n", test)
+		}
+	}
+}
+
 func TestDeterministicParse(t *testing.T) {
 	s1, err := Parse("x=a,a=x")
 	s2, err2 := Parse("a=x,x=a")
@@ -91,25 +138,25 @@ func TestDeterministicParse(t *testing.T) {
 	}
 }
 
-func expectMatch(t *testing.T, selector string, ls Set) {
+func expectMatch(t *testing.T, selector string, fs Set) {
 	lq, err := Parse(selector)
 	if err != nil {
 		t.Errorf("Unable to parse %v as a selector\n", selector)
 		return
 	}
-	if !lq.Matches(ls) {
-		t.Errorf("Wanted %s to match '%s', but it did not.\n", selector, ls)
+	if !lq.Matches(fs) {
+		t.Errorf("Wanted %s to match '%s', but it did not.\n", selector, fs)
 	}
 }
 
-func expectNoMatch(t *testing.T, selector string, ls Set) {
+func expectNoMatch(t *testing.T, selector string, fs Set) {
 	lq, err := Parse(selector)
 	if err != nil {
 		t.Errorf("Unable to parse %v as a selector\n", selector)
 		return
 	}
-	if lq.Matches(ls) {
-		t.Errorf("Wanted '%s' to not match '%s', but it did.", selector, ls)
+	if lq.Matches(fs) {
+		t.Errorf("Wanted '%s' to not match '%s', but it did.", selector, fs)
 	}
 }
 
@@ -128,16 +175,16 @@ func TestSelectorMatches(t *testing.T) {
 	expectNoMatch(t, "x in (z)", Set{"x": "d"})
 	expectNoMatch(t, "x in (a,b,z)", Set{"x": "d"})
 
-	labelset := Set{
+	fieldset := Set{
 		"foo": "bar",
 		"baz": "blah",
 	}
-	expectMatch(t, "foo=bar", labelset)
-	expectMatch(t, "baz=blah", labelset)
-	expectMatch(t, "foo=bar,baz=blah", labelset)
-	expectNoMatch(t, "foo=blah", labelset)
-	expectNoMatch(t, "baz=bar", labelset)
-	expectNoMatch(t, "foo=bar,foobar=bar,baz=blah", labelset)
+	expectMatch(t, "foo=bar", fieldset)
+	expectMatch(t, "baz=blah", fieldset)
+	expectMatch(t, "foo=bar,baz=blah", fieldset)
+	expectNoMatch(t, "foo=blah", fieldset)
+	expectNoMatch(t, "baz=bar", fieldset)
+	expectNoMatch(t, "foo=bar,foobar=bar,baz=blah", fieldset)
 }
 
 func expectMatchDirect(t *testing.T, selector, ls Set) {
@@ -153,16 +200,16 @@ func expectNoMatchDirect(t *testing.T, selector, ls Set) {
 }
 
 func TestSetMatches(t *testing.T) {
-	labelset := Set{
+	fieldset := Set{
 		"foo": "bar",
 		"baz": "blah",
 	}
-	expectNoMatchDirect(t, Set{}, labelset)
-	expectNoMatchDirect(t, Set{"foo": "blah"}, labelset)
-	expectNoMatchDirect(t, Set{"baz": "baz"}, labelset)
-	expectMatchDirect(t, Set{"foo": "bar"}, labelset)
-	expectMatchDirect(t, Set{"baz": "blah"}, labelset)
-	expectMatchDirect(t, Set{"foo": "bar", "baz": "blah"}, labelset)
+	expectNoMatchDirect(t, Set{}, fieldset)
+	expectNoMatchDirect(t, Set{"foo": "blah"}, fieldset)
+	expectNoMatchDirect(t, Set{"baz": "baz"}, fieldset)
+	expectMatchDirect(t, Set{"foo": "bar"}, fieldset)
+	expectMatchDirect(t, Set{"baz": "blah"}, fieldset)
+	expectMatchDirect(t, Set{"foo": "bar", "baz": "blah"}, fieldset)
 }
 
 func TestLexer(t *testing.T) {
@@ -237,6 +284,7 @@ func TestLexerSequence(t *testing.T) {
 		}
 	}
 }
+
 func TestParserLookahead(t *testing.T) {
 	testcases := []struct {
 		s string
@@ -250,6 +298,48 @@ func TestParserLookahead(t *testing.T) {
 		{"", []Token{EndOfStringToken}},
 		{"x in (),y", []Token{IdentifierToken, InToken, OpenParToken, ClosedParToken, CommaToken, IdentifierToken, EndOfStringToken}},
 		{"!= (), = notin", []Token{NotEqualsToken, OpenParToken, ClosedParToken, CommaToken, EqualsToken, NotInToken, EndOfStringToken}},
+	}
+	for _, v := range testcases {
+		p := &Parser{l: &Lexer{s: v.s, pos: 0}, position: 0}
+		p.scan()
+		if len(p.scannedItems) != len(v.t) {
+			t.Errorf("Expected %d items found %d", len(v.t), len(p.scannedItems))
+		}
+		for {
+			token, lit := p.lookahead(KeyAndOperator)
+
+			token2, lit2 := p.consume(KeyAndOperator)
+			if token == EndOfStringToken {
+				break
+			}
+			if token != token2 || lit != lit2 {
+				t.Errorf("Bad values")
+			}
+		}
+	}
+}
+
+func TestParserEscape(t *testing.T) {
+	testcases := []struct {
+		s string
+		t []Token
+	}{
+		{"key=x\\=y", []Token{IdentifierToken, EqualsToken, IdentifierToken, EndOfStringToken}},
+		{"key=x\\,y", []Token{IdentifierToken, EqualsToken, IdentifierToken, EndOfStringToken}},
+		{"key=x\\\\y", []Token{IdentifierToken, EqualsToken, IdentifierToken, EndOfStringToken}},
+		{"key=x\\ay", []Token{IdentifierToken, EqualsToken, ErrorToken, IdentifierToken, EndOfStringToken}},
+		{"key!=x\\=y", []Token{IdentifierToken, NotEqualsToken, IdentifierToken, EndOfStringToken}},
+		{"key!=x\\,y", []Token{IdentifierToken, NotEqualsToken, IdentifierToken, EndOfStringToken}},
+		{"key!=x\\\\y", []Token{IdentifierToken, NotEqualsToken, IdentifierToken, EndOfStringToken}},
+		{"key!=x\\ay", []Token{IdentifierToken, NotEqualsToken, ErrorToken, IdentifierToken, EndOfStringToken}},
+		{"key in (x\\=y)", []Token{IdentifierToken, InToken, OpenParToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
+		{"key in (x\\,y,a\\=b)", []Token{IdentifierToken, InToken, OpenParToken, IdentifierToken, CommaToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
+		{"key in (x\\\\y,a\\\\b)", []Token{IdentifierToken, InToken, OpenParToken, IdentifierToken, CommaToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
+		{"key in (x\\ay)", []Token{IdentifierToken, InToken, OpenParToken, ErrorToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
+		{"key notin (x\\=y,a\\,b)", []Token{IdentifierToken, NotInToken, OpenParToken, IdentifierToken, CommaToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
+		{"key notin (x\\,y)", []Token{IdentifierToken, NotInToken, OpenParToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
+		{"key notin (x\\\\y)", []Token{IdentifierToken, NotInToken, OpenParToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
+		{"key notin (x\\ay)", []Token{IdentifierToken, NotInToken, OpenParToken, ErrorToken, IdentifierToken, ClosedParToken, EndOfStringToken}},
 	}
 	for _, v := range testcases {
 		p := &Parser{l: &Lexer{s: v.s, pos: 0}, position: 0}

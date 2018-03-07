@@ -1,4 +1,4 @@
-package labels
+package fields
 
 import (
 	"bytes"
@@ -27,9 +27,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Adapted from k8s.io/apimachinery/pkg/labels/selector.go
+// Adapted from k8s.io/apimachinery/pkg/labels/selector.go &&
+//              k8s.io/apimachinery/pkg/fields/selector.go
 //
-// - Empty selector does not match any Labels
+// - Empty selector does not match any Fields
 // - Reduced number of operators to 4, Equals, NotEquals, In and NotIn
 
 // ByKey sorts requirements by key to obtain deterministic parser
@@ -65,11 +66,6 @@ func NewRequirement(key string, op Operator, vals []string) (*Requirement, error
 		return nil, fmt.Errorf("operator '%v' is not recognized", op)
 	}
 
-	for i := range vals {
-		if err := validateLabelValue(vals[i]); err != nil {
-			return nil, err
-		}
-	}
 	sort.Strings(vals)
 	return &Requirement{Key: key, Operator: Operator_name[int32(op)], Values: vals}, nil
 }
@@ -83,24 +79,24 @@ func (r *Requirement) hasValue(value string) bool {
 	return false
 }
 
-// Matches returns true if the Requirement matches the input Labels.
+// Matches returns true if the Requirement matches the input Fields.
 // There is a match in the following cases:
-// (1) The operator is Equals or In, Labels has the Requirement's key and Labels'
+// (1) The operator is Equals or In, Fields has the Requirement's key and Fields'
 //     value for that key is in Requirement's value set.
-// (2) The operator is NotEquals or NotIn, Labels has the Requirement's key and
-//     Labels' value for that key is not in Requirement's value set.
-func (r *Requirement) Matches(ls Labels) bool {
+// (2) The operator is NotEquals or NotIn, Fields has the Requirement's key and
+//     Fields' value for that key is not in Requirement's value set.
+func (r *Requirement) Matches(fs Fields) bool {
 	switch Operator(Operator_value[r.Operator]) {
 	case Operator_equals, Operator_in:
-		if !ls.Has(r.Key) {
+		if !fs.Has(r.Key) {
 			return false
 		}
-		return r.hasValue(ls.Get(r.Key))
+		return r.hasValue(fs.Get(r.Key))
 	case Operator_notEquals, Operator_notIn:
-		if !ls.Has(r.Key) {
+		if !fs.Has(r.Key) {
 			return true
 		}
-		return !r.hasValue(ls.Get(r.Key))
+		return !r.hasValue(fs.Get(r.Key))
 	default:
 		return false
 	}
@@ -134,13 +130,13 @@ func (r *Requirement) Print() string {
 }
 
 // Matches for a Selector returns true if all of the Requirements match the
-// provided labels. It returns false for an empty selector.
-func (s *Selector) Matches(l Labels) bool {
+// provided fields. It returns false for an empty selector.
+func (s *Selector) Matches(fs Fields) bool {
 	if len(s.Requirements) == 0 {
 		return false
 	}
 	for ii := range s.Requirements {
-		if matches := s.Requirements[ii].Matches(l); !matches {
+		if matches := s.Requirements[ii].Matches(fs); !matches {
 			return false
 		}
 	}
@@ -220,6 +216,15 @@ func isSpecialSymbol(ch byte) bool {
 	return false
 }
 
+// isEscapeSymbol detects if the character is an escape symbol
+func isEscapeSymbol(ch byte) bool {
+	switch ch {
+	case '\\':
+		return true
+	}
+	return false
+}
+
 // Lexer represents the Lexer struct for label selector.
 // It contains necessary informationt to tokenize the input string
 type Lexer struct {
@@ -253,6 +258,14 @@ IdentifierLoop:
 		switch ch := l.read(); {
 		case ch == 0:
 			break IdentifierLoop
+		case isEscapeSymbol(ch):
+			chNxt := l.read()
+			switch chNxt {
+			case '\\', ',', '=':
+			default:
+				return ErrorToken, fmt.Sprintf("error expected: '\\\\' or '\\,' or '\\=', found '%v'", chNxt)
+			}
+			buffer = append(buffer, ch, chNxt)
 		case isSpecialSymbol(ch) || isWhitespace(ch):
 			l.unread()
 			break IdentifierLoop

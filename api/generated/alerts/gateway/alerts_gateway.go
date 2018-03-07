@@ -22,6 +22,7 @@ import (
 	alerts "github.com/pensando/sw/api/generated/alerts"
 	"github.com/pensando/sw/api/generated/alerts/grpc/client"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -147,7 +148,7 @@ func (e *sAlertDestinationV1GwService) newClient(ctx context.Context, grpcAddr s
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("AlertDestinationV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
@@ -276,7 +277,7 @@ func (e *sAlertPolicyV1GwService) newClient(ctx context.Context, grpcAddr string
 		opts = append(opts, rpckit.WithStatsEnabled(false))
 	}
 
-	client, err := rpckit.NewRPCClient("AlertPolicyV1GwService", grpcAddr, opts...)
+	client, err := rpckit.NewRPCClient(globals.APIGw, grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")
 	}
