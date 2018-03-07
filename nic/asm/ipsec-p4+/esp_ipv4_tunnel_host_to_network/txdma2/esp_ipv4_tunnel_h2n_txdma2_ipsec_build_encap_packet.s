@@ -42,6 +42,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     add r1, r1, k.txdma2_global_pad_size
     add r1, r1, k.t0_s2s_tailroom_offset
     phvwr p.icv_header_dma_cmd_addr, r1
-    phvwri p.{icv_header_dma_pkt_eop...icv_header_dma_cmd_eop}, 3
+    phvwri.f p.{icv_header_dma_pkt_eop...icv_header_dma_cmd_eop}, 3
     nop.e
     nop 

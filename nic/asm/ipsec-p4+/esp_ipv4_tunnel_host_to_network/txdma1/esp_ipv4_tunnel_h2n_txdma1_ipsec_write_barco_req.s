@@ -10,7 +10,7 @@ struct phv_ p;
 %%
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
-    phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    //phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage3_barco_req_addr 
     phvwri p.brq_req_write_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
     phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
@@ -30,17 +30,16 @@ esp_ipv4_tunnel_h2n_post_to_barco_ring:
     and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr 
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    //phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
     phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
     phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END
 
 esp_ipv4_tunnel_h2n_dma_cmd_incr_barco_pindex:
     tbladd d.barco_pindex, 1
-    //phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET 
     nop
     tbland d.barco_pindex, 0x3F
-    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwri.f p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_do_nothing:
     nop.e
