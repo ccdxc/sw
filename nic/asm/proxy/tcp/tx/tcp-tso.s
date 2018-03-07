@@ -103,6 +103,7 @@ dma_cmd_data:
     /* Write L = min(mss, descriptor entry len) */
     seq             c1, k.to_s6_xmit_cursor_len, 0
     b.c1            pkts_sent_stats_update_start
+    phvwri.c1       p.tcp_header_dma_dma_pkt_eop, 1
     slt             c1, k.to_s6_rcv_mss, k.to_s6_xmit_cursor_len
     add.c1          r6, k.to_s6_rcv_mss, r0
     add.!c1         r6, k.to_s6_xmit_cursor_len, r0

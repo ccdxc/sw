@@ -17,20 +17,36 @@ def GetSeqNum (tc, pkt):
     fin = 0
     if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
         fin = 1
-    # HACK: Account for RXed bytes here
-    # to be used for next TCP segment
+    if hasattr(tc.pvtdata, 'tcb1'):
+        # for multi-flow cases get values from tcb
+        # TODO: Later move all logic to use cb. To prevent
+        # too many changes, both ways are maintained
+        tcb = tc.pvtdata.tcb1
+        pktSeqNum = tcb.rcv_nxt
+        tcb.rcv_nxt += pkt.payloadsize + fin
+    else:
+        pktSeqNum = tc.pvtdata.flow1_rcv_nxt
     tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize + fin
-    return tc.pvtdata.flow1_rcv_nxt
+    return pktSeqNum
 
 def GetAckNum (tc, pkt):
-    return tc.pvtdata.flow1_snd_una + tc.pvtdata.flow1_bytes_txed
+    if hasattr(tc.pvtdata, 'tcb1'):
+        # for multi-flow cases get values from tcb
+        # TODO: Later move all logic to use cb. To prevent
+        # too many changes, both ways are maintained
+        return tc.pvtdata.tcb1.snd_una
+    else:
+        return tc.pvtdata.flow1_snd_una + tc.pvtdata.flow1_bytes_txed
 
 def GetReverseFlowSeqNum (tc, pkt):
     fin = 0
     if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
         fin = 1
+    ack_seq_num = tc.pvtdata.flow2_rcv_nxt
+    if hasattr(tc.pvtdata, 'tcb1'):
+        tc.pvtdata.tcb2.rcv_nxt += pkt.payloadsize + fin
     tc.pvtdata.flow2_bytes_rxed += pkt.payloadsize + fin
-    return tc.pvtdata.flow2_rcv_nxt
+    return ack_seq_num
 
 def GetReverseFlowAckNum (tc, pkt):
     return tc.pvtdata.flow2_snd_una
@@ -46,7 +62,15 @@ def GetReverseFlowAckNumAckTwoPkts (tc, pkt):
             tc.packets.Get('PKT2').payloadsize
 
 def GetNxtPktSeqNum (tc, pkt):
-    pktSeqNum = tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.flow1_bytes_rxed
+    if hasattr(tc.pvtdata, 'tcb1'):
+        # for multi-flow cases get values from tcb
+        # TODO: Later move all logic to use cb. To prevent
+        # too many changes, both ways are maintained
+        tcb = tc.pvtdata.tcb1
+        pktSeqNum = tcb.rcv_nxt
+        tcb.rcv_nxt += pkt.payloadsize
+    else:
+        pktSeqNum = tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.flow1_bytes_rxed
     tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize
     return pktSeqNum
 
@@ -57,26 +81,42 @@ def GetPktOutSeqNum (tc, pkt):
     fin = 0
     if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
         fin = 1
-    tc.pvtdata.flow2_bytes_txed += pkt.payloadsize + fin
     if tc.pvtdata.same_flow:
-        return tc.pvtdata.flow1_snd_nxt
+        pktSeqNum = tc.pvtdata.flow1_snd_nxt
+    elif hasattr(tc.pvtdata, 'tcb2'):
+        pktSeqNum = tc.pvtdata.tcb2.snd_nxt
+        tc.pvtdata.tcb2.snd_nxt += pkt.payloadsize + fin
     else:
-        return tc.pvtdata.flow2_snd_nxt
+        pktSeqNum = tc.pvtdata.flow2_snd_nxt
+    tc.pvtdata.flow2_bytes_txed += pkt.payloadsize + fin
+    return pktSeqNum
 
 def GetPktOutAckNum (tc, pkt):
     if tc.pvtdata.same_flow:
         return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
     else:
-        return tc.pvtdata.flow2_rcv_nxt + tc.pvtdata.flow2_bytes_rxed
+        if hasattr(tc.pvtdata, 'tcb2'):
+            # for multi-flow cases get values from tcb
+            # TODO: Later move all logic to use cb. To prevent
+            # too many changes, both ways are maintained
+            return tc.pvtdata.tcb2.rcv_nxt
+        else:
+            return tc.pvtdata.flow2_rcv_nxt + tc.pvtdata.flow2_bytes_rxed
 
 def GetNxtPktOutSeqNum (tc, pkt):
-    #return GetPktOutSeqNum(tc, pkt) + pkt.payloadsize
     fin = 0
     if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
         fin = 1
+
     if tc.pvtdata.same_flow:
         pktSeqNum = tc.pvtdata.flow1_snd_nxt + \
                 tc.pvtdata.flow1_bytes_txed
+    elif hasattr(tc.pvtdata, 'tcb2'):
+        # for multi-flow cases get values from tcb
+        # TODO: Later move all logic to use cb. To prevent
+        # too many changes, both ways are maintained
+        pktSeqNum = tc.pvtdata.tcb2.snd_nxt
+        tc.pvtdata.tcb2.snd_nxt += pkt.payloadsize + fin
     else:
         pktSeqNum = tc.pvtdata.flow2_snd_nxt + \
                 tc.pvtdata.flow2_bytes_txed
@@ -96,7 +136,13 @@ def GetAckPktSeqNum (tc, pkt):
     fin = 0
     if 'F' in pkt.headers.tcp.fields.flags or 'fin' in pkt.headers.tcp.fields.flags:
         fin += 1
-    pktSeqNum = tc.pvtdata.flow1_snd_nxt + tc.pvtdata.flow1_bytes_txed
+
+    if hasattr(tc.pvtdata, 'tcb1'):
+        pktSeqNum = tc.pvtdata.tcb1.snd_nxt
+        tc.pvtdata.tcb1.snd_nxt += pkt.payloadsize + fin
+        tc.pvtdata.tcb1.snd_una += pkt.payloadsize + fin
+    else:
+        pktSeqNum = tc.pvtdata.flow1_snd_nxt + tc.pvtdata.flow1_bytes_txed
     tc.pvtdata.flow1_bytes_txed += pkt.payloadsize + fin
     return pktSeqNum
 

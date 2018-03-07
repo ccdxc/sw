@@ -15,6 +15,87 @@ entries:
             port : const/47273
 
     - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47274
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47275
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47276
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47277
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47278
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47279
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47280
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47281
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47282
+
+    - entry:
         label: ipsec-proxy
         tracking: False
         timestamp: False

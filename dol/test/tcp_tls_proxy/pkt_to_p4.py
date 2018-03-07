@@ -22,6 +22,11 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    skip_config = False
+    if hasattr(tc.module.args, 'skip_config') and tc.module.args.skip_config:
+        print("skipping config")
+        skip_config = True
+
     tc.pvtdata = ObjectDatabase(logger)
 
     tcp_proxy.SetupProxyArgs(tc)
@@ -39,17 +44,22 @@ def TestCaseSetup(tc):
     tc.module.logger.info("Configuring %s" % tcbid)
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    tcp_proxy.init_tcb_inorder(tc, tcb)
-    if tc.pvtdata.serq_full:
-        tcb.serq_pi = 5
-    tcb.SetObjValPd()
+    if not skip_config:
+        tcp_proxy.init_tcb_inorder(tc, tcb)
+        if tc.pvtdata.serq_full:
+            tcb.serq_pi = 5
+        tcb.SetObjValPd()
 
     TcpCbHelper.main(other_fid)
     tcbid2 = "TcpCb%04d" % (other_fid)
     tc.module.logger.info("Configuring %s" % tcbid2)
     tcb2 = tc.infra_data.ConfigStore.objects.db[tcbid2]
-    tcp_proxy.init_tcb_inorder2(tc, tcb2)
-    tcb2.SetObjValPd()
+    if not skip_config:
+        tcp_proxy.init_tcb_inorder2(tc, tcb2)
+        tcb2.SetObjValPd()
+
+    tc.pvtdata.tcb1 = tcb
+    tc.pvtdata.tcb2 = tcb2
 
     # 2. Configure TLS CB in HBM before packet injection
     tlscbid = "TlsCb%04d" % id
@@ -90,8 +100,12 @@ def TestCaseSetup(tc):
         tlscb.other_fid = other_fid
         tlscb2.other_fid = id
 
-    tlscb.SetObjValPd()
-    tlscb2.SetObjValPd()
+    if not skip_config:
+        tlscb.SetObjValPd()
+        tlscb2.SetObjValPd()
+
+    if skip_config:
+        return
 
     # 3. Clone objects that are needed for verification
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
@@ -147,6 +161,10 @@ def TestCaseTrigger(tc):
 def TestCaseVerify(tc):
 
     if GlobalOptions.dryrun:
+        return True
+
+    if hasattr(tc.module.args, 'skip_verify') and tc.module.args.skip_verify:
+        print("skipping verify")
         return True
 
 
