@@ -15,6 +15,7 @@ cc_library(
         "cpupkt_api.hpp",
         "cpupkt_headers.hpp",
         "pd_api.hpp",
+        "pd_api_c.h"
     ],
     deps = [
         "//nic/hal:hal_includes",

@@ -90,6 +90,7 @@ public:
 
 private:
     hal_ret_t init_ssl_ctxt(void);
+    hal_ret_t init_pse_engine(void);
 
     SSL_CTX         *client_ctx;
     SSL_CTX         *server_ctx;

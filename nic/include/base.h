@@ -241,6 +241,7 @@ do {                                                       \
     ENTRY(HAL_RET_FLOW_LKUP_ID_NOT_FOUND,     63, "flow lookup id not found")      \
     ENTRY(HAL_RET_ACL_NOT_FOUND,              64, "acl not found")                 \
     ENTRY(HAL_RET_COPP_NOT_FOUND,             65, "copp not found")                \
+    ENTRY(HAL_RET_OPENSSL_ENGINE_NOT_FOUND,   66, "openssl engine not found")      \
                                                                                    \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

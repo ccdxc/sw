@@ -11,6 +11,7 @@ cc_library(
     copts = sdk_copts,
     deps = [
         "//nic:openssl",
+        "//nic/hal/tls/engine:pse",
         "//nic/hal:hal_includes",
         "//nic/hal/lkl:lklshim_tls",
         "//nic/include:base_includes",

@@ -4,6 +4,7 @@
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/pd/pd_api_c.h"
 
 namespace hal {
 
@@ -836,6 +837,33 @@ hal_pd_init (hal_cfg_t *hal_cfg)
 cleanup:
 
     return ret;
+}
+
+extern "C" int 
+pd_tls_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
+        uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
+        uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t args = {0};
+
+    args.p = p;
+    args.n = n;
+    args.xg = xg;
+    args.yg = yg;
+    args.a = a;
+    args.b = b;
+    args.xq = xq;
+    args.yq = yq;
+    args.r = r;
+    args.s = s;
+    args.h = h;
+
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, (void*)&args);
+    if (ret != HAL_RET_OK) {
+        return -1;
+    }
+    return 1;
 }
 
 }    // namespace pd

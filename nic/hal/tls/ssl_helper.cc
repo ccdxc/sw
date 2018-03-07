@@ -4,7 +4,7 @@
 #include <ostream>
 #include <iomanip>
 #include "nic/hal/tls/ssl_helper.hpp"
-
+#include <openssl/engine.h>
 
 #define WHERE_INFO(ssl, w, flag, msg) { \
     if(w & flag) { \
@@ -290,7 +290,9 @@ SSLHelper::SSLHelper()
 }
 
 hal_ret_t
-SSLHelper::init(void) {
+SSLHelper::init(void)
+{
+    hal_ret_t ret = HAL_RET_OK;
 
     SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -298,7 +300,65 @@ SSLHelper::init(void) {
     ERR_load_crypto_strings();
     SSL_load_error_strings();
 
-    return this->init_ssl_ctxt();
+    ret = init_pse_engine();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to init pse engine: {}", ret);
+        return ret;
+    }
+
+    ret = init_ssl_ctxt();
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to init ssl ctxt: {}", ret);
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+SSLHelper::init_pse_engine()
+{
+    char        *cfg_path;
+    std::string eng_path;
+
+    ENGINE_load_dynamic();
+    ENGINE_load_builtin_engines();
+    ENGINE_register_all_complete();
+
+    ENGINE* pse_engine = ENGINE_by_id("dynamic");
+    if(pse_engine == NULL) {
+        HAL_TRACE_ERR("Failed to load dynamic engine");
+        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+    }
+
+    cfg_path = getenv("HAL_CONFIG_PATH");
+    if (!cfg_path) {
+        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+    }
+
+    eng_path =  std::string(cfg_path) + "/openssl/engine/libpse.so";
+    HAL_TRACE_DEBUG("Loading pensando engine from path: {}", eng_path);
+
+    if(!ENGINE_ctrl_cmd_string(pse_engine, "SO_PATH", eng_path.c_str(), 0)) {
+        HAL_TRACE_ERR("SO_PATH failed!!");
+        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+    }
+
+    if(!ENGINE_ctrl_cmd_string(pse_engine, "ID", "pse", 0)) {
+        HAL_TRACE_ERR("ID failed!!");
+        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+    }
+
+    if(!ENGINE_ctrl_cmd_string(pse_engine, "LOAD", NULL, 0)) {
+        HAL_TRACE_ERR("ENGINE LOAD_ADD failed, err: {}",
+            ERR_error_string(ERR_get_error(), NULL));
+        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+    }
+    int ret = ENGINE_init(pse_engine);
+    HAL_TRACE_DEBUG("Successfully loaded OpenSSL Engine: {} init result: {}",
+                            ENGINE_get_name(pse_engine), ret);
+
+    ret = ENGINE_set_default_EC(pse_engine);
+    HAL_TRACE_DEBUG("Setting PSE as the default for ECDSA: {}", ret);
     return HAL_RET_OK;
 }
 
