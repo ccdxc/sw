@@ -1157,7 +1157,7 @@ int seq_max_data_rate() {
                           queues::get_pvm_seq_comp_sq(1));
 }
 
-static int cp_dualq_flat_64K_buf(uint64_t mem_pa, bool in_hbm,
+static int cp_dualq_flat_4K_buf(uint64_t mem_pa, bool in_hbm,
                                  comp_queue_push_t push_type,
                                  uint32_t seq_comp_qid_cp,
                                  uint32_t seq_comp_qid_hotq) {
@@ -1251,12 +1251,12 @@ static int cp_dualq_flat_64K_buf(uint64_t mem_pa, bool in_hbm,
   return -1;
 }
 
-int compress_dualq_flat_64K_buf() {
+int compress_dualq_flat_4K_buf() {
   printf("Starting testcase %s\n", __func__);
 
   InvalidateHdrInHostMem();
 
-  int rc = cp_dualq_flat_64K_buf(host_mem_pa, false,
+  int rc = cp_dualq_flat_4K_buf(host_mem_pa, false,
                                  COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
   if (rc == 0)
     printf("Testcase %s passed\n", __func__);
@@ -1266,12 +1266,12 @@ int compress_dualq_flat_64K_buf() {
   return rc;
 }
 
-int seq_compress_dualq_flat_64K_buf() {
+int seq_compress_dualq_flat_4K_buf() {
   printf("Starting testcase %s\n", __func__);
 
   InvalidateHdrInHostMem();
 
-  int rc = cp_dualq_flat_64K_buf(host_mem_pa, false,
+  int rc = cp_dualq_flat_4K_buf(host_mem_pa, false,
                                  COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
                                  queues::get_pvm_seq_comp_sq(0),
                                  queues::get_pvm_seq_comp_sq(1));
@@ -1283,12 +1283,12 @@ int seq_compress_dualq_flat_64K_buf() {
   return rc;
 }
 
-int compress_dualq_flat_64K_buf_in_hbm() {
+int compress_dualq_flat_4K_buf_in_hbm() {
   printf("Starting testcase %s\n", __func__);
 
   InvalidateHdrInHBM();
 
-  int rc = cp_dualq_flat_64K_buf(hbm_pa, true,
+  int rc = cp_dualq_flat_4K_buf(hbm_pa, true,
                                  COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
   if (rc == 0)
     printf("Testcase %s passed\n", __func__);
@@ -1298,12 +1298,12 @@ int compress_dualq_flat_64K_buf_in_hbm() {
   return rc;
 }
 
-int seq_compress_dualq_flat_64K_buf_in_hbm() {
+int seq_compress_dualq_flat_4K_buf_in_hbm() {
   printf("Starting testcase %s\n", __func__);
 
   InvalidateHdrInHBM();
 
-  int rc = cp_dualq_flat_64K_buf(hbm_pa, true,
+  int rc = cp_dualq_flat_4K_buf(hbm_pa, true,
                                  COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
                                  queues::get_pvm_seq_comp_sq(0),
                                  queues::get_pvm_seq_comp_sq(1));
