@@ -36,6 +36,10 @@ function createCollectorContainer() {
     docker build --rm --no-cache -t pen-collector:latest -f tools/docker-files/collector/Dockerfile tools/docker-files/collector
 }
 
+function createTpmContainer() {
+    docker build --rm --no-cache -t pen-tpm:latest -f tools/docker-files/tpm/Dockerfile tools/docker-files/tpm
+}
+
 function createBinContainerTarBall() {
     staticimages="registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.7.12 \
         registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.7.12 \
@@ -52,7 +56,7 @@ function createBinContainerTarBall() {
     done
     mkdir -p bin/tars
     dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest \
-        pen-vcsim:latest pen-n4sagent:latest pen-nmd:latest pen-collector:latest"
+        pen-vcsim:latest pen-n4sagent:latest pen-nmd:latest pen-collector:latest pen-tpm:latest"
     for i in $staticimages $dynamicimages
     do
         # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -79,6 +83,7 @@ case $1 in
     n4sagent) createN4sContainer;;
     nmd) createNmdContainer;;
     collector) createCollectorContainer;;
+    tpm) createTpmContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;

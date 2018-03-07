@@ -6,6 +6,7 @@ all:
 	$(MAKE) bld_proto
 	$(MAKE) fix
 	$(MAKE) genapi
+	$(MAKE) -C mock
 
 fix:
 	@${FIX_VER} *pb.go
@@ -22,4 +23,5 @@ genapi:
 	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genapi.sh protos
 
 clean:
+	$(MAKE) -C mock clean
 	@rm -rf generated/*

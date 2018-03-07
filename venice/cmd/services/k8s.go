@@ -329,6 +329,37 @@ var k8sModules = map[string]types.Module{
 			},
 		},
 	},
+	globals.Tpm: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Tpm,
+		},
+		Spec: &types.ModuleSpec{
+			Type:      types.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Name:  globals.Tpm,
+					Image: globals.Tpm,
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Tpm,
+							Port: runtime.MustUint32(globals.TpmRPCPort),
+						},
+					},
+					Args: []string{
+						"-resolver-urls", "$RESOLVER_URLS",
+					},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	},
 }
 
 // NewK8sService creates a new kubernetes service.

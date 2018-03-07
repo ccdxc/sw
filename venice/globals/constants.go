@@ -76,4 +76,7 @@ const (
 
 	// Events manager
 	EvtsMgrRPCPort = "9010"
+
+	// tpm
+	TpmRPCPort = "9020"
 )
