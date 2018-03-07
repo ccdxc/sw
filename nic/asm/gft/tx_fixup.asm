@@ -17,10 +17,14 @@ tx_fixup:
     seq             c3, k.ipv4_1_valid, TRUE
     seq             c4, k.ipv6_1_valid, TRUE
 
+    // update packet length
+    sub             r7, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, \
+                           capri_p4_intrinsic_frame_size_sbit6_ebit13}, TXDMA_SZ
+    phvwr           p.capri_p4_intrinsic_packet_len, r7
+
     seq             c1, k.ctag_1_valid, TRUE
-    cmov            r1, c1, (18 + TXDMA_SZ), (14 + TXDMA_SZ)
-    sub             r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, \
-                        capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
+    cmov            r1, c1, 18, 14
+    sub             r1, r7, r1
     sub.c3          r2, r1, k.ipv4_1_ihl, 2
     sub.c4          r2, r1, 40
 

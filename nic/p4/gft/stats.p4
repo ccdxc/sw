@@ -3,6 +3,16 @@
 /******************************************************************************/
 action rx_vport_stats(permit_packets, permit_bytes,
                       drop_packets, drop_bytes) {
+#ifdef SUPPORT_GFT_GTEST
+    if (capri_intrinsic.lif == EXCEPTION_VPORT) {
+        add_header(capri_txdma_intrinsic);
+        add_header(p4plus_to_p4);
+        modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
+        if ((roce_bth_1.valid == TRUE) or (roce_bth_2.valid == TRUE)) {
+            modify_field(p4plus_to_p4.p4plus_app_id, P4PLUS_APPTYPE_RDMA);
+        }
+    }
+#endif
     add_header(capri_p4_intrinsic);
     if (capri_intrinsic.drop == TRUE) {
         modify_field(scratch_metadata.num_packets, drop_packets);

@@ -2,6 +2,7 @@
 #define FALSE                          0
 #define ASM_INSTRUCTION_OFFSET_MAX     (8 * 256)
 
+#define SUPPORT_GFT_GTEST              1
 #define EXCEPTION_VPORT                0x3FF
 
 /*****************************************************************************/

@@ -1604,8 +1604,6 @@ TEST_F(gft_test, test1) {
         }
     }
 
-    // TODO: Commenting TX test cases as the RX -> TX path needs to be checked
-    tx_enable = 0;
     tcid++;
     if (tx_enable && (tcid_filter == 0 || tcid == tcid_filter)) {
         port = 1;

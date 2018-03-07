@@ -15,8 +15,12 @@ action tx_fixup() {
             p4plus_to_p4.ip_id_delta);
     }
 
+    // update packet length
     subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
-             (CAPRI_TXDMA_INTRINSIC_HDR_SZ + P4PLUS_TO_P4_HDR_SZ));
+             (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
+              P4PLUS_TO_P4_HDR_SZ));
+    modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
+
     // update IP length
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN) != 0) {
         if (ctag_1.valid == TRUE) {

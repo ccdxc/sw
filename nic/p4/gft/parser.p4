@@ -260,6 +260,10 @@ parser rx_deparse_start {
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
     extract(p4_to_p4plus_roce);
+#ifdef SUPPORT_GFT_GTEST
+    extract(capri_txdma_intrinsic);
+    extract(p4plus_to_p4);
+#endif
     return parse_ethernet_1;
 }
 
