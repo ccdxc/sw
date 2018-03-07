@@ -901,11 +901,7 @@ int max_data_rate() {
   return -1;
 }
 
-int compress_dualq_flat_64K_buf() {
-  printf("Starting testcase %s\n", __func__);
-
-  InvalidateHdrInHostMem();
-
+static int cp_dualq_flat_64K_buf(uint64_t mem_pa, bool in_hbm) {
   // Setup compression descriptor for low prirority queue
   cp_desc_t lq_desc;
   bzero(&lq_desc, sizeof(lq_desc));
@@ -914,12 +910,12 @@ int compress_dualq_flat_64K_buf() {
   lq_desc.cmd_bits.insert_header = 1;
   lq_desc.cmd_bits.sha_en = 1;
 
-  lq_desc.src = host_mem_pa + kUncompressedDataOffset;
-  lq_desc.dst = host_mem_pa + kCompressedDataOffset;
+  lq_desc.src = mem_pa + kUncompressedDataOffset;
+  lq_desc.dst = mem_pa + kCompressedDataOffset;
   lq_desc.datain_len = 4096;
   lq_desc.threshold_len = 4096 - 8;
 
-  lq_desc.status_addr = host_mem_pa + kStatusOffset;
+  lq_desc.status_addr = mem_pa + kStatusOffset;
   lq_desc.status_data = 0x1234;
 
   // Setup compression descriptor for high prirority queue
@@ -930,12 +926,12 @@ int compress_dualq_flat_64K_buf() {
   hq_desc.cmd_bits.insert_header = 1;
   hq_desc.cmd_bits.sha_en = 1;
 
-  hq_desc.src = host_mem_pa + kUncompressedDataOffset + 4096;
-  hq_desc.dst = host_mem_pa + kCompressedDataOffset + 4096;
+  hq_desc.src = mem_pa + kUncompressedDataOffset + 4096;
+  hq_desc.dst = mem_pa + kCompressedDataOffset + 4096;
   hq_desc.datain_len = 4096;
   hq_desc.threshold_len = 4096 - 8;
 
-  hq_desc.status_addr = host_mem_pa + kStatusOffset +
+  hq_desc.status_addr = mem_pa + kStatusOffset +
 	  sizeof(cp_status_sha512_t);
   hq_desc.status_data = 0x5678;
 
@@ -968,9 +964,13 @@ int compress_dualq_flat_64K_buf() {
   write_reg(cp_cfg_hotq_pd_idx, cp_hotq_index);
 
   // Check status update to both the descriptors
-  auto func = [] () -> int {
+  auto func = [mem_pa, in_hbm] () -> int {
     cp_status_sha512_t *s;
     s = (cp_status_sha512_t *) (host_mem + kStatusOffset);
+    if (in_hbm) {
+	    read_mem(mem_pa + kStatusOffset, (uint8_t *)s,
+			    sizeof(cp_status_sha512_t));
+    }
     if (!s->valid) {
       printf("Compression request in low queue did not complete "
 	  "status: %llx\n", *((unsigned long long *) s));
@@ -979,6 +979,10 @@ int compress_dualq_flat_64K_buf() {
 
     s = (cp_status_sha512_t *) (host_mem + kStatusOffset +
 				sizeof(cp_status_sha512_t));
+    if (in_hbm) {
+	    read_mem(mem_pa + kStatusOffset + sizeof(cp_status_sha512_t),
+		    (uint8_t *)s, sizeof(cp_status_sha512_t));
+    }
     if (!s->valid) {
       printf("Compression request in high/hot queue did not complete "
 	  "status: %llx\n", *((unsigned long long *) s));
@@ -997,106 +1001,32 @@ int compress_dualq_flat_64K_buf() {
   return -1;
 }
 
+int compress_dualq_flat_64K_buf() {
+  printf("Starting testcase %s\n", __func__);
+
+  InvalidateHdrInHostMem();
+
+  int rc = cp_dualq_flat_64K_buf(host_mem_pa, false);
+  if (rc == 0)
+    printf("Testcase %s passed\n", __func__);
+  else
+    printf("Testcase %s failed\n", __func__);
+
+  return rc;
+}
+
 int compress_dualq_flat_64K_buf_in_hbm() {
   printf("Starting testcase %s\n", __func__);
 
   InvalidateHdrInHBM();
 
-  // Setup compression descriptor for low prirority queue
-  cp_desc_t lq_desc;
-  bzero(&lq_desc, sizeof(lq_desc));
-
-  lq_desc.cmd_bits.comp_decomp_en = 1;
-  lq_desc.cmd_bits.insert_header = 1;
-  lq_desc.cmd_bits.sha_en = 1;
-
-  lq_desc.src = hbm_pa + kUncompressedDataOffset;
-  lq_desc.dst = hbm_pa + kCompressedDataOffset;
-  lq_desc.datain_len = 4096;
-  lq_desc.threshold_len = 4096 - 8;
-
-  lq_desc.status_addr = hbm_pa + kStatusOffset;
-  lq_desc.status_data = 0x1234;
-
-  // Setup compression descriptor for high prirority queue
-  cp_desc_t hq_desc;
-  bzero(&hq_desc, sizeof(hq_desc));
-
-  hq_desc.cmd_bits.comp_decomp_en = 1;
-  hq_desc.cmd_bits.insert_header = 1;
-  hq_desc.cmd_bits.sha_en = 1;
-
-  hq_desc.src = hbm_pa + kUncompressedDataOffset + 4096;
-  hq_desc.dst = hbm_pa + kCompressedDataOffset + 4096;
-  hq_desc.datain_len = 4096;
-  hq_desc.threshold_len = 4096 - 8;
-
-  hq_desc.status_addr = hbm_pa + kStatusOffset +
-	  sizeof(cp_status_sha512_t);
-  hq_desc.status_data = 0x5678;
-
-  // Initialize status for both the requests
-  cp_status_sha512_t *s;
-  s = (cp_status_sha512_t *) (host_mem + kStatusOffset);
-  bzero(s, sizeof(*s));
-  write_mem(hbm_pa + kStatusOffset, all_zeros, sizeof(*s));
-
-  s = (cp_status_sha512_t *) (host_mem + kStatusOffset +
-		  sizeof(cp_status_sha512_t));
-  bzero(s, sizeof(*s));
-  write_mem(hbm_pa + kStatusOffset + sizeof(cp_status_sha512_t),
-		  all_zeros, sizeof(*s));
-
-  // Add descriptor for both high and low priority queue
-  cp_desc_t *dst_desc;
-  dst_desc = (cp_desc_t *) cp_queue_mem;
-  bcopy(&lq_desc, &dst_desc[cp_queue_index], sizeof(lq_desc));
-  cp_queue_index++;
-  if (cp_queue_index == 4096)
-      cp_queue_index = 0;
-
-  // Dont ring the doorbell yet
-  dst_desc = (cp_desc_t *) cp_hotq_mem;
-  bcopy(&hq_desc, &dst_desc[cp_hotq_index], sizeof(hq_desc));
-  cp_hotq_index++;
-  if (cp_hotq_index == 4096)
-      cp_hotq_index = 0;
-
-  // Now ring door bells for both high and low queue
-  write_reg(cp_cfg_q_pd_idx, cp_queue_index);
-  write_reg(cp_cfg_hotq_pd_idx, cp_hotq_index);
-
-  // Check status update to both the descriptors
-  auto func = [] () -> int {
-    cp_status_sha512_t *s;
-    s = (cp_status_sha512_t *) (host_mem + kStatusOffset);
-    read_mem(hbm_pa + kStatusOffset, (uint8_t *)s, sizeof(cp_status_sha512_t));
-    if (!s->valid) {
-      printf("Compression request in low queue did not complete "
-	  "status: %llx\n", *((unsigned long long *) s));
-      return -1;
-    }
-
-    s = (cp_status_sha512_t *) (host_mem + kStatusOffset +
-				sizeof(cp_status_sha512_t));
-    read_mem(hbm_pa + kStatusOffset + sizeof(cp_status_sha512_t),
-		    (uint8_t *)s, sizeof(cp_status_sha512_t));
-    if (!s->valid) {
-      printf("Compression request in high/hot queue did not complete "
-	  "status: %llx\n", *((unsigned long long *) s));
-      return -1;
-    }
-
-    return 0;
-  };
-
-  tests::Poller poll;
-  if (poll(func) == 0) {
+  int rc = cp_dualq_flat_64K_buf(hbm_pa, true);
+  if (rc == 0)
     printf("Testcase %s passed\n", __func__);
-    return 0;
-  }
+  else
+    printf("Testcase %s failed\n", __func__);
 
-  return -1;
+  return rc;
 }
 
 }  // namespace tests
