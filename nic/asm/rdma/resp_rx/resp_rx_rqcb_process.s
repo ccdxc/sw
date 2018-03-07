@@ -737,7 +737,7 @@ ud_drop:
 /****** Logic to recirc packets ******/
 recirc_wait_for_turn:
     // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
 
     phvwr       p.common.p4_intr_recirc, 1
     phvwr.e     p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE

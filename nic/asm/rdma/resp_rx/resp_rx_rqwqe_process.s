@@ -280,7 +280,7 @@ recirc:
     CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, remaining_payload_bytes, REM_PYLD_BYTES)
     
     // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_recirc_mpu_only_process, r0)
 
     // set recirc
     phvwr.e p.common.p4_intr_recirc, 1

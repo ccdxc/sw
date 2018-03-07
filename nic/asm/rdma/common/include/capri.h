@@ -278,7 +278,7 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_SET_TABLE_3_VALID_C(_c, _vld) \
     phvwri._c    p.common.app_header_table3_valid, _vld;
 
-#define CAPRI_SET_TABLE_3_VALID_CE(_c, _vld) \
+#define CAPRI_SET_TABLE_2_VALID_CE(_c, _vld) \
     phvwri._c.e  p.common.app_header_table3_valid, _vld;
     
 #define CAPRI_SET_ALL_TABLES_VALID(_vld) \
