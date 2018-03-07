@@ -66,7 +66,7 @@ header_type ipsec_to_stage1_t {
 header_type ipsec_to_stage2_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
-        stage2_pad     : ADDRESS_WIDTH;
+        ipsec_cb_addr : ADDRESS_WIDTH;
     }
 }
 
@@ -143,6 +143,9 @@ metadata ipsec_txdma2_global_t txdma2_global_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_table0_s2s t0_s2s_scratch;
@@ -257,6 +260,7 @@ action ipsec_encap_txdma2_load_in_desc(addr0, offset0, length0,
 {
     modify_field(t0_s2s.in_page_addr, addr0);
 
+    modify_field(ipsec_to_stage2_scratch.ipsec_cb_addr, ipsec_to_stage2.ipsec_cb_addr);
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 0);

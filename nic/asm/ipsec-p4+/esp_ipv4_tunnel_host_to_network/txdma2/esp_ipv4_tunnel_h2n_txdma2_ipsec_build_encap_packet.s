@@ -12,23 +12,9 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
-    //phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA2_DMA_COMMANDS_OFFSET
-    // intrinsic
-    //phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    //phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
-    //phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
-    // app-header
-    //phvwri p.ipsec_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    //phvwri p.ipsec_app_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_APP_HEADER_START 
-    //phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr,  IPSEC_TXDMA2_APP_HEADER_END 
-    // Ethernet Header 
-    phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET
-    phvwr  p.eth_hdr_dma_cmd_addr, r1
-    phvwri  p.eth_hdr_dma_cmd_size, ETH_FIXED_HDR_SIZE 
     // Outer-IP  
     phvwri p.ip_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    addi r1, r1, 14
+    add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET+14
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
     seq c1, k.ipsec_to_stage3_is_v6, 1
     cmov r6, c1, IPV6_HDR_SIZE, IPV4_HDR_SIZE 
@@ -56,7 +42,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     add r1, r1, k.txdma2_global_pad_size
     add r1, r1, k.t0_s2s_tailroom_offset
     phvwr p.icv_header_dma_cmd_addr, r1
-    phvwri p.icv_header_dma_pkt_eop, 1
-    phvwri p.icv_header_dma_cmd_eop, 1
+    phvwri p.{icv_header_dma_pkt_eop...icv_header_dma_cmd_eop}, 3
     nop.e
     nop 
