@@ -351,18 +351,84 @@ service AlertPolicyV1 {
 // the allowed notification mechanisms (Email, SNMP, etc.). These are reusable
 // objects in the system and can be used by any of the alert policies.
 
+// AuthConfig contains the configuration for SNMP Trap authentication.
+message AuthConfig {
+  // Algos contains the authentication algorithm to be used when SecurityMethod
+  // has AUTH.
+  enum Algos {
+    MD5    = 0;
+    SHA1   = 1;
+  }
+  string Algo     = 1 [(gogoproto.nullable) = true,
+                       (venice.check) = "StrEnum(AuthConfig.Algos)",
+                       (gogoproto.jsontag) = "algo, omitempty"];
+
+  // Password contains the authentication password.
+  string Password = 2 [(gogoproto.nullable) = true,
+                       (gogoproto.jsontag) = "password, omitempty"];
+}
+
+// PrivacyConfig contains the configuration for SNMP Trap encryption.
+message PrivacyConfig {
+  // Algos contains the encryption algorithm to be used when SecurityMethod
+  // has PRIVACY.
+  enum Algos {
+    DES56  = 0;
+    AES128 = 1;
+  }
+  string Algo     = 1 [(gogoproto.nullable) = true,
+                       (venice.check) = "StrEnum(PrivacyConfig.Algos)",
+                       (gogoproto.jsontag) = "algo, omitempty"];
+
+  // Password contains the privacy password.
+  string Password = 2 [(gogoproto.nullable) = true,
+                       (gogoproto.jsontag) = "password, omitempty"];
+}
+
+// SNMPTrapServer contains the configuration for sending SNMP traps to a receiver.
+message SNMPTrapServer {
+  // Host where the trap needs to be sent.
+  string Host                 = 1 [(gogoproto.jsontag) = "host, omitempty"];
+
+  // Port on the Host where the trap needs to be sent, default is 162.
+  string Port                 = 2 [(gogoproto.nullable) = true,
+                                   (gogoproto.jsontag) = "port, omitempty"];
+
+  // Version of SNMP to use to send the traps (v1 is not supported).
+  enum SNMPVersions {
+    V2C = 0;
+    V3  = 1;
+  }
+  string Version              = 3 [(gogoproto.nullable) = true,
+                                   (venice.check) = "StrEnum(SNMPTrapServer.SNMPVersions)",
+                                   (gogoproto.jsontag) = "version, omitempty"];
+
+  // CommunityOrUser contains community string for v2c, user for v3.
+  string CommunityOrUser      = 4 [(gogoproto.nullable) = true,
+                                   (gogoproto.jsontag) = "community-or-user, omitempty"];
+
+  // AuthConfig contains the configuration for authentication, valid only for v3.
+  AuthConfig AuthConfig       = 5 [(gogoproto.nullable) = true,
+                                   (gogoproto.jsontag) = "auth-config, omitempty"];
+
+  // PrivacyConfig contains the configuration for encryption, valid only for v3.
+  PrivacyConfig PrivacyConfig = 6 [(gogoproto.nullable) = true,
+                                   (gogoproto.jsontag) = "privacy-config, omitempty"];
+}
+
 message AlertDestinationSpec {
   // If set, this will be the default notification option for the alert policies unless otherwise
   // something else is mentioned.
-  bool default               = 1 [(gogoproto.jsontag) = "default, omitempty"];
+  bool Default                            = 1 [(gogoproto.jsontag) = "default, omitempty"];
 
 
   // Email notification
-  repeated string EmailList  = 2 [(gogoproto.nullable) = true,
-                                  (gogoproto.jsontag) = "email-list, omitempty"];
+  repeated string EmailList               = 2 [(gogoproto.nullable) = true,
+                                               (gogoproto.jsontag) = "email-list, omitempty"];
 
-  // SNMP notification
-  // TODO
+  // SNMP trap destination(s)
+  repeated SNMPTrapServer SNMPTrapServers = 3 [(gogoproto.nullable) = true,
+                                               (gogoproto.jsontag) = "snmp-trap-servers, omitempty"];
 }
 
 message AlertDestinationStatus {

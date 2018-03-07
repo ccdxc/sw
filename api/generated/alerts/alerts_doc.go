@@ -21,10 +21,13 @@ The following Messages are defined.
   AlertSpec
   AlertStatus
   AuditInfo
+  AuthConfig
   AutoMsgAlertDestinationWatchHelper
   AutoMsgAlertPolicyWatchHelper
   MatchedRequirement
+  PrivacyConfig
   Requirement
+  SNMPTrapServer
 
 The following Services and Methods are defined.
 

@@ -190,6 +190,15 @@ func (m *AuditInfo) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *AuthConfig) Clone(into interface{}) error {
+	out, ok := into.(*AuthConfig)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *AutoMsgAlertDestinationWatchHelper) Clone(into interface{}) error {
 	out, ok := into.(*AutoMsgAlertDestinationWatchHelper)
 	if !ok {
@@ -217,8 +226,26 @@ func (m *MatchedRequirement) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *PrivacyConfig) Clone(into interface{}) error {
+	out, ok := into.(*PrivacyConfig)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *Requirement) Clone(into interface{}) error {
 	out, ok := into.(*Requirement)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
+func (m *SNMPTrapServer) Clone(into interface{}) error {
+	out, ok := into.(*SNMPTrapServer)
 	if !ok {
 		return fmt.Errorf("mismatched object types")
 	}
@@ -241,14 +268,27 @@ func (m *Alert) Validate(ver string, ignoreStatus bool) bool {
 }
 
 func (m *AlertDestination) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *AlertDestinationList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
 func (m *AlertDestinationSpec) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.SNMPTrapServers {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
@@ -352,7 +392,27 @@ func (m *AuditInfo) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *AuthConfig) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapAlerts["AuthConfig"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapAlerts["AuthConfig"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (m *AutoMsgAlertDestinationWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -370,6 +430,23 @@ func (m *MatchedRequirement) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *PrivacyConfig) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapAlerts["PrivacyConfig"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapAlerts["PrivacyConfig"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (m *Requirement) Validate(ver string, ignoreStatus bool) bool {
 	if vs, ok := funcMapAlerts["Requirement"][ver]; ok {
 		for _, v := range vs {
@@ -378,6 +455,23 @@ func (m *Requirement) Validate(ver string, ignoreStatus bool) bool {
 			}
 		}
 	} else if vs, ok := funcMapAlerts["Requirement"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (m *SNMPTrapServer) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapAlerts["SNMPTrapServer"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapAlerts["SNMPTrapServer"]["all"]; ok {
 		for _, v := range vs {
 			if !v(m) {
 				return false
@@ -420,11 +514,41 @@ func init() {
 		return true
 	})
 
+	funcMapAlerts["AuthConfig"] = make(map[string][]func(interface{}) bool)
+	funcMapAlerts["AuthConfig"]["all"] = append(funcMapAlerts["AuthConfig"]["all"], func(i interface{}) bool {
+		m := i.(*AuthConfig)
+
+		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
+			return false
+		}
+		return true
+	})
+
+	funcMapAlerts["PrivacyConfig"] = make(map[string][]func(interface{}) bool)
+	funcMapAlerts["PrivacyConfig"]["all"] = append(funcMapAlerts["PrivacyConfig"]["all"], func(i interface{}) bool {
+		m := i.(*PrivacyConfig)
+
+		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
+			return false
+		}
+		return true
+	})
+
 	funcMapAlerts["Requirement"] = make(map[string][]func(interface{}) bool)
 	funcMapAlerts["Requirement"]["all"] = append(funcMapAlerts["Requirement"]["all"], func(i interface{}) bool {
 		m := i.(*Requirement)
 
 		if _, ok := Requirement_AllowedOperators_value[m.Operator]; !ok {
+			return false
+		}
+		return true
+	})
+
+	funcMapAlerts["SNMPTrapServer"] = make(map[string][]func(interface{}) bool)
+	funcMapAlerts["SNMPTrapServer"]["all"] = append(funcMapAlerts["SNMPTrapServer"]["all"], func(i interface{}) bool {
+		m := i.(*SNMPTrapServer)
+
+		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {
 			return false
 		}
 		return true

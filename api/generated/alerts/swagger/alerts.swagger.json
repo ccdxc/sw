@@ -227,7 +227,7 @@
             "type": "string"
           },
           {
-            "name": "Spec.default",
+            "name": "Spec.Default",
             "description": "Name of the user performed some action.",
             "in": "query",
             "required": false,
@@ -726,7 +726,7 @@
     "alertsAlertDestinationSpec": {
       "type": "object",
       "properties": {
-        "default": {
+        "Default": {
           "type": "boolean",
           "format": "boolean",
           "description": "Name of the user performed some action."
@@ -737,6 +737,12 @@
             "type": "string"
           },
           "description": "Time at which the action was performed."
+        },
+        "SNMPTrapServers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/alertsSNMPTrapServer"
+          }
         }
       },
       "description": "AuditInfo captures the user performed the action and the time at which the\naction was performed."
@@ -854,11 +860,25 @@
         }
       }
     },
+    "alertsAuthConfig": {
+      "type": "object",
+      "properties": {
+        "Algo": {
+          "type": "string",
+          "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned."
+        },
+        "Password": {
+          "type": "string",
+          "title": "Email notification"
+        }
+      }
+    },
     "alertsAutoMsgAlertDestinationWatchHelper": {
       "type": "object",
       "properties": {
         "Type": {
-          "type": "string"
+          "type": "string",
+          "title": "total number of notifications sent using this notification mechanism"
         },
         "Object": {
           "$ref": "#/definitions/alertsAlertDestination"
@@ -873,6 +893,18 @@
         },
         "Object": {
           "$ref": "#/definitions/alertsAlertPolicy"
+        }
+      },
+      "title": "AlertDestination - tenant scoped"
+    },
+    "alertsPrivacyConfig": {
+      "type": "object",
+      "properties": {
+        "Algo": {
+          "type": "string"
+        },
+        "Password": {
+          "type": "string"
         }
       }
     },
@@ -890,6 +922,29 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "alertsSNMPTrapServer": {
+      "type": "object",
+      "properties": {
+        "Host": {
+          "type": "string"
+        },
+        "Port": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string"
+        },
+        "CommunityOrUser": {
+          "type": "string"
+        },
+        "AuthConfig": {
+          "$ref": "#/definitions/alertsAuthConfig"
+        },
+        "PrivacyConfig": {
+          "$ref": "#/definitions/alertsPrivacyConfig"
         }
       }
     },

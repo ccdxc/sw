@@ -387,10 +387,13 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 		"alerts.AlertSpec":                          apisrvpkg.NewMessage("alerts.AlertSpec"),
 		"alerts.AlertStatus":                        apisrvpkg.NewMessage("alerts.AlertStatus"),
 		"alerts.AuditInfo":                          apisrvpkg.NewMessage("alerts.AuditInfo"),
+		"alerts.AuthConfig":                         apisrvpkg.NewMessage("alerts.AuthConfig"),
 		"alerts.AutoMsgAlertDestinationWatchHelper": apisrvpkg.NewMessage("alerts.AutoMsgAlertDestinationWatchHelper"),
 		"alerts.AutoMsgAlertPolicyWatchHelper":      apisrvpkg.NewMessage("alerts.AutoMsgAlertPolicyWatchHelper"),
 		"alerts.MatchedRequirement":                 apisrvpkg.NewMessage("alerts.MatchedRequirement"),
+		"alerts.PrivacyConfig":                      apisrvpkg.NewMessage("alerts.PrivacyConfig"),
 		"alerts.Requirement":                        apisrvpkg.NewMessage("alerts.Requirement"),
+		"alerts.SNMPTrapServer":                     apisrvpkg.NewMessage("alerts.SNMPTrapServer"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}
