@@ -57,20 +57,3 @@ modules:
               segment : filter://native=True
             - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
               segment : filter://native=True
-
-    - module:
-        name    : NONIP_QTAG
-        spec    : l2uc_nonip.testspec
-        perf    : True
-        iterate :
-            # Tagged Cases
-            - segment: filter://native=False
-              flow   : filter://label=NETWORKING
-
-    - module:
-        name    : NONIP_UTAG
-        spec    : l2uc_nonip.testspec
-        iterate :
-            # Untagged Cases
-            - segment: filter://native=True
-              flow   : filter://label=NETWORKING

@@ -33,17 +33,5 @@ sessions:
             - ref://store/specs/id=SESSION_UDP_SERVICES
             - ref://store/specs/id=SESSION_ICMPV6
         mac:
-            - ref://store/specs/id=SESSION_MAC
-
-    multidest:
-        ipv4:
-            - ref://store/specs/id=SESSION_L2MC
-            - ref://store/specs/id=SESSION_L2BC
-        ipv6:
-            - ref://store/specs/id=SESSION_L2MC
-            - ref://store/specs/id=SESSION_L2BC
-        mac:
-            - ref://store/specs/id=SESSION_L2MC
-            - ref://store/specs/id=SESSION_L2BC
 
 lif: ref://store/specs/id=LIF_ETH_RDMA
