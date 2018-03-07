@@ -42,6 +42,7 @@ typedef struct hal_cfg_s {
     char                 asic_name[HAL_MAX_NAME_STR];
     std::string          grpc_port;
     std::string          loader_info_file;
+    std::string          hbm_cache;
     char                 feature_set[HAL_MAX_NAME_STR];
     hal_feature_set_t    features;
     std::string          forwarding_mode;

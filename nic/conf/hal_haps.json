@@ -3,7 +3,8 @@
   "asic":
   {
     "name": "capri",
-    "loader_info_file" : "capri_loader.conf"
+    "loader_info_file" : "capri_loader.conf",
+    "hbm_cache" : "false"
   },
   "sw" :
   {

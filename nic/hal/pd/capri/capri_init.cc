@@ -869,8 +869,12 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        HAL_TRACE_DEBUG("Initializing HBM cache.");
-        ret = capri_cache_init();
+        if (hal_cfg->hbm_cache == "true") {
+            HAL_TRACE_DEBUG("Initializing HBM cache.");
+            ret = capri_cache_init();
+        } else {
+            HAL_TRACE_DEBUG("Disabling HBM cache based on HAL config.");
+        }
     }
 
     // Do asic init before overwriting with the default configs

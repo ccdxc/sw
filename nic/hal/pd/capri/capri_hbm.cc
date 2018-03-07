@@ -83,9 +83,10 @@ capri_hbm_parse (capri_cfg_t *cfg)
         reg->size_kb = p4_tbl.second.get<int>(JKEY_SIZE_KB);
         reg->start_offset = offset;
 
-        HAL_TRACE_DEBUG("hbm region : {}, size : {}kb, start offset : {:#x}",
-                        reg->mem_reg_name, reg->size_kb,
-                        HBM_OFFSET(reg->start_offset));
+        HAL_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}", 
+                        reg->mem_reg_name, reg->size_kb, 
+                        HBM_OFFSET(reg->start_offset),
+                        HBM_OFFSET(reg->start_offset + reg->size_kb * 1024));
 
         offset += reg->size_kb * 1024;
         idx++;
