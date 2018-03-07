@@ -1,5 +1,5 @@
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#ifndef IONIC_H
+#define IONIC_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -16,24 +16,24 @@
 #include "memory.h"
 #include "table.h"
 
-#define DEV	"ionic : "
+#define DEV			"ionic : "
 
-#define IONIC_UD_QP_HW_STALL 0x400000
+#define IONIC_UD_QP_HW_STALL	0x400000
 
 struct ionic_dpi {
-	struct ionic_doorbell    *dbpage;
-	pthread_spinlock_t        db_lock;
+	struct ionic_doorbell	*dbpage;
+	pthread_spinlock_t	db_lock;
 };
 
 struct ionic_pd {
-	struct ibv_pd ibvpd;
-	uint32_t pdid;
+	struct ibv_pd		ibvpd;
+	uint32_t		pdid;
 };
 
 struct ionic_context {
-	struct verbs_context vctx;
-	uint32_t max_qp;
-	struct ionic_dpi udpi;
+	struct verbs_context	vctx;
+	uint32_t		max_qp;
+	struct ionic_dpi	udpi;
 
 	pthread_mutex_t		mut;
 	struct tbl_root		qp_tbl;
@@ -56,23 +56,23 @@ struct ionic_cq {
 };
 
 struct ionic_srq {
-	struct ibv_srq ibvsrq;
+	struct ibv_srq		ibvsrq;
 };
 
 struct ionic_wrid {
-	struct ionic_psns *psns;
-	uint64_t wrid;
-	uint32_t bytes;
-	uint8_t sig;
+	struct ionic_psns	*psns;
+	uint64_t		wrid;
+	uint32_t		bytes;
+	uint8_t			sig;
 };
 
 struct ionic_qpcap {
-	uint32_t max_swr;
-	uint32_t max_rwr;
-	uint32_t max_ssge;
-	uint32_t max_rsge;
-	uint32_t max_inline;
-	uint8_t	sqsig;
+	uint32_t		max_swr;
+	uint32_t		max_rwr;
+	uint32_t		max_ssge;
+	uint32_t		max_rsge;
+	uint32_t		max_inline;
+	uint8_t			sqsig;
 };
 
 struct ionic_sq_meta {
@@ -89,7 +89,7 @@ struct ionic_rq_meta {
 struct ionic_qp {
 	struct ibv_qp		ibvqp;
 
-	uint32_t qpid;
+	uint32_t		qpid;
 
 	pthread_spinlock_t	sq_lock;
 	struct ionic_queue	sq;
@@ -103,41 +103,41 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta;
 
 	/* XXX cleanup */
-	struct ionic_srq *srq;
-	struct ionic_cq *scq;
-	struct ionic_cq *rcq;
-	struct ionic_dpi *udpi;
-	struct ionic_qpcap cap;
-    struct ionic_context *cntxt;
-    
-	uint32_t tbl_indx;
-	uint32_t sq_psn;
-	uint32_t ionicding_db;
-	uint64_t wqe_cnt;
-	uint16_t mtu;
-	uint16_t qpst;
-	uint8_t qptype;
-    uint8_t sq_qtype;
-    uint8_t rq_qtype;
+	struct ionic_srq	*srq;
+	struct ionic_cq		*scq;
+	struct ionic_cq		*rcq;
+	struct ionic_dpi	*udpi;
+	struct ionic_qpcap	cap;
+	struct ionic_context	*cntxt;
+
+	uint32_t		tbl_indx;
+	uint32_t		sq_psn;
+	uint32_t		ionicding_db;
+	uint64_t		wqe_cnt;
+	uint16_t		mtu;
+	uint16_t		qpst;
+	uint8_t			qptype;
+	uint8_t			sq_qtype;
+	uint8_t			rq_qtype;
 	/* irdord? */
 };
 
 struct ionic_mr {
-	struct ibv_mr ibvmr;
+	struct ibv_mr		ibvmr;
 };
 
 struct ionic_ah {
-	struct ibv_ah ibvah;
-	uint32_t avid;
+	struct ibv_ah		ibvah;
+	uint32_t		avid;
 };
 
 struct ionic_dev {
-	struct verbs_device vdev;
-	uint8_t abi_version;
-	size_t pg_size;
+	struct verbs_device	vdev;
+	uint8_t			abi_version;
+	size_t			pg_size;
 
-	uint32_t cqe_size;
-	uint32_t max_cq_depth;
+	uint32_t		cqe_size;
+	uint32_t		max_cq_depth;
 };
 
 /* pointer conversion functions*/
@@ -147,7 +147,7 @@ static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibvdev)
 }
 
 static inline struct ionic_context *to_ionic_context(
-		struct ibv_context *ibvctx)
+						     struct ibv_context *ibvctx)
 {
 	return container_of(ibvctx, struct ionic_context, vctx.context);
 }
@@ -169,7 +169,7 @@ static inline struct ionic_qp *to_ionic_qp(struct ibv_qp *ibvqp)
 
 static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibvah)
 {
-        return container_of(ibvah, struct ionic_ah, ibvah);
+	return container_of(ibvah, struct ionic_ah, ibvah);
 }
 
 static inline uint32_t ionic_get_sqe_size(void)
@@ -220,17 +220,17 @@ static inline uint8_t ibv_to_ionic_wr_opcd(uint8_t ibv_opcd)
 static inline void ionic_set_ibv_send_flags(int flags, struct sqwqe_t *wqe)
 {
 	if (flags & IBV_SEND_FENCE) {
-        wqe->base.fence = 1;
-    }
+		wqe->base.fence = 1;
+	}
 	if (flags & IBV_SEND_SOLICITED) {
-        wqe->base.solicited_event = 1;
-    }
+		wqe->base.solicited_event = 1;
+	}
 	if (flags & IBV_SEND_INLINE) {
-        wqe->base.inline_data_vld = 1;
-    }
+		wqe->base.inline_data_vld = 1;
+	}
 	if (flags & IBV_SEND_SIGNALED) {
-        wqe->base.complete_notify = 1;
-    }
+		wqe->base.complete_notify = 1;
+	}
 }
 
 static inline uint8_t ionic_ibv_wr_to_wc_opcd(uint8_t wr_opcd)
@@ -263,37 +263,37 @@ static inline uint8_t ionic_ibv_wr_to_wc_opcd(uint8_t wr_opcd)
 	return wc_opcd;
 }
 
-#define     CQ_STATUS_SUCCESS               0
-#define     CQ_STATUS_LOCAL_LEN_ERR         1
-#define     CQ_STATUS_LOCAL_QP_OPER_ERR     2
-#define     CQ_STATUS_LOCAL_PROT_ERR        3
-#define     CQ_STATUS_WQE_FLUSHED_ERR       4
-#define     CQ_STATUS_MEM_MGMT_OPER_ERR     5
-#define     CQ_STATUS_BAD_RESP_ERR          6
-#define     CQ_STATUS_LOCAL_ACC_ERR         7
-#define     CQ_STATUS_REMOTE_INV_REQ_ERR    8
-#define     CQ_STATUS_REMOTE_ACC_ERR        9
-#define     CQ_STATUS_REMOTE_OPER_ERR       10
-#define     CQ_STATUS_RETRY_EXCEEDED        11
-#define     CQ_STATUS_RNR_RETRY_EXCEEDED    12
-#define     CQ_STATUS_XRC_VIO_ERR           13
+#define CQ_STATUS_SUCCESS		0
+#define CQ_STATUS_LOCAL_LEN_ERR		1
+#define CQ_STATUS_LOCAL_QP_OPER_ERR	2
+#define CQ_STATUS_LOCAL_PROT_ERR	3
+#define CQ_STATUS_WQE_FLUSHED_ERR	4
+#define CQ_STATUS_MEM_MGMT_OPER_ERR	5
+#define CQ_STATUS_BAD_RESP_ERR		6
+#define CQ_STATUS_LOCAL_ACC_ERR		7
+#define CQ_STATUS_REMOTE_INV_REQ_ERR	8
+#define CQ_STATUS_REMOTE_ACC_ERR	9
+#define CQ_STATUS_REMOTE_OPER_ERR	10
+#define CQ_STATUS_RETRY_EXCEEDED	11
+#define CQ_STATUS_RNR_RETRY_EXCEEDED	12
+#define CQ_STATUS_XRC_VIO_ERR		13
 
-#define OP_TYPE_SEND                0
-#define OP_TYPE_SEND_INV            1
-#define OP_TYPE_SEND_IMM            2
-#define OP_TYPE_READ                3
-#define OP_TYPE_WRITE               4
-#define OP_TYPE_WRITE_IMM           5
-#define OP_TYPE_CMP_N_SWAP          6
-#define OP_TYPE_FETCH_N_ADD         7
-#define OP_TYPE_FRPNR               8
-#define OP_TYPE_LOCAL_INV           9
-#define OP_TYPE_BIND_MW             10
-#define OP_TYPE_SEND_INV_IMM        11 // vendor specific
+#define OP_TYPE_SEND			0
+#define OP_TYPE_SEND_INV		1
+#define OP_TYPE_SEND_IMM		2
+#define OP_TYPE_READ			3
+#define OP_TYPE_WRITE			4
+#define OP_TYPE_WRITE_IMM		5
+#define OP_TYPE_CMP_N_SWAP		6
+#define OP_TYPE_FETCH_N_ADD		7
+#define OP_TYPE_FRPNR			8
+#define OP_TYPE_LOCAL_INV		9
+#define OP_TYPE_BIND_MW			10
+#define OP_TYPE_SEND_INV_IMM		11 // vendor specific
 
-#define OP_TYPE_RDMA_OPER_WITH_IMM 16
-#define OP_TYPE_SEND_RCVD          17
-#define OP_TYPE_INVALID            18
+#define OP_TYPE_RDMA_OPER_WITH_IMM	16
+#define OP_TYPE_SEND_RCVD		17
+#define OP_TYPE_INVALID			18
 
 static inline enum ibv_wc_opcode ionic_to_ibv_wc_opcd(uint8_t ionic_opcd)
 {
@@ -338,44 +338,44 @@ static inline uint8_t ionic_to_ibv_wc_status(uint8_t wcst)
 
 	/* XXX should this use ionic_{req,rsp}_wc_status instead?
 	 * also, do we really need two different enums for wc status? */
-    switch (wcst) {
-    case 0:
-        ibv_wcst = IBV_WC_SUCCESS;
-        break;
-    case CQ_STATUS_LOCAL_LEN_ERR:
-        ibv_wcst = IBV_WC_LOC_LEN_ERR;
-        break;
-    case CQ_STATUS_LOCAL_QP_OPER_ERR:
-        ibv_wcst = IBV_WC_LOC_QP_OP_ERR;
-        break;
-    case CQ_STATUS_LOCAL_PROT_ERR:
-        ibv_wcst = IBV_WC_LOC_PROT_ERR;
-        break;
-    case CQ_STATUS_WQE_FLUSHED_ERR:
-        ibv_wcst = IBV_WC_WR_FLUSH_ERR;
-        break;
-    case CQ_STATUS_LOCAL_ACC_ERR:
-        ibv_wcst = IBV_WC_LOC_ACCESS_ERR;
-        break;
-    case CQ_STATUS_REMOTE_INV_REQ_ERR:
-        ibv_wcst = IBV_WC_REM_INV_REQ_ERR;
-        break;
-    case CQ_STATUS_REMOTE_ACC_ERR:
-        ibv_wcst = IBV_WC_REM_ACCESS_ERR;
-        break;
-    case CQ_STATUS_REMOTE_OPER_ERR:
-        ibv_wcst = IBV_WC_REM_OP_ERR;
-        break;
-    case CQ_STATUS_RNR_RETRY_EXCEEDED:
-        ibv_wcst = IBV_WC_RNR_RETRY_EXC_ERR;
-        break;
-    case CQ_STATUS_RETRY_EXCEEDED:
-        ibv_wcst = IBV_WC_RETRY_EXC_ERR;
-        break;
-    default:
-        ibv_wcst = IBV_WC_GENERAL_ERR;
-        break;
-    }
+	switch (wcst) {
+	case 0:
+		ibv_wcst = IBV_WC_SUCCESS;
+		break;
+	case CQ_STATUS_LOCAL_LEN_ERR:
+		ibv_wcst = IBV_WC_LOC_LEN_ERR;
+		break;
+	case CQ_STATUS_LOCAL_QP_OPER_ERR:
+		ibv_wcst = IBV_WC_LOC_QP_OP_ERR;
+		break;
+	case CQ_STATUS_LOCAL_PROT_ERR:
+		ibv_wcst = IBV_WC_LOC_PROT_ERR;
+		break;
+	case CQ_STATUS_WQE_FLUSHED_ERR:
+		ibv_wcst = IBV_WC_WR_FLUSH_ERR;
+		break;
+	case CQ_STATUS_LOCAL_ACC_ERR:
+		ibv_wcst = IBV_WC_LOC_ACCESS_ERR;
+		break;
+	case CQ_STATUS_REMOTE_INV_REQ_ERR:
+		ibv_wcst = IBV_WC_REM_INV_REQ_ERR;
+		break;
+	case CQ_STATUS_REMOTE_ACC_ERR:
+		ibv_wcst = IBV_WC_REM_ACCESS_ERR;
+		break;
+	case CQ_STATUS_REMOTE_OPER_ERR:
+		ibv_wcst = IBV_WC_REM_OP_ERR;
+		break;
+	case CQ_STATUS_RNR_RETRY_EXCEEDED:
+		ibv_wcst = IBV_WC_RNR_RETRY_EXC_ERR;
+		break;
+	case CQ_STATUS_RETRY_EXCEEDED:
+		ibv_wcst = IBV_WC_RETRY_EXC_ERR;
+		break;
+	default:
+		ibv_wcst = IBV_WC_GENERAL_ERR;
+		break;
+	}
 
 	return ibv_wcst;
 }
@@ -388,7 +388,7 @@ static inline bool ionic_op_is_local(uint8_t opcd)
 
 #if 0
 static inline uint8_t ionic_is_cqe_valid(struct ionic_cq *cq,
-					   struct ionic_bcqe *hdr)
+					 struct ionic_bcqe *hdr)
 {
 	udma_from_device_barrier();
 	return ((le32toh(hdr->flg_st_typ_ph) &
@@ -434,4 +434,4 @@ static inline void ionic_unlock_all_cqs(struct ionic_context *ctx)
 		pthread_spin_unlock(&cq->lock);
 }
 
-#endif
+#endif /* IONIC_H */
