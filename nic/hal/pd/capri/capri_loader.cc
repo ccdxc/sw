@@ -539,6 +539,7 @@ capri_list_program_addr(const char *filename)
         return -1;
     }
 
+    chmod(filename, 0666);
     /* Iterate through the loader instances, programs and list the valid ones */
     for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
         if ((ctx = loader_instances[it->first]) != NULL) {
