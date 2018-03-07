@@ -5,12 +5,12 @@
 package penlop
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
-	//	"encoding/json"
-	"fmt"
+
 	"github.com/davecgh/go-spew/spew"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
