@@ -17,6 +17,7 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex:
     phvwr p.ipsec_to_stage3_barco_req_addr, r2
     add r1, d.{pi}.wx, 1
     phvwr p.barco_dbell_pi, r1.wx
+    phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET
     nop.e
     nop
     

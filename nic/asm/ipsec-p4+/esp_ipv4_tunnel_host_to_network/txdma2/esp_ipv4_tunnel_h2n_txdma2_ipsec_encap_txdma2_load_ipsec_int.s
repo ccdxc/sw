@@ -23,10 +23,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
 // need to add error code
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_barco_error:
     phvwri p.p4_intr_global_drop, 1
-    phvwri p.app_header_table0_valid, 0
-    phvwri p.app_header_table1_valid, 0
-    phvwri p.app_header_table2_valid, 0
-    phvwri p.app_header_table3_valid, 0
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     phvwri p.ipsec_to_stage3_barco_error, 1
     nop.e
     nop

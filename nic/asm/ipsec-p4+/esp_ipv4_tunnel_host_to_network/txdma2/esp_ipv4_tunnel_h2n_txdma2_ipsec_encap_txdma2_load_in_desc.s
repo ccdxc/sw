@@ -21,6 +21,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_in_desc:
     phvwr  p.eth_hdr_dma_cmd_addr, r1
     phvwri  p.eth_hdr_dma_cmd_size, ETH_FIXED_HDR_SIZE
 
+    phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA2_DMA_COMMANDS_OFFSET
+
     nop.e
     nop
  
