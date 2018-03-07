@@ -584,11 +584,11 @@ cpp_int ${classname}::${field_name}(int _idx) const {
 #define {0}_H
 
 #include "nic/include/base.h"
-#include "nic/gen/cap_sw_csr/include/cap_sw_csr_base.h"
+#include "nic/gen/cap_csr_lite/include/cap_sw_csr_base.hpp"
 """.format(block_name.upper())
 
         for i in include_map:
-            cur_str = cur_str + """#include "{0}.h" 
+            cur_str = cur_str + """#include "nic/gen/cap_csr_lite/include/{0}.hpp" 
 """.format(i)
 
         cur_str = cur_str + """
@@ -603,7 +603,7 @@ using namespace std;""".format(block_name.upper())
     def gen_c_cc(self):
         cur_str = """
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "nic/gen/cap_sw_csr/include/{0}.h"
+#include "nic/gen/cap_csr_lite/include/{0}.hpp"
 
 using namespace std;
         """.format(block_name)
@@ -733,7 +733,7 @@ def gen_decoders(yaml_src_file, _block_name, outfile_name, options):
 
     out_f.close()
 
-def gen_cap_sw_csr_base_include():
+def gen_cap_csr_lite_base_include():
     return """#ifndef CAP_SW_CSR_BASE_H
 #define CAP_SW_CSR_BASE_H
     
@@ -829,8 +829,8 @@ class cap_sw_block_base : public cap_sw_csr_base {
 #endif // CAP_SW_CSR_BASE_H
 """
 
-def gen_cap_sw_csr_base_source():
-    return """#include "nic/gen/cap_sw_csr/include/cap_sw_csr_base.h"
+def gen_cap_csr_lite_base_source():
+    return """#include "nic/gen/cap_csr_lite/include/cap_sw_csr_base.hpp"
     
 cap_sw_csr_base::cap_sw_csr_base(cap_sw_csr_base * _parent) {
     base__parent = _parent;
@@ -1088,9 +1088,9 @@ def gen_block_name(filename):
     else:
         return block
 
-def gen_cap_sw_csr_build(files):
+def gen_cap_csr_lite_build(files):
     sources = """\"cap_sw_csr_base.cc\","""
-    includes = """\"include/cap_sw_csr_base.h\","""
+    includes = """\"include/cap_sw_csr_base.hpp\","""
     depends  = """\"//nic:capricsr_int\",
             \"//nic/utils/pack_bytes\","""
 
@@ -1098,13 +1098,13 @@ def gen_cap_sw_csr_build(files):
         block = gen_block_name(file)
         if block is not None:
             sources += """\n            \"{0}.cc\",""".format(block)
-            includes += """\n            \"include/{0}.h\",""".format(block)
+            includes += """\n            \"include/{0}.hpp\",""".format(block)
 
     cur_str = """package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "cap_sw_csr",
+    name = "cap_csr_lite",
     srcs = [{0}
            ],
     hdrs = [{1}
@@ -1116,35 +1116,35 @@ cc_library(
 
     return cur_str
 
-def gen_cap_sw_csr_base(gen_dir, files):
+def gen_cap_csr_lite_base(gen_dir, files):
 
-    inc_f = open(gen_dir+'/include/cap_sw_csr_base.h', 'w')
-    cur_str = gen_cap_sw_csr_base_include()
+    inc_f = open(gen_dir+'include/cap_sw_csr_base.hpp', 'w')
+    cur_str = gen_cap_csr_lite_base_include()
     inc_f.write(cur_str)
 
-    src_f = open(gen_dir+'/cap_sw_csr_base.cc', 'w')
-    cur_str = gen_cap_sw_csr_base_source()
+    src_f = open(gen_dir+'cap_sw_csr_base.cc', 'w')
+    cur_str = gen_cap_csr_lite_base_source()
     src_f.write(cur_str)
 
-    bld_f = open(gen_dir+'/BUILD', 'w')
-    cur_str = gen_cap_sw_csr_build(files)
-    bld_f.write(cur_str)
+#    bld_f = open(gen_dir+'BUILD', 'w')
+#    cur_str = gen_cap_csr_lite_build(files)
+#    bld_f.write(cur_str)
 
 if __name__ == '__main__':
 
     input_dir = '../asic/capri/verif/common/csr_gen/'
-    gen_dir = '../gen/cap_sw_csr'
-    if not os.path.exists(gen_dir + '/include'):
-        os.makedirs(gen_dir + '/include')
+    gen_dir = '../gen/cap_csr_lite/'
+    if not os.path.exists(gen_dir + 'include'):
+        os.makedirs(gen_dir + 'include')
 
     files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f)) and f.endswith(".yaml")]
-    gen_cap_sw_csr_base(gen_dir, files)
+    gen_cap_csr_lite_base(gen_dir, files)
     for file in files:
         block = gen_block_name(file)
         if block is not None:
-            print "Processing " + file + " ==> " +block+".cc [include/"+block+".h]"
-            gen_decoders(input_dir+file, block, gen_dir+'/include/'+block+'.h', 'c_header')
-            gen_decoders(input_dir+file, block, gen_dir+'/'+block+'.cc', 'c_cc')
+            print "Processing " +input_dir+file+ " ==> " +gen_dir+block+".cc [include/"+block+".hpp]"
+            gen_decoders(input_dir+file, block, gen_dir+'include/'+block+'.hpp', 'c_header')
+            gen_decoders(input_dir+file, block, gen_dir+block+'.cc', 'c_cc')
         else:
-            print "Skipped " + file
+            print "Skipped " + input_dir+file
 

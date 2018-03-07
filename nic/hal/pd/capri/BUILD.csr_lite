@@ -1,0 +1,23 @@
+package(default_visibility = ["//visibility:public"])
+licenses(["notice"])  # MIT license
+
+cc_library(
+    name = "cap_csr_lite",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["include/*.hpp"]),
+    deps = ["//nic:capricsr_int",
+            "//nic/utils/pack_bytes",
+           ],
+)
+
+cc_library(
+    name = "cap_csr_lite_includes",
+    srcs = [],
+    hdrs = glob([
+                 "include/*.h",
+                ]),
+    includes = [
+                "include",
+               ],
+    deps = [],
+)
