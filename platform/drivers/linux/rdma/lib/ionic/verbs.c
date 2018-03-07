@@ -17,8 +17,6 @@
 #include "main.h"
 #include "verbs.h"
 
-
-int g_wrid = 0;
 #define IONIC_DEBUG
 
 #ifdef IONIC_DEBUG
@@ -27,8 +25,6 @@ int g_wrid = 0;
 #else
 #define IONIC_LOG(format, ...)
 #endif
-
-uint32_t g_msn = 0;
 
 int ionic_query_device(struct ibv_context *ibvctx,
 			 struct ibv_device_attr *dev_attr)
@@ -1014,7 +1010,7 @@ static int ionic_build_rdma_write_sqe(struct ionic_qp      *qp,
 
     ionic_set_ibv_send_flags(wr->send_flags, wqe);
 
-    wqe->base.wrid = ++g_wrid;
+	wqe->base.wrid = wr->wr_id;
 
 	wqe->u.non_atomic.wqe.write.va = wr->wr.rdma.remote_addr;
 	wqe->u.non_atomic.wqe.write.r_key = wr->wr.rdma.rkey;
@@ -1055,7 +1051,7 @@ static int ionic_build_rdma_read_sqe(struct ionic_qp      *qp,
 
     ionic_set_ibv_send_flags(wr->send_flags, wqe);
 
-    wqe->base.wrid = ++g_wrid;
+	wqe->base.wrid = wr->wr_id;
 
 	wqe->u.non_atomic.wqe.read.va = wr->wr.rdma.remote_addr;
 	wqe->u.non_atomic.wqe.read.r_key = wr->wr.rdma.rkey;
