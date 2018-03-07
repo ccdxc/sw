@@ -164,7 +164,7 @@ func (tu *TestUtils) sshInit() {
 		servers = append(servers, fmt.Sprintf("%s:%s", tu.IPToNameMap[jj], globals.CMDClusterMgmtPort))
 	}
 	ginkgo.By(fmt.Sprintf("resolver servers: %+v ", servers))
-	tu.resolver = resolver.New(&resolver.Config{Servers: servers})
+	tu.resolver = resolver.New(&resolver.Config{Name: "test-utils", Servers: servers})
 
 	tu.apiGwAddr = tu.ClusterVIP + ":" + globals.APIGwRESTPort
 
