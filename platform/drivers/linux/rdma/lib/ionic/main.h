@@ -10,6 +10,7 @@
 #include <infiniband/driver.h>
 #include <util/udma_barrier.h>
 
+#include "ionic_dbg.h"
 #include "ionic-abi.h"
 #include "ionic_queue.h"
 #include "memory.h"

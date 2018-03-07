@@ -17,15 +17,6 @@
 #include "main.h"
 #include "verbs.h"
 
-#define IONIC_DEBUG
-
-#ifdef IONIC_DEBUG
-#define IONIC_LOG(format, ...) \
-    printf("%s(%d): " format "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
-#else
-#define IONIC_LOG(format, ...)
-#endif
-
 int ionic_query_device(struct ibv_context *ibvctx,
 			 struct ibv_device_attr *dev_attr)
 {
@@ -223,13 +214,6 @@ int ionic_destroy_cq(struct ibv_cq *ibvcq)
 	return 0;
 }
 
-static void ionic_debug_cqe(struct cqwqe_be_t *cqe)
-{
-	IONIC_LOG("wrid %#lx color_flags %#x",
-		  (long)be64toh(cqe->id.wrid),
-		  (int)cqe->color_flags);
-}
-
 static bool ionic_cqe_color(struct cqwqe_be_t *cqe)
 {
 	return (cqe->color_flags >> COLOR_SHIFT) != 0;
@@ -404,6 +388,7 @@ static int ionic_poll_send_msn_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 static bool ionic_next_qp_cqe(struct ionic_cq *cq, struct ionic_qp **qp,
 			      struct cqwqe_be_t *cqe)
 {
+	struct ionic_context *ctx = to_ionic_context(cq->ibvcq.context);
 	struct cqwqe_be_t *qcqe;
 
 again:
@@ -416,7 +401,10 @@ again:
 
 	*cqe = *qcqe;
 
-	ionic_debug_cqe(cqe);
+	ionic_dbg(cq->cntxt, "poll cq prod %d", cq->q.prod);
+	ionic_dbg_xdump(cq->cntxt, "cqe", cqe, cq->q.stride);
+
+	ionic_dbg_cqe(ctx, cqe);
 
 	*qp = tbl_lookup(&cq->cntxt->qp_tbl, ionic_cqe_qpn(cqe));
 
@@ -1162,6 +1150,9 @@ int ionic_post_send(struct ibv_qp *ibvqp,
 		meta->len = bytes;
 		meta->op = ibv_to_ionic_wr_opcd(wr->opcode);
 
+		ionic_dbg(qp->cntxt, "post send prod %d", qp->sq.prod);
+		ionic_dbg_xdump(qp->cntxt, "wqe", sqe, qp->sq.stride);
+
 		ionic_queue_produce(&qp->sq);
 		qp->wqe_cnt++;
         nreq++;
@@ -1218,6 +1209,9 @@ int ionic_post_recv(struct ibv_qp *ibvqp,
 	meta = &qp->rq_meta[qp->rq.prod];
 	meta->wrid = wr->wr_id;
 	meta->len = bytes; /* XXX see ionic_poll_recv, byte_len */
+
+	ionic_dbg(qp->cntxt, "post recv prod %d", qp->rq.prod);
+	ionic_dbg_xdump(qp->cntxt, "wqe", rqe, qp->rq.stride);
 
 		ionic_queue_produce(&qp->rq);
         qp->wqe_cnt++;
