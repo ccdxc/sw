@@ -147,6 +147,63 @@ local function binaryStringToNumber(binString, numBytes)
     return totalValue
 end
 
+local function charValidNumber(c, base)
+    if (c >= '0') and (c <= '9') then
+        return (c - '0') < base
+    elseif (c >= 'a') and (c <= 'z') then
+        return (10 + c - 'a') < base
+    elseif (c >= 'A') and (c <= 'Z') then
+        return (10 + c - 'A') < base
+    end
+
+    return false
+end
+
+local function charToNumber(c)
+    if (c >= '0') and (c <= '9') then
+        return (c - '0')
+    elseif (c >= 'a') and (c <= 'z') then
+        return (10 + c - 'a')
+    elseif (c >= 'A') and (c <= 'Z') then
+        return (10 + c - 'A')
+    end
+
+    return 0
+end
+
+local function reverseAsciiStringToNumber(binString, base, numBytes)
+    local totalValue = 0
+    local i = numBytes
+    local b = base
+    while (i > 0) do
+        totalValue = totalValue * b
+        if binString:byte(i) then
+            if not charValidNumber(binString:byte(i), b) then
+                break  -- TODO: error handling, don't consume byte
+            end
+            totalValue = totalValue + charToNumber(binString:byte(i))
+        end
+        i = i - 1
+    end
+    return totalValue
+end
+
+local function asciiStringToNumber(binString, base, numBytes) 
+    local totalValue = 0
+    local b = base
+    for i = 1,numBytes  do
+        totalValue = totalValue * b
+        if binString:byte(i) then
+            if not charValidNumber(binString:byte(i), b) then
+                break  -- TODO: error handling, don't consume byte
+            end
+            totalValue = totalValue + charToNumber(binString:byte(i))
+        end
+        --print ("offset " .. i .. " total " .. totalValue)
+    end
+    return totalValue
+end
+
 --[[tonumber() assumes input is being given in network byte order, that is converted to host order. So
 if input is from packet directly, then it works fine. If input is from some bytestring from C, then one 
 has to change the bytestring to network order before calling the function.
@@ -201,8 +258,10 @@ DetectorCommon = {
     getShortHostFormat = getShortHostFormat,
     getLongHostFormat = getLongHostFormat,
     binaryStringToNumber = binaryStringToNumber,
+    asciiStringToNumber = asciiStringToNumber,
     getStringValue = getStringValue,
     reverseBinaryStringToNumber = reverseBinaryStringToNumber,
+    reverseAsciiStringToNumber = reverseAsciiStringToNumber,
     intToIPv4 = intToIPv4,
 }
 
