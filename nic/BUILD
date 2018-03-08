@@ -336,6 +336,15 @@ cc_library(
 )
 
 cc_library(
+    name = "hal_gen_includes",
+    srcs = glob(["gen/hal/include/*.hpp"]),
+    hdrs = glob(["gen/hal/include/*.hpp"]),
+    deps = [
+        "//nic/include:base_includes",
+    ],
+)
+
+cc_library(
     name = "gen_proto_includes",
     srcs = [
     ] + glob(["gen/proto/hal/*.hpp"]),

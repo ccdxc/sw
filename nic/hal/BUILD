@@ -68,6 +68,7 @@ cc_library(
     deps = [
         "//nic:asic_includes",
         "//nic:gen_proto_includes",
+        "//nic:hal_gen_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_indexer",
         "@sdk//obj:sdk_slab",

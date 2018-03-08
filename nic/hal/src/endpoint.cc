@@ -1,7 +1,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/include/hal_api_stats.hpp"
+#include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/interface.hpp"

@@ -13,10 +13,16 @@ ws_top = os.getcwd() + '/../'
 svc_gen_dir   = ws_top + '/nic/gen/hal/svc/'
 proto_gen_dir = ws_top + '/nic/gen/proto/hal/'
 template_dir  = ws_top + '/nic/tools/hal/'
-api_stats_dir = ws_top + '/nic/include/'
+api_stats_dir = ws_top + '/nic/gen/hal/include/'
 
 try:
     os.makedirs(svc_gen_dir)
+except OSError as e:
+    if e.errno != errno.EEXIST:
+        raise
+
+try:
+    os.makedirs(api_stats_dir)
 except OSError as e:
     if e.errno != errno.EEXIST:
         raise

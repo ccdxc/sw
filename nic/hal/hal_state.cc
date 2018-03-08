@@ -3,7 +3,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
-#include "nic/include/hal_api_stats.hpp"
+#include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/l2segment.hpp"

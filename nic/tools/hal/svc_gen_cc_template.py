@@ -21,7 +21,7 @@
 //:: sys.path.insert(0, fullpath)
 //::
 //:: def write_api_stats_enum(enumC, hal_name):
-//::     stats_file_path = ws_top + '/nic/include/hal_api_stats.hpp'
+//::     stats_file_path = ws_top + '/nic/gen/hal/include/hal_api_stats.hpp'
 //::     stats_file = open(stats_file_path, "a")
 //::     hal_name_upper = hal_name.upper();
 //::     e1 = "ENTRY(HAL_API_"

@@ -5,7 +5,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/nwsec_group.hpp"
-#include "nic/include/hal_api_stats.hpp"
+#include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
