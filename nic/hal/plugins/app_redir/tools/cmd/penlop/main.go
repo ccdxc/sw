@@ -5,7 +5,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"penlop"
+
+	"github.com/pensando/sw/nic/hal/plugins/app_redir/tools/penlop"
 )
 
 const helpStr string = `
