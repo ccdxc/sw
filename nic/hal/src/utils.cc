@@ -75,7 +75,12 @@ ip_pfx_spec_to_pfx_spec (ip_prefix_t *ip_pfx,
     hal_ret_t ret = HAL_RET_OK;
 
     ip_pfx->len = in_ippfx.prefix_len();
-    ret = ip_addr_spec_to_ip_addr(&ip_pfx->addr, in_ippfx.address());
+    if (((in_ippfx.address().ip_af() == types::IP_AF_INET) && (ip_pfx->len > 32)) ||
+        ((in_ippfx.address().ip_af() == types::IP_AF_INET6) && (ip_pfx->len > 128))) {
+        ret = HAL_RET_INVALID_ARG;
+    } else {
+        ret = ip_addr_spec_to_ip_addr(&ip_pfx->addr, in_ippfx.address());
+    }
     return ret;
 }
 

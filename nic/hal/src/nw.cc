@@ -365,7 +365,11 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     // check if network with pfx already exists
-    ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
+    ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
+        goto end;
+    }
     if (find_network_by_key(tid, &ip_pfx)) {
         HAL_TRACE_ERR("{}:network already exists (tid,ippfx) : {}:{}",
                       __FUNCTION__, tid, ippfx2str(&ip_pfx));
@@ -394,7 +398,11 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     nw->nw_key.vrf_id = tid;
     nw->gw_ep_handle = spec.gateway_ep_handle();
     MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
-    ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
+    ret = ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
+        goto end;
+    }
     network_read_security_groups(nw, spec);
 
     HAL_TRACE_DEBUG("{}:nw: {}, rmac: {}", 
@@ -457,13 +465,17 @@ network_lookup_key_or_handle (NetworkKeyHandle& kh, vrf_id_t tid)
     // vrf_id_t                     tid;
     network_t                       *nw = NULL;
     ip_prefix_t                     ip_pfx;
+    hal_ret_t                       ret = HAL_RET_OK;
 
-    auto nw_pfx = kh.ip_prefix();
 
     // tid = req.meta().vrf_id();
-    ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
 
     if (kh.key_or_handle_case() == NetworkKeyHandle::kIpPrefix) {
+        ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, kh.ip_prefix());
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key", __FUNCTION__);
+            return NULL;
+        }
         nw = find_network_by_key(tid, &ip_pfx);
     } else if (kh.key_or_handle_case() == NetworkKeyHandle::kNwHandle) {
         nw = find_network_by_handle(kh.nw_handle());
@@ -1015,6 +1027,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     ip_prefix_t           ip_pfx = { 0 };
     network_t             *nw;
     NetworkGetResponse    *response;
+    hal_ret_t             ret = HAL_RET_OK;
 
     if (!req.has_vrf_key_handle() ||
         req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
@@ -1031,7 +1044,12 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
             auto nw_pfx = kh.ip_prefix();
 
             nw_key.vrf_id = req.vrf_key_handle().vrf_id();
-            ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
+            ret = ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("{}:invalid IPPrefix specified in Network Key",
+                               __FUNCTION__);
+                return ret;
+            }
 
             nw = find_network_by_key(nw_key.vrf_id, &ip_pfx);
 

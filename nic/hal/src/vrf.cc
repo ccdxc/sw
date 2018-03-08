@@ -444,7 +444,14 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         //             my tep ip have to be same.
         ip_addr_spec_to_ip_addr(g_hal_state->oper_db()->mytep(), 
                                 spec.mytep_ip());
-        ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix, spec.gipo_prefix());
+        if (spec.has_gipo_prefix()) {
+            ret = ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix, spec.gipo_prefix());
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("{}: Invalid GIPO prefix specified for VRF {}", 
+                               __FUNCTION__, vrf->vrf_id);
+                goto end;
+            }
+        }
         HAL_TRACE_DEBUG("Local VTEP: {}; GIPo Prefix: {}/{}",
                         ipaddr2str(g_hal_state->oper_db()->mytep()),
                         ipaddr2str(&vrf->gipo_prefix.addr),
@@ -565,6 +572,8 @@ hal_ret_t
 vrf_gipo_prefix_update (VrfSpec& spec, vrf_t *vrf, bool *gipo_prefix_change,
                         ip_prefix_t *new_gipo_prefix)
 {
+    hal_ret_t               ret = HAL_RET_OK;
+
     *gipo_prefix_change = false;
 
     if (vrf->vrf_type != types::VRF_TYPE_INFRA) {
@@ -572,7 +581,14 @@ vrf_gipo_prefix_update (VrfSpec& spec, vrf_t *vrf, bool *gipo_prefix_change,
         goto end;
     }
 
-    ip_pfx_spec_to_pfx_spec(new_gipo_prefix, spec.gipo_prefix());
+    if (spec.has_gipo_prefix()) {
+        ret = ip_pfx_spec_to_pfx_spec(new_gipo_prefix, spec.gipo_prefix());
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}: Invalid GIPO prefix specified for VRF Update {}", 
+                           __FUNCTION__, vrf->vrf_id);
+            goto end;
+        }
+    }
     if (!ip_prefix_is_equal(&vrf->gipo_prefix, new_gipo_prefix)) {
         HAL_TRACE_DEBUG("gipo prefix change {} => {}", 
                         ippfx2str(&vrf->gipo_prefix), 
