@@ -98,7 +98,7 @@ header_type nvme_be_sta_hdr_t {
     time_us		: 32;	// Timestamp in usec
     be_status		: 8;	// Backend status
     is_q0		: 8;	// Is queue 0 (admin queue)
-    rsvd		: 16;	// Padding for 64 bit alignment
+    be_rsvd		: 16;	// Padding for 64 bit alignment
     r2n_buf_handle	: 64;	// Back pointer to the R2N buffer
   }
 }
@@ -182,6 +182,13 @@ header_type storage_pci_data_t  {
   modify_field(hdr.ssd_handle, ssd_handle);		\
   modify_field(hdr.io_priority, io_priority);		\
   modify_field(hdr.is_read, is_read);			\
+  modify_field(hdr.r2n_buf_handle, r2n_buf_handle);	\
+
+#define NVME_BE_STA_HDR_COPY(hdr)			\
+  modify_field(hdr.time_us, time_us);			\
+  modify_field(hdr.be_status, be_status);		\
+  modify_field(hdr.is_q0, is_q0);			\
+  modify_field(hdr.be_rsvd, be_rsvd);			\
   modify_field(hdr.r2n_buf_handle, r2n_buf_handle);	\
 
 #define SEQ_R2N_ENTRY_COPY(entry)			\

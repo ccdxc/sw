@@ -181,11 +181,11 @@ action pci_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   // Raise the MSIx interrupt if enabled
   if (pci_q_state_scratch.intr_en == 1) {
     modify_field(pci_intr_addr_scratch.addr, pci_q_state_scratch.intr_addr);
-    modify_field(pci_intr_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
+    modify_field(pci_intr_data.data, pci_q_state_scratch.intr_data);
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_5, 
                              0,
-                             PHV_FIELD_OFFSET(intr_data.data),
-                             PHV_FIELD_OFFSET(intr_data.data),
+                             PHV_FIELD_OFFSET(pci_intr_data.data),
+                             PHV_FIELD_OFFSET(pci_intr_data.data),
                              0, 0, 0, 0)
   }
 

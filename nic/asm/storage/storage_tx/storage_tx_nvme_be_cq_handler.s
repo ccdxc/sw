@@ -22,7 +22,7 @@ storage_tx_nvme_be_cq_handler_start:
    // Set the state information for the NVME backend status header
    // TODO: Is there any time where error status needs to be set ? 
    //       Set is_q0, time_us correctly.
-   phvwri	p.{nvme_be_sta_hdr_time_us...nvme_be_sta_hdr_rsvd}, 0
+   phvwri	p.{nvme_be_sta_hdr_time_us...nvme_be_sta_hdr_be_rsvd}, 0
 
    // Store the SSD's c_ndx value for DMA to the NVME backend SQ
    phvwr	p.ssd_ci_c_ndx, d.sq_head

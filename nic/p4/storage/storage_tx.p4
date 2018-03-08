@@ -656,7 +656,7 @@ action nvme_be_cq_handler(cspec, rsvd, sq_head, sq_id, cid, phase, status) {
   modify_field(nvme_be_sta_hdr.time_us, 0);
   modify_field(nvme_be_sta_hdr.be_status, 0);
   modify_field(nvme_be_sta_hdr.is_q0, 0);
-  modify_field(nvme_be_sta_hdr.rsvd, 0);
+  modify_field(nvme_be_sta_hdr.be_rsvd, 0);
 
   // Store the SSD's c_ndx value for DMA to the NVME backend SQ
   modify_field(ssd_ci.c_ndx, sq_head);
