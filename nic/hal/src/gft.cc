@@ -1436,7 +1436,7 @@ end:
 
 #define GFT_HDRS_FIELDS(VAR)                                                \
     if (VAR->headers & GFT_HEADER_ETHERNET) {                               \
-        buf.write(" › Ethernet: [ ");                                       \
+        buf.write(" > Ethernet: [ ");                                       \
         if (VAR->fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {                  \
             buf.write("SMac: {} ", macaddr2str(VAR->eth_fields.smac));      \
         }                                                                   \
@@ -1570,7 +1570,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
 
 #define GFT_HDRS_MATCH_FIELDS(VAR)                                          \
     if (VAR->headers & GFT_HEADER_ETHERNET) {                               \
-        buf.write(" › Ethernet: [ ");                                       \
+        buf.write(" > Ethernet: [ ");                                       \
         if (VAR->match_fields & GFT_HEADER_FIELD_SRC_MAC_ADDR) {            \
             buf.write("SMac ");                                             \
         }                                                                   \
@@ -1589,7 +1589,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
     }                                                                       \
     if (VAR->headers & GFT_HEADER_IPV4 ||                                   \
         VAR->headers & GFT_HEADER_IPV6) {                                   \
-        buf.write(" › {}: [ ",                                              \
+        buf.write(" > {}: [ ",                                              \
                   (VAR->headers & GFT_HEADER_IPV4) ? "IPv4" : "IPv6");      \
         if (VAR->match_fields & GFT_HEADER_FIELD_SRC_IP_ADDR) {             \
             buf.write("SIP ");                                              \
@@ -1611,7 +1611,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
         buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_ICMP) {                                   \
-        buf.write(" › ICMP: [ ");                                           \
+        buf.write(" > ICMP: [ ");                                           \
         if (VAR->match_fields & GFT_HEADER_FIELD_ICMP_TYPE) {               \
             buf.write("Type ");                                             \
         }                                                                   \
@@ -1623,7 +1623,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
         buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_TCP) {                                    \
-        buf.write(" › TCP: [ ");                                            \
+        buf.write(" > TCP: [ ");                                            \
         if (VAR->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {      \
             buf.write("Sport ");                                            \
         }                                                                   \
@@ -1638,7 +1638,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
         buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_UDP) {                                    \
-        buf.write(" › UDP: [ ");                                            \
+        buf.write(" > UDP: [ ");                                            \
         if (VAR->match_fields & GFT_HEADER_FIELD_TRANSPORT_SRC_PORT) {      \
             buf.write("Sport ");                                            \
         }                                                                   \
@@ -1650,7 +1650,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
         buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_IP_IN_GRE_ENCAP) {                        \
-        buf.write(" › GRE: [ ");                                            \
+        buf.write(" > GRE: [ ");                                            \
         if (VAR->match_fields & GFT_HEADER_FIELD_GRE_PROTOCOL) {            \
             buf.write("GREProto ");                                         \
         }                                                                   \
@@ -1659,7 +1659,7 @@ gft_exact_match_flow_entry_print (gft_exact_match_flow_entry_t *fe)
         buf.clear();                                                        \
     }                                                                       \
     if (VAR->headers & GFT_HEADER_VXLAN_ENCAP) {                            \
-        buf.write(" › Vxlan: [ ");                                          \
+        buf.write(" > Vxlan: [ ");                                          \
         if (VAR->match_fields & GFT_HEADER_FIELD_TENANT_ID) {               \
             buf.write("TenantId ");                                         \
         }                                                                   \

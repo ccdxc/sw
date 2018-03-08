@@ -37,3 +37,21 @@ profiles:
         table   : EXACT_MATCH_INGRESS
         groups  :
             - ref://store/objects/id=GFT_HGEXM_IPV4_ICMP_QTAG
+
+    - profile:
+        name    : GFT_EXMP_IPV4_UDP_QTAG_EGRESS
+        table   : EXACT_MATCH_EGRESS
+        groups  :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_UDP_QTAG
+
+    - profile:
+        name    : GFT_EXMP_IPV4_TCP_QTAG_EGRESS
+        table   : EXACT_MATCH_EGRESS
+        groups  :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_TCP_QTAG
+
+    - profile:
+        name    : GFT_EXMP_IPV4_ICMP_QTAG_EGRESS
+        table   : EXACT_MATCH_EGRESS
+        groups  :
+            - ref://store/objects/id=GFT_HGEXM_IPV4_ICMP_QTAG
