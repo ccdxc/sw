@@ -1,0 +1,115 @@
+# An imaginary protocol, PTTP, which looks very similar to HTTP
+app:
+  name:  PTTP
+  base_protocol: tcp
+  l4_ports: [ 70, 7070 ]
+  l4_protocol: 6
+  precondition_patterns:
+    - "PET"
+    - "FEAD"
+    - "HUSH"
+    - "GOST"
+    - "PTTP/1"
+  initial_state: init
+  states:
+    - name: init
+      pre_actions:
+        - type: match_condition
+          match_condition:
+            expression:
+              op: pktvar
+              literal: dir
+            matched_action:
+              type: goto_state
+              goto_state: resp_init
+            nomatched_action:
+              type: goto_state
+              goto_state: req_init
+
+    - name: req_init
+      regex_set:
+        type: match_first
+        regex_states:
+          - regex: "PET "
+            state:
+              name: method_known
+          - regex: "FEAD "
+            state:
+              name: method_head
+          - regex: "(GOST|HUSH) "
+            state:
+              name: method_known
+          - regex: ".* "
+            state:
+              name: method_unknown
+
+    - name: method_head
+      pre_actions:
+        - type: set_sessvar
+          set_sessvar:
+            name: is_head
+            literal: true
+        - type: set_app_status
+          set_app_status: IN_PROGRESS
+
+    - name: method_known
+      pre_actions:
+        - type: set_app_status
+          set_app_status: IN_PROGRESS
+
+    - name: method_unknown
+      pre_actions:
+        - type: set_app_status
+          set_app_status: NOT_FOUND
+
+    - name: set_content_length
+      pre_actions:
+        - type: accumulate
+          accumulate:
+            type: atoi
+            sessvar: content_len
+          
+    - name: content_length
+      pre_actions:
+        - type: match_condition
+          match_condition:
+            expression:
+              op: "&&"
+              operands:
+                - op: pktvar
+                  literal: dir
+                - op: sessvar
+                  literal: is_head
+            matched_action:
+              type: set_sessvar
+              set_sessvar:
+                name: content_len
+                literal: 0
+            nomatched_action:
+              type: goto_state
+              goto_state: set_content_length
+          
+    - name: resp_header
+      regex_set:
+        type: match_first
+#        flags: case-insensitive  // TODO
+        regex_states:
+          - regex: "\\nContent-Length:[ \\t]*"
+            state:
+              name: content_length
+          - regex: "\\n\\r?\\n"
+            state:
+              name: headers_done
+
+    - name: resp_init
+      pre_actions:
+        - type: match_pattern
+          match_pattern:
+            regex: "PTTP/1."
+            matched_action:
+              type: set_app_status
+              set_app_status: FOUND
+            nomatched_action:
+              type: set_app_status
+              set_app_status: NOT_FOUND
+    - name: headers_done
