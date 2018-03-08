@@ -58,10 +58,11 @@ void getprogram_address(const internal::ProgramAddressReq &req,
         args.offset = &addr;
         hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, 
                                   (void *)&args);
-        if (ret != HAL_RET_OK)
+        if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
-        else
+        } else {
             resp->set_addr(addr);
+        }
     } else {
         pd::pd_capri_program_to_base_addr_args_t base_args = {0};
         base_args.handle = req.handle().c_str();
@@ -69,10 +70,11 @@ void getprogram_address(const internal::ProgramAddressReq &req,
         base_args.base_addr = &addr;
         hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR, 
                                   (void *)&base_args);
-        if (ret != HAL_RET_OK)
+        if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
-        else
+        } else {
             resp->set_addr(addr);
+        }
     }
 }
 
@@ -101,15 +103,17 @@ void allochbm_address(const internal::HbmAddressReq &req,
 }
 
 void configurelif_bdf(const internal::LifBdfReq &req,
-                      internal::LifBdfResp *resp) {
-   pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
-   args.lif = req.lif();
-   args.bdf = req.bdf();
-   int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF, 
+                      internal::LifBdfResp *resp)
+{
+    pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
+    args.lif = req.lif();
+    args.bdf = req.bdf();
+    int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF, 
                                   (void *)&args);
 
-   resp->set_lif(req.lif());
-   resp->set_bdf(req.bdf());
-   resp->set_status(ret);
+    resp->set_lif(req.lif());
+    resp->set_bdf(req.bdf());
+    resp->set_status(ret);
 }
+
 }    // namespace hal

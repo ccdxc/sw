@@ -145,7 +145,6 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     return HAL_RET_OK;
 
 cleanup:
-
     tlscb_free(tlscb);
     return ret;
 }
@@ -198,7 +197,6 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     
     // fill stats of this TLS CB
     rsp->set_api_status(types::API_STATUS_OK);
- 
     return HAL_RET_OK;
 }
 
@@ -306,7 +304,6 @@ tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp
     
     // fill stats of this TLS CB
     rsp->add_api_status(types::API_STATUS_OK);
- 
     return HAL_RET_OK;
 }
 

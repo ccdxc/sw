@@ -2,6 +2,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
@@ -209,6 +210,7 @@ qosclass_get (qos::QosClassGetRequest& req,
 
     if (!req.has_key_or_handle()) {
         g_hal_state->qos_class_ht()->walk(qos_class_get_ht_cb, rsp);
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_GET_SUCCESS);
         return HAL_RET_OK;
     }
 
@@ -221,7 +223,7 @@ qosclass_get (qos::QosClassGetRequest& req,
     }
 
     qos_class_get_fill_rsp(response, qos_class);
-
+    HAL_API_STATS_INC(HAL_API_QOSCLASS_GET_SUCCESS);
     return HAL_RET_OK;
 }
 
@@ -791,6 +793,9 @@ end:
             qos_class_free(qos_class, true);
             qos_class = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_CREATE_SUCCESS);
     }
 
     qos_class_prepare_rsp(rsp, ret, qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID);
@@ -1150,6 +1155,11 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
                              qos_class_update_cleanup_cb);
 
 end:
+    if (ret != HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_UPDATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_UPDATE_SUCCESS);
+    }
     qos_class_prepare_rsp(rsp, ret,
                           qos_class ? qos_class->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: qos_class update ");
@@ -1337,6 +1347,11 @@ qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
                              qos_class_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_QOSCLASS_UPDATE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: qos_class delete ");
     return ret;
@@ -2086,6 +2101,11 @@ copp_update (CoppSpec& spec, CoppResponse *rsp)
                              copp_update_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_COPP_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_COPP_UPDATE_FAIL);
+    }
     copp_prepare_rsp(rsp, ret,
                      copp ? copp->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: copp update ");
@@ -2141,6 +2161,7 @@ copp_get (CoppGetRequest& req, CoppGetResponseMsg *rsp)
 
     if (!req.has_key_or_handle()) {
         g_hal_state->copp_ht()->walk(copp_get_ht_cb, rsp);
+        HAL_API_STATS_INC(HAL_API_COPP_GET_SUCCESS);
         return HAL_RET_OK;
     }
 
@@ -2149,11 +2170,12 @@ copp_get (CoppGetRequest& req, CoppGetResponseMsg *rsp)
     copp = find_copp_by_key_handle(kh);
     if (!copp) {
         response->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_API_STATS_INC(HAL_API_COPP_GET_FAIL);
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
 
     copp_get_fill_rsp(response, copp);
-
+    HAL_API_STATS_INC(HAL_API_COPP_GET_SUCCESS);
     return HAL_RET_OK;
 }
 

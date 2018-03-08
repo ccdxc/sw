@@ -1,6 +1,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/l4lb.hpp"
@@ -163,6 +164,11 @@ l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
 
 end:
 
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_L4LBSERVICE_CREATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_L4LBSERVICE_CREATE_FAIL);
+    }
     return ret;
 }
     

@@ -4,7 +4,8 @@
 //::
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/base.h"
-#include "nic/include/trace.hpp" 
+#include "nic/include/trace.hpp"
+#include "nic/include/hal_state.hpp" 
 //::
 //::  hdr_file = fileName.replace('_pb2.py', '') + '_svc_gen.hpp'
 //::
@@ -18,6 +19,28 @@
 //:: ws_top = os.environ['WS_TOP']
 //:: fullpath = ws_top + '/nic/gen/proto/hal/'
 //:: sys.path.insert(0, fullpath)
+//::
+//:: def write_api_stats_enum(enumC, hal_name):
+//::     stats_file_path = ws_top + '/nic/include/hal_api_stats.hpp'
+//::     stats_file = open(stats_file_path, "a")
+//::     hal_name_upper = hal_name.upper();
+//::     e1 = "ENTRY(HAL_API_"
+//::     e2 = hal_name_upper
+//::     e3 = "_CALL,"
+//::     e4 = "_SUCCESS,"
+//::     e5 = "_FAIL,"
+//::     enum_str = str(enumC) + ","
+//::     enum_name = "\"" + hal_name + " call\")"
+//::     stats_file.write("\t%-69s%-4s %-50s\t\\\r\n" % (e1 + e2 + e3, enum_str, enum_name))
+//::     enumC = enumC + 1
+//::     enum_str = str(enumC) + ","
+//::     enum_name = "\"" + hal_name + " success\")"
+//::     stats_file.write("\t%-69s%-4s %-50s\t\\\r\n" % (e1 + e2 + e4, enum_str, enum_name))
+//::     enumC = enumC + 1
+//::     enum_str = str(enumC) + ","
+//::     enum_name = "\"" + hal_name + " fail\")"
+//::     stats_file.write("\t%-69s%-4s %-50s\t\\\r\n" % (e1 + e2 + e5, enum_str, enum_name))
+//:: #enddef
 //::
 //:: def convert_to_snake_case(name, fileName, input_name, output_name):
 //::     import re
@@ -48,7 +71,7 @@
 //:: includeFileName = fileName[:-7]
 //::
 #include "nic/hal/src/${includeFileName}.hpp"
-
+//:: enumC = int(enumCount)
 //:: # Remove the _pb2.py from file and store it for now.
 //:: for service in fileModule.DESCRIPTOR.services_by_name.items():
 //::     pkg = fileModule.DESCRIPTOR.package.lower()
@@ -70,6 +93,7 @@ using ${pkg}::${service[0]};
 //::             #endif
 //::         #endfor
 //::         hal_name = convert_to_snake_case(method[0], fileName, input_name, output_name)
+//::         hal_name_upper = hal_name.upper();
 //::         if 'Get' in method[0]:
 //::             op = 'CFG_OP_READ'
 //::             repeated_field = False
@@ -88,7 +112,10 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
+//::    write_api_stats_enum(enumC, hal_name)
+//::    enumC = enumC + 3
 
+    HAL_API_STATS_ADD(hal::HAL_API_${hal_name_upper}_CALL, nreqs);
     hal::hal_cfg_db_open(hal::${op});
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);

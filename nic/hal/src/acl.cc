@@ -3,6 +3,7 @@
 #include "nic/include/eth.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/acl.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
@@ -1607,6 +1608,9 @@ end:
             acl_free(acl, true);
             acl = NULL;
         }
+        HAL_API_STATS_INC (HAL_API_ACL_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC (HAL_API_ACL_CREATE_SUCCESS);
     }
 
     acl_prepare_rsp(rsp, ret, acl ? acl->hal_handle : HAL_HANDLE_INVALID);
@@ -1853,7 +1857,11 @@ end:
             acl_free(acl_clone, true);
             acl_clone = NULL;
         }
+        HAL_API_STATS_INC (HAL_API_ACL_UPDATE_FAIL);
+    } else {
+        HAL_API_STATS_INC (HAL_API_ACL_UPDATE_SUCCESS);
     }
+
     acl_prepare_rsp(rsp, ret,
                     acl ? acl->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: acl update ");
@@ -1874,6 +1882,7 @@ acl_get (AclGetRequest& req, AclGetResponseMsg *rsp)
     if (!req.has_key_or_handle()) {
         g_hal_state->acl_ht()->walk(acl_get_ht_cb, rsp);
         hal_api_trace(" API End: acl get ");
+        HAL_API_STATS_INC (HAL_API_ACL_GET_SUCCESS);
         return HAL_RET_OK;
     }
 
@@ -1882,12 +1891,14 @@ acl_get (AclGetRequest& req, AclGetResponseMsg *rsp)
     acl = acl_lookup_by_key_or_handle(req.key_or_handle());
     if (acl == NULL) {
         response->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_API_STATS_INC (HAL_API_ACL_GET_FAIL);
         return HAL_RET_ACL_NOT_FOUND;
     }
 
     acl_fill_rsp(response, acl);
 
     hal_api_trace(" API End: acl get ");
+    HAL_API_STATS_INC (HAL_API_ACL_GET_SUCCESS);
     return HAL_RET_OK;
 }
 
@@ -2064,6 +2075,11 @@ acl_delete (AclDeleteRequest& req, AclDeleteResponse *rsp)
                              acl_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC (HAL_API_ACL_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC (HAL_API_ACL_DELETE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: acl delete ");
     return ret;

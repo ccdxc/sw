@@ -2,6 +2,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/if_utils.hpp"
 #include "nic/hal/src/nw.hpp"
@@ -415,10 +416,15 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
 
 end:
     
-    if (ret != HAL_RET_OK && nw != NULL) {
-        // if there is an error, nw will be freed in abort CB
-        // network_free(nw);
-        nw = NULL;
+    if (ret != HAL_RET_OK) {
+	    if (nw != NULL) {
+            // if there is an error, nw will be freed in abort CB
+            // network_free(nw);
+            nw = NULL;
+	    }
+	    HAL_API_STATS_INC(HAL_API_NETWORK_CREATE_FAIL);
+    } else {
+	    HAL_API_STATS_INC(HAL_API_NETWORK_CREATE_SUCCESS);
     }
     network_prepare_rsp(rsp, ret, nw ? nw->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: network create ");
@@ -987,6 +993,11 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
                              network_update_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+	    HAL_API_STATS_INC(HAL_API_NETWORK_UPDATE_SUCCESS);
+    } else {
+	    HAL_API_STATS_INC(HAL_API_NETWORK_UPDATE_FAIL);
+    }
     network_prepare_rsp(rsp, ret, 
                         nw ? nw->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: network update ");
@@ -1008,6 +1019,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     if (!req.has_vrf_key_handle() ||
         req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         g_hal_state->network_key_ht()->walk(network_get_ht_cb, rsp);
+	    HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
         return HAL_RET_OK;
     }
 
@@ -1028,15 +1040,18 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
             nw = find_network_by_handle(kh.nw_handle());
         } else {
             response->set_api_status(types::API_STATUS_INVALID_ARG);
+	        HAL_API_STATS_INC(HAL_API_NETWORK_GET_FAIL);
             return HAL_RET_INVALID_ARG;
         }
     } else {
         response->set_api_status(types::API_STATUS_INVALID_ARG);
+	    HAL_API_STATS_INC(HAL_API_NETWORK_GET_FAIL);
         return HAL_RET_INVALID_ARG;
     }
 
     if (nw == NULL) {
         response->set_api_status(types::API_STATUS_NOT_FOUND);
+	    HAL_API_STATS_INC(HAL_API_NETWORK_GET_FAIL);
         return HAL_RET_EP_NOT_FOUND;
     }
 
@@ -1045,6 +1060,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
 
     response->set_api_status(types::API_STATUS_OK);
+	HAL_API_STATS_INC(HAL_API_NETWORK_GET_SUCCESS);
     return HAL_RET_OK;
 }
 
@@ -1257,6 +1273,11 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
                              network_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+	    HAL_API_STATS_INC(HAL_API_NETWORK_DELETE_SUCCESS);
+    } else {
+	    HAL_API_STATS_INC(HAL_API_NETWORK_DELETE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: network delete ");
     return ret;

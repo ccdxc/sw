@@ -206,7 +206,6 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
     
     // fill stats of this RAWC CB
     rsp->set_api_status(types::API_STATUS_OK);
- 
     return HAL_RET_OK;
 }
 
@@ -310,8 +309,7 @@ rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponse *r
     
     // fill stats of this RAWC CB
     rsp->set_api_status(types::API_STATUS_OK);
- 
     return HAL_RET_OK;
 }
 
-}    // namespace hal
+}   // namespace hal

@@ -8,6 +8,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils.hpp"
@@ -481,6 +482,9 @@ end:
             // if there is an error, if will be freed in abort CB
             vrf = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_VRF_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_VRF_CREATE_SUCCESS);
     }
 
     vrf_prepare_rsp(rsp, ret, 
@@ -875,6 +879,7 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
             HAL_TRACE_ERR("security profile with handle {} not found", 
                     app_ctxt.nwsec_profile_handle);
             ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+            HAL_API_STATS_INC(HAL_API_VRF_UPDATE_FAIL);
             goto end;
         } else {
             HAL_TRACE_DEBUG("new nwsec profile id: {}",
@@ -898,6 +903,12 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
                              vrf_update_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_VRF_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_VRF_UPDATE_FAIL);
+    }
+
     vrf_prepare_rsp(rsp, ret, 
                        vrf ? vrf->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: vrf update ");
@@ -965,12 +976,14 @@ vrf_get (VrfGetRequest& req, VrfGetResponseMsg *rsp)
         auto response = rsp->add_response();
         if (vrf == NULL) {
             response->set_api_status(types::API_STATUS_NOT_FOUND);
+            HAL_API_STATS_INC(HAL_API_VRF_GET_FAIL);
             return HAL_RET_VRF_NOT_FOUND;
         } else {
             vrf_process_get(vrf, response);
         }
     }
 
+    HAL_API_STATS_INC(HAL_API_VRF_GET_SUCCESS);
     return HAL_RET_OK;
 }
 
@@ -1202,8 +1215,13 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
                              vrf_delete_commit_cb,
                              vrf_delete_abort_cb, 
                              vrf_delete_cleanup_cb);
-
 end:
+
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC (HAL_API_VRF_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC (HAL_API_VRF_DELETE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: vrf delete ");
     return ret;

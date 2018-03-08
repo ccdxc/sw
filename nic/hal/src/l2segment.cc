@@ -4,6 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
@@ -729,6 +730,9 @@ end:
             // l2seg_cleanup(l2seg);
             l2seg = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_L2SEGMENT_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_L2SEGMENT_CREATE_SUCCESS);
     }
     l2seg_prepare_rsp(rsp, ret, l2seg);
     return ret;
@@ -1339,6 +1343,11 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_update_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_L2SEGMENT_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_L2SEGMENT_UPDATE_FAIL);
+    }
     l2seg_prepare_rsp(rsp, ret, (ret == HAL_RET_OK) ? l2seg_clone : l2seg);
     hal_api_trace(" API End: l2segment update ");
     return ret;
@@ -1617,6 +1626,11 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
                              l2seg_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_L2SEGMENT_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_L2SEGMENT_DELETE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: l2segment delete ");
     return ret;
@@ -1709,6 +1723,7 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponseMsg *rsp)
         if (!vrf) {
             auto response = rsp->add_response();
             response->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+            HAL_API_STATS_INC(HAL_API_L2SEGMENT_GET_FAIL);
             return HAL_RET_INVALID_ARG;
         }
     }
@@ -1722,11 +1737,13 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponseMsg *rsp)
         auto response = rsp->add_response();
         if (l2seg == NULL) {
             response->set_api_status(types::API_STATUS_NOT_FOUND);
+            HAL_API_STATS_INC(HAL_API_L2SEGMENT_GET_FAIL);
             return HAL_RET_L2SEG_NOT_FOUND;
         } else {
             l2segment_process_get(l2seg, response);
         }
     }
+    HAL_API_STATS_INC(HAL_API_L2SEGMENT_GET_SUCCESS);
     return HAL_RET_OK;
 }
 

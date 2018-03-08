@@ -20,8 +20,109 @@ package sys;
 // System service definition
 service System {
   // System related APIs
+  rpc ApiStatsGet(types.Empty) returns (ApiStatsResponse) {}
   rpc SystemGet(types.Empty) returns (SystemResponse) {}
   rpc SystemConfig(SystemConfigMsg) returns (SystemConfigResponseMsg) {}
+}
+
+enum ApiCounter {
+  API_COUNTER_NONE                                      = 0;
+  API_COUNTER_VRF_CREATE                                = 1;
+  API_COUNTER_VRF_UPDATE                                = 2;
+  API_COUNTER_VRF_DELETE                                = 3;
+  API_COUNTER_VRF_GET                                   = 4;
+  API_COUNTER_ACL_CREATE                                = 5;
+  API_COUNTER_ACL_UPDATE                                = 6;
+  API_COUNTER_ACL_DELETE                                = 7;
+  API_COUNTER_ACL_GET                                   = 8;
+  API_COUNTER_CPUCB_CREATE                              = 9;
+  API_COUNTER_CPUCB_UPDATE                              = 10;
+  API_COUNTER_CPUCB_DELETE                              = 11;
+  API_COUNTER_CPUCB_GET                                 = 12;
+  API_COUNTER_CRYPTOAPI_INVOKE                          = 13;
+  API_COUNTER_CRYPTOKEY_CREATE                          = 14;
+  API_COUNTER_CRYPTOKEY_UPDATE                          = 15;
+  API_COUNTER_CRYPTOKEY_DELETE                          = 16;
+  API_COUNTER_CRYPTOKEY_READ                            = 17;
+  API_COUNTER_DESCRAOL_GET                              = 18;
+  API_COUNTER_ENDPOINT_CREATE                           = 19;
+  API_COUNTER_ENDPOINT_UPDATE                           = 20;
+  API_COUNTER_ENDPOINT_DELETE                           = 21;
+  API_COUNTER_ENDPOINT_GET                              = 22;
+  API_COUNTER_GFT_EXACT_MATCH_PROFILE_CREATE            = 23;
+  API_COUNTER_GFT_HEADER_TRANSPOSITION_PROFILE_CREATE   = 24;
+  API_COUNTER_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE         = 25;
+  API_COUNTER_GETPROGRAM_ADDRESS                        = 26;
+  API_COUNTER_ALLOCHBM_ADDRESS                          = 27;
+  API_COUNTER_CONFIGURELIF_BDF                          = 28;
+  API_COUNTER_IPSECCB_CREATE                            = 29;
+  API_COUNTER_IPSECCB_UPDATE                            = 30;
+  API_COUNTER_IPSECCB_DELETE                            = 31;
+  API_COUNTER_IPSECCB_GET                               = 32;
+  API_COUNTER_L2SEGMENT_CREATE                          = 33;
+  API_COUNTER_L2SEGMENT_UPDATE                          = 34;
+  API_COUNTER_L2SEGMENT_DELETE                          = 35;
+  API_COUNTER_L2SEGMENT_GET                             = 36;
+  API_COUNTER_L4LBSERVICE_CREATE                        = 37;
+  API_COUNTER_MULTICASTENTRY_CREATE                     = 38;
+  API_COUNTER_MULTICASTENTRY_UPDATE                     = 39;
+  API_COUNTER_MULTICASTENTRY_DELETE                     = 40;
+  API_COUNTER_MULTICASTENTRY_GET                        = 41;
+  API_COUNTER_SECURITYPROFILE_CREATE                    = 42;
+  API_COUNTER_SECURITYPROFILE_UPDATE                    = 43;
+  API_COUNTER_SECURITYPROFILE_DELETE                    = 44;
+  API_COUNTER_SECURITYPROFILE_GET                       = 45;
+  API_COUNTER_SECURITYGROUPPOLICY_CREATE                = 46;
+  API_COUNTER_SECURITYGROUPPOLICY_UPDATE                = 47;
+  API_COUNTER_SECURITYGROUPPOLICY_DELETE                = 48;
+  API_COUNTER_SECURITYGROUPPOLICY_GET                   = 49;
+  API_COUNTER_SECURITYGROUP_CREATE                      = 50;
+  API_COUNTER_SECURITYGROUP_UPDATE                      = 51;
+  API_COUNTER_SECURITYGROUP_DELETE                      = 52;
+  API_COUNTER_SECURITYGROUP_GET                         = 53;
+  API_COUNTER_DOSPOLICY_CREATE                          = 54;
+  API_COUNTER_DOSPOLICY_UPDATE                          = 55;
+  API_COUNTER_DOSPOLICY_DELETE                          = 56;
+  API_COUNTER_DOSPOLICY_GET                             = 57;
+  API_COUNTER_PROXYCCB_CREATE                           = 58;
+  API_COUNTER_PROXYCCB_UPDATE                           = 59;
+  API_COUNTER_PROXYCCB_DELETE                           = 60;
+  API_COUNTER_PROXYCCB_GET                              = 61;
+  API_COUNTER_PROXYRCB_CREATE                           = 62;
+  API_COUNTER_PROXYRCB_UPDATE                           = 63;
+  API_COUNTER_PROXYRCB_DELETE                           = 64;
+  API_COUNTER_PROXYRCB_GET                              = 65;
+  API_COUNTER_QOSCLASS_CREATE                           = 66;
+  API_COUNTER_QOSCLASS_UPDATE                           = 67;
+  API_COUNTER_QOSCLASS_DELETE                           = 68;
+  API_COUNTER_QOSCLASS_GET                              = 69;
+  API_COUNTER_COPP_UPDATE                               = 70;
+  API_COUNTER_COPP_GET                                  = 71;
+  API_COUNTER_RAWCCB_CREATE                             = 72;
+  API_COUNTER_RAWCCB_UPDATE                             = 73;
+  API_COUNTER_RAWCCB_DELETE                             = 74;
+  API_COUNTER_RAWCCB_GET                                = 75;
+  API_COUNTER_TCPCB_CREATE                              = 76;
+  API_COUNTER_TCPCB_UPDATE                              = 77;
+  API_COUNTER_TCPCB_DELETE                              = 78;
+  API_COUNTER_TCPCB_GET                                 = 79;
+  API_COUNTER_TLSCB_CREATE                              = 80;
+  API_COUNTER_TLSCB_UPDATE                              = 81;
+  API_COUNTER_TLSCB_DELETE                              = 82;
+  API_COUNTER_TLSCB_GET                                 = 83;
+  API_COUNTER_MAX                                       = 84;
+}
+
+message ApiStatsEntry {
+  ApiCounter    api_type                                = 1;
+  uint32        num_api_call                            = 2;
+  uint32        num_api_success                         = 3;
+  uint32        num_api_fail                            = 4;
+}
+
+// API Stats object
+message ApiStatsResponse {
+  repeated ApiStatsEntry api_entries  = 1;               // list of API statistics
 }
 
 message DropStatsEntry {

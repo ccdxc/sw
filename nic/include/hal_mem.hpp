@@ -208,6 +208,7 @@ enum {
     HAL_MEM_ALLOC_INP_PROP_KEY_MASK,
     HAL_MEM_ALLOC_HGEM,
     HAL_MEM_ALLOC_PD_CALLS,
+    HAL_MEM_ALLOC_API_STATS,
     HAL_MEM_ALLOC_OTHER,
     HAL_MEM_ALLOC_ALL = 0xFFFFFFFF,    // reserved and shouldn't be used
 };

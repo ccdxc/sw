@@ -184,7 +184,7 @@ cpucb_update (CpuCbSpec& spec, CpuCbResponse *rsp)
     }
     
     rsp->set_api_status(types::API_STATUS_OK);
- 
+    
     return HAL_RET_OK;
 }
 

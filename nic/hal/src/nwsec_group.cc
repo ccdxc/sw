@@ -5,6 +5,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/nwsec_group.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
@@ -389,6 +390,11 @@ securitygrouppolicy_create(nwsec::SecurityGroupPolicySpec& spec,
                              nwsec_policy_cfg_create_abort_cb,
                              nwsec_policy_cfg_create_cleanup_cb);
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYGROUPPOLICY_CREATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYGROUPPOLICY_CREATE_FAIL);
+    }
     nwsec_policy_cfg_prepare_rsp(rsp, ret, nwsec_plcy_cfg ? nwsec_plcy_cfg->hal_handle : HAL_HANDLE_INVALID);
      
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
@@ -404,6 +410,7 @@ securitygrouppolicy_update(nwsec::SecurityGroupPolicySpec& spec,
     HAL_TRACE_DEBUG("{}: Updating nwsec group, sg_id {} handle {}", __FUNCTION__,
                     spec.key_or_handle().security_group_policy_id().security_group_id(),
                     spec.key_or_handle().security_group_policy_handle());
+    HAL_API_STATS_INC(HAL_API_SECURITYGROUPPOLICY_UPDATE_SUCCESS);
     return HAL_RET_OK;
 
 }  
@@ -415,6 +422,7 @@ securitygrouppolicy_delete(nwsec::SecurityGroupPolicyDeleteRequest& spec,
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
                     spec.key_or_handle().security_group_policy_id().security_group_id());
+    HAL_API_STATS_INC(HAL_API_SECURITYGROUPPOLICY_DELETE_SUCCESS);
     return HAL_RET_OK;
 }    
 
@@ -425,6 +433,7 @@ securitygrouppolicy_get(nwsec::SecurityGroupPolicyGetRequest& spec,
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
                     spec.key_or_handle().security_group_policy_id().security_group_id());
+    HAL_API_STATS_INC(HAL_API_SECURITYGROUPPOLICY_GET_SUCCESS);
     return HAL_RET_OK;
 }
 
@@ -650,6 +659,11 @@ securitygroup_create(nwsec::SecurityGroupSpec&     spec,
                              nwsec_group_create_abort_cb,
                              nwsec_group_create_cleanup_cb);
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYGROUP_CREATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYGROUP_CREATE_FAIL);
+    }
     nwsec_group_prepare_rsp(res, ret, nwsec_grp ? nwsec_grp->hal_handle : HAL_HANDLE_INVALID );
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
@@ -664,6 +678,7 @@ securitygroup_update(nwsec::SecurityGroupSpec& spec,
     HAL_TRACE_DEBUG("{}: Updating nwsec group, sg_id {} handle {}", __FUNCTION__,
                     spec.key_or_handle().security_group_id(),
                     spec.key_or_handle().security_group_handle());
+    HAL_API_STATS_INC(HAL_API_SECURITYGROUP_UPDATE_SUCCESS);
     return HAL_RET_OK;
 
 }
@@ -675,6 +690,7 @@ securitygroup_delete(nwsec::SecurityGroupDeleteRequest& req,
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
                     req.key_or_handle().security_group_id());
+    HAL_API_STATS_INC(HAL_API_SECURITYGROUP_DELETE_SUCCESS);
     return HAL_RET_OK;
 }
 
@@ -685,6 +701,7 @@ securitygroup_get(nwsec::SecurityGroupGetRequest& spec,
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
                     spec.key_or_handle().security_group_id());
+    HAL_API_STATS_INC(HAL_API_SECURITYGROUP_GET_SUCCESS);
     return HAL_RET_OK;
 }
 

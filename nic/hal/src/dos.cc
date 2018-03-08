@@ -4,6 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/nwsec_group.hpp"
@@ -397,6 +398,9 @@ end:
             dos_policy_free(dosp);
             dosp = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_CREATE_SUCCESS);
     }
 
     dos_policy_prepare_rsp(rsp, ret, dosp ? dosp->hal_handle : HAL_HANDLE_INVALID);
@@ -656,6 +660,11 @@ dospolicy_update (nwsec::DoSPolicySpec& spec,
                              dos_policy_update_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_UPDATE_FAIL);
+    }
     dos_policy_prepare_rsp(rsp, ret, dosp ? dosp->hal_handle : HAL_HANDLE_INVALID);
     return ret;
 
@@ -853,6 +862,11 @@ dospolicy_delete (DoSPolicyDeleteRequest& req,
                              dos_policy_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_DELETE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     return ret;
 }
@@ -868,13 +882,15 @@ dospolicy_get (nwsec::DoSPolicyGetRequest& req,
     if (req.dos_handle() == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}:dosp update validation failed, ret : {}", 
                       __FUNCTION__, ret);
-        goto end;
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_GET_FAIL);
+        return HAL_RET_INVALID_ARG;
     }
 
     // lookup this dos policy
     dosp = find_dos_policy_by_handle(req.dos_handle());
     if (!dosp) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_API_STATS_INC(HAL_API_DOSPOLICY_GET_FAIL);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -882,7 +898,7 @@ dospolicy_get (nwsec::DoSPolicyGetRequest& req,
     // fill operational state of this profile
     // fill stats, if any, of this profile
 
-end:
+    HAL_API_STATS_INC(HAL_API_DOSPOLICY_GET_SUCCESS);
     return HAL_RET_OK;
 }
 

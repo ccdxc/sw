@@ -4,6 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/gft.hpp"
 #include "nic/include/pd_api.hpp"
 
@@ -465,6 +466,7 @@ gft_exact_match_profile_create (GftExactMatchProfileSpec& spec,
         // api_status already set, just return
         HAL_TRACE_ERR("GFT exact match profile object validation failure, "
                       "err : {}", ret);
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_PROFILE_CREATE_FAIL);
         return ret;
     }
 
@@ -477,6 +479,7 @@ gft_exact_match_profile_create (GftExactMatchProfileSpec& spec,
         HAL_TRACE_ERR("Failed to create GFT exact match profile, "
                       "profile {} exists already",
                       spec.key_or_handle().profile_id());
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_PROFILE_CREATE_FAIL);
         return HAL_RET_ENTRY_EXISTS;
     }
 
@@ -486,6 +489,7 @@ gft_exact_match_profile_create (GftExactMatchProfileSpec& spec,
         ret = HAL_RET_OOM;
         HAL_TRACE_ERR("Failed to allocate GFT exact match profile, err : {}",
                       ret);
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_PROFILE_CREATE_FAIL);
         goto end;
     }
 
@@ -523,6 +527,9 @@ end:
         if (profile) {
             profile = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_PROFILE_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_PROFILE_CREATE_SUCCESS);
     }
     gft_emp_prepare_rsp(rsp, profile, ret);
     hal_api_trace(" API End: GFT EMP Create");
@@ -729,6 +736,7 @@ gft_header_transposition_profile_create (
         // api_status already set, just return
         HAL_TRACE_ERR("GFT header transposition profile object validation failure, "
                       "err : {}", ret);
+        HAL_API_STATS_INC(HAL_API_GFT_HEADER_TRANSPOSITION_PROFILE_CREATE_FAIL);
         return ret;
     }
 
@@ -741,6 +749,7 @@ gft_header_transposition_profile_create (
         HAL_TRACE_ERR("Failed to create GFT header transposition profile, "
                       "profile {} exists already",
                       spec.key_or_handle().profile_id());
+        HAL_API_STATS_INC(HAL_API_GFT_HEADER_TRANSPOSITION_PROFILE_CREATE_FAIL);
         return HAL_RET_ENTRY_EXISTS;
     }
 
@@ -784,6 +793,9 @@ end:
         if (profile) {
             profile = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_GFT_HEADER_TRANSPOSITION_PROFILE_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_GFT_HEADER_TRANSPOSITION_PROFILE_CREATE_SUCCESS);
     }
     gft_htp_prepare_rsp(rsp, profile, ret);
     return ret;
@@ -1353,6 +1365,7 @@ gft_exact_match_flow_entry_create (GftExactMatchFlowEntrySpec &spec,
         // api_status already set, just return
         HAL_TRACE_ERR("GFT exact match flow entry object validation failure, "
                       "err : {}", ret);
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE_FAIL);
         return ret;
     }
 
@@ -1364,6 +1377,7 @@ gft_exact_match_flow_entry_create (GftExactMatchFlowEntrySpec &spec,
     if (flow_entry) {
         HAL_TRACE_ERR("Failed to create GFT exact match flow entry {} "
                       "exists already", spec.key_or_handle().flow_entry_id());
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE_FAIL);
         return HAL_RET_ENTRY_EXISTS;
     }
 
@@ -1411,6 +1425,9 @@ end:
         if (flow_entry) {
             flow_entry = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE_SUCCESS);
     }
     gft_emfe_prepare_rsp(rsp, flow_entry, ret);
     hal_api_trace(" API End: GFT EMF Create");

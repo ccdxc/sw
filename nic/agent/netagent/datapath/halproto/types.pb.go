@@ -739,6 +739,8 @@
 		SessionStats
 		SessionGetResponse
 		SessionGetResponseMsg
+		ApiStatsEntry
+		ApiStatsResponse
 		DropStatsEntry
 		TableStatsEntry
 		TableStats

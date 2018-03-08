@@ -5,6 +5,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/multicast.hpp"
 #include "nic/include/oif_list_api.hpp"
@@ -552,6 +553,9 @@ end:
             mc_entry_free(mc_entry);
             mc_entry = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_CREATE_SUCCESS);
     }
 
     mc_entry_prepare_rsp(rsp, ret, mc_entry);
@@ -562,12 +566,14 @@ end:
 hal_ret_t multicastentry_update(MulticastEntrySpec& spec,
                                 MulticastEntryResponse *rsp)
 {
+    HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_UPDATE_SUCCESS);
     return HAL_RET_OK;
 }
 
 hal_ret_t multicastentry_delete(MulticastEntryDeleteRequest& req,
                                 MulticastEntryDeleteResponse *rsp)
 {
+    HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_DELETE_SUCCESS);
     return HAL_RET_OK;
 }
 
@@ -612,6 +618,7 @@ hal_ret_t multicastentry_get(MulticastEntryGetRequest& req,
 
     if (!req.has_key_or_handle()) {
         g_hal_state->mc_key_ht()->walk(mc_entry_get_ht_cb, rsp);
+        HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_GET_SUCCESS);
         return HAL_RET_OK;
     }
 
@@ -620,10 +627,13 @@ hal_ret_t multicastentry_get(MulticastEntryGetRequest& req,
     mc_entry = mc_entry_lookup_key_or_handle(kh);
     if (!mc_entry) {
         response->set_api_status(types::API_STATUS_INVALID_ARG);
+        HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_GET_FAIL);
         return HAL_RET_INVALID_ARG;
     }
 
     mc_entry_get_fill_rsp(response, mc_entry);
+
+    HAL_API_STATS_INC(HAL_API_MULTICASTENTRY_GET_SUCCESS);
 
     return HAL_RET_OK;
 }

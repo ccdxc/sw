@@ -4,6 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
@@ -745,6 +746,9 @@ end:
             // if there is an error, if will be freed in abort CB
             sec_prof = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_CREATE_SUCCESS);
     }
 
     nwsec_prepare_rsp(rsp, ret, 
@@ -1072,6 +1076,11 @@ securityprofile_update (nwsec::SecurityProfileSpec& spec,
                              nwsec_update_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_UPDATE_FAIL);
+    }
     nwsec_prepare_rsp(rsp, ret, 
                       sec_prof ? sec_prof->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: security profile update ");
@@ -1277,6 +1286,11 @@ securityprofile_delete (SecurityProfileDeleteRequest& req,
                              nwsec_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_DELETE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: security profile delete ");
     return ret;
@@ -1293,6 +1307,7 @@ securityprofile_get (nwsec::SecurityProfileGetRequest& req,
     // key or handle field must be set
     if (!req.has_key_or_handle()) {
         rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_ID_INVALID);
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_FAIL);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1300,6 +1315,7 @@ securityprofile_get (nwsec::SecurityProfileGetRequest& req,
     sec_prof = nwsec_lookup_key_or_handle(req.key_or_handle());
     if (!sec_prof) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_FAIL);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1374,6 +1390,8 @@ securityprofile_get (nwsec::SecurityProfileGetRequest& req,
 
     // fill operational state of this profile
     rsp->mutable_status()->set_profile_handle(sec_prof->hal_handle);
+
+    HAL_API_STATS_INC(HAL_API_SECURITYPROFILE_GET_SUCCESS);
 
     // fill stats, if any, of this profile
 

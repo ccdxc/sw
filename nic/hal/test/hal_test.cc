@@ -97,6 +97,8 @@ using port::PortDeleteRequestMsg;
 using port::PortDeleteResponseMsg;
 using port::PortDeleteResponse;
 
+using sys::ApiStatsResponse;
+using sys::ApiStatsEntry;
 using sys::System;
 using sys::SystemResponse;
 using sys::Stats;
@@ -417,6 +419,33 @@ public:
                 std::cout << "Num frees: " << stats.num_frees() << "\n";
                 std::cout << "Num alloc errors: " << stats.num_alloc_errors() << "\n";
                 std::cout << "Num blocks: " << stats.num_blocks() << "\n\n";
+            }
+        }
+
+        return 0;
+    }
+
+    int api_stats_get() {
+        ClientContext       context;
+        Empty               request;
+        ApiStatsResponse    response;
+        int                 count;
+        Status              status;
+
+        std::cout << "API Stats Get" << std::endl;
+
+        status = system_stub_->ApiStatsGet(&context, request, &response);
+        if (status.ok()) {
+            count = response.api_entries_size();
+
+            std::cout << "\nAPI Statistics:\n";
+
+            for (int i = 0; i < count; i ++) {
+                ApiStatsEntry entry = response.api_entries(i);
+                std::cout << "Stats " << entry.api_type() << ": "
+                << entry.num_api_call() << "\t"
+                << entry.num_api_success() << "\t"
+                << entry.num_api_fail() << "\n";
             }
         }
 
@@ -1450,6 +1479,9 @@ main (int argc, char** argv)
 
     // Get system statistics
     //hclient.system_get();
+
+    // Get API stats
+    hclient.api_stats_get();
 
     // subscribe and listen to HAL events
     //hclient.event_test();

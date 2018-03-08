@@ -13,6 +13,18 @@
 #include "nic/hal/src/system.hpp"
 
 Status
+SystemServiceImpl::ApiStatsGet(ServerContext *context,
+                               const Empty *request,
+                               ApiStatsResponse *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd API Stats Get Request");
+
+    hal::api_stats_get(rsp);
+
+    return Status::OK;
+}
+
+Status
 SystemServiceImpl::SystemGet(ServerContext *context,
                              const Empty *request,
                              SystemResponse *rsp)

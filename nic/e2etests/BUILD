@@ -150,6 +150,7 @@ cc_binary(
     ],
     deps = [
         "//nic/model_sim/include:modelsim_includes",
+	"//nic:boost",
         # PI
         "//nic/e2etests:driver",
         "//nic/e2etests:hntap-lib",

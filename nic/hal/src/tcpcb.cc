@@ -156,7 +156,6 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     return HAL_RET_OK;
 
 cleanup:
-
     tcpcb_free(tcpcb);
     return ret;
 }
@@ -215,7 +214,6 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     
     // fill stats of this TCP CB
     rsp->set_api_status(types::API_STATUS_OK);
- 
     return HAL_RET_OK;
 }
 
@@ -236,7 +234,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
         HAL_TRACE_ERR("TCPCB get: Failed to find cb with id {}", kh.tcpcb_id());
-	rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+	    rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
     
@@ -350,7 +348,6 @@ tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp
     
     // fill stats of this TCP CB
     rsp->add_api_status(types::API_STATUS_OK);
- 
     return HAL_RET_OK;
 }
 

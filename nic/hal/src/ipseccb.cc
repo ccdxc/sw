@@ -410,7 +410,7 @@ ipseccb_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteRespon
     
     // fill stats of this IPSEC CB
     rsp->add_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 

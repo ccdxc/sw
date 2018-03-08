@@ -642,6 +642,9 @@ public:
     sdk::lib::catalog* catalog(void) const { return catalog_; }
     void set_catalog(sdk::lib::catalog *catalog) { catalog_ = catalog; }
 
+    hal_stats_t api_stats(int idx) const { return api_stats_[idx]; }
+    void set_api_stats(int idx, int val) { api_stats_[idx] = val; }
+
     void* pd_so(void) const { return pd_so_; }
     void set_pd_so(void *so) { pd_so_ = so; }
 
@@ -657,6 +660,7 @@ private:
     hal_oper_db          *oper_db_;
     hal_mem_db           *mem_db_;
     sdk::lib::catalog    *catalog_;
+    hal_stats_t          *api_stats_;
     void                 *pd_so_;
     void                 *pd_stub_so_;
 };

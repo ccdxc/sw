@@ -1,6 +1,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/interface.hpp"
@@ -741,6 +742,9 @@ end:
             ep_free(ep);
             ep = NULL;
         }
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_CREATE_FAIL);
+    } else {
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_CREATE_SUCCESS);
     }
 
     // TODO: Free up ip_entry and l3_entry
@@ -1722,6 +1726,11 @@ end:
         HAL_FREE(HAL_MEM_ALLOC_DLLIST, del_iplist);
     }
 
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_UPDATE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_UPDATE_FAIL);
+    }
     ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: EP update ");
     return ret;
@@ -1912,6 +1921,11 @@ endpoint_delete (EndpointDeleteRequest& req,
                              endpoint_delete_cleanup_cb);
 
 end:
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_DELETE_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_DELETE_FAIL);
+    }
     rsp->set_api_status(hal_prepare_rsp(ret));
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
@@ -1984,6 +1998,7 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
     if (!req.has_vrf_key_handle() ||
         req.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         g_hal_state->ep_l2_ht()->walk(ep_get_ht_cb, rsp);
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_GET_SUCCESS);
         return HAL_RET_OK;
     }
 
@@ -2005,6 +2020,7 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
                 ep = find_ep_by_l3_key(&l3_key);
             } else {
                 response->set_api_status(types::API_STATUS_INVALID_ARG);
+                HAL_API_STATS_INC(HAL_API_ENDPOINT_GET_FAIL);
                 return HAL_RET_INVALID_ARG;
             }
         } else if (kh.key_or_handle_case() ==
@@ -2012,19 +2028,24 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
             ep = find_ep_by_handle(kh.endpoint_handle());
         } else {
             response->set_api_status(types::API_STATUS_INVALID_ARG);
+            HAL_API_STATS_INC(HAL_API_ENDPOINT_GET_FAIL);
             return HAL_RET_INVALID_ARG;
         }
     } else {
         response->set_api_status(types::API_STATUS_INVALID_ARG);
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_GET_FAIL);
         return HAL_RET_INVALID_ARG;
     }
 
     if (ep == NULL) {
         response->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_API_STATS_INC(HAL_API_ENDPOINT_GET_FAIL);
         return HAL_RET_EP_NOT_FOUND;
     }
 
     ep_to_ep_get_response(ep, response);
+
+    HAL_API_STATS_INC(HAL_API_ENDPOINT_GET_SUCCESS);
 
     return HAL_RET_OK;
 }

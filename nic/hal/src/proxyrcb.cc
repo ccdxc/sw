@@ -237,7 +237,7 @@ proxyrcb_update (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
     
     // fill stats of this PROXYR CB
     rsp->set_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 
@@ -363,7 +363,6 @@ proxyrcb_delete (proxyrcb::ProxyrCbDeleteRequest& req, proxyrcb::ProxyrCbDeleteR
     
     // fill stats of this PROXYR CB
     rsp->add_api_status(types::API_STATUS_OK);
- 
     return HAL_RET_OK;
 }
 

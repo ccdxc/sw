@@ -11,6 +11,7 @@ using grpc::Status;
 
 using sys::System;
 using sys::SystemResponse;
+using sys::ApiStatsResponse;
 using types::Empty;
 using sys::SystemConfigMsg;
 using sys::SystemConfigResponseMsg;
@@ -18,6 +19,9 @@ using sys::SystemConfigResponseMsg;
 
 class SystemServiceImpl final : public System::Service {
 public:
+    Status ApiStatsGet(ServerContext *context,
+                       const Empty *request,
+                       ApiStatsResponse *rsp) override;
     Status SystemGet(ServerContext *context,
                     const Empty *request,
                      SystemResponse *rsp) override;

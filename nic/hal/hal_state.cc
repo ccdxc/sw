@@ -1,7 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/hal/hal.hpp"
+#include "nic/include/base.h"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_api_stats.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/nw.hpp"
 #include "nic/hal/src/l2segment.hpp"
@@ -1135,8 +1137,10 @@ hal_state::init(void)
     cfg_db_ = hal_cfg_db::factory();
     oper_db_ = hal_oper_db::factory();
     mem_db_ = hal_mem_db::factory();
+    api_stats_ = (hal_stats_t *)HAL_CALLOC(HAL_MEM_ALLOC_API_STATS,
+                                    sizeof(hal_stats_t) * HAL_API_MAX);;
 
-    HAL_ASSERT_GOTO((cfg_db_ && oper_db_ && mem_db_), cleanup);
+    HAL_ASSERT_GOTO((cfg_db_ && oper_db_ && mem_db_ && api_stats_), cleanup);
     return true;
 
 cleanup:
@@ -1155,6 +1159,11 @@ cleanup:
         mem_db_->~hal_mem_db();
         HAL_FREE(HAL_MEM_ALLOC_INFRA, mem_db_);
     }
+
+    if (api_stats_) {
+        HAL_FREE(HAL_MEM_ALLOC_API_STATS, api_stats_);
+    }
+
     return false;
 }
 

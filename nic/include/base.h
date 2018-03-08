@@ -80,6 +80,7 @@ typedef uint32_t        session_id_t;
 typedef uint32_t        app_session_id_t;
 typedef uint32_t        appid_id_t;
 typedef uint64_t        hbm_addr_t;
+typedef uint32_t        hal_stats_t;
 
 //------------------------------------------------------------------------------
 // HAL config version type
