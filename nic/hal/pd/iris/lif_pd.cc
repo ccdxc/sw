@@ -437,7 +437,7 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_update_args_t *args)
     return lif->vlan_strip_en;
 }
 
-#define TX_POLICER_ACTION(_arg) d.tx_table_s7_t4_lif_rate_limiter_table_action_u.tx_table_s7_t4_lif_rate_limiter_table_tx_stage7_lif_egress_rl_params._arg
+#define TX_POLICER_ACTION(_arg) d.tx_table_s5_t4_lif_rate_limiter_table_action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params._arg
 hal_ret_t
 lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 {
@@ -445,12 +445,12 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     sdk_ret_t             sdk_ret;
     lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap             *tx_policer_tbl = NULL;
-    tx_table_s7_t4_lif_rate_limiter_table_actiondata d = {0};
+    tx_table_s5_t4_lif_rate_limiter_table_actiondata d = {0};
 
-    tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S7_T4_LIF_RATE_LIMITER_TABLE);
+    tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
     HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
 
-    d.actionid = TX_TABLE_S7_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE7_LIF_EGRESS_RL_PARAMS_ID;
+    d.actionid = TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE5_LIF_EGRESS_RL_PARAMS_ID;
     if (pi_lif->qos_info.tx_policer.bps_rate == 0) {
         TX_POLICER_ACTION(entry_valid) = 0;
     } else {
@@ -499,7 +499,7 @@ lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
     sdk_ret_t             sdk_ret;
     directmap             *tx_policer_tbl = NULL;
 
-    tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S7_T4_LIF_RATE_LIMITER_TABLE);
+    tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
     HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = tx_policer_tbl->remove(pd_lif->hw_lif_id);

@@ -148,20 +148,6 @@ action tx_table_dummy_action(data0, data1,
 }
 
 //stage 7 action functions 
-action tx_stage7_lif_egress_rl_params(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
-                               color_aware, rsvd, axi_wr_pend,
-                               burst, rate, tbkt) {
-    modify_field(scratch_policer.policer_valid, entry_valid);
-    modify_field(scratch_policer.policer_pkt_rate, pkt_rate);
-    modify_field(scratch_policer.policer_rlimit_en, rlimit_en);
-    modify_field(scratch_policer.policer_rlimit_prof, rlimit_prof);
-    modify_field(scratch_policer.policer_color_aware, color_aware);
-    modify_field(scratch_policer.policer_rsvd, rsvd);
-    modify_field(scratch_policer.policer_axi_wr_pend, axi_wr_pend);
-    modify_field(scratch_policer.policer_burst, burst);
-    modify_field(scratch_policer.policer_rate, rate);
-    modify_field(scratch_policer.policer_tbkt, tbkt);
-}
 
 action tx_table_s7_t3_cfg_action(data0, data1,
                              data2, data3,
@@ -261,6 +247,22 @@ action tx_table_s6_t0_cfg_action(data0, data1,
 }
 
 //stage 5 action functions 
+
+action tx_stage5_lif_egress_rl_params(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
+                               color_aware, rsvd, axi_wr_pend,
+                               burst, rate, tbkt) {
+    modify_field(scratch_policer.policer_valid, entry_valid);
+    modify_field(scratch_policer.policer_pkt_rate, pkt_rate);
+    modify_field(scratch_policer.policer_rlimit_en, rlimit_en);
+    modify_field(scratch_policer.policer_rlimit_prof, rlimit_prof);
+    modify_field(scratch_policer.policer_color_aware, color_aware);
+    modify_field(scratch_policer.policer_rsvd, rsvd);
+    modify_field(scratch_policer.policer_axi_wr_pend, axi_wr_pend);
+    modify_field(scratch_policer.policer_burst, burst);
+    modify_field(scratch_policer.policer_rate, rate);
+    modify_field(scratch_policer.policer_tbkt, tbkt);
+}
+
 action tx_table_s5_t3_cfg_action(data0, data1,
                              data2, data3,
                              data4, data5, 
@@ -570,19 +572,7 @@ action tx_table_s0_t0_cfg_action(data0, data1,
 }
 
 
-// stage 5
-
-@pragma stage 5
-@pragma policer_table two_color enable_rate_limit
-table tx_table_s7_t4_lif_rate_limiter_table {
-    reads {
-        p4_intr_global.lif : exact;
-    }
-    actions {
-        tx_stage7_lif_egress_rl_params;
-    }
-    size : EGRESS_RATE_LIMITER_TABLE_SIZE;
-}
+// stage 7
 
 @pragma stage 7
 @pragma raw_table common_te3_phv.table_pc
@@ -690,6 +680,19 @@ table tx_table_s6_t0 {
 }
 
 // stage 5
+
+@pragma stage 5
+@pragma policer_table two_color enable_rate_limit
+table tx_table_s5_t4_lif_rate_limiter_table {
+    reads {
+        p4_intr_global.lif : exact;
+    }
+    actions {
+        tx_stage5_lif_egress_rl_params;
+    }
+    size : EGRESS_RATE_LIMITER_TABLE_SIZE;
+}
+
 @pragma stage 5
 @pragma raw_table common_te3_phv.table_pc
 @pragma table_write // lock_en_raw=1
@@ -1133,5 +1136,5 @@ control ingress {
         apply(tx_table_s6_t3);
         apply(tx_table_s7_t3);
     }
-    apply(tx_table_s7_t4_lif_rate_limiter_table);
+    apply(tx_table_s5_t4_lif_rate_limiter_table);
 }
