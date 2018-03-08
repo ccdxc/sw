@@ -125,7 +125,7 @@ int CreateRDMALIF(uint32_t sw_lif_id) {
 
   // RDMA CQ
   params.type[kCQType].valid = true;
-  params.type[kCQType].queue_size = 5;   // 4096
+  params.type[kCQType].queue_size = 6;   // 4096
   params.type[kCQType].num_queues = 1;   // 2, 0-initiator 1-target
   params.type[kCQType].queue_purpose = intf::LIF_QUEUE_PURPOSE_CQ;
 

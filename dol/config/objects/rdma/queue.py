@@ -303,15 +303,21 @@ class RdmaCQstate(Packet):
         X3BytesField("cq_id", 0),
         X3BytesField("eq_id", 0),
         BitField("arm", 0, 1),
-        BitField("color", 0, 1),
 
         BitField("wakeup_dpath", 0, 1),
+        BitField("color", 0, 1),
         BitField("wakeup_lif", 0, 12),
         BitField("wakeup_qtype", 0, 3),
         BitField("wakeup_qid", 0, 24),
         BitField("wakeup_ring_id", 0, 3),
 
         BitField("rsvd4", 0, 19),
+
+        LongField("pt_pa", 0),
+        LongField("pt_next_pa", 0),
+        ShortField("pt_pa_index", 0),
+        ShortField("pt_next_pa_index", 0),
+        BitField("pad", 0, 96),
     ]
 
 class RdmaEQstate(Packet):

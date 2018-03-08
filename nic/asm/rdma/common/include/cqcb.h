@@ -25,16 +25,20 @@ struct cqcb_t {
     eq_id: 24;
 
     arm: 1;
+    wakeup_dpath:1;
     color: 1;
 
-    wakeup_dpath:1;
     wakeup_lif:12;
     wakeup_qtype:3;
     wakeup_qid:24;
     wakeup_ring_id:3;
-
     rsvd4: 19;
-    pad: 256;  // as d-vector is loaded only 256 bits, need this to interpret it correctly
+
+    pt_pa: 64;
+    pt_next_pa: 64;
+    pt_pa_index: 16;
+    pt_next_pa_index: 16;
+    pad: 96;  // as d-vector is loaded only 256 bits, need this to interpret it correctly
 };
 
 #endif // __CQCB_H

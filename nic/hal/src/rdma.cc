@@ -265,8 +265,8 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     if (qstate == nullptr)
         return HAL_RET_ERR;
 
-    max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].qsize;
-    max_eqs  = qstate->type[Q_TYPE_RDMA_EQ].qsize;
+    max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
+    max_eqs  = qstate->type[Q_TYPE_RDMA_EQ].num_queues;
     max_keys = spec.rdma_max_keys();
     max_pt_entries  = spec.rdma_max_pt_entries();
 
@@ -438,6 +438,23 @@ rdma_pt_entry_write (uint16_t lif, uint32_t offset, uint64_t pg_ptr)
     args.buf = (uint8_t*)&pg_ptr;
     args.size = sizeof(pg_ptr);
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, (void *)&args);
+}
+
+void
+rdma_pt_entry_read (uint16_t lif, uint32_t offset, uint64_t *pg_ptr)
+{
+    sram_lif_entry_t    sram_lif_entry = {0};
+    uint64_t            pt_table_base_addr;
+
+    rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
+    pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
+    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
+
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    args.addr = (uint64_t)(pt_table_base_addr + (offset * sizeof(uint64_t)));
+    args.buf = (uint8_t*)pg_ptr;
+    args.size = sizeof(uint64_t);
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, (void *)&args);
 }
 
 uint64_t
@@ -1274,8 +1291,9 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     memset(&cqcb, 0, sizeof(cqcb_t));
     // EQ does not need scheduling, so set one less (meaning #rings as zero)
     cqcb.ring_header.total_rings = MAX_CQ_RINGS - 1;
+    int32_t cq_pt_base = rdma_mr_pt_base_get(lif, spec.cq_lkey());
     cqcb.pt_base_addr =
-        rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.cq_lkey())) >> PT_BASE_ADDR_SHIFT;
+        rdma_pt_addr_get(lif, cq_pt_base) >> PT_BASE_ADDR_SHIFT;
     cqcb.log_cq_page_size = log2(spec.hostmem_pg_size());
     cqcb.log_wqe_size = log2(cqwqe_size);
     cqcb.log_num_wqes = log2(num_cq_wqes);
@@ -1284,12 +1302,20 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.color = 0;
     cqcb.arm = 0;   // Dont arm by default, only Arm it for tests which post/validate EQ
 
-    cqcb.wakeup_dpath = spec.wakeup_dpath();
+    cqcb.wakeup_dpath
+        = spec.wakeup_dpath();
     cqcb.wakeup_lif = spec.wakeup_lif();
     cqcb.wakeup_qtype = spec.wakeup_qtype();
     cqcb.wakeup_qid = spec.wakeup_qid();
     cqcb.wakeup_ring_id = spec.wakeup_ring_id();
 
+    rdma_pt_entry_read(lif, cq_pt_base, &cqcb.pt_pa);
+    rdma_pt_entry_read(lif, cq_pt_base+1, &cqcb.pt_next_pa);    
+    cqcb.pt_pa_index = 1 << (cqcb.log_cq_page_size - cqcb.log_wqe_size);
+    cqcb.pt_next_pa_index = 2 << (cqcb.log_cq_page_size - cqcb.log_wqe_size);
+
+    HAL_TRACE_DEBUG("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}:", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pa_index, cqcb.pt_next_pa_index);
+    
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}", 
                     __FUNCTION__, lif, cqcb.pt_base_addr, sizeof(cqcb_t));

@@ -116,8 +116,8 @@ queue_types:
         id          : RDMA_CQ
         type        : 5
         purpose     : LIF_QUEUE_PURPOSE_CQ
-        size        : 32
-        count       : 32
+        size        : 64
+        count       : 16
         queues:
             - queue:
                 id          : Q0

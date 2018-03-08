@@ -302,7 +302,12 @@ struct resp_rx_cqcb_to_pt_info_t {
     eq_id: 24;
     arm: 1;
     wakeup_dpath: 1;
-    pad: 86;
+    no_translate: 1;
+    no_dma: 1;
+    rsvd1: 4;
+    cqcb_addr: 34;
+    pa_next_index: 16;
+    pad: 24;
 };
 
 struct resp_rx_cqpt_process_k_t {

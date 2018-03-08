@@ -9,19 +9,27 @@ struct cqcb_t d;
 
 #define ARG_P               r5
 #define PAGE_INDEX          r3
+#define CQWQE_P             r3
+#define PT_PINDEX           r1
 #define PAGE_OFFSET         r1
 #define PAGE_SEG_OFFSET     r4
 #define RQCB4_ADDR          r6
+#define CQCB_ADDR           r6
+#define PA_NEXT_INDEX       r6    
 
 #define DMA_CMD_BASE        r6
 #define DB_ADDR             r1
 #define DB_DATA             r2
-
+#define NUM_LOG_WQE         r2    
+    
 #define CQ_PT_INFO_T    struct resp_rx_cqcb_to_pt_info_t
 
+    #c1 : CQ_P_INDEX == 0
+    #c2 : d.arm == 1
+    #c3 : cqwqe_dma == True. Do cqwqe dma in cqcb stage.
+    
 %%
     .param  resp_rx_cqpt_process
-
 .align
 resp_rx_cqcb_process:
 
@@ -35,15 +43,39 @@ resp_rx_cqcb_process:
     // set the color in cqwqe
     phvwr           p.cqwqe.color, CQ_COLOR
 
+    add             r1, CQ_P_INDEX, 0
+    add             r2, d.pt_pa_index, 0
+    blt             r1, r2, no_translate_dma
+    sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size //BD slot
+    add             r2, d.pt_next_pa_index, 0   
+    blt             r1, r2, translate_next
+    add             PT_PINDEX, r0, CQ_P_INDEX //Branch delay slot    
+    crestore        [c3], 0x0, 0x4
+    b               fire_cqpt
+
+translate_next:
+
+    tblwr          d.pt_pa, d.pt_next_pa
+    tblwr          d.pt_pa_index, d.pt_next_pa_index
+
+    add             PT_PINDEX, r0, d.pt_next_pa_index //Branch delay slot
+
+    crestore        [c3], 0x4, 0x4
+    
+fire_cqpt:
     // page_index = p_index >> (log_rq_page_size - log_wqe_size)
-    add             r1, r0, CQ_P_INDEX
-    sub             r2, d.log_cq_page_size, d.log_wqe_size
-    srlv            PAGE_INDEX, r1, r2
+    add             r1, r0, PT_PINDEX
+    sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
+    srlv            PAGE_INDEX, r1, NUM_LOG_WQE
 
     // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
-    mincr           r1, r2, r0
+    mincr           r1, NUM_LOG_WQE, r0
     sll             PAGE_OFFSET, r1, d.log_wqe_size
 
+    //next_p_index = (PAGE_INDEX+1) << (log_cq_page_size - log_wqe_size)
+    add             PA_NEXT_INDEX, PAGE_INDEX, 1
+    sll             PA_NEXT_INDEX, PA_NEXT_INDEX, NUM_LOG_WQE
+        
     // r3 has page_index, r1 has page_offset by now
 
     // page_seg_offset = page_index & 0x7
@@ -55,16 +87,50 @@ resp_rx_cqcb_process:
     // page_index += cqcb_p->pt_base_addr
     add     PAGE_INDEX, PAGE_INDEX, d.pt_base_addr, PT_BASE_ADDR_SHIFT
     // now r3 has page_p to load
+
     
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
     #copy fields cq_id, eq_id, and arm
-    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, arm, d.{cq_id...arm})
-    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, wakeup_dpath, d.wakeup_dpath)
+    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_seg_offset, PAGE_SEG_OFFSET)
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, PAGE_OFFSET)
-
+    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, no_translate, 0)
+    CAPRI_SET_FIELD_C(ARG_P, CQ_PT_INFO_T, no_dma, 1, c3)    
+    CAPRI_SET_FIELD_C(ARG_P, CQ_PT_INFO_T, no_dma, 0, !c3)  //TODO: Do I need two instructions here?
+    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, pa_next_index, PA_NEXT_INDEX)  
+    
+    mfspr          CQCB_ADDR, spr_tbladdr
+    CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, cqcb_addr, CQCB_ADDR)
+    
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 
+    bcf     [!c3], incr_pindex
+    nop
+    b       do_dma
+    add             r1, r0, CQ_P_INDEX
+    
+no_translate_dma:
+    
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, ARG_P)
+    #copy fields cq_id, eq_id, and arm
+    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
+    CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, no_translate, no_dma, 0x3)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, 0, resp_rx_cqpt_process, r0)
+    
+do_dma:
+
+    // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
+    //r1 has CQ_P_INDEX by the time we reach here
+    mincr           r1, NUM_LOG_WQE, r0
+    sll             PAGE_OFFSET, r1, d.log_wqe_size
+
+    // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
+    add             CQWQE_P, d.pt_pa, PAGE_OFFSET
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqwqe, cqwqe, CQWQE_P)
+    
+incr_pindex: 
     // increment p_index
     tblmincri       CQ_P_INDEX, d.log_num_wqes, 1
     // if arm, disarm.
