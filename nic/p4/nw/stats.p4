@@ -33,6 +33,86 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     modify_field(scratch_metadata.drop_stats_packets, drop_pkts);
     modify_field(scratch_metadata.drop_stats_pad, pad);
     modify_field(scratch_metadata.ingress_mirror_en, mirror_en);
+
+    // fields for logging
+    modify_field(capri_intrinsic.tm_iport, capri_intrinsic.tm_iport);
+    modify_field(capri_intrinsic.tm_oport, capri_intrinsic.tm_oport);
+    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_iq);
+    modify_field(capri_intrinsic.lif, capri_intrinsic.lif);
+    modify_field(capri_intrinsic.tm_replicate_ptr, capri_intrinsic.tm_replicate_ptr);
+    modify_field(capri_intrinsic.tm_replicate_en, capri_intrinsic.tm_replicate_en);
+    modify_field(capri_intrinsic.tm_q_depth, capri_intrinsic.tm_q_depth);
+    modify_field(capri_intrinsic.bypass, capri_intrinsic.bypass);
+    modify_field(capri_intrinsic.hw_error, capri_intrinsic.hw_error);
+    modify_field(capri_intrinsic.tm_oq, capri_intrinsic.tm_oq);
+    modify_field(capri_intrinsic.csum_err, capri_intrinsic.csum_err);
+    modify_field(capri_intrinsic.error_bits, capri_intrinsic.error_bits);
+    modify_field(capri_intrinsic.tm_instance_type, capri_intrinsic.tm_instance_type);
+
+    modify_field(capri_p4_intrinsic.crc_err, capri_p4_intrinsic.crc_err);
+    modify_field(capri_p4_intrinsic.len_err, capri_p4_intrinsic.len_err);
+    modify_field(capri_p4_intrinsic.recirc_count, capri_p4_intrinsic.recirc_count);
+    modify_field(capri_p4_intrinsic.parser_err, capri_p4_intrinsic.parser_err);
+    modify_field(capri_p4_intrinsic.frame_size, capri_p4_intrinsic.frame_size);
+    modify_field(capri_p4_intrinsic.no_data, capri_p4_intrinsic.no_data);
+    modify_field(capri_p4_intrinsic.recirc, capri_p4_intrinsic.recirc);
+    modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
+
+    modify_field(scratch_metadata.flag, icmp_echo.valid);
+    modify_field(scratch_metadata.flag, icmp.valid);
+    modify_field(scratch_metadata.flag, tcp_option_eol.valid);
+    modify_field(scratch_metadata.flag, tcp_option_nop_1.valid);
+    modify_field(scratch_metadata.flag, tcp_option_nop.valid);
+    modify_field(scratch_metadata.flag, tcp_option_unknown.valid);
+    modify_field(scratch_metadata.flag, tcp_option_timestamp.valid);
+    modify_field(scratch_metadata.flag, tcp_option_four_sack.valid);
+    modify_field(scratch_metadata.flag, tcp_option_three_sack.valid);
+    modify_field(scratch_metadata.flag, tcp_option_two_sack.valid);
+    modify_field(scratch_metadata.flag, tcp_option_one_sack.valid);
+    modify_field(scratch_metadata.flag, tcp_option_sack_perm.valid);
+    modify_field(scratch_metadata.flag, tcp_option_ws.valid);
+    modify_field(scratch_metadata.flag, tcp_option_mss.valid);
+    modify_field(scratch_metadata.flag, tcp_options_blob.valid);
+    modify_field(scratch_metadata.flag, roce_deth.valid);
+    modify_field(scratch_metadata.flag, roce_deth_immdt.valid);
+    modify_field(scratch_metadata.flag, roce_bth.valid);
+    modify_field(scratch_metadata.flag, esp.valid);
+    modify_field(scratch_metadata.flag, ah.valid);
+    modify_field(scratch_metadata.flag, tcp.valid);
+    modify_field(scratch_metadata.flag, inner_udp.valid);
+    modify_field(scratch_metadata.flag, inner_ipv4_options_blob.valid);
+    modify_field(scratch_metadata.flag, inner_ipv4.valid);
+    modify_field(scratch_metadata.flag, icmpv6.valid);
+    modify_field(scratch_metadata.flag, inner_v6_generic.valid);
+    modify_field(scratch_metadata.flag, inner_ipv6_options_blob.valid);
+    modify_field(scratch_metadata.flag, inner_ipv6.valid);
+    modify_field(scratch_metadata.flag, inner_ethernet.valid);
+    modify_field(scratch_metadata.flag, mpls[2].valid);
+    modify_field(scratch_metadata.flag, mpls[1].valid);
+    modify_field(scratch_metadata.flag, mpls[0].valid);
+    modify_field(scratch_metadata.flag, vxlan.valid);
+    modify_field(scratch_metadata.flag, genv.valid);
+    modify_field(scratch_metadata.flag, vxlan_gpe.valid);
+    modify_field(scratch_metadata.flag, udp.valid);
+    modify_field(scratch_metadata.flag, nvgre.valid);
+    modify_field(scratch_metadata.flag, erspan_t3.valid);
+    modify_field(scratch_metadata.flag, gre.valid);
+    modify_field(scratch_metadata.flag, ipv4_options_blob.valid);
+    modify_field(scratch_metadata.flag, ipv4.valid);
+    modify_field(scratch_metadata.flag, v6_generic.valid);
+    modify_field(scratch_metadata.flag, ipv6_options_blob.valid);
+    modify_field(scratch_metadata.flag, ipv6.valid);
+    modify_field(scratch_metadata.flag, vlan_tag.valid);
+    modify_field(scratch_metadata.flag, snap_header.valid);
+    modify_field(scratch_metadata.flag, llc_header.valid);
+    modify_field(scratch_metadata.flag, ethernet.valid);
+    modify_field(scratch_metadata.flag, p4plus_to_p4_vlan.valid);
+    modify_field(scratch_metadata.flag, p4plus_to_p4.valid);
+    modify_field(scratch_metadata.flag, capri_txdma_intrinsic.valid);
+    modify_field(scratch_metadata.flag, recirc_header.valid);
+    modify_field(scratch_metadata.flag, capri_i2e_metadata.valid);
+    modify_field(scratch_metadata.flag, capri_p4_intrinsic.valid);
+    modify_field(scratch_metadata.flag, capri_intrinsic.valid);
 }
 
 @pragma stage 5

@@ -35,5 +35,7 @@ qos:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 qos_error:
+  phvwr       p.capri_intrinsic_drop, TRUE
+  phvwr       p.control_metadata_drop_reason[DROP_HARDWARE_ERR], TRUE
   sne.e       c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
   phvwr.c1    p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

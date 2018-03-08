@@ -251,8 +251,9 @@
 #define DROP_PARSER_ICRC_ERR           32
 #define DROP_PARSER_LEN_ERR            33
 #define DROP_PARSER_CSUM_ERR           34
+#define DROP_HARDWARE_ERR              35
 #define DROP_MIN                       DROP_INPUT_MAPPING
-#define DROP_MAX                       DROP_PARSER_CSUM_ERR
+#define DROP_MAX                       DROP_HARDWARE_ERR
 
 /*****************************************************************************/
 /* Rewrite flags                                                             */
