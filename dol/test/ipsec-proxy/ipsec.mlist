@@ -210,7 +210,7 @@ modules:
             - flow: filter://type=IPV4,proto=TCP
     - module:
         name    : MULTI_PKT_TCP 
-        enable  : True 
+        enable  : False 
         package : test.ipsec-proxy
         module  : multi_pkt_tcp 
         spec    : multi_pkt_tcp.testspec
