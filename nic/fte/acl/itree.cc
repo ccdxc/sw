@@ -679,7 +679,7 @@ itree_t::cost(uint32_t low, uint32_t high) const
         if ((low < node->low) || (low == node->low && high < node->high)) {
             return 1 + cost_(node->left, low, high);
         } else if (low > node->low || high > node->high) {
-            return 1 + cost_(node->left, low, high);
+            return 1 + cost_(node->right, low, high);
         }
         
         // interval mathces the cur node, then it will be appended to

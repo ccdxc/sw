@@ -847,7 +847,7 @@ hal_ret_t
 ctx_t::update_flow(const flow_update_t& flowupd, 
                    const hal::flow_role_t role)
 {
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
 
     flow_t *flow;
 
