@@ -103,6 +103,7 @@
 // Load a table based on absolute address
 // _pc is in register or in a dvec, AND
 // _table_addr is 64 bits
+// _load_size is 3 bits
 #define LOAD_TABLE_FOR_ADDR64(_table_addr, _load_size, _pc)		        \
   phvwri	p.app_header_table0_valid, 1;				                \
   phvwrpair.e p.common_te0_phv_table_lock_en, 1,			            \
@@ -220,16 +221,8 @@
                 CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		    \
                                       sizeof(p._start) - 1);		    \
    
-#define DMA_MEM2MEM_SETUP_ADDR64(_type, _addr, _size, _use_override_lif,\
-                                 _override_lif, _dma_cmd_X)			    \
-   phvwrpair p._dma_cmd_X##_dma_cmd_mem2mem_type, _type,		        \
-             p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_MEM2MEM;		    \
-   phvwrpair p._dma_cmd_X##_dma_cmd_override_lif, _override_lif,	    \
-             p._dma_cmd_X##_dma_cmd_use_override_lif, _use_override_lif;\
-   phvwrpair p._dma_cmd_X##_dma_cmd_size, _size,			            \
-          	 p._dma_cmd_X##_dma_cmd_addr, _addr;			            \
-   phvwr	p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];	            \
-
+// Mem2Mem DMA:
+// _addr is given in a register
 #define DMA_MEM2MEM_SETUP_REG_ADDR(_type, _addr, _size, _use_override_lif,\
                                    _override_lif, _dma_cmd_X)			\
    phvwrpair p._dma_cmd_X##_dma_cmd_mem2mem_type, _type,		        \
@@ -252,6 +245,7 @@
 
 
 // DMA address update: Specify the destination address for the DMA command
+// _addr is given in a register
 #define DMA_ADDR_UPDATE(_addr, _dma_cmd_X)				                \
    phvwr    p._dma_cmd_X##_dma_cmd_addr, _addr;	                        \
    phvwr    p._dma_cmd_X##_dma_cmd_host_addr, _addr[63:63];	            \
