@@ -129,6 +129,15 @@ pciehw_openregs(pciehw_t *phw)
     return 0;
 }
 
+int
+pciehw_port_is_enabled(const int port)
+{
+    pciehw_t *phw = pciehw_get();
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+
+    return (phwmem->enabled_ports & (1 << port)) != 0;
+}
+
 static void
 pciehw_closeregs(pciehw_t *phw)
 {
@@ -200,7 +209,8 @@ pciehw_init(pciehw_t *phw)
     pciehw_cfg_init(phw);
     pciehw_bar_init(phw);
     pciehw_vfstride_init(phw);
-    pciehw_port_init(phw);
+    pciehw_tgt_port_init(phw);
+    pciehw_itr_port_init(phw);
     pciehw_hdrt_init(phw);
     pciehw_portmap_init(phw);
     pciehw_notify_init(phw);
@@ -249,6 +259,7 @@ pciehw_open(pciehw_params_t *hwparams)
     }
 
     if (phw->hwparams.inithw) {
+        phwmem->enabled_ports = hwparams ? hwparams->enabled_ports : 0x1;
         pciehw_init(phw);
     }
 
@@ -287,15 +298,17 @@ pciehwdev_alloc(pciehdev_t *pdev)
 }
 
 void
-pciehw_initialize_topology(void)
+pciehw_initialize_topology(const u_int8_t port)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
 
     if (phwmem) {
+        /* XXX these are global, not per-port */
         phwmem->allocdev = 0;
         phwmem->allocprt = 0;
-        phwmem->rooth = 0;
+
+        phwmem->rooth[port] = 0;
     }
 }
 
@@ -358,7 +371,7 @@ pciehwdev_search_bdf(pciehwdevh_t phwdevh, const u_int16_t bdf)
 }
 
 static pciehwdev_t *
-pciehwdev_by_bdf(const u_int16_t bdf)
+pciehwdev_by_bdf(const u_int8_t port, const u_int16_t bdf)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
@@ -369,7 +382,7 @@ pciehwdev_by_bdf(const u_int16_t bdf)
         return NULL;
     }
     phwdev_found = NULL;
-    for (phwdevh = phwmem->rooth; phwdevh; phwdevh = phwdev->peerh) {
+    for (phwdevh = phwmem->rooth[port]; phwdevh; phwdevh = phwdev->peerh) {
         phwdev_found = pciehwdev_search_bdf(phwdevh, bdf);
         if (phwdev_found) {
             break;
@@ -437,7 +450,7 @@ pciehw_finalize_dev(pciehdev_t *pdev)
 }
 
 static void
-fake_bios_scan(int bus, int *nextbus)
+fake_bios_scan(const u_int8_t port, int bus, int *nextbus)
 {
     int dev, bdf;
     u_int32_t val;
@@ -446,19 +459,19 @@ fake_bios_scan(int bus, int *nextbus)
         bdf = bdf_make(bus, dev, 0);
 
         /* read vendor/device id to be sure a device exists at bdf */
-        if (pciehw_cfgrd(bdf, 0, 4, &val) < 0) {
+        if (pciehw_cfgrd(port, bdf, 0, 4, &val) < 0) {
             continue;
         }
         /* read header type register */
-        if (pciehw_cfgrd(bdf, 0xe, 1, &val) < 0) {
+        if (pciehw_cfgrd(port, bdf, 0xe, 1, &val) < 0) {
             continue;
         }
         /* bridge header type? */
         if ((val & 0x7f) == 1) {
             /* set secondary bus number */
             int secbus = (*nextbus)++;
-            pciehw_cfgwr(bdf, 0x19, 1, secbus);
-            fake_bios_scan(secbus, nextbus); /* scan secondary bus */
+            pciehw_cfgwr(port, bdf, 0x19, 1, secbus);
+            fake_bios_scan(port, secbus, nextbus); /* scan secondary bus */
         }
     }
 }
@@ -470,11 +483,12 @@ pciehw_finalize_topology(pciehdev_t *proot)
     pciehw_params_t *phwparams = &phw->hwparams;
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehwdev_t *phwroot = proot ? pciehw_finalize_dev(proot) : NULL;
-    phwmem->rooth = pciehwdev_geth(phwroot);
+    const u_int8_t port = pciehdev_get_port(proot);
 
+    phwmem->rooth[port] = pciehwdev_geth(phwroot);
     if (phwparams->fake_bios_scan) {
         int nextbus = 1;
-        fake_bios_scan(0, &nextbus);
+        fake_bios_scan(port, 0, &nextbus);
     }
 }
 
@@ -569,6 +583,7 @@ cmd_meminfo(int argc, char *argv[])
                  hwmempa, sizeof(pciehw_mem_t));
     pciehsys_log("%-*s: 0x%08x\n", w, "magic", phwmem->magic);
     pciehsys_log("%-*s: %d\n", w, "version", phwmem->version);
+    pciehsys_log("%-*s: 0x%x\n", w, "enabled_ports", phwmem->enabled_ports);
     pciehsys_log("%-*s: %d\n", w, "allocdev", phwmem->allocdev);
     pciehsys_log("%-*s: %d\n", w, "allocprt", phwmem->allocprt);
     pciehsys_log("%-*s: 0x%08"PRIx64" size %lu\n", w, "cfgcur",
@@ -634,12 +649,12 @@ pciehw_dbg(int argc, char *argv[])
 }
 
 int
-pciehw_cfgrd(const u_int16_t bdf,
+pciehw_cfgrd(const u_int8_t port, const u_int16_t bdf,
              const u_int16_t offset, const u_int8_t size, u_int32_t *valp)
 {
     pciehwdev_t *phwdev;
 
-    phwdev = pciehwdev_by_bdf(bdf);
+    phwdev = pciehwdev_by_bdf(port, bdf);
     if (phwdev == NULL) {
         return -ESRCH;
     }
@@ -647,12 +662,12 @@ pciehw_cfgrd(const u_int16_t bdf,
 }
 
 int
-pciehw_cfgwr(const u_int16_t bdf,
+pciehw_cfgwr(const u_int8_t port, const u_int16_t bdf,
              const u_int16_t offset, const u_int8_t size, const u_int32_t val)
 {
     pciehwdev_t *phwdev;
 
-    phwdev = pciehwdev_by_bdf(bdf);
+    phwdev = pciehwdev_by_bdf(port, bdf);
     if (phwdev == NULL) {
         return -ESRCH;
     }
@@ -663,40 +678,44 @@ static u_int64_t memval;
 static u_int32_t ioval;
 
 int
-pciehw_memrd(const u_int64_t addr, const u_int8_t size, u_int64_t *valp)
+pciehw_memrd(const u_int8_t port,
+             const u_int64_t addr, const u_int8_t size, u_int64_t *valp)
 {
     *valp = memval;
     return 0;
 }
 
 int
-pciehw_memwr(const u_int64_t addr, const u_int8_t size, u_int64_t val)
+pciehw_memwr(const u_int8_t port,
+             const u_int64_t addr, const u_int8_t size, u_int64_t val)
 {
     memval = val;
     return 0;
 }
 
 int
-pciehw_iord(const u_int32_t addr, const u_int8_t size, u_int32_t *valp)
+pciehw_iord(const u_int8_t port,
+            const u_int32_t addr, const u_int8_t size, u_int32_t *valp)
 {
     *valp = ioval;
     return 0;
 }
 
 int
-pciehw_iowr(const u_int32_t addr, const u_int8_t size, u_int32_t val)
+pciehw_iowr(const u_int8_t port,
+            const u_int32_t addr, const u_int8_t size, u_int32_t val)
 {
     ioval = val;
     return 0;
 }
 
 int
-pciehw_barsz(const u_int16_t bdf, const int i)
+pciehw_barsz(const u_int8_t port, const u_int16_t bdf, const int i)
 {
     pciehwdev_t *phwdev;
     pciehwbar_t *phwbar;
 
-    phwdev = pciehwdev_by_bdf(bdf);
+    phwdev = pciehwdev_by_bdf(port, bdf);
     if (phwdev == NULL) {
         return 0;
     }

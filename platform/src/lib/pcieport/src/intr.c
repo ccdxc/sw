@@ -30,7 +30,6 @@ pcieport_intr(pcieport_t *p)
 {
     const int pn = p->port;
     u_int32_t int_mac, sta_rst;
-    extern int pcieport_link_bringup(pcieport_t *p);
 
     int_mac = pal_reg_rd32(PXC_(INT_C_MAC_INTREG, pn));
     if (int_mac == 0) return -1;
@@ -48,8 +47,6 @@ pcieport_intr(pcieport_t *p)
     if (sta_rst & STA_RSTF_(PERSTN)) {
         if (int_mac & MAC_INTREGF_(RST_UP2DN)) {
             pcieport_fsm(p, PCIEPORTEV_MACUP);
-            pcieport_gate_open(p);
-            pcieport_set_crs(p, 0);
         }
         if (int_mac & MAC_INTREGF_(LINK_DN2UP)) {
             pcieport_fsm(p, PCIEPORTEV_LINKUP);
@@ -88,18 +85,20 @@ pp_intr(void)
 {
     pcieport_info_t *pi = &pcieport_info;
     u_int32_t int_pp;
+    int port;
 
     int_pp = pal_reg_rd32(PP_(INT_PP_INTREG));
     if (int_pp == 0) return -1;
 
     pal_reg_wr32(PP_(INT_PP_INTREG), int_pp);
 
-    if (int_pp & INTREG_PERSTN(0)) {
-        pcieport_t *p = &pi->pcieport[0];
-        printf("power on\n");
-        /* XXX pcieport_fsm(p, PCIEPORTEV_POWERON); */
-        pcieport_config(p);
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        pcieport_t *p = &pi->pcieport[port];
+        if (p->open && (int_pp & INTREG_PERSTN(port))) {
+            pcieport_fsm(p, PCIEPORTEV_POWERON);
+        }
     }
+
     return 0;
 }
 

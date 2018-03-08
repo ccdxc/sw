@@ -26,6 +26,7 @@ pcieport_info_init(void)
         /* already initialized */
         return 0;
     }
+    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
     pi->init = 1;
     return 0;
 }
@@ -78,6 +79,36 @@ cmd_vga_support(int argc, char *argv[])
     vga_support = strtoul(argv[1], NULL, 0);
 }
 
+static void
+cmd_port(int argc, char *argv[])
+{
+    pcieport_info_t *pi = &pcieport_info;
+    pcieport_t *p;
+    const int w = 16;
+    int port;
+
+    if (argc <= 1) {
+        pciehsys_log("Usage: port <n>\n");
+        return;
+    }
+    port = strtoul(argv[1], NULL, 0);
+    if (port < 0 || port > PCIEPORT_NPORTS) {
+        pciehsys_log("port %d out of range\n", port);
+        return;
+    }
+
+    p = &pi->pcieport[port];
+    pciehsys_log("%-*s: gen%dx%d\n", w, "config", p->gen, p->width);
+    pciehsys_log("%-*s: 0x%04x\n", w, "lanemask", p->lanemask);
+    pciehsys_log("%-*s: 0x%04x\n", w, "subvendorid", p->subvendorid);
+    pciehsys_log("%-*s: 0x%04x\n", w, "subdeviceid", p->subdeviceid);
+    pciehsys_log("%-*s: %d\n", w, "open", p->open);
+    pciehsys_log("%-*s: %d\n", w, "config", p->open);
+    pciehsys_log("%-*s: %d\n", w, "crs", p->crs);
+    pciehsys_log("%-*s: %d\n", w, "state", p->state);
+    pciehsys_log("%-*s: %d\n", w, "event", p->event);
+}
+
 typedef struct cmd_s {
     const char *name;
     void (*f)(int argc, char *argv[]);
@@ -89,6 +120,7 @@ static cmd_t cmdtab[] = {
 #define CMDENT(name, desc, helpstr) \
     { #name, cmd_##name, desc, helpstr }
     CMDENT(fsm, "fsm", ""),
+    CMDENT(port, "port", ""),
     CMDENT(vga_support, "vga_support", ""),
     { NULL, NULL }
 };

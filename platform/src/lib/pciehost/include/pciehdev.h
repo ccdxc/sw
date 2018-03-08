@@ -28,6 +28,7 @@ typedef struct pciehdev_openparams_s {
     u_int16_t subvendorid;      /* default subvendorid */
     u_int16_t subdeviceid;      /* default subdeviceid */
     u_int8_t first_bus;         /* first bus number for virtual devices bdf */
+    u_int8_t enabled_ports;     /* bitmask of enabled ports */
     u_int32_t inithw:1;         /* initialize hw */
     u_int32_t fake_bios_scan:1; /* scan finalized topology, assign bus #'s */
     u_int32_t noexttag:1;       /* no extended tags capable */
@@ -50,7 +51,8 @@ typedef struct pciehdev_mem_notify_s {
 } pciehdev_mem_notify_t;
 
 typedef struct pciehdev_eventdata_s {
-    pciehdev_event_t evtype;            /* PCIEHDEV_EV_* */
+    pciehdev_event_t evtype;    /* PCIEHDEV_EV_* */
+    u_int8_t port;              /* PCIe port */
     union {
         pciehdev_mem_notify_t mem_notify;   /* EV_MEMRD/WR_NOTIFY */
     };
@@ -86,12 +88,12 @@ int pciehdev_addchild(pciehdev_t *pdev, pciehdev_t *pchild);
 int pciehdev_make_fn0(pciehdev_t *pdev);
 int pciehdev_make_fnn(pciehdev_t *pdev, const int fnc);
 
-pciehdev_t *pciehdev_get_root(void);
+pciehdev_t *pciehdev_get_root(const u_int8_t port);
 pciehdev_t *pciehdev_get_parent(pciehdev_t *pdev);
 pciehdev_t *pciehdev_get_peer(pciehdev_t *pdev);
 pciehdev_t *pciehdev_get_child(pciehdev_t *pdev);
 
-pciehdev_t *pciehdev_get_by_bdf(const u_int16_t bdf);
+pciehdev_t *pciehdev_get_by_bdf(const u_int8_t port, const u_int16_t bdf);
 pciehdev_t *pciehdev_get_by_name(const char *name);
 
 void *pciehdev_get_hwdev(pciehdev_t *pdev);

@@ -304,14 +304,10 @@ handle_indirect(indirect_entry_t *ientry)
 static indirect_entry_t indirect_entry[PCIEHW_NPORTS];
 
 int
-pciehw_indirect_intr(pciehw_t *phw, const int port)
+pciehw_indirect_intr(pciehw_port_t *p, const int port)
 {
-    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
-    pciehw_port_t *p = &phwmem->port[port];
     indirect_entry_t *ientry = &indirect_entry[port];
 
-    if (phwmem->indirect_intr_dest == 0) return -1;
-    phwmem->indirect_intr_dest = 0;
     p->indirect_cnt++;
 
     read_pending_indirect_entry(port, ientry);
@@ -334,7 +330,18 @@ pciehw_indirect_init(pciehw_t *phw)
 int
 pciehw_indirect_poll(pciehw_t *phw)
 {
-    pciehw_indirect_intr(phw, 0);
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    int port;
+
+    if (phwmem->indirect_intr_dest == 0) return -1;
+    phwmem->indirect_intr_dest = 0;
+
+    for (port = 0; port < phw->nports; port++) {
+        pciehw_port_t *p = &phwmem->port[port];
+        if (pciehw_port_is_enabled(port)) {
+            pciehw_indirect_intr(p, port);
+        }
+    }
     return 0;
 }
 

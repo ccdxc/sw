@@ -24,7 +24,7 @@ pcieport_mac_k_gen(pcieport_t *p)
 
     gen = pal_reg_rd64(PXC_(CFG_C_MAC_K_GEN, pn));
     gen &= 0xffffffff00000000ULL;
-    gen |= 0x80e20254;
+    gen |= 0x80e20254; /* XXX replace hard-coded value? */
 
     switch (p->width) {
     case 1: gen |= (0xf << 24); break;
@@ -67,6 +67,14 @@ pcieport_mac_set_ids(pcieport_t *p)
 }
 
 static void
+pcieport_unreset(pcieport_t *p)
+{
+    u_int32_t val = pal_reg_rd32(PP_(CFG_PP_SW_RESET));
+    val &= ~(0x3 << (p->port << 1));
+    pal_reg_wr32(PP_(CFG_PP_SW_RESET), val);
+}
+
+static void
 pcieport_hostconfig(pcieport_t *p)
 {
     /* toggle these resets */
@@ -75,8 +83,7 @@ pcieport_hostconfig(pcieport_t *p)
     pcieport_set_serdes_reset(p, 0);
     pcieport_set_pcs_reset(p, 0);
 
-    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
-    pal_reg_wr32(PP_(CFG_PP_SW_RESET), 0xfffc);
+    pcieport_unreset(p);
 
     pcieport_mac_k_gen(p);
     pcieport_mac_k_pciconf(p);
@@ -134,6 +141,9 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
         p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
     }
 
+    /* fpga config x4 */
+    p->lanemask = 0xf << (p->port << 1);
+
     p->host = 1;
     p->config = 1;
 
@@ -148,6 +158,7 @@ pcieport_cmd_crs(pcieport_t *p, void *arg)
     if (!p->config) return -EBADF;
     if (!p->host)   return -EINVAL;
     p->crs = on;
+    pcieport_fsm(p, PCIEPORTEV_CONFIG);
     return 0;
 }
 

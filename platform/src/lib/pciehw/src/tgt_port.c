@@ -16,11 +16,11 @@
 #include "pciehw_impl.h"
 #include "pciehsys.h"
 
-#define PORT_BASE \
+#define TGT_PORT_BASE \
     (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_CFG_TGT_PORT_BYTE_ADDRESS)
-#define PORT_COUNT \
+#define TGT_PORT_COUNT \
     CAP_PXB_CSR_CFG_TGT_PORT_ARRAY_COUNT
-#define PORT_STRIDE \
+#define TGT_PORT_STRIDE \
     (CAP_PXB_CSR_CFG_TGT_PORT_ARRAY_ELEMENT_SIZE * 4)
 
 typedef union {
@@ -35,27 +35,27 @@ typedef union {
         u_int32_t fbe_holes_allow:1;
         u_int32_t fence_dis:1;
     } __attribute__((packed));
-    u_int32_t w;
-} portcfg_t;
-
+    u_int32_t all32;
+} tgt_portcfg_t;
 
 static u_int64_t
-port_addr(const int port)
+tgt_port_addr(const int port)
 {
-    return PORT_BASE + (port * PORT_STRIDE);
+    return TGT_PORT_BASE + (port * TGT_PORT_STRIDE);
 }
 
 void
-pciehw_port_skip_notify(const int port, const int on)
+pciehw_tgt_port_skip_notify(const int port, const int on)
 {
-    portcfg_t cfg;
+    const u_int64_t pa = tgt_port_addr(port);
+    tgt_portcfg_t cfg;
 
-    cfg.w = pal_reg_rd32(port_addr(port));
+    cfg.all32 = pal_reg_rd32(pa);
     cfg.skip_notify_if_qfull = on;
-    pal_reg_wr32(port_addr(port), cfg.w);
+    pal_reg_wr32(pa, cfg.all32);
 }
 
 void
-pciehw_port_init(pciehw_t *phw)
+pciehw_tgt_port_init(pciehw_t *phw)
 {
 }

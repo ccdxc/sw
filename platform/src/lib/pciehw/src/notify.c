@@ -306,7 +306,7 @@ pciehw_notify_init(pciehw_t *phw)
 
     notify_init(phw);
     for (i = 0; i < phw->nports; i++) {
-        pciehw_port_skip_notify(i, skip_notify);
+        pciehw_tgt_port_skip_notify(i, skip_notify);
         notify_ring_init(phw, i);
     }
     return 0;
@@ -355,14 +355,24 @@ pciehw_notify_intr(pciehw_t *phw, const int port)
 
     /* we consumed these, adjust ci */
     notify_set_ci(port, pi);
-    phwmem->notify_intr_dest = 0;
     return 0;
 }
 
 int
 pciehw_notify_poll(pciehw_t *phw)
 {
-    return pciehw_notify_intr(phw, 0);
+    pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
+    int port;
+
+    if (phwmem->notify_intr_dest == 0) return -1;
+    phwmem->notify_intr_dest = 0;
+
+    for (port = 0; port < phw->nports; port++) {
+        if (pciehw_port_is_enabled(port)) {
+            pciehw_notify_intr(phw, port);
+        }
+    }
+    return 0;
 }
 
 /******************************************************************
@@ -435,7 +445,7 @@ pciehw_notify_dbg(int argc, char *argv[])
             break;
         case 's': /* skip_notify_if_qfull */
             skip_notify = strtoul(optarg, NULL, 0) != 0;
-            pciehw_port_skip_notify(port, skip_notify);
+            pciehw_tgt_port_skip_notify(port, skip_notify);
             break;
         case 'v':
             notify_verbose = !notify_verbose;

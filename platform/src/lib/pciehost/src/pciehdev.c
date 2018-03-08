@@ -20,12 +20,18 @@
 #include "pciehsys.h"
 #include "pciehw.h"
 
-typedef struct pciehdev_data_s {
-    pciehdev_openparams_t params;
+#define NPORTS 8
+
+typedef struct pciehdev_portinfo_s {
     u_int32_t finalized:1;
     u_int32_t memtun_br:1;
     pciehdev_t *root;
+} pciehdev_portinfo_t;
+
+typedef struct pciehdev_data_s {
+    pciehdev_openparams_t params;
     pciehdev_evhandler_t evhandler;
+    pciehdev_portinfo_t portinfo[NPORTS];
 } pciehdev_data_t;
 
 static pciehdev_data_t pciehdev_data;
@@ -34,6 +40,13 @@ static pciehdev_data_t *
 pciehdev_get_data(void)
 {
     return &pciehdev_data;
+}
+
+static int
+pciehdev_port_is_enabled(const u_int8_t port)
+{
+    pciehdev_openparams_t *params = pciehdev_get_params();
+    return (params->enabled_ports & (1 << port)) != 0;
 }
 
 /******************************************************************/
@@ -63,11 +76,16 @@ pciehdev_open(pciehdev_openparams_t *params)
     if (pdevdata->params.cap_width == 0) {
         pdevdata->params.cap_width = 16;
     }
+    if (pdevdata->params.enabled_ports == 0) {
+        /* port 0 enabled by default */
+        pdevdata->params.enabled_ports = 0x1;
+    }
 
     memset(&hwparams, 0, sizeof(hwparams));
     hwparams.inithw = pdevdata->params.inithw;
     hwparams.fake_bios_scan = pdevdata->params.fake_bios_scan;
     hwparams.first_bus = pdevdata->params.first_bus;
+    hwparams.enabled_ports = pdevdata->params.enabled_ports;
     if ((r = pciehw_open(&hwparams)) < 0) {
         return r;
     }
@@ -98,10 +116,10 @@ pciehdev_new(const char *name, const pciehdevice_resources_t *pres)
         if (pres->lif_valid) {
             pdev->lif = pres->lif;
             pdev->lif_valid = pres->lif_valid;
-            pdev->port = pres->port;
         }
         pdev->intrb = pres->intrb;
         pdev->intrc = pres->intrc;
+        pdev->port = pres->port;
     }
     strncpy0(pdev->name, name, sizeof(pdev->name));
     return pdev;
@@ -129,14 +147,21 @@ int
 pciehdev_initialize(void)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
+    int port;
 
-    if (pdevdata->finalized) {
-        pdevdata->finalized = 0;
+    for (port = 0; port < NPORTS; port++) {
+        pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
+
+        if (pciehdev_port_is_enabled(port)) {
+            if (pi->finalized) {
+                pi->finalized = 0;
+            }
+            pciehw_initialize_topology(port);
+            pciehdev_delete_topology(pi->root);
+            pi->root = NULL;
+            pi->memtun_br = 0;
+        }
     }
-    pciehw_initialize_topology();
-    pciehdev_delete_topology(pdevdata->root);
-    pdevdata->root = NULL;
-    pdevdata->memtun_br = 0;
     return 0;
 }
 
@@ -191,22 +216,31 @@ int
 pciehdev_finalize(void)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
-    u_int8_t nextbus = pdevdata->params.first_bus;
+    int port;
 
-    if (pdevdata->finalized) {
-        return -EALREADY;
+    for (port = 0; port < NPORTS; port++) {
+        pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
+        u_int8_t nextbus = pdevdata->params.first_bus;
+
+        if (pciehdev_port_is_enabled(port) && !pi->finalized) {
+
+            /* add a bridge to complete this topology */
+            if (pi->root == NULL) {
+                pciehdev_t *pbrdn;
+                const int memtun_en = port == 0 && pi->memtun_br == 0;
+                pi->root = pciehdev_bridgeup_new();
+                pi->root->port = port;
+                pbrdn = pciehdev_bridgedn_new(memtun_en);
+                pbrdn->port = port;
+                pciehdev_addchild(pi->root, pbrdn);
+                pi->memtun_br = memtun_en;
+            }
+
+            pciehdev_finalize_dev(pi->root, bdf_make(0, 0, 0), &nextbus);
+            pciehw_finalize_topology(pi->root);
+            pi->finalized = 1;
+        }
     }
-    if (pdevdata->root == NULL) {
-        pciehdev_t *pbrdn;
-        const int memtun_en = pdevdata->memtun_br == 0;
-        pdevdata->root = pciehdev_bridgeup_new();
-        pbrdn = pciehdev_bridgedn_new(memtun_en);
-        pciehdev_addchild(pdevdata->root, pbrdn);
-        pdevdata->memtun_br = 1;
-    }
-    pciehdev_finalize_dev(pdevdata->root, bdf_make(0, 0, 0), &nextbus);
-    pciehw_finalize_topology(pdevdata->root);
-    pdevdata->finalized = 1;
     return 0;
 }
 
@@ -239,12 +273,14 @@ int
 pciehdev_addchild(pciehdev_t *pdev, pciehdev_t *pchild)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
+    const u_int8_t port = pdev->port;
+    pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
     pciehdev_t **ppdev;
 
-    if (pdevdata->finalized) {
+    if (pi->finalized) {
         return -EBUSY;
     }
-    ppdev = pdev ? &pdev->child : &pdevdata->root;
+    ppdev = pdev ? &pdev->child : &pi->root;
     for (; *ppdev; ppdev = &(*ppdev)->peer) {
         continue;
     }
@@ -259,19 +295,23 @@ int
 pciehdev_add(pciehdev_t *pdev)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
+    const u_int8_t port = pdev->port;
+    pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
     pciehdev_t *pbrdn;
     int memtun_en = 0;
 
-    if (pdevdata->finalized) {
+    if (pi->finalized) {
         return -EBUSY;
     }
-    if (pdevdata->root == NULL) {
-        pdevdata->root = pciehdev_bridgeup_new();
+    if (pi->root == NULL) {
+        pi->root = pciehdev_bridgeup_new();
+        pi->root->port = port;
     }
-    memtun_en = pdevdata->memtun_br == 0;
+    memtun_en = port == 0 && pi->memtun_br == 0;
     pbrdn = pciehdev_bridgedn_new(memtun_en);
-    pciehdev_addchild(pdevdata->root, pbrdn);
-    pdevdata->memtun_br = 1;
+    pbrdn->port = port;
+    pciehdev_addchild(pi->root, pbrdn);
+    pi->memtun_br = memtun_en;
     return pciehdev_addchild(pbrdn, pdev);
 }
 
@@ -279,8 +319,10 @@ int
 pciehdev_addfn(pciehdev_t *pdev, pciehdev_t *pfn, const int fnc)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
+    const u_int8_t port = pdev->port;
+    pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
 
-    if (pdevdata->finalized) {
+    if (pi->finalized) {
         return -EBUSY;
     }
     pciehdev_make_fn0(pdev);
@@ -307,10 +349,11 @@ pciehdev_make_fnn(pciehdev_t *pdev, const int fnn)
 }
 
 pciehdev_t *
-pciehdev_get_root(void)
+pciehdev_get_root(const u_int8_t port)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
-    return pdevdata->root;
+    pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
+    return pi->root;
 }
 
 pciehdev_t *
@@ -354,8 +397,16 @@ pciehdev_find_by_name(pciehdev_t *pdev, const char *name)
 pciehdev_t *
 pciehdev_get_by_name(const char *name)
 {
-    pciehdev_data_t *pdevdata = pciehdev_get_data();
-    return pciehdev_find_by_name(pdevdata->root, name);
+    pciehdev_t *pdev_found = NULL;    
+    int port;
+
+    for (port = 0; port < NPORTS; port++) {
+        pciehdev_t *root = pciehdev_get_root(port);
+
+        pdev_found = pciehdev_find_by_name(root, name);
+        if (pdev_found) break;
+    }
+    return pdev_found;
 }
 
 static pciehdev_t *
@@ -379,10 +430,10 @@ pciehdev_find_by_bdf(pciehdev_t *pdev, const u_int16_t bdf)
 }
 
 pciehdev_t *
-pciehdev_get_by_bdf(const u_int16_t bdf)
+pciehdev_get_by_bdf(const u_int8_t port, const u_int16_t bdf)
 {
-    pciehdev_data_t *pdevdata = pciehdev_get_data();
-    return pciehdev_find_by_bdf(pdevdata->root, bdf);
+    pciehdev_t *root = pciehdev_get_root(port);
+    return pciehdev_find_by_bdf(root, bdf);
 }
 
 void *

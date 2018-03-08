@@ -12,7 +12,8 @@ SOURCES = \
 	prt.c \
 	vfstride.c \
 	hdrt.c \
-	port.c \
+	tgt_port.c \
+	itr_port.c \
 	portmap.c \
 	notify.c \
 	indirect.c \

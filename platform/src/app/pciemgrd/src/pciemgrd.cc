@@ -36,7 +36,8 @@
 
 typedef struct pciemgrenv_s {
     pciehdev_t *current_dev;
-    pcieport_t *pport;
+    u_int8_t enabled_ports;
+    pcieport_t *pport[PCIEPORT_NPORTS];
 } pciemgrenv_t;
 
 static pciemgrenv_t pciemgrenv;
@@ -47,8 +48,9 @@ static void
 usage(void)
 {
     fprintf(stderr,
-"Usage: pciemgrd [-Fnv][-b <first_bus_num>][-P gen<G>x<W>][-s subdeviceid]\n"
+"Usage: pciemgrd [-Fnv][-e <enabled_ports>[-b <first_bus_num>][-P gen<G>x<W>][-s subdeviceid]\n"
 "    -b <first_bus_num> set first bus used to <first_bus_num>\n"
+"    -e <enabled_ports> max of enabled pcie ports\n"
 "    -F                 no fake bios scan\n"
 "    -h                 initializing hw\n"
 "    -H                 no initializing hw\n"
@@ -219,9 +221,14 @@ cmd_finalize(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
     int off = 0;
+    int port;
 
     pciehdev_finalize();
-    pcieport_ctrl(pme->pport, PCIEPORT_CMD_CRS, &off);
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->pport[port]) {
+            pcieport_ctrl(pme->pport[port], PCIEPORT_CMD_CRS, &off);
+        }
+    }
 }
 
 static void
@@ -348,8 +355,8 @@ cmd_addfn(int argc, char *argv[])
 static void
 show_header(void)
 {
-    printf("%-10s %-7s %-10s %-10s %-10s\n",
-           "NAME", "BDF", "PARENT", "PEER", "CHILD");
+    printf("%-10s %-9s %-10s %-10s %-10s\n",
+           "NAME", "P:BDF", "PARENT", "PEER", "CHILD");
 }
 
 static void
@@ -359,8 +366,9 @@ show1(pciehdev_t *p)
     pciehdev_t *peer   = pciehdev_get_peer(p);
     pciehdev_t *child  = pciehdev_get_child(p);
 
-    printf("%-10s %-7s %-10s %-10s %-10s\n",
+    printf("%-10s %d:%-7s %-10s %-10s %-10s\n",
            pciehdev_get_name(p),
+           pciehdev_get_port(p),
            bdf_to_str(pciehdev_get_bdf(p)),
            parent ? pciehdev_get_name(parent) : "",
            peer ? pciehdev_get_name(peer) : "",
@@ -390,12 +398,15 @@ foreach_dev(int d, pciehdev_t *pdev, void (*f)(pciehdev_t *pdev))
 static void
 cmd_show(int argc, char *argv[])
 {
-    pciehdev_t *pdev = pciehdev_get_root();
-    if (pdev != NULL) {
-        show_header();
-        foreach_dev(0, pdev, show1);
-    } else {
-        printf("no devices\n");
+    int port;
+
+    show_header();
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        pciehdev_t *pdev = pciehdev_get_root(port);
+
+        if (pdev != NULL) {
+            foreach_dev(0, pdev, show1);
+        }
     }
 }
 
@@ -536,7 +547,13 @@ cmd_poll(int argc, char *argv[])
     poll_enabled = 1;
     while (poll_enabled) {
         tm_start = timestamp();
-        if (poll_port) pcieport_poll(pme->pport);
+        if (poll_port) {
+            for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+                if (pme->pport[port]) {
+                    pcieport_poll(pme->pport[port]);
+                }
+            }
+        }
         tm_port = timestamp();
         pciehw_poll();
         tm_stop = timestamp();
@@ -747,10 +764,16 @@ main(int argc, char *argv[])
     p.first_bus = 1;
 #endif
 
-    while ((opt = getopt(argc, argv, "b:FhHP:D:V:v")) != -1) {
+    pme->enabled_ports = 0x1;
+    p.enabled_ports = pme->enabled_ports;
+    while ((opt = getopt(argc, argv, "b:e:FhHP:D:V:v")) != -1) {
         switch (opt) {
         case 'b':
             p.first_bus = strtoul(optarg, NULL, 0);
+            break;
+        case 'e':
+            pme->enabled_ports = strtoul(optarg, NULL, 0);
+            p.enabled_ports = pme->enabled_ports;
             break;
         case 'F':
             p.fake_bios_scan = 0;
@@ -788,14 +811,23 @@ main(int argc, char *argv[])
         }
     }
 
-    if ((pme->pport = pcieport_open(0)) == NULL) {
-        printf("pcieport_open failed\n");
-        exit(1);
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pcieport_t *pport;
+
+            if ((pport = pcieport_open(port)) == NULL) {
+                printf("pcieport_open %d failed\n", port);
+                exit(1);
+            }
+            if (pcieport_ctrl(pport, PCIEPORT_CMD_HOSTCONFIG, &pcfg) < 0) {
+                printf("pcieport_ctrl(HOSTCONFIG) %d failed\n", port);
+                exit(1);
+            }
+
+            pme->pport[port] = pport;
+        }
     }
-    if (pcieport_ctrl(pme->pport, PCIEPORT_CMD_HOSTCONFIG, &pcfg) < 0) {
-        printf("pcieport_ctrl(HOSTCONFIG) failed\n");
-        exit(1);
-    }
+
     if (pciehdev_open(&p) < 0) {
         printf("pciehdev_open failed\n");
         exit(1);
@@ -827,6 +859,11 @@ main(int argc, char *argv[])
     }
 
     pciehdev_close();
-    pcieport_close(pme->pport);
+
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->pport[port]) {
+            pcieport_close(pme->pport[port]);
+        }
+    }
     exit(0);
 }

@@ -9,6 +9,7 @@
 #include "cap_pp_c_hdr.h"
 
 typedef enum pcieportst_e {
+    PCIEPORTST_OFF,
     PCIEPORTST_DOWN,
     PCIEPORTST_MACUP,
     PCIEPORTST_LINKUP,
@@ -19,6 +20,7 @@ typedef enum pcieportst_e {
 } pcieportst_t;
 
 typedef enum pcieportev_e {
+    PCIEPORTEV_POWERON,
     PCIEPORTEV_MACDN,
     PCIEPORTEV_MACUP,
     PCIEPORTEV_LINKDN,
@@ -33,6 +35,7 @@ struct pcieport_s {
     int port;
     int gen;
     int width;
+    u_int16_t lanemask;
     u_int16_t subvendorid;
     u_int16_t subdeviceid;
     u_int32_t open:1;

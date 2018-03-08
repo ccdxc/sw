@@ -56,24 +56,38 @@ pcieport_set_crs(pcieport_t *p, const int on)
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
 
+/*
+ * Note this function sets reset on/off, but the register
+ * is inverted logic for _RESET_N.  If on=1 then put the serdes
+ * in reset by clearing reset_n bits;
+ */
 void
 pcieport_set_serdes_reset(pcieport_t *p, const int on)
 {
+    u_int32_t v = pal_reg_rd32(PP_(CFG_PP_SD_ASYNC_RESET_N));
     if (on) {
-        pal_reg_wr32(PP_(CFG_PP_SD_ASYNC_RESET_N), 0);
+        v &= ~p->lanemask;
     } else {
-        pal_reg_wr32(PP_(CFG_PP_SD_ASYNC_RESET_N), 0xffff);
+        v |= p->lanemask;
     }
+    pal_reg_wr32(PP_(CFG_PP_SD_ASYNC_RESET_N), v);
 }
 
+/*
+ * Note this function sets reset on/off, but the register
+ * is inverted logic for _RESET_N.  If on=1 then put the serdes
+ * in reset by clearing reset_n bits;
+ */
 void
 pcieport_set_pcs_reset(pcieport_t *p, const int on)
 {
+    u_int32_t v = pal_reg_rd32(PP_(CFG_PP_PCS_RESET_N));
     if (on) {
-        pal_reg_wr32(PP_(CFG_PP_PCS_RESET_N), 0);
+        v &= ~p->lanemask;
     } else {
-        pal_reg_wr32(PP_(CFG_PP_PCS_RESET_N), 0xffff);
+        v |= p->lanemask;
     }
+    pal_reg_wr32(PP_(CFG_PP_PCS_RESET_N), v);
 }
 
 void

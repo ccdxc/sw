@@ -142,7 +142,8 @@ typedef struct pciehw_mem_s {
     u_int32_t version;                  /* PCIEHW_VERSION when initialized */
     u_int32_t allocdev;
     u_int32_t allocprt;
-    pciehwdevh_t rooth;
+    u_int8_t enabled_ports;             /* bitmask of enabled ports */
+    pciehwdevh_t rooth[PCIEHW_NPORTS];
     pciehwdev_t dev[PCIEHW_NDEVS];
     pciehw_port_t port[PCIEHW_NPORTS];
     pciehw_sromsk_t sromsk[PCIEHW_NROMSK];
@@ -177,6 +178,7 @@ pciehwdevh_t pciehwdev_geth(const pciehwdev_t *phwdev);
 void pciehwdev_get_cfgspace(const pciehwdev_t *phwdev, cfgspace_t *cs);
 char *pciehwdev_get_name(const pciehwdev_t *phwdev);
 pciehwdev_t *pciehwdev_find_by_name(const char *name);
+int pciehw_port_is_enabled(const int port);
 
 #include "hdrt.h"
 #include "portmap.h"
@@ -233,8 +235,10 @@ void pciehw_vfstride_init(pciehw_t *phw);
 int pciehw_vfstride_load(pciehw_t *phw, pciehwdev_t *phwdev);
 void pciehw_vfstride_unload(pciehw_t *phw, pciehwdev_t *phwdev);
 
-void pciehw_port_init(pciehw_t *phw);
-void pciehw_port_skip_notify(const int port, const int on);
+void pciehw_tgt_port_init(pciehw_t *phw);
+void pciehw_tgt_port_skip_notify(const int port, const int on);
+
+void pciehw_itr_port_init(pciehw_t *phw);
 
 void *pciehw_memset(void *s, int c, size_t n);
 void *pciehw_memcpy(void *dst, const void *src, size_t n);
