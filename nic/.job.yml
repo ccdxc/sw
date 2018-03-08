@@ -43,6 +43,7 @@ targets:
   gft/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py --gft_gtest && make run-gft-gtests && make sanity_logs" ]
   gft:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo gft --feature gft --gft && make sanity_logs" ]
   base:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo base --feature eth_base,nw_base,rdma_base,proxy_base --lite && make sanity_logs" ]
+  gft_rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make gft && ./run.py  --topo rdma_gft --feature rdma_perf --gft && make sanity_logs" ] 
   proto-sync: ["sh", "-c", "cd /sw && make pull-assets && cd $GOPATH/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto && make proto-sync" ]
   hal-rtl/parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make hal-rtl && ./run.py  --topo parser --feature parser && make sanity_logs" ]
   agent-arm-xcompile: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw make checks && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -a -v github.com/pensando/sw/nic/agent/cmd/netagent" ]

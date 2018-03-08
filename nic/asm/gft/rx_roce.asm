@@ -2,6 +2,7 @@
 #include "INGRESS_p.h"
 #include "CSUM_INGRESS.h"
 #include "../../p4/gft/include/defines.h"
+#include "../../p4/include/common_defines.h"
 
 struct rx_roce_k k;
 struct rx_roce_d d;
@@ -60,6 +61,10 @@ rx_roce_udp_options_done:
 
     // qtype => r7[63:61]
     or              r7, r7, d.u.rx_roce_d.qtype, 61
+
+    // table0_valid ==> r7[43]
+    seq             c3, d.u.rx_roce_d.qtype, Q_TYPE_RDMA_RQ
+    or.c3           r7, r7, 1, 43
 
     // write qid, r7
     phvwrpair       p.capri_rxdma_intrinsic_qid, k.roce_bth_destQP, \

@@ -13,6 +13,7 @@ action rx_roce(raw_flags, len, parsed_hdrs_len, qtype, tm_oq_overwrite, tm_oq) {
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.qtype, qtype);
     modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
+
     add(capri_rxdma_intrinsic.rx_splitter_offset, len,
         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
          P4PLUS_ROCE_HDR_SZ));
@@ -55,6 +56,10 @@ action rx_roce(raw_flags, len, parsed_hdrs_len, qtype, tm_oq_overwrite, tm_oq) {
     if (roce_bth.valid == FALSE) {
         // pre-parser path, truncate udp payload to remove icrc
         modify_field(scratch_metadata.parsed_hdrs_len, parsed_hdrs_len);
+    }
+
+    if (qtype == Q_TYPE_RDMA_RQ) {
+        modify_field(p4_to_p4plus_roce.table0_valid, TRUE);
     }
 
     remove_header(ethernet_1);

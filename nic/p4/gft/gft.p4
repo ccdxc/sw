@@ -6,6 +6,7 @@
 #include "metadata.p4"
 #include "i2e_metadata.p4"
 #include "../include/intrinsic.p4"
+#include "../include/common_defines.h"
 
 #include "key.p4"
 #include "flow.p4"
