@@ -201,6 +201,8 @@ int add_xts_tests(std::vector<TestEntry>& test_suite);
 int add_xts_perf_tests(std::vector<TestEntry>& test_suite);
 int xts_multi_blk_noc_stress_from_host();
 int xts_multi_blk_noc_stress_from_hbm();
+int xts_multi_blk_noc_stress_from_host_hw_chain();
+int xts_multi_blk_noc_stress_from_hbm_hw_chain();
 
 }  // namespace tests
 
