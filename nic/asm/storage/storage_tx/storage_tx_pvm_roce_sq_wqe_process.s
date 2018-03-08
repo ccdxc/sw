@@ -20,12 +20,10 @@ storage_tx_pvm_roce_sq_wqe_process_start:
 
    // If operation type is send on the target side, then the buffer has to 
    // posted back
-   seq		c1, d.op_type, ROCE_OP_TYPE_SEND
-   seq		c2, d.op_type, ROCE_OP_TYPE_SEND_INV
-   seq		c3, d.op_type, ROCE_OP_TYPE_SEND_IMM
-   seq		c4, d.op_type, ROCE_OP_TYPE_SEND_INV_IMM
-   bcf		![c1 | c2 | c3 | c4], exit
-   nop
+   add          r1, d.op_type, r0
+   indexn       r1, r1, [ROCE_OP_TYPE_SEND, ROCE_OP_TYPE_SEND_INV, ROCE_OP_TYPE_SEND_IMM, ROCE_OP_TYPE_SEND_INV_IMM], 0
+   blt.s        r1, r0, exit
+   nop   
    
    // In DOL environment, all buffer posting is done by infrastructure to serialize
    // operations. Enable the buffer posting in production code when PVM is ready.
@@ -37,8 +35,8 @@ storage_tx_pvm_roce_sq_wqe_process_start:
 
    
    // Set the table and the program address for the next stage
-   LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                             storage_tx_roce_rq_push_start)
+   LOAD_TABLE_FOR_ADDR34_PC_IMM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
+                                storage_tx_roce_rq_push_start)
 
 exit:
    // No need to setup the start and end DMA pointers, just drop PHV

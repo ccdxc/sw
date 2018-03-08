@@ -18,8 +18,8 @@ action exit() {
 @pragma little_endian p_ndx c_ndx
 action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                    total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                   num_entries, base_addr, entry_size, next_pc, dst_qaddr,
-                   dst_lif, dst_qtype, dst_qid, vf_id, sq_id, ssd_bm_addr, 
+                   num_entries, base_addr, entry_size, next_pc,
+                   dst_lif, dst_qtype, dst_qid,  dst_qaddr, vf_id, sq_id, ssd_bm_addr, 
                    ssd_q_num, ssd_q_size, ssd_ci_addr, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -68,8 +68,8 @@ action q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 @pragma little_endian p_ndx c_ndx
 action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                     total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                    num_entries, base_addr, entry_size, next_pc, dst_qaddr,
-                    dst_lif, dst_qtype, dst_qid, vf_id, sq_id, ssd_bm_addr, 
+                    num_entries, base_addr, entry_size, next_pc, 
+                    dst_lif, dst_qtype, dst_qid, dst_qaddr, vf_id, sq_id, ssd_bm_addr, 
                     ssd_q_num, ssd_q_size, ssd_ci_addr, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -202,8 +202,8 @@ action pci_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 action pvm_roce_sq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                           total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                           page_size, entry_size, num_entries, rsvd0, roce_msn, 
-                          w_ndx, next_pc, rrq_qaddr, rrq_lif, rrq_qtype,
-                          rrq_qid, rsq_lif, rsq_qtype, rsq_qid, pad) {
+                          w_ndx, next_pc, rrq_lif, rrq_qtype,
+                          rrq_qid, rrq_qaddr, rsq_lif, rsq_qtype, rsq_qid, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   PVM_ROCE_SQ_CB_COPY_STAGE0(pvm_roce_sq_cb_scratch)
@@ -313,8 +313,8 @@ action roce_cq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 action pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                            total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                            page_size, entry_size, num_entries, rsvd0, roce_msn, 
-                           w_ndx, next_pc, rrq_qaddr, rrq_lif, rrq_qtype,
-                           rrq_qid, rsq_lif, rsq_qtype, rsq_qid, pad) {
+                           w_ndx, next_pc, rrq_lif, rrq_qtype,
+                           rrq_qid, rrq_qaddr, rsq_lif, rsq_qtype, rsq_qid, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -457,17 +457,17 @@ action pri_q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                        w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                        hi_weight, med_weight, lo_weight, hi_running, 
                        med_running, lo_running, num_running, max_cmds,
-                       next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
+                       next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
                        ssd_bm_addr, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   PRI_Q_STATE_COPY_STAGE0(pri_q_state_scratch)
 
   // Store fields needed in the K+I vector
-  modify_field(storage_kivec0.dst_qaddr, dst_qaddr);
   modify_field(storage_kivec0.dst_lif, dst_lif);
   modify_field(storage_kivec0.dst_qtype, dst_qtype);
   modify_field(storage_kivec0.dst_qid, dst_qid);
+  modify_field(storage_kivec0.dst_qaddr, dst_qaddr);
   modify_field(storage_kivec0.ssd_bm_addr, ssd_bm_addr);
 
   // In ASM, derive these from the K+I for stage 0
@@ -517,7 +517,7 @@ action pri_q_state_incr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                         w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                         hi_weight, med_weight, lo_weight, hi_running, 
                         med_running, lo_running, num_running, max_cmds,
-                        next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
+                        next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
                         ssd_bm_addr, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -564,7 +564,7 @@ action pri_q_state_decr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                         w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                         hi_weight, med_weight, lo_weight, hi_running, 
                         med_running, lo_running, num_running, max_cmds,
-                        next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
+                        next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
                         ssd_bm_addr, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -612,7 +612,7 @@ action pri_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                         w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
                         hi_weight, med_weight, lo_weight, hi_running, 
                         med_running, lo_running, num_running, max_cmds,
-                        next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
+                        next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, 
                         ssd_bm_addr, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -661,8 +661,8 @@ action pri_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 @pragma little_endian p_ndx c_ndx 
 action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                         total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                        num_entries, base_addr, entry_size, next_pc, dst_qaddr,
-                        dst_lif, dst_qtype, dst_qid, vf_id, sq_id, ssd_bm_addr, 
+                        num_entries, base_addr, entry_size, next_pc, 
+                        dst_lif, dst_qtype, dst_qid, dst_qaddr, vf_id, sq_id, ssd_bm_addr, 
                         ssd_q_num, ssd_q_size, ssd_ci_addr, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -725,7 +725,7 @@ action seq_pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel,
                                eval_last, total_rings, host_rings, pid, 
                                p_ndx, c_ndx, base_addr, page_size, entry_size, 
                                num_entries, rsvd0, roce_msn, w_ndx, next_pc, 
-                               rrq_qaddr, rrq_lif, rrq_qtype, rrq_qid, rsq_lif, 
+                               rrq_lif, rrq_qtype, rrq_qid, rrq_qaddr, rsq_lif, 
                                rsq_qtype, rsq_qid, pad) {
 
 

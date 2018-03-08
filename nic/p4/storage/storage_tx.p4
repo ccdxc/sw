@@ -892,7 +892,7 @@ action roce_cq_handler(wrid_msn, op_type, status, rsvd0, qp, rsvd1) {
  *                 PVM SQ for this ROCE CQ/SQ queue pair.
  *****************************************************************************/
 
-action roce_sq_xlate(next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, pad) {
+action roce_sq_xlate(next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -935,7 +935,7 @@ action roce_sq_xlate(next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, pad) {
  *                     destination R2N lif/type/queue to send the R2N WQE to.
  *****************************************************************************/
 
-action roce_r2n_wqe_prep(next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, pad) {
+action roce_r2n_wqe_prep(next_pc, dst_lif, dst_qtype, dst_qid, dst_qaddr, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -974,8 +974,8 @@ action roce_r2n_wqe_prep(next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, pad) {
 action pvm_roce_sq_cb_update(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                              total_rings, host_rings, pid, p_ndx, c_ndx, base_addr,
                              page_size, entry_size, num_entries, rsvd0, roce_msn, 
-                             w_ndx, next_pc, rrq_qaddr, rrq_lif, rrq_qtype,
-                             rrq_qid, rsq_lif, rsq_qtype, rsq_qid, pad) {
+                             w_ndx, next_pc, rrq_lif, rrq_qtype,
+                             rrq_qid, rrq_qaddr, rsq_lif, rsq_qtype, rsq_qid, pad) {
 
 
   // Store the K+I vector into scratch to get the K+I generated correctly

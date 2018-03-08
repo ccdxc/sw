@@ -17,12 +17,12 @@ struct phv_ p;
 storage_tx_seq_pdma_entry_handler_start:
 
    // Setup the source of the mem2mem DMA into DMA cmd 1
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.src_addr, d.data_size,
-                     d.src_lif_override, d.src_lif_override, dma_m2m_1)
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.src_addr, d.data_size[13:0],
+                     d.src_lif_override, d.src_lif, dma_m2m_1)
 
    // Setup the destination of the mem2mem DMA into DMA cmd 2
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.dst_addr, d.data_size,
-                     d.dst_lif_override, d.dst_lif_override, dma_m2m_2)
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.dst_addr, d.data_size[13:0],
+                     d.dst_lif_override, d.dst_lif, dma_m2m_2)
 
    // Order of evaluation of next doorbell and interrupts
    // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
@@ -59,6 +59,7 @@ check_intr:
 
    // Done firing the interrupt, exit
    b		tbl_load
+   nop
 
 pdma_only:
    // Setup the start and end DMA pointers to just the PDMA portions

@@ -65,10 +65,10 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 208, 28, next_pc);
   // Program only if destination is used in P4+
   if (dst_valid) {
-    utils::write_bit_fields(q_state, 236, 34, dst_qaddr);
-    utils::write_bit_fields(q_state, 270, 11, dst_lif);
-    utils::write_bit_fields(q_state, 281, 3, dst_qtype);
-    utils::write_bit_fields(q_state, 284, 24, dst_qid);
+    utils::write_bit_fields(q_state, 236, 11, dst_lif);
+    utils::write_bit_fields(q_state, 247, 3, dst_qtype);
+    utils::write_bit_fields(q_state, 250, 24, dst_qid);
+    utils::write_bit_fields(q_state, 274, 34, dst_qaddr);
   }
   utils::write_bit_fields(q_state, 340, 34, ssd_bm_addr);
   utils::write_bit_fields(q_state, 374, 16, ssd_q_num);
@@ -193,10 +193,10 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 368, 28, next_pc);
   // Program only if destination is used in P4+
   if (dst_valid) {
-    utils::write_bit_fields(q_state, 396, 34, dst_qaddr);
-    utils::write_bit_fields(q_state, 430, 11, dst_lif);
-    utils::write_bit_fields(q_state, 441, 3, dst_qtype);
-    utils::write_bit_fields(q_state, 444, 24, dst_qid);
+    utils::write_bit_fields(q_state, 396, 11, dst_lif);
+    utils::write_bit_fields(q_state, 407, 3, dst_qtype);
+    utils::write_bit_fields(q_state, 410, 24, dst_qid);
+    utils::write_bit_fields(q_state, 434, 34, dst_qaddr);
   }
   utils::write_bit_fields(q_state, 468, 34, ssd_bm_addr);
 
@@ -300,10 +300,10 @@ int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   utils::write_bit_fields(q_state, 224, 28, next_pc);
   // Program only if rrq is used in P4+
   if (rrq_valid) {
-    utils::write_bit_fields(q_state, 252, 34, rrq_qaddr);
-    utils::write_bit_fields(q_state, 286, 11, rrq_lif);
-    utils::write_bit_fields(q_state, 297, 3, rrq_qtype);
-    utils::write_bit_fields(q_state, 300, 24, rrq_qid);
+    utils::write_bit_fields(q_state, 252, 11, rrq_lif);
+    utils::write_bit_fields(q_state, 263, 3, rrq_qtype);
+    utils::write_bit_fields(q_state, 266, 24, rrq_qid);
+    utils::write_bit_fields(q_state, 290, 34, rrq_qaddr);
   }
   utils::write_bit_fields(q_state, 324, 11, rsq_lif);
   utils::write_bit_fields(q_state, 335, 3, rsq_qtype);
@@ -412,11 +412,11 @@ int update_xlate_entry(int lif, int qtype, int qid, uint64_t hbm_addr, char *pgm
   }
 
   utils::write_bit_fields(data, 0, 28, next_pc);
-  utils::write_bit_fields(data, 28, 34, qaddr);
-  utils::write_bit_fields(data, 62, 11, lif);
-  utils::write_bit_fields(data, 73, 3, qtype);
-  utils::write_bit_fields(data, 76, 24, qid);
-  
+  utils::write_bit_fields(data, 28, 11, lif);
+  utils::write_bit_fields(data, 39, 3, qtype);
+  utils::write_bit_fields(data, 42, 24, qid);
+  utils::write_bit_fields(data, 66, 34, qaddr);
+
   write_mem(hbm_addr, data, 64);
   
   return 0;

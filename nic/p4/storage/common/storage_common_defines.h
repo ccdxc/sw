@@ -21,6 +21,7 @@
 // Entry:  Full R2N WQE (r2n_wqe_t) is stored here
 #define SSD_CMDS_HEADER_SIZE		64
 #define SSD_CMDS_ENTRY_SIZE		64
+#define SSD_CMDS_ENTRY_SHIFT	6
 
 // Offset in memory to store the command handle in the SSD's list of saved commands
 #define SSD_CMDS_ENTRY_OFFSET(bm_pos)	(SSD_CMDS_HEADER_SIZE + (bm_pos * SSD_CMDS_ENTRY_SIZE))

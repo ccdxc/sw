@@ -31,28 +31,29 @@ storage_tx_q_state_pop_start:
 
    // Store fields needed in the K+I vector into the PHV
    phvwr	p.storage_kivec0_w_ndx, d.w_ndx
-   phvwr	p.storage_kivec0_dst_qaddr, d.dst_qaddr
-   phvwr	p.storage_kivec0_dst_lif, d.dst_lif
-   phvwr	p.storage_kivec0_dst_qtype, d.dst_qtype
-   phvwr	p.storage_kivec0_dst_qid, d.dst_qid
-   phvwr	p.storage_kivec0_ssd_bm_addr, d.ssd_bm_addr
-   phvwr	p.storage_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
-   phvwr	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF
-   phvwr	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
-   phvwr	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID
+   
+   phvwr	p.{storage_kivec0_dst_lif...storage_kivec0_dst_qaddr}, \
+                d.{dst_lif...dst_qaddr}
+                
+   phvwrpair	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF, \
+        	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
+   phvwrpair	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID, \
+   	        p.storage_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
    phvwr	p.storage_kivec1_device_addr, d.ssd_ci_addr
-   phvwr	p.storage_kivec2_ssd_q_num, d.ssd_q_num
-   phvwr	p.storage_kivec2_ssd_q_size, d.ssd_q_size
+   
+   phvwrpair	p.storage_kivec2_ssd_q_num, d.ssd_q_num, \
+   	        p.storage_kivec2_ssd_q_size, d.ssd_q_size
    // TODO: derive is_q0 from QID
-   phvwr	p.storage_kivec0_is_q0, 0
+   phvwrpair	p.storage_kivec0_is_q0, 0, \
+   	        p.storage_kivec0_ssd_bm_addr, d.ssd_bm_addr
    
    // Initialize the vf_id and sq_id fields in the PHV
-   phvwr	p.pvm_cmd_trailer_vf_id, d.vf_id
-   phvwr	p.pvm_cmd_trailer_sq_id, d.sq_id
+   phvwrpair	p.pvm_cmd_trailer_vf_id, d.vf_id, \
+   	        p.pvm_cmd_trailer_sq_id, d.sq_id
    
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
-   LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size,
+   LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size[2:0],
                         d.next_pc)
 
 clear_doorbell:

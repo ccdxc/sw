@@ -25,15 +25,14 @@ storage_tx_seq_comp_sgl_handler_start:
    // Source is the address is HBM stored in the K+I vector
    // Destination is specified in the SGL in the D Vector
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, STORAGE_KIVEC5_STATUS_ADDR, 
-                     STORAGE_KIVEC5_STATUS_LEN, 0, 0, dma_m2m_1)
+                     STORAGE_KIVEC5_STATUS_LEN[13:0], 0, 0, dma_m2m_1)
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_addr, 
-                     STORAGE_KIVEC5_STATUS_LEN, 0, 0, dma_m2m_2)
+                     STORAGE_KIVEC5_STATUS_LEN[13:0], 0, 0, dma_m2m_2)
 
 process_data:
    // Store the data length into r6 accouting for the fact that 0 => 64K
-   add		r6, r0, STORAGE_KIVEC4_DATA_LEN
-   seq		c1, d.len0, 0
-   addi.c1	r6, r0, 65536
+   seq		c1, d.len0, r0
+   cmov         r6, c1, 65536, STORAGE_KIVEC4_DATA_LEN
 
    // Store the data address into r7
    add		r7, STORAGE_KIVEC4_DATA_ADDR, r0

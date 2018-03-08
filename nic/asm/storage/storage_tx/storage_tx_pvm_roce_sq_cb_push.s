@@ -20,10 +20,9 @@ storage_tx_pvm_roce_sq_cb_push_start:
   
    // Save the original p_ndx into GPR r6 to use for calculating the addresses as 
    // the tblmincr alters the d-vector.
-   add		r6, r0, d.p_ndx
    seq		c1, STORAGE_KIVEC0_IS_READ, 1
    bcf		![c1], check_push_status
-   nop
+   add		r6, r0, d.p_ndx     // delay slot
 
    // Check queue full condition for pushing both read data and status 
    // and exit if full. TODO: Push error handling
