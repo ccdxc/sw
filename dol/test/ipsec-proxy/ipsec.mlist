@@ -208,3 +208,13 @@ modules:
         rtl     : True 
         iterate :
             - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : MULTI_PKT_TCP 
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : multi_pkt_tcp 
+        spec    : multi_pkt_tcp.testspec
+        ignore  : True 
+        rtl     : False 
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP

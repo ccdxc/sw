@@ -10,6 +10,7 @@ struct phv_ p;
         .param esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2:
+    phvwri p.app_header_table1_valid, 0
     add r2, d.in_desc, 96
     add r3, d.out_desc, 96
     phvwri p.brq_in_desc_zero_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
