@@ -15,6 +15,7 @@
 #include "nic/gen/proto/hal/debug.grpc.pb.h"
 #include "nic/gen/proto/hal/endpoint.grpc.pb.h"
 #include "nic/gen/proto/hal/session.grpc.pb.h"
+#include "nic/gen/proto/hal/gft.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -122,6 +123,11 @@ using types::IPAddress;
 using event::Event;
 using event::EventRequest;
 using event::EventResponse;
+
+using gft::GftExactMatchFlowEntryRequestMsg;
+using gft::GftExactMatchFlowEntrySpec;
+using gft::GftHeaderGroupExactMatch;
+using gft::GftHeaderGroupTransposition;
 
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
@@ -1303,6 +1309,188 @@ create_l2segments(uint64_t   l2seg_id_start,
     return 0;
 }
 
+static uint32_t
+max_uint32 (void)
+{
+    return std::numeric_limits<unsigned long>::max();
+}
+
+static uint64_t
+max_uint64 (void)
+{
+    return std::numeric_limits<unsigned long long>::max();
+}
+
+static void
+gft_proto_size_gftheaders_check (gft::GftHeaders *headers)
+{
+    headers->set_ethernet_header(true);
+    headers->set_ipv4_header(true);
+    headers->set_ipv6_header(true);
+    headers->set_tcp_header(true);
+    headers->set_udp_header(true);
+    headers->set_icmp_header(true);
+    headers->set_no_encap(true);
+    headers->set_ip_in_ip_encap(true);
+    headers->set_ip_in_gre_encap(true);
+    headers->set_nvgre_encap(true);
+    headers->set_vxlan_encap(true);
+}
+
+static void
+gft_proto_size_gftheaderfields_check (gft::GftHeaderFields *header_fields)
+{
+    header_fields->set_dst_mac_addr(true);
+    header_fields->set_src_mac_addr(true);
+    header_fields->set_eth_type(true);
+    header_fields->set_customer_vlan_id(true);
+    header_fields->set_provider_vlan_id(true);
+    header_fields->set_dot1p_priority(true);
+    header_fields->set_src_ip_addr(true);
+    header_fields->set_dst_ip_addr(true);
+    header_fields->set_ip_ttl(true);
+    header_fields->set_ip_protocol(true);
+    header_fields->set_ip_dscp(true);
+    header_fields->set_src_port(true);
+    header_fields->set_dst_port(true);
+    header_fields->set_tcp_flags(true);
+    header_fields->set_tenant_id(true);
+    header_fields->set_icmp_type(true);
+    header_fields->set_icmp_code(true);
+    header_fields->set_oob_vlan(true);
+    header_fields->set_oob_tenant_id(true);
+    header_fields->set_gre_protocol(true);
+}
+
+static void
+gft_proto_size_ethfields_check (gft::GftEthFields *eth_fields)
+{
+    eth_fields->set_dst_mac_addr(max_uint64());
+    eth_fields->set_src_mac_addr(max_uint64());
+    eth_fields->set_eth_type(max_uint32());
+    eth_fields->set_customer_vlan_id(max_uint32());
+    eth_fields->set_provider_vlan_id(max_uint32());
+    eth_fields->set_priority(max_uint32());
+}
+
+static void
+gft_proto_size_gftheader_group_exact_match_check (
+                            GftExactMatchFlowEntrySpec *match_flow_spec)
+{
+    std::string ipv6_ip = "00010001000100010001000100010001";
+    GftHeaderGroupExactMatch *hdr_grp_match
+                                = match_flow_spec->add_exact_matches();
+
+    gft_proto_size_gftheaders_check(hdr_grp_match->mutable_headers());
+    gft_proto_size_gftheaderfields_check(hdr_grp_match->mutable_match_fields());
+    gft_proto_size_ethfields_check(hdr_grp_match->mutable_eth_fields());
+
+    types::IPAddress *src_ip = hdr_grp_match->mutable_src_ip_addr();
+    src_ip->set_ip_af(types::IP_AF_INET6);
+    src_ip->set_v6_addr(ipv6_ip);
+
+    types::IPAddress *dst_ip = hdr_grp_match->mutable_dst_ip_addr();
+    dst_ip->set_ip_af(types::IP_AF_INET6);
+    dst_ip->set_v6_addr(ipv6_ip);
+
+    hdr_grp_match->set_ip_ttl(max_uint32());
+    hdr_grp_match->set_ip_dscp(max_uint32());
+    hdr_grp_match->set_ip_protocol(max_uint32());
+
+    gft::TcpMatchFields *encap_tcp_fields =
+            hdr_grp_match->mutable_encap_or_transport()->mutable_tcp_fields();
+    encap_tcp_fields->set_sport(max_uint32());
+    encap_tcp_fields->set_dport(max_uint32());
+    encap_tcp_fields->set_tcp_flags(max_uint32());
+}
+
+static void
+gft_proto_size_gftheader_group_trans_check (
+                    GftExactMatchFlowEntrySpec *match_flow_spec)
+{
+    std::string ipv6_ip = "00010001000100010001000100010001";
+    GftHeaderGroupTransposition *hdr_grp_trans
+                              = match_flow_spec->add_transpositions();
+    hdr_grp_trans->set_action(gft::TRANSPOSITION_ACTION_MODIFY);
+
+    gft_proto_size_gftheaders_check(hdr_grp_trans->mutable_headers());
+    gft_proto_size_gftheaderfields_check(hdr_grp_trans->mutable_header_fields());
+    gft_proto_size_ethfields_check(hdr_grp_trans->mutable_eth_fields());
+
+    types::IPAddress *src_ip = hdr_grp_trans->mutable_src_ip_addr();
+    src_ip->set_ip_af(types::IP_AF_INET6);
+    src_ip->set_v6_addr(ipv6_ip);
+
+    types::IPAddress *dst_ip = hdr_grp_trans->mutable_dst_ip_addr();
+    dst_ip->set_ip_af(types::IP_AF_INET6);
+    dst_ip->set_v6_addr(ipv6_ip);
+
+    hdr_grp_trans->set_ip_ttl(max_uint32());
+    hdr_grp_trans->set_ip_dscp(max_uint32());
+    hdr_grp_trans->set_ip_protocol(max_uint32());
+
+    gft::TcpTranspositionFields *encap_fields =
+            hdr_grp_trans->mutable_encap_or_transport()->mutable_tcp_fields();
+    encap_fields->set_sport(max_uint32());
+    encap_fields->set_dport(max_uint32());
+}
+
+static void
+gft_proto_size_check (void)
+{
+    GftExactMatchFlowEntryRequestMsg req_msg;
+    GftExactMatchFlowEntrySpec  *match_flow_spec = req_msg.add_request();
+
+    std::cout << "GftExactMatchFlowEntrySpec Init size: "
+              << match_flow_spec->ByteSizeLong()
+              << std::endl;
+
+    match_flow_spec->mutable_meta()->set_vrf_id(max_uint64());
+    match_flow_spec->set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_EGRESS);
+    match_flow_spec->mutable_key_or_handle()->set_flow_entry_id(max_uint64());
+    match_flow_spec->mutable_exact_match_profile()->set_profile_id(max_uint64());
+    match_flow_spec->mutable_transposition_profile()->set_profile_id(max_uint64());
+
+    match_flow_spec->set_add_in_activated_state(true);
+    match_flow_spec->set_rdma_flow(true);
+    match_flow_spec->set_redirect_to_vport_ingress_queue(true);
+    match_flow_spec->set_redirect_to_vport_egress_queue(true);
+    match_flow_spec->set_redirect_to_vport_ingress_queue_if_ttl_is_one(true);
+    match_flow_spec->set_redirect_to_vport_egress_queue_if_ttl_is_one(true);
+    match_flow_spec->set_copy_all_packets(true);
+    match_flow_spec->set_copy_first_packet(true);
+    match_flow_spec->set_copy_when_tcp_flag_set(true);
+    match_flow_spec->set_custom_action_present(true);
+    match_flow_spec->set_meta_action_before_transposition(true);
+    match_flow_spec->set_copy_after_tcp_fin_flag_set(true);
+    match_flow_spec->set_copy_after_tcp_rst_flag_set(true);
+    match_flow_spec->set_vport_id(max_uint32());
+    match_flow_spec->set_redirect_vport_id(max_uint32());
+    match_flow_spec->set_ttl_one_redirect_vport_id(max_uint32());
+
+    std::cout << "GftExactMatchFlowEntrySpec before GftHeaderGroupExactMatch size: "
+              << match_flow_spec->ByteSizeLong()
+              << std::endl;
+
+    int count = 3;
+
+    for (int i = 0; i < count; ++i) {
+        gft_proto_size_gftheader_group_exact_match_check(match_flow_spec);
+    }
+
+    std::cout << "GftExactMatchFlowEntrySpec after GftHeaderGroupExactMatch size: "
+              << match_flow_spec->ByteSizeLong()
+              << std::endl;
+
+    for (int i = 0; i < count; ++i) {
+        gft_proto_size_gftheader_group_trans_check(match_flow_spec);
+    }
+
+    std::cout << "GftExactMatchFlowEntrySpec total size: "
+              << match_flow_spec->ByteSizeLong()
+              << std::endl;
+}
+
 // main test driver
 int
 main (int argc, char** argv)
@@ -1320,6 +1508,7 @@ main (int argc, char** argv)
 
     bool         mpu_trace = false;
     bool         enable = false;
+    bool         size_check = false;
     int          stage_id = -1;
     int          mpu = -1;
     char         pipeline_type[32] = {0};
@@ -1336,6 +1525,8 @@ main (int argc, char** argv)
             enable = true;
         } else if (!strcmp(argv[1], "mpu_trace_disable")) {
             mpu_trace = true;
+        } else if (!strcmp(argv[1], "size_check")) {
+            size_check = true;
         }
     }
 
@@ -1361,6 +1552,9 @@ main (int argc, char** argv)
         mpu = atoi(argv[4]);
 
         hclient.mpu_trace_enable(stage_id, mpu, enable, pipeline_type);
+        return 0;
+    } else if (size_check == true) {
+        gft_proto_size_check();
         return 0;
     }
 
