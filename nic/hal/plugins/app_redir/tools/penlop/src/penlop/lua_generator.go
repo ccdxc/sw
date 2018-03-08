@@ -1,12 +1,11 @@
-// This file converts the canonical form into Snort Lua
-// Top level functions are in interface PenLOPGenerator
+// File lua_generator.go implements the Generator interface.
+// It is used for converting the internal format to Snort Lua.
 // Copyright 2018 Pensando Systems, Inc.
 
 package penlop
 
 import (
 	"fmt"
-	"net" // for IP address conversion
 	"os"
 	"strconv"
 	"strings"
@@ -14,9 +13,9 @@ import (
 	"unicode"
 )
 
-const indent_base string = "  "
+const indentBase string = "  "
 
-const lua_globals_templ = `
+const luaGlobalsTempl = `
 --[[
 # Copyright 2018 Pensando Systems, Inc.
 --]]
@@ -146,24 +145,24 @@ end
 
 `
 
-type PktVarDesc struct {
+type luaPktVarDesc struct {
 	LuaName string
 	ValType int // TODO: move this to parser.go
 }
 
-var PktVarDescTable map[string]PktVarDesc = map[string]PktVarDesc{
-	"dip": {"context.dstIp", VAL_IPADDR},
-	"sip": {"context.srcIp", VAL_IPADDR},
-	"dir": {"(context.packetDir==1)", VAL_BOOL},
+var luaPktVarDescTable = map[string]luaPktVarDesc{
+	"dip": {"context.dstIp", ValIPADDR},
+	"sip": {"context.srcIp", ValIPADDR},
+	"dir": {"(context.packetDir==1)", ValBOOL},
 }
 
-type LuaOpDesc struct {
+type luaOpDesc struct {
 	//	Opname string
 	LuaName string
 }
 
-// For now, just include the subset of operators which differ from PenLOP
-var LuaOpDescTable map[string]LuaOpDesc = map[string]LuaOpDesc{
+// For now, just include the subset of operators which differ from LOP
+var luaOpDescTable = map[string]luaOpDesc{
 	// TODO: bitwise operators are natively supported in Lua 5.3,
 	//       but Lua 5.2 requires use of the bit32 library
 	"^":  {"~"},
@@ -174,23 +173,23 @@ var LuaOpDescTable map[string]LuaOpDesc = map[string]LuaOpDesc{
 }
 
 // Store state preprocessing info
-type LuaStateInfo struct {
-	uses_sessvar bool
+type luaStateInfo struct {
+	usesSessvar bool
 }
 
+// LuaGenerator contains all details needed to run Generate() for Lua output
 type LuaGenerator struct {
-	//	lua_state   map[string]int
-	*PenLOPGeneratorContext
+	*GeneratorContext
 
 	// Initialized during preprocessing
 	IsPreprocessing bool
 	LuaL4Proto      string
 	CurrentState    string
 	SessVarList     map[string]int          // maps string to VarType
-	StateInfoList   map[string]LuaStateInfo // maps state name to info
+	StateInfoList   map[string]luaStateInfo // maps state name to info
 }
 
-// Generate list of L4 ports
+// GlobalPortListString is used by template to generate gPorts.
 func (g *LuaGenerator) GlobalPortListString() string {
 	var s string
 
@@ -206,12 +205,12 @@ func (g *LuaGenerator) GlobalPortListString() string {
 	return s
 }
 
-// Generate FastPattern list
+// GlobalFastPatternListString is used by template to generate gPatterns.
 func (g *LuaGenerator) GlobalFastPatternListString() string {
 	var s string
 
 	// FastPatterns
-	var pat_id int
+	var patid int
 	if len(g.App.PreconditionPatterns) > 0 {
 		// Write gPatterns
 		s += "gPatterns = {\n"
@@ -227,22 +226,22 @@ func (g *LuaGenerator) GlobalFastPatternListString() string {
 			}
 
 			// After this point, we'll definitely (try) to generate FastPattern
-			pat_id++
-			start_offset := len(pattern) - len(pat2)
+			patid++
+			startOffset := len(pattern) - len(pat2)
 
 			// Now replace any "\x" sequences, and warn on invalid chars
 			pat3, err := g.ToLuaString(pat2)
 			if err != nil {
 				return ""
 			}
-			s += fmt.Sprintf("  pat%d = {'%s', %d },\n", pat_id, pat3, start_offset)
+			s += fmt.Sprintf("  pat%d = {'%s', %d },\n", patid, pat3, startOffset)
 		}
 		s += "}\n"
 
 		// Write gFastPatterns
-		if pat_id > 0 {
+		if patid > 0 {
 			s += "\ngFastPatterns = {\n"
-			for i := 0; i < pat_id; i++ {
+			for i := 0; i < patid; i++ {
 				s += fmt.Sprintf("  { DC.ipproto.%s, gPatterns.pat%d },\n",
 					g.LuaL4Proto, i+1)
 			}
@@ -253,13 +252,14 @@ func (g *LuaGenerator) GlobalFastPatternListString() string {
 	return s
 }
 
+// ToLuaString converts an input YAML/JSON string to Lua string.
 func (g *LuaGenerator) ToLuaString(s string) (string, error) {
-	return g.ToLuaStringImpl(s, false)
+	return g.toLuaStringImpl(s, false)
 }
 
 // Convert GO/YAML string to LUA string
 // Assumes this is a string literal, not a regex pattern
-func (g *LuaGenerator) ToLuaStringImpl(s string, allow_regex bool) (string, error) {
+func (g *LuaGenerator) toLuaStringImpl(s string, allowRegex bool) (string, error) {
 	var err error
 
 	// Replace any "\x" sequences in place, and warn on invalid chars
@@ -271,9 +271,9 @@ func (g *LuaGenerator) ToLuaStringImpl(s string, allow_regex bool) (string, erro
 				n, err := strconv.ParseUint(string(pat[i+2:i+4]), 16, 8)
 				if err == nil {
 					// Convert to Lua "\DDD" decimal format
-					dec_str := strconv.FormatUint(n, 10)
+					decstr := strconv.FormatUint(n, 10)
 					copy(pat[i+1:i+4], "000")
-					copy(pat[(i+4)-len(dec_str):i+4], dec_str[0:])
+					copy(pat[(i+4)-len(decstr):i+4], decstr[0:])
 					i += 3 // consume data
 				} else {
 					fmt.Fprintf(os.Stderr, "Warning, unexpected pattern at offset %d in %s\n",
@@ -284,14 +284,14 @@ func (g *LuaGenerator) ToLuaStringImpl(s string, allow_regex bool) (string, erro
 				// Regular backslash escape, passthrough
 				i++
 			}
-		} else if !allow_regex && strings.IndexByte(".*?+[", pat[i]) >= 0 {
+		} else if !allowRegex && strings.IndexByte(".*?+[", pat[i]) >= 0 {
 			// Now generate warning on any regex char
-			fmt.Fprintf(os.Stderr, "Warning, PreCondition pattern %s appears to contain regex symbol %v at index %d, treating as literal\n",
+			fmt.Fprintf(os.Stderr, "Warning, precondition pattern %s appears to contain regex symbol %v at index %d, treating as literal\n",
 				pat, pat[i], i)
 		} else if pat[i] == '\'' || pat[i] == '"' || !unicode.IsPrint(rune(pat[i])) {
 			// Now generate warning on any unescaped character
 			// TODO: append Lua character sequence
-			err = fmt.Errorf("Warning, PreCondition pattern %s contains unescaped symbol %d at index %d, treating as literal\n",
+			err = fmt.Errorf("precondition pattern %s contains unescaped symbol %d at index %d, treating as literal",
 				pat, pat[i], i)
 			return "", err
 		}
@@ -299,6 +299,8 @@ func (g *LuaGenerator) ToLuaStringImpl(s string, allow_regex bool) (string, erro
 	return string(pat), err
 }
 
+// Preprocess is called by Generate() before all other functions.
+// It does an initial pass to gather context details and does some validation.
 func (g *LuaGenerator) Preprocess() error {
 	var err error
 	g.IsPreprocessing = true
@@ -318,10 +320,10 @@ func (g *LuaGenerator) Preprocess() error {
 
 	// Initialize maps
 	g.SessVarList = make(map[string]int)
-	g.StateInfoList = make(map[string]LuaStateInfo)
+	g.StateInfoList = make(map[string]luaStateInfo)
 
 	// Preprocessing pass for getting details about the states and session variables
-	orig_outfile := g.outfile
+	origOutfile := g.outfile
 	g.outfile, _ = os.Create(os.DevNull) // use dummy null file during preprocessing
 	for _, state := range g.App.States {
 		err = g.WriteState(state)
@@ -330,48 +332,53 @@ func (g *LuaGenerator) Preprocess() error {
 		}
 	}
 
-	g.outfile = orig_outfile
+	g.outfile = origOutfile
 	g.IsPreprocessing = false
 	return err
 }
 
+// Postprocess is called by Generate() after all other functions, to do cleanup.
 func (g *LuaGenerator) Postprocess() error {
 	return nil
 }
 
+// WriteGlobals is called by Generate() immediately after Preprocess().
+// It used to write any Lua global statements.
 func (g *LuaGenerator) WriteGlobals() error {
 	var err error
 
 	t := template.Must(template.New("lua_globals").Funcs(template.FuncMap{
 		"GlobalPortListString":        g.GlobalPortListString,
 		"GlobalFastPatternListString": g.GlobalFastPatternListString}).
-		Parse(lua_globals_templ))
+		Parse(luaGlobalsTempl))
 
 	err = t.Execute(g.outfile, g)
 
 	return err
 }
 
-func (g *LuaGenerator) WriteState(s *PenLOPState) error {
+// WriteState is called by Generate() for each LOPState in the input.
+// It writes a Lua function.
+func (g *LuaGenerator) WriteState(s *LOPState) error {
 	var err error
 
 	g.CurrentState = s.Name
 	_, err = fmt.Fprintf(g.outfile, "function %s(context)\n", s.Name)
 	if err == nil {
-		if g.debug_on {
+		if g.debugOn {
 			_, err = fmt.Fprintf(g.outfile, "%sDC.printf('%%s: Entering state %s\\n', gServiceName)\n",
-				indent_base, s.Name)
+				indentBase, s.Name)
 		}
 		// Local variable needed for set/get of session variables
-		if g.StateInfoList[g.CurrentState].uses_sessvar {
-			_, err = fmt.Fprintf(g.outfile, "%slocal rft = FT.getFlowTracker(context.flowKey)\n", indent_base)
+		if g.StateInfoList[g.CurrentState].usesSessvar {
+			_, err = fmt.Fprintf(g.outfile, "%slocal rft = FT.getFlowTracker(context.flowKey)\n", indentBase)
 		}
 
 		// Write the state
 		err = g.WriteStateInline(s, 1)
 		if err == nil {
 			//			if s.Name == g.App.InitialState {
-			//				_, err = fmt.Fprintf(g.outfile, "\n%sreturn serviceFail(context)\n", indent_base)
+			//				_, err = fmt.Fprintf(g.outfile, "\n%sreturn serviceFail(context)\n", indentBase)
 			//			}
 			if err == nil {
 				_, err = fmt.Fprintf(g.outfile, "end\n\n")
@@ -386,14 +393,16 @@ func (g *LuaGenerator) WriteState(s *PenLOPState) error {
 	return err
 }
 
-func (g *LuaGenerator) WriteStateInline(s *PenLOPState, indent_level int) error {
+// WriteStateInline writes the Lua function statements without assuming it's an
+// actual Lua function
+func (g *LuaGenerator) WriteStateInline(s *LOPState, indentLevel int) error {
 	var err error
 
-	//	indent := strings.Repeat(indent_base, indent_level)
+	//	indent := strings.Repeat(indentBase, indentLevel)
 
 	// Generate pre-actions
 	for _, action := range s.PreActions {
-		err = g.WriteAction(action, indent_level)
+		err = g.WriteAction(action, indentLevel)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating Lua function %s preaction: %s\n", s.Name, err)
 			return err
@@ -402,7 +411,7 @@ func (g *LuaGenerator) WriteStateInline(s *PenLOPState, indent_level int) error 
 
 	// Generate regex set
 	if s.RegexSet != nil {
-		err = g.WriteRegexSet(s.RegexSet, indent_level)
+		err = g.WriteRegexSet(s.RegexSet, indentLevel)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating Lua function %s regex set: %s\n", s.Name, err)
 			return err
@@ -411,7 +420,7 @@ func (g *LuaGenerator) WriteStateInline(s *PenLOPState, indent_level int) error 
 
 	// Generate post actions
 	for _, action := range s.PostActions {
-		err = g.WriteAction(action, indent_level)
+		err = g.WriteAction(action, indentLevel)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating Lua state %s postaction: %s\n", s.Name, err)
 			return err
@@ -421,153 +430,153 @@ func (g *LuaGenerator) WriteStateInline(s *PenLOPState, indent_level int) error 
 	return err
 }
 
-// Writes the given expression recursively
-// Returns the VAL_TYPE of the underlying expression, and error if any
-func (g *LuaGenerator) WriteExpression(e *PenLOPExpression, indent_level int) (int, error) {
+// WriteExpression writes the given LOPExpression recursively as Lua output.
+// It returns the ValTYPE of the underlying expression.
+func (g *LuaGenerator) WriteExpression(e *LOPExpression, indentLevel int) (int, error) {
 	var err error
-	var result_type, prev_type int
-	var operand *PenLOPExpression
-	var lua_operator string
+	var resultType, prevType int
+	var operand *LOPExpression
+	var luaop string
 
 	if len(e.Operator) == 0 {
-		err = fmt.Errorf("Empty expression operator")
-		return VAL_NONE, err
+		err = fmt.Errorf("empty expression operator")
+		return ValNONE, err
 	}
 
 	// Get details about the operator
 	opdesc := OpDescTable[e.Operator]
-	lua_opdesc := LuaOpDescTable[e.Operator]
-	if len(lua_opdesc.LuaName) == 0 {
-		lua_operator = e.Operator
+	luaopdesc := luaOpDescTable[e.Operator]
+	if len(luaopdesc.LuaName) == 0 {
+		luaop = e.Operator
 	} else {
-		lua_operator = lua_opdesc.LuaName
+		luaop = luaopdesc.LuaName
 	}
 
 	// Sanity checks
-	if opdesc.OpType != OPTYPE_NONE {
+	if opdesc.OpType != OptypeNONE {
 		// Validate operand count
 		if len(e.Operands) < int(opdesc.MinOperands) || len(e.Operands) > int(opdesc.MaxOperands) {
-			err = fmt.Errorf("Wrong number of parameters for operator %s", e.Operator)
-			return VAL_NONE, err
+			err = fmt.Errorf("wrong number of parameters for operator %s", e.Operator)
+			return ValNONE, err
 		}
 	} else {
 		// Unknown operator, try to guess optype from operand count
 		// TODO: eventually treat this is as error
 		if len(e.Operands) > 0 {
-			opdesc.OpType = OPTYPE_FUNC
+			opdesc.OpType = OptypeFUNC
 			fmt.Fprintf(os.Stderr, "Warn: Guessing optype=FUNC for operator %s.\n", e.Operator)
 		} else {
-			opdesc.OpType = OPTYPE_PKTVAR
+			opdesc.OpType = OptypePKTVAR
 			fmt.Fprintf(os.Stderr, "Warn: Guessing optype=PKTVAR for operator %s.\n", e.Operator)
 		}
 	}
 
 	// Indent string
-	indent := strings.Repeat(indent_base, indent_level)
+	indent := strings.Repeat(indentBase, indentLevel)
 
 	// Generate expression recursively
 	switch opdesc.OpType {
-	case OPTYPE_INFIX:
+	case OptypeINFIX:
 		// Always surround infix expressions with parentheses, for safety
 		_, err = fmt.Fprintf(g.outfile, "%s(", indent)
 		if err != nil {
-			return VAL_NONE, err
+			return ValNONE, err
 		}
 		first := true
 		for _, operand = range e.Operands {
 			if !first {
-				_, err = fmt.Fprintf(g.outfile, " %s ", lua_operator)
+				_, err = fmt.Fprintf(g.outfile, " %s ", luaop)
 				if err != nil {
-					return VAL_NONE, err
+					return ValNONE, err
 				}
 			}
-			result_type, err = g.WriteExpression(operand, 0)
+			resultType, err = g.WriteExpression(operand, 0)
 			if err != nil {
-				return VAL_NONE, err
+				return ValNONE, err
 			}
 
-			// Validate result_type
-			if (result_type & opdesc.InValTypeMask) == 0 {
-				err = fmt.Errorf("Invalid operand type %d for operator %s", result_type, e.Operator)
-				return VAL_NONE, err
+			// Validate resultType
+			if (resultType & opdesc.InValTypeMask) == 0 {
+				err = fmt.Errorf("invalid operand type %d for operator %s", resultType, e.Operator)
+				return ValNONE, err
 			}
 			if first {
 				first = false
 			} else {
-				if prev_type != result_type {
+				if prevType != resultType {
 					// TODO: possibly make this a real error in the future
 					fmt.Fprintf(os.Stderr, "Warning: possible non-matching operand for operator %s.\n", e.Operator)
 				}
 			}
-			prev_type = result_type
+			prevType = resultType
 		}
 		fmt.Fprintf(g.outfile, ")")
 
-	case OPTYPE_PREFIX:
+	case OptypePREFIX:
 		// Always surround prefix expressions with parentheses, for safety
-		_, err = fmt.Fprintf(g.outfile, "%s(%s(", indent, lua_operator)
+		_, err = fmt.Fprintf(g.outfile, "%s(%s(", indent, luaop)
 		if err != nil {
-			return VAL_NONE, err
+			return ValNONE, err
 		}
 		// Assumes operator count of 1
-		result_type, err = g.WriteExpression(e.Operands[0], 0)
+		resultType, err = g.WriteExpression(e.Operands[0], 0)
 		if err != nil {
-			return VAL_NONE, err
+			return ValNONE, err
 		}
-		// Validate result_type
-		if (result_type & opdesc.InValTypeMask) == 0 {
-			err = fmt.Errorf("Invalid operand type %d for operator %s", result_type, e.Operator)
-			return VAL_NONE, err
+		// Validate resultType
+		if (resultType & opdesc.InValTypeMask) == 0 {
+			err = fmt.Errorf("invalid operand type %d for operator %s", resultType, e.Operator)
+			return ValNONE, err
 		}
 		fmt.Fprintf(g.outfile, "))")
 
-	case OPTYPE_POSTFIX:
+	case OptypePOSTFIX:
 		// Always surround postfix expressions with parentheses, for safety
 		_, err = fmt.Fprintf(g.outfile, "%s((", indent)
 		if err != nil {
-			return VAL_NONE, err
+			return ValNONE, err
 		}
 		// Assumes operator count of 1
 		operand = e.Operands[0]
-		result_type, err = g.WriteExpression(operand, 0)
+		resultType, err = g.WriteExpression(operand, 0)
 		if err != nil {
-			return VAL_NONE, err
+			return ValNONE, err
 		}
-		// Validate result_type
-		if (result_type & opdesc.InValTypeMask) == 0 {
-			err = fmt.Errorf("Invalid operand type %d for operator %s", result_type, e.Operator)
-			return VAL_NONE, err
+		// Validate resultType
+		if (resultType & opdesc.InValTypeMask) == 0 {
+			err = fmt.Errorf("invalid operand type %d for operator %s", resultType, e.Operator)
+			return ValNONE, err
 		}
-		fmt.Fprintf(g.outfile, ")%s)", lua_operator)
+		fmt.Fprintf(g.outfile, ")%s)", luaop)
 
-	case OPTYPE_PKTVAR:
-		// Map PenLOP name to Lua name
-		var pktvardesc PktVarDesc
+	case OptypePKTVAR:
+		// Map LOP name to Lua name
+		var pktvardesc luaPktVarDesc
 		if e.Operator == "pktvar" {
-			pktvardesc = PktVarDescTable[e.Literal]
+			pktvardesc = luaPktVarDescTable[e.Literal]
 		} else {
 			// TODO: be stricter in the future
-			pktvardesc = PktVarDescTable[e.Operator]
+			pktvardesc = luaPktVarDescTable[e.Operator]
 		}
 		if len(pktvardesc.LuaName) == 0 {
-			err = fmt.Errorf("Unknown pktvar name %s or %s", e.Operator, e.Literal)
-			return VAL_NONE, err
+			err = fmt.Errorf("unknown pktvar name %s or %s", e.Operator, e.Literal)
+			return ValNONE, err
 		}
 
 		// Generate Lua variable name
 		_, err = fmt.Fprintf(g.outfile, "%s", pktvardesc.LuaName)
 		if err != nil {
-			return VAL_NONE, err
+			return ValNONE, err
 		}
-		result_type = pktvardesc.ValType
+		resultType = pktvardesc.ValType
 
-	case OPTYPE_SESSVAR:
-		result_type, err = g.WriteGetSessVar(e.Literal)
+	case OptypeSESSVAR:
+		resultType, err = g.writeGetSessVar(e.Literal)
 
-	case OPTYPE_FUNC:
-		_, err = fmt.Fprintf(g.outfile, "%s%s(", indent, lua_operator)
+	case OptypeFUNC:
+		_, err = fmt.Fprintf(g.outfile, "%s%s(", indent, luaop)
 		if err != nil {
-			return VAL_NONE, err
+			return ValNONE, err
 		}
 
 		first := true
@@ -577,42 +586,42 @@ func (g *LuaGenerator) WriteExpression(e *PenLOPExpression, indent_level int) (i
 			} else {
 				fmt.Fprintf(g.outfile, ", ")
 			}
-			result_type, err = g.WriteExpression(operand, 0)
+			resultType, err = g.WriteExpression(operand, 0)
 			if err != nil {
-				return VAL_NONE, err
+				return ValNONE, err
 			}
 		}
 		fmt.Fprintf(g.outfile, ")\n")
 
-	case OPTYPE_LITERAL:
-		result_type = DeduceValType(e.Literal)
-		if result_type == VAL_STRING {
+	case OptypeLITERAL:
+		resultType = DeduceValType(e.Literal)
+		if resultType == ValSTRING {
 			// TODO: May need custom Quote function for Lua compliant strings
 			_, err = fmt.Fprintf(g.outfile, "%s", strconv.QuoteToASCII(e.Literal))
 			if err != nil {
-				return VAL_NONE, err
+				return ValNONE, err
 			}
 		} else {
 			_, err = fmt.Fprintf(g.outfile, "%s", e.Literal)
 			if err != nil {
-				return VAL_NONE, err
+				return ValNONE, err
 			}
 		}
 	}
 
-	// No error, return output result_type
-	if (result_type&opdesc.OutValTypeMask) == 0 && opdesc.OutValTypeMask != VAL_NONE {
-		result_type = opdesc.OutValTypeMask
+	// No error, return output resultType
+	if (resultType&opdesc.OutValTypeMask) == 0 && opdesc.OutValTypeMask != ValNONE {
+		resultType = opdesc.OutValTypeMask
 	}
 
-	return result_type, nil
+	return resultType, nil
 }
 
-func (g *LuaGenerator) WriteMatchPattern(p *PenLOPMatchPattern, indent_level int) error {
+func (g *LuaGenerator) writeMatchPattern(p *LOPMatchPattern, indentLevel int) error {
 	var err error
 
 	// Indent string
-	indent := strings.Repeat(indent_base, indent_level)
+	indent := strings.Repeat(indentBase, indentLevel)
 
 	// TODO: replace getPcreGroups
 	_, err = fmt.Fprintf(g.outfile, "%smatched = gDetector:getPcreGroups(\"%s\", 0)\n",
@@ -626,7 +635,7 @@ func (g *LuaGenerator) WriteMatchPattern(p *PenLOPMatchPattern, indent_level int
 		if err != nil {
 			return err
 		}
-		err = g.WriteAction(p.MatchedAction, indent_level+1)
+		err = g.WriteAction(p.MatchedAction, indentLevel+1)
 		if err != nil {
 			return err
 		}
@@ -635,7 +644,7 @@ func (g *LuaGenerator) WriteMatchPattern(p *PenLOPMatchPattern, indent_level int
 			if err != nil {
 				return err
 			}
-			err = g.WriteAction(p.NoMatchedAction, indent_level+1)
+			err = g.WriteAction(p.NoMatchedAction, indentLevel+1)
 			if err != nil {
 				return err
 			}
@@ -649,7 +658,7 @@ func (g *LuaGenerator) WriteMatchPattern(p *PenLOPMatchPattern, indent_level int
 		if err != nil {
 			return err
 		}
-		err = g.WriteAction(p.NoMatchedAction, indent_level+1)
+		err = g.WriteAction(p.NoMatchedAction, indentLevel+1)
 		if err != nil {
 			return err
 		}
@@ -662,11 +671,11 @@ func (g *LuaGenerator) WriteMatchPattern(p *PenLOPMatchPattern, indent_level int
 	return nil
 }
 
-func (g *LuaGenerator) WriteMatchCondition(m *PenLOPMatchCondition, indent_level int) error {
+func (g *LuaGenerator) writeMatchCondition(m *LOPMatchCondition, indentLevel int) error {
 	var err error
 
 	// Indent string
-	indent := strings.Repeat(indent_base, indent_level)
+	indent := strings.Repeat(indentBase, indentLevel)
 
 	// Write Condition
 	_, err = fmt.Fprintf(g.outfile, "%sif (", indent)
@@ -674,12 +683,12 @@ func (g *LuaGenerator) WriteMatchCondition(m *PenLOPMatchCondition, indent_level
 		return err
 	}
 
-	result_type, err := g.WriteExpression(m.Expression, indent_level)
+	resultType, err := g.WriteExpression(m.Expression, indentLevel)
 	if err != nil {
 		return err
 	}
-	if result_type != VAL_BOOL {
-		err = fmt.Errorf("Error: Condition expression is not of boolean type")
+	if resultType != ValBOOL {
+		err = fmt.Errorf("condition expression is not of boolean type")
 		return err
 	}
 	_, err = fmt.Fprintf(g.outfile, ") then\n")
@@ -689,7 +698,7 @@ func (g *LuaGenerator) WriteMatchCondition(m *PenLOPMatchCondition, indent_level
 
 	// Write MatchAction
 	if m.MatchedAction != nil {
-		err = g.WriteAction(m.MatchedAction, indent_level+1)
+		err = g.WriteAction(m.MatchedAction, indentLevel+1)
 		if err != nil {
 			return err
 		}
@@ -701,7 +710,7 @@ func (g *LuaGenerator) WriteMatchCondition(m *PenLOPMatchCondition, indent_level
 		if err != nil {
 			return err
 		}
-		err = g.WriteAction(m.NoMatchedAction, indent_level+1)
+		err = g.WriteAction(m.NoMatchedAction, indentLevel+1)
 		if err != nil {
 			return err
 		}
@@ -713,26 +722,26 @@ func (g *LuaGenerator) WriteMatchCondition(m *PenLOPMatchCondition, indent_level
 }
 
 // Treat as Action
-func (g *LuaGenerator) WriteSetSessVar(v *PenLOPSetSessVar, indent_level int) error {
+func (g *LuaGenerator) writeSetSessVar(v *LOPSetSessVar, indentLevel int) error {
 	// TODO: at init time, traverse all SetSessVar to retrieve list+type of each variable
 	var err error
-	var result_type int
+	var resultType int
 
 	if g.IsPreprocessing {
 		// Remember that the current state is using session variables
 		info := g.StateInfoList[g.CurrentState]
-		info.uses_sessvar = true
+		info.usesSessvar = true
 		g.StateInfoList[g.CurrentState] = info
 	} else {
 		// Validate var exists
 		if g.SessVarList[v.Name] == 0 {
-			err = fmt.Errorf("Cannot set_sessvar, %s undefined", v.Name)
+			err = fmt.Errorf("cannot set_sessvar, %s undefined", v.Name)
 			return err
 		}
 	}
 
 	// Indent string
-	indent := strings.Repeat(indent_base, indent_level)
+	indent := strings.Repeat(indentBase, indentLevel)
 
 	// Generate Lua
 	_, err = fmt.Fprintf(g.outfile, "%sif (not rft) then\n  %srft = FT.addFlowTracker(context.flowKey, {%s=",
@@ -746,9 +755,9 @@ func (g *LuaGenerator) WriteSetSessVar(v *PenLOPSetSessVar, indent_level int) er
 		if err != nil {
 			return err
 		}
-		result_type = DeduceValType(v.Literal)
+		resultType = DeduceValType(v.Literal)
 	} else {
-		_, err = g.WriteExpression(v.Expression, indent_level+1)
+		_, err = g.WriteExpression(v.Expression, indentLevel+1)
 		if err != nil {
 			return err
 		}
@@ -757,7 +766,7 @@ func (g *LuaGenerator) WriteSetSessVar(v *PenLOPSetSessVar, indent_level int) er
 		if err != nil {
 			return err
 		}
-		result_type, err = g.WriteExpression(v.Expression, indent_level+1)
+		resultType, err = g.WriteExpression(v.Expression, indentLevel+1)
 		if err != nil {
 			return err
 		}
@@ -768,10 +777,10 @@ func (g *LuaGenerator) WriteSetSessVar(v *PenLOPSetSessVar, indent_level int) er
 	}
 
 	// Validation
-	if g.SessVarList[v.Name] == VAL_NONE {
-		g.SessVarList[v.Name] = result_type
-	} else if g.SessVarList[v.Name] != result_type {
-		err = fmt.Errorf("Expression type does not match variable type for set_sessvar %s", v.Name)
+	if g.SessVarList[v.Name] == ValNONE {
+		g.SessVarList[v.Name] = resultType
+	} else if g.SessVarList[v.Name] != resultType {
+		err = fmt.Errorf("expression type does not match variable type for set_sessvar %s", v.Name)
 		return err
 	}
 
@@ -779,208 +788,208 @@ func (g *LuaGenerator) WriteSetSessVar(v *PenLOPSetSessVar, indent_level int) er
 }
 
 // Treat as Expression
-func (g *LuaGenerator) WriteGetSessVar(Name string) (int, error) {
+func (g *LuaGenerator) writeGetSessVar(Name string) (int, error) {
 	// TODO
 	var err error
-	var result_type int
+	var resultType int
 
 	// Check result type (in case we previously saw SetSessVar)
-	result_type = g.SessVarList[Name]
+	resultType = g.SessVarList[Name]
 	if g.IsPreprocessing {
 		// Remember that the current state is using session variables
 		info := g.StateInfoList[g.CurrentState]
-		info.uses_sessvar = true
+		info.usesSessvar = true
 		g.StateInfoList[g.CurrentState] = info
 
 		// It's OKAY if variable is not yet defined
-		if result_type == VAL_NONE {
+		if resultType == ValNONE {
 			// Set to wildcard type, to avoid invalid errors
-			result_type = VAL_ANY
+			resultType = ValANY
 		}
 	} else {
 		// Validate var exists
-		if result_type == VAL_NONE {
-			err = fmt.Errorf("Cannot get_sessvar, %s undefined", Name)
-			return result_type, err
+		if resultType == ValNONE {
+			err = fmt.Errorf("cannot get_sessvar, %s undefined", Name)
+			return resultType, err
 		}
 	}
 
 	// Generate Lua
-	var default_ret_str string
-	switch result_type {
-	case VAL_INT:
-		default_ret_str = "0"
-	case VAL_STRING:
-		default_ret_str = "\"\""
-	case VAL_BOOL:
-		default_ret_str = "false"
+	var defaultRetstr string
+	switch resultType {
+	case ValINT:
+		defaultRetstr = "0"
+	case ValSTRING:
+		defaultRetstr = "\"\""
+	case ValBOOL:
+		defaultRetstr = "false"
 	default:
-		default_ret_str = "nil"
+		defaultRetstr = "nil"
 	}
 	_, err = fmt.Fprintf(g.outfile, "getFlowTrackerItem(rft, %s, %s)",
-		Name, default_ret_str)
+		Name, defaultRetstr)
 
-	return result_type, err
+	return resultType, err
 }
 
-func (g *LuaGenerator) WriteAccumulate(a *PenLOPAccumulate, indent_level int) error {
+func (g *LuaGenerator) writeAccumulate(a *LOPAccumulate, indentLevel int) error {
 	// TODO
 	var err error
 
 	if g.IsPreprocessing {
 		// Remember that the current state is using session variables
 		info := g.StateInfoList[g.CurrentState]
-		info.uses_sessvar = true
+		info.usesSessvar = true
 		g.StateInfoList[g.CurrentState] = info
 	} else {
 		// Validate var exists
 		if g.SessVarList[a.SessVar] == 0 {
-			err = fmt.Errorf("Cannot accumulate sessvar, %s undefined", a.SessVar)
+			err = fmt.Errorf("cannot accumulate sessvar, %s undefined", a.SessVar)
 			return err
 		}
 	}
 
-	var result_type int
-	var default_val string
-	var lua_func string
+	var resultType int
+	var defaultVal string
+	var luaFunc string
 	var base int
-	var count int = a.Count
-	var pcre_str string = "(" + strings.Repeat(".", count) + ")"
+	var count = a.Count
+	var pcreStr = "(" + strings.Repeat(".", count) + ")"
 	switch {
 	case strings.HasPrefix(a.Type, "atoi"):
-		result_type = VAL_INT
-		default_val = "0"
+		resultType = ValINT
+		defaultVal = "0"
 		if strings.HasSuffix(a.Type, "le") {
 			// little-endian
-			lua_func = "reverseAsciiStringToNumber"
+			luaFunc = "reverseAsciiStringToNumber"
 		} else {
-			lua_func = "asciiStringToNumber"
+			luaFunc = "asciiStringToNumber"
 		}
 		base = 10
 		if count == 0 {
-			pcre_str = "[^0-9]*([0-9]+)[^0-9]"
+			pcreStr = "[^0-9]*([0-9]+)[^0-9]"
 			count = 99
 		}
 	case strings.HasPrefix(a.Type, "xtoi"):
-		result_type = VAL_INT
-		default_val = "0"
+		resultType = ValINT
+		defaultVal = "0"
 		if strings.HasSuffix(a.Type, "le") {
 			// little-endian
-			lua_func = "reverseAsciiStringToNumber"
+			luaFunc = "reverseAsciiStringToNumber"
 		} else {
-			lua_func = "asciiStringToNumber"
+			luaFunc = "asciiStringToNumber"
 		}
 		base = 16
 		if count == 0 {
-			pcre_str = "[^0-9a-fA-F]*([0-9a-fA-F]+)[^0-9a-fA-F]"
+			pcreStr = "[^0-9a-fA-F]*([0-9a-fA-F]+)[^0-9a-fA-F]"
 			count = 99
 		}
 	case strings.HasPrefix(a.Type, "bin"):
-		result_type = VAL_INT
-		default_val = "0"
+		resultType = ValINT
+		defaultVal = "0"
 		if strings.HasSuffix(a.Type, "le") {
 			// little-endian
-			lua_func = "reverseBinaryStringToNumber"
+			luaFunc = "reverseBinaryStringToNumber"
 		} else {
-			lua_func = "binaryStringToNumber"
+			luaFunc = "binaryStringToNumber"
 		}
 		base = 2
 		if count == 0 {
-			err = fmt.Errorf("Invalid count 0 for binary accumulation, sessvar %s", a.SessVar)
+			err = fmt.Errorf("invalid count 0 for binary accumulation, sessvar %s", a.SessVar)
 			return err
 		}
 	case a.Type == "raw":
-		result_type = VAL_STRING
-		default_val = "\"\""
-		lua_func = "rawString" // TODO: define this
+		resultType = ValSTRING
+		defaultVal = "\"\""
+		luaFunc = "rawString" // TODO: define this
 		base = 2
 		if count == 0 {
-			err = fmt.Errorf("Invalid count 0 for binary accumulation, sessvar %s", a.SessVar)
+			err = fmt.Errorf("invalid count 0 for binary accumulation, sessvar %s", a.SessVar)
 			return err
 		}
 	default:
-		err = fmt.Errorf("Expression type %s does not match variable type for accumulate sessvar %s",
+		err = fmt.Errorf("expression type %s does not match variable type for accumulate sessvar %s",
 			a.Type, a.SessVar)
 		return err
 	}
 
 	// Indent string
-	indent := strings.Repeat(indent_base, indent_level)
-	indent2 := strings.Repeat(indent_base, indent_level+1)
+	indent := strings.Repeat(indentBase, indentLevel)
+	indent2 := strings.Repeat(indentBase, indentLevel+1)
 
 	// TODO: replace getPcreGroups
 	// TODO: how to avoid consuming last byte past numeric string?
 
 	// Generate Lua
 	_, err = fmt.Fprintf(g.outfile, "%sif (not rft) then\n  %srft = FT.addFlowTracker(context.flowKey, {%s=%s})\n%send\n",
-		indent, indent, a.SessVar, default_val, indent)
+		indent, indent, a.SessVar, defaultVal, indent)
 	if err != nil {
 		return err
 	}
 	_, err = fmt.Fprintf(g.outfile, "%smatched, tmp = gDetector:getPcreGroups(\"%s\", 0)\n%sif (matched) then\n",
-		indent, pcre_str, indent)
+		indent, pcreStr, indent)
 	if err != nil {
 		return err
 	}
 
 	if base == 2 {
 		_, err = fmt.Fprintf(g.outfile, "%srft.%s = %s(tmp, %d)\n%send\n",
-			indent2, a.SessVar, lua_func, count, indent)
+			indent2, a.SessVar, luaFunc, count, indent)
 	} else {
 		_, err = fmt.Fprintf(g.outfile, "%srft.%s = %s(tmp, %d, %d)\n%send\n",
-			indent2, a.SessVar, lua_func, base, count, indent)
+			indent2, a.SessVar, luaFunc, base, count, indent)
 	}
 	if err != nil {
 		return err
 	}
 
 	// Validation
-	if g.SessVarList[a.SessVar] == VAL_NONE {
-		g.SessVarList[a.SessVar] = result_type
-	} else if g.SessVarList[a.SessVar] != result_type {
-		err = fmt.Errorf("Expression type does not match variable type for accumulate sessvar %s", a.SessVar)
+	if g.SessVarList[a.SessVar] == ValNONE {
+		g.SessVarList[a.SessVar] = resultType
+	} else if g.SessVarList[a.SessVar] != resultType {
+		err = fmt.Errorf("expression type does not match variable type for accumulate sessvar %s", a.SessVar)
 		return err
 	}
 
 	return err
 }
 
-func (g *LuaGenerator) WriteSetAppStatus(s string, indent_level int) error {
+func (g *LuaGenerator) writeSetAppStatus(s string, indentLevel int) error {
 	// TODO
 	var err error
-	var lua_name string
+	var luaName string
 
 	switch s {
 	case "FOUND":
-		lua_name = "serviceSuccess"
+		luaName = "serviceSuccess"
 	case "NOT_FOUND":
-		lua_name = "serviceFail"
+		luaName = "serviceFail"
 	case "IN_PROGRESS":
-		lua_name = "serviceInProcess"
+		luaName = "serviceInProcess"
 	default:
-		err = fmt.Errorf("Unknown app state %s", s)
+		err = fmt.Errorf("unknown app state %s", s)
 		return err
 	}
 
 	// Indent string
-	indent := strings.Repeat(indent_base, indent_level)
+	indent := strings.Repeat(indentBase, indentLevel)
 
-	_, err = fmt.Fprintf(g.outfile, "%sreturn %s(context)\n", indent, lua_name)
+	_, err = fmt.Fprintf(g.outfile, "%sreturn %s(context)\n", indent, luaName)
 
 	return err
 }
 
-func (g *LuaGenerator) WriteGotoState(s string, indent_level int) error {
+func (g *LuaGenerator) writeGotoState(s string, indentLevel int) error {
 	var err error
 
 	// Validate state exists
 	if LookupState(s, g.App.States) == nil {
-		err = fmt.Errorf("Cannot goto_state, %s undefined", s)
+		err = fmt.Errorf("cannot goto_state, %s undefined", s)
 		return err
 	}
 
 	// Indent string
-	indent := strings.Repeat(indent_base, indent_level)
+	indent := strings.Repeat(indentBase, indentLevel)
 
 	// Generate Lua function call
 	_, err = fmt.Fprintf(g.outfile, "%s%s(context)\n", indent, s)
@@ -988,45 +997,47 @@ func (g *LuaGenerator) WriteGotoState(s string, indent_level int) error {
 	return err
 }
 
-func (g *LuaGenerator) WriteAction(a *PenLOPAction, indent_level int) error {
+// WriteAction writes a LOPAction as Lua output
+func (g *LuaGenerator) WriteAction(a *LOPAction, indentLevel int) error {
 	// TODO
 	var err error
 
 	switch a.Type {
 	case "match_pattern":
-		err = g.WriteMatchPattern(a.MatchPattern, indent_level)
+		err = g.writeMatchPattern(a.MatchPattern, indentLevel)
 	case "match_condition":
-		err = g.WriteMatchCondition(a.MatchCondition, indent_level)
+		err = g.writeMatchCondition(a.MatchCondition, indentLevel)
 	case "set_sessvar":
-		err = g.WriteSetSessVar(a.SetSessVar, indent_level)
+		err = g.writeSetSessVar(a.SetSessVar, indentLevel)
 	case "set_app_status":
-		err = g.WriteSetAppStatus(a.SetAppStatus, indent_level)
+		err = g.writeSetAppStatus(a.SetAppStatus, indentLevel)
 	case "goto_state":
-		err = g.WriteGotoState(a.GotoState, indent_level)
+		err = g.writeGotoState(a.GotoState, indentLevel)
 	case "accumulate":
-		err = g.WriteAccumulate(a.Accumulate, indent_level)
+		err = g.writeAccumulate(a.Accumulate, indentLevel)
 	default:
-		err = fmt.Errorf("Unknown action %s", a.Type)
+		err = fmt.Errorf("unknown action %s", a.Type)
 		return err
 	}
 
 	return err
 }
 
-func (g *LuaGenerator) WriteRegexSet(r *PenLOPRegexSet, indent_level int) error {
+// WriteRegexSet writes a LOPRegexSet as Lua output
+func (g *LuaGenerator) WriteRegexSet(r *LOPRegexSet, indentLevel int) error {
 	var err error
-	match_first := (r.Type == "match_first")
+	matchFirst := (r.Type == "match_first")
 
 	// Indent string
-	inner_indent_level := indent_level + 1
-	indent := strings.Repeat(indent_base, indent_level)
+	innerIndentLevel := indentLevel + 1
+	indent := strings.Repeat(indentBase, indentLevel)
 	indent2 := indent
 
 	// TODO: replace getPcreGroups
 
-	if match_first {
-		indent2 = strings.Repeat(indent_base, indent_level+1)
-		inner_indent_level = indent_level + 2
+	if matchFirst {
+		indent2 = strings.Repeat(indentBase, indentLevel+1)
+		innerIndentLevel = indentLevel + 2
 		_, err = fmt.Fprintf(g.outfile, "%smatched = nil\n", indent)
 		if err != nil {
 			return err
@@ -1034,7 +1045,7 @@ func (g *LuaGenerator) WriteRegexSet(r *PenLOPRegexSet, indent_level int) error 
 	}
 
 	for _, regex := range r.RegexStates {
-		if match_first {
+		if matchFirst {
 			_, err = fmt.Fprintf(g.outfile, "%sif (not matched) then\n", indent)
 			if err != nil {
 				return err
@@ -1053,16 +1064,16 @@ func (g *LuaGenerator) WriteRegexSet(r *PenLOPRegexSet, indent_level int) error 
 			// Name of existing state, use a goto
 			// Validate that the global state exists
 			if LookupState(regex.State.Name, g.App.States) == nil {
-				err = fmt.Errorf("Cannot goto undefined state %s", regex.State.Name)
+				err = fmt.Errorf("cannot goto undefined state %s", regex.State.Name)
 				return err
 			}
-			err = g.WriteGotoState(regex.State.Name, inner_indent_level)
+			err = g.writeGotoState(regex.State.Name, innerIndentLevel)
 			if err != nil {
 				return err
 			}
 		} else {
 			// Inline state, just write it here
-			err = g.WriteStateInline(regex.State, inner_indent_level)
+			err = g.WriteStateInline(regex.State, innerIndentLevel)
 			if err != nil {
 				return err
 			}
@@ -1071,7 +1082,7 @@ func (g *LuaGenerator) WriteRegexSet(r *PenLOPRegexSet, indent_level int) error 
 		if err != nil {
 			return err
 		}
-		if match_first {
+		if matchFirst {
 			_, err = fmt.Fprintf(g.outfile, "%send\n", indent)
 			if err != nil {
 				return err
@@ -1080,25 +1091,4 @@ func (g *LuaGenerator) WriteRegexSet(r *PenLOPRegexSet, indent_level int) error 
 	}
 
 	return nil
-}
-
-func DeduceValType(operand string) int {
-	// TODO: no support for float today
-
-	_, e := strconv.ParseInt(operand, 0, 64)
-	if e == nil {
-		return VAL_INT
-	}
-
-	_, e = strconv.ParseBool(operand)
-	if e == nil {
-		return VAL_BOOL
-	}
-
-	ip := net.ParseIP(operand)
-	if len(ip) > 0 {
-		return VAL_IPADDR
-	}
-
-	return VAL_STRING
 }
