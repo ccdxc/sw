@@ -1,7 +1,6 @@
-
-
-#include "common/storage_p4_defines.h"
-
+/*****************************************************************************
+ * storage_seq.p4: Sequencer functions used by storage_tx P4+ program
+ *****************************************************************************/
 
 
 /*****************************************************************************
@@ -16,19 +15,19 @@ action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
                               next_db_en, intr_en) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(seq_pdma_entry.next_db_addr, next_db_addr);
-  modify_field(seq_pdma_entry.next_db_data, next_db_data);
-  modify_field(seq_pdma_entry.src_addr, src_addr);
-  modify_field(seq_pdma_entry.dst_addr, dst_addr);
-  modify_field(seq_pdma_entry.data_size, data_size);
-  modify_field(seq_pdma_entry.src_lif_override, src_lif_override);
-  modify_field(seq_pdma_entry.src_lif, src_lif);
-  modify_field(seq_pdma_entry.dst_lif_override, dst_lif_override);
-  modify_field(seq_pdma_entry.dst_lif, dst_lif);
-  modify_field(seq_pdma_entry.intr_addr, intr_addr);
-  modify_field(seq_pdma_entry.intr_data, intr_data);
-  modify_field(seq_pdma_entry.next_db_en, next_db_en);
-  modify_field(seq_pdma_entry.intr_en, intr_en);
+  modify_field(seq_pdma_entry_scratch.next_db_addr, next_db_addr);
+  modify_field(seq_pdma_entry_scratch.next_db_data, next_db_data);
+  modify_field(seq_pdma_entry_scratch.src_addr, src_addr);
+  modify_field(seq_pdma_entry_scratch.dst_addr, dst_addr);
+  modify_field(seq_pdma_entry_scratch.data_size, data_size);
+  modify_field(seq_pdma_entry_scratch.src_lif_override, src_lif_override);
+  modify_field(seq_pdma_entry_scratch.src_lif, src_lif);
+  modify_field(seq_pdma_entry_scratch.dst_lif_override, dst_lif_override);
+  modify_field(seq_pdma_entry_scratch.dst_lif, dst_lif);
+  modify_field(seq_pdma_entry_scratch.intr_addr, intr_addr);
+  modify_field(seq_pdma_entry_scratch.intr_data, intr_data);
+  modify_field(seq_pdma_entry_scratch.next_db_en, next_db_en);
+  modify_field(seq_pdma_entry_scratch.intr_en, intr_en);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -36,17 +35,17 @@ action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
 
   // Setup the DMA command to move the data from source to destination address
   // In ASM, set the host, fence bits etc correctly
-  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_pdma_entry.src_addr, 0,
-                           seq_pdma_entry.dst_addr, 0, seq_pdma_entry.data_size,
+  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_pdma_entry_scratch.src_addr, 0,
+                           seq_pdma_entry_scratch.dst_addr, 0, seq_pdma_entry_scratch.data_size,
                            0, 0, 0)
 
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the previous mem2mem DMA for ordering.
-  if (seq_pdma_entry.next_db_en == 1) {
+  if (seq_pdma_entry_scratch.next_db_en == 1) {
     // Copy the doorbell addr and data
-    modify_field(doorbell_addr.addr, seq_pdma_entry.next_db_addr);
-    modify_field(qpush_doorbell_data.data, seq_pdma_entry.next_db_data);
+    modify_field(doorbell_addr_scratch.addr, seq_pdma_entry_scratch.next_db_addr);
+    modify_field(qpush_doorbell_data.data, seq_pdma_entry_scratch.next_db_data);
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
                              0,
                              PHV_FIELD_OFFSET(seq_doorbell_data.data),
@@ -57,11 +56,11 @@ action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
   // Fire the interrupt if there is no doorbell to be rung and if the
   // interrupt enabled bit is set. Fence with the previous mem2mem DMA
   // for ordering.
-  if ((seq_pdma_entry.next_db_en ==  0) and 
-      (seq_pdma_entry.intr_en == 1)) {
+  if ((seq_pdma_entry_scratch.next_db_en ==  0) and 
+      (seq_pdma_entry_scratch.intr_en == 1)) {
     // Copy the doorbell addr and data
-    modify_field(pci_intr_addr.addr, seq_pdma_entry.intr_addr);
-    modify_field(pci_intr_data.data, seq_pdma_entry.intr_data);
+    modify_field(pci_intr_addr_scratch.addr, seq_pdma_entry_scratch.intr_addr);
+    modify_field(pci_intr_data.data, seq_pdma_entry_scratch.intr_data);
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
                              0,
                              PHV_FIELD_OFFSET(pci_intr_data.data),
@@ -82,13 +81,7 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
                              dst_qid, dst_qaddr, is_remote) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(seq_r2n_entry.r2n_wqe_addr, r2n_wqe_addr);
-  modify_field(seq_r2n_entry.r2n_wqe_size, r2n_wqe_size);
-  modify_field(seq_r2n_entry.dst_lif, dst_lif);
-  modify_field(seq_r2n_entry.dst_qtype, dst_qtype);
-  modify_field(seq_r2n_entry.dst_qid, dst_qid);
-  modify_field(seq_r2n_entry.dst_qaddr, dst_qaddr);
-  modify_field(seq_r2n_entry.is_remote, is_remote);
+  SEQ_R2N_ENTRY_COPY(seq_r2n_entry_scratch)
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -103,10 +96,10 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
 
   // Setup the DMA command to move the data from source to destination address
   // In ASM, set the host, fence bits etc correctly
-  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_r2n_entry.r2n_wqe_addr, 0,
-                           0, 0, seq_r2n_entry.r2n_wqe_size, 0, 0, 0)
+  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_r2n_entry_scratch.r2n_wqe_addr, 0,
+                           0, 0, seq_r2n_entry_scratch.r2n_wqe_size, 0, 0, 0)
 
-  if (seq_r2n_entry.is_remote == 1) {
+  if (seq_r2n_entry_scratch.is_remote == 1) {
     // Load the Serivce SQ context for the next stage to push the NVME command
     CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
                           Q_STATE_SIZE, seq_pvm_roce_sq_cb_push_start)
@@ -132,16 +125,16 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_pndx_size,
   STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(seq_barco_entry.xts_desc_addr, xts_desc_addr);
-  modify_field(seq_barco_entry.xts_desc_size, xts_desc_size);
-  modify_field(seq_barco_entry.xts_pndx_size, xts_pndx_size);
-  modify_field(seq_barco_entry.xts_pndx_addr, xts_pndx_addr);
-  modify_field(seq_barco_entry.xts_ring_addr, xts_ring_addr);
+  modify_field(seq_barco_entry_scratch.xts_desc_addr, xts_desc_addr);
+  modify_field(seq_barco_entry_scratch.xts_desc_size, xts_desc_size);
+  modify_field(seq_barco_entry_scratch.xts_pndx_size, xts_pndx_size);
+  modify_field(seq_barco_entry_scratch.xts_pndx_addr, xts_pndx_addr);
+  modify_field(seq_barco_entry_scratch.xts_ring_addr, xts_ring_addr);
 
   // Update the K+I vector with the barco descriptor size to be used 
   // when calculating the offset for the push operation 
-  modify_field(storage_kivec1.xts_desc_size, seq_barco_entry.xts_desc_size);
-  modify_field(storage_kivec1.device_addr, seq_barco_entry.xts_ring_addr);
+  modify_field(storage_kivec1.xts_desc_size, seq_barco_entry_scratch.xts_desc_size);
+  modify_field(storage_kivec1.device_addr, seq_barco_entry_scratch.xts_ring_addr);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -149,14 +142,14 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_pndx_size,
 
   // Setup the DMA command to move the data from source to destination address
   // In ASM, set the host, fence bits etc correctly
-  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_barco_entry.xts_desc_addr, 0,
-                           0, 0, seq_barco_entry.xts_desc_size, 0, 0, 0)
+  DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_barco_entry_scratch.xts_desc_addr, 0,
+                           0, 0, seq_barco_entry_scratch.xts_desc_size, 0, 0, 0)
 
   // Setup the doorbell to be rung based on a fence with the previous mem2mem 
   // DMA. Form the doorbell DMA command in this stage as opposed the push 
   // stage (as is the norm) to avoid carrying the doorbell address in K+I
   // vector.
-  modify_field(doorbell_addr.addr, seq_barco_entry.xts_pndx_addr);
+  modify_field(doorbell_addr_scratch.addr, seq_barco_entry_scratch.xts_pndx_addr);
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
                            0,
                            PHV_FIELD_OFFSET(qpush_doorbell_data.data),
@@ -165,8 +158,8 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_pndx_size,
 
   // Load the Barco ring for the next stage to push the Barco XTS descriptor
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
-                        seq_barco_entry.xts_pndx_addr,
-                        seq_barco_entry.xts_pndx_size, 
+                        seq_barco_entry_scratch.xts_pndx_addr,
+                        seq_barco_entry_scratch.xts_pndx_size, 
                         seq_barco_ring_push_start)
 }
 
@@ -254,7 +247,7 @@ action seq_comp_desc_handler(next_db_addr, next_db_data, status_addr, data_addr,
   // Fence with the SGL mem2mem DMA for ordering.
   if (seq_comp_desc_scratch.next_db_en == 1) {
     // Copy the doorbell addr and data
-    modify_field(doorbell_addr.addr, seq_comp_desc_scratch.next_db_addr);
+    modify_field(doorbell_addr_scratch.addr, seq_comp_desc_scratch.next_db_addr);
     modify_field(seq_doorbell_data.data, seq_comp_desc_scratch.next_db_addr);
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
                              0,
@@ -269,7 +262,7 @@ action seq_comp_desc_handler(next_db_addr, next_db_data, status_addr, data_addr,
   if ((seq_comp_desc_scratch.next_db_en ==  0) and 
       (seq_comp_desc_scratch.intr_en == 1)) {
     // Copy the doorbell addr and data
-    modify_field(pci_intr_addr.addr, seq_comp_desc_scratch.intr_addr);
+    modify_field(pci_intr_addr_scratch.addr, seq_comp_desc_scratch.intr_addr);
     modify_field(pci_intr_data.data, seq_comp_desc_scratch.intr_data);
     DMA_COMMAND_PHV2MEM_FILL(dma_p2m_11, 
                              0,
