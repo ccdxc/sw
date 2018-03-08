@@ -491,7 +491,7 @@ int XtsCtx::verify_doorbell() {
   return verify_opaque_tag(exp_opaque_tag, decr_en);
 }
 
-int e2e_verify(XtsCtx& xts_ctx1, XtsCtx xts_ctx2) {
+int e2e_verify(XtsCtx& xts_ctx1, XtsCtx& xts_ctx2) {
   int rv = 0;
   char src_buf_cp[kDefaultBufSize], dst_buf_cp[kDefaultBufSize];
   uint32_t src_off = 0, dst_off = 0;
@@ -776,7 +776,7 @@ int xts_multi_blk() {
   }
 
 done:
-  //delete ctx;
+  delete ctx;
   free_host_mem(in_buffer);
   free_host_mem(stg_buffer);
   free_host_mem(out_buffer);
@@ -1461,7 +1461,6 @@ int fill_ctx(XtsCtx* ctx1, XtsCtx* ctx2, XtsCtx* ctx3, XtsCtx* ctx4,
     ctx1[i].verify_db = false;
     ctx1[i].ring_db = false;
     ctx1[i].num_sectors = kDefaultBufSize/kSectorSize;
-    //ctx1[i].opa_tag_en = false;
     ctx1[i].opaque_tag = i+1;
 
     ctx2[i].op = xts::AES_DECR_ONLY;
@@ -1469,7 +1468,6 @@ int fill_ctx(XtsCtx* ctx1, XtsCtx* ctx2, XtsCtx* ctx3, XtsCtx* ctx4,
     ctx2[i].verify_db = false;
     ctx2[i].ring_db = false;
     ctx2[i].num_sectors = kDefaultBufSize/kSectorSize;
-    //ctx2[i].opa_tag_en = false;
     ctx2[i].opaque_tag = i+1;
 
     ctx3[i].op = xts::AES_ENCR_ONLY;
@@ -1478,7 +1476,6 @@ int fill_ctx(XtsCtx* ctx1, XtsCtx* ctx2, XtsCtx* ctx3, XtsCtx* ctx4,
     ctx3[i].ring_db = false;
     ctx3[i].num_sectors = kDefaultBufSize/kSectorSize;
     ctx3[i].is_gcm = true;
-    //ctx3[i].opa_tag_en = false;
     ctx3[i].opaque_tag = i+1;
 
     ctx4[i].op = xts::AES_DECR_ONLY;
@@ -1487,7 +1484,6 @@ int fill_ctx(XtsCtx* ctx1, XtsCtx* ctx2, XtsCtx* ctx3, XtsCtx* ctx4,
     ctx4[i].ring_db = false;
     ctx4[i].num_sectors = kDefaultBufSize/kSectorSize;
     ctx4[i].is_gcm = true;
-    //ctx4[i].opa_tag_en = false;
     ctx4[i].opaque_tag = i+1;
 
     ctx1[i].src_buf = (void*)(in_buffer + i*kDefaultBufSize);
@@ -1522,7 +1518,7 @@ int fill_ctx(XtsCtx* ctx1, XtsCtx* ctx2, XtsCtx* ctx3, XtsCtx* ctx4,
   return 0;
 }
 
-int e2e_verify_hbm_buf(XtsCtx& xts_ctx1, XtsCtx xts_ctx2) {
+int e2e_verify_hbm_buf(XtsCtx& xts_ctx1, XtsCtx& xts_ctx2) {
   int rv = 0;
   unsigned char src_buf_cp[kDefaultBufSize], dst_buf_cp[kDefaultBufSize];
   memset(src_buf_cp, 0, kDefaultBufSize);
@@ -1600,6 +1596,16 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
   XtsCtx *ctx3 = new XtsCtx[kTotalReqs];
   XtsCtx *ctx4 = new XtsCtx[kTotalReqs];
   fill_ctx(ctx1, ctx2, ctx3, ctx4, in_buffer, stg1_buffer, stg2_buffer, stg3_buffer, out_buffer, is_hbm_buf);
+  for(uint32_t i = 0; i < kTotalReqs; i++) {
+    ctx1[i].opa_tag_en = false;
+    ctx2[i].opa_tag_en = false;
+    ctx3[i].opa_tag_en = false;
+  }
+
+  uint32_t xts_encr_tag_addr = 0, xts_decr_tag_addr = 0, gcm_encr_tag_addr = 0;
+  read_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, xts_encr_tag_addr);
+  read_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, xts_decr_tag_addr);
+  read_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, gcm_encr_tag_addr);
 
   write_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX);
   write_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W1_ADDR, 0);
@@ -1639,6 +1645,7 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
   }
   pi_inited = false;
   for(uint32_t i = 0; i < kTotalReqs; i++) {
+    ctx4[i].auth_tag_addr = ctx3[i].auth_tag_addr;
     if(0 == rv) rv = ctx4[i].test_seq_xts();
   }
   pi_inited = false;
@@ -1661,10 +1668,13 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
   }
 
 done:
-  //delete ctx1;
-  //delete ctx2;
-  //delete ctx3;
-  //delete ctx4;
+  delete[] ctx1;
+  delete[] ctx2;
+  delete[] ctx3;
+  delete[] ctx4;
+  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, xts_encr_tag_addr);
+  write_reg(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, xts_decr_tag_addr);
+  write_reg(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, gcm_encr_tag_addr);
   if(!is_hbm_buf) {
     free_host_mem((void*)in_buffer);
     free_host_mem((void*)out_buffer);
@@ -1728,10 +1738,8 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
 
   while(1) {
     //xts encryption
-    //if(encr_reqs_comp < kTotalReqs) {
-      rv = get_opaque_tag(encr_reqs_comp, false);
-      if(0 != rv) goto done;
-    //}
+    rv = get_opaque_tag(encr_reqs_comp, false);
+    if(0 != rv) goto done;
 
     //Trigger next batch size of decr
     if((encr_reqs_comp - decr_reqs_comp) >= kBatchSize &&
@@ -1742,10 +1750,8 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
     }
 
     //xts decryption
-    //if(decr_reqs_comp < kTotalReqs) {
-      rv = get_opaque_tag(decr_reqs_comp, true);
-      if(0 != rv) goto done;
-    //}
+    rv = get_opaque_tag(decr_reqs_comp, true);
+    if(0 != rv) goto done;
 
     //Trigger next batch size of gcm encr
     if((decr_reqs_comp - gcm_encr_reqs_comp) >= kBatchSize &&
@@ -1756,16 +1762,12 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
     }
 
     //gcm encryption
-    //if(gcm_encr_reqs_comp < kTotalReqs) {
-      rv = get_opaque_tag(gcm_encr_reqs_comp, false, true);
-      if(0 != rv) goto done;
-    //}
+    rv = get_opaque_tag(gcm_encr_reqs_comp, false, true);
+    if(0 != rv) goto done;
 
     //gcm decryption
-    //if(gcm_decr_reqs_comp < kTotalReqs) {
-      rv = get_opaque_tag(gcm_decr_reqs_comp, true, true);
-      if(0 != rv) goto done;
-    //}
+    rv = get_opaque_tag(gcm_decr_reqs_comp, true, true);
+    if(0 != rv) goto done;
 
     //Trigger next batch size of gcm decr
     if((gcm_encr_reqs_comp - gcm_decr_reqs_comp) >= kBatchSize &&
@@ -1797,16 +1799,30 @@ int xts_multi_blk_noc_stress(bool is_hbm_buf=false) {
   }
 
 done:
-  //delete ctx1;
-  //delete ctx2;
-  //delete ctx3;
-  //delete ctx4;
+  delete[] ctx1;
+  delete[] ctx2;
+  delete[] ctx3;
+  delete[] ctx4;
   if(!is_hbm_buf) {
     free_host_mem((void*)in_buffer);
     free_host_mem((void*)out_buffer);
   }
 
   return rv;
+}
+
+int xts_multi_blk_noc_stress_from_host_hw_chain() {
+  kTotalReqs = 64;
+  kInitReqs = 4;
+  kBatchSize = 4;
+  return xts_multi_blk_noc_stress_hw_daisy_chain();
+}
+
+int xts_multi_blk_noc_stress_from_hbm_hw_chain() {
+  kTotalReqs = 64;
+  kInitReqs = 4;
+  kBatchSize = 4;
+  return xts_multi_blk_noc_stress_hw_daisy_chain(true);
 }
 
 
