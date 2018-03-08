@@ -285,7 +285,7 @@ end:
 }
 
 // ----------------------------------------------------------------------------
-// Deleted PD IP entries
+// Freeup PD l2seg structs
 // ----------------------------------------------------------------------------
 hal_ret_t
 pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
@@ -399,8 +399,11 @@ pd_enicif_cleanup(pd_enicif_t *pd_enicif)
     }
 
     // Free up l2segs PD state
-    ret = pd_enicif_pd_depgm_inp_prop(pd_enicif, 
-                                      &hal_if->l2seg_list_clsc_head);
+    ret = pd_enicif_dealloc_pd_l2seg_entries(&hal_if->l2seg_list_clsc_head);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR(" failed to free pd l2seg entries. ret:{}", ret);
+        goto end;
+    }
 
     // Delinking PI<->PD
     pd_enicif_delink_pi_pd(pd_enicif, (if_t *)pd_enicif->pi_if);
@@ -417,7 +420,8 @@ end:
 hal_ret_t
 pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
 {
-    hal_ret_t            ret = HAL_RET_OK;
+    hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = (if_t *)pd_enicif->pi_if;
 
     // De program TM register
     ret = pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif);
@@ -431,6 +435,24 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:unable to deprogram hw", __FUNCTION__);
     }
+
+    // De-program native input properties. Classic
+    if (pd_enicif->inp_prop_native_l2seg_clsc != INVALID_INDEXER_INDEX) {
+        ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
+                                                inp_prop_native_l2seg_clsc);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to deprogram input properties for "
+                          "native l2seg at index:{}  ret:{}", 
+                          pd_enicif->inp_prop_native_l2seg_clsc,
+                          ret);
+            goto end;
+        }
+
+    }
+
+    // De programming non-native input properties. Classic
+    ret = pd_enicif_pd_depgm_inp_prop(pd_enicif, 
+                                      &hal_if->l2seg_list_clsc_head);
 
 end:
     return ret;

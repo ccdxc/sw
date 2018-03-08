@@ -19,6 +19,8 @@ using namespace hal;
 namespace hal {
 namespace pd {
 
+hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
+
 // ----------------------------------------------------------------------------
 // EP Create
 // ----------------------------------------------------------------------------
@@ -115,6 +117,12 @@ pd_ep_delete (pd_ep_delete_args_t *args)
                                           &(args->ep->ip_list_head));
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD-EP: Failed to depgm IPSG, ret:{}", ret);
+        goto end;
+    }
+
+    ret = ep_pd_depgm_registered_mac(ep_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP: Failed to depgm registered_mac, ret:{}", ret);
         goto end;
     }
 
@@ -698,6 +706,38 @@ end:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// DeProgram registered mac
+// ----------------------------------------------------------------------------
+hal_ret_t 
+ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
+    registered_macs_swkey_t     key;
+    registered_macs_actiondata  data;
+    sdk_hash                    *reg_mac_tbl = NULL;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
+    HAL_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
+
+    sdk_ret = reg_mac_tbl->remove(pd_ep->reg_mac_tbl_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("classic: Unable to deprogram for: {}. ret:{}",
+                __FUNCTION__, pd_ep->reg_mac_tbl_idx, ret);
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("classic: DeProgrammed at: {} ",
+                __FUNCTION__, pd_ep->reg_mac_tbl_idx);
+    }
+
+end:
+    return ret;
+}
 
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
