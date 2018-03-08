@@ -570,9 +570,9 @@ action tx_table_s0_t0_cfg_action(data0, data1,
 }
 
 
-// stage 7
+// stage 5
 
-@pragma stage 7
+@pragma stage 5
 @pragma policer_table two_color enable_rate_limit
 table tx_table_s7_t4_lif_rate_limiter_table {
     reads {
