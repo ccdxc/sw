@@ -461,17 +461,16 @@ def GetReferenceObject(key_type, ext_refs, external_constraints=None):
 # This is used to get the object being referred to from the key. Used in the context 
 # of callbacks, to check whether an object being referred to has some specific
 # attributes set.
-def GetConfigMessageFromKey(key):
+def GetRefObjectFromKey(key):
     for ref_object_spec, ref_object in reference_object_holder.reference_objects:
         spec_key_type = getattr(cfg_meta_mapper.kh_proto, ref_object_spec.key_handle)
         if ref_object.key_or_handle == key:
-            return ref_object._msg_cache[ConfigObjectMeta.CREATE]
+            return ref_object
 
     object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
     for ref_object in object_helper._reference_objects:
         if ref_object.key_or_handle == key:
-            return ref_object._msg_cache[ConfigObjectMeta.CREATE]
-
+            return ref_object
     return None
 
 def CreateConfigFromKeyType(key_type, ext_refs={}, external_constraints=None):
@@ -495,17 +494,17 @@ def ConfigObjectLoopTest(loop_count):
             # First is Create.
             ret = object_helper.ReCreateConfigs(len(object_helper._config_objects), 'API_STATUS_OK')
             if not ret:
-                print("Step Looping Create failed for Config %s" % (object_helper.service_object.name))
+                print("Step Looping Create failed for Config %s" % (object_helper._service_object.name))
                 sys.exit(1)
             # Next Delete
             object_helper.DeleteConfigs(len(object_helper._config_objects), 'API_STATUS_OK')
             if not ret:
-                print("Step Looping Delete failed for Config %s" % (object_helper.service_object.name))
+                print("Step Looping Delete failed for Config %s" % (object_helper._service_object.name))
                 sys.exit(1)
             # Next Get
             object_helper.VerifyConfigs(len(object_helper._config_objects), 'API_STATUS_NOT_FOUND')
             if not ret:
-                print("Step Looping Get failed for Config %s" % (object_helper.service_object.name))
+                print("Step Looping Get failed for Config %s" % (object_helper._service_object.name))
                 sys.exit(1)
 
 def ConfigObjectNegativeTest():
@@ -527,6 +526,25 @@ def ConfigObjectNegativeTest():
                     # Delete the message just to be safe, in case it was incorrectly created in HAL, so that 
                     # the next test case will be correctly executed
                     config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+
+                    # Now ReCreate the message, and try deleting all the reference objects. We should 
+                    # get an API_STATUS_OBJ_IN_USE in response.
+                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, create_message, False)
+                    if ret_status == ApiStatus.API_STATUS_OK:
+                        for key in config_object.ext_ref_objects.values():
+                            if isinstance(key, list):
+                                key = key[0]
+                            ref_object = GetRefObjectFromKey(key)
+                            if not ref_object:
+                                continue
+                            print("Deleting reference object while still in use for " + str(ref_object))
+                            # Try Deleting the referred object.
+                            ret_status, _ = ref_object.process(ConfigObjectMeta.DELETE)
+                            if ret_status != 'API_STATUS_OBJECT_IN_USE':
+                                print("Expected an API_STATUS_OBJECT_IN_USE for delete of a referred object" \
+                                       ", but return code was " + str(ret_status))
+                            else:
+                                print("Api Status returned as API_STATUS_OBJECT_IN_USE correctly")
+                            ret_status, _ = ref_object.process(ConfigObjectMeta.CREATE, redo=True)
             except KeyError:
                 continue
-        
