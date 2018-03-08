@@ -2,8 +2,13 @@
 meta:
     id: LIF_ETH
 
-rss:
-  enable: True
+rdma:
+    enable: True
+    max_pt_entries: 1024
+    max_keys: 1024
+
+#rss:
+#  enable: True
 
 tx_qos_class : QOS_CLASS_USER_DEFINED_1
 rx_qos_class : QOS_CLASS_USER_DEFINED_2
