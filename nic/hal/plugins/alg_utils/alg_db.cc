@@ -136,20 +136,21 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
         goto end;
     }
 
-    // Mask SIP, DIR and do lookup (RPC)
-    key.sip = {};
+    //Mask DIR only and do lookup (Active FTP)
     key.dir = 0;
+    key.sport = ikey.sport;
+    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", key);
+        goto end;
+    }
+
+    // Mask SIP, DIR, SPORT and do lookup (RPC/Passive FTP)
+    key.sip = {};
+    key.sport = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
         HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport/dir key={}", key);
         goto end;
     }
-
-    //Mask SIP, DIR only and do lookup (FTP)
-    key.sport = ikey.sport;
-    if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport/dir key={}", key);
-        goto end;
-    } 
 
 end:
     if (entry) {

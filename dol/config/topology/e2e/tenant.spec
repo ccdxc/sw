@@ -14,8 +14,6 @@ segments:
 # - All the segments will be enabled on these Enics              
 nfveps: 0
 
-security_profile: None
-
 fte:
     ep_learn:
         ipv4: False

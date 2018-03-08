@@ -10,3 +10,6 @@ modules:
     - module:
         name    : HTTP TEST
         program : http_test
+    - module:
+        name    : FTP TEST
+        program : ftp_test

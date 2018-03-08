@@ -406,7 +406,7 @@ void alg_state::move_expflow_to_l4sess(app_session_t *app_sess,
 /*
  * Helper to get the control session expected flow.
  */
-l4_alg_status_t *alg_state::get_ctrl_expflow(app_session_t *app_sess) {
+l4_alg_status_t *alg_state::get_next_expflow(app_session_t *app_sess) {
     sdk::lib::dllist_ctxt_t   *lentry, *next;
 
     HAL_SPINLOCK_LOCK(&app_sess->slock);
@@ -415,8 +415,7 @@ l4_alg_status_t *alg_state::get_ctrl_expflow(app_session_t *app_sess) {
         l4_alg_status_t *exp_flow = dllist_entry(lentry,
                                   l4_alg_status_t, exp_flow_lentry);
         HAL_ASSERT(exp_flow != NULL);
-        if (exp_flow->isCtrl == TRUE)
-            return exp_flow;
+        return exp_flow;
     }
     HAL_SPINLOCK_UNLOCK(&app_sess->slock);
 

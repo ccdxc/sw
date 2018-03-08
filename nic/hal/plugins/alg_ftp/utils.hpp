@@ -17,8 +17,8 @@ typedef struct ftp_info_ ftp_info_t;
  * Constants
  */
 
-#define FTP_MAX_REQ  6
-#define FTP_MAX_RSP  13
+#define FTP_MAX_REQ  4
+#define FTP_MAX_RSP  8 
 
 /*
  * FTP Proto States
@@ -55,10 +55,11 @@ typedef void (*ftp_callback_t) (fte::ctx_t &ctx, ftp_info_t *);
 typedef struct ftp_info_ {
      ftp_state_t     state;
      uint8_t         isIPv6;
-     ipvx_addr_t     ip;
-     uint16_t        port;
-     bool            lnbrk_en;
-     bool            secex_en;
+     ipvx_addr_t     sip;
+     ipvx_addr_t     dip;
+     uint16_t        sport;
+     uint16_t        dport;
+     bool            add_exp_flow;
      ftp_callback_t  callback;
      bool            skip_sfw;
      uint32_t        parse_errors;

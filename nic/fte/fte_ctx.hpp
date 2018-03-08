@@ -596,6 +596,7 @@ private:
     bool                  ignore_session_create_; //ignore session creation for the flow.
     flow_t                *iflow_[MAX_STAGES];       // iflow 
     flow_t                *rflow_[MAX_STAGES];       // rflow 
+    bool                  force_delete_;     // Force delete session
 
     hal::vrf_t            *vrf_;
     hal::l2seg_t          *sl2seg_;
@@ -607,7 +608,6 @@ private:
     hal_handle_t          sep_handle_;
     hal_handle_t          dep_handle_;
     pipeline_event_t      event_;
-    bool                  force_delete_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

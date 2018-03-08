@@ -418,7 +418,7 @@ ctx_t::create_session()
 hal_ret_t
 ctx_t::update_flow_table()
 {
-    hal_ret_t       ret;
+    hal_ret_t       ret = HAL_RET_OK;
     hal_handle_t    session_handle;
     hal::session_t *session = NULL;
 	hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
@@ -579,7 +579,7 @@ ctx_t::update_flow_table()
         if (session_) {
             ret = hal::session_delete(&session_args, session_);
         }
-    } else if (session_) { 
+    } else if (session_) {
         // Update session if it already exists
         ret = hal::session_update(&session_args, session_);
     } else {

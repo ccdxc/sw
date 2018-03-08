@@ -238,7 +238,7 @@ public:
     hal_ret_t lookup_app_sess(hal::flow_key_t key, app_session_t *app_sess);
     void move_expflow_to_l4sess(app_session_t *app_sess, 
                                 l4_alg_status_t *alg_status);
-    l4_alg_status_t *get_ctrl_expflow(app_session_t *app_sess);
+    l4_alg_status_t *get_next_expflow(app_session_t *app_sess);
     l4_alg_status_t *get_ctrl_l4sess(app_session_t *app_sess);
 
 private:

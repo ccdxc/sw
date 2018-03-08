@@ -175,9 +175,11 @@ static int __parse_port_cmd(const char *data, uint32_t dlen,
     if (length == 0)
         return 0;
 
-    ftp_info->ip.v4_addr =  htonl((array[3] << 24) | (array[2] << 16) |
+    ftp_info->dip.v4_addr =  htonl((array[3] << 24) | (array[2] << 16) |
                              (array[1] << 8) | array[0]);
-    ftp_info->port = htons((array[5] << 8) | array[4]);
+    ftp_info->dport = htons((array[5] << 8) | array[4]);
+    ftp_info->add_exp_flow = true;
+    ftp_info->sport = FTP_DATA_PORT;
     return length;
 }
 
@@ -222,13 +224,13 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
         /* Now we have IP address. */
         length = __parse_ipv4(data + 3, dlen - 3, array, 4, '.', delim);
         if (length != 0) 
-            ftp_info->ip.v4_addr = htonl((array[3] << 24) | (array[2] << 16)\
+            ftp_info->dip.v4_addr = htonl((array[3] << 24) | (array[2] << 16)\
                                          | (array[1] << 8) | array[0]);
     } else {
         ftp_info->isIPv6 = TRUE;
         /* Now we have IPv6 address. */
         length = __parse_ipv6(data + 3, dlen - 3,
-                               ftp_info->ip.v6_addr.addr8, delim);
+                               ftp_info->dip.v6_addr.addr8, delim);
     }
 
     if (length == 0) {
@@ -239,9 +241,12 @@ static int __parse_eprt_cmd(const char *data, uint32_t dlen,
     HAL_TRACE_DEBUG("EPRT: Got IP address!");
 
     /* Start offset includes initial "|1|", and trailing delimiter */
-    ret = __parse_port(data, 3 + length + 1, dlen, delim, &ftp_info->port);
+    ret = __parse_port(data, 3 + length + 1, dlen, delim, &ftp_info->dport);
     if (!ret)
         incr_parse_error(ftp_info);
+
+    ftp_info->add_exp_flow = true;
+    ftp_info->sport = FTP_DATA_PORT;
 
     return ret;
 }
@@ -266,9 +271,14 @@ static int __parse_pasv_response(const char *data, uint32_t dlen,
 
     HAL_TRACE_DEBUG("Offset to parse: {} data: {}", *offset, (data+i));
     ret = __parse_port_cmd(data + i, dlen - i, 0, offset, ftp_info);
-    if (!ret)
+    if (!ret) {
         incr_parse_error(ftp_info);
- 
+    } else  {
+        ftp_info->add_exp_flow = true;
+        ftp_info->sport = 0;
+        memset(&ftp_info->sip, 0, sizeof(ipvx_addr_t));
+    }
+
     return ret;
 }
 
@@ -279,6 +289,7 @@ static int __parse_epsv_response(const char *data, uint32_t dlen,
                                  char term, uint32_t *offset,
                                  ftp_info_t *ftp_info) {
     char delim;
+    int  ret=0;
 
     /* Three delimiters. */
     if (dlen <= 3) return 0;
@@ -287,7 +298,15 @@ static int __parse_epsv_response(const char *data, uint32_t dlen,
         data[1] != delim || data[2] != delim)
         return 0;
 
-    return __parse_port(data, 3, dlen, delim, &ftp_info->port);
+    ret = __parse_port(data, 3, dlen, delim, &ftp_info->dport);
+    if (!ret) {
+        incr_parse_error(ftp_info);
+    } else {
+        ftp_info->add_exp_flow = true;
+        memset(&ftp_info->sip, 0, sizeof(ipvx_addr_t));
+    }
+    
+    return ret;
 }
 
 /*
@@ -341,7 +360,6 @@ static int find_pattern(const char *data, uint32_t dlen,
     }
 
     info->state = state;
-
     HAL_TRACE_DEBUG("Match succeeded!");
 
     return 1;
@@ -355,8 +373,10 @@ ftp_search_t ftp_req[FTP_MAX_REQ] = {
            __FTP_CMD("EPRT", ' ',  '\r', FTP_EPRT,  __parse_eprt_cmd),
            __FTP_CMD("PASV", '\0', '\r', FTP_PASV,  NULL),
            __FTP_CMD("EPSV", '\0', '\r', FTP_EPSV,  NULL),
+#ifdef LOGIN_ERR_NEEDED
            __FTP_CMD("USER", ' ',  '\r', FTP_USER,  NULL),
            __FTP_CMD("PASS", ' ',  '\r', FTP_PASS,  NULL),
+#endif
 };
 
 
@@ -366,11 +386,13 @@ ftp_search_t ftp_rsp[FTP_MAX_RSP] = {
            __FTP_CMD("200 EPRT ", '\0', '\0',  FTP_INIT,  NULL),  /* FTP_EPRT Success response  */
            __FTP_CMD("227 ",      '\0', '\0',  FTP_INIT,  __parse_pasv_response), /* FTP_PASV response */
            __FTP_CMD("229 ",      '(',  ')',   FTP_INIT,  __parse_epsv_response), /* FTP_EPSV response */
+#ifdef LOGIN_ERR_NEEDED
            __FTP_CMD("230 ",      '\0', '\0',  FTP_INIT,  NULL),  /* FTP_USER success response */
            __FTP_CMD("331 ",      '\0', '\0',  FTP_PASS,  NULL),  /* FTP_USER Password needed response */
            __FTP_CMD("230 ",      '\0', '\0',  FTP_INIT,  NULL),  /* FTP_PASS success response */
            __FTP_CMD("332 ",      '\0', '\0',  FTP_ACCT,  NULL),  /* FTP_PASS Acct needed response */
            __FTP_CMD("230 ",      '\0', '\0',  FTP_INIT,  NULL),  /* FTP_ACCT success response */
+#endif
            __FTP_CMD("202 ",      '\0', '\0',  FTP_INIT,  NULL),  /* Syntax error response */
            __FTP_CMD("4",         '\0', '\0',  FTP_INIT,  NULL),  /* Transient error response */
            __FTP_CMD("5",         '\0', '\0',  FTP_INIT,  NULL),  /* Error response */
@@ -398,25 +420,56 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     return HAL_RET_OK;
 }
 
+static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess, 
+                                   ftp_info_t *info) {
+    l4_alg_status_t *exp_flow = NULL;
+    ftp_info_t      *data_ftp_info = NULL;
+    hal::flow_key_t  key;
+
+    /*
+     * Install a new expected data flow for this control session
+     * Expected data flow key - (flow_type, vrf, dip & dport)
+     */
+    memset(&key, 0, sizeof(hal::flow_key_t));
+    key = ctx.key();
+    key.dir = 0;
+    key.sport = info->sport;
+    key.dport = info->dport;
+    key.sip = info->sip;
+    if (!isNullip(info->dip, (info->isIPv6)?IP_PROTO_IPV6:IP_PROTO_IPV4)) {
+        key.dip = info->dip;
+    }
+    HAL_TRACE_DEBUG("Dip: {} Dport: {}", key.dip.v4_addr, key.dport);
+    g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow);
+    exp_flow->entry.handler = expected_flow_handler;
+    exp_flow->isCtrl = FALSE;
+    exp_flow->alg = l4_sess->alg;
+    data_ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
+    HAL_ASSERT(data_ftp_info != NULL);
+
+    exp_flow->info = data_ftp_info;
+    data_ftp_info->skip_sfw = TRUE;
+    info->add_exp_flow = false;
+}
+
 /*
  * Walks through list of acceptable responses, updates errors and
  * adds exp_flow for new data sessions to aid opening of pinholes.
  */
 void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
     l4_alg_status_t *l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
-    ftp_info_t      *data_ftp_info = NULL;
-    hal_ret_t        ret = HAL_RET_OK;
-    l4_alg_status_t *exp_flow = NULL;
     uint32_t         payload_offset = ctx.cpu_rxhdr()->payload_offset;
     uint32_t         data_len = 0, offset = 0, matchlen = 0;
     uint8_t         *pkt = ctx.pkt();
     ftp_search_t     cmd;
     int              found = 0;
-    hal::flow_key_t  key;
+    ftp_state_t      prev_state;
+    l4_alg_status_t *exp_flow = NULL;
 
     HAL_TRACE_DEBUG("In __parse_ftp_rsp");
 
-    info->callback = __parse_ftp_req; 
+    info->callback = __parse_ftp_req;
+    prev_state = info->state; 
     if (info->state < FTP_MAX_RSP) 
         cmd = ftp_rsp[info->state];
 
@@ -434,9 +487,21 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
                  found = find_pattern((char *)&pkt[payload_offset], data_len, cmd.pattern,
                                       cmd.plen, cmd.skip, cmd.term, cmd.state,
                                       &offset, &matchlen, info, cmd.cb);
-                 if (found) return;
+                 if (found) {
+                     /* 
+                      * Clean up the previously added expected flow from PORT/EPRT
+                      * if there is an error
+                      */
+                     if ((prev_state == FTP_PORT || prev_state == FTP_EPRT) &&
+                         (exp_flow = g_ftp_state->get_next_expflow(
+                          l4_sess->app_session)) != NULL) {
+                         g_ftp_state->cleanup_exp_flow(exp_flow);
+                     }
+                     return;
+                 }
             }
 
+#ifdef LOGIN_ERR_NEEDED
             if (info->state == FTP_USER || info->state == FTP_PASS) {
                 /*
                  * Increment login errors
@@ -454,36 +519,17 @@ void __parse_ftp_rsp(fte::ctx_t &ctx, ftp_info_t *info) {
                              cmd.plen, cmd.skip, cmd.term, cmd.state,
                              &offset, &matchlen, info, cmd.cb);
             }
+#endif
 
             /*
              * We dont need to update anything for these commands
              */
             return;
         }
-       
-        /*
-         * Install a new expected data flow for this control session
-         * Expected data flow key - (flow_type, vrf, dip & dport)
-         */
-         memset(&key, 0, sizeof(hal::flow_key_t));
-         key = ctx.key();
-         key.dir = 0;
-         key.sport = FTP_DATA_PORT;
-         memset(&key.sip, 0, sizeof(ipvx_addr_t));
-         if (!isNullip(info->ip, (info->isIPv6)?IP_PROTO_IPV6:IP_PROTO_IPV4)) {
-             memcpy(&key.dip, &info->ip, sizeof(ipvx_addr_t));
-         }
-         memcpy(&key.dport, &info->port, sizeof(info->port)); 
-         HAL_TRACE_DEBUG("Dip: {} Dport: {}", key.dip.v4_addr, key.dport);
-         g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow);
-         exp_flow->entry.handler = expected_flow_handler;
-         HAL_ASSERT(ret != HAL_RET_OOM);
-         exp_flow->isCtrl = FALSE;
-         exp_flow->alg = l4_sess->alg;
-         data_ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
-         HAL_ASSERT(data_ftp_info != NULL);
-         exp_flow->info = data_ftp_info;
-         data_ftp_info->skip_sfw = TRUE;
+      
+        if (info->add_exp_flow) { 
+            add_expected_flow(ctx, l4_sess, info);
+        }
     }
 }
 
@@ -529,6 +575,9 @@ void __parse_ftp_req(fte::ctx_t &ctx, ftp_info_t *info) {
          * and wait for a response
          */
          info->callback = __parse_ftp_rsp;
+         if (info->add_exp_flow) {
+             add_expected_flow(ctx, l4_sess, info);
+         }
     }
 
     return; 
@@ -579,6 +628,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         return fte::PIPELINE_CONTINUE;
     }
 
+    payload_offset = ctx.cpu_rxhdr()->payload_offset;
     alg_state = ctx.feature_session_state();
     if (sfw_info->alg_proto == nwsec::APP_SVC_FTP &&
         (!ctx.existing_session())) {
@@ -597,6 +647,8 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             l4_sess->info = ftp_info;
             ftp_info->state = FTP_INIT;
             ftp_info->callback = __parse_ftp_req;
+            ftp_info->sip = ctx.key().sip;
+            ftp_info->add_exp_flow = false;
             /*
              * Register Feature session state & completion handler
              */
@@ -612,6 +664,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
     } else if (alg_state != NULL) {
         l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
         if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP) && \
+            (ctx.pkt_len() > payload_offset) && \
             (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
             ftp_info = (ftp_info_t *)l4_sess->info;
             /*
@@ -622,15 +675,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
                  * This will only be executed for control channel packets that
                  * would lead to opening up pinholes for FTP data sessions.
                  */
-                payload_offset = ctx.cpu_rxhdr()->payload_offset;
-                if (ctx.pkt_len() <= payload_offset) {
-                    // The first iflow packet that get mcast copied could be an
-                    // ACK from the TCP handshake.
-                    HAL_TRACE_DEBUG("Ignoring the packet -- may be a handshake packet");
-                    return fte::PIPELINE_CONTINUE;
-                } else {
-                    ftp_info->callback(ctx, ftp_info);
-                }
+                ftp_info->callback(ctx, ftp_info);
             } else {
                 HAL_TRACE_DEBUG("Not a control packet");
             }

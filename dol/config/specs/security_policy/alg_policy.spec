@@ -46,55 +46,7 @@ policies:
         default    : False
         in_rules:
             - rule:
-                action :  ALLOW
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 0
-                        dst_port : 0
-
-    - policy:
-        id         :  SEC_POLICY_ALLOW3
-        default    :  False
-        in_rules:
-            - rule:
-                action :  ALLOW
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 0
-                        dst_port : 0
-
-    - policy:
-        id          : SEC_POLICY_ALLOW4
-        default     : False
-        in_rules:
-            - rule:
-                action :  ALLOW
-                log    :  True
-                svcs:
-                    - svc:
-                        proto    : 0
-                        dst_port : 0
-
-    - policy:
-        id          : SEC_POLICY_ALLOW5
-        default     : False
-        in_rules:
-            - rule:
-                action  : ALLOW
-                log     : True
-                svcs:
-                    - svc:
-                        proto    : 0
-                        dst_port : 0
-
-    - policy:
-        id         : SEC_POLICY_ALLOW6
-        default    : False
-        in_rules:
-            - rule:
-                action :  ALLOW
+                action :  DENY 
                 log    :  True
                 svcs:
                     - svc:
