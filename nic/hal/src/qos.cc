@@ -177,6 +177,10 @@ qos_class_get_fill_rsp (qos::QosClassGetResponse *rsp,
     spec->mutable_marking()->set_dot1q_pcp_rewrite_en(qos_class->marking.pcp_rewrite_en);
     spec->mutable_marking()->set_ip_dscp(qos_class->marking.dscp);
     spec->mutable_marking()->set_ip_dscp_rewrite_en(qos_class->marking.dscp_rewrite_en);
+
+    // fill operational state of this qos_class
+    rsp->mutable_status()->set_qos_class_handle(qos_class->hal_handle);
+
     rsp->set_api_status(types::API_STATUS_OK);
 }
 
@@ -2088,28 +2092,13 @@ end:
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// process a copp get request
-//------------------------------------------------------------------------------
-hal_ret_t
-copp_get (CoppGetRequest& req, CoppGetResponseMsg *resp)
+static void
+copp_get_fill_rsp (qos::CoppGetResponse *rsp,
+                   copp_t *copp)
 {
-    copp_t        *copp;
-    CoppSpec      *spec;
-    CoppGetResponse *rsp = resp->add_response();
+    CoppSpec    *spec;
 
-    hal_api_trace(" API Begin: copp get ");
-    // key-handle field must be set
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    copp = find_copp_by_key_handle(req.key_or_handle());
-    if (copp == NULL) {
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_COPP_NOT_FOUND;
-    }
+    spec = rsp->mutable_spec();
 
     // fill config spec of this copp
     spec = rsp->mutable_spec();
@@ -2121,9 +2110,50 @@ copp_get (CoppGetRequest& req, CoppGetResponseMsg *resp)
     // fill operational state of this copp
     rsp->mutable_status()->set_copp_handle(copp->hal_handle);
 
-    // fill stats of this copp
+    // TODO: fill stats of this copp
     rsp->set_api_status(types::API_STATUS_OK);
-    hal_api_trace(" API End: copp get ");
+}
+
+static bool
+copp_get_ht_cb(void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry      = (hal_handle_id_ht_entry_t *)ht_entry;
+    qos::CoppGetResponseMsg  *rsp        = (CoppGetResponseMsg *)ctxt;
+    qos::CoppGetResponse     *response   = rsp->add_response();
+    copp_t                   *copp       = NULL;
+
+    copp = (copp_t *)find_copp_by_handle(entry->handle_id);
+    copp_get_fill_rsp(response, copp);
+
+    // Always return false here, so that we walk through all hash table
+    // entries.
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// process a copp get request
+//------------------------------------------------------------------------------
+hal_ret_t
+copp_get (CoppGetRequest& req, CoppGetResponseMsg *rsp)
+{
+    copp_t          *copp;
+    CoppGetResponse *response;
+
+    if (!req.has_key_or_handle()) {
+        g_hal_state->copp_ht()->walk(copp_get_ht_cb, rsp);
+        return HAL_RET_OK;
+    }
+
+    auto kh = req.key_or_handle();
+    response = rsp->add_response();
+    copp = find_copp_by_key_handle(kh);
+    if (!copp) {
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_QOS_CLASS_NOT_FOUND;
+    }
+
+    copp_get_fill_rsp(response, copp);
+
     return HAL_RET_OK;
 }
 

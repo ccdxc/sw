@@ -189,6 +189,38 @@ TEST_F(copp_test, test3)
     }
 }
 
+// Get all 
+TEST_F(copp_test, test4)
+{
+    hal_ret_t    ret;
+    CoppGetRequest get_req;
+    CoppGetResponse get_rsp;
+    CoppGetResponseMsg resp_msg;
+
+    get_req.Clear();
+    get_rsp.Clear();
+    resp_msg.Clear();
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    ret = hal::copp_get(get_req, &resp_msg);
+    get_rsp = resp_msg.response(0);
+    hal::hal_cfg_db_close();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    // Make sure that all the available COPP types are returned
+    bool get_success[kh::CoppType_ARRAYSIZE] = {0};
+
+    for(int i = 0; i < resp_msg.response_size(); i++) {
+        get_rsp = resp_msg.response(i);
+        kh::CoppType copp_type = get_rsp.spec().key_or_handle().copp_type();
+        get_success[copp_type] = true;
+    }
+
+    for (int i = 0; i < kh::CoppType_ARRAYSIZE; i++) {
+        ASSERT_EQ(get_success[i], true);
+    }
+}
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
