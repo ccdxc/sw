@@ -255,8 +255,12 @@ start_dol() {
         echo "Run this command from nic directory"
         return -1 
     fi
-    cp ../dol/config/specs/lif/eth_rdma_drv.txt ../dol/config/specs/lif/eth.spec
     ZMQ_SOC_DIR="$PWD" ../dol/main.py --topo classic --feature classic --classic --config-only --nohostmem
+}
+
+start_dol_rdma() {
+    cp ../dol/config/specs/lif/{eth_rdma_drv.txt,eth.spec}
+    start_dol
 }
 
 start_relay() {
