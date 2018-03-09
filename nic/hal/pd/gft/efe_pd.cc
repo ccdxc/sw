@@ -551,6 +551,10 @@ efe_pd_program_transpositions(pd_gft_efe_t *pd_gft_efe)
         goto end;
     }
 
+    if (num_xpos == 0) {
+        pd_gft_efe->flow_idx = RX_TRANSPOSITION_NOP_ENTRY;
+        goto end;
+    }
     if (num_xpos > 0) {
         RX_XPOSITION_DATA(0, 1);
         RX_XPOSITION_PGM(0);
@@ -705,8 +709,7 @@ efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe)
     }
 
     // Populate data
-    data.flow_index = (pd_gft_efe->flow_idx != INVALID_INDEXER_INDEX) ?
-        pd_gft_efe->flow_idx : RX_TRANSPOSITION_NOP_ENTRY;
+    data.flow_index = pd_gft_efe->flow_idx;
     data.policer_index = pd_gft_efe->policer_idx;
 
     ret = g_hal_state_pd->flow_table()->insert(&gft_key, 
@@ -1215,6 +1218,10 @@ efe_pd_program_tx_transpositions(pd_gft_efe_t *pd_gft_efe)
      *
      * 00, 01, 1, ‹Payload›
      */
+    if (num_xpos == 0) {
+        pd_gft_efe->flow_idx = TX_TRANSPOSITION_NOP_ENTRY;
+        goto end;
+    }
 
     if (num_xpos > 0) {
         if (num_xpos == 1) {
@@ -1375,8 +1382,7 @@ efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
     TX_GFT_KEY_FORM(1);
 
     // Populate data
-    data.flow_index = (pd_gft_efe->flow_idx != INVALID_INDEXER_INDEX) ?
-        pd_gft_efe->flow_idx : TX_TRANSPOSITION_NOP_ENTRY;
+    data.flow_index = pd_gft_efe->flow_idx;
     data.policer_index = pd_gft_efe->policer_idx;
 
     ret = g_hal_state_pd->tx_flow_table()->insert(&gft_key, 
