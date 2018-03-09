@@ -148,9 +148,16 @@ vrf_spec_print (VrfSpec& spec)
     buf.write("type: {}, ", (spec.vrf_type() == types::VrfType::VRF_TYPE_NONE) ? "none" :
               (spec.vrf_type() == types::VrfType::VRF_TYPE_INFRA) ? "infra" : "customer");
 
-    ip_addr_spec_to_ip_addr(&my_tep, spec.mytep_ip());
-    ip_pfx_spec_to_pfx_spec(&gipo_pfx, spec.gipo_prefix());
-    buf.write("my_tep:{}, gipo_pfx:{}/{}", ipaddr2str(&my_tep), ipaddr2str(&gipo_pfx.addr), gipo_pfx.len);
+    if (spec.has_mytep_ip()) {
+        ip_addr_spec_to_ip_addr(&my_tep, spec.mytep_ip());
+        buf.write("my_tep:{}", ipaddr2str(&my_tep));
+    }
+    if (spec.has_gipo_prefix()) {
+        ret = ip_pfx_spec_to_pfx_spec(&gipo_pfx, spec.gipo_prefix());
+        if (ret == HAL_RET_OK) {
+            buf.write("gipo_pfx:{}/{}", ipaddr2str(&gipo_pfx.addr), gipo_pfx.len);
+        }
+    }
 
     HAL_TRACE_DEBUG("{}", buf.c_str());
     return ret;

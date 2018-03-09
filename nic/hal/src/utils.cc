@@ -257,18 +257,12 @@ hal_prepare_rsp (hal_ret_t ret)
 void
 hal_api_trace (const char *trace)
 {
-    fmt::MemoryWriter   buf;
+    // To add as prefix and suffix to the actual trace statement
+    static const std::string prefix_str("--------------------");
 
     if (!trace) return;
 
-    for (int i = 0; i < NUM_DASHES; i++) {
-        buf.write("{}", "-");
-    }
-    buf.write("{}", trace);
-    for (int i = 0; i < NUM_DASHES; i++) {
-        buf.write("{}", "-");
-    }
-    HAL_TRACE_DEBUG("{}", buf.c_str());
+    HAL_TRACE_DEBUG("{}{}{}", prefix_str, trace, prefix_str);
 }
 
 //-----------------------------------------------------------------------------

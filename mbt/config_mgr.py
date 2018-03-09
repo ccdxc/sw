@@ -546,5 +546,6 @@ def ConfigObjectNegativeTest():
                             else:
                                 print("Api Status returned as API_STATUS_OBJECT_IN_USE correctly")
                             ret_status, _ = ref_object.process(ConfigObjectMeta.CREATE, redo=True)
+                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
             except KeyError:
                 continue
