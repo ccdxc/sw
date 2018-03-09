@@ -85,7 +85,10 @@ typedef enum hal_slab_e {
     HAL_SLAB_ACL_ITREE_NODE                  = 71,
     HAL_SLAB_NWSEC_RULE                      = 72,
     HAL_SLAB_RULEDB                          = 73,
-    HAL_SLAB_PI_MAX                          = 74,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_RTSP_ALG_APPSESS                = 74,
+    HAL_SLAB_RTSP_ALG_L4SESS                 = 75,
+    HAL_SLAB_RTSP_ALG_INFO                   = 76,
+    HAL_SLAB_PI_MAX                          = 77,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

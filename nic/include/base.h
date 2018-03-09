@@ -142,10 +142,12 @@ do {                                                       \
 //    ENTRY(OK, 0, "ok")                        
 //    ENTRY(ERR, 1, "err")
 //
-// ENUM_DEFINE(sample_enum_t, SAMPLE_ENUM_ENTRIES)
+// DEFINE_ENUM(sample_enum_t, SAMPLE_ENUM_ENTRIES)
 //------------------------------------------------------------------------------
 
 #define _ENUM_FIELD(_name, _val, _desc) _name = _val,
+#define _ENUM_STR(_name, _val, _desc) \
+    inline const char *_name ## _str() {return _desc; }
 #define _ENUM_CASE(_name, _val, _desc) case _name: return os << #_desc;
 
 #define DEFINE_ENUM(_typ, _entries)                                     \
@@ -156,7 +158,8 @@ do {                                                       \
             _entries(_ENUM_CASE);                                       \
         }                                                               \
         return os;                                                      \
-    }
+    }                                                                   \
+    _entries(_ENUM_STR)                                                 \
 
 //------------------------------------------------------------------------------
 // TODO: we need atomic increment operations for ARM

@@ -10,7 +10,8 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "//nic:gen_includes",
-        "//nic/fte",
+        "//nic/fte:fte",
+        "//nic/hal:hal_src",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
     ],
@@ -22,5 +23,6 @@ cc_library(
     name = "alg_utils_includes",
     hdrs = ["core.hpp",
             "alg_db.hpp",
+            "mime.hpp",
     ],
 )    

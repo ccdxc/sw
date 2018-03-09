@@ -314,6 +314,7 @@ enum ALGName {
    APP_SVC_SIP        = 4;    // Session Initiation Protocol
    APP_SVC_SUN_RPC    = 5;    // SUN Remote Procedure Call
    APP_SVC_MSFT_RPC   = 6;    // Microsoft Remote Procedure Call
+   APP_SVC_RTSP       = 7;    // Real-Time Streaming Protocol
 }
 
 // FirewallRuleSpec defines a stateful firewall rule that is part of a
