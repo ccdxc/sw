@@ -43,6 +43,7 @@ bool run_pdma_tests = false;
 bool run_xts_perf_tests = false;
 bool run_comp_perf_tests = false;
 bool run_noc_perf_tests = false;
+bool run_rdma_perf_tests = false;
 
 std::vector<tests::TestEntry> test_suite;
 
@@ -82,7 +83,7 @@ std::vector<tests::TestEntry> nvme_be_tests = {
 };
 
 std::vector<tests::TestEntry> local_e2e_tests = {
-  /*{&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
+  {&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
   {&tests::test_run_nvme_local_e2e2, "NVME Local Tgt E2E 2", false},
   {&tests::test_run_nvme_local_e2e3, "NVME Local Tgt E2E 3", false},
   {&tests::test_run_seq_write1, "Seq Local Tgt Write 1", false},
@@ -96,7 +97,7 @@ std::vector<tests::TestEntry> local_e2e_tests = {
   {&tests::test_run_seq_e2e1, "Seq Local Tgt E2E 1", false},
   {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
-  {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},*/
+  {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
   {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
 };
 
@@ -138,9 +139,14 @@ std::vector<tests::TestEntry> pdma_tests = {
 
 std::vector<tests::TestEntry> noc_perf_tests = {
   {&tests::xts_multi_blk_noc_stress_from_hbm_hw_chain, "NOC Perf with buffers on hbm HW chain", false},
-  {&tests::xts_multi_blk_noc_stress_from_host_hw_chain, "NOC Perf with buffers on host HW chain", false},
-  {&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
-  {&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
+  //{&tests::xts_multi_blk_noc_stress_from_host_hw_chain, "NOC Perf with buffers on host HW chain", false},
+  //{&tests::xts_multi_blk_noc_stress_from_hbm, "NOC Perf with buffers on hbm", false},
+  //{&tests::xts_multi_blk_noc_stress_from_host, "NOC Perf with buffers on host", false},
+};
+
+std::vector<tests::TestEntry> rdma_perf_tests = {
+  {&tests::test_run_perf_rdma_e2e_write, "Perf e2e rdma write", false},
+  {&tests::test_run_perf_rdma_e2e_write, "Perf e2e rdma write", false},
 };
 
 void sig_handler(int sig) {
@@ -201,6 +207,8 @@ int main(int argc, char**argv) {
       run_pdma_tests = true;
   } else if (FLAGS_test_group == "noc_perf") {
       run_noc_perf_tests = true;
+  } else if (FLAGS_test_group == "rdma_perf") {
+      run_rdma_perf_tests = true;
   } else {
     printf("Usage: ./storage_test [--hal_port <xxx>] [--test_group unit|nvme|nvme_be|local_e2e|comp|xts|rdma|pdma] "
            " [--poll_interval <yyy>] \n");
@@ -310,6 +318,14 @@ int main(int argc, char**argv) {
       test_suite.push_back(noc_perf_tests[i]);
     }
     printf("Added NOC Perf tests \n");
+  }
+
+  // Add RDMA perf tests
+  if (run_rdma_perf_tests) {
+    for (size_t i = 0; i < rdma_perf_tests.size(); i++) {
+      test_suite.push_back(rdma_perf_tests[i]);
+    }
+    printf("Added rdma Perf tests \n");
   }
 
   printf("Formed test suite with %d cases \n", (int) test_suite.size());

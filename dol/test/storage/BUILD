@@ -169,6 +169,7 @@ cc_library(
         "xts.hpp",
         "xts.cc",
         "xts_tests.cc",
+        "e2e_perf_tests.cc",
     ],
     deps = [
         ":hal_if",

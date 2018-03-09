@@ -35,7 +35,7 @@ const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME com
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
 const static uint32_t	kPvmNumEntries		 = 6;
-const static uint32_t	kPvmNumSeqEntries	 = 1;
+const static uint32_t	kPvmNumSeqEntries	 = 6;
 
 const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";

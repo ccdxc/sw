@@ -34,6 +34,8 @@ const static uint32_t  kHbmRWBufSize         = 4096;
 const static uint32_t  kSeqDbDataSize        = 4;
 const static uint32_t  kSeqDbDataMagic       = 0xAAAAAAAA;
 
+bool rdma_ring_db = true;
+
 namespace tests {
 
 dp_mem_t *read_buf;
@@ -1829,7 +1831,9 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   seq_roce_desc->write_thru();
 
   // Kickstart the sequencer 
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+  if(rdma_ring_db) {
+    test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+  }
   
   return 0;
 }
@@ -1920,7 +1924,9 @@ int test_seq_read_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint32_t pvm_ro
   seq_pdma_desc->write_thru();
 
   // Kickstart the sequencer 
-  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0, seq_roce_index);
+  if(rdma_ring_db) {
+    test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0, seq_roce_index);
+  }
   
   return 0;
 }
@@ -2173,7 +2179,7 @@ int test_run_rdma_e2e_read() {
   rc = poll(func1);
 
   // Poll for DMA completion of read data only if status is successful
-  if (rc >= 0) {
+  if (rc == 0) {
     printf("Successfully retrived status \n");
     auto func2 = [] () {
       if  (*((uint32_t *) seq_db_data->read_thru()) != kSeqDbDataMagic) {
@@ -2186,7 +2192,7 @@ int test_run_rdma_e2e_read() {
     rc = poll(func2);
 
     // Now compare the contents
-    if (rc >= 0) {
+    if (rc == 0) {
       printf("Successfully retrived data \n");
       if (!rolling_write_data_buf) {
         printf("No write data buffer for comparison \n");
