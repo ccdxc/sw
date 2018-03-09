@@ -94,6 +94,9 @@ class FlowObject(base.ConfigObjectBase):
         self.__gft_flow = gft_flow
         return
 
+    def GetGftFlow(self):
+        return self.__gft_flow
+
     def IsRetryEnabled(self):
         return self.fte
 

@@ -25,6 +25,7 @@ class GftFlowObject(base.ConfigObjectBase):
         self.flow = flow
         self.exm_profile = self.flow.GetSrcSegmentGftExmProfile()
         self.trsp_profile = self.flow.GetGftTranspositionProfile()
+        self.flow_index = None
         self.Show()
         return
 
@@ -78,9 +79,11 @@ class GftFlowObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.flow_entry_handle
-        cfglogger.info("- GFT Flow %s = %s(HDL = %x)" %\
+        self.flow_index = resp_spec.status.flow_info_index
+
+        cfglogger.info("- GFT Flow %s = %s(HDL = %x) Flow index = %x" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
-                        self.hal_handle))
+                        self.hal_handle, self.flow_index))
 
         return
 

@@ -375,8 +375,14 @@ cb1_byte_update:
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
     phvwr.!c3      BTH_DST_QP, d.dst_qp
     phvwrpair      P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA, P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+
+   // HACK: overloading timestamp field d to store flow_index for GFT.
+#ifdef GFT
+    phvwrpair          p.p4plus_to_p4.flow_index[15:0], d.timestamp, P4PLUS_TO_P4_FLOW_INDEX_VALID, 1
+#else
     //not enough bits on d[] vector to have 64 bit TS value
     phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[31:16]}, d.{timestamp...timestamp_echo}
+#endif
     phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)

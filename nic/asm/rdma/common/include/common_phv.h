@@ -12,12 +12,13 @@ struct p4plus_to_p4_header_t {
     pad                : 4;
     flags              : 8;
     udp_opt_bytes      : 8;  // exclude these bytes from udp payload_len
-    rsvd               : 24;
+    flow_index         : 24;
     ip_id_delta        : 16;
     tcp_seq_delta      : 32;
     gso_start           : 14;
+    byte_align_pad0     : 2;
     gso_offset          : 14;
-    byte_align_pad      : 3;
+    flow_index_valid    : 1;
     gso_valid           : 1;
     vlan_tag           : 16;
 };
@@ -26,6 +27,8 @@ struct p4plus_to_p4_header_t {
 #define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
 #define P4PLUS_TO_P4_VLAN_TAG   p.p4plus_to_p4.vlan_tag
 #define P4PLUS_TO_P4_UDP_OPT_BYTES p.p4plus_to_p4.udp_opt_bytes
+#define P4PLUS_TO_P4_FLOW_INDEX p.p4plus_to_p4.flow_index
+#define P4PLUS_TO_P4_FLOW_INDEX_VALID p.p4plus_to_p4.flow_index_valid
 
 struct phv_to_stage_t {
     pad: TO_STAGE_DATA_WIDTH;

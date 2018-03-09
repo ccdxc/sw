@@ -719,7 +719,7 @@ efe_pd_program_flow(pd_gft_efe_t *pd_gft_efe)
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
         goto end;
     }
-    HAL_TRACE_DEBUG("Flow inserted at: {}", pd_gft_efe->flow_table_idx);
+    HAL_TRACE_DEBUG("Flow inserted at: {} and index {}", pd_gft_efe->flow_table_idx, data.flow_index);
 
 
 end:
@@ -1392,7 +1392,7 @@ efe_pd_program_tx_flow(pd_gft_efe_t *pd_gft_efe)
         HAL_TRACE_ERR("flow table insert failed, err : {}", ret);
         goto end;
     }
-    HAL_TRACE_DEBUG("Flow inserted at: {}", pd_gft_efe->flow_table_idx);
+    HAL_TRACE_DEBUG("Flow inserted at: {} and index {}", pd_gft_efe->flow_table_idx, data.flow_index);
 
 
 end:
