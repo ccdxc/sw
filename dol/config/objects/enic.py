@@ -186,7 +186,7 @@ class EnicObject(base.ConfigObjectBase):
             assert(self.ep != None)
             req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()
             req_spec.if_enic_info.enic_info.encap_vlan_id = self.encap_vlan_id
-            req_spec.if_enic_info.enic_info.l2segment_id = self.ep.segment.id
+            req_spec.if_enic_info.enic_info.l2segment_key_handle.segment_id = self.ep.segment.id
             if self.IsDirect():
                 req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_DIRECT
             elif self.IsUseg():

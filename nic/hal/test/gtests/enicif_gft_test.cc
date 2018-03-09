@@ -183,7 +183,7 @@ TEST_F(enicif_test, test1)
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec.mutable_key_or_handle()->set_interface_id(1);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(1);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(1);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);
@@ -337,7 +337,7 @@ TEST_F(enicif_test, test2)
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
-    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(21);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(21);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);
@@ -495,7 +495,7 @@ TEST_F(enicif_test, test3)
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(31);
     enicif_spec.mutable_key_or_handle()->set_interface_id(31);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_PVLAN);
-    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(301);
+    enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(301);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);

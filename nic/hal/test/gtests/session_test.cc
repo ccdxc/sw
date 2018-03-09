@@ -344,7 +344,7 @@ TEST_F(session_test, test2)
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(21);
+    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(21);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(10);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000001);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -357,7 +357,7 @@ TEST_F(session_test, test2)
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(22);
     enicif_spec2.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(21);
+    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(21);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000002);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -588,7 +588,7 @@ TEST_F(session_test, test3)
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(5);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(31);
+    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(31);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(13);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000001);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -601,7 +601,7 @@ TEST_F(session_test, test3)
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(6);
     enicif_spec2.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(32);
+    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(32);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(14);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000002);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -1821,7 +1821,7 @@ TEST_F(session_test, test10)
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(101);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(101);
+    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(101);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(13);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000001);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -1834,7 +1834,7 @@ TEST_F(session_test, test10)
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(102);
     enicif_spec2.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(102);
+    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(102);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(14);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000002);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

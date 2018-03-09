@@ -380,10 +380,9 @@ enum IfEnicType {
 }
 
 message EnicInfo {
-    uint64                l2segment_id         = 1; // user (external) l2segment
+    kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.moretags) = "venice:ref"]; // user (external) l2segment
     fixed64               mac_address          = 2; // MAC address of the endpoint
     uint32                encap_vlan_id        = 3; // Encap Vlan
-    kh.L2SegmentKeyHandle l2segment_key_handle = 4 [(gogoproto.moretags) = "venice:ref"];
 }
 
 message EnicClassicInfo {

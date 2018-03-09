@@ -182,7 +182,7 @@ int CreateEnicif(uint32_t ten_id, uint32_t lif_id, uint32_t if_id,
   req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
   req->mutable_key_or_handle()->set_interface_id(if_id);
   req->mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-  req->mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(l2seg_id);
+  req->mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
   req->mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(vlan_id);
   req->mutable_if_enic_info()->mutable_enic_info()->set_mac_address(mac_addr);
 

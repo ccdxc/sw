@@ -635,6 +635,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("validation failed. err: {} apistatus: {}",
                       ret, rsp->api_status());
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return ret;
     }
 
@@ -1631,7 +1632,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
         enic_if_info->set_enic_type(hal_if->enic_type);
         enic_if_info->mutable_lif_key_or_handle()->set_lif_id(hal_if->if_id);
         if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
-            enic_if_info->mutable_enic_info()->set_l2segment_id(l2seg->seg_id);
+            enic_if_info->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(l2seg->seg_id);
             enic_if_info->mutable_enic_info()->set_mac_address(MAC_TO_UINT64(hal_if->mac_addr));
             enic_if_info->mutable_enic_info()->set_encap_vlan_id(hal_if->encap_vlan);
         } else {
@@ -2213,10 +2214,11 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG || 
             hal_if->enic_type == intf::IF_ENIC_TYPE_PVLAN ||
             hal_if->enic_type == intf::IF_ENIC_TYPE_DIRECT) {
-        l2seg = find_l2seg_by_id(if_enic_info.mutable_enic_info()->l2segment_id());
+        l2seg = l2seg_lookup_key_or_handle(if_enic_info.mutable_enic_info()->l2segment_key_handle());
         if (l2seg == NULL) {
-            HAL_TRACE_ERR("failed to find l2seg_id:{}",
-                          if_enic_info.mutable_enic_info()->l2segment_id());
+            HAL_TRACE_ERR("failed to find l2seg_id:{}/{}",
+                          if_enic_info.enic_info().l2segment_key_handle().segment_id(),
+                          if_enic_info.enic_info().l2segment_key_handle().l2segment_handle());
             ret = HAL_RET_L2SEG_NOT_FOUND;
             goto end;
         }

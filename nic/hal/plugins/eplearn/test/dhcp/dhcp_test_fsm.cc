@@ -164,7 +164,7 @@ void dhcp_topo_setup()
         enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(i + 1);
         enicif_spec.mutable_key_or_handle()->set_interface_id(i + 100);
         enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_l2segment_id(2);
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(2);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(2);
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

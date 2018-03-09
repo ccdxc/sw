@@ -54,13 +54,17 @@ def PreCreateCb(data, req_spec, resp_spec):
     elif req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK_PC:
         req_spec.request[0].if_uplink_pc_info.native_l2segment_id = 0
     elif req_spec.request[0].type == interface_pb2.IF_TYPE_ENIC:
-        req_spec.request[0].if_enic_info.enic_type = interface_pb2.IF_ENIC_TYPE_CLASSIC
-        req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_handle = 0
-        # Classic Enic's with the same L2Segments are not allowed.
-        # So create a new object.
-        l2seg_key = create_and_get_l2seg_key()
-        req_spec.request[0].if_enic_info.classic_enic_info.l2segment_key_handle.extend([l2seg_key])
-        req_spec.request[0].if_enic_info.pinned_uplink_if_handle = 0
+        if req_spec.request[0].if_enic_info.HasField("classic_enic_info"):
+            req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_handle = 0
+            # Classic Enic's with the same L2Segments are not allowed.
+            # So create a new object.
+            req_spec.request[0].if_enic_info.enic_type = interface_pb2.IF_ENIC_TYPE_CLASSIC
+            l2seg_key = create_and_get_l2seg_key()
+            req_spec.request[0].if_enic_info.classic_enic_info.l2segment_key_handle.extend([l2seg_key])
+            req_spec.request[0].if_enic_info.pinned_uplink_if_handle = 0
+        else:
+            req_spec.request[0].if_enic_info.enic_type = random.choice([interface_pb2.IF_ENIC_TYPE_USEG, \
+           interface_pb2.IF_ENIC_TYPE_PVLAN, interface_pb2.IF_ENIC_TYPE_DIRECT])
 
 def PostCreateCb(data, req_spec, resp_spec):
     data.exp_data.spec = req_spec.request[0]
