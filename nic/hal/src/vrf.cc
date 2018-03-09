@@ -454,8 +454,8 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         if (spec.has_gipo_prefix()) {
             ret = ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix, spec.gipo_prefix());
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("{}: Invalid GIPO prefix specified for VRF {}", 
-                               __FUNCTION__, vrf->vrf_id);
+                HAL_TRACE_ERR("Invalid GIPO prefix specified for VRF {}", 
+                               vrf->vrf_id);
                 goto end;
             }
         }
@@ -591,8 +591,8 @@ vrf_gipo_prefix_update (VrfSpec& spec, vrf_t *vrf, bool *gipo_prefix_change,
     if (spec.has_gipo_prefix()) {
         ret = ip_pfx_spec_to_pfx_spec(new_gipo_prefix, spec.gipo_prefix());
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Invalid GIPO prefix specified for VRF Update {}", 
-                           __FUNCTION__, vrf->vrf_id);
+            HAL_TRACE_ERR("Invalid GIPO prefix specified for VRF Update {}", 
+                           vrf->vrf_id);
             goto end;
         }
     }
