@@ -103,13 +103,13 @@ void ionic_api_put_dbid(struct lif *lif, int dbid);
  * Only 2K of data is supported, because first half of page is for registers.
  */
 struct ionic_admin_ctx {
-	struct completion	work;
-	struct admin_cmd	cmd;
-	struct admin_comp	comp;
+	struct completion work;
+	union adminq_cmd cmd;
+	union adminq_comp comp;
 
 #ifndef ADMINQ
-	void			*side_data;
-	size_t			side_data_len;
+	void *side_data;
+	size_t side_data_len;
 #endif
 };
 

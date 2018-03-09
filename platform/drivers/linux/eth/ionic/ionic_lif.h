@@ -77,6 +77,7 @@ struct lif {
 	struct ionic *ionic;
 	bool registered;
 	unsigned int index;
+	struct workqueue_struct *adminq_wq;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
 	struct qcq **txqcqs;

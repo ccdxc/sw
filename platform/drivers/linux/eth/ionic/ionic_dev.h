@@ -34,17 +34,6 @@ union dev_cmd {
 	struct identify_cmd identify;
 	struct lif_init_cmd lif_init;
 	struct adminq_init_cmd adminq_init;
-#ifndef ADMINQ
-	struct txq_init_cmd txq_init;
-	struct rxq_init_cmd rxq_init;
-	struct q_enable_cmd q_enable;
-	struct q_disable_cmd q_disable;
-	struct station_mac_addr_get_cmd station_mac_addr_get;
-	struct mtu_set_cmd mtu_set;
-	struct rx_mode_set_cmd rx_mode_set;
-	struct rx_filter_cmd rx_filter;
-	struct features_cmd features;
-#endif
 };
 
 union dev_cmd_comp {
@@ -56,17 +45,6 @@ union dev_cmd_comp {
 	struct identify_comp identify;
 	struct lif_init_comp lif_init;
 	struct adminq_init_comp adminq_init;
-#ifndef ADMINQ
-	struct txq_init_comp txq_init;
-	struct rxq_init_comp rxq_init;
-	q_enable_comp q_enable;
-	q_disable_comp q_disable;
-	struct station_mac_addr_get_comp station_mac_addr_get;
-	mtu_set_comp mtu_set;
-	rx_mode_set_comp rx_mode_set;
-	struct rx_filter_comp rx_filter;
-	struct features_comp features;
-#endif
 };
 
 struct dev_cmd_regs {
@@ -338,23 +316,6 @@ void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 			       unsigned int index, unsigned int lif_index,
 			       unsigned int intr_index);
-#ifndef ADMINQ
-void ionic_dev_cmd_txq_init(struct ionic_dev *idev, struct queue *txq,
-			    struct cq *cq, unsigned int cos);
-void ionic_dev_cmd_rxq_init(struct ionic_dev *idev, struct queue *rxq,
-			    struct cq *cq);
-void ionic_dev_cmd_q_enable(struct ionic_dev *idev, struct queue *q);
-void ionic_dev_cmd_q_disable(struct ionic_dev *idev, struct queue *q);
-void ionic_dev_cmd_station_get(struct ionic_dev *idev);
-void ionic_dev_cmd_mtu_set(struct ionic_dev *idev, unsigned int mtu);
-void ionic_dev_cmd_rx_mode_set(struct ionic_dev *idev, unsigned int rx_mode);
-void ionic_dev_cmd_rx_filter_vlan(struct ionic_dev *idev, u16 vlan, bool add);
-void ionic_dev_cmd_rx_filter_mac(struct ionic_dev *idev, const u8 *addr,
-				 bool add);
-void ionic_dev_cmd_rx_filter_macvlan(struct ionic_dev *idev, struct queue *q,
-				     const u8 *addr, u16 vlan, bool add);
-void ionic_dev_cmd_features(struct ionic_dev *idev, u16 set);
-#endif
 
 char *ionic_dev_asic_name(u8 asic_type);
 struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);

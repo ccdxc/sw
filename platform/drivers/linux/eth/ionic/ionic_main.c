@@ -53,7 +53,7 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 	unsigned long time;
 	int done;
 
-	BUG_ON(in_interrupt());
+	WARN_ON(in_interrupt());
 
 	/* Wait for dev cmd to complete...but no more than max_wait
 	 */

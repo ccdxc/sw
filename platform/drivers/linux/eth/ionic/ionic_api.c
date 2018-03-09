@@ -6,7 +6,6 @@
 #include "ionic_if.h"
 #include "ionic_dev.h"
 #include "ionic_lif.h"
-#include "ionic_adminq.h"
 
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 				 const char *api_version)
@@ -139,6 +138,8 @@ int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 	struct queue *adminq = &lif->adminqcq->q;
 	int err;
 
+	WARN_ON(in_interrupt());
+
 	spin_lock(&lif->adminq_lock);
 	if (!ionic_q_has_space(adminq, 1)) {
 		err = -ENOSPC;
@@ -156,6 +157,8 @@ err_out:
 #else
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
+
+	WARN_ON(in_interrupt());
 
 	spin_lock(&lif->adminq_lock);
 

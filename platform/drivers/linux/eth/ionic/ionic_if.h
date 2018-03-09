@@ -1170,4 +1170,38 @@ struct modify_qp_comp {
 
 #pragma pack(pop)
 
+union adminq_cmd {
+	struct admin_cmd cmd;
+	struct nop_cmd nop;
+	struct txq_init_cmd txq_init;
+	struct rxq_init_cmd rxq_init;
+	struct features_cmd features;
+	struct q_enable_cmd q_enable;
+	struct q_disable_cmd q_disable;
+	struct station_mac_addr_get_cmd station_mac_addr_get;
+	struct mtu_set_cmd mtu_set;
+	struct rx_mode_set_cmd rx_mode_set;
+	struct rx_filter_cmd rx_filter;
+	struct debug_q_dump_cmd debug_q_dump;
+	struct create_mr_cmd create_mr;
+	struct create_cq_cmd create_cq;
+	struct create_qp_cmd create_qp;
+	struct modify_qp_cmd modify_qp;
+};
+
+union adminq_comp {
+	struct admin_comp comp;
+	struct nop_comp nop;
+	struct txq_init_comp txq_init;
+	struct rxq_init_comp rxq_init;
+	struct features_comp features;
+	struct station_mac_addr_get_comp station_mac_addr_get;
+	struct rx_filter_comp rx_filter;
+	struct debug_q_dump_comp debug_q_dump;
+	struct create_mr_comp create_mr;
+	struct create_cq_comp create_cq;
+	struct create_qp_comp create_qp;
+	struct modify_qp_comp modify_qp;
+};
+
 #endif /* _IONIC_IF_H_ */
