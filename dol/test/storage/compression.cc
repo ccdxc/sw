@@ -901,11 +901,7 @@ int max_data_rate() {
   return -1;
 }
 
-int compress_dualq_flat_64K_buf() {
-  printf("Starting testcase %s\n", __func__);
-
-  InvalidateHdrInHostMem();
-
+static int cp_dualq_flat_64K_buf(uint64_t mem_pa, bool in_hbm) {
   // Setup compression descriptor for low prirority queue
   cp_desc_t lq_desc;
   bzero(&lq_desc, sizeof(lq_desc));
@@ -914,12 +910,12 @@ int compress_dualq_flat_64K_buf() {
   lq_desc.cmd_bits.insert_header = 1;
   lq_desc.cmd_bits.sha_en = 1;
 
-  lq_desc.src = host_mem_pa + kUncompressedDataOffset;
-  lq_desc.dst = host_mem_pa + kCompressedDataOffset;
+  lq_desc.src = mem_pa + kUncompressedDataOffset;
+  lq_desc.dst = mem_pa + kCompressedDataOffset;
   lq_desc.datain_len = 4096;
   lq_desc.threshold_len = 4096 - 8;
 
-  lq_desc.status_addr = host_mem_pa + kStatusOffset;
+  lq_desc.status_addr = mem_pa + kStatusOffset;
   lq_desc.status_data = 0x1234;
 
   // Setup compression descriptor for high prirority queue
@@ -930,12 +926,12 @@ int compress_dualq_flat_64K_buf() {
   hq_desc.cmd_bits.insert_header = 1;
   hq_desc.cmd_bits.sha_en = 1;
 
-  hq_desc.src = host_mem_pa + kUncompressedDataOffset + 4096;
-  hq_desc.dst = host_mem_pa + kCompressedDataOffset + 4096;
+  hq_desc.src = mem_pa + kUncompressedDataOffset + 4096;
+  hq_desc.dst = mem_pa + kCompressedDataOffset + 4096;
   hq_desc.datain_len = 4096;
   hq_desc.threshold_len = 4096 - 8;
 
-  hq_desc.status_addr = host_mem_pa + kStatusOffset +
+  hq_desc.status_addr = mem_pa + kStatusOffset +
 	  sizeof(cp_status_sha512_t);
   hq_desc.status_data = 0x5678;
 
@@ -968,9 +964,13 @@ int compress_dualq_flat_64K_buf() {
   write_reg(cp_cfg_hotq_pd_idx, cp_hotq_index);
 
   // Check status update to both the descriptors
-  auto func = [] () -> int {
+  auto func = [mem_pa, in_hbm] () -> int {
     cp_status_sha512_t *s;
     s = (cp_status_sha512_t *) (host_mem + kStatusOffset);
+    if (in_hbm) {
+	    read_mem(mem_pa + kStatusOffset, (uint8_t *)s,
+			    sizeof(cp_status_sha512_t));
+    }
     if (!s->valid) {
       printf("Compression request in low queue did not complete "
 	  "status: %llx\n", *((unsigned long long *) s));
@@ -979,6 +979,10 @@ int compress_dualq_flat_64K_buf() {
 
     s = (cp_status_sha512_t *) (host_mem + kStatusOffset +
 				sizeof(cp_status_sha512_t));
+    if (in_hbm) {
+	    read_mem(mem_pa + kStatusOffset + sizeof(cp_status_sha512_t),
+		    (uint8_t *)s, sizeof(cp_status_sha512_t));
+    }
     if (!s->valid) {
       printf("Compression request in high/hot queue did not complete "
 	  "status: %llx\n", *((unsigned long long *) s));
@@ -995,6 +999,34 @@ int compress_dualq_flat_64K_buf() {
   }
 
   return -1;
+}
+
+int compress_dualq_flat_64K_buf() {
+  printf("Starting testcase %s\n", __func__);
+
+  InvalidateHdrInHostMem();
+
+  int rc = cp_dualq_flat_64K_buf(host_mem_pa, false);
+  if (rc == 0)
+    printf("Testcase %s passed\n", __func__);
+  else
+    printf("Testcase %s failed\n", __func__);
+
+  return rc;
+}
+
+int compress_dualq_flat_64K_buf_in_hbm() {
+  printf("Starting testcase %s\n", __func__);
+
+  InvalidateHdrInHBM();
+
+  int rc = cp_dualq_flat_64K_buf(hbm_pa, true);
+  if (rc == 0)
+    printf("Testcase %s passed\n", __func__);
+  else
+    printf("Testcase %s failed\n", __func__);
+
+  return rc;
 }
 
 }  // namespace tests
