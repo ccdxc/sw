@@ -6,11 +6,11 @@
 capri_model = {
     'name': 'Capri-Asic',
     'phv': {
-        'max_size' : 4096,
+        'max_size' : 4096,  # derived from num_flits
         'num_flits' : 8,   # change containers as well (below)
         'max_hw_flits' : 12,    # max allowed value for num_flits
         'flit_size' : 512, # max_size/num_flits
-        'containers': {8: 512}, # {size:num} all 8 bit containers
+        'containers': {8: 512}, # {size:num} all 8 bit containers - derived from num_flits
         'wide_key_start_flit' : 2,
         'gso_csum_phv_start' : 496, # bits 496:511 i.e. byte 62:63 in flit
         'parser_end_off_flit_loc' : 480,  # bits 480:495 i.e. byte 60:61 in flit
@@ -76,13 +76,13 @@ capri_model = {
     },
     'parser': {
         'num_init_profiles' : 16,
-        'num_states' : 256,
+        'num_states' : 288,
         'lkp_regs' : [16, 16, 16],
         'num_extracts' : 16,
         'num_ohi' : 64,
         'num_ohi_per_state' : 4,
         'ohi_threshold' : 48,   # artificial limit to test and also to reserve some ohis for crc..
-        'parser_num_flits' : 5,
+        'parser_num_flits' : 4, # derived from num_flits = 2*num_flits
         'max_lkp_offset' : 64,      # bytes
         'max_extract' : 64,         # bytes
         'max_offset_adv' : 256,     # bytes XXX: this restriction is not removed XXX

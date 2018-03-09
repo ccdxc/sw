@@ -629,7 +629,7 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
         hfile.write("#define " + fname.upper() + '\n\n\n')
         pstr = 'typedef struct __attribute__ ((__packed__)) ' + gress_pa.d.name.lower() + '_phv_ {\n'
         hfile.write(pstr)
-        for i in range (num_flits-1, -1, -1):
+        for i in range (0, num_flits):
             hfile.write(pstr_flit[i])
         pstr = '} ' + gress_pa.d.name.lower() + '_phv_t;\n\n'
         hfile.write(pstr)
@@ -2808,7 +2808,8 @@ def capri_parser_output_decoders(parser):
     se['_modified'] = True
 
     idx += 1
-    parser.logger.info('%s:Tcam states used %d' % (parser.d.name, idx))
+    parser.logger.info('%s:Tcam states used (including catch-all) %d' % (parser.d.name, idx))
+    assert idx <= parser.be.hw_model['parser']['num_states'], "Parser TCAM overflow"
 
     # program catch all entry register
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['pe_enable']['value'] = str(0x3ff)
@@ -2886,8 +2887,7 @@ def capri_parser_output_decoders(parser):
 
     #Enable pre parser on all uplinks and p4-ingress.
     pre_parser = ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_preparse']
-    pre_parser['tm_iport_enc_en']['value'] = str(0x8ff) # First 8 bits map to 8 uplink ports, b11 is
-                                                        # TM_PORT_INGRESS
+    pre_parser['tm_iport_enc_en']['value'] = str(0xff) # First 8 bits map to 8 uplink ports.
     pre_parser['bypass']['value'] = str(0)
     pre_parser['udp_dstport_roce_val0']['value'] = str(4791)
     pre_parser['udp_dstport_vxlan_val0']['value'] = str(4789)
@@ -3675,6 +3675,7 @@ def capri_table_memory_spec_load(be):
             spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec_p4plus_haps.json')
         else:
             spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec_haps.json')
+            be.hw_model['parser']['num_states'] = 256   # HAPS platform supports 256 entry TCAM
     else:
         if be.args.p4_plus:
             spec_file_path = os.path.join(cur_path, 'specs/cap_memory_spec_p4plus.json')

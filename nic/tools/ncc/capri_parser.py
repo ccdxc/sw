@@ -3187,7 +3187,7 @@ class capri_parser:
         return copy.copy(self.meta_ext_states[mf])
 
     def generate_output(self):
-        capri_parser_logical_output(self)
+        # capri_parser_logical_output(self)
         capri_parser_output_decoders(self)
 
     def create_extraction_chunks(self, cs, add_off, extracted_fields):

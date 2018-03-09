@@ -148,6 +148,7 @@ def setup_p4_plus_hw_parameters(capri_model):
     setup_num_phv_flits(capri_model, 12)
 
 def setup_num_phv_flits(capri_model, num_flits):
+    assert (num_flits % 2) == 0, "Only even number of phv flits is allowed"
     max_hw_flits = capri_model['phv']['max_hw_flits']
     assert num_flits <= max_hw_flits, "Value must be less than %d" % max_hw_flits
     capri_model['phv']['num_flits'] = num_flits
@@ -179,6 +180,9 @@ def main():
 
     if args.phv_flits:
         setup_num_phv_flits(capri_model, int(args.phv_flits))
+    else:
+        # init all parameters based on single value to avoid errors/inconsistancies
+        setup_num_phv_flits(capri_model, capri_model['phv']['num_flits'])
 
     capri_be = capri_backend(h, capri_model, args)
 
