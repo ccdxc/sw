@@ -1,12 +1,11 @@
 # TCP Proxy RX Inorder Sample TestSpec file.
 selectors:
-    # Update: Vikasd
     # Choose the config, that only selects flows matching below packet
     # templates.
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False
         qpair       : filter://any # Local QPair
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
@@ -23,13 +22,10 @@ packets:
         id          : BASE_PKT_IN
         template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -49,25 +45,28 @@ packets:
     - packet:
         id          : IN_PKT
         clone       : ref://testcase/packets/id=BASE_PKT_IN
+        encaps      : callback://networking/packets/GetPacketEncaps
         scale       : True
         headers     :
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/encap_vlan_id
             tcp:
-                seq     : callback://tcpcb/tcpcb/GetNxtPktSeqNum
+                seq : callback://tcpcb/tcpcb/GetNxtPktSeqNum
 
     - packet:
         id          : BASE_PKT_OUT
         template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/dst/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
+                tos     : ref://testcase/config/flow/txqos/dscp
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
@@ -92,12 +91,32 @@ packets:
             tcp:
                 seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
 
+buffers:
+    - buffer:
+        id      : BUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        scale   : True
+        fields:
+            bind: True
+            size: scale-ref://testcase/packets/id=IN_PKT/size
+            data: scale-ref://testcase/packets/id=IN_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        scale   : True
+        fields:
+            _buf   : scale-ref://testcase/buffers/id=BUF
+            addr  : scale-ref://testcase/buffers/id=BUF/addr
+            len   : scale-ref://testcase/buffers/id=BUF/size
+
 trigger:
-    packets:
-        - packet:
+    descriptors:
+        - descriptor:
             scale   : True
-            object  : scale-ref://testcase/packets/id=IN_PKT
-            port    : ref://testcase/config/src/endpoint/intf/ports
+            object  : scale-ref://testcase/descriptors/id=DESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
     packets:

@@ -1,0 +1,36 @@
+# Feature Test Modules List
+#
+feature:
+    id          : proxy_ul_to_host_multi_flow
+    sub         : proxy
+    package     : test.tcp_tls_proxy
+    module      : None
+    enable      : True
+    rtl         : True
+    ignore      : False
+    runorder    : 10
+
+modules:
+    - module:
+        name    : UL_TO_HOST_BYPASS_BARCO_MULTI_FLOW_CONFIG
+        spec    : uplink_to_host_no_pkt.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            bypass_barco : 1
+            maxflows : 10
+            snd_cwnd : 1000
+            skip_verify : True
+
+    - module:
+        name    : UL_TO_HOST_BYPASS_BARCO_MULTI_FLOW_SEND_PKTS
+        spec    : uplink_to_host_multi_flow.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        modscale: 100
+        args    :
+            bypass_barco : 1
+            maxflows : 10
+            skip_config : True
+            skip_verify : True
+

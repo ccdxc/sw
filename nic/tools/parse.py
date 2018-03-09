@@ -70,6 +70,14 @@ def parse_logs():
             programline = linenum
             print linenum, '0x'+fields[2], program
             line = line.replace('0x'+fields[2], program)
+        elif re.match(".* PC_ADDR=0x(.*) INST=0x", line, re.I):
+            fields = re.split(r'.* PC_ADDR=0x(.*) INST=0x', line)
+            key = '0x'+fields[1].upper()
+            if not key in symbols:
+                model1file.write(line)
+                continue
+            program = symbols[key]
+            line = line.replace('0x'+fields[1], program)
         elif re.match("^\[(.*)\]: (.*)\.e(.*)", line, re.I):
             fields1 = re.split(r'\[(.*)\]: (.*)\.e(.*)', line)
             inscountfile.write("%03d %s %d\n" % (int(fields1[1])+1, program, programline))

@@ -34,9 +34,9 @@ proxy_meta_init() {
     g_meta[types::PROXY_TYPE_TCP] =
         (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 15}}, types::PROXY_TYPE_NONE, false};
 
-    // CB size 512, num_entries 32K
+    // CB size 1024, num_entries 32K
     g_meta[types::PROXY_TYPE_TLS] =
-        (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 4, 15}}, types::PROXY_TYPE_NONE, false};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 5, 15}}, types::PROXY_TYPE_NONE, false};
 
     g_meta[types::PROXY_TYPE_IPSEC] =
         (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}},
