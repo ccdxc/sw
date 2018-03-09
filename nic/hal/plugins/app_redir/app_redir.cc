@@ -1,6 +1,6 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "app_redir_plugin.hpp"

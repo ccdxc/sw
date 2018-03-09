@@ -8,7 +8,7 @@
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/hal/pd/gft/if_pd.hpp"
 // #include "nic/hal/pd/iris/cpuif_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/gft/include/defines.h"
 
 namespace hal {
 namespace pd {

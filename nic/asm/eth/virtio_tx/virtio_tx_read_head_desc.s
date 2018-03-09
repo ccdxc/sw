@@ -6,7 +6,7 @@
 #include "ingress.h"
 #include "capri-macros.h"
 #include "virtio_defines.h"
-#include "../../p4/nw/include/defines.h"
+#include "../../p4/iris/include/defines.h"
 
 
 struct phv_                 p;

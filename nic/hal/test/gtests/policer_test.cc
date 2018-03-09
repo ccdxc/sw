@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/src/qos.hpp"
 
 using qos::PolicerSpec;

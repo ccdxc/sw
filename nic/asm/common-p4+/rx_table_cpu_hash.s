@@ -1,5 +1,5 @@
 #include "common_rxdma_actions/asm_out/ingress.h"
-#include "../../p4/nw/include/defines.h"
+#include "../../p4/iris/include/defines.h"
 
 struct rx_table_cpu_hash_k k;
 

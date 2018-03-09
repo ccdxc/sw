@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "nic/include/fte.hpp"
 #include "nic/include/app_redir_shared.h"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 namespace hal {
 namespace app_redir {

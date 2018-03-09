@@ -8,7 +8,7 @@
 #include "nic/hal/pd/pd_api.hpp"
 //#include "nic/hal/pd/iris/hal_state_pd.hpp"
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/hal/src/session.hpp"
 #include "nic/include/base.h"

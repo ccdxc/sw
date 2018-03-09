@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/include/cpupkt_api.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"

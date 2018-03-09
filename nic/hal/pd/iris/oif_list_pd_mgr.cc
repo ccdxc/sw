@@ -8,7 +8,7 @@
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "hal_state_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 using namespace hal;
 

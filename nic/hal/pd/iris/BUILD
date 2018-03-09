@@ -36,7 +36,7 @@ cc_library(
         "@sdk//obj:sdk_hash",
         "@sdk//obj:sdk_directmap",
         "//nic/include:base_includes",
-        "//nic/p4/nw/include:p4_nw_includes",
+        "//nic/p4/iris/include:p4_iris_includes",
         "//nic:spdlog",
         "//nic:grpc_includes",
         "//nic/p4/include:p4_common_includes",

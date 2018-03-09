@@ -1,5 +1,5 @@
-#include "../nw/include/table_sizes.h"
-#include "../nw/include/defines.h"
+#include "../iris/include/table_sizes.h"
+#include "../iris/include/defines.h"
 #include "../include/intrinsic.p4"
 
 #define THRESHOLD 10

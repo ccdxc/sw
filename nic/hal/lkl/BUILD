@@ -41,7 +41,7 @@ cc_library(
         "//nic/hal/tls:tls_api",
         "//nic/include:base_includes",
         "//nic/p4/include:p4_common_includes",
-        "//nic/p4/nw/include:p4_nw_includes",
+        "//nic/p4/iris/include:p4_iris_includes",
         "//nic:spdlog",
         "//nic:boost",
         "//nic:lkl_includes",

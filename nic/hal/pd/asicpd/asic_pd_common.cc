@@ -9,7 +9,7 @@
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #include "nic/hal/pd/capri/capri_loader.h"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 // TODO: Need to remove capri references and use lib symbols instead

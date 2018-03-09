@@ -7,7 +7,7 @@ LCXXFLAGS = \
 	-I$(TOPDIR)/hal/svc \
 	-I$(TOPDIR)/gen/protobuf \
 	-I$(TOPDIR)/gen/iris/include \
-	-I$(TOPDIR)/p4/nw/include \
+	-I$(TOPDIR)/p4/iris/include \
 	-I$(TOPDIR)/p4/include \
 	-I$(TOPDIR)/third-party/spdlog/include
 

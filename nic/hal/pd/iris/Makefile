@@ -35,7 +35,7 @@ LCXXFLAGS = \
 			-I../../../gen/proxyc_txdma/include \
             -I../../../gen/common_rxdma_actions/include \
 			-I../../../gen/tls_txdma/include \
-			-I../../../p4/nw/include \
+			-I../../../p4/iris/include \
 			-I../capri \
 			-I../../../third-party/spdlog/include \
 			-I../../../asic/capri/model/capsim-master/lib/libcapisa/include \

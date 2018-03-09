@@ -13,7 +13,7 @@
 //#include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 namespace hal {

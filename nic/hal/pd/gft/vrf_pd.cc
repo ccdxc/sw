@@ -3,7 +3,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/gft/vrf_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/gft/include/defines.h"
 #include "nic/hal/src/proxy.hpp"
 
 namespace hal {

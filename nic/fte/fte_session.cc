@@ -1,6 +1,6 @@
 #include "fte.hpp"
 #include "fte_flow.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 namespace fte {
 

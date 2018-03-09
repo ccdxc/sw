@@ -14,7 +14,7 @@ cc_library(
         "//nic/utils/bm_allocator:bm_allocator",
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
-        "//nic/p4/nw/include:p4_nw_includes",
+        "//nic/p4/iris/include:p4_iris_includes",
         "//nic:spdlog",
         "//nic:grpc",
         "//nic:grpc_includes",

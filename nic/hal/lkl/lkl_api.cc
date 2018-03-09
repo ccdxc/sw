@@ -4,7 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 extern "C" {
 #include "lkl.h"

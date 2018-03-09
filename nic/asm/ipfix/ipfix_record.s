@@ -1,5 +1,5 @@
 #include "ipfix_defines.h"
-#include "../../p4/nw/include/defines.h"
+#include "../../p4/iris/include/defines.h"
 #include "ipfix/asm_out/INGRESS_p.h"
 #include "ipfix/asm_out/ingress.h"
 #include "../common-p4+/include/capri-macros.h"

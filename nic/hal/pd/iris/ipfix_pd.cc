@@ -4,7 +4,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/lif_manager.hpp"
 
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"

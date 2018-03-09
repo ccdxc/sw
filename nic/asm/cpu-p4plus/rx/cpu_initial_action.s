@@ -1,7 +1,7 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
 #include "cpu-table.h"
-#include "../../../p4/nw/include/defines.h"
+#include "../../../p4/iris/include/defines.h"
 
 struct phv_ p;
 struct common_p4plus_stage0_app_header_table_offset_64_k k;

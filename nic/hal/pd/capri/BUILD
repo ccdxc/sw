@@ -75,7 +75,7 @@ cc_library(
                "//nic/hal/lib:hal_lib_includes",
                "//nic/utils/block_list:block_list",
                "//nic/model_sim/include:modelsim_includes",
-               "//nic/p4/nw/include:p4_nw_includes",
+               "//nic/p4/iris/include:p4_iris_includes",
                "//nic:spdlog",
                "//nic:google_includes",
                "//nic:grpc_includes",

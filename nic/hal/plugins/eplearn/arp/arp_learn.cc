@@ -1,7 +1,7 @@
 #include "arp_trans.hpp"
 #include "arp_learn.hpp"
 #include "nic/include/eth.h"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 namespace hal {
 namespace eplearn {

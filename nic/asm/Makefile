@@ -1,5 +1,5 @@
 LIBDIRS = \
-          nw \
+          iris \
           common-p4+ \
           proxy \
           rdma \
@@ -17,7 +17,7 @@ LIBDIRS = \
           $(NULL)
 
 IRIS_SUBDIRS = \
-          nw \
+          iris \
           common-p4+ \
           proxy \
           rdma \

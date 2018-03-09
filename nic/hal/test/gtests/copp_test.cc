@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include <google/protobuf/util/message_differencer.h>
 #include <google/protobuf/text_format.h>

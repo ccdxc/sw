@@ -1,7 +1,7 @@
 CXX = g++
 CPPFLAGS += -I/usr/local/include -std=c++11 -g
 OBJ_DIR = ../../../obj
-INC_DIRS = -I. -I.. -I../.. -I../../src -I../common -I../../../include -I../../../gen -I../../../utils/bitmap -I../../../gen/iris/include/ -I../../../p4/nw/include -I../capri/ -I../../../third-party/spdlog/include
+INC_DIRS = -I. -I.. -I../.. -I../../src -I../common -I../../../include -I../../../gen -I../../../utils/bitmap -I../../../gen/iris/include/ -I../../../p4/iris/include -I../capri/ -I../../../third-party/spdlog/include
 
 all:
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/hal_mem_pd.o hal_mem_pd.cc

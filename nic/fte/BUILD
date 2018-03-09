@@ -21,7 +21,7 @@ cc_library(
         "//nic/hal:hal_src",
         "//nic:hal_svc_gen",
         "//nic/include:base_includes",
-        "//nic/p4/nw/include:p4_nw_includes",
+        "//nic/p4/iris/include:p4_iris_includes",
         "//nic:spdlog",
         "//nic/hal/plugins/app_redir:app_redir_includes",
     ],

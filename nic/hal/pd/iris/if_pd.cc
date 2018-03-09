@@ -10,7 +10,7 @@
 #include "nic/hal/pd/iris/app_redir_if_pd.hpp"
 #include "nic/hal/pd/iris/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/l2seg_uplink_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 namespace hal {
 namespace pd {

@@ -6,7 +6,7 @@
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/pd/iris/if_pd.hpp"
 #include "nic/hal/pd/iris/tunnelif_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "l2seg_pd.hpp"
 #include "if_pd_utils.hpp"
 

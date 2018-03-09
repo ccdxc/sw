@@ -2,7 +2,7 @@
 
 #include "nic/fte/fte.hpp"
 #include "nic/hal/src/session.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 namespace hal {
 namespace plugins {

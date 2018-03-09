@@ -6,7 +6,7 @@
 #include "utils.hpp"
 #include "sdk/list.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 namespace hal {
 namespace plugins {

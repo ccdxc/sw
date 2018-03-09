@@ -18,7 +18,7 @@
 #include "nic/hal/src/tcp_proxy_cb.hpp"
 #include "nic/hal/src/proxy.hpp"
 #include "nic/include/fte.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/plugins/plugins.hpp"
 #include "nic/hal/src/utils.hpp"

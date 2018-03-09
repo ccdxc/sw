@@ -12,7 +12,7 @@ common_deps = [
     "//nic/utils/fsm:fsm",
     "//nic/fte:fte_includes",
     "//nic/include:base_includes",
-    "//nic/p4/nw/include:p4_nw_includes",
+    "//nic/p4/iris/include:p4_iris_includes",
     "//nic/hal/pd:pdcommon",
     "@sdk//obj:sdk_ht",
     "@sdk//obj:sdk_catalog",

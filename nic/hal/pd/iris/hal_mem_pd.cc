@@ -45,7 +45,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 
 namespace hal {
 extern thread   *g_hal_threads[HAL_THREAD_ID_MAX];

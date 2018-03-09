@@ -1,6 +1,6 @@
 #include "ipfix/asm_out/INGRESS_p.h"
 #include "iris/asm_out/ingress.h"
-#include "../../p4/nw/include/defines.h"
+#include "../../p4/iris/include/defines.h"
 
 struct flow_hash_d d;
 struct phv_        p;

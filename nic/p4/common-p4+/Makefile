@@ -13,9 +13,9 @@ NCC_OPTIONS = --asm-out --p4-plus --no-ohi --two-byte-profile --pd-gen --gen-dir
 p4_src = $(shell find $(SOURCEDIR) -name '*.p4')
 hdr_src = $(shell find $(SOURCEDIR) -name '*.h')
 inc_src = $(shell find ../include -name '*')
-nw_inc_src = $(shell find ../nw/include -name '*')
+iris_inc_src = $(shell find ../iris/include -name '*')
 ncc_deps = $(shell find $(TOPDIR)/tools/ncc -path $(TOPDIR)/tools/ncc/utest -prune -o -name '*.c' -print -o -name '*.h' -print -o -name '*.py' -print)
-$(GEN_DIR)/.cmn_p4plus: $(p4_src) $(hdr_src) $(inc_src) $(nw_inc_src) $(ncc_deps)
+$(GEN_DIR)/.cmn_p4plus: $(p4_src) $(hdr_src) $(inc_src) $(iris_inc_src) $(ncc_deps)
 	$(NCC) $(NCC_OPTIONS) --p4-plus-module rxdma common_rxdma_actions.p4
 	$(NCC) $(NCC_OPTIONS) --p4-plus-module txdma common_txdma_actions.p4
 	touch $@

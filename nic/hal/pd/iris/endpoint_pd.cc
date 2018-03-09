@@ -11,7 +11,7 @@
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/nw.hpp"
 #include "nic/hal/pd/iris/l2seg_pd.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/src/utils.hpp"
 
 using namespace hal;

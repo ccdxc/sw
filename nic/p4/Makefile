@@ -2,7 +2,7 @@ TOPDIR = ..
 CUSTOM = subdirs
 
 SUBDIRS = \
-          nw \
+          iris \
           common-p4+ \
           proxy \
           proxy/tls \
@@ -21,7 +21,7 @@ SUBDIRS = \
           $(NULL)
 
 IRIS_SUBDIRS = \
-          nw \
+          iris \
           common-p4+ \
           proxy \
           proxy/tls \
@@ -54,10 +54,10 @@ MSFT_GFT_SUBDIRS = \
           p4pt \
           $(NULL)
 
-.PHONY: subdirs iris msft_gft $(SUBDIRS)
-default: iris 
+.PHONY: subdirs iris_p4 msft_gft $(SUBDIRS)
+default: iris_p4
 
-iris: $(IRIS_SUBDIRS)
+iris_p4: $(IRIS_SUBDIRS)
 
 msft_gft: $(MSFT_GFT_SUBDIRS)
 

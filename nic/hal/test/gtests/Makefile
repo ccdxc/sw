@@ -19,7 +19,7 @@ INC_DIRS = -I. -I$(GEN_DIR) \
 		   -I$(TOPDIR)/hal/pd \
 		   -I$(GTEST_ROOT)/include \
 		   -I$(TOPDIR)/hal/third-party/spdlog/include \
-		   -I$(TOPDIR)/p4/nw/include \
+		   -I$(TOPDIR)/p4/iris/include \
 		   -I$(TOPDIR)/hal/test/utils
 
 LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib -L$(TOPDIR)/model_sim/build -L$(TOPDIR)/obj `pkg-config --libs grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lprotobuf -lpthread -ldl -lhostmem -lzmq

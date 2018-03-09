@@ -5,7 +5,7 @@
 #include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
 #include "nic/include/interface_api.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/gft/include/defines.h"
 
 using namespace hal;
 

@@ -5,7 +5,7 @@
 #include "nic/hal/src/vrf.hpp"
 #include "sdk/list.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"

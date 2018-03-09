@@ -891,7 +891,7 @@ get_acl_type (const acl::AclSelector &sel)
 #ifdef ACL_DOL_TEST_ONLY
 // Added for internal dol test use only to get the drop reason defines
 // TODO: REMOVE
-#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/iris/include/defines.h"
 static uint64_t
 drop_reason_to_define (const acl::DropReason drop_reason)
 {
