@@ -53,6 +53,12 @@ evname(const pcieportev_t ev)
 }
 
 static void
+pcieport_poweron(pcieport_t *p)
+{
+    pcieport_config(p);
+}
+
+static void
 fsm_nop(pcieport_t *p)
 {
 }
@@ -65,8 +71,19 @@ fsm_inv(pcieport_t *p)
 static void
 fsm_poweron(pcieport_t *p)
 {
-    pcieport_config(p);
+    pcieport_poweron(p);
     p->state = PCIEPORTST_DOWN;
+}
+
+/*
+ * Power on after macup.  Power on event raced with macup
+ * and macup came first.  Apply power on config now, but
+ * leave state where it is.
+ */
+static void
+fsm_macup_poweron(pcieport_t *p)
+{
+    pcieport_poweron(p);
 }
 
 static void
@@ -110,6 +127,7 @@ fsm_config(pcieport_t *p)
 #define NOP fsm_nop
 #define INV fsm_inv
 #define PON fsm_poweron
+#define MON fsm_macup_poweron
 #define MUP fsm_macup
 #define MDN fsm_macdn
 #define LUP fsm_linkup
@@ -130,9 +148,9 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
      *                      |    |    |    |    |    BUSCHG
      *                      |    |    |    |    |    |    CONFIG
      *                      |    |    |    |    |    |    |    */
-    [PCIEPORTST_OFF]    = { PON, INV, INV, INV, INV, INV, CFG },
+    [PCIEPORTST_OFF]    = { PON, NOP, MUP, NOP, INV, INV, CFG },
     [PCIEPORTST_DOWN]   = { PON, NOP, MUP, INV, INV, INV, CFG },
-    [PCIEPORTST_MACUP]  = { INV, MDN, INV, INV, LUP, INV, CFG },
+    [PCIEPORTST_MACUP]  = { MON, MDN, INV, INV, LUP, INV, CFG },
     [PCIEPORTST_LINKUP] = { INV, INV, INV, LDN, INV, BUS, CFG },
     [PCIEPORTST_UP]     = { INV, INV, INV, LDN, INV, BUS, CFG },
     [PCIEPORTST_FAULT]  = { INV, MDN, NOP, NOP, NOP, NOP, CFG },

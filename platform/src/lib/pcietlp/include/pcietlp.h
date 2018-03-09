@@ -209,10 +209,6 @@ typedef struct pcie_tlp_mem64_s {
     u_int32_t addr_lo;          /* address[31:2] */
 } __attribute__((packed)) pcie_tlp_mem64_t;
 
-typedef struct pcie_tlp_s {
-
-} pcie_tlp_t;
-
 #ifdef __cplusplus
 }
 #endif

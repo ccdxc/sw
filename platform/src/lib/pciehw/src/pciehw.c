@@ -259,7 +259,7 @@ pciehw_open(pciehw_params_t *hwparams)
     }
 
     if (phw->hwparams.inithw) {
-        phwmem->enabled_ports = hwparams ? hwparams->enabled_ports : 0x1;
+        phwmem->enabled_ports = hwparams ? hwparams->enabled_ports : 0x5;
         pciehw_init(phw);
     }
 

@@ -197,15 +197,15 @@ read_indirect_entry(const unsigned int port,
     ientry->port = port;
 }
 
-static void
+static int
 read_pending_indirect_entry(const unsigned int port,
                             indirect_entry_t *ientry)
 {
     int entry, pending;
 
     read_ind_info(port, &entry, &pending);
-    /* assert(pending); */
     read_indirect_entry(port, entry, ientry);
+    return pending;
 }
 
 void
@@ -307,10 +307,12 @@ int
 pciehw_indirect_intr(pciehw_port_t *p, const int port)
 {
     indirect_entry_t *ientry = &indirect_entry[port];
+    const int pending = read_pending_indirect_entry(port, ientry);
+
+    if (!pending) return -1;
 
     p->indirect_cnt++;
 
-    read_pending_indirect_entry(port, ientry);
     ientry->cpl = PCIECPL_SC; /* assume success */
     handle_indirect(ientry);
     return 0;
@@ -491,7 +493,7 @@ cmd_stats(int argc, char *argv[])
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehw_port_t *p;
-    static int port;
+    int port = 0;
     const int w = 20;
     int opt;
 
@@ -508,6 +510,7 @@ cmd_stats(int argc, char *argv[])
     }
 
     p = &phwmem->port[port];
+    pciehsys_log("port %d:\n", port);
     pciehsys_log("%-*s : %"PRIu64"\n", w, "indirect_cnt", p->indirect_cnt);
     pciehsys_log("%-*s : %"PRIu64"\n", w, "indcfgrd", p->indcfgrd);
     pciehsys_log("%-*s : %"PRIu64"\n", w, "indcfgwr", p->indcfgwr);

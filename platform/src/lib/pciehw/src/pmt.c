@@ -692,9 +692,9 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 static void
 pmt_show_bar_entry_hdr(void)
 {
-    pciehsys_log("%-4s %-2s %-3s %-2s %-9s %-10s "
+    pciehsys_log("%-4s %-2s %-4s %-2s %-9s %-10s "
                  "%-5s %-5s %-5s %-5s %-5s\n",
-                 "idx", "id", "typ", "rw", "p:bb:dd.f", "baraddr",
+                 "idx", "id", "type", "rw", "p:bb:dd.f", "baraddr",
                  " vf  ", " lif ", " prt ", " pid ", "qtype");
 
 }
@@ -759,7 +759,7 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
         prt_e = r->prtsize + (ffs(r->prtsize) - 1);
     }
 
-    pciehsys_log("%4d %2d %-3s %c%c %1d:%-7s 0x%08"PRIx64" "
+    pciehsys_log("%4d %2d %-4s %c%c %1d:%-7s 0x%08"PRIx64" "
                  "%2d:%-2d %2d:%-2d %2d:%-2d %2d:%-2d %2d:%-2d\n",
                  pmti, d->tblid,
                  d->type == r->type ? pmt_type_str(d->type) : "BAD",

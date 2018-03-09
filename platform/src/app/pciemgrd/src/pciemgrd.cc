@@ -355,7 +355,7 @@ cmd_addfn(int argc, char *argv[])
 static void
 show_header(void)
 {
-    printf("%-10s %-9s %-10s %-10s %-10s\n",
+    printf("%-16s %-9s %-10s %-10s %-10s\n",
            "NAME", "P:BDF", "PARENT", "PEER", "CHILD");
 }
 
@@ -366,7 +366,7 @@ show1(pciehdev_t *p)
     pciehdev_t *peer   = pciehdev_get_peer(p);
     pciehdev_t *child  = pciehdev_get_child(p);
 
-    printf("%-10s %d:%-7s %-10s %-10s %-10s\n",
+    printf("%-16s %d:%-7s %-10s %-10s %-10s\n",
            pciehdev_get_name(p),
            pciehdev_get_port(p),
            bdf_to_str(pciehdev_get_bdf(p)),
@@ -764,7 +764,7 @@ main(int argc, char *argv[])
     p.first_bus = 1;
 #endif
 
-    pme->enabled_ports = 0x1;
+    pme->enabled_ports = 0x5;
     p.enabled_ports = pme->enabled_ports;
     while ((opt = getopt(argc, argv, "b:e:FhHP:D:V:v")) != -1) {
         switch (opt) {
