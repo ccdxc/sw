@@ -44,6 +44,26 @@ hdr_template_inline:
     DMA_PHV2PKT_START_LEN_SETUP(r6, r3, pad1, k.args.header_template_size);
     seq            c3, k.args.service, RDMA_SERV_TYPE_UD
 
+#ifdef GFT
+    // For GFT cases, optimize P4 Parser time by hinting the L2/L3/RDMA headers info
+    // For now only handle :-(,  Inline cases and assume v4 and with vlan
+    // Here is the value that need to be set per P4 Parser team
+    // return select(capri_intrinsic.csum_err) {
+    //  1 : start_ipv4_bth_deth;
+    //  2 : start_vlan_ipv4_bth_deth;
+    //  3 : start_ipv6_bth_deth;
+    //  4 : start_vlan_ipv6_bth_deth;
+    //  5 : start_ipv4_bth_deth_immdt;
+    //  6 : start_vlan_ipv4_bth_deth_immdt;
+    //  7 : start_ipv6_bth_deth_immdt;
+    //  8 : start_vlan_ipv6_bth_deth_immdt;
+    //  9 : start_ipv4_bth;
+    //  10 : start_vlan_ipv4_bth;  <<<<<<<<< Passed for now
+    //  11 : start_ipv6_bth;
+    //  12 : start_vlan_ipv6_bth;
+    phvwr   p.common.p4_intr_global_csum_err, 10
+#endif
+
 hdr_template_done:
 
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
