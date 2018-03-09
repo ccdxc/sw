@@ -80,7 +80,8 @@ cfg_db::db_open(cfg_op_t cfg_op)
     // if the cfg db was already opened by this thread, error out
     if (hal::t_cfg_db_ctxt.cfg_db_open_) {
         HAL_TRACE_ERR("Failed to open cfg db, opened already, thread {}",
-                      current_thread()->name());
+                      current_thread() != NULL ?
+                      current_thread()->name() : "main thread");
         return HAL_RET_ERR;
     }
 
@@ -91,7 +92,9 @@ cfg_db::db_open(cfg_op_t cfg_op)
     hal::t_cfg_db_ctxt.cfg_op_ = cfg_op;
     hal::t_cfg_db_ctxt.cfg_db_open_ = true;
     HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
-                    current_thread()->name(), cfg_op);
+                    current_thread() != NULL ?
+                    current_thread()->name() :"main thread",
+                    cfg_op);
     return HAL_RET_OK;
 }
 

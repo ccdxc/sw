@@ -180,6 +180,8 @@ svc_reg (const std::string& server_addr)
     // assemble the server
     std::unique_ptr<Server> server(server_builder.BuildAndStart());
 
+    hal::utils::hal_logger()->flush();
+
     // wait for server to shutdown (some other thread must be responsible for
     // shutting down the server or else this call won't return)
     server->Wait();
