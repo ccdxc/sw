@@ -295,8 +295,9 @@ def run_storage_dol(port, args):
         else:
             cmd = ['./storage_test', '--hal_port', str(port)]
     p = Popen(cmd)
-    p.communicate()
-    return p.returncode
+    #p.communicate()
+    #return p.returncode
+    return check_for_completion(p, model_process, hal_process, args)
 
 # Run GFT tests
 def run_gft_test(args):

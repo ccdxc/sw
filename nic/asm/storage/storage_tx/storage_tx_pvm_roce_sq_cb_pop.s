@@ -52,7 +52,9 @@ clear_doorbell:
    QUEUE_EMPTY(d.c_ndx, d.w_ndx, drop_n_exit)
 
    // Update the queue doorbell to clear the scheduler bit
-   QUEUE_POP_DOORBELL_CLEAR
+   // QUEUE_POP_DOORBELL_CLEAR
+   tblwr d.c_ndx, d.w_ndx
+   QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_RESET)
 
    // Setup the start and end DMA pointers to the doorbell pop
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_0_dma_cmd_eop,

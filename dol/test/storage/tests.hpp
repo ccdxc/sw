@@ -203,6 +203,7 @@ int xts_multi_blk_noc_stress_from_host();
 int xts_multi_blk_noc_stress_from_hbm();
 int xts_multi_blk_noc_stress_from_host_hw_chain();
 int xts_multi_blk_noc_stress_from_hbm_hw_chain();
+int test_run_perf_rdma_e2e_write();
 
 }  // namespace tests
 

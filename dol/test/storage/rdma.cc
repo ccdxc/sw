@@ -42,10 +42,11 @@ std::unique_ptr<Session::Stub> session_stub;
 std::unique_ptr<Rdma::Stub> rdma_stub;
 
 const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
-const uint32_t	kRoceNumEntries	 = 6; // Default is 64 entries
+const uint32_t	kRoceCQEntrySize	 = 5; // Default is 32 bytes
+const uint32_t	kRoceNumEntries	 = 8; // Default is 256 entries
 const uint32_t kPvmRoceSqXlateTblSize	= (64 * 64); // 64 SQs x 64 bytes each
 
-const uint32_t kR2NNumBufs = 4;
+const uint32_t kR2NNumBufs = 128;
 const uint32_t kR2NDataSize = 4096;
 const uint32_t kR2NDataBufOffset = 4096;
 
@@ -303,25 +304,23 @@ const uint32_t kR2NBufSize = (2 * 4096);
 
 const uint16_t kSQWQESize = 64;
 const uint16_t kRQWQESize = 64;
-const uint16_t kCQWQESize = 64;
-const uint16_t kNumSQWQEs = 64;
-const uint16_t kNumRQWQEs = 64;
-const uint16_t kNumCQWQEs = 64;
+const uint16_t kCQWQESize = 32;
+const uint16_t kNumSQWQEs = 256;
+const uint16_t kNumRQWQEs = 256;
+const uint16_t kNumCQWQEs = 256;
 dp_mem_t *initiator_cq_va;
 dp_mem_t *initiator_sq_va;
 dp_mem_t *initiator_rq_va;
 uint16_t initiator_cq_cindex = 0;
-dp_mem_t *initiator_rcv_buf_va = NULL;
-
 
 dp_mem_t *target_cq_va;
 dp_mem_t *target_sq_va;
 dp_mem_t *target_rq_va;
 uint16_t target_cq_cindex = 0;
-dp_mem_t *target_rcv_buf_va = NULL;
-
 }  // anonymous namespace
 
+dp_mem_t *initiator_rcv_buf_va = NULL;
+dp_mem_t *target_rcv_buf_va = NULL;
 
 uint32_t rdma_r2n_buf_size(void)
 {
@@ -1009,7 +1008,7 @@ int rdma_pvm_qs_init() {
   if ((rc = queues::pvm_roce_cq_init(g_rdma_hw_lif_id, 
                                      kCQType, 1, // 0 - initiator; 1 - target
                                      target_cq_va, 
-                                     kRoceNumEntries, kRoceEntrySize,
+                                     kRoceNumEntries, kRoceCQEntrySize,
                                      pvm_roce_sq_xlate_addr)) < 0) {
     printf("RDMA PVM Target ROCE CQ init failure\n");
     return -1;
