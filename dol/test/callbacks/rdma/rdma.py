@@ -9,6 +9,7 @@ import infra.common.defs as defs
 from infra.common.glopts import GlobalOptions
 from test.callbacks.common.pktslicer import *
 import binascii
+from random import *
 
 def GetRqPreEpsn (tc, pkt):
     if GlobalOptions.perf:
@@ -299,3 +300,7 @@ def GetPacketQtag(testcase, packet):
     else:
         return testcase.config.rdmasession.rqp.pd.ep.segment.vlan_id
 
+def GetRandomPacketLen(testcase, packet):
+    randlen = randint(64, 1000)
+    testcase.info("GetRandomPacketLen: Packet random len %d" % (randlen))
+    return randlen

@@ -1,0 +1,75 @@
+# Test Spec
+selectors:
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1
+#    maxrdmasessions     : 1
+
+scale_factor    : 400
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        scale       : True
+        #payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        # Set random length for HW stress tests
+        payloadsize : callback://rdma/rdma/GetRandomPacketLen
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+buffers:
+    - buffer:
+        id      : BUF
+        scale   : True
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 0
+           segments:
+               - size    : scale-ref://testcase/packets/id=BASE_PKT/size
+                 data    : scale-ref://testcase/packets/id=BASE_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        scale   : True
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 0  # OP_TYPE_SEND
+            wrid    : 6
+            num_sges: 1
+
+            send    :
+               
+            sges:
+                - va  : scale-ref://testcase/buffers/id=BUF/address
+                  len : scale-ref://testcase/buffers/id=BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+trigger:
+    descriptors:
+        - descriptor:
+            scale   : True
+            object  : scale-ref://testcase/descriptors/id=DESC
+            ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+    
+    doorbell:
+        object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+        fields:
+            upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+
+expect:
+    #This test is skip verify so nothing to validate

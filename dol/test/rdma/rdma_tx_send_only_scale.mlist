@@ -1,0 +1,22 @@
+# Feature Test Modules List
+# For RDMA TX SEND ONLY SCALE tests
+feature:
+    id          : rdma_tx_send_only_scale
+    sub         : rdma
+    package     : test.rdma
+    module      : rdma
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_scale.testspec
+        ignore  : False
+        perf    : True
