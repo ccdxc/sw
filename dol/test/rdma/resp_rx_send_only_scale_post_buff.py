@@ -4,6 +4,8 @@ from test.rdma.utils import *
 from infra.common.glopts import GlobalOptions
 
 def Setup(infra, module):
+    if GlobalOptions.perf:
+        module.testspec.selectors.SetMaxRdmaSessions(8)
     return
 
 def Teardown(infra, module):

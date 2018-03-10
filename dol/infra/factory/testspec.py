@@ -36,6 +36,12 @@ class TestSpecConfigSelectors(objects.FrameworkObject):
         self.maxflows = maxflows
         return
 
+    def SetMaxRdmaSessions(self, maxrdmasessions):
+        if GlobalOptions.regression:
+            return
+        self.maxrdmasessions = maxrdmasessions
+        return
+
     def IsFlowBased(self):
         return self.Valid() and self.flow != None
 
