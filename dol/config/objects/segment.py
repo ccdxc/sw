@@ -75,7 +75,9 @@ class SegmentObject(base.ConfigObjectBase):
             self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
 
         self.gipo = resmgr.GIPoAddressAllocator.get()
-
+        
+        self.eplearn = getattr(spec, 'eplearn', False)
+            
         self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
         self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
 
@@ -145,10 +147,10 @@ class SegmentObject(base.ConfigObjectBase):
         return self.fabencap == 'VXLAN'
 
     def IsIPV4EpLearnEnabled(self):
-        return self.tenant.IsIPV4EpLearnEnabled()
+        return self.eplearn and self.tenant.IsIPV4EpLearnEnabled()
 
     def IsIPV6EpLearnEnabled(self):
-        return self.tenant.IsIPV6EpLearnEnabled()
+        return self.eplearn and self.tenant.IsIPV6EpLearnEnabled()
 
     def __pin_interface_for_hostpin_mode(self):
         trunks = Store.GetTrunkingUplinks()
@@ -334,7 +336,14 @@ class SegmentObject(base.ConfigObjectBase):
             req_spec.wire_encap.encap_value   = self.vlan_id
         req_spec.mcast_fwd_policy = self.multicast_policy
         req_spec.bcast_fwd_policy = self.broadcast_policy
-
+        
+        if self.eplearn:
+            if self.eplearn.arp_entry_timeout:
+                req_spec.eplearn_cfg.arp.entry_timeout = 9999999
+            if self.eplearn.dhcp:
+                dhcp_server = req_spec.eplearn_cfg.dhcp.trusted_servers.add()
+                dhcp_server = self.ipv4_pool.GetLast()
+                
         if (self.pinnedif != None):
             req_spec.pinned_uplink_if_handle = self.pinnedif.hal_handle
 

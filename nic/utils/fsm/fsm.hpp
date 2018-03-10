@@ -84,6 +84,7 @@ class fsm_timer_t {
                                           fsm_state_machine_t* ctx,
                                           bool periodic = false) = 0;
     virtual void delete_timer(fsm_state_timer_ctx) = 0;
+    virtual uint64_t get_timeout_remaining(fsm_state_timer_ctx) = 0;
 
     virtual ~fsm_timer_t(){};
 };
@@ -127,6 +128,7 @@ class fsm_state_machine_t {
   fsm_state_machine_def_t* get_def() { return this->sm_get_func_(); }
   void process_event(uint32_t event, fsm_event_data data);
   void stop_state_timer();
+  uint64_t get_timeout_remaining();
   void reset_timer();
   // Ability to set dynamic timeout, however this should be called only during
   // entry function of the state.

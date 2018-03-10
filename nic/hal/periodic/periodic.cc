@@ -103,6 +103,18 @@ timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
 }
 
 //------------------------------------------------------------------------------
+// API invoked by other threads to get timeout remaining for the timer.
+//------------------------------------------------------------------------------
+uint64_t
+get_timeout_remaining (void *timer)
+{
+    if (g_twheel) {
+        return g_twheel->get_timeout_remaining(timer);
+    }
+    return 0;
+}
+
+//------------------------------------------------------------------------------
 // API invoked by other threads to delete the scheduled timer
 //------------------------------------------------------------------------------
 void *

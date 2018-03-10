@@ -24,6 +24,17 @@ typedef struct eplearn_info_s {
     uint32_t            trans_ctx_cnt;
 } eplearn_info_t;
 
+static bool
+is_broadcast(fte::ctx_t &ctx) {
+    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
+    ether_header_t *eth_hdr = (ether_header_t*)(ctx.pkt() + cpu_hdr->l2_offset);
+    for (int i = 0; i < ETHER_ADDR_LEN; i++) {
+        if (eth_hdr->dmac[i] != 0xff) {
+            return false;
+        }
+    }
+    return true;
+}
 
 }
 }

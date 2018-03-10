@@ -16,9 +16,13 @@
 namespace hal {
 namespace eplearn {
 
+static hal_ret_t get_dhcp_status(vrf_id_t vrf_id,
+        ip_addr_t *ip_addr, DhcpStatus *dhcp_status);
+
 void dhcp_init()
 {
     dhcp_lib_init();
+    register_dhcp_ep_status_callback(get_dhcp_status);
 }
 
 static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
@@ -50,6 +54,7 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
     event_data.decoded_packet = decoded_packet;
     event_data.fte_ctx = &ctx;
     event_data.in_fte_pipeline = true;
+    event_data.event = event;
     dhcp_trans_t::process_transaction(trans, event,
                                          (fsm_event_data)(&event_data));
     return HAL_RET_OK;
@@ -118,6 +123,50 @@ hal_ret_t dhcp_process_packet(fte::ctx_t &ctx) {
         free_dhcp_packet(&decoded_packet);
     }
 
+    return ret;
+}
+
+static hal_ret_t
+get_dhcp_status(vrf_id_t vrf_id, ip_addr_t *ip_addr, DhcpStatus *dhcp_status)
+{
+    trans_ip_entry_key_t ip_entry_key;
+    dhcp_trans_t *dhcp_trans;
+    hal_ret_t ret;
+    const dhcp_ctx *dhcp_ctx;
+    ip_addr_t ipaddr = { 0 };
+    std::map<dhcp_fsm_state_t, DhcpTransactionState>::iterator it;
+
+    trans_t::init_ip_entry_key(ip_addr, vrf_id, &ip_entry_key);
+
+    dhcp_trans = hal::eplearn::dhcp_trans_t::find_dhcp_trans_by_key(&ip_entry_key);
+    if (dhcp_trans == nullptr) {
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto out;
+    }
+
+    dhcp_ctx = dhcp_trans->get_ctx();
+    if (dhcp_trans->sm_->get_state() == DHCP_BOUND) {
+        dhcp_status->set_renewal_time(dhcp_trans->get_timeout_remaining());
+        dhcp_status->set_rebinding_time(dhcp_ctx->rebinding_time_);
+    }
+    dhcp_status->set_xid(dhcp_ctx->xid_);
+
+    it = dhcp_trans_state_map.find(
+            (dhcp_fsm_state_t)(dhcp_trans->sm_->get_state()));
+    if (it != dhcp_trans_state_map.end()) {
+        dhcp_status->set_state(it->second);
+    }
+
+    ipaddr.addr.v4_addr = dhcp_ctx->default_gateway_.s_addr;
+    ip_addr_to_spec(dhcp_status->mutable_gateway_ip(), &ipaddr);
+
+    ipaddr.addr.v4_addr = dhcp_ctx->yiaddr_.s_addr;
+    ip_addr_to_spec(dhcp_status->mutable_ip_addr(), &ipaddr);
+
+    ipaddr.addr.v4_addr = dhcp_ctx->subnet_mask_.s_addr;
+    ip_addr_to_spec(dhcp_status->mutable_subnet_mask(), &ipaddr);
+
+out:
     return ret;
 }
 

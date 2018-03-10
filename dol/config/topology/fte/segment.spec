@@ -7,6 +7,9 @@ native      : False
 broadcast   : flood
 multicast   : flood
 l4lb        : False
+eplearn :
+    arp_entry_timeout : 99999
+    dhcp              : True
 endpoints   :
     sgenable: True
     useg    : 0

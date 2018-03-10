@@ -53,6 +53,7 @@ enum DhcpTransactionState {
     STATE_REQUESTING      = 2; // Dhcp Transaction in requesting state.
     STATE_BOUND           = 3; // Dhcp Transaction bound.
     STATE_RENEWING        = 4; // Dhcp Transaction being renewed.
+    STATE_REBINDING       = 5; // Dhcp Transaction is in rebinding state.
 }
 
 message DhcpStatus {

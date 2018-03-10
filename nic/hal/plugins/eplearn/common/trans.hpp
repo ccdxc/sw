@@ -61,6 +61,19 @@ public:
         virtual void delete_timer(fsm_state_timer_ctx timer) {
             hal::periodic::timer_delete(timer);
         }
+
+        fsm_state_timer_ctx add_timer_with_custom_handler(uint64_t timeout,
+                                              fsm_state_machine_t *ctx,
+                                              sdk::lib::twheel_cb_t cb,
+                                              bool periodic = false) {
+            void *timer = hal::periodic::timer_schedule(
+                this->get_timer_id(), timeout, ctx, cb, periodic);
+            return reinterpret_cast<fsm_state_timer_ctx>(timer);
+        }
+
+        virtual uint64_t get_timeout_remaining(fsm_state_timer_ctx timer) {
+            return hal::periodic::get_timeout_remaining(timer) / TIME_MSECS_PER_SEC ;
+        }
         static void timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
             fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);
             sm_->reset_timer();
@@ -95,6 +108,10 @@ public:
 
     uint32_t get_current_state_timeout() {
         return this->sm_->get_current_state_timeout();
+    }
+
+    uint64_t get_timeout_remaining() {
+        return this->sm_->get_timeout_remaining();
     }
 
     static fsm_state_machine_def_t *get_sm_def_func() { return nullptr; };

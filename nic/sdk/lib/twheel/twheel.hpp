@@ -53,6 +53,7 @@ public:
                     twheel_cb_t cb, bool periodic=false);
     void *del_timer(void *timer);
     void *upd_timer(void *timer, uint64_t timeout, bool periodic, void *ctxt);
+    uint64_t get_timeout_remaining(void *timer);
     uint32_t num_entries(void) const { return num_entries_; }
 
 private:

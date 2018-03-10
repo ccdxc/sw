@@ -173,6 +173,11 @@ private:
             &handle);
     }
 
+    static arp_trans_t* find_arp_trans_by_key(trans_ip_entry_key_t *key) {
+        return reinterpret_cast<arp_trans_t *>(
+                arp_trans_t::arplearn_ip_entry_ht()->lookup(key));
+    }
+
     void *operator new(size_t size);
     void operator delete(void *p);
     explicit arp_trans_t(const uint8_t *hw_address, arp_trans_type_t type,

@@ -14,6 +14,7 @@
 
 namespace hal {
 
+static void l2seg_ep_learning_update(L2SegmentSpec& spec, l2seg_t *l2seg);
 // ----------------------------------------------------------------------------
 // hash table seg_id => entry
 //  - Get key from entry
@@ -692,6 +693,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
+    l2seg_ep_learning_update(spec, l2seg);
+
     // allocate hal handle id
     l2seg->hal_handle = hal_handle_alloc(HAL_OBJ_ID_L2SEG);
     if (l2seg->hal_handle == HAL_HANDLE_INVALID) {
@@ -1287,6 +1290,8 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
+    l2seg_ep_learning_update(spec, l2seg);
+
     ret = l2seg_check_update(spec, l2seg, &app_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("l2seg check update failed, ret : {}", ret);
@@ -1803,6 +1808,28 @@ l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
     }
 
     return ret;
+}
+
+static void
+l2seg_ep_learning_update (L2SegmentSpec& spec, l2seg_t *l2seg)
+{
+    if (spec.has_eplearn_cfg()) {
+        if (spec.eplearn_cfg().has_arp()) {
+            if (spec.eplearn_cfg().arp().entry_timeout()) {
+                l2seg->eplearn_cfg.arp_cfg.enabled = true;
+            } else {
+                l2seg->eplearn_cfg.arp_cfg.enabled = false;
+            }
+        }
+
+        if (spec.eplearn_cfg().has_dhcp()) {
+            if (spec.eplearn_cfg().dhcp().trusted_servers_size()) {
+                l2seg->eplearn_cfg.dhcp_cfg.enabled = true;
+            } else {
+                l2seg->eplearn_cfg.dhcp_cfg.enabled = true;
+            }
+        }
+    }
 }
 
 }    // namespace hal

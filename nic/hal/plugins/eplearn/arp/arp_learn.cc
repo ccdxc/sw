@@ -6,15 +6,16 @@
 namespace hal {
 namespace eplearn {
 
-void arp_init() {}
+static hal_ret_t get_arp_status(vrf_id_t vrf_id, ip_addr_t *ip_addr, ArpStatus *arp_status);
+
+void arp_init() {
+    register_arp_ep_status_callback(get_arp_status);
+}
 
 bool is_arp_flow(const hal::flow_key_t *key) {
     return (key->flow_type == hal::FLOW_TYPE_L2 &&
             key->ether_type == ETH_TYPE_ARP);
 }
-
-
-
 
 static hal_ret_t arp_process_req_entry(uint16_t opcode, uint8_t *hw_address,
         uint8_t *protocol_address, fte::ctx_t &ctx) {
@@ -150,6 +151,29 @@ hal_ret_t arp_process_packet(fte::ctx_t &ctx) {
     HAL_TRACE_INFO("ARP: Processing ARP type {} , SRC {} ",
                     opcode, macaddr2str(arphead->arp_sha));
     ret = arp_process_entry(arphead, ctx);
+
+out:
+    return ret;
+}
+
+static hal_ret_t
+get_arp_status(vrf_id_t vrf_id, ip_addr_t *ip_addr, ArpStatus *arp_status)
+{
+    trans_ip_entry_key_t ip_entry_key;
+    arp_trans_t *arp_trans;
+    hal_ret_t ret;
+
+    trans_t::init_ip_entry_key(ip_addr, vrf_id, &ip_entry_key);
+
+    arp_trans = hal::eplearn::arp_trans_t::find_arp_trans_by_key(&ip_entry_key);
+    if (arp_trans == nullptr) {
+        arp_status->set_entry_active(false);
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto out;
+    }
+
+    arp_status->set_entry_active(true);
+    arp_status->set_entry_timeout(arp_trans->get_timeout_remaining());
 
 out:
     return ret;

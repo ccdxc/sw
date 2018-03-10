@@ -13,6 +13,9 @@
 
 namespace hal {
 
+dhcp_status_func_t dhcp_status_func = nullptr;
+arp_status_func_t arp_status_func = nullptr;
+
 // ----------------------------------------------------------------------------
 // hash table l2key => ht_entry
 //  - Get key from entry
@@ -1936,8 +1939,9 @@ end:
 static void
 ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
 {
-    dllist_ctxt_t       *lnode = NULL;
-    ep_ip_entry_t       *pi_ip_entry = NULL;
+    dllist_ctxt_t                      *lnode = NULL;
+    ep_ip_entry_t                      *pi_ip_entry = NULL;
+    EplearnStatus                      *ep_learn_status;
     
     auto vrf = vrf_lookup_by_handle(ep->vrf_handle);
     response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf ? vrf->vrf_id : HAL_HANDLE_INVALID);
@@ -1959,6 +1963,17 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
                 offsetof(ep_ip_entry_t, ep_ip_lentry));
         types::IPAddress *ip_addr_spec = response->mutable_spec()->mutable_endpoint_attrs()->add_ip_address();
         ip_addr_to_spec(ip_addr_spec, &pi_ip_entry->ip_addr);
+
+        ep_learn_status = response->mutable_status()->mutable_learn_status()->Add();
+        if ((pi_ip_entry->ip_flags & EP_FLAGS_LEARN_SRC_DHCP) &&
+                (dhcp_status_func != nullptr)) {
+            dhcp_status_func(vrf->vrf_id, &pi_ip_entry->ip_addr,
+                    ep_learn_status->mutable_dhcp_status());
+        } else if ((pi_ip_entry->ip_flags & EP_FLAGS_LEARN_SRC_ARP) &&
+                (arp_status_func != nullptr)) {
+            arp_status_func(vrf->vrf_id, &pi_ip_entry->ip_addr,
+                    ep_learn_status->mutable_arp_status());
+        }
     }
 
     response->set_api_status(types::API_STATUS_OK);
@@ -2146,6 +2161,18 @@ ep_del_session (ep_t *ep, session_t *session)
     return ret;
 }
 
+
+void
+register_dhcp_ep_status_callback (dhcp_status_func_t func)
+{
+    dhcp_status_func = func;
+}
+
+void
+register_arp_ep_status_callback (arp_status_func_t func)
+{
+    arp_status_func = func;
+}
 
 }    // namespace hal
 

@@ -217,7 +217,7 @@ class dhcp_fsm_test : public hal_base_test {
 };
 
 EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
-                                    unsigned char *chaddr, const char *yiaddr) {
+                                    unsigned char *chaddr, const char *yiaddr, bool broadcast = false) {
     EthernetII *eth = new EthernetII();
     IP *ip = new IP();
     UDP *udp = new UDP();
@@ -248,14 +248,19 @@ EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
     const char *fname = "FNAME";
     dhcp->file((const uint8_t *)fname);
 
+    if (broadcast) {
+        HWAddress<6> hw_address("ff:ff:ff:ff:ff:ff");
+        eth->dst_addr(hw_address);
+    }
     return eth;
 }
 
 void dhcp_packet_send(hal_handle_t ep_handle,
                       DHCP::Flags type, uint32_t xid, unsigned char *chaddr,
                       const char *yiaddr = NULL,
-                      std::vector<DHCP::option> *options = NULL) {
-    EthernetII *eth = get_default_dhcp_packet(type, xid, chaddr, yiaddr);
+                      std::vector<DHCP::option> *options = NULL,
+                      bool broadcast = false) {
+    EthernetII *eth = get_default_dhcp_packet(type, xid, chaddr, yiaddr, broadcast);
     DHCP *dhcp = eth->find_pdu<DHCP>();
 
     if (options) {
@@ -340,7 +345,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
 
     options.clear();
     const char *ip_addr = ip_address;
-    std::vector<uint8_t> lease_time = {3, 2, 1, 0};
+    std::vector<uint8_t> lease_time = {0, 0, 1, 0};
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
                                 lease_time.end());
     options.push_back(lease_time_opt);
@@ -350,6 +355,19 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
     DHCP::option rebinding_time_opt(DHCP::DHCP_REBINDING_TIME,
                                     lease_time.begin(), lease_time.end());
     options.push_back(rebinding_time_opt);
+
+    const char* def_router_ip = "1.2.3.4";
+    struct in_addr def_router_ip_addr;
+    inet_pton(AF_INET, def_router_ip, &(def_router_ip_addr.s_addr));
+    std::vector<uint8_t> def_router;
+
+    for (int i = 0; i < 4; i++) {
+        def_router.push_back(((uint8_t *)&def_router_ip_addr.s_addr)[i]);
+    }
+    DHCP::option routers_opt(DHCP::ROUTERS,
+                def_router.begin(), def_router.end());
+    options.push_back(routers_opt);
+
     dhcp_packet_send(*dhcp_server_ep,
             DHCP::Flags::ACK, xid, chaddr, ip_addr, &options);
     trans = reinterpret_cast<dhcp_trans_t *>(
@@ -367,8 +385,11 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
         memcmp(&ctx->renewal_time_, &lease_time[0], sizeof(ctx->renewal_time_)),
         0);
     ASSERT_EQ(memcmp(&ctx->rebinding_time_, &lease_time[0],
-                     sizeof(ctx->rebinding_time_)),
-              0);
+                     sizeof(ctx->rebinding_time_)), 0);
+
+   ASSERT_EQ(memcmp(&ctx->default_gateway_, &def_router_ip_addr,
+                             sizeof(def_router_ip_addr)), 0);
+
     ip_addr_t ip_new_addr = {0};
     ip_new_addr.addr.v4_addr = ntohl(yiaddr.s_addr);
     dhcp_trans_t::init_ip_entry_key(&(ip_new_addr),
@@ -627,11 +648,12 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
                                     lease_time.begin(), lease_time.end());
     options.push_back(rebinding_time_opt);
 
-    /* Make sure no old IP address */
+
+    /* Old IP address should still be active. */
     ep = find_ep_by_handle(ep_handles[1]);
     inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
-    ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
 
     dhcp_packet_send(*dhcp_server_ep,
             DHCP::Flags::ACK, xid, ep->l2_key.mac_addr,
@@ -729,11 +751,11 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_nack) {
     DHCP::option rebinding_time_opt(DHCP::DHCP_REBINDING_TIME,
                                     lease_time.begin(), lease_time.end());
     options.push_back(rebinding_time_opt);
-    /* Make sure no old IP address */
+    /* Old IP address should still be there. */
     ep = find_ep_by_handle(ep_handles[1]);
     inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
-    ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
 
     dhcp_packet_send(*dhcp_server_ep,
             DHCP::Flags::NAK, xid, ep->l2_key.mac_addr,
@@ -768,7 +790,219 @@ TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
     ASSERT_TRUE(trans != NULL);
 
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_current_state_timeout() + 100);
+    hal::periodic::g_twheel->tick(trans->get_ctx()->renewal_time_ * TIME_MSECS_PER_SEC + 100);
+    sleep(2.5);
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(trans == NULL);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
+    /* Make sure no old IP address */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
+}
+
+
+TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_after_rebind) {
+    const char *ip_address = "192.168.1.15";
+    uint32_t xid = 1234;
+    std::vector<DHCP::option> options;
+    dhcp_trans_t *trans;
+    const dhcp_ctx *ctx;
+    dhcp_trans_key_t key;
+    trans_ip_entry_key_t ip_key;
+    ep_t *ep = find_ep_by_handle(ep_handles[1]);
+    dhcp_trans_t::init_dhcp_trans_key(ep->l2_key.mac_addr, xid, ep, &key);
+    ip_addr_t ip = {0};
+
+
+    setup_basic_dhcp_session(ep_handles[1],
+            xid, ep->l2_key.mac_addr, ip_address);
+    /* Check IP in EP */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
+
+    std::vector<uint8_t> server_identifier = {4, 3, 2, 1};
+    // Create a DHCP::option
+    DHCP::option server_id_opt(DHCP::DHCP_SERVER_IDENTIFIER,
+                               server_identifier.begin(),
+                               server_identifier.end());
+    options.push_back(server_id_opt);
+
+    dhcp_packet_send(ep_handles[1],
+            DHCP::Flags::REQUEST, xid, ep->l2_key.mac_addr, NULL, &options, true);
+
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(trans != NULL);
+    ctx = trans->get_ctx();
+    ASSERT_EQ(memcmp(ctx->chaddr_, ep->l2_key.mac_addr, ETH_ADDR_LEN), 0);
+    ASSERT_EQ(trans->get_state(), DHCP_REBINDING);
+    ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
+                     server_identifier.size()), 0);
+    options.clear();
+    const char *renew_ip_address = "192.168.1.16";
+    std::vector<uint8_t> lease_time = {3, 2, 1, 0};
+    DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
+                                lease_time.end());
+    options.push_back(lease_time_opt);
+    DHCP::option renewal_time_opt(DHCP::DHCP_RENEWAL_TIME, lease_time.begin(),
+                                  lease_time.end());
+    options.push_back(renewal_time_opt);
+    DHCP::option rebinding_time_opt(DHCP::DHCP_REBINDING_TIME,
+                                    lease_time.begin(), lease_time.end());
+    options.push_back(rebinding_time_opt);
+
+
+    /* Old IP address should still be active. */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
+
+    dhcp_packet_send(*dhcp_server_ep,
+            DHCP::Flags::ACK, xid, ep->l2_key.mac_addr,
+            renew_ip_address, &options);
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(trans != NULL);
+    ASSERT_EQ(trans->get_state(), DHCP_BOUND);
+
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    dhcp_trans_t::init_ip_entry_key(&(ip),
+                                    dummy_ten->vrf_id, &ip_key);
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(&ip_key));
+    ASSERT_TRUE(trans == NULL);
+
+
+    inet_pton(AF_INET, renew_ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    dhcp_trans_t::init_ip_entry_key(&ip,
+                                    dummy_ten->vrf_id, &ip_key);
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_ip_entry_ht()->lookup(&ip_key));
+    ASSERT_TRUE(trans != NULL);
+
+    /* Check IP in EP */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, renew_ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
+
+    /* Make sure no old IP address */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
+    delete trans;
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
+    /* Check IP in EP */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, renew_ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
+}
+
+TEST_F(dhcp_fsm_test, dhcp_basic_offer_rebind_lease_timeout) {
+    const char *ip_address = "192.168.1.15";
+    uint32_t xid = 1234;
+    std::vector<DHCP::option> options;
+    dhcp_trans_t *trans;
+    const dhcp_ctx *ctx;
+    dhcp_trans_key_t key;
+    ep_t *ep = find_ep_by_handle(ep_handles[1]);
+    dhcp_trans_t::init_dhcp_trans_key(ep->l2_key.mac_addr, xid, ep, &key);
+    ip_addr_t ip = {0};
+
+
+    setup_basic_dhcp_session(ep_handles[1],
+            xid, ep->l2_key.mac_addr, ip_address);
+    /* Check IP in EP */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
+
+    std::vector<uint8_t> server_identifier = {4, 3, 2, 1};
+    // Create a DHCP::option
+    DHCP::option server_id_opt(DHCP::DHCP_SERVER_IDENTIFIER,
+                               server_identifier.begin(),
+                               server_identifier.end());
+    options.push_back(server_id_opt);
+
+    dhcp_packet_send(ep_handles[1],
+            DHCP::Flags::REQUEST, xid, ep->l2_key.mac_addr, NULL, &options, true);
+
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(trans != NULL);
+    ctx = trans->get_ctx();
+    ASSERT_EQ(memcmp(ctx->chaddr_, ep->l2_key.mac_addr, ETH_ADDR_LEN), 0);
+    ASSERT_EQ(trans->get_state(), DHCP_REBINDING);
+    ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
+                     server_identifier.size()), 0);
+    sleep(1);
+    hal::periodic::g_twheel->tick(trans->get_ctx()->renewal_time_ * TIME_MSECS_PER_SEC + 100);
+    sleep(2.5);
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(trans == NULL);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_key_ht()->num_entries(), 0);
+    ASSERT_EQ(dhcp_trans_t::dhcplearn_ip_entry_ht()->num_entries(), 0);
+    /* Make sure no old IP address */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(!ip_in_ep(&ip, ep, NULL));
+}
+
+TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_lease_timeout) {
+    const char *ip_address = "192.168.1.15";
+    uint32_t xid = 1234;
+    std::vector<DHCP::option> options;
+    dhcp_trans_t *trans;
+    const dhcp_ctx *ctx;
+    dhcp_trans_key_t key;
+    ep_t *ep = find_ep_by_handle(ep_handles[1]);
+    dhcp_trans_t::init_dhcp_trans_key(ep->l2_key.mac_addr, xid, ep, &key);
+    ip_addr_t ip = {0};
+
+
+    setup_basic_dhcp_session(ep_handles[1],
+            xid, ep->l2_key.mac_addr, ip_address);
+    /* Check IP in EP */
+    ep = find_ep_by_handle(ep_handles[1]);
+    inet_pton(AF_INET, ip_address, &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    ASSERT_TRUE(ip_in_ep(&ip, ep, NULL));
+
+    std::vector<uint8_t> server_identifier = {4, 3, 2, 1};
+    // Create a DHCP::option
+    DHCP::option server_id_opt(DHCP::DHCP_SERVER_IDENTIFIER,
+                               server_identifier.begin(),
+                               server_identifier.end());
+    options.push_back(server_id_opt);
+
+    dhcp_packet_send(ep_handles[1],
+            DHCP::Flags::REQUEST, xid, ep->l2_key.mac_addr, NULL, &options);
+
+    trans = reinterpret_cast<dhcp_trans_t *>(
+        dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(trans != NULL);
+    ctx = trans->get_ctx();
+    ASSERT_EQ(memcmp(ctx->chaddr_, ep->l2_key.mac_addr, ETH_ADDR_LEN), 0);
+    ASSERT_EQ(trans->get_state(), DHCP_RENEWING);
+    ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
+                     server_identifier.size()), 0);
+    sleep(1);
+    hal::periodic::g_twheel->tick(trans->get_ctx()->renewal_time_ * TIME_MSECS_PER_SEC + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));

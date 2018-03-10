@@ -115,6 +115,14 @@ void fsm_state_machine_t::stop_state_timer() {
     }
 }
 
+uint64_t fsm_state_machine_t::get_timeout_remaining() {
+    if (this->cur_state_time_ctx_) {
+        return this->timer_get_func_()->get_timeout_remaining(this->cur_state_time_ctx_);
+    }
+
+    return 0;
+}
+
 void fsm_state_machine_t::reset_timer() {
     this->cur_state_time_ctx_ = nullptr;
 }

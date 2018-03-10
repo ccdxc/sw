@@ -27,6 +27,11 @@ void *timer_schedule(uint32_t timer_id, uint64_t timeout, void *ctxt,
                      sdk::lib::twheel_cb_t cb, bool periodic);
 
 //------------------------------------------------------------------------------
+// API invoked by other threads to get timeout remaining in msecs for the timer.
+//------------------------------------------------------------------------------
+uint64_t get_timeout_remaining(void *timer);
+
+//------------------------------------------------------------------------------
 // API invoked by other threads to delete the scheduled timer
 //------------------------------------------------------------------------------
 void *timer_delete(void *timer);

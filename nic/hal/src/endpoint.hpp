@@ -9,6 +9,7 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/gen/proto/hal/endpoint.pb.h"
+#include "nic/gen/proto/hal/eplearn.pb.h"
 #include "nic/include/pd.hpp"
 #include <netinet/ether.h>
 
@@ -30,6 +31,10 @@ using endpoint::EndpointGetResponseMsg;
 using endpoint::EndpointUpdateRequestMsg;
 using endpoint::EndpointUpdateResponseMsg;
 using endpoint::EndpointUpdateRequest;
+using eplearn::DhcpTransactionState;
+using eplearn::DhcpStatus;
+using eplearn::ArpStatus;
+using eplearn::EplearnStatus;
 using kh::EndpointKeyHandle;
 using endpoint::EndpointDeleteRequest;
 using kh::EndpointL2Key;
@@ -49,6 +54,11 @@ namespace hal {
 #define EP_FLAGS_LEARN_SRC_CFG                       0x20
 
 #define MAX_SG_PER_ARRAY                             0x10 //16 
+
+typedef hal_ret_t (*dhcp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,
+        DhcpStatus *dhcp_status);
+typedef hal_ret_t (*arp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,
+        ArpStatus *arp_status);
 
 // L2 key of the endpoint
 typedef struct ep_l2_key_s {
@@ -82,6 +92,7 @@ typedef struct ep_sg_s {
     struct ep_sg_s      *next_sg_p;                      // Point to the next set of securiy_group_ids
 }__PACK__ ep_sginfo_t;
 
+
 // endpoint data structure
 // TODO: capture multiple categories of multiple-labels
 typedef struct ep_s {
@@ -112,7 +123,9 @@ typedef struct ep_s {
     // dllist_ctxt_t        l2seg_ep_lentry;      // links in L2 segment endpoint list
     // dllist_ctxt_t        if_ep_lentry;         // links in inteface endpoint list
     dllist_ctxt_t        session_list_head;    // session from/to this EP
+
 } __PACK__ ep_t;
+
 
 // Endpoint's intermediate L3 entry object that points to actual endpoint info
 typedef struct ep_l3_entry_s {
@@ -320,6 +333,11 @@ hal_ret_t endpoint_delete(EndpointDeleteRequest& spec,
                           EndpointDeleteResponse *rsp);
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
+
+
+void register_dhcp_ep_status_callback(dhcp_status_func_t func);
+void register_arp_ep_status_callback(arp_status_func_t func);
+
 }    // namespace hal
 
 #endif    // __ENDPOINT_HPP__

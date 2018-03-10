@@ -302,6 +302,9 @@ class IpAddressStep(FrameworkFieldObject):
     def GetCount(self):
         return self.count
 
+    def GetLast(self):
+        #Assuming /24
+        return ipaddress.IPv4Address(int(self.start) + 254)
 
 class Ipv6Address(FrameworkFieldObject):
     def __init__(self, valobj=None, string=None, integer=None):

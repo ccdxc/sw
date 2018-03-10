@@ -51,23 +51,21 @@ ht *arp_trans_t::arplearn_ip_entry_ht_ =
                 trans_compute_ip_entry_hash_func,
                 trans_compare_ip_entry_key_func);
 
-#define INIT_TIMEOUT       120 * TIME_MSECS_PER_SEC
 // This is default, entry func can override this.
-#define BOUND_TIMEOUT      2000  * TIME_MSECS_PER_MIN
-#define RARP_ENTRY_TIMEOUT 1  * TIME_MSECS_PER_MIN
+#define BOUND_TIMEOUT      60 *  (TIME_MSECS_PER_MIN)
 
 // clang-format off
 void arp_trans_t::arp_fsm_t::_init_state_machine() {
 #define SM_FUNC(__func) SM_BIND_NON_STATIC(arp_fsm_t, __func)
 #define SM_FUNC_ARG_1(__func) SM_BIND_NON_STATIC_ARGS_1(arp_fsm_t, __func)
     FSM_SM_BEGIN((sm_def))
-        FSM_STATE_BEGIN(ARP_INIT, INIT_TIMEOUT, NULL, NULL)
+        FSM_STATE_BEGIN(ARP_INIT, 0, NULL, NULL)
             FSM_TRANSITION(ARP_ADD, SM_FUNC(process_arp_request), ARP_BOUND)
             FSM_TRANSITION(RARP_REQ, SM_FUNC(process_rarp_request), RARP_INIT)
             FSM_TRANSITION(ARP_ERROR, NULL, ARP_DONE)
             FSM_TRANSITION(ARP_DUPLICATE, NULL, ARP_DONE)
         FSM_STATE_END
-        FSM_STATE_BEGIN(RARP_INIT, RARP_ENTRY_TIMEOUT, NULL, NULL)
+        FSM_STATE_BEGIN(RARP_INIT, 0, NULL, NULL)
             FSM_TRANSITION(RARP_REPLY, SM_FUNC(process_rarp_reply),
                            ARP_BOUND)
             FSM_TRANSITION(ARP_TIMEOUT, NULL, ARP_DONE)

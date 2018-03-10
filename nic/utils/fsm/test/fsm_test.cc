@@ -368,6 +368,11 @@ class TestTimer: public fsm_timer_t {
 
     }
 
+    virtual uint64_t get_timeout_remaining(fsm_state_timer_ctx timer)
+    {
+        return test_twheel->get_timeout_remaining(timer) / TIME_MSECS_PER_SEC ;
+    }
+
     static void
     timeout_handler(void *timer, uint32_t timer_id, void *ctxt)
     {

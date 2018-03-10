@@ -31,8 +31,27 @@ using l2segment::L2SegmentGetRequest;
 using l2segment::L2SegmentGetRequestMsg;
 using l2segment::L2SegmentGetResponse;
 using l2segment::L2SegmentGetResponseMsg;
+using eplearn::EpLearnType;
 
 namespace hal {
+
+typedef struct eplearn_arp_cfg_s {
+    bool     enabled;
+    uint32_t entry_timeout;
+} __PACK__ eplearn_arp_cfg_t;
+
+
+typedef struct eplearn_dhcp_cfg_s {
+    bool        enabled;
+    block_list *trusted_servers_list;
+} __PACK__  eplearn_dhcp_cfg_t;
+
+typedef struct eplearn_cfg_s {
+    EpLearnType          learn_type;
+    eplearn_dhcp_cfg_t   dhcp_cfg;
+    eplearn_arp_cfg_t    arp_cfg;
+} __PACK__  eplearn_cfg_t;
+
 
 typedef struct l2seg_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
@@ -41,6 +60,7 @@ typedef struct l2seg_s {
     L2SegmentType         segment_type;            // type of L2 segment
     encap_t               wire_encap;              // wire encap
     encap_t               tunnel_encap;            // tunnel encap
+    eplearn_cfg_t         eplearn_cfg;             // eplearn cfg
     MulticastFwdPolicy    mcast_fwd_policy;        // multicast policy
     BroadcastFwdPolicy    bcast_fwd_policy;        // broadcast policy
     ip_addr_t             gipo;                    // gipo for vxlan 
@@ -139,6 +159,7 @@ l2seg_init (l2seg_t *l2seg)
     // initialize meta information
     l2seg->if_list = block_list::factory(sizeof(hal_handle_t));
     l2seg->nw_list = block_list::factory(sizeof(hal_handle_t));
+    l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list = block_list::factory(sizeof(ip_addr_t));
 
     return l2seg;
 }
@@ -168,6 +189,10 @@ l2seg_cleanup (l2seg_t *l2seg)
     }
     if (l2seg->if_list) {
         block_list::destroy(l2seg->if_list);
+    }
+
+    if (l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list) {
+        block_list::destroy(l2seg->eplearn_cfg.dhcp_cfg.trusted_servers_list);
     }
     l2seg_free(l2seg);
     return HAL_RET_OK;

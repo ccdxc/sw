@@ -59,19 +59,16 @@ ht *dhcp_trans_t::dhcplearn_ip_entry_ht_ =
 /* For now setting a high time for DOL testing
  * But, all these should be configurable.
  */
-#define INIT_TIMEOUT        120000 * TIME_MSECS_PER_SEC
-#define SELECTING_TIMEOUT   120000 * TIME_MSECS_PER_SEC
-#define REQUESTING_TIMEOUT  120000 * TIME_MSECS_PER_SEC
-// This is default, entry func can override this.
-#define BOUND_TIMEOUT       120000 * TIME_MSECS_PER_SEC
-#define RENEWING_TIMEOUT    120000 * TIME_MSECS_PER_SEC
+#define INIT_TIMEOUT        120 * TIME_MSECS_PER_SEC
+#define SELECTING_TIMEOUT   120 * TIME_MSECS_PER_SEC
+#define REQUESTING_TIMEOUT  120 * TIME_MSECS_PER_SEC
 
-#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __decoded_pkt)           \
+#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __new_ip_addr)           \
     uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                                \
     eplearn_info->trans_ctx[__trans_cnt].trans = __trans;                              \
     eplearn_info->trans_ctx[__trans_cnt].dhcp_data.event = __event;                    \
     eplearn_info->trans_ctx[__trans_cnt].dhcp_data.ep_handle = (__ep_handle);          \
-    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.decoded_packet =  (__decoded_pkt);  \
+    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.new_ip_addr =  (__new_ip_addr);     \
     eplearn_info->trans_ctx_cnt++;                                                     \
     fte_ctx->register_completion_handler(dhcp_completion_hdlr);
 
@@ -92,28 +89,42 @@ void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
             FSM_TRANSITION(DHCP_INVALID_PACKET, NULL, DHCP_DONE)
             FSM_TRANSITION(DHCP_ERROR, NULL, DHCP_DONE)
             FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request), DHCP_REQUESTING)
-            FSM_TRANSITION(DHCP_NACK, SM_FUNC(process_dhcp_request), DHCP_DONE)
+            FSM_TRANSITION(DHCP_REBIND, SM_FUNC(process_dhcp_request), DHCP_REQUESTING)
         FSM_STATE_END
         FSM_STATE_BEGIN(DHCP_REQUESTING, REQUESTING_TIMEOUT, NULL, NULL)
             FSM_TRANSITION(DHCP_ACK, SM_FUNC(process_dhcp_ack), DHCP_BOUND)
             FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request), DHCP_REQUESTING)
-            FSM_TRANSITION(DHCP_NACK, NULL, DHCP_DONE)
-            FSM_TRANSITION(DHCP_ERROR, NULL, DHCP_DONE)
+            FSM_TRANSITION(DHCP_REBIND, NULL, DHCP_REQUESTING)
+            FSM_TRANSITION(DHCP_NACK, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_ERROR, SM_FUNC(process_dhcp_end), DHCP_DONE)
         FSM_STATE_END
-        FSM_STATE_BEGIN(DHCP_BOUND, BOUND_TIMEOUT, SM_FUNC_ARG_1(bound_entry_func), NULL)
-            FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request_after_bound), DHCP_RENEWING)
-            FSM_TRANSITION(DHCP_INFORM, SM_FUNC(process_dhcp_request_after_bound), DHCP_BOUND)
-            FSM_TRANSITION(DHCP_IP_ADD, SM_FUNC(add_ip_entry), DHCP_BOUND)
-            FSM_TRANSITION(DHCP_DECLINE, NULL, DHCP_DONE)
-            FSM_TRANSITION(DHCP_RELEASE, SM_FUNC(process_dhcp_release), DHCP_DONE)
-            FSM_TRANSITION(DHCP_INVALID_PACKET, NULL, DHCP_DONE)
-            FSM_TRANSITION(DHCP_TIMEOUT, SM_FUNC(process_dhcp_bound_timeout), DHCP_DONE)
-        FSM_STATE_END
-        FSM_STATE_BEGIN(DHCP_RENEWING, RENEWING_TIMEOUT, NULL, NULL)
+        FSM_STATE_BEGIN(DHCP_RENEWING, 0, NULL, NULL)
             FSM_TRANSITION(DHCP_ACK, SM_FUNC(process_dhcp_ack), DHCP_BOUND)
-            FSM_TRANSITION(DHCP_RESET_TRANS, SM_FUNC(restart_transaction), DHCP_RENEWING)
+            FSM_TRANSITION(DHCP_REBIND, NULL, DHCP_REBINDING)
+            FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request_after_bound), DHCP_RENEWING)
+            FSM_TRANSITION(DHCP_LEASE_TIMEOUT, SM_FUNC(process_dhcp_bound_timeout), DHCP_DONE)
+            FSM_TRANSITION(DHCP_RELEASE, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_NACK, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_ERROR, SM_FUNC(process_dhcp_end), DHCP_DONE)
+        FSM_STATE_END
+        FSM_STATE_BEGIN(DHCP_REBINDING, 0, NULL, NULL)
+            FSM_TRANSITION(DHCP_ACK, SM_FUNC(process_dhcp_ack), DHCP_BOUND)
             FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request), DHCP_REQUESTING)
-            FSM_TRANSITION(DHCP_NACK, NULL, DHCP_DONE)
+            FSM_TRANSITION(DHCP_REBIND, NULL, DHCP_REBINDING)
+            FSM_TRANSITION(DHCP_LEASE_TIMEOUT, SM_FUNC(process_dhcp_bound_timeout), DHCP_DONE)
+            FSM_TRANSITION(DHCP_RELEASE, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_NACK, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_ERROR, SM_FUNC(process_dhcp_end), DHCP_DONE)
+        FSM_STATE_END
+        FSM_STATE_BEGIN(DHCP_BOUND, 0, SM_FUNC_ARG_1(bound_entry_func), NULL)
+            FSM_TRANSITION(DHCP_REQUEST, SM_FUNC(process_dhcp_request_after_bound), DHCP_RENEWING)
+            FSM_TRANSITION(DHCP_REBIND, NULL, DHCP_REBINDING)
+            FSM_TRANSITION(DHCP_INFORM, SM_FUNC(process_dhcp_inform), DHCP_BOUND)
+            FSM_TRANSITION(DHCP_IP_ADD, SM_FUNC(add_ip_entry), DHCP_BOUND)
+            FSM_TRANSITION(DHCP_DECLINE, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_RELEASE, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_INVALID_PACKET, SM_FUNC(process_dhcp_end), DHCP_DONE)
+            FSM_TRANSITION(DHCP_LEASE_TIMEOUT, SM_FUNC(process_dhcp_bound_timeout), DHCP_DONE)
         FSM_STATE_END
         FSM_STATE_BEGIN(DHCP_DONE, 0, NULL, NULL) //No done timeout, it will be deleted.
         FSM_STATE_END
@@ -122,6 +133,14 @@ void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
 }
 // clang-format on
 
+
+static void lease_timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
+    fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);
+    sm_->reset_timer();
+    trans_t* trans =
+        reinterpret_cast<trans_t*>(sm_->get_ctx());
+    trans_t::process_transaction(trans, DHCP_LEASE_TIMEOUT, NULL);
+}
 
 static void dhcp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     eplearn_info_t *eplearn_info = (eplearn_info_t*)\
@@ -136,6 +155,7 @@ static void dhcp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         event_data.in_fte_pipeline = false;
         event_data.decoded_packet =
                 eplearn_info->trans_ctx[i].dhcp_data.decoded_packet;
+        event_data.new_ip_addr = eplearn_info->trans_ctx[i].dhcp_data.new_ip_addr;
 
         eplearn_info->trans_ctx[i].trans->log_info("Executing completion handler ");
         dhcp_trans_t::process_transaction(eplearn_info->trans_ctx[i].trans,
@@ -273,18 +293,44 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_inform(fsm_state_ctx ctx,
                                                 &dhcp_trans->ht_ctxt_);
     }
 
-    init_ip_entry_key(&ip_addr,
-                      dhcp_trans->trans_key_ptr()->vrf_id,
-                      dhcp_trans->ip_entry_key_ptr());
+    if (!memcmp(&(dhcp_trans->ip_entry_key_ptr()->ip_addr),
+            &ip_addr, sizeof(ip_addr)) == 0) {
+        /*
+         * Modify only if the IP address is different from the previous one.
+         */
+        if (data->in_fte_pipeline) {
+            ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_IP_ADD,
+                    ep_entry->hal_handle, ip_addr);
+        } else {
+            rc = add_ip_entry(ctx, fsm_data);
+            if (!rc) {
+                goto out;
+            }
+        }
+    }
+
+out:
+    return rc;
+}
+
+
+bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_end(fsm_state_ctx ctx,
+                                                fsm_event_data fsm_data) {
+    dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
+    fte::ctx_t *fte_ctx = data->fte_ctx;
+    dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
+    ep_t *ep_entry = fte_ctx->sep();
+    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
+                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
+    ip_addr_t ip_addr = {0};
+    bool rc = true;
 
     if (data->in_fte_pipeline) {
-        ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_IP_ADD,
-                ep_entry->hal_handle, NULL);
-    } else {
-        rc = add_ip_entry(ctx, fsm_data);
-        if (!rc) {
-            goto out;
-        }
+        ADD_COMPLETION_HANDLER(dhcp_trans, data->event,
+                ep_entry->hal_handle, ip_addr);
+        rc = false;
+        /* Don't change state, done soon after pipeline completed */
+        goto out;
     }
 
 out:
@@ -324,52 +370,20 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request(fsm_state_ctx ctx,
 
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_request_after_bound(
     fsm_state_ctx ctx, fsm_event_data fsm_data) {
-    dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
     dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
+    dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
     fte::ctx_t *fte_ctx = data->fte_ctx;
-    const struct packet *decoded_packet = data->decoded_packet;
-    ep_t *ep_entry = fte_ctx->sep();
-    hal_ret_t ret;
-    struct option_data option_data;
-    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
-                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
     bool rc = true;
-    dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
 
-    dhcp_trans->log_info("Processing DHCP request after bound.");
-
-    ret = dhcp_lookup_option(decoded_packet,
-                            DHO_DHCP_SERVER_IDENTIFIER, &option_data);
-
-    if (ret != HAL_RET_OK) {
-        dhcp_trans->sm_->throw_event(DHCP_INVALID_PACKET, NULL);
+    if (is_broadcast(*fte_ctx)) {
+        dhcp_trans->sm_->throw_event(DHCP_REBIND, fsm_data);
         rc = false;
         goto out;
-    }
-
-    memcpy(&(dhcp_ctx->server_identifer_), option_data.data,
-           sizeof(dhcp_ctx->server_identifer_));
-
-    if (data->in_fte_pipeline) {
-        ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_RESET_TRANS,
-                ep_entry->hal_handle, NULL);
-    } else {
-        rc = restart_transaction(ctx, fsm_data);
-        if (!rc) {
-            goto out;
-        }
     }
 
 out:
     return rc;
 }
-
-bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_release(fsm_state_ctx ctx,
-                                                    fsm_event_data data) {
-    /* Delete of IP will done during removal of transaction */
-    return true;
-}
-
 
 void dhcp_trans_t::reset() {
     hal_ret_t ret;
@@ -378,6 +392,7 @@ void dhcp_trans_t::reset() {
     dhcp_trans_t::dhcplearn_key_ht()->remove(&this->trans_key_);
     dhcp_trans_t::dhcplearn_ip_entry_ht()->remove(this->ip_entry_key_ptr());
 
+    this->stop_lease_timer();
     ep_entry = this->get_ep_entry();
     if (ep_entry != NULL) {
         ret = endpoint_update_ip_delete(ep_entry,
@@ -421,6 +436,24 @@ bool dhcp_trans_t::dhcp_fsm_t::add_ip_entry(fsm_state_ctx ctx,
     ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
     hal_ret_t ret;
     bool rc = true;
+    ip_addr_t zero_ip = { 0 };
+
+
+    if ((memcmp(&(dhcp_trans->ip_entry_key_ptr()->ip_addr),
+            &zero_ip, sizeof(ip_addr_t))) &&
+        (memcmp(&(dhcp_trans->ip_entry_key_ptr()->ip_addr),
+                   (&data->new_ip_addr), sizeof(ip_addr_t)))) {
+        /*
+         * Restart Transaction if IP address is different.
+         * */
+        restart_transaction(ctx, fsm_data);
+        /* Do a lookup again to make sure we have updated EP reference. */
+        ep_entry = find_ep_by_handle(data->ep_handle);
+    }
+
+    init_ip_entry_key((&data->new_ip_addr),
+                      dhcp_trans->trans_key_ptr()->vrf_id,
+                      dhcp_trans->ip_entry_key_ptr());
 
     ret = endpoint_update_ip_add(ep_entry,
             &dhcp_trans->ip_entry_key_ptr()->ip_addr,
@@ -438,9 +471,32 @@ bool dhcp_trans_t::dhcp_fsm_t::add_ip_entry(fsm_state_ctx ctx,
     dhcp_trans_t::dhcplearn_ip_entry_ht()->insert(
         (void *)dhcp_trans, &dhcp_trans->ip_entry_ht_ctxt_);
 
+    dhcp_trans->start_lease_timer();
+
     return rc;
 }
 
+void dhcp_trans_t::start_lease_timer() {
+
+    if (this->lease_timer_ctx) {
+        dhcp_timer_->delete_timer(this->lease_timer_ctx);
+    }
+    if (this->ctx_.renewal_time_) {
+        this->lease_timer_ctx  = dhcp_timer_->add_timer_with_custom_handler(
+                this->ctx_.renewal_time_ * TIME_MSECS_PER_SEC,
+                this->sm_, lease_timeout_handler);
+    } else {
+        this->lease_timer_ctx = nullptr;
+    }
+}
+
+void dhcp_trans_t::stop_lease_timer() {
+
+    if (this->lease_timer_ctx) {
+        dhcp_timer_->delete_timer(this->lease_timer_ctx);
+    }
+    this->lease_timer_ctx = nullptr;
+}
 
 bool dhcp_trans_t::dhcp_fsm_t::restart_transaction(fsm_state_ctx ctx,
                                           fsm_event_data fsm_data)
@@ -468,8 +524,8 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
                 fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
     struct option_data option_data;
     hal_ret_t ret;
-    ip_addr_t ip_addr = {0};
     ep_t *ep_entry;
+    ip_addr_t ip_addr = { 0 };
     bool rc = true;
 
     ip_addr.addr.v4_addr = ntohl(raw->yiaddr.s_addr);
@@ -520,17 +576,24 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     memcpy(&(dhcp_ctx->lease_time_), option_data.data,
            sizeof(dhcp_ctx->lease_time_));
 
-    init_ip_entry_key((&ip_addr),
-                      dhcp_trans->trans_key_ptr()->vrf_id,
-                      dhcp_trans->ip_entry_key_ptr());
+    ret = dhcp_lookup_option(decoded_packet, DHO_ROUTERS, &option_data);
+    if (ret == HAL_RET_OK) {
+        memcpy(&(dhcp_ctx->default_gateway_), option_data.data,
+                sizeof(dhcp_ctx->default_gateway_));
+    }
 
-    if (data->in_fte_pipeline) {
-        ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_IP_ADD,
-                ep_entry->hal_handle, NULL);
+    if (memcmp(&(dhcp_trans->ip_entry_key_ptr()->ip_addr),
+            &ip_addr, sizeof(ip_addr)) == 0) {
+        dhcp_trans->start_lease_timer();
     } else {
-        rc = add_ip_entry(ctx, fsm_data);
-        if (!rc) {
-            goto out;
+        if (data->in_fte_pipeline) {
+            ADD_COMPLETION_HANDLER(dhcp_trans, DHCP_IP_ADD,
+                    ep_entry->hal_handle, ip_addr);
+        } else {
+            rc = add_ip_entry(ctx, fsm_data);
+            if (!rc) {
+                goto out;
+            }
         }
     }
 
@@ -559,9 +622,9 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_bound_timeout(fsm_state_ctx ctx,
 }
 
 void dhcp_trans_t::dhcp_fsm_t::bound_entry_func(fsm_state_ctx ctx) {
-    dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
-    dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
-    dhcp_trans->sm_->set_current_state_timeout(dhcp_ctx->lease_time_);
+    //dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
+    //dhcp_trans->sm_->set_current_state_timeout(dhcp_ctx->lease_time_);
+    //TODO : ADD Bound timer here.
 }
 
 dhcp_trans_t::dhcp_trans_t(struct packet *dhcp_packet, fte::ctx_t &ctx) {

@@ -428,7 +428,7 @@ TEST_F(arp_fsm_test, arp6_entry_timeout) {
 
     auto timeout = entry->get_current_state_timeout();
     hal::periodic::g_twheel->tick(timeout + 100);
-    sleep(3);
+    sleep(5);
     ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 0);
     ASSERT_EQ(g_hal_state->ep_l3_entry_ht()->num_entries(), 0);
 }
@@ -538,7 +538,7 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
 
     auto timeout = entry->get_current_state_timeout();
     hal::periodic::g_twheel->tick(timeout + 100);
-    sleep(3);
+    sleep(5);
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry == NULL);

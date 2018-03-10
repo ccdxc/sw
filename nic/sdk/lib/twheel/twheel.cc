@@ -179,6 +179,26 @@ twheel::del_timer(void *timer)
 }
 
 //------------------------------------------------------------------------------
+// Get how much timeout remaining for this timer.
+//------------------------------------------------------------------------------
+uint64_t
+twheel::get_timeout_remaining(void *timer)
+{
+    twentry_t    *twentry;
+    uint64_t      timeout;
+
+    if (timer == NULL) {
+        return 0;
+    }
+    twentry = static_cast<twentry_t *>(timer);
+
+    timeout = twentry->nspins_ * (nslices_ * slice_intvl_) +
+            (twentry->slice_ - curr_slice_ + nslices_) % nslices_;
+
+    return timeout;
+}
+
+//------------------------------------------------------------------------------
 // update a given timer wheel entry
 //------------------------------------------------------------------------------
 void *
