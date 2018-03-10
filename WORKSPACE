@@ -61,3 +61,10 @@ local_repository(
     name = "third_party",
     path = "nic/third-party",
 )
+
+new_local_repository(
+    name = 'gperftools',
+    build_file = 'nic/tools/gperftools.BUILD',
+    path = '/tool/toolchain/gperftools-2.6.3'
+)
+

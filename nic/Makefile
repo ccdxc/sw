@@ -196,7 +196,11 @@ bazel-build:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) $(target)
 
 hal:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+    ifeq ($(PROFILING),1)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal_perf
+    else
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+    endif
 
 plugins:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...

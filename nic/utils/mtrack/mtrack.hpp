@@ -45,6 +45,9 @@ public:
         void                *mem;
         bool                free_mem = false;
 
+        // HAL_TRACE_DEBUG("MEMORY_ALLOC for id: {}, func:{}, line: {}, size: {}",
+        //                alloc_id, func, line, size);
+
         // HAL_ASSERT(alloc_id < hal::HAL_MEM_ALLOC_OTHER);
         mem = zero ? calloc(1, size) : malloc(size);
         if (!mem) {

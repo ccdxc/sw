@@ -117,3 +117,36 @@ cc_library(
     srcs = [],
     hdrs = ["src/utils.hpp"],
 )
+
+cc_binary(
+    name = "hal_perf",
+    srcs = [
+        "main.cc",
+    ],
+    copts = sdk_copts,
+    linkopts = gl_linkopts_list,
+    deps = [
+            ":hal_src",
+            # PI
+            "//nic/fte",
+            "//nic:hal_svc_gen",
+            "//nic/hal/svc:hal_svc",
+            "//nic/utils/print",
+            "//nic/hal/plugins",
+            "//nic/hal/plugins/proxy:proxyplugin",
+            "//nic/hal/lkl:lkl_api",
+            "//nic:lkl",
+            "//nic:halproto",
+            "//nic:grpc_includes",
+            "//nic:libprotobuf",
+            "//nic:grpc",
+            "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
+            "//nic/utils/trace",
+            "//nic/utils/mtrack",
+            "@gperftools//:gperftools",
+
+            # PD
+            "@sdk//obj:sdk_catalog",
+            "//nic:asic_libs",
+        ],
+)
