@@ -27,18 +27,19 @@ tls_enc_queue_brq_process:
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s6_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
-	add		    r4, r5, r0
-	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
+	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r5
 
     /*   brq.odesc->data_len = brq.idesc->data_len + sizeof(tls_hdr_t); */
 dma_cmd_enc_data_len:
 	/*   brq.odesc->data_len = tlsp->cur_tls_data_len; */
+#if 0
 	add		    r5, r0, k.to_s5_odesc
 	addi		r5, r5, NIC_DESC_DATA_LEN_OFFSET
 
 	/* Fill the data len */
 	add		    r1, k.to_s5_cur_tls_data_len, TLS_HDR_SIZE
 	phvwr		p.to_s5_cur_tls_data_len, k.to_s5_cur_tls_data_len
+#endif
 
     //CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, to_s5_cur_tls_data_len, to_s5_cur_tls_data_len)
 
@@ -53,10 +54,10 @@ dma_cmd_enc_desc_entry0:
 	addi		r5, r5, PKT_DESC_AOL_OFFSET
 	phvwr		p.dma_cmd1_dma_cmd_addr, r5
 
-	phvwr		p.odesc_A0, k.{to_s5_opage}.dx
-
 	addi		r4, r0, NIC_PAGE_HEADROOM
-	phvwr		p.odesc_O0, r4.wx
+    add         r6, r0, k.{to_s5_opage}
+	phvwrpair   p.odesc_A0, r6.dx, \
+	            p.odesc_O0, r4.wx
 
     /* odesc_L0 already setup in Stage 2, Table 3 */
 

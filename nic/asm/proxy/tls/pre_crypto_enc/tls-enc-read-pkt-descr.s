@@ -33,10 +33,10 @@ tls_enc_pkt_descriptor_process:
     nop
         
     /* Setup idesc */
-    phvwr       p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0
     add         r2, r0, d.{u.tls_read_pkt_descr_aol_d.O0}.wx
     subi        r2, r2, NTLS_AAD_SIZE
-    phvwr       p.idesc_O0, r2.wx
+    phvwrpair   p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0, \
+                p.idesc_O0, r2.wx
     add         r1, r0, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
     addi        r1, r1, NTLS_AAD_SIZE
     phvwr       p.idesc_L0, r1.wx
@@ -58,7 +58,6 @@ tls_enc_pkt_descriptor_process:
     nop
 
 tls_enc_pkt_descriptor_ccm_process:
-    phvwr       p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0
     add         r2, r0, d.{u.tls_read_pkt_descr_aol_d.O0}.wx
 
     /*
@@ -75,23 +74,25 @@ tls_enc_pkt_descriptor_ccm_process:
      *                                       TLS-hdr) + 1-byte zero-pad
      */ 
     subi        r2, r2, TLS_AES_CCM_HEADER_SIZE
-    phvwr       p.idesc_O0, r2.wx
-
-    add         r1, r0, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
+    phvwrpair   p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0, \
+                p.idesc_O0, r2.wx
+                
+    add         r6, r0, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
+    add         r1, r0, r6
     addi        r1, r1, TLS_AES_CCM_HEADER_SIZE
     phvwr       p.idesc_L0, r1.wx
 
     /* Setup odesc length */
     phvwr       p.odesc_L0, r1.wx
-    phvwr       p.s2_s5_t0_phv_aad_length, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
+    phvwr       p.s2_s5_t0_phv_aad_length, r6
 
 
     add         r2, r2, d.{u.tls_read_pkt_descr_aol_d.A0}.dx
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r2,
                                 ccm_header_with_aad_B_0_flags, ccm_header_with_aad_B_1_zero_pad)
 
-    phvwr       p.ccm_header_with_aad_B_0_length, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
-    phvwr       p.ccm_header_with_aad_B_1_aad_length, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
+    phvwrpair   p.ccm_header_with_aad_B_0_length, r6,   \
+                p.ccm_header_with_aad_B_1_aad_length, r6
 
     nop.e
     nop

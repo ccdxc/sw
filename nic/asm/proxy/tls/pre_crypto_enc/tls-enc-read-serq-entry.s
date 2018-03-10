@@ -29,11 +29,10 @@ struct tx_table_s1_t0_k k	    ;
         
 tls_enc_read_serq_entry_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
-    phvwr   p.to_s2_idesc, d.{idesc}
-    phvwr   p.to_s4_idesc, d.{idesc}
-    phvwr   p.to_s5_idesc, d.{idesc}
-
     add     r2, r0, d.{idesc}
+    phvwr   p.to_s2_idesc, r2
+    phvwrpair   p.to_s4_idesc, r2, p.to_s5_idesc, r2
+
     addi    r2, r2, PKT_DESC_AOL_OFFSET
 
 table_read_rx_serq_enc: 

@@ -31,8 +31,8 @@ tls_enc_tdesc_alloc_process:
         CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_1)
         CAPRI_CLEAR_TABLE1_VALID
 
-        phvwr	    p.to_s5_odesc, d.odesc
-        phvwr	    p.to_s4_odesc, d.odesc
+        phvwrpair   p.to_s4_odesc, d.odesc[31:0], p.to_s5_odesc, d.odesc[31:0]
+
         phvwri      p.to_s6_tnmdr_alloc, 1
 
         /*
