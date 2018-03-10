@@ -17,7 +17,8 @@ namespace table {
 //----------------------------------------------------------------------------
 directmap *
 directmap::factory(char *name, uint32_t id,
-                   uint32_t capacity, uint32_t swdata_len, bool sharing_en)
+                   uint32_t capacity, uint32_t swdata_len, bool sharing_en,
+                   bool entry_trace_en)
 {
     void      *mem = NULL;
     directmap *dm  = NULL;
@@ -27,7 +28,8 @@ directmap::factory(char *name, uint32_t id,
         return NULL;
     }
 
-    dm = new (mem) directmap(name, id, capacity, swdata_len, sharing_en);
+    dm = new (mem) directmap(name, id, capacity, swdata_len, sharing_en, 
+                             entry_trace_en);
 
     dm->indexer_ = indexer::factory(capacity, false, false);
 
@@ -71,15 +73,17 @@ directmap::destroy(directmap *dm)
 // directmap constructor
 // ----------------------------------------------------------------------------
 directmap::directmap(char *name, uint32_t id, 
-                     uint32_t capacity, uint32_t swdata_len, bool sharing_en)
+                     uint32_t capacity, uint32_t swdata_len, bool sharing_en,
+                     bool entry_trace_en)
 {
     uint32_t hwkey_len, hwkeymask_len;
 
-    name_       = name;
-    id_         = id;
-    capacity_   = capacity;
-    swdata_len_ = swdata_len;
-    sharing_en_ = sharing_en;
+    name_           = name;
+    id_             = id;
+    capacity_       = capacity;
+    swdata_len_     = swdata_len;
+    sharing_en_     = sharing_en;
+    entry_trace_en_ = entry_trace_en;
 
     hwdata_len_   = 0;
     hwkey_len     = 0;
@@ -216,7 +220,9 @@ directmap::insert(void *data, uint32_t *index)
     }
 
     // Print entry
-    entry_trace_(data, *index);
+    if (entry_trace_en_) {
+        entry_trace_(data, *index);
+    }
 
     // P4-API: write API
     pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data); 
@@ -296,7 +302,10 @@ directmap::insert_withid(void *data, uint32_t index)
     }
 
     // Print entry
-    // entry_trace_(data, index);
+    if (entry_trace_en_) {
+        entry_trace_(data, index);
+    }
+
 
     // P4-API: write API
     pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, data); 
@@ -352,7 +361,9 @@ directmap::update(uint32_t index, void *data)
     }
 
     // Print entry
-    // entry_trace_(data, index);
+    if (entry_trace_en_) {
+        entry_trace_(data, index);
+    }
 
     // P4-API: Write API
     pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, data); 
@@ -439,10 +450,10 @@ directmap::remove(uint32_t index, void *data)
         goto end;
     }
 
-    SDK_TRACE_DEBUG("directmap::%s:index: %d\n", __FUNCTION__, index); 
-
     // Print entry
-    // entry_trace_(tmp_data, index);
+    if (entry_trace_en_) {
+        entry_trace_(tmp_data, index);
+    }
 
     // P4-API: Write API
     pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, tmp_data); 
@@ -761,7 +772,7 @@ directmap::entry_trace_(void *data, uint32_t index)
             NULL, NULL, data, buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
-    SDK_TRACE_DEBUG("Index: %d \n %s", index, buff);
+    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
 
     return SDK_RET_OK;
 }

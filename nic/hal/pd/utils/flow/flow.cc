@@ -12,14 +12,15 @@ using hal::pd::utils::Flow;
 //---------------------------------------------------------------------------
 Flow *
 Flow::factory(std::string table_name, uint32_t table_id,
-           uint32_t oflow_table_id,
-           uint32_t flow_hash_capacity,             // 2M
-           uint32_t flow_coll_capacity,             // 16k
-           uint32_t key_len,                   
-           uint32_t data_len,                 
-           uint32_t num_hints_per_flow_entry,
-           Flow::HashPoly hash_poly,
-           uint32_t mtrack_id)
+              uint32_t oflow_table_id,
+              uint32_t flow_hash_capacity,             // 2M
+              uint32_t flow_coll_capacity,             // 16k
+              uint32_t key_len,                   
+              uint32_t data_len,                 
+              uint32_t num_hints_per_flow_entry,
+              Flow::HashPoly hash_poly,
+              uint32_t mtrack_id,
+              bool entry_trace_en)
 {
     void    *mem = NULL;
     Flow    *flow = NULL;
@@ -31,7 +32,8 @@ Flow::factory(std::string table_name, uint32_t table_id,
 
     flow = new (mem) Flow(table_name, table_id, oflow_table_id, 
                           flow_hash_capacity, flow_coll_capacity, key_len,
-                          data_len, num_hints_per_flow_entry, hash_poly);
+                          data_len, num_hints_per_flow_entry, hash_poly,
+                          entry_trace_en);
     return flow;
 }
 
@@ -57,7 +59,7 @@ Flow::Flow(std::string table_name, uint32_t table_id,
            uint32_t key_len,                   
            uint32_t data_len,                 
            uint32_t num_hints_per_flow_entry,
-           Flow::HashPoly hash_poly)
+           Flow::HashPoly hash_poly, bool entry_trace_en)
 {
 
     table_name_                 = table_name;
@@ -70,6 +72,7 @@ Flow::Flow(std::string table_name, uint32_t table_id,
     hwdata_len_                 = 0;
     flow_hash_capacity_         = 0;
     hash_poly_                  = hash_poly;
+    entry_trace_en_             = entry_trace_en;
 
     pre_process_sizes_(flow_hash_capacity, flow_coll_capacity);
 

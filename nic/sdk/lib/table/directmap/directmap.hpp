@@ -74,6 +74,7 @@ private:
     ht              *entry_ht_;     // hash table to store entries
     uint64_t        *stats_;        // statistics
     bool            sharing_en_;    // enable sharing
+    bool            entry_trace_en_;// enable entry trace
 
     // private methods
     sdk_ret_t alloc_index_(uint32_t *idx);  
@@ -93,14 +94,16 @@ private:
     directmap_entry_t *find_directmap_entry(directmap_entry_t *key);
 
     directmap(char *name, uint32_t id, uint32_t capacity, 
-              uint32_t swdata_len, bool sharing_en = false);
+              uint32_t swdata_len, bool sharing_en = false,
+              bool entry_trace_en = false);
     ~directmap();
 
 public:
     // factory & destroy methods
     static directmap *factory(char *name, uint32_t id, 
                               uint32_t capacity, uint32_t swdata_len, 
-                              bool sharing_en = false);
+                              bool sharing_en = false,
+                              bool entry_trace_en = false);
     static void destroy(directmap *dm);
 
     // debug methods

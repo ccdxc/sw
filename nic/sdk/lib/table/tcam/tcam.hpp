@@ -86,6 +86,7 @@ private:
     ht              *entry_ht_;             // hash table to store entries
     indexer         *indexer_;              // tcam entry indices
     uint64_t        *stats_;                // statistics
+    bool            entry_trace_en_;        // enable entry tracing
 
     sdk_ret_t alloc_index_(uint32_t *idx, bool lowest);
     sdk_ret_t alloc_index_withid_(uint32_t idx);
@@ -100,14 +101,15 @@ private:
     sdk_ret_t entry_trace_(tcam_entry_t *te);
     tcam(uint32_t id, uint32_t capacity,
          uint32_t swkey_len, uint32_t swdata_len, 
-         bool allow_dup_insert = false);
+         bool allow_dup_insert = false, bool entry_trace_en = false);
     ~tcam();
 
 public:
     // factory & destroy methods
     static tcam *factory(char *name, uint32_t id, 
                          uint32_t tcam_capacity, uint32_t swkey_len, 
-                         uint32_t swdata_len, bool allow_dup_insert = false);
+                         uint32_t swdata_len, bool allow_dup_insert = false,
+                         bool entry_trace_en = false);
     static void destroy(tcam *tcam);
 
     // get methods

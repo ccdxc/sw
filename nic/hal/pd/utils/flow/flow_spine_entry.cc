@@ -169,7 +169,8 @@ FlowSpineEntry::program_table()
         HAL_TRACE_DEBUG("FSE::{}: P4 FT Write: {}", __FUNCTION__, ft_index);
 
         // Entry trace
-        if (anchor_entry_) {
+        if (anchor_entry_ && 
+            get_ft_entry()->get_flow()->get_entry_trace_en()) {
             entry_trace(table_id, ft_index, (void *)anchor_entry_->get_key(), 
                         action_data);
         } 
@@ -196,11 +197,14 @@ FlowSpineEntry::program_table()
                         __FUNCTION__, fhct_index_);
 
         // Entry trace
-        if (anchor_entry_) {
-            entry_trace(oflow_table_id, fhct_index_, (void *)anchor_entry_->get_key(), 
-                        action_data);
-        } else {
-            entry_trace(oflow_table_id, fhct_index_, (void *)sw_key, action_data);
+        if (get_ft_entry()->get_flow()->get_entry_trace_en()) {
+            if (anchor_entry_) {
+                entry_trace(oflow_table_id, fhct_index_, 
+                            (void *)anchor_entry_->get_key(), action_data);
+            } else {
+                entry_trace(oflow_table_id, fhct_index_, (void *)sw_key, 
+                            action_data);
+            }
         }
 
 		// P4-API: OFlow Table Write
@@ -243,7 +247,9 @@ FlowSpineEntry::deprogram_table()
         uint32_t ft_index = get_ft_entry()->get_ft_bits();
 
         // Entry trace
-        entry_trace(table_id, ft_index, NULL, NULL);
+        if (get_ft_entry()->get_flow()->get_entry_trace_en()) {
+            entry_trace(table_id, ft_index, NULL, NULL);
+        }
 
 		// P4-API: Flow Table Write
         pd_err = p4pd_entry_write(table_id, ft_index, (uint8_t *)hw_key, NULL, 
@@ -251,7 +257,9 @@ FlowSpineEntry::deprogram_table()
         HAL_FREE(HAL_MEM_ALLOC_FLOW_SPINE_ENTRY_HW_KEY, hw_key);
     } else {
         // Entry trace
-        entry_trace(oflow_table_id, fhct_index_, NULL, NULL);
+        if (get_ft_entry()->get_flow()->get_entry_trace_en()) {
+            entry_trace(oflow_table_id, fhct_index_, NULL, NULL);
+        }
 
 		// P4-API: Oflow Table Write
         pd_err = p4pd_entry_write(oflow_table_id, fhct_index_, NULL, NULL, 

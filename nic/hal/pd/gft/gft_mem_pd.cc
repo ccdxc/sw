@@ -17,6 +17,12 @@
 namespace hal {
 namespace pd {
 
+// P4PD_Lib_Trace Vs Table_Lib_Trace
+// ---------------------------------
+//  Table_Lib_Trace = !P4PD_Lib_Trace
+//  Effectively don't want dual tracing or no tracing.
+#define ENTRY_TRACE_EN HAL_LOG_TBL_UPDATES ? false : true
+
 class hal_state_pd *g_hal_state_pd;
 
 bool
@@ -297,7 +303,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                               tinfo.has_oflow_table ? ctinfo.tabledepth : 0,
                               tinfo.key_struct_size,
                               tinfo.actiondata_struct_size,
-                              static_cast<sdk_hash::HashPoly>(tinfo.hash_type));
+                              static_cast<sdk_hash::HashPoly>(tinfo.hash_type),
+                              ENTRY_TRACE_EN);
             HAL_ASSERT(hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] != NULL);
             break;
 
@@ -306,7 +313,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
                     tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                   tinfo.key_struct_size,
-                                  tinfo.actiondata_struct_size, true);
+                                  tinfo.actiondata_struct_size, true,
+                                  ENTRY_TRACE_EN);
                 HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
             }
             break;
@@ -314,7 +322,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
         case P4_TBL_TYPE_INDEX:
             dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
                 directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                   tinfo.actiondata_struct_size);
+                                   tinfo.actiondata_struct_size, false,
+                                   ENTRY_TRACE_EN);
             HAL_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -329,7 +338,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                   tinfo.tabledepth, ctinfo.tabledepth,
                                   tinfo.key_struct_size,
                                   sizeof(gft_flow_hash_data_t), 10,    // no. of hints
-                                  static_cast<Flow::HashPoly>(tinfo.hash_type));
+                                  static_cast<Flow::HashPoly>(tinfo.hash_type),
+                                  HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
                 HAL_ASSERT(flow_table_ != NULL);
             }
             if (tid == P4TBL_ID_TX_GFT_HASH) {
@@ -341,7 +351,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                   tinfo.tabledepth, ctinfo.tabledepth,
                                   tinfo.key_struct_size,
                                   sizeof(gft_flow_hash_data_t), 10,    // no. of hints
-                                  static_cast<Flow::HashPoly>(tinfo.hash_type));
+                                  static_cast<Flow::HashPoly>(tinfo.hash_type),
+                                  HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
                 HAL_ASSERT(tx_flow_table_ != NULL);
             }
             break;
@@ -391,7 +402,8 @@ hal_state_pd::p4plus_rxdma_init_tables(pd_mem_init_args_t *args)
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
             p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
+                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                   false, ENTRY_TRACE_EN);
             HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -440,7 +452,8 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
             p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
+                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                   false, ENTRY_TRACE_EN);
             HAL_ASSERT(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 

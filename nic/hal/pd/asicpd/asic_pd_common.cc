@@ -15,8 +15,6 @@
 // TODO: Need to remove capri references and use lib symbols instead
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
-//#define HAL_LOG_TBL_UPDATES
-
 namespace hal {
 namespace pd {
 
@@ -71,7 +69,7 @@ asicpd_table_entry_write (uint32_t tableid,
                                   tbl_ctx.is_oflow_table,
                                   (tbl_ctx.gress == P4_GRESS_INGRESS),
                                   oflow_parent_tbl_depth);
-#ifdef HAL_LOG_TBL_UPDATES
+#if HAL_LOG_TBL_UPDATES
     if (tbl_ctx.table_type == P4_TBL_TYPE_HASH || tbl_ctx.table_type == P4_TBL_TYPE_INDEX) {
         char    buffer[2048];
         memset(buffer, 0, sizeof(buffer));
@@ -164,7 +162,7 @@ asicpd_tcam_table_entry_write (uint32_t tableid,
                                        hwentry_bit_len,
                                        cap_tbl_info, tbl_ctx.gress,
                                        (tbl_ctx.gress == P4_GRESS_INGRESS));
-#ifdef HAL_LOG_TBL_UPDATES
+#if HAL_LOG_TBL_UPDATES
     if (tbl_ctx.table_type != P4_TBL_TYPE_HASH && tbl_ctx.table_type != P4_TBL_TYPE_INDEX) {
         char    buffer[2048];
         memset(buffer, 0, sizeof(buffer));
@@ -241,7 +239,7 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
                                       entry_size, cap_tbl_info);
     uint64_t    entry_addr = (index * cap_tbl_info.entry_width);
     ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.gress == P4_GRESS_INGRESS, entry_addr, cap_tbl_info);
-#ifdef HAL_LOG_TBL_UPDATES
+#if HAL_LOG_TBL_UPDATES
     char    buffer[2048];
     memset(buffer, 0, sizeof(buffer));
     uint8_t key[128] = {0}; // Atmost key is 64B. Assuming each

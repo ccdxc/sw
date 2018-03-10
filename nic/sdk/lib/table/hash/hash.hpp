@@ -90,6 +90,7 @@ private:
     tcam            *otcam_;            // overflow tcam
     // HashEntryMap    hash_entry_map_;    // hash map
     ht              *entry_ht_;         // hash table to store entries
+    bool            entry_trace_en_;    // entry trace enable
 
     // Static Declarations
     static const uint8_t otcam_bit_ = 28;    // Dleft or OTcam ?
@@ -131,13 +132,14 @@ private:
     hash(char *name, uint32_t dleft_table_id, 
          uint32_t otcam_table_id, uint32_t dleft_capacity,
          uint32_t otcam_capacity, uint32_t swkey_len, uint32_t swdata_len, 
-         hash::HashPoly hash_poly = HASH_POLY0);
+         hash::HashPoly hash_poly = HASH_POLY0, bool entry_trace_en = false);
     ~hash();
 public:
     static hash *factory(char *name, uint32_t dleft_table_id,
                          uint32_t otcam_table_id, uint32_t dleft_capacity,
                          uint32_t otcam_capacity, uint32_t swkey_len,
-                         uint32_t swdata_len, hash::HashPoly hash_poly = HASH_POLY0);
+                         uint32_t swdata_len, hash::HashPoly hash_poly = HASH_POLY0,
+                         bool entry_trace_en = false);
     static void destroy(hash *hash);
 
     // Debug Info

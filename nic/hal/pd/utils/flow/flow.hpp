@@ -128,10 +128,11 @@ private:
     uint32_t            hint_mem_len_B_;            // sw index into coll table
     uint32_t            num_hints_per_flow_entry_;  // HGs per Flow Entry (6)
 
-    uint32_t            hwkey_len_;             // Key len for Flow Hash Table
-    uint32_t            hwdata_len_;            // Data Len for Flow Hash Table
+    uint32_t            hwkey_len_;          // Key len for Flow Hash Table
+    uint32_t            hwdata_len_;         // Data Len for Flow Hash Table
 
-    bool                enable_delayed_del_;    // enable delayed el
+    bool                enable_delayed_del_;        // enable delayed del
+    bool                entry_trace_en_;            // enable entry tracing
 
     // Hash Value(21 bits) => Flow Table Entry
     FlowTableEntryMap   flow_table_; 
@@ -173,7 +174,8 @@ private:
             uint32_t flow_data_len,                 // 20
             // uint32_t flow_table_entry_len,          // 512
             uint32_t num_hints_per_flow_entry = 6,
-            Flow::HashPoly hash_poly = HASH_POLY0);
+            Flow::HashPoly hash_poly = HASH_POLY0,
+            bool entry_trace_en = false);
     ~Flow();
 
 public:
@@ -182,7 +184,8 @@ public:
                          uint32_t oflow_capacity, uint32_t flow_key_len,
                          uint32_t flow_data_len, uint32_t num_hints_per_flow_entry = 6,
                          Flow::HashPoly hash_poly = HASH_POLY0,
-                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW);
+                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW,
+                         bool entry_trace_en = false);
     static void destroy(Flow *flow,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_FLOW);
 
@@ -235,6 +238,7 @@ public:
     uint32_t get_hwkey_len() { return hwkey_len_; }
     uint32_t get_hwdata_len() { return hwdata_len_; }
     uint32_t get_hint_mem_len_B(void) { return hint_mem_len_B_; }
+    bool get_entry_trace_en() { return entry_trace_en_; }
 
 
     void set_delayed_del_en(bool en);

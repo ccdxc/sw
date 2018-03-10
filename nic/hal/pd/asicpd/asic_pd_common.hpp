@@ -5,6 +5,8 @@
 
 #include "nic/include/base.h"
 
+#define HAL_LOG_TBL_UPDATES 1
+
 typedef struct asicpd_stats_region_info_t_ {
     int tblid;
     int tbldepthshift;

@@ -22,7 +22,8 @@ hash *
 hash::factory(char *name, uint32_t dleft_table_id,
               uint32_t otcam_table_id, uint32_t dleft_capacity,
               uint32_t otcam_capacity, uint32_t swkey_len,
-              uint32_t swdata_len, hash::HashPoly hash_poly)
+              uint32_t swdata_len, hash::HashPoly hash_poly,
+              bool entry_trace_en)
 {
     void   *mem = NULL;
     hash   *h   = NULL;
@@ -34,7 +35,7 @@ hash::factory(char *name, uint32_t dleft_table_id,
 
     h = new (mem) hash(name, dleft_table_id, otcam_table_id,
                        dleft_capacity, otcam_capacity, swkey_len,
-                       swdata_len, hash_poly);
+                       swdata_len, hash_poly, entry_trace_en);
 
     h->entry_ht_ = ht::factory(dleft_capacity,
                                hash_entry_get_key_func,
@@ -75,7 +76,7 @@ hash::destroy(hash *hash)
 hash::hash(char *name, uint32_t dleft_table_id, uint32_t otcam_table_id,
            uint32_t dleft_capacity, uint32_t otcam_capacity,
            uint32_t swkey_len, uint32_t swdata_len,
-           hash::HashPoly hash_poly)
+           hash::HashPoly hash_poly, bool entry_trace_en)
 {
     name_           = name;
     id_             = dleft_table_id;
@@ -83,13 +84,15 @@ hash::hash(char *name, uint32_t dleft_table_id, uint32_t otcam_table_id,
     swkey_len_      = swkey_len;
     swdata_len_     = swdata_len;
     hash_poly_      = hash_poly;
+    entry_trace_en_ = entry_trace_en;
 
     
     // Initialize the Overflow tcam
     otcam_ = NULL;
     if (otcam_capacity) {
         otcam_ = tcam::factory(name, otcam_table_id, 
-                               otcam_capacity, swkey_len_, swdata_len_);
+                               otcam_capacity, swkey_len_, swdata_len_, false,
+                               entry_trace_en);
         if (!otcam_) {
             SDK_ASSERT_RETURN_VOID(FALSE);
         }
@@ -601,7 +604,9 @@ hash::program_table_(hash_entry_t *he, void *hwkey)
     }
 
     // Entry trace
-    entry_trace_(he);
+    if (entry_trace_en_) {
+        entry_trace_(he);
+    }
 
     // P4-API: Wrihe 
     pd_err = p4pd_entry_write(id_, he->index, (uint8_t *)hwkey, 
@@ -634,6 +639,7 @@ hash::deprogram_table_(hash_entry_t *he)
                               NULL, he->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
+    SDK_TRACE_DEBUG("%s: Index: %d de-programmed\n", name_, he->index);
 end:
     SDK_FREE(SDK_MEM_ALLOC_HASH_HW_KEY_DEPGM, hwkey);
 
@@ -787,7 +793,7 @@ hash::entry_trace_(hash_entry_t *he)
             he->key, NULL, he->data, buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
-    SDK_TRACE_DEBUG("Index: %d \n %s", he->index, buff);
+    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, he->index, buff);
 
     return SDK_RET_OK;
 }

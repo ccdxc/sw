@@ -24,7 +24,7 @@ typedef struct tcam_iter_cb_s {
 tcam *
 tcam::factory(char *name, uint32_t id,
               uint32_t capacity, uint32_t swkey_len,
-              uint32_t swdata_len, bool allow_dup_insert)
+              uint32_t swdata_len, bool allow_dup_insert, bool entry_trace_en)
 {
     void *mem  = NULL;
     tcam *t = NULL;
@@ -34,7 +34,8 @@ tcam::factory(char *name, uint32_t id,
         return NULL;
     }
 
-    t = new (mem) tcam(id, capacity, swkey_len, swdata_len, allow_dup_insert);
+    t = new (mem) tcam(id, capacity, swkey_len, swdata_len, allow_dup_insert,
+                       entry_trace_en);
 
     t->indexer_ = indexer::factory(t->capacity_, false, false);
 
@@ -76,13 +77,14 @@ tcam::destroy(tcam *te)
 // tcam constructor
 //---------------------------------------------------------------------------
 tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len, 
-           uint32_t swdata_len, bool allow_dup_insert)
+           uint32_t swdata_len, bool allow_dup_insert, bool entry_trace_en)
 {
     id_               = id;
     capacity_         = capacity;
     swkey_len_        = swkey_len;
     swdata_len_       = swdata_len;
     allow_dup_insert_ = allow_dup_insert;
+    entry_trace_en_   = entry_trace_en;
 
     hwkey_len_ = 0;
     hwkeymask_len_ = 0;
@@ -152,8 +154,6 @@ tcam::insert(void *key, void *key_mask, void *data,
     }
 
 end:
-
-    entry_trace_(te);
     stats_update_(INSERT, rs);
     return rs;
 }
@@ -531,6 +531,9 @@ tcam::program_table_(tcam_entry_t *te)
                               (uint8_t *)hwkeymask, te->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
+    if (entry_trace_en_) {
+        entry_trace_(te);
+    }
 end:
 
     if (hwkey) {
@@ -576,6 +579,8 @@ tcam::deprogram_table_(tcam_entry_t *te)
     pd_err = p4pd_entry_write(id_, te->index, (uint8_t *)hwkey, 
                               (uint8_t *)hwkeymask, te->data);
     SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
+
+    SDK_TRACE_DEBUG("%s: Index: %d de-programmed\n", name_, te->index);
 
 end:
 
@@ -833,7 +838,7 @@ tcam::entry_trace_(tcam_entry_t *te)
             buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
-    SDK_TRACE_DEBUG("Index: %d \n %s\n", te->index, buff);
+    SDK_TRACE_DEBUG("%s: Index: %d \n %s\n", name_, te->index, buff);
 
     return SDK_RET_OK;
 }
