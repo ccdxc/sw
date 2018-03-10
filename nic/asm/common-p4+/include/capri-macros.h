@@ -427,6 +427,13 @@
                      CAPRI_DMA_COMMAND_PHV_TO_MEM);                                             \
         phvwr       p.##_dma_cmd_prefix##_addr, __addr
 
+#define CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(_dma_cmd_prefix, __addr, _sfield, _efield)             \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
+                    ((CAPRI_PHV_END_OFFSET(_efield) << 18) |                                    \
+                     (CAPRI_PHV_START_OFFSET(_sfield) << 8) |                                   \
+                     1 << 3 | CAPRI_DMA_COMMAND_PHV_TO_MEM);                                    \
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr
+
 #define CAPRI_DMA_CMD_PKT2MEM_SETUP(_dma_cmd_prefix, __addr, _len)                               \
         phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \
         phvwrpair   p.##_dma_cmd_prefix##_addr, __addr,                                          \
@@ -503,26 +510,34 @@
         CAPRI_DMA_CMD_RING_DOORBELL_INC_PI(_dma_cmd_prefix, _lif, __type, _qid, _ring, _field)
 
 #define CAPRI_DMA_CMD_PHV2PKT_SETUP(_dma_cmd_prefix, _sfield, _efield)                          \
-        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_phv_start_addr},   \
-                    ((CAPRI_PHV_END_OFFSET(_efield) << 10) | CAPRI_PHV_START_OFFSET(_sfield));   \
-        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
+                    ((CAPRI_PHV_END_OFFSET(_efield) << 17) |                                    \
+                     (CAPRI_PHV_START_OFFSET(_sfield) << 7) |                                   \
+                     CAPRI_DMA_COMMAND_PHV_TO_PKT);
 
 #define CAPRI_DMA_CMD_PHV2PKT_SETUP2(_dma_cmd_prefix, _sfield, _efield, _sfield1, _efield1)     \
-        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \
-        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_efield);          \
-        phvwri      p.##_dma_cmd_prefix##_phv_start_addr1, CAPRI_PHV_START_OFFSET(_sfield1);    \
-        phvwri      p.##_dma_cmd_prefix##_phv_end_addr1, CAPRI_PHV_END_OFFSET(_efield1);        \
-        phvwri      p.##_dma_cmd_prefix##_cmdsize, 1;                                           \
-        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr1...##_dma_cmd_prefix##_phv_start_addr1}, \
+                    ((CAPRI_PHV_END_OFFSET(_efield1) << 10) | CAPRI_PHV_START_OFFSET(_sfield1)); \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
+                    ((CAPRI_PHV_END_OFFSET(_efield) << 17) |                                    \
+                     (CAPRI_PHV_START_OFFSET(_sfield) << 7) |                                   \
+                     (1 << 5) |                                                                 \
+                     CAPRI_DMA_COMMAND_PHV_TO_PKT);
 
 #define CAPRI_DMA_CMD_MEM2PKT_SETUP(_dma_cmd_prefix, __addr, _len)                              \
-        phvwr       p.##_dma_cmd_prefix##_addr, __addr;                                         \
-        phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \
+        phvwrpair   p.##_dma_cmd_prefix##_size, _len,                                           \
+                        p.##_dma_cmd_prefix##_addr, __addr;                                     \
         phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
 
+#define CAPRI_DMA_CMD_MEM2PKT_SETUP_PKT_STOP(_dma_cmd_prefix, __addr, _len)                     \
+        phvwrpair   p.##_dma_cmd_prefix##_addr, __addr,                                         \
+                        p.##_dma_cmd_prefix##_size, _len;                                       \
+        phvwri      p.{##_dma_cmd_prefix##_pkt_eop...##_dma_cmd_prefix##_type},                 \
+                        (1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT)
+
 #define CAPRI_DMA_CMD_STOP_FENCE(_dma_cmd_prefix)                                               \
-        phvwri      p.##_dma_cmd_prefix##_eop, 1;                                               \
-        phvwri      p.##_dma_cmd_prefix##_wr_fence, 1
+        phvwrpair   p.##_dma_cmd_prefix##_wr_fence, 1,                                               \
+                        p.##_dma_cmd_prefix##_eop, 1
 
 #define CAPRI_DMA_CMD_PKT_STOP(_dma_cmd_prefix)                                                 \
         phvwri      p.##_dma_cmd_prefix##_pkt_eop, 1;                                           \

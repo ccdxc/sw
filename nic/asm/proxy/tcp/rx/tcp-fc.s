@@ -57,7 +57,7 @@ tcp_rx_fc_stage_start:
     phvwr.c2    p.s6_t2_s2s_l7_descr, d.l7_descr
 
 flow_fc_process_done:   
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
                 tcp_rx_write_serq_stage_start, k.common_phv_qstate_addr,
                 TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
    

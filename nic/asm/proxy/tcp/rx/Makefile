@@ -43,6 +43,7 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-rx.s \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \
+    $(SRC_DIR)/tcp-slow-write-serq.s \
     $(SRC_DIR)/tcp-write-serq.s \
     $(SRC_DIR)/tcp-write-serq2.s \
     $(SRC_DIR)/tcp-write-serq3.s \

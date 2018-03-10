@@ -811,7 +811,7 @@ p4pd_add_or_del_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.source_port = htons(tcpcb_pd->tcpcb->source_port);
         data.dest_port = htons(tcpcb_pd->tcpcb->dest_port);
         if (tcpcb_pd->tcpcb->header_len != INVALID_HEADER_TEMPLATE_LEN) {
-            data.header_len = (uint8_t)tcpcb_pd->tcpcb->header_len;
+            data.header_len = htons(tcpcb_pd->tcpcb->header_len);
         } else {
             HAL_TRACE_DEBUG("Skipping header template len update");
         }
@@ -1049,7 +1049,7 @@ p4pd_get_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->source_lif  =  ntohs(data.source_lif);
     tcpcb_pd->tcpcb->source_port = ntohs(data.source_port);
     tcpcb_pd->tcpcb->dest_port = ntohs(data.dest_port);
-    tcpcb_pd->tcpcb->header_len = data.header_len;
+    tcpcb_pd->tcpcb->header_len = ntohs(data.header_len);
     HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x}", tcpcb_pd->tcpcb->source_lif);
     HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
                     tcpcb_pd->tcpcb->source_port, tcpcb_pd->tcpcb->dest_port);

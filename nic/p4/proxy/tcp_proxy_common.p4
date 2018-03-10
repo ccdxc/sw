@@ -150,7 +150,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         source_lif                      : 16                    ;\
         source_port                     : 16                    ;\
         dest_port                       : 16                    ;\
-        header_len                      : 8                     ;\
+        header_len                      : 16                    ;\
         bytes_sent                      : 16                    ;\
         pkts_sent                       : 8                     ;\
         debug_num_phv_to_pkt            : 8                     ;\

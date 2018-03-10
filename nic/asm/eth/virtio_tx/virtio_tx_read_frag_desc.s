@@ -57,7 +57,9 @@ virtio_tx_read_frag_desc_start:
 
     /* Packet */
     phvwri      p.packet_cmd_dma_cmd_host_addr, 1
-    CAPRI_DMA_CMD_MEM2PKT_SETUP(packet_cmd_dma_cmd, D(addr).dx, D(len).wx)
+    add         r1, r0, D(addr).dx
+    add         r2, r0, D(len).dx
+    CAPRI_DMA_CMD_MEM2PKT_SETUP(packet_cmd_dma_cmd, r1, r2)
     phvwri      p.packet_cmd_dma_pkt_eop, 1
 
 

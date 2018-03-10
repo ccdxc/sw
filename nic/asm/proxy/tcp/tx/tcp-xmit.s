@@ -93,8 +93,8 @@ flow_read_xmit_cursor_start:
 
     // TODO : r1 needs to be capped by the window size
     add             r1, d.xmit_len, r0
-    phvwr           p.to_s6_xmit_cursor_addr, d.xmit_cursor_addr
-    phvwr           p.to_s6_xmit_cursor_len, r1
+    phvwrpair       p.to_s6_xmit_cursor_addr, d.xmit_cursor_addr[33:0], \
+                        p.to_s6_xmit_cursor_len, r1
     tbladd          d.snd_nxt, r1
 
 rearm_rto:

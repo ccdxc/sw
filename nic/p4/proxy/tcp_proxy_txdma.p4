@@ -284,7 +284,7 @@ header_type common_t0_s2s_phv_t {
     fields {
         next_addr               : HBM_ADDRESS_WIDTH;
         snd_nxt                 : SEQ_NUMBER_WIDTH;
-        snd_wnd                 : SEQ_NUMBER_WIDTH;
+        snd_wnd                 : 16;
         rto                     : 16;
         rto_pi                  : 16;
         snd_ssthresh            : 16;
