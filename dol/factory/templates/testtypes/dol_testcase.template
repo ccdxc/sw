@@ -1,0 +1,5 @@
+meta:
+    id: DOL_TESTCASE
+    package : infra.factory
+    module  : dol_testcase
+    cls    : DOLTestCase

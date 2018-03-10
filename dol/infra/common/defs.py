@@ -44,6 +44,7 @@ FACTORY_TEMPLATE_PYLD_PATH  = "factory/templates/payloads/"
 FACTORY_TEMPLATE_DESC_PATH  = "factory/templates/descriptors/"
 FACTORY_TEMPLATE_BUFS_PATH  = "factory/templates/buffers/"
 FACTORY_TEMPLATE_TESTOBJECTS_PATH = "factory/templates/testobjects"
+FACTORY_TEMPLATE_TESTTYPES_PATH = "factory/templates/testtypes"
 
 FACTORY_SPEC_PATH           = "factory/specs/"
 CONFIG_TEMPLATE_PATH        = "config/templates/"

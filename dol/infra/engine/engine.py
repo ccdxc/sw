@@ -12,8 +12,6 @@ import infra.engine.modmgr          as modmgr
 
 from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger
-from infra.engine.trigger2  import TriggerEngine
-from infra.engine.verif     import VerifEngine
 from config.store           import Store
 from infra.engine.modmgr    import ModuleStore
 
@@ -30,8 +28,6 @@ def CreateInfraData():
     obj.Logger          = None
     obj.Factory         = factory
     obj.ConfigStore     = Store
-    obj.TriggerEngine   = TriggerEngine
-    obj.VerifEngine     = VerifEngine
     obj.UserData        = None
     obj.pvtdata         = None
     obj.LockAttributes()

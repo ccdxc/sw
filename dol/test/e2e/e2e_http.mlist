@@ -1,0 +1,43 @@
+# Feature Test Modules List
+feature:
+    id       : e2e
+    sub      : e2e
+    package  : test.e2e.http
+    module   : http
+    runorder : 0
+    enable   : True
+    ignore   : False
+    rtl      : False
+    args     :
+
+modules:
+    - module:
+        name    : HTTP_REMOTE_REMOTE
+        spec    : http.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=True
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=True
+                    max  : 1
+    - module:
+        name    : HTTP_REMOTE_LOCAL
+        spec    : http.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=True
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1                    
+    - module:
+        name    : HTTP_LOCAL_LOCAL
+        spec    : http.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=False
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1

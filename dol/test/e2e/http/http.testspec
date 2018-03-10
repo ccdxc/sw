@@ -1,0 +1,27 @@
+# Test Spec
+type: ref://factory/templates/id=E2E_TESTCASE
+selectors:
+    root            : ref://store/templates/id=E2E
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+    src_endpoints :
+         type    : filter://remote=True
+         max        : 1
+    dst_endpoints :
+         type    : filter://remote=True
+         max        : 1
+
+trigger:
+    commands:
+        - command:
+            endpoint    : ref://testcase/config/src_endpoints/0
+            cmd         : python
+            background  : True
+            args        :
+                - arg   : "-m SimpleHTTPServer 8000"
+        - command:
+            endpoint    : ref://testcase/config/dst_endpoints/0
+            cmd         : wget
+            args        :
+                - arg   : callback://e2e/http/GetWgetArgs
+expect:

@@ -432,6 +432,8 @@ def run_dol(args):
         cmd.append('--gft')
     if args.perf is True:
         cmd.append('--perf')
+    if args.e2e_mode == "auto":
+        cmd.append("--e2e")
 
     if args.coveragerun:
         #Increasing timeout for coverage runs only.
@@ -762,7 +764,7 @@ def main():
                 status = run_e2e_l7_dol()
             elif (args.v6e2etls):
                     status = run_v6_e2e_tlsproxy_dol()
-            elif (args.e2e_mode):
+            elif (args.e2e_mode == "manual"):
                 status = run_e2e_infra_dol(args.e2e_mode, args.e2e_spec)
 
     if args.coveragerun:

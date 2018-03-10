@@ -1,0 +1,10 @@
+# Config Session Object Template
+meta:
+    id      : E2E
+    package : config.objects
+    module  : e2e
+    feature_set:
+        - iris
+
+src_eps   : None
+dst_eps   : None

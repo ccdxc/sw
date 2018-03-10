@@ -109,7 +109,13 @@ session:
                 # List of Objects
                 - object : None
                   method : None
-
+            commands:
+                - command:
+                    endpoint    : None
+                    cmd         : None
+                    background  : False
+                    args        :
+                        - arg   : None
         expect:
             timeout : None
             packets:

@@ -193,6 +193,7 @@ class TestSpecObject(objects.FrameworkObject):
         self.__merge_section('descriptors')
         self.__merge_section('buffers')
         self.__merge_section('state')
+        self.__merge_section('type')
         self.__merge_session()
         return
 

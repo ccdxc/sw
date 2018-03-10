@@ -29,6 +29,7 @@ import infra.factory.factory    as factory
 import infra.engine.engine      as engine
 import infra.config.config      as config
 import config.generator         as generator
+import infra.e2e.main           as e2e
 
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
@@ -58,12 +59,22 @@ def Main():
         #Dump the configuration to file.
         cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson
         generator.dump_configuration(cfg_file)
+    
+    if glopts.GlobalOptions.e2e:
+        #Start E2E 
+        cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson
+        e2e.Start(cfg_file)
 
     if glopts.GlobalOptions.cfgonly:
         logger.info("CONFIG Only Run......Stopping.")
         return 0
 
-    return engine.main()
+    status = engine.main()
+    
+    if glopts.GlobalOptions.e2e:
+        e2e.Stop()
+    
+    return status
 
 
 if __name__ == '__main__':

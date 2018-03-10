@@ -113,6 +113,9 @@ class ConfigObjectBase(objects.FrameworkObject):
         obj.root = self
         return
 
+    def TearDownTestcaseConfig(self, obj):
+        return
+    
     def ShowTestcaseConfig(self, obj, logger):
         logger.info("%s Config object :  %s" % (type(self).__name__, self.GID()))
         return

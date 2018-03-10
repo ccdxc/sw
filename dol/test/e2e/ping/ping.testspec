@@ -1,0 +1,28 @@
+# Test Spec
+type: ref://factory/templates/id=E2E_TESTCASE
+selectors:
+    root            : ref://store/templates/id=E2E
+    tenant          : filter://overlay=VLAN,type=TENANT
+    segment         : filter://any
+    src_endpoints :
+         type    : filter://remote=True
+         max        : 1
+    dst_endpoints :
+         type    : filter://remote=True
+         max        : 1
+
+trigger:
+    commands:
+        - command:
+            endpoint    : ref://testcase/config/src_endpoints/0
+            cmd         : ping
+            args        :
+                - arg   : "-c 5  -d -i 10"
+                - arg   : ref://testcase/config/dst_endpoints/0/ipaddrs/0
+        - command:
+            endpoint    : ref://testcase/config/dst_endpoints/0
+            cmd         : ping
+            args        :
+                - arg   : "-c 5  -d -i 3"
+                - arg   : ref://testcase/config/src_endpoints/0/ipaddrs/0                
+expect:

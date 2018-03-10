@@ -36,12 +36,12 @@ def GenerateEpPairCfg(src_ep_type="host", dst_ep_type="remote"):
             ep1, ep2 = Get_Ep_Pair(eps, src_ep_type, dst_ep_type)
             ep1_lif , ep1_oport = get_lif_oport(ep1[1])
             ep2_lif , ep2_oport = get_lif_oport(ep2[1])
-            cfg = { "src" : { "name" : ep1[0], "local" : not ep1[1]["remote"], "port" : ep1_oport,
+            ep_pair_cfg = [ { "name" : ep1[0], "local" : not ep1[1]["remote"], "port" : ep1_oport,
                                "lif_id" : ep1_lif},
-                    "dst" : { "name" : ep2[0], "local" : not ep2[1]["remote"], "port" : ep2_oport,
+                     { "name" : ep2[0], "local" : not ep2[1]["remote"], "port" : ep2_oport,
                              "lif_id" : ep2_lif }
-                   }
-            ep_pair_cfg.append(cfg)
+                   ]
+            #ep_pair_cfg.append(cfg)
             #For now, returning after 1 pair creation.
             return ep_pair_cfg
         
@@ -81,19 +81,19 @@ class E2eTest(object):
 
     def __configure_endpoints(self):
         data = json.load(open(consts.DOL_CFG_FILE))
-        for ep_pair in self._ep_pair_cfg:
+        #for ep_pair in self._ep_pair_cfg:
             
-            src_name = ep_pair["src"]["name"]
-            self._src_ep = Endpoint(src_name, data)
-            self._src_ep.Init()
+        src_name = self._ep_pair_cfg[0]["name"]
+        self._src_ep = Endpoint(src_name, data)
+        self._src_ep.Init()
+        
+        dst_name = self._ep_pair_cfg[1]["name"]
+        self._dst_ep = Endpoint(dst_name, data)
+        self._dst_ep.Init()
             
-            dst_name = ep_pair["dst"]["name"]
-            self._dst_ep = Endpoint(dst_name, data)
-            self._dst_ep.Init()
-            
-            #Add Arp entries for now.
-            self._src_ep._ns.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
-            self._dst_ep._ns.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
+        #Add Arp entries for now.
+        self._src_ep._ns.AddArpEntry(self._dst_ep.GetIp(), self._dst_ep.GetMac())
+        self._dst_ep._ns.AddArpEntry(self._src_ep.GetIp(), self._src_ep.GetMac())
         
     def __clean_up_endpoints(self):
         self._src_ep.Delete()

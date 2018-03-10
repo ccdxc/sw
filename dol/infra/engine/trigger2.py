@@ -7,9 +7,27 @@ import infra.common.defs as defs
 
 from infra.common.glopts    import GlobalOptions
 from infra.asic.model       import ModelConnector
+import infra.e2e.main as E2E 
 
 class TriggerEngineObject:
+
     def __init__(self):
+        pass
+
+    def _trigger_step(self, tc, step):
+        return
+        
+    def _trigger(self, tc):
+        return defs.status.SUCCESS
+
+    def Trigger(self, tc):
+        assert(tc != None)
+        tc.status = self._trigger(tc)
+        return
+        
+class DolTriggerEngineObject(TriggerEngineObject):
+    def __init__(self):
+        super().__init__()
         return
 
     def __copy__(self):
@@ -80,7 +98,8 @@ class TriggerEngineObject:
            time.sleep(step.trigger.delay)
         return
 
-    def __trigger_step(self, tc, step):
+    def _trigger_step(self, tc, step):
+        super()._trigger_step(tc, step)
         self.__trigger_delay(step, tc)
         self.__trigger_descriptors(step, tc)
         self.__ring_doorbell(step, tc)
@@ -94,7 +113,7 @@ class TriggerEngineObject:
         return defs.status.SUCCESS
         
     def __verify_step(self, tc, step):
-        vfstatus = tc.infra_data.VerifEngine.Verify(step, tc)
+        vfstatus = tc.verif_engine.Verify(step, tc)
         cbstatus = tc.StepVerifyCallback(step)
         step.status = self.__resolve_status(vfstatus, cbstatus)
         if step.status is defs.status.ERROR:
@@ -106,12 +125,12 @@ class TriggerEngineObject:
         tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
         return step.status
 
-    def __trigger(self, tc):
+    def _trigger(self, tc):
         status = defs.status.SUCCESS
         for step in tc.session.steps:
             tc.StepSetupCallback(step)
             tc.StepTriggerCallback(step)
-            self.__trigger_step(tc, step)
+            self._trigger_step(tc, step)
             vfstatus = self.__verify_step(tc, step)
             tc.StepTeardownCallback(step)
             if vfstatus is defs.status.ERROR:
@@ -130,7 +149,25 @@ class TriggerEngineObject:
 
     def Trigger(self, tc):
         assert(tc != None)
-        tc.status = self.__trigger(tc)
+        tc.status = self._trigger(tc)
         return
 
-TriggerEngine = TriggerEngineObject()
+class E2ETriggerEngineObject(TriggerEngineObject):
+    
+    def __init__(self):
+        super().__init__()
+        
+    def __trigger_commands(self, step, lgh):
+        if GlobalOptions.dryrun:
+            return        
+        for cmd in step.trigger.commands:
+            cmd.status = E2E.RunCommand(cmd.object.GID(), cmd.command,
+                                         background=cmd.background)
+    
+    def _trigger_step(self, tc, step):
+        self.__trigger_commands(step, tc)
+        tc.TriggerCallback()
+        return
+    
+DolTriggerEngine = DolTriggerEngineObject()
+E2ETriggerEngine = E2ETriggerEngineObject()

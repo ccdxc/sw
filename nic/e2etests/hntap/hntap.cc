@@ -586,8 +586,10 @@ hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles, bool paralle
   data.dev_handles = dev_handles;
   data.max_handles = max_handles;
 
-  lib_model_connect();
-  if (parallel) {
+  if (hntap_go_thru_model) {
+      lib_model_connect();
+  }
+  if (parallel && hntap_go_thru_model) {
       init_dev_handles(dev_handles, max_handles);
       ret = pthread_create(&thread, NULL, model_poller, &data);
   }
@@ -658,7 +660,9 @@ hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles, bool paralle
         }
      }
 
-   lib_model_conn_close();
+   if (hntap_go_thru_model) {
+       lib_model_conn_close();
+   }
 }
 
 

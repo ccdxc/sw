@@ -20,7 +20,21 @@ MAX_RETRIES         = 10
 MAX_DROP_RETRIES    = 1
 
 class VerifEngineObject:
+    
     def __init__(self):
+        pass
+
+    def _verify(self, step, tc):
+        return defs.status.SUCCESS
+
+    def Verify(self, step, tc):
+        if GlobalOptions.skipverify:
+            tc.info("Run with skipverify=True: SKIPPING VERIFICATION")
+            return defs.status.SUCCESS
+    
+class DolVerifEngineObject(VerifEngineObject):
+    def __init__(self):
+        super().__init__()
         # Pending testcase database
         self.ptcdb = objects.ObjectDatabase(logger)
         # Completed testcase database 
@@ -247,8 +261,10 @@ class VerifEngineObject:
             return defs.status.ERROR
         return defs.status.SUCCESS
 
-    def __verify(self, step, tc):
+
+    def _verify(self, step, tc):
         verify_pass = True
+        
         pstatus = self.__verify_packets(step, tc)
         if pstatus == defs.status.ERROR:
             verify_pass = False
@@ -263,10 +279,7 @@ class VerifEngineObject:
         cstatus = self.__verify_configs(step, tc)
         if cstatus == defs.status.ERROR:
             verify_pass = False
-
-        if verify_pass == False:
-            return defs.status.ERROR
-
+                
         return defs.status.SUCCESS
 
     def __verify_delay(self, step, tc):
@@ -285,6 +298,40 @@ class VerifEngineObject:
             tc.info("Run with skipverify=True: SKIPPING VERIFICATION")
             return defs.status.SUCCESS
         self.__verify_delay(step, tc)
-        return self.__verify(step, tc)
+        return self._verify(step, tc)
 
-VerifEngine = VerifEngineObject()
+class E2EVerifEngineObject(VerifEngineObject):
+    
+    def __init__(self):
+        super().__init__()
+
+    def __verify_commands(self, step, tc):
+        for cmd in step.expect.commands:
+            if not cmd.status:
+                tc.error("Command Failed %s" % cmd.command)
+                return defs.status.ERROR
+            else:
+                tc.info("Command Success %s" % cmd.command)            
+        return defs.status.SUCCESS        
+    
+    def _verify(self, step, tc):
+        verify_pass = True
+        
+        cstatus = self.__verify_commands(step, tc)
+        if cstatus == defs.status.ERROR:
+           verify_pass = False      
+
+        if verify_pass == False:
+            return defs.status.ERROR         
+        
+        return defs.status.SUCCESS
+
+    def Verify(self, step, tc):
+        if GlobalOptions.skipverify:
+            tc.info("Run with skipverify=True: SKIPPING VERIFICATION")
+            return defs.status.SUCCESS
+        return self._verify(step, tc) 
+       
+DolVerifEngine = DolVerifEngineObject()
+E2EVerifEngine = E2EVerifEngineObject()
+

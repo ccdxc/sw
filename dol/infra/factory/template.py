@@ -129,3 +129,7 @@ def ParseTestobjectTemplates():
                           defs.TEMPLATE_FILE_EXTN,
                           TestobjectTemplate)
 
+def ParseTestTypeTemplates():
+    return __parse_common(defs.FACTORY_TEMPLATE_TESTTYPES_PATH,
+                          defs.TEMPLATE_FILE_EXTN,
+                          TestobjectTemplate)

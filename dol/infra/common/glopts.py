@@ -18,6 +18,8 @@ parser.add_argument('--config-only', dest='cfgonly',
                     action='store_true', help='Test HAL Config Only')
 parser.add_argument('--cfgjson', dest='cfgjson', default=None,
                     help='Dump configuration to json file')
+parser.add_argument('--e2ecfg', dest='e2ecfg', default='conf/hntap.conf',
+                    help='Dump E2E configuration to json file')
 parser.add_argument('--dryrun', dest='dryrun', action='store_true',
                     help='Dry-Run mode. (No communication with HAL & Model)')
 parser.add_argument('--topo', dest='topology', default=None,
@@ -72,6 +74,8 @@ parser.add_argument('--gft', dest='gft', default=False,
                     action='store_true', help='GFT Test.')
 parser.add_argument('--perf', dest='perf', default=False,
                     action='store_true', help='Run only Perf tests.')
+parser.add_argument('--e2e', dest='e2e', action='store_true',
+                    help='Start DOL with E2E Testing')
 GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():

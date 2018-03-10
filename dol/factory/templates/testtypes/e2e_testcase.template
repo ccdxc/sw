@@ -1,0 +1,5 @@
+meta:
+    id: E2E_TESTCASE
+    package      : infra.factory
+    module       : e2e_testcase
+    cls          : E2ETestCase

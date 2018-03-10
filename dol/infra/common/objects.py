@@ -622,11 +622,14 @@ class ReferenceFieldAttr:
     def __init__(self, attr_string):
         self.string = attr_string
         self.is_object = False
+        self.is_index = False
         self.attr = attr_string
         self.id = None
         if '=' in attr_string:
             self.is_object = True
             self.__get_obj_id()
+        elif attr_string.isdigit():
+            self.is_index = True
         return
 
     def __get_obj_id(self):
@@ -657,6 +660,14 @@ class ReferenceField(FrameworkFieldObject):
 
     def __get_object(self, db, refattr):
         return db.Get(refattr.id)
+    
+    def __get_by_index(self, obj, refattr):
+        assert(isinstance(obj, list))
+        ret = obj[refattr]
+        if isinstance(ret, FrameworkFieldObject):
+            return ret.get()
+        else:
+            return ret
 
     def __get_attr(self, node, refattr):
         val = getattr(node, refattr.attr, 'NOTFOUND')
@@ -674,7 +685,9 @@ class ReferenceField(FrameworkFieldObject):
     def Get(self, root):
         value = root
         for r in self.refattrs:
-            if r.is_object:
+            if r.is_index:
+                value = self.__get_by_index(value, int(r.string))
+            elif r.is_object:
                 value = self.__get_object(value, r)
             else:
                 value = self.__get_attr(value, r)

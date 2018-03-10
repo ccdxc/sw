@@ -11,6 +11,9 @@ from infra.factory.store        import FactoryStore as FactoryStore
 def init():
     objlist = template.ParseTestobjectTemplates()
     FactoryStore.testobjects.SetAll(objlist)
+    
+    objlist = template.ParseTestTypeTemplates()
+    FactoryStore.templates.SetAll(objlist)
 
     logger.info("Initializing Packet Factory.")
     pktfactory.init()

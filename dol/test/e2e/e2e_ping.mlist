@@ -1,0 +1,44 @@
+# Feature Test Modules List
+feature:
+    id       : e2e
+    sub      : e2e
+    package  : test.e2e.ping
+    module   : ping
+    runorder : 0
+    enable   : True
+    ignore   : False
+    rtl      : False
+    args     :
+
+modules:
+    - module:
+        name    : PING_REMOTE_REMOTE
+        spec    : ping.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=True
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=True
+                    max  : 1
+    - module:
+        name    : PING_REMOTE_LOCAL
+        spec    : ping.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=True
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1                    
+    - module:
+        name    : PING_LOCAL_LOCAL
+        spec    : ping.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=False
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1
+                                

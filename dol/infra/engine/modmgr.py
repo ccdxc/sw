@@ -16,8 +16,10 @@ import infra.common.loader      as loader
 import infra.factory.testspec   as testspec
 import infra.factory.testcase   as testcase
 
+from infra.factory.store import FactoryStore as FactoryStore
 from config.objects.session import SessionHelper
 from config.objects.rdma.session import RdmaSessionHelper
+from config.objects.e2e import E2EHelper
 from infra.common.logging   import logger
 from infra.common.glopts    import GlobalOptions
 from config.store import Store  as ConfigStore
@@ -114,26 +116,6 @@ class Module(objects.FrameworkObject):
         logger.info("  - Ignore     : %s" % self.ignore)
         return
 
-    def __select_config(self):
-        utils.LogFunctionBegin(self.logger)
-        if hasattr(self.testspec.selectors, "root"):
-            obj = self.testspec.selectors.root.Get(ConfigStore)
-            module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module)
-            assert(module_hdl)
-            objs = module_hdl.GetMatchingObjects(self.testspec.selectors)
-        else:
-            if self.testspec.selectors.IsRdmaSessionBased():
-                objs = RdmaSessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
-            else:
-                objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
-
-        self.testspec.selectors.roots = objs
-        if len(objs) == 0:
-            self.logger.error("- Selected %d Matching Objects" % len(objs))
-        else:
-            self.logger.info("- Selected %d Matching Objects" % len(objs))
-        utils.LogFunctionEnd(self.logger)
-        return defs.status.SUCCESS
 
     def __load_spec(self):
         utils.LogFunctionBegin(self.logger)
@@ -251,14 +233,14 @@ class Module(objects.FrameworkObject):
     def __debug_testcase(self, testcase):
         return
 
-    def __execute_testcase(self, testcase):
+    def _execute_testcase(self, testcase):
         # Process trigger section of testspec
-        self.infra_data.TriggerEngine.Trigger(testcase)
+        testcase.trigger_engine.Trigger(testcase)
         self.__debug_testcase(testcase)
         self.__update_results(testcase)
         return
 
-    def __is_tcid_filter_match(self, tcid):
+    def _is_tcid_filter_match(self, tcid):
         if GlobalOptions.tcid is None:
             return True
 
@@ -281,7 +263,7 @@ class Module(objects.FrameworkObject):
         matching_tcsets = []
         for root in self.testspec.selectors.roots:
             tcid = TestCaseIdAllocator.get()
-            if not self.__is_tcid_filter_match(tcid): continue
+            if not self._is_tcid_filter_match(tcid): continue
             matching_tcsets.append((tcid,root))
 
         nloops = 1
@@ -292,8 +274,8 @@ class Module(objects.FrameworkObject):
 
         for tcid,root in matching_tcsets:
             for loopid in range(nloops):
-                looptc = testcase.TestCase(tcid, root, self, loopid)
-                self.__execute_testcase(looptc)
+                looptc = testcase.GetTestCase(tcid, root, self, loopid)
+                self._execute_testcase(looptc)
                 self.CompletedTestCases.append(looptc)
                 if self.tracker and looptc.status == defs.status.ERROR:
                     self.abort = True
@@ -331,8 +313,13 @@ class Module(objects.FrameworkObject):
             self.logger.info("Starting new Iteration")
             self.__load_spec()
             self.__setup_callback()
-            self.__select_config()
-            self.__execute()
+            #This should be cleaned up.
+            test_spec = self.testspec.type.Get(FactoryStore)
+            if test_spec.meta.id == "E2E_TESTCASE":
+                runner = E2EModuleRunner(self)
+            else:
+                runner = DolModuleRunner(self)
+            runner.Run()
             self.__teardown_callback()
             self.iterator.Next()
 
@@ -341,6 +328,81 @@ class Module(objects.FrameworkObject):
         self.iterator.Reset()
         return
 
+class ModuleRunner:
+    
+    def __init__(self, module):
+        self.module = module
+        self.logger = module.logger
+    
+    def Run(self):
+        pass
+
+
+class DolModuleRunner(ModuleRunner):
+    
+    def __init__(self, module):
+        super().__init__(module)
+        
+    def __select_config(self):
+        utils.LogFunctionBegin(self.logger)
+        if hasattr(self.module.testspec.selectors, "root"):
+            obj = self.module.testspec.selectors.root.Get(ConfigStore)
+            module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module)
+            assert(module_hdl)
+            objs = module_hdl.GetMatchingObjects(self.module.testspec.selectors)
+        else:
+            if self.module.testspec.selectors.IsRdmaSessionBased():
+                objs = RdmaSessionHelper.GetMatchingConfigObjects(self.module.testspec.selectors)
+            else:
+                objs = SessionHelper.GetMatchingConfigObjects(self.module.testspec.selectors)
+
+        self.module.testspec.selectors.roots = objs
+        if len(objs) == 0:
+            self.logger.error("- Selected %d Matching Objects" % len(objs))
+        else:
+            self.logger.info("- Selected %d Matching Objects" % len(objs))
+        utils.LogFunctionEnd(self.logger)
+        return defs.status.SUCCESS    
+
+    def __execute(self):
+        matching_tcsets = []
+        for root in self.module.testspec.selectors.roots:
+            tcid = TestCaseIdAllocator.get()
+            if not self.module._is_tcid_filter_match(tcid): continue
+            matching_tcsets.append((tcid,root))
+
+        nloops = 1
+        if GlobalOptions.tcscale:
+            nloops = int(GlobalOptions.tcscale)
+        if self.module.tcscale:
+            nloops = self.module.tcscale
+
+        for tcid,root in matching_tcsets:
+            for loopid in range(nloops):
+                looptc = testcase.GetTestCase(tcid, root, self.module, loopid)
+                self.module._execute_testcase(looptc)
+                self.module.CompletedTestCases.append(looptc)
+                if self.module.tracker and looptc.status == defs.status.ERROR:
+                    self.module.abort = True
+                    break
+        return
+    
+    def Run(self):
+        self.__select_config()
+        self.__execute()
+
+class E2EModuleRunner(ModuleRunner):
+    
+    def __init__(self, module):
+        super().__init__(module)
+    
+    def Run(self):
+        tcid = TestCaseIdAllocator.get()
+        tc = testcase.GetTestCase(tcid, None, self.module, 0)
+        tc.SetUp()
+        self.module._execute_testcase(tc)
+        self.module.CompletedTestCases.append(tc)
+ 
 class ModuleDatabase:
     def __init__(self):
         self.db = {}
