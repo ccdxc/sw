@@ -28,6 +28,7 @@ targets:
   pin2:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature fte2 --hostpin --lite && make sanity_logs" ]
   pinvxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo fte --feature ftevxlan,hpvxlan --hostpin --lite && make sanity_logs" ]
   agent: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make pull-assets && make checks && cd nic && make nic && make sanity-tests && bash agent/netagent/scripts/sanity.sh && make sanity_logs" ]
+  agent-single-threaded: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make pull-assets && make checks && cd nic && make nic && make sanity-tests && bash agent/netagent/scripts/sanity.sh single-threaded && make sanity_logs" ]
   multicast:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo multicast --feature multicast && make sanity_logs" ]
   pinl2mc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo multicast --feature pinl2mc --hostpin && make sanity_logs" ]
   l4lb:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo l4lb --feature l4lb && make sanity_logs" ]

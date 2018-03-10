@@ -7,6 +7,10 @@ function cleanup {
 
 }
 set -e
+if [ "$1" == "single-threaded" ]; then
+  export GOMAXPROCS=1
+fi
+
 ./tools/start-model.sh > /dev/null &
 ./tools/start-hal.sh > /dev/null &
 ./agent/netagent/scripts/wait-for-hal.sh || cleanup $?
