@@ -39,6 +39,8 @@ func TestNodeServiceStartBeforeSystemdService(t *testing.T) {
 	checkAllNodeServiceStarted(t, s)
 
 	// should not crash
-	n.FileBeatConfig("dummy")
+	n.FileBeatConfig([]string{"dummy"})
+	n.ElasticDiscoveryConfig([]string{"dummy"})
+	n.ElasticMgmtConfig()
 	n.KubeletConfig("dummy")
 }

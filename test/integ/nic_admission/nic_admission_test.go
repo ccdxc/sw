@@ -99,7 +99,7 @@ func getNodeID(index int) string {
 }
 
 func getRESTUrl(index int) string {
-	return fmt.Sprintf(":%d", 10000+index)
+	return fmt.Sprintf(":%d", 20000+index)
 }
 
 func getDBPath(index int) string {

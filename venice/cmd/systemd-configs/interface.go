@@ -6,10 +6,14 @@ type Interface interface {
 	RemoveKubeletConfig()
 	GenerateAPIServerConfig() error
 	RemoveAPIServerConfig()
-	GenerateFilebeatConfig(elasticServerAddr string) error
+	GenerateFilebeatConfig(elasticServerAddrs []string) error
 	RemoveFilebeatConfig()
 	GenerateKubeMasterConfig(apiServerAddr string) error
 	RemoveKubeMasterConfig()
+	GenerateElasticDiscoveryConfig(elasticServerAddrs []string) error
+	RemoveElasticDiscoveryConfig()
+	GenerateElasticMgmtConfig(mgmtAddr string) error
+	RemoveElasticMgmtConfig()
 }
 
 type configs struct{}
@@ -26,17 +30,29 @@ func (c *configs) GenerateAPIServerConfig() error {
 func (c *configs) RemoveAPIServerConfig() {
 	RemoveAPIServerConfig()
 }
-func (c *configs) GenerateFilebeatConfig(elasticServerAddr string) error {
-	return GenerateFilebeatConfig(elasticServerAddr)
+func (c *configs) GenerateFilebeatConfig(elasticServerAddrs []string) error {
+	return GenerateFilebeatConfig(elasticServerAddrs)
 }
 func (c *configs) RemoveFilebeatConfig() {
-	RemoveAPIServerConfig()
+	RemoveFilebeatConfig()
 }
 func (c *configs) GenerateKubeMasterConfig(apiServerAddr string) error {
 	return GenerateKubeMasterConfig(apiServerAddr)
 }
 func (c *configs) RemoveKubeMasterConfig() {
 	RemoveKubeMasterConfig()
+}
+func (c *configs) GenerateElasticDiscoveryConfig(elasticServerAddrs []string) error {
+	return GenerateElasticDiscoveryConfig(elasticServerAddrs)
+}
+func (c *configs) RemoveElasticDiscoveryConfig() {
+	RemoveElasticDiscoveryConfig()
+}
+func (c *configs) GenerateElasticMgmtConfig(mgmtAddr string) error {
+	return GenerateElasticMgmtConfig(mgmtAddr)
+}
+func (c *configs) RemoveElasticMgmtConfig() {
+	RemoveElasticMgmtConfig()
 }
 
 // New object implementing the Interface

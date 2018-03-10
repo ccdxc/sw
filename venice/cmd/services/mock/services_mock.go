@@ -266,12 +266,30 @@ func (c *Configs) RemoveAPIServerConfig() {
 }
 
 // GenerateFilebeatConfig is a mock implementation for Filebeat config generation.
-func (c *Configs) GenerateFilebeatConfig(virtualIP string) error {
+func (c *Configs) GenerateFilebeatConfig(virtualIPs []string) error {
 	return nil
 }
 
 // RemoveFilebeatConfig is a mock implementation for removing Filebeat configuration.
 func (c *Configs) RemoveFilebeatConfig() {
+}
+
+// GenerateElasticDiscoveryConfig is a mock implementation for Elastic-discovery config generation.
+func (c *Configs) GenerateElasticDiscoveryConfig(virtualIPs []string) error {
+	return nil
+}
+
+// RemoveElasticDiscoveryConfig is a mock implementation for removing Elastic-discovery configuration.
+func (c *Configs) RemoveElasticDiscoveryConfig() {
+}
+
+// GenerateElasticMgmtConfig is a mock implementation for Elastic-Mgmt config generation.
+func (c *Configs) GenerateElasticMgmtConfig(mgmtAddr string) error {
+	return nil
+}
+
+// RemoveElasticMgmtConfig is a mock implementation for removing Elastic-Mgmt configuration.
+func (c *Configs) RemoveElasticMgmtConfig() {
 }
 
 // GenerateKubeMasterConfig is a mock implemenation for kube master config generation.
@@ -621,7 +639,7 @@ func (c *CfgWatcherService) APIClient() cmd.CmdV1Interface { return &c.DummyAPIC
 // NodeService is the interface for starting/stopping/configuring services running on all controller nodes
 type NodeService struct {
 	K8sAPIServerLocation string
-	ElasticLocation      string
+	ElasticLocations     []string
 }
 
 // Start service
@@ -640,13 +658,26 @@ func (n *NodeService) AreNodeServicesRunning() bool {
 }
 
 // KubeletConfig is dummy
-func (n *NodeService) KubeletConfig(k8sAPIServerLocation string) {
+func (n *NodeService) KubeletConfig(k8sAPIServerLocation string) error {
 	n.K8sAPIServerLocation = k8sAPIServerLocation
+	return nil
 }
 
 // FileBeatConfig is dummy
-func (n *NodeService) FileBeatConfig(elasticLocation string) {
-	n.ElasticLocation = elasticLocation
+func (n *NodeService) FileBeatConfig(elasticLocations []string) error {
+	n.ElasticLocations = elasticLocations
+	return nil
+}
+
+// ElasticDiscoveryConfig is dummy
+func (n *NodeService) ElasticDiscoveryConfig(elasticLocations []string) error {
+	n.ElasticLocations = elasticLocations
+	return nil
+}
+
+// ElasticMgmtConfig is dummy
+func (n *NodeService) ElasticMgmtConfig() error {
+	return nil
 }
 
 // OnNotifySystemdEvent is dummy

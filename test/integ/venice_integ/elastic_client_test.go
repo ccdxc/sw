@@ -26,7 +26,7 @@ import (
 const (
 	elasticURL   = "http://127.0.0.1:9200"
 	registryURL  = "registry.test.pensando.io:5000"
-	elasticImage = "elasticsearch/elasticsearch:5.4.1"
+	elasticImage = "elasticsearch/elasticsearch:6.2.2"
 )
 
 var (
@@ -47,7 +47,7 @@ var (
 					"Severity": {"type": "keyword"},
 					"Component": {"type": "keyword"},
 					"EventType": {"type": "keyword"},
-					"Message": {"type": "string"},
+					"Message": {"type": "text"},
 					"Count": {"type": "integer"},
 					"Meta": {
 						"type" : "nested",

@@ -94,11 +94,18 @@ type NodeService interface {
 	// are running.
 	AreNodeServicesRunning() bool
 
-	// FileBeatConfig with the location of the Elastic server
-	FileBeatConfig(elasticLocation string)
+	// FileBeatConfig updates the location of the Elastic servers in filebeat config file
+	FileBeatConfig(elasticLocation []string) error
 
 	// KubeletConfig updates the kubelet with the new location of k8sApi server
-	KubeletConfig(k8sAPIServerLocation string)
+	KubeletConfig(k8sAPIServerLocation string) error
+
+	// ElasticDiscoveryConfig updates the location of the Elastic instances in discovery config file
+	ElasticDiscoveryConfig(elasticLocation []string) error
+
+	// ElasticMgmtConfig configures the node's mgmt-addr that is needed by
+	// elastic instance to bind and publish to its peers
+	ElasticMgmtConfig() error
 }
 
 // MasterService is the interface for starting/stopping master services (that run on node winning leader election)

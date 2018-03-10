@@ -63,13 +63,6 @@ var logVolume = protos.ModuleSpec_Volume{
 	MountPath: "/var/log/pensando",
 }
 
-// filebeatConfigVolume is config volume definition for Filebeat.
-var filebeatConfigVolume = protos.ModuleSpec_Volume{
-	Name:      "configs",
-	HostPath:  "/etc/pensando/filebeat.yml",
-	MountPath: "/usr/share/filebeat/filebeat.yml",
-}
-
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]protos.Module{
@@ -113,11 +106,16 @@ var k8sModules = map[string]protos.Module{
 			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.Filebeat,
-					Image: "$REGISTRY_URL/beats/filebeat:5.4.1",
+					Image: "$REGISTRY_URL/beats/filebeat:6.2.2",
 				},
 			},
 			Volumes: []*protos.ModuleSpec_Volume{
-				&filebeatConfigVolume,
+				// Volume definition for Filebeat config
+				&protos.ModuleSpec_Volume{
+					Name:      "configs",
+					HostPath:  globals.FilebeatConfigFile,
+					MountPath: "/usr/share/filebeat/filebeat.yml",
+				},
 				&logVolume,
 			},
 		},
@@ -308,24 +306,37 @@ var k8sModules = map[string]protos.Module{
 			Name: globals.ElasticSearch,
 		},
 		Spec: &protos.ModuleSpec{
-			Type:      protos.ModuleSpec_Deployment,
-			NumCopies: 1,
+			Type: protos.ModuleSpec_DaemonSet,
 			Submodules: []*protos.ModuleSpec_Submodule{
 				{
 					Name:  globals.ElasticSearch,
-					Image: "$REGISTRY_URL/elasticsearch/elasticsearch:5.4.1-pen",
+					Image: "$REGISTRY_URL/elasticsearch-cluster:6.2.2",
 					// TODO
-					// Becaues of https://github.com/kubernetes/kubernetes/pull/48986
+					// Because of https://github.com/kubernetes/kubernetes/pull/48986
 					// we cant have environment variables with special chars in kube
-					// So comment out the code below and have a special Elastic image with
-					//  these options as part of Dockerfile.
+					// So commenting out the code below and have a special Elastic image with
+					// these options as part of Dockerfile.
 					// Once we upgrade to latest kube, we can use official elastic image
-					//  and pass the first 2 environment variables explicitly below
+					// and pass the first 2 environment variables explicitly below
 					EnvVars: map[string]string{
 						//"cluster.name":           "pen-elasticcluster",
 						//"xpack.security.enabled": "false",
-						"ES_JAVA_OPTS": "-Xms512m -Xmx512m",
+						"ES_JAVA_OPTS": "-Xms256m -Xmx256m",
 					},
+				},
+			},
+			Volumes: []*protos.ModuleSpec_Volume{
+				// Volume definition for Elastic Discovery.
+				&protos.ModuleSpec_Volume{
+					Name:      "discovery",
+					HostPath:  "/etc/pensando/elastic-discovery",
+					MountPath: "/usr/share/elasticsearch/config/discovery-file",
+				},
+				// Volume definition for sourcing env variables
+				&protos.ModuleSpec_Volume{
+					Name:      "envvars",
+					HostPath:  globals.ElasticMgmtConfigFile,
+					MountPath: "/usr/share/elasticsearch/mgmt_env.sh",
 				},
 			},
 		},
@@ -662,11 +673,13 @@ func createDeployment(client k8sclient.Interface, module *protos.Module) error {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
+	replicas := int32(module.GetSpec().GetNumCopies())
 	dConfig := &clientTypes.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: module.Name,
 		},
 		Spec: clientTypes.DeploymentSpec{
+			Replicas: &replicas,
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{

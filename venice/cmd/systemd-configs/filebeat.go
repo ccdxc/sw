@@ -7,6 +7,8 @@ import (
 	"text/template"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
@@ -21,8 +23,8 @@ type FilebeatParams struct {
 	// LogDir is the directory where Venice logs are written to
 	LogDir string
 
-	// ElasticEndpoint is the elastic client endpoint of the form "IP/hostname:port"
-	ElasticEndpoint string
+	// ElasticEndpoints is the list of comma separated elastic endpoints of the form "IP/hostname:port"
+	ElasticEndpoints string
 
 	// ElasticIndex is the index where venice logs will be stored
 	ElasticIndex string
@@ -53,7 +55,8 @@ fields:
 #-------------------------- Elasticsearch output ------------------------------
 output.elasticsearch:
   # Array of hosts to connect to.
-  hosts: ["{{.ElasticEndpoint}}"]
+  hosts: [{{.ElasticEndpoints}}]
+  loadbalance: true
   template.name: filebeat
   template.path: filebeat.template.json
 
@@ -62,6 +65,9 @@ output.elasticsearch:
   #username: "elastic"
   #password: "changeme"
   index: "{{.ElasticIndex}}.%{+YYYY.MM.dd}"
+
+setup.template.name: "{{.ElasticIndex}}"
+setup.template.pattern: "{{.ElasticIndex}}.*"
 
 #================================ Logging =====================================
 #output.console:
@@ -79,39 +85,47 @@ logging:
 `
 
 // GenerateFilebeatConfig generates configuration file for filebeat service
-func GenerateFilebeatConfig(elasticServerAddr string) error {
+func GenerateFilebeatConfig(elasticServerAddrs []string) error {
 
+	var buffer bytes.Buffer
+	for i, addr := range elasticServerAddrs {
+		if i > 0 {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString(fmt.Sprintf("\"%s:%s\"", addr, globals.ElasticsearchRESTPort))
+	}
+	log.Debugf("@@@ Generating Filebeat config - Elastic Endpoints: %s", buffer.String())
 	fbParams := FilebeatParams{
-		LogDir:          "/var/log/pensando",
-		ElasticEndpoint: elasticServerAddr + ":" + globals.ElasticsearchRESTPort,
-		ElasticIndex:    "venice.logs",
+		LogDir:           "/var/log/pensando",
+		ElasticEndpoints: buffer.String(),
+		ElasticIndex:     fmt.Sprintf("%s.%s.%s", elastic.InternalIndexPrefix, globals.DefaultTenant, "systemlogs"),
 	}
 
 	t := template.New("Filebeat config template")
 
 	t, err := t.Parse(filebeatTemplate)
 	if err != nil {
-		fmt.Printf("Failed to parse filebeat template %v: ", err)
+		log.Errorf("Failed to parse filebeat template %v: ", err)
 		return err
 	}
 	buf := &bytes.Buffer{}
 
 	err = t.Execute(buf, fbParams)
 	if err != nil {
-		fmt.Printf("Failed to parse filebeat template %v: ", err)
+		log.Errorf("Failed to parse filebeat template %v: ", err)
 		return err
 	}
 
 	f, err := os.Create(filebeatCfgFile)
 	if err != nil {
-		fmt.Printf("Error creating filebeat config file: %v", err)
+		log.Errorf("Error creating filebeat config file: %v", err)
 		return err
 	}
 	defer f.Close()
 
 	_, err = f.WriteString(buf.String())
 	if err != nil {
-		fmt.Printf("Error writing to filebeat config file: %v", err)
+		log.Errorf("Error writing to filebeat config file: %v", err)
 		return err
 	}
 	f.Sync()

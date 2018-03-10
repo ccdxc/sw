@@ -70,7 +70,9 @@ func (s *nodeService) Start() error {
 	defer s.Unlock()
 	s.enabled = true
 
-	s.configs.GenerateFilebeatConfig("")
+	s.configs.GenerateFilebeatConfig([]string{})
+	s.configs.GenerateElasticDiscoveryConfig([]string{})
+	s.configs.GenerateElasticMgmtConfig("")
 
 	for ii := range nodeServices {
 		if err := s.sysSvc.StartUnit(fmt.Sprintf("%s.service", nodeServices[ii])); err != nil {
@@ -93,43 +95,81 @@ func (s *nodeService) Stop() {
 	}
 	s.configs.RemoveKubeletConfig()
 	s.configs.RemoveFilebeatConfig()
-
+	s.configs.RemoveElasticDiscoveryConfig()
+	s.configs.RemoveElasticMgmtConfig()
 }
 
-// FileBeatConfig with the location of the Elastic server
-func (s *nodeService) FileBeatConfig(elasticLocation string) {
-	if s.elasticLocation == elasticLocation {
-		return
-	}
-	if err := s.configs.GenerateFilebeatConfig(elasticLocation); err != nil {
-		log.Errorf("Failed to generate filebeat config with error: %v", err)
-		return
-	}
+// FileBeatConfig with the location of the Elastic servers
+func (s *nodeService) FileBeatConfig(elasticLocations []string) error {
+
 	if !s.enabled {
-		return
+		log.Warnf("Skipping filebeat config generation, node not enabled")
+		return nil
 	}
+
+	if err := s.configs.GenerateFilebeatConfig(elasticLocations); err != nil {
+		log.Errorf("Failed to generate filebeat config with error: %v", err)
+		return err
+	}
+
 	if err := s.sysSvc.StartUnit("pen-filebeatconfig.service"); err != nil {
 		log.Errorf("Failed to reconfigure filebeat service with new config.  error: %v", err)
-		return
+		return err
 	}
+
+	return nil
+}
+
+// ElasticDiscoveryConfig updates the location of the Elastic servers
+func (s *nodeService) ElasticDiscoveryConfig(elasticLocations []string) error {
+
+	if !s.enabled {
+		log.Warnf("Skipping elastic-discovery config generation, node not enabled")
+		return nil
+	}
+
+	if err := s.configs.GenerateElasticDiscoveryConfig(elasticLocations); err != nil {
+		log.Errorf("Failed to generate elastic-discovery config with error: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// ElasticMgmtConfig configures the mgmtAddr needed for elastic instance
+func (s *nodeService) ElasticMgmtConfig() error {
+
+	if !s.enabled {
+		log.Warnf("Skipping elastic-mgmt config generation, node not enabled")
+		return nil
+	}
+
+	if err := s.configs.GenerateElasticMgmtConfig(s.nodeID); err != nil {
+		log.Errorf("Failed to generate elastic-mgmt config with error: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 // KubectlConfig updates the kubelet with the new location of k8sAPI server
-func (s *nodeService) KubeletConfig(k8sAPIServerLocation string) {
+func (s *nodeService) KubeletConfig(k8sAPIServerLocation string) error {
 	if s.k8sAPIServerLocation == k8sAPIServerLocation {
-		return
+		return nil
 	}
 	if err := s.configs.GenerateKubeletConfig(s.nodeID, k8sAPIServerLocation, globals.KubeAPIServerPort); err != nil {
 		log.Errorf("Failed to generate kubelet config with error: %v", err)
-		return
+		return err
 	}
 	if !s.enabled {
-		return
+		return nil
 	}
 	if err := s.sysSvc.StartUnit(fmt.Sprintf("pen-kubeletconfig.service")); err != nil {
 		log.Errorf("Failed to reconfigure kubelet service with new config.  error: %v", err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 // AreNodeServicesRunning returns if all the controller node services are

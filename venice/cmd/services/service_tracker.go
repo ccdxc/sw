@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
@@ -130,8 +131,18 @@ func (m *ServiceTracker) setAPIAddress(service string, addrs []string) {
 	}
 	switch service {
 	case globals.KubeAPIServer:
-		m.nodeService.KubeletConfig(addrs[0])
+		if err := m.nodeService.KubeletConfig(addrs[0]); err != nil {
+			log.Errorf("Failed to update kubelet config, err: %v", err)
+		}
+		if err := m.nodeService.ElasticMgmtConfig(); err != nil {
+			log.Errorf("Failed to update elastic-mgmt config, err: %v", err)
+		}
 	case globals.ElasticSearch:
-		m.nodeService.FileBeatConfig(addrs[0])
+		if err := m.nodeService.FileBeatConfig(addrs); err != nil {
+			log.Errorf("Failed to update filebeat config, err: %v", err)
+		}
+		if err := m.nodeService.ElasticDiscoveryConfig(addrs); err != nil {
+			log.Errorf("Failed to update elastic-discovery config, err: %v", err)
+		}
 	}
 }

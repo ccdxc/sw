@@ -4,6 +4,13 @@ package globals
 
 // global constants
 const (
+
+	// Default Tenant name
+	DefaultTenant = "default"
+
+	// Default Namespace
+	DefaultNamespace = "default"
+
 	// Config directory
 	ConfigDir       = "/etc/pensando"
 	EtcdServiceFile = "pen-etcd.service"
@@ -58,6 +65,7 @@ const (
 
 	// Elasticsearch
 	ElasticsearchRESTPort = "9200"
+	ElasticsearchRPCPort  = "9300"
 
 	// Kibana
 	KibanaRESTPort = "5601"
@@ -77,6 +85,9 @@ const (
 	// Events manager
 	EvtsMgrRPCPort = "9010"
 
-	// tpm
+	// TPM
 	TpmRPCPort = "9020"
+
+	// Spyglass search service
+	SpyglassRPCPort = "9011"
 )
