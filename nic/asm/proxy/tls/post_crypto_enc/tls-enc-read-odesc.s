@@ -68,7 +68,6 @@ tls_enc_post_read_odesc_do_ccm:
      * AAD. Adjust the L0 accordingly.
      */
     sub         r1, r1, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
-    phvwr       p.odesc_L0, r1.wx
 
     /*
      * At the O0 of the odesc, there's 2 16-byte blocks of CCM-header, followed by
@@ -77,9 +76,9 @@ tls_enc_post_read_odesc_do_ccm:
      * We will also need to write the AAD content (5-byte TLS-header + 8-byte seq-num)
      * at the new O0, which we'll setup a DMA for.
      */
-    add         r1, d.{u.tls_read_odesc_d.O0}.wx, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
-    phvwr       p.odesc_O0, r1.wx
-    add         r2, r1, d.{u.tls_read_odesc_d.A0}.dx
+    add         r3, d.{u.tls_read_odesc_d.O0}.wx, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
+    phvwrpair   p.odesc_O0, r3.wx, p.odesc_L0, r1.wx
+    add         r2, r3, d.{u.tls_read_odesc_d.A0}.dx
 	
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r2, tls_hdr_tls_hdr_type, tls_hdr_tls_iv)    
 
@@ -110,10 +109,9 @@ tls_enc_post_read_odesc_do_cbc:
      * to have the same flow as non AES-CBC post-encrypt pipeline.
      */
     sub         r3, d.{u.tls_read_odesc_d.O0}.wx, (TLS_HDR_SIZE + TLS_AES_CBC_RANDOM_IV_SIZE)
-    phvwr       p.odesc_O0, r3.wx
 
     add         r4, d.{u.tls_read_odesc_d.L0}.wx, (TLS_HDR_SIZE + TLS_AES_CBC_RANDOM_IV_SIZE)
-    phvwr       p.odesc_L0, r4.wx
+    phvwrpair   p.odesc_O0, r3.wx, p.odesc_L0, r4.wx
 
     add         r5, d.{u.tls_read_odesc_d.A0}.dx, r3
         

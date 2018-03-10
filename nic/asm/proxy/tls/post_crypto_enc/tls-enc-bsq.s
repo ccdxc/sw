@@ -35,9 +35,9 @@ tls_enc_post_crypto_process:
     slt.s       c2, 0, r2
     phvwri.c2   p.to_s5_do_post_cbc_enc, 1
 
-    phvwr       p.tls_global_phv_fid, k.p4_txdma_intr_qid
-
-    phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    phvwrpair   p.tls_global_phv_fid, k.p4_txdma_intr_qid[15:0],  \
+                p.tls_global_phv_qstate_addr,               \
+                    k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0]
 
     add         r3, r0, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
@@ -50,7 +50,6 @@ tls_enc_post_crypto_process:
     seq         c4, d.{u.read_tls_stg0_d.ci_1}.hx, d.{u.read_tls_stg0_d.pi_1}.hx
     phvwri.c4   p.tls_global_phv_pending_rx_bsq, 1
 	
-    phvwr       p.to_s6_debug_dol, d.u.read_tls_stg0_d.debug_dol
 table_read_rx_bsq_enc: 
         CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_rx_bsq_enc_dummy_process,
                               r3, TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
