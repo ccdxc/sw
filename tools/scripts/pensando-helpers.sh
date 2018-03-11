@@ -195,13 +195,22 @@ setup_pcie() {
     LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/lspci
 }
 
+kill_model() {
+    if [ $UID == 0 ] ; then
+        echo 'kill as root user disabled'
+        return;
+    fi
+
+    killall model_server dol hal gdb
+}
+
 start_model_how() {
     if [[ `basename $PWD` != 'platform' ]]; then
         echo "Run this command from Platform directory"
         return -1 
     fi
 
-    killall model_server
+    kill_model
 
     setup_pcie
 
