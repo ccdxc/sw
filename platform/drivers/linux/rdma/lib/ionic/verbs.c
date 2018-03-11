@@ -292,8 +292,12 @@ static int ionic_poll_one(struct ionic_cq *cq,
         wc->status = ionic_to_ibv_wc_status(cqe->status);        
     }
 
-    wc->qp_num = qp_num = cqe->qp_hi | (be16toh(cqe->qp_lo) << 8);
+    qp_num = ((uint32_t)cqe->qp_hi << 16) | be16toh(cqe->qp_lo);
     qp = cq->cntxt->qp_tbl[qp_num];
+
+    // XXX handle if qp_num > max_qp or if qp == NULL
+
+    wc->qp_num = qp_num;
 
     // Need to figure out if it belongs to SQ or RQ
     if (cqe->op_type == OP_TYPE_SEND_RCVD ||
@@ -308,7 +312,7 @@ static int ionic_poll_one(struct ionic_cq *cq,
 			wc->opcode = IBV_WC_RECV_RDMA_WITH_IMM;
             wc->imm_data = be32toh(cqe->imm_data);
         }
-		wc->src_qp = cqe->src_qp_hi | (be16toh(cqe->src_qp_lo) << 8);
+	wc->src_qp = ((uint32_t)cqe->src_qp_hi << 16) | be16toh(cqe->src_qp_lo);
         //Let us try to copy wrid always from Recv WQE.
         rqe = (struct rqwqe_t *)(qp->rqq->va + sizeof(struct rqwqe_t) * qp->rqq->head);
         wc->wr_id = rqe->wrid;
