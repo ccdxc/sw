@@ -150,7 +150,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
                         ipseccb_pd->ipseccb->is_nat_t, ipseccb_pd->ipseccb->is_random, ipseccb_pd->ipseccb->extra_pad);
     }
     HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: 0x{0:x}", hwid); 
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -204,27 +205,31 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
     if (ipseccb_pd->ipseccb->is_v6 == 0) {
-        if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip_hdr, sizeof(eth_ip_hdr))){
+        if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip_hdr, sizeof(eth_ip_hdr),
+                    P4PLUS_CACHE_INVALIDATE_BOTH)){
             HAL_TRACE_ERR("Failed to create ip_hdr entry for IPSECCB");
             ret = HAL_RET_HW_FAIL;
         }
         if (ipseccb_pd->ipseccb->is_nat_t == 1) {
             nat_t_udp_hdr.sport = htons(UDP_PORT_NAT_T);
             nat_t_udp_hdr.dport = htons(UDP_PORT_NAT_T);
-            if(!p4plus_hbm_write(hwid+34,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr))){
+            if(!p4plus_hbm_write(hwid+34,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr),
+                        P4PLUS_CACHE_INVALIDATE_BOTH)){
                 HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
                 ret = HAL_RET_HW_FAIL;
             }
         }    
     } else {
-        if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip6_hdr, sizeof(eth_ip6_hdr))){
+        if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip6_hdr, sizeof(eth_ip6_hdr),
+                    P4PLUS_CACHE_INVALIDATE_BOTH)){
             HAL_TRACE_ERR("Failed to create ipv6_hdr entry for IPSECCB");
             ret = HAL_RET_HW_FAIL;
         }
         if (ipseccb_pd->ipseccb->is_nat_t == 1) {
             nat_t_udp_hdr.sport = htons(UDP_PORT_NAT_T);
             nat_t_udp_hdr.dport = htons(UDP_PORT_NAT_T);
-            if(!p4plus_hbm_write(hwid+54,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr))){
+            if(!p4plus_hbm_write(hwid+54,  (uint8_t *)&nat_t_udp_hdr, sizeof(nat_t_udp_hdr),
+                        P4PLUS_CACHE_INVALIDATE_BOTH)){
                 HAL_TRACE_ERR("Failed to create nat_t_hdr entry for IPSECCB");
                 ret = HAL_RET_HW_FAIL;
             }

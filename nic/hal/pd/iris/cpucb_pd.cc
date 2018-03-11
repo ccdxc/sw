@@ -89,7 +89,8 @@ p4pd_add_or_del_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         HAL_TRACE_DEBUG("CPUCB: flags: {:#x}", data.u.cpu_rxdma_initial_action_d.flags);
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid);
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for CPUCB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -201,7 +202,8 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
     }
 
     HAL_TRACE_DEBUG("Programming tx stage0 at hw-id: 0x{0:x}", hwid);
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for CPUCB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -262,7 +264,8 @@ p4pd_add_or_del_cpucb_rx_qidxr_entry(pd_cpucb_t* cpucb_pd, cpucb_hw_id_t addr)
     cpu_rx_write_arqrx_d     data = {0};
 
     HAL_TRACE_DEBUG("Programming qidxr at hw-id: {:#x}", addr);
-    if(!p4plus_hbm_write(addr, (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(addr, (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to write cpucb_qidxr entry");
         return HAL_RET_HW_FAIL;
     }

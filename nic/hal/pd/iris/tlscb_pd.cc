@@ -265,7 +265,8 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
     }
 
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: s0_t0_read_tls_stg0 entry for TLS CB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -308,7 +309,8 @@ p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
         HAL_TRACE_DEBUG("Barco HMAC Key Desc Index = 0x{0:x}", data.u.read_tls_stg1_7_d.barco_hmac_key_desc_index);
     }
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: s3_t0_read_tls_stg1_7 entry for TLS CB");
         ret = HAL_RET_HW_FAIL;
     }

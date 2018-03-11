@@ -587,6 +587,51 @@ capri_p4p_stage_id_init (void)
     cap0.tpc.pics.cfg_stage_id.write();
 }
 
+static inline bool
+p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
+        p4plus_cache_action_t action)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    assert ((addr & ~CACHE_LINE_SIZE_MASK) == addr);
+
+    while ((int)size_in_bytes > 0) {
+        if (action & P4PLUS_CACHE_INVALIDATE_RXDMA) {
+            cap_pics_csr_t & pics_csr = cap0.rpc.pics;
+            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
+            pics_csr.picc.dhs_cache_invalidate.entry.write();
+        }
+        if (action & P4PLUS_CACHE_INVALIDATE_TXDMA) {
+            cap_pics_csr_t & pics_csr = cap0.tpc.pics;
+            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
+            pics_csr.picc.dhs_cache_invalidate.entry.write();
+        }
+        size_in_bytes -= CACHE_LINE_SIZE;
+        addr += CACHE_LINE_SIZE;
+    }
+
+    return true;
+}
+
+bool
+p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
+        p4plus_cache_action_t action)
+{
+    bool ret;
+
+    if ((addr & ~CACHE_LINE_SIZE_MASK) == addr) {
+        ret = p4plus_invalidate_cache_aligned(addr, size_in_bytes, action);
+    } else {
+        int unalign_size = addr & CACHE_LINE_SIZE_MASK;
+        ret = p4plus_invalidate_cache_aligned(addr & ~CACHE_LINE_SIZE_MASK,
+                                        size_in_bytes + unalign_size,
+                                        action);
+    }
+
+    return ret;
+}
+
+
 void
 capri_deparser_init(int tm_port_ingress, int tm_port_egress) {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);

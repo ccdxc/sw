@@ -108,7 +108,7 @@ class EthQstateObject(object):
         if GlobalOptions.skipverify:
             return
         lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
-        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
         self.Read(lgh)
 
     def Read(self, lgh = cfglogger):
@@ -124,7 +124,7 @@ class EthQstateObject(object):
         ring_size = self.data[self.__data_class__].ring_size
         assert(isinstance(value, int))
         assert(0 <= value <= math.pow(2, ring_size))
-        model_wrap.write_mem(self.addr + 8 + (4 * ring), bytes(ctypes.c_uint16(value)), 2)
+        model_wrap.write_mem_pcie(self.addr + 8 + (4 * ring), bytes(ctypes.c_uint16(value)), 2)
 
     def get_pindex(self, ring):
         assert(isinstance(ring, int))
@@ -134,23 +134,23 @@ class EthQstateObject(object):
     def set_ring_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].ring_base = value
-        model_wrap.write_mem(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
 
     def set_ring_size(self, value):
         assert(isinstance(value, int))
         value = int(math.log(value, 2))
         self.data[self.__data_class__].ring_size = value
-        model_wrap.write_mem(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
+        model_wrap.write_mem_pcie(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
 
     def set_cq_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem(self.addr + 27, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 27, bytes(ctypes.c_uint64(value)), 8)
 
     def set_sg_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem(self.addr + 40, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 40, bytes(ctypes.c_uint64(value)), 8)
 
     def Show(self, lgh = cfglogger):
         lgh.ShowScapyObject(self.data)
@@ -164,7 +164,7 @@ class AdminQstateObject(object):
 
     def Write(self, lgh = cfglogger):
         lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
-        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
         self.Read(lgh)
 
     def Read(self, lgh = cfglogger):
@@ -175,16 +175,16 @@ class AdminQstateObject(object):
     def set_ring_count(self, host, total):
         self.data[AdminQstate].host = host
         self.data[AdminQstate].total = total
-        model_wrap.write_mem(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
+        model_wrap.write_mem_pcie(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
 
     def set_ring_base(self, value):
         self.data[AdminQstate].ring_base = value
-        model_wrap.write_mem(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
 
     def set_ring_size(self, value):
         value = int(math.log(value, 2))
         self.data[AdminQstate].ring_size = value
-        model_wrap.write_mem(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
+        model_wrap.write_mem_pcie(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
 
     def set_cq_base(self, value):
         pass

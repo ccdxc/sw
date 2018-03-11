@@ -324,7 +324,7 @@ class QpObject(base.ConfigObjectBase):
         if (GlobalOptions.dryrun): return
         # dcqcn_cb is located after header_template. header_template is 66 bytes len.
         cfglogger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 66, 64))
-        model_wrap.write_mem(self.header_temp_addr + 66, bytes(self.dcqcn_data), 64)
+        model_wrap.write_mem_pcie(self.header_temp_addr + 66, bytes(self.dcqcn_data), 64)
         self.ReadDcqcnCb()
         return
 

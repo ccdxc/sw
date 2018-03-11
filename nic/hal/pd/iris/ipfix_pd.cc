@@ -109,13 +109,17 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex) {
 
     // atomic add region
     uint64_t base_addr = get_start_offset(JP4_ATOMIC_STATS) + (flow_index * 32);
-    p4plus_hbm_write(base_addr, (uint8_t *)&permit_bytes, sizeof(permit_bytes));
+    p4plus_hbm_write(base_addr, (uint8_t *)&permit_bytes, sizeof(permit_bytes),
+            P4PLUS_CACHE_ACTION_NONE);
     p4plus_hbm_write(base_addr + 8 , (uint8_t *)&permit_packets,
-                     sizeof(permit_packets));
+                     sizeof(permit_packets),
+                     P4PLUS_CACHE_ACTION_NONE);
     p4plus_hbm_write(base_addr + 16, (uint8_t *)&deny_bytes,
-                     sizeof(deny_bytes));
+                     sizeof(deny_bytes),
+                     P4PLUS_CACHE_ACTION_NONE);
     p4plus_hbm_write(base_addr + 24 , (uint8_t *)&deny_packets,
-                     sizeof(deny_packets));
+                     sizeof(deny_packets),
+                     P4PLUS_CACHE_ACTION_NONE);
 }
 
 hal_ret_t

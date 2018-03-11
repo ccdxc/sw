@@ -35,7 +35,7 @@ class RdmaKeyTableEntryObject(object):
     def Write(self):
         if (GlobalOptions.dryrun): return
         cfglogger.info("Writing KeyTableEntry @0x%x size: %d" % (self.addr, self.size))
-        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
         self.Read()
 
     def Read(self):

@@ -13,6 +13,8 @@
 
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
+#include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
+#include "nic/asic/capri/model/cap_pcie/cap_pxb_csr.h"
 
 namespace pt = boost::property_tree;
 
@@ -73,8 +75,8 @@ capri_hbm_parse (capri_cfg_t *cfg)
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA;
         } else if (cache_pipe_name == "p4plus-rxdma") {
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA;
-        } else if (cache_pipe_name == "p4plus-both") {
-            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_BOTH;
+        } else if (cache_pipe_name == "p4plus-all") {
+            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_ALL;
         } else {
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_NONE;
         }
@@ -179,12 +181,10 @@ capri_hbm_cache_init (void)
 {
     // Disable RXDMA and TXDMA initializations until P4+ cache is fully enabled
     // Enable P4Plus RXDMA (inst_id = 0)
-    /*
     cap_pics_csr_t & rxdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 0);
     rxdma_pics_csr.picc.cfg_cache_global.bypass(0);
     rxdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
     rxdma_pics_csr.picc.cfg_cache_global.write();
-    */
 
     // Enable P4 Ingress (inst_id = 1)
     cap_pics_csr_t & ig_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 1);
@@ -199,12 +199,10 @@ capri_hbm_cache_init (void)
     eg_pics_csr.picc.cfg_cache_global.write();
 
     // Enable P4Plus TXDMA (inst_id = 3)
-    /*
     cap_pics_csr_t & txdma_pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, 3);
     txdma_pics_csr.picc.cfg_cache_global.bypass(0);
     txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
     txdma_pics_csr.picc.cfg_cache_global.write();
-    */
 
     return HAL_RET_OK;
 }
@@ -212,22 +210,88 @@ capri_hbm_cache_init (void)
 hal_ret_t
 capri_hbm_cache_program_region (capri_hbm_region_t *reg, 
                                 uint32_t inst_id, 
-                                uint32_t filter_idx)
+                                uint32_t filter_idx,
+                                bool slave,
+                                bool master)
 {
     cap_pics_csr_t & pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, inst_id);
-    pics_csr.picc.filter_addr_lo_s.data[filter_idx].read();
-    pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(HBM_OFFSET(reg->start_offset) >> 6); //28 MSB bits only
-    pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
+    if (slave) {
+        pics_csr.picc.filter_addr_lo_s.data[filter_idx].read();
+        pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(HBM_OFFSET(reg->start_offset) >> 6); //28 MSB bits only
+        pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
 
-    pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
-    pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+        pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
+        pics_csr.picc.filter_addr_hi_s.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
                                                  (reg->size_kb * 1024)) >> 6);
-    pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
+        pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
-    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
-    // set Valid + CacheEnable
-    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xc);
-    pics_csr.picc.filter_addr_ctl_s.value[filter_idx].write();
+        pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
+        // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
+        pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xf);
+        pics_csr.picc.filter_addr_ctl_s.value[filter_idx].write();
+    }
+
+    if (master) {
+        pics_csr.picc.filter_addr_lo_m.data[filter_idx].read();
+        pics_csr.picc.filter_addr_lo_m.data[filter_idx].value(HBM_OFFSET(reg->start_offset) >> 6); //28 MSB bits only
+        pics_csr.picc.filter_addr_lo_m.data[filter_idx].write();
+
+        pics_csr.picc.filter_addr_hi_m.data[filter_idx].read();
+        pics_csr.picc.filter_addr_hi_m.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+                                                 (reg->size_kb * 1024)) >> 6);
+        pics_csr.picc.filter_addr_hi_m.data[filter_idx].write();
+
+        pics_csr.picc.filter_addr_ctl_m.value[filter_idx].read();
+        // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
+        pics_csr.picc.filter_addr_ctl_m.value[filter_idx].value(0xf);
+        pics_csr.picc.filter_addr_ctl_m.value[filter_idx].write();
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_hbm_cache_program_db (capri_hbm_region_t *reg, 
+                            uint32_t filter_idx)
+{
+    cap_wa_csr_t & wa_csr = CAP_BLK_REG_MODEL_ACCESS(cap_wa_csr_t, 0, 0);
+
+    wa_csr.filter_addr_lo.data[filter_idx].read();
+    wa_csr.filter_addr_lo.data[filter_idx].value(HBM_OFFSET(reg->start_offset) >> 6); //28 MSB bits only
+    wa_csr.filter_addr_lo.data[filter_idx].write();
+
+    wa_csr.filter_addr_hi.data[filter_idx].read();
+    wa_csr.filter_addr_hi.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+                                        (reg->size_kb * 1024)) >> 6);
+    wa_csr.filter_addr_hi.data[filter_idx].write();
+
+    wa_csr.filter_addr_ctl.value[filter_idx].read();
+    // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
+    wa_csr.filter_addr_ctl.value[filter_idx].value(0xf);
+    wa_csr.filter_addr_ctl.value[filter_idx].write();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_hbm_cache_program_pcie (capri_hbm_region_t *reg, 
+                            uint32_t filter_idx)
+{
+    cap_pxb_csr_t & pxb_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pxb_csr_t, 0, 0);
+
+    pxb_csr.filter_addr_lo.data[filter_idx].read();
+    pxb_csr.filter_addr_lo.data[filter_idx].value(HBM_OFFSET(reg->start_offset) >> 6); //28 MSB bits only
+    pxb_csr.filter_addr_lo.data[filter_idx].write();
+
+    pxb_csr.filter_addr_hi.data[filter_idx].read();
+    pxb_csr.filter_addr_hi.data[filter_idx].value((HBM_OFFSET(reg->start_offset) + 
+                                        (reg->size_kb * 1024)) >> 6);
+    pxb_csr.filter_addr_hi.data[filter_idx].write();
+
+    pxb_csr.filter_addr_ctl.value[filter_idx].read();
+    // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
+    pxb_csr.filter_addr_ctl.value[filter_idx].value(0xf);
+    pxb_csr.filter_addr_ctl.value[filter_idx].write();
 
     return HAL_RET_OK;
 }
@@ -240,6 +304,8 @@ capri_hbm_cache_regions_init (void)
     uint32_t                p4eg_filter_idx = 0;
     uint32_t                p4plus_txdma_filter_idx = 0;
     uint32_t                p4plus_rxdma_filter_idx = 0;
+    uint32_t                p4plus_pcie_filter_idx = 0;
+    uint32_t                p4plus_db_filter_idx = 0;
 
     for (int i = 0; i < num_hbm_regions_; i++) {
         reg = &hbm_regions_[i];
@@ -251,7 +317,7 @@ capri_hbm_cache_regions_init (void)
             HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4IG cache(region 1), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4ig_filter_idx);
-            capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx);
+            capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx, 1, 0);
             p4ig_filter_idx++;
         }
 
@@ -259,7 +325,7 @@ capri_hbm_cache_regions_init (void)
             HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4EG cache(region 2), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4eg_filter_idx);
-            capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx);
+            capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx, 1, 0);
             p4eg_filter_idx++;
         }
 
@@ -267,7 +333,7 @@ capri_hbm_cache_regions_init (void)
             HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS TXDMA cache(region 3), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_txdma_filter_idx);
-            capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx);
+            capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx, 1, 1);
             p4plus_txdma_filter_idx++;
         }
 
@@ -275,8 +341,22 @@ capri_hbm_cache_regions_init (void)
             HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS RXDMA cache(region 0), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_rxdma_filter_idx);
-            capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx);
+            capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx, 1, 1);
             p4plus_rxdma_filter_idx++;
+        }
+
+        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_PCIE_DB) {
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to PCIE, "
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_pcie_filter_idx);
+            capri_hbm_cache_program_pcie(reg, p4plus_pcie_filter_idx);
+            p4plus_pcie_filter_idx++;
+
+            HAL_TRACE_DEBUG("HBM Cache: Programming {} to Doorbell, "
+                            "start={} size={} index={}", reg->mem_reg_name,
+                            HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_db_filter_idx);
+            capri_hbm_cache_program_db(reg, p4plus_db_filter_idx);
+            p4plus_db_filter_idx++;
         }
     }
 

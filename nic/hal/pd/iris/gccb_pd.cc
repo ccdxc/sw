@@ -68,7 +68,8 @@ p4pd_add_or_del_gc_tx_stage0_entry(int qid, uint64_t ring_base, int ring_shift, 
             qid, addr);
     HAL_TRACE_DEBUG("ring_base 0x{0:x}, ring_shift 0x{1:x}",
             ring_base, ring_shift);
-    if(!p4plus_hbm_write(addr,  (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(addr,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for addr");
         ret = HAL_RET_HW_FAIL;
     }

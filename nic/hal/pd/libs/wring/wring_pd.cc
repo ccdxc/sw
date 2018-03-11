@@ -251,7 +251,8 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
             uint64_t slot_addr = wring_base + (index * meta->slot_size_in_bytes);
             
             get_default_slot_value(type, index, value);
-            p4plus_hbm_write(slot_addr, value, meta->slot_size_in_bytes);
+            p4plus_hbm_write(slot_addr, value, meta->slot_size_in_bytes,
+                    P4PLUS_CACHE_ACTION_NONE);
         }
     }
     if (meta->alloc_semaphore_addr &&

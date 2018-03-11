@@ -326,12 +326,14 @@ hal_ret_t
 telemetry_export_dest::commit()
 {
     HAL_TRACE_DEBUG("PD-ExportControl:{}: Export Destination commit {}-> {}", __FUNCTION__, id_, base_addr_);
-    p4plus_hbm_write(base_addr_, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_));
+    p4plus_hbm_write(base_addr_, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_),
+            P4PLUS_CACHE_ACTION_NONE);
     print_buffer(_deb_buf, 2047, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_));
     HAL_TRACE_DEBUG("PD-ExportControl:{} : Buffer Header: Wrote: {}", __FUNCTION__, _deb_buf);
     // memcpy(base_addr_, &buf_hdr_, sizeof(buf_hdr_));
     uint64_t hdr = base_addr_ + sizeof(buf_hdr_);
-    p4plus_hbm_write(hdr, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_));
+    p4plus_hbm_write(hdr, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_),
+            P4PLUS_CACHE_ACTION_NONE);
     print_buffer(_deb_buf, 2047, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_));
     HAL_TRACE_DEBUG("PD-ExportControl:{} : IPFIX-Header: Wrote: {}", __FUNCTION__, _deb_buf);
     return HAL_RET_OK;

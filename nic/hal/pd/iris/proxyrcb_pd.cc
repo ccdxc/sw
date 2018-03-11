@@ -81,7 +81,8 @@ p4pd_clear_proxyr_stats_entry(pd_proxyrcb_t* proxyrcb_pd)
     proxyrcb_hw_addr_t hw_addr = proxyrcb_pd->hw_addr +
                                  PROXYRCB_TABLE_STATS_OFFSET;
 
-    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to write stats entry for PROXYRCB");
         return HAL_RET_HW_FAIL;
     }
@@ -243,7 +244,8 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
     }
 
     HAL_TRACE_DEBUG("PROXYRCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr); 
-    if (!p4plus_hbm_write(hw_addr, data_p, data_len)){
+    if (!p4plus_hbm_write(hw_addr, data_p, data_len,
+            P4PLUS_CACHE_INVALIDATE_BOTH)) {
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for PROXYRCB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -289,7 +291,8 @@ p4pd_add_or_del_proxyr_flow_key_entry(pd_proxyrcb_t* proxyrcb_pd,
     }
 
     HAL_TRACE_DEBUG("PROXYRCB Programming flow_key at hw_addr: 0x{0:x}", hw_addr); 
-    if (!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data))) {
+    if (!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)) {
         HAL_TRACE_ERR("Failed to create flow_key entry for PROXYRCB");
         ret = HAL_RET_HW_FAIL;
     }

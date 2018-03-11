@@ -80,7 +80,8 @@ p4pd_clear_rawr_stats_entry(pd_rawrcb_t* rawrcb_pd)
     rawrcb_hw_addr_t hw_addr = rawrcb_pd->hw_addr +
                                RAWRCB_TABLE_STATS_OFFSET;
 
-    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to write stats entry for RAWRCB");
         return HAL_RET_HW_FAIL;
     }
@@ -231,7 +232,8 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
     }
 
     HAL_TRACE_DEBUG("RAWRCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr); 
-    if (!p4plus_hbm_write(hw_addr, data_p, data_len)){
+    if (!p4plus_hbm_write(hw_addr, data_p, data_len,
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for RAWRCB");
         ret = HAL_RET_HW_FAIL;
     }

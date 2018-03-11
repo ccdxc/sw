@@ -79,7 +79,8 @@ p4pd_clear_proxyc_stats_entry(pd_proxyccb_t* proxyccb_pd)
     proxyccb_hw_addr_t hw_addr = proxyccb_pd->hw_addr +
                                  PROXYCCB_TABLE_STATS_OFFSET;
 
-    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hw_addr, (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to write stats entry for PROXYCCB");
         return HAL_RET_HW_FAIL;
     }
@@ -234,7 +235,8 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
     }
 
     HAL_TRACE_DEBUG("PROXYCCB Programming stage0 at hw_addr: 0x{0:x}", hw_addr); 
-    if(!p4plus_hbm_write(hw_addr, data_p, data_len)){
+    if(!p4plus_hbm_write(hw_addr, data_p, data_len,
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create tx: stage0 entry for PROXYCCB");
         ret = HAL_RET_HW_FAIL;
     }

@@ -125,7 +125,8 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6 = ipseccb_pd->ipseccb->is_v6; 
     }
     HAL_TRACE_DEBUG("Programming Decrypt stage0 at hw-id: 0x{0:x}", hwid); 
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
         ret = HAL_RET_HW_FAIL;
     }
@@ -147,7 +148,8 @@ p4pd_add_or_del_ipsec_decrypt_part2(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
     decrypt_part2.iv_salt = ipseccb_pd->ipseccb->iv_salt;
  
     HAL_TRACE_DEBUG("Programming Decrypt part2 at hw-id: 0x{0:x}", hwid); 
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2),
+                P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create part2 entry for IPSECCB");
         ret = HAL_RET_HW_FAIL;
     }

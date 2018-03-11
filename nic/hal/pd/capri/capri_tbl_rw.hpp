@@ -44,6 +44,18 @@
 #define CAPRI_OK (0)
 #define CAPRI_FAIL (-1)
 
+#define CACHE_LINE_SIZE_SHIFT   6
+#define CACHE_LINE_SIZE         (1 << CACHE_LINE_SIZE_SHIFT)   
+#define CACHE_LINE_SIZE_MASK    (CACHE_LINE_SIZE - 1)
+
+typedef enum {
+    P4PLUS_CACHE_ACTION_NONE        = 0x0,
+    P4PLUS_CACHE_INVALIDATE_RXDMA   = 0x1,
+    P4PLUS_CACHE_INVALIDATE_TXDMA   = 0x2,
+    P4PLUS_CACHE_INVALIDATE_BOTH    = P4PLUS_CACHE_INVALIDATE_RXDMA |
+                                      P4PLUS_CACHE_INVALIDATE_TXDMA
+} p4plus_cache_action_t;
+
 typedef struct capri_table_mem_layout_ {
     uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
                                 /* In units of bytes in case of HBM table */
@@ -178,5 +190,8 @@ void capri_timer_init();
 uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc);
 
 uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid);
+
+bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
+                             p4plus_cache_action_t action);
 
 #endif
