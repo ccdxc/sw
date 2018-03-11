@@ -330,7 +330,7 @@ static int ionic_poll_one(struct ionic_cq *cq,
             //We need to pop one or more sqes because of cq coalescing
 
             sqe = (struct sqwqe_t *)(sq->va + (sq->head * sq->stride));
-            for (int i = 0; i < (msn-g_msn); i++) {
+            for (int i = 0; i <= (msn-g_msn); i++) {
                 wc->opcode = IBV_WC_SEND;
                 wc->wc_flags = 0;
                 wc->wr_id = sqe->base.wrid;
@@ -340,7 +340,7 @@ static int ionic_poll_one(struct ionic_cq *cq,
                 wc++;
                 (*npolled)++;
             }
-            g_msn = msn;
+            g_msn = msn + 1;
             IONIC_LOG("CQ Poll Success: MSN %d Send CQEs %d\n", msn, *npolled);
         } 
     }
