@@ -240,7 +240,7 @@ struct req_tx_write_back_process_k_t {
 
 struct req_tx_sqcb1_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct req_tx_sqcb0_to_sqcb1_info_t args;
+    struct req_tx_sqcb0_to_sqcb2_info_t args;
     struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
@@ -252,9 +252,9 @@ struct req_tx_credits_process_k_t {
     struct phv_global_common_t global;
 };
 
-struct req_tx_bktrack_sqcb1_process_k_t {
+struct req_tx_bktrack_sqcb2_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct req_tx_sqcb0_to_sqcb1_info_t args;
+    struct req_tx_sqcb0_to_sqcb2_info_t args;
     struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
@@ -279,9 +279,9 @@ struct req_tx_bktrack_sqsge_process_k_t {
     struct phv_global_common_t global;
 };
 
-struct req_tx_bktrack_sqcb1_write_back_process_k_t {
+struct req_tx_bktrack_sqcb2_write_back_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct req_tx_bktrack_sqcb1_write_back_info_t args;
+    struct req_tx_bktrack_sqcb2_write_back_info_t args;
     struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

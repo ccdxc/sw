@@ -17,7 +17,7 @@
 
 %%
     .param      resp_rx_rqcb_process_ext
-    .param      req_rx_sqcb_process_ext
+    .param      req_rx_sqcb1_process_ext
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2 
 
 //Keep offset 0 for none to avoid invoking unrelated program when
@@ -40,7 +40,7 @@ rdma_resp_rx_stage0:
 //This has to align with the txdma_stage0.s program
 .align
 rdma_req_rx_stage0:
-    j req_rx_sqcb_process_ext
+    j req_rx_sqcb1_process_ext
     nop
 
 //Do not change the order of this entry

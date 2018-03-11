@@ -34,12 +34,27 @@
 
 #define LOG_SIZEOF_EQCB_T   5   // 2^5 = 32 Bytes
 
-#define SQCB0_ADDR_GET(_r)                         \
+#define SQCB0_ADDR_GET(_r) \
     sll     _r, k.global.cb_addr, SQCB_ADDR_SHIFT;
 
-#define SQCB1_ADDR_GET(_r)                         \
+#define SQCB1_ADDR_GET(_r) \
      add    _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, SQCB_ADDR_SHIFT;
 
+#define SQCB2_ADDR_GET(_r) \
+     add    _r, (2 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+
+#define SQCB3_ADDR_GET(_r) \
+     add    _r, (3 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+
+#define SQCB4_ADDR_GET(_r) \
+     add    _r, (4 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+
+#define SQCB5_ADDR_GET(_r) \
+     add    _r, (4 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, SQCB_ADDR_SHIFT;
+
+#define SQCB0_FIELD_ADDR_GET(_r, _field_offset) \
+     add    _r, _field_offset, k.global.cb_addr, SQCB_ADDR_SHIFT;
+  
 //RQCB organization
 //0-256B RQCB0..RQCB3
 //256-320B RESP_RX_STATS

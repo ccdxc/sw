@@ -57,8 +57,9 @@ action rx_roce(raw_flags, len, parsed_hdrs_len, qtype, tm_oq_overwrite, tm_oq) {
         // pre-parser path, truncate udp payload to remove icrc
         modify_field(scratch_metadata.parsed_hdrs_len, parsed_hdrs_len);
     }
-
-    if (qtype == Q_TYPE_RDMA_RQ) {
+   
+    if ((qtype == Q_TYPE_RDMA_RQ) or
+        (qtype == Q_TYPE_RDMA_SQ)) {
         modify_field(p4_to_p4plus_roce.table0_valid, TRUE);
     }
 

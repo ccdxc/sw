@@ -35,7 +35,7 @@ ack:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, rrq_in_progress, k.args.rrq_in_progress)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
 
     CAPRI_SET_TABLE_0_VALID(0);
@@ -64,7 +64,7 @@ p_ack:
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24        c1, d.psn, k.to_stage.bth_psn // Branch Delay Slot
-    seq            c2, k.args.in_progress, 1
+    seq            c2, k.args.rrq_in_progress, 1
     phvwr.!c2      p.rexmit_psn, d.psn 
     phvwr.c2       p.rexmit_psn, k.args.e_rsp_psn
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c1)
@@ -117,7 +117,7 @@ read_or_atomic:
     //     pkt->psn == sqcb1_p->e_rsp_psn
     //  else
     //     pkt->psn == rrqwqe_p->psn 
-    seq            c1, k.args.in_progress, 1 
+    seq            c1, k.args.rrq_in_progress, 1 
     sne.c1         c2, k.to_stage.bth_psn, k.args.e_rsp_psn
     sne.!c1        c2, k.to_stage.bth_psn, d.psn
     bcf            [c2], out_of_order_rsp
@@ -154,7 +154,7 @@ read:
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, cur_sge_id, k.args.cur_sge_id)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, cur_sge_offset, k.args.cur_sge_offset)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, in_progress, k.args.in_progress)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, rrq_in_progress, k.args.rrq_in_progress)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, dma_cmd_eop, 1)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, rrq_cindex, k.args.rrq_cindex)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
@@ -205,11 +205,12 @@ atomic:
     //CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, 0)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, d.psn)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
 
-    SQCB0_ADDR_GET(r1)
-    add            r6, r1, RRQ_C_INDEX_OFFSET
-    memwr.hx       r6, k.args.rrq_cindex
+    //SQCB0_ADDR_GET(r1)
+    //add            r6, r1, RRQ_C_INDEX_OFFSET
+    //memwr.hx       r6, k.args.rrq_cindex
 
     SQCB1_ADDR_GET(r1)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r1)

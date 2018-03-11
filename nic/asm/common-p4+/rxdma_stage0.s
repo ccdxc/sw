@@ -17,7 +17,7 @@
 %%
     .param      tcp_rx_read_shared_stage0_start
     .param      resp_rx_rqcb_process
-    .param      req_rx_sqcb_process
+    .param      req_rx_sqcb1_process
     .param      cpu_rx_read_shared_stage0_start
     .param      eth_rx_app_header
     .param      eth_rx_drop
@@ -48,7 +48,7 @@ rdma_resp_rx_stage0:
 //This has to align with the txdma_stage0.s program
 .align
 rdma_req_rx_stage0:
-    j req_rx_sqcb_process
+    j req_rx_sqcb1_process
     nop
 
 //Do not change the order of this entry

@@ -15,15 +15,6 @@ struct rdma_stage0_table_k k;
 #define SQCB0_TO_SQCB1_T struct req_tx_sqcb0_to_sqcb1_info_t
 
 %%
-    .param    req_tx_sqpt_process
-    .param    req_tx_sqwqe_process
-    .param    req_tx_sqsge_iterate_process
-    .param    req_tx_sqcb1_process
-    .param    req_tx_bktrack_sqcb1_process
-    //.param    req_tx_add_headers_process
-    .param    req_tx_write_back_process
-    .param    req_tx_sqcb1_cnp_process
-    .param    req_tx_sqcb1_dcqcn_addr_fetch_process
 
 .align
 req_tx_sqcb_process_ext:

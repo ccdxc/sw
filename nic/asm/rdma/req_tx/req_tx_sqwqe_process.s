@@ -22,7 +22,7 @@ req_tx_sqwqe_process:
 
     //color check
     seq            c1, k.args.color, d.base.color //BD Slot
-    bcf            [!c1], exit
+    bcf            [!c1], clear_poll_in_progress
 
 skip_color_check:
 
@@ -108,6 +108,7 @@ set_sge_arg:
     // if UD copy ah_handle
     CAPRI_SET_FIELD_C(r7, WQE_TO_SGE_T, ah_size, d.ud_send.ah_size, c1)
     CAPRI_SET_FIELD_C(r7, WQE_TO_SGE_T, ah_handle, d.ud_send.ah_handle, c1)
+    CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, poll_in_progress, color, k.{args.poll_in_progress...args.color})
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
 
@@ -145,9 +146,7 @@ read:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op.rd.read_len, d.read.length)
-    //CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op.rd.num_sges, d.base.num_sges)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op.rd.log_pmtu, k.args.log_pmtu)
-    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, rrq_p_index, k.args.rrq_p_index)
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
@@ -185,12 +184,11 @@ atomic:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
-    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, rrq_p_index, k.args.rrq_p_index)
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
-    CAPRI_SET_TABLE_0_1_VALID(0, 0);     
+    CAPRI_SET_TABLE_0_1_VALID(0, 0)
 
     nop.e
     nop
@@ -228,13 +226,14 @@ inline_data:
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, hdr_template_inline, 1)
     // should work for both send/write as imm_data is located at same offset in wqe for both operations
-    CAPRI_SET_FIELD_RANGE(r7, RRQWQE_TO_HDR_T, op.send_wr.imm_data, op.send_wr.inv_key, d.{send.imm_data...send.inv_key})
-    CAPRI_SET_FIELD_C(r7, RRQWQE_TO_HDR_T, op.send_wr.ah_handle, r2, c1)
+    CAPRI_SET_FIELD_RANGE(r7, SQCB_WRITE_BACK_T, op.send_wr.imm_data, op.send_wr.inv_key, d.{send.imm_data...send.inv_key})
+    CAPRI_SET_FIELD_C(r7, SQCB_WRITE_BACK_T, op.send_wr.ah_handle, r2, c1)
+    CAPRI_SET_FIELD_RANGE(r7, SQCB_WRITE_BACK_T, poll_in_progress, color, k.{args.poll_in_progress...args.color})
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
-    CAPRI_SET_TABLE_0_1_VALID(0, 0);     
+    CAPRI_SET_TABLE_0_1_VALID(0, 0)     
 
     nop.e
     nop
@@ -243,6 +242,13 @@ exit:
 ud_error:
     //For UD we can silently drop
     phvwr.e   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_0_VALID(0);     
+    CAPRI_SET_TABLE_0_VALID(0)    
 
-    
+clear_poll_in_progress:
+    SQCB0_FIELD_ADDR_GET(r1, FIELD_OFFSET(sqcb0_t, current_sge_offset))
+    or    r2, r0, k.args.color, SQCB0_COLOR_BIT_OFFSET    
+    memwr.d        r1, r2
+    CAPRI_SET_TABLE_0_1_VALID(0, 0)
+    DOORBELL_NO_UPDATE(k.global.lif, k.global.qtype, k.global.qid, r1, r2)
+    phvwr.e   p.common.p4_intr_global_drop, 1
+    nop

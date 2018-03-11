@@ -868,10 +868,15 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                     rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())),
                     rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())) >> PT_BASE_ADDR_SHIFT,
                     sqcb_p->sqcb0.pt_base_addr);
-    sqcb_p->sqcb1.header_template_addr = 
+    sqcb_p->sqcb0.header_template_addr = 
                             header_template_addr >> HDR_TEMP_ADDR_SHIFT;
+    sqcb_p->sqcb1.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+    sqcb_p->sqcb2.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+
     sqcb_p->sqcb1.header_template_size = sizeof(header_template_v4_t);
+    sqcb_p->sqcb2.header_template_size = sizeof(header_template_v4_t);
     sqcb_p->sqcb1.log_rrq_size = log2(num_rrq_wqes);
+    sqcb_p->sqcb2.log_rrq_size = sqcb_p->sqcb1.log_rrq_size;
 
     rrq_base_addr = 
         g_rdma_manager->HbmAlloc(sizeof(rrqwqe_t) << sqcb_p->sqcb1.log_rrq_size);
@@ -880,25 +885,35 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // Make sure rrq_base_addr is 8 byte aligned
     HAL_ASSERT(rrq_base_addr % 8 == 0);
     sqcb_p->sqcb1.rrq_base_addr = rrq_base_addr >> RRQ_BASE_ADDR_SHIFT;
+    sqcb_p->sqcb2.rrq_base_addr = sqcb_p->sqcb1.rrq_base_addr;
     sqcb_p->sqcb0.log_sq_page_size = log2(spec.hostmem_pg_size());
     sqcb_p->sqcb0.log_wqe_size = log2(sqwqe_size);
     sqcb_p->sqcb0.log_num_wqes = log2(num_sq_wqes);
+    sqcb_p->sqcb2.log_sq_size = sqcb_p->sqcb0.log_num_wqes;
     sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
+    sqcb_p->sqcb1.log_pmtu = sqcb_p->sqcb0.log_pmtu;
     sqcb_p->sqcb0.congestion_mgmt_enable = FALSE;  
+    sqcb_p->sqcb1.congestion_mgmt_enable = sqcb_p->sqcb0.congestion_mgmt_enable;  
     sqcb_p->sqcb1.cq_id = spec.sq_cq_num();
     sqcb_p->sqcb0.service = spec.svc();
-    sqcb_p->sqcb1.service = spec.svc();
-    sqcb_p->sqcb1.lsn = 128; // FOR now allowing 128 sq send/write_imm requests
-    sqcb_p->sqcb1.ssn = 1;
+    sqcb_p->sqcb1.service = sqcb_p->sqcb0.service;
+    sqcb_p->sqcb2.service = sqcb_p->sqcb0.service;
+    sqcb_p->sqcb2.lsn = 128; // FOR now allowing 128 sq send/write_imm requests
+    sqcb_p->sqcb1.lsn = sqcb_p->sqcb2.lsn;
+    sqcb_p->sqcb2.ssn = 1;
+    sqcb_p->sqcb1.ssn = sqcb_p->sqcb2.ssn;
     sqcb_p->sqcb1.msn = 0;
+    sqcb_p->sqcb2.msn = sqcb_p->sqcb1.msn;
     sqcb_p->sqcb1.credits = 0xe; // 0x01110 - 128
-    sqcb_p->sqcb1.p4plus_to_p4_flags = 0xA;
+    sqcb_p->sqcb2.credits = sqcb_p->sqcb1.credits;
+    sqcb_p->sqcb2.p4plus_to_p4_flags = 0xA;
     //sqcb_p->sqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                    P4PLUS_TO_P4_UPDATE_IP_LEN);
     sqcb_p->sqcb0.pd = spec.pd();
 
     stage0_req_rx_prog_addr(&offset);
     sqcb_p->sqcb0.ring_header.pc = offset >> 6;
+    sqcb_p->sqcb1.pc = sqcb_p->sqcb0.ring_header.pc;
 
     stage0_req_tx_prog_addr(&offset_verify);
     HAL_ASSERT(offset == offset_verify);
@@ -913,6 +928,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // Convert data before writting to HBM
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
     memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
+    memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
     g_lif_manager->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
     HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_SQ, spec.qp_num()));
 
@@ -1181,6 +1197,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     g_lif_manager->ReadQState(lif, Q_TYPE_SQ, qp_num, (uint8_t *)sqcb_p, sizeof(sqcb_t));
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
     memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
+    memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
 
     // Read rqcb from HW
     memset(rqcb_p, 0, sizeof(rqcb_t));
@@ -1192,7 +1209,8 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 
         case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QP:
             rqcb_p->rqcb0.dst_qp = spec.dst_qp_num();
-            sqcb_p->sqcb1.dst_qp = spec.dst_qp_num();
+            sqcb_p->sqcb2.dst_qp = spec.dst_qp_num();
+ 
             HAL_TRACE_DEBUG("{}: Update: Setting dst_qp to: {}", __FUNCTION__,
                     spec.dst_qp_num());
         break;
@@ -1213,7 +1231,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
         case rdma::RDMA_UPDATE_QP_OPER_SET_Q_KEY:
             rqcb_p->rqcb0.q_key = spec.q_key();
             rqcb_p->rqcb1.q_key = rqcb_p->rqcb0.q_key;
-            sqcb_p->sqcb1.q_key = spec.q_key();
+            sqcb_p->sqcb2.q_key = spec.q_key();
             HAL_TRACE_DEBUG("{}: Update: Setting q_key to: {}", __FUNCTION__,
                             spec.q_key());
             break;
@@ -1221,6 +1239,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
         case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
 
             sqcb_p->sqcb1.header_template_size = spec.header_template().size();
+            sqcb_p->sqcb2.header_template_size = sqcb_p->sqcb1.header_template_size;
             rqcb_p->rqcb0.header_template_size = spec.header_template().size();
             rqcb_p->rqcb1.header_template_size = rqcb_p->rqcb0.header_template_size;
 
@@ -1250,6 +1269,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     // Convert and write SQCB to HBM
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
     memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
+    memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
     g_lif_manager->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
 
     // Convert and write RQCB to HBM

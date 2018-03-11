@@ -31,7 +31,7 @@ struct req_rx_sqcb1_to_rrqwqe_info_t {
     cur_sge_id              : 8;
     e_rsp_psn               : 24;
     msn                     : 24;
-    in_progress             : 1;
+    rrq_in_progress         : 1;
     rrq_empty               : 1;
     timer_active            : 1;
     dma_cmd_start_index     : 4;
@@ -46,7 +46,7 @@ struct req_rx_rrqwqe_to_sge_info_t {
     cur_sge_id              : 8;
     e_rsp_psn               : 24;
     num_valid_sges          : 8;
-    in_progress             : 1;
+    rrq_in_progress         : 1;
     is_atomic               : 1;
     dma_cmd_eop             : 1;
     dma_cmd_start_index     : 4;
@@ -71,13 +71,14 @@ struct req_rx_sqcb1_write_back_info_t {
     cur_sge_offset          : 32;
     e_rsp_psn               : 24;
     cur_sge_id              : 8;
-    in_progress             : 1;
+    rrq_in_progress         : 1;
     incr_nxt_to_go_token_id : 1;
     post_bktrack            : 1;
     dma_cmd_eop             : 1;
+    last                    : 1;
     num_sges                : 8;
     tbl_id                  : 8;
-    pad                     : 66;
+    pad                     : 65;
 };
 
 struct req_rx_rrqlkey_to_ptseg_info_t {

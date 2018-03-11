@@ -891,6 +891,7 @@ typedef enum rdma_pkt_opc_e {
 
 //RRQ_RING is not actually monitored by scheduler
 #define MAX_SQ_RINGS 6
+#define MAX_HOST_RINGS (MAX_SQ_RINGS - 1)
 
 #define SQ_RING_ID      RING_ID_0
 #define FC_RING_ID      RING_ID_1
@@ -898,91 +899,140 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  color: 1;
-    uint8_t  poll_for_work: 1;
-    uint8_t  poll_success: 1;
-    uint8_t  poll_in_progress: 1;
-    uint8_t  ring_empty_sched_eval_done: 1;
-    uint8_t  state: 3;
-    uint16_t spec_sq_cindex;
-    uint8_t  cb1_byte;
-    uint8_t  busy: 1;        //tx
-    uint8_t  congestion_mgmt_enable: 1;
-    uint8_t  rsvd0: 5;
-    uint8_t  sq_in_hbm: 1;
-    uint8_t  bktrack_in_progress:1;
-    uint8_t  retry_timer_on:1;
-    uint8_t  li_fence:1;
-    uint8_t  fence:1;
-    uint8_t  fast_reg_enable: 1; //tx
-    uint8_t  disable_e2e_fc: 1;//tx
-    uint8_t  signalled_completion: 1;//rx
-    uint8_t  in_progress: 1; //tx
+    uint16_t  li_fence:1;
+    uint16_t  fence:1;
+    uint16_t  busy: 1;        //tx
+    uint16_t  color: 1;
+    uint16_t  poll_in_progress: 1;
+    uint16_t  poll_success: 1;
+    uint16_t  need_credits: 1;
+    uint16_t  in_progress: 1; //tx
+
+    uint8_t  rsvd: 8;
     uint8_t  num_sges;
     uint8_t  current_sge_id;
     uint32_t  current_sge_offset;
     uint64_t curr_wqe_ptr;
-    uint8_t  curr_op_type;
+
+    uint16_t spec_sq_cindex: 16;
+
+    uint16_t  state: 3;
+    uint16_t  bktrack_in_progress:1;
+    uint16_t  rsvd_stage_flags:4;
+
+    uint16_t ring_empty_sched_eval_done: 1;
+    uint16_t retry_timer_on: 1;
+    uint16_t local_ack_timeout: 5;
+    uint16_t congestion_mgmt_enable: 1;
+    uint16_t sq_in_hbm: 1;
+    uint16_t fast_reg_enable: 1; //tx
+    uint16_t disable_e2e_fc: 1;//tx
+    uint16_t signalled_completion: 1;//rx
+    uint16_t poll_for_work: 1;
+    uint16_t rsvd_cfg_flags: 3;
+
     uint32_t service: 4;
     uint32_t log_num_wqes: 5;
     uint32_t log_wqe_size: 5;
     uint32_t log_sq_page_size:5;
     uint32_t log_pmtu:5;           //tx
     uint32_t pd;
+    uint32_t header_template_addr;
     union {
         uint32_t pt_base_addr;          //common
         uint32_t hbm_sq_base_addr;
     };
-    qpcb_ring_t           rings[MAX_SQ_RINGS];
+    qpcb_ring_t           rings[MAX_HOST_RINGS];
     // intrinsic
     qpcb_intrinsic_base_t ring_header;
 } PACKED sqcb0_t;
-
+    
 typedef struct sqcb1_s {
+
+    uint8_t pad[14];
+
+    uint32_t rsvd3: 7;
+    uint32_t rrq_in_progress:1;
+    uint32_t rrqwqe_cur_sge_offset;
+    uint8_t  rrqwqe_cur_sge_id;
+    uint8_t  rrqwqe_num_sges;
+
+    uint32_t rsvd2: 5;
+    uint32_t err_retry_ctr:3;
+    uint32_t rnr_retry_ctr:3;
+    uint32_t credits:5;
+
+    uint32_t msn:24;
+    uint32_t rexmit_psn:24;
+    uint32_t e_rsp_psn:24;
+
+    uint8_t  token_id;
+    uint8_t  nxt_to_go_token_id;
+
+    uint8_t header_template_size;
+    uint32_t header_template_addr;
+
+    uint32_t lsn:24;
+    uint32_t ssn:24;
+    uint32_t tx_psn:24;      //tx
+
+    uint32_t rsvd1 : 14;
+    uint32_t log_pmtu: 5;
+    uint32_t congestion_mgmt_enable:1 ;
+    uint32_t service:4;
+    uint32_t cq_id:24;       //rx
+    uint8_t  log_rrq_size;
+    uint32_t rrq_base_addr;  //common
+    // RRQ RING for rxdma
+    qpcb_ring_t           ring5;
+    uint8_t   pc;
+} PACKED sqcb1_t;
+
+typedef struct sqcb2_s {
+    uint8_t pad[11];
     uint16_t mss;
     uint16_t timestamp_echo;
     uint16_t timestamp;
-    uint8_t header_template_size;
+
     uint8_t p4plus_to_p4_flags;
+
+    uint16_t rrq_pindex;
+    uint16_t sq_cindex;
+
+    uint32_t inv_key;
+    uint32_t imm_data;
+
+    uint8_t curr_op_type;
+    uint32_t wqe_start_psn:24;
+    uint32_t lsn:24;
+    uint32_t ssn:24;
+    uint32_t tx_psn:24;      //tx
+
+    uint32_t rexmit_psn:24;
+    uint8_t credits;
+    uint32_t msn:24;
+
+    uint32_t service:4;
     uint32_t roce_opt_mss_enable:1;
     uint32_t roce_opt_ts_enable:1;
-    uint32_t err_retry_ctr:3;
-    uint32_t nak_retry_ctr:3;
-    uint32_t wqe_start_psn:24;
-    uint32_t rexmit_psn:24;
-    uint32_t e_rsp_psn:24;
-    uint8_t  token_id;
-    uint8_t  nxt_to_go_token_id;
+
+    uint32_t  log_sq_size:5;
+    uint32_t  log_rrq_size:5;
+    uint32_t rrq_base_addr;  //common
+
     union {
         uint32_t header_template_addr;
         uint32_t q_key;
     };
-    uint32_t rrqwqe_cur_sge_offset;
-    uint8_t  rrqwqe_cur_sge_id;
-    uint8_t  rrqwqe_num_sges;
-    uint32_t rsvd2:5;
-    uint32_t local_ack_timeout:5;
-    uint32_t timer_active:1;
-    uint32_t service:4;
-    uint32_t in_progress:1;
-    uint32_t credits:5;
-    uint32_t rsvd1:3;
-    uint32_t msn:24;
-    uint32_t lsn:24;
-    uint32_t ssn:24;
-    uint32_t tx_psn:24;      //tx
+    uint8_t header_template_size;
     uint32_t dst_qp:24;      //tx
-    uint32_t cq_id:24;       //rx
-    uint8_t  log_rrq_size;
-    uint32_t inv_key;
-    uint32_t imm_data;
-    uint32_t rrq_base_addr;  //common
-    // transport related
-} PACKED sqcb1_t;
+} PACKED sqcb2_t;
+
 
 typedef struct sqcb_s {
     sqcb0_t sqcb0; // 0-63 bytes
     sqcb1_t sqcb1; // 63-127 bytes
+    sqcb2_t sqcb2; // 128-191 bytes
 } PACKED sqcb_t;
 
 typedef struct header_template_v4_s {

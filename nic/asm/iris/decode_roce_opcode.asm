@@ -32,8 +32,7 @@ decode_roce_opcode:
   cmov        r1, c1, k.control_metadata_qid, k.roce_bth_destQP
   phvwr       p.capri_rxdma_intrinsic_qid, r1
   phvwr       p.capri_rxdma_intrinsic_qtype, d.u.decode_roce_opcode_d.qtype
-  seq         c1, d.u.decode_roce_opcode_d.qtype, Q_TYPE_RDMA_RQ
-  phvwr.c1    p.p4_to_p4plus_roce_table0_valid, TRUE
+  phvwr       p.p4_to_p4plus_roce_table0_valid, TRUE
   add         r1, d.u.decode_roce_opcode_d.len, \
                   (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                    CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_ROCE_HDR_SZ)

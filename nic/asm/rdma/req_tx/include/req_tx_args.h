@@ -42,7 +42,9 @@ struct req_tx_wqe_to_sge_info_t {
     current_sge_offset             : 32;
     remaining_payload_bytes        : 16;
     ah_size                        : 8;
-    rsvd                           : 8;
+    poll_in_progress               : 1;
+    color                          : 1;
+    rsvd                           : 6;
     dma_cmd_start_index            : 6; // TODO Different from "C" code due to space scarcity
     imm_data                       : 32;
     union {
@@ -111,21 +113,17 @@ struct req_tx_sqcb_write_back_info_t {
     op_type                      : 8;
     first                        : 1;
     last                         : 1;
-    //set_fence                    : 1;
+    set_fence                    : 1;
     set_li_fence                 : 1;
     empty_rrq_bktrack            : 1;
-    release_cb1_busy             : 1;
-    num_sges                     : 7;
-    current_sge_id               : 8;
     current_sge_offset           : 32;
+    current_sge_id               : 8;
+    num_sges                     : 8;
     sq_c_index                   : 16;
-    union {
-        rrq_p_index                  : 16;
-        struct {
-            ah_size                  : 8;
-            rsvd                     : 8;
-        };
-    };
+    ah_size                      : 8;
+    poll_in_progress             : 1;
+    color                        : 1;
+    rsvd                         : 5;
     union op_t op;
 };
 
@@ -142,8 +140,8 @@ struct req_tx_add_hdr_info_t {
 
 // Note: Do not change the order of log_pmtu to num_sges as
 // program uses concatenated copy like k.{log_pmtu...num_sges}
-// from  req_tx_sqcb0_to_sqcb1_info to req_tx_sqcb1_to_bktrack_wqe_info
-struct req_tx_sqcb0_to_sqcb1_info_t {
+// from  req_tx_sqcb0_to_sqcb2_info to req_tx_sqcb2_to_bktrack_wqe_info
+struct req_tx_sqcb0_to_sqcb2_info_t {
     sq_c_index                    : 16;
     sq_p_index                    : 16;
     in_progress                   : 1;
@@ -194,7 +192,7 @@ struct req_tx_sq_bktrack_info_t {
     };
 };
 
-struct req_tx_bktrack_sqcb1_write_back_info_t {
+struct req_tx_bktrack_sqcb2_write_back_info_t {
     wqe_start_psn                 : 24;
     tx_psn                        : 24;
     ssn                           : 24;
@@ -202,17 +200,17 @@ struct req_tx_bktrack_sqcb1_write_back_info_t {
     tbl_id                        : 3;
     imm_data                      : 32;
     inv_key                       : 32;
-    pad                           : 20;
+    op_type                       : 8;    
+    pad                           : 12;
 };
 
 struct req_tx_sq_to_stage_t {
     wqe_addr                     : 64;
     spec_cindex                  : 16; 
     header_template_addr         : 32;
-    packet_len                   : 13;
+    packet_len                   : 14;
     congestion_mgmt_enable       : 1;   
     rate_enforce_failed          : 1;
-    poll_in_progress             : 1;
 };
 
 struct req_tx_bktrack_to_stage_t {

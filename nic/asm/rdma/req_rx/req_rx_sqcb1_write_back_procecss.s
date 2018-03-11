@@ -9,12 +9,14 @@ struct sqcb1_t d;
 
 .align
 req_rx_sqcb1_write_back_process:
-    tblwr          d.in_progress, k.args.in_progress
+    tblwr          d.rrq_in_progress, k.args.rrq_in_progress
     tblwr          d.rrqwqe_cur_sge_id, k.args.cur_sge_id
     tblwr          d.rrqwqe_cur_sge_offset, k.args.cur_sge_offset
     tblwr          d.e_rsp_psn, k.args.e_rsp_psn
     seq            c1, k.args.incr_nxt_to_go_token_id, 1
     tblmincri.c1   d.nxt_to_go_token_id, SIZEOF_TOKEN_ID_BITS, 1
+    seq            c1, k.args.last, 1
+    tblmincri.c1   RRQ_C_INDEX, d.log_rrq_size, 1 
 
     bbne           k.args.post_bktrack, 1, end
     nop            // Branch Delay Slot

@@ -6,13 +6,13 @@ struct req_tx_bktrack_sqsge_process_k_t k;
 
 #define SQ_BKTRACK_T struct req_tx_sq_bktrack_info_t
 #define SQCB0_WRITE_BACK_T struct req_tx_sqcb_write_back_info_t
-#define SQCB1_WRITE_BACK_T struct req_tx_bktrack_sqcb1_write_back_info_t
+#define SQCB2_WRITE_BACK_T struct req_tx_bktrack_sqcb2_write_back_info_t
 #define TO_STAGE_T struct req_tx_to_stage_t
 
 %%
 
     .param    req_tx_bktrack_write_back_process
-    .param    req_tx_bktrack_sqcb1_write_back_process
+    .param    req_tx_bktrack_sqcb2_write_back_process
 
 .align
 req_tx_bktrack_sqsge_process:
@@ -147,15 +147,15 @@ sqcb_writeback:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r5)
 
     CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, skip_wqe_start_psn, 1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tx_psn, r3)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, ssn, k.args.ssn)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, imm_data, k.args.imm_data)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, inv_key, k.args.inv_key)
+    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, skip_wqe_start_psn, 1)
+    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, tx_psn, r3)
+    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, ssn, k.args.ssn)
+    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, tbl_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, imm_data, k.args.imm_data)
+    CAPRI_SET_FIELD(r7, SQCB2_WRITE_BACK_T, inv_key, k.args.inv_key)
 
-    SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb1_write_back_process, r5)
+    SQCB2_ADDR_GET(r5)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_write_back_process, r5)
 
     nop.e
     nop

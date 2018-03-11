@@ -64,6 +64,7 @@ rx_roce_udp_options_done:
 
     // table0_valid ==> r7[43]
     seq             c3, d.u.rx_roce_d.qtype, Q_TYPE_RDMA_RQ
+    seq.!c3         c3, d.u.rx_roce_d.qtype, Q_TYPE_RDMA_SQ
     or.c3           r7, r7, 1, 43
 
     // write qid, r7

@@ -23,7 +23,6 @@ req_tx_credits_process:
 skip_credit_flag_update:
     // sqcb0_p->busy = False
     tblwr          d.busy, 0
-    tblwr          d.cb1_busy, 0
 
     CAPRI_SET_TABLE_0_VALID(0)
     phvwr  p.common.p4_intr_global_drop, 1

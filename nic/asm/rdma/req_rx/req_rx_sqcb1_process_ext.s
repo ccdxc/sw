@@ -2,13 +2,14 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct sqcb0_t d;
+struct sqcb1_t d;
 struct common_p4plus_stage0_app_header_table_k k;
+#define SQCB1_TO_STAGE_T struct req_rx_to_stage_t
 
 %%
 
 .align
-req_rx_sqcb_process_ext:
+req_rx_sqcb1_process_ext:
 
     // global fields
     add            r1, r0, offsetof(struct phv_, common_global_global_data)
@@ -21,6 +22,11 @@ req_rx_sqcb_process_ext:
 
     // set DMA CMD ptr
     RXDMA_DMA_CMD_PTR_SET(REQ_RX_DMA_CMD_START_FLIT_ID)
+
+    CAPRI_GET_STAGE_1_ARG(req_rx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, SQCB1_TO_STAGE_T, msn, CAPRI_APP_DATA_AETH_MSN)
+    CAPRI_SET_FIELD(r7, SQCB1_TO_STAGE_T, bth_psn, CAPRI_APP_DATA_BTH_PSN)
+    CAPRI_SET_FIELD(r7, SQCB1_TO_STAGE_T, syndrome, CAPRI_APP_DATA_AETH_SYNDROME)
 
     nop.e
     nop

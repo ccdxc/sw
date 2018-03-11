@@ -7,7 +7,7 @@
 #include "defines.h"
 
 struct req_tx_phv_t p;
-struct sqcb1_t d;
+struct sqcb2_t d;
 
 #define DMA_CMD_BASE        r1
 
@@ -16,7 +16,7 @@ struct sqcb1_t d;
     .param      req_tx_dcqcn_cnp_process
 
 // Prepare CNP packet
-req_tx_sqcb1_cnp_process:
+req_tx_sqcb2_cnp_process:
     
     // Update dst_qp of the packet.
     phvwr       p.bth.dst_qp, d.dst_qp

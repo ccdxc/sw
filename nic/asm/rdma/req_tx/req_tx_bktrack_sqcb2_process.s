@@ -2,8 +2,8 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_bktrack_sqcb1_process_k_t k;
-struct sqcb1_t d;
+struct req_tx_bktrack_sqcb2_process_k_t k;
+struct sqcb2_t d;
 
 #define SQ_BKTRACK_T struct req_tx_sq_bktrack_info_t
 #define TO_STAGE_T struct req_tx_to_stage_t
@@ -15,7 +15,7 @@ struct sqcb1_t d;
     .param req_tx_bktrack_write_back_process
 
 .align
-req_tx_bktrack_sqcb1_process:
+req_tx_bktrack_sqcb2_process:
     // if rexmit_psn is same as tx_psn, then this is a spurious timer expiry
     // event. Just write back to release busy bits
     seq            c1, d.rexmit_psn, d.tx_psn
@@ -108,7 +108,7 @@ sqcb_write_back:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, in_progress, k.args.in_progress)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, empty_rrq_bktrack, 1)
-    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, release_cb1_busy, 1)
+    //CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, release_cb1_busy, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, num_sges, k.args.num_sges)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, current_sge_id, k.args.current_sge_id)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, current_sge_offset, k.args.current_sge_offset)
