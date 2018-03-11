@@ -339,6 +339,9 @@ static int ionic_poll_one(struct ionic_cq *cq,
                 ionic_incr_head(sq);
                 wc++;
                 (*npolled)++;
+
+		// XXX msn seems to be broken (msn == zero every time)
+		break;
             }
             g_msn = msn + 1;
             IONIC_LOG("CQ Poll Success: MSN %d Send CQEs %d\n", msn, *npolled);
