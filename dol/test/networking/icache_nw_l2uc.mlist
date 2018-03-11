@@ -1,0 +1,18 @@
+# Feature Test Modules List
+feature:
+    id          : nw_icache
+    sub         : l2uc
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_TCP_QTAG
+        spec    : l2uc.testspec
+        tcscale : 10
+        modscale: 100
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False

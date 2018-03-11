@@ -1,0 +1,19 @@
+# Feature Test Modules List
+# For RDMA TX SEND ONLY SCALE tests
+feature:
+    id          : rdma_icache
+    sub         : tx
+    package     : test.rdma
+    module      : req_tx_send_only_inline_scale
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    selectors:
+        maxrdmasessions: 1
+
+modules:
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE
+        spec    : icache_req_tx_send_only_inline_scale.testspec
+        modscale: 500

@@ -1,0 +1,19 @@
+# Feature Test Modules List
+feature:
+    id          : eth_icache
+    sub         : txrxl2
+    package     : test.eth
+    module      : eth
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : IPV4_QTAG
+        spec    : tx_rx.testspec
+        tcscale : 10
+        modscale: 100
+        iterate:
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False

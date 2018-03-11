@@ -1,0 +1,20 @@
+# Feature Test Modules List
+# For RDMA perf tests
+feature:
+    id          : rdma_icache
+    sub         : rx
+    package     : test.rdma
+    module      : resp_rx_send_only_scale_1qp
+    enable      : True
+    ignore      : False
+    perf        : True
+    rtl         : True
+    pps         : True
+    selectors:
+        maxrdmasessions: 1
+
+modules:
+    - module:
+        name    : RDMA_RX_SEND_ONLY
+        spec    : icache_resp_rx_send_only_scale_1qp.testspec
+        modscale: 500

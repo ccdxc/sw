@@ -1,0 +1,55 @@
+# Topology specification
+meta:
+    id: TOPO_ICACHE
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc: None
+proxy   : False
+ipsec   : False
+acls    : None
+qos     : False
+
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
+
+tenants:
+#    -   spec    : ref://store/specs/id=ICACHE_TENANT_SPAN_VLAN
+#        count   : 1
+#        lifns   : range/101/101
+#    -   spec    : ref://store/specs/id=ICACHE_TENANT_INFRA
+#        count   : 1
+#        lifns   : range/201/208
+    -   spec    : ref://store/specs/id=ICACHE_TENANT_OVERLAY_VLAN
+        count   : 1
+        lifns   : range/301/308
+#    -   spec    : ref://store/specs/id=ICACHE_TENANT_OVERLAY_VXLAN
+#        count   : 1
+#        lifns   : range/401/408
+
+cpu:
+    - entry:
+        id      : Cpu1 
+        lif_id  : 1003
+
+timers:
+    - entry:
+        id          : SLOW_TIMER
+        slowfast    : 0
+        ctime       : 0
+    - entry:
+        id          : FAST_TIMER
+        slowfast    : 1
+        ctime       : 0
