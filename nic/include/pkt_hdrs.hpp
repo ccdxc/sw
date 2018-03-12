@@ -110,6 +110,9 @@ typedef struct udp_header_s {
     uint16_t  check;
 } __PACK__ udp_header_t;
 
+#define ICMP_NEIGHBOR_SOLICITATION     135
+#define ICMP_NEIGHBOR_ADVERTISEMENT    136
+
 typedef struct icmp_header_s {
     uint8_t          type;
     uint8_t          code;

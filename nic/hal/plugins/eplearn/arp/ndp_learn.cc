@@ -1,7 +1,7 @@
 #include "arp_trans.hpp"
 #include "ndp_learn.hpp"
 #include "nic/include/eth.h"
-#include "nic/p4/iris/include/defines.h"
+#include "nic/include/pkt_hdrs.hpp"
 
 namespace hal {
 namespace eplearn {
