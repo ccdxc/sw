@@ -131,6 +131,11 @@ typedef enum hal_obj_id_e {
     HAL_OBJ_ID_MAX
 } hal_obj_id_t;
 
+//------------------------------------------------------------------------------
+// API to create default configuration during init time
+//------------------------------------------------------------------------------
+hal_ret_t hal_default_cfg_init(hal_cfg_t *hal_cfg);
+
 }    // namespace hal
 
 #endif    // __HAL_CFG_HPP__

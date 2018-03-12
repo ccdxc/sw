@@ -43,7 +43,7 @@ public:
     }
 
 
-    void open(const filename_t& fname, bool truncate = false)
+    void open(const filename_t& fname, bool truncate = true)
     {
 
         close();
