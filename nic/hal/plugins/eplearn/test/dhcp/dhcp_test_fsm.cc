@@ -218,7 +218,15 @@ class dhcp_fsm_test : public hal_base_test {
 
 EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
                                     unsigned char *chaddr, const char *yiaddr, bool broadcast = false) {
-    EthernetII *eth = new EthernetII();
+    EthernetII *eth;
+    if (broadcast) {
+        //HWAddress<6> hw_address((const char*)("ff:ff:ff:ff:ff:ff"));
+        //eth->dst_addr(hw_address);
+        uint8_t broadcast[] = {0xff, 0xff,0xff, 0xff,0xff,0xff, 0};
+        eth = new EthernetII(broadcast);
+    } else {
+        eth = new EthernetII();
+    }
     IP *ip = new IP();
     UDP *udp = new UDP();
     DHCP *dhcp = new DHCP();
@@ -248,10 +256,7 @@ EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
     const char *fname = "FNAME";
     dhcp->file((const uint8_t *)fname);
 
-    if (broadcast) {
-        HWAddress<6> hw_address("ff:ff:ff:ff:ff:ff");
-        eth->dst_addr(hw_address);
-    }
+
     return eth;
 }
 
@@ -345,7 +350,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
 
     options.clear();
     const char *ip_addr = ip_address;
-    std::vector<uint8_t> lease_time = {0, 0, 1, 0};
+    std::vector<uint8_t> lease_time = {3, 0, 0, 0};
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
                                 lease_time.end());
     options.push_back(lease_time_opt);

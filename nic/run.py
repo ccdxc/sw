@@ -49,10 +49,10 @@ os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
 #Path and executables
 model_executable = nic_dir + "/../bazel-bin/nic/model_sim/cap_model"
-model_core_path  = nic_dir + "/../bazel-out/local-fastbuild/bin/nic/model_sim"
+model_core_path  = nic_dir
 
 hal_executable = nic_dir + "/../bazel-bin/nic/hal/hal"
-hal_core_path = nic_dir + "/../bazel-out/local-fastbuild/bin/nic/hal"
+hal_core_path = nic_dir
 
 def print_core(executable, core):
     cmd = ['gdb -batch -ex  "bt"']
@@ -73,22 +73,24 @@ def remove_all_core_files():
     remove_core_files(hal_core_path)
     remove_core_files(model_core_path)
 
-def process_core(executable, core_path):
-    core_file = get_latest_core_file(core_path)
-    if core_file:
+def process_core(executable, core_file):
+    if os.path.isfile(core_file):
+        #Wait for all std out to clear.
+        time.sleep(5)
         print_core(executable, core_file)
         os.system("mv " + core_file + "  " + nic_dir + "/core." +  os.path.basename(executable))
 
 
-def process_hal_core():
-    process_core(hal_executable, hal_core_path)
+def process_hal_core(hal_core_file):
+    print ("**********HAL CORE BEGIN**********")
+    process_core(hal_executable, hal_core_file)
+    print ("**********HAL CORE END**********")
 
-def process_model_core():
-    process_core(model_executable, model_core_path)
+def process_model_core(model_core_file):
+    print ("**********MODEL CORE BEGIN**********")
+    process_core(model_executable, model_core_file)
+    print ("**********MODEL CORE END**********")
 
-def process_cores():
-    process_hal_core()
-    process_model_core()
 
 # build
 def build():
@@ -348,23 +350,20 @@ def check_for_completion(p, model_process, hal_process, args):
         print "* MODEL exit code " + str(model_process.returncode)
         if model_process.returncode:
             exitcode = model_process.returncode
-            check_for_cores = True
+            core_file = model_core_path + "/core." + str(model_process.pid)
+            process_model_core(core_file)
 
     if hal_process:
         print "* HAL exit code " + str(hal_process.returncode)
         if hal_process.returncode:
             exitcode = hal_process.returncode
-            check_for_cores = True
+            core_file = hal_core_path + "/core." + str(hal_process.pid)
+            process_hal_core(core_file)
 
     if p:
         print "* DOL exit code " + str(p.returncode)
         if p.returncode:
             exitcode = p.returncode
-
-    if check_for_cores:
-        #Wait for all stdouts to clear out.
-        time.sleep(5)
-        process_cores()
 
     return exitcode
 
