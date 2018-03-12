@@ -3110,7 +3110,10 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
     for (i = 0; i < num_l2segs; i++) {
         l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
         l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
-        HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_INVALID_ARG);
+        if (l2seg == NULL) {
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
 
         if (l2seg_in_classic_enicif(hal_if, l2seg->hal_handle, NULL)) {
             continue;
@@ -3215,7 +3218,10 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
     for (i = 0; i < num_mbrs; i++) {
         mbr_if_key_handle = spec.if_uplink_pc_info().member_if_key_handle(i);
         mbr_if = if_lookup_key_or_handle(mbr_if_key_handle);
-        HAL_ASSERT_RETURN(mbr_if != NULL, HAL_RET_INVALID_ARG);
+        if (mbr_if == NULL) {
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
 
         // Add to aggregated list
         hal_add_to_handle_list(*aggr_mbrlist, mbr_if->hal_handle);

@@ -832,7 +832,10 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
                     __FUNCTION__, num_sgs);
     for (i = 0; i < num_sgs; i++) {
         sg = nwsec_group_lookup_key_or_handle(spec.sg_key_handle(i));
-        HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
+        if (sg == NULL) {
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
         sg_id = sg->sg_id;
 
         // Add to aggregated list

@@ -514,6 +514,7 @@ def ConfigObjectNegativeTest():
         for config_object in object_helper._config_objects:
             try:
                 create_message = config_object._msg_cache[ConfigObjectMeta.CREATE]
+                update_message = config_object._msg_cache[ConfigObjectMeta.UPDATE]
                 delete_message = config_object._msg_cache[ConfigObjectMeta.DELETE]
                 for neg_message in GrpcReqRspMsg.negative_test_generator(create_message):
                     print("The original message is " + str(create_message))
@@ -527,25 +528,49 @@ def ConfigObjectNegativeTest():
                     # the next test case will be correctly executed
                     config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
 
+                for neg_message in GrpcReqRspMsg.negative_test_generator(create_message):
+                    print("The original message is " + str(create_message))
+                    print("The negative test message is " + str(neg_message))
+                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, neg_message, False) 
+                    if ret_status == ApiStatus.API_STATUS_OK:
+                        print("Expected an error in API Return Status, but API_STATUS_OK was returned")
+                    else:
+                        print("API Status returned as error correctly")
+                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that 
+                    # the next test case will be correctly executed
+                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+
+                for neg_message in GrpcReqRspMsg.negative_test_generator(update_message):
+                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, create_message, False)
+                    print("The original message is " + str(update_message))
+                    print("The negative test message is " + str(neg_message))
+                    ret_status, _ = config_object.send_message(ConfigObjectMeta.UPDATE, neg_message, False) 
+                    if ret_status == ApiStatus.API_STATUS_OK:
+                        print("Expected an error in API Return Status, but API_STATUS_OK was returned")
+                    else:
+                        print("API Status returned as error correctly")
+                    # Delete the message just to be safe, in case it was incorrectly created in HAL, so that 
+                    # the next test case will be correctly executed
+                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+
+                if ret_status == ApiStatus.API_STATUS_OK:
                     # Now ReCreate the message, and try deleting all the reference objects. We should 
                     # get an API_STATUS_OBJ_IN_USE in response.
-                    ret_status, _ = config_object.send_message(ConfigObjectMeta.CREATE, create_message, False)
-                    if ret_status == ApiStatus.API_STATUS_OK:
-                        for key in config_object.ext_ref_objects.values():
-                            if isinstance(key, list):
-                                key = key[0]
-                            ref_object = GetRefObjectFromKey(key)
-                            if not ref_object:
-                                continue
-                            print("Deleting reference object while still in use for " + str(ref_object))
-                            # Try Deleting the referred object.
-                            ret_status, _ = ref_object.process(ConfigObjectMeta.DELETE)
-                            if ret_status != 'API_STATUS_OBJECT_IN_USE':
-                                print("Expected an API_STATUS_OBJECT_IN_USE for delete of a referred object" \
-                                       ", but return code was " + str(ret_status))
-                            else:
-                                print("Api Status returned as API_STATUS_OBJECT_IN_USE correctly")
-                            ret_status, _ = ref_object.process(ConfigObjectMeta.CREATE, redo=True)
-                    config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
+                    for key in config_object.ext_ref_objects.values():
+                        if isinstance(key, list):
+                            key = key[0]
+                        ref_object = GetRefObjectFromKey(key)
+                        if not ref_object:
+                            continue
+                        print("Deleting reference object while still in use for " + str(ref_object))
+                        # Try Deleting the referred object.
+                        ret_status, _ = ref_object.process(ConfigObjectMeta.DELETE)
+                        if ret_status != 'API_STATUS_OBJECT_IN_USE':
+                            print("Expected an API_STATUS_OBJECT_IN_USE for delete of a referred object" \
+                                   ", but return code was " + str(ret_status))
+                        else:
+                            print("Api Status returned as API_STATUS_OBJECT_IN_USE correctly")
+                        ret_status, _ = ref_object.process(ConfigObjectMeta.CREATE, redo=True)
+                config_object.send_message(ConfigObjectMeta.DELETE, delete_message, False) 
             except KeyError:
                 continue
