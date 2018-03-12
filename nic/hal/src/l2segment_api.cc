@@ -2,6 +2,7 @@
 
 #include "nic/hal/src/interface.hpp"
 #include "nic/include/interface_api.hpp"
+#include "nic/hal/src/export/vrf_api.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/include/l2segment_api.hpp"
 #include "nic/hal/src/nwsec.hpp"
@@ -114,7 +115,34 @@ l2seg_get_ipsg_en(l2seg_t *pi_l2seg)
 l2seg_t *
 l2seg_get_infra_l2seg()
 {
-    return (l2seg_t *)g_hal_state->infra_l2seg();
+    vrf_t           *vrf = NULL;
+    l2seg_t         *l2seg    = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+
+    vrf = vrf_get_infra_vrf();
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("Unable to find infra vrf");
+        goto end;
+    }
+
+    if (vrf->l2seg_list->num_elems() != 1) {
+        HAL_TRACE_ERR("Invalid number of l2segs in infra vrf: {}", 
+                      vrf->l2seg_list->num_elems());
+        goto end;
+    }
+
+    for (const void *ptr : *vrf->l2seg_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        l2seg = l2seg_lookup_by_handle(*p_hdl_id);
+        if (!l2seg) {
+            HAL_TRACE_ERR("unable to find l2seg with handle:{}", *p_hdl_id);
+            goto end;
+        }
+        return l2seg;
+    }
+
+end:
+    return NULL;
 }
 
 // ----------------------------------------------------------------------------

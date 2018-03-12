@@ -119,8 +119,7 @@ static hal_ret_t
 validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
                            l2seg_create_app_ctxt_t &app_ctxt)
 {
-    vrf_t   *vrf = NULL, *infra_vrf = NULL;
-    l2seg_t *infra_l2seg = NULL; 
+    vrf_t   *vrf = NULL;
 
     if (!spec.has_vrf_key_handle() ||
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
@@ -171,6 +170,15 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
     }
     app_ctxt.vrf = vrf;
 
+
+    if (vrf->vrf_type == types::VRF_TYPE_INFRA && 
+        vrf->l2seg_list->num_elems()) {
+        HAL_TRACE_ERR("Infra Vrf already has an L2seg present.");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // TODO: Cleanup: There wont be an infra L2seg. Only Infra VRF.
+#if 0
     if (spec.segment_type() == types::L2_SEGMENT_TYPE_INFRA) {
 
         // Check if Infra L2Seg exists already
@@ -191,6 +199,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp,
             return HAL_RET_VRF_NOT_FOUND;
         }
     }
+#endif
 
     return HAL_RET_OK;
 }
@@ -363,11 +372,14 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    // TODO Cleanup: There wont be an infra L2seg. Only Infra vrf.
+#if 0
     if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
         HAL_TRACE_DEBUG("id:{} is infra ",
                         l2seg->seg_id);
         g_hal_state->set_infra_l2seg(l2seg);
     }
+#endif
 
 end:
 
@@ -1511,10 +1523,14 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    // TODO: Bharat There wont be anything called infra l2seg. There will be
+    //       only Infra VRF.
+#if 0
     // If it is Infra L2seg, remove the reference
     if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
         g_hal_state->set_infra_l2seg(NULL);
     }
+#endif
 
     // b. Remove object from handle id based hash table
     hal_handle_free(hal_handle);

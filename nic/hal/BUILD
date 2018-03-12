@@ -63,7 +63,8 @@ cc_library(
     ] + glob(["src/*.cc"]),
     hdrs = [
         "hal.hpp",
-    ] + glob(["src/*.hpp"]),
+    ] + glob(["src/*.hpp"]) +
+    glob(["src/export/*.hpp"]),
     copts = sdk_copts,
     deps = [
         "//nic:asic_includes",

@@ -639,7 +639,7 @@ hal_oper_db::init(void)
 hal_oper_db::hal_oper_db()
 {
     hal_handle_id_ht_  = NULL;
-    infra_l2seg_ = NULL;
+    infra_vrf_handle_ = HAL_HANDLE_INVALID;
     ep_l2_ht_ = NULL;
     ep_l3_entry_ht_ = NULL;
     flow_ht_ = NULL;
@@ -674,8 +674,6 @@ hal_oper_db::factory(void)
 hal_oper_db::~hal_oper_db()
 {
     hal_handle_id_ht_ ? ht::destroy(hal_handle_id_ht_) : HAL_NOP;
-
-    infra_l2seg_ = NULL;
 
     ep_l2_ht_ ? ht::destroy(ep_l2_ht_) : HAL_NOP;
     ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_) : HAL_NOP;

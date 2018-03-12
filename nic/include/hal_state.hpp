@@ -323,10 +323,8 @@ public:
     ~hal_oper_db();
 
     ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
-    void *infra_l2seg(void) { return infra_l2seg_; }
-    void set_infra_l2seg(void *infra_l2seg) { infra_l2seg_ = infra_l2seg; }
-    void *infra_vrf(void) { return infra_vrf_; }
-    void set_infra_vrf(void *infra_vrf) { infra_vrf_ = infra_vrf; }
+    hal_handle_t infra_vrf_handle(void) { return infra_vrf_handle_; }
+    void set_infra_vrf_handle(hal_handle_t infra_vrf_hdl) { infra_vrf_handle_ = infra_vrf_hdl; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *flow_ht(void) const { return flow_ht_; }
@@ -338,8 +336,7 @@ private:
     hal_oper_db();
 
 private:
-    void                   *infra_vrf_;      // Infra VRF *
-    void                   *infra_l2seg_;    // l2seg_t *
+    hal_handle_t           infra_vrf_handle_;    // Infra Vrf handle
     eventmgr               *event_mgr_;
     ht                     *hal_handle_id_ht_;
     ht                     *ep_l2_ht_;
@@ -580,13 +577,9 @@ public:
     ht *proxy_type_ht(void) const { return cfg_db_->proxy_type_ht(); }
     ht *proxy_hal_handle_ht(void) const { return cfg_db_->proxy_hal_handle_ht(); }
 
-    // get API for infra l2seg
-    void *infra_l2seg(void) { return oper_db_->infra_l2seg(); }
-    void set_infra_l2seg(void *infra_l2seg) { oper_db_->set_infra_l2seg(infra_l2seg); }
-
     // get API for infra VRF
-    void *infra_vrf(void) { return oper_db_->infra_vrf(); }
-    void set_infra_vrf(void *infra_vrf) { oper_db_->set_infra_vrf(infra_vrf); }
+    hal_handle_t infra_vrf_handle(void) { return oper_db_->infra_vrf_handle(); }
+    void set_infra_vrf_handle(hal_handle_t infra_vrf_handle) { oper_db_->set_infra_vrf_handle(infra_vrf_handle); }
 
     // get APIs for IPSEC CB state
     slab *ipseccb_slab(void) const { return mem_db_->ipseccb_slab(); }

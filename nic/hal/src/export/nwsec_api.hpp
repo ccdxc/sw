@@ -1,12 +1,5 @@
-/* 
- * ----------------------------------------------------------------------------
- *
- * nwsec_api.hpp
- *
- * Nwsec APIs exported by PI to PD.
- *
- * ----------------------------------------------------------------------------
- */
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __NWSEC_API_HPP__
 #define __NWSEC_API_HPP__
 

@@ -764,6 +764,8 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
+    // There are no infra l2segs anymore
+#if 0
     // Create Infra l2seg with non-infra vrf
     infra_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     infra_spec.clear_network_key_handle();
@@ -778,6 +780,7 @@ TEST_F(l2seg_test, test5)
     HAL_TRACE_DEBUG("ret: {}", ret);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
+#endif
 
     // Create Infra vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(85);

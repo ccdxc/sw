@@ -1,12 +1,5 @@
-/* 
- * ----------------------------------------------------------------------------
- *
- * endpoint_api.hpp
- *
- * Endpoint APIs exported by PI
- *
- * ----------------------------------------------------------------------------
- */
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __ENDPOINT_API_HPP__
 #define __ENDPOINT_API_HPP__
 

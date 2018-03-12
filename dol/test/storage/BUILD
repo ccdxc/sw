@@ -182,7 +182,8 @@ cc_library(
         "//nic/model_sim:model_client",
     ],
     copts = [
-        "-std=c++14 -g",
+        "-std=c++14",
+        "-g",
     ]
 )
 

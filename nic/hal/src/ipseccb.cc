@@ -5,6 +5,7 @@
 #include "nic/hal/src/ipseccb.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/src/export/vrf_api.hpp"
 #include "utils.hpp"
 
 namespace hal {
@@ -101,8 +102,8 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     pd::pd_ipseccb_create_args_t    pd_ipseccb_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
-    l2seg_t *infra_seg;
-    vrf_id_t tid;
+    vrf_t   *vrf;
+    vrf_id_t tid = 0;
 
     // validate the request message
     ret = validate_ipseccb_create(spec, rsp);
@@ -131,13 +132,11 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
 
-    infra_seg = l2seg_get_infra_l2seg();
-    if (infra_seg) {
-        tid = hal::vrf_lookup_by_handle(infra_seg->vrf_handle)->vrf_id;
-        HAL_TRACE_DEBUG("infra_seg success tid = {}", tid);
-    } else {
-        tid = 0;
+    vrf = vrf_get_infra_vrf();
+    if (vrf) {
+        tid = vrf->vrf_id;
     }
+
     sep = find_ep_by_v4_key(tid, htonl(spec.tunnel_sip4()));
     if (sep) {
         smac = ep_get_mac_addr(sep);
@@ -212,7 +211,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     pd::pd_ipseccb_update_args_t    pd_ipseccb_args;
     ep_t *sep, *dep;
     mac_addr_t *smac = NULL, *dmac = NULL;
-    l2seg_t *infra_seg;
+    vrf_t   *vrf;
     vrf_id_t tid;
 
     auto kh = spec.key_or_handle();
@@ -251,12 +250,11 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
      
     HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {}\n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6)); 
-    infra_seg = l2seg_get_infra_l2seg();
-    if (infra_seg) {
-        tid = hal::vrf_lookup_by_handle(infra_seg->vrf_handle)->vrf_id;
-        HAL_TRACE_DEBUG("infra_seg success tid = {}", tid);
+    vrf = vrf_get_infra_vrf();
+    if (vrf) {
+        tid = vrf->vrf_id;
+        HAL_TRACE_DEBUG("infra_vrf success tid = {}", tid);
     } else {
-        tid = 0;
     }
     sep = find_ep_by_v4_key(tid, (spec.tunnel_sip4()));
     if (sep) {
