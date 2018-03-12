@@ -82,6 +82,9 @@ struct ionic_qp {
 	pthread_spinlock_t	sq_lock;
 	struct ionic_queue	sq;
 
+	uint32_t		sq_local;
+	uint32_t		sq_msn;
+
 	pthread_spinlock_t	rq_lock;
 	struct ionic_queue	rq;
 
@@ -278,10 +281,49 @@ static inline uint8_t ionic_ibv_wr_to_wc_opcd(uint8_t wr_opcd)
 #define OP_TYPE_SEND_RCVD          17
 #define OP_TYPE_INVALID            18
 
+static inline enum ibv_wc_opcode ionic_to_ibv_wc_opcd(uint8_t ionic_opcd)
+{
+	enum ibv_wc_opcode ibv_opcd;
+
+	/* XXX should this use ionic_wc_type instead? */
+	switch (ionic_opcd) {
+	case OP_TYPE_SEND:
+	case OP_TYPE_SEND_INV:
+	case OP_TYPE_SEND_IMM:
+		ionic_opcd = IBV_WC_SEND;
+		break;
+	case OP_TYPE_READ:
+		ionic_opcd = IBV_WC_RDMA_READ;
+		break;
+	case OP_TYPE_WRITE:
+	case OP_TYPE_WRITE_IMM:
+		ionic_opcd = IBV_WC_RDMA_WRITE;
+		break;
+	case OP_TYPE_CMP_N_SWAP:
+		ionic_opcd = IBV_WC_COMP_SWAP;
+		break;
+	case OP_TYPE_FETCH_N_ADD:
+		ionic_opcd = IBV_WC_FETCH_ADD;
+		break;
+	case OP_TYPE_LOCAL_INV:
+		ionic_opcd = IBV_WC_LOCAL_INV;
+		break;
+	case OP_TYPE_BIND_MW:
+		ionic_opcd = IBV_WC_BIND_MW;
+		break;
+	default:
+		ibv_opcd = 0;
+	}
+
+	return ibv_opcd;
+}
+
 static inline uint8_t ionic_to_ibv_wc_status(uint8_t wcst)
 {
 	uint8_t ibv_wcst;
 
+	/* XXX should this use ionic_{req,rsp}_wc_status instead?
+	 * also, do we really need two different enums for wc status? */
     switch (wcst) {
     case 0:
         ibv_wcst = IBV_WC_SUCCESS;
@@ -322,6 +364,12 @@ static inline uint8_t ionic_to_ibv_wc_status(uint8_t wcst)
     }
 
 	return ibv_wcst;
+}
+
+static inline bool ionic_op_is_local(uint8_t opcd)
+{
+	return opcd == OP_TYPE_LOCAL_INV ||
+		opcd == OP_TYPE_BIND_MW;
 }
 
 #if 0
