@@ -11,6 +11,7 @@
 #include <util/udma_barrier.h>
 
 #include "ionic-abi.h"
+#include "ionic_queue.h"
 #include "memory.h"
 #include "table.h"
 
@@ -42,16 +43,15 @@ struct ionic_cq {
 	struct ibv_cq		ibvcq;
 	struct list_node	ctx_ent;
 
-	uint32_t            cqid;
+	uint32_t		cqid;
 
-	pthread_spinlock_t        lock;
+	pthread_spinlock_t	lock;
+	struct ionic_queue	q;
 
-    uint8_t             qtype;
-    uint8_t             done_color;
-	struct ionic_queue  cqq;
-	struct ionic_dpi   *udpi;    
-	uint32_t            cqe_size;
-    struct ionic_context      *cntxt;
+	/* XXX cleanup */
+	uint8_t			qtype;
+	struct ionic_dpi	*udpi;
+	struct ionic_context	*cntxt;
 };
 
 struct ionic_srq {
@@ -75,11 +75,17 @@ struct ionic_qpcap {
 };
 
 struct ionic_qp {
-	struct ibv_qp ibvqp;
-	struct ionic_queue *sqq;
-	struct ionic_wrid *swrid;
-	struct ionic_queue *rqq;
-	struct ionic_wrid *rwrid;
+	struct ibv_qp		ibvqp;
+
+	uint32_t qpid;
+
+	pthread_spinlock_t	sq_lock;
+	struct ionic_queue	sq;
+
+	pthread_spinlock_t	rq_lock;
+	struct ionic_queue	rq;
+
+	/* XXX cleanup */
 	struct ionic_srq *srq;
 	struct ionic_cq *scq;
 	struct ionic_cq *rcq;
@@ -87,7 +93,6 @@ struct ionic_qp {
 	struct ionic_qpcap cap;
     struct ionic_context *cntxt;
     
-	uint32_t qpid;
 	uint32_t tbl_indx;
 	uint32_t sq_psn;
 	uint32_t ionicding_db;
@@ -112,18 +117,11 @@ struct ionic_ah {
 struct ionic_dev {
 	struct verbs_device vdev;
 	uint8_t abi_version;
-	uint32_t pg_size;
+	size_t pg_size;
 
 	uint32_t cqe_size;
 	uint32_t max_cq_depth;
 };
-
-/* DB ring functions used internally*/
-void ionic_ring_rq_db(struct ionic_qp *qp);
-void ionic_ring_sq_db(struct ionic_qp *qp);
-void ionic_ring_srq_db(struct ionic_srq *srq);
-void ionic_ring_cq_db(struct ionic_cq *cq);
-void ionic_ring_cq_arm_db(struct ionic_cq *cq, uint8_t aflag);
 
 /* pointer conversion functions*/
 static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibvdev)

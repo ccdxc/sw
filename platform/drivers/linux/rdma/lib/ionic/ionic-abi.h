@@ -141,15 +141,6 @@ enum ionic_shpg_offt {
 
 #define IONIC_MAX_INLINE_SIZE		0x100
 
-struct ionic_doorbell {
-	__u16 p_index;
-	__u8  ring:3;
-	__u8  rsvd:5;
-	__u8  qid_lo;
-	__u16 qid_hi;
-	__u16 rsvd2;
-} __packed__;
-
 struct ionic_cntx_resp {
 	struct ibv_get_context_resp resp;
 	__u32 dev_id;

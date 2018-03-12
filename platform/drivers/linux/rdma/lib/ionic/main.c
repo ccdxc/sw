@@ -69,6 +69,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		return errno;
 
 	cntx->max_qp = resp.max_qp;
+	/* XXX cleanup, overwrites dev fields on each init ctx */
 	dev->pg_size = resp.pg_size;
 	dev->cqe_size = resp.cqe_size;
 	dev->max_cq_depth = resp.max_cqd;

@@ -1,38 +1,58 @@
-
-#include <string.h>
+#include <infiniband/driver.h>
 #include <sys/mman.h>
 
-#include "main.h"
+#include "memory.h"
 
-int ionic_alloc_aligned(struct ionic_queue *que, uint32_t pg_size)
+#define IONIC_ANON_MFLAGS	(MAP_PRIVATE | MAP_ANONYMOUS)
+#define IONIC_ANON_MPROT	(PROT_READ | PROT_WRITE)
+
+#define IONIC_DEV_MFLAGS	MAP_SHARED
+#define IONIC_DEV_MPROT		PROT_WRITE
+
+void *ionic_map_anon(size_t size)
 {
-	int ret, bytes;
+	void *ptr;
+	int rc;
 
-	bytes = (que->depth * que->stride);
-	que->bytes = get_aligned(bytes, pg_size);
-	que->va = mmap(NULL, que->bytes, PROT_READ | PROT_WRITE,
-		       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	if (que->va == MAP_FAILED) {
-		que->bytes = 0;
-		return errno;
-	}
-	/* Touch pages before proceeding. */
-	memset(que->va, 0, que->bytes);
+	/* TODO: READ only CQ, WRITE only Send/RecvQ */
+	ptr = mmap(NULL, size, IONIC_ANON_MPROT, IONIC_ANON_MFLAGS, -1, 0);
+	if (ptr == MAP_FAILED)
+		return NULL;
 
-	ret = ibv_dontfork_range(que->va, que->bytes);
-	if (ret) {
-		munmap(que->va, que->bytes);
-		que->bytes = 0;
+	rc = ibv_dontfork_range(ptr, size);
+	if (rc) {
+		munmap(ptr, size);
+		errno = rc;
+		return NULL;
 	}
 
-	return ret;
+	return ptr;
 }
 
-void ionic_free_aligned(struct ionic_queue *que)
+void *ionic_map_device(size_t size, int fd, size_t offset)
 {
-	if (que->bytes) {
-		ibv_dofork_range(que->va, que->bytes);
-		munmap(que->va, que->bytes);
-		que->bytes = 0;
+	void *ptr;
+	int rc;
+
+	ptr = mmap(NULL, size, IONIC_DEV_MPROT, IONIC_DEV_MFLAGS, fd, offset);
+	if (ptr == MAP_FAILED)
+		return NULL;
+
+	rc = ibv_dontfork_range(ptr, size);
+	if (rc) {
+		munmap(ptr, size);
+		errno = rc;
+		return NULL;
+	}
+
+	return ptr;
+}
+
+void ionic_unmap(void *ptr, size_t size)
+{
+	if (ptr) {
+		ibv_dofork_range(ptr, size);
+		munmap(ptr, size);
 	}
 }
+
