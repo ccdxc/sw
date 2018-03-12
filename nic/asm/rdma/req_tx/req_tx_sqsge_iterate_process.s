@@ -44,13 +44,13 @@ trigger_stg3_sqsge_process:
     add            r1, r1, k.to_stage.sq.wqe_addr
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r1)
-    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_SET_TABLE_2_VALID(0)
 
     nop.e
     nop
 
 trigger_stg0_sqsge_process:
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process)
     phvwr          p.common.p4_intr_recirc, 1
     phvwr          p.common.rdma_recirc_recirc_reason, REQ_TX_RECIRC_REASON_SGE_WORK_PENDING

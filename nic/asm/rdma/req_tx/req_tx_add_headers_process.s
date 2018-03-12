@@ -429,7 +429,7 @@ skip_poll_success:
 #endif
     phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 
-    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, ADD_HDR_T, service, d.service) 
     CAPRI_SET_FIELD(r7, ADD_HDR_T, hdr_template_inline, k.args.hdr_template_inline) 
     CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_addr, r1)
@@ -437,7 +437,7 @@ skip_poll_success:
     CAPRI_SET_FIELD_RANGE(r7, ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable,
                           d.{roce_opt_ts_enable...roce_opt_mss_enable})
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_add_headers_2_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_add_headers_2_process, r0)
 
     nop.e
     nop
@@ -445,6 +445,6 @@ skip_poll_success:
 rate_enforce_fail:
 spec_fail:
     phvwr   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_SET_TABLE_2_VALID(0)
     nop.e
     nop

@@ -92,12 +92,12 @@ ring_dcqcn_doorbell:
 load_write_back:            
     // DCQCN rate-enforcement passed. Load stage 5 for write-back
     SQCB2_ADDR_GET(r2)
-    //It is assumed that hdr_template_inline flag is passed untouched to next table-3.
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
+    //It is assumed that hdr_template_inline flag is passed untouched to next table-2.
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
     bbne          k.args.hdr_template_inline, 1, skip_hdr_template_inline
     sll           r2, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT //BD slot
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_hdr_template_process, r2)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_hdr_template_process, r2)
 
 skip_hdr_template_inline:
     nop.e
@@ -110,7 +110,7 @@ bubble_to_next_stage:
 
     add           r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT 
     //invoke the same routine, but with valid header_template_addr as d[] vector
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r2)
 exit:
     nop.e
@@ -122,7 +122,7 @@ drop_phv:
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.rate_enforce_failed, 1)
 
     SQCB2_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 

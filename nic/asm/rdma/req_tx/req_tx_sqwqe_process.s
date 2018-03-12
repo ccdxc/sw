@@ -141,7 +141,7 @@ read:
     //SQCB1_ADDR_GET(r2)
     //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
-    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
@@ -150,7 +150,7 @@ read:
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
@@ -180,14 +180,14 @@ atomic:
     //SQCB1_ADDR_GET(r2)
     //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
-    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0)
 
     nop.e
@@ -220,7 +220,7 @@ inline_data:
     CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.packet_len, d.send.length)
 
-    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
@@ -232,7 +232,7 @@ inline_data:
     // leave rest of variables to FALSE
 
     add            r2, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0)     
 
     nop.e

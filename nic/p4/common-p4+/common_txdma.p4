@@ -577,6 +577,7 @@ action tx_table_s0_t0_cfg_action(data0, data1,
 @pragma stage 7
 @pragma raw_table common_te3_phv.table_pc
 @pragma table_write // lock_en_raw=1
+@pragma memory_only
 table tx_table_s7_t3 {
     reads {
        common_te3_phv.table_addr : exact;

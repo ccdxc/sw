@@ -142,7 +142,7 @@ sge_loop:
     // if (index == num_valid_sges) last = TRUE else last = FALSE;
     cmov           r3, c1, 1, 0
 
-    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, in_progress, r4)
     CAPRI_SET_FIELD_RANGE(r7, SQCB_WRITE_BACK_T, op_type, first, k.{args.op_type...args.first})
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, r3)
@@ -161,13 +161,13 @@ sge_loop:
     add            r1, HDR_TEMPLATE_T_SIZE_BYTES, k.to_stage.sq.header_template_addr, HDR_TEMP_ADDR_SHIFT // Branch Delay Slot
 
 write_back_mpu_only:
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r1)
  
     nop.e
     nop
 
 write_back:
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_dcqcn_enforce_process, r1)
 
     nop.e
     nop
@@ -177,7 +177,7 @@ iterate_sges:
     add            r4, k.args.dma_cmd_start_index, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
     // Error if there are no dma cmd space to compose
     beqi           r4, REQ_TX_DMA_CMD_PYLD_BASE_END, err_no_dma_cmds
-    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7) // Branch Delay Slot
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7) // Branch Delay Slot
     
     CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, in_progress, inv_key, k.{args.in_progress...args.inv_key})
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, current_sge_id, r1)
@@ -190,7 +190,7 @@ iterate_sges:
     mfspr          r1, spr_tbladdr
     add            r1, r1, 2, LOG_SIZEOF_SGE_T
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r1)
 
 end:
     nop.e

@@ -196,9 +196,9 @@ in_progress:
         // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
         add            r2, r2, d.curr_wqe_ptr
         
-        // Use table 3 for sqsge_iterate_process in a consistent way, which will
+        // Use table 2 for sqsge_iterate_process in a consistent way, which will
         // then invoke sqsge_process in stage 3 using table 0
-        CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
+        CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, in_progress, d.in_progress)
         CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, current_sge_id, d.current_sge_id)
         CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, current_sge_offset, d.current_sge_offset)
@@ -210,7 +210,7 @@ in_progress:
         CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, r4)
         CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PYLD_BASE)
         
-        CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r2)
+        CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sqsge_iterate_process, r2)
         
         CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
