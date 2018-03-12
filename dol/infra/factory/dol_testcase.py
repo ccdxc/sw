@@ -203,5 +203,6 @@ class DOLTestCase(TestCase):
     
     def TeardownCallback(self):
         super().TeardownCallback()
+        ModelConnector.TestCaseEnd(self.GID(), self.loopid)
         self.coverage.Process()
 
