@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <util/mmio.h>
+#include <util/udma_barrier.h>
 
 #define IONIC_QID_MASK		((1ull << 24) - 1)
 #define IONIC_DBELL_QID_SHIFT	24

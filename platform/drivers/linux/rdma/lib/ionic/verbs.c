@@ -23,7 +23,7 @@ int g_wrid = 0;
 
 #ifdef IONIC_DEBUG
 #define IONIC_LOG(format, ...) \
-    printf("\n%s(%d): " format, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+    printf("%s(%d): " format "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define IONIC_LOG(format, ...)
 #endif
@@ -227,61 +227,28 @@ int ionic_destroy_cq(struct ibv_cq *ibvcq)
 	return 0;
 }
 
-
-static uint8_t *memrev(uint8_t *block, size_t elnum)
+static bool get_cqe(struct ionic_cq *cq, struct cqwqe_be_t *cqe)
 {
-    uint8_t *s, *t, tmp;
+	volatile struct cqwqe_be_t *qcqe;
+	bool color;
 
-    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
-        tmp = *s;
-        *s = *t;
-        *t = tmp;
-    }
-    return block;
+	qcqe = ionic_queue_at_prod(&cq->q);
+	*cqe = *qcqe;
+
+	color = cqe->color_flags >> COLOR_SHIFT;
+
+	if (color != ionic_queue_color(&cq->q))
+		return false;
+
+	udma_from_device_barrier();
+
+	/* TODO: replace with ionic_dbg_cqe(cqe) */
+	IONIC_LOG("wrid 0x%lx color %d", be64toh(cqe->id.wrid), color);
+
+	return true;
 }
 
-static inline bool ionic_cq_has_data (struct ionic_cq *cq)
-{
-    volatile struct cqwqe_t *wqe;
-    struct cqwqe_t lwqe;
-    
-    wqe = ionic_queue_at_prod(&cq->q);
-    lwqe = *wqe;
-    memrev((uint8_t *)&lwqe, sizeof(struct cqwqe_t));
-           
-    if (lwqe.color == ionic_queue_color(&cq->q)) {
-        IONIC_LOG("wrid 0x%lx color %d", be64toh(lwqe.id.wrid), lwqe.color);
-        return 1;
-    }
-    return 0;
-}
-
-static struct cqwqe_be_t * get_cqe (struct ionic_cq *cq,
-                                    int *has_data)
-{
-    struct cqwqe_be_t *cqe;
-    
-    *has_data = 0;
-    cqe = ionic_queue_at_prod(&cq->q);
-
-    if ((cqe->color_flags >> COLOR_SHIFT) == ionic_queue_color(&cq->q)) {
-        *has_data = 1;
-        udma_from_device_barrier();
-        
-        IONIC_LOG("wrid 0x%lx color %d", be64toh(cqe->id.wrid), ionic_queue_color(&cq->q));
-
-#if 0
-        unsigned int *ptr;
-        ptr = (unsigned int *)cqe;
-        for (int i = 0; i < 5; i++, ptr++) {
-            IONIC_LOG(" 0x%x ", *ptr);
-        }
-#endif        
-    }
-    return cqe;
-}
-
-static inline void ionic_cq_incr (struct ionic_cq *cq)
+static void ionic_cq_incr(struct ionic_cq *cq)
 {
 	uint64_t *dbpage = (void *)cq->udpi->dbpage; /* XXX cleanup */
 
@@ -292,34 +259,30 @@ static inline void ionic_cq_incr (struct ionic_cq *cq)
 			 ionic_queue_dbell_val(&cq->q),
 			 IONIC_QTYPE_RDMA_COMP);
 
-	IONIC_LOG("cq head %d cq done_color %d cq depth %d",
+	/* TODO: replace with ionic_dbg_queue(&cq->q) */
+	IONIC_LOG("cq head %d cq done_color %d cq mask %d",
 		  cq->q.prod, cq->q.cons, cq->q.mask);
 }
 
 static int ionic_poll_one(struct ionic_cq *cq, 
                           struct ibv_wc *wc,
-                          int *npolled)
+                          int nwc)
 {
-	int has_data = 0;
-    struct cqwqe_be_t *cqe;
-    struct rqwqe_t *rqe;
-    struct ionic_qp *qp;
-    __u32 qp_num;
+	struct cqwqe_be_t cqe;
+	struct rqwqe_t *rqe;
+	struct ionic_qp *qp;
+	int npolled = 0;
+	__u32 qp_num;
 
 again:
-	cqe = get_cqe(cq, &has_data);
-	if (has_data == 0) {
-        return -EAGAIN;
-	}
+	if (!get_cqe(cq, &cqe))
+		return 0;
 
-    if (cqe->status == 0) {
-        //SUCCESS
-        wc->status = IBV_WC_SUCCESS;        
-    } else {
-        wc->status = ionic_to_ibv_wc_status(cqe->status);        
-    }
+	/* XXX because of coalescing, this status is only for the last.
+	 * Implied completions are all considered successful. */
+	wc->status = ionic_to_ibv_wc_status(cqe.status);
 
-	qp_num = ((uint32_t)cqe->qp_hi << 16) | be16toh(cqe->qp_lo);
+	qp_num = ((uint32_t)cqe.qp_hi << 16) | be16toh(cqe.qp_lo);
 
 	qp = tbl_lookup(&cq->cntxt->qp_tbl, qp_num);
 
@@ -333,64 +296,73 @@ again:
     wc->qp_num = qp_num;
 
     // Need to figure out if it belongs to SQ or RQ
-    if (cqe->op_type == OP_TYPE_SEND_RCVD ||
-        cqe->op_type == OP_TYPE_RDMA_OPER_WITH_IMM) {
+    if (cqe.op_type == OP_TYPE_SEND_RCVD ||
+        cqe.op_type == OP_TYPE_RDMA_OPER_WITH_IMM) {
         // recv event
         wc->opcode = IBV_WC_RECV;
         wc->wc_flags = 0;
-        if (cqe->color_flags & IMM_DATA_VLD_MASK) {
+        if (cqe.color_flags & IMM_DATA_VLD_MASK) {
             wc->wc_flags |= IBV_WC_WITH_IMM;
         }
-        if (cqe->op_type == OP_TYPE_RDMA_OPER_WITH_IMM) {
+        if (cqe.op_type == OP_TYPE_RDMA_OPER_WITH_IMM) {
 			wc->opcode = IBV_WC_RECV_RDMA_WITH_IMM;
-            wc->imm_data = be32toh(cqe->imm_data);
+            wc->imm_data = be32toh(cqe.imm_data);
         }
-	wc->src_qp = ((uint32_t)cqe->src_qp_hi << 16) | be16toh(cqe->src_qp_lo);
-        //Let us try to copy wrid always from Recv WQE.
-        rqe = ionic_queue_at_cons(&qp->rq);
+	wc->src_qp = ((uint32_t)cqe.src_qp_hi << 16) | be16toh(cqe.src_qp_lo);
+
+	/* XXX don't read the wqe out of the queue */
+	rqe = ionic_queue_at_cons(&qp->rq);
         wc->wr_id = rqe->wrid;
+
 	ionic_queue_consume(&qp->rq);
-        (*npolled)++;
-        IONIC_LOG("CQ Poll Success: Recv CQEs %d\n", *npolled);
+        ++npolled;
+        IONIC_LOG("CQ Poll Success: Recv CQEs %d\n", npolled);
+
+        ionic_cq_incr(cq);
 
     } else {
         struct sqwqe_t *sqe;
         //TODO: Need to handle many op types
-        if (cqe->op_type == OP_TYPE_SEND) {
-            __u32 msn = be32toh(cqe->id.msn);
+        if (cqe.op_type == OP_TYPE_SEND) {
+	    /* TODO: Is this section also good for rdma read/write? */
+
+	    /* XXX g_msn must be qp->msn */
+            __u32 msn = be32toh(cqe.id.msn);
+
+	    /* XXX memory mgmt ops will not have msn, just count instead */
 
             //We need to pop one or more sqes because of cq coalescing
 
-            sqe = ionic_queue_at_cons(&qp->sq);
-            for (int i = 0; i <= (msn-g_msn); i++) {
+	    /* XXX don't read the wqe out of the queue (this could be HBM!) */
+	    sqe = ionic_queue_at_cons(&qp->sq);
+            for (; g_msn <= msn && npolled < nwc; ++g_msn) {
                 wc->opcode = IBV_WC_SEND;
                 wc->wc_flags = 0;
                 wc->wr_id = sqe->base.wrid;
                 wc->qp_num = qp_num;
 
 		ionic_queue_consume(&qp->sq);
-                wc++;
-                (*npolled)++;
+
+		++npolled;
+                ++wc;
 
 		// XXX msn seems to be broken (msn == zero every time)
 		break;
             }
-            g_msn = msn + 1;
-            IONIC_LOG("CQ Poll Success: MSN %d Send CQEs %d\n", msn, *npolled);
+            IONIC_LOG("CQ Poll Success: MSN %d Send CQEs %d\n", msn, npolled);
+
+	    if (g_msn == msn)
+		    ionic_cq_incr(cq);
         } 
     }
-    //TODO: What about error event.
 
-	/* Update cq head */
-    ionic_cq_incr(cq);
-
-	return 0;
+    return npolled;
 }
 
 int ionic_poll_cq(struct ibv_cq *ibvcq, int nwc, struct ibv_wc *wc)
 {
 	struct ionic_cq *cq = to_ionic_cq(ibvcq);
-	int npolled;
+	int rc = 0, npolled = 0;
 
 	if (nwc < 1 || wc == NULL)
 		return 0;
@@ -398,13 +370,15 @@ int ionic_poll_cq(struct ibv_cq *ibvcq, int nwc, struct ibv_wc *wc)
 	pthread_spin_lock(&cq->lock);
     npolled = 0;
     while (npolled < nwc) { 
-        if (ionic_poll_one(cq, (wc + npolled), &npolled)) {
-            break;
-        }
+	    rc = ionic_poll_one(cq, wc + npolled, nwc - npolled);
+	    if (rc <= 0)
+		    break;
+
+	    npolled += rc;
     }
 	pthread_spin_unlock(&cq->lock);
 
-	return npolled;
+	return npolled ?: rc;
 }
 
 void ionic_cq_event(struct ibv_cq *ibvcq)

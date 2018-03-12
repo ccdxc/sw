@@ -283,6 +283,9 @@ static inline uint8_t ionic_to_ibv_wc_status(uint8_t wcst)
 	uint8_t ibv_wcst;
 
     switch (wcst) {
+    case 0:
+        ibv_wcst = IBV_WC_SUCCESS;
+        break;
     case CQ_STATUS_LOCAL_LEN_ERR:
         ibv_wcst = IBV_WC_LOC_LEN_ERR;
         break;
