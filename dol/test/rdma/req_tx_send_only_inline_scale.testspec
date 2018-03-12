@@ -31,7 +31,6 @@ buffers:
     - buffer:
         id      : BUF
         template: ref://factory/templates/id=RDMA_BUFFER
-        scale   : True
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0

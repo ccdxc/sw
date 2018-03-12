@@ -166,53 +166,53 @@ modules:
 
     - module:
         name    : NONIP_QTAG
-        spec    : l2uc_nonip.testspec
+        spec    : l2uc.testspec
         perf    : True
         iterate :
             # Tagged Cases
             - segment: filter://native=False
-              flow   : filter://label=NETWORKING
+              flow   : filter://type=MAC,label=NETWORKING
 
     - module:
         name    : NONIP_UTAG
-        spec    : l2uc_nonip.testspec
+        spec    : l2uc.testspec
         iterate :
             # Untagged Cases
             - segment: filter://native=True
-              flow   : filter://label=NETWORKING
+              flow   : filter://type=MAC,label=NETWORKING
 
     - module:
         name    : NONIP_PTAG
-        spec    : l2uc_nonip.testspec
+        spec    : l2uc.testspec
         iterate :
             # Priority Tagged Cases
             - segment: filter://native=True
-              flow   : filter://label=NETWORKING
+              flow   : filter://type=MAC,label=NETWORKING
               priotag : True
 
     - module:
         name    : NONIP_QTAG_GFT_DROP
-        spec    : l2uc_nonip.testspec
+        spec    : l2uc.testspec
         iterate :
             # Tagged Cases
             - segment: filter://native=False
-              flow   : filter://label=GFT_DROP
+              flow   : filter://type=MAC,label=GFT_DROP
 
     - module:
         name    : NONIP_UTAG_GFT_DROP
-        spec    : l2uc_nonip.testspec
+        spec    : l2uc.testspec
         iterate :
             # Untagged Cases
             - segment: filter://native=True
-              flow   : filter://label=GFT_DROP
+              flow   : filter://type=MAC,label=GFT_DROP
 
     - module:
         name    : NONIP_PTAG_GFT_DROP
-        spec    : l2uc_nonip.testspec
+        spec    : l2uc.testspec
         iterate :
             # Priority Tagged Cases
             - segment: filter://native=True
-              flow   : filter://label=GFT_DROP
+              flow   : filter://type=MAC,label=GFT_DROP
               priotag : True
 
     - module:

@@ -17,9 +17,6 @@ def GetTtl(testcase, packet):
 def GetRoutedTtl(testcase, packet):
     return 128
 
-def GetPacketTemplateByFlow():
-    return
-
 def AddHeaderByFlow_COMMON():
     return
 
@@ -55,6 +52,8 @@ def __get_packet_template_impl(flow, args):
         template += "_%s_%s" % (flow.type, flow.proto)
     elif flow.IsMulticast():
         template += "_%s_UDP" % (flow.GetMulticastL3Type())
+    elif flow.IsMAC():
+        template = 'ETH'
     else:
         assert(0)
 

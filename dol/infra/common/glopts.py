@@ -130,3 +130,10 @@ def ValidateGlopts():
     GlobalOptions.feature_set = "iris"
     if GlobalOptions.gft:
         GlobalOptions.feature_set = "gft"
+
+    print("========================================================")
+    print("Global Command Line Options")
+    for k,v in GlobalOptions.__dict__.items():
+        print ("  %s = " % k, v)
+    print("========================================================")
+

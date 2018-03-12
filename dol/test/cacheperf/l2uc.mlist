@@ -12,6 +12,8 @@ modules:
         name    : IPV4_TCP_QTAG
         spec    : l2uc.testspec
         perf    : True
+        args    :
+            maxflows  : 2000
         iterate :
             - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
               segment : filter://native=False

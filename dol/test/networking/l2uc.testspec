@@ -24,6 +24,7 @@ packets:
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
+                type    : ref://testcase/config/flow/ethertype
             qtag:
                 vlan    : callback://networking/packets/GetVlanId
             ipv4:

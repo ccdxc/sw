@@ -242,10 +242,13 @@ def run_hal(args):
     if args.gft:
         jsonfile = 'hal_gft.json'
 
-    os.environ["HAL_LOG_DIR"] = nic_dir
+    hal_log_dir = nic_dir
     if args.test_suf is not None:
-         hal_log = nic_dir + "/logs_%s/hal.log" % args.test_suf
-         os.environ["HAL_LOG_DIR"] = nic_dir + "/logs_%s/" % args.test_suf
+        hal_log_dir = nic_dir + "/logs_%s/" % args.test_suf
+    
+    os.environ["HAL_LOG_DIR"] = hal_log_dir
+    hal_log = hal_log_dir + "/hal.log"
+    os.system("rm -r %s/hal.log.*" % hal_log_dir)
     os.system("cp " + nic_dir + "/conf/hal_switch.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
@@ -414,9 +417,8 @@ def run_dol(args):
         cmd.append('--dryrun')
     if args.configonly is True:
         cmd.append('--config-only')
-    if args.shuffle is not None:
+    if args.shuffle:
         cmd.append('--shuffle')
-        cmd.append(args.shuffle)
     if args.mbt is True:
         cmd.append('--mbt')
     if args.rtl is True:
@@ -662,7 +664,7 @@ def main():
                         default=False, help="GFT tests")
     parser.add_argument("--gft_gtest", dest='gft_gtest', action="store_true",
                         default=False, help="Run GFT gtests")
-    parser.add_argument('--shuffle', dest='shuffle', default=None,
+    parser.add_argument('--shuffle', dest='shuffle', action="store_true",
                         help='Shuffle tests and loop for X times.')
     parser.add_argument('--mbt', dest='mbt', default=None,
                         action='store_true',
