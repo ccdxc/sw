@@ -26,11 +26,11 @@ struct ionic_dpi {
 };
 
 struct ionic_pd {
-	struct ibv_pd		ibvpd;
+	struct ibv_pd		ibpd;
 	uint32_t		pdid;
 };
 
-struct ionic_context {
+struct ionic_ctx {
 	struct verbs_context	vctx;
 	uint32_t		max_qp;
 	struct ionic_dpi	udpi;
@@ -41,7 +41,7 @@ struct ionic_context {
 };
 
 struct ionic_cq {
-	struct ibv_cq		ibvcq;
+	struct ibv_cq		ibcq;
 	struct list_node	ctx_ent;
 
 	uint32_t		cqid;
@@ -52,11 +52,10 @@ struct ionic_cq {
 	/* XXX cleanup */
 	uint8_t			qtype;
 	struct ionic_dpi	*udpi;
-	struct ionic_context	*cntxt;
 };
 
 struct ionic_srq {
-	struct ibv_srq		ibvsrq;
+	struct ibv_srq		ibsrq;
 };
 
 struct ionic_wrid {
@@ -87,7 +86,7 @@ struct ionic_rq_meta {
 };
 
 struct ionic_qp {
-	struct ibv_qp		ibvqp;
+	struct ibv_qp		ibqp;
 
 	uint32_t		qpid;
 
@@ -103,12 +102,8 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta;
 
 	/* XXX cleanup */
-	struct ionic_srq	*srq;
-	struct ionic_cq		*scq;
-	struct ionic_cq		*rcq;
 	struct ionic_dpi	*udpi;
 	struct ionic_qpcap	cap;
-	struct ionic_context	*cntxt;
 
 	uint32_t		tbl_indx;
 	uint32_t		sq_psn;
@@ -123,11 +118,11 @@ struct ionic_qp {
 };
 
 struct ionic_mr {
-	struct ibv_mr		ibvmr;
+	struct ibv_mr		ibmr;
 };
 
 struct ionic_ah {
-	struct ibv_ah		ibvah;
+	struct ibv_ah		ibah;
 	uint32_t		avid;
 };
 
@@ -140,36 +135,34 @@ struct ionic_dev {
 	uint32_t		max_cq_depth;
 };
 
-/* pointer conversion functions*/
-static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibvdev)
+static inline struct ionic_dev *to_ionic_dev(struct ibv_device *ibdev)
 {
-	return container_of(ibvdev, struct ionic_dev, vdev.device);
+	return container_of(ibdev, struct ionic_dev, vdev.device);
 }
 
-static inline struct ionic_context *to_ionic_context(
-						     struct ibv_context *ibvctx)
+static inline struct ionic_ctx *to_ionic_ctx(struct ibv_context *ibctx)
 {
-	return container_of(ibvctx, struct ionic_context, vctx.context);
+	return container_of(ibctx, struct ionic_ctx, vctx.context);
 }
 
-static inline struct ionic_pd *to_ionic_pd(struct ibv_pd *ibvpd)
+static inline struct ionic_pd *to_ionic_pd(struct ibv_pd *ibpd)
 {
-	return container_of(ibvpd, struct ionic_pd, ibvpd);
+	return container_of(ibpd, struct ionic_pd, ibpd);
 }
 
-static inline struct ionic_cq *to_ionic_cq(struct ibv_cq *ibvcq)
+static inline struct ionic_cq *to_ionic_cq(struct ibv_cq *ibcq)
 {
-	return container_of(ibvcq, struct ionic_cq, ibvcq);
+	return container_of(ibcq, struct ionic_cq, ibcq);
 }
 
-static inline struct ionic_qp *to_ionic_qp(struct ibv_qp *ibvqp)
+static inline struct ionic_qp *to_ionic_qp(struct ibv_qp *ibqp)
 {
-	return container_of(ibvqp, struct ionic_qp, ibvqp);
+	return container_of(ibqp, struct ionic_qp, ibqp);
 }
 
-static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibvah)
+static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibah)
 {
-	return container_of(ibvah, struct ionic_ah, ibvah);
+        return container_of(ibah, struct ionic_ah, ibah);
 }
 
 static inline uint32_t ionic_get_sqe_size(void)
@@ -402,7 +395,7 @@ static inline void ionic_change_cq_phase(struct ionic_cq *cq)
 }
 #endif
 
-static inline void ionic_lock_all_cqs(struct ionic_context *ctx)
+static inline void ionic_lock_all_cqs(struct ionic_ctx *ctx)
 {
 	struct ionic_cq *cq;
 
@@ -425,7 +418,7 @@ static inline void ionic_lock_all_cqs(struct ionic_context *ctx)
 		pthread_spin_lock(&cq->lock);
 }
 
-static inline void ionic_unlock_all_cqs(struct ionic_context *ctx)
+static inline void ionic_unlock_all_cqs(struct ionic_ctx *ctx)
 {
 	struct ionic_cq *cq;
 

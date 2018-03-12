@@ -11,7 +11,7 @@
 
 #include "ionic.h"
 
-static int ionic_query_device(struct ibv_context *ibvctx,
+static int ionic_query_device(struct ibv_context *ibctx,
 			      struct ibv_device_attr *dev_attr)
 {
 	struct ibv_query_device cmd;
@@ -20,22 +20,22 @@ static int ionic_query_device(struct ibv_context *ibvctx,
 
 	IONIC_LOG("");
 	memset(dev_attr, 0, sizeof(struct ibv_device_attr));
-	status = ibv_cmd_query_device(ibvctx, dev_attr, &fw_ver,
+	status = ibv_cmd_query_device(ibctx, dev_attr, &fw_ver,
 				      &cmd, sizeof(cmd));
 	return status;
 }
 
-static int ionic_query_port(struct ibv_context *ibvctx, uint8_t port,
+static int ionic_query_port(struct ibv_context *ibctx, uint8_t port,
 			    struct ibv_port_attr *port_attr)
 {
 	struct ibv_query_port cmd;
 
 	IONIC_LOG("");
 	memset(port_attr, 0, sizeof(struct ibv_port_attr));
-	return ibv_cmd_query_port(ibvctx, port, port_attr, &cmd, sizeof(cmd));
+	return ibv_cmd_query_port(ibctx, port, port_attr, &cmd, sizeof(cmd));
 }
 
-static struct ibv_pd *ionic_alloc_pd(struct ibv_context *ibvctx)
+static struct ibv_pd *ionic_alloc_pd(struct ibv_context *ibctx)
 {
 	struct ibv_alloc_pd cmd;
 	struct ionic_pd_resp resp;
@@ -47,25 +47,25 @@ static struct ibv_pd *ionic_alloc_pd(struct ibv_context *ibvctx)
 
 	IONIC_LOG("");
 	memset(&resp, 0, sizeof(resp));
-	if (ibv_cmd_alloc_pd(ibvctx, &pd->ibvpd, &cmd, sizeof(cmd),
+	if (ibv_cmd_alloc_pd(ibctx, &pd->ibpd, &cmd, sizeof(cmd),
 			     &resp.resp, sizeof(resp)))
 		goto out;
 
 	pd->pdid = resp.pdid;
 
-	return &pd->ibvpd;
+	return &pd->ibpd;
 out:
 	free(pd);
 	return NULL;
 }
 
-static int ionic_free_pd(struct ibv_pd *ibvpd)
+static int ionic_free_pd(struct ibv_pd *ibpd)
 {
-	struct ionic_pd *pd = to_ionic_pd(ibvpd);
+	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	int status;
 
 	IONIC_LOG("");
-	status = ibv_cmd_dealloc_pd(ibvpd);
+	status = ibv_cmd_dealloc_pd(ibpd);
 	if (status)
 		return status;
 	/* DPI un-mapping will be during uninit_ucontext */
@@ -74,7 +74,7 @@ static int ionic_free_pd(struct ibv_pd *ibvpd)
 	return 0;
 }
 
-static struct ibv_mr *ionic_reg_mr(struct ibv_pd *ibvpd,
+static struct ibv_mr *ionic_reg_mr(struct ibv_pd *ibpd,
 				   void *sva,
 				   size_t len,
 				   int access)
@@ -88,22 +88,22 @@ static struct ibv_mr *ionic_reg_mr(struct ibv_pd *ibvpd,
 	if (!mr)
 		return NULL;
 
-	if (ibv_cmd_reg_mr(ibvpd, sva, len, (uintptr_t)sva, access, &mr->ibvmr,
+	if (ibv_cmd_reg_mr(ibpd, sva, len, (uintptr_t)sva, access, &mr->ibmr,
 			   &cmd, sizeof(cmd), &resp.resp, sizeof(resp))) {
 		free(mr);
 		return NULL;
 	}
 
-	return &mr->ibvmr;
+	return &mr->ibmr;
 }
 
-static int ionic_dereg_mr(struct ibv_mr *ibvmr)
+static int ionic_dereg_mr(struct ibv_mr *ibmr)
 {
-	struct ionic_mr *mr = (struct ionic_mr *)ibvmr;
+	struct ionic_mr *mr = (struct ionic_mr *)ibmr;
 	int status;
 
 	IONIC_LOG("");
-	status = ibv_cmd_dereg_mr(ibvmr);
+	status = ibv_cmd_dereg_mr(ibmr);
 	if (status)
 		return status;
 	free(mr);
@@ -111,15 +111,15 @@ static int ionic_dereg_mr(struct ibv_mr *ibvmr)
 	return 0;
 }
 
-static struct ibv_cq *ionic_create_cq(struct ibv_context *ibvctx, int ncqe,
+static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 				      struct ibv_comp_channel *channel, int vec)
 {
+	struct ionic_dev *dev = to_ionic_dev(ibctx->device);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_cq *cq;
 	struct ionic_cq_req cmd;
 	struct ionic_cq_resp resp;
 
-	struct ionic_context *cntx = to_ionic_context(ibvctx);
-	struct ionic_dev *dev = to_ionic_dev(ibvctx->device);
 	int rc;
 
 	IONIC_LOG("");
@@ -151,8 +151,8 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibvctx, int ncqe,
 	IONIC_LOG("cmd.cq_va %#lx", (unsigned long)cmd.cq_va);
 	IONIC_LOG("cmd.cq_bytes %#lx", (unsigned long)cmd.cq_bytes);
 
-	rc = ibv_cmd_create_cq(ibvctx, ncqe, channel, vec,
-			       &cq->ibvcq, &cmd.cmd, sizeof(cmd),
+	rc = ibv_cmd_create_cq(ibctx, ncqe, channel, vec,
+			       &cq->ibcq, &cmd.cmd, sizeof(cmd),
 			       &resp.resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
@@ -162,15 +162,14 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibvctx, int ncqe,
 
 	/* XXX cleanup */
 	cq->qtype = resp.qtype;
-	cq->udpi = &cntx->udpi;
-	cq->cntxt = cntx;
+	cq->udpi = &ctx->udpi;
 	/* XXX cleanup */
 
-	pthread_mutex_lock(&cntx->mut);
-	list_add_tail(&cntx->cq_list, &cq->ctx_ent);
-	pthread_mutex_unlock(&cntx->mut);
+	pthread_mutex_lock(&ctx->mut);
+	list_add_tail(&ctx->cq_list, &cq->ctx_ent);
+	pthread_mutex_unlock(&ctx->mut);
 
-	return &cq->ibvcq;
+	return &cq->ibcq;
 
 err_cmd:
 	ionic_queue_destroy(&cq->q);
@@ -182,18 +181,18 @@ err:
 	return NULL;
 }
 
-static int ionic_resize_cq(struct ibv_cq *ibvcq, int ncqe)
+static int ionic_resize_cq(struct ibv_cq *ibcq, int ncqe)
 {
 	return -ENOSYS;
 }
 
-static int ionic_destroy_cq(struct ibv_cq *ibvcq)
+static int ionic_destroy_cq(struct ibv_cq *ibcq)
 {
-	struct ionic_context *ctx = to_ionic_context(ibvcq->context);
-	struct ionic_cq *cq = to_ionic_cq(ibvcq);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
+	struct ionic_cq *cq = to_ionic_cq(ibcq);
 	int rc;
 
-	rc = ibv_cmd_destroy_cq(ibvcq);
+	rc = ibv_cmd_destroy_cq(ibcq);
 	if (rc)
 		return rc;
 
@@ -382,7 +381,7 @@ static int ionic_poll_send_msn_ok(struct ionic_qp *qp, struct ibv_wc *wc,
 static bool ionic_next_qp_cqe(struct ionic_cq *cq, struct ionic_qp **qp,
 			      struct cqwqe_be_t *cqe)
 {
-	struct ionic_context *ctx = to_ionic_context(cq->ibvcq.context);
+	struct ionic_ctx *ctx = to_ionic_ctx(cq->ibcq.context);
 	struct cqwqe_be_t *qcqe;
 
 again:
@@ -395,12 +394,12 @@ again:
 
 	*cqe = *qcqe;
 
-	ionic_dbg(cq->cntxt, "poll cq prod %d", cq->q.prod);
-	ionic_dbg_xdump(cq->cntxt, "cqe", cqe, cq->q.stride);
+	ionic_dbg(ctx, "poll cq prod %d", cq->q.prod);
+	ionic_dbg_xdump(ctx, "cqe", cqe, cq->q.stride);
 
 	ionic_dbg_cqe(ctx, cqe);
 
-	*qp = tbl_lookup(&cq->cntxt->qp_tbl, ionic_cqe_qpn(cqe));
+	*qp = tbl_lookup(&ctx->qp_tbl, ionic_cqe_qpn(cqe));
 
 	/* Skip this cqe if the qp was destroyed.
 	 * Unlikely race: qp was destroyed, and new qp created with same id.
@@ -414,9 +413,9 @@ again:
 	return true;
 }
 
-static int ionic_poll_cq(struct ibv_cq *ibvcq, int nwc, struct ibv_wc *wc)
+static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 {
-	struct ionic_cq *cq = to_ionic_cq(ibvcq);
+	struct ionic_cq *cq = to_ionic_cq(ibcq);
 	uint64_t *dbpage = (void *)cq->udpi->dbpage; /* XXX cleanup */
 	struct ionic_qp *qp;
 	struct cqwqe_be_t cqe;
@@ -536,25 +535,25 @@ out:
 	return npolled ?: rc;
 }
 
-static void ionic_cq_event(struct ibv_cq *ibvcq)
+static void ionic_cq_event(struct ibv_cq *ibcq)
 {
 
 }
 
-static int ionic_arm_cq(struct ibv_cq *ibvcq, int flags)
+static int ionic_arm_cq(struct ibv_cq *ibcq, int flags)
 {
 	IONIC_LOG("");
 	return 0;
 }
 
-static int ionic_check_qp_limits(struct ionic_context *cntx,
+static int ionic_check_qp_limits(struct ionic_ctx *ctx,
 				 struct ibv_qp_init_attr *attr)
 {
 	struct ibv_device_attr devattr;
 	int ret;
 
 	IONIC_LOG("");
-	ret = ionic_query_device(&cntx->vctx.context, &devattr);
+	ret = ionic_query_device(&ctx->vctx.context, &devattr);
 	if (ret)
 		return ret;
 	if (attr->cap.max_send_sge > devattr.max_sge)
@@ -571,11 +570,11 @@ static int ionic_check_qp_limits(struct ionic_context *cntx,
 	return 0;
 }
 
-static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibvpd,
+static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
 				      struct ibv_qp_init_attr *attr)
 {
-	struct ionic_dev *dev = to_ionic_dev(ibvpd->context->device);
-	struct ionic_context *cntx = to_ionic_context(ibvpd->context);
+	struct ionic_dev *dev = to_ionic_dev(ibpd->context->device);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibpd->context);
 	struct ionic_qp *qp;
 	struct ionic_qp_req req;
 	struct ionic_qp_resp resp;
@@ -583,7 +582,7 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibvpd,
 
 	int rc;
 
-	rc = ionic_check_qp_limits(cntx, attr);
+	rc = ionic_check_qp_limits(ctx, attr);
 	if (rc)
 		goto err_qp;
 
@@ -643,7 +642,7 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibvpd,
 	IONIC_LOG("req.sq_wqe_size %#lx", (unsigned long)req.sq_wqe_size);
 	IONIC_LOG("req.rq_wqe_size %#lx", (unsigned long)req.rq_wqe_size);
 
-	rc = ibv_cmd_create_qp(ibvpd, &qp->ibvqp, attr,
+	rc = ibv_cmd_create_qp(ibpd, &qp->ibqp, attr,
 			       &req.cmd, sizeof(req),
 			       &resp.resp, sizeof(resp));
 	if (rc)
@@ -657,9 +656,7 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibvpd,
 	qp->sq_qtype = resp.sq_qtype;
 	qp->rq_qtype = resp.rq_qtype;
 	qp->qpst = IBV_QPS_RESET;
-	qp->scq = to_ionic_cq(attr->send_cq);
-	qp->rcq = to_ionic_cq(attr->recv_cq);
-	qp->udpi = &cntx->udpi;
+	qp->udpi = &ctx->udpi;
 
 	/* Save/return the altered Caps. */
 	cap->max_ssge = attr->cap.max_send_sge;
@@ -667,16 +664,14 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibvpd,
 	cap->max_inline = attr->cap.max_inline_data;
 	cap->sqsig = attr->sq_sig_all;
 
-	qp->cntxt = cntx;
+	pthread_mutex_lock(&ctx->mut);
+	tbl_alloc_node(&ctx->qp_tbl);
+	ionic_lock_all_cqs(ctx);
+	tbl_insert(&ctx->qp_tbl, qp, qp->qpid);
+	ionic_unlock_all_cqs(ctx);
+	pthread_mutex_unlock(&ctx->mut);
 
-	pthread_mutex_lock(&cntx->mut);
-	tbl_alloc_node(&cntx->qp_tbl);
-	ionic_lock_all_cqs(cntx);
-	tbl_insert(&cntx->qp_tbl, qp, qp->qpid);
-	ionic_unlock_all_cqs(cntx);
-	pthread_mutex_unlock(&cntx->mut);
-
-	return &qp->ibvqp;
+	return &qp->ibqp;
 
 err_cmd:
 	pthread_spin_destroy(&qp->rq_lock);
@@ -695,12 +690,12 @@ err_qp:
 	return NULL;
 }
 
-static int ionic_modify_qp(struct ibv_qp *ibvqp,
+static int ionic_modify_qp(struct ibv_qp *ibqp,
 			   struct ibv_qp_attr *attr,
 			   int attr_mask)
 {
 	struct ibv_modify_qp cmd = {};
-	struct ionic_qp *qp = to_ionic_qp(ibvqp);
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	int rc;
 
 	IONIC_LOG("");
@@ -708,7 +703,7 @@ static int ionic_modify_qp(struct ibv_qp *ibvqp,
 	if (!attr_mask)
 		return 0;
 
-	rc = ibv_cmd_modify_qp(ibvqp, attr, attr_mask, &cmd, sizeof(cmd));
+	rc = ibv_cmd_modify_qp(ibqp, attr, attr_mask, &cmd, sizeof(cmd));
 	if (!rc) {
 		if (attr_mask & IBV_QP_STATE) {
 			qp->qpst = attr->qp_state;
@@ -725,20 +720,20 @@ static int ionic_modify_qp(struct ibv_qp *ibvqp,
 	return rc;
 }
 
-static int ionic_query_qp(struct ibv_qp *ibvqp,
+static int ionic_query_qp(struct ibv_qp *ibqp,
 			  struct ibv_qp_attr *attr,
 			  int attr_mask,
 			  struct ibv_qp_init_attr *init_attr)
 {
 	struct ibv_query_qp cmd;
-	struct ionic_qp *qp = to_ionic_qp(ibvqp);
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	int rc;
 
 	IONIC_LOG("");
-	rc = ibv_cmd_query_qp(ibvqp, attr, attr_mask, init_attr,
+	rc = ibv_cmd_query_qp(ibqp, attr, attr_mask, init_attr,
 			      &cmd, sizeof(cmd));
 	if (!rc)
-		qp->qpst = ibvqp->state;
+		qp->qpst = ibqp->state;
 
 	init_attr->cap.max_inline_data = IONIC_MAX_INLINE_SIZE;
 
@@ -747,14 +742,14 @@ static int ionic_query_qp(struct ibv_qp *ibvqp,
 	return rc;
 }
 
-static int ionic_destroy_qp(struct ibv_qp *ibvqp)
+static int ionic_destroy_qp(struct ibv_qp *ibqp)
 {
-	struct ionic_context *ctx = to_ionic_context(ibvqp->context);
-	struct ionic_qp *qp = to_ionic_qp(ibvqp);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	int status;
 
 	IONIC_LOG("");
-	status = ibv_cmd_destroy_qp(ibvqp);
+	status = ibv_cmd_destroy_qp(ibqp);
 	if (status)
 		return status;
 
@@ -1049,11 +1044,12 @@ static int ionic_build_rdma_read_sqe(struct ionic_qp *qp,
  * optimize this to see capri can take WR entry data in little endian format
  * without compromising performance.
  */
-static int ionic_post_send(struct ibv_qp *ibvqp,
+static int ionic_post_send(struct ibv_qp *ibqp,
 			   struct ibv_send_wr *wr,
 			   struct ibv_send_wr **bad)
 {
-	struct ionic_qp *qp = to_ionic_qp(ibvqp);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	uint64_t *dbpage = (void *)qp->udpi->dbpage; /* XXX cleanup */
 	struct sqwqe_t *sqe;
 	struct ionic_sq_meta *meta;
@@ -1144,8 +1140,8 @@ static int ionic_post_send(struct ibv_qp *ibvqp,
 		meta->len = bytes;
 		meta->op = ibv_to_ionic_wr_opcd(wr->opcode);
 
-		ionic_dbg(qp->cntxt, "post send prod %d", qp->sq.prod);
-		ionic_dbg_xdump(qp->cntxt, "wqe", sqe, qp->sq.stride);
+		ionic_dbg(ctx, "post send prod %d", qp->sq.prod);
+		ionic_dbg_xdump(ctx, "wqe", sqe, qp->sq.stride);
 
 		ionic_queue_produce(&qp->sq);
 		qp->wqe_cnt++;
@@ -1163,11 +1159,12 @@ out:
 	return ret;
 }
 
-static int ionic_post_recv(struct ibv_qp *ibvqp,
+static int ionic_post_recv(struct ibv_qp *ibqp,
 			   struct ibv_recv_wr *wr,
 			   struct ibv_recv_wr **bad)
 {
-	struct ionic_qp *qp = to_ionic_qp(ibvqp);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	uint64_t *dbpage = (void *)qp->udpi->dbpage; /* XXX cleanup */
 	struct rqwqe_t *rqe;
 	struct ionic_rq_meta *meta;
@@ -1204,8 +1201,8 @@ static int ionic_post_recv(struct ibv_qp *ibvqp,
 		meta->wrid = wr->wr_id;
 		meta->len = bytes; /* XXX see ionic_poll_recv, byte_len */
 
-	ionic_dbg(qp->cntxt, "post recv prod %d", qp->rq.prod);
-	ionic_dbg_xdump(qp->cntxt, "wqe", rqe, qp->rq.stride);
+		ionic_dbg(ctx, "post recv prod %d", qp->rq.prod);
+		ionic_dbg_xdump(ctx, "wqe", rqe, qp->rq.stride);
 
 		ionic_queue_produce(&qp->rq);
 		qp->wqe_cnt++;
@@ -1223,7 +1220,7 @@ out:
 	return ret;
 }
 
-static struct ibv_srq *ionic_create_srq(struct ibv_pd *ibvpd,
+static struct ibv_srq *ionic_create_srq(struct ibv_pd *ibpd,
 					struct ibv_srq_init_attr *attr)
 {
 	IONIC_LOG("");
@@ -1231,33 +1228,33 @@ static struct ibv_srq *ionic_create_srq(struct ibv_pd *ibvpd,
 	return NULL;
 }
 
-static int ionic_modify_srq(struct ibv_srq *ibvsrq, struct ibv_srq_attr *attr,
+static int ionic_modify_srq(struct ibv_srq *ibsrq, struct ibv_srq_attr *attr,
 			    int init_attr)
 {
 	IONIC_LOG("");
 	return -ENOSYS;
 }
 
-static int ionic_destroy_srq(struct ibv_srq *ibvsrq)
+static int ionic_destroy_srq(struct ibv_srq *ibsrq)
 {
 	IONIC_LOG("");
 	return -ENOSYS;
 }
 
-static int ionic_query_srq(struct ibv_srq *ibvsrq, struct ibv_srq_attr *attr)
+static int ionic_query_srq(struct ibv_srq *ibsrq, struct ibv_srq_attr *attr)
 {
 	IONIC_LOG("");
 	return -ENOSYS;
 }
 
-static int ionic_post_srq_recv(struct ibv_srq *ibvsrq, struct ibv_recv_wr *wr,
+static int ionic_post_srq_recv(struct ibv_srq *ibsrq, struct ibv_recv_wr *wr,
 			       struct ibv_recv_wr **bad)
 {
 	IONIC_LOG("");
 	return -ENOSYS;
 }
 
-static struct ibv_ah *ionic_create_ah(struct ibv_pd *pd,
+static struct ibv_ah *ionic_create_ah(struct ibv_pd *ibpd,
 				      struct ibv_ah_attr *attr)
 {
 	IONIC_LOG("");
@@ -1265,7 +1262,7 @@ static struct ibv_ah *ionic_create_ah(struct ibv_pd *pd,
 	return NULL;
 }
 
-static int ionic_destroy_ah(struct ibv_ah *ah)
+static int ionic_destroy_ah(struct ibv_ah *ibah)
 {
 	IONIC_LOG("");
 	errno = ENOSYS;
@@ -1305,47 +1302,47 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 						 int cmd_fd)
 {
 	struct ionic_dev *dev = to_ionic_dev(ibdev);
-	struct ionic_context *cntx;
+	struct ionic_ctx *ctx;
 	struct ibv_get_context cmd;
-	struct ionic_cntx_resp resp;
+	struct ionic_ctx_resp resp;
 	int rc;
 
-	cntx = verbs_init_and_alloc_context(ibdev, cmd_fd, cntx, vctx);
-	if (!cntx) {
+	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx);
+	if (!ctx) {
 		rc = errno;
 		goto err_ctx;
 	}
 
-	rc = ibv_cmd_get_context(&cntx->vctx, &cmd, sizeof(cmd),
+	rc = ibv_cmd_get_context(&ctx->vctx, &cmd, sizeof(cmd),
 				 &resp.resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 
 
-	cntx->max_qp = resp.max_qp;
+	ctx->max_qp = resp.max_qp;
 	/* XXX cleanup, overwrites dev fields on each init ctx */
 	dev->pg_size = resp.pg_size;
 	dev->cqe_size = resp.cqe_size;
 	dev->max_cq_depth = resp.max_cqd;
 
 	/* mmap shared page. */
-	cntx->udpi.dbpage = (struct ionic_doorbell *) mmap(NULL, dev->pg_size,
+	ctx->udpi.dbpage = (struct ionic_doorbell *) mmap(NULL, dev->pg_size,
 							   PROT_WRITE,
 							   MAP_SHARED, cmd_fd, 0);
 
-	pthread_mutex_init(&cntx->mut, NULL);
-	tbl_init(&cntx->qp_tbl);
-	list_head_init(&cntx->cq_list);
+	pthread_mutex_init(&ctx->mut, NULL);
+	tbl_init(&ctx->qp_tbl);
+	list_head_init(&ctx->cq_list);
 
-	pthread_spin_init(&cntx->udpi.db_lock,
+	pthread_spin_init(&ctx->udpi.db_lock,
 			  PTHREAD_PROCESS_PRIVATE);
 
-	verbs_set_ops(&cntx->vctx, &ionic_ctx_ops);
+	verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 
-	return &cntx->vctx;
+	return &ctx->vctx;
 
 err_cmd:
-	verbs_uninit_context(&cntx->vctx);
+	verbs_uninit_context(&ctx->vctx);
 err_ctx:
 	errno = rc;
 	return NULL;
@@ -1354,22 +1351,22 @@ err_ctx:
 static void ionic_free_context(struct ibv_context *ibctx)
 {
 	struct ionic_dev *dev = to_ionic_dev(ibctx->device);
-	struct ionic_context *cntx = to_ionic_context(ibctx);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 
-	tbl_destroy(&cntx->qp_tbl);
-	pthread_mutex_destroy(&cntx->mut);
+	tbl_destroy(&ctx->qp_tbl);
+	pthread_mutex_destroy(&ctx->mut);
 
 	/* Un-map DPI only for the first PD that was
 	 * allocated in this context.
 	 */
-	if (cntx->udpi.dbpage && cntx->udpi.dbpage != MAP_FAILED) {
-		pthread_spin_destroy(&cntx->udpi.db_lock);
-		munmap(cntx->udpi.dbpage, dev->pg_size);
-		cntx->udpi.dbpage = NULL;
+	if (ctx->udpi.dbpage && ctx->udpi.dbpage != MAP_FAILED) {
+		pthread_spin_destroy(&ctx->udpi.db_lock);
+		munmap(ctx->udpi.dbpage, dev->pg_size);
+		ctx->udpi.dbpage = NULL;
 	}
 
-	verbs_uninit_context(&cntx->vctx);
-	free(cntx);
+	verbs_uninit_context(&ctx->vctx);
+	free(ctx);
 }
 
 static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev)

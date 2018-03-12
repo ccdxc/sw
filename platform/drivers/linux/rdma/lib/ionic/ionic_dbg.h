@@ -6,10 +6,10 @@
 //#define IONIC_VERBOSE_DEBUG
 
 /* this file may be included from other headers that define these types */
-struct ionic_context;
+struct ionic_ctx;
 struct cqwqe_be_t;
 /* mark used and type check the parameters when debug code is not generated */
-static inline void ionic_type_ctx(struct ionic_context *ctx) {}
+static inline void ionic_type_ctx(struct ionic_ctx *ctx) {}
 static inline void ionic_type_cqe(struct cqwqe_be_t *cqe) {}
 
 #ifdef IONIC_DEBUG
@@ -20,9 +20,9 @@ static inline void ionic_type_cqe(struct cqwqe_be_t *cqe) {}
 } while (0)
 /* TODO: fprintf(ctx->dbg_fd, "%s:%d" fmt "\n", __func__, __LINE__, ##args); */
 #else
-static inline void ionic_dbg(struct ionic_context *ctx, const char *fmt, ...)
+static inline void ionic_dbg(struct ionic_ctx *ctx, const char *fmt, ...)
 	__attribute__((format(printf, 2, 3)));
-static inline void ionic_dbg(struct ionic_context *ctx, const char *fmt, ...) {}
+static inline void ionic_dbg(struct ionic_ctx *ctx, const char *fmt, ...) {}
 #endif
 
 #define ionic_dbg_cqe_verbose(ctx, cqe) do { \
@@ -55,7 +55,7 @@ static inline void ionic_dbg(struct ionic_context *ctx, const char *fmt, ...) {}
 #define ionic_dbg_cqe ionic_dbg_cqe_quiet
 #endif
 
-static inline void ionic_dbg_xdump(struct ionic_context *ctx, const char *str,
+static inline void ionic_dbg_xdump(struct ionic_ctx *ctx, const char *str,
 				   const void *ptr, size_t size)
 {
 	const uint8_t *ptr8 = ptr;

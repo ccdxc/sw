@@ -141,7 +141,7 @@ enum ionic_shpg_offt {
 
 #define IONIC_MAX_INLINE_SIZE		0x100
 
-struct ionic_cntx_resp {
+struct ionic_ctx_resp {
 	struct ib_uverbs_get_context_resp resp;
 	__u32 dev_id;
 	__u32 max_qp; /* To allocate qp-table */
