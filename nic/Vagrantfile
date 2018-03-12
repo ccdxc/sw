@@ -80,6 +80,7 @@ yum install -y cscope
 yum install -y ctags
 yum install -y softhsm libtool-ltdl-devel
 yum install -y nfs-utils nfs-utils-lib
+yum install -y dhcp
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
