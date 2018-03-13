@@ -29,7 +29,6 @@
 #include "nic/hal/src/rawccb.hpp"
 #include "nic/hal/src/proxyrcb.hpp"
 #include "nic/hal/src/proxyccb.hpp"
-//#include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/gft.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
@@ -1074,9 +1073,9 @@ hal_mem_db::~hal_mem_db()
 //----------------------------------------------------------------------------
 // gives the slab of a slab id
 //----------------------------------------------------------------------------
-#define GET_SLAB(slab_name)                                 \
-    if (slab_name && slab_name->slab_id() == slab_id) { \
-        return slab_name;                                   \
+#define GET_SLAB(slab_name)                                            \
+    if (slab_name && slab_name->slab_id() == slab_id) {                \
+        return slab_name;                                              \
     }
 
 slab *
@@ -1215,6 +1214,25 @@ hal_state::~hal_state()
         mem_db_->~hal_mem_db();
         HAL_FREE(HAL_MEM_ALLOC_INFRA, mem_db_);
     }
+}
+
+//------------------------------------------------------------------------------
+// preserve the state in the class in the given persistent memory and return
+// the number of bytes used up
+//------------------------------------------------------------------------------
+uint32_t
+preserve_state(void *mem, uint32_t len)
+{
+    return 0;
+}
+
+//------------------------------------------------------------------------------
+// restore the state from given memory segment
+//------------------------------------------------------------------------------
+uint64_t
+preserve_state(void *mem)
+{
+    return 0;
 }
 
 //------------------------------------------------------------------------------

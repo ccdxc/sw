@@ -12,18 +12,18 @@ extern bool gl_super_user;
 
 namespace pd {
 
-pd_call_t *g_pd_calls;
+pd_call_t    *g_pd_calls;
 
 #define PD_SYMBOL_LOAD(PD_FUNC_ID, NAME)                                       \
 {                                                                              \
     g_pd_calls[PD_FUNC_ID].NAME =                                              \
-        (NAME ## _t)dlsym(g_hal_state->pd_so(), #NAME);                        \
+        (NAME ## _t)dlsym(hal_cfg->pd_so, #NAME);                              \
     dlsym_error = dlerror();                                                   \
     if (dlsym_error) {                                                         \
         HAL_TRACE_DEBUG("Failed to load symbol from PD lib {}:{}", #NAME,      \
                         dlsym_error);                                          \
         g_pd_calls[PD_FUNC_ID].NAME =                                          \
-            (NAME ## _t)dlsym(g_hal_state->pd_stub_so(), #NAME);               \
+            (NAME ## _t)dlsym(hal_cfg->pd_stub_so, #NAME);                     \
         dlsym_error = dlerror();                                               \
         if (dlsym_error) {                                                     \
             HAL_TRACE_ERR("Failed to load symbol from PD stub lib {}:{}",      \
@@ -33,30 +33,29 @@ pd_call_t *g_pd_calls;
     }                                                                          \
 }
 
+//------------------------------------------------------------------------------
 // TODO: Sample Expansion of above macro. Remove this once the code is stable
-/*
- *   g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create = 
- *       (pd_vrf_create_t)dlsym(g_hal_state->pd_so(), 
- *                              "pd_vrf_create");
- *   dlsym_error = dlerror();
- *   if (dlsym_error) {
- *       HAL_TRACE_ERR("{}: cannot load symbol from PD LIB {}: {}", 
- *                     __FUNCTION__, "pd_vrf_create", dlsym_error);
- *       g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create = 
- *           (pd_vrf_create_t)dlsym(g_hal_state->pd_stub_so(), 
- *                                  "pd_vrf_create");
- *       dlsym_error = dlerror();
- *       if (dlsym_error) {
- *           HAL_TRACE_ERR("{}: cannot load symbol from PD STUB LIB {}: {}", 
- *                         __FUNCTION__, "pd_vrf_create", dlsym_error);
- *           HAL_ASSERT(0);
- *       }
- *   }
- */
-
-
+//
+//   g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create = 
+//       (pd_vrf_create_t)dlsym(g_hal_state->pd_so(), 
+//                              "pd_vrf_create");
+//   dlsym_error = dlerror();
+//   if (dlsym_error) {
+//       HAL_TRACE_ERR("{}: cannot load symbol from PD LIB {}: {}", 
+//                     __FUNCTION__, "pd_vrf_create", dlsym_error);
+//       g_pd_calls[PD_FUNC_ID_VRF_CREATE].pd_vrf_create = 
+//           (pd_vrf_create_t)dlsym(g_hal_state->pd_stub_so(), 
+//                                  "pd_vrf_create");
+//       dlsym_error = dlerror();
+//       if (dlsym_error) {
+//           HAL_TRACE_ERR("{}: cannot load symbol from PD STUB LIB {}: {}", 
+//                         __FUNCTION__, "pd_vrf_create", dlsym_error);
+//           HAL_ASSERT(0);
+//       }
+//   }
+//------------------------------------------------------------------------------
 hal_ret_t
-hal_pd_load_symbols (void)
+hal_pd_load_symbols (hal_cfg_t *hal_cfg)
 {
     hal_ret_t       ret = HAL_RET_OK;
     const char*     dlsym_error = NULL;
@@ -725,21 +724,21 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
 
     // with deepbind, its taking the symbol the PD is taking from PI
     // void *so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
-    void *so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
-    if (!so) {
+    hal_cfg->pd_so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
+    if (!hal_cfg->pd_so) {
         HAL_TRACE_ERR("dlopen failed {}:{}", pdlib_path, dlerror());
         HAL_ASSERT(0);
     }
-    g_hal_state->set_pd_so(so);
+    //g_hal_state->set_pd_so(so);
 
     // open PD stub library
     HAL_TRACE_DEBUG("Loading pd stub lib: {}", pdlib_stub_path);
-    void *stub_so = dlopen(pdlib_stub_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
-    if (!stub_so) {
+    hal_cfg->pd_stub_so = dlopen(pdlib_stub_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
+    if (!hal_cfg->pd_stub_so) {
         HAL_TRACE_ERR("{} dlopen failed {}", pdlib_stub_path, dlerror());
         HAL_ASSERT(0);
     }
-    g_hal_state->set_pd_stub_so(stub_so);
+    //g_hal_state->set_pd_stub_so(stub_so);
 
     return ret;
 }
@@ -769,7 +768,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     }
 
     // load pd symbols
-    ret = hal_pd_load_symbols();
+    ret = hal_pd_load_symbols(hal_cfg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL PD lib load symbols failed, err : {}", ret);
         goto cleanup;
@@ -840,7 +839,7 @@ cleanup:
 }
 
 extern "C" int 
-pd_tls_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
+pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
         uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h)
 {

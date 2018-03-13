@@ -54,6 +54,8 @@ typedef struct hal_cfg_s {
     uint16_t             num_data_threads;
     uint64_t             control_cores_mask;
     uint64_t             data_cores_mask;
+    void                 *pd_so;
+    void                 *pd_stub_so;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------
