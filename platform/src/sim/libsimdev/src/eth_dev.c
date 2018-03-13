@@ -550,6 +550,20 @@ devcmd_rx_filter_del(struct admin_cmd *acmd, struct admin_comp *acomp)
 }
 
 static void
+devcmd_stats_dump_start(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    simdev_log("devcmd_stats_dump_start:\n");
+    /* XXX */
+}
+
+static void
+devcmd_stats_dump_stop(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    simdev_log("devcmd_stats_dump_stop:\n");
+    /* XXX */
+}
+
+static void
 devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     struct debug_q_dump_cmd *cmd = (void *)acmd;
@@ -678,6 +692,12 @@ devcmd(struct dev_cmd_regs *dc)
         break;
     case CMD_OPCODE_RX_FILTER_DEL:
         devcmd_rx_filter_del(cmd, comp);
+        break;
+    case CMD_OPCODE_STATS_DUMP_START:
+        devcmd_stats_dump_start(cmd, comp);
+        break;
+    case CMD_OPCODE_STATS_DUMP_STOP:
+        devcmd_stats_dump_stop(cmd, comp);
         break;
     case CMD_OPCODE_DEBUG_Q_DUMP:
         devcmd_debug_q_dump(cmd, comp);

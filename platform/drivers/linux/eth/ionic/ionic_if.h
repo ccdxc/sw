@@ -39,6 +39,8 @@ enum cmd_opcode {
 	CMD_OPCODE_RX_MODE_SET			= 17,
 	CMD_OPCODE_RX_FILTER_ADD		= 18,
 	CMD_OPCODE_RX_FILTER_DEL		= 19,
+	CMD_OPCODE_STATS_DUMP_START		= 20,
+	CMD_OPCODE_STATS_DUMP_STOP		= 21,
 
 	CMD_OPCODE_RDMA_FIRST_CMD		= 50, //Keep this as first rdma cmd
 	CMD_OPCODE_RDMA_QUERY_PKEY		= 51,
@@ -929,6 +931,68 @@ struct rx_filter_comp {
 	u32 color:1;
 };
 
+#define STATS_DUMP_VERSION_1		1
+
+/**
+ * struct stats_dump_cmd - Setup stats dump shared memory command
+ * @opcode:     opcode = 20 (start), 21 (stop)
+ * @ver:        Highest version of stats supported by driver:
+ *                 1 = version 1.0 stats
+ * @addr:       Destination address for the 4096-byte stats shared
+ *              memory area (only valid when starting stats dump).
+ *              (See union stats_dump).
+ *
+ * Once the start stats dump command is called, the device will
+ * periodically dump stats to the shared memory area @addr.
+ * The device will stop stats dump to the shared memory area
+ * when the stop stats dump cmd is called.  Once a stopped
+ * completion is received, the shared memory area can be
+ * released by the driver.
+ */
+struct stats_dump_cmd {
+	u16 opcode;
+	u16 ver;
+	dma_addr_t addr;
+	u32 rsvd2[13];
+};
+
+/**
+ * struct stats_dump_comp - Setup stats dump shared memory
+ *                          completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ *                 1 = Version not supported by device
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @ver:        Version of stats return by device.  The version
+ *              returned by the device can be <= the requested
+ *              version.
+ * @color:      Color bit.
+ */
+struct stats_dump_comp {
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u16 ver;
+	u16 rsvd2[3];
+	u32 rsvd3:31;
+	u32 color:1;
+};
+
+/**
+ * union stats_dump - 4096 bytes of device stats
+ * TODO define stats dump area, placeholders for now:
+ * @stat1:  64-bit device stat
+ * @stat2:  64-bit device stat
+ */
+union stats_dump {
+	struct {
+		/* TODO these are placeholders */
+		u64 stat1;
+		u64 stat2;
+	} ver1;
+	u32 words[1024];
+};
 
 /**
  * struct debug_q_dump_cmd - Debug queue dump command
@@ -1182,6 +1246,7 @@ union adminq_cmd {
 	struct mtu_set_cmd mtu_set;
 	struct rx_mode_set_cmd rx_mode_set;
 	struct rx_filter_cmd rx_filter;
+	struct stats_dump_cmd stats_dump;
 	struct debug_q_dump_cmd debug_q_dump;
 	struct create_mr_cmd create_mr;
 	struct create_cq_cmd create_cq;
@@ -1197,6 +1262,7 @@ union adminq_comp {
 	struct features_comp features;
 	struct station_mac_addr_get_comp station_mac_addr_get;
 	struct rx_filter_comp rx_filter;
+	struct stats_dump_comp stats_dump;
 	struct debug_q_dump_comp debug_q_dump;
 	struct create_mr_comp create_mr;
 	struct create_cq_comp create_cq;

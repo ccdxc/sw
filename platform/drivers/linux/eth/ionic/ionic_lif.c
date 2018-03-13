@@ -54,6 +54,8 @@ static int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
 		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
 		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
+		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
+		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
 		{ 0, 0 }, /* keep last */
 	};
 	struct cmds *cmd = cmds;
@@ -837,6 +839,80 @@ void ionic_lifs_free(struct ionic *ionic)
 	}
 }
 
+static int ionic_lif_stats_dump_start(struct lif *lif, unsigned int ver)
+{
+	struct net_device *netdev = lif->netdev;
+	struct device *dev = lif->ionic->dev;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.stats_dump = {
+			.opcode = CMD_OPCODE_STATS_DUMP_START,
+			.ver = ver,
+		},
+	};
+	int err;
+
+	lif->stats_dump = dma_alloc_coherent(dev, sizeof(*lif->stats_dump),
+					     &lif->stats_dump_pa, GFP_KERNEL);
+
+	if (!lif->stats_dump) {
+		netdev_err(netdev, "%s OOM\n", __func__);
+		return -ENOMEM;
+	}
+
+	ctx.cmd.stats_dump.addr = lif->stats_dump_pa;
+
+	netdev_info(netdev, "stats_dump START ver %d addr 0x%llx\n", ver,
+		    lif->stats_dump_pa);
+
+	err = ionic_api_adminq_post(lif, &ctx);
+	if (err)
+		goto err_out_free;
+
+	wait_for_completion(&ctx.work);
+
+	err = ionic_adminq_check_err(lif, &ctx);
+	if (err)
+		goto err_out_free;
+
+	return 0;
+
+err_out_free:
+	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
+			  lif->stats_dump_pa);
+	return err;
+}
+
+static void ionic_lif_stats_dump_stop(struct lif *lif)
+{
+	struct net_device *netdev = lif->netdev;
+	struct device *dev = lif->ionic->dev;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.stats_dump = {
+			.opcode = CMD_OPCODE_STATS_DUMP_STOP,
+		},
+	};
+	int err;
+
+	netdev_info(netdev, "stats_dump STOP\n");
+
+	err = ionic_api_adminq_post(lif, &ctx);
+	if (err) {
+		netdev_err(netdev, "stats_dump cmd failed %d\n", err);
+		return;
+	}
+
+	wait_for_completion(&ctx.work);
+
+	err = ionic_adminq_check_err(lif, &ctx);
+	if (err)
+		return;
+
+	dma_free_coherent(dev, sizeof(*lif->stats_dump), lif->stats_dump,
+			  lif->stats_dump_pa);
+}
+
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 {
 	struct device *dev = lif->ionic->dev;
@@ -867,6 +943,7 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 
 static void ionic_lif_deinit(struct lif *lif)
 {
+	ionic_lif_stats_dump_stop(lif);
 	ionic_lif_qcq_deinit(lif, lif->adminqcq);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
@@ -1139,6 +1216,10 @@ static int ionic_lif_init(struct lif *lif)
 		goto err_out_txqs_deinit;
 
 	err = ionic_station_set(lif);
+	if (err)
+		goto err_out_rxqs_deinit;
+
+	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
 		goto err_out_rxqs_deinit;
 

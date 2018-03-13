@@ -86,6 +86,8 @@ struct lif {
 	unsigned int nrxqcqs;
 	unsigned int rx_mode;
 	u32 hw_features;
+	union stats_dump *stats_dump;
+	dma_addr_t stats_dump_pa;
 };
 
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
