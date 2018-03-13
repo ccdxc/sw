@@ -13,7 +13,6 @@ cc_library(
     hdrs = glob(["*.hpp", "acl/*.hpp"]),
     copts = sdk_copts,
     deps = [
-        #"//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic:grpc",
         "//nic:halproto",
@@ -36,7 +35,6 @@ cc_library(
         "acl/acl.hpp",
         "acl/ref.hpp"
     ]
-    #+glob(["acl/*.hpp"])
 )
 
 cc_test(

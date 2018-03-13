@@ -73,7 +73,8 @@ gft: platform capsim-master sdk go-proto
 	$(MAKE) -C asm msft_gft AS_DEFINES="-DGFT -DCAPRI_IGNORE_TIMESTAMP"
 	$(MAKE) gen-proto
 	$(MAKE) -j4 build-proto
-	bazel build --copt=-DGFT --define p4pipeline=gft $(SDK_OPTS) hal:hal
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
+	#bazel build --copt=-DGFT $(SDK_OPTS) hal:hal
 	$(MAKE) pd_gft
 	$(MAKE) pd_stub
 	$(MAKE) gtests_gft

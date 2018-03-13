@@ -12,7 +12,6 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/utils/host_mem:host_mem_src",
         "//nic/utils/bm_allocator:bm_allocator",
-        "//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic/p4/iris/include:p4_iris_includes",
         "//nic:spdlog",

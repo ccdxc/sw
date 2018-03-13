@@ -28,7 +28,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",
-        "//nic:gen_includes",
+        "//nic:gen_gft_includes",
         "//nic/hal/pd/utils/flow",
         "//nic/hal/pd/p4pd:p4pd",
         "//nic/hal/pd/capri",

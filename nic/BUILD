@@ -225,7 +225,6 @@ cc_library(
         "gen/iris/include/p4pd.h",
     ],
     deps = [
-        "//nic:gen_includes",
         "//nic/include:base_includes",
     ],
 )
@@ -237,7 +236,6 @@ cc_library(
         "gen/gft/include/p4pd.h",
     ],
     deps = [
-        "//nic:gen_includes",
         "//nic/include:base_includes",
     ],
 )
@@ -249,7 +247,6 @@ cc_library(
         "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
     ],
     deps = [
-        "//nic:gen_includes",
         "//nic/include:base_includes",
     ],
 )
@@ -261,64 +258,57 @@ cc_library(
         "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
     ],
     deps = [
-        "//nic:gen_includes",
         "//nic/include:base_includes",
     ],
 )
 
 cc_library(
-    name = "gen_includes",
+        name = "gen_common_includes",
+        srcs = [],
+        hdrs =  [
+                "gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h",
+                "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h",
+                "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
+                "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
+                "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
+                "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
+                #"gen/ipsec_rxdma_actions/include/ipsec_rxdma_actions_p4plus_ingress.h",
+                "gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h",
+                "gen/tls_txdma_post_crypto_enc/include/tls_txdma_post_crypto_enc_p4plus_ingress.h",
+                "gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h",
+                "gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h",
+                "gen/gc_txdma/include/gc_txdma_p4plus_ingress.h",
+                "gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h",
+                "gen/rawc_txdma/include/rawc_txdma_p4plus_ingress.h",
+                "gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h",
+                "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
+                "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
+                "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
+                ],
+        deps = ["//nic/include:base_includes"],
+)
+
+cc_library(
+        name = "gen_iris_includes",
+        srcs = [],
+        hdrs =  [
+                "gen/iris/include/p4pd.h",
+                "gen/iris/include/p4plus_egress.h",
+                "gen/iris/include/p4plus_ingress.h",
+                "gen/iris/include/p4pd_table.h",
+                ],
+        deps = ["//nic/include:base_includes"],
+)
+
+cc_library(
+    name = "gen_gft_includes",
     srcs = [],
-    hdrs = select ({
-        "//conditions:default": [
-            "gen/iris/include/p4pd.h",
-            "gen/iris/include/p4plus_egress.h",
-            "gen/iris/include/p4plus_ingress.h",
-            "gen/iris/include/p4pd_table.h",
-            "gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h",
-            "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h",
-            "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
-            "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
-            "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
-            "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
-            #"gen/ipsec_rxdma_actions/include/ipsec_rxdma_actions_p4plus_ingress.h",
-            "gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h",
-            "gen/tls_txdma_post_crypto_enc/include/tls_txdma_post_crypto_enc_p4plus_ingress.h",
-            "gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h",
-            "gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h",
-            "gen/gc_txdma/include/gc_txdma_p4plus_ingress.h",
-            "gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h",
-            "gen/rawc_txdma/include/rawc_txdma_p4plus_ingress.h",
-            "gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h",
-            "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
-            "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
-            "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
-        ],
-        ":gft" : [
+    hdrs = [
             "gen/gft/include/p4pd.h",
             "gen/gft/include/p4plus_egress.h",
             "gen/gft/include/p4plus_ingress.h",
             "gen/gft/include/p4pd_table.h",
-            "gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h",
-            "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h",
-            "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
-            "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
-            "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
-            "gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h",
-            #"gen/ipsec_rxdma_actions/include/ipsec_rxdma_actions_p4plus_ingress.h",
-            "gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h",
-            "gen/tls_txdma_post_crypto_enc/include/tls_txdma_post_crypto_enc_p4plus_ingress.h",
-            "gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h",
-            "gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h",
-            "gen/gc_txdma/include/gc_txdma_p4plus_ingress.h",
-            "gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h",
-            "gen/rawc_txdma/include/rawc_txdma_p4plus_ingress.h",
-            "gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h",
-            "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
-            "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
-            "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
         ],
-    }),
     deps = ["//nic/include:base_includes"],
 )
 

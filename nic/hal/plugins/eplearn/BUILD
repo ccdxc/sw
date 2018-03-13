@@ -26,7 +26,6 @@ common_deps = [
     "//nic:grpc_includes",
     "//nic:google_includes",
     "//nic:boost",
-    "//nic:gen_includes",
     "//nic/hal/periodic:periodic",
 ]
 

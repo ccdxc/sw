@@ -68,7 +68,7 @@ cc_library(
     ] + sdk_copts,
     deps = [
                "//nic:asic_includes",
-               "//nic:gen_includes",
+               "//nic:gen_common_includes",
                "//nic:gen_proto_includes",
                "//nic:capricsr_int",
                "//nic/include:base_includes",

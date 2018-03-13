@@ -14,7 +14,6 @@ cc_library(
     ],
     hdrs = glob(["*.hpp"]),
     deps = [
-        "//nic:gen_includes",
         "//nic/fte",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
@@ -37,7 +36,6 @@ cc_library(
     ],
     hdrs = glob(["*.hpp"]),
     deps = [
-        "//nic:gen_includes",
         "//nic/fte",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",

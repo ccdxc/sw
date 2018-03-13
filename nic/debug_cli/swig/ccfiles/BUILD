@@ -18,6 +18,5 @@ cc_binary(
         "//nic/include:base_includes",
         "@python_path//:python27-lib",
         ":swig_includes",
-        "//nic:gen_includes"
     ],
 )

@@ -32,7 +32,6 @@ cc_library(
     hdrs = ["wring_pd.hpp",
             ],
     deps = [
-        "//nic:gen_includes",
         "//nic/hal:hal_hdrs",
         "//nic/hal/periodic:periodic",
     ],

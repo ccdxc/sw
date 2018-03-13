@@ -29,7 +29,6 @@ cc_library(
     ],
     copts = sdk_copts,
     deps = [
-        "//nic:gen_includes",
         "@sdk//obj:sdk_indexer",
         "//nic/hal/pd:hal_pd_includes",
         "//nic/include:base_includes",

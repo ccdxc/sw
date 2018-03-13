@@ -22,7 +22,8 @@ cc_library(
         "//nic:p4pluspd_rxdma",
         # -----
         "//nic:asic_includes",
-        "//nic:gen_includes",
+        "//nic:gen_iris_includes",
+        "//nic:gen_common_includes",
         "@sdk//:sdk_headers",
         "//nic/hal:hal_includes",
         "//nic/hal/pd/capri:capri",
@@ -59,7 +60,8 @@ cc_library(
             "p4plus_pd_api.h",
             "if_pd_utils.hpp"],
     deps = [
-        "//nic:gen_includes",
+        "//nic:gen_iris_includes",
+        "//nic:gen_common_includes",
         "//nic/hal/pd/utils/acl_tcam:acl_tcam_includes",
         "//nic/hal/pd/utils/flow:flow_includes",
         "//nic/hal/pd/utils/met:met_includes",

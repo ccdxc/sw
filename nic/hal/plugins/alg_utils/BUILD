@@ -9,7 +9,6 @@ cc_library(
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [
-        "//nic:gen_includes",
         "//nic/fte:fte",
         "//nic/hal:hal_src",
         "//nic/include:base_includes",
