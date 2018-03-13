@@ -729,7 +729,6 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
         HAL_TRACE_ERR("dlopen failed {}:{}", pdlib_path, dlerror());
         HAL_ASSERT(0);
     }
-    //g_hal_state->set_pd_so(so);
 
     // open PD stub library
     HAL_TRACE_DEBUG("Loading pd stub lib: {}", pdlib_stub_path);
@@ -738,7 +737,6 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
         HAL_TRACE_ERR("{} dlopen failed {}", pdlib_stub_path, dlerror());
         HAL_ASSERT(0);
     }
-    //g_hal_state->set_pd_stub_so(stub_so);
 
     return ret;
 }

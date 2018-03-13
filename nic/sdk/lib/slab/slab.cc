@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "sdk/mem.hpp"
+#include "sdk/mmgr.hpp"
 #include "lib/slab/slab.hpp"
 
 #define SDK_DEBUG 0

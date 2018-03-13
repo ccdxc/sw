@@ -689,258 +689,271 @@ bool
 hal_mem_db::init(void)
 {
     // initialize slab for HAL handles
-    hal_handle_slab_ = slab::factory("hal-handle",
-                                     HAL_SLAB_HANDLE, sizeof(hal_handle),
-                                     64, true, true, true);
-    HAL_ASSERT_RETURN((hal_handle_slab_ != NULL), false);
+    slabs_[HAL_SLAB_HANDLE] = slab::factory("hal-handle",
+                                            HAL_SLAB_HANDLE, sizeof(hal_handle),
+                                            64, true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE] != NULL), false);
 
-    hal_handle_ht_entry_slab_ = slab::factory("hal-handle-ht-entry",
+    slabs_[HAL_SLAB_HANDLE_HT_ENTRY] = slab::factory("hal-handle-ht-entry",
                                               HAL_SLAB_HANDLE_HT_ENTRY,
                                               sizeof(hal_handle_ht_entry_t),
                                               64, true, true, true);
-    HAL_ASSERT_RETURN((hal_handle_ht_entry_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_HT_ENTRY] != NULL), false);
 
-    hal_handle_list_entry_slab_ = slab::factory("hal-handle-list-entry",
+    slabs_[HAL_SLAB_HANDLE_LIST_ENTRY] = slab::factory("hal-handle-list-entry",
                                                 HAL_SLAB_HANDLE_LIST_ENTRY,
                                                 sizeof(hal_handle_list_entry_t),
                                                 64, true, true, true);
-    HAL_ASSERT_RETURN((hal_handle_list_entry_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_LIST_ENTRY] != NULL), false);
 
-	hal_handle_id_ht_entry_slab_ = slab::factory("hal-handle-id-ht-entry",
+	slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY] = slab::factory("hal-handle-id-ht-entry",
                                                  HAL_SLAB_HANDLE_ID_HT_ENTRY,
                                                  sizeof(hal_handle_id_ht_entry_t),
                                                  64, true, true, true);
-    HAL_ASSERT_RETURN((hal_handle_id_ht_entry_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY] != NULL), false);
 
-    hal_handle_id_list_entry_slab_ = slab::factory("hal-handle-id-list-entry",
+    slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY] = slab::factory("hal-handle-id-list-entry",
                                                    HAL_SLAB_HANDLE_ID_LIST_ENTRY,
                                                    sizeof(hal_handle_id_list_entry_t),
                                                    64, true, true, true);
-    HAL_ASSERT_RETURN((hal_handle_id_list_entry_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY] != NULL), false);
 
 	// initialize vrf related data structures
-	vrf_slab_ = slab::factory("vrf", HAL_SLAB_VRF,
+	slabs_[HAL_SLAB_VRF] = slab::factory("vrf", HAL_SLAB_VRF,
                                  sizeof(hal::vrf_t), 16,
                                  false, true, true);
-    HAL_ASSERT_RETURN((vrf_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_VRF] != NULL), false);
 
     // initialize network related data structures
-    network_slab_ = slab::factory("network", HAL_SLAB_NETWORK,
+    slabs_[HAL_SLAB_NETWORK] = slab::factory("network", HAL_SLAB_NETWORK,
                                  sizeof(hal::network_t), 16,
                                  false, true, true);
-    HAL_ASSERT_RETURN((network_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NETWORK] != NULL), false);
 
     // initialize security profile related data structures
-    nwsec_profile_slab_ = slab::factory("nwsec-profile",
+    slabs_[HAL_SLAB_SECURITY_PROFILE] = slab::factory("nwsec-profile",
                                         HAL_SLAB_SECURITY_PROFILE,
                                         sizeof(hal::nwsec_profile_t), 8,
                                         false, true, true);
-    HAL_ASSERT_RETURN((nwsec_profile_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SECURITY_PROFILE] != NULL), false);
     
     // initialize dos policy related data structures
-    dos_policy_slab_ = slab::factory("dos-policy",
+    slabs_[HAL_SLAB_DOS_POLICY] = slab::factory("dos-policy",
                                       HAL_SLAB_DOS_POLICY,
                                       sizeof(hal::dos_policy_t), 8,
                                       false, true, true);
-    HAL_ASSERT_RETURN((dos_policy_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY] != NULL), false);
 
     // initialize dos policy sg list related data structures
-    dos_policy_sg_list_entry_slab_ = slab::factory("dos-policy-sg-list",
+    slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] = slab::factory("dos-policy-sg-list",
                                       HAL_SLAB_DOS_POLICY_SG_LIST,
                                       sizeof(hal::dos_policy_sg_list_entry_t), 8,
                                       false, true, true);
-    HAL_ASSERT_RETURN((dos_policy_sg_list_entry_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] != NULL), false);
 
     // initialize L2 segment related data structures
-    l2seg_slab_ = slab::factory("l2seg", HAL_SLAB_L2SEG,
+    slabs_[HAL_SLAB_L2SEG] = slab::factory("l2seg", HAL_SLAB_L2SEG,
                                 sizeof(hal::l2seg_t), 16,
                                 false, true, true);
-    HAL_ASSERT_RETURN((l2seg_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L2SEG] != NULL), false);
 
     // initialize multicast related data structures
-    mc_entry_slab_ = slab::factory("mc_entry", HAL_SLAB_MC_ENTRY,
+    slabs_[HAL_SLAB_MC_ENTRY] = slab::factory("mc_entry", HAL_SLAB_MC_ENTRY,
                                    sizeof(hal::mc_entry_t), 16,
                                    false, true, true);
-    HAL_ASSERT_RETURN((mc_entry_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_MC_ENTRY] != NULL), false);
 
     // initialize LIF related data structures
-    lif_slab_ = slab::factory("LIF", HAL_SLAB_LIF,
+    slabs_[HAL_SLAB_LIF] = slab::factory("LIF", HAL_SLAB_LIF,
                               sizeof(hal::lif_t), 8,
                              false, true, true);
-    HAL_ASSERT_RETURN((lif_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_LIF] != NULL), false);
 
     // initialize interface related data structures
-    if_slab_ = slab::factory("interface", HAL_SLAB_IF,
+    slabs_[HAL_SLAB_IF] = slab::factory("interface", HAL_SLAB_IF,
                              sizeof(hal::if_t), 16,
                              false, true, true);
-    HAL_ASSERT_RETURN((if_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IF] != NULL), false);
 
     // initialize enic l2seg entry related data structures
-    enic_l2seg_entry_slab_ = slab::factory("interface", HAL_SLAB_ENIC_L2SEG_ENTRY,
-                             sizeof(hal::if_l2seg_entry_t), 16,
-                             false, true, true);
-    HAL_ASSERT_RETURN((enic_l2seg_entry_slab_ != NULL), false);
+    slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY] =
+        slab::factory("interface", HAL_SLAB_ENIC_L2SEG_ENTRY,
+                      sizeof(hal::if_l2seg_entry_t), 16,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY] != NULL), false);
 
     // initialize endpoint related data structures
-    ep_slab_ = slab::factory("EP", HAL_SLAB_EP, sizeof(hal::ep_t), 128,
-                             true, true, true);
-    HAL_ASSERT_RETURN((ep_slab_ != NULL), false);
+    slabs_[HAL_SLAB_EP] =
+        slab::factory("EP", HAL_SLAB_EP, sizeof(hal::ep_t), 128,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP] != NULL), false);
 
-    ep_ip_entry_slab_ = slab::factory("EP IP entry", HAL_SLAB_EP_IP_ENTRY,
-                                      sizeof(hal::ep_ip_entry_t),
-                                      64, true, true, true);
-    HAL_ASSERT_RETURN((ep_ip_entry_slab_ != NULL), false);
+    slabs_[HAL_SLAB_EP_IP_ENTRY] = slab::factory("EP IP entry",
+                                                 HAL_SLAB_EP_IP_ENTRY,
+                                                 sizeof(hal::ep_ip_entry_t),
+                                                 64, true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP_IP_ENTRY] != NULL), false);
 
-    ep_l3_entry_slab_ = slab::factory("EP L3 entry", HAL_SLAB_EP_L3_ENTRY,
-                                      sizeof(hal::ep_l3_entry_t),
-                                      64, true, true, true);
-    HAL_ASSERT_RETURN((ep_l3_entry_slab_ != NULL), false);
+    slabs_[HAL_SLAB_EP_L3_ENTRY] =
+        slab::factory("EP L3 entry", HAL_SLAB_EP_L3_ENTRY,
+                      sizeof(hal::ep_l3_entry_t),
+                      64, true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_EP_L3_ENTRY] != NULL), false);
 
     // initialize flow/session related data structures
-    flow_slab_ = slab::factory("Flow", HAL_SLAB_FLOW, sizeof(hal::flow_t), 128,
+    slabs_[HAL_SLAB_FLOW] = slab::factory("Flow", HAL_SLAB_FLOW, sizeof(hal::flow_t), 128,
                                true, true, true);
-    HAL_ASSERT_RETURN((flow_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FLOW] != NULL), false);
 
-    session_slab_ = slab::factory("Session", HAL_SLAB_SESSION,
+    slabs_[HAL_SLAB_SESSION] = slab::factory("Session", HAL_SLAB_SESSION,
                                   sizeof(hal::session_t), 128,
                                   true, true, true);
-    HAL_ASSERT_RETURN((session_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_SESSION] != NULL), false);
 
     // initialize l4lb related data structures
-    l4lb_slab_ = slab::factory("L4LB", HAL_SLAB_L4LB,
+    slabs_[HAL_SLAB_L4LB] = slab::factory("L4LB", HAL_SLAB_L4LB,
                                sizeof(hal::l4lb_service_entry_t), 16,
                                true, true, true);
-    HAL_ASSERT_RETURN((l4lb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L4LB] != NULL), false);
 
     // initialize TLS CB related data structures
-    tlscb_slab_ = slab::factory("tlscb", HAL_SLAB_TLSCB,
+    slabs_[HAL_SLAB_TLSCB] = slab::factory("tlscb", HAL_SLAB_TLSCB,
                                 sizeof(hal::tlscb_t), 16,
                                 false, true, true);
-    HAL_ASSERT_RETURN((tlscb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TLSCB] != NULL), false);
 
     // initialize TCB CB related data structures
-    tcpcb_slab_ = slab::factory("tcpcb", HAL_SLAB_TCPCB,
+    slabs_[HAL_SLAB_TCPCB] = slab::factory("tcpcb", HAL_SLAB_TCPCB,
                                 sizeof(hal::tcpcb_t), 16,
                                 false, true, true);
-    HAL_ASSERT_RETURN((tcpcb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_TCPCB] != NULL), false);
 
     // initialize Qos-class related data structures
-    qos_class_slab_ = slab::factory("QosClass", HAL_SLAB_QOS_CLASS,
+    slabs_[HAL_SLAB_QOS_CLASS] = slab::factory("QosClass", HAL_SLAB_QOS_CLASS,
                                 sizeof(hal::qos_class_t), 8,
                                 false, true, true);
-    HAL_ASSERT_RETURN((qos_class_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_QOS_CLASS] != NULL), false);
 
     // initialize Copp related data structures
-    copp_slab_ = slab::factory("Copp", HAL_SLAB_COPP,
+    slabs_[HAL_SLAB_COPP] = slab::factory("Copp", HAL_SLAB_COPP,
                                 sizeof(hal::copp_t), 8,
                                 false, true, true);
-    HAL_ASSERT_RETURN((copp_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_COPP] != NULL), false);
 
     // initialize WRing related data structures
-    wring_slab_ = slab::factory("wring", HAL_SLAB_WRING,
+    slabs_[HAL_SLAB_WRING] = slab::factory("wring", HAL_SLAB_WRING,
                                 sizeof(hal::wring_t), 16,
                                 false, true, true);
-    HAL_ASSERT_RETURN((wring_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_WRING] != NULL), false);
 
     // initialize Acl related data structures
-    acl_slab_ = slab::factory("Acl", HAL_SLAB_ACL,
+    slabs_[HAL_SLAB_ACL] = slab::factory("Acl", HAL_SLAB_ACL,
                               sizeof(hal::acl_t), 8,
                               false, true, true);
-    HAL_ASSERT_RETURN((acl_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ACL] != NULL), false);
 
     // initialize IPSEC CB related data structures
-    ipseccb_slab_ = slab::factory("ipseccb", HAL_SLAB_IPSECCB,
+    slabs_[HAL_SLAB_IPSECCB] = slab::factory("ipseccb", HAL_SLAB_IPSECCB,
                                   sizeof(hal::ipseccb_t), 16,
                                   false, true, true);
-    HAL_ASSERT_RETURN((ipseccb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPSECCB] != NULL), false);
 
     // initialize CPU CB related data structures
-    cpucb_slab_ = slab::factory("cpucb", HAL_SLAB_CPUCB,
+    slabs_[HAL_SLAB_CPUCB] = slab::factory("cpucb", HAL_SLAB_CPUCB,
                                 sizeof(hal::cpucb_t), 16,
                                 false, true, true);
-    HAL_ASSERT_RETURN((cpucb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_CPUCB] != NULL), false);
 
     // initialize Raw Redirect CB related data structures
-    rawrcb_slab_ = slab::factory("rawrcb", HAL_SLAB_RAWRCB,
+    slabs_[HAL_SLAB_RAWRCB] = slab::factory("rawrcb", HAL_SLAB_RAWRCB,
                                  sizeof(hal::rawrcb_t), 16,
                                  false, true, true);
-    HAL_ASSERT_RETURN((rawrcb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RAWRCB] != NULL), false);
 
     // initialize Raw Chain CB related data structures
-    rawccb_slab_ = slab::factory("rawccb", HAL_SLAB_RAWCCB,
+    slabs_[HAL_SLAB_RAWCCB] = slab::factory("rawccb", HAL_SLAB_RAWCCB,
                                  sizeof(hal::rawccb_t), 16,
                                  false, true, true);
-    HAL_ASSERT_RETURN((rawccb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RAWCCB] != NULL), false);
 
     // initialize Raw Redirect CB related data structures
-    proxyrcb_slab_ = slab::factory("proxyrcb", HAL_SLAB_PROXYRCB,
+    slabs_[HAL_SLAB_PROXYRCB] = slab::factory("proxyrcb", HAL_SLAB_PROXYRCB,
                                    sizeof(hal::proxyrcb_t), 16,
                                    false, true, true);
-    HAL_ASSERT_RETURN((proxyrcb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXYRCB] != NULL), false);
 
     // initialize Raw Chain CB related data structures
-    proxyccb_slab_ = slab::factory("proxyccb", HAL_SLAB_PROXYCCB,
+    slabs_[HAL_SLAB_PROXYCCB] = slab::factory("proxyccb", HAL_SLAB_PROXYCCB,
                                    sizeof(hal::proxyccb_t), 16,
                                    false, true, true);
-    HAL_ASSERT_RETURN((proxyccb_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXYCCB] != NULL), false);
 
-    nwsec_policy_rules_slab_ = slab::factory("nwsec_policy_rules", HAL_SLAB_NWSEC_POLICY_RULES,
-                                             sizeof(hal::nwsec_policy_rules_t), 64,
-                                             true, true, true);
-    HAL_ASSERT_RETURN((nwsec_policy_rules_slab_ != NULL), false);
+    slabs_[HAL_SLAB_NWSEC_POLICY_RULES] =
+        slab::factory("nwsec_policy_rules",
+                      HAL_SLAB_NWSEC_POLICY_RULES,
+                      sizeof(hal::nwsec_policy_rules_t), 64,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_RULES] != NULL), false);
 
-    nwsec_policy_cfg_slab_ = slab::factory("nwsec_policy_cfg", HAL_SLAB_NWSEC_POLICY_CFG,
-                                           sizeof(hal::nwsec_policy_cfg_t), 64,
-                                           true, true, true);
-    HAL_ASSERT_RETURN((nwsec_policy_cfg_slab_ != NULL), false);
+    slabs_[HAL_SLAB_NWSEC_POLICY_CFG] =
+        slab::factory("nwsec_policy_cfg", HAL_SLAB_NWSEC_POLICY_CFG,
+                      sizeof(hal::nwsec_policy_cfg_t), 64,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_CFG] != NULL), false);
 
-    nwsec_policy_svc_slab_ = slab::factory("nwsec_policy_svc", HAL_SLAB_NWSEC_POLICY_SVC,
-                                           sizeof(hal::nwsec_policy_svc_t), 64,
-                                           true, true, true);
-    HAL_ASSERT_RETURN((nwsec_policy_svc_slab_ != NULL), false);
+    slabs_[HAL_SLAB_NWSEC_POLICY_SVC] =
+        slab::factory("nwsec_policy_svc", HAL_SLAB_NWSEC_POLICY_SVC,
+                      sizeof(hal::nwsec_policy_svc_t), 64,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_SVC] != NULL), false);
 
-    nwsec_policy_appid_slab_ = slab::factory("nwsec_policy_appid", HAL_SLAB_NWSEC_POLICY_APPID,
-                                           sizeof(hal::nwsec_policy_appid_t), 64,
-                                           true, true, true);
-    HAL_ASSERT_RETURN((nwsec_policy_appid_slab_ != NULL), false);
+    slabs_[HAL_SLAB_NWSEC_POLICY_APPID] =
+        slab::factory("nwsec_policy_appid", HAL_SLAB_NWSEC_POLICY_APPID,
+                      sizeof(hal::nwsec_policy_appid_t),
+                      64, true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_POLICY_APPID] != NULL), false);
 
-    nwsec_group_slab_ = slab::factory("nwsec_group", HAL_SLAB_NWSEC_GROUP,
-                                       sizeof(hal::nwsec_group_t), 64,
-                                       true, true, true);
-    HAL_ASSERT_RETURN((nwsec_group_slab_ != NULL), false);
+    slabs_[HAL_SLAB_NWSEC_GROUP] =
+        slab::factory("nwsec_group", HAL_SLAB_NWSEC_GROUP,
+                      sizeof(hal::nwsec_group_t), 64,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_GROUP] != NULL), false);
 
-    nwsec_rule_slab_ = slab::factory("ipv4_rule", HAL_SLAB_NWSEC_RULE,
-                                sizeof(hal::nwsec_rule_t), 1024,
-                                true, true, true);
-    HAL_ASSERT_RETURN((nwsec_rule_slab_ != NULL), false);
+    // TODO - cleanup !! why same slab id for the 2 slabs below ?
+    slabs_[HAL_SLAB_NWSEC_RULE] =
+        slab::factory("ipv4_rule", HAL_SLAB_NWSEC_RULE,
+                      sizeof(hal::nwsec_rule_t), 1024,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE] != NULL), false);
 
-    ruledb_slab_ = slab::factory("ipv4_rule", HAL_SLAB_NWSEC_RULE,
-                                sizeof(hal::ipv4_rule_t), 1024,
-                                true, true, true);
-    HAL_ASSERT_RETURN((ruledb_slab_ != NULL), false);
+    slabs_[HAL_SLAB_NWSEC_RULE] =
+        slab::factory("ipv4_rule", HAL_SLAB_NWSEC_RULE,
+                      sizeof(hal::ipv4_rule_t), 1024,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE] != NULL), false);
 
 
     // initialize GFT related slabs
-    gft_exact_match_profile_slab_ =
+    slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
         slab::factory("gft_exact_match_profile",
                       HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
                       sizeof(hal::gft_exact_match_profile_t),
                       16, false, true, true);
-    HAL_ASSERT_RETURN((gft_exact_match_profile_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] != NULL), false);
 
-    gft_hdr_transposition_profile_slab_ =
+    slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] =
         slab::factory("gft_hdr_xposition_profile",
                       HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
                       sizeof(hal::gft_hdr_xposition_profile_t),
                       16, false, true, true);
-    HAL_ASSERT_RETURN((gft_hdr_transposition_profile_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE] != NULL), false);
 
-    gft_exact_match_flow_entry_slab_ =
+    slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] =
          slab::factory("gft_exact_match_flow_entry",
                        HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
                        sizeof(hal::gft_exact_match_flow_entry_t),
                        16, false, true, true);
-    HAL_ASSERT_RETURN((gft_exact_match_flow_entry_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY] != NULL), false);
 
     return true;
 }
@@ -950,49 +963,7 @@ hal_mem_db::init(void)
 //------------------------------------------------------------------------------
 hal_mem_db::hal_mem_db()
 {
-    hal_handle_slab_ = NULL;
-    hal_handle_ht_entry_slab_ = NULL;
-    hal_handle_list_entry_slab_ = NULL;
-    hal_handle_id_ht_entry_slab_ = NULL;
-    hal_handle_id_list_entry_slab_ = NULL;
-    //hal_del_cache_entry_slab_ = NULL;
-    vrf_slab_ = NULL;
-    network_slab_ = NULL;
-    nwsec_profile_slab_ = NULL;
-    dos_policy_slab_ = NULL;
-    dos_policy_sg_list_entry_slab_ = NULL;
-    nwsec_group_slab_  = NULL;
-    nwsec_rule_slab_ = NULL;
-    ruledb_slab_  = NULL;
-    nwsec_policy_rules_slab_ = NULL;
-    nwsec_policy_cfg_slab_ = NULL;
-    nwsec_policy_svc_slab_ = NULL;
-    l2seg_slab_ = NULL;
-    mc_entry_slab_ = NULL;
-    lif_slab_ = NULL;
-    if_slab_ = NULL;
-    enic_l2seg_entry_slab_ = NULL;
-    ep_slab_ = NULL;
-    ep_ip_entry_slab_ = NULL;
-    ep_l3_entry_slab_ = NULL;
-    flow_slab_ = NULL;
-    session_slab_ = NULL;
-    l4lb_slab_ = NULL;
-    tlscb_slab_ = NULL;
-    tcpcb_slab_ = NULL;
-    qos_class_slab_ = NULL;
-    copp_slab_ = NULL;
-    wring_slab_ = NULL;
-    acl_slab_ = NULL;
-    ipseccb_slab_ = NULL;
-    cpucb_slab_ = NULL;
-    rawrcb_slab_ = NULL;
-    rawccb_slab_ = NULL;
-    proxyrcb_slab_ = NULL;
-    proxyccb_slab_ = NULL;
-    gft_exact_match_profile_slab_ = NULL;
-    gft_hdr_transposition_profile_slab_ = NULL;
-    gft_exact_match_flow_entry_slab_ = NULL;
+    memset(slabs_, 0, sizeof(slabs_));
 }
 
 //------------------------------------------------------------------------------
@@ -1022,107 +993,25 @@ hal_mem_db::factory(void)
 //------------------------------------------------------------------------------
 hal_mem_db::~hal_mem_db()
 {
-    hal_handle_slab_ ? slab::destroy(hal_handle_slab_) : HAL_NOP;
-    hal_handle_ht_entry_slab_ ? slab::destroy(hal_handle_ht_entry_slab_) : HAL_NOP;
-    hal_handle_list_entry_slab_ ? slab::destroy(hal_handle_list_entry_slab_) : HAL_NOP;
-    hal_handle_id_ht_entry_slab_ ? slab::destroy(hal_handle_id_ht_entry_slab_) : HAL_NOP;
-    hal_handle_id_list_entry_slab_ ? slab::destroy(hal_handle_id_list_entry_slab_) : HAL_NOP;
-    vrf_slab_ ? slab::destroy(vrf_slab_) : HAL_NOP;
-    network_slab_ ? slab::destroy(network_slab_) : HAL_NOP;
-    nwsec_profile_slab_ ? slab::destroy(nwsec_profile_slab_) : HAL_NOP;
-    dos_policy_slab_ ? slab::destroy(dos_policy_slab_) : HAL_NOP;
-    dos_policy_sg_list_entry_slab_ ? slab::destroy(dos_policy_sg_list_entry_slab_) : HAL_NOP;
-    nwsec_group_slab_ ? slab::destroy(nwsec_group_slab_) : HAL_NOP;
-    nwsec_rule_slab_  ? slab::destroy(nwsec_rule_slab_) : HAL_NOP;
-    ruledb_slab_ ? slab::destroy(ruledb_slab_) : HAL_NOP;
-    nwsec_policy_rules_slab_ ? slab::destroy(nwsec_policy_rules_slab_) : HAL_NOP;
-    nwsec_policy_cfg_slab_ ? slab::destroy(nwsec_policy_cfg_slab_) : HAL_NOP;
-    nwsec_policy_svc_slab_ ? slab::destroy(nwsec_policy_svc_slab_) : HAL_NOP;
-    l2seg_slab_ ? slab::destroy(l2seg_slab_) : HAL_NOP;
-    mc_entry_slab_ ? slab::destroy(mc_entry_slab_) : HAL_NOP;
-    lif_slab_ ? slab::destroy(lif_slab_) : HAL_NOP;
-    if_slab_ ? slab::destroy(if_slab_) : HAL_NOP;
-    enic_l2seg_entry_slab_ ? slab::destroy(enic_l2seg_entry_slab_) : HAL_NOP;
-    ep_slab_ ? slab::destroy(ep_slab_) : HAL_NOP;
-    ep_ip_entry_slab_ ? slab::destroy(ep_ip_entry_slab_) : HAL_NOP;
-    ep_l3_entry_slab_ ? slab::destroy(ep_l3_entry_slab_) : HAL_NOP;
-    flow_slab_ ? slab::destroy(flow_slab_) : HAL_NOP;
-    session_slab_ ? slab::destroy(session_slab_) : HAL_NOP;
-    l4lb_slab_ ? slab::destroy(l4lb_slab_) : HAL_NOP;
-    tlscb_slab_ ? slab::destroy(tlscb_slab_) : HAL_NOP;
-    tcpcb_slab_ ? slab::destroy(tcpcb_slab_) : HAL_NOP;
-    qos_class_slab_ ? slab::destroy(qos_class_slab_) : HAL_NOP;
-    copp_slab_ ? slab::destroy(copp_slab_) : HAL_NOP;
-    wring_slab_ ? slab::destroy(wring_slab_) : HAL_NOP;
-    acl_slab_ ? slab::destroy(acl_slab_) : HAL_NOP;
-    ipseccb_slab_ ? slab::destroy(ipseccb_slab_) : HAL_NOP;
-    cpucb_slab_ ? slab::destroy(cpucb_slab_) : HAL_NOP;
-    rawrcb_slab_ ? slab::destroy(rawrcb_slab_) : HAL_NOP;
-    rawrcb_slab_ = NULL;
-    rawccb_slab_ ? slab::destroy(rawccb_slab_) : HAL_NOP;
-    rawccb_slab_ = NULL;
-    proxyrcb_slab_ ? slab::destroy(proxyrcb_slab_) : HAL_NOP;
-    proxyrcb_slab_ = NULL;
-    proxyccb_slab_ ? slab::destroy(proxyccb_slab_) : HAL_NOP;
-    proxyccb_slab_ = NULL;
-    gft_exact_match_profile_slab_ ? slab::destroy(gft_exact_match_profile_slab_) : HAL_NOP;
-    gft_hdr_transposition_profile_slab_ ? slab::destroy(gft_hdr_transposition_profile_slab_) : HAL_NOP;
-    gft_exact_match_flow_entry_slab_ ? slab::destroy(gft_exact_match_flow_entry_slab_) : HAL_NOP;
+    uint32_t    i;
+
+    for (i = HAL_SLAB_PI_MIN; i < HAL_SLAB_PI_MAX; i++) {
+        if (slabs_[i]) {
+            slab::destroy(slabs_[i]);
+        }
+    }
 }
 
 //----------------------------------------------------------------------------
 // gives the slab of a slab id
 //----------------------------------------------------------------------------
-#define GET_SLAB(slab_name)                                            \
-    if (slab_name && slab_name->slab_id() == slab_id) {                \
-        return slab_name;                                              \
-    }
-
 slab *
 hal_mem_db::get_slab(hal_slab_t slab_id)
 {
-    GET_SLAB(hal_handle_slab_);
-    GET_SLAB(hal_handle_ht_entry_slab_);
-    GET_SLAB(hal_handle_list_entry_slab_);
-    GET_SLAB(hal_handle_id_ht_entry_slab_);
-    GET_SLAB(hal_handle_id_list_entry_slab_);
-    GET_SLAB(vrf_slab_);
-    GET_SLAB(network_slab_);
-    GET_SLAB(dos_policy_slab_);
-    GET_SLAB(dos_policy_sg_list_entry_slab_);
-    GET_SLAB(nwsec_profile_slab_);
-    GET_SLAB(nwsec_group_slab_);
-    GET_SLAB(nwsec_rule_slab_);
-    GET_SLAB(nwsec_policy_rules_slab_);
-    GET_SLAB(nwsec_policy_cfg_slab_);
-    GET_SLAB(nwsec_policy_svc_slab_);
-    GET_SLAB(l2seg_slab_);
-    GET_SLAB(mc_entry_slab_);
-    GET_SLAB(lif_slab_);
-    GET_SLAB(if_slab_);
-    GET_SLAB(ep_slab_);
-    GET_SLAB(ep_ip_entry_slab_);
-    GET_SLAB(ep_l3_entry_slab_);
-    GET_SLAB(flow_slab_);
-    GET_SLAB(session_slab_);
-    GET_SLAB(l4lb_slab_);
-    GET_SLAB(tlscb_slab_);
-    GET_SLAB(tcpcb_slab_);
-    GET_SLAB(qos_class_slab_);
-    GET_SLAB(copp_slab_);
-    GET_SLAB(wring_slab_);
-    GET_SLAB(acl_slab_);
-    GET_SLAB(ipseccb_slab_);
-    GET_SLAB(cpucb_slab_);
-    GET_SLAB(rawrcb_slab_);
-    GET_SLAB(rawccb_slab_);
-    GET_SLAB(proxyrcb_slab_);
-    GET_SLAB(proxyccb_slab_);
-    GET_SLAB(gft_exact_match_profile_slab_);
-    GET_SLAB(gft_hdr_transposition_profile_slab_);
-    GET_SLAB(gft_exact_match_flow_entry_slab_);
-
-    return NULL;
+    if (slab_id >= HAL_SLAB_PI_MAX) {
+        return NULL;
+    }
+    return slabs_[slab_id];
 }
 
 //------------------------------------------------------------------------------
