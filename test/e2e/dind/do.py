@@ -41,7 +41,7 @@ class TestMgmtNode:
     def runCmd(self,command):
         return runCommand("""docker exec -it {} """.format(self.name) + command)
     def startNode(self):
-        runCommand("""docker run -td -p {}:9200 -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.1 /bin/sh """.format(exposedPortBase + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
+        runCommand("""docker run -td -p {}:9200 -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.2 /bin/sh """.format(exposedPortBase + self.containerIndex, self.ipaddress, src_dir, self.name, self.name))
         self.runCmd("""apk add openssh""")
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")

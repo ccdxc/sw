@@ -3,7 +3,7 @@ FROM centos/systemd
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 
 RUN mkdir -p /target/usr/bin
-RUN curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64.tar.gz  https://storage.googleapis.com/kubernetes-release/release/v1.7.12/kubernetes-server-linux-amd64.tar.gz
+RUN curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64.tar.gz  https://storage.googleapis.com/kubernetes-release/release/v1.7.14/kubernetes-server-linux-amd64.tar.gz
 RUN tar Oxvf /tmp/kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin/kubelet > /target/usr/bin/kubelet
 RUN strip   /target/usr/bin/kubelet
 RUN chmod 755 /target//usr/bin/kubelet

@@ -138,7 +138,7 @@ helper-containers:
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.9 .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/pens-dind:v0.1 .
-	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.1 .
+	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/pens-e2e:v0.2 .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:6.2.2 .
 
 container-compile:

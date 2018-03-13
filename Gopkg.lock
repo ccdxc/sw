@@ -1648,12 +1648,12 @@
     "pkg/util",
     "pkg/util/parsers"
   ]
-  revision = "3bda299a6414b4866f179921610d6738206a18fe"
-  version = "v1.7.12"
+  revision = "d1303b003001cf2b5b8cec099383125096b3dac0"
+  version = "v1.7.14"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bafb1d30044a2e87a848284df5a1c5871c5b6b34a2cd23a03e657e6c99cbde15"
+  inputs-digest = "55c0edeaa8daaf74d1c2f15b45f9575785a0df38d17a01741bfe6cece18e88d2"
   solver-name = "gps-cdcl"
   solver-version = 1

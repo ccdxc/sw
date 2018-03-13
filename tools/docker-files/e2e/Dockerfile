@@ -1,7 +1,7 @@
 FROM alpine:3.6
 RUN apk update
 RUN apk add curl
-RUN curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64.tar.gz  https://storage.googleapis.com/kubernetes-release/release/v1.7.12/kubernetes-server-linux-amd64.tar.gz
+RUN curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64.tar.gz  https://storage.googleapis.com/kubernetes-release/release/v1.7.14/kubernetes-server-linux-amd64.tar.gz
 RUN tar xvf /tmp/kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin/kubectl
 RUN chmod 755 kubernetes/server/bin/kubectl
 
