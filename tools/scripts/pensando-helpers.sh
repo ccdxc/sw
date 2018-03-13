@@ -170,7 +170,7 @@ build_all() {
 
 clean_all() {
     rm -rf ~/.cache/bazel
-    git clean -fdx
+    git clean -fdX
 }
 
 clean_build_all() {
