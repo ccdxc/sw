@@ -630,7 +630,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		goto err_out_free_intr;
 
 	new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
-				       GFP_ATOMIC);
+				       GFP_KERNEL);
 	if (!new->base) {
 		err = -ENOMEM;
 		goto err_out_free_intr;
