@@ -29,6 +29,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_txs/cap_txs_csr.h"
 #include "nic/asic/capri/verif/apis/cap_txs_api.h"
+#include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
 #endif
 
 #define NUM_MAX_COSES 16
@@ -50,6 +51,12 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     //hal::qos_class_t    *control_qos_class;
     //hal_ret_t            ret = HAL_RET_OK;
 
+    cap_wa_csr_cfg_wa_sched_hint_t   &wa_sched_hint_csr = cap0.db.wa.cfg_wa_sched_hint;
+    wa_sched_hint_csr.read();
+    /* 5 bit value: bit 0=host, 1=local, 2=32b, 3=timer, 4=arm4kremap" */
+    wa_sched_hint_csr.enable_src_mask(0x1);
+    wa_sched_hint_csr.write();
+
     hal::hal_cfg_t *hal_cfg =
                 (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     HAL_ASSERT(hal_cfg);
@@ -67,6 +74,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     }
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);
+    txs_csr.cfw_scheduler_glb.enable_set_byp(1);
 
     txs_csr.cfw_scheduler_static.write();
     txs_csr.cfw_scheduler_glb.write();

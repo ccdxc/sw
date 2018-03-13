@@ -34,7 +34,7 @@ pd_get_size_kb (pd_get_size_kb_args_t *args)
 hal_ret_t
 pd_push_qstate_to_capri (pd_push_qstate_to_capri_args_t *args)
 {
-    push_qstate_to_capri(args->qstate);
+    push_qstate_to_capri(args->qstate, args->cos);
     return HAL_RET_OK;
 }
 

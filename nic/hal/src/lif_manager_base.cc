@@ -111,7 +111,7 @@ int32_t LIFManagerBase::InitLIFQState(uint32_t lif_id,
   // Cache the params.
   qstate->params_in = *params;
   
-  int32_t ret = InitLIFQStateImpl(qstate);
+  int32_t ret = InitLIFQStateImpl(qstate, params->type[i].cosA);
   if (ret < 0)
     return ret;
 

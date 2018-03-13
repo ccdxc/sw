@@ -9,7 +9,7 @@ namespace {
 
 #ifndef HAL_GTEST
 template <typename T>
-void set_qstate_entry(hal::LIFQState *qstate, T *entry) {
+void set_qstate_entry(hal::LIFQState *qstate, T *entry, int cos) {
   entry->qstate_base(qstate->hbm_address >> 12);
   entry->length0(qstate->params_in.type[0].entries);
   entry->size0(qstate->params_in.type[0].size);
@@ -28,6 +28,8 @@ void set_qstate_entry(hal::LIFQState *qstate, T *entry) {
   entry->length7(qstate->params_in.type[7].entries);
   entry->size7(qstate->params_in.type[7].size);
   entry->vld(1);
+  entry->sched_hint_en(1);
+  entry->sched_hint_cos(cos);
   entry->write();
 }
 
@@ -55,7 +57,7 @@ int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
 
 }  // Anonymus namespace
 
-void push_qstate_to_capri(hal::LIFQState *qstate) {
+void push_qstate_to_capri(hal::LIFQState *qstate, int cos) {
 #ifndef HAL_GTEST
   cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
@@ -63,11 +65,11 @@ void push_qstate_to_capri(hal::LIFQState *qstate) {
       clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
   }
   auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
-  set_qstate_entry(qstate, wa_entry);
+  set_qstate_entry(qstate, wa_entry, cos);
   auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
-  set_qstate_entry(qstate, psp_entry);
+  set_qstate_entry(qstate, psp_entry, cos);
   auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
-  set_qstate_entry(qstate, pr_entry);
+  set_qstate_entry(qstate, pr_entry, cos);
 #endif
 }
 

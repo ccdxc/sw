@@ -91,10 +91,6 @@ def TestCaseStepVerify(tc, step):
     if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'poll_in_progress', 0):
         return False
 
-    # verify that poll_success is 0
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'poll_success', 0):
-        return False
-
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
 

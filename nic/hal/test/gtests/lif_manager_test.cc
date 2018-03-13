@@ -19,7 +19,7 @@ class MockLIFManager : public LIFManagerBase {
   }
 
  protected:
-  virtual int32_t InitLIFQStateImpl(LIFQState *qstate) {
+  virtual int32_t InitLIFQStateImpl(LIFQState *qstate, int cos) {
     if (qstate->lif_id < 2048)
       return 0;
     return -EINVAL;

@@ -106,7 +106,7 @@ class LIFManagerBase {
   // Returns
   //   0 -      In case of success.
   //   -errno - In case of failure.
-  virtual int32_t InitLIFQStateImpl(LIFQState *qstate) = 0;
+  virtual int32_t InitLIFQStateImpl(LIFQState *qstate, int cos) = 0;
 
   virtual int32_t ReadQStateImpl(
       uint64_t q_addr, uint8_t *buf, uint32_t q_size) = 0;

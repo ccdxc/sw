@@ -1934,6 +1934,7 @@ typedef struct pd_get_size_kb_args_s {
 
 typedef struct pd_push_qstate_to_capri_args_s {
     hal::LIFQState *qstate;
+    uint32_t       cos;
 } __PACK__ pd_push_qstate_to_capri_args_t;
 
 typedef struct pd_clear_qstate_args_s {

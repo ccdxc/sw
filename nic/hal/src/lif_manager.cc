@@ -38,7 +38,7 @@ LIFManager::LIFManager() {
   hbm_allocator_.reset(new BMAllocator(num_units));
 }
 
-int32_t LIFManager::InitLIFQStateImpl(LIFQState *qstate) {
+int32_t LIFManager::InitLIFQStateImpl(LIFQState *qstate, int cos) {
   uint32_t alloc_units;
 
   alloc_units = (qstate->allocation_size + kAllocUnit - 1) & ~(kAllocUnit - 1);
@@ -52,6 +52,7 @@ int32_t LIFManager::InitLIFQStateImpl(LIFQState *qstate) {
 
   pd::pd_push_qstate_to_capri_args_t args = {0};
   args.qstate = qstate;
+  args.cos = cos;
   pd::hal_pd_call(pd::PD_FUNC_ID_PUSH_QSTATE, (void*)&args);
 
   return 0;

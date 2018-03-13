@@ -15,7 +15,7 @@ class LIFManager : public LIFManagerBase {
                               const char *label, uint8_t *offset);
 
  protected:
-  virtual int32_t InitLIFQStateImpl(LIFQState *qstate);
+  virtual int32_t InitLIFQStateImpl(LIFQState *qstate, int cos);
   virtual int32_t ReadQStateImpl(
       uint64_t q_addr, uint8_t *buf, uint32_t q_size);
   virtual int32_t WriteQStateImpl(
