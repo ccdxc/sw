@@ -14,6 +14,15 @@ extern "C" {
 #endif
 #endif
 
+struct create_mr_cmd;
+struct create_mr_comp;
+struct create_cq_cmd;
+struct create_cq_comp;
+struct create_qp_cmd;
+struct create_qp_comp;
+struct modify_qp_cmd;
+struct modify_qp_comp;
+
 void simdev_msg_handler(int fd, simmsg_t *m);
 
 typedef struct simdev_api_s {
@@ -29,17 +38,17 @@ typedef struct simdev_api_s {
     int (*host_write_mem)(const u_int64_t addr,
                           const void *buf,
                           const size_t size);
-    void (*hal_create_mr)(void *cmd,
-                          void *comp,
+    void (*hal_create_mr)(struct create_mr_cmd *cmd,
+                          struct create_mr_comp *comp,
                           u_int32_t *done);
-    void (*hal_create_cq)(void *cmd,
-                          void *comp,
+    void (*hal_create_cq)(struct create_cq_cmd *cmd,
+                          struct create_cq_comp *comp,
                           u_int32_t *done);
-    void (*hal_create_qp)(void *cmd,
-                          void *comp,
+    void (*hal_create_qp)(struct create_qp_cmd *cmd,
+                          struct create_qp_comp *comp,
                           u_int32_t *done);
-    void (*hal_modify_qp)(void *cmd,
-                          void *comp,
+    void (*hal_modify_qp)(struct modify_qp_cmd *cmd,
+                          struct modify_qp_comp *comp,
                           u_int32_t *done);
     void (*set_lif) (u_int32_t lif);
 } simdev_api_t;
