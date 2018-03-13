@@ -43,3 +43,14 @@ QEMU_SSH_PORT=9993
 # Second qemu configuration, for soft-roce host.
 QEMU_IMAGE_RXE='/local/you/sim-rxe.img'
 QEMU_SSH_PORT_RXE=9994
+
+# Any command in the main script can be overridden in the config file.
+
+# Alternative clean_all, `make clean` instead of `git clean`.
+#clean_all() {
+#    make -C proto clean
+#    make clean
+#    make -C ../platform clean
+#    make -C ../platform/src/sim/qemu clean
+#    make -C ../platform/src/sim/model_server clean
+#}

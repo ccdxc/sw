@@ -1,6 +1,5 @@
 # The config file should be copied to your home directory.  A sample config
 # file is checked in.  Please follow the instructions in the config file.
-. ~/pensando-helpers-config.sh
 
 # Change directory to your workspace
 ws() {
@@ -375,5 +374,8 @@ start_qemu_rxe() {
 ssh_qemu_rxe() {
     ssh -p $QEMU_SSH_PORT_RXE $QEMU_USER@127.0.0.1 "$@"
 }
+
+# source config file at end, so user can override any command
+. ~/pensando-helpers-config.sh
 
 # vi: set sw=4 et :
