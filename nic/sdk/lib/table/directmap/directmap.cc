@@ -270,7 +270,9 @@ directmap::insert_withid(void *data, uint32_t index, void* data_mask)
             }
 
             // Program P4
-            pd_err = p4pd_global_entry_write_with_datamask(id_, index, NULL, NULL, data, data_mask); 
+            pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
+                                                           NULL, NULL, 
+                                                           data, data_mask); 
             if (pd_err != P4PD_SUCCESS) {
                 rs = SDK_RET_HW_PROGRAM_ERR;
                 SDK_ASSERT(0);
@@ -308,7 +310,9 @@ directmap::insert_withid(void *data, uint32_t index, void* data_mask)
 
 
     // P4-API: write API
-    pd_err = p4pd_global_entry_write_with_datamask(id_, index, NULL, NULL, data, data_mask); 
+    pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
+                                                   NULL, NULL, 
+                                                   data, data_mask); 
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
@@ -346,7 +350,9 @@ directmap::update(uint32_t index, void *data, void *data_mask)
         SDK_ASSERT(0);
 
         // Update HW
-        pd_err = p4pd_global_entry_write_with_datamask(id_, index, NULL, NULL, data, data_mask); 
+        pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
+                                                       NULL, NULL, 
+                                                       data, data_mask); 
         if (pd_err != P4PD_SUCCESS) {
             rs = SDK_RET_HW_PROGRAM_ERR;
             SDK_ASSERT(0);
@@ -366,7 +372,9 @@ directmap::update(uint32_t index, void *data, void *data_mask)
     }
 
     // P4-API: Write API
-    pd_err = p4pd_global_entry_write_with_datamask(id_, index, NULL, NULL, data, data_mask); 
+    pd_err = p4pd_global_entry_write_with_datamask(id_, index, 
+                                                   NULL, NULL, 
+                                                   data, data_mask); 
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
