@@ -1030,7 +1030,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	netdev_info(lif->netdev, "txq_init.pid %d\n", ctx.cmd.txq_init.pid);
 	netdev_info(lif->netdev, "txq_init.index %d\n", ctx.cmd.txq_init.index);
-	netdev_info(lif->netdev, "txq_init.ring_base %llx\n",
+	netdev_info(lif->netdev, "txq_init.ring_base 0x%llx\n",
 	           ctx.cmd.txq_init.ring_base);
 	netdev_info(lif->netdev, "txq_init.ring_size %d\n",
 		   ctx.cmd.txq_init.ring_size);
@@ -1104,7 +1104,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	netdev_info(lif->netdev, "rxq_init.pid %d\n", ctx.cmd.rxq_init.pid);
 	netdev_info(lif->netdev, "rxq_init.index %d\n", ctx.cmd.rxq_init.index);
-	netdev_info(lif->netdev, "rxq_init.ring_base %llx\n",
+	netdev_info(lif->netdev, "rxq_init.ring_base 0x%llx\n",
 		   ctx.cmd.rxq_init.ring_base);
 	netdev_info(lif->netdev, "rxq_init.ring_size %d\n",
 		   ctx.cmd.rxq_init.ring_size);
