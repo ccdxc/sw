@@ -115,7 +115,7 @@ no_translate_dma:
     #copy fields cq_id, eq_id, and arm
     CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, cq_id, wakeup_dpath, d.{cq_id...wakeup_dpath})
     CAPRI_SET_FIELD_RANGE(ARG_P, CQ_PT_INFO_T, no_translate, no_dma, 0x3)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, 0, resp_rx_cqpt_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_cqpt_process, r0)
     
 do_dma:
 
