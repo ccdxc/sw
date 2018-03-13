@@ -17,8 +17,8 @@ objects:
             api      : VrfUpdate
             request  : VrfRequestMsg
             response : VrfResponseMsg
-            pre_cb   : callback://vrf/PreUpdateCb
-            post_cb  : callback://vrf/PostUpdateCb
+            pre_cb   : None
+            post_cb  : None
         delete:
             api      : VrfDelete
             request  : VrfDeleteRequestMsg

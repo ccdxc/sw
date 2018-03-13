@@ -1258,6 +1258,7 @@ TEST_F(vrf_test, test12)
     ten_spec1.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     ten_spec1.mutable_gipo_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);;
     ten_spec1.mutable_gipo_prefix()->mutable_address()->set_v4_addr(0xa0000001);
+    ten_spec1.set_vrf_type(types::VRF_TYPE_INFRA);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_update(ten_spec1, &ten_rsp1);
     hal::hal_cfg_db_close();

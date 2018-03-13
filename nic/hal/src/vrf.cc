@@ -626,6 +626,13 @@ vrf_check_for_updates (VrfSpec& spec, vrf_t *vrf,
 {
     hal_ret_t   ret = HAL_RET_OK;
 
+    if (vrf->vrf_type != spec.vrf_type()) {
+        HAL_TRACE_ERR("Vrf type change from {} to {} not allowed", 
+                      vrf->vrf_type, spec.vrf_type());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
     // check for nwsec update
     ret = vrf_nwsec_update(spec, vrf, &app_ctxt->nwsec_prof_change, 
                            &app_ctxt->nwsec_profile_handle);
