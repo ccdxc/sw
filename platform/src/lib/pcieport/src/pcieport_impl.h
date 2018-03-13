@@ -26,7 +26,6 @@ typedef enum pcieportev_e {
     PCIEPORTEV_LINKDN,
     PCIEPORTEV_LINKUP,
     PCIEPORTEV_BUSCHG,
-    PCIEPORTEV_CONFIG,
 
     PCIEPORTEV_MAX
 } pcieportev_t;
@@ -44,6 +43,7 @@ struct pcieport_s {
     u_int32_t crs:1;
     pcieportst_t state;
     pcieportev_t event;
+    u_int64_t linkup;
 };
 typedef struct pcieport_s pcieport_t;
 

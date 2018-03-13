@@ -194,7 +194,7 @@ notify_init(pciehw_t *phw)
     u_int64_t pa;
     u_int32_t maxents, ring_size;
 
-    pa = pal_mem_vtop(&phwmem->notify_intr_dest);
+    pa = pal_mem_vtop(&phwmem->notify_intr_dest[0]);
     notify_int_set(pa, 1);
 
     maxents = NOTIFY_NENTRIES;
@@ -364,11 +364,11 @@ pciehw_notify_poll(pciehw_t *phw)
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     int port;
 
-    if (phwmem->notify_intr_dest == 0) return -1;
-    phwmem->notify_intr_dest = 0;
-
     for (port = 0; port < phw->nports; port++) {
-        if (pciehw_port_is_enabled(port)) {
+        if (pciehw_port_is_enabled(port) &&
+            phwmem->notify_intr_dest[port] != 0) {
+
+            phwmem->notify_intr_dest[port] = 0;
             pciehw_notify_intr(phw, port);
         }
     }
@@ -397,14 +397,12 @@ notify_show(void)
     notify_int_get(&addr, &v);
     pciehsys_log("%-*s : 0x%08"PRIx64"\n", w, "notify_int_addr", addr);
     pciehsys_log("%-*s : 0x%08x\n", w, "notify_int_data", v);
-    pciehsys_log("%-*s : 0x%08x\n", w,
-                 "notify_intr_dest", phwmem->notify_intr_dest);
 
     pciehsys_log("%-*s : %d\n", w, "notify_verbose", notify_verbose);
     pciehsys_log("%-*s : %d\n", w, "skip_notify", skip_notify);
 
-    pciehsys_log("%-4s %-11s %5s %5s %4s %4s\n",
-                 "port", "ring_base", "pi", "ci", "max", "cnt");
+    pciehsys_log("%-4s %-11s %-9s %5s %5s %4s %4s\n",
+                 "port", "ring_base", "intr_dest", "pi", "ci", "max", "cnt");
     for (i = 0; i < phw->nports; i++) {
         pciehw_port_t *p = &phwmem->port[i];
         u_int64_t ring_base;
@@ -413,8 +411,10 @@ notify_show(void)
         notify_get_ring_base(phw, i, &ring_base);
         notify_get_pici(i, &pi, &ci);
 
-        pciehsys_log("%-4d 0x%09"PRIx64" %5d %5d %4d %4"PRId64"\n",
-                     i, ring_base, pi, ci, p->notify_max, p->notify_cnt);
+        pciehsys_log("%-4d 0x%09"PRIx64" %9d %5d %5d %4d %4"PRId64"\n",
+                     i, ring_base,
+                     phwmem->notify_intr_dest[i],
+                     pi, ci, p->notify_max, p->notify_cnt);
     }
 }
 

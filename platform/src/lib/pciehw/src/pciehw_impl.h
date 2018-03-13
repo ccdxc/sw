@@ -154,9 +154,9 @@ typedef struct pciehw_mem_s {
     u_int8_t cfgmsk[PCIEHW_NDEVS][PCIEHW_CFGSZ] __attribute__((aligned(4096)));
     u_int8_t notify_area[PCIEHW_NPORTS][PCIEHW_NOTIFYSZ]
                                      __attribute__((aligned(PCIEHW_NOTIFYSZ)));
-    u_int32_t notify_intr_dest;         /* temporary notify intr dest */
     u_int32_t notify_ring_mask;
-    u_int32_t indirect_intr_dest;       /* temporary indirect intr dest */
+    u_int32_t notify_intr_dest[PCIEHW_NPORTS];   /* notify   intr dest */
+    u_int32_t indirect_intr_dest[PCIEHW_NPORTS]; /* indirect intr dest */
 } pciehw_mem_t;
 
 typedef struct pciehw_s {

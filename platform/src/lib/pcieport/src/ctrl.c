@@ -158,7 +158,7 @@ pcieport_cmd_crs(pcieport_t *p, void *arg)
     if (!p->config) return -EBADF;
     if (!p->host)   return -EINVAL;
     p->crs = on;
-    pcieport_fsm(p, PCIEPORTEV_CONFIG);
+    pcieport_set_crs(p, p->crs);
     return 0;
 }
 

@@ -107,6 +107,7 @@ cmd_port(int argc, char *argv[])
     pciehsys_log("%-*s: %d\n", w, "crs", p->crs);
     pciehsys_log("%-*s: %d\n", w, "state", p->state);
     pciehsys_log("%-*s: %d\n", w, "event", p->event);
+    pciehsys_log("%-*s: %"PRIu64"\n", w, "linkup", p->linkup);
 }
 
 typedef struct cmd_s {

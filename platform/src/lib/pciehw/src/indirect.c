@@ -74,7 +74,7 @@ indirect_init(pciehw_t *phw)
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     u_int64_t pa;
 
-    pa = pal_mem_vtop(&phwmem->indirect_intr_dest);
+    pa = pal_mem_vtop(&phwmem->indirect_intr_dest[0]);
     indirect_int_set(pa, 1);
 }
 
@@ -248,6 +248,7 @@ pciehw_indirect_complete(indirect_entry_t *ientry)
     ind_rsp.cpl_stat = ientry->cpl;
     ind_rsp.port_id = ientry->port;
     ind_rsp.axi_id = ientry->info.context_id;
+    ind_rsp.fetch_rsp = 0;
 
     pal_reg_wr32w(IND_RSP_ADDR, ind_rsp.w, IND_RSP_NWORDS);
 }
@@ -335,12 +336,12 @@ pciehw_indirect_poll(pciehw_t *phw)
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     int port;
 
-    if (phwmem->indirect_intr_dest == 0) return -1;
-    phwmem->indirect_intr_dest = 0;
-
     for (port = 0; port < phw->nports; port++) {
         pciehw_port_t *p = &phwmem->port[port];
-        if (pciehw_port_is_enabled(port)) {
+        if (pciehw_port_is_enabled(port) &&
+            (phwmem->indirect_intr_dest[port] != 0)) {
+
+            phwmem->indirect_intr_dest[port] = 0;
             pciehw_indirect_intr(p, port);
         }
     }
@@ -364,17 +365,17 @@ indirect_show(void)
     indirect_int_get(&addr, &data);
     pciehsys_log("%-*s : 0x%08"PRIx64"\n", w, "indirect_int_addr", addr);
     pciehsys_log("%-*s : 0x%08x\n", w, "indirect_int_data", data);
-    pciehsys_log("%-*s : 0x%08x\n", w,
-                 "indirect_intr_dest", phwmem->indirect_intr_dest);
 
-    pciehsys_log("%-4s %4s %s\n",
-                 "port", "cnt", "last_data");
+    pciehsys_log("%-4s %-9s %4s %s\n",
+                 "port", "intr_dest", "cnt", "last_data");
     for (i = 0; i < phw->nports; i++) {
         pciehw_port_t *p = &phwmem->port[i];
         indirect_entry_t *ientry = &indirect_entry[i];
 
-        pciehsys_log("%-4d %4"PRId64" %08x %08x %08x %08x\n",
-                     i, p->indirect_cnt,
+        pciehsys_log("%-4d %9d %4"PRId64" %08x %08x %08x %08x\n",
+                     i,
+                     phwmem->indirect_intr_dest[i],
+                     p->indirect_cnt,
                      ientry->data[0], ientry->data[1],
                      ientry->data[2], ientry->data[3]);
     }

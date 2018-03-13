@@ -522,7 +522,7 @@ cmd_poll(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
     sighandler_t osigint, osigterm, osigquit;
-    useconds_t polltm_us = 500000;
+    useconds_t polltm_us = 0;
     int opt, poll_port;
     u_int64_t tm_start, tm_stop, tm_port;
 

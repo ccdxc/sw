@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <sys/time.h>
 
 #include "pal.h"
 #include "pciehsys.h"
@@ -46,7 +47,6 @@ evname(const pcieportev_t ev)
         PCIEPORTEV_NAME(LINKDN),
         PCIEPORTEV_NAME(LINKUP),
         PCIEPORTEV_NAME(BUSCHG),
-        PCIEPORTEV_NAME(CONFIG),
     };
     if (ev >= PCIEPORTEV_MAX) return "UNKNOWN_EV";
     return evnames[ev];
@@ -113,15 +113,15 @@ fsm_linkdn(pcieport_t *p)
 }
 
 static void
-fsm_buschg(pcieport_t *p)
+fsm_up(pcieport_t *p)
 {
+    p->linkup++;
     p->state = PCIEPORTST_UP;
 }
 
 static void
-fsm_config(pcieport_t *p)
+fsm_buschg(pcieport_t *p)
 {
-    pcieport_set_crs(p, p->crs);
 }
 
 #define NOP fsm_nop
@@ -132,8 +132,8 @@ fsm_config(pcieport_t *p)
 #define MDN fsm_macdn
 #define LUP fsm_linkup
 #define LDN fsm_linkdn
+#define UP_ fsm_up
 #define BUS fsm_buschg
-#define CFG fsm_config
 
 typedef void (*fsm_func_t)(pcieport_t *p);
 static fsm_func_t
@@ -146,14 +146,13 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
      *                      |    |    |    LINKDN
      *                      |    |    |    |    LINKUP
      *                      |    |    |    |    |    BUSCHG
-     *                      |    |    |    |    |    |    CONFIG
-     *                      |    |    |    |    |    |    |    */
-    [PCIEPORTST_OFF]    = { PON, NOP, MUP, NOP, INV, INV, CFG },
-    [PCIEPORTST_DOWN]   = { PON, NOP, MUP, INV, INV, INV, CFG },
-    [PCIEPORTST_MACUP]  = { MON, MDN, INV, INV, LUP, INV, CFG },
-    [PCIEPORTST_LINKUP] = { INV, INV, INV, LDN, INV, BUS, CFG },
-    [PCIEPORTST_UP]     = { INV, INV, INV, LDN, INV, BUS, CFG },
-    [PCIEPORTST_FAULT]  = { INV, MDN, NOP, NOP, NOP, NOP, CFG },
+     *                      |    |    |    |    |    |   */
+    [PCIEPORTST_OFF]    = { PON, NOP, MUP, NOP, INV, INV },
+    [PCIEPORTST_DOWN]   = { PON, NOP, MUP, INV, INV, INV },
+    [PCIEPORTST_MACUP]  = { MON, MDN, INV, INV, LUP, INV },
+    [PCIEPORTST_LINKUP] = { INV, INV, INV, LDN, INV, UP_ },
+    [PCIEPORTST_UP]     = { INV, INV, INV, LDN, INV, BUS },
+    [PCIEPORTST_FAULT]  = { PON, MDN, NOP, NOP, NOP, NOP },
 };
 
 void
@@ -167,7 +166,11 @@ pcieport_fsm(pcieport_t *p, pcieportev_t ev)
     fsm_table[st][ev](p);
 
     if (fsm_verbose) {
-        pciehsys_log("%d: %s + %s => %s\n",
+        struct timeval tv;
+
+        gettimeofday(&tv, NULL);
+        pciehsys_log("[%ld.%.3ld] %d: %s + %s => %s\n",
+                     tv.tv_sec, tv.tv_usec / 1000,
                      p->port, stname(st), evname(ev), stname(p->state));
     }
 }
