@@ -337,6 +337,7 @@ start_qemu() {
     setup_tap
 
     sudo GDB="gdb -ex run --args" \
+        QEMU_MACHINE="$QEMU_MACHINE" \
         QEMU_SERIAL_PORT="$QEMU_SERIAL_PORT" \
         QEMU_MONITOR_PORT="$QEMU_MONITOR_PORT" \
         QEMU_SSH_PORT="$QEMU_SSH_PORT" \
