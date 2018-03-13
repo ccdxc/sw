@@ -158,9 +158,10 @@ class E2ETriggerEngineObject(TriggerEngineObject):
         super().__init__()
         
     def __trigger_commands(self, step, lgh):
-        if GlobalOptions.dryrun:
-            return        
         for cmd in step.trigger.commands:
+            lgh.info("Running command %s : %s" % (cmd.object.GID(), cmd.command))
+            if GlobalOptions.dryrun:
+                return        
             cmd.status = E2E.RunCommand(cmd.object.GID(), cmd.command,
                                          background=cmd.background)
     
@@ -169,5 +170,12 @@ class E2ETriggerEngineObject(TriggerEngineObject):
         tc.TriggerCallback()
         return
     
+    def _trigger(self, tc):
+        for step in tc.session.steps:
+            self._trigger_step(tc, step)
+            tc.StepTeardownCallback(step)
+        tc.TeardownCallback()
+        return defs.status.SUCCESS
+
 DolTriggerEngine = DolTriggerEngineObject()
 E2ETriggerEngine = E2ETriggerEngineObject()
