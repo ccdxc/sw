@@ -96,14 +96,14 @@ typedef enum {
 // For production builds this needs to be removed
 // TODO: REMOVE
 typedef struct acl_internal_match_spec_s {
-    bool       direction;
-    bool       flow_miss;
-    bool       ip_options;
-    bool       ip_frag;
-    bool       tunnel_terminate;
-    bool       from_cpu;
-    uint64_t   drop_reason;
-    mac_addr_t outer_mac_da;
+    bool            direction;
+    bool            flow_miss;
+    bool            ip_options;
+    bool            ip_frag;
+    bool            tunnel_terminate;
+    bool            from_cpu;
+    bool            drop_reasons[acl::DropReason_ARRAYSIZE];
+    mac_addr_t      outer_mac_da;
 } __PACK__ acl_internal_match_spec_t;
 #endif
 

@@ -888,82 +888,6 @@ get_acl_type (const acl::AclSelector &sel)
     return acl_type;
 }
 
-#ifdef ACL_DOL_TEST_ONLY
-// Added for internal dol test use only to get the drop reason defines
-// TODO: REMOVE
-#include "nic/p4/iris/include/defines.h"
-static uint64_t
-drop_reason_to_define (const acl::DropReason drop_reason)
-{
-    switch(drop_reason) {
-        case acl::INPUT_MAPPING__DROP:
-            return DROP_INPUT_MAPPING;
-        case acl::INPUT_MAPPING_DEJAVU__DROP:
-            return DROP_INPUT_MAPPING_DEJAVU;
-        case acl::FLOW_HIT__DROP:
-            return DROP_FLOW_HIT;
-        case acl::FLOW_MISS__DROP:
-            return DROP_FLOW_MISS;
-        case acl::IPSG__DROP:
-            return DROP_IPSG;
-        case acl::INGRESS_POLICER__DROP:
-            return DROP_INGRESS_POLICER;
-        case acl::RX_POLICER__DROP:
-            return DROP_RX_POLICER;
-        case acl::NACL__DROP:
-            return DROP_NACL;
-        case acl::MALFORMED_PKT__DROP:
-            return DROP_MALFORMED_PKT;
-        case acl::PING_OF_DEATH__DROP:
-            return DROP_PING_OF_DEATH;
-        case acl::FRAGMENT_TOO_SMALL__DROP:
-            return DROP_FRAGMENT_TOO_SMALL;
-        case acl::IP_NORMALIZATION__DROP:
-            return DROP_IP_NORMALIZATION;
-        case acl::TCP_NORMALIZATION__DROP:
-            return DROP_TCP_NORMALIZATION;
-        case acl::TCP_NON_SYN_FIRST_PKT__DROP:
-            return DROP_TCP_NON_SYN_FIRST_PKT;
-        case acl::ICMP_NORMALIZATION__DROP:
-            return DROP_ICMP_NORMALIZATION;
-        case acl::ICMP_SRC_QUENCH_MSG__DROP:
-            return DROP_ICMP_SRC_QUENCH_MSG;
-        case acl::ICMP_REDIRECT_MSG__DROP:
-            return DROP_ICMP_REDIRECT_MSG;
-        case acl::ICMP_INFO_REQ_MSG__DROP:
-            return DROP_ICMP_INFO_REQ_MSG;
-        case acl::ICMP_ADDR_REQ_MSG__DROP:
-            return DROP_ICMP_ADDR_REQ_MSG;
-        case acl::ICMP_TRACEROUTE_MSG__DROP:
-            return DROP_ICMP_TRACEROUTE_MSG;
-        case acl::ICMP_RSVD_TYPE_MSG__DROP:
-            return DROP_ICMP_RSVD_TYPE_MSG;
-        case acl::INPUT_PROPERTIES_MISS__DROP:
-            return DROP_INPUT_PROPERTIES_MISS;
-        case acl::TCP_OUT_OF_WINDOW__DROP:
-            return DROP_TCP_OUT_OF_WINDOW;
-        case acl::TCP_SPLIT_HANDSHAKE__DROP:
-            return DROP_TCP_SPLIT_HANDSHAKE;
-        case acl::TCP_WIN_ZERO_DROP__DROP:
-            return DROP_TCP_WIN_ZERO_DROP;
-        case acl::TCP_ACK_ERR__DROP:
-            return DROP_TCP_ACK_ERR;
-        case acl::TCP_DATA_AFTER_FIN__DROP:
-            return DROP_TCP_DATA_AFTER_FIN;
-        case acl::TCP_NON_RST_PKT_AFTER_RST__DROP:
-            return DROP_TCP_NON_RST_PKT_AFTER_RST;
-        case acl::TCP_INVALID_RESPONDER_FIRST_PKT__DROP:
-            return DROP_TCP_INVALID_RESPONDER_FIRST_PKT;
-        case acl::TCP_UNEXPECTED_PKT__DROP:
-            return DROP_TCP_UNEXPECTED_PKT;
-        default:
-            return 0;
-    }
-    return 0;
-}
-
-#endif
-
 static hal_ret_t
 extract_match_spec (acl_match_spec_t *ms,
                     const acl::AclSelector &sel)
@@ -1169,12 +1093,10 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->int_key.ip_frag = sel.internal_key().ip_frag();
         ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
         for (i = 0; i < sel.internal_key().drop_reason_size(); i++) {
-            ms->int_key.drop_reason |=
-                1ull << drop_reason_to_define(sel.internal_key().drop_reason(i));
+            ms->int_key.drop_reasons[sel.internal_key().drop_reason(i)] = true;
         }
         for (i = 0; i < sel.internal_mask().drop_reason_size(); i++) {
-            ms->int_mask.drop_reason |=
-                1ull << drop_reason_to_define(sel.internal_mask().drop_reason(i));
+            ms->int_mask.drop_reasons[sel.internal_mask().drop_reason(i)] = true;
         }
         MAC_UINT64_TO_ADDR(ms->int_key.outer_mac_da, sel.internal_key().outer_dst_mac());
         MAC_UINT64_TO_ADDR(ms->int_mask.outer_mac_da, sel.internal_mask().outer_dst_mac());

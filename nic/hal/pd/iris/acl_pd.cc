@@ -121,6 +121,82 @@ populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
         as->egr_mirror_session;
 }
 
+#ifdef ACL_DOL_TEST_ONLY
+// Added for internal dol test use only to get the drop reason defines
+// TODO: REMOVE
+static uint64_t
+drop_reason_to_define (const acl::DropReason drop_reason)
+{
+    switch(drop_reason) {
+        case acl::INPUT_MAPPING__DROP:
+            return DROP_INPUT_MAPPING;
+        case acl::INPUT_MAPPING_DEJAVU__DROP:
+            return DROP_INPUT_MAPPING_DEJAVU;
+        case acl::FLOW_HIT__DROP:
+            return DROP_FLOW_HIT;
+        case acl::FLOW_MISS__DROP:
+            return DROP_FLOW_MISS;
+        case acl::IPSG__DROP:
+            return DROP_IPSG;
+        case acl::INGRESS_POLICER__DROP:
+            return DROP_INGRESS_POLICER;
+        case acl::RX_POLICER__DROP:
+            return DROP_RX_POLICER;
+        case acl::NACL__DROP:
+            return DROP_NACL;
+        case acl::MALFORMED_PKT__DROP:
+            return DROP_MALFORMED_PKT;
+        case acl::PING_OF_DEATH__DROP:
+            return DROP_PING_OF_DEATH;
+        case acl::FRAGMENT_TOO_SMALL__DROP:
+            return DROP_FRAGMENT_TOO_SMALL;
+        case acl::IP_NORMALIZATION__DROP:
+            return DROP_IP_NORMALIZATION;
+        case acl::TCP_NORMALIZATION__DROP:
+            return DROP_TCP_NORMALIZATION;
+        case acl::TCP_NON_SYN_FIRST_PKT__DROP:
+            return DROP_TCP_NON_SYN_FIRST_PKT;
+        case acl::ICMP_NORMALIZATION__DROP:
+            return DROP_ICMP_NORMALIZATION;
+        case acl::ICMP_SRC_QUENCH_MSG__DROP:
+            return DROP_ICMP_SRC_QUENCH_MSG;
+        case acl::ICMP_REDIRECT_MSG__DROP:
+            return DROP_ICMP_REDIRECT_MSG;
+        case acl::ICMP_INFO_REQ_MSG__DROP:
+            return DROP_ICMP_INFO_REQ_MSG;
+        case acl::ICMP_ADDR_REQ_MSG__DROP:
+            return DROP_ICMP_ADDR_REQ_MSG;
+        case acl::ICMP_TRACEROUTE_MSG__DROP:
+            return DROP_ICMP_TRACEROUTE_MSG;
+        case acl::ICMP_RSVD_TYPE_MSG__DROP:
+            return DROP_ICMP_RSVD_TYPE_MSG;
+        case acl::INPUT_PROPERTIES_MISS__DROP:
+            return DROP_INPUT_PROPERTIES_MISS;
+        case acl::TCP_OUT_OF_WINDOW__DROP:
+            return DROP_TCP_OUT_OF_WINDOW;
+        case acl::TCP_SPLIT_HANDSHAKE__DROP:
+            return DROP_TCP_SPLIT_HANDSHAKE;
+        case acl::TCP_WIN_ZERO_DROP__DROP:
+            return DROP_TCP_WIN_ZERO_DROP;
+        case acl::TCP_ACK_ERR__DROP:
+            return DROP_TCP_ACK_ERR;
+        case acl::TCP_DATA_AFTER_FIN__DROP:
+            return DROP_TCP_DATA_AFTER_FIN;
+        case acl::TCP_NON_RST_PKT_AFTER_RST__DROP:
+            return DROP_TCP_NON_RST_PKT_AFTER_RST;
+        case acl::TCP_INVALID_RESPONDER_FIRST_PKT__DROP:
+            return DROP_TCP_INVALID_RESPONDER_FIRST_PKT;
+        case acl::TCP_UNEXPECTED_PKT__DROP:
+            return DROP_TCP_UNEXPECTED_PKT;
+        default:
+            return 0;
+    }
+    return 0;
+}
+
+#endif
+
+
 static hal_ret_t
 acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
 {
@@ -416,9 +492,23 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update)
     mask.l3_metadata_ip_option_seen_mask = ms->int_mask.ip_options;
     key.l3_metadata_ip_frag = ms->int_key.ip_frag;
     mask.l3_metadata_ip_frag_mask = ms->int_mask.ip_frag;
-    memcpy(key.control_metadata_drop_reason, &(ms->int_key.drop_reason),
+
+    uint64_t drop_reason = 0;
+    uint64_t drop_reason_mask = 0;
+
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_key.drop_reasons); i++) {
+        if (ms->int_key.drop_reasons[i]) {
+            drop_reason |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
+        }
+    }
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(ms->int_mask.drop_reasons); i++) {
+        if (ms->int_mask.drop_reasons[i]) {
+            drop_reason_mask |= 1ull << drop_reason_to_define(static_cast<acl::DropReason>(i));
+        }
+    }
+    memcpy(key.control_metadata_drop_reason, &drop_reason,
            sizeof(key.control_metadata_drop_reason));
-    memcpy(mask.control_metadata_drop_reason_mask, &(ms->int_mask.drop_reason),
+    memcpy(mask.control_metadata_drop_reason_mask, &drop_reason_mask,
            sizeof(mask.control_metadata_drop_reason_mask));
     key.flow_lkp_metadata_lkp_dir = ms->int_key.direction;
     mask.flow_lkp_metadata_lkp_dir_mask = ms->int_mask.direction;
