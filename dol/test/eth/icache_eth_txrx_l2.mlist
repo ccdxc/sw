@@ -12,6 +12,7 @@ modules:
     - module:
         name    : IPV4_QTAG
         spec    : tx_rx.testspec
+        perf    : True
         tcscale : 10
         modscale: 100
         iterate:

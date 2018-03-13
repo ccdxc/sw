@@ -11,6 +11,7 @@ modules:
     - module:
         name    : IPV4_QTAG
         spec    : l3uc.testspec
+        perf    : True
         tcscale : 10
         modscale: 100
         iterate :

@@ -25,6 +25,11 @@ def GetRqPreEpsnMultiQPs (tc, pkt):
     else:
         return tc.pvtdata.rq_pre_qstate.e_psn
 
+def GetRqPreEpsn1QPiCache (tc, pkt):
+    e_psn = tc.config.rdmasession.lqp.rq.qp_e_psn
+    tc.config.rdmasession.lqp.rq.qp_e_psn += 1
+    return e_psn
+
 def GetRqPreEpsnForTx (tc, pkt, args):
     return (tc.pvtdata.rq_pre_qstate.e_psn  + args.pkt_num)
 

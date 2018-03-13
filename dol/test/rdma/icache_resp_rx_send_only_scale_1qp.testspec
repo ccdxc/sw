@@ -54,7 +54,7 @@ packets:
             bth:
                 opcode  : 4 
                 destqp  : ref://testcase/config/rdmasession/lqp/id
-                psn     : callback://rdma/rdma/GetRqPreEpsn
+                psn     : callback://rdma/rdma/GetRqPreEpsn1QPiCache
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
@@ -150,8 +150,8 @@ trigger:
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
-    descriptors:
-        - descriptor:
-            scale   : True
-            object  : scale-ref://testcase/descriptors/id=EXP_RQ_DESC
-            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+#    descriptors:
+#        - descriptor:
+#            scale   : True
+#            object  : scale-ref://testcase/descriptors/id=EXP_RQ_DESC
+#            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ

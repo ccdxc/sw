@@ -4,7 +4,7 @@ feature:
     id          : rdma_icache
     sub         : tx
     package     : test.rdma
-    module      : req_tx_send_only_inline_scale
+    module      : icache_req_tx_send_only_inline_scale
     enable      : True
     ignore      : False
     perf        : True

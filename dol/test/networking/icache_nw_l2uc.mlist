@@ -11,6 +11,7 @@ modules:
     - module:
         name    : IPV4_TCP_QTAG
         spec    : l2uc.testspec
+        perf    : True
         tcscale : 10
         modscale: 100
         iterate :
