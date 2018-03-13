@@ -853,6 +853,7 @@ int
 capri_table_entry_write (uint32_t tableid,
                          uint32_t index,
                          uint8_t  *hwentry,
+                         uint8_t  *hwentry_mask,
                          uint16_t hwentry_bit_len,
                          capri_table_mem_layout_t &tbl_info, int gress,
                          bool is_oflow_table, bool ingress,
@@ -908,6 +909,17 @@ capri_table_entry_write (uint32_t tableid,
     int block = blk;
     int copy_bits = hwentry_bit_len;
     uint16_t *_hwentry = (uint16_t*)hwentry;
+
+    if (hwentry_mask) {
+        /* If mask is specified, it should encompass the entire macros currently */
+        if ((entry_start_word != 0) || (tbl_info.entry_width % CAPRI_SRAM_WORDS_PER_BLOCK)) {
+            HAL_TRACE_ERR("Masked write with entry_start_word {} and width {} "
+                          "not supported",
+                          entry_start_word, tbl_info.entry_width);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
     for (int j = 0; j < tbl_info.entry_width; j++) {
         if (copy_bits >= 16) {
             shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] = *_hwentry;
@@ -928,27 +940,42 @@ capri_table_entry_write (uint32_t tableid,
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     // Push to HW/Capri from entry_start_block to block
     pu_cpp_int<128> sram_block_data;
-    uint8_t temp[16];
+    pu_cpp_int<128> sram_block_datamask;
+    uint8_t temp[16], tempmask[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_SRAM_ROWS, blk++) {
         //all shadow_sram->mem[sram_row][i] to be pushed to capri..
         uint8_t *s = (uint8_t*)(shadow_sram->mem[sram_row][blk]);
         for (int p = 15; p >= 0; p--) {
             temp[p] = *s; s++;
         }
+        cap_pics_csr_t *pics_csr;
         if (ingress) {
-            cap_pics_csr_t *pics_csr = capri_global_pics_get(tableid);
-            sram_block_data = 0;
-            pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
-            pics_csr->dhs_sram.entry[i]
-                        .data((pu_cpp_int<128>)sram_block_data);
-            pics_csr->dhs_sram.entry[i].write();
+            pics_csr = capri_global_pics_get(tableid);
         } else {
-            cap_pics_csr_t & pics_csr = cap0.sse.pics;
-            sram_block_data = 0;
-            pics_csr.hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
-            pics_csr.dhs_sram.entry[i]
-                        .data((pu_cpp_int<128>)sram_block_data);
-            pics_csr.dhs_sram.entry[i].write();
+            pics_csr = &cap0.sse.pics;
+        }
+        sram_block_data = 0;
+        pics_csr->hlp.s_cpp_int_from_array(sram_block_data, 0, 15, temp);
+
+        if (hwentry_mask) {
+            uint8_t *m = hwentry_mask + (i-entry_start_block)*(CAPRI_SRAM_BLOCK_WIDTH>>3) ;
+            for (int p = 15; p >= 0; p--) {
+                tempmask[p] = *m; m++;
+            }
+
+            sram_block_datamask = 0;
+            pics_csr->hlp.s_cpp_int_from_array(sram_block_datamask, 0, 15, tempmask);
+
+            pics_csr->dhs_sram_update_addr.entry.address(i);
+            pics_csr->dhs_sram_update_addr.entry.write();
+            pics_csr->dhs_sram_update_data.entry.data(sram_block_data);
+            pics_csr->dhs_sram_update_data.entry.mask(sram_block_datamask);
+            pics_csr->dhs_sram_update_data.entry.write();
+
+        } else {
+            pics_csr->dhs_sram.entry[i]
+                .data((pu_cpp_int<128>)sram_block_data);
+            pics_csr->dhs_sram.entry[i].write();
         }
     }
     return (CAPRI_OK);

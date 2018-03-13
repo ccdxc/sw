@@ -47,7 +47,8 @@ int
 asicpd_table_entry_write (uint32_t tableid,
                           uint32_t index,
                           uint8_t  *hwentry,
-                          uint16_t hwentry_bit_len)
+                          uint16_t hwentry_bit_len,
+                          uint8_t  *hwentry_mask)
 {
     int ret;
     uint32_t oflow_parent_tbl_depth = 0;
@@ -64,7 +65,7 @@ asicpd_table_entry_write (uint32_t tableid,
     }
     asicpd_copy_capri_table_info(&cap_tbl_info, &tbl_ctx.sram_layout, &tbl_ctx);
     ret = capri_table_entry_write(tableid, index,
-                                  hwentry, hwentry_bit_len,
+                                  hwentry, hwentry_mask, hwentry_bit_len,
                                   cap_tbl_info, tbl_ctx.gress,
                                   tbl_ctx.is_oflow_table,
                                   (tbl_ctx.gress == P4_GRESS_INGRESS),

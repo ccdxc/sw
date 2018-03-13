@@ -325,8 +325,8 @@ hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
                        qos::QosClassGetResponseMsg *rsp);
 
 typedef struct policer_s {
-    uint32_t bps_rate; // rate in bytes-per-sec
-    uint32_t burst_size; // Burst size in bytes
+    uint64_t bps_rate; // rate in bytes-per-sec
+    uint64_t burst_size; // Burst size in bytes
 } __PACK__ policer_t;
 
 static inline void

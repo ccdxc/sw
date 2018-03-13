@@ -80,6 +80,7 @@ void capri_table_rw_cleanup();
 int capri_table_entry_write(uint32_t tableid,
                             uint32_t index,
                             uint8_t  *hwentry,
+                            uint8_t  *hwentry_mask,
                             uint16_t hwentry_bit_len,
                             capri_table_mem_layout_t &tbl_info, int gress,
                             bool is_oflow_table, bool ingress,

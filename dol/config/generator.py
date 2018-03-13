@@ -39,9 +39,9 @@ from infra.asic.model                   import ModelConnector
 from config.store                       import Store
 
 def process(topospec):
-    QosClassHelper.main(topospec)
     # Security Profiles
     SecurityProfileHelper.main(topospec)
+    QosClassHelper.main(topospec)
 
     # Uplinks
     UplinkHelper.main(topospec)

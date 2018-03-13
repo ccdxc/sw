@@ -84,7 +84,8 @@ namespace pd {
 extern int asicpd_table_entry_write(uint32_t tableid,
                                     uint32_t index,
                                     uint8_t  *hwentry,
-                                    uint16_t hwentry_bit_len);
+                                    uint16_t hwentry_bit_len,
+                                    uint8_t  *hwentry_mask);
 extern int asicpd_table_entry_read(uint32_t  tableid,
                                    uint32_t  index,
                                    uint8_t   *hwentry,
@@ -1912,7 +1913,8 @@ ${table}_entry_write(uint32_t tableid,
                      uint32_t index,
                      uint8_t *hwkey, 
                      uint8_t *hwkey_y,
-                     ${table}_actiondata *actiondata)
+                     ${table}_actiondata *actiondata,
+                     ${table}_actiondata *actiondata_mask)
 {
     uint32_t hwkey_len, hwkeymask_len;
     uint8_t  action_pc;
@@ -1922,6 +1924,10 @@ ${table}_entry_write(uint32_t tableid,
     uint16_t entry_size, actiondatalen, axi_shift_len;
     uint16_t actiondata_len_before_key, actiondata_len_after_key;
     uint8_t  *_sram_entry = &sram_entry[0];
+
+    if (actiondata_mask) {
+        return P4PD_FAIL;
+    }
 
     (void)packed_actiondata_before_key;
     (void)actiondata_len_after_key;
@@ -1972,7 +1978,7 @@ ${table}_entry_write(uint32_t tableid,
     // Write to SRAM  area that is associated with TCAM. This SRAM area is
     // in the bottom portion of hash-table's sram area.
     // Hence increment index by size of hash table.
-    hal::pd::asicpd_table_entry_write(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, _sram_entry, entry_size);
+    hal::pd::asicpd_table_entry_write(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, _sram_entry, entry_size, NULL);
 
     // Install Key in TCAM
     // Swizzle Key installed in TCAM before writing to TCAM memory
@@ -1991,12 +1997,17 @@ ${table}_entry_write(uint32_t tableid,
                      uint32_t index,
                      uint8_t *hwkey, 
                      uint8_t *hwkey_y,
-                     ${table}_actiondata *actiondata)
+                     ${table}_actiondata *actiondata,
+                     ${table}_actiondata *actiondata_mask)
 {
     uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  sram_hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint32_t hwkey_len, hwkeymask_len, actiondatalen;
     uint16_t action_pc, entry_size;
+
+    if (actiondata_mask) {
+        return P4PD_FAIL;
+    }
 
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
@@ -2017,7 +2028,7 @@ ${table}_entry_write(uint32_t tableid,
                                             packed_actiondata,
                                             actiondatalen);
     p4pd_swizzle_bytes(sram_hwentry, entry_size);
-    hal::pd::asicpd_table_entry_write(tableid, index, sram_hwentry, entry_size);
+    hal::pd::asicpd_table_entry_write(tableid, index, sram_hwentry, entry_size, NULL);
 
     // Install Key in TCAM
     tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
@@ -2035,12 +2046,17 @@ ${table}_entry_write(uint32_t tableid,
 static p4pd_error_t
 ${table}_entry_write(uint32_t tableid,
                      uint32_t index, 
-                     ${table}_actiondata *actiondata)
+                     ${table}_actiondata *actiondata,
+                     ${table}_actiondata *actiondata_mask)
 {
     uint8_t  action_pc;
     uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint8_t  packed_actiondata_mask[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint8_t  hwentry_mask[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint8_t  *_hwentry_mask = NULL;
     uint16_t entry_size, actiondatalen;
+    (void)_hwentry_mask;
 
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
@@ -2052,6 +2068,16 @@ ${table}_entry_write(uint32_t tableid,
 //::            else:
     action_pc = 0xff;
 //::            #endif
+    if (actiondata_mask) {
+        actiondatalen = ${table}_pack_action_data(tableid, actiondata_mask,
+                                                  packed_actiondata_mask);
+        entry_size = p4pd_p4table_entry_prepare(hwentry_mask,
+                                                action_pc,
+                                                NULL /* Index Table. No MatchKey*/,
+                                                0, /* Zero matchkeylen */
+                                                packed_actiondata_mask,
+                                                actiondatalen);
+    }
     actiondatalen = ${table}_pack_action_data(tableid, actiondata,
                                               packed_actiondata);
     entry_size = p4pd_p4table_entry_prepare(hwentry,
@@ -2064,7 +2090,11 @@ ${table}_entry_write(uint32_t tableid,
     hal::pd::asicpd_hbm_table_entry_write(tableid, index, hwentry, entry_size);
 //::            else:
     p4pd_swizzle_bytes(hwentry, entry_size);
-    hal::pd::asicpd_table_entry_write(tableid, index, hwentry, entry_size);
+    if (actiondata_mask) {
+        p4pd_swizzle_bytes(hwentry_mask, entry_size);
+        _hwentry_mask = hwentry_mask;
+    }
+    hal::pd::asicpd_table_entry_write(tableid, index, hwentry, entry_size, _hwentry_mask);
 //::            #endif
     return (P4PD_SUCCESS);
 }
@@ -2073,7 +2103,8 @@ static p4pd_error_t
 ${table}_entry_write(uint32_t tableid,
                      uint32_t hashindex,
                      uint8_t *hwkey,
-                     ${table}_actiondata *actiondata)
+                     ${table}_actiondata *actiondata,
+                     ${table}_actiondata *actiondata_mask)
 {
     uint32_t hwactiondata_len, hwkey_len;
     uint8_t  action_pc;
@@ -2093,6 +2124,10 @@ ${table}_entry_write(uint32_t tableid,
     (void)actiondata_len_before_key;
     (void)actiondatalen;
     (void)hwkey_len; // always 512 for hash tables..
+
+    if (actiondata_mask) {
+        return P4PD_FAIL;
+    }
 
     ${table}_hwentry_query(tableid, &hwkey_len, &hwactiondata_len);
     hash_${table}_key_len(tableid, &key_len);
@@ -2156,7 +2191,7 @@ ${table}_entry_write(uint32_t tableid,
     hal::pd::asicpd_hbm_table_entry_write(tableid, hashindex, _hwentry, entry_size);
 //::            else:
     p4pd_swizzle_bytes(_hwentry, entry_size);
-    hal::pd::asicpd_table_entry_write(tableid, hashindex, _hwentry, entry_size);
+    hal::pd::asicpd_table_entry_write(tableid, hashindex, _hwentry, entry_size, NULL);
 //::            #endif
     
     return (P4PD_SUCCESS);
@@ -3515,7 +3550,7 @@ ${api_prefix}_index_to_hwindex_map(uint32_t   tableid,
     return (P4PD_FAIL);
 }
 
-/* Install entry into P4-table.
+/* Install entry into P4-table with masked data (hw performs read-modify-write)
  *
  * Arguments: 
  *
@@ -3547,16 +3582,19 @@ ${api_prefix}_index_to_hwindex_map(uint32_t   tableid,
  *                                 Refer to p4pd.h for structure details
  *                                 Per p4 table action data structure should
  *                                 provided as void* actiondata.
+ *  IN  : void    *actiondata_mask : Action data mask associated with the key.
+ * 
  * 
  * Return Value: 
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
 p4pd_error_t
-${api_prefix}_entry_write(uint32_t tableid,
-                          uint32_t index,
-                          uint8_t *hwkey, 
-                          uint8_t *hwkey_y,
-                          void    *actiondata)
+${api_prefix}_entry_write_with_datamask(uint32_t tableid,
+                                        uint32_t index,
+                                        uint8_t *hwkey, 
+                                        uint8_t *hwkey_y,
+                                        void    *actiondata,
+                                        void    *actiondata_mask)
 {
     /* P4 Table can reside in P4pipe or in HBM. Depending on where it resides
      * and depending on if table is lookedup using hash or using index
@@ -3638,16 +3676,19 @@ ${api_prefix}_entry_write(uint32_t tableid,
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
             return (${table}_entry_write(tableid, index, 
-                                         (${table}_actiondata*)actiondata));
+                                         (${table}_actiondata*)actiondata, 
+                                         (${table}_actiondata*)actiondata_mask));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
             return (${table}_entry_write(tableid, index, hwkey, 
-                                         (${table}_actiondata*)actiondata));
+                                         (${table}_actiondata*)actiondata, 
+                                         (${table}_actiondata*)actiondata_mask));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Ternary':
             return (${table}_entry_write(tableid, index,
                                          hwkey, hwkey_y,
-                                         (${table}_actiondata*)actiondata));
+                                         (${table}_actiondata*)actiondata, 
+                                         (${table}_actiondata*)actiondata_mask));
 //::            #endif
         break;
 
@@ -3658,6 +3699,53 @@ ${api_prefix}_entry_write(uint32_t tableid,
         break;
     }
     return (P4PD_SUCCESS);
+}
+
+/* Install entry into P4-table.
+ *
+ * Arguments: 
+ *
+ *  IN  : uint32_t tableid       : Table Id that identifies
+ *                                 P4 table. This id is obtained
+ *                                 from p4pd_table_id_enum.
+ *  IN  : uint32_t index         : Table index where entry is installed.
+ *                                 Caller of the API is expected to provide
+ *                                 this index based on placement decision made.
+ *                                 If tableid identifies hash lookup table,
+ *                                 then index is hash value computed using key
+ *                                 bits. If table id identifies ternary lookup
+ *                                 table, then index is priority or order
+ *                                 determining relative to other enties.
+ *                                 If table is index table, then index value
+ *                                 is same as the key used to lookup table.
+ *  IN  : uint8_t *hwkey         : Hardware key to be installed into P4-table
+ *                                 Can be NULL if table id identifies index
+ *                                 based lookup table.
+ *  IN  : uint8_t *hwkey_y       : Key match trit bit mask used in ternary matching.
+ *                                 This value is obtained by using 
+ *                                 p4pd_hwkey_hwmask_build().
+ *                                 Can be NULL if table id identifies
+ *                                 exact match table (hash based lookup) or
+ *                                 when table id identifies index based lookup
+ *                                 table.
+ *  IN  : void    *actiondata    : Action data associated with the key.
+ *                                 Action data structure generated per p4 table.
+ *                                 Refer to p4pd.h for structure details
+ *                                 Per p4 table action data structure should
+ *                                 provided as void* actiondata.
+ * 
+ * Return Value: 
+ *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
+ */
+p4pd_error_t
+${api_prefix}_entry_write(uint32_t tableid,
+                          uint32_t index,
+                          uint8_t *hwkey, 
+                          uint8_t *hwkey_y,
+                          void    *actiondata)
+{
+    return ${api_prefix}_entry_write_with_datamask(tableid, index, hwkey,
+                                                   hwkey_y, actiondata, NULL);
 }
 
 /* Read P4 table hardware entry.

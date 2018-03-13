@@ -26,8 +26,8 @@ service QOS {
 
 // Specifications of a policer
 message PolicerSpec {
-  uint32 bps_rate   = 1;    // rate for this policer in bytes-per-second
-  uint32 burst_size = 2;    // Burst size allowed for the policer in bytes
+  uint64 bps_rate   = 1;    // rate for this policer in bytes-per-second
+  uint64 burst_size = 2;    // Burst size allowed for the policer in bytes
 }
 
 // PolicerStats captures all the statistics of a policer

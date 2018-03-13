@@ -26,6 +26,8 @@ namespace pd {
 #define HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS  2
 #define HAL_PD_QOS_MAX_QUEUES_PER_CLASS     (1 + HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS)
 
+#define HAL_MAX_POLICER_TOKENS_PER_INTERVAL ((1ull<<39)-1)
+
 #define HAL_PD_QOS_IQS(ENTRY)                                        \
     ENTRY(HAL_PD_QOS_IQ_COMMON,                 0, "common")         \
     ENTRY(HAL_PD_QOS_IQ_TX_UPLINK_GROUP_0,      1, "uplink-group-0") \
@@ -125,6 +127,33 @@ qos_class_pd_mem_free (pd_qos_class_t *qos_class)
     hal::pd::delay_delete_to_slab(HAL_SLAB_QOS_CLASS_PD, qos_class);
     return HAL_RET_OK;
 }
+
+static hal_ret_t
+policer_rate_per_sec_to_token_rate (uint64_t rate_per_sec, uint64_t refresh_interval_us, 
+                                    uint64_t *token_rate_p, uint64_t burst)
+{
+    uint64_t rate_tokens;
+
+    *token_rate_p = 0;
+
+    if (rate_per_sec > UINT64_MAX/refresh_interval_us) {
+        HAL_TRACE_ERR("policer rate {} is too high", rate_per_sec);
+        return HAL_RET_INVALID_ARG;
+    }
+    rate_tokens = (refresh_interval_us * rate_per_sec)/1000000;
+
+    if ((burst + rate_tokens) > HAL_MAX_POLICER_TOKENS_PER_INTERVAL) {
+        HAL_TRACE_ERR("policer rate {} is too high for the "
+                      "refresh interval {}us", 
+                      rate_per_sec, refresh_interval_us);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    *token_rate_p = rate_tokens;
+
+    return HAL_RET_OK;
+}
+
 }   // namespace pd
 }   // namespace hal
 

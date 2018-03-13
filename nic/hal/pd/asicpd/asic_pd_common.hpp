@@ -16,7 +16,8 @@ namespace hal {
 namespace pd {
 
 int asicpd_table_entry_write(uint32_t tableid, uint32_t index,
-                             uint8_t  *hwentry, uint16_t hwentry_bit_len);
+                             uint8_t  *hwentry, uint16_t hwentry_bit_len, 
+                             uint8_t  *hwentry_mask);
 int asicpd_table_entry_read(uint32_t tableid, uint32_t index,
                             uint8_t  *hwentry, uint16_t *hwentry_bit_len);
 int asicpd_table_hw_entry_read(uint32_t tableid, uint32_t index,

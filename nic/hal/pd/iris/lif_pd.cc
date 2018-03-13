@@ -9,6 +9,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/eth.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
+#include "nic/hal/pd/iris/qos_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -437,7 +438,7 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_update_args_t *args)
     return lif->vlan_strip_en;
 }
 
-#define TX_POLICER_ACTION(_arg) d.tx_table_s5_t4_lif_rate_limiter_table_action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params._arg
+#define TX_POLICER_ACTION(_d, _arg) _d.tx_table_s5_t4_lif_rate_limiter_table_action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params._arg
 hal_ret_t
 lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 {
@@ -446,26 +447,53 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap             *tx_policer_tbl = NULL;
     tx_table_s5_t4_lif_rate_limiter_table_actiondata d = {0};
+    tx_table_s5_t4_lif_rate_limiter_table_actiondata d_mask = {0};
+    uint64_t                                         refresh_interval_us = 60;
+    uint64_t                                         rate_tokens = 0;
+    uint64_t                                         burst_tokens = 0;
+    uint64_t                                         bps_rate;
 
     tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
     HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.actionid = TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE5_LIF_EGRESS_RL_PARAMS_ID;
-    if (pi_lif->qos_info.tx_policer.bps_rate == 0) {
-        TX_POLICER_ACTION(entry_valid) = 0;
+
+    bps_rate = pi_lif->qos_info.tx_policer.bps_rate;
+    burst_tokens = pi_lif->qos_info.tx_policer.burst_size;
+
+    if (bps_rate == 0) {
+        TX_POLICER_ACTION(d, entry_valid) = 0;
     } else {
-        TX_POLICER_ACTION(entry_valid) = 1;
-        TX_POLICER_ACTION(pkt_rate) = 0;
-        //TODO does this need memrev ?
-        memcpy(TX_POLICER_ACTION(burst), &pi_lif->qos_info.tx_policer.burst_size, sizeof(uint32_t));
-        // TODO convert the rate into token-rate 
-        memcpy(TX_POLICER_ACTION(rate), &pi_lif->qos_info.tx_policer.bps_rate, sizeof(uint32_t));
+        TX_POLICER_ACTION(d, entry_valid) = 1;
+        TX_POLICER_ACTION(d, pkt_rate) = 0;
+
+        ret = policer_rate_per_sec_to_token_rate(bps_rate, refresh_interval_us, 
+                                                 &rate_tokens, burst_tokens);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error converting rate to token rate ret {}", ret);
+            return ret;
+        }
+
+        memcpy(TX_POLICER_ACTION(d, burst), &burst_tokens,
+               std::min(sizeof(TX_POLICER_ACTION(d, burst)), sizeof(burst_tokens)));
+        memcpy(TX_POLICER_ACTION(d, rate), &rate_tokens,
+               std::min(sizeof(TX_POLICER_ACTION(d, rate)), sizeof(rate_tokens)));
+    }
+
+    memset(&d_mask.tx_table_s5_t4_lif_rate_limiter_table_action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params, 
+           0xff,
+           sizeof(tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params_t));
+    TX_POLICER_ACTION(d_mask, rsvd) = 0;
+    TX_POLICER_ACTION(d_mask, axi_wr_pend) = 0;
+    if (update) {
+        memset(TX_POLICER_ACTION(d_mask, tbkt), 0, 
+               sizeof(TX_POLICER_ACTION(d_mask, tbkt)));
     }
 
     if (update) {
-        sdk_ret = tx_policer_tbl->update(pd_lif->hw_lif_id, &d);
+        sdk_ret = tx_policer_tbl->update(pd_lif->hw_lif_id, &d, &d_mask);
     } else {
-        sdk_ret = tx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id);
+        sdk_ret = tx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id, &d_mask);
     }
 
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -515,7 +543,7 @@ lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
     return ret;
 }
 
-#define RX_POLICER_ACTION(_arg) d.rx_policer_action_u.rx_policer_execute_rx_policer._arg
+#define RX_POLICER_ACTION(_d, _arg) _d.rx_policer_action_u.rx_policer_execute_rx_policer._arg
 hal_ret_t
 lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
 {
@@ -524,26 +552,60 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     lif_t                 *pi_lif = (lif_t *)pd_lif->pi_lif;
     directmap             *rx_policer_tbl = NULL;
     rx_policer_actiondata d = {0};
+    rx_policer_actiondata d_mask = {0};
+    uint64_t              refresh_interval_us = 60;
+    uint64_t              rate_tokens = 0;
+    uint64_t              burst_tokens = 0;
+    uint64_t              bps_rate;
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
     HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.actionid = RX_POLICER_EXECUTE_RX_POLICER_ID;
-    if (pi_lif->qos_info.rx_policer.bps_rate == 0) {
-        RX_POLICER_ACTION(entry_valid) = 0;
+
+    bps_rate = pi_lif->qos_info.rx_policer.bps_rate;
+    burst_tokens = pi_lif->qos_info.rx_policer.burst_size;
+
+    if (bps_rate == 0) {
+        RX_POLICER_ACTION(d, entry_valid) = 0;
     } else {
-        RX_POLICER_ACTION(entry_valid) = 1;
-        RX_POLICER_ACTION(pkt_rate) = 0;
-        //TODO does this need memrev ?
-        memcpy(RX_POLICER_ACTION(burst), &pi_lif->qos_info.rx_policer.burst_size, sizeof(uint32_t));
-        // TODO convert the rate into token-rate 
-        memcpy(RX_POLICER_ACTION(rate), &pi_lif->qos_info.rx_policer.bps_rate, sizeof(uint32_t));
+        RX_POLICER_ACTION(d, entry_valid) = 1;
+        RX_POLICER_ACTION(d, pkt_rate) = 0;
+
+        ret = policer_rate_per_sec_to_token_rate(bps_rate, refresh_interval_us, 
+                                                 &rate_tokens, burst_tokens);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error converting rate to token rate ret {}", ret);
+            return ret;
+        }
+
+        burst_tokens += rate_tokens;
+
+        memcpy(RX_POLICER_ACTION(d, burst), &burst_tokens, 
+               std::min(sizeof(RX_POLICER_ACTION(d, burst)), 
+                        sizeof(burst_tokens)));
+        memcpy(RX_POLICER_ACTION(d, rate), &rate_tokens, 
+               std::min(sizeof(RX_POLICER_ACTION(d, rate)), sizeof(rate_tokens)));
+
+        uint64_t tbkt = burst_tokens;
+        memcpy(RX_POLICER_ACTION(d, tbkt), &tbkt, 
+               std::min(sizeof(RX_POLICER_ACTION(d, tbkt)), 
+                        sizeof(burst_tokens)));
+    }
+
+    memset(&d_mask.rx_policer_action_u.rx_policer_execute_rx_policer, 0xff,
+           sizeof(rx_policer_execute_rx_policer_t));
+    RX_POLICER_ACTION(d_mask, rsvd) = 0;
+    RX_POLICER_ACTION(d_mask, axi_wr_pend) = 0;
+    if (update) {
+        memset(RX_POLICER_ACTION(d_mask, tbkt), 0, 
+               sizeof(RX_POLICER_ACTION(d_mask, tbkt)));
     }
 
     if (update) {
-        sdk_ret = rx_policer_tbl->update(pd_lif->hw_lif_id, &d);
+        sdk_ret = rx_policer_tbl->update(pd_lif->hw_lif_id, &d, &d_mask);
     } else {
-        sdk_ret = rx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id);
+        sdk_ret = rx_policer_tbl->insert_withid(&d, pd_lif->hw_lif_id, &d_mask);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -551,10 +613,12 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
                       lif_get_lif_id(pi_lif), ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("lif {} hw_lif_id {} rate {} burst {} programmed",
+    HAL_TRACE_DEBUG("lif {} hw_lif_id {} rate {} burst {} "
+                    "rate_tokens {} burst_tokens {} programmed",
                     lif_get_lif_id(pi_lif), 
                     pd_lif->hw_lif_id, pi_lif->qos_info.rx_policer.bps_rate,
-                    pi_lif->qos_info.rx_policer.burst_size);
+                    pi_lif->qos_info.rx_policer.burst_size,
+                    rate_tokens, burst_tokens);
     return ret;
 }
 #undef RX_POLICER_ACTION

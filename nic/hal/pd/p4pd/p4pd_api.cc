@@ -73,6 +73,37 @@ p4pd_global_entry_write (uint32_t tableid,
  * routines. TODO: Add other APIs as well here.
  */
 p4pd_error_t
+p4pd_global_entry_write_with_datamask (uint32_t tableid,
+                                       uint32_t  index,
+                                       uint8_t   *hwkey, 
+                                       uint8_t   *hwkey_mask,
+                                       void      *actiondata,
+                                       void      *actiondata_mask)
+{
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        return (p4pd_entry_write_with_datamask(tableid, index, hwkey, hwkey_mask, 
+                                               actiondata, actiondata_mask));
+    } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return (p4pd_common_rxdma_actions_entry_write_with_datamask(tableid,
+                index, hwkey, hwkey_mask, actiondata, actiondata_mask));
+    } else if ((tableid >= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN) &&
+         (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
+        return (p4pd_common_txdma_actions_entry_write_with_datamask(tableid,
+                index, hwkey, hwkey_mask, actiondata, actiondata_mask));
+    } else {
+        HAL_ASSERT(0);
+    }
+    return HAL_RET_OK;
+}
+
+/*
+ * Based on table id call appropriate table routine.
+ * For now this API is only called for p4pd and rxdma
+ * routines. TODO: Add other APIs as well here.
+ */
+p4pd_error_t
 p4pd_global_entry_read (uint32_t tableid,
                         uint32_t   index,
                         void       *swkey,

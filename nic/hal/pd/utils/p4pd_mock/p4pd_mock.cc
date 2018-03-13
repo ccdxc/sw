@@ -25,6 +25,13 @@ int p4pd_global_entry_write(uint32_t tableid, uint32_t index, uint8_t *hwkey,
     return 0;
 }
 
+int p4pd_global_entry_write_with_datamask(uint32_t tableid, uint32_t index, uint8_t *hwkey,
+                                          uint8_t *hwkey_y, void *actiondata,
+                                          void *actiondata_mask)
+{
+    return 0;
+}
+
 int p4pd_global_entry_read(uint32_t tableid, uint32_t index, void *swkey,
                                        void *swkey_mask, void *actiondata)
 {
@@ -79,6 +86,7 @@ static inline int p4pd_stub_entry_read(uint32_t tableid, uint32_t index, void *s
 #define p4pd_global_entry_read     p4pd_global_stub_entry_read
 #define p4pd_global_entry_create   p4pd_global_stub_entry_create
 #define p4pd_global_table_ds_decoded_string_get   p4pd_global_stub_table_ds_decoded_string_get
+#define p4pd_global_entry_write_with_datamask     p4pd_global_stub_entry_write_with_datamask
 
 static inline void p4pd_global_stub_hwentry_query(uint32_t tableid,
                                                   uint32_t *hwkey_len,
@@ -90,6 +98,16 @@ static inline void p4pd_global_stub_hwentry_query(uint32_t tableid,
 
 static inline int p4pd_global_stub_entry_write(uint32_t tableid, uint32_t index, uint8_t *hwkey,
                                         uint8_t *hwkey_y, void *actiondata)
+{
+    return 0;
+}
+
+static inline int p4pd_global_stub_entry_write_with_datamask(uint32_t tableid, 
+                                                             uint32_t index, 
+                                                             uint8_t *hwkey,
+                                                             uint8_t *hwkey_y, 
+                                                             void *actiondata,
+                                                             void *actiondata_mask)
 {
     return 0;
 }

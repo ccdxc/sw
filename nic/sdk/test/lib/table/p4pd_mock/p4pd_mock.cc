@@ -71,6 +71,13 @@ int p4pd_global_entry_write(uint32_t tableid, uint32_t index, uint8_t *hwkey,
     return 0;
 }
 
+int p4pd_global_entry_write_with_datamask(uint32_t tableid, uint32_t index, 
+                                          uint8_t *hwkey, uint8_t *hwkey_y, 
+                                          void *actiondata, void *actiondata_mask)
+{
+    return 0;
+}
+
 // global read API
 int p4pd_global_entry_read(uint32_t tableid, uint32_t index, void *swkey,
                            void *swkey_mask, void *actiondata)

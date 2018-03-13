@@ -293,6 +293,47 @@ p4pd_error_t p4pd_entry_write(uint32_t tableid,
                               uint8_t *hwkey_mask,
                               void    *actiondata);
 
+/* Install entry into P4-table with a actiondata mask
+ *
+ * Arguments: 
+ *
+ *  IN  : uint32_t tableid       : Table Id that identifies
+ *                                 P4 table. This id is obtained
+ *                                 from p4pd_table_id_enum.
+ *  IN  : uint32_t index         : Table index where entry is installed.
+ *                                 Caller of the API is expected to provide
+ *                                 this index based on placement decision made.
+ *                                 If tableid identifies hash lookup table,
+ *                                 then index is hash value computed using key
+ *                                 bits. If table id identifies ternary lookup
+ *                                 table, then index is priority or order
+ *                                 determining relative to other enties.
+ *                                 If table is index table, then index value
+ *                                 is same as the key used to lookup table.
+ *  IN  : uint8_t *hwkey         : Hardware key to be installed into P4-table
+ *                                 Can be NULL if table id identifies index
+ *                                 based lookup table.
+ *  IN  : uint8_t *hwkey_mask    : Key match mask used in ternary matching.
+ *                                 Can be NULL if table id identifies
+ *                                 exact match table (hash based lookup) or
+ *                                 when table id identifies index based lookup
+ *                                 table.
+ *  IN  : void    *actiondata    : Action data associated with the key.
+ *                                 Action data structure is generated per p4 table.
+ *                                 Refer to p4pd.h for structure details
+ *                                 Per p4 table action data structure should
+ *                                 provided as void* actiondata.
+ * 
+ * Return Value: 
+ *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
+ */
+p4pd_error_t p4pd_entry_write_with_datamask(uint32_t tableid,
+                                            uint32_t index,
+                                            uint8_t *hwkey, 
+                                            uint8_t *hwkey_mask,
+                                            void    *actiondata,
+                                            void    *actiondata_mask);
+
 /* Read P4 table hardware entry.
  *
  * Arguments:
@@ -487,6 +528,14 @@ p4pd_common_rxdma_actions_entry_write(uint32_t tableid,
                           uint8_t *hwkey_y,
                           void    *actiondata);
 
+p4pd_error_t
+p4pd_common_rxdma_actions_entry_write_with_datamask(uint32_t tableid,
+                          uint32_t index,
+                          uint8_t *hwkey,
+                          uint8_t *hwkey_y,
+                          void    *actiondata,
+                          void    *actiondata_mask);
+
 
 
 /* Read P4 table hardware entry.
@@ -655,6 +704,14 @@ p4pd_common_txdma_actions_entry_write(uint32_t tableid,
                           uint8_t *hwkey,
                           uint8_t *hwkey_y,
                           void    *actiondata);
+
+p4pd_error_t
+p4pd_common_txdma_actions_entry_write_with_datamask(uint32_t tableid,
+                          uint32_t index,
+                          uint8_t *hwkey,
+                          uint8_t *hwkey_y,
+                          void    *actiondata,
+                          void    *actiondata_mask);
 
 
 
@@ -831,6 +888,51 @@ p4pd_error_t p4pd_global_entry_write(uint32_t tableid,
                               uint8_t *hwkey,
                               uint8_t *hwkey_mask,
                               void    *actiondata);
+
+/* Install entry into P4-table, performs a read-modify-write based on
+ * actiondata_mask
+ *
+ * Arguments: 
+ *
+ *  IN  : uint32_t tableid       : Table Id that identifies
+ *                                 P4 table. This id is obtained
+ *                                 from p4pd_table_id_enum.
+ *  IN  : uint32_t index         : Table index where entry is installed.
+ *                                 Caller of the API is expected to provide
+ *                                 this index based on placement decision made.
+ *                                 If tableid identifies hash lookup table,
+ *                                 then index is hash value computed using key
+ *                                 bits. If table id identifies ternary lookup
+ *                                 table, then index is priority or order
+ *                                 determining relative to other enties.
+ *                                 If table is index table, then index value
+ *                                 is same as the key used to lookup table.
+ *  IN  : uint8_t *hwkey         : Hardware key to be installed into P4-table
+ *                                 Can be NULL if table id identifies index
+ *                                 based lookup table.
+ *  IN  : uint8_t *hwkey_mask    : Key match mask used in ternary matching.
+ *                                 Can be NULL if table id identifies
+ *                                 exact match table (hash based lookup) or
+ *                                 when table id identifies index based lookup
+ *                                 table.
+ *  IN  : void    *actiondata    : Action data associated with the key.
+ *                                 Action data structure is generated per p4 table.
+ *                                 Refer to p4pd.h for structure details
+ *                                 Per p4 table action data structure should
+ *                                 provided as void* actiondata.
+ *  IN  : void    *actiondata_mask : Action data mask associated with the action
+ *                                 data.
+ * 
+ * Return Value: 
+ *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
+ */
+p4pd_error_t
+p4pd_global_entry_write_with_datamask(uint32_t tableid,
+                                      uint32_t  index,
+                                      uint8_t   *hwkey, 
+                                      uint8_t   *hwkey_mask,
+                                      void      *actiondata,
+                                      void      *actiondata_mask);
 
 /* Read P4 table hardware entry.
  *

@@ -1,6 +1,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/copp_pd.hpp"
+#include "nic/hal/pd/iris/qos_pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/qos_api.hpp"
 
@@ -85,7 +86,7 @@ copp_pd_deprogram_hw (pd_copp_t *pd_copp)
     return ret;
 }
 
-#define COPP_ACTION(_arg) d.copp_action_u.copp_execute_copp._arg
+#define COPP_ACTION(_d, _arg) _d.copp_action_u.copp_execute_copp._arg
 static hal_ret_t
 copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
 {
@@ -94,25 +95,60 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update)
     copp_t          *pi_copp = pd_copp->pi_copp;
     directmap       *copp_tbl = NULL;
     copp_actiondata d = {0};
+    copp_actiondata d_mask = {0};
+    uint64_t        refresh_interval_us = 60;
+    uint64_t        rate_tokens = 0;
+    uint64_t        burst_tokens = 0;
+    uint64_t        bps_rate;
+
 
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
     HAL_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
 
     d.actionid = COPP_EXECUTE_COPP_ID;
-    if (pi_copp->policer.bps_rate == 0) {
-        COPP_ACTION(entry_valid) = 0;
+
+    bps_rate = pi_copp->policer.bps_rate;
+    burst_tokens = pi_copp->policer.burst_size;
+
+    if (bps_rate == 0) {
+        COPP_ACTION(d, entry_valid) = 0;
     } else {
-        COPP_ACTION(entry_valid) = 1;
-        COPP_ACTION(pkt_rate) = 0;
-        //TODO does this need memrev ?
-        memcpy(COPP_ACTION(burst), &pi_copp->policer.burst_size, sizeof(uint32_t));
-        // TODO convert the rate into token-rate
-        memcpy(COPP_ACTION(rate), &pi_copp->policer.bps_rate, sizeof(uint32_t));
+        COPP_ACTION(d, entry_valid) = 1;
+        COPP_ACTION(d, pkt_rate) = 0;
+
+        ret = policer_rate_per_sec_to_token_rate(bps_rate, refresh_interval_us, 
+                                                 &rate_tokens, burst_tokens);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error converting rate to token rate ret {}", ret);
+            return ret;
+        }
+
+        burst_tokens += rate_tokens;
+
+        memcpy(COPP_ACTION(d, burst), &burst_tokens,
+               std::min(sizeof(COPP_ACTION(d, burst)), 
+                        sizeof(burst_tokens)));
+        memcpy(COPP_ACTION(d, rate), &rate_tokens,
+               std::min(sizeof(COPP_ACTION(d, rate)), sizeof(rate_tokens)));
+
+        uint64_t tbkt = burst_tokens;
+        memcpy(COPP_ACTION(d, tbkt), &tbkt, 
+               std::min(sizeof(COPP_ACTION(d, tbkt)), 
+                        sizeof(burst_tokens)));
+    }
+
+    memset(&d_mask.copp_action_u.copp_execute_copp, 0xff,
+           sizeof(copp_execute_copp_t));
+    COPP_ACTION(d_mask, rsvd) = 0;
+    COPP_ACTION(d_mask, axi_wr_pend) = 0;
+    if (update) {
+        memset(COPP_ACTION(d_mask, tbkt), 0, 
+               sizeof(COPP_ACTION(d_mask, tbkt)));
     }
 
     // TODO Fixme. Setting entry-valid to 0 until copp is verified and values
     // are determined
-    COPP_ACTION(entry_valid) = 0;
+    COPP_ACTION(d, entry_valid) = 0;
     if (update) {
         sdk_ret = copp_tbl->update(pd_copp->hw_policer_id, &d);
     } else {
