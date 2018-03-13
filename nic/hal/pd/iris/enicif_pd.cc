@@ -695,6 +695,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     uint32_t                                hash_idx = INVALID_INDEXER_INDEX;
     bool                                    direct_to_otcam = false;
     bool                                    vlan_insert_en = false;
+    bool                                    key_changed = false;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
@@ -732,6 +733,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
         if (lif_args && lif_args->vlan_insert_en_changed) {
             vlan_insert_en = lif_args->vlan_insert_en;
+            key_changed = true;
         } else {
             vlan_insert_en = lif->vlan_insert_en;
         }
@@ -788,20 +790,58 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
             // No if_l2seg for native case
             hash_idx = pd_enicif->inp_prop_native_l2seg_clsc;
         }
-        // Update
-        sdk_ret = inp_prop_tbl->update(hash_idx, &data);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:classic: unable to reprogram for "
-                          "(l2seg, upif): ({}, {})",
-                          __FUNCTION__, 
-                          hal::l2seg_get_l2seg_id(l2seg), 
-                          if_get_if_id(hal_if));
-            goto end;
+
+        // If its an update and key changes, we have to remove and add the entry
+        if (key_changed) {
+            // Remove old entry
+            ret = pd_enicif_pd_depgm_inp_prop_l2seg(hash_idx);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to remove input props entry at: {}", 
+                              hash_idx);
+                goto end;
+            }
+
+            // Install new entry
+            sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx, 
+                                           key_mask, direct_to_otcam);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("{}:classic: unable to program for "
+                              "(l2seg, upif): ({}, {})",
+                              __FUNCTION__, 
+                              hal::l2seg_get_l2seg_id(l2seg), 
+                              if_get_if_id(hal_if));
+                goto end;
+            } else {
+                HAL_TRACE_DEBUG("{}:classic: Programmed "
+                                "table:input_properties index:{} ", __FUNCTION__,
+                                hash_idx);
+            }
+
+            if (if_l2seg) {
+                // Non-Native l2seg
+                if_l2seg->inp_prop_idx = hash_idx;
+            } else {
+                // Native l2seg
+                pd_enicif->inp_prop_native_l2seg_clsc = hash_idx;
+            }
+
         } else {
-            HAL_TRACE_DEBUG("{}:classic: reprogrammed "
-                            "table:input_properties index:{} ", __FUNCTION__,
-                            hash_idx);
+            // Update
+            sdk_ret = inp_prop_tbl->update(hash_idx, &data);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("{}:classic: unable to reprogram for "
+                              "(l2seg, upif): ({}, {})",
+                              __FUNCTION__, 
+                              hal::l2seg_get_l2seg_id(l2seg), 
+                              if_get_if_id(hal_if));
+                goto end;
+            } else {
+                HAL_TRACE_DEBUG("{}:classic: reprogrammed "
+                                "table:input_properties index:{} ", __FUNCTION__,
+                                hash_idx);
+            }
         }
     }
 
@@ -927,6 +967,7 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_enicif_t          *pd_enicif;
     if_t                 *hal_if;
+    l2seg_t              *native_l2seg_clsc = NULL;
 
     // TODO: Currently only classic ENIC Is being handled. May have to handle
     //       other types. For eg. vlan_insert_en
@@ -940,10 +981,22 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
     ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, 
                                               TABLE_OPER_UPDATE);
 
-    // Program Input Properties
-    ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, 
-                                    &hal_if->l2seg_list_clsc_head,
-                                    NULL, args, TABLE_OPER_UPDATE);
+    // Check if classic
+    if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        // Program Input Properties
+        ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, 
+                                        &hal_if->l2seg_list_clsc_head,
+                                        NULL, args, TABLE_OPER_UPDATE);
+        // Program native l2seg
+        if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+            native_l2seg_clsc = 
+                l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+            ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
+                                                  native_l2seg_clsc,
+                                                  NULL, NULL, args,
+                                                  TABLE_OPER_UPDATE);
+        }
+    }
 
     return ret;
 }
