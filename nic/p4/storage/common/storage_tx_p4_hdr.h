@@ -110,8 +110,8 @@ header_type pci_q_state_t {
   }
 }
 
-// Barco XTS ring 
-header_type barco_xts_ring_t {
+// Barco ring 
+header_type barco_ring_t {
   fields {
     p_ndx	: 32;	// Producer Index
   }
@@ -405,19 +405,24 @@ header_type seq_pdma_entry_t {
   }
 }
 
-// Sequencer metadata for pushing Barco XTS descriptor
+// Sequencer metadata for pushing Barco descriptor
 header_type seq_barco_entry_t {
   fields {
-    xts_desc_addr	: 64;	// Address of the XTS descriptor to push
-    xts_desc_size	: 32;	// Size of the XTS descriptor to push
-    xts_pndx_size	: 16;	// Size of the XTS ring state to be loaded
-    xts_pndx_addr	: 34;	// 64 bit address of the XTS doorbell to ring
-    xts_ring_addr	: 34;	// Address of the XTS ring
+    barco_desc_addr	: 64;	// Address of the descriptor to push
+    barco_desc_size	: 32;	// Size of the descriptor to push
+    barco_pndx_size	: 16;	// Size of the ring state to be loaded
+    barco_pndx_addr	: 34;	// 64 bit address of the doorbell to ring
+    barco_ring_addr	: 34;	// Address of the ring
+
+    // special test batch mode: pndx value is given in entry
+    barco_batch_pndx: 16;
+    barco_batch_mode: 1;
+    barco_batch_last: 1;
   }
 }
 
-// Sequencer metadata compression entry
-header_type seq_comp_desc_t {
+// Sequencer metadata compression status entry
+header_type seq_comp_status_desc_t {
   fields {
     next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
     next_db_data	: 64;	// 64 bit data of the next doorbell to ring
@@ -493,9 +498,9 @@ header_type storage_kivec1_t {
     src_qtype		: 3;	// Source LIF type (within the LIF)
     src_qid		: 24;	// Source queue number (within the LIF)
     src_qaddr		: 34;	// Source queue state address
-    xts_desc_size	: 16;	// Barco XTS descriptor size
+    barco_desc_size	: 16;	// Barco descriptor size
     device_addr		: 34;	// Address of the consumer index in the SSD qstate (OR)
-				// Barco XTS ring address
+				// Barco ring address
     roce_cq_new_cmd	: 1;	// If ROCE CQ entry is a new commmand
   }
 }
@@ -744,7 +749,7 @@ header_type storage_kivec5_t {
   modify_field(scratch.src_qtype, kivec.src_qtype);			\
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
-  modify_field(scratch.xts_desc_size, kivec.xts_desc_size);		\
+  modify_field(scratch.barco_desc_size, kivec.barco_desc_size);		\
   modify_field(scratch.device_addr, kivec.device_addr);			\
 
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\

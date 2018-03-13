@@ -66,6 +66,8 @@ uint32_t get_pvm_seq_roce_sq(uint32_t offset);
 
 uint32_t get_pvm_seq_comp_sq(uint32_t offset);
 
+uint32_t get_pvm_seq_comp_status_sq(uint32_t offset);
+
 uint32_t get_host_nvme_cq(uint32_t offset);
 
 uint32_t get_pvm_nvme_cq(uint32_t offset);
@@ -87,6 +89,8 @@ void get_host_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
                         uint8_t ring, uint16_t index, 
                         uint64_t *db_addr, uint64_t *db_data);
+void get_capri_doorbell_with_pndx_inc(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                                      uint8_t ring, uint64_t *db_addr, uint64_t *db_data);
 
 uint64_t get_storage_hbm_addr();
 

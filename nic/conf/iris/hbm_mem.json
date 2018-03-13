@@ -88,6 +88,22 @@
             "size_kb": 128
         },
         {
+            "name": "brq-ring-cp",
+            "size_kb": 64
+        },
+        {
+            "name": "brq-ring-cp-hot",
+            "size_kb": 64
+        },
+        {
+            "name": "brq-ring-dc",
+            "size_kb": 64
+        },
+        {
+            "name": "brq-ring-dc-hot",
+            "size_kb": 64
+        },
+        {
             "name": "crypto-sym-msg-descr",
             "size_kb": 64
         },

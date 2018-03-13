@@ -27,6 +27,14 @@ hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring);
+hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring);
+bool capri_barco_cp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+hal_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring);
+bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring);
+bool capri_barco_dc_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+hal_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring);
+bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 
 capri_barco_ring_t  barco_rings[] = {
@@ -172,6 +180,66 @@ capri_barco_ring_t  barco_rings[] = {
     {   // BARCO_RING_MPP6
     },
     {   // BARCO_RING_MPP7
+    },
+    {   // BARCO_RING_CP
+        BARCO_RING_CP_STR,
+        CAPRI_HBM_REG_BARCO_RING_CP,
+        0,
+        64,
+        BARCO_CRYPTO_CP_RING_SIZE,
+        64,
+        0,
+        0,
+        0,
+        0,
+        capri_barco_cp_init,
+        capri_barco_cp_poller,
+        NULL,
+    },
+    {   // BARCO_RING_CP_HOT
+        BARCO_RING_CP_HOT_STR,
+        CAPRI_HBM_REG_BARCO_RING_CP_HOT,
+        0,
+        64,
+        BARCO_CRYPTO_CP_HOT_RING_SIZE,
+        64,
+        0,
+        0,
+        0,
+        0,
+        capri_barco_cp_hot_init,
+        capri_barco_cp_hot_poller,
+        NULL,
+    },
+    {   // BARCO_RING_DC
+        BARCO_RING_DC_STR,
+        CAPRI_HBM_REG_BARCO_RING_DC,
+        0,
+        64,
+        BARCO_CRYPTO_DC_RING_SIZE,
+        64,
+        0,
+        0,
+        0,
+        0,
+        capri_barco_dc_init,
+        capri_barco_dc_poller,
+        NULL,
+    },
+    {   // BARCO_RING_DC_HOT
+        BARCO_RING_DC_HOT_STR,
+        CAPRI_HBM_REG_BARCO_RING_DC_HOT,
+        0,
+        64,
+        BARCO_CRYPTO_DC_HOT_RING_SIZE,
+        64,
+        0,
+        0,
+        0,
+        0,
+        capri_barco_dc_hot_init,
+        capri_barco_dc_hot_poller,
+        NULL,
     },
 };
 
@@ -1050,6 +1118,261 @@ hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
     return capri_barco_gcm1_key_array_init();
 }
 
+
+hal_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint32_t                            reg_lo;
+    uint32_t                            reg_hi;
+
+    ret = capri_barco_ring_common_init(barco_ring);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /* 
+     * Soft reset entire compression block; 
+     * also set the header version
+     */
+    hens.dhs_crypto_ctl.cp_cfg_glb.read();
+    reg_lo = (hens.dhs_crypto_ctl.cp_cfg_glb.fld().convert_to<uint32_t>() &
+              ~BARCO_CRYPTO_CP_CFG_GLB_HDR_VER_MASK)    |
+             BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET         |
+             BARCO_CRYPTO_CP_CFG_GLB_HDR_VER;
+    hens.dhs_crypto_ctl.cp_cfg_glb.fld(reg_lo);
+    hens.dhs_crypto_ctl.cp_cfg_glb.write();
+
+    /*
+     * Bring out of reset
+     */
+    hens.dhs_crypto_ctl.cp_cfg_glb.fld(reg_lo & ~BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET);
+    hens.dhs_crypto_ctl.cp_cfg_glb.write();
+
+    hens.dhs_crypto_ctl.cp_cfg_q_base_adr_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.cp_cfg_q_base_adr_w0.write();
+    hens.dhs_crypto_ctl.cp_cfg_q_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.cp_cfg_q_base_adr_w1.write();
+
+    /*
+     * Enable all 16 cp engines
+     */
+    hens.dhs_crypto_ctl.cp_cfg_ueng_w0.read();
+    reg_lo = hens.dhs_crypto_ctl.cp_cfg_ueng_w0.fld().convert_to<uint32_t>()    |
+             BARCO_CRYPTO_CP_UENG_LO_EN_ALL;
+    hens.dhs_crypto_ctl.cp_cfg_ueng_w1.read();
+    reg_hi = (hens.dhs_crypto_ctl.cp_cfg_ueng_w1.fld().convert_to<uint32_t>()   &
+              ~(BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_CP | BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO)) |
+             BARCO_CRYPTO_CP_UENG_HI_INTEG_APP_STATUS;
+    hens.dhs_crypto_ctl.cp_cfg_ueng_w0.fld(reg_lo);
+    hens.dhs_crypto_ctl.cp_cfg_ueng_w0.write();
+    hens.dhs_crypto_ctl.cp_cfg_ueng_w1.fld(reg_hi);
+    hens.dhs_crypto_ctl.cp_cfg_ueng_w1.write();
+
+    /*
+     * Enable warm queue
+     */
+    hens.dhs_crypto_ctl.cp_cfg_dist.read();
+    reg_lo = (hens.dhs_crypto_ctl.cp_cfg_dist.fld().convert_to<uint32_t>()  & 
+              ~BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE(BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE_MASK)) |
+             BARCO_CRYPTO_CP_DIST_DESC_Q_EN                                             |
+             BARCO_CRYPTO_CP_DIST_DESC_Q_SIZE(BARCO_CRYPTO_CP_RING_SIZE);
+    hens.dhs_crypto_ctl.cp_cfg_dist.fld(reg_lo);
+    hens.dhs_crypto_ctl.cp_cfg_dist.write();
+
+    hens.dhs_crypto_ctl.cp_cfg_host_opaque_tag_adr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.cp_cfg_host_opaque_tag_adr_w0.write();
+    hens.dhs_crypto_ctl.cp_cfg_host_opaque_tag_adr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.cp_cfg_host_opaque_tag_adr_w1.write();
+    hens.dhs_crypto_ctl.cp_cfg_host_opaque_tag_data.fld(barco_ring->opaqe_tag_value);
+    hens.dhs_crypto_ctl.cp_cfg_host_opaque_tag_data.write();
+
+    hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.fld(barco_ring->producer_idx);
+    hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.write();
+
+    HAL_TRACE_DEBUG("Barco compression ring \"{}\" base setup @ {:x}, descriptor count {}",
+            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+
+    return HAL_RET_OK;
+}
+
+bool capri_barco_cp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+{
+    /* TBD */
+    return FALSE;
+}
+
+hal_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint32_t                            reg_lo;
+
+    ret = capri_barco_ring_common_init(barco_ring);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w0.write();
+    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w1.write();
+
+    /*
+     * Enable hot queue
+     */
+    hens.dhs_crypto_ctl.cp_cfg_dist.read();
+    reg_lo = (hens.dhs_crypto_ctl.cp_cfg_dist.fld().convert_to<uint32_t>()  &
+              ~BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK))   |
+             BARCO_CRYPTO_CP_DIST_DESC_HOTQ_EN                                                  |
+             BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_CP_HOT_RING_SIZE);
+    hens.dhs_crypto_ctl.cp_cfg_dist.fld(reg_lo);
+    hens.dhs_crypto_ctl.cp_cfg_dist.write();
+
+    hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.fld(barco_ring->producer_idx);
+    hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.write();
+
+    HAL_TRACE_DEBUG("Barco compression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
+            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+
+    return HAL_RET_OK;
+}
+
+bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+{
+    /* TBD */
+    return FALSE;
+}
+
+hal_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint32_t                            reg_lo;
+    uint32_t                            reg_hi;
+
+    ret = capri_barco_ring_common_init(barco_ring);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    /* 
+     * Soft reset entire decompression block; 
+     * also set the header version
+     */
+    hens.dhs_crypto_ctl.dc_cfg_glb.read();
+    reg_lo = (hens.dhs_crypto_ctl.dc_cfg_glb.fld().convert_to<uint32_t>() &
+              ~BARCO_CRYPTO_DC_CFG_GLB_HDR_VER_MASK)    |
+             BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET         |
+             BARCO_CRYPTO_DC_CFG_GLB_HDR_VER;
+    hens.dhs_crypto_ctl.dc_cfg_glb.fld(reg_lo);
+    hens.dhs_crypto_ctl.dc_cfg_glb.write();
+
+    /*
+     * Bring out of reset
+     */
+    hens.dhs_crypto_ctl.dc_cfg_glb.fld(reg_lo & ~BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET);
+    hens.dhs_crypto_ctl.dc_cfg_glb.write();
+
+    hens.dhs_crypto_ctl.dc_cfg_q_base_adr_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.dc_cfg_q_base_adr_w0.write();
+    hens.dhs_crypto_ctl.dc_cfg_q_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.dc_cfg_q_base_adr_w1.write();
+
+    /*
+     * Enable all 2 dc engines
+     */
+    hens.dhs_crypto_ctl.dc_cfg_ueng_w0.read();
+    reg_lo = hens.dhs_crypto_ctl.dc_cfg_ueng_w0.fld().convert_to<uint32_t>()    |
+             BARCO_CRYPTO_DC_UENG_LO_EN_ALL;
+    hens.dhs_crypto_ctl.dc_cfg_ueng_w1.read();
+    reg_hi = (hens.dhs_crypto_ctl.dc_cfg_ueng_w1.fld().convert_to<uint32_t>()   &
+              ~(BARCO_CRYPTO_DC_UENG_HI_CSUM_ON_CP | BARCO_CRYPTO_DC_UENG_HI_HMEM_FILL_ZERO)) |
+             BARCO_CRYPTO_DC_UENG_HI_INTEG_APP_STATUS;
+    hens.dhs_crypto_ctl.dc_cfg_ueng_w0.fld(reg_lo);
+    hens.dhs_crypto_ctl.dc_cfg_ueng_w0.write();
+    hens.dhs_crypto_ctl.dc_cfg_ueng_w1.fld(reg_hi);
+    hens.dhs_crypto_ctl.dc_cfg_ueng_w1.write();
+
+    /*
+     * Enable warm queue
+     */
+    hens.dhs_crypto_ctl.dc_cfg_dist.read();
+    reg_lo = (hens.dhs_crypto_ctl.dc_cfg_dist.fld().convert_to<uint32_t>()  &
+              ~BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE(BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE_MASK))   |
+             BARCO_CRYPTO_DC_DIST_DESC_Q_EN                                               |
+             BARCO_CRYPTO_DC_DIST_DESC_Q_SIZE(BARCO_CRYPTO_DC_RING_SIZE);
+    hens.dhs_crypto_ctl.dc_cfg_dist.fld(reg_lo);
+    hens.dhs_crypto_ctl.dc_cfg_dist.write();
+
+    hens.dhs_crypto_ctl.dc_cfg_host_opaque_tag_adr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.dc_cfg_host_opaque_tag_adr_w0.write();
+    hens.dhs_crypto_ctl.dc_cfg_host_opaque_tag_adr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.dc_cfg_host_opaque_tag_adr_w1.write();
+    hens.dhs_crypto_ctl.dc_cfg_host_opaque_tag_data.fld(barco_ring->opaqe_tag_value);
+    hens.dhs_crypto_ctl.dc_cfg_host_opaque_tag_data.write();
+
+    hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.fld(barco_ring->producer_idx);
+    hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.write();
+
+    HAL_TRACE_DEBUG("Barco decompression ring \"{}\" base setup @ {:x}, descriptor count {}",
+            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+
+    return HAL_RET_OK;
+}
+
+bool capri_barco_dc_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+{
+    /* TBD */
+    return FALSE;
+}
+
+hal_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint32_t                            reg_lo;
+
+    ret = capri_barco_ring_common_init(barco_ring);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w0.write();
+    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w1.write();
+
+    /*
+     * Enable hot queue
+     */
+    hens.dhs_crypto_ctl.dc_cfg_dist.read();
+    reg_lo = (hens.dhs_crypto_ctl.dc_cfg_dist.fld().convert_to<uint32_t>()  &
+             ~BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK))    |
+             BARCO_CRYPTO_DC_DIST_DESC_HOTQ_EN                                                  |
+             BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_DC_HOT_RING_SIZE);
+    hens.dhs_crypto_ctl.dc_cfg_dist.fld(reg_lo);
+    hens.dhs_crypto_ctl.dc_cfg_dist.write();
+
+    hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.fld(barco_ring->producer_idx);
+    hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.write();
+
+    HAL_TRACE_DEBUG("Barco decompression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
+            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+
+    return HAL_RET_OK;
+}
+
+bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+{
+    /* TBD */
+    return FALSE;
+}
+
 bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
 {
     capri_barco_ring_t          *barco_ring;
@@ -1090,7 +1413,7 @@ hal_ret_t capri_barco_rings_init(void)
     uint64_t        opa_tag_addr = 0;
     hal_ret_t       ret = HAL_RET_OK;
 
-    for (idx = 0; idx < types::BarcoRings_MAX; idx++) {
+    for (idx = 0; idx < types::BarcoRings_ARRAYSIZE; idx++) {
         barco_rings[idx].producer_idx = 0;
         barco_rings[idx].consumer_idx = 0;
 

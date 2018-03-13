@@ -275,6 +275,10 @@ enum BarcoRings {
     BARCO_RING_MPP5             = 10;
     BARCO_RING_MPP6             = 11;
     BARCO_RING_MPP7             = 12;
+    BARCO_RING_CP               = 13;
+    BARCO_RING_CP_HOT           = 14;
+    BARCO_RING_DC               = 15;
+    BARCO_RING_DC_HOT           = 16;
 }
 
 enum AppRedirType {

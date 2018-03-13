@@ -1,5 +1,5 @@
 /*****************************************************************************
- *  seq_comp_desc_handler: Handle the compression descriptor entry in the
+ *  seq_comp_status_desc_handler: Handle the compression status descriptor entry in the
  *                         sequencer. This involves:
  *                          1. processing status to see if operation succeeded
  *                          2. breaking up the compressed data into the
@@ -14,13 +14,13 @@
 
 
 struct s1_tbl_k k;
-struct s1_tbl_seq_comp_desc_handler_d d;
+struct s1_tbl_seq_comp_status_desc_handler_d d;
 struct phv_ p;
 
 %%
    .param storage_tx_seq_comp_status_handler_start
 
-storage_tx_seq_comp_desc_handler_start:
+storage_tx_seq_comp_status_desc_handler_start:
 
    // Store the various parts of the descriptor in the K+I vectors for later use
    phvwrpair	p.storage_kivec4_sgl_addr, d.sgl_addr, \

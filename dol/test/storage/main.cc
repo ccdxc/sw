@@ -116,12 +116,23 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_dualq_flat_64K_buf_in_hbm, "Compress HBM-HBM flat 64K buf on hot and cold queues", false},
   // Enable when model is fixed.
   //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
+  {&tests::seq_compress_flat_64K_buf, "Sequencer Compress Host->Host flat 64K buf", false},
+  {&tests::seq_compress_same_src_and_dst, "Sequencer Compress with same src and dst", false},
+  {&tests::seq_decompress_to_flat_64K_buf, "Sequencer Decompress Host->Host to flat 64K buf", false},
+  {&tests::seq_compress_host_sgl_to_host_sgl, "Sequencer Compress Host->Host using SGLs", false},
+  {&tests::seq_decompress_host_sgl_to_host_sgl, "Sequencer Decompress Host->Host using SGLs", false},
+  {&tests::seq_compress_flat_64K_buf_in_hbm, "Sequencer Compress HBM->HBM flat 64K buf", false},
+  {&tests::seq_decompress_to_flat_64K_buf_in_hbm, "Sequencer Decompress HBM->HBM to flat 64K buf", false},
+  {&tests::seq_compress_output_through_sequencer, "Sequencer Compress and pull data from HBM through sequencer", false},
+  {&tests::seq_compress_dualq_flat_64K_buf, "Sequencer Compress Host-Host flat 64K buf on hot and cold queues", false},
+  {&tests::seq_compress_dualq_flat_64K_buf_in_hbm, "Sequencer Compress HBM-HBM flat 64K buf on hot and cold queues", false},
 };
 
 std::vector<tests::TestEntry> comp_perf_tests = {
   {&tests::compress_flat_64K_buf, "Compress Host->Host flat 64K buf", false},
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
   {&tests::max_data_rate, "Test max data rate", false},
+  {&tests::seq_max_data_rate, "Sequencer Test max data rate", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {

@@ -1,8 +1,10 @@
 // Compression DOLs.
+#include <math.h>
 #include "compression.hpp"
 #include "compression_test.hpp"
 #include "tests.hpp"
 #include "utils.hpp"
+#include "queues.hpp"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
@@ -72,21 +74,42 @@ static const uint64_t dc_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
 static const uint64_t dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
     CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
 
-static const uint32_t kNumSubqEntries = 4096;
-static const uint32_t kQueueMemSize = sizeof(cp_desc_t) * kNumSubqEntries;
-static void *cp_queue_mem;
-static uint64_t cp_queue_mem_pa;
-static uint16_t cp_queue_index = 0;
-static void *dc_queue_mem;
-static uint64_t dc_queue_mem_pa;
-static uint16_t dc_queue_index = 0;
+// compression/decompression blocks initialized by HAL
+// or by this DOL module.
+static const bool comp_inited_by_hal = true;
 
-static void *cp_hotq_mem;
-static uint64_t cp_hotq_mem_pa;
-static uint16_t cp_hotq_index = 0;
-static void *dc_hotq_mem;
-static uint64_t dc_hotq_mem_pa;
-static uint16_t dc_hotq_index = 0;
+static const uint32_t kNumSubqEntries = 1024;
+static const uint32_t kQueueMemSize = sizeof(cp_desc_t) * kNumSubqEntries;
+
+typedef enum {
+  COMP_QUEUE_PUSH_INVALID,
+  COMP_QUEUE_PUSH_SEQUENCER,
+  COMP_QUEUE_PUSH_SEQUENCER_BATCH,
+  COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
+  COMP_QUEUE_PUSH_HW_DIRECT,
+  COMP_QUEUE_PUSH_HW_DIRECT_BATCH,
+} comp_queue_push_t;
+
+// comp_queue_t provides usage flexibility as follows:
+// - HW queue configuration performed by this DOL module or elsewhere (such as HAL)
+// - queue entry submission via sequencer or directly to HW producer register
+typedef struct {
+  uint64_t  cfg_q_base;
+  uint64_t  cfg_q_pd_idx;
+  cp_desc_t *q_base_mem;
+  uint64_t  q_base_mem_pa;
+
+  uint32_t  curr_seq_comp_qid;
+  uint16_t  curr_seq_comp_pd_idx;
+  uint16_t  curr_pd_idx;
+  comp_queue_push_t curr_push_type;
+} comp_queue_t;
+
+static comp_queue_t cp_queue;
+static comp_queue_t dc_queue;
+
+static comp_queue_t cp_hotq;
+static comp_queue_t dc_hotq;
 
 // Sample data generated during test.
 uint8_t all_zeros[65536] = {0};
@@ -117,6 +140,14 @@ static constexpr uint32_t kSGLOffset = 129024;
 static uint64_t host_mem_pa;
 static uint8_t *host_mem;
 static uint64_t hbm_pa;
+
+// Forward declaration with default param values
+int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp,
+                comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
+                uint32_t seq_comp_qid = 0);
+int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp,
+                comp_queue_push_t push_type = COMP_QUEUE_PUSH_HW_DIRECT,
+                uint32_t seq_comp_qid = 0);
 
 // Write zeros to the 1st 8 bytes of compressed data buffer in hostmem.
 void InvalidateHdrInHostMem() {
@@ -150,22 +181,150 @@ static bool status_poll(bool in_hbm) {
   return false;
 }
 
+uint64_t
+queue_mem_pa_get(uint64_t reg_addr)
+{
+    uint32_t lo_val, hi_val;
+    uint64_t full_val;
+
+    read_reg(reg_addr, lo_val);
+    read_reg(reg_addr + 4, hi_val);
+
+    full_val = ((uint64_t)hi_val << 32) | lo_val;
+    printf("%s 0x%lx\n", __FUNCTION__, full_val);
+    return full_val;
+}
+
+
+void
+comp_queue_alloc(comp_queue_t &comp_queue,
+                 uint64_t cfg_q_base,
+                 uint64_t cfg_q_pd_idx)
+{
+    memset(&comp_queue, 0, sizeof(comp_queue));
+    comp_queue.cfg_q_base = cfg_q_base;
+    comp_queue.cfg_q_pd_idx = cfg_q_pd_idx;
+
+    // If comp was initialized by HAL, q_base_mem below would be used
+    // as descriptor cache for sequencer submission.
+    comp_queue.q_base_mem = (cp_desc_t *)alloc_page_aligned_host_mem(kQueueMemSize);
+    assert(comp_queue.q_base_mem != nullptr);
+
+    if (comp_inited_by_hal) {
+        comp_queue.q_base_mem_pa = queue_mem_pa_get(cfg_q_base);
+    } else {
+        comp_queue.q_base_mem_pa = host_mem_v2p(comp_queue.q_base_mem);
+    }
+}
+
+void
+comp_queue_push(const cp_desc_t *src_desc,
+                comp_queue_t &comp_queue,
+                comp_queue_push_t push_type,
+                uint32_t seq_comp_qid)
+{
+    cp_desc_t   *dst_desc;
+    dp_mem_t    *seq_comp_desc;
+    uint16_t    curr_pd_idx;
+
+    switch (push_type) {
+
+    case COMP_QUEUE_PUSH_SEQUENCER:
+    case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
+    case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
+        curr_pd_idx = comp_queue.curr_pd_idx;
+        comp_queue.curr_pd_idx = (comp_queue.curr_pd_idx + 1) % kNumSubqEntries;
+
+        dst_desc = &comp_queue.q_base_mem[curr_pd_idx];
+        memcpy(dst_desc, src_desc, sizeof(*dst_desc));
+
+        comp_queue.curr_seq_comp_qid = seq_comp_qid;
+        seq_comp_desc = queues::pvm_sq_consume_entry(comp_queue.curr_seq_comp_qid,
+                                                     &comp_queue.curr_seq_comp_pd_idx);
+        seq_comp_desc->clear();
+        seq_comp_desc->write_bit_fields(0, 64, host_mem_v2p(dst_desc));
+        seq_comp_desc->write_bit_fields(64, 32, (uint64_t)log2(sizeof(*dst_desc)));
+        seq_comp_desc->write_bit_fields(96, 16, (uint64_t)log2(sizeof(uint32_t)));
+        seq_comp_desc->write_bit_fields(112, 34, comp_queue.cfg_q_pd_idx);
+        seq_comp_desc->write_bit_fields(146, 34, comp_queue.q_base_mem_pa);
+
+        // Sequencer queue depth is limited and should be taken into
+        // considerations when using batch mode.
+        if (push_type == COMP_QUEUE_PUSH_SEQUENCER) {
+            seq_comp_desc->write_thru();
+            test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE,
+                               comp_queue.curr_seq_comp_qid, 0,
+                               comp_queue.curr_seq_comp_pd_idx);
+            comp_queue.curr_push_type = COMP_QUEUE_PUSH_INVALID;
+            break;
+        }
+
+        seq_comp_desc->write_bit_fields(180, 16, curr_pd_idx);
+        seq_comp_desc->write_bit_fields(196, 1, 1); /* set barco_batch_mode */
+        if (push_type == COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST) {
+            seq_comp_desc->write_bit_fields(197, 1, 1); /* set barco_batch_last */
+        }
+
+        // defer until caller calls comp_queue_post_push()
+        seq_comp_desc->write_thru();
+        comp_queue.curr_push_type = push_type;
+        break;
+
+    case COMP_QUEUE_PUSH_HW_DIRECT:
+    case COMP_QUEUE_PUSH_HW_DIRECT_BATCH:
+        write_mem(comp_queue.q_base_mem_pa + (comp_queue.curr_pd_idx * sizeof(cp_desc_t)),
+                  (uint8_t *)src_desc, sizeof(cp_desc_t));
+        comp_queue.curr_pd_idx = (comp_queue.curr_pd_idx + 1) % kNumSubqEntries;
+        if (push_type == COMP_QUEUE_PUSH_HW_DIRECT) {
+            write_reg(comp_queue.cfg_q_pd_idx, comp_queue.curr_pd_idx);
+            comp_queue.curr_push_type = COMP_QUEUE_PUSH_INVALID;
+            break;
+        }
+
+        // defer until caller calls comp_queue_post_push()
+        comp_queue.curr_push_type = push_type;
+        break;
+
+    default:
+        printf("%s unsupported push_type %d\n", __FUNCTION__, push_type);
+        assert(0);
+        break;
+    }
+}
+
+// Execute any deferred comp_queue_push() on the given comp_queue.
+void
+comp_queue_post_push(comp_queue_t &comp_queue)
+{
+    switch (comp_queue.curr_push_type) {
+
+    case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
+    case COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST:
+        test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, 
+                           comp_queue.curr_seq_comp_qid, 0,
+                           comp_queue.curr_seq_comp_pd_idx);
+        break;
+
+    case COMP_QUEUE_PUSH_HW_DIRECT_BATCH:
+        write_reg(comp_queue.cfg_q_pd_idx, comp_queue.curr_pd_idx);
+        break;
+
+    default:
+        printf("%s nothing to do for curr_push_type %d\n", __FUNCTION__,
+               comp_queue.curr_push_type);
+        break;
+    }
+
+    comp_queue.curr_push_type = COMP_QUEUE_PUSH_INVALID;
+}
+
 void
 compression_init()
 {
-  cp_queue_mem = alloc_page_aligned_host_mem(kQueueMemSize);
-  assert(cp_queue_mem != nullptr);
-  cp_queue_mem_pa = host_mem_v2p(cp_queue_mem);
-  dc_queue_mem = alloc_page_aligned_host_mem(kQueueMemSize);
-  assert(dc_queue_mem != nullptr);
-  dc_queue_mem_pa = host_mem_v2p(dc_queue_mem);
-
-  cp_hotq_mem = alloc_page_aligned_host_mem(kQueueMemSize);
-  assert(cp_hotq_mem != nullptr);
-  cp_hotq_mem_pa = host_mem_v2p(cp_hotq_mem);
-  dc_hotq_mem = alloc_page_aligned_host_mem(kQueueMemSize);
-  assert(dc_hotq_mem != nullptr);
-  dc_hotq_mem_pa = host_mem_v2p(dc_hotq_mem);
+  comp_queue_alloc(cp_queue, cp_cfg_q_base, cp_cfg_q_pd_idx);
+  comp_queue_alloc(cp_hotq, cp_cfg_hotq_base, cp_cfg_hotq_pd_idx);
+  comp_queue_alloc(dc_queue, dc_cfg_q_base, dc_cfg_q_pd_idx);
+  comp_queue_alloc(dc_hotq, dc_cfg_hotq_base, dc_cfg_hotq_pd_idx);
 
   host_mem = (uint8_t *)alloc_page_aligned_host_mem(kTotalBufSize);
   assert(host_mem != nullptr);
@@ -186,62 +345,60 @@ compression_init()
   }
 
   uint32_t lo_reg, hi_reg;
-  // Write cp queue base.
-  read_reg(cp_cfg_glob, lo_reg);
-  write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
-  write_reg(cp_cfg_q_base, cp_queue_mem_pa & 0xFFFFFFFFu);
-  write_reg(cp_cfg_q_base + 4, (cp_queue_mem_pa >> 32) & 0xFFFFFFFFu);
+  if (!comp_inited_by_hal) {
 
-  write_reg(cp_cfg_hotq_base, cp_hotq_mem_pa & 0xFFFFFFFFu);
-  write_reg(cp_cfg_hotq_base + 4, (cp_hotq_mem_pa >> 32) & 0xFFFFFFFFu);
+      // Write cp queue base.
+      read_reg(cp_cfg_glob, lo_reg);
+      write_reg(cp_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
+      write_reg(cp_cfg_q_base, cp_queue.q_base_mem_pa & 0xFFFFFFFFu);
+      write_reg(cp_cfg_q_base + 4, (cp_queue.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
 
-  // Write dc queue base.
-  read_reg(dc_cfg_glob, lo_reg);
-  write_reg(dc_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
-  write_reg(dc_cfg_q_base, dc_queue_mem_pa & 0xFFFFFFFFu);
-  write_reg(dc_cfg_q_base + 4, (dc_queue_mem_pa >> 32) & 0xFFFFFFFFu);
+      write_reg(cp_cfg_hotq_base, cp_hotq.q_base_mem_pa & 0xFFFFFFFFu);
+      write_reg(cp_cfg_hotq_base + 4, (cp_hotq.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
 
-  write_reg(dc_cfg_hotq_base, dc_hotq_mem_pa & 0xFFFFFFFFu);
-  write_reg(dc_cfg_hotq_base + 4, (dc_hotq_mem_pa >> 32) & 0xFFFFFFFFu);
+      // Write dc queue base.
+      read_reg(dc_cfg_glob, lo_reg);
+      write_reg(dc_cfg_glob, (lo_reg & 0xFFFF0000u) | kCPVersion);
+      write_reg(dc_cfg_q_base, dc_queue.q_base_mem_pa & 0xFFFFFFFFu);
+      write_reg(dc_cfg_q_base + 4, (dc_queue.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
 
-  // Enable all 16 cp engines.
-  read_reg(cp_cfg_ueng, lo_reg);
-  read_reg(cp_cfg_ueng+4, hi_reg);
-  lo_reg |= 0xFFFF;
-  hi_reg &= ~(1u << (54 - 32));
-  hi_reg &= ~(1u << (53 - 32));
-  hi_reg |= 1u << (55 - 32);
-  write_reg(cp_cfg_ueng, lo_reg);
-  write_reg(cp_cfg_ueng+4, hi_reg);
-  // Enable both DC engines.
-  read_reg(dc_cfg_ueng, lo_reg);
-  read_reg(dc_cfg_ueng+4, hi_reg);
-  lo_reg |= 0x3;
-  hi_reg &= ~(1u << (54 - 32));
-  hi_reg &= ~(1u << (53 - 32));
-  hi_reg |= 1u << (55 - 32);
-  write_reg(dc_cfg_ueng, lo_reg);
-  write_reg(dc_cfg_ueng+4, hi_reg);
+      write_reg(dc_cfg_hotq_base, dc_hotq.q_base_mem_pa & 0xFFFFFFFFu);
+      write_reg(dc_cfg_hotq_base + 4, (dc_hotq.q_base_mem_pa >> 32) & 0xFFFFFFFFu);
 
-  // Enable cold/warm queue.
-  read_reg(cp_cfg_dist, lo_reg);
-  lo_reg |= 1;
-  write_reg(cp_cfg_dist, lo_reg);
-  read_reg(dc_cfg_dist, lo_reg);
-  lo_reg |= 1;
-  write_reg(dc_cfg_dist, lo_reg);
+      // Enable all 16 cp engines.
+      read_reg(cp_cfg_ueng, lo_reg);
+      read_reg(cp_cfg_ueng+4, hi_reg);
+      lo_reg |= 0xFFFF;
+      hi_reg &= ~(1u << (54 - 32));
+      hi_reg &= ~(1u << (53 - 32));
+      hi_reg |= 1u << (55 - 32);
+      write_reg(cp_cfg_ueng, lo_reg);
+      write_reg(cp_cfg_ueng+4, hi_reg);
+      // Enable both DC engines.
+      read_reg(dc_cfg_ueng, lo_reg);
+      read_reg(dc_cfg_ueng+4, hi_reg);
+      lo_reg |= 0x3;
+      hi_reg &= ~(1u << (54 - 32));
+      hi_reg &= ~(1u << (53 - 32));
+      hi_reg |= 1u << (55 - 32);
+      write_reg(dc_cfg_ueng, lo_reg);
+      write_reg(dc_cfg_ueng+4, hi_reg);
 
-  cp_queue_index = 0;
-  dc_queue_index = 0;
-
-  cp_hotq_index = 0;
-  dc_hotq_index = 0;
+      // Enable cold/warm queue.
+      read_reg(cp_cfg_dist, lo_reg);
+      lo_reg |= 1;
+      write_reg(cp_cfg_dist, lo_reg);
+      read_reg(dc_cfg_dist, lo_reg);
+      lo_reg |= 1;
+      write_reg(dc_cfg_dist, lo_reg);
+  }
 
   printf("Compression init done\n");
 }
 
 // We only compare err and partial data from exp.
-static int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp) {
+int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp,
+                comp_queue_push_t push_type, uint32_t seq_comp_qid) {
   cp_status_sha512_t *s = (cp_status_sha512_t *)(host_mem + kStatusOffset);
   bzero(s, sizeof(*s));
   if (status_in_hbm) {
@@ -249,13 +406,7 @@ static int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_h
   }
   desc->status_addr = (status_in_hbm ? hbm_pa : host_mem_pa) + kStatusOffset;
 
-  cp_desc_t *dst_d = (cp_desc_t *)cp_queue_mem;
-  bcopy(desc, &dst_d[cp_queue_index], sizeof(*desc));
-  cp_queue_index++;
-  if (cp_queue_index == 4096)
-    cp_queue_index = 0;
-  write_reg(cp_cfg_q_pd_idx, cp_queue_index);
-
+  comp_queue_push(desc, cp_queue, push_type, seq_comp_qid);
   if (!status_poll(status_in_hbm)) {
     printf("ERROR: status never came\n");
     return -1;
@@ -319,7 +470,8 @@ static int run_cp_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_h
 }
 
 // Only err, output_data_len and partial_data is compared from exp.
-static int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp) {
+int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_hash_t &exp,
+                comp_queue_push_t push_type, uint32_t seq_comp_qid) {
   cp_status_sha512_t *s = (cp_status_sha512_t *)(host_mem + kStatusOffset);
   bzero(s, sizeof(*s));
   if (status_in_hbm) {
@@ -327,13 +479,7 @@ static int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_h
   }
   desc->status_addr = (status_in_hbm ? hbm_pa : host_mem_pa) + kStatusOffset;
 
-  cp_desc_t *dst_d = (cp_desc_t *)dc_queue_mem;
-  bcopy(desc, &dst_d[dc_queue_index], sizeof(*desc));
-  dc_queue_index++;
-  if (dc_queue_index == 4096)
-    dc_queue_index = 0;
-  write_reg(dc_cfg_q_pd_idx, dc_queue_index);
-
+  comp_queue_push(desc, dc_queue, push_type, seq_comp_qid);
   if (!status_poll(status_in_hbm)) {
     printf("ERROR: status never came\n");
     return -1;
@@ -359,8 +505,10 @@ static int run_dc_test(cp_desc_t *desc, bool status_in_hbm, const cp_status_no_h
   return 0;
 }
 
-int compress_flat_64K_buf() {
-  printf("Starting testcase %s\n", __func__);
+int _compress_flat_64K_buf(comp_queue_push_t push_type,
+                           uint32_t seq_comp_qid) {
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+         __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -374,7 +522,7 @@ int compress_flat_64K_buf() {
   InvalidateHdrInHostMem();
   cp_status_no_hash_t st = {0};
   st.partial_data = 0x1234;
-  if (run_cp_test(&d, false, st) < 0) {
+  if (run_cp_test(&d, false, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -386,8 +534,19 @@ int compress_flat_64K_buf() {
   return 0;
 }
 
-int compress_same_src_and_dst() {
-  printf("Starting testcase %s\n", __func__);
+int compress_flat_64K_buf() {
+  return _compress_flat_64K_buf(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_compress_flat_64K_buf() {
+  return _compress_flat_64K_buf(COMP_QUEUE_PUSH_SEQUENCER, 
+                                queues::get_pvm_seq_comp_sq(0));
+}
+
+int _compress_same_src_and_dst(comp_queue_push_t push_type,
+                               uint32_t seq_comp_qid) {
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+         __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -402,7 +561,7 @@ int compress_same_src_and_dst() {
   d.status_data = 0x1234;
   cp_status_no_hash_t st = {0};
   st.partial_data = 0x1234;
-  if (run_cp_test(&d, false, st) < 0) {
+  if (run_cp_test(&d, false, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -410,10 +569,21 @@ int compress_same_src_and_dst() {
   return 0;
 }
 
-int decompress_to_flat_64K_buf() {
+int compress_same_src_and_dst() {
+    return _compress_same_src_and_dst(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_compress_same_src_and_dst() {
+    return _compress_same_src_and_dst(COMP_QUEUE_PUSH_SEQUENCER, 
+                                      queues::get_pvm_seq_comp_sq(0));
+}
+
+int _decompress_to_flat_64K_buf(comp_queue_push_t push_type,
+                                uint32_t seq_comp_qid) {
   bzero(host_mem, kTotalBufSize);
   bcopy(compressed_data_buf, host_mem + kCompressedDataOffset, compressed_data_size);
-  printf("Starting testcase %s\n", __func__);
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+         __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -426,7 +596,7 @@ int decompress_to_flat_64K_buf() {
   d.status_data = 0x3456;
   cp_status_no_hash_t st = {0};
   st.partial_data = 0x3456;
-  if (run_dc_test(&d, false, st) < 0) {
+  if (run_dc_test(&d, false, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -438,6 +608,15 @@ int decompress_to_flat_64K_buf() {
   }
   printf("Testcase %s passed\n", __func__);
   return 0;
+}
+
+int decompress_to_flat_64K_buf() {
+    return _decompress_to_flat_64K_buf(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_decompress_to_flat_64K_buf() {
+    return _decompress_to_flat_64K_buf(COMP_QUEUE_PUSH_SEQUENCER, 
+                                       queues::get_pvm_seq_comp_sq(0));
 }
 
 int compress_odd_size_buf() {
@@ -492,7 +671,8 @@ int decompress_odd_size_buf() {
   return 0;
 }
 
-int compress_host_sgl_to_host_sgl() {
+int _compress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
+                                   uint32_t seq_comp_qid) {
   // Prepare source SGLs
   uint64_t data_pa = host_mem_pa + kUncompressedDataOffset;
   uint64_t sgl_pa = host_mem_pa + kSGLOffset;
@@ -525,7 +705,8 @@ int compress_host_sgl_to_host_sgl() {
   bcopy(&sgl1, host_mem + kSGLOffset + (2*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
   bcopy(&sgl2, host_mem + kSGLOffset + (3*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
 
-  printf("Starting testcase %s\n", __func__);
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+         __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -541,7 +722,7 @@ int compress_host_sgl_to_host_sgl() {
   InvalidateHdrInHostMem();
   cp_status_no_hash_t st = {0};
   st.partial_data = 0x1234;
-  if (run_cp_test(&d, false, st) < 0) {
+  if (run_cp_test(&d, false, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -549,7 +730,17 @@ int compress_host_sgl_to_host_sgl() {
   return 0;
 }
 
-int decompress_host_sgl_to_host_sgl() {
+int compress_host_sgl_to_host_sgl() {
+    return _compress_host_sgl_to_host_sgl(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_compress_host_sgl_to_host_sgl() {
+    return _compress_host_sgl_to_host_sgl(COMP_QUEUE_PUSH_SEQUENCER, 
+                                          queues::get_pvm_seq_comp_sq(0));
+}
+
+int _decompress_host_sgl_to_host_sgl(comp_queue_push_t push_type,
+                                     uint32_t seq_comp_qid) {
   // bzero some initial area.
   bzero(host_mem + kUncompressedDataOffset, 1024);
   // Prepare source SGLs
@@ -580,7 +771,8 @@ int decompress_host_sgl_to_host_sgl() {
   bcopy(&sgl1, host_mem + kSGLOffset + (2*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
   bcopy(&sgl2, host_mem + kSGLOffset + (3*sizeof(cp_sgl_t)), sizeof(cp_sgl_t));
 
-  printf("Starting testcase %s\n", __func__);
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+         __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -596,7 +788,7 @@ int decompress_host_sgl_to_host_sgl() {
   cp_status_no_hash_t st = {0};
   st.partial_data = 0x1234;
   st.output_data_len = 6000;
-  if (run_dc_test(&d, false, st) < 0) {
+  if (run_dc_test(&d, false, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -609,8 +801,19 @@ int decompress_host_sgl_to_host_sgl() {
   return 0;
 }
 
-int compress_flat_64K_buf_in_hbm() {
-  printf("Starting testcase %s\n", __func__);
+int decompress_host_sgl_to_host_sgl() {
+    return _decompress_host_sgl_to_host_sgl(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_decompress_host_sgl_to_host_sgl() {
+    return _decompress_host_sgl_to_host_sgl(COMP_QUEUE_PUSH_SEQUENCER, 
+                                            queues::get_pvm_seq_comp_sq(0));
+}
+
+int _compress_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
+                                  uint32_t seq_comp_qid) {
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+          __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -624,7 +827,7 @@ int compress_flat_64K_buf_in_hbm() {
   InvalidateHdrInHBM();
   cp_status_no_hash_t st = {0};
   st.partial_data = 0x1234;
-  if (run_cp_test(&d, true, st) < 0) {
+  if (run_cp_test(&d, true, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -632,9 +835,20 @@ int compress_flat_64K_buf_in_hbm() {
   return 0;
 }
 
-int decompress_to_flat_64K_buf_in_hbm() {
+int compress_flat_64K_buf_in_hbm() {
+    return _compress_flat_64K_buf_in_hbm(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_compress_flat_64K_buf_in_hbm() {
+    return _compress_flat_64K_buf_in_hbm(COMP_QUEUE_PUSH_SEQUENCER, 
+                                         queues::get_pvm_seq_comp_sq(0));
+}
+
+int _decompress_to_flat_64K_buf_in_hbm(comp_queue_push_t push_type,
+                                       uint32_t seq_comp_qid) {
   write_mem(hbm_pa + kUncompressedDataOffset, all_zeros, 16);
-  printf("Starting testcase %s\n", __func__);
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+          __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -647,7 +861,7 @@ int decompress_to_flat_64K_buf_in_hbm() {
   d.status_data = 0x3456;
   cp_status_no_hash_t st = {0};
   st.partial_data = 0x3456;
-  if (run_dc_test(&d, true, st) < 0) {
+  if (run_dc_test(&d, true, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -655,10 +869,21 @@ int decompress_to_flat_64K_buf_in_hbm() {
   return 0;
 }
 
+int decompress_to_flat_64K_buf_in_hbm() {
+    return _decompress_to_flat_64K_buf_in_hbm(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_decompress_to_flat_64K_buf_in_hbm() {
+    return _decompress_to_flat_64K_buf_in_hbm(COMP_QUEUE_PUSH_SEQUENCER, 
+                                              queues::get_pvm_seq_comp_sq(0));
+}
+
 // Route the compressed output through sequencer to handle output block
 // boundry issues of compression engine.
-int compress_output_through_sequencer() {
-  printf("Starting testcase %s\n", __func__);
+int _compress_output_through_sequencer(comp_queue_push_t push_type,
+                                       uint32_t seq_comp_qid) {
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+         __func__, push_type, seq_comp_qid);
   cp_desc_t d;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
@@ -702,7 +927,7 @@ int compress_output_through_sequencer() {
   seq_params.seq_ent.status_dma_en = 1;
   seq_params.seq_ent.intr_en = 1;
   seq_params.seq_index = 0;
-  if (test_setup_cp_seq_ent(&seq_params) != 0) {
+  if (test_setup_cp_seq_status_ent(&seq_params) != 0) {
     printf("cp_seq_ent failed\n");
     return -1;
   }
@@ -712,7 +937,7 @@ int compress_output_through_sequencer() {
 
   // Verify(wait for) that the status makes it to HBM.
   // We could directly poll for sequencer but this is just additional verification.
-  if (run_cp_test(&d, true, st) < 0) {
+  if (run_cp_test(&d, true, st, push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
   }
@@ -776,6 +1001,15 @@ int compress_output_through_sequencer() {
   return 0;
 }
 
+int compress_output_through_sequencer() {
+    return _compress_output_through_sequencer(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+}
+
+int seq_compress_output_through_sequencer() {
+    return _compress_output_through_sequencer(COMP_QUEUE_PUSH_SEQUENCER, 
+                                              queues::get_pvm_seq_comp_sq(0));
+}
+
 // Verify integrity of >64K buffer
 int verify_integrity_for_gt64K() {
   printf("Starting testcase %s\n", __func__);
@@ -815,10 +1049,27 @@ int verify_integrity_for_gt64K() {
   return 0;
 }
 
-int max_data_rate() {
-  printf("Starting testcase %s\n", __func__);
-  cp_desc_t d;
-  cp_desc_t *dst_d = (cp_desc_t *)cp_queue_mem;
+int _max_data_rate(comp_queue_push_t push_type,
+                   uint32_t seq_comp_qid_cp,
+                   uint32_t seq_comp_qid_dc) {
+
+  comp_queue_push_t last_push_type;
+  cp_desc_t         d;
+
+  printf("Starting testcase %s push_type %d seq_comp_qid_cp %u "
+         "seq_comp_qid_dc %u\n", __func__, push_type,
+         seq_comp_qid_cp, seq_comp_qid_dc);
+  switch (push_type) {
+
+  case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
+      last_push_type = COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST;
+      break;
+
+  default:
+      last_push_type = push_type;
+      break;
+  }
+
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
   d.cmd_bits.insert_header = 1;
@@ -836,14 +1087,12 @@ int max_data_rate() {
     d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset + (2 * 4096) + i*8;
     // Why add 0x10000? mem is init to 0 and 1st tag is also zero.
     d.opaque_tag_data = 0x10000 + i;
-    bcopy(&d, &dst_d[cp_queue_index], sizeof(d));
-    cp_queue_index++;
-    if (cp_queue_index == 4096)
-      cp_queue_index = 0;
+    comp_queue_push(&d, cp_queue, 
+                    i == (16 - 1) ? last_push_type : push_type,
+                    seq_comp_qid_cp);
   }
   // Dont ring the doorbell yet.
   // Add descriptors for decompression also.
-  dst_d = (cp_desc_t *)dc_queue_mem;
   bzero(&d, sizeof(d));
   d.cmd_bits.comp_decomp_en = 1;
   d.cmd_bits.header_present = 1;
@@ -858,15 +1107,14 @@ int max_data_rate() {
     d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset +
                         (2 * 4096) + 2048 + i*8;
     d.opaque_tag_data = 0x10000 + i;
-    bcopy(&d, &dst_d[dc_queue_index], sizeof(d));
-    dc_queue_index++;
-    if (dc_queue_index == 4096)
-      dc_queue_index = 0;
+    comp_queue_push(&d, dc_queue, 
+                    i == (2 - 1) ? last_push_type : push_type,
+                    seq_comp_qid_dc);
   }
 
   // Now ring doorbells
-  write_reg(cp_cfg_q_pd_idx, cp_queue_index);
-  write_reg(dc_cfg_q_pd_idx, dc_queue_index);
+  comp_queue_post_push(cp_queue);
+  comp_queue_post_push(dc_queue);
 
   // Wait for all the interrupts
   auto func = [] () -> int {
@@ -901,7 +1149,20 @@ int max_data_rate() {
   return -1;
 }
 
-static int cp_dualq_flat_64K_buf(uint64_t mem_pa, bool in_hbm) {
+int max_data_rate() {
+    return _max_data_rate(COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
+}
+
+int seq_max_data_rate() {
+    return _max_data_rate(COMP_QUEUE_PUSH_SEQUENCER_BATCH,
+                          queues::get_pvm_seq_comp_sq(0),
+                          queues::get_pvm_seq_comp_sq(1));
+}
+
+static int cp_dualq_flat_64K_buf(uint64_t mem_pa, bool in_hbm,
+                                 comp_queue_push_t push_type,
+                                 uint32_t seq_comp_qid_cp,
+                                 uint32_t seq_comp_qid_hotq) {
   // Setup compression descriptor for low prirority queue
   cp_desc_t lq_desc;
   bzero(&lq_desc, sizeof(lq_desc));
@@ -945,23 +1206,14 @@ static int cp_dualq_flat_64K_buf(uint64_t mem_pa, bool in_hbm) {
   bzero(s, sizeof(*s));
 
   // Add descriptor for both high and low priority queue
-  cp_desc_t *dst_desc;
-  dst_desc = (cp_desc_t *) cp_queue_mem;
-  bcopy(&lq_desc, &dst_desc[cp_queue_index], sizeof(lq_desc));
-  cp_queue_index++;
-  if (cp_queue_index == 4096)
-      cp_queue_index = 0;
+  comp_queue_push(&lq_desc, cp_queue, push_type, seq_comp_qid_cp);
 
   // Dont ring the doorbell yet
-  dst_desc = (cp_desc_t *) cp_hotq_mem;
-  bcopy(&hq_desc, &dst_desc[cp_hotq_index], sizeof(hq_desc));
-  cp_hotq_index++;
-  if (cp_hotq_index == 4096)
-      cp_hotq_index = 0;
+  comp_queue_push(&hq_desc, cp_hotq, push_type, seq_comp_qid_hotq);
 
   // Now ring door bells for both high and low queue
-  write_reg(cp_cfg_q_pd_idx, cp_queue_index);
-  write_reg(cp_cfg_hotq_pd_idx, cp_hotq_index);
+  comp_queue_post_push(cp_queue);
+  comp_queue_post_push(cp_hotq);
 
   // Check status update to both the descriptors
   auto func = [mem_pa, in_hbm] () -> int {
@@ -1006,7 +1258,25 @@ int compress_dualq_flat_64K_buf() {
 
   InvalidateHdrInHostMem();
 
-  int rc = cp_dualq_flat_64K_buf(host_mem_pa, false);
+  int rc = cp_dualq_flat_64K_buf(host_mem_pa, false,
+                                 COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
+  if (rc == 0)
+    printf("Testcase %s passed\n", __func__);
+  else
+    printf("Testcase %s failed\n", __func__);
+
+  return rc;
+}
+
+int seq_compress_dualq_flat_64K_buf() {
+  printf("Starting testcase %s\n", __func__);
+
+  InvalidateHdrInHostMem();
+
+  int rc = cp_dualq_flat_64K_buf(host_mem_pa, false,
+                                 COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
+                                 queues::get_pvm_seq_comp_sq(0),
+                                 queues::get_pvm_seq_comp_sq(1));
   if (rc == 0)
     printf("Testcase %s passed\n", __func__);
   else
@@ -1020,7 +1290,25 @@ int compress_dualq_flat_64K_buf_in_hbm() {
 
   InvalidateHdrInHBM();
 
-  int rc = cp_dualq_flat_64K_buf(hbm_pa, true);
+  int rc = cp_dualq_flat_64K_buf(hbm_pa, true,
+                                 COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
+  if (rc == 0)
+    printf("Testcase %s passed\n", __func__);
+  else
+    printf("Testcase %s failed\n", __func__);
+
+  return rc;
+}
+
+int seq_compress_dualq_flat_64K_buf_in_hbm() {
+  printf("Starting testcase %s\n", __func__);
+
+  InvalidateHdrInHBM();
+
+  int rc = cp_dualq_flat_64K_buf(hbm_pa, true,
+                                 COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST,
+                                 queues::get_pvm_seq_comp_sq(0),
+                                 queues::get_pvm_seq_comp_sq(1));
   if (rc == 0)
     printf("Testcase %s passed\n", __func__);
   else
