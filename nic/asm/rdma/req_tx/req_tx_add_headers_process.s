@@ -80,11 +80,12 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
 
         .brcase RDMA_PKT_ONLY
-            // check_credits = TRUE
-            setcf          c5, [c0]
-
             // Update num addrs to 2 if UD service (bth, deth)
             seq            c3, d.service, RDMA_SERV_TYPE_UD
+
+            // check_credits = TRUE  : Keep this instruction here to avoid hazard for c3
+            setcf          c5, [c0]
+
             phvwr.!c3      BTH_ACK_REQ, 1
 
             DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 2, c3)
