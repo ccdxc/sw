@@ -6,7 +6,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/src/qos.hpp"
 #include "nic/hal/src/acl.hpp"
-#include "nic/p4/iris/include/defines.h"       // TODO: Sudhi, please clean this up
+#include "nic/include/pkt_hdrs.hpp"
 #include <google/protobuf/util/json_util.h>
 
 namespace hal {
@@ -199,9 +199,6 @@ hal_eplearn_acl_config_init (void)
     dhcp_action.mutable_internal_actions()->set_qid_valid(true);
     dhcp_action.mutable_copp_key_handle()->set_copp_type(kh::COPP_TYPE_DHCP);
 
-    // TODO: 
-    // Sudhi, please clean this up, we can't have P4 includes
-    // all the way up here in the PI
     acl_id = ACL_EPLEARN_ENTRY_ID_BEGIN;
     priority = ACL_EPLEARN_ENTRY_PRIORITY_BEGIN;
     {
@@ -212,7 +209,7 @@ hal_eplearn_acl_config_init (void)
         spec.mutable_key_or_handle()->set_acl_id(acl_id++);
         spec.set_priority(priority++);
 
-        match->mutable_eth_selector()->set_eth_type(ETHERTYPE_ARP);
+        match->mutable_eth_selector()->set_eth_type(ETH_TYPE_ARP);
         match->mutable_eth_selector()->set_eth_type_mask(0xffff);
         match->mutable_internal_key()->set_flow_miss(true);
         match->mutable_internal_mask()->set_flow_miss(true);

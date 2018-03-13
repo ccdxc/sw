@@ -16,10 +16,10 @@
 
 namespace hal {
 
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // hash table vrf_id => entry
 //  - Get key from entry
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 void *
 vrf_id_get_key_func (void *entry)
 {
@@ -35,9 +35,9 @@ vrf_id_get_key_func (void *entry)
     return (void *)&(vrf->vrf_id);
 }
 
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // hash table vrf_id => entry - compute hash
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 uint32_t
 vrf_id_compute_hash_func (void *key, uint32_t ht_size)
 {
@@ -45,9 +45,9 @@ vrf_id_compute_hash_func (void *key, uint32_t ht_size)
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(vrf_id_t)) % ht_size;
 }
 
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // hash table vrf_id => entry - compare function
-// ----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 bool
 vrf_id_compare_key_func (void *key1, void *key2)
 {
@@ -1094,11 +1094,12 @@ vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
+
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// Update PI DBs as vrf_delete_del_cb() was a succcess
+// update PI DBs as vrf_delete_del_cb() was a succcess
 //      a. Delete from vrf id hash table
 //      b. Remove object from handle id based hash table
 //      c. Free PI vrf
@@ -1106,12 +1107,12 @@ end:
 hal_ret_t
 vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    vrf_t                    *vrf = NULL;
-    hal_handle_t                hal_handle = 0;
-    nwsec_profile_t             *sec_prof = NULL;
+    hal_ret_t          ret = HAL_RET_OK;
+    dllist_ctxt_t      *lnode = NULL;
+    dhl_entry_t        *dhl_entry = NULL;
+    vrf_t              *vrf = NULL;
+    hal_handle_t       hal_handle = 0;
+    nwsec_profile_t    *sec_prof = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1159,11 +1160,12 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_free(vrf);
 
 end:
+
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// If delete fails, nothing to do
+// if delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
 vrf_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1172,7 +1174,7 @@ vrf_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// If delete fails, nothing to do
+// if delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
 vrf_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1262,7 +1264,7 @@ end:
 
 
 //-----------------------------------------------------------------------------
-// Adds l2seg into vrf list
+// adds l2seg into vrf list
 //-----------------------------------------------------------------------------
 hal_ret_t
 vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
@@ -1283,6 +1285,7 @@ vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
     }
 
 end:
+
     HAL_TRACE_DEBUG("add vrf => l2seg, {} => {}, ret:{}",
                     vrf ? vrf->vrf_id : 0, 
                     l2seg ? l2seg->seg_id : 0, ret);
@@ -1291,7 +1294,7 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// Remove l2seg from vrf list
+// remove l2seg from vrf list
 //-----------------------------------------------------------------------------
 hal_ret_t
 vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg)
@@ -1313,7 +1316,9 @@ vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg)
 
     HAL_TRACE_DEBUG("del vrf =/=> l2seg, {} =/=> {}, ret:{}",
                     vrf->vrf_id, l2seg->seg_id, ret);
+
 end:
+
     return ret;
 }
 

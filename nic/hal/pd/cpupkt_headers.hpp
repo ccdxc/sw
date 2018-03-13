@@ -95,4 +95,4 @@ typedef struct cpu_to_p4plus_header_s {
 
 struct quiesce_trailer_t {
     uint32_t timestamp;
-}__attribute__ ((__packed__));
+} __attribute__ ((__packed__));

@@ -90,7 +90,7 @@ cc_library(
         "//nic/include:base_includes",
         # TODO: PD-Cleanup: app_redir_ctx.hpp & rdma.cc
         "//nic/p4/include:p4_common_includes",
-        "//nic/p4/iris/include:p4_iris_includes",
+        "//nic/p4/iris/include:p4_iris_includes",   # TODO: this should go away ACL & app-redir are fixed
         "//nic:spdlog",
         "//nic/utils/block_list",
         "//nic/utils/bm_allocator",
