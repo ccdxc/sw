@@ -168,6 +168,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 
 			into := app.AppList{}
 			r := app.App{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -373,6 +374,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 
 			into := app.AppUserGrpList{}
 			r := app.AppUserGrp{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -386,6 +388,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 
 			into := app.AppUserList{}
 			r := app.AppUser{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

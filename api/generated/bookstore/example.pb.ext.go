@@ -604,7 +604,6 @@ func init() {
 		return true
 	})
 
-	funcMapExample["OrderItem"] = make(map[string][]func(interface{}) bool)
 	funcMapExample["OrderItem"]["all"] = append(funcMapExample["OrderItem"]["all"], func(i interface{}) bool {
 		m := i.(*OrderItem)
 		args := make([]string, 0)

@@ -159,6 +159,7 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 
 			into := networkencryption.TrafficEncryptionPolicyList{}
 			r := networkencryption.TrafficEncryptionPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

@@ -309,6 +309,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				Spec: cmd.SmartNICSpec{
 					Phase:    cmd.SmartNICSpec_REGISTERING.String(),
 					NodeName: tc.nodeName,
+					MgmtIp:   "0.0.0.0",
 				},
 			}
 

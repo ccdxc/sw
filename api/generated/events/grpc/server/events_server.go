@@ -241,6 +241,7 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 
 			into := events.EventPolicyList{}
 			r := events.EventPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

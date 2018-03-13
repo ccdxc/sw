@@ -276,7 +276,7 @@ message SmartNICSpec {
 
     // Management IP address of the naples node
     string MgmtIp           = 2 [(gogoproto.nullable) = true,
-                                (venice.check) = "IPAddr()",
+                                (venice.check) = "HostAddr()",
                                 (gogoproto.jsontag) = "mgmt-ip,omitempty"];
 
     // Workload node or Controller node.

@@ -183,6 +183,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 
 			into := telemetry.FlowExportPolicyList{}
 			r := telemetry.FlowExportPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -293,6 +294,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 
 			into := telemetry.FwlogPolicyList{}
 			r := telemetry.FwlogPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -402,6 +404,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 
 			into := telemetry.StatsPolicyList{}
 			r := telemetry.StatsPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

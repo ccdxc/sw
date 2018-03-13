@@ -114,6 +114,9 @@ func (n *NMD) StartManagedMode() error {
 					},
 				}
 			}
+			if nicObj.Spec.MgmtIp == "" {
+				nicObj.Spec.MgmtIp = "0.0.0.0"
+			}
 
 			// Send NIC register request to CMD
 			log.Infof("++++ Registering NIC with CMD : %+v", nicObj)

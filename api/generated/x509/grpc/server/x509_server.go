@@ -157,6 +157,7 @@ func (s *sx509X509Backend) CompleteRegistration(ctx context.Context, logger log.
 
 			into := x509.CertificateList{}
 			r := x509.Certificate{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

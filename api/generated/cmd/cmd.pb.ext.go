@@ -481,7 +481,6 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["NodeCondition"] = make(map[string][]func(interface{}) bool)
 	funcMapCmd["NodeCondition"]["all"] = append(funcMapCmd["NodeCondition"]["all"], func(i interface{}) bool {
 		m := i.(*NodeCondition)
 
@@ -523,7 +522,6 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["PortCondition"] = make(map[string][]func(interface{}) bool)
 	funcMapCmd["PortCondition"]["all"] = append(funcMapCmd["PortCondition"]["all"], func(i interface{}) bool {
 		m := i.(*PortCondition)
 
@@ -543,7 +541,6 @@ func init() {
 		return true
 	})
 
-	funcMapCmd["SmartNICCondition"] = make(map[string][]func(interface{}) bool)
 	funcMapCmd["SmartNICCondition"]["all"] = append(funcMapCmd["SmartNICCondition"]["all"], func(i interface{}) bool {
 		m := i.(*SmartNICCondition)
 
@@ -557,13 +554,12 @@ func init() {
 
 	funcMapCmd["SmartNICSpec"]["all"] = append(funcMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
 		m := i.(*SmartNICSpec)
-		if !validators.IPAddr(m.MgmtIp) {
+		if !validators.HostAddr(m.MgmtIp) {
 			return false
 		}
 		return true
 	})
 
-	funcMapCmd["SmartNICSpec"] = make(map[string][]func(interface{}) bool)
 	funcMapCmd["SmartNICSpec"]["all"] = append(funcMapCmd["SmartNICSpec"]["all"], func(i interface{}) bool {
 		m := i.(*SmartNICSpec)
 

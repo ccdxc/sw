@@ -235,6 +235,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 
 			into := network.EndpointList{}
 			r := network.Endpoint{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -345,6 +346,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 
 			into := network.LbPolicyList{}
 			r := network.LbPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -454,6 +456,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 
 			into := network.NetworkList{}
 			r := network.Network{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -564,6 +567,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 
 			into := network.SecurityGroupList{}
 			r := network.SecurityGroup{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -673,6 +677,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 
 			into := network.ServiceList{}
 			r := network.Service{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -782,6 +787,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 
 			into := network.SgpolicyList{}
 			r := network.Sgpolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -893,6 +899,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 
 			into := network.TenantList{}
 			r := network.Tenant{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

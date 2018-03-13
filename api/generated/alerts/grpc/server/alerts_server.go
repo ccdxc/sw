@@ -264,6 +264,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 
 			into := alerts.AlertDestinationList{}
 			r := alerts.AlertDestination{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -373,6 +374,7 @@ func (s *salertsAlertsBackend) CompleteRegistration(ctx context.Context, logger 
 
 			into := alerts.AlertPolicyList{}
 			r := alerts.AlertPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

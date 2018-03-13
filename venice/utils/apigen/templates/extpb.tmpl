@@ -91,8 +91,8 @@ func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index
 {{if $validators.Fmap}}
 func init() {
 	funcMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
-	{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
-	funcMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool)
+	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}{{if getBool 1}}
+	funcMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool){{$_ := saveBool false 1}}{{end}}{{end}}{{end}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
 	{{range $fldv.Validators}}{{if eq 0 (len .Args)}}
 	funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
 		m := i.(*{{$msgName}})

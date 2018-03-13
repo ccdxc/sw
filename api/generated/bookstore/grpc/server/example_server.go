@@ -272,6 +272,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 
 			into := bookstore.BookList{}
 			r := bookstore.Book{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -368,6 +369,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 
 			into := bookstore.CouponList{}
 			r := bookstore.Coupon{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -476,6 +478,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 
 			into := bookstore.OrderList{}
 			r := bookstore.Order{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -655,6 +658,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 
 			into := bookstore.PublisherList{}
 			r := bookstore.Publisher{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -929,6 +933,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 
 			into := bookstore.StoreList{}
 			r := bookstore.Store{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {

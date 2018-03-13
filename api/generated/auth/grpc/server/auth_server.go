@@ -162,6 +162,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 
 			into := auth.AuthenticationPolicyList{}
 			r := auth.AuthenticationPolicy{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
@@ -279,6 +280,7 @@ func (s *sauthAuthBackend) CompleteRegistration(ctx context.Context, logger log.
 
 			into := auth.UserList{}
 			r := auth.User{}
+			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
 			err := kvs.List(ctx, key, &into)
 			if err != nil {
