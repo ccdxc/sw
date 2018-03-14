@@ -29,9 +29,8 @@ struct d_struct d;
 tls_dec_tdesc_alloc_process:
 
         CAPRI_CLEAR_TABLE1_VALID
-
-	    phvwr		p.to_s5_odesc, d.odesc
-	    phvwr		p.to_s6_odesc, d.odesc
+	    phvwrpair   p.to_s5_odesc, d.odesc[31:0], \
+	                p.to_s6_odesc, d.odesc[31:0]
         phvwri      p.to_s7_tnmdr_alloc, 1
         
 	    nop.e

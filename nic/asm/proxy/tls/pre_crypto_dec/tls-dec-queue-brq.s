@@ -57,10 +57,11 @@ dma_cmd_dec_odesc:
 	add		    r5, r0, k.to_s6_odesc
 	addi		r5, r5, PKT_DESC_AOL_OFFSET
 
-	phvwr		p.odesc_A0, k.{to_s6_opage}.dx
 
 	addi		r4, r0, (NIC_PAGE_HEADROOM - NTLS_AAD_SIZE)
-	phvwr		p.odesc_O0, r4.wx
+    add         r6, r0, k.{to_s6_opage}
+	phvwrpair   p.odesc_A0, r6.dx, \
+	            p.odesc_O0, r4.wx
 
 	/* r1 = d.cur_tls_data_len + TLS_HDR_SIZE */
     /* Includes the TLS header, explicit IV and authentication tag

@@ -30,29 +30,22 @@ tls_dec_bld_barco_req_process:
     nop
 table_read_QUEUE_BRQ:
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
-    phvwr       p.barco_desc_status_address, k.{to_s5_idesc}.dx
     addi        r2, r0, PKT_DESC_AOL_OFFSET
     add         r1, r2, k.{to_s5_idesc}
-    phvwr       p.barco_desc_input_list_address, r1.dx
-    CAPRI_OPERAND_DEBUG(r1.dx)
 
-    add         r1, r2, k.{to_s5_odesc}
-    phvwr       p.barco_desc_output_list_address, r1.dx
-    CAPRI_OPERAND_DEBUG(r1.dx)
+    add         r3, r2, k.{to_s5_odesc}
+    phvwrpair   p.barco_desc_input_list_address, r1.dx, \
+                p.barco_desc_output_list_address, r3.dx
 
     add         r1, r0, k.{to_s5_odesc}
     phvwr       p.odesc_dma_src_odesc, r1.dx
 
-    phvwr       p.barco_desc_key_desc_index, d.u.tls_bld_brq5_d.barco_key_desc_index
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_key_desc_index)
+    phvwrpair   p.barco_desc_command, d.u.tls_bld_brq5_d.barco_command, \
+                p.barco_desc_key_desc_index, d.u.tls_bld_brq5_d.barco_key_desc_index
 
-    phvwr       p.barco_desc_command, d.u.tls_bld_brq5_d.barco_command
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_command)
 
     /* address will be in r4 */
     addi        r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, LIF_TLS)
-    phvwr       p.barco_desc_doorbell_address, r4.dx
-    CAPRI_OPERAND_DEBUG(r4.dx)
 
     /*
      * data will be in r3
@@ -64,8 +57,8 @@ table_read_QUEUE_BRQ:
     tbladd.f    d.{u.tls_bld_brq5_d.sw_bsq_pi}.hx, 1
     add         r6, r0, d.{u.tls_bld_brq5_d.sw_bsq_pi}.hx
     CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6)
-    phvwr       p.barco_desc_doorbell_data, r3.dx
-    CAPRI_OPERAND_DEBUG(r3.dx)
+    phvwrpair   p.barco_desc_doorbell_address, r4.dx,   \
+                p.barco_desc_doorbell_data, r3.dx
 
     /*
      * Check if this is AES-CCM decrypt case, which has some differences in the barco
@@ -79,8 +72,10 @@ table_read_QUEUE_BRQ:
     phvwr       p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
     tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
 
+    add         r2, r0, k.{to_s5_idesc}
     addi        r1, r0, NTLS_AAD_SIZE
-    phvwr       p.barco_desc_header_size, r1.wx
+    phvwrpair   p.barco_desc_header_size, r1.wx,    \
+                p.barco_desc_status_address, r2.dx
 
     addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
 
@@ -97,8 +92,8 @@ tls_cpu_rx:
 
     addui       r5, r0, hiword(ARQTX_BASE)
     addi        r5, r5, loword(ARQTX_BASE)
-    phvwr       p.s5_s6_t1_s2s_arq_base, r5
-    phvwr       p.s5_s6_t1_s2s_debug_dol, k.to_s5_debug_dol
+    phvwrpair   p.s5_s6_t1_s2s_debug_dol, k.to_s5_debug_dol,    \
+                p.s5_s6_t1_s2s_arq_base, r5
 
 #ifdef DO_NOT_USE_CPU_SEM
     /* Use RxDMA pi (first arg = 1 for TxDMA) */
@@ -131,12 +126,15 @@ tls_cpu_rx:
 tls_dec_bld_barco_req_ccm_process:
     phvwri      p.ccm_header_with_aad_B_0_flags, TLS_AES_CCM_HDR_B0_FLAGS
         
+    add         r1, r0, NTLS_AAD_SIZE
     /* FIXME: Misnomer, this is actually the sequence number */
-    phvwr       p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
+    phvwrpair   p.ccm_header_with_aad_B_1_aad_size, r1, \
+                p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
     tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
 
-    phvwri      p.ccm_header_with_aad_B_1_aad_size, NTLS_AAD_SIZE
-    phvwri      p.ccm_header_with_aad_B_1_zero_pad, 0
+
+    // PHV is already zeroed out
+    //phvwri      p.ccm_header_with_aad_B_1_zero_pad, 0
         
     addi        r1, r0, TLS_AES_CCM_HEADER_SIZE
     phvwr       p.barco_desc_header_size, r1.wx

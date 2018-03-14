@@ -21,8 +21,11 @@ struct tx_table_s2_t0_k     k;
     .align
 
 tls_dec_pkt_descriptor_process:
-    phvwr   p.s2_s3_t0_phv_idesc_aol0_addr, d.{u.tls_read_pkt_descr_aol_d.A0}.dx
-    phvwr   p.s2_s3_t0_phv_idesc_aol0_offset, d.{u.tls_read_pkt_descr_aol_d.O0}.wx 
+    add         r5, r0, d.{u.tls_read_pkt_descr_aol_d.A0}
+    add         r6, r0, d.{u.tls_read_pkt_descr_aol_d.O0}
+    
+    phvwrpair   p.s2_s3_t0_phv_idesc_aol0_addr, r5.dx,   \
+                p.s2_s3_t0_phv_idesc_aol0_offset, r6.wx
     phvwr   p.s2_s3_t0_phv_idesc_aol0_len, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
 
     /*
@@ -33,17 +36,15 @@ tls_dec_pkt_descriptor_process:
     bbeq        k.tls_global_phv_do_pre_ccm_dec, 1, tls_dec_pkt_descriptor_ccm_process
     nop
 
-    phvwr   p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0
-    add     r2, r0, d.{u.tls_read_pkt_descr_aol_d.A0}.dx
-    add     r1, r0, d.{u.tls_read_pkt_descr_aol_d.O0}.wx
-    phvwr   p.idesc_O0, r1.wx
+    phvwrpair   p.idesc_A0, r5,    \
+                p.idesc_O0, r6
     
     add     r3, r0, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
     subi    r3, r3, TLS_AES_GCM_AUTH_TAG_SIZE
     phvwr   p.idesc_L0, r3.wx
 
     /* Setup DMA command to write the AAD */
-    add     r3, r2, r1
+    add     r3, r5.dx, r6.wx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, s4_s6_t0_phv_aad_seq_num,
                                 s4_s6_t0_phv_aad_length)
@@ -69,9 +70,9 @@ tls_dec_pkt_descriptor_ccm_process:
      * The pre-decrypt packet has AAD + data-payload in the ipage, we need to setup
      * the CCM-header(which includes AAD) + data-payload for decrypt request with barco.
      */
-    phvwr   p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0
     sub     r1, d.{u.tls_read_pkt_descr_aol_d.O0}.wx, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
-    phvwr   p.idesc_O0, r1.wx
+    phvwrpair   p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0,    \
+                p.idesc_O0, r1.wx
     
     add     r3, d.{u.tls_read_pkt_descr_aol_d.L0}.wx, (TLS_AES_CCM_HEADER_SIZE - NTLS_AAD_SIZE)
     subi    r3, r3, TLS_AES_CCM_AUTH_TAG_SIZE

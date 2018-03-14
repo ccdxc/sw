@@ -32,7 +32,6 @@ tls_dec_pre_crypto_process:
     seq         c1, d.u.read_tls_stg0_d.barco_command[7:0], 0x05
     phvwri.c1   p.tls_global_phv_do_pre_ccm_dec, 1
 
-    phvwr       p.tls_global_phv_fid, k.p4_txdma_intr_qid
     add         r3, r0, d.{u.read_tls_stg0_d.ci_0}.hx
     sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
 
@@ -44,7 +43,9 @@ tls_dec_pre_crypto_process:
     //add         r3, r0, r0
     add         r3, r3, d.u.read_tls_stg0_d.serq_base
 
-    phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    phvwrpair   p.tls_global_phv_fid, k.p4_txdma_intr_qid[15:0],  \
+                p.tls_global_phv_qstate_addr,               \
+                    k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0]
 
 table_read_DESC:
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_serq_entry_process, r3, TABLE_SIZE_64_BITS)

@@ -24,7 +24,6 @@ tls_dec_post_read_odesc:
     sne         c1, k.tls_global_phv_l7_proxy_en, r0
     sne         c2, k.tls_global_phv_l7_proxy_type_span, r0
     
-    phvwr       p.odesc_A0, d.u.tls_read_odesc_d.A0
     phvwr.c1    p.l7_desc_A0, d.u.tls_read_odesc_d.A0
 
     /*
@@ -35,7 +34,8 @@ tls_dec_post_read_odesc:
     addi.!c3    r2, r0, NTLS_AAD_SIZE
     addi.c3     r2, r0, TLS_AES_CCM_HEADER_SIZE
     add         r1, d.{u.tls_read_odesc_d.O0}.wx, r2
-    phvwr       p.odesc_O0, r1.wx
+    phvwrpair   p.odesc_A0, d.u.tls_read_odesc_d.A0,    \
+                p.odesc_O0, r1.wx
     phvwr.c1    p.l7_desc_O0, r1.wx
     
     sub         r1, d.{u.tls_read_odesc_d.L0}.wx, r2

@@ -74,8 +74,8 @@ no_dma_cmd:
         add             r3, r0, k.s2_s3_t0_phv_idesc_aol0_offset
         add             r3, r3, k.tls_global_phv_next_tls_hdr_offset
         add             r2, r2, r3
-        phvwr           p.s3_s4_t0_phv_idesc_aol0_addr, k.s2_s3_t0_phv_idesc_aol0_addr
-        phvwr           p.s3_s4_t0_phv_idesc_aol0_offset, k.s2_s3_t0_phv_idesc_aol0_offset
+        phvwrpair       p.s3_s4_t0_phv_idesc_aol0_addr, k.s2_s3_t0_phv_idesc_aol0_addr, \
+                        p.s3_s4_t0_phv_idesc_aol0_offset, k.s2_s3_t0_phv_idesc_aol0_offset
         phvwr           p.s3_s4_t0_phv_idesc_aol0_len, k.s2_s3_t0_phv_idesc_aol0_len      
 
 table_read_tls_header:  
