@@ -77,7 +77,7 @@ enum SeverityLevel {
 // Event client and persisted in EventDB.
 message Event {
     option (venice.objectPrefix) = {Collection: "events", Path: "/{O.Tenant}"};
-    
+
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = ", inline"];
@@ -131,8 +131,8 @@ message EventSource {
     // Component from which the event is generated.
     string Component    = 1 [(gogoproto.jsontag) = "component,omitempty"];
 
-    // Host of the venice or workload node which is generating the event.
-    string Host         = 2 [(gogoproto.jsontag) = "host,omitempty"];
+    // Name of the venice or workload node which is generating the event.
+    string NodeName     = 2 [(gogoproto.jsontag) = "node-name,omitempty"];
 }
 
 // Event object REST API definition

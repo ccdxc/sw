@@ -139,7 +139,7 @@
           },
           {
             "name": "Spec.MaxRetentionTime",
-            "description": "Host of the venice or workload node which is generating the event.",
+            "description": "Name of the venice or workload node which is generating the event.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -383,7 +383,7 @@
         },
         "MaxRetentionTime": {
           "type": "string",
-          "description": "Host of the venice or workload node which is generating the event."
+          "description": "Name of the venice or workload node which is generating the event."
         }
       },
       "title": "EventSource has info about the component and\nhost/node that generated the event"

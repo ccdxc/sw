@@ -66,7 +66,7 @@ func TestEventsRPCServer(t *testing.T) {
 				Severity:  "INFO",
 				Type:      "DUMMYEVENT",
 				ObjectRef: &api.ObjectRef{Kind: "dummy", Namespace: "default", Name: "d1"},
-				Source:    &events.EventSource{Component: "xxx", Host: "yyy"},
+				Source:    &events.EventSource{Component: "xxx", NodeName: "yyy"},
 			},
 		},
 	}
@@ -87,7 +87,7 @@ func TestEventsRPCServer(t *testing.T) {
 				Severity:  "INFO",
 				Type:      "DUMMYEVENT",
 				ObjectRef: &api.ObjectRef{Kind: "dummy", Namespace: "default", Name: "d2"},
-				Source:    &events.EventSource{Component: "xxx", Host: "yyy"},
+				Source:    &events.EventSource{Component: "xxx", NodeName: "yyy"},
 			},
 		},
 		events.Event{
@@ -97,7 +97,7 @@ func TestEventsRPCServer(t *testing.T) {
 				Severity:  "CIRITICAL",
 				Type:      "DUMMYEVENT",
 				ObjectRef: &api.ObjectRef{Kind: "dummy", Namespace: "default", Name: "d3"},
-				Source:    &events.EventSource{Component: "xxx", Host: "yyy"},
+				Source:    &events.EventSource{Component: "xxx", NodeName: "yyy"},
 			},
 		},
 	}
