@@ -98,17 +98,8 @@ struct ionic_qp {
 
 	/* XXX cleanup */
 	struct ionic_qpcap	cap;
-
-	uint32_t		tbl_indx;
-	uint32_t		sq_psn;
-	uint32_t		ionicding_db;
-	uint64_t		wqe_cnt;
-	uint16_t		mtu;
-	uint16_t		qpst;
-	uint8_t			qptype;
 	uint8_t			sq_qtype;
 	uint8_t			rq_qtype;
-	/* irdord? */
 };
 
 struct ionic_mr {

@@ -287,7 +287,7 @@ struct sqwqe_ud_send_t {
 }__attribute__ ((__packed__));
 
 // write
-struct sqwqe_write_t {
+struct sqwqe_rdma_t {
     __u32 imm_data;
     __u64 va;
     __u32 length;
@@ -304,22 +304,13 @@ struct sqwqe_atomic_t {
     struct sge_t sge;
 }__attribute__ ((__packed__));
 
-// Read
-struct sqwqe_read_t {
-    __u32 rsvd;
-    __u64 va;
-    __u32 length;
-    __u32 r_key;
-}__attribute__ ((__packed__));
-
 struct sqwqe_non_atomic_t {
     union {
         struct sqwqe_rc_send_t send;
         struct sqwqe_ud_send_t ud_send;
-        struct sqwqe_write_t write;
-        struct sqwqe_read_t read;
+        struct sqwqe_rdma_t rdma;
     }wqe;
-    __u64 inline_data[4]; // It can accomodate 2 SGEs
+    struct sge_t sg_arr[2];
 }__attribute__ ((__packed__));
 
 /*

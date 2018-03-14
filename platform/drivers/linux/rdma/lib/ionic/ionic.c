@@ -206,6 +206,7 @@ static int ionic_destroy_cq(struct ibv_cq *ibcq)
 	return 0;
 }
 
+/* XXX move these helpers to some interface header file */
 static bool ionic_cqe_color(struct cqwqe_be_t *cqe)
 {
 	return (cqe->color_flags >> COLOR_SHIFT) != 0;
@@ -651,10 +652,8 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
 	ionic_queue_dbell_init(&qp->sq, qp->qpid);
 	ionic_queue_dbell_init(&qp->rq, qp->qpid);
 
-	qp->qptype = attr->qp_type;
 	qp->sq_qtype = resp.sq_qtype;
 	qp->rq_qtype = resp.rq_qtype;
-	qp->qpst = IBV_QPS_RESET;
 
 	/* Save/return the altered Caps. */
 	cap->max_ssge = attr->cap.max_send_sge;
@@ -704,9 +703,8 @@ static int ionic_modify_qp(struct ibv_qp *ibqp,
 	rc = ibv_cmd_modify_qp(ibqp, attr, attr_mask, &cmd, sizeof(cmd));
 	if (!rc) {
 		if (attr_mask & IBV_QP_STATE) {
-			qp->qpst = attr->qp_state;
 			/* transition to reset */
-			if (qp->qpst == IBV_QPS_RESET) {
+			if (attr->qp_state == IBV_QPS_RESET) {
 				qp->sq.prod = 0;
 				qp->sq.cons = 0;
 				qp->rq.prod = 0;
@@ -724,14 +722,11 @@ static int ionic_query_qp(struct ibv_qp *ibqp,
 			  struct ibv_qp_init_attr *init_attr)
 {
 	struct ibv_query_qp cmd;
-	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	int rc;
 
 	IONIC_LOG("");
 	rc = ibv_cmd_query_qp(ibqp, attr, attr_mask, init_attr,
 			      &cmd, sizeof(cmd));
-	if (!rc)
-		qp->qpst = ibqp->state;
 
 	init_attr->cap.max_inline_data = IONIC_MAX_INLINE_SIZE;
 
@@ -772,388 +767,457 @@ static int ionic_destroy_qp(struct ibv_qp *ibqp)
 	return 0;
 }
 
-#if 0
-static inline uint8_t ionic_set_hdr_flags(struct ionic_bsqe *hdr,
-					  uint32_t send_flags, uint8_t sqsig)
+static int64_t ionic_prep_inline(void *data, size_t max_data,
+				 struct ibv_sge *ibv_sgl, uint32_t num_sge)
 {
-	uint8_t is_inline = false;
-	uint32_t hdrval = 0;
+	static const int64_t bit_31 = 1u << 31;
+	int64_t len = 0, sg_len;
+	int sg_i;
 
-	if (send_flags & IBV_SEND_SIGNALED || sqsig)
-		hdrval |= ((IONIC_WR_FLAGS_SIGNALED & IONIC_HDR_FLAGS_MASK)
-			   << IONIC_HDR_FLAGS_SHIFT);
-	if (send_flags & IBV_SEND_FENCE)
-		/*TODO: See when RD fence can be used. */
-		hdrval |= ((IONIC_WR_FLAGS_UC_FENCE & IONIC_HDR_FLAGS_MASK)
-			   << IONIC_HDR_FLAGS_SHIFT);
-	if (send_flags & IBV_SEND_SOLICITED)
-		hdrval |= ((IONIC_WR_FLAGS_SE & IONIC_HDR_FLAGS_MASK)
-			   << IONIC_HDR_FLAGS_SHIFT);
+	for (sg_i = 0; sg_i < num_sge; ++sg_i) {
+		sg_len = ibv_sgl[sg_i].length;
 
-	if (send_flags & IBV_SEND_INLINE) {
-		hdrval |= ((IONIC_WR_FLAGS_INLINE & IONIC_HDR_FLAGS_MASK)
-			   << IONIC_HDR_FLAGS_SHIFT);
-		is_inline = true;
-	}
-	hdr->rsv_ws_fl_wt = htole32(hdrval);
+		/* sge length zero means 2GB */
+		if (unlikely(sg_len == 0))
+			sg_len = bit_31;
 
-	return is_inline;
-}
-#endif
+		/* greater than max inline data is invalid */
+		if (unlikely(len + sg_len > max_data))
+			return -EINVAL;
 
-static int ionic_build_sge(struct sge_t *sge, struct ibv_sge *sg_list,
-			   uint32_t num_sge, uint8_t is_inline) {
-	int indx, length = 0;
-	void *dst;
+		memcpy(data + len, (void *)ibv_sgl[sg_i].addr, sg_len);
 
-	IONIC_LOG("");
-	if (!num_sge) {
-		memset(sge, 0, sizeof(*sge));
-		return 0;
+		len += sg_len;
 	}
 
-	if (is_inline) {
-		dst = sge;
-		for (indx = 0; indx < num_sge; indx++) {
-			length += sg_list[indx].length;
-			if (length > IONIC_MAX_INLINE_SIZE)
-				return -ENOMEM;
-			memcpy(dst, (void *)(uintptr_t)sg_list[indx].addr,
-			       sg_list[indx].length);
-			dst = dst + sg_list[indx].length;
-		}
-	} else {
-		for (indx = 0; indx < num_sge; indx++) {
-			sge[indx].va = htobe64(sg_list[indx].addr);
-			sge[indx].lkey = htobe32(sg_list[indx].lkey);
-			sge[indx].len = htobe32(sg_list[indx].length);
-			length += sg_list[indx].length;
-		}
-	}
-
-	return length;
-}
-
-#if TODO
-static void ionic_fill_psns(struct ionic_qp *qp, struct ionic_psns *psns,
-			    uint8_t opcode, uint32_t len)
-{
-	uint32_t pkt_cnt = 0, nxt_psn;
-
-	memset(psns, 0, sizeof(*psns));
-	if (qp->qptype == IBV_QPT_RC) {
-		psns->opc_spsn = htole32(qp->sq_psn & IONIC_PSNS_SPSN_MASK);
-		pkt_cnt = (len / qp->mtu);
-		if (len % qp->mtu)
-			pkt_cnt++;
-		nxt_psn = ((qp->sq_psn + pkt_cnt) & IONIC_PSNS_NPSN_MASK);
-		psns->flg_npsn = htole32(nxt_psn);
-		qp->sq_psn = nxt_psn;
-	}
-	opcode = ionic_ibv_wr_to_wc_opcd(opcode);
-	psns->opc_spsn |= htole32(((opcode & IONIC_PSNS_OPCD_MASK) <<
-				   IONIC_PSNS_OPCD_SHIFT));
-}
-#endif
-
-#if TODO
-static void ionic_fill_wrid(struct ionic_wrid *wrid, struct ibv_send_wr *wr,
-			    uint32_t len, uint8_t sqsig)
-{
-	wrid->wrid = wr->wr_id;
-	wrid->bytes = len;
-	wrid->sig = 0;
-	if (wr->send_flags & IBV_SEND_SIGNALED || sqsig)
-		wrid->sig = IBV_SEND_SIGNALED;
-}
-#endif
-
-static int ionic_build_send_sqe(struct ionic_qp *qp,
-				struct sqwqe_t *wqe,
-				struct ibv_send_wr *wr,
-				uint8_t is_inline)
-{
-	struct sge_t *sge = (struct sge_t *)&wqe->u.non_atomic.inline_data;
-	int len;
-	uint8_t opcode;
-
-	IONIC_LOG("");
-	len = ionic_build_sge(sge, wr->sg_list, wr->num_sge, is_inline);
-	if (len < 0) {
-		IONIC_LOG("build sge failed");
-		return len;
-	}
-
-	/* Fill Header */
-	opcode = ibv_to_ionic_wr_opcd(wr->opcode);
-	if (opcode == IONIC_WR_OPCD_INVAL) {
-		IONIC_LOG("invalid opcode %d", wr->opcode);
-		return -EINVAL;
-	}
-
-	wqe->base.op_type = opcode & IONIC_WR_OPCODE_MASK;
-
-	if (is_inline) {
-		// TODO
-		wqe->u.non_atomic.wqe.send.length = len;
-	} else {
-		wqe->base.num_sges = wr->num_sge;
-		wqe->u.non_atomic.wqe.send.length = htobe32(len);
-	}
-
-	ionic_set_ibv_send_flags(wr->send_flags, wqe);
-
-	wqe->base.wrid = wr->wr_id;
 	return len;
 }
 
-static int ionic_build_ud_sqe(struct ionic_qp *qp,
-			      struct sqwqe_t *wqe,
-			      struct ibv_send_wr *wr,
-			      uint8_t is_inline)
+static int64_t ionic_prep_sgl(struct sge_t *sgl, uint32_t max_sge,
+			      struct ibv_sge *ibv_sgl, uint32_t num_sge)
+{
+	static const int64_t bit_31 = 1l << 31;
+	int64_t len = 0, sg_len;
+	int sg_i;
+
+	if (unlikely(num_sge > max_sge))
+		return -EINVAL;
+
+	for (sg_i = 0; sg_i < num_sge; ++sg_i) {
+		sg_len = ibv_sgl[sg_i].length;
+
+		/* sge length zero means 2GB */
+		if (unlikely(sg_len == 0))
+			sg_len = bit_31;
+
+		/* greater than 2GB data is invalid */
+		if (unlikely(len + sg_len > bit_31))
+			return -EINVAL;
+
+		sgl[sg_i].va = htobe64(ibv_sgl[sg_i].addr);
+		sgl[sg_i].lkey = htobe32(ibv_sgl[sg_i].lkey);
+		sgl[sg_i].len = htobe32(sg_len);
+
+		len += sg_len;
+	}
+
+	return len;
+}
+
+static void ionic_prep_base(struct ionic_qp *qp,
+			    struct ibv_send_wr *wr,
+			    struct ionic_sq_meta *meta,
+			    struct sqwqe_t *wqe)
+{
+	meta->wrid = wr->wr_id;
+
+	/* XXX wqe wrid can be removed */
+	wqe->base.wrid = 0;
+
+	if (wr->send_flags & IBV_SEND_FENCE)
+		wqe->base.fence = 1;
+
+	if (wr->send_flags & IBV_SEND_SOLICITED)
+		wqe->base.solicited_event = 1;
+
+	if (wr->send_flags & IBV_SEND_SIGNALED) {
+		/* TODO meta->signaled if completion should produce wc */
+		wqe->base.complete_notify = 1;
+	}
+}
+
+static int ionic_prep_common(struct ionic_qp *qp,
+			     struct ibv_send_wr *wr,
+			     struct ionic_sq_meta *meta,
+			     struct sqwqe_t *wqe,
+			     /* XXX length field offset differs per opcode */
+			     __u32 *wqe_length_field)
+{
+	int64_t signed_len;
+
+	ionic_prep_base(qp, wr, meta, wqe);
+
+	if (wr->send_flags & IBV_SEND_INLINE) {
+		wqe->base.num_sges = 0;
+		wqe->base.inline_data_vld = 1;
+		signed_len = ionic_prep_inline(wqe->u.non_atomic.sg_arr,
+					       qp->cap.max_inline,
+					       wr->sg_list, wr->num_sge);
+	} else {
+		wqe->base.num_sges = wr->num_sge;
+		signed_len = ionic_prep_sgl(wqe->u.non_atomic.sg_arr,
+					    qp->cap.max_ssge,
+					    wr->sg_list, wr->num_sge);
+	}
+
+	if (unlikely(signed_len < 0))
+		return (int)-signed_len;
+
+	meta->len = (uint32_t)signed_len;
+	*wqe_length_field = htobe32((uint32_t)signed_len);
+
+	return 0;
+}
+
+static int ionic_prep_send(struct ionic_qp *qp,
+			   struct ibv_send_wr *wr)
+{
+	struct ionic_sq_meta *meta;
+	struct sqwqe_t *wqe;
+
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	memset(wqe, 0, qp->sq.stride);
+
+	switch (wr->opcode) {
+	case IBV_WR_SEND:
+		meta->op = IONIC_WR_OPCD_SEND;
+		wqe->base.op_type = IONIC_WR_OPCD_SEND;
+		break;
+	case IBV_WR_SEND_WITH_IMM:
+		meta->op = IONIC_WR_OPCD_SEND_IMM;
+		wqe->base.op_type = IONIC_WR_OPCD_SEND_IMM;
+		wqe->u.non_atomic.wqe.send.imm_data = wr->imm_data;
+		break;
+	case IBV_WR_SEND_WITH_INV:
+		meta->op = IONIC_WR_OPCD_SEND_INVAL;
+		wqe->base.op_type = IONIC_WR_OPCD_SEND_INVAL;
+		wqe->u.non_atomic.wqe.send.imm_data =
+			htobe32(wr->invalidate_rkey);
+
+		/* XXX just use imm_data field */
+		wqe->u.non_atomic.wqe.send.inv_key =
+			htobe32(wr->invalidate_rkey);
+		break;
+	default:
+		return EINVAL;
+	}
+
+	return ionic_prep_common(qp, wr, meta, wqe,
+				 &wqe->u.non_atomic.wqe.send.length);
+}
+
+/* XXX duplicated code.
+ *
+ * This can be cleaned up by making sqwqe_rc_send_t and sqwqe_ud_send_t the
+ * same descriptor format, deleting this function, and using ionic_prep_send()
+ * for both rc and ud.
+ */
+static int ionic_prep_send_duplicated_code_ud(struct ionic_qp *qp,
+					      struct ibv_send_wr *wr)
+{
+	struct ionic_sq_meta *meta;
+	struct sqwqe_t *wqe;
+
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	memset(wqe, 0, qp->sq.stride);
+
+	switch (wr->opcode) {
+	case IBV_WR_SEND:
+		meta->op = IONIC_WR_OPCD_SEND;
+		wqe->base.op_type = IONIC_WR_OPCD_SEND;
+		break;
+	case IBV_WR_SEND_WITH_IMM:
+		meta->op = IONIC_WR_OPCD_SEND_IMM;
+		wqe->base.op_type = IONIC_WR_OPCD_SEND_IMM;
+		wqe->u.non_atomic.wqe.ud_send.imm_data = wr->imm_data;
+		break;
+	default:
+		return EINVAL;
+	}
+
+	return ionic_prep_common(qp, wr, meta, wqe,
+				 &wqe->u.non_atomic.wqe.ud_send.length);
+}
+
+static int ionic_prep_send_ah(struct ionic_qp *qp,
+			      struct ibv_send_wr *wr)
 {
 	struct ionic_ah *ah;
-	int len;
-	struct sge_t *sge = (struct sge_t *)&wqe->u.non_atomic.inline_data;
-	uint8_t opcode;
+	struct sqwqe_t *wqe;
 
-	IONIC_LOG("");
-	len = ionic_build_sge(sge, wr->sg_list, wr->num_sge, is_inline);
-	if (len < 0)
-		return len;
-
-	/* Fill Header */
-	opcode = ibv_to_ionic_wr_opcd(wr->opcode);
-	if (opcode == IONIC_WR_OPCD_INVAL)
-		return -EINVAL;
-
-	wqe->base.op_type = opcode & IONIC_WR_OPCODE_MASK;
-
-	if (is_inline) {
-		// TODO
-		wqe->u.non_atomic.wqe.ud_send.length = len;
-	} else {
-		wqe->base.num_sges = wr->num_sge;
-		wqe->u.non_atomic.wqe.ud_send.length = len;
-	}
-
-	ionic_set_ibv_send_flags(wr->send_flags, wqe);
-
-	wqe->base.wrid = wr->wr_id;
-
-	wqe->u.non_atomic.wqe.ud_send.q_key = wr->wr.ud.remote_qkey;
-	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->wr.ud.remote_qpn;
-
-	if (!wr->wr.ud.ah) {
-		return (-EINVAL);
-	}
+	if (unlikely(!wr->wr.ud.ah))
+		return EINVAL;
 
 	ah = to_ionic_ah(wr->wr.ud.ah);
+
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	/* XXX endian? */
+	wqe->u.non_atomic.wqe.ud_send.q_key = wr->wr.ud.remote_qkey;
+	wqe->u.non_atomic.wqe.ud_send.dst_qp = wr->wr.ud.remote_qpn;
 	wqe->u.non_atomic.wqe.ud_send.ah_handle = ah->avid;
 
-	return len;
+	return 0;
 }
 
-static int ionic_build_rdma_write_sqe(struct ionic_qp *qp,
-				      struct sqwqe_t *wqe,
-				      struct ibv_send_wr *wr,
-				      uint8_t is_inline)
+static int ionic_prep_rdma(struct ionic_qp *qp,
+			   struct ibv_send_wr *wr)
 {
-	struct sge_t *sge = (struct sge_t *)&wqe->u.non_atomic.inline_data;
-	int len;
-	uint8_t opcode;
+	struct ionic_sq_meta *meta;
+	struct sqwqe_t *wqe;
 
-	IONIC_LOG("");
-	len = ionic_build_sge(sge, wr->sg_list, wr->num_sge, is_inline);
-	if (len < 0)
-		return len;
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
 
-	/* Fill Header */
-	opcode = ibv_to_ionic_wr_opcd(wr->opcode);
-	if (opcode == IONIC_WR_OPCD_INVAL)
-		return -EINVAL;
+	memset(wqe, 0, qp->sq.stride);
 
-	wqe->base.op_type = opcode & IONIC_WR_OPCODE_MASK;
-
-	if (is_inline) {
-		// TODO
-		wqe->u.non_atomic.wqe.write.length = len;
-	} else {
-		wqe->base.num_sges = wr->num_sge;
-		wqe->u.non_atomic.wqe.write.length = len;
+	switch (wr->opcode) {
+	case IBV_WR_RDMA_READ:
+		if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
+			return EINVAL;
+		meta->op = IONIC_WR_OPCD_RDMA_READ;
+		wqe->base.op_type = IONIC_WR_OPCD_RDMA_READ;
+		break;
+	case IBV_WR_RDMA_WRITE:
+		if (wr->send_flags & IBV_SEND_SOLICITED)
+			return EINVAL;
+		meta->op = IONIC_WR_OPCD_RDMA_WRITE;
+		wqe->base.op_type = IONIC_WR_OPCD_RDMA_WRITE;
+		break;
+	case IBV_WR_RDMA_WRITE_WITH_IMM:
+		meta->op = IONIC_WR_OPCD_RDMA_WRITE_IMM;
+		wqe->base.op_type = IONIC_WR_OPCD_RDMA_WRITE_IMM;
+		wqe->u.non_atomic.wqe.ud_send.imm_data = wr->imm_data;
+		break;
+	default:
+		return EINVAL;
 	}
 
-	ionic_set_ibv_send_flags(wr->send_flags, wqe);
+	/* XXX endian? */
+	wqe->u.non_atomic.wqe.rdma.va = wr->wr.rdma.remote_addr;
+	wqe->u.non_atomic.wqe.rdma.r_key = wr->wr.rdma.rkey;
 
-	wqe->base.wrid = wr->wr_id;
-
-	wqe->u.non_atomic.wqe.write.va = wr->wr.rdma.remote_addr;
-	wqe->u.non_atomic.wqe.write.r_key = wr->wr.rdma.rkey;
-
-	return len;
+	return ionic_prep_common(qp, wr, meta, wqe,
+				 &wqe->u.non_atomic.wqe.ud_send.length);
 }
 
-static int ionic_build_rdma_read_sqe(struct ionic_qp *qp,
-				     struct sqwqe_t *wqe,
-				     struct ibv_send_wr *wr,
-				     uint8_t is_inline)
+static int ionic_prep_atomic(struct ionic_qp *qp,
+			     struct ibv_send_wr *wr)
 {
-	struct sge_t *sge = (struct sge_t *)&wqe->u.non_atomic.inline_data;
-	int len;
-	uint8_t opcode;
+	struct ionic_sq_meta *meta;
+	struct sqwqe_t *wqe;
 
-	IONIC_LOG("");
-	len = ionic_build_sge(sge, wr->sg_list, wr->num_sge, is_inline);
-	if (len < 0)
-		return len;
+	if (wr->num_sge != 1 || wr->sg_list[0].length != 8)
+		return EINVAL;
 
-	/* Fill Header */
-	opcode = ibv_to_ionic_wr_opcd(wr->opcode);
-	if (opcode == IONIC_WR_OPCD_INVAL) {
-		IONIC_LOG("invlid opcode %d", wr->opcode);
-		return -EINVAL;
+	if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
+		return EINVAL;
+
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	memset(wqe, 0, qp->sq.stride);
+
+	switch (wr->opcode) {
+	case IBV_WR_ATOMIC_CMP_AND_SWP:
+		meta->op = IONIC_WR_OPCD_ATOMIC_CS;
+		wqe->base.op_type = IONIC_WR_OPCD_ATOMIC_CS;
+		wqe->u.atomic.swap_or_add_data =
+			htobe64(wr->wr.atomic.swap);
+		wqe->u.atomic.cmp_data =
+			htobe64(wr->wr.atomic.compare_add);
+		break;
+	case IBV_WR_ATOMIC_FETCH_AND_ADD:
+		meta->op = IONIC_WR_OPCD_ATOMIC_FA;
+		wqe->base.op_type = IONIC_WR_OPCD_ATOMIC_FA;
+		wqe->u.atomic.swap_or_add_data =
+			htobe64(wr->wr.atomic.compare_add);
+		break;
+	default:
+		return EINVAL;
 	}
 
-	wqe->base.op_type = opcode & IONIC_WR_OPCODE_MASK;
+	/* XXX endian? */
+	wqe->u.atomic.r_key = wr->wr.atomic.rkey;
+	wqe->u.atomic.va = wr->wr.atomic.remote_addr;
 
-	if (is_inline) {
-		// TODO
-		wqe->u.non_atomic.wqe.read.length = len;
-	} else {
-		wqe->base.num_sges = wr->num_sge;
-		wqe->u.non_atomic.wqe.read.length = len;
-	}
+	wqe->base.num_sges = 1;
+	wqe->u.atomic.sge.va = htobe64(wr->sg_list[0].addr);
+	wqe->u.atomic.sge.lkey = htobe32(wr->sg_list[0].lkey);
+	wqe->u.atomic.sge.len = htobe32(8);
 
-	ionic_set_ibv_send_flags(wr->send_flags, wqe);
+	ionic_prep_base(qp, wr, meta, wqe);
 
-	wqe->base.wrid = wr->wr_id;
-
-	wqe->u.non_atomic.wqe.read.va = wr->wr.rdma.remote_addr;
-	wqe->u.non_atomic.wqe.read.r_key = wr->wr.rdma.rkey;
-
-	return len;
+	return 0;
 }
 
-/*
- * TODO:
- * Assumption is driver always run on host with Little Endian format (BE endian
- * driver support needs to come later) and HCA is Big Endian format. For now
- * driver is doing all the endian conversions as needed. Later we need to
- * optimize this to see capri can take WR entry data in little endian format
- * without compromising performance.
- */
+static int ionic_prep_one_rc(struct ionic_qp *qp,
+			     struct ibv_send_wr *wr)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(qp->ibqp.context);
+	int rc = 0;
+
+	switch (wr->opcode) {
+	case IBV_WR_SEND:
+	case IBV_WR_SEND_WITH_IMM:
+	case IBV_WR_SEND_WITH_INV:
+		rc = ionic_prep_send(qp, wr);
+		break;
+	case IBV_WR_RDMA_READ:
+	case IBV_WR_RDMA_WRITE:
+	case IBV_WR_RDMA_WRITE_WITH_IMM:
+		rc = ionic_prep_rdma(qp, wr);
+		break;
+	case IBV_WR_ATOMIC_CMP_AND_SWP:
+	case IBV_WR_ATOMIC_FETCH_AND_ADD:
+		rc = ionic_prep_atomic(qp, wr);
+		break;
+	default:
+		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
+		rc = EINVAL;
+	}
+
+	return rc;
+}
+
+static int ionic_prep_one_ud(struct ionic_qp *qp,
+			     struct ibv_send_wr *wr)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(qp->ibqp.context);
+	int rc = 0;
+
+	switch (wr->opcode) {
+	case IBV_WR_SEND:
+	case IBV_WR_SEND_WITH_IMM:
+		rc = ionic_prep_send_duplicated_code_ud(qp, wr);
+		if (rc)
+			break;
+		rc = ionic_prep_send_ah(qp, wr);
+		break;
+	default:
+		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
+		rc = EINVAL;
+	}
+
+	return rc;
+}
+
 static int ionic_post_send(struct ibv_qp *ibqp,
 			   struct ibv_send_wr *wr,
 			   struct ibv_send_wr **bad)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
-	struct sqwqe_t *sqe;
-	struct ionic_sq_meta *meta;
-	int ret = 0, bytes = 0, nreq = 0;
-	uint8_t is_inline = false;
+	uint16_t old_prod;
+	int rc = 0;
 
 	IONIC_LOG("");
+
+	if (!bad)
+		return EINVAL;
+
 	pthread_spin_lock(&qp->sq_lock);
-	while (wr) {
-		if ((qp->qpst != IBV_QPS_RTS) && (qp->qpst != IBV_QPS_SQD)) {
-			*bad = wr;
-			ret = -EINVAL;
-			IONIC_LOG("Bad QP State %d", qp->qpst);
-			goto out;
+
+	old_prod = qp->sq.prod;
+
+	if (ibqp->state != IBV_QPS_RTS &&
+	    ibqp->state != IBV_QPS_SQD) {
+		ionic_dbg(ctx, "invalid qp state %d", ibqp->state);
+		rc = EINVAL;
+		goto out;
+	}
+
+	if (ibqp->qp_type == IBV_QPT_UD) {
+		while (wr) {
+			if (ionic_queue_full(&qp->sq)) {
+				ionic_dbg(ctx, "queue full");
+				rc = ENOMEM;
+				goto out;
+			}
+
+			rc = ionic_prep_one_ud(qp, wr);
+			if (rc)
+				goto out;
+
+			ionic_dbg(ctx, "post send prod %d", qp->sq.prod);
+			ionic_dbg_xdump(ctx, "wqe", ionic_queue_at_prod(&qp->sq), qp->sq.stride);
+
+			ionic_queue_produce(&qp->sq);
+
+			wr = wr->next;
 		}
+	} else {
+		while (wr) {
+			if (ionic_queue_full(&qp->sq)) {
+				ionic_dbg(ctx, "queue full");
+				rc = ENOMEM;
+				goto out;
+			}
 
-		if ((qp->qptype == IBV_QPT_UD) &&
-		    (wr->opcode != IBV_WR_SEND &&
-		     wr->opcode != IBV_WR_SEND_WITH_IMM)) {
-			*bad = wr;
-			ret = -EINVAL;
-			IONIC_LOG("Bad QP type %d opcode %d", qp->qptype, wr->opcode);
-			goto out;
+			rc = ionic_prep_one_rc(qp, wr);
+			if (rc)
+				goto out;
+
+			ionic_dbg(ctx, "post send prod %d", qp->sq.prod);
+			ionic_dbg_xdump(ctx, "wqe", ionic_queue_at_prod(&qp->sq), qp->sq.stride);
+
+			ionic_queue_produce(&qp->sq);
+
+			wr = wr->next;
 		}
-
-		if (ionic_queue_full(&qp->sq) ||
-		    wr->num_sge > qp->cap.max_ssge) {
-			IONIC_LOG("Queue Full");
-			*bad = wr;
-			ret = -ENOMEM;
-			goto out;
-		}
-
-		sqe = ionic_queue_at_prod(&qp->sq);
-		memset(sqe, 0, qp->sq.stride);
-
-		sqe->base.wrid = wr->wr_id;
-		if (wr->send_flags & IBV_SEND_INLINE) {
-			is_inline = true;
-			sqe->base.inline_data_vld = 1;
-		}
-
-		switch (wr->opcode) {
-		case IBV_WR_SEND_WITH_IMM:
-			sqe->u.non_atomic.wqe.send.imm_data = wr->imm_data;
-			SWITCH_FALLTHROUGH;
-		case IBV_WR_SEND:
-			if (qp->qptype == IBV_QPT_UD)
-				bytes = ionic_build_ud_sqe(qp, sqe, wr,
-							   is_inline);
-			else
-				bytes = ionic_build_send_sqe(qp, sqe, wr,
-							     is_inline);
-			break;
-		case IBV_WR_RDMA_WRITE_WITH_IMM:
-			sqe->u.non_atomic.wqe.write.imm_data = wr->imm_data;
-			SWITCH_FALLTHROUGH;
-		case IBV_WR_RDMA_WRITE:
-			bytes = ionic_build_rdma_write_sqe(qp, sqe, wr, is_inline);
-			break;
-		case IBV_WR_RDMA_READ:
-			bytes = ionic_build_rdma_read_sqe(qp, sqe, wr, false);
-			break;
-
-#ifdef LATER
-			//TODO
-		case IBV_WR_ATOMIC_CMP_AND_SWP:
-			bytes = ionic_build_cns_sqe(qp, sqe, wr);
-			break;
-		case IBV_WR_ATOMIC_FETCH_AND_ADD:
-			bytes = ionic_build_fna_sqe(qp, sqe, wr);
-			break;
-#endif
-		default:
-			bytes = -EINVAL;
-			break;
-		}
-
-		if (bytes < 0) {
-			ret = (bytes == -EINVAL) ? EINVAL : ENOMEM;
-			*bad = wr;
-			IONIC_LOG("Invalid Bytes built");
-			break;
-		}
-
-		meta = &qp->sq_meta[qp->sq.prod];
-		meta->wrid = wr->wr_id;
-		meta->len = bytes;
-		meta->op = ibv_to_ionic_wr_opcd(wr->opcode);
-
-		ionic_dbg(ctx, "post send prod %d", qp->sq.prod);
-		ionic_dbg_xdump(ctx, "wqe", sqe, qp->sq.stride);
-
-		ionic_queue_produce(&qp->sq);
-		qp->wqe_cnt++;
-		nreq++;
-		wr = wr->next;
 	}
 
 out:
-	if (nreq) {
+	if (likely(qp->sq.prod != old_prod)) {
 		ionic_dbell_ring(ctx->dbpage,
 				 ionic_queue_dbell_val(&qp->sq),
 				 IONIC_QTYPE_RDMA_SEND);
 	}
+
 	pthread_spin_unlock(&qp->sq_lock);
-	return ret;
+
+	*bad = wr;
+	return rc;
+}
+
+static int ionic_prep_recv(struct ionic_qp *qp,
+			   struct ibv_recv_wr *wr)
+{
+	struct ionic_rq_meta *meta;
+	struct rqwqe_t *wqe;
+	int64_t signed_len;
+
+	meta = &qp->rq_meta[qp->rq.prod];
+	wqe = ionic_queue_at_prod(&qp->rq);
+
+	memset(wqe, 0, qp->rq.stride);
+
+	signed_len = ionic_prep_sgl(wqe->sge_arr, qp->cap.max_rsge,
+				    wr->sg_list, wr->num_sge);
+	if (signed_len < 0)
+		return (int)-signed_len;
+
+	wqe->wrid = 0; /* XXX tag for SRQ? */
+	wqe->num_sges = wr->num_sge;
+
+	meta->wrid = wr->wr_id;
+	meta->len = (uint32_t)signed_len;
+
+	return 0;
 }
 
 static int ionic_post_recv(struct ibv_qp *ibqp,
@@ -1162,58 +1226,55 @@ static int ionic_post_recv(struct ibv_qp *ibqp,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibqp->context);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
-	struct rqwqe_t *rqe;
-	struct ionic_rq_meta *meta;
-	int ret = 0, nreq = 0, bytes = 0;
-	struct sge_t *sge;
+	uint16_t old_prod;
+	int rc = 0;
 
 	IONIC_LOG("");
+
+	if (!bad)
+		return EINVAL;
+
 	pthread_spin_lock(&qp->rq_lock);
+
+	old_prod = qp->rq.prod;
+
+	if (ibqp->state == IBV_QPS_RESET ||
+	    ibqp->state == IBV_QPS_ERR) {
+		ionic_dbg(ctx, "invalid qp state %d", ibqp->state);
+		rc = EINVAL;
+		goto out;
+	}
+
 	while (wr) {
-		/* check QP state, abort if it is ERR or RST */
-		if (qp->qpst == IBV_QPS_RESET || qp->qpst == IBV_QPS_ERR) {
-			*bad = wr;
-			ret = -EINVAL;
+		if (ionic_queue_full(&qp->rq)) {
+			ionic_dbg(ctx, "queue full");
+			rc = ENOMEM;
 			goto out;
 		}
 
-		if (ionic_queue_full(&qp->rq) ||
-		    wr->num_sge > qp->cap.max_rsge) {
-			*bad = wr;
-			ret = -ENOMEM;
+		rc = ionic_prep_recv(qp, wr);
+		if (rc)
 			goto out;
-		}
-
-		rqe = ionic_queue_at_prod(&qp->rq);
-		memset(rqe, 0, qp->rq.stride);
-
-		sge = (struct sge_t *) rqe->sge_arr;
-		bytes = ionic_build_sge(sge, wr->sg_list, wr->num_sge, false);
-
-		rqe->wrid = wr->wr_id;
-		rqe->num_sges = wr->num_sge;
-
-		meta = &qp->rq_meta[qp->rq.prod];
-		meta->wrid = wr->wr_id;
-		meta->len = bytes; /* XXX see ionic_poll_recv, byte_len */
 
 		ionic_dbg(ctx, "post recv prod %d", qp->rq.prod);
-		ionic_dbg_xdump(ctx, "wqe", rqe, qp->rq.stride);
+		ionic_dbg_xdump(ctx, "wqe", ionic_queue_at_prod(&qp->rq), qp->rq.stride);
 
 		ionic_queue_produce(&qp->rq);
-		qp->wqe_cnt++;
+
 		wr = wr->next;
-		nreq++;
 	}
 
 out:
-	if (nreq) {
+	if (likely(qp->rq.prod != old_prod)) {
 		ionic_dbell_ring(ctx->dbpage,
 				 ionic_queue_dbell_val(&qp->rq),
 				 IONIC_QTYPE_RDMA_RECV);
 	}
+
 	pthread_spin_unlock(&qp->rq_lock);
-	return ret;
+
+	*bad = wr;
+	return rc;
 }
 
 static struct ibv_srq *ionic_create_srq(struct ibv_pd *ibpd,
