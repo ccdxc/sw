@@ -346,15 +346,6 @@ hal_ret_t parse_sunrpc_control_flow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     uint8_t                  addr_family = 0;
     char                     netid[128], uaddr[128], owner[128];
 
-    // Payload offset from CPU header
-    if (ctx.pkt_len() == rpc_msg_offset && 
-        ctx.key().proto == IP_PROTO_TCP) {
-        // The first iflow packet that get mcast copied could be an
-        // ACK from the TCP handshake.
-        HAL_TRACE_DEBUG("Ignoring the packet -- may be a handshake packet");
-        return HAL_RET_OK;
-    }
-
     if (pkt_len <= (uint32_t)(rpc_msg_offset + 3*WORD_BYTES)) {
         // Packet length is smaller than the RPC common header
         // Size. We cannot process this packet.
@@ -604,8 +595,10 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     fte::flow_update_t    flowupd;
     rpc_info_t           *rpc_info = NULL;
     app_session_t        *app_sess = NULL;
+    uint32_t              payload_offset = 0;
 
     HAL_TRACE_DEBUG("In alg_sunrpc_exec {:p}", (void *)l4_sess);
+    payload_offset = ctx.cpu_rxhdr()->payload_offset;
     if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC &&
         (!ctx.existing_session())) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
@@ -653,7 +646,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
            flowupd.mcast_info.proxy_mcast_ptr = 0;
            ret = ctx.update_flow(flowupd);
         }
-    } else if (l4_sess && l4_sess->info) {
+    } else if (l4_sess && l4_sess->info && (ctx.pkt_len() > payload_offset)) {
         rpc_info = (rpc_info_t *)l4_sess->info;
         HAL_TRACE_DEBUG("RPC Info {:p}", l4_sess->info);
 

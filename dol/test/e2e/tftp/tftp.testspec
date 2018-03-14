@@ -18,10 +18,10 @@ trigger:
             cmd         : python
             background  : True
             args        :
-                - arg   : "-m SimpleHTTPServer 8000"
+                - arg   : callback://e2e/tftp/GetSrcPythonArgs
         - command:
             endpoint    : ref://testcase/config/dst_endpoints/0
-            cmd         : wget
+            cmd         : python
             args        :
-                - arg   : callback://e2e/http/GetWgetArgs
+                - arg   : callback://e2e/tftp/GetDstPythonArgs
 expect:

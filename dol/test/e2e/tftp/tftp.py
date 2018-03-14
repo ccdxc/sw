@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Test Module
 
-import os 
+import os
 import infra.api.api as InfraApi
 import test.callbacks.networking.modcbs as modcbs
 
@@ -13,7 +13,7 @@ def TestCaseSetup(tc):
     pass
 
 def TestCaseTeardown(tc):
-    os.system("rm -f index.html")
+    os.system("rm -f tftp_file.txt")
     pass
 
 def TestCaseStepSetup(tc, step):

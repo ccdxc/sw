@@ -19,6 +19,7 @@ PIP2_PACKAGES = %w[
   ply==3.9
   cmd2
   bitstring
+  tftpy
 ]
 
 PIP3_PACKAGES = %w[
@@ -35,7 +36,6 @@ PIP3_PACKAGES = %w[
   PyOpenSSL
   pysendfile
   pyftpdlib
-  tftpy
   jsonrpc2_zeromq
 ]
 
@@ -265,7 +265,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.16"
+tag "pensando/nic:1.17"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

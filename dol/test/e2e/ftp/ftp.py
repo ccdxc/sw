@@ -13,7 +13,7 @@ def TestCaseSetup(tc):
     pass
 
 def TestCaseTeardown(tc):
-    os.system("rm -f index.html")
+    os.system("rm -f ftp_file.txt")
     pass
 
 def TestCaseStepSetup(tc, step):

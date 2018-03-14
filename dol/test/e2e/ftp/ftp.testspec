@@ -15,13 +15,13 @@ trigger:
     commands:
         - command:
             endpoint    : ref://testcase/config/src_endpoints/0
-            cmd         : python
+            cmd         : python3
             background  : True
             args        :
-                - arg   : "-m SimpleHTTPServer 8000"
+                - arg   : callback://e2e/ftp/GetPythonArgs
         - command:
             endpoint    : ref://testcase/config/dst_endpoints/0
             cmd         : wget
             args        :
-                - arg   : callback://e2e/http/GetWgetArgs
+                - arg   : callback://e2e/ftp/GetWgetArgs
 expect:

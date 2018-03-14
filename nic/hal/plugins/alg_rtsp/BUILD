@@ -31,5 +31,6 @@ cc_test(
     srcs = glob(["test/*.cc"]),
     copts = sdk_copts,
     linkopts = gl_linkopts_list,
+    tags = ["gtests"],
     deps = [":alg_rtsp"] + gl_deps_list + test_deps_list, 
 )

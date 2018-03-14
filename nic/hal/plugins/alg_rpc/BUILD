@@ -41,5 +41,6 @@ cc_test(
            "//nic/hal/plugins/alg_rpc:alg_rpc",
            ] + gl_deps_list + test_deps_list,
     linkopts = gl_linkopts_list,
+    tags = ["gtests"],
     copts = sdk_copts
 )

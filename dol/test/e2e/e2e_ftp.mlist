@@ -1,0 +1,43 @@
+# Feature Test Modules List
+feature:
+    id       : e2e 
+    sub      : e2e
+    package  : test.e2e.ftp
+    module   : ftp
+    runorder : 0
+    enable   : True
+    ignore   : False
+    rtl      : False
+    args     :
+
+modules:
+    - module:
+        name    : FTP_REMOTE_REMOTE
+        spec    : ftp.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=True
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=True
+                    max  : 1
+    - module:
+        name    : FTP_REMOTE_LOCAL
+        spec    : ftp.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=True
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1                    
+    - module:
+        name    : FTP_LOCAL_LOCAL
+        spec    : ftp.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=False
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1
