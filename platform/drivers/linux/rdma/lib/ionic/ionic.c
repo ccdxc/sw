@@ -535,14 +535,17 @@ out:
 	return npolled ?: rc;
 }
 
-static void ionic_cq_event(struct ibv_cq *ibcq)
-{
-
-}
-
 static int ionic_arm_cq(struct ibv_cq *ibcq, int flags)
 {
+	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
+	struct ionic_cq *cq = to_ionic_cq(ibcq);
+
 	IONIC_LOG("");
+
+	ionic_dbell_ring(ctx->dbpage,
+			 ionic_queue_dbell_val_arm(&cq->q),
+			 IONIC_QTYPE_RDMA_COMP);
+
 	return 0;
 }
 
@@ -1336,7 +1339,6 @@ static const struct verbs_context_ops ionic_ctx_ops = {
 	.create_cq		= ionic_create_cq,
 	.poll_cq		= ionic_poll_cq,
 	.req_notify_cq		= ionic_arm_cq,
-	.cq_event		= ionic_cq_event,
 	.resize_cq		= ionic_resize_cq,
 	.destroy_cq		= ionic_destroy_cq,
 	.create_srq		= ionic_create_srq,
