@@ -9,6 +9,8 @@ def PreCreateCb(data, req_spec, resp_spec):
             req_spec.request[0].vrf_type = types_pb2.VRF_TYPE_CUSTOMER
         else:
             current_infra_types += 1
+    elif req_spec.request[0].vrf_type == types_pb2.VRF_TYPE_NONE:
+        req_spec.request[0].vrf_type = types_pb2.VRF_TYPE_CUSTOMER
 
 def PostCreateCb(data, req_spec, resp_spec):
     data.exp_data.spec = req_spec.request[0]
