@@ -1916,13 +1916,21 @@ class Checksum:
                             _csum_obj = pl_calfldobj.DeParserCsumObjGet()
                             self.DeParserInnerPayLoadCsumInclude(\
                                         payload_csum_obj_list, hdr.name, _csum_obj)
+                            payload_csum_obj_list.append((_csum_obj, hdr.name))
 
                         if pl_calfldobj and pl_calfldobj in csum_objects:
                             self.csum_compute_logger.debug('%s Checksum Assignment'\
                                                            ' along path %s' %
                                                            (xgress_to_string(parser.d), str(parse_path)))
+                            #Inner L4 csum result is included in outer L4 csum
                             self.BuildDeParserCsumPayloadObject(parser, hdr, phdr, pl_calfldobj, payload_csum_obj_list)
                             csum_objects.remove(pl_calfldobj)
+
+                    #Include inner L3 csum result into outer L4 csum
+                    if not calfldobj.payload_checksum and not calfldobj.option_checksum:
+                        _csum_obj = calfldobj.DeParserCsumObjGet()
+                        self.DeParserInnerPayLoadCsumInclude(\
+                                        payload_csum_obj_list, hdr.name, _csum_obj)
 
                 if not len(csum_objects):
                     break
