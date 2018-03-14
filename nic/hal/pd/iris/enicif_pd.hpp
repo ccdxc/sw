@@ -108,7 +108,9 @@ hal_ret_t pd_enicif_free (pd_enicif_t *enicif);
 void link_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 void unlink_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 hal_ret_t pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, 
-        nwsec_profile_t *nwsec_prof);
+                                              pd_if_lif_update_args_t *lif_args,
+                                              nwsec_profile_t *nwsec_prof,
+                                              table_oper_t ope);
 hal_ret_t
 pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif, 
                                     pd_if_lif_update_args_t *lif_upd,
