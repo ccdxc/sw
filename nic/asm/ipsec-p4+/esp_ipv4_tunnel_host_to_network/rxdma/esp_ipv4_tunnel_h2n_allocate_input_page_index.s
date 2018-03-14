@@ -30,7 +30,7 @@ esp_ipv4_tunnel_h2n_enable_read_random:
     phvwri p.app_header_table2_valid, 1
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_h2n_read_random_number_from_barco[33:6]
     // Will change to 3 later - model has a bug and cannot pull more than 32 bits right now
-    phvwri p.common_te2_phv_table_raw_table_size, 2
+    phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 10 
     phvwri p.common_te2_phv_table_lock_en, 1
     phvwri p.common_te2_phv_table_addr, CAPRI_BARCO_MD_HENS_REG_DRBG_RANDOM_NUM0 
     nop.e 

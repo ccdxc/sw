@@ -13,7 +13,7 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_allocate_output_desc_index:
     phvwri p.app_header_table1_valid, 1
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_update_output_desc_aol[33:6] 
-    phvwri p.common_te1_phv_table_raw_table_size, 4
+    phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 12 
     phvwri p.common_te1_phv_table_lock_en, 0
     phvwr p.common_te1_phv_table_addr, d.out_desc_index 
     phvwr p.ipsec_int_header_out_desc, d.out_desc_index 
