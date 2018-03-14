@@ -35,13 +35,6 @@ typedef enum hal_timer_id_s {
     HAL_TIMER_ID_MAX                      = 5, 
 } hal_timer_id_t;
 
-typedef enum hal_forwarding_mode_s {
-    HAL_FORWARDING_MODE_NONE              = 0,
-    HAL_FORWARDING_MODE_SMART_SWITCH      = 1,
-    HAL_FORWARDING_MODE_SMART_HOST_PINNED = 2,
-    HAL_FORWARDING_MODE_CLASSIC           = 3,
-} hal_forwarding_mode_t;
-
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
 
 // TODO: this should be coming from catalogue or platform API
@@ -145,8 +138,8 @@ public:
     ht *gft_hdr_transposition_profile_id_ht(void) const { return gft_hdr_transposition_profile_id_ht_; }
     ht *gft_exact_match_flow_entry_id_ht(void) const { return gft_exact_match_flow_entry_id_ht_; }
 
-    void set_forwarding_mode(std::string modestr);
-    hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
+    void set_forwarding_mode(hal_forwarding_mode_t mode);
+    hal_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
 
 private:
     bool init(void);
@@ -583,8 +576,8 @@ public:
     ht *gft_exact_match_flow_entry_id_ht(void) const { return cfg_db_->gft_exact_match_flow_entry_id_ht(); }
 
     // forwarding mode APIs
-    void set_forwarding_mode(std::string modestr) { 
-        cfg_db_->set_forwarding_mode(modestr);
+    void set_forwarding_mode(hal_forwarding_mode_t mode) { 
+        cfg_db_->set_forwarding_mode(mode);
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return cfg_db_->forwarding_mode(); }
 

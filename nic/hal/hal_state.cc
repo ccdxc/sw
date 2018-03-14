@@ -509,17 +509,9 @@ hal_cfg_db::~hal_cfg_db()
 }
 
 void
-hal_cfg_db::set_forwarding_mode(std::string modestr)
+hal_cfg_db::set_forwarding_mode(hal_forwarding_mode_t mode)
 {
-    if (modestr == "smart-switch") {
-        forwarding_mode_ = HAL_FORWARDING_MODE_SMART_SWITCH;
-    } else if (modestr == "smart-host-pinned") {
-        forwarding_mode_ = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-    } else if (modestr == "classic") {
-        forwarding_mode_ = HAL_FORWARDING_MODE_CLASSIC;
-    } else {
-        HAL_ASSERT(FALSE);
-    }
+    forwarding_mode_ = mode;
     return;
 }
 
@@ -1133,18 +1125,6 @@ hal_mem_init (void)
     g_hal_state = hal_state::factory();
     HAL_ASSERT_RETURN((g_hal_state != NULL), HAL_RET_ERR);
 
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// Save hal_cfg parsed from JSON to hal_state.
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_init (hal_cfg_t *hal_cfg)
-{
-    HAL_TRACE_INFO("{}: Setting forwarding_mode to {}", __FUNCTION__,
-                   hal_cfg->forwarding_mode);
-    g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
     return HAL_RET_OK;
 }
 

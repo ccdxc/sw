@@ -3,9 +3,11 @@
 #ifndef __HAL_PD_ASIC_RW_HPP__
 #define __HAL_PD_ASIC_RW_HPP__
 
-#include "nic/include/base.h"
 #include <vector>
 #include <tuple>
+#include "sdk/catalog.hpp"
+#include "nic/include/base.h"
+
 using std::vector;
 using std::tuple;
 
@@ -13,12 +15,13 @@ namespace hal {
 namespace pd {
 
 typedef struct asic_cfg_s {
-    std::string      loader_info_file;
-    std::string      default_config_dir;    // TODO: vasanth, pls. remove this up eventually
-    uint32_t         admin_cos;
-    uint32_t         repl_entry_width;
-    std::string      pgm_name;
-    std::string      cfg_path;              // HAL config path
+    std::string          loader_info_file;
+    std::string          default_config_dir;    // TODO: vasanth, pls. remove this up eventually
+    uint32_t             admin_cos;
+    uint32_t             repl_entry_width;
+    std::string          pgm_name;
+    std::string          cfg_path;              // HAL config path
+    sdk::lib::catalog    *catalog;
 } asic_cfg_t;
 
 // asic init

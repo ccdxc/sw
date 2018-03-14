@@ -52,11 +52,6 @@ extern hal_ret_t hal_wait(void);
 //------------------------------------------------------------------------------
 extern hal_ret_t hal_mem_init(void);
 
-//------------------------------------------------------------------------------
-// one time config related initializatino for HAL
-//------------------------------------------------------------------------------
-extern hal_ret_t hal_cfg_init(hal_cfg_t *hal_cfg);
-
 }    // namespace hal
 
 #endif    // __HAL_HPP__

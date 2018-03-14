@@ -549,6 +549,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
     // asic_cfg.admin_cos = qos_class_get_admin_cos();
     asic_cfg.admin_cos = 1;
     asic_cfg.cfg_path = hal_cfg->cfg_path;
+    asic_cfg.catalog = hal_cfg->catalog;
     args.cfg = &asic_cfg;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, (void *)&args);
     HAL_ABORT(ret == HAL_RET_OK);

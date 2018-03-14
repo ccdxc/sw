@@ -5,6 +5,7 @@
 
 #include "nic/include/base.h"
 #include "sdk/list.hpp"
+#include "sdk/catalog.hpp"
 
 using sdk::lib::dllist_ctxt_t;
 namespace hal {
@@ -37,25 +38,33 @@ typedef enum hal_feature_set_s {
     HAL_FEATURE_SET_GFT,
 } hal_feature_set_t;
 
+typedef enum hal_forwarding_mode_s {
+    HAL_FORWARDING_MODE_NONE              = 0,
+    HAL_FORWARDING_MODE_SMART_SWITCH      = 1,
+    HAL_FORWARDING_MODE_SMART_HOST_PINNED = 2,
+    HAL_FORWARDING_MODE_CLASSIC           = 3,
+} hal_forwarding_mode_t;
+
 typedef struct hal_cfg_s {
-    hal_platform_mode_t  platform_mode;
-    char                 asic_name[HAL_MAX_NAME_STR];
-    std::string          grpc_port;
-    std::string          loader_info_file;
-    std::string          hbm_cache;
-    char                 feature_set[HAL_MAX_NAME_STR];
-    hal_feature_set_t    features;
-    std::string          forwarding_mode;
-    bool                 sync_mode_logging;
-    std::string          cfg_path;                  // full HAL config path
-    std::string          catalog_file;              // full path of catalog file
-    std::string          default_config_dir;        // TODO: remove this !!
-    uint16_t             num_control_threads;
-    uint16_t             num_data_threads;
-    uint64_t             control_cores_mask;
-    uint64_t             data_cores_mask;
-    void                 *pd_so;
-    void                 *pd_stub_so;
+    hal_platform_mode_t      platform_mode;
+    char                     asic_name[HAL_MAX_NAME_STR];
+    std::string              grpc_port;
+    std::string              loader_info_file;
+    std::string              hbm_cache;
+    char                     feature_set[HAL_MAX_NAME_STR];
+    hal_feature_set_t        features;
+    hal_forwarding_mode_t    forwarding_mode;
+    bool                     sync_mode_logging;
+    std::string              cfg_path;                  // full HAL config path
+    std::string              catalog_file;              // full path of catalog file
+    sdk::lib::catalog        *catalog;
+    std::string              default_config_dir;        // TODO: remove this !!
+    uint16_t                 num_control_threads;
+    uint16_t                 num_data_threads;
+    uint64_t                 control_cores_mask;
+    uint64_t                 data_cores_mask;
+    void                     *pd_so;
+    void                     *pd_stub_so;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------

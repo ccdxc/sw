@@ -535,6 +535,7 @@ pd_pgm_def_entries (pd_pgm_def_entries_args_t *args)
     p4pd_def_cfg_t  p4pd_def_cfg;
 
     HAL_TRACE_DEBUG("Programming table default entries ...");
+    p4pd_def_cfg.hal_cfg = args->hal_cfg;
     ret = p4pd_table_defaults_init(&p4pd_def_cfg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program default entries, err: {}", ret);

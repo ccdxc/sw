@@ -45,12 +45,15 @@ typedef struct pd_mem_init_args_s {
 
 typedef struct pd_mem_init_phase2_args_s {
     const char    *cfg_path;    // HAL config path
+    hal_cfg_t     *hal_cfg;
 } __PACK__ pd_mem_init_phase2_args_t;
 
 typedef struct pd_pgm_def_entries_args_s {
+    hal_cfg_t    *hal_cfg;
 } __PACK__ pd_pgm_def_entries_args_t;
 
 typedef struct pd_pgm_def_p4plus_entries_args_s {
+    hal_cfg_t    *hal_cfg;
 } __PACK__ pd_pgm_def_p4plus_entries_args_t;
 
 // vrf 

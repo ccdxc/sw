@@ -83,7 +83,7 @@ private:
 inline hal_ret_t init_plugins(hal_cfg_t *hal_cfg) {
     fte::init();
 
-    bool classic_nic = hal_cfg->forwarding_mode == "classic";
+    bool classic_nic = hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC;
     std::string plugin_file;
 
     if (classic_nic) {

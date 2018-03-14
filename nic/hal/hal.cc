@@ -87,7 +87,6 @@ hal_periodic_loop_start (void *ctxt)
     return NULL;
 }
 
-
 //------------------------------------------------------------------------------
 // return current thread pointer, for gRPC threads curr_thread is not set,
 // however, they are considered as cfg threads
@@ -305,6 +304,19 @@ hal_wait (void)
     return HAL_RET_OK;
 }
 
+static hal_forwarding_mode_t
+hal_get_forwarding_mode (std::string mode)
+{
+    if (mode == "smart-switch") {
+        return HAL_FORWARDING_MODE_SMART_SWITCH;
+    } else if (mode == "smart-host-pinned") {
+        return HAL_FORWARDING_MODE_SMART_HOST_PINNED;
+    } else if (mode == "classic") {
+        return HAL_FORWARDING_MODE_CLASSIC;
+    }
+    return HAL_FORWARDING_MODE_NONE;
+}
+
 //------------------------------------------------------------------------------
 // parse HAL .ini file
 //------------------------------------------------------------------------------
@@ -319,7 +331,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         fprintf(stderr, "HAL ini file %s doesn't exist or not accessible,"
                 "picking defaults. mode: smart-switch",
                 ini_file.c_str());
-        hal_cfg->forwarding_mode = "smart-switch";
+        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_SWITCH;
         return HAL_RET_OK;
     }
 
@@ -327,7 +339,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     if (!in) {
         HAL_TRACE_ERR("Failed to open ini file ... "
                       "setting forwarding mode to smart-switch");
-        hal_cfg->forwarding_mode = "smart-switch";
+        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_SWITCH;
         return HAL_RET_OK;
     }
 
@@ -336,14 +348,14 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         std::string val = line.substr(line.find("=")+1, line.length()-1);
 
         if (key == "forwarding_mode") {
-            if ((val != "smart-switch") && (val != "smart-host-pinned") &&
-                (val != "classic")) {
+            hal_cfg->forwarding_mode = hal_get_forwarding_mode(val);
+            if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_NONE) {
                 HAL_TRACE_ERR("Invalid forwarding mode : {}, aborting ...",
                               val);
                 HAL_ABORT(0);
             }
-            hal_cfg->forwarding_mode = val;
-            HAL_TRACE_DEBUG("NIC forwarding mode : {}", val);
+            HAL_TRACE_DEBUG("NIC forwarding mode : {}",
+                            hal_cfg->forwarding_mode);
         }
     }
     in.close();
@@ -582,29 +594,26 @@ hal_init (hal_cfg_t *hal_cfg)
     // do SDK initialization, if any
     hal_sdk_init();
 
+    // check to see if HAL is running with root permissions
+    user = getenv("USER");
+    if (user && !strcmp(user, "root")) {
+        gl_super_user = true;
+    }
+
     // do memory related initialization
-    HAL_ABORT(hal_mem_init() == HAL_RET_OK);
+    //HAL_ABORT(hal_mem_init() == HAL_RET_OK);
 
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     HAL_ASSERT(catalog != NULL);
-    g_hal_state->set_catalog(catalog);
+    hal_cfg->catalog = catalog;
 
     // validate control/data cores against catalog
     HAL_ABORT(hal_cores_validate(catalog->cores_mask(),
                                  hal_cfg->control_cores_mask,
                                  hal_cfg->data_cores_mask) == HAL_RET_OK);
 
-    // initialize config parameters from the JSON file
-    HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
-
     // init fte and hal plugins
     hal::init_plugins(hal_cfg);
-
-    // check to see if HAL is running with root permissions
-    user = getenv("USER");
-    if (user && !strcmp(user, "root")) {
-        gl_super_user = true;
-    }
 
     // spawn all necessary PI threads
     HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);
@@ -614,10 +623,15 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
 
+    // do memory related initialization
+    HAL_ABORT(hal_mem_init() == HAL_RET_OK);
+    g_hal_state->set_catalog(catalog);
+    // set the forwarding mode
+    g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);
+
     // do per module initialization
     // TODO: needed only in smart nic mode
     HAL_ABORT(hal::session_init() == HAL_RET_OK);
-
 
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??
@@ -632,7 +646,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     if (!getenv("CAPRI_MOCK_MODE") && 
         !getenv("DISABLE_FTE") &&
-        !(hal_cfg->forwarding_mode == "classic")) {
+        !(hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)) {
         // start fte threads
         for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
             tid = HAL_THREAD_ID_FTE_MIN + i;

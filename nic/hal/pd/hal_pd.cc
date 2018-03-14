@@ -807,20 +807,21 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     }
 
     ph2_args.cfg_path = mem_init_args.cfg_path;
+    ph2_args.hal_cfg = hal_cfg;
     ret = hal_pd_call(PD_FUNC_ID_MEM_INIT_PHASE2, (void *)&ph2_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL PD init failed, err : {}", ret);
         goto cleanup;
     }
 
-    // ret = hal_pd_pgm_def_entries();
+    pgm_def_args.hal_cfg = hal_cfg;
     ret = hal_pd_call(PD_FUNC_ID_PGM_DEF_ENTRIES, (void *)&pgm_def_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL Programming default entries, err : {}", ret);
         goto cleanup;
     }
 
-    // ret = hal_pd_pgm_def_p4plus_entries();
+    pgm_p4p_args.hal_cfg = hal_cfg;
     ret = hal_pd_call(PD_FUNC_ID_PGM_DEF_P4PLUS_ENTRIES, (void *)&pgm_p4p_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("HAL Programming default p4plus entries failed, err : {}", ret);

@@ -108,6 +108,7 @@ hal::pd::asic_init (asic_cfg_t *cfg)
     capri_cfg.admin_cos = cfg->admin_cos;
     capri_cfg.repl_entry_width = cfg->repl_entry_width;
     capri_cfg.pgm_name = cfg->pgm_name;
+    capri_cfg.catalog = cfg->catalog;
     return capri_init(&capri_cfg);
 }
 
@@ -884,7 +885,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        if (!hal::g_hal_state->catalog()->qos_sw_init_enabled()) {
+        if (!cfg->catalog->qos_sw_init_enabled()) {
             ret = capri_default_config_init(cfg);
         }
     }
@@ -902,7 +903,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_tm_init(hal::g_hal_state->catalog());
+        ret = capri_tm_init(cfg->catalog);
     }
 
     if (ret == HAL_RET_OK) {

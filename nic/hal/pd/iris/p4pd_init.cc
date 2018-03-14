@@ -113,7 +113,7 @@ p4pd_ddos_policers_init (void)
 }
 
 static hal_ret_t
-p4pd_input_mapping_native_init (void)
+p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
     uint32_t                             idx;
     input_mapping_native_swkey_t         key;
@@ -143,7 +143,7 @@ p4pd_input_mapping_native_init (void)
     mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         mask.tunnel_metadata_tunnel_type_mask = 0x0;
     } else {
         mask.tunnel_metadata_tunnel_type_mask = 0xFF;
@@ -180,7 +180,7 @@ p4pd_input_mapping_native_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         mask.tunnel_metadata_tunnel_type_mask = 0x0;
     } else {
         mask.tunnel_metadata_tunnel_type_mask = 0xFF;
@@ -217,7 +217,7 @@ p4pd_input_mapping_native_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         mask.tunnel_metadata_tunnel_type_mask = 0x0;
     } else {
         mask.tunnel_metadata_tunnel_type_mask = 0xFF;
@@ -240,7 +240,7 @@ p4pd_input_mapping_native_init (void)
 }
 
 static hal_ret_t
-p4pd_input_mapping_tunneled_init (void)
+p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
     uint32_t                             idx;
     input_mapping_tunneled_swkey_t       key;
@@ -270,7 +270,7 @@ p4pd_input_mapping_tunneled_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         mask.tunnel_metadata_tunnel_type_mask = 0x0;
     } else {
         mask.tunnel_metadata_tunnel_type_mask = 0xFF;
@@ -305,7 +305,7 @@ p4pd_input_mapping_tunneled_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         mask.tunnel_metadata_tunnel_type_mask = 0x0;
     } else {
         mask.tunnel_metadata_tunnel_type_mask = 0xFF;
@@ -342,7 +342,7 @@ p4pd_input_mapping_tunneled_init (void)
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         mask.tunnel_metadata_tunnel_type_mask = 0x0;
     } else {
         mask.tunnel_metadata_tunnel_type_mask = 0xFF;
@@ -1418,7 +1418,7 @@ capri_repl_pgm_def_entries (void)
 // Chip Forwarding Mode Initialization
 //-----------------------------------------------------------------------------
 static hal_ret_t
-p4pd_forwarding_mode_init (void) 
+p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg) 
 {
 #if 0
     if (getenv("CAPRI_MOCK_MODE")) {
@@ -1432,7 +1432,7 @@ p4pd_forwarding_mode_init (void)
                               (tbl_ctx.gress == P4_GRESS_INGRESS));
     val = be64toh(val);
     
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
         nic_mode = NIC_MODE_CLASSIC;
     } else {
         // host-pinned & default
@@ -1484,8 +1484,8 @@ hal_ret_t
 p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
     // initialize all P4 ingress tables with default entries, if any
-    HAL_ASSERT(p4pd_input_mapping_native_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_input_mapping_tunneled_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_input_mapping_native_init(p4pd_def_cfg) == HAL_RET_OK);
+    HAL_ASSERT(p4pd_input_mapping_tunneled_init(p4pd_def_cfg) == HAL_RET_OK);
     HAL_ASSERT(p4pd_l4_profile_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
@@ -1512,7 +1512,7 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     HAL_ASSERT(capri_repl_pgm_def_entries() == HAL_RET_OK);
 
     // Setting NIC's forwarding mode
-    HAL_ASSERT(p4pd_forwarding_mode_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_forwarding_mode_init(p4pd_def_cfg) == HAL_RET_OK);
     return HAL_RET_OK;
 }
 
