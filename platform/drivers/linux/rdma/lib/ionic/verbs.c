@@ -254,6 +254,10 @@ static int ionic_poll_recv(struct ionic_qp *qp, struct ibv_wc *wc,
 {
 	struct rqwqe_t *wqe;
 
+	/* there had better be something in the recv queue to complete */
+	if (ionic_queue_empty(&qp->rq))
+		return -EIO;
+
 	/* XXX use || array instead of wqe */
 	wqe = ionic_queue_at_cons(&qp->rq);
 
@@ -299,6 +303,10 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc,
 {
 	struct sqwqe_t *wqe;
 
+	/* there had better be something in the send queue to complete */
+	if (ionic_queue_empty(&qp->sq))
+		return -EIO;
+
 	wqe = ionic_queue_at_cons(&qp->sq);
 
 	memset(wc, 0, sizeof(*wc));
@@ -328,6 +336,10 @@ static int ionic_poll_send(struct ionic_qp *qp, struct ibv_wc *wc,
 static int ionic_poll_send_ok(struct ionic_qp *qp, struct ibv_wc *wc)
 {
 	struct sqwqe_t *wqe;
+
+	/* there had better be something in the send queue to complete OK */
+	if (ionic_queue_empty(&qp->sq))
+		return -EIO;
 
 	wqe = ionic_queue_at_cons(&qp->sq);
 
@@ -434,6 +446,21 @@ int ionic_poll_cq(struct ibv_cq *ibvcq, int nwc, struct ibv_wc *wc)
 	struct cqwqe_be_t cqe;
 	uint16_t old_prod;
 	int rc = 0, npolled = 0;
+
+	/* Note about rc: (noted here because poll is different)
+	 *
+	 * Functions without "poll" in the name, if they return an integer,
+	 * return zero on success, or a positive error number.  Functions
+	 * returning a pointer return NULL on error and set errno to a positve
+	 * error number.
+	 *
+	 * Functions with "poll" in the name return negative error numbers.
+	 * Functions that poll zero zero or more completions (ionic_poll_cq,
+	 * ionic_poll_xxx_ok), positive values including zero indicate a number
+	 * of successful completions polled.  Functions tht poll exactly one
+	 * completion (ionic_poll_send, ionic_poll_recv), only zero indicates
+	 * success.
+	 */
 
 	if (nwc < 1)
 		return 0;
