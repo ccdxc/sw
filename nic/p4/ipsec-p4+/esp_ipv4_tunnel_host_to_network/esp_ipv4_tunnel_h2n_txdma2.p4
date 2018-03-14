@@ -9,6 +9,7 @@
 #define tx_table_s2_t2_action ipsec_encap_txdma2_load_ipsec_int
 
 #define tx_table_s3_t0_action ipsec_build_encap_packet
+#define tx_table_s3_t1_action ipsec_build_encap_packet2
 
 #include "../../common-p4+/common_txdma.p4"
 #include "esp_ipv4_tunnel_h2n_headers.p4"
@@ -151,6 +152,9 @@ metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
 metadata ipsec_table0_s2s t0_s2s_scratch;
 
 @pragma scratch_metadata
+metadata ipsec_table1_s2s t1_s2s_scratch;
+
+@pragma scratch_metadata
 metadata barco_request_t barco_req_scratch;
 
 @pragma scratch_metadata
@@ -174,6 +178,10 @@ metadata ipsec_int_pad_t ipsec_int_pad_scratch;
     modify_field(t0_s2s_scratch.headroom_offset, t0_s2s.headroom_offset); \
     modify_field(t0_s2s_scratch.tailroom_offset, t0_s2s.tailroom_offset); \
     
+#define TXDMA2_T1_S2S_SCRATCH \
+    modify_field(t1_s2s_scratch.out_desc_addr, t1_s2s.out_desc_addr); \
+    modify_field(t1_s2s_scratch.out_page_addr, t1_s2s.out_page_addr); \
+    
 #define BARCO_REQ_SCRTATCH_SET \
     modify_field(barco_req_scratch.input_list_address,input_list_address); \
     modify_field(barco_req_scratch.output_list_address,output_list_address); \
@@ -190,6 +198,18 @@ metadata ipsec_int_pad_t ipsec_int_pad_scratch;
     modify_field(barco_req_scratch.application_tag,application_tag); \
  
 #define IPV4_HEADER_SIZE 20
+
+//stage 3
+action ipsec_build_encap_packet2()
+{
+    TXDMA2_GLOBAL_SCRATCH_INIT
+    TXDMA2_T1_S2S_SCRATCH
+    modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
+    modify_field(ipsec_to_stage3_scratch.is_v6, ipsec_to_stage3.is_v6);
+    modify_field(ipsec_to_stage3_scratch.is_nat_t, ipsec_to_stage3.is_nat_t);
+    modify_field(ipsec_to_stage3_scratch.flags, ipsec_to_stage3.flags);
+    modify_field(ipsec_to_stage3_scratch.barco_error, ipsec_to_stage3.barco_error);
+}
 
 //stage 3
 action ipsec_build_encap_packet()

@@ -10,7 +10,6 @@ struct phv_ p;
        .param BRQ_BASE 
         .align
 esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex:
-    //phvwri p.app_header_table1_valid, 0
     sll r2, d.{pi}.wx, BRQ_RING_ENTRY_SIZE_SHIFT 
     addui r2, r2, hiword(BRQ_BASE)
     addi r2, r2, loword(BRQ_BASE)
