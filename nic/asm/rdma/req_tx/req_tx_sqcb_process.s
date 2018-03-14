@@ -18,7 +18,7 @@ struct rdma_stage0_table_k k;
 
 %%
     .param    req_tx_sqpt_process
-    .param    req_tx_sqwqe_process
+    .param    req_tx_dummy_sqpt_process
     .param    req_tx_sqsge_iterate_process
     .param    req_tx_sqcb1_process
     .param    req_tx_bktrack_sqcb2_process
@@ -124,7 +124,7 @@ poll_for_work:
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
         
         // populate t0 PC and table address
-        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, r2)
+        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, r2)
         
         crestore       [c1], d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
@@ -439,7 +439,7 @@ fence:
     CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
     //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, li_fence_cleared, 0)
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, d.curr_wqe_ptr)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, d.curr_wqe_ptr)
 
 end:
     nop.e
