@@ -300,6 +300,9 @@ pciehdev_add(pciehdev_t *pdev)
     pciehdev_t *pbrdn;
     int memtun_en = 0;
 
+    if (pdev->port >= NPORTS) {
+        return -EINVAL;
+    }
     if (pi->finalized) {
         return -EBUSY;
     }

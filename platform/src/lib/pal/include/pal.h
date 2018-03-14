@@ -21,6 +21,9 @@ void pal_reg_wr32(const u_int64_t pa, const u_int32_t val);
 u_int64_t pal_reg_rd64(const u_int64_t pa);
 void pal_reg_wr64(const u_int64_t pa, const u_int64_t val);
 
+u_int64_t pal_reg_rd64_safe(const u_int64_t pa);
+void pal_reg_wr64_safe(const u_int64_t pa, const u_int64_t val);
+
 void pal_reg_rd32w(const u_int64_t pa,
                    u_int32_t *w,
                    const u_int32_t nw);

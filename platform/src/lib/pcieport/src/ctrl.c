@@ -22,7 +22,7 @@ pcieport_mac_k_gen(pcieport_t *p)
     const int pn = p->port;
     u_int64_t gen;
 
-    gen = pal_reg_rd64(PXC_(CFG_C_MAC_K_GEN, pn));
+    gen = pal_reg_rd64_safe(PXC_(CFG_C_MAC_K_GEN, pn));
     gen &= 0xffffffff00000000ULL;
     gen |= 0x80e20254; /* XXX replace hard-coded value? */
 
@@ -34,7 +34,7 @@ pcieport_mac_k_gen(pcieport_t *p)
     case 16: /* 16 is default */ break;
     }
 
-    pal_reg_wr64(PXC_(CFG_C_MAC_K_GEN, pn), gen);
+    pal_reg_wr64_safe(PXC_(CFG_C_MAC_K_GEN, pn), gen);
 }
 
 static void

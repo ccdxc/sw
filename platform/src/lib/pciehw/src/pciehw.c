@@ -505,7 +505,7 @@ cmd_dev(int argc, char *argv[])
     char lifstr[8];
     int i;
 
-    pciehsys_log("%-3s %-10s %-9s %-4s %-4s\n",
+    pciehsys_log("%-3s %-16s %-9s %-4s %-4s\n",
                  "hdl", "name", "p:bdf", "intx", "lif");
     phwdev = &phwmem->dev[1];
     for (i = 1; i <= phwmem->allocdev; i++, phwdev++) {
@@ -513,7 +513,7 @@ cmd_dev(int argc, char *argv[])
         if (phwdev->lif_valid) {
             snprintf(lifstr, sizeof(lifstr), "%d", phwdev->lif);
         }
-        pciehsys_log("%3d %-10s %1d:%-7s    %c %4s\n",
+        pciehsys_log("%3d %-16s %1d:%-7s    %c %4s\n",
                      pciehwdev_geth(phwdev),
                      pciehwdev_get_name(phwdev),
                      phwdev->port,

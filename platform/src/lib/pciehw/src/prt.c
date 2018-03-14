@@ -378,25 +378,26 @@ pciehw_prt_load(const int prtbase, const int prtcount)
     pciehw_t *phw = pciehw_get();
     pciehw_mem_t *phwmem = pciehw_get_hwmem(phw);
     pciehw_sprt_t *sprt;
-    int i;
+    const int prtend = prtbase + prtcount;
+    int prti;
 
     sprt = &phwmem->sprt[prtbase];
-    for (i = 0; i < prtcount; i++, sprt++) {
+    for (prti = 0; prti < prtend; prti++, sprt++) {
         const pciehwdev_t *phwdev = pciehwdev_get(sprt->owner);
 
         switch (sprt->type) {
         case PRT_TYPE_RES:
-            prt_set_res(prtbase + i,
+            prt_set_res(prti,
                         sprt->resaddr, sprt->ressize,
                         sprt->notify, sprt->indirect,
                         sprt->pmvdis);
             break;
         case PRT_TYPE_DB64:
             assert(phwdev->lif_valid);
-            prt_set_db64(prtbase + i, phwdev->lif, sprt->updvec);
+            prt_set_db64(prti, phwdev->lif, sprt->updvec);
             break;
         case PRT_TYPE_DB32:
-            prt_set_db32(prtbase + i, phwdev->lif, sprt->updvec);
+            prt_set_db32(prti, phwdev->lif, sprt->updvec);
             break;
         case PRT_TYPE_DB16:
             /* XXX add these */
@@ -414,10 +415,11 @@ void
 pciehw_prt_unload(const int prtbase, const int prtcount)
 {
     const prt_t prt = { 0 };
-    int i;
+    const int prtend = prtbase + prtcount;
+    int prti;
 
-    for (i = 0; i < prt_size(); i++) {
-        prt_set(i, &prt);
+    for (prti = prtbase; prti < prtend; prti++) {
+        prt_set(prti, &prt);
     }
 }
 

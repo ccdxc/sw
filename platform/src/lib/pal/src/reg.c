@@ -75,3 +75,22 @@ pal_reg_wr32w(const u_int64_t pa,
         *va++ = *w++;
     }
 }
+
+u_int64_t
+pal_reg_rd64_safe(const u_int64_t pa)
+{
+    u_int64_t val;
+    u_int32_t *w = (u_int32_t *)&val;
+
+    pal_reg_rd32w(pa, w, 2);
+    return val;
+}
+
+void
+pal_reg_wr64_safe(const u_int64_t pa, const u_int64_t val)
+{
+    const u_int32_t *w = (const u_int32_t *)&val;
+
+    pal_reg_wr32w(pa, w, 2);
+}
+
