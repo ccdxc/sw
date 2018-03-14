@@ -121,7 +121,7 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request(capri_barco_symm_enctype_e
 						      uint8_t *plaintext, int plaintext_len,
 						      uint8_t *iv, int iv_len,
 						      uint8_t *ciphertext, int ciphertext_len,
-						      uint8_t *auth_tag, int auth_tag_len);
+						      uint8_t *auth_tag, int auth_tag_len, bool schedule_barco);
 
 void capri_barco_init_drbg(void);
 

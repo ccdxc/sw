@@ -178,6 +178,8 @@ SSLConnection::process_nw_data(uint8_t* data, size_t len)
         return HAL_RET_INVALID_ARG;
     }
     HAL_TRACE_DEBUG("SSL: Received data of len: {}", len);
+    HAL_TRACE_DEBUG("data in hex: {}",
+                    hex_dump(data, len));
     int err = BIO_write(nbio, data, len);
     ret = handle_ssl_ret(err);
     if(ret != HAL_RET_OK) {

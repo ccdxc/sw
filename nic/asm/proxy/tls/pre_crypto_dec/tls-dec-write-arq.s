@@ -30,7 +30,7 @@ tls_dec_write_arq:
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r5
 
 
-    smeqb       c1, k.s5_s6_t1_s2s_debug_dol, TLS_DDOL_LEAVE_IN_ARQ, TLS_DDOL_LEAVE_IN_ARQ
+    smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_LEAVE_IN_ARQ, TLS_DDOL_LEAVE_IN_ARQ
 
 dma_cmd_cpu_hdr:
     phvwri      p.cpu_hdr1_src_lif,0
@@ -52,7 +52,7 @@ dma_cmd_cpu_hdr:
     phvwri      p.cpu_hdr2_l4_offset, 0xFFFF
     phvwri      p.cpu_hdr2_payload_offset, 0
         
-    add         r4, k.to_s6_opage, k.to_s6_next_tls_hdr_offset
+    add         r4, k.s5_s6_t1_s2s_arq_opage, k.to_s6_next_tls_hdr_offset
     subi        r3, r4, NIC_CPU_HDR_SIZE_BYTES
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window_1)
@@ -63,7 +63,7 @@ dma_cmd_descr:
     addi        r1, r5, PKT_DESC_AOL_OFFSET
 
 
-    phvwr       p.idesc_A0, k.{to_s6_opage}.dx
+    phvwr       p.idesc_A0, k.{s5_s6_t1_s2s_arq_opage}.dx
     add         r4, k.to_s6_next_tls_hdr_offset, r0
     subi        r3, r4, NIC_CPU_HDR_SIZE_BYTES
     phvwr       p.idesc_O0, r3.wx

@@ -22,6 +22,8 @@ struct tx_table_s3_t0_d d;
 	
 %%
 	.param      tls_enc_bld_barco_req_process
+	.param      tls_enc_read_barco_pi_process
+	.param      TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
         
 tls_enc_serq_consume_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_0)
@@ -50,5 +52,14 @@ table_read_BLD_BARCO_ENC_REQ:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_bld_barco_req_process,
                            k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET,
                            TABLE_SIZE_512_BITS)
+
+    /*
+     * Launch a locked table-read to the Barco GCM0 PI address in HBM.
+     */
+    addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, tls_enc_read_barco_pi_process, r5, TABLE_SIZE_16_BITS)
+	
 	nop.e
 	nop

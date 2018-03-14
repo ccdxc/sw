@@ -122,7 +122,7 @@ def TestCaseVerify(tc):
         print("enc_requests not as expected %d %d" %(tlscb_cur.enc_requests, tlscb.enc_requests))
         return False
 
-    if (tlscb_cur.pre_debug_stage0_7_thread != 0x117711):
+    if (tlscb_cur.pre_debug_stage0_7_thread != 0x157711):
         print("pre_debug_stage0_7_thread not as expected %x" % tlscb_cur.pre_debug_stage0_7_thread)
         return False
 

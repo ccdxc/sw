@@ -30,15 +30,93 @@ def TestCaseSetup(tc):
     tc.pvtdata = ObjectDatabase(logger)
     tcp_proxy.SetupProxyArgs(tc)
 
-    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    skip_config = False
+    if hasattr(tc.module.args, 'skip_config') and tc.module.args.skip_config:
+        print("skipping config")
+        skip_config = True
+
+    #id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+
+    id1, id2 = ProxyCbServiceHelper.GetSessionQids(tc.config.flow._FlowObject__session)
+    if tc.config.flow.IsIflow():
+        id = id1
+        other_fid = id2
+    else:
+        id = id2
+        other_fid = id1
+
     TcpCbHelper.main(id)
     tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    tcp_proxy.init_tcb_inorder(tc, tcb)
-    # set tcb state to ESTABLISHED(1)
-    tcb.state = 1
-    tcb.SetObjValPd()
+    if not skip_config:
+       tcp_proxy.init_tcb_inorder(tc, tcb)
+       # set tcb state to ESTABLISHED(1)
+       tcb.state = 1
+       tcb.SetObjValPd()
+    else:
+        tc.pvtdata.flow1_bytes_rxed = 0
+        tc.pvtdata.flow1_bytes_txed = 0
+        tc.pvtdata.flow2_bytes_rxed = 0
+        tc.pvtdata.flow2_bytes_txed = 0
+
+    TcpCbHelper.main(other_fid)
+    tcbid2 = "TcpCb%04d" % (other_fid)
+    tc.module.logger.info("Configuring %s" % tcbid2)
+    tcb2 = tc.infra_data.ConfigStore.objects.db[tcbid2]
+    if not skip_config:
+        tcp_proxy.init_tcb_inorder2(tc, tcb2)
+        tcb2.SetObjValPd()
+
+    tc.pvtdata.tcb1 = tcb
+    tc.pvtdata.tcb2 = tcb2
+
+
+    tlscbid = "TlsCb%04d" % id
+    tlscbid2 = "TlsCb%04d" % (other_fid)
+    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
+    #tlscb = tc.infra_data.ConfigStore.objects.db[tlscbid]
+    #tlscb2 = tc.infra_data.ConfigStore.objects.db[tlscbid2]
+    tlscb2 = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid2])
+
+    tlscb.serq_pi = 0
+    tlscb.serq_pi = 0
+    tlscb.serq_ci = 0
+    tlscb.serq_ci = 0
+    tlscb2.serq_pi = 0
+    tlscb2.serq_pi = 0
+    tlscb2.serq_ci = 0
+    tlscb2.serq_ci = 0
+    tlscb.debug_dol = 0
+    tlscb2.debug_dol = 0
+
+    #tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
+    #                        tcp_tls_proxy.tls_debug_dol_sesq_stop
+    #tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy
+
+    #If 'use_random_iv' is set, set the corresponding debug-dol flag to indicate
+    #datapath to pick a random value from DRBG as IV.
+    if hasattr(tc.module.args, 'use_random_iv') and tc.module.args.use_random_iv == 1:
+        tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random
+        tlscb2.debug_dol |= tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random
+
+    if tc.pvtdata.same_flow:
+        tlscb.other_fid = 0xffff
+    else:
+        tlscb.other_fid = other_fid
+
+
+    if not skip_config:    
+       if tc.module.args.key_size == 16:
+           tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb)
+       elif tc.module.args.key_size == 32:
+           tcp_tls_proxy.tls_aes256_encrypt_setup(tc, tlscb)
+
+       tlscb.SetObjValPd()
+       tlscb2.SetObjValPd()
+
+    if skip_config:
+        return
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
@@ -52,27 +130,6 @@ def TestCaseSetup(tc):
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     tnmpr.GetMeta()
 
-
-
-    tlscbid = "TlsCb%04d" % id
-    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
-    tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
-                            tcp_tls_proxy.tls_debug_dol_sesq_stop
-
-    #If 'use_random_iv' is set, set the corresponding debug-dol flag to indicate
-    #datapath to pick a random value from DRBG as IV.
-    if hasattr(tc.module.args, 'use_random_iv') and tc.module.args.use_random_iv == 1:
-        tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random
-    tlscb.other_fid = 0xffff
-
-    if tc.module.args.key_size == 16:
-        tcp_tls_proxy.tls_aes128_encrypt_setup(tc, tlscb)
-    elif tc.module.args.key_size == 32:
-        tcp_tls_proxy.tls_aes256_encrypt_setup(tc, tlscb)
-    
-    tlscb.serq_pi = 0
-    tlscb.serq_ci = 0
-    tlscb.SetObjValPd()
     print("snapshot1: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
     print("snapshot1: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
 
@@ -99,6 +156,10 @@ def TestCaseSetup(tc):
 
 def TestCaseVerify(tc):
     if GlobalOptions.dryrun:
+        return True
+
+    if hasattr(tc.module.args, 'skip_verify') and tc.module.args.skip_verify:
+        print("skipping verify")
         return True
 
     num_pkts = 1
@@ -145,9 +206,9 @@ def TestCaseVerify(tc):
     if tc.module.args.cipher_suite == "CBC": 
         pre_debug_stage0_7_thread = 0x111911
     elif ((tlscb.debug_dol & tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random) == tcp_tls_proxy.tls_debug_dol_explicit_iv_use_random):
-        pre_debug_stage0_7_thread = 0x137711
+        pre_debug_stage0_7_thread = 0x177711
     else:
-        pre_debug_stage0_7_thread = 0x117711
+        pre_debug_stage0_7_thread = 0x157711
 
     if (tlscb_cur.pre_debug_stage0_7_thread != pre_debug_stage0_7_thread):
         print("pre crypto pipeline threading was not ok 0x%x" % tlscb_cur.pre_debug_stage0_7_thread)

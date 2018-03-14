@@ -18,7 +18,7 @@
 #include "nic/hal/pd/capri/capri_state.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 85
+#define CAPRI_P4PLUS_NUM_SYMBOLS 87
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -764,6 +764,32 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = 0x1;
     symbols[i].params[1].name = CAPRI_CPU_MAX_ARQID;
     symbols[i].params[1].val = 0x0; 
+    i++;
+
+    symbols[i].name = "tls-enc-serq-consume.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+
+    /*
+     * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
+     * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
+     * HBM memory from this region to store other TLS global resources.
+     */
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
+                                 CAPRI_MAX_TLS_PAD_SIZE; 
+    i++;
+
+    symbols[i].name = "tls-dec-read-header.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+
+    /*
+     * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
+     * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
+     * HBM memory from this region to store other TLS global resources.
+     */
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
+                                 CAPRI_MAX_TLS_PAD_SIZE; 
     i++;
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below

@@ -32,6 +32,7 @@ tls_enc_queue_brq_mpp_process:
 
     /*   brq.odesc->data_len = brq.idesc->data_len + sizeof(tls_hdr_t); */
 dma_cmd_enc_data_len:
+#if 0
     /*   brq.odesc->data_len = tlsp->cur_tls_data_len; */
     add         r5, r0, k.to_s5_odesc
     addi        r5, r5, NIC_DESC_DATA_LEN_OFFSET
@@ -41,6 +42,7 @@ dma_cmd_enc_data_len:
     phvwr       p.to_s5_cur_tls_data_len, k.to_s5_cur_tls_data_len
 
     //CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, to_s5_cur_tls_data_len, to_s5_cur_tls_data_len)
+#endif
 
     /*
             SET_DESC_ENTRY(brq.odesc, 0, 

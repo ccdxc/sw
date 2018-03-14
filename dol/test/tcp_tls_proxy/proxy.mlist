@@ -232,11 +232,11 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         rtl     : True
+        ignore  : True
         spec    : multi_pkt.testspec
         args    :
             cipher_suite: GCM
             maxflows: 1
-            same_flow : 1
             key_size : 16
             num_pkts : 10
             snd_cwnd : 10
@@ -249,6 +249,7 @@ modules:
         module  : pkt_to_bsq_encrypt
         rtl     : True
         spec    : one_pkt.testspec
+        perf    : True
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -275,6 +276,7 @@ modules:
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes128_gcm_record_pkt.testspec
         rtl     : True
+        enable  : False
         args    :
             cipher_suite: GCM
             maxflows: 1
@@ -289,6 +291,7 @@ modules:
         module  : pkt_to_bsq_decrypt
         rtl     : False
         spec    : one_tls_aes128_gcm_record_pkt_multi_segment.testspec
+        enable  : False
         args    :
             cipher_suite: GCM
             maxflows: 1

@@ -77,6 +77,11 @@ hal_ret_t capri_barco_crypto_init(void)
     ret = capri_barco_sym_hash_run_tests();
 #endif
 
+#if 0
+    hal_ret_t capri_barco_sym_run_aes_gcm_1K_test(void);
+    ret = capri_barco_sym_run_aes_gcm_1K_test();
+#endif
+
     /*
      * Initialize the barco DRBG random number generator.
      */
@@ -222,10 +227,11 @@ hal_ret_t capri_barco_read_key(uint32_t key_idx, types::CryptoKeyType *key_type,
 hal_ret_t
 capri_barco_crypto_init_tls_pad_table(void)
 {
-    uint8_t  tls_pad_bytes[CAPRI_MAX_TLS_PAD_SIZE], i, j;
+    uint8_t  tls_pad_bytes[get_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
     uint64_t tls_pad_base_addr = 0;
 
-    HAL_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table"); 
+    HAL_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size {:x}", sizeof(tls_pad_bytes));
+    bzero(tls_pad_bytes, sizeof(tls_pad_bytes));
 
     /*
      * Block-size 16.
@@ -240,7 +246,7 @@ capri_barco_crypto_init_tls_pad_table(void)
 
     tls_pad_base_addr = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
     if (tls_pad_base_addr) {
-        capri_hbm_write_mem(tls_pad_base_addr, tls_pad_bytes, CAPRI_MAX_TLS_PAD_SIZE);
+        capri_hbm_write_mem(tls_pad_base_addr, tls_pad_bytes, sizeof(tls_pad_bytes));
     }
     return HAL_RET_OK;
 }

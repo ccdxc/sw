@@ -6,16 +6,16 @@
 
 #define tx_table_s1_t0_action       read_serq_entry
 
-#define tx_table_s2_t0_action       tls_read_pkt_descr_aol
+#define tx_table_s2_t0_action       tls_serq_process
 #define tx_table_s2_t1_action       read_tnmdr_pidx
 #define tx_table_s2_t2_action       read_tnmpr_pidx
 #define tx_table_s2_t3_action       tls_serq_consume
 
-#define tx_table_s3_t0_action       tls_serq_process
+#define tx_table_s3_t0_action       tls_read_tls_header
 #define tx_table_s3_t1_action       tdesc_alloc
 #define tx_table_s3_t2_action       tpage_alloc
 
-#define tx_table_s4_t0_action       tls_read_tls_header
+#define tx_table_s4_t0_action       tls_read_barco_pi
 
 #define tx_table_s5_t0_action       tls_bld_brq5
 
@@ -114,7 +114,8 @@ rsvd,cosA,cosB,cos_sel,eval_last,host,total,pid, pi_0,ci_0
         modify_field(tls_global_phv_scratch.tls_hdr_version_major, tls_global_phv.tls_hdr_version_major);\
         modify_field(tls_global_phv_scratch.tls_hdr_version_minor, tls_global_phv.tls_hdr_version_minor);\
         modify_field(tls_global_phv_scratch.tls_hdr_len, tls_global_phv.tls_hdr_len);                   \
-        modify_field(tls_global_phv_scratch.next_tls_hdr_offset, tls_global_phv.next_tls_hdr_offset);
+        modify_field(tls_global_phv_scratch.next_tls_hdr_offset, tls_global_phv.next_tls_hdr_offset);   \
+        modify_field(tls_global_phv_scratch.debug_dol, tls_global_phv.debug_dol);
 
 /* Global PHV definition */
 header_type tls_global_phv_t {
@@ -134,23 +135,15 @@ header_type tls_global_phv_t {
         tls_hdr_version_minor           : 8;
         tls_hdr_len                     : 16;
         next_tls_hdr_offset             : 16;
-    }
-}
-
-header_type to_stage_3_phv_t {
-    fields {
-        idesc                           : ADDRESS_WIDTH;
-    }
-}
-
-header_type to_stage_4_phv_t {
-    fields {
-        pad                             : 96;
         debug_dol                       : 8;
     }
 }
-#define GENERATE_TO_S4_K                                                                \
-    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
+
+header_type to_stage_2_phv_t {
+    fields {
+        idesc                           : HBM_ADDRESS_WIDTH;
+    }
+}
 
 header_type to_stage_5_phv_t {
     fields {
@@ -158,15 +151,10 @@ header_type to_stage_5_phv_t {
         odesc                           : HBM_ADDRESS_WIDTH;
         opage                           : HBM_ADDRESS_WIDTH;
         cur_tls_data_len                : 16;
-        debug_dol                       : 8;
         write_arq                       : 1;
         pad                             : 7;
     }
 }
-
-#define s4_s6_t0_phv_t  additional_data_t
-#define GENERATE_S4_S6_T0  GENERATE_AAD_FIELDS(s4_s6_t0_scratch, s4_s6_t0_phv)
-
 
 header_type to_stage_6_phv_t {
     fields {
@@ -196,8 +184,21 @@ header_type to_stage_6_phv_t {
         modify_field(TO.next_tls_hdr_offset, FROM.next_tls_hdr_offset);
 
 
-#define GENERATE_S2_S3_T0                                                                   \
-        modify_field(s2_s3_t0_scratch.idesc_aol0_addr, s2_s3_t0_phv.idesc_aol0_addr);       \
+#define GENERATE_S1_S2_T0                                                                   \
+        modify_field(s1_s2_t0_scratch.idesc_aol0_addr, s1_s2_t0_phv.idesc_aol0_addr);       \
+        modify_field(s1_s2_t0_scratch.idesc_aol0_offset, s1_s2_t0_phv.idesc_aol0_offset);   \
+        modify_field(s1_s2_t0_scratch.idesc_aol0_len, s1_s2_t0_phv.idesc_aol0_len);
+
+header_type s1_s2_t0_phv_t {
+    fields {
+        idesc_aol0_addr                 : ADDRESS_WIDTH;
+        idesc_aol0_offset               : 32;
+        pad1                            : 24;
+        idesc_aol0_len                  : 32;
+    }
+}
+#define GENERATE_S2_S3_T0                                                               \
+        modify_field(s2_s3_t0_scratch.idesc_aol0_addr, s2_s3_t0_phv.idesc_aol0_addr);   \
         modify_field(s2_s3_t0_scratch.idesc_aol0_offset, s2_s3_t0_phv.idesc_aol0_offset);   \
         modify_field(s2_s3_t0_scratch.idesc_aol0_len, s2_s3_t0_phv.idesc_aol0_len);
 
@@ -209,28 +210,33 @@ header_type s2_s3_t0_phv_t {
         idesc_aol0_len                  : 32;
     }
 }
-#define GENERATE_S3_S4_T0                                                               \
-        modify_field(s3_s4_t0_scratch.idesc_aol0_addr, s3_s4_t0_phv.idesc_aol0_addr);   \
-        modify_field(s3_s4_t0_scratch.idesc_aol0_offset, s3_s4_t0_phv.idesc_aol0_offset);   \
-        modify_field(s3_s4_t0_scratch.idesc_aol0_len, s3_s4_t0_phv.idesc_aol0_len);
-header_type s3_s4_t0_phv_t {
+
+//The aad fields below should be same as additional_data_t
+header_type s4_s6_t0_phv_t {
     fields {
-        idesc_aol0_addr                 : ADDRESS_WIDTH;
-        idesc_aol0_offset               : 32;
-        pad1                            : 24;
-        idesc_aol0_len                  : 32;
+        aad_seq_num                 : 64;
+        aad_type                    : 8;
+        aad_version_major           : 8;
+        aad_version_minor           : 8;
+        aad_length                  : 16;
+        sw_barco_pi                 : 16;
     }
 }
 
+#define GENERATE_S4_S6_T0  \
+        GENERATE_AAD_FIELDS(s4_s6_t0_scratch, s4_s6_t0_phv)    \
+        modify_field(s4_s6_t0_scratch.sw_barco_pi, s4_s6_t0_phv.sw_barco_pi);
+
+
 #define GENERATE_S5_S6_T1                                                               \
         modify_field(s5_s6_t1_s2s_scratch.arq_base, s5_s6_t1_s2s.arq_base);             \
-        modify_field(s5_s6_t1_s2s_scratch.debug_dol, s5_s6_t1_s2s.debug_dol);
+        modify_field(s5_s6_t1_s2s_scratch.arq_opage, s5_s6_t1_s2s.arq_opage);
 
 header_type s5_s6_t1_s2s_phv_t {
     fields {
-        debug_dol                       : 8;
-        pad                             : 8;
+        pad                             : 16;
         arq_base                        : 32;
+        arq_opage                       : 64;
 
     }
 }
@@ -264,13 +270,19 @@ header_type s3_t2_s2s_phv_t {
 
 header_type pad_to_dma_cmds_t {
     fields {
-        pad                     : 0;
+        pad                     : 60;
     }
 }
 
 header_type ring_entry_pad_t {
     fields {
         pad                     : 192;
+    }
+}
+
+header_type after_odesc_pad_t {
+    fields {
+        pad                     : 32;
     }
 }
 
@@ -290,7 +302,7 @@ metadata tls_stage_queue_brq_d_t tls_queue_brq_d;
 metadata tls_stage_pre_crypto_stats_d_t tls_pre_crypto_stats_d;
 
 @pragma scratch_metadata
-metadata serq_entry_d_t SERQ_ENTRY_SCRATCH;
+metadata serq_entry_new_t SERQ_ENTRY_NEW_SCRATCH;
 
 @pragma scratch_metadata
 metadata tnmdr_pidx_t TNMDR_PIDX_SCRATCH;
@@ -311,25 +323,19 @@ metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_1_t cpu_hdr1;
 
-
-@pragma pa_header_union ingress to_stage_2 cpu_hdr2
 @pragma dont_trim
-metadata barco_dbell_t barco_dbell;
+@pragma pa_header_union ingress to_stage_2 to_s2 cpu_hdr2
+metadata to_stage_2_phv_t to_s2;
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_2_t cpu_hdr2;
 
-
 @pragma pa_header_union ingress to_stage_3 odesc_dma_src
-metadata to_stage_3_phv_t to_s3;
 @pragma dont_trim
 metadata odesc_dma_src_t odesc_dma_src;
 
-
-@pragma pa_header_union ingress to_stage_4 crypto_iv to_s4
+@pragma pa_header_union ingress to_stage_4 crypto_iv
 @pragma dont_trim
 metadata crypto_iv_t crypto_iv;
-metadata to_stage_4_phv_t to_s4;
-
 
 @pragma pa_header_union ingress to_stage_5
 metadata to_stage_5_phv_t to_s5;
@@ -343,9 +349,9 @@ metadata to_stage_7_phv_t to_s7;
 @pragma pa_header_union ingress common_global
 metadata tls_global_phv_t tls_global_phv;
 
-@pragma pa_header_union ingress  common_t0_s2s s3_s4_t0_phv s4_s6_t0_phv
+@pragma pa_header_union ingress  common_t0_s2s s2_s3_t0_phv s4_s6_t0_phv
+metadata s1_s2_t0_phv_t s1_s2_t0_phv;
 metadata s2_s3_t0_phv_t s2_s3_t0_phv;
-metadata s3_s4_t0_phv_t s3_s4_t0_phv;
 metadata s4_s6_t0_phv_t s4_s6_t0_phv;
 
 
@@ -361,7 +367,11 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s;
 @pragma dont_trim
 metadata pkt_descr_aol_t idesc; 
 @pragma dont_trim
-metadata pkt_descr_aol_t odesc; 
+metadata pkt_descr_aol_t odesc;
+@pragma dont_trim
+metadata barco_dbell_t barco_dbell;
+@pragma dont_trim
+metadata after_odesc_pad_t odesc_pad;
 @pragma dont_trim
 metadata barco_desc_t barco_desc;
 @pragma dont_trim
@@ -391,11 +401,9 @@ metadata dma_cmd_phv2mem_t dma_cmd7;
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
 @pragma scratch_metadata
-metadata to_stage_3_phv_t to_s3_scratch;
+metadata to_stage_2_phv_t to_s2_scratch;
 @pragma scratch_metadata
 metadata barco_dbell_t barco_db_scratch;
-@pragma scratch_metadata
-metadata to_stage_4_phv_t to_s4_scratch;
 @pragma scratch_metadata
 metadata to_stage_5_phv_t to_s5_scratch;
 @pragma scratch_metadata
@@ -404,9 +412,9 @@ metadata to_stage_6_phv_t to_s6_scratch;
 metadata to_stage_7_phv_t to_s7_scratch;
 
 @pragma scratch_metadata
-metadata s2_s3_t0_phv_t s2_s3_t0_scratch;
+metadata s1_s2_t0_phv_t s1_s2_t0_scratch;
 @pragma scratch_metadata
-metadata s3_s4_t0_phv_t s3_s4_t0_scratch;
+metadata s2_s3_t0_phv_t s2_s3_t0_scratch;
 @pragma scratch_metadata
 metadata s4_s6_t0_phv_t s4_s6_t0_scratch;
 
@@ -428,21 +436,40 @@ metadata arq_pi_d_t arq_tx_pi_d;
 
 
 /* Stage 1 Table 0 action */
-action read_serq_entry(SERQ_ENTRY_ACTION_PARAMS) {
+action read_serq_entry(SERQ_ENTRY_NEW_ACTION_PARAMS) {
 
     GENERATE_GLOBAL_K
 
-    GENERATE_SERQ_ENTRY_D
+    GENERATE_SERQ_ENTRY_NEW_D
 }
 
 
-
-/* Stage 2 table 0 action */
+/* Stage 2 table 0 action -- not needed anyore, absorbed in read_serq_entry
 action tls_read_pkt_descr_aol(PKT_DESCR_AOL_ACTION_PARAMS) {
 
     GENERATE_GLOBAL_K
 
     GENERATE_PKT_DESCR_AOL_D
+}
+*/
+
+/* Stage 2 table 0 action */
+action tls_serq_process(TLSCB_1_PARAMS) {
+
+
+    GENERATE_GLOBAL_K
+
+    GENERATE_S1_S2_T0
+
+    /* To Stage 3 fields */
+    modify_field(to_s2_scratch.idesc, to_s2.idesc);
+
+    /* Unionized PHV mem with to_s3 used in later stage as scratch */
+    /*modify_field(barco_db_scratch.pi, barco_dbell.pi); */
+
+    /* D vector */
+    GENERATE_TLSCB_1_D
+
 }
 
 /*
@@ -474,23 +501,13 @@ action tls_serq_consume(TLSCB_0_PARAMS_NON_STG0) {
 
 }
 
-/* Stage 3 table 0 action */
-action tls_serq_process(TLSCB_1_PARAMS) {
-
-
+/* Stage 3 Table 0 action */
+action tls_read_tls_header(TLS_HDR_ACTION_PARAMS) {
     GENERATE_GLOBAL_K
 
     GENERATE_S2_S3_T0
 
-    /* To Stage 3 fields */
-    modify_field(to_s3_scratch.idesc, to_s3.idesc);
-
-    /* Unionized PHV mem with to_s3 used in later stage as scratch */
-    /*modify_field(barco_db_scratch.pi, barco_dbell.pi); */
-
-    /* D vector */
-    GENERATE_TLSCB_1_D
-
+    GENERATE_TLS_HDR_D
 }
 
 /*
@@ -540,17 +557,12 @@ action tls_stage3(TLSCB_1_PARAMS) {
     GENERATE_TLSCB_1_D
 }
 
-/* Stage 4 action */
-action tls_read_tls_header(TLS_HDR_ACTION_PARAMS) {
+
+/* Stage 4 Table 0 action */
+action tls_read_barco_pi(TLS_HDR_ACTION_PARAMS) {
+
     GENERATE_GLOBAL_K
-
-    GENERATE_S3_S4_T0
-
-    GENERATE_TO_S4_K
-
-    GENERATE_TLS_HDR_D
 }
-
 
 /* Stage 5 action */
 action tls_bld_brq5(TLSCB_0_PARAMS_NON_STG0) {
@@ -560,7 +572,6 @@ action tls_bld_brq5(TLSCB_0_PARAMS_NON_STG0) {
     /* To Stage 5 fields */
     modify_field(to_s5_scratch.idesc, to_s5.idesc);
     modify_field(to_s5_scratch.odesc, to_s5.odesc);
-    modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
     GENERATE_TLSCB_0_D_NON_STG0
 }

@@ -189,7 +189,7 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to enqueue request");
         ret = HAL_RET_ERR;
@@ -505,7 +505,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_gen(uint8_t *p, uint8_t *n,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to enqueue request");
         ret = HAL_RET_ERR;
@@ -838,7 +838,7 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to enqueue request");
         ret = HAL_RET_ERR;
@@ -1114,7 +1114,7 @@ hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to enqueue request");
         ret = HAL_RET_ERR;
@@ -1404,7 +1404,7 @@ hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to enqueue request");
         ret = HAL_RET_ERR;
@@ -1795,7 +1795,7 @@ hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to enqueue request");
         ret = HAL_RET_ERR;
@@ -2117,7 +2117,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_gen(uint8_t *n, uint8_t *d,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to enqueue request");
         ret = HAL_RET_ERR;
@@ -2389,7 +2389,7 @@ hal_ret_t capri_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to enqueue request");
         ret = HAL_RET_ERR;

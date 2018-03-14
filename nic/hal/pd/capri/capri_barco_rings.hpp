@@ -101,7 +101,7 @@ hal_ret_t pd_crypto_asym_dma_descr_init(void);
 
 typedef hal_ret_t (*barco_ring_init_t) (struct capri_barco_ring_s *);
 typedef bool (*barco_ring_poller_t) (struct capri_barco_ring_s *, uint32_t);
-typedef hal_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *, uint32_t *);
+typedef hal_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *, uint32_t *, bool);
 
 typedef struct capri_barco_ring_s {
     char                ring_name[32];      /*  Friendly name for logging       */
@@ -189,7 +189,7 @@ typedef struct capri_barco_ring_s {
 #define BARCO_CRYPTO_DC_RING_SIZE                   1024
 #define BARCO_CRYPTO_DC_HOT_RING_SIZE               1024
 
-hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag);
+hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag, bool);
 bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag);
   hal_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, hal::barco_asym_descr_t *asym_req_descr);
 hal_ret_t capri_barco_symm_req_descr_get(types::BarcoRings ring_type, uint32_t slot_index,

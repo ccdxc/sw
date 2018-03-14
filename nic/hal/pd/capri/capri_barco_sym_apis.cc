@@ -241,7 +241,7 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     sym_req_descr.doorbell_data = 0;
 
     ret = capri_barco_ring_queue_request(types::BARCO_RING_MPP0, (void *)&sym_req_descr,
-					 &req_tag);
+					 &req_tag, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to enqueue request",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
@@ -254,8 +254,6 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
         //HAL_TRACE_DEBUG("SYM Hash {}-{}: Waiting for Barco completion...",
         //                CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
     }
-    //sleep(5);
-    //abort();
 
     /* Copy out the results */
     if (generate) {
@@ -337,7 +335,8 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 						       uint8_t *plaintext, int plaintext_len,
 						       uint8_t *iv, int iv_len,
 						       uint8_t *ciphertext, int ciphertext_len,
-						       uint8_t *auth_tag, int auth_tag_len)
+						       uint8_t *auth_tag, int auth_tag_len,
+						       bool schedule_barco)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint64_t                    ilist_msg_descr_addr = 0, olist_msg_descr_addr = 0;
@@ -615,6 +614,11 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
     sym_req_descr.output_list_addr = olist_msg_descr_addr;
 
     switch (enc_type) {
+    case CAPRI_SYMM_ENCTYPE_AES_GCM:
+      sym_req_descr.command = encrypt ?
+	CAPRI_BARCO_SYM_COMMAND_AES_GCM_Encrypt :
+	CAPRI_BARCO_SYM_COMMAND_AES_GCM_Decrypt;
+      break;
     case CAPRI_SYMM_ENCTYPE_AES_CCM:
       sym_req_descr.command = encrypt ?
 	//CAPRI_BARCO_SYM_COMMAND_AES_CCM_Encrypt(iv_len, auth_tag_len) :
@@ -685,8 +689,14 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
 
     ciphertext_len = plaintext_len;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_MPP0, (void *)&sym_req_descr,
-					 &req_tag);
+    if (enc_type == CAPRI_SYMM_ENCTYPE_AES_GCM) {
+        ret = capri_barco_ring_queue_request(types::BARCO_RING_GCM0, (void *)&sym_req_descr,
+					     &req_tag, schedule_barco);
+    } else {
+        ret = capri_barco_ring_queue_request(types::BARCO_RING_MPP0, (void *)&sym_req_descr,
+					     &req_tag, schedule_barco);
+    }
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYMM Encrypt {}-{}: Failed to enqueue request",
 		      capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
@@ -694,10 +704,25 @@ hal_ret_t capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_
         goto cleanup;
     }
 
+    if (!schedule_barco) {
+        HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Request at slot {:x}, Barco PI not updated",
+		        capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
+		        req_tag);
+        ret = HAL_RET_OK;
+	return(ret);
+    }
+
     /* Poll for completion */
-    while (capri_barco_ring_poll(types::BARCO_RING_MPP0, req_tag) != TRUE) {
-        //HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Waiting for Barco completion...",
-        //                capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+    if (enc_type == CAPRI_SYMM_ENCTYPE_AES_GCM) {
+        while (capri_barco_ring_poll(types::BARCO_RING_GCM0, req_tag) != TRUE) {
+           //HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Waiting for Barco completion...",
+           //                capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        }
+    } else {
+        while (capri_barco_ring_poll(types::BARCO_RING_MPP0, req_tag) != TRUE) {
+            //HAL_TRACE_DEBUG("SYMM Encrypt {}-{}: Waiting for Barco completion...",
+            //                capri_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
+        }
     }
     //sleep(5);
     //abort();

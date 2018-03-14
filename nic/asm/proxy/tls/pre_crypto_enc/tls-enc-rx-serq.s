@@ -64,7 +64,6 @@ dma_cmd_enc_desc_entry_last:
 no_dma_cmd_enc:        
     /* etlsp->enc_nxt.desc = TAIL_DESC(*etlsp, enc); */
     tblwr           d.nxt_desc, k.to_s2_idesc
-    phvwr       p.to_s5_cur_tls_data_len, d.cur_tls_data_len
 
     tblwr.c1        d.qtail, k.to_s2_idesc
     tblwr.c1        d.qhead, k.to_s2_idesc

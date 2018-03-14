@@ -82,12 +82,12 @@ dma_cmd_iv:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, crypto_iv_salt, crypto_iv_explicit_iv)    
 	
 dma_cmd_dec_brq_slot:
-	add		    r7, r0, d.{u.tls_queue_brq6_d.pi}.wx
-    sll		    r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
+	add             r7, r0, k.s4_s6_t0_phv_sw_barco_pi
+        sll		r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */
 	addui		r1, r0, hiword(BRQ_BASE)
 	addi		r1, r1, loword(BRQ_BASE)
-	add		    r1, r1, r5
+	add		r1, r1, r5
 
    	/* Fill the barco request */
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r1, barco_desc_input_list_address,

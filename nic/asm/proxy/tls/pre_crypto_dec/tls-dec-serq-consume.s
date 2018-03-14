@@ -23,7 +23,6 @@ struct tx_table_s2_t3_d d;
 #define D   d.u.tls_serq_consume_d
 	
 %%
-	.param      tls_dec_bld_barco_req_process
         
 tls_dec_serq_consume_process:
     CAPRI_CLEAR_TABLE3_VALID

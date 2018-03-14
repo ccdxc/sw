@@ -92,8 +92,7 @@ tls_cpu_rx:
 
     addui       r5, r0, hiword(ARQTX_BASE)
     addi        r5, r5, loword(ARQTX_BASE)
-    phvwrpair   p.s5_s6_t1_s2s_debug_dol, k.to_s5_debug_dol,    \
-                p.s5_s6_t1_s2s_arq_base, r5
+    phvwr       p.s5_s6_t1_s2s_arq_base, r5
 
 #ifdef DO_NOT_USE_CPU_SEM
     /* Use RxDMA pi (first arg = 1 for TxDMA) */

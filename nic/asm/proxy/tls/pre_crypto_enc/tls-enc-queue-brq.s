@@ -15,7 +15,6 @@
 struct phv_ p	;
 struct tx_table_s5_t0_k k	;
 struct tx_table_s5_t0_d d;
-
 	
 %%
 	.param		BRQ_BASE
@@ -98,7 +97,13 @@ dma_cmd_iv:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, crypto_iv_salt, crypto_iv_explicit_iv)
 
 dma_cmd_enc_brq_slot:
-    add         r7, r0, d.{u.tls_queue_brq5_d.pi}.wx
+
+    /*
+     * We've already obtained the Barco GCM0 PI via a global locked-table read in
+     * earlier stage.
+     */
+    //add         r7, r0, d.{u.tls_queue_brq5_d.pi}.wx
+    add           r7, r0, k.to_s5_sw_barco_pi
 
     sll		    r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */

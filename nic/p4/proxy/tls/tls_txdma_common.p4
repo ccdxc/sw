@@ -20,7 +20,7 @@ header_type tlscb_0_t {
 
         sesq_base                       : HBM_ADDRESS_WIDTH;
         sw_sesq_pi                      : 16;
-        sw_sesq_ci                      : 16;
+        sw_sesq_ci                       : 16;
 
         sw_bsq_pi                       : 16;
         dec_flow                        : 8;
@@ -62,7 +62,7 @@ debug_dol, barco_command, barco_key_desc_index, explicit_iv, l7_proxy_type
     modify_field(tlscb_0_d.serq_prod_ci_addr, serq_prod_ci_addr);                                        \
     modify_field(tlscb_0_d.sesq_base, sesq_base);                                                        \
     modify_field(tlscb_0_d.sw_sesq_pi, sw_sesq_pi);                                                      \
-    modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                      \
+    modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                        \
     modify_field(tlscb_0_d.sw_bsq_pi, sw_bsq_pi);                                                        \
     modify_field(tlscb_0_d.dec_flow, dec_flow);                                                          \
     modify_field(tlscb_0_d.debug_dol, debug_dol);                                                        \

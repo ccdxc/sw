@@ -17,6 +17,7 @@
 
 #define tx_table_s4_t0_action       tls_bld_brq4
 #define tx_table_s4_t1_action       tls_read_random_iv
+#define tx_table_s4_t2_action       tls_read_barco_pi
 
 #define tx_table_s5_t0_action       tls_queue_brq5
 
@@ -168,7 +169,7 @@ header_type to_stage_5_phv_t {
         idesc                           : HBM_ADDRESS_WIDTH;
         odesc                           : HBM_ADDRESS_WIDTH;
         opage                           : HBM_ADDRESS_WIDTH;
-        cur_tls_data_len                : 16;
+        sw_barco_pi                     : 16;
         debug_dol                       : 8;
     }
 }
@@ -489,6 +490,19 @@ action tls_read_random_iv(TLSCB_0_PARAMS_NON_STG0) {
     GENERATE_TLSCB_0_D_NON_STG0
 }
 
+/* Stage 4 table 2 action */
+action tls_read_barco_pi(TLSCB_0_PARAMS_NON_STG0) {
+
+    GENERATE_GLOBAL_K
+
+    /* To Stage 4 table 2 fields */
+    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
+    modify_field(to_s4_scratch.do_pre_ccm_enc, to_s4.do_pre_ccm_enc);
+
+    /* D vector */
+    GENERATE_TLSCB_0_D_NON_STG0
+}
+
 /* Stage 5 table 0 action */
 action tls_queue_brq5(BARCO_CHANNEL_PARAMS) {
 
@@ -500,7 +514,7 @@ action tls_queue_brq5(BARCO_CHANNEL_PARAMS) {
     modify_field(to_s5_scratch.idesc, to_s5.idesc);
     modify_field(to_s5_scratch.odesc, to_s5.odesc);
     modify_field(to_s5_scratch.opage, to_s5.opage);
-    modify_field(to_s5_scratch.cur_tls_data_len, to_s5.cur_tls_data_len);
+    modify_field(to_s5_scratch.sw_barco_pi, to_s5.sw_barco_pi);
     modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
     GENERATE_S2_S5_T0

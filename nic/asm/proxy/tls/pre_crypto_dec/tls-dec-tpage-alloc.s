@@ -17,7 +17,7 @@ struct d_struct {
 };
 
 /* Readonly Parsed packet header info for the current packet */
-struct tx_table_s2_t3_k k             ;
+struct tx_table_s3_t2_k k             ;
 struct phv_ p;
 struct d_struct d;
 
@@ -25,11 +25,11 @@ struct d_struct d;
 	
 	    .align
 tls_dec_tpage_alloc_process:
-
-        CAPRI_CLEAR_TABLE2_VALID
+            CAPRI_CLEAR_TABLE2_VALID
+	
 	    phvwrpair   p.to_s5_opage, d.opage[31:0], \
 	                p.to_s6_opage, d.opage[31:0]
-        phvwri      p.to_s7_tnmpr_alloc, 1
+            phvwri      p.to_s7_tnmpr_alloc, 1
 	    nop.e
 	    nop
 

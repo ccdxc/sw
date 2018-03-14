@@ -17,7 +17,7 @@ struct d_struct {
 };
 
 /* Readonly Parsed packet header info for the current packet */
-struct tx_table_s2_t2_k                 k;
+struct tx_table_s3_t1_k                 k;
 
 struct phv_ p;
 struct d_struct d;

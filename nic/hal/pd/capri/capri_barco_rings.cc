@@ -14,15 +14,21 @@ namespace pd {
 hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
-        void *req, uint32_t *req_tag);
+        void *req, uint32_t *req_tag, bool);
 hal_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring);
+bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring,
+                                       void *req, uint32_t *req_tag, bool);
+hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring,
+                                       void *req, uint32_t *req_tag, bool);
 hal_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_xts0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 hal_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_xts1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring,
-					void *req, uint32_t *req_tag);
+					void *req, uint32_t *req_tag, bool);
 hal_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring);
@@ -65,8 +71,8 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         capri_barco_gcm0_init,
-        NULL,
-        NULL,
+        capri_barco_gcm0_poller,
+        capri_barco_gcm0_queue_request,
     },
     {   // BARCO_RING_GCM1
         BARCO_RING_GCM1_STR,
@@ -80,8 +86,8 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         capri_barco_gcm1_init,
-        NULL,
-        NULL,
+        capri_barco_gcm1_poller,
+        capri_barco_gcm1_queue_request,
     },
     {   // BARCO_RING_XTS0
         BARCO_RING_XTS0_STR,
@@ -371,7 +377,7 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 }
 
 hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
-        void *req, uint32_t *req_tag)
+					 void *req, uint32_t *req_tag, bool schedule_barco)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
@@ -691,7 +697,7 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 }
 
 hal_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
-					uint32_t *req_tag)
+					uint32_t *req_tag, bool schedule_barco)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
@@ -1043,6 +1049,89 @@ hal_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
     return capri_barco_gcm0_key_array_init();
 }
 
+bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+{
+    bool                                ret = FALSE;
+    uint32_t                            curr_opaque_tag = 0;
+
+    if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
+			   sizeof(curr_opaque_tag))) {
+        HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
+                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr); 
+        return FALSE;
+    }
+    else {
+        HAL_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}", barco_ring->ring_name,
+			curr_opaque_tag);
+        /* TODO: Handle wraparounds */
+        if (curr_opaque_tag >= req_tag)
+            ret = TRUE;
+    }
+
+    return ret;
+
+#if 0
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+
+    /* TBD - use Doorbell address in req descriptor  to track request completions */
+    if (hens.dhs_crypto_ctl.gcm0_consumer_idx.fld() != barco_ring->consumer_idx) {
+        /* New responses available */
+        return TRUE;
+    }
+
+    return FALSE;
+#endif
+}
+
+hal_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
+			  		uint32_t *req_tag, bool schedule_barco)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    uint64_t                            slot_addr = 0;
+    hal_ret_t                           ret = HAL_RET_OK;
+    barco_symm_req_descriptor_t         *sym_req_descr = NULL;
+
+    /*
+     * We'll use the opaque-tag address to track response from
+     * barco.
+     */
+    sym_req_descr = (barco_symm_req_descriptor_t*) req;
+
+    sym_req_descr->opaque_tag_value = barco_ring->opaqe_tag_value;
+    sym_req_descr->opaque_tag_wr_en = 1;
+
+#if 1
+    /*
+     * Use doorbell-address in the symm request descriptor to
+     * track response from barco.
+     */
+    sym_req_descr->doorbell_addr = barco_ring->opaque_tag_addr;
+    sym_req_descr->doorbell_data = barco_ring->opaqe_tag_value;
+#endif
+
+    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
+    
+    if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+        HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
+                barco_ring->ring_name,
+                (uint64_t) slot_addr); 
+        ret = HAL_RET_INVALID_ARG;
+    }
+
+    barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
+
+    if (schedule_barco) {
+
+        /* Barco doorbell */
+        hens.dhs_crypto_ctl.gcm0_producer_idx.fld(barco_ring->producer_idx);
+        hens.dhs_crypto_ctl.gcm0_producer_idx.write();
+    }
+    *req_tag = barco_ring->opaqe_tag_value++;
+
+    return ret;
+}
 
 hal_ret_t capri_barco_gcm1_key_array_init(void)
 {
@@ -1373,6 +1462,90 @@ bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return FALSE;
 }
 
+bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+{
+    bool                                ret = FALSE;
+    uint32_t                            curr_opaque_tag = 0;
+
+    if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
+			   sizeof(curr_opaque_tag))) {
+        HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
+                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr); 
+        return FALSE;
+    }
+    else {
+        HAL_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}", barco_ring->ring_name,
+			curr_opaque_tag);
+        /* TODO: Handle wraparounds */
+        if (curr_opaque_tag >= req_tag)
+            ret = TRUE;
+    }
+
+    return ret;
+
+#if 0
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+
+    /* TBD - use Doorbell address in req descriptor  to track request completions */
+    if (hens.dhs_crypto_ctl.gcm1_consumer_idx.fld() != barco_ring->consumer_idx) {
+        /* New responses available */
+        return TRUE;
+    }
+
+    return FALSE;
+#endif
+}
+
+hal_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
+			  		uint32_t *req_tag, bool schedule_barco)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    uint64_t                            slot_addr = 0;
+    hal_ret_t                           ret = HAL_RET_OK;
+    barco_symm_req_descriptor_t         *sym_req_descr = NULL;
+
+    /*
+     * We'll use the opaque-tag address to track response from
+     * barco.
+     */
+    sym_req_descr = (barco_symm_req_descriptor_t*) req;
+
+    sym_req_descr->opaque_tag_value = barco_ring->opaqe_tag_value;
+    sym_req_descr->opaque_tag_wr_en = 1;
+
+#if 1
+    /*
+     * Use doorbell-address in the symm request descriptor to
+     * track response from barco.
+     */
+    sym_req_descr->doorbell_addr = barco_ring->opaque_tag_addr;
+    sym_req_descr->doorbell_data = barco_ring->opaqe_tag_value;
+#endif
+
+    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
+    
+    if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+        HAL_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
+                barco_ring->ring_name,
+                (uint64_t) slot_addr); 
+        ret = HAL_RET_INVALID_ARG;
+    }
+
+    barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
+
+    if (schedule_barco) {
+
+        /* Barco doorbell */
+        hens.dhs_crypto_ctl.gcm1_producer_idx.fld(barco_ring->producer_idx);
+        hens.dhs_crypto_ctl.gcm1_producer_idx.write();
+    }
+    *req_tag = barco_ring->opaqe_tag_value++;
+
+    return ret;
+}
+
 bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
 {
     capri_barco_ring_t          *barco_ring;
@@ -1385,7 +1558,7 @@ bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
     return FALSE;
 }
 
-hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag)
+hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag, bool schedule_barco)
 {
     capri_barco_ring_t          *barco_ring;
 
@@ -1394,7 +1567,7 @@ hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void
      *  - Queue full check in the common API
      */
     barco_ring = &barco_rings[barco_ring_type];
-    return barco_ring->queue_request(barco_ring, req, req_tag);
+    return barco_ring->queue_request(barco_ring, req, req_tag, schedule_barco);
 }
 
 hal_ret_t capri_barco_ring_consume(types::BarcoRings barco_ring_type)

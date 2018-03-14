@@ -373,7 +373,7 @@ hal_ret_t capri_barco_sym_hash_run_tests (void)
 						      aes_enc[1].plaintext, aes_enc[1].plaintext_len,
 						      aes_enc[1].iv, aes_enc[1].iv_len,
 						      ciphertext, aes_enc[1].ciphertext_len,
-						      auth_tag, aes_enc[1].auth_tag_len);
+						      auth_tag, aes_enc[1].auth_tag_len, true);
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("AES-CCM Encrypt test FAILED: api failure");
@@ -410,7 +410,7 @@ hal_ret_t capri_barco_sym_hash_run_tests (void)
 						      plaintext, aes_enc[1].plaintext_len,
 						      aes_enc[1].iv, aes_enc[1].iv_len,
 						      aes_enc[1].ciphertext, aes_enc[1].ciphertext_len,
-						      aes_enc[1].auth_tag, aes_enc[1].auth_tag_len);
+						      aes_enc[1].auth_tag, aes_enc[1].auth_tag_len, true);
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure {:d}", ret);
@@ -427,6 +427,92 @@ hal_ret_t capri_barco_sym_hash_run_tests (void)
 	   HAL_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
 	}
     }
+
+    return ret;
+}
+
+
+hal_ret_t capri_barco_sym_run_aes_gcm_1K_test (void)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    uint8_t auth_tag[64], ciphertext[128];
+
+    for (int i = 0; i < 1000; i++) {
+        ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM, true,
+						      aes_enc[1].key, aes_enc[1].key_len,
+						      aes_enc[1].aad, aes_enc[1].aad_len,
+						      aes_enc[1].plaintext, aes_enc[1].plaintext_len,
+						      aes_enc[1].iv, aes_enc[1].iv_len,
+						      ciphertext, aes_enc[1].ciphertext_len,
+                            			  auth_tag, aes_enc[1].auth_tag_len, false);
+    }
+
+    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM, true,
+						      aes_enc[1].key, aes_enc[1].key_len,
+						      aes_enc[1].aad, aes_enc[1].aad_len,
+						      aes_enc[1].plaintext, aes_enc[1].plaintext_len,
+						      aes_enc[1].iv, aes_enc[1].iv_len,
+						      ciphertext, aes_enc[1].ciphertext_len,
+                            			  auth_tag, aes_enc[1].auth_tag_len, true);
+    
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("AES-GCM Encrypt test FAILED: api failure");
+    } else {
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received cipher-text:",
+				      (char *)ciphertext, aes_enc[1].ciphertext_len);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected cipher-text:",
+				      (char *)aes_enc[1].ciphertext, aes_enc[1].ciphertext_len);
+
+
+        if (memcmp(ciphertext, aes_enc[1].ciphertext, aes_enc[1].ciphertext_len)) {
+            HAL_TRACE_DEBUG("AES-CCM Encrypt test FAILED: ciphertext do not match!!"); 
+	} else {
+	   HAL_TRACE_DEBUG("AES-CCM Encrypt test PASSED: ciphertexts match");
+	}
+
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received auth-tag:",
+				      (char *)auth_tag, aes_enc[1].auth_tag_len);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected auth-tag:",
+				      (char *)aes_enc[1].auth_tag, aes_enc[1].auth_tag_len);
+
+        if (memcmp(auth_tag, aes_enc[1].auth_tag, aes_enc[1].auth_tag_len)) {
+            HAL_TRACE_DEBUG("AES-CCM Encrypt test FAILED: auth-tag do not match!!"); 
+	} else {
+	    HAL_TRACE_DEBUG("AES-CCM Encrypt test PASSED: auth-tag match");
+	}
+    }
+
+#if 0
+
+    //GCM Decrypt
+    uint8_t plaintext[128];
+
+    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM, false,
+						      aes_enc[1].key, aes_enc[1].key_len,
+						      aes_enc[1].aad, aes_enc[1].aad_len,
+						      plaintext, aes_enc[1].plaintext_len,
+						      aes_enc[1].iv, aes_enc[1].iv_len,
+						      aes_enc[1].ciphertext, aes_enc[1].ciphertext_len,
+						      aes_enc[1].auth_tag, aes_enc[1].auth_tag_len, true);
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure {:d}", ret);
+    } else {
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received plain-text:",
+				      (char *)plaintext, aes_enc[1].plaintext_len);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected plain-text:",
+				      (char *)aes_enc[1].plaintext, aes_enc[1].plaintext_len);
+
+
+        if (memcmp(plaintext, aes_enc[1].plaintext, aes_enc[1].plaintext_len)) {
+            HAL_TRACE_DEBUG("AES-CCM Decrypt test FAILED: plaintext do not match!!"); 
+	} else {
+	   HAL_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
+	}
+    }
+#endif
 
     return ret;
 }
