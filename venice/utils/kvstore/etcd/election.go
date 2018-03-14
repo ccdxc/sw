@@ -137,6 +137,7 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 			continue
 		}
 
+		doneCh := el.session.Done()
 		el.leaseID = el.session.Lease()
 		el.election = concurrency.NewElection(el.session, path.Join(electionsPrefix, el.name))
 
@@ -145,7 +146,6 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 		log.Infof("Election(%v:%v): starting campaign with lease %v", el.id, el.name, el.leaseID)
 
 		errCh := make(chan struct{})
-		doneCh := el.session.Done()
 		obsCh := el.election.Observe(el.ctx)
 
 		foundErr := false
