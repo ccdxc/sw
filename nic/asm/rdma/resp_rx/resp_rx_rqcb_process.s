@@ -696,8 +696,12 @@ rc_checkout:
 
     //MPU only
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_dummy_rqpt_process, r0)
-    nop.e
-    nop
+
+    //get the address of the next WQE and invoke prefetch
+    //ignore the boundary check
+    sll         r1, 1, d.log_wqe_size
+    add.e       r2, r2, r1
+    cpref       r2
 
 pt_process:
 
