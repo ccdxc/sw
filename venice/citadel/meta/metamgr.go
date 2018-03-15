@@ -431,10 +431,7 @@ func (md *MetadataMgr) rebalanceLoop(ctx context.Context) error {
 		default:
 			time.Sleep(md.cfg.RebalanceInterval)
 
-			md.cluster.Lock()
-			jstr, _ := json.MarshalIndent(md.cluster.NodeMap, "", "    ")
-			md.cluster.Unlock()
-			log.Debugf("%s Running rebalancing loop for cluster %s: %s", md.nodeUUID, md.clusterType, jstr)
+			log.Debugf("%s Running rebalancing loop for cluster %s", md.nodeUUID, md.clusterType)
 
 			// check if any shard has less replicas than desired
 			md.checkNumReplicas()

@@ -21,7 +21,7 @@ func (br *Broker) WriteKvs(ctx context.Context, table string, kvs []*tproto.KeyV
 
 	// get the kstore cluster
 	cl := br.GetCluster(meta.ClusterTypeKstore)
-	if cl == nil || cl.ShardMap == nil {
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 		return errors.New("Shard map is empty")
 	}
 
@@ -86,7 +86,7 @@ func (br *Broker) ReadKvs(ctx context.Context, table string, keys []*tproto.Key)
 
 	// get the kstore cluster
 	cl := br.GetCluster(meta.ClusterTypeKstore)
-	if cl == nil || cl.ShardMap == nil {
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 		return kvs, errors.New("Shard map is empty")
 	}
 
@@ -178,7 +178,7 @@ func (br *Broker) ListKvs(ctx context.Context, table string) ([]*tproto.KeyValue
 
 	// get the kstore cluster
 	cl := br.GetCluster(meta.ClusterTypeKstore)
-	if cl == nil || cl.ShardMap == nil {
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 		return kvs, errors.New("Shard map is empty")
 	}
 
@@ -201,7 +201,7 @@ func (br *Broker) DeleteKvs(ctx context.Context, table string, keys []*tproto.Ke
 
 	// get the kstore cluster
 	cl := br.GetCluster(meta.ClusterTypeKstore)
-	if cl == nil || cl.ShardMap == nil {
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 		return errors.New("Shard map is empty")
 	}
 

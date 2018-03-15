@@ -56,7 +56,7 @@ func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, 
 func (br *Broker) CreateDatabase(ctx context.Context, database string) error {
 	// get cluster
 	cl := br.GetCluster(meta.ClusterTypeTstore)
-	if cl == nil || cl.ShardMap == nil {
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 		return errors.New("Shard map is empty")
 	}
 
@@ -82,7 +82,7 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 
 	// get the shardmap
 	cl := br.GetCluster(meta.ClusterTypeTstore)
-	if cl == nil || cl.ShardMap == nil {
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 		return errors.New("Shard map is empty")
 	}
 
@@ -199,7 +199,7 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 			for _, measurement := range selStmt.Sources.Measurements() {
 				// get the cluster
 				cl := br.GetCluster(meta.ClusterTypeTstore)
-				if cl == nil || cl.ShardMap == nil {
+				if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 					return nil, errors.New("Shard map is empty")
 				}
 
