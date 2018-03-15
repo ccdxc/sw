@@ -18,7 +18,7 @@ struct phv_ p;
 %%
    .param storage_nvme_handle_no_prp_list_start
 
-storage_nvme_handle_cmd_start:
+storage_nvme_process_io_map_start:
 
    // Save the NVME backend cmd information to PHV to write to the I/O buffer
    phvwr	p.{nvme_be_cmd_hdr_src_queue_id...nvme_be_cmd_hdr_io_priority},	\
