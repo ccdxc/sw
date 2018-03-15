@@ -115,6 +115,7 @@ message ExportControlResponseMsg {
 enum RuleAction {
     COLLECT_FLOW_STATS  = 0;
     MIRROR              = 1;
+    MIRROR_TO_CPU       = 2;
 }
 
 // AggregationScheme is an enumeration of aggregation schemes supported
@@ -150,8 +151,8 @@ message FlowMonitorRuleSpec {
   types.IPPrefix    dest_ip           = 7; // Destination IP prefix to match
   L4Port            source_l4_port    = 8; // Souce L4 port 
   L4Port            dest_l4_port      = 9; // Destination L4 port
-  repeated uint64   source_tags       = 10; // Set of source TAGs to match (all)
-  repeated uint64   dest_tags         = 11; // Set of destination TAGs to match (all)
+  uint64            source_groupid    = 10; // Source Workload GroupID to match
+  uint64            dest_groupid      = 11; // Destination Workload GroupID to match
   MonitorAction     action            = 12; // Action for flows that meet the match criteria
 }
 
