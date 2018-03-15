@@ -6,7 +6,7 @@ experimenting with the changes.
 #### Prerequisites
 - Git
 - [Virtualbox 5.1.30](https://www.virtualbox.org/wiki/Download_Old_Builds_5_1)
-- [Vagrant 1.8.6](https://www.vagrantup.com/downloads.html)
+- [Vagrant 2.0.2](https://www.vagrantup.com/downloads.html)
 
 
 ##### 1. Clone/Create repository

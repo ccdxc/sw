@@ -144,14 +144,14 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 				return
 			}
 
-			w.netWatcher <- *evt
+			w.sgWatcher <- *evt
 
 		case evt, ok := <-sgpWatcher.EventChan():
 			if !ok {
 				log.Errorf("Error receiving from apisrv watcher")
 				return
 			}
-			w.netWatcher <- *evt
+			w.sgPolicyWatcher <- *evt
 
 		case evt, ok := <-epWatcher.EventChan():
 			if !ok {
