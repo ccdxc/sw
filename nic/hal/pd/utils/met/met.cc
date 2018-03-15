@@ -83,8 +83,8 @@ Met::~Met()
 hal_ret_t
 Met::create_repl_list(uint32_t *repl_list_idx)
 {
-    hal_ret_t   rs = HAL_RET_OK;
-    ReplList    *repl_list = NULL;
+    hal_ret_t       rs         = HAL_RET_OK;
+    ReplList        *repl_list = NULL;
 
     // Allocate an index in repl. table
     rs = alloc_repl_table_index(repl_list_idx);
@@ -94,6 +94,8 @@ Met::create_repl_list(uint32_t *repl_list_idx)
 
     // repl_list = new ReplList(*repl_list_idx, this);
     repl_list = ReplList::factory(*repl_list_idx, this);
+
+    repl_list->initialize_first_repl_table_entry();
 
     repl_list_map_[*repl_list_idx] = repl_list;
 
@@ -125,6 +127,8 @@ Met::create_repl_list_with_id(uint32_t repl_list_idx)
     // repl_list = new ReplList(repl_list_idx, this);
     repl_list = ReplList::factory(repl_list_idx, this);
 
+    repl_list->initialize_first_repl_table_entry();
+
     repl_list_map_[repl_list_idx] = repl_list;
 
     // TODO: Only for debugging
@@ -154,6 +158,9 @@ Met::create_repl_list_block(uint32_t *repl_list_idx, uint32_t size)
 
     for (uint32_t i = 0; i < size; i++) {
         repl_list = ReplList::factory((*repl_list_idx) + i, this);
+
+        repl_list->initialize_first_repl_table_entry();
+
         repl_list_map_[(*repl_list_idx) + i] = repl_list;
     }
 

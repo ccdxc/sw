@@ -155,6 +155,11 @@ ReplTableEntry::program_table()
     ReplEntry *repl_entry;
     p4pd_repl_table_entry p4pd_entry;
 
+    memset(&p4pd_entry, 0, sizeof(p4pd_repl_table_entry));
+
+    p4pd_entry.set_num_tokens(0);
+    p4pd_entry.set_last_entry(1);
+
     for (repl_entry = get_first_repl_entry(); repl_entry;
          repl_entry = repl_entry->get_next()) {
 
@@ -170,6 +175,11 @@ ReplTableEntry::program_table()
         }
     }
 
+    HAL_TRACE_DEBUG("Program Replication Table Entry: is_last:{}, "
+                    "num_elems:{}, next_ptr:{}", 
+                    p4pd_entry.get_last_entry(),
+                    p4pd_entry.get_num_tokens(), 
+                    p4pd_entry.get_next_ptr());
     return p4pd_repl_entry_write(get_repl_table_index(), &p4pd_entry);
 }
 

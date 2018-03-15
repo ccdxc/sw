@@ -4,6 +4,8 @@
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/p4pd/p4pd_repl.hpp"
 
+#define HAL_LOG_TBL_UPDATES
+
 /* HBM base address in System memory map; Cached once at the init time */
 extern uint64_t capri_hbm_base;
 extern uint64_t hbm_repl_table_offset;

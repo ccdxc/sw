@@ -300,6 +300,23 @@ ReplList::de_program_repl_table_entry (uint32_t index)
     return rs;
 }
 
+hal_ret_t
+ReplList::initialize_first_repl_table_entry()
+{
+    hal_ret_t       rs       = HAL_RET_OK;
+    ReplTableEntry  *repl_te = NULL;
+
+    // Initialize the first replication table entry 
+    rs = get_repl_table_entry(&repl_te);
+    if (rs != HAL_RET_OK) {
+        goto end;
+    }
+    repl_te->program_table();
+
+end:
+    return rs;
+}
+
 // ----------------------------------------------------------------------------
 // Trace Replication List
 // ----------------------------------------------------------------------------
