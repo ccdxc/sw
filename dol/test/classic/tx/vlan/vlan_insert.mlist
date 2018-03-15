@@ -1,13 +1,12 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : txins
-    package     : test.classic
-    module      : classic
-    spec        : tx_vlan_insert.testspec
-    enable      : False
+    sub         : tx_vlan_insert
+    package     : test.classic.tx.vlan
+    module      : vlan_insert
+    spec        : vlan_insert.testspec
+    enable      : True
     ignore      : False
-    runorder    : 10
 
 modules:
     - module:
@@ -40,8 +39,7 @@ modules:
 
     - module:
         name    : NONIP_QTAG
-        spec    : tx_nonip_vlan_insert.testspec
+        spec    : vlan_insert_nonip.testspec
         iterate :
             - segment   : filter://native=False
               flow      : filter://label=CLASSIC
-

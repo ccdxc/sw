@@ -1,15 +1,15 @@
 feature:
     id          : eth
-    sub         : strip
-    package     : test.eth
-    module      : eth_rx_vlan_strip
+    sub         : tx_vlan_insert
+    package     : test.eth.tx.vlan
+    module      : vlan_insert
+    spec        : vlan_insert.testspec
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
     - module:
         name    : IPv4_VLAN
-        spec    : rx_vlan_strip.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=False
@@ -20,7 +20,6 @@ modules:
 
     - module:
         name    : IPv6_VLAN
-        spec    : rx_vlan_strip.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
               segment   : filter://native=False
@@ -31,7 +30,6 @@ modules:
 
     - module:
         name    : IPv4_NATIVE
-        spec    : rx_vlan_strip.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -42,7 +40,6 @@ modules:
 
     - module:
         name    : IPv6_NATIVE
-        spec    : rx_vlan_strip.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -53,7 +50,6 @@ modules:
 
     - module:
         name    : IPv4_PRI
-        spec    : rx_vlan_strip.testspec
         iterate :
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -67,7 +63,6 @@ modules:
 
     - module:
         name    : IPv6_PRI
-        spec    : rx_vlan_strip.testspec
         iterate :
             - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment   : filter://native=True
