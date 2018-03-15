@@ -238,6 +238,84 @@ TEST_F(endpoint_test, test1)
 
 }
 
+// ----------------------------------------------------------------------------
+// Creating a endpoint with mcast mac
+// ----------------------------------------------------------------------------
+TEST_F(endpoint_test, test2) 
+{
+    hal_ret_t                   ret;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
+    L2SegmentSpec               l2seg_spec;
+    L2SegmentResponse           l2seg_rsp;
+    InterfaceSpec               up_spec;
+    InterfaceResponse           up_rsp;
+    EndpointSpec                ep_spec;
+    EndpointResponse            ep_rsp;
+    EndpointUpdateRequest       ep_req;
+    NetworkSpec                 nw_spec;
+    NetworkResponse             nw_rsp;
+    ::google::protobuf::uint32  ip1 = 0x0a000003;
+    NetworkKeyHandle            *nkh = NULL;
+
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    nw_spec.set_rmac(0x0002DEADBEEE);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    // Create L2 Segment
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(11);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+
+    // Create an uplink
+    up_spec.set_type(intf::IF_TYPE_UPLINK);
+    up_spec.mutable_key_or_handle()->set_interface_id(21);
+    up_spec.mutable_if_uplink_info()->set_port_num(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(up_spec, &up_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+
+    // Create Endpoint
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(2);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x01000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

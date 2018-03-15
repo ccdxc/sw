@@ -209,6 +209,8 @@ ep_del_from_l3_db (ep_l3_key_t *l3_key)
 static hal_ret_t
 validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
+    mac_addr_t mac_addr;
+
     if (!spec.has_vrf_key_handle() ||
         spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("{}:vrf id not valid",
@@ -253,6 +255,12 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         HAL_TRACE_ERR("{}:interface handle not valid",
                       __FUNCTION__);
         return HAL_RET_HANDLE_INVALID;
+    }
+
+    MAC_UINT64_TO_ADDR(mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
+    if (IS_MCAST_MAC_ADDR(mac_addr)) {
+        HAL_TRACE_ERR("ep is being created with Mcast mac: {}", macaddr2str(mac_addr));
+        return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
