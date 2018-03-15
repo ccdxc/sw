@@ -14,10 +14,6 @@ struct phv_ p;
         .align
 
 esp_ipv4_tunnel_n2h_update_input_desc_aol:
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc[33:6] 
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 
-    phvwr p.common_te0_phv_table_addr, k.ipsec_to_stage3_ipsec_cb_addr 
 
     add r2, k.ipsec_to_stage3_iv_salt_off, k.t0_s2s_in_page_addr
     subi r5, r2, ESP_FIXED_HDR_SIZE 
