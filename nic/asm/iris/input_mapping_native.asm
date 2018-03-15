@@ -59,7 +59,6 @@ native_ipv4_esp_packet:
 
 .align
 native_ipv6_packet:
-  K_DBG_WR(0x10)
   DBG_WR(0x19, 0x19)
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST

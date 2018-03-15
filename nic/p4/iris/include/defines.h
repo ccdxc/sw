@@ -583,15 +583,6 @@
 
 
 /*****************************************************************************/
-/* Defines for writing into a DBG_WR trace for assembly. This is disabled by */
-/* default, to enable write to DBG_HBM_EN and write a valid HBM base address */
-/* to DBG_HBM_BASE                                                           */
-/*****************************************************************************/
-#define DBG_HBM_EN      0
-#define DBG_HBM_BASE    0x11AD37000
-#define DBG_HBM_COUNT   0x200
-
-/*****************************************************************************/
 /* Number of Hints in Flow table                                             */
 /*****************************************************************************/
 #define P4_FLOW_NUM_HINTS_PER_ENTRY                 5

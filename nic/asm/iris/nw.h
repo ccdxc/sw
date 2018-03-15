@@ -4,6 +4,14 @@
     .assert((offsetof(d, d_start) - offsetof(d, d_end)) == \
             (offsetof(s, s_start) - offsetof(s, s_end)))
 
+/*****************************************************************************/
+/* Defines for writing into a DBG_WR trace for assembly. This is disabled by */
+/* default, to enable write to DBG_HBM_EN                                    */
+/*****************************************************************************/
+#define DBG_HBM_EN      0 
+#define DBG_HBM_BASE    0x0C0000000
+#define DBG_HBM_COUNT   0x200
+
 #if DBG_HBM_EN
 #define DBG_WR(index, val) \
     .assert((index) < DBG_HBM_COUNT); \
