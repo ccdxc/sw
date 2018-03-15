@@ -58,8 +58,7 @@ check_lo:
 
 clear_doorbell:
    // Nothing can be popped => Clear the doorbell
-   // TODO: Ring this doorbell in the NVME backend response processing path
-   PRI_QUEUE_POP_DOORBELL_CLEAR
+   PRI_QUEUE_POP_DOORBELL_CLEAR_RESET
 
    // Setup the start and end DMA pointers to the doorbell pop
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_0_dma_cmd_eop,
