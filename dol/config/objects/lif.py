@@ -258,6 +258,8 @@ class LifObjectHelper:
         self.aidx = 0
 
     def Generate(self, tenant, spec, namespace, n_prom, n_allmc):
+        if namespace is None:
+            return
         count = namespace.GetCount()
         cfglogger.info("Creating %d Lifs. for Tenant:%s NProm:%d NAllmc:%d" %\
                        (count, tenant.GID(), n_prom, n_allmc))
@@ -279,6 +281,8 @@ class LifObjectHelper:
 
     def Configure(self):
         if not LifObject().InFeatureSet():
+            return
+        if len(self.lifs) == 0:
             return
         cfglogger.info("Configuring %d LIFs." % len(self.lifs))
         halapi.ConfigureLifs(self.lifs)
