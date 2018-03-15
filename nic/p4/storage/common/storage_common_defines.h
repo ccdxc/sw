@@ -194,18 +194,22 @@
 
 // Offsets into the I/O buffer in bytes
 #define IO_BUF_IO_CTX_OFFSET			0
-#define IO_BUF_R2N_WQE_OFFSET			64
-#define IO_BUF_ROCE_SQ_WQE_OFFSET		128
-#define IO_BUF_PRP_LIST_OFFSET			192
-#define IO_BUF_IO_MAP_DESC_OFFSET		320   // Size == IO_MAP_ENTRY_TOTAL_SIZE == 1024 bytes
-#define IO_BUF_SEQ_DESC_OFFSET			1344  // Size == IO_BUF_SEQ_DESC_TOTAL_SIZE Size = 512 bytes
-#define IO_BUF_SEQ_DB_OFFSET			1856  // Size == IO_BUF_SEQ_DB_TOTAL_SIZE Size = 512 bytes
-#define IO_BUF_PAD_OFFSET			2368  // Pad size = 4096 - (128 + 64 + 8) - 1856 = 1528
+#define IO_BUF_WRITE_R2N_WQE_OFFSET		64
+#define IO_BUF_READ_R2N_WQE_OFFSET		128
+#define IO_BUF_WRITE_ROCE_SQ_WQE_OFFSET		192
+#define IO_BUF_READ_ROCE_SQ_WQE_OFFSET		256
+#define IO_BUF_PRP_LIST_OFFSET			320
+#define IO_BUF_PAD0_OFFSET			448   // Size == 1024 - 448 = 576 bytes
+// For easy of use, aligning to 1K boundary
+#define IO_BUF_IO_MAP_DESC_OFFSET		1024  // Size == IO_MAP_ENTRY_SIZE_BYTES Size = 1024 bytes
+#define IO_BUF_SEQ_DESC_OFFSET			2048  // Size == IO_BUF_SEQ_DESC_TOTAL_SIZE Size = 512 bytes
+#define IO_BUF_SEQ_DB_OFFSET			2560  // Size == IO_BUF_SEQ_DB_TOTAL_SIZE Size = 512 bytes
+#define IO_BUF_PAD1_OFFSET			3072  // Pad size = 4096 - (128 + 64 + 8) - 3072 = 824 bytes
 // Keep the following offset the same as the NVME_BE_CMD_OFFSET in R2N Buffer using pad above
 #define IO_BUF_NVME_BE_CMD_OFFSET		3896
 #define IO_BUF_WRITE_REQ_OFFSET			4024
 #define IO_BUF_IO_CTX_ID_OFFSET			4088
-// Start of the data buffer in the R2N I/O buffer
+// Start of the data buffer in the R2N I/O buffer (align to 4K page)
 #define IO_BUF_DATA_OFFSET			4096
 // Size of base length of R2N buffer to be provided to the transport
 #define IO_BUF_BASE_XPORT_DATA_LEN		(IO_BUF_DATA_OFFSET - IO_BUF_NVME_BE_CMD_OFFSET)
@@ -225,5 +229,6 @@
 #define	IO_CTX_OPER_STATUS_TIMED_OUT		3
 #define	IO_CTX_OPER_STATUS_BE_ERROR		4
 #define	IO_CTX_OPER_STATUS_COMPLETED		5
+#define	IO_CTX_OPER_STATUS_NON_STARTER		7
 
 #endif     // STORAGE_COMMON_DEFINES_H

@@ -93,9 +93,38 @@ header_type nvme_cq_state_t {
     intr_data		: 32;	// MSI-X interrupt data
     intr_en		: 1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
     phase		: 1;	// Phase bit
-    pad			: 211;	// Align to 64 bytes
+    pad			: 210;	// Align to 64 bytes
   }
 }
+
+// ARM  Queue State.  Total size can be 64 bytes at most.
+header_type arm_q_state_t {
+  fields {
+    pc_offset		: 8;	// Program counter (relative offset)
+    rsvd		: 8;	// Hardware reserved field
+    cosA		: 4;	// Cos value A
+    cosB		: 4;	// Cos value B
+    cos_sel		: 8;	// Cos selector
+    eval_last		: 8;	// Evaluator of "work ready" for ring
+    total_rings		: 4;	// Total number of rings used by this qstate
+    host_rings		: 4;	// Number of host facing rings used by this qstate
+    pid			: 16;	// PID value to be compared with that from host
+    p_ndx		: 16;	// Producer Index
+    c_ndx		: 16;	// Consumer Index
+    w_ndx		: 16;	// Working consumer index
+    num_entries		: 16;	// Number of queue entries (power of 2 of this value)
+    base_addr		: 64;	// Base address of queue entries
+    entry_size		: 16;	// Size of each queue entry
+    next_pc		: 28;	// Next program's PC
+    intr_addr		: 32;	// MSI-X interrupt address
+    intr_data		: 32;	// MSI-X interrupt data
+    intr_en		: 1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
+    phase		: 1;	// Phase bit
+    pad			: 210;	// Align to 64 bytes
+  }
+}
+
+// ARM Q is the same format as NVME CQ
 
 // Generic Ring State. Total size can be 64 bytes at most.
 header_type ring_state_t {
@@ -148,7 +177,7 @@ header_type io_ctx_entry_t {
   fields {
     iob_addr		: 64;	// Base address of the R2N I/O buffer
     nvme_data_len	: 32;	// Data length
-    oper_status		: 16;	// Free/InUse/TimedOut/Punt2Arm/Error etc
+    oper_status		: 8;	// Free/InUse/TimedOut/Punt2Arm/Error etc
     is_read		: 8;	// Whether it is read command
     is_remote		: 8;	// Whether destination is remote
     nvme_sq_qaddr	: 34;	// NVME VF SQ address for which this IOB was used
@@ -170,6 +199,20 @@ header_type r2n_wqe_t {
     data_size		: 32;	// Size pointed to by handle
     opcode		: 16;	// Each use case has a distinct opcode
     status		: 16;	// Success/failure status
+  }
+}
+
+// PRP list holding upto 8 entries (64 bytes)
+header_type nvme_prp_list_t {
+  fields {
+    entry0		: 64;
+    entry1		: 64;
+    entry2		: 64;
+    entry3		: 64;
+    entry4		: 64;
+    entry5		: 64;
+    entry6		: 64;
+    entry7		: 64;
   }
 }
 
@@ -201,21 +244,7 @@ header_type nvme_kivec_global_t {
     src_qaddr		: 34;	// Source queue state address
     nvme_data_len	: 32;	// Data length as indicated in the NVME command
     io_map_num_entries	: 16;	// Number of entries in the IO map table
-    oper_status		: 16;	// Free/InUse/TimedOut/Punt2Arm/Error etc
-  }
-}
-
-// PRP list holding upto 8 entries (64 bytes)
-header_type nvme_prp_list_t {
-  fields {
-    entry0		: 64;
-    entry1		: 64;
-    entry2		: 64;
-    entry3		: 64;
-    entry4		: 64;
-    entry5		: 64;
-    entry6		: 64;
-    entry7		: 64;
+    oper_status		: 8;	// Free/InUse/TimedOut/Punt2Arm/Error etc
   }
 }
 
@@ -318,6 +347,26 @@ header_type nvme_kivec_arm_dst_t {
   NVME_CQ_STATE_COPY_STAGE0(q_state)			\
   modify_field(q_state.pad, pad);			\
 
+
+#define ARM_Q_STATE_COPY_STAGE0(q_state)		\
+  Q_STATE_COPY_INTRINSIC(q_state)			\
+  modify_field(q_state.p_ndx, p_ndx);			\
+  modify_field(q_state.c_ndx, c_ndx);			\
+  modify_field(q_state.w_ndx, w_ndx);			\
+  modify_field(q_state.num_entries, num_entries);	\
+  modify_field(q_state.base_addr, base_addr);		\
+  modify_field(q_state.entry_size, entry_size);		\
+  modify_field(q_state.next_pc, next_pc);		\
+  modify_field(q_state.intr_addr, intr_addr);		\
+  modify_field(q_state.intr_data, intr_data);		\
+  modify_field(q_state.intr_en, intr_en);		\
+  modify_field(q_state.phase, phase);			\
+
+#define ARM_Q_STATE_COPY(q_state)			\
+  ARM_Q_STATE_COPY_STAGE0(q_state)			\
+  modify_field(q_state.pad, pad);			\
+
+
 #define RING_STATE_COPY_STAGE0(ring_state)		\
   modify_field(ring_state.p_ndx, p_ndx);		\
   modify_field(ring_state.c_ndx, c_ndx);		\
@@ -398,6 +447,7 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
   modify_field(scratch.nvme_data_len, kivec.nvme_data_len);		\
   modify_field(scratch.io_map_num_entries, kivec.io_map_num_entries);	\
+  modify_field(scratch.oper_status, kivec.oper_status);			\
 
 #define NVME_KIVEC_SQ_INFO_USE(scratch, kivec)				\
   modify_field(scratch.is_admin_q, kivec.is_admin_q);			\
@@ -413,7 +463,7 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(scratch.arm_qaddr, kivec.arm_qaddr);			\
 
 // PRP entry based data xfer marcos from host (for write command)
-// TODO: FIXME: In ASM, use min(scratch.data_len_xferred, PRP_DATA_XFER_SIZE)
+// TODO: FIXME: In ASM, use min(remaining_len, PRP_DATA_XFER_SIZE)
 #define NVME_DATA_XFER_FROM_HOST(s2s_kivec, global_kivec, src_dma_cmd,	\
                                  dst_dma_cmd, prp_entry, scratch)	\
   if ((s2s_kivec.punt_to_arm == 0) and					\
