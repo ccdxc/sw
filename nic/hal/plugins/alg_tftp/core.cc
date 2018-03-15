@@ -305,8 +305,10 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
             HAL_TRACE_DEBUG("TFTP ALG invoking callback");
             tftp_info = (tftp_info_t *)l4_sess->info;
             HAL_ASSERT(tftp_info);
-    
-            tftp_info->callback(ctx, l4_sess);
+
+            if (tftp_info->callback != NULL) {    
+                tftp_info->callback(ctx, l4_sess);
+            }
         }
     }
 
