@@ -5,6 +5,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/encap.hpp"
+#include "nic/include/hal_state.hpp"
 #include "sdk/list.hpp"
 #include "sdk/ht.hpp"
 #include "nic/hal/src/vrf.hpp"

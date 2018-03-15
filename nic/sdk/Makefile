@@ -27,6 +27,10 @@ else
   JOBS = --jobs=$(j)
 endif
 
+ifneq ($(CUSTOM_FLAGS),)
+  BAZEL_CUSTOM_FLAGS = --copt=$(CUSTOM_FLAGS)
+endif
+
 # Parallel builds
 ifneq ($(k),)
     STOPONERR = 
@@ -37,9 +41,9 @@ endif
 SKIP_DIRS = --deleted_packages=test/lib/list
 
 ifeq ($(ARCH), aarch64)
-	BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS) --crosstool_top=//tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
+	BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS) $(BAZEL_CUSTOM_FLAGS) --crosstool_top=//tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
 else
-	BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS)
+	BUILD_OPTS = $(JOBS) $(GCOV) $(VERBOSE) $(STOPONERR) $(SKIP_DIRS) $(BAZEL_CUSTOM_FLAGS)
 endif
 
 ifeq ($(BAZEL_OUTPUT_BASE),)

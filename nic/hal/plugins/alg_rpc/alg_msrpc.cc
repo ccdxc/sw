@@ -1,5 +1,6 @@
 #include "core.hpp"
 #include "alg_msrpc.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 #include "nic/hal/plugins/alg_rpc/msrpc_proto_def.hpp"
 #include "nic/p4/iris/include/defines.h"

@@ -56,6 +56,7 @@ cc_test(
         "-lzmq",
         "-lpthread",
         "-pthread",
+        "-lrt",
     ],
     deps = [
             "//nic/hal/pd/iris:pd_iris",

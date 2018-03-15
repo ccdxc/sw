@@ -1,4 +1,5 @@
 #include "alg_db.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 #include "sdk/list.hpp"
 

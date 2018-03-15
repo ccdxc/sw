@@ -61,6 +61,143 @@ if_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a interface instance
+static inline if_t *
+if_alloc (void)
+{
+    if_t    *hal_if;
+
+    hal_if = (if_t *)g_hal_state->if_slab()->alloc();
+    if (hal_if == NULL) {
+        return NULL;
+    }
+    return hal_if;
+}
+
+// initialize a interface instance
+static inline if_t *
+if_init (if_t *hal_if)
+{
+    if (!hal_if) {
+        return NULL;
+    }
+    memset(hal_if, 0, sizeof(if_t));
+    HAL_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    hal_if->num_ep = 0;
+    hal_if->enic_type = intf::IF_ENIC_TYPE_NONE;
+    hal_if->pd_if = NULL;
+    hal_if->hal_handle = HAL_HANDLE_INVALID;
+    hal_if->lif_handle = HAL_HANDLE_INVALID;
+    hal_if->l2seg_handle = HAL_HANDLE_INVALID;
+    hal_if->native_l2seg_clsc = HAL_HANDLE_INVALID;
+    hal_if->pinned_uplink = HAL_HANDLE_INVALID;
+    hal_if->is_pc_mbr = false;
+    hal_if->uplinkpc_handle = HAL_HANDLE_INVALID;
+    sdk::lib::dllist_reset(&hal_if->l2seg_list_head);
+    sdk::lib::dllist_reset(&hal_if->enicif_list_head);
+    sdk::lib::dllist_reset(&hal_if->mbr_if_list_head);
+    sdk::lib::dllist_reset(&hal_if->l2seg_list_clsc_head);
+
+    return hal_if;
+}
+
+// allocate and initialize a interface instance
+static inline if_t *
+if_alloc_init (void)
+{
+    return if_init(if_alloc());
+}
+
+static inline hal_ret_t
+if_free (if_t *hal_if)
+{
+    HAL_SPINLOCK_DESTROY(&hal_if->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_IF, hal_if);
+    return HAL_RET_OK;
+}
+
+hal_handle_id_ht_entry_t *
+find_handle_obj_by_if_id (if_id_t if_id)
+{
+    hal_handle_id_ht_entry_t    *entry = NULL;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        if_id_ht()->lookup(&if_id);
+
+    return entry;
+}
+
+if_t *
+find_if_by_id (if_id_t if_id)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    if_t                        *hal_if;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        if_id_ht()->lookup(&if_id);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_INTERFACE);
+
+        hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        return hal_if;
+    }
+    return NULL;
+}
+
+if_t *
+find_if_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_INTERFACE) {
+        HAL_TRACE_DEBUG("{}:failed to find if with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+
+    return (if_t *)hal_handle_get_obj(handle); 
+
+#if 0
+    // TODO: hal_handle can be NULL if there is no if with handle. 
+    //       Print proper msg.
+
+    // check for object type
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+               HAL_OBJ_ID_INTERFACE);
+    return (if_t *)hal_handle_get_obj(handle);
+#endif
+}
+
+lif_t *
+find_lif_by_if_handle (hal_handle_t if_handle)
+{
+    if_t    *if_p;
+
+    if_p = find_if_by_handle(if_handle);
+    if (!if_p) {
+        return NULL;
+    }
+
+    if (if_p->if_type == intf::IF_TYPE_ENIC) {
+        return find_lif_by_handle(if_p->lif_handle);
+    } else {
+        return NULL;
+    }
+}
+
 //------------------------------------------------------------------------------
 // insert a if to HAL config db
 //------------------------------------------------------------------------------

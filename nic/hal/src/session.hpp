@@ -357,18 +357,8 @@ struct session_s {
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
 
-static inline session_t *
-find_session_by_handle (hal_handle_t handle)
-{
-    return (session_t *)g_hal_state->session_hal_handle_ht()->lookup(&handle);
-}
-
-static inline session_t *
-find_session_by_id (session_id_t session_id)
-{
-    return (session_t *)g_hal_state->session_id_ht()->lookup(&session_id);
-}
-
+session_t *find_session_by_handle(hal_handle_t handle);
+session_t *find_session_by_id(session_id_t session_id);
 extern void *session_get_key_func(void *entry);
 extern uint32_t session_compute_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_key_func(void *key1, void *key2);

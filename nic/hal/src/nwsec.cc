@@ -9,7 +9,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
 
-
 namespace hal {
 
 //----------------------------------------------------------------------------
@@ -54,8 +53,101 @@ nwsec_profile_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a security profile instance
+static inline nwsec_profile_t *
+nwsec_profile_alloc (void)
+{
+    nwsec_profile_t    *sec_prof;
+
+    sec_prof = (nwsec_profile_t *)g_hal_state->nwsec_profile_slab()->alloc();
+    if (sec_prof == NULL) {
+        return NULL;
+    }
+    return sec_prof;
+}
+
+// initialize a security profile instance
+static inline nwsec_profile_t *
+nwsec_profile_init (nwsec_profile_t *sec_prof)
+{
+    if (!sec_prof) {
+        return NULL;
+    }
+    memset(sec_prof, 0, sizeof(nwsec_profile_t));
+
+
+    HAL_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    sdk::lib::dllist_reset(&sec_prof->vrf_list_head);
+
+    return sec_prof;
+}
+
+// allocate and initialize a security profile instance
+static inline nwsec_profile_t *
+nwsec_profile_alloc_init (void)
+{
+    return nwsec_profile_init(nwsec_profile_alloc());
+}
+
+// free security profile instance
+static inline hal_ret_t
+nwsec_profile_free (nwsec_profile_t *sec_prof)
+{
+    HAL_SPINLOCK_DESTROY(&sec_prof->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_SECURITY_PROFILE, sec_prof);
+    return HAL_RET_OK;
+}
+
+// find a security profile instance by its id
+nwsec_profile_t *
+find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
+{
+    // return (nwsec_profile_t *)g_hal_state->nwsec_profile_id_ht()->lookup(&profile_id);
+    hal_handle_id_ht_entry_t    *entry;
+    nwsec_profile_t             *sec_prof;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        nwsec_profile_id_ht()->lookup(&profile_id);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_SECURITY_PROFILE);
+
+        sec_prof = (nwsec_profile_t *)hal_handle_get_obj(entry->handle_id);
+        return sec_prof;
+    }
+    return NULL;
+}
+
+// find a security profile instance by its handle
+nwsec_profile_t *
+find_nwsec_profile_by_handle (hal_handle_t handle)
+{
+    // return (nwsec_profile_t *)g_hal_state->nwsec_profile_hal_handle_ht()->lookup(&handle);
+    // check for object type
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_SECURITY_PROFILE) {
+        HAL_TRACE_DEBUG("{}:failed to find nwsec profile with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    // HAL_ASSERT(hal_handle->obj_id() == 
+    //           HAL_OBJ_ID_SECURITY_PROFILE);
+    return (nwsec_profile_t *)hal_handle_get_obj(handle); 
+}
+
 //------------------------------------------------------------------------------
-// lookup l2seg from key or handle
+// lookup nwsec from key or handle
 //------------------------------------------------------------------------------
 nwsec_profile_t *
 nwsec_lookup_key_or_handle (const SecurityProfileKeyHandle& kh)

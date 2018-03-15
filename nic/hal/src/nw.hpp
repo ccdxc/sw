@@ -1,6 +1,7 @@
 #ifndef __NETWORK_HPP__
 #define __NETWORK_HPP__
 
+#include "nic/include/hal_state.hpp"
 #include "nic/hal/src/vrf.hpp"
 #include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/include/ip.h"

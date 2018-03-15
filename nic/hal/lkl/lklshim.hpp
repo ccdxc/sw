@@ -5,7 +5,6 @@
 #include "sdk/slab.hpp"
 #include "sdk/list.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_state.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/src/session.hpp"

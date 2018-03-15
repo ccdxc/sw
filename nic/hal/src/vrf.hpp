@@ -10,11 +10,11 @@
 #include "sdk/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
+#include "nic/include/ip.h"
 #include "nic/hal/src/nwsec.hpp"
 
 using sdk::lib::ht_ctxt_t;
@@ -77,12 +77,11 @@ typedef struct vrf_update_app_ctxt_s {
     ip_prefix_t         new_gipo_prefix;        // new gipo prefix
 } __PACK__ vrf_update_app_ctxt_t;
 
-
 // max. number of VRFs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_VRFS                                 256
 
 static inline void 
-vrf_lock(vrf_t *vrf, const char *fname, int lineno, const char *fxname)
+vrf_lock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("{}:operlock:locking vrf:{} from {}:{}:{}", 
                     __FUNCTION__, vrf->vrf_id,
@@ -91,103 +90,12 @@ vrf_lock(vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 }
 
 static inline void 
-vrf_unlock(vrf_t *vrf, const char *fname, int lineno, const char *fxname)
+vrf_unlock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("{}:operlock:unlocking vrf:{} from {}:{}:{}", 
                     __FUNCTION__, vrf->vrf_id,
                     fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&vrf->slock);
-}
-
-// allocate a vrf instance
-static inline vrf_t *
-vrf_alloc (void)
-{
-    vrf_t    *vrf;
-
-    vrf = (vrf_t *)g_hal_state->vrf_slab()->alloc();
-    if (vrf == NULL) {
-        return NULL;
-    }
-    return vrf;
-}
-
-// initialize a vrf instance
-static inline vrf_t *
-vrf_init (vrf_t *vrf)
-{
-    if (!vrf) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&vrf->slock, PTHREAD_PROCESS_PRIVATE);
-
-    // initialize the operational state
-    vrf->hal_handle   = HAL_HANDLE_INVALID;
-    vrf->num_l2seg    = 0;
-    vrf->num_sg       = 0;
-    vrf->num_l4lb_svc = 0;
-    vrf->num_ep       = 0;
-    vrf->pd           = NULL;
-
-    // initialize meta information
-    vrf->l2seg_list = block_list::factory(sizeof(hal_handle_t));
-    // utils::dllist_reset(&vrf->l2seg_list_head);
-    // utils::dllist_reset(&vrf->ep_list_head);
-    // utils::dllist_reset(&vrf->session_list_head);
-
-    return vrf;
-}
-
-// allocate and initialize a vrf instance
-static inline vrf_t *
-vrf_alloc_init (void)
-{
-    return vrf_init(vrf_alloc());
-}
-
-// free vrf instance
-// Note: This is not a deep free wherein the list or other pointers have to
-//       be freed separately
-static inline hal_ret_t
-vrf_free (vrf_t *vrf)
-{
-    HAL_SPINLOCK_DESTROY(&vrf->slock);
-    hal::delay_delete_to_slab(HAL_SLAB_VRF, vrf);
-    return HAL_RET_OK;
-}
-
-// anti vrf_alloc_init
-static inline hal_ret_t
-vrf_cleanup (vrf_t *vrf)
-{
-    if (vrf->l2seg_list) {
-        block_list::destroy(vrf->l2seg_list);
-    }
-    vrf_free(vrf);
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// find a vrf instance by its id
-//------------------------------------------------------------------------------
-static inline vrf_t *
-vrf_lookup_by_id (vrf_id_t tid)
-{
-    hal_handle_id_ht_entry_t    *entry;
-    vrf_t                    *vrf;
-
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->vrf_id_ht()->lookup(&tid);
-    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
-
-        // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
-                HAL_OBJ_ID_VRF);
-
-        vrf = (vrf_t *)hal_handle_get_obj(entry->handle_id);
-        return vrf;
-    }
-    return NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -214,6 +122,7 @@ vrf_lookup_by_handle (hal_handle_t handle)
     return (vrf_t *)hal_handle->get_obj();
 }
 
+extern vrf_t *vrf_lookup_by_id(vrf_id_t tid);
 extern void *vrf_id_get_key_func(void *entry);
 extern uint32_t vrf_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool vrf_id_compare_key_func(void *key1, void *key2);

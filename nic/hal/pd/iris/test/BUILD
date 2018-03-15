@@ -13,6 +13,7 @@ cc_test(
         "-lpthread",
         "-pthread",
         "-lz",
+        "-lrt",
     ],
     deps = gl_deps_list + [
             "//nic/hal/pd/iris:pd_iris",
@@ -32,6 +33,7 @@ cc_test(
         "-lpthread",
         "-pthread",
         "-lz",
+        "-lrt",
     ],
     deps =  gl_deps_list + [
             "//nic/hal/pd/iris:pd_iris",

@@ -31,6 +31,10 @@ else
   JOBS = --jobs=$(j)
 endif
 
+ifneq ($(CUSTOM_FLAGS),)
+  BAZEL_CUSTOM_FLAGS = --copt=$(CUSTOM_FLAGS)
+endif
+
 ifeq ($(BAZEL_OUTPUT_BASE),)
     OUTPUT_BASE =
 else
@@ -42,11 +46,11 @@ TOOLCHAIN_VER=1.1
 TOOLCHAIN_PATH=$(TOOLCHAIN_ROOT)-$(TOOLCHAIN_VER)
 
 ifeq ($(ARCH), aarch64)
-    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) --crosstool_top=//nic/tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
+    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(BAZEL_CUSTOM_FLAGS) --crosstool_top=//nic/tools/arm_compiler:toolchain --cpu=aarch64-linux --strategy=CppCompile=standalone --strategy=CppLink=standalone
     PATH_OPTS   = PATH=$(TOOLCHAIN_PATH)/bin:$$PATH
     BUILD_OPTS  = BUILD_ARCHES=aarch64
 else
-    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE)
+    BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(BAZEL_CUSTOM_FLAGS)
 endif
 
 #BZL_OPT = --bazelrc=bazel.rc

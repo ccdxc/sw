@@ -146,6 +146,105 @@ proxy_compare_handle_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a proxy instance
+static inline proxy_t *
+proxy_alloc (void)
+{
+    proxy_t    *proxy;
+
+    proxy = (proxy_t *)g_hal_state->proxy_slab()->alloc();
+    if (proxy == NULL) {
+        return NULL;
+    }
+    return proxy;
+}
+
+// initialize a proxyment instance
+static inline proxy_t *
+proxy_init (proxy_t *proxy)
+{
+    if (!proxy) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&proxy->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    proxy->pd = NULL;
+
+    // initialize meta information
+    proxy->ht_ctxt.reset();
+    proxy->hal_handle_ht_ctxt.reset();
+
+    return proxy;
+}
+
+// allocate and initialize a PROXY instance
+static inline proxy_t *
+proxy_alloc_init (void)
+{
+    return proxy_init(proxy_alloc());
+}
+
+static inline hal_ret_t
+proxy_free (proxy_t *proxy)
+{
+    HAL_SPINLOCK_DESTROY(&proxy->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_PROXY, proxy);
+    return HAL_RET_OK;
+}
+
+// allocate a proxy flow info instance
+static inline proxy_flow_info_t *
+proxy_flow_info_alloc (void)
+{
+    proxy_flow_info_t       *pfi;
+    pfi = (proxy_flow_info_t *)g_hal_state->proxy_flow_info_slab()->alloc();
+    if(pfi == NULL) {
+        return NULL;
+    } 
+    return pfi;
+}
+
+// initialize a proxyment instance
+static inline proxy_flow_info_t *
+proxy_flow_info_init (proxy_flow_info_t *pfi)
+{
+    if(!pfi) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&pfi->slock, PTHREAD_PROCESS_PRIVATE);
+    pfi->flow_ht_ctxt.reset();
+    return pfi;
+}
+
+// allocate and initialize a PROXY instance
+static inline proxy_flow_info_t *
+proxy_flow_info_alloc_init (void)
+{
+    return proxy_flow_info_init(proxy_flow_info_alloc());
+}
+
+static inline hal_ret_t
+proxy_flow_info_free (proxy_flow_info_t *proxy_flow_info)
+{
+    HAL_SPINLOCK_DESTROY(&proxy_flow_info->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_PROXY_FLOW_INFO,
+                                        proxy_flow_info);
+    return HAL_RET_OK;
+}
+
+static inline proxy_t *
+find_proxy_by_type (types::ProxyType proxy_type)
+{
+    return (proxy_t *)g_hal_state->proxy_type_ht()->lookup(&proxy_type);
+}
+
+static inline proxy_t *
+find_proxy_by_handle (hal_handle_t handle)
+{
+    return (proxy_t *)g_hal_state->proxy_hal_handle_ht()->lookup(&handle);
+}
+
 //------------------------------------------------------------------------------
 // validate an incoming PROXY enable request
 // TODO:

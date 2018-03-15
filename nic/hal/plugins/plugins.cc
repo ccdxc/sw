@@ -1,4 +1,5 @@
 #include "nic/include/base.h"
+#include "nic/include/hal_mem.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/hal/src/proxy.hpp"

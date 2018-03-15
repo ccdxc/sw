@@ -45,6 +45,7 @@ cc_test(
             ] + gl_deps_list + test_deps_list,
     linkopts = [
         "-lzmq",
+        "-lrt",
      ],
     copts = sdk_copts,
 )

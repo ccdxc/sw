@@ -3,17 +3,17 @@
 package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
-# Indexer Test
 cc_test(
-    name = "indexer_test",
-    srcs = ["indexer_test.cc"],
+    name = "shmmgr_test",
+    srcs = ["shmmgr_test.cc"],
     deps = [
         "//:sdk_headers",
-        "//obj:sdk_indexer",
+        "//obj:sdk_shmmgr",
         "//obj:sdk_logger",
-        # Utils
-        #":indexer",
-        # External
         "//:gtest",
+        "@third_party//:boost",
     ],
+    linkopts = [
+        "-lrt",
+    ]
 )

@@ -145,6 +145,18 @@ flow_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+session_t *
+find_session_by_handle (hal_handle_t handle)
+{
+    return (session_t *)g_hal_state->session_hal_handle_ht()->lookup(&handle);
+}
+
+session_t *
+find_session_by_id (session_id_t session_id)
+{
+    return (session_t *)g_hal_state->session_id_ht()->lookup(&session_id);
+}
+
 //------------------------------------------------------------------------------
 // thread safe helper to stringify flow_key_t
 //------------------------------------------------------------------------------

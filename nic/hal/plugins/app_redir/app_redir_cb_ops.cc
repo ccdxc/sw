@@ -1,3 +1,4 @@
+#include "nic/include/hal_state.hpp"
 #include "app_redir.hpp"
 #include "app_redir_cb_ops.hpp"
 

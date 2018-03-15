@@ -54,6 +54,65 @@ rawccb_compare_handle_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a RAWCCB instance
+static inline rawccb_t *
+rawccb_alloc (void)
+{
+    rawccb_t    *rawccb;
+
+    rawccb = (rawccb_t *)g_hal_state->rawccb_slab()->alloc();
+    if (rawccb == NULL) {
+        return NULL;
+    }
+    return rawccb;
+}
+
+// initialize a RAWCCB instance
+static inline rawccb_t *
+rawccb_init (rawccb_t *rawccb)
+{
+    if (!rawccb) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&rawccb->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    rawccb->pd = NULL;
+
+    // initialize meta information
+    rawccb->ht_ctxt.reset();
+    rawccb->hal_handle_ht_ctxt.reset();
+
+    return rawccb;
+}
+
+// allocate and initialize a RAWCCB instance
+static inline rawccb_t *
+rawccb_alloc_init (void)
+{
+    return rawccb_init(rawccb_alloc());
+}
+
+static inline hal_ret_t
+rawccb_free (rawccb_t *rawccb)
+{
+    HAL_SPINLOCK_DESTROY(&rawccb->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_RAWCCB, rawccb);
+    return HAL_RET_OK;
+}
+
+static inline rawccb_t *
+find_rawccb_by_id (rawccb_id_t rawccb_id)
+{
+    return (rawccb_t *)g_hal_state->rawccb_id_ht()->lookup(&rawccb_id);
+}
+
+static inline rawccb_t *
+find_rawccb_by_handle (hal_handle_t handle)
+{
+    return (rawccb_t *)g_hal_state->rawccb_hal_handle_ht()->lookup(&handle);
+}
+
 //------------------------------------------------------------------------------
 // validate an incoming RAWCCB create request
 // TODO:

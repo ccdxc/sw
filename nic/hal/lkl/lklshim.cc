@@ -4,6 +4,7 @@
 #include <ostream>
 #include <iomanip>
 #include "nic/hal/hal.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"

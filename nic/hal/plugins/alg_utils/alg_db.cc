@@ -1,3 +1,4 @@
+#include "nic/include/periodic.hpp"
 #include "alg_db.hpp"
 
 namespace hal {

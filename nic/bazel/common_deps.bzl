@@ -29,6 +29,7 @@ gl_linkopts_list = [
     "-lz",
     "-rdynamic",
     "-lm",
+    "-lrt",
     ]
 
 sdk_copts = ["-Inic/sdk"]

@@ -2,6 +2,7 @@
 
 #include "nic/fte/fte.hpp"
 #include "nic/fte/fte_flow.hpp"
+#include "nic/include/hal_mem.hpp"
 #include <string>
 #include <sstream>
 #include <iostream>

@@ -89,6 +89,129 @@ ep_compare_l3_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a ep instance
+static inline ep_t *
+ep_alloc (void)
+{
+    ep_t    *ep;
+
+    ep = (ep_t *)g_hal_state->ep_slab()->alloc();
+    if (ep == NULL) {
+        return NULL;
+    }
+    return ep;
+}
+
+// initialize a ep instance
+static inline ep_t *
+ep_init (ep_t *ep)
+{
+    if (!ep) {
+        return NULL;
+    }
+    memset(ep, 0, sizeof(ep_t));
+    HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
+    
+    sdk::lib::dllist_reset(&ep->ip_list_head);
+    sdk::lib::dllist_reset(&ep->session_list_head);
+    ep->sgs.sg_id_cnt = 0;
+    memset(&ep->sgs.arr_sg_id, 0 , MAX_SG_PER_ARRAY);
+
+    return ep;
+}
+
+// allocate and initialize a ep instance
+static inline ep_t *
+ep_alloc_init (void)
+{
+    return ep_init(ep_alloc());
+}
+
+static inline hal_ret_t
+ep_free (ep_t *ep)
+{
+    HAL_SPINLOCK_DESTROY(&ep->slock);
+
+    // TODO: may have to free list of ip entries
+    hal::delay_delete_to_slab(HAL_SLAB_EP, ep);
+    return HAL_RET_OK;
+}
+
+ep_t *
+find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    ep_l2_key_t                 l2_key = { 0 };
+    ep_t                        *ep;
+
+    l2_key.l2_segid = l2seg_id;
+    memcpy(&l2_key.mac_addr, mac_addr, ETH_ADDR_LEN);
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        ep_l2_ht()->lookup(&l2_key);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_ENDPOINT);
+        ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
+        return ep;
+    }
+    return NULL;
+}
+
+// find EP from hal handle
+ep_t *
+find_ep_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+
+    // check for object type
+    if (hal_handle_get_from_handle_id(handle)->obj_id() != HAL_OBJ_ID_ENDPOINT) {
+        return NULL;
+    }
+    return (ep_t *)hal_handle_get_obj(handle);
+}
+
+// find EP from l3 key
+ep_t *
+find_ep_by_l3_key (ep_l3_key_t *ep_l3_key)
+{
+    ep_l3_entry_t    *ep_l3_entry;
+
+    HAL_ASSERT(ep_l3_key != NULL);
+    ep_l3_entry =
+        (ep_l3_entry_t *)g_hal_state->ep_l3_entry_ht()->lookup(ep_l3_key);
+    if (ep_l3_entry == NULL) {
+        return NULL;
+    }
+    return find_ep_by_handle(ep_l3_entry->ep_hal_handle);
+}
+
+// find EP from v4 key
+ep_t *
+find_ep_by_v4_key (vrf_id_t tid, uint32_t v4_addr)
+{
+    ep_l3_key_t    l3_key = { 0 };
+
+    l3_key.vrf_id = tid;
+    l3_key.ip_addr.af = IP_AF_IPV4;
+    l3_key.ip_addr.addr.v4_addr = v4_addr;
+    return find_ep_by_l3_key(&l3_key);
+}
+
+// find EP from v6 key
+ep_t *
+find_ep_by_v6_key (vrf_id_t tid, const ip_addr_t *ip_addr)
+{
+    ep_l3_key_t    l3_key = { 0 };
+
+    l3_key.vrf_id = tid;
+    memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
+    return find_ep_by_l3_key(&l3_key);
+}
+
 //------------------------------------------------------------------------------
 // insert an ep to l2 db
 //------------------------------------------------------------------------------

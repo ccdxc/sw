@@ -54,6 +54,65 @@ proxyrcb_compare_handle_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a PROXYRCB instance
+static inline proxyrcb_t *
+proxyrcb_alloc (void)
+{
+    proxyrcb_t    *proxyrcb;
+
+    proxyrcb = (proxyrcb_t *)g_hal_state->proxyrcb_slab()->alloc();
+    if (proxyrcb == NULL) {
+        return NULL;
+    }
+    return proxyrcb;
+}
+
+// initialize a PROXYRCB instance
+static inline proxyrcb_t *
+proxyrcb_init (proxyrcb_t *proxyrcb)
+{
+    if (!proxyrcb) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&proxyrcb->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    proxyrcb->pd = NULL;
+
+    // initialize meta information
+    proxyrcb->ht_ctxt.reset();
+    proxyrcb->hal_handle_ht_ctxt.reset();
+
+    return proxyrcb;
+}
+
+// allocate and initialize a PROXYRCB instance
+static inline proxyrcb_t *
+proxyrcb_alloc_init (void)
+{
+    return proxyrcb_init(proxyrcb_alloc());
+}
+
+static inline hal_ret_t
+proxyrcb_free (proxyrcb_t *proxyrcb)
+{
+    HAL_SPINLOCK_DESTROY(&proxyrcb->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_PROXYRCB, proxyrcb);
+    return HAL_RET_OK;
+}
+
+proxyrcb_t *
+find_proxyrcb_by_id (proxyrcb_id_t proxyrcb_id)
+{
+    return (proxyrcb_t *)g_hal_state->proxyrcb_id_ht()->lookup(&proxyrcb_id);
+}
+
+proxyrcb_t *
+find_proxyrcb_by_handle (hal_handle_t handle)
+{
+    return (proxyrcb_t *)g_hal_state->proxyrcb_hal_handle_ht()->lookup(&handle);
+}
+
 //------------------------------------------------------------------------------
 // validate an incoming PROXYRCB create request
 // TODO:

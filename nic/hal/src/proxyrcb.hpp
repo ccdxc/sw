@@ -7,7 +7,6 @@
 #include "sdk/ht.hpp"
 #include "nic/gen/proto/hal/proxyrcb.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_state.hpp"
 #include "nic/include/app_redir_shared.h"
 
 using sdk::lib::ht_ctxt_t;
@@ -101,68 +100,11 @@ typedef struct proxyrcb_s {
  */
 #define HAL_NUM_PROXYRCB_RINGS_MAX        APP_REDIR_PROXYR_RINGS_MAX
 
-// allocate a PROXYRCB instance
-static inline proxyrcb_t *
-proxyrcb_alloc (void)
-{
-    proxyrcb_t    *proxyrcb;
-
-    proxyrcb = (proxyrcb_t *)g_hal_state->proxyrcb_slab()->alloc();
-    if (proxyrcb == NULL) {
-        return NULL;
-    }
-    return proxyrcb;
-}
-
-// initialize a PROXYRCB instance
-static inline proxyrcb_t *
-proxyrcb_init (proxyrcb_t *proxyrcb)
-{
-    if (!proxyrcb) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&proxyrcb->slock, PTHREAD_PROCESS_PRIVATE);
-
-    // initialize the operational state
-    proxyrcb->pd = NULL;
-
-    // initialize meta information
-    proxyrcb->ht_ctxt.reset();
-    proxyrcb->hal_handle_ht_ctxt.reset();
-
-    return proxyrcb;
-}
-
-// allocate and initialize a PROXYRCB instance
-static inline proxyrcb_t *
-proxyrcb_alloc_init (void)
-{
-    return proxyrcb_init(proxyrcb_alloc());
-}
-
-static inline hal_ret_t
-proxyrcb_free (proxyrcb_t *proxyrcb)
-{
-    HAL_SPINLOCK_DESTROY(&proxyrcb->slock);
-    hal::delay_delete_to_slab(HAL_SLAB_PROXYRCB, proxyrcb);
-    return HAL_RET_OK;
-}
-
-static inline proxyrcb_t *
-find_proxyrcb_by_id (proxyrcb_id_t proxyrcb_id)
-{
-    return (proxyrcb_t *)g_hal_state->proxyrcb_id_ht()->lookup(&proxyrcb_id);
-}
-
-static inline proxyrcb_t *
-find_proxyrcb_by_handle (hal_handle_t handle)
-{
-    return (proxyrcb_t *)g_hal_state->proxyrcb_hal_handle_ht()->lookup(&handle);
-}
-
 extern void *proxyrcb_get_key_func(void *entry);
 extern uint32_t proxyrcb_compute_hash_func(void *key, uint32_t ht_size);
 extern bool proxyrcb_compare_key_func(void *key1, void *key2);
+extern proxyrcb_t *find_proxyrcb_by_id(proxyrcb_id_t proxyrcb_id);
+extern proxyrcb_t *find_proxyrcb_by_handle(hal_handle_t handle);
 
 extern void *proxyrcb_get_handle_key_func(void *entry);
 extern uint32_t proxyrcb_compute_handle_hash_func(void *key, uint32_t ht_size);

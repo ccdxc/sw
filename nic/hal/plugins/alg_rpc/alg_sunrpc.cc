@@ -4,6 +4,7 @@
 #include <rpc/rpc_msg.h>
 #include <rpc/pmap_prot.h>
 #include <rpc/pmap_rmt.h>
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 #include "rpcb_prot.h"
 #include "nic/p4/iris/include/defines.h"

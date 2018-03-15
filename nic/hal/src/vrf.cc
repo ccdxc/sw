@@ -59,6 +59,103 @@ vrf_id_compare_key_func (void *key1, void *key2)
 }
 
 //------------------------------------------------------------------------------
+// allocate a vrf instance
+//------------------------------------------------------------------------------
+static inline vrf_t *
+vrf_alloc (void)
+{
+    vrf_t    *vrf;
+
+    vrf = (vrf_t *)g_hal_state->vrf_slab()->alloc();
+    if (vrf == NULL) {
+        return NULL;
+    }
+    return vrf;
+}
+
+//------------------------------------------------------------------------------
+// initialize a vrf instance
+//------------------------------------------------------------------------------
+static inline vrf_t *
+vrf_init (vrf_t *vrf)
+{
+    if (!vrf) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&vrf->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    vrf->hal_handle   = HAL_HANDLE_INVALID;
+    vrf->num_l2seg    = 0;
+    vrf->num_sg       = 0;
+    vrf->num_l4lb_svc = 0;
+    vrf->num_ep       = 0;
+    vrf->pd           = NULL;
+
+    // initialize meta information
+    vrf->l2seg_list = block_list::factory(sizeof(hal_handle_t));
+    // utils::dllist_reset(&vrf->l2seg_list_head);
+    // utils::dllist_reset(&vrf->ep_list_head);
+    // utils::dllist_reset(&vrf->session_list_head);
+
+    return vrf;
+}
+
+//------------------------------------------------------------------------------
+// allocate and initialize a vrf instance
+//------------------------------------------------------------------------------
+static inline vrf_t *
+vrf_alloc_init (void)
+{
+    return vrf_init(vrf_alloc());
+}
+
+// free vrf instance
+// Note: This is not a deep free wherein the list or other pointers have to
+//       be freed separately
+static inline hal_ret_t
+vrf_free (vrf_t *vrf)
+{
+    HAL_SPINLOCK_DESTROY(&vrf->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_VRF, vrf);
+    return HAL_RET_OK;
+}
+
+// anti vrf_alloc_init
+static inline hal_ret_t
+vrf_cleanup (vrf_t *vrf)
+{
+    if (vrf->l2seg_list) {
+        block_list::destroy(vrf->l2seg_list);
+    }
+    vrf_free(vrf);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// find a vrf instance by its id
+//------------------------------------------------------------------------------
+vrf_t *
+vrf_lookup_by_id (vrf_id_t tid)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    vrf_t                    *vrf;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->vrf_id_ht()->lookup(&tid);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                HAL_OBJ_ID_VRF);
+
+        vrf = (vrf_t *)hal_handle_get_obj(entry->handle_id);
+        return vrf;
+    }
+    return NULL;
+}
+
+//------------------------------------------------------------------------------
 // insert a vrf to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t

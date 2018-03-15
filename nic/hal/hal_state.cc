@@ -32,6 +32,7 @@
 #include "nic/hal/src/gft.hpp"
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/twheel.hpp"
+#include "sdk/shmmgr.hpp"
 
 namespace hal {
 
@@ -198,16 +199,6 @@ hal_cfg_db::init(void)
     HAL_ASSERT_RETURN((wring_hal_handle_ht_ != NULL), false);
 
     // initialize proxy service related data structures
-    proxy_slab_ = slab::factory("proxy", HAL_SLAB_PROXY,
-                                sizeof(hal::proxy_t), HAL_MAX_PROXY,
-                                false, true, true);
-    HAL_ASSERT_RETURN((proxy_slab_ != NULL), false);
-
-    proxy_flow_info_slab_ = slab::factory("proxy-flow-infi", HAL_SLAB_PROXY_FLOW_INFO,
-                                sizeof(hal::proxy_flow_info_t), HAL_MAX_PROXY_FLOWS,
-                                false, true, true);
-    HAL_ASSERT_RETURN((proxy_flow_info_slab_ != NULL), false);
-
     proxy_type_ht_ = ht::factory(HAL_MAX_PROXY,
                                  hal::proxy_get_key_func,
                                  hal::proxy_compute_hash_func,
@@ -384,8 +375,6 @@ hal_cfg_db::hal_cfg_db()
     wring_id_ht_ = NULL;
     wring_hal_handle_ht_ = NULL;
     
-    proxy_slab_ = NULL;
-    proxy_flow_info_slab_ = NULL;
     proxy_type_ht_ = NULL;
     proxy_hal_handle_ht_ = NULL;
 
@@ -478,8 +467,6 @@ hal_cfg_db::~hal_cfg_db()
     wring_id_ht_ ? ht::destroy(wring_id_ht_) : HAL_NOP;
     wring_hal_handle_ht_ ? ht::destroy(wring_hal_handle_ht_) : HAL_NOP;
     
-    proxy_slab_ ? slab::destroy(proxy_slab_) : HAL_NOP;
-    proxy_flow_info_slab_ ? slab::destroy(proxy_flow_info_slab_) : HAL_NOP;
     proxy_type_ht_ ? ht::destroy(proxy_type_ht_) : HAL_NOP;
     proxy_hal_handle_ht_ ? ht::destroy(proxy_hal_handle_ht_) : HAL_NOP;
     
@@ -924,6 +911,17 @@ hal_mem_db::init(void)
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_NWSEC_RULE] != NULL), false);
 
+    slabs_[HAL_SLAB_PROXY] = slab::factory("proxy", HAL_SLAB_PROXY,
+                                           sizeof(hal::proxy_t), HAL_MAX_PROXY,
+                                           false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXY] != NULL), false);
+
+    slabs_[HAL_SLAB_PROXY_FLOW_INFO] =
+        slab::factory("proxy-flow-infi", HAL_SLAB_PROXY_FLOW_INFO,
+                      sizeof(hal::proxy_flow_info_t),
+                      HAL_MAX_PROXY_FLOWS,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_PROXY_FLOW_INFO] != NULL), false);
 
     // initialize GFT related slabs
     slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
@@ -989,7 +987,7 @@ hal_mem_db::~hal_mem_db()
 
     for (i = HAL_SLAB_PI_MIN; i < HAL_SLAB_PI_MAX; i++) {
         if (slabs_[i]) {
-            slab::destroy(slabs_[i]);
+            slab::destroy(TO_SLAB_PTR(slabs_[i]));
         }
     }
 }
@@ -1003,7 +1001,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     if (slab_id >= HAL_SLAB_PI_MAX) {
         return NULL;
     }
-    return slabs_[slab_id];
+    return TO_SLAB_PTR(slabs_[slab_id]);
 }
 
 //------------------------------------------------------------------------------

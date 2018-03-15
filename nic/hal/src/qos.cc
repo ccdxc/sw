@@ -52,6 +52,92 @@ qos_class_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a QosClass instance
+static inline qos_class_t *
+qos_class_alloc (void)
+{
+    qos_class_t    *qos_class;
+
+    qos_class = (qos_class_t *)g_hal_state->qos_class_slab()->alloc();
+    if (qos_class == NULL) {
+        return NULL;
+    }
+    return qos_class;
+}
+
+// initialize a QosClass instance
+static inline qos_class_t *
+qos_class_init (qos_class_t *qos_class)
+{
+    if (!qos_class) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_PRIVATE);
+
+    return qos_class;
+}
+
+// allocate and initialize a qos_class instance
+static inline qos_class_t *
+qos_class_alloc_init (void)
+{
+    return qos_class_init(qos_class_alloc());
+}
+
+qos_class_t *
+find_qos_class_by_group (qos_group_t qos_group)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    qos_class_key_t             qos_class_key;
+    qos_class_t                 *qos_class;
+
+    qos_class_key.qos_group = qos_group;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        qos_class_ht()->lookup(&qos_class_key);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_QOS_CLASS);
+        qos_class = (qos_class_t *)hal_handle_get_obj(entry->handle_id);
+        return qos_class;
+    }
+    return NULL;
+}
+
+qos_class_t *
+find_qos_class_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_ERR("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_QOS_CLASS) {
+        HAL_TRACE_ERR("{}:failed to find qos_class with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    return (qos_class_t *)hal_handle_get_obj(handle);
+}
+
+qos_class_t *
+find_qos_class_by_key_handle (const QosClassKeyHandle& kh)
+{
+    if (kh.key_or_handle_case() == QosClassKeyHandle::kQosGroup) {
+        qos_group_t qos_group = qos_spec_qos_group_to_qos_group(kh.qos_group());
+        return valid_qos_group(qos_group) ? 
+                                    find_qos_class_by_group(qos_group) : NULL;
+    } else if (kh.key_or_handle_case() == QosClassKeyHandle::kQosClassHandle) {
+        return find_qos_class_by_handle(kh.qos_class_handle());
+    }
+    return NULL;
+}
+
 static inline void
 qos_class_cmap_db_add (qos_class_t *qos_class)
 {
@@ -1433,6 +1519,90 @@ copp_compare_key_func (void *key1, void *key2)
         return true;
     }
     return false;
+}
+
+// allocate a Copp instance
+static inline copp_t *
+copp_alloc (void)
+{
+    copp_t    *copp;
+
+    copp = (copp_t *)g_hal_state->copp_slab()->alloc();
+    if (copp == NULL) {
+        return NULL;
+    }
+    return copp;
+}
+
+// initialize a Copp instance
+static inline copp_t *
+copp_init (copp_t *copp)
+{
+    if (!copp) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_PRIVATE);
+
+    return copp;
+}
+
+// allocate and initialize a copp instance
+static inline copp_t *
+copp_alloc_init (void)
+{
+    return copp_init(copp_alloc());
+}
+
+copp_t *
+find_copp_by_copp_type (copp_type_t copp_type)
+{
+    hal_handle_id_ht_entry_t *entry;
+    copp_key_t       copp_key;
+    copp_t           *copp;
+
+    copp_key.copp_type = copp_type;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        copp_ht()->lookup(&copp_key);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_COPP);
+        copp = (copp_t *)hal_handle_get_obj(entry->handle_id);
+        return copp;
+    }
+    return NULL;
+}
+
+copp_t *
+find_copp_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_ERR("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_COPP) {
+        HAL_TRACE_ERR("{}:failed to find copp with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    return (copp_t *)hal_handle_get_obj(handle);
+}
+
+copp_t *
+find_copp_by_key_handle (const CoppKeyHandle& kh)
+{
+    if (kh.key_or_handle_case() == CoppKeyHandle::kCoppType) {
+        return find_copp_by_copp_type(copp_spec_copp_type_to_copp_type(kh.copp_type()));
+    } else if (kh.key_or_handle_case() == CoppKeyHandle::kCoppHandle) {
+        return find_copp_by_handle(kh.copp_handle());
+    }
+    return NULL;
 }
 
 //------------------------------------------------------------------------------

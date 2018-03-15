@@ -3,6 +3,7 @@
  */
 
 #include "core.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
 

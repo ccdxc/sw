@@ -50,6 +50,90 @@ lif_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a LIF instance
+static inline lif_t *
+lif_alloc (void)
+{
+    lif_t    *lif;
+
+    lif = (lif_t *)g_hal_state->lif_slab()->alloc();
+    if (lif == NULL) {
+        return NULL;
+    }
+    return lif;
+}
+
+// initialize a LIF instance
+static inline lif_t *
+lif_init (lif_t *lif)
+{
+    if (!lif) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&lif->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+    lif->hal_handle    = HAL_HANDLE_INVALID;
+    lif->pinned_uplink = HAL_HANDLE_INVALID;
+
+    // initialize meta information
+    sdk::lib::dllist_reset(&lif->if_list_head);
+
+    return lif;
+}
+
+// allocate and initialize a interface instance
+static inline lif_t *
+lif_alloc_init (void)
+{
+    return lif_init(lif_alloc());
+}
+
+static inline hal_ret_t
+lif_free (lif_t *lif)
+{
+    HAL_SPINLOCK_DESTROY(&lif->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_LIF, lif);
+    return HAL_RET_OK;
+}
+
+lif_t *
+find_lif_by_id (lif_id_t lif_id)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    lif_t                       *lif;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->lif_id_ht()->lookup(&lif_id);
+    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_LIF);
+        lif = (lif_t *)hal_handle_get_obj(entry->handle_id);
+        return lif;
+    }
+    return NULL;
+}
+
+lif_t *
+find_lif_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_LIF) {
+        HAL_TRACE_DEBUG("{}:failed to find lif with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    return (lif_t *)hal_handle->get_obj();
+}
+
 //------------------------------------------------------------------------------
 // insert this lif in all meta data structures
 //------------------------------------------------------------------------------

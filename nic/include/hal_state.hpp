@@ -17,6 +17,15 @@
 #include "nic/hal/periodic/periodic.hpp"
 #include "sdk/timestamp.hpp"
 
+#ifdef SHM
+#include "sdk/shmmgr.hpp"
+#define slab_ptr_t        offset_ptr<slab>
+#define TO_SLAB_PTR(x)    (x).get()
+#else
+#define slab_ptr_t        slab *
+#define TO_SLAB_PTR(x)    x
+#endif
+
 namespace hal {
 
 using sdk::lib::slab;
@@ -100,8 +109,6 @@ public:
     ht *wring_hal_handle_ht(void) const { return wring_hal_handle_ht_; }
 
     // get APIs for Proxy state
-    slab *proxy_slab(void) const { return proxy_slab_; }
-    slab *proxy_flow_info_slab(void) const { return proxy_flow_info_slab_; }
     ht *proxy_type_ht(void) const { return proxy_type_ht_; }
     ht *proxy_hal_handle_ht(void) const { return proxy_hal_handle_ht_; }
 
@@ -242,8 +249,6 @@ private:
 
     // Proxy related config
     struct {
-        slab       *proxy_slab_;
-        slab       *proxy_flow_info_slab_; 
         ht         *proxy_type_ht_;
         ht         *proxy_hal_handle_ht_;
     } __PACK__;
@@ -345,56 +350,58 @@ public:
     ~hal_mem_db();
 
     slab *get_slab(hal_slab_t slab_id);
-    slab *hal_handle_slab(void) const { return slabs_[HAL_SLAB_HANDLE]; }
-    slab *hal_handle_ht_entry_slab(void) const { return slabs_[HAL_SLAB_HANDLE_HT_ENTRY]; }
-    slab *hal_handle_list_entry_slab(void) const { return slabs_[HAL_SLAB_HANDLE_LIST_ENTRY]; }
-    slab *hal_handle_id_ht_entry_slab(void) const { return slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY]; }
-    slab *hal_handle_id_list_entry_slab(void) const { return slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY]; }
-    slab *dos_policy_sg_list_entry_slab(void) const { return slabs_[HAL_SLAB_DOS_POLICY_SG_LIST]; }
-    slab *vrf_slab(void) const { return slabs_[HAL_SLAB_VRF]; }
-    slab *network_slab(void) const { return slabs_[HAL_SLAB_NETWORK]; }
-    slab *nwsec_profile_slab(void) const { return slabs_[HAL_SLAB_SECURITY_PROFILE]; }
-    slab *nwsec_group_slab(void) const { return slabs_[HAL_SLAB_NWSEC_GROUP]; }
-    slab *nwsec_rule_slab(void) const { return slabs_[HAL_SLAB_NWSEC_RULE]; }
-    slab *ruledb_slab(void) const { return slabs_[HAL_SLAB_NWSEC_RULE]; }
-    slab *nwsec_policy_rules_slab(void) const { return slabs_[HAL_SLAB_NWSEC_POLICY_RULES]; }
-    slab *nwsec_policy_cfg_slab(void) const { return slabs_[HAL_SLAB_NWSEC_POLICY_CFG]; }
-    slab *nwsec_policy_svc_slab(void) const { return slabs_[HAL_SLAB_NWSEC_POLICY_SVC]; }
-    slab *nwsec_policy_appid_slab(void) const { return slabs_[HAL_SLAB_NWSEC_POLICY_APPID]; }
-    slab *dos_policy_slab(void) const { return slabs_[HAL_SLAB_DOS_POLICY]; }
-    slab *l2seg_slab(void) const { return slabs_[HAL_SLAB_L2SEG]; }
-    slab *mc_entry_slab(void) const { return slabs_[HAL_SLAB_MC_ENTRY]; }
-    slab *lif_slab(void) const { return slabs_[HAL_SLAB_LIF]; }
-    slab *if_slab(void) const { return slabs_[HAL_SLAB_IF]; }
-    slab *enic_l2seg_entry_slab(void) { return slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY]; }
-    slab *ep_slab(void) const { return slabs_[HAL_SLAB_EP]; }
-    slab *ep_ip_entry_slab(void) const { return slabs_[HAL_SLAB_EP_IP_ENTRY]; }
-    slab *ep_l3_entry_slab(void) const { return slabs_[HAL_SLAB_EP_L3_ENTRY]; }
-    slab *l4lb_slab(void) const { return slabs_[HAL_SLAB_L4LB]; }
-    slab *flow_slab(void) const { return slabs_[HAL_SLAB_FLOW]; }
-    slab *session_slab(void) const { return slabs_[HAL_SLAB_SESSION]; }
-    slab *tlscb_slab(void) const { return slabs_[HAL_SLAB_TLSCB]; }
-    slab *tcpcb_slab(void) const { return slabs_[HAL_SLAB_TCPCB]; }
-    slab *qos_class_slab(void) const { return slabs_[HAL_SLAB_QOS_CLASS]; }
-    slab *copp_slab(void) const { return slabs_[HAL_SLAB_COPP]; }
-    slab *acl_slab(void) const { return slabs_[HAL_SLAB_ACL]; }
-    slab *wring_slab(void) const { return slabs_[HAL_SLAB_WRING]; }
-    slab *ipseccb_slab(void) const { return slabs_[HAL_SLAB_IPSECCB]; }
-    slab *cpucb_slab(void) const { return slabs_[HAL_SLAB_CPUCB]; }
-    slab *rawrcb_slab(void) const { return slabs_[HAL_SLAB_RAWRCB]; }
-    slab *rawccb_slab(void) const { return slabs_[HAL_SLAB_RAWCCB]; }
-    slab *proxyrcb_slab(void) const { return slabs_[HAL_SLAB_PROXYRCB]; }
-    slab *proxyccb_slab(void) const { return slabs_[HAL_SLAB_PROXYCCB]; }
-    slab *gft_exact_match_profile_slab(void) const { return slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE]; }
-    slab *gft_hdr_transposition_profile_slab(void) const { return slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE]; }
-    slab *gft_exact_match_flow_entry_slab(void) const { return slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY]; }
+    slab *hal_handle_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE]); }
+    slab *hal_handle_ht_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_HT_ENTRY]); }
+    slab *hal_handle_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_LIST_ENTRY]); }
+    slab *hal_handle_id_ht_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID_HT_ENTRY]); }
+    slab *hal_handle_id_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_HANDLE_ID_LIST_ENTRY]); }
+    slab *dos_policy_sg_list_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY_SG_LIST]); }
+    slab *vrf_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VRF]); }
+    slab *network_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NETWORK]); }
+    slab *nwsec_profile_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SECURITY_PROFILE]); }
+    slab *nwsec_group_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_GROUP]); }
+    slab *nwsec_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE]); }
+    slab *ruledb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE]); }
+    slab *nwsec_policy_rules_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_RULES]); }
+    slab *nwsec_policy_cfg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_CFG]); }
+    slab *nwsec_policy_svc_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_SVC]); }
+    slab *nwsec_policy_appid_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_APPID]); }
+    slab *dos_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY]); }
+    slab *l2seg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG]); }
+    slab *mc_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_MC_ENTRY]); }
+    slab *lif_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_LIF]); }
+    slab *if_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IF]); }
+    slab *enic_l2seg_entry_slab(void) { return TO_SLAB_PTR(slabs_[HAL_SLAB_ENIC_L2SEG_ENTRY]); }
+    slab *ep_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_EP]); }
+    slab *ep_ip_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_EP_IP_ENTRY]); }
+    slab *ep_l3_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_EP_L3_ENTRY]); }
+    slab *l4lb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L4LB]); }
+    slab *flow_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_FLOW]); }
+    slab *session_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SESSION]); }
+    slab *tlscb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TLSCB]); }
+    slab *tcpcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TCPCB]); }
+    slab *qos_class_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_QOS_CLASS]); }
+    slab *copp_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_COPP]); }
+    slab *acl_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_ACL]); }
+    slab *wring_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_WRING]); }
+    slab *ipseccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSECCB]); }
+    slab *cpucb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_CPUCB]); }
+    slab *rawrcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RAWRCB]); }
+    slab *rawccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RAWCCB]); }
+    slab *proxyrcb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXYRCB]); }
+    slab *proxyccb_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXYCCB]); }
+    slab *gft_exact_match_profile_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE]); }
+    slab *gft_hdr_transposition_profile_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE]); }
+    slab *gft_exact_match_flow_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY]); }
+    slab *proxy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY]); }
+    slab *proxy_flow_info_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY_FLOW_INFO]); }
 
 private:
     bool init(void);
     hal_mem_db();
 
 private:
-    slab    *slabs_[HAL_SLAB_PI_MAX - HAL_SLAB_PI_MIN];
+    slab_ptr_t    slabs_[HAL_SLAB_PI_MAX - HAL_SLAB_PI_MIN];
 };
 
 //------------------------------------------------------------------------------
@@ -523,8 +530,8 @@ public:
     ht *wring_hal_handle_ht(void) const { return cfg_db_->wring_hal_handle_ht(); }
 
     // get APIs for Proxy state
-    slab *proxy_slab(void) const { return cfg_db_->proxy_slab(); }
-    slab *proxy_flow_info_slab(void) const { return cfg_db_->proxy_flow_info_slab(); }
+    slab *proxy_slab(void) const { return mem_db_->proxy_slab(); }
+    slab *proxy_flow_info_slab(void) const { return mem_db_->proxy_flow_info_slab(); }
     ht *proxy_type_ht(void) const { return cfg_db_->proxy_type_ht(); }
     ht *proxy_hal_handle_ht(void) const { return cfg_db_->proxy_hal_handle_ht(); }
 

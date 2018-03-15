@@ -1,12 +1,14 @@
-#ifndef __SHMSEG_HPP__
-#define __SHMSEG_HPP__
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+#ifndef __SDK_SHMMGR_HPP__
+#define __SDK_SHMMGR_HPP__
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 using namespace boost::interprocess;
 
-namespace utils {
-namespace shm {
+namespace sdk {
+namespace lib {
 
 //------------------------------------------------------------------------------
 // modes in which a shared memory segment can be opened/created
@@ -18,8 +20,10 @@ enum shm_mode_e {
     OPEN_READ_ONLY,
 };
 
+#define SHMSEG_NAME_MAX_LEN    16
+
 //------------------------------------------------------------------------------
-// shmseg is the shared memory and it expected to be instantiated once
+// shmmgr is the shared memory and it expected to be instantiated once
 // on each core in process/core's private heap memory, this will manage all the
 // shared memory between 
 // name - name of the shared memory segment being created
@@ -28,11 +32,11 @@ enum shm_mode_e {
 // baseaddr - address in the caller's memory address space this shared memory
 //            will be mapped to
 //------------------------------------------------------------------------------
-class shmseg {
+class shmmgr {
 public:
-    // even shared
-    shmseg(char *name, const std::size_t size, shm_mode_e mode, void *baseaddr);
-    ~shmseg();
+    static shmmgr *factory(const char *name, const std::size_t size,
+                           shm_mode_e mode, void *baseaddr = NULL);
+    static void destroy(shmmgr *seg);
 
     // allocate memory of give size (in bytes)from underlying system shared
     // memory.  if alignment is 0, caller doesn't care if memory allocated is
@@ -51,11 +55,17 @@ public:
 
 private:
     fixed_managed_shared_memory    *fixed_mgr_shm_;
-    std::string                    name_;
+    char                           name_[SHMSEG_NAME_MAX_LEN];
+
+private:
+    shmmgr() {};
+    ~shmmgr() {};
+    bool init(const char *name, const std::size_t size,
+              shm_mode_e mode, void *baseaddr);
 };
 
-}    // namespace shm
-}    // namespace utils
+}    // namespace lib
+}    // namespace sdk
 
-#endif    // __SHMSEG_HPP__
+#endif    // __SDK_SHMMGR_HPP__
 

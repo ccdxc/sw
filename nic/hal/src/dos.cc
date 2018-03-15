@@ -29,6 +29,66 @@ dos_policy_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
+// allocate a dos policy instance
+static inline dos_policy_t *
+dos_policy_alloc (void)
+{
+    dos_policy_t    *dos_policy;
+
+    dos_policy = (dos_policy_t *)g_hal_state->dos_policy_slab()->alloc();
+    if (dos_policy == NULL) {
+        return NULL;
+    }
+    return dos_policy;
+}
+
+// initialize a dos policy instance
+static inline dos_policy_t *
+dos_policy_init (dos_policy_t *dos_policy)
+{
+    if (!dos_policy) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&dos_policy->slock, PTHREAD_PROCESS_PRIVATE);
+
+    // initialize the operational state
+
+    // initialize meta information
+    // dos_policy->ht_ctxt.reset();
+    // dos_policy->hal_handle_ht_ctxt.reset();
+
+    return dos_policy;
+}
+
+// allocate and initialize a dos policy instance
+static inline dos_policy_t *
+dos_policy_alloc_init (void)
+{
+    return dos_policy_init(dos_policy_alloc());
+}
+
+// free dos policy instance
+static inline hal_ret_t
+dos_policy_free (dos_policy_t *dos_policy)
+{
+    HAL_SPINLOCK_DESTROY(&dos_policy->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_DOS_POLICY, dos_policy);
+    return HAL_RET_OK;
+}
+
+// find a dos policy instance by its handle
+dos_policy_t *
+find_dos_policy_by_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return NULL;
+    }
+    // check for object type
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+               HAL_OBJ_ID_DOS_POLICY);
+    return (dos_policy_t *)hal_handle_get_obj(handle); 
+}
+
 static inline hal_ret_t
 dos_policy_handle_update (DoSPolicySpec& spec, dos_policy_t *dosp, 
                           dos_policy_update_app_ctx_t *app_ctx)

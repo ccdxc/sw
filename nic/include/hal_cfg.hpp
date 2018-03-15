@@ -65,6 +65,7 @@ typedef struct hal_cfg_s {
     uint64_t                 data_cores_mask;
     void                     *pd_so;
     void                     *pd_stub_so;
+    bool                     shm_mode;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------

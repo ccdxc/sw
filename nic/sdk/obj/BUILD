@@ -156,6 +156,17 @@ cc_library(
     ],
 )
 
+# shm library
+cc_library(
+    name = "sdk_shmmgr",
+    srcs = [
+        "libshmmgr.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)
+
 # utils library
 cc_library(
     name = "sdk_utils",

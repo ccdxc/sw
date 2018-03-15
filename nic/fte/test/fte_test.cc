@@ -3,6 +3,8 @@
 
 #include "nic/fte/fte.hpp"
 #include "nic/fte/fte_flow.hpp"
+#include "nic/include/hal_mem.hpp"
+
 using namespace fte;
 using namespace std;
 

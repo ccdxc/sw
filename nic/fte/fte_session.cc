@@ -1,5 +1,6 @@
 #include "fte.hpp"
 #include "fte_flow.hpp"
+#include "nic/include/hal_mem.hpp"
 #include "nic/p4/iris/include/defines.h"
 
 namespace fte {

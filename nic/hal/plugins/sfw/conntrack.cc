@@ -1,6 +1,7 @@
 //{C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "nic/fte/fte.hpp"
+#include "nic/include/periodic.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/p4/iris/include/defines.h"
 

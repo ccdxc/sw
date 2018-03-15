@@ -2,6 +2,7 @@
 
 #include "nic/include/base.h"
 #include "sdk/ht.hpp"
+#include "sdk/twheel.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/fte/acl/ref.hpp"
 

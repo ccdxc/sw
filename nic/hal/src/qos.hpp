@@ -3,7 +3,6 @@
 #define __QOS_HPP__
 
 #include "nic/include/base.h"
-#include "nic/include/hal_state.hpp"
 #include "sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/qos.pb.h"
@@ -149,38 +148,6 @@ typedef struct qos_class_update_app_ctxt_s {
     bool marking_changed;
 } __PACK__ qos_class_update_app_ctxt_t;
 
-// allocate a QosClass instance
-static inline qos_class_t *
-qos_class_alloc (void)
-{
-    qos_class_t    *qos_class;
-
-    qos_class = (qos_class_t *)g_hal_state->qos_class_slab()->alloc();
-    if (qos_class == NULL) {
-        return NULL;
-    }
-    return qos_class;
-}
-
-// initialize a QosClass instance
-static inline qos_class_t *
-qos_class_init (qos_class_t *qos_class)
-{
-    if (!qos_class) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&qos_class->slock, PTHREAD_PROCESS_PRIVATE);
-
-    return qos_class;
-}
-
-// allocate and initialize a qos_class instance
-static inline qos_class_t *
-qos_class_alloc_init (void)
-{
-    return qos_class_init(qos_class_alloc());
-}
-
 static bool
 valid_qos_group (qos_group_t qos_group)
 {
@@ -191,98 +158,47 @@ static inline qos_group_t
 qos_spec_qos_group_to_qos_group (kh::QosGroup qos_group)
 {
     switch(qos_group) {
-        case kh::DEFAULT: 
-            return QOS_GROUP_DEFAULT;
-        case kh::USER_DEFINED_1: 
-            return QOS_GROUP_USER_DEFINED_1;
-        case kh::USER_DEFINED_2: 
-            return QOS_GROUP_USER_DEFINED_2;
-        case kh::USER_DEFINED_3: 
-            return QOS_GROUP_USER_DEFINED_3;
-        case kh::USER_DEFINED_4: 
-            return QOS_GROUP_USER_DEFINED_4;
-        case kh::USER_DEFINED_5: 
-            return QOS_GROUP_USER_DEFINED_5;
-        case kh::USER_DEFINED_6: 
-            return QOS_GROUP_USER_DEFINED_6;
-        case kh::CONTROL: 
-            return QOS_GROUP_CONTROL;
-        case kh::SPAN: 
-            return QOS_GROUP_SPAN;
-        case kh::INTERNAL_RX_PROXY_NO_DROP: 
-            return QOS_GROUP_RX_PROXY_NO_DROP;
-        case kh::INTERNAL_RX_PROXY_DROP: 
-            return QOS_GROUP_RX_PROXY_DROP;
-        case kh::INTERNAL_TX_PROXY_NO_DROP: 
-            return QOS_GROUP_TX_PROXY_NO_DROP;
-        case kh::INTERNAL_TX_PROXY_DROP: 
-            return QOS_GROUP_TX_PROXY_DROP;
-        case kh::INTERNAL_CPU_COPY: 
-            return QOS_GROUP_CPU_COPY;
-        default:
-            HAL_TRACE_ERR("pi-qos:{}: Invalid qos group {}", 
-                          __func__, qos_group);
-            return NUM_QOS_GROUPS;
+    case kh::DEFAULT: 
+        return QOS_GROUP_DEFAULT;
+    case kh::USER_DEFINED_1: 
+        return QOS_GROUP_USER_DEFINED_1;
+    case kh::USER_DEFINED_2: 
+        return QOS_GROUP_USER_DEFINED_2;
+    case kh::USER_DEFINED_3: 
+        return QOS_GROUP_USER_DEFINED_3;
+    case kh::USER_DEFINED_4: 
+        return QOS_GROUP_USER_DEFINED_4;
+    case kh::USER_DEFINED_5: 
+        return QOS_GROUP_USER_DEFINED_5;
+    case kh::USER_DEFINED_6: 
+        return QOS_GROUP_USER_DEFINED_6;
+    case kh::CONTROL: 
+        return QOS_GROUP_CONTROL;
+    case kh::SPAN: 
+        return QOS_GROUP_SPAN;
+    case kh::INTERNAL_RX_PROXY_NO_DROP: 
+        return QOS_GROUP_RX_PROXY_NO_DROP;
+    case kh::INTERNAL_RX_PROXY_DROP: 
+        return QOS_GROUP_RX_PROXY_DROP;
+    case kh::INTERNAL_TX_PROXY_NO_DROP: 
+        return QOS_GROUP_TX_PROXY_NO_DROP;
+    case kh::INTERNAL_TX_PROXY_DROP: 
+        return QOS_GROUP_TX_PROXY_DROP;
+    case kh::INTERNAL_CPU_COPY: 
+        return QOS_GROUP_CPU_COPY;
+    default:
+        HAL_TRACE_ERR("pi-qos:{}: Invalid qos group {}", 
+                      __func__, qos_group);
+        return NUM_QOS_GROUPS;
     }
-}
-
-static inline qos_class_t *
-find_qos_class_by_group (qos_group_t qos_group)
-{
-    hal_handle_id_ht_entry_t    *entry;
-    qos_class_key_t             qos_class_key;
-    qos_class_t                 *qos_class;
-
-    qos_class_key.qos_group = qos_group;
-
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
-        qos_class_ht()->lookup(&qos_class_key);
-    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
-        // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
-                   HAL_OBJ_ID_QOS_CLASS);
-        qos_class = (qos_class_t *)hal_handle_get_obj(entry->handle_id);
-        return qos_class;
-    }
-    return NULL;
-}
-
-static inline qos_class_t *
-find_qos_class_by_handle (hal_handle_t handle)
-{
-    if (handle == HAL_HANDLE_INVALID) {
-        return NULL;
-    }
-    auto hal_handle = hal_handle_get_from_handle_id(handle);
-    if (!hal_handle) {
-        HAL_TRACE_ERR("{}:failed to find object with handle:{}",
-                        __FUNCTION__, handle);
-        return NULL;
-    }
-    if (hal_handle->obj_id() != HAL_OBJ_ID_QOS_CLASS) {
-        HAL_TRACE_ERR("{}:failed to find qos_class with handle:{}",
-                        __FUNCTION__, handle);
-        return NULL;
-    }
-    return (qos_class_t *)hal_handle_get_obj(handle);
-}
-
-static inline qos_class_t *
-find_qos_class_by_key_handle (const QosClassKeyHandle& kh)
-{
-    if (kh.key_or_handle_case() == QosClassKeyHandle::kQosGroup) {
-        qos_group_t qos_group = qos_spec_qos_group_to_qos_group(kh.qos_group());
-        return valid_qos_group(qos_group) ? 
-                                    find_qos_class_by_group(qos_group) : NULL;
-    } else if (kh.key_or_handle_case() == QosClassKeyHandle::kQosClassHandle) {
-        return find_qos_class_by_handle(kh.qos_class_handle());
-    }
-    return NULL;
 }
 
 extern void *qos_class_get_key_func(void *entry);
 extern uint32_t qos_class_compute_hash_func(void *key, uint32_t ht_size);
 extern bool qos_class_compare_key_func(void *key1, void *key2);
+qos_class_t *find_qos_class_by_group(qos_group_t qos_group);
+qos_class_t *find_qos_class_by_handle(hal_handle_t handle);
+qos_class_t *find_qos_class_by_key_handle(const QosClassKeyHandle& kh);
 
 static inline bool
 qos_group_is_user_defined (qos_group_t qos_group)
@@ -384,51 +300,19 @@ typedef struct copp_update_app_ctxt_s {
     bool policer_changed;
 } __PACK__ copp_update_app_ctxt_t;
 
-// allocate a Copp instance
-static inline copp_t *
-copp_alloc (void)
-{
-    copp_t    *copp;
-
-    copp = (copp_t *)g_hal_state->copp_slab()->alloc();
-    if (copp == NULL) {
-        return NULL;
-    }
-    return copp;
-}
-
-// initialize a Copp instance
-static inline copp_t *
-copp_init (copp_t *copp)
-{
-    if (!copp) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&copp->slock, PTHREAD_PROCESS_PRIVATE);
-
-    return copp;
-}
-
-// allocate and initialize a copp instance
-static inline copp_t *
-copp_alloc_init (void)
-{
-    return copp_init(copp_alloc());
-}
-
 static inline copp_type_t
 copp_spec_copp_type_to_copp_type (kh::CoppType copp_type)
 {
     switch(copp_type) {
-        case kh::COPP_TYPE_FLOW_MISS:
-            return COPP_TYPE_FLOW_MISS;
-        case kh::COPP_TYPE_ARP:
-            return COPP_TYPE_ARP;
-        case kh::COPP_TYPE_DHCP:
-            return COPP_TYPE_DHCP;
-        default:
-            HAL_ASSERT(0);
-            return COPP_TYPE_FLOW_MISS;
+    case kh::COPP_TYPE_FLOW_MISS:
+        return COPP_TYPE_FLOW_MISS;
+    case kh::COPP_TYPE_ARP:
+        return COPP_TYPE_ARP;
+    case kh::COPP_TYPE_DHCP:
+        return COPP_TYPE_DHCP;
+    default:
+        HAL_ASSERT(0);
+        return COPP_TYPE_FLOW_MISS;
     }
 }
 
@@ -436,73 +320,24 @@ static inline kh::CoppType
 copp_type_to_spec_type (copp_type_t copp_type)
 {
     switch(copp_type) {
-        case COPP_TYPE_FLOW_MISS:
-            return kh::COPP_TYPE_FLOW_MISS;
-        case COPP_TYPE_ARP:
-            return kh::COPP_TYPE_ARP;
-        case COPP_TYPE_DHCP:
-            return kh::COPP_TYPE_DHCP;
-        default:
-            HAL_ASSERT(0);
-            return kh::COPP_TYPE_FLOW_MISS;
+    case COPP_TYPE_FLOW_MISS:
+        return kh::COPP_TYPE_FLOW_MISS;
+    case COPP_TYPE_ARP:
+        return kh::COPP_TYPE_ARP;
+    case COPP_TYPE_DHCP:
+        return kh::COPP_TYPE_DHCP;
+    default:
+        HAL_ASSERT(0);
+        return kh::COPP_TYPE_FLOW_MISS;
     }
-}
-
-static inline copp_t *
-find_copp_by_copp_type (copp_type_t copp_type)
-{
-    hal_handle_id_ht_entry_t *entry;
-    copp_key_t       copp_key;
-    copp_t           *copp;
-
-    copp_key.copp_type = copp_type;
-
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
-        copp_ht()->lookup(&copp_key);
-    if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
-        // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
-                   HAL_OBJ_ID_COPP);
-        copp = (copp_t *)hal_handle_get_obj(entry->handle_id);
-        return copp;
-    }
-    return NULL;
-}
-
-static inline copp_t *
-find_copp_by_handle (hal_handle_t handle)
-{
-    if (handle == HAL_HANDLE_INVALID) {
-        return NULL;
-    }
-    auto hal_handle = hal_handle_get_from_handle_id(handle);
-    if (!hal_handle) {
-        HAL_TRACE_ERR("{}:failed to find object with handle:{}",
-                        __FUNCTION__, handle);
-        return NULL;
-    }
-    if (hal_handle->obj_id() != HAL_OBJ_ID_COPP) {
-        HAL_TRACE_ERR("{}:failed to find copp with handle:{}",
-                        __FUNCTION__, handle);
-        return NULL;
-    }
-    return (copp_t *)hal_handle_get_obj(handle);
-}
-
-static inline copp_t *
-find_copp_by_key_handle (const CoppKeyHandle& kh)
-{
-    if (kh.key_or_handle_case() == CoppKeyHandle::kCoppType) {
-        return find_copp_by_copp_type(copp_spec_copp_type_to_copp_type(kh.copp_type()));
-    } else if (kh.key_or_handle_case() == CoppKeyHandle::kCoppHandle) {
-        return find_copp_by_handle(kh.copp_handle());
-    }
-    return NULL;
 }
 
 extern void *copp_get_key_func(void *entry);
 extern uint32_t copp_compute_hash_func(void *key, uint32_t ht_size);
 extern bool copp_compare_key_func(void *key1, void *key2);
+extern copp_t *find_copp_by_copp_type(copp_type_t copp_type);
+extern copp_t *find_copp_by_handle(hal_handle_t handle);
+extern copp_t *find_copp_by_key_handle(const CoppKeyHandle& kh);
 
 // SVC CRUD APIs
 hal_ret_t copp_create(qos::CoppSpec& spec,
