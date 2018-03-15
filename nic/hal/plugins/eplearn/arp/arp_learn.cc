@@ -1,7 +1,7 @@
 #include "arp_trans.hpp"
 #include "arp_learn.hpp"
 #include "nic/include/eth.h"
-#include "nic/p4/iris/include/defines.h"
+
 
 namespace hal {
 namespace eplearn {
@@ -129,15 +129,13 @@ hal_ret_t arp_process_packet(fte::ctx_t &ctx) {
     struct ether_arp *arphead;
     hal_ret_t ret = HAL_RET_OK;
     uint16_t opcode;
-    const fte::cpu_rxhdr_t* cpu_hdr;
 
     if (ether_pkt == nullptr) {
         /* Skipping as not packet to process */
         goto out;
     }
 
-    cpu_hdr = ctx.cpu_rxhdr();
-    if (cpu_hdr->flags & CPU_FLAGS_VLAN_VALID) {
+    if (ctx.vlan_valid()) {
         arphead = (struct ether_arp *)(ether_pkt + sizeof(vlan_header_t));
     } else {
         arphead = (struct ether_arp *)(ether_pkt + L2_ETH_HDR_LEN);

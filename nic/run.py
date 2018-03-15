@@ -55,7 +55,7 @@ hal_executable = nic_dir + "/../bazel-bin/nic/hal/hal"
 hal_core_path = nic_dir
 
 def print_core(executable, core):
-    cmd = ['gdb -batch -ex  "bt"']
+    cmd = ['gdb', '-batch', '-ex', 'bt']
     cmd.extend([executable, core])
     call(" ".join(cmd), universal_newlines=True, shell=True)
 
@@ -227,6 +227,7 @@ def run_hal(args):
     os.environ["LD_LIBRARY_PATH"] = "/home/asic/bin/tools/lib64:" + os.environ["LD_LIBRARY_PATH"]
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/x86_64/lib/"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/sdk/obj"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/hal/obj"
     os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/x86_64/lib/"

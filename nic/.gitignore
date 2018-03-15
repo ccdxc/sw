@@ -37,6 +37,7 @@ hal/third-party/zmq/*
 hal/third-party/google/*
 hal/third-party/grpc/*
 hal/third-party/crchack/bin/*
+hal/obj/*.so
 third-party/googletest-release-1.8.0/googletest/make/*.a
 third-party/boost/*
 model_sim/libs/*

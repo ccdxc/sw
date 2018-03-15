@@ -1,5 +1,5 @@
 exclude folder __main__/bazel-out/
-exclude folder ../external/
+exclude folder ../sdk/external/
 exclude folder __main__/dol/
 exclude folder __main__/nic/asic/
 exclude folder __main__/nic/third-party/

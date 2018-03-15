@@ -1,4 +1,4 @@
-.PHONY: p4 asm hal utils linkmgr sdk
+.PHONY: p4 asm hal utils linkmgr sdk third-party
 
 default: all
 
@@ -52,6 +52,7 @@ hal-rtl: p4 platform capsim-master sdk
 	$(MAKE) AS_DEFINES="-DCAPRI_IGNORE_TIMESTAMP -DRTL" asm
 	$(MAKE) gen-proto 
 	$(MAKE) build-proto
+	$(MAKE) third-party
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal:hal
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/iris:libiris.so
 	bazel $(BZL_OPT) build $(BZL_NON_DOCK_BLD_OPT) $(SDK_OPTS) hal/pd/pd_stub
@@ -203,6 +204,11 @@ hal:
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal:hal
     endif
 
+third-party:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/third-party/isc-dhcp:isc-dhcp
+	cp $(TOPDIR_ABS)/../bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so $(TOPDIR_ABS)/hal/obj
+	chmod +w "$(TOPDIR_ABS)/hal/obj/libisc-dhcp.so"
+
 plugins:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(SDK_OPTS) hal/plugins/...
 
@@ -222,7 +228,7 @@ pd: pd_iris pd_stub
 stage0: p4 gen-proto go-proto sdk utils capsim-master
 
 # lib building stage
-stage1: asm capmodel build-proto
+stage1: asm capmodel build-proto third-party
 
 # app building stage
 stage2: plugins linkmgr platform pd hal

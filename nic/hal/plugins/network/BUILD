@@ -12,7 +12,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic/hal/plugins/eplearn:eplearn_includes",
-        "//nic/hal/plugins/eplearn:eplearn",
+        #"//nic/hal/plugins/eplearn:ep_learn",
         "//nic:gen_proto_includes",
      ],
     alwayslink = 1,

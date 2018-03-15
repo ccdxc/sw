@@ -27,7 +27,6 @@ cc_binary(
             "//nic:grpc_includes",
             "//nic:libprotobuf",
             "//nic:grpc",
-            "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
             "//nic/utils/trace",
             "//nic/utils/mtrack",
 
@@ -142,7 +141,6 @@ cc_binary(
             "//nic:grpc_includes",
             "//nic:libprotobuf",
             "//nic:grpc",
-            "//nic/hal/third-party/isc-dhcp:isc-dhcp",  # TODO(move to eplearn plugin)
             "//nic/utils/trace",
             "//nic/utils/mtrack",
             "@gperftools//:gperftools",

@@ -12,7 +12,6 @@ common_deps = [
     "//nic/utils/fsm:fsm",
     "//nic/fte:fte_includes",
     "//nic/include:base_includes",
-    "//nic/p4/iris/include:p4_iris_includes",
     "//nic/hal/pd:pdcommon",
     "@sdk//obj:sdk_ht",
     "@sdk//obj:sdk_catalog",
@@ -29,13 +28,33 @@ common_deps = [
     "//nic/hal/periodic:periodic",
 ]
 
-cc_library(
-    name = "eplearn",
-    srcs = glob(["*.cc"]) + glob(["dhcp/*.cc"]) + glob(["arp/*.cc"]) + glob(["common/*.cc"]),
+cc_binary(
+    name = "libeplearn.so",
+    linkshared = 1,
     deps = [
-        ":arp_learn",
-        ":dhcp_learn",
-        ":ep_learn_common",
+        "//nic/hal/plugins/eplearn:ep_learn",
+        "//nic/hal/obj:isc-dhcp",
+        ],
+)
+
+cc_library(
+    name = "ep_learn",
+    srcs = glob(["*.cc"]) + glob(["dhcp/*.cc"]) + glob(["arp/*.cc"]) + glob(["common/*.cc"]),
+    hdrs = glob(["dhcp/*.hpp"]) + glob(["arp/*.hpp"]) + glob(["common/*.hpp"]),
+    deps = [
+        "@sdk//obj:sdk_slab",
+        "//nic/hal/third-party/isc-dhcp:isc-dhcp",
+        "//nic/utils/bm_allocator:bm_allocator",
+        "//nic/hal/pd:hal_pd_includes",
+        "//nic:gen_proto_includes",
+        "//nic/hal:hal_hdrs",
+        "//nic/utils/fsm:fsm",
+        "//nic/fte:fte_includes",
+        "//nic/include:base_includes",
+        "//nic/utils/block_list:block_list",
+        "//nic:grpc_includes",
+        "//nic:google_includes",
+        "//nic:boost",
         ":eplearn_includes",
     ],
     alwayslink = 1,
@@ -60,27 +79,6 @@ cc_library(
     alwayslink = 1,
 )
 
-cc_library(
-    name = "dhcp_learn",
-    srcs = glob(["dhcp/*.cc"]),
-    hdrs = glob(["dhcp/*.hpp"]),
-    deps = common_deps + [
-        "//nic/hal/third-party/isc-dhcp",
-        ":ep_learn_common",
-    ],
-    copts = sdk_copts,
-    alwayslink = 1,
-)
-
-cc_library(
-    name = "arp_learn",
-    srcs = glob(["arp/*.cc"]),
-    hdrs = glob(["arp/*.hpp"]),
-    deps = common_deps + [":ep_learn_common"],
-    copts = sdk_copts,
-    alwayslink = 1,
-)
-
 cc_test(
     name = "dhcp_test",
     srcs = glob(["test/dhcp/*.cc"]) + [
@@ -89,7 +87,7 @@ cc_test(
     tags = ["manual", "gtests"],
     copts = sdk_copts,
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
-    deps = gl_deps_list + [":eplearn"] + test_deps_list,
+    deps = gl_deps_list + [":ep_learn"] + test_deps_list,
 )
 
 cc_test(
@@ -100,5 +98,5 @@ cc_test(
     tags = ["manual", "gtests"],
     copts = sdk_copts,
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
-    deps = gl_deps_list + [":eplearn"] + test_deps_list,
+    deps = gl_deps_list + [":ep_learn"] + test_deps_list,
 )

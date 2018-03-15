@@ -5,7 +5,6 @@
 #include "nic/hal/src/vrf.hpp"
 #include "sdk/list.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/p4/iris/include/defines.h"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
@@ -1186,6 +1185,12 @@ ctx_t::is_proxy_flow()
     // in the case of pkts from host, stage 1 flow is the proxy flow
     return (flow[stage()]->key().dir == FLOW_DIR_FROM_UPLINK) ?  
                                 stage() == 0 : stage() != 0;
+}
+
+bool
+ctx_t::vlan_valid()
+{
+    return cpu_rxhdr_->flags&CPU_FLAGS_VLAN_VALID;
 }
 
 std::ostream& operator<<(std::ostream& os, const mpls_label_t& val)
