@@ -69,7 +69,7 @@ fire_eqcb:
     nop
     
 cqpt_exit:
-    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, DMA_CMD_BASE)
+    DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_phv2mem_t, DMA_CMD_BASE, !c1)
     CAPRI_SET_TABLE_2_VALID(0)
     nop.e
     nop
