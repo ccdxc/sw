@@ -12,6 +12,7 @@ def run(cmd, timeout=None, background=False):
             p = subprocess.run(cmd, shell=True, timeout=timeout)
         except subprocess.TimeoutExpired:
             print ("timed out : ", cmd)
+            return False
         if p.returncode:
             print ("Command exit code : ", p.returncode)
             return False

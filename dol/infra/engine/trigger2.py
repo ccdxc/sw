@@ -24,6 +24,46 @@ class TriggerEngineObject:
         assert(tc != None)
         tc.status = self._trigger(tc)
         return
+
+    def __resolve_status(self, status1, status2):
+        if status1 is defs.status.ERROR or status2 is defs.status.ERROR:
+            return defs.status.ERROR
+        return defs.status.SUCCESS
+
+    def __verify_step(self, tc, step):
+        vfstatus = tc.verif_engine.Verify(step, tc)
+        cbstatus = tc.StepVerifyCallback(step)
+        step.status = self.__resolve_status(vfstatus, cbstatus)
+        if step.status is defs.status.ERROR:
+            tc.error("Step%d FINAL STATUS = %s (Verify:%s Callback:%s)" %\
+                     (step.step_id, 'IGNORE' if tc.IsIgnore() else 'FAIL',
+                      defs.status.str(vfstatus),
+                      defs.status.str(cbstatus)))
+            return step.status
+        tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
+        return step.status
+
+    def _trigger(self, tc):
+        status = defs.status.SUCCESS
+        for step in tc.session.steps:
+            tc.StepSetupCallback(step)
+            tc.StepTriggerCallback(step)
+            self._trigger_step(tc, step)
+            vfstatus = self.__verify_step(tc, step)
+            tc.StepTeardownCallback(step)
+            if vfstatus is defs.status.ERROR:
+                break
+        cbstatus = tc.VerifyCallback()
+        status = self.__resolve_status(cbstatus, vfstatus)
+        if status is defs.status.ERROR:
+            tc.error("TESTCASE FINAL STATUS = %s(Verify:%s Callback:%s)" %\
+                     ('IGNORE' if tc.IsIgnore() else 'FAIL',
+                      defs.status.str(vfstatus),
+                      defs.status.str(cbstatus)))
+        else:
+            tc.info("TESTCASE FINAL STATUS = PASS")
+        tc.TeardownCallback()
+        return status    
         
 class DolTriggerEngineObject(TriggerEngineObject):
     def __init__(self):
@@ -107,51 +147,6 @@ class DolTriggerEngineObject(TriggerEngineObject):
         tc.TriggerCallback()
         return
 
-    def __resolve_status(self, status1, status2):
-        if status1 is defs.status.ERROR or status2 is defs.status.ERROR:
-            return defs.status.ERROR
-        return defs.status.SUCCESS
-        
-    def __verify_step(self, tc, step):
-        vfstatus = tc.verif_engine.Verify(step, tc)
-        cbstatus = tc.StepVerifyCallback(step)
-        step.status = self.__resolve_status(vfstatus, cbstatus)
-        if step.status is defs.status.ERROR:
-            tc.error("Step%d FINAL STATUS = %s (Verify:%s Callback:%s)" %\
-                     (step.step_id, 'IGNORE' if tc.IsIgnore() else 'FAIL',
-                      defs.status.str(vfstatus),
-                      defs.status.str(cbstatus)))
-            return step.status
-        tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
-        return step.status
-
-    def _trigger(self, tc):
-        status = defs.status.SUCCESS
-        for step in tc.session.steps:
-            tc.StepSetupCallback(step)
-            tc.StepTriggerCallback(step)
-            self._trigger_step(tc, step)
-            vfstatus = self.__verify_step(tc, step)
-            tc.StepTeardownCallback(step)
-            if vfstatus is defs.status.ERROR:
-                break
-        cbstatus = tc.VerifyCallback()
-        status = self.__resolve_status(vfstatus, cbstatus)
-        if status is defs.status.ERROR:
-            tc.error("TESTCASE FINAL STATUS = %s(Verify:%s Callback:%s)" %\
-                     ('IGNORE' if tc.IsIgnore() else 'FAIL',
-                      defs.status.str(vfstatus),
-                      defs.status.str(cbstatus)))
-        else:
-            tc.info("TESTCASE FINAL STATUS = PASS")
-        tc.TeardownCallback()
-        return status
-
-    def Trigger(self, tc):
-        assert(tc != None)
-        tc.status = self._trigger(tc)
-        return
-
 class E2ETriggerEngineObject(TriggerEngineObject):
     
     def __init__(self):
@@ -169,13 +164,7 @@ class E2ETriggerEngineObject(TriggerEngineObject):
         self.__trigger_commands(step, tc)
         tc.TriggerCallback()
         return
-    
-    def _trigger(self, tc):
-        for step in tc.session.steps:
-            self._trigger_step(tc, step)
-            tc.StepTeardownCallback(step)
-        tc.TeardownCallback()
-        return defs.status.SUCCESS
+
 
 DolTriggerEngine = DolTriggerEngineObject()
 E2ETriggerEngine = E2ETriggerEngineObject()
