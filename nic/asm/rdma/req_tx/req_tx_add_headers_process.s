@@ -27,37 +27,32 @@ struct sqcb2_t d;
 req_tx_add_headers_process:
     // if speculative cindex matches cindex, then this wqe is being
     // processed in the right order and state update is allowed. Otherwise
-    // discard and continue with speculation until speculative cindex 
+    // discard and continue with speculation until speculative cindex
     // matches current cindex. Similarly, drop if dcqcn rate enforcement
     // doesn't allow this packet
-    bbeq           k.to_stage.sq.rate_enforce_failed, 1, rate_enforce_fail
     seq            c1, k.to_stage.sq.spec_cindex, d.sq_cindex
     bcf            [!c1], spec_fail
-
     // initialize  cf to 0
     crestore        [c7-c1], r0, 0xfe // Branch Delay Slot
 
-    seq             c1, k.args.last, 1
+    bbeq           k.args.poll_failed, 1, poll_fail
+    seq             c1, k.args.last, 1 // Branch Delay Slot
+
+    bbeq           k.to_stage.sq.rate_enforce_failed, 1, rate_enforce_fail
+    seq            c2, k.args.first, 1 // Branch Delay Slot
 
     // sqcb0 maintains copy of sq_cindex to enable speculation check. Increment
     //the copy on completion of wqe and write it into sqcb0
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
-    SQCB0_FIELD_ADDR_GET(r1, FIELD_OFFSET(sqcb0_t, ring0.cindex))
-    memwr.hx.c1      r1, d.sq_cindex
-    // write curr_wqe_ptr into sqcb0
-    SQCB0_FIELD_ADDR_GET(r1, FIELD_OFFSET(sqcb0_t, curr_wqe_ptr))
-    memwr.d         r1, k.to_stage.sq.wqe_addr
 
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
     // To start with, num_addr is 1 (bth)
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, bth, bth, 1)
-    seq            c2, k.args.first, 1
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, bth, bth, 1) // Branch Delay Slot
     cmov           r2, c2, k.args.op_type, d.curr_op_type
-    //add            r2, k.args.op_type, r0
     .brbegin
     br             r2[2:0]    
-    seq            c1, k.args.last, 1 // Branch Delay Slot
+    tblwr.c2       d.curr_op_type, k.args.op_type // Branch Delay Slot
 
     .brcase OP_TYPE_SEND
         .csbegin
@@ -356,6 +351,7 @@ inc_psn:
     add            r2, FIELD_OFFSET(sqcb1_t, tx_psn), r1
     memwr.d        r2, d.{tx_psn...lsn[23:8]}
     add            r2, r2, 8
+    memwr.b        r2, d.lsn[7:0]
 
     // TODO:For RTL perf tests, disable check_credits
     setcf          c5, [!c0]
@@ -365,7 +361,7 @@ inc_psn:
     //     write_back_info_p->set_credits = TRUE
     scwlt24.c5     c5, d.lsn, d.ssn
     bcf            [!c5], rrq_p_index_chk
-    memwr.b        r2, d.lsn[7:0] // Branch Delay Slot
+    SQCB0_ADDR_GET(r2) // Branch Delay Slot
 
     phvwr          BTH_ACK_REQ, 1
     // Disable TX scheduler for this QP until ack is received with credits to
@@ -374,8 +370,9 @@ inc_psn:
 
 rrq_p_index_chk:
     // do we need to increment rrq_pindex ?
-    bcf             [!c7], sqcb0_flags_update
-    tblwr.c2        d.curr_op_type, k.args.op_type // Branch Delay Slot
+    bcf             [!c7], cb1_byte_update
+    // cb1_byte is by default set to FALSE
+    add             r5, r0, r0 // BD Slot
 
     // incr_rrq_p_index
     tblmincri       d.rrq_pindex, d.log_rrq_size, 1
@@ -386,31 +383,12 @@ rrq_p_index_chk:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQ_PINDEX)
     DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
 
-sqcb0_flags_update:
-    bbeq             k.args.poll_in_progress, 0, skip_poll_success
-    add              r3, r0, k.{args.current_sge_offset...args.num_sges}, 16 // Branch Delay Slot
-    SQCB0_FIELD_ADDR_GET(r2, SQCB_SPEC_SQ_CINDEX_OFFSET)
-    memwr.h          r2, d.sq_cindex
-#ifdef CAPRI_IGNORE_TIMESTAMP
-#else
-    #on non-RTL
-    #in case of standalone model, DOL would not have incremented pindex
-    #upon success in polling, do it in the program
-    SQCB0_FIELD_ADDR_GET(r2, SQCB_SQ_PINDEX_OFFSET)
-    memwr.hx         r2, d.sq_cindex
-#endif
-    DOORBELL_NO_UPDATE(k.global.lif, k.global.qtype, k.global.qid, r2, r3)
-
-skip_poll_success:
-    or.c5            r3, r3, 1, SQCB0_NEED_CREDITS_BIT_OFFSET 
-    seq              c5, d.sq_cindex, 0
-    add.c5           r4, k.args.color, 1
-    or.c5            r3, r3, r4[0], SQCB0_COLOR_BIT_OFFSET 
-    or.!c5           r3, r3, k.args.color, SQCB0_COLOR_BIT_OFFSET
-    // in_progress based on s2s data
-    or              r3, r3, k.args.in_progress, SQCB0_IN_PROGRESS_BIT_OFFSET
-    SQCB0_FIELD_ADDR_GET(r1, FIELD_OFFSET(sqcb0_t, current_sge_offset))
-    memwr.d          r1, r3
+cb1_byte_update:
+    // on top of it, set need_credits flag is conditionally
+    add.c5         r5, r5, SQCB0_NEED_CREDITS_FLAG
+    or             r5, r5, k.args.in_progress, SQCB0_IN_PROGRESS_BIT_OFFSET
+    add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
+    memwr.b        r3, r5
 
     //For UD, ah_handle comes in send req
     seq            c3, d.service, RDMA_SERV_TYPE_UD
@@ -430,7 +408,7 @@ skip_poll_success:
 #endif
     phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 
-    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, ADD_HDR_T, service, d.service) 
     CAPRI_SET_FIELD(r7, ADD_HDR_T, hdr_template_inline, k.args.hdr_template_inline) 
     CAPRI_SET_FIELD(r7, ADD_HDR_T, header_template_addr, r1)
@@ -438,14 +416,15 @@ skip_poll_success:
     CAPRI_SET_FIELD_RANGE(r7, ADD_HDR_T, roce_opt_ts_enable, roce_opt_mss_enable,
                           d.{roce_opt_ts_enable...roce_opt_mss_enable})
 
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_add_headers_2_process, r0)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_add_headers_2_process, r0)
 
     nop.e
     nop
 
+poll_fail:
 rate_enforce_fail:
 spec_fail:
     phvwr   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_2_VALID(0)
+    CAPRI_SET_TABLE_3_VALID(0)
     nop.e
     nop

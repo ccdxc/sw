@@ -245,10 +245,10 @@ ud_error:
     CAPRI_SET_TABLE_0_VALID(0)    
 
 clear_poll_in_progress:
-    SQCB0_FIELD_ADDR_GET(r1, FIELD_OFFSET(sqcb0_t, current_sge_offset))
-    or    r2, r0, k.args.color, SQCB0_COLOR_BIT_OFFSET    
-    memwr.d        r1, r2
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, poll_failed, 1)
+
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0)
-    DOORBELL_NO_UPDATE(k.global.lif, k.global.qtype, k.global.qid, r1, r2)
-    phvwr.e   p.common.p4_intr_global_drop, 1
+    nop.e
     nop

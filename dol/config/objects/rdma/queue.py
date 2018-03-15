@@ -215,7 +215,7 @@ class RdmaSQstate(Packet):
         BitField("log_num_wqes", 0, 5),
         BitField("serv_type", 0, 4),
 
-        BitField("rsvd_cfg_flags", 0, 3),
+        BitField("rsvd_cfg_flags", 0, 5),
         BitField("poll_for_work", 0, 1),
         BitField("signalled_completion", 0, 1),
         BitField("disable_e2e_fc", 0, 1),
@@ -223,12 +223,6 @@ class RdmaSQstate(Packet):
         BitField("sq_in_hbm", 0, 1),
         BitField("congestion_mgmt_enable",0, 1),
         BitField("local_ack_timeout", 0, 5),
-        BitField("retry_timer_on", 0, 1),
-        BitField("ring_empty_sched_eval_done", 0, 1),
-
-        BitField("rsvd_state_flags", 0, 4),
-        BitField("bktrack_in_progress", 0, 1),
-        BitField("state", 0, 3),
 
         ShortField("spec_sq_cindex", 0),
 
@@ -236,16 +230,24 @@ class RdmaSQstate(Packet):
         IntField("current_sge_offset", 0),
         ByteField("current_sge_id", 0),
         ByteField("num_sges", 0),
-        ByteField("rsvd", 0),
 
-        BitField("in_progress", 0, 1),
-        BitField("need_credits", 0, 1),
-        BitField("poll_success", 0, 1),
+        BitField("rsvd_state_flags", 0, 5),
+        BitField("bktrack_in_progress", 0, 1),
+        BitField("ring_empty_sched_eval_done", 0, 1),
+        BitField("retry_timer_on", 0, 1),
+
         BitField("poll_in_progress", 0, 1),
         BitField("color", 0, 1),
-        BitField("busy", 0, 1),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
+        BitField("state", 0, 3),
+        BitField("busy", 0, 1),
+
+        BitField("cb1_busy", 0, 1),
+        BitField("in_progress", 0, 1),
+        BitField("need_credits", 0, 1),
+        BitField("rsvd_cb1_flags", 0, 5),
+        
 
         # SQCB1 
         ByteField("pc_offset", 0),

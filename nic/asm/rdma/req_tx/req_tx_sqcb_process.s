@@ -55,7 +55,7 @@ req_tx_sqcb_process:
     .brcase        SQ_RING_ID
 
         bbeq           d.poll_in_progress, 1, exit
-        nop            // Branch Delay Slot
+        crestore [c2,c1], d.{busy...cb1_busy}, 0x3 //BD Slot
         
         // Load sqcb1 to fetch dcqcn_cb addr if congestion_mgmt is enabled.
         bbeq           d.congestion_mgmt_enable, 0, process_send
@@ -85,7 +85,7 @@ process_send:
         
         // Check if spec cindex is pointing to yet to be filled wqe
         seq            c3, SPEC_SQ_C_INDEX, SQ_P_INDEX
-        bcf            [c3], revert_spec_cindex
+        bcf            [c3], exit
         
 poll_for_work:
 
@@ -105,7 +105,7 @@ poll_for_work:
         // is not in in_progress state. Before state update at the end of pipeline,
         // check if speculative cindex is matching current cindex. If so,
         // update state, otherwise discard and redo in the next scheduler slot
-        add            r1, r0, SPEC_SQ_C_INDEX // Branch Delay Slot
+        add            r1, r0, SPEC_SQ_C_INDEX
         
         bbne           d.sq_in_hbm, 1, pt_process
         sll            r2, r1, d.log_wqe_size // Branch Delay Slot
@@ -116,7 +116,8 @@ poll_for_work:
         // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
         CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
-        CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_WQE_T, poll_in_progress, color, d.{poll_in_progress...color})
+        CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, poll_in_progress, d.poll_in_progress)
+        CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, color, d.color)
         CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, remaining_payload_bytes, r4)
         
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
@@ -126,13 +127,15 @@ poll_for_work:
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, r2)
         
-        crestore       [c1], d.poll_in_progress, 0x1
+        seq            c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
         // Revert speculative cindex if its far apart from actual cindex
         sub            r1, SPEC_SQ_C_INDEX, SQ_C_INDEX
         mincr          r1, d.log_num_wqes, 0
-        scwlt.e        c1, r1, SPEC_LEN
-        tblwr.!c1      SPEC_SQ_C_INDEX, SQ_C_INDEX
+        blti           r1, SPEC_LEN, end1
+        add            r1, SQ_C_INDEX, r0
+        mincr.e        r1, d.log_num_wqes, 1
+        tblwr          SPEC_SQ_C_INDEX, r1
 
 pt_process:
         // log_num_wqe_per_page = (log_sq_page_size - log_wqe_size)
@@ -165,7 +168,8 @@ pt_process:
         CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, page_seg_offset, r2)
         //write pd, log_pmtu together
         CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_PT_T, pd, log_pmtu, d.{pd...log_pmtu})
-        CAPRI_SET_FIELD_RANGE(r7, SQCB_TO_PT_T, poll_in_progress, color, d.{poll_in_progress...color})
+        CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, poll_in_progress, d.poll_in_progress)
+        CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, color, d.color)
         
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
@@ -173,21 +177,23 @@ pt_process:
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
         
-        crestore       [c1], d.poll_in_progress, 0x1
+        seq            c1, d.poll_in_progress, 0x1
         tblmincri.!c1  SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
         // Revert speculative cindex if its far apart from actual cindex
         sub            r1, SPEC_SQ_C_INDEX, SQ_C_INDEX
         mincr          r1, d.log_num_wqes, 0
-        scwlt.e        c1, r1, SPEC_LEN
-        tblwr.!c1      SPEC_SQ_C_INDEX, SQ_C_INDEX
+        blti           r1, SPEC_LEN, end1
+        add            r1, SQ_C_INDEX, r0
+        mincr.e        r1, d.log_num_wqes, 1
+        tblwr          SPEC_SQ_C_INDEX, r1
 
 in_progress:
         // do not speculate for in_progress processing
-        bbeq           d.busy, 1, exit
+        bcf            [c1 | c2], exit
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
         // Assert busy for multi-packet message as each packet has to continue
         // from where the previous packet has left off 
-        tblwr          d.busy, 0x1
+        tblwr          d.{busy...cb1_busy}, 0x3
         
         // load wqe using sqcb_p->wqe_addr
         
@@ -221,17 +227,22 @@ in_progress:
         CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
         CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
+
+        mincr.e        r1, d.log_num_wqes, 1
+        tblwr          SPEC_SQ_C_INDEX, r1
         
+end1:
         nop.e
         nop
 
     .brcase        FC_RING_ID
-        bbeq           d.busy, 1, exit
+        crestore [c2,c1], d.{busy...cb1_busy}, 0x3
+        bcf            [c1 | c2], exit
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
         
         // take both the busy flags
-        tblwr          d.busy, 0x1
+        tblwr          d.{busy...cb1_busy}, 0x3
         
         // set cindex same as pindex without ringing doorbell, as stage0
         // can get scheduled again while doorbell memwr is still in the queue
@@ -252,12 +263,13 @@ in_progress:
         nop
 
     .brcase        SQ_BKTRACK_RING_ID
-        bbeq           d.busy, 1, exit
+        crestore       [c2,c1], d.{busy...cb1_busy}, 0x3
+        bcf            [c1 | c2], exit
 
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
         // take both the busy flags
-        tblwr          d.busy, 0x1
+        tblwr          d.{busy...cb1_busy}, 0x3
         
         sslt           c1, r0, d.in_progress, d.bktrack_in_progress
         bcf            [c1], sq_bktrack1
@@ -316,12 +328,14 @@ sq_bktrack1:
         nop
 
     .brcase        TIMER_RING_ID
-        bbeq           d.busy, 1, exit
+        crestore       [c2,c1], d.{busy...cb1_busy}, 0x3
+        bcf            [c1 | c2], exit
+
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
 
         // take both the busy flags
-        tblwr          d.busy, 0x1
+        tblwr          d.{busy...cb1_busy}, 0x3
         
         sslt           c1, r0, d.in_progress, d.bktrack_in_progress
         bcf            [c1], sq_bktrack2
@@ -451,13 +465,10 @@ invalid_bktrack:
     // fall through to unlock and exit
 
 unlock_and_exit:
-    tblwr          d.busy, 0
+    tblwr          d.{busy...cb1_busy}, 0
     nop.e
     nop
 
-revert_spec_cindex:
-   tblwr           SPEC_SQ_C_INDEX, SQ_C_INDEX
-   // fall through
 exit:
     phvwr   p.common.p4_intr_global_drop, 1
     nop.e

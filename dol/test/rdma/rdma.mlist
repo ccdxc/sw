@@ -68,7 +68,7 @@ modules:
         package : test.rdma
         module  : req_tx_send_only_inline_poll
         spec    : req_tx_send_only_inline_poll.testspec
-        ignore  : True
+        ignore  : False
         rtl     : False
 
     - module:

@@ -61,12 +61,8 @@
 #define SQCB_CURR_WQE_PTR_OFFSET     FIELD_OFFSET(sqcb0_t, curr_wqe_ptr)
 #define SQCB_CURRENT_SGE_OFFSET      FIELD_OFFSET(sqcb0_t, current_sge_offset)
 
-#define SQCB0_IN_PROGRESS_BIT_OFFSET        7
-#define SQCB0_NEED_CREDITS_BIT_OFFSET       6
-#define SQCB0_POLL_SUCCESS_BIT_OFFSET       5
-#define SQCB0_POLL_IN_PROGRESS_BIT_OFFSET   4
-#define SQCB0_COLOR_BIT_OFFSET              3 
-#define SQCB0_BUSY_BIT_OFFSET               2
+#define SQCB0_IN_PROGRESS_BIT_OFFSET        6
+#define SQCB0_NEED_CREDITS_BIT_OFFSET       5
 
 struct sqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -88,7 +84,7 @@ struct sqcb0_t {
     log_num_wqes                  : 5;  // RO
     service                       : 4;  // RO
 
-    rsvd_cfg_flags                : 3;
+    rsvd_cfg_flags                : 5;
     poll_for_work                 : 1;  // RO
     signalled_completion          : 1;  // RO
     disable_e2e_fc                : 1;  // RO
@@ -96,12 +92,6 @@ struct sqcb0_t {
     sq_in_hbm                     : 1;  // RO
     congestion_mgmt_enable        : 1;  // RO
     local_ack_timeout             : 5;  // RO
-    retry_timer_on                : 1;  // RW S0
-    ring_empty_sched_eval_done    : 1;  // RW S0 
-
-    rsvd_state_flags              : 4;
-    bktrack_in_progress           : 1;  // RW S5, RW S0
-    state                         : 3;  // RW S5, RW S0
 
     spec_sq_cindex                : 16; // RW S0
 
@@ -109,17 +99,28 @@ struct sqcb0_t {
     current_sge_offset            : 32; // WO S5, RO S0
     current_sge_id                : 8;  // WO S5, RO S0
     num_sges                      : 8;  // WO S5, RO S0
-    rsvd                          : 8;  // WO S5, RO S0
 
-    in_progress                   : 1;  // WO S5, RO S0
-    need_credits                  : 1;  // WO S5, RO S0
-    poll_success                  : 1;  // WO S5, RW S0
+    rsvd_state_flags              : 5;
+    bktrack_in_progress           : 1;  // RW S5, RW S0
+    ring_empty_sched_eval_done    : 1;  // RW S0 
+    retry_timer_on                : 1;  // RW S0
+
     poll_in_progress              : 1;  // WO S5, RW S0
     color                         : 1;  // WO S5, R0 S0
-    busy                          : 1;  // WO S5, RW S0
     fence                         : 1;  // WO S5, RW S0
     li_fence                      : 1;  // WO S5, RW S0
+    state                         : 3;
+    busy                          : 1;
 
+    union {
+        struct {
+            cb1_busy              : 1;  // WO S5, R0 S0
+            in_progress           : 1;  // WO S5, RO S0
+            need_credits          : 1;  // WO S5, RO S0
+            rsvd_cb1_flags        : 5;
+        };
+        cb1_byte                  : 8;
+    };
 };
 
 struct sqcb1_t {
@@ -159,7 +160,7 @@ struct sqcb1_t {
     rrq_in_progress                : 1;  // RW S5
     rsvd2                          : 7;
 
-    pad                            : 112; 
+    pad                            : 112;
 };
 
 struct sqcb2_t {

@@ -899,16 +899,23 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
+    uint8_t   rsvd_cb1_flags: 5;
+    uint8_t   need_credits: 1;
+    uint8_t   in_progress: 1;
+    uint8_t   cb1_busy: 1;
+
+    uint16_t  busy: 1;        //tx
+    uint16_t  state: 3;
     uint16_t  li_fence:1;
     uint16_t  fence:1;
-    uint16_t  busy: 1;        //tx
     uint16_t  color: 1;
     uint16_t  poll_in_progress: 1;
-    uint16_t  poll_success: 1;
-    uint16_t  need_credits: 1;
-    uint16_t  in_progress: 1; //tx
 
-    uint8_t  rsvd: 8;
+    uint16_t retry_timer_on: 1;
+    uint16_t ring_empty_sched_eval_done: 1;
+    uint16_t  bktrack_in_progress:1;
+    uint16_t  rsvd_stage_flags: 5;
+
     uint8_t  num_sges;
     uint8_t  current_sge_id;
     uint32_t  current_sge_offset;
@@ -916,12 +923,6 @@ typedef struct sqcb0_s {
 
     uint16_t spec_sq_cindex: 16;
 
-    uint16_t  state: 3;
-    uint16_t  bktrack_in_progress:1;
-    uint16_t  rsvd_stage_flags:4;
-
-    uint16_t ring_empty_sched_eval_done: 1;
-    uint16_t retry_timer_on: 1;
     uint16_t local_ack_timeout: 5;
     uint16_t congestion_mgmt_enable: 1;
     uint16_t sq_in_hbm: 1;
@@ -929,7 +930,7 @@ typedef struct sqcb0_s {
     uint16_t disable_e2e_fc: 1;//tx
     uint16_t signalled_completion: 1;//rx
     uint16_t poll_for_work: 1;
-    uint16_t rsvd_cfg_flags: 3;
+    uint16_t rsvd_cfg_flags: 5;
 
     uint32_t service: 4;
     uint32_t log_num_wqes: 5;

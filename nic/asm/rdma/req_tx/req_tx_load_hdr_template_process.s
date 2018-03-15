@@ -14,4 +14,4 @@ req_tx_load_hdr_template_process:
     phvwr         p.pad2[15:0], r0[15:0]
 
     nop.e
-    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_SET_TABLE_1_VALID(0)

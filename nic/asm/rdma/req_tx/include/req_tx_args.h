@@ -123,7 +123,8 @@ struct req_tx_sqcb_write_back_info_t {
     ah_size                      : 8;
     poll_in_progress             : 1;
     color                        : 1;
-    rsvd                         : 5;
+    poll_failed                  : 1;
+    rsvd                         : 4;
     union op_t op;
 };
 

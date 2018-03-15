@@ -81,7 +81,7 @@ hdr_template_done:
     #c5 - mss_enable
     #c6 - ts_enable
     bcf            [!c5 & !c6],  skip_roce_udp_options
-    CAPRI_SET_TABLE_2_VALID(0) //BD slot
+    CAPRI_SET_TABLE_3_VALID(0) //BD slot
     phvwrpair      p.roce_options.OCS_kind, ROCE_OPT_KIND_OCS, p.roce_options.OCS_value, 0
     phvwrpair      p.roce_options.TS_kind, ROCE_OPT_KIND_TS, p.roce_options.TS_len, ROCE_OPT_LEN_TS
     phvwrpair      p.roce_options.MSS_kind, ROCE_OPT_KIND_MSS, p.roce_options.MSS_len, ROCE_OPT_LEN_MSS
