@@ -57,8 +57,8 @@ for target in job["targets"]:
     job_info = job["targets"][target]
     for cmd in job_info:
     	if DOL_JOB_PREFIX in cmd:
-	    options = [DOL_JOB_PREFIX, DOL_COVERAGE_OPTION,
-			cmd.split(DOL_JOB_PREFIX, 1)[1]]
+            run_args = cmd.split(DOL_JOB_PREFIX, 1)[1].split("&&")[0]
+	    options = [DOL_JOB_PREFIX, DOL_COVERAGE_OPTION, run_args]
             if model_logging_enabled:
 	        options.append(MODEL_LOG_OPTION)
             cov_cmd = " ".join(options)
