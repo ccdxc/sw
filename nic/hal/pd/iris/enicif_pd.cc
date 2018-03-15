@@ -1029,8 +1029,6 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
     l2seg_t              *native_l2seg_clsc = NULL;
     nwsec_profile_t      *pi_nwsec = NULL;
 
-    // TODO: Currently only classic ENIC Is being handled. May have to handle
-    //       other types. For eg. vlan_insert_en
     HAL_TRACE_DEBUG("{}: updating lif params for enicif: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
@@ -1053,24 +1051,28 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
         }
     }
 
-    // Program Output Mapping 
-    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, 
-                                              TABLE_OPER_UPDATE);
+    if (args->vlan_strip_en_changed) {
+        // Program Output Mapping 
+        ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, 
+                                                  TABLE_OPER_UPDATE);
+    }
 
     // Check if classic
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
-        // Program Input Properties
-        ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, 
-                                        &hal_if->l2seg_list_clsc_head,
-                                        NULL, args, TABLE_OPER_UPDATE);
-        // Program native l2seg
-        if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
-            native_l2seg_clsc = 
-                l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
-            ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
-                                                  native_l2seg_clsc,
-                                                  NULL, NULL, args,
-                                                  TABLE_OPER_UPDATE);
+        if (args->vlan_insert_en_changed) {
+            // Program Input Properties
+            ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, 
+                                            &hal_if->l2seg_list_clsc_head,
+                                            NULL, args, TABLE_OPER_UPDATE);
+            // Program native l2seg
+            if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+                native_l2seg_clsc = 
+                    l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+                ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
+                                                      native_l2seg_clsc,
+                                                      NULL, NULL, args,
+                                                      TABLE_OPER_UPDATE);
+            }
         }
     }
 

@@ -47,6 +47,8 @@ extern class hal_state_pd    *g_hal_state_pd;
 
 #define HAL_MAX_HW_ACLS                 512 
 
+#define HAL_PD_SLAB_ID(slab_id) slab_id - HAL_SLAB_PD_MIN
+
 typedef enum hal_clock_delta_op_s {
     HAL_CLOCK_DELTA_OP_ADD                = 0,
     HAL_CLOCK_DELTA_OP_SUBTRACT           = 1,
@@ -76,135 +78,75 @@ public:
     void set_tnnl_rwr_tbl_encap_vlan_idx(uint32_t idx) { 
         tnnl_rewr_tbl_enc_vlan_idx_ = idx; }
 
-    // get APIs for vrf related state
-    slab *vrf_slab(void) const { return vrf_slab_; }
-    indexer *vrf_hwid_idxr(void) const { return vrf_hwid_idxr_; }
 
-    // get APIs for security related state
-    indexer *nwsec_profile_hwid_idxr(void) const { return nwsec_profile_hwid_idxr_; }
+    // get slabs
+    slab *vrf_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)]; }
+    slab *l2seg_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L2SEG_PD)]; }
+    slab *mc_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MC_ENTRY_PD)]; }
+    slab *lif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)]; }
+    slab *uplinkif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)]; }
+    slab *uplinkpc_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKPC_PD)]; }
+    slab *enicif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)]; }
+    slab *if_l2seg_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IF_L2SEG_PD)]; }
+    slab *tunnelif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNELIF_PD)]; }
+    slab *cpuif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUIF_PD)]; }
+    slab *dos_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_DOS_POLICY_PD)]; }
+    slab *nwsec_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)]; }
+    slab *ep_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)]; }
+    slab *ep_pd_ip_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_IP_ENTRY_PD)]; }
+    slab *session_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SESSION_PD)]; }
+    slab *tlscb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TLSCB_PD)]; }
+    slab *tcpcb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TCPCB_PD)]; }
+    slab *qos_class_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)]; }
+    slab *acl_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)]; }
+    slab *wring_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_WRING_PD)]; }
+    slab *ipseccb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_PD)]; }
+    slab *ipseccb_decrypt_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IPSECCB_DECRYPT_PD)]; }
+    slab *l4lb_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)]; }
+    slab *rw_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RW_PD)]; }
+    slab *tnnl_rw_entry_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNEL_RW_PD)]; }
+    slab *cpucb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUCB_PD)]; }
+    slab *cpupkt_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_PD)]; }
+    slab *rawrcb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWRCB_PD)]; }
+    slab *rawccb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_RAWCCB_PD)]; }
+    slab *proxyrcb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYRCB_PD)]; }
+    slab *proxyccb_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_PROXYCCB_PD)]; }
+    slab *cpupkt_qinst_info_slab(void) const {return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUPKT_QINST_INFO_PD)]; }
+    slab *copp_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)]; }
+    slab *app_redir_if_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_APP_REDIR_IF_PD)]; }
 
-    // get APIs for L2 segment related state
-    slab *l2seg_slab(void) const { return l2seg_slab_; }
+    // get hts
     ht *flow_lkupid_ht(void) const { return flow_lkupid_ht_; }
-    indexer *l2seg_cpu_idxr(void) const { return l2seg_cpu_idxr_; }
-
-    // get APIs for mc entry related state
-    slab *mc_entry_slab(void) const { return mc_entry_slab_; }
-
-    // get API for lport indexer
-    indexer *lport_idxr(void) const { return lport_idxr_; }
-
-    // get APIs for LIF related state
-    slab *lif_pd_slab(void) const { return lif_pd_slab_; }
-    indexer *lif_hwid_idxr(void) const { return lif_hwid_idxr_; }
-
-    // get APIs for Uplinkif  related state
-    slab *uplinkif_pd_slab(void) const { return uplinkif_pd_slab_; }
-    indexer *uplinkifpc_hwid_idxr(void) const { return uplinkifpc_idxr_; }
-
-    // get APIs for uplinkpc related state
-    slab *uplinkpc_pd_slab(void) const { return uplinkpc_pd_slab_; }
-
-    // get APIs for enicif  related state
-    slab *enicif_pd_slab(void) const { return enicif_pd_slab_; }
-    slab *if_l2seg_entry_slab(void) const { return if_l2seg_entry_slab_; }
-
-    // get APIs for cpuif  related state
-    slab *cpuif_pd_slab(void) const { return cpuif_pd_slab_; }
-
-    // get APIs for App redirect if  related state
-    slab *app_redir_if_pd_slab(void) const { return app_redir_if_pd_slab_; }
-
-    // get APIs for TunnelIf related state
-    slab *tunnelif_pd_slab(void) const { return tunnelif_pd_slab_; }
-
-    // get APIs for LIF related state
-    slab *ep_pd_slab(void) const { return ep_pd_slab_; }
-    slab *ep_pd_ip_entry_slab(void) const { return ep_pd_ip_entry_slab_; }
-    // indexer *rw_table_idxr(void) const { return rw_table_idxr_; }
-
-    // get APIs for nwsec related state
-    slab *nwsec_pd_slab(void) const { return nwsec_pd_slab_; }
-
-    // get APIs for dos policy related state
-    slab *dos_pd_slab(void) const { return dos_pd_slab_; }
-
-    // get APIs for session related state
-    slab *session_slab(void) const { return session_slab_; }
-
-    // get APIs for TLS CB related state
-    slab *tlscb_slab(void) const { return tlscb_slab_; }
     ht *tlscb_hwid_ht(void) const { return tlscb_hwid_ht_; }
-
-    // get APIs for TCP CB related state
-    slab *tcpcb_slab(void) const { return tcpcb_slab_; }
     ht *tcpcb_hwid_ht(void) const { return tcpcb_hwid_ht_; }
+    ht *wring_hwid_ht(void) const { return wring_hwid_ht_; }
+    ht *ipseccb_hwid_ht(void) const { return ipseccb_hwid_ht_; }
+    ht *ipseccb_decrypt_hwid_ht(void) const { return ipseccb_decrypt_hwid_ht_; }
+    ht *cpucb_hwid_ht(void) const { return cpucb_hwid_ht_; }
+    ht *rawrcb_hwid_ht(void) const { return rawrcb_hwid_ht_; }
+    ht *rawccb_hwid_ht(void) const { return rawccb_hwid_ht_; }
+    ht *proxyrcb_hwid_ht(void) const { return proxyrcb_hwid_ht_; }
+    ht *proxyccb_hwid_ht(void) const { return proxyccb_hwid_ht_; }
+    ht *rw_table_ht(void) const { return rw_table_ht_; }
+    ht *tnnl_rw_table_ht(void) const { return tnnl_rw_table_ht_; }
 
-    // get APIs for Qos-class related state
-    slab *qos_class_pd_slab(void) const { return qos_class_pd_slab_; }
+    // get indexers
+    indexer *vrf_hwid_idxr(void) const { return vrf_hwid_idxr_; }
+    indexer *nwsec_profile_hwid_idxr(void) const { return nwsec_profile_hwid_idxr_; }
+    indexer *l2seg_cpu_idxr(void) const { return l2seg_cpu_idxr_; }
+    indexer *lport_idxr(void) const { return lport_idxr_; }
+    indexer *lif_hwid_idxr(void) const { return lif_hwid_idxr_; }
+    indexer *uplinkifpc_hwid_idxr(void) const { return uplinkifpc_idxr_; }
     indexer *qos_txdma_iq_idxr(void) { return qos_txdma_iq_idxr_; }
     indexer *qos_uplink_iq_idxr(void) { return qos_uplink_iq_idxr_; }
     indexer *qos_common_oq_idxr(void) { return qos_common_oq_idxr_; }
     indexer *qos_rxdma_oq_idxr(void) { return qos_rxdma_oq_idxr_; }
-
-    // get APIs for Copp related state
-    slab *copp_pd_slab(void) const { return copp_pd_slab_; }
-
-    // get APIs for Acl related state
-    slab *acl_pd_slab(void) const { return acl_pd_slab_; }
-
-    // get APIs for WRING related state
-    slab *wring_slab(void) const { return wring_slab_; }
-    ht *wring_hwid_ht(void) const { return wring_hwid_ht_; }
-
-    // get APIs for Crypto state
     indexer *crypto_pd_keys_idxr(void) { return session_keys_idxr_; }
-    
-    // get APIs for IPSEC CB related state
-    slab *ipseccb_slab(void) const { return ipseccb_slab_; }
-    ht *ipseccb_hwid_ht(void) const { return ipseccb_hwid_ht_; }
-
-    slab *ipseccb_decrypt_slab(void) const { return ipseccb_decrypt_slab_; }
-    ht *ipseccb_decrypt_hwid_ht(void) const { return ipseccb_decrypt_hwid_ht_; }
-
-    // get APIs for L4LB related state
-    slab *l4lb_pd_slab(void) const { return l4lb_pd_slab_; }
-    
-    // get APIs for TCP CB related state
-    slab *cpucb_slab(void) const { return cpucb_slab_; }
-    ht *cpucb_hwid_ht(void) const { return cpucb_hwid_ht_; }
-
-    // get APIs for Raw Redirect CB related state
-    slab *rawrcb_slab(void) const { return rawrcb_slab_; }
-    ht *rawrcb_hwid_ht(void) const { return rawrcb_hwid_ht_; }
-
-    // get APIs for Raw Chain CB related state
-    slab *rawccb_slab(void) const { return rawccb_slab_; }
-    ht *rawccb_hwid_ht(void) const { return rawccb_hwid_ht_; }
-
-    // get APIs for Proxy Redirect CB related state
-    slab *proxyrcb_slab(void) const { return proxyrcb_slab_; }
-    ht *proxyrcb_hwid_ht(void) const { return proxyrcb_hwid_ht_; }
-
-    // get APIs for Proxy Chain CB related state
-    slab *proxyccb_slab(void) const { return proxyccb_slab_; }
-    ht *proxyccb_hwid_ht(void) const { return proxyccb_hwid_ht_; }
-
-    // get APIs for RW table related state
-    slab *rw_entry_slab(void) const { return rw_entry_slab_; }
-    ht *rw_table_ht(void) const { return rw_table_ht_; }
     indexer *rw_tbl_idxr(void) { return rw_tbl_idxr_; }
-
-    // get APIs for Tunnel RW table related state
-    slab *tnnl_rw_entry_slab(void) const { return tnnl_rw_entry_slab_; }
-    ht *tnnl_rw_table_ht(void) const { return tnnl_rw_table_ht_; }
     indexer *tnnl_rw_tbl_idxr(void) { return tnnl_rw_tbl_idxr_; }
-
-    // get APIs for CPU PKT related state
-    slab *cpupkt_slab(void) const { return cpupkt_slab_; }
-    slab *cpupkt_qinst_info_slab(void) const {return cpupkt_qinst_info_slab_; }
     indexer *cpupkt_descr_hw_id_idxr(void) {return cpupkt_descr_hwid_idxr_; }
     indexer *cpupkt_page_hw_id_idxr(void) {return cpupkt_page_hwid_idxr_; }
+
 
     hal_ret_t init_tables(pd_mem_init_args_t *args);
     hal_ret_t p4plus_rxdma_init_tables(pd_mem_init_args_t *args);
@@ -232,17 +174,11 @@ public:
         return tcam_tables_[tid - P4TBL_ID_TCAM_MIN];
     }
 
-    Flow *flow_table(void) const {
-        return flow_table_;
-    }
+    Flow *flow_table(void) const { return flow_table_; }
 
-    Met *met_table(void) const {
-        return met_table_;
-    }
+    Met *met_table(void) const { return met_table_; }
 
-    acl_tcam *acl_table(void) const {
-        return acl_table_;
-    }
+    acl_tcam *acl_table(void) const { return acl_table_; }
 
     directmap *p4plus_rxdma_dm_table(uint32_t tid) const {
         if ((tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN) ||
@@ -278,7 +214,6 @@ private:
 
     // vrf related state
     struct {
-        slab       *vrf_slab_;
         indexer    *vrf_hwid_idxr_;
     } __PACK__;
 
@@ -288,14 +223,12 @@ private:
 
     // l2seg related state
     struct {
-        slab       *l2seg_slab_;
         ht         *flow_lkupid_ht_;
         indexer    *l2seg_cpu_idxr_;
     } __PACK__;
 
     // mc entry related state
     struct {
-        slab       *mc_entry_slab_;
     } __PACK__;
 
     // Lport Indexer
@@ -305,75 +238,26 @@ private:
 
     // LIF related state
     struct {
-        slab       *lif_pd_slab_;
         indexer    *lif_hwid_idxr_;         // Used even by Uplink IF/PCs
     } __PACK__;
 
     // Uplink IF related state
     struct {
-        slab       *uplinkif_pd_slab_;
-        slab       *uplinkpc_pd_slab_;
         indexer    *uplinkifpc_idxr_;       // User for both Uplink IF/PCs
-    } __PACK__;
-
-    // Enic IF related state
-    struct {
-        slab       *enicif_pd_slab_;
-        slab       *if_l2seg_entry_slab_;
-    } __PACK__;
-
-    // CPU IF related state
-    struct {
-        slab       *cpuif_pd_slab_;
-    } __PACK__;
-
-    // App Redirect IF related state
-    struct {
-        slab       *app_redir_if_pd_slab_;
-    } __PACK__;
-
-    // Tunnel IF related state
-    struct {
-        slab       *tunnelif_pd_slab_;
-    } __PACK__;
-
-    // EP related state
-    struct {
-        slab       *ep_pd_slab_;
-        slab       *ep_pd_ip_entry_slab_;
-        // indexer    *rw_table_idxr_;
-    } __PACK__;
-
-    // nwsec related state
-    struct {
-        slab       *nwsec_pd_slab_;
-    } __PACK__;
-
-    // dos policy related state
-    struct {
-        slab       *dos_pd_slab_;
-    } __PACK__;
-
-    // session related state
-    struct {
-        slab       *session_slab_;
     } __PACK__;
 
     // tlscb related state
     struct {
-        slab       *tlscb_slab_;
         ht         *tlscb_hwid_ht_;
     } __PACK__;
 
     // tcpcb related state
     struct {
-        slab       *tcpcb_slab_;
         ht         *tcpcb_hwid_ht_;
     } __PACK__;
 
     // Qos related state
     struct {
-        slab       *qos_class_pd_slab_;
         // Array of indexers for each of the tm port types - uplink, p4, dma
         indexer    *qos_txdma_iq_idxr_;
         indexer    *qos_uplink_iq_idxr_;
@@ -381,19 +265,8 @@ private:
         indexer    *qos_rxdma_oq_idxr_;
     } __PACK__;
 
-    // Copp related state
-    struct {
-        slab       *copp_pd_slab_;
-    } __PACK__;
-
-    // Acl related state
-    struct {
-        slab       *acl_pd_slab_;
-    } __PACK__;
-
     // wring related state
     struct {
-        slab       *wring_slab_;
         ht         *wring_hwid_ht_;
     } __PACK__;
 
@@ -404,77 +277,62 @@ private:
     
     // ipseccb related state
     struct {
-        slab       *ipseccb_slab_;
         ht         *ipseccb_hwid_ht_;
-        slab       *ipseccb_decrypt_slab_;
         ht         *ipseccb_decrypt_hwid_ht_;
-    } __PACK__;
-
-    // l4lb related state
-    struct {
-        slab       *l4lb_pd_slab_;
     } __PACK__;
 
     // rw table management
     struct {
-        slab      *rw_entry_slab_;
         ht        *rw_table_ht_;   
         indexer   *rw_tbl_idxr_;
     } __PACK__;
 
     // tnnl rw table management
     struct {
-        slab      *tnnl_rw_entry_slab_;
         ht        *tnnl_rw_table_ht_;   
         indexer   *tnnl_rw_tbl_idxr_;
     } __PACK__;
     
     // cpucb related state
     struct {
-        slab       *cpucb_slab_;
         ht         *cpucb_hwid_ht_;
     } __PACK__;
 
     // cpupkt related state
     struct {
-        slab       *cpupkt_slab_;
-        slab       *cpupkt_qinst_info_slab_;
         indexer    *cpupkt_descr_hwid_idxr_;
         indexer    *cpupkt_page_hwid_idxr_;
     } __PACK__;
 
     // Raw Redirect CB related state
     struct {
-        slab       *rawrcb_slab_;
         ht         *rawrcb_hwid_ht_;
     } __PACK__;
 
     // Proxy Redirect CB related state
     struct {
-        slab       *proxyrcb_slab_;
         ht         *proxyrcb_hwid_ht_;
     } __PACK__;
 
     // Raw Chain CB related state
     struct {
-        slab       *rawccb_slab_;
         ht         *rawccb_hwid_ht_;
     } __PACK__;
 
     // Proxy Chain CB related state
     struct {
-        slab       *proxyccb_slab_;
         ht         *proxyccb_hwid_ht_;
     } __PACK__;
 
-    directmap             **dm_tables_;
-    sdk_hash              **hash_tcam_tables_;
-    tcam                  **tcam_tables_;
-    Flow                   *flow_table_;
-    Met                    *met_table_;
-    acl_tcam               *acl_table_;
-    directmap             **p4plus_rxdma_dm_tables_;
-    directmap             **p4plus_txdma_dm_tables_;
+    slab                    *slabs_[HAL_SLAB_PD_MAX - HAL_SLAB_PD_MIN];
+    directmap               **dm_tables_;
+    sdk_hash                **hash_tcam_tables_;
+    tcam                    **tcam_tables_;
+    Flow                    *flow_table_;
+    Met                     *met_table_;
+    acl_tcam                *acl_table_;
+    directmap               **p4plus_rxdma_dm_tables_;
+    directmap               **p4plus_txdma_dm_tables_;
     uint64_t                clock_delta_;    // hw sw clock delta in nanoseconds
     hal_clock_delta_op_t    clock_delta_op_; // hw sw clock delta op 
 };

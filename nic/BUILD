@@ -220,7 +220,9 @@ config_setting(
 
 cc_library(
     name = "iris_p4pd",
-    srcs = ["gen/iris/src/p4pd.cc", "gen/iris/src/p4pd_table_range.cc"],
+    srcs = [
+            "gen/iris/src/p4pd.cc", 
+            "gen/iris/src/p4pd_table_range.cc"],
     hdrs = [
         "gen/iris/include/p4pd.h",
     ],
@@ -231,7 +233,9 @@ cc_library(
 
 cc_library(
     name = "gft_p4pd",
-    srcs = ["gen/gft/src/p4pd.cc", "gen/gft/src/p4pd_table_range.cc"],
+    srcs = [
+            "gen/gft/src/p4pd.cc", 
+            "gen/gft/src/p4pd_table_range.cc"],
     hdrs = [
         "gen/gft/include/p4pd.h",
     ],

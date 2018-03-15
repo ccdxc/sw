@@ -28,6 +28,8 @@ namespace pd {
 
 #define HAL_MAX_HW_LIFS         1025        
 
+#define HAL_PD_SLAB_ID(slab_id) slab_id - HAL_SLAB_PD_MIN
+
 extern class hal_state_pd    *g_hal_state_pd;
 
 class hal_state_pd {
@@ -42,32 +44,21 @@ public:
     hal_ret_t p4plus_rxdma_init_tables(pd_mem_init_args_t *args);
     hal_ret_t p4plus_txdma_init_tables(pd_mem_init_args_t *args);
 
-
-    // get APIs for LIF related state
-    slab *lif_pd_slab(void) const { return lif_pd_slab_; }
-    indexer *lif_hwid_idxr(void) const { return lif_hwid_idxr_; }
-
-    // get APIs for EP related state
-    slab *vrf_pd_slab(void) const { return vrf_pd_slab_; }
-
-    // get APIs for Uplinkif  related state
-    slab *uplinkif_pd_slab(void) const { return uplinkif_pd_slab_; }
-
-    // get APIs for enicif  related state
-    slab *enicif_pd_slab(void) const { return enicif_pd_slab_; }
-
-    // get APIs for EP related state
-    slab *ep_pd_slab(void) const { return ep_pd_slab_; }
-
-    // get APIs for exact match profile
+    // get slabs
+    slab *lif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)]; }
+    slab *vrf_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)]; }
+    slab *uplinkif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)]; }
+    slab *enicif_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)]; }
+    slab *ep_pd_slab(void) const { return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)]; }
     slab *exact_match_profile_pd_slab(void) const { 
-        return exact_match_profile_pd_slab_; 
+        return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EMP_PD)]; 
+    }
+    slab *exact_match_flow_entry_pd_slab(void) const { 
+        return slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EFE_PD)]; 
     }
 
-    // get APIs for exact flow entry
-    slab *exact_match_flow_entry_pd_slab(void) const { 
-        return exact_match_flow_entry_pd_slab_; 
-    }
+    // get indexers
+    indexer *lif_hwid_idxr(void) const { return lif_hwid_idxr_; }
 
     directmap *dm_table(uint32_t tid) const {
         if ((tid < P4TBL_ID_INDEX_MIN) || (tid > P4TBL_ID_INDEX_MAX)) {
@@ -121,48 +112,18 @@ private:
     ~hal_state_pd();
 
 private:
-    directmap    **dm_tables_;
-    sdk_hash     **hash_tcam_tables_;
-    tcam         **tcam_tables_;
-    Flow         *flow_table_;
-    Flow         *tx_flow_table_;
-    directmap    **p4plus_rxdma_dm_tables_;
-    directmap    **p4plus_txdma_dm_tables_;
+    slab                    *slabs_[HAL_SLAB_PD_MAX - HAL_SLAB_PD_MIN];
+    directmap               **dm_tables_;
+    sdk_hash                **hash_tcam_tables_;
+    tcam                    **tcam_tables_;
+    Flow                    *flow_table_;
+    Flow                    *tx_flow_table_;
+    directmap               **p4plus_rxdma_dm_tables_;
+    directmap               **p4plus_txdma_dm_tables_;
 
     // LIF related state
     struct {
-        slab       *lif_pd_slab_;
         indexer    *lif_hwid_idxr_;         // Used even by Uplink IF/PCs
-    } __PACK__;
-
-    // VRF related state
-    struct {
-        slab       *vrf_pd_slab_;
-    } __PACK__;
-
-    // Uplink IF related state
-    struct {
-        slab       *uplinkif_pd_slab_;
-    } __PACK__;
-
-    // Enic IF related state
-    struct {
-        slab       *enicif_pd_slab_;
-    } __PACK__;
-
-    // Endpoint related state
-    struct {
-        slab       *ep_pd_slab_;
-    } __PACK__;
-
-    // Exact Match Profile 
-    struct {
-        slab      *exact_match_profile_pd_slab_;
-    } __PACK__;
-
-    // Exact Flow entry
-    struct {
-        slab      *exact_match_flow_entry_pd_slab_;
     } __PACK__;
 };
 

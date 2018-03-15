@@ -28,60 +28,74 @@ class hal_state_pd *g_hal_state_pd;
 bool
 hal_state_pd::init(void)
 {
-    dm_tables_ = NULL;
-    hash_tcam_tables_ = NULL;
-    tcam_tables_ = NULL;
-    flow_table_ = NULL;
-    tx_flow_table_ = NULL;
+    dm_tables_              = NULL;
+    hash_tcam_tables_       = NULL;
+    tcam_tables_            = NULL;
+    flow_table_             = NULL;
+    tx_flow_table_          = NULL;
     p4plus_rxdma_dm_tables_ = NULL;
     p4plus_txdma_dm_tables_ = NULL;
 
     // initialize LIF PD related data structures
-    lif_pd_slab_ = slab::factory("LIF_PD", HAL_SLAB_LIF_PD,
-                                 sizeof(hal::pd::pd_lif_t), 8,
-                                 false, true, true);
-    HAL_ASSERT_RETURN((lif_pd_slab_ != NULL), false);
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] = 
+        slab::factory("LIF_PD", HAL_SLAB_LIF_PD,
+                      sizeof(hal::pd::pd_lif_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] != NULL), 
+                      false);
 
     lif_hwid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_HW_LIFS);
     HAL_ASSERT_RETURN((lif_hwid_idxr_ != NULL), false);
 
     // initialize vrf related data structures
-    vrf_pd_slab_ = slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
-                                 sizeof(hal::pd::pd_vrf_t), 8,
-                                 false, true, true);
-    HAL_ASSERT_RETURN((vrf_pd_slab_ != NULL), false);
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] = 
+        slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
+                      sizeof(hal::pd::pd_vrf_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] != NULL), 
+                      false);
 
     // initialize Uplink If PD related data structures
-    uplinkif_pd_slab_ = slab::factory("UPLINKIF_PD", HAL_SLAB_UPLINKIF_PD,
-                                 sizeof(hal::pd::pd_uplinkif_t), 8,
-                                 false, true, true);
-    HAL_ASSERT_RETURN((uplinkif_pd_slab_ != NULL), false);
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] = 
+        slab::factory("UPLINKIF_PD", HAL_SLAB_UPLINKIF_PD,
+                      sizeof(hal::pd::pd_uplinkif_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] != NULL), 
+                      false);
 
     // initialize ENIC If PD related data structures
-    enicif_pd_slab_ = slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
-                                 sizeof(hal::pd::pd_enicif_t), 8,
-                                 false, true, true);
-    HAL_ASSERT_RETURN((enicif_pd_slab_ != NULL), false);
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] = 
+        slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
+                      sizeof(hal::pd::pd_enicif_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] != NULL), 
+                      false);
 
     // initialize EP PD related data structures
-    ep_pd_slab_ = slab::factory("EP_PD", HAL_SLAB_EP_PD,
-                                 sizeof(hal::pd::pd_ep_t), 8,
-                                 false, true, true);
-    HAL_ASSERT_RETURN((ep_pd_slab_ != NULL), false);
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] = 
+        slab::factory("EP_PD", HAL_SLAB_EP_PD,
+                      sizeof(hal::pd::pd_ep_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] != NULL), 
+                      false);
 
     // initiate GFT exact match profile
-    exact_match_profile_pd_slab_ = slab::factory("GFT_EMP_PD", 
-                                                 HAL_SLAB_GFT_EMP_PD,
-                                                 sizeof(hal::pd::pd_gft_emp_t), 
-                                                 8, false, true, true);
-    HAL_ASSERT_RETURN((exact_match_profile_pd_slab_ != NULL), false);
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EMP_PD)] = 
+        slab::factory("GFT_EMP_PD", 
+                      HAL_SLAB_GFT_EMP_PD,
+                      sizeof(hal::pd::pd_gft_emp_t), 
+                      8, false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EMP_PD)] != NULL), 
+                      false);
 
     // initiate GFT exact flow entry 
-    exact_match_flow_entry_pd_slab_ = slab::factory("GFT_EFE_PD", 
-                                                    HAL_SLAB_GFT_EFE_PD,
-                                                    sizeof(hal::pd::pd_gft_efe_t), 
-                                                    8, false, true, true);
-    HAL_ASSERT_RETURN((exact_match_flow_entry_pd_slab_ != NULL), false);
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EFE_PD)] = 
+        slab::factory("GFT_EFE_PD", 
+                      HAL_SLAB_GFT_EFE_PD,
+                      sizeof(hal::pd::pd_gft_efe_t), 
+                      8, false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_GFT_EFE_PD)] != NULL), 
+                      false);
 
     return true;
 }
@@ -91,13 +105,11 @@ hal_state_pd::init(void)
 //------------------------------------------------------------------------------
 hal_state_pd::hal_state_pd()
 {
-    lif_pd_slab_ = NULL;
-    vrf_pd_slab_ = NULL;
-    uplinkif_pd_slab_ = NULL;
-    enicif_pd_slab_ = NULL;
-    ep_pd_slab_ = NULL;
-    exact_match_profile_pd_slab_ = NULL;
-    exact_match_flow_entry_pd_slab_ = NULL;
+    // slab
+    memset(slabs_, 0, sizeof(slabs_));
+
+    // indexer
+    lif_hwid_idxr_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -106,22 +118,13 @@ hal_state_pd::hal_state_pd()
 hal_state_pd::~hal_state_pd()
 {
     uint32_t    tid;
+    for (uint32_t i = HAL_SLAB_PD_MIN; i < HAL_SLAB_PD_MAX; i++) {
+        if (slabs_[HAL_PD_SLAB_ID(i)]) {
+            slab::destroy(slabs_[HAL_PD_SLAB_ID(i)]);
+        }
+    }
 
-    lif_pd_slab_ ? slab::destroy(lif_pd_slab_) : HAL_NOP;
     lif_hwid_idxr_ ? indexer::destroy(lif_hwid_idxr_) : HAL_NOP;
-
-    vrf_pd_slab_ ? slab::destroy(vrf_pd_slab_) : HAL_NOP;
-
-    uplinkif_pd_slab_ ? slab::destroy(uplinkif_pd_slab_) : HAL_NOP;
-    enicif_pd_slab_ ? slab::destroy(enicif_pd_slab_) : HAL_NOP;
-
-    ep_pd_slab_ ? slab::destroy(ep_pd_slab_) : HAL_NOP;
-
-    exact_match_profile_pd_slab_ ? slab::destroy(exact_match_profile_pd_slab_) : 
-        HAL_NOP;
-    exact_match_flow_entry_pd_slab_ ? 
-        slab::destroy(exact_match_flow_entry_pd_slab_) :
-        HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -217,14 +220,6 @@ hal_state_pd::factory(void)
     return new_state;
 }
 
-//-----------------------------------------------------------------------------
-// return slab for a slab id
-//-----------------------------------------------------------------------------
-#define GET_SLAB(slab_name)                                            \
-    if (slab_name && slab_name->slab_id() == slab_id) {                \
-        return slab_name;                                              \
-    }
-
 hal_ret_t
 pd_get_slab (pd_get_slab_args_t *args)
 {
@@ -236,13 +231,10 @@ pd_get_slab (pd_get_slab_args_t *args)
 slab *
 hal_state_pd::get_slab(hal_slab_t slab_id) 
 {
-    GET_SLAB(lif_pd_slab_);
-    GET_SLAB(vrf_pd_slab_);
-    GET_SLAB(uplinkif_pd_slab_);
-    GET_SLAB(enicif_pd_slab_);
-    GET_SLAB(ep_pd_slab_);
-    GET_SLAB(exact_match_profile_pd_slab_);
-
+    if (slab_id >= HAL_SLAB_PD_MAX || slab_id < HAL_SLAB_PD_MIN) {
+        return NULL;
+    }
+    return slabs_[HAL_PD_SLAB_ID(slab_id)];
     return NULL;
 }
 
