@@ -382,7 +382,7 @@ pciehw_prt_load(const int prtbase, const int prtcount)
     int prti;
 
     sprt = &phwmem->sprt[prtbase];
-    for (prti = 0; prti < prtend; prti++, sprt++) {
+    for (prti = prtbase; prti < prtend; prti++, sprt++) {
         const pciehwdev_t *phwdev = pciehwdev_get(sprt->owner);
 
         switch (sprt->type) {
