@@ -27,5 +27,6 @@ sessions:
             - ref://store/specs/id=SESSION_TCP_PARSER
             - ref://store/specs/id=SESSION_PR255_PARSER
         mac:
+            - ref://store/specs/id=SESSION_MAC_PARSER
 
 lif: ref://store/specs/id=LIF_ETH

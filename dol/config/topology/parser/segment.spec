@@ -9,6 +9,6 @@ multicast   : drop
 l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 0
+    pvlan   : 1
     direct  : 0
     remote  : 2

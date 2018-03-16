@@ -1,0 +1,15 @@
+# Feature Test Modules List
+feature:
+    id      : parser
+    sub     : mac
+    package : test.parser
+    module  : parser
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : TX_40B_PKT
+        spec    : mac.testspec
+        iterate :
+            - flow : filter://type=MAC
