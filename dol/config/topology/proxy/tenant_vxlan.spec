@@ -19,10 +19,8 @@ security_profile: None
 sessions:
     unidest:
         ipv6:
-            - ref://store/specs/id=SESSION_TCP_PROXY
+            - ref://store/specs/id=SESSION_TCP_PROXY_VXLAN
         ipv4:
-            - ref://store/specs/id=SESSION_TCP_PROXY
-        mac:
-            - ref://store/specs/id=SESSION_MAC_PROXY
+            - ref://store/specs/id=SESSION_TCP_PROXY_VXLAN
 
 lif: ref://store/specs/id=LIF_ETH

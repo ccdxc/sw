@@ -1,7 +1,7 @@
 # Feature Test Modules List
 #
 feature:
-    id          : proxy_ul_to_ul_multi_flow
+    id          : proxy_icache
     sub         : proxy
     package     : test.tcp_tls_proxy
     module      : None
@@ -12,11 +12,11 @@ feature:
 
 modules:
     - module:
-        name    : UL_TO_UL_BYPASS_BARCO_MULTI_FLOW_SEND_PKTS
-        spec    : uplink_to_uplink_multi_flow.testspec
+        name    : HOST_TO_UL_BYPASS_BARCO
+        spec    : host_to_uplink_multi_flow.testspec
         module  : proxy_e2e
         rtl     : True
-        modscale: 100
+        modscale: 1000
         args    :
-            maxflows : 10
+            maxflows    : 1
 

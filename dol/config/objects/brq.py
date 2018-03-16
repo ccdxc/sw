@@ -42,15 +42,15 @@ class BRQEntryObject(base.ConfigObjectBase):
         if (self.entry_defn == "BRQ_GCM_ENTRY"):
             reqspec.type = self.ring_type
             reqspec.index = self.entry_idx
-            cfglogger.info("PrepareHALRequestSpec Entry: %s, type: %d, index: %d" % (self.ID() , reqspec.type , reqspec.index ))
+            #cfglogger.info("PrepareHALRequestSpec Entry: %s, type: %d, index: %d" % (self.ID() , reqspec.type , reqspec.index ))
         else:
             reqspec.ring_type = self.ring_type
             reqspec.slot_index = self.entry_idx
-            cfglogger.info("PrepareHALRequestSpec Entry: %s, type: %d, index: %d" % (self.ID() , reqspec.ring_type , reqspec.slot_index ))
+            #cfglogger.info("PrepareHALRequestSpec Entry: %s, type: %d, index: %d" % (self.ID() , reqspec.ring_type , reqspec.slot_index ))
         return
     def ProcessHALResponse(self, req_spec, resp_spec):
         if (self.entry_defn == "BRQ_GCM_ENTRY"):
-            cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
+            #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
             if (resp_spec.spec.type != req_spec.type):
                 assert(0)
                 if (resp_spec.index != req_spec.index):

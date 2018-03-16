@@ -191,6 +191,66 @@ def SetupProxyArgs(tc):
     tc.pvtdata.serq_full = serq_full
     tc.pvtdata.snd_cwnd = snd_cwnd
 
+def init_flow_pvtdata(tc, tcb1, tcb2):
+    tc.pvtdata.flow1_rcv_nxt = tcb1.rcv_nxt
+    tc.pvtdata.flow1_snd_nxt = tcb1.snd_nxt
+    tc.pvtdata.flow1_snd_una = tcb1.snd_una
+    tc.pvtdata.flow1_bytes_rxed = 0
+    tc.pvtdata.flow1_bytes_txed = 0
+
+    tc.pvtdata.flow2_rcv_nxt = tcb2.rcv_nxt
+    tc.pvtdata.flow2_snd_nxt = tcb2.snd_nxt
+    tc.pvtdata.flow2_snd_una = tcb2.snd_una
+    tc.pvtdata.flow2_bytes_rxed = 0
+    tc.pvtdata.flow2_bytes_txed = 0
+
+def init_tcb1(tcb, session):
+    tcb.rcv_nxt = 0x1ABABABA
+    tcb.snd_nxt = 0x1FEFEFF0
+    tcb.snd_una = 0x1FEFEFF0
+    tcb.rcv_tsval = 0x1AFAFAFA
+    tcb.ts_recent = 0x1AFAFAF0
+    tcb.snd_cwnd = 10000
+
+    tcb.source_port = session.iflow.dport
+    tcb.dest_port = session.iflow.sport
+
+    sep = session.iflow._FlowObject__sep
+    dep = session.iflow._FlowObject__dep
+
+    vlan_id = 0
+    if dep.intf.type == 'UPLINK':
+        # is there a better way to find the lif?
+        tcb.source_lif = dep.intf.port
+        if dep.segment.native == False:
+            vlan_id = dep.segment.vlan_id
+    elif hasattr(dep.intf, 'encap_vlan_id'):
+        vlan_id = dep.intf.encap_vlan_id
+        tcb.source_lif = dep.intf.lif.hw_lif_id
+
+    if vlan_id != 0:
+        vlan_id = 0x7 << 13 | vlan_id
+        vlan_etype_bytes = bytes([0x81, 0x00]) + \
+                vlan_id.to_bytes(2, 'big') + \
+                bytes([0x08, 0x00])
+    else:
+        vlan_etype_bytes = bytes([0x08, 0x00])
+
+    # TODO: ipv6
+    tcb.header_len = ETH_IP_HDR_SZE + len(vlan_etype_bytes) - 2
+    if session.iflow.IsIPV4():
+        tcb.header_template = \
+             sep.macaddr.getnum().to_bytes(6, 'big') + \
+             dep.macaddr.getnum().to_bytes(6, 'big') + \
+             vlan_etype_bytes + \
+             bytes([0x45, 0x07, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
+             bytes([0x40, 0x06, 0xfa, 0x71]) + \
+             session.iflow.dip.getnum().to_bytes(4, 'big') + \
+             session.iflow.sip.getnum().to_bytes(4, 'big')
+        print("header_template = " + str(tcb.header_template))
+    # set tcb state to ESTABLISHED(1)
+    tcb.state = 1
+
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
     tcb.snd_nxt = 0x1FEFEFF0
@@ -287,6 +347,53 @@ def init_tcb_inorder(tc, tcb):
     tcb.state = 1
     tcb.serq_pi = 0
     tcb.serq_ci = 0
+
+def init_tcb2(tcb, session):
+    tcb.rcv_nxt = 0x2ABABABA
+    tcb.snd_nxt = 0x2FEFEFF0
+    tcb.snd_una = 0x2FEFEFF0
+    tcb.rcv_tsval = 0x2AFAFAFA
+    tcb.ts_recent = 0x2AFAFAF0
+    tcb.snd_cwnd = 10000
+
+    tcb.source_port = session.iflow.sport
+    tcb.dest_port = session.iflow.dport
+
+    dep = session.iflow._FlowObject__sep
+    sep = session.iflow._FlowObject__dep
+
+    vlan_id = 0
+    if dep.intf.type == 'UPLINK':
+        # is there a better way to find the lif?
+        tcb.source_lif = dep.intf.port
+        if dep.segment.native == False:
+            vlan_id = dep.segment.vlan_id
+    elif hasattr(dep.intf, 'encap_vlan_id'):
+        vlan_id = dep.intf.encap_vlan_id
+        tcb.source_lif = dep.intf.lif.hw_lif_id
+
+    if vlan_id != 0:
+        vlan_id = 0x7 << 13 | vlan_id
+        vlan_etype_bytes = bytes([0x81, 0x00]) + \
+                vlan_id.to_bytes(2, 'big') + \
+                bytes([0x08, 0x00])
+    else:
+        vlan_etype_bytes = bytes([0x08, 0x00])
+
+    # TODO: ipv6
+    tcb.header_len = ETH_IP_HDR_SZE + len(vlan_etype_bytes) - 2
+    if session.iflow.IsIPV4():
+        tcb.header_template = \
+             sep.macaddr.getnum().to_bytes(6, 'big') + \
+             dep.macaddr.getnum().to_bytes(6, 'big') + \
+             vlan_etype_bytes + \
+             bytes([0x45, 0x07, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
+             bytes([0x40, 0x06, 0xfa, 0x71]) + \
+             session.iflow.sip.getnum().to_bytes(4, 'big') + \
+             session.iflow.dip.getnum().to_bytes(4, 'big')
+        print("header_template = " + str(tcb.header_template))
+    # set tcb state to ESTABLISHED(1)
+    tcb.state = 1
 
 def init_tcb_inorder2(tc, tcb):
     tcb.rcv_nxt = 0x2ABABABA

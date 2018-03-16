@@ -18,7 +18,7 @@ uplink:
         status  : UP
 
 uplinkpc: None
-proxy   : False
+proxy   : True
 ipsec   : False
 acls    : None
 qos     : False

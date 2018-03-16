@@ -52,7 +52,7 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.esn_lo                    = self.esn_lo
             req_spec.spi                       = self.spi
             req_spec.new_spi                   = self.new_spi
-            req_spec.key_index                 = self.crypto_key_idx
+            req_spec.key_index                 = self.key_index
             req_spec.new_key_index             = self.new_key_index
             req_spec.expected_seq_no           = self.expected_seq_no
             req_spec.seq_no_bmp                = self.seq_no_bmp

@@ -31,6 +31,9 @@ class TlsCbObject(base.ConfigObjectBase):
         self.bsq = SwDscrRingHelper.main("BSQ", gid, self.id)
         self.crypto_key = CryptoKeyHelper.main() 
         self.crypto_hmac_key = CryptoKeyHelper.main() 
+        self.debug_dol = 0x1 # bypass barco
+        self.is_decrypt_flow = False
+        self.other_fid = tcpcb.other_qid
         return
 
     def PrepareHALRequestSpec(self, req_spec):

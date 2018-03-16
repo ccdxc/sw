@@ -99,6 +99,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         data.u.ipsec_encap_rxdma_initial_table_d.esn_lo = htonl(ipseccb_pd->ipseccb->esn_lo);
         data.u.ipsec_encap_rxdma_initial_table_d.spi = htonl(ipseccb_pd->ipseccb->spi);
         data.u.ipsec_encap_rxdma_initial_table_d.key_index = ipseccb_pd->ipseccb->key_index;
+        HAL_TRACE_DEBUG("key_index = {}\n", ipseccb_pd->ipseccb->key_index);
    
         ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE));

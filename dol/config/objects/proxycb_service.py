@@ -118,7 +118,9 @@ class ProxyCbServiceObjectHelper:
                 lst.append(proxycb)
                 halapi.ConfigureProxyCbService(lst)
                 halapi.GetQidProxycbGetFlowInfo(lst)
-                #TcpCbHelper.main(proxycb.qid)
+            if proxycb.session.iflow.label == 'TCP-PROXY':
+                TcpCbHelper.main(proxycb.qid, proxycb.other_qid, proxycb.session, True)
+                TcpCbHelper.main(proxycb.other_qid, proxycb.qid, proxycb.session, False)
         return
 
     def GetSessionQids(self, session):

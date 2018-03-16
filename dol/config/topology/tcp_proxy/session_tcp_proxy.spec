@@ -51,51 +51,47 @@ entries:
             port : const/47277
 
     - entry:
-        label: ipsec-proxy
+        label: tcp-proxy
         tracking: False
         timestamp: False
-        responder: 
-            port : const/44444
-        initiator: 
-            port : const/44445
-
-    - entry:
-        label: tcp-proxy-e2e
-        tracking: False
-        timestamp: False
-        fte: True
         responder: 
             port : const/80
         initiator: 
-            port : const/47802
+            port : const/47278
 
     - entry:
-        label: tcp-proxy-e2e
+        label: tcp-proxy
         tracking: False
         timestamp: False
-        fte: True
         responder: 
-            port : const/81
+            port : const/80
         initiator: 
-            port : const/47802
+            port : const/47279
 
     - entry:
-        label: proxy-redir-e2e
+        label: tcp-proxy
         tracking: False
         timestamp: False
-        fte: True
-        responder:
-            port : const/89
-        initiator:
-            port : const/47802
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47280
 
     - entry:
-        label: proxy-redir-span-e2e
+        label: tcp-proxy
         tracking: False
         timestamp: False
-        fte: True
-        responder:
-            port : const/8089
-        initiator:
-            port : const/47802
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47281
+
+    - entry:
+        label: tcp-proxy
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47282
 

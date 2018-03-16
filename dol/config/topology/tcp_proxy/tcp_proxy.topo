@@ -1,0 +1,45 @@
+# Configuration Spec
+# # Topology specification
+meta:
+    id: TOPO_TCP_PROXY
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc: None
+acls: None
+qos : True
+tenants:
+    -   spec    : ref://store/specs/id=TCP_TENANT_PROXY
+        count   : 1
+        lifns   : range/111/114
+
+cpu:
+    - entry:
+        id      : Cpu1
+        lif_id  : 1003
+
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_PROXY
+security_policy: ref://store/specs/id=SECURITY_POLICY_PROXY
+proxy: True
+
+timers:
+    - entry:
+        id          : SLOW_TIMER
+        slowfast    : 0
+        ctime       : 0
+    - entry:
+        id          : FAST_TIMER
+        slowfast    : 1
+        ctime       : 0

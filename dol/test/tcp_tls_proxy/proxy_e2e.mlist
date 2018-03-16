@@ -1,0 +1,36 @@
+# Feature Test Modules List
+#
+feature:
+    id          : proxy_e2e
+    sub         : proxy
+    package     : test.tcp_tls_proxy
+    module      : proxy_e2e
+    enable      : True
+    rtl         : True
+    ignore      : False
+    runorder    : 10
+
+modules:
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO
+        spec    : uplink_to_uplink_multi_flow.testspec
+        rtl     : True
+        perf    : True
+        args    :
+            maxflows : 1
+
+    - module:
+        name    : HOST_TO_UL_BYPASS_BARCO
+        spec    : host_to_uplink_multi_flow.testspec
+        rtl     : True
+        perf    : True
+        args    :
+            maxflows : 1
+
+    - module:
+        name    : UL_TO_HOST_BYPASS_BARCO
+        spec    : uplink_to_host_multi_flow.testspec
+        rtl     : True
+        perf    : True
+        args    :
+            maxflows : 1

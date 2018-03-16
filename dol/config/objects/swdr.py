@@ -288,7 +288,7 @@ class SwDscrRingObjectHelper:
     def main(self, type, parent = None, ringidx = None):
         self.Generate(type, parent, ringidx)
         #self.Configure()
-        self.Show()
+        #self.Show()
 
 
 SwDscrRingHelper = SwDscrRingObjectHelper()

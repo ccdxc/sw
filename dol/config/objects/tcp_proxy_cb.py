@@ -14,6 +14,8 @@ from config.objects.tls_proxy_cb     import TlsCbHelper
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
+import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
+
 class TcpCbObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -21,9 +23,13 @@ class TcpCbObject(base.ConfigObjectBase):
         return
 
     #def Init(self, spec_obj):
-    def Init(self, qid):
+    def Init(self, qid, other_qid = None, session = None, is_iflow = None):
         if halapi.IsHalDisabled(): qid = resmgr.TcpCbIdAllocator.get()
         self.id = qid
+        if other_qid != None:
+            self.other_qid = other_qid
+        else:
+            self.other_qid = 0xffff
         gid = "TcpCb%04d" % qid
         self.GID(gid)
         # self.spec = spec_obj
@@ -39,6 +45,18 @@ class TcpCbObject(base.ConfigObjectBase):
         self.tlscb = TlsCbHelper.main(self)
         self.sesq = SwDscrRingHelper.main("SESQ", gid, self.id)
         self.asesq = SwDscrRingHelper.main("ASESQ", gid, self.id)
+
+        if is_iflow:
+            print("%s is iflow" % gid)
+            tcp_proxy.init_tcb1(self, session)
+        elif is_iflow != None:
+            print("%s is rflow" % gid)
+            tcp_proxy.init_tcb2(self, session)
+
+        self.debug_dol = tcp_proxy.tcp_debug_dol_dont_send_ack | \
+                            tcp_proxy.tcp_debug_dol_bypass_barco
+        self.debug_dol_tx = tcp_proxy.tcp_tx_debug_dol_dont_send_ack | \
+                                tcp_proxy.tcp_tx_debug_dol_bypass_barco
 
         return
 
@@ -163,26 +181,26 @@ class TcpCbObjectHelper:
         halapi.ConfigureTcpCbs(objlist)
         return
 
-    def __gen_one(self, qid):
+    def __gen_one(self, qid, other_qid = None, session = None, is_iflow = None):
         cfglogger.info("Creating TcpCb")
         tcpcb_obj = TcpCbObject()
-        tcpcb_obj.Init(qid)
+        tcpcb_obj.Init(qid, other_qid, session, is_iflow)
         Store.objects.Add(tcpcb_obj)
         return tcpcb_obj
 
-    def Generate(self, qid):
-        obj = self.__gen_one(qid)
+    def Generate(self, qid, other_qid = None, session = None, is_iflow = None):
+        obj = self.__gen_one(qid, other_qid, session, is_iflow)
         self.objlist.append(obj)
         lst = []
         lst.append(obj)
         self.Configure(lst)
         return self.objlist
 
-    def main(self, qid):
+    def main(self, qid, other_qid = None, session = None, is_iflow = None):
         gid = "TcpCb%04d" % qid
         if Store.objects.IsKeyIn(gid):
             return Store.objects.Get(gid)
-        objlist = self.Generate(qid)
+        objlist = self.Generate(qid, other_qid, session, is_iflow)
         return objlist
 
 TcpCbHelper = TcpCbObjectHelper()
