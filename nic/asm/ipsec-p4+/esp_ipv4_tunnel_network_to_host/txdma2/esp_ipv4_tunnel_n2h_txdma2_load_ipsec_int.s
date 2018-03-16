@@ -18,16 +18,13 @@ esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int:
     phvwr p.t0_s2s_headroom_offset, d.headroom_offset
     phvwr p.t0_s2s_tailroom_offset, d.tailroom_offset
     phvwr p.ipsec_to_stage4_in_page, d.in_page
-    phvwr p.ipsec_to_stage4_headroom, d.headroom
+    phvwr.f p.ipsec_to_stage4_headroom, d.headroom
     nop.e
     nop
 
 esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int_phv_drop:
     phvwri p.p4_intr_global_drop, 1
-    phvwri p.app_header_table0_valid, 0
-    phvwri p.app_header_table1_valid, 0
-    phvwri p.app_header_table2_valid, 0
-    phvwri p.app_header_table3_valid, 0
+    phvwri.f p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop.e
     nop
      

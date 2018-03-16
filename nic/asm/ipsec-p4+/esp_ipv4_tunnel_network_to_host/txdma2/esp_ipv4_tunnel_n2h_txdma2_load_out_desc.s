@@ -13,11 +13,9 @@ esp_ipv4_tunnel_n2h_txdma2_load_out_desc:
     phvwr p.t0_s2s_out_page_addr, d.{addr0}.dx
     add r2, d.{addr0}.dx, d.{length0}.wx
     subi r2, r2, 2
-    phvwri p.app_header_table1_valid, 0
+    phvwri p.{app_header_table0_valid...app_header_table1_valid}, 2
 
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_lock_en, 1
-    phvwri p.common_te0_phv_table_raw_table_size, 6
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_pad_size_l4_proto[33:6]
     phvwr  p.common_te0_phv_table_addr, r2 
 

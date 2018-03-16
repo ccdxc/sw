@@ -16,17 +16,12 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     phvwri.c2 p.p4_intr_global_drop, 1
 
     seq c1, d.is_v6, 1
-    phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
+    //phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma2_global_iv_size, d.iv_size
     phvwr p.txdma2_global_icv_size, d.icv_size
 
-    phvwri p.p4_intr_global_tm_oport, TM_OPORT_P4INGRESS
-    phvwri p.p4_intr_global_tm_iport, TM_OPORT_DMA
-    phvwri p.p4_intr_global_lif, ARM_CPU_LIF 
-
     phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_lock_en, 1
-    phvwri p.common_te0_phv_table_raw_table_size, 6
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_load_barco_req[33:6] 
     sll r1, d.barco_cindex, BRQ_RING_ENTRY_SIZE_SHIFT 
     add r1, r1, d.barco_ring_base_addr 
@@ -34,7 +29,6 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.ipsec_to_stage3_block_size, d.block_size
-    phvwri p.ipsec_to_stage4_dot1q_etype, DOT1Q_ETYPE
     phvwr p.ipsec_to_stage4_vrf_vlan, d.vrf_vlan
     cmov r6, c1, IPV6_ETYPE, IPV4_ETYPE
     phvwr p.ipsec_to_stage4_ip_etype, r6
