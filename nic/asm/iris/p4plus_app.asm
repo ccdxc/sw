@@ -26,8 +26,10 @@ p4plus_app_classic_nic:
   // r7 : packet_len
   or          r7, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
                   k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
-  seq         c1, k.control_metadata_vlan_strip, TRUE
-  seq.c1      c1, k.vlan_tag_valid, TRUE
+  sub         r6, r7, 14
+  seq         c1, k.vlan_tag_valid, TRUE
+  sub.c1      r6, r6, 4
+  seq.c1      c1, k.control_metadata_vlan_strip, TRUE
   bcf         [!c1], p4plus_app_classic_nic_no_vlan_strip
   phvwr.c1    p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
   phvwr       p.ethernet_etherType, k.vlan_tag_etherType
@@ -41,7 +43,7 @@ p4plus_app_classic_nic:
 p4plus_app_classic_nic_no_vlan_strip:
   phvwrpair   p.p4_to_p4plus_classic_nic_valid, TRUE, \
               p.capri_rxdma_intrinsic_valid, TRUE
-  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, r7
+  phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, r6
   phvwrpair   p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_CLASSIC_NIC_HDR_SZ), \

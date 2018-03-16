@@ -2037,7 +2037,6 @@ class capri_parser:
                     hfname = h.name + '.csum'
                     csum_hv_names.append(hfname)
                 if not self.be.checksum.IsHdrInL2CompleteCsumCompute(h.name, self.d) and \
-                   not self.be.checksum.IsL2HdrInL2CompleteCsumCompute(h.name, self.d) and \
                    not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name, self.d) and \
                    not self.be.checksum.IsHdrInOptionCsumCompute(h.name, self.d):
                     hfname = h.name + '.tcp_csum'

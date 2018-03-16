@@ -1978,8 +1978,13 @@ parser parse_inner_ethernet {
     }
 }
 
-field_list l2_complete_checksum_list {
-   ethernet.dstAddr;
+field_list complete_checksum_ipv4_list {
+   ipv4.srcAddr;
+   payload;
+}
+
+field_list complete_checksum_ipv6_list {
+   ipv6.srcAddr;
    payload;
 }
 
@@ -1987,14 +1992,27 @@ field_list l2_complete_checksum_list {
 //Share checksum engine among udp-option csum computation and l2_checksum
 //as one is used in packet towards uplink and other in packet towards host.
 @pragma checksum update_share udp_opt_ocs.chksum, p4_to_p4plus_classic_nic.csum
-field_list_calculation l2_complete_checksum {
+field_list_calculation complete_checksum_ipv4 {
    input {
-       l2_complete_checksum_list;
+       complete_checksum_ipv4_list;
+   }
+   algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
+   output_width : 16;
+}
+
+@pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
+//Share checksum engine among udp-option csum computation and l2_checksum
+//as one is used in packet towards uplink and other in packet towards host.
+@pragma checksum update_share udp_opt_ocs.chksum, p4_to_p4plus_classic_nic.csum
+field_list_calculation complete_checksum_ipv6 {
+   input {
+       complete_checksum_ipv6_list;
    }
    algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
    output_width : 16;
 }
 
 calculated_field p4_to_p4plus_classic_nic.csum {
-   update l2_complete_checksum if (valid(ethernet));
+   update complete_checksum_ipv4 if (valid(ipv4));
+   update complete_checksum_ipv6 if (valid(ipv6));
 }

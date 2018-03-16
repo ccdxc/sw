@@ -6,6 +6,7 @@ from scapy.utils import checksum
 import config.hal.defs as haldefs
 from bitstring import BitArray
 from scapy.layers.inet6 import in6_chksum
+from scapy.layers.l2 import Ether, Dot1Q
 
 from .toeplitz import *
 
@@ -141,7 +142,10 @@ def GetTxOpcodeCalcCsumTcpUdp(tc, obj, args=None):
 def GetL2Checksum(tc, obj, args=None):
     spktobj = tc.packets.db['EXP_PKT'].spktobj
     pkt = spktobj.spkt
-    return checksum(bytes(pkt)) & 0xffff
+    if pkt.haslayer(Dot1Q):
+        return checksum(bytes(pkt[Dot1Q].payload)) & 0xffff
+    else:
+        return checksum(bytes(pkt[Ether].payload)) & 0xffff
 
 
 def GetIsIPV4(tc, obj, args=None):
