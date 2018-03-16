@@ -2,7 +2,7 @@
 feature:
     id          : alg 
     sub         : ftp
-    package     : test.fte
+    package     : test.fte.alg
     module      : alg
     spec        : ftp.testspec
     enable      : True
@@ -20,6 +20,7 @@ modules:
                 base      : filter://type=IPV4,proto=TCP,label=FTE
                 iflow     : filter://any
                 rflow     : filter://any
+
         iterate  :
             - step        : ref://trackerstore/steps/id=IFLOW_FTP_SYN
               cpu         : True

@@ -3,12 +3,12 @@ import copy
 import pdb
 
 import test.firewall.tracker.tracker as base 
-import test.fte.tracker.step as step
-import test.fte.tracker.connection as connection
+import test.fte.alg.tracker.step as step
+import test.fte.alg.tracker.connection as connection
 import test.firewall.tracker.flowstate as flowstate
 
 from infra.common.logging import logger as logger
-from test.fte.tracker.store import TrackerStore
+from test.fte.alg.tracker.store import TrackerStore
 
 class ALGTrackerObject(base.TrackerObject):
     def __init__(self):

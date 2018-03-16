@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_FTE
+    id: SEGMENT_ALG
 
 type        : tenant
 native      : False

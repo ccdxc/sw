@@ -5,7 +5,7 @@ feature:
     package  : test.e2e.tftp
     module   : tftp
     runorder : 0
-    enable   : False
+    enable   : True
     ignore   : False
     rtl      : False
     args     :

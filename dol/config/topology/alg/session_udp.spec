@@ -1,7 +1,7 @@
 # Flow generation configuration template.
 
 meta:
-    id: SESSION_UDP_FTE
+    id: SESSION_UDP_ALG
 
 proto: udp
 

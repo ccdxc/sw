@@ -3,7 +3,7 @@ import infra.common.parser as parser
 import infra.common.objects as objects
 import test.firewall.tracker.connection as base
 from infra.common.logging import logger as logger
-from test.fte.tracker.store import TrackerStore
+from test.fte.alg.tracker.store import TrackerStore
 
 class ALGConnectionParamsObject(base.ConnectionParamsObject):
     def __init__(self, spec):

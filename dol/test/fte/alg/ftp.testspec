@@ -1,11 +1,11 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://overlay=VLAN,type=TENANT
+        tenant  : filter://type=TENANT
         segment : filter://native=True
         endpoint: filter://remote=True
     dst:
-        tenant  : filter://overlay=VLAN,type=TENANT
+        tenant  : filter://type=TENANT
         segment : filter://native=True
         endpoint: filter://remote=True
     session       :

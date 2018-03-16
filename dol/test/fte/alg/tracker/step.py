@@ -6,7 +6,7 @@ import test.firewall.tracker.step as base
 import infra.common.parser as parser
 import infra.common.objects as objects
 from infra.common.logging import logger as logger
-from test.fte.tracker.store import TrackerStore
+from test.fte.alg.tracker.store import TrackerStore
 
 class StepALGObject(base.StepObject):
     def __init__(self, spec = None):
@@ -79,7 +79,7 @@ class StepALGObject(base.StepObject):
         return
 
 def __parse_step_specs():
-    path = 'test/fte/tracker/specs/'
+    path = 'test/fte/alg/tracker/specs/'
     filename = 'steps.spec'
     return parser.ParseDirectory(path, filename)
 

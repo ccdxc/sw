@@ -1,14 +1,14 @@
 # Configuration Template.
 meta:
-    id: TENANT_FTE
+    id: TENANT_ALG
 
 type    : tenant
 overlay : vlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_FTE
-      count : 2
-    - spec  : ref://store/specs/id=SEGMENT_NATIVE_FTE
+#    - spec  : ref://store/specs/id=SEGMENT_ALG
+#      count : 2
+    - spec  : ref://store/specs/id=SEGMENT_NATIVE_ALG
       count : 1
 
 # NFV Endpoints:
@@ -21,14 +21,11 @@ security_profile: ref://store/objects/id=SEC_PROF_ALG
 sessions:
     unidest:
         ipv4:
-            - ref://store/specs/id=SESSION_UDP_FTE
-            - ref://store/specs/id=SESSION_TCP_FTE
-            - ref://store/specs/id=SESSION_ICMP_FTE
+            - ref://store/specs/id=SESSION_UDP_ALG
+            - ref://store/specs/id=SESSION_TCP_ALG
         ipv6:
-            - ref://store/specs/id=SESSION_UDP_FTE
-            - ref://store/specs/id=SESSION_TCP_FTE
-            - ref://store/specs/id=SESSION_ICMPV6_FTE
+            - ref://store/specs/id=SESSION_UDP_ALG
+            - ref://store/specs/id=SESSION_TCP_ALG
         mac:
-            - ref://store/specs/id=SESSION_MAC_FTE
 
 lif: ref://store/specs/id=LIF_ETH

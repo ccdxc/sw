@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-import test.fte.tracker.tracker as trackermod
+import test.fte.alg.tracker.tracker as trackermod
 
 def InitTracker(infra, module):
     tracker = trackermod.ALGTrackerObject()

@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id  : SEGMENT_NATIVE_FTE
+    id  : SEGMENT_NATIVE_ALG
 
 type        : tenant
 fabencap    : vlan
@@ -11,6 +11,6 @@ l4lb        : False
 endpoints   :
     sgenable: True 
     useg    : 0
-    pvlan   : 8
+    pvlan   : 0
     direct  : 0
     remote  : 12

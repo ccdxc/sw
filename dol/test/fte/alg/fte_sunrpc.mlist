@@ -2,7 +2,7 @@
 feature:
     id          : alg 
     sub         : sunrpc 
-    package     : test.fte
+    package     : test.fte.alg
     module      : alg 
     spec        : sunrpc.testspec
     enable      : True
