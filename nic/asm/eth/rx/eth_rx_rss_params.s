@@ -1,7 +1,9 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "defines.h"
+#include "INGRESS_eth_rx_rss_params_k.h"
+
+#include "../../asm/eth/rx/defines.h"
 
 struct phv_ p;
 struct eth_rx_rss_params_k k;
@@ -12,7 +14,7 @@ struct eth_rx_rss_params_eth_rx_rss_params_d d;
 .align
 eth_rx_rss_params:
 
-  and               r1, d.rss_type, k.{p4_to_p4plus_header_flags_sbit0_ebit3, p4_to_p4plus_header_flags_sbit4_ebit11}
+  and               r1, d.rss_type, k.p4_to_p4plus_rss_flags
   beq               r1, r0, eth_rx_rss_params_skip
   nop
 

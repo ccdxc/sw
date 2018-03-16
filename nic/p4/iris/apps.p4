@@ -74,63 +74,85 @@ action f_p4plus_app_classic_nic_prep() {
         add_header(p4_to_p4plus_classic_nic_inner_ip);
         if (inner_ipv4.valid == TRUE) {
             if (inner_udp.valid == TRUE) {
-                modify_field(p4_to_p4plus_classic_nic.header_flags,
-                             CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP);
+                modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                             CLASSIC_NIC_RSS_FLAGS_IPV4_UDP);
             } else {
                 if (tcp.valid == TRUE) {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV4_TCP);
                 }
                 else {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV4);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV4);
                 }
+            }
+            if (ipv4.valid == TRUE) {
+                modify_field(scratch_metadata.flag,
+                             ((control_metadata.checksum_results & (1 << CSUM_HDR_IP)) |
+                              (control_metadata.checksum_results & (1 << CSUM_HDR_INNER_IP))));
+                modify_field(p4_to_p4plus_classic_nic.csum_ip_ok, ~scratch_metadata.flag);
+                modify_field(p4_to_p4plus_classic_nic.csum_ip_bad, scratch_metadata.flag);
+            } else {
+                modify_field(p4_to_p4plus_classic_nic.csum_ip_ok,
+                             ~(control_metadata.checksum_results & (1 << CSUM_HDR_INNER_IP)));
+                modify_field(p4_to_p4plus_classic_nic.csum_ip_bad,
+                             (control_metadata.checksum_results & (1 << CSUM_HDR_INNER_IP)));
             }
         }
         if (inner_ipv6.valid == TRUE) {
             if (inner_udp.valid == TRUE) {
-                modify_field(p4_to_p4plus_classic_nic.header_flags,
-                             CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP);
+                modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                             CLASSIC_NIC_RSS_FLAGS_IPV6_UDP);
             } else {
                 if (tcp.valid == TRUE) {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV6_TCP);
                 }
                 else {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV6);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV6);
                 }
+            }
+            if (ipv4.valid == TRUE) {
+                modify_field(p4_to_p4plus_classic_nic.csum_ip_ok,
+                             ~(control_metadata.checksum_results & (1 << CSUM_HDR_IP)));
+                modify_field(p4_to_p4plus_classic_nic.csum_ip_bad,
+                             (control_metadata.checksum_results & (1 << CSUM_HDR_IP)));
             }
         }
     } else {
         add_header(p4_to_p4plus_classic_nic_ip);
         if (ipv4.valid == TRUE) {
             if (udp.valid == TRUE) {
-                modify_field(p4_to_p4plus_classic_nic.header_flags,
-                             CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP);
+                modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                             CLASSIC_NIC_RSS_FLAGS_IPV4_UDP);
             } else {
                 if (tcp.valid == TRUE) {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV4_TCP);
                 }
                 else {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV4);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV4);
                 }
             }
+            modify_field(p4_to_p4plus_classic_nic.csum_ip_ok,
+                         ~(control_metadata.checksum_results & (1 << CSUM_HDR_IP)));
+            modify_field(p4_to_p4plus_classic_nic.csum_ip_bad,
+                         (control_metadata.checksum_results & (1 << CSUM_HDR_IP)));
         }
         if (ipv6.valid == TRUE) {
             if (udp.valid == TRUE) {
-                modify_field(p4_to_p4plus_classic_nic.header_flags,
-                             CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP);
+                modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                             CLASSIC_NIC_RSS_FLAGS_IPV6_UDP);
             } else {
                 if (tcp.valid == TRUE) {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV6_TCP);
                 }
                 else {
-                    modify_field(p4_to_p4plus_classic_nic.header_flags,
-                                 CLASSIC_NIC_HEADER_FLAGS_IPV6);
+                    modify_field(p4_to_p4plus_classic_nic.rss_flags,
+                                 CLASSIC_NIC_RSS_FLAGS_IPV6);
                 }
             }
         }
@@ -138,26 +160,26 @@ action f_p4plus_app_classic_nic_prep() {
     if (inner_udp.valid == TRUE) {
         modify_field(p4_to_p4plus_classic_nic.l4_sport, inner_udp.srcPort);
         modify_field(p4_to_p4plus_classic_nic.l4_dport, inner_udp.dstPort);
+        modify_field(p4_to_p4plus_classic_nic.csum_udp_ok,
+                     ~(control_metadata.checksum_results & (1 << CSUM_HDR_INNER_UDP)));
+        modify_field(p4_to_p4plus_classic_nic.csum_udp_bad,
+                     (control_metadata.checksum_results & (1 << CSUM_HDR_INNER_UDP)));
     } else {
         if (udp.valid == TRUE) {
             modify_field(p4_to_p4plus_classic_nic.l4_sport, udp.srcPort);
             modify_field(p4_to_p4plus_classic_nic.l4_dport, udp.dstPort);
+            modify_field(p4_to_p4plus_classic_nic.csum_udp_ok,
+                         ~(control_metadata.checksum_results & (1 << CSUM_HDR_UDP)));
+            modify_field(p4_to_p4plus_classic_nic.csum_udp_bad,
+                         (control_metadata.checksum_results & (1 << CSUM_HDR_UDP)));
         }
         if (tcp.valid == TRUE) {
             modify_field(p4_to_p4plus_classic_nic.l4_sport, tcp.srcPort);
             modify_field(p4_to_p4plus_classic_nic.l4_dport, tcp.dstPort);
-        }
-    }
-
-    // checksum level (use generated value in ASM, not the ones in defines.h)
-    if (((control_metadata.checksum_results & (1 << CSUM_HDR_UDP)) != 0) or
-        (((control_metadata.checksum_results & (1 << CSUM_HDR_TCP)) != 0) and
-        ((inner_ipv4.valid == FALSE) and (inner_ipv6.valid == FALSE)))) {
-        if (((control_metadata.checksum_results & (1 << CSUM_HDR_TCP)) != 0) and
-            ((inner_ipv4.valid == FALSE) and (inner_ipv6.valid == FALSE))) {
-            modify_field(p4_to_p4plus_classic_nic.csum_level, 2);
-        } else {
-            modify_field(p4_to_p4plus_classic_nic.csum_level, 1);
+            modify_field(p4_to_p4plus_classic_nic.csum_tcp_ok,
+                         ~(control_metadata.checksum_results & (1 << CSUM_HDR_TCP)));
+            modify_field(p4_to_p4plus_classic_nic.csum_tcp_bad,
+                         (control_metadata.checksum_results & (1 << CSUM_HDR_TCP)));
         }
     }
 
@@ -173,9 +195,6 @@ action p4plus_app_classic_nic() {
         modify_field(p4_to_p4plus_classic_nic.vlan_valid, TRUE);
         remove_header(vlan_tag);
         subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
-    }
-    if (control_metadata.checksum_results == 0) {
-        modify_field(p4_to_p4plus_classic_nic.csum_ok, TRUE);
     }
     modify_field(p4_to_p4plus_classic_nic.packet_len,
                  capri_p4_intrinsic.packet_len);
@@ -202,7 +221,8 @@ action p4plus_app_ipsec() {
     modify_field(p4_to_p4plus_ipsec.p4plus_app_id,
                  control_metadata.p4plus_app_id);
     modify_field(p4_to_p4plus_ipsec.seq_no, ipsec_metadata.seq_no);
-    modify_field(p4_to_p4plus_ipsec.spi, (flow_lkp_metadata.lkp_sport << 16) | flow_lkp_metadata.lkp_dport);
+    modify_field(p4_to_p4plus_ipsec.spi, ((flow_lkp_metadata.lkp_sport << 16) |
+                                          flow_lkp_metadata.lkp_dport));
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
@@ -320,7 +340,7 @@ action f_p4plus_cpu_pkt(offset) {
     modify_field(p4_to_p4plus_cpu_pkt.lkp_type,
                  control_metadata.lkp_flags_egress);
     // Copy the src_tm_iq only for pkts from TxDMA
-    if ((control_metadata.lkp_flags_egress & (1 << CPU_LKP_FLAGS_LKP_DIR)) == 
+    if ((control_metadata.lkp_flags_egress & (1 << CPU_LKP_FLAGS_LKP_DIR)) ==
             (FLOW_DIR_FROM_DMA << CPU_LKP_FLAGS_LKP_DIR)) {
         modify_field(p4_to_p4plus_cpu_pkt.src_tm_iq, control_metadata.src_tm_iq);
     }

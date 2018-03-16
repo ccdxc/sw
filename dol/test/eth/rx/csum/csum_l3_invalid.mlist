@@ -1,0 +1,63 @@
+# Feature Test Modules List
+feature:
+    id          : eth
+    sub         : rx_csum_l3_invalid
+    package     : test.eth
+    module      : eth
+    spec        : csum_l3_invalid.testspec
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : NONIP
+        iterate:
+            - segment   : filter://native=True
+              flow      : filter://label=NETWORKING
+
+    - module:
+        name    : NONIP_QTAG
+        iterate:
+            - segment   : filter://native=False
+              flow      : filter://label=NETWORKING
+
+    - module:
+        name    : IPV4
+        iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV4_QTAG
+        iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=False
+
+    - module:
+        name    : IPV6
+        iterate:
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV6_QTAG
+        iterate:
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=False

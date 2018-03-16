@@ -19,15 +19,6 @@ p4plus_app_prep:
   phvwr       p.ethernet_l2csum, TRUE
   phvwr       p.p4_to_p4plus_classic_nic_l2csum, TRUE
 
-  // checksum level
-  setcf       c3, [c1|c2]
-  seq         c4, k.control_metadata_checksum_results[csum_hdr_udp], TRUE
-  seq.!c3     c4, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
-  phvwr.c4    p.p4_to_p4plus_classic_nic_csum_level, 1
-  seq.c3      c5, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
-  setcf       c4, [c4&c5]
-  phvwr.c4    p.p4_to_p4plus_classic_nic_csum_level, 2
-
   seq         c3, k.inner_ethernet_valid, TRUE
   bcf         [c1|c2|c3], p4plus_app_classic_nic_tunneled
   seq         c4, k.ipv4_valid, TRUE
@@ -35,87 +26,118 @@ p4plus_app_prep:
   phvwr       p.p4_to_p4plus_classic_nic_ip_valid, TRUE
   seq         c4, k.ipv6_valid, TRUE
   bcf         [c4], p4plus_app_classic_nic_native_ipv6_tcp
-  nop.!c4.e
+  add         r7, r0, r0
+  nop.e
   nop
 
 p4plus_app_classic_nic_native_ipv4_tcp:
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_ipv4], TRUE
+  cmov        r7, c7, 0x20, 0x10
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_native_ipv4_udp
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
+  cmov        r6, c7, 0x2, 0x1
+  or          r7, r7, r6
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_TCP
 
 p4plus_app_classic_nic_native_ipv4_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_ipv4
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_udp], TRUE
+  cmov        r6, c7, 0x2, 0x1
+  or          r7, r7, r6, 2
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_UDP
 
 p4plus_app_classic_nic_native_ipv6_tcp:
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_native_ipv6_udp
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
+  cmov        r7, c7, 0x2, 0x1
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_tcp_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_TCP
 
 p4plus_app_classic_nic_native_ipv6_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_ipv6
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_udp], TRUE
+  cmov        r7, c7, 0x2, 0x1
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_udp_bad,p4_to_p4plus_classic_nic_csum_udp_ok}, r7
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_UDP
 
 p4plus_app_classic_nic_tunneled:
   bcf         [c1], p4plus_app_classic_nic_tunneled_ipv4_tcp
   phvwr       p.p4_to_p4plus_classic_nic_inner_ip_valid, TRUE
   bcf         [c2], p4plus_app_classic_nic_tunneled_ipv6_tcp
-  nop.!c2.e
+  add         r7, r0, r0
+  nop.e
   nop
 
 p4plus_app_classic_nic_tunneled_ipv4_tcp:
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_inner_ipv4], TRUE
+  seq.!c7     c7, k.control_metadata_checksum_results[csum_hdr_ipv4], TRUE
+  cmov        r7, c7, 0x20, 0x10
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_tunneled_ipv4_udp
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
+  cmov        r6, c7, 0x2, 0x1
+  or          r7, r7, r6
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_TCP
 
 p4plus_app_classic_nic_tunneled_ipv4_udp:
   seq         c1, k.inner_udp_valid, TRUE
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_inner_udp], TRUE
+  cmov        r6, c7, 0x2, 0x1
+  or          r7, r7, r6, 2
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   bcf         [!c1], p4plus_app_classic_nic_ipv4
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_UDP
 
 p4plus_app_classic_nic_tunneled_ipv6_tcp:
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_ipv4], TRUE
+  cmov.c4     r7, c7, 0x20, 0x10
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_tunneled_ipv6_udp
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_tcp], TRUE
+  cmov        r6, c7, 0x2, 0x1
+  or          r7, r7, r6
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_TCP
 
 p4plus_app_classic_nic_tunneled_ipv6_udp:
   seq         c1, k.inner_udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_ipv6
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, \
+  seq         c7, k.control_metadata_checksum_results[csum_hdr_inner_udp], TRUE
+  cmov        r6, c7, 0x2, 0x1
+  or          r7, r7, r6, 2
+  phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP
-  nop
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_UDP
 
 p4plus_app_classic_nic_ipv4:
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV4
-  nop
+  phvwr.e     p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4
 
 p4plus_app_classic_nic_ipv6:
-  phvwr.e.f   p.p4_to_p4plus_classic_nic_header_flags, CLASSIC_NIC_HEADER_FLAGS_IPV6
-  nop
+  phvwr.e     p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
+  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -373,9 +373,12 @@
 /*****************************************************************************/
 /* Checksum flags from parser (for compiling P4 code only, don't use in ASM  */
 /*****************************************************************************/
-#define CSUM_HDR_UDP                   1
-#define CSUM_HDR_TCP                   2
+#define CSUM_HDR_IP                    0
+#define CSUM_HDR_INNER_IP              0
+#define CSUM_HDR_UDP                   0
 #define CSUM_HDR_UDP_OPT_OCS           0
+#define CSUM_HDR_TCP                   0
+#define CSUM_HDR_INNER_UDP             0
 
 // IPSEC
 #define IPSEC_HEADER_AH                1
@@ -474,44 +477,44 @@
 /*****************************************************************************/
 /* Classic NIC header flags                                                  */
 /*****************************************************************************/
-#define CLASSIC_NIC_HEADER_FLAGS_NONE          0x000
-#define CLASSIC_NIC_HEADER_FLAGS_IPV4          0x001
-#define CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP      0x003
-#define CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP      0x005
-#define CLASSIC_NIC_HEADER_FLAGS_IPV6          0x008
-#define CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP      0x018
-#define CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP      0x028
+#define CLASSIC_NIC_RSS_FLAGS_NONE     0x000
+#define CLASSIC_NIC_RSS_FLAGS_IPV4     0x001
+#define CLASSIC_NIC_RSS_FLAGS_IPV4_TCP 0x003
+#define CLASSIC_NIC_RSS_FLAGS_IPV4_UDP 0x005
+#define CLASSIC_NIC_RSS_FLAGS_IPV6     0x008
+#define CLASSIC_NIC_RSS_FLAGS_IPV6_TCP 0x018
+#define CLASSIC_NIC_RSS_FLAGS_IPV6_UDP 0x028
 
 /*****************************************************************************/
 /* CPU flags                                                                 */
 /*****************************************************************************/
-#define CPU_FLAGS_VLAN_VALID                   0x01
-#define CPU_FLAGS_IPV4_VALID                   0x02
-#define CPU_FLAGS_IPV6_VALID                   0x04
-#define CPU_FLAGS_IP_OPTIONS_PRESENT           0x08
-#define CPU_FLAGS_TCP_OPTIONS_PRESENT          0x10
+#define CPU_FLAGS_VLAN_VALID           0x01
+#define CPU_FLAGS_IPV4_VALID           0x02
+#define CPU_FLAGS_IPV6_VALID           0x04
+#define CPU_FLAGS_IP_OPTIONS_PRESENT   0x08
+#define CPU_FLAGS_TCP_OPTIONS_PRESENT  0x10
 
 /*****************************************************************************/
 /* CPU header packet types                                                   */
 /*****************************************************************************/
-#define CPU_PACKET_TYPE_NONE                   0
-#define CPU_PACKET_TYPE_IPV4                   1
-#define CPU_PACKET_TYPE_IPV6                   2
+#define CPU_PACKET_TYPE_NONE           0
+#define CPU_PACKET_TYPE_IPV4           1
+#define CPU_PACKET_TYPE_IPV6           2
 
 /*****************************************************************************/
 /* CPU LKP Flags                                                                 */
 /*****************************************************************************/
-#define CPU_LKP_FLAGS_LKP_TYPE_POS                 0
-#define CPU_LKP_FLAGS_LKP_INST                     4
-#define CPU_LKP_FLAGS_LKP_DIR                      5
+#define CPU_LKP_FLAGS_LKP_TYPE_POS     0
+#define CPU_LKP_FLAGS_LKP_INST         4
+#define CPU_LKP_FLAGS_LKP_DIR          5
 
 /*****************************************************************************/
 /* TCP OPTIONS                                                               */
 /*****************************************************************************/
-#define CPU_TCP_OPTIONS_WINDOW_SCALE          0x01
-#define CPU_TCP_OPTIONS_MSS                   0x02
-#define CPU_TCP_OPTIONS_TIMESTAMP             0x04
-#define CPU_TCP_OPTIONS_SACK_PERMITTED        0x08
+#define CPU_TCP_OPTIONS_WINDOW_SCALE   0x01
+#define CPU_TCP_OPTIONS_MSS            0x02
+#define CPU_TCP_OPTIONS_TIMESTAMP      0x04
+#define CPU_TCP_OPTIONS_SACK_PERMITTED 0x08
 
 /*****************************************************************************/
 /* ROCE flags                                                                */

@@ -1,10 +1,10 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : rx_csum_l2
+    sub         : rx_csum_valid
     package     : test.classic
     module      : classic
-    spec        : csum_l2.testspec
+    spec        : csum_valid.testspec
     enable      : True
     ignore      : False
 

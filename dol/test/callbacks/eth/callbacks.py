@@ -136,3 +136,16 @@ def GetL2Checksum(tc, obj, args=None):
     spktobj = tc.packets.db['EXP_PKT'].spktobj
     pkt = spktobj.spkt
     return checksum(bytes(pkt)) & 0xffff
+
+
+def GetIsIPV4(tc, obj, args=None):
+    return tc.config.flow.IsIPV4()
+
+
+def GetIsTCP(tc, obj, args=None):
+    return tc.config.flow.IsTCP()
+
+
+def GetIsUDP(tc, obj, args=None):
+    return tc.config.flow.IsUDP()
+

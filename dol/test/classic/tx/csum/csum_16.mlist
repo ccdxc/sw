@@ -1,7 +1,7 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : csum_16
+    sub         : tx_csum_16
     package     : test.classic
     module      : classic
     spec        : csum_16.testspec

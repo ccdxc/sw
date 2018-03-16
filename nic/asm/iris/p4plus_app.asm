@@ -39,9 +39,6 @@ p4plus_app_classic_nic:
   sub         r7, r7, 4
 
 p4plus_app_classic_nic_no_vlan_strip:
-  // checksum flags
-  seq         c1, k.control_metadata_checksum_results, r0
-  phvwr.c1    p.p4_to_p4plus_classic_nic_csum_ok, TRUE
   phvwrpair   p.p4_to_p4plus_classic_nic_valid, TRUE, \
               p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_deparser_len_udp_opt_l2_checksum_len, r7

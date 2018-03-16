@@ -46,11 +46,11 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
     // seq-no logic
-    seq c4, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, d.expected_seq_no
+    seq c4, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, d.expected_seq_no
     bcf [c4], ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no
-    slt c1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, d.expected_seq_no
+    slt c1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, d.expected_seq_no
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno
-    sub r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, d.expected_seq_no
+    sub r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, d.expected_seq_no
     slt c2, IPSEC_WIN_REPLAY_MAX_DIFF, r1 
     bcf [c2], ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed
     nop
@@ -62,7 +62,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
 
 .align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no:
-    phvwr p.t2_s2s_last_replay_seq_no, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31} 
+    phvwr p.t2_s2s_last_replay_seq_no, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31} 
     addi r1, r1, 1
     tblwr d.expected_seq_no, r1 
     nop
@@ -77,7 +77,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
     add r4, d.expected_seq_no, r3
     tblwr d.expected_seq_no, r4
     nop
-    phvwr p.t2_s2s_last_replay_seq_no,  k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31} 
+    phvwr p.t2_s2s_last_replay_seq_no,  k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31} 
     sllv r6, d.replay_seq_no_bmp, r3
     sllv r7, 1, r3
     or r6, r6, r7
@@ -88,7 +88,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
 
 .align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
-    sub r1, d.expected_seq_no, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}
+    sub r1, d.expected_seq_no, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}
     slt c1, r1, IPSEC_WIN_REPLAY_MAX_DIFF 
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz
     nop
@@ -96,7 +96,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     ori r3, r3, 1
     tblwr d.replay_seq_no_bmp, r3
     nop
-    add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, 1
+    add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, 1
     tblwr d.expected_seq_no, r1 
     nop.e
     nop
@@ -105,7 +105,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     tblwr d.replay_seq_no_bmp, 1 
     nop
-    add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, 1
+    add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7...p42p4plus_hdr_seq_no_sbit16_ebit31}, 1
     tblwr d.expected_seq_no, r1 
     nop.e
     nop

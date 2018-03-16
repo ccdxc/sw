@@ -147,16 +147,6 @@ header_type p4_to_p4plus_tcp_proxy_sack_header_t {
     }
 }
 
-/*
- * header flags :
- *  0       : ipv4
- *  1       : ipv4 tcp
- *  2       : ipv4 udp
- *  3       : ipv6
- *  4       : ipv6 tcp
- *  5       : ipv6 udp
- *  [6-11]  : unused
- */
 header_type p4_to_p4plus_classic_nic_header_t {
     fields {
         p4plus_app_id       : 4;
@@ -170,10 +160,15 @@ header_type p4_to_p4plus_classic_nic_header_t {
         vlan_vid            : 12;
         packet_len          : 16;
         csum                : 16;
-        csum_level          : 2;
-        csum_ok             : 1;
+        csum_ip_bad         : 1;
+        csum_ip_ok          : 1;
+        csum_udp_bad        : 1;
+        csum_udp_ok         : 1;
+        csum_tcp_bad        : 1;
+        csum_tcp_ok         : 1;
         vlan_valid          : 1;
-        header_flags        : 12;
+        pad                 : 3;
+        rss_flags           : 6;
         l4_sport            : 16;
         l4_dport            : 16;
     }

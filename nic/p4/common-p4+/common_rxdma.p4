@@ -1147,6 +1147,7 @@ header_type eth_rx_rss_params {
 @pragma scratch_metadata
 metadata eth_rx_rss_params eth_rx_rss_params_scratch;
 
+
 header_type p4_to_p4plus_classic_nic_header_ext_t {
     fields {
         p4plus_app_id       : 4;
@@ -1160,10 +1161,15 @@ header_type p4_to_p4plus_classic_nic_header_ext_t {
         vlan_vid            : 12;
         packet_len          : 16;
         csum                : 16;
-        csum_level          : 2;
-        csum_ok             : 1;
+        csum_ip_bad         : 1;
+        csum_ip_ok          : 1;
+        csum_udp_bad        : 1;
+        csum_udp_ok         : 1;
+        csum_tcp_bad        : 1;
+        csum_tcp_ok         : 1;
         vlan_valid          : 1;
-        header_flags        : 12;
+        pad                 : 3;
+        rss_flags           : 6;
         l4_sport            : 16;
         l4_dport            : 16;
         ip_sa               : 128;
@@ -1189,7 +1195,7 @@ action eth_rx_rss_params(rss_type, rss_key)
     modify_field(p4_to_p4plus_scratch.table2_valid, p4_to_p4plus.table2_valid);
     modify_field(p4_to_p4plus_scratch.table3_valid, p4_to_p4plus.table3_valid);
 
-    modify_field(p4_to_p4plus_scratch.header_flags, p4_to_p4plus.header_flags);
+    modify_field(p4_to_p4plus_scratch.rss_flags, p4_to_p4plus.rss_flags);
 
     // --- D-struct generation
     modify_field(eth_rx_rss_params_scratch.rss_type, rss_type);

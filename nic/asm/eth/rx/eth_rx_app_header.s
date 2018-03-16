@@ -1,7 +1,9 @@
 
 #include "INGRESS_p.h"
 #include "ingress.h"
-#include "defines.h"
+#include "INGRESS_common_p4plus_stage0_app_header_table_k.h"
+
+#include "../../asm/eth/rx/defines.h"
 
 struct phv_ p;
 struct common_p4plus_stage0_app_header_table_k k;
@@ -23,6 +25,7 @@ eth_rx_app_header:
 
   // Build completion entry in the PHV
   phvwr           p.eth_rx_cq_desc_csum, k.{p4_to_p4plus_csum}.hx
+  phvwr           p.{eth_rx_cq_desc_csum_ip_bad...eth_rx_cq_desc_csum_tcp_ok}, k.{p4_to_p4plus_csum_ip_bad...p4_to_p4plus_csum_tcp_ok}
   phvwr           p.eth_rx_cq_desc_vlan_strip, k.p4_to_p4plus_vlan_valid
   phvwr           p.eth_rx_cq_desc_vlan_tci, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid_sbit4_ebit11}.hx
   phvwr           p.eth_rx_cq_desc_len_lo, k.p4_to_p4plus_packet_len[7:0]
@@ -30,7 +33,7 @@ eth_rx_app_header:
 
 // Write RSS input to PHV
 eth_rx_rss_input:
-  and             r1, d.{rss_type}.hx, k.{p4_to_p4plus_header_flags_sbit0_ebit3, p4_to_p4plus_header_flags_sbit4_ebit11}
+  and             r1, d.{rss_type}.hx, k.p4_to_p4plus_rss_flags
 
   // Map RSS type flags (sparse number-space) to RSS enum (contiguous number-space)
   // Driver sets RSS type flags based on the packet types it wants to do RSS on.
