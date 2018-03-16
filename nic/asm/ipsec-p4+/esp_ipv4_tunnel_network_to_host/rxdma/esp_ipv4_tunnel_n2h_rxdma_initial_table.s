@@ -7,7 +7,6 @@ struct common_p4plus_stage0_app_header_table_k k;
 struct phv_ p;
 
 %%
-.param ipsec_esp_v4_tunnel_n2h_good_pkt 
 .align
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
@@ -37,9 +36,6 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_payload_size, r5 
     phvwr p.ipsec_to_stage3_iv_size, d.iv_size
 
-    phvwr p.ipsec_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
-    phvwr p.ipsec_global_qtype, k.p4_rxdma_intr_qtype
-    phvwr p.ipsec_global_qid, k.p4_rxdma_intr_qid
     add r2, r0, k.p42p4plus_hdr_ipsec_payload_end 
     addi.c1 r2, r2, IPV6_HDR_SIZE
     phvwr p.ipsec_global_packet_length, r2 
@@ -61,8 +57,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     sllv r3, 1, r1
     or r3, r3, d.replay_seq_no_bmp 
     tblwr  d.replay_seq_no_bmp, r3
-    nop
-    j ipsec_esp_v4_tunnel_n2h_good_pkt
+    nop.e
     nop
 
 .align 
@@ -73,8 +68,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no:
     nop
     sllv r3, d.replay_seq_no_bmp, 1
     tblwr d.replay_seq_no_bmp, r3
-    nop
-    j ipsec_esp_v4_tunnel_n2h_good_pkt
+    nop.e
     nop
 
 .align 
@@ -88,9 +82,6 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
     sllv r7, 1, r3
     or r6, r6, r7
     tblwr d.replay_seq_no_bmp, r6
-    nop
-    j ipsec_esp_v4_tunnel_n2h_good_pkt
-    nop
     nop.e
     nop
  
@@ -107,9 +98,6 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     nop
     add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, 1
     tblwr d.expected_seq_no, r1 
-    nop
-    j ipsec_esp_v4_tunnel_n2h_good_pkt
-    nop
     nop.e
     nop
 
@@ -119,9 +107,6 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     nop
     add r1, k.{p42p4plus_hdr_seq_no_sbit0_ebit7, p42p4plus_hdr_seq_no_sbit8_ebit31}, 1
     tblwr d.expected_seq_no, r1 
-    nop
-    j ipsec_esp_v4_tunnel_n2h_good_pkt
-    nop
     nop.e
     nop
  

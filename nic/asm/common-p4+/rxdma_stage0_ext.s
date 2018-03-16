@@ -19,6 +19,7 @@
     .param      resp_rx_rqcb_process_ext
     .param      req_rx_sqcb1_process_ext
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2 
+    .param      ipsec_esp_v4_tunnel_n2h_good_pkt
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -74,7 +75,7 @@ cpu_rx_stage0:
 
 .align
 ipsec_rx_n2h_stage0:
-    nop.e
+    j ipsec_esp_v4_tunnel_n2h_good_pkt 
     nop
 
 .align

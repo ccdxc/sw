@@ -1,6 +1,7 @@
 #include "../../common-p4+/common_rxdma_dummy.p4"
 
 #define rx_table_s0_t0_action esp_v4_tunnel_n2h_rxdma_initial_table 
+#define rx_table_s0_t1_action esp_v4_tunnel_n2h_rxdma_initial_table 
 #define common_p4plus_stage0_app_header_table_action_dummy esp_v4_tunnel_n2h_rxdma_initial_table
 
 #define rx_table_s1_t0_action esp_v4_tunnel_n2h_allocate_input_desc_semaphore 

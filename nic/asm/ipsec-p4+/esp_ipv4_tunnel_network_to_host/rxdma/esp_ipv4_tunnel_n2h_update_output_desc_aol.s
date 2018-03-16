@@ -11,8 +11,7 @@ struct phv_ p;
         .align
 
 esp_ipv4_tunnel_n2h_update_output_desc_aol:
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.app_header_table1_valid, 0
+    phvwri p.{app_header_table0_valid...app_header_table1_valid}, 2
     phvwr p.barco_desc_out_A0_addr, k.{t1_s2s_out_page_addr}.dx 
     // get the correct way of giving it as a single 14 bit field
     add r2, k.ipsec_to_stage3_payload_size, ESP_FIXED_HDR_SIZE
