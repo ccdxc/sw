@@ -18,7 +18,6 @@ esp_ipv4_tunnel_n2h_allocate_input_page_semaphore:
     addi r1, r1, loword(RNMPR_TABLE_BASE)
     phvwr  p.common_te2_phv_table_addr, r1
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_page_index[33:6] 
-    phvwri p.common_te2_phv_table_lock_en, 0
-    phvwri p.common_te2_phv_table_raw_table_size, 3 
+    phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 11 
     nop.e 
     nop

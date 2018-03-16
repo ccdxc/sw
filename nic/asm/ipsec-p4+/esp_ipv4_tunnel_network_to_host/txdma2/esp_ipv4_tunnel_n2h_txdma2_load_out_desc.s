@@ -19,5 +19,12 @@ esp_ipv4_tunnel_n2h_txdma2_load_out_desc:
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_pad_size_l4_proto[33:6]
     phvwr  p.common_te0_phv_table_addr, r2 
 
+    phvwri p.p4_txdma_intr_dma_cmd_ptr, N2H_TXDMA2_DMA_COMMANDS_OFFSET
+    phvwri p.p4plus2p4_hdr_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
+
+    phvwri p.ipsec_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    phvwri p.ipsec_app_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_APP_HEADER_START
+    phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr, IPSEC_TXDMA2_APP_HEADER_END
+
     nop.e
     nop 
