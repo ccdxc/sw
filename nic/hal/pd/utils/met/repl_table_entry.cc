@@ -175,11 +175,14 @@ ReplTableEntry::program_table()
         }
     }
 
-    HAL_TRACE_DEBUG("Program Replication Table Entry: is_last:{}, "
+    HAL_TRACE_DEBUG("Program Replication Table Entry: Index:{} is_last:{}, "
                     "num_elems:{}, next_ptr:{}", 
+                    get_repl_table_index(),
                     p4pd_entry.get_last_entry(),
                     p4pd_entry.get_num_tokens(), 
                     p4pd_entry.get_next_ptr());
+    HAL_ASSERT(!(p4pd_entry.get_last_entry() == 0 &&
+               get_repl_table_index() == p4pd_entry.get_next_ptr()));
     return p4pd_repl_entry_write(get_repl_table_index(), &p4pd_entry);
 }
 

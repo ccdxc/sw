@@ -193,7 +193,7 @@ TEST_F(enicif_test, test2)
     NetworkSpec                 nw_spec;
     NetworkResponse             nw_rsp;
     InterfaceDeleteRequest      del_req;
-    InterfaceDeleteResponseMsg  del_rsp;
+    InterfaceDeleteResponse     del_rsp;
     int                         num_l2segs = 10;
     uint64_t                    l2seg_hdls[10] = { 0 };
     NetworkKeyHandle                *nkh = NULL;
@@ -254,6 +254,7 @@ TEST_F(enicif_test, test2)
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(21);
+    lif_spec.mutable_packet_filter()->set_receive_broadcast(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();
@@ -344,7 +345,114 @@ TEST_F(enicif_test, test2)
     ret = hal::lif_update(lif_spec, &lif_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(21);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
     
+    // Create classic enic
+    enicif_spec1.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
+    enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
+    enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
+    enicif_spec1.mutable_if_enic_info()->set_pinned_uplink_if_handle(up_hdl);
+    l2kh = enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh->set_l2segment_handle(l2seg_hdls[1]);
+    l2kh = enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh->set_l2segment_handle(l2seg_hdls[2]);
+    enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_hdls[3]);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(21);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // Create classic enic
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(21);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // Create classic enic
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(21);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // Create classic enic
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(21);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // Create classic enic
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(21);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // Create classic enic
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(21);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // Create classic enic
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Update classic enic - Change native l2seg
     // Update classic enic - Change l2seg list

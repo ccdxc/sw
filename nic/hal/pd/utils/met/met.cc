@@ -22,6 +22,12 @@ Met::factory(std::string table_name, uint32_t table_id,
 
     met = new (mem) Met(table_name, table_id, repl_table_capacity, 
                         num_repl_entries, repl_entry_data_len);
+
+    HAL_TRACE_DEBUG("met: table_name: {}, tableid: {}, repl_table_capacity:{}"
+                    "num_repl_entries:{}, repl_entry_data_len:{}",
+                    met->table_name_, met->table_id_, met->repl_table_capacity_, 
+                    met->max_num_repls_per_entry_, 
+                    met->repl_entry_data_len_);
     return met;
 }
 
