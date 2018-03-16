@@ -110,8 +110,8 @@ SSL_CTX* InitServerCTX(void)
 {
   SSL_CTX *ctx;
 
-  ctx = SSL_CTX_new(SSLv23_server_method());/* create new context from method */
-  //ctx = SSL_CTX_new(TLS_server_method());/* create new context from method */
+  //ctx = SSL_CTX_new(SSLv23_server_method());/* create new context from method */
+  ctx = SSL_CTX_new(TLS_server_method());/* create new context from method */
 
   if ( ctx == NULL )
     {
@@ -202,10 +202,12 @@ void *main_server(void* unused)
   SSL_CTX *ctx;
 
   ctx = InitServerCTX();/* initialize SSL */
-  LoadCertificates(ctx, "ca.crt", "ca.pem");/* load certs */
-  //LoadCertificates(ctx, "rsa.crt", "rsa.key");/* load certs */
-  SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
+  //LoadCertificates(ctx, "ca.crt", "ca.pem");/* load certs */
+  //SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
+  LoadCertificates(ctx, "rsa.crt", "rsa.key");/* load certs */
   //SSL_CTX_set_cipher_list(ctx, "ECDHE-RSA-AES128-SHA");
+  //SSL_CTX_set_cipher_list(ctx, "ECDHE-RSA-AES128-GCM-SHA256");
+  SSL_CTX_set_cipher_list(ctx, "AES256-SHA256");
 
   int server = OpenListener(port);/* create server socket */
   while (1)

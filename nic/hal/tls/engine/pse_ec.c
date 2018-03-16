@@ -1,6 +1,5 @@
 #include "e_pse.h"
 #include "pse_ec.h"
-#include "nic/hal/pd/pd_api_c.h"
 static EC_KEY_METHOD *pse_ec_method = NULL;
 
 // Methods
@@ -217,17 +216,18 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
 
     //LOG_BUFFER("p:", bp); 
     INFO("ECDSA parameters: ");
-    LOG_BUFFER("p", bp);
-    LOG_BUFFER("p", bn);
-    LOG_BUFFER("p", bxg);
-    LOG_BUFFER("p", byg);
-    LOG_BUFFER("p", ba);
-    LOG_BUFFER("p", bb);
-    LOG_BUFFER("p", bxq);
-    LOG_BUFFER("p", byq);
-    LOG_BUFFER("p", br);
-    LOG_BUFFER("p", bs);
-   
+    LOG_BUFFER("bp", bp);
+    LOG_BUFFER("bn", bn);
+    LOG_BUFFER("bxg", bxg);
+    LOG_BUFFER("byg", byg);
+    LOG_BUFFER("ba", ba);
+    LOG_BUFFER("bb", bb);
+    LOG_BUFFER("bxq", bxq);
+    LOG_BUFFER("byq", byq);
+    LOG_BUFFER("br", br);
+    LOG_BUFFER("bs", bs);
+
+#ifndef NO_PEN_HW_OFFLOAD
     // Send verify request to barco
     ret = pd_tls_asym_ecdsa_p256_sig_verify(bp.data,
                                             bn.data, 
@@ -240,6 +240,7 @@ int pse_ecdsa_verify_sig(const unsigned char *dgst,
                                             br.data,
                                             bs.data,
                                             (uint8_t*)dgst);
+#endif
     INFO("Return value: ret %d", ret);
 cleanup:
     if(ctx) {

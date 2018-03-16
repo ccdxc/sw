@@ -357,8 +357,9 @@ SSLHelper::init_pse_engine()
     HAL_TRACE_DEBUG("Successfully loaded OpenSSL Engine: {} init result: {}",
                             ENGINE_get_name(pse_engine), ret);
 
-    ret = ENGINE_set_default_EC(pse_engine);
-    HAL_TRACE_DEBUG("Setting PSE as the default for ECDSA: {}", ret);
+    ENGINE_set_default_EC(pse_engine);
+    ENGINE_set_default_RSA(pse_engine);
+    
     return HAL_RET_OK;
 }
 
@@ -370,8 +371,6 @@ SSLHelper::init_ssl_ctxt()
     // Client
     client_ctx =  SSL_CTX_new(SSLv23_client_method());
     HAL_ASSERT(client_ctx != NULL);
-    SSL_CTX_set_options(client_ctx, SSL_OP_NO_SSLv2);
-    SSL_CTX_set_cipher_list(client_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
     SSL_CTX_set_info_callback(client_ctx, ssl_info_callback);
 
     // Server

@@ -29,12 +29,14 @@ cc_library(
         "hal_pd.cc",
         "pd.hpp",
         "pd_api.hpp",
+        "pd_api_c.h",
     ],
     hdrs = [
         "cpupkt_api.hpp",
         "cpupkt_headers.hpp",
         "pd.hpp",
         "pd_api.hpp",
+        "pd_api_c.h",
     ],
     copts = sdk_copts,
     deps = [

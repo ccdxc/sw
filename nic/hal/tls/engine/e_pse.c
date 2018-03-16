@@ -2,6 +2,7 @@
 #include <string.h>
 #include "e_pse.h"
 #include "pse_ec.h"
+#include "pse_rsa.h"
 
 /* OpenSSL includes */
 
@@ -20,7 +21,6 @@ static int pse_bind_helper(ENGINE* eng, const char *id)
     if(!pse_init_log()) {
         return 0;
     }
-    INFO("Starting Bind\n");
 
     if(id && (strcmp(id, engine_pse_id) != 0)) {
         WARN("ENGINE_id defined already!");
@@ -40,11 +40,15 @@ static int pse_bind_helper(ENGINE* eng, const char *id)
         WARN("ENGINE_set_EC failed");
         goto cleanup;
     }
+ 
+    if(!ENGINE_set_RSA(eng, pse_get_RSA_methods())) {
+        WARN("ENGINE_set_RSA failed");
+        goto cleanup;
+    }
     
     ret = 1;
-    INFO("pse bind completed");
 cleanup:
-    INFO("return value: %d\n", ret);
+    INFO("pse bind completed. ret: %d", ret);
     return ret;
 }
 

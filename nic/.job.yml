@@ -77,3 +77,4 @@ logfiles:
   - /sw/nic/http_client.log
   - /sw/nic/http_server.log
   - /sw/nic/gen/capri_loader.conf
+  - /sw/nic/pse.log

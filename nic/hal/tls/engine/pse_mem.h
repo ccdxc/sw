@@ -11,11 +11,15 @@ typedef struct pse_buffer_s {
 
 #define LOG_BUFFER(name, buf)       \
     INFO(name);                     \
-    INFO("\t len: %d", buf.len);   \
+    INFO("len: %d", buf.len);   \
     HEX_DUMP(buf.data, buf.len);
 
-int pse_BN_to_buffer(const BIGNUM* bn, pse_buffer_t *buf);
+#define PSE_MALLOC(sz)  \
+        malloc(sz);
 
+int pse_BN_to_buffer(const BIGNUM* bn, pse_buffer_t *buf);
+int pse_BN_to_buffer_pad256(const BIGNUM* bn, pse_buffer_t *buf);
+int pse_BN_to_buffer_pad(const BIGNUM* bn, pse_buffer_t *buf, int tolen);
 void pse_free_buffer(pse_buffer_t* buf);
 
 #endif /* __PSE_MEM_H__ */

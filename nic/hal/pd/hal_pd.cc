@@ -864,5 +864,22 @@ pd_tls_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     return 1;
 }
 
+extern "C" int 
+pd_tls_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e, uint8_t *m,  uint8_t *c)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_capri_barco_asym_rsa2k_encrypt_args_t args = {0};
+    args.n = n;
+    args.e = e;
+    args.m = m;
+    args.c = c;
+
+    ret = hal_pd_call(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, (void*)&args);
+    if (ret != HAL_RET_OK) {
+        return -1;
+    }
+    return 1;
+}
+
 }    // namespace pd
 }    // namespace hal

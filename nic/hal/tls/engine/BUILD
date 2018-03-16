@@ -11,6 +11,6 @@ cc_library(
     deps = [
         "//nic:openssl",
         "//nic/utils/trace",
-        "//nic/hal/pd:hal_pd_includes",
+        "//nic/hal/pd:pdcommon",
     ],
 )
