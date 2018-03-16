@@ -46,14 +46,14 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 #define RX2TX_SHARED_STATE \
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
-        snd_wnd                         : SEQ_NUMBER_WIDTH      ;\
+        snd_wnd                         : 16                    ;\
         ft_pi                           : 16                    ;\
         rto                             : 16                    ;\
         rx_flag                         : 8                     ;\
         state                           : 8                     ;\
         pending_ack_send                : 1                     ;\
         saved_pending_ack_send          : 1                     ;\
-        pad1_rx2tx                      : 14                    ;
+        pad1_rx2tx                      : 30                    ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \

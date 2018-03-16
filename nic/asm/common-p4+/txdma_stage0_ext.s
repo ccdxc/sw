@@ -18,6 +18,7 @@
 
     .param      req_tx_sqcb_process_ext
     .param      resp_tx_rqcb_process_ext
+    .param      tcp_tx_read_rx2tx_shared_process_ext
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -58,7 +59,7 @@ eth_tx_stage0:
 
 .align
 tcp_tx_stage0:
-    nop.e
+    j tcp_tx_read_rx2tx_shared_process_ext
     nop
 
 .align

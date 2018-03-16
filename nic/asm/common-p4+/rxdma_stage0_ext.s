@@ -20,6 +20,7 @@
     .param      req_rx_sqcb1_process_ext
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2 
     .param      ipsec_esp_v4_tunnel_n2h_good_pkt
+    .param      tcp_rx_read_shared_stage0_start_ext
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -60,7 +61,7 @@ eth_tx_stage0_dummy:
 
 .align
 tcp_rx_stage0:
-    nop.e
+    j tcp_rx_read_shared_stage0_start_ext
     nop
 
 .align

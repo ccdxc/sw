@@ -650,7 +650,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
         data.u.read_rx2tx_d.eval_last = 1 << TCP_SCHED_RING_FT;
         data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_ST;
-        data.u.read_rx2tx_d.snd_wnd = htonl(tcpcb_pd->tcpcb->snd_wnd);
+        data.u.read_rx2tx_d.snd_wnd = htons(tcpcb_pd->tcpcb->snd_wnd);
         data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
         if (!debug_dol_timer_full_hw_id &&
                 tcpcb_pd->tcpcb->debug_dol_tx & TCP_TX_DDOL_FORCE_TIMER_FULL) {

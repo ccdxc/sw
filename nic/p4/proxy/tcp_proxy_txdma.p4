@@ -185,7 +185,7 @@ header_type common_global_phv_t {
     fields {
         // global k (max 128)
         fid                     : 24;
-        qstate_addr             : HBM_ADDRESS_WIDTH;
+        qstate_addr             : 34;
         snd_una                 : SEQ_NUMBER_WIDTH;
         rx_flag                 : 8;
         fin                     : 1;

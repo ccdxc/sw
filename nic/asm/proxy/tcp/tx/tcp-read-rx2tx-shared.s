@@ -23,17 +23,6 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
     .param          tcp_tx_process_read_xmit_start
 
 tcp_tx_read_rx2tx_shared_process:
-    phvwr           p.common_phv_fid, k.p4_txdma_intr_qid
-    phvwr           p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.common_phv_snd_una, d.snd_una
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
-    phvwr           p.to_s5_state, d.state
-    CAPRI_OPERAND_DEBUG(d.snd_wnd)
-    //CAPRI_OPERAND_DEBUG(d.snd_cwnd)
-    //phvwr           p.t0_s2s_snd_cwnd, d.snd_cwnd
-    phvwr           p.t0_s2s_snd_wnd, d.snd_wnd
-    phvwr           p.t0_s2s_rto, d.rto
-
     // This table need not be locked since it is read-only.
     // Moreover it should not be locked to prevent the bypass
     // cache from being used (bypass cache cannot be used,

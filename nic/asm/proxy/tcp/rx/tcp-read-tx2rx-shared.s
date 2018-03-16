@@ -24,11 +24,7 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 tcp_rx_read_shared_stage0_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
-    add             r6, r0, r0
 #endif
-    /* Debug instruction */
-    CAPRI_CLEAR_TABLE0_VALID
-
     tblwr           d.rx_ts, r4
 
     add             r1, r0, k.p4_rxdma_intr_qstate_addr
@@ -73,26 +69,12 @@ table_read_RX:
                 tcp_rx_read_tls_stage0_start, d.tls_stage0_ring0_addr,
                 TABLE_SIZE_32_BITS)
 
-    //TODO: move to s2s phvwr        p.common_phv_rcv_tsecr, k.tcp_app_header_prev_echo_ts
-
-
     /* Setup the to-stage/stage-to-stage variables based
      * on the p42p4+ app header info
      */
-    phvwr           p.to_s2_flags, k.tcp_app_header_flags
-    phvwrpair       p.to_s2_seq, k.tcp_app_header_seqNo, \
-                        p.to_s2_ack_seq, k.tcp_app_header_ackNo
-    phvwr           p.{cpu_hdr2_tcp_window_1,cpu_hdr3_tcp_window_2}, k.{tcp_app_header_window}.hx
-
-    phvwr           p.to_s2_snd_nxt, d.snd_nxt
-
-    phvwrpair       p.to_s3_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
-                        p.to_s3_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
     phvwrpair       p.s1_s2s_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
                         p.s1_s2s_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
     phvwr           p.to_s3_rcv_tsecr, k.tcp_app_header_prev_echo_ts
-
-    phvwr           p.to_s6_payload_len, k.tcp_app_header_payload_len
 
     phvwrpair       p.common_phv_fid, k.p4_rxdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr
@@ -106,7 +88,7 @@ table_read_RX:
     phvwrpair       p.s1_s2s_rcv_wup, d.rcv_wup, \
                         p.s1_s2s_packets_out, d.packets_out
 
-    phvwr.f         p.s1_s2s_payload_len, k.tcp_app_header_payload_len
+    phvwr.f         p.to_s6_payload_len, k.tcp_app_header_payload_len
 
 flow_terminate:
     nop.e

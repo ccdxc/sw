@@ -36,6 +36,7 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-read-rnmpr-alloc-idx.s \
     $(SRC_DIR)/tcp-l7-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared.s \
+    $(SRC_DIR)/tcp-read-tx2rx-shared-ext.s \
     $(SRC_DIR)/tcp-rpage-alloc.s \
     $(SRC_DIR)/tcp-l7-rdesc-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \

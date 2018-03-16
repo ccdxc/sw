@@ -39,6 +39,7 @@ ORIG_SRC_FILES := \
 
 SRC_FILES := \
     $(SRC_DIR)/tcp-read-rx2tx-shared.s \
+    $(SRC_DIR)/tcp-read-rx2tx-shared-ext.s \
     $(SRC_DIR)/tcp-read-rx2tx-shared-extra.s \
     $(SRC_DIR)/tcp-read-sesq-ci.s \
 	$(SRC_DIR)/tcp-tx-process-pending.s \
