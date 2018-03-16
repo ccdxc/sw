@@ -414,8 +414,9 @@
                         STAGE0_KIVEC_QID)				\
 
 // Queue pop doorbell clear is done in two stages:
-// 1. table write of w_ndx to c_ndx (this should make p_ndx == c_ndx)
-// 2. scheduler bit clear with reset 
+// 1. table write of w_ndx to c_ndx 
+// 2. scheduler bit clear with reset (eval won't work as p_ndx may not
+//    be equal to c_ndx)
 #define QUEUE_POP_DOORBELL_CLEAR_RESET					\
    tblwr d.c_ndx, d.w_ndx;						\
    QUEUE_DOORBELL_CLEAR(r0, DOORBELL_SCHED_WR_RESET,			\
@@ -426,7 +427,8 @@
 // Queue pop doorbell clear is done in two stages:
 // 1. table write of w_ndx to c_ndx for all priorities 
 //    (this should make p_ndx == c_ndx for all priorities)
-// 2. scheduler bit clear with reset 
+// 2. scheduler bit clear with reset (eval won't work as p_ndx may not
+//    be equal to c_ndx for all priorities)
 #define PRI_QUEUE_POP_DOORBELL_CLEAR_RESET				\
    tblwr d.c_ndx_lo, d.w_ndx_lo;					\
    tblwr d.c_ndx_med, d.w_ndx_med;					\
@@ -751,5 +753,22 @@
                      _dst_dma_cmd)					\
    add		_xfer_len, _xfer_len, r3;				\
    
+
+#define NVME_DATA_XFER_TO_HOST(_prp_entry, _dst_addr, _data_len, 	\
+                               _xfer_len,  _src_dma_cmd, _dst_dma_cmd,	\
+                               _branch_instr)				\
+   sne		c1, _prp_entry, 0;					\
+   slt		c2, _xfer_len, _data_len;				\
+   bcf		[!c1 | !c2], _branch_instr;				\
+   sub		r3, _data_len, _xfer_len;				\
+   slt		c3, r3, PRP_DATA_XFER_SIZE;				\
+   add.c3	r3, r0, PRP_DATA_XFER_SIZE;				\
+   add		r4, _dst_addr, _xfer_len;				\
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4, r3, 0, 0,		\
+                     _src_dma_cmd)					\
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, _prp_entry, r3, 0, 0,	\
+                     _dst_dma_cmd)					\
+   add		_xfer_len, _xfer_len, r3;				\
+
 
 #endif     // STORAGE_ASM_DEFINES_H

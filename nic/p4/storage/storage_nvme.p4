@@ -32,8 +32,10 @@
 #define tx_table_s4_t0_action1	send_read_data
 
 #define tx_table_s5_t0_action	handle_no_prp_list
+#define tx_table_s5_t0_action1	lookup_sq
 
 #define tx_table_s6_t0_action	process_dst_seq
+#define tx_table_s6_t0_action1	push_cq
 
 #define tx_table_s7_t0_action	push_arm_q
 #define tx_table_s7_t1_action	push_dst_seq_q
@@ -796,7 +798,7 @@ action process_dst_seq(lif, qtype, qid, qaddr) {
 @pragma little_endian p_ndx c_ndx
 action push_arm_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                   total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                  num_entries, base_addr, entry_size, next_pc, vf_id, 
+                  num_entries, base_addr, entry_size, next_pc, 
                   intr_addr, intr_data, intr_en, phase, pad) {
 
 
@@ -853,8 +855,8 @@ action push_arm_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 @pragma little_endian p_ndx c_ndx
 action push_dst_seq_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                       total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                      num_entries, base_addr, entry_size, next_pc, dst_qaddr,
-                      dst_lif, dst_qtype, dst_qid, pad) {
+                      num_entries, base_addr, entry_size, next_pc,
+                      dst_lif, dst_qtype, dst_qid, dst_qaddr, pad) {
 
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -924,8 +926,8 @@ action push_dst_seq_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 @pragma little_endian p_ndx c_ndx
 action pop_r2n_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                   total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-                  num_entries, base_addr, entry_size, next_pc, dst_qaddr,
-                  dst_lif, dst_qtype, dst_qid, pad) {
+                  num_entries, base_addr, entry_size, next_pc,
+                  dst_lif, dst_qtype, dst_qid, dst_qaddr, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   Q_STATE_COPY_STAGE0(q_state_scratch)
@@ -952,6 +954,14 @@ action pop_r2n_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     modify_field(nvme_kivec_t0_s2s.dst_qtype, dst_qtype);
     modify_field(nvme_kivec_t0_s2s.dst_qid, dst_qid);
     modify_field(nvme_kivec_t0_s2s.dst_qaddr, dst_qaddr);
+
+    // Load the table and program for processing the queue entry in the next stage
+    CAPRI_LOAD_TABLE_IDX(common_te0_phv,
+                         q_state_scratch.base_addr,
+                         q_state_scratch.w_ndx,
+                         q_state_scratch.entry_size,
+                         q_state_scratch.entry_size,
+                         handle_r2n_wqe_start)
   }
 }
 
@@ -1004,6 +1014,10 @@ action process_be_status(time_us, be_status, is_q0, be_rsvd, r2n_buf_handle,
     modify_field(nvme_kivec_global.oper_status, IO_CTX_OPER_STATUS_BE_ERROR);
   }
 
+  // Store the I/O context to K+I vector 
+  modify_field(nvme_kivec_t0_s2s.iob_addr, iob_addr);
+  
+
   // Load the I/O context for processing in the next stage
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr + IO_BUF_IO_CTX_OFFSET,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, process_io_ctx_start)
@@ -1035,7 +1049,7 @@ action process_io_ctx(iob_addr, nvme_data_len, oper_status, is_read, is_remote,
 
   // Form the oper status in the K+I vector 
   if ((nvme_kivec_global_scratch.oper_status != IO_CTX_OPER_STATUS_BE_ERROR) and
-      (nvme_kivec_global_scratch.oper_status != IO_CTX_OPER_STATUS_TIMED_OUT)) {
+      (io_ctx_scratch.oper_status != IO_CTX_OPER_STATUS_TIMED_OUT)) {
     modify_field(nvme_kivec_global.oper_status, IO_CTX_OPER_STATUS_COMPLETED);
   }
 
@@ -1061,6 +1075,8 @@ action process_io_ctx(iob_addr, nvme_data_len, oper_status, is_read, is_remote,
     modify_field(nvme_kivec_t0_s2s.is_read, 1);
     modify_field(nvme_kivec_global.nvme_data_len, io_ctx_scratch.nvme_data_len);
   }
+
+  // TODO: Branch off for large data xfers
 
   // Load the I/O context for processing in the next stage
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
@@ -1128,10 +1144,10 @@ action lookup_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   modify_field(nvme_kivec_t0_s2s.dst_qaddr, cq_qaddr);
 
   // Store the c_ndx in the NVME status as SQ head
-  modify_field(nvme_sta.sq_head, c_ndx);
+  modify_field(nvme_sta.sq_head, nvme_sq_state_scratch.c_ndx);
 
   // Load the NVME CQ to push the NVME status in the next stage
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, cq_qaddr, 
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, nvme_sq_state_scratch.cq_qaddr, 
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, push_cq_start)
 }
 
@@ -1144,7 +1160,7 @@ action lookup_sq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 @pragma little_endian p_ndx c_ndx
 action push_cq(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                total_rings, host_rings, pid, p_ndx, c_ndx, w_ndx,
-               num_entries, base_addr, entry_size, next_pc, vf_id, 
+               num_entries, base_addr, entry_size, next_pc,
                intr_addr, intr_data, intr_en, phase, pad) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly

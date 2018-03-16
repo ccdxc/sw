@@ -40,11 +40,13 @@ storage_nvme_push_arm_q_start:
    // Check if interrupt is enabled and branch
    seq		c1, d.intr_en, 1
    bcf		[c1], send_intr
+   nop
 
    // Setup the start and end DMA pointers and branch to table load
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_14_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
    b		tbl_load
+   nop
 
 send_intr:
    // Raise the interrupt with a DMA update

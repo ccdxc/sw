@@ -676,6 +676,7 @@ table tx_table_s6_t0 {
     }
     actions {
         tx_table_s6_t0_action;
+        tx_table_s6_t0_action1;
         tx_table_s6_t0_cfg_action;
     }
 }

@@ -26,10 +26,10 @@ header_type q_state_t {
     base_addr	: 64;	// Base address of queue entries
     entry_size	: 16;	// Size of each queue entry
     next_pc	: 28;	// Next program's PC
-    dst_qaddr	: 34;	// Destination queue state address
     dst_lif	: 11;	// Destination LIF number
     dst_qtype	: 3;	// Destination LIF type (within the LIF)
     dst_qid	: 24;	// Destination queue number (within the LIF)
+    dst_qaddr	: 34;	// Destination queue state address
     pad		: 204;	// Align to 64 bytes
   }
 }
@@ -66,7 +66,7 @@ header_type nvme_sq_state_t {
     io_map_base_addr	: 34;	// IO map table base address (entry = base + (nsid * size))
     io_map_num_entries	: 16;	// Number of entries in the IO map table
     iob_ring_base_addr	: 34;	// IOB ring base address (free list of IOBs)
-    pad			: 15;	// Align to 64 bytes
+    pad			: 16;	// Align to 64 bytes
   }
 }
 
@@ -293,10 +293,10 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(q_state.base_addr, base_addr);		\
   modify_field(q_state.entry_size, entry_size);		\
   modify_field(q_state.next_pc, next_pc);		\
-  modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.dst_lif, dst_lif);		\
   modify_field(q_state.dst_qtype, dst_qtype);		\
   modify_field(q_state.dst_qid, dst_qid);		\
+  modify_field(q_state.dst_qaddr, dst_qaddr);		\
 
 #define Q_STATE_COPY(q_state)				\
   Q_STATE_COPY_STAGE0(q_state)				\
@@ -510,11 +510,12 @@ header_type nvme_kivec_arm_dst_t {
 #define process_dst_seq_start		0x81080000
 #define push_arm_q_start		0x81090000
 #define push_dst_seq_q_start		0x810A0000
-#define process_be_status_start		0x810B0000
-#define process_io_ctx_start		0x810C0000
-#define send_read_data_start		0x810D0000
-#define lookup_sq_start			0x810E0000
-#define push_cq_start			0x810F0000
+#define handle_r2n_wqe_start		0x810B0000
+#define process_be_status_start		0x810C0000
+#define process_io_ctx_start		0x810D0000
+#define send_read_data_start		0x810E0000
+#define lookup_sq_start			0x810F0000
+#define push_cq_start			0x81100000
 
 
 #endif     // STORAGE_NVME_P4_HDR_H
