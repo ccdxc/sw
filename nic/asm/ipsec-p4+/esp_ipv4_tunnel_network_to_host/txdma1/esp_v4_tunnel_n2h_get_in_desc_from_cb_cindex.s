@@ -12,10 +12,16 @@ struct phv_ p;
         .align
 esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex:
 
-    phvwri p.app_header_table1_valid, 0
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_lock_en, 1
+    phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri p.brq_req_write_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
+    phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END
+    phvwri p.p4_txdma_intr_dma_cmd_ptr, N2H_TXDMA1_DMA_COMMANDS_OFFSET
+    phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+
+
+    phvwri p.{app_header_table0_valid...app_header_table1_valid}, 2
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header[33:6] 
-    phvwri p.common_te0_phv_table_raw_table_size, 6
-    phvwr.e p.common_te0_phv_table_addr, d.in_desc_addr
+    phvwr.f p.common_te0_phv_table_addr, d.in_desc_addr
+    nop.e
     nop

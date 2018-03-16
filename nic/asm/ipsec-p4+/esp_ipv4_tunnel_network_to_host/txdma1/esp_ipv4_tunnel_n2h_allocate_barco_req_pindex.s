@@ -18,5 +18,8 @@ esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex:
     phvwr p.ipsec_to_stage3_barco_req_addr, r2
     add r1, d.{pi}.wx, 1
     phvwr p.barco_dbell_pi, r1.wx
+
+    addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)  
+    phvwr p.barco_req_doorbell_address, r4.dx
     nop.e
     nop 

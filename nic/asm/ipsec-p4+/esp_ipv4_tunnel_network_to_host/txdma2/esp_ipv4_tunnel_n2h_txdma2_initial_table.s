@@ -16,7 +16,6 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     phvwri.c2 p.p4_intr_global_drop, 1
 
     seq c1, d.is_v6, 1
-    //phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma2_global_iv_size, d.iv_size
     phvwr p.txdma2_global_icv_size, d.icv_size
 
