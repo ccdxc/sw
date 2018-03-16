@@ -67,7 +67,7 @@ private:
 };
 
 // API return values: 0 => successs; < 0 => failure
-int test_setup_cp_seq_ent(cp_seq_params_t *params);
+int test_setup_cp_seq_status_ent(cp_seq_params_t *params);
 
 int test_setup();
 

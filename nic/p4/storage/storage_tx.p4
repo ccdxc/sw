@@ -29,7 +29,7 @@
 #define tx_table_s1_t0_action7	seq_barco_entry_handler
 #define tx_table_s1_t0_action8	roce_cq_handler
 #define tx_table_s1_t0_action9	pvm_roce_sq_wqe_process
-#define tx_table_s1_t0_action10	seq_comp_desc_handler
+#define tx_table_s1_t0_action10	seq_comp_status_desc_handler
 
 #define tx_table_s2_t0_action	q_state_push
 #define tx_table_s2_t0_action1	seq_q_state_push
@@ -126,9 +126,9 @@ metadata nvme_sta_t nvme_sta;
 @pragma dont_trim
 metadata ssd_ci_t ssd_ci;
 
-// Barco XTS ring doorbell data
+// Barco ring doorbell data
 @pragma dont_trim
-metadata barco_xts_ring_t xts_doorbell_data;
+metadata barco_ring_t barco_doorbell_data;
 
 // R2N data buffer address that needs to be fixed up for passing to ROCE
 // for RDMA Write command
@@ -226,7 +226,7 @@ metadata pri_q_state_t pri_q_state_scratch;
 metadata pci_q_state_t pci_q_state_scratch;
 
 @pragma scratch_metadata
-metadata barco_xts_ring_t barco_xts_ring_scratch;
+metadata barco_ring_t barco_ring_scratch;
 
 @pragma scratch_metadata
 metadata roce_cq_cb_t roce_cq_cb_scratch;
@@ -295,7 +295,7 @@ metadata roce_rq_wqe_t roce_rq_wqe_scratch;
 metadata roce_sq_xlate_entry_t roce_sq_xlate_entry_scratch;
 
 @pragma scratch_metadata
-metadata seq_comp_desc_t seq_comp_desc_scratch;
+metadata seq_comp_status_desc_t seq_comp_status_desc_scratch;
 
 @pragma scratch_metadata
 metadata seq_comp_status_t seq_comp_status_scratch;

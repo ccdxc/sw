@@ -80,6 +80,7 @@ cc_library(
         "compression_test.hpp",
         "utils.hpp",
         "dp_mem.hpp",
+	"queues.hpp",
         "tests.hpp",
     ],
     hdrs = ["compression.hpp"],

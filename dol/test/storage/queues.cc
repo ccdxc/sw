@@ -25,6 +25,7 @@ const static uint32_t	kPvmNumSsdSQs	 	 = 4;
 const static uint32_t	kPvmNumSeqR2nSQs	 = 3;
 const static uint32_t	kPvmNumSeqXtsSQs	 = 3;
 const static uint32_t	kPvmNumSeqCompSQs	 = 4;
+const static uint32_t	kPvmNumSeqCompStatusSQs = 4;
 const static uint32_t	kPvmNumSeqRoceSQs	 = 3;
 const static uint32_t	kPvmNumNvmeCQs		 = 1;
 const static uint32_t	kPvmNumR2nCQs		 = 0; // 2^0 => 1 queue
@@ -47,7 +48,8 @@ const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
-const static char	*kSeqCompSqHandler	 = "storage_tx_seq_comp_desc_handler.bin";
+const static char	*kSeqCompSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
+const static char	*kSeqCompStatusSqHandler = "storage_tx_seq_comp_status_desc_handler.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -59,6 +61,7 @@ const static uint32_t	kDbAddrHost		 = 0x400000;
 const static uint32_t	kDbAddrNvme		 = 0xC00000;
 const static uint32_t	kDbAddrCapri		 = 0x8800000;
 const static uint32_t	kDbAddrUpdate		 = 0xB;
+const static uint32_t	kDbAddrInc		 = ((3 << 2) + 1); // plus sched_wr_eval bit
 const static uint32_t	kDbQidShift		 = 24;
 const static uint32_t	kDbRingShift		 = 16;
 const static uint32_t	kDbUpdateShift		 = 17;
@@ -125,6 +128,7 @@ uint32_t pvm_host_r2n_sq_base;
 uint32_t pvm_seq_xts_sq_base;
 uint32_t pvm_seq_roce_sq_base;
 uint32_t pvm_seq_comp_sq_base;
+uint32_t pvm_seq_comp_status_sq_base;
 uint32_t host_nvme_cq_base;
 uint32_t pvm_nvme_cq_base;
 uint32_t pvm_r2n_cq_base;
@@ -583,6 +587,17 @@ int queues_setup() {
     printf("Setup PVM Seq Compression queue %d \n", i);
   }
 
+  // Initialize PVM SQs for processing Sequencer commands for post compression
+  pvm_seq_comp_status_sq_base = i;
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqCompStatusSQs); j++, i++) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqCompStatusSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+      printf("Failed to setup PVM Seq Compression Status queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq Compression Status queue %d \n", i);
+  }
+
   // Save PVM's last SQ
   pvm_last_sq = i;
   printf("PVM's last saved SQ %lu \n", pvm_last_sq);
@@ -818,6 +833,10 @@ uint32_t get_pvm_seq_comp_sq(uint32_t offset) {
   return (pvm_seq_comp_sq_base + offset);
 }
 
+uint32_t get_pvm_seq_comp_status_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSeqCompStatusSQs));
+  return (pvm_seq_comp_status_sq_base + offset);
+}
 
 uint32_t get_host_nvme_cq(uint32_t offset) {
   assert(offset < NUM_TO_VAL(kNvmeNumCQs));
@@ -876,6 +895,16 @@ void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
 
   *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | index;
   *db_addr = kDbAddrCapri |  (kDbAddrUpdate << kDbUpdateShift) | 
+             (lif << kDbLifShift) | (qtype << kDbTypeShift);
+}
+
+void get_capri_doorbell_with_pndx_inc(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                                      uint8_t ring, uint64_t *db_addr, uint64_t *db_data) {
+
+  if (!db_addr || !db_data) return;
+
+  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift);
+  *db_addr = kDbAddrCapri |  (kDbAddrInc << kDbUpdateShift) | 
              (lif << kDbLifShift) | (qtype << kDbTypeShift);
 }
 

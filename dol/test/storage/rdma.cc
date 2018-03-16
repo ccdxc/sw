@@ -275,6 +275,24 @@ int rdma_p4_init() {
 
 namespace {
 
+#define RDMA_OP_TYPE_SEND           0
+#define RDMA_OP_TYPE_SEND_INV       1
+#define RDMA_OP_TYPE_SEND_IMM       2
+#define RDMA_OP_TYPE_READ           3
+#define RDMA_OP_TYPE_WRITE          4
+#define RDMA_OP_TYPE_WRITE_IMM      5
+#define RDMA_OP_TYPE_CMP_N_SWAP     6
+#define RDMA_OP_TYPE_FETCH_N_ADD    7
+#define RDMA_OP_TYPE_FRPMR          8
+#define RDMA_OP_TYPE_LOCAL_INV      9
+#define RDMA_OP_TYPE_BIND_MW        10
+#define RDMA_OP_TYPE_SEND_INV_IMM   11
+
+// Define the desired Send op_type;
+// Valid choices are RDMA_OP_TYPE_SEND or RDMA_OP_TYPE_SEND_IMM
+const uint8_t  kRdmaSendOpType = RDMA_OP_TYPE_SEND_IMM;
+
+
 // Fixed keys:
 const uint32_t kInitiatorCQLKey = 1;
 const uint32_t kInitiatorSQLKey = 2;
@@ -401,6 +419,27 @@ void CreateCQ(uint32_t cq_num, uint32_t lkey) {
   cq->set_num_cq_wqes(kNumCQWQEs);
   cq->set_hostmem_pg_size(4096);
   cq->set_cq_lkey(lkey);
+
+  // when not using send_imm, configure RDMA to wake up target CQ
+  if ((kRdmaSendOpType != RDMA_OP_TYPE_SEND_IMM) &&
+      (lkey == kTargetCQLKey)) {
+
+      uint64_t db_addr;
+      uint64_t db_data;
+
+      cq->set_wakeup_dpath(true);
+      cq->set_wakeup_lif(queues::get_pvm_lif());
+      cq->set_wakeup_qtype(CQ_TYPE);
+      cq->set_wakeup_qid(g_rdma_pvm_roce_tgt_cq);
+      cq->set_wakeup_ring_id(0);
+
+      // RDMA will ring doorbell with pndx increment,
+      // print out this info to make it easy to locate in model.log
+      queues::get_capri_doorbell_with_pndx_inc(queues::get_pvm_lif(), CQ_TYPE,
+                                               g_rdma_pvm_roce_tgt_cq, 0,
+                                               &db_addr, &db_data);
+      printf("Target CQ wakeup doorbell db_addr %lx db_data %lx\n", db_addr, db_data);
+  }
 
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaCqCreate(&context, req, &resp);
@@ -699,13 +738,15 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_hbm_buf_pa->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
+  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
-  sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
-  sqwqe->write_bit_fields(107, 3, CQ_TYPE);
-  sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
+      sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
+      sqwqe->write_bit_fields(107, 3, CQ_TYPE);
+      sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  }
   sqwqe->write_bit_fields(192, 32, data_len);  // data len
 
   // Form the SGE
@@ -747,13 +788,15 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_buf->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
+  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
-  sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
-  sqwqe->write_bit_fields(107, 3, CQ_TYPE);
-  sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
+      sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
+      sqwqe->write_bit_fields(107, 3, CQ_TYPE);
+      sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  }
   sqwqe->write_bit_fields(192, 32, data_len);  // data len
 
   // Form the SGE
@@ -776,6 +819,9 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
 int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_handle,
                      dp_mem_t **nvme_cmd_ptr, dp_mem_t **read_buf_ptr, uint64_t slba, 
                      uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif, uint32_t bdf) {
+
+  uint64_t db_addr;
+  uint64_t db_data;
 
   if (!nvme_cmd_ptr || !read_buf_ptr) return -1;
 
@@ -827,13 +873,15 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_buf_va->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
+  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
-  sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
-  sqwqe->write_bit_fields(107, 3, CQ_TYPE);
-  sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
+      sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
+      sqwqe->write_bit_fields(107, 3, CQ_TYPE);
+      sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  }
   sqwqe->write_bit_fields(192, 32, r2n_data_len);  // data len
 
   // Local read command buffer goes into SGE
@@ -852,6 +900,12 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   write_wqe->write_bit_fields(64, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
   write_wqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
   write_wqe->write_bit_fields(192, 32, (uint32_t) kR2NDataSize);  // data len
+
+  // RDMA will ring the next doorbell with pndx increment,
+  // print out this info to make it easy to locate in model.log
+  queues::get_capri_doorbell_with_pndx_inc(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+                                           &db_addr, &db_data);
+  printf("write_wqe next doorbell db_addr %lx db_data %lx\n", db_addr, db_data);
 
   // Write WQE: remote side buffer with immediate data as doorbell
   write_wqe->write_bit_fields(96, 11, queues::get_pvm_lif());
@@ -892,6 +946,8 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
                                   uint32_t next_qtype,
                                   uint32_t next_qid)
 {
+  uint64_t db_addr, db_data;
+
   assert(data_len == kR2NDataSize);
 
   // Increment the LKey at the beginning of each API
@@ -914,13 +970,15 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
    * Point sqwqe to the nvme command in r2n_buf
    */
   sqwqe->write_bit_fields(0, 64, r2n_send_buf->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
+  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
-  sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
-  sqwqe->write_bit_fields(107, 3, CQ_TYPE);
-  sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
+      sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
+      sqwqe->write_bit_fields(107, 3, CQ_TYPE);
+      sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
+  }
   sqwqe->write_bit_fields(192, 32, r2n_data_len);
 
   // Local read command buffer goes into SGE
@@ -941,6 +999,12 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
   write_wqe->write_bit_fields(64, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
   write_wqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
   write_wqe->write_bit_fields(192, 32, data_len);  // data len
+
+  // RDMA will ring the next doorbell with pndx increment,
+  // print out this info to make it easy to locate in model.log
+  queues::get_capri_doorbell_with_pndx_inc(next_lif, next_qtype, next_qid, 0,
+                                           &db_addr, &db_data);
+  printf("write_wqe next doorbell db_addr %lx db_data %lx\n", db_addr, db_data);
 
   // Write WQE: remote side buffer with immediate data as doorbell
   write_wqe->write_bit_fields(96, 11, next_lif);
@@ -971,8 +1035,11 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
 void rdma_queues_init() {
   AllocRdmaMem();
   CreateInitiatorCQ();
-  CreateTargetCQ();
   CreateInitiatorQP();
+}
+
+void rdma_queues_init2() {
+  CreateTargetCQ();
   CreateTargetQP();
   ConnectInitiatorAndTarget(0, 1, kMACAddr1, kMACAddr2, kIPAddr1, kIPAddr2);
   ConnectInitiatorAndTarget(1, 0, kMACAddr2, kMACAddr1, kIPAddr2, kIPAddr1);
@@ -1050,6 +1117,8 @@ int rdma_init() {
     printf("RDMA PVM queues Init failed\n");
     return -1;
   }
+  rdma_queues_init2();
+
   printf("RDMA PVM queues Init success\n");
   assert(PullCQEntry(initiator_cq_va, &initiator_cq_cindex, 64, 1, &ent) == false);
   assert(PullCQEntry(target_cq_va, &target_cq_cindex, 64, 1, &ent) == false);
