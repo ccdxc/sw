@@ -58,6 +58,7 @@
 
 #define MODIFY_ETH_TX_T0_S2S \
     modify_field(eth_tx_t0_s2s_scratch.num_desc, eth_tx_t0_s2s.num_desc); \
+    modify_field(eth_tx_t0_s2s_scratch.num_sg_elems, eth_tx_t0_s2s.num_sg_elems); \
     modify_field(eth_tx_t0_s2s_scratch.sg_desc_addr, eth_tx_t0_s2s.sg_desc_addr); \
     modify_field(eth_tx_t0_s2s_scratch.sg_in_progress, eth_tx_t0_s2s.sg_in_progress);
 

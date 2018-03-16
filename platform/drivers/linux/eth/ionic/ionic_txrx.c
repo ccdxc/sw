@@ -506,12 +506,12 @@ static bool ionic_tx_fit_check(struct queue *q, struct sk_buff *skb)
 	struct tx_stats *stats = q_to_tx_stats(q);
 	int err;
 
-	//if (skb_shinfo(skb)->nr_frags > IONIC_TX_MAX_SG_ELEMS) {
+	if (skb_shinfo(skb)->nr_frags > IONIC_TX_MAX_SG_ELEMS) {
 		err = skb_linearize(skb);
 		if (err)
 			return false;
 		stats->linearize++;
-	//}
+	}
 
 	return true;
 }

@@ -26,23 +26,30 @@ eth_tx_fetch_desc:
   /* R2 = How many max descriptors should we process? */
 
   // How many descriptors are posted?
-  slt             c1, d.{p_index0}.hx, d.{c_index0}.hx  // pi < ci
-  sub.c1          r2, d.{c_index0}.hx, d.{p_index0}.hx  // if pi < ci
-  sub.!c1         r2, d.{p_index0}.hx, d.{c_index0}.hx  // if pi >= ci
+  // num_posted = (pi < ci) ? (ring_size - (ci - pi)) : (pi - ci)
+  slt             c1, d.{p_index0}.hx, d.{c_index0}.hx
+  sub.c1          r2, d.{c_index0}.hx, d.{p_index0}.hx
+  sub.c1          r2, r1, r2
+  sub.!c1         r2, d.{p_index0}.hx, d.{c_index0}.hx
+
   // We should only process upto MAX_DESC_PER_PHV
-  sle             c2, r2, MAX_DESC_PER_PHV    // max(num_posted, max_per_phv)
+  // num_todo = max(num_posted, max_per_phv)
+  sle             c2, r2, MAX_DESC_PER_PHV
   addi.!c2        r2, r0, MAX_DESC_PER_PHV
+
   // Are we at the end of the ring?
-  add             r6, d.{c_index0}.hx, r2     // ci + to_do
-  slt             c3, r1, r6                  // end-of-ring = ring_size < (ci + to_do)
-  addi.c3         r2, r0, 1                   // to_do = 1 if end-of-ring
-  phvwr           p.eth_tx_t0_s2s_num_desc, r2    // R2 = num_desc_to_do
+  // end_of_ring = ring_size <  (ci + num_todo)
+  // num_todo = end_of_ring ? 1 : num_todo
+  add             r6, d.{c_index0}.hx, r2
+  slt             c3, r1, r6
+  addi.c3         r2, r0, 1
+  phvwr           p.eth_tx_t0_s2s_num_desc, r2
 
   // Compute the descriptor fetch address
   add             r3, d.{ring_base}.dx, d.{c_index0}.hx, LG2_TX_DESC_SIZE
 
   // Compute the sg descriptor address
-  add             r4, d.{sg_ring_base}.dx, d.{c_index0}, LG2_TX_SG_DESC_SIZE
+  add             r4, d.{sg_ring_base}.dx, d.{c_index0}.hx, LG2_TX_SG_DESC_SIZE
 
   // Compute the completion descriptor address
   add             r5, d.{cq_ring_base}.dx, d.{p_index1}.hx, LG2_TX_CMPL_DESC_SIZE
@@ -65,12 +72,14 @@ eth_tx_fetch_desc:
   //phvwri          p.common_te0_phv_table_lock_en, 1
   phvwri          p.common_te0_phv_table_pc, eth_tx_prep[38:6]  
   phvwr           p.common_te0_phv_table_addr, r3
+
   // Compute the size of descriptor read
-  seq             c4, r2, 1        // Should we read 16 B or 64 B?
-  setcf           c4, [c3 | c4]    // read = 16 if to_do == 1 or end-of-ring else 64
+  // read_size = (num_todo == 1) ? 16 : 64
+  // NOTE: num_todo == 1 when end_of_ring or num_posted == 1
+  seq             c4, r2, 1
   addi.c4         r6, r0, LG2_TX_DESC_SIZE
   addi.!c4        r6, r0, LG2_TX_DESC_SIZE + 2
-  phvwr           p.common_te0_phv_table_raw_table_size, r6   // R6 = desc_ring_read_size
+  phvwr           p.common_te0_phv_table_raw_table_size, r6
 
   phvwr           p.eth_tx_t0_s2s_sg_desc_addr, r4
 

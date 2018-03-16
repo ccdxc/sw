@@ -116,6 +116,7 @@ header_type eth_tx_global_k {
 header_type eth_tx_t0_s2s_k {
     fields {
         num_desc : 4;
+        num_sg_elems : 4;
         sg_desc_addr : 64;
         sg_in_progress : 1;
     }
