@@ -1,31 +1,42 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2017-2018, Pensando Systems Inc.
 #
 
 PROGRAM = pciemgrd
-SOURCES = pciemgrd.cc
-LCFLAGS = \
+SOURCES = \
+	pciemgrd.cc \
+	cli.cc \
+	server.cc \
+	logger.cc \
+	$(NULL)
+
+LCXXFLAGS = \
 	-I $(TOPDIR)/include/common \
+	-I $(TOPDIR)/../nic/hal/third-party/spdlog/include/ \
+	-I $(TOPDIR)/../nic/third-party/libev/include \
+	-I $(TOPDIR)/src/lib/evutils/include \
 	-I $(TOPDIR)/src/lib/misc/include \
 	-I $(TOPDIR)/src/lib/pal/include \
 	-I $(TOPDIR)/src/lib/pcieport/include \
 	-I $(TOPDIR)/src/lib/cfgspace/include \
-	-I $(TOPDIR)/src/lib/pciehost/include \
-	-I $(TOPDIR)/src/lib/pciehw/include \
 	-I $(TOPDIR)/src/lib/pciehdevices/include \
+	-I $(TOPDIR)/src/lib/pciemgr/include \
+	-I $(TOPDIR)/src/lib/pciemgrutils/include \
+	-I $(TOPDIR)/src/lib/pciemgr_if/include \
 	$(NULL)
 
-LCXXFLAGS = $(LCFLAGS)
 LIBRARIES = \
-	-lpciehost \
+	-lpciemgr_if \
+	-lpciemgr \
+	-lpciemgrutils \
 	-lpciehdevices \
-	-lpciehw \
 	-lintrutils \
 	-lcfgspace \
 	-lpcieport \
 	-lpcietlp \
 	-lpal \
 	-lmisc \
+	-levutils \
 	$(NULL)
 
 LCXXFLAGS += \
@@ -41,6 +52,8 @@ LLDFLAGS = \
 SYSTEM_LIBRARIES = \
 	-ledit \
 	-lncurses \
+	-L$(TOPDIR)/../nic/third-party/libev/$(BUILD_ARCH)/lib -lev \
+	-lm \
 	$(NULL)
 
 TOPDIR = ../../../..

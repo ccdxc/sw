@@ -14,7 +14,7 @@
 #include <signal.h>
 #include <sys/types.h>
 
-#include "src/lib/pciehsvc/include/pciehsvc.h"
+#include "src/lib/pciemgr/include/pciehsvc.h"
 #include "src/lib/misc/include/maclib.h"
 #include "src/lib/misc/include/bdf.h"
 #include "src/sim/libsimlib/include/simserver.h"

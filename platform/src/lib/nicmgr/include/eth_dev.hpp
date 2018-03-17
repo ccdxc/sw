@@ -8,14 +8,6 @@
 #include <map>
 
 #include "dev.hpp"
-#include "pci_ids.h"
-#include "misc.h"
-#include "bdf.h"
-#include "cfgspace.h"
-#include "pciehost.h"
-#include "pciehdevices.h"
-#include "pciehw.h"
-#include "pcieport.h"
 #include "eth_common.h"
 #include "sdk/indexer.hpp"
 #include "hal_types.hpp"

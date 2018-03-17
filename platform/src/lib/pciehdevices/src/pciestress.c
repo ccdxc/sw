@@ -3,12 +3,13 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/types.h>
 
 #include "pci_ids.h"
-#include "pciehost.h"
+#include "pciemgrutils.h"
 #include "pciehdevices.h"
 
 #define PCI_DEVICE_ID_PENSANDO_PCIESTRESS 0x8001
@@ -20,77 +21,66 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     pciehbar_t pbar;
     u_int64_t sz = 0x1000;
     u_int64_t pa = 0x13f000000 + (sz * pres->port);
+    prt_t prt;
 
-    /* bar mem64 */
+    /* mem64 bar */
     memset(&pbar, 0, sizeof(pbar));
     pbar.type = PCIEHBARTYPE_MEM64;
-    {
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW | PCIEHBARREGF_MEM;
-        preg.paddr = pa;
-        preg.size = sz;
-        pciehbar_add_reg(&pbar, &preg);
+    pbar.size = sz * 4; /* 4 pages with different properties */
+    pbar.cfgidx = 0;
 
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = (PCIEHBARREGF_RW |
-                      PCIEHBARREGF_NOTIFYRW);
-        preg.paddr = pa;
-        preg.size = sz;
-        pciehbar_add_reg(&pbar, &preg);
+    memset(&preg, 0, sizeof(preg));
+    pmt_bar_enc(&preg.pmt,
+                pres->port,
+                PMT_TYPE_MEM,
+                pbar.size,
+                sz,     /* prtsize */
+                PMT_BARF_RW);
 
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = (PCIEHBARREGF_RW |
-                      PCIEHBARREGF_INDIRECTRW);
-        preg.paddr = pa;
-        preg.size = sz;
-        pciehbar_add_reg(&pbar, &preg);
+    /* direct access */
+    prt_res_enc(&prt, pa, 0x1000, PRT_RESF_PMVDIS);
+    pciehbarreg_add_prt(&preg, &prt);
+    /* notify access */
+    prt_res_enc(&prt, pa, 0x1000, PRT_RESF_NOTIFY);
+    pciehbarreg_add_prt(&preg, &prt);
+    /* indirect access */
+    prt_res_enc(&prt, pa, 0x1000, PRT_RESF_INDIRECT);
+    pciehbarreg_add_prt(&preg, &prt);
+    /* pad prt */
+    prt_res_enc(&prt, 0, 0, PRT_RESF_NONE);
+    pciehbarreg_add_prt(&preg, &prt);
 
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW;
-        preg.paddr = pa;
-        preg.size = sz;
-        pciehbar_add_reg(&pbar, &preg);
-    }
+    pciehbar_add_reg(&pbar, &preg);
     pciehbars_add_bar(pbars, &pbar);
 
-    /* bar io */
+    /* io bar */
     memset(&pbar, 0, sizeof(pbar));
     pbar.type = PCIEHBARTYPE_IO;
-    {
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW | PCIEHBARREGF_MEM;
-        preg.paddr = pa;
-        preg.size = 0x20;
-        pciehbar_add_reg(&pbar, &preg);
+    pbar.size = 0x80;
+    pbar.cfgidx = 2;
 
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = (PCIEHBARREGF_RW |
-                      PCIEHBARREGF_NOTIFYRW);
-        preg.paddr = pa;
-        preg.size = 0x20;
-        pciehbar_add_reg(&pbar, &preg);
+    memset(&preg, 0, sizeof(preg));
+    pmt_bar_enc(&preg.pmt,
+                pres->port,
+                PMT_TYPE_IO,
+                pbar.size,
+                0x20, /* prtsize */
+                PMT_BARF_RW);
 
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = (PCIEHBARREGF_RW |
-                      PCIEHBARREGF_INDIRECTRW);
-        preg.paddr = pa;
-        preg.size = 0x20;
-        pciehbar_add_reg(&pbar, &preg);
+    /* direct access */
+    prt_res_enc(&prt, pa, 0x20, PRT_RESF_PMVDIS);
+    pciehbarreg_add_prt(&preg, &prt);
+    /* notify access */
+    prt_res_enc(&prt, pa, 0x20, PRT_RESF_NOTIFY);
+    pciehbarreg_add_prt(&preg, &prt);
+    /* indirect access */
+    prt_res_enc(&prt, pa, 0x20, PRT_RESF_INDIRECT);
+    pciehbarreg_add_prt(&preg, &prt);
+    /* direct access */
+    prt_res_enc(&prt, pa, 0x20, PRT_RESF_NONE);
+    pciehbarreg_add_prt(&preg, &prt);
 
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW;
-        preg.paddr = pa;
-        preg.size = 0x20;
-        pciehbar_add_reg(&pbar, &preg);
-    }
+    pciehbar_add_reg(&pbar, &preg);
     pciehbars_add_bar(pbars, &pbar);
 }
 
@@ -100,6 +90,7 @@ init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
 {
     pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_PCIESTRESS);
     pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
+    pciehcfg_setconf_dsn(pcfg, pres->dsn);
 
     pciehcfg_sethdr_type0(pcfg, pbars);
     pciehcfg_add_standard_caps(pcfg);

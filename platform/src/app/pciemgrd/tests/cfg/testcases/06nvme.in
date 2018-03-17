@@ -1,0 +1,3 @@
+add nvme -L 4
+finalize
+exit

@@ -221,6 +221,23 @@ pcieport_set_ltssm_en(pcieport_t *p, const int on)
 }
 
 void
+pcieport_set_aer_common_en(pcieport_t *p, const int on)
+{
+    const int pn = p->port;
+    u_int32_t reg[2];
+#define AER_COMMON_EN \
+    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_1_2_AER_COMMON_EN_FIELD_MASK
+
+    pal_reg_rd32w(PXC_(CFG_C_PORT_MAC, pn), reg, 2);
+    if (on) {
+        reg[1] |= AER_COMMON_EN;
+    } else {
+        reg[1] &= ~AER_COMMON_EN;
+    }
+    pal_reg_wr32w(PXC_(CFG_C_PORT_MAC, pn), reg, 2);
+}
+
+void
 pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq)
 {
     const int pn = p->port;

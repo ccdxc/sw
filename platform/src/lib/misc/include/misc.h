@@ -12,6 +12,18 @@ extern "C" {
 #endif
 #endif
 
+/*
+ * roundup_power2 - Round up to next power of 2.
+ */
+static inline u_int64_t
+roundup_power2(u_int64_t n)
+{
+    while (n & (n - 1)) {
+        n = (n | (n - 1)) + 1;
+    }
+    return n;
+}
+
 char *hex_format(char *buf, size_t buflen,
                  const void *data, const size_t datalen);
 char *strncpy0(char *d, const char *s, const size_t n);

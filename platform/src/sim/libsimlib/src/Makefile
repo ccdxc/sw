@@ -11,7 +11,7 @@ SOURCES = \
 	$(NULL)
 
 LCFLAGS += \
-	-I ../../../pciehsvc/include \
+	-I ../../../pciemgr/include \
 	-I ../include \
 	$(NULL)
 

@@ -38,6 +38,8 @@ struct pcieport_s {
     int cap_width;
     int cur_gen;
     int cur_width;
+    u_int32_t compliance:1;
+    u_int32_t sris:1;
     u_int16_t lanemask;
     u_int16_t subvendorid;
     u_int16_t subdeviceid;
@@ -89,6 +91,7 @@ void pcieport_set_serdes_reset(pcieport_t *p, const int on);
 void pcieport_set_pcs_reset(pcieport_t *p, const int on);
 void pcieport_set_mac_reset(pcieport_t *p, const int on);
 void pcieport_set_ltssm_en(pcieport_t *p, const int on);
+void pcieport_set_aer_common_en(pcieport_t *p, const int on);
 void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);
 void pcieport_rx_credit_bfr(const int port, const int base, const int limit);
 u_int16_t pcieport_get_phystatus(pcieport_t *p);

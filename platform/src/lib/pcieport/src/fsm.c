@@ -14,7 +14,7 @@
 #include <linux/pci_regs.h>
 
 #include "pal.h"
-#include "pciehsys.h"
+#include "pciesys.h"
 #include "portcfg.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
@@ -71,7 +71,7 @@ pcieport_fault(pcieport_t *p, const char *fmt, ...)
         va_end(ap);
 
         p->state = PCIEPORTST_FAULT;
-        pciehsys_error("port %d fault: %s\n", p->port, p->fault_reason);
+        pciesys_logerror("port %d fault: %s\n", p->port, p->fault_reason);
     }
 }
 
@@ -92,11 +92,11 @@ static int
 pcieport_drain(pcieport_t *p)
 {
     if (pcieport_tgt_marker_rx_wait(p) < 0) {
-        pciehsys_error("port%d: port tgt_marker_rx failed\n", p->port);
+        pciesys_logerror("port%d: port tgt_marker_rx failed\n", p->port);
         return -1;
     }
     if (pcieport_tgt_axi_pending_wait(p) < 0) {
-        pciehsys_error("port%d: port tgt_axi_pending failed\n", p->port);
+        pciesys_logerror("port%d: port tgt_axi_pending failed\n", p->port);
         return -1;
     }
     return 0;
@@ -268,9 +268,9 @@ pcieport_fsm(pcieport_t *p, pcieportev_t ev)
         struct timeval tv;
 
         gettimeofday(&tv, NULL);
-        pciehsys_log("[%ld.%.3ld] %d: %s + %s => %s\n",
-                     tv.tv_sec, tv.tv_usec / 1000,
-                     p->port, stname(st), evname(ev), stname(p->state));
+        pciesys_loginfo("[%ld.%.3ld] %d: %s + %s => %s\n",
+                        tv.tv_sec, tv.tv_usec / 1000,
+                        p->port, stname(st), evname(ev), stname(p->state));
     }
 }
 

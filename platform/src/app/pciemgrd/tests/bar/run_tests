@@ -1,0 +1,22 @@
+#!/bin/sh
+
+npass=0
+nfail=0
+for tc in testcases/*.in; do
+    tb=`echo $tc | sed -e 's/\.in$//'`
+    rm -f $HOME/.palreg-*
+    ./genrun pciemgrd < $tc > $tb.out
+    if ! cmp -s $tb.exp $tb.out; then
+	printf "%-30s FAILED ***\n" $tc
+	diff $tb.exp $tb.out
+	nfail=`expr $nfail + 1`
+    else
+	printf "%-30s passed\n" $tc
+	rm $tb.out
+	npass=`expr $npass + 1`
+    fi
+done
+
+echo Passed: $npass Failed: $nfail
+[ $nfail != 0 ] && exit 1
+exit 0

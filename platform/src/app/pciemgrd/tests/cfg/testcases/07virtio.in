@@ -1,0 +1,3 @@
+add virtio -L 4
+finalize
+exit

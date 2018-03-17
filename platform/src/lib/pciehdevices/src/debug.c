@@ -10,7 +10,7 @@
 
 #include "pci_ids.h"
 #include "misc.h"
-#include "pciehost.h"
+#include "pciemgrutils.h"
 #include "pciehdevices.h"
 
 #define PCI_DEVICE_ID_PENSANDO_DEBUG 0x8000
@@ -49,17 +49,24 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         if (sz) {
             pciehbarreg_t preg;
             pciehbar_t pbar;
+            prt_t prt;
 
             memset(&pbar, 0, sizeof(pbar));
             pbar.type = PCIEHBARTYPE_MEM64;
-            {
-                memset(&preg, 0, sizeof(preg));
-                preg.regtype = PCIEHBARREGT_RES;
-                preg.flags = PCIEHBARREGF_RW;
-                preg.paddr = pa;
-                preg.size = sz;
-                pciehbar_add_reg(&pbar, &preg);
-            }
+            pbar.size = roundup_power2(sz);
+            pbar.cfgidx = i * 2;
+
+            memset(&preg, 0, sizeof(preg));
+            pmt_bar_enc(&preg.pmt,
+                        pres->port,
+                        PMT_TYPE_MEM,
+                        pbar.size,
+                        sz,     /* prtsize */
+                        PMT_BARF_RW);
+
+            prt_res_enc(&prt, pa, sz, PRT_RESF_NONE);
+            pciehbarreg_add_prt(&preg, &prt);
+            pciehbar_add_reg(&pbar, &preg);
             pciehbars_add_bar(pbars, &pbar);
         }
     }
@@ -76,6 +83,7 @@ init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
     pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
     pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
+    pciehcfg_setconf_dsn(pcfg, pres->dsn);
     pciehcfg_setconf_fnn(pcfg, pres->fnn);
 
     pciehcfg_sethdr_type0(pcfg, pbars);

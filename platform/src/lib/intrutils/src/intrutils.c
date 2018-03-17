@@ -54,21 +54,33 @@
 #define INTR_STATE_STRIDE       0x10
 
 u_int64_t
-intr_msixcfg_addr(const int intr)
+intr_msixcfg_addr(const int intrb)
 {
-    return INTR_MSIXCFG_BASE + (intr * INTR_MSIXCFG_STRIDE);
+    return INTR_MSIXCFG_BASE + (intrb * INTR_MSIXCFG_STRIDE);
+}
+
+u_int32_t
+intr_msixcfg_size(const int intrc)
+{
+    return intrc * INTR_MSIXCFG_STRIDE;
 }
 
 u_int64_t
-intr_fwcfg_addr(const int intr)
+intr_fwcfg_addr(const int intrb)
 {
-    return INTR_FWCFG_BASE + (intr * INTR_FWCFG_STRIDE);
+    return INTR_FWCFG_BASE + (intrb * INTR_FWCFG_STRIDE);
 }
 
 u_int64_t
-intr_drvcfg_addr(const int intr)
+intr_drvcfg_addr(const int intrb)
 {
-    return INTR_DRVCFG_BASE + (intr * INTR_DRVCFG_STRIDE);
+    return INTR_DRVCFG_BASE + (intrb * INTR_DRVCFG_STRIDE);
+}
+
+u_int32_t
+intr_drvcfg_size(const int intrc)
+{
+    return intrc * INTR_DRVCFG_STRIDE;
 }
 
 u_int64_t
@@ -81,6 +93,13 @@ u_int64_t
 intr_pba_addr(const int lif)
 {
     return INTR_PBA_BASE + (lif * INTR_PBA_STRIDE);
+}
+
+u_int32_t
+intr_pba_size(const int intrc)
+{
+    assert(intrc <= 64);
+    return intrc > 0 ? INTR_PBA_STRIDE : 0;
 }
 
 u_int64_t
@@ -96,7 +115,7 @@ intr_state_addr(const int intr)
 }
 
 void
-intr_pba_cfg(const int lif, const int intr_start, const size_t intr_count)
+intr_pba_cfg(const int lif, const int intrb, const size_t intrc)
 {
     u_int64_t pa = intr_pba_cfg_addr(lif);
     union {
@@ -108,8 +127,8 @@ intr_pba_cfg(const int lif, const int intr_start, const size_t intr_count)
         } __attribute__((packed));
         u_int32_t w[1];
     } __attribute__((packed)) v = {
-        .start = intr_start,
-        .count = intr_count - 1,
+        .start = intrb,
+        .count = intrc - 1,
     };
 
     pal_reg_wr32(pa, v.w[0]);

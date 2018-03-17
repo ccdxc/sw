@@ -15,7 +15,7 @@ human_readable_buf(char *buf, size_t bufsz, u_int64_t n)
     static const char units[][2] = { "", "K", "M", "G", "T" };
     int i;
 
-    for (i = 0; i < sizeof(units) / sizeof(units[0]) - 1; i++) {
+    for (i = 0; n && i < sizeof(units) / sizeof(units[0]) - 1; i++) {
         if (n & (1024 - 1)) break;
         n >>= 10;
     }

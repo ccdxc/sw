@@ -7,157 +7,31 @@
 #include <assert.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/param.h>
 
 #include "pci_ids.h"
-#include "pciehost.h"
+#include "pciemgrutils.h"
 #include "pciehdevices.h"
-#include "utils_impl.h"
+#include "pciehdevices_impl.h"
 #include "storage_seq_common.h"
-
-static void
-init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
-{
-    pciehbarreg_t preg;
-    pciehbar_t pbar;
-
-    /* resource bar - mem64 */
-    memset(&pbar, 0, sizeof(pbar));
-    pbar.type = PCIEHBARTYPE_MEM64;
-    {
-        /* Device Cmd Regs */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW;
-        preg.paddr = pres->devcmdpa;
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-
-        /* Device Cmd Doorbell */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = (PCIEHBARREGF_WR |
-                      PCIEHBARREGF_NOTIFYWR);
-        preg.paddr = pres->devcmddbpa;
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-
-        /* Interrupt Control regs */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW;
-        preg.paddr = intr_drvcfg_addr(pres->intrb);
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-
-        /* Interrupt Status regs */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RD;
-        preg.paddr = intr_pba_addr(pres->lif);
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-
-        /* <reserved> */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RD;
-        preg.paddr = 0;
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-
-        /* <reserved> */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RD;
-        preg.paddr = 0;
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-
-        /* MSI-X Interrupt Table */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_TBL);
-        preg.paddr = intr_msixcfg_addr(pres->intrb);
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-
-        /* MSI-X Interrupt PBA */
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = (PCIEHBARREGF_RD | PCIEHBARREGF_MSIX_PBA);
-        preg.paddr = intr_pba_addr(pres->lif);
-        preg.size = 0x1000;
-        pciehbar_add_reg(&pbar, &preg);
-    }
-    pciehbars_add_bar(pbars, &pbar);
-
-    /* doorbell bar - mem64 */
-    memset(&pbar, 0, sizeof(pbar));
-    pbar.type = PCIEHBARTYPE_MEM64;
-    {
-        const u_int32_t npids = pres->npids ? pres->npids : 1;
-
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_DB64;
-        preg.flags = PCIEHBARREGF_WR;
-        preg.size = 0x1000 * npids;
-        preg.npids = npids;
-        preg.qtyshift = 3;
-        preg.qtywidth = 3;
-        for (int i = 0; i < sizeof(preg.upd)/sizeof(preg.upd[0]); i++) {
-            preg.upd[i] = PCIEHBARUPD_NONE;
-        }
-        preg.upd[STORAGE_SEQ_QTYPE_SQ] = (PCIEHBARUPD_SCHED_SET |
-                                          PCIEHBARUPD_PICI_PISET |
-                                          PCIEHBARUPD_PID_CHECK);
-        preg.upd[STORAGE_SEQ_QTYPE_ADMIN] = (PCIEHBARUPD_SCHED_SET |
-                                             PCIEHBARUPD_PICI_PISET |
-                                             PCIEHBARUPD_PID_CHECK);
-        pciehbar_add_reg(&pbar, &preg);
-    }
-    pciehbars_add_bar(pbars, &pbar);
-
-    /* optional controller memory bar - mem64 */
-    if (pres->cmbsz) {
-        memset(&pbar, 0, sizeof(pbar));
-        pbar.type = PCIEHBARTYPE_MEM64;
-        {
-            /* Controller Memory region */
-            memset(&preg, 0, sizeof(preg));
-            preg.regtype = PCIEHBARREGT_RES;
-            preg.flags = PCIEHBARREGF_RW;
-            preg.paddr = pres->cmbpa;
-            preg.size = pres->cmbsz;
-            pciehbar_add_reg(&pbar, &preg);
-        }
-        pciehbars_add_bar(pbars, &pbar);
-    }
-}
-
-static void
-init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
-         const pciehdevice_resources_t *pres)
-{
-    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_ACCEL);
-    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
-    pciehcfg_setconf_nintrs(pcfg, pres->intrc);
-    pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
-    pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
-    pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
-    pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
-    pciehcfg_setconf_fnn(pcfg, pres->fnn);
-
-    pciehcfg_sethdr_type0(pcfg, pbars);
-    pciehcfg_add_standard_caps(pcfg);
-}
 
 static void
 initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
 {
+    const u_int8_t upd[8] = {
+        [STORAGE_SEQ_QTYPE_SQ] =
+            PRT_UPD_SCHED_SET | PRT_UPD_PICI_PISET | PRT_UPD_PID_CHECK,
+        [STORAGE_SEQ_QTYPE_ADMIN] =
+            PRT_UPD_SCHED_SET | PRT_UPD_PICI_PISET | PRT_UPD_PID_CHECK,
+    };
     pciehbars_t *pbars;
 
     pbars = pciehbars_new();
-    init_bars(pbars, pres);
+
+    add_common_resource_bar(pbars, pres);
+    add_common_doorbell_bar(pbars, pres, upd);
+    add_common_cmb_bar(pbars, pres);
+
     pciehdev_set_bars(pdev, pbars);
 }
 
@@ -167,7 +41,19 @@ initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
 
-    init_cfg(pcfg, pbars, pres);
+    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_ACCEL);
+    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
+    pciehcfg_setconf_nintrs(pcfg, pres->intrc);
+    pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
+    pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
+    pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
+    pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
+    pciehcfg_setconf_dsn(pcfg, pres->dsn);
+    pciehcfg_setconf_fnn(pcfg, pres->fnn);
+
+    pciehcfg_sethdr_type0(pcfg, pbars);
+    pciehcfg_add_standard_caps(pcfg);
+
     pciehdev_set_cfg(pdev, pcfg);
 }
 

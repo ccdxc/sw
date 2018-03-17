@@ -1,0 +1,9 @@
+add pciestress
+finalize
+dbg pciehw bar setaddr -d pciestress0 -b 0 0xffffffffffffffff
+dbg pciehw bar setaddr -d pciestress0 -b 2 0xffffffffffffffff
+dbg pciehw bar load -d pciestress0 -b 0
+dbg pciehw bar load -d pciestress0 -b 2
+dbg pciehw bar show
+dbg pciehw pmt -b
+dbg pciehw pmt -br

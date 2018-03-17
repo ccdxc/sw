@@ -28,6 +28,7 @@ typedef struct pciehdevice_resources_s {
     u_int64_t devcmddbpa;       /* devcmd doorbell physical address */
     u_int32_t cmbsz;            /* controller memory buffer bar size */
     u_int64_t cmbpa;            /* controller memory buffer physical address */
+    u_int64_t dsn;              /* device serial number */
     struct {
         u_int64_t barpa;        /* bar physical address */
         u_int64_t barsz;        /* bar size */

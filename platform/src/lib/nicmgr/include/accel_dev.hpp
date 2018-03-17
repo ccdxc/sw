@@ -6,14 +6,6 @@
 #include <unordered_map>
 
 #include "dev.hpp"
-#include "pci_ids.h"
-#include "misc.h"
-#include "bdf.h"
-#include "cfgspace.h"
-#include "pciehost.h"
-#include "pciehdevices.h"
-#include "pciehw.h"
-#include "pcieport.h"
 #include "hal_client.hpp"
 #include "accel_ring.h"
 #include "adminq.h"

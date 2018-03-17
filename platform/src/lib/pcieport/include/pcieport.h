@@ -17,13 +17,6 @@ extern "C" {
 struct pcieport_s;
 typedef struct pcieport_s pcieport_t;
 
-typedef struct pcieport_hostconfig_s {
-    int gen;
-    int width;
-    u_int16_t subvendorid;
-    u_int16_t subdeviceid;
-} pcieport_hostconfig_t;
-
 typedef enum pcieport_cmd_e {
     PCIEPORT_CMD_NONE,
     PCIEPORT_CMD_HOSTCONFIG,
@@ -35,7 +28,13 @@ typedef enum pcieport_cmd_e {
 
 pcieport_t *pcieport_open(const int port);
 void pcieport_close(pcieport_t *p);
-int pcieport_ctrl(pcieport_t *p, const pcieport_cmd_t cmd, void *arg);
+
+struct pciehdev_params_s;
+typedef struct pciehdev_params_s pciehdev_params_t;
+
+int pcieport_hostconfig(pcieport_t *p, const pciehdev_params_t *params);
+int pcieport_crs(pcieport_t *p, const int on);
+
 int pcieport_poll(pcieport_t *p);
 void pcieport_dbg(int argc, char *argv[]);
 

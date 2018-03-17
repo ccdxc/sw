@@ -72,15 +72,10 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #endif
 
 #ifdef __aarch64__
-#include "pci_ids.h"
-#include "misc.h"
-#include "bdf.h"
-#include "cfgspace.h"
-#include "pciehost.h"
-#include "pciehdevices.h"
-#include "pciehw.h"
-#include "pcieport.h"
+#include "pciemgr.h"
 #endif
+#include "pciemgrutils.h"
+#include "pciehdevices.h"
 
 /**
  * Memory Regions
@@ -234,8 +229,7 @@ public:
     Device *AddDevice(enum DeviceType type, void *dev_spec);
 
 #ifdef __aarch64__
-    static void PcieEventHandler(pciehdev_t *pdev,
-        const pciehdev_eventdata_t *evd);
+    static void PcieEventHandler(const pciehdev_eventdata_t *evd);
 #endif
     void DevcmdPoll();
     void AdminQPoll();

@@ -757,7 +757,7 @@ t_simpletest(int argc, char *argv[])
     int wrflags = 0;
 
     optind = 0;
-    while ((opt = getopt(argc, argv, "1248s:t:w")) != -1) {
+    while ((opt = getopt(argc, argv, "1248ins:t:w")) != -1) {
         switch (opt) {
         case '1':
             wrflags |= 1;
@@ -770,6 +770,12 @@ t_simpletest(int argc, char *argv[])
             break;
         case '8':
             wrflags |= 8;
+            break;
+        case 'i':
+            va = tdev.memvai;
+            break;
+        case 'n':
+            va = tdev.memvan;
             break;
         case 's':
             sz = strtoul(optarg, NULL, 0);

@@ -18,7 +18,7 @@ LCFLAGS = \
 	-I /usr/include/python2.7 \
 	-I $(NIC)/model_sim/include \
 	-I ../../lib/misc/include \
-	-I ../../lib/pciehsvc/include \
+	-I ../../lib/pciemgr/include \
 	-I ../libsimlib/include \
 	-I ../libsimdev/include \
 	-I ../../../../ \
@@ -35,12 +35,11 @@ LLDFLAGS = \
 LIBRARIES = \
 	-lsimlib \
 	-lsimdev \
-	-lpciehsvc \
 	-lpcieport \
-	-lpciehw \
+	-lpciemgr \
+	-lpciemgrutils \
 	-lpcietlp \
 	-lintrutils \
-	-lpciehost \
 	-lcfgspace \
 	-lintrutils \
 	-lpal \

@@ -11,7 +11,7 @@
 #include <inttypes.h>
 
 #include "pal.h"
-#include "pciehsys.h"
+#include "pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
@@ -146,7 +146,7 @@ static void
 cmd_vga_support(int argc, char *argv[])
 {
     if (argc < 2) {
-        pciehsys_log("vga_support %d\n", vga_support);
+        pciesys_loginfo("vga_support %d\n", vga_support);
         return;
     }
     vga_support = strtoul(argv[1], NULL, 0);
@@ -161,39 +161,43 @@ cmd_port(int argc, char *argv[])
     int port;
 
     if (argc <= 1) {
-        pciehsys_log("Usage: port <n>\n");
+        pciesys_loginfo("Usage: port <n>\n");
         return;
     }
     port = strtoul(argv[1], NULL, 0);
     if (port < 0 || port > PCIEPORT_NPORTS) {
-        pciehsys_log("port %d out of range\n", port);
+        pciesys_logerror("port %d out of range\n", port);
         return;
     }
 
     p = &pi->pcieport[port];
-    pciehsys_log("%-*s: cap gen%dx%d\n", w, "config", p->cap_gen,p->cap_width);
-    pciehsys_log("%-*s: cur gen%dx%d\n", w, "current",p->cur_gen,p->cur_width);
-    pciehsys_log("%-*s: 0x%04x\n", w, "lanemask", p->lanemask);
-    pciehsys_log("%-*s: 0x%04x\n", w, "subvendorid", p->subvendorid);
-    pciehsys_log("%-*s: 0x%04x\n", w, "subdeviceid", p->subdeviceid);
-    pciehsys_log("%-*s: %d\n", w, "open", p->open);
-    pciehsys_log("%-*s: %d\n", w, "config", p->open);
-    pciehsys_log("%-*s: %d\n", w, "crs", p->crs);
-    pciehsys_log("%-*s: %d\n", w, "state", p->state);
-    pciehsys_log("%-*s: %d\n", w, "event", p->event);
-    pciehsys_log("%-*s: %s\n", w, "fault_reason", p->fault_reason);
-    pciehsys_log("%-*s: %s\n", w, "last_fault_reason", p->last_fault_reason);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "hostup", p->hostup);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypolllast", p->phypolllast);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollmax", p->phypollmax);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollperstn", p->phypollperstn);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "phypollfail", p->phypollfail);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "gatepolllast", p->gatepolllast);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "gatepollmax", p->gatepollmax);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "markerpolllast", p->markerpolllast);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "markerpollmax", p->markerpollmax);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "axipendpolllast",p->axipendpolllast);
-    pciehsys_log("%-*s: %"PRIu64"\n", w, "axipendpollmax", p->axipendpollmax);
+
+#define LOG(args, ...) \
+    pciesys_loginfo(args, ##__VA_ARGS__)
+    LOG("%-*s: cap gen%dx%d\n", w, "config", p->cap_gen,p->cap_width);
+    LOG("%-*s: cur gen%dx%d\n", w, "current",p->cur_gen,p->cur_width);
+    LOG("%-*s: 0x%04x\n", w, "lanemask", p->lanemask);
+    LOG("%-*s: 0x%04x\n", w, "subvendorid", p->subvendorid);
+    LOG("%-*s: 0x%04x\n", w, "subdeviceid", p->subdeviceid);
+    LOG("%-*s: %d\n", w, "open", p->open);
+    LOG("%-*s: %d\n", w, "config", p->open);
+    LOG("%-*s: %d\n", w, "crs", p->crs);
+    LOG("%-*s: %d\n", w, "state", p->state);
+    LOG("%-*s: %d\n", w, "event", p->event);
+    LOG("%-*s: %s\n", w, "fault_reason", p->fault_reason);
+    LOG("%-*s: %s\n", w, "last_fault_reason", p->last_fault_reason);
+    LOG("%-*s: %"PRIu64"\n", w, "hostup", p->hostup);
+    LOG("%-*s: %"PRIu64"\n", w, "phypolllast", p->phypolllast);
+    LOG("%-*s: %"PRIu64"\n", w, "phypollmax", p->phypollmax);
+    LOG("%-*s: %"PRIu64"\n", w, "phypollperstn", p->phypollperstn);
+    LOG("%-*s: %"PRIu64"\n", w, "phypollfail", p->phypollfail);
+    LOG("%-*s: %"PRIu64"\n", w, "gatepolllast", p->gatepolllast);
+    LOG("%-*s: %"PRIu64"\n", w, "gatepollmax", p->gatepollmax);
+    LOG("%-*s: %"PRIu64"\n", w, "markerpolllast", p->markerpolllast);
+    LOG("%-*s: %"PRIu64"\n", w, "markerpollmax", p->markerpollmax);
+    LOG("%-*s: %"PRIu64"\n", w, "axipendpolllast",p->axipendpolllast);
+    LOG("%-*s: %"PRIu64"\n", w, "axipendpollmax", p->axipendpollmax);
+#undef LOG
 }
 
 typedef struct cmd_s {
@@ -231,13 +235,13 @@ pcieport_dbg(int argc, char *argv[])
     cmd_t *c;
 
     if (argc < 2) {
-        pciehsys_log("Usage: pcieport <subcmd>\n");
+        pciesys_loginfo("Usage: pcieport <subcmd>\n");
         return;
     }
 
     c = cmd_lookup(cmdtab, argv[1]);
     if (c == NULL) {
-        pciehsys_log("%s: %s not found\n", argv[0], argv[1]);
+        pciesys_logerror("%s: %s not found\n", argv[0], argv[1]);
         return;
     }
     c->f(argc - 1, argv + 1);

@@ -8,7 +8,7 @@
 #include <sys/types.h>
 
 #include "pci_ids.h"
-#include "pciehost.h"
+#include "pciemgrutils.h"
 #include "pciehdevices.h"
 
 #define PCI_DEVICE_ID_PENSANDO_RCDEV 0x8888
@@ -18,20 +18,27 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 {
     pciehbarreg_t preg;
     pciehbar_t pbar;
+    prt_t prt;
     const u_int64_t sz = 0x00100000; /* 1MB */
     const u_int64_t pa = 0; /* pa will come later from bar addr */
 
     /* bar mem64 */
     memset(&pbar, 0, sizeof(pbar));
     pbar.type = PCIEHBARTYPE_MEM64;
-    {
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW | PCIEHBARREGF_MEM;
-        preg.paddr = pa;
-        preg.size = sz;
-        pciehbar_add_reg(&pbar, &preg);
-    }
+    pbar.size = sz;
+    pbar.cfgidx = 0;
+
+    memset(&preg, 0, sizeof(preg));
+    pmt_bar_enc(&preg.pmt,
+                pres->port,
+                PMT_TYPE_MEM,
+                pbar.size,
+                pbar.size, /* prtsize */
+                PMT_BARF_RW);
+
+    prt_res_enc(&prt, pa, sz, PRT_RESF_NONE);
+    pciehbarreg_add_prt(&preg, &prt);
+    pciehbar_add_reg(&pbar, &preg);
     pciehbars_add_bar(pbars, &pbar);
 }
 

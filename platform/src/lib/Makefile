@@ -7,17 +7,19 @@ SUBDIRS = \
 	misc \
 	nicmgr \
 	hal_api \
+	evutils \
 	intrutils \
-	pciehdevices \
-	pciehost \
-	pciehsvc \
-	pciehw \
-	pcietlp \
-	pcieport \
+	nicmgr \
 	pal \
-    delphi \
-    sysmgr \
-    upgrade \
+	pciehdevices \
+	pciemgr \
+	pciemgrutils \
+	pciemgr_if \
+	pcieport \
+	pcietlp \
+	delphi \
+	sysmgr \
+	upgrade \
 	$(NULL)
 
 TOPDIR = ../..

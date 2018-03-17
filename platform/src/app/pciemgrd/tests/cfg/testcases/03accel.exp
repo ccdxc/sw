@@ -1,4 +1,4 @@
-00:00.0 Class 0604: Device 1dd8:1000
+00:00.0 0604: 1dd8:1000
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Bus: primary=00, secondary=01, subordinate=00, sec-latency=0
@@ -32,7 +32,7 @@
 	Capabilities: [80] Power Management version 3
 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [a0] Subsystem: Device 1dd8:4001
+	Capabilities: [a0] Subsystem: 1dd8:4001
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -305,7 +305,7 @@ fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-01:00.0 Class 0604: Device 1dd8:1001
+01:00.0 0604: 1dd8:1001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Region 0: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=256K]
@@ -340,7 +340,7 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [80] Power Management version 3
 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [a0] Subsystem: Device 1dd8:4001
+	Capabilities: [a0] Subsystem: 1dd8:4001
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -617,8 +617,8 @@ fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-02:00.0 Class ff00: Device 1dd8:1007
-	Subsystem: Device 1dd8:4001
+02:00.0 ff00: 1dd8:1007
+	Subsystem: 1dd8:4001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Interrupt: pin A routed to IRQ 0

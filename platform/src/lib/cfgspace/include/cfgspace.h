@@ -103,6 +103,7 @@ typedef struct cfgspace_bar_s {
     cfgspace_bartype_t type;    /* bar type */
     u_int64_t size;             /* bar size */
     u_int8_t cfgidx;            /* bar index in cfg space bars region */
+    u_int32_t prefetch:1;       /* prefetch enabled */
 } cfgspace_bar_t;
 
 typedef struct cfgspace_header_params_s {

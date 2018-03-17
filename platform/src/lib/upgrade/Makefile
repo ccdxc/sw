@@ -5,7 +5,6 @@
 LIBRARY= libnicmgr_upgrade.so 
 SOURCES = upgrade.cc 
 
-
 LCFLAGS = \
 	-I ../include \
 	-I $(TOPDIR) \
@@ -17,9 +16,8 @@ LCFLAGS = \
     -I $(TOPDIR)/src/lib/pal/include \
     -I $(TOPDIR)/src/lib/misc/include \
     -I $(TOPDIR)/src/lib/pcieport/include \
-    -I $(TOPDIR)/src/lib/cfgspace/include \
-    -I $(TOPDIR)/src/lib/pciehost/include \
-    -I $(TOPDIR)/src/lib/pciehw/include \
+	-I $(TOPDIR)/src/lib/pciemgr/include \
+	-I $(TOPDIR)/src/lib/pciemgrutils/include \
     -I $(TOPDIR)/src/lib/pciehdevices/include \
     -I $(TOPDIR)/src/lib/intrutils/include \
     -I $(TOPDIR)/src/lib/nicmgr/include \
@@ -55,72 +53,6 @@ LLDFLAGS = \
 	-L $(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib \
 	-L $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/lib \
 	$(NULL)
-
-SYSTEM_LIBRARIES = \
-	-lpthread \
-	-lgrpc \
-	-lgrpc++ \
-	-lgrpc_unsecure \
-	-lgrpc++_unsecure \
-	$(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib/libprotobuf.so.14 \
-	-lhalproto \
-	-lindexer \
-	-llogger \
-	-ldl \
-	-lcapri_csr_cpu_hal \
-	-lisa \
-	-lcapisa \
-	-lcrypto \
-	-lhal_mock \
-	-lutils \
-	-lmtrack \
-	-ltrace \
-	-lp4pd \
-	-lp4pd_common_p4plus_rxdma \
-	-lp4pd_common_p4plus_txdma \
-	-lasicpd \
-	-lcapri_csrint \
-	-llist \
-	-lbm_allocator \
-	-lslab \
-	-lthread \
-	-lshmmgr \
-	-lsknobs \
-	-lpdcommon \
-	-lp4pd_iris \
-	-lpdcapri \
-	-lmpuobj \
-	-lsdkpal \
-	-lsdkplatformutils \
-	-lrt \
-	-ldirectmap \
-	-lht \
-	-ldelphisdk \
-    -lupgrade_app \
-    -lupgrade \
-	-lev \
-	$(NULL)
-
-LIBRARIES += \
-		-lnicmgr \
-		-lhal_api \
-		-lhal_api_trace \
-		-lpal \
-		-lmisc \
-		-lpciehost \
-		-lpciehdevices \
-		-lpciehw \
-		-lintrutils \
-		-lcfgspace \
-		-lpcieport \
-		-lpcietlp \
-		$(NULL)
-
-ifeq ($(BUILD_ARCH), x86_64)
-	SYSTEM_LIBRARIES += -lJudy
-else
-	LIBRARIES += $(TOPDIR)/../nic/hal/third-party/judy/aarch64/lib/libJudy.so.1
-endif
 
 TOPDIR = ../../..
 include $(TOPDIR)/make/Makefile.inc

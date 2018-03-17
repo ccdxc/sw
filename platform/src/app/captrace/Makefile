@@ -16,7 +16,6 @@ LCFLAGS = \
 	-I $(TOPDIR)/../nic/include/ \
 	-I $(TOPDIR)/../nic/sdk/include \
 	-I $(TOPDIR)/../nic/sdk \
-	-I $(TOPDIR)/../nic/gen/proto/hal/ \
 	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/proto \
 	-I $(TOPDIR)/../nic/hal/third-party/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/grpc/include/ \
@@ -29,7 +28,6 @@ LCXXFLAGS = $(LCFLAGS)
 LLDFLAGS = \
 	-L $(TOPDIR)/../nic/obj \
 	-L $(TOPDIR)/../nic/conf/sdk \
-	-L $(TOPDIR)/../nic/gen/$(BUILD_ARCH)/lib/ \
 	-L $(TOPDIR)/../nic/hal/third-party/grpc/$(BUILD_ARCH)/lib \
 	-L $(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib \
 	-L $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/lib \

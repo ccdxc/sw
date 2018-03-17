@@ -8,7 +8,7 @@
 #include "cap_sw_glue.h"
 #include "cap_pcie_api.h"
 
-#include "pciehsys.h"
+#include "pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
@@ -86,12 +86,12 @@ pcieport_serdes_init(void)
     int gen;
 
     hdr = (struct sbus_hdr *)sbus_pcie_rom_start;
-    pciehsys_log("pcie sbus ROM @ %p", hdr);
+    pciesys_loginfo("pcie sbus ROM @ %p", hdr);
     if (hdr->magic != SBUS_ROM_MAGIC) {
-        pciehsys_log(", bad magic\n");
+        pciesys_loginfo(", bad magic\n");
         return;
     }
-    pciehsys_log(", good magic.  %d words\n", hdr->nwords);
+    pciesys_loginfo(", good magic.  %d words\n", hdr->nwords);
 
     ctx.buf = (uint8_t *)(hdr + 1);
     ctx.nwords = hdr->nwords;
@@ -102,7 +102,7 @@ pcieport_serdes_init(void)
     cap_pcie_serdes_setup(0, 0, gen == 1, &ctx);
     pal_reg_trace("================ cap_pcie_serdes_setup end\n");
 #else
-    pciehsys_error("pcieport_serdes_init: missing serdes rom!!!\n");
+    pciesys_logerror("pcieport_serdes_init: missing serdes rom!!!\n");
     assert(0);
     if (0) pcieport_serdes_fw_gen();
 #endif

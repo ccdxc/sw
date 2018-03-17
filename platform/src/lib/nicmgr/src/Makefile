@@ -14,11 +14,9 @@ LCFLAGS = \
 	-I $(TOPDIR)/include/common \
 	-I $(TOPDIR)/src/third-party/lib/gmp/include \
 	-I $(TOPDIR)/src/lib/pal/include \
-	-I $(TOPDIR)/src/lib/misc/include \
 	-I $(TOPDIR)/src/lib/pcieport/include \
-	-I $(TOPDIR)/src/lib/cfgspace/include \
-	-I $(TOPDIR)/src/lib/pciehost/include \
-	-I $(TOPDIR)/src/lib/pciehw/include \
+	-I $(TOPDIR)/src/lib/pciemgr/include \
+	-I $(TOPDIR)/src/lib/pciemgrutils/include \
 	-I $(TOPDIR)/src/lib/pciehdevices/include \
 	-I $(TOPDIR)/src/lib/intrutils/include \
 	-I $(TOPDIR)/src/lib/delphi \
@@ -84,9 +82,9 @@ LCXXFLAGS = $(LCFLAGS)
 
 LIBRARIES = \
 	-lmisc \
-	-lpciehost \
+	-lpciemgr \
+	-lpciemgrutils \
 	-lpciehdevices \
-	-lpciehw \
 	-lintrutils \
 	-lcfgspace \
 	-lpcieport \
@@ -99,7 +97,7 @@ LLDFLAGS = \
 	-L $(TOPDIR)/../nic/conf/sdk \
 	-L $(TOPDIR)/../nic/hal/third-party/grpc/$(BUILD_ARCH)/lib \
 	-L $(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib \
-	-L $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/lib/ \
+	-L $(TOPDIR)/../nic/build/$(BUILD_ARCH)/iris/lib \
 	$(NULL)
 
 SYSTEM_LIBRARIES = \

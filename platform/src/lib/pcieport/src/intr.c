@@ -12,7 +12,7 @@
 #include <sys/time.h>
 
 #include "pal.h"
-#include "pciehsys.h"
+#include "pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
@@ -81,7 +81,7 @@ pcieport_poweron(pcieport_t *p)
 
     pcieport_set_ltssm_st_cnt(p, 0);
     r = pcieport_config(p);
-    if (r) pciehsys_log("%d: poweron: %d\n", p->port, r);
+    if (r) pciesys_logerror("%d: poweron: %d\n", p->port, r);
 }
 
 #define INTREG_PERST0N \

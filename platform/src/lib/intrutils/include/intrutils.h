@@ -64,13 +64,19 @@ u_int64_t intr_msixcfg_addr(const int intr);
 u_int64_t intr_fwcfg_addr(const int intr);
 u_int64_t intr_drvcfg_addr(const int intr);
 u_int64_t intr_assert_addr(const int intr);
+u_int64_t intr_msixcfg_addr(const int intrb);
+u_int32_t intr_msixcfg_size(const int intrc);
+u_int64_t intr_fwcfg_addr(const int intrb);
+u_int64_t intr_drvcfg_addr(const int intrb);
+u_int32_t intr_drvcfg_size(const int intrc);
+u_int64_t intr_assert_addr(const int intrb);
 u_int64_t intr_pba_addr(const int lif);
+u_int32_t intr_pba_size(const int intrc);
 u_int64_t intr_pba_cfg_addr(const int lif);
 u_int64_t intr_state_addr(const int intr);
 
 void intr_drvcfg(const int intr);
-void intr_pba_cfg(const int lif,
-                  const int intr_start, const size_t intr_count);
+void intr_pba_cfg(const int lif, const int intrb, const size_t intrc);
 void intr_pba_clear(const int intr);
 void intr_msixcfg(const int intr,
                   const u_int64_t msgaddr,

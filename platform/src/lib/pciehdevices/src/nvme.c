@@ -8,50 +8,41 @@
 #include <sys/types.h>
 
 #include "pci_ids.h"
-#include "pciehost.h"
+#include "intrutils.h"
+#include "pciemgrutils.h"
 #include "pciehdevices.h"
-#include "utils_impl.h"
 
 static void
 initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 {
     pciehbarreg_t preg;
     pciehbar_t pbar;
+    prt_t prt;
 
-    /* bar mem64 */
+    /*****************
+     * resource bar
+     */
     memset(&pbar, 0, sizeof(pbar));
     pbar.type = PCIEHBARTYPE_MEM64;
+    pbar.size = 0x4000;
+    pbar.cfgidx = 0;
 
-    /* Controller Regs */
     memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_RES;
-    preg.flags = PCIEHBARREGF_RW;
-    preg.paddr = pres->devcmdpa;
-    preg.size = 0x1000;
+    pmt_bar_enc(&preg.pmt,
+                pres->port,
+                PMT_TYPE_MEM,
+                pbar.size,
+                pbar.size,      /* prtsize */
+                PMT_BARF_RW);
+
+    /* XXX */
+    prt_res_enc(&prt, /* pa */0, /* sz */0, PRT_RESF_NONE);
+    pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
-    /* Doorbells */
-    memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_DB32;
-    preg.flags = PCIEHBARREGF_RW;
-    preg.size = 0x1000;
-    pciehbar_add_reg(&pbar, &preg);
-
-    /* MSI-X Interrupt Table */
-    memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_RES;
-    preg.flags = (PCIEHBARREGF_RW | PCIEHBARREGF_MSIX_TBL);
-    preg.paddr = intr_msixcfg_addr(pres->intrb);
-    preg.size = 0x1000;
-    pciehbar_add_reg(&pbar, &preg);
-
-    /* MSI-X Interrupt PBA */
-    memset(&preg, 0, sizeof(preg));
-    preg.regtype = PCIEHBARREGT_RES;
-    preg.flags = (PCIEHBARREGF_RD | PCIEHBARREGF_MSIX_PBA);
-    preg.paddr = intr_pba_addr(pres->lif);
-    preg.size = 0x1000;
-    pciehbar_add_reg(&pbar, &preg);
+    /* XXX */
+    pciehbars_set_msix_tbl(pbars, 0, 0x2000);
+    pciehbars_set_msix_pba(pbars, 0, 0x3000);
 
     pciehbars_add_bar(pbars, &pbar);
 }
@@ -68,6 +59,7 @@ initialize_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
     pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
     pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
+    pciehcfg_setconf_dsn(pcfg, pres->dsn);
     pciehcfg_setconf_fnn(pcfg, pres->fnn);
 
     pciehcfg_sethdr_type0(pcfg, pbars);

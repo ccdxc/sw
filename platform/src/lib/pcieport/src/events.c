@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "pciehsys.h"
+#include "pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
@@ -94,7 +94,7 @@ pcieport_register_event_handler(pcieport_event_handler_t h, void *arg)
     int n;
 
     n = evinfo->nhandlers + 1;
-    newhandlers = pciehsys_realloc(evinfo->handlers, n * sizeof(*newhandlers));
+    newhandlers = pciesys_realloc(evinfo->handlers, n * sizeof(*newhandlers));
     if (newhandlers == NULL) return -1;
 
     evinfo->handlers = newhandlers;

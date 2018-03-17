@@ -6,7 +6,7 @@ LIBRARY = libpcieport.a libpcieport.so
 SOURCES = \
 	pcieport.c \
 	events.c \
-	ctrl.c \
+	config.c \
 	intr.c \
 	fsm.c \
 	utils.c \
@@ -25,9 +25,10 @@ LCFLAGS += \
 	-I $(ASIC_ROOT)/capri/design/common \
 	-I $(ASIC_ROOT)/capri/model/cap_top \
 	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
-	-I ../../../../include/common \
+	-I $(TOPDIR)/include/common \
 	-I ../../misc/include \
-	-I ../../pciehost/include \
+	-I ../../pciemgrutils/include \
+	-I ../../pciemgr/include \
 	-I ../../pal/include \
 	-I ../include \
 	$(NULL)

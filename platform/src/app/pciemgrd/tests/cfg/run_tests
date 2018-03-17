@@ -6,7 +6,7 @@ for tc in testcases/*.in; do
     tb=`echo $tc | sed -e 's/\.in$//'`
     rm -f $HOME/.palreg-*
     ./genrun pciemgrd < $tc > /dev/null
-    ./genrun lspci -vvvxxxx > $tb.out
+    ./genrun lspci -nvvvxxxx > $tb.out
     if ! cmp -s $tb.exp $tb.out; then
 	printf "%-30s FAILED ***\n" $tc
 	diff $tb.exp $tb.out
@@ -19,5 +19,5 @@ for tc in testcases/*.in; do
 done
 
 echo Passed: $npass Failed: $nfail
-if [ $nfail != 0 ]; then exit 1; fi
+[ $nfail != 0 ] && exit 1
 exit 0

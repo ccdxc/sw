@@ -1,4 +1,4 @@
-00:00.0 Class 0604: Device 1dd8:1000
+00:00.0 0604: 1dd8:1000
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Bus: primary=00, secondary=01, subordinate=00, sec-latency=0
@@ -32,7 +32,7 @@
 	Capabilities: [80] Power Management version 3
 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [a0] Subsystem: Device 1dd8:4001
+	Capabilities: [a0] Subsystem: 1dd8:4001
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -305,7 +305,7 @@ fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-01:00.0 Class 0604: Device 1dd8:1001
+01:00.0 0604: 1dd8:1001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Region 0: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=256K]
@@ -340,7 +340,7 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [80] Power Management version 3
 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [a0] Subsystem: Device 1dd8:4001
+	Capabilities: [a0] Subsystem: 1dd8:4001
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -617,7 +617,7 @@ fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-01:01.0 Class 0604: Device 1dd8:1001
+01:01.0 0604: 1dd8:1001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Bus: primary=00, secondary=03, subordinate=00, sec-latency=0
@@ -651,7 +651,7 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [80] Power Management version 3
 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [a0] Subsystem: Device 1dd8:4001
+	Capabilities: [a0] Subsystem: 1dd8:4001
 	Capabilities: [100 v2] Advanced Error Reporting
 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
@@ -928,13 +928,13 @@ fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-02:00.0 Class 0200: Device 1dd8:1002
-	Subsystem: Device 1dd8:4001
+02:00.0 0200: 1dd8:1002
+	Subsystem: 1dd8:4001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Interrupt: pin A routed to IRQ 0
 	Region 0: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=32K]
-	Region 2: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=16K]
+	Region 2: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=4K]
 	Capabilities: [40] Express (v2) Endpoint, MSI 00
 		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
 			ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 0.000W
@@ -974,10 +974,9 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [160 v1] Alternative Routing-ID Interpretation (ARI)
 		ARICap:	MFVC- ACS-, Next Function: 0
 		ARICtl:	MFVC- ACS-, Function Group: 0
-	Capabilities: [180 v1] Device Serial Number 12-34-56-78-9a-bc-de-ff
-	Capabilities: [1a0 v1] #19
-	Capabilities: [1e0 v1] #26
-	Capabilities: [280 v1] #27
+	Capabilities: [180 v1] #19
+	Capabilities: [1c0 v1] #26
+	Capabilities: [260 v1] #27
 00: d8 1d 02 10 00 00 10 00 00 00 00 02 00 00 00 00
 10: 04 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
 20: 00 00 00 00 00 00 00 00 00 00 00 00 d8 1d 01 40
@@ -1002,25 +1001,25 @@ f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 160: 0e 00 01 18 00 00 00 00 00 00 00 00 00 00 00 00
 170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-180: 03 00 01 1a ff de bc 9a 78 56 34 12 00 00 00 00
-190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-1a0: 19 00 01 1e 00 00 00 00 00 00 00 00 7f 7f 7f 7f
-1b0: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f
-1c0: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 00 00 00 00
+180: 19 00 01 1c 00 00 00 00 00 00 00 00 7f 7f 7f 7f
+190: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f
+1a0: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 00 00 00 00
+1b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1c0: 26 00 01 26 00 00 00 00 00 00 00 00 00 00 00 00
 1d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-1e0: 26 00 01 28 00 00 00 00 00 00 00 00 00 00 00 00
+1e0: f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0
 1f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-200: f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0
+200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-280: 27 00 01 00 00 00 01 00 38 9c 38 9c 38 9c 38 9c
-290: 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c
-2a0: 38 9c 38 9c 38 9c 38 9c 00 00 00 00 00 00 00 00
+260: 27 00 01 00 00 00 01 00 38 9c 38 9c 38 9c 38 9c
+270: 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c
+280: 38 9c 38 9c 38 9c 38 9c 00 00 00 00 00 00 00 00
+290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 2b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 2c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 2d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -1235,13 +1234,13 @@ fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-03:00.0 Class 0200: Device 1dd8:1002
-	Subsystem: Device 1dd8:4001
+03:00.0 0200: 1dd8:1002
+	Subsystem: 1dd8:4001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
 	Interrupt: pin A routed to IRQ 0
 	Region 0: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=32K]
-	Region 2: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=16K]
+	Region 2: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=4K]
 	Capabilities: [40] Express (v2) Endpoint, MSI 00
 		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
 			ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 0.000W
@@ -1281,10 +1280,9 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [160 v1] Alternative Routing-ID Interpretation (ARI)
 		ARICap:	MFVC- ACS-, Next Function: 0
 		ARICtl:	MFVC- ACS-, Function Group: 0
-	Capabilities: [180 v1] Device Serial Number 12-34-56-78-9a-bc-de-ff
-	Capabilities: [1a0 v1] #19
-	Capabilities: [1e0 v1] #26
-	Capabilities: [280 v1] #27
+	Capabilities: [180 v1] #19
+	Capabilities: [1c0 v1] #26
+	Capabilities: [260 v1] #27
 00: d8 1d 02 10 00 00 10 00 00 00 00 02 00 00 00 00
 10: 04 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
 20: 00 00 00 00 00 00 00 00 00 00 00 00 d8 1d 01 40
@@ -1309,25 +1307,25 @@ f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 160: 0e 00 01 18 00 00 00 00 00 00 00 00 00 00 00 00
 170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-180: 03 00 01 1a ff de bc 9a 78 56 34 12 00 00 00 00
-190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-1a0: 19 00 01 1e 00 00 00 00 00 00 00 00 7f 7f 7f 7f
-1b0: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f
-1c0: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 00 00 00 00
+180: 19 00 01 1c 00 00 00 00 00 00 00 00 7f 7f 7f 7f
+190: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f
+1a0: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 00 00 00 00
+1b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+1c0: 26 00 01 26 00 00 00 00 00 00 00 00 00 00 00 00
 1d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-1e0: 26 00 01 28 00 00 00 00 00 00 00 00 00 00 00 00
+1e0: f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0
 1f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-200: f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0 f0
+200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-280: 27 00 01 00 00 00 01 00 38 9c 38 9c 38 9c 38 9c
-290: 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c
-2a0: 38 9c 38 9c 38 9c 38 9c 00 00 00 00 00 00 00 00
+260: 27 00 01 00 00 00 01 00 38 9c 38 9c 38 9c 38 9c
+270: 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c 38 9c
+280: 38 9c 38 9c 38 9c 38 9c 00 00 00 00 00 00 00 00
+290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+2a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 2b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 2c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 2d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00

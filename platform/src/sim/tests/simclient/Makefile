@@ -12,13 +12,12 @@ LCFLAGS = \
 	$(NULL)
 
 LIBRARIES = \
-	-lpciehsvc \
-	-lpciehw \
+	-lpciemgr \
+	-lpciemgrutils \
 	-lpcieport \
 	-lpcietlp \
 	-lintrutils \
 	-lpal \
-	-lpciehost \
 	-lcfgspace \
 	-lmisc \
 	-lsimlib \

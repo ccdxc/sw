@@ -5,7 +5,6 @@
 PROGRAM = nicmgrd
 SOURCES = nicmgrd.cc nicmgr_client_reg.cc
 
-
 LCFLAGS = \
 	-I ../include \
 	-I $(TOPDIR) \
@@ -15,8 +14,8 @@ LCFLAGS = \
 	-I $(TOPDIR)/src/lib/misc/include \
 	-I $(TOPDIR)/src/lib/pcieport/include \
 	-I $(TOPDIR)/src/lib/cfgspace/include \
-	-I $(TOPDIR)/src/lib/pciehost/include \
-	-I $(TOPDIR)/src/lib/pciehw/include \
+	-I $(TOPDIR)/src/lib/pciemgr/include \
+	-I $(TOPDIR)/src/lib/pciemgrutils/include \
 	-I $(TOPDIR)/src/lib/pciehdevices/include \
 	-I $(TOPDIR)/src/lib/intrutils/include \
 	-I $(TOPDIR)/src/lib/nicmgr/include \
@@ -113,9 +112,9 @@ LIBRARIES += \
 	-lhal_api_trace \
 	-lpal \
 	-lmisc \
-	-lpciehost \
 	-lpciehdevices \
-	-lpciehw \
+	-lpciemgr \
+	-lpciemgrutils \
 	-lintrutils \
 	-lcfgspace \
 	-lpcieport \

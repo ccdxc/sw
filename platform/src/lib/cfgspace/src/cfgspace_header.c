@@ -222,11 +222,13 @@ cfgspace_set_bar(cfgspace_t *cs, const cfgspace_bar_t *b)
     switch (b->type) {
     case CFGSPACE_BARTYPE_MEM:
         v = 0x0 << 1;   /* 32-bit */
+        if (b->prefetch) v |= 0x8;
         m = ~(b->size - 1) & ~0xfUL;
         cfgspace_setdm(cs, cfgoff, v, m);
         break;
     case CFGSPACE_BARTYPE_MEM64:
         v = 0x2 << 1;   /* 64-bit */
+        if (b->prefetch) v |= 0x8;
         m = ~(b->size - 1) & ~0xfULL;
         cfgspace_setdm(cs, cfgoff, v, m);
         cfgspace_setdm(cs, cfgoff + 4, v >> 32, m >> 32);

@@ -539,9 +539,9 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 
 #ifdef __aarch64__
 void
-DeviceManager::PcieEventHandler(pciehdev_t *pdev, const pciehdev_eventdata_t *evd)
+DeviceManager::PcieEventHandler(const pciehdev_eventdata_t *evd)
 {
-    Device *dev = (Device *)pciehdev_get_priv(pdev);
+    Device *dev = (Device *)pciehdev_get_priv(evd->pdev);
     dev->DevcmdHandler();
 }
 #endif

@@ -88,8 +88,8 @@ diff -uprN pciutils-3.5.6-orig/lib/Makefile pciutils-3.5.6/lib/Makefile
 +PEN_TOP ?= path-to-pensando-topdir
 +PEN_PCIE = ../$(PEN_TOP)/src/lib
 +OBJS += pen-libpciehost
-+pen-libpciehost.o: CFLAGS += -I$(PEN_PCIE)/pciehost/include \
-+                             -I$(PEN_PCIE)/pciehsvc/include
++pen-libpciehost.o: CFLAGS += -I$(PEN_PCIE)/pciemgrutils/include \
++                             -I$(PEN_PCIE)/pciemgr/include
 +endif
 +
  all: $(PCILIB) $(PCILIBPC)
@@ -109,7 +109,7 @@ diff -uprN pciutils-3.5.6-orig/lib/pci.h pciutils-3.5.6/lib/pci.h
 diff -uprN pciutils-3.5.6-orig/lib/pen-libpciehost.c pciutils-3.5.6/lib/pen-libpciehost.c
 --- pciutils-3.5.6-orig/lib/pen-libpciehost.c	1969-12-31 16:00:00.000000000 -0800
 +++ pciutils-3.5.6/lib/pen-libpciehost.c	2018-02-11 01:51:47.648310244 -0800
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,124 @@
 +/*
 + *	The PCI Library -- NetBSD libpci access
 + *         (based on FreeBSD /dev/pci access)
@@ -126,13 +126,14 @@ diff -uprN pciutils-3.5.6-orig/lib/pen-libpciehost.c pciutils-3.5.6/lib/pen-libp
 + *      to supply basic information correctly, but I promise no more.
 + */
 +
++#include <stdarg.h>
 +#include <fcntl.h>
 +#include <string.h>
 +#include <unistd.h>
 +#include <sys/types.h>
 +
-+#include "pciehost.h"
-+#include "pciehsvc.h"
++#include "pciemgrutils.h"
++#include "pciemgr.h"
 +
 +#include "internal.h"
 +
@@ -236,7 +237,7 @@ diff -uprN pciutils-3.5.6-orig/lib/pen-libpciehost.c pciutils-3.5.6/lib/pen-libp
 diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
 --- pciutils-3.5.6-orig/Makefile	2017-11-17 05:00:27.000000000 -0800
 +++ pciutils-3.5.6/Makefile	2018-02-10 23:05:23.232755294 -0800
-@@ -87,6 +87,28 @@ common.o: common.c pciutils.h $(PCIINC)
+@@ -87,6 +87,27 @@ common.o: common.c pciutils.h $(PCIINC)
  lspci: LDLIBS+=$(LIBKMOD_LIBS)
  ls-kernel.o: CFLAGS+=$(LIBKMOD_CFLAGS)
  
@@ -245,11 +246,10 @@ diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
 +PEN_TOP ?= path-to-pensando-topdir
 +LIBPCIEDIR = $(PEN_TOP)/gen/$(BUILD_ARCH)/lib
 +LIBPCIE = \
-+	$(LIBPCIEDIR)/libpciehsvc.a \
-+	$(LIBPCIEDIR)/libpciehw.a \
-+	$(LIBPCIEDIR)/libpcieport.a \
++	$(LIBPCIEDIR)/libpciemgr.a \
++	$(LIBPCIEDIR)/libpciemgrutils.a \
 +	$(LIBPCIEDIR)/libpcietlp.a \
-+	$(LIBPCIEDIR)/libpciehost.a \
++	$(LIBPCIEDIR)/libpcieport.a \
 +	$(LIBPCIEDIR)/libcfgspace.a \
 +	$(LIBPCIEDIR)/libpal.a \
 +	$(LIBPCIEDIR)/libmisc.a \

@@ -1,9 +1,10 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2017-2018, Pensando Systems Inc.
 #
 
 LIBRARY = libpciehdevices.a libpciehdevices.so
 SOURCES = \
+	bars.c \
 	eth.c \
 	nvme.c \
 	accel.c \
@@ -11,18 +12,15 @@ SOURCES = \
 	debug.c \
 	pciestress.c \
 	rcdev.c \
-	utils.c \
 	$(NULL)
 
 LCFLAGS = \
-	-I $(ASIC_ROOT)/capri/design/common \
-	-I $(ASIC_ROOT)/capri/model/cap_top \
-	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
-	-I ../../../../include/common \
+	-I $(TOPDIR)/../nic/include \
+	-I $(TOPDIR)/include/common \
 	-I ../../misc/include \
-	-I ../../pciehost/include \
+	-I ../../intrutils/include \
+	-I ../../pciemgrutils/include \
 	-I ../include \
-	-I ../../../../../nic/include \
 	$(NULL)
 
 TOPDIR = ../../../..

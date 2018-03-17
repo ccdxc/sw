@@ -1,0 +1,7 @@
+add nvme
+finalize
+dbg pciehw bar setaddr -d nvme0 -b 0 0x8877665544338000
+dbg pciehw bar load -d nvme0 -b 0
+dbg pciehw bar show
+dbg pciehw pmt -b
+dbg pciehw pmt -br

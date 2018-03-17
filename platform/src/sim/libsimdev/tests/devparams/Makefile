@@ -8,11 +8,10 @@ SOURCES = devparams.c
 LIBRARIES = \
 	-lsimdev \
 	-lsimlib \
-	-lpciehsvc \
-	-lpciehw \
+	-lpciemgr \
+	-lpciemgrutils \
 	-lpcieport \
 	-lpcietlp \
-	-lpciehost \
 	-lcfgspace \
 	-lintrutils \
 	-lpal \

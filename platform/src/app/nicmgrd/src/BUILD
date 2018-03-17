@@ -36,6 +36,7 @@ cc_binary(
                 "//platform/src/lib/pciehost/include:libpciehost_hdrs",
                 "//platform/src/lib/pciehdevices/include:libpciehdevices_hdrs",
                 "//platform/src/lib/pciehw/include:libpciehw_hdrs",
+                "//platform/src/lib/pciehwutil/src:libpciehwutil",
                 "//platform/src/lib/pcieport/include:libpcieport_hdrs",
                 "//platform/drivers/linux/eth/ionic:liblinuxionic_hdrs",
                 "//nic/hal/third-party:grpc",

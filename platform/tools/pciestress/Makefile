@@ -10,9 +10,9 @@ LCFLAGS = \
 	-I $(TOPDIR)/src/third-party/lib/pci/include \
 	$(NULL)
 
-LLDFLAGS = /lib/x86_64-linux-gnu/libpci.so.3
-
-SYSTEM_LIBRARIES = 
+SYSTEM_LIBRARIES = \
+	/lib/x86_64-linux-gnu/libpci.so.3 \
+	$(NULL)
 
 TOPDIR = ../..
 include $(TOPDIR)/make/Makefile.inc

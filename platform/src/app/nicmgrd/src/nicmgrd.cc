@@ -15,17 +15,9 @@
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
 #include "hal_client.hpp"
-
-#ifndef __x86_64__
 #include "pci_ids.h"
-#include "misc.h"
-#include "bdf.h"
-#include "cfgspace.h"
-#include "pciehost.h"
-#include "pciehdevices.h"
-#include "pciehw.h"
+#include "pciehw_dev.h"
 #include "pcieport.h"
-#endif
 
 using namespace std;
 
@@ -79,7 +71,7 @@ static void
 loop()
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    pciehdev_openparams_t p;
+    pciehdev_params_t p;
     useconds_t polltm_us = 10000;
 
     memset(&p, 0, sizeof(p));
@@ -90,14 +82,14 @@ loop()
      * is in hw and our first virtual device is 00:00.0.
      */
 #ifdef __aarch64__
+    p.initmode = FORCE_INIT;
     p.first_bus = 0;
 #else
+    p.initmode = FORCE_INIT;
     p.first_bus = 1;
     p.fake_bios_scan = 1;
 #endif
-    p.inithw = 1;
     p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
-    p.enabled_ports = 0x1;
     pme->enabled_ports = 0x1;
 
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
@@ -108,8 +100,8 @@ loop()
                 printf("pcieport_open %d failed\n", port);
                 exit(1);
             }
-            if (pcieport_ctrl(pport, PCIEPORT_CMD_HOSTCONFIG, NULL) < 0) {
-                printf("pcieport_ctrl(HOSTCONFIG) %d failed\n", port);
+            if (pcieport_hostconfig(pport, &p) < 0) {
+                printf("pcieport_hostconfig %d failed\n", port);
                 exit(1);
             }
 
@@ -122,9 +114,13 @@ loop()
         exit(1);
     }
 
-    if (pciehdev_initialize() < 0) {
-        printf("pciehdev_initialize failed\n");
-        exit(1);
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            if (pciehdev_initialize(port) < 0) {
+                printf("pciehdev_initialize failed\n");
+                exit(1);
+            }
+        }
     }
 
     devmgr = new DeviceManager(fwd_mode, platform);
@@ -138,13 +134,19 @@ loop()
     }
 #endif
 
-    pciehdev_finalize();
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pciehdev_finalize(port);
+            const int off = 0;
+            pcieport_crs(pme->pport[port], off);
+        }
+    }
 
 #ifdef __aarch64__
     int off = 0;
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->pport[port]) {
-            pcieport_ctrl(pme->pport[port], PCIEPORT_CMD_CRS, &off);
+            pcieport_crs(pme->pport[port], off);
         }
     }
 #endif
