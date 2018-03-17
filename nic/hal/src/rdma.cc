@@ -1222,7 +1222,8 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             break;
         
         case rdma::RDMA_UPDATE_QP_OPER_SET_TX_PSN:
-            sqcb_p->sqcb1.tx_psn = spec.tx_psn();
+            sqcb_p->sqcb2.tx_psn = spec.tx_psn();
+            sqcb_p->sqcb1.tx_psn = sqcb_p->sqcb2.tx_psn;
             sqcb_p->sqcb1.rexmit_psn = spec.tx_psn();
             HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,
                             spec.tx_psn());
