@@ -125,11 +125,17 @@ def GetChecksumOffset(tc, obj, args=None):
 TxOpcodeEnum = {
     'TXQ_DESC_OPCODE_CALC_NO_CSUM' : 0x0,
     'TXQ_DESC_OPCODE_CALC_CSUM' : 0x1,
+    'TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP' : 0x2,
     'TXQ_DESC_OPCODE_TSO': 0x2
 }
 
+
 def GetTxOpcodeCalcCsum(tc, obj, args=None):
     return TxOpcodeEnum['TXQ_DESC_OPCODE_CALC_CSUM']
+
+
+def GetTxOpcodeCalcCsumTcpUdp(tc, obj, args=None):
+    return TxOpcodeEnum['TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP']
 
 
 def GetL2Checksum(tc, obj, args=None):
@@ -142,6 +148,10 @@ def GetIsIPV4(tc, obj, args=None):
     return tc.config.flow.IsIPV4()
 
 
+def GetIsIPV6(tc, obj, args=None):
+    return tc.config.flow.IsIPV6()
+
+
 def GetIsTCP(tc, obj, args=None):
     return tc.config.flow.IsTCP()
 
@@ -149,3 +159,6 @@ def GetIsTCP(tc, obj, args=None):
 def GetIsUDP(tc, obj, args=None):
     return tc.config.flow.IsUDP()
 
+
+def GetIsTCPUDP(tc, obj, args=None):
+    return 1 if GetIsTCP(tc, obj, args) or GetIsUDP(tc, obj, args=None) else 0

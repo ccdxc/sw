@@ -24,10 +24,14 @@ f_p4plus_to_p4_2:
   // update compute checksum flags (classic nic)
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC
   bcf           [!c1], f_p4plus_to_p4_2_other_apps
-  phvwrpair.c1  p.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_L4_CHECKSUM], \
-                    k.p4plus_to_p4_comp_inner_l4_csum, \
-                    p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], \
-                    k.p4plus_to_p4_comp_l4_csum
+  crestore      [c2-c1], k.{p4plus_to_p4_compute_inner_l4_csum,\
+                            p4plus_to_p4_compute_l4_csum}, 0x3
+  phvwr.c2      p.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_L4_CHECKSUM], TRUE
+  phvwr.c1      p.control_metadata_checksum_ctl[CHECKSUM_CTL_L4_CHECKSUM], TRUE
+  crestore      [c2-c1], k.{p4plus_to_p4_compute_inner_ip_csum,\
+                            p4plus_to_p4_compute_ip_csum}, 0x3
+  phvwr.c2      p.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_IP_CHECKSUM], TRUE
+  phvwr.c1      p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
   // remove the headers
   phvwr.e       p.capri_txdma_intrinsic_valid, FALSE

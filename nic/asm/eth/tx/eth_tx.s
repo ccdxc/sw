@@ -78,7 +78,7 @@ eth_tx_sg_continue:
 
   // C2 = No more frags .. Packet EOP
 
-  sub             r2, r2, 1
+  subi            r2, r2, 1
   seq             c1, r2, 0
 
   DMA_CMD_PTR(r4, r5, r6, r7)

@@ -9,6 +9,32 @@
  *  P-vector Headers
  ***/
 
+header_type p4plus_to_p4_classic_header_t {
+    fields {
+        p4plus_app_id           : 4;
+        pad                     : 4;
+        lkp_inst                : 1;
+        compute_inner_l4_csum   : 1;
+        compute_l4_csum         : 1;
+        insert_vlan_tag         : 1;
+        update_udp_len          : 1;
+        update_tcp_seq_no       : 1;
+        update_ip_len           : 1;
+        update_ip_id            : 1;
+        udp_opt_bytes           : 8;
+        flow_index              : 24;
+        ip_id_delta             : 16;
+        tcp_seq_delta           : 32;
+        gso_start               : 14;
+        compute_inner_ip_csum   : 1;
+        compute_ip_csum         : 1;
+        gso_offset              : 14;
+        flow_index_valid        : 1;
+        gso_valid               : 1;
+        vlan_tag                : 16;
+    }
+}
+
 header_type eth_tx_cq_desc_p {
     fields {
         status : 8;
@@ -64,13 +90,14 @@ header_type eth_tx_qstate_d {
     len##n : 16; \
     vlan_tci##n : 16; \
     hdr_len_lo##n : 8; \
-    csum##n : 1; \
+    encap##n : 1; \
     cq_entry##n : 1; \
     vlan_insert##n : 1; \
     rsvd2##n : 3; \
     hdr_len_hi##n: 2; \
     mss_or_csumoff_lo##n : 8; \
-    rsvd3_or_rsvd4##n : 2; \
+    csum_l4##n : 1; \
+    csum_l3##n : 1; \
     mss_or_csumoff_hi##n : 6;
 
 header_type eth_tx_desc_d {
@@ -250,7 +277,7 @@ metadata eth_tx_cq_desc_p eth_tx_cq_desc;
 // Use the App Header from Flit0 for the first packet
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
-metadata p4plus_to_p4_header_t eth_tx_app_hdr0;
+metadata p4plus_to_p4_classic_header_t eth_tx_app_hdr0;
 
 // Additional APP Headers for other packets
 @pragma dont_trim

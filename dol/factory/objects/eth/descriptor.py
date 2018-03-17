@@ -75,7 +75,8 @@ class EthTxDescriptor(LittleEndianStructure):
         ("C", c_uint16, 1),
         ("O", c_uint16, 1),
         ("mss_or_csumoffset", c_uint16, 14),
-        ("rsvd3_or_rsvd4", c_uint16, 2),
+        ("csum_l3", c_uint16, 1),
+        ("csum_l4", c_uint16, 1),
     ]
 
 

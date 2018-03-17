@@ -74,8 +74,8 @@
     addr_lo##n, rsvd##n, addr_hi##n, opcode##n, num_sg_elems##n, \
     len##n, vlan_tci##n, \
     hdr_len_lo##n, \
-    csum##n, cq_entry##n, vlan_insert##n, rsvd2##n, hdr_len_hi##n, \
-    mss_or_csumoff_lo##n, rsvd3_or_rsvd4##n, mss_or_csumoff_hi##n
+    encap##n, cq_entry##n, vlan_insert##n, rsvd2##n, hdr_len_hi##n, \
+    mss_or_csumoff_lo##n, csum_l4##n, csum_l3##n, mss_or_csumoff_hi##n
 
 #define MODIFY_TX_DESC(n) \
     modify_field(eth_tx_desc.addr_lo##n, addr_lo##n); \
@@ -90,9 +90,10 @@
     modify_field(eth_tx_desc.rsvd2##n, rsvd2##n); \
     modify_field(eth_tx_desc.vlan_insert##n, vlan_insert##n); \
     modify_field(eth_tx_desc.cq_entry##n, cq_entry##n); \
-    modify_field(eth_tx_desc.csum##n, csum##n); \
+    modify_field(eth_tx_desc.encap##n, encap##n); \
     modify_field(eth_tx_desc.mss_or_csumoff_lo##n, mss_or_csumoff_lo##n); \
-    modify_field(eth_tx_desc.rsvd3_or_rsvd4##n, rsvd3_or_rsvd4##n); \
+    modify_field(eth_tx_desc.csum_l4##n, csum_l4##n); \
+    modify_field(eth_tx_desc.csum_l3##n, csum_l3##n); \
     modify_field(eth_tx_desc.mss_or_csumoff_hi##n, mss_or_csumoff_hi##n);
 
 #define PARAM_TX_SG_ELEM(n) \
@@ -119,7 +120,8 @@
     modify_field(eth_tx_##hdr##_scratch.rsvd2##n, eth_tx_##hdr.rsvd2##n); \
     modify_field(eth_tx_##hdr##_scratch.vlan_insert##n, eth_tx_##hdr.vlan_insert##n); \
     modify_field(eth_tx_##hdr##_scratch.cq_entry##n, eth_tx_##hdr.cq_entry##n); \
-    modify_field(eth_tx_##hdr##_scratch.csum##n, eth_tx_##hdr.csum##n); \
+    modify_field(eth_tx_##hdr##_scratch.encap##n, eth_tx_##hdr.encap##n); \
     modify_field(eth_tx_##hdr##_scratch.mss_or_csumoff_lo##n, eth_tx_##hdr.mss_or_csumoff_lo##n); \
-    modify_field(eth_tx_##hdr##_scratch.rsvd3_or_rsvd4##n, eth_tx_##hdr.rsvd3_or_rsvd4##n); \
+    modify_field(eth_tx_##hdr##_scratch.csum_l4##n, eth_tx_##hdr.csum_l4##n); \
+    modify_field(eth_tx_##hdr##_scratch.csum_l3##n, eth_tx_##hdr.csum_l3##n); \
     modify_field(eth_tx_##hdr##_scratch.mss_or_csumoff_hi##n, eth_tx_##hdr.mss_or_csumoff_hi##n);

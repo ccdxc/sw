@@ -260,53 +260,55 @@ header_type p4_to_p4plus_cpu_tcp_pkt_t {
  */
 header_type p4plus_to_p4_header_t {
     fields {
-        p4plus_app_id       : 4;
-        table0_valid        : 1;
-        table1_valid        : 1;
-        table2_valid        : 1;
-        table3_valid        : 1;
-        flags               : 8;
-        udp_opt_bytes       : 8;  // exclude these bytes from udp payload_len
-        flow_index          : 24;
-        ip_id_delta         : 16;
-        tcp_seq_delta       : 32;
-        gso_start           : 14;
-        byte_align_pad0     : 2;
-        gso_offset          : 14;
-        flow_index_valid    : 1;
-        gso_valid           : 1;
-        vlan_tag            : 16;
+        p4plus_app_id           : 4;
+        table0_valid            : 1;
+        table1_valid            : 1;
+        table2_valid            : 1;
+        table3_valid            : 1;
+        flags                   : 8;
+        udp_opt_bytes           : 8;
+        flow_index              : 24;
+        ip_id_delta             : 16;
+        tcp_seq_delta           : 32;
+        gso_start               : 14;
+        compute_inner_ip_csum   : 1;
+        compute_ip_csum         : 1;
+        gso_offset              : 14;
+        flow_index_valid        : 1;
+        gso_valid               : 1;
+        vlan_tag                : 16;
     }
 }
 
 header_type p4plus_to_p4_s1_t {
     fields {
-        p4plus_app_id       : 4;
-        pad                 : 4;
-        lkp_inst            : 1;
-        comp_inner_l4_csum  : 1;
-        comp_l4_csum        : 1;
-        insert_vlan_tag     : 1;
-        update_udp_len      : 1;
-        update_tcp_seq_no   : 1;
-        update_ip_len       : 1;
-        update_ip_id        : 1;
-        udp_opt_bytes       : 8;  // exclude these bytes from udp payload_len
-        flow_index          : 24;
-        ip_id_delta         : 16;
-        tcp_seq_delta       : 32;
-        gso_start           : 14;
-        byte_align_pad0     : 2;
-        gso_offset          : 14;
-        flow_index_valid    : 1;
-        gso_valid           : 1;
+        p4plus_app_id           : 4;
+        pad                     : 4;
+        lkp_inst                : 1;
+        compute_inner_l4_csum   : 1;
+        compute_l4_csum         : 1;
+        insert_vlan_tag         : 1;
+        update_udp_len          : 1;
+        update_tcp_seq_no       : 1;
+        update_ip_len           : 1;
+        update_ip_id            : 1;
+        udp_opt_bytes           : 8;
+        flow_index              : 24;
+        ip_id_delta             : 16;
+        tcp_seq_delta           : 32;
+        gso_start               : 14;
+        compute_inner_ip_csum   : 1;
+        compute_ip_csum         : 1;
+        gso_offset              : 14;
+        flow_index_valid        : 1;
+        gso_valid               : 1;
     }
 }
 
 header_type p4plus_to_p4_s2_t {
     fields {
-        pcp                 : 3;
-        dei                 : 1;
-        vid                 : 12;
+        pcp                     : 3;
+        dei                     : 1;
+        vid                     : 12;
     }
 }

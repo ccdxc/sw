@@ -18,9 +18,10 @@
 #define LG2_MAX_SPURIOUS_DB         (3)
 
 // TX Descriptor Opcodes
-#define TXQ_DESC_OPCODE_CALC_NO_CSUM    0x0
-#define TXQ_DESC_OPCODE_CALC_CSUM       0x1
-#define TXQ_DESC_OPCODE_TSO             0x2
+#define TXQ_DESC_OPCODE_CALC_NO_CSUM        0x0
+#define TXQ_DESC_OPCODE_CALC_CSUM           0x1
+#define TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP    0x2
+#define TXQ_DESC_OPCODE_TSO                 0x3
 
 // DMA Macros
 #define ETH_DMA_CMD_START_OFFSET    (CAPRI_PHV_START_OFFSET(dma_dma_cmd_type) / 16)
@@ -53,19 +54,27 @@
 
 #define BUILD_APP_HEADER(n) \
     phvwri      p.eth_tx_app_hdr##n##_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC; \
-    add         r1, r0, r0; \
-    seq         c1, k.eth_tx_to_s2_vlan_insert##n##, 1; \
-    bcf         [!c1], eth_tx_vlan_insert_skip; \
-    nop; \
-eth_tx_vlan_insert:; \
-    addi        r1, r0, P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG; \
+    phvwr       p.eth_tx_app_hdr##n##_insert_vlan_tag, k.eth_tx_to_s2_vlan_insert##n##;\
     phvwr       p.eth_tx_app_hdr##n##_vlan_tag, k.{eth_tx_to_s2_vlan_tci##n}.hx; \
-    phvwr       p.eth_tx_app_hdr##n##_flags, r1; \
-eth_tx_vlan_insert_skip:; \
-    seq         c2, k.eth_tx_to_s2_opcode##n##, TXQ_DESC_OPCODE_CALC_CSUM; \
-    bcf         [!c2], eth_tx_csum_none; \
+eth_tx_opcode_start:; \
+    add         r1, r0, k.eth_tx_to_s2_opcode##n##; \
+.brbegin; \
+    br          r1[1:0]; \
     nop; \
-eth_tx_csum_calc:; \
+    .brcase     TXQ_DESC_OPCODE_CALC_NO_CSUM; \
+        b       eth_tx_opcode_done; \
+        nop; \
+    .brcase     TXQ_DESC_OPCODE_CALC_CSUM; \
+        b       eth_tx_calc_csum; \
+        nop; \
+    .brcase     TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP; \
+        b       eth_tx_calc_csum_tcpudp; \
+        nop; \
+    .brcase     TXQ_DESC_OPCODE_TSO; \
+        b       eth_tx_tso; \
+        nop; \
+.brend; \
+eth_tx_calc_csum:; \
     phvwr       p.eth_tx_app_hdr##n##_gso_valid, 1; \
     or          r2, k.eth_tx_to_s2_hdr_len_lo##n, k.eth_tx_to_s2_hdr_len_hi##n, sizeof(k.eth_tx_to_s2_hdr_len_lo##n); \
     add         r2, r0, r2.dx; \
@@ -76,7 +85,18 @@ eth_tx_csum_calc:; \
     or          r3, r3[63:56], r3[53:48], sizeof(k.eth_tx_to_s2_mss_or_csumoff_lo##n); \
     add         r3, r3, r2;\
     phvwrpair   p.eth_tx_app_hdr##n##_gso_start, r2, p.eth_tx_app_hdr##n##_gso_offset, r3; \
-eth_tx_csum_none:; \
+eth_tx_calc_csum_tcpudp:; \
+    seq         c1, k.eth_tx_to_s2_encap##n, 1; \
+    seq         c2, k.eth_tx_to_s2_csum_l4##n, 1; \
+    seq         c3, k.eth_tx_to_s2_csum_l3##n, 1; \
+    bcf         [!c1], eth_tx_calc_csum_tcpudp_noencap; \
+    nop; \
+    phvwrpair   p.eth_tx_app_hdr##n##_compute_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_ip_csum, 1; \
+    phvwrpair   p.eth_tx_app_hdr##n##_compute_inner_l4_csum, k.eth_tx_to_s2_csum_l4##n, p.eth_tx_app_hdr##n##_compute_inner_ip_csum, k.eth_tx_to_s2_csum_l3##n; \
+eth_tx_calc_csum_tcpudp_noencap:; \
+    phvwrpair   p.eth_tx_app_hdr##n##_compute_l4_csum, k.eth_tx_to_s2_csum_l4##n, p.eth_tx_app_hdr##n##_compute_ip_csum, k.eth_tx_to_s2_csum_l3##n; \
+eth_tx_tso:; \
+eth_tx_opcode_done:;
 
 #define DEBUG_DESCR_FLD(name) \
     add         r7, r0, d.##name
