@@ -55,7 +55,8 @@
         },
         {
             "name": "p4plus_program",
-            "size_kb": 131072
+            "size_kb": 131072,
+            "cache": "p4plus-all"
         },
         {
             "name": "rdma",
