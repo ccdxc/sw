@@ -49,6 +49,14 @@ tcp_svr_log = nic_dir + "/tcp_server.log"
 tcp_clt_log = nic_dir + "/tcp_client.log"
 HalChannel = None
 
+TLS_GCM_CIPHER = "ECDHE-ECDSA-AES128-GCM-SHA256"
+TLS_GCM_CERTFILE = "e2etests/proxy/ca.crt"
+TLS_GCM_KEYFILE = "e2etests/proxy/ca.pem"
+TLS_RSA_CIPHER = "AES128-GCM-SHA256"
+TLS_RSA_CERTFILE = "e2etests/proxy/rsa.crt"
+TLS_RSA_KEYFILE = "e2etests/proxy/rsa.key"
+
+
 def hal_init():
     global HalChannel
 
@@ -106,9 +114,10 @@ def run_hntap(tcp_port):
     return
 
 
-def run_tls_server(tcp_port):
+def run_tls_server(tcp_port, cipher, certfile, keyfile):
     log = open(tls_svr_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tls-server', tcp_port ]
+    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tls-server',
+                            tcp_port, cipher, certfile, keyfile]
     p = Popen(cmd, stdout=log, stderr=log)
     global tls_svr_process
     tls_svr_process = p
@@ -216,7 +225,7 @@ def print_logs():
       for line in sock_stats:
           print("    " + line)
 
-def run_test(testnum, testname, tcp_port, bypass_tls):
+def run_test(testnum, testname, tcp_port, bypass_tls, cipher, certfile, keyfile):
     print("Test %d: Running E2E %s test, tcp-port %s\n" % (testnum, testname, tcp_port))
     start_time = time.time()
 
@@ -227,7 +236,7 @@ def run_test(testnum, testname, tcp_port, bypass_tls):
         run_tcp_server(tcp_port)
     else:
         set_proxy_tls_bypass_mode(False)
-        run_tls_server(tcp_port)
+        run_tls_server(tcp_port, cipher, certfile, keyfile)
 
     status = run_tcp_client(tcp_port)
 
@@ -263,19 +272,26 @@ def main():
     log = open(hntap_log, "w")
     log.close()
 
-    status = run_test(1, "TLS Proxy", str(80), 0)
+    status = run_test(1, "TLS Proxy-GCM", str(80), 0,
+                      TLS_GCM_CIPHER, TLS_GCM_CERTFILE, TLS_GCM_KEYFILE)
     if status == 0:
         time.sleep(5)
-        status = run_test(2, "TCP Proxy", str(81), 1)
+        status = run_test(2, "TCP Proxy", str(81), 1, None, None, None)
     if status == 0:
         # Run TCP/TLS proxy with app redirect E2E
         time.sleep(5)
-        status = run_test(3, "TLS Proxy with APP-redirect", str(89), 0)
+        status = run_test(3, "TLS Proxy with APP-redirect", str(89), 0,
+                          TLS_GCM_CIPHER, TLS_GCM_CERTFILE, TLS_GCM_KEYFILE)
         if status == 0:
             # Run TCP/TLS proxy (SPAN mode) with app redirect E2E
             time.sleep(5)
-            status = run_test(4, "TLS Proxy with App-redirect(SPAN mode)", str(8089), 0)
-
+            status = run_test(4, "TLS Proxy with App-redirect(SPAN mode)", str(8089), 0,
+                              TLS_GCM_CIPHER, TLS_GCM_CERTFILE, TLS_GCM_KEYFILE)
+            if status == 0:
+                # Run TLS proxy with RSA
+                time.sleep(5)
+                status = run_test(5, "TLS Proxy-RSA", str(82), 0,
+                                  TLS_RSA_CIPHER, TLS_RSA_CERTFILE, TLS_RSA_KEYFILE)
     #cleanup(keep_logs=True)
 
     print("\n- Total run time: %s seconds\n" % round(time.time() - start_time, 1))

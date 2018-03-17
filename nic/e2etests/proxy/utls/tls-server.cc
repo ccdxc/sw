@@ -40,7 +40,9 @@ void dummy_ssl_msg_callback(
 
 int bytes_recv,bytes_sent;
 int port;
-
+char *cipher;
+char *certfile;
+char *keyfile;
 
 pthread_t server_thread;
 
@@ -48,8 +50,8 @@ void *main_server(void*);
 
 int main(int argv, char* argc[]) {
 
-  if (argv != 2) {
-    TLOG("usage: ./tls port\n");
+  if (argv != 5) {
+    TLOG("usage: ./tls port cipher certfile keyfile\n");
     exit(-1);
   }
 
@@ -57,7 +59,14 @@ int main(int argv, char* argc[]) {
   setlinebuf(stderr);
 
   port = atoi(argc[1]);
+  cipher = argc[2];
+  certfile = argc[3];
+  keyfile = argc[4];
+
   TLOG("Serving port %i\n", port);
+  TLOG("cipher: %s,\n", cipher);
+  TLOG("certfile: %s,\n", certfile);
+  TLOG("keyfile: %s,\n", keyfile);
 
   SSL_library_init();
   OpenSSL_add_all_algorithms();
@@ -199,8 +208,8 @@ void *main_server(void* unused)
   SSL_CTX *ctx;
 
   ctx = InitServerCTX();/* initialize SSL */
-  LoadCertificates(ctx, "e2etests/proxy/ca.crt", "e2etests/proxy/ca.pem");/* load certs */
-  SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
+  LoadCertificates(ctx, certfile, keyfile);/* load certs */
+  SSL_CTX_set_cipher_list(ctx, cipher);
 
   int server = OpenListener(port);/* create server socket */
   while (1)
