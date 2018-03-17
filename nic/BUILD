@@ -3,6 +3,26 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
+    name = "csr_lite_asic_includes",
+    srcs = [
+           ],
+    hdrs = [
+            "asic/capri/model/utils/LogMsg.h",
+            "asic/ip/verif/pcpp/cpu.h",
+            "asic/ip/verif/pcpp/cpu_bus_base.h",
+            "asic/ip/verif/pcpp/cpu_bus_stub.h",
+            "asic/capri/model/cap_top/cap_top_csr_defines.h",
+           ],
+    includes = [
+                "asic/capri/model/utils",
+                "asic/ip/verif/pcpp",
+                "asic/capri/model/cap_top",
+               ],
+    deps = [
+           ],
+)
+
+cc_library(
     name = "capricsr_int",
     srcs = [
         "asic/capri/model/cap_top/cap_top_csr.cc",

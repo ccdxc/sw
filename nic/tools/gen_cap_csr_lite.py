@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import copy
 import yaml
 import yaml.constructor
 from collections import OrderedDict
@@ -66,50 +67,78 @@ class component_info:
         self.instance_done = 0
         self.fields = []
 
+    c_helper_headerfile_class_declare = Template("""
+class ${hlprclassname} {
+private:
+    uint32_t base_addr;
+public:
+    ${hlprclassname}()=default;
+    ~${hlprclassname}()=default;
+    void init(uint32_t _addr);
+    ${csrclassname} *get_csr_instance(uint32_t chip_id);""")
+    c_helper_headerfile_class_tail = Template("""
+}; //  ${hlprclassname}()
+""")
+    c_helper_headerfile_decoder_array_info = Template("""
+    $field_typename $field_name[$field_array];
+    inline uint32_t get_depth_${field_name}() { return $field_array; }""")
+    c_helper_headerfile_decoder_info = Template("""
+    ${field_typename} $field_name;""")
+
     c_headerfile_class_declare = Template("""
 class ${classname} : public cap_sw_${base}_base {
     public:
-        ${classname}(cap_sw_csr_base *parent = 0);
+        ${classname}();
         virtual ~${classname}();
-        virtual void init();
-        virtual uint32_t get_width() const;
-        static uint32_t s_get_width();
-        virtual void pack(uint8_t *bytes, uint32_t start=0);
-        virtual void unpack(uint8_t *bytes, uint32_t start=0);
-""")
+
+        void init(uint32_t chip_id, uint32_t _addr_base) override;
+        void pack(uint8_t *bytes, uint32_t start=0) override;
+        void unpack(uint8_t *bytes, uint32_t start=0) override;
+
+        uint32_t get_width() const override;
+        static uint32_t s_get_width();""")
     c_headerfile_class_tail = Template("""
 }; // ${classname}
 """)
     c_headerfile_decoder_array_info = Template("""
         $field_typename $field_name[$field_array];
-        int get_depth_${field_name}() { return $field_array; }
-""")
+        int get_depth_${field_name}() { return $field_array; }""")
     c_headerfile_decoder_info = Template("""
-        ${field_typename} $field_name;
-""")
+        ${field_typename} $field_name;""")
     c_headerfile_field_info = Template("""
         ${field_typename} ${field_name}${field_array}${field_wide};
         void pack_${field_name}(uint8_t *bytes, uint32_t start=0);
-        void unpack_${field_name}(uint8_t *bytes, uint32_t start=0);
+        void unpack_${field_name}(uint8_t *bytes, uint32_t start=0);""")
+
+    c_helper_ccfile_init_declare = Template("""
+void ${classname}::init(uint32_t _addr) {
+    base_addr = _addr;""")
+    c_helper_ccfile_init_tail = Template("""
+} // ${hlprclassname}::init()
+
+${csrclassname} *${hlprclassname}::get_csr_instance(uint32_t chip_id) {
+    auto *inst = new ${csrclassname}();
+    if (inst) {
+        inst->init(chip_id, base_addr);
+    }
+    return inst;
+} // ${hlprclassname}::get_csr_instance(void)
 """)
+    c_helper_ccfile_decoder_array_info = Template("""
+    for (uint32_t ii = 0; ii < get_depth_${field_name}(); ii++) {
+        ${field_name}[ii].init(base_addr + 0x${field_offset});
+    }""")
+    c_helper_ccfile_decoder_info = Template("""
+    $field_name.init(base_addr + 0x${field_offset});""")
 
     c_ccfile_class_declare = Template("""
-${classname}::${classname}(cap_sw_csr_base * parent):cap_sw_${base}_base(parent)
-{ 
-    init();
-}
-
-${classname}::~${classname}()
-{
-}
-""")
+${classname}::${classname}()=default;
+${classname}::~${classname}()=default;""")
     c_ccfile_class_declare_add_byte_size = Template("""
-${classname}::${classname}(cap_sw_csr_base * parent): 
-    cap_sw_${base}_base(parent)  { 
-        set_byte_size(${field_byte_size});
-        ${field_optional_init}
-        }
-${classname}::~${classname}() { }
+${classname}::${classname}():cap_sw_${base}_base()  { 
+    set_byte_size(${field_byte_size});
+}
+${classname}::~${classname}()=default;
 """)
 
     c_ccfile_s_width_declare = Template("""
@@ -130,8 +159,7 @@ uint32_t ${classname}::s_get_width() {
 
     c_ccfile_width_declare = Template("""
 uint32_t ${classname}::get_width() const {
-    return ${classname}::s_get_width();
-""")
+    return ${classname}::s_get_width();""")
     c_ccfile_width_declare_end = Template("""
 }
 """)
@@ -139,21 +167,27 @@ uint32_t ${classname}::get_width() const {
     c_ccfile_width_decoder_impl = Template("")
     c_ccfile_width_array_impl = Template("")
     c_ccfile_width_impl = Template("")
-
-    c_ccfile_init_declare = Template("""
-void ${classname}::init() {
-""")
     c_ccfile_init_reset_val = Template("""""")
     c_ccfile_init_register_set_get = Template("""""")
     c_ccfile_init_register_set_get_array = Template("""""")
+    c_ccfile_init_decoder_array_impl = Template("""
+    for(int ii = 0; ii < ${field_array}; ii++) {
+        ${field_name}[ii].init(_chip_id, _addr_base + 0x${field_offset} + (${field_name}[ii].get_byte_size()*ii));
+    }""")
+    c_ccfile_init_declare = Template("""
+void ${classname}::init(uint32_t _chip_id, uint32_t _addr_base) {
+    set_chip_id(_chip_id);
+    set_offset(_addr_base);""")
+    c_ccfile_init_decoder_impl = Template("""
+    ${field_name}.init(_chip_id, _addr_base + 0x${field_offset});""")
+    c_ccfile_init_array_impl = Template("""
+""")
+    c_ccfile_init_impl = Template("""
+    base_offset = ${offsetname}[inst_id] + ${fieldoffset};
+""")
     c_ccfile_init_declare_end = Template("""
 }
 """)
-    c_ccfile_init_decoder_array_impl = Template("""""")
-    c_ccfile_init_decoder_impl = Template("""""")
-    c_ccfile_init_array_impl = Template("""
-""")
-    c_ccfile_init_impl = Template("""""")
 
     c_ccfile_unpack_declare = Template("""
 void ${classname}::unpack(uint8_t *bytes, uint32_t start) {""")
@@ -211,40 +245,36 @@ cpp_int ${classname}::${field_name}(int _idx) const {
 """)
 
     c_ccfile_unpack_head = Template("""
-    void ${classname}::unpack_${field_name}(uint8_t *bytes, uint32_t start)
-    {""")
+void ${classname}::unpack_${field_name}(uint8_t *bytes, uint32_t start)
+{""")
     c_ccfile_unpack_body = Template("""
-        ${field_name} = hal::utils::pack_bytes_unpack(bytes, start + ${field_start}, ${field_size});""")
+    ${field_name} = hal::utils::pack_bytes_unpack(bytes, start + ${field_start}, ${field_size});""")
     c_ccfile_unpack_tail = Template("""
-    }
-""")
+}""")
     c_ccfile_unpack_array_head = Template("""
-    void ${classname}::unpack_${field_name}(uint8_t *bytes, int _idx)
-    {
-        PU_ASSERT(_idx < ${field_array});""")
+void ${classname}::unpack_${field_name}(uint8_t *bytes, int _idx)
+{
+    PU_ASSERT(_idx < ${field_array});""")
     c_ccfile_unpack_array_body = Template("""
-        ${field_name}[_idx] = hal::utils::pack_bytes_unpack(bytes, ${field_start}, ${field_size});""")
+    ${field_name}[_idx] = hal::utils::pack_bytes_unpack(bytes, ${field_start}, ${field_size});""")
     c_ccfile_unpack_array_tail = Template("""
-    }
-""")
+}""")
 
     c_ccfile_pack_head = Template("""
-    void ${classname}::pack_${field_name}(uint8_t *bytes, uint32_t start)
-    {""")
+void ${classname}::pack_${field_name}(uint8_t *bytes, uint32_t start)
+{""")
     c_ccfile_pack_body = Template("""
-        hal::utils::pack_bytes_pack(bytes, start + ${field_start}, ${field_size}, ${field_name});""")
+    hal::utils::pack_bytes_pack(bytes, start + ${field_start}, ${field_size}, ${field_name});""")
     c_ccfile_pack_tail = Template("""
-    }
-""")
+}""")
     c_ccfile_pack_array_head = Template("""
-    void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
-    {
-        PU_ASSERT(_idx < ${field_array});""")
+void ${classname}::pack_${field_name}(uint8_t *bytes, int _idx)
+{
+    PU_ASSERT(_idx < ${field_array});""")
     c_ccfile_pack_array_body = Template("""
-        hal::utils::pack_bytes_pack(bytes, ${field_start}, ${field_size}, ${field_name}[_idx]);""")
+    hal::utils::pack_bytes_pack(bytes, ${field_start}, ${field_size}, ${field_name}[_idx]);""")
     c_ccfile_pack_array_tail = Template("""
-    }
-""")
+}""")
 
     def set_tot_size(self, indent_level=0):
 
@@ -277,7 +307,7 @@ cpp_int ${classname}::${field_name}(int _idx) const {
             else:
                 raise Exception("field size is 0 %s" % (self.name))
 
-    def gen_cpp_h_file(self, l_cur_str, indent_level=0):
+    def gen_h_file(self, l_cur_str, indent_level=0):
 
         if self.size != 0:
             wide_str = ''
@@ -296,7 +326,8 @@ cpp_int ${classname}::${field_name}(int _idx) const {
         if len(self.fields) > 0:
             if self.name != 'root':
                 l_cur_str = '{0}{1}'.format(l_cur_str, self.c_headerfile_class_declare.substitute(
-                    classname='{0}_t'.format(self.name), base=self.subtype))
+                    classname='{0}_t'.format(self.name),instancetype='{0}_inst_id_t'.format(block_name),
+                    base=self.subtype))
             for field in self.fields:
                 if field.decoder != "":
                     if field.array > 1:
@@ -308,16 +339,14 @@ cpp_int ${classname}::${field_name}(int _idx) const {
                             field_typename='{0}_t'.format(field.decoder), field_name='{0}'.format(field.name)))
                 else:
                     if field.instance_done == 0:
-                        l_cur_str = field.gen_cpp_h_file(l_cur_str, indent_level + 1)
+                        l_cur_str = field.gen_h_file(l_cur_str, indent_level + 1)
                         field.instance_done = 1
             if self.name != 'root':
                 l_cur_str = '{0}{1}'.format(l_cur_str, self.c_headerfile_class_tail.substitute(
                     classname='{0}_t'.format(self.name)))
         return l_cur_str
-
-    def gen_cpp_c_file(self, cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str,
+    def gen_c_file(self, cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str,
                        init_str, set_field_str, get_field_str, indent_level=0, p_classname=""):
-
         if self.size != 0:
             if self.array > 1:
                 width_str = '{0}{1}'.format(width_str,
@@ -411,8 +440,7 @@ cpp_int ${classname}::${field_name}(int _idx) const {
                                                                                                 field_array=self.array))
             else:
                 width_str = '{0}{1}'.format(width_str, self.c_ccfile_width_impl.substitute(field_typename="cpp_int",
-                                                                                           field_name='{0}'.format(
-                                                                                               self.name),
+                                                                                           field_name='{0}'.format(self.name),
                                                                                            field_array='',
                                                                                            field_size=self.size))
                 s_width_str = '{0}{1}'.format(s_width_str,
@@ -430,7 +458,10 @@ cpp_int ${classname}::${field_name}(int _idx) const {
                                                                                     field_name='{0}'.format(self.name),
                                                                                     field_array='',
                                                                                     field_size=self.size))
-                # init_str = '{0}{1}'.format(init_str, self.c_ccfile_init_impl.substitute( field_typename="cpp_int", field_name='{0}'.format(self.name), field_array='', field_size=self.size))
+#                init_str = '{0}{1}'.format(init_str, self.c_ccfile_init_impl.substitute(
+#                                                                        offsetname='{0}_base_addr'.format(block_name),
+#                                                                        fieldoffset='{0}'.format(offset)))
+
                 set_field_str = '{0}{1}'.format(set_field_str,
                                                 self.c_ccfile_pack_head.substitute(field_name='{0}'.format(self.name),
                                                                                    classname=p_classname))
@@ -512,9 +543,12 @@ cpp_int ${classname}::${field_name}(int _idx) const {
                     classname='{0}_t'.format(self.name), field_size=self.size))
                 get_all_str = '{0}{1}'.format(get_all_str, self.c_ccfile_pack_declare.substitute(
                     classname='{0}_t'.format(self.name), field_size=self.size))
-                init_str = '{0}{1}'.format(init_str,
-                                           self.c_ccfile_init_declare.substitute(classname='{0}_t'.format(self.name),
-                                                                                 field_size=self.size))
+
+                init_str = '{0}{1}'.format(init_str,self.c_ccfile_init_declare.substitute(classname='{0}_t'.format(self.name),
+                                 instancetype='{0}_inst_id_t'.format(block_name),
+                                 instancemax='{0}_inst_max'.format(block_name).upper(),
+                                 offsetname='{0}_base_addr'.format(block_name),
+                                 fieldoffset='{0}'.format(self.offset)))
 
             bit_offset = 0
             for field in self.fields:
@@ -537,7 +571,6 @@ cpp_int ${classname}::${field_name}(int _idx) const {
                         init_str = '{0}{1}'.format(init_str, self.c_ccfile_init_decoder_array_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array=field.array,
                             field_offset=format(field.offset, 'x')), field_size=field.size)
-
                     else:
                         width_str = '{0}{1}'.format(width_str, self.c_ccfile_width_decoder_impl.substitute(
                             field_typename=field.decoder, field_name='{0}'.format(field.name), field_array='',
@@ -556,10 +589,9 @@ cpp_int ${classname}::${field_name}(int _idx) const {
                             field_size=field.size, field_offset=format(field.offset, 'x')))
                 else:
                     if field.instance_done == 0:
-                        cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str, set_field_str, get_field_str = field.gen_cpp_c_file(
-                            cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str,
-                            init_str, set_field_str, get_field_str, indent_level + 1,
-                            p_classname="{0}_t".format(self.name))
+                        cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str, set_field_str, get_field_str = field.gen_c_file(
+                        cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str, set_field_str, get_field_str, indent_level + 1,
+                        p_classname="{0}_t".format(self.name))
                         field.instance_done = 1
 
             if self.name != 'root':
@@ -577,33 +609,76 @@ cpp_int ${classname}::${field_name}(int _idx) const {
                 init_str = '{0}{1}'.format(init_str, self.c_ccfile_init_declare_end.substitute(
                     classname='{0}_t'.format(self.name), field_size=self.size))
         return cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str, set_field_str, get_field_str
+    def gen_helper_h_file(self, l_cur_str, indent_level=0):
+
+        if len(self.fields) > 0:
+            if self.name != 'root':
+                l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_headerfile_class_declare.substitute(
+                    hlprclassname='{0}_helper_t'.format(self.name),
+                    csrclassname='{0}_t'.format(self.name)))
+            for field in self.fields:
+                if field.decoder != "":
+                    if field.array > 1:
+                        l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_headerfile_decoder_array_info.substitute(
+                            field_typename='{0}_helper_t'.format(field.decoder), field_name='{0}'.format(field.name),
+                            field_array=field.array, field_size=field.size))
+                    else:
+                        l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_headerfile_decoder_info.substitute(
+                            field_typename='{0}_helper_t'.format(field.decoder),
+                            field_name='{0}'.format(field.name)))
+                else:
+                    if field.instance_done == 0:
+                        l_cur_str = field.gen_helper_h_file(l_cur_str, indent_level + 1)
+                        field.instance_done = 1
+            if self.name != 'root':
+                l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_headerfile_class_tail.substitute(
+                    hlprclassname='{0}_helper_t'.format(self.name)))
+        return l_cur_str
+    def gen_helper_c_file(self, l_cur_str, indent_level=0):
+
+        if len(self.fields) > 0:
+            if self.name != 'root':
+                l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_init_declare.substitute(
+                    classname='{0}_helper_t'.format(self.name)))
+            for field in self.fields:
+                if field.decoder != "":
+                    if field.array > 1:
+                        l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_decoder_array_info.substitute(
+                            field_name='{0}'.format(field.name), field_offset=format(field.offset, 'x')))
+                    else:
+                        l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_decoder_info.substitute(
+                            field_name='{0}'.format(field.name), field_offset=format(field.offset, 'x')))
+                else:
+                    if field.instance_done == 0:
+                        l_cur_str = field.gen_helper_c_file(l_cur_str, indent_level + 1)
+                        field.instance_done = 1
+            if self.name != 'root':
+                l_cur_str = '{0}{1}'.format(l_cur_str, self.c_helper_ccfile_init_tail.substitute(
+                    hlprclassname='{0}_helper_t'.format(self.name),
+                    csrclassname='{0}_t'.format(self.name)))
+        return l_cur_str
 
     def gen_c_header(self, include_map):
         cur_str = """
-#ifndef {0}_H
-#define {0}_H
+#ifndef {0}_HPP
+#define {0}_HPP
 
-#include "nic/include/base.h"
-#include "nic/gen/cap_csr_lite/include/cap_sw_csr_base.hpp"
+#include "nic/hal/pd/capri/csr_lite/include/cap_csr_base.hpp"
 """.format(block_name.upper())
-
         for i in include_map:
-            cur_str = cur_str + """#include "nic/gen/cap_csr_lite/include/{0}.hpp" 
+            cur_str = cur_str + """#include "nic/gen/csr_lite/include/{0}.hpp" 
 """.format(i)
-
         cur_str = cur_str + """
 using namespace std;""".format(block_name.upper())
-
-        cur_str = self.gen_cpp_h_file(cur_str, 0)
+        cur_str = self.gen_h_file(cur_str, 0)
         cur_str = cur_str + """
-#endif // {0}_H
+#endif // {0}_HPP
         """.format(block_name.upper())
         return cur_str
-
-    def gen_c_cc(self):
+    def gen_c_source(self):
         cur_str = """
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "nic/gen/cap_csr_lite/include/{0}.hpp"
+#include "nic/gen/csr_lite/include/{0}.hpp"
 
 using namespace std;
         """.format(block_name)
@@ -619,24 +694,38 @@ using namespace std;
         set_field_str = ""
         get_field_str = ""
 
-        cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str, set_field_str, get_field_str = self.gen_cpp_c_file(
+        cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str, set_field_str, get_field_str = self.gen_c_file(
             cur_str, head_str, tail_str, show_str, width_str, s_width_str, set_all_str, get_all_str, init_str,
             set_field_str, get_field_str, 0, "")
 
-        # cc_file = open('ppa_decoders_csr.cc', 'w')
-
         return cur_str + head_str + tail_str + show_str + width_str + s_width_str + set_all_str + get_all_str + init_str + get_field_str + set_field_str
-        # cc_file.write(cur_str)
-        # cc_file.write(head_str)
-        # cc_file.write(tail_str)
-        # cc_file.write(show_str)
-        # cc_file.write(width_str)
-        # cc_file.write(get_all_str)
-        # cc_file.write(set_all_str)
-        # cc_file.write(init_str)
-        # cc_file.write(get_field_str)
-        # cc_file.write(set_field_str)
-        # cc_file.close()
+    def gen_c_helper_header(self, include_map):
+        cur_str = """
+#ifndef {0}_HELPER_HPP
+#define {0}_HELPER_HPP
+
+#include "nic/gen/csr_lite/include/{1}.hpp"
+""".format(block_name.upper(), block_name)
+        for i in include_map:
+            cur_str = cur_str + """#include "nic/gen/csr_lite/include/{0}_helper.hpp" 
+""".format(i)
+        cur_str = cur_str + """
+using namespace std;
+""".format(block_name.upper())
+        cur_str = self.gen_helper_h_file(cur_str, 0)
+        cur_str = cur_str + """
+#endif // {0}_HELPER_HPP
+""".format(block_name.upper())
+        return cur_str
+    def gen_c_helper_source(self):
+        cur_str = """
+#include "nic/gen/csr_lite/include/{0}_helper.hpp"
+""".format(block_name)
+        cur_str = cur_str + """
+using namespace std;
+"""
+        cur_str = self.gen_helper_c_file(cur_str, 0)
+        return cur_str
 
 def filter_unused(include_map, cur_map, init_map, target, target_block, depth=0, field_or_decoder=1):
     # print "checking ", target
@@ -696,11 +785,9 @@ def recurse(e, parent, depth=0):
     else:
         print 'ERROR:', parent.name, "  " * depth, e
 
-def gen_decoders(yaml_src_file, _block_name, outfile_name, options):
+def gen_decoders(yaml_src_file, _block_name, gen_dir):
     global block_name
-    if type(options) != list: options = [options]
     f = open(yaml_src_file)
-    out_f = open(outfile_name, 'w')
     data_map = yaml.load(f, OrderedDictYAMLLoader)
     p = component_info()
     p.name = 'root'
@@ -719,362 +806,27 @@ def gen_decoders(yaml_src_file, _block_name, outfile_name, options):
         filter_map = p
 
     filter_map.set_tot_size()
-    for option in options:
-        if option == 'c_header':
-            cur_str = filter_map.gen_c_header(include_map)
-            out_f.write(cur_str)
-            # cur_str= p.gen_c_header([])
-            # out_f.write(cur_str)
-        if option == 'c_cc':
-            cur_str = filter_map.gen_c_cc()
-            out_f.write(cur_str)
-            # cur_str= p.gen_c_cc()
-            # out_f.write(cur_str)
 
+    temp = copy.deepcopy(filter_map)
+    out_f = open(gen_dir+'include/'+block+'.hpp', 'w')
+    out_f.write(temp.gen_c_header(include_map))
     out_f.close()
 
-def gen_cap_csr_lite_base_include():
-    return """#ifndef CAP_SW_CSR_BASE_H
-#define CAP_SW_CSR_BASE_H
-    
-#include "nic/include/base.h"
-#include "nic/asic/ip/verif/pcpp/cpu.h"
+    temp = copy.deepcopy(filter_map)
+    out_f = open(gen_dir+block+'.cc', 'w')
+    out_f.write(temp.gen_c_source())
+    out_f.close()
+
+    temp = copy.deepcopy(filter_map)
+    out_f = open(gen_dir+'include/'+block+'_helper.hpp', 'w')
+    out_f.write(temp.gen_c_helper_header(include_map))
+    out_f.close()
+
+    temp = copy.deepcopy(filter_map)
+    out_f = open(gen_dir+block+'_helper.cc', 'w')
+    out_f.write(temp.gen_c_helper_source())
+    out_f.close()
 
-class cap_sw_csr_base {
-    public:
-        enum csr_type_t {
-            CSR_TYPE_NONE = 0,
-            CSR_TYPE_REGISTER,
-            CSR_TYPE_MEM_ENTRY,
-            CSR_TYPE_MEMORY,
-            CSR_TYPE_DECODER,
-            CSR_TYPE_BLOCK
-        };
-
-    protected:
-        cap_sw_csr_base * base__parent;
-        uint64_t base__offset;
-        csr_type_t base__csr_type;
-        unsigned base__csr_id;
-        uint64_t base__csr_end_addr;
-
-    public:
-        cap_sw_csr_base(cap_sw_csr_base * _parent = 0);
-        virtual ~cap_sw_csr_base();
-    
-        virtual cap_sw_csr_base * get_parent() const;
-        virtual uint32_t get_width() const;
-        virtual csr_type_t get_csr_type() const;
-        virtual void set_csr_type(csr_type_t _type);
-        virtual void init();
-        virtual void pack(uint8_t *bytes, uint32_t start=0);
-        virtual void unpack(uint8_t *bytes, uint32_t start=0);
-
-        virtual void set_offset(uint64_t _offset);
-        virtual uint64_t get_offset() const;
-        virtual uint32_t get_chip_id() const;
-        virtual uint32_t get_byte_size() const;
-        virtual void write();
-        virtual void read();
-        virtual void write_hw(uint8_t *bytes, int block_write=0);
-        virtual void read_hw(uint8_t *bytes, int block_read=0);
-        virtual void read_compare(int block_read=0);
-};
-
-class cap_sw_register_base : public cap_sw_csr_base {
-    public:
-        cap_sw_register_base(cap_sw_csr_base * _parent = 0);
-        virtual ~cap_sw_register_base();
-        virtual void write();
-        virtual void read();
-        virtual void write_hw(uint8_t *write_bytes, int block_write=0);
-        virtual void read_hw(uint8_t *write_bytes, int block_read=0);
-        virtual void read_compare(int block_read=0);
-};
-
-class cap_sw_memory_base : public cap_sw_csr_base {
-    public:
-        cap_sw_memory_base(cap_sw_csr_base * _parent = 0);
-        virtual ~cap_sw_memory_base();
-        virtual void write();
-        virtual void read();
-};
-
-class cap_sw_decoder_base : public cap_sw_csr_base {
-    public:
-        cap_sw_decoder_base(cap_sw_csr_base * _parent = 0);
-        virtual ~cap_sw_decoder_base();
-        virtual void write();
-        virtual void read();
-};
-
-class cap_sw_block_base : public cap_sw_csr_base {
-
-    protected:
-    uint32_t block__chip_id;
-    uint32_t block__byte_size;
-
-    public:
-        cap_sw_block_base(cap_sw_csr_base * _parent = 0);
-        virtual ~cap_sw_block_base();
-        virtual uint32_t get_chip_id() const;
-        virtual void set_chip_id(uint32_t _chip_id);
-        virtual void write();
-        virtual void read();
-        virtual void set_byte_size(uint32_t _byte_size);
-        virtual uint32_t  get_byte_size() const;
-};
-
-
-#endif // CAP_SW_CSR_BASE_H
-"""
-
-def gen_cap_csr_lite_base_source():
-    return """#include "nic/gen/cap_csr_lite/include/cap_sw_csr_base.hpp"
-    
-cap_sw_csr_base::cap_sw_csr_base(cap_sw_csr_base * _parent) {
-    base__parent = _parent;
-    base__offset = 0;
-    base__csr_id = 0;
-    base__csr_end_addr = 0;
-}
-
-cap_sw_csr_base::~cap_sw_csr_base() { }
-
-cap_sw_csr_base * cap_sw_csr_base::get_parent() const {
-    return base__parent;
-}
-
-uint32_t cap_sw_csr_base::get_width() const {
-    return 0;
-}
-
-void cap_sw_csr_base::init() {
-}
-
-void cap_sw_csr_base::pack(uint8_t *bytes, uint32_t start) {
-}
-
-void cap_sw_csr_base::unpack(uint8_t *bytes, uint32_t start) {
-}
-
-uint32_t cap_sw_csr_base::get_byte_size() const {
-    int x;
-    uint32_t my_width = get_width();
-    if(my_width < 32) my_width = 32;
-    x  = (int) my_width;
-    x |= (x >> 1);
-    x |= (x >> 2);
-    x |= (x >> 4);
-    x |= (x >> 8);
-    x |= (x >> 16);
-    x  = (x & ~(x >> 1));    
-    if ((uint32_t)x != my_width) {
-        x <<= 1;
-    }
-    return (x/8);
-}
-
-void cap_sw_csr_base::set_offset(uint64_t _offset) {
-    base__offset = _offset;
-}
-
-uint64_t cap_sw_csr_base::get_offset() const {
-    uint64_t ret_val = 0;
-    if(get_parent() != 0) {
-        ret_val = get_parent()->get_offset() + base__offset;
-    } else {
-        ret_val = base__offset;
-    }
-    return ret_val;
-}
-
-uint32_t cap_sw_csr_base::get_chip_id() const {
-    uint32_t ret_val = 0;
-    if(get_parent() != 0) {
-        ret_val = get_parent()->get_chip_id();
-    } else {
-        HAL_TRACE_ERR("cap_sw_csr_base:get_chip_id() parent is null and its not"
-                      " block or system\\n");
-        return 0;
-    }
-    return ret_val;
-}
-
-void cap_sw_csr_base::write() {
-    HAL_TRACE_ERR("cap_sw_csr_base::write() should not be used\\n");
-}
-
-void cap_sw_csr_base::read() {
-    HAL_TRACE_ERR("cap_sw_csr_base::read() should not be used\\n");
-}
-
-void cap_sw_csr_base::write_hw(uint8_t *bytes, int block_write) {
-    HAL_TRACE_ERR("cap_sw_csr_base::write_hw() should not be used\\n");
-}
-
-void cap_sw_csr_base::read_hw(uint8_t *bytes, int block_read) {
-    HAL_TRACE_ERR("cap_sw_csr_base::read_hw() should not be used\\n");
-}
-
-void cap_sw_csr_base::read_compare(int block_read) {
-    HAL_TRACE_ERR("cap_sw_csr_base::read_compare() should not be used\\n");
-}
-
-cap_sw_csr_base::csr_type_t cap_sw_csr_base::get_csr_type() const {
-    return base__csr_type;
-}
-
-void cap_sw_csr_base::set_csr_type(csr_type_t _type) {
-    base__csr_type = _type;
-}
-
-
-cap_sw_register_base::cap_sw_register_base(cap_sw_csr_base * _parent):
-    cap_sw_csr_base(_parent) {
-        set_csr_type(CSR_TYPE_REGISTER);
-}
-
-cap_sw_register_base::~cap_sw_register_base() { }
-
-void cap_sw_register_base::write() {
-    uint32_t width = get_width();
-    uint32_t words = (width+31)/32;
-    uint32_t num_bytes = words*4;
-    auto *bytes = (uint8_t *)calloc(num_bytes, sizeof(uint8_t));
-    pack(bytes);
-    write_hw(bytes);
-    free(bytes);
-}
-void cap_sw_register_base::read() {
-    uint32_t width = get_width();
-    uint32_t words = (width+31)/32;
-    uint32_t num_bytes = words*4;
-    auto *bytes = (uint8_t *)calloc(num_bytes, sizeof(uint8_t));
-    read_hw(bytes);
-    unpack(bytes);
-    free(bytes);
-}
-
-void cap_sw_register_base::write_hw(uint8_t *write_bytes, int block_write) {
-    uint32_t words = (get_width()+31)/32;
-    uint64_t offset = get_offset();
-    
-    HAL_ASSERT(block_write == 0);
-
-    for(uint32_t ii = 0; ii < words; ii++) {
-        uint32_t data = *((uint32_t *)&(write_bytes[ii*4]));
-        HAL_TRACE_DEBUG("cap_sw_register_base::write_hw(): Addr: {}; Data: {}\\n",
-                         offset + (ii*4), data);
-        cpu::access()->write(get_chip_id(), offset + (ii*4), data, false,
-                       secure_acc_e);
-    }
-}
-
-void cap_sw_register_base::read_hw(uint8_t *read_bytes, int block_read) {
-    uint32_t chip_id = get_chip_id();
-    uint64_t offset = get_offset();
-    uint32_t width = get_width();
-    uint32_t words = (width+31)/32;
-
-    HAL_ASSERT(block_read == 0);
-
-    for(uint32_t ii = 0; ii < words; ii++) {
-        uint32_t data = cpu::access()->read(chip_id, offset + (ii*4), false, secure_acc_e);
-        *((uint32_t *)&(read_bytes[ii*4])) = data;
-        HAL_TRACE_DEBUG("cap_sw_register_base::read_hw(): Addr: {}; Data: {}\\n",
-                         offset + (ii*4), data);
-    }
-}
-
-void cap_sw_register_base::read_compare(int block_read) {
-    uint8_t *bytes1, *bytes2;
-    uint32_t width = get_width();
-    uint32_t words = (width+31)/32;
-    uint32_t num_bytes = words*4;
-
-    bytes1 = (uint8_t *)calloc(num_bytes, sizeof(uint8_t));
-    bytes2 = (uint8_t *)calloc(num_bytes, sizeof(uint8_t));
-
-    pack(bytes1);
-    read_hw(bytes2, block_read);
-
-    for (uint32_t ii=0; ii<num_bytes; ii++) {
-        if (bytes1[ii] != bytes2[ii]) {
-            HAL_TRACE_ERR("cap_sw_register_base::read_compare(): Actual: {}, Read: {}\\n", bytes1[ii], bytes2[ii]);
-        }
-    }
-
-    free(bytes1);
-    free(bytes2);
-}
-
-cap_sw_memory_base::cap_sw_memory_base(cap_sw_csr_base * _parent):
-    cap_sw_csr_base(_parent) {
-        set_csr_type(CSR_TYPE_MEMORY);
-}
-
-cap_sw_memory_base::~cap_sw_memory_base() { }
-
-void cap_sw_memory_base::write() {
-    HAL_TRACE_ERR("cap_sw_memory_base::write() should not be used\\n");
-}
-
-void cap_sw_memory_base::read() {
-    HAL_TRACE_ERR("cap_sw_memory_base::read() should not be used\\n");
-}
-
-
-cap_sw_decoder_base::cap_sw_decoder_base(cap_sw_csr_base * _parent):
-    cap_sw_csr_base(_parent) {
-        set_csr_type(CSR_TYPE_DECODER);
-}
-
-cap_sw_decoder_base::~cap_sw_decoder_base() { }
-
-void cap_sw_decoder_base::write() {
-    HAL_TRACE_ERR("cap_sw_decoder_base::write() should not be used\\n");
-}
-
-void cap_sw_decoder_base::read() {
-    HAL_TRACE_ERR("cap_sw_decoder_base::read() should not be used\\n");
-}
-
-
-cap_sw_block_base::cap_sw_block_base(cap_sw_csr_base * _parent):
-    cap_sw_csr_base(_parent) {
-
-        block__chip_id = 0;
-        set_csr_type(CSR_TYPE_BLOCK);
-    }
-
-cap_sw_block_base::~cap_sw_block_base() { }
-
-void cap_sw_block_base::write() {
-    HAL_TRACE_ERR("cap_sw_block_base::write() should not be used\\n");
-}
-
-void cap_sw_block_base::read() {
-    HAL_TRACE_ERR("cap_sw_block_base::read() should not be used\\n");
-}
-
-uint32_t cap_sw_block_base::get_chip_id() const {
-    return block__chip_id;
-}
-
-void cap_sw_block_base::set_chip_id(uint32_t _chip_id) {
-    block__chip_id = _chip_id;
-}
-
-void cap_sw_block_base::set_byte_size(uint32_t _byte_size) {
-    block__byte_size = _byte_size;
-}
-
-uint32_t cap_sw_block_base::get_byte_size() const {
-    return block__byte_size;
-}
-
-"""
 
 def gen_block_name(filename):
     block = filename.split(".")[0]
@@ -1088,63 +840,18 @@ def gen_block_name(filename):
     else:
         return block
 
-def gen_cap_csr_lite_build(files):
-    sources = """\"cap_sw_csr_base.cc\","""
-    includes = """\"include/cap_sw_csr_base.hpp\","""
-    depends  = """\"//nic:capricsr_int\",
-            \"//nic/utils/pack_bytes\","""
-
-    for file in files:
-        block = gen_block_name(file)
-        if block is not None:
-            sources += """\n            \"{0}.cc\",""".format(block)
-            includes += """\n            \"include/{0}.hpp\",""".format(block)
-
-    cur_str = """package(default_visibility = ["//visibility:public"])
-licenses(["notice"])  # MIT license
-
-cc_library(
-    name = "cap_csr_lite",
-    srcs = [{0}
-           ],
-    hdrs = [{1}
-           ],
-    deps = [{2}
-           ],
-)
-""".format(sources, includes, depends)
-
-    return cur_str
-
-def gen_cap_csr_lite_base(gen_dir, files):
-
-    inc_f = open(gen_dir+'include/cap_sw_csr_base.hpp', 'w')
-    cur_str = gen_cap_csr_lite_base_include()
-    inc_f.write(cur_str)
-
-    src_f = open(gen_dir+'cap_sw_csr_base.cc', 'w')
-    cur_str = gen_cap_csr_lite_base_source()
-    src_f.write(cur_str)
-
-#    bld_f = open(gen_dir+'BUILD', 'w')
-#    cur_str = gen_cap_csr_lite_build(files)
-#    bld_f.write(cur_str)
-
 if __name__ == '__main__':
 
     input_dir = '../asic/capri/verif/common/csr_gen/'
-    gen_dir = '../gen/cap_csr_lite/'
+    gen_dir = '../gen/csr_lite/'
     if not os.path.exists(gen_dir + 'include'):
         os.makedirs(gen_dir + 'include')
 
     files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f)) and f.endswith(".yaml")]
-    gen_cap_csr_lite_base(gen_dir, files)
     for file in files:
         block = gen_block_name(file)
         if block is not None:
             print "Processing " +input_dir+file+ " ==> " +gen_dir+block+".cc [include/"+block+".hpp]"
-            gen_decoders(input_dir+file, block, gen_dir+'include/'+block+'.hpp', 'c_header')
-            gen_decoders(input_dir+file, block, gen_dir+block+'.cc', 'c_cc')
+            gen_decoders(input_dir+file, block, gen_dir)
         else:
             print "Skipped " + input_dir+file
-
