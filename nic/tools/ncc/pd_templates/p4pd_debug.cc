@@ -62,6 +62,8 @@ static std::unique_ptr<Debug::Stub> stub;
 p4pd_error_t
 ${api_prefix}_cli_init(char *grpc_server_port)
 {
+    grpc_init();
+
     channel =
         grpc::CreateChannel(grpc_server_port, grpc::InsecureChannelCredentials());
 

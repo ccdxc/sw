@@ -148,6 +148,7 @@ message LifRequestMsg {
 message LifStatus {
   IfStatus    lif_status = 1;    // currrent status of the interface
   fixed64     lif_handle = 2;    // id of the interface returned by HAL
+  uint64      hw_lif_id  = 3;    // Hardware Lif Id
 }
 
 // LifQstate entries
@@ -164,12 +165,11 @@ message LifRdmaData {
 
 // LifResponse response to one LifSpec
 message LifResponse {
-  types.ApiStatus     api_status   = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  LifStatus           status       = 2;    // operational status
-  uint64              hw_lif_id    = 3;    // Hardware Lif Id
-  repeated LifQState  qstate       = 4;    // Qstate Address info
-  bool                rdma_data_valid = 5; // RDMA data valid only this bit is set
-  LifRdmaData         rdma_data    = 6;    // RDMA data - valid only when rdma is enabled
+  types.ApiStatus     api_status      = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  LifStatus           status          = 2;    // operational status
+  repeated LifQState  qstate          = 3;    // Qstate Address info
+  bool                rdma_data_valid = 4; // RDMA data valid only this bit is set
+  LifRdmaData         rdma_data       = 5;    // RDMA data - valid only when rdma is enabled
 }
 
 // LifResponseMsg is response to LifRequestMsg

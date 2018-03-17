@@ -120,7 +120,7 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
 
   // TODO: Check number of responses ? 
   // TODO: Check status
-  *lif_id = resp_msg.response(0).hw_lif_id();
+  *lif_id = resp_msg.response(0).status().hw_lif_id();
   return 0;
 }
 

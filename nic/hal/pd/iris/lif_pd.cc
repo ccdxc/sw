@@ -849,15 +849,15 @@ pd_lif_mem_free(pd_lif_mem_free_args_t *args)
 // Get PD hw_lif_id from lif.
 //-------------------------------------------------------------------------
 
-// uint32_t pd_get_hw_lif_id(lif_t *lif)
+// uint32_t pd_lif_get(lif_t *lif)
 hal_ret_t
-pd_get_hw_lif_id (pd_get_hw_lif_id_args_t *args)
+pd_lif_get (pd_lif_get_args_t *args)
 {
     lif_t *lif = args->lif;
 
     pd_lif_t  *lif_pd = (pd_lif_t *)lif->pd_lif;
 
-    args->hw_lifid = lif_pd->hw_lif_id;
+    args->hw_lif_id = lif_pd->hw_lif_id;
 
     return HAL_RET_OK;
 }

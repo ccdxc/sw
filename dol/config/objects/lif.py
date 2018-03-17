@@ -198,7 +198,7 @@ class LifObject(base.ConfigObjectBase):
             self.CLibConfig(resp_spec)
         if self.hw_lif_id == -1:
             # HAL does not return hw_lif_id in the UpdateResponse. Set the hw_lif_id only once.
-            self.hw_lif_id = resp_spec.hw_lif_id
+            self.hw_lif_id = resp_spec.status.hw_lif_id
         cfglogger.info("- LIF %s = %s HW_LIF_ID = %s (HDL = 0x%x)" %
                        (self.GID(),
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
@@ -224,7 +224,7 @@ class LifObject(base.ConfigObjectBase):
        qaddrs = qaddrs_type()
        for qstate in resp_spec.qstate:
            qaddrs[int(qstate.type_num)] = qstate.addr
-       qinfo = QInfoStruct(GlobalOptions.dryrun, resp_spec.hw_lif_id, qaddrs)
+       qinfo = QInfoStruct(GlobalOptions.dryrun, resp_spec.status.hw_lif_id, qaddrs)
        self.c_lib_config(ctypes.byref(qinfo))
 
     def Update(self):

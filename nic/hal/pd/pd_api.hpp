@@ -381,10 +381,10 @@ typedef struct pd_lif_make_clone_args_s {
     lif_t    *clone;
 } __PACK__ pd_lif_make_clone_args_t;
 
-typedef struct pd_get_hw_lif_id_args_s {
-    lif_t *lif;         // i/p
-    uint32_t hw_lifid;  // o/p
-} __PACK__ pd_get_hw_lif_id_args_t;
+typedef struct pd_lif_get_args_s {
+    lif_t *lif;          // i/p
+    uint32_t hw_lif_id;  // o/p
+} __PACK__ pd_lif_get_args_t;
 
 static inline void
 pd_lif_create_args_init (pd_lif_create_args_t *args)
@@ -2227,7 +2227,7 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_LIF_UPDATE,           32, "PD_FUNC_ID_LIF_UPDATE")          \
     ENTRY(PD_FUNC_ID_LIF_MEM_FREE,         33, "PD_FUNC_ID_LIF_MEM_FREE")        \
     ENTRY(PD_FUNC_ID_LIF_MAKE_CLONE,       34, "PD_FUNC_ID_LIF_MAKE_CLONE")      \
-    ENTRY(PD_FUNC_ID_GET_HW_LIFID,         35, "PD_FUNC_ID_GET_HW_LIFID")       \
+    ENTRY(PD_FUNC_ID_LIF_GET,              35, "PD_FUNC_ID_LIF_GET")            \
     ENTRY(PD_FUNC_ID_IF_CREATE,            36, "PD_FUNC_ID_IF_CREATE")          \
     ENTRY(PD_FUNC_ID_IF_DELETE,            37, "PD_FUNC_ID_IF_DELETE")          \
     ENTRY(PD_FUNC_ID_IF_UPDATE,            38, "PD_FUNC_ID_IF_UPDATE")          \
@@ -2461,7 +2461,7 @@ PD_FUNCP_TYPEDEF(pd_lif_delete);
 PD_FUNCP_TYPEDEF(pd_lif_update);
 PD_FUNCP_TYPEDEF(pd_lif_mem_free);
 PD_FUNCP_TYPEDEF(pd_lif_make_clone);
-PD_FUNCP_TYPEDEF(pd_get_hw_lif_id);
+PD_FUNCP_TYPEDEF(pd_lif_get);
 
 // if calls
 PD_FUNCP_TYPEDEF(pd_if_create);
@@ -2781,7 +2781,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_lif_update);
         PD_UNION_FIELD(pd_lif_mem_free);
         PD_UNION_FIELD(pd_lif_make_clone);
-        PD_UNION_FIELD(pd_get_hw_lif_id);
+        PD_UNION_FIELD(pd_lif_get);
 
         // lif pd calls
         PD_UNION_FIELD(pd_if_create);

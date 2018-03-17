@@ -134,6 +134,23 @@ find_lif_by_handle (hal_handle_t handle)
     return (lif_t *)hal_handle->get_obj();
 }
 
+static inline uint64_t
+lif_hw_lif_id_get (lif_t *lif)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    pd::pd_lif_get_args_t hwlifid_args;
+    memset(&hwlifid_args, 0, sizeof(pd::pd_lif_get_args_t));
+
+    hwlifid_args.lif = lif;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET, (void *)&hwlifid_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get hw_lif_id for lif {}", lif->lif_id);
+    }
+
+    return hwlifid_args.hw_lif_id;
+}
+
 //------------------------------------------------------------------------------
 // insert this lif in all meta data structures
 //------------------------------------------------------------------------------
@@ -712,7 +729,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     hw_lif_id = app_ctxt.hw_lif_id; // populated in lif_create_add_cb
     lif_prepare_rsp(rsp, ret, hal_handle);
-    rsp->set_hw_lif_id(hw_lif_id);
+    rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
     rsp->mutable_status()->set_lif_status(lif->admin_status);
 
     // Return LifQstate addresses
@@ -827,11 +844,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     args.rx_policer_changed    = app_ctxt->rx_policer_changed;
     args.tx_policer_changed    = app_ctxt->tx_policer_changed;
 
-    pd::pd_get_hw_lif_id_args_t hwlifid_args;
-    hwlifid_args.lif = lif;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_HW_LIFID, (void *)&hwlifid_args);
-
-    hw_lif_id = hwlifid_args.hw_lifid;
+    hw_lif_id = lif_hw_lif_id_get(lif);
 
     if (app_ctxt->qstate_map_init_set) {
         // init queue state map
@@ -1115,6 +1128,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     const                 LifKeyHandle &kh = spec .key_or_handle ();
     lif_update_app_ctxt_t app_ctxt     = { 0 };
     hal_handle_t          hal_handle   = 0;
+    uint64_t              hw_lif_id    = 0;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
 
@@ -1157,7 +1171,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         HAL_TRACE_ERR("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
-    
+
     lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj, spec);
 
     // form ctxt and call infra update object
@@ -1175,6 +1189,10 @@ lif_update (LifSpec& spec, LifResponse *rsp)
 
 end:
     lif_prepare_rsp(rsp, ret, hal_handle);
+
+    hw_lif_id = lif_hw_lif_id_get(lif);
+    rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
@@ -1449,7 +1467,8 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
 static void
 lif_process_get (lif_t *lif, LifGetResponse *rsp)
 {
-    LifSpec *spec;
+    LifSpec  *spec     = NULL;
+    uint64_t hw_lif_id = lif_hw_lif_id_get(lif);
 
     // fill in the config spec of this lif.
     spec = rsp->mutable_spec();
@@ -1458,6 +1477,8 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->set_enable_rdma(lif->enable_rdma);
     spec->set_rdma_max_keys(lif->rdma_max_keys);
     spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
+
+    rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
 
     rsp->set_api_status(types::API_STATUS_OK);
 }

@@ -71,7 +71,7 @@ PD_FUNC_STUB(pd_lif_delete);
 PD_FUNC_STUB(pd_lif_update);
 PD_FUNC_STUB(pd_lif_mem_free);
 PD_FUNC_STUB(pd_lif_make_clone);
-PD_FUNC_STUB(pd_get_hw_lif_id);
+PD_FUNC_STUB(pd_lif_get);
 
 // if calls
 PD_FUNC_STUB(pd_if_create);
