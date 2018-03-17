@@ -24,8 +24,8 @@ struct tx_table_s2_t0_tls_read_desc_d d	;
 
 tls_dec_read_desc_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
-    phvwrpair   p.read_desc_status, d.{status}.wx,  \
-                p.read_desc_output_list_address, d.{output_list_address}.dx
+    phvwr       p.read_desc_status, d.{status}.wx
+    phvwr       p.read_desc_output_list_address, d.{output_list_address}.dx
     phvwr       p.to_s3_odesc, d.{output_list_address}.dx
     phvwr       p.to_s5_odesc, d.{output_list_address}.dx
     CAPRI_OPERAND_DEBUG(d.output_list_address)

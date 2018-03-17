@@ -28,8 +28,8 @@ void set_qstate_entry(hal::LIFQState *qstate, T *entry, int cos) {
   entry->length7(qstate->params_in.type[7].entries);
   entry->size7(qstate->params_in.type[7].size);
   entry->vld(1);
-  entry->sched_hint_en(1);
-  entry->sched_hint_cos(cos);
+  //entry->sched_hint_en(1);
+  //entry->sched_hint_cos(cos);
   entry->write();
 }
 
