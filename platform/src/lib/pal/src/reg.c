@@ -21,6 +21,7 @@ pal_reg_rd32(const u_int64_t pa)
 {
     const u_int32_t val = *(u_int32_t *)pr_ptov(pa, 4);
     pal_reg_trace("reg_rd32 0x%08"PRIx64" = 0x%"PRIx32"\n", pa, val);
+    assert((pa & 0x3) == 0);
     return val;
 }
 
@@ -29,6 +30,7 @@ pal_reg_rd64(const u_int64_t pa)
 {
     const u_int64_t val = *(u_int64_t *)pr_ptov(pa, 8);
     pal_reg_trace("reg_rd64 0x%08"PRIx64" = 0x%"PRIx64"\n", pa, val);
+    assert((pa & 0x3) == 0);
     return val;
 }
 
@@ -40,6 +42,7 @@ pal_reg_rd32w(const u_int64_t pa,
     u_int32_t *va = pr_ptov(pa, nw * 4);
     int i;
 
+    assert((pa & 0x3) == 0);
     for (i = 0; i < nw; i++) {
         *w++ = *va++;
         pal_reg_trace("reg_rd32 0x%08"PRIx64" = 0x%"PRIx32"\n",
@@ -51,6 +54,7 @@ void
 pal_reg_wr32(const u_int64_t pa, const u_int32_t val)
 {
     pal_reg_trace("reg_wr32 0x%08"PRIx64" = 0x%"PRIx32"\n", pa, val);
+    assert((pa & 0x3) == 0);
     *(u_int32_t *)pr_ptov(pa, 4) = val;
 }
 
@@ -58,6 +62,7 @@ void
 pal_reg_wr64(const u_int64_t pa, const u_int64_t val)
 {
     pal_reg_trace("reg_wr64 0x%08"PRIx64" = 0x%"PRIx64"\n", pa, val);
+    assert((pa & 0x3) == 0);
     *(u_int64_t *)pr_ptov(pa, 8) = val;
 }
 
@@ -69,6 +74,7 @@ pal_reg_wr32w(const u_int64_t pa,
     u_int32_t *va = pr_ptov(pa, nw * 4);
     int i;
 
+    assert((pa & 0x3) == 0);
     for (i = 0; i < nw; i++) {
         pal_reg_trace("reg_wr32 0x%08"PRIx64" = 0x%"PRIx32"\n",
                       pa + i * 4, *w);
