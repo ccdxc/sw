@@ -13,11 +13,11 @@
 
 #ifdef __aarch64__
 #include "pal.h"
-#define rd_reg 		pal_reg_rd32
-#define wr_reg 		pal_reg_wr32
-#define rd_mem		pal_mem_rd
-#define wr_mem       	pal_mem_wr
-#define rd_reg32w	pal_reg_rd32w
+#define rd_reg          pal_reg_rd32
+#define wr_reg          pal_reg_wr32
+#define rd_mem          pal_mem_rd
+#define wr_mem          pal_mem_wr
+#define rd_reg32w       pal_reg_rd32w
 #define wr_reg32w       pal_reg_wr32w
 #endif
 
@@ -31,7 +31,7 @@ uint32_t rd_reg(uint64_t pa)
     return val;
 }
 
-#define wr_reg		write_reg
+#define wr_reg          write_reg
 
 void rd_reg32w(uint64_t pa, uint32_t *w, uint32_t nw)
 {
@@ -48,6 +48,9 @@ void wr_reg32w(uint64_t pa, uint32_t *w, uint32_t nw)
         pa += 4;
     }
 }
+
+#define rd_mem          read_mem
+#define wr_mem          write_mem
 
 #endif
 
@@ -105,7 +108,9 @@ void psp_read_counters(int, int);
 void npv_read_counters(int, int);
 void axi_bw_mon(int, u_int32_t);
 void parser_read_counters(int, u_int32_t);
-
+void qstate_lif_dump(int);
+void dump_qstate(int, int, u_int64_t);
+  
 int
 main(int argc, char *argv[])
 {
@@ -113,28 +118,42 @@ main(int argc, char *argv[])
   u_int32_t te_pipe_base, te_stage_base;
   int mpu, pipeline, stage;
   int verbose=0;
+  int queue_dump=0;
   int i=1;
   int polls=100;
+  int exclude=0;
+
+
+#ifdef __x86_64__
+   lib_model_connect();
+#endif
+    
   while(i < (argc)) {
     if(strcmp(argv[i], "-r")==0) {
       printf("Resetting all MPU performance counters\n");
       mpu_reset_all_counters();
+      exit(0);
     }
     else if(strcmp(argv[i], "-v")==0) {
       verbose=1;
       printf("Verbose output mode\n");
     }
-    else {
+    else if(strcmp(argv[i], "-q")==0) {
+      printf("Capmon Queue Dump\n");
+      queue_dump=1;
+    }
+    else if(strcmp(argv[i], "-x")==0) {
+      i++;
+      exclude = atoi(argv[i]);
+      printf("Exclude: %d\n", exclude);
+    }
+    else {      
       printf("usage: capmon -r[eset counters] -v[erbose] \n");
       return(0);
     }
     i++;
   }
 
-#ifdef __x86_64__
-   lib_model_connect();
-#endif
-  
     printf("****CAPMON****\n");
 
     sta_ver = rd_reg(CAP_ADDR_BASE_MS_MS_OFFSET +
@@ -144,106 +163,129 @@ main(int argc, char *argv[])
     printf("Build:   %d\n", (sta_ver >> 16) & 0xffff);
     printf("Version: %d\n", (sta_ver >> 4) & 0xfff);
 
-    printf("==Doorbells==\n");
-    doorbell_read_counters(verbose, polls);    
-    printf("==TX Scheduler==\n");
-    sched_read_counters(verbose, polls);    
+    if(queue_dump == 1) {
+      qstate_lif_dump(verbose);
+      exit(0);
+    }
+      
+    if((exclude & 1) == 0) {
+      printf("==Doorbells==\n");
+      doorbell_read_counters(verbose, polls);    
+    }
+    exclude = exclude >> 1;
+    if((exclude & 1) == 0) {
+      printf("==TX Scheduler==\n");
+      sched_read_counters(verbose, polls);    
+    }
+    exclude = exclude >> 1;
     
     for(pipeline=0; pipeline<4; pipeline++) {
-      switch(pipeline) {
-      case TXDMA: 
-	printf("==TXDMA PIPELINE==\n");
-	npv_read_counters(verbose, polls);    	
-	break;
-      case RXDMA: 
-	printf("==RXDMA PIPELINE==\n");
-	psp_read_counters(verbose, polls);    	
-	break;
-      case P4SGI: 
-	printf("==P4 INGRESS PIPELINE==\n");
-	printf(" SI Parser:");
-	parser_read_counters(verbose, CAP_ADDR_BASE_PPA_PPA_1_OFFSET);
-	break;
-      case P4SGE: 
-	printf("==P4 EGRESS PIPELINE==\n");
-	printf(" SE Parser:");
-	parser_read_counters(verbose, CAP_ADDR_BASE_PPA_PPA_0_OFFSET);
-	break;
+      if((exclude & 1) == 1) {
+	exclude = exclude >> 1;
       }
-      pipe_base = ((pipeline==TXDMA) ? CAP_ADDR_BASE_PCT_MPU_0_OFFSET :
-		   (pipeline==P4SGI) ? CAP_ADDR_BASE_SGI_MPU_0_OFFSET :
-		   (pipeline==P4SGE) ? CAP_ADDR_BASE_SGE_MPU_0_OFFSET :
-		   (pipeline==RXDMA) ? CAP_ADDR_BASE_PCR_MPU_0_OFFSET : 0);
-      te_pipe_base = ((pipeline==TXDMA) ? CAP_ADDR_BASE_PCT_TE_0_OFFSET :
-		      (pipeline==P4SGI) ? CAP_ADDR_BASE_SGI_TE_0_OFFSET :
-		      (pipeline==P4SGE) ? CAP_ADDR_BASE_SGE_TE_0_OFFSET :
-		      (pipeline==RXDMA) ? CAP_ADDR_BASE_PCR_TE_0_OFFSET : 0);
-      // Visit each Stage in pipeline
-      for(stage=0; stage<(((pipeline==TXDMA)|(pipeline==RXDMA)) ? 8 : 6); stage++) {
-	printf(" Stage %d", stage);
-	if(verbose==1) {
-	  printf("\n");
+      else {
+	exclude = exclude >> 1;
+
+	switch(pipeline) {
+	case TXDMA: 
+	  printf("==TXDMA PIPELINE==\n");
+	  npv_read_counters(verbose, polls);      
+	  break;
+	case RXDMA: 
+	  printf("==RXDMA PIPELINE==\n");
+	  psp_read_counters(verbose, polls);      
+	  break;
+	case P4SGI: 
+	  printf("==P4 INGRESS PIPELINE==\n");
+	  printf(" SI Parser:");
+	  parser_read_counters(verbose, CAP_ADDR_BASE_PPA_PPA_1_OFFSET);
+	  break;
+	case P4SGE: 
+	  printf("==P4 EGRESS PIPELINE==\n");
+	  printf(" SE Parser:");
+	  parser_read_counters(verbose, CAP_ADDR_BASE_PPA_PPA_0_OFFSET);
+	  break;
 	}
-	stage_base = (pipe_base + 
-		      (CAP_ADDR_BASE_PCR_MPU_1_OFFSET -
-		       CAP_ADDR_BASE_PCR_MPU_0_OFFSET) * stage);
-	te_stage_base = (te_pipe_base + 
-			 (CAP_ADDR_BASE_PCR_TE_1_OFFSET -
-			  CAP_ADDR_BASE_PCR_TE_0_OFFSET) * stage);	
-	sta_stg_poll(verbose, stage_base, polls);
-	te_read_counters(verbose, te_stage_base);
-	sdp_read_counters(verbose, stage_base);
-	// Visit each MPU in state
-	for(mpu=0; mpu<4; mpu++) {
-	  mpu_read_counters(verbose, stage_base, mpu);
+
+	pipe_base = ((pipeline==TXDMA) ? CAP_ADDR_BASE_PCT_MPU_0_OFFSET :
+		     (pipeline==P4SGI) ? CAP_ADDR_BASE_SGI_MPU_0_OFFSET :
+		     (pipeline==P4SGE) ? CAP_ADDR_BASE_SGE_MPU_0_OFFSET :
+		     (pipeline==RXDMA) ? CAP_ADDR_BASE_PCR_MPU_0_OFFSET : 0);
+	te_pipe_base = ((pipeline==TXDMA) ? CAP_ADDR_BASE_PCT_TE_0_OFFSET :
+			(pipeline==P4SGI) ? CAP_ADDR_BASE_SGI_TE_0_OFFSET :
+			(pipeline==P4SGE) ? CAP_ADDR_BASE_SGE_TE_0_OFFSET :
+			(pipeline==RXDMA) ? CAP_ADDR_BASE_PCR_TE_0_OFFSET : 0);
+	// Visit each Stage in pipeline
+	for(stage=0; stage<(((pipeline==TXDMA)|(pipeline==RXDMA)) ? 8 : 6); stage++) {
+	  printf(" Stage %d", stage);
 	  if(verbose==1) {
-	    mpu_read_table_addr(verbose, stage_base, mpu);
+	    printf("\n");
 	  }
+	  stage_base = (pipe_base + 
+			(CAP_ADDR_BASE_PCR_MPU_1_OFFSET -
+			 CAP_ADDR_BASE_PCR_MPU_0_OFFSET) * stage);
+	  te_stage_base = (te_pipe_base + 
+			   (CAP_ADDR_BASE_PCR_TE_1_OFFSET -
+			    CAP_ADDR_BASE_PCR_TE_0_OFFSET) * stage);      
+	  sta_stg_poll(verbose, stage_base, polls);
+	  te_read_counters(verbose, te_stage_base);
+	  sdp_read_counters(verbose, stage_base);
+	  // Visit each MPU in state
+	  for(mpu=0; mpu<4; mpu++) {
+	    mpu_read_counters(verbose, stage_base, mpu);
+	    if(verbose==1) {
+	    }  mpu_read_table_addr(verbose, stage_base, mpu);
+	  }
+        }
+
+	switch(pipeline) {
+	case TXDMA: 
+	  printf(" TxDMA Engine:");
+	  ptd_read_counters(verbose, polls);
+	  break;
+	case RXDMA: 
+	  printf(" RxDMA Engine:");
+	  prd_read_counters(verbose, polls);    
+	  break;
+	case P4SGI:
+	  break;
+	case P4SGE: 
+	  break;
 	}
       }
-
-      switch(pipeline) {
-      case TXDMA: 
-	printf(" TxDMA Engine:");
-	ptd_read_counters(verbose, polls);
-	break;
-      case RXDMA: 
-	printf(" RxDMA Engine:");
-	prd_read_counters(verbose, polls);    
-	break;
-      case P4SGI:
-	break;
-      case P4SGE: 
-	break;
-      }
-
     }
 
-    exit(0);
+    //    exit(0);
     
     // Bandwidth Monitors:
     printf("==AXI==\n");
+
+    /*
     printf("RXD AXI:");
     axi_bw_mon(verbose, (CAP_ADDR_BASE_RPC_PICS_OFFSET +
-			 CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+                         CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
     printf("TXD AXI:");
     axi_bw_mon(verbose, (CAP_ADDR_BASE_TPC_PICS_OFFSET +
-			 CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+                         CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
     printf("SI  AXI:");
     axi_bw_mon(verbose, (CAP_ADDR_BASE_SSI_PICS_OFFSET +
-			 CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+                         CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
     printf("SE  AXI:");
     axi_bw_mon(verbose, (CAP_ADDR_BASE_SSE_PICS_OFFSET +
-			 CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+                         CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+    */
+    /*
     printf("MS AXI: ");
     axi_bw_mon(verbose, (CAP_ADDR_BASE_MS_MS_OFFSET +
-			 CAP_MS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+                         CAP_MS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
     printf("PXB AXI:");
     axi_bw_mon(verbose, (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-			 CAP_PXB_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+                         CAP_PXB_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+    */
+
     //    printf("SG  AXI:");
     //    axi_bw_mon(verbose, (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-    //			 CAP_SG_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+    //                   CAP_SG_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
 
 #ifdef __x86_64__
@@ -257,25 +299,25 @@ void mpu_read_counters(int verbose, u_int32_t stage_base, int mpu_id)
 {
   u_int32_t mpu_offset = mpu_id * 4; // word array
   u_int32_t inst_executed = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_INST_EXECUTED_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_INST_EXECUTED_BYTE_OFFSET);
   u_int32_t icache_miss = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_ICACHE_MISS_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_ICACHE_MISS_BYTE_OFFSET);
   u_int32_t icache_fill_stall = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_ICACHE_FILL_STALL_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_ICACHE_FILL_STALL_BYTE_OFFSET);
   u_int32_t cycles = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_CYCLES_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_CYCLES_BYTE_OFFSET);
   u_int32_t phv_executed = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_PHV_EXECUTED_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_PHV_EXECUTED_BYTE_OFFSET);
   u_int32_t hazard_stall = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_HAZARD_STALL_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_HAZARD_STALL_BYTE_OFFSET);
   u_int32_t phvwr_stall = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_PHVWR_STALL_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_PHVWR_STALL_BYTE_OFFSET);
   u_int32_t memwr_stall = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_MEMWR_STALL_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_MEMWR_STALL_BYTE_OFFSET);
   u_int32_t tblwr_stall = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_TBLWR_STALL_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_TBLWR_STALL_BYTE_OFFSET);
   u_int32_t fence_stall = rd_reg(mpu_offset + stage_base +
-				       CAP_MPU_CSR_CNT_FENCE_STALL_BYTE_OFFSET);
+                                       CAP_MPU_CSR_CNT_FENCE_STALL_BYTE_OFFSET);
   if(verbose==1) {
     printf("  mpu %d cycles=%d",mpu_id,cycles);
     printf(" inst=%d",inst_executed);
@@ -306,21 +348,92 @@ void mpu_read_counters(int verbose, u_int32_t stage_base, int mpu_id)
 void mpu_reset_all_counters()
 {
   u_int32_t pipe_base, stage_base;
-  int mpu, pipeline, stage;
-  
+  int mpu, pipeline, stage, cos;
+  u_int32_t zero[4];
+  zero[3] = 0;
+  zero[2] = 0;
+  zero[1] = 0;
+  zero[0] = 0;
+
+  // Doorbell count reset:
+  printf("DB reset\n");
+  wr_reg32w(CAP_ADDR_BASE_TXS_TXS_OFFSET +
+            CAP_TXS_CSR_CNT_SCH_DOORBELL_SET_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_TXS_TXS_OFFSET +
+            CAP_TXS_CSR_CNT_SCH_DOORBELL_CLR_BYTE_ADDRESS, zero, 2);
+  // NPV count reset:
+  printf("NPV reset\n");
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PSP_CSR_CNT_MA_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PSP_CSR_CNT_SW_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PSP_CSR_CNT_PB_PBUS_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PSP_CSR_CNT_PR_PBUS_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PSP_CSR_CNT_MA_DROP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PSP_CSR_CNT_MA_RECIRC_BYTE_ADDRESS, zero, 2);
+  // TxDMA
+  printf("TXD reset\n");
+  for(cos=0; cos<16; cos++) {  
+    wr_reg(CAP_ADDR_BASE_TXS_TXS_OFFSET + (cos * 8) +
+           CAP_TXS_CSR_CNT_SCH_TXDMA_COS0_ADDRESS, 0);
+  }
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PT_CSR_PTD_CNT_MA_BYTE_ADDRESS, zero, 3);
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PT_CSR_PTD_CNT_NPV_RESUB_BYTE_ADDRESS, zero, 3);
+  wr_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
+            CAP_PT_CSR_PTD_CNT_PB_BYTE_ADDRESS, zero, 3);
+  // RxDMA
+  printf("RXD reset\n");
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PR_CSR_PRD_CNT_MA_BYTE_ADDRESS, zero, 3);
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PR_CSR_PRD_CNT_PS_RESUB_PKT_BYTE_ADDRESS, zero, 3);
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PR_CSR_PRD_CNT_PS_PKT_BYTE_ADDRESS, zero, 3);
+  // PSP
+  printf("PSP reset\n");
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PSP_CSR_CNT_MA_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PSP_CSR_CNT_SW_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PSP_CSR_CNT_PB_PBUS_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PSP_CSR_CNT_PR_PBUS_SOP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PSP_CSR_CNT_MA_DROP_BYTE_ADDRESS, zero, 2);
+  wr_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+            CAP_PSP_CSR_CNT_MA_RECIRC_BYTE_ADDRESS, zero, 2);
+  // Parser
+  printf("Parser reset\n");
+  wr_reg32w(CAP_ADDR_BASE_PPA_PPA_0_OFFSET + CAP_PPA_CSR_CNT_PPA_PB_BYTE_ADDRESS, zero, 4);
+  wr_reg32w(CAP_ADDR_BASE_PPA_PPA_0_OFFSET + CAP_PPA_CSR_CNT_PPA_DP_BYTE_ADDRESS, zero, 4);
+  wr_reg32w(CAP_ADDR_BASE_PPA_PPA_0_OFFSET + CAP_PPA_CSR_CNT_PPA_MA_BYTE_ADDRESS, zero, 4);
+  wr_reg32w(CAP_ADDR_BASE_PPA_PPA_1_OFFSET + CAP_PPA_CSR_CNT_PPA_PB_BYTE_ADDRESS, zero, 4);
+  wr_reg32w(CAP_ADDR_BASE_PPA_PPA_1_OFFSET + CAP_PPA_CSR_CNT_PPA_DP_BYTE_ADDRESS, zero, 4);
+  wr_reg32w(CAP_ADDR_BASE_PPA_PPA_1_OFFSET + CAP_PPA_CSR_CNT_PPA_MA_BYTE_ADDRESS, zero, 4);
+  // Stage:
+  printf("Stage resets\n");
   for(pipeline=0; pipeline<4; pipeline++) {
     pipe_base = ((pipeline==TXDMA) ? CAP_ADDR_BASE_PCT_MPU_0_OFFSET :
-		 (pipeline==P4SGI) ? CAP_ADDR_BASE_SGI_MPU_0_OFFSET :
-		 (pipeline==P4SGE) ? CAP_ADDR_BASE_SGE_MPU_0_OFFSET :
-		 (pipeline==RXDMA) ? CAP_ADDR_BASE_PCR_MPU_0_OFFSET : 0);
+                 (pipeline==P4SGI) ? CAP_ADDR_BASE_SGI_MPU_0_OFFSET :
+                 (pipeline==P4SGE) ? CAP_ADDR_BASE_SGE_MPU_0_OFFSET :
+                 (pipeline==RXDMA) ? CAP_ADDR_BASE_PCR_MPU_0_OFFSET : 0);
     // Visit each Stage in pipeline
     for(stage=0; stage<(((pipeline==TXDMA)|(pipeline==RXDMA)) ? 8 : 6); stage++) {
       stage_base = (pipe_base + 
-		    (CAP_ADDR_BASE_PCR_MPU_1_OFFSET -
-		     CAP_ADDR_BASE_PCR_MPU_0_OFFSET) * stage);
-      // Visit each MPU in state
+                    (CAP_ADDR_BASE_PCR_MPU_1_OFFSET -
+                     CAP_ADDR_BASE_PCR_MPU_0_OFFSET) * stage);
+      // SDP:
+      wr_reg32w(stage_base + CAP_MPU_CSR_CNT_SDP_BYTE_OFFSET, zero, 3);
+      // Visit each MPU in stage
       for(mpu=0; mpu<4; mpu++) {
-	mpu_reset_counters(stage_base, mpu);
+        mpu_reset_counters(stage_base, mpu);
       }
     }
   }
@@ -331,25 +444,25 @@ void mpu_reset_counters(u_int32_t stage_base, int mpu_id)
 {
   u_int32_t mpu_offset = mpu_id * 4; // word array
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_INST_EXECUTED_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_INST_EXECUTED_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_ICACHE_MISS_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_ICACHE_MISS_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_ICACHE_FILL_STALL_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_ICACHE_FILL_STALL_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_CYCLES_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_CYCLES_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_PHV_EXECUTED_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_PHV_EXECUTED_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_HAZARD_STALL_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_HAZARD_STALL_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_PHVWR_STALL_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_PHVWR_STALL_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_MEMWR_STALL_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_MEMWR_STALL_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_TBLWR_STALL_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_TBLWR_STALL_BYTE_OFFSET, 0);
   wr_reg(mpu_offset + stage_base +
-	       CAP_MPU_CSR_CNT_FENCE_STALL_BYTE_OFFSET, 0);
+               CAP_MPU_CSR_CNT_FENCE_STALL_BYTE_OFFSET, 0);
 }
 
 void sdp_read_counters(int verbose, u_int32_t stage_base)
@@ -382,7 +495,7 @@ void te_read_counters(int verbose, u_int32_t stage_base)
     //
   } else {
     printf("  te phv=%d, axi_rd=%d, tcam=%d, mpu_out=%d\n",
-	   te_phv_cnt, te_axi_cnt, te_tcam_cnt, te_mpu_cnt);
+           te_phv_cnt, te_axi_cnt, te_tcam_cnt, te_mpu_cnt);
   }
 }
 
@@ -391,9 +504,9 @@ void mpu_read_table_addr(int verbose, u_int32_t stage_base, int mpu)
   u_int32_t table_addr[2];
   u_int64_t addr;
   rd_reg32w(stage_base + CAP_MPU_CSR_STA_TBL_ADDR_BYTE_OFFSET +
-	    ( CAP_MPU_CSR_STA_TBL_ADDR_ARRAY_ELEMENT_SIZE * 4 * mpu), table_addr, 2);
-  addr = ((u_int64_t) CAP_MPU_CSR_STA_TBL_ADDR_STA_TBL_ADDR_0_2_IN_MPU_31_0_GET(table_addr[0]) +	   
-	  ((u_int64_t) CAP_MPU_CSR_STA_TBL_ADDR_STA_TBL_ADDR_1_2_IN_MPU_63_32_GET(table_addr[1]) << 32));
+            ( CAP_MPU_CSR_STA_TBL_ADDR_ARRAY_ELEMENT_SIZE * 4 * mpu), table_addr, 2);
+  addr = ((u_int64_t) CAP_MPU_CSR_STA_TBL_ADDR_STA_TBL_ADDR_0_2_IN_MPU_31_0_GET(table_addr[0]) +           
+          ((u_int64_t) CAP_MPU_CSR_STA_TBL_ADDR_STA_TBL_ADDR_1_2_IN_MPU_63_32_GET(table_addr[1]) << 32));
   
   if(verbose==0) {
   } else {
@@ -433,15 +546,15 @@ void sta_stg_poll(int verbose, u_int32_t stage_base, int polls)
     sta_stg = rd_reg(stage_base + CAP_MPU_CSR_STA_STG_BYTE_OFFSET);
     for(mpu=0; mpu<4; mpu++) {
       rd_reg32w(stage_base + CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_0_2_BYTE_OFFSET +
-		    mpu * CAP_MPU_CSR_STA_CTL_MPU_BYTE_SIZE, sta_ctl[mpu], 2);
+                    mpu * CAP_MPU_CSR_STA_CTL_MPU_BYTE_SIZE, sta_ctl[mpu], 2);
       latency[mpu] = rd_reg(stage_base +
-				  (CAP_MPU_CSR_STA_TABLE_ARRAY_ELEMENT_SIZE * 4 * mpu) +
-				  CAP_MPU_CSR_STA_TABLE_BYTE_OFFSET);
+                                  (CAP_MPU_CSR_STA_TABLE_ARRAY_ELEMENT_SIZE * 4 * mpu) +
+                                  CAP_MPU_CSR_STA_TABLE_BYTE_OFFSET);
     }
                 
     for(mpu=0; mpu<4; mpu++) {
-      //	CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_1_2_EX_PC_30_29_GET(sta_ctl[mpu][1])
-      //	CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_0_2_EX_PC_28_0_GET(sta_ctl[mpu][0])
+      //        CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_1_2_EX_PC_30_29_GET(sta_ctl[mpu][1])
+      //        CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_0_2_EX_PC_28_0_GET(sta_ctl[mpu][0])
       phv_data_depth[mpu] += CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_1_2_PHV_DATA_FIFO_DEPTH_GET(sta_ctl[mpu][1]);
       phv_cmd_depth[mpu] += CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_1_2_PHV_CMD_FIFO_DEPTH_GET(sta_ctl[mpu][1]);
       stall[mpu][0] += CAP_MPU_CSR_STA_CTL_MPU_STA_CTL_MPU_1_2_STALL_VECTOR_GET(sta_ctl[mpu][1]) & 0x1;
@@ -451,7 +564,7 @@ void sta_stg_poll(int verbose, u_int32_t stage_base, int polls)
       mpu_processing[mpu] += (CAP_MPU_CSR_STA_STG_MPU_PROCESSING_GET(sta_stg) >> mpu) & 0x1;
       latency_val[mpu] +=CAP_MPU_CSR_STA_TABLE_MPU_PROCESSING_TABLE_LATENCY_GET(latency[mpu]);
       table_type[mpu] = CAP_MPU_CSR_STA_TABLE_MPU_PROCESSING_TABLE_PCIE_GET(latency[mpu]) ? TABLE_PCI :
-   	                CAP_MPU_CSR_STA_TABLE_MPU_PROCESSING_TABLE_SRAM_GET(latency[mpu]) ? TABLE_SRAM : TABLE_HBM;
+                        CAP_MPU_CSR_STA_TABLE_MPU_PROCESSING_TABLE_SRAM_GET(latency[mpu]) ? TABLE_SRAM : TABLE_HBM;
       latency_total += latency_val[mpu];
       last_table_type = table_type[mpu];
       if(latency_val[mpu] > latency_max) latency_max = latency_val[mpu];
@@ -465,21 +578,21 @@ void sta_stg_poll(int verbose, u_int32_t stage_base, int polls)
     }
   }
   printf(" srdy=%3d%% drdy=%3d%% te=%d",
-	 stg_srdy * 100 / polls,
-	 stg_drdy * 100 / polls,
-	 te_valid / polls
-	 );
+         stg_srdy * 100 / polls,
+         stg_drdy * 100 / polls,
+         te_valid / polls
+         );
   if(last_table_type==TABLE_PCI)       printf(" PCI_lat=");
   else if(last_table_type==TABLE_SRAM) printf(" SRAM_lat=");
   else                                 printf(" HBM_lat=");
-  printf("%dclk", latency_total * 400 / polls);
+  printf("%d", latency_total / (4 * polls));
   if(verbose==1) {
-    printf(" min=%dclk, max=%dclk", (int) latency_min, (int) latency_max);
+    printf(" min=%d, max=%d", (int) latency_min, (int) latency_max);
     printf(" phvwr depths");
     for(mpu=0; mpu<4; mpu++) {
       printf(" m%d=%d,%d", mpu,
-	     (int) (phv_cmd_depth[mpu] / polls),
-	     (int) (phv_data_depth[mpu] / polls));
+             (int) (phv_cmd_depth[mpu] / polls),
+             (int) (phv_data_depth[mpu] / polls));
     }
     printf("\n");
   }
@@ -487,16 +600,16 @@ void sta_stg_poll(int verbose, u_int32_t stage_base, int polls)
   for(mpu=0; mpu<4; mpu++) {
     if(verbose==1) {
       printf("  mpu %d  processing %2d%%, stalls: hazard %2d%% phvwr %2d%% tblwr %2d%% memwr %2d%%\n",
-	     mpu,
-	     mpu_processing[mpu] * 100 / polls,	   
-	     stall[mpu][3] * 100 / polls,
-	     stall[mpu][2] * 100 / polls,
-	     stall[mpu][1] * 100 / polls,
-	     stall[mpu][0] * 100 / polls);
+             mpu,
+             mpu_processing[mpu] * 100 / polls,    
+             stall[mpu][3] * 100 / polls,
+             stall[mpu][2] * 100 / polls,
+             stall[mpu][1] * 100 / polls,
+             stall[mpu][0] * 100 / polls);
     } else {
       printf(" m%0d %0d%%",
-	     mpu,
-	     mpu_processing[mpu] * 100 / polls);   
+             mpu,
+             mpu_processing[mpu] * 100 / polls);   
     }
   }
   if(verbose==0) {
@@ -512,10 +625,10 @@ void sched_read_counters(int verbose, int polls)
   int cos, i;
   // Doorbell sets/clears:
   rd_reg32w(CAP_ADDR_BASE_TXS_TXS_OFFSET +
-		CAP_TXS_CSR_CNT_SCH_DOORBELL_SET_BYTE_ADDRESS, cnt, 2);
+                CAP_TXS_CSR_CNT_SCH_DOORBELL_SET_BYTE_ADDRESS, cnt, 2);
   printf(" Doorbell sets=%d", cnt[0]);
   rd_reg32w(CAP_ADDR_BASE_TXS_TXS_OFFSET +
-		CAP_TXS_CSR_CNT_SCH_DOORBELL_CLR_BYTE_ADDRESS, cnt, 2);
+                CAP_TXS_CSR_CNT_SCH_DOORBELL_CLR_BYTE_ADDRESS, cnt, 2);
   printf(" clears=%d", cnt[0]);
   // Packet Buffer XOFF:
   for(cos=0; cos<16; cos++) {
@@ -523,7 +636,7 @@ void sched_read_counters(int verbose, int polls)
   }
   for(i=0; i<polls; i++) {
     xoff_vector = rd_reg(CAP_ADDR_BASE_TXS_TXS_OFFSET +
-			       CAP_TXS_CSR_STA_GLB_BYTE_OFFSET);
+                               CAP_TXS_CSR_STA_GLB_BYTE_OFFSET);
     for(cos=0; cos<16; cos++) {
       xoff[cos] += (((xoff_vector >> cos) & 1)==1) ? 1 : 0;
     }
@@ -536,7 +649,7 @@ void sched_read_counters(int verbose, int polls)
   printf("\n PHVs to Stage0:");
   for(cos=0; cos<16; cos++) {  
     cnt_txdma = rd_reg(CAP_ADDR_BASE_TXS_TXS_OFFSET + (cos * 8) +
-			     CAP_TXS_CSR_CNT_SCH_TXDMA_COS0_ADDRESS);
+                             CAP_TXS_CSR_CNT_SCH_TXDMA_COS0_ADDRESS);
     if(cnt_txdma > 0)
       printf(" COS%d=%d",cos, cnt_txdma);
   }
@@ -548,15 +661,15 @@ void doorbell_read_counters(int verbose, int polls)
   u_int32_t cnt[2];
   // Doorbell Host
   rd_reg32w( CAP_ADDR_BASE_DB_WA_OFFSET +
-	     CAP_WA_CSR_CNT_WA_HOST_DOORBELLS_BYTE_ADDRESS, cnt, 2);
+             CAP_WA_CSR_CNT_WA_HOST_DOORBELLS_BYTE_ADDRESS, cnt, 2);
   printf(" Host_DBs=%d", cnt[0]);
   // Doorbell Local
   rd_reg32w( CAP_ADDR_BASE_DB_WA_OFFSET +
-	     CAP_WA_CSR_CNT_WA_LOCAL_DOORBELLS_BYTE_ADDRESS, cnt, 2);
+             CAP_WA_CSR_CNT_WA_LOCAL_DOORBELLS_BYTE_ADDRESS, cnt, 2);
   printf(" Local_DBs=%d", cnt[0]);
   // Doorbell to Sched
   rd_reg32w( CAP_ADDR_BASE_DB_WA_OFFSET +
-	     CAP_WA_CSR_CNT_WA_SCHED_OUT_BYTE_ADDRESS, cnt, 2);
+             CAP_WA_CSR_CNT_WA_SCHED_OUT_BYTE_ADDRESS, cnt, 2);
   printf(" DBtoSchedReq=%d", cnt[0]);
 
   printf("\n");
@@ -580,20 +693,20 @@ void ptd_read_counters(int verbose, int polls)
   u_int32_t cnt[3];
   // Get PHV counts:
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PT_CSR_PTD_CNT_MA_BYTE_ADDRESS, cnt, 3);
+            CAP_PT_CSR_PTD_CNT_MA_BYTE_ADDRESS, cnt, 3);
   int ma_cnt = CAP_PTD_CSR_CNT_MA_CNT_MA_0_3_SOP_31_0_GET(cnt[0]);
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PT_CSR_PTD_CNT_NPV_RESUB_BYTE_ADDRESS, cnt, 3);
+            CAP_PT_CSR_PTD_CNT_NPV_RESUB_BYTE_ADDRESS, cnt, 3);
   int resub_cnt = CAP_PTD_CSR_CNT_NPV_RESUB_CNT_NPV_RESUB_0_3_SOP_31_0_GET(cnt[0]);
 
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PT_CSR_PTD_CNT_PB_BYTE_ADDRESS, cnt, 3);
+            CAP_PT_CSR_PTD_CNT_PB_BYTE_ADDRESS, cnt, 3);
   int pb_cnt = CAP_PTD_CSR_CNT_PB_CNT_PB_0_3_SOP_31_0_GET(cnt[0]);
   // Pending Reads/Writes, # PHVs
   for(i=0; i<polls; i++) {
     // FIFO Status
     sta_fifo = rd_reg(CAP_ADDR_BASE_PT_PT_OFFSET +
-		      CAP_PT_CSR_PTD_STA_FIFO_BYTE_ADDRESS);
+                      CAP_PT_CSR_PTD_STA_FIFO_BYTE_ADDRESS);
     rd_ff_full   += CAP_PRD_CSR_STA_FIFO_RD_LAT_FF_FULL_GET(sta_fifo);
     rd_ff_empty  += CAP_PRD_CSR_STA_FIFO_RD_LAT_FF_EMPTY_GET(sta_fifo);
     wr_ff_full   += CAP_PRD_CSR_STA_FIFO_WR_LAT_FF_FULL_GET(sta_fifo);
@@ -602,22 +715,22 @@ void ptd_read_counters(int verbose, int polls)
     pkt_ff_empty += CAP_PRD_CSR_STA_FIFO_PKT_FF_EMPTY_GET(sta_fifo);
     // Pending:
     cnt_pend = rd_reg(CAP_ADDR_BASE_PT_PT_OFFSET +
-		      CAP_PT_CSR_PTD_STA_ID_BYTE_ADDRESS);
+                      CAP_PT_CSR_PTD_STA_ID_BYTE_ADDRESS);
     sta_xoff = rd_reg(CAP_ADDR_BASE_PT_PT_OFFSET +
-		      CAP_PT_CSR_PTD_STA_XOFF_BYTE_ADDRESS);
+                      CAP_PT_CSR_PTD_STA_XOFF_BYTE_ADDRESS);
     pend_rd += CAP_PTD_CSR_STA_ID_RD_PEND_CNT_GET(cnt_pend);
     pend_wr += CAP_PTD_CSR_STA_ID_WR_PEND_CNT_GET(cnt_pend);
     num_phv += CAP_PTD_CSR_STA_XOFF_NUMPHV_COUNTER_GET(sta_xoff);
   }
   printf(" phv_cnt=%d pb_cnt=%d resub=%d AXI_Reads=%d AXI_Writes=%d PHVs_in_P4+=%d\n",
-	 ma_cnt, pb_cnt, resub_cnt,
-	 (pend_rd) / polls,
-	 (pend_wr) / polls,
-	 (num_phv) / polls);
+         ma_cnt, pb_cnt, resub_cnt,
+         (pend_rd) / polls,
+         (pend_wr) / polls,
+         (num_phv) / polls);
   printf("       (FIFOs empty/full) rd=%d%%/%d%% wr=%d%%/%d%% pkt=%d%%/%d%%\n",
-	 rd_ff_empty / polls, rd_ff_full / polls,
-	 wr_ff_empty / polls, wr_ff_full / polls,
-	 pkt_ff_empty / polls, pkt_ff_full / polls);
+         rd_ff_empty / polls, rd_ff_full / polls,
+         wr_ff_empty / polls, wr_ff_full / polls,
+         pkt_ff_empty / polls, pkt_ff_full / polls);
 }  
 
 void prd_read_counters(int verbose, int polls)
@@ -638,19 +751,19 @@ void prd_read_counters(int verbose, int polls)
   int sta_fifo=0;
   // Get PHV counts:
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PR_CSR_PRD_CNT_MA_BYTE_ADDRESS, cnt, 3);
+            CAP_PR_CSR_PRD_CNT_MA_BYTE_ADDRESS, cnt, 3);
   int ma_cnt = CAP_PRD_CSR_CNT_MA_CNT_MA_0_3_SOP_31_0_GET(cnt[0]);
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PR_CSR_PRD_CNT_PS_RESUB_PKT_BYTE_ADDRESS, cnt, 3);
+            CAP_PR_CSR_PRD_CNT_PS_RESUB_PKT_BYTE_ADDRESS, cnt, 3);
   int resub_cnt = CAP_PRD_CSR_CNT_PS_RESUB_PKT_CNT_PS_RESUB_PKT_0_3_SOP_31_0_GET(cnt[0]);
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PR_CSR_PRD_CNT_PS_PKT_BYTE_ADDRESS, cnt, 3);
+            CAP_PR_CSR_PRD_CNT_PS_PKT_BYTE_ADDRESS, cnt, 3);
   int ps_cnt = CAP_PRD_CSR_CNT_PS_PKT_CNT_PS_PKT_0_3_SOP_31_0_GET(cnt[0]);
   // Pending Reads/Writes, # PHVs
   for(i=0; i<polls; i++) {
     // FIFO Status
     sta_fifo = rd_reg(CAP_ADDR_BASE_PR_PR_OFFSET +
-		      CAP_PR_CSR_PRD_STA_FIFO_BYTE_ADDRESS);
+                      CAP_PR_CSR_PRD_STA_FIFO_BYTE_ADDRESS);
     rd_ff_full   += CAP_PRD_CSR_STA_FIFO_RD_LAT_FF_FULL_GET(sta_fifo);
     rd_ff_empty  += CAP_PRD_CSR_STA_FIFO_RD_LAT_FF_EMPTY_GET(sta_fifo);
     wr_ff_full   += CAP_PRD_CSR_STA_FIFO_WR_LAT_FF_FULL_GET(sta_fifo);
@@ -659,76 +772,76 @@ void prd_read_counters(int verbose, int polls)
     pkt_ff_empty += CAP_PRD_CSR_STA_FIFO_PKT_FF_EMPTY_GET(sta_fifo);
     // Pending reads/writes:
     sta_id =  rd_reg(CAP_ADDR_BASE_PR_PR_OFFSET +
-		     CAP_PR_CSR_PRD_STA_ID_BYTE_ADDRESS);
+                     CAP_PR_CSR_PRD_STA_ID_BYTE_ADDRESS);
     pend_rd += CAP_PRD_CSR_STA_ID_RD_PEND_CNT_GET(sta_id);
     pend_wr += CAP_PRD_CSR_STA_ID_WR_PEND_CNT_GET(sta_id);
     // num PHVs, xoff:
     rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	      CAP_PR_CSR_PRD_STA_XOFF_BYTE_ADDRESS, cnt, 3);               
+              CAP_PR_CSR_PRD_STA_XOFF_BYTE_ADDRESS, cnt, 3);               
     num_phv += CAP_PRD_CSR_STA_XOFF_STA_XOFF_0_3_NUMPHV_XOFF_GET(cnt[0]);
     pb_xoff = (CAP_PRD_CSR_STA_XOFF_STA_XOFF_1_3_PBPR_P15_PBUS_XOFF_27_0_GET(cnt[1]) << 4) |
               CAP_PRD_CSR_STA_XOFF_STA_XOFF_2_3_PBPR_P15_PBUS_XOFF_31_28_GET(cnt[2]);
   }
   printf(" phv_cnt=%d pkt_cnt=%d resub=%d AXI_Reads=%d AXI_Writes=%d PHVs_in_P4+=%d\n",
-	 ma_cnt, ps_cnt, resub_cnt,
-	 (pend_rd) / polls,
-	 (pend_wr) / polls,
-	 (num_phv) / polls);
+         ma_cnt, ps_cnt, resub_cnt,
+         (pend_rd) / polls,
+         (pend_wr) / polls,
+         (num_phv) / polls);
   printf("       (FIFOs empty/full) rd=%d%%/%d%% wr=%d%%/%d%% pkt=%d%%/%d%% XOFF=%x\n",
-	 rd_ff_empty / polls, rd_ff_full / polls,
-	 wr_ff_empty / polls, wr_ff_full / polls,
-	 pkt_ff_empty / polls, pkt_ff_full / polls,
-	 pb_xoff);
+         rd_ff_empty / polls, rd_ff_full / polls,
+         wr_ff_empty / polls, wr_ff_full / polls,
+         pkt_ff_empty / polls, pkt_ff_full / polls,
+         pb_xoff);
 }  
 
 void psp_read_counters(int verbose, int polls)
 {
   u_int32_t cnt[2];
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PSP_CSR_CNT_MA_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_MA_SOP_BYTE_ADDRESS, cnt, 2);
   int ma_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PSP_CSR_CNT_SW_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_SW_SOP_BYTE_ADDRESS, cnt, 2);
   int sw_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PSP_CSR_CNT_PB_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_PB_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
   int pb_pbus_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PSP_CSR_CNT_PR_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_PR_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
   int pr_pbus_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PSP_CSR_CNT_MA_DROP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_MA_DROP_BYTE_ADDRESS, cnt, 2);
   int ma_drop_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
-	    CAP_PSP_CSR_CNT_MA_RECIRC_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_MA_RECIRC_BYTE_ADDRESS, cnt, 2);
   int ma_recirc_cnt = cnt[0];
   printf(" PSP phv=%d pb_pbus=%d pr_pbus=%d sw=%d phv_drop=%d recirc=%d\n",
-	 ma_cnt,sw_cnt,pb_pbus_cnt,pr_pbus_cnt,ma_drop_cnt,ma_recirc_cnt);
+         ma_cnt,sw_cnt,pb_pbus_cnt,pr_pbus_cnt,ma_drop_cnt,ma_recirc_cnt);
 }  
 
 void npv_read_counters(int verbose, int polls)
 {
   u_int32_t cnt[2];
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PSP_CSR_CNT_MA_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_MA_SOP_BYTE_ADDRESS, cnt, 2);
   int ma_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PSP_CSR_CNT_SW_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_SW_SOP_BYTE_ADDRESS, cnt, 2);
   int sw_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PSP_CSR_CNT_PB_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_PB_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
   int pb_pbus_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PSP_CSR_CNT_PR_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_PR_PBUS_SOP_BYTE_ADDRESS, cnt, 2);
   int pr_pbus_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PSP_CSR_CNT_MA_DROP_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_MA_DROP_BYTE_ADDRESS, cnt, 2);
   int ma_drop_cnt = cnt[0];
   rd_reg32w(CAP_ADDR_BASE_PT_PT_OFFSET +
-	    CAP_PSP_CSR_CNT_MA_RECIRC_BYTE_ADDRESS, cnt, 2);
+            CAP_PSP_CSR_CNT_MA_RECIRC_BYTE_ADDRESS, cnt, 2);
   int ma_recirc_cnt = cnt[0];
   printf(" NPV phv=%d pb_pbus=%d pr_pbus=%d sw=%d phv_drop=%d recirc=%d\n",
-	 ma_cnt,sw_cnt,pb_pbus_cnt,pr_pbus_cnt,ma_drop_cnt,ma_recirc_cnt);
+         ma_cnt,sw_cnt,pb_pbus_cnt,pr_pbus_cnt,ma_drop_cnt,ma_recirc_cnt);
 }  
 
 void parser_read_counters(int verbose, u_int32_t base_addr)
@@ -737,14 +850,14 @@ void parser_read_counters(int verbose, u_int32_t base_addr)
   u_int64_t from_pb, to_dp, to_ma;
   rd_reg32w(base_addr + CAP_PPA_CSR_CNT_PPA_PB_BYTE_ADDRESS, cnt, 4);
   from_pb = ((u_int64_t) CAP_PPA_CSR_CNT_PPA_PB_CNT_PPA_PB_0_4_SOP_31_0_GET(cnt[0]) + 
-	     ((u_int64_t) CAP_PPA_CSR_CNT_PPA_PB_CNT_PPA_PB_1_4_SOP_39_32_GET(cnt[1]) << 32));
+             ((u_int64_t) CAP_PPA_CSR_CNT_PPA_PB_CNT_PPA_PB_1_4_SOP_39_32_GET(cnt[1]) << 32));
   rd_reg32w(base_addr + CAP_PPA_CSR_CNT_PPA_DP_BYTE_ADDRESS, cnt, 4);
   to_dp = ((u_int64_t) CAP_PPA_CSR_CNT_PPA_DP_CNT_PPA_DP_0_4_SOP_31_0_GET(cnt[0]) + 
-	   ((u_int64_t) CAP_PPA_CSR_CNT_PPA_DP_CNT_PPA_DP_1_4_SOP_39_32_GET(cnt[1]) << 32));
+           ((u_int64_t) CAP_PPA_CSR_CNT_PPA_DP_CNT_PPA_DP_1_4_SOP_39_32_GET(cnt[1]) << 32));
 
   rd_reg32w(base_addr + CAP_PPA_CSR_CNT_PPA_MA_BYTE_ADDRESS, cnt, 4);
   to_ma = ((u_int64_t) CAP_PPA_CSR_CNT_PPA_MA_CNT_PPA_MA_0_4_SOP_31_0_GET(cnt[0]) + 
-	   ((u_int64_t) CAP_PPA_CSR_CNT_PPA_MA_CNT_PPA_MA_1_4_SOP_39_32_GET(cnt[1]) << 32));
+           ((u_int64_t) CAP_PPA_CSR_CNT_PPA_MA_CNT_PPA_MA_1_4_SOP_39_32_GET(cnt[1]) << 32));
 
   printf(" pkt_from_pb=%ld phv_to_s0=%ld pkt_to_dp=%ld\n", from_pb, to_ma, to_dp);
 }  
@@ -755,51 +868,150 @@ void axi_bw_mon(int verbose, u_int32_t base_addr)
   // Use PICS defines to get relative spacing between monitor regs
   // base_addr is the address of CAP_*_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS =
   u_int32_t rd_latency = rd_reg(base_addr +
-				      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS -
-				      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+                                CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS -
+                                CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
   u_int32_t rd_bandwidth = rd_reg(base_addr +
-				      CAP_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_BYTE_ADDRESS -
-				      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+                                  CAP_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_BYTE_ADDRESS -
+                                  CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
   u_int32_t rd_cnt = rd_reg(base_addr +
-				  CAP_PICS_CSR_CNT_AXI_BW_MON_RD_ADDRESS -
-				  CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+                            CAP_PICS_CSR_CNT_AXI_BW_MON_RD_BYTE_ADDRESS -
+                            CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
   u_int32_t rd_trans = rd_reg(base_addr +
-				    CAP_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_BYTE_ADDRESS +
-				    CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
-
+                              CAP_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_BYTE_ADDRESS -
+                              CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+  
   u_int32_t wr_latency = rd_reg(base_addr +
-				      CAP_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_BYTE_ADDRESS -
-				      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+                                CAP_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_BYTE_ADDRESS -
+                                CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
   u_int32_t wr_bandwidth = rd_reg(base_addr +
-				      CAP_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_BYTE_ADDRESS -
-				      CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+                                  CAP_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_BYTE_ADDRESS -
+                                  CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
   u_int32_t wr_cnt = rd_reg(base_addr +
-				  CAP_PICS_CSR_CNT_AXI_BW_MON_WR_ADDRESS -
-				  CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+                            CAP_PICS_CSR_CNT_AXI_BW_MON_WR_BYTE_ADDRESS -
+                            CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
   u_int32_t wr_trans = rd_reg(base_addr +
-				    CAP_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_BYTE_ADDRESS +
-				    CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
+                              CAP_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_BYTE_ADDRESS -
+                              CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS);
   printf(" rd_latency=%d/%d",
-	 CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_AVRG_GET(rd_latency),
-	 CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_MAXV_GET(rd_latency));
+         CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_AVRG_GET(rd_latency),
+         CAP_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_MAXV_GET(rd_latency));
   printf(" rd_bandwidth=%d/%d",
-	 CAP_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_AVRG_GET(rd_bandwidth),
-	 CAP_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_MAXV_GET(rd_bandwidth));
+         CAP_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_AVRG_GET(rd_bandwidth),
+         CAP_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_MAXV_GET(rd_bandwidth));
   printf(" rd_cnt=%d", rd_cnt);
   printf(" rd_pend=%d, no_drdy=%d",
-	 CAP_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_OUTSTANDING_GET(rd_trans),
-	 CAP_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_DESS_RDY_GET(rd_trans));
+         CAP_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_OUTSTANDING_GET(rd_trans),
+         CAP_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_DESS_RDY_GET(rd_trans));
   // Writes:
   printf("\n         wr_latency=%d/%d",
-	 CAP_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_AVRG_GET(wr_latency),
-	 CAP_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_MAXV_GET(wr_latency));
+         CAP_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_AVRG_GET(wr_latency),
+         CAP_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_MAXV_GET(wr_latency));
   printf(" wr_bandwidth=%d/%d",
-	 CAP_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_AVRG_GET(wr_bandwidth),
-	 CAP_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_MAXV_GET(wr_bandwidth));
+         CAP_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_AVRG_GET(wr_bandwidth),
+         CAP_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_MAXV_GET(wr_bandwidth));
   printf(" wr_cnt=%d", wr_cnt);
   printf(" wr_pend=%d, no_drdy=%d",
-	 CAP_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_OUTSTANDING_GET(wr_trans),
-	 CAP_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_DESS_RDY_GET(wr_trans));
+         CAP_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_OUTSTANDING_GET(wr_trans),
+         CAP_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_DESS_RDY_GET(wr_trans));
   
   printf("\n");
 }  
+
+void qstate_lif_dump(int verbose)
+{
+  u_int32_t cnt[4], size[8], length[8];
+  u_int32_t valid, hint, hint_cos;
+  u_int64_t base;
+  int lif, type, q, max_type;
+  int this_size, this_len;
+
+  for(lif=0; lif < 8; lif++) {
+    rd_reg32w(CAP_ADDR_BASE_DB_WA_OFFSET +
+	      CAP_WA_CSR_DHS_LIF_QSTATE_MAP_BYTE_ADDRESS + (16 * lif), cnt, 4);
+    // decode lif qstate table:
+    base     = (u_int64_t) CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_QSTATE_BASE_GET(cnt[0]);
+    valid    = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_VLD_GET(cnt[0]);
+    hint     = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SCHED_HINT_EN_GET(cnt[2]);
+    hint_cos = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SCHED_HINT_COS_GET(cnt[2]);
+    // 3 bit size is qstate size: 32B/64B/128B...
+    size[0] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_SIZE0_GET(cnt[0]);
+    size[1] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE1_GET(cnt[1]);
+    size[2] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE2_GET(cnt[1]);
+    size[3] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE3_GET(cnt[1]);
+    size[4] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE4_GET(cnt[1]);
+    size[5] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE5_GET(cnt[2]);
+    size[6] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE6_GET(cnt[2]);
+    size[7] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE7_GET(cnt[2]);
+    // 5 bit length is lg2 # entries:
+    length[0] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_LENGTH0_GET(cnt[0]);
+    length[1] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_LENGTH1_0_0_GET(cnt[0]) |
+               (CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH1_4_1_GET(cnt[1]) << 1);
+    length[2] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH2_GET(cnt[1]);
+    length[3] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH3_GET(cnt[1]);
+    length[4] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH4_GET(cnt[1]);
+    length[5] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH5_0_0_GET(cnt[1]) |
+               (CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH5_4_1_GET(cnt[2]) << 1);
+    length[6] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH6_GET(cnt[2]);
+    length[7] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH7_GET(cnt[2]);
+    
+    for (max_type = 0; max_type < 8; max_type++) {
+      if (size[max_type] == 0) {
+        break;
+      }
+    }
+
+    if(valid) {
+      base = base << 12; // base is 4KB aligned
+      printf("LIF %d valid, qstate_base=0x%lx, hint=%d, hint_cos=%d\n",
+	     lif, base, hint, hint_cos);
+      for(type=0; type < max_type; type++) {
+      	this_len = 1 << length[type];
+      	this_size = 32 * (1 << size[type]);
+      	printf(" type %d tybe_base = 0x%lx, length=%d entries, qstate_size=%d bytes\n",
+      	       type, base, this_len, this_size);
+      	for(q=0; q < this_len; q++) {
+      	  dump_qstate(verbose, q, base + (u_int64_t) (q * this_size));
+      	}
+      	base += this_size * this_len;
+      }
+    }
+  }
+}
+
+void dump_qstate(int verbose, int qid, u_int64_t qaddr)
+{
+  u_int8_t buf[64];
+
+  rd_mem(qaddr, buf, 64);
+  
+  typedef struct {
+      uint8_t     pc_offset;
+      uint8_t     rsvd0;
+      uint8_t     cosA : 4;
+      uint8_t     cosB : 4;
+      uint8_t     cos_sel;
+      uint8_t     eval_last;
+      uint8_t     host : 4;
+      uint8_t     total : 4;
+      uint16_t    pid;
+
+      struct {
+        uint16_t    pi;
+        uint16_t    ci;
+      } rings[8];
+
+  } qstate_t;
+
+  qstate_t *q = (qstate_t *)buf;
+  
+  printf("QID %d: ", qid);
+  if(verbose) {
+    printf(" total_rings=%02d cosA=%02d cosB=%02d cos_sel=0x%02x pc=0x%02x",
+	   q->total, q->cosA, q->cosB, q->cos_sel, q->pc_offset);
+  }
+  for(uint8_t ring=0; ring < q->total; ring++) {
+    printf(" ring %02d: PI=%06d CI=%06d", ring, q->rings[ring].pi, q->rings[ring].ci);
+  }
+
+  printf("\n");
+}
