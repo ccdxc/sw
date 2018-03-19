@@ -18,7 +18,6 @@ cc_test(
         ":bitmap",
         "//nic/hal/test:hal_mock",
         "//nic/utils/trace:trace",
-        "//nic/hal/periodic",
         "//nic/utils/mtrack:mtrack",
         "@sdk//obj:sdk_logger",
 

@@ -81,8 +81,6 @@ validate_tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
 static inline hal_ret_t
 add_tcpcb_to_db (tcpcb_t *tcpcb)
 {
-    g_hal_state->tcpcb_hal_handle_ht()->insert(tcpcb,
-                                               &tcpcb->hal_handle_ht_ctxt);
     g_hal_state->tcpcb_id_ht()->insert(tcpcb, &tcpcb->ht_ctxt);
     return HAL_RET_OK;
 }

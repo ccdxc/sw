@@ -107,12 +107,6 @@ find_proxyrcb_by_id (proxyrcb_id_t proxyrcb_id)
     return (proxyrcb_t *)g_hal_state->proxyrcb_id_ht()->lookup(&proxyrcb_id);
 }
 
-proxyrcb_t *
-find_proxyrcb_by_handle (hal_handle_t handle)
-{
-    return (proxyrcb_t *)g_hal_state->proxyrcb_hal_handle_ht()->lookup(&handle);
-}
-
 //------------------------------------------------------------------------------
 // validate an incoming PROXYRCB create request
 // TODO:
@@ -145,8 +139,6 @@ validate_proxyrcb_create (ProxyrCbSpec& spec, ProxyrCbResponse *rsp)
 static inline hal_ret_t
 add_proxyrcb_to_db (proxyrcb_t *proxyrcb)
 {
-    g_hal_state->proxyrcb_hal_handle_ht()->insert(proxyrcb,
-                                               &proxyrcb->hal_handle_ht_ctxt);
     g_hal_state->proxyrcb_id_ht()->insert(proxyrcb, &proxyrcb->ht_ctxt);
     return HAL_RET_OK;
 }

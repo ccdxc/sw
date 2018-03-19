@@ -384,7 +384,7 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf = (vrf_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    // 1. a. Add to vrf id hash table
+    // add to vrf id hash table
     ret = vrf_add_to_db(vrf, hal_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to add vrf {} to db, err : {}", 
@@ -392,7 +392,7 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // Add vrf to nwsec profile
+    // add vrf to nwsec profile
     if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         ret = nwsec_prof_add_vrf(app_ctxt->sec_prof, vrf);
         if (ret != HAL_RET_OK) {
@@ -401,7 +401,7 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
-    // If the VRF created is Infra VRF, store it in hal_state
+    // statsh this in hal_state, if this is infra VRF
     if (vrf->vrf_type == types::VRF_TYPE_INFRA) {
         g_hal_state->set_infra_vrf_handle(hal_handle);
     }

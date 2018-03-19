@@ -50,7 +50,7 @@ extern hal_ret_t hal_wait(void);
 //------------------------------------------------------------------------------
 // one time memory related initializatino for HAL
 //------------------------------------------------------------------------------
-extern hal_ret_t hal_mem_init(void);
+extern hal_ret_t hal_mem_init(bool shm_mode);
 
 }    // namespace hal
 

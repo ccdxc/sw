@@ -10,12 +10,12 @@ cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/hal:hal_includes",
-        "//nic/hal/periodic",
         "//nic/include:base_includes",
         "//nic/hal/lib:hal_lib_includes",
         "//nic:spdlog",
         "//nic/utils/print",
         "@sdk//obj:sdk_slab",
+        "@sdk//obj:sdk_shmmgr",
     ],
     copts = sdk_copts,
 )
@@ -31,6 +31,9 @@ cc_test(
         "//nic/hal/test:hal_mock",
         # External
         "//:gtest",
+    ],
+    linkopts = [
+        "-lrt",
     ],
     copts = sdk_copts,
 )

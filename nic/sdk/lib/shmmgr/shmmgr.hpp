@@ -3,10 +3,6 @@
 #ifndef __SDK_SHMMGR_HPP__
 #define __SDK_SHMMGR_HPP__
 
-#include <boost/interprocess/managed_shared_memory.hpp>
-
-using namespace boost::interprocess;
-
 namespace sdk {
 namespace lib {
 
@@ -14,10 +10,10 @@ namespace lib {
 // modes in which a shared memory segment can be opened/created
 //------------------------------------------------------------------------------
 enum shm_mode_e {
-    CREATE_ONLY,
-    OPEN_ONLY,
-    OPEN_OR_CREATE,
-    OPEN_READ_ONLY,
+    SHM_CREATE_ONLY,
+    SHM_OPEN_ONLY,
+    SHM_OPEN_OR_CREATE,
+    SHM_OPEN_READ_ONLY,
 };
 
 #define SHMSEG_NAME_MAX_LEN    16
@@ -36,16 +32,19 @@ class shmmgr {
 public:
     static shmmgr *factory(const char *name, const std::size_t size,
                            shm_mode_e mode, void *baseaddr = NULL);
-    static void destroy(shmmgr *seg);
+    static void destroy(shmmgr *mmgr);
+    static void remove(const char *name);
+    static bool exists(const char *name, void *baseaddr = NULL);
 
     // allocate memory of give size (in bytes)from underlying system shared
     // memory.  if alignment is 0, caller doesn't care if memory allocated is
     // aligned or not. if the alignment is non-zero, it should be a power of 2
     // and >= 4
-    void *allocate(const std::size_t size, const std::size_t alignment = 4);
+    void *alloc(const std::size_t size, const std::size_t alignment = 4,
+                bool reset = false);
 
     // free the given memory back to system shared memory
-    void deallocate(void *mem);
+    void free(void *mem);
 
     // returns the size of this shared memory segment
     std::size_t size(void) const;
@@ -53,19 +52,25 @@ public:
     // returns the size of the free memory in this segment
     std::size_t free_size(void) const;
 
-private:
-    fixed_managed_shared_memory    *fixed_mgr_shm_;
-    char                           name_[SHMSEG_NAME_MAX_LEN];
+    // return the underlying memory manager
+    // NOTE: use it only in exception cases
+    void *mmgr(void) const;
 
 private:
-    shmmgr() {};
-    ~shmmgr() {};
+    char    name_[SHMSEG_NAME_MAX_LEN];
+    void    *mmgr_;
+
+private:
+    shmmgr();
+    ~shmmgr();
     bool init(const char *name, const std::size_t size,
               shm_mode_e mode, void *baseaddr);
 };
 
 }    // namespace lib
 }    // namespace sdk
+
+using sdk::lib::shmmgr;
 
 #endif    // __SDK_SHMMGR_HPP__
 

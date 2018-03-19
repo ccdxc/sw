@@ -1,8 +1,12 @@
 #include <assert.h>
 #include <iostream>
+#include <boost/interprocess/managed_shared_memory.hpp>
 #include "sdk/base.hpp"
 #include "sdk/mem.hpp"
 #include "lib/shmmgr/shmmgr.hpp"
+
+using namespace boost::interprocess;
+#define TO_FM_SHM(x)    ((fixed_managed_shared_memory *)(x))
 
 namespace sdk {
 namespace lib {
@@ -14,27 +18,41 @@ bool
 shmmgr::init(const char *name, const std::size_t size,
              shm_mode_e mode, void *baseaddr)
 {
-    if (mode == CREATE_ONLY) {
-        fixed_mgr_shm_ = new fixed_managed_shared_memory(create_only, name,
+    fixed_managed_shared_memory    *fixed_mgr_shm;
+    if (mode == SHM_CREATE_ONLY) {
+        fixed_mgr_shm = new fixed_managed_shared_memory(create_only, name,
+                                                        size, baseaddr);
+    } else if (mode == SHM_OPEN_ONLY) {
+        fixed_mgr_shm = new fixed_managed_shared_memory(open_only, name,
+                                                        baseaddr);
+    } else if (mode == SHM_OPEN_OR_CREATE) {
+        fixed_mgr_shm = new fixed_managed_shared_memory(open_or_create, name,
                                                          size, baseaddr);
-    } else if (mode == OPEN_ONLY) {
-        fixed_mgr_shm_ = new fixed_managed_shared_memory(open_only, name,
-                                                         baseaddr);
-    } else if (mode == OPEN_OR_CREATE) {
-        fixed_mgr_shm_ = new fixed_managed_shared_memory(open_or_create, name,
-                                                         size, baseaddr);
-    } else if (mode == OPEN_READ_ONLY) {
-        fixed_mgr_shm_ = new fixed_managed_shared_memory(open_read_only,
-                                                         name, baseaddr);
+    } else if (mode == SHM_OPEN_READ_ONLY) {
+        fixed_mgr_shm = new fixed_managed_shared_memory(open_read_only,
+                                                        name, baseaddr);
     } else {
         return false;
     }
 
-    if (fixed_mgr_shm_ == NULL) {
-        return false;
-    }
-    strncpy(this->name_, name, SHMSEG_NAME_MAX_LEN);
+    strncpy(name_, name, SHMSEG_NAME_MAX_LEN);
+    mmgr_ = fixed_mgr_shm;
     return true;
+}
+
+//------------------------------------------------------------------------------
+// constructor
+//------------------------------------------------------------------------------
+shmmgr::shmmgr()
+{
+    mmgr_ = NULL;
+}
+
+//------------------------------------------------------------------------------
+// destructor 
+//------------------------------------------------------------------------------
+shmmgr::~shmmgr()
+{
 }
 
 //------------------------------------------------------------------------------
@@ -45,7 +63,7 @@ shmmgr::factory(const char *name, const std::size_t size,
                 shm_mode_e mode, void *baseaddr)
 {
     void      *mem;
-    shmmgr    *new_seg;
+    shmmgr    *new_shmmgr;
 
     // basic validation(s)
     if ((name == NULL) || size <= 16 || baseaddr == NULL) {
@@ -66,46 +84,81 @@ shmmgr::factory(const char *name, const std::size_t size,
         return NULL;
     }
 
-    new_seg = new (mem) shmmgr();
-    if (new_seg->init(name, size, mode, baseaddr) == false) {
-        new_seg->~shmmgr();
-        SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, new_seg);
+    new_shmmgr = new (mem) shmmgr();
+    if (new_shmmgr->init(name, size, mode, baseaddr) == false) {
+        new_shmmgr->~shmmgr();
+        SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, new_shmmgr);
         return NULL;
     }
-    return new_seg;
+    return new_shmmgr;
 }
 
 //------------------------------------------------------------------------------
 // destroy method
 //------------------------------------------------------------------------------
 void
-shmmgr::destroy(shmmgr *seg)
+shmmgr::destroy(shmmgr *mmgr)
 {
-    if (!seg) {
+    if (!mmgr) {
         return;
     }
-    SDK_TRACE_DEBUG("Deleting segment {}", seg->name_);
-    shared_memory_object::remove(seg->name_);
-    seg->~shmmgr();
-    SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, seg);
+    SDK_TRACE_DEBUG("Deleting segment {}", mmgr->name_);
+    shared_memory_object::remove(mmgr->name_);
+    mmgr->~shmmgr();
+    SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, mmgr);
+}
+
+//------------------------------------------------------------------------------
+// remove shm segment given its name
+//------------------------------------------------------------------------------
+void
+shmmgr::remove(const char *name)
+{
+    if (!name) {
+        return;
+    }
+    SDK_TRACE_DEBUG("Deleting segment {}", name);
+    shared_memory_object::remove(name);
+}
+
+//------------------------------------------------------------------------------
+// check if shared memory segment exists
+//------------------------------------------------------------------------------
+bool
+shmmgr::exists(const char *name, void *baseaddr)
+{
+    if (name == NULL) {
+        return false;
+    }
+    try {
+        fixed_managed_shared_memory seg(open_only, name, baseaddr);
+        //return segment.check_sanity();
+        return true;
+    } catch (const std::exception &ex) {
+        SDK_TRACE_DEBUG("shmmgr exception : ",  ex.what());
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------
 // allocate requested amount of memory
 //------------------------------------------------------------------------------
 void *
-shmmgr::allocate(const std::size_t size, const std::size_t alignment)
+shmmgr::alloc(const std::size_t size, const std::size_t alignment,
+              bool reset)
 {
     void    *ptr;
 
     if (alignment == 0) {
-        ptr = fixed_mgr_shm_->allocate(size);
+        ptr = TO_FM_SHM(mmgr_)->allocate(size);
     } else {
         assert((alignment & (alignment - 1)) == 0);
         assert(alignment >= 4);
-        ptr = fixed_mgr_shm_->allocate_aligned(size, alignment);
+        ptr = TO_FM_SHM(mmgr_)->allocate_aligned(size, alignment);
     }
-    assert(ptr != NULL);
+    if (ptr) {
+        memset(ptr, 0, size);
+    }
     return ptr;
 }
 
@@ -113,10 +166,12 @@ shmmgr::allocate(const std::size_t size, const std::size_t alignment)
 // free given memory
 //------------------------------------------------------------------------------
 void
-shmmgr::deallocate(void *mem)
+shmmgr::free(void *mem)
 {
-    assert(mem != NULL);
-    fixed_mgr_shm_->deallocate(mem);
+    if (mem == NULL) {
+        return;
+    }
+    TO_FM_SHM(mmgr_)->deallocate(mem);
 }
 
 //------------------------------------------------------------------------------
@@ -125,7 +180,7 @@ shmmgr::deallocate(void *mem)
 std::size_t
 shmmgr::size(void) const
 {
-    return fixed_mgr_shm_->get_size();
+    return TO_FM_SHM(mmgr_)->get_size();
 }
 
 //------------------------------------------------------------------------------
@@ -134,8 +189,15 @@ shmmgr::size(void) const
 std::size_t
 shmmgr::free_size(void) const
 {
-    return fixed_mgr_shm_->get_free_memory();
+    return TO_FM_SHM(mmgr_)->get_free_memory();
 }
+
+void *
+shmmgr::mmgr(void) const
+{
+    return mmgr_;
+}
+
 
 }    // namespace lib
 }    // namespace sdk

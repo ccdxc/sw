@@ -28,7 +28,8 @@ TEST_F(shmmgr_test, create_ok) {
     std::size_t    one_gig = 1024 * 1024 * 1024;
 
     test_shmmgr = shmmgr::factory("test-seg1", one_gig,
-                                  OPEN_OR_CREATE, (void *)0xB0000000L);
+                                  sdk::lib::SHM_OPEN_OR_CREATE,
+                                  (void *)0xB0000000L);
     ASSERT_TRUE(test_shmmgr != NULL);
     ASSERT_TRUE(test_shmmgr->size() == one_gig);
 
@@ -41,26 +42,21 @@ TEST_F(shmmgr_test, alloc_dealloc_ok) {
     void           *ptr1, *ptr2;
     uint32_t       free_size;
 
-    try {
     test_shmmgr = shmmgr::factory("test-seg2", one_mb,
-                             OPEN_OR_CREATE, (void *)0xA0000000L);
-    } catch (boost::interprocess::bad_alloc &ex) {
-        std::cerr << ex.what() << '\n';
-    } catch (std::exception ex) {
-        std::cerr << ex.what() << '\n';
-    }
+                             sdk::lib::SHM_OPEN_OR_CREATE,
+                             (void *)0xA0000000L);
 
     ASSERT_TRUE(test_shmmgr != NULL);
     ASSERT_TRUE(test_shmmgr->size() == one_mb);
     free_size = test_shmmgr->free_size();
-    ptr1 = test_shmmgr->allocate(512, 4);
+    ptr1 = test_shmmgr->alloc(512, 4);
     ASSERT_TRUE(ptr1 != NULL);
     // all max. possible out of rest of the memory available
-    ptr2 = test_shmmgr->allocate(test_shmmgr->free_size() - 24, 0);
+    ptr2 = test_shmmgr->alloc(test_shmmgr->free_size() - 24, 0);
     ASSERT_TRUE(ptr2 != NULL);
 
-    test_shmmgr->deallocate(ptr1);
-    test_shmmgr->deallocate(ptr2);
+    test_shmmgr->free(ptr1);
+    test_shmmgr->free(ptr2);
     ASSERT_TRUE(test_shmmgr->free_size() == free_size);
     shmmgr::destroy(test_shmmgr);
 }

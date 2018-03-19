@@ -12,12 +12,11 @@ namespace lib {
 bool
 ht::init(uint32_t ht_size, ht_get_key_func_t get_key_func,
         ht_compute_hash_func_t hash_func, ht_compare_key_func_t compare_func,
-        bool thread_safe)
+        bool thread_safe, shmmgr *mmgr)
 {
     uint32_t    i;
 
     num_buckets_ = ht_size;
-    ht_buckets_ = NULL;
     thread_safe_ = thread_safe;
     hash_func_ = hash_func;
     get_key_func_ = get_key_func;
@@ -35,63 +34,98 @@ ht::init(uint32_t ht_size, ht_get_key_func_t get_key_func,
     num_lookups_ = 0;
     num_collisions_ = 0;
 
-    // TODO: buckets should be a function of ht_size
-    ht_buckets_ = (ht_bucket_t *)SDK_CALLOC(HAL_MEM_ALLOC_LIB_HT,
-                                            ht_size * sizeof(ht_bucket_t));
-    if (ht_buckets_ == NULL) {
-        return false;
-    }
     for (i = 0; i < ht_size; i++) {
         SDK_SPINLOCK_INIT(&ht_buckets_[i].slock_, PTHREAD_PROCESS_PRIVATE);
     }
     return true;
 }
 
+void
+ht::cleanup(ht *htable, shmmgr *mmgr)
+{
+    if (mmgr) {
+        if (htable->ht_buckets_) {
+            mmgr->free(htable->ht_buckets_);
+        }
+        htable->~ht();
+        mmgr->free(htable);
+    } else {
+        if (htable->ht_buckets_) {
+            SDK_FREE(HAL_MEM_ALLOC_LIB_HT,
+                     htable->ht_buckets_);
+            htable->~ht();
+            SDK_FREE(HAL_MEM_ALLOC_LIB_HT, htable);
+        }
+    }
+}
+
 // factory method for the hash table
 ht *
 ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
             ht_compute_hash_func_t hash_func,
-            ht_compare_key_func_t compare_func, bool thread_safe)
+            ht_compare_key_func_t compare_func, bool thread_safe,
+            shmmgr *mmgr)
 {
     void    *mem;
-    ht      *hash_table;
+    ht      *hash_table = NULL;
 
     SDK_ASSERT_RETURN((ht_size > 0), NULL);
     SDK_ASSERT_RETURN(((get_key_func != NULL) && (hash_func != NULL) &&
                        (compare_func != NULL)), NULL);
 
-    mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_HT, sizeof(ht));
+    if (mmgr) {
+        mem = mmgr->alloc(sizeof(ht), 4, true);
+    } else {
+        mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_HT, sizeof(ht));
+    }
     if (!mem) {
         return NULL;
     }
     hash_table = new (mem) ht();
+
+    // TODO: buckets should be a function of ht_size
+    if (mmgr) {
+        hash_table->ht_buckets_ =
+            (ht_bucket_t *)mmgr->alloc(ht_size * sizeof(ht_bucket_t),
+                                       4, true);
+    } else {
+        hash_table->ht_buckets_ =
+            (ht_bucket_t *)SDK_CALLOC(HAL_MEM_ALLOC_LIB_HT,
+                                      ht_size * sizeof(ht_bucket_t));
+    }
+    if (hash_table->ht_buckets_ == NULL) {
+        goto cleanup;
+    }
+
     if (hash_table->init(ht_size, get_key_func, hash_func,
-                         compare_func, thread_safe) == false) {
-        hash_table->~ht();
-        SDK_FREE(HAL_MEM_ALLOC_LIB_HT, hash_table);
-        return NULL;
+                         compare_func, thread_safe,
+                         mmgr) == false) {
+        goto cleanup;
     }
     return hash_table;
+
+cleanup:
+
+    if (hash_table) {
+        ht::cleanup(hash_table, mmgr);
+    }
+    return NULL;
 }
 
 ht::~ht()
 {
-    if (ht_buckets_) {
-        SDK_FREE(HAL_MEM_ALLOC_LIB_HT, ht_buckets_);
-    }
     if (thread_safe_) {
         SDK_SPINLOCK_DESTROY(&slock_);
     }
 }
 
 void
-ht::destroy(ht *htable)
+ht::destroy(ht *htable, shmmgr *mmgr)
 {
     if (!htable) {
         return;
     }
-    htable->~ht();
-    SDK_FREE(HAL_MEM_ALLOC_LIB_HT, htable);
+    ht::cleanup(htable, mmgr);
 }
 
 // internal helper function that looks up an entry given its key and the bucket

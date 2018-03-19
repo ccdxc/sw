@@ -152,7 +152,6 @@ l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
     // handle is allocated only after PD programming is SUCCESS
     l4lb->hal_handle = hal_alloc_handle();
     l4lb->hal_handle_ht_ctxt.reset();
-    g_hal_state->l4lb_hal_handle_ht()->insert(l4lb, &l4lb->hal_handle_ht_ctxt);
 
     // add l4lb key into the hash table
     l4lb->l4lbkey_ht_ctxt.reset();

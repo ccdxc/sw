@@ -42,6 +42,7 @@
 
 #include "sdk/base.hpp"
 #include "sdk/lock.hpp"
+#include "sdk/shmmgr.hpp"
 
 namespace sdk {
 namespace lib {
@@ -85,8 +86,9 @@ public:
     static ht *factory(uint32_t ht_size, ht_get_key_func_t key_func,
                        ht_compute_hash_func_t hash_func,
                        ht_compare_key_func_t compare_func,
-                       bool thread_safe=true);
-    static void destroy(ht *htable);
+                       bool thread_safe=true,
+                       shmmgr *mmgr=NULL);
+    static void destroy(ht *htable, shmmgr *mmgr=NULL);
 
     // lookup() will return entry given its key or NULL if entry is not found
     void *lookup(void *key);
@@ -156,7 +158,8 @@ private:
     bool init(uint32_t ht_size, ht_get_key_func_t key_func,
               ht_compute_hash_func_t hash_func,
               ht_compare_key_func_t compare_func,
-              bool thread_safe);
+              bool thread_safe, shmmgr *mmgr);
+    static void cleanup(ht *htable, shmmgr *mmgr);
     void *lookup_(ht_bucket_t *ht_bucket, void *key);
 };
 

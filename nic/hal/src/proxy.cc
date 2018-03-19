@@ -239,12 +239,6 @@ find_proxy_by_type (types::ProxyType proxy_type)
     return (proxy_t *)g_hal_state->proxy_type_ht()->lookup(&proxy_type);
 }
 
-static inline proxy_t *
-find_proxy_by_handle (hal_handle_t handle)
-{
-    return (proxy_t *)g_hal_state->proxy_hal_handle_ht()->lookup(&handle);
-}
-
 //------------------------------------------------------------------------------
 // validate an incoming PROXY enable request
 // TODO:
@@ -268,8 +262,6 @@ validate_proxy_enable (ProxySpec& spec, ProxyResponse *rsp)
 static inline hal_ret_t
 add_proxy_to_db (proxy_t *proxy)
 {
-    g_hal_state->proxy_hal_handle_ht()->insert(proxy,
-                                               &proxy->hal_handle_ht_ctxt);
     g_hal_state->proxy_type_ht()->insert(proxy, &proxy->ht_ctxt);
     return HAL_RET_OK;
 }

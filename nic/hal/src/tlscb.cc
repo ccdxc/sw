@@ -81,8 +81,6 @@ validate_tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
 static inline hal_ret_t
 add_tlscb_to_db (tlscb_t *tlscb)
 {
-    g_hal_state->tlscb_hal_handle_ht()->insert(tlscb,
-                                               &tlscb->hal_handle_ht_ctxt);
     g_hal_state->tlscb_id_ht()->insert(tlscb, &tlscb->ht_ctxt);
     return HAL_RET_OK;
 }

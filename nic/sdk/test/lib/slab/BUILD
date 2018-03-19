@@ -11,6 +11,10 @@ cc_test(
         "//:gtest",
         "//:sdk_headers",
         "//obj:sdk_slab",
+        "//obj:sdk_shmmgr",
         "//lib/logger:logger",
+    ],
+    linkopts = [
+        "-lrt",
     ],
 )

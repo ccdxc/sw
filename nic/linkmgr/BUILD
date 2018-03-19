@@ -23,9 +23,11 @@ cc_binary(
         "//nic:gen_proto_includes",
         "@sdk//obj:sdk_logger",
         "@sdk//obj:sdk_pal",
+        "@sdk//obj:sdk_shmmgr",
+        "@sdk//obj:sdk_catalog",
+        "@sdk//obj:sdk_utils",
         "//nic:spdlog",
         "//nic/utils/mtrack:mtrack",
-        "@sdk//obj:sdk_catalog",
         "//nic/utils/block_list:block_list",
         "//nic/linkmgr:linkmgr_includes",
         "//nic/hal/lib:hal_lib_includes",
@@ -36,7 +38,6 @@ cc_binary(
         "//nic:libprotobuf",
         "//nic/utils/trace:trace",
         "@sdk//obj:sdk_linkmgr",
-        "@sdk//obj:sdk_utils",
         "//nic:google_includes",
     ],
     linkopts = [
@@ -47,6 +48,7 @@ cc_binary(
         "-rdynamic",
         "-ldl",
         "-lm",
+        "-lrt",
     ],
     copts = sdk_copts,
 )

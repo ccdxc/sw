@@ -156,12 +156,6 @@ find_tcpcb_by_id (tcpcb_id_t tcpcb_id)
     return (tcpcb_t *)g_hal_state->tcpcb_id_ht()->lookup(&tcpcb_id);
 }
 
-static inline tcpcb_t *
-find_tcpcb_by_handle (hal_handle_t handle)
-{
-    return (tcpcb_t *)g_hal_state->tcpcb_hal_handle_ht()->lookup(&handle);
-}
-
 extern void *tcpcb_get_key_func(void *entry);
 extern uint32_t tcpcb_compute_hash_func(void *key, uint32_t ht_size);
 extern bool tcpcb_compare_key_func(void *key1, void *key2);

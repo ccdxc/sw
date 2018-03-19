@@ -107,12 +107,6 @@ find_proxyccb_by_id (proxyccb_id_t proxyccb_id)
     return (proxyccb_t *)g_hal_state->proxyccb_id_ht()->lookup(&proxyccb_id);
 }
 
-static inline proxyccb_t *
-find_proxyccb_by_handle (hal_handle_t handle)
-{
-    return (proxyccb_t *)g_hal_state->proxyccb_hal_handle_ht()->lookup(&handle);
-}
-
 /*
  * A given tcpcb will be enabled for L7 redirect if there's a corresponding
  * proxy chain CB which forwards to SERVICE_LIF_TLS_PROXY. In other words,
@@ -185,8 +179,6 @@ validate_proxyccb_create (ProxycCbSpec& spec, ProxycCbResponse *rsp)
 static inline hal_ret_t
 add_proxyccb_to_db (proxyccb_t *proxyccb)
 {
-    g_hal_state->proxyccb_hal_handle_ht()->insert(proxyccb,
-                                                &proxyccb->hal_handle_ht_ctxt);
     g_hal_state->proxyccb_id_ht()->insert(proxyccb, &proxyccb->ht_ctxt);
     return HAL_RET_OK;
 }

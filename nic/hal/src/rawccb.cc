@@ -107,12 +107,6 @@ find_rawccb_by_id (rawccb_id_t rawccb_id)
     return (rawccb_t *)g_hal_state->rawccb_id_ht()->lookup(&rawccb_id);
 }
 
-static inline rawccb_t *
-find_rawccb_by_handle (hal_handle_t handle)
-{
-    return (rawccb_t *)g_hal_state->rawccb_hal_handle_ht()->lookup(&handle);
-}
-
 //------------------------------------------------------------------------------
 // validate an incoming RAWCCB create request
 // TODO:
@@ -145,8 +139,6 @@ validate_rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
 static inline hal_ret_t
 add_rawccb_to_db (rawccb_t *rawccb)
 {
-    g_hal_state->rawccb_hal_handle_ht()->insert(rawccb,
-                                                &rawccb->hal_handle_ht_ctxt);
     g_hal_state->rawccb_id_ht()->insert(rawccb, &rawccb->ht_ctxt);
     return HAL_RET_OK;
 }

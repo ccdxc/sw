@@ -12,6 +12,10 @@ cc_test(
         "//:sdk_headers",
         "//lib/twheel:twheel",
         "//lib/slab:slab",
+        "//lib/shmmgr:shmmgr",
         "//lib/logger:logger",
+    ],
+    linkopts = [
+        "-lrt",
     ],
 )

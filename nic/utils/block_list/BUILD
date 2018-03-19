@@ -26,7 +26,6 @@ cc_test(
         "//nic/utils/trace",
         "//nic/utils/mtrack",
         "@sdk//obj:sdk_logger",
-        "//nic/hal/periodic",
         "//nic/hal/test:hal_mock",
         # External
         "//:gtest",

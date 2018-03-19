@@ -15,9 +15,13 @@ cc_test(
         "//lib/table/directmap",
         "//lib/indexer:indexer",
         "//lib/ht:ht",
+        "//lib/shmmgr:shmmgr",
         "//lib/logger",
         "//test/lib/table/p4pd_mock",
         # External
         "//:gtest",
+    ],
+    linkopts = [
+        "-lrt",
     ],
 )

@@ -14,57 +14,14 @@ namespace sdk {
 namespace lib {
 
 //------------------------------------------------------------------------------
-// private function to allocate and initialize a new block
-//------------------------------------------------------------------------------
-slab_block_t *
-slab::alloc_block_(void)
-{
-    slab_block_t        *block;
-    uint8_t             *ptr;
-
-#if SDK_DEBUG
-    SDK_TRACE_DEBUG("%s: SLAB_DBG slab block allocation."
-                  " name: %s, slab_id: %d, elem_sz: %d,"
-                  " elems_per_block: %d, size %d",
-                  __FUNCTION__, name_, slab_id_, elem_sz_,
-                  elems_per_block_, raw_block_sz_);
-#endif
-
-    block = (slab_block_t *)SDK_MALLOC(HAL_MEM_ALLOC_LIB_SLAB, raw_block_sz_);
-    if (block == NULL) {
-        SDK_TRACE_ERR("%s: slab block allocation failed."
-                      " name: %s, slab_id: %d, elem_sz: %d,"
-                      " elems_per_block: %d, size %d",
-                      __FUNCTION__, name_, slab_id_, elem_sz_,
-                      elems_per_block_, raw_block_sz_);
-#if SDK_DEBUG
-        SDK_ASSERT(FALSE);
-#endif
-        return NULL;
-    }
-    block->prev_ = block->next_ = NULL;
-    block->free_head_ = block->elems_;
-    block->num_in_use_ = 0;
-
-    ptr = block->elems_;
-    for (uint32_t i = 0; i < elems_per_block_ - 1; i++) {
-        *(void **)ptr = (ptr + elem_sz_);
-        ptr += elem_sz_;
-    }
-    *(void **)ptr = NULL;
-    this->num_blocks_++;
-
-    return block;
-}
-
-//------------------------------------------------------------------------------
 // slab instance initialization
 //------------------------------------------------------------------------------
-int
+bool
 slab::init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
            uint32_t elems_per_block, bool thread_safe, bool grow_on_demand,
-           bool zero_on_alloc)
+           bool zero_on_alloc, shmmgr *mmgr)
 {
+    mmgr_ = mmgr;
     if (thread_safe) {
         SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     }
@@ -95,7 +52,7 @@ slab::init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
 
     this->block_head_ = NULL;
 
-    return 0;
+    return true;
 }
 
 //------------------------------------------------------------------------------
@@ -104,9 +61,8 @@ slab::init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
 slab *
 slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
               uint32_t elems_per_block, bool thread_safe, bool grow_on_demand,
-              bool zero_on_alloc)
+              bool zero_on_alloc, shmmgr *mmgr)
 {
-    int     rv;
     void    *mem;
     slab    *new_slab = NULL;
 
@@ -121,26 +77,28 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
                     sizeof(slab));
 #endif
 
-    mem = SDK_MALLOC(HAL_MEM_ALLOC_LIB_SLAB, sizeof(slab));
+    if (mmgr) {
+        mem = mmgr->alloc(sizeof(slab), 4, true);
+    } else {
+        mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_SLAB, sizeof(slab));
+    }
     if (mem == NULL) {
-        SDK_TRACE_ERR("%s: slab allocation failed."
-                      " name: %s, slab_id: %d, elem_sz: %d,"
-                      " elems_per_block: %d size %d\n",
-                      __FUNCTION__, name, slab_id, elem_sz, elems_per_block,
-                      sizeof(slab));
+        SDK_TRACE_ERR("Failed to create slab %s, id %u, elem sz %u, "
+                      "elems per block %u", name, slab_id, elem_sz,
+                      elems_per_block);
         return NULL;
     }
 
     new_slab = new (mem) slab();
-    rv = new_slab->init(name, slab_id, elem_sz, elems_per_block, thread_safe,
-                        grow_on_demand, zero_on_alloc);
-    if (rv < 0) {
-        SDK_TRACE_ERR("%s: slab init failed."
-                      " name: %s, slab_id: %d, elem_sz: %d,"
-                      " elems_per_block: %d\n",
-                      __FUNCTION__, name, slab_id, elem_sz, elems_per_block);
+    if (new_slab->init(name, slab_id, elem_sz, elems_per_block, thread_safe,
+                       grow_on_demand, zero_on_alloc, mmgr) == false) {
+        SDK_TRACE_ERR("Failed to initialize slab %s, id %u", name, slab_id);
         new_slab->~slab();
-        SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, new_slab);
+        if (mmgr) {
+            mmgr->free(mem);
+        } else {
+            SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, mem);
+        }
         return NULL;
     }
 
@@ -161,7 +119,11 @@ slab::~slab()
     block = this->block_head_;
     while (block) {
         this->block_head_ = block->next_;
-        SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, block);
+        if (mmgr_) {
+            mmgr_->free(block);
+        } else {
+            SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, block);
+        }
         block = this->block_head_;
     }
     if (thread_safe_) {
@@ -176,7 +138,53 @@ slab::destroy(slab *slb)
         return;
     }
     slb->~slab();
-    SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, slb);
+    if (slb->mmgr_) {
+        slb->mmgr_->free(slb);
+    } else {
+        SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, slb);
+    }
+}
+
+//------------------------------------------------------------------------------
+// private function to allocate and initialize a new block
+//------------------------------------------------------------------------------
+slab_block_t *
+slab::alloc_block_(void)
+{
+    slab_block_t    *block;
+    uint8_t         *ptr;
+
+#if SDK_DEBUG
+    SDK_TRACE_DEBUG("Allocating block from slab %s, id: %u\n"
+                    name_, slab_id_);
+#endif
+
+    if (mmgr_) {
+        block = (slab_block_t *)mmgr_->alloc(raw_block_sz_, 4, true);
+    } else {
+        block = (slab_block_t *)SDK_MALLOC(HAL_MEM_ALLOC_LIB_SLAB, raw_block_sz_);
+    }
+    if (block == NULL) {
+        SDK_TRACE_ERR("Failed to allocate block for slab %s, id %u\n",
+                      name_, slab_id_);
+#if SDK_DEBUG
+        SDK_ASSERT(FALSE);
+#endif
+        return NULL;
+    }
+    block->prev_ = block->next_ = NULL;
+    block->free_head_ = block->elems_;
+    block->num_in_use_ = 0;
+
+    ptr = block->elems_;
+    for (uint32_t i = 0; i < elems_per_block_ - 1; i++) {
+        *(void **)ptr = (ptr + elem_sz_);
+        ptr += elem_sz_;
+    }
+    *(void **)ptr = NULL;
+    this->num_blocks_++;
+
+    return block;
 }
 
 //------------------------------------------------------------------------------
@@ -274,7 +282,11 @@ slab::free_(void *elem)
                     block->next_->prev_ = block->prev_;
                 }
             }
-            SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, block);
+            if (mmgr_) {
+                mmgr_->free(block);
+            } else {
+                SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, block);
+            }
             this->num_blocks_--;
         }
     } else {

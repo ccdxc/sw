@@ -1,7 +1,6 @@
 # {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 package(default_visibility = ["//visibility:public"])
-
 licenses(["notice"])  # MIT license
 
 # target: hash test
@@ -15,10 +14,14 @@ cc_test(
         "//lib/table/hash",
         "//lib/table/tcam:tcam",
         "//lib/logger",
+        "//lib/shmmgr:shmmgr",
         "//test/lib/table/p4pd_mock",
         "//lib/indexer:indexer",
         "//lib/ht:ht",
         # External
         "//:gtest",
     ],
+    linkopts = [
+        "-lrt",
+    ]
 )

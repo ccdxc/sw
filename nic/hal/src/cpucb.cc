@@ -82,8 +82,6 @@ validate_cpucb_create (CpuCbSpec& spec, CpuCbResponse *rsp)
 static inline hal_ret_t
 add_cpucb_to_db (cpucb_t *cpucb)
 {
-    g_hal_state->cpucb_hal_handle_ht()->insert(cpucb,
-                                               &cpucb->hal_handle_ht_ctxt);
     g_hal_state->cpucb_id_ht()->insert(cpucb, &cpucb->ht_ctxt);
     return HAL_RET_OK;
 }

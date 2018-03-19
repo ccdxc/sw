@@ -95,12 +95,6 @@ find_cpucb_by_id (cpucb_id_t cpucb_id)
     return (cpucb_t *)g_hal_state->cpucb_id_ht()->lookup(&cpucb_id);
 }
 
-static inline cpucb_t *
-find_cpucb_by_handle (hal_handle_t handle)
-{
-    return (cpucb_t *)g_hal_state->cpucb_hal_handle_ht()->lookup(&handle);
-}
-
 extern void *cpucb_get_key_func(void *entry);
 extern uint32_t cpucb_compute_hash_func(void *key, uint32_t ht_size);
 extern bool cpucb_compare_key_func(void *key1, void *key2);

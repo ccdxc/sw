@@ -84,8 +84,6 @@ validate_wring_create (WRingSpec& spec, WRingResponse *rsp)
 static inline hal_ret_t
 add_wring_to_db (wring_t *wring)
 {
-    g_hal_state->wring_hal_handle_ht()->insert(wring,
-                                               &wring->hal_handle_ht_ctxt);
     g_hal_state->wring_id_ht()->insert(wring, &wring->ht_ctxt);
     return HAL_RET_OK;
 }

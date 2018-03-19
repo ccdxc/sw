@@ -10,6 +10,7 @@
 #include "sdk/base.hpp"
 #include "sdk/lock.hpp"
 #include "sdk/mem.hpp"
+#include "sdk/shmmgr.hpp"
 
 namespace sdk {
 namespace lib {
@@ -39,7 +40,8 @@ public:
     // static methods for instantiating and destroying slabs
     static slab *factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
                          uint32_t elems_per_block, bool thread_safe=false,
-                         bool grow_on_demand=true, bool zero_on_alloc=false);
+                         bool grow_on_demand=true, bool zero_on_alloc=false,
+                         shmmgr *mmgr = NULL);
     static void destroy(slab *slb);
 
     // per instance member functions
@@ -80,13 +82,14 @@ private:
 
     // meta data
     slab_block_t      *block_head_;
+    shmmgr            *mmgr_;
 
 private:
     slab() {};
     ~slab();
-    int init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
-             uint32_t elems_per_block, bool thread_safe, bool grow_on_demand,
-             bool zero_on_alloc);
+    bool init(const char *name, slab_id_t slab_id, uint32_t elem_sz,
+              uint32_t elems_per_block, bool thread_safe, bool grow_on_demand,
+              bool zero_on_alloc, shmmgr *mmgr);
     void free_(void *elem);
     slab_block_t *alloc_block_(void);
 };

@@ -83,8 +83,6 @@ validate_ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 static inline hal_ret_t
 add_ipseccb_to_db (ipseccb_t *ipseccb)
 {
-    g_hal_state->ipseccb_hal_handle_ht()->insert(ipseccb,
-                                               &ipseccb->hal_handle_ht_ctxt);
     g_hal_state->ipseccb_id_ht()->insert(ipseccb, &ipseccb->ht_ctxt);
     return HAL_RET_OK;
 }

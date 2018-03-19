@@ -125,12 +125,6 @@ find_wring_by_id (wring_id_t wring_id)
     return (wring_t *)g_hal_state->wring_id_ht()->lookup(&wring_id);
 }
 
-static inline wring_t *
-find_wring_by_handle (hal_handle_t handle)
-{
-    return (wring_t *)g_hal_state->wring_hal_handle_ht()->lookup(&handle);
-}
-
 extern void *wring_get_key_func(void *entry);
 extern uint32_t wring_compute_hash_func(void *key, uint32_t ht_size);
 extern bool wring_compare_key_func(void *key1, void *key2);

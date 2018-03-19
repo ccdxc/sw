@@ -456,6 +456,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             HAL_TRACE_ERR("Uknown feature set {}", sparam.c_str());
         }
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
+        hal_cfg->shm_mode = pt.get<bool>("sw.shm", false);
 
         // parse threads config
         hal_parse_thread_cfg(pt, hal_cfg);
@@ -600,9 +601,6 @@ hal_init (hal_cfg_t *hal_cfg)
         gl_super_user = true;
     }
 
-    // do memory related initialization
-    //HAL_ABORT(hal_mem_init() == HAL_RET_OK);
-
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     HAL_ASSERT(catalog != NULL);
     hal_cfg->catalog = catalog;
@@ -624,7 +622,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     // do memory related initialization
-    HAL_ABORT(hal_mem_init() == HAL_RET_OK);
+    HAL_ABORT(hal_mem_init(hal_cfg->shm_mode) == HAL_RET_OK);
     g_hal_state->set_catalog(catalog);
     // set the forwarding mode
     g_hal_state->set_forwarding_mode(hal_cfg->forwarding_mode);

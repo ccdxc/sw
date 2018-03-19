@@ -127,12 +127,6 @@ find_tlscb_by_id (tlscb_id_t tlscb_id)
     return (tlscb_t *)g_hal_state->tlscb_id_ht()->lookup(&tlscb_id);
 }
 
-static inline tlscb_t *
-find_tlscb_by_handle (hal_handle_t handle)
-{
-    return (tlscb_t *)g_hal_state->tlscb_hal_handle_ht()->lookup(&handle);
-}
-
 extern void *tlscb_get_key_func(void *entry);
 extern uint32_t tlscb_compute_hash_func(void *key, uint32_t ht_size);
 extern bool tlscb_compare_key_func(void *key1, void *key2);
