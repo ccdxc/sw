@@ -465,29 +465,43 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
                     pstr += indent2 + 'struct {\n'
                 else:
                     pstr += indent2 + 'struct  __attribute__ ((__packed__)) {\n'
+                cfields = []
+                if not asm_output:
+                    save_pstr = pstr
                 for cf in cf_strm:
                     if phv_bit != cf.phv_bit:
                         # print pad
-                        pstr += cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent3)
+                        cstr = cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent3)
                         width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
-                        pstr += '_%s_pad_%d_%s; // FLE[%d:%d]\n' % \
+                        cstr += '_%s_pad_%d_%s; // FLE[%d:%d]\n' % \
                             (strm, phv_bit, width_str,
                             _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
-                    pstr += cstruct_data_type_get(asm_output, cf.width, indent3)
+                        pstr += cstr
+                        cfields.append(cstr)
+                    cstr = cstruct_data_type_get(asm_output, cf.width, indent3)
                     width_str = phv_width_string_get(asm_output, cf.width)
-                    pstr += '%s%s; // BE[%d] FLE[%d:%d]\n' % \
+                    cstr += '%s%s; // BE[%d] FLE[%d:%d]\n' % \
                         (_get_output_name(cf.hfname), width_str, cf.phv_bit,
                         _phv_bit_flit_le_bit(cf.phv_bit),
                         _phv_bit_flit_le_bit(cf.phv_bit+cf.width-1))
+                    pstr += cstr
+                    cfields.append(cstr)
                     phv_bit += cf.storage_size()
                 # add pad to bottom-align unions as needed by capas
                 bottom_pad = self.end_phv - phv_bit
                 if bottom_pad > 0:
-                    pstr += cstruct_data_type_get(asm_output, bottom_pad, indent3)
+                    cstr = cstruct_data_type_get(asm_output, bottom_pad, indent3)
                     width_str = phv_width_string_get(asm_output, bottom_pad)
-                    pstr += '%s_bottom_pad_%s; // FLE[%d:%d]\n' % \
+                    cstr += '%s_bottom_pad_%s; // FLE[%d:%d]\n' % \
                         (_get_output_name(strm), width_str,
                         _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(self.end_phv-1))
+                    pstr += cstr
+                    cfields.append(cstr)
+
+                if not asm_output:
+                    for _pstr in reversed(cfields):
+                        save_pstr += _pstr
+                    pstr = save_pstr
 
                 pstr += indent2 + '};\n'
             pstr += indent + '};\n'
@@ -519,8 +533,10 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
 
     flit_sz = gress_pa.pa.be.hw_model['phv']['flit_size']
     fid = 0
+    cfields = []
     phv_bit = 0
     pstr = indent + '//----- Flit %d -----\n' % fid
+    flit_cstr = pstr
     active_union = None
     for cf in gress_pa.field_order:
         if cf.width == 0 or cf.is_ohi:
@@ -529,42 +545,58 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
         if (cf.phv_bit / flit_sz) != fid:
             if active_union:
                 # print union...
-                pstr += active_union.print_union()
+                cstr = active_union.print_union()
+                pstr += cstr
+                cfields.append(cstr)
                 phv_bit = active_union.end_phv
                 active_union = None
             flit_pad = cf.phv_bit - phv_bit
             assert flit_pad >= 0, pdb.set_trace()
             if flit_pad > 0:
-                pstr += cstruct_data_type_get(asm_output, flit_pad, indent)
+                cstr = cstruct_data_type_get(asm_output, flit_pad, indent)
                 width_str = phv_width_string_get(asm_output, flit_pad)
-                pstr += '_flit_%d_pad_%d_%s; // FLE[%d:%d]\n' % \
+                cstr += '_flit_%d_pad_%d_%s; // FLE[%d:%d]\n' % \
                     (fid, phv_bit, width_str,
                     _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
+                pstr += cstr
+                cfields.append(cstr)
             phv_bit = cf.phv_bit
+            if not asm_output:
+                for _pstr in reversed(cfields):
+                    flit_cstr += _pstr
+                pstr = flit_cstr
             pstr_flit[fid] = copy.copy(pstr)
+            cfields = []
             fid += 1
             #pdb.set_trace()
             pstr = indent + '//----- Flit %d -----\n' % fid
+            flit_cstr = pstr
 
         if not cf.is_union_storage() and not cf.is_union():
             if active_union:
                 # print union
-                pstr += active_union.print_union()
+                cstr = active_union.print_union()
+                pstr += cstr
+                cfields.append(cstr)
                 phv_bit = active_union.end_phv
                 active_union = None
             # check for gaps
             if phv_bit != cf.phv_bit:
                 assert (cf.phv_bit - phv_bit) >= 0, pdb.set_trace()
-                pstr += cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent)
+                cstr = cstruct_data_type_get(asm_output, cf.phv_bit - phv_bit, indent)
                 width_str = phv_width_string_get(asm_output, cf.phv_bit - phv_bit)
-                pstr += '_pad_%d_%s; // FLE[%d:%d]\n' % \
+                cstr += '_pad_%d_%s; // FLE[%d:%d]\n' % \
                     (phv_bit, width_str,
                     _phv_bit_flit_le_bit(phv_bit),_phv_bit_flit_le_bit(cf.phv_bit-1))
-            pstr += cstruct_data_type_get(asm_output, cf.width, indent)
+                pstr += cstr
+                cfields.append(cstr)
+            cstr = cstruct_data_type_get(asm_output, cf.width, indent)
             width_str = phv_width_string_get(asm_output, cf.width)
-            pstr += '%s%s; // BE[%d] FLE[%d:%d]\n' % \
+            cstr += '%s%s; // BE[%d] FLE[%d:%d]\n' % \
                     (_get_output_name(cf.hfname), width_str, cf.phv_bit,
                     _phv_bit_flit_le_bit(cf.phv_bit), _phv_bit_flit_le_bit(cf.phv_bit+cf.width-1))
+            pstr += cstr
+            cfields.append(cstr)
             phv_bit = cf.phv_bit + cf.storage_size()
             continue
 
@@ -579,7 +611,9 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
             hdr_name = cf.get_p4_hdr().name
             storage_hdr_name = gress_pa.hdr_unions[cf.get_p4_hdr()][2].name
             if active_union and active_union.name != storage_hdr_name:
-                pstr += active_union.print_union()
+                cstr = active_union.print_union()
+                pstr += cstr
+                cfields.append(cstr)
                 active_union = None
 
             if active_union:
@@ -593,7 +627,9 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
             #pdb.set_trace()
             storage_fld_name = gress_pa.fld_unions[cf][1].hfname
             if active_union and active_union.name != storage_fld_name:
-                pstr += active_union.print_union()
+                cstr = active_union.print_union()
+                pstr += cstr
+                cfields.append(cstr)
                 phv_bit = active_union.end_phv
                 active_union = None
 
@@ -608,30 +644,39 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
             pass # covered first
 
     if active_union:
-        pstr += active_union.print_union()
+        cstr = active_union.print_union()
+        pstr += cstr
+        cfields.append(cstr)
         phv_bit = active_union.end_phv
 
     last_flit_pad = ((fid+1) * flit_sz) - phv_bit
     if last_flit_pad:
-        pstr += cstruct_data_type_get(asm_output, last_flit_pad, indent)
+        cstr = cstruct_data_type_get(asm_output, last_flit_pad, indent)
         width_str = phv_width_string_get(asm_output, last_flit_pad)
-        pstr += '_pad_%d_ %s; // FLE[%d:%d]\n' % \
+        cstr += '_pad_%d_ %s; // FLE[%d:%d]\n' % \
                     (phv_bit, width_str,
                     _phv_bit_flit_le_bit(phv_bit),
                     _phv_bit_flit_le_bit(phv_bit+last_flit_pad-1))
+        pstr += cstr
+        cfields.append(cstr)
     if fid < num_flits and pstr_flit[fid] == '':
+        if not asm_output:
+            for _pstr in reversed(cfields):
+                flit_cstr += _pstr
+            pstr = flit_cstr
         pstr_flit[fid] = copy.copy(pstr)
+        cfields = []
 
     if not asm_output:
         fname = '__%s_phv__' % gress_pa.d.name
         hfile.write("#ifndef " +  fname.upper() + '\n\n')
         fname = '__%s_phv__' % gress_pa.d.name
         hfile.write("#define " + fname.upper() + '\n\n\n')
-        pstr = 'typedef struct __attribute__ ((__packed__)) ' + gress_pa.d.name.lower() + '_phv_ {\n'
+        pstr = 'typedef struct __attribute__ ((__packed__)) ' + gress_pa.pa.be.prog_name + '_' + gress_pa.d.name.lower() + '_phv_ {\n'
         hfile.write(pstr)
         for i in range (0, num_flits):
             hfile.write(pstr_flit[i])
-        pstr = '} ' + gress_pa.d.name.lower() + '_phv_t;\n\n'
+        pstr = '} ' + gress_pa.pa.be.prog_name + '_' + gress_pa.d.name.lower() + '_phv_t;\n\n'
         hfile.write(pstr)
         hfile.write("#endif\n")
     else:
