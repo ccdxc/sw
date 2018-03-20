@@ -70,6 +70,10 @@ typedef struct collector_config_s {
     export_formats_en   format;
 } collector_config_t;
 
+typedef struct flow_monitor_rule_s {
+    hal_spinlock_t slock;
+} __PACK__ flow_monitor_rule_t;
+
 hal_ret_t mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp);
 hal_ret_t collector_create(CollectorSpec *spec, Collector *resp);

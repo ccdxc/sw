@@ -321,6 +321,7 @@ print_buffer(char *outbuf, int max_size, uint8_t *inbuf, int size)
         }
     }
 }
+
 char _deb_buf[2048];
 hal_ret_t
 telemetry_export_dest::commit()
@@ -337,6 +338,30 @@ telemetry_export_dest::commit()
     print_buffer(_deb_buf, 2047, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_));
     HAL_TRACE_DEBUG("PD-ExportControl:{} : IPFIX-Header: Wrote: {}", __FUNCTION__, _deb_buf);
     return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_flow_monitor_rule_create(pd_flow_monitor_rule_create_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    return ret;
+}
+
+hal_ret_t
+pd_flow_monitor_rule_delete(pd_flow_monitor_rule_delete_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    return ret;
+}
+
+hal_ret_t
+pd_flow_monitor_rule_get(pd_flow_monitor_rule_get_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    return ret;
 }
 
 } // namespace pd

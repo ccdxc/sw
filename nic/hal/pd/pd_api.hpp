@@ -1473,6 +1473,37 @@ pd_mirror_session_get_args_init(pd_mirror_session_get_args_t *args)
     args->session = NULL;
 }
 
+// flow monitoring rule
+typedef struct pd_flow_monitor_rule_create_args_s {
+    flow_monitor_rule_t *rule;
+} __PACK__ pd_flow_monitor_rule_create_args_t;
+
+static inline void
+pd_flow_monitor_rule_create_args_init(pd_flow_monitor_rule_create_args_t *args)
+{
+    args->rule = NULL;
+}
+
+typedef struct pd_flow_monitor_rule_delete_args_s {
+    flow_monitor_rule_t *rule;
+} __PACK__ pd_flow_monitor_rule_delete_args_t;
+
+static inline void
+pd_flow_monitor_rule_delete_args_init(pd_flow_monitor_rule_delete_args_t *args)
+{
+    args->rule = NULL;
+}
+
+typedef struct pd_flow_monitor_rule_get_args_s {
+    flow_monitor_rule_t *rule;
+} __PACK__ pd_flow_monitor_rule_get_args_t;
+
+static inline void
+pd_flow_monitor_rule_get_args_init(pd_flow_monitor_rule_get_args_t *args)
+{
+    args->rule = NULL;
+}
+
 // collector
 typedef struct pd_collector_create_args_s {
     collector_config_t *cfg;
@@ -2576,6 +2607,11 @@ PD_FUNCP_TYPEDEF(pd_mirror_session_create);
 PD_FUNCP_TYPEDEF(pd_mirror_session_delete);
 PD_FUNCP_TYPEDEF(pd_mirror_session_get);
 
+// mirror session
+PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_create);
+PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_delete);
+PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_get);
+
 // collector
 PD_FUNCP_TYPEDEF(pd_collector_create);
 
@@ -2894,6 +2930,11 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_mirror_session_create);
         PD_UNION_FIELD(pd_mirror_session_delete);
         PD_UNION_FIELD(pd_mirror_session_get);
+
+        // flow monitoring rule
+        PD_UNION_FIELD(pd_flow_monitor_rule_create);
+        PD_UNION_FIELD(pd_flow_monitor_rule_delete);
+        PD_UNION_FIELD(pd_flow_monitor_rule_get);
 
         // collector
         PD_UNION_FIELD(pd_collector_create);
