@@ -1565,22 +1565,22 @@ capri_set_table_txdma_asm_base (int tableid,
 void 
 capri_debug_hbm_read (void)
 {
+    hal_ret_t ret = HAL_RET_OK;
     uint64_t start_addr = get_start_offset("mpu-debug");
     uint64_t count = (get_size_kb("mpu-debug") << 10) >> 3;
     uint64_t addr;
-    bool rc;
     uint64_t data;
 
     HAL_TRACE_DEBUG("------------------ READ HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
         addr = (start_addr + (i<<3)) & 0xffffffff8; 
-        rc = hal::pd::asic_mem_read(addr, (uint8_t *)&data, sizeof(data));
-        if (!rc) {
-            HAL_TRACE_DEBUG("ERROR reading 0x{:x}", i);
+        ret = hal::pd::asic_mem_read(addr, (uint8_t *)&data, sizeof(data));
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("ERROR reading {:#x} ret {} ", i, ret);
             continue;
         }
         if (data != 0xabababababababab) {
-            HAL_TRACE_DEBUG("addr 0x{:x}, data 0x{:x}", i, data);
+            HAL_TRACE_DEBUG("addr {:#x}, data {:#x}", i, data);
         }
     }
     HAL_TRACE_DEBUG("------------------ READ HBM END -----------");
@@ -1589,10 +1589,10 @@ capri_debug_hbm_read (void)
 void 
 capri_debug_hbm_reset (void)
 {
+    hal_ret_t ret = HAL_RET_OK;
     uint64_t start_addr = get_start_offset("mpu-debug");
     uint64_t count = (get_size_kb("mpu-debug") << 10) >> 3;
     uint64_t addr;
-    bool rc;
     uint64_t data = 0xabababababababab;
 
     HAL_ASSERT(start_addr == get_start_offset("mpu-debug"));
@@ -1600,12 +1600,12 @@ capri_debug_hbm_reset (void)
     HAL_TRACE_DEBUG("------------------ RESET HBM START -----------");
     for (uint64_t i = 0; i < count; i++) {
         addr = (start_addr + (i<<3)) & 0xffffffff8; 
-        rc = hal::pd::asic_mem_write(addr, (uint8_t *)&data, sizeof(data));
-        if (!rc) {
-            HAL_TRACE_DEBUG("ERROR writing 0x{:x}", i);
+        ret = hal::pd::asic_mem_write(addr, (uint8_t *)&data, sizeof(data));
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("ERROR writing {:#x} ret {} ", i, ret);
             continue;
         }
-        HAL_TRACE_DEBUG("addr 0x{:x}, data 0x{:x}", i, data);
+        HAL_TRACE_DEBUG("addr {:#x}, data {:#x}", i, data);
     }
     HAL_TRACE_DEBUG("------------------ RESET HBM END -----------");
 }

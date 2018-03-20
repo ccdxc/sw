@@ -3,6 +3,7 @@
  * Vasanth Kumar (Pensando Systems)
  */
 
+
 #include <stdio.h>
 #include <string>
 #include <errno.h>
@@ -223,7 +224,7 @@ capri_tm_get_port_type (tm_port_t port)
         case TM_PORT_INGRESS:
             return TM_PORT_TYPE_P4IG;
     }
-    return TM_PORT_TYPE_UPLINK;
+    return NUM_TM_PORT_TYPES;
 }
 
 static inline bool
@@ -260,6 +261,12 @@ capri_tm_max_hbm_contexts_for_fifo (uint32_t fifo_type)
             return 0;
     }
     return 0;
+}
+
+static inline bool
+port_supports_hbm_contexts (tm_port_t port)
+{
+    return is_active_uplink_port(port) || (port == TM_PORT_DMA);
 }
 
 static inline uint32_t
@@ -347,6 +354,10 @@ capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 //::     port_info[p] = pinfo
 //:: #endfor
 //::
+//:: hbm_fifo_info = { 
+//::                'TM_HBM_FIFO_TYPE_UPLINK': {'reg_name' : 'eth', 'count' : 32 },
+//::                'TM_HBM_FIFO_TYPE_TXDMA': {'reg_name' : 'tx', 'count' : 16}
+//::                 }
 //::
 //:: import yaml 
 //:: def get_reg_instances(regs, types):
@@ -533,29 +544,31 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     pbc_csr.port_${p}.cfg_account_mtu_table.write();
                 }
 
-                // HBM Thresholds
-                hbm_csr.cfg_hbm_threshold.read();
+                if (port_supports_hbm_contexts(port)) {
+                    // HBM Thresholds
+                    hbm_csr.cfg_hbm_threshold.read();
 
-                xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
-                xon_val = hbm_csr.cfg_hbm_threshold.xon();
-                hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
-                // xoff and xon thresholds are in 512B units in register.
-                // So right shift by 9 (using ceil value)
-                xoff_threshold = (iq_params->xoff_threshold + (1<<9) - 1) >> 9;
-                xon_threshold = (iq_params->xon_threshold + (1<<9) - 1) >> 9;
-                // 20 bits per hbm_context
-                pbc_csr.hlp.set_slc(xoff_val, xoff_threshold,
-                                    hbm_context * 20, ((hbm_context + 1) * 20) - 1);
-                // 20 bits per hbm_context
-                pbc_csr.hlp.set_slc(xon_val, xon_threshold,
-                                    hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+                    xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
+                    xon_val = hbm_csr.cfg_hbm_threshold.xon();
+                    hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
+                    // xoff and xon thresholds are in 512B units in register.
+                    // So right shift by 9 (using ceil value)
+                    xoff_threshold = (iq_params->xoff_threshold + (1<<9) - 1) >> 9;
+                    xon_threshold = (iq_params->xon_threshold + (1<<9) - 1) >> 9;
+                    // 20 bits per hbm_context
+                    pbc_csr.hlp.set_slc(xoff_val, xoff_threshold,
+                                        hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+                    // 20 bits per hbm_context
+                    pbc_csr.hlp.set_slc(xon_val, xon_threshold,
+                                        hbm_context * 20, ((hbm_context + 1) * 20) - 1);
 
-                hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
-                hbm_csr.cfg_hbm_threshold.xon(xon_val);
-                // Write all the registers
-                if (tm_sw_cfg_write_enabled()) {
-                    hbm_csr.cfg_hbm_threshold.show();
-                    hbm_csr.cfg_hbm_threshold.write();
+                    hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
+                    hbm_csr.cfg_hbm_threshold.xon(xon_val);
+                    // Write all the registers
+                    if (tm_sw_cfg_write_enabled()) {
+                        hbm_csr.cfg_hbm_threshold.show();
+                        hbm_csr.cfg_hbm_threshold.write();
+                    }
                 }
                 break;
             }
@@ -907,6 +920,144 @@ capri_tm_uplink_lif_set (uint32_t port,
     HAL_TRACE_DEBUG("Set the lif {} on port {}",
                     lif, port);
 
+    return HAL_RET_OK;
+}
+
+uint32_t
+capri_tm_get_hbm_occupancy(tm_hbm_fifo_type_e fifo_type, uint32_t context)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
+    uint32_t occupancy = UINT32_MAX;
+
+    if (context >= capri_tm_max_hbm_contexts_for_fifo(fifo_type)) {
+        HAL_TRACE_ERR("Invalid context {} for fifo {}", context, fifo_type);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    switch(fifo_type) {
+//:: for fifo_type, finfo in hbm_fifo_info.items():
+        case ${fifo_type}:
+            switch (context) {
+//::    for context in range(finfo['count']):
+                case ${context}:
+                    {
+                        hbm_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.read();
+                        hbm_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.show();
+                        occupancy = 
+                            hbm_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.depth().convert_to<uint32_t>();
+                    }
+                    break;
+//::    #endfor
+            }
+            break;
+//:: #endfor
+        default:
+            return occupancy;
+    }
+   
+    return occupancy; 
+}
+
+static hal_ret_t
+capri_tm_drain_uplink_port (tm_port_t port)
+{
+    bool all_zeroes = false;
+    uint32_t tries = 0;
+    uint32_t max_tries = 1000;
+    uint32_t occupancy;
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    uint32_t i;
+
+    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+    while (port_supports_hbm_contexts(port) &&
+           !all_zeroes && (tries < max_tries)) {
+        all_zeroes = true;
+        for (i = 0; i < num_hbm_contexts_per_port; i++) {
+            context = (port * num_hbm_contexts_per_port) + i;
+            occupancy = capri_tm_get_hbm_occupancy(TM_HBM_FIFO_TYPE_UPLINK, context);
+            if (occupancy) {
+                all_zeroes = false;
+            }
+        }
+        // TODO: Do we need a sleep here ?
+        usleep(1000);
+        tries++;
+    }
+
+    if (!all_zeroes && port_supports_hbm_contexts(port)) {
+        HAL_TRACE_ERR("Port {} hbm queues not drained completely after {} tries", 
+                      port, tries);
+        return HAL_RET_RETRY;
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        HAL_TRACE_ERR("{} is not a valid TM uplink port",
+                      port);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (enable) {
+        /* Make sure the contexts are free */
+        ret = capri_tm_drain_uplink_port(port);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Port {} is not fully drained. Retry later", port);
+            return HAL_RET_RETRY;
+        }
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_write_control.read();
+                pbc_csr.port_${p}.cfg_oq.read();
+
+                pbc_csr.port_${p}.cfg_write_control.enable(enable ? 1 : 0);
+                pbc_csr.port_${p}.cfg_oq.flush(enable ? 0 : 1);
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_write_control.show();
+                    pbc_csr.port_${p}.cfg_write_control.write();
+
+                    pbc_csr.port_${p}.cfg_oq.show();
+                    pbc_csr.port_${p}.cfg_oq.write();
+                }
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return HAL_RET_ERR;
+    }
+
+    /* If we're disabling the port, we need to wait until all HBM contexts are
+     * free
+     */
+    if (!enable) {
+        ret = capri_tm_drain_uplink_port(port);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Port {} is not fully drained", port);
+            // Ignore the return status and continue
+            ret = HAL_RET_OK;
+        }
+    }
+
+    HAL_TRACE_DEBUG("{}d uplink port {}", 
+                    enable ? "Enable" : "Disable", port);
     return HAL_RET_OK;
 }
 
@@ -1360,14 +1511,14 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     // On active uplink ports and the DMA port, setup the HBM queues
     num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
 
-//:: reg_params = {"uplink": { "fifo_type" : "TM_HBM_FIFO_TYPE_UPLINK", "reg_name" : "eth"},
-//::               "dma" : {"fifo_type" : "TM_HBM_FIFO_TYPE_TXDMA", "reg_name" : "tx" } }
+//:: fifo_types = {"uplink": "TM_HBM_FIFO_TYPE_UPLINK" ,
+//::               "dma" : "TM_HBM_FIFO_TYPE_TXDMA" }
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
 //::    if pinfo["has_hbm"]:
     // ${pinfo["enum"]}
-//::        fifo_type = reg_params[pinfo["type"]]["fifo_type"]
-//::        reg_name = reg_params[pinfo["type"]]["reg_name"]
+//::        fifo_type = fifo_types[pinfo["type"]]
+//::        reg_name = hbm_fifo_info[fifo_type]["reg_name"]
 //::        if pinfo["type"] == "uplink":
     if (is_active_uplink_port(${pinfo["enum"]})) {
         // If we are an active port, then setup the HBM fifo contexts
@@ -1474,9 +1625,8 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 //::    #endif
 //:: #endfor
 
-//:: for param in reg_params.values():
-//::    fifo_type = param["fifo_type"]
-//::    reg_name = param["reg_name"]
+//:: for fifo_type in fifo_types.values():
+//::    reg_name = hbm_fifo_info[fifo_type]["reg_name"]
 
     hbm_csr.cfg_hbm_${reg_name}_payload.base(payload_base_val[${fifo_type}]);
     hbm_csr.cfg_hbm_${reg_name}_payload.mem_sz(payload_size_val[${fifo_type}]);
@@ -1856,8 +2006,8 @@ capri_tm_global_init (void)
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
     
-//:: regs = [('TM_HBM_FIFO_TYPE_UPLINK', 'eth'), ('TM_HBM_FIFO_TYPE_TXDMA', 'tx')]
-//:: for fifo_type, reg_name in regs:
+//:: for fifo_type, finfo in hbm_fifo_info.items():
+//::    reg_name = finfo["reg_name"]
     hbm_csr.cfg_hbm_${reg_name}_ctrl_init.head_start(1);
     hbm_csr.cfg_hbm_${reg_name}_ctrl_init.tail_start(1);
     if (tm_sw_init_enabled()) {
@@ -1865,8 +2015,8 @@ capri_tm_global_init (void)
     }
 //:: #endfor
 
-//:: regs = [('TM_HBM_FIFO_TYPE_UPLINK', 'eth'), ('TM_HBM_FIFO_TYPE_TXDMA', 'tx')]
-//:: for fifo_type, reg_name in regs:
+//:: for fifo_type, finfo in hbm_fifo_info.items():
+//::    reg_name = finfo["reg_name"]
     hbm_csr.cfg_hbm_${reg_name}_ctrl_init.head_start(0);
     hbm_csr.cfg_hbm_${reg_name}_ctrl_init.tail_start(0);
     if (tm_sw_init_enabled()) {
@@ -1927,7 +2077,7 @@ capri_tm_global_init (void)
 }
 
 static hal_ret_t
-capri_tm_enable_ports (void)
+capri_tm_init_enable_ports (void)
 {
     hal_ret_t ret = HAL_RET_OK;
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -2126,7 +2276,7 @@ capri_tm_init (sdk::lib::catalog* catalog)
         return ret;
     }
 
-    ret = capri_tm_enable_ports();
+    ret = capri_tm_init_enable_ports();
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error enabling ports ret {}", ret);
         return ret;

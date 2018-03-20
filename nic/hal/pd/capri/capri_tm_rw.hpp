@@ -233,6 +233,13 @@ capri_tm_repl_table_token_size_set(uint32_t size_in_bits);
 hal_ret_t
 capri_tm_get_clock_tick(uint64_t *tick);
 
+/** capri_tm_enable_disable_uplink_port
+ * API to enable/disable an uplink port. Need to be called for link up/down 
+ * events etc
+ */
+hal_ret_t
+capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable);
+
 void
 capri_tm_dump_debug_regs(void);
 void
