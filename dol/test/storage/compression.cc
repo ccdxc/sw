@@ -1075,16 +1075,18 @@ int _max_data_rate(comp_queue_push_t push_type,
   d.cmd_bits.insert_header = 1;
   d.cmd_bits.opaque_tag_on = 1;
   d.src = hbm_pa + kUncompressedDataOffset;
-  d.dst = hbm_pa + kUncompressedDataOffset + 4096;
+/* TBD: parameterize size ... */
+#define TMP_BLK_SIZE 8192
+  d.dst = hbm_pa + kUncompressedDataOffset + TMP_BLK_SIZE;
   d.status_addr = hbm_pa + kStatusOffset;
-  d.datain_len = 4096;
-  d.threshold_len = 4096 - 8;;
+  d.datain_len = TMP_BLK_SIZE;
+  d.threshold_len = TMP_BLK_SIZE - 8;
   d.status_data = 0x1234;
-  // We will use 4K bytes at host_mem + kUncompressedDataOffset + (2 * 4096) to store
+  // We will use 4K bytes at host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) to store
   // all interrupts (opaque tags).
-  bzero(host_mem + kUncompressedDataOffset + (2 * 4096), 4096);
+  bzero(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE), 4096);
   for (uint32_t i = 0; i < 16; i++) {
-    d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset + (2 * 4096) + i*8;
+    d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) + i*8;
     // Why add 0x10000? mem is init to 0 and 1st tag is also zero.
     d.opaque_tag_data = 0x10000 + i;
     comp_queue_push(&d, cp_queue, 
@@ -1098,14 +1100,14 @@ int _max_data_rate(comp_queue_push_t push_type,
   d.cmd_bits.header_present = 1;
   d.cmd_bits.opaque_tag_on = 1;
   d.src = hbm_pa + kCompressedDataOffset;
-  d.dst = hbm_pa + kUncompressedDataOffset + (4096*4);
+  d.dst = hbm_pa + kUncompressedDataOffset + (TMP_BLK_SIZE*4);
   d.status_addr = hbm_pa + kStatusOffset;
-  d.datain_len = 4096;
-  d.threshold_len = 4096*4;
+  d.datain_len = TMP_BLK_SIZE;
+  d.threshold_len = TMP_BLK_SIZE*4;
   d.status_data = 0x4321;
   for (uint32_t i = 0; i < 2; i++) {
     d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset +
-                        (2 * 4096) + 2048 + i*8;
+                        (2 * TMP_BLK_SIZE) + 2048 + i*8;
     d.opaque_tag_data = 0x10000 + i;
     comp_queue_push(&d, dc_queue, 
                     i == (2 - 1) ? last_push_type : push_type,
@@ -1118,12 +1120,12 @@ int _max_data_rate(comp_queue_push_t push_type,
 
   // Wait for all the interrupts
   auto func = [] () -> int {
-    uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096));
+    uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE));
     for (int i = 0; i < 16; i++) {
       if (intr_ptr[i] == 0)
         return 1;
     }
-    intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096) + 2048);
+    intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) + 2048);
     for (int i = 0; i < 2; i++) {
       if (intr_ptr[i] == 0)
         return 1;
@@ -1135,12 +1137,12 @@ int _max_data_rate(comp_queue_push_t push_type,
     printf("Testcase %s passed\n", __func__);
     return 0;
   }
-  uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096));
+  uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE));
   for (int i = 0; i < 16; i++) {
     if (intr_ptr[i] == 0)
       printf("Compression request %d did not complete\n", i);
   }
-  intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * 4096) + 2048);
+  intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) + 2048);
   for (int i = 0; i < 2; i++) {
     if (intr_ptr[i] == 0)
       printf("Decompression request %d did not complete\n", i);
