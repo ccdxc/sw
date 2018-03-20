@@ -137,3 +137,48 @@ pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq)
 
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
+
+void
+pcieport_rx_credit_bfr(const int port, const int base, const int limit)
+{
+#define RX_CREDIT_BFR_ADDR \
+    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
+     CAP_PXB_CSR_CFG_TGT_RX_CREDIT_BFR_BYTE_ADDRESS)
+
+    union {
+        struct {
+#define FIELDS(P) \
+            u_int32_t adr_base##P:10; \
+            u_int32_t adr_limit##P:10; \
+            u_int32_t update##P:1; \
+            u_int32_t rst_rxfifo##P:1
+            FIELDS(0); FIELDS(1); FIELDS(2); FIELDS(3);
+            FIELDS(4); FIELDS(5); FIELDS(6); FIELDS(7);
+        } __attribute__((packed));
+        u_int32_t w[6];
+    } r;
+
+    pal_reg_rd32w(RX_CREDIT_BFR_ADDR, r.w, 6);
+
+#define UPD_FIELDS(P, base, limit) \
+    do { \
+        r.adr_base##P = base; \
+        r.adr_limit##P = limit; \
+        r.update##P = 1; \
+        r.rst_rxfifo##P = 0; \
+    } while (0)
+
+    switch (port) {
+    case 0: UPD_FIELDS(0, base, limit); break;
+    case 1: UPD_FIELDS(1, base, limit); break;
+    case 2: UPD_FIELDS(2, base, limit); break;
+    case 3: UPD_FIELDS(3, base, limit); break;
+    case 4: UPD_FIELDS(4, base, limit); break;
+    case 5: UPD_FIELDS(5, base, limit); break;
+    case 6: UPD_FIELDS(6, base, limit); break;
+    case 7: UPD_FIELDS(7, base, limit); break;
+    default: break;
+    }
+
+    pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
+}

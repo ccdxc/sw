@@ -103,7 +103,7 @@ intr_pba_cfg(const int lif, const int intr_start, const size_t intr_count)
         u_int32_t w[1];
     } __attribute__((packed)) v = {
         .start = intr_start,
-        .count = intr_count,
+        .count = intr_count - 1,
     };
 
     pal_reg_wr32(pa, v.w[0]);

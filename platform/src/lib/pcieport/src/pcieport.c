@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -17,6 +17,28 @@
 
 pcieport_info_t pcieport_info;
 
+static void
+pcieport_rx_credit_init(const int nports)
+{
+    int base, ncredits, i;
+
+    assert(nports == 4); /* XXX tailored for 4 active ports */
+    ncredits = 1024 / nports;
+    for (base = 0, i = 0; i < 8; i += 2, base += ncredits) {
+        const int limit = base + ncredits - 1;
+
+        pcieport_rx_credit_bfr(i, base, limit);
+        pcieport_rx_credit_bfr(i + 1, 0, 0);
+    }
+}
+
+static void
+pcieport_link_init(void)
+{
+    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
+    pcieport_rx_credit_init(4);
+}
+
 static int
 pcieport_info_init(void)
 {
@@ -26,7 +48,7 @@ pcieport_info_init(void)
         /* already initialized */
         return 0;
     }
-    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
+    pcieport_link_init();
     pi->init = 1;
     return 0;
 }

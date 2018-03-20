@@ -6,6 +6,7 @@
 #define __PCIEPORT_IMPL_H__
 
 #include "cap_top_csr_defines.h"
+#include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
 
 typedef enum pcieportst_e {
@@ -64,6 +65,7 @@ void pcieport_set_pcs_reset(pcieport_t *p, const int on);
 void pcieport_set_mac_reset(pcieport_t *p, const int on);
 void pcieport_set_ltssm_en(pcieport_t *p, const int on);
 void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);
+void pcieport_rx_credit_bfr(const int port, const int base, const int limit);
 
 void pcieport_fsm_dbg(int argc, char *argv[]);
 

@@ -63,7 +63,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         memset(&preg, 0, sizeof(preg));
         preg.regtype = PCIEHBARREGT_RES;
         preg.flags = (PCIEHBARREGF_RD | PCIEHBARREGF_MSIX_PBA);
-        preg.paddr = intr_pba_addr(pres->intrb);
+        preg.paddr = intr_pba_addr(pres->lif);
         preg.size = 0x1000;
         pciehbar_add_reg(&pbar, &preg);
     }

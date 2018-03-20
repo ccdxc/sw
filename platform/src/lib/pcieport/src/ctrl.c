@@ -56,6 +56,13 @@ pcieport_mac_k_pciconf(pcieport_t *p)
 }
 
 static void
+pcieport_mac_k_rx_cred(pcieport_t *p)
+{
+    u_int32_t val = 0x00200080;
+    pal_reg_wr32(PXC_(CFG_C_MAC_K_RX_CRED, p->port), val);
+}
+
+static void
 pcieport_mac_set_ids(pcieport_t *p)
 {
     const int pn = p->port;
@@ -86,6 +93,7 @@ pcieport_hostconfig(pcieport_t *p)
     pcieport_unreset(p);
 
     pcieport_mac_k_gen(p);
+    pcieport_mac_k_rx_cred(p);
     pcieport_mac_k_pciconf(p);
     pcieport_mac_set_ids(p);
 
