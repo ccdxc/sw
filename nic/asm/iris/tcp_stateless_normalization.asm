@@ -51,7 +51,7 @@ tcp_stateless_normalization:
 #else /* 0 */
   add         r1, k.tcp_flags, r0
   indexb      r2, r1, [TCP_FLAG_SYN|TCP_FLAG_RST, TCP_FLAG_SYN|TCP_FLAG_FIN, 0xFF, 0x0], 0
-  sle.!c1     c1, r0, r2
+  sle.s.!c1   c1, r0, r2
 #endif /* 0 */
 
   smeqb       c2, k.tcp_flags, TCP_FLAG_ACK, 0x0
@@ -268,7 +268,7 @@ lb_tcp_invalid_flags:
   seq         c2, k.l4_metadata_tcp_flags_nonsyn_noack_drop, ACT_ALLOW
   add         r1, k.tcp_flags, r0
   indexb      r2, r1, [TCP_FLAG_SYN|TCP_FLAG_RST, TCP_FLAG_SYN|TCP_FLAG_FIN, 0xFF, 0x0], 0
-  sle         c3, r0, r2
+  sle.s       c3, r0, r2
   b.!c3       lb_tcp_flags_nonsyn_noack
   seq         c3, k.l4_metadata_tcp_invalid_flags_drop, ACT_DROP
   // Trying to be symmetric with rest of the blocks of code. Ideally
