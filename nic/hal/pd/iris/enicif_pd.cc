@@ -768,10 +768,14 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
                        sizeof(input_properties_otcam_swkey_mask_t));
         key_mask->capri_intrinsic_lif_mask = 0xFFFF;
         key_mask->vlan_tag_vid_mask = 0xFFFF;
-        key_mask->vlan_tag_valid_mask = 0xFF;
         key_mask->entry_inactive_input_properties_mask = 0xFF;
-        key_mask->p4plus_to_p4_insert_vlan_tag_mask = 0xFF;
         direct_to_otcam = true;
+
+        // Ignore where vlan id is coming from
+        key_mask->vlan_tag_valid_mask = 0;
+        key_mask->p4plus_to_p4_insert_vlan_tag_mask = 0;
+        // key_mask->vlan_tag_valid_mask = 0xFF;
+        // key_mask->p4plus_to_p4_insert_vlan_tag_mask = 0xFF;
     }
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);

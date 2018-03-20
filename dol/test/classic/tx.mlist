@@ -11,10 +11,25 @@ feature:
 
 modules:
     - module:
+        name    : IPV4_UDP_PTAG
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment   : filter://native=True
+              priotag   : True
+
+    - module:
         name    : IPV4_UDP_QTAG
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment   : filter://native=False
+
+    - module:
+        name    : IPV4_TCP_PTAG
+        perf    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment   : filter://native=True
+              priotag   : True
 
     - module:
         name    : IPV4_TCP_QTAG

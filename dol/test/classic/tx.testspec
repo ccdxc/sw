@@ -54,7 +54,8 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag    :
-                vlan: ref://testcase/config/src/segment/vlan_id
+                #vlan: ref://testcase/config/src/segment/vlan_id
+                vlan: callback://networking/packets/GetVlanId
             tcp:
                 flags: ack
 
