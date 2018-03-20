@@ -67,6 +67,10 @@ sq:
     CAPRI_SET_FIELD(r2, REQ_RX_TO_STAGE_T, cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
     CAPRI_SET_FIELD(r2, REQ_RX_TO_STAGE_T, log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
 
+    add r2, r0, offsetof(struct phv_, to_stage_5_to_stage_data)
+    CAPRI_SET_FIELD(r2, REQ_RX_TO_STAGE_T, cqcb_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_page_id)
+    CAPRI_SET_FIELD(r2, REQ_RX_TO_STAGE_T, log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
+    
     #CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, prefetch_pool_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.prefetch_pool_base_addr_page_id)
     #CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_prefetch_pool_entries, d.u.rx_stage0_load_rdma_params_d.log_num_prefetch_pool_entries)
 done:

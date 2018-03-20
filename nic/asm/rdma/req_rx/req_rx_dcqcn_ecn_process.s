@@ -32,6 +32,6 @@ req_rx_dcqcn_ecn_process:
     DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, CNP_RING_ID, DB_ADDR, DB_DATA)
 
 exit:
-    CAPRI_SET_TABLE_2_VALID(0)
+    CAPRI_SET_TABLE_3_VALID(0)
     nop.e
     nop

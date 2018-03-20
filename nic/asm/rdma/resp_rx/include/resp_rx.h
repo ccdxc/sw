@@ -306,6 +306,7 @@ struct resp_rx_cqcb_to_pt_info_t {
     no_dma: 1;
     rsvd1: 4;
     cqcb_addr: 34;
+    rsvd2: 6;
     pa_next_index: 16;
     pad: 24;
 };

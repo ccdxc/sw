@@ -47,8 +47,8 @@ resp_rx_cqpt_process:
     add             CQCB_PA_INDEX, k.args.cqcb_addr, offsetof(struct cqcb_t, pt_next_pa_index)
     memwr.h         CQCB_PA_INDEX, k.args.pa_next_index
 
-    bcf             [c3], fire_eqcb
-    nop
+    bcf             [c2], fire_eqcb
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ) //BD slot    
 
     tblrdp.dx       PAGE_ADDR_P, PAGE_ADDR_P, 0, CAPRI_SIZEOF_U64_BITS
         // cqwqe_p = (cqwqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);

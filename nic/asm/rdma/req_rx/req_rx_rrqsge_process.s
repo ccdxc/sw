@@ -147,18 +147,17 @@ sge_loop:
 
 set_arg:
 
-    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
+    CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
 
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, rrq_in_progress, r4)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, r1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, r2)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, last, 1, c5)
 
     SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
  
     nop.e
     nop

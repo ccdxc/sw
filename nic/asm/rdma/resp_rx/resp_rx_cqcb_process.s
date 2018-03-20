@@ -49,16 +49,16 @@ resp_rx_cqcb_process:
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size //BD slot
     add             r2, d.pt_next_pa_index, 0   
     blt             r1, r2, translate_next
-    add             PT_PINDEX, r0, CQ_P_INDEX //Branch delay slot    
-    crestore        [c3], 0x0, 0x4
+    crestore        [c3], 0x0, 0x4            //Branch delay slot
     b               fire_cqpt
+    add             PT_PINDEX, r0, CQ_P_INDEX //Branch delay slot    
 
 translate_next:
 
     tblwr          d.pt_pa, d.pt_next_pa
     tblwr          d.pt_pa_index, d.pt_next_pa_index
 
-    add             PT_PINDEX, r0, d.pt_next_pa_index //Branch delay slot
+    add             PT_PINDEX, r0, d.pt_next_pa_index 
 
     crestore        [c3], 0x4, 0x4
     
@@ -96,7 +96,7 @@ fire_cqpt:
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, page_offset, PAGE_OFFSET)
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, no_translate, 0)
     CAPRI_SET_FIELD_C(ARG_P, CQ_PT_INFO_T, no_dma, 1, c3)    
-    CAPRI_SET_FIELD_C(ARG_P, CQ_PT_INFO_T, no_dma, 0, !c3)  //TODO: Do I need two instructions here?
+
     CAPRI_SET_FIELD(ARG_P, CQ_PT_INFO_T, pa_next_index, PA_NEXT_INDEX)  
     
     mfspr          CQCB_ADDR, spr_tbladdr

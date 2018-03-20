@@ -35,8 +35,7 @@ post_bktrack_ring:
 
 
 end:
-     add           r1, k.args.tbl_id, r0
-     CAPRI_SET_TABLE_I_VALID(r1, 0)
+     CAPRI_SET_TABLE_3_VALID(0)
 
      nop.e
      nop

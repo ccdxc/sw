@@ -37,11 +37,11 @@ req_rx_sqcb1_process:
     bcf            [c5 | c6], process_rx_pkt
 
     // Load dcqcn_cb to store timestamps and trigger Doorbell to generate CNP.
-    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
+    CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, ECN_INFO_T, p_key, CAPRI_APP_DATA_BTH_P_KEY)
 
     add     r1, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr, HDR_TEMP_ADDR_SHIFT //dcqcn_cb addr
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_dcqcn_ecn_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_dcqcn_ecn_process, r1)
 
 process_rx_pkt:
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS
@@ -258,14 +258,12 @@ ud_feedback:
     tblsub         d.token_id, 1
     tblmincri      d.token_id, SIZEOF_TOKEN_ID_BITS, 0 
 
-    CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, tbl_id, 3)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, dma_cmd_index, REQ_RX_DMA_CMD_CQ)
+    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
 
     CAPRI_SET_TABLE_0_VALID(0)
 
     //REQ_RX_CQCB_ADDR_GET(r1, d.cq_id) TODO CQCB needs to be pushed to stage 5
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_cqcb_process, r1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_cqcb_process, r1)
 
     nop.e
     nop

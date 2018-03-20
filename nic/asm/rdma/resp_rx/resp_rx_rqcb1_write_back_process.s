@@ -61,7 +61,7 @@ skip_updates_for_only:
 
 
     RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_cqcb_process, CQCB_ADDR)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqcb_process, CQCB_ADDR)
 
 
     // if invalidate rkey is present, invoke it by loading appopriate

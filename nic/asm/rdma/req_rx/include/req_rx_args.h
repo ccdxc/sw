@@ -93,30 +93,28 @@ struct req_rx_rrqlkey_to_ptseg_info_t {
 };
 
 struct req_rx_rrqwqe_to_cq_info_t {
-    tbl_id                  : 4;
-    dma_cmd_index           : 8;
-    pad                     : 148;
+    cq_id                   : 24;
+    pad                     : 136;
 };
 
 struct req_rx_cqcb_to_pt_info_t {
     page_offset             : 16;
     page_seg_offset         : 8;
-    dma_cmd_index           : 8;
-    eq_id                   : 24;
     cq_id                   : 24;
+    eq_id                   : 24;
     arm                     : 1;
     wakeup_dpath            : 1;
-    tbl_id                  : 3;
-    rsvd                    : 4;
-    pad                     : 71;
+    no_translate            : 1;
+    no_dma                  : 1;
+    rsvd                    : 1;
+    cqcb_addr               : 34;
+    pa_next_index           : 16;
+    pad                     : 30;
 };
 
 struct req_rx_cqcb_to_eq_info_t {
-    tbl_id                  : 3;
-    rsvd                    : 5;
-    dma_cmd_index           : 8;
     cq_id                   : 24;
-    pad                     : 120;
+    pad                     : 136;
 };
 
 struct req_rx_ecn_info_t { 

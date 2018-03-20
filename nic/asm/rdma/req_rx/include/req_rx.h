@@ -21,11 +21,11 @@
 #define REQ_RX_DMA_CMD_BKTRACK_DB          3
 #define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
 #define REQ_RX_MAX_DMA_CMDS                16
-#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 3)
-#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 2)
+#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 2)
+#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 1)
 //wakeup dpath and EQ are mutually exclusive
 #define REQ_RX_DMA_CMD_WAKEUP_DPATH        REQ_RX_DMA_CMD_EQ
-#define REQ_RX_DMA_CMD_EQ_INTR             (REQ_RX_MAX_DMA_CMDS - 2)
+#define REQ_RX_DMA_CMD_EQ_INTR             (REQ_RX_MAX_DMA_CMDS - 1)
 
 // phv 
 struct req_rx_phv_t {

@@ -28,16 +28,16 @@ req_rx_rrqwqe_process:
 ack:
     // Hardcode table 2 for write_back process
     SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
 
-    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
+    CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, rrq_in_progress, k.args.rrq_in_progress)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
-
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 3)
+    
     CAPRI_SET_TABLE_0_VALID(0);
 
     // r1 = aeth_syndrome
@@ -198,7 +198,7 @@ atomic:
     // Hardcode table id 2 for write_back process
     // to keep it consistent with read process where
     // table 0 and 1 are taken for sge process
-    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
+    CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
 
     //CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, 0)
     //CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, 0)
@@ -206,27 +206,25 @@ atomic:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, d.psn)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, last, 1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 3)
 
     //SQCB0_ADDR_GET(r1)
     //add            r6, r1, RRQ_C_INDEX_OFFSET
     //memwr.hx       r6, k.args.rrq_cindex
 
     SQCB1_ADDR_GET(r1)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r1)
 
 set_cqcb_arg:
     // if(!completion) goto end
     bcf            [!c4], end
     nop            // Branch Delay Slot 
 
-    // Hardcode table id 3 for CQCB process
-    CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, tbl_id, 3)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, dma_cmd_index, REQ_RX_DMA_CMD_CQ)
+    // Hardcode table id 2 for CQCB process
+    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
 
-    REQ_RX_CQCB_ADDR_GET(r1, k.args.cq_id)
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_cqcb_process, r1)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, cq_id, k.args.cq_id) 
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
 end:
     nop.e
