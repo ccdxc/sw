@@ -247,6 +247,11 @@
 #define LOAD_TABLE_FOR_ADDR(_table_addr, _load_size, _pc)               \
   LOAD_TABLE0_FOR_ADDR64(_table_addr, _load_size, _pc)                  \
             
+#define LOAD_TABLE1_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)     \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE1_FOR_ADDR34(_table_addr, _load_size, r1)                   \
+
+
 // Calculate a table address based on index and size
 // addr = _table_base + (_entry_index * (2 ^_entry_size))
 #define TABLE_ADDR_FOR_INDEX(_table_base, _entry_index, _entry_size)    \
@@ -283,16 +288,15 @@
   add       r1, r3, _table_base;                                        \
   LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)                              \
 
+// Used to clear table 1 valid bits 
+#define CLEAR_TABLE1                                                    \
+  phvwri.e  p.app_header_table1_valid, 0;   				\
+  nop;                                                                  \
 
 // Used to clear all table valid bits and exit the pipeline
 #define LOAD_NO_TABLES                                                  \
   phvwri.e  p.{app_header_table0_valid...app_header_table3_valid}, 0;   \
   nop;                                                                  \
-
-
-#define LOAD_TABLE1_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)     \
-  addi      r1, r0, _pc[33:6];                                          \
-  LOAD_TABLE1_FOR_ADDR34(_table_addr, _load_size, r1)                   \
 
 
 // Capri PHV Bit to Byte Macros
@@ -480,9 +484,9 @@
 #define NVME_SEQ_QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)                 \
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,       \
                              DOORBELL_UPDATE_NONE, d.p_ndx,             \
-                             NVME_KIVEC_T1_S2S_DST_LIF,                 \
-                             NVME_KIVEC_T1_S2S_DST_QTYPE,               \
-                             NVME_KIVEC_T1_S2S_DST_QID)                 \
+                             NVME_KIVEC_T0_S2S_DST_LIF,                 \
+                             NVME_KIVEC_T0_S2S_DST_QTYPE,               \
+                             NVME_KIVEC_T0_S2S_DST_QID)                 \
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.

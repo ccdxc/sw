@@ -24,6 +24,15 @@ storage_nvme_lookup_sq_start:
    // Store the c_ndx in the NVME status as SQ head
    phvwr	p.nvme_sta_sq_head, d.c_ndx
 
+   // Store fields needed in the K+I vector into the PHV
+   phvwr	p.{nvme_kivec_arm_dst6_arm_lif...nvme_kivec_arm_dst6_arm_qtype}, \
+                d.{arm_lif...arm_qtype}
+   phvwr	p.{nvme_kivec_arm_dst7_arm_lif...nvme_kivec_arm_dst7_arm_qtype}, \
+                d.{arm_lif...arm_qtype}
+   add		r1, d.arm_base_qid, ARM_QID_OFFSET_STA_FREE_IOB_Q
+   add		r2, d.arm_base_qaddr, ARM_QID_OFFSET_STA_FREE_IOB_Q, ARM_QSTATE_ENTRY_SIZE_LOG2
+   phvwrpair	p.nvme_kivec_arm_dst6_arm_qid, r1, p.nvme_kivec_arm_dst6_arm_qaddr, r2
+   phvwrpair	p.nvme_kivec_arm_dst7_arm_qid, r1, p.nvme_kivec_arm_dst7_arm_qaddr, r2
 
    // Load the NVME CQ to push the NVME status in the next stage
    LOAD_TABLE_FOR_ADDR34_PC_IMM(d.cq_qaddr,

@@ -1,7 +1,6 @@
 /*****************************************************************************
- *  push_dst_seq_q: Push the WQE to the next P4+ program in the chain (ROCE/R2N).
- *                  This will be called only when the IO buffer is not being
- *                  punted to arm and needs to be handled in P4+.
+ *  send_sta_free_iob: Post a message to the P4+ program to free the IOB
+ *                     from the NVME status handling path.
  *****************************************************************************/
 
 #include "storage_asm_defines.h"
@@ -10,12 +9,12 @@
 
 
 struct s7_tbl0_k k;
-struct s7_tbl0_push_dst_seq_q_d d;
+struct s7_tbl0_send_sta_free_iob_d d;
 struct phv_ p;
 
 %%
 
-storage_nvme_push_dst_seq_q_start:
+storage_nvme_send_sta_free_iob_start:
    // Check queue full condition and exit
    // TODO: Push error handling
    QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, tbl_load)
@@ -25,14 +24,14 @@ storage_nvme_push_dst_seq_q_start:
    QUEUE_PUSH_ADDR(d.base_addr, d.p_ndx, d.entry_size)
 
    // DMA the I/O context from PHV to the destinations sequencer queue
-   DMA_PHV2MEM_SETUP_ADDR34(seq_r2n_wqe_r2n_wqe_addr, seq_r2n_wqe_dst_qaddr,
-                            r7, dma_p2m_12)
+   DMA_PHV2MEM_SETUP_ADDR34(io_ctx_iob_addr, io_ctx_iob_addr,
+                            r7, dma_p2m_7)
 
    // Push the entry to the queue (this increments p_ndx and writes to table)
    QUEUE_PUSH(d.p_ndx, d.num_entries)
 
    // Ring the doorbell for the recipient of the push
-   NVME_SEQ_QUEUE_PUSH_DOORBELL_RING(dma_p2m_13)
+   NVME_SEQ_QUEUE_PUSH_DOORBELL_RING(dma_p2m_8)
 
 tbl_load:
    // Load no tables and exit the pipeline

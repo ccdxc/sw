@@ -10,7 +10,7 @@
 
 struct s0_tbl0_k k;
 // Use push_dst_seq_q d-vector as the stage 0 d-vector has space for action-pc
-struct s7_tbl1_push_dst_seq_q_d d;
+struct s7_tbl0_push_dst_seq_q_d d;
 struct phv_ p;
 
 %%
