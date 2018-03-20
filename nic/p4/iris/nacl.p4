@@ -8,7 +8,7 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
                    rewrite_en, rewrite_index, rewrite_flags,
                    tunnel_rewrite_en, tunnel_rewrite_index, tunnel_vnid,
                    tunnel_originate,
-                   dst_lport_en, dst_lport) {
+                   dst_lport_en, dst_lport, discard_drop) {
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.force_flow_hit, force_flow_hit);
     modify_field(scratch_metadata.qid_en, qid_en);
@@ -18,7 +18,13 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
     modify_field(scratch_metadata.rewrite_en, rewrite_en);
     modify_field(scratch_metadata.tunnel_rewrite_en, tunnel_rewrite_en);
     modify_field(scratch_metadata.dst_lport_en, dst_lport_en);
+    modify_field(scratch_metadata.discard_drop, discard_drop);
 
+    if (discard_drop == TRUE) {
+        permit_packet();
+        modify_field(control_metadata.drop_reason, 0);
+    }
+        
     if (force_flow_hit == TRUE) {
         modify_field(control_metadata.flow_miss, FALSE);
         modify_field(control_metadata.flow_miss_ingress, FALSE);

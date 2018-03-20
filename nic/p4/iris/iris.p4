@@ -285,6 +285,7 @@ header_type scratch_metadata_t {
 
         size16                        : 16;
         size8                         : 8;
+        discard_drop                  : 1;
     }
 }
 

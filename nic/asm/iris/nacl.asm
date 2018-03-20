@@ -22,6 +22,10 @@ nop:
 nacl_permit:
   K_DBG_WR(0x80)
   DBG_WR(0x89, 0x89)
+  seq           c2, d.u.nacl_permit_d.discard_drop, 1
+  phvwr.c2      p.capri_intrinsic_drop, 0
+  phvwr.c2      p.control_metadata_drop_reason, 0
+
   seq           c2, d.u.nacl_permit_d.force_flow_hit, 1
   phvwrpair.c2      p.control_metadata_flow_miss_ingress, 0, \
                     p.control_metadata_flow_miss, 0
