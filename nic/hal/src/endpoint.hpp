@@ -30,6 +30,7 @@ using endpoint::EndpointGetResponseMsg;
 using endpoint::EndpointUpdateRequestMsg;
 using endpoint::EndpointUpdateResponseMsg;
 using endpoint::EndpointUpdateRequest;
+using endpoint::EndpointIpAddress;
 using eplearn::DhcpTransactionState;
 using eplearn::DhcpStatus;
 using eplearn::ArpStatus;

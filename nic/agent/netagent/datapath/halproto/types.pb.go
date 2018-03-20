@@ -181,6 +181,7 @@
 		EndpointAttributes
 		EndpointSpec
 		EndpointRequestMsg
+		EndpointIpAddress
 		EndpointStatus
 		EndpointResponse
 		EndpointResponseMsg

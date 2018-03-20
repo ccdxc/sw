@@ -163,12 +163,15 @@ find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
 ep_t *
 find_ep_by_handle (hal_handle_t handle)
 {
+    hal_handle *handle_obj;
+
     if (handle == HAL_HANDLE_INVALID) {
         return NULL;
     }
 
     // check for object type
-    if (hal_handle_get_from_handle_id(handle)->obj_id() != HAL_OBJ_ID_ENDPOINT) {
+    handle_obj = hal_handle_get_from_handle_id(handle);
+    if (!handle_obj || handle_obj->obj_id() != HAL_OBJ_ID_ENDPOINT) {
         return NULL;
     }
     return (ep_t *)hal_handle_get_obj(handle);
@@ -822,7 +825,6 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         sdk::lib::dllist_reset(&ip_entry[i]->ep_ip_lentry);
         ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.endpoint_attrs().ip_address(i));
         ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG; 
-        ep->ep_flags |= EP_FLAGS_LEARN_SRC_CFG;
         sdk::lib::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
     }
 
@@ -2084,9 +2086,6 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     response->mutable_spec()->mutable_endpoint_attrs()->set_useg_vlan(ep->useg_vlan);
 
     response->mutable_status()->set_endpoint_handle(ep->hal_handle);
-    response->mutable_status()->set_learn_source_dhcp(ep->ep_flags & EP_FLAGS_LEARN_SRC_DHCP);
-    response->mutable_status()->set_learn_source_arp(ep->ep_flags & EP_FLAGS_LEARN_SRC_ARP);
-    response->mutable_status()->set_learn_source_rarp(ep->ep_flags & EP_FLAGS_LEARN_SRC_RARP);
     response->mutable_status()->set_learn_source_config(ep->ep_flags & EP_FLAGS_LEARN_SRC_CFG);
     response->mutable_status()->set_is_endpoint_local(ep->ep_flags & EP_FLAGS_LOCAL);
 
@@ -2094,18 +2093,26 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     dllist_for_each(lnode, &(ep->ip_list_head)) {
         pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
                 offsetof(ep_ip_entry_t, ep_ip_lentry));
-        types::IPAddress *ip_addr_spec = response->mutable_spec()->mutable_endpoint_attrs()->add_ip_address();
+        types::IPAddress *ip_addr_spec =
+                response->mutable_spec()->mutable_endpoint_attrs()->add_ip_address();
         ip_addr_to_spec(ip_addr_spec, &pi_ip_entry->ip_addr);
 
-        ep_learn_status = response->mutable_status()->mutable_learn_status()->Add();
+        EndpointIpAddress *endpoint_ip_addr = response->mutable_status()->add_ip_address();
+        ip_addr_to_spec(endpoint_ip_addr->mutable_ip_address(), &pi_ip_entry->ip_addr);
+        ep_learn_status = endpoint_ip_addr->mutable_learn_status();
         if ((pi_ip_entry->ip_flags & EP_FLAGS_LEARN_SRC_DHCP) &&
                 (dhcp_status_func != nullptr)) {
             dhcp_status_func(vrf->vrf_id, &pi_ip_entry->ip_addr,
                     ep_learn_status->mutable_dhcp_status());
+            endpoint_ip_addr->set_learn_source_dhcp(true);
         } else if ((pi_ip_entry->ip_flags & EP_FLAGS_LEARN_SRC_ARP) &&
                 (arp_status_func != nullptr)) {
             arp_status_func(vrf->vrf_id, &pi_ip_entry->ip_addr,
                     ep_learn_status->mutable_arp_status());
+            endpoint_ip_addr->set_learn_source_dhcp(true);
+        } else if (pi_ip_entry->ip_flags & EP_FLAGS_LEARN_SRC_CFG) {
+            endpoint_ip_addr->set_learn_source_dhcp(pi_ip_entry->ip_flags & EP_FLAGS_LEARN_SRC_CFG);
+            endpoint_ip_addr->set_learn_source_config(true);
         }
     }
 

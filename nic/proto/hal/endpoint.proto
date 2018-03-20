@@ -56,17 +56,23 @@ message EndpointRequestMsg {
   repeated EndpointSpec    request = 1;    // batched request
 }
 
+//Endpoint IP address information.
+message EndpointIpAddress {
+	types.IPAddress        ip_address          = 1;    // IP addresses learnt.
+	bool                   learn_source_dhcp   = 2;    // TRUE if learnt via DHCP
+  	bool                   learn_source_arp    = 3;    // TRUE if learnt via ARP/GARP
+  	bool                   learn_source_rarp   = 4;    // TRUE if learnt via RARP
+  	bool                   learn_source_config = 5;    // TRUE if learnt via configuration
+  	eplearn.EplearnStatus  learn_status        = 6;   // ep learning status
+};
+
 // EndpointStatus has the current status of an endpoint
 // TODO: capturing aging information, if any
 message EndpointStatus {
   fixed64                         endpoint_handle     = 1;    // id of endpoint returned by HAL
-  repeated types.IPAddress        ip_address          = 2;    // IP addresses learnt, if any
-  bool                            learn_source_dhcp   = 3;    // TRUE if learnt via DHCP
-  bool                            learn_source_arp    = 4;    // TRUE if learnt via ARP/GARP
-  bool                            learn_source_rarp   = 5;    // TRUE if learnt via RARP
-  bool                            learn_source_config = 6;    // TRUE if learnt via configuration
-  bool                            is_endpoint_local   = 7;    // TRUE if endpoint is local
-  repeated eplearn.EplearnStatus  learn_status        = 8;    // ep learning status
+  repeated EndpointIpAddress      ip_address          = 2;    // IP addresses learnt, if any
+  bool                            is_endpoint_local   = 3;    // TRUE if endpoint is local
+  bool							  learn_source_config = 4;    // TRUE if ep entry was created by config.
 }
 
 // EndpointResponse is response to EndpointSpec
