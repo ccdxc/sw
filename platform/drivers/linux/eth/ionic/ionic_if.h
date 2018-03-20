@@ -659,7 +659,7 @@ enum rxq_comp_rss_type {
  * @comp_index:   The index in the descriptor ring for which this
  *                is the completion.
  * @rss_hash:     32-bit RSS hash for the @rss_type indicated
- * @csum:         One's complement 16-bit sum of the packet’s L2 payload.
+ * @csum:         16-bit sum of the packet’s L2 payload.
  *                If the packet’s L2 payload is odd length, an extra
  *                zero-value byte is included in the @csum calculation but
  *                not included in @len.
