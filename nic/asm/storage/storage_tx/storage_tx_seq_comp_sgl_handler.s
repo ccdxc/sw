@@ -31,10 +31,14 @@ storage_tx_seq_comp_sgl_handler_start:
 
 process_data:
    // Store the data length into r6 accouting for the fact that 0 => 64K
+   // Question: shouldn't r6 always be set to STORAGE_KIVEC4_DATA_LEN???
+   
    seq		c1, d.len0, r0
    cmov         r6, c1, 65536, STORAGE_KIVEC4_DATA_LEN
 
    // Store the data address into r7
+   // TODO: handle the case of data_addr being an SGL address!
+   
    add		r7, STORAGE_KIVEC4_DATA_ADDR, r0
 
    // Setup the compression data buffer DMA based on flat source buffer 

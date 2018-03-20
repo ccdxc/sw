@@ -114,6 +114,7 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::compress_output_through_sequencer, "Compress and pull data from HBM through sequencer", false},
   {&tests::compress_dualq_flat_4K_buf, "Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::compress_dualq_flat_4K_buf_in_hbm, "Compress HBM-HBM flat 4K buf on hot and cold queues", false},
+  {&tests::compress_output_encrypt, "Compress->XTS encrypt chaining", false},
   // Enable when model is fixed.
   //{&tests::verify_integrity_for_gt64K, "Verify integrity calc for data size > 64K", false},
   {&tests::seq_compress_flat_64K_buf, "Sequencer Compress Host->Host flat 64K buf", false},
@@ -126,6 +127,7 @@ std::vector<tests::TestEntry> comp_tests = {
   {&tests::seq_compress_output_through_sequencer, "Sequencer Compress and pull data from HBM through sequencer", false},
   {&tests::seq_compress_dualq_flat_4K_buf, "Sequencer Compress Host-Host flat 4K buf on hot and cold queues", false},
   {&tests::seq_compress_dualq_flat_4K_buf_in_hbm, "Sequencer Compress HBM-HBM flat 4K buf on hot and cold queues", false},
+  {&tests::seq_compress_output_encrypt, "Sequencer Compress->XTS encrypt chaining", false},
 };
 
 std::vector<tests::TestEntry> comp_perf_tests = {

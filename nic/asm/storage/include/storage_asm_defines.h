@@ -53,7 +53,7 @@
 #define STORAGE_KIVEC1_BARCO_DESC_SIZE          \
     k.{storage_kivec1_barco_desc_size_sbit0_ebit7...storage_kivec1_barco_desc_size_sbit8_ebit15}
 #define STORAGE_KIVEC1_DEVICE_ADDR              \
-    k.{storage_kivec1_device_addr_sbit0_ebit31...storage_kivec1_device_addr_sbit32_ebit33}
+    k.{storage_kivec1_device_addr_sbit0_ebit7...storage_kivec1_device_addr_sbit32_ebit33}
 #define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD          \
     k.storage_kivec1_roce_cq_new_cmd
 
@@ -67,8 +67,8 @@
 
 #define STORAGE_KIVEC4_W_NDX                    \
     k.storage_kivec4_w_ndx
-#define STORAGE_KIVEC4_SGL_ADDR                 \
-    k.{storage_kivec4_sgl_addr_sbit0_ebit7...storage_kivec4_sgl_addr_sbit40_ebit63}
+#define STORAGE_KIVEC4_SGL_AOL_ADDR             \
+    k.{storage_kivec4_sgl_aol_addr_sbit0_ebit7...storage_kivec4_sgl_aol_addr_sbit40_ebit63}
 #define STORAGE_KIVEC4_DATA_ADDR                \
     k.{storage_kivec4_data_addr_sbit0_ebit7...storage_kivec4_data_addr_sbit56_ebit63}
 #define STORAGE_KIVEC4_DATA_LEN                 \
@@ -78,12 +78,24 @@
     k.{storage_kivec5_status_addr_sbit0_ebit7...storage_kivec5_status_addr_sbit40_ebit63}
 #define STORAGE_KIVEC5_STATUS_LEN               \
     k.{storage_kivec5_status_len_sbit0_ebit7...storage_kivec5_status_len_sbit8_ebit15}
+#define STORAGE_KIVEC5_PAD_LEN_SHIFT            \
+    k.storage_kivec5_pad_len_shift
 #define STORAGE_KIVEC5_STATUS_ERR               \
     k.storage_kivec5_status_err
 #define STORAGE_KIVEC5_STATUS_DMA_EN            \
     k.storage_kivec5_status_dma_en
 #define STORAGE_KIVEC5_DATA_LEN_FROM_DESC       \
     k.storage_kivec5_data_len_from_desc
+#define STORAGE_KIVEC5_EXIT_CHAIN_ON_ERROR      \
+    k.storage_kivec5_exit_chain_on_error
+#define STORAGE_KIVEC5_NEXT_DB_EN               \
+    k.storage_kivec5_next_db_en
+#define STORAGE_KIVEC5_AOL_LEN_PAD_EN           \
+    k.storage_kivec5_aol_len_pad_en
+#define STORAGE_KIVEC5_SGL_XFER_EN              \
+    k.storage_kivec5_sgl_xfer_en
+#define STORAGE_KIVEC5_INTR_EN                  \
+    k.storage_kivec5_intr_en
 
 #define STAGE0_KIVEC_LIF                        \
     k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -371,6 +383,10 @@
    DMA_MEM2MEM_SETUP_REG_ADDR(_type, r1, _size, _use_override_lif,      \
                               _override_lif, _dma_cmd_X)                \
    
+// DMA fence update: Set the fence bit for the MEM2MEM DMA command
+#define DMA_MEM2MEM_FENCE(_dma_cmd_X)                                   \
+   phvwri   p._dma_cmd_X##_dma_cmd_wr_fence, 1;                         \
+
 // DMA fence update: Set the fence bit for the PHV2MEM DMA command
 #define DMA_PHV2MEM_FENCE(_dma_cmd_X)                                   \
    phvwri   p._dma_cmd_X##_dma_cmd_wr_fence, 1;                         \

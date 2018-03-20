@@ -428,11 +428,12 @@ header_type seq_comp_status_desc_t {
     next_db_data	: 64;	// 64 bit data of the next doorbell to ring
     status_addr		: 64;	// Address where compression status will be placed
     data_addr		: 64;	// Address where compression data will be placed
-    sgl_addr		: 64;	// Address where destination SGL will be placed for PDMA
+    sgl_aol_addr	: 64;	// SGL or AOL address where destination will be placed for PDMA
     intr_addr		: 64;	// Address where interrupt needs to be written
     intr_data		: 32;	// Data that needs to be written for interrupt
     status_len		: 16;	// Length of the compression status
     data_len		: 16;	// Length of the compression data
+    pad_len_shift	:  5;	// Padding length (power of 2)
     data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
 				// 0 => Use the data lenghth in the status
     status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA 
@@ -441,6 +442,9 @@ header_type seq_comp_status_desc_t {
 				// NOTE: Don't enable intr_en and next_db_en together
 				//       as only one will be serviced
 				// Order of evaluation: 1. next_db_en 2. intr_en
+    exit_chain_on_error	:  1; // 1: don't ring next DB on error
+    aol_len_pad_en      :  1;
+    sgl_xfer_en         :  1;
   }
 }
 
@@ -464,9 +468,60 @@ header_type seq_comp_status_t {
   fields {
     rsvd1		: 12;	// Reserved
     err			: 3;	// Error status (0: success: >0: failure)
-    rsvd2		: 1;	// Reserved
+    valid_bit		: 1;
     data_len		: 16;	// Output bits
     rsvd3		: 32;	// Reserved
+  }
+}
+
+// Sequencer metadata XTS status entry
+header_type seq_xts_status_desc_t {
+  fields {
+    next_db_addr	: 64;	// 64 bit address of the next doorbell to ring
+    next_db_data	: 64;	// 64 bit data of the next doorbell to ring
+    status_hbm_addr	: 64;	// Address where HW compression status was placed
+    status_host_addr    : 64;	// Address where a copy of above status can be made
+    intr_addr		: 64;	// Address where interrupt needs to be written
+    intr_data		: 32;	// Data that needs to be written for interrupt
+    status_len		: 16;	// Length of the compression status
+    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA 
+    next_db_en		:  1;	// 1 => Ring next sequencer doorbell, 0 => don't ring
+    intr_en		:  1;	// 1 => Fire the MSI-X interrupt, 0 => don't fire
+				// NOTE: Don't enable intr_en and next_db_en together
+				//       as only one will be serviced
+				// Order of evaluation: 1. next_db_en 2. intr_en
+    exit_chain_on_error	:  1; // 1: don't ring next DB on error
+  }
+}
+
+// XTS status metadata
+header_type seq_xts_status_t {
+  fields {
+    err			: 64;	// Error status (0: success: >0: failure)
+  }
+}
+
+// Barco AOL (used by XTS)
+header_type barco_aol_t {
+  fields {
+    A0              : 64;
+    O0              : 32;
+    L0              : 32;
+    A1              : 64;
+    O1              : 32;
+    L1              : 32;
+    A2              : 64;
+    O2              : 32;
+    L2              : 32;
+    next_addr       : 64;
+    rsvd            : 64;
+  }
+}
+
+// AOL 32-bit length
+header_type barco_aol_len_t {
+  fields {
+    len 	: 32;
   }
 }
 
@@ -524,7 +579,7 @@ header_type storage_kivec3_t {
 header_type storage_kivec4_t {
   fields {
     w_ndx		: 16;	// Working consumer index
-    sgl_addr		: 64;	// Address where destination SGL will be placed for PDMA
+    sgl_aol_addr        : 64;	// SGL or AOL address where data will be placed for PDMA
     data_addr		: 64;	// Address where compression data will be placed
     data_len		: 16;	// Length of compression data (either from descriptor or 
 				// from the compression status)
@@ -536,10 +591,16 @@ header_type storage_kivec5_t {
   fields {
     status_addr		: 64;	// Address where compression status will be placed
     status_len		: 16;	// Length of the compression status
-    status_err		:  3;	// Error status (0: success: >0: failure)
-    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA status
+    pad_len_shift       : 5;
+    status_err		: 3;	// Error status (0: success: >0: failure)
     data_len_from_desc	:  1;	// 1 => Use the data length in the descriptor, 
-				// 0 => Use the data lenghth in the status
+                                // 0 => Use the data lenghth in the status
+    status_dma_en	:  1;	// 1 => DMA status, 0 => don't DMA status
+    next_db_en          :  1;
+    intr_en	        :  1;
+    exit_chain_on_error :  1;
+    aol_len_pad_en      :  1;
+    sgl_xfer_en         :  1;
   }
 }
 #define Q_STATE_COPY_INTRINSIC(q_state)			\
@@ -563,7 +624,7 @@ header_type storage_kivec5_t {
   modify_field(q_state.entry_size, entry_size);		\
   modify_field(q_state.next_pc, next_pc);		\
   modify_field(q_state.dst_lif, dst_lif);		\
-  modify_field(q_state.dst_qtype, dst_qtype);		\
+  modify_field(q_state.dst_qtype, dst_qtype);	        \
   modify_field(q_state.dst_qid, dst_qid);		\
   modify_field(q_state.dst_qaddr, dst_qaddr);		\
   modify_field(q_state.vf_id, vf_id);			\
@@ -761,7 +822,7 @@ header_type storage_kivec5_t {
 
 #define STORAGE_KIVEC4_USE(scratch, kivec)				\
   modify_field(scratch.w_ndx, kivec.w_ndx);				\
-  modify_field(scratch.sgl_addr, kivec.sgl_addr);			\
+  modify_field(scratch.sgl_aol_addr, kivec.sgl_aol_addr);		\
   modify_field(scratch.data_addr, kivec.data_addr);			\
   modify_field(scratch.data_len, kivec.data_len);			\
 
@@ -769,8 +830,14 @@ header_type storage_kivec5_t {
   modify_field(scratch.status_addr, kivec.status_addr);			\
   modify_field(scratch.status_len, kivec.status_len);			\
   modify_field(scratch.status_err, kivec.status_err);			\
-  modify_field(scratch.status_dma_en, kivec.status_dma_en);		\
+  modify_field(scratch.pad_len_shift, kivec.pad_len_shift);		\
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);	\
+  modify_field(scratch.status_dma_en, kivec.status_dma_en);	        \
+  modify_field(scratch.next_db_en, kivec.next_db_en);	                \
+  modify_field(scratch.intr_en, kivec.intr_en);	                        \
+  modify_field(scratch.exit_chain_on_error, kivec.exit_chain_on_error);	\
+  modify_field(scratch.aol_len_pad_en, kivec.aol_len_pad_en);           \
+  modify_field(scratch.sgl_xfer_en, kivec.sgl_xfer_en);	                \
 
 
 // Macros for ASM param addresses (hardcoded in P4)
@@ -794,6 +861,7 @@ header_type storage_kivec5_t {
 #define seq_pvm_roce_sq_cb_push_start	0x80020000
 #define seq_comp_status_handler_start	0x80030000
 #define seq_comp_sgl_handler_start	0x80040000
+#define seq_xts_status_handler_start	0x80050000
 
 
 #endif     // STORAGE_TX_P4_HDR_H

@@ -62,6 +62,8 @@ uint32_t get_pvm_host_r2n_sq(uint32_t offset);
 
 uint32_t get_pvm_seq_xts_sq(uint32_t offset);
 
+uint32_t get_pvm_seq_xts_status_sq(uint32_t offset);
+
 uint32_t get_pvm_seq_roce_sq(uint32_t offset);
 
 uint32_t get_pvm_seq_comp_sq(uint32_t offset);

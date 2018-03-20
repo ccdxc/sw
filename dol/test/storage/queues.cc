@@ -24,6 +24,7 @@ const static uint32_t	kPvmNumSsdSQs	 	 = 4;
       static uint32_t	kPvmNumSeqPdmaSQs	 = 3; // pdma test may modify at run time
 const static uint32_t	kPvmNumSeqR2nSQs	 = 3;
 const static uint32_t	kPvmNumSeqXtsSQs	 = 3;
+const static uint32_t	kPvmNumSeqXtsStatusSQs = 4;
 const static uint32_t	kPvmNumSeqCompSQs	 = 4;
 const static uint32_t	kPvmNumSeqCompStatusSQs = 4;
 const static uint32_t	kPvmNumSeqRoceSQs	 = 3;
@@ -46,6 +47,7 @@ const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
+const static char	*kSeqXtsStatusSqHandler = "storage_tx_seq_xts_status_desc_handler.bin";
 const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
 const static char	*kSeqCompSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
@@ -126,6 +128,7 @@ uint32_t pvm_seq_pdma_sq_base;
 uint32_t pvm_seq_r2n_sq_base;
 uint32_t pvm_host_r2n_sq_base;
 uint32_t pvm_seq_xts_sq_base;
+uint32_t pvm_seq_xts_status_sq_base;
 uint32_t pvm_seq_roce_sq_base;
 uint32_t pvm_seq_comp_sq_base;
 uint32_t pvm_seq_comp_status_sq_base;
@@ -565,6 +568,17 @@ int queues_setup() {
     printf("Setup PVM Seq Xts queue %d \n", i);
   }
 
+  // Initialize PVM SQs for processing Sequencer commands for post XTS
+  pvm_seq_xts_status_sq_base = i;
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqXtsStatusSQs); j++, i++) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqXtsStatusSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+      printf("Failed to setup PVM Seq XTS Status queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq XTS Status queue %d \n", i);
+  }
+
   // Initialize PVM SQs for processing Sequencer commands for ROCE
   pvm_seq_roce_sq_base = i;
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqRoceSQs); j++, i++) {
@@ -821,6 +835,11 @@ uint32_t get_pvm_host_r2n_sq(uint32_t offset) {
 uint32_t get_pvm_seq_xts_sq(uint32_t offset) {
   assert(offset < NUM_TO_VAL(kPvmNumSeqXtsSQs));
   return (pvm_seq_xts_sq_base + offset);
+}
+
+uint32_t get_pvm_seq_xts_status_sq(uint32_t offset) {
+  assert(offset < NUM_TO_VAL(kPvmNumSeqXtsStatusSQs));
+  return (pvm_seq_xts_status_sq_base + offset);
 }
 
 uint32_t get_pvm_seq_roce_sq(uint32_t offset) {

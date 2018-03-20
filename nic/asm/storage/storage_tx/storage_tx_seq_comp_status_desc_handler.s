@@ -23,14 +23,12 @@ struct phv_ p;
 storage_tx_seq_comp_status_desc_handler_start:
 
    // Store the various parts of the descriptor in the K+I vectors for later use
-   phvwrpair	p.storage_kivec4_sgl_addr, d.sgl_addr, \
+   phvwrpair	p.storage_kivec4_sgl_aol_addr, d.sgl_aol_addr, \
    	        p.storage_kivec4_data_addr, d.data_addr
    phvwr	p.storage_kivec4_data_len, d.data_len
   
    phvwrpair	p.storage_kivec5_status_addr, d.status_addr, \
    	        p.storage_kivec5_status_len, d.status_len
-   phvwrpair	p.storage_kivec5_status_dma_en, d.status_dma_en, \
-   	        p.storage_kivec5_data_len_from_desc, d.data_len_from_desc
    
    // Order of evaluation of next doorbell and interrupts
    // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
@@ -38,20 +36,21 @@ storage_tx_seq_comp_status_desc_handler_start:
    // 2. If next_db_en is not set and intr_en is not set => do nothing more
 
    // Check if next doorbell is to be enabled and branch
-   seq		c1, d.next_db_en, 1
-   bcf		![c1], check_intr
-   nop
+   bbeq		d.next_db_en, 0, check_intr
+   phvwrpair	p.storage_kivec5_pad_len_shift, d.pad_len_shift, \
+                p.{storage_kivec5_data_len_from_desc...storage_kivec5_sgl_xfer_en}, \
+   	        d.{data_len_from_desc...sgl_xfer_en}    // delay slot
 
    // Ring the sequencer doorbell based on addr/data provided in the descriptor
    SEQUENCER_DOORBELL_RING(dma_p2m_11)
 
    // Done ringing doorbell, don't fire the interrupt in this path
    b		tbl_load
+   nop
 
 check_intr:
    // Check if interrupt is enabled and branch
-   seq		c1, d.intr_en, 1
-   bcf		![c1], tbl_load
+   bbeq		d.intr_en, 0, tbl_load
    nop
 
    // Raise interrupt based on addr/data provided in descriptor

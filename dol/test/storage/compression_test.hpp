@@ -33,6 +33,8 @@ int compress_dualq_flat_4K_buf();
 int seq_compress_dualq_flat_4K_buf();
 int compress_dualq_flat_4K_buf_in_hbm();
 int seq_compress_dualq_flat_4K_buf_in_hbm();
+int compress_output_encrypt();
+int seq_compress_output_encrypt();
 
 }  // namespace tests
 

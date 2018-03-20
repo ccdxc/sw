@@ -8,6 +8,12 @@
 #define BITS_PER_BYTE       8
 #endif
 
+/*
+ * Presumed upper limit in bytes per invocation of write_mem/read_mem
+ */
+#define DP_HBM_WRITE_READ_UPPER_LIMIT   8192
+
+
 namespace dp_mem {
 
 /*
