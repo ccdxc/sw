@@ -677,6 +677,35 @@ capri_mpu_icache_invalidate (void)
     }
 }
 
+
+/* After power on, reset tcam memories.
+ * This will ensure that all tcam entry lines are invalid
+ */
+static void
+capri_tcam_memory_init(bool ingress)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    /* Toggle reset enable bit */
+    if (ingress) {
+        cap_pict_csr_t & pict_csr = cap0.tsi.pict;
+        pict_csr.cfg_tcam_reset.enable(1);
+        pict_csr.cfg_tcam_reset.vec(0xff);
+        pict_csr.cfg_tcam_reset.write();
+        pict_csr.cfg_tcam_reset.enable(0);
+        pict_csr.cfg_tcam_reset.vec(0x00);
+        pict_csr.cfg_tcam_reset.write();
+    } else {
+        cap_pict_csr_t & pict_csr = cap0.tse.pict;
+        pict_csr.cfg_tcam_reset.enable(1);
+        pict_csr.cfg_tcam_reset.vec(0xff);
+        pict_csr.cfg_tcam_reset.write();
+        pict_csr.cfg_tcam_reset.enable(0);
+        pict_csr.cfg_tcam_reset.vec(0x00);
+        pict_csr.cfg_tcam_reset.write();
+    }
+}
+
 void capri_debug_hbm_reset(void);
 int
 capri_table_rw_init (void)
@@ -729,6 +758,12 @@ capri_table_rw_init (void)
 
     capri_mpu_icache_invalidate();
     capri_debug_hbm_reset();
+
+    /* If cold boot, initialize tcam memories */
+    /* ingress pipe tcam memory init */
+    capri_tcam_memory_init(true);
+    /* egress pipe tcam memory init */
+    capri_tcam_memory_init(false);
 
     return (CAPRI_OK);
 }
