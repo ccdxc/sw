@@ -670,7 +670,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             /*
              * Process only when we are expecting something.
              */
-            if (l4_sess->isCtrl == TRUE) {
+            if (l4_sess->isCtrl == TRUE && ftp_info->callback != NULL) {
                 /*
                  * This will only be executed for control channel packets that
                  * would lead to opening up pinholes for FTP data sessions.

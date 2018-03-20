@@ -115,6 +115,7 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     l4_alg_status_t   *exp_flow = NULL;
     hal::flow_key_t    key;
     hal_ret_t          ret;
+    tftp_info_t       *tftp_info = NULL;
 
     HAL_ASSERT(l4_sess != NULL);
 
@@ -148,7 +149,8 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
              * session list and move it to l4 session list
              */
             g_tftp_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess);
-            memset(&(l4_sess->info), 0, sizeof(tftp_info_t));
+            tftp_info = (tftp_info_t *)l4_sess->info;
+            if (tftp_info) tftp_info->callback = NULL;
             HAL_TRACE_DEBUG("Move expected flow to l4 session");
         }
     }
