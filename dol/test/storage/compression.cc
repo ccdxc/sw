@@ -1049,11 +1049,53 @@ int verify_integrity_for_gt64K() {
   return 0;
 }
 
+#define MAX_CPDC_REQ	16 + 2
+#define TMP_BLK_SIZE	8192	/* TBD: parameterize size ... */
+int _max_rate_compress_flat_buf(comp_queue_push_t push_type,
+                           uint32_t seq_comp_qid) {
+  printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
+         __func__, push_type, seq_comp_qid);
+
+  cp_desc_t d;
+
+  InvalidateHdrInHostMem();
+  bzero(&d, sizeof(d));
+
+  d.cmd_bits.comp_decomp_en = 1;
+  d.cmd_bits.insert_header = 1;
+  d.cmd_bits.sha_en = 1;
+
+  d.src = host_mem_pa + kUncompressedDataOffset;
+  d.dst = host_mem_pa + kCompressedDataOffset;
+  d.datain_len = TMP_BLK_SIZE;  // 0 = 64K
+  d.threshold_len = kCompressedBufSize - 8;
+
+  d.status_data = 0x1234;
+
+  cp_status_no_hash_t st = {0};
+  st.partial_data = 0x1234;
+  if (run_cp_test(&d, false, st, push_type, seq_comp_qid) < 0) {
+    printf("Testcase %s failed\n", __func__);
+    return -1;
+  }
+
+  printf("Testcase %s passed\n", __func__);
+
+  // Save compressed data.
+  cp_hdr_t *hdr = (cp_hdr_t *)(host_mem + kCompressedDataOffset);
+  bcopy(hdr, compressed_data_buf, hdr->data_len + 8);
+  compressed_data_size = hdr->data_len + 8;
+
+  return 0;
+}
+
 int _max_data_rate_ex(comp_queue_push_t push_type,
 		uint32_t seq_comp_qid_cp,
 		uint32_t seq_comp_qid_dc) {
   comp_queue_push_t last_push_type;
   cp_desc_t         d;
+
+  _max_rate_compress_flat_buf(COMP_QUEUE_PUSH_HW_DIRECT, 0);
 
   printf("Starting testcase %s push_type %d seq_comp_qid_cp %u "
          "seq_comp_qid_dc %u\n", __func__, push_type,
@@ -1069,13 +1111,10 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
       break;
   }
 
-#define MAX_CPDC_REQ	16 + 2
-#define TMP_BLK_SIZE	8192	/* TBD: parameterize size ... */
-  // uint64_t host_mem_pa_ex[MAX_CPDC_REQ];
   uint64_t host_mem_pa_ex_tmp;
   uint8_t *host_mem_ex[MAX_CPDC_REQ];
   uint8_t *host_mem_ex_tmp;
-  // uint64_t hbm_pa_ex[MAX_CPDC_REQ];
+  uint64_t hbm_pa_ex[MAX_CPDC_REQ];
   uint64_t hbm_pa_ex_tmp;
   uint32_t i;
 
@@ -1087,10 +1126,8 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
     assert(utils::hbm_addr_alloc_page_aligned(kTotalBufSize, &hbm_pa_ex_tmp) == 0);
 
     host_mem_ex[i] = host_mem_ex_tmp;
-    // host_mem_pa_ex[i] = host_mem_pa_ex_tmp;
-    // hbm_pa_ex[i] = hbm_pa_ex_tmp;
+    hbm_pa_ex[i] = hbm_pa_ex_tmp;
 
-    InvalidateHdrInHostMem();
     bzero(&d, sizeof(d));
  
     d.cmd_bits.comp_decomp_en = 1;
@@ -1124,9 +1161,8 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
 
     host_mem_ex[i] = host_mem_ex_tmp;
     // host_mem_pa_ex[i] = host_mem_pa_ex_tmp;
-    // hbm_pa_ex[i] = hbm_pa_ex_tmp;
+    hbm_pa_ex[i] = hbm_pa_ex_tmp;
 
-    InvalidateHdrInHostMem();
     bzero(&d, sizeof(d));
 
     d.cmd_bits.comp_decomp_en = 1;
@@ -1135,7 +1171,7 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
 
     d.src = hbm_pa_ex_tmp + kCompressedDataOffset;
     d.dst = hbm_pa_ex_tmp + kUncompressedDataOffset;
-    d.datain_len = TMP_BLK_SIZE;
+    d.datain_len = compressed_data_size;	// TMP_BLK_SIZE;
     d.threshold_len = TMP_BLK_SIZE * 4;
 
     d.status_addr = host_mem_pa_ex_tmp + kStatusOffset;
@@ -1154,7 +1190,7 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
   comp_queue_post_push(dc_queue);
 
   // Wait for all the interrupts
-  auto func = [host_mem_ex] () -> int {
+  auto func = [host_mem_ex, hbm_pa_ex] () -> int {
     int  i;
     uint64_t *intr_ptr;
     for (i = 0; i < MAX_CPDC_REQ-2; i++) {
@@ -1180,6 +1216,15 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
       if (!s->valid) {
 	      printf("Decompression status is invalid! "
 			      "status: %llx\n", *((unsigned long long *) s));
+	      return -1;
+      }
+      if (s->err != 0) {
+	      printf("ERROR: status err 0x%x is unexpected!\n", s->err);
+	      return -1;
+      }
+      if (s->partial_data != 0x4321) {
+	      printf("ERROR: status partial data 0x%x is unexpected\n",
+			      s->partial_data);
 	      return -1;
       }
     }
