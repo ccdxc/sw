@@ -27,7 +27,7 @@ def TestCaseSetup(tc):
     rs.lqp.rq.qstate.data.roce_opt_ts_value = 0
     rs.lqp.rq.qstate.data.roce_opt_ts_echo = 0
     rs.lqp.rq.qstate.data.roce_opt_mss = 0
-    rs.lqp.rq.qstate.Write()
+    rs.lqp.rq.qstate.WriteWithDelay()
 
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data

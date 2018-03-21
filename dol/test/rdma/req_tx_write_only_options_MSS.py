@@ -35,7 +35,7 @@ def TestCaseSetup(tc):
     rs.lqp.sq.qstate.data.timestamp_echo = tc.pvtdata.roce_opt_ts_echo >> 16
     rs.lqp.sq.qstate.data.mss = tc.pvtdata.roce_opt_mss
 
-    rs.lqp.sq.qstate.Write()
+    rs.lqp.sq.qstate.WriteWithDelay()
 
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
 
@@ -93,5 +93,5 @@ def TestCaseTeardown(tc):
     rs.lqp.sq.qstate.data.timestamp = 0
     rs.lqp.sq.qstate.data.timestamp_echo = 0
     rs.lqp.sq.qstate.data.roce_opt_mss = 0
-    rs.lqp.sq.qstate.Write()
+    rs.lqp.sq.qstate.WriteWithDelay()
     return

@@ -88,7 +88,7 @@ def TestCaseVerify(tc):
             (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
     # validate the key again for further tests
     kt_entry.data.state = 2  
-    kt_entry.Write()
+    kt_entry.WriteWithDelay()
     if not (kt_entry.data.state == 2): # KEY_STATE_VALID = 2
         logger.info("RDMA TestCaseVerify(): Unable to set Rkey to valid state for hw_lif %d qp %s rkey %d " % 
                 (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))

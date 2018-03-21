@@ -35,7 +35,7 @@ def TestCaseStepTrigger(tc, step):
         kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
         tc.pvtdata.r_key_temp_acc_ctrl = kt_entry.data.acc_ctrl
         kt_entry.data.acc_ctrl &= ~0x2 #ACC_CTRL_REMOTE_WRITE
-        kt_entry.Write()
+        kt_entry.WriteWithDelay()
 
 
     
@@ -85,6 +85,6 @@ def TestCaseTeardown(tc):
     #Restore remote write permissions on the RKEY of MR
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
     kt_entry.data.acc_ctrl = tc.pvtdata.r_key_temp_acc_ctrl
-    kt_entry.Write()
+    kt_entry.WriteWithDelay()
 
     return

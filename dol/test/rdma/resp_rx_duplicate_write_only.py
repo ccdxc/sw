@@ -21,7 +21,7 @@ def TestCaseSetup(tc):
     rs.lqp.rq.qstate.data.ack_nak_psn = (rs.lqp.rq.qstate.data.e_psn - 5) & 0xFFFFFF
     rs.lqp.rq.qstate.data.aeth_msn = (rs.lqp.rq.qstate.data.msn - 3) & 0xFFFFFF
     rs.lqp.rq.qstate.data.aeth_syndrome = (0 << 5) | 13
-    rs.lqp.rq.qstate.Write();
+    rs.lqp.rq.qstate.WriteWithDelay();
 
     # Read RQ pre state
     rs.lqp.rq.qstate.Read()

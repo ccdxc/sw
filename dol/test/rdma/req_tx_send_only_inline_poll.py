@@ -27,7 +27,7 @@ def TestCaseSetup(tc):
 
     rs.lqp.sq.qstate.Read()
     rs.lqp.sq.qstate.data.poll_for_work = 1
-    rs.lqp.sq.qstate.Write()
+    rs.lqp.sq.qstate.WriteWithDelay()
 
     # DO NOT ARM CQ and Set EQ's CI=PI for EQ enablement
     #rs.lqp.sq_cq.qstate.ArmCq()
@@ -102,6 +102,6 @@ def TestCaseTeardown(tc):
     rs = tc.config.rdmasession
     logger.info("Clearing poll_for_work in SQCB\n")
     rs.lqp.sq.qstate.data.poll_for_work = 0
-    rs.lqp.sq.qstate.Write()
+    rs.lqp.sq.qstate.WriteWithDelay()
 
     return

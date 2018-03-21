@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import time
 
 import infra.common.objects     as objects
 import model_sim.src.model_wrap as model_wrap
@@ -36,6 +37,14 @@ class RdmaKeyTableEntryObject(object):
         if (GlobalOptions.dryrun): return
         logger.info("Writing KeyTableEntry @0x%x size: %d" % (self.addr, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
+        self.Read()
+
+    def WriteWithDelay(self):
+        if (GlobalOptions.dryrun): return
+        logger.info("Writing KeyTableEntry @0x%x size: %d with delay" % (self.addr, self.size))
+        model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
+        if GlobalOptions.rtl:
+            time.sleep(10)
         self.Read()
 
     def Read(self):

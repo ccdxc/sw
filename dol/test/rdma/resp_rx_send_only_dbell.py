@@ -20,7 +20,7 @@ def TestCaseSetup(tc):
 
     #Set the immdt_as_dbell property on the QP
     rs.lqp.rq.qstate.data.immdt_as_dbell = 1
-    rs.lqp.rq.qstate.Write();
+    rs.lqp.rq.qstate.WriteWithDelay();
 
    # ARM CQ and Set EQ's CI=PI for EQ enablement
     rs.lqp.rq_cq.qstate.ArmCq()
@@ -95,7 +95,7 @@ def TestCaseTeardown(tc):
     #Set the immdt_as_dbell property on the QP
     rs.lqp.rq.qstate.Read()
     rs.lqp.rq.qstate.data.immdt_as_dbell = 0
-    rs.lqp.rq.qstate.Write();
+    rs.lqp.rq.qstate.WriteWithDelay();
 
     logger.info("RDMA TestCaseTeardown() Implementation.")
     return

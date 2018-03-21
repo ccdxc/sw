@@ -31,7 +31,7 @@ def TestCaseSetup(tc):
     #overload timestamp with flow-index only for GFT case.
     if (gftflow != None): 
         rs.lqp.sq.qstate.data.timestamp = gftflow.flow_index 
-        rs.lqp.sq.qstate.Write()
+        rs.lqp.sq.qstate.WriteWithDelay()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
 

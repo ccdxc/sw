@@ -23,7 +23,7 @@ def TestCaseSetup(tc):
 
     #Set the immdt_as_dbell property on the QP
     rs.lqp.rq.qstate.data.immdt_as_dbell = 1
-    rs.lqp.rq.qstate.Write();
+    rs.lqp.rq.qstate.WriteWithDelay();
 
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()
@@ -82,7 +82,7 @@ def TestCaseTeardown(tc):
     rs.lqp.rq.qstate.data.immdt_as_dbell = 0
     rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
     rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.Write();
+    rs.lqp.rq.qstate.WriteWithDelay();
 
     logger.info("RDMA TestCaseTeardown() Implementation.")
     return

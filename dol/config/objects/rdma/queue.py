@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import math
+import time
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -411,6 +412,13 @@ class RdmaQstateObject(object):
         if (GlobalOptions.dryrun): return
         logger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
+
+    def WriteWithDelay(self):
+        if (GlobalOptions.dryrun): return
+        logger.info("Writing Qstate @0x%x Type: %s size: %d with delay" % (self.addr, self.queue_type, self.size))
+        model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
+        if GlobalOptions.rtl:
+            time.sleep(10)
 
     def Read(self):
         if (GlobalOptions.dryrun):
