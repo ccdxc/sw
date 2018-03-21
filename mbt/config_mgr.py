@@ -164,7 +164,9 @@ class ConfigObject():
         api_status = GrpcReqRspMsg.GetApiStatusObject(resp_message)
         print("API response status %s" % api_status)
 
-        if crud_oper._post_cb and should_call_callback:
+        if crud_oper._post_cb:
+            # and should_call_callback:
+            # Post callback should not modify the message
             crud_oper._post_cb.call(self.data, req_message, resp_message)
         self._msg_cache[op_type] = req_message
         return api_status, resp_message
@@ -471,6 +473,15 @@ def GetRefObjectFromKey(key):
     for ref_object in object_helper._reference_objects:
         if ref_object.key_or_handle == key:
             return ref_object
+    return None
+
+# This is used to get the config object being referred to from the key. Used in the context 
+# of callbacks, to retrieve a config object
+def GetConfigObjectFromKey(key):
+    object_helper = cfg_meta_mapper.key_type_to_config[type(key)]
+    for config_object in object_helper._config_objects:
+        if config_object.key_or_handle == key:
+            return config_object
     return None
 
 def CreateConfigFromKeyType(key_type, ext_refs={}, external_constraints=None):

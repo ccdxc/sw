@@ -1,7 +1,7 @@
 ProtoObject: qos_pb2
 Service: QOS
 enabled : True
-dolEnabled : False
+dolEnabled : True
 objects:
     - object:
         name : Qos
@@ -12,7 +12,7 @@ objects:
             request  : QosClassRequestMsg
             response : QosClassResponseMsg
             pre_cb   : callback://qos/PreCreateCb
-            post_cb  : None
+            post_cb  : callback://qos/PostCreateCb
         update:
             api      : QosClassUpdate
             request  : QosClassRequestMsg
