@@ -454,6 +454,6 @@ TEST_F(msrpc_test, app_sess_force_delete) {
     ctx.set_force_delete(TRUE);
     fte_ret = alg_rpc_session_delete_cb(ctx);
     ASSERT_EQ(fte_ret, PIPELINE_CONTINUE);
-    ASSERT_EQ(g_rpc_state->lookup_app_sess(app_sess_key, app_sess), 
+    ASSERT_EQ(g_rpc_state->lookup_app_sess(&app_sess_key, &app_sess), 
                                                HAL_RET_ENTRY_NOT_FOUND); 
 }

@@ -234,36 +234,50 @@ static bool app_sess_compare_key_func (void *key1, void *key2)
 void alg_state::init(const char* feature_name, slab *app_sess_slab,
                    slab *l4_sess_slab, slab *alg_info_slab,
                    app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
-                   l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr) {
-     feature_ = feature_name;
-     app_sess_slab_ = app_sess_slab;
-     l4_sess_slab_ = l4_sess_slab;
-     alg_info_slab_ = alg_info_slab;
-     app_sess_cleanup_hdlr_ = app_sess_clnup_hdlr;
-     l4_sess_cleanup_hdlr_ = l4_sess_clnup_hdlr;
+                     l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr,
+                     ht::ht_get_key_func_t ht_get_key_func,
+                     ht::ht_compute_hash_func_t ht_compute_hash_func,
+                     ht::ht_compare_key_func_t ht_compare_key_func)
+{
+    feature_ = feature_name;
+    app_sess_slab_ = app_sess_slab;
+    l4_sess_slab_ = l4_sess_slab;
+    alg_info_slab_ = alg_info_slab;
+    app_sess_cleanup_hdlr_ = app_sess_clnup_hdlr;
+    l4_sess_cleanup_hdlr_ = l4_sess_clnup_hdlr;
 
-     app_sess_ht_ = sdk::lib::ht::factory(ALG_UTILS_MAX_APP_SESS,
-                                           app_sess_get_key_func,
-                                           app_sess_compute_hash_func,
-                                           app_sess_compare_key_func);
+    if (ht_get_key_func == NULL) {
+        ht_get_key_func = app_sess_get_key_func;
+        ht_compute_hash_func = app_sess_compute_hash_func;
+        ht_compare_key_func = app_sess_compare_key_func;
+    }
 
-     return; 
+    app_sess_ht_ = sdk::lib::ht::factory(ALG_UTILS_MAX_APP_SESS,
+                                         ht_get_key_func,
+                                         ht_compute_hash_func,
+                                         ht_compare_key_func);
+    
 }
 
 alg_state_t *alg_state::factory(const char* feature_name, slab *app_sess_slab,
-                              slab *l4_sess_slab, slab *alg_info_slab,
-                              app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
-                              l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr) {
+                                slab *l4_sess_slab, slab *alg_info_slab,
+                                app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
+                                l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr,
+                                ht::ht_get_key_func_t ht_get_key_func,
+                                ht::ht_compute_hash_func_t ht_compute_hash_func,
+                                ht::ht_compare_key_func_t ht_compare_key_func)
+{
     void         *mem = NULL;
     alg_state    *state = NULL;
-
+    
     mem = (alg_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
-                                       sizeof(alg_state_t));
+                                    sizeof(alg_state_t));
     HAL_ABORT(mem != NULL);
     state = new (mem) alg_state();
     
     state->init(feature_name, app_sess_slab, l4_sess_slab, 
-               alg_info_slab, app_sess_clnup_hdlr, l4_sess_clnup_hdlr);
+                alg_info_slab, app_sess_clnup_hdlr, l4_sess_clnup_hdlr,
+                ht_get_key_func, ht_compute_hash_func, ht_compare_key_func);
 
     return state;
 }
@@ -359,38 +373,46 @@ hal_ret_t alg_state::alloc_and_insert_l4_sess(app_session_t *app_sess,
     return HAL_RET_OK;
 }
 
-hal_ret_t alg_state::lookup_app_sess(hal::flow_key_t key, app_session_t *app_sess) {
-    app_sess = (app_session_t *)app_sess_ht()->lookup((void *)&key);
-    if (app_sess) {
+hal_ret_t alg_state::lookup_app_sess(const void *key, app_session_t **app_sess) {
+    *app_sess = (app_session_t *)app_sess_ht()->lookup((void *)key);
+    if (*app_sess) {
         return HAL_RET_OK;
     }
 
     return HAL_RET_ENTRY_NOT_FOUND;
 }
 
+hal_ret_t alg_state::insert_app_sess(app_session_t *app_session) {
+    sdk_ret_t ret;
+
+    HAL_SPINLOCK_INIT(&app_session->slock, PTHREAD_PROCESS_PRIVATE);
+
+    ret = app_sess_ht()->insert(app_session, &app_session->app_sess_ht_ctxt);
+
+    if (ret == sdk::SDK_RET_OK) {
+        return HAL_RET_OK;
+    } else if (ret == sdk::SDK_RET_ENTRY_EXISTS) {
+        return HAL_RET_ENTRY_EXISTS;
+    }
+
+    return HAL_RET_ERR;
+}
+
 hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_session) {
     hal_ret_t       ret = HAL_RET_OK;
-    app_session_t  *app_sess = NULL;
 
     // Lookup if app session already exists
-    ret = lookup_app_sess(key, app_sess);
+    ret = lookup_app_sess(&key, app_session);
     if (ret != HAL_RET_ENTRY_NOT_FOUND) {
-        *app_session = app_sess;
         return HAL_RET_ENTRY_EXISTS;
     }   
 
-    app_sess = (app_session_t *)app_sess_slab()->alloc();
-    if (app_sess == NULL) {
+    *app_session = (app_session_t *)app_sess_slab()->alloc();
+    if (*app_session == NULL) {
         return HAL_RET_OOM;
     }
-
-    HAL_SPINLOCK_INIT(&app_sess->slock, PTHREAD_PROCESS_PRIVATE);
-    memcpy(&(app_sess)->key, &key, sizeof(hal::flow_key_t));
-    app_sess_ht()->insert(app_sess, &app_sess->app_sess_ht_ctxt);
-
-    *app_session = app_sess;
-
-    return HAL_RET_OK;
+    memcpy(&(*app_session)->key, &key, sizeof(hal::flow_key_t));
+    return insert_app_sess(*app_session);
 }
 
 void alg_state::move_expflow_to_l4sess(app_session_t *app_sess, 

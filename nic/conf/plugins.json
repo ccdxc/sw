@@ -83,7 +83,7 @@
         {
             "name"      : "alg_rtsp",
             "provider"  : "pensando.io",
-            "lib"       : "alg_rpc/libalg_rtsp.so",
+            "lib"       : "alg_rtsp/libalg_rtsp.so",
             "init_func" : "alg_rtsp_init",
             "exit_func" : "alg_rtsp_exit",
             "auto_load" : "true",

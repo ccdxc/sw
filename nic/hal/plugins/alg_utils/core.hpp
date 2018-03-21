@@ -181,9 +181,9 @@ typedef struct l4_alg_status {
     dllist_ctxt_t                   exp_flow_lentry;           // Expected flow list context
 } l4_alg_status_t;
 
-#define alg_status(feature_state_ptr)                        \
-       ((l4_alg_status_t *)((char *)feature_state_ptr -      \
-        offsetof(l4_alg_status_t, fte_feature_state)))
+inline l4_alg_status_t* alg_status(fte::feature_session_state_t *fte_feature_state) {
+    return (l4_alg_status_t *)container_of(fte_feature_state, l4_alg_status_t, fte_feature_state);
+}
 
 #define expected_flow(timer_ptr)                             \
        ((expected_flow_t *)((char *)timer_ptr -              \
@@ -203,15 +203,21 @@ typedef class alg_state alg_state_t;
 class alg_state {
 public:
     static alg_state *factory(const char* feature_name, slab *app_sess_slab, 
-                             slab *l4_sess_slab, slab *alg_info_slab, 
-                             app_sess_cleanup_hdlr_t app_sess_clnup_hdlr, 
-                             l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr);
-
+                              slab *l4_sess_slab, slab *alg_info_slab, 
+                              app_sess_cleanup_hdlr_t app_sess_clnup_hdlr, 
+                              l4_sess_cleanup_hdlr_t exp_flow_clnup_hdlr,
+                              ht::ht_get_key_func_t ht_get_key_func = NULL,
+                              ht::ht_compute_hash_func_t ht_compute_hash_func = NULL,
+                              ht::ht_compare_key_func_t ht_compare_key_func = NULL);
+    
     void init(const char* feature_name, slab *app_sess_slab,
               slab *l4_sess_slab, slab *alg_state_slab,
               app_sess_cleanup_hdlr_t app_sess_clnup_hdlr,
-              l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr);
-
+              l4_sess_cleanup_hdlr_t l4_sess_clnup_hdlr,
+              ht::ht_get_key_func_t ht_get_key_func = NULL,
+              ht::ht_compute_hash_func_t ht_compute_hash_func = NULL,
+              ht::ht_compare_key_func_t ht_compare_key_func = NULL);
+    
     ~alg_state();
 
     void rlock(void) { rwlock_.rlock(); }
@@ -235,7 +241,9 @@ public:
     hal_ret_t alloc_and_insert_l4_sess(app_session_t *app_sess,
                                        l4_alg_status_t **alg_status); 
     hal_ret_t alloc_and_init_app_sess(hal::flow_key_t key, app_session_t **app_sess);
-    hal_ret_t lookup_app_sess(hal::flow_key_t key, app_session_t *app_sess);
+    hal_ret_t insert_app_sess(app_session_t *app_sess);
+    hal_ret_t lookup_app_sess(const void *key, app_session_t **app_sess);
+
     void move_expflow_to_l4sess(app_session_t *app_sess, 
                                 l4_alg_status_t *alg_status);
     l4_alg_status_t *get_next_expflow(app_session_t *app_sess);

@@ -57,7 +57,7 @@ rtsp_next_param(const char* buf, uint32_t len, uint32_t* poff,
         *paramoff = *poff;
     }
     if (paramlen) {
-        *paramlen = off - *poff;        
+        *paramlen = off;        
     }
 
     *poff = off + 1;
@@ -81,11 +81,11 @@ rtsp_parse_start_line(const char *buf, uint32_t len, rtsp_msg_t *msg)
     if (alg_utils::alg_mime_token_cmp(buf, len, &off, RTSP_V1_str(), ' ')) {
         msg->type = RTSP_MSG_RESPONSE;
         msg->ver = RTSP_V1;
-        alg_utils::alg_mime_strtou32(buf+off, &msg->rsp.status_code);
+        alg_utils::alg_mime_strtou32(buf, len, &off, &msg->rsp.status_code);
     } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, RTSP_V2_str(), ' ')) {
         msg->type = RTSP_MSG_RESPONSE;
         msg->ver = RTSP_V2;
-        alg_utils::alg_mime_strtou32(buf+off, &msg->rsp.status_code);
+        alg_utils::alg_mime_strtou32(buf, len, &off, &msg->rsp.status_code);
     } else {
         msg->type =  RTSP_MSG_REQUEST;
         if (alg_utils::alg_mime_token_cmp(buf, len, &off, RTSP_METHOD_SETUP_str(), ' ')) {
@@ -107,6 +107,8 @@ rtsp_parse_start_line(const char *buf, uint32_t len, rtsp_msg_t *msg)
             msg->ver = RTSP_V1;
         } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, RTSP_V2_str(), ' ')) {
             msg->ver = RTSP_V2;
+        } else {
+            return false;
         }
     }
 
@@ -127,7 +129,7 @@ rtsp_parse_cseq_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
         return false;  
     }
 
-    if(alg_utils::alg_mime_strtou32(buf+off, &msg->hdrs.cseq) != 0) {
+    if(alg_utils::alg_mime_strtou32(buf, len, &off, &msg->hdrs.cseq) != 0) {
         msg->hdrs.valid.cseq = 1;
     }
 
@@ -136,35 +138,33 @@ rtsp_parse_cseq_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
 
 //------------------------------------------------------------------------
 // Parse port range
-//
-// Returns no.of bytes read, 0 in case of error
 // ------------------------------------------------------------------------
 inline int
-rtsp_parse_port_range(const char *buf, uint16_t *loport, uint16_t *hiport)
+rtsp_parse_port_range(const char *buf, uint32_t len, uint32_t *poff,
+                      uint16_t *loport, uint16_t *hiport)
 {
-    int nbytes;
+    uint32_t off = *poff;
 
-    nbytes = alg_utils::alg_mime_strtou16(buf, loport);
-    if (nbytes <= 0) {
-        return nbytes;
-    }
+    if (!alg_utils::alg_mime_strtou16(buf, len, &off, loport))
+        return false;
 
-    if (buf[nbytes] != '-') {
+    if (buf[off] != '-') {
         *hiport = *loport;
-        return nbytes;
+    } else {
+        off++;
+        if (!alg_utils::alg_mime_strtou16(buf, len, &off, hiport))
+            return false;
+
+        // If we have a range, assume rtp:
+        // loport must be even, hiport must be loport+1
+        if ((*loport & 0x0001) != 0 || *hiport - *loport > 1) {
+            *loport &= 0xfffe;
+            *hiport = *loport+1;
+        }
     }
 
-    nbytes++;
-    nbytes += alg_utils::alg_mime_strtou16(buf+nbytes, hiport);
-    
-    // If we have a range, assume rtp:
-    // loport must be even, hiport must be loport+1
-    if ((*loport & 0x0001) != 0 || *hiport - *loport > 1) {
-        *loport &= 0xfffe;
-        *hiport = *loport+1;
-    }
-
-    return nbytes;
+    *poff = off;
+    return true;
 }
 
 //------------------------------------------------------------------------
@@ -176,9 +176,9 @@ rtsp_parse_port_range(const char *buf, uint16_t *loport, uint16_t *hiport)
 //   lower-transport     =    "TCP" | "UDP"
 //------------------------------------------------------------------------
 inline bool
-rtsp_parse_transport_proto(const char *buf, uint32_t len, rtsp_transport_t* spec)
+rtsp_parse_transport_proto(const char *buf, uint32_t len, uint32_t *poff, rtsp_transport_t* spec)
 {
-    uint32_t off = 0;
+    uint32_t off = *poff;
  
     // skip proto
     if (!rtsp_next_param(buf, len, &off, '/', NULL, NULL)) {
@@ -198,6 +198,7 @@ rtsp_parse_transport_proto(const char *buf, uint32_t len, rtsp_transport_t* spec
         spec->ip_proto = IP_PROTO_UDP;
     }
 
+    *poff = off;
     return true;
 }
 
@@ -209,23 +210,24 @@ rtsp_parse_transport_proto(const char *buf, uint32_t len, rtsp_transport_t* spec
 //    198.51.100.241:6256
 //------------------------------------------------------------------------
 inline bool
-rtsp_parse_host_port(const char *buf, uint32_t *poff, uint32_t len,
+rtsp_parse_host_port(const char *buf, uint32_t len, uint32_t *poff, 
                      ip_addr_t *addr, uint16_t *port)
 {
     uint32_t off = *poff;
-    const char *addr_end;
+    uint32_t paramoff;
+    uint32_t paramlen;
 
-    addr_end = (const char*) memchr(buf+off, ':', len-off);
-    if (addr_end == NULL) {
+    if (!rtsp_next_param(buf, len, &off, ':', &paramoff, &paramlen)) {
         return false;
     }
 
-    if (addr_end > buf+off) {
-        alg_utils::alg_mime_strtoip(buf+off, addr_end-buf-off, addr);  
-    }
+    // parse host
+    if (paramlen > paramoff)
+        alg_utils::alg_mime_strtoip(buf, paramlen, &paramoff, addr);  
 
-    off = addr_end - buf + 1;
-    off +=  alg_utils::alg_mime_strtou16(buf+off, port);
+    // parse port
+    if (!alg_utils::alg_mime_strtou16(buf, len, &off, port))
+        return false;
 
     *poff = off;
     return true;
@@ -240,11 +242,12 @@ rtsp_parse_host_port(const char *buf, uint32_t *poff, uint32_t len,
 //    "198.51.100.241:6256"
 //------------------------------------------------------------------------
 inline bool
-rtsp_parse_quoted_addr(const char *buf, uint32_t *poff, uint32_t len,
+rtsp_parse_quoted_addr(const char *buf, uint32_t len, uint32_t *poff,
                        ip_addr_t *addr, uint16_t *port)
 {
     uint32_t off = *poff;
-    const char *addr_end;
+    uint32_t paramoff;
+    uint32_t paramlen;
 
     alg_utils::alg_mime_skipws(buf, len, &off);
     if (buf[off] != '"') {
@@ -252,16 +255,15 @@ rtsp_parse_quoted_addr(const char *buf, uint32_t *poff, uint32_t len,
     }
     off++;
 
-    addr_end = (const char*) memchr(buf+off, '"', len-off);
-    if (addr_end == NULL) {
+    if (!rtsp_next_param(buf, len, &off, '"', &paramoff, &paramlen)) {
         return false;
     }
 
-    if(!rtsp_parse_host_port(buf, &off, addr_end-buf, addr, port)) {
+    if(!rtsp_parse_host_port(buf, paramlen, &paramoff, addr, port)) {
         return false;
     }
 
-    *poff = addr_end-buf+1;
+    *poff = off;
     return true;
 }
 
@@ -275,13 +277,13 @@ rtsp_parse_quoted_addr(const char *buf, uint32_t *poff, uint32_t len,
 //    "198.51.100.241:6256"/"198.51.100.241:6257"
 //------------------------------------------------------------------------
 inline bool
-rtsp_parse_addr_list(const char *buf, uint32_t len,
+rtsp_parse_addr_list(const char *buf, uint32_t len, uint32_t *poff,
                      ip_addr_t *addr, uint16_t *port1, uint16_t *port2)
 {
-    uint32_t off = 0;
+    uint32_t off = *poff;
 
 
-    if (!rtsp_parse_quoted_addr(buf, &off, len, addr, port1)) {
+    if (!rtsp_parse_quoted_addr(buf, len, &off, addr, port1)) {
         return false;
     }
 
@@ -289,7 +291,7 @@ rtsp_parse_addr_list(const char *buf, uint32_t len,
 
     if (buf[off] == '/') {
         off++;
-        return rtsp_parse_quoted_addr(buf, &off, len, addr, port2);
+        return rtsp_parse_quoted_addr(buf, len, &off, addr, port2);
     }
 
     return true;
@@ -327,36 +329,32 @@ rtsp_parse_transport_spec(const char *buf, uint32_t len, rtsp_transport_t* spec)
 
     *spec = {};
 
-    while (off < len) {
-        const char *param_end;
-        uint32_t nextparam_off;
+    uint32_t paramoff;
+    uint32_t paramlen;
 
-        param_end = (const char *)memchr(buf+off, ';', len - off);
-        nextparam_off = (param_end == NULL) ? len : param_end - buf + 1;
-
-        if (off == 0) {
-            if (!rtsp_parse_transport_proto(buf, len, spec)) {
+    while (rtsp_next_param(buf, len, &off, ';', &paramoff, &paramlen)) {
+        if (paramoff == 0) {
+            if (!rtsp_parse_transport_proto(buf, paramlen, &paramoff, spec)) {
                 return false;
             }
-        } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, "source", '=')) {
-            alg_utils::alg_mime_strtoip(buf+off, nextparam_off-off-1, &spec->server_ip);
-        } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, "destination", '=')) {
-            alg_utils::alg_mime_strtoip(buf+off, nextparam_off-off-1, &spec->client_ip);
-        } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, "port", '=')) {
-            rtsp_parse_port_range(buf+off, &spec->client_port_start, &spec->client_port_end); 
-        } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, "client_port", '=')) {
-            rtsp_parse_port_range(buf+off, &spec->client_port_start, &spec->client_port_end); 
-        } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, "server_port", '=')) {
-            rtsp_parse_port_range(buf+off, &spec->server_port_start, &spec->server_port_end); 
-        } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, "dest_addr", '=')) {
-            rtsp_parse_addr_list(buf+off, nextparam_off-off-1, &spec->client_ip,
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "source", '=')) {
+            alg_utils::alg_mime_strtoip(buf, paramlen, &paramoff, &spec->server_ip);
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "destination", '=')) {
+            alg_utils::alg_mime_strtoip(buf, paramlen, &paramoff, &spec->client_ip);
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "port", '=')) {
+            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end); 
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "client_port", '=')) {
+            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->client_port_start, &spec->client_port_end); 
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "server_port", '=')) {
+            rtsp_parse_port_range(buf, paramlen, &paramoff, &spec->server_port_start, &spec->server_port_end); 
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "dest_addr", '=')) {
+            rtsp_parse_addr_list(buf, paramlen, &paramoff, &spec->client_ip,
                                  &spec->client_port_start, &spec->client_port_end);
-        } else if (alg_utils::alg_mime_token_cmp(buf, len, &off, "src_addr", '=')) {
-            rtsp_parse_addr_list(buf+off, nextparam_off-off-1, &spec->server_ip,
+        } else if (alg_utils::alg_mime_token_cmp(buf, paramlen, &paramoff, "src_addr", '=')) {
+            rtsp_parse_addr_list(buf, paramlen, &paramoff, &spec->server_ip,
                                  &spec->server_port_start, &spec->server_port_end);
         } 
 
-        off = nextparam_off;
         alg_utils::alg_mime_skipws(buf, len, &off);
     }
 
@@ -441,7 +439,7 @@ rtsp_parse_session_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
 
     off++;
     if (alg_utils::alg_mime_token_cmp(buf, len, &off, "timeout", '=')) {
-        alg_utils::alg_mime_strtou32(buf+off, &msg->hdrs.session.timeout);
+        alg_utils::alg_mime_strtou32(buf, len, &off, &msg->hdrs.session.timeout);
     }
 
     return true;
@@ -462,7 +460,7 @@ rtsp_parse_content_length_header(const char *buf, uint32_t len, rtsp_msg_t*msg)
         return false;  
     }
 
-    if(alg_utils::alg_mime_strtou32(buf+off, &msg->hdrs.content_length) != 0) {
+    if(alg_utils::alg_mime_strtou32(buf, len, &off, &msg->hdrs.content_length) != 0) {
         msg->hdrs.valid.content_length = 1;
     }
 

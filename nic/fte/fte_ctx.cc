@@ -1350,7 +1350,7 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
 
 std::ostream& operator<<(std::ostream& os, const mirror_info_t& val)
 {
-    os << "{mirror_en" << val.mirror_en;
+    os << "{mirror_en=" << val.mirror_en;
     os << " ,ing_mirror_session=" << val.ing_mirror_session;
     os << " ,egr_mirror_session=" << val.egr_mirror_session;
     os << " ,proxy_ing_mirror_session=" << val.proxy_ing_mirror_session;

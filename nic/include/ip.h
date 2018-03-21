@@ -160,6 +160,13 @@ ip_addr_is_equal (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
     return memcmp(ip_addr1, ip_addr2, sizeof(ip_addr_t)) ? false : true;
 }
 
+static inline bool
+ip_addr_is_zero (ip_addr_t *addr)
+{
+    return (addr->af == IP_AF_IPV4) ? addr->addr.v4_addr == 0 :
+        (addr->addr.v6_addr.addr64[0] & addr->addr.v6_addr.addr64[1]) == 0;
+}
+
 static inline bool 
 ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
 {

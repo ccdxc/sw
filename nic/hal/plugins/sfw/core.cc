@@ -281,52 +281,6 @@ net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
     return HAL_RET_OK;
 }
 
-//------------------------------------------------------------------------------
-// extract all the TCP related state from session spec
-//------------------------------------------------------------------------------
-static hal_ret_t
-net_sfw_extract_session_state_from_spec (fte::flow_state_t *flow_state,
-                                 const session::FlowData& flow_data)
-{
-    auto conn_track_info = flow_data.conn_track_info();
-    flow_state->state = flow_data.flow_info().tcp_state();
-    flow_state->tcp_seq_num = conn_track_info.tcp_seq_num();
-    flow_state->tcp_ack_num = conn_track_info.tcp_ack_num();
-    flow_state->tcp_win_sz = conn_track_info.tcp_win_sz();
-    flow_state->tcp_win_scale = conn_track_info.tcp_win_scale();
-    flow_state->tcp_mss = conn_track_info.tcp_mss();
-    flow_state->create_ts = conn_track_info.flow_create_ts();
-    flow_state->last_pkt_ts = flow_state->create_ts;
-    flow_state->packets = conn_track_info.flow_packets();
-    flow_state->bytes = conn_track_info.flow_bytes();
-    flow_state->exception_bmap = conn_track_info.exception_bits();
-
-    return HAL_RET_OK;
-}
-
-
-static inline bool
-net_sfw_conn_tracking_configured(fte::ctx_t &ctx)
-{
-
-    if (ctx.protobuf_request()) {
-        return ctx.sess_spec()->conn_track_en();
-    }
-
-    if (ctx.key().proto != types::IPPROTO_TCP) {
-        return false;
-    }
-
-    // lookup Security profile
-    if (ctx.vrf()->nwsec_profile_handle  != HAL_HANDLE_INVALID) {
-        hal::nwsec_profile_t  *nwsec_prof =
-            find_nwsec_profile_by_handle(ctx.vrf()->nwsec_profile_handle);
-        if (nwsec_prof != NULL) {
-            return nwsec_prof->cnxn_tracking_en;
-        }
-    }
-    return false;
-}
 
 fte::pipeline_action_t
 sfw_exec(fte::ctx_t& ctx)
@@ -343,6 +297,12 @@ sfw_exec(fte::ctx_t& ctx)
     if (expected_flow) {
         ret = expected_flow->handler(ctx, expected_flow);
     }
+    // reset the feature name back to sfw
+    // (expected_flow_handler might have changed the name)
+    // TODO(goli) instead set the feature name to the feature that installed
+    //            the expected flow prior to calling handler, so that handler
+    //            doen't need to do it
+    ctx.set_feature_name(FTE_FEATURE_SFW.c_str()); 
 
     // ToDo (lseshan) - for now handling only ingress rules
     // Need to select SPs based on the flow direction

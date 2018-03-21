@@ -13,8 +13,6 @@ namespace alg_rtsp {
 
 alg_utils::alg_state_t *g_rtsp_state;
 
-const std::string FTE_FEATURE_ALG_RTSP("pensando.io/alg_rtsp:alg_rtsp");
-
 extern "C" hal_ret_t alg_rtsp_init() {
     slab *appsess_slab_ = NULL;
     slab *l4sess_slab_ = NULL;
@@ -32,8 +30,8 @@ extern "C" hal_ret_t alg_rtsp_init() {
                                  true, true, true);
     HAL_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
 
-    rtspinfo_slab_  = slab::factory("rtsp_alg_info", HAL_SLAB_RTSP_ALG_INFO,
-                                     sizeof(rtsp_info_t), 64,
+    rtspinfo_slab_  = slab::factory("rtsp_session", HAL_SLAB_RTSP_ALG_INFO,
+                                     sizeof(rtsp_session_t), 64,
                                     true, true, true);
     HAL_ASSERT_RETURN((rtspinfo_slab_ != NULL), HAL_RET_OOM);
 

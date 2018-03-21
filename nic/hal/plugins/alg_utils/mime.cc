@@ -151,38 +151,46 @@ alg_mime_token_cmp(const char *buf, uint32_t len, uint32_t *offset,
 
 //------------------------------------------------------------------------
 // Parse a string containing a 16-bit unsigned integer.
-// Returns the number of chars used, or zero if no number is found.
 //------------------------------------------------------------------------
-int
-alg_mime_strtou16(const char* pbuf, uint16_t* pval)
+bool
+alg_mime_strtou16(const char* buf, uint32_t len, uint32_t *poff, uint16_t* pval)
 {
-    int n = 0;
+    uint32_t off = *poff;
 
     *pval = 0;
-    while (isdigit(pbuf[n])) {
-        *pval = (*pval * 10) + (pbuf[n] - '0');
-        n++;
+    while (off < len && isdigit(buf[off])) {
+        *pval = (*pval * 10) + (buf[off] - '0');
+        off++;
     }
 
-    return n;
+    if (off == *poff) {
+        return false;
+    }
+
+    *poff = off;
+    return true;
 }
 
 //------------------------------------------------------------------------
 // Parse a string containing a 32-bit unsigned integer.
-// Returns the number of chars used, or zero if no number is found.
 //------------------------------------------------------------------------
-int
-alg_mime_strtou32(const char* pbuf, uint32_t* pval)
+bool
+alg_mime_strtou32(const char* buf, uint32_t len, uint32_t *poff, uint32_t* pval)
 {
-    int n = 0;
+    uint32_t off = *poff;
 
     *pval = 0;
-    while (pbuf[n] >= '0' && pbuf[n] <= '9') {
-        *pval = (*pval * 10) + (pbuf[n] - '0');
-        n++;
+    while (off < len && isdigit(buf[off])) {
+        *pval = (*pval * 10) + (buf[off] - '0');
+        off++;
     }
-    
-    return n;
+
+    if (off == *poff) {
+        return false;
+    }
+
+    *poff = off;
+    return true;
 }
 
 //------------------------------------------------------------------------
@@ -190,28 +198,32 @@ alg_mime_strtou32(const char* pbuf, uint32_t* pval)
 // Returns true on success and false if ip address format is not correct
 //------------------------------------------------------------------------
 bool
-alg_mime_strtoip(const char* pbuf, uint32_t len, ip_addr_t* pval )
+alg_mime_strtoip(const char* buf, uint32_t len, uint32_t *poff, ip_addr_t* pval )
 {
+    uint32_t off = *poff;
+
     char str[INET6_ADDRSTRLEN];
     int ret;
 
-    if (len >= INET6_ADDRSTRLEN) {
+    if (len-off >= INET6_ADDRSTRLEN) {
         return false;
     }
 
-    strncpy(str, pbuf, len);
-    str[len] = '\0';
+    strncpy(str, buf+off, len-off);
+    str[len-off] = '\0';
     
     ret = inet_pton(AF_INET, str, &pval->addr.v4_addr);
     if (ret > 0) {
         pval->af = IP_AF_IPV4;
         pval->addr.v4_addr = ntohl(pval->addr.v4_addr);
+        *poff = len;
         return true;
     }
 
     ret = inet_pton(AF_INET6, str, pval->addr.v6_addr.addr8);
     if (ret > 0) {
         pval->af = IP_AF_IPV6;
+        *poff = len;
         return true;
     }
 
