@@ -24,7 +24,7 @@ import infra.factory.scapyfactory as scapyfactory
 from infra.penscapy.penscapy import *
 from infra.common.logging import logger
 
-logger.set_level(7)
+logger.SetLoggingLevel(7)
 
 a = Ether()/IP()/UDP(sport=49000)
 ipf = Ipfix()

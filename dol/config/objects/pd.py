@@ -7,7 +7,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
@@ -29,7 +29,7 @@ class PdObject(base.ConfigObjectBase):
         self.spec = spec
         self.remote = ep.remote
 
-        self.mrs = objects.ObjectDatabase(cfglogger)
+        self.mrs = objects.ObjectDatabase()
         self.obj_helper_mr = mr.MrObjectHelper()
         mr_spec = spec.mr.Get(Store)
         self.obj_helper_mr.Generate(self, mr_spec)
@@ -37,7 +37,7 @@ class PdObject(base.ConfigObjectBase):
             self.mrs.SetAll(self.obj_helper_mr.mrs)
 
         #CQs
-        self.cqs = objects.ObjectDatabase(cfglogger)
+        self.cqs = objects.ObjectDatabase()
         self.obj_helper_cq = cq.CqObjectHelper()
         cq_spec = spec.cq.Get(Store)
         self.obj_helper_cq.Generate(self, cq_spec)
@@ -45,7 +45,7 @@ class PdObject(base.ConfigObjectBase):
             self.cqs.SetAll(self.obj_helper_cq.cqs)
 
         #EQs
-        self.eqs = objects.ObjectDatabase(cfglogger)
+        self.eqs = objects.ObjectDatabase()
         self.obj_helper_eq = eq.EqObjectHelper()
         eq_spec = spec.eq.Get(Store)
         self.obj_helper_eq.Generate(self, eq_spec)
@@ -53,9 +53,9 @@ class PdObject(base.ConfigObjectBase):
             self.eqs.SetAll(self.obj_helper_eq.eqs)
 
         #QPs
-        self.qps = objects.ObjectDatabase(cfglogger)
-        self.perf_qps = objects.ObjectDatabase(cfglogger)
-        self.udqps = objects.ObjectDatabase(cfglogger)
+        self.qps = objects.ObjectDatabase()
+        self.perf_qps = objects.ObjectDatabase()
+        self.udqps = objects.ObjectDatabase()
         self.obj_helper_qp = qp.QpObjectHelper()
         qp_spec = spec.qp.Get(Store)
         self.obj_helper_qp.Generate(self, qp_spec)
@@ -65,10 +65,10 @@ class PdObject(base.ConfigObjectBase):
             self.perf_qps.SetAll(self.obj_helper_qp.perf_qps)
         if len(self.obj_helper_qp.udqps):
             self.udqps.SetAll(self.obj_helper_qp.udqps)
-        cfglogger.info('PD: %s Total UdQps in the PD : %d ' % (self.GID(), len(self.udqps)))
+        logger.info('PD: %s Total UdQps in the PD : %d ' % (self.GID(), len(self.udqps)))
         #pdudqps = self.udqps.GetAll()
         #for tmpqp in pdudqps:
-        #    cfglogger.info('   Qps: %s' % (tmpqp.GID()))
+        #    logger.info('   Qps: %s' % (tmpqp.GID()))
 
         self.Show()
         return
@@ -88,10 +88,10 @@ class PdObject(base.ConfigObjectBase):
             self.obj_helper_qp.Configure()
 
     def Show(self):
-        cfglogger.info('PD: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
-        cfglogger.info('Qps: %d Perf QPs: %d Mrs: %d' %(len(self.obj_helper_qp.qps), len(self.obj_helper_qp.perf_qps), len(self.obj_helper_mr.mrs)))
-        cfglogger.info('UDQps: %d ' % (len(self.obj_helper_qp.udqps)))
-        cfglogger.info('CQs: %d EQs: %d' % (len(self.obj_helper_cq.cqs), len(self.obj_helper_eq.eqs)))
+        logger.info('PD: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
+        logger.info('Qps: %d Perf QPs: %d Mrs: %d' %(len(self.obj_helper_qp.qps), len(self.obj_helper_qp.perf_qps), len(self.obj_helper_mr.mrs)))
+        logger.info('UDQps: %d ' % (len(self.obj_helper_qp.udqps)))
+        logger.info('CQs: %d EQs: %d' % (len(self.obj_helper_cq.cqs), len(self.obj_helper_eq.eqs)))
 
 class PdObjectHelper:
     def __init__(self):
@@ -99,7 +99,7 @@ class PdObjectHelper:
 
     def Generate(self, ep, spec):
         count = spec.count
-        cfglogger.info("Creating %d Pds. for EP:%s" %\
+        logger.info("Creating %d Pds. for EP:%s" %\
                        (count, ep.GID()))
         for i in range(count):
             pd_id = i if ep.remote else ep.intf.lif.GetPd()
@@ -107,6 +107,6 @@ class PdObjectHelper:
             self.pds.append(pd)
 
     def Configure(self):
-        cfglogger.info("Configuring %d Pds." % len(self.pds)) 
+        logger.info("Configuring %d Pds." % len(self.pds)) 
         for pd in self.pds:
             pd.Configure()

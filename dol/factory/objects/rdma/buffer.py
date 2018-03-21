@@ -4,7 +4,7 @@ import binascii
 import config.resmgr            as resmgr
 
 import infra.factory.base as base
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
 from infra.common.glopts        import GlobalOptions
@@ -39,7 +39,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         if self.address:
             self.mem_handle = resmgr.MemHandle(self.address,
                                                resmgr.HostMemoryAllocator.v2p(self.address))
-        cfglogger.info("Creating Rdma Buffer @0x%x = size: %d offset: %d " %
+        logger.info("Creating Rdma Buffer @0x%x = size: %d offset: %d " %
                        (self.address, self.size, self.offset))
 
     def Write(self):
@@ -48,12 +48,12 @@ class RdmaBufferObject(base.FactoryObjectBase):
         :return:
         """
         if self.address and self.data:
-            cfglogger.info("Writing Buffer @0x%x = size: %d offset: %d " %
+            logger.info("Writing Buffer @0x%x = size: %d offset: %d " %
                        (self.address, self.size, self.offset))
             resmgr.HostMemoryAllocator.write(self.mem_handle,
                                 bytes(self.data[:self.size]))
         else:
-            cfglogger.info("Warning:!! buffer is not bound to an address, Write is ignored !!")
+            logger.info("Warning:!! buffer is not bound to an address, Write is ignored !!")
 
     def Read(self):
         """
@@ -62,23 +62,23 @@ class RdmaBufferObject(base.FactoryObjectBase):
         """
         if self.address:
             self.data = resmgr.HostMemoryAllocator.read(self.mem_handle, self.size)
-            cfglogger.info("Read Buffer @0x%x = size: %d offset: %d crc(data): 0x%x" %
+            logger.info("Read Buffer @0x%x = size: %d offset: %d crc(data): 0x%x" %
                        (self.address, self.size, self.offset, binascii.crc32(self.data)))
         else:
-            cfglogger.info("Warning:!! buffer is not bound to an address, Read is ignored !!")
+            logger.info("Warning:!! buffer is not bound to an address, Read is ignored !!")
 
     def __eq__(self, other):
         # self: Expected, other: Actual
-        cfglogger.info("expected size: %d actual: %d" %(self.size, other.size))
+        logger.info("expected size: %d actual: %d" %(self.size, other.size))
 
         if self.size > other.size: 
            return False
 
-        print('Expected: self_data: [size: %d] %s' % (self.size, binascii.hexlify(bytes(self.data))))
-        print('Actual: other_data: [size: %d] %s' % (self.size, binascii.hexlify(bytes(other.data[:self.size]))))
+        logger.info('Expected: self_data: [size: %d] %s' % (self.size, binascii.hexlify(bytes(self.data))))
+        logger.info('Actual: other_data: [size: %d] %s' % (self.size, binascii.hexlify(bytes(other.data[:self.size]))))
         cmp = bytes(self.data) == bytes(other.data[:self.size])
-        cfglogger.info("comparison: %s" %cmp) 
-        #cfglogger.info("Compare data byte by byte:") 
+        logger.info("comparison: %s" %cmp) 
+        #logger.info("Compare data byte by byte:") 
         #for i in range(self.size):
         #    print ('[%d] %d %d %d : 0x%x 0x%x' % (i, (self.data[i] == other.data[i]),
         #                                              self.data[i], other.data[i],

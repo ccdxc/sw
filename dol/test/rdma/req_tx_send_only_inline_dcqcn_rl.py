@@ -4,7 +4,7 @@ from test.rdma.utils import *
 import pdb
 import copy
 from infra.common.glopts import GlobalOptions
-
+from infra.common.logging import logger as logger
 def Setup(infra, module):
     return
 
@@ -12,7 +12,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     rs.lqp.sq.qstate.data.congestion_mgmt_enable = 1;
@@ -20,7 +20,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
 
-    tc.info("RDMA DCQCN State read/write")
+    logger.info("RDMA DCQCN State read/write")
     # Feeding timestamp from dcqcn_cb since model doesn't support timestamps.
     rs.lqp.ReadDcqcnCb()
     tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
@@ -47,16 +47,16 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
-    tc.info("RDMA TestCaseTrigger() Implementation.")
+    logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
 def TestCaseVerify(tc):
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     return True
 
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
@@ -115,7 +115,7 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     rs.lqp.sq.qstate.data.congestion_mgmt_enable = 0;

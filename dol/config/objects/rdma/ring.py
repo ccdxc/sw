@@ -3,7 +3,7 @@
 import config.resmgr            as resmgr
 import config.objects.ring      as ring
 
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 from infra.factory.store    import FactoryStore
 import config.objects.rdma.doorbell as doorbell
 
@@ -34,7 +34,7 @@ class RdmaRingObject(ring.RingObject):
         self.mem_handle = mem_handle
         self.size = size
         self.desc_size = desc_size
-        cfglogger.info("SetRingParams: host %d nic_resident %d eqe_base_addr: 0x%x" \
+        logger.info("SetRingParams: host %d nic_resident %d eqe_base_addr: 0x%x" \
                        " size %d desc_size %d " %\
                        (self.host, self.nic_resident, self.address, self.size, self.desc_size))
 
@@ -47,7 +47,7 @@ class RdmaRingObject(ring.RingObject):
         #    self.queue.qstate.set_ring_base(self.address)
         #    self.queue.qstate.set_ring_size(self.size)
         # Bind the descriptor to the ring
-        cfglogger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
+        logger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_pindex(0)))
         if self.nic_resident:
             descriptor.mem_handle = None
@@ -56,12 +56,12 @@ class RdmaRingObject(ring.RingObject):
                                                      resmgr.HostMemoryAllocator.v2p(descriptor.address))
 
         descriptor.Write()
-        cfglogger.info('incrementing pindex..')
+        logger.info('incrementing pindex..')
         self.queue.qstate.incr_pindex(0, self.size)
 
         # Increment posted index
         #if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
-        #    cfglogger.info('incrementing pindex..')
+        #    logger.info('incrementing pindex..')
         #    self.queue.qstate.incr_pindex(0)
         # for now, ring doorbell only for SQ.
         # Doorbell ring for RQ will be needed for Prefetch/Cache, will be done later
@@ -69,7 +69,7 @@ class RdmaRingObject(ring.RingObject):
         #    self.doorbell.Ring({})  # HACK
 
     def Consume(self, descriptor):
-        cfglogger.info("Consuming descriptor on Queue(%s) Ring at cindex: %d" % (self.queue.queue_type.purpose.upper(), self.queue.qstate.get_cindex(0)))
+        logger.info("Consuming descriptor on Queue(%s) Ring at cindex: %d" % (self.queue.queue_type.purpose.upper(), self.queue.qstate.get_cindex(0)))
         if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
             descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_proxy_cindex()))
         elif self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_SEND":
@@ -88,7 +88,7 @@ class RdmaRingObject(ring.RingObject):
         # Increment consumer index for CQs and EQs
         if ((self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_CQ") or 
             (self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_EQ")):
-            cfglogger.info('incrementing cindex..')
+            logger.info('incrementing cindex..')
             self.queue.qstate.incr_cindex(0, self.size)
 
     def Read(self):

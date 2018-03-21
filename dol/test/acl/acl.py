@@ -5,11 +5,13 @@ import pdb
 import infra.api.api as InfraApi
 import test.telemetry.telemetry as telemetry
 
+from infra.common.logging import logger as logger
+
 def Setup(infra, module):
 
     iterelem = module.iterator.Get()
 
-    module.logger.info("ACL id - %s" % iterelem.id)
+    logger.info("ACL id - %s" % iterelem.id)
     if 'flow' in iterelem.__dict__:
         module.testspec.selectors.flow.Extend(iterelem.flow)
 

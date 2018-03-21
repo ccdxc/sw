@@ -6,14 +6,14 @@ import infra.common.loader      as loader
 import infra.common.objects     as objects
 
 from infra.factory.store    import FactoryStore
-from infra.common.logging   import memlogger
+from infra.common.logging   import logger
 
 def init():
-    memlogger.info("Loading Descriptor templates.")
+    logger.info("Loading Descriptor templates.")
     objlist = template.ParseDescriptorTemplates()
     FactoryStore.templates.SetAll(objlist)
 
-    memlogger.info("Loading Buffer templates.")
+    logger.info("Loading Buffer templates.")
     objlist = template.ParseBufferTemplates()
     FactoryStore.templates.SetAll(objlist)
 
@@ -30,7 +30,7 @@ def __resolve_refs_obj(obj, tc):
     for a, v in obj.__dict__.items():
         if objects.IsReference(v):
             val = v.Get(tc)
-            tc.info("Resolving spec.fields.%s = " % a, val)
+            logger.info("Resolving spec.fields.%s = " % a, val)
             obj.__dict__[a] = val
         elif objects.IsCallback(v):
             obj.__dict__[a] = v.call(tc, obj)
@@ -47,10 +47,9 @@ def __generate_common(tc, spec, write = True):
     spec = copy.deepcopy(spec)
     template = spec.template.Get(FactoryStore)
     obj = template.CreateObjectInstance()
-    obj.Logger(tc)
     obj.GID(spec.id)
     
-    tc.info("Created MemFactoryObject: %s" % obj.GID())
+    logger.info("Created MemFactoryObject: %s" % obj.GID())
     # Resolve all the references.
     __resolve_refs_obj(spec.fields, tc)
 
@@ -78,7 +77,7 @@ def __generate_descriptors_from_spec(tc, desc_entry):
     tc.descriptors.Add(obj)
 
 def GenerateDescriptors(tc):
-    tc.info("Generating Descriptors")
+    logger.info("Generating Descriptors")
     for desc_entry in tc.testspec.descriptors:
         __generate_descriptors_from_callback(tc, desc_entry)
         __generate_descriptors_from_spec(tc, desc_entry)
@@ -104,7 +103,7 @@ def __generate_buffers_from_callback(tc, buff_entry):
     return
 
 def GenerateBuffers(tc):
-    tc.info("Generating Buffers")
+    logger.info("Generating Buffers")
     for buff_entry in tc.testspec.buffers:
         __generate_buffers_from_spec(tc, buff_entry)
         __generate_buffers_from_callback(tc, buff_entry)

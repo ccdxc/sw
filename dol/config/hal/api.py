@@ -9,7 +9,7 @@ import config.hal.defs      as haldefs
 import grpc
 
 from infra.common.glopts  import GlobalOptions
-from infra.common.logging import cfglogger
+from infra.common.logging import logger
 from mbt_signaling_client import SignalingClient
 
 import types_pb2            as types_pb2
@@ -72,7 +72,7 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
     num_req_specs = len(req_msg.request)
     num_resp_specs = len(resp_msg.response)
     if num_req_specs != num_resp_specs:
-        cfglogger.error(" - Bad # of resp_specs:%d Expected:%d" %\
+        logger.error(" - Bad # of resp_specs:%d Expected:%d" %\
                         (num_resp_specs, num_req_specs))
         assert(0)
 
@@ -82,7 +82,7 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
         req_obj = req_objs[idx]
         getattr(req_obj, respcb)(req_spec, resp_spec)
         if resp_spec.api_status != types_pb2.API_STATUS_OK:
-            cfglogger.error(" HAL Returned API Status:%d" % (resp_spec.api_status))
+            logger.error(" HAL Returned API Status:%d" % (resp_spec.api_status))
             assert(0)
     return
 
@@ -128,7 +128,7 @@ def IsObjectListInFeatureSet(objs):
 def IsConfigAllowed(objs):
     if not len(objs): return False
     if not IsObjectListInFeatureSet(objs):
-        cfglogger.info("Skipping config: Object not in feature set")
+        logger.info("Skipping config: Object not in feature set")
         return False
     if IsHalDisabled(): return False
     return True
@@ -144,15 +144,15 @@ def init():
         port = os.environ['HAL_GRPC_PORT']
     else:
         port = '50054'
-    cfglogger.info("Creating GRPC channel to HAL on port %s" %(port))
+    logger.info("Creating GRPC channel to HAL on port %s" %(port))
     server = 'localhost:' + port
     HalChannel = grpc.insecure_channel(server)
-    cfglogger.info("Waiting for HAL to be ready ...")
+    logger.info("Waiting for HAL to be ready ...")
     grpc.channel_ready_future(HalChannel).result()
-    cfglogger.info("Connected to HAL!")
+    logger.info("Connected to HAL!")
     if GlobalOptions.mbt:
         SignalingClient.Connect()
-        cfglogger.info("Connected to the Model based tester")
+        logger.info("Connected to the Model based tester")
     return
 
 def ConfigureLifs(objlist, update = False):
@@ -443,7 +443,7 @@ def ConfigureLifsForObjects(objlist):
     for obj in objlist:
         lif_objlist.append(obj.lif)
     if not IsConfigAllowed(lif_objlist): return
-    cfglogger.info("Configuring %d LIFs." % len(lif_objlist))
+    logger.info("Configuring %d LIFs." % len(lif_objlist))
     ConfigureLifs(lif_objlist)
     return
 

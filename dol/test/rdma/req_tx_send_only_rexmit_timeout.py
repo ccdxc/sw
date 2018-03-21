@@ -4,7 +4,7 @@ from test.rdma.utils import *
 import pdb
 import copy
 from infra.common.glopts import GlobalOptions
-
+from infra.common.logging import logger as logger
 def Setup(infra, module):
     return
 
@@ -12,7 +12,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
@@ -26,30 +26,30 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseStepTrigger(tc, step):
-    tc.info("RDMA TestCaseStepTrigger() Implementation with step_id: %d" % (step.step_id))
+    logger.info("RDMA TestCaseStepTrigger() Implementation with step_id: %d" % (step.step_id))
     if (GlobalOptions.dryrun): return True
     if step.step_id == 0:
         if tc.pvtdata.test_timer:
-            tc.info("RDMA TestCaseStepTrigger() - Setting the system time for SLOW_TIMER to 0")
+            logger.info("RDMA TestCaseStepTrigger() - Setting the system time for SLOW_TIMER to 0")
             timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
             timer.Step(0)
 
     if step.step_id == 1:
         if tc.pvtdata.test_timer:
-            tc.info("RDMA TestCaseStepTrigger() - Fast Forwarding the system time by by 101 ticks for SLOW_TIMER wheel")
+            logger.info("RDMA TestCaseStepTrigger() - Fast Forwarding the system time by by 101 ticks for SLOW_TIMER wheel")
             timer = tc.infra_data.ConfigStore.objects.db['SLOW_TIMER']
             timer.Step(101)
 
     return
 
 def TestCaseVerify(tc):
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     return True
 
 def TestCaseStepVerify(tc, step):
-    tc.info("RDMA TestCaseStepVerify() Implementation with step_id: %d" % (step.step_id))
+    logger.info("RDMA TestCaseStepVerify() Implementation with step_id: %d" % (step.step_id))
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
@@ -174,5 +174,5 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
     return

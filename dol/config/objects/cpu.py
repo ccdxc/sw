@@ -10,7 +10,7 @@ import config.objects.segment   as segment
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class CpuObject(base.ConfigObjectBase):
@@ -26,7 +26,7 @@ class CpuObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Creating Cpu = %s lif-id=%d" %\
+        logger.info("Creating Cpu = %s lif-id=%d" %\
                        (self.GID(), self.lif_id))
         return
 
@@ -46,7 +46,7 @@ class CpuObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-        cfglogger.info("- Cpu %s = %s (HDL = 0x%x)" %\
+        logger.info("- Cpu %s = %s (HDL = 0x%x)" %\
                        (self.GID(),\
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
@@ -65,7 +65,7 @@ class CpuObject(base.ConfigObjectBase):
             self.hal_handle = get_resp.spec.key_or_handle.if_handle
 
         self.hal_handle = get_resp.status.if_handle;
-        cfglogger.info("- Cpu %s = %s (HDL = 0x%x)" %\
+        logger.info("- Cpu %s = %s (HDL = 0x%x)" %\
                        (self.GID(),\
                         haldefs.common.ApiStatus.Name(get_resp.api_status),\
                         self.hal_handle))
@@ -77,12 +77,12 @@ class CpuObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Cpus" % len(self.objlist))
+        logger.info("Configuring %d Cpus" % len(self.objlist))
         halapi.ConfigureInterfaces(self.objlist)
         return
 
     def GetConf(self):
-        cfglogger.info("Get Config from HAL for %d Cpus" % len(self.objlist))
+        logger.info("Get Config from HAL for %d Cpus" % len(self.objlist))
         halapi.GetInterfaces(self.objlist)
         return
 
@@ -102,7 +102,7 @@ class CpuObjectHelper:
         #     DOL just queries for handle
         #self.Configure()
         self.GetConf()
-        cfglogger.info("Adding %d Cpus to Store." % len(self.objlist))
+        logger.info("Adding %d Cpus to Store." % len(self.objlist))
         return
 
     def GetAll(self):

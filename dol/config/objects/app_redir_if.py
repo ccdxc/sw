@@ -10,7 +10,7 @@ import config.objects.segment   as segment
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class AppRedirIfObject(base.ConfigObjectBase):
@@ -26,7 +26,7 @@ class AppRedirIfObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Creating APP_REDIR_IF = %s lif-id=%d" %\
+        logger.info("Creating APP_REDIR_IF = %s lif-id=%d" %\
                        (self.GID(), self.lif_id))
         return
 
@@ -46,7 +46,7 @@ class AppRedirIfObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-        cfglogger.info("- APP_REDIR_IF %s = %s (HDL = 0x%x)" %\
+        logger.info("- APP_REDIR_IF %s = %s (HDL = 0x%x)" %\
                        (self.GID(),\
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
@@ -59,7 +59,7 @@ class AppRedirIfObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d APP_REDIR_IFs" % len(self.objlist))
+        logger.info("Configuring %d APP_REDIR_IFs" % len(self.objlist))
         halapi.ConfigureInterfaces(self.objlist)
         return
 
@@ -76,7 +76,7 @@ class AppRedirIfObjectHelper:
     def main(self, topospec):
         self.Generate(topospec)
         self.Configure()
-        cfglogger.info("Adding %d APP_REDIR_IFs to Store." % len(self.objlist))
+        logger.info("Adding %d APP_REDIR_IFs to Store." % len(self.objlist))
         return
 
     def GetAll(self):

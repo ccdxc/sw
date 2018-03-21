@@ -4,17 +4,18 @@ from test.rdma.utils import *
 import pdb
 import copy
 from infra.common.glopts import GlobalOptions
+from infra.common.logging import logger as logger
 
 def Setup(infra, module):
     if GlobalOptions.perf:
         module.testspec.selectors.SetMaxRdmaSessions(8)
     iterelem = module.iterator.Get()
 
-    module.logger.info("Iterator Selectors")
+    logger.info("Iterator Selectors")
 
     if iterelem:
         if 'base' in iterelem.rdmasession.__dict__:
-            module.logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
+            logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
             module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
     return
 
@@ -22,7 +23,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     gftflow = tc.config.rdmasession.session.iflow.GetGftFlow()
     
     rs = tc.config.rdmasession
@@ -45,16 +46,16 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
-    tc.info("RDMA TestCaseTrigger() Implementation.")
+    logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
 def TestCaseVerify(tc):
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     return True
 
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
@@ -141,5 +142,5 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
     return

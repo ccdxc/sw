@@ -10,7 +10,7 @@ import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.tcp_proxy_cb        import TcpCbHelper
 
 class ProxyCbServiceObject(base.ConfigObjectBase):
@@ -21,11 +21,11 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Service List for %s" % self.GID())
+        logger.info("Service List for %s" % self.GID())
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        print("Configuring proxy for the flow with label: " + self.session.iflow.label)
+        logger.info("Configuring proxy for the flow with label: " + self.session.iflow.label)
         if self.session.iflow.label == 'TCP-PROXY' or self.session.iflow.label == 'TCP-PROXY-E2E' or \
             self.session.iflow.label == 'PROXY-REDIR':
             req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
@@ -69,7 +69,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.alloc_qid = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'ESP-PROXY':
-            print("Configuring esp ipsec proxy for the flow with label: " + self.session.iflow.label)
+            logger.info("Configuring esp ipsec proxy for the flow with label: " + self.session.iflow.label)
             req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 3
@@ -79,7 +79,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.ipsec_config.encrypt = False
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'IPSEC-PROXY':
-            print("Configuring host ipsec proxy for the flow with label: " + self.session.iflow.label)
+            logger.info("Configuring host ipsec proxy for the flow with label: " + self.session.iflow.label)
             req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 3
@@ -93,11 +93,11 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         if resp_spec.__class__.__name__ == 'ProxyGetFlowInfoResponse':
-            cfglogger.info("Received response %s qid1 %d qid2 %d qtype %d lif_id %d" % (haldefs.common.ApiStatus.Name(resp_spec.api_status), resp_spec.qid1, resp_spec.qid2, resp_spec.qtype, resp_spec.lif_id))
+            logger.info("Received response %s qid1 %d qid2 %d qtype %d lif_id %d" % (haldefs.common.ApiStatus.Name(resp_spec.api_status), resp_spec.qid1, resp_spec.qid2, resp_spec.qtype, resp_spec.lif_id))
             self.qid = resp_spec.qid1
             self.other_qid = resp_spec.qid2
         else:
-            cfglogger.info("Received response %s" % (haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+            logger.info("Received response %s" % (haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
 
 class ProxyCbServiceObjectHelper:

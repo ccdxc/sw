@@ -12,15 +12,14 @@ class DOLTestCase(TestCase):
         self.pendol = module.IsPendolHeaderEnabled()
         self._setup_config(root)
 
-        self.packets        = objects.ObjectDatabase(logger = self)
-        self.descriptors    = objects.ObjectDatabase(logger = self)
-        self.buffers        = objects.ObjectDatabase(logger = self)
-        self.objects        = objects.ObjectDatabase(logger = self)
+        self.packets        = objects.ObjectDatabase()
+        self.descriptors    = objects.ObjectDatabase()
+        self.buffers        = objects.ObjectDatabase()
+        self.objects        = objects.ObjectDatabase()
 
         self.tracker        = module.GetTracker()
         self.coverage       = TestCaseCoverageHelper(self)
-        
-        self._generate()
+        super()._generate()
         return
 
     def IsPendolHeaderEnabled(self):
@@ -56,7 +55,7 @@ class DOLTestCase(TestCase):
         return
 
     def __generate_packets(self):
-        self.info("Generating Packet Objects")
+        logger.info("Generating Packet Objects")
         if self.testspec.packets == None: return
         for pspec in self.testspec.packets:
             self.__generate_packets_from_spec(pspec)
@@ -77,7 +76,7 @@ class DOLTestCase(TestCase):
         if objects.IsCallback(spkt.packet.object):
             tpkt.packet = spkt.packet.object.call(self)
             if tpkt.packet is None:
-                self.info("- Packet Callback return None")
+                logger.info("- Packet Callback return None")
                 return None
         else: # Its a reference
             tpkt.packet = spkt.packet.object.Get(self)
@@ -100,15 +99,15 @@ class DOLTestCase(TestCase):
     def __setup_packets(self, step_id, tcsn, spsn):
         if spsn.packets == None: return
         for spkt in spsn.packets:
-            self.info("- Setting up  Packet: %s:" % spkt)
+            logger.info("- Setting up  Packet: %s:" % spkt)
             tpkt = self.__setup_packet(step_id, spkt)            
             if tpkt is None:
                 continue
 
             self.__setup_packet_ports(tpkt, spkt)
-            self.info("- Adding Packet: %s, Ports :" %\
+            logger.info("- Adding Packet: %s, Ports :" %\
                       tpkt.packet.GID(), tpkt.ports)
-            tpkt.packet.Show(self)
+            tpkt.packet.Show()
             tcsn.packets.append(tpkt)
         return
 
@@ -123,17 +122,17 @@ class DOLTestCase(TestCase):
             else:
                 tc_desc_spec.descriptor.ring   = spec_desc_entry.descriptor.ring.Get(self)
             if tc_desc_spec.descriptor.ring == None: continue
-            self.info("- Adding Descriptor: %s, Ring: %s" %\
+            logger.info("- Adding Descriptor: %s, Ring: %s" %\
                       (tc_desc_spec.descriptor.object.GID(), tc_desc_spec.descriptor.ring.GID()))
             buff = getattr(spec_desc_entry.descriptor, 'buffer', None)
             if buff:
                 tc_desc_spec.descriptor.buffer = spec_desc_entry.descriptor.buffer.Get(self)
-                self.info("  - Expected Buffer: %s" %\
+                logger.info("  - Expected Buffer: %s" %\
                           tc_desc_spec.descriptor.buffer.GID())
                 packet = getattr(spec_desc_entry.descriptor, 'packet', None)
                 if packet:
                     tc_desc_spec.descriptor.packet = spec_desc_entry.descriptor.packet.Get(self)
-                    self.info("  - Expected Packet: %s" %\
+                    logger.info("  - Expected Packet: %s" %\
                               tc_desc_spec.descriptor.packet.GID())
             tcsn.descriptors.append(tc_desc_spec)
         return
@@ -146,7 +145,7 @@ class DOLTestCase(TestCase):
         else:
             tcsn.doorbell.object = spsn.doorbell.object.Get(self)
         tcsn.doorbell.spec = spsn.doorbell.fields
-        self.info("- Adding Doorbell: %s" % tcsn.doorbell.object.GID())
+        logger.info("- Adding Doorbell: %s" % tcsn.doorbell.object.GID())
         return
    
     def __setup_config_objects(self, tcsn, spsn):
@@ -174,11 +173,11 @@ class DOLTestCase(TestCase):
         else:
             tcsn.delay = spdelay
         if tcsn.delay:
-            self.info("  - Adding Delay of %d seconds." % tcsn.delay)
+            logger.info("  - Adding Delay of %d seconds." % tcsn.delay)
         return
 
     def _setup_trigger(self, tcstep, spstep):
-        self.info("- Setting up Trigger.")
+        logger.info("- Setting up Trigger.")
         if spstep.trigger == None: return
         self.__setup_delay(tcstep.trigger, spstep.trigger)
         self.__setup_packets(tcstep.step_id, tcstep.trigger, spstep.trigger)
@@ -188,7 +187,7 @@ class DOLTestCase(TestCase):
         return defs.status.SUCCESS
 
     def _setup_expect(self, tcstep, spstep):
-        self.info("- Setting up Expect.")
+        logger.info("- Setting up Expect.")
         if spstep.expect == None: return
         self.__setup_delay(tcstep.expect, spstep.expect)
         #self.__setup_ignore_excess_packets(tcstep.expect, spstep.expect)

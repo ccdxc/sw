@@ -7,6 +7,7 @@ from config.store import Store
 import config.objects.span as span
 import config.objects.tunnel as tunnel
 import config.objects.tenant as tenant
+from infra.common.logging import logger as logger
 
 erspan_sessions = []
 
@@ -515,7 +516,7 @@ class spanSessionData:
     def clearLocalEpDest(self):
         self._local_ep_dests = []
 
-    def show(self, logger):
+    def show(self):
         logger.info("ERSpan Sesssions")
         for key in self.erspan_sess_map:
             tnl = self.erspan_sess_map[key]
@@ -579,7 +580,7 @@ def setup_span(infra, module, case):
             else:
                 tnl = data.getCurErspanSession(count)
             data.setErspanSession(id - 1, tnl)
-            module.logger.info("Setting SpanSession %s(%d) Dst: %s Src: %s " % (sessname, id - 1, tnl.rtep.get(), tnl.ltep.get())) 
+            logger.info("Setting SpanSession %s(%d) Dst: %s Src: %s " % (sessname, id - 1, tnl.rtep.get(), tnl.ltep.get())) 
             sess.erspan_dest = tnl.GetDestIp()
             sess.erspan_src = tnl.GetSrcIp()
             sess.tenant = tnl.tenant
@@ -603,14 +604,14 @@ def setup_span(infra, module, case):
             lspancount = lspancount + 1
         else:
             dintf = infra.ConfigStore.objects.Get(intf)
-        module.logger.info("Updating Span Session %s on interface %s with type %s" % (sessname, intf, spantype))
+        logger.info("Updating Span Session %s on interface %s with type %s" % (sessname, intf, spantype))
         snaplen = 0
         if pktlen != 0:
             snaplen = pktlen - 14
             if pktlen < 14:
                 snaplen = 1
         sess.Update(snaplen, spantype, dintf)
-    data.show(module.logger)
+    data.show()
     return
 
 def Setup(infra, module):

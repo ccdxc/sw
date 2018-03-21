@@ -9,7 +9,7 @@ import config.resmgr            as resmgr
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class DosPolicyObject(base.ConfigObjectBase):
@@ -135,39 +135,39 @@ class DosPolicyObject(base.ConfigObjectBase):
         return
 
     def __show_service(self, obj):
-        cfglogger.info("  - Service")
+        logger.info("  - Service")
         if obj.icmp_msg is not None:
-            cfglogger.info("    - IcmpMsgType=%s" % obj.icmp_msg.type)
-            cfglogger.info("    - IcmpMsgCode=%s" % obj.icmp_msg.code)
+            logger.info("    - IcmpMsgType=%s" % obj.icmp_msg.type)
+            logger.info("    - IcmpMsgCode=%s" % obj.icmp_msg.code)
         if obj.proto is not None:
-            cfglogger.info("    - Proto     = %s" % obj.proto)
+            logger.info("    - Proto     = %s" % obj.proto)
         if obj.port is not None:
-            cfglogger.info("    - Port      = %s" % obj.port)
+            logger.info("    - Port      = %s" % obj.port)
         return
 
     def __show_flood_limits_common(self, obj, typestr):
         if obj.pps is not None:
-            cfglogger.info("    - %s PPS       : %d" % (typestr, obj.pps))
+            logger.info("    - %s PPS       : %d" % (typestr, obj.pps))
         if obj.burst is not None:
-            cfglogger.info("    - %s Burst PPS : %d" % (typestr, obj.burst))
+            logger.info("    - %s Burst PPS : %d" % (typestr, obj.burst))
         if obj.duration is not None:
-            cfglogger.info("    - %s Duration  : %d" % (typestr, obj.duration))
+            logger.info("    - %s Duration  : %d" % (typestr, obj.duration))
         return
 
     def __show_flood_limits(self, obj, typestr):
-        cfglogger.info("  - %s" % typestr)
+        logger.info("  - %s" % typestr)
         self.__show_flood_limits_common(obj.restrict, 'Restrict')
         self.__show_flood_limits_common(obj.protect, 'Protect')
         return
 
     def __show_dir_common(self, obj, direction):
-        cfglogger.info("- %s" % direction)
+        logger.info("- %s" % direction)
         if obj.peersg is not None:
-            cfglogger.info("  - PeerSG     = %s" % obj.peersg)
+            logger.info("  - PeerSG     = %s" % obj.peersg)
         else:
-            cfglogger.info("  - PeerSG     = None")
+            logger.info("  - PeerSG     = None")
         self.__show_service(obj.service)
-        cfglogger.info("- Flood Limits")
+        logger.info("- Flood Limits")
         self.__show_flood_limits(obj.tcp_syn_flood_limits, 'TCP')
         self.__show_flood_limits(obj.udp_flood_limits, 'UDP')
         self.__show_flood_limits(obj.icmp_flood_limits, 'ICMP')
@@ -175,12 +175,12 @@ class DosPolicyObject(base.ConfigObjectBase):
         return
 
     def Show(self, detail = False):
-        cfglogger.info("DosPolicy = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("- Tenant  = %s" % self.tenant.GID())
-        cfglogger.info("- Label   = %s" % self.label)
-        cfglogger.info("- Security Groups:")
+        logger.info("DosPolicy = %s(%d)" % (self.GID(), self.id))
+        logger.info("- Tenant  = %s" % self.tenant.GID())
+        logger.info("- Label   = %s" % self.label)
+        logger.info("- Security Groups:")
         for s in self.sgs:
-            cfglogger.info("  - %s %s" % (s.GID(), s.GetLabel()))
+            logger.info("  - %s %s" % (s.GID(), s.GetLabel()))
         self.__show_dir_common(self.ingress, 'Ingress')
         self.__show_dir_common(self.egress, 'Egress')
         return
@@ -250,7 +250,7 @@ class DosPolicyObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- DosPolicy %s = %s" %\
+        logger.info("- DosPolicy %s = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.status.dos_handle
         return
@@ -275,7 +275,7 @@ class DosPolicyObjectHelper:
 
     def Configure(self):
         if len(self.dps) == 0: return
-        cfglogger.info("Configuring %d Security Groups" % len(self.dps))
+        logger.info("Configuring %d Security Groups" % len(self.dps))
         halapi.ConfigureDosPolicies(self.dps)
         return
 
@@ -284,7 +284,7 @@ class DosPolicyObjectHelper:
         if dpspec is None:
             return
 
-        cfglogger.info("Creating Dos Policies for Tenant = %s" %\
+        logger.info("Creating Dos Policies for Tenant = %s" %\
                        (tenant.GID()))
         dpspec = dpspec.Get(Store)
         for espec in dpspec.entries:

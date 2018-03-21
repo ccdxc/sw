@@ -14,7 +14,7 @@ import config.objects.multicast_group as multicast_group
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 from config.store               import Store
 
@@ -171,7 +171,7 @@ class SegmentObject(base.ConfigObjectBase):
             self.__pin_interface_for_classic()
         else:
             return
-        cfglogger.info("- %s: Pinning to Interface: %s" %\
+        logger.info("- %s: Pinning to Interface: %s" %\
                        (self.GID(), self.pinnedif))
         return
 
@@ -205,22 +205,22 @@ class SegmentObject(base.ConfigObjectBase):
         return True
 
     def Show(self, detail = False):
-        cfglogger.info("Segment = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("- FabEncap   = %s" % self.fabencap)
-        cfglogger.info("- VLAN       = %d" % self.vlan_id)
+        logger.info("Segment = %s(%d)" % (self.GID(), self.id))
+        logger.info("- FabEncap   = %s" % self.fabencap)
+        logger.info("- VLAN       = %d" % self.vlan_id)
 
         if GlobalOptions.classic is False:
             if not self.IsInfraSegment():
-                cfglogger.info("- VXLAN      = %s" % self.vxlan_id)
-                cfglogger.info("- GIPo       = %s" % self.gipo.get())
-            cfglogger.info("- Native     = %s" % self.native)
+                logger.info("- VXLAN      = %s" % self.vxlan_id)
+                logger.info("- GIPo       = %s" % self.gipo.get())
+            logger.info("- Native     = %s" % self.native)
             if self.blackhole:
-                cfglogger.info("- BlackHole  = %s" % self.blackhole)
-            cfglogger.info("- MAC        = %s" % self.macaddr.get())
-            cfglogger.info("- Subnet     = %s" % self.subnet.get())
-            cfglogger.info("- Subnet6    = %s" % self.subnet6.get())
-        cfglogger.info("- Broadcast  = %s" % self.spec.broadcast)
-        cfglogger.info("- Multicast  = %s" % self.spec.multicast)
+                logger.info("- BlackHole  = %s" % self.blackhole)
+            logger.info("- MAC        = %s" % self.macaddr.get())
+            logger.info("- Subnet     = %s" % self.subnet.get())
+            logger.info("- Subnet6    = %s" % self.subnet6.get())
+        logger.info("- Broadcast  = %s" % self.spec.broadcast)
+        logger.info("- Multicast  = %s" % self.spec.multicast)
         if self.floodlist:
             self.floodlist.Show()
 
@@ -310,7 +310,7 @@ class SegmentObject(base.ConfigObjectBase):
     def AddSecurityGroup(self, sg):
         if self.IsNetworkSgEnabled() == False:
             return
-        cfglogger.info("- Adding SecurityGroup:%s to Segment:%s" %\
+        logger.info("- Adding SecurityGroup:%s to Segment:%s" %\
                        (sg.GID(), self.GID()))
         self.obj_helper_nw.AddSecurityGroup(sg)
         return
@@ -355,7 +355,7 @@ class SegmentObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- Segment %s = %s, vrf_id 0x%x" %\
+        logger.info("- Segment %s = %s, vrf_id 0x%x" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
                            resp_spec.l2segment_status.vrf_id))
         self.hal_handle = resp_spec.l2segment_status.l2segment_handle
@@ -397,7 +397,7 @@ class SegmentObject(base.ConfigObjectBase):
                 self.nw_ids.append(nw_id)
 
         else:
-            cfglogger.error("- Segment %s = %s is missing." %\
+            logger.error("- Segment %s = %s is missing." %\
                        (self.GID(), haldefs.common.ApiStatus.Name(get_resp_spec.api_status)))
             self.id = None
         return
@@ -419,7 +419,7 @@ class SegmentObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Segments." % len(self.segs))
+        logger.info("Configuring %d Segments." % len(self.segs))
         for seg in self.segs:
             seg.ConfigureNetworks()
         halapi.ConfigureSegments(self.segs)
@@ -431,7 +431,7 @@ class SegmentObjectHelper:
         return
 
     def Generate(self, tenant, spec, count):
-        cfglogger.info("Creating %d Segments for Tenant = %s" %\
+        logger.info("Creating %d Segments for Tenant = %s" %\
                        (count, tenant.GID()))
         for s in range(count):
             seg = SegmentObject()
@@ -475,17 +475,17 @@ class SegmentObjectHelper:
             else:
                 self.backend_remote_eps.append(ep)
         #self.backend_remote_eps = self.GetRemoteEps(backend = True)
-        cfglogger.info("Remote L4LB Backend Pool:")
+        logger.info("Remote L4LB Backend Pool:")
         for bend in self.backend_remote_eps:
-            cfglogger.info("- Backend: %s" % bend.GID())
-        cfglogger.info("Remote L4LB Backend Tunneled Pool:")
+            logger.info("- Backend: %s" % bend.GID())
+        logger.info("Remote L4LB Backend Tunneled Pool:")
         for bend in self.backend_remote_eps_tunneled:
-            cfglogger.info("- Tunneled Backend: %s" % bend.GID())
+            logger.info("- Tunneled Backend: %s" % bend.GID())
 
         self.backend_eps = self.GetLocalEps(backend = True)
-        cfglogger.info("L4LB Backend Pool:")
+        logger.info("L4LB Backend Pool:")
         for bend in self.backend_eps:
-            cfglogger.info("- Backend: %s" % bend.GID())
+            logger.info("- Backend: %s" % bend.GID())
         return
 
     def AllocL4LbBackend(self, remote, tnnled, pick_ep_in_l2seg_vxlan):

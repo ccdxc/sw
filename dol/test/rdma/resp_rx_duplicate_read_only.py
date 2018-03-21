@@ -3,7 +3,7 @@
 import copy
 from test.rdma.utils import *
 from infra.common.glopts import GlobalOptions
-
+from infra.common.logging import logger as logger
 def Setup(infra, module):
     return
 
@@ -11,7 +11,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
 
     # Read RQ pre state
@@ -25,17 +25,17 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
-    tc.info("RDMA TestCaseTrigger() Implementation.")
+    logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
 def TestCaseVerify(tc):
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     return True
 
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation.")
-    tc.info("step id: %d" %(step.step_id))
+    logger.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("step id: %d" %(step.step_id))
     rs = tc.config.rdmasession
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     ring1_mask = (rs.lqp.num_rsq_wqes - 1)
@@ -190,5 +190,5 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
     return

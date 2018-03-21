@@ -7,7 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store                      import Store
-from infra.common.logging              import cfglogger
+from infra.common.logging              import logger
 from config.objects.swdr               import SwDscrRingHelper
 from config.objects.crypto_keys        import CryptoKeyHelper
 
@@ -25,7 +25,7 @@ class TlsCbObject(base.ConfigObjectBase):
         self.id = tcpcb.id
         gid = "TlsCb%04d" % self.id
         self.GID(gid)
-        cfglogger.info("  - %s" % self)
+        logger.info("  - %s" % self)
         self.tcpcb = tcpcb 
         self.serq = SwDscrRingHelper.main("SERQ", gid, self.id)
         self.bsq = SwDscrRingHelper.main("BSQ", gid, self.id)
@@ -53,7 +53,7 @@ class TlsCbObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - TlsCb %s = %s" %\
+        logger.info("  - TlsCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'TlsCbResponse':
@@ -111,12 +111,12 @@ class TlsCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TlsCbObject)
-        cfglogger.info("Configuring %d TlsCbs." % len(objlist)) 
+        logger.info("Configuring %d TlsCbs." % len(objlist)) 
         halapi.ConfigureTlsCbs(objlist)
         return
         
     def __gen_one(self, tcpcb):
-        cfglogger.info("Creating TlsCb")
+        logger.info("Creating TlsCb")
         tlscb_obj = TlsCbObject()
         tlscb_obj.Init(tcpcb)
         Store.objects.Add(tlscb_obj)

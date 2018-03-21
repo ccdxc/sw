@@ -10,7 +10,7 @@ import config.objects.rdma.queue as rdma_queue
 import config.hal.defs          as haldefs
 from infra.common.glopts        import GlobalOptions
 from infra.common.defs          import status
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 
 eth_queue_type_ids = {'RX', 'TX', 'ADMIN'}
@@ -35,7 +35,7 @@ class QueueTypeObject(base.ConfigObjectBase):
 
         self.queueid_allocator = objects.TemplateFieldObject("range/0/16384")
 
-        self.queues = objects.ObjectDatabase(cfglogger)
+        self.queues = objects.ObjectDatabase()
         self.need_type_specific_configure = True
         if spec.id in eth_queue_type_ids:
             self.obj_helper_q = eth_queue.EthQueueObjectHelper()
@@ -86,7 +86,7 @@ class QueueTypeObject(base.ConfigObjectBase):
         q_type.entries = self.entries
         return q_type
 
-    def Equals(self, other, lgh=cfglogger):
+    def Equals(self, other, lgh=logger):
         if not isinstance(other, self.__class__):
             return False
         fields = ["id", "type", "purpose", "entries"]
@@ -167,7 +167,7 @@ class QueueTypeObject(base.ConfigObjectBase):
                  self.count))
 
     def Show(self):
-        cfglogger.info(self)
+        logger.info(self)
 
 
 class QueueTypeObjectHelper:

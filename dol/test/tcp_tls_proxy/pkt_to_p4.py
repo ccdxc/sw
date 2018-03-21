@@ -12,6 +12,7 @@ import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 from infra.common.glopts import GlobalOptions
+from infra.common.logging import logger as logger
 
 
 def Setup(infra, module):
@@ -27,7 +28,7 @@ def TestCaseSetup(tc):
         print("skipping config")
         skip_config = True
 
-    tc.pvtdata = ObjectDatabase(logger)
+    tc.pvtdata = ObjectDatabase()
 
     tcp_proxy.SetupProxyArgs(tc)
 
@@ -41,7 +42,7 @@ def TestCaseSetup(tc):
 
     TcpCbHelper.main(id)
     tcbid = "TcpCb%04d" % id
-    tc.module.logger.info("Configuring %s" % tcbid)
+    logger.info("Configuring %s" % tcbid)
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     if not skip_config:
@@ -57,7 +58,7 @@ def TestCaseSetup(tc):
 
     TcpCbHelper.main(other_fid)
     tcbid2 = "TcpCb%04d" % (other_fid)
-    tc.module.logger.info("Configuring %s" % tcbid2)
+    logger.info("Configuring %s" % tcbid2)
     tcb2 = tc.infra_data.ConfigStore.objects.db[tcbid2]
     if not skip_config:
         tcp_proxy.init_tcb_inorder2(tc, tcb2)

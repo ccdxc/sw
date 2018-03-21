@@ -194,54 +194,54 @@ def GetCQColorForMulticastCopy(tc, desc, args = None):
     else:
        color = rq_cq_pre_qstate.color
      
-    tc.info("GetCQColorForMulticastCopy: Lif %s CQid: %d Color: %d" % (lif.GID(), qp.rq_cq.id, color))
+    logger.info("GetCQColorForMulticastCopy: Lif %s CQid: %d Color: %d" % (lif.GID(), qp.rq_cq.id, color))
     return color
 
 def GetCQRingForMulticastCopy(tc, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     ring = __get_ring_from_lif(lif, 'RDMA_CQ', qp.rq_cq.id, 'CQ')
-    tc.info("GetCQRingForLif: %s CQid: %d RxCqRing: %s" % (lif.GID(), qp.rq_cq.id, ring.GID()))
+    logger.info("GetCQRingForLif: %s CQid: %d RxCqRing: %s" % (lif.GID(), qp.rq_cq.id, ring.GID()))
     return ring
 
 def GetRdmaRxRingForMulticastCopy(tc, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     ring = __get_ring_from_lif(lif, 'RDMA_RQ', qp.id, 'RQ')
-    tc.info("GetRdmaRxRingForLif: %s Qid: %s RdmaRxRing: %s" % (lif.GID(), qp.GID(), ring.GID()))
+    logger.info("GetRdmaRxRingForLif: %s Qid: %s RdmaRxRing: %s" % (lif.GID(), qp.GID(), ring.GID()))
     return ring
 
 def GetRdmaRxRingDoorBellForMulticastCopy(tc, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     ring = __get_ring_from_lif(lif, 'RDMA_RQ', qp.id, 'RQ')
-    tc.info("GetRdmaRxRingDoorBellForLif: %s Qid: %s RdmaRxRing: %s" % (lif.GID(), qp.GID(), ring.GID()))
+    logger.info("GetRdmaRxRingDoorBellForLif: %s Qid: %s RdmaRxRing: %s" % (lif.GID(), qp.GID(), ring.GID()))
     return ring.doorbell
 
 def GetQpIdForMulticastCopy(tc, desc, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
-    tc.info("GetCQRingForLif: %s Qid: %s" % (lif.GID(), qp.GID()))
+    logger.info("GetCQRingForLif: %s Qid: %s" % (lif.GID(), qp.GID()))
     return qp.id
 
 def GetEpSlab0ForMulticastCopy(tc, buf, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     slab = qp.pd.ep.slabs.Get('SLAB0000');
-    tc.info("GetEpSlab0ForMulticastCopy: %s Qid: %s Slab: %s" % (lif.GID(), qp.GID(), slab.GID()))
+    logger.info("GetEpSlab0ForMulticastCopy: %s Qid: %s Slab: %s" % (lif.GID(), qp.GID(), slab.GID()))
     return slab
 
 def GetMrSlab0LkeyForMulticastCopy(tc, buf, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     mr = qp.pd.mrs.Get('MR-SLAB0000');
-    tc.info("GetEpSlab0LkeyForMulticastCopy: %s Qid: %s Mr: %s Lkey: %s" % (lif.GID(), qp.GID(), mr.GID(), mr.lkey))
+    logger.info("GetEpSlab0LkeyForMulticastCopy: %s Qid: %s Mr: %s Lkey: %s" % (lif.GID(), qp.GID(), mr.GID(), mr.lkey))
     return mr.lkey
 
 def GetEpSlab1ForMulticastCopy(tc, buf, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     slab = qp.pd.ep.slabs.Get('SLAB0001');
-    tc.info("GetEpSlab0ForMulticastCopy: %s Qid: %s Slab: %s" % (lif.GID(), qp.GID(), slab.GID()))
+    logger.info("GetEpSlab0ForMulticastCopy: %s Qid: %s Slab: %s" % (lif.GID(), qp.GID(), slab.GID()))
     return slab
 
 def GetMrSlab1LkeyForMulticastCopy(tc, buf, args = None):
     (lif, qp) = __get_lif_qp(tc, args)
     mr = qp.pd.mrs.Get('MR-SLAB0001');
-    tc.info("GetEpSlab0LkeyForMulticastCopy: %s Qid: %s Mr: %s Lkey: %s" % (lif.GID(), qp.GID(), mr.GID(), mr.lkey))
+    logger.info("GetEpSlab0LkeyForMulticastCopy: %s Qid: %s Mr: %s Lkey: %s" % (lif.GID(), qp.GID(), mr.GID(), mr.lkey))
     return mr.lkey
 
 def GetAtomicData(tc, pkt, args = None):
@@ -258,7 +258,7 @@ def PickPktTemplate(tc, pkt, args = None):
        template = args.v6
     else:
        template = args.v4
-    tc.info("ChoosePacketTemplateByFlow: Picking %s" % (template))
+    logger.info("ChoosePacketTemplateByFlow: Picking %s" % (template))
     return infra_api.GetPacketTemplate(template)
     
 # return a psn which is pkt_num less than e_psn
@@ -307,5 +307,5 @@ def GetPacketQtag(testcase, packet):
 
 def GetRandomPacketLen(testcase, packet):
     randlen = randint(64, 1000)
-    testcase.info("GetRandomPacketLen: Packet random len %d" % (randlen))
+    logger.info("GetRandomPacketLen: Packet random len %d" % (randlen))
     return randlen

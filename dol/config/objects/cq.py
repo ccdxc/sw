@@ -7,7 +7,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
@@ -72,12 +72,12 @@ class CqObject(base.ConfigObjectBase):
         return  self.__roundup_to_pow_2(len(RdmaCqDescriptor()))
 
     def Show(self):
-        cfglogger.info('CQ: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
-        cfglogger.info('CQ num_wqes: %d wqe_size: %d, EQ-ID: %d' 
+        logger.info('CQ: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
+        logger.info('CQ num_wqes: %d wqe_size: %d, EQ-ID: %d' 
                        %(self.num_cq_wqes, self.cqwqe_size, self.pd.id)) 
 
     def PrepareHALRequestSpec(self, req_spec):
-        cfglogger.info("CQ: %s PD: %s Remote: %s LKey: %d LIF: %d\n" %\
+        logger.info("CQ: %s PD: %s Remote: %s LKey: %d LIF: %d" %\
                         (self.GID(), self.pd.GID(), self.remote, 
                          self.cq_mr.lkey, self.pd.ep.intf.lif.hw_lif_id))
         if (GlobalOptions.dryrun): return
@@ -95,11 +95,11 @@ class CqObject(base.ConfigObjectBase):
                               self.cq_slab.address, 
                               self.num_cq_wqes, 
                               self.cqwqe_size)
-        cfglogger.info("CQ: %s PD: %s Remote: %s LIF: %d cqcb_addr: 0x%x cq_base_addr: 0x%x \n" %\
+        logger.info("CQ: %s PD: %s Remote: %s LIF: %d cqcb_addr: 0x%x cq_base_addr: 0x%x" %\
                         (self.GID(), self.pd.GID(), self.remote, 
                          self.pd.ep.intf.lif.hw_lif_id, 
                          self.cq.GetQstateAddr(), self.cq_slab.address))
-        #self.cq.qstate.data.show()
+        #logger.ShowScapyObject(self.cq.qstate.data)
          
 class CqObjectHelper:
     def __init__(self):
@@ -108,11 +108,11 @@ class CqObjectHelper:
     def Generate(self, pd, spec):
         self.pd = pd
         if self.pd.remote:
-            cfglogger.info("skipping CQ generation for remote PD: %s" %(pd.GID()))
+            logger.info("skipping CQ generation for remote PD: %s" %(pd.GID()))
             return
 
         count = spec.count
-        cfglogger.info("Creating %d Cqs. for PD:%s" %\
+        logger.info("Creating %d Cqs. for PD:%s" %\
                        (count, pd.GID()))
         for i in range(count):
             cq_id = i if pd.remote else pd.ep.intf.lif.GetCqid()
@@ -121,7 +121,7 @@ class CqObjectHelper:
 
     def Configure(self):
         if self.pd.remote:
-            cfglogger.info("skipping CQ configuration for remote PD: %s" %(self.pd.GID()))
+            logger.info("skipping CQ configuration for remote PD: %s" %(self.pd.GID()))
             return
-        cfglogger.info("Configuring %d CQs." % len(self.cqs)) 
+        logger.info("Configuring %d CQs." % len(self.cqs)) 
         halapi.ConfigureCqs(self.cqs)

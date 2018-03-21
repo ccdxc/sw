@@ -6,7 +6,7 @@ import infra.common.defs as defs
 import grpc
 
 from infra.common.glopts    import GlobalOptions
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 
 import interface_pb2        as interface
 import l2segment_pb2        as segment

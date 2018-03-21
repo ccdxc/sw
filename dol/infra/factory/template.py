@@ -9,7 +9,6 @@ import infra.common.objects         as objects
 import infra.common.parser          as parser
 import infra.common.loader          as loader
 
-from infra.common.logging   import pktlogger
 from infra.factory.store    import FactoryStore
 
 class FactoryTemplate(objects.FrameworkTemplateObject):

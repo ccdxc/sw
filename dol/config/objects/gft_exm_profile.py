@@ -7,7 +7,7 @@ import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
 from infra.common.glopts        import GlobalOptions
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class GftExmProfileObject(base.ConfigObjectBase):
@@ -36,13 +36,13 @@ class GftExmProfileObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Creating GFT EXM Profile Object = %s ID=%d" %\
+        logger.info("Creating GFT EXM Profile Object = %s ID=%d" %\
                        (self.GID(), self.id))
-        cfglogger.info("- rdma_flow     : ", self.rdma_flow)
-        cfglogger.info("- table_type    : ", self.table_type)
-        cfglogger.info("- Header Groups:")
+        logger.info("- rdma_flow     : ", self.rdma_flow)
+        logger.info("- table_type    : ", self.table_type)
+        logger.info("- Header Groups:")
         for g in self.groups:
-            cfglogger.info("  - Group: %s" % g.GID())
+            logger.info("  - Group: %s" % g.GID())
         return
 
     def Summary(self):
@@ -76,12 +76,12 @@ class GftExmProfileObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d GFT EXM Profiles." % len(self.objlist))
+        logger.info("Configuring %d GFT EXM Profiles." % len(self.objlist))
         halapi.ConfigureGftExmProfiles(self.objlist)
         return
 
     def ReConfigure(self):
-        cfglogger.info("Updating %d GFT EXM Profiles." % len(self.objlist))
+        logger.info("Updating %d GFT EXM Profiles." % len(self.objlist))
         #halapi.ConfigureGftExmProfiles(self.objlist, update = True)
         return
 
@@ -92,7 +92,7 @@ class GftExmProfileObjectHelper:
         spec = getattr(gftexm_spec, 'profiles', None)
         pfs = spec.Get(Store)
 
-        cfglogger.info("Adding GFT EXM Profiles to Store.")
+        logger.info("Adding GFT EXM Profiles to Store.")
 
         for entry in pfs.profiles:
             profile = entry.profile
@@ -104,7 +104,7 @@ class GftExmProfileObjectHelper:
     def main(self, topospec):
         self.Generate(topospec)
         self.Configure()
-        cfglogger.info("Adding %d GFT EXM Profiles to Store." % len(self.objlist))
+        logger.info("Adding %d GFT EXM Profiles to Store." % len(self.objlist))
         if len(self.objlist) == 0: return
         Store.objects.SetAll(self.objlist)
         return

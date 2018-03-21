@@ -14,8 +14,8 @@ class ALGTrackerObject(base.TrackerObject):
     def __init__(self):
         super().__init__()
 
-    def Init(self, gid, connspec, lg):
-        super().Init(gid, connspec, lg)
+    def Init(self, gid, connspec):
+        super().Init(gid, connspec)
 
     def PktTemplate(self):
         return self.step.PktTemplate()
@@ -29,8 +29,7 @@ class ALGTrackerObject(base.TrackerObject):
         self.step.SetFlowStates(ifstate, rfstate)
         return
 
-    def SetStep(self, stepspec, lg):
-        self.lg = lg
+    def SetStep(self, stepspec, tc):
         step = stepspec.step.Get(TrackerStore)
         self.step = copy.copy(step)
         self.step.SetCpuCopyValid(getattr(stepspec, 'cpu', False))
@@ -39,8 +38,8 @@ class ALGTrackerObject(base.TrackerObject):
         self.step.SetPorts(self.iport, self.rport)
         if 'pkttemplate' in dir(stepspec):
             self.step.SetPktTemplate(getattr(stepspec, 'pkttemplate'))
-        self.step.SetIPs(self.lg)
-        self.step.Show(self.lg)
+        self.step.SetIPs(tc)
+        self.step.Show()
 
 logger.info("Loading Tracker Connection Specs:")
 connection.LoadConnectionSpecs()

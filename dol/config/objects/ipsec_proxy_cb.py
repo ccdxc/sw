@@ -7,7 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.swdr        import SwDscrRingHelper
 from config.objects.crypto_keys        import CryptoKeyHelper
 import config.objects.endpoint  as endpoint
@@ -27,7 +27,7 @@ class IpsecCbObject(base.ConfigObjectBase):
         gid = "IPSECCB%04d" % self.id
         self.GID(gid)
         self.ipseccbq_base = SwDscrRingHelper.main("IPSECCBQ", gid, self.id)
-        cfglogger.info("  - %s" % self)
+        logger.info("  - %s" % self)
         self.crypto_key = CryptoKeyHelper.main() 
         self.new_crypto_key = CryptoKeyHelper.main() 
         self.sip6 = resmgr.TepIpv6SubnetAllocator.get()
@@ -68,7 +68,7 @@ class IpsecCbObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - IPSECCB %s = %s" %\
+        logger.info("  - IPSECCB %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ == 'IpsecCbGetResponse':
@@ -116,12 +116,12 @@ class IpsecCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(IpsecCbObject)
-        cfglogger.info("Configuring %d IpsecCbs." % len(objlist)) 
+        logger.info("Configuring %d IpsecCbs." % len(objlist)) 
         halapi.ConfigureIpsecCbs(objlist)
         return
         
     def __gen_one(self, ):
-        cfglogger.info("Creating IpsecCb")
+        logger.info("Creating IpsecCb")
         ipseccb_obj = IpsecCbObject()
         ipseccb_obj.Init()
         Store.objects.Add(ipseccb_obj)

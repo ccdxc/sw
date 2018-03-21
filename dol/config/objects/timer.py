@@ -3,7 +3,7 @@
 import pdb
 import infra.config.base as base
 import infra.common.objects as objects
-from infra.common.logging import cfglogger
+from infra.common.logging import logger
 from config.store import Store
 
 import model_sim.src.model_wrap as model_wrap
@@ -20,7 +20,7 @@ class Timer(base.ConfigObjectBase):
         self.slowfast = int(spec.slowfast)
         self.ctime = int(spec.ctime)
 
-    def Step(self, ctime, lgh=cfglogger):
+    def Step(self, ctime, lgh=logger):
         lgh.info("Setting Timer %s: ctime %d" % (self.id, ctime))
         model_wrap.step_tmr_wheel_update(self.slowfast, ctime)
 
@@ -40,6 +40,6 @@ class TimerObjectHelper:
 
     def main(self, topospec):
         self.Generate(topospec)
-        cfglogger.info("Adding %d Timers to Store." % len(self.objlist))
+        logger.info("Adding %d Timers to Store." % len(self.objlist))
 
 TimerHelper = TimerObjectHelper()

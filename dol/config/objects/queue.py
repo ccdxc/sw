@@ -11,7 +11,7 @@ import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 class QueueObject(objects.FrameworkObject):
     def __init__(self):
@@ -25,7 +25,7 @@ class QueueObject(objects.FrameworkObject):
 
         self.GID('Q%d' % self.id)
 
-        self.rings      = objects.ObjectDatabase(cfglogger)
+        self.rings      = objects.ObjectDatabase()
         self.obj_helper_ring = ring.EthRingObjectHelper()
         self.obj_helper_ring.Generate(self, spec)
         self.rings.SetAll(self.obj_helper_ring.rings)
@@ -42,9 +42,9 @@ class QueueObject(objects.FrameworkObject):
         pass
 
     def Show(self):
-        cfglogger.info('Queue: %s' % self.GID())
-        cfglogger.info('- type   : %s' % self.queue_type.GID())
-        cfglogger.info('- id     : %s' % self.id)
+        logger.info('Queue: %s' % self.GID())
+        logger.info('- type   : %s' % self.queue_type.GID())
+        logger.info('- id     : %s' % self.id)
 
 class QueueObjectHelper:
     def __init__(self):

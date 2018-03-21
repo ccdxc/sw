@@ -24,7 +24,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.pvtdata = ObjectDatabase(logger)
+    tc.pvtdata = ObjectDatabase()
     tcp_proxy.SetupProxyArgs(tc)
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)

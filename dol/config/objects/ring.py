@@ -4,7 +4,7 @@ import infra.common.defs as defs
 import infra.common.objects as objects
 import config.objects.doorbell as doorbell
 
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 from infra.factory.store    import FactoryStore
 
 class RingObject(objects.FrameworkObject):
@@ -23,22 +23,22 @@ class RingObject(objects.FrameworkObject):
     def Configure(self):
         # 1) Call the backend API to allocate an address for this ring.
         # 2) Initialize all the elements of the ring to default value.
-        cfglogger.warn("RingObject::Configure() - Base Class Implementation - DO NOT USE")
+        logger.warn("RingObject::Configure() - Base Class Implementation - DO NOT USE")
         return
 
     def Post(self, descriptor):
         # 1) Convert descriptor to backend format or bytes
         # 2) Call mem_write of descriptor bytes
-        cfglogger.warn("RingObject::Post() - Base Class Implementation - DO NOT USE")
+        logger.warn("RingObject::Post() - Base Class Implementation - DO NOT USE")
         return
 
     def Read(self, index=None):
         # Read the HW state of the ring.
-        cfglogger.warn("RingObject::Read() - Base Class Implementation - DO NOT USE")
+        logger.warn("RingObject::Read() - Base Class Implementation - DO NOT USE")
         return
 
     def Consume(self, descriptor):
-        cfglogger.warn("RingObject::Consume() - Base Class Implementation - DO NOT USE")
+        logger.warn("RingObject::Consume() - Base Class Implementation - DO NOT USE")
         return
 
 class RingObjectHelper:

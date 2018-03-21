@@ -8,7 +8,7 @@ import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 MAX_ENICS_PER_GROUP = 2
 class MulticastGroupObject(base.ConfigObjectBase):
@@ -32,7 +32,7 @@ class MulticastGroupObject(base.ConfigObjectBase):
 
         self.session_spec = spec.session
 
-        self.oifs = objects.ObjectDatabase(cfglogger)
+        self.oifs = objects.ObjectDatabase()
         self.enic_list = []
         self.uplink_list = []
         return
@@ -59,18 +59,18 @@ class MulticastGroupObject(base.ConfigObjectBase):
         return self.pinnedif.GetRxQosDscp()
 
     def Show(self):
-        cfglogger.info("Multicast Group:%s NumOifs:%d" %\
+        logger.info("Multicast Group:%s NumOifs:%d" %\
                        (self.GID(), len(self.oifs)))
-        cfglogger.info("- type  : %s" % self.type)
-        cfglogger.info("- group : %s" % self.group)
-        cfglogger.info("- l3type: %s" % self.l3type)
-        cfglogger.info("- gip   : %s" % self.gip)
-        cfglogger.info("- OIFs  :")
+        logger.info("- type  : %s" % self.type)
+        logger.info("- group : %s" % self.group)
+        logger.info("- l3type: %s" % self.l3type)
+        logger.info("- gip   : %s" % self.gip)
+        logger.info("- OIFs  :")
         for intf in self.oifs.GetAllInList():
-            cfglogger.info("  - Oif: %s" % (intf.Summary()))
-        cfglogger.info("- ENICs  :")
+            logger.info("  - Oif: %s" % (intf.Summary()))
+        logger.info("- ENICs  :")
         for intf in self.enic_list:
-            cfglogger.info("  - Oif: %s" % (intf.Summary()))
+            logger.info("  - Oif: %s" % (intf.Summary()))
 
         return
 
@@ -106,16 +106,16 @@ class MulticastGroupObject(base.ConfigObjectBase):
             return
         
         if oif.IsAllMulticast():
-            cfglogger.info("Adding ALL MULTICAST oif:%s to enic list only." % oif.GID())
+            logger.info("Adding ALL MULTICAST oif:%s to enic list only." % oif.GID())
             self.enic_list.append(oif)
             return
 
         if self.IsEnabled() == False:
-            cfglogger.info("Skip adding registered ENICs to ALL Multicast Group.")
+            logger.info("Skip adding registered ENICs to ALL Multicast Group.")
             return
 
         if len(self.enic_list) >= MAX_ENICS_PER_GROUP:
-            cfglogger.info("Reached MAX_ENICS_PER_GROUP. Not adding OIF:%s" % (oif.GID()))
+            logger.info("Reached MAX_ENICS_PER_GROUP. Not adding OIF:%s" % (oif.GID()))
             return
 
         self.enic_list.append(oif)
@@ -146,7 +146,7 @@ class MulticastGroupObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- MulticastGroup: %s Status = %s" %\
+        logger.info("- MulticastGroup: %s Status = %s" %\
                        (self.GID(),
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.entry_status.multicast_handle
@@ -199,6 +199,6 @@ class MulticastGroupObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Multicast Groups." % len(self.groups))
+        logger.info("Configuring %d Multicast Groups." % len(self.groups))
         halapi.ConfigureMulticastGroups(self.cfg_groups)
         return

@@ -1,6 +1,6 @@
 #! /usr/bin/python3
-
 import pdb
+from infra.common.logging import logger as logger
 
 def GetTxExpectedPacket(tc, args = None):
     return tc.packets.Get(args.expktid)
@@ -33,12 +33,12 @@ def __get_enic(tc, args):
 def GetPromiscuousEnicRx(tc, args = None):
     enic = tc.config.src.tenant.GetPromiscuousEnic()
     rx = enic.lif.queue_types.Get("RX")
-    tc.info("PromiscuousRxRing: Enic:%s QueueType:%s" % (enic.GID(), rx.GID()))
+    logger.info("PromiscuousRxRing: Enic:%s QueueType:%s" % (enic.GID(), rx.GID()))
     return rx
 
 def GetEncapVlanIdForMulticastCopy(tc, pkt, args = None):
     enic = __get_enic(tc, args)
-    tc.info("MulticastCopy: Enic:%s EncapVlanId:%d" % (enic.GID(), enic.encap_vlan_id))
+    logger.info("MulticastCopy: Enic:%s EncapVlanId:%d" % (enic.GID(), enic.encap_vlan_id))
     return enic.encap_vlan_id
 
 def GetMulticastEnicRx(tc, args = None):
@@ -46,7 +46,7 @@ def GetMulticastEnicRx(tc, args = None):
     #enic = tc.config.src.endpoint.intf
     enic = __get_enic(tc, args)
     rx = enic.lif.queue_types.Get("RX")
-    tc.info("MulticastCopy: Enic:%s QueueType:%s" % (enic.GID(), rx.GID()))
+    logger.info("MulticastCopy: Enic:%s QueueType:%s" % (enic.GID(), rx.GID()))
     return rx
 
 def GetPortsForMulticastCopy(tc, args = None):
@@ -56,14 +56,14 @@ def GetPortsForMulticastCopy(tc, args = None):
     if len(oiflist) < args.idx:
         return None
     upintf = oiflist[args.idx]
-    tc.info("MulticastCopy: Returning Ports for %s" % upintf.GID())
+    logger.info("MulticastCopy: Returning Ports for %s" % upintf.GID())
     return oiflist[args.idx].ports
 
 def GetTxPortsForMulticastCopy(tc, args = None):
     if args is None:
         return None
     upintf = tc.config.src.endpoint.pinintf
-    tc.info("MulticastCopy: Returning Ports for %s" % upintf.GID())
+    logger.info("MulticastCopy: Returning Ports for %s" % upintf.GID())
     return upintf.ports
 
 def GetRxUplinkPorts(tc, args = None):

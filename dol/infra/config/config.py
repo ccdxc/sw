@@ -8,7 +8,7 @@ import infra.common.utils       as utils
 import infra.common.parser      as parser
 import config.hal.api            as halapi
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.config.parser        import ConfigParser as ConfigParser
 from config.store               import Store
 
@@ -22,11 +22,11 @@ import config.objects.session   as session
 import config.objects.security_profile as security_profile
 
 def init():
-    cfglogger.info("Loading Config Object Templates.")
+    logger.info("Loading Config Object Templates.")
     objlist = ConfigParser.ParseTemplates(Store)
     Store.templates.SetAll(objlist)
 
-    cfglogger.info("Loading CONFIG Object Specs")
+    logger.info("Loading CONFIG Object Specs")
     specs = ConfigParser.ParseSpecs(Store)
     Store.specs.SetAll(specs)
     return

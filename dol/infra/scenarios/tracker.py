@@ -9,7 +9,7 @@ class ScenarioSpecParserObject(objects.FrameworkObject):
         return
 
     def Init(self)
-        cfglogger.info("Loading Scenario Labels.")
+        logger.info("Loading Scenario Labels.")
         labelspec = parser.ParseFile('test/scenarios/', labels_file)
 
         return

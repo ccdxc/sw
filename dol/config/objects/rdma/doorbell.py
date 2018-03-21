@@ -1,14 +1,14 @@
 #! /usr/bin/python3
 
 import config.objects.doorbell      as doorbell
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
 
 
 class Doorbell(doorbell.Doorbell):
 
-    def Ring(self, test_spec, lgh=cfglogger):
+    def Ring(self, test_spec, lgh=logger):
         # Address
         upd = getattr(test_spec, 'upd', 0xb)
         queue_type = self.ring.queue.queue_type.type

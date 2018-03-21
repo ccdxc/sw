@@ -1,16 +1,16 @@
 #! /usr/bin/python3
 from infra.common.objects import ObjectDatabase as ObjectDatabase
-from infra.common.logging import cfglogger as cfglogger
+from infra.common.logging import logger as logger
 
 class ConfigStore:
     def __init__(self):
-        self.objects    = ObjectDatabase(cfglogger)
-        self.templates  = ObjectDatabase(cfglogger)
-        self.specs      = ObjectDatabase(cfglogger)
+        self.objects    = ObjectDatabase()
+        self.templates  = ObjectDatabase()
+        self.specs      = ObjectDatabase()
         
         # Custom Database for easy access.
-        self.trunks = ObjectDatabase(cfglogger)
-        self.tunnels = ObjectDatabase(cfglogger)
+        self.trunks = ObjectDatabase()
+        self.tunnels = ObjectDatabase()
         return
 
     def SetTunnels(self, objs):

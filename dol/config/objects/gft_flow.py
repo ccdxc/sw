@@ -10,7 +10,7 @@ import config.hal.defs          as haldefs
 import config.objects.session   as session
 
 from infra.common.glopts        import GlobalOptions
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class GftFlowObject(base.ConfigObjectBase):
@@ -81,27 +81,27 @@ class GftFlowObject(base.ConfigObjectBase):
         self.hal_handle = resp_spec.status.flow_entry_handle
         self.flow_index = resp_spec.status.flow_info_index
 
-        cfglogger.info("- GFT Flow %s = %s(HDL = %x) Flow index = %x" %\
+        logger.info("- GFT Flow %s = %s(HDL = %x) Flow index = %x" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hal_handle, self.flow_index))
 
         return
 
     def Show(self):
-        cfglogger.info("GFT Flow: %s" % self.GID())
-        cfglogger.info("- Match Fields:")
-        cfglogger.info("  - Eth Header  : Smac:%s/Dmac:%s/Etype:%#x" %\
+        logger.info("GFT Flow: %s" % self.GID())
+        logger.info("- Match Fields:")
+        logger.info("  - Eth Header  : Smac:%s/Dmac:%s/Etype:%#x" %\
                        (self.flow.smac.get(), self.flow.dmac.get(), 0x800))
-        cfglogger.info("  - IPv4 Header : Sip:%s/Dip:%s/Proto:%s" %\
+        logger.info("  - IPv4 Header : Sip:%s/Dip:%s/Proto:%s" %\
                        (self.flow.sip.get(), self.flow.dip.get(), self.flow.proto))
         if self.flow.IsUDP():
-            cfglogger.info("  - UDP Header  : Sport:%d/Dport:%d" %\
+            logger.info("  - UDP Header  : Sport:%d/Dport:%d" %\
                            (self.flow.sport, self.flow.dport))
         if self.flow.IsTCP():
-            cfglogger.info("  - TCP Header  : Sport:%d/Dport:%d" %\
+            logger.info("  - TCP Header  : Sport:%d/Dport:%d" %\
                            (self.flow.sport, self.flow.dport))
         if self.flow.IsICMP():
-            cfglogger.info("  - ICMP Header : Type:%d/Code:%d" %\
+            logger.info("  - ICMP Header : Type:%d/Code:%d" %\
                            (self.flow.icmptype, self.flow.icmpcode))
         return
 
@@ -112,7 +112,7 @@ class GftFlowObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d GFT Flows." % len(self.objlist))
+        logger.info("Configuring %d GFT Flows." % len(self.objlist))
         halapi.ConfigureGftFlows(self.objlist)
         return
 
@@ -135,7 +135,7 @@ class GftFlowObjectHelper:
             return
         self.Generate()
         self.Configure()
-        cfglogger.info("Adding %d GFT Flows to Store." % len(self.objlist))
+        logger.info("Adding %d GFT Flows to Store." % len(self.objlist))
         if len(self.objlist) == 0: return
         Store.objects.SetAll(self.objlist)
         return

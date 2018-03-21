@@ -3,7 +3,7 @@ import infra.config.base        as base
 import config.hal.defs          as haldefs
 import infra.common.defs        as defs
 
-from infra.common.logging import cfglogger
+from infra.common.logging import logger
 
 class SvcObject(base.ConfigObjectBase):
     def __init__(self, spec):
@@ -17,7 +17,7 @@ class SvcObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.ip_protocol = self.proto
         proto_str = 'IPPROTO_' + defs.ipprotos.str(self.proto)
-        cfglogger.info("prot %s" %(proto_str))
+        logger.info("prot %s" %(proto_str))
         if proto_str in ('IPPROTO_ICMP', 'IPPROTO_ICMPV6'):
             req_spec.icmp_msg_type = self.icmp_msg_type
         else:

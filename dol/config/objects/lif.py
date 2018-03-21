@@ -10,7 +10,7 @@ import config.objects.queue_type     as queue_type
 import infra.clibs.clibs        as clibs
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 
 import config.hal.api            as halapi
@@ -68,7 +68,7 @@ class LifObject(base.ConfigObjectBase):
         self.vlan_strip_en = False
         self.vlan_insert_en = False
 
-        self.queue_types = objects.ObjectDatabase(cfglogger)
+        self.queue_types = objects.ObjectDatabase()
         self.obj_helper_q = queue_type.QueueTypeObjectHelper()
         self.obj_helper_q.Generate(self, spec)
         self.queue_types.SetAll(self.obj_helper_q.queue_types)
@@ -162,8 +162,8 @@ class LifObject(base.ConfigObjectBase):
         self.obj_helper_q.Configure()
 
     def Show(self):
-        cfglogger.info("- LIF   : %s" % self.GID())
-        cfglogger.info("  - # Queue Types    : %d" % len(self.obj_helper_q.queue_types))
+        logger.info("- LIF   : %s" % self.GID())
+        logger.info("  - # Queue Types    : %d" % len(self.obj_helper_q.queue_types))
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.lif_id = self.id
@@ -199,18 +199,18 @@ class LifObject(base.ConfigObjectBase):
         if self.hw_lif_id == -1:
             # HAL does not return hw_lif_id in the UpdateResponse. Set the hw_lif_id only once.
             self.hw_lif_id = resp_spec.status.hw_lif_id
-        cfglogger.info("- LIF %s = %s HW_LIF_ID = %s (HDL = 0x%x)" %
+        logger.info("- LIF %s = %s HW_LIF_ID = %s (HDL = 0x%x)" %
                        (self.GID(),
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hw_lif_id, self.hal_handle))
         for qstate in resp_spec.qstate:
-            cfglogger.info("- QUEUE_TYPE = %d QSTATE_ADDR = 0x%x" % (qstate.type_num, qstate.addr))
+            logger.info("- QUEUE_TYPE = %d QSTATE_ADDR = 0x%x" % (qstate.type_num, qstate.addr))
             self.qstate_base[qstate.type_num] = qstate.addr
         if self.enable_rdma:
            if resp_spec.rdma_data_valid:
                self.rdma_pt_base_addr = resp_spec.rdma_data.pt_base_addr
                self.rdma_kt_base_addr = resp_spec.rdma_data.kt_base_addr
-           cfglogger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
+           logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x)" %
                           (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr))
 
     def Get(self):
@@ -232,7 +232,7 @@ class LifObject(base.ConfigObjectBase):
         self.ConfigureQueueTypes()
 
     def SetPromiscous(self):
-        cfglogger.info("Setting PROMISCUOUS mode for LIF:%s" % self.GID())
+        logger.info("Setting PROMISCUOUS mode for LIF:%s" % self.GID())
         self.promiscuous = True
         return
 
@@ -240,7 +240,7 @@ class LifObject(base.ConfigObjectBase):
         return self.promiscuous
 
     def SetAllMulticast(self):
-        cfglogger.info("Setting ALL MULTICAST mode for LIF:%s" % self.GID())
+        logger.info("Setting ALL MULTICAST mode for LIF:%s" % self.GID())
         self.allmulticast = True
         return
 
@@ -261,7 +261,7 @@ class LifObjectHelper:
         if namespace is None:
             return
         count = namespace.GetCount()
-        cfglogger.info("Creating %d Lifs. for Tenant:%s NProm:%d NAllmc:%d" %\
+        logger.info("Creating %d Lifs. for Tenant:%s NProm:%d NAllmc:%d" %\
                        (count, tenant.GID(), n_prom, n_allmc))
         for l in range(count):
             lif = LifObject()
@@ -284,14 +284,14 @@ class LifObjectHelper:
             return
         if len(self.lifs) == 0:
             return
-        cfglogger.info("Configuring %d LIFs." % len(self.lifs))
+        logger.info("Configuring %d LIFs." % len(self.lifs))
         halapi.ConfigureLifs(self.lifs)
         for lif in self.lifs:
             lif.ConfigureQueueTypes()
         Store.objects.SetAll(self.lifs)
 
     def Update(self):
-        cfglogger.info("Updating %d LIFs." % len(self.lifs))
+        logger.info("Updating %d LIFs." % len(self.lifs))
         halapi.ConfigureLifs(self.lifs, update=True)
         for lif in self.lifs:
             lif.ConfigureQueueTypes()

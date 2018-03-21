@@ -10,7 +10,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -49,7 +49,7 @@ class FlowEndpointL4LbObject:
         if self.IsTwiceNAT():
             self.service_snat_ip, self.service_snat_ipv6, self.service_snat_port = \
                 self.service.SelectServiceSNat()
-            cfglogger.info("flowepl4obj: snat_ip:%s, snat_ipv6:%s, snat_port:%d" %\
+            logger.info("flowepl4obj: snat_ip:%s, snat_ipv6:%s, snat_port:%d" %\
                   (self.service_snat_ip, self.service_snat_ipv6, self.service_snat_port))
 
     def GetServiceSNatIpAddress(self):
@@ -396,7 +396,7 @@ class FlowEndpointObject(base.ConfigObjectBase):
                 string += "%s" % self.esp_spi
         elif self.IsMAC():
             string += "%04x" % self.ethertype
-        cfglogger.info("- %s: %s" % (prefix, string))
+        logger.info("- %s: %s" % (prefix, string))
 
         if self.IsL4Lb() == False: return
 
@@ -406,10 +406,10 @@ class FlowEndpointObject(base.ConfigObjectBase):
             string += "%s/" % self.proto
             string += "%d" % (self.l4lb.GetBackendPort())
 
-        cfglogger.info("  - Backend: %s" % string)
+        logger.info("  - Backend: %s" % string)
         return
 
-    def ShowTestcaseConfig(self, lg):
+    def ShowTestcaseConfig(self):
         if self.group is not None:
-            lg.info("  - Group : %s" % self.group.Summary())
+            logger.info("  - Group : %s" % self.group.Summary())
         return

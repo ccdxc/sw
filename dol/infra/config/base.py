@@ -8,7 +8,7 @@ import infra.common.objects     as objects
 import infra.common.utils       as utils
 
 from infra.common.glopts   import GlobalOptions as GlobalOptions
-from infra.common.logging  import cfglogger as cfglogger
+from infra.common.logging  import logger as logger
 
 class ConfigObjectBase(objects.FrameworkObject):
     def __init__(self):
@@ -37,7 +37,7 @@ class ConfigObjectBase(objects.FrameworkObject):
         return dict
                 
     def IsFilterMatch(self, filters):
-        cfglogger.verbose("IsFilterMatch(): Object %s" % self.GID())
+        logger.verbose("IsFilterMatch(): Object %s" % self.GID())
         if filters == None:
             return True
         for f in filters:
@@ -46,7 +46,7 @@ class ConfigObjectBase(objects.FrameworkObject):
             if attr == 'any' and value == None:
                 continue
             if attr not in self.__dict__:
-                cfglogger.error("Attr:%s not present in %s." %\
+                logger.error("Attr:%s not present in %s." %\
                                 (attr, self.__class__))
                 assert(0)
                 return False
@@ -59,11 +59,11 @@ class ConfigObjectBase(objects.FrameworkObject):
             if value == 'None': value = None
             if value == 'True': value = True
             if value == 'False': value = False
-            cfglogger.verbose("  - %s: object" % attr, fvalue,
+            logger.verbose("  - %s: object" % attr, fvalue,
                               "filter:", value)
             if fvalue != value:
                 return False
-        cfglogger.verbose("  - Found Match !!")
+        logger.verbose("  - Found Match !!")
         return True
 
     def Equals(self, other):
@@ -116,7 +116,7 @@ class ConfigObjectBase(objects.FrameworkObject):
     def TearDownTestcaseConfig(self, obj):
         return
     
-    def ShowTestcaseConfig(self, obj, logger):
+    def ShowTestcaseConfig(self, obj):
         logger.info("%s Config object :  %s" % (type(self).__name__, self.GID()))
         return
     

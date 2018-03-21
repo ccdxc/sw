@@ -16,7 +16,7 @@ import config.objects.tenant          as tenant
 import config.objects.collector       as collector
 
 from config.store                       import Store
-from infra.common.logging               import cfglogger
+from infra.common.logging               import logger
 import infra.e2e.main as E2E
 
 class E2EObject(base.ConfigObjectBase):
@@ -36,14 +36,14 @@ class E2EObject(base.ConfigObjectBase):
 
     def __print_eps(self, eps):
         for ep in eps:
-            cfglogger.info("\t EP: %s, type : %s" % (ep.GID(),
+            logger.info("\t EP: %s, type : %s" % (ep.GID(),
                             "Remote" if ep.IsRemote() else "Local")) 
         
     def Show(self):
-        cfglogger.info("Created E2E with GID:%s" % self.GID())
-        cfglogger.info("SRC EPS:")
+        logger.info("Created E2E with GID:%s" % self.GID())
+        logger.info("SRC EPS:")
         self.__print_eps(self.src_eps)
-        cfglogger.info("DST EPS:")
+        logger.info("DST EPS:")
         self.__print_eps(self.dst_eps)
 
     def SetupTestcaseConfig(self, obj):

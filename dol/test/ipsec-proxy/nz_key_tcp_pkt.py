@@ -34,7 +34,7 @@ def TestCaseSetup(tc):
     global iv
     global seq
 
-    tc.pvtdata = ObjectDatabase(logger)
+    tc.pvtdata = ObjectDatabase()
     print("TestCaseSetup(): Sample Implementation.")
     # 1. Configure IPSECCB in HBM before packet injection
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]

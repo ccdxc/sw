@@ -10,7 +10,6 @@ class InfraUtDoorbell(base.FactoryObjectBase):
         return
 
     def Init(self, qid):
-        #self.logger.info("Initializing INFRA_UT_TX_DESCRITOR %s" % self.GID())
         self.qid = qid
         return
 

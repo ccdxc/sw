@@ -123,13 +123,13 @@ class CrPacket:
         return self.__get_pkt_match_degree(rxpkt)
 
 
-    def Show(self, lgh):
-        self.spktobj.Show(lgh)
-        lgh.info("Packet Length = %d" % self.pktlen)
+    def Show(self):
+        self.spktobj.Show()
+        logger.info("Packet Length = %d" % self.pktlen)
         return
 
 class CrPacketPair:
-    def __init__(self, expkt, rxpkt, pid, lg = logger):
+    def __init__(self, expkt, rxpkt, pid):
         if expkt and isinstance(expkt, CrPacket) is False:
             pdb.set_trace()
         if rxpkt and isinstance(rxpkt, CrPacket) is False:
@@ -143,7 +143,6 @@ class CrPacketPair:
 
         self.degree = self.__get_degree()
         self.match  = None
-        self.lg     = lg
         return
     
     def __get_degree(self):
@@ -176,11 +175,11 @@ class CrPacketPair:
             for f in fields:
                 setattr(ehdr, f, 0)
                 setattr(ahdr, f, 0)
-                self.lg.warn("- Header:%s Field:%s is ignored. !!" % (hdr, f))
+                logger.warn("- Header:%s Field:%s is ignored. !!" % (hdr, f))
         return
 
     def Match(self):
-        self.lg.info("Matching Packets: %s" % self.__get_pair_id())
+        logger.info("Matching Packets: %s" % self.__get_pair_id())
         if self.expkt is None or self.rxpkt is None:
             return False
 
@@ -199,27 +198,27 @@ class CrPacketPair:
         return self.match
 
     def __show_missing(self):
-        self.lg.error("Missing Packet: %s" % self.__expstr())
+        logger.error("Missing Packet: %s" % self.__expstr())
         return
 
     def __show_excess(self):
-        self.lg.error("Excess Packet: %s" % self.__rxstr())
+        logger.error("Excess Packet: %s" % self.__rxstr())
         return
 
     def __show_hdr_mismatch(self, ehdr, ahdr):
         efields = ehdr.fields
         afields = ahdr.fields
 
-        self.lg.error("Header: %s" % ehdr.__class__.__name__)
+        logger.error("Header: %s" % ehdr.__class__.__name__)
         for efk,efv in efields.items():
             afv = afields[efk]
             if efv == afv: continue
-            self.lg.error("  Field: %s : Exp = %s, Actual = %s" %\
+            logger.error("  Field: %s : Exp = %s, Actual = %s" %\
                            (efk, str(efv), str(afv)))
         return
 
     def __show_mismatch(self):
-        self.lg.error("Packets Mismatch: %s" % self.__get_pair_id())
+        logger.error("Packets Mismatch: %s" % self.__get_pair_id())
         for hpair in self.mismatch_hdrs:
             ehdr = hpair[0]
             ahdr = hpair[1]
@@ -228,7 +227,7 @@ class CrPacketPair:
         return
 
     def __show_match(self):
-        self.lg.info("Packets Match: %s" % self.__get_pair_id())
+        logger.info("Packets Match: %s" % self.__get_pair_id())
         return
 
     def ShowResults(self):
@@ -252,7 +251,7 @@ class CrPacketPair:
 
 # Packet Comparator for Scapy packets.
 class PacketComparator:
-    def __init__(self, lg = logger):
+    def __init__(self):
         self.eid    = 0
         self.rid    = 0
         self.pid    = 0
@@ -261,7 +260,6 @@ class PacketComparator:
         self.dpm    = {} # Degree x Pair Matrix
         self.pairs  = {}
         self.match  = True
-        self.lg     = lg
         return
 
     def __add_pair_to_dpm(self, deg, epid, rpid):
@@ -269,14 +267,14 @@ class PacketComparator:
             return
         if deg not in self.dpm:
             self.dpm[deg] = []
-        self.lg.debug("Adding DPM entry Deg:%d Epid:%s Rpid:%s" %\
+        logger.debug("Adding DPM entry Deg:%d Epid:%s Rpid:%s" %\
                       (deg, epid, rpid))
         self.dpm[deg].append((epid, rpid))
         return
 
     def __build_dpm(self):
         for epktid,epkt in self.expkts.items():
-            self.lg.debug("Searching for BestPkt for Expkt:%s" % epktid)
+            logger.debug("Searching for BestPkt for Expkt:%s" % epktid)
             for rpktid,rpkt in self.rxpkts.items():
                 deg = epkt.GetMatchDegree(rpkt)
                 self.__add_pair_to_dpm(deg, epktid, rpktid)
@@ -284,8 +282,8 @@ class PacketComparator:
 
     def __add_pair(self, epkt, rpkt):
         self.pid += 1
-        self.lg.debug("- Adding new pair id = %s" % self.pid)
-        pair = CrPacketPair(epkt, rpkt, self.pid, self.lg)
+        logger.debug("- Adding new pair id = %s" % self.pid)
+        pair = CrPacketPair(epkt, rpkt, self.pid)
         self.pairs[self.pid] = pair
         return
 
@@ -296,13 +294,13 @@ class PacketComparator:
             epkt = self.expkts[epid]
         else:
             # Expkt is already added by a pair with better degree.
-            self.lg.debug("- Epid:%s used already..skipping." % epid)
+            logger.debug("- Epid:%s used already..skipping." % epid)
             return
 
         if rpid in self.rxpkts:
             rpkt = self.rxpkts[rpid]
         else:
-            self.lg.debug("- Rpid:%s used already..skipping." % rpid)
+            logger.debug("- Rpid:%s used already..skipping." % rpid)
             return
             
         del self.expkts[epid]
@@ -315,7 +313,7 @@ class PacketComparator:
         for deg in sorted(self.dpm.keys(), reverse=True):
             pairs = self.dpm[deg]
             for p in pairs:
-                self.lg.debug("Processing pair: Deg:%d Epid:%s Rpid:%s" %\
+                logger.debug("Processing pair: Deg:%d Epid:%s Rpid:%s" %\
                               (deg, p[0], p[1]))
                 self.__add_dpm_pair(p[0], p[1])
 
@@ -347,9 +345,9 @@ class PacketComparator:
         spkt = self.__add_padding(spkt, ports)
         self.eid += 1
         epgid = '%s::%d' % (pktid, self.eid)
-        self.lg.info("EXPECTED RX Packet: %s, Ports: " % epgid, ports)
+        logger.info("EXPECTED RX Packet: %s, Ports: " % epgid, ports)
         epobj = CrPacket(pktid, spkt, ports)
-        epobj.Show(self.lg)
+        epobj.Show()
         assert(epgid not in self.expkts)
         self.expkts[epgid] = epobj
         return
@@ -359,10 +357,10 @@ class PacketComparator:
             spkt = self.__add_padding(spkt, ports)
         self.rid += 1
         rpgid = 'RXPKT%d' % self.rid
-        self.lg.info("ACTUAL RX Packet: %s, Ports: " % rpgid, ports)
-        scapyfactory.ScapyPacketObject.ShowRawPacket(spkt, self.lg)
+        logger.info("ACTUAL RX Packet: %s, Ports: " % rpgid, ports)
+        scapyfactory.ScapyPacketObject.ShowRawPacket(spkt)
         rpobj = CrPacket(rpgid, spkt, ports)
-        rpobj.Show(self.lg)
+        rpobj.Show()
         self.rxpkts[rpobj.pktid] = rpobj
         return
 

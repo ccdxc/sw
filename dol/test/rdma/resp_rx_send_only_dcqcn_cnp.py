@@ -2,7 +2,7 @@
 
 from test.rdma.utils import *
 from infra.common.glopts import GlobalOptions
-
+from infra.common.logging import logger as logger
 def Setup(infra, module):
     return
 
@@ -10,7 +10,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
 
     tc.pvtdata.num_total_bytes = 0x40
@@ -22,7 +22,7 @@ def TestCaseSetup(tc):
 
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
 
-    tc.info("RDMA DCQCN State read/write")
+    logger.info("RDMA DCQCN State read/write")
     rs.lqp.ReadDcqcnCb()
     tc.pvtdata.dcqcn_pre_qstate = rs.lqp.dcqcn_data
     # Setting target rate to 100 gbps and rate-enforced to 10 gbps
@@ -40,12 +40,12 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
-    tc.info("RDMA TestCaseTrigger() Implementation.")
+    logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
@@ -191,7 +191,7 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
     #Disable congestion mgmt in qstate
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()                        

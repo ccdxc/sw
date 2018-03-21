@@ -1014,10 +1014,9 @@ def IsCallback(field):
 
 
 class ObjectDatabase(FrameworkObject):
-    def __init__(self, logger):
+    def __init__(self):
         super().__init__()
         self.db = OrderedDict()
-        self.logger = logger
         return
 
     def __len__(self):
@@ -1044,7 +1043,7 @@ class ObjectDatabase(FrameworkObject):
         if key in self.db:
             print("ERROR: Duplicate Key : %s" % key)
             assert(0)
-        if self.logger: self.logger.info("- Adding %s to store." % key)
+        logger.info("- Adding %s to store." % key)
         self.db[key] = data
         return
 

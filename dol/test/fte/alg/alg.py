@@ -3,7 +3,7 @@ import test.fte.alg.tracker.tracker as trackermod
 
 def InitTracker(infra, module):
     tracker = trackermod.ALGTrackerObject()
-    tracker.Init(module.name, module.args.connspec, module.logger)
+    tracker.Init(module.name, module.args.connspec)
     return tracker
 
 def Setup(infra, module):

@@ -4,15 +4,15 @@ from test.rdma.utils import *
 import pdb
 import copy
 from infra.common.glopts import GlobalOptions
-
+from infra.common.logging import logger as logger
 def Setup(infra, module):
     iterelem = module.iterator.Get()
 
-    module.logger.info("Iterator Selectors")
+    logger.info("Iterator Selectors")
 
     if iterelem:
         if 'base' in iterelem.rdmasession.__dict__:
-            module.logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
+            logger.info("- rdmasession.base: %s" % iterelem.rdmasession.base)
             module.testspec.selectors.rdmasession.base.Extend(iterelem.rdmasession.base)
     return
 
@@ -20,7 +20,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
@@ -40,16 +40,16 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
-    tc.info("RDMA TestCaseTrigger() Implementation.")
+    logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
 def TestCaseVerify(tc):
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     return True
 
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation. Step ID: ", step.step_id)
+    logger.info("RDMA TestCaseVerify() Implementation. Step ID: ", step.step_id)
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
@@ -97,10 +97,10 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
 
     rs = tc.config.rdmasession
-    tc.info("Clearing poll_for_work in SQCB\n")
+    logger.info("Clearing poll_for_work in SQCB\n")
     rs.lqp.sq.qstate.data.poll_for_work = 0
     rs.lqp.sq.qstate.Write()
 

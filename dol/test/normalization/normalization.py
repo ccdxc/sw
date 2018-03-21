@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+from infra.common.logging import logger as logger
 
 def Setup(infra, module):
     iterelem = module.iterator.Get()
@@ -14,7 +15,7 @@ def Teardown(infra, module):
     if module.iterator.End():
         asp = infra.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
         profile = infra.ConfigStore.objects.Get('SEC_PROF_DEFAULT')
-        module.logger.info("Restoring Active Security Profile --> SEC_PROF_DEFAULT")
+        logger.info("Restoring Active Security Profile --> SEC_PROF_DEFAULT")
         asp.CloneFields(profile)
         asp.Update()
     return
@@ -29,7 +30,7 @@ def TestCaseSetup(tc):
     pfname = getattr(iterelem, 'profile', None)
     if pfname is not None and tc.module.pvtdata.profile != pfname:
         profile = tc.module.infra_data.ConfigStore.objects.Get(pfname)
-        tc.module.logger.info("Updating Active Security Profile --> %s" % profile)
+        logger.info("Updating Active Security Profile --> %s" % profile)
         asp.CloneFields(profile)
         asp.Update()
         tc.module.pvtdata.profile = pfname

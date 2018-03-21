@@ -7,7 +7,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
@@ -76,13 +76,13 @@ class EqObject(base.ConfigObjectBase):
         return  self.__roundup_to_pow_2(len(RdmaEqDescriptor()))
 
     def Show(self):
-        cfglogger.info('EQ: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
-        cfglogger.info('EQ num_wqes: %d wqe_size: %d' %(self.num_eq_wqes, self.eqwqe_size)) 
+        logger.info('EQ: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
+        logger.info('EQ num_wqes: %d wqe_size: %d' %(self.num_eq_wqes, self.eqwqe_size)) 
         if not self.eqe_base_addr is None:
-            cfglogger.info('EQ Intr Base Addr- VA: 0x%x PHY: 0x%x' %(self.eqe_base_addr, self.eqe_base_addr_phy)) 
+            logger.info('EQ Intr Base Addr- VA: 0x%x PHY: 0x%x' %(self.eqe_base_addr, self.eqe_base_addr_phy)) 
 
     def PrepareHALRequestSpec(self, req_spec):
-        cfglogger.info("EQ: %s PD: %s Remote: %s LKey: %d LIF: %d\n" %\
+        logger.info("EQ: %s PD: %s Remote: %s LKey: %d LIF: %d" %\
                         (self.GID(), self.pd.GID(), self.remote, 
                          self.eq_mr.lkey, self.pd.ep.intf.lif.hw_lif_id))
         if (GlobalOptions.dryrun): return
@@ -92,7 +92,7 @@ class EqObject(base.ConfigObjectBase):
         req_spec.eq_wqe_size = self.eqwqe_size
         req_spec.num_eq_wqes = self.num_eq_wqes
         self.eqe_base_addr = self.eq_slab.address
-        print(self.eqe_base_addr, self.eq_slab.address)
+        logger.info(self.eqe_base_addr, self.eq_slab.address)
         assert(self.eqe_base_addr)
         self.eqe_base_addr_phy = resmgr.HostMemoryAllocator.v2p(self.eqe_base_addr)
         assert(self.eqe_base_addr_phy)
@@ -105,15 +105,15 @@ class EqObject(base.ConfigObjectBase):
                               self.eq_slab.address, 
                               self.num_eq_wqes, 
                               self.eqwqe_size)
-        cfglogger.info("EQ: %s PD: %s Remote: %s LIF: %d eqcb_addr: 0x%x eqe_base_addr: 0x%x" \
+        logger.info("EQ: %s PD: %s Remote: %s LIF: %d eqcb_addr: 0x%x eqe_base_addr: 0x%x" \
                        " eqe_base_addr_phy: 0x%x" %\
                         (self.GID(), self.pd.GID(), self.remote, 
                          self.pd.ep.intf.lif.hw_lif_id, 
                          self.eq.GetQstateAddr(), self.eqe_base_addr, self.eqe_base_addr_phy));
         self.intr_tbl_addr = resp_spec.eq_intr_tbl_addr
-        cfglogger.info("EQ: intr_tbl_addr from HAL: 0x%x" % self.intr_tbl_addr)
-        cfglogger.info("HAL Response successful for EQ creation");
-        self.eq.qstate.data.show()
+        logger.info("EQ: intr_tbl_addr from HAL: 0x%x" % self.intr_tbl_addr)
+        logger.info("HAL Response successful for EQ creation");
+        logger.ShowScapyObject(self.eq.qstate.data)
          
 class EqObjectHelper:
     def __init__(self):
@@ -122,11 +122,11 @@ class EqObjectHelper:
     def Generate(self, pd, spec):
         self.pd = pd
         if self.pd.remote:
-            cfglogger.info("skipping EQ generation for remote PD: %s" %(pd.GID()))
+            logger.info("skipping EQ generation for remote PD: %s" %(pd.GID()))
             return
 
         count = spec.count
-        cfglogger.info("Creating %d EQs. for PD:%s" %\
+        logger.info("Creating %d EQs. for PD:%s" %\
                        (count, pd.GID()))
         for i in range(count):
             eq_id = i if pd.remote else pd.ep.intf.lif.GetEqid()
@@ -135,7 +135,7 @@ class EqObjectHelper:
 
     def Configure(self):
         if self.pd.remote:
-            cfglogger.info("skipping EQ configuration for remote PD: %s" %(self.pd.GID()))
+            logger.info("skipping EQ configuration for remote PD: %s" %(self.pd.GID()))
             return
-        cfglogger.info("Configuring %d EQs." % len(self.eqs)) 
+        logger.info("Configuring %d EQs." % len(self.eqs)) 
         halapi.ConfigureEqs(self.eqs)

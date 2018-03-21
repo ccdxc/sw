@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
 import config.objects.doorbell      as doorbell
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
 
@@ -14,7 +14,7 @@ class Doorbell(doorbell.Doorbell):
         self.lif_id = queue_type.lif.hw_lif_id
         self.upd = queue_type.upd
 
-    def Ring(self, queue_id, ring_id, p_index, pid, lgh=cfglogger):
+    def Ring(self, queue_id, ring_id, p_index, pid, lgh=logger):
         address = 0x400000 + (self.upd << 17) + (self.lif_id << 6) + (self.queue_type << 3)
         data = (pid << 48) | (queue_id << 24) | (ring_id << 16) | p_index
 

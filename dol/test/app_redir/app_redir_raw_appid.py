@@ -26,7 +26,7 @@ def TestCaseSetup(tc):
     global rnmpr
     global rnmpr_small
     tc.SetRetryEnabled(True)
-    tc.pvtdata = ObjectDatabase(logger)
+    tc.pvtdata = ObjectDatabase()
 
     # For this test, we'd like app_redir flow miss pipeline to configure
     # the necessary rawr/rawc CBs so we refrain from doing that here.

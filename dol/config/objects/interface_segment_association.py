@@ -5,7 +5,7 @@ import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
 from infra.common.glopts        import GlobalOptions
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class HalInterfaceSegmentAssociationObject(base.ConfigObjectBase):
@@ -25,7 +25,7 @@ class HalInterfaceSegmentAssociationObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- Intf:%s <--> Seg:%s. Status = %s)" %\
+        logger.info("- Intf:%s <--> Seg:%s. Status = %s)" %\
                        (self.intf.GID(), self.seg.GID(),\
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return

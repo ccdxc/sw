@@ -7,7 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.swdr        import SwDscrRingHelper
 
 import config.hal.defs          as haldefs
@@ -25,7 +25,7 @@ class CpuCbObject(base.ConfigObjectBase):
         self.id = qid
         gid = "CpuCb%04d" % qid
         self.GID(gid)
-        cfglogger.info("  - %s" % self)
+        logger.info("  - %s" % self)
 
         return
 
@@ -39,7 +39,7 @@ class CpuCbObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - CpuCb %s = %s" %\
+        logger.info("  - CpuCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'CpuCbResponse':
@@ -78,12 +78,12 @@ class CpuCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(CpuCbObject)
-        cfglogger.info("Configuring %d CpuCbs." % len(objlist)) 
+        logger.info("Configuring %d CpuCbs." % len(objlist)) 
         halapi.ConfigureCpuCbs(objlist)
         return
         
     def __gen_one(self, qid):
-        cfglogger.info("Creating CpuCb")
+        logger.info("Creating CpuCb")
         cpucb_obj = CpuCbObject()
         cpucb_obj.Init(qid)
         Store.objects.Add(cpucb_obj)

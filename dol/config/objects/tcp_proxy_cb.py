@@ -7,7 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.swdr        import SwDscrRingHelper
 from config.objects.tls_proxy_cb     import TlsCbHelper
 
@@ -33,7 +33,7 @@ class TcpCbObject(base.ConfigObjectBase):
         gid = "TcpCb%04d" % qid
         self.GID(gid)
         # self.spec = spec_obj
-        # cfglogger.info("  - %s" % self)
+        # logger.info("  - %s" % self)
 
         # self.uplinks = objects.ObjectDatabase()
         # for uplink_spec in self.spec.uplinks:
@@ -41,16 +41,16 @@ class TcpCbObject(base.ConfigObjectBase):
             # self.uplinks.Set(uplink_obj.GID(), uplink_obj)
 
         # assert(len(self.uplinks) > 0)
-        cfglogger.info("  - %s" % self)
+        logger.info("  - %s" % self)
         self.tlscb = TlsCbHelper.main(self)
         self.sesq = SwDscrRingHelper.main("SESQ", gid, self.id)
         self.asesq = SwDscrRingHelper.main("ASESQ", gid, self.id)
 
         if is_iflow:
-            print("%s is iflow" % gid)
+            logger.info("%s is iflow" % gid)
             tcp_proxy.init_tcb1(self, session)
         elif is_iflow != None:
-            print("%s is rflow" % gid)
+            logger.info("%s is rflow" % gid)
             tcp_proxy.init_tcb2(self, session)
 
         self.debug_dol = tcp_proxy.tcp_debug_dol_dont_send_ack | \
@@ -92,7 +92,7 @@ class TcpCbObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - TcpCb %s = %s" %\
+        logger.info("  - TcpCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'TcpCbResponse':
@@ -177,12 +177,12 @@ class TcpCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TcpCbObject)
-        cfglogger.info("Configuring %d TcpCbs." % len(objlist))
+        logger.info("Configuring %d TcpCbs." % len(objlist))
         halapi.ConfigureTcpCbs(objlist)
         return
 
     def __gen_one(self, qid, other_qid = None, session = None, is_iflow = None):
-        cfglogger.info("Creating TcpCb")
+        logger.info("Creating TcpCb")
         tcpcb_obj = TcpCbObject()
         tcpcb_obj.Init(qid, other_qid, session, is_iflow)
         Store.objects.Add(tcpcb_obj)

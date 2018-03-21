@@ -7,7 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.swdr        import SwDscrRingHelper
 
 import config.hal.defs          as haldefs
@@ -26,7 +26,7 @@ class RawcCbObject(base.ConfigObjectBase):
         gid = "RawcCb%04d" % qid
         self.GID(gid)
         # self.spec = spec_obj
-        # cfglogger.info("  - %s" % self)
+        # logger.info("  - %s" % self)
 
         # self.uplinks = objects.ObjectDatabase()
         # for uplink_spec in self.spec.uplinks:
@@ -34,7 +34,7 @@ class RawcCbObject(base.ConfigObjectBase):
             # self.uplinks.Set(uplink_obj.GID(), uplink_obj)
 
         # assert(len(self.uplinks) > 0)
-        cfglogger.info("  - %s" % self)
+        logger.info("  - %s" % self)
 
         self.rawccbq = SwDscrRingHelper.main("RAWCCBQ", gid, self.id)
         return
@@ -61,7 +61,7 @@ class RawcCbObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - RawcCb %s = %s" %\
+        logger.info("  - RawcCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'RawcCbResponse':
@@ -117,21 +117,21 @@ class RawcCbObject(base.ConfigObjectBase):
     # Print rawccb statistics
     #
     def StatsPrint(self):
-        print("RAWCCB %d stat_pkts_chain %d" % 
+        logger.info("RAWCCB %d stat_pkts_chain %d" % 
               (self.id, self.stat_pkts_chain))
-        print("RAWCCB %d stat_pkts_discard %d" % 
+        logger.info("RAWCCB %d stat_pkts_discard %d" % 
               (self.id, self.stat_pkts_discard))
-        print("RAWCCB %d stat_cb_not_ready %d" % 
+        logger.info("RAWCCB %d stat_cb_not_ready %d" % 
               (self.id, self.stat_cb_not_ready))
-        print("RAWCCB %d stat_my_txq_empty %d" % 
+        logger.info("RAWCCB %d stat_my_txq_empty %d" % 
               (self.id, self.stat_my_txq_empty))
-        print("RAWCCB %d stat_aol_err %d" % 
+        logger.info("RAWCCB %d stat_aol_err %d" % 
               (self.id, self.stat_aol_err))
-        print("RAWCCB %d stat_txq_full %d" % 
+        logger.info("RAWCCB %d stat_txq_full %d" % 
               (self.id, self.stat_txq_full))
-        print("RAWCCB %d stat_desc_sem_free_full %d" % 
+        logger.info("RAWCCB %d stat_desc_sem_free_full %d" % 
               (self.id, self.stat_desc_sem_free_full))
-        print("RAWCCB %d stat_page_sem_free_full %d" % 
+        logger.info("RAWCCB %d stat_page_sem_free_full %d" % 
               (self.id, self.stat_page_sem_free_full))
         return
 
@@ -145,12 +145,12 @@ class RawcCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(RawcCbObject)
-        cfglogger.info("Configuring %d RawcCbs." % len(objlist)) 
+        logger.info("Configuring %d RawcCbs." % len(objlist)) 
         halapi.ConfigureRawcCbs(objlist)
         return
         
     def __gen_one(self, qid):
-        cfglogger.info("Creating RawcCb")
+        logger.info("Creating RawcCb")
         rawccb_obj = RawcCbObject()
         rawccb_obj.Init(qid)
         Store.objects.Add(rawccb_obj)

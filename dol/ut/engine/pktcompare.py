@@ -19,7 +19,7 @@ from infra.penscapy.penscapy import *
 import infra.engine.comparators as crs
 from infra.common.logging import logger
 
-logger.set_level(7)
+logger.SetLoggingLevel(7)
 
 rawbytes = [1]*64
 bnr = '-' * 20

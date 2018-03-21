@@ -7,7 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.swdr        import SwDscrRingHelper
 
 import config.hal.defs          as haldefs
@@ -26,7 +26,7 @@ class RawrCbObject(base.ConfigObjectBase):
         gid = "RawrCb%04d" % qid
         self.GID(gid)
         # self.spec = spec_obj
-        # cfglogger.info("  - %s" % self)
+        # logger.info("  - %s" % self)
 
         # self.uplinks = objects.ObjectDatabase()
         # for uplink_spec in self.spec.uplinks:
@@ -34,7 +34,7 @@ class RawrCbObject(base.ConfigObjectBase):
             # self.uplinks.Set(uplink_obj.GID(), uplink_obj)
 
         # assert(len(self.uplinks) > 0)
-        cfglogger.info("  - %s" % self)
+        logger.info("  - %s" % self)
 
         return
 
@@ -62,7 +62,7 @@ class RawrCbObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - RawrCb %s = %s" %\
+        logger.info("  - RawrCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'RawrCbResponse':
@@ -121,27 +121,27 @@ class RawrCbObject(base.ConfigObjectBase):
     # Print rawrcb statistics
     #
     def StatsPrint(self):
-        print("RAWRCB %d stat_pkts_redir %d" % 
+        logger.info("RAWRCB %d stat_pkts_redir %d" % 
               (self.id, self.stat_pkts_redir))
-        print("RAWRCB %d stat_pkts_discard %d" % 
+        logger.info("RAWRCB %d stat_pkts_discard %d" % 
               (self.id, self.stat_pkts_discard))
-        print("RAWRCB %d stat_cb_not_ready %d" % 
+        logger.info("RAWRCB %d stat_cb_not_ready %d" % 
               (self.id, self.stat_cb_not_ready))
-        print("RAWRCB %d stat_qstate_cfg_err %d" % 
+        logger.info("RAWRCB %d stat_qstate_cfg_err %d" % 
               (self.id, self.stat_qstate_cfg_err))
-        print("RAWRCB %d stat_pkt_len_err %d" % 
+        logger.info("RAWRCB %d stat_pkt_len_err %d" % 
               (self.id, self.stat_pkt_len_err))
-        print("RAWRCB %d stat_rxq_full %d" % 
+        logger.info("RAWRCB %d stat_rxq_full %d" % 
               (self.id, self.stat_rxq_full))
-        print("RAWRCB %d stat_txq_full %d" % 
+        logger.info("RAWRCB %d stat_txq_full %d" % 
               (self.id, self.stat_txq_full))
-        print("RAWRCB %d stat_desc_sem_alloc_full %d" % 
+        logger.info("RAWRCB %d stat_desc_sem_alloc_full %d" % 
               (self.id, self.stat_desc_sem_alloc_full))
-        print("RAWRCB %d stat_mpage_sem_alloc_full %d" % 
+        logger.info("RAWRCB %d stat_mpage_sem_alloc_full %d" % 
               (self.id, self.stat_mpage_sem_alloc_full))
-        print("RAWRCB %d stat_ppage_sem_alloc_full %d" % 
+        logger.info("RAWRCB %d stat_ppage_sem_alloc_full %d" % 
               (self.id, self.stat_ppage_sem_alloc_full))
-        print("RAWRCB %d stat_sem_free_full %d" % 
+        logger.info("RAWRCB %d stat_sem_free_full %d" % 
               (self.id, self.stat_sem_free_full))
         return
 
@@ -155,12 +155,12 @@ class RawrCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(RawrCbObject)
-        cfglogger.info("Configuring %d RawrCbs." % len(objlist)) 
+        logger.info("Configuring %d RawrCbs." % len(objlist)) 
         halapi.ConfigureRawrCbs(objlist)
         return
         
     def __gen_one(self, qid):
-        cfglogger.info("Creating RawrCb")
+        logger.info("Creating RawrCb")
         rawrcb_obj = RawrCbObject()
         rawrcb_obj.Init(qid)
         Store.objects.Add(rawrcb_obj)

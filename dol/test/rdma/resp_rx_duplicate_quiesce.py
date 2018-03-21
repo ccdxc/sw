@@ -3,7 +3,7 @@
 import copy
 from test.rdma.utils import *
 from infra.common.glopts import GlobalOptions
-
+from infra.common.logging import logger as logger
 def Setup(infra, module):
     return
 
@@ -11,7 +11,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
 
     # Read RQ pre state
@@ -25,17 +25,17 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
-    tc.info("RDMA TestCaseTrigger() Implementation.")
+    logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
 def TestCaseVerify(tc):
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     return True
 
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation.")
-    tc.info("step id: %d" %(step.step_id))
+    logger.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("step id: %d" %(step.step_id))
     rs = tc.config.rdmasession
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     ring1_mask = (rs.lqp.num_rsq_wqes - 1)
@@ -47,7 +47,7 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
 
     if step.step_id == 0:
-        tc.info("after receiving AT1/AT2/AT3/SEND..")
+        logger.info("after receiving AT1/AT2/AT3/SEND..")
 
         # verify that e_psn is incremented by 4
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 4):
@@ -99,7 +99,7 @@ def TestCaseStepVerify(tc, step):
             return False
     
     elif step.step_id == 1:
-        tc.info("after receiving duplicate AT1..")
+        logger.info("after receiving duplicate AT1..")
 
         # verify that e_psn is incremented by 0
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
@@ -151,7 +151,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 2:
-        tc.info("after receiving duplicate AT2..")
+        logger.info("after receiving duplicate AT2..")
 
         # verify that e_psn is NOT incremented
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
@@ -202,7 +202,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 3:
-        tc.info("after receiving AT4..")
+        logger.info("after receiving AT4..")
 
         # verify that e_psn is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 1):
@@ -252,7 +252,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 4:
-        tc.info("after receiving duplicate AT3..")
+        logger.info("after receiving duplicate AT3..")
 
         # verify that e_psn is NOT incremented
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
@@ -303,7 +303,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 5:
-        tc.info("after receiving duplicate AT4..")
+        logger.info("after receiving duplicate AT4..")
 
         # verify that e_psn is NOT incremented
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
@@ -364,5 +364,5 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
     return

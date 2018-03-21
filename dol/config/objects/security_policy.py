@@ -9,7 +9,7 @@ import config.objects.rules        as rules
 import config.hal.defs             as haldefs
 
 from    config.store               import Store
-from    infra.common.logging       import cfglogger
+from    infra.common.logging       import logger
 from    config.objects.security_group import SecurityGroupObject
 
 class SGPairObject(base.ConfigObjectBase):
@@ -34,7 +34,7 @@ class SGPairObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.policy_handle
-        cfglogger.info(" - SecurityPolicy %s = %s (HDL = 0x%x)" %\
+        logger.info(" - SecurityPolicy %s = %s (HDL = 0x%x)" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hal_handle))
@@ -114,7 +114,7 @@ class SecurityGroupPolicyObjectHelper:
 
     def Configure(self):
         sgpairlist  = Store.objects.GetAllByClass(SGPairObject)
-        cfglogger.info("Confguring %d SecurityGroupPolicies." %len(sgpairlist))
+        logger.info("Confguring %d SecurityGroupPolicies." %len(sgpairlist))
 
         halapi.ConfigureSecurityGroupPolicies(sgpairlist)
         return
@@ -162,7 +162,7 @@ class SecurityGroupPolicyObjectHelper:
         if sps is None:
             return
         spec = topospec.security_policy.Get(Store)
-        cfglogger.info("Creating %d SecurityPolicies." % len(spec.policies))
+        logger.info("Creating %d SecurityPolicies." % len(spec.policies))
         for p in spec.policies:
             policy = SecurityGroupPolicyObject()
             policy.Init(p.policy)

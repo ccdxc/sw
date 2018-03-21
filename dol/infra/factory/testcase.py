@@ -118,7 +118,6 @@ class TestCasePrivateData:
         return
 
 class TestCase(objects.FrameworkObject):
-
     def __init__(self, tcid, root, module, loopid = 0):
         super().__init__()
         self.template = FactoryStore.testobjects.Get('TESTCASE')
@@ -137,7 +136,6 @@ class TestCase(objects.FrameworkObject):
         self.module         = module
         self.infra_data     = module.infra_data
         self.testspec       = module.testspec
-        self.logger         = self.infra_data.Logger
         self.session        = TestCaseSessionObject()
         self.step_id        = 0
         self.pvtdata        = TestCasePrivateData()
@@ -147,6 +145,8 @@ class TestCase(objects.FrameworkObject):
             self.logpfx = "TC%06d-%04d:" % (self.ID(), self.loopid)
         else:
             self.logpfx = "TC%06d" % self.ID()  
+        logger.SetTestcase(self.logpfx)
+        return
         
     def _setup_config(self, root):
         self.__root = root
@@ -156,31 +156,8 @@ class TestCase(objects.FrameworkObject):
     def IsIgnore(self):
         return self.module.IsIgnore()
                 
-    def info(self, *args, **kwargs):
-        self.logger.info(self.logpfx, *args, **kwargs)
-        return
-
-    def error(self, *args, **kwargs):
-        self.logger.error(self.logpfx, *args, **kwargs)
-        return
-
-    def warn(self, *args, **kwargs):
-        self.logger.warn(self.logpfx, *args, **kwargs)
-        return
-
-    def debug(self, *args, **kwargs):
-        self.logger.debug(self.logpfx, *args, **kwargs)
-        return
-
-    def verbose(self, *args, **kwargs):
-        self.logger.verbose(self.logpfx, *args, **kwargs)
-        return
-
-    def GetLogPrefix(self):
-        return self.logger.GetLogPrefix() + ' ' + self.logpfx
-    
     def _generate(self):
-        self.info("%s Starting TestCase. %s" % ('=' * 20, '=' * 20))
+        logger.info("%s Starting TestCase. %s" % ('=' * 20, '=' * 20))
         self.__show_config_objects()
         self.__setup_callback()
         self._generate_objects()
@@ -212,18 +189,18 @@ class TestCase(objects.FrameworkObject):
         return
 
     def __show_config_objects(self):
-        self.__root.ShowTestcaseConfig(self.config, self)
+        self.__root.ShowTestcaseConfig(self.config)
         return
 
     def __setup_session(self):
-        self.info("Setting Up Session")
+        logger.info("Setting Up Session")
         for tspstep in self.testspec.session:
             step = TestCaseSessionStepObject()
             step.step_id = self.step_id
             self.step_id += 1
 
             self.module.RunModuleCallback('TestCaseStepSetup', self, step)
-            self.info("- Setting Up Session Step")
+            logger.info("- Setting Up Session Step")
             self._setup_trigger(step, tspstep.step)
             self._setup_expect(step, tspstep.step)
 
@@ -232,10 +209,10 @@ class TestCase(objects.FrameworkObject):
     
     def __process_verify_callback_retval(self, ret):
         if ret is defs.status.SUCCESS or ret is True:
-            self.info("- Verify Callback Status = Success")
+            logger.info("- Verify Callback Status = Success")
             status =  defs.status.SUCCESS
         else:
-            self.error("- Verify Callback Status = Failure")
+            logger.error("- Verify Callback Status = Failure")
             status = defs.status.ERROR
         return status
 
@@ -246,41 +223,41 @@ class TestCase(objects.FrameworkObject):
         pass
     
     def TeardownCallback(self):
-        self.info("Invoking TestCaseTeardown.")
+        logger.info("Invoking TestCaseTeardown.")
         self.module.RunModuleCallback('TestCaseTeardown', self)
         self.GetRoot().TearDownTestcaseConfig(self.config)
         return
     
     def VerifyCallback(self):
         if GlobalOptions.skipverify: return defs.status.SUCCESS
-        self.info("Invoking TestCaseVerify.")
+        logger.info("Invoking TestCaseVerify.")
         ret = self.module.RunModuleCallback('TestCaseVerify', self)
         return self.__process_verify_callback_retval(ret)
 
 
     def TriggerCallback(self):
-        self.info("Invoking TestCaseTrigger.")
+        logger.info("Invoking TestCaseTrigger.")
         self.module.RunModuleCallback('TestCaseTrigger', self)
         return
 
     def StepSetupCallback(self, step):
-        self.info("Invoking TestCaseStepSetup.")
+        logger.info("Invoking TestCaseStepSetup.")
         self.module.RunModuleCallback('TestCaseStepSetup', self, step)
         return
 
     def StepTriggerCallback(self, step):
-        self.info("Invoking TestCaseStepTrigger.")
+        logger.info("Invoking TestCaseStepTrigger.")
         self.module.RunModuleCallback('TestCaseStepTrigger', self, step)
         return
 
     def StepVerifyCallback(self, step):
         if GlobalOptions.skipverify: return defs.status.SUCCESS
-        self.info("Invoking TestCaseStepVerify.")
+        logger.info("Invoking TestCaseStepVerify.")
         ret = self.module.RunModuleCallback('TestCaseStepVerify', self, step)
         return self.__process_verify_callback_retval(ret)
 
     def StepTeardownCallback(self, step):
-        self.info("Invoking TestCaseStepTeardown.")
+        logger.info("Invoking TestCaseStepTeardown.")
         self.module.RunModuleCallback('TestCaseStepTeardown', self, step)
         return
 

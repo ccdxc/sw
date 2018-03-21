@@ -7,7 +7,7 @@ def InitTracker(infra, module):
     connspec = getattr(module.args, 'connspec', None)
     if connspec is not None:
         tracker = trackermod.TrackerObject()
-        tracker.Init(module.name, module.args.connspec, module.logger)
+        tracker.Init(module.name, module.args.connspec)
         TrackerStore.trackers.Add(tracker)
 
     tracker_ref = getattr(module.args, 'tracker', None)

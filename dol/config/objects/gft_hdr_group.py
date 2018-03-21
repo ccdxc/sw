@@ -13,7 +13,7 @@ import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
 from infra.common.glopts        import GlobalOptions
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class GftHeaderGroupObject(base.ConfigObjectBase):
@@ -123,7 +123,7 @@ class GftHeaderGroupObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Header Group: %s" % (self.GID()))
+        logger.info("Header Group: %s" % (self.GID()))
         hdrs = ""
         if self.headers.ethernet_header: hdrs += "Eth,"
         if self.headers.ipv4_header: hdrs += "IPv4,"
@@ -136,7 +136,7 @@ class GftHeaderGroupObject(base.ConfigObjectBase):
         if self.headers.ip_in_gre_encap: hdrs += "IPinGRE,"
         if self.headers.nvgre_encap: hdrs += "NVGRE,"
         if self.headers.vxlan_encap: hdrs += "VXLAN,"
-        cfglogger.info("- Headers: %s" % hdrs)
+        logger.info("- Headers: %s" % hdrs)
         fields = ""
         if self.fields.dst_mac_addr: fields += "Dmac,"
         if self.fields.src_mac_addr: fields += "Smac,"
@@ -158,7 +158,7 @@ class GftHeaderGroupObject(base.ConfigObjectBase):
         if self.fields.oob_vlan: fields += "OobVlan,"
         if self.fields.oob_tenant_id: fields += "OobTenantID,"
         if self.fields.gre_protocol: fields += "GREProto,"
-        cfglogger.info("- Fields: %s" % fields)
+        logger.info("- Fields: %s" % fields)
         return
 
 class GftHeaderGroupObjectHelper:
@@ -173,7 +173,7 @@ class GftHeaderGroupObjectHelper:
         spec = getattr(gftexm_spec, 'hdrgroups', None)
         hgs = spec.Get(Store)
 
-        cfglogger.info("Adding GFT Header Groups to Store.")
+        logger.info("Adding GFT Header Groups to Store.")
         for entry in hgs.header_groups:
             hdrgroup = entry.group
             obj = GftHeaderGroupObject()

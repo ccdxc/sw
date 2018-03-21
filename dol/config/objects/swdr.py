@@ -12,7 +12,7 @@ import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 '''
 AOL Type descriptor object support
@@ -25,7 +25,7 @@ class SwDscrAolObject(base.ConfigObjectBase):
         self.GID("%s_DESC%04d" % (ringname, swdreidx))
         return
     def Show(self):
-        cfglogger.info("SwDscrAol: %s" % (self.ID()))
+        logger.info("SwDscrAol: %s" % (self.ID()))
         return
     def PrepareHALRequestSpec(self, reqspec):
         # FIXME, this should really be an index into the ring
@@ -42,10 +42,10 @@ class SwDscrAolObject(base.ConfigObjectBase):
         self.Addr3      = resp_spec.Address3
         self.Offset3    = resp_spec.Offset3
         self.Len3       = resp_spec.Length3
-        cfglogger.info("[%s]Received response for handle: %016x" % (self.ID(), self.DescAddr))
-        cfglogger.info("A:%016x O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
-        cfglogger.info("A:%016x O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
-        cfglogger.info("A:%016x O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
+        logger.info("[%s]Received response for handle: %016x" % (self.ID(), self.DescAddr))
+        logger.info("A:%016x O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
+        logger.info("A:%016x O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
+        logger.info("A:%016x O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
         return
     def SetHandle(self, handle):
         self.DescAddr = handle
@@ -73,7 +73,7 @@ class SwDscrPageObject(base.ConfigObjectBase):
         self.GID("%s_PAGE%04d" % (ringname, swdreidx))
         return
     def Show(self):
-        cfglogger.info("SwPage: %s" % (self.ID()))
+        logger.info("SwPage: %s" % (self.ID()))
         return
     def PrepareHALRequestSpec(self, reqspec):
         # FIXME, query address of the page
@@ -112,7 +112,7 @@ class SwDscrRingEntry(base.ConfigObjectBase):
         self.GID("%s_ENTRY%04d" % (ringname, entryidx))
         return
     def Show(self):
-        cfglogger.info("Entry : %s" % (self.ID()))
+        logger.info("Entry : %s" % (self.ID()))
         return
     def PrepareHALRequestSpec(self, reqspec):
         if (self.ringidx != None):
@@ -121,14 +121,14 @@ class SwDscrRingEntry(base.ConfigObjectBase):
         reqspec.index = self.idx
         return
     def ProcessHALResponse(self, req_spec, resp_spec):
-        #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
+        #logger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
         if (resp_spec.spec.type != req_spec.type):
             assert(0)
         if (resp_spec.index != req_spec.index):
             assert(0)
 
         self.handle = resp_spec.value
-        cfglogger.info("Entry : %s : Handle: %016x" % (self.ID(), self.handle))
+        logger.info("Entry : %s : Handle: %016x" % (self.ID(), self.handle))
         return
     def GetHandle(self):
         return self.handle
@@ -176,7 +176,7 @@ class SwDscrRingObject(base.ConfigObjectBase):
         reqspec.type = self.haltype
         reqspec.pi = self.pi
         reqspec.ci = self.ci
-        cfglogger.info("Req Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
+        logger.info("Req Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -189,14 +189,14 @@ class SwDscrRingObject(base.ConfigObjectBase):
         return
 
     def ProcessHALGetResponse(self, req_spec, resp_spec):
-        #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
+        #logger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
         self.pi = resp_spec.spec.pi
         self.ci = resp_spec.spec.ci
-        cfglogger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
+        logger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
         return
 
     def Show(self):
-        cfglogger.info("SWDSCR List for %s" % self.ID())
+        logger.info("SWDSCR List for %s" % self.ID())
         for swdre in self.swdre_list:
             swdre.Show()
         return

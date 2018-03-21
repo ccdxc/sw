@@ -10,7 +10,7 @@ import config.objects.segment   as segment
 
 import config.objects.interface_segment_association as if_seg_assoc
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 import config.hal.api            as halapi
@@ -37,7 +37,7 @@ class UplinkPcObject(base.ConfigObjectBase):
         self.segment_ids = []
         self.member_keys = []
 
-        cfglogger.info("Creating UplinkPC = %s Port=%d" %\
+        logger.info("Creating UplinkPC = %s Port=%d" %\
                        (self.GID(), self.port))
 
         for mbr in spec.members:
@@ -100,14 +100,14 @@ class UplinkPcObject(base.ConfigObjectBase):
 
 
     def Show(self):
-        cfglogger.info("Creating UplinkPC = %s(IFID:%d) Port=%d" %\
+        logger.info("Creating UplinkPC = %s(IFID:%d) Port=%d" %\
                        (self.GID(), self.id, self.port))
-        cfglogger.info("- txqos: Cos:%s/Dscp:%s" %\
+        logger.info("- txqos: Cos:%s/Dscp:%s" %\
                        (str(self.txqos.cos), str(self.txqos.dscp)))
-        cfglogger.info("- rxqos: Cos:%s/Dscp:%s" %\
+        logger.info("- rxqos: Cos:%s/Dscp:%s" %\
                        (str(self.rxqos.cos), str(self.rxqos.dscp)))
         for mbr in self.members:
-            cfglogger.info("- Member: %s" % mbr.GID())
+            logger.info("- Member: %s" % mbr.GID())
         return
 
     def Summary(self):
@@ -122,7 +122,7 @@ class UplinkPcObject(base.ConfigObjectBase):
 
     def SetNativeSegment(self, seg):
         assert(self.native_segment == None)
-        cfglogger.info("Adding Segment:%s as native segment on UplinkPC:%s" %\
+        logger.info("Adding Segment:%s as native segment on UplinkPC:%s" %\
                        (seg.GID(), self.GID()))
         self.native_segment = seg
         self.native_segment_id = seg.id
@@ -162,7 +162,7 @@ class UplinkPcObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- Uplink %s = %s" %\
+        logger.info("- Uplink %s = %s" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
 
@@ -210,13 +210,13 @@ class UplinkPcObjectHelper:
 
     def Configure(self):
         if len(self.uplinkpcs) == 0: return
-        cfglogger.info("Configuring %d UplinkPCs." % len(self.uplinkpcs))
+        logger.info("Configuring %d UplinkPCs." % len(self.uplinkpcs))
         halapi.ConfigureInterfaces(self.uplinkpcs)
         return
 
     def ReConfigure(self):
         if len(self.uplinkpcs) == 0: return
-        cfglogger.info("Updating %d UplinkPCs." % len(self.uplinkpcs))
+        logger.info("Updating %d UplinkPCs." % len(self.uplinkpcs))
         halapi.ConfigureInterfaces(self.uplinkpcs, update = True)
         return
 
@@ -246,7 +246,7 @@ class UplinkPcObjectHelper:
         self.Generate(topospec)
         self.Configure()
         if len(self.uplinkpcs) == 0: return
-        cfglogger.info("Adding %d UplinkPcs to Store." % len(self.uplinkpcs))
+        logger.info("Adding %d UplinkPcs to Store." % len(self.uplinkpcs))
         Store.objects.SetAll(self.uplinkpcs)
         Store.SetTrunkingUplinks(self.trunks)
         return

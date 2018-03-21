@@ -8,7 +8,7 @@ import config.resmgr            as resmgr
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class SecurityGroupObject(base.ConfigObjectBase):
@@ -34,7 +34,7 @@ class SecurityGroupObject(base.ConfigObjectBase):
 
     def __update_eps(self):
         for ep in self.eps:
-            cfglogger.info("- Adding SecurityGroup:%s to Ep:%s" % (self.GID(), ep.GID()))
+            logger.info("- Adding SecurityGroup:%s to Ep:%s" % (self.GID(), ep.GID()))
             ep.AddSecurityGroup(self)
             ep.SetLabel(self.label)
         return
@@ -46,12 +46,12 @@ class SecurityGroupObject(base.ConfigObjectBase):
         return self.local is True
 
     def Show(self, detail = False):
-        cfglogger.info("SecurityGroup = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("- Tenant    = %s" % self.tenant.GID())
-        cfglogger.info("- Local     = %s" % self.local)
-        cfglogger.info("- EPs:")
+        logger.info("SecurityGroup = %s(%d)" % (self.GID(), self.id))
+        logger.info("- Tenant    = %s" % self.tenant.GID())
+        logger.info("- Local     = %s" % self.local)
+        logger.info("- EPs:")
         for e in self.eps:
-            cfglogger.info("  - %s" % e.GID())
+            logger.info("  - %s" % e.GID())
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -60,7 +60,7 @@ class SecurityGroupObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- SecurityGroup %s = %s" %\
+        logger.info("- SecurityGroup %s = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.status.sg_handle
         return
@@ -92,7 +92,7 @@ class SecurityGroupObjectHelper:
         return self.rsgs
 
     def Configure(self):
-        cfglogger.info("Configuring %d Security Groups" % len(self.sgs))
+        logger.info("Configuring %d Security Groups" % len(self.sgs))
         halapi.ConfigureSecurityGroups(self.sgs)
         return
 
@@ -108,7 +108,7 @@ class SecurityGroupObjectHelper:
         return
 
     def Generate(self, tenant):
-        cfglogger.info("Creating Security Group for Tenant = %s" %\
+        logger.info("Creating Security Group for Tenant = %s" %\
                        (tenant.GID()))
         leps = tenant.GetLocalEps()
         reps = tenant.GetRemoteEps()

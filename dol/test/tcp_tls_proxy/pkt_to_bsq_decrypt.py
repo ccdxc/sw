@@ -30,7 +30,7 @@ def TestCaseSetup(tc):
 
     print("TestCaseSetup(): Start")
 
-    tc.pvtdata = ObjectDatabase(logger)
+    tc.pvtdata = ObjectDatabase()
     tcp_proxy.SetupProxyArgs(tc)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     TcpCbHelper.main(id)

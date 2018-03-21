@@ -3,7 +3,7 @@
 from pprint import pformat
 from scapy.all import *
 import config.resmgr            as resmgr
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from ctypes import *
 
 import infra.factory.base as base
@@ -24,7 +24,7 @@ def to_dict(obj):
 
 
 def ctypes_pformat(cstruct):
-    return cstruct.__class__.__name__ + '\n' + pformat(to_dict(cstruct))
+    return cstruct.__class__.__name__ + '\n' + pformat(to_dict(cstruct)) 
 
 
 class EthRxDescriptor(LittleEndianStructure):
@@ -130,7 +130,6 @@ class EthDescriptorObject(base.FactoryObjectBase):
 
     def __init__(self):
         super().__init__()
-        self.logger = cfglogger
         self.size = sizeof(self.__data_class__)
         if (self.size & (self.size - 1)) != 0:    # Size must be power of 2
             raise ValueError('Size must be a power of 2.'
@@ -157,7 +156,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         self._buf = getattr(spec.fields, '_buf', None)
         self._more = getattr(spec.fields, '_more', None)
 
-        self.logger.info("Init %s" % self)
+        logger.info("Init %s" % self)
 
     def Write(self):
         """
@@ -166,10 +165,10 @@ class EthDescriptorObject(base.FactoryObjectBase):
         """
         if self._mem is None: return
 
-        self.logger.info("Writing %s" % self)
+        logger.info("Writing %s" % self)
         self._data = self.__data_class__(**self.fields)
         resmgr.HostMemoryAllocator.write(self._mem, bytes(self._data))
-        self.logger.info(ctypes_pformat(self._data))
+        logger.info(ctypes_pformat(self._data))
 
     def Read(self):
         """
@@ -178,13 +177,13 @@ class EthDescriptorObject(base.FactoryObjectBase):
         """
         if self._mem is None: return
 
-        self.logger.info("Reading %s" % self)
+        logger.info("Reading %s" % self)
         ba = resmgr.HostMemoryAllocator.read(self._mem, self.size)
         self._data = self.__data_class__.from_buffer_copy(ba)
         # Fill in the fields from data
         self.fields = {k[0]: getattr(self._data, k[0])
                        for k in self.__data_class__._fields_}
-        self.logger.info(ctypes_pformat(self._data))
+        logger.info(ctypes_pformat(self._data))
 
     def __str__(self):
         return "%s GID:%s/Id:0x%x/Memory:%s" % (
@@ -205,7 +204,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
                                          '==' if self.fields[x] == other.fields[x] else '!=',
                                          other.fields[x]))
         msg.append('ignored: %s' % ','.join(ignored_fields))
-        self.logger.info('/'.join(msg))
+        logger.info('/'.join(msg))
         return all(self.fields[x] == other.fields[x] for x in compare_fields)
 
     def __copy__(self):

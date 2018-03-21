@@ -39,7 +39,7 @@ def TestCaseSetup(tc):
     global rawccb
     global redir_span
     tc.SetRetryEnabled(True)
-    tc.pvtdata = ObjectDatabase(logger)
+    tc.pvtdata = ObjectDatabase()
     redir_span = getattr(tc.module.args, 'redir_span', False)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     if redir_span:

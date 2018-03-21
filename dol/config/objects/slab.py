@@ -7,7 +7,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
@@ -42,8 +42,8 @@ class SlabObject(base.ConfigObjectBase):
 
     def Show(self):
         if (GlobalOptions.dryrun): return
-        cfglogger.info('SLAB: %s EP: %s' %(self.GID(), self.ep.GID()))
-        cfglogger.info('size: %d address: 0x%x' %(self.size, self.address))
+        logger.info('SLAB: %s EP: %s' %(self.GID(), self.ep.GID()))
+        logger.info('size: %d address: 0x%x' %(self.size, self.address))
         i = 0
         for phy_addr in self.phy_address:
             i += 1
@@ -55,7 +55,7 @@ class SlabObjectHelper:
 
     def Generate(self, ep, spec):
         count = spec.count
-        cfglogger.info("Creating %d Slabs. for EP:%s" %\
+        logger.info("Creating %d Slabs. for EP:%s" %\
                        (count, ep.GID()))
         for slab_id in range(count):
             slab = SlabObject(ep, spec.size)
@@ -65,6 +65,6 @@ class SlabObjectHelper:
         self.slabs.append(slab)
 
     def Configure(self):
-        cfglogger.info("Configuring %d Slabs." % len(self.slabs)) 
+        logger.info("Configuring %d Slabs." % len(self.slabs)) 
         for slab in self.slabs:
             slab.Configure()

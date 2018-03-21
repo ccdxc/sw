@@ -6,7 +6,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 import config.objects.endpoint  as endpoint
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 import config.hal.api            as halapi
@@ -48,7 +48,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
         return self.ep.GetIpv6Address()
 
     def Show(self):
-        cfglogger.info("- Backend = %s  %s:%d" %\
+        logger.info("- Backend = %s  %s:%d" %\
                        (self.GID(), self.ep.GID(), self.port.get()))
         return
 
@@ -60,7 +60,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- Backend %s = %s" %\
+        logger.info("- Backend %s = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.status.service_handle
         return
@@ -78,7 +78,7 @@ class L4LbBackendObjectHelper:
         return
 
     def Configure(self):
-        cfgloggers("Configuring %d L4LbBackends" % len(self.bends))
+        loggers("Configuring %d L4LbBackends" % len(self.bends))
         halapi.ConfigureL4LbBackends(self.bends)
         return
 
@@ -88,10 +88,10 @@ class L4LbBackendObjectHelper:
             for c in range(count):
                 bend = L4LbBackendObject()
                 if c < count/2:
-                    cfglogger.info("Picking up non-vxlan EP for Backend");
+                    logger.info("Picking up non-vxlan EP for Backend");
                     pick_ep_in_l2seg_vxlan = False
                 else:
-                    cfglogger.info("Picking up vxlan EP for Backend");
+                    logger.info("Picking up vxlan EP for Backend");
                     pick_ep_in_l2seg_vxlan = True
                 bend.Init(service, bspec, pick_ep_in_l2seg_vxlan)
                 self.bends.append(bend)
@@ -178,21 +178,21 @@ class L4LbServiceObject(base.ConfigObjectBase):
 
 
     def Show(self):
-        cfglogger.info("L4LbService: %s" % self.GID())
-        cfglogger.info("- Label   = %s" % self.label)
-        cfglogger.info("- Mode    = %s" % self.mode)
-        cfglogger.info("- Tenant  = %s" % self.tenant.GID())
-        cfglogger.info("- Proto   = %s" % self.proto)
-        cfglogger.info("- VIP     = %s" % self.vip.get())
-        cfglogger.info("- VMac    = %s" % self.macaddr.get())
-        cfglogger.info("- Port    = %s" % self.port.get())
+        logger.info("L4LbService: %s" % self.GID())
+        logger.info("- Label   = %s" % self.label)
+        logger.info("- Mode    = %s" % self.mode)
+        logger.info("- Tenant  = %s" % self.tenant.GID())
+        logger.info("- Proto   = %s" % self.proto)
+        logger.info("- VIP     = %s" % self.vip.get())
+        logger.info("- VMac    = %s" % self.macaddr.get())
+        logger.info("- Port    = %s" % self.port.get())
         for s in range(len(self.snat_ips)):
             if len(self.snat_ports) != 0:
-                cfglogger.info("- SNAT Ipaddr:Ipv6addr:Port = %s:%s:%d" %\
+                logger.info("- SNAT Ipaddr:Ipv6addr:Port = %s:%s:%d" %\
                               (self.snat_ips[s].get(), self.snat_ipv6s[s].get(),\
                               self.snat_ports[s]))
             else:
-                cfglogger.info("- SNAT Ipaddr:Port = %s:%s:%d" %\
+                logger.info("- SNAT Ipaddr:Port = %s:%s:%d" %\
                               (self.snat_ips[s].get(), self.snat_ipv6s[s].get(), 0))
         for bend in self.obj_helper_bend.bends:
             bend.Show()
@@ -212,9 +212,9 @@ class L4LbServiceObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         if gl_l4lb_config_ipv4:
-            cfglogger.info("Configuring IPv4 L4LbService: %s" % self.GID())
+            logger.info("Configuring IPv4 L4LbService: %s" % self.GID())
         else:
-            cfglogger.info("Configuring IPv4 L4LbService: %s" % self.GID())
+            logger.info("Configuring IPv4 L4LbService: %s" % self.GID())
 
         req_spec.meta.vrf_id = self.tenant.id
 
@@ -242,7 +242,7 @@ class L4LbServiceObject(base.ConfigObjectBase):
             handle = self.ipv4_hal_handle
 
         status = haldefs.common.ApiStatus.Name(resp_spec.api_status)
-        cfglogger.info("- L4LbService %s = %s (HDL = 0x%x)" % (self.GID(), status, handle))
+        logger.info("- L4LbService %s = %s (HDL = 0x%x)" % (self.GID(), status, handle))
         return
 
     def IsFilterMatch(self, spec):
@@ -264,11 +264,11 @@ class L4LbServiceObjectHelper:
     def Configure(self):
         global gl_l4lb_config_ipv4
 
-        cfglogger.info("Configuring %d IPv4 L4LbServices." % len(self.svcs))
+        logger.info("Configuring %d IPv4 L4LbServices." % len(self.svcs))
         gl_l4lb_config_ipv4 = True
         halapi.ConfigureL4LbServices(self.svcs)
 
-        cfglogger.info("Configuring %d IPv6 L4LbServices." % len(self.svcs))
+        logger.info("Configuring %d IPv6 L4LbServices." % len(self.svcs))
         gl_l4lb_config_ipv4 = False
         halapi.ConfigureL4LbServices(self.svcs)
 

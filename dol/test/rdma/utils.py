@@ -1,38 +1,39 @@
 import math
-
+from infra.common.logging import logger as logger
+from infra.common.logging import logger as logger
 def VerifyFieldModify(tc, pre_state, post_state, field_name, incr):
     pre_val = getattr(pre_state, field_name)
     post_val = getattr(post_state, field_name)
-    tc.info("%s pre: %d  post(actual): %d expected: %d" \
+    logger.info("%s pre: %d  post(actual): %d expected: %d" \
                     %(field_name, pre_val, post_val, pre_val+incr))
     cmp = (pre_val+incr == post_val)
-    tc.info('    Match: %s ' %cmp)
+    logger.info('    Match: %s ' %cmp)
     return cmp
 
 def VerifyFieldMaskModify(tc, pre_state, post_state, field_name, mask, incr):
     pre_val = getattr(pre_state, field_name)
     post_val = getattr(post_state, field_name)
-    tc.info("%s pre: %d  post(actual): %d expected: %d" \
+    logger.info("%s pre: %d  post(actual): %d expected: %d" \
                     %(field_name, pre_val, post_val, ((pre_val+incr) & mask)))
     cmp = (((pre_val+incr) & mask) == post_val)
-    tc.info('    Match: %s ' %cmp)
+    logger.info('    Match: %s ' %cmp)
     return cmp
 
 def VerifyFieldAbsolute(tc, state, field_name, exp_val):
     val = getattr(state, field_name)
-    tc.info("%s actual: %d expected: %d" \
+    logger.info("%s actual: %d expected: %d" \
              %(field_name, val, exp_val))
     cmp = (val == exp_val)
-    tc.info('    Match: %s ' %cmp)
+    logger.info('    Match: %s ' %cmp)
     return cmp
 
 def VerifyFieldsEqual(tc, state1, field_name1, state2, field_name2):
     val = getattr(state1, field_name1)
     exp_val = getattr(state2, field_name2)
-    tc.info("%s actual: %d %s expected: %d" \
+    logger.info("%s actual: %d %s expected: %d" \
              %(field_name1, val, field_name2, exp_val))
     cmp = (val == exp_val)
-    tc.info('    Match: %s ' %cmp)
+    logger.info('    Match: %s ' %cmp)
     return cmp
 
 
@@ -49,7 +50,7 @@ def ValidateRespRxCQChecks(tc):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
-    #tc.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
+    #logger.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
     if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'color', tc.descriptors.Get('EXP_CQ_DESC').color):
         return False
 
@@ -67,7 +68,7 @@ def ValidateRespRx2CQChecks(tc):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
-    #tc.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
+    #logger.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
     if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'color', tc.descriptors.Get('EXP_CQ_DESC_2').color):
         return False
 
@@ -85,7 +86,7 @@ def ValidateReqRxCQChecks(tc, desc_name):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
-    #tc.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
+    #logger.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
     if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_cq_post_qstate, 'color', tc.descriptors.Get(desc_name).color):
         return False
 
@@ -125,7 +126,7 @@ def ValidateEQChecks(tc):
         return False
 
     # verify that color bit in EQWQE and EQCB are same
-    #tc.info('Color from Exp EQ Descriptor: %d' % tc.descriptors.Get('EXP_EQ_DESC').color)
+    #logger.info('Color from Exp EQ Descriptor: %d' % tc.descriptors.Get('EXP_EQ_DESC').color)
     if not VerifyFieldAbsolute(tc, tc.pvtdata.eq_post_qstate, 'color', tc.descriptors.Get('EXP_EQ_DESC').color):
         return False
 

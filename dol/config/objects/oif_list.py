@@ -6,7 +6,7 @@ import config.resmgr            as resmgr
 import infra.common.objects     as objects
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 class OifListObject(base.ConfigObjectBase):
     def __init__(self):
@@ -18,17 +18,17 @@ class OifListObject(base.ConfigObjectBase):
         self.id = resmgr.OifListIdAllocator.get()
         gid = "OifList%04d" % self.id
         self.GID(gid)
-        self.oifs = objects.ObjectDatabase(cfglogger)
+        self.oifs = objects.ObjectDatabase()
         self.enic_list = []
         self.uplink_list = []
         self.Show()
         return
 
     def Show(self):
-        cfglogger.info("- OifList:%s NumOifs:%d" %\
+        logger.info("- OifList:%s NumOifs:%d" %\
                        (self.GID(), len(self.oifs)))
         for intf in self.oifs.GetAllInList():
-            cfglogger.info("  - Oif: %s" % (intf.Summary()))
+            logger.info("  - Oif: %s" % (intf.Summary()))
         return
 
     def addOif(self, oif, remote):

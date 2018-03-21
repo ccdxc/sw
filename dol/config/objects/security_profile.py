@@ -9,7 +9,7 @@ import config.resmgr            as resmgr
 import infra.config.base        as base
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 
 import config.hal.api            as halapi
@@ -28,7 +28,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         self.GID(spec.id)
         if GlobalOptions.hostpin:
             self.fields.ipsg_en = False
-            cfglogger.info("%s Disabling IPSG for Hostpin mode." % self.GID())
+            logger.info("%s Disabling IPSG for Hostpin mode." % self.GID())
         self.Show()
         return
 
@@ -37,7 +37,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         return
 
     def Update(self):
-        cfglogger.info("Updating SecurityProfile %s" % self.GID()) 
+        logger.info("Updating SecurityProfile %s" % self.GID()) 
         halapi.ConfigureSecurityProfiles([ self ], update = True)
         return
 
@@ -60,7 +60,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
 
 
     def Show(self):
-        cfglogger.info("- Security Profile  : %s (id: %d)" %\
+        logger.info("- Security Profile  : %s (id: %d)" %\
                        (self.GID(), self.id))
         return
     
@@ -117,7 +117,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.profile_status.profile_handle
-        cfglogger.info("  - SecurityProfile %s = %s (HDL = 0x%x)" %\
+        logger.info("  - SecurityProfile %s = %s (HDL = 0x%x)" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hal_handle))
@@ -181,7 +181,7 @@ class SecurityProfileObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d SecurityProfiles." % len(self.sps)) 
+        logger.info("Configuring %d SecurityProfiles." % len(self.sps)) 
         halapi.ConfigureSecurityProfiles(self.sps)
         return
         
@@ -190,7 +190,7 @@ class SecurityProfileObjectHelper:
         if sps is None: 
             return
         spec = topospec.security_profiles.Get(Store)
-        cfglogger.info("Creating %d SecurityProfiles." % len(spec.profiles))
+        logger.info("Creating %d SecurityProfiles." % len(spec.profiles))
         for p in spec.profiles:
             profile = SecurityProfileObject()
             profile.Init(p)

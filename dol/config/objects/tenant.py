@@ -18,7 +18,7 @@ import config.objects.security_group    as security_group
 import config.objects.dos_policy        as dos_policy
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 
 import config.hal.defs          as haldefs
@@ -136,15 +136,15 @@ class TenantObject(base.ConfigObjectBase):
         return True
 
     def Show(self):
-        cfglogger.info("Tenant  : %s" % self.GID())
-        cfglogger.info("- Type          : %s" % self.type)
-        cfglogger.info("- HostPinned    : %s" % self.hostpinned)
+        logger.info("Tenant  : %s" % self.GID())
+        logger.info("- Type          : %s" % self.type)
+        logger.info("- HostPinned    : %s" % self.hostpinned)
         if self.IsInfra():
-            cfglogger.info("- LocalTep  : %s" % self.local_tep.get())
-            cfglogger.info("- GIPo      : %s/%d" % (self.gipo_prefix.get(), self.gipo_len))
+            logger.info("- LocalTep  : %s" % self.local_tep.get())
+            logger.info("- GIPo      : %s/%d" % (self.gipo_prefix.get(), self.gipo_len))
         if GlobalOptions.classic:
-            cfglogger.info("- ClassicNicMode: True")
-            cfglogger.info("- Pinned IF     : %s" % self.pinif.GID())
+            logger.info("- ClassicNicMode: True")
+            logger.info("- Pinned IF     : %s" % self.pinif.GID())
         return
 
     def Summary(self):
@@ -335,7 +335,7 @@ class TenantObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - Tenant %s = %s" %\
+        logger.info("  - Tenant %s = %s" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
@@ -366,7 +366,7 @@ class TenantObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Tenants." % len(self.tens))
+        logger.info("Configuring %d Tenants." % len(self.tens))
         halapi.ConfigureTenants(self.tens)
         for ten in self.tens:
             ten.ConfigureSegments()
@@ -387,7 +387,7 @@ class TenantObjectHelper:
             return
         for entry in topospec.tenants:
             spec = entry.spec.Get(Store)
-            cfglogger.info("Creating %d Tenants" % entry.count)
+            logger.info("Creating %d Tenants" % entry.count)
             for c in range(entry.count):
                 ten = TenantObject()
                 ten.Init(spec, entry, topospec)

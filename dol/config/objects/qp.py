@@ -10,7 +10,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
@@ -77,7 +77,7 @@ class QpObject(base.ConfigObjectBase):
             if (self.sq is None or self.rq is None):
                 assert(0)
         
-            #cfglogger.info('QP: %s PD: %s Remote: %s intf: %s lif: %s' %(self.GID(), self.pd.GID(), self.remote, pd.ep.intf.GID(), pd.ep.intf.lif.GID()))
+            #logger.info('QP: %s PD: %s Remote: %s intf: %s lif: %s' %(self.GID(), self.pd.GID(), self.remote, pd.ep.intf.GID(), pd.ep.intf.lif.GID()))
 
             self.tx = pd.ep.intf.lif.GetQt('TX')
             self.rx = pd.ep.intf.lif.GetQt('RX')
@@ -142,13 +142,13 @@ class QpObject(base.ConfigObjectBase):
                 len(RdmaRsqDescriptorRead()))
 
     def Show(self):
-        cfglogger.info('QP: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
-        cfglogger.info('SQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_sq_sges, self.num_sq_wqes, self.sqwqe_size)) 
-        cfglogger.info('RQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_rq_sges, self.num_rq_wqes, self.rqwqe_size)) 
-        cfglogger.info('RRQ num_wqes: %d wqe_size: %d' %(self.num_rrq_wqes, self.rrqwqe_size)) 
-        cfglogger.info('RSQ num_wqes: %d wqe_size: %d' %(self.num_rsq_wqes, self.rsqwqe_size)) 
+        logger.info('QP: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
+        logger.info('SQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_sq_sges, self.num_sq_wqes, self.sqwqe_size)) 
+        logger.info('RQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_rq_sges, self.num_rq_wqes, self.rqwqe_size)) 
+        logger.info('RRQ num_wqes: %d wqe_size: %d' %(self.num_rrq_wqes, self.rrqwqe_size)) 
+        logger.info('RSQ num_wqes: %d wqe_size: %d' %(self.num_rsq_wqes, self.rsqwqe_size)) 
         if not self.remote:
-            cfglogger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
+            logger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
 
     def set_dst_qp(self, value):
         self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QP
@@ -161,7 +161,7 @@ class QpObject(base.ConfigObjectBase):
         halapi.ModifyQps([self])
 
     def PrepareHALRequestSpec(self, req_spec):
-        cfglogger.info("QP: %s PD: %s Remote: %s HW_LIF: %d EP->Intf: %s\n" %\
+        logger.info("QP: %s PD: %s Remote: %s HW_LIF: %d EP->Intf: %s" %\
                         (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id,
                          self.pd.ep.intf.GID()))
 
@@ -245,10 +245,10 @@ class QpObject(base.ConfigObjectBase):
                                   self.rsq_base_addr,
                                   self.num_rsq_wqes,
                                   self.rsqwqe_size)
-            cfglogger.info("QP: %s PD: %s Remote: %s \n"
+            logger.info("QP: %s PD: %s Remote: %s"
                            "sq_base_addr: 0x%x rq_base_addr: 0x%x "
                            "rsq_base_addr: 0x%x rrq_base_addr: 0x%x "
-                           "header_temp_addr: 0x%x\n" %\
+                           "header_temp_addr: 0x%x" %\
                             (self.GID(), self.pd.GID(), self.remote,
                              self.sq_slab.address, self.rq_slab.address,
                              self.rsq_base_addr, self.rrq_base_addr,
@@ -256,41 +256,41 @@ class QpObject(base.ConfigObjectBase):
     
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
-            cfglogger.info("Resp for RdmaQpUpdateSpec, "
-                           "QP: %s PD: %s oper: %d\n" %\
+            logger.info("Resp for RdmaQpUpdateSpec, "
+                           "QP: %s PD: %s oper: %d" %\
                             (self.GID(), self.pd.GID(), req_spec.oper))
 
 
-        #self.sq_cq.qstate.data.show()
+        #logger.ShowScapyObject(self.sq_cq.qstate.data)
 
     def IsFilterMatch(self, spec):
-        cfglogger.debug("Matching QID %d svc %d" %(self.id, self.svc))
+        logger.debug("Matching QID %d svc %d" %(self.id, self.svc))
         match = super().IsFilterMatch(spec.filters)
 
         return match
 
-    def ShowTestcaseConfig(self, obj, logger):
+    def ShowTestcaseConfig(self, obj):
         logger.info("Config Objects for %s" % (self.GID()))
         return
 
     def ConfigureHeaderTemplate(self, rdma_session, forward, isipv6):
-        cfglogger.info("rdma_session: %s" % rdma_session.GID())
-        cfglogger.info("session: %s" % rdma_session.session.GID())
-        cfglogger.info("flow_ep1: %s ep1: %s" \
+        logger.info("rdma_session: %s" % rdma_session.GID())
+        logger.info("session: %s" % rdma_session.session.GID())
+        logger.info("flow_ep1: %s ep1: %s" \
             %(rdma_session.session.initiator.GID(), rdma_session.session.initiator.ep.GID()))
-        cfglogger.info("flow_ep2: %s ep2: %s" \
+        logger.info("flow_ep2: %s ep2: %s" \
              %(rdma_session.session.responder.GID(), rdma_session.session.responder.ep.GID()))
-        cfglogger.info("src_ip: %s" % rdma_session.session.initiator.addr.get())
-        cfglogger.info("dst_ip: %s" % rdma_session.session.responder.addr.get())
-        cfglogger.info("src_mac: %s" % rdma_session.session.initiator.ep.macaddr.get())
-        cfglogger.info("dst_mac: %s" % rdma_session.session.responder.ep.macaddr.get())
-        cfglogger.info("proto: %s" % rdma_session.session.iflow.proto)
-        cfglogger.info("sport: %s" % rdma_session.session.iflow.sport)
-        cfglogger.info("dport: %s" % rdma_session.session.iflow.dport)
-        cfglogger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
-        cfglogger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
-        cfglogger.info("isipv6: %d" % (isipv6))
-        cfglogger.info("isVXLAN: %d" % (rdma_session.IsVXLAN))
+        logger.info("src_ip: %s" % rdma_session.session.initiator.addr.get())
+        logger.info("dst_ip: %s" % rdma_session.session.responder.addr.get())
+        logger.info("src_mac: %s" % rdma_session.session.initiator.ep.macaddr.get())
+        logger.info("dst_mac: %s" % rdma_session.session.responder.ep.macaddr.get())
+        logger.info("proto: %s" % rdma_session.session.iflow.proto)
+        logger.info("sport: %s" % rdma_session.session.iflow.sport)
+        logger.info("dport: %s" % rdma_session.session.iflow.dport)
+        logger.info("src_qp: %d pd: %s" % (rdma_session.lqp.id, rdma_session.lqp.pd.GID()))
+        logger.info("dst_qp: %d pd: %s" % (rdma_session.rqp.id, rdma_session.rqp.pd.GID()))
+        logger.info("isipv6: %d" % (isipv6))
+        logger.info("isVXLAN: %d" % (rdma_session.IsVXLAN))
 
         EthHdr = scapy.Ether(src=rdma_session.session.initiator.ep.macaddr.get(),
                              dst=rdma_session.session.responder.ep.macaddr.get())
@@ -323,7 +323,7 @@ class QpObject(base.ConfigObjectBase):
     def WriteDcqcnCb(self):
         if (GlobalOptions.dryrun): return
         # dcqcn_cb is located after header_template. header_template is 66 bytes len.
-        cfglogger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 66, 64))
+        logger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 66, 64))
         model_wrap.write_mem_pcie(self.header_temp_addr + 66, bytes(self.dcqcn_data), 64)
         self.ReadDcqcnCb()
         return
@@ -334,8 +334,8 @@ class QpObject(base.ConfigObjectBase):
             self.dcqcn_data = RdmaDCQCNstate(dcqcn_data)
             return
         self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + 66, 64))
-        self.dcqcn_data.show()
-        cfglogger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 66, 64))
+        logger.ShowScapyObject(self.dcqcn_data)
+        logger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 66, 64))
         return
 
 class RdmaDCQCNstate(scapy.Packet):
@@ -383,7 +383,7 @@ class QpObjectHelper:
         #RC QPs
         rc_spec = spec.rc
         count = rc_spec.count
-        cfglogger.info("Creating %d %s Qps. for PD:%s" %\
+        logger.info("Creating %d %s Qps. for PD:%s" %\
                        (count, rc_spec.svc_name, pd.GID()))
         for i in range(count):
             qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
@@ -394,7 +394,7 @@ class QpObjectHelper:
         #PERF RC QPs
         rc_spec = spec.perf_rc
         count = rc_spec.count
-        cfglogger.info("Creating %d %s Perf Qps. for PD:%s" %\
+        logger.info("Creating %d %s Perf Qps. for PD:%s" %\
                        (count, rc_spec.svc_name, pd.GID()))
         for i in range(count):
             qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
@@ -406,7 +406,7 @@ class QpObjectHelper:
         #UD QPs
         ud_spec = spec.ud
         count = ud_spec.count
-        cfglogger.info("Creating %d %s Qps. for PD:%s" %\
+        logger.info("Creating %d %s Qps. for PD:%s" %\
                        (count, ud_spec.svc_name, pd.GID()))
         for i in range(count):
             qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
@@ -418,8 +418,8 @@ class QpObjectHelper:
 
     def Configure(self):
         if self.pd.remote:
-            cfglogger.info("skipping QP configuration for remote PD: %s" %(self.pd.GID()))
+            logger.info("skipping QP configuration for remote PD: %s" %(self.pd.GID()))
             return
-        cfglogger.info("Configuring %d QPs %d Perf QPs." % (len(self.qps), len(self.perf_qps)))
+        logger.info("Configuring %d QPs %d Perf QPs." % (len(self.qps), len(self.perf_qps)))
         halapi.ConfigureQps(self.qps)
         halapi.ConfigureQps(self.perf_qps)

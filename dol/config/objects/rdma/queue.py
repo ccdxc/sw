@@ -10,7 +10,7 @@ import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.queue       import QueueObject
 
 import model_sim.src.model_wrap as model_wrap
@@ -409,7 +409,7 @@ class RdmaQstateObject(object):
 
     def Write(self):
         if (GlobalOptions.dryrun): return
-        cfglogger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
+        logger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
 
     def Read(self):
@@ -418,14 +418,14 @@ class RdmaQstateObject(object):
             self.data = qt_params[self.queue_type]['state'](data)
             return
         self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
-        self.data.show()
-        cfglogger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
+        logger.ShowScapyObject(self.data)
+        logger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
     
     def incr_pindex(self, ring, ring_size):
         assert(ring < 7)
         prev_value = self.get_pindex(ring)
         new_value = ((self.get_pindex(ring) + 1) & (ring_size - 1))
-        cfglogger.info("  incr_pindex: pre-val: %d new-val: %d ring_size %d" % (prev_value, new_value, ring_size))
+        logger.info("  incr_pindex: pre-val: %d new-val: %d ring_size %d" % (prev_value, new_value, ring_size))
         self.set_pindex(ring, new_value)
 
     def incr_cindex(self, ring, ring_size):
@@ -471,7 +471,7 @@ class RdmaQstateObject(object):
         setattr(self.data, 'arm', 1)
         self.Write()
 
-    def Show(self, lgh = cfglogger):
+    def Show(self, lgh = logger):
         lgh.ShowScapyObject(self.data) 
 
 
@@ -487,7 +487,7 @@ class RdmaQueueObject(QueueObject):
         self.qp_e_psn   = 0      #Needed for rx multi QP scale tests to pick next psn
         self.GID(str(self.id))
 
-        self.rings      = objects.ObjectDatabase(cfglogger)
+        self.rings      = objects.ObjectDatabase()
         self.obj_helper_ring = ring.RdmaRingObjectHelper()
         self.obj_helper_ring.Generate(self, spec)
         self.rings.SetAll(self.obj_helper_ring.rings)
@@ -508,7 +508,7 @@ class RdmaQueueObject(QueueObject):
         qstate = qt_params_entry["state"]()
         qstate.host = qt_params_entry["hrings"]
         qstate.total = qt_params_entry["trings"]
-        qstate.show()
+        logger.ShowScapyObject(qstate)
         req_spec.queue_state = bytes(qstate)
         if qt_params_entry["has_label"]:
             req_spec.label.handle = "p4plus"
@@ -527,9 +527,9 @@ class RdmaQueueObject(QueueObject):
                 model_wrap.eos_ignore_addr(self.GetQstateAddr() + 44, 1)
 
     def Show(self):
-        cfglogger.info('Queue: %s' % self.GID())
-        cfglogger.info('- type   : %s' % self.queue_type.GID())
-        cfglogger.info('- id     : %s' % self.id)
+        logger.info('Queue: %s' % self.GID())
+        logger.info('- type   : %s' % self.queue_type.GID())
+        logger.info('- id     : %s' % self.id)
 
     def SetRingParams(self, ring_id, host, nic_resident, mem_handle, address, size, desc_size):
         r = self.rings.Get(ring_id)

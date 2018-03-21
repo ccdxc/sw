@@ -3,6 +3,7 @@
 import pdb
 from infra.common.logging       import logger
 import types_pb2                as types_pb2
+from infra.common.logging import logger as logger
 
 import infra.common.defs as defs
 
@@ -33,7 +34,7 @@ def tls_cb_verify (fwdata, usrdata):
 
 tls_aes128_gcm_explicit_iv = 0x627788b54033b07f
 def tls_aes128_decrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES128-%s Decrypt Setup:" % (tc.module.args.cipher_suite))
+    logger.info("AES128-%s Decrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
@@ -74,7 +75,7 @@ def tls_aes128_decrypt_setup(tc, tlscb):
     return
 
 def tls_aes128_encrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES128-%s Encrypt Setup:" % (tc.module.args.cipher_suite))
+    logger.info("AES128-%s Encrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
@@ -114,7 +115,7 @@ def tls_aes128_encrypt_setup(tc, tlscb):
 # Explicit IV : 0x94 0xcb 0x98 0x62 0x80 0xff 0xdb 0x23
 tls_aes256_gcm_explicit_iv = 0x23dbff806298cb94
 def tls_aes256_decrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES256-%s Decrypt Setup:" % (tc.module.args.cipher_suite))
+    logger.info("AES256-%s Decrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
@@ -155,7 +156,7 @@ def tls_aes256_decrypt_setup(tc, tlscb):
     return
 
 def tls_aes256_encrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES256-%s Encrypt Setup:" % (tc.module.args.cipher_suite))
+    logger.info("AES256-%s Encrypt Setup:" % (tc.module.args.cipher_suite))
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
@@ -163,7 +164,7 @@ def tls_aes256_encrypt_setup(tc, tlscb):
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
     tlscb.crypto_key.Update(key_type, key_size, key)
 
-    tc.module.logger.info("AES256-%s Encrypt Setup: - crypto key index %d" % (tc.module.args.cipher_suite, tlscb.crypto_key.keyindex))
+    logger.info("AES256-%s Encrypt Setup: - crypto key index %d" % (tc.module.args.cipher_suite, tlscb.crypto_key.keyindex))
 
     if hasattr(tc.module.args, 'hmac_key_size'):
         if tc.module.args.hmac_key_size == 16:
@@ -176,7 +177,7 @@ def tls_aes256_encrypt_setup(tc, tlscb):
             key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xcc'
         tlscb.crypto_hmac_key.Update(key_type, key_size, key)            
 
-        tc.module.logger.info("AES256-%s Encrypt Setup: - crypto HMAC key index %d" % (tc.module.args.cipher_suite, tlscb.crypto_hmac_key.keyindex))
+        logger.info("AES256-%s Encrypt Setup: - crypto HMAC key index %d" % (tc.module.args.cipher_suite, tlscb.crypto_hmac_key.keyindex))
 
     # TLS-CB Setup
     if tc.module.args.cipher_suite == "CCM":

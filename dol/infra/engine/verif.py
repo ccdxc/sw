@@ -20,7 +20,6 @@ MAX_RETRIES         = 10
 MAX_DROP_RETRIES    = 1
 
 class VerifEngineObject:
-    
     def __init__(self):
         pass
 
@@ -29,16 +28,16 @@ class VerifEngineObject:
 
     def Verify(self, step, tc):
         if GlobalOptions.skipverify:
-            tc.info("Run with skipverify=True: SKIPPING VERIFICATION")
+            logger.info("Run with skipverify=True: SKIPPING VERIFICATION")
             return defs.status.SUCCESS
     
 class DolVerifEngineObject(VerifEngineObject):
     def __init__(self):
         super().__init__()
         # Pending testcase database
-        self.ptcdb = objects.ObjectDatabase(logger)
+        self.ptcdb = objects.ObjectDatabase()
         # Completed testcase database 
-        self.ctcdb = objects.ObjectDatabase(logger)
+        self.ctcdb = objects.ObjectDatabase()
         return
 
     def __compare_pktbuffers(self, epktbuf, apktbuf, tc):
@@ -46,21 +45,21 @@ class DolVerifEngineObject(VerifEngineObject):
             return True
 
         if epktbuf is None:
-            tc.info("Packet Compare: Expected Buffer is None. Skipping")
+            logger.info("Packet Compare: Expected Buffer is None. Skipping")
             return True
 
         if apktbuf is None:
-            tc.error("Packet Compare: ExpType:%s, ActType:%s" %\
+            logger.error("Packet Compare: ExpType:%s, ActType:%s" %\
                       (type(epktbuf), type(apktbuf)))
             return False
 
         # Make sure we are not accidentally comparing the same object
         if id(apktbuf) == id(epktbuf):
-            tc.error("ExpBuf and ActBuf are same objects.")
+            logger.error("ExpBuf and ActBuf are same objects.")
             return False
 
-        tc.verbose("Comparing Packets")
-        pcr = comparators.PacketComparator(tc)
+        logger.verbose("Comparing Packets")
+        pcr = comparators.PacketComparator()
         pcr.AddExpected(epktbuf, None, 1)
         pcr.AddReceived(apktbuf, None)
         pcr.Compare()
@@ -71,9 +70,9 @@ class DolVerifEngineObject(VerifEngineObject):
     def __verify_pktbuffers(self, epktbuf, apktbuf, tc):
         match = self.__compare_pktbuffers(epktbuf, apktbuf, tc)
         if match is False:
-            tc.error("PacketBuffer Compare Result = Mismatch")
+            logger.error("PacketBuffer Compare Result = Mismatch")
             return defs.status.ERROR
-        tc.info("PacketBuffer Compare Result = Match")
+        logger.info("PacketBuffer Compare Result = Match")
         return defs.status.SUCCESS
 
     def __compare_buffers(self, ebuf, abuf, tc):
@@ -81,14 +80,14 @@ class DolVerifEngineObject(VerifEngineObject):
             return True
 
         if ebuf is None or abuf is None:
-            tc.error("Buffer Compare: ExpType:%s, ActType:%s" %\
+            logger.error("Buffer Compare: ExpType:%s, ActType:%s" %\
                       (type(ebuf), type(abuf)))
             return False
 
-        tc.info("Comparing Buffers: %s <--> %s " % (ebuf.GID(), abuf.GID()))
+        logger.info("Comparing Buffers: %s <--> %s " % (ebuf.GID(), abuf.GID()))
         # Make sure we are not accidentally comparing the same object
         if id(ebuf) == id(abuf):
-            tc.error("ExpBuf and ActBuf are same objects.")
+            logger.error("ExpBuf and ActBuf are same objects.")
             return False
 
         return ebuf == abuf
@@ -98,20 +97,20 @@ class DolVerifEngineObject(VerifEngineObject):
             return buf.Read()
 
         if GlobalOptions.dryrun is False:
-            tc.error("Trying to GetBuffer() on a None descriptor.")
+            logger.error("Trying to GetBuffer() on a None descriptor.")
             assert(0)
         return None
 
     def __verify_buffers(self, ebuf, abuf, tc):
         match = self.__compare_buffers(ebuf, abuf, tc)
         if match is False:
-            tc.error("Buffer compare result = Mismatch")
+            logger.error("Buffer compare result = Mismatch")
             return defs.status.ERROR
-        tc.info("Buffer compare result = Match")
+        logger.info("Buffer compare result = Match")
 
         # If this buffer is not a packet, then stop.
         if ebuf.IsPacket() is False:
-            tc.info("Buffer is not a packet. Skipping PktCompare.")
+            logger.info("Buffer is not a packet. Skipping PktCompare.")
             return defs.status.SUCCESS
        
         epktbuf = self.__get_pktbuffer(ebuf, tc)
@@ -123,7 +122,7 @@ class DolVerifEngineObject(VerifEngineObject):
             return utils.SafeFnCall(None, tc, descr.GetBuffer)
 
         if GlobalOptions.dryrun is False:
-            tc.error("Trying to GetBuffer() on a None descriptor.")
+            logger.error("Trying to GetBuffer() on a None descriptor.")
             assert(0)
         return None
 
@@ -131,26 +130,26 @@ class DolVerifEngineObject(VerifEngineObject):
         if GlobalOptions.dryrun:
             return True
 
-        tc.info("Comparing Descriptors: %s <--> %s " % (edescr.GID(), adescr.GID()))
+        logger.info("Comparing Descriptors: %s <--> %s " % (edescr.GID(), adescr.GID()))
         return edescr == adescr
 
     def __verify_one_descriptor(self, edescr, adescr, tc):
         match = self.__compare_descriptors(edescr, adescr, tc)
         if match is False:
-            tc.error("Descriptor compare result = MisMatch")
+            logger.error("Descriptor compare result = MisMatch")
             return defs.status.ERROR
-        tc.info("Descriptor compare result = Match")
+        logger.info("Descriptor compare result = Match")
         ebuf = self.__get_buffer(edescr, tc)
         abuf = self.__get_buffer(adescr, tc)
         if ebuf is None:
-            tc.info("Expected buffer is None = Buffer Verification skipped!")
+            logger.info("Expected buffer is None = Buffer Verification skipped!")
             return defs.status.SUCCESS
         return self.__verify_buffers(ebuf, abuf, tc)
 
     def __retry_wait(self, tc):
         if GlobalOptions.dryrun:
             return
-        tc.info("Retry wait.........")
+        logger.info("Retry wait.........")
         if GlobalOptions.rtl:
             time.sleep(1*RTL_RETRY_SCALE)
         else:
@@ -204,7 +203,7 @@ class DolVerifEngineObject(VerifEngineObject):
                 
             method()
             if not config.original_object.Equals(config.actual_object, tc):
-                tc.error("Config object compare result = MisMatch")
+                logger.error("Config object compare result = MisMatch")
                 return defs.status.ERROR
         return defs.status.SUCCESS
 
@@ -215,12 +214,12 @@ class DolVerifEngineObject(VerifEngineObject):
             for mpkt in mpkts:
                 pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])
             if pcr.GetExPacketCount() == 0:
-                #tc.info("0 Packets expected: Waiting for Excess packets")
+                #logger.info("0 Packets expected: Waiting for Excess packets")
                 break
             else:
                 if pcr.GetRxPacketCount() >= pcr.GetExPacketCount():
                     break
-                tc.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
+                logger.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
                         (pcr.GetExPacketCount(), pcr.GetRxPacketCount()))
 
             if self.__is_retry_enabled(tc) == False:
@@ -243,7 +242,7 @@ class DolVerifEngineObject(VerifEngineObject):
         return
 
     def __verify_packets(self, step, tc):
-        pcr = comparators.PacketComparator(tc)
+        pcr = comparators.PacketComparator()
         # Add Expected
         self.__add_expected(pcr, step, tc)
         # Add RX
@@ -289,13 +288,13 @@ class DolVerifEngineObject(VerifEngineObject):
             final_delay = step.expect.delay
             if GlobalOptions.rtl:
                 final_delay = step.expect.delay * RTL_RETRY_SCALE
-            tc.info("Expectation Delay: %d" % final_delay)
+            logger.info("Expectation Delay: %d" % final_delay)
             time.sleep(final_delay)
         return
 
     def Verify(self, step, tc):
         if GlobalOptions.skipverify:
-            tc.info("Run with skipverify=True: SKIPPING VERIFICATION")
+            logger.info("Run with skipverify=True: SKIPPING VERIFICATION")
             return defs.status.SUCCESS
         self.__verify_delay(step, tc)
         return self._verify(step, tc)
@@ -308,10 +307,10 @@ class E2EVerifEngineObject(VerifEngineObject):
     def __verify_commands(self, step, tc):
         for cmd in step.expect.commands:
             if not cmd.status:
-                tc.error("Command Failed %s" % cmd.command)
+                logger.error("Command Failed %s" % cmd.command)
                 return defs.status.ERROR
             else:
-                tc.info("Command Success %s" % cmd.command)            
+                logger.info("Command Success %s" % cmd.command)            
         return defs.status.SUCCESS        
     
     def _verify(self, step, tc):
@@ -328,7 +327,7 @@ class E2EVerifEngineObject(VerifEngineObject):
 
     def Verify(self, step, tc):
         if GlobalOptions.skipverify:
-            tc.info("Run with skipverify=True: SKIPPING VERIFICATION")
+            logger.info("Run with skipverify=True: SKIPPING VERIFICATION")
             return defs.status.SUCCESS
         return self._verify(step, tc) 
        

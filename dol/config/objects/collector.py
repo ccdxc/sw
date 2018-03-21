@@ -12,7 +12,7 @@ import config.objects.tunnel    as tunnel
 #import config.objects.session   as session
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -43,14 +43,14 @@ class CollectorObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Collector       : %s" % self.GID())
-        cfglogger.info("- Encap         : %s" % self.vlan)
-        cfglogger.info("- Destination   : %s" % self.dest_ip)
-        cfglogger.info("- Source        : %s" % self.source_ip)
-        cfglogger.info("- Protocol      : %s" % self.protocol)
-        cfglogger.info("- Port          : %s" % self.dport)
-        cfglogger.info("- Format        : %s" % self.format)
-        cfglogger.info("- Template ID   : %s" % self.template_id)
+        logger.info("Collector       : %s" % self.GID())
+        logger.info("- Encap         : %s" % self.vlan)
+        logger.info("- Destination   : %s" % self.dest_ip)
+        logger.info("- Source        : %s" % self.source_ip)
+        logger.info("- Protocol      : %s" % self.protocol)
+        logger.info("- Port          : %s" % self.dport)
+        logger.info("- Format        : %s" % self.format)
+        logger.info("- Template ID   : %s" % self.template_id)
         return
 
     def Update(self, encap, dest, src, protocol, dport, format, template_id):
@@ -83,7 +83,7 @@ class CollectorObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - Collector %s = %s" %\
+        logger.info("  - Collector %s = %s" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         #pdb.set_trace()
@@ -99,7 +99,7 @@ class CollectorObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Collector." % len(self.collectors))
+        logger.info("Configuring %d Collector." % len(self.collectors))
         halapi.ConfigureCollectors(self.collectors)
         return
 

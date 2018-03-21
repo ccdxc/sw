@@ -10,7 +10,7 @@ import config.hal.defs          as haldefs
 import config.hal.api           as halapi
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 class ProxyServiceObject(base.ConfigObjectBase):
     def __init__(self, name, type):
@@ -21,7 +21,7 @@ class ProxyServiceObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Service List for %s" % self.GID())
+        logger.info("Service List for %s" % self.GID())
         return
 
     def PrepareHALRequestSpec(self, reqspec):
@@ -64,7 +64,7 @@ class ProxyServiceObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("[%s]Received response %s for type: %d" % (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),  resp_spec.proxy_status.proxy_handle))
+        logger.info("[%s]Received response %s for type: %d" % (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),  resp_spec.proxy_status.proxy_handle))
         return
 
 class ProxyServiceObjectHelper:

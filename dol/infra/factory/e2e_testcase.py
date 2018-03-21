@@ -16,7 +16,7 @@ class E2ETestCase(TestCase):
         if objects.IsCallback(command.endpoint):
             cmd.object = endpoint.endpoint.call(self)
             if cmd.object is None:
-                self.info("- Object Callback return None")
+                logger.info("- Object Callback return None")
                 return None
         else: # Its a reference
             cmd.object = command.endpoint.Get(self)
@@ -42,7 +42,7 @@ class E2ETestCase(TestCase):
             tcsn.commands.append(tc_cmd)
     
     def _setup_trigger(self, tcstep, spstep):
-        self.info("- Setting up Trigger.")
+        logger.info("- Setting up Trigger.")
         if spstep.trigger == None: return
         super()._setup_trigger(tcstep, spstep)
         self.__setup_commands(tcstep.trigger, spstep.trigger)
@@ -62,4 +62,4 @@ class E2ETestCase(TestCase):
         #Config should be generated for the testcase.
         assert(config_obj)
         self._setup_config(config_obj)
-        self._generate()
+        super()._generate()

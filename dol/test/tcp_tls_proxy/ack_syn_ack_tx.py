@@ -12,6 +12,7 @@ from infra.common.logging import logger
 from config.objects.cpucb        import CpuCbHelper
 import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 import test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
+from infra.common.logging import logger as logger
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -23,7 +24,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.pvtdata = ObjectDatabase(logger)
+    tc.pvtdata = ObjectDatabase()
     tcp_proxy.SetupProxyArgs(tc)
 
     id1, id2 = ProxyCbServiceHelper.GetSessionQids(tc.config.flow._FlowObject__session)
@@ -46,7 +47,7 @@ def TestCaseSetup(tc):
 
     TcpCbHelper.main(other_fid)
     tcbid2 = "TcpCb%04d" % (other_fid)
-    tc.module.logger.info("Configuring %s" % tcbid2)
+    logger.info("Configuring %s" % tcbid2)
     tcb2 = tc.infra_data.ConfigStore.objects.db[tcbid2]
     tcp_proxy.init_tcb_inorder2(tc, tcb2)
     tcb2.SetObjValPd()

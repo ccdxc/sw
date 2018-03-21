@@ -11,7 +11,7 @@ import config.objects.lif       as lif
 import config.objects.tunnel    as tunnel
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -41,21 +41,21 @@ class SpanSessionObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Span Session: %s" % self.GID())
-        cfglogger.info("- Type      : %s" % self.type)
+        logger.info("Span Session: %s" % self.GID())
+        logger.info("- Type      : %s" % self.type)
         if self.IsLocal():
-            cfglogger.info("- Interface : %s" % self.intf.GID())
+            logger.info("- Interface : %s" % self.intf.GID())
         elif self.IsRspan():
-            cfglogger.info("- Interface : %s" % self.intf.GID())
+            logger.info("- Interface : %s" % self.intf.GID())
             if self.segment.IsFabEncapVxlan():
-                cfglogger.info("- EncapType : VXLAN")
-                cfglogger.info("- EncapVal  : %s" % self.segment.vxlan_id)
+                logger.info("- EncapType : VXLAN")
+                logger.info("- EncapVal  : %s" % self.segment.vxlan_id)
             else:
-                cfglogger.info("- EncapType : VLAN")
-                cfglogger.info("- EncapVal  : %s" % self.segment.vlan_id)
+                logger.info("- EncapType : VLAN")
+                logger.info("- EncapVal  : %s" % self.segment.vlan_id)
         elif self.IsErspan():
-            cfglogger.info("- Dest IP   : %s" % self.ep.GetIpAddress().get())
-            cfglogger.info("- DSCP      : %s" % self.dscp)
+            logger.info("- Dest IP   : %s" % self.ep.GetIpAddress().get())
+            logger.info("- DSCP      : %s" % self.dscp)
         return
 
     def IsLocal(self):
@@ -105,7 +105,7 @@ class SpanSessionObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - SpanSession %s = %s" %\
+        logger.info("  - SpanSession %s = %s" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
@@ -120,7 +120,7 @@ class SpanSessionObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Span Sessions." % len(self.span_ssns)) 
+        logger.info("Configuring %d Span Sessions." % len(self.span_ssns)) 
         halapi.ConfigureSpanSessions(self.span_ssns)
         return
         

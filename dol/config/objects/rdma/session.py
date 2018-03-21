@@ -7,7 +7,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
@@ -47,17 +47,17 @@ class RdmaSessionObject(base.ConfigObjectBase):
         if self.lqp.svc == 3:
             self.lqp.set_q_key(self.lqp.id) #we are using q_id as q_key
         #self.lqp.rq.set_dst_qp(self.rqp.id)
-        #cfglogger.info('RDMA Session: %s  Setting SQCB Local QID: %d Remote QID: %d ' % 
+        #logger.info('RDMA Session: %s  Setting SQCB Local QID: %d Remote QID: %d ' % 
         #               (self.GID(), self.lqp.id, self.rqp.id))
         pass
          
     def Show(self):
-        cfglogger.info('RDMA Session: %s' % self.GID())
-        cfglogger.info('- Session: %s' % self.session.GID())
-        cfglogger.info('- LQP: %s' % self.lqp.GID())
-        cfglogger.info('- RQP: %s' % self.rqp.GID())
-        cfglogger.info('- IsIPV6: %s' % self.IsIPV6())
-        cfglogger.info('- IsVxLAN: %s' % self.IsVxLAN)
+        logger.info('RDMA Session: %s' % self.GID())
+        logger.info('- Session: %s' % self.session.GID())
+        logger.info('- LQP: %s' % self.lqp.GID())
+        logger.info('- RQP: %s' % self.rqp.GID())
+        logger.info('- IsIPV6: %s' % self.IsIPV6())
+        logger.info('- IsVxLAN: %s' % self.IsVxLAN)
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -65,8 +65,8 @@ class RdmaSessionObject(base.ConfigObjectBase):
         # For now we only have Ah Requests. In future we need to make sure what kind
         # of spec it is.
         #
-        cfglogger.info("PrepareHALRequestSpec:: RDMA Session: %s Session: %s "
-                       "Remote QP: %s Local QP: %s\n" %\
+        logger.info("PrepareHALRequestSpec:: RDMA Session: %s Session: %s "
+                       "Remote QP: %s Local QP: %s" %\
                         (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID()))
         if (GlobalOptions.dryrun): return
 
@@ -98,8 +98,8 @@ class RdmaSessionObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("ProcessHALResponse:: RDMA Session: %s Session: %s "
-                       "Remote QP: %s Local QP: %s ah_handle: %d, ah_size: %d\n" %\
+        logger.info("ProcessHALResponse:: RDMA Session: %s Session: %s "
+                       "Remote QP: %s Local QP: %s ah_handle: %d, ah_size: %d" %\
                         (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID(), 
                          resp_spec.ah_handle, resp_spec.ah_size))
 
@@ -111,14 +111,14 @@ class RdmaSessionObject(base.ConfigObjectBase):
         return self.IsIPV6
 
     def IsFilterMatch(self, selectors):
-        cfglogger.debug('Matching RDMA Session: %s' % self.GID())
+        logger.debug('Matching RDMA Session: %s' % self.GID())
 
         match = self.lqp.IsFilterMatch(selectors.rdmasession.lqp)
-        cfglogger.debug("- LQP Filter Match =", match)
+        logger.debug("- LQP Filter Match =", match)
         if match == False: return match
         
         match = self.rqp.IsFilterMatch(selectors.rdmasession.rqp)
-        cfglogger.debug("- RQP Filter Match =", match)
+        logger.debug("- RQP Filter Match =", match)
         if match == False: return  match
         
         if hasattr(selectors.rdmasession, 'base'):
@@ -127,7 +127,7 @@ class RdmaSessionObject(base.ConfigObjectBase):
 
         if hasattr(selectors.rdmasession, 'session'):
             match = super().IsFilterMatch(selectors.rdmasession.session.filters)
-            cfglogger.debug("- IsIPV6 Filter Match =", match)
+            logger.debug("- IsIPV6 Filter Match =", match)
             if match == False: return  match
         
         return True
@@ -136,10 +136,10 @@ class RdmaSessionObject(base.ConfigObjectBase):
         obj.rdmasession = self;
         return
 
-    def ShowTestcaseConfig(self, obj, logger):
+    def ShowTestcaseConfig(self, obj):
         logger.info("Config Objects for %s" % self.GID())
-        self.lqp.ShowTestcaseConfig(obj.rdmasession.lqp, logger)
-        self.rqp.ShowTestcaseConfig(obj.rdmasession.rqp, logger)
+        self.lqp.ShowTestcaseConfig(obj.rdmasession.lqp)
+        self.rqp.ShowTestcaseConfig(obj.rdmasession.rqp)
         return
 
     def IsRetryEnabled(self):
@@ -188,7 +188,7 @@ class RdmaSessionObjectHelper:
             ep1_qps = self.__get_qps_for_ep(ep1)
             ep2_qps = self.__get_qps_for_ep(ep2)
             
-            #cfglogger.info("RDMA RC Generate: EP1 %s (%s, %d) EP2 %s (%s, %d) IPv6 %d VXLAN %d" %\
+            #logger.info("RDMA RC Generate: EP1 %s (%s, %d) EP2 %s (%s, %d) IPv6 %d VXLAN %d" %\
             #                (ep1.GID(), not ep1.remote, len(ep1_qps), ep2.GID(), not ep2.remote,
             #                len(ep2_qps), nw_s.IsIPV6(), ep2.segment.IsFabEncapVxlan()))
 
@@ -217,10 +217,10 @@ class RdmaSessionObjectHelper:
                     ipv6  = nw_s.IsIPV6()
 
                     if vxlan and not nw_s.iflow.IsL2():
-                       #cfglogger.info('SKIP: VXLAN Routed Sessions for now')
+                       #logger.info('SKIP: VXLAN Routed Sessions for now')
                        continue
 
-                    #cfglogger.info("RDMA RC CHECK: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s"
+                    #logger.info("RDMA RC CHECK: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s"
                     #               " IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
                     #               not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(),
                     #               ep2.segment.IsFabEncapVxlan()))
@@ -247,7 +247,7 @@ class RdmaSessionObjectHelper:
                     self.used_qps.append(lqp)
                     self.used_qps.append(rqp)
 
-                    cfglogger.info("RDMA RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
+                    logger.info("RDMA RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
                                    "IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
                                    not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(), 
                                    ep2.segment.IsFabEncapVxlan()))
@@ -281,7 +281,7 @@ class RdmaSessionObjectHelper:
 
                     vxlan = ep2.segment.IsFabEncapVxlan()
 
-                    cfglogger.info("RDMA PERF RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
+                    logger.info("RDMA PERF RC PICKED: EP1 %s (%s) EP2 %s (%s) LQP %s RQP %s" 
                                    "IPv6 %d VXLAN %d" % (ep1.GID(), not ep1.remote, ep2.GID(),
                                    not ep2.remote, lqp.GID(), rqp.GID(), nw_s.IsIPV6(), 
                                    ep2.segment.IsFabEncapVxlan()))

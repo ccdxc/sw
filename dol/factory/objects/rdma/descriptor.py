@@ -5,7 +5,7 @@ from scapy.all import *
 import config.resmgr as resmgr
 
 import infra.factory.base as base
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
 
@@ -186,7 +186,6 @@ class RdmaEqDescriptor(Packet):
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
-        self.logger = cfglogger
         self.sges = []
 
     def Init(self, spec):
@@ -202,7 +201,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         inline_data_vld = self.spec.fields.inline_data_vld if hasattr(self.spec.fields, 'inline_data_vld') else 0
         num_sges = self.spec.fields.num_sges if hasattr(self.spec.fields, 'num_sges') else 0
         color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
-        cfglogger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d color: %d" % 
+        logger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d color: %d" % 
                        (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges, color))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid,
                                     inline_data_vld = inline_data_vld, num_sges=num_sges, color=color)
@@ -211,7 +210,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
 
         # Make sure Inline data is specificied only for Send and Write, assert in other operations
         if hasattr(self.spec.fields, 'send'):
-           print("Reading Send")
+           logger.info("Reading Send")
            imm_data = self.spec.fields.send.imm_data if hasattr(self.spec.fields.send, 'imm_data') else 0
            inv_key = self.spec.fields.send.inv_key if hasattr(self.spec.fields.send, 'inv_key') else 0
            data_len = self.spec.fields.send.len if hasattr(self.spec.fields.send, 'len') else 0
@@ -224,7 +223,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            desc = desc/send
 
         if hasattr(self.spec.fields, 'ud_send'):
-           print("Reading UD Send")
+           logger.info("Reading UD Send")
            dst_qp = self.spec.fields.ud_send.dst_qp if hasattr(self.spec.fields.ud_send, 'dst_qp') else 0
            q_key = self.spec.fields.ud_send.q_key if hasattr(self.spec.fields.ud_send, 'q_key') else 0
            ah_handle = self.spec.fields.ud_send.ah_handle if hasattr(self.spec.fields.ud_send, 'ah_handle') else 0
@@ -236,7 +235,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            desc = desc/send
 
         if hasattr(self.spec.fields, 'write'):
-           print("Reading Write")
+           logger.info("Reading Write")
            imm_data = self.spec.fields.write.imm_data if hasattr(self.spec.fields.write, 'imm_data') else 0
            va = self.spec.fields.write.va if hasattr(self.spec.fields.write, 'va') else 0
            dma_len = self.spec.fields.write.len if hasattr(self.spec.fields.write, 'len') else 0
@@ -250,7 +249,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            desc = desc/write
 
         if hasattr(self.spec.fields, 'read'):
-           print("Reading Read")
+           logger.info("Reading Read")
            assert(inline_data_vld == 0)
            rsvd = self.spec.fields.read.rsvd if hasattr(self.spec.fields.read, 'rsvd') else 0
            va = self.spec.fields.read.va if hasattr(self.spec.fields.read, 'va') else 0
@@ -260,7 +259,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            desc = desc/read
 
         if hasattr(self.spec.fields, 'atomic'):
-           print("Reading Atomic")
+           logger.info("Reading Atomic")
            assert(inline_data_vld == 0)
            r_key = self.spec.fields.atomic.r_key if hasattr(self.spec.fields.atomic, 'r_key') else 0
            va = self.spec.fields.atomic.va if hasattr(self.spec.fields.atomic, 'va') else 0
@@ -270,16 +269,16 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            desc = desc/atomic
 
         if inline_data_vld:
-           print("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))
+           logger.info("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))
            desc = desc/bytes(inline_data)
         else:
             for sge in self.spec.fields.sges:
                 sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
-                cfglogger.info("Read Sge[] = va: 0x%x len: %d l_key: %d" % 
+                logger.info("Read Sge[] = va: 0x%x len: %d l_key: %d" % 
                                (sge.va, sge.len, sge.l_key))
                 desc = desc/sge_entry
-              
-        desc.show()
+        
+        logger.ShowScapyObject(desc)
         if self.mem_handle:
             resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
         else:
@@ -300,11 +299,11 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
             hbm_addr = self.address
             desc = RdmaSqDescriptorBase(model_wrap.read_mem(hbm_addr, 32))
 
-        desc.show()
+        logger.ShowScapyObject(desc)
         self.wrid = desc.wrid
         self.num_sges = desc.num_sges
         self.op_type = desc.op_type
-        cfglogger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d" % 
+        logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d" % 
                        (self.address, self.wrid, self.num_sges, self.op_type))
         self.sges = []
         if self.mem_handle:
@@ -326,7 +325,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
 
             #sge = RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16))
             #self.sges.append(sge)
-            #cfglogger.info("Read Sge[%d] = va: 0x%x len: %d l_key: %d" % 
+            #logger.info("Read Sge[%d] = va: 0x%x len: %d l_key: %d" % 
             #               (i, sge.va, sge.len, sge.l_key))
             if self.mem_handle:
                 mem_handle.va += 16
@@ -334,50 +333,49 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
                 hbm_addr += 16
 
         for sge in self.sges:
-            print('%s' % type(sge))
-            print('0x%x' % sge.va)
-        print('id: %s' %id(self))
+            logger.info('%s' % type(sge))
+            logger.info('0x%x' % sge.va)
+        logger.info('id: %s' %id(self))
 
 
     def Show(self):
         desc = RdmaSqDescriptor(wrid=self.wrid, op_type=self.op_type, num_sges=self.num_sges)
-        desc.show()
+        logger.ShowScapyObject(desc)
         #TODO: Check if we need to show SGEs
 
     def __eq__(self, other):
-        cfglogger.info("__eq__ operator invoked on descriptor, ignoring for now..")
+        logger.info("__eq__ operator invoked on descriptor, ignoring for now..")
         return True
 
     def GetBuffer(self):
-        cfglogger.info("GetBuffer() operator invoked on descriptor")
+        logger.info("GetBuffer() operator invoked on descriptor")
 
         #if hasattr(self.spec.fields, 'buff'):
         if not hasattr(self, 'address'):
-            cfglogger.info("Reading from buff")
+            logger.info("Reading from buff")
             return self.spec.fields.buff
 
         rdmabuff = rdmabuffer.RdmaBufferObject()
-        cfglogger.info("wrid: %d num_sges: %d len: %d" % (self.wrid, self.num_sges, len(self.sges)));
+        logger.info("wrid: %d num_sges: %d len: %d" % (self.wrid, self.num_sges, len(self.sges)));
         total_data = bytearray()
         total_size = 0 
         for idx in range(self.num_sges):
             sge = self.sges[idx]
-            cfglogger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
+            logger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
             mem_handle = resmgr.MemHandle(sge.va,
                                           resmgr.HostMemoryAllocator.v2p(sge.va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
-            cfglogger.info("     sge data: %s" % bytes(sge_data))
+            logger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)
             total_size += sge.len
         rdmabuff.data = bytes(total_data)
         rdmabuff.size = total_size
-        cfglogger.info("Total data: %s" % bytes(total_data))
+        logger.info("Total data: %s" % bytes(total_data))
         return rdmabuff
 
 class RdmaRqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
-        self.logger = cfglogger
         self.sges = []
 
     def Init(self, spec):
@@ -391,20 +389,20 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         :return:
         """
         if self.mem_handle:
-            cfglogger.info("Writing RQ Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
+            logger.info("Writing RQ Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
                        (self.mem_handle.va, self.mem_handle.pa, self.wrid, self.spec.fields.num_sges))
         else:
-            cfglogger.info("Writing RQ Descriptor @(address:0x%x) = wrid: 0x%x num_sges: %d" % 
+            logger.info("Writing RQ Descriptor @(address:0x%x) = wrid: 0x%x num_sges: %d" % 
                        (self.address, self.wrid, self.spec.fields.num_sges))
 
         desc = RdmaRqDescriptorBase(wrid=self.wrid,
                                     num_sges=self.spec.fields.num_sges)
         for sge in self.spec.fields.sges:
-            cfglogger.info("sge: va: 0x%x len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
+            logger.info("sge: va: 0x%x len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
             sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
             desc = desc/sge_entry
-              
-        desc.show()
+        
+        logger.ShowScapyObject(desc)
         if self.mem_handle:
             resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
         else:
@@ -426,10 +424,10 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
             hbm_addr = self.address
             desc = RdmaRqDescriptorBase(model_wrap.read_mem(hbm_addr, 32))
 
-        desc.show()
+        logger.ShowScapyObject(desc)
         self.wrid = desc.wrid
         self.num_sges = desc.num_sges
-        cfglogger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d" % 
+        logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d" % 
                        (self.address, self.wrid, self.num_sges))
 
         self.sges = []
@@ -451,51 +449,50 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
                 hbm_addr += 16
 
         for sge in self.sges:
-            print('%s' % type(sge))
-            print('va: 0x%x' % sge.va)
-            print('len: 0x%x' % sge.len)
-            print('lkey: 0x%x' % sge.l_key)
-        print('id: %s' %id(self))
+            logger.info('%s' % type(sge))
+            logger.info('va: 0x%x' % sge.va)
+            logger.info('len: 0x%x' % sge.len)
+            logger.info('lkey: 0x%x' % sge.l_key)
+        logger.info('id: %s' %id(self))
 
     def Show(self):
         desc = RdmaRqDescriptor(addr=self.wrid, len=self.num_sges)
-        desc.show()
+        logger.ShowScapyObject(desc)
         #TODO: Check if we need to show SGEs
 
     def __eq__(self, other):
-        cfglogger.info("__eq__ operator invoked on descriptor, ignoring for now..")
+        logger.info("__eq__ operator invoked on descriptor, ignoring for now..")
         return True
 
     def GetBuffer(self):
-        cfglogger.info("GetBuffer() operator invoked on descriptor")
+        logger.info("GetBuffer() operator invoked on descriptor")
 
         #if hasattr(self.spec.fields, 'buff'):
         if not hasattr(self, 'address'):
             return self.spec.fields.buff
 
         rdmabuff = rdmabuffer.RdmaBufferObject()
-        cfglogger.info("wrid: %d num_sges: %d len: %d" % (self.wrid, self.num_sges, len(self.sges)));
+        logger.info("wrid: %d num_sges: %d len: %d" % (self.wrid, self.num_sges, len(self.sges)));
         total_data = bytearray()
         total_size = 0 
         for idx in range(self.num_sges):
             sge = self.sges[idx]
-            cfglogger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
+            logger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
             mem_handle = resmgr.MemHandle(sge.va,
                                           resmgr.HostMemoryAllocator.v2p(sge.va))
             sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
-            cfglogger.info("     sge data: %s" % bytes(sge_data))
+            logger.info("     sge data: %s" % bytes(sge_data))
             total_data.extend(sge_data)
             total_size += sge.len
         rdmabuff.data = bytes(total_data)
         rdmabuff.size = total_size
-        cfglogger.info("Total data: %s" % bytes(total_data))
+        logger.info("Total data: %s" % bytes(total_data))
         return rdmabuff
 
 class RdmaCqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
         self.Clone(FactoryStore.templates.Get('DESC_RDMA_CQ'))
-        self.logger = cfglogger
 
     def Init(self, spec):
         super().Init(spec)
@@ -553,7 +550,7 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing CQ Desciptor @0x%x = wrid: 0x%x " % 
+        logger.info("Writing CQ Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
         resmgr.HostMemoryAllocator.write(self.mem_handle, 
                                          bytes(self.desc))
@@ -563,21 +560,21 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from "self.address"
         :return:
         """
-        cfglogger.info("Reading CQ Desciptor @0x%x = wrid: 0x%x " % 
+        logger.info("Reading CQ Desciptor @0x%x = wrid: 0x%x " % 
                        (self.address, self.wrid))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaCqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptor()))))
 
     def Show(self):
-        self.desc.show()
+        logger.ShowScapyObject(self.desc)
 
     def __eq__(self, other):
-        cfglogger.info("__eq__ operator invoked on cq descriptor..")
+        logger.info("__eq__ operator invoked on cq descriptor..")
 
-        cfglogger.info('\nself(expected):')
+        logger.info('self(expected):')
         self.Show()
-        cfglogger.info('\nother(actual):')
+        logger.info('other(actual):')
         other.Show()
 
         # don't compare wrid anymore as asm is no longer populating it.
@@ -586,23 +583,23 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         if self.desc.status == 0: #CQ_STATUS_SUCCESS
             return self.desc == other.desc
 
-        cfglogger.info('status is not 0\n')
+        logger.info('status is not 0\n')
 
         # don't compare wrid anymore as asm is no longer populating it.
         #if self.desc.wrid != other.desc.wrid:
         #    return False
 
-        #cfglogger.info('wrid matched\n')
+        #logger.info('wrid matched\n')
 
         if self.desc.op_type != other.desc.op_type:
             return False
 
-        cfglogger.info('op_type matched\n')
+        logger.info('op_type matched\n')
 
         if self.desc.status != other.desc.status:
             return False
 
-        cfglogger.info('status matched\n')
+        logger.info('status matched\n')
 
         return True
 
@@ -610,7 +607,7 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
 
 
     def GetBuffer(self):
-        cfglogger.info("GetBuffer() operator invoked on cq descriptor")
+        logger.info("GetBuffer() operator invoked on cq descriptor")
         # CQ is not associated with any buffer and hence simply create
         # default RDMABuffer object so that ebuf == abuf check passes
         return rdmabuffer.RdmaBufferObject()
@@ -619,7 +616,6 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
         self.Clone(FactoryStore.templates.Get('DESC_RDMA_EQ'))
-        self.logger = cfglogger
 
     def Init(self, spec):
         super().Init(spec)
@@ -642,7 +638,7 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing EQ Desciptor @0x%x = cq_id: %d " % 
+        logger.info("Writing EQ Desciptor @0x%x = cq_id: %d " % 
                        (self.address, self.cq_id))
         resmgr.HostMemoryAllocator.write(self.mem_handle, 
                                          bytes(self.desc))
@@ -652,40 +648,40 @@ class RdmaEqDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from "self.address"
         :return:
         """
-        cfglogger.info("Reading EQ Desciptor @ 0x%x " % (self.address))
+        logger.info("Reading EQ Desciptor @ 0x%x " % (self.address))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaEqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaEqDescriptor()))))
 
     def Show(self):
-        self.desc.show()
+        logger.ShowScapyObject(self.desc)
 
     def __eq__(self, other):
-        cfglogger.info("__eq__ operator invoked on Eq descriptor..")
+        logger.info("__eq__ operator invoked on Eq descriptor..")
 
-        cfglogger.info('\nself(expected):')
+        logger.info('\nself(expected):')
         self.Show()
-        cfglogger.info('\nother(actual):')
+        logger.info('\nother(actual):')
         other.Show()
 
         if self.desc.cq_id != other.desc.cq_id:
             return False
 
-        cfglogger.info('cq_id matched\n')
+        logger.info('cq_id matched\n')
 
         if self.desc.color != other.desc.color:
             return False
 
-        cfglogger.info('color matched\n')
+        logger.info('color matched\n')
 
-        cfglogger.info('EQ descriptor matched\n')
+        logger.info('EQ descriptor matched\n')
         return True
 
         #no need to compare other params as they are meaningful only incase of SUCCESS
 
 
     def GetBuffer(self):
-        cfglogger.info("GetBuffer() operator invoked on EQ descriptor")
+        logger.info("GetBuffer() operator invoked on EQ descriptor")
         # EQ is not associated with any buffer and hence simply create
         # default RDMABuffer object so that ebuf == abuf check passes
         return rdmabuffer.RdmaBufferObject()

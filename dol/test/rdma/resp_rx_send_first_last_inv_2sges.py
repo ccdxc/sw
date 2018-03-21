@@ -4,7 +4,7 @@ from test.rdma.utils import *
 
 from config.objects.rdma.keytable import *
 from infra.common.glopts import GlobalOptions
-
+from infra.common.logging import logger as logger
 
 def Setup(infra, module):
     return
@@ -13,7 +13,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    tc.info("RDMA TestCaseSetup() Implementation.")
+    logger.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
 
     # Read RQ pre state
@@ -29,7 +29,7 @@ def TestCaseSetup(tc):
    # Invalidate Rkey: Invalidate the Lkey of the RQ slab (lkey is in MR)
     tc.pvtdata.inv_r_key = rs.lqp.pd.mrs.Get('MR-SLAB0000').rkey
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
-    tc.info("RDMA TestCaseSetup(): Lkey state for SLAB0 of hw_lif %d qp %s rkey: %d state: %d" %
+    logger.info("RDMA TestCaseSetup(): Lkey state for SLAB0 of hw_lif %d qp %s rkey: %d state: %d" %
             (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key, kt_entry.data.state))
     if (GlobalOptions.dryrun): return
     # Make sure that lkey is valid before the test
@@ -37,12 +37,12 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
-    tc.info("RDMA TestCaseTrigger() Implementation.")
+    logger.info("RDMA TestCaseTrigger() Implementation.")
     return
 
 def TestCaseVerify(tc):
     if (GlobalOptions.dryrun): return True
-    tc.info("RDMA TestCaseVerify() Implementation.")
+    logger.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
@@ -78,26 +78,26 @@ def TestCaseVerify(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
 
     if not (kt_entry.data.state == 1): # KEY_STATE_FREE = 1
-        tc.info("RDMA TestCaseVerify(): Rkey invalidated fails for hw_lif %d qp %s rkey %d " %
+        logger.info("RDMA TestCaseVerify(): Rkey invalidated fails for hw_lif %d qp %s rkey %d " %
                 (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
-        tc.info("RDMA TestCaseVerify(): Invalidated rkey is not in Free state: state %d" %
+        logger.info("RDMA TestCaseVerify(): Invalidated rkey is not in Free state: state %d" %
                 kt_entry.data.state)
         return False
 
-    tc.info("RDMA TestCaseVerify(): Rkey is invalidated for hw_lif %d qp %s rkey %d" %
+    logger.info("RDMA TestCaseVerify(): Rkey is invalidated for hw_lif %d qp %s rkey %d" %
             (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
     # validate the key again for further tests
     kt_entry.data.state = 2
     kt_entry.Write()
     if not (kt_entry.data.state == 2): # KEY_STATE_VALID = 2
-        tc.info("RDMA TestCaseVerify(): Unable to set Rkey to valid state for hw_lif %d qp %s rkey %d " %
+        logger.info("RDMA TestCaseVerify(): Unable to set Rkey to valid state for hw_lif %d qp %s rkey %d " %
                 (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
-        tc.info("RDMA TestCaseVerify(): Rkey current state: state %d" %
+        logger.info("RDMA TestCaseVerify(): Rkey current state: state %d" %
                 kt_entry.data.state)
         return False
 
     return True
 
 def TestCaseTeardown(tc):
-    tc.info("RDMA TestCaseTeardown() Implementation.")
+    logger.info("RDMA TestCaseTeardown() Implementation.")
     return

@@ -4,7 +4,7 @@ import binascii
 import config.resmgr            as resmgr
 
 import infra.factory.base as base
-from infra.common.logging   import cfglogger
+from infra.common.logging   import logger
 
 import model_sim.src.model_wrap as model_wrap
 from infra.common.glopts import GlobalOptions
@@ -29,7 +29,7 @@ class RdmaXferObject(base.FactoryObjectBase):
         if self.address:
             self.mem_handle = resmgr.MemHandle(self.address,
                                                resmgr.HostMemoryAllocator.v2p(self.address))
-        cfglogger.info("Creating Rdma Xfer @0x%x = size: %d offset: %d " %
+        logger.info("Creating Rdma Xfer @0x%x = size: %d offset: %d " %
                        (self.address, self.size, self.offset))
 
     def Write(self):
@@ -46,10 +46,10 @@ class RdmaXferObject(base.FactoryObjectBase):
         if self.address:
             buffer.data = resmgr.HostMemoryAllocator.read(self.mem_handle, self.size)
             buffer.size = self.size
-            cfglogger.info("Read Xfer @0x%x = size: %d offset: %d" %
+            logger.info("Read Xfer @0x%x = size: %d offset: %d" %
                        (self.address, self.size, self.offset))
         else:
-            cfglogger.info("Warning:!! Xfer is not bound to an address, Read is ignored !!")
+            logger.info("Warning:!! Xfer is not bound to an address, Read is ignored !!")
 
     def __eq__(self, other):
         pass

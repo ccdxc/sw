@@ -10,7 +10,7 @@ import config.resmgr            as resmgr
 import infra.config.base        as base
 
 from config.store                       import Store
-from infra.common.logging               import cfglogger
+from infra.common.logging               import logger
 from config.objects.security_policy     import SecurityGroupPolicyHelper
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -365,7 +365,7 @@ class FlowObject(base.ConfigObjectBase):
         return self.label == FLOW_COLLISION_LABEL
 
     def SetLabel(self, label):
-        cfglogger.info("Updating %s Label to %s" % (self.GID(), label))
+        logger.info("Updating %s Label to %s" % (self.GID(), label))
         self.label = label
         return
 
@@ -609,15 +609,15 @@ class FlowObject(base.ConfigObjectBase):
 
     def Show(self):
         string = self.Summary()
-        cfglogger.info("- %s    : %s" % (self.direction, string))
+        logger.info("- %s    : %s" % (self.direction, string))
         string = "%s" % self.action
         if self.IsTCP():
             string += "/%s" % self.state
 
         if self.__flowhash is not None:
-            cfglogger.info("  - flowhash : 0x%08x" % self.__flowhash)
-        cfglogger.info("  - label  : %s" % self.label)
-        cfglogger.info("  - distlabel: %s" % self.distlabel)
+            logger.info("  - flowhash : 0x%08x" % self.__flowhash)
+        logger.info("  - label  : %s" % self.label)
+        logger.info("  - distlabel: %s" % self.distlabel)
         if self.IsSnat():
             string += '/%s/%s/%d/%s' %\
                       (self.nat_type, self.nat_sip.get(),
@@ -640,24 +640,24 @@ class FlowObject(base.ConfigObjectBase):
                        self.nat_sport, self.nat_dip.get(),
                        self.nat_dport, self.nat_rw)
 
-        cfglogger.info("  - info   : %s" % string)
+        logger.info("  - info   : %s" % string)
 
-        cfglogger.info('  - txqos: Cos:%s/Dscp:%s' %\
+        logger.info('  - txqos: Cos:%s/Dscp:%s' %\
                        (str(self.txqos.cos), str(self.txqos.dscp)))
-        cfglogger.info('  - rxqos: Cos:%s/Dscp:%s' %\
+        logger.info('  - rxqos: Cos:%s/Dscp:%s' %\
                        (str(self.rxqos.cos), str(self.rxqos.dscp)))
 
         if len(self.ing_mirror_sessions):
             string = ''
             for ssn in self.ing_mirror_sessions:
                 string += ssn.GID() + ' '
-            cfglogger.info("  - IngSpan: %s" % string)
+            logger.info("  - IngSpan: %s" % string)
 
         if len(self.egr_mirror_sessions):
             string = ''
             for ssn in self.egr_mirror_sessions:
                 string += ssn.GID() + ' '
-            cfglogger.info("  - EgrSpan: %s" % string)
+            logger.info("  - EgrSpan: %s" % string)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -666,7 +666,7 @@ class FlowObject(base.ConfigObjectBase):
             assert 0, 'Recirc hash 0x%x does not match expected 0x%x' %\
                     (resp_spec.flow_hash, self.__flowhash)
 
-        cfglogger.info("- %s %s = (HDL = %x), Label = %s" %\
+        logger.info("- %s %s = (HDL = %x), Label = %s" %\
                        (self.direction, self.GID(),
                         self.hal_handle, self.label))
         return
@@ -739,57 +739,57 @@ class FlowObject(base.ConfigObjectBase):
 #            self.txqos.dscp = None
 
     def IsFilterMatch(self, selectors):
-        cfglogger.debug("Matching %s Flow:%s, Session:%s" %\
+        logger.debug("Matching %s Flow:%s, Session:%s" %\
                         (self.direction, self.GID(), self.__session.GID()))
         # Match Source Tenant
         match = self.__sten.IsFilterMatch(selectors.src.tenant)
-        cfglogger.debug("- Source Tenant Filter Match =", match)
+        logger.debug("- Source Tenant Filter Match =", match)
         if match == False: return match
         # Match Destination Tenant
         match = self.__dten.IsFilterMatch(selectors.dst.tenant)
-        cfglogger.debug("- Destination Tenant Filter Match =", match)
+        logger.debug("- Destination Tenant Filter Match =", match)
         if match == False: return match
         # Match Source Segment
         match = self.__sseg.IsFilterMatch(selectors.src.segment)
-        cfglogger.debug("- Source Segment Filter Match =", match)
+        logger.debug("- Source Segment Filter Match =", match)
         if match == False: return match
         # Match Destination Segment
         match = self.__dseg.IsFilterMatch(selectors.dst.segment)
-        cfglogger.debug("- Destination Segment Filter Match =", match)
+        logger.debug("- Destination Segment Filter Match =", match)
         if match == False: return match
         # Match Source Endpoint
         if self.__sep:
             match = self.__sep.IsFilterMatch(selectors.src.endpoint)
-            cfglogger.debug("- Source Endpoint Filter Match =", match)
+            logger.debug("- Source Endpoint Filter Match =", match)
             if match == False: return match
         # Match Destination Endpoint
         if self.__dep:
             match = self.__dep.IsFilterMatch(selectors.dst.endpoint)
-            cfglogger.debug("- Destination Endpoint Filter Match =", match)
+            logger.debug("- Destination Endpoint Filter Match =", match)
             if match == False: return match
         # Match Source Interface
         if self.__sep:
             match = self.__sep.intf.IsFilterMatch(selectors.src.interface)
-            cfglogger.debug("- Source Interface Filter Match =", match)
+            logger.debug("- Source Interface Filter Match =", match)
             if match == False: return match
         # Match Destination Interface
         if self.__dep:
             match = self.__dep.intf.IsFilterMatch(selectors.dst.interface)
-            cfglogger.debug("- Destination Interface Filter Match =", match)
+            logger.debug("- Destination Interface Filter Match =", match)
             if match == False: return match
         # Match Source Lif
         if self.__sep and self.__sep.remote == False:
             match = self.__sep.intf.lif.IsFilterMatch(selectors.src.lif)
-            cfglogger.debug("- Source Lif Filter Match =", match)
+            logger.debug("- Source Lif Filter Match =", match)
             if match == False: return match
         # Match Destination Lif
         if self.__dep and self.__dep.remote == False:
             match = self.__dep.intf.lif.IsFilterMatch(selectors.dst.lif)
-            cfglogger.debug("- Destination Lif Filter Match =", match)
+            logger.debug("- Destination Lif Filter Match =", match)
             if match == False: return match
         # Match Flow
         match = super().IsFilterMatch(selectors.flow.filters)
-        cfglogger.debug("- Flow Filter Match =", match)
+        logger.debug("- Flow Filter Match =", match)
         if match == False: return match
         return True
 
@@ -820,26 +820,26 @@ class FlowObject(base.ConfigObjectBase):
         obj.egress_mirror.session3 = self.GetEgressMirrorSession(idx = 3)
         return
 
-    def __show_testcase_config(self, obj, lg):
-        lg.info("  - Ten : %s" % obj.tenant.Summary())
-        lg.info("  - Seg : %s" % obj.segment.Summary())
+    def __show_testcase_config(self, obj):
+        logger.info("  - Ten : %s" % obj.tenant.Summary())
+        logger.info("  - Seg : %s" % obj.segment.Summary())
         if obj.endpoint:
-            lg.info("  - EP  : %s" % obj.endpoint.Summary())
-            lg.info("  - Intf: %s" % obj.endpoint.intf.Summary())
+            logger.info("  - EP  : %s" % obj.endpoint.Summary())
+            logger.info("  - Intf: %s" % obj.endpoint.intf.Summary())
         if obj.l4lb.IsEnabled():
-            lg.info("  - Srvc: %s" % obj.l4lb.service.Summary())
-            lg.info("  - Bknd: %s" % obj.l4lb.backend.Summary())
+            logger.info("  - Srvc: %s" % obj.l4lb.service.Summary())
+            logger.info("  - Bknd: %s" % obj.l4lb.backend.Summary())
         return
 
-    def ShowTestcaseConfig(self, obj, lg):
-        lg.info("Testcase Config Objects:")
-        lg.info("- Flow  : %s" % obj.flow.Summary())
+    def ShowTestcaseConfig(self, obj):
+        logger.info("Testcase Config Objects:")
+        logger.info("- Flow  : %s" % obj.flow.Summary())
         if obj.gft_flow:
-            lg.info("- GftFlow: %s" % obj.gft_flow.Summary())
-        lg.info("- Source:")
-        self.__show_testcase_config(obj.src, lg)
-        lg.info("- Destination:")
-        self.__show_testcase_config(obj.dst, lg)
+            logger.info("- GftFlow: %s" % obj.gft_flow.Summary())
+        logger.info("- Source:")
+        self.__show_testcase_config(obj.src)
+        logger.info("- Destination:")
+        self.__show_testcase_config(obj.dst)
         if self.IsMulticast():
-            self.__dfep.ShowTestcaseConfig(lg)
+            self.__dfep.ShowTestcaseConfig()
         return

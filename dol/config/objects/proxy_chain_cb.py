@@ -7,7 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.objects.swdr        import SwDscrRingHelper
 
 import config.hal.defs          as haldefs
@@ -29,7 +29,7 @@ class ProxycCbObject(base.ConfigObjectBase):
         gid = "ProxycCb%04d" % qid
         self.GID(gid)
         # self.spec = spec_obj
-        # cfglogger.info("  - %s" % self)
+        # logger.info("  - %s" % self)
 
         # self.uplinks = objects.ObjectDatabase()
         # for uplink_spec in self.spec.uplinks:
@@ -37,7 +37,7 @@ class ProxycCbObject(base.ConfigObjectBase):
             # self.uplinks.Set(uplink_obj.GID(), uplink_obj)
 
         # assert(len(self.uplinks) > 0)
-        cfglogger.info("  - %s" % self)
+        logger.info("  - %s" % self)
 
         self.proxyccbq = SwDscrRingHelper.main("PROXYCCBQ", gid, self.id)
         return
@@ -65,7 +65,7 @@ class ProxycCbObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - ProxycCb %s = %s" %\
+        logger.info("  - ProxycCb %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'ProxycCbResponse':
@@ -122,21 +122,21 @@ class ProxycCbObject(base.ConfigObjectBase):
     # Print proxyccb statistics
     #
     def StatsPrint(self):
-        print("PROXYCCB %d stat_pkts_chain %d" % 
+        logger.info("PROXYCCB %d stat_pkts_chain %d" % 
               (self.id, self.stat_pkts_chain))
-        print("PROXYCCB %d stat_pkts_discard %d" % 
+        logger.info("PROXYCCB %d stat_pkts_discard %d" % 
               (self.id, self.stat_pkts_discard))
-        print("PROXYCCB %d stat_cb_not_ready %d" % 
+        logger.info("PROXYCCB %d stat_cb_not_ready %d" % 
               (self.id, self.stat_cb_not_ready))
-        print("PROXYCCB %d stat_my_txq_empty %d" % 
+        logger.info("PROXYCCB %d stat_my_txq_empty %d" % 
               (self.id, self.stat_my_txq_empty))
-        print("PROXYCCB %d stat_aol_err %d" % 
+        logger.info("PROXYCCB %d stat_aol_err %d" % 
               (self.id, self.stat_aol_err))
-        print("PROXYCCB %d stat_txq_full %d" % 
+        logger.info("PROXYCCB %d stat_txq_full %d" % 
               (self.id, self.stat_txq_full))
-        print("PROXYCCB %d stat_desc_sem_free_full %d" % 
+        logger.info("PROXYCCB %d stat_desc_sem_free_full %d" % 
               (self.id, self.stat_desc_sem_free_full))
-        print("PROXYCCB %d stat_page_sem_free_full %d" % 
+        logger.info("PROXYCCB %d stat_page_sem_free_full %d" % 
               (self.id, self.stat_page_sem_free_full))
         return
 
@@ -150,12 +150,12 @@ class ProxycCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(ProxycCbObject)
-        cfglogger.info("Configuring %d ProxycCbs." % len(objlist)) 
+        logger.info("Configuring %d ProxycCbs." % len(objlist)) 
         halapi.ConfigureProxycCbs(objlist)
         return
         
     def __gen_one(self, qid):
-        cfglogger.info("Creating ProxycCb")
+        logger.info("Creating ProxycCb")
         proxyccb_obj = ProxycCbObject()
         proxyccb_obj.Init(qid)
         Store.objects.Add(proxyccb_obj)

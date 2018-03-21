@@ -36,7 +36,6 @@ prefixes = {
 class LoggerSink:
     def __init__(self, stdout = None, logfile = None):
         self.sink = None
-        self.prefix = ''
         self.lock = threading.Lock()
         if stdout:
             self.sink = sys.stdout
@@ -45,12 +44,28 @@ class LoggerSink:
         else:
             assert(0)
         return
+
+    def __is_logger_print(self, text):
+        for level in range(7):
+            pfx = prefixes[level]
+            if pfx in text: return True
+        return False
     
     def write(self, text):
+        #pdb.set_trace()
+        #text = text.replace('\n', ' ')
+        #text += '\n'
+        self.log(text)
+        return
+
+    def log(self, text): 
+        #if not self.__is_logger_print(text):
+        #    return
         self.lock.acquire()
         self.sink.write(text)
         self.lock.release()
         self.flush()
+        return
 
     def flush(self):
         self.sink.flush()
@@ -68,13 +83,14 @@ if GlobalOptions.verbose:
     start_level = levels.VERBOSE
 
 class Logger:
-    def __init__(self, stdout=True, level=start_level, name=None, logfile=None):
+    def __init__(self, stdout=True, level=start_level, logfile=None):
         self.sinks          = []
         self.indent_enable  = False
         self.level          = level
         self.levels         = levels
-        self.name           = name
         self.logfile        = logfile
+        self.modname        = None
+        self.tcid           = None
 
         if stdout:
             global StdoutLoggerSink
@@ -86,12 +102,30 @@ class Logger:
 
     def __flush(self, text):
         for s in self.sinks:
-            s.write(text)
+            s.log(text)
         return
 
     def __get_timestamp(self):
         return "[%s] " % str(datetime.datetime.now())
-        #return ''
+
+    def __get_log_prefix(self, level=None):
+        prefix = self.__get_timestamp()
+        if self.modname:
+            prefix += "[%s]" % self.modname
+        if self.tcid:
+            prefix += "[%s]" % self.tcid
+        if level:
+            prefix += "[%s]" % prefixes[level]
+        else:
+            prefix += "[INFO]"
+        prefix += " "
+        return prefix
+
+    def __args_to_str(self, *args, **kwargs):
+        text = ""
+        for a in args:
+            text = text + str(a) + " "
+        return
 
     def __format(self, *args, **kwargs):
         text = ""
@@ -100,19 +134,18 @@ class Logger:
             indent = len(inspect.stack())
             if indent >= defs.LOGGING_DEFAULT_REV_OFFSET:
                 indent = indent - defs.LOGGING_DEFAULT_REV_OFFSET
+
         level = kwargs['level']
-        prefix = prefixes[kwargs['level']]
         if self.level < level:
             return None
-        text = text + self.__get_timestamp()
-        if self.name:
-            text = text + "[%s]" % self.name
-        text = text + "[%s] " % prefix
+
+        text = self.__get_log_prefix(level)
         if indent:
             text = text + "  " * indent
         for a in args:
             text = text + str(a) + " "
-
+        
+        text = text.replace('\n', ' ')
         text = text + "\n"
         return text
 
@@ -142,19 +175,31 @@ class Logger:
 
     def log(self, level, *args, **kwargs):
         return self.__log(*args, **kwargs, level=level)
-    
-    def set_level(self, level):
+   
+    def SetLoggingLevel(self, level):
         self.level = level
 
+    def SetModule(self, modname):
+        self.modname = modname
+        return
+
+    def SetTestcase(self, tcid):
+        self.tcid = tcid
+        return
+
     def GetLogPrefix(self):
-        return self.__get_timestamp() + "[%s][INFO]" % self.name
+        return self.__get_log_prefix()
 
     def ShowScapyObject(self, scapyobj):
         scapyobj.show2(indent = 0,
                         label_lvl = self.GetLogPrefix())
 
-logger      = Logger(level = start_level, name = "Default")
-ylogger     = Logger(level = start_level, name = " YAML ")
-cfglogger   = Logger(level = start_level, name = "Config")
-memlogger   = Logger(level = start_level, name = "MemFactory")
-pktlogger   = Logger(level = start_level, name = "PktFactory")
+    def LogFunctionBegin(self):
+        logger.debug("BEG: %s()" % inspect.stack()[1][3])
+        return
+
+    def LogFunctionEnd(self, status=0):
+        logger.debug("END: %s()  Status:%d" % (inspect.stack()[1][3], status))
+        return
+
+logger = Logger(level = start_level)

@@ -87,20 +87,20 @@ class StepTcpOptions:
             self.__init_sack(spec)
         return
 
-    def Show(self, lg):
-        lg.info("- Options:")
+    def Show(self):
+        logger.info("- Options:")
         if self.nop_v is not None:
-            lg.info("  - NOP        :", self.spec_nop)
+            logger.info("  - NOP        :", self.spec_nop)
         if self.scale_v is not None:
-            lg.info("  - Scale      :", self.spec_scale)
+            logger.info("  - Scale      :", self.spec_scale)
         if self.sack_v is not None:
-            lg.info("  - Sack       :", self.spec_sack)
+            logger.info("  - Sack       :", self.spec_sack)
         if self.sackok_v is not None:
-            lg.info("  - SackOK     :", self.spec_sackok)
+            logger.info("  - SackOK     :", self.spec_sackok)
         if self.timestamp_v is not None:
-            lg.info("  - Timestamp  :", self.spec_timestamp)
+            logger.info("  - Timestamp  :", self.spec_timestamp)
         if self.mss_v is not None:
-            lg.info("  - MSS        :", self.spec_mss)
+            logger.info("  - MSS        :", self.spec_mss)
         return
 
 class StepObject(objects.FrameworkTemplateObject):
@@ -243,15 +243,15 @@ class StepObject(objects.FrameworkTemplateObject):
             self.fields.dport = iport
         return
 
-    def Show(self, lg):
-        lg.info("Tracker Step: %s" % self.GID())
-        lg.info("- Seq      : ", self.fields.seq)
-        lg.info("- Ack      : ", self.fields.ack)
-        lg.info("- Flags    : ", self.fields.flags)
-        lg.info("- Window   : ", self.fields.window)
-        lg.info("- Scale    : ", self.fields.scale)
-        lg.info("- MSS      : ", self.fields.mss)
-        self.fields.options.Show(lg)
+    def Show(self):
+        logger.info("Tracker Step: %s" % self.GID())
+        logger.info("- Seq      : ", self.fields.seq)
+        logger.info("- Ack      : ", self.fields.ack)
+        logger.info("- Flags    : ", self.fields.flags)
+        logger.info("- Window   : ", self.fields.window)
+        logger.info("- Scale    : ", self.fields.scale)
+        logger.info("- MSS      : ", self.fields.mss)
+        self.fields.options.Show()
         return
 
 def __parse_step_specs():

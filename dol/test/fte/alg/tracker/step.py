@@ -55,27 +55,27 @@ class StepALGObject(base.StepObject):
                 self.fields.dport = iport
         return
  
-    def SetIPs(self, lg):
+    def SetIPs(self, tc):
         if self.IsIflow():
             if 'sip' not in dir(self.fields):
-                self.fields.sip = lg.config.session.iconfig.flow.sip
+                self.fields.sip = tc.config.session.iconfig.flow.sip
             if 'dip' not in dir(self.fields):
-                self.fields.dip = lg.config.session.iconfig.flow.dip
+                self.fields.dip = tc.config.session.iconfig.flow.dip
         else:
             if 'sip' not in dir(self.fields):
-                self.fields.sip = lg.config.session.rconfig.flow.sip 
+                self.fields.sip = tc.config.session.rconfig.flow.sip 
             if 'dip' not in dir(self.fields):
-                self.fields.dip = lg.config.session.rconfig.flow.dip
+                self.fields.dip = tc.config.session.rconfig.flow.dip
         return
 
-    def Show(self, lg):
-        lg.info("Tracker Step: %s" % self.GID())
-        lg.info("- Sport      : ", self.fields.sport)
-        lg.info("- Dport      : ", self.fields.dport)
+    def Show(self):
+        logger.info("Tracker Step: %s" % self.GID())
+        logger.info("- Sport      : ", self.fields.sport)
+        logger.info("- Dport      : ", self.fields.dport)
         if 'datapgm' in dir(self.fields):
-            lg.info("- datapgm    : ", self.fields.datapgm)
+            logger.info("- datapgm    : ", self.fields.datapgm)
         if 'dataproto' in dir(self.fields):
-            lg.info("- dataproto  : ", self.fields.dataproto)
+            logger.info("- dataproto  : ", self.fields.dataproto)
         return
 
 def __parse_step_specs():

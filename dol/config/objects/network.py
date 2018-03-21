@@ -8,7 +8,7 @@ import config.resmgr            as resmgr
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class NetworkObject(base.ConfigObjectBase):
@@ -44,7 +44,7 @@ class NetworkObject(base.ConfigObjectBase):
 
     def AddSecurityGroup(self, sg):
         self.security_groups.append(sg)
-        cfglogger.info("- Adding SecurityGroup:%s to Network:%s" %\
+        logger.info("- Adding SecurityGroup:%s to Network:%s" %\
                        (sg.GID(), self.GID()))
         return
 
@@ -75,9 +75,9 @@ class NetworkObject(base.ConfigObjectBase):
 
 
     def Show(self, detail = False):
-        cfglogger.info("- Network = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("  - RMAC       = %s" % self.rmac.get())
-        cfglogger.info("  - Prefix     = %s/%d" %\
+        logger.info("- Network = %s(%d)" % (self.GID(), self.id))
+        logger.info("  - RMAC       = %s" % self.rmac.get())
+        logger.info("  - Prefix     = %s/%d" %\
                        (self.prefix.get(), self.prefix_len))
         return
 
@@ -101,7 +101,7 @@ class NetworkObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- Network %s = %s" %\
+        logger.info("- Network %s = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.status.nw_handle
         return
@@ -122,7 +122,7 @@ class NetworkObject(base.ConfigObjectBase):
         if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
             self.rmac = objects.MacAddressBase(integer=get_resp_spec.spec.rmac)
         else:
-            cfglogger.error("- Network  %s = %s is missing." %\
+            logger.error("- Network  %s = %s is missing." %\
                        (self.GID(), haldefs.common.ApiStatus.Name(get_resp_spec.api_status)))
             self.hal_handle = None
 
@@ -144,12 +144,12 @@ class NetworkObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Networks" % len(self.nws))
+        logger.info("Configuring %d Networks" % len(self.nws))
         halapi.ConfigureNetworks(self.nws)
         return
 
     def Generate(self, segment):
-        cfglogger.info("Creating Network Objects for Segment = %s" %\
+        logger.info("Creating Network Objects for Segment = %s" %\
                        (segment.GID()))
         nw = NetworkObject()
         nw.Init(segment, segment.subnet, 'IPV4')

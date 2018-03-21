@@ -6,7 +6,7 @@ import infra.common.objects     as objects
 import infra.config.base        as base
 import config.resmgr            as resmgr
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 from config.store               import Store
 
@@ -72,7 +72,7 @@ class EnicObject(base.ConfigObjectBase):
             self.__pin_interface_for_classic()
         else:
             return
-        cfglogger.info("- %s: Pinning to Interface: %s" %\
+        logger.info("- %s: Pinning to Interface: %s" %\
                        (self.GID(), self.pinnedif))
         return
 
@@ -95,19 +95,19 @@ class EnicObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Enic = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("- Tenant     = %s" % self.tenant.GID())
+        logger.info("Enic = %s(%d)" % (self.GID(), self.id))
+        logger.info("- Tenant     = %s" % self.tenant.GID())
         if self.ep is not None:
-            cfglogger.info("- Ep         = %s" % self.ep.GID())
-        cfglogger.info("- EnicType   = %s" % self.type)
-        cfglogger.info("- EncapVlan  = %d" % self.encap_vlan_id)
-        cfglogger.info("- Lif        = %s" % self.lif.GID())
-        cfglogger.info("- TxQos      = Cos:%s/Dscp:%s" %\
+            logger.info("- Ep         = %s" % self.ep.GID())
+        logger.info("- EnicType   = %s" % self.type)
+        logger.info("- EncapVlan  = %d" % self.encap_vlan_id)
+        logger.info("- Lif        = %s" % self.lif.GID())
+        logger.info("- TxQos      = Cos:%s/Dscp:%s" %\
                        (str(self.txqos.cos), str(self.txqos.dscp)))
-        cfglogger.info("- RxQos      = Cos:%s/Dscp:%s" %\
+        logger.info("- RxQos      = Cos:%s/Dscp:%s" %\
                        (str(self.rxqos.cos), str(self.rxqos.dscp)))
         if self.pinnedif:
-            cfglogger.info("- PinnedIF   = %s" % self.pinnedif.GID())
+            logger.info("- PinnedIF   = %s" % self.pinnedif.GID())
         return
 
     def Summary(self):
@@ -208,7 +208,7 @@ class EnicObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-        cfglogger.info("- Enic %s = %s (HDL = 0x%x)" %\
+        logger.info("- Enic %s = %s (HDL = 0x%x)" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
         return
@@ -233,10 +233,10 @@ class EnicObjectHelper:
         return
 
     def Show(self):
-        cfglogger.info("- # Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
+        logger.info("- # Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
                        (len(self.direct), len(self.useg),
                         len(self.pvlan), len(self.enics)))
-        cfglogger.info("- # Backend Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
+        logger.info("- # Backend Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
                        (len(self.backend_direct), len(self.backend_useg),
                         len(self.backend_pvlan), len(self.backend_enics)))
         return
@@ -253,7 +253,7 @@ class EnicObjectHelper:
         enics = []
         num_direct = getattr(spec, 'direct', 0)
         if num_direct == 0: return enics
-        cfglogger.info("Creating %d DIRECT (Backend:%s) Enics in Segment = %s" %\
+        logger.info("Creating %d DIRECT (Backend:%s) Enics in Segment = %s" %\
                        (spec.direct, l4lb_backend, segment.GID()))
         enics = self.__create(segment, spec.direct, ENIC_TYPE_DIRECT)
         Store.objects.SetAll(enics)
@@ -263,7 +263,7 @@ class EnicObjectHelper:
         enics = []
         num_useg = getattr(spec, 'useg', 0)
         if num_useg == 0: return enics
-        cfglogger.info("Creating %d USEG (Backend:%s) Enics in Segment = %s" %\
+        logger.info("Creating %d USEG (Backend:%s) Enics in Segment = %s" %\
                        (spec.useg, l4lb_backend, segment.GID()))
         enics = self.__create(segment, spec.useg, ENIC_TYPE_USEG)
         Store.objects.SetAll(enics)
@@ -273,7 +273,7 @@ class EnicObjectHelper:
         enics = []
         num_pvlan = getattr(spec, 'pvlan', 0)
         if num_pvlan == 0: return enics
-        cfglogger.info("Creating %d PVLAN (Backend:%s) Enics in Segment = %s" %\
+        logger.info("Creating %d PVLAN (Backend:%s) Enics in Segment = %s" %\
                        (spec.pvlan, l4lb_backend, segment.GID()))
         enics = self.__create(segment, spec.pvlan, ENIC_TYPE_PVLAN)
         Store.objects.SetAll(enics)
@@ -290,7 +290,7 @@ class EnicObjectHelper:
 
         num_classic = getattr(spec, 'classic', 0)
         if num_classic == 0: return enics
-        cfglogger.info("Creating %d CLASSIC Enics in Segment = %s" %\
+        logger.info("Creating %d CLASSIC Enics in Segment = %s" %\
                        (spec.classic, segment.GID()))
         enics = self.__create(segment, spec.classic, ENIC_TYPE_CLASSIC)
         Store.objects.SetAll(enics)
@@ -327,13 +327,13 @@ class EnicObjectHelper:
         if GlobalOptions.classic:
             enics = self.segment.tenant.GetClassicEnicsForConfig()
             if enics is None: return
-            cfglogger.info("Configuring %d Classic Enics." % len(enics))
+            logger.info("Configuring %d Classic Enics." % len(enics))
             halapi.ConfigureInterfaces(enics)
         else:
-            cfglogger.info("Configuring %d Enics." % len(self.enics))
+            logger.info("Configuring %d Enics." % len(self.enics))
             halapi.ConfigureInterfaces(self.enics)
             if len(self.backend_enics):
-                cfglogger.info("Configuring %d L4LbBackend Enics." %\
+                logger.info("Configuring %d L4LbBackend Enics." %\
                                len(self.backend_enics))
                 halapi.ConfigureInterfaces(self.backend_enics)
         return

@@ -4,15 +4,13 @@ import config.resmgr                as resmgr
 import infra.factory.scapyfactory   as scapyfactory
 import infra.factory.base           as base
 
-from infra.common.logging import cfglogger
+from infra.common.logging import logger
 
 
 
 class EthBufferObject(base.FactoryObjectBase):
-
     def __init__(self):
         super().__init__()
-        self.logger = cfglogger
 
     def Init(self, spec):
         super().Init(spec)
@@ -28,7 +26,7 @@ class EthBufferObject(base.FactoryObjectBase):
             self._mem = resmgr.HostMemoryAllocator.get(self.size, page_aligned=False)
             self.addr = self._mem.pa
 
-        self.logger.info("Init %s" % self)
+        logger.info("Init %s" % self)
 
     def Write(self):
         """
@@ -37,14 +35,14 @@ class EthBufferObject(base.FactoryObjectBase):
         """
         if not self._mem: return
 
-        self.logger.info("Writing %s" % self)
+        logger.info("Writing %s" % self)
         if self.data is None:
             resmgr.HostMemoryAllocator.zero(self._mem, self.size)
         else:
-            self.logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
-            scapyfactory.Parse(self.data).Show(self.logger)
+            logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
+            scapyfactory.Parse(self.data).Show()
             resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
-            self.logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
+            logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
 
     def Read(self):
         """
@@ -53,12 +51,12 @@ class EthBufferObject(base.FactoryObjectBase):
         """
         if not self._mem: return self.data
 
-        self.logger.info("Read %s" % self)
+        logger.info("Read %s" % self)
         self.data = resmgr.HostMemoryAllocator.read(self._mem, self.size)
 
-        self.logger.info("=" * 30, "READ BUFFER", "=" * 30)
-        scapyfactory.Parse(self.data).Show(self.logger)
-        self.logger.info("=" * 30, "END READ BUFFER", "=" * 30)
+        logger.info("=" * 30, "READ BUFFER", "=" * 30)
+        scapyfactory.Parse(self.data).Show()
+        logger.info("=" * 30, "END READ BUFFER", "=" * 30)
 
         return self.data
 

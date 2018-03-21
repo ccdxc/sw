@@ -19,7 +19,7 @@ import config.objects.l4lb            as l4lb
 import config.objects.multicast_group as multicast_group
 
 from config.store                       import Store
-from infra.common.logging               import cfglogger
+from infra.common.logging               import logger
 from infra.common.glopts                import GlobalOptions as GlobalOptions
 from config.objects.proxycb_service     import ProxyCbServiceHelper
 
@@ -96,7 +96,7 @@ class SessionObject(base.ConfigObjectBase):
         return self.fte
 
     def SetLabel(self, label, update_iflow=True, update_rflow=True):
-        cfglogger.info("Updating %s Label to %s" % (self.GID(), label))
+        logger.info("Updating %s Label to %s" % (self.GID(), label))
         self.label = label
         if update_iflow:
             self.iflow.SetLabel(label)
@@ -116,8 +116,8 @@ class SessionObject(base.ConfigObjectBase):
         return (ingspanlen, egspanlen)
 
     def Show(self):
-        cfglogger.info("Created Session with GID:%s" % self.GID())
-        cfglogger.info("- Label    : %s" % self.label)
+        logger.info("Created Session with GID:%s" % self.GID())
+        logger.info("- Label    : %s" % self.label)
         string = None
         if self.IsTCP():
             tr = getattr(self.spec, 'tracking', False)
@@ -126,7 +126,7 @@ class SessionObject(base.ConfigObjectBase):
             if ts: string += '/Timestamp'
 
         if string:
-           cfglogger.info("- Info     : %s" % string)
+           logger.info("- Info     : %s" % string)
 
         self.initiator.Show('Initiator')
         self.iflow.Show()
@@ -136,9 +136,9 @@ class SessionObject(base.ConfigObjectBase):
             self.rflow.Show()
         
         ilen,elen = self.__get_span_lens(self.ispec)
-        cfglogger.info(" Initatior SPAN sessions : %d/%d" % (ilen, elen))
+        logger.info(" Initatior SPAN sessions : %d/%d" % (ilen, elen))
         ilen,elen = self.__get_span_lens(self.rspec)
-        cfglogger.info(" Responder SPAN sessions : %d/%d" % (ilen, elen))
+        logger.info(" Responder SPAN sessions : %d/%d" % (ilen, elen))
         return
 
     def Get(self):
@@ -185,7 +185,7 @@ class SessionObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("Configuring Session with GID:%s" % self.GID())
+        logger.info("Configuring Session with GID:%s" % self.GID())
         self.iflow.ProcessHALResponse(req_spec.initiator_flow,
                                       resp_spec.status.iflow_status)
         self.rflow.ProcessHALResponse(req_spec.responder_flow,
@@ -197,7 +197,7 @@ class SessionObject(base.ConfigObjectBase):
             self.label = self.iflow.label
         elif self.rflow.IsCollisionFlow():
             self.label = self.rflow.label
-        cfglogger.info("  - Session %s = %s(HDL = %x), Label = %s" %\
+        logger.info("  - Session %s = %s(HDL = %x), Label = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hal_handle, self.label))
 
@@ -225,12 +225,12 @@ class SessionObject(base.ConfigObjectBase):
         return
 
     def IsFilterMatch(self, selectors):
-        cfglogger.debug("Matching Session %s" % self.GID())
+        logger.debug("Matching Session %s" % self.GID())
         
         # Match on Initiator Flow
         selectors.SetFlow(selectors.session.iflow)
         match = self.iflow.IsFilterMatch(selectors)
-        cfglogger.debug("- IFlow Filter Match =", match)
+        logger.debug("- IFlow Filter Match =", match)
         if match == False: return match
         
         # Match on Responder Flow
@@ -239,12 +239,12 @@ class SessionObject(base.ConfigObjectBase):
         selectors.SetFlow(selectors.session.rflow)
         match = self.rflow.IsFilterMatch(selectors)
         selectors.SwapSrcDst()
-        cfglogger.debug("- RFlow Filter Match =", match)
+        logger.debug("- RFlow Filter Match =", match)
         if match == False: return match
         
         # Match on the Session
         match = super().IsFilterMatch(selectors.session.base.filters)
-        cfglogger.debug("- Session Filter Match =", match)
+        logger.debug("- Session Filter Match =", match)
         return match
 
     def SetupTestcaseConfig(self, obj):
@@ -253,10 +253,10 @@ class SessionObject(base.ConfigObjectBase):
         obj.root = self
         return
 
-    def ShowTestcaseConfig(self, obj, logger):
+    def ShowTestcaseConfig(self, obj):
         logger.info("Config Objects for %s" % self.GID())
-        self.iflow.ShowTestcaseConfig(obj.session.iconfig, logger)
-        self.rflow.ShowTestcaseConfig(obj.session.rconfig, logger)
+        self.iflow.ShowTestcaseConfig(obj.session.iconfig)
+        self.rflow.ShowTestcaseConfig(obj.session.rconfig)
         return
 
 class SessionObjectHelper:
@@ -282,13 +282,13 @@ class SessionObjectHelper:
         self.objs.append(session)
         self.__add_to_ldb(session)
         if session.IsFteEnabled():
-            cfglogger.info("Adding Session:%s to FTE Session List" % session.GID())
+            logger.info("Adding Session:%s to FTE Session List" % session.GID())
             self.ftessns.append(session)
         elif GlobalOptions.classic:
-            cfglogger.info("Adding Session:%s to Classic Session List" % session.GID())
+            logger.info("Adding Session:%s to Classic Session List" % session.GID())
             self.classicssns.append(session)
         else:
-            cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
+            logger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
             self.ssns.append(session)
         return
 
@@ -504,7 +504,7 @@ class SessionObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d NON-FTE Sessions." % len(self.ssns))
+        logger.info("Configuring %d NON-FTE Sessions." % len(self.ssns))
         if len(self.ssns):
             halapi.ConfigureSessions(self.ssns)
         return
@@ -563,7 +563,7 @@ class SessionObjectHelper:
             objs = self.__get_matching_sessions(selectors)
         else:
             objs = []
-            cfglogger.error("INVALID Config Filter in testspec.")
+            logger.error("INVALID Config Filter in testspec.")
         return objs
 
     def __add_collector_sessions(self):

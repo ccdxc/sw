@@ -13,7 +13,7 @@ import config.objects.tunnel    as tunnel
 import config.objects.span      as span
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -46,10 +46,10 @@ class QosClassObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("QosClass  : %s (id: %d)" % (self.GID(), self.id))
-        cfglogger.info("- UplinkCmap: dot1q_pcp %d" % self.cmap_dot1q_pcp)
-        cfglogger.info("- Spec")
-        cfglogger.info("    Marking: dot1q_pcp %s/%d ip_dscp %s/%d" % \
+        logger.info("QosClass  : %s (id: %d)" % (self.GID(), self.id))
+        logger.info("- UplinkCmap: dot1q_pcp %d" % self.cmap_dot1q_pcp)
+        logger.info("- Spec")
+        logger.info("    Marking: dot1q_pcp %s/%d ip_dscp %s/%d" % \
                                         (self.spec.marking.dot1q_pcp_en,
                                          self.spec.marking.dot1q_pcp,
                                          self.spec.marking.ip_dscp_en,
@@ -57,7 +57,7 @@ class QosClassObject(base.ConfigObjectBase):
         return
 
     def Configure(self):
-        cfglogger.info("Configuring QosClass  : %s (id: %d)" % (self.GID(), self.id))
+        logger.info("Configuring QosClass  : %s (id: %d)" % (self.GID(), self.id))
         self.Show()
         halapi.ConfigureQosClass([self])
         return
@@ -83,7 +83,7 @@ class QosClassObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.qos_class_handle
-        cfglogger.info("  - Qos-class %s = %s handle: 0x%x" %\
+        logger.info("  - Qos-class %s = %s handle: 0x%x" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status), 
                         self.hal_handle))
@@ -111,7 +111,7 @@ class QosClassObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Qos-classes." % len(self.qos_classes)) 
+        logger.info("Configuring %d Qos-classes." % len(self.qos_classes)) 
         halapi.ConfigureQosClass(self.qos_classes)
         return
         
@@ -120,7 +120,7 @@ class QosClassObjectHelper:
         if qosspec is False:
             return
         spec = Store.specs.Get('QOS_CLASS')
-        cfglogger.info("Creating Qos classes")
+        logger.info("Creating Qos classes")
         for e in spec.entries:
             qos_class = QosClassObject()
             qos_class.Init(e.entry)

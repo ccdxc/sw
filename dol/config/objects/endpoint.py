@@ -12,7 +12,7 @@ import config.hal.api           as halapi
 import config.hal.defs          as haldefs
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 
 #import config.objects.qp        as qp
@@ -179,18 +179,18 @@ class EndpointObject(base.ConfigObjectBase):
         return True
 
     def Show(self):
-        cfglogger.info("Endpoint = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("- IsBackend = %s" % self.IsL4LbBackend())
-        cfglogger.info("- Access    = %s" % self.access)
-        cfglogger.info("- Tenant    = %s" % self.tenant)
-        cfglogger.info("- Macaddr   = %s" % self.macaddr.get())
-        cfglogger.info("- Interface = %s" % self.intf.GID())
+        logger.info("Endpoint = %s(%d)" % (self.GID(), self.id))
+        logger.info("- IsBackend = %s" % self.IsL4LbBackend())
+        logger.info("- Access    = %s" % self.access)
+        logger.info("- Tenant    = %s" % self.tenant)
+        logger.info("- Macaddr   = %s" % self.macaddr.get())
+        logger.info("- Interface = %s" % self.intf.GID())
         for ipaddr in self.ipaddrs:
-            cfglogger.info("- Ipaddr    = %s" % ipaddr.get())
+            logger.info("- Ipaddr    = %s" % ipaddr.get())
         for ipv6addr in self.ipv6addrs:
-            cfglogger.info("- Ipv6addr  = %s" % ipv6addr.get())
+            logger.info("- Ipv6addr  = %s" % ipv6addr.get())
         for qp in self.udqps:
-            cfglogger.info("- UdQp: QP: %s PD: %s " % (qp.GID(), qp.pd.GID()))
+            logger.info("- UdQp: QP: %s PD: %s " % (qp.GID(), qp.pd.GID()))
         return
 
     def Summary(self):
@@ -231,7 +231,7 @@ class EndpointObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.endpoint_status.endpoint_handle
-        cfglogger.info("- Endpoint %s = %s (HDL = 0x%x)" %\
+        logger.info("- Endpoint %s = %s (HDL = 0x%x)" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hal_handle))
@@ -263,18 +263,18 @@ class EndpointObject(base.ConfigObjectBase):
         return super().IsFilterMatch(spec.filters)
 
     def CreatePds(self, spec):
-        self.pds = objects.ObjectDatabase(cfglogger)
+        self.pds = objects.ObjectDatabase()
         self.obj_helper_pd = pd.PdObjectHelper()
         self.obj_helper_pd.Generate(self, spec)
         self.pds.SetAll(self.obj_helper_pd.pds)
-        cfglogger.debug("In CreatePds, Endpoint %s" % (self.GID()))
+        logger.debug("In CreatePds, Endpoint %s" % (self.GID()))
         for eppd in self.obj_helper_pd.pds:
-            cfglogger.debug("   Adding QPs for PD %s, Num of Qps %d" % (eppd.GID(), len(eppd.udqps)))
+            logger.debug("   Adding QPs for PD %s, Num of Qps %d" % (eppd.GID(), len(eppd.udqps)))
             pdudqps = eppd.udqps.GetAll()
             for qp in pdudqps:
-                cfglogger.debug("      Adding QP: PD %s, QP %s" % (eppd.GID(), qp.GID()))
+                logger.debug("      Adding QP: PD %s, QP %s" % (eppd.GID(), qp.GID()))
                 self.udqps.append(qp)
-        cfglogger.debug("   Total UDQPs in this endpoint: Qps %d" % (len(self.udqps)))
+        logger.debug("   Total UDQPs in this endpoint: Qps %d" % (len(self.udqps)))
 
 
     def ConfigurePds(self):
@@ -282,7 +282,7 @@ class EndpointObject(base.ConfigObjectBase):
 
     def CreateSlabs(self, spec):
         self.slab_allocator = objects.TemplateFieldObject("range/0/1024")
-        self.slabs = objects.ObjectDatabase(cfglogger)
+        self.slabs = objects.ObjectDatabase()
         self.obj_helper_slab = slab.SlabObjectHelper()
         self.obj_helper_slab.Generate(self, spec)
         self.slabs.SetAll(self.obj_helper_slab.slabs)
@@ -329,11 +329,11 @@ class EndpointObjectHelper:
             string += 'Remote:%d ' % len(self.remote)
         if len(self.eps):
             string += 'Total:%d' % len(self.eps)
-        cfglogger.info("- # EP: %s" % string)
+        logger.info("- # EP: %s" % string)
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Endpoints." % len(self.eps))
+        logger.info("Configuring %d Endpoints." % len(self.eps))
         if GlobalOptions.classic:
             halapi.ConfigureEndpoints(self.local)
         else:
@@ -370,7 +370,7 @@ class EndpointObjectHelper:
 
     def __create_remote(self, segment, spec):
         if spec.remote:
-            cfglogger.info("Creating %d REMOTE EPs in Segment = %s" %\
+            logger.info("Creating %d REMOTE EPs in Segment = %s" %\
                            (spec.remote, segment.GID()))
             if GlobalOptions.classic:
                 remote_intfs = [ segment.tenant.GetPinIf() ]
@@ -383,7 +383,7 @@ class EndpointObjectHelper:
                                         remote = True,
                                         backend = False)
             if segment.l4lb:
-                cfglogger.info("Creating %d REMOTE L4LB Backend EPs in Segment = %s" %\
+                logger.info("Creating %d REMOTE L4LB Backend EPs in Segment = %s" %\
                                (spec.remote, segment.GID()))
                 self.backend_remote = self.__create(segment, remote_intfs,
                                                     spec.remote,
@@ -396,14 +396,14 @@ class EndpointObjectHelper:
         bend_eps = []
         count = getattr(spec, typestr, None)
         if count is None: return eps,bend_eps
-        cfglogger.info("Creating %d %s EPs in Segment = %s" %\
+        logger.info("Creating %d %s EPs in Segment = %s" %\
                        (count, typestr, segment.GID()))
         enics = enic_cb()
         eps = self.__create(segment, enics, count)
         self.local += eps
 
         if segment.l4lb:
-            cfglogger.info("Creating %d %s L4LB Backend EPs in Segment = %s" %\
+            logger.info("Creating %d %s L4LB Backend EPs in Segment = %s" %\
                            (count, typestr, segment.GID()))
             enics = enic_cb(backend = True)
             bend_eps = self.__create(segment, enics, count, backend = True)
@@ -420,7 +420,7 @@ class EndpointObjectHelper:
                                                           segment.GetUsegEnics)
 
         if GlobalOptions.classic:
-            cfglogger.info("Creating %d CLASSIC EPs in Segment = %s" %\
+            logger.info("Creating %d CLASSIC EPs in Segment = %s" %\
                            (spec.classic, segment.GID()))
             classic_enics = segment.tenant.GetClassicEnics()
             self.classic = self.__create(segment, classic_enics, spec.classic,
@@ -470,7 +470,7 @@ def GetMatchingObjects(selectors):
         if ep.IsFilterMatch(selectors.endpoint) and \
             ep.segment.IsFilterMatch(selectors.segment) and \
             ep.segment.tenant.IsFilterMatch(selectors.tenant):
-            cfglogger.info("Selecting Endpoint : %s" % ep.GID())
+            logger.info("Selecting Endpoint : %s" % ep.GID())
             eps.append(ep)
 
     return eps

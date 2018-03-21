@@ -5,6 +5,7 @@ import time
 import infra.asic.model as model
 import infra.common.defs as defs
 
+from infra.common.logging   import logger as logger
 from infra.common.glopts    import GlobalOptions
 from infra.asic.model       import ModelConnector
 import infra.e2e.main as E2E 
@@ -35,12 +36,12 @@ class TriggerEngineObject:
         cbstatus = tc.StepVerifyCallback(step)
         step.status = self.__resolve_status(vfstatus, cbstatus)
         if step.status is defs.status.ERROR:
-            tc.error("Step%d FINAL STATUS = %s (Verify:%s Callback:%s)" %\
-                     (step.step_id, 'IGNORE' if tc.IsIgnore() else 'FAIL',
-                      defs.status.str(vfstatus),
-                      defs.status.str(cbstatus)))
+            logger.error("Step%d FINAL STATUS = %s (Verify:%s Callback:%s)" %\
+                         (step.step_id, 'IGNORE' if tc.IsIgnore() else 'FAIL',
+                         defs.status.str(vfstatus),
+                         defs.status.str(cbstatus)))
             return step.status
-        tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
+        logger.info("Step%d FINAL STATUS = PASS" % step.step_id)
         return step.status
 
     def _trigger(self, tc):
@@ -56,12 +57,12 @@ class TriggerEngineObject:
         cbstatus = tc.VerifyCallback()
         status = self.__resolve_status(cbstatus, vfstatus)
         if status is defs.status.ERROR:
-            tc.error("TESTCASE FINAL STATUS = %s(Verify:%s Callback:%s)" %\
-                     ('IGNORE' if tc.IsIgnore() else 'FAIL',
-                      defs.status.str(vfstatus),
-                      defs.status.str(cbstatus)))
+            logger.error("TESTCASE FINAL STATUS = %s(Verify:%s Callback:%s)" %\
+                         ('IGNORE' if tc.IsIgnore() else 'FAIL',
+                         defs.status.str(vfstatus),
+                         defs.status.str(cbstatus)))
         else:
-            tc.info("TESTCASE FINAL STATUS = PASS")
+            logger.info("TESTCASE FINAL STATUS = PASS")
         tc.TeardownCallback()
         return status    
         
@@ -74,7 +75,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
         assert(0)
         return
 
-    def __trigger_descriptors(self, step, lgh):
+    def __trigger_descriptors(self, step):
         if GlobalOptions.dryrun:
             return
 
@@ -88,12 +89,12 @@ class DolTriggerEngineObject(TriggerEngineObject):
             ring = dbsp.descriptor.ring
             descr = dbsp.descriptor.object
 
-            lgh.info("Posting Descriptor:%s on Ring:%s" %\
+            logger.info("Posting Descriptor:%s on Ring:%s" %\
                     (ring.GID(), descr.GID()))
             ring.Post(descr)
         return
 
-    def __trigger_packets(self, step, lgh):
+    def __trigger_packets(self, step):
         if step.trigger.packets == None:
             return
 
@@ -101,12 +102,12 @@ class DolTriggerEngineObject(TriggerEngineObject):
             if p.packet == None: break
             rawpkt = p.packet.rawbytes
             port = p.ports[0]
-            lgh.info("Sending Input Packet:%s of Length:%d on Port:%d" %\
-                     (p.packet.GID(), len(rawpkt), port))
+            logger.info("Sending Input Packet:%s of Length:%d on Port:%d" %\
+                        (p.packet.GID(), len(rawpkt), port))
             ModelConnector.Transmit(rawpkt, port)
         return
 
-    def __ring_doorbell(self, step, lgh):
+    def __ring_doorbell(self, step):
         if GlobalOptions.dryrun:
             return
         
@@ -115,11 +116,11 @@ class DolTriggerEngineObject(TriggerEngineObject):
             return
         
         db = dbsp.object
-        lgh.info("Posting doorbell %s" % db)
+        logger.info("Posting doorbell %s" % db)
         db.Ring(dbsp.spec)
         return
 
-    def __trigger_config(self, step, lgh):
+    def __trigger_config(self, step):
         if step.trigger.configs == None:
             return
 
@@ -130,38 +131,39 @@ class DolTriggerEngineObject(TriggerEngineObject):
             method(config_spec.spec)
         return
 
-    def __trigger_delay(self, step, lgh):
+    def __trigger_delay(self, step):
         if GlobalOptions.dryrun:
             return
         if step.trigger.delay:
-           lgh.info("Trigger Delay: %d" % step.trigger.delay)
+           logger.info("Trigger Delay: %d" % step.trigger.delay)
            time.sleep(step.trigger.delay)
         return
 
     def _trigger_step(self, tc, step):
         super()._trigger_step(tc, step)
-        self.__trigger_delay(step, tc)
-        self.__trigger_descriptors(step, tc)
-        self.__ring_doorbell(step, tc)
-        self.__trigger_packets(step, tc)
+        self.__trigger_delay(step)
+        self.__trigger_descriptors(step)
+        self.__ring_doorbell(step)
+        self.__trigger_packets(step)
         tc.TriggerCallback()
         return
 
 class E2ETriggerEngineObject(TriggerEngineObject):
-    
     def __init__(self):
         super().__init__()
-        
-    def __trigger_commands(self, step, lgh):
+        return
+
+    def __trigger_commands(self, step):
         for cmd in step.trigger.commands:
-            lgh.info("Running command %s : %s" % (cmd.object.GID(), cmd.command))
+            logger.info("Running command %s : %s" % (cmd.object.GID(), cmd.command))
             if GlobalOptions.dryrun:
                 return        
             cmd.status = E2E.RunCommand(cmd.object.GID(), cmd.command,
                                          background=cmd.background)
+        return
     
     def _trigger_step(self, tc, step):
-        self.__trigger_commands(step, tc)
+        self.__trigger_commands(step)
         tc.TriggerCallback()
         return
 

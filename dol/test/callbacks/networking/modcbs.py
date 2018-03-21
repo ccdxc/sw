@@ -1,63 +1,65 @@
 #! /usr/bin/python3
 
+from infra.common.logging import logger as logger
+
 def Setup(infra, module):
     iterelem = module.iterator.Get()
 
-    module.logger.info("Iterator Selectors")
+    logger.info("Iterator Selectors")
 
     if iterelem:
         if 'session' in iterelem.__dict__:
-            module.logger.info("- session: %s" % iterelem.session)
+            logger.info("- session: %s" % iterelem.session)
             module.testspec.selectors.session.base.Extend(iterelem.session)
 
         if 'flow' in iterelem.__dict__:
-            module.logger.info("- flow: %s" % iterelem.flow)
+            logger.info("- flow: %s" % iterelem.flow)
             module.testspec.selectors.flow.Extend(iterelem.flow)
 
         if 'srcif' in iterelem.__dict__:
-            module.logger.info("- srcif: %s" % iterelem.srcif)
+            logger.info("- srcif: %s" % iterelem.srcif)
             module.testspec.selectors.src.interface.Extend(iterelem.srcif)
         else:
             module.testspec.selectors.src.interface.Extend('filter://any')
         
         if 'dstif' in iterelem.__dict__:
-            module.logger.info("- srcif: %s" % iterelem.dstif)
+            logger.info("- srcif: %s" % iterelem.dstif)
             module.testspec.selectors.dst.interface.Extend(iterelem.dstif)
         else:
             module.testspec.selectors.dst.interface.Extend('filter://any')
 
         if 'segment' in iterelem.__dict__:
-            module.logger.info("- segment: %s" % iterelem.segment)
+            logger.info("- segment: %s" % iterelem.segment)
             module.testspec.selectors.src.segment.Extend(iterelem.segment)
             module.testspec.selectors.dst.segment.Extend(iterelem.segment)
 
         if 'srcseg' in iterelem.__dict__:
-            module.logger.info("- srcseg: %s" % iterelem.srcseg)
+            logger.info("- srcseg: %s" % iterelem.srcseg)
             module.testspec.selectors.src.segment.Extend(iterelem.srcseg)
 
         if 'dstseg' in iterelem.__dict__:
-            module.logger.info("- dstseg: %s" % iterelem.dstseg)
+            logger.info("- dstseg: %s" % iterelem.dstseg)
             module.testspec.selectors.dst.segment.Extend(iterelem.dstseg)
 
         if 'priotag' in iterelem.__dict__:
-            module.logger.info("- priotag: %s" % iterelem.priotag)
+            logger.info("- priotag: %s" % iterelem.priotag)
 
         if 'tenant' in iterelem.__dict__:
-            module.logger.info("- tenant: %s" % iterelem.tenant)
+            logger.info("- tenant: %s" % iterelem.tenant)
             module.testspec.selectors.src.tenant.Extend(iterelem.tenant)
             module.testspec.selectors.dst.tenant.Extend(iterelem.tenant)
 
         if 'ep' in iterelem.__dict__:
-            module.logger.info("- ep: %s" % iterelem.tenant)
+            logger.info("- ep: %s" % iterelem.tenant)
             module.testspec.selectors.src.endpoint.Extend(iterelem.tenant)
             module.testspec.selectors.dst.endpoint.Extend(iterelem.tenant)
 
         if 'srcep' in iterelem.__dict__:
-            module.logger.info("- srcep: %s" % iterelem.tenant)
+            logger.info("- srcep: %s" % iterelem.tenant)
             module.testspec.selectors.src.endpoint.Extend(iterelem.tenant)
 
         if 'dstep' in iterelem.__dict__:
-            module.logger.info("- dstep: %s" % iterelem.tenant)
+            logger.info("- dstep: %s" % iterelem.tenant)
             module.testspec.selectors.dst.endpoint.Extend(iterelem.tenant)
 
     if module.args == None:
@@ -65,7 +67,7 @@ def Setup(infra, module):
 
     if 'maxflows' in module.args.__dict__:
         module.testspec.selectors.SetMaxFlows(module.args.maxflows)
-        module.logger.info("- maxflows: %s" % module.testspec.selectors.maxflows)
+        logger.info("- maxflows: %s" % module.testspec.selectors.maxflows)
 
     return
 

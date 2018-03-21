@@ -3,7 +3,7 @@
 from infra.common.defs          import status
 import config.resmgr            as resmgr
 import config.objects.ring      as ring
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 from factory.objects.eth.descriptor import IONIC_TX_MAX_SG_ELEMS
 
@@ -37,7 +37,7 @@ class EthRingObject(ring.RingObject):
         # Make sure ring_size is a power of 2
         self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
         resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
-        cfglogger.info("Creating Ring %s" % self)
+        logger.info("Creating Ring %s" % self)
         if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
             self._sgmem = resmgr.HostMemoryAllocator.get(IONIC_TX_MAX_SG_ELEMS * self.size * self.sg_desc_size)
 
@@ -45,7 +45,7 @@ class EthRingObject(ring.RingObject):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
-        cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.pi, self))
+        logger.info("Posting %s @ %s on %s" % (descriptor, self.pi, self))
 
         # Check descriptor compatibility
         assert(descriptor is not None)
@@ -66,7 +66,7 @@ class EthRingObject(ring.RingObject):
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
 
-        cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.ci, self))
+        logger.info("Consuming %s @ %s on %s" % (descriptor, self.ci, self))
 
         # Check descriptor compatibility
         assert(descriptor is not None)
@@ -77,7 +77,7 @@ class EthRingObject(ring.RingObject):
         # Retreive descriptor for completion processing
         d = self.queue.descriptors[self.ci]
         if d is None:
-            cfglogger.error("Consume(): Descriptor not found in map.")
+            logger.error("Consume(): Descriptor not found in map.")
             return status.RETRY
         if descriptor.GetBuffer() is not None and d.GetBuffer() is not None:
             descriptor.GetBuffer().Bind(d.GetBuffer()._mem)

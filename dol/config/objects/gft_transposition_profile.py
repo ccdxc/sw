@@ -13,7 +13,7 @@ import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
 from infra.common.glopts        import GlobalOptions
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class GftTranspositionProfileObject(base.ConfigObjectBase):
@@ -75,8 +75,8 @@ class GftTranspositionProfileObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Transposition Profile : %s" % self.GID())
-        cfglogger.info("- ID: ", self.id)
+        logger.info("Transposition Profile : %s" % self.GID())
+        logger.info("- ID: ", self.id)
 
         redirect_actions = ""
         if self.redirect_to_vport_ingress_queue:
@@ -87,7 +87,7 @@ class GftTranspositionProfileObject(base.ConfigObjectBase):
             redirect_actions += "VportIngressQTtl1,"
         if self.redirect_to_vport_egress_queue_if_ttl_is_one:
             redirect_actions += "VportEgressQTtl1,"
-        cfglogger.info("- Redirect: %s" % redirect_actions)
+        logger.info("- Redirect: %s" % redirect_actions)
 
         copy_actions = ""
         if self.copy_all_packets:
@@ -100,11 +100,11 @@ class GftTranspositionProfileObject(base.ConfigObjectBase):
             copy_actions += "CopyAfterFinFlagSet,"
         if self.copy_after_tcp_rst_flag_set:
             copy_actions += "CopyAfterRstFlagSet,"
-        cfglogger.info("- Copy: %s" % copy_actions)
+        logger.info("- Copy: %s" % copy_actions)
         if self.custom_action_present:
-            cfglogger.info("- Custom Action: True")
+            logger.info("- Custom Action: True")
         if self.meta_action_before_transposition:
-            cfglogger.info("- Meta Action Before Transposition: True")
+            logger.info("- Meta Action Before Transposition: True")
 
         return
 
@@ -120,7 +120,7 @@ class GftTranspositionProfileObjectHelper:
         spec = getattr(gftexm_spec, 'transpositions', None)
         trs = spec.Get(Store)
 
-        cfglogger.info("Adding GFT Transposition Profiles to Store.")
+        logger.info("Adding GFT Transposition Profiles to Store.")
         for entry in trs.transposition_profiles:
             trp = entry.profile
             obj = GftTranspositionProfileObject()

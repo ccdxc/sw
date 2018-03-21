@@ -13,7 +13,7 @@ import config.objects.tunnel    as tunnel
 import config.objects.span      as span
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -55,108 +55,108 @@ class AclObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Acl  : %s (id: %d)" % (self.GID(), self.id))
-        cfglogger.info("- Match  : %s" % self.GID())
+        logger.info("Acl  : %s (id: %d)" % (self.GID(), self.id))
+        logger.info("- Match  : %s" % self.GID())
         if self.MatchOnFlowMiss():
-            cfglogger.info("  Flow Miss" )
+            logger.info("  Flow Miss" )
 
         if self.MatchOnDirection():
-            cfglogger.info("  Direction     : %s" % self.fields.match.direction)
+            logger.info("  Direction     : %s" % self.fields.match.direction)
 
         if self.MatchOnSIF():
             if self.fields.match.src_if:
-                cfglogger.info("  Src IF     : %s" % self.fields.match.src_if.GID())
+                logger.info("  Src IF     : %s" % self.fields.match.src_if.GID())
             else:
-                cfglogger.info("  Src IF Not set")
+                logger.info("  Src IF Not set")
 
         if self.MatchOnDIF():
             if self.fields.match.dst_if:
-                cfglogger.info("  Dst IF     : %s" % self.fields.match.dst_if.GID())
+                logger.info("  Dst IF     : %s" % self.fields.match.dst_if.GID())
             else:
-                cfglogger.info("  Dst IF Not set")
+                logger.info("  Dst IF Not set")
 
         if self.MatchOnSegment():
             if self.fields.match.segment:
-                cfglogger.info("  Segment     : %s" % self.fields.match.segment.GID())
+                logger.info("  Segment     : %s" % self.fields.match.segment.GID())
             else:
-                cfglogger.info("  Segment Not set")
+                logger.info("  Segment Not set")
 
         if self.MatchOnTenant():
             if self.fields.match.tenant:
-                cfglogger.info("  Tenant     : %s" % self.fields.match.tenant.GID())
+                logger.info("  Tenant     : %s" % self.fields.match.tenant.GID())
             else:
-                cfglogger.info("  Tenant Not set")
+                logger.info("  Tenant Not set")
 
         if len(self.fields.match.dropmask):
-            cfglogger.info("  DropMask: " )
+            logger.info("  DropMask: " )
         for dm in self.fields.match.dropmask:
-            cfglogger.info("    - %s" % dm)
+            logger.info("    - %s" % dm)
 
         if self.MatchOnEth():
-            cfglogger.info("  Eth:")
-            cfglogger.info("  - Ethertype : %d" % self.fields.match.eth.ethertype.get())
-            cfglogger.info("  - Src       : %s" % self.fields.match.eth.src.get())
-            cfglogger.info("  - Dst       : %s" % self.fields.match.eth.dst.get())
+            logger.info("  Eth:")
+            logger.info("  - Ethertype : %d" % self.fields.match.eth.ethertype.get())
+            logger.info("  - Src       : %s" % self.fields.match.eth.src.get())
+            logger.info("  - Dst       : %s" % self.fields.match.eth.dst.get())
         elif self.MatchOnIP():
-            cfglogger.info("  IP:")
-            cfglogger.info("  - Src   : %s/%d" %\
+            logger.info("  IP:")
+            logger.info("  - Src   : %s/%d" %\
                             (self.fields.match.ip.src_ip.get(),
                              self.fields.match.ip.src_prefix_len.get()))
-            cfglogger.info("  - Dst   : %s/%d" %\
+            logger.info("  - Dst   : %s/%d" %\
                             (self.fields.match.ip.dst_ip.get(),
                              self.fields.match.ip.dst_prefix_len.get()))
-            cfglogger.info("  - Options : ", self.fields.match.ip.options)
+            logger.info("  - Options : ", self.fields.match.ip.options)
         if self.MatchOnL4Proto():
-            cfglogger.info("  - Proto : %d" % self.fields.match.l4.proto.get())
+            logger.info("  - Proto : %d" % self.fields.match.l4.proto.get())
         if self.MatchOnTCP():
-            cfglogger.info("  TCP:")
+            logger.info("  TCP:")
             if self.MatchOnTCPFlags(['syn']):
-                cfglogger.info("  - Syn             : %d" % self.fields.match.l4.tcp.syn)
+                logger.info("  - Syn             : %d" % self.fields.match.l4.tcp.syn)
             if self.MatchOnTCPFlags(['ack']):
-                cfglogger.info("  - Ack             : %d" % self.fields.match.l4.tcp.ack)
+                logger.info("  - Ack             : %d" % self.fields.match.l4.tcp.ack)
             if self.MatchOnTCPFlags(['fin']):
-                cfglogger.info("  - Fin             : %d" % self.fields.match.l4.tcp.fin)
+                logger.info("  - Fin             : %d" % self.fields.match.l4.tcp.fin)
             if self.MatchOnTCPFlags(['rst']):
-                cfglogger.info("  - Rst             : %d" % self.fields.match.l4.tcp.rst)
+                logger.info("  - Rst             : %d" % self.fields.match.l4.tcp.rst)
             if self.MatchOnTCPFlags(['urg']):
-                cfglogger.info("  - Urg             : %d" % self.fields.match.l4.tcp.urg)
-            cfglogger.info("  - Src Port-Range  : %d-%d" %\
+                logger.info("  - Urg             : %d" % self.fields.match.l4.tcp.urg)
+            logger.info("  - Src Port-Range  : %d-%d" %\
                            (self.fields.match.l4.tcp.src_port_range.GetStart(),
                             self.fields.match.l4.tcp.src_port_range.GetEnd()))
-            cfglogger.info("  - Dst Port-Range  : %d-%d" %\
+            logger.info("  - Dst Port-Range  : %d-%d" %\
                            (self.fields.match.l4.tcp.dst_port_range.GetStart(),
                             self.fields.match.l4.tcp.dst_port_range.GetEnd()))
         elif self.MatchOnUDP():
-            cfglogger.info("  UDP:")
-            cfglogger.info("  - Src Port-Range  : %d-%d" %\
+            logger.info("  UDP:")
+            logger.info("  - Src Port-Range  : %d-%d" %\
                            (self.fields.match.l4.udp.src_port_range.GetStart(),
                             self.fields.match.l4.udp.src_port_range.GetEnd()))
-            cfglogger.info("  - Dst Port-Range  : %d-%d" %\
+            logger.info("  - Dst Port-Range  : %d-%d" %\
                            (self.fields.match.l4.udp.dst_port_range.GetStart(),
                             self.fields.match.l4.udp.dst_port_range.GetEnd()))
         elif self.MatchOnICMP():
-            cfglogger.info("  ICMP:")
-            cfglogger.info("  - Code/Mask: %02x/%02x" % \
+            logger.info("  ICMP:")
+            logger.info("  - Code/Mask: %02x/%02x" % \
                     (self.fields.match.l4.icmp.code.get(), self.fields.match.l4.icmp.code_mask.get()))
-            cfglogger.info("  - Type/Mask: %02x/%02x" % \
+            logger.info("  - Type/Mask: %02x/%02x" % \
                     (self.fields.match.l4.icmp.type.get(), self.fields.match.l4.icmp.type_mask.get()))
 
-        cfglogger.info("- Action    : %s" % self.fields.action.action)
+        logger.info("- Action    : %s" % self.fields.action.action)
         if self.ActionUplinkRedirect():
-            cfglogger.info("  Uplink redirect : %s" % self.fields.action.redirect_if.GID())
+            logger.info("  Uplink redirect : %s" % self.fields.action.redirect_if.GID())
         elif self.ActionTunnelRedirect():
-            cfglogger.info("  Tunnel redirect : %s" % self.fields.action.redirect_if.GID())
+            logger.info("  Tunnel redirect : %s" % self.fields.action.redirect_if.GID())
         elif self.ActionSupRedirect():
-            cfglogger.info("  Sup redirect" )
+            logger.info("  Sup redirect" )
 
         for ssn in self.ing_mirror_sessions:
-            cfglogger.info("  Ing. Mirror   : Session=%s" % ssn.GID())
+            logger.info("  Ing. Mirror   : Session=%s" % ssn.GID())
         for ssn in self.egr_mirror_sessions:
-            cfglogger.info("  Egr. Mirror   : Session=%s" % ssn.GID())
+            logger.info("  Egr. Mirror   : Session=%s" % ssn.GID())
         return
 
     def Configure(self):
-        cfglogger.info("Configuring Acl  : %s (id: %d)" % (self.GID(), self.id))
+        logger.info("Configuring Acl  : %s (id: %d)" % (self.GID(), self.id))
         if self.GID() in self.acls_to_skip:
             return
         self.Show()
@@ -167,7 +167,7 @@ class AclObject(base.ConfigObjectBase):
         if g_acl_handle is None:
             return self.Configure()
 
-        cfglogger.info("Updating Acl  : %s (id: %d)" % (self.GID(), self.id))
+        logger.info("Updating Acl  : %s (id: %d)" % (self.GID(), self.id))
         if self.GID() in self.acls_to_skip:
             return
         self.Show()
@@ -177,7 +177,7 @@ class AclObject(base.ConfigObjectBase):
         return
 
     def Delete(self):
-        cfglogger.info("Deleting Acl  : %s (id: %d)" % (self.GID(), self.id))
+        logger.info("Deleting Acl  : %s (id: %d)" % (self.GID(), self.id))
         if self.GID() in self.acls_to_skip:
             return
         halapi.DeleteAcls([self])
@@ -345,7 +345,7 @@ class AclObject(base.ConfigObjectBase):
         global g_acl_handle
 
         self.hal_handle = resp_spec.status.acl_handle
-        cfglogger.info("  - Acl %s = %s handle: 0x%x" %\
+        logger.info("  - Acl %s = %s handle: 0x%x" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status), 
                         self.hal_handle))
@@ -724,7 +724,7 @@ class AclObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Acls." % len(self.acls)) 
+        logger.info("Configuring %d Acls." % len(self.acls)) 
         halapi.ConfigureAcls(self.acls)
         return
         
@@ -733,7 +733,7 @@ class AclObjectHelper:
         if aclspec is None:
             return
         spec = topospec.acls.Get(Store)
-        cfglogger.info("Creating Acls")
+        logger.info("Creating Acls")
         for e in spec.entries:
             acl = AclObject()
             acl.Init(e.entry)

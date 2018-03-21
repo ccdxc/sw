@@ -434,7 +434,7 @@ class ScapyPacketObject:
         return self.rawbytes
 
     @staticmethod
-    def ShowRawPacket(rawbytes, logger):
+    def ShowRawPacket(rawbytes):
         logger.info("--------------------- RAW PACKET ---------------------")
         i = 0
         line = ''
@@ -454,16 +454,16 @@ class ScapyPacketObject:
         return
 
     @staticmethod
-    def ShowScapyPacket(rawbytes, logger):
+    def ShowScapyPacket(rawbytes):
         spktobj = Parse(rawbytes)
         spkt = spktobj.spkt
         logger.info("------------------- SCAPY PACKET ---------------------")
-        spkt.show(indent = 0, label_lvl = logger.GetLogPrefix())
+        logger.ShowScapyObject(spkt)
         return
 
-    def Show(self, logger):
-        ScapyPacketObject.ShowScapyPacket(self.rawbytes, logger)
-        ScapyPacketObject.ShowRawPacket(self.rawbytes, logger)
+    def Show(self):
+        ScapyPacketObject.ShowScapyPacket(self.rawbytes)
+        ScapyPacketObject.ShowRawPacket(self.rawbytes)
         return
 
 class RawPacketParser:

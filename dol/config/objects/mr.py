@@ -7,7 +7,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.api           as halapi
 import config.hal.defs          as haldefs
@@ -37,9 +37,9 @@ class MrObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        cfglogger.info("MR: %s PD: %s SLAB: %s LIF: %s\n" %\
-                        (self.GID(), self.pd.GID(), self.slab.GID(),
-                         self.pd.ep.intf.lif.hw_lif_id))
+        logger.info("MR: %s PD: %s SLAB: %s LIF: %s" %\
+                    (self.GID(), self.pd.GID(), self.slab.GID(),
+                     self.pd.ep.intf.lif.hw_lif_id))
 
         if (GlobalOptions.dryrun): return
 
@@ -61,8 +61,8 @@ class MrObject(base.ConfigObjectBase):
         pass
 
     def Show(self):
-        cfglogger.info('MR: %s PD: %s ' %(self.GID(), self.pd.GID()))
-        cfglogger.info('LKey: %d RKey: %d address: 0x%x size: %d '\
+        logger.info('MR: %s PD: %s ' %(self.GID(), self.pd.GID()))
+        logger.info('LKey: %d RKey: %d address: 0x%x size: %d '\
                         %(self.lkey, self.rkey, self.slab.address, self.slab.size))
 
 class MrObjectHelper:
@@ -72,15 +72,15 @@ class MrObjectHelper:
     def Generate(self, pd, spec):
         self.pd = pd
         if self.pd.remote:
-            cfglogger.info("skipping MR generation for remote PD: %s" %(pd.GID()))
+            logger.info("skipping MR generation for remote PD: %s" %(pd.GID()))
             return
 
         mr_count = spec.count
         slab_count = len(pd.ep.slabs)
-        cfglogger.info('mr_count: %d slab_count: %d' \
+        logger.info('mr_count: %d slab_count: %d' \
                         %(mr_count, slab_count))
         count = min(mr_count, slab_count)
-        cfglogger.info("Creating %d Mrs. for PD:%s" %\
+        logger.info("Creating %d Mrs. for PD:%s" %\
                        (count, pd.GID()))
         for i in range(count):
             slab = pd.ep.slabs.Get('SLAB%04d' % i)
@@ -94,10 +94,10 @@ class MrObjectHelper:
 
     def Configure(self):
         if self.pd.remote:
-            cfglogger.info("skipping MR configuration for remote PD: %s" %(self.pd.GID()))
+            logger.info("skipping MR configuration for remote PD: %s" %(self.pd.GID()))
             return
 
         if (GlobalOptions.dryrun): return
 
-        cfglogger.info("Configuring %d Mrs." % len(self.mrs))
+        logger.info("Configuring %d Mrs." % len(self.mrs))
         halapi.ConfigureMrs(self.mrs)

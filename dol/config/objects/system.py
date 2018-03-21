@@ -9,7 +9,7 @@ import config.resmgr            as resmgr
 #import config.objects.session   as session
 
 from config.store               import Store
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -27,10 +27,10 @@ class SystemObject(base.ConfigObjectBase):
         self.mirror_sessions = []
 
     def Show(self):
-        cfglogger.info("System Object       : %s" % self.GID())
-        cfglogger.info(" - MirrorSessions :")
+        logger.info("System Object       : %s" % self.GID())
+        logger.info(" - MirrorSessions :")
         for sess in self.mirror_sessions:
-            cfglogger.info("    Session ID  : %d" % sess.id)
+            logger.info("    Session ID  : %d" % sess.id)
 
     def PrepareHALRequestSpec(self, reqspec):
         for sess in self.mirror_sessions:
@@ -39,7 +39,7 @@ class SystemObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("  - System Object %s = %s" %(self.GID(), \
+        logger.info("  - System Object %s = %s" %(self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
 
     def IsFilterMatch(self, spec):
@@ -51,7 +51,7 @@ class SystemObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring System Object")
+        logger.info("Configuring System Object")
         objs = []
 
         objs.append(self.systemObject)

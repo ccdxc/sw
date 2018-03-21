@@ -118,21 +118,21 @@ class Module(objects.FrameworkObject):
 
 
     def __load_spec(self):
-        utils.LogFunctionBegin(self.logger)
+        logger.LogFunctionBegin()
         coverage.Init(self)
-        self.logger.info("- Loading TEST SPEC = %s" % self.spec)
-        self.testspec = testspec.TestSpecObject(self.path, self.spec, self.logger)
+        logger.info("- Loading TEST SPEC = %s" % self.spec)
+        self.testspec = testspec.TestSpecObject(self.path, self.spec, logger)
         self.testspec.MergeSelectors(self.selectors)
         self.testspec.DeriveLimits()
-        utils.LogFunctionEnd(self.logger)
+        logger.LogFunctionEnd()
         return defs.status.SUCCESS
 
     def __load(self):
-        utils.LogFunctionBegin(self.logger)
+        logger.LogFunctionBegin()
         if self.module:
             self.module_hdl = loader.ImportModule(self.package, self.module)
             assert(self.module_hdl)
-        utils.LogFunctionEnd(self.logger)
+        logger.LogFunctionEnd()
 
     def GetTracker(self):
         return self.__trackerobj
@@ -141,9 +141,9 @@ class Module(objects.FrameworkObject):
         self.__trackerobj = None
         if self.tracker is False:
             return
-        utils.LogFunctionBegin(self.logger)
+        logger.LogFunctionBegin()
         self.__trackerobj = self.RunModuleCallback(MODULE_CB_INIT_TRACKER, self.infra_data, self)
-        utils.LogFunctionEnd(self.logger)
+        logger.LogFunctionEnd()
         return
 
     def __unload(self):
@@ -222,9 +222,9 @@ class Module(objects.FrameworkObject):
         return defs.status.SUCCESS
 
     def __setup_callback(self):
-        utils.LogFunctionBegin(self.logger)
+        logger.LogFunctionBegin()
         self.RunModuleCallback(MODULE_CB_SETUP, self.infra_data, self)
-        utils.LogFunctionEnd(self.logger)
+        logger.LogFunctionEnd()
         return
 
     def __update_results(self, testcase):
@@ -283,9 +283,9 @@ class Module(objects.FrameworkObject):
         return
 
     def __teardown_callback(self):
-        utils.LogFunctionBegin(self.logger)
+        logger.LogFunctionBegin()
         self.RunModuleCallback(MODULE_CB_TEARDOWN, self.infra_data, self)
-        utils.LogFunctionEnd(self.logger)
+        logger.LogFunctionEnd()
         return
 
     def __process_results(self):
@@ -301,16 +301,15 @@ class Module(objects.FrameworkObject):
 
         self.infra_data = infra_data
         prefix = "%s/%s" % (self.feature, self.name)
-        self.logger = logging.Logger(stdout=True, name=prefix)
-        self.infra_data.Logger = self.logger
+        logger.SetModule(prefix)
         self.__load()
         self.__init_tracker()
         while self.iterator.End() is False and\
               self.abort is False and\
               GlobalOptions.alltc_done == False:
             self.pvtdata = ModulePrivateData()
-            self.logger.info("========== Starting Test Module =============")
-            self.logger.info("Starting new Iteration")
+            logger.info("========== Starting Test Module =============")
+            logger.info("Starting new Iteration")
             self.__load_spec()
             self.__setup_callback()
             #This should be cleaned up.
@@ -329,22 +328,19 @@ class Module(objects.FrameworkObject):
         return
 
 class ModuleRunner:
-    
     def __init__(self, module):
         self.module = module
-        self.logger = module.logger
     
     def Run(self):
         pass
 
 
 class DolModuleRunner(ModuleRunner):
-    
     def __init__(self, module):
         super().__init__(module)
         
     def __select_config(self):
-        utils.LogFunctionBegin(self.logger)
+        logger.LogFunctionBegin()
         if hasattr(self.module.testspec.selectors, "root"):
             obj = self.module.testspec.selectors.root.Get(ConfigStore)
             module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module)
@@ -358,10 +354,10 @@ class DolModuleRunner(ModuleRunner):
 
         self.module.testspec.selectors.roots = objs
         if len(objs) == 0:
-            self.logger.error("- Selected %d Matching Objects" % len(objs))
+            logger.error("- Selected %d Matching Objects" % len(objs))
         else:
-            self.logger.info("- Selected %d Matching Objects" % len(objs))
-        utils.LogFunctionEnd(self.logger)
+            logger.info("- Selected %d Matching Objects" % len(objs))
+        logger.LogFunctionEnd()
         return defs.status.SUCCESS    
 
     def __execute(self):
@@ -392,7 +388,6 @@ class DolModuleRunner(ModuleRunner):
         self.__execute()
 
 class E2EModuleRunner(ModuleRunner):
-    
     def __init__(self, module):
         super().__init__(module)
     

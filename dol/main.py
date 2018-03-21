@@ -22,7 +22,7 @@ os.environ['MODEL_DATA_OUT_DIR'] = ws_top + '/nic/coverage/asm_out_all'
 os.environ['MODEL_DATA_DEST_DIR'] = ws_top + '/nic/coverage/asm_out_final'
 for path in paths:
     fullpath = ws_top + path
-    print("Adding Path: %s" % fullpath)
+    #print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
 import infra.factory.factory    as factory
@@ -33,12 +33,10 @@ import infra.e2e.main           as e2e
 
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
-glopts.ValidateGlopts()
-
 from infra.common.logging import logger
-
 import sys
 
+glopts.ValidateGlopts()
 def Main():
     logger.info("Initializing Config Infra")
     config.init()

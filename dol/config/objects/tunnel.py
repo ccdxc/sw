@@ -11,7 +11,7 @@ import config.objects.segment   as segment
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from config.store               import Store
 
 class TunnelObject(base.ConfigObjectBase):
@@ -33,7 +33,7 @@ class TunnelObject(base.ConfigObjectBase):
             self.ltep       = self.tenant.local_tep
         else:
             leps = self.tenant.GetLocalEps()
-            cfglogger.info(" found %d local eps for tunnel using %s" % (len(leps), leps[0].ipaddrs[0].get()))
+            logger.info(" found %d local eps for tunnel using %s" % (len(leps), leps[0].ipaddrs[0].get()))
             self.ltep = leps[0].ipaddrs[0]
 
         if remote_ep.IsRemote():
@@ -82,18 +82,18 @@ class TunnelObject(base.ConfigObjectBase):
         return self.ltep
 
     def Show(self):
-        cfglogger.info("Tunnel = %s" % self.GID())
-        cfglogger.info("- Tenant      = %s" % self.tenant.GID())
-        cfglogger.info("- EncapType   = %s" % self.encap_type)
+        logger.info("Tunnel = %s" % self.GID())
+        logger.info("- Tenant      = %s" % self.tenant.GID())
+        logger.info("- EncapType   = %s" % self.encap_type)
         if 'local_tep' in self.tenant.__dict__:
-            cfglogger.info("- LocalTep    = %s" % self.ltep.get())
-        cfglogger.info("- RemoteTep   = %s" % self.rtep.get())
-        cfglogger.info("- Local Dest  = ", self.local_dest)
-        cfglogger.info("- Interface   = %s" % self.remote_ep.GetInterface().GID())
-        cfglogger.info("- Ports       =", self.ports)
-        cfglogger.info("- txqos: Cos:%s/Dscp:%s" %\
+            logger.info("- LocalTep    = %s" % self.ltep.get())
+        logger.info("- RemoteTep   = %s" % self.rtep.get())
+        logger.info("- Local Dest  = ", self.local_dest)
+        logger.info("- Interface   = %s" % self.remote_ep.GetInterface().GID())
+        logger.info("- Ports       =", self.ports)
+        logger.info("- txqos: Cos:%s/Dscp:%s" %\
                        (str(self.txqos.cos), str(self.txqos.dscp)))
-        cfglogger.info("- rxqos: Cos:%s/Dscp:%s" %\
+        logger.info("- rxqos: Cos:%s/Dscp:%s" %\
                        (str(self.rxqos.cos), str(self.rxqos.dscp)))
         return
 
@@ -147,7 +147,7 @@ class TunnelObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-        cfglogger.info("- Tunnel %s = %s (HDL = 0x%x)" %\
+        logger.info("- Tunnel %s = %s (HDL = 0x%x)" %\
                        (self.GID(),\
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
@@ -162,12 +162,12 @@ class TunnelObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Tunnels." % len(self.tunnels))
+        logger.info("Configuring %d Tunnels." % len(self.tunnels))
         halapi.ConfigureInterfaces(self.tunnels)
         return
 
     def Generate(self, tenant, spec, eps):
-        cfglogger.info("Creating %d Tunnels for Tenant = %s" %\
+        logger.info("Creating %d Tunnels for Tenant = %s" %\
                        (len(eps), tenant.GID()))
         for ep in eps:
             tunnel = TunnelObject()

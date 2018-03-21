@@ -12,7 +12,7 @@ import infra.factory.template       as template
 import infra.factory.scapyfactory   as scapyfactory
 
 from infra.factory.store            import FactoryStore
-from infra.common.logging           import pktlogger
+from infra.common.logging           import logger
 from infra.penscapy                 import penscapy
 
 scapy_hdr_map = {}
@@ -29,18 +29,18 @@ def get_factory_id_from_scapy_id(scapy_id):
     return scapy_hdr_map.get(scapy_id)
 
 def init():
-    pktlogger.info("Loading HEADER templates.")
+    logger.info("Loading HEADER templates.")
     objlist = template.ParseHeaderTemplates()
     FactoryStore.headers.SetAll(objlist)
     global scapy_hdr_map
     for hdr in objlist:
         scapy_hdr_map[hdr.meta.scapy] = hdr.meta.id
 
-    pktlogger.info("Loading PACKET templates.")
+    logger.info("Loading PACKET templates.")
     objlist = template.ParsePacketTemplates()
     FactoryStore.packets.SetAll(objlist)
 
-    pktlogger.info("Loading PAYLOAD templates.")
+    logger.info("Loading PAYLOAD templates.")
     objlist = template.ParsePayloadTemplates()
     FactoryStore.payloads.SetAll(objlist)
     return
@@ -238,7 +238,7 @@ class Packet(objects.FrameworkObject):
             return
 
         if pktspec.template == None:
-            pktlogger.error("No Template or Clone specified for packet.")
+            logger.error("No Template or Clone specified for packet.")
             return None
 
         if objects.IsReference(pktspec.template):
@@ -248,7 +248,7 @@ class Packet(objects.FrameworkObject):
         else:
             assert(0)
         if self.template == None:
-            pktlogger.error("Template NOT FOUND for ID:%s" %\
+            logger.error("Template NOT FOUND for ID:%s" %\
                             self.spec.template.GetInstID())
             assert(self.template != None)
         return 
@@ -302,7 +302,7 @@ class Packet(objects.FrameworkObject):
         for h in self.hdrsorder:
             hdr = self.headers.__dict__[h]
             if IsPacketHeader(hdr):
-                pktlogger.verbose("Size of HEADER: %s = " %\
+                logger.verbose("Size of HEADER: %s = " %\
                                   h, hdr.meta.size)
                 size += hdr.meta.size
         return size
@@ -337,9 +337,9 @@ class Packet(objects.FrameworkObject):
     def __fixup_payloadsize(self, tc):
         datasize = len(self.headers.payload.fields.data)
         if datasize != self.payloadsize:
-            tc.warn("- Testspec payload data size:%d payloadsize:%d" %\
+            logger.warn("- Testspec payload data size:%d payloadsize:%d" %\
                     (datasize, self.payloadsize))
-            tc.warn("- Fixing payloadsize to data size: %d" % datasize)
+            logger.warn("- Fixing payloadsize to data size: %d" % datasize)
             self.payloadsize = datasize
         return
 
@@ -347,9 +347,9 @@ class Packet(objects.FrameworkObject):
         currdata = self.headers.payload.fields.data
         datasize = len(self.headers.payload.fields.data)
         if datasize != self.payloadsize:
-            tc.warn("- Testspec payload data size:%d payloadsize:%d" %\
+            logger.warn("- Testspec payload data size:%d payloadsize:%d" %\
                 (len(self.headers.payload.fields.data), self.payloadsize))
-            tc.warn("- Fixing payload data.")
+            logger.warn("- Fixing payload data.")
             fac = int(self.payloadsize / datasize) + 1
             newdata = currdata * fac
             self.headers.payload.fields.data = newdata[:self.payloadsize]
@@ -382,7 +382,7 @@ class Packet(objects.FrameworkObject):
                     utils.ParseIntegerList(self.headers.payload.fields.data)
         else:
             self.__fixup_payload(tc)
-        tc.info("- Added Payload of Size = %d" % self.payloadsize)
+        logger.info("- Added Payload of Size = %d" % self.payloadsize)
         return
 
     def __process(self, tc):
@@ -431,8 +431,8 @@ class Packet(objects.FrameworkObject):
         self.size = self.spktobj.GetSize()
         return
 
-    def Show(self, logger):
+    def Show(self):
         logger.info("################## %-16s ##################" %
                     self.GID())
-        self.spktobj.Show(logger)
+        self.spktobj.Show()
         return

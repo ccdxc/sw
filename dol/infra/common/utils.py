@@ -13,7 +13,6 @@ from collections import OrderedDict
 from scapy.packet import Packet
 from io import StringIO
 
-
 def IsTemplateField(string):
     # TODO: Add a def to separator instead of hardcoding.
     if "/" in str(string):
@@ -112,21 +111,12 @@ def ParseIntegerList(string):
 def GetFunctionName():
     return inspect.stack()[1][3]
 
-def LogFunctionBegin(lg):
-    lg.debug("BEG: %s()" % inspect.stack()[1][3])
-    return
-
-def LogFunctionEnd(lg, status=0):
-    lg.debug("END: %s()  Status:%d" % (inspect.stack()[1][3], status))
-    return
-
 def log_exception(lg):
     exc_type, exc_value, exc_traceback = sys.exc_info()
     lg.info("Exception: %s-- %s" % (exc_type, exc_value))
     lg.info('-' * 60)
     lg.info("%s" % pprint.pformat(traceback.format_tb(exc_traceback)))
     lg.info('-' * 60)
-
 
 def CompareObjectFields(self, other, fields, lgh):
     if other == None and self == None:

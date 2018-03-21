@@ -2,6 +2,7 @@
 
 import pdb
 from infra.common.logging import logger
+from infra.common.logging import logger as logger
 
 # Need to match defines in tcp-constants.h
 tcp_debug_dol_pkt_to_serq = 0x1
@@ -45,7 +46,7 @@ l7_proxy_type_SPAN = 2
 tcp_ddol_TBLADDR_VALUE = 0x59
 
 def SetupProxyArgs(tc):
-    tc.module.logger.info("Testcase Args:")
+    logger.info("Testcase Args:")
     same_flow = 0
     bypass_barco = 0
     send_ack_flow1 = 0
@@ -70,31 +71,31 @@ def SetupProxyArgs(tc):
     snd_cwnd = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
-        tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
+        logger.info("- same_flow %s" % tc.module.args.same_flow)
     if hasattr(tc.module.args, 'bypass_barco'):
         bypass_barco = tc.module.args.bypass_barco
-        tc.module.logger.info("- bypass_barco %s" % tc.module.args.bypass_barco)
+        logger.info("- bypass_barco %s" % tc.module.args.bypass_barco)
     if hasattr(tc.module.args, 'send_ack_flow1'):
         send_ack_flow1 = tc.module.args.send_ack_flow1
-        tc.module.logger.info("- send_ack_flow1 %s" % tc.module.args.send_ack_flow1)
+        logger.info("- send_ack_flow1 %s" % tc.module.args.send_ack_flow1)
     if hasattr(tc.module.args, 'send_ack_flow2'):
         send_ack_flow2 = tc.module.args.send_ack_flow2
-        tc.module.logger.info("- send_ack_flow2 %s" % tc.module.args.send_ack_flow2)
+        logger.info("- send_ack_flow2 %s" % tc.module.args.send_ack_flow2)
     if hasattr(tc.module.args, 'test_timer'):
         test_timer = tc.module.args.test_timer
-        tc.module.logger.info("- test_timer %s" % tc.module.args.test_timer)
+        logger.info("- test_timer %s" % tc.module.args.test_timer)
     if hasattr(tc.module.args, 'test_retx_timer'):
         test_retx_timer = tc.module.args.test_retx_timer
-        tc.module.logger.info("- test_retx_timer %s" % tc.module.args.test_retx_timer)
+        logger.info("- test_retx_timer %s" % tc.module.args.test_retx_timer)
     if hasattr(tc.module.args, 'test_cancel_retx_timer'):
         test_cancel_retx_timer = tc.module.args.test_cancel_retx_timer
-        tc.module.logger.info("- test_cancel_retx_timer %s" % tc.module.args.test_cancel_retx_timer)
+        logger.info("- test_cancel_retx_timer %s" % tc.module.args.test_cancel_retx_timer)
     if hasattr(tc.module.args, 'ooo_seq_delta'):
         ooo_seq_delta = tc.module.args.ooo_seq_delta
-        tc.module.logger.info("- ooo_seq_delta %s" % tc.module.args.ooo_seq_delta)
+        logger.info("- ooo_seq_delta %s" % tc.module.args.ooo_seq_delta)
     if hasattr(tc.module.args, 'num_pkts'):
         num_pkts = tc.module.args.num_pkts
-        tc.module.logger.info("- num_pkts %s" % tc.module.args.num_pkts)
+        logger.info("- num_pkts %s" % tc.module.args.num_pkts)
     if hasattr(tc.module.args, 'test_retx'):
         test_retx = tc.module.args.test_retx
     if hasattr(tc.module.args, 'sem_full'):
@@ -109,65 +110,65 @@ def SetupProxyArgs(tc):
         final_fin = tc.module.args.final_fin
     if hasattr(tc.module.args, 'test_retx_timer_full'):
         test_retx_timer_full = tc.module.args.test_retx_timer_full
-        tc.module.logger.info("- test_retx_timer_full %s" % tc.module.args.test_retx_timer_full)
+        logger.info("- test_retx_timer_full %s" % tc.module.args.test_retx_timer_full)
     if hasattr(tc.module.args, 'test_mpu_tblsetaddr'):
         test_mpu_tblsetaddr = tc.module.args.test_mpu_tblsetaddr
-        tc.module.logger.info("- test_mpu_tblsetaddr %s" % tc.module.args.test_mpu_tblsetaddr)
+        logger.info("- test_mpu_tblsetaddr %s" % tc.module.args.test_mpu_tblsetaddr)
     if hasattr(tc.module.args, 'timestamp'):
         timestamp = tc.module.args.timestamp
-        tc.module.logger.info("- timestamp %s" % tc.module.args.timestamp)
+        logger.info("- timestamp %s" % tc.module.args.timestamp)
     if hasattr(tc.module.args, 'pkt_alloc'):
         pkt_alloc = tc.module.args.pkt_alloc
-        tc.module.logger.info("- pkt_alloc %s" % tc.module.args.pkt_alloc)
+        logger.info("- pkt_alloc %s" % tc.module.args.pkt_alloc)
     if hasattr(tc.module.args, 'pkt_free'):
         pkt_free = tc.module.args.pkt_free
-        tc.module.logger.info("- pkt_free %s" % tc.module.args.pkt_free)
+        logger.info("- pkt_free %s" % tc.module.args.pkt_free)
     if hasattr(tc.module.args, 'serq_full'):
         serq_full = tc.module.args.serq_full
-        tc.module.logger.info("- serq_full %s" % tc.module.args.serq_full)
+        logger.info("- serq_full %s" % tc.module.args.serq_full)
     if hasattr(tc.module.args, 'snd_cwnd'):
         snd_cwnd = tc.module.args.snd_cwnd
-        tc.module.logger.info("- snd_cwnd %s" % tc.module.args.snd_cwnd)
+        logger.info("- snd_cwnd %s" % tc.module.args.snd_cwnd)
 
-    tc.module.logger.info("Testcase Iterators:")
+    logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
     if iterelem:
         if 'same_flow' in iterelem.__dict__:
             same_flow = iterelem.same_flow
-            tc.module.logger.info("- same_flow %s" % iterelem.same_flow)
+            logger.info("- same_flow %s" % iterelem.same_flow)
         if 'bypass_barco' in iterelem.__dict__:
             bypass_barco = iterelem.bypass_barco
-            tc.module.logger.info("- bypass_barco %s" % iterelem.bypass_barco)
+            logger.info("- bypass_barco %s" % iterelem.bypass_barco)
         if 'send_ack_flow1' in iterelem.__dict__:
             send_ack_flow1 = iterelem.send_ack_flow1
-            tc.module.logger.info("- send_ack_flow1 %s" % iterelem.send_ack_flow1)
+            logger.info("- send_ack_flow1 %s" % iterelem.send_ack_flow1)
         if 'send_ack_flow2' in iterelem.__dict__:
             send_ack_flow2 = iterelem.send_ack_flow2
-            tc.module.logger.info("- send_ack_flow2 %s" % iterelem.send_ack_flow2)
+            logger.info("- send_ack_flow2 %s" % iterelem.send_ack_flow2)
         if 'test_timer' in iterelem.__dict__:
             test_timer = iterelem.test_timer
-            tc.module.logger.info("- test_timer %s" % iterelem.test_timer)
+            logger.info("- test_timer %s" % iterelem.test_timer)
         if 'test_retx_timer' in iterelem.__dict__:
             test_retx_timer = iterelem.test_retx_timer
-            tc.module.logger.info("- test_retx_timer %s" % iterelem.test_retx_timer)
+            logger.info("- test_retx_timer %s" % iterelem.test_retx_timer)
         if 'test_cancel_retx_timer' in iterelem.__dict__:
             test_cancel_retx_timer = iterelem.test_cancel_retx_timer
-            tc.module.logger.info("- test_cancel_retx_timer %s" % iterelem.test_cancel_retx_timer)
+            logger.info("- test_cancel_retx_timer %s" % iterelem.test_cancel_retx_timer)
         if 'ooo_seq_delta' in iterelem.__dict__:
             ooo_seq_delta = iterelem.ooo_seq_delta
-            tc.module.logger.info("- ooo_seq_delta %s" % iterelem.ooo_seq_delta)
+            logger.info("- ooo_seq_delta %s" % iterelem.ooo_seq_delta)
         if 'num_pkts' in iterelem.__dict__:
             num_pkts = iterelem.num_pkts
-            tc.module.logger.info("- num_pkts %s" % iterelem.num_pkts)
+            logger.info("- num_pkts %s" % iterelem.num_pkts)
         if 'sem_full' in iterelem.__dict__:
             sem_full = iterelem.sem_full
-            tc.module.logger.info("- sem_full %s" % iterelem.sem_full)
+            logger.info("- sem_full %s" % iterelem.sem_full)
         if 'test_cong_avoid' in iterelem.__dict__:
             test_cong_avoid = iterelem.test_cong_avoid
-            tc.module.logger.info("- test_cong_avoid %s" % iterelem.test_cong_avoid)
+            logger.info("- test_cong_avoid %s" % iterelem.test_cong_avoid)
         if 'fin' in iterelem.__dict__:
             fin = iterelem.fin
-            tc.module.logger.info("- fin %s" % iterelem.fin)
+            logger.info("- fin %s" % iterelem.fin)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack_flow1 = send_ack_flow1

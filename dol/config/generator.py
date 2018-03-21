@@ -34,7 +34,7 @@ from config.objects.swdr                import SwDscrRingHelper
 from config.objects.brq                 import BRQHelper
 from config.objects.timer               import TimerHelper
 from config.objects.security_policy     import SecurityGroupPolicyHelper
-from infra.common.logging               import cfglogger as cfglogger
+from infra.common.logging               import logger as logger
 from infra.asic.model                   import ModelConnector
 from config.store                       import Store
 
@@ -104,9 +104,9 @@ def process(topospec):
 def main(topofile):
     timeprofiler.ConfigTimeProfiler.Start()
     halapi.init()
-    cfglogger.info("Initializing Resmgr")
+    logger.info("Initializing Resmgr")
     resmgr.init()
-    cfglogger.info("Generating Config Objects for Topology = %s" % topofile)
+    logger.info("Generating Config Objects for Topology = %s" % topofile)
     topospec = parser.ParseFile('config/topology/', topofile)
     if topospec:
         process(topospec)
@@ -120,5 +120,5 @@ def dump_configuration(conf_file):
         config_dict[cfg_object.__class__.__name__][cfg_object.GID()] = cfg_object.ToJson()
     with open(conf_file, 'w') as fp:
         json.dump(config_dict, fp, indent=4)
-    cfglogger.info("Dumped configuration to file %s" % conf_file)
+    logger.info("Dumped configuration to file %s" % conf_file)
     

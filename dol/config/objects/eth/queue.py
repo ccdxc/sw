@@ -2,7 +2,7 @@
 
 import math
 from infra.common.defs          import status
-from infra.common.logging       import cfglogger
+from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 from config.objects.queue       import QueueObject
 import model_sim.src.model_wrap as model_wrap
@@ -104,14 +104,14 @@ class EthQstateObject(object):
         self.__data_class__ = cls
         self.data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
 
-    def Write(self, lgh = cfglogger):
+    def Write(self, lgh = logger):
         if GlobalOptions.skipverify:
             return
         lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
         self.Read(lgh)
 
-    def Read(self, lgh = cfglogger):
+    def Read(self, lgh = logger):
         if GlobalOptions.skipverify:
             return
         data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
@@ -152,7 +152,7 @@ class EthQstateObject(object):
         self.data[self.__data_class__].cq_base = value
         model_wrap.write_mem_pcie(self.addr + 40, bytes(ctypes.c_uint64(value)), 8)
 
-    def Show(self, lgh = cfglogger):
+    def Show(self, lgh = logger):
         lgh.ShowScapyObject(self.data)
 
 
@@ -162,12 +162,12 @@ class AdminQstateObject(object):
         self.size = size
         self.data = AdminQstate(model_wrap.read_mem(self.addr, self.size))
 
-    def Write(self, lgh = cfglogger):
+    def Write(self, lgh = logger):
         lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
         self.Read(lgh)
 
-    def Read(self, lgh = cfglogger):
+    def Read(self, lgh = logger):
         data = AdminQstate(model_wrap.read_mem(self.addr, self.size))
         lgh.ShowScapyObject(data)
         lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
@@ -192,7 +192,7 @@ class AdminQstateObject(object):
     def get_ring_size(self):
         return int(math.pow(2, self.data[AdminQstate].ring_size))
 
-    def Show(self, lgh = cfglogger):
+    def Show(self, lgh = logger):
         lgh.ShowScapyObject(self.data)
 
 
@@ -223,9 +223,9 @@ class EthQueueObject(QueueObject):
             elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
                 self._qstate = AdminQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
             else:
-                cfglogger.critical("Unable to initialize Qstate for Queue Type %s" % self.queue_type.purpose)
+                logger.critical("Unable to initialize Qstate for Queue Type %s" % self.queue_type.purpose)
                 raise NotImplementedError
-            cfglogger.info("Loading Qstate: Lif=%s QType=%s QID=%s Addr=0x%x Size=%s" %
+            logger.info("Loading Qstate: Lif=%s QType=%s QID=%s Addr=0x%x Size=%s" %
                            (self.queue_type.lif.id,
                             self.queue_type.type,
                             self.id,
@@ -258,7 +258,7 @@ class EthQueueObject(QueueObject):
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "adminq_stage0"
         else:
-            cfglogger.critical("Unable to set program information for Queue Type %s" % self.queue_type.purpose)
+            logger.critical("Unable to set program information for Queue Type %s" % self.queue_type.purpose)
             raise NotImplementedError
 
     def Fill(self):
@@ -278,14 +278,14 @@ class EthQueueObject(QueueObject):
                     i)
                 # Create Buffer
                 buf = buffer_template.CreateObjectInstance()
-                buf.Logger(cfglogger)
+                buf.Logger(logger)
                 buf.GID('%s_%s' % (buffer_template.meta.id, uid))
                 buf_spec = AttrDict(fields=AttrDict(size=1518, bind=True))
                 buf.Init(buf_spec)
                 buf.Write()
                 # Create descriptor
                 desc = descriptor_template.CreateObjectInstance()
-                buf.Logger(cfglogger)
+                buf.Logger(logger)
                 buf.GID('%s_%s' % (descriptor_template.meta.id, uid))
                 desc_spec = AttrDict(fields=AttrDict(addr=buf.addr, len=buf.size))
                 desc.Init(desc_spec)
