@@ -40,4 +40,4 @@ hal_ret_t capri_pxb_pcie_init();
  */
 hal_ret_t capri_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf);
 
-#endif //__CAPRI_PCB_PCIE_HPP__
+#endif //__CAPRI_PXB_PCIE_HPP__

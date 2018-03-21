@@ -13,9 +13,11 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/asic_pd.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"
+#include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 87
@@ -934,6 +936,10 @@ capri_init (capri_cfg_t *cfg = NULL)
 
     if (ret == HAL_RET_OK) {
         ret = capri_repl_init(cfg);
+    }
+
+    if (ret == HAL_RET_OK) {
+        ret = hal::pd::capri_sw_phv_init();
     }
 
    if (cfg && !cfg->loader_info_file.empty()) {

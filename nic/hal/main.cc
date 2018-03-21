@@ -107,6 +107,7 @@ svc_reg (const std::string& server_addr,
     MulticastServiceImpl     multicast_svc;
     GftServiceImpl           gft_svc;
     SystemServiceImpl        system_svc;
+    SoftwarePhvServiceImpl   swphv_svc;
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
 
@@ -148,6 +149,7 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&barco_rings_svc);
         server_builder.RegisterService(&multicast_svc);
         server_builder.RegisterService(&system_svc);
+        server_builder.RegisterService(&swphv_svc);
     } else if (feature_set == hal::HAL_FEATURE_SET_GFT) {
         server_builder.RegisterService(&vrf_svc);
         server_builder.RegisterService(&if_svc);

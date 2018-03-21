@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+import "types.proto";
 
 package internal;
 option go_package="halproto";
@@ -16,6 +17,10 @@ service Internal {
   rpc AllocHbmAddress(AllocHbmAddressRequestMsg) returns (AllocHbmAddressResponseMsg) {}
   // LIF BDF association APIs
   rpc ConfigureLifBdf(ConfigureLifBdfRequestMsg) returns (ConfigureLifBdfResponseMsg) {}
+  // Inject a software PHV
+  rpc SoftwarePhvInject (SoftwarePhvInjectMsg) returns (SoftwarePhvResponseMsg) {}
+  // Get software PHV injection status
+  rpc SoftwarePhvGet (SoftwarePhvGetRequestMsg) returns (SoftwarePhvGetResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -81,3 +86,69 @@ message ConfigureLifBdfResponseMsg {
   repeated LifBdfResp response = 1;
 }
 
+// The Software PHV service definition
+service SoftwarePhv {
+}
+
+// SoftwarePhvPipeline: pipeline to inject the software phv
+enum SoftwarePhvPipeline {
+  SOFTWARE_PHV_RXDMA       = 0;
+  SOFTWARE_PHV_TXDMA       = 1;
+  SOFTWARE_PHV_INGRESS     = 2;
+  SOFTWARE_PHV_EGRESS      = 3;
+}
+
+// SoftwarePhvStatus represents the current status of the PHVs
+message SoftwarePhvStatus {
+  types.ObjectMeta      meta              = 1;    // common object meta
+  SoftwarePhvPipeline   pipeline          = 2;    // pipeline to inject into
+  bool                  enabled           = 3;    // PHV injection is enabled
+  bool                  done              = 4;    // PHV injection is done
+  uint32                current_cntr      = 5;    // current counter
+  uint32                inject_cntr       = 6;    // injected PHV counter
+}
+
+// SoftwarePhvResponse is generic response 
+message SoftwarePhvResponse {
+  types.ApiStatus       api_status        = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
+// SoftwarePhvResponseMsg is batched response to SoftwarePhvRequestMsg
+message SoftwarePhvResponseMsg {
+  repeated SoftwarePhvResponse    response = 1;    // batched response
+}
+
+// SoftwarePhvGetRequest is used to get information about a PHV
+message SoftwarePhvGetRequest {
+  types.ObjectMeta      meta             = 1;    // object meta
+  SoftwarePhvPipeline   pipeline         = 2;    // pipeline to inject into
+}
+
+// SoftwarePhvGetRequestMsg is batched GET request for PHV
+message SoftwarePhvGetRequestMsg {
+  repeated SoftwarePhvGetRequest    request = 1;    // batched get request
+}
+
+
+// SoftwarePhvGetResponse captures all the information about a Sw PHV
+// only if api_status indicates success, other fields are valid
+message SoftwarePhvGetResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+  SoftwarePhvStatus    status     = 2;    // operational state of PHV
+}
+
+// SoftwarePhvGetResponseMsg is the batched response to SoftwarePhvGetRequestMsg
+message SoftwarePhvGetResponseMsg {
+  repeated SoftwarePhvGetResponse    response = 1;    // batched get response
+}
+
+// SoftwarePhvInject is the packet inject spec
+message SoftwarePhvInject {
+  types.ObjectMeta      meta             = 1;    // object meta
+  SoftwarePhvPipeline   pipeline         = 2;    // pipeline to inject into
+}
+
+// SoftwarePhvInjectMsg is the inject message
+message SoftwarePhvInjectMsg {
+  repeated SoftwarePhvInject  request = 1; // sw phv inject request
+}

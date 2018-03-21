@@ -15,6 +15,23 @@ typedef struct asicpd_stats_region_info_t_ {
 namespace hal {
 namespace pd {
 
+// sw phv pipeline type
+enum asicpd_swphv_type_t {
+    ASICPD_SWPHV_TYPE_RXDMA   = 0,    // P4+ RxDMA
+    ASICPD_SWPHV_TYPE_TXDMA   = 1,    // P4+ TxDMA
+    ASICPD_SWPHV_TYPE_INGRESS = 2,    // P4 Ingress
+    ASICPD_SWPHV_TYPE_EGRESS  = 3,    // P4 Egress
+};
+
+// sw phv injection state
+typedef struct asicpd_sw_phv_state_ {
+    bool        enabled;
+    bool        done;
+    uint32_t    current_cntr;
+    uint32_t    no_data_cntr;
+    uint32_t    drop_no_data_cntr;
+} asicpd_sw_phv_state_t;
+
 int asicpd_table_entry_write(uint32_t tableid, uint32_t index,
                              uint8_t  *hwentry, uint16_t hwentry_bit_len, 
                              uint8_t  *hwentry_mask);
@@ -53,6 +70,12 @@ hal_ret_t asicpd_program_hbm_table_base_addr(void);
 hal_ret_t asicpd_stats_region_init(asicpd_stats_region_info_t *region_arr,
                                    int arrlen);
 hal_ret_t asicpd_p4plus_table_mpu_base_init(void);
+
+
+hal_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num, 
+		uint8_t start_idx, uint8_t num_flits, void *data);
+hal_ret_t asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, 
+	asicpd_sw_phv_state_t *state);
 
 }    // namespace pd
 }    // namespace hal

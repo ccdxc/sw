@@ -369,6 +369,10 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     // slab
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_SLAB, pd_get_slab);
 
+    // swphv
+    PD_SYMBOL_LOAD(PD_FUNC_ID_SWPHV_INJECT, pd_swphv_inject);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_SWPHV_GET_STATE, pd_swphv_get_state);
+
     return ret;
 }
 
@@ -702,6 +706,9 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     // slab
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_SLAB, pd_get_slab);
 
+    // swphv
+    PD_SYMBOL_CALL(PD_FUNC_ID_SWPHV_INJECT, pd_swphv_inject);
+    PD_SYMBOL_CALL(PD_FUNC_ID_SWPHV_GET_STATE, pd_swphv_get_state);
 
     HAL_ASSERT(0);
     return ret;

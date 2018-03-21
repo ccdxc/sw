@@ -323,6 +323,15 @@
 		LifBdfResp
 		ConfigureLifBdfRequestMsg
 		ConfigureLifBdfResponseMsg
+		SoftwarePhvStatus
+		SoftwarePhvResponse
+		SoftwarePhvResponseMsg
+		SoftwarePhvGetRequest
+		SoftwarePhvGetRequestMsg
+		SoftwarePhvGetResponse
+		SoftwarePhvGetResponseMsg
+		SoftwarePhvInject
+		SoftwarePhvInjectMsg
 		Key
 		IpsecSA
 		IpsecRuleSpec

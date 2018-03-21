@@ -14,6 +14,7 @@
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 // TODO: Need to remove capri references and use lib symbols instead
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_sw_phv.hpp"
 
 namespace hal {
 namespace pd {
@@ -585,6 +586,22 @@ asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
     }
     assert(stats_base_addr <  (stats_region_start +  stats_region_size));
     return HAL_RET_OK;
+}
+
+// asicpd_sw_phv_inject
+// Inject a software phv(maintenance PHV) into asic
+hal_ret_t 
+asicpd_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num, 
+		uint8_t start_idx, uint8_t num_flits, void *data) {
+    return capri_sw_phv_inject(type, prof_num, start_idx, num_flits, data);
+}
+
+// asicpd_sw_phv_get
+// get software PHV state from asic
+hal_ret_t 
+asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, 
+	asicpd_sw_phv_state_t *state) {
+    return capri_sw_phv_get(type, prof_num, state);
 }
 
 }    // namespace pd

@@ -1661,6 +1661,28 @@ typedef struct pd_rw_entry_args_s {
     rewrite_actions_en  rw_act;
 } __PACK__ pd_rw_entry_args_t;
 
+enum pd_swphv_type_t {
+    PD_SWPHV_TYPE_RXDMA   = 0,     // P4+ Rx DMA
+    PD_SWPHV_TYPE_TXDMA   = 1,     // P4+ Tx DMA
+    PD_SWPHV_TYPE_INGRESS = 2,     // P4 Ingress
+    PD_SWPHV_TYPE_EGRESS  = 3,     // P4 Egress
+};
+
+// SW PHV params for injecting software PHV
+typedef struct pd_swphv_inject_args_s {
+    pd_swphv_type_t    type;
+} pd_swphv_inject_args_t;
+
+// state of SW PHV injection
+typedef struct pd_swphv_get_state_args_s {
+    pd_swphv_type_t    type;
+    bool               enabled;
+    bool               done;
+    uint32_t           current_cntr;
+    uint32_t           no_data_cntr;
+    uint32_t           drop_no_data_cntr;
+} pd_swphv_get_state_args_t;
+
 // TODO: PD-Cleanup Handle
 uint32_t qos_class_get_admin_cos (void);
 
@@ -1678,7 +1700,7 @@ typedef struct pd_twice_nat_del_args_s {
     pd_twice_nat_entry_args_t *args;
 } pd_twice_nat_del_args_t;
 
-// qos
+// Qos
 typedef struct pd_qos_class_get_qos_class_id_args_s {
     qos_class_t *qos_class;
     if_t *dest_if;
@@ -2427,7 +2449,9 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_COPP_UPDATE,           202, "PD_FUNC_ID_COPP_UPDATE")          \
     ENTRY(PD_FUNC_ID_COPP_MAKE_CLONE,       203, "PD_FUNC_ID_COPP_MAKE_CLONE")      \
     ENTRY(PD_FUNC_ID_COPP_MEM_FREE,         204, "PD_FUNC_ID_COPP_MEM_FREE")        \
-    ENTRY(PD_FUNC_ID_MAX,                   205, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SWPHV_INJECT,          205, "PD_FUNC_ID_SWPHV_INJECT")\
+    ENTRY(PD_FUNC_ID_SWPHV_GET_STATE,       206, "PD_FUNC_ID_SWPHV_GET_STATE")\
+    ENTRY(PD_FUNC_ID_MAX,                   207, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2767,6 +2791,10 @@ PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
 // slab
 PD_FUNCP_TYPEDEF(pd_get_slab);
 
+// swphv
+PD_FUNCP_TYPEDEF(pd_swphv_inject);
+PD_FUNCP_TYPEDEF(pd_swphv_get_state);
+
 typedef struct pd_call_s {
     union {
         // init pd calls
@@ -3074,6 +3102,9 @@ typedef struct pd_call_s {
         // slab
         PD_UNION_FIELD(pd_get_slab);
 
+        // swphv
+        PD_UNION_FIELD(pd_swphv_inject);
+        PD_UNION_FIELD(pd_swphv_get_state);
     };
 
 } pd_call_t;

@@ -19,6 +19,7 @@ cc_library(
         "capri_pxb_pcie.hpp",
         "capri_tm_rw.hpp",
         "capri_txs_scheduler.hpp",
+        "capri_sw_phv.hpp",
     ],
     deps = [
         "//nic/utils/bm_allocator:bm_allocator",
@@ -59,6 +60,7 @@ cc_library(
         "capri_txs_scheduler.cc",
         "capri_pd.cc",
         "capri_state.cc",
+        "capri_sw_phv.cc",
     ],
     hdrs = [
     ] + glob(["*.hpp"]) + glob(["*.h"]),
@@ -80,6 +82,7 @@ cc_library(
                "//nic:google_includes",
                "//nic:grpc_includes",
                "//nic/hal/periodic:periodic",
+	       "//nic/hal/pd/asicpd:asicpd"
            ] + capri_util_deps +
            capri_pd_deps,
     alwayslink = 1,

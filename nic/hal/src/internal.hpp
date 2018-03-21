@@ -21,6 +21,9 @@ void allochbm_address(const internal::HbmAddressReq &req,
 void configurelif_bdf(const internal::LifBdfReq &req,
                       internal::LifBdfResp *resp);
 
+hal_ret_t software_phv_get (internal::SoftwarePhvGetRequest &req, internal::SoftwarePhvGetResponseMsg *rsp);
+hal_ret_t software_phv_inject (internal::SoftwarePhvInject &req, internal::SoftwarePhvResponse *rsp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

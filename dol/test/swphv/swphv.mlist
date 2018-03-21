@@ -1,0 +1,34 @@
+# Feature Test Modules List
+feature:
+    id      : swphv
+    package : test.swphv
+    module  : swphv
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : SWPHV_INJECT_TXDMA
+        module  : swphv_txdma
+        spec    : swphv_txdma.testspec
+        ignore  : False
+
+    - module:
+        name    : SWPHV_INJECT_RXDMA
+        module  : swphv_rxdma
+        spec    : swphv_rxdma.testspec
+        ignore  : False
+
+    - module:
+        name    : SWPHV_INJECT_INGRESS
+        module  : swphv_ingress
+        spec    : swphv_ingress.testspec
+        ignore  : False
+
+    - module:
+        name    : SWPHV_INJECT_EGRESS
+        module  : swphv_egress
+        spec    : swphv_egress.testspec
+        # Can not inject SW phv into Egress pipeline because it needs a dummy packet.
+        ignore  : True 
+

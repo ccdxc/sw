@@ -308,6 +308,7 @@ cc_library(
                 "gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h",
                 "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",
                 "gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h",
+	        "gen/tcp_proxy_txdma/include/ingress_phv.h",
                 ],
         deps = ["//nic/include:base_includes"],
 )
