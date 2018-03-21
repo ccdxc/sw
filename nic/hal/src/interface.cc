@@ -746,6 +746,14 @@ if_prepare_rsp (InterfaceResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
     return HAL_RET_OK;
 }
 
+static void
+if_set_rsp_status (if_t *hal_if, InterfaceResponse *rsp)
+{
+    rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
+    rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
+    // Rest of the status need to be filled in from PD
+}
+
 //------------------------------------------------------------------------------
 // process a interface create request
 // TODO: if interface already exists, treat it as modify
@@ -777,11 +785,13 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
 
     // check if intf exists already, and reject if one is found
-    if (find_if_by_id(spec.key_or_handle().interface_id())) {
+    hal_if = find_if_by_id(spec.key_or_handle().interface_id());
+    if (hal_if) {
         HAL_TRACE_ERR("failed to create an if, "
                       "if {} exists already",
                       spec.key_or_handle().interface_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
+        if_set_rsp_status(hal_if, rsp);
         return HAL_RET_ENTRY_EXISTS;
     }
 
