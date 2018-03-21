@@ -753,11 +753,13 @@ enum eth_hw_features {
  * struct features_cmd - Features command
  * @opcode:     opcode = 7
  * @set:        Feature set (see enum feature_set)
+ * @wanted:     Features from set wanted by driver.
  */
 struct features_cmd {
 	u16 opcode;
 	u16 set;
-	u32 rsvd2[15];
+	u32 wanted;
+	u32 rsvd2[14];
 };
 
 /**

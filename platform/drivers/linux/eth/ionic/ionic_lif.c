@@ -1260,6 +1260,9 @@ static int ionic_get_features(struct lif *lif)
 		.cmd.features = {
 			.opcode = CMD_OPCODE_FEATURES,
 			.set = FEATURE_SET_ETH_HW_FEATURES,
+			.wanted = ETH_HW_TX_SG
+				| ETH_HW_TX_CSUM
+				| ETH_HW_RX_CSUM,
 		},
 	};
 	int err;
@@ -1274,7 +1277,8 @@ static int ionic_get_features(struct lif *lif)
 	if (err)
 		return err;
 
-	lif->hw_features = ctx.comp.features.supported;
+	lif->hw_features = ctx.cmd.features.wanted &
+			   ctx.comp.features.supported;
 
 	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
 		netdev_info(lif->netdev, "feature ETH_HW_VLAN_TX_TAG\n");
