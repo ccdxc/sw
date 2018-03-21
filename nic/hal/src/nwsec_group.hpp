@@ -547,8 +547,13 @@ typedef struct nwsec_rule_s {
     uint64_t              rule_id;
     uint32_t              rule_no;
     bool                  enable;
-    //nwsec_rule_action     action;
+
+    nwsec::SecurityAction action;
+    nwsec::LogAction      log_action;
+    nwsec::ALGName        alg;
+
     bool                  count_en;
+
     dllist_ctxt_t         app_list_head;
     dllist_ctxt_t         app_group_list_head;
     address_field_t       src_address;

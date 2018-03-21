@@ -131,6 +131,93 @@ net_sfw_check_policy_pair(fte::ctx_t                    &ctx,
     return ret;
 }
 
+static hal_ret_t
+net_sfw_check_security_policy(fte::ctx_t &ctx, net_sfw_match_result_t *match_rslt)
+{
+    hal_ret_t ret;
+    hal::ipv4_tuple acl_key = {};
+
+    const hal::nwsec_rule_t *nwsec_rule;
+    const hal::ipv4_rule_t *rule = NULL;
+    const acl::acl_ctx_t *acl_ctx = NULL;
+
+    char name[ACL_NAMESIZE];
+
+    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy acl rule lookup for key={}", ctx.key());
+
+    std::snprintf(name, sizeof(name), "sfw-rules:%lu", ctx.key().vrf_id);
+
+    acl_ctx = acl::acl_get(name);
+    if (acl_ctx == NULL) {
+        HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy failed to lookup acl_ctx");
+        return HAL_RET_FTE_RULE_NO_MATCH;
+    }
+
+    // initialize the acl key
+    if (ctx.key().flow_type != hal::FLOW_TYPE_V4) {
+        // TODO(goli) only v4 rules for now
+        ret = HAL_RET_FTE_RULE_NO_MATCH;
+        goto end;
+    }
+
+    acl_key.proto =  ctx.key().proto;
+    acl_key.ip_src =  ctx.key().sip.v4_addr;
+    acl_key.ip_dst =  ctx.key().dip.v4_addr;
+    switch ( ctx.key().proto) {
+    case types::IPPROTO_ICMP:
+    case types::IPPROTO_ICMPV6:
+        acl_key.port_src =  ctx.key().icmp_id;
+        acl_key.port_dst = ((ctx.key().icmp_type << 8) |  ctx.key().icmp_code);
+        break;
+    case types::IPPROTO_ESP:
+        acl_key.port_src = ctx.key().spi >> 16 & 0xFFFF;
+        acl_key.port_dst = ctx.key().spi & 0xFFFF;
+        break;
+    case types::IPPROTO_TCP:
+    case types::IPPROTO_UDP:
+        acl_key.port_src = ctx.key().sport;
+        acl_key.port_dst = ctx.key().dport;
+        break;
+    default:
+        HAL_ASSERT(true);
+        ret = HAL_RET_FTE_RULE_NO_MATCH;
+        goto end;
+    }
+
+    ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+    if (rule == NULL) {
+        ret = HAL_RET_FTE_RULE_NO_MATCH;
+        goto end;
+    }
+
+    nwsec_rule = (const hal::nwsec_rule_t *)rule->data.userdata;
+
+    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {}", nwsec_rule->rule_id);
+
+    match_rslt->valid = 1;
+    if (nwsec_rule->action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
+        match_rslt->action = session::FLOW_ACTION_ALLOW;
+    } else {
+        match_rslt->action = session::FLOW_ACTION_DROP;
+    }
+    match_rslt->alg = nwsec_rule->alg;
+
+ end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy rule lookup failed ret={}", ret);
+    }
+
+    if (acl_ctx) {
+        acl_deref(acl_ctx);
+    }
+    return ret;
+}
+
+
 hal_ret_t
 net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
                             net_sfw_match_result_t *match_rslt)
@@ -151,6 +238,13 @@ net_sfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
         match_rslt->action = session::FLOW_ACTION_DROP;
         return HAL_RET_OK;
     }
+
+    ret = net_sfw_check_security_policy(ctx, match_rslt);
+    if (ret == HAL_RET_OK) {
+        return ret;
+    }
+
+    // TODO(goli) - folloing code is kept for DOLs using the old policy model
 
     //ToDo (lseshan) - For now if a sep or dep is not found allow
     // Eventually use prefix to find the sg

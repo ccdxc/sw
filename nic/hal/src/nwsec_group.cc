@@ -1104,6 +1104,35 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRuleSpec spec, nwsec_rule_t *rule)
     hal_ret_t              ret = HAL_RET_OK;
     uint32_t               hv = 2166136261;
 
+    // Action
+    rule->action = nwsec::SECURITY_RULE_ACTION_ALLOW;;
+    rule->log_action =  nwsec::LOG_NONE;
+    if (spec.has_action()) {
+        rule->action =  spec.action().sec_action();
+        rule->log_action = spec.action().log_action();
+    }
+
+    // Parse APPs (set alg name only for now)
+    rule->alg = nwsec::APP_SVC_NONE;
+    for (int i = 0; i < spec.app_size() && rule->alg == nwsec::APP_SVC_NONE; i++) {
+        auto app = spec.app(i).spec().predefined_apps();
+        if (app == nwsec::APP_NAME_TFTP) {
+            rule->alg = nwsec::APP_SVC_TFTP;
+        } else if (app == nwsec::APP_NAME_FTP) {
+            rule->alg = nwsec::APP_SVC_FTP;
+        } else if (app == nwsec::APP_NAME_DNS) {
+            rule->alg = nwsec::APP_SVC_DNS;
+        } else if (app == nwsec::APP_NAME_SIP) {
+            rule->alg = nwsec::APP_SVC_SIP;
+        } else if (app == nwsec::APP_NAME_SUNRPC_TCP) {
+            rule->alg = nwsec::APP_SVC_SUN_RPC;
+        } else if (app == nwsec::APP_NAME_MSRPC) {
+            rule->alg = nwsec::APP_SVC_MSFT_RPC;
+        } else if (app == nwsec::APP_NAME_RTSP) {
+            rule->alg = nwsec::APP_SVC_RTSP;
+        } 
+    }
+
     //Fill in the hash value
 
     uint32_t  sz = spec.src_address_size();
