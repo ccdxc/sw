@@ -89,6 +89,7 @@ struct ionic_qp {
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
 
+	/* next sequence number to complete, 24bit, initialized to 1 */
 	uint32_t		sq_local;
 	uint32_t		sq_msn;
 
