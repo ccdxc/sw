@@ -200,6 +200,11 @@ parser.add_argument("-delete", action='store_true',default=False, help="delete c
 parser.add_argument("-stop", action='store_true',default=False, help="stop venice cluster but keep containers")
 args = parser.parse_args()
 
+if args.delete:
+    deleteCluster()
+    os.system("stty sane")
+    sys.exit(0)
+
 datastore={}
 if args.configFile:
     try:
@@ -266,10 +271,6 @@ if args.stop:
     sys.exit(0)
 if args.restart:
     restartCluster(nodeList, nodes + naplesNodes, quorumNames, clustervip)
-    os.system("stty sane")
-    sys.exit(0)
-if args.delete:
-    deleteCluster()
     os.system("stty sane")
     sys.exit(0)
 
