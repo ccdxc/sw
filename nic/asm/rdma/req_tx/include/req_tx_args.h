@@ -159,9 +159,8 @@ struct req_tx_sqcb0_to_sqcb2_info_t {
 };
 
 
-struct req_tx_sqcb1_to_credits_info_t {
-    need_credits                 : 1;
-    pad                          : 159;
+struct req_tx_sqcb0_to_credits_info_t {
+    pad                          : 160;
 };
 
 // Note: Do not change the order of sq_c_index to num_sges as

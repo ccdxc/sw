@@ -181,6 +181,10 @@ struct sqcb2_t {
     credits                        : 8;  // RO S1 (WO RXDMA)
     rexmit_psn                     : 24; // RO S1 (WO RXDMA)
 
+    in_progress                    : 1; // RW S5
+    need_credits                   : 1; // RW S5
+    rsvd_flags                     : 6;
+
     tx_psn                         : 24; // RW S5
     ssn                            : 24; // RW S5
     lsn                            : 24; // RW S5
@@ -200,7 +204,7 @@ struct sqcb2_t {
     timestamp_echo                 : 16;
     mss                            : 16;
    
-    pad                            : 88;
+    pad                            : 80;
 };
 
 struct sqcb_t {

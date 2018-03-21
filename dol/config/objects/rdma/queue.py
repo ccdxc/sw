@@ -306,6 +306,10 @@ class RdmaSQstate(Packet):
         ByteField("sqcb2_credits", 0),
         X3BytesField("sqcb2_rexmit_psn", 0),
 
+        BitField("sqcb2_in_progress", 0, 1),
+        BitField("sqcb2_need_credits", 0, 1),
+        BitField("rsvd_flags", 0, 6),
+
         X3BytesField("tx_psn", 0),
         X3BytesField("ssn", 0),
         X3BytesField("lsn", 0),
@@ -323,7 +327,7 @@ class RdmaSQstate(Packet):
         ShortField("timestamp_echo", 0),
         ShortField("mss", 0),
 
-        BitField("pad2", 0, 88),
+        BitField("pad2", 0, 80),
     ]
 
 class RdmaCQstate(Packet):

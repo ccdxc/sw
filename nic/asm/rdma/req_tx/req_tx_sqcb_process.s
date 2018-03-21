@@ -20,7 +20,7 @@ struct rdma_stage0_table_k k;
     .param    req_tx_sqpt_process
     .param    req_tx_dummy_sqpt_process
     .param    req_tx_sqsge_iterate_process
-    .param    req_tx_sqcb1_process
+    .param    req_tx_credits_process
     .param    req_tx_bktrack_sqcb2_process
     .param    req_tx_sqcb2_cnp_process
 
@@ -236,13 +236,11 @@ end1:
         nop
 
     .brcase        FC_RING_ID
-        crestore [c2,c1], d.{busy...cb1_busy}, 0x3
-        bcf            [c1 | c2], exit
+        bbeq             d.cb1_busy, 1, exit
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
         
-        // take both the busy flags
-        tblwr          d.{busy...cb1_busy}, 0x3
+        tblwr            d.cb1_busy, 1
         
         // set cindex same as pindex without ringing doorbell, as stage0
         // can get scheduled again while doorbell memwr is still in the queue
@@ -252,12 +250,8 @@ end1:
         // time
         tblwr          FC_C_INDEX, FC_P_INDEX
         
-        CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-        CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB2_T, update_credits, 1)
-        
         // sqcb1_p
-        add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-        CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb1_process, r1)
+        CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_credits_process, r0)
         
         nop.e
         nop

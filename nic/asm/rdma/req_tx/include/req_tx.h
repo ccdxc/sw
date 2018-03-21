@@ -247,7 +247,7 @@ struct req_tx_sqcb1_process_k_t {
 
 struct req_tx_credits_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct req_tx_sqcb1_to_credits_info_t args;
+    struct req_tx_sqcb0_to_credits_info_t args;
     struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

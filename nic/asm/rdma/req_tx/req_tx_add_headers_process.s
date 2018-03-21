@@ -390,6 +390,9 @@ cb1_byte_update:
     add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
     memwr.b        r3, r5
 
+    tblwr          d.in_progress, k.args.in_progress
+    tblwr.c5       d.need_credits, 1          
+
     //For UD, ah_handle comes in send req
     seq            c3, d.service, RDMA_SERV_TYPE_UD
     cmov           r1, c3, k.args.op.send_wr.ah_handle, d.header_template_addr

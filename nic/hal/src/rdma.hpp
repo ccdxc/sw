@@ -990,7 +990,7 @@ typedef struct sqcb1_s {
 } PACKED sqcb1_t;
 
 typedef struct sqcb2_s {
-    uint8_t pad[11];
+    uint8_t pad[10];
     uint16_t mss;
     uint16_t timestamp_echo;
     uint16_t timestamp;
@@ -1008,6 +1008,10 @@ typedef struct sqcb2_s {
     uint32_t lsn:24;
     uint32_t ssn:24;
     uint32_t tx_psn:24;      //tx
+
+    uint8_t  rsvd_flags:6;
+    uint8_t  need_credits:1;
+    uint8_t  in_progress:1;
 
     uint32_t rexmit_psn:24;
     uint8_t credits;
