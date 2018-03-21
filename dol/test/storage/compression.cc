@@ -1049,9 +1049,19 @@ int verify_integrity_for_gt64K() {
   return 0;
 }
 
-#define MAX_CPDC_REQ	16 + 2
-#define TMP_BLK_SIZE	8192	/* TBD: parameterize size ... */
-int _max_rate_compress_flat_buf(comp_queue_push_t push_type,
+
+#define MAX_CP_REQ	16
+#define MAX_DC_REQ	2
+#define MAX_CPDC_REQ	(MAX_CP_REQ + MAX_DC_REQ)
+#define TMP_BLK_SIZE	8192
+
+/*
+ * TBD: Cleanup -- following function is duplicated for quick-testing.
+ * To avoid duplication, size of the buffer and buffers may need to be
+ * parameterized.
+ *
+ */
+int _max_data_rate_compress_flat_buf(comp_queue_push_t push_type,
                            uint32_t seq_comp_qid) {
   printf("Starting testcase %s push_type %d seq_comp_qid %u\n",
          __func__, push_type, seq_comp_qid);
@@ -1067,7 +1077,7 @@ int _max_rate_compress_flat_buf(comp_queue_push_t push_type,
 
   d.src = host_mem_pa + kUncompressedDataOffset;
   d.dst = host_mem_pa + kCompressedDataOffset;
-  d.datain_len = TMP_BLK_SIZE;  // 0 = 64K
+  d.datain_len = TMP_BLK_SIZE;
   d.threshold_len = kCompressedBufSize - 8;
 
   d.status_data = 0x1234;
@@ -1089,13 +1099,13 @@ int _max_rate_compress_flat_buf(comp_queue_push_t push_type,
   return 0;
 }
 
-int _max_data_rate_ex(comp_queue_push_t push_type,
+int _max_data_rate(comp_queue_push_t push_type,
 		uint32_t seq_comp_qid_cp,
 		uint32_t seq_comp_qid_dc) {
   comp_queue_push_t last_push_type;
   cp_desc_t         d;
 
-  _max_rate_compress_flat_buf(COMP_QUEUE_PUSH_HW_DIRECT, 0);
+  _max_data_rate_compress_flat_buf(COMP_QUEUE_PUSH_HW_DIRECT, 0);
 
   printf("Starting testcase %s push_type %d seq_comp_qid_cp %u "
          "seq_comp_qid_dc %u\n", __func__, push_type,
@@ -1118,8 +1128,8 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
   uint64_t hbm_pa_ex_tmp;
   uint32_t i;
 
-  // allocate and fill descriptors for 16 compression requests
-  for (i = 0; i < MAX_CPDC_REQ-2; i++) {
+  // allocate and fill descriptors to load compression engine with requests
+  for (i = 0; i < MAX_CPDC_REQ - MAX_DC_REQ; i++) {
     host_mem_ex_tmp = (uint8_t *) alloc_page_aligned_host_mem(kTotalBufSize);
     assert(host_mem_ex_tmp != nullptr);
     host_mem_pa_ex_tmp = host_mem_v2p(host_mem_ex_tmp);
@@ -1136,7 +1146,7 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
     
     d.src = hbm_pa_ex_tmp + kUncompressedDataOffset;
     d.dst = hbm_pa_ex_tmp + kCompressedDataOffset;
-    d.datain_len = TMP_BLK_SIZE;
+    d.datain_len = TMP_BLK_SIZE;	// TBD: parameterize this
     d.threshold_len = TMP_BLK_SIZE - 8;
   
     d.status_addr = host_mem_pa_ex_tmp + kStatusOffset;
@@ -1146,21 +1156,18 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
     d.opaque_tag_addr = host_mem_pa_ex_tmp + kOpaqueTagOffset;
     d.opaque_tag_data = 0x10000 + i;
     comp_queue_push(&d, cp_queue, 
-                    i == (16 - 1) ? last_push_type : push_type,
+                    i == (MAX_CP_REQ - 1) ? last_push_type : push_type,
                     seq_comp_qid_cp);
   }
 
-  // Dont ring the doorbell yet.
-  // Add descriptors for decompression also.
-  uint32_t j = 0;
-  for (; i < MAX_CPDC_REQ; i++, j++) {
+  // Ring the doorbell after loading decompression engine with requests
+  for (; i < MAX_CPDC_REQ; i++) {
     host_mem_ex_tmp = (uint8_t *) alloc_page_aligned_host_mem(kTotalBufSize);
     assert(host_mem_ex_tmp != nullptr);
     host_mem_pa_ex_tmp = host_mem_v2p(host_mem_ex_tmp);
     assert(utils::hbm_addr_alloc_page_aligned(kTotalBufSize, &hbm_pa_ex_tmp) == 0);
 
     host_mem_ex[i] = host_mem_ex_tmp;
-    // host_mem_pa_ex[i] = host_mem_pa_ex_tmp;
     hbm_pa_ex[i] = hbm_pa_ex_tmp;
 
     bzero(&d, sizeof(d));
@@ -1171,7 +1178,7 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
 
     d.src = hbm_pa_ex_tmp + kCompressedDataOffset;
     d.dst = hbm_pa_ex_tmp + kUncompressedDataOffset;
-    d.datain_len = compressed_data_size;	// TMP_BLK_SIZE;
+    d.datain_len = compressed_data_size;	// predefined fixed size
     d.threshold_len = TMP_BLK_SIZE * 4;
 
     d.status_addr = host_mem_pa_ex_tmp + kStatusOffset;
@@ -1181,8 +1188,9 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
     d.opaque_tag_addr = host_mem_pa_ex_tmp + kOpaqueTagOffset;
     d.opaque_tag_data = 0x10000 + i;
     comp_queue_push(&d, dc_queue, 
-                    i == (2 - 1) ? last_push_type : push_type,
-                    seq_comp_qid_dc);
+		    i == (MAX_CPDC_REQ - 1) ?
+		    last_push_type : push_type,
+		    seq_comp_qid_dc);
   }
 
   // Now ring doorbells
@@ -1193,10 +1201,13 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
   auto func = [host_mem_ex, hbm_pa_ex] () -> int {
     int  i;
     uint64_t *intr_ptr;
-    for (i = 0; i < MAX_CPDC_REQ-2; i++) {
+
+    // NOTE: Max requests include the request count of both compression
+    // and decompression
+    for (i = 0; i < MAX_CPDC_REQ - MAX_DC_REQ; i++) {
       intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
       if (intr_ptr == 0)
-        return 1;
+        return -1;
 
       cp_status_sha512_t *s;
       s = (cp_status_sha512_t *) (host_mem_ex[i] + kStatusOffset);
@@ -1206,10 +1217,12 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
 	      return -1;
       }
     }
+
+    // handle remaining decompression requests
     for (; i < MAX_CPDC_REQ; i++) {
       intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
       if (intr_ptr == 0)
-        return 1;
+        return -1;
 
       cp_status_sha512_t *s;
       s = (cp_status_sha512_t *) (host_mem_ex[i] + kStatusOffset);
@@ -1237,125 +1250,13 @@ int _max_data_rate_ex(comp_queue_push_t push_type,
   }
 
   uint64_t *intr_ptr;
-  for (i = 0; i < MAX_CPDC_REQ-2; i++) {
+  for (i = 0; i < MAX_CPDC_REQ - MAX_DC_REQ; i++) {
     intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
     if (intr_ptr[i] == 0)
       printf("Compression request %d did not complete\n", i);
   }
   for (; i < MAX_CPDC_REQ; i++) {
     intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
-    if (intr_ptr[i] == 0)
-      printf("Decompression request %d did not complete\n", i);
-  }
-  printf("ERROR: Timed out waiting for all the commands to complete\n");
-  return -1;
-}
-
-int max_data_rate_ex() {
-    return _max_data_rate_ex(COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
-}
-
-int seq_max_data_rate_ex() {
-    return _max_data_rate_ex(COMP_QUEUE_PUSH_SEQUENCER_BATCH,
-                          queues::get_pvm_seq_comp_sq(0),
-                          queues::get_pvm_seq_comp_sq(1));
-}
-
-int _max_data_rate(comp_queue_push_t push_type,
-                   uint32_t seq_comp_qid_cp,
-                   uint32_t seq_comp_qid_dc) {
-
-  comp_queue_push_t last_push_type;
-  cp_desc_t         d;
-
-  printf("Starting testcase %s push_type %d seq_comp_qid_cp %u "
-         "seq_comp_qid_dc %u\n", __func__, push_type,
-         seq_comp_qid_cp, seq_comp_qid_dc);
-  switch (push_type) {
-
-  case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
-      last_push_type = COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST;
-      break;
-
-  default:
-      last_push_type = push_type;
-      break;
-  }
-
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.insert_header = 1;
-  d.cmd_bits.opaque_tag_on = 1;
-  d.src = hbm_pa + kUncompressedDataOffset;
-/* TBD: parameterize size ... */
-#define TMP_BLK_SIZE 8192
-  d.dst = hbm_pa + kUncompressedDataOffset + TMP_BLK_SIZE;
-  d.status_addr = hbm_pa + kStatusOffset;
-  d.datain_len = TMP_BLK_SIZE;
-  d.threshold_len = TMP_BLK_SIZE - 8;
-  d.status_data = 0x1234;
-  // We will use 4K bytes at host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) to store
-  // all interrupts (opaque tags).
-  bzero(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE), 4096);
-  for (uint32_t i = 0; i < 16; i++) {
-    d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) + i*8;
-    // Why add 0x10000? mem is init to 0 and 1st tag is also zero.
-    d.opaque_tag_data = 0x10000 + i;
-    comp_queue_push(&d, cp_queue, 
-                    i == (16 - 1) ? last_push_type : push_type,
-                    seq_comp_qid_cp);
-  }
-  // Dont ring the doorbell yet.
-  // Add descriptors for decompression also.
-  bzero(&d, sizeof(d));
-  d.cmd_bits.comp_decomp_en = 1;
-  d.cmd_bits.header_present = 1;
-  d.cmd_bits.opaque_tag_on = 1;
-  d.src = hbm_pa + kUncompressedDataOffset + TMP_BLK_SIZE;
-  d.dst = hbm_pa + kUncompressedDataOffset + (TMP_BLK_SIZE*4);
-  d.status_addr = hbm_pa + kStatusOffset;
-  d.datain_len = TMP_BLK_SIZE;
-  d.threshold_len = TMP_BLK_SIZE*4;
-  d.status_data = 0x4321;
-  for (uint32_t i = 0; i < 2; i++) {
-    d.opaque_tag_addr = host_mem_pa + kUncompressedDataOffset +
-                        (2 * TMP_BLK_SIZE) + 2048 + i*8;
-    d.opaque_tag_data = 0x10000 + i;
-    comp_queue_push(&d, dc_queue, 
-                    i == (2 - 1) ? last_push_type : push_type,
-                    seq_comp_qid_dc);
-  }
-
-  // Now ring doorbells
-  comp_queue_post_push(cp_queue);
-  comp_queue_post_push(dc_queue);
-
-  // Wait for all the interrupts
-  auto func = [] () -> int {
-    uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE));
-    for (int i = 0; i < 16; i++) {
-      if (intr_ptr[i] == 0)
-        return 1;
-    }
-    intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) + 2048);
-    for (int i = 0; i < 2; i++) {
-      if (intr_ptr[i] == 0)
-        return 1;
-    }
-    return 0;
-  };
-  tests::Poller poll;
-  if (poll(func) == 0) {
-    printf("Testcase %s passed\n", __func__);
-    return 0;
-  }
-  uint64_t *intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE));
-  for (int i = 0; i < 16; i++) {
-    if (intr_ptr[i] == 0)
-      printf("Compression request %d did not complete\n", i);
-  }
-  intr_ptr = (uint64_t *)(host_mem + kUncompressedDataOffset + (2 * TMP_BLK_SIZE) + 2048);
-  for (int i = 0; i < 2; i++) {
     if (intr_ptr[i] == 0)
       printf("Decompression request %d did not complete\n", i);
   }

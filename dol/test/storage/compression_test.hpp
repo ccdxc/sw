@@ -28,8 +28,6 @@ int compress_output_through_sequencer();
 int seq_compress_output_through_sequencer();
 int verify_integrity_for_gt64K();
 int max_data_rate();
-int max_data_rate_ex();
-int seq_max_data_rate_ex();
 int seq_max_data_rate();
 int compress_dualq_flat_64K_buf();
 int seq_compress_dualq_flat_64K_buf();

@@ -133,7 +133,6 @@ std::vector<tests::TestEntry> comp_perf_tests = {
   {&tests::compress_flat_64K_buf_in_hbm, "Compress HBM->HBM flat 64K buf", false},
   {&tests::max_data_rate, "Test max data rate", false},
   {&tests::seq_max_data_rate, "Sequencer Test max data rate", false},
-  {&tests::max_data_rate_ex, "Test max data rate", false},
 };
 
 std::vector<tests::TestEntry> rdma_tests = {
