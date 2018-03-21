@@ -1049,6 +1049,173 @@ int verify_integrity_for_gt64K() {
   return 0;
 }
 
+int _max_data_rate_ex(comp_queue_push_t push_type,
+		uint32_t seq_comp_qid_cp,
+		uint32_t seq_comp_qid_dc) {
+  comp_queue_push_t last_push_type;
+  cp_desc_t         d;
+
+  printf("Starting testcase %s push_type %d seq_comp_qid_cp %u "
+         "seq_comp_qid_dc %u\n", __func__, push_type,
+         seq_comp_qid_cp, seq_comp_qid_dc);
+  switch (push_type) {
+
+  case COMP_QUEUE_PUSH_SEQUENCER_BATCH:
+      last_push_type = COMP_QUEUE_PUSH_SEQUENCER_BATCH_LAST;
+      break;
+
+  default:
+      last_push_type = push_type;
+      break;
+  }
+
+#define MAX_CPDC_REQ	16 + 2
+#define TMP_BLK_SIZE	8192	/* TBD: parameterize size ... */
+  // uint64_t host_mem_pa_ex[MAX_CPDC_REQ];
+  uint64_t host_mem_pa_ex_tmp;
+  uint8_t *host_mem_ex[MAX_CPDC_REQ];
+  uint8_t *host_mem_ex_tmp;
+  // uint64_t hbm_pa_ex[MAX_CPDC_REQ];
+  uint64_t hbm_pa_ex_tmp;
+  uint32_t i;
+
+  // allocate and fill descriptors for 16 compression requests
+  for (i = 0; i < MAX_CPDC_REQ-2; i++) {
+    host_mem_ex_tmp = (uint8_t *) alloc_page_aligned_host_mem(kTotalBufSize);
+    assert(host_mem_ex_tmp != nullptr);
+    host_mem_pa_ex_tmp = host_mem_v2p(host_mem_ex_tmp);
+    assert(utils::hbm_addr_alloc_page_aligned(kTotalBufSize, &hbm_pa_ex_tmp) == 0);
+
+    host_mem_ex[i] = host_mem_ex_tmp;
+    // host_mem_pa_ex[i] = host_mem_pa_ex_tmp;
+    // hbm_pa_ex[i] = hbm_pa_ex_tmp;
+
+    InvalidateHdrInHostMem();
+    bzero(&d, sizeof(d));
+ 
+    d.cmd_bits.comp_decomp_en = 1;
+    d.cmd_bits.insert_header = 1;
+    d.cmd_bits.opaque_tag_on = 1;
+    
+    d.src = hbm_pa_ex_tmp + kUncompressedDataOffset;
+    d.dst = hbm_pa_ex_tmp + kCompressedDataOffset;
+    d.datain_len = TMP_BLK_SIZE;
+    d.threshold_len = TMP_BLK_SIZE - 8;
+  
+    d.status_addr = host_mem_pa_ex_tmp + kStatusOffset;
+    d.status_data = 0x1234;
+    
+    bzero(host_mem_ex_tmp + kOpaqueTagOffset, 8);
+    d.opaque_tag_addr = host_mem_pa_ex_tmp + kOpaqueTagOffset;
+    d.opaque_tag_data = 0x10000 + i;
+    comp_queue_push(&d, cp_queue, 
+                    i == (16 - 1) ? last_push_type : push_type,
+                    seq_comp_qid_cp);
+  }
+
+  // Dont ring the doorbell yet.
+  // Add descriptors for decompression also.
+  uint32_t j = 0;
+  for (; i < MAX_CPDC_REQ; i++, j++) {
+    host_mem_ex_tmp = (uint8_t *) alloc_page_aligned_host_mem(kTotalBufSize);
+    assert(host_mem_ex_tmp != nullptr);
+    host_mem_pa_ex_tmp = host_mem_v2p(host_mem_ex_tmp);
+    assert(utils::hbm_addr_alloc_page_aligned(kTotalBufSize, &hbm_pa_ex_tmp) == 0);
+
+    host_mem_ex[i] = host_mem_ex_tmp;
+    // host_mem_pa_ex[i] = host_mem_pa_ex_tmp;
+    // hbm_pa_ex[i] = hbm_pa_ex_tmp;
+
+    InvalidateHdrInHostMem();
+    bzero(&d, sizeof(d));
+
+    d.cmd_bits.comp_decomp_en = 1;
+    d.cmd_bits.header_present = 1;
+    d.cmd_bits.opaque_tag_on = 1;
+
+    d.src = hbm_pa_ex_tmp + kCompressedDataOffset;
+    d.dst = hbm_pa_ex_tmp + kUncompressedDataOffset;
+    d.datain_len = TMP_BLK_SIZE;
+    d.threshold_len = TMP_BLK_SIZE * 4;
+
+    d.status_addr = host_mem_pa_ex_tmp + kStatusOffset;
+    d.status_data = 0x4321;
+
+    bzero(host_mem_ex_tmp + kOpaqueTagOffset, 8);
+    d.opaque_tag_addr = host_mem_pa_ex_tmp + kOpaqueTagOffset;
+    d.opaque_tag_data = 0x10000 + i;
+    comp_queue_push(&d, dc_queue, 
+                    i == (2 - 1) ? last_push_type : push_type,
+                    seq_comp_qid_dc);
+  }
+
+  // Now ring doorbells
+  comp_queue_post_push(cp_queue);
+  comp_queue_post_push(dc_queue);
+
+  // Wait for all the interrupts
+  auto func = [host_mem_ex] () -> int {
+    int  i;
+    uint64_t *intr_ptr;
+    for (i = 0; i < MAX_CPDC_REQ-2; i++) {
+      intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
+      if (intr_ptr == 0)
+        return 1;
+
+      cp_status_sha512_t *s;
+      s = (cp_status_sha512_t *) (host_mem_ex[i] + kStatusOffset);
+      if (!s->valid) {
+	      printf("Compression status is invalid! "
+			      "status: %llx\n", *((unsigned long long *) s));
+	      return -1;
+      }
+    }
+    for (; i < MAX_CPDC_REQ; i++) {
+      intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
+      if (intr_ptr == 0)
+        return 1;
+
+      cp_status_sha512_t *s;
+      s = (cp_status_sha512_t *) (host_mem_ex[i] + kStatusOffset);
+      if (!s->valid) {
+	      printf("Decompression status is invalid! "
+			      "status: %llx\n", *((unsigned long long *) s));
+	      return -1;
+      }
+    }
+    return 0;
+  };
+  tests::Poller poll;
+  if (poll(func) == 0) {
+    printf("Testcase %s passed\n", __func__);
+    return 0;
+  }
+
+  uint64_t *intr_ptr;
+  for (i = 0; i < MAX_CPDC_REQ-2; i++) {
+    intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
+    if (intr_ptr[i] == 0)
+      printf("Compression request %d did not complete\n", i);
+  }
+  for (; i < MAX_CPDC_REQ; i++) {
+    intr_ptr = (uint64_t *) (host_mem_ex[i] + kOpaqueTagOffset);
+    if (intr_ptr[i] == 0)
+      printf("Decompression request %d did not complete\n", i);
+  }
+  printf("ERROR: Timed out waiting for all the commands to complete\n");
+  return -1;
+}
+
+int max_data_rate_ex() {
+    return _max_data_rate_ex(COMP_QUEUE_PUSH_HW_DIRECT_BATCH, 0, 0);
+}
+
+int seq_max_data_rate_ex() {
+    return _max_data_rate_ex(COMP_QUEUE_PUSH_SEQUENCER_BATCH,
+                          queues::get_pvm_seq_comp_sq(0),
+                          queues::get_pvm_seq_comp_sq(1));
+}
+
 int _max_data_rate(comp_queue_push_t push_type,
                    uint32_t seq_comp_qid_cp,
                    uint32_t seq_comp_qid_dc) {
@@ -1099,7 +1266,7 @@ int _max_data_rate(comp_queue_push_t push_type,
   d.cmd_bits.comp_decomp_en = 1;
   d.cmd_bits.header_present = 1;
   d.cmd_bits.opaque_tag_on = 1;
-  d.src = hbm_pa + kCompressedDataOffset;
+  d.src = hbm_pa + kUncompressedDataOffset + TMP_BLK_SIZE;
   d.dst = hbm_pa + kUncompressedDataOffset + (TMP_BLK_SIZE*4);
   d.status_addr = hbm_pa + kStatusOffset;
   d.datain_len = TMP_BLK_SIZE;
