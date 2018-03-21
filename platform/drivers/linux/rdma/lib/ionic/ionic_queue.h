@@ -11,10 +11,6 @@
 #define IONIC_DBELL_QID_SHIFT	24
 #define IONIC_DBELL_RING_ARM	(1ull << 16)
 
-#define IONIC_QTYPE_RDMA_SEND	3
-#define IONIC_QTYPE_RDMA_RECV	4
-#define IONIC_QTYPE_RDMA_COMP	5
-
 /** ionic_u16_mask - Round uint16_t up to power of two minus one.
  * @val:	Value to round up.
  *
@@ -253,15 +249,13 @@ static inline uint64_t ionic_queue_dbell_val_arm(struct ionic_queue *q)
 }
 
 /** ionic_dbell_ring - Write the doorbell value to register.
- * @dbp:	Doorbell page.
+ * @dbreg:	Doorbell register.
  * @val:	Doorbell value from queue.
- * @qtype:	Queue type.
  */
-static inline void ionic_dbell_ring(uint64_t *dbp, uint64_t val, int qtype)
+static inline void ionic_dbell_ring(uint64_t *dbreg, uint64_t val)
 {
 	udma_to_device_barrier();
-	mmio_write64_le(&dbp[qtype], htole64(val));
-	//mmio_write64_be(&dbp[qtype], htobe64(val));
+	mmio_write64_le(dbreg, htole64(val));
 }
 
 #endif /* IONIC_QUEUE_H */

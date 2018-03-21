@@ -30,6 +30,9 @@ struct ionic_ctx {
 	uint32_t		max_qp;
 
 	uint64_t		*dbpage;
+	uint8_t			sq_qtype;
+	uint8_t			rq_qtype;
+	uint8_t			cq_qtype;
 
 	pthread_mutex_t		mut;
 	struct tbl_root		qp_tbl;

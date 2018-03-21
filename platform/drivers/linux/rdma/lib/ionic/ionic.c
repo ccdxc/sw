@@ -524,11 +524,9 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 	}
 
 out:
-	if (likely(cq->q.prod != old_prod)) {
-		ionic_dbell_ring(ctx->dbpage,
-				 ionic_queue_dbell_val(&cq->q),
-				 IONIC_QTYPE_RDMA_COMP);
-	}
+	if (likely(cq->q.prod != old_prod))
+		ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
+				 ionic_queue_dbell_val(&cq->q));
 
 	pthread_spin_unlock(&cq->lock);
 
@@ -546,9 +544,8 @@ static int ionic_req_notify_cq(struct ibv_cq *ibcq, int solicited_only)
 	if (solicited_only)
 		ionic_dbg(ctx, "XXX solicited_only=%d", solicited_only);
 
-	ionic_dbell_ring(ctx->dbpage,
-			 ionic_queue_dbell_val_arm(&cq->q),
-			 IONIC_QTYPE_RDMA_COMP);
+	ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
+			 ionic_queue_dbell_val_arm(&cq->q));
 
 	return 0;
 }
@@ -1191,11 +1188,9 @@ static int ionic_post_send(struct ibv_qp *ibqp,
 	}
 
 out:
-	if (likely(qp->sq.prod != old_prod)) {
-		ionic_dbell_ring(ctx->dbpage,
-				 ionic_queue_dbell_val(&qp->sq),
-				 IONIC_QTYPE_RDMA_SEND);
-	}
+	if (likely(qp->sq.prod != old_prod))
+		ionic_dbell_ring(&ctx->dbpage[ctx->sq_qtype],
+				 ionic_queue_dbell_val(&qp->sq));
 
 	pthread_spin_unlock(&qp->sq_lock);
 
@@ -1274,11 +1269,9 @@ static int ionic_post_recv(struct ibv_qp *ibqp,
 	}
 
 out:
-	if (likely(qp->rq.prod != old_prod)) {
-		ionic_dbell_ring(ctx->dbpage,
-				 ionic_queue_dbell_val(&qp->rq),
-				 IONIC_QTYPE_RDMA_RECV);
-	}
+	if (likely(qp->rq.prod != old_prod))
+		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
+				 ionic_queue_dbell_val(&qp->rq));
 
 	pthread_spin_unlock(&qp->rq_lock);
 
@@ -1389,6 +1382,11 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	dev->pg_size = resp.pg_size;
 	dev->cqe_size = resp.cqe_size;
 	dev->max_cq_depth = resp.max_cqd;
+
+	/* XXX get from resp */
+	ctx->sq_qtype = 3;
+	ctx->rq_qtype = 4;
+	ctx->cq_qtype = 5;
 
 	ctx->dbpage = ionic_map_device(dev->pg_size, cmd_fd, 0);
 	if (!ctx->dbpage) {
