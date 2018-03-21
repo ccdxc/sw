@@ -141,6 +141,7 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 			return nil
 		}),
 		"events.EventAttributes": apisrvpkg.NewMessage("events.EventAttributes"),
+		"events.EventExport":     apisrvpkg.NewMessage("events.EventExport"),
 		"events.EventPolicy": apisrvpkg.NewMessage("events.EventPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := events.EventPolicy{}

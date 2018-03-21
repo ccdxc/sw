@@ -50,3 +50,11 @@ message ExternalCred {
     // CaData holds PEM-encoded bytes (typically read from a root certificates bundle).
     bytes CaData = 6 [(gogoproto.jsontag) = "ca-data,omitempty"];
 }
+
+// syslog export configurations
+message  SyslogExportConfig {
+    // override default facility with this in exported logs
+    string FacilityOverride = 1 [(gogoproto.jsontag) = "facility-override,omitempty"];
+    // add prefix in exported logs
+    string Prefix = 2 [(gogoproto.jsontag) = "prefix,omitempty"];
+}

@@ -10,6 +10,7 @@ The following Messages are defined.
   AutoMsgEventPolicyWatchHelper
   Event
   EventAttributes
+  EventExport
   EventPolicy
   EventPolicyList
   EventPolicySpec

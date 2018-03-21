@@ -639,6 +639,40 @@ func DecodeGrpcRespFlowExportTarget(ctx context.Context, response interface{}) (
 	return response, nil
 }
 
+func encodeHTTPFwlogExport(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogExport(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogExport
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogExport encodes GRPC request
+func EncodeGrpcReqFwlogExport(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogExport)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogExport decodes GRPC request
+func DecodeGrpcReqFwlogExport(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogExport)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogExport encodes GRC response
+func EncodeGrpcRespFwlogExport(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogExport decodes GRPC response
+func DecodeGrpcRespFwlogExport(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPFwlogPolicy(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

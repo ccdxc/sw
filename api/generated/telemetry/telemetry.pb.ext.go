@@ -148,6 +148,15 @@ func (m *FlowExportTarget) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *FwlogExport) Clone(into interface{}) error {
+	out, ok := into.(*FwlogExport)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *FwlogPolicy) Clone(into interface{}) error {
 	out, ok := into.(*FwlogPolicy)
 	if !ok {
@@ -230,6 +239,9 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) Validate(ver string, ignoreStatus b
 }
 
 func (m *AutoMsgFwlogPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -283,15 +295,58 @@ func (m *FlowExportTarget) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *FwlogExport) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapTelemetry["FwlogExport"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapTelemetry["FwlogExport"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (m *FwlogPolicy) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *FwlogPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
 func (m *FwlogSpec) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Exports {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	if vs, ok := funcMapTelemetry["FwlogSpec"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapTelemetry["FwlogSpec"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
 	return true
 }
 
@@ -324,6 +379,39 @@ func init() {
 
 		if _, ok := FlowExportTarget_Formats_value[m.Format]; !ok {
 			return false
+		}
+		return true
+	})
+
+	funcMapTelemetry["FwlogExport"] = make(map[string][]func(interface{}) bool)
+	funcMapTelemetry["FwlogExport"]["all"] = append(funcMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
+		m := i.(*FwlogExport)
+
+		for _, v := range m.Filter {
+			if _, ok := FwlogFilter_value[v]; !ok {
+				return false
+			}
+		}
+		return true
+	})
+
+	funcMapTelemetry["FwlogExport"]["all"] = append(funcMapTelemetry["FwlogExport"]["all"], func(i interface{}) bool {
+		m := i.(*FwlogExport)
+
+		if _, ok := FwlogExportFormat_value[m.Format]; !ok {
+			return false
+		}
+		return true
+	})
+
+	funcMapTelemetry["FwlogSpec"] = make(map[string][]func(interface{}) bool)
+	funcMapTelemetry["FwlogSpec"]["all"] = append(funcMapTelemetry["FwlogSpec"]["all"], func(i interface{}) bool {
+		m := i.(*FwlogSpec)
+
+		for _, v := range m.Filter {
+			if _, ok := FwlogFilter_value[v]; !ok {
+				return false
+			}
 		}
 		return true
 	})

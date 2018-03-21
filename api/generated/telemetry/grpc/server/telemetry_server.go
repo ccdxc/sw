@@ -194,6 +194,7 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 		"telemetry.FlowExportSpec":   apisrvpkg.NewMessage("telemetry.FlowExportSpec"),
 		"telemetry.FlowExportStatus": apisrvpkg.NewMessage("telemetry.FlowExportStatus"),
 		"telemetry.FlowExportTarget": apisrvpkg.NewMessage("telemetry.FlowExportTarget"),
+		"telemetry.FwlogExport":      apisrvpkg.NewMessage("telemetry.FwlogExport"),
 		"telemetry.FwlogPolicy": apisrvpkg.NewMessage("telemetry.FwlogPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := telemetry.FwlogPolicy{}

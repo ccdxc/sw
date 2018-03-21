@@ -16,6 +16,7 @@
 		Empty
 		ExportConfig
 		ExternalCred
+		SyslogExportConfig
 		TypeMeta
 		ListMeta
 		Timestamp

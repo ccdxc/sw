@@ -811,6 +811,15 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "Spec.Filter",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -1014,6 +1023,20 @@
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiSyslogExportConfig": {
+      "type": "object",
+      "properties": {
+        "FacilityOverride": {
+          "type": "string",
+          "title": "override default facility with this in exported logs"
+        },
+        "Prefix": {
+          "type": "string",
+          "title": "add prefix in exported logs"
+        }
+      },
+      "title": "syslog export configurations"
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
@@ -1097,20 +1120,21 @@
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "title": "RetentionTime defines for how long to keep the fwlog before it is deleted"
+          "title": "Target contains ip/port/protocol"
         },
         "ListMeta": {
           "$ref": "#/definitions/apiListMeta",
-          "title": "Export contains the export config"
+          "title": "fwlog format, SYSLOG_BSD default"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/telemetryFlowExportPolicy"
-          }
+          },
+          "title": "filter firewall logs, FWLOG_ALL default"
         }
       },
-      "title": "Firewall logs are managed like syslog.\nVenice collects fwlog irrespective of the export config"
+      "title": "firewall log export config"
     },
     "telemetryFlowExportSpec": {
       "type": "object",
@@ -1119,20 +1143,20 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/telemetryFlowExportTarget"
-          }
+          },
+          "title": "RetentionTime defines for how long to keep the fwlog before it is deleted"
         }
-      }
+      },
+      "title": "Venice collects fwlog irrespective of the export config"
     },
     "telemetryFlowExportStatus": {
-      "type": "object",
-      "title": "========================================================================================\n flow export policy\n========================================================================================"
+      "type": "object"
     },
     "telemetryFlowExportTarget": {
       "type": "object",
       "properties": {
         "Interval": {
-          "type": "string",
-          "title": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
+          "type": "string"
         },
         "Format": {
           "type": "string"
@@ -1141,8 +1165,33 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/apiExportConfig"
+          }
+        }
+      },
+      "title": "========================================================================================\n flow export policy\n========================================================================================"
+    },
+    "telemetryFwlogExport": {
+      "type": "object",
+      "properties": {
+        "Targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiExportConfig"
+          },
+          "title": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
+        },
+        "Format": {
+          "type": "string"
+        },
+        "Filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
           },
           "description": "Export contains export parameters."
+        },
+        "SyslogConfig": {
+          "$ref": "#/definitions/apiSyslogExportConfig"
         }
       }
     },
@@ -1186,10 +1235,16 @@
         "RetentionTime": {
           "type": "string"
         },
+        "Filter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "Exports": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiExportConfig"
+            "$ref": "#/definitions/telemetryFwlogExport"
           }
         }
       }

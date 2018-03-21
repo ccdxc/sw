@@ -74,6 +74,15 @@ func (m *EventAttributes) Clone(into interface{}) error {
 	return nil
 }
 
+func (m *EventExport) Clone(into interface{}) error {
+	out, ok := into.(*EventExport)
+	if !ok {
+		return fmt.Errorf("mismatched object types")
+	}
+	*out = *m
+	return nil
+}
+
 func (m *EventPolicy) Clone(into interface{}) error {
 	out, ok := into.(*EventPolicy)
 	if !ok {
@@ -122,6 +131,9 @@ func (m *EventSource) Clone(into interface{}) error {
 // Validators
 
 func (m *AutoMsgEventPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
@@ -149,15 +161,48 @@ func (m *EventAttributes) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
+func (m *EventExport) Validate(ver string, ignoreStatus bool) bool {
+	if m.Selector != nil && !m.Selector.Validate(ver, ignoreStatus) {
+		return false
+	}
+	if vs, ok := funcMapEvents["EventExport"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapEvents["EventExport"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (m *EventPolicy) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
 	return true
 }
 
 func (m *EventPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
 func (m *EventPolicySpec) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Exports {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
 	return true
 }
 
@@ -177,6 +222,16 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
+			return false
+		}
+		return true
+	})
+
+	funcMapEvents["EventExport"] = make(map[string][]func(interface{}) bool)
+	funcMapEvents["EventExport"]["all"] = append(funcMapEvents["EventExport"]["all"], func(i interface{}) bool {
+		m := i.(*EventExport)
+
+		if _, ok := EventExportFormat_value[m.Format]; !ok {
 			return false
 		}
 		return true

@@ -8,6 +8,8 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/export.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
 
 // -------------------------- Event Policy -----------------------------
 // Event Policy represents the policy definition for Events.
@@ -31,12 +33,32 @@ message EventPolicy {
                                     (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// EventPolicySpec is the specification of an Event Policy,
-// It consists of Retention and Export policies.
-message EventPolicySpec {
+enum EventExportFormat {
+        SYSLOG_BSD = 0;
+        SYSLOG_RFC5424 = 1;
+}
 
-    // Name of the export policies that defines the location, frequency and format of data to an external collector
-    repeated string ExportPolicies  = 1 [(gogoproto.jsontag) = "export-policies,omitempty"];
+message EventExport {
+    // export target ip/port/protocol
+    repeated api.ExportConfig Targets = 1 [(gogoproto.jsontag) = "targets,omitempty"];
+
+    // event export format, SYSLOG_BSD default
+    string Format = 2 [(venice.check) = "StrEnum(EventExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
+
+    // export events matched by the selector
+    fields.Selector Selector = 3 [(gogoproto.jsontag) = "selector,omitempty"];
+
+    // syslog specific configuration
+    api.SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
+
+    // each format can have it's own config
+}
+
+// EventPolicySpec is the specification of an Event Policy,
+// It consists of Retention and Export.
+message EventPolicySpec {
+    // export configuration
+    repeated EventExport Exports  = 1 [(gogoproto.jsontag) = "exports,omitempty"];
 
     // MaxRetentionTime defines for how long to keep the data before it is deleted
     // The value is specified as a string format e.g. 30d (30 days)

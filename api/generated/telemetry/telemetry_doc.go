@@ -15,6 +15,7 @@ The following Messages are defined.
   FlowExportSpec
   FlowExportStatus
   FlowExportTarget
+  FwlogExport
   FwlogPolicy
   FwlogPolicyList
   FwlogSpec

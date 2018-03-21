@@ -128,16 +128,6 @@
             "type": "string"
           },
           {
-            "name": "Spec.ExportPolicies",
-            "description": "Component from which the event is generated.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
             "name": "Spec.MaxRetentionTime",
             "description": "Name of the venice or workload node which is generating the event.",
             "in": "query",
@@ -216,6 +206,57 @@
     }
   },
   "definitions": {
+    "apiExportConfig": {
+      "type": "object",
+      "properties": {
+        "Destination": {
+          "type": "string",
+          "title": "IP address or URL of the collector/entity to which the data is to be exported"
+        },
+        "Transport": {
+          "type": "string",
+          "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
+        },
+        "Credentials": {
+          "$ref": "#/definitions/apiExternalCred",
+          "title": "Credentials provide secure access to the collector"
+        }
+      },
+      "title": "----------------------------- Export Config -----------------------------\nExport Config specifies server address and user credentials"
+    },
+    "apiExternalCred": {
+      "type": "object",
+      "properties": {
+        "UserName": {
+          "type": "string",
+          "title": "UserName is the login id to be used towards the external entity"
+        },
+        "Password": {
+          "type": "string",
+          "title": "Password is one time specified, not visibile on read operations\nOnly valid when UserName is defined\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "BearerToken": {
+          "type": "string",
+          "title": "External entity supports bearer tokens for authentication and authorization\nToken refresh is not supported using OAuth2\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "CertData": {
+          "type": "string",
+          "format": "byte",
+          "description": "CertData holds PEM-encoded bytes (typically read from a client certificate file)."
+        },
+        "KeyData": {
+          "type": "string",
+          "format": "byte",
+          "title": "KeyData holds PEM-encoded bytes (typically read from a client certificate key file).\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "CaData": {
+          "type": "string",
+          "format": "byte",
+          "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle)."
+        }
+      },
+      "title": "------------------------ ExternalCred Object ----------------------------\nExternalCred defines credentials required to access an external entity, such as\na stats collector, compute orchestration entity, or a syslog server.\nExternal entity may support a variety of methods, like username/password,\nTLS Client authentication, or Bearer Token based authentication. User is\nexpected to configure one of the methods"
+    },
     "apiListMeta": {
       "type": "object",
       "properties": {
@@ -295,6 +336,20 @@
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
     },
+    "apiSyslogExportConfig": {
+      "type": "object",
+      "properties": {
+        "FacilityOverride": {
+          "type": "string",
+          "title": "override default facility with this in exported logs"
+        },
+        "Prefix": {
+          "type": "string",
+          "title": "add prefix in exported logs"
+        }
+      },
+      "title": "syslog export configurations"
+    },
     "apiTimestamp": {
       "type": "object",
       "properties": {
@@ -329,6 +384,27 @@
         }
       },
       "description": "-------------------------- Event Policy -----------------------------\nEvent Policy represents the policy definition for Events.\nEvent Client module will be consumer of this policy."
+    },
+    "eventsEventExport": {
+      "type": "object",
+      "properties": {
+        "Targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiExportConfig"
+          }
+        },
+        "Format": {
+          "type": "string"
+        },
+        "Selector": {
+          "$ref": "#/definitions/fieldsSelector"
+        },
+        "SyslogConfig": {
+          "$ref": "#/definitions/apiSyslogExportConfig"
+        }
+      },
+      "title": "EventPolicyStatus"
     },
     "eventsEventPolicy": {
       "type": "object",
@@ -374,10 +450,10 @@
     "eventsEventPolicySpec": {
       "type": "object",
       "properties": {
-        "ExportPolicies": {
+        "Exports": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/eventsEventExport"
           },
           "description": "Component from which the event is generated."
         },
@@ -390,6 +466,40 @@
     },
     "eventsEventPolicyStatus": {
       "type": "object"
+    },
+    "fieldsRequirement": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "description": "The label key that the condition applies to."
+        },
+        "Operator": {
+          "type": "string",
+          "description": "Condition checked for the key."
+        },
+        "Values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+        }
+      },
+      "description": "Requirement defines a single matching condition for a selector."
+    },
+    "fieldsSelector": {
+      "type": "object",
+      "properties": {
+        "Requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/fieldsRequirement"
+          },
+          "description": "Requirements are ANDed."
+        }
+      },
+      "description": "Selector is used to select objects by fields. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
     }
   }
 }
