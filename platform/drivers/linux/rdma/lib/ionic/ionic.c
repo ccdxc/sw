@@ -535,12 +535,16 @@ out:
 	return npolled ?: rc;
 }
 
-static int ionic_arm_cq(struct ibv_cq *ibcq, int flags)
+static int ionic_req_notify_cq(struct ibv_cq *ibcq, int solicited_only)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
 
 	IONIC_LOG("");
+
+	/* XXX need some ring bits for "solicited only" */
+	if (solicited_only)
+		ionic_dbg(ctx, "XXX solicited_only=%d", solicited_only);
 
 	ionic_dbell_ring(ctx->dbpage,
 			 ionic_queue_dbell_val_arm(&cq->q),
@@ -1340,7 +1344,7 @@ static const struct verbs_context_ops ionic_ctx_ops = {
 	.dereg_mr		= ionic_dereg_mr,
 	.create_cq		= ionic_create_cq,
 	.poll_cq		= ionic_poll_cq,
-	.req_notify_cq		= ionic_arm_cq,
+	.req_notify_cq		= ionic_req_notify_cq,
 	.resize_cq		= ionic_resize_cq,
 	.destroy_cq		= ionic_destroy_cq,
 	.create_srq		= ionic_create_srq,
