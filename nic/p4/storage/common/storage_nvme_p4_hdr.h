@@ -143,8 +143,6 @@ header_type ring_state_t {
   }
 }
 
-#define RING_STATE_P_NDX_OFFSET	0
-
 // Doorbell cleanup state
 header_type doorbell_cleanup_q_state_t {
   fields {
@@ -160,10 +158,6 @@ header_type qpush_pndx_data_t {
     p_ndx	: 16;	// Producer Index
   }
 }
-// Offset and size in bytes within a queue state at which doorbell 
-// cleanup is to be issued.  Derived from the common queue state definitions 
-// based on the offset of the first field in doorbell_cleanup_q_state_t.
-#define DOORBELL_CLEANUP_Q_STATE_OFFSET		8
 
 // Sequencer doorbell information
 header_type seq_db_info_t {
@@ -287,10 +281,10 @@ header_type nvme_kivec_sq_info_t {
   }
 }
 
-// header union with to_stage_3
+// header union with to_stage_3 and to_stage_4
 header_type nvme_kivec_iob_ring_t {
   fields {
-    iob_ring_base_addr	: 34;	// IOB ring base address (free list of IOBs)
+    base_addr	: 34;		// IOB ring base address (free list of IOBs)
   }
 }
 
@@ -513,7 +507,7 @@ header_type nvme_kivec_arm_dst_t {
   modify_field(scratch.arm_qaddr, kivec.arm_qaddr);			\
 
 #define NVME_KIVEC_IOB_RING_USE(scratch, kivec)				\
-  modify_field(scratch.iob_ring_base_addr, kivec.iob_ring_base_addr);	\
+  modify_field(scratch.base_addr, kivec.base_addr);	                \
 
 // PRP entry based data xfer marcos from host (for write command)
 // TODO: FIXME: In ASM, use min(remaining_len, PRP_DATA_XFER_SIZE)

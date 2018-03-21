@@ -250,7 +250,7 @@ header_type storage_pci_data_t  {
 #define QUEUE_EMPTY(q)	_QUEUE_EMPTY(q.p_ndx, q.c_ndx)
 
 // Queue full macros
-#define _QUEUE_FULL(_c_ndx, _p_ndx, _num_entries, _increment)	\
+#define _QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, _increment)	\
 	(_c_ndx == ((_p_ndx + _increment) % _num_entries))
 #define QUEUE_FULL(q)						\
 	_QUEUE_FULL(q.p_ndx, q.c_ndx, q.num_entries, 1)

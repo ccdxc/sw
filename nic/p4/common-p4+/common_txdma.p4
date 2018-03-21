@@ -801,6 +801,7 @@ table tx_table_s4_t0 {
         tx_table_s4_t0_action;
         tx_table_s4_t0_cfg_action;
         tx_table_s4_t0_action1;
+        tx_table_s4_t0_action2;
     }
 }
 

@@ -159,6 +159,12 @@
 #define NVME_KIVEC_SQ_INFO_IS_ADMIN_Q           \
     k.nvme_kivec_sq_info_is_admin_q
 
+#define NVME_KIVEC_IOB_RING3_BASE_ADDR          \
+    k.{nvme_kivec_iob_ring3_base_addr_sbit0_ebit7...nvme_kivec_iob_ring3_base_addr_sbit32_ebit33}
+
+#define NVME_KIVEC_IOB_RING4_BASE_ADDR          \
+    k.{nvme_kivec_iob_ring4_base_addr_sbit0_ebit31...nvme_kivec_iob_ring4_base_addr_sbit32_ebit33}
+
 #define NVME_KIVEC_PRP_BASE_PRP0                \
     k.nvme_kivec_prp_base_prp0
 #define NVME_KIVEC_PRP_BASE_PRP1                \

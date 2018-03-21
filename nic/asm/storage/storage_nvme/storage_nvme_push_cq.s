@@ -32,15 +32,16 @@ storage_nvme_push_cq_start:
    // Push the entry to the queue (this increments p_ndx and writes to table)
    QUEUE_PUSH(d.p_ndx, d.num_entries)
 
+   // Delay slot to check the interrupt enable bit (since reading p_ndx 
+   // straight after writing takes a one cycle stall)
+   seq		c2, d.intr_en, 1
+
    // If new p_ndx has wrapped around, flip the phase bit
-   // TODO: Remove nop after checking if d.p_ndx seen here will be the new value
-   nop
    seq		c1, d.p_ndx, 0
    tblmincri.c1	d.phase, 2, 1
 
    // Check if interrupt is enabled and branch
-   seq		c1, d.intr_en, 1
-   bcf		![c1], skip_intr
+   bcf		![c2], skip_intr
    nop
 
    // Raise the interrupt with a DMA update

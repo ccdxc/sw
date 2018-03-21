@@ -39,6 +39,7 @@
 
 #define tx_table_s4_t0_action	process_io_map
 #define tx_table_s4_t0_action1	send_read_data
+#define tx_table_s4_t0_action2	free_iob
 
 #define tx_table_s5_t0_action	handle_no_prp_list
 #define tx_table_s5_t0_action1	lookup_sq
@@ -72,7 +73,9 @@ metadata nvme_kivec_global_t nvme_kivec_global;
 @pragma pa_header_union ingress to_stage_3
 metadata nvme_kivec_sq_info_t nvme_kivec_sq_info;
 @pragma pa_header_union ingress to_stage_3
-metadata nvme_kivec_iob_ring_t nvme_kivec_iob_ring;
+metadata nvme_kivec_iob_ring_t nvme_kivec_iob_ring3;
+@pragma pa_header_union ingress to_stage_4
+metadata nvme_kivec_iob_ring_t nvme_kivec_iob_ring4;
 @pragma pa_header_union ingress to_stage_5
 metadata nvme_kivec_prp_base_t nvme_kivec_prp_base;
 @pragma pa_header_union ingress to_stage_6
@@ -1498,7 +1501,9 @@ action pop_arm_q(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     modify_field(nvme_kivec_t0_s2s.dst_qtype, dst_qtype);
     modify_field(nvme_kivec_t0_s2s.dst_qid, dst_qid);
     modify_field(nvme_kivec_t0_s2s.dst_qaddr, dst_qaddr);
-    modify_field(nvme_kivec_iob_ring_scratch.iob_ring_base_addr, 
+    modify_field(nvme_kivec_iob_ring3.base_addr, 
+                 iob_ring_base_addr);
+    modify_field(nvme_kivec_iob_ring4.base_addr, 
                  iob_ring_base_addr);
    
 
@@ -1566,7 +1571,7 @@ action cleanup_iob(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
                            0, 0, 0, 0)
 
-  // Sequencer for Barco XTS encryption doorbell
+  // Sequencer for Barco XTS decryption doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_2,
                            nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
                            IO_BUF_SEQ_BARCO_XTS_DEC_DB_OFFSET +
@@ -1593,7 +1598,7 @@ action cleanup_iob(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
                            PHV_FIELD_OFFSET(doorbell_cleanup_q_state.w_ndx),
                            0, 0, 0, 0)
 
-  // Sequencer for integrity tag gneration doorbell
+  // Sequencer for integrity tag generation doorbell
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_5,
                            nvme_kivec_t0_s2s.iob_addr + IO_BUF_SEQ_DB_OFFSET + 
                            IO_BUF_SEQ_INT_TAG_DB_OFFSET +
@@ -1649,12 +1654,12 @@ action cleanup_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
-  NVME_KIVEC_IOB_RING_USE(nvme_kivec_iob_ring_scratch, nvme_kivec_iob_ring)
+  NVME_KIVEC_IOB_RING_USE(nvme_kivec_iob_ring_scratch, nvme_kivec_iob_ring3)
 
   // Load the table and program for freeing the IOB to the free ring 
   // in the next stage
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv,
-                        nvme_kivec_iob_ring_scratch.iob_ring_base_addr,
+                        nvme_kivec_iob_ring_scratch.base_addr,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, free_iob_start)
 }
 
@@ -1669,15 +1674,17 @@ action free_iob(p_ndx, c_ndx, wp_ndx, num_entries, base_addr, entry_size, pad) {
   // Store the K+I vector into scratch to get the K+I generated correctly
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+  NVME_KIVEC_IOB_RING_USE(nvme_kivec_iob_ring_scratch, nvme_kivec_iob_ring4)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   RING_STATE_COPY(iob_ring_state_scratch)
 
-  // If NVME SQ is empty or if IOB free ring is empty, dont allocate IOB
-  if (QUEUE_EMPTY(iob_ring_state_scratch)) {
+  // If IOB ring is full, dont free it. This error condition should never be hit
+  // but for a bug. 
+  if (_QUEUE_FULL(iob_ring_state_scratch.wp_ndx, iob_ring_state_scratch.c_ndx,
+                  iob_ring_state_scratch.num_entries, 1)) {
     exit();
   }
-
 
   // DMA the I/O buffer address to be freed
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_9,
@@ -1694,7 +1701,7 @@ action free_iob(p_ndx, c_ndx, wp_ndx, num_entries, base_addr, entry_size, pad) {
   // DMA the wp_ndx to p_ndx via fenced DMA
   modify_field(qpush_pndx_data.p_ndx, iob_ring_state_scratch.wp_ndx);
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_10,
-                           nvme_kivec_iob_ring_scratch.iob_ring_base_addr + 
+                           nvme_kivec_iob_ring_scratch.base_addr + 
                            RING_STATE_P_NDX_OFFSET,
                            PHV_FIELD_OFFSET(qpush_pndx_data.p_ndx),
                            PHV_FIELD_OFFSET(qpush_pndx_data.p_ndx),
