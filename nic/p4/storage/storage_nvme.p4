@@ -23,15 +23,18 @@
 #define tx_table_s1_t0_action	allocate_iob
 #define tx_table_s1_t0_action1	handle_r2n_wqe
 #define tx_table_s1_t0_action2	free_iob_addr
+#define tx_table_s1_t0_action3	timeout_iob_addr
 
 #define tx_table_s2_t0_action	pop_sq
 #define tx_table_s2_t0_action1	process_be_status
 #define tx_table_s2_t0_action2	cleanup_iob
+#define tx_table_s2_t0_action3	timeout_iob_skip
 
 #define tx_table_s3_t0_action	handle_cmd
 #define tx_table_s3_t0_action1	send_cmd_free_iob
 #define tx_table_s3_t0_action2	process_io_ctx
 #define tx_table_s3_t0_action3	cleanup_io_ctx
+#define tx_table_s3_t0_action4	timeout_io_ctx
 #define tx_table_s3_t1_action	save_io_ctx
 
 #define tx_table_s4_t0_action	process_io_map
@@ -1441,13 +1444,10 @@ action send_sta_free_iob(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *****************************************************************************/
 
 /*****************************************************************************
- * Storage Tx ARM queue processing BEGIN
+ * Storage Tx ARM LIF processing BEGIN
  *****************************************************************************/
 
 /*****************************************************************************
- *  pop_arm_q: Pop the ARM queue to see if there is some activity queued by
- *             ARM or NVME command/status handling P4+ programs. This is a
- *             common pop function with next_pc determining the next action.
  *
  *  ARM Queues and their handlers (Qid 0 is not handled by P4+):	
  *	Qid	QName		From		To
@@ -1458,6 +1458,12 @@ action send_sta_free_iob(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *	4	Free IOB Q 	NVME Sta P4+	Free IOB handler P4+
  *	5	Free IOB Q 	ARM		Free IOB handler P4+
  *         
+ *****************************************************************************/
+
+/*****************************************************************************
+ *  pop_arm_q: Pop the ARM queue to see if there is some activity queued by
+ *             ARM or NVME command/status handling P4+ programs. This is a
+ *             common pop function with next_pc determining the next action.
  *****************************************************************************/
 
 @pragma little_endian p_ndx c_ndx
@@ -1519,7 +1525,7 @@ action free_iob_addr(iob_addr) {
   NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
   NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
 
-  // Save the IOB address from the free list into K+I vector and into PHV
+  // Save the IOB address into K+I vector and into PHV
   modify_field(nvme_kivec_t0_s2s.iob_addr, iob_addr_scratch.iob_addr);
   modify_field(io_ctx.iob_addr, iob_addr_scratch.iob_addr);
 
@@ -1698,6 +1704,76 @@ action free_iob(p_ndx, c_ndx, wp_ndx, num_entries, base_addr, entry_size, pad) {
 }
 
 /*****************************************************************************
- * Storage Tx ARM queue processing END
+ *  timeout_iob_addr: Get the address of the IOB that needs to be marked as
+ *                    timed out.
+ *****************************************************************************/
+
+action timeout_iob_addr(iob_addr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IOB_ADDR_COPY(iob_addr_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // Save the IOB address into K+I vector
+  modify_field(nvme_kivec_t0_s2s.iob_addr, iob_addr_scratch.iob_addr);
+
+  // Load the IOB for the next stage to cleanup
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, iob_addr_scratch.iob_addr,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, timeout_iob_skip_start)
+}
+
+/*****************************************************************************
+ *  timeout_iob_skip: Stage with no work to align the write of the oper_status
+ *                    via a locked table write in stage 3
+ *****************************************************************************/
+
+action timeout_iob_skip(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+                        nvme_sq_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+
+  // Load the IO context for the next stage to modify oper status with table locking
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
+                        nvme_kivec_t0_s2s.iob_addr + IO_BUF_IO_CTX_OFFSET,
+                        STORAGE_DEFAULT_TBL_LOAD_SIZE, timeout_io_ctx_start)
+}
+
+/*****************************************************************************
+ *  timeout_io_ctx: Marked the oper_status to have timed out via a locked 
+ *                  table write 
+ *****************************************************************************/
+
+action timeout_io_ctx(oper_status, iob_addr, nvme_data_len, is_read, is_remote,
+                      nvme_sq_qaddr) {
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  IO_CTX_ENTRY_COPY(io_ctx_scratch)
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  NVME_KIVEC_S2S_USE(nvme_kivec_t0_s2s_scratch, nvme_kivec_t0_s2s)
+  NVME_KIVEC_GLOBAL_USE(nvme_kivec_global_scratch, nvme_kivec_global)
+ 
+  // Set the oper_status to timed out only if the I/O is in progress already.
+  // Is ASM do a locked table write.
+  if (nvme_kivec_global_scratch.oper_status == IO_CTX_OPER_STATUS_IN_PROGRESS) {
+    modify_field(io_ctx_scratch.oper_status, IO_CTX_OPER_STATUS_TIMED_OUT);
+    // In ASM, table write
+#if 0
+    tblwr	d.oper_status, IO_CTX_OPER_STATUS_TIMED_OUT
+#endif
+  }
+  // Exit the pipeline
+
+}
+/*****************************************************************************
+ * Storage Tx ARM LIF processing END
  *****************************************************************************/
 

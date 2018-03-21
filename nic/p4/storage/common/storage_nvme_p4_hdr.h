@@ -551,29 +551,31 @@ header_type nvme_kivec_arm_dst_t {
   }									\
 
 
-
+// Dummy function pointers for P4
 #define allocate_iob_start		0x81000000
 #define pop_sq_start			0x81010000
 #define handle_cmd_start		0x81020000
-#define send_cmd_free_iob_start		0x81020000
-#define process_io_map_start		0x81030000
-#define handle_no_prp_list_start	0x81040000
-#define handle_prp_list0_start		0x81050000
-#define handle_prp_list1_start		0x81060000
-#define save_io_ctx_start		0x81070000
-#define process_dst_seq_start		0x81080000
-#define push_arm_q_start		0x81090000
-#define push_dst_seq_q_start		0x810A0000
-#define handle_r2n_wqe_start		0x810B0000
-#define process_be_status_start		0x810C0000
-#define process_io_ctx_start		0x810D0000
-#define send_read_data_start		0x810E0000
-#define lookup_sq_start			0x810F0000
-#define push_cq_start			0x81100000
-#define send_sta_free_iob_start		0x81100000
-#define cleanup_iob_start		0x81100000
-#define cleanup_io_ctx_start		0x81100000
-#define free_iob_start			0x81100000
+#define send_cmd_free_iob_start		0x81030000
+#define process_io_map_start		0x81040000
+#define handle_no_prp_list_start	0x81050000
+#define handle_prp_list0_start		0x81060000
+#define handle_prp_list1_start		0x81070000
+#define save_io_ctx_start		0x81080000
+#define process_dst_seq_start		0x81090000
+#define push_arm_q_start		0x810A0000
+#define push_dst_seq_q_start		0x810B0000
+#define handle_r2n_wqe_start		0x810C0000
+#define process_be_status_start		0x810D0000
+#define process_io_ctx_start		0x810E0000
+#define send_read_data_start		0x810F0000
+#define lookup_sq_start			0x81100000
+#define push_cq_start			0x81110000
+#define send_sta_free_iob_start		0x81120000
+#define cleanup_iob_start		0x81130000
+#define cleanup_io_ctx_start		0x81140000
+#define free_iob_start			0x81150000
+#define timeout_iob_skip_start		0x81160000
+#define timeout_io_ctx_start		0x81170000
 
 
 #endif     // STORAGE_NVME_P4_HDR_H
