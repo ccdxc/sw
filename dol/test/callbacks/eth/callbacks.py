@@ -7,6 +7,7 @@ import config.hal.defs as haldefs
 from bitstring import BitArray
 from scapy.layers.inet6 import in6_chksum
 from scapy.layers.l2 import Ether, Dot1Q
+from ctypes import c_uint16
 
 from .toeplitz import *
 
@@ -143,9 +144,10 @@ def GetL2Checksum(tc, obj, args=None):
     spktobj = tc.packets.db['EXP_PKT'].spktobj
     pkt = spktobj.spkt
     if pkt.haslayer(Dot1Q):
-        return checksum(bytes(pkt[Dot1Q].payload)) & 0xffff
+        chksum = (checksum(bytes(pkt[Dot1Q].payload)) ^ -1) & 0xffff
     else:
-        return checksum(bytes(pkt[Ether].payload)) & 0xffff
+        chksum = (checksum(bytes(pkt[Ether].payload)) ^ -1) & 0xffff
+    return struct.unpack('<H', struct.pack('>H', chksum))[0]
 
 
 def GetIsIPV4(tc, obj, args=None):

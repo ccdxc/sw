@@ -24,7 +24,8 @@ eth_rx_app_header:
   phvwr           p.eth_rx_t0_s2s_packet_len, k.p4_to_p4plus_packet_len
 
   // Build completion entry in the PHV
-  phvwr           p.eth_rx_cq_desc_csum, k.{p4_to_p4plus_csum}.hx
+  xor             r1, k.p4_to_p4plus_csum, -1
+  phvwr           p.eth_rx_cq_desc_csum, r1
   phvwr           p.{eth_rx_cq_desc_csum_ip_bad...eth_rx_cq_desc_csum_tcp_ok}, k.{p4_to_p4plus_csum_ip_bad...p4_to_p4plus_csum_tcp_ok}
   phvwr           p.eth_rx_cq_desc_vlan_strip, k.p4_to_p4plus_vlan_valid
   phvwr           p.eth_rx_cq_desc_vlan_tci, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid_sbit4_ebit11}.hx
