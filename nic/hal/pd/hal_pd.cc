@@ -294,6 +294,7 @@ hal_pd_load_symbols (hal_cfg_t *hal_cfg)
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_NUM_OIFS, pd_oif_list_get_num_oifs);
     PD_SYMBOL_LOAD(PD_FUNC_ID_GET_OIF_ARRAY, pd_oif_list_get_oif_array);
     PD_SYMBOL_LOAD(PD_FUNC_ID_SET_HONOR_ING, pd_oif_list_set_honor_ingress);
+    PD_SYMBOL_LOAD(PD_FUNC_ID_CLR_HONOR_ING, pd_oif_list_clr_honor_ingress);
 
     // tnnl if
     PD_SYMBOL_LOAD(PD_FUNC_ID_TNNL_IF_GET_RW_IDX, pd_tunnelif_get_rw_idx);
@@ -627,6 +628,7 @@ hal_pd_call (pd_func_id_t pd_func_id, void *args)
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_NUM_OIFS, pd_oif_list_get_num_oifs);
     PD_SYMBOL_CALL(PD_FUNC_ID_GET_OIF_ARRAY, pd_oif_list_get_oif_array);
     PD_SYMBOL_CALL(PD_FUNC_ID_SET_HONOR_ING, pd_oif_list_set_honor_ingress);
+    PD_SYMBOL_CALL(PD_FUNC_ID_CLR_HONOR_ING, pd_oif_list_clr_honor_ingress);
 
     // tunnel if
     PD_SYMBOL_CALL(PD_FUNC_ID_TNNL_IF_GET_RW_IDX, pd_tunnelif_get_rw_idx);

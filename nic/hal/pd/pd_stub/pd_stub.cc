@@ -253,6 +253,7 @@ PD_FUNC_STUB(pd_oif_list_is_member);
 PD_FUNC_STUB(pd_oif_list_get_num_oifs);
 PD_FUNC_STUB(pd_oif_list_get_oif_array);
 PD_FUNC_STUB(pd_oif_list_set_honor_ingress);
+PD_FUNC_STUB(pd_oif_list_clr_honor_ingress);
 
 // if
 PD_FUNC_STUB(pd_tunnelif_get_rw_idx);

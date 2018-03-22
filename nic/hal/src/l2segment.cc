@@ -228,6 +228,84 @@ l2seg_del_from_db (l2seg_t *l2seg)
     return HAL_RET_OK;
 }
 
+static inline hal_ret_t
+l2seg_create_oifs(l2seg_t *l2seg)
+{
+    hal_ret_t  ret = HAL_RET_OK;
+
+    // create the broadcast/flood list for this l2seg
+    if (is_forwarding_mode_classic_nic()) {
+        ret = oif_list_create_block(&l2seg->base_oif_list_id, 3);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to create broadcast list[3], err : {}", ret);
+            goto end;
+        }
+        ret = oif_list_set_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to set honor-ingr for bcast, err : {}", ret);
+            oif_list_delete_block(l2seg->base_oif_list_id, 3);
+            l2seg->base_oif_list_id = OIF_LIST_ID_INVALID;
+            goto end;
+        }
+        ret = oif_list_set_honor_ingress(l2seg_get_mcast_oif_list(l2seg));
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to set honor-ingr for mcast, err : {}", ret);
+            oif_list_clr_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
+            oif_list_delete_block(l2seg->base_oif_list_id, 3);
+            l2seg->base_oif_list_id = OIF_LIST_ID_INVALID;
+            goto end;
+        }
+        ret = oif_list_set_honor_ingress(l2seg_get_prmsc_oif_list(l2seg));
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to set honor-ingr for promisc, err : {}", ret);
+            oif_list_clr_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
+            oif_list_clr_honor_ingress(l2seg_get_mcast_oif_list(l2seg));
+            oif_list_delete_block(l2seg->base_oif_list_id, 3);
+            l2seg->base_oif_list_id = OIF_LIST_ID_INVALID;
+            goto end;
+        }
+    } else {
+        ret = oif_list_create(&l2seg->base_oif_list_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to create broadcast list, err : {}", ret);
+            goto end;
+        }
+
+        if (is_forwarding_mode_host_pinned()) {
+            ret = oif_list_set_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("failed to set honor-ingr for bcast, err : {}", ret);
+                oif_list_delete(l2seg->base_oif_list_id);
+                l2seg->base_oif_list_id = OIF_LIST_ID_INVALID;
+                goto end;
+            }
+        }
+    }
+
+end:
+    return ret;
+}
+
+static inline hal_ret_t
+l2seg_delete_oifs(l2seg_t *l2seg)
+{
+    // create the broadcast/flood list for this l2seg
+    if (is_forwarding_mode_classic_nic()) {
+        oif_list_clr_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
+        oif_list_clr_honor_ingress(l2seg_get_mcast_oif_list(l2seg));
+        oif_list_clr_honor_ingress(l2seg_get_prmsc_oif_list(l2seg));
+        oif_list_delete_block(l2seg->base_oif_list_id, 3);
+    } else {
+        if (is_forwarding_mode_host_pinned()) {
+            oif_list_clr_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
+        }
+        oif_list_delete(l2seg->base_oif_list_id);
+    }
+
+    l2seg->base_oif_list_id = OIF_LIST_ID_INVALID;
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // validate an incoming L2 segment create request
 // TODO:
@@ -349,16 +427,9 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("create add CB for l2seg_id:{}", l2seg->seg_id);
 
-    // create the broadcast/flood list for this l2seg
-    if (is_forwarding_mode_classic_nic()) {
-        ret = oif_list_create_block(&l2seg->bcast_oif_list, 3);
-    } else {
-        ret = oif_list_create(&l2seg->bcast_oif_list);
-    }
-
+    ret = l2seg_create_oifs(l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create broadcast list, err : {}",
-                      ret);
+        HAL_TRACE_ERR("failed to create OIFs for l2seg, err : {}", ret);
         goto end;
     }
 
@@ -368,8 +439,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.vrf = app_ctxt->vrf;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_CREATE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create l2seg pd, err : {}",
-                      ret);
+        HAL_TRACE_ERR("failed to create l2seg pd, err : {}", ret);
     }
 
 end:
@@ -439,31 +509,6 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("create commit CB for l2seg_id:{}",
                     l2seg->seg_id);
-
-    // create the broadcast/flood list for this l2seg
-    if (is_forwarding_mode_classic_nic()) {
-        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list);
-        if (ret != HAL_RET_OK) {
-            oif_list_delete_block(l2seg->bcast_oif_list, 3);
-            goto end;
-        }
-        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list + 1);
-        if (ret != HAL_RET_OK) {
-            oif_list_delete_block(l2seg->bcast_oif_list, 3);
-            goto end;
-        }
-        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list + 2);
-        if (ret != HAL_RET_OK) {
-            oif_list_delete_block(l2seg->bcast_oif_list, 3);
-            goto end;
-        }
-    } else if (is_forwarding_mode_host_pinned()) {
-        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list);
-        if (ret != HAL_RET_OK) {
-            oif_list_delete(l2seg->bcast_oif_list);
-            goto end;
-        }
-    }
 
     // Add to l2seg id hash table
     ret = l2seg_add_to_db(l2seg, hal_handle);
@@ -1556,6 +1601,12 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_DELETE, (void *)&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to delete l2seg pd, err : {}", ret);
+        goto end;
+    }
+
+    ret = l2seg_delete_oifs(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to delete OIFs for l2seg, err : {}", ret);
     }
 
 end:

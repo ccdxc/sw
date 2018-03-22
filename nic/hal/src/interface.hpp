@@ -247,8 +247,9 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
                               bool *l2seglist_change,
                               dllist_ctxt_t **add_l2seglist, 
                               dllist_ctxt_t **del_l2seglist);
-hal_ret_t enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, 
-                                         if_t *hal_if, bool add);
+hal_ret_t enicif_update_l2segs_relation(dllist_ctxt_t *l2segs_list,
+                                        if_t *hal_if, bool add);
+hal_ret_t enicif_update_l2segs_oif_lists(if_t *hal_if, lif_t *lif, bool add);
 hal_ret_t enicif_cleanup_l2seg_entry_list(dllist_ctxt_t **list);
 bool l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle, 
                              if_l2seg_entry_t **l2seg_entry);

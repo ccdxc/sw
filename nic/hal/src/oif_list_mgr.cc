@@ -102,4 +102,11 @@ hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list)
     return pd::hal_pd_call(pd::PD_FUNC_ID_SET_HONOR_ING, (void *)&args);
 }
 
+hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list)
+{
+    pd::pd_oif_list_clr_honor_ingress_args_t args;
+    args.list = list;
+    return pd::hal_pd_call(pd::PD_FUNC_ID_CLR_HONOR_ING, (void *)&args);
+}
+
 }    // namespace hal

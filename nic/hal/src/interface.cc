@@ -466,33 +466,108 @@ end:
 }
 
 hal_ret_t
-enicif_classic_add_to_oif_lists (l2seg_t *l2seg, if_t *hal_if)
+enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
+                                lif_t *lif, bool add)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    oif_t                       oif = { 0 };
-    lif_t                       *lif = NULL;
+    oif_t                       oif = {};
 
-    HAL_ASSERT(l2seg && hal_if);
-    lif = find_lif_by_handle(hal_if->lif_handle);
-    HAL_ASSERT(lif != NULL);
+    HAL_ASSERT(l2seg && hal_if && lif);
 
     oif.intf = hal_if;
     oif.l2seg = l2seg;
 
-    if (lif->packet_filters.receive_broadcast) {
-        ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
-        HAL_ASSERT(ret == HAL_RET_OK);
-    }
-    if (lif->packet_filters.receive_all_multicast) {
-        ret = oif_list_add_oif(l2seg->bcast_oif_list + 1, &oif);
-        HAL_ASSERT(ret == HAL_RET_OK);
-    }
-    if (lif->packet_filters.receive_promiscuous) {
-        ret = oif_list_add_oif(l2seg->bcast_oif_list + 2, &oif);
-        HAL_ASSERT(ret == HAL_RET_OK);
+    if (add) {
+        if (lif->packet_filters.receive_broadcast) {
+            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+        if (lif->packet_filters.receive_all_multicast) {
+            ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+        if (lif->packet_filters.receive_promiscuous) {
+            ret = oif_list_add_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+    } else {
+        if (lif->packet_filters.receive_broadcast) {
+            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+        if (lif->packet_filters.receive_all_multicast) {
+            ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+        if (lif->packet_filters.receive_promiscuous) {
+            ret = oif_list_remove_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
     }
 
-    return HAL_RET_OK;
+    return ret;
+}
+
+hal_ret_t
+if_update_oif_lists(if_t *hal_if, bool add)
+{
+    hal_ret_t  ret = HAL_RET_OK;
+    l2seg_t    *l2seg = NULL, *nat_l2seg = NULL;
+
+    HAL_ASSERT(hal_if);
+    HAL_TRACE_DEBUG("Add intf to OIFs : if_id:{}", hal_if->if_id);
+
+    // If its enic, add to l2seg and lif
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        lif_t *lif = find_lif_by_handle(hal_if->lif_handle);
+        HAL_ASSERT(lif);
+        if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
+            l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
+            // Add classic nic/RxQ to bcast list only when RDMA is not enabled for this LIF
+            if (l2seg && !lif->enable_rdma) {
+                oif_t oif = {};
+
+                oif.intf = hal_if;
+                oif.l2seg = l2seg;
+
+                // TODO: Clean this as l2seg should not have list of oifs.
+                // It should be handles.
+                // Add the new interface to the broadcast list of the associated
+                // l2seg.
+                if (add) {
+                    ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+                } else {
+                    ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+                }
+
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("{} oif to oif_list failed, err : {}",
+                                  add ? "Add": "Del", ret);
+                    goto end;
+                }
+            }
+        } else {
+            // Add native L2Segment if valid
+            if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+                nat_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+                HAL_ASSERT(nat_l2seg);
+                ret = enicif_classic_update_oif_lists(hal_if, nat_l2seg, lif, add);
+                HAL_ASSERT(ret == HAL_RET_OK);
+            }
+
+            ret = enicif_update_l2segs_oif_lists(hal_if, lif, add);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+    }
+
+//    if (hal_if->if_type == intf::IF_TYPE_UPLINK_PC) {
+//        Nothing to be done here since OIFs will be added when
+//        the l2seg is added to the uplink interface
+//
+//    }
+
+end:
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -508,7 +583,6 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
     if_create_app_ctxt_t        *app_ctxt = NULL; 
     l2seg_t                     *l2seg = NULL, *nat_l2seg = NULL;
-    oif_t                       oif = { 0 };
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -550,24 +624,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             // add to lif
             ret = lif_add_if(app_ctxt->lif, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
-
-            // Add classic nic/RxQ to bcast list only when RDMA is not enabled for this LIF
-            if (l2seg && !app_ctxt->lif->enable_rdma) {
-                // TODO: Clean this as l2seg should not have list of oifs.
-                // It should be handles.
-                // Add the new interface to the broadcast list of the associated
-                // l2seg. This applies to enicifs only. Its here because the
-                // multicast oif call requires the pi_if to have been created fully.
-                oif.intf = hal_if;
-                oif.l2seg = l2seg;
-                ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Add oif to oif_list failed, err : {}", ret);
-                    goto end;
-                }
-            }
         } else {
-
             // add to lif
             ret = lif_add_if(app_ctxt->lif, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
@@ -595,14 +652,11 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 }
                 ret = l2seg_add_if(nat_l2seg, hal_if);
                 HAL_ASSERT(ret == HAL_RET_OK);
-                ret = enicif_classic_add_to_oif_lists(nat_l2seg, hal_if);
-                HAL_ASSERT(ret == HAL_RET_OK);
             }
 
             //  - Add back refs to all l2segs 
             ret = enicif_update_l2segs_relation(&hal_if->l2seg_list_clsc_head,
                                                 hal_if, true);
-            HAL_ASSERT(ret == HAL_RET_OK);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("failed to add l2seg -> enicif "
                               "relation ret:{}", ret);
@@ -629,6 +683,14 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // TODO: Increment the ref counts of dependent objects
+
+    // Finally add the new interface to all the relevant OIF lists.
+    // The call is here because the multicast oif call requires the pi_if to
+    // have been created completely.
+    ret = if_update_oif_lists(hal_if, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to add if to OIFs");
+    }
 
 end:
     return ret;
@@ -2004,7 +2066,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     hal_ret_t                       ret = HAL_RET_OK;
     if_t                            *hal_if = NULL;
     l2seg_t                         *l2seg = NULL;
-    oif_t                           oif;
+    oif_t                           oif = {};
     pd::pd_add_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
     hal_api_trace(" API Begin: addl2seguplink ");
@@ -2055,7 +2117,8 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     if (is_forwarding_mode_smart_nic()) {
         oif.intf = hal_if;
         oif.l2seg = l2seg;
-        ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
+
+        ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-l2segup<->link:bcast oiflist failed. ret:{}",
                           ret);
@@ -2080,6 +2143,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     hal_ret_t                       ret = HAL_RET_OK;
     l2seg_t                         *l2seg = NULL;
     if_t                            *hal_if = NULL;
+    oif_t                           oif = {};
     pd::pd_del_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
     hal_api_trace(" API Begin: delete l2seg on uplink ");
@@ -2110,6 +2174,19 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         goto end;
     }
 
+    // Del the uplink from the broadcast list of the l2seg
+    if (is_forwarding_mode_smart_nic()) {
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
+
+        ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-dell2seguplink<->link:bcast oiflist"
+                                  " failed. ret:{}", ret);
+            goto end;
+        }
+    }
+
     // Del Uplink in l2seg
     ret = l2seg_del_if(l2seg, hal_if);
     if (ret != HAL_RET_OK) {
@@ -2127,20 +2204,6 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
                       ret);
         goto end;
     }
-
-    // TODO: Del from bcast list
-#if 0
-    // Add the uplink to the broadcast list of the l2seg
-    oif.intf = hal_if;
-    oif.l2seg = l2seg;
-    ret = oif_list_del_oif(l2seg->bcast_oif_list, &oif);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:bcast oiflist failed. ret:{}",
-                      ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
-    }
-#endif
 
 end:
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -2787,8 +2850,15 @@ if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     intf = (if_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("delete del CB {}",
-                    intf->if_id);
+    HAL_TRACE_DEBUG("delete del CB {}", intf->if_id);
+
+    // First of all, delete the interface from all the relevant OIF lists.
+    // This needs to be done before the PD call to delete the interface.
+    ret = if_update_oif_lists(intf, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to remove if from OIFs");
+        goto end;
+    }
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_if_delete_args_init(&pd_if_args);
@@ -2819,7 +2889,6 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                     *l2seg = NULL, *nat_l2seg = NULL;
     lif_t                       *lif = NULL;
     hal_handle_t                hal_handle = 0;
-    oif_t                       oif = { 0 };
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -2853,17 +2922,6 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 HAL_TRACE_ERR("unable to remove if from lif");
                 goto end;
             }
-
-            // delete oif from bcast oif list
-            oif.intf = intf;
-            oif.l2seg = l2seg;
-            ret = oif_list_remove_oif(l2seg->bcast_oif_list, &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("unable to remove if from "
-                              "l2seg bcast list.ret:{}",
-                              ret);
-                // goto end;
-            }
         } else {
             // Remove from lif
             lif = find_lif_by_handle(intf->lif_handle);
@@ -2892,6 +2950,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                                   intf->native_l2seg_clsc);
                     goto end;
                 }
+
                 ret = l2seg_del_if(nat_l2seg, intf);
                 HAL_ASSERT(ret == HAL_RET_OK);
             }
@@ -3444,6 +3503,30 @@ end:
 }
 
 //----------------------------------------------------------------------------
+// Add/Del Oifs to/from Oif Lists for all l2segs in the list
+//----------------------------------------------------------------------------
+hal_ret_t
+enicif_update_l2segs_oif_lists(if_t *hal_if, lif_t *lif, bool add)
+{
+    hal_ret_t        ret = HAL_RET_OK;
+    dllist_ctxt_t    *curr, *next;
+    if_l2seg_entry_t *entry = NULL;
+    l2seg_t          *l2seg = NULL;
+    dllist_ctxt_t    *l2segs_list = &hal_if->l2seg_list_clsc_head;
+
+    dllist_for_each_safe(curr, next, l2segs_list) {
+        entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
+        l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
+
+        HAL_ASSERT(l2seg);
+
+        ret = enicif_classic_update_oif_lists(hal_if, l2seg, lif, add);
+    }
+
+    return ret;
+}
+
+//----------------------------------------------------------------------------
 // Add/Del relation l2seg -> enicif for all l2segs in the list
 //----------------------------------------------------------------------------
 hal_ret_t
@@ -3465,9 +3548,6 @@ enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, if_t *hal_if, bool ad
         }
         if (add) {
             ret = l2seg_add_if(l2seg, hal_if);
-            if (ret == HAL_RET_OK) {
-                ret = enicif_classic_add_to_oif_lists(l2seg, hal_if);
-            }
         } else {
             ret = l2seg_del_if(l2seg, hal_if);
         }

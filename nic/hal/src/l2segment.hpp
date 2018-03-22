@@ -65,7 +65,7 @@ typedef struct l2seg_s {
     BroadcastFwdPolicy    bcast_fwd_policy;        // broadcast policy
     ip_addr_t             gipo;                    // gipo for vxlan 
 
-    oif_list_id_t         bcast_oif_list;          // outgoing interface list for broadcast/flood
+    oif_list_id_t         base_oif_list_id;        // Base replication list id
     hal_handle_t          pinned_uplink;           // pinned uplink
 
     // operational state of L2 segment
@@ -84,6 +84,10 @@ typedef struct l2seg_s {
     void                  *pd;                     // all PD specific state
 
 } __PACK__ l2seg_t;
+
+#define HAL_BCAST_OIFLIST_OFFSET      0
+#define HAL_MCAST_OIFLIST_OFFSET      1
+#define HAL_PRMSC_OIFLIST_OFFSET      2
 
 // CB data structures
 typedef struct l2seg_create_app_ctxt_s {

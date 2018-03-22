@@ -160,7 +160,25 @@ l2seg_get_bcast_fwd_policy(l2seg_t *pi_l2seg)
 oif_list_id_t
 l2seg_get_bcast_oif_list(l2seg_t *pi_l2seg)
 {
-    return pi_l2seg->bcast_oif_list;
+    return pi_l2seg->base_oif_list_id + HAL_BCAST_OIFLIST_OFFSET;
+}
+
+// ----------------------------------------------------------------------------
+// Returns mcast_oif_list
+// ----------------------------------------------------------------------------
+oif_list_id_t
+l2seg_get_mcast_oif_list(l2seg_t *pi_l2seg)
+{
+    return pi_l2seg->base_oif_list_id + HAL_MCAST_OIFLIST_OFFSET;
+}
+
+// ----------------------------------------------------------------------------
+// Returns prmsc_oif_list
+// ----------------------------------------------------------------------------
+oif_list_id_t
+l2seg_get_prmsc_oif_list(l2seg_t *pi_l2seg)
+{
+    return pi_l2seg->base_oif_list_id + HAL_PRMSC_OIFLIST_OFFSET;
 }
 
 // ----------------------------------------------------------------------------

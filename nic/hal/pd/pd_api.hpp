@@ -1857,6 +1857,10 @@ typedef struct pd_oif_list_set_honor_ingress_args_s {
     oif_list_id_t list;
 } __PACK__ pd_oif_list_set_honor_ingress_args_t;
 
+typedef struct pd_oif_list_clr_honor_ingress_args_s {
+    oif_list_id_t list;
+} __PACK__ pd_oif_list_clr_honor_ingress_args_t;
+
 typedef struct pd_tunnelif_get_rw_idx_args_s {
     if_t *hal_if;
     uint32_t tnnl_rw_idx;
@@ -2451,7 +2455,8 @@ typedef struct pd_get_slab_args_s {
     ENTRY(PD_FUNC_ID_COPP_MEM_FREE,         204, "PD_FUNC_ID_COPP_MEM_FREE")        \
     ENTRY(PD_FUNC_ID_SWPHV_INJECT,          205, "PD_FUNC_ID_SWPHV_INJECT")\
     ENTRY(PD_FUNC_ID_SWPHV_GET_STATE,       206, "PD_FUNC_ID_SWPHV_GET_STATE")\
-    ENTRY(PD_FUNC_ID_MAX,                   207, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_CLR_HONOR_ING,         207, "PD_FUNC_ID_CLR_HONOR_ING")\
+    ENTRY(PD_FUNC_ID_MAX,                   208, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -2703,6 +2708,7 @@ PD_FUNCP_TYPEDEF(pd_oif_list_is_member);
 PD_FUNCP_TYPEDEF(pd_oif_list_get_num_oifs);
 PD_FUNCP_TYPEDEF(pd_oif_list_get_oif_array);
 PD_FUNCP_TYPEDEF(pd_oif_list_set_honor_ingress);
+PD_FUNCP_TYPEDEF(pd_oif_list_clr_honor_ingress);
 
 // if
 PD_FUNCP_TYPEDEF(pd_tunnelif_get_rw_idx);
@@ -3031,6 +3037,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_oif_list_get_num_oifs);
         PD_UNION_FIELD(pd_oif_list_get_oif_array);
         PD_UNION_FIELD(pd_oif_list_set_honor_ingress);
+        PD_UNION_FIELD(pd_oif_list_clr_honor_ingress);
 
         PD_UNION_FIELD(pd_tunnelif_get_rw_idx);
 

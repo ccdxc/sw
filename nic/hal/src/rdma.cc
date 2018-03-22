@@ -1042,7 +1042,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
         oif.l2seg = l2seg;
         oif.qid = spec.qp_num();
         oif.purpose = intf::LIF_QUEUE_PURPOSE_RDMA_RECV;
-        ret = oif_list_add_qp_oif(l2seg->bcast_oif_list, &oif);
+        ret = oif_list_add_qp_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Add QP oif to oif_list failed for LIF:{} QP:{}, err : {}", lif, spec.qp_num(), ret);
             HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);

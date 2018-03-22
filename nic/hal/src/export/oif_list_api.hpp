@@ -44,6 +44,8 @@ namespace hal {
     hal_ret_t oif_list_get_oif_array(oif_list_id_t list, uint32_t &num_oifs, oif_t *oifs);
     // Adds a special node for ingress driven copy
     hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list);
+    // Deletes the special node for ingress driven copy
+    hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list);
 }    // namespace hal
 
 #endif /* __OIF_LIST_API_HPP__ */

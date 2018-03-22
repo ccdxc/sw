@@ -74,7 +74,7 @@ hal_ret_t pd_oif_list_add_oif(pd_oif_list_add_oif_args_t *args)
         return ret;
     }
 
-    HAL_TRACE_DEBUG("Replication data: isTnl: {}; isQid: {}; rw_idx: {}; "
+    HAL_TRACE_DEBUG("Replication data add: isTnl: {}; isQid: {}; rw_idx: {}; "
                     "tnl_idx: {}; lport : {} qtype : {} qid/vni : {}",
                     data.is_tunnel, data.is_qid, data.rewrite_index,
                     data.tunnel_rewrite_index, data.lport, data.qtype,
@@ -135,13 +135,26 @@ hal_ret_t pd_oif_list_add_qp_oif(pd_oif_list_add_qp_oif_args_t *args)
 // hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif)
 hal_ret_t pd_oif_list_remove_oif(pd_oif_list_remove_oif_args_t *args)
 {
+    hal_ret_t ret;
     oif_list_id_t list = args->list;
-    // oif_t *oif = args->oif;
-    p4_replication_data_t data = { 0 };
+    oif_t *oif = args->oif;
+    p4_replication_data_t data = {};
+    if_t *pi_if = oif->intf;
+    l2seg_t *pi_l2seg = oif->l2seg;
 
-    // TODO: MET library expects the same data to be passed during
-    //       removal as that passed during add. Otherwise it wont be
-    //       able to find the replication.
+    HAL_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
+
+    ret = if_l2seg_get_multicast_rewrite_data(pi_if, pi_l2seg, &data);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("Replication data del: isTnl: {}; isQid: {}; rw_idx: {}; "
+                    "tnl_idx: {}; lport : {} qtype : {} qid/vni : {}",
+                    data.is_tunnel, data.is_qid, data.rewrite_index,
+                    data.tunnel_rewrite_index, data.lport, data.qtype,
+                    data.qid_or_vnid);
+
     return g_hal_state_pd->met_table()->del_replication(list, (void*)&data);
 }
 
@@ -167,11 +180,20 @@ hal_ret_t pd_oif_list_get_oif_array(pd_oif_list_get_oif_array_args_t *args) {
 // hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list)
 hal_ret_t pd_oif_list_set_honor_ingress(pd_oif_list_set_honor_ingress_args_t *args)
 {
-    p4_replication_data_t data;
+    p4_replication_data_t data = {};
     oif_list_id_t list = args->list;
-    memset(&data, 0, sizeof(data));
     data.repl_type = TM_REPL_TYPE_HONOR_INGRESS;
     return g_hal_state_pd->met_table()->add_replication(list, (void*)&data);
+}
+
+// Deletes the special node for ingress driven copy
+// hal_ret_t oif_list_clr_honor_ingress(oif_list_id_t list)
+hal_ret_t pd_oif_list_clr_honor_ingress(pd_oif_list_clr_honor_ingress_args_t *args)
+{
+    p4_replication_data_t data = {};
+    oif_list_id_t list = args->list;
+    data.repl_type = TM_REPL_TYPE_HONOR_INGRESS;
+    return g_hal_state_pd->met_table()->del_replication(list, (void*)&data);
 }
 
 }    // namespace pd
